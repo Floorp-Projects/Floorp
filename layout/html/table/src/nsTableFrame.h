@@ -297,6 +297,9 @@ protected:
   /** returns PR_TRUE if the cached pass 1 data is still valid */
   virtual PRBool IsFirstPassValid() const;
 
+  /** do post processing to setting up style information for the frame */
+  virtual NS_METHOD DidSetStyleContext(nsIPresContext* aPresContext);
+
 private:
   void nsTableFrame::DebugPrintCount() const; // Debugging routine
 

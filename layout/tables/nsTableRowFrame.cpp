@@ -811,7 +811,7 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
       kidDel = cell->GetDelegate(aPresContext);
       kidFrame = kidDel->CreateFrame(aPresContext, cell, kidIndex, this);
       NS_RELEASE(kidDel);
-      kidFrame->SetStyleContext(kidStyleContext);
+      kidFrame->SetStyleContext(aPresContext,kidStyleContext);
     } else {
       kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidFrame);
     }

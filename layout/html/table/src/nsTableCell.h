@@ -96,9 +96,6 @@ public:
                                  nsIPresContext* aPresContext);
 
  
-  virtual void MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBorderWidth);
-  virtual void MapBorderMarginPaddingInto(nsIStyleContext* aContext,
-                                          nsIPresContext* aPresContext);
 
   /** @return the number of rows spanned by this cell.  Always >= 1 */
   virtual int GetRowSpan ();

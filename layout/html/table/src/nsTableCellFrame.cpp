@@ -26,10 +26,11 @@
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
 #include "nsCSSLayout.h"
+#include "nsHTMLAtoms.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
-//#define NOISY
+#define   NOISY_STYLE
 //#define NOISY_FLOW
 #else
 static const PRBool gsDebug = PR_FALSE;
@@ -185,7 +186,7 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
     // Resolve style and set the style context
     nsIStyleContext* styleContext =
       aPresContext->ResolveStyleContextFor(mContent, this);             // styleContext: ADDREF++
-    mFirstChild->SetStyleContext(styleContext);
+    mFirstChild->SetStyleContext(aPresContext,styleContext);
     NS_RELEASE(styleContext);                                           // styleContext: ADDREF--
   } else {
     nsTableCellFrame* prevFrame = (nsTableCellFrame *)mPrevInFlow;
@@ -341,6 +342,129 @@ NS_METHOD nsTableCellFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
   nsTableCellFrame* cf = new nsTableCellFrame(mContent, mIndexInParent, aParent);
   PrepareContinuingFrame(aPresContext, aParent, cf);
   aContinuingFrame = cf;
+  return NS_OK;
+}
+
+
+/**
+  *
+  * Update the border style to map to the HTML border style
+  *
+  */
+void nsTableCellFrame::MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBorderWidth)
+{
+  for (PRInt32 index = 0; index < 4; index++)
+    aBorderStyle.mSizeFlag[index] = NS_STYLE_BORDER_WIDTH_LENGTH_VALUE; 
+
+  aBorderStyle.mSize.top    = 
+  aBorderStyle.mSize.left   = 
+  aBorderStyle.mSize.bottom = 
+  aBorderStyle.mSize.right  = aBorderWidth;
+
+
+  aBorderStyle.mStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_INSET; 
+  aBorderStyle.mStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_INSET; 
+  aBorderStyle.mStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_OUTSET; 
+  aBorderStyle.mStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_OUTSET; 
+  
+  NS_ColorNameToRGB("white",&aBorderStyle.mColor[NS_SIDE_TOP]);
+  NS_ColorNameToRGB("white",&aBorderStyle.mColor[NS_SIDE_LEFT]);
+
+  // This should be the background color of the tables 
+  // container
+  NS_ColorNameToRGB("gray",&aBorderStyle.mColor[NS_SIDE_BOTTOM]);
+  NS_ColorNameToRGB("gray",&aBorderStyle.mColor[NS_SIDE_RIGHT]);
+}
+
+
+
+void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
+{
+  // Check to see if the table has either cell padding or 
+  // Cell spacing defined for the table. If true, then
+  // this setting overrides any specific border, margin or 
+  // padding information in the cell. If these attributes
+  // are not defined, the the cells attributes are used
+  
+  nsHTMLValue padding_value;
+  nsHTMLValue spacing_value;
+  nsHTMLValue border_value;
+
+  nsContentAttr padding_result;
+  nsContentAttr spacing_result;
+  nsContentAttr border_result;
+
+  nscoord   padding = 0;
+  nscoord   spacing = 0;
+  nscoord   border  = 1;
+
+  float     p2t = aPresContext->GetPixelsToTwips();
+
+  nsTablePart*  table = ((nsTableContent*)mContent)->GetTable();
+
+  NS_ASSERTION(table,"Table Must not be null");
+  if (!table)
+    return;
+
+  padding_result = table->GetAttribute(nsHTMLAtoms::cellpadding,padding_value);
+  spacing_result = table->GetAttribute(nsHTMLAtoms::cellspacing,spacing_value);
+  border_result = table->GetAttribute(nsHTMLAtoms::border,border_value);
+
+  // check to see if cellpadding or cellspacing is defined
+  if (spacing_result == eContentAttr_HasValue || padding_result == eContentAttr_HasValue)
+  {
+  
+    if (padding_result == eContentAttr_HasValue)
+      padding = (nscoord)(p2t*(float)padding_value.GetPixelValue()); 
+    
+    if (spacing_result == eContentAttr_HasValue)
+      spacing = (nscoord)(p2t*(float)spacing_value.GetPixelValue()); 
+
+    nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+    spacingData->mMargin.SizeTo(spacing,spacing,spacing,spacing);
+    spacingData->mPadding.top     = 
+    spacingData->mPadding.left    = 
+    spacingData->mPadding.bottom  = 
+    spacingData->mPadding.right   =  padding; 
+
+  }
+  if (border_result == eContentAttr_HasValue)
+  {
+    PRInt32 intValue = border_value.GetPixelValue();
+    if (intValue > 0)
+      intValue = 1;
+    border = nscoord(p2t*(float)intValue); 
+  }
+
+
+  nsStyleBorder& borderData = *(nsStyleBorder*)mStyleContext->GetData(kStyleBorderSID);
+  MapHTMLBorderStyle(borderData,border);
+}
+
+void nsTableCellFrame::MapTextAttributes(nsIPresContext* aPresContext)
+{
+  nsHTMLValue value;
+
+  ((nsTableCell*)mContent)->GetAttribute(nsHTMLAtoms::align, value);
+  if (value.GetUnit() == eHTMLUnit_Enumerated) 
+  {
+    nsStyleText* text = (nsStyleText*)mStyleContext->GetData(kStyleTextSID);
+    text->mTextAlign = value.GetIntValue();
+  }
+}
+
+
+
+// Subclass hook for style post processing
+NS_METHOD nsTableCellFrame::DidSetStyleContext(nsIPresContext* aPresContext)
+{
+#ifdef NOISY_STYLE
+  printf("nsTableCellFrame::DidSetStyleContext \n");
+#endif
+
+  MapTextAttributes(aPresContext);
+  MapBorderMarginPadding(aPresContext);
+  mStyleContext->RecalcAutomaticData();
   return NS_OK;
 }
 

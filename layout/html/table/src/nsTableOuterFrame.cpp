@@ -227,16 +227,17 @@ NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
     aStatus = mInnerTableFrame->ResizeReflowPass1(aPresContext, aDesiredSize, aMaxSize, 
                                                   &innerTableMaxElementSize);
   
+    nsIContentPtr content;
+    mInnerTableFrame->GetContent(content.AssignRef());
+    nsTablePart *table = (nsTablePart*)(nsIContent*)content;
 #ifdef NOISY_MARGINS
-    nsIContent* content = nsnull;
-    mInnerTableFrame->GetContent(content);
-    nsTablePart *table = (nsTablePart*)content;
     if (table != nsnull)
       table->DumpCellMap();
+#endif
     mInnerTableFrame->RecalcLayoutData();
+#ifdef NOISY_MARGINS
     mInnerTableFrame->ListColumnLayoutData(stdout,1);
 #endif
-
   }
   mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_SECOND);
   // assign table width info only if the inner table frame is a first-in-flow
@@ -945,7 +946,7 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
   nsIStyleContextPtr kidStyleContext =
     aPresContext->ResolveStyleContextFor(mContent, this);
   NS_ASSERTION(kidStyleContext.IsNotNull(), "bad style context for kid.");
-  mInnerTableFrame->SetStyleContext(kidStyleContext);
+  mInnerTableFrame->SetStyleContext(aPresContext,kidStyleContext);
   mChildCount++;
   // Link child frame into the list of children
   mFirstChild = mInnerTableFrame;
@@ -974,7 +975,7 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
       NS_ASSERTION(captionStyleContext.IsNotNull(), "bad style context for caption.");
       nsStyleText* captionStyle = 
         (nsStyleText*)captionStyleContext->GetData(kStyleTextSID);
-      captionFrame->SetStyleContext(captionStyleContext);
+      captionFrame->SetStyleContext(aPresContext,captionStyleContext);
       mChildCount++;
       // Link child frame into the list of children
       if ((eStyleUnit_Enumerated == captionStyle->mVerticalAlign.GetUnit()) && 
@@ -1244,7 +1245,7 @@ void nsTableOuterFrame::PrepareContinuingFrame(nsIPresContext*    aPresContext,
   // XXX presumptive
   nsIStyleContextPtr styleContext =
     aPresContext->ResolveStyleContextFor(mContent, aParent);
-  aContFrame->SetStyleContext(styleContext);
+  aContFrame->SetStyleContext(aPresContext,styleContext);
 }
 
 NS_METHOD nsTableOuterFrame::VerifyTree() const
@@ -1363,7 +1364,7 @@ void nsTableOuterFrame::CreateInnerTableFrame(nsIPresContext* aPresContext)
     // Resolve style and set the style context
     nsIStyleContextPtr styleContext =
       aPresContext->ResolveStyleContextFor(mContent, this);
-    mInnerTableFrame->SetStyleContext(styleContext);
+    mInnerTableFrame->SetStyleContext(aPresContext,styleContext);
   } else {
     nsTableOuterFrame*  prevOuterTable = (nsTableOuterFrame*)mPrevInFlow;
 

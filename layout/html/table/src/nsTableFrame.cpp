@@ -48,6 +48,7 @@ static PRBool gsTiming = PR_FALSE;
 static PRBool gsDebugMBP = PR_FALSE;
 //#define NOISY
 //#define NOISY_FLOW
+//#ifdef NOISY_STYLE
 #else
 static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebugCLD = PR_FALSE;
@@ -640,7 +641,7 @@ nsIFrame::ReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresCont
         kidDel = kid->GetDelegate(aPresContext);
         kidFrame = kidDel->CreateFrame(aPresContext, kid, contentOffset, this);
         NS_RELEASE(kidDel);
-        kidFrame->SetStyleContext(kidStyleContext);
+        kidFrame->SetStyleContext(aPresContext,kidStyleContext);
       }
 
       nsSize maxKidElementSize;
@@ -1415,7 +1416,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
       kidDel = kid->GetDelegate(aPresContext);
       kidFrame = kidDel->CreateFrame(aPresContext, kid, kidIndex, this);
       NS_RELEASE(kidDel);
-      kidFrame->SetStyleContext(kidStyleContext);
+      kidFrame->SetStyleContext(aPresContext, kidStyleContext);
     } else {
       kidPrevInFlow->CreateContinuingFrame(aPresContext, this, kidFrame);
     }
@@ -2077,7 +2078,7 @@ NS_METHOD nsTableFrame::CreateContinuingFrame(nsIPresContext* aPresContext,
       kidDel = content->GetDelegate(aPresContext);                       // kidDel: REFCNT++
       nsIFrame * duplicateFrame = kidDel->CreateFrame(aPresContext, content, index, cf);
       NS_RELEASE(kidDel);                                                // kidDel: REFCNT--
-      duplicateFrame->SetStyleContext(kidStyleContext);
+      duplicateFrame->SetStyleContext(aPresContext,kidStyleContext);
       NS_RELEASE(kidStyleContext);                                       // kidStyleContenxt: REFCNT--
       
       if (nsnull==lastSib)
@@ -2147,6 +2148,14 @@ void  nsTableFrame::SetColumnWidth(PRInt32 aColIndex, PRInt32 aWidth)
   }
 }
 
+// Subclass hook for style post processing
+NS_METHOD nsTableFrame::DidSetStyleContext(nsIPresContext* aPresContext)
+{
+#ifdef NOISY_STYLE
+  printf("nsTableFrame::DidSetStyleContext \n");
+#endif
+  return NS_OK;
+}
 
 /* ---------- static methods ---------- */
 
