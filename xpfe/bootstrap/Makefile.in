@@ -300,10 +300,18 @@ nsStaticComponents.cpp: nsStaticComponents.cpp.in Makefile Makefile.in $(FINAL_L
 	> $@
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+
+ifdef MOZ_DEBUG
+APP_NAME = MozillaDebug
+else
+APP_NAME = Mozilla
+endif
+
 install:: $(PROGRAM)
-	rm -rf $(DIST)/Mozilla.app
-	mkdir $(DIST)/Mozilla.app
-	cp -R $(srcdir)/macbuild/Contents $(DIST)/Mozilla.app
-	cp -RL $(DIST)/bin $(DIST)/Mozilla.app/Contents/MacOS
+	rm -rf $(DIST)/$(APP_NAME).app
+	mkdir $(DIST)/$(APP_NAME).app
+	cp -R $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
+	cp -RL $(DIST)/bin $(DIST)/$(APP_NAME).app/Contents/MacOS
+
 endif
 
