@@ -14,12 +14,12 @@
 <window id="xulEditMainWindow" class="color-dialog" orient="vertical"
         title="ViXEn"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="xe_Startup()" onunload="xe_Shutdown();">
+        onload="vx_Startup()" onunload="vx_Shutdown();">
   
   <script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
   <script language="JavaScript" src="chrome://global/content/globalOverlay.js"></script>
 
-  <script language="JavaScript" src="chrome://vixen/content/xuledit.js"></script>
+  <script language="JavaScript" src="chrome://vixen/content/vixen.js"></script>
   
   <toolbox id="xuledit-toolbox" flex="1">
     <menubar id="xuledit-menubar">
