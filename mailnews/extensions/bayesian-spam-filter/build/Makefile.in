@@ -41,6 +41,7 @@ REQUIRES	= xpcom \
 		  msgbaseutil \
 		  msgdb \
 		  necko \
+		  lwbrk \
 		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
