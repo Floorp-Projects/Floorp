@@ -71,7 +71,7 @@
     {0x91, 0x55, 0xc3, 0x50, 0x94, 0x28, 0x46, 0x1e} \
 }
 
-// service implementing nsIProtocolProxyService.
+// service implementing nsIProtocolProxyService and nsPIProtocolProxyService.
 #define NS_PROTOCOLPROXYSERVICE_CLASSNAME \
     "nsProtocolProxyService"
 #define NS_PROTOCOLPROXYSERVICE_CONTRACTID \
@@ -434,6 +434,24 @@
     0x4308,                                          \
     {0x94, 0xdb, 0xd4, 0xf8, 0x59, 0x05, 0x82, 0x15} \
 }
+
+// component implementing nsIPrompt
+//
+// NOTE: this implementation does not have any way to correctly parent itself,
+//       it is almost always wrong to get a prompt via this interface.
+//       use nsIWindowWatcher instead whenever possible.
+//
+#define NS_DEFAULTPROMPT_CONTRACTID \
+    "@mozilla.org/network/default-prompt;1"
+
+// component implementing nsIAuthPrompt
+//
+// NOTE: this implementation does not have any way to correctly parent itself,
+//       it is almost always wrong to get an auth prompt via this interface.
+//       use nsIWindowWatcher instead whenever possible.
+//
+#define NS_DEFAULTAUTHPROMPT_CONTRACTID \
+    "@mozilla.org/network/default-auth-prompt;1"
 
 /******************************************************************************
  * netwerk/cache/ classes

@@ -77,7 +77,7 @@
 class nsHttpResponseHead;
 class nsAHttpConnection;
 class nsIHttpAuthenticator;
-class nsIProxyInfo;
+class nsProxyInfo;
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel
@@ -115,7 +115,7 @@ public:
 
     nsresult Init(nsIURI *uri,
                   PRUint8 capabilities,
-                  nsIProxyInfo* proxyInfo);
+                  nsProxyInfo* proxyInfo);
 
 public: /* internal; workaround lame compilers */ 
     typedef void (nsHttpChannel:: *nsAsyncCallback)(void);

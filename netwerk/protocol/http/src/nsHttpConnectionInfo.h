@@ -40,7 +40,7 @@
 #define nsHttpConnectionInfo_h__
 
 #include "nsHttp.h"
-#include "nsIProxyInfo.h"
+#include "nsProxyInfo.h"
 #include "nsCOMPtr.h"
 #include "nsDependentString.h"
 #include "nsString.h"
@@ -55,7 +55,7 @@ class nsHttpConnectionInfo
 {
 public:
     nsHttpConnectionInfo(const nsACString &host, PRInt32 port,
-                         nsIProxyInfo* proxyInfo,
+                         nsProxyInfo* proxyInfo,
                          PRBool usingSSL=PR_FALSE)
         : mRef(0)
         , mProxyInfo(proxyInfo)
@@ -95,7 +95,7 @@ public:
         SetOriginServer(nsDependentCString(host), port);
     }
 
-    const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host() : nsnull; }
+    const char *ProxyHost() const { return mProxyInfo ? mProxyInfo->Host().get() : nsnull; }
     PRInt32     ProxyPort() const { return mProxyInfo ? mProxyInfo->Port() : -1; }
     const char *ProxyType() const { return mProxyInfo ? mProxyInfo->Type() : nsnull; }
 
@@ -113,7 +113,7 @@ public:
 
     const char   *Host() const           { return mHost.get(); }
     PRInt32       Port() const           { return mPort; }
-    nsIProxyInfo *ProxyInfo()            { return mProxyInfo; }
+    nsProxyInfo  *ProxyInfo()            { return mProxyInfo; }
     PRBool        UsingHttpProxy() const { return mUsingHttpProxy; }
     PRBool        UsingSSL() const       { return mUsingSSL; }
     PRInt32       DefaultPort() const    { return mUsingSSL ? NS_HTTPS_DEFAULT_PORT : NS_HTTP_DEFAULT_PORT; }
@@ -123,7 +123,7 @@ private:
     nsCString              mHashKey;
     nsCString              mHost;
     PRInt32                mPort;
-    nsCOMPtr<nsIProxyInfo> mProxyInfo;
+    nsCOMPtr<nsProxyInfo>  mProxyInfo;
     PRPackedBool           mUsingHttpProxy;
     PRPackedBool           mUsingSSL;
 };

@@ -213,9 +213,14 @@ nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, const char *connectionType,
           if (NS_SUCCEEDED(rv))
               rv = proxyUri->SetScheme(NS_LITERAL_CSTRING("mailto"));
       }
+      //
+      // XXX(darin): Consider using AsyncResolve instead to avoid blocking
+      //             the calling thread in cases where PAC may call into
+      //             our DNS resolver.
+      //
       if (NS_SUCCEEDED(rv))
-          rv = pps->ExamineForProxy(proxyUri, getter_AddRefs(proxyInfo));
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't successfully call ExamineForProxy");
+          rv = pps->Resolve(proxyUri, 0, getter_AddRefs(proxyInfo));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't successfully resolve a proxy");
       if (NS_FAILED(rv)) proxyInfo = nsnull;
   }
 

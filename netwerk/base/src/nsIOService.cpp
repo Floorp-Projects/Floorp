@@ -187,6 +187,8 @@ nsIOService::Init()
     // down later. If we wait until the nsIOService is being shut down,
     // GetService will fail at that point.
 
+    // TODO(darin): Load the Socket and DNS services lazily.
+
     mSocketTransportService = do_GetService(kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv))
         NS_WARNING("failed to get socket transport service");
@@ -194,10 +196,6 @@ nsIOService::Init()
     mDNSService = do_GetService(kDNSServiceCID, &rv);
     if (NS_FAILED(rv))
         NS_WARNING("failed to get DNS service");
-
-    mProxyService = do_GetService(kProtocolProxyServiceCID, &rv);
-    if (NS_FAILED(rv))
-        NS_WARNING("failed to get protocol proxy service");
 
     // XXX hack until xpidl supports error info directly (bug 13423)
     nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID);
@@ -451,34 +449,48 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
 
     nsCAutoString scheme;
     rv = aURI->GetScheme(scheme);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIProxyInfo> pi;
-    if (mProxyService) {
-        rv = mProxyService->ExamineForProxy(aURI, getter_AddRefs(pi));
-        if (NS_FAILED(rv))
-            pi = 0;
-    }
+    if (NS_FAILED(rv))
+        return rv;
 
     nsCOMPtr<nsIProtocolHandler> handler;
+    rv = GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
+    if (NS_FAILED(rv))
+        return rv;
 
-    if (pi && !strcmp(pi->Type(),"http")) {
-        // we are going to proxy this channel using an http proxy
-        rv = GetProtocolHandler("http", getter_AddRefs(handler));
-        if (NS_FAILED(rv)) return rv;
-    } else {
-        rv = GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
-        if (NS_FAILED(rv)) return rv;
+    PRUint32 protoFlags;
+    rv = handler->GetProtocolFlags(&protoFlags);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Talk to the PPS if the protocol handler allows proxying.  Otherwise,
+    // skip this step.  This allows us to lazily load the PPS at startup.
+    if (protoFlags & nsIProtocolHandler::ALLOWS_PROXY) {
+        nsCOMPtr<nsIProxyInfo> pi;
+        if (!mProxyService) {
+            mProxyService = do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID);
+            if (!mProxyService)
+                NS_WARNING("failed to get protocol proxy service");
+        }
+        if (mProxyService) {
+            rv = mProxyService->Resolve(aURI, 0, getter_AddRefs(pi));
+            if (NS_FAILED(rv))
+                pi = nsnull;
+        }
+        if (pi) {
+            nsCAutoString type;
+            if (NS_SUCCEEDED(pi->GetType(type)) && type.EqualsLiteral("http")) {
+                // we are going to proxy this channel using an http proxy
+                rv = GetProtocolHandler("http", getter_AddRefs(handler));
+                if (NS_FAILED(rv))
+                    return rv;
+            }
+            nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
+            if (pph)
+                return pph->NewProxiedChannel(aURI, pi, result);
+        }
     }
 
-    nsCOMPtr<nsIProxiedProtocolHandler> pph = do_QueryInterface(handler);
-
-    if (pph)
-        rv = pph->NewProxiedChannel(aURI, pi, result);
-    else
-        rv = handler->NewChannel(aURI, result);
-
-    return rv;
+    return handler->NewChannel(aURI, result);
 }
 
 NS_IMETHODIMP
@@ -691,7 +703,7 @@ nsIOService::Observe(nsISupports *subject,
         SetOffline(PR_TRUE);
 
         // Break circular reference.
-        mProxyService = 0;
+        mProxyService = nsnull;
     }
     return NS_OK;
 }

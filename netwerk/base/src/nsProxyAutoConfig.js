@@ -1,4 +1,5 @@
 /* -*- Mode: Java; tab-width: 4; c-basic-offset: 4; -*- */
+/* vim:set ts=4 sw=4 sts=4 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -22,6 +23,7 @@
  * Contributor(s):
  *   Akhil Arora <akhil.arora@sun.com>
  *   Tomi Leppikangas <Tomi.Leppikangas@oulu.fi>
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,102 +44,64 @@
        - Gagan Saksena 04/24/00 
 */
 
-const kPAC_CONTRACTID = "@mozilla.org/network/proxy-auto-config;1";
-const kIOSERVICE_CONTRACTID = "@mozilla.org/network/io-service;1";
 const kDNS_CONTRACTID = "@mozilla.org/network/dns-service;1";
+const kPAC_CONTRACTID = "@mozilla.org/network/proxy-auto-config;1";
 const kPAC_CID = Components.ID("{63ac8c66-1dd2-11b2-b070-84d00d3eaece}");
+
+const nsISupports        = Components.interfaces.nsISupports;
 const nsIProxyAutoConfig = Components.interfaces.nsIProxyAutoConfig;
-const nsIIOService = Components.interfaces['nsIIOService'];
-const nsIDNSService = Components.interfaces.nsIDNSService;
-const nsIRequest = Components.interfaces.nsIRequest;
+const nsIDNSService      = Components.interfaces.nsIDNSService;
 
 // implementor of nsIProxyAutoConfig
 function nsProxyAutoConfig() {};
 
-// global variable that will hold the downloaded js 
-var pac = null;
-//hold PAC's URL, used in evalAsCodebase()
-var pacURL;
-// ptr to eval'ed FindProxyForURL function
-var LocalFindProxyForURL = null;
-// sendbox in which we eval loaded autoconfig js file
-var ProxySandBox = null;
-
 nsProxyAutoConfig.prototype = {
-    sis: null,
-    done: false,
+    // sandbox in which we eval loaded autoconfig js file
+    _sandBox: null, 
 
-    getProxyForURI: function(uri) {
-        // If we're not done loading the pac yet, wait (ideally). For
-        // now, just return DIRECT to avoid loops. A simple mutex
-        // between getProxyForURI and loadPACFromURI locks-up the
-        // browser.
-        if (!this.done)
-            return null;
+    // ptr to eval'ed FindProxyForURL function
+    _findProxyForURL: null,
 
-        if (!LocalFindProxyForURL)
-            return null;
-
-        // Call the original function-
-        return LocalFindProxyForURL(uri.spec, uri.host);
+    QueryInterface: function(iid) {
+        if (iid.Equals(nsIProxyAutoConfig) ||
+            iid.Equals(nsISupports))
+            return this;
+        throw Components.results.NS_ERROR_NO_INTERFACE;
     },
 
-    loadPACFromURI: function(uri, ioService) {
-        this.done = false;
-        var channel = ioService.newChannelFromURI(uri);
-        // don't cache the PAC content
-        channel.loadFlags |= nsIRequest.LOAD_BYPASS_CACHE;
-        pacURL = uri.spec;
-        channel.notificationCallbacks = this;
-        channel.asyncOpen(this, null);
-        Components.returnCode = Components.results.NS_OK;
-    },
-
-    // nsIInterfaceRequestor interface
-    getInterface: function(iid, instance) {
-        if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
-            // use the window watcher service to get a nsIAuthPrompt impl
-            var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                               .getService(Components.interfaces.nsIWindowWatcher);
-            return ww.getNewAuthPrompter(null);
+    init: function(pacURI, pacText) {
+        // remove PAC configuration if requested
+        if (pacURI == "" || pacText == "") {
+            this._findProxyForURL = null;
+            this._sandBox = null;
         }
-        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-        return null;
-    },
 
-    // nsIStreamListener interface
-    onStartRequest: function(request, ctxt) { 
-        pac = '';
-        LocalFindProxyForURL=null;
-        this.sis = 
-        Components.Constructor('@mozilla.org/scriptableinputstream;1',
-                               'nsIScriptableInputStream', 
-                               'init');
-    },
+        // allocate a fresh Sandbox to clear global scope for new PAC script
+        this._sandBox = new Sandbox();
 
-    onStopRequest: function(request, ctxt, status) {
-        if(!ProxySandBox) {
-           ProxySandBox = new Sandbox();
-        }
         // add predefined functions to pac
-        var mypac = pacUtils + pac;
-        ProxySandBox.myIpAddress = myIpAddress;
-        ProxySandBox.dnsResolve = dnsResolve;
-        ProxySandBox.alert = proxyAlert;
+        var mypac = pacUtils + pacText;
+        this._sandBox.myIpAddress = myIpAddress;
+        this._sandBox.dnsResolve = dnsResolve;
+        this._sandBox.alert = proxyAlert;
+
         // evaluate loaded js file
-        evalInSandbox(mypac, ProxySandBox, pacURL);
-        LocalFindProxyForURL=ProxySandBox.FindProxyForURL;
-        this.done = true;
+        evalInSandbox(mypac, this._sandBox, pacURI);
+        this._findProxyForURL = this._sandBox.FindProxyForURL;
     },
 
-    onDataAvailable: function(request, ctxt, inStream, sourceOffset, count) {
-        var ins = new this.sis(inStream);
-        pac += ins.read(count);
+    getProxyForURI: function(testURI, testHost) {
+        if (!this._findProxyForURL)
+            return null;
+
+        // Call the original function
+        return this._findProxyForURL(testURI, testHost);
     }
 }
 
 function proxyAlert(msg) {
     try {
+        // It would appear that the console service is threadsafe.
         var cns = Components.classes["@mozilla.org/consoleservice;1"]
                             .getService(Components.interfaces.nsIConsoleService);
         cns.logStringMessage("PAC-alert: "+msg);
@@ -200,22 +164,17 @@ pacFactory.createInstance =
             throw Components.results.NS_ERROR_NO_AGGREGATION;
 
         if (!iid.equals(nsIProxyAutoConfig) &&
-            !iid.equals(Components.interfaces.nsIStreamListener) &&
-            !iid.equals(Components.interfaces.nsIRequestObserver) &&
             !iid.equals(Components.interfaces.nsISupports)) {
-            // shouldn't this be NO_INTERFACE?
-            throw Components.results.NS_ERROR_INVALID_ARG;
+            throw Components.results.NS_ERROR_NO_INTERFACE;
         }
-        return PacMan;
+        return pac;
     }
 
 function NSGetModule(compMgr, fileSpec) {
     return pacModule;
 }
 
-var PacMan = new nsProxyAutoConfig() ;
-
-var ios = Components.classes[kIOSERVICE_CONTRACTID].getService(nsIIOService);
+var pac = new nsProxyAutoConfig() ;
 var dns = Components.classes[kDNS_CONTRACTID].getService(nsIDNSService);
 
 var pacUtils = 

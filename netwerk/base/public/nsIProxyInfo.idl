@@ -40,30 +40,65 @@
 #include "nsISupports.idl"
 
 /**
- * This interface is PRIVATE.
+ * This interface identifies a proxy server.
  *
- * It is used as an opaque cookie, and this class may change at
- * any time without notice.
- *
- * XXX The HTTP protocol handler does not treat this type as opaque,
- * so perhaps it is wrong to restrict it to be opaque.
- *
- * @see nsIProtocolProxyService::examineForProxy
- * @see nsISocketTransportService::createTransport
+ * @status UNDER_REVIEW
  */
-native constCharPtr(const char*);
-
-[scriptable, uuid(cefb3b30-e82f-11d8-329c-0004e22243f8)]
+[scriptable, uuid(3fe9308b-1608-4fa0-933c-c5ec2c6175fd)]
 interface nsIProxyInfo : nsISupports
 {
-    [noscript, notxpcom] constCharPtr Host();
-    [noscript, notxpcom] PRInt32      Port();
-    [noscript, notxpcom] constCharPtr Type();
-    [noscript, notxpcom] PRUint32     Flags();
+  /**
+   * This attribute specifies the hostname of the proxy server.
+   */
+  readonly attribute AUTF8String host;
 
-    /* This flag is set if the proxy is to perform name resolution
-     * itself.  If this is the case, the hostname is used in some
-     * fashion, and we shouldn't do any form of DNS lookup ourselves.
-     */
-    const unsigned short TRANSPARENT_PROXY_RESOLVES_HOST = 1 << 0;
+  /**
+   * This attribute specifies the port number of the proxy server.
+   */
+  readonly attribute long port;
+
+  /**
+   * This attribute specifies the type of the proxy server as an ASCII string.
+   *
+   * Some special values for this attribute include (but are not limited to)
+   * the following:
+   *   "http"     HTTP proxy (or SSL CONNECT for HTTPS)
+   *   "socks"    SOCKS v5 proxy
+   *   "socks4"   SOCKS v4 proxy
+   *   "direct"   no proxy
+   */
+  readonly attribute ACString type; 
+
+  /**
+   * This attribute specifies flags that modify the proxy type.  The value of
+   * this attribute is the bit-wise combination of the Proxy Flags defined
+   * below.  Any undefined bits are reserved for future use.
+   */
+  readonly attribute unsigned long flags;
+
+  /**
+   * This attribute specifies the failover timeout in seconds for this proxy.
+   * If a nsIProxyInfo is reported as failed via nsIProtocolProxyService::
+   * getFailoverForProxy, then the failed proxy will not be used again for this
+   * many seconds.
+   */
+  readonly attribute unsigned long failoverTimeout;
+
+  /**
+   * This attribute specifies the proxy to failover to when this proxy fails.
+   */
+  attribute nsIProxyInfo failoverProxy;
+
+
+  /****************************************************************************
+   * The following "Proxy Flags" may be bit-wise combined to construct the flags
+   * attribute defined on this interface.
+   */
+
+  /**
+   * This flag is set if the proxy is to perform name resolution itself.  If
+   * this is the case, the hostname is used in some fashion, and we shouldn't
+   * do any form of DNS lookup ourselves.
+   */
+  const unsigned short TRANSPARENT_PROXY_RESOLVES_HOST = 1 << 0;
 };

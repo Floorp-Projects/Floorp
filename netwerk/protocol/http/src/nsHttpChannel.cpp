@@ -150,7 +150,7 @@ nsHttpChannel::~nsHttpChannel()
 nsresult
 nsHttpChannel::Init(nsIURI *uri,
                     PRUint8 caps,
-                    nsIProxyInfo *proxyInfo)
+                    nsProxyInfo *proxyInfo)
 {
     nsresult rv;
 

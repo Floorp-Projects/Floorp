@@ -77,6 +77,8 @@ XPIDLSRCS	= \
 		nsIProgressEventSink.idl \
 		nsIPrompt.idl \
 		nsIProtocolProxyService.idl \
+		nsIProtocolProxyFilter.idl \
+		nsIProtocolProxyCallback.idl \
 		nsIProxiedProtocolHandler.idl \
 		nsIProxyAutoConfig.idl \
 		nsIProxyInfo.idl \
@@ -107,6 +109,7 @@ XPIDLSRCS	= \
 		nsIAuthModule.idl \
 		nsIContentSniffer.idl \
 		nsIAuthPromptProvider.idl \
+		nsPIProtocolProxyService.idl \
 		nsIChannelEventSink.idl \
 		$(NULL)
 

@@ -142,8 +142,8 @@ var gConnectionsDialog = {
   reloadPAC: function ()
   {
     var autoURL = document.getElementById("networkProxyAutoconfigURL");
-    var pps = Components.classesByID["{e9b301c0-e0e4-11D3-a1a8-0050041caf44}"]
-                        .getService(Components.interfaces.nsIProtocolProxyService);
+    var pps = Components.classes["@mozilla.org/network/protocol-proxy-service;1"]
+                        .getService(Components.interfaces.nsPIProtocolProxyService);
     pps.configureFromPAC(autoURL.value);
   },
   

@@ -50,6 +50,8 @@
 #include "nsCommandGroup.h"
 #include "nsPrintingPromptService.h"
 #include "nsBaseCommandController.h"
+#include "nsPrompt.h"
+#include "nsNetCID.h"
 #include "nsEmbedCID.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowWatcher, Init)
@@ -62,6 +64,54 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCommandParams, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsControllerCommandGroup)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBaseCommandController)
+
+#define NS_DEFAULTPROMPT_CLASSNAME \
+    "nsDefaultPrompt"
+#define NS_DEFAULTPROMPT_CID                         \
+{ /* 2e41ada0-62b7-4902-b9a6-e4542aa458ba */         \
+    0x2e41ada0,                                      \
+    0x62b7,                                          \
+    0x4902,                                          \
+    {0xb9, 0xa6, 0xe4, 0x54, 0x2a, 0xa4, 0x58, 0xba} \
+}
+
+#define NS_DEFAULTAUTHPROMPT_CLASSNAME \
+    "nsDefaultAuthPrompt"
+#define NS_DEFAULTAUTHPROMPT_CID                     \
+{ /* ca200860-4696-40d7-88fa-4490d423a8ef */         \
+    0xca200860,                                      \
+    0x4696,                                          \
+    0x40d7,                                          \
+    {0x88, 0xfa, 0x44, 0x90, 0xd4, 0x23, 0xa8, 0xef} \
+}
+
+static NS_METHOD
+nsDefaultPromptConstructor(nsISupports *outer, const nsIID &iid, void **result)
+{
+  if (outer)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsCOMPtr<nsIPrompt> prompt;
+  nsresult rv = NS_NewPrompter(getter_AddRefs(prompt), nsnull);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return prompt->QueryInterface(iid, result);
+}
+
+static NS_METHOD
+nsDefaultAuthPromptConstructor(nsISupports *outer, const nsIID &iid, void **result)
+{
+  if (outer)
+    return NS_ERROR_NO_AGGREGATION;
+
+  nsCOMPtr<nsIAuthPrompt> prompt;
+  nsresult rv = NS_NewAuthPrompter(getter_AddRefs(prompt), nsnull);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return prompt->QueryInterface(iid, result);
+}
 
 #ifdef MOZ_XUL
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDialogParamBlock)
@@ -92,7 +142,9 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Command Manager", NS_COMMAND_MANAGER_CID, NS_COMMAND_MANAGER_CONTRACTID, nsCommandManagerConstructor },
   { "Command Params", NS_COMMAND_PARAMS_CID, NS_COMMAND_PARAMS_CONTRACTID, nsCommandParamsConstructor },
   { "Command Group", NS_CONTROLLER_COMMAND_GROUP_CID, NS_CONTROLLER_COMMAND_GROUP_CONTRACTID, nsControllerCommandGroupConstructor },
-  { "Base Command Controller", NS_BASECOMMANDCONTROLLER_CID, NS_BASECOMMANDCONTROLLER_CONTRACTID, nsBaseCommandControllerConstructor }
+  { "Base Command Controller", NS_BASECOMMANDCONTROLLER_CID, NS_BASECOMMANDCONTROLLER_CONTRACTID, nsBaseCommandControllerConstructor },
+  { NS_DEFAULTPROMPT_CLASSNAME, NS_DEFAULTPROMPT_CID, NS_DEFAULTPROMPT_CONTRACTID, nsDefaultPromptConstructor },
+  { NS_DEFAULTAUTHPROMPT_CLASSNAME, NS_DEFAULTAUTHPROMPT_CID, NS_DEFAULTAUTHPROMPT_CONTRACTID, nsDefaultAuthPromptConstructor }
 #ifdef MOZ_PROFILESHARING
   ,{ "Profile Sharing Setup", NS_PROFILESHARINGSETUP_CID, NS_PROFILESHARINGSETUP_CONTRACTID, nsProfileSharingSetupConstructor }
 #endif

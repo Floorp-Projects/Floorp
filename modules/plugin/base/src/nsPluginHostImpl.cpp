@@ -3067,22 +3067,9 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
   nsCOMPtr<nsIURI> uriIn;
   nsCOMPtr<nsIProtocolProxyService> proxyService;
   nsCOMPtr<nsIIOService> ioService;
-  PRBool isProxyEnabled;
 
   proxyService = do_GetService(kProtocolProxyServiceCID, &res);
   if (NS_FAILED(res) || !proxyService) {
-    return res;
-  }
-
-  if (NS_FAILED(proxyService->GetProxyEnabled(&isProxyEnabled))) {
-    return res;
-  }
-
-  if (!isProxyEnabled) {
-    *result = PL_strdup("DIRECT");
-    if (nsnull == *result) {
-      res = NS_ERROR_OUT_OF_MEMORY;
-    }
     return res;
   }
 
@@ -3099,25 +3086,32 @@ NS_IMETHODIMP nsPluginHostImpl::FindProxyForURL(const char* url, char* *result)
 
   nsCOMPtr<nsIProxyInfo> pi;
 
-  res = proxyService->ExamineForProxy(uriIn,
-                                      getter_AddRefs(pi));
+  res = proxyService->Resolve(uriIn, 0, getter_AddRefs(pi));
   if (NS_FAILED(res)) {
     return res;
   }
 
-  if (!pi || !pi->Host() || pi->Port() <= 0) {
+  nsCAutoString host, type;
+  PRInt32 port = -1;
+
+  // These won't fail, and even if they do... we'll be ok.
+  pi->GetType(type);
+  pi->GetHost(host);
+  pi->GetPort(&port);
+
+  if (!pi || host.IsEmpty() || port <= 0 || host.EqualsLiteral("direct")) {
     *result = PL_strdup("DIRECT");
-  } else if (!nsCRT::strcasecmp(pi->Type(), "http")) {
-    *result = PR_smprintf("PROXY %s:%d", pi->Host(), pi->Port());
-  } else if (!nsCRT::strcasecmp(pi->Type(), "socks4")) {
-    *result = PR_smprintf("SOCKS %s:%d", pi->Host(), pi->Port());
-  } else if (!nsCRT::strcasecmp(pi->Type(), "socks")) {
+  } else if (type.EqualsLiteral("http")) {
+    *result = PR_smprintf("PROXY %s:%d", host.get(), port);
+  } else if (type.EqualsLiteral("socks4")) {
+    *result = PR_smprintf("SOCKS %s:%d", host.get(), port);
+  } else if (type.EqualsLiteral("socks")) {
     // XXX - this is socks5, but there is no API for us to tell the
     // plugin that fact. SOCKS for now, in case the proxy server
     // speaks SOCKS4 as well. See bug 78176
     // For a long time this was returning an http proxy type, so
     // very little is probably broken by this
-    *result = PR_smprintf("SOCKS %s:%d", pi->Host(), pi->Port());
+    *result = PR_smprintf("SOCKS %s:%d", host.get(), port);
   } else {
     NS_ASSERTION(PR_FALSE, "Unknown proxy type!");
     *result = PL_strdup("DIRECT");
