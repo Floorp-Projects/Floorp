@@ -29,6 +29,8 @@ CHROME_CONTENT = \
 	.\openLocation.xul \
 	.\viewsource.js \
 	.\viewSource.xul \
+	.\pageInfo.js \
+	.\pageInfo.xul \
 	.\navigator.xul \
 	.\sessionHistoryUI.js \
 	.\keywords.js \
