@@ -57,7 +57,7 @@ nsContextMenu.prototype = {
     onDestroy : function () {
     },
     // Initialize context menu.
-    initMenu : function ( popup, event ) {
+    initMenu : function ( popup ) {
         // Save menu.
         this.menu = popup;
 
