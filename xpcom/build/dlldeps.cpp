@@ -84,6 +84,7 @@
 #include "nsStaticNameTable.h"
 #include "nsProcess.h"
 #include "nsSlidingString.h"
+#include "nsStringEnumerator.h"
 #include "nsIInputStreamTee.h"
 #include "nsCheapSets.h"
 #ifdef DEBUG
@@ -181,4 +182,10 @@ void XXXNeverCalled()
     NS_NewArray(nsnull, dummyArray);
     NS_NewArrayEnumerator(nsnull, dummyArray);
     nsVariant();
+    nsStringArray array;
+    NS_NewStringEnumerator(nsnull, &array);
+    NS_NewAdoptingStringEnumerator(nsnull, &array);
+    nsCStringArray carray;
+    NS_NewUTF8StringEnumerator(nsnull, &carray);
+    NS_NewAdoptingUTF8StringEnumerator(nsnull, &carray);
 }
