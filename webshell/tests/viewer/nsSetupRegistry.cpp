@@ -24,6 +24,10 @@
 #include "nsGfxCIID.h"
 #include "nsViewsCID.h"
 
+#ifdef VIEWER_PLUGINS
+#include "nsPluginsCID.h"
+#endif
+
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"

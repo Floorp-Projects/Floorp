@@ -365,8 +365,6 @@ nsThrobber::Stop()
 {
   mRunning = PR_FALSE;
   mIndex = 0;
-  nsRect trect;/* XXX why */
-  mWidget->GetBounds(trect);/* XXX why */
   mWidget->Invalidate(PR_FALSE);
   return NS_OK;
 }
@@ -410,11 +408,9 @@ nsThrobber::Tick()
 {
   if (mRunning)
   {
-    nsRect trect;
     mIndex++;
     if (mIndex >= THROB_NUM)
       mIndex = 0;
-    mWidget->GetBounds(trect);
     mWidget->Invalidate(PR_TRUE);
   }
 
@@ -460,7 +456,7 @@ nsThrobber::LoadThrobberImages()
                                                    &bgcolor,
                                                    mWidth - 2,
                                                    mHeight - 2, 0),
-                             cnt);
+                                                   cnt);
   }
 
   return rv;
