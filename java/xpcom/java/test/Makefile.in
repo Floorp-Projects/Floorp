@@ -36,11 +36,15 @@ XPIDL_MODULE	= javaSample
 XPIDLSRCS	= bcIJavaSample.idl
 CPPSRCS         = bcJavaSample.cpp
 include $(topsrcdir)/config/rules.mk
+include ../config/rules.mk
 
 bcJavaSample.jar.comp: manifest bcIJavaSample.class bcJavaSample.class 
 	$(JDKHOME)/bin/jar cvfm bcJavaSample.jar.comp  manifest *.class
 .java.class:
-	$(JDKHOME)/bin/javac -classpath .:../classes $<
+	$(JDKHOME)/bin/javac -classpath .:../classes:$(DIST)/classes $<
+	
+bcIJavaSample.java : bcIJavaSample.idl
+
 install-component: bcJavaSample.jar.comp bcJavaSample.jar.info
 	cp  bcJavaSample.jar.comp bcJavaSample.jar.info $(DEPTH)/dist/bin/components/
 	

@@ -47,13 +47,33 @@ static  nsModuleComponentInfo components[] =
 {
     {
         "Black Connect Java stubs and proxies",
-	BC_JAVASTUBSANDPROXIES_CID,
-        BC_JAVASTUBSANDPROXIES_PROGID,
+        BC_JAVASTUBSANDPROXIES_CID,
+        BC_JAVASTUBSANDPROXIES_ContractID,
         bcJavaStubsAndProxiesConstructor
     }
 };
 
-NS_IMPL_NSGETMODULE("BlackConnect Java stubs and proxies",components);
+//NS_IMPL_NSGETMODULE("BlackConnect Java stubs and proxies",components_stubs);
+
+
+PRUint32 NSGetModule_components_count =                                    
+           sizeof(components) / sizeof(components[0]);                   
+                                                                           
+nsModuleComponentInfo* NSGetModule_components_idk = (components);             
+                                                                           
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,    
+                                          nsIFile* location,               
+                                          nsIModule** result)              
+{          
+    return NS_NewGenericModule("BlackConnect Java stubs and proxies",
+                               NSGetModule_components_count,               
+                               NSGetModule_components_idk,                     
+                               nsnull, result);                             
+}
+
+
+
+
 
 NS_IMPL_ISUPPORTS(bcJavaStubsAndProxies,NS_GET_IID(bcJavaStubsAndProxies));
 
@@ -81,10 +101,14 @@ public:
 
 bcJavaStubsAndProxies::bcJavaStubsAndProxies() {
     NS_INIT_REFCNT();
+    PR_LOG(bcJavaGlobal::GetLog(),PR_LOG_DEBUG,
+           ("--[c++] bcJavaStubsAndProxies::bcJavaStubsAndProxies\n"));
     oid2objectMap = new nsHashtable(256,PR_TRUE);
 }
 
 bcJavaStubsAndProxies::~bcJavaStubsAndProxies() {
+    PR_LOG(bcJavaGlobal::GetLog(),PR_LOG_DEBUG,
+           ("--[c++] bcJavaStubsAndProxies::~bcJavaStubsAndProxies\n"));
     delete oid2objectMap;
 }
 

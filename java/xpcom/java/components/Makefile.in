@@ -37,6 +37,7 @@ XPIDLSRCS	= bcIBlackConnectInit.idl
 CPPSRCS         = bcBlackConnectInit.cpp
 
 include $(topsrcdir)/config/rules.mk
+include ../config/rules.mk
 
 COMPONENT=bcBlackConnectInit
 CLASSES=bcIBlackConnectInit.class bcBlackConnectInit.class 
@@ -44,7 +45,10 @@ CLASSES=bcIBlackConnectInit.class bcBlackConnectInit.class
 $(COMPONENT).jar.comp: manifest $(CLASSES)
 	$(JDKHOME)/bin/jar cvfm $(COMPONENT).jar.comp  manifest *.class
 .java.class:
-	$(JDKHOME)/bin/javac -classpath .:../classes $<
+	$(JDKHOME)/bin/javac -classpath .:../classes:$(DIST)/classes $<
+	
+bcIBlackConnectInit.java : bcIBlackConnectInit.idl
+
 install-component: $(COMPONENT).jar.comp $(COMPONENT).jar.info
 	cp  $(COMPONENT).jar.comp $(COMPONENT).jar.info $(DEPTH)/dist/bin/components/
 clobber-java:

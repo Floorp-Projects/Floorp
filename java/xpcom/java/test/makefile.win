@@ -41,14 +41,16 @@ OBJS	= .\$(OBJDIR)\bcJavaSample.obj
 LLIBS=$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib
 
 include <$(DEPTH)\config\rules.mak>
+include ..\config\rules.mak
 
 bcJavaSample.jar.comp: manifest bcIJavaSample.class bcJavaSample.class
 	$(JDKHOME)\bin\jar cvfm bcJavaSample.jar.comp  manifest *.class
 
-.SUFFIXES: .java .class
 
 .java.class:
-	$(JDKHOME)\bin\javac -classpath .;..\classes $<
+	$(JDKHOME)\bin\javac -classpath .;..\classes;$(DEPTH)\dist\classes $<
+
+bcIJavaSample.java : bcIJavaSample.idl
 
 install-component: bcJavaSample.jar.comp bcJavaSample.jar.info $(DLL)
 	copy bcJavaSample.jar* $(DIST)\bin\components

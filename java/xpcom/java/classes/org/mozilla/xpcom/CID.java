@@ -21,19 +21,19 @@
  */
 package org.mozilla.xpcom;
 
-public class IID extends ID {
-    public IID(String iid) {
-        super(iid);
+public class CID extends ID {
+    public CID(String cid) {
+        super(cid);
     }
     public boolean equals(Object obj) {
-        if (! (obj instanceof IID)) { 
+        if (! (obj instanceof CID)) { 
             return false;
         }
-        boolean res = id.equals(((IID)obj).id);
+        boolean res = id.equals(((CID)obj).id);
         return res;
     }
     protected String getPrefixForToString() {
-        return "org.mozilla.xpcom.IID@";
+        return "org.mozilla.xpcom.CID@";
     }
 
 }

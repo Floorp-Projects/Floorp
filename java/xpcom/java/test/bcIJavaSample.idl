@@ -1,6 +1,7 @@
 #include "nsISupports.idl"
 #include "nsIComponentManager.idl"
 
+#pragma prefix 
 [scriptable, uuid(ca1e2656-1dd1-11b2-9c4e-f49ea557abde)]
 interface bcIJavaSample : nsISupports
 {

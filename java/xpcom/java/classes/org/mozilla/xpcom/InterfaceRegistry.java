@@ -86,12 +86,12 @@ public class InterfaceRegistry {
     
     private static Hashtable registerInterfaces(Class cl) {
         try {
-            Object iidStr = cl.getField(IID_STRING).get(cl);
-            if (iidStr instanceof String) {
-                IID iid = new IID((String)iidStr);
+            Object iidTmp = cl.getField(IID_STRING).get(cl);
+            if (iidTmp instanceof IID) {
+                IID iid = (IID)iidTmp;
                 // if this iface hasn't been registered, yet
                 if (interfaces.get(iid) == null) {
-                    String[] methodNames = Utilities.getInterfaceMethodNames((String)iidStr);
+                    String[] methodNames = Utilities.getInterfaceMethodNames(iid.getString());
                     if (methodNames != null) {
                         Method[] rmethods = new Method[methodNames.length];
                         Class[] ifaces = cl.getInterfaces();

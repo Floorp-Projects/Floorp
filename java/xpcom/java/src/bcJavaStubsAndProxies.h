@@ -33,7 +33,7 @@
  {0x58034ea6, 0x1dd2, 0x11b2,  \
  {0x9b, 0x58, 0x86, 0x30, 0xab, 0xb8, 0xaf,0x47}} 
 
-#define BC_JAVASTUBSANDPROXIES_PROGID "component://netscape/blackwood/blackconnect/java-stubs-and-proxies"
+#define BC_JAVASTUBSANDPROXIES_ContractID "@mozilla.org/blackwood/blackconnect/java-stubs-and-proxies"
 
 /* 7cadf6e8-1dd2-11b2-9a6e-b1c37844e004 */
 #define BC_JAVASTUBSANDPROXIES_CID \

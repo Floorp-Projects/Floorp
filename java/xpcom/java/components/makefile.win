@@ -41,6 +41,7 @@ OBJS	= .\$(OBJDIR)\bcBlackConnectInit.obj
 LLIBS=$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib
 
 include <$(DEPTH)\config\rules.mak>
+include ..\config\rules.mak
 
 COMPONENT=bcBlackConnectInit
 CLASSES=bcIBlackConnectInit.class bcBlackConnectInit.class
@@ -51,7 +52,9 @@ $(COMPONENT).jar.comp: manifest $(CLASSES)
 .SUFFIXES: .java .class
 
 .java.class:
-	$(JDKHOME)\bin\javac -classpath .;..\classes $<
+	$(JDKHOME)\bin\javac -classpath .;..\classes;$(DEPTH)\dist\classes $<
+
+bcIBlackConnectInit.java : bcIBlackConnectInit.idl
 
 install-component: $(COMPONENT).jar.comp $(COMPONENT).jar.info $(DLL)
 	copy $(COMPONENT).jar* $(DIST)\bin\components

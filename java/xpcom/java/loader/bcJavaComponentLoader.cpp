@@ -454,14 +454,12 @@ UnregisterJavaLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(bcJavaComponentLoader);
 
-static nsModuleComponentInfo components[] = {
+static nsModuleComponentInfo components_loader[] = {
     { "Java component loader", BC_JAVACOMPONENTLOADER_CID,
       BC_JAVACOMPONENTLOADER_ContractID, 
       bcJavaComponentLoaderConstructor,
       RegisterJavaLoader, UnregisterJavaLoader },
 };
 
-NS_IMPL_NSGETMODULE("Java component loader", components);
-
-
+NS_IMPL_NSGETMODULE("Java component loader", components_loader);
 

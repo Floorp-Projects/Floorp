@@ -29,8 +29,8 @@ public class bcJavaSample implements bcIJavaSample {
     public Object queryInterface(IID iid) {
         System.out.println("--[java]bcJavaSample::queryInterface iid="+iid);
         Object result;
-        if ( iid.equals(nsISupportsIID)
-             || iid.equals(bcIJavaSampleIID)) {
+        if ( iid.equals(nsISupports.IID)
+             || iid.equals(bcIJavaSample.IID)) {
             result = this;
         } else {
             result = null;
@@ -99,7 +99,7 @@ public class bcJavaSample implements bcIJavaSample {
                     || counter > 300) {
                     break;
                 }
-                strObj = (nsISupportsString) obj.queryInterface(nsISupportsStringIID);
+                strObj = (nsISupportsString) obj.queryInterface(nsISupportsString.IID);
                 str = strObj.getData();
                 System.out.println("--[java] bcJavaSample.Test5 string "+str);
                 enumerator.next(); counter++;
@@ -124,11 +124,6 @@ public class bcJavaSample implements bcIJavaSample {
         count[0] = retValue.length;
         valueArray[0] = retValue;
     }
-
-    static IID bcIJavaSampleIID = new IID(bcIJavaSample.IID);
-    static IID nsISupportsIID = new IID(nsISupports.IID);
-    static IID nsIComponenstManagerIID = new IID(nsIComponentManager.IID);
-    static IID nsISupportsStringIID = new IID(nsISupportsString.IID);
     static {
       try {
           Class nsIComponentManagerClass = 

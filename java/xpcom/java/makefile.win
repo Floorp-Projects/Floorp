@@ -27,6 +27,7 @@ DIRS=   \
 	xpidl \
         loader \
 	src \
+	import \
 	classes \
 #	test \
 	components \

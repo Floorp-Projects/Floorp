@@ -21,22 +21,33 @@
  */
 package org.mozilla.xpcom;
 
-public class IID extends ID {
-    public IID(String iid) {
-        super(iid);
+public class ID {
+    public ID(String id) {
+        this.id = ((id == null) ? "" : id).toLowerCase();;
     }
     public boolean equals(Object obj) {
         if (! (obj instanceof IID)) { 
             return false;
         }
-        boolean res = id.equals(((IID)obj).id);
+        boolean res = id.equals(((ID)obj).id);
         return res;
     }
-    protected String getPrefixForToString() {
-        return "org.mozilla.xpcom.IID@";
+    public String toString() {
+        return getPrefixForToString()+id;
     }
-
+    public int hashCode() {
+        int h = id.hashCode(); 
+        return h;
+    }
+    public String getString() {
+        return id;
+    }
+    protected String id;
+    protected String getPrefixForToString() {
+        return "org.mozilla.xpcom.ID@";
+    }
 }
+
 
 
 

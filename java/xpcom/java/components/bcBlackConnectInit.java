@@ -26,8 +26,8 @@ public class bcBlackConnectInit implements bcIBlackConnectInit {
     }
     public Object queryInterface(IID iid) {
         Object result;
-        if ( nsISupportsIID.equals(iid)
-             || bcIBlackConnectInitIID.equals(iid)) {
+        if ( nsISupports.IID.equals(iid)
+             || bcIBlackConnectInit.IID.equals(iid)) {
             result = this;
         } else {
             result = null;
@@ -39,9 +39,6 @@ public class bcBlackConnectInit implements bcIBlackConnectInit {
         Components.setComponentManager(cm);
         Debug.log("Components.setComponentManager(cm);");
     }
-    
-    static IID bcIBlackConnectInitIID = new IID(bcIBlackConnectInit.IID);
-    static IID nsISupportsIID = new IID(nsISupports.IID);
     static {
         InterfaceRegistry.register(nsIComponentManager.class);
     }

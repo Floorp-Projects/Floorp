@@ -20,6 +20,8 @@
  * Contributor(s): 
  *    Michael Allen (michael.allen@sun.com)
  *    Frank Mitchell (frank.mitchell@sun.com)
+ *    Denis Sharypov (sdv@sparc.spb.su)
+ *    Igor Kushnirskiy (idk@eng.sun.com)
  */
 
 /*
@@ -255,7 +257,7 @@ interface_declaration(TreeState *state)
 /*          } */
 
 /*          fprintf(FILENAME(state), " =\n        new nsID(\"%s\");\n\n", iid); */
-        fprintf(FILENAME(state), "    public static final String IID =\n        \"%s\";\n\n", iid);
+        fprintf(FILENAME(state), "    public static final IID IID =\n       new IID(\"%s\");\n\n", iid);
     }
 
     /*
@@ -370,19 +372,22 @@ xpcom_to_java_type (TreeState *state)
             IDL_NODE_TYPE(IDL_NODE_UP(state->tree)) == IDLN_NATIVE) {
             const char *user_type = IDL_NATIVE(IDL_NODE_UP(state->tree)).user_type;
             const char *ident_str = IDL_IDENT(IDL_NATIVE(IDL_NODE_UP(state->tree)).ident).str;
-            if (strcmp(user_type, "void") == 0) {
+            if (strcmp(user_type, "void") == 0) { /*it should not happend for scriptable methods*/
                 fputs("Object", FILENAME(state));
             }
-            else if (strcmp(user_type, "nsID") == 0 ||
-                     strcmp(user_type, "nsIID") == 0 ||
-                     strcmp(user_type, "nsCID") == 0) {
-                /* XXX: s.b test for "iid" attribute */
-                /* XXX: special class for nsIDs */
+            /* XXX: s.b test for "id" attribute */
+            /* XXX: special class for nsIDs */
+            else if (strcmp(user_type, "nsID") == 0) {
+                fputs("ID", FILENAME(state));
+            } else if (strcmp(user_type, "nsIID") == 0) {
                 fputs("IID", FILENAME(state));
+            } else if (strcmp(user_type, "nsCID") == 0) { 
+                fputs("CID", FILENAME(state));
             }
             else {
                 /* XXX: special class for opaque types */
-                fputs("OpaqueValue", FILENAME(state));
+                /*it should not happend for scriptable methods*/
+                fputs("OpaqueValue", FILENAME(state)); 
             }
         } else {
             const char *ident_str = IDL_IDENT(state->tree).str;
