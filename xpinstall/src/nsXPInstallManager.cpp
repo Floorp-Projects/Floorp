@@ -25,6 +25,7 @@
 #include "nscore.h"
 #include "nsFileSpec.h"
 #include "nsVector.h"
+#include "pratom.h"
 
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
@@ -58,7 +59,7 @@ static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 nsXPInstallManager::nsXPInstallManager()
-  :  mTriggers(0), mItem(0), mNextItem(0)
+  : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), mFinalizing(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
 
@@ -89,6 +90,8 @@ nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsIXPINotifier*,this);
   else if (aIID.Equals(nsIStreamListener::GetIID()))
     *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*,this);
+  else if (aIID.Equals(nsIXULWindowCallbacks::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsIXULWindowCallbacks*,this);
   else if (aIID.Equals(kISupportsIID))
     *aInstancePtr = NS_STATIC_CAST( nsISupports*, NS_STATIC_CAST(nsIXPINotifier*,this));
   else
@@ -126,22 +129,15 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
     {
         nsInstallProgressDialog* dlg;
         nsCOMPtr<nsISupports>    Idlg;
-        NS_NEWXPCOM( dlg, nsInstallProgressDialog );
+
+        dlg = new nsInstallProgressDialog(this);
 
         if ( dlg )
         {
-            rv = dlg->QueryInterface( nsIXPIProgressDlg::GetIID(), getter_AddRefs(Idlg) );
+            rv = dlg->QueryInterface( nsIXPIProgressDlg::GetIID(), getter_AddRefs(mDlg) );
             if (NS_SUCCEEDED(rv))
             {
-                NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
-                if (NS_SUCCEEDED(rv))
-                {
-                    rv = pmgr->GetProxyObject( 0, nsIXPIProgressDlg::GetIID(),
-                        Idlg, PROXY_SYNC, getter_AddRefs(mDlg) );
-
-                    if (NS_SUCCEEDED(rv))
-                        rv = mDlg->Open();
-                }
+                rv = mDlg->Open();
             }
         }
         else
@@ -149,9 +145,7 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
     }
 
     // --- start the first download (or clean up on error)
-    if (NS_SUCCEEDED(rv))
-        rv = DownloadNext();
-    else 
+    if (!NS_SUCCEEDED(rv))
         NS_RELEASE_THIS();
 
     return rv;
@@ -171,7 +165,7 @@ nsresult nsXPInstallManager::DownloadNext()
         NS_ASSERTION( mItem->mURL.Length() > 0, "bogus trigger");
         if ( !mItem || mItem->mURL.Length() == 0 )
         {
-            // serious problem with trigger! try to carry on
+            // XXX serious problem with trigger! try to carry on
             rv = DownloadNext();
         }
         else if ( mItem->IsFileURL() )
@@ -180,7 +174,10 @@ nsresult nsXPInstallManager::DownloadNext()
             rv = NS_NewFileSpecWithSpec( nsFileSpec(nsFileURL(mItem->mURL)),
                     getter_AddRefs(mItem->mFile) );
             if (NS_FAILED(rv))
+            {
+                // XXX serious problem with trigger! try to carry on
                 mItem->mFile = 0;
+            }
 
             rv = DownloadNext();
         }
@@ -232,29 +229,57 @@ nsresult nsXPInstallManager::DownloadNext()
     }
     else
     {
-        NS_WITH_SERVICE(nsISoftwareUpdate, softupdate, nsSoftwareUpdate::GetCID(), &rv);
         // all downloaded, queue them for installation
-        for (PRUint32 i = 0; i < mTriggers->Size(); ++i)
+
+        NS_WITH_SERVICE(nsISoftwareUpdate, softupdate, nsSoftwareUpdate::GetCID(), &rv);
+        if (NS_SUCCEEDED(rv))
         {
-            mItem = (nsXPITriggerItem*)mTriggers->Get(i);
-            if ( mItem )
+            for (PRUint32 i = 0; i < mTriggers->Size(); ++i)
             {
-                if (NS_SUCCEEDED(rv) && mItem->mFile )
+                mItem = (nsXPITriggerItem*)mTriggers->Get(i);
+                if ( mItem && mItem->mFile )
                 {
-                    softupdate->InstallJar( mItem->mFile,
-                                            mItem->mArguments.GetUnicode(),
-                                            mItem->mFlags,
-                                            this );
+                    rv = softupdate->InstallJar(mItem->mFile,
+                                                mItem->mURL.GetUnicode(),
+                                                mItem->mArguments.GetUnicode(),
+                                                mItem->mFlags,
+                                                this );
+                    if (NS_SUCCEEDED(rv))
+                        PR_AtomicIncrement(&mNumJars);
                 }
                 else
                     ; // XXX announce failure
             }
+        }
+        else
+        {
+            ; // XXX gotta clean up all those files...
+        }
+
+        if ( mNumJars == 0 )
+        {
+            // We must clean ourself up now -- we won't be called back
+            Shutdown();
         }
     }
 
     return rv;
 }
 
+void nsXPInstallManager::Shutdown()
+{
+    if (mProxy)
+    {
+        // proxy exists: we're being called from script thread
+        mProxy->Close();
+        mProxy = 0;
+    }
+    else if (mDlg)
+        mDlg->Close();
+
+    mDlg = 0;
+    NS_RELEASE_THIS();
+}
 
 
 
@@ -377,56 +402,84 @@ nsXPInstallManager::OnDataAvailable(nsIURI* aURL,
 // IXPINotifier methods
 
 NS_IMETHODIMP 
-nsXPInstallManager::BeforeJavascriptEvaluation()
+nsXPInstallManager::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
+    nsresult rv = NS_OK;
+
     mFinalizing = PR_FALSE;
+
+    if ( !mProxy )
+    {
+        NS_WITH_SERVICE( nsIProxyObjectManager, pmgr, kProxyObjectManagerCID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = pmgr->GetProxyObject( 0, nsIXPIProgressDlg::GetIID(),
+                    mDlg, PROXY_SYNC, getter_AddRefs(mProxy) );
+
+        }
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP 
+nsXPInstallManager::AfterJavascriptEvaluation(const PRUnichar *URL)
+{
+    PR_AtomicDecrement( &mNumJars );
+    if ( mNumJars == 0 )
+        Shutdown();
+
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsXPInstallManager::AfterJavascriptEvaluation()
+nsXPInstallManager::InstallStarted(const PRUnichar *URL, const PRUnichar *UIPackageName)
 {
-    return NS_OK;
+    return mProxy->SetHeading( nsString(UIPackageName).GetUnicode() );
 }
 
 NS_IMETHODIMP 
-nsXPInstallManager::InstallStarted(const char *UIPackageName)
+nsXPInstallManager::ItemScheduled(const PRUnichar *message)
 {
-    return mDlg->SetHeading( nsString(UIPackageName).GetUnicode() );
+    return mProxy->SetActionText( nsString(message).GetUnicode() );
 }
 
 NS_IMETHODIMP 
-nsXPInstallManager::ItemScheduled(const char *message)
-{
-    PRBool cancelled = PR_FALSE;
-
-    mDlg->GetCancelStatus(&cancelled);
-    if (cancelled)
-        return NS_ERROR_FAILURE;
-
-    return mDlg->SetActionText( nsString(message).GetUnicode() );
-}
-
-NS_IMETHODIMP 
-nsXPInstallManager::InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum)
+nsXPInstallManager::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, PRInt32 totNum)
 {
     if (!mFinalizing)
     {
         mFinalizing = PR_TRUE;
-        mDlg->SetActionText( nsString("Finishing install... please wait").GetUnicode() );
+        mProxy->SetActionText( nsString("Finishing install... please wait").GetUnicode() );
     }
-    return mDlg->SetProgress( itemNum, totNum );
+    return mProxy->SetProgress( itemNum, totNum );
 }
 
 NS_IMETHODIMP 
-nsXPInstallManager::InstallAborted()
+nsXPInstallManager::FinalStatus(const PRUnichar *URL, PRInt32 status)
 {
+    mTriggers->SendStatus( URL, status );
     return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsXPInstallManager::LogComment(const char* comment)
+nsXPInstallManager::LogComment(const PRUnichar* comment)
 {
     return NS_OK;
 }
 
+
+
+// nsIXULWindowCallbacks
+
+NS_IMETHODIMP
+nsXPInstallManager::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPInstallManager::ConstructAfterJavaScript(nsIWebShell *aWebShell)
+{
+    return DownloadNext();
+}

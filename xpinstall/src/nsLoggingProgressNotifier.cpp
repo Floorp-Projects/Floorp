@@ -25,6 +25,8 @@
 #include "nsIXPINotifier.h"
 #include "nsLoggingProgressNotifier.h"
 
+#include "nsInstall.h"
+
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
@@ -40,28 +42,50 @@ nsLoggingProgressNotifier::nsLoggingProgressNotifier()
 
 nsLoggingProgressNotifier::~nsLoggingProgressNotifier()
 {
+    if (mLogStream)
+    {
+        NS_ASSERTION(PR_FALSE, "We're being destroyed before script finishes!");
+        mLogStream->close();
+        delete mLogStream;
+        mLogStream = 0;
+    }
 }
 
 NS_IMPL_ISUPPORTS(nsLoggingProgressNotifier, nsIXPINotifier::GetIID());
 
 NS_IMETHODIMP
-nsLoggingProgressNotifier::BeforeJavascriptEvaluation()
+nsLoggingProgressNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
     nsSpecialSystemDirectory logFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     logFile += "Install.log";
 
     mLogStream = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
+    if (!mLogStream) 
+        return NS_ERROR_NULL_POINTER;
+
+    char* time;
+    GetTime(&time);
+
     mLogStream->seek(logFile.GetFileSize());
+
+    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
+    *mLogStream << nsAutoCString(URL) << "     --     " << time << nsEndl;    
+    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
+    *mLogStream << nsEndl;
+
+    PL_strfree(time);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsLoggingProgressNotifier::AfterJavascriptEvaluation()
+nsLoggingProgressNotifier::AfterJavascriptEvaluation(const PRUnichar *URL)
 {
+    if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
+    
     char* time;
     GetTime(&time);
 
-    *mLogStream << nsEndl;
+//    *mLogStream << nsEndl;
     *mLogStream << "     Finished Installation  " << time << nsEndl << nsEndl;
 
     PL_strfree(time);
@@ -74,51 +98,76 @@ nsLoggingProgressNotifier::AfterJavascriptEvaluation()
 }
 
 NS_IMETHODIMP
-nsLoggingProgressNotifier::InstallStarted(const char* UIPackageName)
+nsLoggingProgressNotifier::InstallStarted(const PRUnichar *URL, const PRUnichar* UIPackageName)
 {
-    if (mLogStream == nsnull) return -1;
+    if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-    char* time;
-    GetTime(&time);
-    
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
-    *mLogStream << UIPackageName << nsEndl;    
-    *mLogStream << "---------------------------------------------------------------------------" << nsEndl;
+//    char* time;
+//    GetTime(&time);
+
+    nsString name(UIPackageName,eOneByte);
+    nsString uline(eOneByte);
+    uline.SetCapacity(name.Length());
+    for ( int i=0; i < uline.Length(); ++i)
+        uline.SetCharAt('-', i);
+
+    *mLogStream << "     " << name.GetBuffer() << nsEndl;
+    *mLogStream << "     " << uline.GetBuffer() << nsEndl;
+
     *mLogStream << nsEndl;
-    *mLogStream << "     Starting Installation at " << nsAutoCString(time) << nsEndl;   
+//    *mLogStream << "     Starting Installation at " << time << nsEndl;   
+//    *mLogStream << nsEndl;
+
+
+//    PL_strfree(time);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoggingProgressNotifier::ItemScheduled(const PRUnichar* message )
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoggingProgressNotifier::FinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
+{
+    if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
+
+    *mLogStream << "     Item [" << (itemNum+1) << "/" << totNum << "]\t" << nsAutoCString(message) << nsEndl;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoggingProgressNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
+{
+    if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
+
     *mLogStream << nsEndl;
 
+    switch (status)
+    {
+    case nsInstall::SUCCESS:
+        *mLogStream << "     Install completed successfully" << nsEndl;
+        break;
 
-    PL_strfree(time);
-    return NS_OK;
-}
+    case nsInstall::REBOOT_NEEDED:
+        *mLogStream << "     Install completed successfully, restart required" << nsEndl;
+        break;
 
-NS_IMETHODIMP
-nsLoggingProgressNotifier::ItemScheduled(const char* message )
-{
-    return NS_OK;
-}
+    case nsInstall::ABORT_INSTALL:
+        *mLogStream << "     Install script aborted" << nsEndl;
+        break;
 
-NS_IMETHODIMP
-nsLoggingProgressNotifier::InstallFinalization(const char* message, PRInt32 itemNum, PRInt32 totNum )
-{
-    if (mLogStream == nsnull) return -1;
+    case nsInstall::USER_CANCELLED:
+        *mLogStream << "     Install cancelled by user" << nsEndl;
+        break;
 
-    *mLogStream << "     Item [" << (itemNum+1) << "/" << totNum << "]\t" << message << nsEndl;
-    return NS_OK;
-}
+    default:
+        *mLogStream << "     Install **FAILED** with error " << status << nsEndl;
+        break;
+    }
 
-NS_IMETHODIMP
-nsLoggingProgressNotifier::InstallAborted()
-{
-    if (mLogStream == nsnull) return -1;
-
-    char* time;
-    GetTime(&time);
-    
-    *mLogStream << "     Aborted Installation at " << time << nsEndl << nsEndl;
-
-    PL_strfree(time);
     return NS_OK;
 }
 
@@ -133,11 +182,11 @@ nsLoggingProgressNotifier::GetTime(char** aString)
 }
 
 NS_IMETHODIMP
-nsLoggingProgressNotifier::LogComment(const char* comment)
+nsLoggingProgressNotifier::LogComment(const PRUnichar* comment)
 {
-    if (mLogStream == nsnull) return -1;
+    if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-    *mLogStream << "     Comment: " << comment << nsEndl;    
+    *mLogStream << "     ** " << nsAutoCString(comment) << nsEndl;    
     return NS_OK;
 }
 

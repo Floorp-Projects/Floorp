@@ -42,9 +42,9 @@
 
 #include "prmem.h"
 #include "plstr.h"
+#include "prprf.h"
 
 #include "VerReg.h"
-//#include "zipfile.h" // replaced by nsIJAR.h
 
 #include "nsInstall.h"
 #include "nsInstallFolder.h"
@@ -89,12 +89,14 @@ static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 	
 
-nsInstallInfo::nsInstallInfo(nsIFileSpec* aFile, 
+nsInstallInfo::nsInstallInfo(nsIFileSpec*     aFile, 
+                             const PRUnichar* aURL,
                              const PRUnichar* aArgs, 
-                             long flags, 
-                             nsIXPINotifier* aNotifier)
+                             long             flags, 
+                             nsIXPINotifier*  aNotifier)
 : mError(0), 
-  mFlags(flags), 
+  mFlags(flags),
+  mURL(aURL),
   mArgs(aArgs), 
   mFile(aFile), 
   mNotifier(aNotifier)
@@ -104,7 +106,6 @@ nsInstallInfo::nsInstallInfo(nsIFileSpec* aFile,
 
 nsInstallInfo::~nsInstallInfo()
 {
-    VR_Close();
 }
 
 void 
@@ -207,11 +208,11 @@ nsInstall::GetRegPackageName(nsString& aRegPackageName)
     return NS_OK;
 }
 
-PRInt32    
-nsInstall::AbortInstall()
+void
+nsInstall::InternalAbort(PRInt32 errcode)
 {
     if (mNotifier)
-        mNotifier->InstallAborted();
+        mNotifier->FinalStatus(mInstallURL.GetUnicode(), errcode);
 
     nsInstallObject* ie;
     if (mInstalledFiles != nsnull) 
@@ -220,14 +221,18 @@ nsInstall::AbortInstall()
         for (i=0; i < mInstalledFiles->GetSize(); i++) 
         {
             ie = (nsInstallObject *)mInstalledFiles->Get(i);
-            if (ie == nsnull)
-                continue;
-            ie->Abort();
+            if (ie) 
+                ie->Abort();
         }
     }
     
     CleanUp();
-    
+}
+
+PRInt32    
+nsInstall::AbortInstall()
+{
+    InternalAbort(ABORT_INSTALL);
     return NS_OK;
 }
 
@@ -619,11 +624,13 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
 {
     PRBool  rebootNeeded = PR_FALSE;
 
-    PRInt32 result = SanityCheck();
+    *aReturn = SanityCheck();
 
-    if (result != nsInstall::SUCCESS)
+    if (*aReturn != nsInstall::SUCCESS)
     {
-        *aReturn = SaveError( result );
+        SaveError( *aReturn );
+        if (mNotifier)
+            mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
         return NS_OK;
     }
     
@@ -633,10 +640,10 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
         // and no need for user confirmation
     
         CleanUp();
+        if (mNotifier)
+            mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
         return NS_OK; 
     }
-
-    nsInstallObject* ie = nsnull;
 
     if ( mUninstallPackage )
     {
@@ -644,31 +651,51 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                                 (char*)(const char*) nsAutoCString(mUIName));
     }
       
+    PRInt32 result;
+    nsInstallObject* ie = nsnull;
+
     PRUint32 i=0;
     for (i=0; i < mInstalledFiles->GetSize(); i++) 
     {
         ie = (nsInstallObject*)mInstalledFiles->Get(i);
+        NS_ASSERTION(ie, "NULL object in install queue!");
         if (ie == NULL)
             continue;
     
         char *objString = ie->toString();
         
         if (mNotifier)
-            mNotifier->InstallFinalization(objString, i , mInstalledFiles->GetSize());
+            mNotifier->FinalizeProgress(nsAutoString(objString).GetUnicode(),
+                                        i, mInstalledFiles->GetSize());
 
-        delete [] objString;
-    
-        ie->Complete();
+        if (objString)
+            delete [] objString;
+
+        result = ie->Complete();
 
         if (result != nsInstall::SUCCESS) 
         {
-            ie->Abort();
-            *aReturn = SaveError( result );
-            return NS_OK;
+            if ( result == REBOOT_NEEDED )
+            {
+                rebootNeeded = PR_TRUE;
+                result = SUCCESS;
+            }
+            else
+            {
+                InternalAbort( result );
+                break;
+            }
         }
     }
 
-    *aReturn = NS_OK;
+    if ( result != SUCCESS )
+        *aReturn = SaveError( result );
+    else if ( rebootNeeded )
+        *aReturn = SaveError( REBOOT_NEEDED );
+
+    if (mNotifier)
+        mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
+
     return NS_OK;
 }
 
@@ -863,8 +890,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     JS_GetProperty( cx, JS_GetGlobalObject( cx ), "Object", &v );
     if (!v)
     {
-        SaveError(nsInstall::UNEXPECTED_ERROR);
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_NULL_POINTER;
     }
     JSClass *objclass = JS_GetClass( cx, JSVAL_TO_OBJECT(v) );
     JSObject *res = JS_NewObject( cx, objclass, JSVAL_TO_OBJECT(v), 0 );
@@ -874,7 +900,6 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     ExtractFileFromJar(aBaseName, nsnull, &resFile);
     if (!resFile)
     {
-        SaveError( nsInstall::FILE_DOES_NOT_EXIST );
         return NS_OK;
     }
 	
@@ -958,7 +983,8 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
     return NS_OK;
 
 handle_err:
-    SaveError(ret);
+    // XXX looks like we're leaking at least all our services,
+    // and more depending on which evil goto we hit. Bad, bad, bad!
     return NS_OK;
 }
 
@@ -1082,7 +1108,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     SaveError(*aReturn);
     
     if (mNotifier)
-            mNotifier->InstallStarted(nsAutoCString(mUIName));
+            mNotifier->InstallStarted(mInstallURL.GetUnicode(), mUIName.GetUnicode());
 
     return NS_OK;
 }
@@ -1394,7 +1420,7 @@ void
 nsInstall::LogComment(nsString& aComment)
 {
   if(mNotifier)
-    mNotifier->LogComment(nsAutoCString(aComment));
+    mNotifier->LogComment(aComment.GetUnicode());
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -1417,32 +1443,42 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     // flash current item
 
     if (mNotifier)
-        if ( !NS_SUCCEEDED(mNotifier->ItemScheduled(objString)) )
-            mUserCancelled = PR_TRUE;
+        mNotifier->ItemScheduled(nsAutoString(objString).GetUnicode());
 
-    delete [] objString;
-    
+
     // do any unpacking or other set-up
     error = ob->Prepare();
     
-    if (error != nsInstall::SUCCESS) 
-        return error;
-    
-    
-    // Add to installation list if we haven't thrown out
-    
-    mInstalledFiles->Add( ob );
+    if (error == nsInstall::SUCCESS) 
+    {
+        // Add to installation list
+        mInstalledFiles->Add( ob );
 
-    // turn on flags for creating the uninstall node and
-    // the package node for each InstallObject
+        // turn on flags for creating the uninstall node and
+        // the package node for each InstallObject
+
+        if (ob->CanUninstall())
+            mUninstallPackage = PR_TRUE;
+
+        if (ob->RegisterPackageNode())
+            mRegisterPackage = PR_TRUE;
+    }
+    else if ( mNotifier )
+    {
+        // error in preparation step -- log it
+        char* errprefix = PR_smprintf("ERROR (%d): ",error);
+        nsString errstr = errprefix;
+        errstr += objString;
+
+        mNotifier->LogComment( errstr.GetUnicode() );
+
+        PR_smprintf_free(errprefix);
+    }
+
+    if (objString)
+        delete [] objString;
     
-    if (ob->CanUninstall())
-        mUninstallPackage = PR_TRUE;
-	
-    if (ob->RegisterPackageNode())
-        mRegisterPackage = PR_TRUE;
-  
-  return nsInstall::SUCCESS;
+    return error;
 }
 
 
@@ -1462,8 +1498,7 @@ nsInstall::SanityCheck(void)
 
     if (mUserCancelled) 
     {
-        AbortInstall();
-        SaveError(USER_CANCELLED);
+        InternalAbort(USER_CANCELLED);
         return USER_CANCELLED;
     }
 	
@@ -1647,7 +1682,8 @@ nsInstall::CleanUp(void)
         for (; i < mInstalledFiles->GetSize(); i++) 
         {
             ie = (nsInstallObject*)mInstalledFiles->Get(i);
-            delete (ie);
+            if (ie)
+                delete (ie);
         }
 
         mInstalledFiles->RemoveAll();
@@ -1657,7 +1693,7 @@ nsInstall::CleanUp(void)
 
     if (mPatchList)
     {
-        // do I need to delete every entry?
+        // XXX do I need to delete every entry?
         delete mPatchList;
     }
     
@@ -1688,6 +1724,10 @@ nsInstall::SetInstallArguments(const nsString& args)
 {
     mInstallArguments = args;
 }
+
+
+void nsInstall::GetInstallURL(nsString& url)        { url = mInstallURL; }
+void nsInstall::SetInstallURL(const nsString& url)  { mInstallURL = url; }
 
 
 

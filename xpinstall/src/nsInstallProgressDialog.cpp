@@ -47,7 +47,8 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
 
-nsInstallProgressDialog::nsInstallProgressDialog()
+nsInstallProgressDialog::nsInstallProgressDialog(nsIXULWindowCallbacks* aManager)
+    : mManager(aManager)
 {
     NS_INIT_REFCNT();
 }
@@ -95,44 +96,34 @@ nsInstallProgressDialog::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 }
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::BeforeJavascriptEvaluation()
+nsInstallProgressDialog::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
     return Open();
 }
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::AfterJavascriptEvaluation()
+nsInstallProgressDialog::AfterJavascriptEvaluation(const PRUnichar *URL)
 {
     return Close();
 }
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::InstallStarted(const char *UIPackageName)
+nsInstallProgressDialog::InstallStarted(const PRUnichar *URL, const PRUnichar *UIPackageName)
 {
-    return SetHeading( nsString(UIPackageName).GetUnicode() );
+    return SetHeading( UIPackageName );
 }
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::ItemScheduled(const char *message)
+nsInstallProgressDialog::ItemScheduled(const PRUnichar *message)
 {
-    nsresult rv = SetActionText( nsString(message).GetUnicode() );
-
-    if (NS_SUCCEEDED(rv))
-    {
-        PRBool cancel;
-        rv = GetCancelStatus( &cancel );
-
-        if ( NS_SUCCEEDED(rv) && cancel)
-            return NS_ERROR_FAILURE;  // XXX: Not a COM failure! change interface to return val
-    }
-    return rv;
+    return SetActionText( message );
 }
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum)
+nsInstallProgressDialog::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, PRInt32 totNum)
 {
 
-    nsresult rv = SetActionText( nsString(message).GetUnicode() );
+    nsresult rv = SetActionText( message );
 
     if (NS_SUCCEEDED(rv))
         rv = SetProgress( itemNum, totNum );
@@ -141,14 +132,14 @@ nsInstallProgressDialog::InstallFinalization(const char *message, PRInt32 itemNu
 }
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::InstallAborted()
+nsInstallProgressDialog::FinalStatus(const PRUnichar *URL, PRInt32 status)
 {
     return NS_OK;
 }
 
 
 NS_IMETHODIMP 
-nsInstallProgressDialog::LogComment(const char* comment)
+nsInstallProgressDialog::LogComment(const PRUnichar* comment)
 {
     return NS_OK;
 }
@@ -199,8 +190,22 @@ nsInstallProgressDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
                       __FILE__, (int)__LINE__, (int)rv );
     }
 
+    if (mManager)
+        mManager->ConstructBeforeJavaScript(aWebShell);
+
     return rv;
 }
+
+
+NS_IMETHODIMP
+nsInstallProgressDialog::ConstructAfterJavaScript(nsIWebShell *aWebShell) 
+{
+    if (mManager)
+        return mManager->ConstructAfterJavaScript(aWebShell);
+    else
+        return NS_OK;
+}
+
 
 
 NS_IMETHODIMP

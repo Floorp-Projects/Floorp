@@ -27,6 +27,9 @@ interface Install
 	const int PATCH_BAD_CHECKSUM_TARGET = -221; /* source file doesn't checksum  */
 	const int PATCH_BAD_CHECKSUM_RESULT = -222; /* final patched file fails checksum  */
 	const int UNINSTALL_FAILED          = -223; /* error while uninstalling a package  */
+
+    const int ABORT_INSTALL             = -227; /* script explicitly called abort */
+
 	const int GESTALT_UNKNOWN_ERR       = -5550;         
 	const int GESTALT_INVALID_ARGUMENT  = -5551;
 

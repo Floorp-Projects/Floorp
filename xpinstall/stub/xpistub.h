@@ -41,19 +41,15 @@ PR_BEGIN_EXTERN_C
  *  to StartInstall(), either in the script itself or in the
  *  engine trying to set up for it.
  */
-typedef void     (*pfnXPIStart)   (const char* UIName);
+typedef void     (*pfnXPIStart)   (const char* URL, const char* UIName);
 
 /** pfnXPIProgress  -- individual install item callback
  *
  *  This callback will be called twice for each installed item,
  *  First when it is scheduled (val and max will both be 0) and
  *  then during the finalize step.
- *
- *  This function must return NS_OK unless it wants to stop
- *  the script execution (for example, to implement a user-cancel
- *  feature). To stop the script return a failing nsresult value.
  */
-typedef nsresult (*pfnXPIProgress)(const char* msg, PRInt32 val, PRInt32 max);
+typedef void    (*pfnXPIProgress)(const char* msg, PRInt32 val, PRInt32 max);
 
 /** pfnXPIFinal  -- script end callback
  *
@@ -61,7 +57,7 @@ typedef nsresult (*pfnXPIProgress)(const char* msg, PRInt32 val, PRInt32 max);
  *  AbortInstall() or FinalizeInstall() and will return the
  *  last error code.
  */
-typedef void     (*pfnXPIFinal)   (PRInt32 finalStatus);
+typedef void     (*pfnXPIFinal)   (const char* URL, PRInt32 finalStatus);
 
 
 /** XPI_Init

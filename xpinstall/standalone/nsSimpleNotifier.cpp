@@ -36,38 +36,38 @@ nsSimpleNotifier::~nsSimpleNotifier()
 {}
 
 NS_IMETHODIMP
-nsSimpleNotifier::BeforeJavascriptEvaluation(void)
+nsSimpleNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
     printf("Prior to evaluation of Install Script\n");
 }
 
 NS_IMETHODIMP
-nsSimpleNotifier::AfterJavascriptEvaluation(void)
+nsSimpleNotifier::AfterJavascriptEvaluation(const PRUnichar *URL)
 {
     printf("After evaluation of Install Script\n");
 }
 
 NS_IMETHODIMP
-nsSimpleNotifier::InstallStarted(const char* UIPackageName)
+nsSimpleNotifier::InstallStarted(const PRUnichar *URL, const char* UIPackageName)
 {
     printf("Installing: %s\n", UIPackageName);
 }
 
 NS_IMETHODIMP
-nsSimpleNotifier::ItemScheduled(const char* message )
+nsSimpleNotifier::ItemScheduled(const PRUnichar* message )
 {
     printf("Scheduled Item:\t%s\n", message);
     return 0;
 }
 
 NS_IMETHODIMP
-nsSimpleNotifier::InstallFinalization(const char* message, long itemNum, long totNum )
+nsSimpleNotifier::FinalizeProgress(const PRUnichar* message, long itemNum, long totNum )
 {
     printf("Item: %s\t(%ld of %ld) Installed.\n", message, itemNum, totNum );
 }
 
 NS_IMETHODIMP
-nsSimpleNotifier::InstallAborted(void)
+nsSimpleNotifier::FinalStatus(const PRUnichar *URL, PRInt32 status)
 {
     printf("Installation aborted.\n");
 }

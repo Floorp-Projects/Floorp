@@ -232,9 +232,15 @@ REGERR ReplaceFileNowOrSchedule(nsFileSpec& replacementFile, nsFileSpec& doomedF
     {
         // Now that we have removed the existing file, we can move the mExtracedFile or mPatchedFile into place.
         nsFileSpec parentofFinalFile;
+        nsFileSpec parentofReplacementFile;
 
         doomedFile.GetParent(parentofFinalFile);
-        result = replacementFile.Move(parentofFinalFile);
+        replacementFile.GetParent(parentofReplacementFile);
+        if(parentofReplacementFile != parentofFinalFile)
+            result = replacementFile.Move(parentofFinalFile);
+        else
+        	result = NS_OK;
+        	
         if ( NS_SUCCEEDED(result) )
         {
             char* leafName = doomedFile.GetLeafName();

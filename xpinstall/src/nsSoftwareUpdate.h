@@ -32,6 +32,7 @@ class nsSoftwareUpdate:  public nsIAppShellComponent, public nsISoftwareUpdate
         NS_DECL_IAPPSHELLCOMPONENT
         
         NS_IMETHOD InstallJar( nsIFileSpec* localFile,
+                               const PRUnichar* URL,
                                const PRUnichar* arguments,
                                long flags = 0,
                                nsIXPINotifier* notifier = 0);  

@@ -38,27 +38,6 @@ LCFLAGS =          \
         $(DEFINES) \
         $(NULL)
 
-LINCS=                          \
-        -I$(PUBLIC)\xpinstall   \
-        -I$(PUBLIC)\jar         \
-        -I$(PUBLIC)\libreg      \
-!ifdef NECKO
-        -I$(PUBLIC)\necko                 \
-!else
-        -I$(PUBLIC)\netlib                \
-!endif
-        -I$(PUBLIC)\xpcom       \
-        -I$(PUBLIC)\pref        \
-        -I$(PUBLIC)\rdf         \
-        -I$(PUBLIC)\js          \
-        -I$(PUBLIC)\dom         \
-        -I$(PUBLIC)\raptor      \
-        -I$(PUBLIC)\nspr2       \
-		-I$(PUBLIC)\zlib        \
-        -I$(PUBLIC)\xpfe\components \
-        -I$(PUBLIC)\intl        \
-        -I$(PUBLIC)\locale      \
-        $(NULL)
 
 LLIBS =                                \
         $(DIST)\lib\jar50.lib          \
