@@ -315,6 +315,8 @@ protected:
   nsICSSStyleSheet* mSheet;
 
   PRBool mInHead;
+
+  PRBool  mNavQuirkMode;
 };
 
 NS_HTML nsresult
@@ -335,6 +337,7 @@ CSSParserImpl::CSSParserImpl()
   mScanner = nsnull;
   mSheet = nsnull;
   mHavePushBack = PR_FALSE;
+  mNavQuirkMode = PR_TRUE;
 }
 
 CSSParserImpl::CSSParserImpl(nsICSSStyleSheet* aSheet)
@@ -343,6 +346,7 @@ CSSParserImpl::CSSParserImpl(nsICSSStyleSheet* aSheet)
   mScanner = nsnull;
   mSheet = aSheet; NS_ADDREF(aSheet);
   mHavePushBack = PR_FALSE;
+  mNavQuirkMode = PR_TRUE;
 }
 
 NS_IMPL_ISUPPORTS(CSSParserImpl,kICSSParserIID)
@@ -1578,6 +1582,14 @@ PRBool CSSParserImpl::ParseVariant(PRInt32& aErrorCode, nsCSSValue& aValue,
     aValue.SetIntValue(tk->mInteger, eCSSUnit_Integer);
     aParsedVariant = VARIANT_INTEGER;
     return PR_TRUE;
+  }
+  if (PR_TRUE == mNavQuirkMode) { // NONSTANDARD: Nav interprets unitless numbers as px
+    if (((aVariantMask & VARIANT_LENGTH) != 0) &&
+        (eCSSToken_Number == tk->mType)) {
+      aValue.SetFloatValue(tk->mNumber, eCSSUnit_Pixel);
+      aParsedVariant = VARIANT_LENGTH;
+      return PR_TRUE;
+    }
   }
   if (((aVariantMask & VARIANT_URL) != 0) &&
       (eCSSToken_Function == tk->mType) && 
