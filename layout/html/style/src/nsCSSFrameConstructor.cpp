@@ -372,6 +372,24 @@ SetFrameIsSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame* aS
   }
 }
 
+static nsIFrame*
+GetIBContainingBlockFor(nsIFrame* aFrame)
+{
+  // Get the first "normal" ancestor of the target frame.
+  NS_PRECONDITION(IsFrameSpecial(aFrame),
+                  "GetIBContainingBlockFor() should only be called on known IB frames");
+
+  nsIFrame* parentFrame;
+  do {
+    aFrame->GetParent(&parentFrame);
+    if (!parentFrame || !IsFrameSpecial(parentFrame))
+      break;
+
+    aFrame = parentFrame;
+  } while (1);
+
+  return aFrame;
+}
 
 //----------------------------------------------------------------------
 
@@ -9591,30 +9609,26 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
     nsBoxLayoutState state(aPresContext);
     box->MarkStyleChange(state);
   }
-  else if (IsFrameSpecial(aFrame)) {
-    // We are pretty harsh here (and definitely not optimal) -- we
-    // wipe out the entire containing block and recreate it from
-    // scratch. The reason is that because we know that a special
-    // inline frame has propogated some of its children upward to be
-    // children of the block and that those frames may need to move
-    // around. This logic guarantees a correct answer.
-    ReframeContainingBlock(aPresContext, aFrame);
-  }
   else {
+    // If the frame is part of a split block-in-inline hierarchy, then
+    // target the style-change reflow at the first ``normal'' ancestor
+    // so we're sure that the style change will propagate to any
+    // anonymously created siblings.
+    if (IsFrameSpecial(aFrame))
+      aFrame = GetIBContainingBlockFor(aFrame);
+
+    // Target a style-change reflow at the frame.
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
  
-
-    nsIReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
+    nsCOMPtr<nsIReflowCommand> reflowCmd;
+    rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), aFrame,
                                  nsIReflowCommand::StyleChanged,
                                  nsnull,
                                  aAttribute);
   
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv))
       shell->AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
-    }
   }
 
   return NS_OK;
@@ -9998,13 +10012,13 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   // apply changes
   if (primaryFrame && aHint == NS_STYLE_HINT_ATTRCHANGE)
     result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, aHint);
-  else if (PR_TRUE == reconstruct) {
+  else if (reconstruct) {
     result = ReconstructDocElementHierarchy(aPresContext);
   }
-  else if (PR_TRUE == reframe) {
+  else if (reframe) {
     result = RecreateFramesForContent(aPresContext, aContent, inlineStyle, rule, styleContext);
   }
-  else if (PR_TRUE == restyle) {
+  else if (restyle) {
     if (inlineStyle) {
       if (styleContext) {
         nsCOMPtr<nsIRuleNode> ruleNode;
@@ -13379,55 +13393,45 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIPresContext* aPresContext, nsIF
   }
 #endif
 
-  // Get the first "normal" parent of the target frame. From there we
-  // look for the containing block in case the target frame is already
-  // a block (which can happen when an inline frame wraps some of its
-  // content in an anonymous block; see ConstructInline)
-  nsIFrame* parentFrame;
-  do {
-    aFrame->GetParent(&parentFrame);
-    if (!parentFrame || !IsFrameSpecial(parentFrame))
-      break;
-
-    aFrame = parentFrame;
-  } while (1);
-
-
-  if (!parentFrame) {
-    return RecreateEntireFrameTree(aPresContext);
-  }
-
-  // Now find the containing block
-  nsIFrame* containingBlock = GetFloaterContainingBlock(aPresContext, parentFrame);
-  if (!containingBlock) {
-    return RecreateEntireFrameTree(aPresContext);
-  }
-
-  // And get the containingBlock's content
-  nsCOMPtr<nsIContent> blockContent;
-  containingBlock->GetContent(getter_AddRefs(blockContent));
-  if (!blockContent) {
-    return RecreateEntireFrameTree(aPresContext);
-  }
-
-  // Now find the containingBlock's content's parent
-  nsCOMPtr<nsIContent> parentContainer;
-  blockContent->GetParent(*getter_AddRefs(parentContainer));
-  if (!parentContainer) {
-    return RecreateEntireFrameTree(aPresContext);
-  }
+  // Get the first "normal" ancestor of the target frame.
+  nsIFrame* parentFrame = GetIBContainingBlockFor(aFrame);
+  if (parentFrame) {
+    // From here we look for the containing block in case the target
+    // frame is already a block (which can happen when an inline frame
+    // wraps some of its content in an anonymous block; see
+    // ConstructInline)
+    //
+    // XXXwaterson I don't think this extra step is necessary: we
+    // should just be able to recreate the frames starting from the IB
+    // containing block.
+    nsIFrame* containingBlock = GetFloaterContainingBlock(aPresContext, aFrame);
+    if (containingBlock) {
+      // And get the containingBlock's content
+      nsCOMPtr<nsIContent> blockContent;
+      containingBlock->GetContent(getter_AddRefs(blockContent));
+      if (blockContent) {
+        // Now find the containingBlock's content's parent
+        nsCOMPtr<nsIContent> parentContainer;
+        blockContent->GetParent(*getter_AddRefs(parentContainer));
+        if (parentContainer) {
 
 #ifdef DEBUG
-  if (gNoisyContentUpdates) {
-    printf("  ==> blockContent=%p, parentContainer=%p\n",
-           blockContent.get(), parentContainer.get());
-  }
+          if (gNoisyContentUpdates) {
+            printf("  ==> blockContent=%p, parentContainer=%p\n",
+                   blockContent.get(), parentContainer.get());
+          }
 #endif
 
-  PRInt32 ix;
-  parentContainer->IndexOf(blockContent, ix);
-  nsresult rv = ContentReplaced(aPresContext, parentContainer, blockContent, blockContent, ix);
-  return rv;
+          PRInt32 ix;
+          parentContainer->IndexOf(blockContent, ix);
+          return ContentReplaced(aPresContext, parentContainer, blockContent, blockContent, ix);
+        }
+      }
+    }
+  }
+
+  // If we get here, we're screwed!
+  return RecreateEntireFrameTree(aPresContext);
 }
 
 nsresult
