@@ -25,6 +25,7 @@ DIRS=\
         content         \
         datasource      \
         build           \
+        brprof          \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
