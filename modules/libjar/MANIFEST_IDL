@@ -1,2 +1,1 @@
-nsIZip.idl
-nsIJAR.idl
+nsIZipReader.idl
