@@ -76,7 +76,7 @@ my %pubcmds = (
                "debug" => \&bot_debug,
                "(stocks|stock)" => \&bot_pub_stocks,
                "(translate|xlate|x)" => \&bot_translate,
-               "review" -> \&bot_review,
+               "review" => \&bot_review,
                );
 
 my %admincmds = (
