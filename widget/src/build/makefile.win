@@ -52,6 +52,13 @@ LCFLAGS =                               \
 	-D_IMPL_NS_WIDGET               \
 	$(NULL)
 
+!ifdef MOZ_UNICODE
+LCFLAGS =                       \
+	$(LCFLAGS)                  \
+	-DMOZ_UNICODE               \
+	$(NULL)
+!endif
+
 WIN_LIBS=                               \
  comctl32.lib                           \
  comdlg32.lib                           \

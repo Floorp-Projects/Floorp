@@ -40,10 +40,18 @@
 #include <windows.h>
 #include <SHLOBJ.H>
 
+#ifdef MOZ_UNICODE
+#include "nsString.h"
+#include "nsToolkit.h"
+#endif // MOZ_UNICODE
+
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
+#ifdef MOZ_UNICODE
+nsString nsFilePicker::mLastUsedUnicodeDirectory;
+#endif
 char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 
 #define MAX_EXTENSION_LENGTH 10
@@ -79,9 +87,193 @@ nsFilePicker::~nsFilePicker()
 // Show - Display the file dialog
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
+#ifdef MOZ_UNICODE
+NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 {
-  NS_ENSURE_ARG_POINTER(retval);
+  NS_ENSURE_ARG_POINTER(aReturnVal);
+
+  PRBool result = PR_FALSE;
+  PRUnichar fileBuffer[MAX_PATH+1];
+  wcsncpy(fileBuffer,  mDefault.get(), MAX_PATH);
+
+  nsAutoString htmExt(NS_LITERAL_STRING("html"));
+  PRUnichar *title = ToNewUnicode(mTitle);
+  nsAutoString initialDir;
+  mDisplayDirectory->GetPath(initialDir);
+
+  // If no display directory, re-use the last one.
+  if(initialDir.IsEmpty()) {
+    // Allocate copy of last used dir.
+    initialDir = mLastUsedUnicodeDirectory;
+  }
+
+  mUnicodeFile.SetLength(0);
+
+  if (mMode == modeGetFolder) {
+    PRUnichar dirBuffer[MAX_PATH+1];
+    wcsncpy(dirBuffer, initialDir.get(), MAX_PATH);
+
+    BROWSEINFOW browserInfo;
+    browserInfo.hwndOwner      = mWnd;
+    browserInfo.pidlRoot       = nsnull;
+    browserInfo.pszDisplayName = (LPWSTR)dirBuffer;
+    browserInfo.lpszTitle      = title;
+    browserInfo.ulFlags        = BIF_RETURNONLYFSDIRS;//BIF_STATUSTEXT | BIF_RETURNONLYFSDIRS;
+    browserInfo.lpfn           = nsnull;
+    browserInfo.lParam         = nsnull;
+    browserInfo.iImage         = nsnull;
+
+    // XXX UNICODE support is needed here --> DONE
+    LPITEMIDLIST list = ::SHBrowseForFolderW(&browserInfo);
+    if (list != NULL) {
+      result = ::SHGetPathFromIDListW(list, (LPWSTR)fileBuffer);
+      if (result) {
+          mUnicodeFile.Append(fileBuffer);
+      }
+  
+      // free PIDL
+      LPMALLOC pMalloc = NULL;
+      ::SHGetMalloc(&pMalloc);
+      if(pMalloc) {
+         pMalloc->Free(list);
+         pMalloc->Release();
+      }
+    }
+  }
+  else {
+
+    OPENFILENAMEW ofn;
+    memset(&ofn, 0, sizeof(ofn));
+
+    ofn.lStructSize = sizeof(ofn);
+
+    nsString filterBuffer = mFilterList;
+                                  
+    if (!initialDir.IsEmpty()) {
+      ofn.lpstrInitialDir = initialDir.get();
+    }
+    
+    ofn.lpstrTitle   = (LPCWSTR)title;
+    ofn.lpstrFilter  = (LPCWSTR)filterBuffer.get();
+    ofn.nFilterIndex = mSelectedType;
+    ofn.hwndOwner    = mWnd;
+    ofn.lpstrFile    = fileBuffer;
+    ofn.nMaxFile     = MAX_PATH;
+
+    ofn.Flags = OFN_NOCHANGEDIR | OFN_SHAREAWARE | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+
+    if (!mDefaultExtension.IsEmpty()) {
+      ofn.lpstrDefExt = mDefaultExtension.get();
+    }
+    else {
+      // Get file extension from suggested filename
+      //  to detect if we are saving an html file
+      //XXX: nsIFile SHOULD HAVE A GetExtension() METHOD!
+      PRInt32 extIndex = mDefault.RFind(".");
+      if ( extIndex >= 0) {
+        nsAutoString ext;
+        mDefault.Right(ext, mDefault.Length() - extIndex);
+        // Should we test for ".cgi", ".asp", ".jsp" and other
+        // "generated" html pages?
+
+        if ( ext.EqualsIgnoreCase(".htm")  ||
+             ext.EqualsIgnoreCase(".html") ||
+             ext.EqualsIgnoreCase(".shtml") ) {
+          // This is supposed to append ".htm" if user doesn't supply an extension
+          //XXX Actually, behavior is sort of weird:
+          //    often appends ".html" even if you have an extension
+          //    It obeys your extension if you put quotes around name
+          ofn.lpstrDefExt = htmExt.get();
+        }
+      }
+    }
+
+    if (mMode == modeOpen) {
+      // FILE MUST EXIST!
+      ofn.Flags |= OFN_FILEMUSTEXIST;
+      result = ::GetOpenFileNameW(&ofn);
+    }
+    else if (mMode == modeSave) {
+      ofn.Flags |= OFN_NOREADONLYRETURN;
+      result = ::GetSaveFileNameW(&ofn);
+      if (!result) {
+        // Error, find out what kind.
+        if (::GetLastError() == ERROR_INVALID_PARAMETER ||
+            ::CommDlgExtendedError() == FNERR_INVALIDFILENAME) {
+          // probably the default file name is too long or contains illegal characters!
+          // Try again, without a starting file name.
+          ofn.lpstrFile[0] = 0;
+          result = ::GetSaveFileNameW(&ofn);
+        }
+      }
+    }
+    else {
+      NS_ASSERTION(0, "Only load, save and getFolder are supported modes"); 
+    }
+  
+    // Remember what filter type the user selected
+    mSelectedType = (PRInt16)ofn.nFilterIndex;
+
+    // Set user-selected location of file or directory
+    if (result == PR_TRUE) {
+      // I think it also needs a conversion here (to unicode since appending to nsString) 
+      // but doing that generates garbage file name, weird.
+      mUnicodeFile.Append(fileBuffer);
+    }
+
+  }
+
+  if (title)
+    nsMemory::Free( title );
+
+  if (result) {
+    PRInt16 returnOKorReplace = returnOK;
+
+    // Remember last used directory.
+    nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+    NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+    // work around.  InitWithPath() will convert UCS2 to FS path !!!  corrupts unicode 
+    file->InitWithPath(mUnicodeFile);
+    nsCOMPtr<nsIFile> dir;
+    if (NS_SUCCEEDED(file->GetParent(getter_AddRefs(dir)))) {
+      nsCOMPtr<nsILocalFile> localDir(do_QueryInterface(dir));
+      if (localDir) {
+        nsAutoString newDir;
+        localDir->GetPath(newDir);
+        if(!newDir.IsEmpty())
+          mLastUsedUnicodeDirectory.Assign(newDir);
+        // Update mDisplayDirectory with this directory, also.
+        // Some callers rely on this.
+        mDisplayDirectory->InitWithPath(mLastUsedUnicodeDirectory);
+      }
+    }
+
+    if (mMode == modeSave) {
+      // Windows does not return resultReplace,
+      //   we must check if file already exists
+      PRBool exists = PR_FALSE;
+      file->Exists(&exists);
+      if (exists)
+        returnOKorReplace = returnReplace;
+    }
+    *aReturnVal = returnOKorReplace;
+  }
+  else {
+    *aReturnVal = returnCancel;
+  }
+  return NS_OK;
+}
+#endif
+
+NS_IMETHODIMP nsFilePicker::Show(PRInt16 *aReturnVal)
+#ifdef MOZ_UNICODE
+{
+  return ShowW(aReturnVal);
+}
+#else
+{
+  NS_ENSURE_ARG_POINTER(aReturnVal);
 
   PRBool result = PR_FALSE;
   char fileBuffer[MAX_PATH+1] = "";
@@ -279,28 +471,36 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       if (exists)
         returnOKorReplace = returnReplace;
     }
-    *retval = returnOKorReplace;
+    *aReturnVal = returnOKorReplace;
   }
   else {
-    *retval = returnCancel;
+    *aReturnVal = returnCancel;
   }
   return NS_OK;
 }
-
-
+#endif
 
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(aFile);
 
+#ifdef MOZ_UNICODE
+  if (mUnicodeFile.IsEmpty())
+      return NS_OK;
+#else
   if (mFile.IsEmpty())
       return NS_OK;
+#endif
 
   nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
     
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
+#ifdef MOZ_UNICODE
+  file->InitWithPath(mUnicodeFile);
+#else
   file->InitWithNativePath(mFile);
+#endif
 
   NS_ADDREF(*aFile = file);
 
@@ -312,7 +512,11 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 {
   nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+#ifdef MOZ_UNICODE
+  file->InitWithPath(mUnicodeFile);
+#else
   file->InitWithNativePath(mFile);
+#endif
 
   nsCOMPtr<nsIURI> uri;
   NS_NewFileURI(getter_AddRefs(uri), file);
