@@ -43,8 +43,10 @@
 #include "nsDeviceContextOS2.h"
 #include "nsCOMPtr.h"
 #include "nsVoidArray.h"
+#include "nsUnicharUtils.h"
 #include "nsDrawingSurfaceOS2.h"
-#include "nsICollation.h"
+#include "nsTHashtable.h"
+#include "nsHashKeys.h"
 
 #ifndef FM_DEFN_LATIN1
 #define FM_DEFN_LATIN1          0x0010   /* Base latin character set     */
@@ -68,29 +70,48 @@
 //#define DEBUG_FONT_SELECTION
 //#define DEBUG_FONT_STRUCT_ALLOCS
 
-struct nsMiniFontMetrics
+struct nsMiniMetrics
 {
-  char    szFamilyname[FACESIZE];
-  char    szFacename[FACESIZE];
-  USHORT  fsType;
-  USHORT  fsDefn;
-  USHORT  fsSelection;
-  USHORT  usCodePage;
+  char            szFacename[FACESIZE];
+  USHORT          fsType;
+  USHORT          fsDefn;
+  USHORT          fsSelection;
+  nsMiniMetrics*  mNext;
 };
 
-class nsGlobalFont
+// GlobalFontEntry->mStr is an nsString which contains the family name of font.
+class GlobalFontEntry : public nsStringHashKey
 {
- public:
-      nsGlobalFont(void)  { key = nsnull; };
-     ~nsGlobalFont(void)  { if(key) nsMemory::Free(key); };
-     
-  nsAutoString        name;
-  nsMiniFontMetrics   metrics;
-  int                 nextFamily;
-  PRUint8*            key;
-  PRUint32            len;
-};
+public:
+  GlobalFontEntry(KeyTypePointer aStr) : nsStringHashKey(aStr) { }
+  GlobalFontEntry(const GlobalFontEntry& aToCopy)
+      : nsStringHashKey(aToCopy) { }
+  ~GlobalFontEntry()
+  {
+    nsMiniMetrics* metrics = mMetrics;
+    while (metrics) {
+      nsMiniMetrics* nextMetrics = metrics->mNext;
+      if (metrics)
+        delete metrics;
+      metrics = nextMetrics;
+    }
+  }
 
+  // Override, since we want to compare font names as case insensitive
+  PRBool KeyEquals(const KeyTypePointer aKey) const
+  {
+    return GetKeyPointer()->Equals(*aKey, nsCaseInsensitiveStringComparator());
+  }
+  static PLDHashNumber HashKey(const KeyTypePointer aKey)
+  {
+    nsAutoString low(*aKey);
+    ToLowerCase(low);
+    return HashString(low);
+  }
+
+  USHORT          mCodePage;
+  nsMiniMetrics*  mMetrics;
+};
 
 // An nsFontHandle is actually a pointer to one of these.
 // It knows how to select itself into a ps.
@@ -214,9 +235,8 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   nsFontOS2*          LoadUnicodeFont(HPS aPS, const nsString& aName);
   static nsresult     InitializeGlobalFonts();
 
-  static nsVoidArray*  gGlobalFonts;
+  static nsTHashtable<GlobalFontEntry>* gGlobalFonts;
   static PLHashTable*  gFamilyNames;
-  static nsICollation* gCollation;
   static PRBool        gSubstituteVectorFonts;
 
   nsCOMPtr<nsIAtom>   mLangGroup;
@@ -270,7 +290,6 @@ class nsFontMetricsOS2 : public nsIFontMetrics
   nsFontOS2          *mFontHandle;
   nsDeviceContextOS2 *mDeviceContext;
 
-  static int          gCachedIndex;
 #ifdef DEBUG_FONT_STRUCT_ALLOCS
   static unsigned long mRefCount;
 #endif
