@@ -53,7 +53,9 @@
 #include "nsIPref.h"
 #include "nsCRT.h"
 #include "nsRect.h"
-#ifndef NECKO
+#ifdef NECKO
+#include "nsIPrompt.h"
+#else
 #include "nsINetSupport.h"
 #endif
 #include "nsIContentViewer.h"
@@ -995,7 +997,11 @@ GlobalWindowImpl::Alert(JSContext *cx, jsval *argv, PRUint32 argc)
       ret = rootWebShell->GetContainer(rootContainer);
       if (nsnull != rootContainer) {
 #ifdef NECKO
-        NS_ASSERTION(0, "fix me");
+        nsIPrompt *prompter;
+        if (NS_OK == (ret = rootContainer->QueryInterface(nsIPrompt::GetIID(), (void**)&prompter))) {
+          ret = prompter->Alert(str.GetUnicode());
+          NS_RELEASE(prompter);
+        }
 #else
         nsINetSupport *support;
         if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
@@ -1033,7 +1039,11 @@ GlobalWindowImpl::Confirm(JSContext *cx, jsval *argv, PRUint32 argc, PRBool* aRe
       ret = rootWebShell->GetContainer(rootContainer);
       if (nsnull != rootContainer) {
 #ifdef NECKO
-        NS_ASSERTION(0, "fix me");
+        nsIPrompt *prompter;
+        if (NS_OK == (ret = rootContainer->QueryInterface(nsIPrompt::GetIID(), (void**)&prompter))) {
+          ret = prompter->Confirm(str.GetUnicode(), aReturn);
+          NS_RELEASE(prompter);
+        }
 #else
         nsINetSupport *support;
         if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
@@ -1075,7 +1085,20 @@ GlobalWindowImpl::Prompt(JSContext *cx, jsval *argv, PRUint32 argc, nsString& aR
       ret = rootWebShell->GetContainer(rootContainer);
       if (nsnull != rootContainer) {
 #ifdef NECKO
-        NS_ASSERTION(0, "fix me");
+        nsIPrompt *prompter;
+        if (NS_OK == (ret = rootContainer->QueryInterface(nsIPrompt::GetIID(), (void**)&prompter))) {
+          PRBool b;
+          PRUnichar* uniResult = nsnull;
+          ret = prompter->Prompt(str.GetUnicode(), initial.GetUnicode(), &uniResult, &b);
+          aReturn = uniResult;
+          if (NS_FAILED(ret) || !b) {
+            // XXX Need to check return value and return null if the
+            // user hits cancel. Currently, we can only return a 
+            // string reference.
+            aReturn.SetString("");
+          }
+          NS_RELEASE(prompter);
+        }
 #else
         nsINetSupport *support;
         if (NS_OK == (ret = rootContainer->QueryInterface(kINetSupportIID, (void**)&support))) {
