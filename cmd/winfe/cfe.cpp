@@ -555,6 +555,7 @@ void CFE_SetDrawable(MWContext *pContext, CL_Drawable *drawable)
 }
 #endif
 
+#ifdef TRANSPARENT_APPLET
 /* java specific functions to allow delayed window creation and transparency */
 void CFE_HandleClippingView(MWContext *pContext, LJAppletData *appletD, int x, int y, int width, int height) {
     if(ABSTRACTCX(pContext)->IsDestroyed())	{
@@ -575,6 +576,7 @@ void CFE_DrawJavaApp(MWContext *pContext, int iLocation, LO_JavaAppStruct *pJava
 
     WINCX(pContext)->DrawJavaApp(pContext, iLocation, pJava);
 }
+#endif
 
 int CFE_FileSortMethod(MWContext *pContext)	{
 	if(ABSTRACTCX(pContext)->IsDestroyed())	{

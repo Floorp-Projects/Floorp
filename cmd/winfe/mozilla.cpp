@@ -28,7 +28,11 @@ void STARTUP_li(void);
 void SHUTDOWN_li(void);
 #endif/* MOZ_LOC_INDEP */
 
+#if defined(OJI)
+#include "jvmmgr.h"
+#elif defined(JAVA)
 #include "jri.h"
+#endif
 
 #define XP_CPLUSPLUS  // temporary hack - jsw
 //#include "secnav.h"
@@ -87,7 +91,7 @@ BOOL bIsGold = FALSE;
 // Full Circle stuff - see http://www.fullsoft.com for more info
 #include "fullsoft.h"
 
-#ifdef JAVA
+#if defined(OJI) || defined(JAVA)
 	// don't include java.h here because the Win16 compiler won't be able to handle this file
 	void WFE_LJ_StartupJava(void);
 	void WFE_LJ_StartDebugger(void);
@@ -1358,7 +1362,7 @@ BOOL CNetscapeApp::InitInstance()
 	STARTUP_np();
 
 	// if PE mode, start up java too!
-#ifdef JAVA
+#if defined(OJI) || defined(JAVA)
 	if (m_bAccountSetupStartupJava) {
 
     // rhp - Added flags for MAPI startup...
@@ -1382,24 +1386,31 @@ BOOL CNetscapeApp::InitInstance()
 		// only show splash if not embedded
 		m_splash.NavDoneIniting();
     }
-
-#ifdef JAVA
+#if defined(OJI) || defined(JAVA)
 	// if PE mode, check if java environment is valid
 	if (m_bAccountSetupStartupJava) {
 
-	JRIEnv * ee = JRI_GetCurrentEnv();
-
-	if (ee == NULL)  {
-
-			CString szJavaStartupErr = "You are starting up an application that needs java.\nPlease turn on java in your navigator's preference and try again.";
-			AfxMessageBox(szJavaStartupErr, MB_OK);
-
-			m_bAccountSetupStartupJava = FALSE;
-
-			return FALSE;
-		}
-
-		m_bAccountSetupStartupJava = FALSE;
+#ifdef OJI
+        JRIEnv* ee = NULL;
+        JVMMgr* jvmMgr = JVM_GetJVMMgr();
+        if (jvmMgr) {
+            NPIJVMPlugin* jvm = jvmMgr->GetJVM();
+            if (jvm) {
+                ee = jvm->EnsureExecEnv();
+                jvm->Release();
+            }
+            jvmMgr->Release();
+        }
+#else
+        JRIEnv * ee = JRI_GetCurrentEnv();
+#endif
+        if (ee == NULL)  {
+            CString szJavaStartupErr = "You are starting up an application that needs java.\nPlease turn on java in your navigator's preference and try again.";
+            AfxMessageBox(szJavaStartupErr, MB_OK);
+            m_bAccountSetupStartupJava = FALSE;
+            return FALSE;
+        }
+        m_bAccountSetupStartupJava = FALSE;
 	}
 #endif
     // Its now safe to create the frame objects and start this whole thang
@@ -1749,7 +1760,7 @@ BOOL CNetscapeApp::InitInstance()
 				
 #endif /* MOZ_MAIL_NEWS */
 
-#ifdef JAVA
+#if defined(OJI) || defined(JAVA)
 		case STARTUP_JAVA_DEBUG_AGENT:
 					WFE_LJ_StartDebugger();         // stub call because java.h can't be included here
 					break;
@@ -2084,7 +2095,7 @@ int CNetscapeApp::ExitInstance()
     // Free all resources allocated by NSPR...
     //
 #if !defined(_WIN32)
-#if defined(JAVA) || defined(MOCHA)
+#if defined(OJI) || defined(JAVA) || defined(MOCHA)
 #if defined(NSPR20)
 	/*
 	 * XXX SHould PR_CLeanup be called here?
@@ -2097,7 +2108,7 @@ int CNetscapeApp::ExitInstance()
     PR_Shutdown();
 #endif
 #endif
-#endif  /* JAVA || MOCHA */
+#endif  /* OJI || JAVA || MOCHA */
 
 	if (theApp.m_bNetworkProfile) {
 		// if we have a network profile command-line we are assuming delete on exit (for now)

@@ -518,6 +518,7 @@ void CStubsCX::GetDocPosition(MWContext * pContext, int iLoc, int32 * pX, int32 
 {
 }
 
+#ifdef TRANSPARENT_APPLET
 /* java specific functions to allow delayed window creation and transparency */
 void CStubsCX::HandleClippingView(MWContext *pContext, LJAppletData *appletD, int x, int y, int width, int height)
 {
@@ -525,6 +526,7 @@ void CStubsCX::HandleClippingView(MWContext *pContext, LJAppletData *appletD, in
 void CStubsCX::DrawJavaApp(MWContext *pContext, int iLocation, LO_JavaAppStruct *pJava)
 {
 }
+#endif
 
 //  URL Exit Routines
 void CStubsCX::GetUrlExitRoutine(URL_Struct *pUrl, int iStatus, MWContext *pContext)    {

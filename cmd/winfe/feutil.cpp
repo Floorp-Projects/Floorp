@@ -28,8 +28,13 @@
 #include "toolbar2.h"
 #include "VerReg.h"
 #include "libmocha.h"
-#include "java.h"
 #include "ngdwtrst.h"
+
+#if defined(OJI)
+#include "jvmmgr.h"
+#elif defined(JAVA)
+#include "java.h"
+#endif
 
 extern "C" {
 #include "xpgetstr.h"
@@ -1776,9 +1781,22 @@ void FEU_OpenNetcaster(void)
 		
 
 		if (regErr == REGERR_OK) {
-
+            BOOL javaEnabled = FALSE;
+#if defined(OJI)
+            JVMMgr* jvmMgr = JVM_GetJVMMgr();
+            if (jvmMgr) {
+                NPIJVMPlugin* jvm = jvmMgr->GetJVM();
+                if (jvm) {
+                    javaEnabled = jvm->GetJVMEnabled();
+                    jvm->Release();
+                }
+                jvmMgr->Release();
+            }
+#elif defined(JAVA)
+            javaEnabled = LJ_GetJavaEnabled();
+#endif
 			// Now check to see if Java and JS are enabled
-			if (!LM_GetMochaEnabled() || !LJ_GetJavaEnabled()) {
+			if (!LM_GetMochaEnabled() || !javaEnabled) {
 				MessageBox(NULL, XP_GetString(XP_ALERT_NETCASTER_NO_JS), szLoadString(AFX_IDS_APP_TITLE), MB_OK | MB_ICONEXCLAMATION); 
 				return;
 			}

@@ -52,7 +52,7 @@
 #endif
 #endif
 
-#if defined(JAVA) || defined(MOCHA)
+#if defined(OJI) || defined(JAVA) || defined(MOCHA)
 
 #ifndef XP_PC
 #define XP_PC
@@ -72,17 +72,24 @@
 #endif
 
 #include "nspr.h"
+#include "plevent.h"
+#endif /* OJI || JAVA || MOCHA */
+
+#if defined(OJI)
+#include "jvmmgr.h"
+#elif defined(JAVA)
 #include "java.h"
-#endif /* JAVA || MOCHA */
+#endif
 
 #if defined(XP_PC) && !defined(_WIN32)
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
 extern "C" PR_PUBLIC_API(void) SuspendAllJavaThreads(void);
 #endif
 #endif
 
 // Shared event queue used to pass messages between the java threads and
 // the main navigator thread...
+
 extern "C" {
 PREventQueue *mozilla_event_queue;
 PRThread     *mozilla_thread;
@@ -623,31 +630,42 @@ static struct PRMethodCallbackStr DLLCallbacks = {
 #endif	/* NSPR20 */
 #endif /* XP_WIN16 */
 
-#if defined(JAVA) || defined(MOCHA)
+#if defined(OJI) || defined(JAVA) || defined(MOCHA)
 #ifndef NSPR20
     // Initialize the NSPR library
     PR_Init( "mozilla", MOZILLA_THREAD_PRIORITY, 1, stackBase);
 
     mozilla_thread = PR_CurrentThread();
 #else
-	PR_STDIO_INIT()
+    PR_STDIO_INIT()
     mozilla_thread = PR_CurrentThread();
     PR_SetThreadGCAble();
     PR_SetThreadPriority(mozilla_thread, MOZILLA_THREAD_PRIORITY);
     PL_InitializeEventsLib("mozilla");
 #endif
-#endif /* JAVA || MOCHA */
+#endif /* OJI || JAVA || MOCHA */
 }
 
 BOOL fe_ShutdownJava()
 {
 	BOOL bRetval = TRUE;
 
-#ifdef JAVA
+#if defined(OJI)
+
+    JVMMgr* jvmMgr = JVM_GetJVMMgr();
+    if (jvmMgr == NULL) 
+        return FALSE;
+    bRetval = (jvmMgr->ShutdownJVM() == JVMStatus_Enabled);
+    // XXX suspend all java threads
+    jvmMgr->Release();
+
+#elif defined(JAVA)
+
     bRetval = (LJ_ShutdownJava() == LJJavaStatus_Enabled);
 #if defined(XP_PC) && !defined(_WIN32)
     SuspendAllJavaThreads();
 #endif
+
 #endif
 
 	return(bRetval);

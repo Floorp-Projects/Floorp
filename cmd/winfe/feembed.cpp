@@ -159,12 +159,12 @@ void EmbedUrlExit(URL_Struct *pUrl, int iStatus, MWContext *pContext)
         while(rIndex != NULL && iStatus != MK_INTERRUPTED)   {
             pLayoutData = (LO_EmbedStruct *)pItem->m_cplUnblock.GetNext(rIndex);
 			if ((pEmbeddedApp->type ==  NP_OLE) && pItem->m_lpObject) {
-				if ( pLayoutData->width)
-					csExtents.cx = pLayoutData->width; 
-				if ( pLayoutData->height)
-					csExtents.cy = pLayoutData->height; 
-				pLayoutData->width = csExtents.cx;
-				pLayoutData->height = csExtents.cy;
+				if ( pLayoutData->objTag.width)
+					csExtents.cx = pLayoutData->objTag.width; 
+				if ( pLayoutData->objTag.height)
+					csExtents.cy = pLayoutData->objTag.height; 
+				pLayoutData->objTag.width = csExtents.cx;
+				pLayoutData->objTag.height = csExtents.cy;
 
 			}
             LO_ClearEmbedBlock(ABSTRACTCX(pContext)->GetDocumentContext(), pLayoutData);        
@@ -186,20 +186,20 @@ void EmbedUrlExit(URL_Struct *pUrl, int iStatus, MWContext *pContext)
             pLayoutData = (LO_EmbedStruct *)pItem->m_cplDisplay.GetNext(rIndex);
 
 			if ((pEmbeddedApp->type ==  NP_OLE) && pItem->m_lpObject) {
-				if ( pLayoutData->width )
-					csExtents.cx = pLayoutData->width; 
-				if ( pLayoutData->height)
-					csExtents.cy = pLayoutData->height;
-				pLayoutData->width = csExtents.cx;
-				pLayoutData->height = csExtents.cy;
+				if ( pLayoutData->objTag.width )
+					csExtents.cx = pLayoutData->objTag.width; 
+				if ( pLayoutData->objTag.height)
+					csExtents.cy = pLayoutData->objTag.height;
+				pLayoutData->objTag.width = csExtents.cx;
+				pLayoutData->objTag.height = csExtents.cy;
 			}
 #ifdef LAYERS
             if (pContext->compositor) {
                 XP_Rect rect;
                 
-                CL_GetLayerBbox(pLayoutData->layer, &rect);
-                CL_UpdateLayerRect(CL_GetLayerCompositor(pLayoutData->layer),
-                                   pLayoutData->layer, &rect, PR_FALSE);
+                CL_GetLayerBbox(pLayoutData->objTag.layer, &rect);
+                CL_UpdateLayerRect(CL_GetLayerCompositor(pLayoutData->objTag.layer),
+                                   pLayoutData->objTag.layer, &rect, PR_FALSE);
             }
             else
 #endif /* LAYERS */
@@ -260,16 +260,16 @@ static void wfe_PluginStream(URL_Struct *pUrlData, MWContext *pContext)
             /* Convert layer-relative coordinates for element to document
                coordinates, since that's what the FE uses. */
             rect.top = rect.left = rect.right = rect.bottom = 0;
-            CL_LayerToWindowRect(pContext->compositor, pLayoutData->layer, &rect);
+            CL_LayerToWindowRect(pContext->compositor, pLayoutData->objTag.layer, &rect);
             CL_WindowToDocumentRect(pContext->compositor, &rect);
             
             /* Save old, layer-relative coordinates */
-            lXSave = pLayoutData->x;
-            lYSave = pLayoutData->y;
+            lXSave = pLayoutData->objTag.x;
+            lYSave = pLayoutData->objTag.y;
             
             /* Temporarily shift element to document coordinates */
-            pLayoutData->x = rect.left - pLayoutData->x_offset;
-            pLayoutData->y = rect.top - pLayoutData->y_offset;
+            pLayoutData->objTag.x = rect.left - pLayoutData->objTag.x_offset;
+            pLayoutData->objTag.y = rect.top - pLayoutData->objTag.y_offset;
         }
 #endif /* LAYERS */
 
@@ -278,8 +278,8 @@ static void wfe_PluginStream(URL_Struct *pUrlData, MWContext *pContext)
 
 #ifdef LAYERS
         if (pContext->compositor) {
-            pLayoutData->x = lXSave;
-            pLayoutData->y = lYSave;
+            pLayoutData->objTag.x = lXSave;
+            pLayoutData->objTag.y = lYSave;
         }
 #endif /* LAYERS */
 

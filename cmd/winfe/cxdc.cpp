@@ -33,7 +33,9 @@
 #include "prefinfo.h"
 #include "cxprint.h"
 
-#ifdef JAVA
+#if defined(OJI)
+#include "jvmmgr.h"
+#elif defined(JAVA)
 #include "java.h"
 #endif
 
@@ -1177,12 +1179,12 @@ BOOL CDCCX::ResolveElement(LTRB& Rect, LO_EmbedStruct *pEmbed, int iLocation, Bo
     // and we ignore the layer origin. For windowless embeds, we only
     // need the layer origin, and not the position of the embed.
     if (bWindowed) {
-        Rect.left += pEmbed->x + pEmbed->x_offset + pEmbed->border_width;
-        Rect.top += pEmbed->y + pEmbed->y_offset + pEmbed->border_width;
+        Rect.left += pEmbed->objTag.x + pEmbed->objTag.x_offset + pEmbed->objTag.border_width;
+        Rect.top += pEmbed->objTag.y + pEmbed->objTag.y_offset + pEmbed->objTag.border_width;
     }
     
-	Rect.right = Rect.left + pEmbed->width;
-	Rect.bottom = Rect.top + pEmbed->height;
+	Rect.right = Rect.left + pEmbed->objTag.width;
+	Rect.bottom = Rect.top + pEmbed->objTag.height;
 
     if (!bWindowed)
         ExtendCoord(Rect);
@@ -2554,8 +2556,8 @@ void CDCCX::DisplayImageFeedback(MWContext *pContext, int iLocation, LO_Element 
 BOOL CDCCX::IsPluginFullPage(LO_EmbedStruct *pLayoutData)
 {
     // 1x1 size is signal that plugin is full page, not embedded
-    if((pLayoutData->width == Pix2TwipsX(1))
-        && (pLayoutData->height == Pix2TwipsX(1)))
+    if((pLayoutData->objTag.width == Pix2TwipsX(1))
+        && (pLayoutData->objTag.height == Pix2TwipsX(1)))
         return TRUE;
     return FALSE;
 }
@@ -2662,7 +2664,7 @@ void CDCCX::DisplayPlugin(MWContext *pContext, LO_EmbedStruct *pEmbed,
         return;
 
     if (::IsWindowVisible((HWND)pAppWin->window) && 
-        (pEmbed->ele_attrmask & LO_ELE_INVISIBLE))
+        (pEmbed->objTag.ele_attrmask & LO_ELE_INVISIBLE))
         ::ShowWindow((HWND)pAppWin->window, SW_HIDE);
 
     // If the plugin is embedded we need to make sure the window is
@@ -2697,14 +2699,14 @@ void CDCCX::DisplayPlugin(MWContext *pContext, LO_EmbedStruct *pEmbed,
     }
         
     if (!::IsWindowVisible((HWND)pAppWin->window) &&
-        !(pEmbed->ele_attrmask & LO_ELE_INVISIBLE))
+        !(pEmbed->objTag.ele_attrmask & LO_ELE_INVISIBLE))
         ::ShowWindow((HWND)pAppWin->window, SW_SHOW);
        
 }
 
 void CDCCX::DisplayEmbed(MWContext *pContext, int iLocation, LO_EmbedStruct *pEmbed)
 {
-    NPEmbeddedApp* pEmbeddedApp = (NPEmbeddedApp*)pEmbed->FE_Data;
+    NPEmbeddedApp* pEmbeddedApp = (NPEmbeddedApp*)pEmbed->objTag.FE_Data;
 
     if(pEmbeddedApp == NULL)
         return;
@@ -2733,8 +2735,8 @@ void CDCCX::DisplayEmbed(MWContext *pContext, int iLocation, LO_EmbedStruct *pEm
         SafeSixteen(Rect);
 
 		//	Draw a border around the embed if needed.
-		if(pEmbed->border_width != 0)	{
-			DrawRectBorder(Rect, ResolveBorderColor(NULL), pEmbed->border_width);
+		if(pEmbed->objTag.border_width != 0)	{
+			DrawRectBorder(Rect, ResolveBorderColor(NULL), pEmbed->objTag.border_width);
 		}
 
 		//	Get the embedded item
@@ -3796,14 +3798,14 @@ BOOL CDCCX::ResolveTextExtent(int16 wincsid, HDC pDC, LPCTSTR pString, int iLeng
 #endif
 }
 
-
+#ifdef TRANSPARENT_APPLET
 // 
 // This function is called only when applet are windowless and force a
 // paint on the java side
 //
 void CDCCX::DrawJavaApp(MWContext *pContext, int iLocation, LO_JavaAppStruct *pJava)
 {
-#ifdef JAVA
+#if defined(OJI) || defined(JAVA)
 
     RECT        rect;
     HDC         hDC = GetContextDC();
@@ -3827,10 +3829,15 @@ void CDCCX::DrawJavaApp(MWContext *pContext, int iLocation, LO_JavaAppStruct *pJ
     event.event = WM_PAINT;
     event.wParam = (uint32)hDC;
     event.lParam = (uint32)&rect;
-    
+
+#if defined(OJI)
+    // XXX help
+#elif defined(JAVA) 
     LJ_HandleEvent(pContext, pJava, (void *)&event);
+#endif
 
     ReleaseContextDC(hDC);
 #endif
 }
 
+#endif

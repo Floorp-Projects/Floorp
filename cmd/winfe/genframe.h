@@ -264,7 +264,7 @@ protected:
 	afx_msg void OnFishCam(); 
     afx_msg void OnShowBookmarkWindow();
     afx_msg void OnShowAddressBookWindow();
-#ifdef JAVA
+#if defined(JAVA) || defined(OJI)
 	afx_msg void OnToggleJavaConsole();
 	afx_msg void OnUpdateJavaConsole(CCmdUI* pCmdUI);
 #endif

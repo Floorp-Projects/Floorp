@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -444,8 +444,10 @@ public:
     virtual void RestoreEmbedWindow(MWContext *pContext, NPEmbeddedApp *pApp);
     virtual void DestroyEmbedWindow(MWContext *pContext, NPEmbeddedApp *pApp);
 	virtual void DisplayJavaApp(MWContext *pContext, int iLocation, LO_JavaAppStruct *java_struct);
-        virtual void HandleClippingView(MWContext *pContext, LJAppletData *appletD, int x, int y, int width, int height);
-        virtual void HideJavaAppElement(MWContext *pContext, LJAppletData * session_data);
+#ifdef TRANSPARENT_APPLET
+	virtual void HandleClippingView(MWContext *pContext, LJAppletData *appletD, int x, int y, int width, int height);
+#endif
+	virtual void HideJavaAppElement(MWContext *pContext, LJAppletData * session_data);
 	virtual void SetDocDimension(MWContext *pContext, int iLocation, int32 lWidth, int32 lLength);
 	virtual void SetDocPosition(MWContext *pContext, int iLocation, int32 lX, int32 lY);
 	virtual void FreeJavaAppElement(MWContext *pContext, LJAppletData *appletD);

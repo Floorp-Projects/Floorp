@@ -731,7 +731,9 @@ public:
 	virtual void ResetFormElement(MWContext *pContext, LO_FormElementStruct *pFormElement);
 	virtual void SetFormElementToggle(MWContext *pContext, LO_FormElementStruct *pFormElement, XP_Bool iState);
 
+#ifdef TRANSPARENT_APPLET
         virtual void DrawJavaApp(MWContext *pContext, int iLocation, LO_JavaAppStruct *pJava);
+#endif
 
 protected:
 	void StretchMaskBlt(HDC hTargetDC, HBITMAP theBitmap, HBITMAP theMask, 

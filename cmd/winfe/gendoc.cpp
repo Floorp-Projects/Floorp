@@ -364,9 +364,9 @@ void CGenericDoc::GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pLayoutData,
 			if (rIndex) {
 				LO_EmbedStruct* pLayoutData = (LO_EmbedStruct *)pItem->m_cplElements.GetNext(rIndex);
 
-				ASSERT(pLayoutData && pLayoutData->type == LO_EMBED);
+				ASSERT(pLayoutData && pLayoutData->objTag.type == LO_EMBED);
 				if (pLayoutData) {
-					NPEmbeddedApp* pEmbeddedApp = (NPEmbeddedApp*)pLayoutData->FE_Data;
+					NPEmbeddedApp* pEmbeddedApp = (NPEmbeddedApp*)pLayoutData->objTag.FE_Data;
 
 					ASSERT(pEmbeddedApp);
 					if (pEmbeddedApp && pEmbeddedApp->type == NP_OLE)
@@ -408,11 +408,11 @@ void CGenericDoc::GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pLayoutData,
         pEmbeddedApp->wdata = pAppWin;
 
         //  Go ahead and assign it into the layout data for use in other functions.
-        pLayoutData->FE_Data = (void *)pEmbeddedApp;
+        pLayoutData->objTag.FE_Data = (void *)pEmbeddedApp;
         pItem->m_iLock++;
 
         //  Is layout blocking for this information?
-        if(pLayoutData->width == 0 || pLayoutData->height == 0) {
+        if(pLayoutData->objTag.width == 0 || pLayoutData->objTag.height == 0) {
 
             if(pItem->m_bLoading == TRUE)   {
                 //  Add this layout element to those that will be unblocked once loaded.
@@ -439,12 +439,12 @@ void CGenericDoc::GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pLayoutData,
 				csExtents.cx = pCX->Metric2TwipsX(csExtents.cx);
 				csExtents.cy = pCX->Metric2TwipsY(csExtents.cy);
 
-				if ( pLayoutData->width )
-					csExtents.cx = pLayoutData->width;
-				if ( pLayoutData->height )
-					csExtents.cy = pLayoutData->height; 
-				pLayoutData->width = csExtents.cx;
-				pLayoutData->height = csExtents.cy;
+				if ( pLayoutData->objTag.width )
+					csExtents.cx = pLayoutData->objTag.width;
+				if ( pLayoutData->objTag.height )
+					csExtents.cy = pLayoutData->objTag.height; 
+				pLayoutData->objTag.width = csExtents.cx;
+				pLayoutData->objTag.height = csExtents.cy;
             }
 
             return;
@@ -506,8 +506,8 @@ void CGenericDoc::GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pLayoutData,
 		//
 		// If we're printing we will use a cached app from the session data so we don't
 		// need to do either of these
-		if ((pLayoutData->ele_attrmask & LO_ELE_HIDDEN) == 0 && !bPrinting) {
-			if(pLayoutData->width == 0 || pLayoutData->height == 0) {
+		if ((pLayoutData->objTag.ele_attrmask & LO_ELE_HIDDEN) == 0 && !bPrinting) {
+			if(pLayoutData->objTag.width == 0 || pLayoutData->objTag.height == 0) {
 				//  Layout is blocking, be sure to unblock once loaded.
 				pItem->m_cplUnblock.AddTail(pLayoutData);
 			}
@@ -542,19 +542,19 @@ void CGenericDoc::GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pLayoutData,
 
 				csExtents.cx = pCX->Metric2TwipsX(csExtents.cx);
 				csExtents.cy = pCX->Metric2TwipsY(csExtents.cy);
-				if ( pLayoutData->width )
-					csExtents.cx = pLayoutData->width; 
-				if ( pLayoutData->height )
-					csExtents.cy = pLayoutData->height; 
-				pLayoutData->width = csExtents.cx;
-				pLayoutData->height = csExtents.cy;
+				if ( pLayoutData->objTag.width )
+					csExtents.cx = pLayoutData->objTag.width; 
+				if ( pLayoutData->objTag.height )
+					csExtents.cy = pLayoutData->objTag.height; 
+				pLayoutData->objTag.width = csExtents.cx;
+				pLayoutData->objTag.height = csExtents.cy;
                 // In the printing case, an OLE container is not windowed
                 LO_SetEmbedType(pLayoutData, PR_FALSE);
 			}
 			else { 
 				// so layout will not block on us. Since this embed element is missing.
-				pLayoutData->width = 1;
-				pLayoutData->height = 1;
+				pLayoutData->objTag.width = 1;
+				pLayoutData->objTag.height = 1;
 
 			}
 
@@ -593,13 +593,13 @@ void CGenericDoc::GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pLayoutData,
 		pItem->m_csAddress = pLayoutAddress;
 
 		//  Go ahead and assign it into the layout data for use in other functions.
-		pLayoutData->FE_Data = (void *)pEmbeddedApp;
+		pLayoutData->objTag.FE_Data = (void *)pEmbeddedApp;
 
 		// Now that we've set the NPEmbeddedApp's fe_data and layout's FE_Data we can start the embed
 		if (NPL_EmbedStart(pContext, pLayoutData, pEmbeddedApp) != NPERR_NO_ERROR) {
 			// Something went wrong. Time to clean up. The XP code has already deleted
 			// the NPEmbeddedApp
-			pLayoutData->FE_Data = NULL;
+			pLayoutData->objTag.FE_Data = NULL;
 			pItem->m_bLoading = FALSE;
 			delete pItem;
 		}
@@ -609,7 +609,7 @@ void CGenericDoc::GetEmbedSize(MWContext *pContext, LO_EmbedStruct *pLayoutData,
 
 void CGenericDoc::FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pLayoutData)
 {
-    NPEmbeddedApp* 		pEmbeddedApp = (NPEmbeddedApp*)pLayoutData->FE_Data;
+    NPEmbeddedApp* 		pEmbeddedApp = (NPEmbeddedApp*)pLayoutData->objTag.FE_Data;
     CNetscapeCntrItem*	pItem = NULL;
     CNetscapeCntrItem*	curItem = NULL;
     int32 iRefCountIndicator = 0;
@@ -643,7 +643,7 @@ void CGenericDoc::FreeEmbedElement(MWContext *pContext, LO_EmbedStruct *pLayoutD
         curItem = (CNetscapeCntrItem*)pEmbeddedApp->fe_data;
 
     NPL_EmbedDelete(pContext, pLayoutData);
-    pLayoutData->FE_Data = NULL;
+    pLayoutData->objTag.FE_Data = NULL;
 
 	//	If the item is already gone, bail now.
     // Also check for npdata->refs being greater or equal 0

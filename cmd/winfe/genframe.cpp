@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -45,7 +45,9 @@
 #include "intelli.h"
 #endif
 
-#ifdef JAVA
+#if defined(OJI)
+#include "jvmmgr.h"
+#elif defined(JAVA)
 #include "java.h"
 #endif
 
@@ -756,7 +758,7 @@ BEGIN_MESSAGE_MAP(CGenericFrame, CFrameWnd)
 	ON_COMMAND(ID_OPEN_NEWS_WINDOW, OnOpenNewsWindow)
     ON_COMMAND(ID_WINDOW_BOOKMARKWINDOW, OnShowBookmarkWindow)
     ON_COMMAND(ID_WINDOW_ADDRESSBOOK, OnShowAddressBookWindow)
-#ifdef JAVA
+#if defined(OJI) || defined(JAVA)
     ON_COMMAND(ID_OPTIONS_SHOWJAVACONSOLE, OnToggleJavaConsole)
     ON_UPDATE_COMMAND_UI(ID_OPTIONS_SHOWJAVACONSOLE, OnUpdateJavaConsole)
 #endif
@@ -2196,25 +2198,59 @@ void CGenericFrame::OnShowBookmarkWindow()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-#ifdef JAVA
+
+#if defined(OJI) || defined(JAVA)
 void CGenericFrame::OnToggleJavaConsole()
 {
-    if( LJ_IsConsoleShowing() ) {
-	LJ_HideConsole();
-    } else {
-	LJ_ShowConsole();
+#ifdef OJI
+    JVMMgr* jvmMgr = JVM_GetJVMMgr();
+    if (jvmMgr == NULL) 
+        return;
+    NPIJVMPlugin* jvm = jvmMgr->GetJVM();
+    if (jvm) {
+        if (jvm->IsConsoleVisible()) {
+            jvm->HideConsole();
+        } else {
+            jvm->ShowConsole();
+        }
+        jvm->Release();
     }
+    jvmMgr->Release();
+#else
+    if( LJ_IsConsoleShowing() ) {
+      LJ_HideConsole();
+    } else {
+      LJ_ShowConsole();
+    }
+#endif
 }
 
 void CGenericFrame::OnUpdateJavaConsole(CCmdUI* pCmdUI)
 {   
+#ifdef OJI
+    JVMMgr* jvmMgr = JVM_GetJVMMgr();
+    if (jvmMgr == NULL) {
+        pCmdUI->Enable(FALSE);
+    }
+    NPIJVMPlugin* jvm = jvmMgr->GetJVM();
+    if (jvm) {
+        if (jvm->GetJVMStatus() != JVMStatus_Failed) {
+            pCmdUI->SetCheck(jvm->IsConsoleVisible());
+        } else {
+            pCmdUI->Enable(FALSE);
+        }
+        jvm->Release();
+    }
+    jvmMgr->Release();
+#else
     if (LJJavaStatus_Failed != LJ_GetJavaStatus()) {
         pCmdUI->SetCheck( LJ_IsConsoleShowing() );
     } else {
         pCmdUI->Enable(FALSE);
     }
+#endif
 }
-#endif  /* JAVA */
+#endif  /* OJI || JAVA */
 
 void CGenericFrame::OnTaskbar()
 {

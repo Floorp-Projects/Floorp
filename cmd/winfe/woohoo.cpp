@@ -27,10 +27,14 @@
 #include "template.h"
 #include "mainfrm.h"
 #include "woohoo.h"
-#ifdef JAVA
+
+#if defined(OJI)
+#include "jvmmgr.h"
+#elif defined(JAVA)
 #include "java.h"
 #endif
 
+void WFE_LJ_StartDebugger(void);
 
 //
 // Parse the command line for component launch arguments
@@ -194,7 +198,7 @@ BOOL CNetscapeApp::ExistComponentArguments(char * pszCommandLine)
   } else if (strcasestr(pszCommandLine,"-PROFILE_MANAGER" )){
     m_bProfileManager = TRUE;
 
-#ifdef JAVA
+#if defined(OJI) || defined(JAVA)
   } else if (strcasestr(pszCommandLine,"-javadebug" )){
     m_bCreateJavaDebugAgent = TRUE;
 #endif
@@ -252,7 +256,7 @@ BOOL CNetscapeApp::BuildCmdLineList(const char* pszRemoveString, CCmdParse &cmdP
       
 	if (!pFirst)
 	{   //just in case no switch was given
-		pFirst = strchr(pszCmdLine,'"');  
+		pFirst = strchr(pszCmdLine,'"');
 	}
 	else
 	{   //jump over the flag since we don't want it on the list
@@ -484,13 +488,13 @@ void CNetscapeApp::LaunchComponentWindow(int iStartupMode, char *pszCmdLine)
 			//we do this outside the switch
 			break; 
 
-#ifdef JAVA
+#if defined(OJI) || defined(JAVA)
 		case STARTUP_NETCASTER:
 			FEU_OpenNetcaster() ;
 			break;
 
 		case STARTUP_JAVA_DEBUG_AGENT:
-			LJ_StartDebugger(LJDebugPort_SharedMemory);
+			WFE_LJ_StartDebugger();
 			break;
 
 		case STARTUP_JAVA:
@@ -1152,15 +1156,37 @@ inline UINT CMapStringToObNoCase::HashKey(LPCTSTR key) const
 
 void WFE_LJ_StartupJava(void)
 {
-#ifdef JAVA
-	LJ_StartupJava();
+#ifdef OJI
+    JVMMgr* jvmMgr = JVM_GetJVMMgr();
+    if (jvmMgr) {
+        jvmMgr->StartupJVM();
+        jvmMgr->Release();
+    }
+#else
+    LJ_StartupJava();
 #endif
 }
 
 void WFE_LJ_StartDebugger(void)
 {
-#ifdef JAVA
-	LJ_StartDebugger(LJDebugPort_SharedMemory);
+#ifdef OJI
+    JVMMgr* jvmMgr = JVM_GetJVMMgr();
+    if (jvmMgr) {
+        NPIJVMPlugin* jvm = jvmMgr->GetJVM();
+        if (jvm) {
+            static NS_DEFINE_IID(kISymantecDebuggerIID, NP_ISYMANTECDEBUGGER_IID);
+            NPISymantecDebugger* debugger;
+            if (jvm->QueryInterface(kISymantecDebuggerIID, (void**)&debugger) == NS_OK) {
+                // XXX should we make sure the vm is started first?
+                debugger->StartDebugger(NPSymantecDebugPort_SharedMemory);
+                debugger->Release();
+            }
+            jvm->Release();
+        }
+        jvmMgr->Release();
+    }
+#else
+    LJ_StartDebugger(LJDebugPort_SharedMemory);
 #endif
 }
 

@@ -1844,14 +1844,15 @@ void CPrintCX::DisplayEmbed(MWContext *pContext, int iLocation, LO_EmbedStruct *
         return;
 	else if (GetDisplayMode() == CAPTURE_POSITION)	{
 		//	Capture the coordinates of this element.
-		Capture(pEmbed->x + pEmbed->x_offset, pEmbed->y + pEmbed->y_offset, pEmbed->width, pEmbed->height);
+		Capture(pEmbed->objTag.x + pEmbed->objTag.x_offset, pEmbed->objTag.y + pEmbed->objTag.y_offset,
+                pEmbed->objTag.width, pEmbed->objTag.height);
 
 		//	We don't actually allow display while we are capturing the area.
 		return;
 	}
 
 	//	Call the base for actual display.
-    NPEmbeddedApp* pEmbeddedApp = (NPEmbeddedApp*)pEmbed->FE_Data;
+    NPEmbeddedApp* pEmbeddedApp = (NPEmbeddedApp*)pEmbed->objTag.FE_Data;
 	if (pEmbeddedApp->type ==  NP_OLE) {
 		CNetscapeCntrItem *pItem = (CNetscapeCntrItem *)pEmbeddedApp->fe_data;
 		pItem->SetPrintDevice( &(m_pcpiPrintJob->m_pPD->m_pd) );

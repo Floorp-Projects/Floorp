@@ -195,7 +195,7 @@ BOOL CNetscapeView::AddEmbedToPopup(CMenu * pMenu, LO_Element * pElement, CL_Lay
 	//	Inline
     CNetscapeCntrItem *pItem = NULL;
     if(pElement != NULL && pElement->type == LO_EMBED)  {
-		NPEmbeddedApp *pPluginShim = (NPEmbeddedApp *)((LO_EmbedStruct *)pElement)->FE_Data;
+		NPEmbeddedApp *pPluginShim = (NPEmbeddedApp *)((LO_EmbedStruct *)pElement)->objTag.FE_Data;
 		if(pPluginShim != NULL && wfe_IsTypePlugin(pPluginShim) == FALSE)	{
         	pItem = (CNetscapeCntrItem *)pPluginShim->fe_data;
 		}
@@ -1228,11 +1228,11 @@ void CNetscapeView::OnPopupActivateEmbed()	{
     CWinCX *pWinCX = GetContext();
     if(pWinCX && pWinCX->m_pSelected)   {
         //  Figure out the rect that the item covers.
-        long lLeft = pWinCX->m_pSelected->x + pWinCX->m_pSelected->y_offset - pWinCX->GetOriginX();
-        long lRight = lLeft + pWinCX->m_pSelected->width;
+        long lLeft = pWinCX->m_pSelected->objTag.x + pWinCX->m_pSelected->objTag.y_offset - pWinCX->GetOriginX();
+        long lRight = lLeft + pWinCX->m_pSelected->objTag.width;
 
-        long lTop = pWinCX->m_pSelected->y + pWinCX->m_pSelected->y_offset - pWinCX->GetOriginY();
-        long lBottom = lTop + pWinCX->m_pSelected->height;
+        long lTop = pWinCX->m_pSelected->objTag.y + pWinCX->m_pSelected->objTag.y_offset - pWinCX->GetOriginY();
+        long lBottom = lTop + pWinCX->m_pSelected->objTag.height;
 
         HDC pDC = pWinCX->GetContextDC();
         RECT crBounds;
@@ -1251,7 +1251,7 @@ void CNetscapeView::OnPopupActivateEmbed()	{
     if(m_pRBElement != NULL)    {
         if(m_pRBElement->type == LO_EMBED)  {
             LO_EmbedStruct *pLayoutData = (LO_EmbedStruct *)m_pRBElement;
-			NPEmbeddedApp *pPluginShim = (NPEmbeddedApp *)pLayoutData->FE_Data;
+			NPEmbeddedApp *pPluginShim = (NPEmbeddedApp *)pLayoutData->objTag.FE_Data;
 			if(pPluginShim != NULL && wfe_IsTypePlugin(pPluginShim) == FALSE)	{
 	            CNetscapeCntrItem *pItem = (CNetscapeCntrItem *)pPluginShim->fe_data;
 
@@ -1324,7 +1324,7 @@ void CNetscapeView::OnPopupCopyEmbedToClipboard()   {
     if(m_pRBElement != NULL)    {
         if(m_pRBElement->type == LO_EMBED)  {
             LO_EmbedStruct *pLayoutData = (LO_EmbedStruct *)m_pRBElement;
-			NPEmbeddedApp *pPluginShim = (NPEmbeddedApp *)pLayoutData->FE_Data;
+			NPEmbeddedApp *pPluginShim = (NPEmbeddedApp *)pLayoutData->objTag.FE_Data;
 			if(pPluginShim != NULL && wfe_IsTypePlugin(pPluginShim) == FALSE)	{
 	            CNetscapeCntrItem *pItem = (CNetscapeCntrItem *)pPluginShim->fe_data;
 

@@ -24,10 +24,15 @@
 #include "cxsave.h"
 
 #include "np.h"
-#include "java.h"
 #include "prlog.h"
 #include "prlink.h"
 #include "xpstrsw.h"
+
+#if defined(OJI)
+#include "jvmmgr.h"
+#elif defined(JAVA)
+#include "java.h"
+#endif
 
 #include "cuvfs.h"
 #include "intl_csi.h"

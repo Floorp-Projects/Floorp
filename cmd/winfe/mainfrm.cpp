@@ -46,7 +46,9 @@
 #include "np.h"
 #include "npapi.h"			// for NPWindow
 
-#ifdef JAVA
+#if defined(OJI)
+#include "jvmmgr.h"
+#elif defined(JAVA)
 #include "java.h"
 #endif
 
