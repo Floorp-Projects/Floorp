@@ -66,7 +66,7 @@ nsMIMEInfoImpl::ExtensionExists(const char *aExtension, PRBool *_retval) {
     if (!aExtension) return NS_ERROR_NULL_POINTER;
 
     for (PRUint8 i=0; i < extCount; i++) {
-        nsString* ext = (nsString*)mExtensions.CStringAt(i);
+        nsCString* ext = mExtensions.CStringAt(i);
         if (ext->Equals(aExtension)) {
             found = PR_TRUE;
             break;
@@ -120,8 +120,9 @@ nsMIMEInfoImpl::Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval) {
     nsresult rv = aMIMEInfo->GetMIMEType(getter_Copies(type));
     if (NS_FAILED(rv)) return rv;
 
+      // STRING USE WARNING: perhaps |type1| should be an |nsCAutoString|? -- scc
     nsAutoString type1;
     mMIMEType->ToString(type1);
-    *_retval = type1.Equals(type);
+    *_retval = type1.EqualsWithConversion(type);
     return NS_OK;
 }

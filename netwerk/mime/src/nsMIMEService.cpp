@@ -113,7 +113,7 @@ nsMIMEService::AddMapping(const char* mimeType,
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
 
     anInfo->mExtensions.AppendCString(extension);
-    anInfo->mDescription = description;
+    anInfo->mDescription.AssignWithConversion(description);
     anInfo->mURI = dataURI;
 
     // The entry is mapped many-to-one and the MIME type is the root mapping.
@@ -201,7 +201,11 @@ nsMIMEService::RemoveExtension(const char* aExtension) {
     
     // Next remove the root MIME mapping from the array and hash
     // IFF this was the only file extension mapping left.
-    PRBool removed = info->mExtensions.RemoveCString(key.GetString());
+
+      // STRING USE WARNING: this particular use really needs to be examined -- scc
+    nsCAutoString keyString;
+    keyString.AssignWithConversion(key.GetString().GetUnicode());
+    PRBool removed = info->mExtensions.RemoveCString(keyString);
     NS_ASSERTION(removed, "mapping problem");
 
     if (info->GetExtCount() == 0) {
@@ -374,7 +378,7 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
     rv = aURI->GetSpec(getter_Copies(cStrSpec));
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString specStr(cStrSpec);
+    nsAutoString specStr; specStr.AssignWithConversion(cStrSpec);
 
     // find the file extension (if any)
     nsAutoString extStr;
