@@ -58,7 +58,8 @@ public:
 
   // For a given element, returns a flat list of all the anonymous children that need
   // frames built.
-  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement) = 0;
+  NS_IMETHOD GetContentList(nsIContent* aContent, nsISupportsArray** aResult, nsIContent** aChildElement, 
+                            PRBool* aMultipleInsertionPoints) = 0;
 
   // Retrieves our base class (e.g., tells us what type of frame and content node to build)
   NS_IMETHOD ResolveTag(nsIContent* aContent, nsIAtom** aResult) = 0;

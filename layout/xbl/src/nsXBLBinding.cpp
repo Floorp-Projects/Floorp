@@ -145,8 +145,6 @@ class nsXBLBinding: public nsIXBLBinding, public nsIScriptObjectOwner
   NS_IMETHOD GetBindingElement(nsIContent** aResult);
   NS_IMETHOD SetBindingElement(nsIContent* aElement);
 
-  NS_IMETHOD GetInsertionPoint(nsIContent** aResult);
-
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement);
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement);
   NS_IMETHOD InstallProperties(nsIContent* aBoundElement);
@@ -158,6 +156,9 @@ class nsXBLBinding: public nsIXBLBinding, public nsIScriptObjectOwner
   NS_IMETHOD ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument);
 
   NS_IMETHOD GetBindingURI(nsString& aResult);
+  
+  NS_IMETHOD GetInsertionPoint(nsIContent* aChild, nsIContent** aResult);
+  NS_IMETHOD GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleInsertionPoints);
 
   // nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -180,6 +181,7 @@ public:
   static nsIAtom* kInterfaceAtom;
   static nsIAtom* kHandlersAtom;
   static nsIAtom* kExcludesAtom;
+  static nsIAtom* kIncludesAtom;
   static nsIAtom* kInheritsAtom;
   static nsIAtom* kTypeAtom;
   static nsIAtom* kCapturerAtom;
@@ -214,6 +216,9 @@ protected:
 
   void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
   void GetNestedChild(nsIAtom* aTag, nsIContent* aContent, nsIContent** aResult);
+  void GetNestedChildren(nsIAtom* aTag, nsIContent* aContent, nsISupportsArray* aList);
+  void BuildInsertionTable();
+  void GetNestedChildren();
   PRBool IsInExcludesList(nsIAtom* aTag, const nsString& aList);
 
   NS_IMETHOD ConstructAttributeTable(nsIContent* aElement); 
@@ -230,12 +235,12 @@ protected:
   nsCOMPtr<nsIContent> mBinding; // Strong. As long as we're around, the binding can't go away.
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
-  nsCOMPtr<nsIContent> mChildrenElement; // Strong. One of our anonymous content children.
   void* mScriptObject; // Strong
     
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
   
   nsSupportsHashtable* mAttributeTable; // A table for attribute entries.
+  nsSupportsHashtable* mInsertionPointTable; // A table of insertion points.
 };
 
 // Static initialization
@@ -245,6 +250,7 @@ nsIAtom* nsXBLBinding::kContentAtom = nsnull;
 nsIAtom* nsXBLBinding::kInterfaceAtom = nsnull;
 nsIAtom* nsXBLBinding::kHandlersAtom = nsnull;
 nsIAtom* nsXBLBinding::kExcludesAtom = nsnull;
+nsIAtom* nsXBLBinding::kIncludesAtom = nsnull;
 nsIAtom* nsXBLBinding::kInheritsAtom = nsnull;
 nsIAtom* nsXBLBinding::kTypeAtom = nsnull;
 nsIAtom* nsXBLBinding::kCapturerAtom = nsnull;
@@ -319,7 +325,8 @@ NS_IMPL_ISUPPORTS2(nsXBLBinding, nsIXBLBinding, nsIScriptObjectOwner)
 // Constructors/Destructors
 nsXBLBinding::nsXBLBinding(void)
 : mScriptObject(nsnull),
-  mAttributeTable(nsnull)
+  mAttributeTable(nsnull),
+  mInsertionPointTable(nsnull)
 {
   NS_INIT_REFCNT();
   gRefCnt++;
@@ -328,6 +335,7 @@ nsXBLBinding::nsXBLBinding(void)
     kInterfaceAtom = NS_NewAtom("interface");
     kHandlersAtom = NS_NewAtom("handlers");
     kExcludesAtom = NS_NewAtom("excludes");
+    kIncludesAtom = NS_NewAtom("includes");
     kInheritsAtom = NS_NewAtom("inherits");
     kTypeAtom = NS_NewAtom("type");
     kCapturerAtom = NS_NewAtom("capturer");
@@ -362,6 +370,7 @@ nsXBLBinding::nsXBLBinding(void)
 nsXBLBinding::~nsXBLBinding(void)
 {
   delete mAttributeTable;
+  delete mInsertionPointTable;
 
   gRefCnt--;
   if (gRefCnt == 0) {
@@ -369,6 +378,7 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kInterfaceAtom);
     NS_RELEASE(kHandlersAtom);
     NS_RELEASE(kExcludesAtom);
+    NS_RELEASE(kIncludesAtom);
     NS_RELEASE(kInheritsAtom);
     NS_RELEASE(kTypeAtom);
     NS_RELEASE(kCapturerAtom);
@@ -469,14 +479,6 @@ nsXBLBinding::SetBindingElement(nsIContent* aElement)
 }
 
 NS_IMETHODIMP
-nsXBLBinding::GetInsertionPoint(nsIContent** aResult)
-{
-  *aResult = mChildrenElement;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
 {
   // Set our bound element.
@@ -569,9 +571,8 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     nsCOMPtr<nsIContent> clonedContent = do_QueryInterface(clonedNode);
     SetAnonymousContent(clonedContent);
 
-    if (childrenElement) {
-      GetNestedChild(kChildrenAtom, clonedContent, getter_AddRefs(mChildrenElement));
-    }
+    if (childrenElement)
+      BuildInsertionTable();
   }
   
   if (mNextBinding) {
@@ -1215,10 +1216,76 @@ nsXBLBinding::GetNestedChild(nsIAtom* aTag, nsIContent* aContent, nsIContent** a
         return;
     }
   }
-
-  return;
 }
 
+void
+nsXBLBinding::GetNestedChildren(nsIAtom* aTag, nsIContent* aContent, nsISupportsArray* aList)
+{
+  PRInt32 childCount;
+  aContent->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aContent->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsIAtom> tag;
+    child->GetTag(*getter_AddRefs(tag));
+    if (aTag == tag.get()) 
+      aList->AppendElement(child);
+    else
+      GetNestedChildren(aTag, child, aList);
+  }
+}
+
+void 
+nsXBLBinding::BuildInsertionTable()
+{
+  if (!mInsertionPointTable) 
+    mInsertionPointTable = new nsSupportsHashtable;
+  
+  nsCOMPtr<nsISupportsArray> childrenElements;
+  NS_NewISupportsArray(getter_AddRefs(childrenElements));
+  GetNestedChildren(kChildrenAtom, mContent, childrenElements);
+
+  PRUint32 count;
+  childrenElements->Count(&count);
+  for (PRUint32 i = 0; i < count; i++) {
+    nsCOMPtr<nsISupports> supp;
+    childrenElements->GetElementAt(i, getter_AddRefs(supp));
+    nsCOMPtr<nsIContent> child(do_QueryInterface(supp));
+    if (child) {
+      nsCOMPtr<nsIContent> parent; 
+      child->GetParent(*getter_AddRefs(parent));
+      nsAutoString includes;
+      child->GetAttribute(kNameSpaceID_None, kIncludesAtom, includes);
+      if (includes.IsEmpty()) {
+        nsISupportsKey key(kChildrenAtom);
+        mInsertionPointTable->Put(&key, parent);
+      }
+      else {
+        // The user specified at least one attribute.
+        char* str = includes.ToNewCString();
+        char* newStr;
+        // XXX We should use a strtok function that tokenizes PRUnichar's
+        // so that we don't have to convert from Unicode to ASCII and then back
+
+        char* token = nsCRT::strtok( str, ", ", &newStr );
+        while( token != NULL ) {
+          // Build an atom out of this string.
+          nsCOMPtr<nsIAtom> atom;
+            
+          nsAutoString tok; tok.AssignWithConversion(token);
+          atom = getter_AddRefs(NS_NewAtom(tok.GetUnicode()));
+           
+          nsISupportsKey key(atom);
+          mInsertionPointTable->Put(&key, parent);
+          
+          token = nsCRT::strtok( newStr, ", ", &newStr );
+        }
+
+        nsAllocator::Free(str);
+      }
+    }
+  }
+}
 
 PRBool
 nsXBLBinding::IsInExcludesList(nsIAtom* aTag, const nsString& aList) 
@@ -1476,6 +1543,46 @@ nsXBLBinding::AllowScripts()
   }
 
   return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsXBLBinding::GetInsertionPoint(nsIContent* aChild, nsIContent** aResult)
+{
+  *aResult = nsnull;
+  if (mInsertionPointTable) {
+    nsCOMPtr<nsIAtom> tag;
+    aChild->GetTag(*getter_AddRefs(tag));
+    nsISupportsKey key(tag);
+    nsCOMPtr<nsIContent> content = getter_AddRefs(NS_STATIC_CAST(nsIContent*, 
+                                                                 mInsertionPointTable->Get(&key)));
+    if (!content) {
+      nsISupportsKey key2(kChildrenAtom);
+      content = getter_AddRefs(NS_STATIC_CAST(nsIContent*, mInsertionPointTable->Get(&key2)));
+    }
+
+    *aResult = content;
+    NS_IF_ADDREF(*aResult);
+  }
+  return NS_OK;  
+}
+
+NS_IMETHODIMP
+nsXBLBinding::GetSingleInsertionPoint(nsIContent** aResult, PRBool* aMultipleInsertionPoints)
+{
+  *aResult = nsnull;
+  *aMultipleInsertionPoints = PR_FALSE;
+  if (mInsertionPointTable) {
+    if(mInsertionPointTable->Count() == 1) {
+      nsISupportsKey key(kChildrenAtom);
+      nsCOMPtr<nsIContent> content = getter_AddRefs(NS_STATIC_CAST(nsIContent*, 
+                                                                   mInsertionPointTable->Get(&key)));
+      *aResult = content;
+      NS_IF_ADDREF(*aResult);
+    }
+    else 
+      *aMultipleInsertionPoints = PR_TRUE;
+  }
+  return NS_OK;  
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
