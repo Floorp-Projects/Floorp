@@ -1614,10 +1614,6 @@ function GenericSendMessage( msgType )
       msgCompFields.subject = subject;
       Attachments2CompFields(msgCompFields);
 
-      var event = document.createEvent('Events');
-      event.initEvent('compose-send-message', false, true);
-      document.getElementById("msgcomposeWindow").dispatchEvent(event);
-
       if (msgType == nsIMsgCompDeliverMode.Now || msgType == nsIMsgCompDeliverMode.Later)
       {
         //Do we need to check the spelling?
@@ -1721,6 +1717,13 @@ function GenericSendMessage( msgType )
           gMsgCompose.SetDocumentCharset(fallbackCharset.value);
       }
       try {
+
+        // just before we try to send the message, fire off the compose-send-message event for listeners
+        // such as smime so they can do any pre-security work such as fetching certificates before sending
+        var event = document.createEvent('Events');
+        event.initEvent('compose-send-message', false, true);
+        document.getElementById("msgcomposeWindow").dispatchEvent(event);
+
         gWindowLocked = true;
         disableEditableFields();
         updateComposeItems();
