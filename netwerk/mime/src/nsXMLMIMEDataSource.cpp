@@ -288,7 +288,8 @@ nsXMLMIMEDataSource::GetEnumerator(nsISimpleEnumerator* *aEnumerator) {
 
 NS_IMETHODIMP
 nsXMLMIMEDataSource::Serialize() {
-
+return NS_ERROR_FAILURE;
+#if 0
 	nsresult rv = NS_OK;
 	
 	nsCOMPtr<nsIChannel> channel;
@@ -394,6 +395,7 @@ nsXMLMIMEDataSource::Serialize() {
   rv = stream->Close();
 
   return rv;
+#endif
 
 }
 
