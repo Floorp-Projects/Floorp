@@ -1387,7 +1387,30 @@ NS_IMETHODIMP
 nsHTMLDocument::CreateElement(const nsAString& aTagName,
                               nsIDOMElement** aReturn)
 {
-  return nsDocument::CreateElement(aTagName, aReturn);
+  *aReturn = nsnull;
+
+  nsresult rv = nsContentUtils::CheckQName(aTagName, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString tmp(aTagName);
+
+  if (!IsXHTML()) {
+    ToLowerCase(tmp);
+  }
+
+  nsCOMPtr<nsIAtom> name = do_GetAtom(tmp);
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  rv = mNodeInfoManager->GetNodeInfo(name, nsnull, mDefaultNamespaceID,
+                                     getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHTMLContent> content;
+  rv = NS_CreateHTMLElement(getter_AddRefs(content), nodeInfo, IsXHTML());
+  NS_ENSURE_SUCCESS(rv, rv);
+  content->SetContentID(mNextContentID++);
+
+  return CallQueryInterface(content, aReturn);
 }
 
 NS_IMETHODIMP
