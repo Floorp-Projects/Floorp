@@ -240,6 +240,10 @@ Essential Files:WidgetSupport.shlb
 Components:widget.shlb
 Components:widget.xpt
 
+; xmlextras, optional for XMLHttpRequest support
+Components:xmlextras.shlb
+Components:xmlextras.xpt
+
 ; xpconnect
 Components:XPConnect.shlb
 Components:xpconnect.xpt

@@ -233,6 +233,10 @@ softokn3.dll
 ssl3.dll
 nssckbi.dll
 
+; xmlextras, optional for XMLHttpRequest support
+components\xmlextras.dll
+components\xmlextras.xpt
+
 ;
 ; MathML, optional for MathML charset conversion
 ;
