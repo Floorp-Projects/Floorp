@@ -265,7 +265,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
 //*****************************************************************************   
 
 NS_IMETHODIMP
-nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
+nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo, PRUint32 aLoadFlags)
 {
   nsresult rv;
   nsCOMPtr<nsIURI> referrer;
@@ -273,21 +273,55 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
   PRBool inheritOwner = PR_FALSE;
   PRBool stopActiveDoc = PR_FALSE;
   nsCOMPtr<nsISHEntry> shEntry;
-  nsDocShellInfoLoadType loadType = nsIDocShellLoadInfo::loadNormal;
+
+  LoadType loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);
 
   NS_ENSURE_ARG(aURI);
 
   // Extract the info from the DocShellLoadInfo struct...
   if(aLoadInfo) {
     aLoadInfo->GetReferrer(getter_AddRefs(referrer));
-    aLoadInfo->GetLoadType(&loadType);
+
+    nsDocShellInfoLoadType lt = nsIDocShellLoadInfo::loadNormal;
+    aLoadInfo->GetLoadType(&lt);
+    switch (lt)
+    {
+    case nsIDocShellLoadInfo::loadNormal:
+        loadType = LOAD_NORMAL;
+        break;
+    case nsIDocShellLoadInfo::loadNormalReplace:
+        loadType = LOAD_NORMAL_REPLACE;
+        break;
+    case nsIDocShellLoadInfo::loadHistory:
+        loadType = LOAD_HISTORY;
+        break;
+    case nsIDocShellLoadInfo::loadReloadNormal:
+        loadType = LOAD_RELOAD_NORMAL;
+        break;
+    case nsIDocShellLoadInfo::loadReloadBypassCache:
+        loadType = LOAD_RELOAD_BYPASS_CACHE;
+        break;
+    case nsIDocShellLoadInfo::loadReloadBypassProxy:
+        loadType = LOAD_RELOAD_BYPASS_PROXY;
+        break;
+    case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
+        loadType = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
+        break;
+    case nsIDocShellLoadInfo::loadLink:
+        loadType = LOAD_LINK;
+        break;
+    case nsIDocShellLoadInfo::loadRefresh:
+        loadType = LOAD_REFRESH;
+        break;
+    }
+
     aLoadInfo->GetOwner(getter_AddRefs(owner));
     aLoadInfo->GetInheritOwner(&inheritOwner);
     aLoadInfo->GetStopActiveDocument(&stopActiveDoc);
     aLoadInfo->GetSHEntry(getter_AddRefs(shEntry));
   }
 
-  if (!shEntry && loadType != nsIDocShellLoadInfo::loadNormalReplace) {
+  if (!shEntry && loadType != LOAD_NORMAL_REPLACE) {
     /* Check if we are in the middle of loading a subframe whose parent
      * was originally loaded thro' Session History. ie., you were in a frameset
      * page, went somewhere else and clicked 'back'. The loading of the root page
@@ -304,7 +338,7 @@ nsDocShell::LoadURI(nsIURI* aURI, nsIDocShellLoadInfo* aLoadInfo)
       if (parent) {
         parent->GetChildSHEntry(mChildOffset, getter_AddRefs(shEntry));
         if (shEntry) {
-          loadType = nsIDocShellLoadInfo::loadHistory;
+          loadType = LOAD_HISTORY;
         }
       }
     }
@@ -341,10 +375,42 @@ NS_IMETHODIMP nsDocShell::LoadStream(nsIInputStream *aStream, nsIURI *aURI,
       if (NS_FAILED(rv)) return rv;
    }
 
-   nsDocShellInfoLoadType loadType = nsIDocShellLoadInfo::loadNormal;
-
+   LoadType loadType = LOAD_NORMAL;
    if(aLoadInfo)
-      (void)aLoadInfo->GetLoadType(&loadType);
+   {
+      nsDocShellInfoLoadType lt= nsIDocShellLoadInfo::loadNormal;
+      (void)aLoadInfo->GetLoadType(&lt);
+      switch (lt)
+      {
+      case nsIDocShellLoadInfo::loadNormal:
+          loadType = LOAD_NORMAL;
+          break;
+      case nsIDocShellLoadInfo::loadNormalReplace:
+          loadType = LOAD_NORMAL_REPLACE;
+          break;
+      case nsIDocShellLoadInfo::loadHistory:
+          loadType = LOAD_HISTORY;
+          break;
+      case nsIDocShellLoadInfo::loadReloadNormal:
+          loadType = LOAD_RELOAD_NORMAL;
+          break;
+      case nsIDocShellLoadInfo::loadReloadBypassCache:
+          loadType = LOAD_RELOAD_BYPASS_CACHE;
+          break;
+      case nsIDocShellLoadInfo::loadReloadBypassProxy:
+          loadType = LOAD_RELOAD_BYPASS_PROXY;
+          break;
+      case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
+          loadType = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
+          break;
+      case nsIDocShellLoadInfo::loadLink:
+          loadType = LOAD_LINK;
+          break;
+      case nsIDocShellLoadInfo::loadRefresh:
+          loadType = LOAD_REFRESH;
+          break;
+      }
+   }
 
    NS_ENSURE_SUCCESS(StopLoad(), NS_ERROR_FAILURE);
    // Cancel any timers that were set for this loader.
@@ -557,7 +623,9 @@ NS_IMETHODIMP nsDocShell::SetViewMode(PRInt32 aViewMode)
    mViewMode = aViewMode;
 
    if(reload)
-	   Reload(nsIDocShellLoadInfo::loadReloadNormal);
+   {
+	   Reload(LOAD_FLAGS_NONE);
+   }
 
    return NS_OK;
 }
@@ -1268,7 +1336,7 @@ nsDocShell::GotoIndex(PRInt32 aIndex)
 }
 
 
-NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
+NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI, PRUint32 aLoadFlags)
 {
    nsCOMPtr<nsIURI> uri;
 
@@ -1306,20 +1374,23 @@ NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI)
    if(!uri)
       return NS_ERROR_FAILURE;
 
-   NS_ENSURE_SUCCESS(LoadURI(uri, nsnull), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(LoadURI(uri, nsnull, aLoadFlags), NS_ERROR_FAILURE);
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
-{  
+NS_IMETHODIMP nsDocShell::Reload(PRUint32 aReloadFlags)
+{
+    NS_ASSERTION(((aReloadFlags & 0xf) == 0), "Reload command not updated to use load flags!");
+
 #ifdef SH_IN_FRAMES
    // XXX Honor the reload type
    //NS_ENSURE_STATE(mCurrentURI);
 
    // XXXTAB Convert reload type to our type
-   nsDocShellInfoLoadType type = nsIDocShellLoadInfo::loadReloadNormal;
-   if ( aReloadType == nsIWebNavigation::loadReloadBypassProxyAndCache )
-   	type = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
+   LoadType type = LOAD_RELOAD_NORMAL;
+   if ( aReloadFlags & LOAD_FLAGS_BYPASS_CACHE &&
+        aReloadFlags & LOAD_FLAGS_BYPASS_PROXY )
+   	type = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
 #if 0
    nsCOMPtr<nsISHEntry> entry;
    if (OSHE) {
@@ -1361,9 +1432,10 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
    NS_ENSURE_STATE(mCurrentURI);
 
    // XXXTAB Convert reload type to our type
-   nsDocShellInfoLoadType type = nsIDocShellLoadInfo::loadReloadNormal;
-   if ( aReloadType == nsIWebNavigation::loadReloadBypassProxyAndCache )
-   	type = nsIDocShellLoadInfo::loadReloadBypassProxyAndCache;
+   LoadType type = LOAD_RELOAD_NORMAL;
+   if ( aReloadFlags & LOAD_FLAGS_BYPASS_CACHE &&
+        aReloadFlags & LOAD_FLAGS_BYPASS_PROXY )
+   	type = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
 
    UpdateCurrentSessionHistory();
 
@@ -2345,10 +2417,10 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
     // Determine if this type of load should update history   
     switch(mLoadType)
     {
-    case nsIDocShellLoadInfo::loadNormalReplace:
-    case nsIDocShellLoadInfo::loadReloadBypassCache:
-    case nsIDocShellLoadInfo::loadReloadBypassProxy:
-    case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
+    case LOAD_NORMAL_REPLACE:
+    case LOAD_RELOAD_BYPASS_CACHE:
+    case LOAD_RELOAD_BYPASS_PROXY:
+    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
         updateHistory = PR_FALSE;
         break;
     default:
@@ -2717,11 +2789,11 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
     // Determine if this type of load should update history   
     switch(mLoadType)
     {
-    case nsIDocShellLoadInfo::loadHistory:
-    case nsIDocShellLoadInfo::loadReloadNormal:
-    case nsIDocShellLoadInfo::loadReloadBypassCache:
-    case nsIDocShellLoadInfo::loadReloadBypassProxy:
-    case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
+    case LOAD_HISTORY:
+    case LOAD_RELOAD_NORMAL:
+    case LOAD_RELOAD_BYPASS_CACHE:
+    case LOAD_RELOAD_BYPASS_PROXY:
+    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
         updateHistory = PR_FALSE;
         break;
     default:
@@ -2767,20 +2839,20 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    nsISupports* aOwner, PRBool aInheritOwner, PRBool aStopActiveDoc, const char* aWindowTarget, 
    nsIInputStream* aPostData, nsIInputStream* aHeadersData,
-   nsDocShellInfoLoadType aLoadType, nsISHEntry * aSHEntry)
+   PRUint32 aLoadType, nsISHEntry * aSHEntry)
 #else
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    nsISupports* aOwner, PRBool aInheritOwner, PRBool aStopActiveDoc, const char* aWindowTarget, 
    nsIInputStream* aPostData, nsIInputStream* aHeadersData,
-   nsDocShellInfoLoadType aLoadType)
+   PRUint32 aLoadType)
 #endif
 {
   mURIResultedInDocument = PR_FALSE; // reset the clock...
     // Check to see if the new URI is an anchor in the existing document.
-  if ((aLoadType == nsIDocShellLoadInfo::loadNormal ||
-       aLoadType == nsIDocShellLoadInfo::loadNormalReplace ||
-       aLoadType == nsIDocShellLoadInfo::loadHistory ||
-       aLoadType == nsIDocShellLoadInfo::loadLink) && (aPostData == nsnull))
+  if ((aLoadType == LOAD_NORMAL ||
+       aLoadType == LOAD_NORMAL_REPLACE ||
+       aLoadType == LOAD_HISTORY ||
+       aLoadType == LOAD_LINK) && (aPostData == nsnull))
     {
         PRBool wasAnchor = PR_FALSE;
         NS_ENSURE_SUCCESS(ScrollIfAnchor(aURI, &wasAnchor), NS_ERROR_FAILURE);
@@ -2834,7 +2906,7 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
 #endif
 
     nsURILoadCommand  loadCmd = nsIURILoader::viewNormal;
-    if(nsIDocShellLoadInfo::loadLink == aLoadType)
+    if(LOAD_LINK == aLoadType)
         loadCmd = nsIURILoader::viewUserClick;
     NS_ENSURE_SUCCESS(DoURILoad(aURI, aReferrer, aOwner, aInheritOwner,
                                 loadCmd, aWindowTarget, 
@@ -3394,22 +3466,22 @@ NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand a
   
   	switch ( mLoadType )
   	{
-  	 case nsIDocShellLoadInfo::loadHistory:
+  	 case LOAD_HISTORY:
   	 		loadAttribs |= nsIChannel::VALIDATE_NEVER;
   	 		break;
   	 		
-  	 case nsIDocShellLoadInfo::loadReloadNormal:
+  	 case LOAD_RELOAD_NORMAL:
   	 			loadAttribs |= nsIChannel::FORCE_VALIDATION;
   	 		break;
   	 		
-  	 case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
+  	 case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
   	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
   	 		break;
-  	 case nsIDocShellLoadInfo::loadRefresh:
+  	 case LOAD_REFRESH:
   	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
   	 		break;
-     case nsIDocShellLoadInfo::loadNormal:
-     case nsIDocShellLoadInfo::loadLink:
+     case LOAD_NORMAL:
+     case LOAD_LINK:
 		   // Set cache checking flags
 		   if ( mPrefs )
 		   {
@@ -3565,34 +3637,19 @@ NS_IMETHODIMP nsDocShell::ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor)
 
 
 NS_IMETHODIMP
-nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType aLoadType)
+nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, PRUint32 aLoadType)
 {
     NS_ASSERTION(aURI, "uri is null");
 
     UpdateCurrentGlobalHistory();
     PRBool updateHistory = PR_TRUE;
 
-    // Determine if this type of load should update history   
-    switch(aLoadType)
+    // Determine if this type of load should update history
+    if (aLoadType & LOAD_FLAGS_BYPASS_HISTORY ||
+        aLoadType & LOAD_CMD_RELOAD || aLoadType & LOAD_CMD_HISTORY)
     {
-    case nsIDocShellLoadInfo::loadHistory:
-    case nsIDocShellLoadInfo::loadReloadNormal:
-    case nsIDocShellLoadInfo::loadReloadBypassCache:
-    case nsIDocShellLoadInfo::loadReloadBypassProxy:
-    case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
-        updateHistory = PR_FALSE;
-        break;
-
-    case nsIDocShellLoadInfo::loadNormal:
-    case nsIDocShellLoadInfo::loadRefresh:
-    case nsIDocShellLoadInfo::loadNormalReplace:
-    case nsIDocShellLoadInfo::loadLink:
-        break;
-
-    default:
-        NS_ERROR("Need to update case");
-        break;
-    } 
+      updateHistory = PR_FALSE;
+    }
 
   if (updateHistory) { // Page load not from SH
     // Update session history if necessary...
@@ -3777,7 +3834,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
   // If the entry is being replaced in SH, then just use the
   // current entry...
   //
-  if(mSessionHistory && nsIDocShellLoadInfo::loadNormalReplace == mLoadType) {
+  if(mSessionHistory && LOAD_NORMAL_REPLACE == mLoadType) {
     PRInt32 index = 0;
     mSessionHistory->GetIndex(&index);
     mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
@@ -3814,7 +3871,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
   // heirarchy, then AddChildSHEntry(...) will fail and the new entry
   // will be deleted when it loses scope...
   //
-  if (mLoadType != nsIDocShellLoadInfo::loadNormalReplace) {
+  if (mLoadType != LOAD_NORMAL_REPLACE) {
      if (mSessionHistory)	  
          rv = mSessionHistory->AddEntry(entry, shouldPersist);
      else 
@@ -3868,7 +3925,7 @@ NS_IMETHODIMP nsDocShell::UpdateCurrentSessionHistory()
 }
 
 #ifdef SH_IN_FRAMES
-NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, nsDocShellInfoLoadType aLoadType)
+NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadType)
 #else
 NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
 #endif
@@ -3911,7 +3968,7 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
 #else
    NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE,
                                   postData, nsnull, 
-                                  nsIDocShellLoadInfo::loadHistory),
+                                  LOAD_HISTORY),
       NS_ERROR_FAILURE);
 #endif 
 
@@ -4205,7 +4262,7 @@ nsresult nsDocShell::GetLoadCookie(nsISupports **aResult)
   return NS_OK;
 }
 
-nsresult nsDocShell::SetLoadType(nsDocShellInfoLoadType aLoadType)
+nsresult nsDocShell::SetLoadType(PRUint32 aLoadType)
 {
   mLoadType = aLoadType;
   return NS_OK;
@@ -4373,10 +4430,10 @@ NS_IMETHODIMP_(void) nsRefreshTimer::Notify(nsITimer *aTimer)
     if(mDocShell)
     {
         nsCOMPtr<nsIDocShellLoadInfo> loadInfo;        
-        mDocShell -> CreateLoadInfo (getter_AddRefs (loadInfo));
+        mDocShell->CreateLoadInfo (getter_AddRefs (loadInfo));
 
-        loadInfo  -> SetLoadType(nsIDocShellLoadInfo::loadRefresh);
-        mDocShell -> LoadURI(mURI, loadInfo);
+        loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
+        mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
     }
 
    /*

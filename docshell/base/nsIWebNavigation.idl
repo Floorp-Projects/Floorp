@@ -74,43 +74,39 @@ interface nsIWebNavigation : nsISupports
 	void gotoIndex(in long index);
 
 	/*
-	Loads a given URI.  This will give priority to loading the requested URI
+	Load flags for use with loadURI() and reload()
+	*/
+	const unsigned long LOAD_FLAGS_NONE            = 0x0000;
+	const unsigned long LOAD_FLAGS_MASK            = 0xffff;
+
+    /* loadURI() specific flags */
+	const unsigned long LOAD_FLAGS_IS_REFRESH      = 0x0010; // Refresh timer
+	const unsigned long LOAD_FLAGS_IS_LINK         = 0x0020; // Link click
+	const unsigned long LOAD_FLAGS_BYPASS_HISTORY  = 0x0040; // Bypass the history
+	const unsigned long LOAD_FLAGS_REPLACE_HISTORY = 0x0080; // Replace the history entry
+
+    /* loadURI() & reload() specific flags */
+	const unsigned long LOAD_FLAGS_BYPASS_CACHE    = 0x0100; // Bypass the cache
+	const unsigned long LOAD_FLAGS_BYPASS_PROXY    = 0x0200; // Bypass the proxy
+
+    /*
+    Loads a given URI.  This will give priority to loading the requested URI
 	in the object implementing	this interface.  If it can't be loaded here
 	however, the URL dispatcher will go through its normal process of content
 	loading.
 
 	@param uri - The URI to load.
+	@param loadFlags - Flags modifying load behaviour. Generally you will pass
+	        LOAD_FLAGS_NONE for this parameter.
 	*/
-	void loadURI(in wstring uri);
-
-	/*
-	Definitions for the reload types.
-	*/
-	/* these are load type enums... */
-	const long LOAD_NORMAL = 0;                       // Normal Load
-	const long LOAD_NORMAL_REPLACE = 1;               // Normal Load but replaces current history slot
-	const long LOAD_HISTORY = 2;                      // Load from history
-    const long LOAD_RELOAD_NORMAL = 3;                // normal Reload
-	const long LOAD_RELOAD_BYPASS_CACHE = 4;          // Reloads bypassing the cache
-	const long LOAD_RELOAD_BYPASS_PROXY = 5;          // Reloads bypassing the proxy
-	const long LOAD_RELOAD_BYPASS_PROXY_AND_CACHE = 6;// Reloads bypassing proxy and cache
-	const long LOAD_LINK = 7;
-	const long LOAD_REFRESH = 8;
-
-	const long loadNormal = 0;					// Normal Load
-	const long loadNormalReplace = 1;			// Normal Load but replaces current history slot
-	const long loadHistory = 2;					// Load from history
-	const long loadReloadNormal = 3;				// normal Reload
-	const long loadReloadBypassCache = 4;        // Reloads bypassing the cache
-	const long loadReloadBypassProxy = 5;        // Reloads bypassing the proxy
-	const long loadReloadBypassProxyAndCache = 6;// Reloads bypassing proxy and cache
-	const long loadLink = 7;
-	const long loadRefresh = 8;
+	void loadURI(in wstring uri, in unsigned long loadFlags);
 
 	/*
 	Tells the Object to reload the current location.
+	@param reloadFlags - Flags modifying reload behaviour. Generally you will
+	        pass LOAD_FLAGS_NONE for this parameter.
 	*/
-	void reload(in long reloadType);
+	void reload(in unsigned long reloadFlags);
 
 	/*
 	Stops a load of a URI.

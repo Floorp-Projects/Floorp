@@ -659,7 +659,7 @@ nsBrowserInstance::LoadUrl(const PRUnichar * urlToLoad)
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
     
   // Normal browser.
-  rv = webNav->LoadURI( urlToLoad );
+  rv = webNav->LoadURI( urlToLoad, nsIWebNavigation::LOAD_FLAGS_NONE );
 
   return rv;
 }

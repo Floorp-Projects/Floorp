@@ -921,7 +921,7 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
   if (NS_FAILED(rv))
     return rv; // We're not
 
-  rv = docShell->LoadURI(uri, loadInfo);
+  rv = docShell->LoadURI(uri, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
 
   return rv;

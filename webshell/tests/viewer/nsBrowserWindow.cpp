@@ -837,7 +837,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       url.AppendInt(ix, 10);
       url.AppendWithConversion(".html");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-      webNav->LoadURI(url.GetUnicode());
+      webNav->LoadURI(url.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
     }
     break;
 
@@ -846,7 +846,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
       url.AppendWithConversion("/toolbarTest1.xul");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-      webNav->LoadURI(url.GetUnicode());
+      webNav->LoadURI(url.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
       break;
     }
   case VIEWER_XPTOOLKITTREE1:
@@ -854,7 +854,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       nsAutoString url; url.AssignWithConversion(SAMPLES_BASE_URL);
       url.AppendWithConversion("/treeTest1.xul");
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-      webNav->LoadURI(url.GetUnicode());
+      webNav->LoadURI(url.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
       break;
     }
   
@@ -1026,7 +1026,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
   /* invoke the javascript wallet editor */
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-  webNav->LoadURI(urlString.GetUnicode());
+  webNav->LoadURI(urlString.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
   }
   break;
 #endif
@@ -1076,7 +1076,7 @@ void
 nsBrowserWindow::GoTo(const PRUnichar* aURL)
 {
    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-   webNav->LoadURI(aURL);
+   webNav->LoadURI(aURL, nsIWebNavigation::LOAD_FLAGS_NONE);
 }
 
 
@@ -1130,7 +1130,7 @@ nsBrowserWindow::DoFileOpen()
     nsFileURL fileURL(fileSpec);
     // Ask the Web widget to load the file URL
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-    webNav->LoadURI(NS_ConvertASCIItoUCS2(fileURL.GetURLString()).GetUnicode());
+    webNav->LoadURI(NS_ConvertASCIItoUCS2(fileURL.GetURLString()).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
     SetVisibility(PR_TRUE);
   }
 }

@@ -351,7 +351,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
     nsCRT::free(tmpStr);
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(webNav->LoadURI(urlString.GetUnicode()), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(webNav->LoadURI(urlString.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE), NS_ERROR_FAILURE);
   }
                      
   return rv;
@@ -1501,7 +1501,7 @@ void nsWebShellWindow::LoadContentAreas() {
           nsUnescape(urlChar);
           contentURL.AssignWithConversion(urlChar);
           nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(contentShell));
-          webNav->LoadURI(contentURL.GetUnicode());
+          webNav->LoadURI(contentURL.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
           delete [] urlChar;
         }
         NS_RELEASE(contentShell);

@@ -39,12 +39,13 @@ function onTransform()
   var docShell = docShellElement.docShell;
   docShell.viewMode = Components.interfaces.nsIDocShell.viewSource;
   var webNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
-  webNav.loadURI(theXMLURL);
+  var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
+  webNav.loadURI(theXMLURL, loadFlags);
   docShellElement = document.getElementById("xsl-source");
   docShell = docShellElement.docShell;
   docShell.viewMode = Components.interfaces.nsIDocShell.viewSource;
   webNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
-  webNav.loadURI(theXSLURL);
+  webNav.loadURI(theXSLURL, loadFlags);
   docShellElement = document.getElementById("result-doc");
   resultDocument = webNav.document;
   xmlDocument = resultDocument.implementation.createDocument("", "", null);

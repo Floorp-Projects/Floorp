@@ -157,7 +157,7 @@ LocationImpl::SetURL(nsIURI* aURL)
 
     loadInfo->SetStopActiveDocument(PR_TRUE);
 
-    return mDocShell->LoadURI(aURL, loadInfo);
+    return mDocShell->LoadURI(aURL, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
   }
   else {
     return NS_OK;
@@ -399,7 +399,7 @@ LocationImpl::SetHrefWithBase(const nsAReadableString& aHref,
 
     loadInfo->SetStopActiveDocument(PR_TRUE);
 
-    return mDocShell->LoadURI(newUrl, loadInfo);
+    return mDocShell->LoadURI(newUrl, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
   }
   
   return result;
@@ -618,7 +618,7 @@ LocationImpl::Reload(PRBool aForceget)
    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
    NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
 
-   NS_ENSURE_SUCCESS(webNav->Reload(nsIWebNavigation::loadReloadNormal), 
+   NS_ENSURE_SUCCESS(webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE), 
       NS_ERROR_FAILURE);
 
    return NS_OK;

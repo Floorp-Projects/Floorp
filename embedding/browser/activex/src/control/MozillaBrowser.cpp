@@ -1557,7 +1557,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mWebBrowser);
 	if (spIWebNavigation)
 	{
-		res = spIWebNavigation->LoadURI(sUrl.c_str());
+		res = spIWebNavigation->LoadURI(sUrl.c_str(), nsIWebNavigation::LOAD_FLAGS_NONE);
 	}
 
 	return res;
@@ -1606,7 +1606,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 	}
 
 	// Turn the IE refresh type into the nearest NG equivalent
-	nsLoadFlags type = nsIChannel::LOAD_NORMAL;
+    PRUint32 flags = nsIWebNavigation::LOAD_FLAGS_NONE;
 	switch (iRefreshLevel & OLECMDIDF_REFRESH_LEVELMASK)
 	{
 	case OLECMDIDF_REFRESH_NORMAL:
@@ -1614,10 +1614,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 	case OLECMDIDF_REFRESH_CONTINUE:
 	case OLECMDIDF_REFRESH_NO_CACHE:
 	case OLECMDIDF_REFRESH_RELOAD:
-	    type = nsIChannel::LOAD_NORMAL;
+        flags = nsIWebNavigation::LOAD_FLAGS_NONE;
 		break;
 	case OLECMDIDF_REFRESH_COMPLETELY:
-        type = nsIHTTPChannel::BYPASS_CACHE | nsIHTTPChannel::BYPASS_PROXY;
+        flags = nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
 		break;
 	default:
 		// No idea what refresh type this is supposed to be
@@ -1628,7 +1628,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mWebBrowser);
 	if (spIWebNavigation)
 	{
-		spIWebNavigation->Reload(type);
+		spIWebNavigation->Reload(flags);
 	}
 	
 	return S_OK;

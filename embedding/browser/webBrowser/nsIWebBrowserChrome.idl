@@ -91,14 +91,13 @@ interface nsIWebBrowserChrome : nsISupports
 	attribute unsigned long chromeFlags;
 
 	/*
-		Tells the implementer of this interface to create a new webBrowserChrome
-		object for it.  Typically this means the implemetor will create a new 
-		top level window that is represented by nsIWebBrowserChrome.  This
-		most often will be called when for instance there is a need for a new
-		JS window, etc.  Soon after this new object is returned, the webBrowser
-		attribute will checked, if one does not exist, one will be created and
-		setWebBrowser will be called with the new widget to instantiate in this 
-		new window.	
+	    Asks the implementer of this interface to create a new webbrowser
+		object and return the nsIWebBrowser interface to it. The chrome
+		flags indicate the style of the surrounding frame window and
+		associated chrome. The position parameters should be ignored
+		unless the CHROME_WITH_POSITION chrome flags is set. The size
+		parameters should be ignored unless the CHROME_WITH_SIZE chrome flag
+		is set. 
 	*/
 
     nsIWebBrowser createBrowserWindow(in unsigned long chromeFlags,

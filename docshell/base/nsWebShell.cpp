@@ -105,9 +105,6 @@ typedef unsigned long HMTX;
 
 #include "nsILocaleService.h"
 #include "nsIStringBundle.h"
-#include "nsIStringBundle.h"
-
-static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 
 #include "nsIIOService.h"
 #include "nsIURL.h"
@@ -142,8 +139,9 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 #define WEB_TRACE(_bit,_args)
 #endif
 
-static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+//static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
+//static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
 //----------------------------------------------------------------------
 
@@ -151,31 +149,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // Class IID's
 static NS_DEFINE_IID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
-static NS_DEFINE_IID(kDocLoaderServiceCID,    NS_DOCUMENTLOADER_SERVICE_CID);
-static NS_DEFINE_IID(kWebShellCID,            NS_WEB_SHELL_CID);
-
-// IID's
-static NS_DEFINE_IID(kIContentViewerContainerIID,
-                     NS_ICONTENTVIEWERCONTAINER_IID);
-static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
-static NS_DEFINE_IID(kIFactoryIID,            NS_IFACTORY_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kRefreshURIIID,          NS_IREFRESHURI_IID);
-
-static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIPluginManagerIID,      NS_IPLUGINMANAGER_IID);
-static NS_DEFINE_IID(kIPluginHostIID,         NS_IPLUGINHOST_IID);
-static NS_DEFINE_IID(kCPluginManagerCID,      NS_PLUGINMANAGER_CID);
-static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
-static NS_DEFINE_IID(kITimerCallbackIID,      NS_ITIMERCALLBACK_IID);
-static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
-static NS_DEFINE_IID(kIClipboardCommandsIID,  NS_ICLIPBOARDCOMMANDS_IID);
-static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kIDOMHTMLDocumentIID,    NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
-// XXX not sure
-static NS_DEFINE_IID(kILinkHandlerIID,        NS_ILINKHANDLER_IID);
 
 //----------------------------------------------------------------------
 
@@ -274,7 +248,7 @@ nsWebShell::FireUnloadEvent()
 
     if (mScriptGlobal) {
       nsIDocumentViewer* docViewer;
-      if (mContentViewer && NS_SUCCEEDED(mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer))) {
+      if (mContentViewer && NS_SUCCEEDED(mContentViewer->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**)&docViewer))) {
         nsIPresContext *presContext;
         if (NS_SUCCEEDED(docViewer->GetPresContext(presContext))) {
           nsEventStatus status = nsEventStatus_eIgnore;
@@ -547,7 +521,7 @@ NS_IMETHODIMP nsWebShell::GoTo(PRInt32 aIndex)
 
    UpdateCurrentSessionHistory();  
 #ifdef SH_IN_FRAMES
-   NS_ENSURE_SUCCESS(LoadHistoryEntry(entry, nsIDocShellLoadInfo::loadHistory), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(LoadHistoryEntry(entry, LOAD_HISTORY), NS_ERROR_FAILURE);
 #else
    NS_ENSURE_SUCCESS(LoadHistoryEntry(entry), NS_ERROR_FAILURE);
 #endif
@@ -639,7 +613,7 @@ nsWebShell::LoadDocument(const char* aURL,
         if(eCharsetReloadRequested != mCharsetReloadState) 
         {
           mCharsetReloadState = eCharsetReloadRequested;
-          LoadURI(NS_ConvertASCIItoUCS2(aURL).GetUnicode());
+          LoadURI(NS_ConvertASCIItoUCS2(aURL).GetUnicode(), LOAD_FLAGS_NONE);
         }
       }
     }
@@ -669,7 +643,7 @@ nsWebShell::ReloadDocument(const char* aCharset,
          if(eCharsetReloadRequested != mCharsetReloadState) 
          {
             mCharsetReloadState = eCharsetReloadRequested;
-            return Reload(nsIWebNavigation::loadReloadNormal);
+            return Reload(LOAD_FLAGS_NONE);
          }
       }
     }
@@ -856,11 +830,10 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
 
 #ifdef SH_IN_FRAMES
 		InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, PR_FALSE, target, aPostDataStream, 
-                 aHeadersDataStream, nsIDocShellLoadInfo::loadLink, nsnull); 
+                 aHeadersDataStream, LOAD_LINK, nsnull); 
 #else
-        InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, PR_FALSE, target, 
-                     aPostDataStream, aHeadersDataStream, 
-                     nsIDocShellLoadInfo::loadLink); 
+        InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, target, 
+                     aPostDataStream, aHeadersDataStream, LOAD_LINK); 
 #endif  /* SH_IN_FRAMES */
       }
       break;
@@ -1051,7 +1024,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             // only send non-qualified hosts to the keyword server
             nsAutoString keywordSpec; keywordSpec.AssignWithConversion("keyword:");
             keywordSpec.Append(NS_ConvertUTF8toUCS2(host));
-            return LoadURI(keywordSpec.GetUnicode());
+            return LoadURI(keywordSpec.GetUnicode(), LOAD_FLAGS_NONE);
             } // end keywordsEnabled
          }
 
@@ -1089,7 +1062,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             NS_ENSURE_SUCCESS(aURL->GetSpec(getter_Copies(aSpec)),
                NS_ERROR_FAILURE);
             // reload the url
-            return LoadURI(NS_ConvertASCIItoUCS2(aSpec).GetUnicode());
+            return LoadURI(NS_ConvertASCIItoUCS2(aSpec).GetUnicode(), LOAD_FLAGS_NONE);
             } // retry
 
          // throw a DNS failure dialog
@@ -1303,7 +1276,7 @@ nsWebShell::SelectAll(void)
   nsresult rv;
 
   nsCOMPtr<nsIDocumentViewer> docViewer;
-  rv = mContentViewer->QueryInterface(kIDocumentViewerIID,
+  rv = mContentViewer->QueryInterface(NS_GET_IID(nsIDocumentViewer),
                                       getter_AddRefs(docViewer));
   if (NS_FAILED(rv) || !docViewer) return rv;
 
@@ -1325,7 +1298,7 @@ nsWebShell::SelectAll(void)
 
 
   nsCOMPtr<nsIDOMHTMLDocument> htmldoc;
-  rv = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
+  rv = doc->QueryInterface(NS_GET_IID(nsIDOMHTMLDocument), (void**)&htmldoc);
   if (NS_FAILED(rv) || !htmldoc) return rv;
 
   nsCOMPtr<nsIDOMHTMLElement>bodyElement;

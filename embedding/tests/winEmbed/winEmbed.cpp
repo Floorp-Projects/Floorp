@@ -96,7 +96,7 @@ nsresult OpenWebPage(char* url)
     ResizeEmbedding(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
 
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
-    return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode());
+    return webNav->LoadURI(NS_ConvertASCIItoUCS2(url).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
 }   
 
 int main ()
@@ -243,7 +243,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         nsCOMPtr<nsIWebBrowser> wb;
                         chrome->GetWebBrowser(getter_AddRefs(wb));
                         nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(wb));
-                        webNav->LoadURI(NS_ConvertASCIItoUCS2(gLastURI).GetUnicode());
+                        webNav->LoadURI(NS_ConvertASCIItoUCS2(gLastURI).GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
                     }
                     break;
 

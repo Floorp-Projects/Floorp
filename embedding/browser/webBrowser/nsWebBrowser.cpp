@@ -393,18 +393,18 @@ NS_IMETHODIMP nsWebBrowser::GoForward()
    return mDocShellAsNav->GoForward();
 }
 
-NS_IMETHODIMP nsWebBrowser::LoadURI(const PRUnichar* aURI)
+NS_IMETHODIMP nsWebBrowser::LoadURI(const PRUnichar* aURI, PRUint32 aLoadFlags)
 {
    NS_ENSURE_STATE(mDocShell);
 
-   return mDocShellAsNav->LoadURI(aURI);
+   return mDocShellAsNav->LoadURI(aURI, aLoadFlags);
 }
 
-NS_IMETHODIMP nsWebBrowser::Reload(PRInt32 aReloadType)
+NS_IMETHODIMP nsWebBrowser::Reload(PRUint32 aReloadFlags)
 {
    NS_ENSURE_STATE(mDocShell);
 
-   return mDocShellAsNav->Reload(aReloadType);
+   return mDocShellAsNav->Reload(aReloadFlags);
 }
 
 NS_IMETHODIMP nsWebBrowser::GotoIndex(PRInt32 aIndex)

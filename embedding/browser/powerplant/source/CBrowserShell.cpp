@@ -391,7 +391,7 @@ void CBrowserShell::LoadURL(Ptr urlText, SInt32 urlTextLen)
 
 void CBrowserShell::LoadURL(const nsString& urlText)
 {
-   nsresult rv = mWebBrowserAsWebNav->LoadURI(urlText.GetUnicode());
+   nsresult rv = mWebBrowserAsWebNav->LoadURI(urlText.GetUnicode(), nsIWebNavigation::LOAD_FLAGS_NONE);
    if (NS_FAILED(rv))
       Throw_(NS_ERROR_GET_CODE(rv));
 }
