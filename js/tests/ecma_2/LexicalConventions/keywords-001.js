@@ -13,9 +13,6 @@
 
     startTest();
 
-    // Regular Expression Literals may not be empty; // should be regarded
-    // as a comment, not a RegExp literal.
-
     var result = "failed";
 
     try {
@@ -23,12 +20,12 @@
 	} 
 	catch (x) {
 		if (x instanceof SyntaxError)
-			result = x.toString();
+			result = x.name;
 	}
 
     AddTestCase(
         "using the expression \"super\" shouldn't cause js to crash",
-        "SyntaxError: super is a reserved identifier" ,
+        "SyntaxError",
         result );
 
     test();
