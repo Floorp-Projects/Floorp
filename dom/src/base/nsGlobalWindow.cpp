@@ -264,8 +264,8 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
   ClearAllTimeouts();
   
   if ((nsnull != mScriptObject) && 
-      (nsnull != mContext) &&
-      (nsnull != aDocument)) {
+      (nsnull != mContext) /* &&
+      (nsnull != aDocument) */ ) {
     JS_ClearScope((JSContext *)mContext->GetNativeContext(),
                   (JSObject *)mScriptObject);
   }
