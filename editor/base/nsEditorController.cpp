@@ -39,8 +39,6 @@
 #include "nsEditorCommands.h"
 #include "nsComposerCommands.h"
 
-#define kMaxStackCommandNameLength 128
-
 
 NS_IMPL_ADDREF(nsEditorController)
 NS_IMPL_RELEASE(nsEditorController)
@@ -94,22 +92,30 @@ NS_IMETHODIMP nsEditorController::GetInterface(const nsIID & aIID, void * *resul
 }
 
 
-#define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                                \
-  {                                                                                 \
-  _cmdClass* theCmd = new _cmdClass;                                                \
-  rv = RegisterOneCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(), inCommandManager, theCmd); \
+#define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                                      \
+  {                                                                                       \
+    _cmdClass* theCmd;                                                                    \
+    NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
+    if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
+    rv = inCommandManager->RegisterCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(),  \
+                                   NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
   }
 
-#define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)                              \
-  {                                                                                 \
-  _cmdClass* theCmd = new _cmdClass;                                                \
-  rv = RegisterOneCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(), inCommandManager, theCmd);        \
+#define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)                                    \
+  {                                                                                       \
+    _cmdClass* theCmd;                                                                    \
+    NS_NEWXPCOM(theCmd, _cmdClass);                                                       \
+    if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
+    rv = inCommandManager->RegisterCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(),  \
+                                   NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
-#define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                               \
-  rv = RegisterOneCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(), inCommandManager, theCmd);
+#define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                                     \
+    rv = inCommandManager->RegisterCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(),  \
+                                   NS_STATIC_CAST(nsIControllerCommand *, theCmd));
 
-#define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                               \
-  rv = RegisterOneCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(), inCommandManager, theCmd);        \
+#define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                                     \
+    rv = inCommandManager->RegisterCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(),  \
+                                   NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
   }
 
 
@@ -169,21 +175,6 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager 
   NS_REGISTER_LAST_COMMAND(nsSelectionMoveCommands, "cmd_selectPageDown");
     
   return NS_OK;
-}
-
-// static
-nsresult nsEditorController::RegisterOneCommand(const PRUnichar* aCommandName,
-              nsIControllerCommandManager *inCommandManager,
-              nsBaseCommand* aCommand)
-{
-  nsCOMPtr<nsIControllerCommand> editorCommand;
-
-  NS_ADDREF(aCommand);
-  nsresult rv = aCommand->QueryInterface(NS_GET_IID(nsIControllerCommand), getter_AddRefs(editorCommand));
-  NS_RELEASE(aCommand);
-  if (NS_FAILED(rv)) return rv;
-  
-  return inCommandManager->RegisterCommand(aCommandName, editorCommand);   // this is the owning ref
 }
 
 /* =======================================================================
@@ -271,17 +262,22 @@ NS_IMETHODIMP nsComposerController::Init(nsISupports *aCommandRefCon)
   rv = nsEditorController::Init(aCommandRefCon);
   if (NS_FAILED(rv)) return rv;  
   
-  // get our ref to the singleton command manager
-  rv = GetComposerCommandManager(getter_AddRefs(mCommandManager));
-  if (NS_FAILED(rv)) return rv;  
+  mCommandManager = do_CreateInstance("component://netscape/rdf/controller-command-manager", &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // register the commands.
+  rv = nsComposerController::RegisterComposerCommands(mCommandManager);
+  if (NS_FAILED(rv)) return rv;
 
   return NS_OK;
 }
 
-#define NS_REGISTER_STYLE_COMMAND(_cmdClass, _cmdName, _styleTag)   \
-  {                                                                                 \
-  _cmdClass* theCmd = new _cmdClass(_styleTag);                     \
-  rv = RegisterOneCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(), inCommandManager, theCmd); \
+#define NS_REGISTER_STYLE_COMMAND(_cmdClass, _cmdName, _styleTag)                         \
+  {                                                                                       \
+    _cmdClass* theCmd = new _cmdClass(_styleTag);                                         \
+    if (!theCmd) return NS_ERROR_OUT_OF_MEMORY;                                           \
+    rv = inCommandManager->RegisterCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(),  \
+                                   NS_STATIC_CAST(nsIControllerCommand *, theCmd));       \
   }
   
 
@@ -289,8 +285,6 @@ NS_IMETHODIMP nsComposerController::Init(nsISupports *aCommandRefCon)
 nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandManager *inCommandManager)
 {
   nsresult rv;
-
-  // These are composer-only commands
   
   // File menu
   NS_REGISTER_ONE_COMMAND(nsSaveCommand, "cmd_save");
@@ -340,43 +334,4 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
   
   return NS_OK;
 }
-
-
-nsWeakPtr nsComposerController::sComposerCommandManager = NULL;
-
-nsresult nsComposerController::GetComposerCommandManager(nsIControllerCommandManager* *outCommandManager)
-{
-  NS_ENSURE_ARG_POINTER(outCommandManager);
-
-/*
-  nsCOMPtr<nsIControllerCommandManager> cmdManager = do_QueryReferent(sComposerCommandManager);
-  if (!cmdManager)
-  {
-    nsresult rv;
-    cmdManager = do_CreateInstance("component://netscape/rdf/controller-command-manager", &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    // register the commands. This just happens once per instance
-    rv = nsComposerController::RegisterComposerCommands(cmdManager);
-    if (NS_FAILED(rv)) return rv;
-
-    // save the singleton in our static weak reference
-    sComposerCommandManager = getter_AddRefs(NS_GetWeakReference(cmdManager, &rv));
-    if (NS_FAILED(rv))  return rv;
-  }
-*/
-  // always make a new one
-  nsresult rv;
-  nsCOMPtr<nsIControllerCommandManager> cmdManager;
-  cmdManager = do_CreateInstance("component://netscape/rdf/controller-command-manager", &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // register the commands.
-  rv = nsComposerController::RegisterComposerCommands(cmdManager);
-  if (NS_FAILED(rv)) return rv;
-  
-  NS_ADDREF(*outCommandManager = cmdManager);
-  return NS_OK;
-}
-
 

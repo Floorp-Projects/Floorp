@@ -38,7 +38,6 @@
 
 class nsIEditor;
 class nsIEditorShell;
-class nsBaseCommand;
 
 
 // the editor controller is used for both text widgets, and basic text editing
@@ -74,9 +73,6 @@ protected:
   /** return PR_TRUE if the editor associated with mContent is enabled */
   PRBool   IsEnabled();
 
-  /* register a command */
-  nsresult RegisterEditorCommand(nsBaseCommand* aCommand);
-  
 protected:
 
    //if editor is null then look to mContent. this is for dual use of window and content
@@ -85,11 +81,6 @@ protected:
    
    nsCOMPtr<nsIControllerCommandManager> mCommandManager;     // our reference to the command manager
    
-
-protected:
-
-  static nsresult RegisterOneCommand(const PRUnichar* aCommandName, nsIControllerCommandManager *inCommandManager, nsBaseCommand* aCommand);
-
 private:
 
   static nsresult GetEditorCommandManager(nsIControllerCommandManager* *outCommandManager);
@@ -115,13 +106,8 @@ public:
   /** init the controller */
   NS_IMETHOD Init(nsISupports *aCommandRefCon);
 
-protected:
-
 private:
 
-  static nsresult GetComposerCommandManager(nsIControllerCommandManager* *outCommandManager);
   static nsresult RegisterComposerCommands(nsIControllerCommandManager* inCommandManager);
 
-  // the singleton command manager
-  static nsWeakPtr sComposerCommandManager;     // composer-specific commands (lots of them)
 };
