@@ -33,7 +33,6 @@ EmbedWindow::EmbedWindow(void)
 {
   NS_INIT_REFCNT();
   mOwner       = nsnull;
-  mChromeMask  = 0;
 }
 
 EmbedWindow::~EmbedWindow(void)
@@ -150,14 +149,14 @@ EmbedWindow::SetWebBrowser(nsIWebBrowser *aWebBrowser)
 NS_IMETHODIMP
 EmbedWindow::GetChromeFlags(PRUint32 *aChromeFlags)
 {
-  *aChromeFlags = mChromeMask;
+  *aChromeFlags = mOwner->mChromeMask;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 EmbedWindow::SetChromeFlags(PRUint32 aChromeFlags)
 {
-  mChromeMask = aChromeFlags;
+  mOwner->mChromeMask = aChromeFlags;
   return NS_OK;
 }
 

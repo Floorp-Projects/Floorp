@@ -73,7 +73,9 @@ EmbedPrivate::EmbedPrivate(void)
   mProgress         = nsnull;
   mContentListener  = nsnull;
   mEventListener    = nsnull;
+  mChromeMask       = 0;
   mListenersAttached = PR_FALSE;
+
   PushStartup();
   if (!sWindowList) {
     sWindowList = new nsVoidArray();

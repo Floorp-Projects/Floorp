@@ -73,7 +73,6 @@ private:
   EmbedPrivate            *mOwner;
   nsCOMPtr<nsIWebBrowser>  mWebBrowser; // [OWNER]
   nsCOMPtr<nsIBaseWindow>  mBaseWindow; // [OWNER]
-  PRUint32                 mChromeMask;
   static GtkWidget        *sTipWindow;
 
 };
