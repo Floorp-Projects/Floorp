@@ -1991,6 +1991,8 @@ else
     [ AC_MSG_ERROR([Could not compile basic X program.]) ])
     CFLAGS="$_SAVE_CFLAGS"
 
+    AC_CHECK_FT2(6.1.0, [_HAVE_FREETYPE2=1], [_HAVE_FREETYPE2=])
+
 fi # $no_x
 
 AC_SUBST(XCFLAGS)
@@ -3266,19 +3268,21 @@ AC_SUBST(MOZ_XUL_APP)
 
 dnl ========================================================
 dnl = FreeType2
+dnl = Enable freetype by default if building against X11 
+dnl = and freetype is available
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(freetype2,
 [  --disable-freetype2     Disable FreeType2 support ],
-    _NO_FREETYPE2=1,
-    _NO_FREETYPE2= )
+    MOZ_ENABLE_FREETYPE2=,
+    MOZ_ENABLE_FREETYPE2=1,
+    [if test "$_X11_TOOLKIT" -a "$_HAVE_FREETYPE2"; then 
+         MOZ_ENABLE_FREETYPE2=1
+     fi])
 
-if test "$no_x" = "yes"; then
-    _NO_FREETYPE2=1
+if test "$MOZ_ENABLE_FREETYPE2" && test -z "$_X11_TOOLKIT" -o -z "$_HAVE_FREETYPE2"; then
+    AC_MSG_ERROR([Cannot enable FreeType2 support for non-X11 toolkits or if FreeType2 is not detected.])
 fi
 
-if test -z "$_NO_FREETYPE2"; then
-    AC_CHECK_FT2(6.1.0, [MOZ_ENABLE_FREETYPE2=1], [MOZ_ENABLE_FREETYPE2=])
-fi
 if test "$MOZ_ENABLE_FREETYPE2"; then
     AC_DEFINE(MOZ_ENABLE_FREETYPE2)
     _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES MOZ_ENABLE_FREETYPE2"
