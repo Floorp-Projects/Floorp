@@ -203,7 +203,15 @@
 
 #ifndef __PRUNICHAR__
 #define __PRUNICHAR__
-  typedef PRUint16 PRUnichar;
+  /* For now, don't use wchar_t on Unix because it breaks the Netscape
+   * commercial build.  When this is fixed there will be no need for the
+   * |NS_REINTERPRET_CAST| in nsLiteralString.h either.
+   */
+  #if defined(HAVE_CPP_2BYTE_WCHAR_T) && (defined(XP_WIN) || defined(XP_MAC))
+    typedef wchar_t PRUnichar;
+  #else
+    typedef PRUint16 PRUnichar;
+  #endif
 #endif
 
   /*
