@@ -106,10 +106,10 @@
         
             <tabbox>
                <tabs>
-                <tab label="New Event"/>
-                <tab label="Recurrence"/>
-                <tab label="Contacts"/>
-                <tab label="Files"/>
+                <tab label="&newevent.newevent.tab.label;"/>
+                <tab label="&newevent.recurrence.tab.label;"/>
+                <tab label="$newevent.contacts.tab.label;" collapsed="true"/>
+                <tab label="&newevent.files.tab.label;" collapsed="true"/>
                </tabs>
                <tabpanels>
                 <tabpanel>
@@ -283,8 +283,9 @@
                           <hbox id="repeat-extenstions-month" diabled="true" collapsed="true" align="center">
                               <vbox align="center">
                                  <radiogroup id="advanced-repeat-month" disable-controller="repeat">
-                                    <radio disable-controller="repeat" id="advanced-repeat-dayofmonth" label="On the xth day of the month" selected="true"/>
-                                    <radio disable-controller="repeat" id="advanced-repeat-dayofweek"  label="Last Tuesday of the month"/>
+                                    <radio disable-controller="repeat" id="advanced-repeat-dayofmonth"      label="On the xth day of the month" selected="true"/>
+                                    <radio disable-controller="repeat" id="advanced-repeat-dayofweek"       label="4th Tuesday of the month"/>
+                                    <radio disable-controller="repeat" id="advanced-repeat-dayofweek-last"  label="Last Tuesday of the month" disabled="true"/>
                                  </radiogroup>
                               </vbox>
                           </hbox>
@@ -358,6 +359,7 @@
                    ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
                <vbox>
                   <button onclick="AttachFile()" label="Choose File"/>
+                  <button onclick="removeSelectedAttachment()" label="Remove Selected File"/>
                   <spacer flex="1"/>
                </vbox>
             </tabpanel>

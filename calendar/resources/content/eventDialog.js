@@ -162,6 +162,15 @@ function loadCalendarEventDialog()
       addException( ExceptionDate );
    }
 
+   //file attachments;
+   
+   for( var i = 0; i < gEvent.attachmentsArray.Count(); i++ )
+   {
+      var thisAttachment = gEvent.attachmentsArray.QueryElementAt( i, Components.interfaces.nsIMsgAttachment );
+      
+      addAttachment( thisAttachment );
+   }
+
    setDateFieldValue( "exception-dates-text", startDate );
 
    setFieldValue( "title-field", gEvent.title  );
@@ -229,7 +238,8 @@ function loadCalendarEventDialog()
    setAdvancedWeekRepeat();
    
    setFieldValue( "advanced-repeat-dayofmonth", ( gEvent.recurWeekNumber == 0 || gEvent.recurWeekNumber == undefined ), "selected" );
-   setFieldValue( "advanced-repeat-dayofweek", ( gEvent.recurWeekNumber > 0 ), "selected" );
+   setFieldValue( "advanced-repeat-dayofweek", ( gEvent.recurWeekNumber > 0 && gEvent.recurWeekNumber != 5 ), "selected" );
+   setFieldValue( "advanced-repeat-dayofweek-last", ( gEvent.recurWeekNumber == 5 ), "selected" );
    
    // set up OK, Cancel
    doSetOKCancel( onOKCommand, 0 );
@@ -332,6 +342,10 @@ function onOKCommand()
          if( getFieldValue( "advanced-repeat-dayofweek", "selected" ) == true )
          {
             gEvent.recurWeekNumber = getWeekNumberOfMonth();
+         } 
+         else if( getFieldValue( "advanced-repeat-dayofweek-last", "selected" ) == true )
+         {
+            gEvent.recurWeekNumber = 5;
          }
          else
             gEvent.recurWeekNumber = 0;
@@ -354,7 +368,22 @@ function onOKCommand()
       ArrayOfExceptionDates[ ArrayOfExceptionDates.length ] = dateObj;
    }
 
-   // :TODO: REALLY only do this if the alarm or start settings change.?
+   /* File attachments */
+   //loop over the items in the listbox
+   gEvent.removeAttachments();
+
+   var attachmentListbox = document.getElementById( "attachmentBucket" );
+
+   for( i = 0; i < attachmentListbox.childNodes.length; i++ )
+   {
+      dump( "\n adding attachment to event added for "+attachmentListbox.childNodes[i].getAttribute( "label" ) );
+      Attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance( Components.interfaces.nsIMsgAttachment );
+	   
+      Attachment.url = attachmentListbox.childNodes[i].getAttribute( "label" );
+	
+      gEvent.addAttachment( Attachment );
+   }
+
    //if the end time is later than the start time... alert the user using text from the dtd.
    // call caller's on OK function
    gOnOkFunction( gEvent, ArrayOfExceptionDates );
@@ -1066,9 +1095,34 @@ function updateAdvancedRepeatDayOfMonth()
 
    var dayExtension = getDayExtension( dayNumber );
 
-   document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", "On the "+dayNumber+dayExtension+" of the month" );
+   var weekNumber = getWeekNumberOfMonth();
 
-   document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( getWeekNumberOfMonth() )+" "+getDayOfWeek( dayNumber )+" of the month" );
+   document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", "On the "+dayNumber+dayExtension+" of the month" );
+   
+   if( weekNumber == 4 && isLastDayOfWeekOfMonth() )
+   {
+      //enable
+      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+" of the month" );
+
+      document.getElementById( "advanced-repeat-dayofweek-last" ).removeAttribute( "collapsed" );
+
+      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", "Last "+getDayOfWeek( dayNumber )+" of the month" );
+   }
+   else if( weekNumber == 4 && !isLastDayOfWeekOfMonth() )
+   {
+      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+" of the month" );
+
+      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "collapsed", "true" );
+   }
+   else
+   {
+      //disable
+      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "collapsed", "true" );
+
+      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", "Last "+getDayOfWeek( dayNumber )+" of the month" );
+   }
+
+   
 }
 
 /*
@@ -1088,8 +1142,6 @@ function updateAddExceptionButton()
       document.getElementById( "exception-add-button" ).removeAttribute( "disabled" );
    }
 }
-
-
 
 function removeSelectedExceptionDate()
 {
@@ -1126,7 +1178,7 @@ function isAlreadyException( dateObj )
    //check to make sure that the date is not already added.
    var listbox = document.getElementById( "exception-dates-listbox" );
 
-   for( i = 0; i < listbox.childNodes.length; i++ )
+   for( var i = 0; i < listbox.childNodes.length; i++ )
    {
       var dateToMatch = new Date( );
       
@@ -1194,6 +1246,31 @@ function getWeekNumberOfMonth()
       weekNumber++;
    }
    
+   return( weekNumber );
+}
+
+function isLastDayOfWeekOfMonth()
+{
+   //get the day number for today.
+   var startTime = getDateTimeFieldValue( "start-date-text" );
+   
+   var oldStartTime = startTime;
+
+   var thisMonth = startTime.getMonth();
+   
+   var monthToCompare = thisMonth;
+
+   var weekNumber = 0;
+
+   while( monthToCompare == thisMonth )
+   {
+      startTime = new Date( startTime.getTime() - ( 1000 * 60 * 60 * 24 * 7 ) );
+
+      monthToCompare = startTime.getMonth();
+      
+      weekNumber++;
+   }
+   
    if( weekNumber > 3 )
    {
       var nextWeek = new Date( oldStartTime.getTime() + ( 1000 * 60 * 60 * 24 * 7 ) );
@@ -1201,11 +1278,36 @@ function getWeekNumberOfMonth()
       if( nextWeek.getMonth() != thisMonth )
       {
          //its the last week of the month
-         weekNumber = 5;
+        return( true );
       }
    }
 
-   return( weekNumber );
+   return( false );
+}
+
+/* FILE ATTACHMENTS */
+
+function removeSelectedAttachment()
+{
+   var Listbox = document.getElementById( "attachmentBucket" );
+
+   var SelectedItem = Listbox.selectedItem;
+
+   if( SelectedItem )
+      Listbox.removeChild( SelectedItem );
+}
+
+function addAttachment( attachmentToAdd )
+{
+   if( !attachmentToAdd )
+   {
+      return;
+   }
+   
+   //add a row to the listbox
+   document.getElementById( "attachmentBucket" ).appendItem( attachmentToAdd.url, attachmentToAdd.url );
+
+   sizeToContent();
 }
 
 
@@ -1229,31 +1331,6 @@ function getWeekNumberText( weekNumber )
 
 }
 
-
-
-/* 
-   FILES
-   
-   Add files to the event 
-*/
-function launchFilePicker()
-{
-   const nsIFilePicker = Components.interfaces.nsIFilePicker;
-   
-   var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-     
-   fp.init(window, "Open", nsIFilePicker.modeOpen);
-	
-   fp.appendFilter( "All Files", "*.*" );
-   
-   fp.show();
-
-   if (fp.file && fp.file.path.length > 0) 
-   {
-      alert( "add "+fp.file.path+" to the event" );
-      //add the file fp.file to the event. 
-   }
-}
 
 
 /* URL */
