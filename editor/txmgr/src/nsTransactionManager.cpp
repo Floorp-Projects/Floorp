@@ -109,6 +109,18 @@ nsTransactionManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
+nsresult
+NS_NewTransactionManager(nsITransactionManager** result)
+{
+  nsTransactionManager* transactionManager = new nsTransactionManager();
+  if (! transactionManager) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *result = transactionManager;
+  NS_ADDREF(*result);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsTransactionManager::Do(nsITransaction *aTransaction)
 {
