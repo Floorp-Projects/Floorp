@@ -543,7 +543,7 @@ if ($my_webservergroup) {
     }
 
     # make sure that contrib keeps the permissions it had (don't touch it)
-    chmod 0770, 'data', 'shadow';
+    chmod 0770, 'data', 'shadow', 'graphs';
     chmod 0666, glob('data/*');
     chmod 0777, glob('data/*/'); # directories stay executable
 }
