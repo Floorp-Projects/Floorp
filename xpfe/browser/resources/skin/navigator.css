@@ -157,6 +157,13 @@ toolbar#PersonalToolbar menuitem {
   color: #99CCCC;
 }
 
+toolbar#PersonalToolbar menuseparator {
+  border-top: none;
+  margin-left: 6px; 
+  margin-right: 6px;
+  border-bottom: 1px #99CCCC solid; 
+}
+
 toolbar#PersonalToolbar menupopup {
   color: #99CCCC;
   background-color: #003366;
