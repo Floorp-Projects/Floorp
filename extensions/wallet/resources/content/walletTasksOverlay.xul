@@ -203,8 +203,8 @@
                   accesskey="&walletSitesCmd.accesskey;"
                   id="walletsites"
                   oncommand="WalletDialog('walletsites');"/> 
+<!--        
         <menuseparator/>
-<!--
         <menuitem label="&walletSafeFillCmd.label;"
                   accesskey="&walletSafeFillCmd.accesskey;"
                   id="walletSafeFill"
@@ -218,11 +218,11 @@
                   id="walletCapture"
                   oncommand="WalletAction('capture');"/> 
         <menuseparator/>
--->
         <menuitem label="&walletSamplesCmd.label;"
                   accesskey="&walletSamplesCmd.accesskey;"
                   id="walletSamples"
                   oncommand="WalletDialog('samples');"/> 
+-->
       </menupopup>
     </menu>
   </menupopup>
