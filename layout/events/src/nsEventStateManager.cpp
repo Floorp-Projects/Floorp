@@ -427,6 +427,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     break;
   case NS_MOUSE_EXIT:
     GenerateMouseEnterExit(aPresContext, aEvent);
+    //This is a window level mouseenter event and should stop here
+    aEvent->message = 0;
     break;
   case NS_DRAGDROP_OVER:
     GenerateDragDropEnterExit(aPresContext, aEvent);
