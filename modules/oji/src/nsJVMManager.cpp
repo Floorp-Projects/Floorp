@@ -261,6 +261,14 @@ nsJVMManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_METHOD
+nsJVMManager::InitLiveConnectClasses(JSContext* context, JSObject* globalObject)
+{
+	return (JSJ_InitJSContext(context, globalObject, NULL) ? NS_OK : NS_ERROR_FAILURE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_METHOD
 nsJVMManager::GetClasspathAdditions(const char* *result)
 {
     if (fClassPathAdditionsString != NULL)
