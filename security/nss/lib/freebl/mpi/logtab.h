@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: logtab.h,v 1.2 2000/07/31 20:36:41 nelsonb%netscape.com Exp $
+ *  $Id: logtab.h,v 1.3 2000/08/09 22:45:51 nelsonb%netscape.com Exp $
  */
 
 const float s_logv_2[] = {
@@ -54,6 +54,6 @@ const float s_logv_2[] = {
    0.175425064f, 0.174583430f, 0.173765343f, 0.172969690f,  /* 52 53 54 55 */
    0.172195434f, 0.171441601f, 0.170707280f, 0.169991616f,  /* 56 57 58 59 */
    0.169293808f, 0.168613099f, 0.167948779f, 0.167300179f,  /* 60 61 62 63 */
-   0.166666667
+   0.166666667f
 };
 
