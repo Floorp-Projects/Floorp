@@ -46,6 +46,10 @@
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"
 
+#ifdef INCLUDE_XUL
+#include "nsXULAtoms.h"
+#endif
+
 static NS_DEFINE_IID(kIHTMLStyleSheetIID, NS_IHTML_STYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -423,6 +427,16 @@ protected:
                                nsIStyleContext* aStyleContext,
                                nsAbsoluteItems& aAbsoluteItems,
                                nsIFrame*&       aNewFrame);
+
+#ifdef INCLUDE_XUL
+  nsresult ConstructXULFrame(nsIPresContext*  aPresContext,
+                             nsIContent*      aContent,
+                             nsIFrame*        aParentFrame,
+                             nsIAtom*         aTag,
+                             nsIStyleContext* aStyleContext,
+                             nsAbsoluteItems& aAbsoluteItems,
+                             nsIFrame*&       aNewFrame);
+#endif
 
   nsresult ConstructFrameByDisplayType(nsIPresContext*       aPresContext,
                                        const nsStyleDisplay* aDisplay,
@@ -1793,6 +1807,88 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
   return rv;
 }
 
+#ifdef INCLUDE_XUL
+nsresult
+HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
+                                      nsIContent*      aContent,
+                                      nsIFrame*        aParentFrame,
+                                      nsIAtom*         aTag,
+                                      nsIStyleContext* aStyleContext,
+                                      nsAbsoluteItems& aAbsoluteItems,
+                                      nsIFrame*&       aNewFrame)
+{
+  PRBool    processChildren = PR_FALSE;  // whether we should process child content
+  nsresult  rv = NS_OK;
+  PRBool    isAbsolutelyPositioned = PR_FALSE;
+
+  // Initialize OUT parameter
+  aNewFrame = nsnull;
+
+  NS_ASSERTION(aTag != nsnull, "null XUL tag");
+  if (aTag == nsnull)
+    return NS_OK;
+
+  PRInt32 nameSpaceID;
+  if (NS_SUCCEEDED(aContent->GetNameSpaceID(nameSpaceID)) &&
+      nameSpaceID == nsXULAtoms::nameSpaceID) {
+      
+    // See if the element is absolutely positioned
+    const nsStylePosition* position = (const nsStylePosition*)
+      aStyleContext->GetStyleData(eStyleStruct_Position);
+    if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition)
+      isAbsolutelyPositioned = PR_TRUE;
+
+    // Create a frame based on the tag
+    if (aTag == nsXULAtoms::button)
+      rv = NS_NewButtonControlFrame(aNewFrame);
+    else if (aTag == nsXULAtoms::checkbox)
+      rv = NS_NewCheckboxControlFrame(aNewFrame);
+    else if (aTag == nsXULAtoms::radio)
+      rv = NS_NewRadioControlFrame(aNewFrame);
+    else if (aTag == nsXULAtoms::text)
+      rv = NS_NewTextControlFrame(aNewFrame);
+  }
+
+  // If we succeeded in creating a frame then initialize it, process its
+  // children (if requested), and set the initial child list
+  if (NS_SUCCEEDED(rv) && aNewFrame != nsnull) {
+    nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
+                                                         aParentFrame;
+    aNewFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
+
+    // See if we need to create a view, e.g. the frame is absolutely positioned
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+                                             aStyleContext, PR_FALSE);
+
+    // Process the child content if requested
+    nsIFrame* childList = nsnull;
+    if (processChildren)
+      rv = ProcessChildren(aPresContext, aContent, aNewFrame, aAbsoluteItems,
+                           childList);
+
+    // Set the frame's initial child list
+    aNewFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+
+    // If the frame is absolutely positioned then create a placeholder frame
+    if (isAbsolutelyPositioned) {
+      nsIFrame* placeholderFrame;
+
+      CreatePlaceholderFrameFor(aPresContext, aContent, aNewFrame, aStyleContext,
+                                aParentFrame, placeholderFrame);
+
+      // Add the absolutely positioned frame to its containing block's list
+      // of child frames
+      aAbsoluteItems.AddAbsolutelyPositionedChild(aNewFrame);
+
+      // Add the placeholder frame to the flow
+      aNewFrame = placeholderFrame;
+    }
+  }
+
+  return rv;
+}
+#endif
+
 nsresult
 HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*       aPresContext,
                                                 const nsStyleDisplay* aDisplay,
@@ -2223,6 +2319,15 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
       // Handle specific frame types
       rv = ConstructFrameByTag(aPresContext, aContent, aParentFrame, tag,
                                styleContext, aAbsoluteItems, aFrameSubTree);
+
+#ifdef INCLUDE_XUL
+      // failing to find a matching HTML frame, try creating a specialized
+      // XUL frame. this is temporary, pending planned factoring of this
+      // whole process into separate, pluggable steps.
+      if (NS_SUCCEEDED(rv) && nsnull == aFrameSubTree)
+        rv = ConstructXULFrame(aPresContext, aContent, aParentFrame, tag,
+                               styleContext, aAbsoluteItems, aFrameSubTree);
+#endif
 
       if (NS_SUCCEEDED(rv) && (nsnull == aFrameSubTree)) {
         // When there is no explicit frame to create, assume it's a
