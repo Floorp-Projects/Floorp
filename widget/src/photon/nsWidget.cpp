@@ -792,6 +792,7 @@ static struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_UP,         Pk_Up, PR_FALSE },
   { NS_VK_DOWN,       Pk_Down, PR_FALSE },
   { NS_VK_TAB,        Pk_Tab, PR_FALSE },
+  { NS_VK_TAB,        Pk_KP_Tab, PR_FALSE },
   { NS_VK_HOME,       Pk_Home, PR_FALSE },
   { NS_VK_END,        Pk_End, PR_FALSE },
   { NS_VK_LEFT,       Pk_Left, PR_FALSE },
