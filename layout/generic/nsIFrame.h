@@ -179,9 +179,13 @@ public:
   NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight) = 0;
 
   /**
-   * Child frame enumeration
+   * Child frame enumeration.
+   *
+   * Child frames are linked together in a singly-linked list.
    */
   NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const = 0;
+  NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const = 0;
+  NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling) = 0;
 
   /**
    * Painting
@@ -327,12 +331,6 @@ public:
    * Gets the size of an "auto" margin.
    */
   NS_IMETHOD  GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const = 0;
-
-  /**
-   * Sibling pointer used to link together frames
-   */
-  NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const = 0;
-  NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling) = 0;
 
   /**
    * Does this frame have content that is considered "transparent"?
