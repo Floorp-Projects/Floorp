@@ -44,6 +44,8 @@
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
 #include "nsFont.h"
+#include "nsIDeviceContext.h"
+#include "nsIFontMetrics.h"
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
@@ -92,7 +94,24 @@ public:
   NS_METHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
   virtual void Reset();
 
+  //
+  // XXX: The following paint methods are TEMPORARY. It is being used to get printing working
+  // under windows. Later it may be used to GFX-render the controls to the display. 
+  // Expect this code to repackaged and moved to a new location in the future.
+  //
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  const nsRect& aDirtyRect);
+ 
+  virtual void PaintSelectControl(nsIPresContext& aPresContext,
+                                  nsIRenderingContext& aRenderingContext,
+                                  const nsRect& aDirtyRect);
+
+  ///XXX: End o the temporary methods
+
 protected:
+  PRUint32 mNumRows;
+
   nsIDOMHTMLSelectElement* GetSelect();
   nsIDOMHTMLCollection* GetOptions(nsIDOMHTMLSelectElement* aSelect = nsnull);
   nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLCollection& aOptions, PRUint32 aIndex);
@@ -124,6 +143,7 @@ nsSelectControlFrame::nsSelectControlFrame()
 {
   mIsComboBox   = PR_FALSE;
   mOptionsAdded = PR_FALSE;
+  mNumRows      = 0;
 }
 
 nscoord 
@@ -238,25 +258,46 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull, nsnull,
                                 maxWidth, PR_TRUE, nsHTMLAtoms::size, 1);
   // XXX fix CalculateSize to return PRUint32
-  PRUint32 numRows = (PRUint32)CalculateSize(aPresContext, this, styleSize, textSpec, 
-                                             calcSize, widthExplicit, heightExplicit, rowHeight,
-                                             aReflowState.rendContext);
+  mNumRows = (PRUint32)CalculateSize(aPresContext, this, styleSize, textSpec, 
+                                     calcSize, widthExplicit, heightExplicit, rowHeight,
+                                     aReflowState.rendContext);
 
   // here it is determined whether we are a combo box
   PRInt32 sizeAttr;
   GetSize(&sizeAttr);
   PRBool multiple;
   if (!GetMultiple(&multiple) && 
-      ((1 >= sizeAttr) || ((ATTR_NOTSET == sizeAttr) && (1 >= numRows)))) {
+      ((1 >= sizeAttr) || ((ATTR_NOTSET == sizeAttr) && (1 >= mNumRows)))) {
     mIsComboBox = PR_TRUE;
   }
-    
+
+  float sp2t;
   float p2t = aPresContext->GetPixelsToTwips();
+
+  aPresContext->GetScaledPixelsToTwips(sp2t);
+
+  nscoord scrollbarWidth  = 0;
+  nscoord scrollbarHeight = 0;
+  float   scale;
+  nsIDeviceContext* dx = nsnull;
+  dx = aPresContext->GetDeviceContext();
+  if (nsnull != dx) { 
+    float sbWidth;
+    float sbHeight;
+    dx->GetCanonicalPixelScale(scale);
+    dx->GetScrollBarDimensions(sbWidth, sbHeight);
+    scrollbarWidth  = PRInt32(sbWidth * scale);
+    scrollbarHeight = PRInt32(sbHeight * scale);
+    NS_RELEASE(dx);
+  } else {
+    scrollbarWidth  = GetScrollbarWidth(sp2t);
+    scrollbarHeight = scrollbarWidth;
+  }
 
   aDesiredLayoutSize.width = calcSize.width;
   // account for vertical scrollbar, if present  
-  if (!widthExplicit && ((numRows < numOptions) || mIsComboBox)) {
-    aDesiredLayoutSize.width += GetScrollbarWidth(p2t);
+  if (!widthExplicit && ((mNumRows < numOptions) || mIsComboBox)) {
+    aDesiredLayoutSize.width += scrollbarWidth;
   }
 
   // XXX put this in widget library, combo boxes are fixed height (visible part)
@@ -269,7 +310,7 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = aDesiredLayoutSize.height;
   if (mIsComboBox) {  // add in pull down size
-    PRInt32 extra = NSIntPixelsToTwips(10, p2t);
+    PRInt32 extra = NSIntPixelsToTwips(10, p2t*scale);
     aDesiredWidgetSize.height += (rowHeight * (numOptions > 20 ? 20 : numOptions)) + extra;
   }
 
@@ -600,3 +641,191 @@ nsSelectControlFrame::GetOptionValue(nsIDOMHTMLCollection& aCollection, PRUint32
   return status;
 }
 
+void
+nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
+                                         nsIRenderingContext& aRenderingContext,
+                                         const nsRect& aDirtyRect)
+{
+#ifdef XP_PC
+  aRenderingContext.PushState();
+
+
+  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+
+  /**
+   * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
+   * The tag should be uppercase and inclue the colon.
+   * ie: NS_NewAtom(":FIRST-LINE");
+   */
+  nsIAtom * sbAtom = NS_NewAtom(":SCROLLBAR-LOOK");
+  nsIStyleContext* scrollbarStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
+  NS_RELEASE(sbAtom);
+
+  sbAtom = NS_NewAtom(":SCROLLBAR-ARROW-LOOK");
+  nsIStyleContext* arrowStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
+  NS_RELEASE(sbAtom);
+
+
+  nsIDOMHTMLCollection* options = GetOptions();
+  if (!options) {
+    return;
+  }
+  PRUint32 numOptions;
+  options->GetLength(&numOptions);
+
+  float scale;
+  nsIDeviceContext * context;
+  aRenderingContext.GetDeviceContext(context);
+  context->GetCanonicalPixelScale(scale);
+
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  nsMargin border;
+  spacing->CalcBorderFor(this, border);
+
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+  nsRect outside(0, 0, mRect.width, mRect.height);
+  outside.Deflate(border);
+  outside.Deflate(onePixel, onePixel);
+
+  nsRect inside(outside);
+
+  aRenderingContext.SetColor(NS_RGB(0,0,0));
+
+  nsFont font(aPresContext.GetDefaultFixedFont()); 
+  GetFont(&aPresContext, font);
+
+  aRenderingContext.SetFont(font);
+
+  //nscoord textWidth;
+  nscoord textHeight;
+  nsString text;
+
+  // Calculate the height of the text
+  nsIFontMetrics* metrics;
+  context->GetMetricsFor(font, metrics);
+  metrics->GetHeight(textHeight);
+
+  // Calculate the width of the scrollbar
+  PRInt32 scrollbarWidth;
+  if (numOptions > mNumRows) {
+    float sbWidth;
+    float sbHeight;
+    context->GetCanonicalPixelScale(scale);
+    context->GetScrollBarDimensions(sbWidth, sbHeight);
+    scrollbarWidth = PRInt32(sbWidth * scale);
+  } else {
+    scrollbarWidth = 0;
+  }
+
+  // shrink the inside rect's width for the scrollbar
+  inside.width  -= scrollbarWidth;
+  PRBool clipEmpty;
+  aRenderingContext.PushState();
+  nsRect clipRect(inside); 
+  clipRect.Inflate(onePixel, onePixel);
+
+  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kReplace, clipEmpty);
+
+  nscoord x = inside.x + onePixel;
+  nscoord y;
+  if (mIsComboBox) {
+    y = ((inside.height  - textHeight) / 2)  + inside.y;
+  } else {
+    y = inside.y;
+  }
+
+  PRUint32 selectedIndex = -1;
+  // XXX Get Selected index out of Content model
+  selectedIndex = 1;
+
+  nsIDOMNode* node;
+  nsIDOMHTMLOptionElement* option;
+  for (PRUint32 i = 0; i < numOptions; i++) {
+    options->Item(i, &node);
+    if (node) {
+      nsresult result = node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
+      if ((NS_OK == result) && option) {
+        // XXX need to compress whitespace
+        if (NS_CONTENT_ATTR_HAS_VALUE != option->GetText(text)) {
+            text = " ";
+        }
+
+        PRBool selected = PR_FALSE;
+        option->GetSelected(&selected);
+        if ((selected && !mIsComboBox) || (mIsComboBox && selectedIndex == i)) {
+          nsRect rect(inside.x, y-onePixel, mRect.width-onePixel, textHeight+onePixel);
+          nscolor currentColor;
+          aRenderingContext.GetColor(currentColor);
+          aRenderingContext.SetColor(NS_RGB(0,0,0));
+          aRenderingContext.FillRect(rect); 
+          aRenderingContext.SetColor(NS_RGB(255,255,255));
+          aRenderingContext.DrawString(text, x, y, 0); 
+          aRenderingContext.SetColor(currentColor);
+        } else {
+          if (!mIsComboBox || (mIsComboBox && -1 == selectedIndex && 0 == i)) {
+            aRenderingContext.DrawString(text, x, y, 0); 
+          }
+        }
+
+        if (!mIsComboBox) {
+          y += textHeight;
+          if (i == mNumRows-1) {
+            i = numOptions;
+          }
+        } else if ((-1 == selectedIndex && 0 == i) || (selectedIndex == i)) {
+          i = numOptions;
+        }
+
+        NS_RELEASE(option);
+      }
+      NS_RELEASE(node);
+    }
+  }
+
+  aRenderingContext.PopState(clipEmpty);
+  // Draw Scrollbars
+  if (numOptions > mNumRows) {
+    //const nsStyleColor* myColor =
+    //  (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+
+    if (mIsComboBox) {
+      // Get the Scrollbar's Arrow's Style structs
+      const nsStyleSpacing* arrowSpacing = (const nsStyleSpacing*)arrowStyle->GetStyleData(eStyleStruct_Spacing);
+      const nsStyleColor*   arrowColor   = (const nsStyleColor*)arrowStyle->GetStyleData(eStyleStruct_Color);
+
+      nsRect srect(mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
+	    DrawArrow(eArrowDirection_Down, aRenderingContext,aPresContext, 
+			          aDirtyRect, srect, onePixel, *arrowColor, *arrowSpacing, this, mRect);
+    } else {
+      nsRect srect(mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
+
+      DrawScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_FALSE, onePixel, 
+																    scrollbarStyle, arrowStyle, this, mRect);   
+    }
+  }
+
+
+  NS_RELEASE(context);
+
+  NS_RELEASE(options);
+  aRenderingContext.PopState(clipEmpty);
+
+  NS_RELEASE(scrollbarStyle);
+  NS_RELEASE(arrowStyle);
+#endif
+}
+
+NS_METHOD 
+nsSelectControlFrame::Paint(nsIPresContext& aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect& aDirtyRect)
+{
+#ifdef XP_PC
+  PaintSelectControl(aPresContext, aRenderingContext, aDirtyRect);
+#endif
+  return NS_OK;
+}

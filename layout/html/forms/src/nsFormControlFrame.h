@@ -25,6 +25,7 @@
 #include "nsIWidget.h"
 #include "nsLeafFrame.h"
 #include "nsCoord.h"
+#include "nsIStyleContext.h"
 
 class nsIView;
 class nsIPresContext;
@@ -255,23 +256,100 @@ protected:
   //nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
   //                    nscoord aMaxWidth, const nsStyleCoord& aCoord);
 
+//
+// XXX: The following paint code is TEMPORARY. It is being used to get printing working
+// under windows. Later it may be used to GFX-render the controls to the display. 
+// Expect this code to repackaged and moved to a new location in the future.
+//
+
+
+   /**
+    * Enumeration of possible mouse states used to detect mouse clicks
+    */
+   enum nsArrowDirection {
+    eArrowDirection_Left,
+    eArrowDirection_Right,
+    eArrowDirection_Up,
+    eArrowDirection_Down
+   };
+
+   /**
+    * Setup an array of Points
+    */
+
+   static void SetupPoints(PRUint32 aNumberOfPoints, nscoord* points, 
+     nsPoint* polygon, nscoord aScaleFactor, nscoord aX, nscoord aY);
+
    /**
     * Draw a fat line. The line is drawn as a polygon with a specified width.
-	* Utility used for rendering a form control during printing.
-	* 
+	  * Utility used for rendering a form control during printing.
+	  *  
     * @param aRenderingContext the rendering context
     * @param aSX starting x in pixels
-	* @param aSY starting y in pixels
-	* @param aEX ending x in pixels
-	* @param aEY ending y in pixels
+	  * @param aSY starting y in pixels
+	  * @param aEX ending x in pixels
+	  * @param aEY ending y in pixels
     * @param aHorz PR_TRUE if aWidth is added to x coordinates to form polygon. If 
-	*              PR_FALSE  then aWidth as added to the y coordinates.
+	  *              PR_FALSE  then aWidth as added to the y coordinates.
     * @param aOnePixel number of twips in a single pixel.
     */
 
-  void DrawLine(nsIRenderingContext& aRenderingContext, 
+  static void DrawLine(nsIRenderingContext& aRenderingContext, 
                  nscoord aSX, nscoord aSY, nscoord aEX, nscoord aEY, 
                  PRBool aHorz, nscoord aWidth, nscoord aOnePixel);
+
+
+   /**
+    * Draw a arrow glyph
+	  * 
+    * @param aRenderingContext the rendering context
+    * @param aSX upper left x coordinate pixels
+   	* @param aSY upper left y coordinate pixels
+    * @param aType @see nsArrowDirection
+    * @param aOnePixel number of twips in a single pixel.
+    */
+
+  static void DrawArrowGlyph(nsIRenderingContext& aRenderingContext, 
+                 nscoord aSX, nscoord aSY, nsArrowDirection aArrowDirection, 
+                 nscoord aOnePixel);
+
+   /**
+    * Draw a arrow 
+   	* 
+    * @param aRenderingContext the rendering context
+    * @param aRect location and size of in pixels 
+    * @param aType @see nsArrowDirection
+    * @param aOnePixel number of twips in a single pixel.
+    */
+
+  static void DrawArrow(nsArrowDirection aArrowDirection,
+					                    nsIRenderingContext& aRenderingContext,
+															nsIPresContext& aPresContext, 
+															const nsRect& aDirtyRect,
+                              nsRect& aRect, 
+															nscoord aOnePixel, 
+															const nsStyleColor& aColor,
+															const nsStyleSpacing& aSpacing,
+															nsIFrame* aForFrame,
+                              nsRect& aFrameRect);
+  /**
+    * Draw a scrollbar
+	  * 
+    * @param aRenderingContext the rendering context
+    * @param aHorizontal if TRUE a horizontal scrollbar is drawn, if FALSE a vertical scrollbar is drawn
+    * @param aOnePixel number of twips in a single pixel.
+    */
+
+  static void DrawScrollbar(nsIRenderingContext& aRenderingContext,
+																	nsIPresContext& aPresContext, 
+																  const nsRect& aDirtyRect,
+                                  nsRect& aRect, 
+																  PRBool aHorizontal, 
+																  nscoord aOnePixel, 
+                                  nsIStyleContext* aScrollbarStyleContext,
+                                  nsIStyleContext* aScrollbarArrowStyleContext,
+																	nsIFrame* aForFrame,
+                                  nsRect& aFrameRect);
 
 
   nsMouseState mLastMouseState;
