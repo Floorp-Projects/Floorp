@@ -1,19 +1,19 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY  title.label "Composer">
-<!ENTITY  compheader "Composer">
+<!ENTITY  lHeader "Composer">
+<!ENTITY  rHeader "Set general preferences for the authoring Web pages">
 <!ENTITY  authorName "Author Name">
 <!ENTITY  AutoSaveCheck.label "Automatically save page every">
 <!ENTITY  minText "minutes">
 <!ENTITY  exterLegand.label "External Editors">
-<!ENTITY  htmlSource "Html Source">
+<!ENTITY  htmlSource "HTML Source:">
 <!ENTITY  chooseButton.label "Choose...">
 <!ENTITY  fontSizeHeader "Font Size Mode">
-<!ENTITY  img "Images">
+<!ENTITY  img "Images:">
 <!ENTITY  relSizeRadio.label "Show relative size as points based on your Navigator font sizes">
 <!ENTITY  relfontRadio.label "Show relative HTML font scale: -2, -1, 0, +1, +2, +3, +4">
 <!ENTITY  relScaleRadio.label "Show relative HTML scale and absolute &quot;point-size&quot; attributes">
@@ -22,30 +22,118 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="return StartUp('Composer');"  title="&title.label;">
+        onload="return StartUp('Composer');"  alighn="vertical" title="&title.label;">
 
 <html:script language="javascript" src="PrefsWindow.js"/>
 <html:div flex="100%">
+	<box id="header" style="width:100%" align="horizontal">  
+		  <spring style="width:20px"/>
+		  <html:div style="vertical-align: middle;">
+		  <html:B>&lHeader;</html:B>
+		  </html:div>
+   		  <spring flex="100%"/>
+		  <html:div>&rHeader;</html:div><spring style="width:5px"/>
+	</box>
+
+	<box align="vertical" flex="100%" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+					<html:legend align="left"> 
+			<html:div></html:div> 
+					</html:legend> 
+		<html:div>
+			&authorName;
+			<html:input name="author" type="text" id="pref:string:editor.author" />
+		</html:div>
+		<html:div>
+			<html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save_delay" />
+			<html:label for="pref:0:int:editor.auto_save_delay" accesskey="a" tabindex="0">
+				&AutoSaveCheck.label;
+			</html:label>		
+			<html:input name="time" type="text" size="3" value="5" id="pref:5:int:editor.auto_save_delay" />
+			&minText;	
+		</html:div>
+	</html:fieldset>
+	</box>  
+
+<box align="vertical" flex="100%" style="width: 100%;">
+		<html:fieldset style="width: 100%;">
+					<html:legend align="left"> 
+			<html:div>&exterLegand.label;</html:div> 
+					</html:legend> 
+	 	<html:div>
+			&htmlSource;
+		</html:div>
+		<html:div>
+			<html:input name="&chooseButton.label;" type="text" id="pref:string:editor.html_directory" />
+			<titledbutton name=""  value="&chooseButton.label;" />
+		</html:div>
+	<html:div>
+			&img;
+		</html:div>
+		<html:div>
+			<html:input name="chooseButton.label" type="text" id="pref:string:editor.image_editor" />
+			<titledbutton name=""  value="&chooseButton.label;" />
+		</html:div> 
+
+	</html:fieldset>
+	</box> 
+
+	<box align="vertical" flex="100%" style="width: 100%;">
+		<html:fieldset style="width: 50%;">
+					<html:legend align="left"> 
+			<html:div>&fontSizeHeader;</html:div> 
+					</html:legend> 
+	<html:div>
+		<html:input name="font" type="radio" id="pref:0:int:fontsize_mode" val="checked" />	
+		<html:label for="pref:0:int:fontsize_mode" accesskey="s" tabindex="0">
+		&relSizeRadio.label;			
+		</html:label>
+	</html:div>
+	<html:div>
+		<html:input name="font" type="radio" id="pref:1:int:fontsize_mode" />
+		<html:label for="pref:1:int:fontsize_mode" accesskey="f" tabindex="0">
+		&relfontRadio.label;			
+		</html:label>
+	</html:div>
+	<html:div>
+		<html:input name="font" type="radio" id="pref:2:int:fontsize_mode" />
+		<html:label for="pref:2:int:fontsize_mode" accesskey="c" tabindex="0">			
+		&relScaleRadio.label;
+		</html:label>
+	</html:div>
+	</html:fieldset>
+	</box>  
+
+
+
+<!--
 <html:DIV ID="top">
 		<html:SPAN ID="lefttext">&compheader;</html:SPAN>
 </html:DIV>
 
 <form>
 <html:table> 
-      <html:tr><html:td>&authorName;<html:input name="author" type="text" id="pref:string:editor.author" /></html:td></html:tr>           
-			<html:tr><html:td><html:label><html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save_delay" />&AutoSaveCheck.label;</html:label></html:td>
-			<html:td><html:input name="time" type="text" size="3" value="5" id="pref:5:int:editor.auto_save_delay" />&minText;</html:td></html:tr>			
+      <html:tr><html:td>&authorName;
+	  <html:input name="author" type="text" id="pref:string:editor.author" /></html:td></html:tr>           
+			<html:tr><html:td><html:label>
+			<html:input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save_delay" />
+			&AutoSaveCheck.label;</html:label></html:td>
+			<html:td>
+			<html:input name="time" type="text" size="3" value="5" id="pref:5:int:editor.auto_save_delay" />
+			&minText;</html:td></html:tr>			
 </html:table>
 </form>
 &exterLegand.label;	
 <form>	
 <html:table>		
       <html:tr><html:td>&htmlSource;</html:td></html:tr>
-			<html:tr><html:td><html:input name="&chooseButton.label;" type="text" id="pref:string:editor.html_directory" /></html:td>
+			<html:tr><html:td>
+			<html:input name="&chooseButton.label;" type="text" id="pref:string:editor.html_directory" /></html:td>
 			<html:td><html:input name="" type="button" value="&chooseButton.label;" /></html:td></html:tr>
 			
 			<html:tr><html:td>&img;</html:td></html:tr>
-			<html:tr><html:td><html:input name="chooseButton.label" type="text" id="pref:string:editor.image_editor" /></html:td>
+			<html:tr><html:td>
+			<html:input name="chooseButton.label" type="text" id="pref:string:editor.image_editor" /></html:td>
 			<html:td><html:input name="chooseButton.label" type="button" value="choose..." /></html:td></html:tr>
 </html:table>
 </form>
@@ -53,11 +141,17 @@
 &fontSizeHeader;
 <html:table>
       		
-			<html:tr><html:td><html:label><html:input name="font" type="radio" id="pref:0:int:fontsize_mode" val="checked" />&relSizeRadio.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input name="font" type="radio" id="pref:1:int:fontsize_mode" />&relfontRadio.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:label><html:input name="font" type="radio" id="pref:2:int:fontsize_mode" />&relScaleRadio.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label>
+			<html:input name="font" type="radio" id="pref:0:int:fontsize_mode" val="checked" />
+			&relSizeRadio.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label><html:input name="font" type="radio" id="pref:1:int:fontsize_mode" />
+			&relfontRadio.label;</html:label></html:td></html:tr>
+			<html:tr><html:td><html:label><html:input name="font" type="radio" id="pref:2:int:fontsize_mode" />
+			&relScaleRadio.label;</html:label></html:td></html:tr>
 </html:table>
 </form>
+
+-->
 </html:div>
 </window>
 
