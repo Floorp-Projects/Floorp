@@ -41,6 +41,7 @@
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIObserverService.h"
+#include "nsObserverService.h"
 #include "nsIDocumentLoader.h"
 #include "nsCURILoader.h"
 #include "nsIDocShell.h"
@@ -100,7 +101,7 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
   // remove self from form post notifications:
   nsCOMPtr<nsIObserverService> svc(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) {
-    svc->RemoveObserver(this, NS_ConvertASCIItoUCS2(NS_FORMSUBMIT_SUBJECT).get());
+    svc->RemoveObserver(this, NS_FORMSUBMIT_SUBJECT);
   }
 }
 
@@ -131,7 +132,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window,
   // hook up to the form post notifications:
   nsCOMPtr<nsIObserverService> svc(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) {
-    rv = svc->AddObserver(this, NS_ConvertASCIItoUCS2(NS_FORMSUBMIT_SUBJECT).get());
+    rv = svc->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
   }
   
   /* GetWebProgress(mWindow) */
@@ -172,7 +173,7 @@ nsSecureBrowserUIImpl::DisplayPageInfoUI()
 }
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::Observe(nsISupports*, const PRUnichar*,
+nsSecureBrowserUIImpl::Observe(nsISupports*, const char*,
                                const PRUnichar*)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
