@@ -119,6 +119,7 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
     mStateCache = nsnull;
   }
 
+  delete mRenderingSurface;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextUnix, kRenderingContextIID)
@@ -137,6 +138,7 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   mRenderingSurface->display =  (Display *)aWindow->GetNativeData(NS_NATIVE_DISPLAY);
   mRenderingSurface->drawable = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
   mRenderingSurface->gc       = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
+
 
   ((nsDeviceContextUnix *)aContext)->SetDrawingSurface(mRenderingSurface);
   ((nsDeviceContextUnix *)aContext)->InstallColormap();
