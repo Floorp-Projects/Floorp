@@ -238,10 +238,10 @@ ScrollbarsPropImpl::~ScrollbarsPropImpl()
 
 NS_IMETHODIMP ScrollbarsPropImpl::GetVisible(PRBool *aVisible) 
 {
-   return NS_ERROR_FAILURE;
+   return BarPropImpl::GetVisibleByFlag(aVisible, nsIWebBrowserChrome::CHROME_SCROLLBARS);
 }
 
 NS_IMETHODIMP ScrollbarsPropImpl::SetVisible(PRBool aVisible) 
 {
-   return NS_ERROR_FAILURE;
+   return BarPropImpl::SetVisibleByFlag(aVisible, nsIWebBrowserChrome::CHROME_SCROLLBARS);
 }

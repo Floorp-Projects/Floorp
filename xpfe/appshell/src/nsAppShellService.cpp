@@ -566,11 +566,9 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   nsWebShellWindow* window;
   PRBool intrinsicallySized;
   PRUint32 zlevel;
-  PRBool contentScrollbars;
 
   *aResult = nsnull;
   intrinsicallySized = PR_FALSE;
-  contentScrollbars = PR_FALSE;
   window = new nsWebShellWindow();
   // Bump count to one so it doesn't die on us while doing init.
   nsCOMPtr<nsIXULWindow> tempRef(window); 
@@ -613,9 +611,6 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
       }  
     }
 
-    if (aChromeMask & nsIWebBrowserChrome::CHROME_SCROLLBARS)
-      contentScrollbars = PR_TRUE;
-
     zlevel = nsIXULWindow::normalZ;
     if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RAISED)
       zlevel = nsIXULWindow::raisedZ;
@@ -644,8 +639,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     }
 
     rv = window->Initialize(aParent, mAppShell, aUrl,
-                            aShowWindow, aLoadDefaultPage,
-                            contentScrollbars, zlevel,
+                            aShowWindow, aLoadDefaultPage, zlevel,
                             aInitialWidth, aInitialHeight, widgetInitData);
       
     if (NS_SUCCEEDED(rv)) {

@@ -202,7 +202,6 @@ nsWebShellWindow::nsWebShellWindow() : nsXULWindow()
   mIntrinsicallySized = PR_FALSE;
   mDebuting = PR_FALSE;
   mLoadDefaultPage = PR_TRUE;
-  mKillScrollbarsAfterLoad = PR_FALSE;
   mSPTimerLock = PR_NewLock();
 }
 
@@ -244,7 +243,6 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                                       nsIAppShell* aShell, nsIURI* aUrl, 
                                       PRBool aCreatedVisible,
                                       PRBool aLoadDefaultPage,
-                                      PRBool aContentScrollbars,
                                       PRUint32 aZlevel,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
                                       nsWidgetInitData& widgetInitData)
@@ -254,7 +252,6 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
 
   mShowAfterLoad = aCreatedVisible;
   mLoadDefaultPage = aLoadDefaultPage;
-  mKillScrollbarsAfterLoad = !aContentScrollbars;
   mZlevel = aZlevel;
   
   // XXX: need to get the default window size from prefs...
@@ -1294,8 +1291,6 @@ nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
 
   OnChromeLoaded();
   LoadContentAreas();
-  if (mKillScrollbarsAfterLoad)
-    KillContentScrollbars();
 
   return NS_OK;
 }

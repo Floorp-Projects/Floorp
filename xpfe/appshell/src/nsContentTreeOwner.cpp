@@ -80,12 +80,9 @@ NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
   NS_ENSURE_ARG_POINTER(aSink);
   *aSink = 0;
 
-  if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome))) {
-    nsIWebBrowserChrome *us = NS_STATIC_CAST(nsIWebBrowserChrome *, this);
-    NS_ADDREF(us);
-    *aSink = (void **) us;
-    return NS_OK;
-  }
+  if(aIID.Equals(NS_GET_IID(nsIWebBrowserChrome)))
+    return mXULWindow->GetInterface(aIID, aSink);
+
   if(aIID.Equals(NS_GET_IID(nsIPrompt)))
     return mXULWindow->GetInterface(aIID, aSink);
 
@@ -568,52 +565,56 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
 
 NS_IMETHODIMP nsContentTreeOwner::ApplyChromeFlags()
 {
-   if(!mXULWindow->mChromeLoaded)
-      return NS_OK;  // We'll do this later when chrome is loaded
+  if(!mXULWindow->mChromeLoaded)
+    return NS_OK;  // We'll do this later when chrome is loaded
       
-   nsCOMPtr<nsIDOMElement> window;
-   mXULWindow->GetWindowDOMElement(getter_AddRefs(window));
-   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-   
-   mXULWindow->mWindow->ShowMenuBar(mChromeFlags & 
-                                    nsIWebBrowserChrome::CHROME_MENUBAR ? 
-                                    PR_TRUE : PR_FALSE);
+  nsCOMPtr<nsIDOMElement> window;
+  mXULWindow->GetWindowDOMElement(getter_AddRefs(window));
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-   // Construct the new value for the 'chromehidden' attribute that
-   // we'll whack onto the window. We've got style rules in
-   // navigator.css that trigger visibility based on the
-   // 'chromehidden' attribute of the <window> tag.
-   nsAutoString newvalue;
+  // menubar has its own special treatment
+  mXULWindow->mWindow->ShowMenuBar(mChromeFlags & 
+                                     nsIWebBrowserChrome::CHROME_MENUBAR ? 
+                                   PR_TRUE : PR_FALSE);
 
-   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR)) {
-     newvalue.AppendWithConversion("menubar ");
-   } 
-   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR)) {
-     newvalue.AppendWithConversion("toolbar ");
-   }
-   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_LOCATIONBAR)) {
-     newvalue.AppendWithConversion("location ");
-   }
-   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR)) {
-     newvalue.AppendWithConversion("directories ");
-   }
-   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_STATUSBAR)) {
-     newvalue.AppendWithConversion("status ");
-   }
-   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_EXTRA)) {
-     newvalue.AppendWithConversion("extrachrome");
-   }
+  // scrollbars have their own special treatment
+  mXULWindow->SetContentScrollbarVisibility(mChromeFlags &
+                                              nsIWebBrowserChrome::CHROME_SCROLLBARS ?
+                                            PR_TRUE : PR_FALSE);
 
-   // Get the old value, to avoid useless style reflows if we're just
-   // setting stuff to the exact same thing.
-   nsAutoString oldvalue;
-   window->GetAttribute(NS_ConvertASCIItoUCS2("chromehidden"), oldvalue);
+  /* the other flags are handled together. we have style rules
+     in navigator.css that trigger visibility based on
+     the 'chromehidden' attribute of the <window> tag. */
+  nsAutoString newvalue;
 
-   if (oldvalue != newvalue) {
-     window->SetAttribute(NS_ConvertASCIItoUCS2("chromehidden"), newvalue);
-   }
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR))
+    newvalue.Append(NS_LITERAL_STRING("menubar "));
 
-   return NS_OK;
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR))
+    newvalue.Append(NS_LITERAL_STRING("toolbar "));
+
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_LOCATIONBAR))
+    newvalue.Append(NS_LITERAL_STRING("location "));
+
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR))
+    newvalue.Append(NS_LITERAL_STRING("directories "));
+
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_STATUSBAR))
+    newvalue.Append(NS_LITERAL_STRING("status "));
+
+  if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_EXTRA))
+    newvalue.Append(NS_LITERAL_STRING("extrachrome"));
+
+
+  // Get the old value, to avoid useless style reflows if we're just
+  // setting stuff to the exact same thing.
+  nsAutoString oldvalue;
+  window->GetAttribute(NS_LITERAL_STRING("chromehidden"), oldvalue);
+
+  if (oldvalue != newvalue)
+    window->SetAttribute(NS_LITERAL_STRING("chromehidden"), newvalue);
+
+  return NS_OK;
 }
 
 //*****************************************************************************
