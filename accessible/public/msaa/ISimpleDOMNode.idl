@@ -122,7 +122,7 @@ const long DISPID_NODE_ATTRIBUTESFORNAMES = -5902;
 const long DISPID_NODE_COMPSTYLE  = -5903;
 const long DISPID_NODE_COMPSTYLEFORPROPS = -5904;
 
-[object, uuid(ef0fcc67-0d76-441b-9737-9e30a066308a)]
+[object, uuid(261f5f21-c4ff-4d45-b4d9-ea7b59cc30f6)]
 interface ISimpleDOMNode : IUnknown
 {
   const unsigned short NODETYPE_ELEMENT = 1;
@@ -184,6 +184,12 @@ interface ISimpleDOMNode : IUnknown
   [propget] HRESULT lastChild([out, retval] ISimpleDOMNode **node);
   [propget] HRESULT previousSibling([out, retval] ISimpleDOMNode **node);
   [propget] HRESULT nextSibling([out, retval] ISimpleDOMNode **node);
+  [propget] HRESULT childAt([in] unsigned childIndex, 
+                            [out, retval] ISimpleDOMNode **node);
+
+  [propget] HRESULT innerHTML([out, retval] BSTR *innerHTML);
+
+  [propget, local] HRESULT localInterface([out][retval] void **localInterface);
 }
-        
+
 
