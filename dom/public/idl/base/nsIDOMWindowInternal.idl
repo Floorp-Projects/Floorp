@@ -40,7 +40,6 @@
 
 #include "nsIDOMWindow.idl"
 
-interface nsISidebar;
 interface nsIPrompt;
 interface nsIControllers;
 interface nsIDOMLocation;
@@ -59,9 +58,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow
 
   /* [replaceable] content */
   readonly attribute nsIDOMWindow                content;
-
-  /* [replaceable] sidebar */
-  readonly attribute nsISidebar                  sidebar;
 
   /* [replaceable] prompter */
   [noscript] readonly attribute nsIPrompt        prompter;

@@ -63,15 +63,14 @@ function nsSidebar()
     debug('datasource_uri is ' + this.datasource_uri);
     this.resource = 'urn:sidebar:current-panel-list';
     this.datasource = this.rdf.GetDataSource(this.datasource_uri);
+
+    const PROMPTSERVICE_CONTRACTID = "@mozilla.org/embedcomp/prompt-service;1";
+    const nsIPromptService = Components.interfaces.nsIPromptService;
+    this.promptService =
+        Components.classes[PROMPTSERVICE_CONTRACTID].getService(nsIPromptService);
 }
 
 nsSidebar.prototype.nc = "http://home.netscape.com/NC-rdf#";
-
-nsSidebar.prototype.setWindow =
-function (aWindow)
-{    
-    this.window = aWindow;    
-}
 
 nsSidebar.prototype.isPanel =
 function (aContentURL)
@@ -116,12 +115,6 @@ function(aTitle, aContentURL, aCustomizeURL)
 nsSidebar.prototype.addPanelInternal =
 function (aTitle, aContentURL, aCustomizeURL, aPersist)
 {
-    if (!this.window)
-    {
-        debug ("no window object set, bailing out.");
-        throw Components.results.NS_ERROR_NOT_INITIALIZED;
-    }
-
     sidebarURLSecurityCheck(aContentURL);
 
     // Create a "container" wrapper around the current panels to
@@ -141,7 +134,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
     var panel_resource = 
         this.rdf.GetResource("urn:sidebar:3rdparty-panel:" + aContentURL);
     var panel_index = container.IndexOf(panel_resource);
-    var stringBundle, brandStringBundle, titleMessage, dialogMessage, promptService;
+    var stringBundle, brandStringBundle, titleMessage, dialogMessage;
     if (panel_index != -1)
     {
         try {
@@ -160,11 +153,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
             dialogMessage = aContentURL + " already exists in Sidebar.  No string bundle";
         }
           
-        promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-        if (promptService) {
-          promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-          promptService.alert(this.window, titleMessage, dialogMessage);
-        }
+        this.promptService.alert(null, titleMessage, dialogMessage);
 
         return;
     }
@@ -192,9 +181,7 @@ function (aTitle, aContentURL, aCustomizeURL, aPersist)
         dialogMessage = "No string bundle.  Add the Tab '" + aTitle + "' to Sidebar?\n\n" + "Source: " + aContentURL;
     }
           
-    promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-    var rv = promptService.confirm(this.window, titleMessage, dialogMessage);
+    var rv = this.promptService.confirm(null, titleMessage, dialogMessage);
       
     if (!rv)
         return;
@@ -243,12 +230,6 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     debug("addSearchEngine(" + engineURL + ", " + iconURL + ", " +
           suggestedCategory + ", " + suggestedTitle + ")");
 
-    if (!this.window)
-    {
-        debug ("no window object set, bailing out.");
-        throw Components.results.NS_ERROR_NOT_INITIALIZED;
-    }
-
     try
     {
         // make sure using HTTP (for both engine as well as icon URLs)
@@ -282,7 +263,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
     }
     catch(ex)
     {
-        this.window.alert("Failed to add the search engine.\n");
+        this.promptService.alert(null, "Failed to add the search engine.");
         throw Components.results.NS_ERROR_INVALID_ARG;
     }
 
@@ -308,9 +289,7 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
         dialogMessage += "\nSource: " + engineURL;
     }
           
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-    promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
-    var rv = promptService.confirm(this.window, titleMessage, dialogMessage);
+    var rv = this.promptService.confirm(null, titleMessage, dialogMessage);
       
     if (!rv)
         return;
@@ -364,6 +343,18 @@ function (compMgr, fileSpec, location, type)
                                     fileSpec, 
                                     location,
                                     type);
+
+    const CATMAN_CONTRACTID = "@mozilla.org/categorymanager;1";
+    const nsICategoryManager = Components.interfaces.nsICategoryManager;
+    var catman = Components.classes[CATMAN_CONTRACTID].
+                            getService(nsICategoryManager);
+
+    const JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY = "JavaScript global property";
+    catman.addCategoryEntry(JAVASCRIPT_GLOBAL_PROPERTY_CATEGORY,
+                            "sidebar",
+                            SIDEBAR_CONTRACTID,
+                            true,
+                            true);
 }
 
 sidebarModule.getClassObject =

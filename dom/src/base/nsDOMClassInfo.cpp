@@ -845,7 +845,6 @@ jsval nsDOMClassInfo::sComponents_id      = JSVAL_VOID;
 jsval nsDOMClassInfo::sConstructor_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::s_content_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sContent_id         = JSVAL_VOID;
-jsval nsDOMClassInfo::sSidebar_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sMenubar_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sToolbar_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sLocationbar_id     = JSVAL_VOID;
@@ -949,7 +948,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sConstructor_id,     cx, "constructor");
   SET_JSVAL_TO_STRING(s_content_id,        cx, "_content");
   SET_JSVAL_TO_STRING(sContent_id,         cx, "content");
-  SET_JSVAL_TO_STRING(sSidebar_id,         cx, "sidebar");
   SET_JSVAL_TO_STRING(sMenubar_id,         cx, "menubar");
   SET_JSVAL_TO_STRING(sToolbar_id,         cx, "toolbar");
   SET_JSVAL_TO_STRING(sLocationbar_id,     cx, "locationbar");
@@ -2798,7 +2796,6 @@ nsDOMClassInfo::ShutDown()
   sConstructor_id     = JSVAL_VOID;
   s_content_id        = JSVAL_VOID;
   sContent_id         = JSVAL_VOID;
-  sSidebar_id         = JSVAL_VOID;
   sMenubar_id         = JSVAL_VOID;
   sToolbar_id         = JSVAL_VOID;
   sLocationbar_id     = JSVAL_VOID;

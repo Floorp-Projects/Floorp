@@ -47,7 +47,6 @@ REQUIRES	= xpcom \
 		  java \
 		  locale \
 		  uriloader \
-		  sidebar \
 		  xuldoc \
 		  webshell \
 		  view \
