@@ -497,7 +497,9 @@ static OSStatus spec2path(const FSSpec& spec, char* path, UInt32 maxPathSize)
 
 string MRJSession::getClassPath()
 {
-    string classPath("-Djava.class.path=");
+    // to work around problem in Mac OS X 10.2 (Jaguar) (bugzilla #164712),
+    // put our classes in the boot class path.
+    string classPath("-Xbootclasspath/p:");
     
     // keep appending paths make from FSSpecs.
     MRJClassPath::const_iterator i = mClassPath.begin();
