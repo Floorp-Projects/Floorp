@@ -311,12 +311,7 @@ nsEditorShell::SetEditorType(const PRUnichar *editorType)
     
   nsAutoString  theType = editorType;
   theType.ToLowerCase();
-  if (theType == "text")
-  {
-    mEditorTypeString = theType;
-    return NS_OK;
-  }
-  else if (theType == "html" || theType == "")
+  if (theType == "text" || theType == "html" || theType == "" || theType == "htmlMail")
   {
     mEditorTypeString = theType;
     return NS_OK;
@@ -351,27 +346,31 @@ nsEditorShell::InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     if (mEditorTypeString == "text")
     {
       err = editor->Init(aDoc, aPresShell, nsIHTMLEditor::eEditorPlaintextMask);
-		}
-		else if (mEditorTypeString == "html" || mEditorTypeString == "")  // empty string default to HTML editor
+    }
+    else if (mEditorTypeString == "html" || mEditorTypeString == "")  // empty string default to HTML editor
     {
       err = editor->Init(aDoc, aPresShell, 0);
-		}
-		else
-	  {
-	    err = NS_ERROR_INVALID_ARG;    // this is not an editor we know about
+    }
+    else if (mEditorTypeString == "htmlMail")  //  HTML editor with special mail rules
+    {
+      err = editor->Init(aDoc, aPresShell, nsIHTMLEditor::eEditorMailMask);
+    }
+    else
+    {
+      err = NS_ERROR_INVALID_ARG;    // this is not an editor we know about
 #if DEBUG
-	    nsString  errorMsg = "Failed to init editor. Unknown editor type \"";
-	    errorMsg += mEditorTypeString;
-	    errorMsg += "\"\n";
-	    char  *errorMsgCString = errorMsg.ToNewCString();
-	       NS_WARNING(errorMsgCString);
-	       nsCRT::free(errorMsgCString);
+      nsString  errorMsg = "Failed to init editor. Unknown editor type \"";
+      errorMsg += mEditorTypeString;
+      errorMsg += "\"\n";
+      char  *errorMsgCString = errorMsg.ToNewCString();
+         NS_WARNING(errorMsgCString);
+         nsCRT::free(errorMsgCString);
 #endif
-	  }
+    }
 
     if (NS_SUCCEEDED(err) && editor)
     {
-      mEditor = do_QueryInterface(editor);		// this does the addref that is the owning reference
+      mEditor = do_QueryInterface(editor);    // this does the addref that is the owning reference
       mEditorType = eHTMLTextEditorType;
     }
   }
@@ -444,8 +443,8 @@ nsEditorShell::SetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
   // addref it while we're using it
   NS_ADDREF(styleAtom);
 
-  nsAutoString		attributeStr(attr);
-  nsAutoString		valueStr(value);
+  nsAutoString    attributeStr(attr);
+  nsAutoString    valueStr(value);
   
   switch (mEditorType)
   {
@@ -509,7 +508,7 @@ nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
   };
   
   nsAutoString  allStr(prop);
-  nsAutoString	aAttr(attr);
+  nsAutoString  aAttr(attr);
   
   allStr.ToLowerCase();
   PRBool    doingAll = (allStr == "all");
@@ -533,7 +532,7 @@ nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
   }
   else
   {
-  	nsAutoString  aProp(prop);
+    nsAutoString  aProp(prop);
     err = RemoveOneProperty(aProp, aAttr);
   }
   
@@ -692,7 +691,7 @@ nsEditorShell::TransferDocumentStateListeners()
     return NS_OK;
    
   if (!mEditor)
-    return NS_ERROR_NOT_INITIALIZED;		// called too early.
+    return NS_ERROR_NOT_INITIALIZED;    // called too early.
 
   nsresult  rv;
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor, &rv);
@@ -748,7 +747,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   // make the UI state maintainer
   mStateMaintainer = new nsInterfaceState;
   if (!mStateMaintainer) return NS_ERROR_OUT_OF_MEMORY;
-  mStateMaintainer->AddRef();			// the owning reference
+  mStateMaintainer->AddRef();      // the owning reference
   rv = mStateMaintainer->Init(mEditor, mWebShell);
   if (NS_FAILED(rv)) return rv;
   
@@ -820,7 +819,7 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
       return NS_ERROR_NULL_POINTER;
 
   mContentWindow = aWin;
-  //mContentScriptContext = GetScriptContext(mContentWindow);		// XXX does this AddRef?
+  //mContentScriptContext = GetScriptContext(mContentWindow);    // XXX does this AddRef?
 
   nsresult  rv;
   nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(mContentWindow, &rv);
@@ -832,7 +831,7 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
   if (!webShell)
     return NS_ERROR_FAILURE;
     
-  mContentAreaWebShell = webShell;			// dont AddRef
+  mContentAreaWebShell = webShell;      // dont AddRef
   return mContentAreaWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
 }
 
@@ -991,7 +990,7 @@ nsEditorShell::Open()
         result = toolkitCore->ShowWindowWithArgs("chrome://editor/content", nsnull, fileURLString/*fileURL.GetAsString()*/);
       }
 
-			// delete the string
+      // delete the string
 
       break;
     }
@@ -1097,44 +1096,44 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
           {
             nsAutoString  promptString = GetString("SaveDocumentAs");
 
-	          nsString* titles = nsnull;
-	          nsString* filters = nsnull;
-	          nsString* nextTitle;
-	          nsString* nextFilter;
+            nsString* titles = nsnull;
+            nsString* filters = nsnull;
+            nsString* nextTitle;
+            nsString* nextFilter;
             nsString HTMLFiles;
             nsString TextFiles;
 
-	          titles = new nsString[2];
-	          if (!titles)
-	          {
-		          res = NS_ERROR_OUT_OF_MEMORY;
-		          goto SkipFilters;
-	          }
-	          filters = new nsString[2];
-	          if (!filters)
-	          {
-		          res = NS_ERROR_OUT_OF_MEMORY;
-		          goto SkipFilters;
-	          }
-	          nextTitle = titles;
-	          nextFilter = filters;
+            titles = new nsString[2];
+            if (!titles)
+            {
+              res = NS_ERROR_OUT_OF_MEMORY;
+              goto SkipFilters;
+            }
+            filters = new nsString[2];
+            if (!filters)
+            {
+              res = NS_ERROR_OUT_OF_MEMORY;
+              goto SkipFilters;
+            }
+            nextTitle = titles;
+            nextFilter = filters;
             // The names of the file types are localizable
             HTMLFiles = GetString("HTMLFiles");
             TextFiles = GetString("TextFiles");
-		        if (HTMLFiles.Length() == 0 || TextFiles.Length() == 0)
+            if (HTMLFiles.Length() == 0 || TextFiles.Length() == 0)
               goto SkipFilters;
                 
             *nextTitle++ = "HTML Files";
-		        *nextFilter++ = "*.htm; *.html; *.shtml";
-		        *nextTitle++ = "Text Files";
-		        *nextFilter++ = "*.txt";
+            *nextFilter++ = "*.htm; *.html; *.shtml";
+            *nextTitle++ = "Text Files";
+            *nextFilter++ = "*.txt";
             fileWidget->SetFilterList(2, titles, filters);
 SkipFilters:
             nsFileDlgResults dialogResult;
             // 1ST PARAM SHOULD BE nsIDOMWindow*, not nsIWidget*
             dialogResult = fileWidget->PutFile(/*mContentWindow*/nsnull, promptString, docFileSpec);
-          	delete [] titles;
-	          delete [] filters;
+            delete [] titles;
+            delete [] filters;
 
             if (dialogResult == nsFileDlgResults_Cancel)
             {
@@ -1297,7 +1296,7 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
       // Convert it to the string version of the URL format
       // NOTE: THIS CRASHES IF fileSpec is empty
       nsFileURL url(fileSpec);
-      nsString	returnVal = url.GetURLString();
+      nsString  returnVal = url.GetURLString();
       *_retval = returnVal.ToNewUnicode();
     }
     // TODO: SAVE THIS TO THE PREFS?
@@ -1705,10 +1704,10 @@ nsEditorShell::DoFind(PRBool aFindNext)
     
     if (NS_SUCCEEDED(rv))
     {
-	    if (aFindNext)
-	      rv = findComponent->FindNext(mSearchContext, &foundIt);
-	    else
-	      rv = findComponent->Find(mSearchContext, &foundIt);
+      if (aFindNext)
+        rv = findComponent->FindNext(mSearchContext, &foundIt);
+      else
+        rv = findComponent->Find(mSearchContext, &foundIt);
     }
     
     // Release the service.
@@ -1854,7 +1853,7 @@ nsEditorShell::GetDocumentCharacterSet(PRUnichar** characterSet)
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
 
   if (editor)
-	  return editor->GetDocumentCharacterSet(characterSet);
+    return editor->GetDocumentCharacterSet(characterSet);
 
   return NS_ERROR_FAILURE;
 }
@@ -1865,7 +1864,7 @@ nsEditorShell::SetDocumentCharacterSet(const PRUnichar* characterSet)
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
 
   if (editor)
-	  return editor->SetDocumentCharacterSet(characterSet);
+    return editor->SetDocumentCharacterSet(characterSet);
 
   return NS_ERROR_FAILURE;
 
@@ -3031,10 +3030,10 @@ nsEditorShell::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, cons
 NS_IMETHODIMP
 #ifndef NECKO
 nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURI *aUrl, PRInt32 aStatus,
-								 nsIDocumentLoaderObserver * aObserver)
+                 nsIDocumentLoaderObserver * aObserver)
 #else
 nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel, nsresult aStatus,
-								 nsIDocumentLoaderObserver * aObserver)
+                 nsIDocumentLoaderObserver * aObserver)
 #endif // NECKO
 {
 #ifdef NECKO

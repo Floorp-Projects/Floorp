@@ -173,7 +173,7 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
   }
 
   // split any mailcites in the way
-  if (1 || mFlags & nsIHTMLEditor::eEditorMailMask)
+  if (mFlags & nsIHTMLEditor::eEditorMailMask)
   {
     nsCOMPtr<nsIDOMNode> citeNode, selNode;
     PRInt32 selOffset, newOffset;
