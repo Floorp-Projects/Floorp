@@ -1045,11 +1045,9 @@ function EditorSetDefaultPrefs()
   var newdoctype = domdoc.implementation.createDocumentType("html", "-//W3C//DTD HTML 4.01 Transitional//EN",
                "");
   if (!domdoc.doctype)
-  {
     domdoc.insertBefore(newdoctype, domdoc.firstChild);
-  }
   else
-    dump("doctype not added");
+    domdoc.replaceChild(domdoc.firstChild, newdoctype);
   
   // search for head; we'll need this for meta tag additions
   var headelement = 0;
