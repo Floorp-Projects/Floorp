@@ -770,6 +770,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
         }
 
         //we are done with args, time to free the strings therein
+	PRInt32 j;
         for (j = 0; j < argCount; j++) {
           nsAllocator::Free(args[j]);
         }
