@@ -432,8 +432,7 @@ nsresult nsMailboxTestDriver::OnDisplayMessage()
 	PR_FREEIF(displayString);
 
 	// concatenate folder name onto folder path....
-	// mscott: this won't work on unix.....
-	char * fullFolderPath = PR_smprintf("%s\\%s", folderPath ? folderPath : "", m_userData);
+	char * fullFolderPath = PR_smprintf("%s%c%s", folderPath ? folderPath : "",PR_DIRECTORY_SEPARATOR, m_userData);
 	PR_FREEIF(folderPath);
 	// now turn this into a nsFilePath...
 	nsFileSpec filePath(fullFolderPath);
@@ -503,8 +502,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 	PR_FREEIF(displayString);
 
 	// concatenate folder name onto folder path....
-	// mscott: this won't work on unix.....
-	char * fullFolderPath = PR_smprintf("%s\\%s", folderPath ? folderPath : "", m_userData);
+	char * fullFolderPath = PR_smprintf("%s%c%s", folderPath ? folderPath : "",PR_DIRECTORY_SEPARATOR, m_userData);
 	PR_FREEIF(folderPath);
 	// now turn this into a nsFileSpec...
 	nsFileSpec filePath(fullFolderPath);
