@@ -24,24 +24,24 @@
  */
 
 
-#ifndef nsSimpleConsoleProgressNotifier_H__
-#define nsSimpleConsoleProgressNotifier_H__
+#ifndef nsSimpleNotifier_H__
+#define nsSimpleNotifier_H__
 
-#include "nsIXPInstallProgressNotifier.h"
+#include "nsIXPINotifier.h"
 
-class nsSimpleConsoleProgressNotifier : public nsIXPInstallProgressNotifier
+class nsSimpleNotifier : public nsIXPINotifier
 {
     public:
 
-        nsSimpleConsoleProgressNotifier();
-        virtual ~nsSimpleConsoleProgressNotifier();
+        nsSimpleNotifier();
+        virtual ~nsSimpleNotifier();
        
-        void BeforeJavascriptEvaluation(void);
-        void AfterJavascriptEvaluation(void);
-        void InstallStarted(const char* UIPackageName);
-        long ItemScheduled(const char* message );
-        void InstallFinalization(const char* message, long itemNum, long totNum );
-        void InstallAborted(void);
+        NS_IMETHOD BeforeJavascriptEvaluation();
+        NS_IMETHOD AfterJavascriptEvaluation();
+        NS_IMETHOD InstallStarted(const char *UIPackageName);
+        NS_IMETHOD ItemScheduled(const char *message);
+        NS_IMETHOD InstallFinalization(const char *message, PRInt32 itemNum, PRInt32 totNum);
+        NS_IMETHOD InstallAborted();
 };
 
 #endif
