@@ -127,7 +127,7 @@
 <!--
   <command id="change_display_todo_in_view" oncommand="" checked="true"/>
 -->
-  <command id="close_calendar_command" key="key_close" oncommand="closeCalendar()"/>
+  <command id="close_calendar_command" oncommand="closeCalendar()"/>
 
   <command id="wizard_command" oncommand="launchWizard()" collapsed="true"/>
 </commandset>

@@ -116,6 +116,7 @@
                    accesskey="&event.edit.event.accesskey;"
                    observes="modify_command"/>
          <menuitem id="calendar-close"
+                   key="key_close"
                    label="&calendar.menu.options.close;"
                    accesskey="&calendar.menu.options.close.accesskey;"
                    observes="close_calendar_command"/>
