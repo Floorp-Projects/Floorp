@@ -70,6 +70,7 @@ nsMessengerWinIntegration::nsMessengerWinIntegration()
   mDefaultServerAtom = getter_AddRefs(NS_NewAtom("DefaultServer"));
   mTotalUnreadMessagesAtom = getter_AddRefs(NS_NewAtom("TotalUnreadMessages"));
 
+  mFirstTimeFolderUnreadCountChanged = PR_TRUE;
   mInboxURI = nsnull;
   mEmail = nsnull;
 }
@@ -207,7 +208,7 @@ nsMessengerWinIntegration::Init()
 
   rv = ResetCurrent();
   NS_ENSURE_SUCCESS(rv,rv);
- 
+
   rv = SetupUnreadCountUpdateTimer();
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -293,6 +294,24 @@ nsMessengerWinIntegration::OnItemIntPropertyChanged(nsISupports *aItem, nsIAtom 
     const char *itemURI = nsnull;
     rv = folderResource->GetValueConst(&itemURI);
     NS_ENSURE_SUCCESS(rv,rv);
+
+    // Today, if the user brings up the mail app and gets his/her mail and read 
+    // couple of messages and quit the app before the first timer action is 
+    // triggered, app will not get the opportunity to update the registry 
+    // latest unread count thus displaying essentially the previous sessions's data. 
+    // That is not desirable. So, we can avoid that situation by updating the 
+    // registry first time the total unread count is changed. That will update 
+    // the registry to reflect the first user action that alters unread mail count.
+    // As the user reads some of the messages, the latest unread mail count 
+    // is kept track of. Now, if the user quits before the first timer is triggered,
+    // the registry is updated one last time via UpdateRegistryWithCurrent() as we will
+    // have all information needed available to do so.
+    if (mFirstTimeFolderUnreadCountChanged) {
+      mFirstTimeFolderUnreadCountChanged = PR_FALSE;
+
+      rv = UpdateUnreadCount();
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
 
     if (itemURI && mInboxURI && !nsCRT::strcmp(itemURI, mInboxURI)) {
       mCurrentUnreadCount = aNewValue;

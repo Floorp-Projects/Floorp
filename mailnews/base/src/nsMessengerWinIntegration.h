@@ -107,6 +107,9 @@ private:
   // "might" because we don't know until we check 
   // what type of server is associated with the default account
   PRBool    mDefaultAccountMightHaveAnInbox;
+
+  // first time the unread count changes, we need to update registry
+  PRBool mFirstTimeFolderUnreadCountChanged;
 };
 
 #endif // __nsMessengerWinIntegration_h
