@@ -216,24 +216,38 @@ sub outputLoginInsufficient {
     });   
 }
 
+sub getPendingCommandString {
+    my $self = shift;
+    my($app) = @_;
+    my $pendingCommand = $app->input->peekArgument('loginPendingCommands');
+    if (not defined($pendingCommand)) {
+        $pendingCommand = $app->input->getArgumentsAsString();
+    }
+    return $pendingCommand;
+}
+
 # dispatcher.output.generic
 sub outputLoginFailed {
     my $self = shift;
     my($app, $output, $tried, $message) = @_;
+    my $pendingCommand = $self->getPendingCommandString($app);
     $output->output('login.failed', {
         'tried' => $tried, # 0 = no username; 1 = unknown username; 2 = invalid username
         'contacts' => [$app->getService('dataSource.user')->getFieldNamesByCategory($app, 'contact')],
         'message' => $message,
-    });   
+        'pendingCommands' => $pendingCommand,
+    });
 }
 
 # dispatcher.output.generic
 sub outputLoginRequestAccount {
     my $self = shift;
     my($app, $output, $tried) = @_;
+    my $pendingCommand = $self->getPendingCommandString($app);
     $output->output('login.requestAccount', {
         'contacts' => [$app->getService('dataSource.user')->getFieldNamesByCategory($app, 'contact')],
-    });   
+        'pendingCommands' => $pendingCommand,
+    });
 }
 
 # dispatcher.output.generic
@@ -243,7 +257,8 @@ sub outputLoginDetailsSent {
     $output->output('login.detailsSent', {
         'address' => $address,
         'protocol' => $protocol,
-    });   
+        'pendingCommands' => $app->input->getArgumentsFromString($app->input->peekArgument('loginPendingCommands')),
+    });
 }
 
 # dispatcher.output.generic
@@ -253,7 +268,8 @@ sub outputLoginDetails {
     $output->output('login.details', {
         'username' => $username,
         'password' => $password,
-    });   
+        'pendingCommands' => $app->input->getArgumentsFromString($app->input->peekArgument('loginPendingCommands')),
+    });
 }
 
 # dispatcher.output
@@ -261,7 +277,7 @@ sub strings {
     return (
             'login.accessDenied' => 'Displayed when the user does not have the requisite right (namely, right).',
             'login.failed' => 'Displayed when the user has not logged in (tried is false) or when the credentials were wrong (tried is true). A message may be given in message.',
-            'login.requestAccount' => 'Displayed when the user requests the form to enter a new account (should display the same form as login.failed, basically).',
+            'login.requestAccount' => 'Displayed when the user requests the form to enter a new account (should display the same form as login.failed, basically). Pass pendingCommands back as loginPendingCommands.',
             'login.detailsSent' => 'The password was sent to address using protocol.',
             'login.details' => 'The message containing the username and password of a new account or when the user has forgotten his password (only required for contact protocols, e.g. e-mail).',
             );
