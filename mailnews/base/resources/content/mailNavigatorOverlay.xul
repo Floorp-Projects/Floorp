@@ -9,50 +9,54 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript">
-  <![CDATA[
-            
-    function getCurrentIdentityKey()
+    function sendLink(pageUrl, pageTitle)
     {
-      try 
-      {
-        var cwindowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-        var iwindowManager = Components.interfaces.nsIWindowMediator;
-        var windowManager  = cwindowManager.QueryInterface(iwindowManager);
-        var mailWindow = windowManager.getMostRecentWindow('mail:3pane');
-        var folder = mailWindow.GetFirstSelectedMsgFolder();
-        var server = folder.server;
-        var identity = mailWindow.getIdentityForServer(server);
-        return identity.key;
-      }
-      catch(ex) {
-        return null;
-      }
+      var currentIdentity = getCurrentIdentityKey();
+      var args = "body='" + pageUrl + "',subject='" + pageTitle +"',bodyislink=true";
+      if (currentIdentity)
+        args += ",preselectid='" + currentIdentity+ "'";        
+      window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
+                         "chrome,all,dialog=no", args );
     }
 
-    function sendLink(pageUrl, pageTitle)
-      {
-        var currentIdentity = getCurrentIdentityKey();
-        var args = "body='" + pageUrl + "',subject='" + pageTitle +"',bodyislink=true";
-        if (currentIdentity)
-          args += ",preselectid='" + currentIdentity+ "'";
+    function sendPage(aDocument)
+    {
+      var currentIdentity = getCurrentIdentityKey();
+       
+      if (!aDocument)
+        aDocument = window._content.document;
+        
+      var pageUrl = aDocument.URL;
+      var pageTitle = aDocument.title;
 
-        window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
-                           "chrome,all,dialog=no", args);
-      }
+      var args = "attachment='" + pageUrl.replace(/\,/g, "%2C") + "',body='" + pageUrl +"',subject='" + pageTitle + "',bodyislink=true";
+      if (currentIdentity)
+        args += ",preselectid='" + currentIdentity+ "'";        
+      window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
+                         "chrome,all,dialog=no", args);
+    }
 
-    function sendPage()
-      {
-        var currentIdentity = getCurrentIdentityKey();
-        var pageUrl = window._content.location.href;
-        var pageTitle =  window._content.document.title;
-        var args = "attachment='" + pageUrl.replace(/\,/g, "%2C") + "',body='" + pageUrl +"',subject='" + pageTitle + "',bodyislink=true";
-        if (currentIdentity)
-          args += ",preselectid='" + currentIdentity+ "'";
-          
-        window.openDialog( "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
-                           "chrome,all,dialog=no", args);
-      }
-  
+    function initMailContextMenuItems(aEvent)
+    {
+      var shouldShowSendPage = !gContextMenu.onImage && !gContextMenu.onLink && !gContextMenu.onTextInput;
+      gContextMenu.showItem("context-sendpage", shouldShowSendPage);
+
+      var shouldShowSendLink = gContextMenu.onLink;
+      gContextMenu.showItem("context-sendlink", shouldShowSendLink);
+        
+      var appsSeparator = document.getElementById("context-sep-apps");
+      var tempElement = appsSeparator.previousSibling;
+      if (tempElement.localName == "menuseparator") 
+        gContextMenu.showItem("context-sep-apps", false);
+    }
+      
+    function initMailContextMenuListener(aEvent)
+    {
+      var popup = document.getElementById("contentAreaContextMenu");
+      popup.addEventListener("popupshowing", initMailContextMenuItems, false);
+    }
+    
+    addEventListener("load", initMailContextMenuListener, false);
   ]]>
   </script>         
 
@@ -72,6 +76,19 @@
     <menuitem id="menu_sendPage" label="&sendPage.label;" accesskey="&sendPage.accesskey;" command="cmd_sendPage" position="11"/>
     <menuitem id="menu_sendLink" label="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" command="Browser:SendLink" position="12"/>
   </menupopup>
+
+  <popup id="contentAreaContextMenu">
+    <menuitem id="context-sendpage"
+              label="&sendPage.label;"
+              accesskey="&sendPage.accesskey;"
+              oncommand="sendPage(gContextMenu.target.ownerDocument);"
+              insertafter="context-sep-save"/>
+    <menuitem id="context-sendlink"
+              label="&sendLinkCmd.label;"
+              accesskey="&sendLinkCmd.accesskey;"
+              oncommand="sendLink(gContextMenu.linkURL(), gContextMenu.linkText());"
+              insertafter="context-sep-save"/>
+  </popup> 
   
 </overlay>
 
