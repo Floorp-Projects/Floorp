@@ -3868,6 +3868,14 @@ if (!$dbh->bz_get_field_def('bugs', 'qa_contact')->[2]) { # if it's NOT NULL
                WHERE initialqacontact = 0");
 }
 
+# 2005-03-17 Add more indices for bugs_activity -- Bug 286625
+print "Adding more indexes for bugs_activity table.\n";
+$dbh->do("ALTER TABLE bugs_activity ADD INDEX bugs_activity_idfield (bug_id, fieldid)");
+$dbh->do("ALTER TABLE bugs_activity ADD FULLTEXT bugs_activity_added (added)");
+$dbh->do("ALTER TABLE bugs_activity ADD FULLTEXT bugs_activity_removed (removed)");
+$dbh->do("ALTER TABLE bugs_activity ADD FULLTEXT bugs_activity_added_removed (added, removed)");
+
+
 } # END LEGACY CHECKS
 
 
