@@ -55,6 +55,8 @@
 
       <xul:button label="&pageSetup.label;" accesskey="&pageSetup.accesskey;"
         oncommand="doPageSetup();"/>
+      
+      <xul:toolbarseparator/>
 
       <xul:vbox align="center" pack="center">
         <xul:label value="&page.label;"/>
@@ -75,13 +77,13 @@
       <xul:toolbarbutton class="toolbarbutton-icon end-arrow"
         oncommand="parentNode.navigate(0, 0, 'end');"/>
 
-      <xul:toolbarseparator class="toolbarseparator-primary"/>
+      <xul:toolbarseparator/>
       <xul:vbox align="center" pack="center">
         <xul:label value="&scale.label;"/>
       </xul:vbox>
 
       <xul:hbox align="center" pack="center">
-        <xul:menulist crop="none" 
+        <xul:menulist crop="none"
           oncommand="parentNode.parentNode.scale(this.selectedItem.value);">
           <xul:menupopup>
             <xul:menuitem value="0.3" label="&p30.label;"/>
@@ -104,20 +106,20 @@
         </xul:menulist>
       </xul:hbox>
 
-      <xul:toolbarseparator class="toolbarseparator-primary"/>
+      <xul:toolbarseparator/>
       <xul:vbox align="center" pack="center">
         <xul:hbox align="center" pack="center">
-          <xul:toolbarbutton label="&portrait.label;" checked="true"
+          <xul:toolbarbutton label="&portrait.label;" 
+            accesskey="&portrait.accesskey;" checked="true"
             type="radio" group="orient" class="toolbar-portrait-page"
             oncommand="parentNode.parentNode.parentNode.orient('portrait');"/>
-          <xul:toolbarbutton label="&landscape.label;" 
+          <xul:toolbarbutton label="&landscape.label;" accesskey="&landscape.accesskey;"
             type="radio" group="orient" class="toolbar-landscape-page"
             oncommand="parentNode.parentNode.parentNode.orient('landscape');"/>
         </xul:hbox>
       </xul:vbox>
 
       <xul:toolbarseparator/>
-      <xul:toolbarseparator class="toolbarseparator-primary"/>
       <xul:button label="&close.label;" accesskey="&close.accesskey;"
         oncommand="BrowserExitPrintPreview();"/>
       <xul:data value="&customPrompt.title;"/>
@@ -131,28 +133,28 @@
         document.getAnonymousNodes(this)[0]
       </field>
       <field name="mPageTextBox">
-        document.getAnonymousNodes(this)[5].childNodes[0]
+        document.getAnonymousNodes(this)[6].firstChild
       </field>
       <field name="mTotalPages">
-        document.getAnonymousNodes(this)[5].childNodes[2]
+        document.getAnonymousNodes(this)[6].lastChild
       </field>
       <field name="mScaleLabel">
-        document.getAnonymousNodes(this)[9].firstChild
-      </field>
-      <field name="mScaleCombobox">
         document.getAnonymousNodes(this)[10].firstChild
       </field>
+      <field name="mScaleCombobox">
+        document.getAnonymousNodes(this)[11].firstChild
+      </field>
       <field name="mOrientButtonsBox">
-        document.getAnonymousNodes(this)[12].firstChild
+        document.getAnonymousNodes(this)[13].firstChild
       </field>
       <field name="mPortaitButton">
-        this.mOrientButtonsBox.childNodes[0]
+        this.mOrientButtonsBox.firstChild
       </field>
       <field name="mLandscapeButton">
-        this.mOrientButtonsBox.childNodes[1]
+        this.mOrientButtonsBox.lastChild
       </field>
       <field name="mCustomTitle">
-        document.getAnonymousNodes(this)[16].firstChild
+        document.getAnonymousNodes(this)[16].getAttribute("value");
       </field>
       <field name="mPrintPreviewObs">
       </field>
@@ -209,10 +211,10 @@
           // hide page setup button
           document.getAnonymousNodes(this)[1].setAttribute("hidden", "true");
 
-          // hide scale widgets (indices: 8, 9, 10, 11)
-          // hide orient widgets (indices: 12, 13)
+          // hide scale widgets (indices: 9, 10, 11, 12)
+          // hide orient widget (index: 13)
           var i;
-          for (i = 8; i <= 13; ++i)
+          for (i = 9; i <= 13; ++i)
           {
             document.getAnonymousNodes(this)[i].setAttribute("hidden", "true");
           }
@@ -245,6 +247,10 @@
         <![CDATA[
           this._debug("navigate: " + aDirection + " " + aPageNum + 
                       " " + aHomeOrEnd);
+          
+          if (this.mPageTextBox.getAttribute("lastvalid") == aPageNum) {
+            return;
+          }
           
           var print = this._getWebBrowserPrint();
           var validInput = false;
