@@ -489,7 +489,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
     // make sure our scroll position did not change for where we last put
     // it. if it does then the user must have moved it, and we no longer
     // need to restore.
-    nsIPresContext* presContext(aState.GetPresContext());
+    nsIPresContext* presContext = aState.GetPresContext();
     nsIView* view;
     GetView(presContext, &view);
     if (!view)
