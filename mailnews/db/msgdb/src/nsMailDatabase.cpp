@@ -424,7 +424,8 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
 {
 	nsLocalFolderSummarySpec	summarySpec(*folderName);
 	nsFileSpec					summaryPath(summarySpec);
-	nsresult		err;
+	nsresult		err = NS_OK;
+	PRBool			bOpenedDB = PR_FALSE;
 
 	if (!folderName->Exists())
 		return NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
@@ -452,6 +453,7 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
 			delete pMessageDB;
 			pMessageDB = NULL;
 		}
+		bOpenedDB = PR_TRUE;
 	}
 	else
 		pMessageDB->AddRef();
@@ -473,8 +475,18 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
 		pMessageDB->m_dbFolderInfo->ChangeNumNewMessages(numunread);
 		pMessageDB->m_dbFolderInfo->ChangeNumMessages(num);
 	}
-	pMessageDB->Close(PR_TRUE);
-	return NS_OK;
+	// if we opened the db, then we'd better close it. Otherwise, we found it in the cache,
+	// so just commit and release.
+	if (bOpenedDB)
+	{
+		pMessageDB->Close(PR_TRUE);
+	}
+	else if (pMessageDB)
+	{ 
+		err = pMessageDB->Commit(kSessionCommit);
+		pMessageDB->Release();
+	}
+	return err;
 }
 
 

@@ -142,7 +142,7 @@ NS_IMETHODIMP	nsImapMailDatabase::SetSummaryValid(PRBool /* valid */)
 }
 	
 // IMAP does not set local file flags, override does nothing
-void	nsImapMailDatabase::UpdateFolderFlag(nsMsgHdr * /* msgHdr */, PRBool /* bSet */, 
+void	nsImapMailDatabase::UpdateFolderFlag(nsIMsgDBHdr * /* msgHdr */, PRBool /* bSet */, 
 									 MsgFlags /* flag */, nsIOFileStream ** /* ppFileStream */)
 {
 }
