@@ -953,15 +953,14 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, PRBool 
 		nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(aItem);
 		if(folderResource  && folder)
 		{
-			char *folderURI =nsnull;
-			rv = folderResource->GetValue(&folderURI);
+			const char *folderURI;
+			rv = folderResource->GetValueConst(&folderURI);
 			if(NS_FAILED(rv)) return rv;
             PRBool equal;
             if (caseInsensitive) 
               equal = (folderURI && nsCRT::strcasecmp(folderURI, uri)==0);  
             else
               equal = (folderURI && nsCRT::strcmp(folderURI, uri)==0);
-			nsMemory::Free(folderURI);
 			if (equal)
 			{
 				*child = folder;
