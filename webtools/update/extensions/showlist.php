@@ -418,7 +418,7 @@ echo"</DIV>\n";
 
 } //End While Loop
 if ($totalresults=="0") {
-echo"<DIV class=\"item\" class=\"noitems\">\n";
+echo"<DIV class=\"item noitems\">\n";
 echo"<P>No extensions found in this category for ".ucwords($application).".</P>\n";
 echo"</DIV>\n";
 
