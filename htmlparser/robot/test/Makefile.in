@@ -26,17 +26,22 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM		= htmlrobot
+PROGRAM		= htmlrobot$(BIN_SUFFIX)
 
 REQUIRES	= xpcom
 
 CPPSRCS		= RobotMain.cpp
 
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = dbgrobot
+else
+EXTRA_DSO_LIBS = DebugRobot
+endif
+
 LIBS		= \
 		-lDebugRobot \
-		$(XPCOM_LIBS) \
 		$(LOST_SYM_LIBS) \
-		$(NSPR_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

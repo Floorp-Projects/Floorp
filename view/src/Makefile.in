@@ -28,7 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= raptor
 LIBRARY_NAME	= raptorview
+SHORT_LIBNAME	= ngview
 IS_COMPONENT    = 1
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS = nggfx
+else
+EXTRA_DSO_LIBS = raptorgfx
+endif
 
 CPPSRCS		= \
 		nsView.cpp \
@@ -43,7 +50,6 @@ REQUIRES	= raptor xpcom
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
-		-lraptorgfx	\
 		$(MOZ_TIMER_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
