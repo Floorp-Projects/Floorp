@@ -36,6 +36,7 @@ EXPORTS = \
 	nsUInt32Array.h \
 	nsMsgLineBuffer.h	\
 	nsMsgFolder.h	\
+	nsUrlListenerManager.h \
 	$(NULL)
 
 CPPSRCS = \
@@ -48,6 +49,7 @@ CPPSRCS = \
 	nsNewsSet.cpp \
 	nsLocalFolderSummarySpec.cpp	\
 	nsMsgMD5.cpp \
+	nsUrlListenerManager.cpp \
 	$(NULL)
 
 CPPSRCS += \
