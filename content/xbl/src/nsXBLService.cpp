@@ -396,6 +396,10 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     mBindingDocument->GetBindingManager(getter_AddRefs(xblDocBindingManager));
     xblDocBindingManager->GetXBLDocumentInfo(nsCAutoString(NS_STATIC_CAST(const char*, str)), getter_AddRefs(info));
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
+    if (!info) {
+      NS_ERROR("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
+      return NS_ERROR_FAILURE;
+    }
 
     // If the doc is a chrome URI, then we put it into the XUL cache.
     PRBool cached = PR_FALSE;
@@ -1146,6 +1150,11 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
         document->GetBindingManager(getter_AddRefs(xblDocBindingManager));
         xblDocBindingManager->GetXBLDocumentInfo(aURLStr, getter_AddRefs(info));
         xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
+
+        if (!info) {
+          NS_ERROR("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
+          return NS_ERROR_FAILURE;
+        }
 
         // If the doc is a chrome URI, then we put it into the XUL cache.
         PRBool cached = PR_FALSE;

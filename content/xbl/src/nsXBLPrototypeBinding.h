@@ -41,6 +41,7 @@
 #include "nsIXBLPrototypeBinding.h"
 #include "nsIXBLPrototypeHandler.h"
 #include "nsIXBLPrototypeProperty.h"
+#include "nsXBLPrototypeResources.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsWeakReference.h"
@@ -57,12 +58,9 @@ class nsFixedSizeAllocator;
 // *********************************************************************/
 // The XBLPrototypeBinding class
 
-class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsICSSLoaderObserver, public nsSupportsWeakReference
+class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsSupportsWeakReference
 {
   NS_DECL_ISUPPORTS
-
-  // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify);
 
   // nsIXBLPrototypeBinding
   NS_IMETHOD GetBindingElement(nsIContent** aResult);
@@ -78,6 +76,7 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsICSSLoaderO
   NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aRec);
 
   NS_IMETHOD LoadResources(PRBool* aResult);
+  NS_IMETHOD AddResource(nsIAtom* aResourceType, const nsAReadableString& aSrc);
 
   NS_IMETHOD InheritsStyle(PRBool* aResult);
 
@@ -106,7 +105,8 @@ class nsXBLPrototypeBinding: public nsIXBLPrototypeBinding, public nsICSSLoaderO
   NS_IMETHOD GetStyleSheets(nsISupportsArray** aResult);
 
   NS_IMETHOD HasInsertionPoints(PRBool* aResult) { *aResult = (mInsertionPointTable != nsnull); return NS_OK; };
-  NS_IMETHOD HasStyleSheets(PRBool* aResult) { *aResult = (mStyleSheetList != nsnull); return NS_OK; };
+  NS_IMETHOD HasStyleSheets(PRBool* aResult) 
+  { *aResult = (mResources && mResources->mStyleSheetList); return NS_OK; };
 
   NS_IMETHOD InstantiateInsertionPoints(nsIXBLBinding* aBinding);
 
@@ -155,8 +155,7 @@ protected:
   void ConstructInsertionTable(nsIContent* aElement);
   void ConstructInterfaceTable(nsIContent* aElement);
   void GetNestedChildren(nsIAtom* aTag, nsIContent* aContent, nsISupportsArray** aList);
-  void NotifyBoundElements();
-
+  
 protected:
   // Internal helper class for managing our IID table.
   class nsIIDKey : public nsHashKey {
@@ -195,12 +194,9 @@ protected:
   nsCOMPtr<nsIXBLPrototypeBinding> mBaseBinding; // Strong. We own the base binding in our explicit inheritance chain.
   PRPackedBool mInheritStyle;
   PRPackedBool mHasBaseProto;
-  PRPackedBool mLoadingResources;
-  PRPackedBool mInLoadResourcesFunc;
-
-  PRInt32 mPendingSheets; // The number of stylesheets that have yet to load.
-  nsCOMPtr<nsISupportsArray> mBoundElements; // Bound elements that are waiting on the stylesheets and scripts.
-
+ 
+  nsXBLPrototypeResources* mResources; // If we have any resources, this will be non-null.
+                                      
   nsWeakPtr mXBLDocInfoWeak; // A pointer back to our doc info.  Weak, since it owns us.
 
   nsSupportsHashtable* mAttributeTable; // A table for attribute entries.  Used to efficiently
@@ -210,9 +206,6 @@ protected:
                                              // underneath anonymous content.
 
   nsSupportsHashtable* mInterfaceTable; // A table of cached interfaces that we support.
-
-  nsCOMPtr<nsISupportsArray> mStyleSheetList; // A list of loaded stylesheets for this binding.
-  nsCOMPtr<nsISupportsArray> mRuleProcessors; // The list of stylesheets converted to rule processors.
 
   PRInt32 mBaseNameSpaceID;    // If we extend a tagname/namespace, then that information will
   nsCOMPtr<nsIAtom> mBaseTag;  // be stored in here.

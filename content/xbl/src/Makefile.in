@@ -58,6 +58,8 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
     nsXBLBinding.cpp \
     nsXBLPrototypeBinding.cpp \
+    nsXBLPrototypeResources.cpp \
+    nsXBLResourceLoader.cpp \
     nsXBLDocumentInfo.cpp \
     nsXBLContentSink.cpp \
     nsXBLPrototypeProperty.cpp \
