@@ -1,0 +1,2 @@
+Before you can use Doctor you have to configure it by copying sample.conf 
+to doctor.conf and editing the file according to the instructions in it.
