@@ -382,7 +382,7 @@ net_check_for_company_hostname(ActiveEntry *ce)
             add_www = TRUE;
         }
 
-        PR_Free(host);
+        PR_FREEIF(host);
         host = NULL;
 
         if(add_www) {
