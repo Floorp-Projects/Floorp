@@ -52,6 +52,7 @@ public:
 protected:
   nsCOMPtr<nsIMsgHeaderSink> mMsgHeaderSink;
   nsCOMPtr<nsIMsgStatusFeedback> mStatusFeedback;
+  nsCOMPtr<nsIMsgMessagePaneController> mMsgPaneController;
   nsCOMPtr<nsITransactionManager> mTransactionManager;
   nsCOMPtr<nsIMsgFolder> mOpenFolder;
   nsCOMPtr<nsIMsgWindowCommands> mMsgWindowCommands;
