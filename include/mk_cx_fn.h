@@ -101,7 +101,7 @@ FE_DEFINE(DisplayTable,void, (MWContext * context, int iLocation ,LO_TableStruct
 FE_DEFINE(DisplayCell,void, (MWContext * context, int iLocation ,LO_CellStruct *cell_struct))
 #ifdef XP_MAC
 FE_DEFINE(InvalidateEntireTableOrCell,void, (MWContext * context, LO_Element *element))
-FE_DEFINE(DisplayAddRowOrColBorder,void, (MWContext * context, XP_Rect* r ,XP_Bool bErase))
+FE_DEFINE(DisplayAddRowOrColBorder,void, (MWContext * context, void* r ,XP_Bool bErase))
 #endif
 FE_DEFINE(DisplaySubDoc,void, (MWContext * context, int iLocation ,LO_SubDocStruct *subdoc_struct))
 FE_DEFINE(DisplayLineFeed,void, (MWContext * context, int iLocation , LO_LinefeedStruct *line_feed, XP_Bool need_bg))
@@ -149,7 +149,7 @@ FE_DEFINE(GetMaxWidth,int, (MWContext * context, LO_TextStruct *text))
 #if 0
 FE_DEFINE(EraseBackground, void, (MWContext *, int, int32, int32, uint32, uint32, LO_Color *))
 FE_DEFINE(SetDrawable, void, (MWContext *, CL_Drawable *))
-FE_DEFINE(GetTextFrame, void, (MWContext *, LO_TextStruct *, int32, int32, XP_Rect *))
+FE_DEFINE(GetTextFrame, void, (MWContext *, LO_TextStruct *, int32, int32, void *))
 #ifdef XP_MAC
 FE_DEFINE(GetDefaultBackgroundColor, void, (MWContext* context, LO_Color* color))
 #endif
