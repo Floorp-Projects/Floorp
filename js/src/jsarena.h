@@ -182,7 +182,7 @@ struct JSArenaPool {
  * Initialize an arena pool with the given name for debugging and metering,
  * with a minimum size per arena of size bytes.
  */
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_InitArenaPool(JSArenaPool *pool, const char *name, JSUint32 size,
 		 JSUint32 align);
 
@@ -191,59 +191,59 @@ JS_InitArenaPool(JSArenaPool *pool, const char *name, JSUint32 size,
  * after calling this function.  There is no need to call JS_InitArenaPool()
  * again unless JS_FinishArenaPool(pool) has been called.
  */
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_FreeArenaPool(JSArenaPool *pool);
 
 /*
  * Free the arenas in pool and finish using it altogether.
  */
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_FinishArenaPool(JSArenaPool *pool);
 
 /*
  * Compact all of the arenas in a pool so that no space is wasted.
  */
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_CompactArenaPool(JSArenaPool *pool);
 
 /*
  * Finish using arenas, freeing all memory associated with them.
  */
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_ArenaFinish(void);
 
 /*
  * Friend functions used by the JS_ARENA_*() macros.
  */
-JS_EXTERN_API(void *)
+extern JS_PUBLIC_API(void *)
 JS_ArenaAllocate(JSArenaPool *pool, JSUint32 nb);
 
-JS_EXTERN_API(void *)
+extern JS_PUBLIC_API(void *)
 JS_ArenaGrow(JSArenaPool *pool, void *p, JSUint32 size, JSUint32 incr);
 
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_ArenaRelease(JSArenaPool *pool, char *mark);
 
 #ifdef JS_ARENAMETER
 
 #include <stdio.h>
 
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_ArenaCountAllocation(JSArenaPool *pool, JSUint32 nb);
 
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_ArenaCountInplaceGrowth(JSArenaPool *pool, JSUint32 size, JSUint32 incr);
 
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_ArenaCountGrowth(JSArenaPool *pool, JSUint32 size, JSUint32incr);
 
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_ArenaCountRelease(JSArenaPool *pool, char *mark);
 
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_ArenaCountRetract(JSArenaPool *pool, char *mark);
 
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_DumpArenaStats(FILE *fp);
 
 #else  /* !JS_ARENAMETER */

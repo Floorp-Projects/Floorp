@@ -47,9 +47,9 @@ JSInt64 __pascal __loadds __export
 JSInt64 __pascal __loadds __export
     JSLL_MinInt(void) { return ll_minint; }
 #else
-JS_EXPORT_API(JSInt64) JSLL_Zero(void) { return ll_zero; }
-JS_EXPORT_API(JSInt64) JSLL_MaxInt(void) { return ll_maxint; }
-JS_EXPORT_API(JSInt64) JSLL_MinInt(void) { return ll_minint; }
+JS_PUBLIC_API(JSInt64) JSLL_Zero(void) { return ll_zero; }
+JS_PUBLIC_API(JSInt64) JSLL_MaxInt(void) { return ll_maxint; }
+JS_PUBLIC_API(JSInt64) JSLL_MinInt(void) { return ll_minint; }
 #endif
 
 #ifndef JS_HAVE_LONG_LONG
@@ -110,7 +110,7 @@ static JSUint32 CountLeadingZeros(JSUint32 a)
     return r;
 }
 
-JS_EXPORT_API(void) jsll_udivmod(JSUint64 *qp, JSUint64 *rp, JSUint64 a, JSUint64 b)
+JS_PUBLIC_API(void) jsll_udivmod(JSUint64 *qp, JSUint64 *rp, JSUint64 a, JSUint64 b)
 {
     JSUint32 n0, n1, n2;
     JSUint32 q0, q1;

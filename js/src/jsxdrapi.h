@@ -109,58 +109,58 @@ struct JSXDRState {
     void        *data;
 };
 
-JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(void)
 JS_XDRNewBase(JSContext *cx, JSXDRState *xdr, JSXDRMode mode);
 
-JS_PUBLIC_API(JSXDRState *)
+extern JS_PUBLIC_API(JSXDRState *)
 JS_XDRNewMem(JSContext *cx, JSXDRMode mode);
 
-JS_PUBLIC_API(void *)
+extern JS_PUBLIC_API(void *)
 JS_XDRMemGetData(JSXDRState *xdr, uint32 *lp);
 
-JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(void)
 JS_XDRMemSetData(JSXDRState *xdr, void *data, uint32 len);
 
-JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(void)
 JS_XDRDestroy(JSXDRState *xdr);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_XDRUint8(JSXDRState *xdr, uint8 *b);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_XDRUint16(JSXDRState *xdr, uint16 *s);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_XDRUint32(JSXDRState *xdr, uint32 *lp);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_XDRBytes(JSXDRState *xdr, char **bytes, uint32 len);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_XDRCString(JSXDRState *xdr, char **sp);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_XDRCStringOrNull(JSXDRState *xdr, char **sp);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_XDRString(JSXDRState *xdr, JSString **strp);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_XDRStringOrNull(JSXDRState *xdr, JSString **strp);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_XDRDouble(JSXDRState *xdr, jsdouble **dp);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_XDRValue(JSXDRState *xdr, jsval *vp);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_RegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *lp);
 
-JS_PUBLIC_API(uint32)
+extern JS_PUBLIC_API(uint32)
 JS_FindClassIdByName(JSXDRState *xdr, const char *name);
 
-JS_PUBLIC_API(JSClass *)
+extern JS_PUBLIC_API(JSClass *)
 JS_FindClassById(JSXDRState *xdr, uint32 id);
 
 /* Magic values */

@@ -88,7 +88,7 @@ static JSHashAllocOps defaultHashAllocOps = {
     DefaultAllocEntry, DefaultFreeEntry
 };
 
-JS_EXPORT_API(JSHashTable *)
+JS_PUBLIC_API(JSHashTable *)
 JS_NewHashTable(uint32 n, JSHashFunction keyHash,
                 JSHashComparator keyCompare, JSHashComparator valueCompare,
                 JSHashAllocOps *allocOps, void *allocPriv)
@@ -134,7 +134,7 @@ JS_NewHashTable(uint32 n, JSHashFunction keyHash,
     return ht;
 }
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_HashTableDestroy(JSHashTable *ht)
 {
     uint32 i, n;
@@ -162,7 +162,7 @@ JS_HashTableDestroy(JSHashTable *ht)
 /*
 ** Multiplicative hash, from Knuth 6.4.
 */
-JS_EXPORT_API(JSHashEntry **)
+JS_PUBLIC_API(JSHashEntry **)
 JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
 {
     JSHashEntry *he, **hep, **hep0;
@@ -192,7 +192,7 @@ JS_HashTableRawLookup(JSHashTable *ht, JSHashNumber keyHash, const void *key)
     return hep;
 }
 
-JS_EXPORT_API(JSHashEntry *)
+JS_PUBLIC_API(JSHashEntry *)
 JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
                    JSHashNumber keyHash, const void *key, void *value)
 {
@@ -249,7 +249,7 @@ JS_HashTableRawAdd(JSHashTable *ht, JSHashEntry **hep,
     return he;
 }
 
-JS_EXPORT_API(JSHashEntry *)
+JS_PUBLIC_API(JSHashEntry *)
 JS_HashTableAdd(JSHashTable *ht, const void *key, void *value)
 {
     JSHashNumber keyHash;
@@ -271,7 +271,7 @@ JS_HashTableAdd(JSHashTable *ht, const void *key, void *value)
     return JS_HashTableRawAdd(ht, hep, keyHash, key, value);
 }
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
 {
     uint32 i, n;
@@ -313,7 +313,7 @@ JS_HashTableRawRemove(JSHashTable *ht, JSHashEntry **hep, JSHashEntry *he)
     }
 }
 
-JS_EXPORT_API(JSBool)
+JS_PUBLIC_API(JSBool)
 JS_HashTableRemove(JSHashTable *ht, const void *key)
 {
     JSHashNumber keyHash;
@@ -329,7 +329,7 @@ JS_HashTableRemove(JSHashTable *ht, const void *key)
     return JS_TRUE;
 }
 
-JS_EXPORT_API(void *)
+JS_PUBLIC_API(void *)
 JS_HashTableLookup(JSHashTable *ht, const void *key)
 {
     JSHashNumber keyHash;
@@ -348,7 +348,7 @@ JS_HashTableLookup(JSHashTable *ht, const void *key)
 ** entry found. Stop if "f" says to (return value & JS_ENUMERATE_STOP).
 ** Return a count of the number of elements scanned.
 */
-JS_EXPORT_API(int)
+JS_PUBLIC_API(int)
 JS_HashTableEnumerateEntries(JSHashTable *ht, JSHashEnumerator f, void *arg)
 {
     JSHashEntry *he, **hep;
@@ -389,7 +389,7 @@ out:
 #include <math.h>
 #include <stdio.h>
 
-JS_EXPORT_API(void)
+JS_PUBLIC_API(void)
 JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 {
     double mean, variance;
@@ -435,7 +435,7 @@ JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 }
 #endif /* HASHMETER */
 
-JS_EXPORT_API(int)
+JS_PUBLIC_API(int)
 JS_HashTableDump(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 {
     int count;
@@ -447,7 +447,7 @@ JS_HashTableDump(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
     return count;
 }
 
-JS_EXPORT_API(JSHashNumber)
+JS_PUBLIC_API(JSHashNumber)
 JS_HashString(const void *key)
 {
     JSHashNumber h;
@@ -459,7 +459,7 @@ JS_HashString(const void *key)
     return h;
 }
 
-JS_EXPORT_API(int)
+JS_PUBLIC_API(int)
 JS_CompareValues(const void *v1, const void *v2)
 {
     return v1 == v2;

@@ -62,19 +62,19 @@ JS_BEGIN_EXTERN_C
 ** of the buffer. Returns the length of the written output, NOT including
 ** the NUL, or (JSUint32)-1 if an error occurs.
 */
-JS_EXTERN_API(JSUint32) JS_snprintf(char *out, JSUint32 outlen, const char *fmt, ...);
+extern JS_PUBLIC_API(JSUint32) JS_snprintf(char *out, JSUint32 outlen, const char *fmt, ...);
 
 /*
 ** sprintf into a malloc'd buffer. Return a pointer to the malloc'd
 ** buffer on success, NULL on failure. Call "JS_smprintf_free" to release
 ** the memory returned.
 */
-JS_EXTERN_API(char*) JS_smprintf(const char *fmt, ...);
+extern JS_PUBLIC_API(char*) JS_smprintf(const char *fmt, ...);
 
 /*
 ** Free the memory allocated, for the caller, by JS_smprintf
 */
-JS_EXTERN_API(void) JS_smprintf_free(char *mem);
+extern JS_PUBLIC_API(void) JS_smprintf_free(char *mem);
 
 /*
 ** "append" sprintf into a malloc'd buffer. "last" is the last value of
@@ -83,7 +83,7 @@ JS_EXTERN_API(void) JS_smprintf_free(char *mem);
 ** will allocate the initial string. The return value is the new value of
 ** last for subsequent calls, or NULL if there is a malloc failure.
 */
-JS_EXTERN_API(char*) JS_sprintf_append(char *last, const char *fmt, ...);
+extern JS_PUBLIC_API(char*) JS_sprintf_append(char *last, const char *fmt, ...);
 
 /*
 ** sprintf into a function. The function "f" is called with a string to
@@ -94,15 +94,15 @@ JS_EXTERN_API(char*) JS_sprintf_append(char *last, const char *fmt, ...);
 */
 typedef JSIntn (*JSStuffFunc)(void *arg, const char *s, JSUint32 slen);
 
-JS_EXTERN_API(JSUint32) JS_sxprintf(JSStuffFunc f, void *arg, const char *fmt, ...);
+extern JS_PUBLIC_API(JSUint32) JS_sxprintf(JSStuffFunc f, void *arg, const char *fmt, ...);
 
 /*
 ** va_list forms of the above.
 */
-JS_EXTERN_API(JSUint32) JS_vsnprintf(char *out, JSUint32 outlen, const char *fmt, va_list ap);
-JS_EXTERN_API(char*) JS_vsmprintf(const char *fmt, va_list ap);
-JS_EXTERN_API(char*) JS_vsprintf_append(char *last, const char *fmt, va_list ap);
-JS_EXTERN_API(JSUint32) JS_vsxprintf(JSStuffFunc f, void *arg, const char *fmt, va_list ap);
+extern JS_PUBLIC_API(JSUint32) JS_vsnprintf(char *out, JSUint32 outlen, const char *fmt, va_list ap);
+extern JS_PUBLIC_API(char*) JS_vsmprintf(const char *fmt, va_list ap);
+extern JS_PUBLIC_API(char*) JS_vsprintf_append(char *last, const char *fmt, va_list ap);
+extern JS_PUBLIC_API(JSUint32) JS_vsxprintf(JSStuffFunc f, void *arg, const char *fmt, va_list ap);
 
 /*
 ***************************************************************************
@@ -137,7 +137,7 @@ JS_EXTERN_API(JSUint32) JS_vsxprintf(JSStuffFunc f, void *arg, const char *fmt, 
 ***************************************************************************
 */
 
-JS_EXTERN_API(JSInt32) JS_sscanf(const char *buf, const char *fmt, ...);
+extern JS_PUBLIC_API(JSInt32) JS_sscanf(const char *buf, const char *fmt, ...);
 
 JS_END_EXTERN_C
 

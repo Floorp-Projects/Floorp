@@ -184,7 +184,7 @@ JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
 		    ...);
 
 #ifdef va_start
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
 		      const char *format, va_list ap);
 #endif
@@ -372,10 +372,10 @@ JS_DestroyContextNoGC(JSContext *cx);
 extern JS_PUBLIC_API(void)
 JS_DestroyContextMaybeGC(JSContext *cx);
 
-JS_EXTERN_API(void*)
+extern JS_PUBLIC_API(void*)
 JS_GetContextPrivate(JSContext *cx);
 
-JS_EXTERN_API(void)
+extern JS_PUBLIC_API(void)
 JS_SetContextPrivate(JSContext *cx, void *data);
 
 extern JS_PUBLIC_API(JSRuntime *)
@@ -454,7 +454,7 @@ JS_AddRoot(JSContext *cx, void *rp);
 extern JS_PUBLIC_API(JSBool)
 JS_RemoveRoot(JSContext *cx, void *rp);
 
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_RemoveRootRT(JSRuntime *rt, void *rp);
 
 extern JS_PUBLIC_API(JSBool)

@@ -131,7 +131,7 @@ static void dprintf(const char *format, ...)
 }
 #endif   /* XP_MAC */
 
-JS_EXPORT_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
+JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 {
 #if defined(XP_UNIX) || defined(XP_OS2)
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
