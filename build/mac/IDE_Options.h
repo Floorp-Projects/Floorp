@@ -26,63 +26,69 @@
 */
 
 	/* warning pragmas */
-#pragma warn_hidevirtual on
+#pragma warn_hidevirtual 		on
+#pragma warn_emptydecl 			on
+#pragma warn_unusedvar 			on
+#pragma warn_extracomma 		on
+#pragma warn_illpragma 			on
+#pragma warn_possunwant 		on
+#pragma warn_unusedarg 			off		/* turned off to reduce warnings */
 
-#pragma check_header_flags on
+#pragma check_header_flags 		on
 
 	/* Language features that must be the same across libraries... */
-#pragma enumsalwaysint	on
-#pragma unsigned_char		off
-#pragma exceptions			on
-#pragma bool on
+#pragma enumsalwaysint			on
+#pragma unsigned_char			off
+#pragma exceptions				on
+#pragma bool 					on
 
 
 	/* Save as much space as possible with strings... */
 #pragma pool_strings				on
-#pragma dont_reuse_strings	off
+#pragma dont_reuse_strings			off
 
 #pragma options align=native
-#pragma sym on									/* Takes no memory.  OK in non-debug. */
+#pragma sym 						on				/* Takes no memory.  OK in non-debug. */
 
 
 
 #ifdef powerc /* ...generating PowerPC */
-	#pragma toc_data on
-	#pragma fp_contract on
-	#pragma readonly_strings on
+	#pragma toc_data 				on
+	#pragma fp_contract 			on
+	#pragma readonly_strings 		on
 
 	#ifdef DEBUG
-		#pragma traceback on
-		#pragma global_optimizer off
-		#pragma scheduling off
-		#pragma peephole off
-		#pragma optimize_for_size off
+		#pragma traceback 			on
+		#pragma global_optimizer 	off
+		#pragma scheduling 			off
+		#pragma peephole 			off
+		#pragma optimize_for_size 	off
 	#else
-		#pragma traceback off
-		#pragma global_optimizer on
-		#pragma optimization_level 4
-		#pragma scheduling 604
-		#pragma peephole on
-		#pragma optimize_for_size on
+		#pragma traceback 			off
+		#pragma global_optimizer 	on
+		#pragma optimization_level 	4
+		#pragma scheduling 			604
+		#pragma peephole 			on
+		#pragma optimize_for_size	on
 	#endif
 
 #else /* ...generating 68k */
-	#pragma code68020 on
-	#pragma code68881 off
+	#pragma code68020 			on
+	#pragma code68881 			off
 
 		/* Far everything... */
 	#pragma far_code
-	#pragma far_data on
-	#pragma far_strings on
-	#pragma far_vtables on
+	#pragma far_data 			on
+	#pragma far_strings 		on
+	#pragma far_vtables 		on
 
-	#pragma fourbyteints	on	/* 4-byte ints */
-	#pragma IEEEdoubles		on	/* 8-byte doubles (as required by Java and NSPR) */
+	#pragma fourbyteints		on	/* 4-byte ints */
+	#pragma IEEEdoubles			on	/* 8-byte doubles (as required by Java and NSPR) */
 
 	#ifdef DEBUG
-		#pragma macsbug on
+		#pragma macsbug 		on
 		#pragma oldstyle_symbols off
 	#else
-		#pragma macsbug off
+		#pragma macsbug 		off
 	#endif
 #endif
