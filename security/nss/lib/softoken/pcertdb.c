@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.18 2002/05/16 20:39:03 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.19 2002/05/16 20:48:27 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -4066,6 +4066,7 @@ nsslowcert_AddPermCert(NSSLOWCERTCertDBHandle *dbhandle,
     certDBEntryCert *entry;
     PRBool conflict;
     SECStatus ret;
+    SECStatus rv;
 
     nsslowcert_LockDB(dbhandle);
     rv = db_BeginTransaction(dbhandle->permCertDB);
