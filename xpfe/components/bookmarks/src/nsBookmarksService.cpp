@@ -1874,8 +1874,23 @@ nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
 
 		*aResult += "bookmarks.html";
 
+		// Note: first try "bookmarks.html" and, if that doesn't exist,
+		//       fallback to trying "bookmark.htm". Do this due to older
+		//       versions of the browser where the name is different per
+		//       platform.
 		if (! aResult->Exists())
-			rv = NS_ERROR_FAILURE;
+		{
+			// XXX should we   NS_RELEASE(*aResult)   ???
+		
+			rv = profile->GetCurrentProfileDir(aResult);
+			if (NS_FAILED(rv)) break;
+			*aResult += "bookmark.htm";
+
+			if (! aResult->Exists())
+			{
+				rv = NS_ERROR_FAILURE;
+			}
+		}
 	} while (0);
 
 #ifdef DEBUG
