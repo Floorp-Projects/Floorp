@@ -58,6 +58,7 @@ CPPSRCS		= \
 		nsProperties.cpp \
 		nsPersistentProperties.cpp \
 		nsQuickSort.cpp \
+		nsRecyclingAllocator.cpp \
 		nsSizeOfHandler.cpp \
 		nsStaticNameTable.cpp \
 		nsStatistics.cpp \
@@ -90,6 +91,7 @@ EXPORTS		= \
 		nsInt64.h \
 		nsObserverService.h \
 		nsQuickSort.h \
+		nsRecyclingAllocator.h \
 		nsStaticNameTable.h \
 		nsStatistics.h \
 		nsSupportsArray.h \
