@@ -160,6 +160,9 @@
 <!-- NEEDED FOR MAIL SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarMail.js"/>
 
+<!-- NEEDED FOR PUBLICATION SUPPORT -->
+<script type="application/x-javascript" src="chrome://calendar/content/calendarPublish.js"/>
+
 <!-- NEEDED FOR DATE UTILS -->
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
@@ -291,8 +294,8 @@
                </listcols>
             </listbox>
          </vbox>
-         <splitter id="calendar-todo-splitter" collapse="after" persist="state hidden collapsed top"
-            class="chromeclass-extrachrome" orient="vertical" onmouseup="persist_height()">
+         <splitter id="calendar-todo-splitter" collapse="after" persist="state"
+            class="chromeclass-extrachrome" orient="vertical" onmouseup="persist_height( 'left-hand-below-splitter' )">
             <grippy/>
          </splitter>
          <vbox id="left-hand-below-splitter" flex="1">
@@ -357,7 +360,7 @@
             </vbox>
          </vbox>
     
-         <splitter id="calendar-splitter" collapse="before" persist="state hidden collapsed left"
+         <splitter id="calendar-splitter" collapse="before" persist="state"
           class="chromeclass-extrachrome sidebar-splitter" onmouseup="persist_width()" orient="horizontal">
             <grippy class="sidebar-splitter-grippy"/>
          </splitter>
@@ -387,12 +390,12 @@
                <!-- End: Calendar Day View -->
                       
             </deck>  <!-- End: Day/Month/Week Deck -->
-            <splitter id="calendar-view-splitter" collapse="after" persist="state hidden collapsed"
-            class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="gCalendarWindow.doResize();">
+            <splitter id="calendar-view-splitter" collapse="after" persist="state"
+            class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="gCalendarWindow.doResize();persist_height( 'bottom-events-box' )">
                <grippy class="sidebar-splitter-grippy"/>
             </splitter>
          
-            <vbox>
+            <vbox id="bottom-events-box">
                <box align="center">
                   <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
                   <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
@@ -410,8 +413,8 @@
                       </menupopup>
                   </menulist>
                </box>
-               <!-- leave the following line as onclick, don't change it to onselect, we take care of our own selection -->
-               <tree tooltip="savetip" id="unifinder-search-results-listbox" flex="1" enableColumnDrag="false">
+               
+               <tree tooltip="savetip" id="unifinder-search-results-listbox" flex="1" seltype="multiple" enableColumnDrag="false">
                <treecols id="unifinder-search-results-tree-cols">
                   <treecol id="unifinder-search-results-tree-col-title"
                       persist="hidden ordinal width" flex="1" 
@@ -434,12 +437,12 @@
                   </treecols>
        
                   <treechildren onmousemove="changeToolTipTextForToDo( event )" 
-                    onclick="unifinderOnSelect( event )"
+                    onclick="unifinderClickEvent( event )"
                     onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                     ondragover="return( false );"  
                     ondblclick="unifinderDoubleClickEvent( event )"
                     onfocus="focusFirstItemIfNoSelection( );"
-                    >
+                    context="taskitem-context-menu">
                  </treechildren>
                </tree>
             </vbox>

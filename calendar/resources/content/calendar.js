@@ -841,12 +841,19 @@ function print()
 
 
 /*HACK*/
-function persist_height( )
+function persist_height( id )
 {
-   setTimeout("document.persist('left-hand-above-splitter', 'height');",100);
+   setTimeout("document.persist('"+id+"', 'height');",100);
 }
 
 function persist_width( )
 {
    setTimeout("document.persist('left-hand-content', 'width');",100);
+}
+
+
+function publishCalendarData()
+{
+   var calendarString = eventArrayToICalString( gCalendarWindow.EventSelection.selectedEvents );
+   calendarPublish(calendarString, "ftp://home.planet.com/", "CalendarDataFile.ics", "ajb", "*****", "text/calendar");
 }
