@@ -166,10 +166,10 @@ nsresult nsCollation::UnicodeToChar(const nsString& src, char** dst, const nsStr
       const PRUnichar *unichars = src.GetUnicode();
       PRInt32 unicharLength = src.Length();
       PRInt32 dstLength;
-      res = encoder->Length(unichars, 0, unicharLength, &dstLength);
+      res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
       *dst = (char *) PR_Malloc(dstLength + 1);
       if (*dst != nsnull) {
-        res = encoder->Convert(unichars, 0, &unicharLength, *dst, 0, &dstLength);
+        res = encoder->Convert(unichars, &unicharLength, *dst, &dstLength);
         (*dst)[dstLength] = '\0';
       }
       else {
