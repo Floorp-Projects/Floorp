@@ -25,6 +25,7 @@ Rights Reserved.
 <!ENTITY showAnimatedAlert.label          "Show an alert">
 <!ENTITY showAnimatedAlert.accesskey      "S">
 <!ENTITY preview.label                    "Preview">
+<!ENTITY preview.accesskey                "v">
 <!ENTITY systemsound.label                "System New Mail Sound">
 <!ENTITY customsound.label                "Custom wav file">
 <!ENTITY browse.label                     "Browse...">

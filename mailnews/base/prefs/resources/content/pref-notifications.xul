@@ -67,9 +67,10 @@ Contributor(s):
       <textbox flex="1" oninput="onCustomWavInput()" id="mailnewsSoundFileUrl" preftype="string"
            prefstring="mail.biff.play_sound.url"/>
       <hbox autostretch="never">
-        <button id="browse" label="&browse.label;" filepickertitle="&browse.title;" oncommand="Browse()"/>
-        <button id="preview" label="&preview.label;" 
-              oncommand="PreviewSound()"/>
+        <button id="browse" label="&browse.label;" filepickertitle="&browse.title;"
+                accesskey="&browse.accesskey;" oncommand="Browse()"/>
+        <button id="preview" label="&preview.label;"
+                accesskey="&preview.accesskey;" oncommand="PreviewSound()"/>
       </hbox>
     </hbox>
   </groupbox>

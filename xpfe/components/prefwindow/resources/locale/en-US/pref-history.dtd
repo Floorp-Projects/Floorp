@@ -3,7 +3,7 @@
 <!ENTITY  header3.label             "Browsing History">
 <!ENTITY  historyPages.label        "History is a list of previously visited pages.">
 <!ENTITY  pageHis.label             "Remember visited pages for the last">
-<!ENTITY  pageHis.accesskey         "p">
+<!ENTITY  pageHis.accesskey         "a">
 <!ENTITY  days.label                "days">
 <!ENTITY  clearHistory.label        "Clear History">
 <!ENTITY  clearHistory.accesskey    "r">

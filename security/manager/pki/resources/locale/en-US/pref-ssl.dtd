@@ -31,6 +31,7 @@
 <!ENTITY enable.tls "Enable TLS">
 
 <!ENTITY edit.sslciphers "Edit Ciphers...">
+<!ENTITY edit.sslciphers.accesskey "E">
 
 <!ENTITY warn.description "&brandShortName; can alert you to the security status of the web page you are viewing. Set &brandShortName; to show a warning and ask permission before:">
 <!ENTITY warn.enteringsecure "Loading a page that supports encryption">

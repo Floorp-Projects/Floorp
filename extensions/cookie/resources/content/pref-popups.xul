@@ -154,14 +154,16 @@
             <radio value="false" label="&popupAllow.label;" 
                    oncommand="setButtons()"/>
             <spacer flex="1"/>
-            <button id="exceptionsAllow" label="&popupView.label;"
+            <button id="exceptionsAllow" label="&popupViewAllow.label;"
+                    accesskey="&popupViewAllow.accesskey;"
                     oncommand="viewPopups();"/>
           </hbox>        
           <hbox>
             <radio value="true" label="&popupBlock.label;"
                    oncommand="setButtons()"/>
             <spacer flex="1"/>
-            <button id="exceptionsBlock" label="&popupView.label;"
+            <button id="exceptionsBlock" label="&popupViewBlock.label;"
+                    accesskey="&popupViewBlock.accesskey;"
                     oncommand="viewPopups();"/>
           </hbox>
         </vbox>

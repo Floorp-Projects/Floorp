@@ -9,7 +9,7 @@
 <!ENTITY  selectSkin.accesskey    "a">
 
 <!ENTITY  uninstallSkin.label        "Uninstall Theme">
-<!ENTITY  uninstallSkin.accesskey    "u">
+<!ENTITY  uninstallSkin.accesskey    "U">
 
 <!ENTITY  general.label           "General">
 <!ENTITY  preview.label           "Preview Image">

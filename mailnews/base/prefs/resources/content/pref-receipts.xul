@@ -83,7 +83,8 @@
             <columns><column/><column/></columns>
             <rows>
               <row align="center">
-                <label id="notInToCcLabel" accesskey="&notInToCc.accesskey;" control="notInToCcPref">&notInToCc.label;</label>
+                <label id="notInToCcLabel" accesskey="&notInToCc.accesskey;" 
+                       control="notInToCcPref" value="&notInToCc.label;"/>
                 <menulist id="notInToCcPref" prefstring="mail.mdn.report.not_in_to_cc">
                   <menupopup>
                     <menuitem value="0" label="&neverSend.label;"/>
@@ -93,7 +94,8 @@
                 </menulist>
               </row>
               <row align="center">
-                <label id="outsideDomainLabel" accesskey="&outsideDomain.accesskey;" control="outsideDomainPref">&outsideDomain.label;</label>
+                <label id="outsideDomainLabel" accesskey="&outsideDomain.accesskey;"
+                       control="outsideDomainPref" value="&outsideDomain.label;"/>
                 <menulist id="outsideDomainPref" prefstring="mail.mdn.report.outside_domain">
                   <menupopup>
                     <menuitem value="0" label="&neverSend.label;"/>
@@ -103,7 +105,8 @@
                 </menulist>
               </row>
               <row align="center">
-                <label id="otherCasesLabel" accesskey="&otherCases.accesskey;" control="otherCasesPref">&otherCases.label;</label>
+                <label id="otherCasesLabel" accesskey="&otherCases.accesskey;" control="otherCasesPref"
+                       value="&otherCases.label;"/>
                 <menulist id="otherCasesPref" prefstring="mail.mdn.report.other">
                   <menupopup>
                     <menuitem value="0" label="&neverSend.label;"/>

@@ -75,7 +75,8 @@
                   accesskey="&autoCompleteEnabled.accesskey;"
                   prefstring="browser.urlbar.autocomplete.enabled"
                   oncommand="toggleAutoCompleteAdvancedButton()" flex="1"/>
-      <button label="&autoCompleteAdvanced.label;" oncommand="showACAdvanced()" id="autoCompleteAdvancedButton"/>
+      <button label="&autoCompleteAdvanced.label;" oncommand="showACAdvanced()" id="autoCompleteAdvancedButton"
+              accesskey="&autoCompleteAdvanced.accesskey;"/>
       <data id="browserUrlbarAutoFill" preftype="bool" prefattribute="value"
             prefstring="browser.urlbar.autoFill"/>
       <data id="browserUrlbarShowPopup" preftype="bool" prefattribute="value"
