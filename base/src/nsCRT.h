@@ -134,6 +134,7 @@ public:
   }
 
   /**
+
     How to use this fancy (thread-safe) version of strtok: 
 
     void main( void ) {
@@ -148,7 +149,8 @@ public:
         token = nsCRT::strtok( newStr, seps, &newStr );
       }
     }
-
+    * WARNING - STRTOK WHACKS str THE FIRST TIME IT IS CALLED *
+    * MAKE A COPY OF str IF YOU NEED TO USE IT AFTER strtok() *
   */
   static char* strtok(char* str, const char* delims, char* *newStr); 
 
