@@ -1778,7 +1778,7 @@ nsWebShell::SetZoom(float aZoom)
               sv->ComputeScrollOffsets();
             vm->GetRootView(rootview);
             if (nsnull != rootview)
-              vm->UpdateView(rootview, nsnull, 0);
+              vm->UpdateView(rootview, 0);
               NS_RELEASE(vm);
           }
           NS_RELEASE(shell);

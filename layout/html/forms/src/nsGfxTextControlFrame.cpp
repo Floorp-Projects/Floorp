@@ -1635,8 +1635,8 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
         { // single line text controls get a display frame rather than a subdoc.
           // the subdoc will be created when the frame first gets focus
           // create anonymous text content
-          nsIContent* content;
-          rv = NS_NewTextNode(&content);
+          nsCOMPtr<nsIContent> content;
+          rv = NS_NewTextNode(getter_AddRefs(content));
           if (NS_FAILED(rv)) { return rv; }
           if (!content) { return NS_ERROR_NULL_POINTER; }
           nsIDocument* doc;

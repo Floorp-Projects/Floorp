@@ -833,7 +833,7 @@ DocumentViewerImpl::SetEnableRendering(PRBool aOn)
       nsIView* view; 
       mViewManager->GetRootView(view);   // views are not refCounted 
       if (view) { 
-        mViewManager->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE); 
+        mViewManager->UpdateView(view, NS_VMREFRESH_IMMEDIATE);
       } 
     }
     else {

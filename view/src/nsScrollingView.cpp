@@ -168,7 +168,7 @@ NS_IMETHODIMP CornerView::ShowQuality(PRBool aShow)
       }
     }
 
-    mViewManager->UpdateView(this, nsnull, NS_VMREFRESH_IMMEDIATE);
+    mViewManager->UpdateView(this, NS_VMREFRESH_IMMEDIATE);
   }
   return NS_OK;
 }
@@ -180,7 +180,7 @@ NS_IMETHODIMP CornerView::SetQuality(nsContentQuality aQuality)
     mQuality = aQuality;
 
     if (mVis == nsViewVisibility_kShow)
-      mViewManager->UpdateView(this, nsnull, NS_VMREFRESH_IMMEDIATE);
+      mViewManager->UpdateView(this, NS_VMREFRESH_IMMEDIATE);
   }
   return NS_OK;
 }
@@ -1643,7 +1643,7 @@ void nsScrollingView::Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, f
       // XXX Repainting is really slow. The widget's Scroll() member function
       // needs an argument that specifies whether child widgets are scrolled,
       // and we need to be able to specify the rect to be scrolled...
-      mViewManager->UpdateView(mClipView, nsnull, 0);
+      mViewManager->UpdateView(mClipView, 0);
       AdjustChildWidgets(this, aScrolledView, 0, 0, scale);
     }
     else

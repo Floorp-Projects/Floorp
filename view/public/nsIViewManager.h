@@ -118,16 +118,12 @@ public:
   NS_IMETHOD  Composite(void) = 0;
 
   /**
-   * Called to inform the view manager that some portion of a view
-   * is dirty and needs to be redrawn. The region passed in
-   * should be in the view's coordinate space.
+   * Called to inform the view manager that the entire area of a view
+   * is dirty and needs to be redrawn.
    * @param aView view to paint. should be root view
-   * @param region region to mark as damaged, if nsnull, then entire
-   *               view is marked as damaged
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  NS_IMETHOD  UpdateView(nsIView *aView, nsIRegion *aRegion,
-                         PRUint32 aUpdateFlags) = 0;
+  NS_IMETHOD  UpdateView(nsIView *aView, PRUint32 aUpdateFlags) = 0;
 
   /**
    * Called to inform the view manager that some portion of a view

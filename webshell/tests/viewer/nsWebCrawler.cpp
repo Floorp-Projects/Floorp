@@ -277,7 +277,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
     if (vm) {
       nsIView* rootView;
       vm->GetRootView(rootView);
-      vm->UpdateView(rootView, nsnull, NS_VMREFRESH_IMMEDIATE);
+      vm->UpdateView(rootView, NS_VMREFRESH_IMMEDIATE);
     }
 
 #ifdef NS_DEBUG

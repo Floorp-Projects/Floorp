@@ -3166,7 +3166,7 @@ void nsEditor::HACKForceRedraw()
       nsIView* view;
       viewmgr->GetRootView(view);      // views are not refCounted
       if (view) {
-        viewmgr->UpdateView(view,nsnull,NS_VMREFRESH_IMMEDIATE);
+        viewmgr->UpdateView(view,NS_VMREFRESH_IMMEDIATE);
       }
     }
   }

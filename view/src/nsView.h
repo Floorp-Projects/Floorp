@@ -92,19 +92,19 @@ public:
   NS_IMETHOD  GetClientData(void *&aData) const;
   NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget);
   NS_IMETHOD  GetDirtyRegion(nsIRegion*& aRegion) const;
-  NS_IMETHOD  SetDirtyRegion(nsIRegion* aRegion);
   NS_IMETHOD  CreateWidget(const nsIID &aWindowIID,
                            nsWidgetInitData *aWidgetInitData = nsnull,
                            nsNativeWidget aNative = nsnull,
                            PRBool aEnableDragDrop = PR_TRUE);
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
   NS_IMETHOD  GetWidget(nsIWidget *&aWidget) const;
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  NS_IMETHOD SetViewFlags(PRUint32 aFlags);
-  NS_IMETHOD ClearViewFlags(PRUint32 aFlags);
-  NS_IMETHOD GetViewFlags(PRUint32 *aFlags) const;
-  NS_IMETHOD GetScratchPoint(nsPoint **aPoint);
-  NS_IMETHOD GetExtents(nsRect *aExtents);
+  NS_IMETHOD  HasWidget(PRBool *aHasWidget) const;
+  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD  SetViewFlags(PRUint32 aFlags);
+  NS_IMETHOD  ClearViewFlags(PRUint32 aFlags);
+  NS_IMETHOD  GetViewFlags(PRUint32 *aFlags) const;
+  NS_IMETHOD  GetScratchPoint(nsPoint **aPoint);
+  NS_IMETHOD  GetExtents(nsRect *aExtents);
 
   // Helper function to get the view that's associated with a widget
   static nsIView*  GetViewFor(nsIWidget* aWidget);
