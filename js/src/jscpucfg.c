@@ -91,9 +91,9 @@ struct align_prword {
 #define ALIGN_OF(type) \
     (((char*)&(((struct align_##type *)0)->a)) - ((char*)0))
 
-int bpb;
+unsigned int bpb;
 
-static int Log2(int n)
+static int Log2(unsigned int n)
 {
     int log2 = 0;
 
