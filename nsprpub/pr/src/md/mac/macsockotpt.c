@@ -341,7 +341,6 @@ static pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResul
             thread = secret->md.write.thread;
             secret->md.write.thread    = NULL;
             secret->md.write.cookie    = cookie;
-            secret->md.connectionOpen  = PR_TRUE;
             break;
 
         case T_DATA:        // Standard data is available
@@ -363,7 +362,6 @@ static pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResul
             err = OTRcvDisconnect(endpoint, &discon);
             PR_ASSERT(err == kOTNoError);
             secret->md.exceptReady     = PR_TRUE;
-            secret->md.connectionOpen  = PR_FALSE;
 
 			// wake up waiting threads, if any
 			result = -3199 - discon.reason; // obtain the negative error code
@@ -396,7 +394,7 @@ static pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResul
             PR_ASSERT(err == kOTNoError);
             secret->md.readReady      = PR_TRUE;   // mark readable (to emulate bsd sockets)
             // remember connection is closed, so we can return 0 on read or receive
-			secret->md.connectionOpen = PR_FALSE;
+			secret->md.orderlyDisconnect = PR_TRUE;
 	
             thread = secret->md.read.thread;
 	        secret->md.read.thread    = NULL;
@@ -1501,7 +1499,9 @@ static PRInt32 SendReceiveStream(PRFileDesc *fd, void *buf, PRInt32 amount,
 						goto ErrorExit;				
 					break;
 					
-				case kOTOutStateErr:	// it has been closed, fall through for error
+				case kOTOutStateErr:	// if provider already closed, fall through to handle error
+					if (fd->secret->md.orderlyDisconnect)
+						return 0;
 				default:
 					err = result;
 					goto ErrorExit;
@@ -1794,7 +1794,7 @@ void _MD_initfiledesc(PRFileDesc *fd)
 		PR_ASSERT(fd->secret->md.miscLock == NULL);
 		fd->secret->md.miscLock = PR_NewLock();
 		PR_ASSERT(fd->secret->md.miscLock != NULL);
-		fd->secret->md.connectionOpen = PR_FALSE;	// starts out closed
+		fd->secret->md.orderlyDisconnect = PR_FALSE;
 		fd->secret->md.readReady = PR_FALSE;		// let's not presume we have data ready to read
 		fd->secret->md.writeReady = PR_TRUE;		// let's presume we can write unless we hear otherwise
 		fd->secret->md.exceptReady = PR_FALSE;
