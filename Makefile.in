@@ -69,6 +69,8 @@ DIRS		+= modules/zlib
 endif
 endif
 
+include $(topsrcdir)/config/rules.mk
+
 ifndef NSPR_AUTOCONF
 export:: envirocheck $(OBJS)
 	$(MAKE) $(NSPR_MAKE_ARGS)
@@ -93,8 +95,6 @@ clobber_all::
 
 endif # !NSPR_AUTOCONF
 	
-include $(topsrcdir)/config/rules.mk
-
 # Running this rule assembles all the SDK source pieces into dist/sdk.
 # You'll need to run this rule on every platform to get all the
 # binaries (e.g. javah) copied there. You'll also have to do special
