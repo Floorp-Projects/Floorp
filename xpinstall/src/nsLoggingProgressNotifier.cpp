@@ -270,14 +270,19 @@ nsLoggingProgressListener::OnItemScheduled(const PRUnichar* message )
 }
 
 NS_IMETHODIMP
-nsLoggingProgressListener::OnFinalizeProgress(const PRUnichar* message, PRInt32 itemNum, PRInt32 totNum )
+nsLoggingProgressListener::OnFinalizeProgress(const PRUnichar* aMessage, PRInt32 aItemNum, PRInt32 aTotNum )
 {
     nsCString messageConverted;
-    messageConverted.AssignWithConversion(message);
+
+    // this Lossy conversion is safe because the input source came from a
+    // similar fake-ascii-to-not-really-unicode conversion.
+    // If you use NS_CopyUnicodeToNative(), it'll crash under a true JA WinXP
+    // system as opposed to a EN winXP system changed to JA.
+    messageConverted.AssignWithConversion(aMessage);
 
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
-    *mLogStream << "     [" << (itemNum) << "/" << totNum << "]\t" << messageConverted.get() << nsEndl;
+    *mLogStream << "     [" << (aItemNum) << "/" << aTotNum << "]\t" << messageConverted.get() << nsEndl;
     return NS_OK;
 }
 
@@ -292,11 +297,11 @@ nsLoggingProgressListener::GetTime(char** aString)
 }
 
 NS_IMETHODIMP
-nsLoggingProgressListener::OnLogComment(const PRUnichar* comment)
+nsLoggingProgressListener::OnLogComment(const PRUnichar* aComment)
 {
     nsCString commentConverted;
-    commentConverted.AssignWithConversion(comment);
 
+    NS_CopyUnicodeToNative(nsDependentString(aComment), commentConverted);
     if (mLogStream == nsnull) return NS_ERROR_NULL_POINTER;
 
     *mLogStream << "     ** " << commentConverted.get() << nsEndl;

@@ -498,13 +498,13 @@ BOOL DetermineUnRegisterServer(sil *silInstallLogHead, LPSTR szFile)
     silInstallLogTemp = silInstallLogHead;
     iSharedFileCount  = GetSharedFileCount(szFile);
     lstrcpy(szLCFile, szFile);
-    _strlwr(szLCFile);
+    CharLowerBuff(szLCFile, sizeof(szLCLine));
 
     do
     {
       silInstallLogTemp = silInstallLogTemp->Prev;
       lstrcpy(szLCLine, silInstallLogTemp->szLine);
-      _strlwr(szLCLine);
+      CharLowerBuff(szLCLine, sizeof(szLCLine));
 
       if((strstr(szLCLine, szLCFile) != NULL) &&
          (strstr(szLCLine, KEY_INSTALLING_SHARED_FILE) != NULL) &&
@@ -570,7 +570,7 @@ DWORD Uninstall(sil* silInstallLogHead)
     {
       silInstallLogTemp = silInstallLogTemp->Prev;
       lstrcpy(szLCLine, silInstallLogTemp->szLine);
-      _strlwr(szLCLine);
+      CharLowerBuff(szLCLine, sizeof(szLCLine));
 
       if(((szSubStr = strstr(szLCLine, KEY_WINDOWS_REGISTER_SERVER)) != NULL) &&
           (strstr(szLCLine, KEY_DO_NOT_UNINSTALL) == NULL))

@@ -3482,7 +3482,7 @@ void RestoreInvisibleFlag(siC *siCNode)
 
   GetPrivateProfileString(siCNode->szReferenceName, "Attributes", "", szBuf, sizeof(szBuf), szFileIniConfig);
   lstrcpy(szAttribute, szBuf);
-  strupr(szAttribute);
+  CharUpperBuff(szAttribute, sizeof(szAttribute));
 
   if(strstr(szAttribute, "INVISIBLE") || siCNode->bSupersede)
     siCNode->dwAttributes |= SIC_INVISIBLE;
@@ -3497,7 +3497,7 @@ void RestoreAdditionalFlag(siC *siCNode)
 
   GetPrivateProfileString(siCNode->szReferenceName, "Attributes", "", szBuf, sizeof(szBuf), szFileIniConfig);
   lstrcpy(szAttribute, szBuf);
-  strupr(szAttribute);
+  CharUpperBuff(szAttribute, sizeof(szAttribute));
 
   if(strstr(szAttribute, "ADDITIONAL") && !strstr(szAttribute, "NOTADDITIONAL"))
     siCNode->dwAttributes |= SIC_ADDITIONAL;
@@ -4470,7 +4470,7 @@ DWORD ParseOSType(char *szOSType)
   DWORD dwOSType = 0;
 
   lstrcpy(szBuf, szOSType);
-  strupr(szBuf);
+  CharUpperBuff(szBuf, sizeof(szBuf));
 
   if(strstr(szBuf, "WIN95 DEBUTE"))
     dwOSType |= OS_WIN95_DEBUTE;
@@ -4500,7 +4500,7 @@ HRESULT ParseComponentAttributes(char *szAttribute, DWORD dwAttributes, BOOL bOv
   char  szBuf[MAX_BUF];
 
   lstrcpy(szBuf, szAttribute);
-  strupr(szBuf);
+  CharUpperBuff(szBuf, sizeof(szBuf));
 
   if(bOverride != TRUE)
   {
@@ -8391,8 +8391,8 @@ int AddGrePathToApplicationAppPathsKey()
     rv = APPPATH_GRE_PATH_SET;
     MozCopyStr(path, keyPathUpr, sizeof(keyPathUpr));
     MozCopyStr(gGre.homePath, grePathUpr, sizeof(grePathUpr));
-    strupr(grePathUpr);
-    strupr(keyPathUpr);
+    CharUpperBuff(grePathUpr, sizeof(grePathUpr));
+    CharUpperBuff(keyPathUpr, sizeof(keyPathUpr));
     if(!strstr(keyPathUpr, grePathUpr))
       wsprintf(newPath, "%s;%s", gGre.homePath, path);
     else

@@ -223,7 +223,7 @@ BOOL DdeexecCheck(char *szKey, char *szValue)
   BOOL bPass = TRUE;
 
   lstrcpy(szKeyLower, szKey);
-  strlwr(szKeyLower);
+  CharLowerBuff(szKeyLower, sizeof(szKeyLower));
   if(strstr(szKeyLower, szKddeexec) && CheckForNonPrintableChars(szValue))
     bPass = FALSE;
 
@@ -392,7 +392,7 @@ int GetUninstallAppPathName(char *szAppPathName, DWORD dwAppPathNameSize)
   }
 
   GetWinReg(hkRoot, szKey, "PathToExe", szAppPathName, dwAppPathNameSize);
-  strupr(szAppPathName);
+  CharUpperBuff(szAppPathName, dwAppPathNameSize);
   return(CMI_OK);
 }
 
@@ -513,7 +513,7 @@ BOOL GetUnreadMailKeyList(char *szUninstallAppPathName, skn **sknWinRegKeyList)
                                szBuf,
                                &dwBufSize) == ERROR_SUCCESS)
             {
-              strupr(szBuf);
+              CharUpperBuff(szBuf, sizeof(szBuf));
               if(strstr(szBuf, szUninstallAppPathName) != NULL)
               {
                 bFoundAtLeastOne = TRUE;
