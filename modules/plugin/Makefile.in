@@ -50,43 +50,43 @@ ifdef MOZ_PLUGINS
 DIRS		+= base/src 
 
 ifneq (,$(filter gtk gtk2 xlib ,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		+= samples/unixprinting
+TOOL_DIRS += samples/unixprinting
 endif
 
 # These subdirs rely on GTK libraries and header files, it is not
 #  buildable on other non-GTK unix builds
 
 ifdef MOZ_ENABLE_GTK
-DIRS		+= samples/default/unix
+TOOL_DIRS += samples/default/unix
 
 ifdef ENABLE_TESTS
-DIRS		+= samples/simple
+TOOL_DIRS += samples/simple
 endif
 
 endif
 
 ifdef MOZ_ENABLE_GTK2
-DIRS		+= samples/default/unix
+TOOL_DIRS += samples/default/unix
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-DIRS		+= samples/default/windows
+TOOL_DIRS += samples/default/windows
 endif
 
 ifeq ($(OS_ARCH),OS2)
-DIRS		+= samples/default/os2
+TOOL_DIRS += samples/default/os2
 ifdef ENABLE_TESTS
-DIRS		+= tools/tester/common tools/tester/os2
+TOOL_DIRS += tools/tester/common tools/tester/os2
 endif
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS		+= samples/default/mac
+TOOL_DIRS += samples/default/mac
 endif
 
 ifdef ENABLE_TESTS
 ifneq (,$(filter WINNT Darwin Linux,$(OS_ARCH)))
-DIRS		+= tools/sdk
+TOOL_DIRS += tools/sdk
 endif
 endif
 
