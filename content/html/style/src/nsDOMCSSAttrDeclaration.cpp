@@ -83,6 +83,11 @@ nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAString& aPropertyName,
 
     if (NS_SUCCEEDED(rv)) {
       rv = SetCSSDeclaration(decl, PR_TRUE);
+    } else {
+      // RemoveProperty will throw in all sorts of situations -- eg if
+      // the property is a shorthand one.  Do not propagate its return
+      // value to callers.
+      rv = NS_OK;
     }
   }
 
