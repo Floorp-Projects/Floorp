@@ -58,7 +58,7 @@ class nsJSEditorLog;
 #endif // ENABLE_JS_EDITOR_LOG
 
 //This is the monitor for the editor.
-PRMonitor *getEditorMonitor();
+PRMonitor *GetEditorMonitor();
 
 
 /** implementation of an editor object.  it will be the controler/focal point 
