@@ -73,7 +73,7 @@
       <columns>
         <column/>
         <column flex="1"/>
-        <column width="60"/>
+        <column/>
       </columns>
       
       <rows>
