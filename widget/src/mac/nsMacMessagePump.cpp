@@ -283,7 +283,11 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 			{
 				::SetPort(whichWindow);
 
-				Boolean drawOnResize = (DEBUG && DRAW_ON_RESIZE && ((anEvent.modifiers & cmdKey) != 0));
+#if DEBUG
+				Boolean drawOnResize = (DRAW_ON_RESIZE && ((anEvent.modifiers & cmdKey) != 0));
+#else
+				Boolean drawOnResize = false;
+#endif
 				if (drawOnResize)
 				{
 					Point oldPt = anEvent.where;
