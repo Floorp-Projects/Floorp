@@ -21,6 +21,7 @@
 
 #include "nsISupports.h"
 #include "prtypes.h"
+#include "rdf.h" // for error codes
 class nsIRDFDataSource;
 class nsIRDFNode;
 class nsIRDFResource;
@@ -36,7 +37,7 @@ class nsIRDFCursor : public nsISupports {
 public:
     /**
      * Advance the cursor to the next element.
-     * @return NS_ERROR_UNEXPECTED if the cursor has reached the end
+     * @return NS_ERROR_RDF_CURSOR_EMPTY if the cursor has reached the end
      * and there are no more elements to enumerate; otherwise, NS_OK
      * unless a catastrophic error occurs.
      */
@@ -160,5 +161,6 @@ public:
      */
     NS_IMETHOD GetTruthValue(PRBool* aTruthValue) = 0;
 };
+
 
 #endif /* nsIRDFCursor_h__ */

@@ -20,6 +20,8 @@
 #ifndef rdf_h___
 #define rdf_h___
 
+#include "nsError.h"
+
 /*
  * The following macros are to aid in vocabulary definition.
  * They creates const char*'s for "kURI[prefix]_[name]" and
@@ -38,5 +40,18 @@
 #define DEFINE_RDF_VOCAB(namespace, prefix, name) \
 static const char* kURI##prefix##_##name = ##namespace #name ;\
 static const char* kTag##prefix##_##name = kURI##prefix##_##name## + sizeof(##namespace) - 1
+
+
+/**
+ * @name Standard RDF error codes
+ */
+
+/*@{*/
+
+/* Returned from nsIRDFCursor::Advance() if the cursor has no more
+   elements to enuemrate */
+#define NS_ERROR_RDF_CURSOR_EMPTY       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_RDF, 1)
+
+/*@}*/
 
 #endif /* rdf_h___ */
