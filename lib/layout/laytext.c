@@ -1864,15 +1864,11 @@ lo_LayoutPreformattedText(MWContext *context,
 		
 #ifdef XP_WIN16
 		while ((*tptr != CR)&&(*tptr != LF)&&(*tptr != '\0')&&
-#ifdef TEXT_CHUNK_LIMIT
 		    ((line_length + (tab_count * state->tab_stop)) < TEXT_CHUNK_LIMIT)&&
-#endif /* TEXT_CHUNK_LIMIT */
 		    (((state->line_buf_len + line_length + (tab_count * state->tab_stop))) < SIZE_LIMIT))
 #else
 		while ((*tptr != CR)&&(*tptr != LF)&&(*tptr != '\0')
-#ifdef TEXT_CHUNK_LIMIT
 		    &&((line_length + (tab_count * state->tab_stop)) < TEXT_CHUNK_LIMIT)
-#endif /* TEXT_CHUNK_LIMIT */
 			)
 #endif /* XP_WIN16 */
 		{
@@ -1964,7 +1960,6 @@ lo_LayoutPreformattedText(MWContext *context,
 		}
 		line_length = line_length + (state->tab_stop * tab_count);
 
-#ifdef TEXT_CHUNK_LIMIT
 		if ((state->line_buf_len + line_length) > TEXT_CHUNK_LIMIT)
 		{
 			lo_FlushLineBuffer(context, state);
@@ -1974,7 +1969,6 @@ lo_LayoutPreformattedText(MWContext *context,
 				state->cur_ele_type = LO_TEXT;
 			}
 		}
-#endif /* TEXT_CHUNK_LIMIT */
 
 #ifdef XP_WIN16
 		if ((state->line_buf_len + line_length) >= SIZE_LIMIT)
@@ -2562,9 +2556,7 @@ lo_LayoutFormattedText(MWContext *context,
 	{
 		PA_Block nbsp_block;
 		Bool has_nbsp;
-#ifdef TEXT_CHUNK_LIMIT
 		int32 w_char_cnt;
-#endif /* TEXT_CHUNK_LIMIT */
 #ifdef XP_WIN16
 		int32 ccnt;
 #endif /* XP_WIN16 */
@@ -2675,9 +2667,7 @@ lo_LayoutFormattedText(MWContext *context,
 			 * Terminate the word, saving the char we replaced
 			 * with the terminator so it can be restored later.
 			 */
-#ifdef TEXT_CHUNK_LIMIT
 			w_char_cnt = 0;
-#endif /* TEXT_CHUNK_LIMIT */
 #ifdef XP_WIN16
 			ccnt = state->line_buf_len;
 			while ((!XP_IS_SPACE(*tptr))&&(*tptr != '\0')&&(ccnt < SIZE_LIMIT))
@@ -2687,9 +2677,7 @@ lo_LayoutFormattedText(MWContext *context,
 					has_nbsp = TRUE;
 				}
 				tptr++;
-#ifdef TEXT_CHUNK_LIMIT
 				w_char_cnt++;
-#endif /* TEXT_CHUNK_LIMIT */
 				ccnt++;
 			}
 			if (ccnt >= SIZE_LIMIT)
@@ -2705,9 +2693,7 @@ lo_LayoutFormattedText(MWContext *context,
 					has_nbsp = TRUE;
 				}
 				tptr++;
-#ifdef TEXT_CHUNK_LIMIT
 				w_char_cnt++;
-#endif /* TEXT_CHUNK_LIMIT */
 			}
 #endif /* XP_WIN16 */
 		}
@@ -2797,9 +2783,7 @@ lo_LayoutFormattedText(MWContext *context,
 			 * Terminate the word, saving the char we replaced
 			 * with the terminator so it can be restored later.
 			 */
-#ifdef TEXT_CHUNK_LIMIT
 			w_char_cnt = 0;
-#endif /* TEXT_CHUNK_LIMIT */
 #ifdef XP_WIN16
 			ccnt = state->line_buf_len;
 			while ((  ((unsigned char)*tptr < 128) 
@@ -2814,9 +2798,7 @@ lo_LayoutFormattedText(MWContext *context,
 				tptr2 = INTL_NextChar(charset, tptr);
 				c_len = (intn)(tptr2 - tptr);
 				tptr = tptr2;
-#ifdef TEXT_CHUNK_LIMIT
 				w_char_cnt += c_len;
-#endif /* TEXT_CHUNK_LIMIT */
 				ccnt += c_len;
 			}
 			if (ccnt >= SIZE_LIMIT)
@@ -2853,14 +2835,11 @@ lo_LayoutFormattedText(MWContext *context,
 				tptr2 = INTL_NextChar(charset, tptr);
 				c_len = (intn)(tptr2 - tptr);
 				tptr = tptr2;
-#ifdef TEXT_CHUNK_LIMIT
 				w_char_cnt += c_len;
-#endif /* TEXT_CHUNK_LIMIT */
 			}
 #endif /* XP_WIN16 */
 		}  /* multi byte */
 
-#ifdef TEXT_CHUNK_LIMIT
 		if (w_char_cnt > TEXT_CHUNK_LIMIT)
 		{
 			tptr = (char *)(tptr - (w_char_cnt - TEXT_CHUNK_LIMIT));
@@ -2881,7 +2860,6 @@ lo_LayoutFormattedText(MWContext *context,
 				state->cur_ele_type = LO_TEXT;
 			}
 		}
-#endif /* TEXT_CHUNK_LIMIT */
 		if (multi_byte != FALSE)
 		{
 			if ((w_start == tptr)&&((unsigned char)*tptr > 127))
