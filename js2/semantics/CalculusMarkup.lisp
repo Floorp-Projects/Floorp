@@ -1777,6 +1777,7 @@
 ; (declare-action <action-name> <general-grammar-symbol> <type> <mode> <parameter-list> <command> ... <command>)
 ; <mode> is one of:
 ;    :hide      Don't depict this action declaration because it's for a hidden production;
+;    :forward   Depict this action declaration; it forwards to calls to the same action in all nonterminals on the rhs;
 ;    :singleton Don't depict this action declaration because it contains a singleton production;
 ;    :action    Depict this action declaration; all corresponding actions will be depicted by depict-action;
 ;    :actfun    Depict this action declaration; all corresponding actions will be depicted by depict-actfun;
@@ -1788,6 +1789,25 @@
     (unless (and (general-nonterminal? general-grammar-symbol) (hidden-nonterminal? general-grammar-symbol))
       (ecase mode
         (:hide)
+        (:forward
+         (depict-delayed-action (markup-stream world depict-env action-name)
+           (depict-semantics (markup-stream depict-env)
+             (depict-logical-block (markup-stream 0)
+               (depict-action-name-and-symbol markup-stream action-name general-grammar-symbol)
+               (depict-break markup-stream 1)
+               (unless (and (consp type-expr) (eq (first type-expr) '->))
+                 (error "Destructuring requires ~S to be a -> type" type-expr))
+               (let ((->-parameters (second type-expr))
+                     (->-result (third type-expr)))
+                 (unless (= (length ->-parameters) (length parameter-list))
+                   (error "Parameter count mistmatch: ~S and ~S" ->-parameters parameter-list))
+                 (let ((bindings (mapcar #'list parameter-list ->-parameters)))
+                   (depict-function-signature markup-stream world bindings ->-result t)))
+               (depict-string-words markup-stream " propagates the call to ")
+               (depict-action-name markup-stream action-name)
+               (depict-string-words markup-stream " to every nonterminal in the expansion of ")
+               (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference)
+               (depict markup-stream ".")))))
         (:singleton (depict-delayed-action (markup-stream world depict-env action-name)
                       (depict-algorithm (markup-stream depict-env)
                         (depict-commands markup-stream world depict-env commands))))

@@ -5445,6 +5445,7 @@
 ; (declare-action <action-name> <general-grammar-symbol> <type> <mode> <parameter-list> <command> ... <command>)
 ; <mode> is one of:
 ;    :hide      Don't depict this action declaration because it's for a hidden production;
+;    :forward   Depict this action declaration; it forwards to calls to the same action in all nonterminals on the rhs;
 ;    :singleton Don't depict this action declaration because it contains a singleton production;
 ;    :action    Depict this action declaration; all corresponding actions will be depicted by depict-action;
 ;    :actfun    Depict this action declaration; all corresponding actions will be depicted by depict-actfun;
@@ -5452,7 +5453,7 @@
 ; <parameter-list> contains the names of the action parameters when <mode> is :actfun.
 (defun scan-declare-action (world grammar-info-var action-name general-grammar-symbol-source type-expr mode parameter-list &rest commands)
   (declare (ignore parameter-list))
-  (unless (member mode '(:hide :singleton :action :actfun :writable))
+  (unless (member mode '(:hide :forward :singleton :action :actfun :writable))
     (error "Bad declare-action mode ~S" mode))
   (let* ((grammar (checked-grammar grammar-info-var))
          (action-symbol (scan-name world action-name))
@@ -6385,6 +6386,11 @@
 ;      (action <action-spec-m-n> <name-m> <type-n> <mode> . <body-m-n>)
 ;
 ; The productions may be enclosed by (? <conditional> ...) preprocessor actions.
+;
+; If one of the <body-x-y> is :forward, then the action must be a function action and the corresponding action's
+; <body-z-y> must also be :forward in every other production.  This action expands into a function that calls
+; actions with the same name in every nonterminal on the right side of the grammar production, passing them the
+; same parameters as the action received.
 (defun preprocess-rule (preprocessor-state command general-grammar-symbol action-declarations &rest productions)
   (declare (ignore command))
   (assert-type action-declarations (list (tuple symbol t)))
@@ -6403,16 +6409,20 @@
                  (when (eq (first parameter-lists) t)
                    (setf (first parameter-lists) :value))
                  (actions-match (rest action-declarations) (rest parameter-lists) actions))
-               (let ((declared-action-name (first action-declaration))
-                     (action-name (caar actions))
-                     (parameter-list :value))
+               (let* ((declared-action-name (first action-declaration))
+                      (action (first actions))
+                      (action-name (first action))
+                      (action-body (rest action))
+                      (parameter-list :value))
                  (when (consp action-name)
                    (setq parameter-list (mapcar #'(lambda (arg)
                                                     (if (consp arg)
                                                       (first arg)
                                                       arg))
                                                 (rest action-name)))
-                   (setq action-name (first action-name)))
+                   (setq action-name (first action-name))
+                   (when (equal action-body '(:forward))
+                     (setq parameter-list (cons :forward parameter-list))))
                  (when (eq (first parameter-lists) t)
                    (setf (first parameter-lists) parameter-list))
                  (and (eq declared-action-name action-name)
@@ -6442,24 +6452,33 @@
         (error "Empty rule"))
       (let ((i 4))
         (dolist (action-declaration action-declarations)
-          (let* ((parameter-list (pop parameter-lists))
+          (let* ((action-name (first action-declaration))
+                 (parameter-list (pop parameter-lists))
                  (writable (writable-action action-declaration))
                  (declare-mode (cond
                                 (writable :writable)
+                                ((and (consp parameter-list) (eq (first parameter-list) :forward))
+                                 (setq parameter-list (cdr parameter-list))
+                                 :forward)
                                 ((= n-productions 1) :singleton)
                                 ((eq parameter-list :value) :action)
                                 (t (assert-true (listp parameter-list)) :actfun)))
                  (j 0))
             (push (list*
-                   'declare-action (first action-declaration) general-grammar-symbol (second action-declaration) declare-mode parameter-list
+                   'declare-action action-name general-grammar-symbol (second action-declaration) declare-mode parameter-list
                    (each-preprocessed-command
                     #'(lambda (production highlight)
                         (declare (ignore highlight))
-                        (let ((name (fourth production))
-                              (action (if writable
-                                        (list (first action-declaration)
-                                              (list 'writable-cell-of (second (second action-declaration))))
-                                        (nth i production)))
+                        (let* ((name (fourth production))
+                              (action (cond
+                                       (writable
+                                        (list action-name (list 'writable-cell-of (second (second action-declaration)))))
+                                       ((eq declare-mode :forward)
+                                        (let ((forwarded-calls (generate-forwarded-calls action-name (third production) parameter-list)))
+                                          (if forwarded-calls
+                                            (cons (cons action-name parameter-list) forwarded-calls)
+                                            (list (cons action-name (mapcar #'(lambda (parameter) (list parameter :unused)) parameter-list))))))
+                                       (t (nth i production))))
                               (mode (cond
                                      ((= n-productions 1) :singleton)
                                      ((= j 0) :first)
@@ -6475,6 +6494,20 @@
             (unless writable
               (incf i))))
         (values (nreverse commands-reverse) t)))))
+
+
+(defun generate-forwarded-calls (action-name rhs arguments)
+  (let ((counts nil))
+    (labels
+      ((process-grammar-symbol (general-grammar-symbol)
+         (cond
+          ((and (keywordp general-grammar-symbol) (not (member general-grammar-symbol '(:- :line-break :no-line-break))))
+           (let ((count (incf (getf counts general-grammar-symbol 0))))
+             (list (cons (list action-name general-grammar-symbol count) arguments))))
+          ((consp general-grammar-symbol)
+           (process-grammar-symbol (first general-grammar-symbol)))
+          (t nil))))
+      (mapcan #'process-grammar-symbol rhs))))
 
 
 ; (exclude <lhs> ... <lhs>)
