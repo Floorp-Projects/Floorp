@@ -233,7 +233,7 @@ nsTransactionItem::GetNumberOfRedoItems(PRInt32 *aNumItems)
 nsresult
 nsTransactionItem::Write(nsIOutputStream *aOutputStream)
 {
-  PRInt32 len;
+  PRUint32 len;
 
   if (mTransaction)
     mTransaction->Write(aOutputStream);
