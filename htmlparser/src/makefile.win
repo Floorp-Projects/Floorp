@@ -28,7 +28,7 @@ CPPSRCS=					\
 	nsHTMLTokenizer.cpp \
 	nsXMLTokenizer.cpp \
 	nsExpatTokenizer.cpp \
-  nsElementTable.cpp \
+    nsElementTable.cpp \
 	CNavDTD.cpp				\
 	COtherDTD.cpp				\
 	CRtfDTD.cpp				\
@@ -50,7 +50,7 @@ CPPSRCS=					\
 	nsValidDTD.cpp				\
 	nsWellFormedDTD.cpp			\
 	nsViewSourceHTML.cpp \
-  nsXIFDTD.cpp				\
+    nsXIFDTD.cpp				\
     nsExpatDTD.cpp			\
 	prstrm.cpp				\
 	$(NULL)
@@ -113,6 +113,7 @@ EXPORTS=					\
 	nsXIFDTD.h				\
 	nsExpatDTD.h			\
     nsParserCIID.h \
+	nsParserError.h \
 	$(NULL)
 
 EXTRA_EXPORTS=					\
