@@ -357,6 +357,7 @@ struct __struct_STCategoryRule
         ** A callsite needs to pass substring match for all the strings.
         */
         char* pats[ST_MAX_PATTERNS_PER_RULE];
+        PRUint32 patlen[ST_MAX_PATTERNS_PER_RULE];
         PRUint32 npats;
 
         /*
