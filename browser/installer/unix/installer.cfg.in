@@ -8,5 +8,5 @@ FileMainEXE               = firefox
 FileUninstall             = UninstallFirefox
 FileUninstallZIP          = UninstallFirefox.zip
 FileInstallerNETRoot      = FirefoxNetSetup
-ComponentList             = xpcom,browser,talkback,deflenus,langenus,regus,abe,adt
+ComponentList             = xpcom,browser,talkback,deflenus,langenus,regus,abe,adt,help
 LicenseFile               = browser/LICENSE

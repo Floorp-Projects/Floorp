@@ -273,6 +273,10 @@ bin/res/inspector/search-registry.rdf
 ; bin/components/venkman-service.js
 ; bin/chrome/venkman.jar
 
+; [Help]
+[help]
+bin/chrome/help.jar
+
 ; [Additional Browsing Enhancements]
 [abe]
 
