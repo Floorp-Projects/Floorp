@@ -200,7 +200,9 @@ class nsScanner {
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
        */
-      nsresult ReadUntil(nsString& aString,PRUnichar aTerminal,PRBool addTerminal);
+      nsresult ReadUntil(nsAWritableString& aString,
+                         PRUnichar aTerminal,
+                         PRBool addTerminal);
 
       /**
        *  Consume characters until you find one contained in given
@@ -212,10 +214,28 @@ class nsScanner {
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
        */
-      nsresult ReadUntil(nsString& aString,nsString& aTermSet,PRBool addTerminal);
-      nsresult ReadUntil(nsString& aString,nsCString& aTermSet,PRBool addTerminal);
-      nsresult ReadUntil(nsString& aString,const char* aTermSet,PRBool addTerminal);
-      nsresult ReadUntil(nsReadingIterator<PRUnichar>& aStart, nsReadingIterator<PRUnichar>& aEnd, nsString& aTerminalSet,PRBool addTerminal);
+      nsresult ReadUntil(nsAWritableString& aString,
+                         const nsAReadableString& aTermSet,
+                         PRBool addTerminal);
+
+      nsresult ReadUntil(nsAWritableString& aString,
+                         const nsAReadableCString& aTermSet,
+                         PRBool addTerminal);
+
+      nsresult ReadUntil(nsAWritableString& aString,
+                         const char* aTerminalSet,
+                         PRBool addTerminal)
+      {
+        return ReadUntil(aString,
+                         NS_STATIC_CAST(const nsAReadableCString&,
+                                        nsLiteralCString(aTerminalSet)),
+                         addTerminal);
+      }
+
+      nsresult ReadUntil(nsReadingIterator<PRUnichar>& aStart,
+                         nsReadingIterator<PRUnichar>& aEnd,
+                         const nsAReadableString& aTerminalSet,
+                         PRBool addTerminal);
 
 
       /**
