@@ -829,7 +829,7 @@ sub get_product_name {
 
 sub get_component_id {
     my ($prod_id, $comp) = @_;
-    return undef unless ($prod_id =~ /^\d+$/);
+    return undef unless ($prod_id && ($prod_id =~ /^\d+$/));
     PushGlobalSQLState();
     SendSQL("SELECT id FROM components " .
             "WHERE product_id = $prod_id AND name = " . SqlQuote($comp));

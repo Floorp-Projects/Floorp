@@ -305,7 +305,7 @@ if ($::FORM{'cmdtype'} eq "dorem") {
         exit;
     }
 }
-elsif ($::FORM{'cmdtype'} eq "doit") {
+elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
     if ($::FORM{'remtype'} eq "asdefault") {
         confirm_login();
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});

@@ -1116,7 +1116,12 @@ foreach my $id (@idlist) {
     # change the component of a bug (we checked product above).
     # http://bugzilla.mozilla.org/show_bug.cgi?id=180545
     my $product_id = get_product_id($::FORM{'product'});
-    $::FORM{'component_id'} = get_component_id($product_id, $::FORM{'component'});
+    
+    if ($::FORM{'component'} ne $::FORM{'dontchange'}) {
+        $::FORM{'component_id'} = 
+                            get_component_id($product_id, $::FORM{'component'});
+    }
+    
     my $i = 0;
     foreach my $col (@::log_columns) {
         # Consider NULL db entries to be equivalent to the empty string
@@ -1127,7 +1132,8 @@ foreach my $id (@idlist) {
                 # More fun hacking... don't display component_id
                 my $vars;
                 if ($col eq 'component_id') {
-                    $vars->{'oldvalue'} = get_component_name($oldhash{'component_id'});
+                    $vars->{'oldvalue'} = 
+                                   get_component_name($oldhash{'component_id'});
                     $vars->{'newvalue'} = $::FORM{'component'};
                     $vars->{'field'} = 'component';
                 }
