@@ -323,10 +323,18 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void)cleanup
 {
-  [mSearchString release]; mSearchString = nil;
-  [mPopupWin release];     mPopupWin = nil;
-  [mDataSource release];   mDataSource = nil;
-  [mSecureBackgroundColor release]; mSecureBackgroundColor = nil;
+  [mSearchString release];
+  mSearchString = nil;
+  
+  [mPopupWin release];
+  mPopupWin = nil;
+  
+  [mDataSource release];
+  mDataSource = nil;
+  
+  [mSecureBackgroundColor release];
+  mSecureBackgroundColor = nil;
+  
   [mLock release]; mLock = nil;
 
   NS_IF_RELEASE(mSession);
@@ -403,12 +411,15 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 - (void) performSearch
 {
-  nsAutoString searchString;
-  [mSearchString assignTo_nsAString:searchString];
-  nsresult rv = mSession->OnStartLookup(searchString.get(), mResults, mListener);
-
-  if (NS_FAILED(rv))
-    NSLog(@"Unable to perform autocomplete lookup");
+  if (mSession) {
+    nsAutoString searchString;
+    [mSearchString assignTo_nsAString:searchString];
+    if (mSession == nsnull)
+      NSLog(@"mSession is equal to nsnull");
+    nsresult rv = mSession->OnStartLookup(searchString.get(), mResults, mListener);
+    if (NS_FAILED(rv))
+      NSLog(@"Unable to perform autocomplete lookup");
+  }
 }
 
 - (void) dataReady:(nsIAutoCompleteResults*)aResults status:(AutoCompleteStatus)aStatus
