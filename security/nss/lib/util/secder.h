@@ -38,7 +38,7 @@
  * secder.h - public data structures and prototypes for the DER encoding and
  *	      decoding utilities library
  *
- * $Id: secder.h,v 1.5 2003/12/22 23:33:39 wchang0222%aol.com Exp $
+ * $Id: secder.h,v 1.6 2004/01/07 23:07:24 jpierre%netscape.com Exp $
  */
 
 #if defined(_WIN32_WCE)
@@ -206,12 +206,12 @@ extern char *CERT_GenTime2FormattedAscii (int64 genTime, char *format);
 ** or a SEC_ASN1_UTC_TIME
 */
 
-extern SECStatus CERT_DecodeTimeChoice(PRTime* output, const SECItem* input);
+extern SECStatus DER_DecodeTimeChoice(PRTime* output, const SECItem* input);
 
 /* encode a PRTime to an ASN.1 DER SECItem containing either a
    SEC_ASN1_GENERALIZED_TIME or a SEC_ASN1_UTC_TIME */
 
-extern SECStatus CERT_EncodeTimeChoice(PRArenaPool* arena, SECItem* output,
+extern SECStatus DER_EncodeTimeChoice(PRArenaPool* arena, SECItem* output,
                                        PRTime input);
 
 SEC_END_PROTOS

@@ -265,8 +265,8 @@ dumpCertificate(CERTCertificate *cert, int num, PRFileDesc *outfile)
 	int64 timeBefore, timeAfter;
 	PRExplodedTime beforePrintable, afterPrintable;
 	char *beforestr, *afterstr;
-	CERT_DecodeTimeChoice(&timeBefore, &cert->validity.notBefore);
-	CERT_DecodeTimeChoice(&timeAfter, &cert->validity.notAfter);
+	DER_DecodeTimeChoice(&timeBefore, &cert->validity.notBefore);
+	DER_DecodeTimeChoice(&timeAfter, &cert->validity.notAfter);
 	PR_ExplodeTime(timeBefore, PR_GMTParameters, &beforePrintable);
 	PR_ExplodeTime(timeAfter, PR_GMTParameters, &afterPrintable);
 	beforestr = PORT_Alloc(100);

@@ -122,9 +122,9 @@ CERT_CreateValidity(int64 notBefore, int64 notAfter)
     v = (CERTValidity*) PORT_ArenaZAlloc(arena, sizeof(CERTValidity));
     if (v) {
 	v->arena = arena;
-	rv = CERT_EncodeTimeChoice(arena, &v->notBefore, notBefore);
+	rv = DER_EncodeTimeChoice(arena, &v->notBefore, notBefore);
 	if (rv) goto loser;
-	rv = CERT_EncodeTimeChoice(arena, &v->notAfter, notAfter);
+	rv = DER_EncodeTimeChoice(arena, &v->notAfter, notAfter);
 	if (rv) goto loser;
     }
     return v;
@@ -228,7 +228,7 @@ DecodeGeneralizedTime2FormattedAscii (SECItem *generalizedTimeDER,  char *format
 /* decode a SECItem containing either a SEC_ASN1_GENERALIZED_TIME 
    or a SEC_ASN1_UTC_TIME */
 
-SECStatus CERT_DecodeTimeChoice(PRTime* output, const SECItem* input)
+SECStatus DER_DecodeTimeChoice(PRTime* output, const SECItem* input)
 {
     switch (input->type) {
         case siGeneralizedTime:
@@ -247,7 +247,7 @@ SECStatus CERT_DecodeTimeChoice(PRTime* output, const SECItem* input)
 /* encode a PRTime to an ASN.1 DER SECItem containing either a
    SEC_ASN1_GENERALIZED_TIME or a SEC_ASN1_UTC_TIME */
 
-SECStatus CERT_EncodeTimeChoice(PRArenaPool* arena, SECItem* output, PRTime input)
+SECStatus DER_EncodeTimeChoice(PRArenaPool* arena, SECItem* output, PRTime input)
 {
     if (LL_CMP(input, >, January1st2050)) {
         return DER_TimeToGeneralizedTimeArena(arena, output, input);

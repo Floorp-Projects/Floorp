@@ -758,9 +758,9 @@ SECKEY_PublicKeyStrengthInBits;
 ;+};
 ;+NSS_3.9 { 	# NSS 3.9 release
 ;+    global:
-CERT_DecodeTimeChoice;
+DER_DecodeTimeChoice;
 CERT_DestroyOidSequence;
-CERT_EncodeTimeChoice;
+DER_EncodeTimeChoice;
 CERT_GetOidString;
 ;;CERT_TimeChoiceTemplate DATA ;
 DSAU_DecodeDerSigToLen;

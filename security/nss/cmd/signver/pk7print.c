@@ -110,7 +110,7 @@ sv_PrintTime(FILE *out, SECItem *t, char *m)
     char *timeString;
     int rv;
 
-    rv = CERT_DecodeTimeChoice(&time, t);
+    rv = DER_DecodeTimeChoice(&time, t);
     if (rv) return rv;
 
     /* Convert to local time */
