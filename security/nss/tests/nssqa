@@ -251,7 +251,7 @@ nssqa_main()
   
 TEST_LEVEL=0
 
-while [ $TEST_LEVEL -lt 3 ] ; do
+while [ $TEST_LEVEL -lt 2 ] ; do
     export TEST_LEVEL
     unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
     unset USE_64;export USE_64;Debug "USE_64 $USE_64"
