@@ -33,10 +33,11 @@
 
  */
 
-#ifndef jni_util_h
-#define jni_util_h
+#ifndef ns_util_h
+#define ns_util_h
 
-#include <jni.h>
+#include "jni_util.h" // located in ../src_share, 
+                      // pulls in ../src_share/jni_util_export.h
 
 #include "nsCOMPtr.h" // so we can save the docShell
 #include "nsIWebBrowser.h"
@@ -97,8 +98,9 @@ struct WebShellInitContext {
     int                 gtkWinPtr;
     nsCOMPtr<nsISearchContext> searchContext;
     nsCOMPtr<nsIDOMDocument> currentDocument;
-    jclass propertiesClass;
     nsCOMPtr<wcIBrowserContainer> browserContainer;
+    // This struct contains all per-window information not specific to mozilla
+    ShareInitContext   shareContext;
 };
 
 enum {
@@ -115,11 +117,6 @@ enum {
     kGetContentViewerError,
     kGetDOMWindowError
 };
-
-
-extern JavaVM *gVm; // defined in jni_util.cpp
-
-void    util_ThrowExceptionToJava (JNIEnv * env, const char * message);
 
 /**
 
@@ -154,118 +151,9 @@ void    util_PostEvent (WebShellInitContext * initContext, PLEvent * event);
 
 void *  util_PostSynchronousEvent (WebShellInitContext * initContext, PLEvent * event);
 
-/**
-
- * simply call the java method nativeEventOccurred on
- * eventRegistrationImpl, passing webclientEventListener and eventType
- * as arguments.
-
- */
-
-void    util_SendEventToJava(JNIEnv *env, jobject eventRegistrationImpl,
-                             jobject webclientEventListener, 
-                             jlong eventType,
-                             jobject eventData);
-
-char *util_GetCurrentThreadName(JNIEnv *env);
-
-void util_DumpJavaStack(JNIEnv *env);
-
-//
-// Functions to wrap JNIEnv functions.
-//
-
-#include "jni_util_export.h"
-
-jobject util_NewGlobalRef(JNIEnv *env, jobject toAddRef);
-
-void util_DeleteGlobalRef(JNIEnv *env, jobject toAddRef);
-
-jthrowable util_ExceptionOccurred(JNIEnv *env);
-
-jint util_GetJavaVM(JNIEnv *env, JavaVM **vm);
-
-jclass util_FindClass(JNIEnv *env, const char *fullyQualifiedClassName);
-
-jfieldID util_GetStaticFieldID(JNIEnv *env, jclass clazz, 
-                               const char *fieldName, 
-                               const char *signature);
-
-jlong util_GetStaticLongField(JNIEnv *env, jclass clazz, jfieldID id);
-
-jboolean util_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz);
-
-jint util_GetIntValueFromInstance(JNIEnv *env, jobject instance,
-                                  const char *fieldName);
-
-void util_SetIntValueForInstance(JNIEnv *env, jobject instance,
-                                 const char *fieldName, jint newValue);
-
-/**
-
- * A JNI wrapper to create a java.util.Properties object, or the
- * equivalent object in the BAL case.
-
- */
-
-jobject util_CreatePropertiesObject(JNIEnv *env, jobject reserved_NotUsed);
-
-/**
-
- * A JNI wrapper to destroy the object from CreatePropertiesObject
-
- */
-
-void util_DestroyPropertiesObject(JNIEnv *env, jobject propertiesObject,
-                                  jobject reserved_NotUsed);
-
-/**
-
- * A JNI wrapper to clear the object from CreatePropertiesObject
-
- */
-
-void util_ClearPropertiesObject(JNIEnv *env, jobject propertiesObject,
-                                jobject reserved_NotUsed);
-
-/**
-
- * A JNI wrapper for storing a name/value pair into the Properties
- * object created by CreatePropertiesObject
-
- */
-
-void util_StoreIntoPropertiesObject(JNIEnv *env, jobject propertiesObject,
-                                    jobject name, jobject value, 
-                                    jobject reserved);
-
-
-//
-// Functions from secret JDK files
-//
-
-JNIEXPORT jvalue JNICALL
-JNU_CallMethodByName(JNIEnv *env, 
-					 jboolean *hasException,
-					 jobject obj, 
-					 const char *name,
-					 const char *signature,
-					 ...);
-
-JNIEXPORT jvalue JNICALL
-JNU_CallMethodByNameV(JNIEnv *env, 
-					  jboolean *hasException,
-					  jobject obj, 
-					  const char *name,
-					  const char *signature, 
-					  va_list args);
-
-JNIEXPORT void * JNICALL
-JNU_GetEnv(JavaVM *vm, jint version);
-
 // hack functions to get around mozilla oddities
 #ifdef XP_UNIX
 jint util_GetGTKWinPtrFromCanvas(JNIEnv *env, jobject browserControlCanvas);
 #endif
 
-#endif // jni_util_h
+#endif // ns_util_h

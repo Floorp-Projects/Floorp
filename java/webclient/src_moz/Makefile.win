@@ -28,8 +28,8 @@ MODULE=webclient
 
 
 OBJS =                              \
-    .\$(OBJDIR)\jni_util.obj  \
-    .\$(OBJDIR)\jni_util_export.obj  \
+    .\$(OBJDIR)\ns_util.obj  \
+    .\$(OBJDIR)\ns_util_export.obj  \
     .\$(OBJDIR)\rdf_util.obj  \
     .\$(OBJDIR)\dom_util.obj  \
     .\$(OBJDIR)\nsActions.obj  \
@@ -46,13 +46,6 @@ OBJS =                              \
     .\$(OBJDIR)\ISupportsPeer.obj  \
     .\$(OBJDIR)\nsSetupRegistry.obj  \
     $(NULL)
-
-!ifdef BAL_INTERFACE
-OBJS = \
-	.\$(OBJDIR)\bal_util.obj  \
-	$(OBJS) \
-	$(NULL)
-!endif
 
 
 LCFLAGS = \
@@ -82,6 +75,7 @@ LLIBS = \
 	$(DIST)\lib\nspr4.lib \
 	$(DIST)\lib\plc4.lib \
 	$(DIST)\lib\plds4.lib \
+	$(DIST)\lib\wc_share.lib \
 #	$(DEPTH)\xpfe\bootstrap\$(OBJDIR)\nsSetupRegistry.obj \
 	$(NULL)  
 
@@ -110,6 +104,10 @@ INCS = \
 	$(NULL)
 !endif
 
+INCS = \
+	-I..\src_share \
+	$(INCS) \
+	$(NULL)
 
 !CMDSWITCHES -S
 

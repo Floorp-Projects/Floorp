@@ -24,7 +24,7 @@
 
 #include "rdf_util.h"
 #include "rdf_progids.h"
-#include "jni_util.h"
+#include "ns_util.h"
 
 #include "nsIServiceManager.h"
 

@@ -26,14 +26,6 @@
 
 #include "bal_util.h"
 
-#include "nscore.h" // for nsnull
-
-#include "ns_globals.h" // for prLogModuleInfo
-
-#include "nsHashtable.h" // PENDING(edburns): size optimization?
-
-static nsHashtable *gClassMappingTable = nsnull;
-
 fpEventOccurredType externalEventOccurred = nsnull; // jni_util_export.h
 
 fpInstanceOfType externalInstanceOf = nsnull; // jni_util_export.h
@@ -149,36 +141,6 @@ JNIEXPORT  void JNICALL util_DeleteString(JNIEnv *env, jstring toDelete)
 #endif
 
 }
-
-JNIEXPORT jint JNICALL util_StoreClassMapping(const char* jniClassName,
-                                              jclass yourClassType)
-{
-    if (nsnull == gClassMappingTable) {
-        if (nsnull == (gClassMappingTable = new nsHashtable(20, PR_TRUE))) {
-            return -1;
-        }
-    }
-
-    nsStringKey key(jniClassName);
-    gClassMappingTable->Put(&key, yourClassType);
-
-    return 0;
-}
-
-JNIEXPORT jclass JNICALL util_GetClassMapping(const char* jniClassName)
-{
-    jclass result = nsnull;
-
-    if (nsnull == gClassMappingTable) {
-        return nsnull;
-    }
-
-    nsStringKey key(jniClassName);
-    result = (jclass) gClassMappingTable->Get(&key);
-    
-    return result;
-}
-
 
 JNIEXPORT void JNICALL util_SetEventOccurredFunction(fpEventOccurredType fp)
 {

@@ -72,26 +72,6 @@ JNIEXPORT  void JNICALL util_DeleteString(JNIEnv *env, jstring toDelete);
 
  */
 
-/**
-
- * This method is used to store a mapping from a jniClass Name, such as
- * "org/mozilla/webclient/DocumentLoadListener" to some external class
- * type, such as
- * org::mozilla::webclient::wrapper_native::uno::DocumentLoadListener.
-
- * This table is used in util_IsInstanceOf.
-
- * @see util_SetInstanceOfFunction
-
- * @ret 0 on success
-
- */
-
-JNIEXPORT jint JNICALL util_StoreClassMapping(const char* jniClassName,
-                                              jclass yourClassType);
-
-JNIEXPORT jclass JNICALL util_GetClassMapping(const char* jniClassName);
-
 
 /**
 
@@ -358,6 +338,32 @@ JNIEXPORT void JNICALL
 util_InitializeEventMaskValuesFromClass(const char *className,
                                         char *maskNames[], 
                                         jlong maskValues[]);
+
+//
+// Functions provided by browser-specific native code
+//
+
+/**
+
+ * This method is used to store a mapping from a jniClass Name, such as
+ * "org/mozilla/webclient/DocumentLoadListener" to some external class
+ * type, such as
+ * org::mozilla::webclient::wrapper_native::uno::DocumentLoadListener.
+
+ * This table is used in util_IsInstanceOf.
+
+ * @see util_SetInstanceOfFunction
+
+ * @ret 0 on success
+
+ */
+
+JNIEXPORT jint JNICALL util_StoreClassMapping(const char* jniClassName,
+                                              jclass yourClassType);
+
+JNIEXPORT jclass JNICALL util_GetClassMapping(const char* jniClassName);
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -46,7 +46,7 @@
 
 #include "wcIBrowserContainer.h"
 
-#include "jni_util.h"
+#include "ns_util.h"
 
 class nsIURI;
 

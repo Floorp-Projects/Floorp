@@ -100,7 +100,7 @@ CBrowserContainer::CBrowserContainer(nsIWebBrowser *pOwner, JNIEnv *env,
     inverseDepth(-1), properties(nsnull), currentDOMEvent(nsnull)
 {
   	NS_INIT_REFCNT();
-	if (nsnull == gVm) { // declared in jni_util.h
+	if (nsnull == gVm) { // declared in ../src_share/jni_util.h
         ::util_GetJavaVM(env, &gVm);  // save this vm reference away for the callback!
     }
 }
@@ -700,8 +700,6 @@ CBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
             ::Recycle(urlStr);
         }
     }  
-
-
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
                          DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], 
@@ -778,7 +776,6 @@ CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChanne
                          DocumentLoader_maskValues[START_URL_LOAD_EVENT_MASK], 
                          nsnull);
     
-    
 	return NS_OK; 
 } 
 
@@ -795,7 +792,6 @@ CBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aCha
                ("CBrowserContainer: OnProgressURLLoad\n"));
     }
 #endif
-
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
@@ -830,12 +826,11 @@ CBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader,
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
     jstring statusMessage = ::util_NewString(env, (const jchar *) 
                                              aMsg.GetUnicode(), length);
-
+    
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, 
                          mDocTarget, 
                          DocumentLoader_maskValues[STATUS_URL_LOAD_EVENT_MASK], 
                          (jobject) statusMessage);
-    
     
     if (statusMessage) {
         ::util_DeleteString(mInitContext->env, statusMessage);
@@ -863,7 +858,6 @@ CBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, 
                          mInitContext->nativeEventThread, mDocTarget, 
                          DocumentLoader_maskValues[END_URL_LOAD_EVENT_MASK], nsnull);
     
-    
 	return NS_OK; 
 } 
 
@@ -884,14 +878,11 @@ CBrowserContainer::MouseDown(nsIDOMEvent* aMouseEvent)
     PR_ASSERT(nsnull != aMouseEvent);
     
     getPropertiesFromEvent(aMouseEvent);
-
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_DOWN_EVENT_MASK], 
                          properties);
-    
-
 	return NS_OK; 
 }
 
@@ -905,14 +896,11 @@ CBrowserContainer::MouseUp(nsIDOMEvent* aMouseEvent)
     PR_ASSERT(nsnull != aMouseEvent);
     
     getPropertiesFromEvent(aMouseEvent);
-
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_UP_EVENT_MASK], 
                          properties);
-    
-    
 	return NS_OK; 
 }
 
@@ -928,15 +916,14 @@ CBrowserContainer::MouseClick(nsIDOMEvent* aMouseEvent)
 
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
     ::util_StoreIntoPropertiesObject(env, properties,  CLICK_COUNT_KEY,
-                                     ONE_VALUE, (jobject) mInitContext);
+                                     ONE_VALUE, (jobject) 
+                                     &(mInitContext->shareContext));
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_CLICK_EVENT_MASK], 
                          properties);
-    
-
 	return NS_OK; 
 }
 
@@ -953,15 +940,14 @@ CBrowserContainer::MouseDblClick(nsIDOMEvent* aMouseEvent)
 
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
     ::util_StoreIntoPropertiesObject(env, properties,  CLICK_COUNT_KEY,
-                                     TWO_VALUE, (jobject) mInitContext);
+                                     TWO_VALUE, (jobject)
+                                     &(mInitContext->shareContext));
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_DOUBLE_CLICK_EVENT_MASK], 
                          properties);
-    
-
 	return NS_OK; 
 }
 
@@ -975,14 +961,11 @@ CBrowserContainer::MouseOver(nsIDOMEvent* aMouseEvent)
     PR_ASSERT(nsnull != aMouseEvent);
     
     getPropertiesFromEvent(aMouseEvent);
-
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_OVER_EVENT_MASK], 
                          properties);
-    
-    
 	return NS_OK; 
 }
 
@@ -996,14 +979,11 @@ CBrowserContainer::MouseOut(nsIDOMEvent* aMouseEvent)
     PR_ASSERT(nsnull != aMouseEvent);
     
     getPropertiesFromEvent(aMouseEvent);
-
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_OUT_EVENT_MASK], 
                          properties);
-    
-    
 	return NS_OK; 
 }
 
@@ -1024,7 +1004,6 @@ NS_IMETHODIMP CBrowserContainer::AddMouseListener(jobject target)
                                                 DOMMouseListener_maskNames, 
                                                 DOMMouseListener_maskValues);
     }
-
     mMouseTarget = target;
 
     return rv;
@@ -1042,7 +1021,6 @@ NS_IMETHODIMP CBrowserContainer::AddDocumentLoadListener(jobject target)
                                                 DocumentLoader_maskNames, 
                                                 DocumentLoader_maskValues);
     }
-
     mDocTarget = target;
 
     return rv;
@@ -1138,11 +1116,13 @@ jobject JNICALL CBrowserContainer::getPropertiesFromEvent(nsIDOMEvent *event)
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
 
     if (properties) {
-        util_ClearPropertiesObject(env, properties, (jobject) mInitContext);
+        util_ClearPropertiesObject(env, properties, (jobject) 
+                                   &(mInitContext->shareContext));
     }
     else {
         if (!(properties = 
-              util_CreatePropertiesObject(env, (jobject)mInitContext))) {
+              util_CreatePropertiesObject(env, (jobject)
+                                          &(mInitContext->shareContext)))) {
             return properties;
         }
     }
@@ -1189,7 +1169,8 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, SCREEN_X_KEY,
                                          (jobject) strVal, 
-                                         (jobject) mInitContext);
+                                         (jobject) 
+                                         &(mInitContext->shareContext));
     }
     
     rv = mouseEvent->GetScreenY(&intVal);
@@ -1198,7 +1179,8 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, SCREEN_Y_KEY,
                                          (jobject) strVal, 
-                                         (jobject) mInitContext);
+                                         (jobject) 
+                                         &(mInitContext->shareContext));
     }
     
     rv = mouseEvent->GetClientX(&intVal);
@@ -1207,7 +1189,8 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, CLIENT_X_KEY,
                                          (jobject) strVal, 
-                                         (jobject) mInitContext);
+                                         (jobject) 
+                                         &(mInitContext->shareContext));
     }
     
     rv = mouseEvent->GetClientY(&intVal);
@@ -1216,7 +1199,8 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, CLIENT_Y_KEY,
                                          (jobject) strVal, 
-                                         (jobject) mInitContext);
+                                         (jobject) 
+                                         &(mInitContext->shareContext));
     }
     
     int16Val = 0;
@@ -1226,7 +1210,8 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
         strVal = ::util_NewStringUTF(env, buf);
         ::util_StoreIntoPropertiesObject(env, properties, BUTTON_KEY,
                                          (jobject) strVal,
-                                         (jobject) mInitContext);
+                                         (jobject) 
+                                         &(mInitContext->shareContext));
     }
     
     rv = mouseEvent->GetAltKey(&boolVal);
@@ -1234,7 +1219,8 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
         strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
         ::util_StoreIntoPropertiesObject(env, properties, ALT_KEY,
                                          (jobject) strVal, 
-                                         (jobject) mInitContext);
+                                         (jobject) 
+                                         &(mInitContext->shareContext));
     }
     
     rv = mouseEvent->GetCtrlKey(&boolVal);
@@ -1242,7 +1228,8 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
         strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
         ::util_StoreIntoPropertiesObject(env, properties, CTRL_KEY,
                                          (jobject) strVal, 
-                                         (jobject) mInitContext);
+                                         (jobject) 
+                                         &(mInitContext->shareContext));
     }
     
     rv = mouseEvent->GetShiftKey(&boolVal);
@@ -1250,7 +1237,8 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
         strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
         ::util_StoreIntoPropertiesObject(env, properties, SHIFT_KEY,
                                          (jobject) strVal, 
-                                         (jobject) mInitContext);
+                                         (jobject) 
+                                         &(mInitContext->shareContext));
     }
     
     rv = mouseEvent->GetMetaKey(&boolVal);
@@ -1258,7 +1246,8 @@ void JNICALL CBrowserContainer::addMouseEventDataToProperties(nsIDOMEvent *aMous
         strVal = boolVal ? (jstring) TRUE_VALUE : (jstring) FALSE_VALUE;
         ::util_StoreIntoPropertiesObject(env, properties, META_KEY,
                                          (jobject) strVal, 
-                                         (jobject) mInitContext);
+                                         (jobject) 
+                                         &(mInitContext->shareContext));
     }
 }
 
@@ -1323,7 +1312,8 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
         util_StoreIntoPropertiesObject(env, (jobject) curThis->properties,
                                        (jobject) jNodeName, 
                                        (jobject) jNodeValue, 
-                                       (jobject) curThis->mInitContext);
+                                       (jobject) 
+                                       &(curThis->mInitContext->shareContext));
         if (jNodeName) {
             ::util_DeleteString(env, jNodeName);
         }
@@ -1386,7 +1376,8 @@ nsresult JNICALL CBrowserContainer::takeActionOnNode(nsCOMPtr<nsIDOMNode> curren
             util_StoreIntoPropertiesObject(env, (jobject) curThis->properties,
                                            (jobject) jNodeName, 
                                            (jobject) jNodeValue, 
-                                           (jobject) curThis->mInitContext);
+                                           (jobject) 
+                                           &(curThis->mInitContext->shareContext));
             if (jNodeName) {
                 ::util_DeleteString(env, jNodeName);
             }

@@ -31,8 +31,7 @@
 
 #include "CurrentPageImpl.h"
 
-#include "jni_util.h"
-#include "jni_util_export.h"
+#include "ns_util.h"
 #include "rdf_util.h"
 #include "nsActions.h"
 

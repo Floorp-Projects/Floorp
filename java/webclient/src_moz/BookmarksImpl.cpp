@@ -23,7 +23,7 @@
 #include "BookmarksImpl.h"
 
 #include "rdf_util.h"
-#include "jni_util.h"
+#include "ns_util.h"
 
 
 #include "nsCOMPtr.h"

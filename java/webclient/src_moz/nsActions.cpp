@@ -37,7 +37,7 @@
 #include "nsIURI.h"
 #include "nsIDocShellTreeItem.h"
 
-#include "jni_util.h"
+#include "ns_util.h"
 
 void *          handleEvent     (PLEvent * event);
 void            destroyEvent    (PLEvent * event);
@@ -737,8 +737,8 @@ wsDeallocateInitContextEvent::handleEvent ()
     mInitContext->browserContainer->RemoveAllListeners();
     
     mInitContext->currentDocument = nsnull;
-    mInitContext->propertiesClass = nsnull;
     mInitContext->browserContainer = nsnull;
+    util_DeallocateShareInitContext(&(mInitContext->shareContext));
 
     //  delete mInitContext;
         

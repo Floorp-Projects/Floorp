@@ -26,9 +26,9 @@
  *               Ann Sunhachawee
  */
 
-#include "prlog.h" // for PR_ASSERT
-
 #include "jni_util.h"
+
+#include <string.h>
 
 JavaVM *gVm = nsnull; // declared in ns_globals.h, which is included in
                       // jni_util.h
@@ -40,6 +40,17 @@ JavaVM *gVm = nsnull; // declared in ns_globals.h, which is included in
 static jmethodID gPropertiesInitMethodID = nsnull;
 static jmethodID gPropertiesSetPropertyMethodID = nsnull;
 static jmethodID gPropertiesClearMethodID = nsnull;
+
+void    util_InitializeShareInitContext(void *yourInitContext)
+{
+    ShareInitContext *initContext = (ShareInitContext *) yourInitContext;
+    initContext->propertiesClass = nsnull;
+}
+
+void    util_DeallocateShareInitContext(void *yourInitContext)
+{
+    // right now there is nothing to deallocate
+}
 
 void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
 {
@@ -74,30 +85,6 @@ void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
 	}
 } // ThrowExceptionToJava()
 
-void util_PostEvent(WebShellInitContext * initContext, PLEvent * event)
-{
-    PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-  
-    ::PL_PostEvent(initContext->actionQueue, event);
-    
-    PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-} // PostEvent()
-
-
-void *util_PostSynchronousEvent(WebShellInitContext * initContext, PLEvent * event)
-{
-    void    *       voidResult = nsnull;
-
-    PL_ENTER_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-    
-    voidResult = ::PL_PostSynchronousEvent(initContext->actionQueue, event);
-    
-    PL_EXIT_EVENT_QUEUE_MONITOR(initContext->actionQueue);
-    
-    return voidResult;
-} // PostSynchronousEvent()          
-
-
 void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
                           jobject webclientEventListener, 
                           jlong eventType, jobject eventData)
@@ -131,10 +118,7 @@ void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
         env->CallVoidMethod(nativeEventThread, mid, webclientEventListener,
                             eventType, eventData);
     } else {
-        if (prLogModuleInfo) {
-            PR_LOG(prLogModuleInfo, 3, 
-                   ("cannot call the Java Method!\n"));
-        }
+        util_LogMessage(3, "cannot call the Java Method!\n");
     }
 #endif
 }
@@ -273,46 +257,6 @@ jboolean util_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
     return result;
 }
 
-#ifdef XP_UNIX
-jint util_GetGTKWinPtrFromCanvas(JNIEnv *env, jobject browserControlCanvas)
-{
-    jint result = -1;
-#ifdef BAL_INTERFACE
-#else
-    jclass cls = env->GetObjectClass(browserControlCanvas);  // Get Class for BrowserControlImpl object
-    jclass clz = env->FindClass("org/mozilla/webclient/BrowserControlImpl");
-    if (nsnull == clz) {
-        ::util_ThrowExceptionToJava(env, "Exception: Could not find class for BrowserControlImpl");
-        return (jint) 0;
-    }
-    jboolean ans = env->IsInstanceOf(browserControlCanvas, clz);
-    if (JNI_FALSE == ans) {
-        ::util_ThrowExceptionToJava(env, "Exception: We have a problem");
-        return (jint) 0;
-    }
-    // Get myCanvas IVar
-    jfieldID fid = env->GetFieldID(cls, "myCanvas", "Lorg/mozilla/webclient/BrowserControlCanvas;");
-    if (nsnull == fid) {
-        ::util_ThrowExceptionToJava(env, "Exception: field myCanvas not found in the jobject for BrowserControlImpl");
-        return (jint) 0;
-    }
-    jobject canvasObj = env->GetObjectField(browserControlCanvas, fid);
-    jclass canvasCls = env->GetObjectClass(canvasObj);
-    if (nsnull == canvasCls) {
-        ::util_ThrowExceptionToJava(env, "Exception: Could Not find Class for CanvasObj");
-        return (jint) 0;
-    }
-    jfieldID gtkfid = env->GetFieldID(canvasCls, "gtkWinPtr", "I");
-    if (nsnull == gtkfid) {
-        ::util_ThrowExceptionToJava(env, "Exception: field gtkWinPtr not found in the jobject for BrowserControlCanvas");
-        return (jint) 0;
-    }
-    result = env->GetIntField(canvasObj, gtkfid);
-#endif
-    return result;
-}
-#endif
-
 jint util_GetIntValueFromInstance(JNIEnv *env, jobject obj,
                                   const char *fieldName)
 {
@@ -321,19 +265,15 @@ jint util_GetIntValueFromInstance(JNIEnv *env, jobject obj,
 #else
     jclass objClass = env->GetObjectClass(obj);
     if (nsnull == objClass) {
-        if (prLogModuleInfo) {
-            PR_LOG(prLogModuleInfo, 3, 
-                   ("util_GetIntValueFromInstance: Can't get object class from instance.\n"));
-        }
+        util_LogMessage(3, 
+                        "util_GetIntValueFromInstance: Can't get object class from instance.\n");
         return result;
     }
 
     jfieldID theFieldID = env->GetFieldID(objClass, fieldName, "I");
     if (nsnull == theFieldID) {
-        if (prLogModuleInfo) {
-            PR_LOG(prLogModuleInfo, 3, 
-                   ("util_GetIntValueFromInstance: Can't get fieldID for fieldName.\n"));
-        }
+        util_LogMessage(3, 
+                        "util_GetIntValueFromInstance: Can't get fieldID for fieldName.\n");
         return result;
     }
 
@@ -349,19 +289,15 @@ void util_SetIntValueForInstance(JNIEnv *env, jobject obj,
 #else
     jclass objClass = env->GetObjectClass(obj);
     if (nsnull == objClass) {
-        if (prLogModuleInfo) {
-            PR_LOG(prLogModuleInfo, 3, 
-                   ("util_SetIntValueForInstance: Can't get object class from instance.\n"));
-        }
+        util_LogMessage(3, 
+                        "util_SetIntValueForInstance: Can't get object class from instance.\n");
         return;
     }
 
     jfieldID fieldID = env->GetFieldID(objClass, fieldName, "I");
     if (nsnull == fieldID) {
-        if (prLogModuleInfo) {
-            PR_LOG(prLogModuleInfo, 3, 
-                   ("util_SetIntValueForInstance: Can't get fieldID for fieldName.\n"));
-        }
+        util_LogMessage(3, 
+                        "util_SetIntValueForInstance: Can't get fieldID for fieldName.\n");
         return;
     }
     
@@ -377,8 +313,8 @@ jobject util_CreatePropertiesObject(JNIEnv *env, jobject initContextObj)
         result = externalCreatePropertiesObject(env, initContextObj);
     }
 #else
-    PR_ASSERT(initContextObj);
-    WebShellInitContext *initContext = (WebShellInitContext *) initContextObj;
+    util_Assert(initContextObj);
+    ShareInitContext *initContext = (ShareInitContext *) initContextObj;
 
     if (nsnull == initContext->propertiesClass) {
         if (nsnull == (initContext->propertiesClass =
@@ -388,14 +324,14 @@ jobject util_CreatePropertiesObject(JNIEnv *env, jobject initContextObj)
     }
 
     if (nsnull == gPropertiesInitMethodID) {
-        PR_ASSERT(initContext->propertiesClass);
+        util_Assert(initContext->propertiesClass);
         if (nsnull == (gPropertiesInitMethodID = 
                        env->GetMethodID(initContext->propertiesClass, 
                                         "<init>", "()V"))) {
             return result;
         }
     }
-    PR_ASSERT(gPropertiesInitMethodID);
+    util_Assert(gPropertiesInitMethodID);
     
     result = ::util_NewGlobalRef(env, 
                                  env->NewObject(initContext->propertiesClass, 
@@ -426,17 +362,17 @@ void util_ClearPropertiesObject(JNIEnv *env, jobject propertiesObject,
         externalClearPropertiesObject(env, propertiesObject, initContextObj);
     }
 #else
-    PR_ASSERT(initContextObj);
-    WebShellInitContext *initContext = (WebShellInitContext *) initContextObj;
+    util_Assert(initContextObj);
+    ShareInitContext *initContext = (ShareInitContext *) initContextObj;
     
     if (nsnull == gPropertiesClearMethodID) {
-        PR_ASSERT(initContext->propertiesClass);
+        util_Assert(initContext->propertiesClass);
         if (nsnull == (gPropertiesClearMethodID = 
                        env->GetMethodID(initContext->propertiesClass, "clear", "()V"))) {
             return;
         }
     }
-    PR_ASSERT(gPropertiesClearMethodID);
+    util_Assert(gPropertiesClearMethodID);
     env->CallVoidMethod(propertiesObject, gPropertiesClearMethodID);
     
     return;
@@ -453,11 +389,11 @@ void util_StoreIntoPropertiesObject(JNIEnv *env, jobject propertiesObject,
                                           initContextObj);
     }
 #else
-    PR_ASSERT(initContextObj);
-    WebShellInitContext *initContext = (WebShellInitContext *) initContextObj;
+    util_Assert(initContextObj);
+    ShareInitContext *initContext = (ShareInitContext *) initContextObj;
     
     if (nsnull == gPropertiesSetPropertyMethodID) {
-        PR_ASSERT(initContext->propertiesClass);
+        util_Assert(initContext->propertiesClass);
         if (nsnull == (gPropertiesSetPropertyMethodID = 
                        env->GetMethodID(initContext->propertiesClass, 
                                         "setProperty",
@@ -465,7 +401,7 @@ void util_StoreIntoPropertiesObject(JNIEnv *env, jobject propertiesObject,
             return;
         }
     }
-    PR_ASSERT(gPropertiesSetPropertyMethodID);
+    util_Assert(gPropertiesSetPropertyMethodID);
 
     env->CallObjectMethod(propertiesObject, gPropertiesSetPropertyMethodID,
                           name, value);

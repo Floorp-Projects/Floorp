@@ -29,7 +29,7 @@
 #include "NativeEventThread.h"
 #include "CBrowserContainer.h"
 
-#include "jni_util.h"
+#include "ns_util.h"
 #include "ns_globals.h"
 
 #include "nsIServiceManager.h"  // for NS_InitXPCOM
@@ -49,7 +49,7 @@
 
 #include "nsAppShellCIDs.h" // for NS_SESSIONHISTORY_CID
 #include "nsCOMPtr.h" // to get nsIBaseWindow from webshell
-//nsIDocShell is included in jni_util.h
+//nsIDocShell is included in ns_util.h
 #include "nsIEventQueueService.h" // for PLEventQueue
 #include "nsRepository.h"
 #include "nsIServiceManager.h" // for do_GetService
@@ -61,7 +61,7 @@
 #include "nsCWebBrowser.h"
 #include "nsIEventQueueService.h"
 #include "nsIThread.h"
-//nsIWebShell is included in jni_util.h
+//nsIWebShell is included in ns_util.h
 
 
 #include "prlog.h" // for PR_ASSERT
@@ -196,7 +196,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
                                     "NULL webShellPtr passed to nativeInitialize.");
         return;
     }
-    if (nsnull == gVm) { // declared in jni_util.h
+    if (nsnull == gVm) { // declared in ../src_share/jni_util.h
         ::util_GetJavaVM(env, &gVm);  // save this vm reference
     }
 
@@ -309,7 +309,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
 
     return;
 }
-
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveListener

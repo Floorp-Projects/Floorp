@@ -27,8 +27,7 @@
  */
 
 #include "WindowControlImpl.h"
-#include <jni.h>
-#include "jni_util.h"
+#include "ns_util.h"
 #include "nsActions.h"
 
 #include "nsIThread.h" // for PRThread
@@ -100,8 +99,8 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_wrapper_1native_WindowControlI
     initContext->h = height;
     initContext->searchContext = nsnull;
     initContext->currentDocument = nsnull;
-    initContext->propertiesClass = nsnull;
     initContext->browserContainer = nsnull;
+    util_InitializeShareInitContext(&(initContext->shareContext));
 
 #ifdef XP_UNIX
     initContext->gtkWinPtr = 

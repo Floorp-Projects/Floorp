@@ -27,7 +27,7 @@
 
 #include "HistoryImpl.h"
 
-#include "jni_util.h"
+#include "ns_util.h"
 
 #include "nsActions.h"
 

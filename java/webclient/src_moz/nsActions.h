@@ -69,7 +69,7 @@
 
  * The nsActionEvent subclass is then cast to a PLEvent struct, and
  * passed into either util_PostEvent() or util_PostSynchronous event,
- * declared in jni_util.h.  See the comments for those functions for
+ * declared in ns_util.h.  See the comments for those functions for
  * information on how they deal with the nsActionEvent, cast as a
  * PLEvent.
 

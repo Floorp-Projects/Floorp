@@ -28,13 +28,13 @@
 
 #include "WrapperFactoryImpl.h"
 
-#include "jni_util.h"
+#include "ns_util.h"
 #include "nsCRT.h" // for nsCRT::strcmp
 
 
 const char * gBinDir; 
 
-PRLogModuleInfo *prLogModuleInfo = NULL; // declared in jni_util.h
+PRLogModuleInfo *prLogModuleInfo = NULL; // declared in ns_globals.h
 
 const char *gImplementedInterfaces[] = {
         "webclient.WindowControl",
