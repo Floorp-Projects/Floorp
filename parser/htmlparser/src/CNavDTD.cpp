@@ -1781,7 +1781,6 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
     case eHTMLTag_noframes:
     case eHTMLTag_noembed:
-    case eHTMLTag_noscript:
       mHasOpenNoXXX--;
       //and allow to fall through...
 
@@ -2318,6 +2317,14 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
     }
   }
 #endif
+  if(!result) {
+    // Bug 42429 - Preserve whitespace inside TABLE,TR,TBODY,TFOOT,etc.,
+    if(gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) {
+      if(nsHTMLElement::IsWhitespaceTag((eHTMLTags)aChild)) { 
+        result=PR_TRUE; 
+      }
+    }
+  }
   return result;
 } 
 
@@ -3181,6 +3188,7 @@ nsresult CNavDTD::CloseNoscript(const nsIParserNode *aNode) {
     START_TIMER();
 
     if(NS_SUCCEEDED(result)) {
+      NS_ASSERTION((mHasOpenNoXXX > -1), "mHasOpenNoXXX underflow");
       if(mHasOpenNoXXX > 0) { 
         mHasOpenNoXXX--;
       }
