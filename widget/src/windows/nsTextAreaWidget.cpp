@@ -80,6 +80,15 @@ PRUint32  nsTextAreaWidget::GetCaretPosition()
 }
 
 //-------------------------------------------------------------------------
+void nsTextAreaWidget::SetUpForPaint(HDC aHDC) 
+{
+  ::SetBkColor (aHDC, NSRGB_2_COLOREF(mBackground));
+  ::SetTextColor(aHDC, NSRGB_2_COLOREF(mForeground));
+  //::SetBkMode (aHDC, TRANSPARENT); // don't do this
+}
+
+
+//-------------------------------------------------------------------------
 //
 // nsTextAreaWidget constructor
 //
