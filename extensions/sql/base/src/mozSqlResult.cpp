@@ -50,9 +50,11 @@ mozSqlResult::Init()
                                             (void**) &gFormat);
     if (NS_FAILED(rv)) return rv;
 
-    rv = gRDFService->GetResource("SQL:ResultRoot", &kSQL_ResultRoot);
+    rv = gRDFService->GetResource(NS_LITERAL_CSTRING("SQL:ResultRoot"),
+                                  &kSQL_ResultRoot);
     if (NS_FAILED(rv)) return rv;
-    rv = gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
+    rv = gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),
+                                  &kNC_Child);
     if (NS_FAILED(rv)) return rv;
 
     rv = gRDFService->GetLiteral(NS_LITERAL_STRING("null").get(), &kNullLiteral);

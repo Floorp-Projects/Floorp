@@ -82,12 +82,18 @@ mozSqlService::Init()
 
   if (NS_FAILED(rv)) return rv;
 
-  gRDFService->GetResource("SQL:AliasesRoot", &kSQL_AliasesRoot);
-  gRDFService->GetResource(SQL_NAMESPACE_URI "name", &kSQL_Name);
-  gRDFService->GetResource(SQL_NAMESPACE_URI "type", &kSQL_Type);
-  gRDFService->GetResource(SQL_NAMESPACE_URI "hostname", &kSQL_Hostname);
-  gRDFService->GetResource(SQL_NAMESPACE_URI "port", &kSQL_Port);
-  gRDFService->GetResource(SQL_NAMESPACE_URI "database", &kSQL_Database);
+  gRDFService->GetResource(NS_LITERAL_CSTRING("SQL:AliasesRoot"),
+                           &kSQL_AliasesRoot);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(SQL_NAMESPACE_URI "name"),
+                           &kSQL_Name);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(SQL_NAMESPACE_URI "type"),
+                           &kSQL_Type);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(SQL_NAMESPACE_URI "hostname"),
+                           &kSQL_Hostname);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(SQL_NAMESPACE_URI "port"),
+                           &kSQL_Port);
+  gRDFService->GetResource(NS_LITERAL_CSTRING(SQL_NAMESPACE_URI "database"),
+                           &kSQL_Database);
 
   nsCOMPtr<nsIFile> file;
   rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
@@ -118,7 +124,7 @@ mozSqlService::AddAlias(const nsACString& aURI,
                         const nsAString& aDatabase)
 {
   nsCOMPtr<nsIRDFResource> resource;
-  gRDFService->GetResource(PromiseFlatCString(aURI).get(), getter_AddRefs(resource));
+  gRDFService->GetResource(aURI, getter_AddRefs(resource));
 
   nsCOMPtr<nsIRDFLiteral> rdfLiteral;
   nsCOMPtr<nsIRDFInt> rdfInt;
@@ -152,7 +158,7 @@ NS_IMETHODIMP
 mozSqlService::HasAlias(const nsACString& aURI, PRBool* _retval)
 {
   nsCOMPtr<nsIRDFResource> resource;
-  gRDFService->GetResource(PromiseFlatCString(aURI).get(), getter_AddRefs(resource));
+  gRDFService->GetResource(aURI, getter_AddRefs(resource));
 
   nsresult rv = EnsureAliasesContainer();
   if (NS_FAILED(rv))
@@ -175,7 +181,7 @@ mozSqlService::GetAlias(const nsACString& aURI,
                         nsAString& aDatabase)
 {
   nsCOMPtr<nsIRDFResource> resource;
-  gRDFService->GetResource(PromiseFlatCString(aURI).get(), getter_AddRefs(resource));
+  gRDFService->GetResource(aURI, getter_AddRefs(resource));
 
   nsCOMPtr<nsIRDFNode> rdfNode;
   nsCOMPtr<nsIRDFLiteral> rdfLiteral;
@@ -228,7 +234,7 @@ mozSqlService::UpdateAlias(const nsACString& aURI,
                            const nsAString& aDatabase)
 {
   nsCOMPtr<nsIRDFResource> resource;
-  gRDFService->GetResource(PromiseFlatCString(aURI).get(), getter_AddRefs(resource));
+  gRDFService->GetResource(aURI, getter_AddRefs(resource));
 
   nsCOMPtr<nsIRDFNode> rdfNode;
   nsCOMPtr<nsIRDFLiteral> rdfLiteral;
@@ -263,7 +269,7 @@ NS_IMETHODIMP
 mozSqlService::RemoveAlias(const nsACString &aURI)
 {
   nsCOMPtr<nsIRDFResource> resource;
-  gRDFService->GetResource(PromiseFlatCString(aURI).get(), getter_AddRefs(resource));
+  gRDFService->GetResource(aURI, getter_AddRefs(resource));
 
   nsCOMPtr<nsIRDFNode> rdfNode;
 

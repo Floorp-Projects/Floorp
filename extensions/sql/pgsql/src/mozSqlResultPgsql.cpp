@@ -78,7 +78,7 @@ mozSqlResultPgsql::BuildColumnInfo()
     nsCAutoString uri(NS_LITERAL_CSTRING("http://www.mozilla.org/SQL-rdf#"));
     uri.Append(n);
     nsCOMPtr<nsIRDFResource> property;
-    gRDFService->GetResource(uri.get(), getter_AddRefs(property));
+    gRDFService->GetResource(uri, getter_AddRefs(property));
 
     ColumnInfo* columnInfo = ColumnInfo::Create(mAllocator, name, type, size, mod, property);
     mColumnInfo.AppendElement(columnInfo); 
