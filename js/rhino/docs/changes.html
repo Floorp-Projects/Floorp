@@ -11,79 +11,10 @@
 <h1 align="center">
 Change Log for Significant Rhino Changes</h1>
 
-This is a log of significant changes since Rhino 1.5 Release 4.
+This is a log of significant changes since Rhino 1.5 Release 5.
 
 
-<h3>Automatic wrapping of JavaScript functions ans Java instances</h3>
-It is possible now to pass JavaScript function as argument to Java method expecting an interface with single method. Rhino automatically provides glue code to call the passed function when the interface method is called. It allows to simplify code that previously had to create explicit JavaAdapter objects. 
-See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=223435">Bugzilla 223435</a>.
-</p>
-<p>
-For example, one can write now:
-<pre>
-    var button = new javax.swing.JButton("My Button");
-    button.addActionListener(function() {
-    	java.lang.System.out.println("Button click");
-    }); 
-</pre>
-instead of 
-<pre>
-    var button = new javax.swing.JButton("My Button");
-    button.addActionListener(new java.awt.event.ActionListener({
-    	actionPerformed : function() {
-    	    java.lang.System.out.println("Button click");
-    	}
-    });
-</pre>
-which was necessary in the previous version of Rhino. 
-
-<h3>Support for uneval()/toSource()</h3>
-Rhino now fully supports <tt>uneval()</tt> function and <tt>toSource()<tt> method which are extensions to ECMAScript available in <a href="http://www.mozilla.org/js/">SpiderMonkey</a>. They return a string that can be passed to eval to reconstruct the original value when possible. It is guaranteed that <tt>uneval(eval(uneval(x))) == uneval(x)</tt> and in many cases more useful notion <tt>eval(uneval(x)) == deep copy of x</tt> holds. See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=225465">Bugzilla 225465</a>.
-</p>
-<p> 
-For example, here is an extract from a <a href="shell.html">Rhino shell</a> session: 
-<pre>
-js> var x = { a: 1, b: 2, c: [1,2,3,4,5], f: function test() { return 1; }, o: { property1: "Test", proeprty2: new Date()}}
-js> uneval(x)
-({c:[1, 2, 3, 4, 5], o:{property1:"Test", proeprty2:(new Date(1076585338601))}, f:(function test() {return 1;}), a:1, b:2})
-js> x.toSource()
-({c:[1, 2, 3, 4, 5], o:{property1:"Test", proeprty2:(new Date(1076585338601))}, f:(function test() {return 1;}), a:1, b:2})
-js> uneval(x.propertyThatDoesNotExist)
-undefined
-</pre>
-</p>
-
-
-<h3>Exception changes</h3>
-<p>In Rhino 1.5R5 all script-related exceptions include source name of the script and number of the line that triggered exception. The exception class <tt>org.mozilla.javascript.JavaScriptException</tt> now is used only to represent exceptions explicitly thrown by scripts by JavaScript "throw" statement, it never wraps exceptions thrown by Java methods that called by scripts. Such exceptions are always wrapped now as  <tt>org.mozilla.javascript.WrappedException</tt>. See <a  href="http://bugzilla.mozilla.org/show_bug.cgi?id=217584">Bugzilla 217584</a>.
-</p>
-
-<h3>Compiled scripts are scope independent</h3>
-Previously Rhino required a scope object in the <tt>compileReader</tt> method of <tt>org.mozilla.javascript.Context</tt> to compile script into <tt>org.mozilla.javascript.Script</tt> instances. Under some circumstances it was possible that this object would be stored in the resulting compiled script preventing reuse of the compiled form to execute the script against different scopes. Now all such cases are removed and <tt>compileReader</tt> and newly introduced <tt>compileString</tt> no longer take the scope argument. For compatibility the old form of <tt>compileReader</tt> is kept as a deprecated method. See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=218440">Bugzilla 218440</a>.
-</p>
-<p>
-In addition the new interface <tt>org.mozilla.javascript.Callable</tt> allows to execute scripts with JavaScript <tt>this</tt> keyword pointing to arbitrary object instead of defaulting to the scope object as <tt>exec</tt> method from <tt>org.mozilla.javascript.Script</tt> does.
-</p>
-
-<h3>No static caching</h3>
-Rhino no longer caches generated classes and information about reflected Java classes in static objects. Instead such caches by default are initialized once per call to <tt>initStandardObjects</tt> of <tt>org.mozilla.javascript.Context</tt> but this can be overridden with explicit call to the <tt>associate</tt> method of <tt>org.mozilla.javascript.ClassCache</tt> if cache sharing is desired. The change allows to instantiate multiple Rhino runtime instances which would not interfere with each other and prevents memory leaks throw ever growing caches.  
-
-<h3>New API for compiling scripts into class files</h3>
-<p>The new class <tt>org.mozilla.javascript.optimizer.ClassCompiler</tt> provides simple API to compile JavaScript source into set of Java class files with the given set of compilation options. <a href="jsc.html">JavaScript Compiler</a> was upgraded to use new API and the old API were deprecated.
-</p>
-
-<h3>Optimizer generates only one class per script </h3>
-<p>
-In Rhino 1.5R5 the default optimization mode generates only one class per script and all its functions where previously the optimizer generated additional class for each function definition in the script. It improves loading time for scripts and decreases memory usage especially for scripts with many function definitions. See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=198086">Bugzilla 198086</a>.
-</p>
-
-<h3>Improved support for huge scripts</h3>
-<p>
-The interpreted mode contains significantly less restrictions on size and complexity of the scripts and if the remaining restrictions are not satisfied, Rhino will report an exception instead of producing corrupted internal byte code.
-See <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=225831">Bugzilla 225831</a>.
-</p>
-
-
+<h3>Nothing significant yet!</h3>
 
 <hr width="100%"><br>
 <a href="index.html">back to top</a></h3>
