@@ -187,18 +187,21 @@ class nsScanner {
       nsresult Eof(void);
 
       /**
-       *  Consume characters until you find the terminal char
+       *  Consume characters until you run into space, a '<', a '>', or a '/'.
        *  
-       *  @update  gess 3/25/98
-       *  @param   aString receives new data from stream
-       *  @param   addTerminal tells us whether to append terminal to aString
+       *  @param   aString - receives new data from stream
        *  @return  error code
        */
-      nsresult GetIdentifier(nsString& aString,PRBool allowPunct=PR_FALSE);
-      nsresult ReadIdentifier(nsString& aString,PRBool allowPunct=PR_FALSE);
-      nsresult ReadIdentifier(nsScannerIterator& aStart,
-                              nsScannerIterator& aEnd,
-                              PRBool allowPunct=PR_FALSE);
+      nsresult ReadTagIdentifier(nsString& aString);
+
+      /**
+       *  Consume characters until you run into a char that's not valid in an
+       *  entity name
+       *  
+       *  @param   aString - receives new data from stream
+       *  @return  error code
+       */
+      nsresult ReadEntityIdentifier(nsString& aString);
       nsresult ReadNumber(nsString& aString,PRInt32 aBase);
       nsresult ReadWhitespace(nsString& aString, 
                               PRInt32& aNewlinesSkipped);
