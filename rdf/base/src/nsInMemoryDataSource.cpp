@@ -1089,8 +1089,8 @@ InMemoryDataSource::GetSource(nsIRDFResource* property,
 
     NS_AUTOLOCK(mLock);
 
-    for (Assertion* as = GetReverseArcs(target); as != nsnull; as = as->mNext) {
-        if ((property == as->u.as.mProperty) && (tv == (as->u.as.mTruthValue))) {
+    for (Assertion* as = GetReverseArcs(target); as; as = as->u.as.mInvNext) {
+        if ((property == as->u.as.mProperty) && (tv == as->u.as.mTruthValue)) {
             *source = as->mSource;
             NS_ADDREF(*source);
             return NS_OK;
