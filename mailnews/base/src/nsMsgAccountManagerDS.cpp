@@ -391,23 +391,11 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
   nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(element, &rv);
   if (NS_FAILED(rv)) return PR_TRUE;
 
-  // get the URI from the incoming server
-  nsXPIDLCString serverUri;
-  rv = server->GetServerURI(getter_Copies(serverUri));
-  if (NS_FAILED(rv)) return PR_TRUE;
+	nsCOMPtr <nsIFolder> serverFolder;
+	rv = server->GetRootFolder(getter_AddRefs(serverFolder));
+	if(NS_FAILED(rv)) return PR_TRUE;
 
-  // get the corresponding RDF resource
-  // RDF will create the server resource if it doesn't already exist
-  nsCOMPtr<nsIRDFResource> serverResource;
-  rv = rdf->GetResource(serverUri, getter_AddRefs(serverResource));
-  if (NS_FAILED(rv)) return PR_TRUE;
-
-  // make incoming server know about its root server folder so we 
-  // can find sub-folders given an incoming server.
-  nsCOMPtr <nsIFolder> serverFolder = do_QueryInterface(serverResource);
   if (serverFolder) {
-	server->SetRootFolder(serverFolder);
-
     nsXPIDLString serverName;
     server->GetPrettyName(getter_Copies(serverName));
     serverFolder->SetPrettyName(NS_CONST_CAST(PRUnichar*,
@@ -415,6 +403,10 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
   }
 
   // add the resource to the array
+  nsCOMPtr<nsIRDFResource> serverResource = do_QueryInterface(serverFolder);
+	if(!serverResource)
+		return PR_TRUE;
+
   rv = servers->AppendElement(serverResource);
   if (NS_FAILED(rv)) return PR_TRUE;
   
