@@ -20,6 +20,7 @@
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
 #include "nsIWidget.h"
+#include "nsIMenuListener.h"
 
 #include "nsStringUtil.h"
 
@@ -73,6 +74,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mMenuParent  = nsnull;
   mPopUpParent = nsnull;
   mTarget      = nsnull;
+  mXULCommandListener = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -85,6 +87,7 @@ nsMenuItem::~nsMenuItem()
   NS_IF_RELEASE(mMenuParent);
   NS_IF_RELEASE(mPopUpParent);
   NS_IF_RELEASE(mTarget);
+  NS_IF_RELEASE(mXULCommandListener);
 }
 
 #ifdef NOTNOW
@@ -269,7 +272,10 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
 {
-  return NS_OK;
+    NS_IF_RELEASE(mXULCommandListener);
+    NS_IF_ADDREF(aMenuListener);
+	mXULCommandListener = aMenuListener;
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -283,6 +289,9 @@ NS_METHOD nsMenuItem::RemoveMenuListener(nsIMenuListener * aMenuListener)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
+	if(mXULCommandListener)
+		return mXULCommandListener->MenuSelected(aMenuEvent);
+		
   	return nsEventStatus_eIgnore;
 }
 
