@@ -627,7 +627,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           break;
 
         case eHTMLTag_script:
-          result=HandleScriptToken(st); break;
+          result=HandleScriptToken(st, attrNode); break;
 
         case eHTMLTag_head:
           break; //ignore head tags...
@@ -821,32 +821,32 @@ nsresult CNavDTD::HandleAttributeToken(CToken* aToken) {
  *  @param   aToken -- next (start) token to be handled
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
-nsresult CNavDTD::HandleScriptToken(CToken* aToken) {
+nsresult CNavDTD::HandleScriptToken(CToken* aToken, nsCParserNode& aNode) {
   NS_PRECONDITION(0!=aToken,kNullToken);
   nsresult result=NS_OK;
 
   PRInt32 pos=GetTopmostIndexOf(eHTMLTag_body);
-  nsCParserNode theNode((CHTMLToken*)aToken);
-  nsCParserNode attrNode((CHTMLToken*)aToken);
+//  nsCParserNode theNode((CHTMLToken*)aToken);
+//  nsCParserNode attrNode((CHTMLToken*)aToken);
   PRInt32 attrCount=aToken->GetAttributeCount();
 
   if (kNotFound == pos) {
     // We're in the HEAD
-    result=OpenHead(theNode);
+    result=OpenHead(aNode);
     if(NS_OK==result) {
-      mParser->CollectSkippedContent(attrNode,attrCount);
+      mParser->CollectSkippedContent(aNode,attrCount);
       if(NS_OK==result) {
-        result=AddLeaf(attrNode);
+        result=AddLeaf(aNode);
         if(NS_OK==result)
-          result=CloseHead(theNode);
+          result=CloseHead(aNode);
       }
     }
   }
   else {
     // We're in the BODY
-    mParser->CollectSkippedContent(attrNode,attrCount);
+    mParser->CollectSkippedContent(aNode,attrCount);
     if(NS_OK==result) {
-      result=AddLeaf(attrNode);
+      result=AddLeaf(aNode);
     }
   }
 

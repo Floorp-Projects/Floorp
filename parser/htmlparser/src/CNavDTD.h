@@ -42,6 +42,7 @@
 class nsIHTMLContentSink;
 class nsIDTDDebug;
 class nsIParserNode;
+class nsCParserNode;
 class CITokenHandler;
 class nsParser;
 
@@ -359,7 +360,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
     nsresult HandleCommentToken(CToken* aToken);
     nsresult HandleSkippedContentToken(CToken* aToken);
     nsresult HandleAttributeToken(CToken* aToken);
-    nsresult HandleScriptToken(CToken* aToken);
+    nsresult HandleScriptToken(CToken* aToken, nsCParserNode& aNode);
     nsresult HandleStyleToken(CToken* aToken);
 
 
