@@ -173,7 +173,7 @@ void CleanupPreviousVersionINIKeys(void)
       GetPrivateProfileString(szSection, "Key",                "", szBuf,           sizeof(szBuf),           szFileIniConfig);
       GetPrivateProfileString(szSection, "Decrypt Key",        "", szDecrypt,       sizeof(szDecrypt),       szFileIniConfig);
       memset(szKey, 0, sizeof(szKey));
-      if(strcmpi(szDecrypt, "TRUE") == 0)
+      if(stricmp(szDecrypt, "TRUE") == 0)
         DecryptString(szDirKey, szBuf);
       else
         strcpy(szDirKey, szBuf);
@@ -205,7 +205,7 @@ void CleanupPreviousVersionINIKeys(void)
         GetPrivateProfileString(szSection, "App",                 "", szBuf,           sizeof(szBuf),          szFileIniConfig);
         GetPrivateProfileString(szSection, "Decrypt App",         "", szDecrypt,       sizeof(szDecrypt),      szFileIniConfig);
         memset(szApp, 0, sizeof(szApp));
-        if(strcmpi(szDecrypt, "TRUE") == 0)
+        if(stricmp(szDecrypt, "TRUE") == 0)
           DecryptString(szApp, szBuf);
         else
           strcpy(szApp, szBuf);
@@ -213,7 +213,7 @@ void CleanupPreviousVersionINIKeys(void)
         GetPrivateProfileString(szSection, "Key",                "", szBuf,           sizeof(szBuf),           szFileIniConfig);
         GetPrivateProfileString(szSection, "Decrypt Key",        "", szDecrypt,       sizeof(szDecrypt),       szFileIniConfig);
         memset(szDirKey, 0, sizeof(szKey));
-        if(strcmpi(szDecrypt, "TRUE") == 0)
+        if(stricmp(szDecrypt, "TRUE") == 0)
           DecryptString(szDirKey, szBuf);
         else
           strcpy(szDirKey, szBuf);
@@ -222,7 +222,7 @@ void CleanupPreviousVersionINIKeys(void)
         if (szIni[0]) {
           BOOL bDecryptINI;
           GetPrivateProfileString(szSection, "Decrypt INI", "", szBuf,   sizeof(szBuf),   szFileIniConfig);
-          if(strcmpi(szBuf, "FALSE")) {
+          if(stricmp(szBuf, "FALSE")) {
             DecryptString(szBuf, szIni);
             strcpy(szIni, szBuf);
           }
@@ -232,7 +232,7 @@ void CleanupPreviousVersionINIKeys(void)
         PrfQueryProfileString(hini, szApp, szDirKey, "", szKey, MAX_BUF);
         if (szKey[0]) {
           AppendBackSlash(szKey, sizeof(szKey));
-          if (strcmpi(szKey, szPath) == 0) {
+          if (stricmp(szKey, szPath) == 0) {
             PrfWriteProfileString(hini, szApp, NULL, NULL);
           }
         }
