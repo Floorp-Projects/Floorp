@@ -382,8 +382,8 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     if (NS_SUCCEEDED(prefs->GetBoolPref("chimera.use_system_home_page", &boolPref)) && boolPref)
       return [self getICStringPref:kICWWWHomePage];
 
-    NSString* homepagePref = [self getMozillaPrefString:"browser.startup.homepage"];
-    if ([homepagePref length] > 0)
+    NSString* homepagePref = NSLocalizedStringFromTable( @"HomePageDefault", @"WebsiteDefaults", nil );
+    if ([homepagePref length] > 0 && ![homepagePref isEqualToString:@"HomePageDefault"])
       return homepagePref;
   }
   
