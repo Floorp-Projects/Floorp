@@ -3842,8 +3842,10 @@ PRInt32 nsNNTPProtocol::Cancel()
     PR_ASSERT(NS_SUCCEEDED(rv));
     char *newsgroupname = nsnull;
     rv = m_runningURL->GetNewsgroupName(&newsgroupname);
-    PR_ASSERT(NS_SUCCEEDED(rv) && newsgroupname);
-    printf("delete %lu from %s\n",key,newsgroupname);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && newsgroupname && (key != nsMsgKey_None), "need more to remove this message from the db");
+    if ((key != nsMsgKey_None) && (newsgroupname)) {
+	printf("delete %lu from %s\n",key,newsgroupname);
+    }
 #endif
   }
     
