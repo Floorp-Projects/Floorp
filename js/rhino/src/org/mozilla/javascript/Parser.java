@@ -365,7 +365,7 @@ class Parser {
         tt = ts.getToken();
 
         switch(tt) {
-        case ts.IF: {
+        case TokenStream.IF: {
             skipsemi = true;
 
             source.append((char)ts.IF);
@@ -388,7 +388,7 @@ class Parser {
             break;
         }
 
-        case ts.SWITCH: {
+        case TokenStream.SWITCH: {
             skipsemi = true;
 
             source.append((char)ts.SWITCH);
@@ -408,14 +408,14 @@ class Parser {
 
             while ((tt = ts.getToken()) != ts.RC && tt != ts.EOF) {
                 switch(tt) {
-                case ts.CASE:
+                case TokenStream.CASE:
                     source.append((char)ts.CASE);
                     cur_case = nf.createUnary(ts.CASE, expr(ts, source, false));
                     source.append((char)ts.COLON);
                     source.append((char)ts.EOL);
                     break;
 
-                case ts.DEFAULT:
+                case TokenStream.DEFAULT:
                     cur_case = nf.createLeaf(ts.DEFAULT);
                     source.append((char)ts.DEFAULT);
                     source.append((char)ts.COLON);
@@ -446,7 +446,7 @@ class Parser {
             break;
         }
 
-        case ts.WHILE: {
+        case TokenStream.WHILE: {
             skipsemi = true;
 
             source.append((char)ts.WHILE);
@@ -463,7 +463,7 @@ class Parser {
 
         }
 
-        case ts.DO: {
+        case TokenStream.DO: {
             source.append((char)ts.DO);
             source.append((char)ts.LC);
             source.append((char)ts.EOL);
@@ -481,7 +481,7 @@ class Parser {
             break;
         }
 
-        case ts.FOR: {
+        case TokenStream.FOR: {
             skipsemi = true;
 
             source.append((char)ts.FOR);
@@ -552,7 +552,7 @@ class Parser {
             break;
         }
 
-        case ts.TRY: {
+        case TokenStream.TRY: {
             int lineno = ts.getLineno();
 
             Object tryblock;
@@ -626,7 +626,7 @@ class Parser {
 
             break;
         }
-        case ts.THROW: {
+        case TokenStream.THROW: {
             int lineno = ts.getLineno();
             source.append((char)ts.THROW);
             pn = nf.createThrow(expr(ts, source, false), lineno);
@@ -634,7 +634,7 @@ class Parser {
                 wellTerminated(ts, ts.ERROR);
             break;
         }
-        case ts.BREAK: {
+        case TokenStream.BREAK: {
             int lineno = ts.getLineno();
 
             source.append((char)ts.BREAK);
@@ -647,7 +647,7 @@ class Parser {
             pn = nf.createBreak(label, lineno);
             break;
         }
-        case ts.CONTINUE: {
+        case TokenStream.CONTINUE: {
             int lineno = ts.getLineno();
 
             source.append((char)ts.CONTINUE);
@@ -660,7 +660,7 @@ class Parser {
             pn = nf.createContinue(label, lineno);
             break;
         }
-        case ts.WITH: {
+        case TokenStream.WITH: {
             skipsemi = true;
 
             source.append((char)ts.WITH);
@@ -681,14 +681,14 @@ class Parser {
             pn = nf.createWith(obj, body, lineno);
             break;
         }
-        case ts.VAR: {
+        case TokenStream.VAR: {
             int lineno = ts.getLineno();
             pn = variables(ts, source, false);
             if (ts.getLineno() == lineno)
                 wellTerminated(ts, ts.ERROR);
             break;
         }
-        case ts.RETURN: {
+        case TokenStream.RETURN: {
             Object retExpr = null;
             int lineno = 0;
 
@@ -717,17 +717,17 @@ class Parser {
             pn = nf.createReturn(retExpr, lineno);
             break;
         }
-        case ts.LC:
+        case TokenStream.LC:
             skipsemi = true;
 
             pn = statements(ts, source);
             mustMatchToken(ts, ts.RC, "msg.no.brace.block");
             break;
 
-        case ts.ERROR:
+        case TokenStream.ERROR:
             // Fall thru, to have a node for error recovery to work on
-        case ts.EOL:
-        case ts.SEMI:
+        case TokenStream.EOL:
+        case TokenStream.SEMI:
             pn = nf.createLeaf(ts.VOID);
             skipsemi = true;
             break;
@@ -1033,28 +1033,28 @@ class Parser {
         ts.flags &= ~ts.TSF_REGEXP;
 
         switch(tt) {
-        case ts.UNARYOP:
+        case TokenStream.UNARYOP:
             source.append((char)ts.UNARYOP);
             source.append((char)ts.getOp());
             return nf.createUnary(ts.UNARYOP, ts.getOp(),
                                   unaryExpr(ts, source));
 
-        case ts.ADD:
-        case ts.SUB:
+        case TokenStream.ADD:
+        case TokenStream.SUB:
             source.append((char)ts.UNARYOP);
             source.append((char)tt);
             return nf.createUnary(ts.UNARYOP, tt, unaryExpr(ts, source));
 
-        case ts.INC:
-        case ts.DEC:
+        case TokenStream.INC:
+        case TokenStream.DEC:
             source.append((char)tt);
             return nf.createUnary(tt, ts.PRE, memberExpr(ts, source, true));
 
-        case ts.DELPROP:
+        case TokenStream.DELPROP:
             source.append((char)ts.DELPROP);
             return nf.createUnary(ts.DELPROP, unaryExpr(ts, source));
 
-        case ts.ERROR:
+        case TokenStream.ERROR:
             break;
 
         default:
@@ -1205,10 +1205,10 @@ class Parser {
 
         switch(tt) {
 
-        case ts.FUNCTION:
+        case TokenStream.FUNCTION:
             return function(ts, source, true);
 
-        case ts.LB:
+        case TokenStream.LB:
             {
                 source.append((char)ts.LB);
                 pn = nf.createLeaf(ts.ARRAYLIT);
@@ -1247,7 +1247,7 @@ class Parser {
                 return nf.createArrayLiteral(pn);
             }
 
-        case ts.LC: {
+        case TokenStream.LC: {
             pn = nf.createLeaf(ts.OBJLIT);
 
             source.append((char)ts.LC);
@@ -1266,18 +1266,18 @@ class Parser {
                     tt = ts.getToken();
                     switch(tt) {
                         // map NAMEs to STRINGs in object literal context.
-                    case ts.NAME:
-                    case ts.STRING:
+                    case TokenStream.NAME:
+                    case TokenStream.STRING:
                         String s = ts.getString();
                         source.addString(ts.NAME, s);
                         property = nf.createString(ts.getString());
                         break;
-                    case ts.NUMBER:
+                    case TokenStream.NUMBER:
                         Number n = ts.getNumber();
                         source.addNumber(n);
                         property = nf.createNumber(n);
                         break;
-                    case ts.RC:
+                    case TokenStream.RC:
                         // trailing comma is OK.
                         ts.ungetToken(tt);
                         break commaloop;
@@ -1301,7 +1301,7 @@ class Parser {
             return nf.createObjectLiteral(pn);
         }
 
-        case ts.LP:
+        case TokenStream.LP:
 
             /* Brendan's IR-jsparse.c makes a new node tagged with
              * TOK_LP here... I'm not sure I understand why.  Isn't
@@ -1314,22 +1314,22 @@ class Parser {
             mustMatchToken(ts, ts.RP, "msg.no.paren");
             return pn;
 
-        case ts.NAME:
+        case TokenStream.NAME:
             String name = ts.getString();
             source.addString(ts.NAME, name);
             return nf.createName(name);
 
-        case ts.NUMBER:
+        case TokenStream.NUMBER:
             Number n = ts.getNumber();
             source.addNumber(n);
             return nf.createNumber(n);
 
-        case ts.STRING:
+        case TokenStream.STRING:
             String s = ts.getString();
             source.addString(ts.STRING, s);
             return nf.createString(s);
 
-        case ts.OBJECT:
+        case TokenStream.OBJECT:
         {
             String flags = ts.regExpFlags;
             ts.regExpFlags = null;
@@ -1338,16 +1338,16 @@ class Parser {
             return nf.createRegExp(re, flags);
         }
 
-        case ts.PRIMARY:
+        case TokenStream.PRIMARY:
             source.append((char)ts.PRIMARY);
             source.append((char)ts.getOp());
             return nf.createLeaf(ts.PRIMARY, ts.getOp());
 
-        case ts.RESERVED:
+        case TokenStream.RESERVED:
             reportError(ts, "msg.reserved.id");
             break;
 
-        case ts.ERROR:
+        case TokenStream.ERROR:
             /* the scanner or one of its subroutines reported the error. */
             break;
 
