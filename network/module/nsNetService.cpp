@@ -1009,30 +1009,31 @@ char *mangleResourceIntoFileURL(const char* aResourceFileName)
 #endif /* XP_PC */
 
 #ifdef XP_UNIX
-  // XXX For now, all resources are relative to the current working directory
 
-    FILE *pp;
+//
+// Obtain the resource: url base from the environment variable
+//
+// MOZILLA_HOME
+//
+// Which is the standard place where mozilla stores global (ie, not
+// user specific) data
+//
 
-#define MAXPATHLEN 2000
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 1024 // A good guess, i suppose
+#endif
 
-    resourceBase = (char *)PR_Malloc(MAXPATHLEN);;
+#define MOZILLA_HOME "MOZILLA_HOME"
 
-    if (!(pp = popen("pwd", "r"))) {
-      printf("RESOURCE protocol error in nsURL::mangeResourceIntoFileURL 1\n");
-      return(nsnull);
+    static char * nsUnixMozillaHomePath = nsnull;
+
+    if (nsnull == nsUnixMozillaHomePath)
+    {
+      nsUnixMozillaHomePath = getenv(MOZILLA_HOME);
     }
-    else {
-      if (fgets(resourceBase, MAXPATHLEN, pp)) {
-        printf("[%s] %d\n", resourceBase, PL_strlen(resourceBase));
-        resourceBase[PL_strlen(resourceBase)-1] = 0;
-      }
-      else {
-       printf("RESOURCE protocol error in nsURL::mangeResourceIntoFileURL 2\n");
-       return(nsnull);
-      }
-   }
 
-   printf("RESOURCE name %s\n", resourceBase);
+	resourceBase = XP_STRDUP(nsUnixMozillaHomePath);
+
 #endif /* XP_UNIX */
 
 #ifdef XP_MAC
