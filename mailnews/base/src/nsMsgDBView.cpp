@@ -126,7 +126,7 @@ nsMsgDBView::nsMsgDBView()
   mNumSelectedRows = 0;
   mSuppressMsgDisplay = PR_FALSE;
   mSuppressCommandUpdating = PR_FALSE;
-  mIsSpecialFolder = PR_FALSE;
+  mTreatRecipientAsAuthor = PR_FALSE;
   mIsNews = PR_FALSE;
   mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;
   m_deletingRows = PR_FALSE;
@@ -482,7 +482,7 @@ nsresult nsMsgDBView::FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aSenderString)
     mHeaderParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 
   nsresult rv = NS_OK;
-  if (mIsSpecialFolder)
+  if (mTreatRecipientAsAuthor)
     rv = aHdr->GetMime2DecodedRecipients(getter_Copies(unparsedAuthor));
   else
     rv = aHdr->GetMime2DecodedAuthor(getter_Copies(unparsedAuthor));
@@ -1520,11 +1520,13 @@ NS_IMETHODIMP nsMsgDBView::PerformActionOnCell(const PRUnichar *action, PRInt32 
 // end nsITreeView Implementation Methods
 ///////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount)
+NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRBool aTreatRecipientAsAuthor, PRInt32 *pCount)
 {
   m_viewFlags = viewFlags;
   m_sortOrder = sortOrder;
   m_sortType = sortType;
+  mTreatRecipientAsAuthor = aTreatRecipientAsAuthor;
+
   nsMsgViewTypeValue viewType;
 
   if (folder) // search view will have a null folder
@@ -1551,19 +1553,8 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
     NS_ENSURE_SUCCESS(rv,rv);
     mIsNews = !nsCRT::strcmp("nntp",type.get());
     GetImapDeleteModel(nsnull);
-    // for sent, unsent and draft folders, be sure to set mIsSpecialFolder so we'll show the recipient field
-    // in place of the author.
-    PRUint32 folderFlags = 0;
-    m_folder->GetFlags(&folderFlags);
-    if ( (folderFlags & MSG_FOLDER_FLAG_DRAFTS) || (folderFlags & MSG_FOLDER_FLAG_SENTMAIL)
-          || (folderFlags & MSG_FOLDER_FLAG_QUEUE))
-      mIsSpecialFolder = PR_TRUE;
   }
-#ifdef HAVE_PORT
-	CacheAdd ();
-#endif
-
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDBView::ReloadFolderAfterQuickSearch()
@@ -5158,5 +5149,46 @@ NS_IMETHODIMP
 nsMsgDBView::SetSearchSession(nsIMsgSearchSession *aSession)
 {
   m_searchSession = getter_AddRefs(NS_GetWeakReference(aSession));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::CloneDBView(nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater, nsIMsgDBView **_retval)
+{
+  nsMsgDBView* newMsgDBView;
+
+  NS_NEWXPCOM(newMsgDBView, nsMsgDBView);
+  if (!newMsgDBView)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = CopyDBView(newMsgDBView, aMessengerInstance, aMsgWindow, aCmdUpdater);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  NS_IF_ADDREF(*_retval = newMsgDBView);
+  return NS_OK;
+}
+
+nsresult nsMsgDBView::CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater)
+{
+  NS_ENSURE_ARG_POINTER(aNewMsgDBView);
+
+  aNewMsgDBView->mMsgWindow = aMsgWindow;
+  aNewMsgDBView->mMessengerInstance = aMessengerInstance;
+  aNewMsgDBView->mCommandUpdater = aCmdUpdater;
+  aNewMsgDBView->m_folder = m_folder;
+  aNewMsgDBView->m_viewFlags = m_viewFlags;
+  aNewMsgDBView->m_sortOrder = m_sortOrder;
+  aNewMsgDBView->m_sortType = m_sortType;
+  aNewMsgDBView->m_db = m_db;
+  aNewMsgDBView->mDateFormater = mDateFormater;
+  aNewMsgDBView->m_db->AddListener(aNewMsgDBView);
+  aNewMsgDBView->mIsNews = mIsNews;
+  aNewMsgDBView->mHeaderParser = mHeaderParser;
+  aNewMsgDBView->mDeleteModel = mDeleteModel;
+  aNewMsgDBView->mTreatRecipientAsAuthor = mTreatRecipientAsAuthor;
+  aNewMsgDBView->m_flags.CopyArray(m_flags);
+  aNewMsgDBView->m_levels.CopyArray(m_levels);
+  aNewMsgDBView->m_keys.CopyArray(m_keys);
+
   return NS_OK;
 }

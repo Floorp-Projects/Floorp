@@ -44,6 +44,7 @@ public:
 	nsresult InsertAt(PRInt32 nIndex, PRUint8 newElement, PRInt32 nCount = 1);
 	void RemoveAt(PRInt32 nIndex, PRInt32 nCount = 1);
 	nsresult InsertAt(PRInt32 nStartIndex, nsUint8Array* pNewArray);
+	void CopyArray(nsUint8Array &aSrcArray);
 
 	// use carefully!
 	PRUint8*				GetArray(void) {return((PRUint8*)m_pData);}		// only valid until another function called on the array (like GetBuffer() in CString)

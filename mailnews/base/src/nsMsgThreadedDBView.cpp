@@ -56,11 +56,10 @@ nsMsgThreadedDBView::~nsMsgThreadedDBView()
   /* destructor code */
 }
 
-NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount)
+NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRBool aTreatRecipientAsAuthor, PRInt32 *pCount)
 {
-	nsresult rv;
-	rv = nsMsgDBView::Open(folder, sortType, sortOrder, viewFlags, pCount);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = nsMsgDBView::Open(folder, sortType, sortOrder, viewFlags, aTreatRecipientAsAuthor, pCount);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Preset msg hdr cache size for performance reason.
   if (m_db)
@@ -870,4 +869,20 @@ void nsMsgThreadedDBView::ClearPreSearchInfo()
   m_preSearchKeys.RemoveAll();
   m_preSearchLevels.RemoveAll();
   m_preSearchFlags.RemoveAll();
+}
+
+NS_IMETHODIMP
+nsMsgThreadedDBView::CloneDBView(nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater, nsIMsgDBView **_retval)
+{
+  nsMsgThreadedDBView* newMsgDBView;
+  NS_NEWXPCOM(newMsgDBView, nsMsgThreadedDBView);
+
+  if (!newMsgDBView)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = CopyDBView(newMsgDBView, aMessengerInstance, aMsgWindow, aCmdUpdater);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  NS_IF_ADDREF(*_retval = newMsgDBView);
+  return NS_OK;
 }

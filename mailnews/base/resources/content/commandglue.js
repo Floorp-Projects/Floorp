@@ -533,10 +533,9 @@ var gCurSortType;
 // CreateDBView is called when we have a thread pane. CreateBareDBView is called when there is no
 // tree associated with the view. CreateDBView will call into CreateBareDBView...
 
-function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
+function CreateBareDBView(originalView, msgFolder, viewType, viewFlags, sortType, sortOrder)
 {
   var dbviewContractId = "@mozilla.org/messenger/msgdbview;1?type=";
-
   // hack to turn this into an integer, if it was a string
   // it would be a string if it came from localStore.rdf
   viewType = viewType - 0;
@@ -554,7 +553,8 @@ function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
           break;
   }
 
-  gDBView = Components.classes[dbviewContractId].createInstance(Components.interfaces.nsIMsgDBView);
+  if (!originalView)
+    gDBView = Components.classes[dbviewContractId].createInstance(Components.interfaces.nsIMsgDBView);
 
   gCurViewFlags = viewFlags;
   var count = new Object;
@@ -568,14 +568,21 @@ function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
     gCurSortType = sortType;
   }
 
-  gDBView.init(messenger, msgWindow, gThreadPaneCommandUpdater);
-  gDBView.open(msgFolder, gCurSortType, sortOrder, viewFlags, count);
+  if (!originalView) {
+    gDBView.init(messenger, msgWindow, gThreadPaneCommandUpdater);
+
+    var treatRecipientAsAuthor = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE);
+    gDBView.open(msgFolder, gCurSortType, sortOrder, viewFlags, treatRecipientAsAuthor, count);
+  } 
+  else {
+    gDBView = originalView.cloneDBView(messenger, msgWindow, gThreadPaneCommandUpdater);
+  }
 }
 
 function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
 {
   // call the inner create method
-  CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder);
+  CreateBareDBView(null, msgFolder, viewType, viewFlags, sortType, sortOrder);
 
   // now do tree specific work
 

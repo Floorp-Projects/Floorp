@@ -46,7 +46,8 @@ public:
 	nsMsgThreadsWithUnreadDBView();
 	virtual ~nsMsgThreadsWithUnreadDBView();
 	virtual const char * GetViewName(void) {return "ThreadsWithUnreadView"; }
-    NS_IMETHOD Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount);
+    NS_IMETHOD Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRBool aTreatRecipientAsAuthor, PRInt32 *pCount);
+    NS_IMETHOD CloneDBView(nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCommandUpdater, nsIMsgDBView **_retval);
     NS_IMETHOD GetViewType(nsMsgViewTypeValue *aViewType);
 
 	virtual PRBool		WantsThisThread(nsIMsgThread *threadHdr);
@@ -59,6 +60,7 @@ class nsMsgWatchedThreadsWithUnreadDBView : public nsMsgThreadedDBView
 {
 public:
     NS_IMETHOD GetViewType(nsMsgViewTypeValue *aViewType);
+    NS_IMETHOD CloneDBView(nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCommandUpdater, nsIMsgDBView **_retval);
 	virtual const char * GetViewName(void) {return "WatchedThreadsWithUnreadView"; }
 	virtual PRBool		WantsThisThread(nsIMsgThread *threadHdr);
 protected:

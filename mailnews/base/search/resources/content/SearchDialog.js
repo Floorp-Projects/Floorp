@@ -461,7 +461,7 @@ function setupDatasource() {
     var cmdupdator = new nsMsgSearchCommandUpdater();
 
     gSearchView.init(messenger, msgWindow, cmdupdator);
-    gSearchView.open(null, nsMsgViewSortType.byId, nsMsgViewSortOrder.ascending, nsMsgViewFlagsType.kNone, count);
+    gSearchView.open(null, nsMsgViewSortType.byId, nsMsgViewSortOrder.ascending, nsMsgViewFlagsType.kNone, false, count);
 
     // the thread pane needs to use the search datasource (to get the
     // actual list of messages) and the message datasource (to get any

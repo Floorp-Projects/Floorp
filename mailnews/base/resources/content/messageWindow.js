@@ -202,7 +202,9 @@ function OnLoadMessageWindow()
   }
   
   var msgFolder = GetLoadedMsgFolder();
-  CreateBareDBView(msgFolder,viewType, viewFlags, sortType, sortOrder); // create a db view for 
+
+  // create a db view
+  CreateBareDBView(originalView, msgFolder, viewType, viewFlags, sortType, sortOrder); 
 
   if (gCurrentMessageUri) {
     SetUpToolbarButtons(gCurrentMessageUri);

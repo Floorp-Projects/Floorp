@@ -294,6 +294,7 @@ protected:
   nsresult AppendLabelProperties(nsMsgLabelValue label, nsISupportsArray *aProperties);
   nsresult AppendSelectedTextColorProperties(nsMsgLabelValue label, nsISupportsArray *aProperties);
   nsresult InitLabelPrefs(void);
+  nsresult CopyDBView(nsMsgDBView *aNewMsgDBView, nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater);
   void InitializeAtomsAndLiterals();
   PRInt32 GetLevelInUnreadView(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex);
   nsresult GetImapDeleteModel(nsIMsgFolder *folder);
@@ -317,7 +318,11 @@ protected:
   // if we're deleting messages, we want to hold off loading messages on selection changed until the delete is done
   // and we want to batch notifications.
   PRPackedBool m_deletingRows;
-  PRPackedBool mIsSpecialFolder; // for special folders, the Sender column really shows recipients.
+  // for certain special folders 
+  // and decendents of those folders
+  // (like the "Sent" folder, "Sent/Old Sent")
+  // the Sender column really shows recipients.
+  PRPackedBool mTreatRecipientAsAuthor; 
   PRPackedBool mIsNews;          // we have special icons for news, and for news, we show lines instead of size
   PRPackedBool m_sortValid;
   PRUint8      m_saveRestoreSelectionDepth;

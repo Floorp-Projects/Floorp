@@ -47,9 +47,9 @@ nsMsgThreadsWithUnreadDBView::~nsMsgThreadsWithUnreadDBView()
 {
 }
 
-NS_IMETHODIMP nsMsgThreadsWithUnreadDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount)
+NS_IMETHODIMP nsMsgThreadsWithUnreadDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRBool aTreatRecipientAsAuthor, PRInt32 *pCount)
 {
-  return nsMsgThreadedDBView::Open(folder, sortType, sortOrder, viewFlags, pCount);
+  return nsMsgThreadedDBView::Open(folder, sortType, sortOrder, viewFlags, aTreatRecipientAsAuthor, pCount);
 }
 
 NS_IMETHODIMP nsMsgThreadsWithUnreadDBView::GetViewType(nsMsgViewTypeValue *aViewType)
@@ -97,6 +97,22 @@ nsresult nsMsgThreadsWithUnreadDBView::AddMsgToThreadNotInView(nsIMsgThread *thr
   return rv;
 }
 
+NS_IMETHODIMP
+nsMsgThreadsWithUnreadDBView::CloneDBView(nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater, nsIMsgDBView **_retval)
+{
+  nsMsgThreadsWithUnreadDBView* newMsgDBView;
+  NS_NEWXPCOM(newMsgDBView, nsMsgThreadsWithUnreadDBView);
+
+  if (!newMsgDBView)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = CopyDBView(newMsgDBView, aMessengerInstance, aMsgWindow, aCmdUpdater);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  NS_IF_ADDREF(*_retval = newMsgDBView);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgWatchedThreadsWithUnreadDBView::GetViewType(nsMsgViewTypeValue *aViewType)
 {
     NS_ENSURE_ARG_POINTER(aViewType);
@@ -142,4 +158,20 @@ nsresult nsMsgWatchedThreadsWithUnreadDBView::AddMsgToThreadNotInView(nsIMsgThre
     }
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsMsgWatchedThreadsWithUnreadDBView::CloneDBView(nsIMessenger *aMessengerInstance, nsIMsgWindow *aMsgWindow, nsIMsgDBViewCommandUpdater *aCmdUpdater, nsIMsgDBView **_retval)
+{
+  nsMsgWatchedThreadsWithUnreadDBView* newMsgDBView;
+  NS_NEWXPCOM(newMsgDBView, nsMsgWatchedThreadsWithUnreadDBView);
+
+  if (!newMsgDBView)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = CopyDBView(newMsgDBView, aMessengerInstance, aMsgWindow, aCmdUpdater);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  NS_IF_ADDREF(*_retval = newMsgDBView);
+  return NS_OK;
 }
