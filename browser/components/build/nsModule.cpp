@@ -52,7 +52,7 @@
 #include "nsOperaProfileMigrator.h"
 #include "nsPhoenixProfileMigrator.h"
 #include "nsSeamonkeyProfileMigrator.h"
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(__MINGW32__)
 #include "nsIEProfileMigrator.h"
 #elif defined(XP_MACOSX)
 #include "nsSafariProfileMigrator.h"
@@ -78,7 +78,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsOperaProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPhoenixProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSeamonkeyProfileMigrator)
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(__MINGW32__)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEProfileMigrator)
 #elif defined(XP_MACOSX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafariProfileMigrator)
@@ -125,7 +125,7 @@ static const nsModuleComponentInfo components[] =
     NS_PROFILEMIGRATOR_CONTRACTID,
     nsProfileMigratorConstructor },
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(__MINGW32__)
   { "Internet Explorer (Windows) Profile Migrator",
     NS_WINIEPROFILEMIGRATOR_CID,
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "ie",
