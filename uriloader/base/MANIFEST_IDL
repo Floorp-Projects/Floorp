@@ -6,3 +6,6 @@ nsCURILoader.idl
 nsIContentHandler.idl
 nsIURIContentListener.idl
 nsIURILoader.idl
+nsIDocumentLoader.idl
+nsIDocumentLoaderObserver.idl
+

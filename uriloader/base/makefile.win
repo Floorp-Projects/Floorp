@@ -33,12 +33,15 @@ XPIDLSRCS=						\
 		.\nsIContentHandler.idl			\
 		.\nsIURIContentListener.idl		\
 		.\nsIURILoader.idl			\
+    .\nsIDocumentLoader.idl \
+    .\nsIDocumentLoaderObserver.idl \
 		$(NULL)
 
 LIBRARY_NAME=uriloaderbase_s
 
-CPP_OBJS =                                         \
-        .\$(OBJDIR)\nsURILoader.obj            \
+CPP_OBJS =                            \
+        .\$(OBJDIR)\nsURILoader.obj   \
+        .\$(OBJDIR)\nsDocLoader.obj   \
         $(NULL)
 
 INCS = $(INCS)                  \

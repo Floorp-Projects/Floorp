@@ -22,6 +22,7 @@
 
 #include "nsIGenericFactory.h"
 #include "nsURILoader.h"
+#include "nsDocLoader.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -29,6 +30,7 @@
 // NOTE: This creates an instance of objects by using the default constructor
 //
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsURILoader)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDocLoaderImpl, Init)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -37,6 +39,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsURILoader)
 //
 static nsModuleComponentInfo components[] = {
   { "Netscape URI Loader Service", NS_URI_LOADER_CID, NS_URI_LOADER_PROGID, nsURILoaderConstructor, },
+  { "Netscape Doc Loader", NS_DOCUMENTLOADER_CID, NS_DOCUMENTLOADER_PROGID, nsDocLoaderImplConstructor, },
+  { "Netscape Doc Loader Service", NS_DOCUMENTLOADER_SERVICE_CID, NS_DOCUMENTLOADER_SERVICE_PROGID, 
+     nsDocLoaderImplConstructor, },
 };
 
 ////////////////////////////////////////////////////////////////////////
