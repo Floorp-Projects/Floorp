@@ -128,6 +128,10 @@ class nsEditorShell :   public nsIEditorShell,
 	  NS_IMETHOD Find();
 	  NS_IMETHOD FindNext();
 
+	  /* Charset Menu */
+	  NS_IMETHOD GetDocumentCharacterSet(PRUnichar **characterSet);
+	  NS_IMETHOD SetDocumentCharacterSet(const PRUnichar *characterSet);
+
 	  /* void InsertText (in wstring textToInsert); */
 	  NS_IMETHOD InsertText(const PRUnichar *textToInsert);
 	  NS_IMETHOD InsertSource(const PRUnichar *sourceToInsert);

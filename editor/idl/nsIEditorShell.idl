@@ -100,6 +100,10 @@ interface nsIEditorShell : nsISupports
   
   void Find();
   void FindNext();
+
+  /* Charset Menu */
+  wstring GetDocumentCharacterSet();
+  void SetDocumentCharacterSet(in wstring characterSet);
   
   /* Structure change */
   void InsertText(in wstring textToInsert);

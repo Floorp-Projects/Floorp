@@ -1521,6 +1521,29 @@ nsEditorShell::FindNext()
 }
 
 NS_IMETHODIMP
+nsEditorShell::GetDocumentCharacterSet(PRUnichar** characterSet)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+
+  if (editor)
+	  return editor->GetDocumentCharacterSet(characterSet);
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsEditorShell::SetDocumentCharacterSet(const PRUnichar* characterSet)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+
+  if (editor)
+	  return editor->SetDocumentCharacterSet(characterSet);
+
+  return NS_ERROR_FAILURE;
+
+}
+
+NS_IMETHODIMP
 nsEditorShell::GetContentsAs(const PRUnichar *format, PRUint32 flags,
                              PRUnichar **contentsAs)
 {

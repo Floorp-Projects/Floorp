@@ -125,7 +125,11 @@ public:
   /** Returns true if the document is modifed and needs saving */
   NS_IMETHOD GetDocumentModified(PRBool *outDocModified)=0;
 
+  /** Returns the current 'Save' document character set */
+  NS_IMETHOD GetDocumentCharacterSet(PRUnichar** characterSet)=0;
 
+  /** Sets the current 'Save' document character set */
+  NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet)=0;
 
   /* ------------ Transaction methods -------------- */
 
