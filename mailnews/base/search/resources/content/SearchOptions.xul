@@ -22,17 +22,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-[
-<!ENTITY searchOptionsTitle.label "Search Options">
-<!ENTITY searchSubfoldersCheckbox.label "Search Subfolders">
-<!ENTITY localRemoteTitle.label "When online, search for messages:">
-<!ENTITY localSearchRadio.label "on your local system">
-<!ENTITY removeSearchRadio.label "on the specified serer">
-<!ENTITY ok.label "OK">
-<!ENTITY cancel.label "Cancel">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchOptions.dtd" >
 
 <window id="search-options-dialog" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

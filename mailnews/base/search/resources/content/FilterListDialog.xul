@@ -2,20 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
-<!DOCTYPE window
-[
-	<!ENTITY numberColumn.label "Number">
-	<!ENTITY nameColumn.label "Name">
-	<!ENTITY activeColumn.label "Active">
-	<!ENTITY newButton.label "New">
-	<!ENTITY editButton.label "Edit">
-	<!ENTITY deleteButton.label "Delete">
-	<!ENTITY logFilterUseCheckbox.label "Log Filter Use">
-	<!ENTITY viewLogButton.label "View Log">
-	<!ENTITY description.label "Description">
-    <!ENTITY filterHeader.label "Filters will be applied in the following order:">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterListDialog.dtd" >
 <window
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:html="http://www.w3.org/TR/REC-html40"

@@ -22,28 +22,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-[
-    <!ENTITY searchHeading.label "Search for messages in:">
-    <!ENTITY matchAll.label "Match all of the following:">
-    <!ENTITY matchAny.label "Match any of the following:">
-    <!ENTITY scopeSubject.label "subject">
-    <!ENTITY scopeSender.label  "sender">
-    <!ENTITY scopeDate.label    "date">
-    <!ENTITY scopeText.label    "any text">
-    <!ENTITY scopeKeyword.label "keyword">
-    <!ENTITY scopeAgeDays.label "age in days">
-    <!ENTITY critContains.label "contains">
-    <!ENTITY critNotContains.label "doesn't contain">
-    <!ENTITY buttonMore.label "More">
-    <!ENTITY buttonFewer.label "Fewer">
-    <!ENTITY buttonClear.label "Clear">
-    <!ENTITY buttonSearch.label "Search">
-    <!ENTITY buttonOptions.label "Options">
-    <!ENTITY buttonClose.label "Close">
-	<!ENTITY searchDialogTitle.label "Search Messages">
-]>
-<window id="msg-search-dialog" xmlns:html="http://www.w3.org/TR/REC-html40"
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="&searchDialogTitle.label;">
 
