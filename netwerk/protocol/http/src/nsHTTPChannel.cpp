@@ -1336,7 +1336,8 @@ nsHTTPChannel::Open(PRBool bIgnoreCache)
                 getter_Copies(authStr))))
             {
                 if (authStr && *authStr)
-                    rv = mRequest->SetHeader(nsHTTPAtoms::Authorization, authStr);
+                    rv = mRequest->SetHeader(nsHTTPAtoms::Authorization, 
+                            authStr);
             }
 
             if (mProxy && *mProxy)
@@ -1344,10 +1345,11 @@ nsHTTPChannel::Open(PRBool bIgnoreCache)
                 nsXPIDLCString proxyAuthStr;
                 if (NS_SUCCEEDED(pAuthEngine->GetProxyAuthString(mProxy, 
                                 mProxyPort,
-                            getter_Copies(proxyAuthStr))))
+                                getter_Copies(proxyAuthStr))))
                 {
                     if (proxyAuthStr && *proxyAuthStr)
-                        rv = mRequest->SetHeader(nsHTTPAtoms::Proxy_Authorization, 
+                        rv = mRequest->SetHeader(
+                                nsHTTPAtoms::Proxy_Authorization, 
                                 proxyAuthStr);
                 }
             }
@@ -1858,6 +1860,11 @@ nsHTTPChannel::FinishedResponseHeaders(void)
     // Notify the consumer that headers are available...
     OnHeadersAvailable();
     mFiredOnHeadersAvailable = PR_TRUE;
+
+    // if its a head request dont call processStatusCode but wrap up instead
+    nsCOMPtr<nsIAtom> method = mRequest->GetMethod();
+    if (method.get() == nsHTTPAtoms::Head)
+        return ResponseCompleted(mResponseDataListener, NS_OK, nsnull);
 
     //
     // Check the status code to see if any special processing is necessary.
