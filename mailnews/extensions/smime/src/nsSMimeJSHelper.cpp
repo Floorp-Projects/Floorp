@@ -98,10 +98,27 @@ NS_IMETHODIMP nsSMimeJSHelper::GetRecipientCertsInfo(
   
   {
     nsCString all_recipients;
-    all_recipients.Append(NS_LossyConvertUCS2toASCII(to).get());
-    all_recipients.Append(NS_LossyConvertUCS2toASCII(cc).get());
-    all_recipients.Append(NS_LossyConvertUCS2toASCII(bcc).get());
+
+    NS_LossyConvertUCS2toASCII ascii_to(to);
+    if (!ascii_to.IsEmpty()) {
+      all_recipients.Append(ascii_to.get());
+      all_recipients.Append(",");
+    }
+
+    NS_LossyConvertUCS2toASCII ascii_cc(cc);
+    if (!ascii_cc.IsEmpty()) {
+      all_recipients.Append(ascii_cc.get());
+      all_recipients.Append(",");
+    }
+
+    NS_LossyConvertUCS2toASCII ascii_bcc(bcc);
+    if (!ascii_bcc.IsEmpty()) {
+      all_recipients.Append(ascii_bcc.get());
+      all_recipients.Append(",");
+    }
+
     all_recipients.Append(ng);
+
     char *unique_mailboxes = nsnull;
 
     {
