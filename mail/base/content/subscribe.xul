@@ -114,6 +114,9 @@
                         predicate="http://home.netscape.com/NC-rdf#Subscribed"
                         object="?Subscribed"/>
                 <binding subject="?member"
+                        predicate="http://home.netscape.com/NC-rdf#Subscribable"
+                        object="?Subscribable"/>
+                <binding subject="?member"
                         predicate="http://home.netscape.com/NC-rdf#TotalMessages"
                         object="?TotalMessages"/>
               </bindings>
@@ -122,8 +125,8 @@
                 <treechildren>
                   <treeitem uri="?member">
                     <treerow>
-                      <treecell label="?LeafName" properties="ServerType-?ServerType"/>
-                      <treecell properties="Subscribed-?Subscribed"/>
+                      <treecell label="?LeafName" properties="ServerType-?ServerType Subscribable-?Subscribable"/>
+                      <treecell properties="Subscribed-?Subscribed Subscribable-?Subscribable"/>
                       <!-- commenting out until bug 38906 is fixed 
                       <treecell label="?TotalMessages"/> -->
                     </treerow>
