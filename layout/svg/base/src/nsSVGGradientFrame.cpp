@@ -58,6 +58,10 @@
 #include "nsStyleContext.h"
 #include "nsNetUtil.h"
 #include "nsINameSpaceManager.h"
+#include "nsISVGChildFrame.h"
+#include "nsIDOMSVGRect.h"
+#include "nsSVGMatrix.h"
+#include "nsISVGGeometrySource.h"
 
 nsresult NS_NewSVGGenericContainerFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame **aNewFrame);
 static nsresult GetSVGGradient(nsISVGGradient **result, nsCAutoString& aSpec, 
@@ -302,25 +306,60 @@ nsSVGGradientFrame::GetGradientUnits(PRUint16 *aUnits)
 }
 
 NS_IMETHODIMP
-nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform)
+nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform,
+                                         nsISVGGeometrySource *aSource)
 {
+  *aGradientTransform = nsnull;
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> aTrans;
   nsCOMPtr<nsIDOMSVGGradientElement> aGrad = do_QueryInterface(mContent);
   NS_ASSERTION(aGrad, "Wrong content element (not gradient)");
   if (aGrad == nsnull) {
     return NS_ERROR_FAILURE;
   }
+
+  nsCOMPtr<nsIDOMSVGMatrix> bboxTransform;
+  PRUint16 bbox;
+  GetGradientUnits(&bbox);
+  if (bbox == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX) {
+    nsISVGChildFrame *frame = nsnull;
+    if (aSource)
+      CallQueryInterface(aSource, &frame);
+    nsCOMPtr<nsIDOMSVGRect> rect;
+    if (frame) {
+      frame->SetMatrixPropagation(PR_FALSE);
+      frame->NotifyCanvasTMChanged();
+      frame->GetBBox(getter_AddRefs(rect));
+      frame->SetMatrixPropagation(PR_TRUE);
+      frame->NotifyCanvasTMChanged();
+    }
+    if (rect) {
+      float x, y, width, height;
+      rect->GetX(&x);
+      rect->GetY(&y);
+      rect->GetWidth(&width);
+      rect->GetHeight(&height);
+      NS_NewSVGMatrix(getter_AddRefs(bboxTransform),
+                      width, 0, 0, height, x, y);
+    }
+  }
+
+  if (!bboxTransform)
+    NS_NewSVGMatrix(getter_AddRefs(bboxTransform));
+
+  nsCOMPtr<nsIDOMSVGMatrix> gradientTransform;
   // See if we need to get the value from another gradient
   if (!checkURITarget(nsSVGAtoms::gradientTransform)) {
     // No, return the values
     aGrad->GetGradientTransform(getter_AddRefs(aTrans));
     nsCOMPtr<nsIDOMSVGTransformList> lTrans;
     aTrans->GetAnimVal(getter_AddRefs(lTrans));
-    lTrans->GetConsolidationMatrix(aGradientTransform);
+    lTrans->GetConsolidationMatrix(getter_AddRefs(gradientTransform));
   } else {
     // Yes, get it from the target
-    mNextGrad->GetGradientTransform(aGradientTransform);
+    mNextGrad->GetGradientTransform(getter_AddRefs(gradientTransform), nsnull);
   }
+
+  bboxTransform->Multiply(gradientTransform, aGradientTransform);
   return NS_OK;
 }
 

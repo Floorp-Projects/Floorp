@@ -321,7 +321,7 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
       nsCOMPtr<nsISVGGradient> aGrad;
       mSource->GetFillGradient(getter_AddRefs(aGrad));
 
-      cairo_pattern_t *gradient = CairoGradient(ctx, aGrad);
+      cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
       cairo_set_pattern(ctx, gradient);
       cairo_fill(ctx);
       cairo_pattern_destroy(gradient);
@@ -348,7 +348,7 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
       nsCOMPtr<nsISVGGradient> aGrad;
       mSource->GetStrokeGradient(getter_AddRefs(aGrad));
 
-      cairo_pattern_t *gradient = CairoGradient(ctx, aGrad);
+      cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
       cairo_set_pattern(ctx, gradient);
       cairo_stroke(ctx);
       cairo_pattern_destroy(gradient);

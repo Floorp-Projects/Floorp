@@ -60,6 +60,7 @@ using namespace Gdiplus;
 #include "nsSVGTypeCIDs.h"
 #include "nsIComponentManager.h"
 
+
 /**
  * \addtogroup gdiplus_renderer GDI+ Rendering Engine
  * @{
@@ -73,6 +74,8 @@ class nsSVGGDIPlusPathGeometry : public nsISVGRendererPathGeometry
 protected:
   friend nsresult NS_NewSVGGDIPlusPathGeometry(nsISVGRendererPathGeometry **result,
                                                nsISVGPathGeometrySource *src);
+  friend void gradCBFill(Graphics *gfx, Brush *brush, void *cbStruct);
+  friend void gradCBStroke(Graphics *gfx, Brush *brush, void *cbStruct);
 
   nsSVGGDIPlusPathGeometry();
   ~nsSVGGDIPlusPathGeometry();
@@ -84,7 +87,7 @@ public:
   
   // nsISVGRendererPathGeometry interface:
   NS_DECL_NSISVGRENDERERPATHGEOMETRY
-  
+
 protected:
   void ClearPath() { if (mPath) { delete mPath; mPath=nsnull; } }
   void ClearFill() { if (mFill) { delete mFill; mFill=nsnull; } }
@@ -369,10 +372,16 @@ nsSVGGDIPlusPathGeometry::RenderPath(GraphicsPath *path, nscolor color, float op
 //----------------------------------------------------------------------
 // nsISVGRendererPathGeometry methods:
 
-static void gradCBPath(Graphics *gfx, Brush *brush, void *cbStruct)
+static void gradCBFill(Graphics *gfx, Brush *brush, void *cbStruct)
 {
-  GraphicsPath *path = (GraphicsPath *)cbStruct;
-  gfx->FillPath(brush, path);
+  nsSVGGDIPlusPathGeometry *geom = (nsSVGGDIPlusPathGeometry *)cbStruct;
+  gfx->FillPath(brush, geom->GetFill());
+}
+
+static void gradCBStroke(Graphics *gfx, Brush *brush, void *cbStruct)
+{
+  nsSVGGDIPlusPathGeometry *geom = (nsSVGGDIPlusPathGeometry *)cbStruct;
+  gfx->FillPath(brush, geom->GetStroke());
 }
 
 /** Implements void render(in nsISVGRendererCanvas canvas); */
@@ -437,7 +446,7 @@ nsSVGGDIPlusPathGeometry::Render(nsISVGRendererCanvas *canvas)
       mSource->GetCanvasTM(getter_AddRefs(ctm));
 
       GDIPlusGradient(aRegion, aGrad, ctm, gdiplusCanvas->GetGraphics(),
-                      gradCBPath, GetFill());
+                      mSource, gradCBFill, this);
     }
   }
 
@@ -459,7 +468,7 @@ nsSVGGDIPlusPathGeometry::Render(nsISVGRendererCanvas *canvas)
       mSource->GetCanvasTM(getter_AddRefs(ctm));
 
       GDIPlusGradient(aRegion, aGrad, ctm, gdiplusCanvas->GetGraphics(),
-                      gradCBPath, GetStroke());
+                      mSource, gradCBStroke, this);
     }
   }
   

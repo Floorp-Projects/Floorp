@@ -39,9 +39,10 @@
 
 #include "nsISVGGradient.h"
 #include "nsISVGGDIPlusRegion.h"
+#include "nsISVGGeometrySource.h"
 
 void GDIPlusGradient(nsISVGGDIPlusRegion *aRegion, nsISVGGradient *aGrad,
-		     nsIDOMSVGMatrix *aCTM, Graphics *aGFX,
+                     nsIDOMSVGMatrix *aCTM, Graphics *aGFX, nsISVGGeometrySource *aSource,
 		     void(*aCallback)(Graphics *, Brush*, void *), void *aData);
 
 #endif

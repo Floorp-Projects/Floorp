@@ -120,50 +120,24 @@ CairoRadialGradient(cairo_t *ctx, nsISVGGradient *aGrad)
   aRgrad->GetFx(&fFx);
   aRgrad->GetFy(&fFy);
 
-  return cairo_pattern_create_radial(fCx, fCy, 0, fFx, fFy, fR);
+  return cairo_pattern_create_radial(fFx, fFy, 0, fCx, fCy, fR);
 }
 
 
 cairo_pattern_t *
-CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad, cairo_text_extents_t *extent)
+CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
+              nsISVGGeometrySource *aSource)
 {
   NS_ASSERTION(aGrad, "Called CairoGradient without a gradient!");
   if (!aGrad)
     return NULL;
 
-  // Get the gradientUnits
-  PRUint16 bbox;
-  aGrad->GetGradientUnits(&bbox);
-
-  cairo_matrix_t *patternMatrix = cairo_matrix_create();
-  if (bbox == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX) {
-    // BoundingBox
-    // We need to calculate this from the Region (Uta?) in
-    // the object we're filling
-    double x1, x2, y1, y2;
-
-    if (!extent) {
-      cairo_fill_extents(ctx, &x1, &y1, &x2, &y2);
-    } else {
-      x1 = extent->x_bearing;
-      y1 = extent->y_bearing;
-      x2 = extent->x_bearing + extent->width;
-      y2 = extent->y_bearing + extent->height;
-    }
-
-    cairo_matrix_set_affine(patternMatrix, x2 - x1, 0, 0, y2 - y1, x1, y1);
-  } else {
-    cairo_matrix_set_identity(patternMatrix);
-  }
-
   // Get the transform list (if there is one)
   nsCOMPtr<nsIDOMSVGMatrix> svgMatrix;
-  aGrad->GetGradientTransform(getter_AddRefs(svgMatrix));
+  aGrad->GetGradientTransform(getter_AddRefs(svgMatrix), aSource);
   NS_ASSERTION(svgMatrix, "CairoGradient: GetGradientTransform returns null");
 
-  cairo_matrix_t *aTransMatrix =  SVGToMatrix(svgMatrix);
-  cairo_matrix_multiply(patternMatrix, aTransMatrix, patternMatrix);
-  cairo_matrix_destroy(aTransMatrix);
+  cairo_matrix_t *patternMatrix =  SVGToMatrix(svgMatrix);
 
   cairo_pattern_t *gradient;
 
@@ -192,4 +166,3 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad, cairo_text_extents_t *extent)
 
   return gradient;
 }
-

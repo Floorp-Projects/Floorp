@@ -250,7 +250,8 @@ LibartRadialGradient(ArtRender *render, nsISVGGradient *aGrad, double *affine)
 
 void
 LibartGradient(ArtRender *render, nsIDOMSVGMatrix *aMatrix, 
-               nsISVGGradient *aGrad, nsISVGLibartRegion *aRegion)
+               nsISVGGradient *aGrad, nsISVGLibartRegion *aRegion,
+               nsISVGGeometrySource *aSource)
 {
   double affine[6];
   NS_ASSERTION(aGrad, "Called LibartGradient without a gradient!");
@@ -258,50 +259,21 @@ LibartGradient(ArtRender *render, nsIDOMSVGMatrix *aMatrix,
     return;
   }
 
-  // Get the gradientUnits
-  PRUint16 bbox;
-  aGrad->GetGradientUnits(&bbox);
-
-  if (bbox == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX) 
-  {
-    // BoundingBox
-    // We need to calculate this from the Region (Uta?) in
-    // the object we're filling
-    ArtIRect aBoundsRect;
-    GetBounds(aRegion, &aBoundsRect);
-#ifdef DEBUG_scooter
-    printf("In LibartGradient: bbox (%f, %f, %f, %f)\n", (float)aBoundsRect.x0, 
-           (float)aBoundsRect.x1, (float)aBoundsRect.y0, (float)aBoundsRect.y1);
-#endif
-    affine[0] = aBoundsRect.x1 - aBoundsRect.x0;
-    affine[1] = 0.;
-    affine[2] = 0.;
-    affine[3] = aBoundsRect.y1 - aBoundsRect.y0;
-    affine[4] = aBoundsRect.x0;
-    affine[5] = aBoundsRect.y0;
-  } else {
-    // userSpaceOnUse
-    // Get the current transformation matrix
-    SVGToMatrix(aMatrix, affine);
-  }
-
   // Get the transform list (if there is one)
   nsCOMPtr<nsIDOMSVGMatrix> svgMatrix;
-  aGrad->GetGradientTransform(getter_AddRefs(svgMatrix));
+  aGrad->GetGradientTransform(getter_AddRefs(svgMatrix), aSource);
   NS_ASSERTION(svgMatrix, "LibartLinearGradient: GetGradientTransform returns null");
 
   double aTransMatrix[6];
   SVGToMatrix(svgMatrix, aTransMatrix);
 
-  art_affine_multiply(affine, aTransMatrix, affine);
-
   // Linear or Radial?
   PRUint32 type;
   aGrad->GetGradientType(&type);
   if (type == nsISVGGradient::SVG_LINEAR_GRADIENT)
-    LibartLinearGradient(render, aGrad, affine);
+    LibartLinearGradient(render, aGrad, aTransMatrix);
   else if (type == nsISVGGradient::SVG_RADIAL_GRADIENT)
-    LibartRadialGradient(render, aGrad, affine);
+    LibartRadialGradient(render, aGrad, aTransMatrix);
 
   return;
 }
