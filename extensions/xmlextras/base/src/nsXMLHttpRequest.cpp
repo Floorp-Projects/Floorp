@@ -1264,7 +1264,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
                                    loadGroup, nsnull, 
                                    getter_AddRefs(listener),
-                                   PR_FALSE);
+                                   PR_TRUE);
 
 #ifdef IMPLEMENT_SYNC_LOAD
   if (NS_FAILED(rv)) {
