@@ -47,7 +47,7 @@ LIBS		= 		\
 
 # PROGS = $(OBJDIR)/TestXPC
 
-TEST_FILES = testxpc.js xpctest_echo.js
+TEST_FILES = $(srcdir)/testxpc.js $(srcdir)/xpctest_echo.js
 
 # TARGETS= $(PROGS)
 

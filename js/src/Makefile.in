@@ -204,6 +204,9 @@ endif
 ifeq ($(OS_ARCH), Linux)
 LDFLAGS		+= -ldl
 endif
+ifeq ($(OS_ARCH), FreeBSD)
+LDFLAGS		+= -pthread
+endif
 ifeq ($(OS_ARCH), OSF1)
 LDFLAGS		+= -lc_r
 endif
