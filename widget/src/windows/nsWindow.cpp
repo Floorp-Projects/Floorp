@@ -53,6 +53,9 @@
 #include "nsIMenuListener.h"
 #include "nsMenuItem.h"
 #include <imm.h>
+#ifdef MOZ_AIMM
+#include "aimm.h"
+#endif // MOZ_AIMM
 
 #include "nsNativeDragTarget.h"
 #include "nsIRollupListener.h"
@@ -107,6 +110,84 @@ extern HINSTANCE g_hinst;
 
 
 #define IS_IME_CODEPAGE(cp) ((932==(cp))||(936==(cp))||(949==(cp))||(950==(cp)))
+
+//
+// Macro for Active Input Method Manager (AIMM) support.
+// Use AIMM method instead of Win32 Imm APIs.
+//
+#ifdef MOZ_AIMM
+
+#define NS_IMM_GETCOMPOSITIONSTRING(hIMC, dwIndex, pBuf, dwBufLen, compStrLen) \
+{ \
+  compStrLen = 0; \
+  if (nsToolkit::gAIMMApp) \
+    nsToolkit::gAIMMApp->GetCompositionStringA(hIMC, dwIndex, dwBufLen, &(compStrLen), pBuf); \
+  else \
+    compStrLen = ::ImmGetCompositionStringA(hIMC, dwIndex, pBuf, dwBufLen); \
+}
+
+#define NS_IMM_GETCONTEXT(hWnd, hIMC) \
+  { \
+    hIMC = NULL; \
+    if (nsToolkit::gAIMMApp) \
+      nsToolkit::gAIMMApp->GetContext(hWnd, &(hIMC)); \
+    else \
+      hIMC = ::ImmGetContext(hWnd); \
+  }
+
+#define NS_IMM_GETCONVERSIONSTATUS(hIMC, pfdwConversion, pfdwSentence) \
+  (nsToolkit::gAIMMApp ? \
+    (nsToolkit::gAIMMApp->GetConversionStatus(hIMC, pfdwConversion, pfdwSentence) == S_OK) : \
+    (::ImmGetConversionStatus(hIMC, pfdwConversion, pfdwSentence)))
+
+#define NS_IMM_RELEASECONTEXT(hWnd, hIMC) \
+  { \
+    if (nsToolkit::gAIMMApp) \
+      nsToolkit::gAIMMApp->ReleaseContext(hWnd, hIMC); \
+    else \
+      ::ImmReleaseContext(hWnd, hIMC); \
+  }
+
+#define NS_IMM_NOTIFYIME(hIMC, dwAction, dwIndex, dwValue) \
+  (nsToolkit::gAIMMApp ? \
+    (nsToolkit::gAIMMApp->NotifyIME(hIMC, dwAction, dwIndex, dwValue) == S_OK) :	\
+    (::ImmNotifyIME(hIMC, dwAction, dwIndex, dwValue)))
+
+#define NS_IMM_SETCANDIDATEWINDOW(hIMC, candForm) \
+  (nsToolkit::gAIMMApp ? \
+    (nsToolkit::gAIMMApp->SetCandidateWindow(hIMC, candForm) == S_OK) : \
+    (::ImmSetCandidateWindow(hIMC, candForm)))
+
+#define NS_IMM_SETCONVERSIONSTATUS(hIMC, pfdwConversion, pfdwSentence) \
+  (nsToolkit::gAIMMApp ? \
+    (nsToolkit::gAIMMApp->SetConversionStatus(hIMC, (pfdwConversion), (pfdwSentence)) == S_OK) : \
+    (::ImmSetConversionStatus(hIMC, (pfdwConversion), (pfdwSentence))))
+
+#else /* !MOZ_AIMM */
+
+#define NS_IMM_GETCOMPOSITIONSTRING(hIMC, dwIndex, pBuf, dwBufLen, compStrLen) \
+  { compStrLen = ::ImmGetCompositionString(hIMC, dwIndex, pBuf, dwBufLen); }
+
+#define NS_IMM_GETCONTEXT(hWnd, hIMC) \
+  { hIMC = ::ImmGetContext(hWnd); }
+
+#define NS_IMM_GETCONVERSIONSTATUS(hIMC, lpfdwConversion, lpfdwSentence) \
+  (::ImmGetConversionStatus(hIMC, (lpfdwConversion), (lpfdwSentence)))
+
+#define NS_IMM_RELEASECONTEXT(hWnd, hIMC) \
+  { ::ImmReleaseContext(hWnd, hIMC); }
+
+#define NS_IMM_NOTIFYIME(hIMC, dwAction, dwIndex, dwValue) \
+  (::ImmNotifyIME(hIMC, dwAction, dwIndex, dwValue))
+
+#define NS_IMM_SETCANDIDATEWINDOW(hIMC, candForm) \
+  (::ImmSetCandidateWindow(hIMC, candForm))
+
+#define NS_IMM_SETCONVERSIONSTATUS(hIMC, lpfdwConversion, lpfdwSentence) \
+  (::ImmSetConversionStatus(hIMC, (lpfdwConversion), (lpfdwSentence)))
+
+#endif /* MOZ_AIMM */
+
 
 static PRBool LangIDToCP(WORD aLangID, UINT& oCP)
 {
@@ -619,6 +700,21 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 #endif
 }
 
+#ifdef MOZ_AIMM
+//
+// Default Window proceduer for AIMM support.
+//
+LRESULT CALLBACK nsWindow::DefaultWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  if(nsToolkit::gAIMMApp)
+  {
+    LRESULT lResult;
+    if (nsToolkit::gAIMMApp->OnDefWindowProc(hWnd, msg, wParam, lParam, &lResult) == S_OK)
+      return lResult;
+  }
+  return ::DefWindowProc(hWnd, msg, wParam, lParam);
+}
+#endif
 
 //WINOLEAPI oleStatus;
 //-------------------------------------------------------------------------
@@ -2983,7 +3079,11 @@ LPCTSTR nsWindow::WindowClass()
 
 //        wc.style            = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
         wc.style            = CS_DBLCLKS;
+#ifdef MOZ_AIMM
+        wc.lpfnWndProc      = nsWindow::DefaultWindowProc;
+#else
         wc.lpfnWndProc      = ::DefWindowProc;
+#endif
         wc.cbClsExtra       = 0;
         wc.cbWndExtra       = 0;
         wc.hInstance        = nsToolkit::mDllInstance;
@@ -2994,6 +3094,11 @@ LPCTSTR nsWindow::WindowClass()
         wc.lpszClassName    = className;
     
         nsWindow::sIsRegistered = ::RegisterClass(&wc);
+#ifdef MOZ_AIMM
+        // Call FilterClientWindows method since it enables ActiveIME on CJK Windows
+        if(nsToolkit::gAIMMApp)
+          nsToolkit::gAIMMApp->FilterClientWindows((ATOM*)&nsWindow::sIsRegistered,1);
+#endif // MOZ_AIMM
     }
 
     return className;
@@ -3737,7 +3842,7 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
 
   printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
 
-  ::ImmSetCandidateWindow(hIMEContext,&candForm);
+  NS_IMM_SETCANDIDATEWINDOW(hIMEContext,&candForm);
 
 }
 
@@ -3768,7 +3873,7 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 #ifdef DEBUG_IME2
 	printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
 #endif
-	::ImmSetCandidateWindow(hIMEContext,&candForm);
+	NS_IMM_SETCANDIDATEWINDOW(hIMEContext, &candForm);
 	NS_RELEASE(event.widget);
 
 	if(nsnull == mIMECompString)
@@ -3947,7 +4052,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 
 	BOOL result = PR_FALSE;					// will change this if an IME message we handle
 
-	hIMEContext = ::ImmGetContext(mWnd);
+	NS_IMM_GETCONTEXT(mWnd, hIMEContext);
 	if (hIMEContext==NULL) 
 		return PR_TRUE;
 
@@ -3961,15 +4066,13 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 		if(! mIMEIsComposing) 
 			HandleStartComposition(hIMEContext);
 
-		long compStrLen = ::ImmGetCompositionString(hIMEContext,
-			GCS_RESULTSTR,NULL,0);
+		long compStrLen;
+		NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_RESULTSTR, NULL, 0, compStrLen);
 
 		mIMECompString->SetCapacity(compStrLen+1);
-		
-		compStrLen = ::ImmGetCompositionString(hIMEContext,GCS_RESULTSTR,	
-			(char*)mIMECompString->GetBuffer(),
-			mIMECompString->mCapacity);
-  		((char*)mIMECompString->GetBuffer())[compStrLen] = '\0';
+
+		NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_RESULTSTR, (char*)mIMECompString->GetBuffer(), mIMECompString->mCapacity, compStrLen);
+  	((char*)mIMECompString->GetBuffer())[compStrLen] = '\0';
 		mIMECompString->mLength = compStrLen;
 
 #ifdef DEBUG_IME
@@ -3999,8 +4102,8 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 		//--------------------------------------------------------
 		// This provides us with the attribute string necessary 
 		// for doing hiliting
-		long attrStrLen = ::ImmGetCompositionString(hIMEContext,
-									GCS_COMPATTR,NULL,0);
+		long attrStrLen;
+		NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_COMPATTR, NULL, 0, attrStrLen);
 		if (attrStrLen>mIMEAttributeStringSize) {
 			if (mIMEAttributeString!=NULL) 
 				delete [] mIMEAttributeString;
@@ -4008,17 +4111,17 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 			mIMEAttributeStringSize = attrStrLen+32;
 		}
 
-		attrStrLen = ::ImmGetCompositionString(hIMEContext,
-				GCS_COMPATTR,
-				mIMEAttributeString,
-				mIMEAttributeStringSize);
+		NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_COMPATTR, mIMEAttributeString, mIMEAttributeStringSize, attrStrLen);
 		mIMEAttributeStringLength = attrStrLen;
 
 		//--------------------------------------------------------
 		// 2. Get GCS_COMPCLAUSE
 		//--------------------------------------------------------
-		long compClauseLen = ::ImmGetCompositionString(hIMEContext,
-				GCS_COMPCLAUSE,NULL,0) / sizeof(PRUint32);
+		long compClauseLen;
+		NS_IMM_GETCOMPOSITIONSTRING(hIMEContext,
+			GCS_COMPCLAUSE, NULL, 0, compClauseLen);
+		compClauseLen = compClauseLen / sizeof(PRUint32);
+
 		if (compClauseLen>mIMECompClauseStringSize) {
 			if (mIMECompClauseString!=NULL) 
 				delete [] mIMECompClauseString;
@@ -4026,11 +4129,13 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 			mIMECompClauseStringSize = compClauseLen+32;
 		}
 
-		long compClauseLen2 = ::ImmGetCompositionString(hIMEContext,
-				GCS_COMPCLAUSE,
-				mIMECompClauseString,
-				mIMECompClauseStringSize * sizeof(PRUint32)) 
-                                      / sizeof(PRUint32);
+		long compClauseLen2;
+		NS_IMM_GETCOMPOSITIONSTRING(hIMEContext,
+			GCS_COMPCLAUSE,
+			mIMECompClauseString,
+			mIMECompClauseStringSize * sizeof(PRUint32),
+			compClauseLen2);
+		compClauseLen2 = compClauseLen2 / sizeof(PRUint32);
                 NS_ASSERTION(compClauseLen2 == compClauseLen, "strange result");
                 if(compClauseLen > compClauseLen2)
                   compClauseLen = compClauseLen2;
@@ -4040,21 +4145,20 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 		//--------------------------------------------------------
 		// 3. Get GCS_CURSOPOS
 		//--------------------------------------------------------
-		mIMECursorPosition = ::ImmGetCompositionString(hIMEContext,
-				GCS_CURSORPOS,NULL,0);
+		NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_CURSORPOS, NULL, 0, mIMECursorPosition);
 
 		//--------------------------------------------------------
 		// 4. Get GCS_COMPSTR
 		//--------------------------------------------------------
-		long compStrLen = ::ImmGetCompositionString(hIMEContext,
-					GCS_COMPSTR,NULL,0);
+		long compStrLen;
+		NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_COMPSTR, NULL, 0, compStrLen);
 		mIMECompString->SetCapacity(compStrLen+1);
-		
-		compStrLen = ::ImmGetCompositionString(hIMEContext,
+
+		NS_IMM_GETCOMPOSITIONSTRING(hIMEContext,
 			GCS_COMPSTR,
 			(char*)mIMECompString->GetBuffer(),
-			mIMECompString->mCapacity);
-  		((char*)mIMECompString->GetBuffer())[compStrLen] = '\0';
+			mIMECompString->mCapacity, compStrLen);
+ 		((char*)mIMECompString->GetBuffer())[compStrLen] = '\0';
 		mIMECompString->mLength = compStrLen;
 
 #ifdef DEBUG_IME
@@ -4085,8 +4189,8 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
 		HandleTextEvent(hIMEContext,PR_FALSE);
 		result = PR_TRUE;
 	}
-	
-	::ImmReleaseContext(mWnd,hIMEContext);
+
+	NS_IMM_RELEASECONTEXT(mWnd, hIMEContext);
 	return result;
 }
 //==========================================================================
@@ -4113,7 +4217,7 @@ BOOL nsWindow::OnIMEEndComposition()
 			  (mIMEProperty & IME_PROP_AT_CARET)) 
 			return PR_FALSE;
 
-		hIMEContext = ::ImmGetContext(mWnd);
+		NS_IMM_GETCONTEXT(mWnd, hIMEContext);
 		if (hIMEContext==NULL) 
 			return PR_TRUE;
 
@@ -4126,7 +4230,7 @@ BOOL nsWindow::OnIMEEndComposition()
 		HandleTextEvent(hIMEContext, PR_FALSE);
 
 		HandleEndComposition();
-		::ImmReleaseContext(mWnd,hIMEContext);
+		NS_IMM_RELEASECONTEXT(mWnd, hIMEContext);
 	}
 	return PR_TRUE;
 }
@@ -4174,6 +4278,9 @@ BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)
 		break;
 		case IMN_SETSTATUSWINDOWPOS:
 			printf("IMN_SETSTATUSWINDOWPOS\n");
+		break;
+		case IMN_PRIVATE:
+			printf("IMN_PRIVATE\n");
 		break;
 	};
 #endif
@@ -4236,12 +4343,12 @@ BOOL nsWindow::OnIMEStartComposition()
       (mIMEProperty & IME_PROP_AT_CARET)) 
 		return PR_FALSE;
 
-	hIMEContext = ::ImmGetContext(mWnd);
+	NS_IMM_GETCONTEXT(mWnd, hIMEContext);
 	if (hIMEContext==NULL) 
 		return PR_TRUE;
 
 	HandleStartComposition(hIMEContext);
-	::ImmReleaseContext(mWnd,hIMEContext);
+	NS_IMM_RELEASECONTEXT(mWnd, hIMEContext);
 	return PR_TRUE;
 }
 
@@ -4252,11 +4359,12 @@ NS_IMETHODIMP nsWindow::ResetInputState()
 	printf("ResetInputState\n");
 #endif 
 	//if(mIMEIsComposing) {
-		HIMC hIMC = ::ImmGetContext(mWnd);
+		HIMC hIMC;
+		NS_IMM_GETCONTEXT(mWnd, hIMC);
 		if(hIMC) {
-			BOOL ret = ::ImmNotifyIME(hIMC,NI_COMPOSITIONSTR,CPS_COMPLETE,NULL);
+			BOOL ret = NS_IMM_NOTIFYIME(hIMC, NI_COMPOSITIONSTR, CPS_COMPLETE, NULL);
 			//NS_ASSERTION(ret, "ImmNotify failed");
-			::ImmReleaseContext(mWnd,hIMC);
+			NS_IMM_RELEASECONTEXT(mWnd, hIMC);
 		}
 	//}
 	return NS_OK;
@@ -4275,18 +4383,19 @@ NS_IMETHODIMP nsWindow::PasswordFieldEnter(PRUint32& oState)
 #endif 
 	if(IS_IME_CODEPAGE(gCurrentKeyboardCP))
 	{
-		HIMC hIMC = ::ImmGetContext(mWnd);
+		HIMC hIMC;
+		NS_IMM_GETCONTEXT(mWnd, hIMC);
 		if(hIMC) {
 			DWORD st1,st2;
      
-			BOOL ret = ::ImmGetConversionStatus(hIMC, &st1, &st2);
+			BOOL ret = NS_IMM_GETCONVERSIONSTATUS(hIMC, &st1, &st2);
 			NS_ASSERTION(ret, "ImmGetConversionStatus failed");
 			if(ret) {
 				oState = st1;
-				ret = ::ImmSetConversionStatus(hIMC, IME_CMODE_NOCONVERSION, st2);
+				ret = NS_IMM_SETCONVERSIONSTATUS(hIMC, IME_CMODE_NOCONVERSION, st2);
 				NS_ASSERTION(ret, "ImmSetConversionStatus failed");
 			}
-			::ImmReleaseContext(mWnd,hIMC);
+			NS_IMM_RELEASECONTEXT(mWnd, hIMC);
 		}
 	}
 	return NS_OK;
@@ -4299,17 +4408,18 @@ NS_IMETHODIMP nsWindow::PasswordFieldExit(PRUint32 aState)
 #endif 
 	if(IS_IME_CODEPAGE(gCurrentKeyboardCP))
 	{
-		HIMC hIMC = ::ImmGetContext(mWnd);
+		HIMC hIMC;
+		NS_IMM_GETCONTEXT(mWnd, hIMC);
 		if(hIMC) {
 			DWORD st1,st2;
 	     
-			BOOL ret = ::ImmGetConversionStatus(hIMC, &st1, &st2);
+			BOOL ret = NS_IMM_GETCONVERSIONSTATUS(hIMC, &st1, &st2);
 			NS_ASSERTION(ret, "ImmGetConversionStatus failed");
 			if(ret) {
-				ret = ::ImmSetConversionStatus(hIMC, (DWORD)aState, st2);
+				ret = NS_IMM_SETCONVERSIONSTATUS(hIMC, (DWORD)aState, st2);
 				NS_ASSERTION(ret, "ImmSetConversionStatus failed");
 			}
-			::ImmReleaseContext(mWnd,hIMC);
+			NS_IMM_RELEASECONTEXT(mWnd, hIMC);
 		}
 	}
 	return NS_OK;

@@ -220,7 +220,10 @@ protected:
                                         UINT msg,
                                         WPARAM wParam,
                                         LPARAM lParam);
-    
+#ifdef MOZ_AIMM
+    static LRESULT CALLBACK DefaultWindowProc(HWND hWns, UINT msg, WPARAM wParam, LPARAM lParam);
+#endif
+
     static PRBool ConvertStatus(nsEventStatus aStatus);
     DWORD  GetWindowType(nsWindowType aWindowType);
     DWORD  GetBorderStyle(nsBorderStyle aBorderStyle);

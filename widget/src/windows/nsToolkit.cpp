@@ -25,6 +25,10 @@
 #include "prmon.h"
 #include "prtime.h"
 #include "nsGUIEvent.h"
+#ifdef MOZ_AIMM
+#include <initguid.h>
+#include "aimm.h"
+#endif
 
 NS_IMPL_ISUPPORTS(nsToolkit, NS_ITOOLKIT_IID)
 
@@ -35,6 +39,12 @@ NS_IMPL_ISUPPORTS(nsToolkit, NS_ITOOLKIT_IID)
 static PRUintn gToolkitTLSIndex = 0;
 
 HINSTANCE nsToolkit::mDllInstance = 0;
+
+#ifdef MOZ_AIMM
+//IUnknown                   *nsToolkit::gAIMM             = NULL;
+IActiveIMMApp              *nsToolkit::gAIMMApp          = NULL;
+//IActiveIMMMessagePumpOwner *nsToolkit::gAIMMMsgPumpOwner = NULL;
+#endif
 
 nsWindow     *MouseTrailer::mCaptureWindow  = NULL;
 nsWindow     *MouseTrailer::mHoldMouse      = NULL;
@@ -71,6 +81,13 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
 
             VERIFY(::RegisterClass(&wc));
 
+#ifdef MOZ_AIMM
+            //
+            // Initialize COM since create Active Input Method Manager object
+            //
+
+            CoInitialize(NULL);
+#endif
             break;
 
         case DLL_THREAD_ATTACH:
@@ -80,6 +97,12 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
             break;
     
         case DLL_PROCESS_DETACH:
+#ifdef MOZ_AIMM
+            if(nsToolkit::gAIMMApp)
+                nsToolkit::gAIMMApp->Release();
+
+            nsToolkit::gAIMMApp = NULL;
+#endif
             //VERIFY(::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance));
             ::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance);
             break;
@@ -105,6 +128,12 @@ void RunPump(void* arg)
     ThreadInitInfo *info = (ThreadInitInfo*)arg;
     ::PR_EnterMonitor(info->monitor);
 
+#ifdef MOZ_AIMM
+    // Start Active Input Method Manager on this thread
+    if(nsToolkit::gAIMMApp)
+        nsToolkit::gAIMMApp->Activate(TRUE);
+#endif
+
     // do registration and creation in this thread
     info->toolkit->CreateInternalWindow(PR_GetCurrentThread());
 
@@ -118,6 +147,9 @@ void RunPump(void* arg)
     // Process messages
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
+//#ifdef MOZ_AIMM // not need?
+//      if (!nsToolkit::gAIMMMsgPumpOwner || (nsToolkit::gAIMMMsgPumpOwner->OnTranslateMessage(&msg) != S_OK))
+//#endif
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -133,6 +165,11 @@ nsToolkit::nsToolkit()
     NS_INIT_REFCNT();
     mGuiThread  = NULL;
     mDispatchWnd = 0;
+
+#ifdef MOZ_AIMM
+    if(!nsToolkit::gAIMMApp)
+      ::CoCreateInstance(CLSID_CActiveIMM, NULL, CLSCTX_INPROC_SERVER, IID_IActiveIMMApp, (void**) &nsToolkit::gAIMMApp);
+#endif
 }
 
 
@@ -225,6 +262,17 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
     // Store the thread ID of the thread containing the message pump.  
     // If no thread is provided create one
     if (NULL != aThread) {
+
+#ifdef MOZ_AIMM
+        // Start Active Input Method Manager on this thread
+        if(nsToolkit::gAIMMApp)
+            nsToolkit::gAIMMApp->Activate(TRUE);
+
+        // Start message pump, but not need?
+//      if(nsToolkit::gAIMMMsgPumpOwner)
+//          nsToolkit::gAIMMMsgPumpOwner->Start();
+#endif
+
         CreateInternalWindow(aThread);
     } else {
         // create a thread where the message pump will run
@@ -250,6 +298,13 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
         }
     }
 
+#ifdef MOZ_AIMM
+    if(nsToolkit::gAIMMApp) {
+        LRESULT lResult;
+        if (nsToolkit::gAIMMApp->OnDefWindowProc(hWnd, msg, wParam, lParam, &lResult) == S_OK)
+            return lResult;
+    }
+#endif
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
 

@@ -26,6 +26,12 @@
 #include "nsdefs.h"
 #include "nsIToolkit.h"
 
+#ifdef MOZ_AIMM
+struct IUnknown;
+struct IActiveIMMApp;
+struct IActiveIMMMessagePumpOwner;
+#endif
+
 struct MethodInfo;
 
 /**
@@ -69,6 +75,13 @@ protected:
 
 public:
     static HINSTANCE mDllInstance;
+
+#ifdef MOZ_AIMM
+    // Active Input Method support
+    static IUnknown                   *gAIMM;
+    static IActiveIMMApp              *gAIMMApp;
+    static IActiveIMMMessagePumpOwner *gAIMMMsgPumpOwner;
+#endif
 };
 
 #define WM_CALLMETHOD   (WM_USER+1)
