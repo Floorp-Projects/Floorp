@@ -639,8 +639,6 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32* aErrorCode)
 
   // Translate the selector list and declaration block into style data
 
-  // XXX PSL working here 
-
   SelectorList* list = slist;
   nsCSSSelector selector;
   nsICSSStyleRule* rule;
@@ -669,8 +667,6 @@ PRBool CSSParserImpl::ParseRuleSet(PRInt32* aErrorCode)
 
     list = list->mNext;
   }
-
-  // XXX PSL working here
 
   // Release temporary storage
   slist->Destroy();
@@ -833,8 +829,12 @@ nsICSSDeclaration* CSSParserImpl::ParseDeclarationBlock(PRInt32* aErrorCode)
   }
   nsICSSDeclaration* declaration = nsnull;
   if (NS_OK == NS_NewCSSDeclaration(&declaration)) {
+    PRInt32 count = 0;
     for (;;) {
-      if (!ParseDeclaration(aErrorCode, declaration)) {
+      if (ParseDeclaration(aErrorCode, declaration)) {
+        count++;  // count declarations
+      }
+      else {
         SkipDeclaration(aErrorCode);
         if (ExpectSymbol(aErrorCode, '}', PR_TRUE)) {
           break;
@@ -842,6 +842,9 @@ nsICSSDeclaration* CSSParserImpl::ParseDeclarationBlock(PRInt32* aErrorCode)
         // Since the skipped declaration didn't end the block we parse
         // the next declaration.
       }
+    }
+    if (0 == count) { // didn't get any XXX is this ok with the DOM?
+      NS_RELEASE(declaration);
     }
   }
   return declaration;
@@ -999,6 +1002,7 @@ PRBool CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode, nsICSSDeclaration* a
 #define VARIANT_HL   (VARIANT_INHERIT | VARIANT_LENGTH)
 #define VARIANT_HLP  (VARIANT_HL | VARIANT_PERCENT)
 #define VARIANT_HLPN (VARIANT_HLP | VARIANT_NUMBER)
+#define VARIANT_HMK  (VARIANT_INHERIT | VARIANT_NORMAL | VARIANT_KEYWORD)
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
 #define VARIANT_LP   (VARIANT_LENGTH | VARIANT_PERCENT)
 #define VARIANT_CK   (VARIANT_COLOR | VARIANT_KEYWORD)
@@ -1146,9 +1150,9 @@ static PRInt32 kOverflowKTable[] = {
 };
 
 static PRInt32 kPositionKTable[] = {
-  KEYWORD_STATIC, NS_STYLE_POSITION_STATIC,
   KEYWORD_RELATIVE, NS_STYLE_POSITION_RELATIVE,
   KEYWORD_ABSOLUTE, NS_STYLE_POSITION_ABSOLUTE,
+  KEYWORD_FIXED, NS_STYLE_POSITION_FIXED,
   -1
 };
 
@@ -1594,7 +1598,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32* aErrorCode,
   case PROP_OVERFLOW:
     return ParseEnum(aErrorCode, aDeclaration, aName, kOverflowKTable);
   case PROP_POSITION:
-    return ParseEnum(aErrorCode, aDeclaration, aName, kPositionKTable);
+    return ParseVariant(aErrorCode, aDeclaration, aName, VARIANT_HMK, kPositionKTable);
   case PROP_TEXT_ALIGN:
     return ParseEnum(aErrorCode, aDeclaration, aName, kTextAlignKTable);
   case PROP_TEXT_DECORATION:
