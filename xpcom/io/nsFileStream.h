@@ -646,9 +646,9 @@ public:
                                           nsISupports* stream;
                                           if (NS_FAILED(NS_NewOutputConsoleStream(&stream)))
                                               return;
-                                          mFile = nsQueryInterface(stream);
-                                          mOutputStream = nsQueryInterface(stream);
-                                          mFileOutputStream = nsQueryInterface(stream);
+                                          mFile = do_QueryInterface(stream);
+                                          mOutputStream = do_QueryInterface(stream);
+                                          mFileOutputStream = do_QueryInterface(stream);
                                           NS_RELEASE(stream);
                                       }
 
@@ -704,12 +704,12 @@ public:
                                               &stream,
                                               inFile, nsprMode, accessMode)))
                                               return;
-                                          mFile = nsQueryInterface(stream);
-                                          mStore = nsQueryInterface(stream);
-                                          mInputStream = nsQueryInterface(stream);
-                                          mOutputStream = nsQueryInterface(stream);
-                                          mFileInputStream = nsQueryInterface(stream);
-                                          mFileOutputStream = nsQueryInterface(stream);
+                                          mFile = do_QueryInterface(stream);
+                                          mStore = do_QueryInterface(stream);
+                                          mInputStream = do_QueryInterface(stream);
+                                          mOutputStream = do_QueryInterface(stream);
+                                          mFileInputStream = do_QueryInterface(stream);
+                                          mFileOutputStream = do_QueryInterface(stream);
                                           NS_RELEASE(stream);
                                       }
  
