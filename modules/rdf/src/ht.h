@@ -36,6 +36,7 @@
 
 #ifdef	XP_MAC
 #include "stdlib.h"
+#include <Aliases.h>
 #endif
 
 #include "rdf.h"
@@ -56,7 +57,7 @@
 #define FROM_PAGE			1
 #define GUESS_FROM_PREVIOUS_PAGE	2
 
-#define HTDEL remoteStoreRemove
+#define HTDEL				remoteStoreRemove
 
 
 	/* external string references in allxpstr */

@@ -8767,13 +8767,21 @@ dropOnSmartURL(HT_Resource dropTarget, char *objURL, PRBool justAction)
 HT_DropAction
 dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction)
 {
-	HT_Resource		elders;
-#ifdef XP_WIN32
-	HT_Resource		parent;
-#endif
+	HT_Resource		elders, parent;
 	RDF_BT			targetType;
 	RDF_BT			objType;
 
+#ifdef	XP_MAC
+	AEEventID		actionType;
+	AEAddressDesc		finderAddr = { typeNull, NULL };
+	AEDescList		selection = { typeNull, NULL };
+	AliasHandle		srcAliasH = NULL, destAliasH = NULL;
+	AppleEvent		theEvent = { typeNull, NULL }, theReply = { typeNull, NULL };
+	FSSpec			srcFSS, destFSS;
+	OSErr			err;
+	ProcessSerialNumber	finderPSN = { 0, kNoProcess };
+	char			*errorMsg;
+#endif
 
 	if (dropTarget == NULL)		return(DROP_NOT_ALLOWED);
 	if (dropObject == NULL)		return(DROP_NOT_ALLOWED);
@@ -8808,10 +8816,10 @@ dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction)
 
 #ifdef SMART_MAIL
                 case PMF_RT:
-                 if (objType != PM_RT) return(DROP_NOT_ALLOWED);
-                 if (justAction) return (COPY_MOVE_CONTENT);
-                 MoveMessage(resourceID(dropTarget->node), resourceID(dropObject->parent->node), 
-                             dropObject->node->pdata);
+		if (objType != PM_RT) return(DROP_NOT_ALLOWED);
+		if (justAction) return (COPY_MOVE_CONTENT);
+		MoveMessage(resourceID(dropTarget->node), resourceID(dropObject->parent->node), 
+			dropObject->node->pdata);
                  break; 
 #endif
 		case LFS_RT:
@@ -8830,6 +8838,77 @@ dropOn (HT_Resource dropTarget, HT_Resource dropObject, PRBool justAction)
 				refreshItemList (dropTarget, HT_EVENT_VIEW_REFRESH);
 				destroyViewInt(parent, PR_FALSE);
 				refreshItemList (parent, HT_EVENT_VIEW_REFRESH);
+				return COPY_MOVE_CONTENT;
+			} 
+		}
+		else
+		return DROP_NOT_ALLOWED;
+#elif XP_MAC
+		if (objType == LFS_RT)
+		{
+			if (justAction)
+			{
+				return COPY_MOVE_CONTENT;
+			}
+			else
+			{
+				parent = dropObject->parent;
+
+				if ((err = nativeMacPathname(resourceID(dropObject->node), &srcFSS)) != noErr)	{}
+				else if ((err = nativeMacPathname(resourceID(dropTarget->node), &destFSS)) != noErr)	{}
+				else if ((err = NewAliasMinimal(&srcFSS, &srcAliasH)) != noErr)	{}
+				else if ((err = NewAliasMinimal(&destFSS, &destAliasH)) != noErr)	{}
+				else
+				{
+					if (srcAliasH != NULL)	HLock((Handle)srcAliasH);
+					if (destAliasH != NULL)	HLock((Handle)srcAliasH);
+					actionType = (srcFSS.vRefNum == destFSS.vRefNum) ? kAEMove : kAEDrag;
+				}
+
+				if (err)	{}
+				else if ((err = getPSNbyTypeSig(&finderPSN, 'FNDR', 'MACS')) != noErr)	{}
+				else if ((err = AECreateDesc(typeProcessSerialNumber, &finderPSN,
+					sizeof(ProcessSerialNumber), &finderAddr)) != noErr)	{}
+				else if ((err = AECreateAppleEvent(kAEFinderEvents /* kAEFinderSuite */,
+					actionType, &finderAddr, kAutoGenerateReturnID,
+					kAnyTransactionID, &theEvent)) != noErr)	{}
+				else if ((err = AECreateList (NULL, 0, false, &selection)) != noErr)	{}
+				else if ((err = AEPutPtr (&selection, 0, typeAlias, *srcAliasH, GetHandleSize((Handle)srcAliasH))) != noErr)	{}
+				else if ((err = AEPutParamDesc (&theEvent, keySelection, &selection)) != noErr)	{}
+				else if ((err = AEPutParamPtr (&theEvent, keyDirectObject, typeAlias, *destAliasH, GetHandleSize((Handle)destAliasH))) != noErr)	{}
+				else err = AESend (&theEvent, &theReply,
+					(kAENoReply | kAEAlwaysInteract | kAECanInteract | kAECanSwitchLayer),
+					kAENormalPriority, kAEDefaultTimeout, NULL, NULL);
+
+				if (err == noErr)
+				{
+					/* SetFrontProcess(&finderPSN); */
+				}
+				else
+				{
+					if ((errorMsg = PR_smprintf("Error %d", (int)err)) != NULL)
+					{
+						FE_Alert(NULL, errorMsg);
+						XP_FREE(errorMsg);
+					}
+				}
+
+				if (srcAliasH != NULL)			DisposeHandle((Handle)srcAliasH);
+				if (destAliasH != NULL)			DisposeHandle((Handle)destAliasH);
+				if (finderAddr.dataHandle != NULL)	AEDisposeDesc(&finderAddr);
+				if (selection.dataHandle != NULL)	AEDisposeDesc (&selection);
+				if (theEvent.dataHandle != NULL)	AEDisposeDesc(&theEvent);
+				if (theReply.dataHandle != NULL)	AEDisposeDesc(&theReply);
+
+				/* magic */
+
+				destroyViewInt(dropTarget, PR_FALSE);
+				refreshItemList (dropTarget, HT_EVENT_VIEW_REFRESH);
+				if (dropTarget->view != parent->view)
+				{
+					destroyViewInt(parent, PR_FALSE);
+					refreshItemList (parent, HT_EVENT_VIEW_REFRESH);
+				}
 				return COPY_MOVE_CONTENT;
 			} 
 		}
