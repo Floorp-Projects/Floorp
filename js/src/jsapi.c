@@ -1665,10 +1665,13 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg)
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
+    /* Don't nuke active arenas if executing or compiling. */
     if (cx->stackPool.current == &cx->stackPool.first)
         JS_FinishArenaPool(&cx->stackPool);
-    JS_FinishArenaPool(&cx->codePool);
-    JS_FinishArenaPool(&cx->tempPool);
+    if (cx->codePool.current == &cx->codePool.first)
+        JS_FinishArenaPool(&cx->codePool);
+    if (cx->tempPool.current == &cx->tempPool.first)
+        JS_FinishArenaPool(&cx->tempPool);
     js_ForceGC(cx, 0);
 }
 
@@ -2951,15 +2954,12 @@ CompileTokenStream(JSContext *cx, JSObject *obj, JSTokenStream *ts,
     if (!js_InitCodeGenerator(cx, &cg, ts->filename, ts->lineno,
                               ts->principals)) {
         script = NULL;
-        goto out;
-    }
-    if (!js_CompileTokenStream(cx, obj, ts, &cg)) {
+    } else if (!js_CompileTokenStream(cx, obj, ts, &cg)) {
         script = NULL;
         eof = (ts->flags & TSF_EOF) != 0;
-        goto out;
+    } else {
+        script = js_NewScriptFromCG(cx, &cg, NULL);
     }
-    script = js_NewScriptFromCG(cx, &cg, NULL);
-out:
     if (eofp)
         *eofp = eof;
     if (!js_CloseTokenStream(cx, ts)) {
