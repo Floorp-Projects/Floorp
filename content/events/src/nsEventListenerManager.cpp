@@ -1113,11 +1113,57 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
     }
   }
 
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentTarget));
+  nsCOMPtr<nsIDocument> document;
+
+  if (content) {
+    content->GetDocument(*getter_AddRefs(document));
+  }
+
+  if (!document) {
+    document = do_QueryInterface(aCurrentTarget);
+  }
+
+  if (document) {
+    document->GetScriptGlobalObject(getter_AddRefs(sgo));
+  }
+
+  if (!sgo) {
+    sgo = do_QueryInterface(aCurrentTarget);
+  }
+
+  JSContext *cx = nsnull;
+
+  if (sgo) {
+    nsCOMPtr<nsIScriptContext> scx;
+
+    sgo->GetContext(getter_AddRefs(scx));
+
+    if (scx) {
+      cx = (JSContext *)scx->GetNativeContext();
+    }
+  }
+
+  nsCOMPtr<nsIJSContextStack> stack;
+
+  if (cx) {
+    stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+
+    if (stack) {
+      stack->Push(cx);
+    }
+  }
+
   if (NS_SUCCEEDED(result)) {
     nsCOMPtr<nsIPrivateDOMEvent> aPrivDOMEvent(do_QueryInterface(aDOMEvent));
     aPrivDOMEvent->SetCurrentTarget(aCurrentTarget);
     result = aListenerStruct->mListener->HandleEvent(aDOMEvent);
     aPrivDOMEvent->SetCurrentTarget(nsnull);
+  }
+
+  if (cx && stack) {
+    stack->Pop(&cx);
   }
 
   return result;
