@@ -486,6 +486,18 @@ main()
     }
 
     {
+      const char *foo = "this is a really long string";
+      nsCString origString;
+      nsCString string2;
+      nsCString string3;
+
+      origString = foo;
+
+      string2 = Substring(origString, 0, 5);
+      string3 = Substring(origString, 6, origString.Length() - 6);
+    }
+
+    {
       nsLiteralCString s13("He");
       nsCAutoString    s14("l");
       nsLiteralCString s15("lo");
