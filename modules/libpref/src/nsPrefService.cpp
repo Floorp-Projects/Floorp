@@ -350,7 +350,7 @@ nsresult nsPrefService::useUserPrefFile()
   if (NS_SUCCEEDED(rv) && aFile) {
     rv = aFile->Append(userFiles[0]);
     if (NS_SUCCEEDED(rv)) {
-      rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE, PR_TRUE);
+      rv = openPrefFile(aFile, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
     }
   }
   return rv;
