@@ -583,7 +583,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
           offsetused = beginoffset;
           frameused = anchor;
         }
-        if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirPrevious, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+        if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirPrevious, offsetused, &resultFrame, &frameOffset, &contentOffset, PR_FALSE)) && resultFrame){
           result = TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
         break;
@@ -602,7 +602,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
           offsetused = endoffset;
           frameused = frame;
         }
-        if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset)) && resultFrame){
+        if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset, PR_FALSE)) && resultFrame){
           result = TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
       case nsIDOMEvent::VK_UP : 

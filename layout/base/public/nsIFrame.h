@@ -590,9 +590,10 @@ public:
    *  @param aResultFrame frame that actually is the next/previous
    *  @param aFrameOffset offset from frame of the frame results
    *  @param aContentOffset offset from content of the frame results
+   *  @param aEatingWS boolean to tell us the state of our search for Next/Prev
    */
   NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
-                         nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset) = 0;
+                         nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset, PRBool aEatingWS) = 0;
 
   /**
    * See if tree verification is enabled. To enable tree verification add
