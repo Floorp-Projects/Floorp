@@ -420,6 +420,7 @@ nsLDAPConnection::RemovePendingOperation(nsILDAPOperation *aOperation)
     nsresult rv;
     PRInt32 msgID;
 
+    NS_ENSURE_TRUE(mPendingOperations, NS_OK);
     NS_ENSURE_ARG_POINTER(aOperation);
 
     // find the message id
@@ -520,8 +521,9 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
 
     // invoke the callback 
     //
-    listener->OnLDAPMessage(aMsg);
-
+    if (listener) {
+      listener->OnLDAPMessage(aMsg);
+    }
     // if requested (ie the operation is done), remove the operation
     // from the connection queue.
     //
@@ -922,7 +924,7 @@ nsLDAPConnection::OnLookupComplete(nsIDNSRequest *aRequest,
         if ( !mConnectionHandle ) {
             rv = NS_ERROR_FAILURE;  // LDAP C SDK API gives no useful error
         } else {
-#ifdef DEBUG_dmose
+#if defined(DEBUG_dmose) || defined(DEBUG_bienvenu)
             const int lDebug = 0;
             ldap_set_option(mConnectionHandle, LDAP_OPT_DEBUG_LEVEL, &lDebug);
 #endif

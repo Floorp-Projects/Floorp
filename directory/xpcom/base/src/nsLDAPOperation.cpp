@@ -405,17 +405,24 @@ nsLDAPOperation::AbandonExt(LDAPControl **serverctrls,
     // succeeded (and there's nothing else the caller can reasonably do), 
     // so we only pay attention to this in debug builds.
     //
-    rv = NS_STATIC_CAST(nsLDAPConnection *, NS_STATIC_CAST(
-        nsILDAPConnection *, mConnection.get()))->RemovePendingOperation(this);
+    // check mConnection in case we're getting bit by 
+    // http://bugzilla.mozilla.org/show_bug.cgi?id=239729, wherein we 
+    // theorize that ::Clearing the operation is nulling out the mConnection
+    // from another thread.
+    if (mConnection)
+    {
+      rv = NS_STATIC_CAST(nsLDAPConnection *, NS_STATIC_CAST(
+          nsILDAPConnection *, mConnection.get()))->RemovePendingOperation(this);
 
-    if (NS_FAILED(rv)) {
-        // XXXdmose should we use keep Abandon from happening on multiple 
-        // threads at the same time?  that's when this condition is most 
-        // likely to occur.  i _think_ the LDAP C SDK is ok with this; need 
-        // to verify.
-        //
-        NS_WARNING("nsLDAPOperation::AbandonExt: "
-                   "mConnection->RemovePendingOperation(this) failed.");
+      if (NS_FAILED(rv)) {
+          // XXXdmose should we use keep Abandon from happening on multiple 
+          // threads at the same time?  that's when this condition is most 
+          // likely to occur.  i _think_ the LDAP C SDK is ok with this; need 
+          // to verify.
+          //
+          NS_WARNING("nsLDAPOperation::AbandonExt: "
+                     "mConnection->RemovePendingOperation(this) failed.");
+      }
     }
 
     return retStatus;
