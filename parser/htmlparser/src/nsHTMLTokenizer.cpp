@@ -843,7 +843,10 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,
                                                      endTagName,
                                                      mFlags,
                                                      done);
-            aFlushTokens = done;
+
+            // Only flush tokens for <script>, to give oursevles more of a
+            // chance of allowing inlines to contain blocks.
+            aFlushTokens = done && theTag == eHTMLTag_script;
           }
           else if (isPCDATA) {
             // Title is consumed conservatively in order to not regress
