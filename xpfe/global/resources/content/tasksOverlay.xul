@@ -38,8 +38,6 @@
               <menu value="&walletPasswordManager.label;">
                 <menupopup>
                   <menuitem value="&walletDisplaySignonsCmd.label;" oncommand="WalletDialog('signon');"/> 
-                  <menuitem value="&walletChangePasswordCmd.label;" oncommand="WalletAction('password');"/>
-                  <menuitem value="&walletExpirePasswordCmd.label;" oncommand="WalletAction('expire');"/>
                 </menupopup>
               </menu>
               <menu value="&walletCookieManager.label;">

@@ -100,12 +100,4 @@
               oncommand="viewSignons();"/>
     </box>
   </titledbox>
-
-  <separator/>
-  
-  <box autostretch="never" halign="right">
-    <button class="dialog" value="&changePasswords.label;" accesskey="&changePasswords.accesskey;"
-            oncommand="changePasswords();"/>
-  </box>
-  
 </window>
