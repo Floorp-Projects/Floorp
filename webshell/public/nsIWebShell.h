@@ -64,6 +64,9 @@ public:
   // Link traversing control
 };
 
+// Return value from WillLoadURL
+#define NS_WEB_SHELL_CANCEL_URL_LOAD      0xC0E70000
+
 //----------------------------------------------------------------------
 
 /**
@@ -119,6 +122,7 @@ public:
                      nsIPostData* aPostData=nsnull) = 0;
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex) = 0;
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult) = 0;
+  NS_IMETHOD GetURL(PRInt32 aHistoryIndex, nsString& aURLResult) = 0;
 
   // Chrome api's
   NS_IMETHOD SetTitle(const nsString& aTitle) = 0;
