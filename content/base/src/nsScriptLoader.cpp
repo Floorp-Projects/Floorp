@@ -592,7 +592,7 @@ static PRBool
 DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset) 
 {
   if (aLen < 2)
-    return false;
+    return PR_FALSE;
 
   switch(aBytes[0]) {
   case 0xEF:  
