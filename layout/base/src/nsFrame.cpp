@@ -182,7 +182,6 @@ nsFrame::~nsFrame()
   NS_IF_RELEASE(mStyleContext);
   if (nsnull != mView) {
     // Break association between view and frame
-    mView->SetFrame(nsnull);
     mView->Destroy();
     mView = nsnull;
   }
@@ -254,6 +253,11 @@ NS_METHOD nsFrame::DeleteFrame()
 #endif
     cx->StopLoadImage(this);
     NS_RELEASE(cx);
+  }
+
+  //Set to prevent event dispatch during destruct
+  if (nsnull != mView) {
+    mView->SetFrame(nsnull);
   }
 
   delete this;
