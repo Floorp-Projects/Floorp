@@ -88,7 +88,7 @@ titledbox {
 .color-well {
   width:20px;
   height: 16px; 
-  border: 1px inset #CCCCCC;
+  border: 1px inset #B4C3D4;
   margin: 3px 1px 5px 8px;
 }
 
@@ -106,7 +106,7 @@ titledbox {
 }
 
 #ColorPickerSwatch {
-  border : 2px outset #CCCCCC;
+  border : 2px outset #B4C3D4;
   width: 25px;
   height: 20px;
   margin: 0px 3px 0px 0px;
@@ -120,7 +120,7 @@ titledbox {
 #LastPickedColor {
   width: 17px;
   height: 1.2em; 
-  border: 1px inset #CCCCCC;
+  border: 1px inset #B4C3D4;
   margin-bottom: 2px;
 }
 
@@ -130,7 +130,7 @@ titledbox {
 
 /* temporary -- we need a simple box-based list defined in XBL */
 tree.list {
-  border: 1px inset #CCCCCC;
+  border: 1px inset #B4C3D4;
   /* same as in menulist.css */
   margin: 1px 5px 2px 5px;
   width: 10em;
@@ -139,7 +139,7 @@ tree.list {
 }
 
 #ColorPreview {
-  border: 1px inset #CCCCCC;
+  border: 1px inset #B4C3D4;
   margin-left:    10px;
   padding-left:    5px;
   padding-right:   5px;
@@ -193,7 +193,7 @@ tree.list {
 
 /* use outset shape for a button look */
 .colorpicker {
-  border: 1px outset #CCCCCC;
+  border: 1px outset #B4C3D4;
   /* This should be the same as for textfield */
   margin-left: 4px;
   /* For a little extra space between buttons */
@@ -246,7 +246,7 @@ tree.list {
   GetOriginalWidth(), EdImageProps.js
 */    
 #preview-image-box {
-  border: 1px inset #CCCCCC;
+  border: 1px inset #B4C3D4;
   width      : 82px;
   max-width  : 82px;
   min-width  : 82px;
