@@ -1,0 +1,76 @@
+%define ver		@MOZILLA_RPM_VERSION@
+%define rel		@MOZILLA_RPM_RELEASE@
+%define prefix	@MOZILLA_RPM_PREFIX@
+%define tmp		@MOZILLA_RPM_TMP@
+
+Summary:	Netscape Portable Runtime (NSPR)
+Name:		nspr-pthreads
+Version:	%ver
+Release:	%rel
+Copyright:	NPL
+Group:		Development/Libraries
+Source:		nspr-pthreads-%{ver}-%{rel}.tar.gz
+BuildRoot:	%{tmp}/%{name}-root
+Packager:	Ramiro Estrugo <ramiro@netscape.com>
+URL:		http://www.mozilla.org/docs/tplist/catCode/nsprdesc.htm
+Provides:	nspr
+
+%description
+Libraries that implement cross-platform runtime services from Netscape.
+
+%package devel
+Summary:	NSPR library header files for development
+Group:		Development/Libraries
+Requires:	nspr
+#Obsoletes: libnspr-devel
+#Conflicts: libnspr-userthreads-devel
+
+%description devel
+Header files for the NSPR library from Netscape
+
+%prep
+%setup -n nspr-pthreads
+
+%build
+make \
+	DIST=$RPM_BUILD_ROOT%{prefix} \
+	NSDISTMODE=copy \
+	USE_PTHREADS=1 \
+	@MOZILLA_RPM_NSPR_OPTIMIZE@ \
+	export
+
+%install
+make \
+	DIST=$RPM_BUILD_ROOT%{prefix} \
+	NSDISTMODE=copy \
+	USE_PTHREADS=1 \
+	@MOZILLA_RPM_NSPR_OPTIMIZE@ \
+	install
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%post
+
+#if grep "/usr/mozilla/lib" /etc/ld.so.conf > /dev/null 2>&1
+#then
+#	:
+#else
+#	echo "/usr/mozilla/lib" >> /etc/ld.so.conf
+#fi
+#
+#/sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
+%files
+%attr(-, root, root)
+
+%{prefix}/lib/*.so
+
+%files devel
+%attr(-, root, root)
+
+%{prefix}/include/*
+%{prefix}/lib/*.a
+
