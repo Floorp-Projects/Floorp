@@ -198,6 +198,7 @@ typedef PRFileDesc* XP_File;
 #define XP_STRCAT(a,b)      PL_strcat((a),(b))
 #define XP_ATOI             PL_atoi
 #define XP_STRCPY(a,b)      PL_strcpy((a),(b))
+#define XP_STRNCPY(a,b,n)   PL_strncpy((a),(b),(n))
 #define XP_STRLEN(x)        PL_strlen(x)
 #define XP_SPRINTF          sprintf
 #define XP_FREE(x)          PR_Free((x))
