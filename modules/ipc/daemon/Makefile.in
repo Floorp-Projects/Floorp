@@ -79,3 +79,8 @@ LIBS		= \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+# For fruncate
+ifeq ($(OS_ARCH),Linux)
+DEFINES += -D_BSD_SOURCE
+endif

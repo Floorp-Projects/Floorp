@@ -62,6 +62,7 @@ ipcClient::Init()
     // every client must be able to handle IPCM messages.
     mTargets.Append(IPCM_TARGET);
 
+    // XXX cleanup
     // see ipcCommandModule for this:
     //IPC_NotifyClientUp(this);
 }
@@ -142,6 +143,7 @@ ipcClient::DelTarget(const nsID &target)
 int
 ipcClient::Process(PRFileDesc *fd, int poll_flags)
 {
+    // XXX check if not read OR write
     if ((poll_flags & PR_POLL_ERR) || 
         (poll_flags & PR_POLL_HUP) ||
         (poll_flags & PR_POLL_EXCEPT) ||
@@ -159,7 +161,7 @@ ipcClient::Process(PRFileDesc *fd, int poll_flags)
     if (poll_flags & PR_POLL_READ) {
         LOG(("client socket is now readable\n"));
 
-        char buf[1024];
+        char buf[1024]; // XXX 4k?
         PRInt32 n;
 
         // find out how much data is available for reading...
@@ -169,11 +171,12 @@ ipcClient::Process(PRFileDesc *fd, int poll_flags)
         if (n <= 0)
             return 0; // cancel connection
 
-        char *ptr = buf;
+        const char *ptr = buf;
         while (n) {
             PRUint32 nread;
             PRBool complete;
 
+            // XXX check return value
             mInMsg.ReadFrom(ptr, PRUint32(n), &nread, &complete);
 
             if (complete) {
@@ -222,6 +225,7 @@ ipcClient::WriteMsgs(PRFileDesc *fd)
 
         if (nw == bufLen)
             mOutMsgQ.DeleteFirst();
+        // XXX mSendOffset = 0;
         else
             mSendOffset += nw;
     }

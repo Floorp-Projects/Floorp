@@ -48,6 +48,8 @@
 PRStatus
 IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
 {
+    // XXX assert args valid
+    //
     if (msg->Target().Equals(IPCM_TARGET)) {
         IPCM_HandleMsg(client, msg);
         return PR_SUCCESS;
@@ -84,8 +86,10 @@ PRStatus
 IPC_DispatchMsg(ipcClient *client, const nsID &target, const void *data, PRUint32 dataLen)
 {
     // lookup handler for this message's topic and forward message to it.
+    // XXX methods should be |const|
     ipcModuleMethods *methods = IPC_GetModuleByTarget(target);
     if (methods) {
+        // XXX make sure handleMsg not null
         methods->handleMsg(client, target, data, dataLen);
         return PR_SUCCESS;
     }
@@ -124,6 +128,8 @@ IPC_GetClientByName(const char *name)
 void
 IPC_EnumClients(ipcClientEnumFunc func, void *closure)
 {
+    // XXX null check
+    // XXX check return val for STOP
     for (int i = 0; i < ipcClientCount; ++i)
         func(closure, &ipcClients[i], ipcClients[i].ID());
 }
@@ -131,24 +137,29 @@ IPC_EnumClients(ipcClientEnumFunc func, void *closure)
 PRUint32
 IPC_GetClientID(ipcClient *client)
 {
+    // XXX null check
     return client->ID();
 }
 
 const char *
 IPC_GetPrimaryClientName(ipcClient *client)
 {
+    // XXX null check
+    // XXX eliminate
     return client->PrimaryName();
 }
 
 PRBool
 IPC_ClientHasName(ipcClient *client, const char *name)
 {
+    // XXX null check
     return client->HasName(name);
 }
 
 PRBool
 IPC_ClientHasTarget(ipcClient *client, const nsID &target)
 {
+    // XXX null check
     return client->HasTarget(target);
 }
 
@@ -174,6 +185,7 @@ IPC_EnumClientTargets(ipcClient *client, ipcClientTargetEnumFunc func, void *clo
     }
 }
 
+// XXX remove
 ipcClient *
 IPC_GetClients(PRUint32 *count)
 {

@@ -71,7 +71,7 @@ RemoveClient(ipcClient *client)
 
     int clientIndex = client - ipcClientArray;
 
-    client->Finalize();
+    client->Finalize(); // XXX pick another name.. 
 
     //
     // move last ipcClient object down into the spot occupied by this client.
@@ -113,6 +113,8 @@ PurgeStaleClients()
 
         IPC_GetClientWindowName(client->PID(), wName);
 
+        // XXX dougt has ideas about how to make this better
+
         HWND hwnd = FindWindow(IPC_CLIENT_WINDOW_CLASS, wName);
         if (!hwnd) {
             LOG(("  client window not found; removing client!\n"));
@@ -140,7 +142,7 @@ AddClient(HWND hwnd, PRUint32 pid)
     ipcClient *client = &ipcClientArray[ipcClientCount];
     client->Init();
     client->SetHwnd(hwnd);
-    client->SetPID(pid);
+    client->SetPID(pid);    // XXX one funhction instead of 3
 
     ++ipcClientCount;
     LOG(("  num clients = %u\n", ipcClientCount));
@@ -185,6 +187,7 @@ ProcessMsg(HWND hwnd, PRUint32 pid, const ipcMessage *msg)
     else
         client = AddClient(hwnd, pid);
 
+    // XXX add logging
     if (client == NULL)
         return;
 
@@ -227,6 +230,7 @@ WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             ipcMessage msg;
             PRUint32 bytesRead;
             PRBool complete;
+            // XXX avoid extra malloc
             PRStatus rv = msg.ReadFrom((const char *) cd->lpData, cd->cbData,
                                        &bytesRead, &complete);
             if (rv == PR_SUCCESS && complete) {
@@ -241,6 +245,7 @@ WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return TRUE;
     }
 
+    // XXX don't check wParam
     if (uMsg == WM_TIMER && wParam == IPC_PURGE_TIMER_ID) {
         PurgeStaleClients();
         return 0;
@@ -263,7 +268,7 @@ WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 
     if (uMsg == IPC_WM_SHUTDOWN) {
-        DestroyWindow(hWnd);
+        DestroyWindow(hWnd);  // XXX possibly move out... think about shutdown sync
         ipcHwnd = NULL;
         PostQuitMessage(0);
         return 0;
@@ -288,12 +293,10 @@ AcquireLock()
         return PR_FALSE;
     }
 
-    if (ipcSyncEvent) {
-        // check to see if event already existed prior to this call.
-        if (GetLastError() == ERROR_ALREADY_EXISTS) {
-            LOG(("  lock already set; exiting...\n"));
-            return PR_FALSE;
-        }
+    // check to see if event already existed prior to this call.
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        LOG(("  lock already set; exiting...\n"));
+        return PR_FALSE;
     }
     
     LOG(("  acquired lock\n"));
@@ -323,6 +326,7 @@ main(int argc, char **argv)
     if (!AcquireLock())
         return 0;
 
+    // XXX add comments
     ipcClients = ipcClientArray;
     ipcClientCount = 0;
 

@@ -41,7 +41,8 @@
 #include "ipcModule.h"
 
 //
-// called to init the module registry.
+// called to init the module registry.  this may only be called once at
+// startup or once after calling IPC_ShutdownModuleReg.
 //
 // params:
 //   exePath - path to the daemon executable.  modules are loaded from a
@@ -50,7 +51,8 @@
 void IPC_InitModuleReg(const char *exePath);
 
 //
-// called to shutdown the module registry.
+// called to shutdown the module registry.  this may be called more than
+// once and need not follow a call to IPC_InitModuleReg.
 //
 void IPC_ShutdownModuleReg();
 
@@ -58,6 +60,8 @@ void IPC_ShutdownModuleReg();
 // returns the ipcModuleMethods for the given target.
 //
 ipcModuleMethods *IPC_GetModuleByTarget(const nsID &target);
+
+// XXX "handle msg for target" instead
 
 //
 // notifies all modules of client connect/disconnect
