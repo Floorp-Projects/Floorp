@@ -54,7 +54,6 @@
     
     function Startup()
     {
-      dump("*** noopy\n");
       doSetOKCancel(onOK);
       
       gIcon             = document.getElementById("largeIcon");
@@ -65,17 +64,14 @@
       gAppPath          = document.getElementById("appPath");
       gAskBeforeOpen    = document.getElementById("askBeforeOpen");
         
-      dump("*** noopy\n");
       gBundle           = srGetStrBundle("chrome://communicator/locale/pref/pref-applications.properties");  
       
-      dump("*** noopy\n");
       var handlerInfo = window.arguments[0];
       
       gExtensionLabel.setAttribute("value", handlerInfo.extensions);
       gMIMEField.value = handlerInfo.mimeType;
       gOldMIME = handlerInfo.mimeType;
       
-      dump("*** noopy\n");
       // figure out how this type is handled
       var data = 0;
       if (handlerInfo.handleInternal == "true")
@@ -85,7 +81,6 @@
       else 
         data = 2;
         
-      dump("*** noopy\n");
       gHandlerGroup.selectedItem = gHandlerGroup.getElementsByAttribute("data", data)[0];
       doEnabling();
       
@@ -97,7 +92,6 @@
       gContentType.setAttribute("value", handlerInfo.description);
       gIcon.setAttribute("src", handlerInfo.largeIconURL);
       
-      dump("*** noopy\n");
       gMIMEField.focus();
     }
     
@@ -119,7 +113,6 @@
         var windowTitle = gBundle.GetStringFromName("chooseHandler");
         var programsFilter = gBundle.GetStringFromName("programsFilter");
         filePicker.init(window, windowTitle, FP.modeOpen);
-        dump("*** navigator.platform = " + navigator.platform + "\n");
         if (navigator.platform == "Windows")
           filePicker.appendFilter(programsFilter, "*.exe; *.com");
         else
@@ -220,7 +213,7 @@
   <keyset id="keyset"/>
   
   <box autostretch="never">
-    <image id="largeIcon" src="chrome://communicator/skin/content-large.gif" style="width: 32px; height: 32px;"/>
+    <image id="largeIcon" class="file-icon-large" style="width: 32px; height: 32px;"/>
     <text class="label" id="contentType" crop="right"/>
   </box>
   
@@ -230,18 +223,18 @@
   
   <separator class="thin"/>
 
-  <grid flex="1">
+  <grid>
     <columns>
-      <column/>
       <column flex="1"/>
+      <column flex="3"/>
     </columns>
     
     <rows>
-      <row>
+      <row autostretch="never">
         <text class="label" value="&extension.label;"/>
         <text class="label" id="extension"/>
       </row>
-      <row>
+      <row autostretch="never">
         <text class="label" value="&mimetype.label;" accesskey="&mimetype.accesskey;"
               for="mimeType"/>
         <textfield id="mimeType" flex="1"/>
