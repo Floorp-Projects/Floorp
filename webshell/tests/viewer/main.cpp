@@ -25,7 +25,7 @@
 
 class nsMotifViewer : public nsViewer {
     virtual void AddMenu(nsIWidget* aMainWindow);
-    virtual char* GetBaseURL();
+    //virtual char* GetBaseURL();
 };
 
 //--------------------------------------------------------
@@ -68,6 +68,7 @@ void nsMotifViewer::AddMenu(nsIWidget* aMainWindow)
   CreateViewerMenus(XtParent((Widget)aMainWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
 }
 
+/*
 char* nsMotifViewer::GetBaseURL()
 {
     static char* protocol = "file:///";
@@ -92,5 +93,5 @@ char* nsMotifViewer::GetBaseURL()
    }
 
 }
-
+*/
 
