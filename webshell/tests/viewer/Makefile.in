@@ -139,15 +139,19 @@ install:: $(PROGRAM) $(srcdir)/mozilla-viewer.sh
 
 $(PROGRAM)_gtk: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_gtk_s.a
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(GTK_LIBS) $(OS_LIBS)
+	$(MOZ_POST_PROGRAM_COMMAND) $@
 
 $(PROGRAM)_motif: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_motif_s.a
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(MOTIF_LIBS) $(OS_LIBS)
+	$(MOZ_POST_PROGRAM_COMMAND) $@
 
 $(PROGRAM)_qt: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_qt_s.a
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(QT_LIBS) $(OS_LIBS)
+	$(MOZ_POST_PROGRAM_COMMAND) $@
 
 $(PROGRAM)_xlib: $(PROGOBJS) $(EXTRA_DEPS) Makefile Makefile.in $(DIST)/lib/libviewer_xlib_s.a
 	$(CCC) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(XLIB_LIBS) $(OS_LIBS)
+	$(MOZ_POST_PROGRAM_COMMAND) $@
 
 ifdef MOZ_ENABLE_GTK
 install:: $(PROGRAM)_gtk

@@ -584,6 +584,7 @@ case "$target" in
 	DSO_PIC_CFLAGS="+Z"
 	MKSHLIB='$(CXX) $(DSO_LDOPTS)'
 	MKCSHLIB='$(CC) $(DSO_LDOPTS)'
+	MOZ_POST_PROGRAM_COMMAND='chatr +s enable'
     else
 	DSO_LDOPTS='-b -E -L$(DIST)/bin -L$(DIST)/lib'
 	MKSHLIB='$(LD) $(DSO_LDOPTS)'
@@ -2453,8 +2454,12 @@ dnl =
 dnl = Enable stripping of .so and .a libs
 dnl = 
 dnl ========================================================
-MOZ_POST_DSO_LIB_COMMAND=true
-MOZ_POST_PROGRAM_COMMAND=true
+if test -z "$MOZ_POST_DSO_LIB_COMMAND"; then
+  MOZ_POST_DSO_LIB_COMMAND=true
+fi
+if test -z "$MOZ_POST_PROGRAM_COMMAND"; then
+  MOZ_POST_PROGRAM_COMMAND=true
+fi
 
 MOZ_ARG_ENABLE_BOOL(strip-libs,
 [  --enable-strip-libs       Enable stripping of .so and .a libs ],
