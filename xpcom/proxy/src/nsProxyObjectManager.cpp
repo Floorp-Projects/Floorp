@@ -27,9 +27,14 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
+#include "nsIAppShellComponentImpl.h"
+#include "nsIEventQueueService.h"
+
+
+
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
-
+static NS_DEFINE_IID( kAppShellServiceCID, NS_APPSHELL_SERVICE_CID );
+static NS_DEFINE_IID( kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID );
 
 
 /***************************************************************************/
@@ -136,17 +141,64 @@ nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInst
 NS_IMETHODIMP 
 nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, nsISupports* aObj, ProxyType proxyType, void** aProxyObject)
 {
-    
+    nsIEventQueue *postQ = destQueue;
+
     *aProxyObject = nsnull;
+
+    if (postQ == nsnull)
+    {
+        // Get app shell service.
+        nsIAppShellService *appShell;
+        nsresult rv = nsServiceManager::GetService( kAppShellServiceCID,
+                                                    nsIAppShellService::GetIID(),
+                                                    (nsISupports**)&appShell );
+
+        if ( NS_FAILED( rv ) )
+            return NS_ERROR_UNEXPECTED;
+
+        PRThread *aThread;
+        rv = appShell->GetPrimordialThread(&aThread);
+        
+        if ( NS_FAILED( rv ) )
+        {
+            NS_RELEASE(appShell);
+            return NS_ERROR_UNEXPECTED;
+        }
+
+        nsIEventQueueService *eventQService;
+
+        rv = nsServiceManager::GetService( kEventQueueServiceCID,
+                                           nsIEventQueueService::GetIID(),
+                                           (nsISupports**)&eventQService );
+
+        if ( NS_FAILED( rv ) )
+        {
+            NS_RELEASE(appShell);
+            return NS_ERROR_UNEXPECTED;
+        }
+        
+        rv = eventQService->GetThreadEventQueue(aThread, &postQ);
+        
+        if ( NS_FAILED( rv ) )
+        {
+            NS_RELEASE(appShell);
+            NS_RELEASE(eventQService);
+            return NS_ERROR_UNEXPECTED;
+        }
     
+        NS_RELEASE(appShell);
+        NS_RELEASE(eventQService);
+    
+    }
+
     // check to see if proxy is there or not.
-    *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(destQueue, proxyType, aObj, aIID);
+    *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(postQ, proxyType, aObj, aIID);
     if (*aProxyObject != nsnull)
     {
         return NS_OK;
     }
     
-    return NS_ERROR_FACTORY_NOT_REGISTERED; //fix error code?
+    return NS_ERROR_NO_INTERFACE; //fix error code?
 }   
 
 
