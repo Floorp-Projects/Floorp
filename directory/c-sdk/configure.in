@@ -156,12 +156,16 @@ AC_ARG_ENABLE(optimize,
     	    _OPTIMIZE_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
             _SAVE_OPTIMIZE_FLAGS=$_OPTIMIZE_FLAGS
         fi
+      else
+        MOZ_OPTIMIZE=
     fi ])
 
 AC_ARG_ENABLE(debug,
     [  --disable-debug         Do not compile in debugging symbols],
     [	if test "$enableval" = "no"; then
     	    MOZ_DEBUG=
+        else
+            MOZ_DEBUG=1
 	    fi])
 
 AC_ARG_ENABLE(win32-target,
