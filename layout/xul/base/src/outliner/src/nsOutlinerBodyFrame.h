@@ -139,6 +139,8 @@ public:
   void SetNext(nsOutlinerColumn* aNext) { mNext = aNext; };
   nsOutlinerColumn* GetNext() { return mNext; };
 
+  nsIContent* GetElement() { return mColElement; };
+
   nscoord GetWidth();
   const PRUnichar* GetID() { return mID.GetUnicode(); };
 };
@@ -171,6 +173,14 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
+
+  // This method paints a specific column background of the outliner.
+  NS_IMETHOD PaintColumn(nsOutlinerColumn*    aColumn,
+                         const nsRect& aCellRect,
+                         nsIPresContext*      aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         const nsRect&        aDirtyRect,
+                         nsFramePaintLayer    aWhichLayer);
 
   // This method paints a single row in the outliner.
   NS_IMETHOD PaintRow(int aRowIndex, const nsRect& aRowRect,

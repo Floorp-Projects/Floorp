@@ -567,6 +567,21 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   // Ensure our column info is built.
   EnsureColumns();
 
+  // Loop through our columns and paint them (e.g., for sorting).  This is only
+  // relevant when painting backgrounds, since columns contain no content.  Content
+  // is contained in the rows.
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    nscoord currX = mInnerBox.x;
+    for (nsOutlinerColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
+      nsRect colRect(currX, mInnerBox.y, currCol->GetWidth(), mInnerBox.height);
+      nsRect dirtyRect;
+      if (dirtyRect.IntersectRect(aDirtyRect, colRect)) {
+        PaintColumn(currCol, colRect, aPresContext, aRenderingContext, aDirtyRect, aWhichLayer); 
+      }
+      currX += currCol->GetWidth();
+    }
+  }
+
   // Loop through our on-screen rows.
   for (PRInt32 i = mTopRowIndex; i < rowCount && i < mTopRowIndex+mPageCount+1; i++) {
     nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*(i-mTopRowIndex), mInnerBox.width, mRowHeight);
@@ -577,6 +592,37 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   aRenderingContext.PopState(clipState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBodyFrame::PaintColumn(nsOutlinerColumn*    aColumn,
+                                               const nsRect& aColRect,
+                                               nsIPresContext*      aPresContext,
+                                               nsIRenderingContext& aRenderingContext,
+                                               const nsRect&        aDirtyRect,
+                                               nsFramePaintLayer    aWhichLayer)
+{
+  // Now obtain the properties for our cell.
+  // XXX Automatically fill in the following props: open, container, selected, focused, and the col ID.
+  PrefillPropertyArray(-1, aColumn->GetID());
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aColumn->GetElement()));
+  mView->GetColumnProperties(aColumn->GetID(), elt, mScratchArray);
+
+  // Resolve style for the column.  It contains all the info we need to lay ourselves
+  // out and to paint.
+  nsCOMPtr<nsIStyleContext> colContext;
+  GetPseudoStyleContext(aPresContext, nsXULAtoms::mozoutlinercolumn, getter_AddRefs(colContext));
+
+  // Obtain the margins for the cell and then deflate our rect by that 
+  // amount.  The cell is assumed to be contained within the deflated rect.
+  nsRect colRect(aColRect);
+  const nsStyleMargin* colMarginData = (const nsStyleMargin*)colContext->GetStyleData(eStyleStruct_Margin);
+  nsMargin colMargin;
+  colMarginData->GetMargin(colMargin);
+  colRect.Deflate(colMargin);
+
+  PaintBackgroundLayer(colContext, aPresContext, aRenderingContext, colRect, aDirtyRect);
+
   return NS_OK;
 }
 
