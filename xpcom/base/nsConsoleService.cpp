@@ -240,24 +240,9 @@ nsConsoleService::RegisterListener(nsIConsoleListener *listener) {
      * thread-specific ways, and we always want to call them on their
      * originating thread.  JavaScript is the motivating example.
      */
-    nsCOMPtr<nsIProxyObjectManager> proxyManager =
-        (do_GetService(NS_XPCOMPROXY_CONTRACTID));
-
-    if (proxyManager == nsnull)
-        return NS_ERROR_NOT_AVAILABLE;
-
     nsCOMPtr<nsIConsoleListener> proxiedListener;
 
-    /*
-     * NOTE this will fail if the calling thread doesn't have an eventQ.
-     *
-     * Would it be better to catch that case and leave the listener unproxied?
-     */
-    rv = proxyManager->GetProxyForObject(NS_CURRENT_EVENTQ,
-                                         NS_GET_IID(nsIConsoleListener),
-                                         listener,
-                                         PROXY_ASYNC | PROXY_ALWAYS,
-                                         getter_AddRefs(proxiedListener));
+    rv = GetProxyForListener(listener, getter_AddRefs(proxiedListener));
     if (NS_FAILED(rv))
         return rv;
 
@@ -274,13 +259,49 @@ nsConsoleService::RegisterListener(nsIConsoleListener *listener) {
 
 NS_IMETHODIMP
 nsConsoleService::UnregisterListener(nsIConsoleListener *listener) {
-    nsAutoLock lock(mLock);
+    nsresult rv;
 
-    // ignore rv for now, as a comment says it returns prbool instead of
-    // nsresult.
+    nsCOMPtr<nsIConsoleListener> proxiedListener;
+    rv = GetProxyForListener(listener, getter_AddRefs(proxiedListener));
+    if (NS_FAILED(rv))
+        return rv;
 
-    // Solaris needs the nsISupports cast to avoid confusion with
-    // another nsSupportsArray::RemoveElement overloading.
-    mListeners->RemoveElement((const nsISupports *)listener);
+    {
+        nsAutoLock lock(mLock);
+
+        // ignore rv below for now, as a comment says it returns
+        // prbool instead of nsresult.
+
+        // Solaris needs the nsISupports cast to avoid confusion with
+        // another nsSupportsArray::RemoveElement overloading.
+        mListeners->RemoveElement((const nsISupports *)proxiedListener);
+
+    }
     return NS_OK;
+}
+
+nsresult 
+nsConsoleService::GetProxyForListener(nsIConsoleListener* aListener,
+                                      nsIConsoleListener** aProxy)
+{
+    nsresult rv;
+    *aProxy = nsnull;
+
+    nsCOMPtr<nsIProxyObjectManager> proxyManager =
+        (do_GetService(NS_XPCOMPROXY_CONTRACTID));
+
+    if (proxyManager == nsnull)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    /*
+     * NOTE this will fail if the calling thread doesn't have an eventQ.
+     *
+     * Would it be better to catch that case and leave the listener unproxied?
+     */
+    rv = proxyManager->GetProxyForObject(NS_CURRENT_EVENTQ,
+                                         NS_GET_IID(nsIConsoleListener),
+                                         aListener,
+                                         PROXY_ASYNC | PROXY_ALWAYS,
+                                         (void**) aProxy);
+    return rv;
 }
