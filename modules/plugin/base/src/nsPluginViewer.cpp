@@ -403,7 +403,7 @@ PluginViewerImpl::Destroy(void)
 NS_IMETHODIMP
 PluginViewerImpl::GetDOMDocument(nsIDOMDocument **aResult)
 {
-  return CallQueryInterface(mDocument, aResult);
+  return (mDocument) ? CallQueryInterface(mDocument, aResult) : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
