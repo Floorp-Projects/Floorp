@@ -192,11 +192,12 @@ sub process_cvs_info {
         for $i (@changed_files, "BEATME.NOW", @added_files) {
             if ($i eq "BEATME.NOW") { $stat = 'A'; }
             if ($i eq $fn) {
-                $rcsfile = shell_escape("$envcvsroot/$repository/$fn,v");
+                $rcsfile = "$envcvsroot/$repository/$fn,v";
                 if (! -r $rcsfile) {
-                    $rcsfile = shell_escape("$envcvsroot/$repository/Attic/$fn,v");
+                    $rcsfile = "$envcvsroot/$repository/Attic/$fn,v";
                 }
-                open(LOG, "$rlogcommand -N -r$rev $rcsfile |")
+                $rlogcmd = "$rlogcommand -N -r$rev " . shell_escape($rcsfile);
+                open(LOG, "$rlogcmd |")
                         || print STDERR "dolog.pl: Couldn't run rlog\n";
                 while (<LOG>) {
                     if (/^date:.* author: ([^;]*);.*/) {
