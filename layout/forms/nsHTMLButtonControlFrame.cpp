@@ -322,7 +322,7 @@ PRBool
 nsHTMLButtonControlFrame::IsSubmit(nsIPresContext* aPresContext, PRInt32 type)
 {
   nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(&mode);
+  nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
   if (eCompatibility_Standard == mode && mContent != nsnull) {
     // The default type for a html4 button is NS_FORM_BUTTON_BUTTON, 
     // but that does not mean that the type was actually set to "button"

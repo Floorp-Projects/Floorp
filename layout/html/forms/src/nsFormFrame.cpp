@@ -373,7 +373,7 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
   // If in standard mode, then a radio group MUST default 
   // to the first item in the group (it must be selected)
   nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(&mode);
+  nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
   if (eCompatibility_Standard == mode) {
     // first find out if any have a default selection
     PRInt32 i;

@@ -155,29 +155,21 @@ pre[wrap], pre[cols], pre[width] {
 }
 
 
-/* Quirk: no bottom padding */
+/* Temporary - Test of full time Standard mode for forms Bug 91602 
 input[type="text"] {
+background-color: blue;
   padding: 1px 0 0 0;
 } 
 
-
-/* Quirk: text inputs and textareas have special font (b=44656) */
-/* dealt with at the code level */
-
-
-/* Quirk: special margins for radio buttons */
 input[type="radio"] {
   margin: 2px 5px 4px 3px;
   vertical-align: bottom;
 }
 
-
-/* Quirk: special margins for check boxes */
 input[type="checkbox"] {
   margin: 3px 4px 3px 3px;
   vertical-align: bottom;
 }
-
 
 button, 
 input[type="reset"],
@@ -185,8 +177,6 @@ input[type="button"],
 input[type="submit"] { 
   vertical-align: bottom;
 }
-
-/* Quirk: special top and bottom margins for inputs in tables */
 
 td select[size] {
   margin-top: 0px;
@@ -212,6 +202,7 @@ td textarea {
   margin-top: 1px;
   margin-bottom: 2px;
 }
+*/
 
 /* Quirk: HRs avoid floats (b=18754) */
 
