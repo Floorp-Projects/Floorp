@@ -1036,15 +1036,13 @@ void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
   // 3) from clicking on it
   //
   // If removing any of this code PLEASE read comment below
-  nsresult result;
+  nsresult result = NS_OK;
   if (!mWebShell)
   {
     result = CreateSubDoc(nsnull);
     if (NS_FAILED(result)) return;
   }
   if (aOn) {
-
-    nsresult result = NS_OK;
 
     nsIContentViewer *viewer = nsnull;
     mWebShell->GetContentViewer(&viewer);
@@ -3372,8 +3370,6 @@ nsEnderEventListener::Blur(nsIDOMEvent* aEvent)
   if (!uiEvent) {
     return NS_OK;
   }
-
-  nsresult result = NS_OK;
 
   nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
 
