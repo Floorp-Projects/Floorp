@@ -1222,7 +1222,7 @@ public:
   virtual PRInt32 GetStyleRuleCount(void) const;
   NS_IMETHOD GetPseudoType(nsIAtom*& aPseudoTag) const;
 
-  NS_IMETHOD FindChildWithRules(const nsIAtom* aPseudoTag, const nsISupportsArray* aRules,
+  NS_IMETHOD FindChildWithRules(const nsIAtom* aPseudoTag, nsISupportsArray* aRules,
                                 nsIStyleContext*& aResult);
 
   virtual PRBool    Equals(const nsIStyleContext* aOther) const;
@@ -1510,7 +1510,7 @@ StyleContextImpl::GetPseudoType(nsIAtom*& aPseudoTag) const
 
 NS_IMETHODIMP
 StyleContextImpl::FindChildWithRules(const nsIAtom* aPseudoTag, 
-                                     const nsISupportsArray* aRules,
+                                     nsISupportsArray* aRules,
                                      nsIStyleContext*& aResult)
 {
   aResult = nsnull;
@@ -1520,7 +1520,7 @@ StyleContextImpl::FindChildWithRules(const nsIAtom* aPseudoTag,
     PRInt32 ruleCount;
     if (aRules) {
       PRUint32 cnt;
-      nsresult rv = ((nsISupportsArray*)aRules)->Count(&cnt);       // XXX bogus cast -- aRules should not be const
+      nsresult rv = aRules->Count(&cnt);
       if (NS_FAILED(rv)) return rv;
       ruleCount = cnt;
     }
