@@ -155,7 +155,8 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
   NS_ENSURE_TRUE(iim, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIEnumerator> e;
-  nsresult rv = iim->EnumerateInterfaces(getter_AddRefs(e));
+  nsresult rv = iim->EnumerateInterfacesWhoseNamesStartWith(
+                                    NS_DOM_INTERFACE_PREFIX, getter_AddRefs(e));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISupports> entry;
@@ -165,7 +166,7 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
   if (NS_FAILED(rv)) {
     // Empty interface list?
 
-    NS_WARNING("What, no interfaces installed?");
+    NS_WARNING("What, no nsIDOM interfaces installed?");
 
     return NS_OK;
   }
@@ -186,11 +187,6 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
 
     rv = if_info->GetName(getter_Copies(if_name));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    if (nsCRT::strncmp(if_name.get(), NS_DOM_INTERFACE_PREFIX,
-                       nsCRT::strlen(NS_DOM_INTERFACE_PREFIX))) {
-      continue;
-    }
 
     PRUint16 constant_count = 0;
 
