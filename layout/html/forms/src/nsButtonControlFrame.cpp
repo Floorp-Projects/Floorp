@@ -266,7 +266,7 @@ nsButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   } else {
     if (nsHTMLAtoms::value == aAttribute) {
      // redraw button with the changed value
-      Invalidate(mRect, PR_TRUE);
+      Invalidate(mRect, PR_FALSE);
     }
   }
   return result;
@@ -590,7 +590,7 @@ nsButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 void
 nsButtonControlFrame::Redraw()
 {	nsRect rect(0, 0, mRect.width, mRect.height);
-    Invalidate(rect, PR_TRUE);
+    Invalidate(rect, PR_FALSE);
 
 }
 
