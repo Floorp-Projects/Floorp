@@ -1799,7 +1799,7 @@ nsLineLayout::ComputeQuirksModeLineHeightData(nsIRenderingContext *aRC,
   {
     nsCOMPtr<nsIAtom> tag;
     content->GetTag(*(getter_AddRefs(tag)));
-    if (nsHTMLAtoms::font==tag)
+    if (nsHTMLAtoms::font==tag.get())
     {
       nsAutoString resultString;
       nsresult result;
