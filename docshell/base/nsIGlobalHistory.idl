@@ -50,15 +50,19 @@ interface nsIGlobalHistory : nsISupports
 {
     /**
      * addPage
-     * Add a page to the history - aReferrer can be null, but aDate
-     * must be the date to set in the history
+     * Add a page to the history
+     *
+     * @param aURL the url to the page
      */
 
     void addPage(in string aURL);
 
     /**
      * isVisited
-     * returns true if a page has been passed into addPage().
+     * Checks to see if the given page is in history
+     *
+     * @return true if a page has been passed into addPage().
+     * @param aURL the url to the page
      */
     boolean isVisited(in string aURL);
 };
