@@ -291,6 +291,20 @@ PRUint32 nsCRT::HashCode(const PRUnichar* str, PRUint32* resultingStrLen)
 
   if (!str) return h;
 
+  PRUnichar c;
+  while ( (c = *s++) )
+    h = (h>>28) ^ (h<<4) ^ c;
+
+  if ( resultingStrLen )
+    *resultingStrLen = (s-str)-1;
+  return h;
+}
+
+PRUint32 nsCRT::HashCodeAsUTF8(const PRUnichar* str, PRUint32* resultingStrLen)
+{
+  PRUint32 h = 0;
+  const PRUnichar* s = str;
+
   {
     PRUint16 W1 = 0;      // the first UTF-16 word in a two word tuple
     PRUint32 U = 0;       // the current char as UCS-4
