@@ -462,7 +462,7 @@ sub tree_open {
 
 sub print_javascript {
 
-  print <<'__ENDJS';
+  print <<"__ENDJS";
     <script>
 
     if (parseInt(navigator.appVersion) < 4) {
@@ -583,7 +583,7 @@ sub print_javascript {
       }
 __ENDJS
 
-  print <<'__ENDJS' if $tree2 ne '';
+  print <<"__ENDJS" if $tree2 ne '';
       else {
         return '../bonsai/cvsquery.cgi?module=$td2->{cvs_module}'
              + '&branch=$td2->{cvs_branch}&cvsroot=$td2->{cvs_root}'
@@ -592,7 +592,7 @@ __ENDJS
       }
 __ENDJS
 
-  print <<'__ENDJS';
+  print <<"__ENDJS";
     }
 
     function js_qr24(tree,who) {
@@ -602,7 +602,7 @@ __ENDJS
       }
 __ENDJS
 
-  print <<'__ENDJS' if $tree2 ne '';
+  print <<"__ENDJS" if $tree2 ne '';
       else {
         return '../bonsai/cvsquery.cgi?module=$td2->{cvs_module}'
                + '&branch=$td2->{cvs_branch}&cvsroot=$td2->{cvs_root}'
@@ -703,20 +703,10 @@ sub do_express {
   print "<th align=left colspan=$keycount>";
   print "<a href=showbuilds.cgi?tree=$form{tree}";
   print "&hours=$form{hours}" if $form{hours};
-  print "&nocrap=1" if $form{nocrap};
+  print "&nocrap=1"           if $form{nocrap};
   print ">$tree as of $tm</a></tr><tr>\n";
   foreach my $buildname (@keys) {
-    if ($build{$buildname} eq 'busted') {
-      if ($form{nocrap}) {
-        print "<td bgcolor=$colormap->{busted}>";
-      } else {
-        print "<td bgcolor=000000 background=1afi003r.gif>";
-        print "<font color=white>\n";
-      }
-    } else {
-      print "<td bgcolor='$colormap->{$build{$buildname}}'>";
-    }
-    print "$buildname</td>";
+    print "<td bgcolor='$colormap->{$build{$buildname}}'>$buildname</td>";
   }
   print "</tr></table>\n";
 }
@@ -726,15 +716,6 @@ sub do_panel {
   # Refresh the tinderbox sidebar panel every minute.
   print "Content-type: text/html\nRefresh: 60\n\n<HTML>\n";
 
-  my %build, %times;
-  loadquickparseinfo($form{tree}, \%build, \%times);
-  
-  my @keys = sort keys %build;
-  my $keycount = @keys;
-  
-  my ($minute,$hour,$mday,$mon) = (localtime)[1..4];
-  my $tm = sprintf("%d/%d&nbsp;%d:%02d",$mon+1,$mday,$hour,$minute);
-  
   print q(
     <head>
       <style>
@@ -754,16 +735,20 @@ sub do_panel {
   
   $bonsai_tree = '';
   require "$tree/treedata.pl";
-  if ($bonsai_tree ne "") {
+  if ($bonsai_tree ne '') {
     print " is ", tree_open() ? "OPEN" : "CLOSED";
   }
+  # Add the current time
+  my ($minute,$hour,$mday,$mon) = (localtime)[1..4];
+  my $tm = sprintf("%d/%d&nbsp;%d:%02d",$mon+1,$mday,$hour,$minute);
   print " as of $tm</a><br>";
   
+  my %build, %times;
+  loadquickparseinfo($form{tree}, \%build, \%times);
+  
   print "<table border=0 cellpadding=1 cellspacing=1>";
-  for $buildname (@keys) {
-    print "<tr><td bgcolor='";
-    print $colormap->{$build{$buildname}};
-    print "'>$buildname</td></tr>";
+  while (my ($name, $status) = each %build) {
+    print "<tr><td bgcolor='$colormap->{$status}'>$name</td></tr>";
   }
   print "</table></body>";
 }
@@ -774,24 +759,16 @@ sub do_flash {
   my %build, %times;
   loadquickparseinfo($form{tree}, \%build, \%times);
 
-  my @keys = keys %build;
-
-  # The Flash spec says we need to give ctime.
-  use POSIX;
-  my $tm = POSIX::ctime(time());
-  chop $tm;
-  
   my ($mac,$unix,$win) = (0,0,0);
 
-  for (@keys) {
-    #print $_ . ' ' .  $build{$_} . "\n";
-    next if $build{$_} eq 'success';
-    $mac = 1, next if /Mac/;
-    $win = 1, next if /Win/;
+  while (my ($name, $status) = each %build) {
+    next if $status eq 'success';
+    $mac = 1, next if $name =~ /Mac/;
+    $win = 1, next if $name =~ /Win/;
     $unix = 1;
   }
 
-  print qq{
+  print q{
     <RDF:RDF xmlns:RDF='http://www.w3.org/1999/02/22-rdf-syntax-ns#' 
              xmlns:NC='http://home.netscape.com/NC-rdf#'>
     <RDF:Description about='NC:FlashRoot'>
@@ -804,7 +781,7 @@ sub do_flash {
     # are busted", "Windows is busted", etc. This is hideous. If
     # you can think of something better, please fix it.
 
-    my $description;
+    my $text;
     if ($mac) {
       $text .= 'Mac' . ($busted > 2 ? ', ' : ($busted > 1 ? ' and ' : ''));
     }
@@ -814,8 +791,15 @@ sub do_flash {
     if ($win) {
       $text .= 'Windows';
     }
-    $text .= ($busted > 1 ? ' are ' : ' is ') . 'busted.';
+    $text .= ($busted > 1 ? ' are ' : ' is ') . 'busted';
     
+    # The Flash spec says we need to give ctime.
+    use POSIX;
+    my $tm = POSIX::ctime(time());
+    $tm =~ s/^...\s//;   # Strip day of week
+    $tm =~ s/:\d\d\s/ /; # Strip seconds
+    chop $tm;
+  
     print qq{
       <NC:child>
         <RDF:Description ID='flash'>
@@ -828,7 +812,7 @@ sub do_flash {
     };
   }
 
-  print qq{
+  print q{
     </RDF:Description>
     </RDF:RDF>
   };
