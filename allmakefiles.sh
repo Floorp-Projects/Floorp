@@ -51,7 +51,6 @@ build/unix/mozilla-config
 config/Makefile
 config/autoconf.mk
 config/mkdepend/Makefile
-config/mkdetect/Makefile
 include/Makefile
 "
 
