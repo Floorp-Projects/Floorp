@@ -11,7 +11,10 @@
   <RDF:Description about="urn:mozilla:package:chatzilla"
         chrome:displayName="Chatzilla"
         chrome:author="mozilla.org"
+        chrome:authorURL="http://www.mozilla.org/projects/rt-messaging/chatzilla/"
+        chrome:description="A simple, straightforward Internet Relay Chat (IRC) client."
         chrome:localeVersion="@MOZILLA_VERSION@"
+        chrome:extension="true"
         chrome:name="chatzilla">
   </RDF:Description>
 
