@@ -1027,8 +1027,7 @@ static callsite *calltree(uint32 *bp)
     for (depth = 0; ; depth++) {
         bpdown = (uint32*) bp[0];
         bp[0] = (uint32) bpup;
-        pc = bp[1];
-        if (pc < 0x08000000 || pc > 0x7fffffff || bpdown < bp)
+        if ((uint32*) bpdown[0] < bpdown)
             break;
         bpup = bp;
         bp = bpdown;
@@ -1336,7 +1335,7 @@ callsite *
 backtrace(int skip)
 {
     jmp_buf jb;
-    uint32 *bp, *bpdown, pc;
+    uint32 *bp, *bpdown;
     callsite *site, **key;
     PLHashNumber hash;
     PLHashEntry **hep, *he;
@@ -1350,8 +1349,7 @@ backtrace(int skip)
     bp = (uint32*) jb[0].__jmpbuf[JB_BP];
     while (--skip >= 0) {
         bpdown = (uint32*) *bp++;
-        pc = *bp;
-        if (pc < 0x08000000 || pc > 0x7fffffff || bpdown < bp)
+        if (bpdown < bp)
             break;
         bp = bpdown;
     }
