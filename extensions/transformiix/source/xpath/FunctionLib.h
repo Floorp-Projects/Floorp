@@ -39,7 +39,6 @@
 #ifndef TRANSFRMX_FUNCTIONLIB_H
 #define TRANSFRMX_FUNCTIONLIB_H
 
-#include "primitives.h"
 #include "Expr.h"
 
 /**

@@ -41,13 +41,9 @@
 #ifndef TRANSFRMX_EXPR_H
 #define TRANSFRMX_EXPR_H
 
-#include "baseutils.h"
 #include "List.h"
-#include "nsString.h"
-#include "nsIAtom.h"
-#include "TxObject.h"
 #include "nsAutoPtr.h"
-#include "ExprResult.h"
+#include "txCore.h"
 
 #ifdef DEBUG
 #define TX_TO_STRING
@@ -58,6 +54,8 @@
   Much of this code was ported from XSL:P.
 */
 
+class nsIAtom;
+class txAExprResult;
 class txIParseContext;
 class txIMatchContext;
 class txIEvalContext;

@@ -39,6 +39,7 @@
 #include "txIXPathContext.h"
 #include "ExprResult.h"
 #include "txAtoms.h"
+#include "txError.h"
 #include "XMLUtils.h"
 #include "XSLTFunctions.h"
 #include "txNamespaceMap.h"

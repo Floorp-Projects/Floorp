@@ -39,8 +39,6 @@
 #ifndef TRANSFRMX_TXNAMESPACEMAP_H
 #define TRANSFRMX_TXNAMESPACEMAP_H
 
-#include "txError.h"
-#include "baseutils.h"
 #include "nsIAtom.h"
 #include "nsCOMArray.h"
 

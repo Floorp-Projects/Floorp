@@ -55,10 +55,10 @@
 
 #include "List.h"
 #include "nsIAtom.h"
-#include "baseutils.h"
 #include "nsDoubleHashtable.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "txCore.h"
 
 #define kTxNsNodeIndexOffset 0x00000000;
 #define kTxAttrIndexOffset 0x40000000;

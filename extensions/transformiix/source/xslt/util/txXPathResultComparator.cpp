@@ -40,7 +40,7 @@
 #include "txXPathResultComparator.h"
 #include "Expr.h"
 #include "ExprResult.h"
-#include "primitives.h"
+#include "txCore.h"
 #ifndef TX_EXE
 #include "nsCollationCID.h"
 #include "nsILocale.h"

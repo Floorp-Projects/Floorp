@@ -39,10 +39,10 @@
 #ifndef MITRE_ERROROBSERVER_H
 #define MITRE_ERROROBSERVER_H
 
-#include "baseutils.h"
-#include "txError.h"
+#include "txCore.h"
+#ifdef TX_EXE
 #include <iostream.h>
-class nsAString;
+#endif
 
 /**
  * A simple interface for observing errors
@@ -74,6 +74,7 @@ public:
 
 }; //-- ErrorObserver
 
+#ifdef TX_EXE
 /**
  * A simple ErrorObserver which allows printing error messages to a stream
 **/
@@ -107,5 +108,7 @@ private:
     ostream* errStream;
     MBool hideWarnings;
 }; //-- SimpleErrorObserver
+#endif
+
 #endif
 

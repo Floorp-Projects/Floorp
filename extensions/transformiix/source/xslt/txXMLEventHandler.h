@@ -39,10 +39,8 @@
 #ifndef TRANSFRMX_XML_EVENT_HANDLER_H
 #define TRANSFRMX_XML_EVENT_HANDLER_H
 
-#include "baseutils.h"
-#include "txError.h"
+#include "txCore.h"
 
-class nsAString;
 class txOutputFormat;
 
 #ifdef TX_EXE

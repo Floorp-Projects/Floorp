@@ -41,7 +41,7 @@
 #include "txTokenizer.h"
 #include "txInstructions.h"
 #include "txAtoms.h"
-#include "primitives.h"
+#include "txCore.h"
 #include "txStringUtils.h"
 #include "txStylesheet.h"
 #include "txToplevelItems.h"

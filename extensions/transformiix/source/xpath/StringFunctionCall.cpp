@@ -44,6 +44,7 @@
 #include "ExprResult.h"
 #include "FunctionLib.h"
 #include "txAtoms.h"
+#include "txError.h"
 #include "txIXPathContext.h"
 #include "XMLUtils.h"
 #include "txXPathTreeWalker.h"

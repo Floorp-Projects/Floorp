@@ -43,6 +43,7 @@
 #include "ExprLexer.h"
 #include "txAtoms.h"
 #include "nsString.h"
+#include "txError.h"
 #include "XMLUtils.h"
 
 /**
