@@ -1416,8 +1416,22 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
   // update the total so far
   mNumChars += inLength;
 
-  // Decoders are not available, duplicate the input.
+  // Decoders are not available, do fallback
   if (NULL == mDecoder && NULL == mDecoderDetected) {
+    // if the input charset is empty and the out charset is utf-8
+    // then assume latin1 to avoid generating a wrong utf-8
+    if (!mInputCharset.Length() &&
+         mOutputCharset.EqualsIgnoreCase("utf-8")) {
+      nsAutoString tempStr("");
+      tempStr.Append(inBuffer, inLength);
+      *outBuffer = tempStr.ToNewUTF8String();
+      if (NULL != *outBuffer) {
+        *outLength = nsCRT::strlen(*outBuffer);
+        return 0;
+      }
+      return -1;
+    }
+    // otherwise, duplicate the input
     *outBuffer = (char *) PR_Malloc(inLength+1);
     if (NULL != *outBuffer) {
       nsCRT::memcpy(*outBuffer, inBuffer, inLength);
