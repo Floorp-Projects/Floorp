@@ -6,12 +6,13 @@
 #define __gen_xpccomponents_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsrootidl.h" /* interface nsrootidl */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIXPCInterfaces */
+/* starting interface:    nsIXPCInterfaces */
 
 /* {4b62a640-d26c-11d2-9842-006008962422} */
 #define NS_IXPCINTERFACES_IID_STR "4b62a640-d26c-11d2-9842-006008962422"
@@ -32,7 +33,7 @@ class nsIXPCInterfaces : public nsISupports {
 #endif
 };
 
-/* starting interface nsIXPCClasses */
+/* starting interface:    nsIXPCClasses */
 
 /* {978ff520-d26c-11d2-9842-006008962422} */
 #define NS_IXPCCLASSES_IID_STR "978ff520-d26c-11d2-9842-006008962422"
@@ -53,7 +54,7 @@ class nsIXPCClasses : public nsISupports {
 #endif
 };
 
-/* starting interface nsIXPCComponents */
+/* starting interface:    nsIXPCComponents */
 
 /* {42624f80-d26c-11d2-9842-006008962422} */
 #define NS_IXPCCOMPONENTS_IID_STR "42624f80-d26c-11d2-9842-006008962422"

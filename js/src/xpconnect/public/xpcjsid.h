@@ -6,12 +6,13 @@
 #define __gen_xpcjsid_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsrootidl.h" /* interface nsrootidl */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
 
-/* starting interface nsIJSID */
+/* starting interface:    nsIJSID */
 
 /* {C86AE131-D101-11d2-9841-006008962422} */
 #define NS_IJSID_IID_STR "C86AE131-D101-11d2-9841-006008962422"
@@ -53,7 +54,7 @@ class nsIJSID : public nsISupports {
 #endif
 };
 
-/* starting interface nsIJSIID */
+/* starting interface:    nsIJSIID */
 
 /* {e08dcda0-d651-11d2-9843-006008962422} */
 #define NS_IJSIID_IID_STR "e08dcda0-d651-11d2-9843-006008962422"
@@ -74,7 +75,7 @@ class nsIJSIID : public nsIJSID {
 #endif
 };
 
-/* starting interface nsIJSCID */
+/* starting interface:    nsIJSCID */
 
 /* {e3a24a60-d651-11d2-9843-006008962422} */
 #define NS_IJSCID_IID_STR "e3a24a60-d651-11d2-9843-006008962422"

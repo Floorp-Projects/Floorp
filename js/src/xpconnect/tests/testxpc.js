@@ -62,25 +62,25 @@ for(i in foo)
 print(".......................................");
 print("echo tests...");
 
-var reciever = new Object();
-reciever.SetReciever = function() {};
-reciever.SendOneString = function(str) {reciever_results[0] = str;};
-reciever.SendManyTypes = function() 
+var receiver = new Object();
+receiver.SetReceiver = function() {};
+receiver.SendOneString = function(str) {receiver_results[0] = str;};
+receiver.SendManyTypes = function() 
     {
         for(var i = 0; i < arguments.length; i++)
-            reciever_results[i] = arguments[i];
+            receiver_results[i] = arguments[i];
     };
 
-echo.SetReciever(reciever);
+echo.SetReceiver(receiver);
 
 ////////////////////
 // SendOneString
 
 var test_string = "some string";
-var reciever_results = new Object();
+var receiver_results = new Object();
 echo.SendOneString(test_string);
 print("SendOneString - "+(
-       reciever_results[0] == test_string
+       receiver_results[0] == test_string
        ? "passed" : "failed"));
 
 ////////////////////
@@ -113,7 +113,7 @@ print("In2OutOneString - "+(
 ////////////////////
 // SendManyTypes
 
-var reciever_results = new Object();
+var receiver_results = new Object();
 var send_params = [1,-2,-3,-102020,2,4,6,1023,1.5,2.000008,true,'a','b',NS_ITESTXPC_FOO_IID,"a string","another string"];
 echo.SendManyTypes(send_params[0],
                    send_params[1], 
@@ -134,12 +134,12 @@ echo.SendManyTypes(send_params[0],
 
 var all_ok = true;
 for(i = 0; i < 16; i++) {
-    if(((""+reciever_results[i]).toLowerCase()) != 
+    if(((""+receiver_results[i]).toLowerCase()) != 
         ((""+send_params[i]).toLowerCase())) {
         if(all_ok)
             print("SendManyTypes - failed...");
         all_ok = false;
-        print("    param number "+i+" diff: "+send_params[i]+" -> "+reciever_results[i])
+        print("    param number "+i+" diff: "+send_params[i]+" -> "+receiver_results[i])
     }
 }
 if(all_ok)
@@ -148,14 +148,14 @@ if(all_ok)
 ////////////////////
 // SendInOutManyTypes
 
-var reciever_results = new Object();
+var receiver_results = new Object();
 var send_params   = [1,-2,-3,-102020,2,4,6,1023,1.5,2.000008,true,'a','b',NS_ITESTXPC_FOO_IID,"a string","another string"];
 var resend_params = [2,-3,-7,-10220,18,14,16,123,2.5,8.000008,false,'z','l',NS_ISUPPORTS_IID,"foo string","yet another string"];
 
-reciever.SendInOutManyTypes = function() 
+receiver.SendInOutManyTypes = function() 
     {
         for(var i = 0; i < arguments.length; i++) {
-            reciever_results[i] = arguments[i].value;
+            receiver_results[i] = arguments[i].value;
             arguments[i].value = resend_params[i];
         }
     };
@@ -196,12 +196,12 @@ echo.SendInOutManyTypes(inout_params[0] ,
 
 var all_ok = true;
 for(i = 0; i < 16; i++) {
-    if(((""+reciever_results[i]).toLowerCase()) != 
+    if(((""+receiver_results[i]).toLowerCase()) != 
         ((""+send_params[i]).toLowerCase())) {
         if(all_ok)
             print("SendInOutManyTypes - failed...");
         all_ok = false;
-        print("    sent param number "+i+" diff: "+send_params[i]+" -> "+reciever_results[i]);
+        print("    sent param number "+i+" diff: "+send_params[i]+" -> "+receiver_results[i]);
     }
 }
 
@@ -256,7 +256,7 @@ catch(e) {
 // XXX this is bad test since null is now convertable.
 /*
 try {
-    echo.SetReciever(null);
+    echo.SetReceiver(null);
 //    print("Can't convert arg to Native ("+out+")- failed");
     print("Can't convert arg to Native - failed");
 }
@@ -268,10 +268,10 @@ catch(e) {
 ////////////////////
 // FailInJSTest
 
-var reciever3 = new Object();
-reciever3.SetReciever = function() {};
-reciever3.FailInJSTest = function(fail) {if(fail)throw("");};
-echo.SetReciever(reciever3);
+var receiver3 = new Object();
+receiver3.SetReceiver = function() {};
+receiver3.FailInJSTest = function(fail) {if(fail)throw("");};
+echo.SetReceiver(receiver3);
 
 var all_ok = true;
 
@@ -372,6 +372,11 @@ all_ok = idTest("bogus",         "{XXXXXXXX-C5D9-11d2-9838-006008962422}", true)
 print("nsID tests - "+(all_ok ? "passed" : "failed"));
 
 /***************************************************************************/
+
+all_ok = echo.SharedString() == "a static string";
+print("[shared] test - "+(all_ok ? "passed" : "failed"));
+
+/***************************************************************************/
 // Components object test...
 // print(".......................................");
 
@@ -397,12 +402,12 @@ print("simple speed tests...");
 
 var iterations = 1000;
 
-var reciever2 = new Object();
-reciever2.SetReciever = function() {};
-reciever2.SendOneString = function(str) {/*print(str);*/};
+var receiver2 = new Object();
+receiver2.SetReceiver = function() {};
+receiver2.SendOneString = function(str) {/*print(str);*/};
 
 var echoJS = new Object();
-echoJS.SetReciever = function(r) {this.r = r;};
+echoJS.SetReceiver = function(r) {this.r = r;};
 echoJS.SendOneString = function(str) {if(this.r)this.r.SendOneString(str)};
 echoJS.SimpleCallNoEcho = function(){}
 
@@ -411,7 +416,7 @@ echoJS.SimpleCallNoEcho = function(){}
 
 print("\nEcho.SimpleCallNoEcho (just makes call with no params and no callback)");
 var start_time = new Date().getTime()/1000;
-echoJS.SetReciever(reciever2);
+echoJS.SetReceiver(receiver2);
 for(i = 0; i < iterations; i++)
     echoJS.SimpleCallNoEcho();
 var end_time = new Date().getTime()/1000;
@@ -419,7 +424,7 @@ var interval = parseInt(100*(end_time - start_time),10)/100;
 print("JS control did "+iterations+" iterations in "+interval+ " seconds.");
 
 var start_time = new Date().getTime()/1000;
-echo.SetReciever(reciever2);
+echo.SetReceiver(receiver2);
 for(i = 0; i < iterations; i++)
     echo.SimpleCallNoEcho();
 var end_time = new Date().getTime()/1000;
@@ -430,7 +435,7 @@ print("XPConnect  did "+iterations+" iterations in "+interval+ " seconds.");
 
 print("\nEcho.SendOneString (calls a callback that does a call)");
 var start_time = new Date().getTime()/1000;
-echoJS.SetReciever(reciever2);
+echoJS.SetReceiver(receiver2);
 for(i = 0; i < iterations; i++)
     echoJS.SendOneString("foo");
 var end_time = new Date().getTime()/1000;
@@ -438,7 +443,7 @@ var interval = parseInt(100*(end_time - start_time),10)/100;
 print("JS control did "+iterations+" iterations in "+interval+ " seconds.");
 
 var start_time = new Date().getTime()/1000;
-echo.SetReciever(reciever2);
+echo.SetReceiver(receiver2);
 for(i = 0; i < iterations; i++)
     echo.SendOneString("foo");
 var end_time = new Date().getTime()/1000;
@@ -447,5 +452,5 @@ print("XPConnect  did "+iterations+" iterations in "+interval+ " seconds.");
 
 print(".......................................");
 
-echoJS.SetReciever(null);
-echo.SetReciever(null);
+echoJS.SetReceiver(null);
+echo.SetReceiver(null);

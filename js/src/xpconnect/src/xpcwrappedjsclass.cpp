@@ -486,7 +486,7 @@ pre_call_clean_up:
                    !(conditional_iid = *((nsID**)params[arg_num].val.p)))
                     break;
             }
-            else if(type.IsPointer())
+            else if(type.IsPointer() && !param.IsShared())
                 useAllocator = JS_TRUE;
 
             if(!XPCConvert::JSData2Native(cx, &pv->val, val, type,

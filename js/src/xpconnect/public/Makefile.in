@@ -29,6 +29,7 @@ EXPORTS = \
     xpccomponents.h     \
     xpcjsid.h           \
     xpclog.h            \
+    nsrootidl.h         \
     $(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

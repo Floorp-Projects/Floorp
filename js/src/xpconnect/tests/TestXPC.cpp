@@ -166,7 +166,7 @@ class MyEcho : public nsIEcho
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_IMETHOD SetReciever(nsIEcho* aReciever);
+    NS_IMETHOD SetReceiver(nsIEcho* aReceiver);
     NS_IMETHOD SendOneString(const char* str);
     NS_IMETHOD In2OutOneInt(int input, int* output);
     NS_IMETHOD In2OutAddTwoInts(int input1, 
@@ -214,9 +214,12 @@ public:
 
     NS_IMETHOD FailInJSTest(int fail);
 
+    /* void SharedTest ([shared, retval] out string str); */
+    NS_IMETHOD SharedString(char **str);
+
     MyEcho();
 private: 
-    nsIEcho* mReciever;
+    nsIEcho* mReceiver;
     nsIAllocator* mAllocator;
 };
 
@@ -224,7 +227,7 @@ static NS_DEFINE_IID(kMyEchoIID, NS_IECHO_IID);
 NS_IMPL_ISUPPORTS(MyEcho, kMyEchoIID);
 
 MyEcho::MyEcho() 
-    : mReciever(NULL)
+    : mReceiver(NULL)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -233,20 +236,20 @@ MyEcho::MyEcho()
                                  (nsISupports **)&mAllocator);
 }
 
-NS_IMETHODIMP MyEcho::SetReciever(nsIEcho* aReciever)
+NS_IMETHODIMP MyEcho::SetReceiver(nsIEcho* aReceiver)
 {
-    if(mReciever)
-        NS_RELEASE(mReciever);
-    mReciever = aReciever;
-    if(mReciever)
-        NS_ADDREF(mReciever);
+    if(mReceiver)
+        NS_RELEASE(mReceiver);
+    mReceiver = aReceiver;
+    if(mReceiver)
+        NS_ADDREF(mReceiver);
     return NS_OK;
 }
 
 NS_IMETHODIMP MyEcho::SendOneString(const char* str)
 {
-    if(mReciever)
-        return mReciever->SendOneString(str);
+    if(mReceiver)
+        return mReceiver->SendOneString(str);
     return NS_OK;
 }
 
@@ -307,8 +310,8 @@ MyEcho::SendManyTypes(PRUint8              p1,
                       const char*       p15,
                       const PRUnichar*  p16)
 {
-    if(mReciever)
-        return mReciever->SendManyTypes(p1, p2, p3, p4, p5, p6, p7, p8, p9,
+    if(mReceiver)
+        return mReceiver->SendManyTypes(p1, p2, p3, p4, p5, p6, p7, p8, p9,
                                         p10, p11, p12, p13, p14, p15, p16);
     return NS_OK;
 }    
@@ -331,8 +334,8 @@ MyEcho::SendInOutManyTypes(PRUint8*    p1,
                            char**   p15,
                            PRUint16** p16)
 {
-    if(mReciever)
-        return mReciever->SendInOutManyTypes(p1, p2, p3, p4, p5, p6, p7, p8, p9,
+    if(mReceiver)
+        return mReceiver->SendInOutManyTypes(p1, p2, p3, p4, p5, p6, p7, p8, p9,
                                              p10, p11, p12, p13, p14, p15, p16);
     return NS_OK;
 }
@@ -352,8 +355,22 @@ MyEcho::ReturnCode(int code)
 NS_IMETHODIMP 
 MyEcho::FailInJSTest(int fail)
 {
-    if(mReciever)
-        return mReciever->FailInJSTest(fail);
+    if(mReceiver)
+        return mReceiver->FailInJSTest(fail);
+    return NS_OK;
+}        
+
+NS_IMETHODIMP 
+MyEcho::SharedString(char **str)
+{
+    *str = "a static string";
+/*    
+    // to do non-shared we clone the string:
+    char buf[] = "a static string";
+    int len;
+    *str = (char*)mAllocator->Alloc(len=strlen(buf)+1);
+    memcpy(*str, buf, len);
+*/
     return NS_OK;
 }        
 
@@ -642,7 +659,7 @@ int main()
         JS_DeleteProperty(jscontext, glob, "foo2");
         JS_DeleteProperty(jscontext, glob, "baz");
         JS_DeleteProperty(jscontext, glob, "baz2");
-        JS_DeleteProperty(jscontext, glob, "reciever");
+        JS_DeleteProperty(jscontext, glob, "receiver");
         JS_SetGlobalObject(jscontext, JS_NewObject(jscontext, &global_class, NULL, NULL));
     }
     NS_RELEASE(wrapper);

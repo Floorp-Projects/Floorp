@@ -421,7 +421,7 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
             return JS_FALSE;
         case nsXPTType::T_IID:
         {
-            NS_ASSERTION(useAllocator,"trying to convert a JSID to nsID without allocator");
+            NS_ASSERTION(useAllocator,"trying to convert a JSID to nsID without allocator : this would leak");
 
             JSObject* obj;
             const nsID* pid=NULL;
