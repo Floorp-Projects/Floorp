@@ -3845,6 +3845,33 @@ static const uint8 urlCharType[256] =
         return OBJECT_TO_JS2VAL(meta->functionClass->prototype);
     }
  
+    js2val Array_lengthGet(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
+    {
+        ASSERT(JS2VAL_IS_OBJECT(thisValue));
+        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
+        ArrayInstance *arrInst = checked_cast<ArrayInstance *>(obj);
+        
+        return meta->engine->allocNumber(arrInst->length);
+    }
+
+    js2val Array_lengthSet(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+    {
+        ASSERT(JS2VAL_IS_OBJECT(thisValue));
+        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
+        ArrayInstance *arrInst = checked_cast<ArrayInstance *>(obj);
+
+        uint32 newLength = meta->convertValueToUInteger(argv[0]);
+        if (newLength < arrInst->length) {
+            // need to delete all the elements above the new length
+            bool deleteResult;
+            for (uint32 i = newLength; i < arrInst->length; i++) {
+                meta->arrayClass->DeletePublic(meta, thisValue, meta->engine->numberToString(i), &deleteResult);
+            }
+        }
+        arrInst->length = newLength;
+        return JS2VAL_UNDEFINED;
+    }
+
     static js2val Object_valueOf(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
     {
         return thisValue;
@@ -3949,28 +3976,28 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 
 // Add __proto__ as a getter/setter instance member to Object & class
-        Multiname mn(&world.identifiers["__proto__"], publicNamespace);
+        Multiname proto_mn(&world.identifiers["__proto__"], publicNamespace);
         fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), class_underbarProtoGet, env);
         fInst->fWrap->length = 0;
-        InstanceGetter *g = new InstanceGetter(&mn, fInst, objectClass, true, true);
-        defineInstanceMember(classClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, g, 0);
+        InstanceGetter *g = new InstanceGetter(&proto_mn, fInst, objectClass, true, true);
+        defineInstanceMember(classClass, &cxt, proto_mn.name, *proto_mn.nsList, Attribute::NoOverride, false, g, 0);
         fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), class_underbarProtoGet, env);
         fInst->fWrap->length = 0;
-        InstanceSetter *s = new InstanceSetter(&mn, fInst, objectClass, true, true);
-        defineInstanceMember(classClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, s, 0);
+        InstanceSetter *s = new InstanceSetter(&proto_mn, fInst, objectClass, true, true);
+        defineInstanceMember(classClass, &cxt, proto_mn.name, *proto_mn.nsList, Attribute::NoOverride, false, s, 0);
 
         fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_underbarProtoGet, env);
         fInst->fWrap->length = 0;
-        g = new InstanceGetter(&mn, fInst, objectClass, true, true);
-        defineInstanceMember(objectClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, g, 0);
+        g = new InstanceGetter(&proto_mn, fInst, objectClass, true, true);
+        defineInstanceMember(objectClass, &cxt, proto_mn.name, *proto_mn.nsList, Attribute::NoOverride, false, g, 0);
         fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_underbarProtoSet, env);
         fInst->fWrap->length = 0;
-        s = new InstanceSetter(&mn, fInst, objectClass, true, true);
-        defineInstanceMember(objectClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, s, 0);
+        s = new InstanceSetter(&proto_mn, fInst, objectClass, true, true);
+        defineInstanceMember(objectClass, &cxt, proto_mn.name, *proto_mn.nsList, Attribute::NoOverride, false, s, 0);
 
 
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
@@ -4033,11 +4060,21 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         initMathObject(this, mathObject);
 
 /*** ECMA 3  Array Class ***/
-
         arrayClass = new JS2ArrayClass(objectClass, NULL, new Namespace(engine->private_StringAtom), true, true, engine->allocStringPtr(&world.identifiers["Array"])); arrayClass->complete = true; arrayClass->defaultValue = JS2VAL_NULL;        
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineLocalMember(env, &world.identifiers["Array"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
         initArrayObject(this);
+        Multiname length_mn(&world.identifiers["length"], publicNamespace);
+        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Array_lengthGet, env);
+        fInst->fWrap->length = 0;
+        g = new InstanceGetter(&length_mn, fInst, objectClass, true, true);
+        defineInstanceMember(arrayClass, &cxt, length_mn.name, *length_mn.nsList, Attribute::NoOverride, false, g, 0);
+        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Array_lengthSet, env);
+        fInst->fWrap->length = 0;
+        s = new InstanceSetter(&length_mn, fInst, objectClass, true, true);
+        defineInstanceMember(arrayClass, &cxt, length_mn.name, *length_mn.nsList, Attribute::NoOverride, false, s, 0);
 
 /*** ECMA 3  Error Classes ***/
         MAKEBUILTINCLASS(errorClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Error"]), JS2VAL_NULL);
@@ -4884,10 +4921,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     ArrayInstance::ArrayInstance(JS2Metadata *meta, js2val parent, JS2Class *type) 
         : SimpleInstance(meta, parent, type) 
     {
-        JS2Object *result = this;
-        DEFINE_ROOTKEEPER(rk1, result);
+        length = 0;
+//        JS2Object *result = this;
+//        DEFINE_ROOTKEEPER(rk1, result);
 
-        meta->createDynamicProperty(this, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), ReadWriteAccess, true, false);
+//        meta->createDynamicProperty(this, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), ReadWriteAccess, true, false);
     }
 
  /************************************************************************************

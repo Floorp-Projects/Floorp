@@ -63,39 +63,6 @@ typedef js2val (Callor)(JS2Metadata *meta, const js2val thisValue, js2val *argv,
 typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
 
-/*
-typedef bool (Read)(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
-typedef bool (ReadPublic)(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
-typedef bool (Write)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
-typedef bool (WritePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
-typedef bool (DeleteProperty)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool *result);
-typedef bool (DeletePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result);
-typedef bool (BracketRead)(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval);
-typedef bool (BracketWrite)(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, js2val newValue);
-typedef bool (BracketDelete)(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, bool *result);
-typedef js2val (ImplicitCoerce)(JS2Metadata *meta, js2val newValue, JS2Class *toClass);
-typedef js2val (Is)(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
-
-bool defaultReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Environment *env, Phase phase, js2val *rval);
-bool defaultReadPublicProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
-bool defaultBracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval);
-bool defaultWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
-bool defaultWritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
-bool defaultBracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, js2val newValue);
-bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool *result);
-bool defaultDeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result);
-bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, js2val indexVal, bool *result);
-
-bool arrayClass_WriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, Environment *env, bool createIfMissing, js2val newValue, bool initFlag);
-bool arrayClass_WritePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
-
-js2val defaultImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
-js2val defaultIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
-js2val integerImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
-js2val integerIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
-
-bool stringClass_BracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, js2val indexVal, Phase phase, js2val *rval);
-*/
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
 extern void initMathObject(JS2Metadata *meta, SimpleInstance *mathObject);
@@ -118,6 +85,10 @@ extern js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2v
 extern js2val RegExp_exec(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val Boolean_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val Number_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+
+
+js2val Array_lengthGet(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
+js2val Array_lengthSet(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 
 typedef struct {
     char *name;
@@ -1032,6 +1003,8 @@ class ArrayInstance : public SimpleInstance {
 public:
     ArrayInstance(JS2Metadata *meta, js2val parent, JS2Class *type);
     virtual ~ArrayInstance()             { }
+
+    uint32 length;
 };
 
 // RegExp instances are simple instances created by the RegExp class, they have an extra field 

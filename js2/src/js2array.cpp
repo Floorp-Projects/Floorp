@@ -59,32 +59,26 @@ namespace MetaData {
 uint32 getLength(JS2Metadata *meta, JS2Object *obj)
 {
     uint32 length = 0;
-    js2val result;
-    JS2Class *c = meta->objectType(obj);
-    js2val val = OBJECT_TO_JS2VAL(obj);
-    if (c->ReadPublic(meta, &val, meta->engine->length_StringAtom, RunPhase, &result))
-        length = toUInt32(meta->toInteger(result));
+    if ((obj->kind == SimpleInstanceKind)
+            && (checked_cast<SimpleInstance *>(obj)->type == meta->arrayClass)) {
+        length = toUInt32(meta->toInteger(Array_lengthGet(meta, OBJECT_TO_JS2VAL(obj), NULL, 0)));
+    }
+    else {
+        js2val result;
+        JS2Class *c = meta->objectType(obj);
+        js2val val = OBJECT_TO_JS2VAL(obj);
+        if (c->ReadPublic(meta, &val, meta->engine->length_StringAtom, RunPhase, &result))
+            length = toUInt32(meta->toInteger(result));
+    }
     return length;
 }
 
 js2val setLength(JS2Metadata *meta, JS2Object *obj, uint32 newLength)
 {
     js2val result = meta->engine->allocNumber(newLength);
-    // XXX maybe should have setArrayLength as a specialization
     if ((obj->kind == SimpleInstanceKind)
             && (checked_cast<SimpleInstance *>(obj)->type == meta->arrayClass)) {
-        uint32 length = getLength(meta, obj);
-        if (newLength < length) {
-            // need to delete all the elements above the new length
-            bool deleteResult;
-            JS2Class *c = meta->objectType(obj);
-            for (uint32 i = newLength; i < length; i++) {
-                c->DeletePublic(meta, OBJECT_TO_JS2VAL(obj), meta->engine->numberToString(i), &deleteResult);
-            }
-        }
-        Multiname *mn = new Multiname(meta->engine->length_StringAtom, meta->publicNamespace);
-        DEFINE_ROOTKEEPER(rk, mn);
-        meta->arrayClass->Write(meta, OBJECT_TO_JS2VAL(obj), mn, meta->env, true, result, false);
+        Array_lengthSet(meta, OBJECT_TO_JS2VAL(obj), &result, 1);
     }
     else {
         JS2Class *c = meta->objectType(obj);

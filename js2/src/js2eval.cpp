@@ -728,22 +728,29 @@ namespace MetaData {
     {
         ASSERT(JS2VAL_IS_OBJECT(base));
         JS2Object *obj = JS2VAL_TO_OBJECT(base);
+        
+        bool result;
+        if ((*multiname->name == *meta->engine->length_StringAtom) && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
+            Array_lengthSet(meta, base, &newValue, 1);
+            result = true;
+        }
+        else {
+            result = JS2Class::Write(meta, base, multiname, env, createIfMissing, newValue, false);
+            if (result && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
+                const char16 *numEnd;        
+                float64 f = stringToDouble(multiname->name->data(), multiname->name->data() + multiname->name->length(), numEnd);
+                uint32 index = JS2Engine::float64toUInt32(f);
 
-        bool result = JS2Class::Write(meta, base, multiname, env, createIfMissing, newValue, false);
-        if (result && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
-            const char16 *numEnd;        
-            float64 f = stringToDouble(multiname->name->data(), multiname->name->data() + multiname->name->length(), numEnd);
-            uint32 index = JS2Engine::float64toUInt32(f);
+                char buf[dtosStandardBufferSize];
+                const char *chrp = doubleToStr(buf, dtosStandardBufferSize, index, dtosStandard, 0);
 
-            char buf[dtosStandardBufferSize];
-            const char *chrp = doubleToStr(buf, dtosStandardBufferSize, index, dtosStandard, 0);
+                if (widenCString(chrp) == *multiname->name) {
+                    uint32 length = getLength(meta, obj);
+                    if (index >= length)
+                        setLength(meta, obj, index + 1);
+                }
 
-            if (widenCString(chrp) == *multiname->name) {
-                uint32 length = getLength(meta, obj);
-                if (index >= length)
-                    setLength(meta, obj, index + 1);
             }
-
         }
         return result;
     }    
