@@ -95,7 +95,9 @@ function onOK() {
   while (eb.hasMoreElements()) {
     // Update the home button tooltip.
     var domWin = eb.getNext().QueryInterface(Components.interfaces.nsIDOMWindow);
-    domWin.document.getElementById("home-button").setAttribute("tooltiptext", parent.homepage);
+    var homeButton = domWin.document.getElementById("home-button");
+    if (homeButton)
+      homeButton.setAttribute("tooltiptext", parent.homepage);
   }
 }
 
