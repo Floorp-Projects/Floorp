@@ -3950,11 +3950,8 @@ NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const PRUnichar *aCommand,
   	
   if (PR_TRUE== nsAutoString(sCopyString).Equals(aCommand))
   { 
-    //1rv = editInterface->GetCopyable( aResult );
-    rv = NS_OK;
-    *aResult = PR_TRUE;//hack for now
+    rv = editInterface->GetCopyable( aResult );
   }
-#if 0
   else if (PR_TRUE==nsAutoString(sCutString).Equals(aCommand))    
   { 
     rv =  editInterface->GetCutable( aResult);
@@ -3968,7 +3965,6 @@ NS_IMETHODIMP nsDOMWindowController::IsCommandEnabled(const PRUnichar *aCommand,
     *aResult = PR_TRUE;
     rv = NS_OK;
   }
-#endif 
   return rv;
 
 }
@@ -4035,21 +4031,17 @@ NS_IMETHODIMP nsDOMWindowController::DoCommand(const PRUnichar *aCommand)
   	
   if (PR_TRUE== nsAutoString(sCopyString).Equals(aCommand))
   { 
-    //rv = editInterface->CopySelection();
-    if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))) && presShell)
-    {
-      rv = presShell->DoCopy();
-    }
+    rv = editInterface->CopySelection();
   }
-  else if (PR_TRUE== nsAutoString(sSelectAllString).Equals(aCommand))    
+  else if (PR_TRUE== nsAutoString(sCutString).Equals(aCommand))    
   { 
     rv = editInterface->CutSelection();
   }
-  else if (PR_TRUE== nsAutoString( sSelectAllString ).Equals(aCommand))    
+  else if (PR_TRUE== nsAutoString(sPasteString).Equals(aCommand))    
   { 
     rv = editInterface->Paste();
   }
-  else if (PR_TRUE== nsAutoString( sSelectAllString ).Equals(aCommand))    
+  else if (PR_TRUE== nsAutoString(sSelectAllString).Equals(aCommand))    
   { 
     rv = editInterface->SelectAll();
   }
