@@ -1044,6 +1044,7 @@ public:
    nsIMdbStore() {}
 
 	mdb_err   WriteAll(nsIMdbEnv* ev, nsIMdbThumb** acqThumb);
+	mdb_err   ReadAll(nsIMdbEnv* ev);
 	mdb_err		ReadTokenList();
 	mdb_err		WriteTokenList();
     mdb_err		WriteTableList();
@@ -1857,7 +1858,7 @@ class nsIMdbCell : public nsIMdbBlob { // text attribute in row with column scop
 class mdbCellImpl : public nsIMdbCell
 {
 public:
-	mdbCellImpl() {}
+	mdbCellImpl() ;
 	mdbCellImpl(const mdbCellImpl &anotherCell);
 	mdbCellImpl& operator=(const mdbCellImpl& other);
 	virtual mdb_err AliasYarn(nsIMdbEnv* ev, mdbYarn* outYarn) ; 
