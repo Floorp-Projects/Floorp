@@ -10,7 +10,8 @@
 	 nc:link="chrome://help/locale/customize_help.html#add_bookmarkSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -19,7 +20,8 @@
 	 nc:link="chrome://help/locale/customize_help.html#add_bookmarksSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -28,7 +30,8 @@
 	 nc:link="chrome://help/locale/customize_help.html#adding_bookmarksSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -37,7 +40,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#autocompleteSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -46,7 +50,8 @@
 	 nc:link="chrome://help/locale/customize_help.html#bookmark_folderSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -55,7 +60,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#buttonsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -64,7 +70,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#cacheSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -73,7 +80,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#character_codingSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -82,7 +90,8 @@
 	 nc:link="chrome://help/locale/ssl_help.html#cipherSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -91,7 +100,8 @@
 	 nc:link="chrome://help/locale/customize_help.html#creating_bookmarksSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -100,7 +110,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#disable_Quick_LaunchSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -109,7 +120,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#disable_QuickLaunchSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -118,7 +130,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#downloadSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -127,7 +140,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#downloadingSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -136,7 +150,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#enable_Quick_LaunchSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -145,7 +160,8 @@
 	 nc:link="chrome://help/locale/customize_help.html#folderSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -154,7 +170,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#home_pageSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -163,7 +180,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#internet_keywordsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -172,7 +190,7 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#javascriptSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
 
 <rdf:Description about="urn:root">
    <nc:subheadings>
@@ -182,7 +200,7 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#JavaScriptSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
 
 <rdf:Description about="urn:root">
    <nc:subheadings>
@@ -192,7 +210,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#keywordsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -201,7 +220,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#languagesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -210,7 +230,8 @@
 	 nc:link="chrome://help/locale/mail_help.html#mail_security_settingsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -219,7 +240,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#memorySDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -228,7 +250,8 @@
 	 nc:link="chrome://help/locale/mail_help.html#newsgroup_security_settingsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -237,7 +260,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#opening_filesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -246,7 +270,8 @@
 	 nc:link="chrome://help/locale/customize_help.html#personal_toolbarSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -255,7 +280,8 @@
 	 nc:link="chrome://help/locale/mail_help.html#printing_messagesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -264,7 +290,8 @@
 	 nc:link="chrome://help/locale/nav_help.html#Quick_LaunchSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -273,7 +300,8 @@
 	 nc:link="chrome://help/locale/nav_help.html#QuickLaunchSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -282,7 +310,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#searchSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -291,7 +320,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#search_engineSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -300,7 +330,8 @@
 	 nc:link="chrome://help/locale/mail_help.html#security_settingsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -309,7 +340,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#tabSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -318,7 +350,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#tabbed_browsingSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -327,7 +360,8 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#whats_relatedSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -336,5 +370,6 @@
 	 nc:link="chrome://help/locale/cs_nav_prefs_advanced.html#windowsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
-</rdf:Description
+</rdf:Description>
+
 </rdf:RDF>
