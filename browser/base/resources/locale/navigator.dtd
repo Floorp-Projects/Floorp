@@ -195,4 +195,5 @@
 
 <!ENTITY searchButton.label "Search">
 <!ENTITY bookmarksButton.label "Bookmarks">
+<!ENTITY historyButton.label "History">
 <!ENTITY closeButton.label "Close">

@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
+ *   Jason Kersey (kerz@netscape.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -121,10 +122,6 @@
   -moz-image-region: rect(63px 115px 84px 92px) !important;
 }
 
-#fullscreen-exit-button {
-  list-style-image: none;
-}
-
 #home-button {
   -moz-image-region: rect(0px 138px 21px 115px) !important;
 }
@@ -160,6 +157,18 @@
   
 #bookmarks-button:hover:active {
   -moz-image-region: rect(63px 184px 84px 161px) !important;
+}
+
+#history-button {
+  -moz-image-region: rect(0px 207px 21px 184px) !important;
+}
+  
+#history-button:hover {
+  -moz-image-region: rect(42px 207px 63px 184px) !important;
+}
+  
+#history-button:hover:active {
+  -moz-image-region: rect(63px 207px 84px 184px) !important;
 }
 
 /* ::::: small primary toolbar buttons ::::: */

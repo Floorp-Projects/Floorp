@@ -713,6 +713,10 @@ Contributor(s): ______________________________________. -->
                      label="&bookmarksButton.label;" persist="hidden"
                      oncommand="openPanel('chrome://browser/content/bookmarks/bm-panel.xul',
                                           this.getAttribute('label'));"/>
+      <toolbarbutton id="history-button" class="toolbarbutton-1"
+                     label="&historyButton.label;" persist="hidden"
+                     oncommand="openPanel('chrome://communicator/content/history/history-panel.xul',
+                                          this.getAttribute('label'));"/>
       <toolbarseparator/>
       <toolbarbutton id="print-button" class="toolbarbutton-1"
                      label="&printButton.label;" persist="hidden"
