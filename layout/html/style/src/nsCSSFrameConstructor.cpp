@@ -9827,7 +9827,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     nsCOMPtr<nsIAtom> tag;
     aContent->GetTag(*getter_AddRefs(tag));
     if (reframe == PR_FALSE && tag && (tag.get() == nsXULAtoms::treechildren ||
-                tag.get() == nsXULAtoms::treeitem))
+      tag.get() == nsXULAtoms::treeitem || tag.get() == nsXULAtoms::treerow ||
+      tag.get() == nsXULAtoms::treecell))
       return NS_OK;
   }
 #endif // INCLUDE_XUL
