@@ -223,8 +223,8 @@ sub InstallNonChromeResources()
     InstallResources(":mozilla:intl:strres:tests:MANIFEST",            "$resource_dir");
 
     # install builtin XBL bindings
-    MakeAlias(":mozilla:layout:xbl:builtin:htmlbindings.xml",                      "$builtin_dir");
-    MakeAlias(":mozilla:layout:xbl:builtin:mac:platformHTMLBindings.xml",          "$builtin_dir");
+    MakeAlias(":mozilla:content:xbl:builtin:htmlbindings.xml",                     "$builtin_dir");
+    MakeAlias(":mozilla:content:xbl:builtin:mac:platformHTMLBindings.xml",         "$builtin_dir");
 
     print("--- End Resource copying ----\n");
 }
@@ -589,30 +589,47 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:webshell:public:MANIFEST_IDL",                   "$distdirectory:idl:");
     InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",          "$distdirectory:webshell:");
 
+    #CONTENT
+    
+    open(OUTPUT, ">:mozilla:layout:build:gbdate.h") || die "could not open gbdate.h";
+    my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
+    # localtime returns year minus 1900
+    $year = $year + 1900;
+    printf(OUTPUT "#define PRODUCT_VERSION \"%04d%02d%02d\"\n", $year, 1+$mon, $mday);
+    close(OUTPUT);
+    
+    InstallFromManifest(":mozilla:content:base:public:MANIFEST",                   "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:base:public:MANIFEST_IDL",               "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:content:base:src:MANIFEST",                      "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:build:MANIFEST",                         "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:events:public:MANIFEST",                 "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:events:src:MANIFEST",                    "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:html:content:public:MANIFEST",           "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:html:content:src:MANIFEST",              "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:html:document:public:MANIFEST",          "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:html:document:src:MANIFEST",             "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:html:style:public:MANIFEST",             "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:html:style:src:MANIFEST",                "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:xbl:public:MANIFEST",                    "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:xml:content:public:MANIFEST",            "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:xml:document:public:MANIFEST",           "$distdirectory:content:");
+    InstallFromManifest(":mozilla:content:xsl:document:src:MANIFEST_IDL",          "$distdirectory:idl:");
+
     #LAYOUT
     InstallFromManifest(":mozilla:layout:build:MANIFEST",                          "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:base:public:MANIFEST",                    "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:base:public:MANIFEST_IDL",                "$distdirectory:idl:");
-    InstallFromManifest(":mozilla:layout:html:content:public:MANIFEST",            "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",              "$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:html:document:public:MANIFEST",           "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",              "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:style:src:MANIFEST",                 "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",                  "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:forms:public:MANIFEST",              "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:table:public:MANIFEST",              "$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:base:src:MANIFEST",                       "$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:events:public:MANIFEST",                  "$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:events:src:MANIFEST",                     "$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:xml:document:public:MANIFEST",            "$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:xml:content:public:MANIFEST",             "$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:xsl:document:src:MANIFEST_IDL",           "$distdirectory:idl:");
     if ($main::options{svg})
     {
         InstallFromManifest(":mozilla:layout:svg:base:public:MANIFEST",                        "$distdirectory:layout:");
     }
     InstallFromManifest(":mozilla:layout:xul:base:public:Manifest",                "$distdirectory:layout:");
-    InstallFromManifest(":mozilla:layout:xbl:public:Manifest",                     "$distdirectory:layout:");
 
     #GFX
     InstallFromManifest(":mozilla:gfx:public:MANIFEST",                            "$distdirectory:gfx:");
@@ -929,6 +946,8 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:profile:macbuild:ProfileServicesIDL.mcp", "profileservices");
     BuildIDLProject(":mozilla:profile:pref-migrator:macbuild:prefmigratorIDL.mcp",  "prefm");
         
+    BuildIDLProject(":mozilla:content:macbuild:contentIDL.mcp",                       "content");
+
     BuildIDLProject(":mozilla:layout:macbuild:layoutIDL.mcp",                       "layout");
 
     BuildIDLProject(":mozilla:rdf:macbuild:RDFIDL.mcp",                             "rdf");
@@ -1304,12 +1323,7 @@ sub BuildLayoutProjects()
     
     StartBuildModule("nglayout");
 
-    open(OUTPUT, ">:mozilla:layout:build:gbdate.h") || die "could not open gbdate.h";
-    my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
-    # localtime returns year minus 1900
-    $year = $year + 1900;
-    printf(OUTPUT "#define PRODUCT_VERSION \"%04d%02d%02d\"\n", $year, 1+$mon, $mday);
-    close(OUTPUT);
+
     #//
     #// Build Layout projects
     #//
@@ -1320,7 +1334,7 @@ sub BuildLayoutProjects()
     BuildOneProjectWithOutput(":mozilla:gfx:macbuild:gfx.mcp",            "gfx$C$D.shlb", "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:dom:macbuild:dom.mcp",                            "dom$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",              "plugin$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:layout:macbuild:layoutxsl.mcp",                   "layoutxsl$D.o", 0, 0, 0);
+    BuildOneProject(":mozilla:content:macbuild:content.mcp",                    "content$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     if ($main::options{mathml})
     {
         BuildOneProject(":mozilla:layout:macbuild:layoutmathml.mcp",                "layoutmathml$D.o", 0, 0, 0);
