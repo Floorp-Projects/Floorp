@@ -257,7 +257,12 @@ sub setup_env {
     # make sure it's there.  if it's not there, give a helpful message so
     # the user can figure out what they need to do next.
 
-    $shell_command = $src_dir . $object_dir .'/'. $js_exe;
+
+    if ( ! $js_exe_full_path ) {
+        $shell_command = $src_dir . $object_dir .'/'. $js_exe;
+    } else {
+        $shell_command = $js_exe_full_path;
+    }
 
     if ( !-e $shell_command ) {
         die ("Could not find JavaScript shell executable $shell_command.\n" .
@@ -316,6 +321,9 @@ sub parse_args {
             $js_quiet = 1;
         } elsif ($ARGV[$i] eq '--h' ) {
             die &usage;
+        } elsif ( $ARGV[$i] eq '-E' ) {
+            $js_exe_full_path = $ARGV[$i+1];
+            $i++;
         } else {
             die &usage;
         }
