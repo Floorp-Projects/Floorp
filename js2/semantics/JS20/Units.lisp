@@ -27,7 +27,7 @@
                                            (#?2000 #?2001 #?2002 #?2003 #?2004 #?2005 #?2006 #?2007)
                                            (#?2008 #?2009 #?200A #?200B)
                                            (#?3000)) ())
-               (:line-terminator (#?000A #?000D #?2028 #?2029) ())
+               (:line-terminator (#?000A #?000D #?0085 #?2028 #?2029) ())
                (:initial-identifier-character (+ :unicode-initial-alphabetic (#\$ #\_))
                                               (($default-action $default-action)))
                (:continuing-identifier-character (+ :unicode-alphanumeric (#\$ #\_))
