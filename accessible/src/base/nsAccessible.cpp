@@ -1141,10 +1141,9 @@ NS_IMETHODIMP nsAccessible::AccRemoveSelection()
 NS_IMETHODIMP nsAccessible::AccTakeSelection()
 {
   nsCOMPtr<nsISelectionController> control(do_QueryReferent(mPresShell));
- if (!control) {
-     return NS_ERROR_FAILURE;  
-  }
-
+  if (!control)
+    return NS_ERROR_FAILURE;  
+ 
   nsCOMPtr<nsISelection> selection;
   nsresult rv = control->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
   if (NS_FAILED(rv))
@@ -1189,9 +1188,8 @@ NS_IMETHODIMP nsAccessible::AccTakeSelection()
 NS_IMETHODIMP nsAccessible::AccTakeFocus()
 { 
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-  if (!shell) {
-     return NS_ERROR_FAILURE;  
-  }
+  if (!shell)
+    return NS_ERROR_FAILURE;  
 
   nsCOMPtr<nsIPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
@@ -1295,8 +1293,6 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
     elt->GetAttribute(NS_LITERAL_STRING("alt"), textEquivalent);
     if (textEquivalent.IsEmpty())
       elt->GetAttribute(NS_LITERAL_STRING("title"), textEquivalent);
-    if (textEquivalent.IsEmpty())
-      elt->GetAttribute(NS_LITERAL_STRING("name"), textEquivalent);
     if (textEquivalent.IsEmpty())
       elt->GetAttribute(NS_LITERAL_STRING("src"), textEquivalent);
     if (textEquivalent.IsEmpty())
