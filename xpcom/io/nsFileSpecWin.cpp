@@ -348,6 +348,11 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasSymlink)
                     }
                 } 
             }
+            else {
+                // It wasn't a shortcut. Oh well. Leave it like it was.
+                hres = 0;
+            }
+
             // Release the pointer to the IPersistFile interface. 
             ppf->Release(); 
         }
