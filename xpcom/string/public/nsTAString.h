@@ -218,6 +218,12 @@ class nsTAString_CharT
         {
           return EqualsASCII(str, N-1);
         }
+      template<int N>
+      inline PRBool EqualsLiteral( char (&str)[N] ) const
+        {
+          const char* s = str;
+          return EqualsASCII(s, N-1);
+        }
 #endif
 
         /**
