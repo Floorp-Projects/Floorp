@@ -108,6 +108,9 @@ interface nsITimelineService : nsISupports
     void markTimer(in string timerName);
 
     void resetTimer(in string timerName);
+
+    // Mark a timer, plus an additional comment
+    void markTimerWithComment(in string timerName, in string comment);
 };
 
 %{C++
