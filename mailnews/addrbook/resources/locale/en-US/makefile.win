@@ -35,6 +35,8 @@ install::
 	$(MAKE_INSTALL) abNewCardDialog.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) abResultsTreeOverlay.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) abSelectAddressesDialog.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) abMailListDialog.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) addressBook.properties $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abAddressBookNameDialog.dtd
@@ -45,3 +47,5 @@ clobber::
   rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abNewCardDialog.dtd
   rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abResultsTreeOverlay.dtd
   rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abSelectAddressesDialog.dtd
+  rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\abMailListDialog.dtd
+  rm -f $(DIST)\bin\chrome\messenger\locale\addressbook\addressBook.properties

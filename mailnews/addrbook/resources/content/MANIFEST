@@ -36,3 +36,5 @@ abSelectAddressesDialog.xul
 addressbook.js
 addressbook.xul
 abDragDrop.js
+abMailListDialog.js
+abMailListDialog.xul

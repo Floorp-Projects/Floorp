@@ -45,6 +45,8 @@ EXPORT_RESOURCE_SAMPLES = \
 		addressbook.js \
 		addressbook.xul \
 		abDragDrop.js \
+		abMailListDialog.js \
+		abMailListDialog.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -6,3 +6,5 @@ abMainWindow.dtd
 abNewCardDialog.dtd
 abResultsTreeOverlay.dtd
 abSelectAddressesDialog.dtd
+abMailListDialog.dtd
+addressBook.properties

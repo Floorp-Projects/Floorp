@@ -19,8 +19,9 @@
  * Contributor(s): 
  */
 
-top.MAX_RECIPIENTS = 0;
+top.MAX_RECIPIENTS = 1;
 var inputElementType = "";
+var strBundle = srGetStrBundle("chrome://messenger/locale/addressBook.properties");
 
 function MailListOKButton()
 {
@@ -42,7 +43,11 @@ function MailListOKButton()
 		mailList.listName = document.getElementById('ListName').value;
 
 		if (mailList.listName.length == 0)
+		{
+			var alertText = strBundle.GetStringFromName("emptyListName");
+			alert(alertText);
 			return false;
+		}
 
 		mailList.listNickName = document.getElementById('ListNickName').value;
 		mailList.description = document.getElementById('ListDescription').value;
@@ -176,7 +181,6 @@ function awInputElementName()
 
 function awAppendNewRow(setFocus)
 {
-dump("-----awAppendNewRow\n");
 	var body = document.getElementById('addressList');
 	var treeitem1 = awGetTreeItem(1);
 	
@@ -188,7 +192,6 @@ dump("-----awAppendNewRow\n");
         var input = newNode.getElementsByTagName(awInputElementName());
         if ( input && input.length == 1 )
         {
-dump("-----awAppendNewRow 1\n");
     	    input[0].setAttribute("value", "");
     	    input[0].setAttribute("id", "address#" + top.MAX_RECIPIENTS);
     	}
@@ -296,6 +299,8 @@ function awRemoveNodeAndChildren(parent, nodeToRemove)
 
 function awSetFocus(row, inputElement)
 {
+	return;
+
 	top.awRow = row;
 	top.awInputElement = inputElement;
 	top.awFocusRetry = 0;
@@ -304,12 +309,12 @@ function awSetFocus(row, inputElement)
 
 function _awSetFocus()
 {
-	var tree = document.getElementById('addressingWidgetTree');
+	var tree = document.getElementById('addressListTree');
 	try
 	{
 		theNewRow = awGetTreeRow(top.awRow);
 		//temporary patch for bug 26344
-		awFinishCopyNode(theNewRow);
+//		awFinishCopyNode(theNewRow);
 
 		tree.ensureElementIsVisible(theNewRow);
 		top.awInputElement.focus();

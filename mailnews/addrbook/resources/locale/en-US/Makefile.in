@@ -35,6 +35,8 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/abNewCardDialog.dtd \
 		$(srcdir)/abResultsTreeOverlay.dtd \
 		$(srcdir)/abSelectAddressesDialog.dtd \
+		$(srcdir)/abMailListDialog.dtd \
+		$(srcdir)/addressBook.properties \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

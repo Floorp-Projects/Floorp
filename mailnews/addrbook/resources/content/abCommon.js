@@ -518,3 +518,16 @@ function UpdateSortIndicator(column,sortDirection)
 	}
 }
 
+function AbNewList()
+{
+	return;
+	var selectedAB = 0;
+	if ( dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1) )
+		selectedAB = dirTree.selectedItems[0].getAttribute('id');
+		
+	window.openDialog("chrome://messenger/content/addressbook/abMailListDialog.xul",
+					  "",
+					  "chrome,resizeable=no",
+					  {selectedAB:selectedAB});
+}
+

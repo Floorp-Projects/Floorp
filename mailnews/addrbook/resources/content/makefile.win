@@ -40,6 +40,8 @@ install::
 	$(MAKE_INSTALL) addressbook.js				$(DIST)\bin\chrome\messenger\content\addressbook
 	$(MAKE_INSTALL) addressbook.xul				$(DIST)\bin\chrome\messenger\content\addressbook
 	$(MAKE_INSTALL) abDragDrop.js				$(DIST)\bin\chrome\messenger\content\addressbook
+	$(MAKE_INSTALL) abMailListDialog.xul		$(DIST)\bin\chrome\messenger\content\addressbook
+	$(MAKE_INSTALL) abMailListDialog.js			$(DIST)\bin\chrome\messenger\content\addressbook
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\addressbook\abAddressBookNameDialog.js
@@ -58,6 +60,8 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\addressbook\addressbook.js
 	rm -f $(DIST)\chrome\messenger\content\addressbook\addressbook.xul
 	rm -f $(DIST)\chrome\messenger\content\addressbook\abDragDrop.js
+	rm -f $(DIST)\chrome\messenger\content\addressbook\abMailListDialog.xul
+	rm -f $(DIST)\chrome\messenger\content\addressbook\abMailListDialog.js
 
 
 
