@@ -50,26 +50,26 @@ typedef enum JSTokenType {
     TOK_EOF = 0,                        /* end of file */
     TOK_EOL = 1,                        /* end of line */
     TOK_SEMI = 2,                       /* semicolon */
-    TOK_LB = 3, TOK_RB = 4,             /* left and right brackets */
-    TOK_LC = 5, TOK_RC = 6,             /* left and right curlies (braces) */
-    TOK_LP = 7, TOK_RP = 8,             /* left and right parentheses */
-    TOK_COMMA = 9,                      /* comma operator */
-    TOK_ASSIGN = 10,                    /* assignment ops (= += -= etc.) */
-    TOK_HOOK = 11, TOK_COLON = 12,      /* conditional (?:) */
-    TOK_OR = 13,                        /* logical or (||) */
-    TOK_AND = 14,                       /* logical and (&&) */
-    TOK_BITOR = 15,                     /* bitwise-or (|) */
-    TOK_BITXOR = 16,                    /* bitwise-xor (^) */
-    TOK_BITAND = 17,                    /* bitwise-and (&) */
-    TOK_EQOP = 18,                      /* equality ops (== !=) */
-    TOK_RELOP = 19,                     /* relational ops (< <= > >=) */
-    TOK_SHOP = 20,                      /* shift ops (<< >> >>>) */
-    TOK_PLUS = 21,                      /* plus */
-    TOK_MINUS = 22,                     /* minus */
-    TOK_STAR = 23, TOK_DIVOP = 24,      /* multiply/divide ops (* / %) */
-    TOK_UNARYOP = 25,                   /* unary prefix operator */
-    TOK_INC = 26, TOK_DEC = 27,         /* increment/decrement (++ --) */
-    TOK_DOT = 28,                       /* member operator (.) */
+    TOK_COMMA = 3,                      /* comma operator */
+    TOK_ASSIGN = 4,                     /* assignment ops (= += -= etc.) */
+    TOK_HOOK = 5, TOK_COLON = 6,        /* conditional (?:) */
+    TOK_OR = 7,                         /* logical or (||) */
+    TOK_AND = 8,                        /* logical and (&&) */
+    TOK_BITOR = 9,                      /* bitwise-or (|) */
+    TOK_BITXOR = 10,                    /* bitwise-xor (^) */
+    TOK_BITAND = 11,                    /* bitwise-and (&) */
+    TOK_EQOP = 12,                      /* equality ops (== !=) */
+    TOK_RELOP = 13,                     /* relational ops (< <= > >=) */
+    TOK_SHOP = 14,                      /* shift ops (<< >> >>>) */
+    TOK_PLUS = 15,                      /* plus */
+    TOK_MINUS = 16,                     /* minus */
+    TOK_STAR = 17, TOK_DIVOP = 18,      /* multiply/divide ops (* / %) */
+    TOK_UNARYOP = 19,                   /* unary prefix operator */
+    TOK_INC = 20, TOK_DEC = 21,         /* increment/decrement (++ --) */
+    TOK_DOT = 22,                       /* member operator (.) */
+    TOK_LB = 23, TOK_RB = 24,           /* left and right brackets */
+    TOK_LC = 25, TOK_RC = 26,           /* left and right curlies (braces) */
+    TOK_LP = 27, TOK_RP = 28,           /* left and right parentheses */
     TOK_NAME = 29,                      /* identifier */
     TOK_NUMBER = 30,                    /* numeric constant */
     TOK_STRING = 31,                    /* string constant */
