@@ -14385,12 +14385,6 @@ if test "$MOZ_LDAP_XPCOM"; then
     fi
 fi
 
-NS_MT_SUPPORTED=1
-cat >> confdefs.h <<\EOF
-#define NS_MT_SUPPORTED 1
-EOF
-
-
 if test "$SUNCTL"; then
         _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $GLIB_CFLAGS"
@@ -14403,14 +14397,14 @@ ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$a
 cross_compiling=$ac_cv_prog_cc_cross
 
     cat > conftest.$ac_ext <<EOF
-#line 14407 "configure"
+#line 14401 "configure"
 #include "confdefs.h"
 #include <gmodule.h>
 int main() {
  int x = 1; x++; 
 ; return 0; }
 EOF
-if { (eval echo configure:14414: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:14408: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   :
 else
   echo "configure: failed program was:" >&5
