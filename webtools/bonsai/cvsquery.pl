@@ -159,6 +159,12 @@ sub query_checkins {
         }
     }
 
+    if (0 < @::query_dirs) {
+        foreach my $i (@::query_dirs) {
+            $qstring .= " and dirs.dir like " . SqlQuote("$i%");
+        }
+    }
+
     if (defined $::query_file && $::query_file ne '') {
         my $q = SqlQuote($::query_file);
         $::query_filetype ||= "exact";
