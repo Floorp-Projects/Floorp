@@ -64,8 +64,7 @@ PRBool DeleteAdjacencyEntry(nsHashKey *aKey, void *aData, void* closure) {
 
 nsStreamConverterService::~nsStreamConverterService() {
     // Clean up the adjacency list table.
-    mAdjacencyList->Enumerate(DeleteAdjacencyEntry, nsnull);
-    mAdjacencyList->Reset();
+    mAdjacencyList->Reset(DeleteAdjacencyEntry, nsnull);
     delete mAdjacencyList;
 }
 
@@ -426,8 +425,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
         if (data->keyString->Equals(fromStr)) {
             // found it. We're done here.
             *aEdgeList = shortestPath;
-            lBFSTable.Enumerate(DeleteBFSEntry, nsnull);
-            lBFSTable.Reset();
+            lBFSTable.Reset(DeleteBFSEntry, nsnull);
             return NS_OK;
         }
 
@@ -453,8 +451,7 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
         data = predecessorData;
     }
 
-    lBFSTable.Enumerate(DeleteBFSEntry, nsnull);
-    lBFSTable.Reset();
+    lBFSTable.Reset(DeleteBFSEntry, nsnull);
     *aEdgeList = nsnull;
     return NS_ERROR_FAILURE; // couldn't find a stream converter or chain.
 
