@@ -21,6 +21,8 @@
  *
  * Contributor(s):
  *   Don Cone <dcone@netscape.com>
+ *   Rod Spears <rods@netscape.com>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -91,6 +93,7 @@ interface nsIPrintSettings : nsISupports
   const unsigned long kInitSavePageDelay      = 0x00800000;
   const unsigned long kInitSaveMargins        = 0x01000000;
   const unsigned long kInitSaveNativeData     = 0x02000000;
+  const unsigned long kInitSavePlexName       = 0x04000000;
   const unsigned long kInitSaveAll            = 0xFFFFFFFF;
 
   /* Print Option Flags for Bit Field*/
@@ -223,6 +226,9 @@ interface nsIPrintSettings : nsISupports
   attribute double  paperWidth;    /* width of the paper in inches or mm */
   attribute double  paperHeight;   /* height of the paper in inches or mm */
   attribute short   paperSizeUnit; /* paper is in inches or mm */
+
+  attribute wstring plexName;      /* name of plex mode (like "simplex", "duplex",
+                                    * "tumble" and various custom values) */
 
   attribute boolean printReversed;
   attribute boolean printInColor;  /* a false means grayscale */

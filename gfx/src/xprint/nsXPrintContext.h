@@ -135,6 +135,7 @@ private:
   nsresult SetupPrintContext(nsIDeviceContextSpecXp *aSpec);
   nsresult SetMediumSize(const char *paper_name);
   nsresult SetOrientation(int landscape);
+  nsresult SetPlexMode(const char *plexname);
   nsresult SetResolution(void);
 };
 

@@ -90,6 +90,7 @@ protected:
   nsString      mFooterStrs[NUM_HEAD_FOOT];
 
   nsString      mPaperName;
+  nsString      mPlexName;
   PRInt16       mPaperData;
   PRInt16       mPaperSizeType;
   double        mPaperWidth;

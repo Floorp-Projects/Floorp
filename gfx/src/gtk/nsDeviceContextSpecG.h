@@ -96,6 +96,7 @@ public:
   static nsresult GetPrintMethod(const char *aPrinter, PrintMethod &aMethod);
   NS_IMETHOD GetPageSizeInTwips(PRInt32 *aWidth, PRInt32 *aHeight);
   NS_IMETHOD GetPaperName(const char **aPaperName);
+  NS_IMETHOD GetPlexName(const char **aPlexName);
   virtual ~nsDeviceContextSpecGTK();
   
 protected:
@@ -108,6 +109,7 @@ protected:
   char   mPath[PATH_MAX];     /* If toPrinter = PR_FALSE, dest file */
   char   mPrinter[256];       /* Printer name */
   char   mPaperName[256];     /* Printer name */
+  char   mPlexName[256];      /* Plex mode name */
   int    mCopies;             /* number of copies */
   PRBool mCancel;             /* If PR_TRUE, user cancelled */
   float  mLeft;               /* left margin */

@@ -493,6 +493,65 @@ nsresult nsXPrintContext::SetOrientation(int landscape)
   return NS_OK;
 }
 
+nsresult nsXPrintContext::SetPlexMode(const char *plexname)
+{
+  XpuPlexList  list;
+  int          list_count;
+  XpuPlexRec  *match;
+
+  /* Print the used plex name to the log... */
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("plexname=%s\n", plexname));    
+
+  /* Get list of supported plex modes */
+  list = XpuGetPlexList(mPDisplay, mPContext, &list_count);
+  if( !list )
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuGetPlexList() failure.\n"));  
+    return NS_ERROR_GFX_PRINTER_PLEX_NOT_SUPPORTED;
+  }
+
+#ifdef PR_LOGGING 
+  int i;
+  /* Print plex modes for the log... */
+  for( i = 0 ; i < list_count ; i++ )
+  {
+    XpuPlexRec *curr = &list[i];
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("got plex='%s'\n", curr->plex));
+  }
+#endif /* PR_LOGGING */
+
+  /* Find requested plex mode */
+  match = XpuFindPlexByName(list, list_count, plexname);
+  if (!match)
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuFindPlexByName() failure.\n"));  
+    XpuFreePlexList(list);
+    return NS_ERROR_GFX_PRINTER_PLEX_NOT_SUPPORTED;
+  }
+
+  /* Set plex */
+  if (XpuSetDocPlex(mPDisplay, mPContext, match) != 1)
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("XpuSetDocPlex() failure.\n"));  
+    
+    /* We have a "match" in the list of supported plex modes but we are not
+     * allowed to set it... Well - if this happens and we only have ONE entry
+     * in this list then we can safely assume that this is the only choice...
+     * (please correct me if I am wrong) 
+     */
+    if (list_count != 1)
+    {
+      /* ... otherwise we have a problem... */
+      XpuFreePlexList(list);
+      return NS_ERROR_GFX_PRINTER_PLEX_NOT_SUPPORTED;
+    }
+  }
+  
+  XpuFreePlexList(list);
+
+  return NS_OK;
+}
+
 
 nsresult
 nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
@@ -567,8 +626,10 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   dumpXpAttributes(mPDisplay, mPContext);
 #endif /* XPRINT_DEBUG_SOMETIMES_USEFULL */
   
-  const char *paper_name = nsnull;
+  const char *paper_name = nsnull,
+             *plex_name  = nsnull;
   aSpec->GetPaperName(&paper_name);
+  aSpec->GetPlexName(&plex_name);
   
   if (NS_FAILED(XPU_TRACE(rv = SetMediumSize(paper_name))))
     return rv;
@@ -576,6 +637,9 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   if (NS_FAILED(XPU_TRACE(rv = SetOrientation(landscape))))
     return rv;
 
+  if (NS_FAILED(XPU_TRACE(rv = SetPlexMode(plex_name))))
+    return rv;
+    
   if (NS_FAILED(XPU_TRACE(rv = SetResolution())))
     return rv;
    

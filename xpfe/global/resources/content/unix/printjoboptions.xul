@@ -24,6 +24,7 @@ Contributor(s):
   Dan Rosen <dr@netscape.com>
   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
   Asko Tontti <atontti@cc.hut.fi>
+  Jessica Blanco <jblanco@us.ibm.com>
 
 -->
 
@@ -47,7 +48,7 @@ Contributor(s):
     </columns>
 
     <rows>
-      <row>
+      <row id="paperGroup">
         <hbox align="center" pack="end">
           <label id="paperLabel" value="&paperInput.label;"/>
         </hbox>
@@ -56,13 +57,24 @@ Contributor(s):
         </menulist>
       </row>
 
-      <row>
+      <row id="plexGroup">
+        <hbox align="center" pack="end">
+          <label id="plexLabel" value="&plexInput.label;"/>
+        </hbox>
+        <menulist id="plexList" flex="1">
+          <menupopup/>
+        </menulist>
+      </row>
+      
+      <row id="cmdGroup">
         <label id="cmdLabel" value="&cmdInput.label;"/>
         <textbox id="cmdInput" flex="1"/>
       </row>
 
       <row>
-        <label value="&colorGroup.label;"/>
+        <hbox align="center" pack="end">
+          <label value="&colorGroup.label;"/>
+        </hbox>
         <radiogroup id="colorGroup" orient="horizontal">
           <radio id="grayRadio" label="&grayRadio.label;"/>
           <radio id="colorRadio" label="&colorRadio.label;"/>

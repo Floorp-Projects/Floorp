@@ -43,6 +43,7 @@ var gPrintSettings = null;
 var gStringBundle  = null;
 var gPrintSettingsInterface  = Components.interfaces.nsIPrintSettings;
 var gPaperArray;
+var gPlexArray;
 var gPrefs;
 
 var default_command    = "lpr";
@@ -95,8 +96,12 @@ function initDialog()
 
   dialog.paperList       = document.getElementById("paperList");
   dialog.paperGroup      = document.getElementById("paperGroup");
-  
+
+  dialog.plexList        = document.getElementById("plexList");
+  dialog.plexGroup       = document.getElementById("plexGroup");
+    
   dialog.cmdLabel        = document.getElementById("cmdLabel");
+  dialog.cmdGroup        = document.getElementById("cmdGroup");
   dialog.cmdInput        = document.getElementById("cmdInput");
 
   dialog.colorGroup      = document.getElementById("colorGroup");
@@ -117,18 +122,18 @@ function round10(val)
 
 
 //---------------------------------------------------
-function listElement(aListElement)
+function paperListElement(aPaperListElement)
   {
-    this.listElement = aListElement;
+    this.paperListElement = aPaperListElement;
   }
 
-listElement.prototype =
+paperListElement.prototype =
   {
-    clearList:
+    clearPaperList:
       function ()
         {
           // remove the menupopup node child of the menulist.
-          this.listElement.removeChild(this.listElement.firstChild);
+          this.paperListElement.removeChild(this.paperListElement.firstChild);
         },
 
     appendPaperNames: 
@@ -156,7 +161,7 @@ listElement.prototype =
             itemNode.setAttribute("value", i);
             popupNode.appendChild(itemNode);            
           }
-          this.listElement.appendChild(popupNode); 
+          this.paperListElement.appendChild(popupNode); 
         } 
   };
 
@@ -252,17 +257,129 @@ function createPaperSizeList(selectedInx)
 {
   gStringBundle = srGetStrBundle("chrome://communicator/locale/printPageSetup.properties");
 
-  var selectElement = new listElement(dialog.paperList);
-  selectElement.clearList();
+  var selectElement = new paperListElement(dialog.paperList);
+  selectElement.clearPaperList();
 
   selectElement.appendPaperNames(gPaperArray);
 
   if (selectedInx > -1) {
-    selectElement.listElement.selectedIndex = selectedInx;
+    selectElement.paperListElement.selectedIndex = selectedInx;
   }
 
   //dialog.paperList = selectElement;
+}
+
+//---------------------------------------------------
+function plexListElement(aPlexListElement)
+  {
+    this.plexListElement = aPlexListElement;
+  }
+
+plexListElement.prototype =
+  {
+    clearPlexList:
+      function ()
+        {
+          // remove the menupopup node child of the menulist.
+          this.plexListElement.removeChild(this.plexListElement.firstChild);
+        },
+
+    appendPlexNames: 
+      function (aDataObject) 
+        { 
+          var popupNode = document.createElement("menupopup"); 
+          for (var i=0;i<aDataObject.length;i++)  {
+            var plexObj = aDataObject[i];
+            var itemNode = document.createElement("menuitem");
+            var label;
+            try {
+              label = gStringBundle.GetStringFromName(plexObj.name)
+            } 
+            catch (e) {
+              /* No name in string bundle ? Then build one manually (this
+               * usually happens when gPlexArray was build by createPlexArrayFromPrinterFeatures() ...) */              
+              label = plexObj.name;
+            }
+            itemNode.setAttribute("label", label);
+            itemNode.setAttribute("value", i);
+            popupNode.appendChild(itemNode);            
+          }
+          this.plexListElement.appendChild(popupNode); 
+        } 
+  };
+
+
+//---------------------------------------------------
+function createPlexArrayFromDefaults()
+{
+  var plexNames = ["default"];
+
+  gPlexArray = new Array();
+
+  for (var i=0;i<plexNames.length;i++) {
+    var obj    = new Object();
+    obj.name   = plexNames[i];
+    
+    gPlexArray[i] = obj;
+  }
+}
+
+//---------------------------------------------------
+function createPlexArrayFromPrinterFeatures()
+{
+  var printername = gPrintSettings.printerName;
+  if (doDebug) {
+    dump("createPlexArrayFromPrinterFeatures for " + printername + ".\n");
+  }
+
+  gPlexArray = new Array();
+  
+  var numPlexs = gPrefs.getIntPref("print.tmp.printerfeatures." + printername + ".plex.count");
+  
+  if (doDebug) {
+    dump("processing " + numPlexs + " entries...\n");
+  }    
+
+  for ( var i=0 ; i < numPlexs ; i++ ) {
+    var obj = new Object();
+    obj.name = gPrefs.getCharPref("print.tmp.printerfeatures." + printername + ".plex." + i + ".name");
+
+    gPlexArray[i] = obj;
+
+    if (doDebug) {
+      dump("plex index=" + i + ", name='" + obj.name + "'.\n");
+    }
+  }  
+}
+
+//---------------------------------------------------
+function createPlexArray()
+{  
+  if (isListOfPrinterFeaturesAvailable()) {
+    createPlexArrayFromPrinterFeatures();    
+  }
+  else {
+    createPlexArrayFromDefaults();
+  }
+}
+
+//---------------------------------------------------
+function createPlexNameList(selectedInx)
+{
+  gStringBundle = srGetStrBundle("chrome://communicator/locale/printPageSetup.properties");
+
+  var selectElement = new plexListElement(dialog.plexList);
+  selectElement.clearPlexList();
+
+  selectElement.appendPlexNames(gPlexArray);
+
+  if (selectedInx > -1) {
+    selectElement.plexListElement.selectedIndex = selectedInx;
+  }
+
+  //dialog.plexList = selectElement;
 }   
+
 
 //---------------------------------------------------
 function loadDialog()
@@ -272,6 +389,7 @@ function loadDialog()
   var print_paper_width      = 0.0;
   var print_paper_height     = 0.0;
   var print_paper_name       = "";
+  var print_plex_name        = "";
   var print_color            = true;
   var print_command          = default_command;
 
@@ -283,6 +401,7 @@ function loadDialog()
     print_paper_width  = gPrintSettings.paperWidth;
     print_paper_height = gPrintSettings.paperHeight;
     print_paper_name   = gPrintSettings.paperName;
+    print_plex_name    = gPrintSettings.plexName;
     print_color        = gPrintSettings.printInColor;
     print_command      = gPrintSettings.printCommand;
   }
@@ -293,16 +412,17 @@ function loadDialog()
     dump("paperWidth    "+print_paper_width+"\n");
     dump("paperHeight   "+print_paper_height+"\n");
     dump("paperName     "+print_paper_name+"\n");
+    dump("plexName      "+print_plex_name+"\n");
     dump("printInColor  "+print_color+"\n");
     dump("printCommand  "+print_command+"\n");
   }
 
   createPaperArray();
 
-  var selectedInx = 0;
+  var paperSelectedInx = 0;
   for (var i=0;i<gPaperArray.length;i++) { 
     if (print_paper_name == gPaperArray[i].name) {
-      selectedInx = i;
+      paperSelectedInx = i;
       break;
     }
   }
@@ -311,23 +431,66 @@ function loadDialog()
     if (i == gPaperArray.length)
       dump("loadDialog: No paper found.\n");
     else
-      dump("loadDialog: found paper '"+gPaperArray[selectedInx].name+"'.\n");
+      dump("loadDialog: found paper '"+gPaperArray[paperSelectedInx].name+"'.\n");
   }
 
-  createPaperSizeList(selectedInx);
+  createPaperSizeList(paperSelectedInx);
+
+  createPlexArray();
+
+  var plexSelectedInx = 0;
+  for (var i=0;i<gPlexArray.length;i++) { 
+    if (print_plex_name == gPlexArray[i].name) {
+      plexSelectedInx = i;
+      break;
+    }
+  }
   
-  // Enable/disable widgets based in the information whether the selected
-  // printer supports the matching feature or not
+  if (doDebug) {
+    if (i == gPlexArray.length)
+      dump("loadDialog: No plex found.\n");
+    else
+      dump("loadDialog: found plex '"+gPlexArray[plexSelectedInx].name+"'.\n");
+  }
+  
+  createPlexNameList(plexSelectedInx);
+    
+  /* Enable/disable and/or hide/unhide widgets based in the information
+   * whether the selected printer and/or print module supports the matching
+   * feature or not */
   if (isListOfPrinterFeaturesAvailable()) {
+    // spooler command
     if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".can_change_spoolercommand"))
       dialog.cmdInput.removeAttribute("disabled");
     else
       dialog.cmdInput.setAttribute("disabled","true");
+      
+    if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".supports_spoolercommand_change"))
+      dialog.cmdGroup.removeAttribute("hidden");
+    else
+      dialog.cmdGroup.setAttribute("hidden","true");
 
+    // paper size
     if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".can_change_paper_size"))
       dialog.paperList.removeAttribute("disabled");
     else
       dialog.paperList.setAttribute("disabled","true");
+
+    if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".supports_paper_size_change"))
+      dialog.paperGroup.removeAttribute("hidden");
+    else
+      dialog.paperGroup.setAttribute("hidden","true");
+            
+    // plex mode
+    if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".can_change_plex"))
+      dialog.plexList.removeAttribute("disabled");
+    else
+      dialog.plexList.setAttribute("disabled","true");
+      
+    if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".supports_plex_change"))
+      dialog.plexGroup.removeAttribute("hidden");
+    else
+      dialog.plexGroup.setAttribute("hidden","true");
   }
 
   if (print_command == "") {
@@ -392,24 +555,28 @@ function onAccept()
   var print_paper_width  = 0.0;
   var print_paper_height = 0.0;
   var print_paper_name   = "";
+  var print_plex_name    = "";
 
   if (gPrintSettings != null) {
-    var selectedInx = dialog.paperList.selectedIndex;
-    if (gPaperArray[selectedInx].inches) {
+    var paperSelectedInx = dialog.paperList.selectedIndex;
+    var plexSelectedInx  = dialog.plexList.selectedIndex;
+    if (gPaperArray[paperSelectedInx].inches) {
       print_paper_unit = gPrintSettingsInterface.kPaperSizeInches;
     } else {
       print_paper_unit = gPrintSettingsInterface.kPaperSizeMillimeters;
     }
-    print_paper_width  = gPaperArray[selectedInx].width;
-    print_paper_height = gPaperArray[selectedInx].height;
-    print_paper_name   = gPaperArray[selectedInx].name;
-    gPrintSettings.paperSize = gPaperArray[selectedInx].paperSize; // deprecated
+    print_paper_width  = gPaperArray[paperSelectedInx].width;
+    print_paper_height = gPaperArray[paperSelectedInx].height;
+    print_paper_name   = gPaperArray[paperSelectedInx].name;
+    print_plex_name    = gPlexArray[plexSelectedInx].name;
+    gPrintSettings.paperSize = gPaperArray[paperSelectedInx].paperSize; // deprecated
 
     gPrintSettings.paperSizeType = print_paper_type;
     gPrintSettings.paperSizeUnit = print_paper_unit;
     gPrintSettings.paperWidth    = print_paper_width;
     gPrintSettings.paperHeight   = print_paper_height;
     gPrintSettings.paperName     = print_paper_name;
+    gPrintSettings.plexName      = print_plex_name;
 
     // save these out so they can be picked up by the device spec
     gPrintSettings.printInColor = dialog.colorRadio.selected;
@@ -440,6 +607,7 @@ function onAccept()
       dump("paperWidth    "+print_paper_width+"\n");
       dump("paperHeight   "+print_paper_height+"\n");
       dump("paperName     '"+print_paper_name+"'\n");
+      dump("plexName      '"+print_plex_name+"'\n");
 
       dump("printInColor  "+gPrintSettings.printInColor+"\n");
       dump("printCommand  '"+gPrintSettings.printCommand+"'\n");

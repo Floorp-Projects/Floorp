@@ -4,6 +4,8 @@
 
 <!ENTITY paperInput.label "Paper Size:">
 
+<!ENTITY plexInput.label "Plex mode:">
+
 <!ENTITY cmdInput.label "Print Command:">
 
 <!ENTITY colorGroup.label "Color:">
