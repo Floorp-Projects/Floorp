@@ -294,6 +294,7 @@ public:
         Environment *env;
         Environment *newEnv;
         Frame *topFrame;
+        NonWithFrame *localFrame;
     };
     void jsr(Phase execPhase, BytecodeContainer *bCon, uint32 stackBase, js2val returnVal, Environment *env);
     bool activationStackEmpty() { return (activationStackTop == activationStack); }

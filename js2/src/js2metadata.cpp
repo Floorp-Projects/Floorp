@@ -691,10 +691,10 @@ namespace MetaData {
         case StmtNode::group:
             {
                 BlockStmtNode *b = checked_cast<BlockStmtNode *>(p);
-                BlockFrame *runtimeFrame = new BlockFrame(b->compileFrame);
-                env->addFrame(runtimeFrame);    // XXX is this right? shouldn't this be the compile frame until execution occurs?
+//                BlockFrame *runtimeFrame = new BlockFrame(b->compileFrame);
+                env->addFrame(b->compileFrame);    // XXX is this right? shouldn't this be the compile frame until execution occurs?
                 bCon->emitOp(ePushFrame, p->pos);
-                bCon->addFrame(runtimeFrame);
+                bCon->addFrame(b->compileFrame);
                 StmtNode *bp = b->statements;
                 while (bp) {
                     SetupStmt(env, phase, bp);
@@ -2089,7 +2089,6 @@ doUnary:
                                     returnRef = new (*referenceArena) FrameSlotReference(checked_cast<FrameVariable *>(m)->frameSlot);
                                     break;
                                 }                                        
-                                break;
                                 keepLooking = false;
                             }
                         }
@@ -3107,6 +3106,7 @@ rescan:
             // need to reset the environment to the one in operation when eval was called so
             // that eval code can affect the apppropriate scopes.
             meta->engine->jsr(meta->engine->phase, NULL, meta->engine->sp - meta->engine->execStack, JS2VAL_VOID, meta->engine->activationStackTop[-1].env);
+//            meta->engine->localFrame = meta->engine->activationStackTop[-1].localFrame;
             js2val result = meta->readEvalString(*meta->toString(argv[0]), widenCString("Eval Source"));
             meta->engine->rts();
             return result;

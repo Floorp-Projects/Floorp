@@ -228,6 +228,8 @@
         {
             Frame *f = checked_cast<Frame *>(bCon->mObjectList[BytecodeContainer::getShort(pc)]);
             pc += sizeof(short);
+            if (meta->env->getTopFrame()->kind == ParameterKind)
+                localFrame = checked_cast<NonWithFrame *>(f);
             meta->env->addFrame(f);
             f->instantiate(meta->env);
         }

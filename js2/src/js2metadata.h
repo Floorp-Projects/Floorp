@@ -1054,7 +1054,7 @@ public:
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eSlotRead, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eSlotRef, pos); bCon->addShort((uint16)slotIndex); }
-    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadForInvokeBytecode(bCon, pos); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadBytecode(bCon, pos); }
     virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
 
     virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eSlotPostInc, pos); bCon->addShort((uint16)slotIndex); }
@@ -1077,7 +1077,7 @@ public:
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(eFrameSlotRead, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eFrameSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(eFrameSlotRef, pos); bCon->addShort((uint16)slotIndex); }
-    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadForInvokeBytecode(bCon, pos); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadBytecode(bCon, pos); }
     virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
 
     virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(eFrameSlotPostInc, pos); bCon->addShort((uint16)slotIndex); }
@@ -1100,7 +1100,7 @@ public:
     virtual void emitReadBytecode(BytecodeContainer *bCon, size_t pos)      { bCon->emitOp(ePackageSlotRead, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitWriteBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(ePackageSlotWrite, pos); bCon->addShort((uint16)slotIndex); }
     virtual void emitReadForInvokeBytecode(BytecodeContainer *bCon, size_t pos)     { bCon->emitOp(ePackageSlotRef, pos); bCon->addShort((uint16)slotIndex); }
-    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadForInvokeBytecode(bCon, pos); }
+    virtual void emitReadForWriteBackBytecode(BytecodeContainer *bCon, size_t pos)  { emitReadBytecode(bCon, pos); }
     virtual void emitWriteBackBytecode(BytecodeContainer *bCon, size_t pos)         { emitWriteBytecode(bCon, pos); }
 
     virtual void emitPostIncBytecode(BytecodeContainer *bCon, size_t pos)   { bCon->emitOp(ePackageSlotPostInc, pos); bCon->addShort((uint16)slotIndex); }

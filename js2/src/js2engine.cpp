@@ -921,7 +921,8 @@ namespace MetaData {
         activationStackTop->env = meta->env;    // save current environment, to be restored on rts
         activationStackTop->newEnv = env;       // and save the new environment, if an exception occurs, we can't depend on meta->env
         activationStackTop->topFrame = env->getTopFrame();  // remember how big the new env. is supposed to be so that local frames don't accumulate
-        localFrame = checked_cast<NonWithFrame *>(activationStackTop->topFrame);
+        activationStackTop->localFrame = localFrame;
+//        localFrame = checked_cast<NonWithFrame *>(activationStackTop->topFrame);
         activationStackTop++;
         if (new_bCon) {
             bCon = new_bCon;
@@ -949,6 +950,7 @@ namespace MetaData {
         bCon = activationStackTop->bCon;
         pc = activationStackTop->pc;
         phase = activationStackTop->phase;
+        localFrame = activationStackTop->localFrame;
         // reset the env. top
         while (activationStackTop->newEnv->getTopFrame() != activationStackTop->topFrame)
             activationStackTop->newEnv->removeTopFrame();

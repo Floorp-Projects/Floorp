@@ -261,6 +261,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < localFrame->slots->size());
             a = top();
             (*localFrame->slots)[slotIndex] = a;
         }
@@ -270,6 +271,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < localFrame->slots->size());
             // XXX some kind of code here?
         }
         break;
@@ -278,15 +280,27 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < localFrame->slots->size());
             push((*localFrame->slots)[slotIndex]);
         }
         break;
-
+/*
+    case eFrameSlotRef:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            push(JS2VAL_NULL);
+            ASSERT(slotIndex < localFrame->slots->size());
+            push((*localFrame->slots)[slotIndex]);
+        }
+        break;
+*/
     case ePackageSlotWrite:
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
             a = top();
+            ASSERT(slotIndex < packageFrame->slots->size());
             (*packageFrame->slots)[slotIndex] = a;
         }
         break;
@@ -295,6 +309,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < packageFrame->slots->size());
             // XXX some kind of code here?
         }
         break;
@@ -303,6 +318,17 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < packageFrame->slots->size());
+            push((*packageFrame->slots)[slotIndex]);
+        }
+        break;
+
+    case ePackageSlotRef:
+        {
+            uint16 slotIndex = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            push(JS2VAL_NULL);
+            ASSERT(slotIndex < packageFrame->slots->size());
             push((*packageFrame->slots)[slotIndex]);
         }
         break;

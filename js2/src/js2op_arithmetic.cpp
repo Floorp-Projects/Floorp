@@ -1154,6 +1154,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < localFrame->slots->size());
             a = (*localFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
             (*localFrame->slots)[slotIndex] = allocNumber(num + 1.0);
@@ -1164,6 +1165,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < localFrame->slots->size());
             a = (*localFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
             (*localFrame->slots)[slotIndex] = allocNumber(num - 1.0);
@@ -1174,6 +1176,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < localFrame->slots->size());
             a = (*localFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
@@ -1184,6 +1187,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < localFrame->slots->size());
             a = (*localFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
@@ -1195,6 +1199,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < packageFrame->slots->size());
             a = (*packageFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
             (*packageFrame->slots)[slotIndex] = allocNumber(num + 1.0);
@@ -1205,6 +1210,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < packageFrame->slots->size());
             a = (*packageFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
             (*packageFrame->slots)[slotIndex] = allocNumber(num - 1.0);
@@ -1215,6 +1221,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < packageFrame->slots->size());
             a = (*packageFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num + 1.0);
@@ -1225,6 +1232,7 @@
         {
             uint16 slotIndex = BytecodeContainer::getShort(pc);
             pc += sizeof(short);
+            ASSERT(slotIndex < packageFrame->slots->size());
             a = (*packageFrame->slots)[slotIndex];
             float64 num = meta->toFloat64(a);
             a = pushNumber(num - 1.0);
