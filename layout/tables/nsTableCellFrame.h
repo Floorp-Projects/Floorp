@@ -137,11 +137,6 @@ public:
     */
   virtual void SetPass1MaxElementSize(const nsSize & aMaxElementSize);
 
-
-
-  /** Get the TableFrame that contains this cell frame */
-  virtual nsTableFrame* GetTableFrame();
-
   void RecalcLayoutData(nsTableFrame* aTableFrame,
                         nsVoidArray*  aBoundaryCells[4]);
 

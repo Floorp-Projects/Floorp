@@ -212,28 +212,6 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
   }
 }
 
-/*
- * Should this be performanced tuned? This is called
- * in resize/reflow. Maybe we should cache the table
- * frame in the table cell frame.
- *
- */
-nsTableFrame* nsTableCellFrame::GetTableFrame()
-{
-  nsIFrame* frame = nsnull;
-  nsresult  result;
-
-  result = GetContentParent(frame);             // Get RowFrame
-  
-  if ((result == NS_OK) && (frame != nsnull))
-    frame->GetContentParent(frame);             // Get RowGroupFrame
-  
-  if ((result == NS_OK) && (frame != nsnull))
-   frame->GetContentParent(frame);              // Get TableFrame
-
-  return (nsTableFrame*)frame;
-}
-
 PRInt32 nsTableCellFrame::GetRowSpan()
 {  
   PRInt32 rowSpan=1;
@@ -314,7 +292,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   // Get the margin information, available space should
   // be reduced accordingly
   nsMargin      margin(0,0,0,0);
-  nsTableFrame* tableFrame = GetTableFrame();
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
   tableFrame->GetCellMarginData(this,margin);
 
   // get frame, creating one if needed
@@ -341,7 +320,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   // fit or might need continuing.
   if (availSize.height < 0)
     availSize.height = 1;
-  nsSize maxKidElementSize;
+
   if (gsDebug==PR_TRUE)
     printf("  nsTableCellFrame::Reflow calling ReflowChild with availSize=%d,%d\n",
            availSize.width, availSize.height);
@@ -490,7 +469,8 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, nsStyleS
   aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_SOLID; 
 #endif
   
-  nsTableFrame*     tableFrame = GetTableFrame();
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
   nsIStyleContext*  styleContext = nsnull;
   
   tableFrame->GetStyleContext(aPresContext,styleContext);
@@ -545,7 +525,8 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   nscoord   spacing = 0;
   nscoord   border  = 1;
 
-  nsTableFrame*  tableFrame = GetTableFrame();
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
   //tableFrame->GetGeometricParent((nsIFrame *&)tableFrame); // get the outer frame
   NS_ASSERTION(tableFrame,"Table Must not be null");
   if (!tableFrame)
