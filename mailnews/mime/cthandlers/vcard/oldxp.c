@@ -81,7 +81,7 @@ WH_FileName (const char *NetName, XP_FileType type)
         return PL_strdup("cookies");
 #endif
     } else if (type == xpCacheFAT) {
-;//		sprintf(newName, "%s\\fat.db", (const char *)theApp.m_pCacheDir);
+;/*		sprintf(newName, "%s\\fat.db", (const char *)theApp.m_pCacheDir); */
         
     } else if ((type == xpURL) || (type == xpFileToPost)) {
         /*
@@ -94,17 +94,17 @@ WH_FileName (const char *NetName, XP_FileType type)
         if(!NetName)
             return NULL;
         
-        //  If the name is only '/' or begins '//' keep the
-        //    whole name else strip the leading '/'
+        /*  If the name is only '/' or begins '//' keep the
+            whole name else strip the leading '/' */
 
         if(NetName[0] == '/')
             bChopSlash = PR_TRUE;
 
-        // save just / as a path
+        /* save just / as a path */
         if(NetName[0] == '/' && NetName[1] == '\0')
             bChopSlash = PR_FALSE;
 
-        // spanky Win9X path name
+        /* spanky Win9X path name */
         if(NetName[0] == '/' && NetName[1] == '/')
             bChopSlash = PR_FALSE;
 
