@@ -2752,13 +2752,8 @@ mime_generate_headers (MSG_CompositionFields *fields,
 			  localtime (&now));
 #else
 	int gmtoffset = XP_LocalZoneOffset();
-#ifndef NSPR20
-    PRTime now;
-    PR_ExplodeTime(&now, PR_Now());
-#else
     PRExplodedTime now;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
-#endif /* NSPR20 */
 
 	/* Use PR_FormatTimeUSEnglish() to format the date in US English format,
 	   then figure out what our local GMT offset is, and append it (since
