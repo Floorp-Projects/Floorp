@@ -130,9 +130,13 @@
           var enabled;
           if (aCommand == "cmdEditUndo")
             enabled = this.mCommandPtr >= 0;
-          else if (aCommand == "cmdEditRedo")
+          else if (aCommand == "cmdEditRedo") {
             enabled = this.mCommandPtr+1 < this.mCommandStack.length;
-          else {
+            if (!enabled && (this.mCommandPtr > -1)) {
+              var lastCmd = this.mCommandStack[this.mCommandPtr];
+              enabled = ((lastCmd instanceof nsITransactionManager) && (lastCmd.numberOfRedoItems > 0));
+            }
+          } else {
             if (this.focusedPanel && this.focusedPanel.viewer) {
               enabled = this.focusedPanel.viewer.isCommandEnabled(aCommand);
             }
@@ -175,6 +179,14 @@
               else
                 cmd.setAttribute(aAttribute, aValue);
           }
+        ]]></body>
+      </method>
+
+      <method name="createTransactionManager">
+        <body><![CDATA[
+          var txmgr = Components.classes["@mozilla.org/transactionmanager;1"].createInstance(nsITransactionManager); 
+          txmgr = txmgr.QueryInterface(nsITransactionManager);
+          return txmgr;
         ]]></body>
       </method>
 
@@ -231,17 +243,37 @@
             if (!command)
               return;
               
-            var noPush = false;
-            //try {
+            if (typeof command.txnType == "undefined") {
+              var noPush = false;
+              //try {
               noPush = command.doCommand();
-            //} catch (ex) {
-            //  dump("Unable to successfully complete command " + aCommand + "\n");
-            //  return;
-            //}
-            
-            if (!noPush) {
-              this.addCommandToStack(command);
+              //} catch (ex) {
+              //  dump("Unable to successfully complete command " + aCommand + "\n");
+              //  return;
+              //}
+      
+              if (!noPush) {
+                this.addCommandToStack(command);
+              }
+              return;
             }
+
+            // command.txnType != "undefined"; we have an nsITransaction.
+            if (command.isTransient) {
+              // command cannot be undone
+              command.doTransaction();
+              return;
+            }
+
+            if (command.txnType == "dialog") {
+              // transaction executed from dialog box onAcceptDialog event; open dialog.
+              command.openDialog();
+              return;
+            }
+
+            // otherwise, command is a standard transaction.
+            // Pass control to addCommandToStack function; it will handle TxMgr.
+            this.addCommandToStack(command);
           }
         ]]></body>
       </method>
@@ -250,14 +282,20 @@
         <body><![CDATA[
           if (this.mCommandPtr >= 0) {
             var command = this.mCommandStack[this.mCommandPtr];
-            --this.mCommandPtr;
-            
-            //try {
-              command.undoCommand();
-            /*} catch (ex) {
-              dump("Unable to successfully undo command.\n");
-              return;
-            }*/
+            if ((command instanceof nsITransactionManager) && (command.numberOfUndoItems > 0)) {
+              command.undoTransaction();
+              if (command.numberOfUndoItems == 0) {
+                --this.mCommandPtr;
+              }
+            } else {
+              --this.mCommandPtr;
+              //try {
+                command.undoCommand();
+              /*} catch (ex) {
+                dump("Unable to successfully undo command.\n");
+                return;
+              }*/
+            }
             
             this.updateCommand("cmdEditUndo");
             this.updateCommand("cmdEditRedo");
@@ -267,14 +305,27 @@
 
       <method name="redo">
         <body><![CDATA[
+          if (this.mCommandPtr == -1) {
+            var command = null;
+          } else {
+            command = this.mCommandStack[this.mCommandPtr];
+          }
+
           if (this.mCommandPtr >= -1) {
-            ++this.mCommandPtr;
-            var command = this.mCommandStack[this.mCommandPtr];
-            try {
-              command.doCommand();
-            } catch (ex) {
-              dump("Unable to successfully redo command.\n");
-              return;
+            if (!((command instanceof nsITransactionManager)&&(command.numberOfRedoItems > 0))) {
+              ++this.mCommandPtr;
+              command = this.mCommandStack[this.mCommandPtr];
+            }
+
+            if ((command instanceof nsITransactionManager)&&(command.numberOfRedoItems > 0)) {
+              command.redoTransaction();
+            } else {
+              try {
+                command.doCommand();
+              } catch (ex) {
+                dump("Unable to successfully redo command.\n");
+                return;
+              }
             }
             this.updateCommand("cmdEditUndo");
             this.updateCommand("cmdEditRedo");
@@ -285,9 +336,48 @@
       <method name="addCommandToStack">
         <parameter name="command"/>
         <body><![CDATA[
-          // add new command to the stack
-          ++this.mCommandPtr;
-          this.mCommandStack[this.mCommandPtr] = command;
+          if (typeof command.txnType == "undefined") {
+            // original Inspector-compatible command, not nsITransaction.
+            // add new command to the stack
+            ++this.mCommandPtr;
+            this.mCommandStack[this.mCommandPtr] = command;
+
+            // get rid of stack entries ahead of the command pointer (if there were any);
+            this.mCommandStack.splice(this.mCommandPtr+1, this.mCommandStack.length - (this.mCommandPtr+1));
+
+            this.updateCommand("cmdEditUndo");
+            this.updateCommand("cmdEditRedo");
+            return;
+          }
+
+          // command should be treated as a nsITransaction object.
+          if (this.mCommandPtr + 1 < this.mCommandStack.length) {
+            var nextCmd = this.mCommandStack[this.mCommandPtr + 1];
+            if (nextCmd instanceof nsITransactionManager) {
+              var mgr = nextCmd;
+              mgr.clear();
+              // No two Transaction Manager objects are ever adjacent to each other.
+              // We simply use the Transaction Manager immediately following, and clear all transactions from it.
+              // This gives us a fresh Transaction Manager.
+            }
+          }
+
+          var currentCmd = this.mCommandStack[this.mCommandPtr];
+          if (currentCmd instanceof nsITransactionManager) {
+            mgr = currentCmd;
+          }
+          // we need a Transaction Manager, even if we create one.
+          if (typeof mgr == "undefined") {
+            mgr = this.createTransactionManager();
+          } 
+
+          mgr.doTransaction(command);
+
+          if (currentCmd != mgr) {
+            // insert Transaction Manager into stack
+            ++this.mCommandPtr;
+            this.mCommandStack[this.mCommandPtr] = mgr;
+          }
 
           // get rid of stack entries ahead of the command pointer (if there were any);
           this.mCommandStack.splice(this.mCommandPtr + 1, this.mCommandStack.length - (this.mCommandPtr + 1));
