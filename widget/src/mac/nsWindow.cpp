@@ -38,6 +38,7 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
 
 
+
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -94,7 +95,6 @@ nsWindow::~nsWindow()
 		DisposeRgn(mWindowRegion);
 		mWindowRegion = nsnull;	
 		}
-
 
   //XtDestroyWidget(mWidget);
   //if (nsnull != mGC) {
@@ -903,6 +903,8 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     event.renderingContext = nsnull;
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+    
+    printf("Painting the Widget\n");
     
     /*
     if (NS_OK == NSRepository::CreateInstance(kRenderingContextCID, 
