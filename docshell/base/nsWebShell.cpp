@@ -3221,25 +3221,25 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
         rv = aURL->GetHost(getter_Copies(host));
         if (NS_FAILED(rv)) return rv;
 
+        CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
+        nsCAutoString hostStr(buf);
+        PRInt32 dotLoc = hostStr.FindChar('.');
+
+        // First see if we should throw it to the keyword server.
+        NS_ASSERTION(mPrefs, "the webshell's pref service wasn't initialized");
+        PRBool keywordsEnabled = PR_FALSE;
+        rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
+        if (NS_FAILED(rv)) return rv;
+
+        if (keywordsEnabled && (-1 == dotLoc)) {
+            // only send non-qualified hosts to the keyword server
+            nsAutoString keywordSpec("keyword:");
+            keywordSpec.Append(host);
+            return LoadURL(keywordSpec.GetUnicode(), "view");
+        } // end keywordsEnabled
+
         // Doc failed to load because the host was not found.
         if (aStatus == NS_ERROR_UNKNOWN_HOST) {
-            CBufDescriptor buf((const char *)host, PR_TRUE, PL_strlen(host) + 1);
-            nsCAutoString hostStr(buf);
-            PRInt32 dotLoc = hostStr.FindChar('.');
-
-            // First see if we should throw it to the keyword server.
-            NS_ASSERTION(mPrefs, "the webshell's pref service wasn't initialized");
-            PRBool keywordsEnabled = PR_FALSE;
-            rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
-            if (NS_FAILED(rv)) return rv;
-
-            if (keywordsEnabled && (-1 == dotLoc)) {
-                // only send non-qualified hosts to the keyword server
-                nsAutoString keywordSpec("keyword:");
-                keywordSpec.Append(host);
-                return LoadURL(keywordSpec.GetUnicode(), "view");
-            } // end keywordsEnabled
-
             // Try our www.*.com trick.
             nsCAutoString retryHost;
             nsXPIDLCString scheme;
