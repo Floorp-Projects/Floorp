@@ -87,7 +87,8 @@ protected:
     nsresult StartAttachmentInBody(const char *name, const char *contentType, const char *url);
 
     nsCOMPtr<nsIDateTimeFormat> mDateFormater;
-    nsresult GenerateDateString(const char * dateString, PRUnichar ** formattedDate);
+    nsresult GenerateDateString(const char * dateString, nsACString& formattedDate);
+    nsresult BroadcastHeaders(nsIMsgHeaderSink * aHeaderSink, PRInt32 aHeaderMode, PRBool aFromNewsgroup);
 };
 
 

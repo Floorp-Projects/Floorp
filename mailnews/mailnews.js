@@ -393,6 +393,11 @@ pref("mail.server.default.spamLoggingEnabled",false);
 pref("mail.server.default.manualMark",false);
 pref("mail.server.default.manualMarkMode",0); // 0 == "move to junk folder", 1 == "delete"
 
+// the probablilty threshold over which messages are classified as junk
+// this number is divided by 100 before it is used. The classifier can be fine tuned
+// by changing this pref. Typical values are .99, .95, .90, .5, etc. 
+pref("mail.adaptivefilters.junk_threshold", 90); 
+
 // if true, we'll use the password from an incoming server with
 // matching username and domain
 pref("mail.smtp.useMatchingDomainServer", false);

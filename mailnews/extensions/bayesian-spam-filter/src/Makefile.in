@@ -54,6 +54,12 @@ REQUIRES	= xpcom \
 		  msgbaseutil \
 		  msgdb \
 		  lwbrk \
+      mimetype \
+      mime \
+      pref \
+		  content \
+		  htmlparser \
+		  layout \
 		  $(NULL)
 
 CPPSRCS		= \

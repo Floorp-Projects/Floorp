@@ -54,6 +54,8 @@
 #include "prtime.h"
 #include "nsReadableUtils.h"
 #include "prprf.h"
+#include "nsIStringEnumerator.h"
+#include "nsStringEnumerator.h"
 
 // hack: include this to fix opening news attachments.
 #include "nsINntpUrl.h"
@@ -121,7 +123,6 @@ nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTMLPostfix()
     return NS_OK;
 }
 
-
 nsresult
 nsMimeHtmlDisplayEmitter::GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink)
 {
@@ -135,6 +136,9 @@ nsMimeHtmlDisplayEmitter::GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink)
       nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(uri));
       if (msgurl)
       {
+        msgurl->GetMsgHeaderSink(getter_AddRefs(mHeaderSink));
+        if (!mHeaderSink)  // if the url is not overriding the header sink, then just get the one from the msg window
+        {
         nsCOMPtr<nsIMsgWindow> msgWindow;
         msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
         if (msgWindow)
@@ -142,9 +146,71 @@ nsMimeHtmlDisplayEmitter::GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink)
       }
     }
   }
+  }
 
   *aHeaderSink = mHeaderSink;
   NS_IF_ADDREF(*aHeaderSink);
+  return rv;
+}
+
+nsresult nsMimeHtmlDisplayEmitter::BroadcastHeaders(nsIMsgHeaderSink * aHeaderSink, PRInt32 aHeaderMode, PRBool aFromNewsgroup)
+{
+  // two string enumerators to pass out to the header sink
+  nsCOMPtr<nsIUTF8StringEnumerator> headerNameEnumerator;
+  nsCOMPtr<nsIUTF8StringEnumerator> headerValueEnumerator;
+
+  // CStringArrays which we can pass into the enumerators
+  nsCStringArray headerNameArray;
+  nsCStringArray headerValueArray;
+
+  nsCAutoString convertedDateString;
+
+  PRBool displayOriginalDate = PR_FALSE;
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  if (pPrefBranch)
+    pPrefBranch->GetBoolPref("mailnews.display.original_date", &displayOriginalDate);
+
+  for (PRInt32 i=0; i<mHeaderArray->Count(); i++)
+  {
+    headerInfoType * headerInfo = (headerInfoType *) mHeaderArray->ElementAt(i);
+    if ( (!headerInfo) || (!headerInfo->name) || (!(*headerInfo->name)) || (!headerInfo->value) || (!(*headerInfo->value)))
+      continue;
+
+    const char * headerValue = headerInfo->value;
+
+    // optimization: if we aren't in view all header view mode, we only show a small set of the total # of headers.
+    // don't waste time sending those out to the UI since the UI is going to ignore them anyway. 
+    if (aHeaderMode != VIEW_ALL_HEADERS && (mFormat != nsMimeOutput::nsMimeMessageFilterSniffer)) 
+    {
+      if (nsCRT::strcasecmp("to", headerInfo->name) && nsCRT::strcasecmp("from", headerInfo->name) &&
+          nsCRT::strcasecmp("cc", headerInfo->name) && nsCRT::strcasecmp("newsgroups", headerInfo->name) &&
+          nsCRT::strcasecmp("bcc", headerInfo->name) && nsCRT::strcasecmp("followup-to", headerInfo->name) &&
+          nsCRT::strcasecmp("reply-to", headerInfo->name) && nsCRT::strcasecmp("subject", headerInfo->name) &&
+          nsCRT::strcasecmp("organization", headerInfo->name) && nsCRT::strcasecmp("user-agent", headerInfo->name) &&
+          nsCRT::strcasecmp("date", headerInfo->name) && nsCRT::strcasecmp("x-mailer", headerInfo->name))
+            continue;
+    }
+
+    if (!nsCRT::strcasecmp("Date", headerInfo->name) && !displayOriginalDate) 
+    {
+      GenerateDateString(headerValue, convertedDateString); 
+      headerValueArray.AppendCString(convertedDateString);
+    }
+    else // append the header value as is
+      headerValueArray.AppendCString(nsCString(headerValue));
+
+    // XXX: TODO If nsCStringArray were converted over to take nsACStrings instead of nsCStrings, we can just 
+    // wrap these strings with a nsDependentCString which would avoid making a duplicate copy of the string
+    // like we are doing here....
+    headerNameArray.AppendCString(nsCString(headerInfo->name));
+  }
+
+  // turn our string arrays into enumerators
+  NS_NewUTF8StringEnumerator(getter_AddRefs(headerNameEnumerator), &headerNameArray);
+  NS_NewUTF8StringEnumerator(getter_AddRefs(headerValueEnumerator), &headerValueArray);
+
+  aHeaderSink->ProcessHeaders(headerNameEnumerator, headerValueEnumerator, aFromNewsgroup);
   return rv;
 }
 
@@ -186,76 +252,20 @@ NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
   nsCOMPtr<nsIMsgHeaderSink> headerSink; 
   nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
 
+  if (headerSink)
+  {
   PRInt32 viewMode = 0;
   nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   if (pPrefBranch)
     rv = pPrefBranch->GetIntPref("mail.show_headers", &viewMode);
 
-  if (headerSink)
-  {
-    // turn our headers into 2 parallel arrays which we'll pass into JS
-    const char ** headerNames = (const char **) PR_MALLOC(sizeof(const char *) * mHeaderArray->Count());
-    PRUnichar ** headerValues = (PRUnichar **) PR_MALLOC(sizeof(PRUnichar *) * mHeaderArray->Count());
-
-    if (!headerNames || !headerValues) return NS_ERROR_FAILURE;
-
-    PRUint32 numHeadersAdded = 0;
-    for (PRInt32 i=0; i<mHeaderArray->Count(); i++)
-    {
-      headerInfoType * headerInfo = (headerInfoType *) mHeaderArray->ElementAt(i);
-      if ( (!headerInfo) || (!headerInfo->name) || (!(*headerInfo->name)) || (!headerInfo->value) || (!(*headerInfo->value)))
-        continue;
-
-      const char * headerValue = headerInfo->value;
-
-      headerNames[numHeadersAdded] = headerInfo->name;
-
-      if (nsCRT::strcasecmp("Date", headerInfo->name) == 0)
-      {
-        PRBool displayOriginalDate = PR_FALSE;
-        if (pPrefBranch)
-          pPrefBranch->GetBoolPref("mailnews.display.original_date", &displayOriginalDate);
-
-        if (displayOriginalDate)
-          headerValues[numHeadersAdded] = ToNewUnicode(nsDependentCString(headerValue));
-        else
-          GenerateDateString(headerValue, &headerValues[numHeadersAdded]);
-      }
-      else
-      {
-        // optimization: if we aren't in view all header view mode, we only show a small set of the total # of headers.
-        // don't waste time sending those out to the UI since the UI is going to ignore them. 
-        if (viewMode != VIEW_ALL_HEADERS) 
-        {
-          if (nsCRT::strcasecmp("to", headerInfo->name) && nsCRT::strcasecmp("from", headerInfo->name) &&
-              nsCRT::strcasecmp("cc", headerInfo->name) && nsCRT::strcasecmp("newsgroups", headerInfo->name) &&
-              nsCRT::strcasecmp("bcc", headerInfo->name) && nsCRT::strcasecmp("followup-to", headerInfo->name) &&
-              nsCRT::strcasecmp("reply-to", headerInfo->name) && nsCRT::strcasecmp("subject", headerInfo->name) &&
-              nsCRT::strcasecmp("organization", headerInfo->name) && nsCRT::strcasecmp("user-agent", headerInfo->name) &&
-              nsCRT::strcasecmp("x-mailer", headerInfo->name))
-                continue;
-        }
-
-        headerValues[numHeadersAdded] = nsCRT::strdup(NS_ConvertUTF8toUCS2(headerValue).get());
-      }
-
-      numHeadersAdded++;
-    }
-
-    headerSink->ProcessHeaders(headerNames, (const PRUnichar **) headerValues, numHeadersAdded, bFromNewsgroups);
-    for (PRUint32 index = 0; index < numHeadersAdded; index++)
-      nsCRT::free(headerValues[index]);
-
-    PR_FREEIF(headerNames);
-    PR_FREEIF(headerValues);
-
-    // free unicode strings. 
+    rv = BroadcastHeaders(headerSink, viewMode, bFromNewsgroups);
   } // if header Sink
 
   return NS_OK;
 }
 
-nsresult nsMimeHtmlDisplayEmitter::GenerateDateString(const char * dateString, PRUnichar ** aDateString)
+nsresult nsMimeHtmlDisplayEmitter::GenerateDateString(const char * dateString, nsACString &formattedDate)
 {
   nsAutoString formattedDateString;
   nsresult rv = NS_OK;
@@ -309,7 +319,7 @@ nsresult nsMimeHtmlDisplayEmitter::GenerateDateString(const char * dateString, P
                                       formattedDateString);
 
   if (NS_SUCCEEDED(rv))
-    *aDateString = ToNewUnicode(formattedDateString);
+    formattedDate = NS_ConvertUCS2toUTF8(formattedDateString);
 
   return rv;
 }
@@ -317,7 +327,7 @@ nsresult nsMimeHtmlDisplayEmitter::GenerateDateString(const char * dateString, P
 nsresult
 nsMimeHtmlDisplayEmitter::EndHeader()
 {
-  if (mDocHeader)
+  if (mDocHeader && (mFormat != nsMimeOutput::nsMimeMessageFilterSniffer))
   {
     UtilityWriteCRLF("<html>");
     UtilityWriteCRLF("<head>");
@@ -539,8 +549,11 @@ nsMimeHtmlDisplayEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *am
 nsresult
 nsMimeHtmlDisplayEmitter::EndBody()
 {
+  if (mFormat != nsMimeOutput::nsMimeMessageFilterSniffer)
+  {
   UtilityWriteCRLF("</body>");
   UtilityWriteCRLF("</html>");
+  }
   nsCOMPtr<nsIMsgHeaderSink> headerSink; 
   nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl (do_QueryInterface(mURL, &rv));

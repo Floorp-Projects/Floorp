@@ -56,15 +56,57 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsUnicharUtils.h"
 
+#include "nsPrintfCString.h"
+#include "nsIMIMEHeaderParam.h"
+#include "nsNetCID.h"
+#include "nsIMimeHeaders.h"
+#include "nsMsgMimeCID.h"
+#include "nsIMsgMailNewsUrl.h"
+#include "nsIMimeMiscStatus.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIStringEnumerator.h"
+
+// needed to mark attachment flag on the db hdr
+#include "nsIMsgHdr.h"
+
+// needed to strip html out of the body
+#include "nsParserCIID.h"
+#include "nsIParser.h"
+#include "nsIHTMLContentSink.h"
+#include "nsIContentSerializer.h"
+#include "nsLayoutCID.h"
+#include "nsIHTMLToTextSink.h"
+#include "nsIDocumentEncoder.h" 
+
+#include <math.h>
+
 static PRLogModuleInfo *BayesianFilterLogModule = nsnull;
 
-static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f!\"#%&()*+,./:;<=>?@[\\]^_`{|}~";
+static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
+static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
+
+#define kDefaultJunkThreshold .99 // we override this value via a pref
+static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f.";
+static int kMinLengthForToken = 3; // lower bound on the number of characters in a word before we treat it as a token
+static int kMaxLengthForToken = 12; // upper bound on the number of characters in a word to be declared as a token
+
+#define FORGED_RECEIVED_HEADER_HINT NS_LITERAL_CSTRING("may be forged")
+
+#ifndef M_LN2
+#define M_LN2 0.69314718055994530942
+#endif
+
+#ifndef M_E
+#define M_E   2.7182818284590452354
+#endif
 
 struct Token : public PLDHashEntryHdr {
     const char* mWord;
     PRUint32 mLength;
     PRUint32 mCount;            // TODO:  put good/bad count values in same token object.
     double mProbability;        // TODO:  cache probabilities
+    double mDistance;
 };
 
 TokenEnumeration::TokenEnumeration(PLDHashTable* table)
@@ -179,6 +221,7 @@ inline Token* Tokenizer::get(const char* word)
 Token* Tokenizer::add(const char* word, PRUint32 count)
 {
     PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("add word: %s (count=%d)", word, count));
+
     PLDHashEntryHdr* entry = PL_DHashTableOperate(&mTokenTable, word, PL_DHASH_ADD);
     Token* token = NS_STATIC_CAST(Token*, entry);
     if (token) {
@@ -259,16 +302,198 @@ static char* toLowerCase(char* str)
     return str;
 }
 
-void Tokenizer::tokenize(char* text)
+void Tokenizer::addTokenForHeader(const char * aTokenPrefix, nsACString& aValue, PRBool aTokenizeValue)
 {
-    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("tokenize: %s", text));
+  if (aValue.Length())
+  {
+    ToLowerCase(aValue);
+    if (!aTokenizeValue)
+      add(PromiseFlatCString(nsDependentCString(aTokenPrefix) + NS_LITERAL_CSTRING(":") + aValue).get());
+    else 
+    {
+      char* word;
+      const nsPromiseFlatCString &flatValue = PromiseFlatCString(aValue);
+      char* next = (char *) flatValue.get();
+      while ((word = nsCRT::strtok(next, kBayesianFilterTokenDelimiters, &next)) != NULL) 
+      {
+          if (word[0] == '\0') continue;
+          if (isDecimalNumber(word)) continue;
+          if (isASCII(word))
+              add(PromiseFlatCString(nsDependentCString(aTokenPrefix) + NS_LITERAL_CSTRING(":") + nsDependentCString(word)).get());
+      }
+    }
+  }
+}
+
+void Tokenizer::tokenizeAttachment(const char * aContentType, const char * aFileName)
+{
+  nsCAutoString contentType;
+  nsCAutoString fileName;
+  fileName.Assign(aFileName);
+  contentType.Assign(aContentType);
+
+  // normalize the content type and the file name
+  ToLowerCase(fileName);
+  ToLowerCase(contentType);
+  addTokenForHeader("attachment/filename", fileName);
+
+  addTokenForHeader("attachment/content-type", contentType);
+}
+
+void Tokenizer::tokenizeHeaders(nsIUTF8StringEnumerator * aHeaderNames, nsIUTF8StringEnumerator * aHeaderValues)
+{
+  nsCOMPtr<nsIMIMEHeaderParam> mimehdrpar = do_GetService(NS_MIMEHEADERPARAM_CONTRACTID);
+
+  nsCString headerValue;
+  nsCAutoString headerName; // we'll be normalizing all header names to lower case
+  PRBool hasMore = PR_TRUE;
+
+  while (hasMore)
+  {
+    aHeaderNames->GetNext(headerName);
+    ToLowerCase(headerName); 
+    aHeaderValues->GetNext(headerValue);
+
+    switch (headerName.First())
+    {
+    case 'c':
+        if (headerName.Equals("content-type"))
+        {
+          // extract the charset parameter
+          nsXPIDLCString parameterValue;
+          mimehdrpar->GetParameterInternal(headerValue.get(), "charset", nsnull, nsnull, getter_Copies(parameterValue));
+          addTokenForHeader("charset", parameterValue);
+
+          // create a token containing just the content type 
+          mimehdrpar->GetParameterInternal(headerValue.get(), "type", nsnull, nsnull, getter_Copies(parameterValue));
+          if (!parameterValue.Length())
+            mimehdrpar->GetParameterInternal(headerValue.get(), nsnull /* use first unnamed param */, nsnull, nsnull, getter_Copies(parameterValue));
+          addTokenForHeader("content-type/type", parameterValue);
+
+          // XXX: should we add a token for the entire content-type header as well or just these parts we have extracted?
+        }
+        break;
+    case 'r':
+      if (headerName.Equals("received"))
+      {
+        // look for the string "may be forged" in the received headers. sendmail sometimes adds this hint
+        // This does not compile on linux yet. Need to figure out why. Commenting out for now
+        // if (FindInReadable(FORGED_RECEIVED_HEADER_HINT, headerValue))
+        //   addTokenForHeader(headerName.get(), FORGED_RECEIVED_HEADER_HINT);
+        // for now 
+      }
+      
+      // leave out reply-to
+      break;
+    case 's':
+        if (headerName.Equals("subject"))
+        { 
+          // we want to tokenize the subject
+          addTokenForHeader(headerName.get(), headerValue, PR_TRUE);
+        }
+
+        // important: leave out sender field. Too strong of an indicator
+        break;
+    case 'x': // (2) X-Mailer / user-agent works best if it is untokenized, just fold the case and any leading/trailing white space
+    case 'u': 
+        addTokenForHeader(headerName.get(), headerValue); 
+        break;
+    default:
+        addTokenForHeader(headerName.get(), headerValue); 
+        break;
+    } // end switch
+
+    aHeaderNames->HasMore(&hasMore);
+  }
+}
+
+void Tokenizer::tokenize_ascii_word(char * aWord)
+{
+  // always deal with normalized lower case strings
+  toLowerCase(aWord);
+  PRInt32 wordLength = strlen(aWord);
+
+  // if the wordLength is within our accepted token limit, then add it
+  if (wordLength >= kMinLengthForToken && wordLength <= kMaxLengthForToken)
+    add(aWord);
+  else if (wordLength > kMaxLengthForToken)
+  {
+    // don't skip over the word if it looks like an email address,
+    // there is value in adding tokens for addresses
+    nsDependentCString word (aWord, wordLength); // CHEAP, no allocation occurs here...
+
+    // XXX: i think the 40 byte check is just for perf reasons...if the email address is longer than that then forget about it.
+    if (wordLength < 40 && strchr(aWord, '.') && word.CountChar('@') == 1)
+    {
+      PRInt32 numBytesToSep = word.FindChar('@'); 
+      if (numBytesToSep < wordLength - 1) // if the @ sign is the last character, it must not be an email address
+      {
+        // split the john@foo.com into john and foo.com, treat them as separate tokens
+        // if i did my string foo correctly, none of this string magic should cause a heap based allocation...
+        add(nsPrintfCString(256, "email name:%s", PromiseFlatCString(Substring(word, 0, numBytesToSep++)).get()).get());
+        add(nsPrintfCString(256, "email addr:%s", PromiseFlatCString(Substring(word, numBytesToSep, wordLength - numBytesToSep)).get()).get());
+        return;
+      }
+    }
+
+    // there is value in generating a token indicating the number
+    // of characters we are skipping. We'll round to the nearest 10
+    add(nsPrintfCString("skip:%c %d", word[0], (wordLength/10) * 10).get()); 
+  } 
+}
+
+nsresult Tokenizer::stripHTML(const nsAString& inString, nsAString& outString)
+{
+  nsresult rv = NS_OK;
+  // Create a parser
+  nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create the appropriate output sink
+  nsCOMPtr<nsIContentSink> sink = do_CreateInstance(NS_PLAINTEXTSINK_CONTRACTID,&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
+  NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
+  PRUint32 flags = nsIDocumentEncoder::OutputLFLineBreak 
+                 | nsIDocumentEncoder::OutputNoScriptContent
+                 | nsIDocumentEncoder::OutputNoFramesContent
+                 | nsIDocumentEncoder::OutputBodyOnly;
+
+  textSink->Initialize(&outString, flags, 80);
+
+  parser->SetContentSink(sink);
+  nsCOMPtr<nsIDTD> dtd = do_CreateInstance(kNavDTDCID,&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  parser->RegisterDTD(dtd);
+
+  return parser->Parse(inString, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+}
+
+void Tokenizer::tokenize(char* aText)
+{
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("tokenize: %s", aText));
+
+    // strip out HTML tags before we begin processing
+    // uggh but first we have to blow up our string into UCS2
+    // since that's what the document encoder wants. UTF8/UCS2, I wish we all
+    // spoke the same language here..
+    nsString text = NS_ConvertUTF8toUCS2(aText);
+    nsString strippedUCS2;
+    stripHTML(text, strippedUCS2);
+
+    nsCString strippedStr = NS_ConvertUCS2toUTF8(strippedUCS2);
+    char * strippedText = (char *) strippedStr.get(); // bleh
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("tokenize stripped html: %s", strippedText));
+
     char* word;
-    char* next = text;
+    char* next = strippedText;
     while ((word = nsCRT::strtok(next, kBayesianFilterTokenDelimiters, &next)) != NULL) {
-        if (word[0] == '\0') continue;
+        if (!*word) continue;
         if (isDecimalNumber(word)) continue;
         if (isASCII(word))
-            add(toLowerCase(word));
+            tokenize_ascii_word(word);
         else {
             nsresult rv;
             // use I18N  scanner to break this word into meaningful semantic units.
@@ -371,11 +596,12 @@ public:
  * any of the valid token separators would do. This could be a further
  * refinement.
  */
-class TokenStreamListener : public nsIStreamListener {
+class TokenStreamListener : public nsIStreamListener, nsIMsgHeaderSink {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIMSGHEADERSINK
     
     TokenStreamListener(TokenAnalyzer* analyzer);
     virtual ~TokenStreamListener();
@@ -385,13 +611,15 @@ protected:
     PRUint32 mBufferSize;
     PRUint32 mLeftOverCount;
     Tokenizer mTokenizer;
+    PRBool mSetAttachmentFlag;
 };
 
 const PRUint32 kBufferSize = 16384;
 
 TokenStreamListener::TokenStreamListener(TokenAnalyzer* analyzer)
     :   mAnalyzer(analyzer),
-        mBuffer(NULL), mBufferSize(kBufferSize), mLeftOverCount(0)
+        mBuffer(NULL), mBufferSize(kBufferSize), mLeftOverCount(0),
+        mSetAttachmentFlag(PR_FALSE)
 {
 }
 
@@ -401,7 +629,60 @@ TokenStreamListener::~TokenStreamListener()
     delete mAnalyzer;
 }
 
-NS_IMPL_ISUPPORTS2(TokenStreamListener, nsIRequestObserver, nsIStreamListener)
+NS_IMPL_ISUPPORTS3(TokenStreamListener, nsIRequestObserver, nsIStreamListener, nsIMsgHeaderSink)
+
+NS_IMETHODIMP TokenStreamListener::ProcessHeaders(nsIUTF8StringEnumerator *aHeaderNames, nsIUTF8StringEnumerator *aHeaderValues, PRBool dontCollectAddress)
+{
+    mTokenizer.tokenizeHeaders(aHeaderNames, aHeaderValues);
+    return NS_OK;
+}
+
+NS_IMETHODIMP TokenStreamListener::HandleAttachment(const char *contentType, const char *url, const PRUnichar *displayName, const char *uri, PRBool aNotDownloaded)
+{
+    // UE Improvement, if we are downloading the message for the junk filter, and the junk filter is told the msg has attachments
+    // then go ahead and mark the message as having attachments instead of waiting for the user to display the message
+    // before making such a notation. 
+    // XXX Unfortunately this code causes us to be over agressive in marking messages as having attachments
+#if 0
+    if (!mSetAttachmentFlag)
+    {
+      nsCOMPtr <nsIMsgMessageService> messageService;
+      nsresult rv = GetMessageServiceFromURI(uri, getter_AddRefs(messageService));
+      if (messageService)
+      {
+        nsCOMPtr <nsIMsgDBHdr> msgHdr;
+        rv = messageService->MessageURIToMsgHdr(uri, getter_AddRefs(msgHdr));
+        if (msgHdr) 
+          msgHdr->MarkHasAttachments(PR_TRUE);
+      }
+
+      mSetAttachmentFlag = PR_TRUE;
+    }
+#endif
+
+    mTokenizer.tokenizeAttachment(contentType, NS_ConvertUCS2toUTF8(displayName).get());
+    return NS_OK;
+}
+
+NS_IMETHODIMP TokenStreamListener::OnEndAllAttachments()
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP TokenStreamListener::OnEndMsgDownload(nsIMsgMailNewsUrl *url)
+{
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP TokenStreamListener::GetSecurityInfo(nsISupports * *aSecurityInfo)
+{
+    return NS_OK;
+}
+NS_IMETHODIMP TokenStreamListener::SetSecurityInfo(nsISupports * aSecurityInfo)
+{
+    return NS_OK;
+}
 
 /* void onStartRequest (in nsIRequest aRequest, in nsISupports aContext); */
 NS_IMETHODIMP TokenStreamListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
@@ -415,6 +696,20 @@ NS_IMETHODIMP TokenStreamListener::OnStartRequest(nsIRequest *aRequest, nsISuppo
         if (!mBuffer)
             return NS_ERROR_OUT_OF_MEMORY;
     }
+
+    // get the url for the channel and set our nsIMsgHeaderSink on it so we get notified 
+    // about the headers and attachments
+
+    nsCOMPtr<nsIChannel> channel (do_QueryInterface(aRequest));
+    if (channel)
+    {
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(uri);
+        if (mailUrl)
+            mailUrl->SetMsgHeaderSink(NS_STATIC_CAST(nsIMsgHeaderSink*, this));
+    }
+
     return NS_OK;
 }
 
@@ -510,6 +805,18 @@ nsBayesianFilter::nsBayesianFilter()
     if (!BayesianFilterLogModule)
       BayesianFilterLogModule = PR_NewLogModule("BayesianFilter");
 
+    PRInt32 junkThreshold = 0;
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch> pPrefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    if (pPrefBranch)
+      pPrefBranch->GetIntPref("mail.adaptivefilters.junk_threshold", &junkThreshold);
+
+    mJunkProbabilityThreshold = ((double) junkThreshold) / 100;
+    if (mJunkProbabilityThreshold == 0 || mJunkProbabilityThreshold >= 1)
+      mJunkProbabilityThreshold = kDefaultJunkThreshold;
+
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("junk probabilty threshold: %f", mJunkProbabilityThreshold));
+
     PRBool ok = (mGoodTokens && mBadTokens);
     NS_ASSERTION(ok, "error allocating tokenizers");
     if (ok)
@@ -595,12 +902,29 @@ inline double abs(double x) { return (x >= 0 ? x : -x); }
 PR_STATIC_CALLBACK(int) compareTokens(const void* p1, const void* p2, void* /* data */)
 {
     Token *t1 = (Token*) p1, *t2 = (Token*) p2;
-    double delta = abs(t1->mProbability - 0.5) - abs(t2->mProbability - 0.5);
+    double delta = t1->mDistance - t2->mDistance;
     return (delta == 0.0 ? 0 : (delta > 0.0 ? 1 : -1));
 }
 
 inline double dmax(double x, double y) { return (x > y ? x : y); }
 inline double dmin(double x, double y) { return (x < y ? x : y); }
+
+double chi2Q (double x2, PRUint32 v) 
+{
+  PRUint32 i;
+  double m = x2 / 2.0;
+  double sum = exp(-m);
+  double term = sum;
+
+  NS_ASSERTION(!(v & 1), "chi2Q called with odd value");
+  for (i=1; i < v/2; ++i) 
+  {
+    term *= m / i;
+    sum += term;
+  }
+
+  return dmin(sum,1.0);
+}
 
 void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* messageURI,
                                        nsIJunkMailClassificationListener* listener)
@@ -629,53 +953,78 @@ void nsBayesianFilter::classifyMessage(Tokenizer& tokenizer, const char* message
       return;
     }
 
-    /* run the kernel of the Graham filter algorithm here. */
-    PRUint32 i, count = tokenizer.countTokens();
-    double ngood = mGoodCount, nbad = mBadCount;
-    for (i = 0; i < count; ++i) {
+    /* this part is similar to the Graham algorithm with some adjustments. */
+    PRUint32 i, goodclues=0, count = tokenizer.countTokens();
+    double ngood = mGoodCount, nbad = mBadCount, prob;
+
+    for (i = 0; i < count; ++i) 
+    {
         Token& token = tokens[i];
         const char* word = token.mWord;
-        // ((g (* 2 (or (gethash word good) 0)))
         Token* t = mGoodTokens.get(word);
-        double g = 2.0 * ((t != NULL) ? t->mCount : 0);
-        // (b (or (gethash word bad) 0)))
+      double hamcount = ((t != NULL) ? t->mCount : 0);
         t = mBadTokens.get(word);
-        double b = ((t != NULL) ? t->mCount : 0);
-        if ((g + b) > 5) {
-            // (max .01
-            //      (min .99 (float (/ (min 1 (/ b nbad))
-            //                         (+ (min 1 (/ g ngood))
-            //                            (min 1 (/ b nbad)))))))
-            token.mProbability = dmax(.01,
-                                     dmin(.99,
-                                         (dmin(1.0, (b / nbad)) /
-                                              (dmin(1.0, (g / ngood)) +
-                                               dmin(1.0, (b / nbad))))));
+       double spamcount = ((t != NULL) ? t->mCount : 0);
+       prob = (spamcount / nbad) / ( hamcount / ngood + spamcount / nbad);
+       double n = hamcount + spamcount;
+       prob =  (0.225 + n * prob) / (.45 + n);
+       double distance = abs(prob - 0.5);
+       if (distance >= .1) 
+       {
+         goodclues++;
+         token.mDistance = distance;
+         token.mProbability = prob;
             PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("token.mProbability (%s) is %f", word, token.mProbability));
-        } else {
-            token.mProbability = 0.4;
-            PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("token.mProbability (%s) assume 0.4", word));
         }
+      else 
+        token.mDistance = -1; //ignore clue
     }
     
-    // sort the array by the distance of the token probabilities from a 50-50 value of 0.5.
-    PRUint32 first, last = count;
-    if (count > 15) {
-        first = count - 15;
+    // sort the array by the token distances
         NS_QuickSort(tokens, count, sizeof(Token), compareTokens, NULL);
-    } else {
-        first = 0;
+    PRUint32 first, last = count;
+    first = (goodclues > 150) ? count - 150 : 0;
+
+    double H = 1.0, S = 1.0;
+    PRUint32 Hexp = 0, Sexp = 0;
+    goodclues=0;
+    int e;
+
+    for (i = first; i < last; ++i) 
+    {
+      if (tokens[i].mDistance != -1) 
+      {
+        goodclues++;
+        double value = tokens[i].mProbability;
+        S *= (1.0 - value);
+        H *= value;
+        if ( S < 1e-200 ) 
+        {
+          S = frexp(S, &e);
+          Sexp += e;
+        }
+        if ( H < 1e-200 ) 
+        {
+          H = frexp(H, &e);
+          Hexp += e;
+    }
+    }
     }
 
-    double prod1 = 1.0, prod2 = 1.0;
-    for (i = first; i < last; ++i) {
-        double value = tokens[i].mProbability;
-        prod1 *= value;
-        prod2 *= (1.0 - value);
-    }
-    double prob = (prod1 / (prod1 + prod2));
-    PRBool isJunk = (prob >= 0.90);
-    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("%s is junk probability = (%f)", messageURI, prob));
+    S = log(S) + Sexp * M_LN2;
+    H = log(H) + Hexp * M_LN2;
+
+    if (goodclues > 0) 
+    {
+      S = 1.0 - chi2Q(-2.0 * S, 2 * goodclues);
+      H = 1.0 - chi2Q(-2.0 * H, 2 * goodclues);
+      prob = (S-H +1.0) / 2.0;
+    } 
+    else 
+      prob = 0.5;
+
+    PRBool isJunk = (prob >= mJunkProbabilityThreshold);
+    PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("%s is junk probability = (%f)  HAM SCORE:%f SPAM SCORE:%f", messageURI, prob,H,S));
 
     delete[] tokens;
 
@@ -770,9 +1119,13 @@ private:
 
 static void forgetTokens(Tokenizer& corpus, TokenEnumeration tokens)
 {
+    // if we are forgetting the tokens for a message, should only 
+    // subtract 1 from the occurrence count for that token in the training set
+    // because we assume we only bumped the training set count once per messages
+    // containing the token. 
     while (tokens.hasMoreTokens()) {
         Token* token = tokens.nextToken();
-        corpus.remove(token->mWord, token->mCount);
+        corpus.remove(token->mWord);
     }
 }
 
@@ -780,7 +1133,7 @@ static void rememberTokens(Tokenizer& corpus, TokenEnumeration tokens)
 {
     while (tokens.hasMoreTokens()) {
         Token* token = tokens.nextToken();
-        corpus.add(token->mWord, token->mCount);
+        corpus.add(token->mWord);
     }
 }
 
@@ -790,6 +1143,16 @@ void nsBayesianFilter::observeMessage(Tokenizer& tokenizer, const char* messageU
 {
     PR_LOG(BayesianFilterLogModule, PR_LOG_ALWAYS, ("observeMessage(%s) old=%d new=%d", messageURL, oldClassification, newClassification));
     TokenEnumeration tokens = tokenizer.getTokens();
+
+    // Uhoh...if the user is re-training then the message may already be classified and we are classifying it again with the same classification.
+    // the old code would have removed the tokens for this message then added them back. But this really hurts the message occurrence
+    // count for tokens if you just removed training.dat and are re-training. See Bug #237095 for more details.
+    // What can we do here? Well we can skip the token removal step if the classifications are the same and assume the user is
+    // just re-training. But this then allows users to re-classify the same message on the same training set over and over again
+    // leading to data skew. But that's all I can think to do right now to address this.....
+    if (oldClassification != newClassification) 
+    {
+      // remove the tokens from the token set it is currently in
     switch (oldClassification) {
     case nsIJunkMailPlugin::JUNK:
         // remove tokens from junk corpus.
@@ -808,6 +1171,9 @@ void nsBayesianFilter::observeMessage(Tokenizer& tokenizer, const char* messageU
         }
         break;
     }
+    }
+
+    
     switch (newClassification) {
     case nsIJunkMailPlugin::JUNK:
         // put tokens into junk corpus.

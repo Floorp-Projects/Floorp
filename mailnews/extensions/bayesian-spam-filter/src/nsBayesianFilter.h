@@ -52,6 +52,8 @@ class Token;
 class TokenEnumeration;
 class TokenAnalyzer;
 class nsIMsgWindow;
+class nsIMimeHeaders;
+class nsIUTF8StringEnumerator;
 
 /**
  * Helper class to enumerate Token objects in a PLDHashTable
@@ -78,6 +80,11 @@ public:
     operator int() { return mTokenTable.entryStore != NULL; }
     
     Token* get(const char* word);
+
+    // The training set keeps an occurrence count on each word. This count 
+    // is supposed to count the # of messsages it occurs in.
+    // When add/remove is called while tokenizing a message and NOT the training set,
+    // 
     Token* add(const char* word, PRUint32 count = 1);
     void remove(const char* word, PRUint32 count = 1);
     
@@ -102,12 +109,22 @@ public:
     void tokenize(const char* str);
     
     /**
+     *  Creates specific tokens based on the mime headers for the message being tokenized
+     */
+    void tokenizeHeaders(nsIUTF8StringEnumerator * aHeaderNames, nsIUTF8StringEnumerator * aHeaderValues);
+
+    void tokenizeAttachment(const char * aContentType, const char * aFileName);
+
+    /**
      * Calls passed-in function for each token in the table.
      */
     void visit(PRBool (*f) (Token*, void*), void* data);
 
 private:
     char* copyWord(const char* word, PRUint32 len);
+    void tokenize_ascii_word(char * word);
+    inline void addTokenForHeader(const char * aTokenPrefix, nsACString& aValue, PRBool aTokenizeValue = false);
+    nsresult stripHTML(const nsAString& inString, nsAString& outString);
 
 private:
     PLDHashTable mTokenTable;
@@ -134,6 +151,7 @@ public:
     
 protected:
     Tokenizer mGoodTokens, mBadTokens;
+    double   mJunkProbabilityThreshold;
     PRUint32 mGoodCount, mBadCount;
     PRUint32 mBatchLevel;  // allow for nested batches to happen
     PRPackedBool mTrainingDataDirty;

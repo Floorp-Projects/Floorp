@@ -450,7 +450,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       else if (ptr9)
       {
         CRTFREEIF(mOutputFormat);
-        mOutputFormat = nsCRT::strdup("text/plain");
+        mOutputFormat = nsCRT::strdup("text/html");
         *aNewType = nsMimeOutput::nsMimeMessageFilterSniffer;
       }
     }
@@ -642,7 +642,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 
     case nsMimeOutput::nsMimeMessageFilterSniffer: // output all displayable part as raw 
       CRTFREEIF(mOutputFormat);
-      mOutputFormat = nsCRT::strdup("text/plain");
+      mOutputFormat = nsCRT::strdup("text/html");
       break;
 
     default:

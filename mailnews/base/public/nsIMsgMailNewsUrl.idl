@@ -50,6 +50,7 @@ interface nsICacheSession;
 interface nsIMimeHeaders;
 interface nsIStreamListener;
 interface nsIMsgFolder;
+interface nsIMsgHeaderSink;
 
 [scriptable, uuid(6CFFCEB0-CB8C-11d2-8065-006008128C4E)]
 interface nsIMsgMailNewsUrl : nsIURL {
@@ -107,6 +108,10 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	const unsigned long eDisplay  = 2;
 	boolean IsUrlType(in unsigned long type);
     nsIStreamListener getSaveAsListener(in boolean addDummyEnvelope, in nsIFileSpec aFileSpec);
+
+    // typically the header sink is tied to the nsIMsgWindow, but in certain circumstances, a consumer
+    // may chose to provide its own header sink for this url
+    attribute nsIMsgHeaderSink msgHeaderSink;
 };
 
 //////////////////////////////////////////////////////////////////////////////////
