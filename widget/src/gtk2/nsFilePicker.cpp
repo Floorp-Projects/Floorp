@@ -84,10 +84,7 @@ typedef GtkWidget* (*_gtk_file_chooser_dialog_new_fn)(const gchar *title,
                                                       GtkWindow *parent,
                                                       GtkFileChooserAction action,
                                                       const gchar *first_button_text,
-                                                      gint first_button_response,
-                                                      const gchar *second_button_text,
-                                                      gint second_button_response,
-                                                      const gchar *third_button_text /* NULL */);
+                                                      ...);
 typedef void (*_gtk_file_chooser_set_select_multiple_fn)(GtkFileChooser* chooser, gboolean truth);
 typedef void (*_gtk_file_chooser_set_current_name_fn)(GtkFileChooser* chooser, const gchar* name);
 typedef void (*_gtk_file_chooser_set_current_folder_fn)(GtkFileChooser* chooser, const gchar* folder);
