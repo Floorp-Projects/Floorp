@@ -238,7 +238,7 @@
        (define reserved-words (vector string)
          (vector "abstract" "as" "break" "case" "catch" "class" "const" "continue" "debugger" "default" "delete" "do" "else" "enum"
                  "export" "extends" "false" "final" "finally" "for" "function" "goto" "if" "implements" "import" "in"
-                 "instanceof" "interface" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return" "static" "super"
+                 "instanceof" "interface" "is" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return" "static" "super"
                  "switch" "synchronized" "this" "throw" "throws" "transient" "true" "try" "typeof" "use" "var" "volatile" "while" "with"))
        (define non-reserved-words (vector string)
          (vector "exclude" "get" "include" "set"))
