@@ -69,21 +69,21 @@
               accesskey=""
               oncommand="formShow();"
               style="display:none;"
-              insertafter="context-paste"/>
+              insertafter="context-copyimage"/>
     <menuitem id="context-capture"
               label="&captureCmd.label;"
               accesskey=""
               oncommand="formCapture();"
               style="display:none;"
-              insertafter="context-paste"/>
+              insertafter="context-copyimage"/>
     <menuitem id="context-prefill"
               label="&prefillCmd.label;"
               accesskey=""
               oncommand="formPrefill();"
               style="display:none;"
-              insertafter="context-paste"/>
+              insertafter="context-copyimage"/>
     <menuseparator id="context-separator"
                    style="display:none;"
-                   insertafter="context-paste"/>
+                   insertafter="context-copyimage"/>
   </popup>
 </overlay>
