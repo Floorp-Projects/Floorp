@@ -2241,8 +2241,12 @@ PresShell::HandleEvent(nsIView         *aView,
           else {
             nsIContent* targetContent;
             if (NS_OK == mCurrentEventFrame->GetContent(&targetContent) && nsnull != targetContent) {
+              // XXX Temporary fix for re-entracy isses
+              // temporarily cache the current frame
+              nsIFrame * currentEventFrame = mCurrentEventFrame;
               rv = targetContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
                                                  NS_EVENT_FLAG_INIT, aEventStatus);
+              mCurrentEventFrame = currentEventFrame;  // other part of re-entracy fix
               NS_RELEASE(targetContent);
             }
           }
