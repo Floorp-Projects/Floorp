@@ -48,10 +48,9 @@ bin/run-mozilla.sh
 bin/regExport
 bin/regxpcom
 bin/regchrome
-bin/splash.xpm
+bin/mozilla-xremote-client
 bin/xpicleanup
 bin/res/cmessage.txt
-; this is used by gtk embedding clients
 
 
 bin/components/bookmarks.xpt
@@ -66,6 +65,8 @@ bin/components/autocomplete.xpt
 bin/components/appshell.xpt
 bin/components/caps.xpt
 bin/components/cookie.xpt
+bin/components/jsdservice.xpt
+bin/components/libjsd.so
 bin/components/dom.xpt
 bin/components/dom_base.xpt
 bin/components/dom_core.xpt
@@ -83,17 +84,20 @@ bin/components/editor.xpt
 bin/components/find.xpt
 bin/components/gfx.xpt
 bin/components/gfx2.xpt
-bin/components/content_base.xpt
-bin/components/content_xsl.xpt
 bin/components/intl.xpt
 bin/components/imglib2.xpt
 bin/components/chardet.xpt
 bin/components/jar.xpt
 bin/components/jsconsole-clhandler.js
+bin/components/content_base.xpt
+bin/components/content_html.xpt
+bin/components/content_xsl.xpt
+bin/components/webBrowser_core.xpt
 bin/components/locale.xpt
 bin/components/mozbrwsr.xpt
 bin/components/mozcomps.xpt
 bin/components/mozfind.xpt
+bin/components/mozucth.xpt
 bin/components/mozxfer.xpt
 bin/components/necko.xpt
 bin/components/mimetype.xpt
@@ -163,14 +167,17 @@ bin/components/nsProgressDialog.js
 bin/components/progressDlg.xpt
 bin/components/nsDownloadProgressListener.js
 bin/components/transformiix.xpt
+bin/components/filepicker.xpt
 
 bin/chrome/help.jar
 bin/chrome/toolkit.jar
 bin/chrome/comm.jar
 bin/chrome/content-packs.jar
+bin/chrome/forms.jar
 bin/chrome/modern.jar
 bin/chrome/classic.jar
 bin/chrome/installed-chrome.txt
+bin/chrome/chromelist.txt
 ;-bin/chrome/comm/content/editor/EditorInitPage.html
 ;-bin/chrome/comm/content/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
@@ -225,6 +232,7 @@ bin/res/builtin/platformHTMLBindings.xml
 
 
 [mail]
+bin/components/libmeta_mail.so
 bin/libldap40.so
 bin/liblber40.so
 bin/components/addrbook.xpt
@@ -243,12 +251,17 @@ bin/components/txmgr.xpt
 bin/components/import.xpt
 bin/components/absync.xpt
 bin/chrome/messenger.jar
+bin/components/msgsmime.xpt
+bin/components/smime-service.js
 
 
 [chatzilla]
 bin/components/chatzilla-service.js
 bin/chrome/chatzilla.jar
 
+[venkman]
+bin/components/venkman-service.js
+bin/chrome/venkman.jar
 
 [talkback]
 ; Dummy talkback.xpi must be generated so deliver.pl and 
@@ -262,9 +275,10 @@ bin/components/nsSample.js
 
 [psm]
 bin/libnssckbi.so
-bin/components/pipboot.xpt
+bin/components/pipboot.xpt 
 bin/components/pipnss.xpt
 bin/components/pippki.xpt
+bin/components/libmeta_crypto.so
 bin/libnss3.so
 bin/libsmime3.so
 bin/libsoftokn3.so
@@ -282,3 +296,4 @@ bin/chrome/inspector.jar
 bin/defaults/pref/inspector.js
 bin/res/inspector/viewer-registry.rdf
 bin/res/inspector/search-registry.rdf
+
