@@ -440,6 +440,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 
 	  mIMEProperty		= 0;
 	  mIMEIsComposing		= PR_FALSE;
+    mIMEIsStatusChanged = PR_FALSE;
 	  mIMECompString = NULL;
 	  mIMECompUnicode = NULL;
 	  mIMEAttributeString = NULL;
@@ -2908,7 +2909,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             //  press and a key release. The scan code is used for
             //  translating ALT+number key combinations.
 
-            if (!mIMEIsComposing)
+            if (mIsAltDown && mIMEIsStatusChanged) {
+               mIMEIsStatusChanged = FALSE;
+	             result = PR_FALSE;
+            }
+            else if (!mIMEIsComposing)
                result = OnKeyDown(wParam, (HIWORD(lParam)));
 	          else
 	             result = PR_FALSE;
@@ -4769,6 +4774,8 @@ BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)
       mIsControlDown = PR_FALSE;
       mIsAltDown = PR_TRUE;
       DispatchKeyEvent(NS_KEY_PRESS, 0, 192);// XXX hack hack hack
+      if (aIMN == IMN_SETOPENSTATUS)
+        mIMEIsStatusChanged = PR_TRUE;
   }
 	// not implement yet 
 	return PR_FALSE;

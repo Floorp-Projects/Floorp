@@ -405,6 +405,7 @@ protected:
 	// For Input Method Support
 	DWORD		mIMEProperty;
 	PRBool		mIMEIsComposing;
+  PRBool    mIMEIsStatusChanged;
 	nsCString*	mIMECompString;
 	nsString*	mIMECompUnicode;
 	PRUint8*	mIMEAttributeString;
