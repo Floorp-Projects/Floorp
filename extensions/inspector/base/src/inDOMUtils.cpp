@@ -1,4 +1,3 @@
-/*  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (original author)
+ *   Christopher A. Aillon <christopher@aillon.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -45,6 +45,8 @@
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMCharacterData.h"
+#include "nsITextContent.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIXBLBinding.h" 
 #include "nsIStyleContext.h"
@@ -91,8 +93,6 @@ inDOMUtils::GetStyleContextForContent(nsIContent* aContent,
     return mCSSUtils->GetStyleContextForFrame(frame, aStyleContext);
   }
 
-  NS_ASSERTION(aContent->IsContentOfType(nsIContent::eELEMENT),
-               "We need to deal with non-elements too?  This code needs fixing");
   // No frame.  Do this the hard way.
   // Get the parent style context
   nsCOMPtr<nsIStyleContext> parentContext;
@@ -108,8 +108,65 @@ inDOMUtils::GetStyleContextForContent(nsIContent* aContent,
   nsCOMPtr<nsIPresContext> presContext;
   aPresShell->GetPresContext(getter_AddRefs(presContext));
   NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
-  
-  return presContext->ResolveStyleContextFor(aContent, parentContext, aStyleContext);
+
+  if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
+    return presContext->ResolveStyleContextFor(aContent, parentContext,
+                                               aStyleContext);
+  }
+
+  return presContext->ResolveStyleContextForNonElement(parentContext,
+                                                       aStyleContext);
+}
+
+NS_IMETHODIMP
+inDOMUtils::IsIgnorableWhitespace(nsIDOMCharacterData *aDataNode,
+                                  PRBool *aReturn)
+{
+  NS_PRECONDITION(aDataNode, "Must have a character data node");
+  NS_PRECONDITION(aReturn, "Must have an out parameter");
+
+  *aReturn = PR_FALSE;
+
+  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aDataNode);
+  NS_ASSERTION(textContent, "Does not implement nsITextContent!");
+
+  PRBool whiteSpaceOnly = PR_FALSE;
+  textContent->IsOnlyWhitespace(&whiteSpaceOnly);
+  if (!whiteSpaceOnly) {
+    return NS_OK;
+  }
+
+  // Okay.  We have only white space.  Let's check the white-space
+  // property now and make sure that this isn't preformatted text...
+
+  nsCOMPtr<nsIDOMWindowInternal> win = inLayoutUtils::GetWindowFor(aDataNode);
+  if (!win) {
+    // Hmm.  Things are screwy if we have no window...
+    NS_ERROR("No window!");
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPresShell> presShell = inLayoutUtils::GetPresShellFor(win);
+  NS_ASSERTION(presShell, "No pres shell!");
+
+  nsCOMPtr<nsIStyleContext> styleContext;
+  GetStyleContextForContent(textContent, presShell,
+                            getter_AddRefs(styleContext));
+
+  if (styleContext) {
+    const nsStyleText* text = nsnull;
+    ::GetStyleData(styleContext, &text);
+    NS_ASSERTION(text, "Could not get a style struct!");
+
+    *aReturn = !text->WhiteSpaceIsSignificant();
+  }
+  else {
+    // No style context.  Let's just assume the default value of
+    // white-space: normal, which we can safely ignore.
+    *aReturn = PR_TRUE;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -128,8 +185,8 @@ inDOMUtils::GetStyleRules(nsIDOMElement *aElement, nsISupportsArray **_retval)
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   nsCOMPtr<nsIStyleContext> styleContext;
 
-  nsresult rv = GetStyleContextForContent(content, shell,
-                                          getter_AddRefs(styleContext));
+  GetStyleContextForContent(content, shell,
+                            getter_AddRefs(styleContext));
   if (!styleContext) {
     NS_ERROR("no StyleContext");
     return NS_ERROR_UNEXPECTED;

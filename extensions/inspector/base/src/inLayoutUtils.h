@@ -52,7 +52,7 @@
 class inLayoutUtils
 {
 public:
-  static nsIDOMWindowInternal* GetWindowFor(nsIDOMElement* aElement);
+  static nsIDOMWindowInternal* GetWindowFor(nsIDOMNode* aNode);
   static nsIDOMWindowInternal* GetWindowFor(nsIDOMDocument* aDoc);
   static nsIPresShell* GetPresShellFor(nsISupports* aThing);
   static nsIFrame* GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell);
