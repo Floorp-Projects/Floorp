@@ -344,7 +344,7 @@
     <para>Years of bug writing experience has been distilled for your
     reading pleasure into the 
     <ulink
-    url="&landfillbase;bugwritinghelp.html">
+    url="&landfillbase;page.cgi?id=bug-writing.html">
     Bug Writing Guidelines</ulink>. 
     While some of the advice is Mozilla-specific, the basic principles of
     reporting Reproducible, Specific bugs, isolating the Product you are
