@@ -28,9 +28,9 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMNSHTMLSelectElement.h"
 #include "nsIDOMHTMLCollection.h"
 
@@ -39,16 +39,16 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
+static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
-static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kINSHTMLSelectElementIID, NS_IDOMNSHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
 
 NS_DEF_PTR(nsIDOMHTMLSelectElement);
+NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMHTMLElement);
 NS_DEF_PTR(nsIDOMHTMLFormElement);
-NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMNSHTMLSelectElement);
 NS_DEF_PTR(nsIDOMHTMLCollection);
 
@@ -271,7 +271,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       default:
       {
-        nsIDOMNode* prop;
+        nsIDOMElement* prop;
         nsIDOMNSHTMLSelectElement* b;
         if (NS_OK == a->QueryInterface(kINSHTMLSelectElementIID, (void **)&b)) {
           if (NS_OK == b->Item(JSVAL_TO_INT(id), &prop)) {
@@ -702,7 +702,7 @@ NSHTMLSelectElementItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     return JS_FALSE;
   }
 
-  nsIDOMNode* nativeRet;
+  nsIDOMElement* nativeRet;
   PRUint32 b0;
 
   *rval = JSVAL_NULL;

@@ -240,9 +240,26 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-        checkNamedItem = PR_TRUE;
+      {
+        nsIDOMElement* prop;
+        nsIDOMNSHTMLFormElement* b;
+        if (NS_OK == a->QueryInterface(kINSHTMLFormElementIID, (void **)&b)) {
+          if (NS_OK == b->Item(JSVAL_TO_INT(id), &prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Object must be of type NSHTMLFormElement");
+          return JS_FALSE;
+        }
+      }
     }
-    NS_RELEASE(secMan);
   }
 
   if (checkNamedItem) {
@@ -580,6 +597,66 @@ NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 }
 
 
+//
+// Native method Item
+//
+PR_STATIC_CALLBACK(JSBool)
+NSHTMLFormElementItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLFormElement *privateThis = (nsIDOMHTMLFormElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMNSHTMLFormElement *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLFormElementIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSHTMLFormElement");
+    return JS_FALSE;
+  }
+
+  nsIDOMElement* nativeRet;
+  PRUint32 b0;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    return JS_FALSE;
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlformelement.item", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    if (argc < 1) {
+      JS_ReportError(cx, "Function item requires 1 parameter");
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      JS_ReportError(cx, "Parameter must be a number");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->Item(b0, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for HTMLFormElement
@@ -624,6 +701,7 @@ static JSFunctionSpec HTMLFormElementMethods[] =
   {"submit",          HTMLFormElementSubmit,     0},
   {"reset",          HTMLFormElementReset,     0},
   {"namedItem",          NSHTMLFormElementNamedItem,     1},
+  {"item",          NSHTMLFormElementItem,     1},
   {0}
 };
 
