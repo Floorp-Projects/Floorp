@@ -41,6 +41,7 @@ nsTextWidget::nsTextWidget(): nsWindow()
   mMakeReadOnly=PR_FALSE;
   mMakePassword=PR_FALSE;
   mTE_Data = nsnull;
+  strcpy(gInstanceClassName, "nsTextWidget");
   //mBackground = NS_RGB(124, 124, 124);
 }
 
