@@ -48,8 +48,13 @@ interface nsIMsgIncomingServer : nsISupports {
   /* should we remember the password? */
   attribute boolean rememberPassword;
 
-  /* the password to login with (in cleartext for now) */
-  attribute string password;
+  /* the password to login with (in cleartext for now) 
+	  aWithUI is a flag where the caller can decide if they
+	  want us to bring up UI to ask for the password. If you pass
+	  in false, we will return an empty password if we don't know 
+	  it already and we will NOT ask the user */
+  void GetPassword(in boolean aWithUI, out string aPassword);
+  void SetPassword(in string aPassword);
 
   /* should we download whole messages when biff goes off? */
   attribute boolean downloadOnBiff;
