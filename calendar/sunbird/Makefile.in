@@ -271,7 +271,6 @@ endif
 	cp $(topsrcdir)/dist/bin/components/nsDictionary.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/nsXmlRpcClient.js ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/xmlextras.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/p3p.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/autoconfig.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/typeaheadfind.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/websrvcs.xpt ./MozillaSunbird/components
