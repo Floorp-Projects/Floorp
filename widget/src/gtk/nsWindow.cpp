@@ -1738,6 +1738,20 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWindow::Flash(void)
+{
+  // get the next up moz area
+  GtkWidget *top_mozarea = GetMozArea();
+  if (top_mozarea) {
+    GtkWidget *top_window = gtk_widget_get_toplevel(top_mozarea);
+    if (top_window) {
+      // this will raise the toplevel window
+      gdk_window_show(top_window->window);
+    }
+  }
+  return NS_OK;
+}
+
 /* virtual */ void
 nsWindow::OnRealize(GtkWidget *aWidget)
 {

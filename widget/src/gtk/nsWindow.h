@@ -81,6 +81,7 @@ public:
   NS_IMETHOD           SetBackgroundColor(const nscolor &aColor);
   NS_IMETHOD           SetCursor(nsCursor aCursor);
   NS_IMETHOD           SetFocus(void);
+  NS_IMETHOD           Flash(void);
 
   void                 QueueDraw();
   void                 UnqueueDraw();
