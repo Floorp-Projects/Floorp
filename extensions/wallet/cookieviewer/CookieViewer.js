@@ -72,6 +72,7 @@ function Startup()
 
   // install imageblocker tab if instructed to do so by the "imageblocker.enabled" pref
   try {
+    var pref;
     pref = Components.classes['@mozilla.org/preferences;1'];
     pref = pref.getService();
     pref = pref.QueryInterface(Components.interfaces.nsIPref);
@@ -122,8 +123,8 @@ function Startup()
 // purpose  : creates an array of cookie objects from the cookie stream
 function CreateCookieList()
 {
-  count = 0;
-  for(i = 1; i < cookieList.length; i+=8)
+  var count = 0;
+  for(var i = 1; i < cookieList.length; i+=8)
   {
     cookies[count] = new Cookie();
     cookies[count].number     = cookieList[i+0];
@@ -158,11 +159,11 @@ function Cookie(number,name,value,domaintype,domain,path,secure,expire)
 function loadCookies()
 {
   //  get cookies into an array
-  list            = cookieviewer.GetCookieValue();
-  BREAK           = list[0];
+  var list        = cookieviewer.GetCookieValue();
+  var BREAK       = list.substring(0,1);
   cookieList      = list.split(BREAK);
   CreateCookieList();   // builds an object array from cookiestream
-  for(i = 0; i < cookies.length; i++)
+  for(var i = 0; i < cookies.length; i++)
   {
     var domain = cookies[i].domain;
     if(domain.charAt(0) == ".")   // get rid of the ugly dot on the start of some domains
@@ -221,6 +222,7 @@ function ViewCookieSelected( e )
     field.setAttribute("value", value);
     if(rows[i] == "ifl_expires") break;
   }
+  return true;
 }
 
 // function : <CookieViewer.js>::DeleteCookieSelected();
@@ -293,12 +295,12 @@ function RestoreCookies()
 // purpose  : creates an array of permission objects from the permission stream
 function CreatePermissionList()
 {
-  count = 0;
-  for(i = 1; i < permissionList.length; i+=2)
+  var count = 0;
+  for(var i = 1; i < permissionList.length; i+=2)
   {
     permissions[count] = new Permission();
     permissions[count].number     = permissionList[i];
-    permStr                       = permissionList[i+1];
+    var permStr                   = permissionList[i+1];
     permissions[count].type       = permStr.substring(0,1);
     permissions[count].domain     = permStr.substring(1,permStr.length);
     count++;
@@ -319,12 +321,13 @@ function Permission(number,type,domain)
 function loadPermissions()
 {
   // get permissions into an array
-  list            = cookieviewer.GetPermissionValue(0);
-  BREAK           = list[0];
+  var list            = cookieviewer.GetPermissionValue(0);
+  var BREAK           = list.substring(0,1);
   permissionList  = list.split(BREAK);
   CreatePermissionList();   // builds an object array from permissionstream
-  for(i = 0; i < permissions.length; i++)
+  for(var i = 0; i < permissions.length; i++)
   {
+    var contentStr;
     var domain = permissions[i].domain;
     if(domain.charAt(0) == ".")   // get rid of the ugly dot on the start of some domains
       domain = domain.substring(1,domain.length);
@@ -375,12 +378,12 @@ function DeleteAllPermissions() {
 // purpose  : creates an array of image objects from the image stream
 function CreateImageList()
 {
-  count = 0;
-  for(i = 1; i < imageList.length; i+=2)
+  var count = 0;
+  for(var i = 1; i < imageList.length; i+=2)
   {
     images[count] = new Image();
     images[count].number     = imageList[i];
-    imgStr                   = imageList[i+1];
+    var imgStr               = imageList[i+1];
     images[count].type       = imgStr.substring(0,1);
     images[count].domain     = imgStr.substring(1,imgStr.length);
     count++;
@@ -401,13 +404,14 @@ function Image(number,type,domain)
 function loadImages()
 {
   // get images into an array
-  list = cookieviewer.GetPermissionValue(1);
-  BREAK = list[0];
+  var list = cookieviewer.GetPermissionValue(1);
+  var BREAK = list.substring(0,1);
   imageList = list.split(BREAK);
   CreateImageList();   // builds an object array from imagestream
-  for(i = 0; i < images.length; i++)
+  for(var i = 0; i < images.length; i++)
   {
-    var domain = images[i].domain;
+   var contentStr; 
+   var domain = images[i].domain;
     if(images[i].type == "+")
       contentStr = bundle.GetStringFromName("canImages");
     else if(images[i].type == "-")
@@ -484,17 +488,18 @@ function AddItem(children,cells,prefix,idfier)
 // function : <CookieViewer.js>::DeleteItemSelected();
 // purpose  : deletes all the signons that are selected
 function DeleteItemSelected(tree, prefix, kids) {
+  var i;
   var delnarray = [];
   var rv = "";
   var cookietree = document.getElementById(tree);
   selitems = cookietree.selectedItems;
-  for(var i = 0; i < selitems.length; i++) 
+  for(i = 0; i < selitems.length; i++) 
   { 
     delnarray[i] = document.getElementById(selitems[i].getAttribute("id"));
     var itemid = parseInt(selitems[i].getAttribute("id").substring(prefix.length,selitems[i].getAttribute("id").length));
     rv += (itemid + ",");
   }
-  for(var i = 0; i < delnarray.length; i++) 
+  for(i = 0; i < delnarray.length; i++) 
   { 
     document.getElementById(kids).removeChild(delnarray[i]);
   }

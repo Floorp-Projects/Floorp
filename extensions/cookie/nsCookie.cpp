@@ -2415,13 +2415,11 @@ COOKIE_CookieViewerReturn(nsAutoString results) {
   }
 }
 
-#define BUFLEN2 5000
 #define BREAK '\001'
 
 PUBLIC void
 COOKIE_GetCookieListForViewer(nsString& aCookieList) {
-  PRUnichar *buffer = (PRUnichar*)PR_Malloc(2*BUFLEN2);
-  int g, cookieNum;
+  int cookieNum = 0;
   cookie_CookieStruct * cookie;
 
 
@@ -2442,31 +2440,37 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
     PRUnichar * Yes = cookie_Localize("Yes");
     PRUnichar * No = cookie_Localize("No");
     PRUnichar * AtEnd = cookie_Localize("AtEndOfSession");
-    buffer[0] = '\0';
-    g = 0;
 
-    /*
-     * Cookie expiration times on mac will not be decoded correctly because
-     * they were based on get_current_time() instead of time(NULL) -- see comments in
-     * get_current_time.  So we need to adjust for that now in order for the
-     * display of the expiration time to be correct
-     */
-    time_t expires;
-    expires = cookie->expires + (time(NULL) - get_current_time());
+    aCookieList.AppendWithConversion(BREAK);
+    aCookieList.AppendInt(cookieNum);
+    aCookieList.AppendWithConversion(BREAK);
+    aCookieList.AppendWithConversion(fixed_name);
+    aCookieList.AppendWithConversion(BREAK);
+    aCookieList.AppendWithConversion(fixed_value);
+    aCookieList.AppendWithConversion(BREAK);
+    aCookieList.Append(cookie->isDomain ? Domain : Host);
+    aCookieList.AppendWithConversion(BREAK);
+    aCookieList.AppendWithConversion(fixed_domain_or_host);
+    aCookieList.AppendWithConversion(BREAK);
+    aCookieList.AppendWithConversion(fixed_path);
+    aCookieList.AppendWithConversion(BREAK);
+    aCookieList.Append(cookie->xxx ? Yes : No);
+    aCookieList.AppendWithConversion(BREAK);
+    if (cookie->expires) {
+      /*
+       * Cookie expiration times on mac will not be decoded correctly because
+       * they were based on get_current_time() instead of time(NULL) -- see comments in
+       * get_current_time.  So we need to adjust for that now in order for the
+       * display of the expiration time to be correct
+       */
+      time_t expires;
+      expires = cookie->expires + (time(NULL) - get_current_time());
+      nsString expireString; expireString.AssignWithConversion(ctime(&(expires)));
+      aCookieList.Append(expireString);
+    } else {
+      aCookieList.Append(AtEnd);
+    }
 
-    nsString temp1; temp1.AssignWithConversion("%c%d%c%s%c%s%c%S%c%s%c%s%c%S%c%S");
-    nsString temp2; temp2.AssignWithConversion(ctime(&(expires)));
-    g += nsTextFormatter::snprintf(buffer+g, BUFLEN2-g,
-      temp1.GetUnicode(),
-      BREAK, cookieNum,
-      BREAK, fixed_name,
-      BREAK, fixed_value,
-      BREAK, cookie->isDomain ? Domain : Host,
-      BREAK, fixed_domain_or_host,
-      BREAK, fixed_path,
-      BREAK, cookie->xxx ? Yes : No,
-      BREAK, cookie->expires ? (temp2.GetUnicode()) : AtEnd
-    );
     PR_FREEIF(fixed_name);
     PR_FREEIF(fixed_value);
     PR_FREEIF(fixed_domain_or_host);
@@ -2476,26 +2480,21 @@ COOKIE_GetCookieListForViewer(nsString& aCookieList) {
     Recycle(Yes);
     Recycle(No);
     Recycle(AtEnd);
-    aCookieList += buffer;
   }
-  PR_FREEIF(buffer);
 }
 
 PUBLIC void
 COOKIE_GetPermissionListForViewer(nsString& aPermissionList, PRInt32 type) {
-  char *buffer = (char*)PR_Malloc(BUFLEN2);
-  int g = 0, permissionNum;
+
+  int permissionNum = 0;
   permission_HostStruct * hostStruct;
   permission_TypeStruct * typeStruct;
 
-  buffer[0] = '\0';
-  permissionNum = 0;
-
   if (cookie_permissionList == nsnull) {
-    PR_FREEIF(buffer);
     return;
   }
 
+  aPermissionList.SetLength(0);
   PRInt32 count = cookie_permissionList->Count();
   for (PRInt32 i = 0; i < count; ++i) {
     hostStruct = NS_STATIC_CAST(permission_HostStruct*, cookie_permissionList->ElementAt(i));
@@ -2505,21 +2504,16 @@ COOKIE_GetPermissionListForViewer(nsString& aPermissionList, PRInt32 type) {
         typeStruct = NS_STATIC_CAST
           (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
         if (typeStruct->type == type) {
-          g += PR_snprintf(buffer+g, BUFLEN2-g,
-            "%c%d%c%c%s",
-            BREAK,
-            permissionNum,
-            BREAK,
-            (typeStruct->permission) ? '+' : '-',
-            hostStruct->host
-          );
+          aPermissionList.AppendWithConversion(BREAK);
+          aPermissionList.AppendInt(permissionNum);
+          aPermissionList.AppendWithConversion(BREAK);
+          aPermissionList.AppendWithConversion((typeStruct->permission) ? '+' : '-');
+          aPermissionList.AppendWithConversion(hostStruct->host);
           permissionNum++;
         }
       }
     }
   }
-  aPermissionList.AssignWithConversion(buffer);
-  PR_FREEIF(buffer);
 }
 
 PUBLIC void

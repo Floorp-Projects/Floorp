@@ -2685,7 +2685,6 @@ wallet_ReleasePrefillElementList(nsVoidArray * wallet_PrefillElement_list) {
   }
 }
 
-#define BUFLEN3 5000
 #define BREAK '\001'
 
 nsVoidArray * wallet_list;
