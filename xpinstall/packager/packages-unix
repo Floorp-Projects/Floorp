@@ -254,6 +254,8 @@ bin/components/libmsgdb.so
 bin/components/libmsgimap.so
 bin/components/libmsgnews.so
 bin/components/libvcard.so
+bin/components/libsigned.so
+bin/components/libsmime.so
 bin/components/mailnews.xpt
 bin/components/mime.xpt
 bin/components/msgbase.xpt
