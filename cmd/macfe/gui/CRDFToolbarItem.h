@@ -51,6 +51,7 @@ public:
 	virtual void ResizeFrameTo ( SInt16 inWidth, SInt16 inHeight, Boolean inRefresh ) = 0;
 	virtual void PlaceInSuperFrameAt ( SInt32 inHoriz, SInt32 inVert, Boolean inRefresh ) = 0;
 	virtual SDimension16 NaturalSize ( SDimension16 inAvail ) const = 0;
+	virtual bool IsStretchy ( ) const { return false; }
 
 		// Post-creation init routines
 		// These are called AFTER the item has been placed inside its parent
@@ -239,6 +240,7 @@ public:
 		LPane::PlaceInSuperFrameAt(inHoriz, inVert, inRefresh);	
 	}
 	virtual SDimension16 NaturalSize ( SDimension16 inAvail ) const ;
+	virtual bool IsStretchy ( ) const ;
 
 	virtual void FinishCreate ( ) ;
 

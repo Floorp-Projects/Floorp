@@ -353,7 +353,9 @@ CRDFPushButton::NaturalSize( SDimension16 inAvailable ) const
 		  size;
 		* an item with a percentage size can calculate it based on
 		  |inAvailable|;
-		* an item with a space-filling size can simply return |inAvailable|.
+		* an item with a space-filling size should return the smallest space
+			it can live in. The toolbar will know it is stretchy because
+			it can call IsStretchy().
 
 	  Problems:
 		this routine is essentially a hack.	 In particular, if |inAvailable|
@@ -849,7 +851,13 @@ CRDFURLBar :: FinishCreate ( )
 	LWindow* window = LWindow::FetchWindowObject(GetMacPort());
 	LView* view = UReanimator::CreateView(1104, this, window);	// create the url bar
 
-
+	// chances are good that if this button streams in after the window has been
+	// created, the url bar will have not been hooked up to the current context. Doing
+	// it here ensures it will.
+	CBrowserWindow* browser = dynamic_cast<CBrowserWindow*>(window);
+	if ( browser )
+		browser->HookupContextToToolbars();
+		
 } // FinishCreate
 
 
@@ -857,11 +865,25 @@ CRDFURLBar :: FinishCreate ( )
 // NaturalSize
 // (See comment on CRDFPushButton::NaturalSize() for tons of info.)
 //
-// Since we want to take as much room as possible, return what is available.
+// Return the smallest size we can live in.
 //
 SDimension16
 CRDFURLBar::NaturalSize( SDimension16 inAvailable ) const
 {
-	return inAvailable;
+	SDimension16 desiredSpace;
+	desiredSpace.width = 50; desiredSpace.height = 25;		//еее is this enough?
+	
+	return desiredSpace;
 	 
 } // NaturalSize
+
+
+//
+// IsStretchy
+//
+// 
+bool
+CRDFURLBar :: IsStretchy ( ) const 
+{
+	return true;		//еее do this right.
+}
