@@ -25,7 +25,13 @@
 
 #define PR_LINKER_ARCH	"bsdi"
 #define _PR_SI_SYSNAME "BSDI"
+#if defined(__i386__)
 #define _PR_SI_ARCHITECTURE "x86"
+#elif defined(__sparc__)
+#define _PR_SI_ARCHITECTURE "sparc"
+#else
+#error "Unknown CPU architecture"
+#endif
 #define PR_DLL_SUFFIX		".so"
 
 #define _PR_STACK_VMBASE	0x50000000
@@ -38,6 +44,8 @@
 #define _PR_NO_LARGE_FILES
 
 #define USE_SETJMP
+
+#ifndef _PR_PTHREADS
 
 #include <setjmp.h>
 
@@ -156,12 +164,15 @@ struct _MDCPU {
 #define _MD_IOQ_LOCK()
 #define _MD_IOQ_UNLOCK()
 
-#define _MD_EARLY_INIT          _MD_EarlyInit
-#define _MD_FINAL_INIT			_PR_UnixInit
 #define _MD_INIT_RUNNING_CPU(cpu) _MD_unix_init_running_cpu(cpu)
 #define _MD_INIT_THREAD         _MD_InitializeThread
 #define _MD_EXIT_THREAD(thread)
 #define _MD_CLEAN_THREAD(_thread)
+
+#endif /* ! _PR_PTHREADS */
+
+#define _MD_EARLY_INIT          _MD_EarlyInit
+#define _MD_FINAL_INIT			_PR_UnixInit
 
 #include <sys/syscall.h>
 #define _MD_SELECT(nfds,r,w,e,tv) syscall(SYS_select,nfds,r,w,e,tv)

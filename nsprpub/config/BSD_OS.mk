@@ -16,12 +16,12 @@
 #
 
 #
-# Config stuff for BSDI Unix for x86.
+# Config stuff for BSD/OS Unix.
 #
 
 include $(MOD_DEPTH)/config/UNIX.mk
 
-ifeq (,$(filter-out 1.1 4.0,$(OS_RELEASE)))
+ifeq (,$(filter-out 1.1 4.0 4.0.1,$(OS_RELEASE)))
 CC		= gcc -Wall -Wno-format
 CCC		= g++
 else
@@ -38,7 +38,16 @@ IMPL_STRATEGY = _EMU
 DEFINES		+= -D_PR_LOCAL_THREADS_ONLY
 endif
 
-OS_CFLAGS	= -DBSDI -DHAVE_STRERROR -D__386BSD__ -DNEED_BSDREGEX -Di386
+OS_CFLAGS	= $(DSO_CFLAGS) -DBSDI -DHAVE_STRERROR -DNEED_BSDREGEX
+
+ifeq (86,$(findstring 86,$(OS_TEST)))
+CPU_ARCH	= x86
+OS_CFLAGS	+= -D__386BSD__ -Di386
+endif
+ifeq (sparc,$(findstring sparc,$(OS_TEST)))
+CPU_ARCH	= sparc
+OS_CFLAGS	+= -D__sparc__ -Dsparc
+endif
 
 ifeq ($(OS_RELEASE),2.1)
 OS_CFLAGS	+= -D_PR_TIMESPEC_HAS_TS_SEC
@@ -50,8 +59,6 @@ else
 OS_CFLAGS	+= -D_PR_SELECT_CONST_TIMEVAL -D_PR_BSDI_JMPBUF_IS_STRUCT
 endif
 
-CPU_ARCH	= x86
-
 NOSUCHFILE	= /no-such-file
 
 ifeq ($(OS_RELEASE),1.1)
@@ -59,9 +66,10 @@ OS_CFLAGS	+= -D_PR_STAT_HAS_ONLY_ST_ATIME -D_PR_NEED_H_ERRNO
 else
 OS_CFLAGS	+= -DHAVE_DLL -DUSE_DLFCN -D_PR_STAT_HAS_ST_ATIMESPEC
 OS_LIBS		= -ldl
-ifeq ($(OS_RELEASE),4.0)
+ifeq (,$(filter-out 4.0 4.0.1,$(OS_RELEASE)))
 MKSHLIB		= $(CC) $(DSO_LDOPTS)
-DSO_LDOPTS	= -shared
+DSO_CFLAGS	= -fPIC
+DSO_LDOPTS	= -shared -Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)
 else
 MKSHLIB		= $(LD) $(DSO_LDOPTS)
 DSO_LDOPTS	= -r
