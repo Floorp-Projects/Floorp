@@ -32,15 +32,22 @@
  */
 package org.mozilla.jss.asn1;
 
+import java.util.Vector;
+
 /**
  * An exception thrown when BER decoding fails.
  */
 public class InvalidBERException extends java.lang.Exception {
 
     private InvalidBERException child=null;
+    private Vector mesgList = new Vector();
 
     public InvalidBERException(String mesg) {
         super(mesg);
+    }
+
+    public void append(String mesg) {
+        mesgList.addElement(mesg);
     }
 
     public InvalidBERException(InvalidBERException e, String mesg) {
@@ -52,26 +59,33 @@ public class InvalidBERException extends java.lang.Exception {
      * Prints out the exception class and error message, including
      * all the nested exceptions.
      */
+    private void appendMessages(StringBuffer sb) {
+        int numMessages = mesgList.size();
+        for( int i=numMessages-1; i >= 0; --i ) {
+            sb.append(mesgList.elementAt(i));
+            sb.append(" >> ");
+        }
+        sb.append(getMessage());
+    }
+
     public String toString() {
-        if(child != null) {
-            return (super.toString()+ " >> " + child.toStringNested());
-        } else {
-            return super.toString();
-        }
+        StringBuffer sb = new StringBuffer();
+        sb.append( this.getClass().getName() );
+        sb.append(": ");
+        appendMessages(sb);
+        return sb.toString();
     }
 
-    /**
-     * Prints out the error message of this exception, including all the
-     * nested exceptions.
-     */
     public String toStringNested() {
-        if(child != null) {
-            return ( getMessage() + " >> " + child.toStringNested());
-        } else {
-            return getMessage();
+        StringBuffer sb = new StringBuffer();
+        appendMessages(sb);
+        if( child != null ) {
+            sb.append(" >> ");
+            sb.append( child.toStringNested() );
         }
+        return sb.toString();
     }
-
+        
     public static class EOF extends InvalidBERException {
         public EOF() {
             super("Unexpected end-of-file encountered");

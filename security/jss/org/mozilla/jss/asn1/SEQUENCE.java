@@ -384,7 +384,7 @@ public static class Template implements ASN1Template {
                         tagDesc = lookAhead.getTag().toString();
                     }
                     throw new InvalidBERException("Missing item #" + index +
-                        ": found " + lookAhead.getTag() );
+                        ": found " + tagDesc );
                 }
                 continue;
             }
@@ -412,12 +412,14 @@ public static class Template implements ASN1Template {
             }
 
             // Store this element in the SEQUENCE
-            if(  e.getImplicitTag() == null ) {
-                // no implicit tag
-                seq.addElement( val );
-            } else {
-                // there is an implicit tag
-                seq.addElement( e.getImplicitTag(), val );
+            if( e.producesOutput() ) {
+                if(  e.getImplicitTag() == null ) {
+                    // no implicit tag
+                    seq.addElement( val );
+                } else {
+                    // there is an implicit tag
+                    seq.addElement( e.getImplicitTag(), val );
+                }
             }
 
             // If this element is repeatable, don't go on to the next element
@@ -449,7 +451,8 @@ public static class Template implements ASN1Template {
         return seq;
 
       } catch(InvalidBERException e) {
-        throw new InvalidBERException(e, "SEQUENCE(item #"+index+")");
+        e.append("SEQUENCE(item #" +index + ")");
+        throw e;
       }
     }
 
@@ -464,10 +467,20 @@ public static class Template implements ASN1Template {
          */
         public Element(Tag implicitTag, ASN1Template type, boolean optional)
         {
+            this(implicitTag, type, optional, true);
+        }
+
+        /**
+         * Creates a new element, which may or may not be optional.
+         */
+        public Element(Tag implicitTag, ASN1Template type, boolean optional,
+            boolean doesProduceOutput)
+        {
             this.type = type;
             defaultVal = null;
             this.optional = optional;
             this.implicitTag = implicitTag;
+            this.doesProduceOutput = doesProduceOutput;
         }
 
         /**
@@ -479,6 +492,11 @@ public static class Template implements ASN1Template {
             this.defaultVal = defaultVal;
             optional = false;
             this.implicitTag = implicitTag;
+        }
+
+        private boolean doesProduceOutput;
+        boolean producesOutput() {
+            return doesProduceOutput;
         }
 
         // repeatability is provided to allow for SEQUENCE OF SIZE
@@ -551,6 +569,15 @@ public static class OF_Template implements ASN1Template {
         Template.Element el = new Template.Element(null, type, true); //optional
         el.makeRepeatable();
         template.addElement( el );
+    }
+
+    public static OF_Template makeOutputlessOFTemplate(ASN1Template type) {
+        OF_Template t = new OF_Template();
+        t.template = new Template();
+        Template.Element el = new Template.Element(null, type, true, false);
+        el.makeRepeatable();
+        t.template.addElement(el);
+        return t;
     }
 
     public boolean tagMatch(Tag tag) {
