@@ -48,7 +48,8 @@ interface nsIDOMNSHTMLImageElement : nsISupports
   readonly attribute long             naturalHeight;
   readonly attribute long             naturalWidth;
 
-  // These attributes are mapped to .offsetLeft and .offsetTop
+  // These attributes are offsets from the closest view (to mimic
+  // NS4's "offset-from-layer" behavior).
   readonly attribute long             x;
   readonly attribute long             y;
 };
