@@ -53,9 +53,9 @@ public:
 
 
 #define NS_FORWARD_IDOMXULDOCUMENT(_to)  \
-  NS_IMETHOD    GetRdf(nsIRDFService** aRdf) { return _to##GetRdf(aRdf); } \
-  NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn) { return _to##GetElementById(aId, aReturn); }  \
-  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to##GetElementsByAttribute(aName, aValue, aReturn); }  \
+  NS_IMETHOD    GetRdf(nsIRDFService** aRdf) { return _to GetRdf(aRdf); } \
+  NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn) { return _to GetElementById(aId, aReturn); }  \
+  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitXULDocumentClass(nsIScriptContext *aContext, void **aPrototype);

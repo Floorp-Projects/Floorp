@@ -47,8 +47,8 @@ public:
 
 
 #define NS_FORWARD_IDOMXULTREEELEMENT(_to)  \
-  NS_IMETHOD    GetDatabase(nsIRDFCompositeDataSource** aDatabase) { return _to##GetDatabase(aDatabase); } \
-  NS_IMETHOD    SetDatabase(nsIRDFCompositeDataSource* aDatabase) { return _to##SetDatabase(aDatabase); } \
+  NS_IMETHOD    GetDatabase(nsIRDFCompositeDataSource** aDatabase) { return _to GetDatabase(aDatabase); } \
+  NS_IMETHOD    SetDatabase(nsIRDFCompositeDataSource* aDatabase) { return _to SetDatabase(aDatabase); } \
 
 
 extern "C" NS_DOM nsresult NS_InitXULTreeElementClass(nsIScriptContext *aContext, void **aPrototype);
