@@ -126,6 +126,9 @@ case "$target" in
 alpha-*-linux*)
 	CFLAGS="$CFLAGS -mieee" ;;
 
+*-freebsd*)
+	DSO_LDOPTS='-Bshareable' ;;
+
 esac
 
 dnl Checks for typedefs, structures, and compiler characteristics.
