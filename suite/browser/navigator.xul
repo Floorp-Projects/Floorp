@@ -292,35 +292,6 @@ Contributor(s): ______________________________________. -->
   <html:script language="javascript" src="tooltip.js">
   </html:script>
 
-<popup id="translationlist">
-    <menu>
-        <menuitem value="&translateEngtoFrenCmd.label;" onaction="Translate('en', 'fr', 'SSI');" />
-        <menuitem value="&translateEngtoGermCmd.label;" onaction="Translate('en', 'de', 'SSI');"/>
-        <menuitem value="&translateEngtoItalianCmd.label;" onaction="Translate('en', 'it', 'SSI');"/>
-        <menuitem value="&translateEngtoJapaneseCmd.label;" onaction="Translate('en', 'ja', 'Neocortech');"/>
-        <menuitem value="&translateEngtoPortCmd.label;" onaction="Translate('en', 'po', 'SSI');"/>
-        <menuitem value="&translateEngtoSpanCmd.label;" onaction="Translate('en', 'es', 'SSI');"/>
-        <menuseparator />
-        <menuitem value="&translateFrentoEngCmd.label;" onaction="Translate('fr', 'en', 'SSI')"/>
-        <menuitem value="&translateFrentoGermCmd.label;" onaction="Translate('fr', 'de', 'SSI')"/>
-        <menuitem value="&translateFrentoSpanCmd.label;" onaction="Translate('fr', 'es', 'SSI')"/>
-        <menuseparator />
-        <menuitem value="&translateGermtoEngCmd.label;" onaction="Translate('de', 'en', 'SSI')"/>
-        <menuitem value="&translateGermtoFrenCmd.label;" onaction="Translate('de', 'fr', 'SSI')"/>
-        <menuitem value="&translateGermtoSpanCmd.label;" onaction="Translate('de', 'es', 'SSI')"/>
-        <menuseparator />
-        <menuitem value="&translateItaliantoEngCmd.label;" onaction="Translate('it', 'en', 'SSI');"/>
-        <menuseparator />
-        <menuitem value="&tanslateJapanesetoEngCmd.label;" onaction="Translate('ja', 'en', 'SSI');"/>
-        <menuseparator />
-        <menuitem value="&translatePorttoEngCmd.label;" onaction="Translate('po', 'en', 'SSI');"/>
-        <menuseparator />
-        <menuitem value="&tanslateSpantoEngCmd.label;" onaction="Translate('es', 'en', 'SSI')"/>
-        <menuitem value="&translateSpantoFrenCmd.label;" onaction="Translate('es', 'fr', 'SSI')"/>
-        <menuitem value="&translateSpantoGermCmd.label;" onaction="Translate('es', 'de', 'SSI')"/>
-    </menu>
-</popup>
-
 <!-- This needs to go into a xul fragment, but since those don't work now, this stays here !-->
 <popup id="aTooltip" oncreate="return FillInTooltip(document.tooltipElement);">
  <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
