@@ -2335,41 +2335,40 @@ public class Interpreter extends LabelTable {
 
                 final int SCRIPT_THROW = 0, ECMA = 1, RUNTIME = 2, OTHER = 3;
                 int exType;
-                Object errObj; // Object seen by catch
+                Object catchObj = ex; // Object seen by script catch
 
                 for (;;) {
-                    if (ex instanceof JavaScriptException) {
-                        errObj = ScriptRuntime.
-                            unwrapJavaScriptException((JavaScriptException)ex);
+                    if (catchObj instanceof JavaScriptException) {
+                        catchObj = ScriptRuntime.unwrapJavaScriptException
+                                    ((JavaScriptException)catchObj);
                         exType = SCRIPT_THROW;
                     }
-                    else if (ex instanceof EcmaError) {
+                    else if (catchObj instanceof EcmaError) {
                         // an offical ECMA error object,
-                        errObj = ((EcmaError)ex).getErrorObject();
+                        catchObj = ((EcmaError)catchObj).getErrorObject();
                         exType = ECMA;
                     }
-                    else if (ex instanceof WrappedException) {
-                        Object w = ((WrappedException) ex).unwrap();
-                        if (w instanceof Throwable) {
-                            ex = (Throwable) w;
-                            continue;
+                    else if (catchObj instanceof RuntimeException) {
+                        if (catchObj instanceof WrappedException) {
+                            Object w = ((WrappedException) catchObj).unwrap();
+                            if (w instanceof Throwable) {
+                                catchObj = (Throwable) w;
+                                continue;
+                            }
                         }
-                        errObj = ex;
-                        exType = RUNTIME;
-                    }
-                    else if (ex instanceof RuntimeException) {
-                        errObj = ex;
+                        catchObj = null; // script can not catch this
                         exType = RUNTIME;
                     }
                     else {
-                        errObj = ex; // Error instance
+                        // Error instance
+                        catchObj = null; // script can not catch this
                         exType = OTHER;
                     }
                     break;
                 }
 
                 if (exType != OTHER && cx.debugger != null) {
-                    cx.debugger.handleExceptionThrown(cx, errObj);
+                    cx.debugger.handleExceptionThrown(cx, ex);
                 }
 
                 boolean rethrow = true;
@@ -2388,6 +2387,8 @@ public class Interpreter extends LabelTable {
                             // Has catch block
                             rethrow = false;
                             pc = catch_pc;
+                            stackTop = STACK_SHFT;
+                            stack[stackTop] = catchObj;
                         }
                     }
                     if (rethrow) {
@@ -2396,8 +2397,9 @@ public class Interpreter extends LabelTable {
                         if (finally_pc != 0) {
                             // has finally block
                             rethrow = false;
-                            errObj = ex;
                             pc = finally_pc;
+                            stackTop = STACK_SHFT;
+                            stack[stackTop] = ex;
                         }
                     }
                 }
@@ -2430,10 +2432,8 @@ public class Interpreter extends LabelTable {
                 }
                 pcPrevBranch = pc;
 
-                // prepare stack and restore this function's security domain.
+                // restore scope at try point
                 scope = (Scriptable)stack[TRY_STACK_SHFT + tryStackTop];
-                stackTop = STACK_SHFT;
-                stack[stackTop] = errObj;
             }
         }
         if (frame != null) {
