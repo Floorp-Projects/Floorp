@@ -37,17 +37,6 @@
 # ***** END LICENSE BLOCK *****
 */
 
-.listBox {
-  -moz-appearance: listbox;
-  margin: 2px 4px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  background-color: -moz-Field;
-}
-
 .buttonBox {
   margin: 0px 5px 0px 0px !important;
 }
@@ -109,82 +98,3 @@
   min-width: 8em;
 }
 
-/** Privacy/Advanced Panels Expander Boxes **/
-.settingsBox {
-  margin: 5px;
-  padding: 5px;
-}
-
-/* Themes/Extensions Items */
-.themesLink {
-  margin-left: 5px;
-  text-decoration: underline;
-  color: blue;
-  cursor: pointer;
-}
-
-.themesLink:active {
-  color: red;
-}
-
-#previewImageContainer {
-  height: 93px;
-  padding: 1px;
-}
-
-#previewImage {
-  max-width: 355px;
-  min-width: 355px;
-  max-height: 85px;
-  min-height: 85px;
-}
-
-.extensionInfoArea {
-  background-color: -moz-Field !important;
-  height: 10em;
-}
-
-#fileExtension {
-  width: 5em; 
-}
-
-#fileExtension.pluginsList {
-  width: 5.5em; 
-}
-
-#typeIcon, 
-.extensionChildren::-moz-tree-image(fileExtension),
-.pluginTypesChildren::-moz-tree-image(fileExtension) {
-  margin: 0px 5px 0px 0px;
-}
-
-.pluginTypesChildren::-moz-tree-image(pluginEnabled) {
-  margin: 0px 5px 0px 0px;
-  list-style-image: url(chrome://browser/skin/pref/dot.gif);  
-}
-
-.pluginTypesChildren::-moz-tree-image(pluginEnabled, enabled) {
-  margin: 0px 5px 0px 0px;
-  list-style-image: url(chrome://browser/skin/pref/check.gif);  
-}
-
-.biggerIndent {
-  margin-left: 28px; 
-}
-
-#typeField {
-  font-weight: bold; 
-}
-
-#defaultAppName {
-  margin-left: 6px !important; 
-}
-
-expander {
-  margin: 2px;
-}
-
-#privacyCategories > expander[open="true"] {
-  background-color: #FFFFCC;
-  border: 1px solid black;
-}

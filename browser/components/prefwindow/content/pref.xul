@@ -1,5 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/skin/pref/pref.css"?>
 <?xml-stylesheet href="chrome://browser/skin/pref/pref.css"?>
 
 <!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref.dtd" >
@@ -82,7 +83,7 @@
       <button id="catFeaturesbutton"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&features.label;"  
               url="chrome://browser/content/pref/pref-features.xul"/>
       <button id="catDownloadsButton" orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&downloads.label;" 
-              url="chrome://browser/content/pref/pref-downloads.xul"/>
+              url="chrome://mozapps/content/downloads/pref-downloads.xul"/>
       <button id="catThemesButton"    orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&themes.label;"    
               url="chrome://browser/content/pref/pref-themes.xul"/>
       <button id="catExtButton"       orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&ext.label;"       
