@@ -583,8 +583,8 @@ nsSize
 GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
 {
   nsSize size(0,0);
-  const nsHTMLReflowState* containRS = 
-    nsHTMLReflowState::GetContainingBlockReflowState(aOuterRS.parentReflowState);
+  const nsHTMLReflowState* containRS =
+    aOuterRS.parentReflowState->mCBReflowState;
 
   if (containRS) {
     size.width = containRS->mComputedWidth;

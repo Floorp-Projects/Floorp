@@ -298,33 +298,28 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
   GetStyleData(frame, &mStyleText);
 
   mFrameType = DetermineFrameType(frame, mStyleDisplay);
+  InitCBReflowState();
   InitConstraints(aPresContext, aContainingBlockWidth, aContainingBlockHeight, aBorder, aPadding);
 }
 
-const nsHTMLReflowState*
-nsHTMLReflowState::GetContainingBlockReflowState(const nsHTMLReflowState* aParentRS)
+void nsHTMLReflowState::InitCBReflowState()
 {
-  while (nsnull != aParentRS) {
-    if (nsnull != aParentRS->frame) {
-      PRBool isContainingBlock;
-      // XXX This needs to go and we need to start using the info in the
-      // reflow state...
-      nsresult rv = aParentRS->frame->IsPercentageBase(isContainingBlock);
-      if (NS_SUCCEEDED(rv) && isContainingBlock) {
-        // a block inside a table cell needs to use the table cell
-        if (aParentRS->parentReflowState) {
-          nsCOMPtr<nsIAtom> fType;
-          aParentRS->parentReflowState->frame->GetFrameType(getter_AddRefs(fType));
-          if (IS_TABLE_CELL(fType.get())) {
-            aParentRS = aParentRS->parentReflowState;
-          }
-        }
-        return aParentRS;
+  PRBool isContainingBlock;
+  nsresult rv = frame->IsPercentageBase(isContainingBlock);
+  if (NS_SUCCEEDED(rv) && isContainingBlock) {
+    // a block inside a table cell needs to use the table cell
+    if (parentReflowState) {
+      nsCOMPtr<nsIAtom> fType;
+      parentReflowState->frame->GetFrameType(getter_AddRefs(fType));
+      if (IS_TABLE_CELL(fType.get())) {
+        mCBReflowState = parentReflowState;
+        return;
       }
     }
-    aParentRS = aParentRS->parentReflowState;
+    mCBReflowState = this;
+    return;
   }
-  return nsnull;
+  mCBReflowState = parentReflowState->mCBReflowState;
 }
 
 const nsHTMLReflowState*
@@ -337,13 +332,10 @@ nsHTMLReflowState::GetPageBoxReflowState(const nsHTMLReflowState* aParentRS)
 nscoord
 nsHTMLReflowState::GetContainingBlockContentWidth(const nsHTMLReflowState* aParentRS)
 {
-  nscoord width = 0;
-  const nsHTMLReflowState* rs =
-    GetContainingBlockReflowState(aParentRS);
-  if (nsnull != rs) {
-    return aParentRS->mComputedWidth;
-  }
-  return width;
+  const nsHTMLReflowState* rs = aParentRS->mCBReflowState;
+  if (!rs)
+    return 0;
+  return rs->mComputedWidth;
 }
 
 nsCSSFrameType
@@ -1672,8 +1664,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     mComputedMaxWidth = mComputedMaxHeight = NS_UNCONSTRAINEDSIZE;
   } else {
     // Get the containing block reflow state
-    const nsHTMLReflowState* cbrs =
-      GetContainingBlockReflowState(parentReflowState);
+    const nsHTMLReflowState* cbrs = parentReflowState->mCBReflowState;
     NS_ASSERTION(nsnull != cbrs, "no containing block");
 
     // If we weren't given a containing block width and height, then
@@ -1774,8 +1765,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
         // used to be called exclusively.
         if (NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_INLINE) == mFrameType) {
           // Get the containing block reflow state
-          const nsHTMLReflowState* cbrs =
-            GetContainingBlockReflowState(parentReflowState);
+          const nsHTMLReflowState* cbrs = parentReflowState->mCBReflowState;
           NS_ASSERTION(nsnull != cbrs, "no containing block");
           nsCompatibility mode;
           aPresContext->GetCompatibilityMode(&mode);
