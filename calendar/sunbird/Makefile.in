@@ -180,7 +180,6 @@ endif
 	cp $(topsrcdir)/dist/bin/components/xpconnect.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/unicharutil.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/uconv.xpt ./MozillaSunbird/components
-	cp $(topsrcdir)/dist/bin/components/ucnative.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/locale.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/intl.xpt ./MozillaSunbird/components
 	cp $(topsrcdir)/dist/bin/components/lwbrk.xpt ./MozillaSunbird/components
