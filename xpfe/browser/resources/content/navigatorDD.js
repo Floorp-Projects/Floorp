@@ -339,21 +339,7 @@ var homeButtonObserver = {
   onDrop: function (aEvent, aXferData, aDragSession)
     {
       var url = retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
-      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-      var pressedVal = { };
-      var promptTitle = gNavigatorBundle.getString("droponhometitle");
-      var promptMsg   = gNavigatorBundle.getString("droponhomemsg");
-      var okButton    = gNavigatorBundle.getString("droponhomeokbutton");
-
-      promptService.confirmEx(window, promptTitle, promptMsg,
-                              (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
-                              (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
-                              okButton, null, null, null, {value:0}, pressedVal);
-
-      if (pressedVal.value == 0) {
-        nsPreferences.setUnicharPref("browser.startup.homepage", url);
-        setTooltipText("home-button", url);
-      }
+      setTimeout(openHomeDialog, 0, url);
     },
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
@@ -378,6 +364,25 @@ var homeButtonObserver = {
       return flavourSet;
     }
 };
+
+function openHomeDialog(aURL)
+{
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+  var pressedVal = { };
+  var promptTitle = gNavigatorBundle.getString("droponhometitle");
+  var promptMsg   = gNavigatorBundle.getString("droponhomemsg");
+  var okButton    = gNavigatorBundle.getString("droponhomeokbutton");
+
+  promptService.confirmEx(window, promptTitle, promptMsg,
+                          (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
+                          (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
+                          okButton, null, null, null, {value:0}, pressedVal);
+
+  if (pressedVal.value == 0) {
+    nsPreferences.setUnicharPref("browser.startup.homepage", aURL);
+    setTooltipText("home-button", aURL);
+  }
+}
 
 var goButtonObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
