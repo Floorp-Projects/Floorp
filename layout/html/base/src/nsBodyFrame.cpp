@@ -524,7 +524,7 @@ AddToPadding(nsIPresContext* aPresContext,
 NS_METHOD 
 nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 {
-  if (0 == (NS_BODY_THE_BODY & mFlags)) {
+  if ((0 == (NS_BODY_THE_BODY & mFlags)) || (nsnull == mContent)) {
     return NS_OK;
   }
 
