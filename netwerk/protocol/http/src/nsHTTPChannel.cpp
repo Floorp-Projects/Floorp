@@ -97,7 +97,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mBufferSegmentSize(0),
     mBufferMaxSize(0),
     mStatus(NS_OK),
-    mPipeliningAllowed (PR_TRUE)
+    mPipeliningAllowed (PR_TRUE),
+    mPipelinedRequest (nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -1065,7 +1066,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
 
     // ruslan/hack: don't cache secure connections for now
     nsCOMPtr<nsISupports> securityInfo;
-    if (GetSecurityInfo (getter_AddRefs (securityInfo)) && securityInfo)
+    if (NS_SUCCEEDED (GetSecurityInfo (getter_AddRefs (securityInfo))) && securityInfo)
         return NS_OK;
 
     // If the current response is itself from the cache rather than the network
@@ -1327,17 +1328,24 @@ nsHTTPChannel::Open(void)
 
         if (NS_ERROR_BUSY == rv)
         {
-            mPipelinedRequest = pReq;
+            if (!mPipelinedRequest)
+            {
+                mPipelinedRequest = pReq;
+                NS_RELEASE (pReq);
+            }
+
             mState = HS_WAITING_FOR_OPEN;
             return NS_OK;
         }
         
+        if (!mPipelinedRequest)
+            NS_RELEASE (pReq);
+
         if (NS_FAILED (rv)) 
         {
             ResponseCompleted (mResponseDataListener, rv, nsnull);
             return rv;
         }
-        NS_RELEASE (pReq);
     }
     
     mState = HS_WAITING_FOR_RESPONSE;
@@ -1462,6 +1470,12 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
                                           const PRUnichar* aMsg)
 {
     nsresult rv = NS_OK;
+
+    {
+        // ruslan: grab the security info before the transport disappears
+        nsCOMPtr<nsISupports> secInfo;
+        GetSecurityInfo (getter_AddRefs (secInfo)); // this will store it
+    }
 
     //
     // First:
@@ -2128,13 +2142,20 @@ nsHTTPChannel::GetSecurityInfo (nsISupports * *aSecurityInfo)
     if (!aSecurityInfo)
         return NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsIChannel> trans;
-
     if (mRequest)
     {
+        nsCOMPtr<nsIChannel> trans;
+
         mRequest -> GetTransport (getter_AddRefs (trans));
         if (trans)
-            return trans -> GetSecurityInfo (aSecurityInfo);
+            trans -> GetSecurityInfo (getter_AddRefs (mSecurityInfo));
+
+        if (mSecurityInfo)
+        {
+            *aSecurityInfo = mSecurityInfo;
+            NS_ADDREF (*aSecurityInfo);
+        }
+    
     }
     return NS_OK;
 }
