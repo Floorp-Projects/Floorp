@@ -2484,7 +2484,7 @@ function goAboutDialog()
 {
   // XXXBlake -- the about dialog should be modal, but then clicking the link in it just opens
   //             a blank browser window (the page isn't loaded).
-  window.openDialog("chrome://browser/content/aboutDialog.xul", "About", "modal=no,centerscreen,chrome,resizable=no");
+  window.openDialog("chrome://browser/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
 }
 
 
