@@ -47,10 +47,7 @@
 
 static PRLibrary *xpcomLib = nsnull;
 static XPCOMFunctions *xpcomFunctions = nsnull;
-
-#ifdef DEBUG_dougt
-#define XPCOM_GLUE_FLUSH_HEAP
-#endif
+static nsIMemory* xpcomMemory = nsnull;
 
 //#define XPCOM_GLUE_NO_DYNAMIC_LOADING
 
@@ -64,6 +61,11 @@ static XPCOMFunctions *xpcomFunctions = nsnull;
 #define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #endif
 #endif
+
+
+
+extern nsresult GlueStartupMemory();
+extern void GlueShutdownMemory();
 
 extern "C"
 nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile)
@@ -109,51 +111,11 @@ nsresult NS_COM XPCOMGlueStartup(const char* xpcomFile)
         xpcomLib = nsnull;
         return NS_ERROR_FAILURE;
     }
-    return NS_OK;
-#endif
-}
-#ifdef XPCOM_GLUE_FLUSH_HEAP
-static void FlushHeap()
-{
 
-#if defined(XP_WIN32)
-    // Heap compaction and shrink working set now 
-#ifdef DEBUG_dougt
-    PRIntervalTime start = PR_IntervalNow();
-    int ret = 
+    // startup the nsMemory
+    return GlueStartupMemory();
 #endif
-        _heapmin();
-#ifdef DEBUG_dougt
-    printf("DEBUG: HeapCompact() %s - %d ms\n", (!ret ? "success" : "FAILED"),
-           PR_IntervalToMilliseconds(PR_IntervalNow()-start));
-#endif
-    
-    // shrink working set if we can
-    // This function call is available only on winnt and above.
-    typedef BOOL WINAPI SetProcessWorkingSetProc(HANDLE hProcess, SIZE_T dwMinimumWorkingSetSize,
-                                                 SIZE_T dwMaximumWorkingSetSize);
-    SetProcessWorkingSetProc *setProcessWorkingSetSizeP = NULL;
-    
-    HMODULE kernel = GetModuleHandle("kernel32.dll");
-    if (kernel) {
-        setProcessWorkingSetSizeP = (SetProcessWorkingSetProc *)
-            GetProcAddress(kernel, "SetProcessWorkingSetSize");
-    }
-    
-    if (setProcessWorkingSetSizeP) {
-        // shrink working set
-#ifdef DEBUG_dougt
-        start = PR_IntervalNow();
-#endif
-        (*setProcessWorkingSetSizeP)(GetCurrentProcess(), -1, -1);
-#ifdef DEBUG_dougt
-        printf("DEBUG: Honey! I shrunk the resident-set! - %d ms\n",
-               PR_IntervalToMilliseconds(PR_IntervalNow() - start));
-#endif
-    }
-#endif 
 }
-#endif 
 
 extern "C"
 nsresult NS_COM XPCOMGlueShutdown()
@@ -170,11 +132,8 @@ nsresult NS_COM XPCOMGlueShutdown()
         PR_UnloadLibrary(xpcomLib);
         xpcomLib = nsnull;
     }
-#ifdef XPCOM_GLUE_FLUSH_HEAP
-    // should the application do this instead of us?
-    FlushHeap();
-#endif 
-
+    
+    GlueShutdownMemory();
     return NS_OK;
 #endif
 }
