@@ -47,6 +47,8 @@ toolkit.jar:
         content/global/printProgress.xul            (resources/content/printProgress.xul)
         content/global/printProgress.js             (resources/content/printProgress.js)
         content/global/build.dtd                    (build.dtd)
+        content/global/MPL-1.1.html                 (resources/content/MPL-1.1.html)
+        content/global/NPL-1.1.html                 (resources/content/NPL-1.1.html)
         content/global/bindings/browser.xml         (resources/content/bindings/browser.xml)
         content/global/bindings/button.xml          (resources/content/bindings/button.xml)
         content/global/bindings/checkbox.xml        (resources/content/bindings/checkbox.xml)
