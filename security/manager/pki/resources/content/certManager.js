@@ -320,6 +320,7 @@ function deleteCerts()
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var selTab = document.getElementById('certMgrTabbox').selectedItem;
   var selTabID = selTab.getAttribute('id');
+  var t;
 
   params.SetNumberStrings(numcerts+1);
 
@@ -345,7 +346,7 @@ function deleteCerts()
   }
 
   params.SetInt(0,numcerts);
-  for (var t=0; t<numcerts; t++) 
+  for (t=0; t<numcerts; t++) 
   {
     var cert = selected_certs[t];
     params.SetString(t+1, cert.dbKey);  
@@ -364,8 +365,8 @@ function deleteCerts()
     var treeView = null;
     var loadParam = null;
 
-    var selTab = document.getElementById('certMgrTabbox').selectedItem;
-    var selTabID = selTab.getAttribute('id');
+    selTab = document.getElementById('certMgrTabbox').selectedItem;
+    selTabID = selTab.getAttribute('id');
     if (selTabID == 'mine_tab') {
       treeView = userTreeView;
       loadParam = nsIX509Cert.USER_CERT;
@@ -380,7 +381,7 @@ function deleteCerts()
       loadParam = nsIX509Cert.CA_CERT;
     }
 
-    for (var t=numcerts-1; t>=0; t--)
+    for (t=numcerts-1; t>=0; t--)
     {
       var s = params.GetString(t+1);
       if (s.length) {
@@ -400,7 +401,6 @@ function viewCerts()
   if (!numcerts)
     return;
 
-  var numcerts = selected_certs.length;
   for (var t=0; t<numcerts; t++) {
     selected_certs[t].view();
   }
