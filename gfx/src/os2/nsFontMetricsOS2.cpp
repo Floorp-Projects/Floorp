@@ -68,7 +68,6 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 nsVoidArray  *nsFontMetricsOS2::gGlobalFonts = nsnull;
 PRBool        nsFontMetricsOS2::gSubstituteVectorFonts = PR_TRUE;
 PLHashTable  *nsFontMetricsOS2::gFamilyNames = nsnull;
-long          nsFontMetricsOS2::gSystemRes = 0;
 int           nsFontMetricsOS2::gCachedIndex = 0;
 nsICollation *nsFontMetricsOS2::gCollation = nsnull;
 
@@ -387,12 +386,6 @@ InitGlobals(void)
 
   ulSystemCodePage = WinQueryCp(HMQ_CURRENT);
 
-   // find system screen resolution. used here and in RealizeFont
-  HPS ps = ::WinGetScreenPS(HWND_DESKTOP);
-  HDC hdc = GFX (::GpiQueryDevice (ps), HDC_ERROR);
-  GFX (::DevQueryCaps(hdc, CAPS_HORIZONTAL_FONT_RES, 1, &nsFontMetricsOS2::gSystemRes), FALSE);
-  ::WinReleasePS(ps);
-
   if( !nsFontMetricsOS2::gGlobalFonts )
   {
     nsresult res = nsFontMetricsOS2::InitializeGlobalFonts();
@@ -541,11 +534,12 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
     {
       long lFonts = 0;
       FONTMETRICS* pMetrics = getMetrics( lFonts, fattrs->szFacename, aPS);
+      int browserRes = mDeviceContext->GetDPI();
 
       int curPoints = 0;
       for( int i = 0; i < lFonts; i++)
       {
-        if( pMetrics[i].sYDeviceRes == gSystemRes )
+        if( pMetrics[i].sYDeviceRes == browserRes )
         {
           if (pMetrics[i].sNominalPointSize / 10 == points)
           {
