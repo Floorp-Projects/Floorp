@@ -21,6 +21,9 @@
 
 DEPTH=..
 
-DIRS=base components browser tests
+DIRS=base components browser
+!if !defined(DISABLE_TESTS)
+DIRS=$(DIRS) tests
+!endif
 
 include <$(DEPTH)\config\rules.mak>
