@@ -146,7 +146,7 @@ static void readEvalPrint(FILE *in, World &world)
                 StmtNode *parsedStatements = p.parseProgram();
 				ASSERT(p.lexer.peek(true).hasKind(Token::end));
                 {
-                	PrettyPrinter f(stdOut, 20);
+                	PrettyPrinter f(stdOut, 30);
                 	{
                 		PrettyPrinter::Block b(f, 2);
 	                	f << "Program =";
