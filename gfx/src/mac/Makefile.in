@@ -91,6 +91,10 @@ CPPSRCS = \
         nsNativeThemeMac.cpp \
         $(NULL)
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+CMMSRCS = nsCocoaImageUtils.mm
+endif
+
 SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX)
 EXTRA_DSO_LIBS = mozutil_s gkgfx
 EXTRA_DEPS = $(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX)
@@ -113,3 +117,8 @@ include $(topsrcdir)/config/rules.mk
 CXXFLAGS    += $(TK_CFLAGS)
 CFLAGS      += $(TK_CFLAGS)
 INCLUDES    += $(TK_CFLAGS) -I$(srcdir)/..
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+LDFLAGS += -framework Cocoa
+endif
+

@@ -751,15 +751,15 @@ void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame,
   const PRUint32 height = PR_MIN(heightOverlay,
                                  heightComposite - overlayYOffset);
 
-// Windows and OS/2 have the funky bottom up data storage we need to account for
-#if defined(XP_WIN) || defined(XP_OS2)
+#ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
+  // Account for bottom-up storage
   PRInt32 offset = ((heightComposite - 1) - overlayYOffset) * abprComposite;
 #else
   PRInt32 offset = overlayYOffset * abprComposite;
 #endif
   PRUint8* alphaLine = compositingAlphaData + offset + (overlayXOffset >> 3);
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
   offset = (heightOverlay - 1) * abprOverlay;
 #else
   offset = 0;
@@ -820,7 +820,7 @@ void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame,
       }
     }
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
     alphaLine   -= abprComposite;
     overlayLine -= abprOverlay;
 #else
@@ -877,8 +877,8 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
   PRUint32 abpr;
   aFrame->GetAlphaBytesPerRow(&abpr);
 
-// Windows and OS/2 have the funky bottom up data storage we need to account for
-#if defined(XP_WIN) || defined(XP_OS2)
+#ifdef MOZ_PLATFORM_IMAGES_BOTTOM_TO_TOP
+  // Account for bottom-up storage.
   // Start at the bottom (top in memory), go to the top (bottom in memory)
   PRUint8* alphaLine = alphaData + ((frameHeight - aY - height) * abpr) +
                        (aX >> 3);

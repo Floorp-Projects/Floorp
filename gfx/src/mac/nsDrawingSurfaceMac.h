@@ -71,22 +71,27 @@ public:
   NS_IMETHOD Init(nsIWidget *aTheWidget);
   NS_IMETHOD Init(PRUint32 aDepth,PRUint32 aWidth, PRUint32 aHeight,PRUint32 aFlags);
 	NS_IMETHOD GetGrafPtr(CGrafPtr	*aTheGrafPtr) { *aTheGrafPtr = mPort; return NS_OK; }
+  NS_IMETHOD_(CGContextRef) StartQuartzDrawing();
+  NS_IMETHOD_(void) EndQuartzDrawing(CGContextRef aContext);
 
   // locals
 	nsGraphicState*	GetGS(void) {return mGS;}
 
 private:
-	CGrafPtr				mPort;						// the onscreen or offscreen CGrafPtr;	
-	
-  PRUint32      	mWidth;
-  PRUint32      	mHeight;
-  PRInt32       	mLockOffset;
-  PRInt32       	mLockHeight;
-  PRUint32      	mLockFlags;
-	PRBool					mIsOffscreen;	
-	PRBool					mIsLocked;
+  CGrafPtr      mPort;      // the onscreen or offscreen CGrafPtr;	
 
-	nsGraphicState*	mGS;						// a graphics state for the surface
+  PRUint32      mWidth;
+  PRUint32      mHeight;
+  PRInt32       mLockOffset;
+  PRInt32       mLockHeight;
+  PRUint32      mLockFlags;
+  PRBool        mIsOffscreen;
+  PRBool        mIsLocked;
+
+  nsGraphicState* mGS;      // a graphics state for the surface
+#ifdef MOZ_WIDGET_COCOA
+  void* mWidgetView;        // non-retained ('weak') ref to NSView
+#endif
 };
 
 #endif

@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,19 +11,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Cocoa Image helper functions.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Mike Pinkerton (pinkerton@netscape.com)
+ *    Javier Pedemonte (jhpedemonte@gmail.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,43 +35,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIImageMac_h__
-#define nsIImageMac_h__
+#import <Cocoa/Cocoa.h>
 
 
-#include "nsISupports.h"
-#include "nsRect.h"
-#include <Quickdraw.h>
-
-
-// IID for the nsIImage interface
-// {80b2f600-f140-11d4-bb6f-d472847e8dbc}
-#define NS_IIMAGEMAC_IID      \
-    { 0x80b2f600, 0xf140, 0x11d4, { 0xbb, 0x6f, 0xd4, 0x72, 0x84, 0x7e, 0x8d, 0xbc } };
-
-
-// 
-// nsIImageMac
-//
-  
-// MacOS-specific Interface to Images
-//
-class nsIImageMac : public nsISupports
+CGContextRef Cocoa_LockFocus(void* view)
 {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEMAC_IID)
+  if (view) {
+    NSView* v = (NSView*) view;
+    [v lockFocus];
+  }
+  return (CGContextRef) [[NSGraphicsContext currentContext] graphicsPort];
+}
 
-    // Convert to the os-native PICT format. Most likely
-    // used for clipboard. The caller is responsible for
-    // using ::KillPicture() to dispose of |outPicture|
-    // when it's done.
-  NS_IMETHOD ConvertToPICT ( PicHandle* outPicture ) = 0;
-  
-    // Convert from the os-native PICT format. Most likely
-    // used for clipboard.  
-  NS_IMETHOD ConvertFromPICT ( PicHandle inPicture ) = 0;
-
-}; // nsIImageMac
-
-
-#endif
+void Cocoa_UnlockFocus(void* view)
+{
+  if (view) {
+    NSView* v = (NSView*) view;
+    [v unlockFocus];
+  }
+}

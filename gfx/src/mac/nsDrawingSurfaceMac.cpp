@@ -39,7 +39,14 @@
 
 #include "nsDrawingSurfaceMac.h"
 #include "nsGraphicState.h"
+#include "nsRegionPool.h"
 
+#ifdef MOZ_WIDGET_COCOA
+// Helper functions to manipulate CGContextRef from a Cocoa NSQuickDrawView.
+// Implemented in nsCocoaUtils.mm.
+extern CGContextRef Cocoa_LockFocus(void* view);
+extern void Cocoa_UnlockFocus(void* view);
+#endif
 
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
 static NS_DEFINE_IID(kIDrawingSurfaceMacIID, NS_IDRAWING_SURFACE_MAC_IID);
@@ -53,13 +60,15 @@ static NS_DEFINE_IID(kIDrawingSurfaceMacIID, NS_IDRAWING_SURFACE_MAC_IID);
 nsDrawingSurfaceMac::nsDrawingSurfaceMac()
 {
   mPort = NULL;
-	mGS = sGraphicStatePool.GetNewGS();	//new nsGraphicState();
+  mGS = sGraphicStatePool.GetNewGS();	//new nsGraphicState();
   mWidth = mHeight = 0;
   mLockOffset = mLockHeight = 0;
   mLockFlags = 0;
-	mIsOffscreen = PR_FALSE;
-	mIsLocked = PR_FALSE;
-
+  mIsOffscreen = PR_FALSE;
+  mIsLocked = PR_FALSE;
+#ifdef MOZ_WIDGET_COCOA
+  mWidgetView = nsnull;
+#endif
 }
 
 /** --------------------------------------------------- 
@@ -246,6 +255,9 @@ NS_IMETHODIMP nsDrawingSurfaceMac::Init(nsIWidget *aTheWidget)
 	// get our native graphics port from the widget
  	mPort = reinterpret_cast<CGrafPtr>(aTheWidget->GetNativeData(NS_NATIVE_GRAPHIC));
 	mGS->Init(aTheWidget);
+#ifdef MOZ_WIDGET_COCOA
+  mWidgetView = aTheWidget->GetNativeData(NS_NATIVE_WIDGET);
+#endif
   return NS_OK;
 }
 
@@ -326,3 +338,69 @@ NS_IMETHODIMP nsDrawingSurfaceMac::Init(PRUint32 aDepth, PRUint32 aWidth, PRUint
   return NS_OK;
 }
 
+
+// Takes a QD Rect and adds it to the path of the CG Context.  This is used
+// by QDRegionToRects in order to create a clipping path from a region.
+static OSStatus
+CreatePathFromRectsProc(UInt16 aMessage, RgnHandle aRegion, const Rect* aRect,
+                        void* aData)
+{
+  CGContextRef context = NS_STATIC_CAST(CGContextRef, aData);
+
+  if (aMessage == kQDRegionToRectsMsgParse)
+  {
+    CGRect rect = ::CGRectMake(aRect->left, aRect->top,
+                               aRect->right - aRect->left,
+                               aRect->bottom - aRect->top);
+    ::CGContextAddRect(context, rect);
+  }
+
+  return noErr;
+}
+
+NS_IMETHODIMP_(CGContextRef)
+nsDrawingSurfaceMac::StartQuartzDrawing()
+{
+  CGContextRef context;
+#ifdef MOZ_WIDGET_COCOA
+  // In Cocoa, we get the context directly from the NSQuickDrawView.
+  if (mWidgetView) {
+    context = Cocoa_LockFocus(mWidgetView);
+  } else
+#endif
+  {
+    // Convert GrafPort to a CGContext
+    ::QDBeginCGContext(mPort, &context);
+
+    // Translate to QuickDraw coordinate system
+    Rect portRect;
+    ::GetPortBounds(mPort, &portRect);
+    ::CGContextTranslateCTM(context, 0, (float)(portRect.bottom - portRect.top));
+    ::CGContextScaleCTM(context, 1, -1);
+  }
+
+  // Construct a CG path from the QD region and clip to the path.
+  // NOTE: Ordinarily we would use ClipCGContextToRegion, but it seems to have
+  //   some bugs, particulary when drawing interlaced PNGs.
+  StRegionFromPool currentClipRgn;
+  ::GetPortClipRegion(mPort, currentClipRgn);
+  ::QDRegionToRects(currentClipRgn, kQDParseRegionFromTopLeft,
+                    CreatePathFromRectsProc, context);
+  ::CGContextClip(context);
+
+  return context;
+}
+
+NS_IMETHODIMP_(void)
+nsDrawingSurfaceMac::EndQuartzDrawing(CGContextRef aContext)
+{
+  // Synchronize the context to QD port before closing it.
+  ::CGContextSynchronize(aContext);
+
+#ifdef MOZ_WIDGET_COCOA
+  if (mWidgetView)
+    Cocoa_UnlockFocus(mWidgetView);
+  else
+#endif
+    ::QDEndCGContext(mPort, &aContext);
+}
