@@ -45,12 +45,10 @@
         var permissionmanager =
           Components.classes["@mozilla.org/permissionmanager;1"]
             .getService(Components.interfaces.nsIPermissionManager);
-
-        if(permissionmanager.testForBlocking(gContextMenu.imageURL,IMAGEPERMISSION))
-          return false;
-
-        /* image is not already being blocked, so "Block Image" can appear on the menu */
-        return true;
+        if(!permissionmanager) {
+          return true;
+        }
+        return !permissionmanager.testForBlocking(gContextMenu.imageURL, IMAGEPERMISSION);
       },
 
       // Determine if "imageBlocker.enabled" pref is set
