@@ -2190,7 +2190,12 @@ if test -n "$USE_PTHREADS"; then
 	        _PTHREAD_LDFLAGS="-lc_r"
 	    fi
 	    ;;
-    *-openbsd*|*-bsdi*|*-netbsd*)
+    *-netbsd*)
+	    if test "$ac_cv_have_dash_pthread" = "yes"; then
+	        _PTHREAD_LDFLAGS="-pthread"
+	    fi
+	    ;;
+    *-openbsd*|*-bsdi*)
 	    AC_DEFINE(_THREAD_SAFE)
 	    dnl -pthread links in -lc_r, so don't specify it explicitly.
 	    if test "$ac_cv_have_dash_pthread" = "yes"; then
