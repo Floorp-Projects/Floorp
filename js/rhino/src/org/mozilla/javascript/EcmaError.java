@@ -73,11 +73,21 @@ public class EcmaError extends RuntimeException {
      * of the name of the error together with the message.
      */
     public String toString() {
-        if (sourceName != null && lineNumber > 0)
-            return errorObject.toString() + " (" + sourceName + 
-               "; line " + lineNumber + ")";
-        else
+        if (sourceName == null && lineNumber <= 0)
             return errorObject.toString();
+        StringBuffer buf = new StringBuffer();
+        buf.append(errorObject.toString());
+        buf.append(" (");
+        if (sourceName != null) {
+            buf.append(sourceName);
+            buf.append("; ");
+        }
+        if (lineNumber > 0) {
+            buf.append("line ");
+            buf.append(lineNumber);
+        }
+        buf.append(')');
+        return buf.toString();
     }
     
     /**
