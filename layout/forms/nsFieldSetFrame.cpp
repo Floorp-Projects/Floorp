@@ -73,7 +73,7 @@ protected:
 
   virtual ~nsFieldSetFrame();
 
-  void nsFieldSetFrame::SetMaxElementSize(nsSize& maxSize, nsSize* aSize);
+  void SetMaxElementSize(nsSize& maxSize, nsSize* aSize);
   virtual PRIntn GetSkipSides() const;
   //virtual void GetDesiredSize(nsIPresContext* aPresContext,
   //                            const nsReflowState& aReflowState,
