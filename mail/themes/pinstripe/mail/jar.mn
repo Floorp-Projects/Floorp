@@ -4,6 +4,7 @@ classic.jar:
      skin/classic/global/tree/treetwisty-open.png                   (icons/treetwisty-open.png) 
 *    skin/classic/global/contents.rdf                               (global-contents.rdf)
 *    skin/classic/messenger/contents.rdf
+     skin/classic/messenger/dialogs.css 
      skin/classic/messenger/messenger.css
      skin/classic/messenger/primaryToolbar.css
      skin/classic/messenger/accountCentral.css
