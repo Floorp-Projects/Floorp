@@ -64,8 +64,6 @@
 //~~~ windowless plugin support
 #include "nsplugindefs.h"
 
-#include "tabapi.h"   // !! TAB-FIX
-
 #include <stdlib.h>
 #include <ctype.h>
 #include <unikbd.h>
