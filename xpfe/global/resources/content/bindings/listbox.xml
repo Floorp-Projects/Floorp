@@ -888,7 +888,7 @@
     </implementation>
 
     <handlers> 
-      <handler event="mousedown" action="if (!this.disabled) this.checked = !this.checked;"/>
+      <handler event="mousedown" button="0" action="if (!this.disabled) this.checked = !this.checked;"/>
     </handlers>
   </binding>
   
