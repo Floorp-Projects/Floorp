@@ -29,6 +29,8 @@
 
 NPNetscapeFuncs NPNFuncs;
 
+#ifdef XP_WIN
+
 NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
 {
   if(pFuncs == NULL)
@@ -55,6 +57,8 @@ NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
 
   return NPERR_NO_ERROR;
 }
+
+#endif /* XP_WIN */
 
 NPError OSCALL NP_Initialize(NPNetscapeFuncs* pFuncs)
 {

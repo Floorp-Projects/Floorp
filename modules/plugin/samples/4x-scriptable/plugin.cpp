@@ -54,7 +54,7 @@ static LRESULT CALLBACK PluginWinProc(HWND, UINT, WPARAM, LPARAM);
 static WNDPROC lpOldProc = NULL;
 #endif
 
-BOOL CPlugin::init(NPWindow* pNPWindow)
+NPBool CPlugin::init(NPWindow* pNPWindow)
 {
   if(pNPWindow == NULL)
     return FALSE;
@@ -88,7 +88,7 @@ void CPlugin::shut()
   m_bInitialized = FALSE;
 }
 
-BOOL CPlugin::isInitialized()
+NPBool CPlugin::isInitialized()
 {
   return m_bInitialized;
 }

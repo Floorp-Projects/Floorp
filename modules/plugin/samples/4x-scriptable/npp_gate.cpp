@@ -27,6 +27,15 @@
 //
 #include "plugin.h"
 
+NPError NPP_Initialize(void)
+{
+    return NPERR_NO_ERROR;
+}
+
+void NPP_Shutdown(void)
+{
+}
+
 // here the plugin creates an instance of our CPlugin object which 
 // will be associated with this newly created plugin instance and 
 // will do all the neccessary job
@@ -132,17 +141,24 @@ NPError	NPP_GetValue(NPP instance, NPPVariable variable, void *value)
   if(pPlugin == NULL)
     return NPERR_GENERIC_ERROR;
 
-  static nsIID scriptableIID = NS_I4XSCRIPTABLEPLUGIN_IID;
-  
   if (variable == NPPVpluginScriptableInstance) {
     // addref happens in getter, so we don't addref here
     nsI4xScriptablePlugin * scriptablePeer = pPlugin->getScriptablePeer();
-    *(nsISupports **)value = scriptablePeer;
+    if (scriptablePeer) {
+      *(nsISupports **)value = scriptablePeer;
+    } else {
+      rv = NPERR_OUT_OF_MEMORY_ERROR;
+    }
   }
   else if (variable == NPPVpluginScriptableIID) {
+    static nsIID scriptableIID = NS_I4XSCRIPTABLEPLUGIN_IID;
     nsIID* ptr = (nsIID *)NPN_MemAlloc(sizeof(nsIID));
-    *ptr = scriptableIID;
-    *(nsIID **)value = ptr;
+    if (ptr) {
+        *ptr = scriptableIID;
+        *(nsIID **)value = ptr;
+    } else {
+      rv = NPERR_OUT_OF_MEMORY_ERROR;
+    }
   }
 
   return rv;
