@@ -11,6 +11,7 @@ tree {
  border-spacing: 0px;
  //border-collapse: collapse;
  width: 100%;
+ table-layout: fixed;
 }
 
 treeitem { 
@@ -30,6 +31,7 @@ treecell {
  color: black;
  font-family: Verdana;
  font-size: 10pt;
+ white-space: nowrap;
 } 
 
 treecell[selectedcell] { 
