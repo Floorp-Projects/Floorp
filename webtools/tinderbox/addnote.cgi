@@ -121,20 +121,18 @@ Go back to the Error Log</a>
   </td>
 </tr>
 </table>
-<b><font size="+2">Builds</font></b><br>
+<br><b><font size="+2">Addition Builds</font></b><br>
+(Comment will be added to the most recent cycle.)<br>
 );
 
 for $other_build (@names){
     if( $other_build ne "" ){
       
       if (not exists ${$ignore_builds}{$other_build}) {
-        if( $other_build eq $buildname ){
-          print "<INPUT TYPE=checkbox NAME=\"$other_build\" CHECKED>";
-        } else {
+        if( $other_build ne $buildname ){
           print "<INPUT TYPE=checkbox NAME=\"$other_build\">";
+          print "$other_build<BR>\n";
         }
-
-        print "$other_build<BR>\n";
       } #EndIf
     }
 } #Endfor
