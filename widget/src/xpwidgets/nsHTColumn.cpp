@@ -29,6 +29,7 @@ nsHTColumn::nsHTColumn(nsIContent* pContent) : nsTreeColumn()
   mPixelWidth = 25;
   mDesiredPercentage = 0.33;
   mContentNode = pContent;
+  NS_ADDREF(mContentNode);
 }
 
 //--------------------------------------------------------------------
