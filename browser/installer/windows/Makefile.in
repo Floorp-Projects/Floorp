@@ -51,3 +51,11 @@ installer:
 	cd $(topsrcdir)/toolkit/mozapps/installer/windows && perl build_static.pl -config "$(CONFIG_DIR)"
 
 include $(topsrcdir)/config/rules.mk
+
+export::
+ifndef MOZ_USE_OFFICIAL_BRANDING
+	$(NSINSTALL) -D $(DIST)/branding
+	cp $(srcdir)/Header.bmp    $(DIST)/branding/Header.bmp
+	cp $(srcdir)/Watermrk.bmp  $(DIST)/branding/Watermrk.bmp
+endif
+
