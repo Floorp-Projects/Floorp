@@ -35,6 +35,57 @@
   <titledbutton class="right-header-text" value="&rHeader;"/>
 </box>
 
-<spring flex="1"/>
+<tabcontrol flex="1" align="vertical">
+  <tabbox>
+    <tab selected="true">Theme View</tab>
+    <tab>Package View</tab>
+  </tabbox>
+  <tabpanel align="vertical" flex="1">
+    <box flex="1" align="vertical">
+	  <html:fieldset>
+	    <html:legend align="left">
+		  <html:div>Themes</html:div> 
+		</html:legend>
+		<html:div style="height:100px">
+		<tree style="height:100%;width:100%;">
+			<treecol/>
+			<treechildren>
+			  <treeitem>
+				<treerow>
+				  <treecell value="Classic 4.x"/>
+				</treerow>
+			  </treeitem>
+			  <treeitem>
+				<treerow>
+				  <treecell value="Purple and Blue"/>
+				</treerow>
+			  </treeitem>
+			  <treeitem>
+				<treerow>
+				  <treecell value="That 70's Chrome"/>
+				</treerow>
+			  </treeitem>
+			</treechildren>
+		  </tree>
+		</html:div>
+	</html:fieldset>
+	  <spring style="width: 2px"/>
+	  <html:fieldset>
+	    <html:legend align="left">
+		  <html:div>Selected Theme: Purple and Blue</html:div> 
+		</html:legend>
+		<html:div>Author: Mozilla.org</html:div>
+		<html:div>Version: 1.0</html:div>
+		<html:div>Site: <html:a href="http://www.mozilla.org">http://www.mozilla.org</html:a></html:div>
+		<html:div>Preview Image:<html:br/>The thumbnail image would go here.</html:div>
+		<html:div>
+		    <titledbutton class="push dialog" value="Apply Theme"/>
+		    <titledbutton class="push dialog" value="Delete Theme"/>
+			<titledbutton class="push dialog" value="Details"/>
+		</html:div>
+	  </html:fieldset>
+	</box>
+  </tabpanel>
+</tabcontrol>
 
 </window>
