@@ -45,19 +45,19 @@
     <separator />
     <html>&certmgr.editcert.edittrust;</html>
     <box orient = "vertical">
-      <checkbox value="&certmgr.editcert.trustssl;" checked="false" 
+      <checkbox label="&certmgr.editcert.trustssl;" checked="false" 
        id="trustSSL"/>
-      <checkbox value="&certmgr.editcert.trustemail;" checked="false" 
+      <checkbox label="&certmgr.editcert.trustemail;" checked="false" 
        id="trustEmail"/>
-      <checkbox value="&certmgr.editcert.trustobjsign;" checked="false" 
+      <checkbox label="&certmgr.editcert.trustobjsign;" checked="false" 
        id="trustObjSign"/>
     </box>
     <box orient="horizontal" align="center">
-      <button id="ok-button" class="dialog" value="&certmgr.ok.label;"
+      <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
            style="width: 8ex" oncommand="doOK();"/> 
-      <button id="cancel-button" class="dialog" value="&certmgr.cancel.label;"
+      <button id="cancel-button" class="dialog" label="&certmgr.cancel.label;"
            style="width: 8ex" oncommand="window.close();" /> 
-      <button id="help-button" class="dialog" value="&certmgr.help.label;"
+      <button id="help-button" class="dialog" label="&certmgr.help.label;"
            style="width: 8ex" oncommand="alert('Help to add here');" /> 
     </box>
   </box>
