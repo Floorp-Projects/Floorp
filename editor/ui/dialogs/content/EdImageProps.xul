@@ -52,10 +52,11 @@
 
 <!-- /////////////////////// Parent  table //////////////////////////////// -->
 
+<!--
 <table>
   <tr>
     <td>
-
+-->
 
 <!-- /////////////////////// Choose File Alt text  table /////////////////// -->
 
@@ -138,7 +139,7 @@
     </tr>
     <tr>
       <td>
-        <xul:titledbutton id="MoreFewerButton" align="left" style="width: 10em" onclick="onMoreFewer()"/>
+        <xul:titledbutton class="push" id="MoreFewerButton" align="left" style="width: 10em" onclick="onMoreFewer()" persist="more"/>
       </td>
       <td/>
     </tr>
@@ -147,6 +148,7 @@
 <!-- ////////////////////// "More" controls table ///////////////////////////////// -->
 
 <div id="MoreRow" style="visibility: inherit; display: block;">
+<xul:box align="vertical">
    <table>
     <tr>
       <td>
@@ -242,7 +244,7 @@
                 <td>
 
         <xul:titledbutton 
-                class           = "popup" 
+                class           = "push popup" 
                 id              = "widthunitSelect" 
                 style           = "width: 50px;"
                 disabled        = "true"
@@ -286,7 +288,7 @@
                 <td>
 
         <xul:titledbutton 
-                class           = "popup"
+                class           = "push popup"
                 id              = "heightunitSelect"
                 style           = "width: 50px;"
                 disabled        = "true"
@@ -339,7 +341,7 @@
         <xul:titledbutton 
                 id              = "image.alignType" 
                 src             = "resource:/chrome/editor/skin/default/images/img-align-bottom.gif" 
-                class           = "popup" 
+                class           = "push popup" 
                 popup           = "ImageTextAlignment" 
                 popupanchor     = "bottomleft" 
                 align           = "left"
@@ -470,16 +472,19 @@
         </fieldset>
       </td>
     </tr>
-</table>
-<!-- from EdDialogOverlay -->
-<xul:box id="AdvancedEditButtonNoHR"/>
+  </table>
+  </xul:box>
+  </div> <!-- END of block that is hidden by More/Less button -->
 
-</div> <!-- END of block that is hidden by More/Less button -->
+  <!-- from EdDialogOverlay -->
+  <xul:box id="AdvancedEditButtonNoHR"/>
 
 <!-- ///////////////////// End Parent Table //////////////////////////////////// -->
+<!--
    </td>
   </tr>
 </table>
+-->
 <div class="separator" align="horizontal"/>
 <!-- ////////////////////////// OK CANCEL Box /////////////////////////////// -->
 
@@ -510,7 +515,7 @@
     <xul:box align="vertical" flex="100%" style="border: 1px outset white;">
 
     <xul:titledbutton
-                class           = "select" 
+                class           = "push select" 
                 value           = "&pixelsPopup.value;" 
                 align           = "center"
                 style           = "height:20px; vertical-align: middle;"
@@ -519,7 +524,7 @@
                                 window.close();"/>
 
     <xul:titledbutton 
-                class           = "select" 
+                class           = "push select" 
                 value           = "&percentPopup.value;" 
                 align           = "center"
                 style           = "height:20px; vertical-align: middle;"
@@ -556,7 +561,7 @@
     <xul:box align="vertical" flex="100%" style="border: 1px outset white;">
 
     <xul:titledbutton
-                class           = "select" 
+                class           = "push select" 
                 value           = "&pixelsPopup.value;" 
                 align           = "center"
                 style           = "height:20px; vertical-align: middle;"
@@ -565,7 +570,7 @@
                                 window.close();"/>
 
     <xul:titledbutton 
-                class           = "select" 
+                class           = "push select" 
                 value           = "&percentPopup.value;" 
                 align           = "center"
                 style           = "height:20px; vertical-align: middle;"
@@ -600,35 +605,35 @@
 
         <xul:box align="vertical" flex="100%" style="border: 1px outset white;">
                 
-        <xul:titledbutton 
+        <xul:titledbutton class="push" 
                 src             = "&topIcon.url;" 
                 value           = "&topPopup.value;"  
                 onclick         = "opener.SetImageAlignment('top'); 
                                 opener.popupSelectedImage('&topIcon.url;', 'image.alignType', 'src'); 
                                 window.close();" />
 
-        <titledbutton 
+        <titledbutton class="push" 
                 src             = "&centerIcon.url;"
                 value           ="&centerPopup.value;"
                 onclick         = "opener.SetImageAlignment('middle'); 
                                 opener.popupSelectedImage('&centerIcon.url;', 'image.alignType', 'src'); 
                                 window.close();" />
 
-        <titledbutton 
+        <titledbutton class="push" 
                 src             = "&bottomIcon.url;"
                 value           = "&bottomPopup.value;"
                 onclick         = "opener.SetImageAlignment('bottom', 'image.alignType'); 
                                 opener.popupSelectedImage('&bottomIcon.url;', 'image.alignType', 'src'); 
                                 window.close();" />
 
-        <titledbutton 
+        <titledbutton class="push" 
                 src             = "&wrapRightIcon.url;"
                 value           = "&wrapRightPopup.value;"
                 onclick         = "opener.SetImageAlignment('left', 'image.alignType'); 
                                 opener.popupSelectedImage('&wrapRightIcon.url;', 'image.alignType', 'src'); 
                                 window.close();" />
 
-        <titledbutton 
+        <titledbutton class="push" 
                 src             = "&wrapLeftIcon.url;"
                 value           = "&wrapLeftPopup.value;"
                 onclick         = "opener.SetImageAlignment('right'); 

@@ -60,10 +60,11 @@ function Startup()
   dialog.imagetbInput                   = document.getElementById( "imagetopbottomInput" );
   dialog.imageborderInput               = document.getElementById( "imageborderInput" );
 
-  // Start in the mode initialized in the "SeeMore" var above
-  //TODO; We should get the current state of the "More" area from a pref
-  // Initialize to true, but calling this will toggle to "collapsed"
-  SeeMore = true;
+  // Set SeeMore bool to the OPPOSITE of the current state,
+  //   which is automatically saved by using the 'persist="more"' 
+  //   attribute on the MoreFewerButton button
+  //   onMoreFewer will toggle it and redraw the dialog
+  SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
   onMoreFewer();
 
   if (null == dialog.srcInput || 

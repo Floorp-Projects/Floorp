@@ -114,23 +114,23 @@
 
 
 <xul:toolbar id="toolbar">
-  <xul:titledbutton src="&cutIcon.url;"/>
-  <xul:titledbutton src="&copyIcon.url;"/>
-  <xul:titledbutton src="&pasteIcon.url;"/>
+  <xul:titledbutton class="push" src="&cutIcon.url;"/>
+  <xul:titledbutton class="push" src="&copyIcon.url;"/>
+  <xul:titledbutton class="push" src="&pasteIcon.url;"/>
   <xul:menuseparator/>
-  <xul:titledbutton src="&zoomInIcon.url;"/>
-  <xul:titledbutton src="&zoomOutIcon.url;"/>
-  <xul:titledbutton toggled="0" src="&contrastIcon.url;" onclick="highContrast()"/>-
+  <xul:titledbutton class="push" src="&zoomInIcon.url;"/>
+  <xul:titledbutton class="push" src="&zoomOutIcon.url;"/>
+  <xul:titledbutton class="push" toggled="0" src="&contrastIcon.url;" onclick="highContrast()"/>-
   <xul:spring flex="100%"/>
 </xul:toolbar> 
 
 
 <xul:box align="horizontal" flex="100">
   <xul:toolbar id="toolbox" align="vertical">
-    <xul:titledbutton src="&pointerIcon.url;" id="pointer" toggled="0" onclick="changeTool(event, 'select')"/>
-    <xul:titledbutton src="&rectangleIcon.url;" id="rect" toggled="1" onclick="changeTool(event, 'rect')"/>
-    <xul:titledbutton src="&circleIcon.url;" id="cir" toggled="0" onclick="changeTool(event, 'cir')"/>
-    <xul:titledbutton src="&polygonIcon.url;" id="poly" toggled="0" onclick="changeTool(event, 'poly')"/>
+    <xul:titledbutton class="push" src="&pointerIcon.url;" id="pointer" toggled="0" onclick="changeTool(event, 'select')"/>
+    <xul:titledbutton class="push" src="&rectangleIcon.url;" id="rect" toggled="1" onclick="changeTool(event, 'rect')"/>
+    <xul:titledbutton class="push" src="&circleIcon.url;" id="cir" toggled="0" onclick="changeTool(event, 'cir')"/>
+    <xul:titledbutton class="push" src="&polygonIcon.url;" id="poly" toggled="0" onclick="changeTool(event, 'poly')"/>
     <xul:spring flex="100%"/>
   </xul:toolbar>
   <iframe id="content" src="EdImageMapPage.html" flex="100%"/>
@@ -139,10 +139,10 @@
 
 <xul:toolbar>
   <!-- Cheap hack untill I get key events hooked up -->
-  <xul:titledbutton value="Delete Spot" onclick="deleteElement(currentElement)"/>  
+  <xul:titledbutton class="push" value="Delete Spot" onclick="deleteElement(currentElement)"/>  
   <xul:spring flex="100%"/>
-  <xul:titledbutton value="OK" onclick="finishMap()"/>  
-  <xul:titledbutton value="Cancel" onclick="exitImageMap()"/> 
+  <xul:titledbutton class="push" value="OK" onclick="finishMap()"/>  
+  <xul:titledbutton class="push" value="Cancel" onclick="exitImageMap()"/> 
 </xul:toolbar>
 
 </xul:window>

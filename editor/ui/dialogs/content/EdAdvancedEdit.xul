@@ -89,7 +89,7 @@
                       <box align="horizontal" flex="100%">
             	            <html:div><html:input type="text" id="AddHTMLAttributeValueInput"/></html:div>
                           <spring flex="100%" class="spacer"/>
-                          <html:div><titledbutton class="hspaced" id="AddHTMLAttribute" onclick="onAddHTMLAttribute()" value="&AddAttributeButton.label;" disabled="true"/></html:div>
+                          <html:div><titledbutton class="push" id="AddHTMLAttribute" onclick="onAddHTMLAttribute()" value="&AddAttributeButton.label;" disabled="true"/></html:div>
                       </box>
                   </box>
               </html:fieldset>
@@ -122,7 +122,7 @@
                       <box align="horizontal" flex="100%">
             	            <html:div><html:input type="text" id="AddJSEAttributeValueInput"/></html:div>
                           <spring flex="100%" class="spacer"/>
-                          <html:div><titledbutton class="hspaced" id="AddJSEAttribute" onclick="onAddJSEAttribute()" value="&AddAttributeButton.label;" disabled="true"/></html:div>
+                          <html:div><titledbutton class="push" id="AddJSEAttribute" onclick="onAddJSEAttribute()" value="&AddAttributeButton.label;" disabled="true"/></html:div>
                       </box>
                   </box>
               </html:fieldset>
@@ -155,7 +155,7 @@
                       <box align="horizontal" flex="100%">
             	            <html:div><html:input type="text" id="AddCSSAttributeValueInput"/></html:div>
                           <spring flex="100%" class="spacer"/>
-                          <html:div><titledbutton class="hspaced" id="AddCSSAttribute" onclick="onAddCSSAttribute()" value="&AddAttributeButton.label;" disabled="true"/></html:div>
+                          <html:div><titledbutton class="push" id="AddCSSAttribute" onclick="onAddCSSAttribute()" value="&AddAttributeButton.label;" disabled="true"/></html:div>
                       </box>
                   </box>
               </html:fieldset>
@@ -166,7 +166,7 @@
     </tabcontrol>
   
     <box align="horizontal">
-        <html:div style="margin-top: 0.5em"><titledbutton value="&HTMLReference.label;"/></html:div>
+        <html:div style="margin-top: 0.5em"><titledbutton class="push" value="&HTMLReference.label;"/></html:div>
         <spring flex="100%"/>
         <!-- from global dialogOverlay -->
         <box id="okCancelButtons"/> 
