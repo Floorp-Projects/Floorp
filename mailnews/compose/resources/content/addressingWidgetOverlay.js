@@ -125,17 +125,30 @@ function CompFields2Recipients(msgCompFields, msgType)
       var templateNode = treeChildren.firstChild;
 
     top.MAX_RECIPIENTS = 0;
+    var msgReplyTo = msgCompFields.replyTo;
+    var msgTo = msgCompFields.to;
+    var msgCC = msgCompFields.cc;
+    var msgBCC = msgCompFields.bcc;
+    var msgRandomHeaders = msgCompFields.otherRandomHeaders;
+    var msgNewsgroups = msgCompFields.newsgroups;
+    var msgFollowupTo = msgCompFields.followupTo;
+    if(msgReplyTo)
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgReplyTo, false), "addr_reply", newTreeChildrenNode, templateNode);
+    if(msgTo)
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgTo, false), "addr_to", newTreeChildrenNode, templateNode);
+    if(msgCC)
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCC, false), "addr_cc", newTreeChildrenNode, templateNode);
+    if(msgBCC)
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgBCC, false), "addr_bcc", newTreeChildrenNode, templateNode);
+    if(msgRandomHeaders)
+      awSetInputAndPopup(msgRandomHeaders, "addr_other", newTreeChildrenNode, templateNode);
+    if(msgNewsgroups)
+      awSetInputAndPopup(msgNewsgroups, "addr_newsgroups", newTreeChildrenNode, templateNode);
+    if(msgFollowupTo)
+      awSetInputAndPopup(msgFollowupTo, "addr_followup", newTreeChildrenNode, templateNode);
 
-    awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.replyTo, false), "addr_reply", newTreeChildrenNode, templateNode);
-    awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.to, false), "addr_to", newTreeChildrenNode, templateNode);
-    awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.cc, false), "addr_cc", newTreeChildrenNode, templateNode);
-    awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.bcc, false), "addr_bcc", newTreeChildrenNode, templateNode);
-    awSetInputAndPopup(msgCompFields.otherRandomHeaders, "addr_other", newTreeChildrenNode, templateNode);
-    awSetInputAndPopup(msgCompFields.newsgroups, "addr_newsgroups", newTreeChildrenNode, templateNode);
-    awSetInputAndPopup(msgCompFields.followupTo, "addr_followup", newTreeChildrenNode, templateNode);
     //If it's a new message, we need to add an extrat empty recipient.
-    var msgComposeType = Components.interfaces.nsIMsgCompType;
-    if (!msgCompFields.to && !msgCompFields.newsgroups)
+    if (!msgTo && !msgNewsgroups)
       _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
     dump("replacing child in comp fields 2 recips \n");
       var parent = treeChildren.parentNode;

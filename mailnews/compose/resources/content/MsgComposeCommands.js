@@ -56,7 +56,7 @@ try {
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 var currentAttachment = null;
-var windowLocked = false;
+var gWindowLocked = false;
 var contentChanged = false;
 var gCurrentIdentity = null;
 var defaultSaveOperation = "draft";
@@ -113,7 +113,7 @@ var stateListener = {
 
 	ComposeProcessDone: function(aResult) {
     dump("\n RECEIVE ComposeProcessDone\n\n");
-    windowLocked = false;
+    gWindowLocked = false;
     CommandUpdate_MsgCompose();
     enableEditableFields();
 
@@ -336,9 +336,9 @@ var defaultController =
       case "cmd_sendLater":
 //      case "cmd_printSetup":
       case "cmd_print":
-        return !windowLocked;
+        return !gWindowLocked;
       case "cmd_sendNow":
-        return !(windowLocked || (ioService && ioService.offline))
+        return !(gWindowLocked || (ioService && ioService.offline))
       case "cmd_quit":
         return true;
 
@@ -375,7 +375,7 @@ var defaultController =
 
       //Options Menu
       case "cmd_selectAddress":
-        return !windowLocked;
+        return !gWindowLocked;
       case "cmd_spelling":
         return !focusedElement;
       case "cmd_outputFormat":
@@ -880,7 +880,7 @@ function DoCommandPreferences()
 
 function ToggleWindowLock()
 {
-  windowLocked = !windowLocked;
+  gWindowLocked = !gWindowLocked;
   CommandUpdate_MsgCompose();
 }
 
@@ -1408,7 +1408,7 @@ function GenericSendMessage( msgType )
 				}
 			}
 			try {
-        windowLocked = true;
+        gWindowLocked = true;
         CommandUpdate_MsgCompose();
         disableEditableFields();
 
@@ -1422,7 +1422,7 @@ function GenericSendMessage( msgType )
 			}
 			catch (ex) {
         dump("failed to SendMsg: " + ex + "\n");
-        windowLocked = false;
+        gWindowLocked = false;
         enableEditableFields();
         CommandUpdate_MsgCompose();
 			}

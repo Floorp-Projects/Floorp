@@ -3125,10 +3125,10 @@ nsresult nsMsgCompose::GetMailListAddresses(nsString& name, nsISupportsArray* ma
 }
 
 
+#define MAX_OF_RECIPIENT_ARRAY		3
+
 NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBool returnNonHTMLRecipients, PRUnichar **nonHTMLRecipients, PRUint32 *_retval)
 {
-	#define MAX_OF_RECIPIENT_ARRAY		3
-
   if (returnNonHTMLRecipients && !nonHTMLRecipients || !_retval)
     return NS_ERROR_INVALID_ARG;
 
@@ -3154,7 +3154,9 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
   nsCOMPtr<nsIMsgRecipientArray> emailArray;
 	for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
 	{
-		rv = m_compFields->SplitRecipientsEx((const PRUnichar *)(originalRecipients[i]), getter_AddRefs(addressArray), getter_AddRefs(emailArray));
+    if (originalRecipients[i].IsEmpty())
+      continue;
+    rv = m_compFields->SplitRecipientsEx((const PRUnichar *)(originalRecipients[i]), getter_AddRefs(addressArray), getter_AddRefs(emailArray));
 		if (NS_SUCCEEDED(rv))
 		{
       PRInt32 nbrRecipients;
@@ -3239,6 +3241,8 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
       stillNeedToSearch = PR_FALSE;
       for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
       {
+        if (!recipientsList[i])
+          continue;
         recipientsList[i]->Count(&nbrRecipients);
         for (j = 0; j < (PRInt32)nbrRecipients; j ++, recipientsList[i]->Count(&nbrRecipients))
         {
@@ -3391,8 +3395,11 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
     *_retval = -1;
     for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
     {
+      if (!recipientsList[i])
+        continue;
       recipientsStr.SetLength(0);
       PRUint32 nbrRecipients;
+
       recipientsList[i]->Count(&nbrRecipients);
       for (j = 0; j < (PRInt32)nbrRecipients; j ++)
       {

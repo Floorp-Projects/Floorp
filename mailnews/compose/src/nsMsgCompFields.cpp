@@ -551,9 +551,11 @@ const char* nsMsgCompFields::GetBody()
     return m_body ? m_body : "";
 }
 
-
-nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBool emailAddressOnly, nsIMsgRecipientArray **_retval)
+// This method is called during the creation of a new window.
+NS_IMETHODIMP nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBool emailAddressOnly, nsIMsgRecipientArray **_retval)
 {
+  NS_ASSERTION(recipients, "The recipient list is not supposed to be null -Fix the caller!");
+
 	nsresult rv = NS_OK;
 
 	if (! _retval)
@@ -629,8 +631,11 @@ nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBool em
 	return rv;
 }
 
+//This method is called during the sending of message from NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients
 nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgRecipientArray ** fullAddrsArray, nsIMsgRecipientArray ** emailsArray)
 {
+  NS_ASSERTION(recipients, "The recipient list is not supposed to be null -Fix the caller!");
+
 	nsresult rv = NS_OK;
 
   nsMsgRecipientArray* pAddrsArray = nsnull;
@@ -733,7 +738,7 @@ nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgR
 	return rv;
 }
 
-nsresult nsMsgCompFields::ConvertBodyToPlainText()
+NS_IMETHODIMP nsMsgCompFields::ConvertBodyToPlainText()
 {
 	nsresult rv = NS_OK;
 	
