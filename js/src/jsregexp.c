@@ -268,11 +268,19 @@ typedef struct REGlobalData {
  * 6. Return cu.
  */
 static jschar
-canonicalize(jschar ch)
+upcase(jschar ch)
 {
     jschar cu = JS_TOUPPER(ch);
     if ((ch >= 128) && (cu < 128)) return ch;
     return cu;
+}
+
+static jschar
+downcase(jschar ch)
+{
+    jschar cl = JS_TOLOWER(ch);
+    if ((cl >= 128) && (ch < 128)) return ch;
+    return cl;
 }
 
 /* Construct and initialize an RENode, returning NULL for out-of-memory */
@@ -840,7 +848,7 @@ lexHex:
             }
         }
         if (state->flags & JSREG_FOLD) {
-            c = canonicalize((jschar)localMax);
+            c = JS_MAX(upcase((jschar)localMax), downcase((jschar)localMax));
             if (c > localMax)
                 localMax = c;
         }
@@ -1757,8 +1765,7 @@ flatNIMatcher(REGlobalData *gData, REMatchState *x, jschar *matchChars,
     if ((x->cp + length) > gData->cpend)
         return NULL;
     for (i = 0; i < length; i++) {
-        if (canonicalize(matchChars[i]) 
-                != canonicalize(x->cp[i]))
+        if (upcase(matchChars[i]) != upcase(x->cp[i]))
             return NULL;
     }
     x->cp += length;
@@ -1805,8 +1812,7 @@ backrefMatcher(REGlobalData *gData, REMatchState *x, uintN parenIndex)
     parenContent = &gData->cpbegin[s->index];
     if (gData->regexp->flags & JSREG_FOLD) {
         for (i = 0; i < len; i++) {
-            if (canonicalize(parenContent[i]) 
-                                    != canonicalize(x->cp[i]))
+            if (upcase(parenContent[i]) != upcase(x->cp[i]))
                 return NULL;
         }
     }
@@ -2020,34 +2026,22 @@ lexHex:
         }
         if (inRange) {
             if (gData->regexp->flags & JSREG_FOLD) {
-                jschar minch = (jschar)65535;
-                jschar maxch = 0;
-                /*
-
-                    yuk
-                
-                */
-                if (rangeStart < minch) minch = rangeStart;
-                if (thisCh < minch) minch = thisCh;
-                if (canonicalize(rangeStart) < minch) 
-                                            minch = canonicalize(rangeStart);
-                if (canonicalize(thisCh) < minch) minch = canonicalize(thisCh);
-
-                if (rangeStart > maxch) maxch = rangeStart;
-                if (thisCh > maxch) maxch = thisCh;
-                if (canonicalize(rangeStart) > maxch) 
-                                            maxch = canonicalize(rangeStart);
-                if (canonicalize(thisCh) > maxch) maxch = canonicalize(thisCh);
-                addCharacterRangeToCharSet(charSet, minch, maxch);
-            }
-            else
+                addCharacterRangeToCharSet(charSet, upcase(rangeStart),
+                                                    upcase(thisCh));
+                addCharacterRangeToCharSet(charSet, downcase(rangeStart),
+                                                    downcase(thisCh));
+            } else {
                 addCharacterRangeToCharSet(charSet, rangeStart, thisCh);
+            }
             inRange = JS_FALSE;
         }
         else {
-            if (gData->regexp->flags & JSREG_FOLD)
-                addCharacterToCharSet(charSet, canonicalize(thisCh));
-            addCharacterToCharSet(charSet, thisCh);
+            if (gData->regexp->flags & JSREG_FOLD) {
+                addCharacterToCharSet(charSet, upcase(thisCh));
+                addCharacterToCharSet(charSet, downcase(thisCh));
+            } else {
+                addCharacterToCharSet(charSet, thisCh);
+            }
             if (src < (end - 1)) {
                 if (*src == '-') {
                     ++src;
@@ -2227,8 +2221,7 @@ static REMatchState *simpleMatch(REGlobalData *gData, REMatchState *x,
         break;
     case REOP_FLAT1i:
         matchCh = *pc++;
-        if ((x->cp != gData->cpend) 
-                && (canonicalize(*x->cp) == canonicalize(matchCh))) {
+        if ((x->cp != gData->cpend) && (upcase(*x->cp) == upcase(matchCh))) {
             result = x;
             result->cp++;
         }
@@ -2244,8 +2237,7 @@ static REMatchState *simpleMatch(REGlobalData *gData, REMatchState *x,
     case REOP_UCFLAT1i:
         matchCh = GET_ARG(pc);
         pc += ARG_LEN;
-        if ((x->cp != gData->cpend) 
-                && (canonicalize(*x->cp) == canonicalize(matchCh))) {
+        if ((x->cp != gData->cpend) && (upcase(*x->cp) == upcase(matchCh))) {
             result = x;
             result->cp++;
         }
