@@ -2708,7 +2708,9 @@ nsWebShellWindow::ShowMenuBar(PRBool aShow)
 //nsIUrlDispatcher methods
 
 NS_IMETHODIMP
-nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, const PRUnichar * aURLSpec, nsIPostData * aPostData)
+nsWebShellWindow::HandleUrl(const PRUnichar * aCommand, 
+                            const PRUnichar * aURLSpec, 
+                            nsIInputStream * aPostDataStream)
 {  
   /* Make the topic to observe. The topic will be of the format 
    * linkclick:<prototocol>. Note thet this is a totally made up thing.

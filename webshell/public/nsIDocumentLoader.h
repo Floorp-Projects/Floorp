@@ -105,7 +105,7 @@ public:
     NS_IMETHOD LoadDocument(const nsString& aURLSpec, 
                             const char* aCommand,
                             nsIContentViewerContainer* aContainer,
-                            nsIPostData* aPostData = nsnull,
+                            nsIInputStream* aPostDataStream = nsnull,
                             nsISupports* aExtraInfo = nsnull,
                             nsIStreamObserver* anObserver = nsnull,
 #ifdef NECKO

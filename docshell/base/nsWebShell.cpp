@@ -223,7 +223,7 @@ public:
   // Document load api's
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
-                     nsIPostData* aPostData=nsnull,
+                     nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
@@ -233,7 +233,7 @@ public:
                      const PRUint32 localIP = 0);
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      const char* aCommand,
-                     nsIPostData* aPostData=nsnull,
+                     nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
@@ -294,7 +294,7 @@ public:
                          nsLinkVerb aVerb,
                          const PRUnichar* aURLSpec,
                          const PRUnichar* aTargetSpec,
-                         nsIPostData* aPostData = 0);
+                         nsIInputStream* aPostDataStream = 0);
   NS_IMETHOD OnOverLink(nsIContent* aContent,
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec);
@@ -410,7 +410,7 @@ public:
                             nsLinkVerb aVerb,
                             const PRUnichar* aURLSpec,
                             const PRUnichar* aTargetSpec,
-                            nsIPostData* aPostDat = 0);
+                            nsIInputStream* aPostDataStream = 0);
 
   void ShowHistory();
 
@@ -500,7 +500,7 @@ protected:
   nsresult CreateScriptEnvironment();
   nsresult DoLoadURL(const nsString& aUrlSpec,
                      const char* aCommand,
-                     nsIPostData* aPostData,
+                     nsIInputStream* aPostDataStream,
 #ifdef NECKO
                      nsLoadFlags aType,
 #else
@@ -1778,7 +1778,7 @@ static void convertFileToURL(const nsString &aIn, nsString &aOut)
 
 NS_IMETHODIMP
 nsWebShell::LoadURL(const PRUnichar *aURLSpec,
-                    nsIPostData* aPostData,
+                    nsIInputStream* aPostDataStream,
                     PRBool aModifyHistory,
 #ifdef NECKO
                     nsLoadFlags aType,
@@ -1791,7 +1791,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   // before the last document was loaded.
   InitFrameData(PR_FALSE);
 
-  return LoadURL(aURLSpec,"view",aPostData,aModifyHistory,aType, aLocalIP);
+  return LoadURL(aURLSpec, "view", aPostDataStream,
+                 aModifyHistory,aType, aLocalIP);
 }
 
 // Nisheeth: returns true if the host and the file parts of
@@ -1832,7 +1833,7 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
 nsresult
 nsWebShell::DoLoadURL(const nsString& aUrlSpec,
                       const char* aCommand,
-                      nsIPostData* aPostData,
+                      nsIInputStream* aPostDataStream,
 #ifdef NECKO
                       nsLoadFlags aType,
 #else
@@ -1847,10 +1848,10 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
   // and see if it's an element within the current document
 #ifdef NECKO
   if ((aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer) &&
-    (nsnull == aPostData))
+    (nsnull == aPostDataStream))
 #else
   if ((aType == nsURLReload || aType == nsURLReloadFromHistory) && 
-    (nsnull != mContentViewer) && (nsnull == aPostData))
+    (nsnull != mContentViewer) && (nsnull == aPostDataStream))
 #endif
   {
     nsCOMPtr<nsIDocumentViewer> docViewer;
@@ -1947,20 +1948,20 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
   *  - Radha
   */
   
-  return mDocLoader->LoadDocument(aUrlSpec,       // URL string
-                                  aCommand,       // Command
-                                  this,           // Container
-                                  aPostData,      // Post Data
-                                  nsnull,         // Extra Info...
-                                  mObserver,      // Observer
-                                  aType,          // reload type
-                                  aLocalIP);      // load attributes.
+  return mDocLoader->LoadDocument(aUrlSpec,        // URL string
+                                  aCommand,        // Command
+                                  this,            // Container
+                                  aPostDataStream, // Post Data
+                                  nsnull,          // Extra Info...
+                                  mObserver,       // Observer
+                                  aType,           // reload type
+                                  aLocalIP);       // load attributes.
 }
 
 NS_IMETHODIMP
 nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     const char* aCommand,
-                    nsIPostData* aPostData,
+                    nsIInputStream* aPostDataStream,
                     PRBool aModifyHistory,
 #ifdef NECKO
                     nsLoadFlags aType,
@@ -2050,7 +2051,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
        res = GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
        if (NS_SUCCEEDED(res) && urlDispatcher) {
 		  printf("calling HandleUrl\n");
-          urlDispatcher->HandleUrl(LinkCommand.GetUnicode(), urlSpec.GetUnicode(), aPostData);
+          urlDispatcher->HandleUrl(LinkCommand.GetUnicode(), 
+                                   urlSpec.GetUnicode(), aPostDataStream);
           return NS_OK;          
        }
     }
@@ -2118,7 +2120,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   GetURL(&urlString);
   nsAutoString  newURL(urlString);
 
-  return DoLoadURL(newURL, aCommand, aPostData, aType, aLocalIP);
+  return DoLoadURL(newURL, aCommand, aPostDataStream, aType, aLocalIP);
 //#endif
 }
 
@@ -2535,19 +2537,20 @@ nsWebShell::SetRendering(PRBool aRender)
 struct OnLinkClickEvent : public PLEvent {
   OnLinkClickEvent(nsWebShell* aHandler, nsIContent* aContent,
                    nsLinkVerb aVerb, const PRUnichar* aURLSpec,
-                   const PRUnichar* aTargetSpec, nsIPostData* aPostData = 0);
+                   const PRUnichar* aTargetSpec, nsIInputStream* aPostDataStream = 0);
   ~OnLinkClickEvent();
 
   void HandleEvent() {
-    mHandler->HandleLinkClickEvent(mContent, mVerb, mURLSpec->GetUnicode(), mTargetSpec->GetUnicode(), mPostData);
+    mHandler->HandleLinkClickEvent(mContent, mVerb, mURLSpec->GetUnicode(), 
+                                   mTargetSpec->GetUnicode(), mPostDataStream);
   }
 
   nsWebShell*  mHandler;
   nsString*    mURLSpec;
   nsString*    mTargetSpec;
-  nsIPostData* mPostData;
-  nsIContent*  mContent;
-  nsLinkVerb   mVerb;
+  nsIInputStream* mPostDataStream;
+  nsIContent*     mContent;
+  nsLinkVerb      mVerb;
 };
 
 static void PR_CALLBACK HandlePLEvent(OnLinkClickEvent* aEvent)
@@ -2565,7 +2568,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                                    nsLinkVerb aVerb,
                                    const PRUnichar* aURLSpec,
                                    const PRUnichar* aTargetSpec,
-                                   nsIPostData* aPostData)
+                                   nsIInputStream* aPostDataStream)
 {
   nsIEventQueue* eventQueue;
 
@@ -2573,8 +2576,8 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
   NS_ADDREF(aHandler);
   mURLSpec = new nsString(aURLSpec);
   mTargetSpec = new nsString(aTargetSpec);
-  mPostData = aPostData;
-  NS_IF_ADDREF(mPostData);
+  mPostDataStream = aPostDataStream;
+  NS_IF_ADDREF(mPostDataStream);
   mContent = aContent;
   NS_IF_ADDREF(mContent);
   mVerb = aVerb;
@@ -2592,7 +2595,7 @@ OnLinkClickEvent::~OnLinkClickEvent()
 {
   NS_IF_RELEASE(mContent);
   NS_IF_RELEASE(mHandler);
-  NS_IF_RELEASE(mPostData);
+  NS_IF_RELEASE(mPostDataStream);
   if (nsnull != mURLSpec) delete mURLSpec;
   if (nsnull != mTargetSpec) delete mTargetSpec;
   
@@ -2605,13 +2608,13 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
                         nsLinkVerb aVerb,
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec,
-                        nsIPostData* aPostData)
+                        nsIInputStream* aPostDataStream)
 {
   OnLinkClickEvent* ev;
   nsresult rv = NS_OK;
 
   ev = new OnLinkClickEvent(this, aContent, aVerb, aURLSpec, 
-                            aTargetSpec, aPostData);
+                            aTargetSpec, aPostDataStream);
   if (nsnull == ev) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2699,7 +2702,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
                                  nsLinkVerb aVerb,
                                  const PRUnichar* aURLSpec,
                                  const PRUnichar* aTargetSpec,
-                                 nsIPostData* aPostData)
+                                 nsIInputStream* aPostDataStream)
 {
   nsAutoString target(aTargetSpec);
 
@@ -2711,7 +2714,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
       {
         nsIWebShell* shell = GetTarget(target.GetUnicode());
         if (nsnull != shell) {
-          (void)shell->LoadURL(aURLSpec, aPostData);
+          (void)shell->LoadURL(aURLSpec, aPostDataStream);
           NS_RELEASE(shell);
         }
       }

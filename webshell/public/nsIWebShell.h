@@ -36,7 +36,7 @@
 class nsIDOMElement;
 class nsIDOMWindow;
 class nsIFactory;
-class nsIPostData;
+//class nsIPostData;
 class nsIStreamObserver;
 class nsIDocumentLoader;
 class nsIDocumentLoaderObserver;
@@ -340,7 +340,7 @@ public:
    * Load the document associated with the specified URL into the WebShell.
    */
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
-                     nsIPostData* aPostData=nsnull,
+                     nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
@@ -354,7 +354,7 @@ public:
    */
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      const char* aCommand, 
-                     nsIPostData* aPostData=nsnull,
+                     nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,

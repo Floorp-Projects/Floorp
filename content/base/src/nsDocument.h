@@ -37,6 +37,7 @@ class nsDOMStyleSheetCollection;
 class nsIOutputStream;
 class nsDocument;
 
+#if 0
 class nsPostData : public nsIPostData {
 public:
   nsPostData(PRBool aIsFile, char* aData);
@@ -54,6 +55,7 @@ protected:
   char*   mData;
   PRInt32 mDataLen;
 };
+#endif
 
 class nsDocHeaderData
 {

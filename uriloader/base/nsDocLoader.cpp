@@ -36,7 +36,7 @@
 #include "nsIURLGroup.h"
 #include "nsILoadAttribs.h"
 #include "nsINetService.h"
-#include "nsIPostToServer.h"
+//#include "nsIPostToServer.h"
 #else
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
@@ -129,7 +129,7 @@ public:
     NS_DECL_ISUPPORTS
 
     nsresult Bind(const nsString& aURLSpec, 
-                  nsIPostData* aPostData,
+                  nsIInputStream* aPostDataStream,
                   nsIStreamListener* aListener);
 
     nsresult Bind(nsIURI* aURL, nsIStreamListener* aListener);
@@ -209,7 +209,7 @@ public:
     NS_IMETHOD LoadDocument(const nsString& aURLSpec, 
                             const char *aCommand,
                             nsIContentViewerContainer* aContainer,
-                            nsIPostData* aPostData = nsnull,
+                            nsIInputStream* aPostDataStream = nsnull,
                             nsISupports* aExtraInfo = nsnull,
                             nsIStreamObserver* anObserver = nsnull,
 #ifdef NECKO
@@ -591,7 +591,7 @@ NS_IMETHODIMP
 nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec, 
                               const char* aCommand,
                               nsIContentViewerContainer* aContainer,
-                              nsIPostData* aPostData,
+                              nsIInputStream* aPostDataStream,
                               nsISupports* aExtraInfo,
                               nsIStreamObserver* anObserver,
 #ifdef NECKO
@@ -670,7 +670,7 @@ nsDocLoaderImpl::LoadDocument(const nsString& aURLSpec,
 
   mStreamObserver = dont_QueryInterface(anObserver);
 
-  rv = loader->Bind(aURLSpec, aPostData, nsnull);
+  rv = loader->Bind(aURLSpec, aPostDataStream, nsnull);
 
 done:
   NS_RELEASE(loader);
@@ -1564,7 +1564,7 @@ nsDocumentBindInfo::QueryInterface(const nsIID& aIID,
 }
 
 nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec, 
-                                  nsIPostData* aPostData,
+                                  nsIInputStream* aPostDataStream,
                                   nsIStreamListener* aListener)
 {
     nsresult rv;
@@ -1581,9 +1581,12 @@ nsresult nsDocumentBindInfo::Bind(const nsString& aURLSpec,
     }
 
     /* Store any POST data into the URL */
-    if (nsnull != aPostData) {
+    if (nsnull != aPostDataStream) {
 #ifdef NECKO
         NS_ASSERTION(0, "FIX ME");
+
+        
+
 #else
         static NS_DEFINE_IID(kPostToServerIID, NS_IPOSTTOSERVER_IID);
         nsIPostToServer* pts;

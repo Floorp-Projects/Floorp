@@ -37,11 +37,12 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IURLDISPATCHER_IID)
 
 
-  NS_IMETHOD HandleUrl(const PRUnichar * aCommand,  const PRUnichar * aURLSpec, nsIPostData * aPostData)=0;
+  NS_IMETHOD HandleUrl(const PRUnichar * aCommand,  const PRUnichar * aURLSpec, 
+                       nsIInputStream * aPostDataStream) = 0;
 };
 
 #define NS_DECL_IURLDISPATCHER \
-  NS_IMETHOD  HandleUrl(const PRUnichar *, const PRUnichar *, nsIPostData *); \
+  NS_IMETHOD  HandleUrl(const PRUnichar *, const PRUnichar *, nsIInputStream *); \
 
 
 #endif /* nsIUrlDispatcher_h___ */

@@ -498,6 +498,7 @@ nsDOMImplementation::SetScriptObject(void *aScriptObject)
 // =
 // ==================================================================
 
+#if 0
 NS_LAYOUT nsresult
 NS_NewPostData(PRBool aIsFile, char* aData, 
                nsIPostData** aInstancePtrResult)
@@ -517,8 +518,9 @@ NS_NewPostData(PRBool aIsFile, char* aData,
 
   return rv;
 }
+#endif
 
-
+#if 0 // nuking postdata
 nsPostData::nsPostData(PRBool aIsFile, char* aData)
 {
   NS_INIT_REFCNT();
@@ -561,6 +563,7 @@ PRInt32 nsPostData::GetDataLength()
 {
   return mDataLen;
 }
+#endif // nuking postdata.
 
 // ==================================================================
 // =

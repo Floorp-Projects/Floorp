@@ -22,7 +22,7 @@
 #include "nsweb.h"
 #include "nsISupports.h"
 
-class nsIPostData;
+class nsIInputStream;
 class nsIContent;
 struct nsGUIEvent;
 
@@ -63,7 +63,7 @@ public:
                          nsLinkVerb aVerb,
                          const PRUnichar* aURLSpec,
                          const PRUnichar* aTargetSpec,
-                         nsIPostData* aPostData = 0) = 0;
+                         nsIInputStream* aPostDataStream = 0) = 0;
 
   /**
    * Process a mouse-over a link. aContent is the 
