@@ -2212,6 +2212,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
       rv = GetMIMEInfoForExtensionFromDS(aFileExt, *_retval);
       LOG(("Data source: Via ext: retval 0x%08x\n", rv));
       found = NS_SUCCEEDED(rv);
+      if (found && aMIMEType && *aMIMEType)
+        (*_retval)->SetMIMEType(aMIMEType);
     }
   }
 
@@ -2246,7 +2248,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
   if (aFileExt && *aFileExt) {
     PRBool matches = PR_FALSE;
     (*_retval)->ExtensionExists(aFileExt, &matches);
-    LOG(("Extension '%s' matches mime info: '%s'\n", aFileExt, matches? "yes" : "no"));
+    LOG(("Extension '%s' matches mime info: %s\n", aFileExt, matches ? "yes" : "no"));
     if (matches)
       (*_retval)->SetPrimaryExtension(aFileExt);
   }
