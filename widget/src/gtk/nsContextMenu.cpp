@@ -437,10 +437,10 @@ nsEventStatus nsContextMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
-void nsContextMenu::MenuPosFunc(GtkMenu *menu,
-                                  gint *x,
-                                  gint *y,
-                                  gpointer data)
+void menu_popup_position(GtkMenu *menu,
+                         gint *x,
+                         gint *y,
+                         gpointer data)
 {
   nsContextMenu *cm = (nsContextMenu*)data;
   *x = cm->GetX();
@@ -452,7 +452,7 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   GtkWidget *parent = GTK_WIDGET(mParent->GetNativeData(NS_NATIVE_WIDGET));
   gtk_menu_popup (GTK_MENU(mMenu),
                   parent, NULL,
-                  nsContextMenu::MenuPosFunc,
+                  menu_popup_position,
                   this, 1, GDK_CURRENT_TIME);
 
   if (nsnull != mListener) {
