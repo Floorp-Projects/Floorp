@@ -35,7 +35,6 @@ nsAuth::nsAuth(nsIURI* i_URI,
     username(0),
     uri(dont_QueryInterface(i_URI))
 {
-    NS_INIT_REFCNT();
     if (i_encString)
         encodedString = nsCRT::strdup(i_encString);
     if (i_username)
@@ -53,8 +52,3 @@ nsAuth::~nsAuth()
     CRTFREEIF(password);
     CRTFREEIF(realm);
 }
-
-NS_IMPL_ADDREF(nsAuth);
-NS_IMPL_RELEASE(nsAuth);
-
-NS_IMPL_QUERY_INTERFACE0(nsAuth);
