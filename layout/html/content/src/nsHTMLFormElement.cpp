@@ -174,7 +174,7 @@ nsHTMLFormElement::nsHTMLFormElement(nsIAtom* aTag)
   mInner.Init(this, aTag);
   mControls = new nsFormControlList();
   NS_ADDREF(mControls);
-nsTraceRefcnt::Create((nsIForm*)this, "nsHTMLFormElement", __FILE__, __LINE__);
+//nsTraceRefcnt::Create((nsIForm*)this, "nsHTMLFormElement", __FILE__, __LINE__);
 }
 
 nsHTMLFormElement::~nsHTMLFormElement()
@@ -193,7 +193,7 @@ nsHTMLFormElement::~nsHTMLFormElement()
 
   NS_RELEASE(mControls);
 
-nsTraceRefcnt::Destroy((nsIForm*)this, __FILE__, __LINE__);
+//nsTraceRefcnt::Destroy((nsIForm*)this, __FILE__, __LINE__);
 }
 
 // nsISupports
@@ -231,14 +231,14 @@ nsHTMLFormElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP_(nsrefcnt)
 nsHTMLFormElement::AddRef(void)                                
 { 
-  nsTraceRefcnt::AddRef((nsIForm*)this, mRefCnt+1, __FILE__, __LINE__);
+  //nsTraceRefcnt::AddRef((nsIForm*)this, mRefCnt+1, __FILE__, __LINE__);
   return ++mRefCnt;                                          
 }
 
 NS_IMETHODIMP_(nsrefcnt)
 nsHTMLFormElement::Release()
 {
-  nsTraceRefcnt::Release((nsIForm*)this, mRefCnt-1, __FILE__, __LINE__);
+  //nsTraceRefcnt::Release((nsIForm*)this, mRefCnt-1, __FILE__, __LINE__);
   --mRefCnt;
   PRUint32 numChildren;
   GetElementCount(&numChildren);
