@@ -7,8 +7,8 @@
 # display these states and can also set the states which are not the
 # Bonsai States.
 
-# $Revision: 1.6 $ 
-# $Date: 2002/05/09 18:15:57 $ 
+# $Revision: 1.7 $ 
+# $Date: 2003/04/13 14:15:01 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/TreeState_Bonsai_Plus.pm,v $ 
 # $Name:  $ 
@@ -52,7 +52,7 @@ use BonsaiData;
 
 @ISA = qw(TinderHeader::BasicTxtHeader);
 
-$VERSION = ( qw $Revision: 1.6 $ )[1];
+$VERSION = ( qw $Revision: 1.7 $ )[1];
 
 # load the simple name of this module into TinderHeader so we can
 # track the implementations provided.
@@ -102,7 +102,7 @@ sub gettree_header {
 
   if (
       ($text_treestate) &&
-      ($text_treestate != 'Current_Bonsai_State') 
+      ($text_treestate ne 'Current_Bonsai_State') 
       ) {
       $treestate = $text_treestate;
   } else {
