@@ -483,10 +483,17 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("KeyPress event for window 0x%lx\n",
                                        event->xkey.window));
-  nsKeyEvent keyEvent;
-  KeySym     keysym;
 
-  keysym = XKeycodeToKeysym(event->xkey.display, event->xkey.keycode, 0);
+  // Dont dispatch events for modifier keys pressed ALONE
+  if (nsKeyCode::KeyCodeIsModifier(event->xkey.keycode))
+  {
+    return;
+  }
+
+  nsKeyEvent keyEvent;
+
+  KeySym     keysym = nsKeyCode::ConvertKeyCodeToKeySym(event->xkey.display,
+                                                        event->xkey.keycode);
 
   keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
   keyEvent.charCode = 0;
@@ -494,17 +501,53 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   keyEvent.isShift = event->xkey.state & ShiftMask;
   keyEvent.isControl = event->xkey.state & ControlMask;
   keyEvent.isAlt = event->xkey.state & Mod1Mask;
-  keyEvent.point.x = 0;
-  keyEvent.point.y = 0;
+  keyEvent.point.x = event->xkey.x;
+  keyEvent.point.y = event->xkey.y;
   keyEvent.message = NS_KEY_DOWN;
   keyEvent.widget = aWidget;
   keyEvent.eventStructType = NS_KEY_EVENT;
+
+  printf("keysym = %d, keycode = %d, char = %c\n",
+         keysym,
+         event->xkey.keycode,
+         keyEvent.keyCode);
+
+//  NS_ADDREF(aWidget);
+
+  aWidget->DispatchKeyEvent(keyEvent);
+
+//  NS_RELEASE(aWidget);
+
+#if 1
+
+
+  keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
+  keyEvent.charCode = 0;
+  keyEvent.time = event->xkey.time;
+  keyEvent.isShift = event->xkey.state & ShiftMask;
+  keyEvent.isControl = event->xkey.state & ControlMask;
+  keyEvent.isAlt = event->xkey.state & Mod1Mask;
+  keyEvent.point.x = event->xkey.x;
+  keyEvent.point.y = event->xkey.y;
+  keyEvent.message = NS_KEY_PRESS;
+  keyEvent.widget = aWidget;
+  keyEvent.eventStructType = NS_KEY_EVENT;
+
+#if 1
+  char buf[2];
+
+  buf[0] = keyEvent.keyCode;
+  buf[1] = nsnull;
+
+  keyEvent.charCode = keyEvent.keyCode;
+#endif
 
   NS_ADDREF(aWidget);
 
   aWidget->DispatchKeyEvent(keyEvent);
 
-  NS_ADDREF(aWidget);
+  NS_RELEASE(aWidget);
+#endif
 }
 
 void
@@ -513,10 +556,15 @@ nsAppShell::HandleKeyReleaseEvent(XEvent *event, nsWidget *aWidget)
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("KeyRelease event for window 0x%lx\n",
                                        event->xkey.window));
 
-  nsKeyEvent keyEvent;
-  KeySym     keysym;
+  // Dont dispatch events for modifier keys pressed ALONE
+  if (nsKeyCode::KeyCodeIsModifier(event->xkey.keycode))
+  {
+    return;
+  }
 
-  keysym = XKeycodeToKeysym(event->xkey.display, event->xkey.keycode, 0);
+  nsKeyEvent keyEvent;
+  KeySym     keysym = nsKeyCode::ConvertKeyCodeToKeySym(event->xkey.display,
+                                                        event->xkey.keycode);
 
   keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
   keyEvent.charCode = 0;
@@ -524,8 +572,8 @@ nsAppShell::HandleKeyReleaseEvent(XEvent *event, nsWidget *aWidget)
   keyEvent.isShift = event->xkey.state & ShiftMask;
   keyEvent.isControl = event->xkey.state & ControlMask;
   keyEvent.isAlt = event->xkey.state & Mod1Mask;
-  keyEvent.point.x = 0;
-  keyEvent.point.y = 0;
+  keyEvent.point.x = event->xkey.x;
+  keyEvent.point.y = event->xkey.y;
   keyEvent.message = NS_KEY_UP;
   keyEvent.widget = aWidget;
   keyEvent.eventStructType = NS_KEY_EVENT;
@@ -534,7 +582,7 @@ nsAppShell::HandleKeyReleaseEvent(XEvent *event, nsWidget *aWidget)
 
   aWidget->DispatchKeyEvent(keyEvent);
 
-  NS_ADDREF(aWidget);
+  NS_RELEASE(aWidget);
 }
 
 void
