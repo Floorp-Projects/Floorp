@@ -85,16 +85,26 @@ interface nsIWebNavigation : nsISupports
 	/*
 	Definitions for the reload types.
 	*/
-	    /* these are load type enums... */
-   const long loadNormal = 0;					// Normal Load
-   const long loadNormalReplace = 1;			// Normal Load but replaces current history slot
-   const long loadHistory = 2;					// Load from history
-   const long loadReloadNormal = 3;				// normal Reload
-   const long loadReloadBypassCache = 4;        // Reloads bypassing the cache
-   const long loadReloadBypassProxy = 5;        // Reloads bypassing the proxy
-   const long loadReloadBypassProxyAndCache = 6;// Reloads bypassing proxy and cache
-   const long loadLink = 7;
-   const long loadRefresh = 8;
+	/* these are load type enums... */
+	const long LOAD_NORMAL = 0;                       // Normal Load
+	const long LOAD_NORMAL_REPLACE = 1;               // Normal Load but replaces current history slot
+	const long LOAD_HISTORY = 2;                      // Load from history
+    const long LOAD_RELOAD_NORMAL = 3;                // normal Reload
+	const long LOAD_RELOAD_BYPASS_CACHE = 4;          // Reloads bypassing the cache
+	const long LOAD_RELOAD_BYPASS_PROXY = 5;          // Reloads bypassing the proxy
+	const long LOAD_RELOAD_BYPASS_PROXY_AND_CACHE = 6;// Reloads bypassing proxy and cache
+	const long LOAD_LINK = 7;
+	const long LOAD_REFRESH = 8;
+
+	const long loadNormal = 0;					// Normal Load
+	const long loadNormalReplace = 1;			// Normal Load but replaces current history slot
+	const long loadHistory = 2;					// Load from history
+	const long loadReloadNormal = 3;				// normal Reload
+	const long loadReloadBypassCache = 4;        // Reloads bypassing the cache
+	const long loadReloadBypassProxy = 5;        // Reloads bypassing the proxy
+	const long loadReloadBypassProxyAndCache = 6;// Reloads bypassing proxy and cache
+	const long loadLink = 7;
+	const long loadRefresh = 8;
 
 	/*
 	Tells the Object to reload the current location.
@@ -107,19 +117,7 @@ interface nsIWebNavigation : nsISupports
 	void stop();
 
 	/*
-	Set the document for the current webBrowser.  This will simulate the normal
-	load process of a document being loaded.
-
-	@param document - The document to be set.
-	@param contentType - This is the content type to try and render the document
-		as.  This may be null.  If this is null, the method will try to query
-		the document to identify the content type of the document.  If the query
-		fails, content type "HTML" will be assumed.
-	*/
-	void setDocument(in nsIDOMDocument document, in wstring contentType);
-	
-	/*
-	Retrieves or sets the current Document for the WebBrowser.  When setting
+	Retrieves the current Document for the WebBrowser.  When setting
 	this will simulate the normal load process.
 	*/
 	readonly attribute nsIDOMDocument document;

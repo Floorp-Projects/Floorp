@@ -42,7 +42,6 @@
 
 #include "nsIWebShell.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsIClipboardCommands.h"
 #include "pratom.h"
 #include "prprf.h"
 #include "nsIComponentManager.h"
@@ -57,6 +56,8 @@
 #include "nsIDOMWindow.h"
 
 #include "nsIScriptGlobalObject.h"
+#include "nsIContentViewer.h"
+#include "nsIContentViewerEdit.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
 #include "nsIWebShellWindow.h"
@@ -1362,26 +1363,26 @@ nsBrowserInstance::Close()
 
 NS_IMETHODIMP    
 nsBrowserInstance::Copy()
-{ 
-   nsCOMPtr<nsIPresShell> presShell;
-   GetContentAreaDocShell()->GetPresShell(getter_AddRefs(presShell));
-  if (presShell) {
-    presShell->DoCopy();
-  }
-
-  return NS_OK;
+{
+    nsCOMPtr<nsIContentViewer> viewer;
+    GetContentAreaDocShell()->GetContentViewer(getter_AddRefs(viewer));
+    nsCOMPtr<nsIContentViewerEdit> edit(do_QueryInterface(viewer));
+    if (edit) {
+        edit->CopySelection();
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBrowserInstance::SelectAll()
 {
-  nsresult rv;
-  nsCOMPtr<nsIClipboardCommands> clip(do_QueryInterface(GetContentAreaDocShell(),&rv));
-  if ( NS_SUCCEEDED(rv) ) {
-      rv = clip->SelectAll();
-  }
-
-  return rv;
+    nsCOMPtr<nsIContentViewer> viewer;
+    GetContentAreaDocShell()->GetContentViewer(getter_AddRefs(viewer));
+    nsCOMPtr<nsIContentViewerEdit> edit(do_QueryInterface(viewer));
+    if (edit) {
+        edit->SelectAll();
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP    

@@ -105,9 +105,9 @@
 #define SHRIMP_PREF                    "shrimp.startup.enable"
 
 #if defined (XP_MAC)
-#define CHROME_STYLE nsIWebBrowserChrome::windowBordersOn | nsIWebBrowserChrome::windowCloseOn | nsIWebBrowserChrome::centerScreen
+#define CHROME_STYLE nsIWebBrowserChrome::CHROME_WINDOW_BORDERS | nsIWebBrowserChrome::CHROME_WINDOW_CLOSE | nsIWebBrowserChrome::CHROME_CENTER_SCREEN
 #else /* the rest */
-#define CHROME_STYLE nsIWebBrowserChrome::allChrome | nsIWebBrowserChrome::centerScreen
+#define CHROME_STYLE nsIWebBrowserChrome::CHROME_ALL | nsIWebBrowserChrome::CHROME_CENTER_SCREEN
 #endif 
 
 // we want everyone to have the debugging info to the console for now

@@ -120,10 +120,11 @@ NS_IMETHODIMP nsCommandHandler::SetWindow(nsIDOMWindow * aWindow)
 ///////////////////////////////////////////////////////////////////////////////
 // nsICommandHandler implementation
 
-/* void do (in string aCommand, in string aStatus); */
-NS_IMETHODIMP nsCommandHandler::Exec(const char *aCommand, const char *aStatus)
+/* string exec (in string aCommand, in string aStatus); */
+NS_IMETHODIMP nsCommandHandler::Exec(const char *aCommand, const char *aStatus, char **aResult)
 {
     NS_ENSURE_ARG_POINTER(aCommand);
+    NS_ENSURE_ARG_POINTER(aResult);
 
     nsCOMPtr<nsICommandHandler> commandHandler;
     GetCommandHandler(getter_AddRefs(commandHandler));
@@ -131,13 +132,18 @@ NS_IMETHODIMP nsCommandHandler::Exec(const char *aCommand, const char *aStatus)
     // Call the client's command handler to deal with this command
     if (commandHandler)
     {
-        return commandHandler->Exec(aCommand, aStatus);
+        *aResult = nsnull;
+        return commandHandler->Exec(aCommand, aStatus, aResult);
     }
+
+    // Return an empty string
+    const char szEmpty[] = "";
+    *aResult = (char *) nsAllocator::Clone(szEmpty, sizeof(szEmpty));
 
     return NS_OK;
 }
 
-/* void query (in string aCommand, in string aStatus); */
+/* string query (in string aCommand, in string aStatus); */
 NS_IMETHODIMP nsCommandHandler::Query(const char *aCommand, const char *aStatus, char **aResult)
 {
     NS_ENSURE_ARG_POINTER(aCommand);

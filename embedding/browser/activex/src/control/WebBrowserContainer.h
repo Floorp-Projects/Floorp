@@ -26,6 +26,7 @@
 #define WEBBROWSERCONTAINER_H
 
 #include "nsIContextMenuListener.h"
+#include "nsICommandHandler.h"
 
 // This is the class that handles the XPCOM side of things, callback
 // interfaces into the web shell and so forth.
@@ -40,7 +41,8 @@ class CWebBrowserContainer :
 		public nsIDocShellTreeOwner,
 		public nsIInterfaceRequestor,
 		public nsIPrompt,
-        public nsIContextMenuListener
+        public nsIContextMenuListener,
+        public nsICommandHandler
 {
 public:
 	CWebBrowserContainer(CMozillaBrowser *pOwner);
@@ -70,6 +72,7 @@ public:
 	NS_DECL_NSIINTERFACEREQUESTOR
 	NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSICONTEXTMENULISTENER
+    NS_DECL_NSICOMMANDHANDLER
 
 	// "Services" accessed through nsIInterfaceRequestor
 	NS_DECL_NSIPROMPT

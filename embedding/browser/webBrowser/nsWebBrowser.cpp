@@ -145,7 +145,7 @@ NS_IMETHODIMP nsWebBrowser::RemoveWebBrowserListener(nsIInterfaceRequestor* aLis
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowser::GetTopLevelWindow(nsIWebBrowserChrome** aTopWindow)
+NS_IMETHODIMP nsWebBrowser::GetContainerWindow(nsIWebBrowserChrome** aTopWindow)
 {
    NS_ENSURE_ARG_POINTER(aTopWindow);
 
@@ -158,7 +158,7 @@ NS_IMETHODIMP nsWebBrowser::GetTopLevelWindow(nsIWebBrowserChrome** aTopWindow)
    return NS_OK;   
 }
 
-NS_IMETHODIMP nsWebBrowser::SetTopLevelWindow(nsIWebBrowserChrome* aTopWindow)
+NS_IMETHODIMP nsWebBrowser::SetContainerWindow(nsIWebBrowserChrome* aTopWindow)
 {
    NS_ENSURE_SUCCESS(EnsureDocShellTreeOwner(), NS_ERROR_FAILURE);
    return mDocShellTreeOwner->SetWebBrowserChrome(aTopWindow);
@@ -179,16 +179,6 @@ NS_IMETHODIMP nsWebBrowser::SetParentURIContentListener(nsIURIContentListener*
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
 
    return mContentListener->SetParentContentListener(aParentContentListener);
-}
-
-NS_IMETHODIMP nsWebBrowser::GetDocShell(nsIDocShell** aDocShell)
-{
-   NS_ENSURE_ARG_POINTER(aDocShell);
-
-   *aDocShell = mDocShell;
-   NS_IF_ADDREF(*aDocShell);
-
-   return NS_OK;
 }
 
 //*****************************************************************************
@@ -322,15 +312,21 @@ NS_IMETHODIMP nsWebBrowser::FindItemWithName(const PRUnichar *aName,
 
 NS_IMETHODIMP nsWebBrowser::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
 {  
-   NS_ENSURE_ARG_POINTER(aTreeOwner);
-
-   if(mDocShellTreeOwner)
-      *aTreeOwner = mDocShellTreeOwner->mTreeOwner;
-   else
-      *aTreeOwner = nsnull;
-
-   NS_IF_ADDREF(*aTreeOwner);
-   return NS_OK;
+    NS_ENSURE_ARG_POINTER(aTreeOwner);
+    *aTreeOwner = nsnull;
+    if(mDocShellTreeOwner)
+    {
+        if (mDocShellTreeOwner->mTreeOwner)
+        {
+            *aTreeOwner = mDocShellTreeOwner->mTreeOwner;
+        }
+        else
+        {
+            *aTreeOwner = mDocShellTreeOwner;
+        }
+    }
+    NS_IF_ADDREF(*aTreeOwner);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner)
@@ -411,20 +407,6 @@ NS_IMETHODIMP nsWebBrowser::Stop()
    return mDocShellAsNav->Stop();
 }
 
-NS_IMETHODIMP nsWebBrowser::SetDocument(nsIDOMDocument* aDocument, 
-   const PRUnichar* aContentType)
-{
-   NS_ENSURE_STATE(mDocShell);
-   return mDocShellAsNav->SetDocument(aDocument, aContentType);
-}
-
-NS_IMETHODIMP nsWebBrowser::GetDocument(nsIDOMDocument** aDocument)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsNav->GetDocument(aDocument);
-}
-
 NS_IMETHODIMP nsWebBrowser::GetCurrentURI(PRUnichar** aCurrentURI)
 {
    NS_ENSURE_STATE(mDocShell);
@@ -455,6 +437,38 @@ NS_IMETHODIMP nsWebBrowser::GetSessionHistory(nsISHistory** aSessionHistory)
    return NS_OK;
 }
 
+
+NS_IMETHODIMP nsWebBrowser::GetDocument(nsIDOMDocument** aDocument)
+{
+   NS_ENSURE_STATE(mDocShell);
+
+   return mDocShellAsNav->GetDocument(aDocument);
+}
+
+
+//*****************************************************************************
+// nsWebBrowser::nsIWebBrowserSetup
+//*****************************************************************************
+
+/* void setProperty (in unsigned long aId, in unsigned long aValue); */
+NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
+{
+    switch (aId)
+    {
+    case nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS:
+        {
+           NS_ENSURE_STATE(mDocShell);
+           NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
+           mDocShell->SetAllowPlugins(aValue);
+        }
+    default:
+        return NS_ERROR_INVALID_ARG;
+  
+    }
+    return NS_OK;
+}
+
+
 //*****************************************************************************
 // nsWebBrowser::nsIWebProgress
 //*****************************************************************************
@@ -471,41 +485,6 @@ NS_IMETHODIMP nsWebBrowser::RemoveProgressListener(nsIWebProgressListener* aList
    NS_ENSURE_STATE(mDocShell);
 
    return mDocShellAsProgress->RemoveProgressListener(aListener);
-}
-
-NS_IMETHODIMP nsWebBrowser::GetProgressStatusFlags(PRInt32* aProgressStatusFlags)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsProgress->GetProgressStatusFlags(aProgressStatusFlags);
-}
-
-NS_IMETHODIMP nsWebBrowser::GetCurSelfProgress(PRInt32* aCurSelfProgress)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsProgress->GetCurSelfProgress(aCurSelfProgress);
-}
-
-NS_IMETHODIMP nsWebBrowser::GetMaxSelfProgress(PRInt32* aMaxSelfProgress)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsProgress->GetMaxSelfProgress(aMaxSelfProgress);
-}
-
-NS_IMETHODIMP nsWebBrowser::GetCurTotalProgress(PRInt32* aCurTotalProgress)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsProgress->GetCurTotalProgress(aCurTotalProgress);
-}
-
-NS_IMETHODIMP nsWebBrowser::GetMaxTotalProgress(PRInt32* aMaxTotalProgress)
-{
-   NS_ENSURE_STATE(mDocShell);
-
-   return mDocShellAsProgress->GetMaxTotalProgress(aMaxTotalProgress);
 }
 
 //*****************************************************************************

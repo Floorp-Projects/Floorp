@@ -69,7 +69,7 @@
 #include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS
 
-#define CHROME_STYLE nsIWebBrowserChrome::allChrome | nsIWebBrowserChrome::centerScreen
+#define CHROME_STYLE nsIWebBrowserChrome::CHROME_ALL | nsIWebBrowserChrome::CHROME_CENTER_SCREEN
 
 /* Network */
 

@@ -264,8 +264,8 @@ GtkMozEmbedPrivate::Init(GtkMozEmbed *aEmbed)
   // get our hands on the browser chrome
   nsCOMPtr<nsIWebBrowserChrome> browserChrome = do_QueryInterface(mEmbed);
   NS_ENSURE_TRUE(browserChrome, NS_ERROR_FAILURE);
-  // set the toplevel window
-  mWebBrowser->SetTopLevelWindow(browserChrome);
+  // set the container window
+  mWebBrowser->SetContainerWindow(browserChrome);
   // set the widget as the owner of the object
   mEmbed->Init(GTK_WIDGET(aEmbed));
 
@@ -327,8 +327,7 @@ GtkMozEmbedPrivate::Realize(GtkWidget *aWidget)
   mWebBrowser->SetParentURIContentListener(uriListener);
 
   // get the nsIWebProgress object from the chrome docshell
-  nsCOMPtr <nsIDocShell> docShell;
-  mWebBrowser->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr <nsIDocShell> docShell = do_GetInterface(mWebBrowser);
   nsCOMPtr <nsIWebProgress> webProgress;
   webProgress = do_GetInterface(docShell);
   // add our chrome listener object
@@ -563,8 +562,7 @@ GtkMozEmbedPrivate::Destroy(void)
   mWebBrowser->SetParentURIContentListener(nsnull);
   
   // remove ourselves as the progress listener for the chrome object
-  nsCOMPtr <nsIDocShell> docShell;
-  mWebBrowser->GetDocShell(getter_AddRefs(docShell));
+  nsCOMPtr <nsIDocShell> docShell = do_GetInterface(mWebBrowser);
   nsCOMPtr <nsIWebProgress> webProgress;
   webProgress = do_GetInterface(docShell);
   webProgress->RemoveProgressListener(mChromeProgress);
@@ -1111,14 +1109,14 @@ gtk_moz_embed_set_chrome_mask (GtkMozEmbed *embed, guint32 flags)
   nsCOMPtr<nsIWebBrowserChrome> browserChrome =
     do_QueryInterface(embed_private->mEmbed);
   g_return_if_fail(browserChrome);
-  browserChrome->SetChromeMask(flags);
+  browserChrome->SetChromeFlags(flags);
 }
 
 guint32
 gtk_moz_embed_get_chrome_mask  (GtkMozEmbed *embed)
 {
   GtkMozEmbedPrivate *embed_private;
-  PRUint32 curMask = 0;
+  PRUint32 curFlags = 0;
   
   g_return_val_if_fail ((embed != NULL), 0);
   g_return_val_if_fail (GTK_IS_MOZ_EMBED(embed), 0);
@@ -1127,8 +1125,8 @@ gtk_moz_embed_get_chrome_mask  (GtkMozEmbed *embed)
   nsCOMPtr<nsIWebBrowserChrome> browserChrome = 
     do_QueryInterface(embed_private->mEmbed);
   g_return_val_if_fail(browserChrome, 0);
-  if (browserChrome->GetChromeMask(&curMask) == NS_OK)
-    return curMask;
+  if (browserChrome->GetChromeFlags(&curFlags) == NS_OK)
+    return curFlags;
   else
     return 0;
 }

@@ -376,15 +376,6 @@ nsSHistory::Stop()
 
 
 NS_IMETHODIMP
-nsSHistory::SetDocument(nsIDOMDocument* aDocument,
-   const PRUnichar* aContentType)
-{
-	// Not implemented
-  return NS_OK;
-
-}
-
-NS_IMETHODIMP
 nsSHistory::GetDocument(nsIDOMDocument** aDocument)
 {
 

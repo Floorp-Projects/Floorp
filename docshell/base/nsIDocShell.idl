@@ -95,14 +95,6 @@ interface nsIDocShell : nsISupports
 	nsIWebNavigation::Stop() method. 
 	*/
 	void stopLoad();
-	/*
-	Sets the current document to the one being passed in.  This will simulate
-	a load.
-
-	@param document - The document to load.
-	@param rootNode - The root of the document content, to be hooked up
-	*/
-	[noscript]void setDocument(in nsIDOMDocument document, in nsIDOMElement rootNode);
 
 	/*
 	The current URI that is loaded.

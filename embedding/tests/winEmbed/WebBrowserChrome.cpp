@@ -75,17 +75,7 @@ NS_IMETHODIMP WebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstance
 // WebBrowserChrome::nsIWebBrowserChrome
 //*****************************************************************************   
 
-NS_IMETHODIMP WebBrowserChrome::SetJSStatus(const PRUnichar* aStatus)
-{
-   return NS_OK;
-}
-
-NS_IMETHODIMP WebBrowserChrome::SetJSDefaultStatus(const PRUnichar* aStatus)
-{
-   return NS_OK;
-}
-
-NS_IMETHODIMP WebBrowserChrome::SetOverLink(const PRUnichar* aLink)
+NS_IMETHODIMP WebBrowserChrome::SetStatus(PRUint32 aType, const PRUnichar* aStatus)
 {
    return NS_OK;
 }
@@ -109,13 +99,13 @@ NS_IMETHODIMP WebBrowserChrome::SetWebBrowser(nsIWebBrowser* aWebBrowser)
    return NS_OK;
 }
 
-NS_IMETHODIMP WebBrowserChrome::GetChromeMask(PRUint32* aChromeMask)
+NS_IMETHODIMP WebBrowserChrome::GetChromeFlags(PRUint32* aChromeMask)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP WebBrowserChrome::SetChromeMask(PRUint32 aChromeMask)
+NS_IMETHODIMP WebBrowserChrome::SetChromeFlags(PRUint32 aChromeMask)
 {
    NS_ERROR("Haven't Implemented this yet");
    return NS_ERROR_FAILURE;
@@ -125,7 +115,7 @@ NS_IMETHODIMP WebBrowserChrome::SetChromeMask(PRUint32 aChromeMask)
 // in winEmbed.cpp
 extern nativeWindow CreateNativeWindow(nsIWebBrowserChrome* chrome);
 
-NS_IMETHODIMP WebBrowserChrome::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **aWebBrowser)
+NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, nsIWebBrowser **aWebBrowser)
 {
    NS_ENSURE_ARG_POINTER(aWebBrowser);
    *aWebBrowser = nsnull;
@@ -135,7 +125,7 @@ NS_IMETHODIMP WebBrowserChrome::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser
 	if (!mWebBrowser)
         return NS_ERROR_FAILURE;
 
-    mWebBrowser->SetTopLevelWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+    mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
 
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
     dsti->SetItemType(nsIDocShellTreeItem::typeChromeWrapper);
@@ -221,7 +211,7 @@ NS_IMETHODIMP WebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIReque
                                                PRInt32 progressStateFlags, PRUint32 status)
 {
 
-    if ((progressStateFlags & flag_stop) && (progressStateFlags & flag_is_request))
+    if ((progressStateFlags & STATE_STOP) && (progressStateFlags & STATE_IS_REQUEST))
     {
     }
     return NS_ERROR_NOT_IMPLEMENTED;

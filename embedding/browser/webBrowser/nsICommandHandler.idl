@@ -33,10 +33,19 @@ interface nsICommandHandlerInit : nsISupports
 [scriptable, uuid(34A4FCF0-66FC-11d4-9528-0020183BF181)]
 interface nsICommandHandler : nsISupports
 {
-    void exec(in string aCommand, in string aStatus);
-    void query(in string aCommand, in string aStatus, [retval] out string aResult);
+	/*
+	 * Execute the specified command with the specified parameters and return
+	 * the result to the caller. The format of the command, parameters and 
+	 * the result are determined by the acutal implementation.
+	 */
+    string exec(in string aCommand, in string aParameters);
+	/*
+	 * Query the status of the specified command with the specified parameters
+	 * and return the result to the caller. The format of the command,
+	 * parameters and the result are determined by the implementation.
+	 */
+    string query(in string aCommand, in string aParameters);
 };
-
 
 %{ C++
 //	{3A449110-66FD-11d4-9528-0020183BF181} - 

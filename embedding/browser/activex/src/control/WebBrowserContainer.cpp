@@ -63,6 +63,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 	NS_INTERFACE_MAP_ENTRY(nsIPrompt)
     NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
+//    NS_INTERFACE_MAP_ENTRY(nsICommandHandler)
 NS_INTERFACE_MAP_END
 
 
@@ -199,15 +200,15 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
 {
 	NG_TRACE(_T("CWebBrowserContainer::OnStateChange(...)\n"));
 
-    if (progressStateFlags & flag_is_network)
+    if (progressStateFlags & STATE_IS_NETWORK)
     {
 
-    	if (progressStateFlags &  flag_start)
+    	if (progressStateFlags & STATE_START)
 	    {
     		// TODO 
     	}
 
-    	if (progressStateFlags & flag_stop)
+    	if (progressStateFlags & STATE_STOP)
     	{
 	    	nsXPIDLCString aURI;
 		    if (m_pCurrentURI)
@@ -486,11 +487,8 @@ NS_IMETHODIMP CWebBrowserContainer::GetNewWindow(PRInt32 aChromeFlags,
 	if ((bCancel == VARIANT_FALSE) && pDispNew)
 	{
 		CMozillaBrowser *pBrowser = (CMozillaBrowser *) pDispNew;
-
-		nsIDocShell *docShell;
-		pBrowser->mWebBrowser->GetDocShell(&docShell);
-		docShell->QueryInterface(NS_GET_IID(nsIDocShellTreeItem), (void **) aDocShellTreeItem);
-		docShell->Release();
+        // XXXX what the hell is this supposed to mean?
+		nsCOMPtr<nsIDocShell> docShell(do_GetInterface(pBrowser->mWebBrowser));
 		pDispNew->Release();
 		return NS_OK;
 	}
@@ -654,34 +652,10 @@ CWebBrowserContainer::SetTitle(const PRUnichar * aTitle)
 // nsIWebBrowserChrome implementation
 
 NS_IMETHODIMP
-CWebBrowserContainer::SetJSStatus(const PRUnichar *status)
+CWebBrowserContainer::SetStatus(PRUint32 statusType, const PRUnichar *status)
 {
 	//Fire a StatusTextChange event
 	BSTR bstrStatus = SysAllocString(status);
-	m_pEvents1->Fire_StatusTextChange(bstrStatus);
-	m_pEvents2->Fire_StatusTextChange(bstrStatus);
-    SysFreeString(bstrStatus);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::SetJSDefaultStatus(const PRUnichar *status)
-{
-	//Fire a StatusTextChange event
-	BSTR bstrStatus = SysAllocString(status);
-	m_pEvents1->Fire_StatusTextChange(bstrStatus);
-	m_pEvents2->Fire_StatusTextChange(bstrStatus);
-    SysFreeString(bstrStatus);
-	return NS_OK;
-}
-
-
-NS_IMETHODIMP
-CWebBrowserContainer::SetOverLink(const PRUnichar *link)
-{
-	//Fire a StatusTextChange event
-	BSTR bstrStatus = SysAllocString(link);
 	m_pEvents1->Fire_StatusTextChange(bstrStatus);
 	m_pEvents2->Fire_StatusTextChange(bstrStatus);
     SysFreeString(bstrStatus);
@@ -704,21 +678,21 @@ CWebBrowserContainer::SetWebBrowser(nsIWebBrowser * aWebBrowser)
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::GetChromeMask(PRUint32 *aChromeMask)
+CWebBrowserContainer::GetChromeFlags(PRUint32 *aChromeFlags)
 {
 	return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::SetChromeMask(PRUint32 aChromeMask)
+CWebBrowserContainer::SetChromeFlags(PRUint32 aChromeFlags)
 {
 	return NS_ERROR_FAILURE;
 }
 
 
 NS_IMETHODIMP
-CWebBrowserContainer::GetNewBrowser(PRUint32 chromeMask, nsIWebBrowser **_retval)
+CWebBrowserContainer::CreateBrowserWindow(PRUint32 chromeFlags, nsIWebBrowser **_retval)
 {
 	return NS_ERROR_FAILURE;
 }
@@ -909,3 +883,17 @@ CWebBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channe
 } 
 
 
+///////////////////////////////////////////////////////////////////////////////
+// nsICommandHandler implementation
+
+/* void do (in string aCommand, in string aStatus); */
+NS_IMETHODIMP CWebBrowserContainer::Exec(const char *aCommand, const char *aStatus, char **aResult)
+{
+    return NS_OK;
+}
+
+/* void query (in string aCommand, in string aStatus); */
+NS_IMETHODIMP CWebBrowserContainer::Query(const char *aCommand, const char *aStatus, char **aResult)
+{
+    return NS_OK;
+}

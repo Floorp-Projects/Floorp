@@ -32,23 +32,16 @@ interface nsIDocShellTreeItem;
 [scriptable, uuid(BA434C60-9D52-11d3-AFB0-00A024FFC08C)]
 interface nsIWebBrowserChrome : nsISupports
 {
-	/*
-		Called when the js status value changes.  nsnull will be passed when 
-		there is no longer any js Status.  
-	*/
-	void setJSStatus(in wstring status);
+	const unsigned long STATUS_SCRIPT         = 0x00000001;
+	const unsigned long STATUS_SCRIPT_DEFAULT = 0x00000002;
+	const unsigned long STATUS_LINK           = 0x00000003;
 
 	/*
-		Called when the js default status value changes.  nsnull will be passed
-		when there is no longer any js default status.
-	*/
-	void setJSDefaultStatus(in wstring status);
-
-	/*
-		Called when the current link the mouse is over changes.  nsnull will 
-		be passed when the mouse is no longer over a link.
-	*/
-	void setOverLink(in wstring link);
+	    Called when the status text in the chrome needs to be updated.
+		The statusType indicates what is setting the text, the text is nsnull
+		when there is no longer any status
+    */
+	void setStatus(in unsigned long statusType, in wstring status);
 
 	/*
 		This is the currently loaded webBrowser.  The browser chrome may be
@@ -63,33 +56,35 @@ interface nsIWebBrowserChrome : nsISupports
 	/*
 		Definitions for the chrome masks
 	*/
-	const unsigned long defaultChrome       = 0x00000001;
-	const unsigned long windowBordersOn     = 0x00000002;
-	const unsigned long windowCloseOn       = 0x00000004;
-	const unsigned long windowResizeOn      = 0x00000008;
-	const unsigned long menuBarOn           = 0x00000010;
-	const unsigned long toolBarOn           = 0x00000020;
-	const unsigned long locationBarOn       = 0x00000040;
-	const unsigned long statusBarOn         = 0x00000080;
-	const unsigned long personalToolBarOn   = 0x00000100;
-	const unsigned long scrollbarsOn        = 0x00000200;
-	const unsigned long titlebarOn          = 0x00000400;
-	const unsigned long extraChromeOn       = 0x00000800;
+	const unsigned long CHROME_DEFAULT = 0x00000001;
+	const unsigned long CHROME_WINDOW_BORDERS = 0x00000002;
+	const unsigned long CHROME_WINDOW_CLOSE = 0x00000004;
+	const unsigned long CHROME_WINDOW_RESIZE = 0x00000008;
+	const unsigned long CHROME_MENUBAR = 0x00000010;
+	const unsigned long CHROME_TOOLBAR = 0x00000020;
+	const unsigned long CHROME_LOCATIONBAR = 0x00000040;
+	const unsigned long CHROME_STATUSBAR = 0x00000080;
+	const unsigned long CHROME_PERSONAL_TOOLBAR = 0x00000100;
+	const unsigned long CHROME_SCROLLBARS = 0x00000200;
+	const unsigned long CHROME_TITLEBAR = 0x00000400;
+	const unsigned long CHROME_EXTRA = 0x00000800;
 
-	const unsigned long windowRaised        = 0x02000000;
-	const unsigned long windowLowered       = 0x04000000;
-	const unsigned long centerScreen        = 0x08000000;
-	const unsigned long dependent           = 0x10000000;
-	const unsigned long modal               = 0x20000000;
-	const unsigned long openAsDialog        = 0x40000000;
-	const unsigned long openAsChrome        = 0x80000000;
+	const unsigned long CHROME_WINDOW_RAISED = 0x02000000;
+	const unsigned long CHROME_WINDOW_LOWERED = 0x04000000;
+	const unsigned long CHROME_CENTER_SCREEN = 0x08000000;
+	const unsigned long CHROME_DEPENDENT = 0x10000000;
+	// Note: The modal style bit just affects the way the window looks and does
+	//       mean it's actually modal.
+	const unsigned long CHROME_MODAL = 0x20000000; 
+	const unsigned long CHROME_OPENAS_DIALOG = 0x40000000;
+	const unsigned long CHROME_OPENAS_CHROME = 0x80000000;
 
-	const unsigned long allChrome           = 0x00000ffe;
+	const unsigned long CHROME_ALL = 0x00000ffe;
 
 	/*
-		The chrome mask for this browser chrome
+		The chrome flags for this browser chrome
 	*/
-	attribute unsigned long chromeMask;
+	attribute unsigned long chromeFlags;
 
 	/*
 		Tells the implementer of this interface to create a new webBrowserChrome
@@ -101,7 +96,8 @@ interface nsIWebBrowserChrome : nsISupports
 		setWebBrowser will be called with the new widget to instantiate in this 
 		new window.	
 	*/
-	nsIWebBrowser getNewBrowser(in unsigned long chromeMask);
+
+	nsIWebBrowser createBrowserWindow(in unsigned long chromeFlags);
 
 
 	/*

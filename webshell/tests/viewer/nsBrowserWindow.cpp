@@ -1421,10 +1421,11 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   nsCOMPtr<nsIBaseWindow> webBrowserWin(do_QueryInterface(mWebBrowser));
   rv = webBrowserWin->InitWindow(mWindow->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
   NS_ENSURE_SUCCESS(EnsureWebBrowserChrome(), NS_ERROR_FAILURE);
-  mWebBrowser->SetTopLevelWindow(mWebBrowserChrome);
+  mWebBrowser->SetContainerWindow(mWebBrowserChrome);
 
   webBrowserWin->Create();
-  mWebBrowser->GetDocShell(&mDocShell);
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWebBrowser);
+  mDocShell = docShell;
   mDocShell->SetAllowPlugins(aAllowPlugins);
   nsCOMPtr<nsIDocumentLoader> docLoader;
   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
@@ -1436,7 +1437,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   }
   webBrowserWin->SetVisibility(PR_TRUE);
 
-  if (nsIWebBrowserChrome::menuBarOn & aChromeMask) {
+  if (nsIWebBrowserChrome::CHROME_MENUBAR & aChromeMask) {
     rv = CreateMenuBar(r.width);
     if (NS_OK != rv) {
       return rv;
@@ -1445,14 +1446,14 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     r.x = r.y = 0;
   }
 
-  if (nsIWebBrowserChrome::toolBarOn & aChromeMask) {
+  if (nsIWebBrowserChrome::CHROME_TOOLBAR & aChromeMask) {
     rv = CreateToolBar(r.width);
     if (NS_OK != rv) {
       return rv;
     }
   }
 
-  if (nsIWebBrowserChrome::statusBarOn & aChromeMask) {
+  if (nsIWebBrowserChrome::CHROME_STATUSBAR & aChromeMask) {
     rv = CreateStatusBar(r.width);
     if (NS_OK != rv) {
       return rv;
@@ -1514,7 +1515,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     docLoader->AddObserver(this);
   }
 
-  if (nsIWebBrowserChrome::menuBarOn & aChromeMask) {
+  if (nsIWebBrowserChrome::CHROME_MENUBAR & aChromeMask) {
     rv = CreateMenuBar(r.width);
     if (NS_OK != rv) {
       return rv;
@@ -1523,14 +1524,14 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     r.x = r.y = 0;
   }
 
-  if (nsIWebBrowserChrome::toolBarOn & aChromeMask) {
+  if (nsIWebBrowserChrome::CHROME_TOOLBAR & aChromeMask) {
     rv = CreateToolBar(r.width);
     if (NS_OK != rv) {
       return rv;
     }
   }
 
-  if (nsIWebBrowserChrome::statusBarOn & aChromeMask) {
+  if (nsIWebBrowserChrome::CHROME_STATUSBAR & aChromeMask) {
     rv = CreateStatusBar(r.width);
     if (NS_OK != rv) {
       return rv;
@@ -1758,7 +1759,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   nsRect rr(0, 0, aWidth, aHeight);
 
   // position location bar (it's stretchy)
-  if (nsIWebBrowserChrome::toolBarOn & mChromeMask) {
+  if (nsIWebBrowserChrome::CHROME_TOOLBAR & mChromeMask) {
     nsIWidget* locationWidget = nsnull;
     if (mLocation &&
         NS_SUCCEEDED(mLocation->QueryInterface(kIWidgetIID,
@@ -1825,7 +1826,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   nsIWidget* statusWidget = nsnull;
 
   if (mStatus && NS_OK == mStatus->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
-    if (mChromeMask & nsIWebBrowserChrome::statusBarOn) {
+    if (mChromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR) {
       statusWidget->Resize(0, aHeight - txtHeight,
                            aWidth, txtHeight,
                            PR_TRUE);
@@ -1842,7 +1843,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 
   // inset the web widget
 
-  if (nsIWebBrowserChrome::toolBarOn & mChromeMask) {
+  if (nsIWebBrowserChrome::CHROME_TOOLBAR & mChromeMask) {
     rr.height -= BUTTON_HEIGHT;
     rr.y += BUTTON_HEIGHT;
   }
@@ -2443,7 +2444,7 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
           nsBrowserWindow* bw = new nsNativeBrowserWindow;
           bw->SetApp(mApp);
           bw->Init(mAppShell, nsRect(0, 0, 600, 400),
-                   nsIWebBrowserChrome::menuBarOn, PR_TRUE, docv, printContext);
+                   nsIWebBrowserChrome::CHROME_MENUBAR, PR_TRUE, docv, printContext);
           bw->SetVisibility(PR_TRUE);
 
           NS_RELEASE(printContext);

@@ -33,57 +33,6 @@ interface nsIWebProgressListener;
 interface nsIWebProgress : nsISupports
 {	
 	/*
-	Progress Status Flags.  These flags show transition.
-
-	Bit Layout:
-	|31-22|21-20|19-12|11-0|
-	
-	|11-0| - Network Transitions
-	|19-12| - Network Stop Reasons
-	|21-20| - Window Activity Transitions
-	|31-22| - Available
-	*/	
-	
-	/* Network Transitions bits |11-0|
-		flag_net_start - network activity is starting
-		flag_net_stop - network activity has stopped (this may include a stop
-			reason which would have the stop reasons bits set)	
-		flag_net_dns - Looking up requested host.
-		flag_net_connecting - Connecting to requested host.
-		flag_net_redirecting - Connection is being redirected.
-		flag_net_negotiating - Negotiating connection to the server 
-			(Authentication/ Authorization).
-		flag_net_transferring - Transferring data from host.
-	*/
-	const long flag_net_start				= 0x00000001;
-	const long flag_net_stop				= 0x00000002;
-	const long flag_net_dns					= 0x00000004;
-	const long flag_net_connecting		= 0x00000008;
-	const long flag_net_redirecting		= 0x00000010;
-	const long flag_net_negotiating		= 0x00000020;
-	const long flag_net_transferring		= 0x00000040;
-
-	/* Network Stop Reasons bits |19-12|
-		flag_net_failedDNS - DNS lookup failed.
-		flag_net_failedConnect - Connecting to server failed.
-		flag_net_failedTransfer - Transfer failed.
-		flag_net_failedTimeout - connection timed out
-		flag_net_userCancelled - User cancelled load.
-	*/
-	const long flag_net_failedDNS			= 0x00001000;
-	const long flag_net_failedConnect	= 0x00002000;
-	const long flag_net_failedTransfer	= 0x00004000;
-	const long flag_net_failedTimeout	= 0x00008000;
-	const long flag_net_userCancelled	= 0x00010000;
-
-	/* Window Activity bits |21-20|
-		flag_win_start - window activity is starting
-		flag_win_stop - window activity is stoping
-	*/
-	const long flag_win_start				= 0x00100000;
-	const long flag_win_stop				= 0x00200000;
-
-	/*
 	Registers a listener to be notified of Progress Events
 
 	@param listener - The listener interface to be called when a progress event
@@ -106,38 +55,4 @@ interface nsIWebProgress : nsISupports
 					to a previously registered listener.
 	*/
 	void removeProgressListener(in nsIWebProgressListener listener);
-
-	/*
-	Current progress Status of the browser.  This will be a combination of the 
-	progress status flags.
-	*/
-	readonly attribute long progressStatusFlags;
-
-	/*
-	The current position of progress.  This is between 0 and maxSelfProgress.
-	This is the position of only this progress object.  It doesn not include
-	the progress of all children.
-	*/
-	readonly attribute long curSelfProgress;
-
-	/*
-	The maximum position that progress will go to.  This sets a relative
-	position point for the current progress to relate to.  This is the max
-	position of only this progress object.  It does not include the progress of
-	all the children.
-	*/
-	readonly attribute long maxSelfProgress;
-
-	/*
-	The current position of progress for this object and all children added
-	together.  This is between 0 and maxTotalProgress.
-	*/
-	readonly attribute long curTotalProgress;
-
-	/*
-	The maximum position that progress will go to for the max of this progress
-	object and all children.  This sets the relative position point for the
-	current progress to relate to.
-	*/
-	readonly attribute long maxTotalProgress;
 };

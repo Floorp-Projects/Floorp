@@ -20,36 +20,17 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
-#include "nsIModule.h"
-#include "nsIGenericFactory.h"
+#include "nsISupports.idl"
+#include "nsIEnumerator.idl"
 
-#include "nsWebBrowser.h"
-#include "nsCommandHandler.h"
+/**
+ * The nsIWebBrowserSetup    
+ */
 
-
-// Factory Constructors
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowser)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserSetup)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandHandler)
-
-
-// Component Table
-
-static nsModuleComponentInfo components[] =
+[scriptable, uuid(F15398A0-8018-11d3-AF70-00A024FFC08C)]
+interface nsIWebBrowserSetup : nsISupports
 {
-   { "WebBrowser Component", NS_WEBBROWSER_CID, 
-      NS_WEBBROWSER_PROGID, nsWebBrowserConstructor },
-   { "CommandHandler Component", NS_COMMANDHANDLER_CID,
-      NS_COMMANDHANDLER_PROGID, nsCommandHandlerConstructor }
-//   { "WebBrowserSetup Component", NS_WEBBROWSER_SETUP_CID, 
-//      NS_WEBBROWSER_SETUP_PROGID, nsWebBrowserSetupConstructor }
+	const unsigned long SETUP_ALLOW_PLUGINS = 1;
+
+	void setProperty(in unsigned long aId, in unsigned long aValue);
 };
-
-
-// NSGetModule implementation.
-
-NS_IMPL_NSGETMODULE("Browser Embedding Module", components)
-
-
-

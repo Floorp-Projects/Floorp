@@ -47,7 +47,7 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 nsContentTreeOwner::nsContentTreeOwner(PRBool fPrimary) : mXULWindow(nsnull), 
    mPrimary(fPrimary), mContentTitleSetting(PR_FALSE), 
-   mChromeMask(nsIWebBrowserChrome::allChrome)
+   mChromeFlags(nsIWebBrowserChrome::CHROME_ALL)
 {
 	NS_INIT_REFCNT();
 }
@@ -198,25 +198,7 @@ NS_IMETHODIMP nsContentTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
 // nsContentTreeOwner::nsIWebBrowserChrome
 //*****************************************************************************   
 
-NS_IMETHODIMP nsContentTreeOwner::SetJSStatus(const PRUnichar* aStatus)
-{
-   nsCOMPtr<nsIDOMWindow> domWindow;
-   mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWindow));
-   nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(domWindow));
-   if(!piDOMWindow)
-      return NS_OK;
-
-   nsCOMPtr<nsISupports> xpConnectObj;
-   nsAutoString xulBrowserWinId; xulBrowserWinId.AssignWithConversion("XULBrowserWindow");
-   piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
-
-   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
-   if(xulBrowserWindow)
-      xulBrowserWindow->SetJSStatus(aStatus);
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsContentTreeOwner::SetJSDefaultStatus(const PRUnichar* aStatus)
+NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
 {
    nsCOMPtr<nsIDOMWindow> domWindow;
    mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWindow));
@@ -229,26 +211,22 @@ NS_IMETHODIMP nsContentTreeOwner::SetJSDefaultStatus(const PRUnichar* aStatus)
    piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
    nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
 
-   if(xulBrowserWindow)
-      xulBrowserWindow->SetJSDefaultStatus(aStatus);
-   return NS_OK;
-}
+   if (xulBrowserWindow)
+   {
+     switch(aStatusType)
+     {
+     case STATUS_SCRIPT:
+       xulBrowserWindow->SetJSStatus(aStatus);
+       break;
+     case STATUS_SCRIPT_DEFAULT:
+       xulBrowserWindow->SetJSDefaultStatus(aStatus);
+       break;
+     case STATUS_LINK:
+       xulBrowserWindow->SetOverLink(aStatus);
+       break;
+     }
+   }
 
-NS_IMETHODIMP nsContentTreeOwner::SetOverLink(const PRUnichar* aLink)
-{
-   nsCOMPtr<nsIDOMWindow> domWindow;
-   mXULWindow->GetWindowDOMWindow(getter_AddRefs(domWindow));
-   nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(domWindow));
-   if(!piDOMWindow)
-      return NS_OK;
-
-   nsCOMPtr<nsISupports> xpConnectObj;
-   nsAutoString xulBrowserWinId; xulBrowserWinId.AssignWithConversion("XULBrowserWindow");
-   piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
-   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
-
-   if(xulBrowserWindow)
-      xulBrowserWindow->SetOverLink(aLink);
    return NS_OK;
 }
 
@@ -264,23 +242,23 @@ NS_IMETHODIMP nsContentTreeOwner::GetWebBrowser(nsIWebBrowser** aWebBrowser)
    return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsContentTreeOwner::SetChromeMask(PRUint32 aChromeMask)
+NS_IMETHODIMP nsContentTreeOwner::SetChromeFlags(PRUint32 aChromeFlags)
 {
-   mChromeMask = aChromeMask;
-   NS_ENSURE_SUCCESS(ApplyChromeMask(), NS_ERROR_FAILURE);
+   mChromeFlags = aChromeFlags;
+   NS_ENSURE_SUCCESS(ApplyChromeFlags(), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
 
-NS_IMETHODIMP nsContentTreeOwner::GetChromeMask(PRUint32* aChromeMask)
+NS_IMETHODIMP nsContentTreeOwner::GetChromeFlags(PRUint32* aChromeFlags)
 {
-   NS_ENSURE_ARG_POINTER(aChromeMask);
+   NS_ENSURE_ARG_POINTER(aChromeFlags);
 
-   *aChromeMask = mChromeMask;
+   *aChromeFlags = mChromeFlags;
    return NS_OK;
 }
 
-NS_IMETHODIMP nsContentTreeOwner::GetNewBrowser(PRUint32 aChromeFlags,
+NS_IMETHODIMP nsContentTreeOwner::CreateBrowserWindow(PRUint32 aChromeFlags,
    nsIWebBrowser** aWebBrowser)
 {
    NS_ERROR("Haven't Implemented this yet");
@@ -567,7 +545,7 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
 // nsContentTreeOwner: Helpers
 //*****************************************************************************   
 
-NS_IMETHODIMP nsContentTreeOwner::ApplyChromeMask()
+NS_IMETHODIMP nsContentTreeOwner::ApplyChromeFlags()
 {
    if(!mXULWindow->mChromeLoaded)
       return NS_OK;  // We'll do this later when chrome is loaded
@@ -576,8 +554,8 @@ NS_IMETHODIMP nsContentTreeOwner::ApplyChromeMask()
    mXULWindow->GetWindowDOMElement(getter_AddRefs(window));
    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
    
-   mXULWindow->mWindow->ShowMenuBar(mChromeMask & 
-                                    nsIWebBrowserChrome::menuBarOn ? 
+   mXULWindow->mWindow->ShowMenuBar(mChromeFlags & 
+                                    nsIWebBrowserChrome::CHROME_MENUBAR ? 
                                     PR_TRUE : PR_FALSE);
 
    // Construct the new value for the 'chromehidden' attribute that
@@ -586,22 +564,22 @@ NS_IMETHODIMP nsContentTreeOwner::ApplyChromeMask()
    // 'chromehidden' attribute of the <window> tag.
    nsAutoString newvalue;
 
-   if (! (mChromeMask & nsIWebBrowserChrome::menuBarOn)) {
+   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_MENUBAR)) {
      newvalue.AppendWithConversion("menubar ");
    } 
-   if (! (mChromeMask & nsIWebBrowserChrome::toolBarOn)) {
+   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_TOOLBAR)) {
      newvalue.AppendWithConversion("toolbar ");
    }
-   if (! (mChromeMask & nsIWebBrowserChrome::locationBarOn)) {
+   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_LOCATIONBAR)) {
      newvalue.AppendWithConversion("location ");
    }
-   if (! (mChromeMask & nsIWebBrowserChrome::personalToolBarOn)) {
+   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR)) {
      newvalue.AppendWithConversion("directories ");
    }
-   if (! (mChromeMask & nsIWebBrowserChrome::statusBarOn)) {
+   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_STATUSBAR)) {
      newvalue.AppendWithConversion("status ");
    }
-   if (! (mChromeMask & nsIWebBrowserChrome::extraChromeOn)) {
+   if (! (mChromeFlags & nsIWebBrowserChrome::CHROME_EXTRA)) {
      newvalue.AppendWithConversion("extrachrome");
    }
 

@@ -42,6 +42,8 @@
 #include "nsIContentViewerFile.h"
 #include "nsISelectionController.h"
 
+#include "nsIDOMWindow.h"
+
 #include "nsEmbedAPI.h"
 
 // Macros to return errors from bad calls to the automation
@@ -428,13 +430,15 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 	char szFileTitle[256];
 	BSTR pageName = NULL;
 
+	//TODO:	The IE control allows you to also save as "Web Page, complete"
+    //      where all of the page's images are saved in the same directory.
+    //      For the moment, we're not allowing this option.
+
+    memset(&SaveFileName, 0, sizeof(SaveFileName));
 	SaveFileName.lStructSize = sizeof(SaveFileName);
 	SaveFileName.hwndOwner = m_hWnd;
 	SaveFileName.hInstance = NULL;
 	SaveFileName.lpstrFilter = "Web Page, HTML Only (*.htm;*.html)\0*.htm;*.html\0Text File (*.txt)\0*.txt\0"; 
-	//TODO:	The IE control allows you to also save as "Web Page, complete" where all of the page's images are saved
-	//		in a directory along with the web page.  This doesn't appear to be directly supported by Mozilla, but
-	//		could be implemented here if deemed necessary.  (Web Page, complete (*.htm;*.html)\0*.htm;*.html\0)
 	SaveFileName.lpstrCustomFilter = NULL; 
 	SaveFileName.nMaxCustFilter = NULL; 
 	SaveFileName.nFilterIndex = 1; 
@@ -461,9 +465,9 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 	get_LocationName(&pageName);
 	strcpy(szTmp, OLE2A(pageName));
 	
-	//The SaveAs dialog will fail if szFile contains any "bad" characters.
-	//This hunk of code attempts to mimick the IE way of replacing "bad"
-	//characters with "good" characters.
+	// The SaveAs dialog will fail if szFile contains any "bad" characters.
+	// This hunk of code attempts to mimick the IE way of replacing "bad"
+	// characters with "good" characters.
 	int j = 0;
 	for (int i=0; szTmp[i]!='\0'; i++)
 	{		
@@ -497,42 +501,42 @@ LRESULT CMozillaBrowser::OnSaveAs(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL
 	szFile[j] = '\0';
 
 	HRESULT hr = S_OK;
-	if ( GetSaveFileName(&SaveFileName) )
+	if (GetSaveFileName(&SaveFileName))
 	{
-		//Get the current DOM document
+		// Get the current DOM document
 		nsIDOMDocument* pDocument = nsnull;
 		hr = GetDOMDocument(&pDocument);
-		if ( FAILED(hr) )
+		if (FAILED(hr))
 		{
 			return hr;
 		}
 		
-		//Get an nsIDiskDocument interface to the DOM document
+		// Get an nsIDiskDocument interface to the DOM document
 		nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(pDocument);
 		if (!diskDoc)
 		{
 			return E_NOINTERFACE;
 		}
 
-/* XXX fix to use new mime-ified version of SaveFile on nsIDiskDocument
-		//Set the file type specified by the user
-		//Add the correct file extension if none is specified
-		nsIDiskDocument::ESaveFileType saveFileType;
-		if ( SaveFileName.nFilterIndex == 2 )		//SaveAs text file
-		{
-			saveFileType = nsIDiskDocument::eSaveFileText;
-		}
-		else										//SaveAs html file
-		{
-			saveFileType = nsIDiskDocument::eSaveFileHTML;
-		}
-
-		//Create an nsFilelSpec from the selected file path.
+		// Create an nsFilelSpec from the selected file path.
 		nsFileSpec fileSpec(szFile, PR_FALSE);
 		
-		//Save the file.
-		hr = diskDoc->SaveFile(&fileSpec, PR_TRUE, PR_TRUE, saveFileType, "");
-*/
+        // Figure out the mime type from the selection
+        nsAutoString mimeType; 
+        switch (SaveFileName.nFilterIndex)
+        {
+        case 1:
+            mimeType.AssignWithConversion("text/html");
+            break;
+        case 2:
+        default:
+            mimeType.AssignWithConversion("text/plain");
+            break;
+        }
+
+		// Save the file.
+        nsAutoString useDocCharset;
+		hr = diskDoc->SaveFile(&fileSpec, PR_TRUE, PR_TRUE, mimeType, useDocCharset, 0);
 	}
 
 	return hr;
@@ -549,9 +553,8 @@ LRESULT CMozillaBrowser::OnProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 LRESULT CMozillaBrowser::OnCut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnCut);
-    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit;
-    nsresult rv = GetEditInterface(getter_AddRefs(contentViewerEdit));
-    if (NS_SUCCEEDED(rv))
+    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_GetInterface(mWebBrowser));
+    if (contentViewerEdit)
     {
         contentViewerEdit->CutSelection();
     }
@@ -561,9 +564,8 @@ LRESULT CMozillaBrowser::OnCut(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& b
 LRESULT CMozillaBrowser::OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnCopy);
-    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit;
-    nsresult rv = GetEditInterface(getter_AddRefs(contentViewerEdit));
-    if (NS_SUCCEEDED(rv))
+    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_GetInterface(mWebBrowser));
+    if (contentViewerEdit)
     {
         contentViewerEdit->CopySelection();
     }
@@ -573,9 +575,8 @@ LRESULT CMozillaBrowser::OnCopy(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& 
 LRESULT CMozillaBrowser::OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnPaste);
-    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit;
-    nsresult rv = GetEditInterface(getter_AddRefs(contentViewerEdit));
-    if (NS_SUCCEEDED(rv))
+    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_GetInterface(mWebBrowser));
+    if (contentViewerEdit)
     {
         contentViewerEdit->Paste();
     }
@@ -585,9 +586,8 @@ LRESULT CMozillaBrowser::OnPaste(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 LRESULT CMozillaBrowser::OnSelectAll(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::OnSelectAll);
-    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit;
-    nsresult rv = GetEditInterface(getter_AddRefs(contentViewerEdit));
-    if (NS_SUCCEEDED(rv))
+    nsCOMPtr<nsIContentViewerEdit> contentViewerEdit(do_GetInterface(mWebBrowser));
+    if (contentViewerEdit)
     {
         contentViewerEdit->SelectAll();
     }
@@ -881,7 +881,9 @@ HRESULT CMozillaBrowser::CreateBrowser()
 		return rv;
 	}
 
-	mWebBrowser->QueryInterface(NS_GET_IID(nsIBaseWindow), (void **) &mWebBrowserAsWin);
+    nsCOMPtr<nsIInterfaceRequestor> webBrowserAsReq(do_QueryInterface(mWebBrowser));
+
+    mWebBrowserAsWin = do_QueryInterface(mWebBrowser);
 	rv = mWebBrowserAsWin->InitWindow(nsNativeWidget(m_hWnd), nsnull,
 		0, 0, rcLocation.right - rcLocation.left, rcLocation.bottom - rcLocation.top);
 
@@ -889,7 +891,13 @@ HRESULT CMozillaBrowser::CreateBrowser()
     browserAsItem->SetItemType(nsIDocShellTreeItem::typeChromeWrapper);
 
 	rv = mWebBrowserAsWin->Create();
-	rv = mWebBrowser->GetDocShell(&mRootDocShell);
+
+    // Configure what the web browser can and cannot do
+//    nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(mWebBrowser));
+//    webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, aAllowPlugins);
+
+    // XXX delete when docshell becomes inaccessible
+    mRootDocShell = do_GetInterface(mWebBrowser);
     if (mRootDocShell == nsnull)
     {
 		NG_ASSERT(0);
@@ -897,7 +905,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
         SetStartupErrorMessage(IDS_CANNOTCREATEPREFS);
         return rv;
     }
-	mRootDocShell->SetAllowPlugins(aAllowPlugins);
+
 	nsCOMPtr<nsIDocumentLoader> docLoader;
 
 	// Create the container object
@@ -939,15 +947,15 @@ HRESULT CMozillaBrowser::DestroyBrowser()
  	}
 
     // Destroy layout...
-	if (mWebBrowserAsWin != nsnull)
+	if (mWebBrowserAsWin)
 	{
 		mWebBrowserAsWin->Destroy();
-		NS_RELEASE(mWebBrowserAsWin);
+        mWebBrowserAsWin = nsnull;
 	}
 
 	if (mRootDocShell != nsnull)
 	{
-		NS_RELEASE(mRootDocShell);
+        mRootDocShell = nsnull;
 	}
 
 	if (mWebBrowserContainer)
@@ -971,58 +979,6 @@ HRESULT CMozillaBrowser::DestroyBrowser()
 HRESULT CMozillaBrowser::SetEditorMode(BOOL bEnabled)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::SetEditorMode);
-/*
-	mEditModeFlag = FALSE;
-	if (bEnabled && mEditor == nsnull)
-	{
-		if (!IsValid())
-		{
-			return E_UNEXPECTED;
-		}
-
-		nsresult result = nsComponentManager::CreateInstance(kHTMLEditorCID,
-										nsnull,
-										NS_GET_IID(nsIEditor),
-										(void **) &mEditor);
-		if (NS_FAILED(result))
-		{
-			return result;
-		}
-		if (!mEditor)
-		{
-			return E_OUTOFMEMORY;
-		}
-
-		nsIDOMDocument *pIDOMDocument = nsnull;
-		if (FAILED(GetDOMDocument(&pIDOMDocument)) || pIDOMDocument == nsnull)
-		{
-			return E_UNEXPECTED;
-		}
-
-		nsIPresShell* pIPresShell = nsnull;
-		if (FAILED(GetPresShell(&pIPresShell)) || pIPresShell == nsnull)
-		{
-			return E_UNEXPECTED;
-		}
-
-		result = mEditor->Init(pIDOMDocument, pIPresShell, 0);
-		if (NS_SUCCEEDED(result))
-		{
-			mEditModeFlag = TRUE;
-		}
-
-		NS_RELEASE(pIPresShell);
-		NS_RELEASE(pIDOMDocument);
-	}
-	else
-	{
-		if (mEditor)
-		{
-			mEditor->Release();
-			mEditor = nsnull;
-		}
-	}
-*/
 	return S_OK;
 }
 
@@ -1095,72 +1051,12 @@ HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
 }
 
 
-// Returns the presentation shell
-HRESULT CMozillaBrowser::GetPresShell(nsIPresShell **pPresShell)
-{
-	NG_TRACE_METHOD(CMozillaBrowser::GetPresShell);
-
-	nsresult res;
-	
-	// Test for stupid args
-	if (pPresShell == NULL)
-	{
-		NG_ASSERT(0);
-		return E_INVALIDARG;
-	}
-
-	*pPresShell = nsnull;
-
-	if (!IsValid())
-	{
-		NG_ASSERT(0);
-		return E_UNEXPECTED;
-	}
-	
-	nsIContentViewer* pIContentViewer = nsnull;
-	res = mRootDocShell->GetContentViewer(&pIContentViewer);
-	if (NS_SUCCEEDED(res) && pIContentViewer)
-	{
-		nsIDocumentViewer* pIDocViewer = nsnull;
-		res = pIContentViewer->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**) &pIDocViewer);
-		if (NS_SUCCEEDED(res) && pIDocViewer)
-		{
-			nsIPresContext * pIPresContent = nsnull;
-			res = pIDocViewer->GetPresContext(pIPresContent);
-			if (NS_SUCCEEDED(res) && pIPresContent)
-			{
-				res = pIPresContent->GetShell(pPresShell);
-				NS_RELEASE(pIPresContent);
-			}
-			NS_RELEASE(pIDocViewer);
-		}
-		NS_RELEASE(pIContentViewer);
-	}
-
-	return res;
-}
-
-
-// Get the nsIContentViewEdit interface from the root docshell
-HRESULT CMozillaBrowser::GetEditInterface(nsIContentViewerEdit** aEditInterface)
-{	 
-    nsCOMPtr<nsIContentViewer> viewer;
-    mRootDocShell->GetContentViewer(getter_AddRefs(viewer));
-    nsCOMPtr<nsIContentViewerEdit> edit(do_QueryInterface(viewer));
-    NS_ENSURE_TRUE(edit, NS_ERROR_FAILURE);
-
-    *aEditInterface = edit;
-    NS_ADDREF(*aEditInterface);
-
-    return NS_OK;
-}
-
 // Return the root DOM document
 HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::GetDOMDocument);
 
-	nsresult res;
+	HRESULT hr = E_FAIL;
 
 	// Test for stupid args
 	if (pDocument == NULL)
@@ -1176,28 +1072,18 @@ HRESULT CMozillaBrowser::GetDOMDocument(nsIDOMDocument **pDocument)
 		NG_ASSERT(0);
 		return E_UNEXPECTED;
 	}
-	
-	nsIContentViewer * pCViewer = nsnull;
-	res = mRootDocShell->GetContentViewer(&pCViewer);
-	if (NS_SUCCEEDED(res) && pCViewer)
-	{
-		nsIDocumentViewer * pDViewer = nsnull;
-		res = pCViewer->QueryInterface(NS_GET_IID(nsIDocumentViewer), (void**) &pDViewer);
-		if (NS_SUCCEEDED(res) && pDViewer)
-		{
-			nsIDocument * pDoc = nsnull;
-			res = pDViewer->GetDocument(pDoc);
-			if (NS_SUCCEEDED(res) && pDoc)
-			{
-				res = pDoc->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**) pDocument);
-				NS_RELEASE(pDoc);
-			}
-			NS_RELEASE(pDViewer);
-		}
-		NS_RELEASE(pCViewer);
-	}
 
-	return res;
+    // Get the DOM window from the webbrowser
+    nsCOMPtr<nsIDOMWindow> window(do_GetInterface(mWebBrowser));
+    if (window)
+    {
+        if (NS_SUCCEEDED(window->GetDocument(pDocument)) && *pDocument)
+        {
+            hr = S_OK;
+        }
+    }
+
+	return hr;
 }
 
 
@@ -1674,7 +1560,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 	// Load the URL	
 	nsresult res = NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mRootDocShell);
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mWebBrowser);
 	if (spIWebNavigation)
 	{
 		res = spIWebNavigation->LoadURI(sUrl.c_str());
@@ -1745,7 +1631,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 		RETURN_E_UNEXPECTED();
 	}
 
-	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mRootDocShell);
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mWebBrowser);
 	if (spIWebNavigation)
 	{
 		spIWebNavigation->Reload(type);
@@ -1765,7 +1651,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Stop()
 		RETURN_E_UNEXPECTED();
 	}
 
-	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mRootDocShell);
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mWebBrowser);
 	if (spIWebNavigation)
 	{
 		spIWebNavigation->Stop();

@@ -189,7 +189,7 @@ nsAppShellService::CreateHiddenWindow()
   PRInt32     initialHeight = 0, initialWidth = 0;
 #else
   const char* hiddenWindowURL = "about:blank";
-  PRUint32    chromeMask =  nsIWebBrowserChrome::allChrome;
+  PRUint32    chromeMask =  nsIWebBrowserChrome::CHROME_ALL;
   PRInt32     initialHeight = 100, initialWidth = 100;
 #endif
 
@@ -548,24 +548,24 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   else {
     nsWidgetInitData widgetInitData;
 
-    widgetInitData.mWindowType = aChromeMask & nsIWebBrowserChrome::openAsDialog ?
+    widgetInitData.mWindowType = aChromeMask & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG ?
                                  eWindowType_dialog : eWindowType_toplevel;
 
     // note default chrome overrides other OS chrome settings, but
     // not internal chrome
-    if (aChromeMask & nsIWebBrowserChrome::defaultChrome)
+    if (aChromeMask & nsIWebBrowserChrome::CHROME_DEFAULT)
       widgetInitData.mBorderStyle = eBorderStyle_default;
-    else if ((aChromeMask & nsIWebBrowserChrome::allChrome) == nsIWebBrowserChrome::allChrome)
+    else if ((aChromeMask & nsIWebBrowserChrome::CHROME_ALL) == nsIWebBrowserChrome::CHROME_ALL)
       widgetInitData.mBorderStyle = eBorderStyle_all;
     else {
       widgetInitData.mBorderStyle = eBorderStyle_none; // assumes none == 0x00
-      if (aChromeMask & nsIWebBrowserChrome::windowBordersOn)
+      if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_BORDERS)
         widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_border);
-      if (aChromeMask & nsIWebBrowserChrome::titlebarOn)
+      if (aChromeMask & nsIWebBrowserChrome::CHROME_TITLEBAR)
         widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_title);
-      if (aChromeMask & nsIWebBrowserChrome::windowCloseOn)
+      if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_CLOSE)
         widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_close);
-      if (aChromeMask & nsIWebBrowserChrome::windowResizeOn) {
+      if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
         widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_resizeh);
         /* Associate the resize flag with min/max buttons and system menu.
            but not for dialogs. This is logic better associated with the
@@ -573,18 +573,18 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
            eBorderStyle_default style. But since I know of no platform
            that wants min/max buttons on dialogs, it works here, too.
            If you have such a platform, this is where the fun starts: */
-        if (!(aChromeMask & nsIWebBrowserChrome::openAsDialog))
+        if (!(aChromeMask & nsIWebBrowserChrome::CHROME_OPENAS_DIALOG))
           widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_minimize | eBorderStyle_maximize | eBorderStyle_menu);
       }
     }
 
-    if (aChromeMask & nsIWebBrowserChrome::scrollbarsOn)
+    if (aChromeMask & nsIWebBrowserChrome::CHROME_SCROLLBARS)
       contentScrollbars = PR_TRUE;
 
     zlevel = nsIXULWindow::normalZ;
-    if (aChromeMask & nsIWebBrowserChrome::windowRaised)
+    if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RAISED)
       zlevel = nsIXULWindow::raisedZ;
-    else if (aChromeMask & nsIWebBrowserChrome::windowLowered)
+    else if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_LOWERED)
       zlevel = nsIXULWindow::loweredZ;
 #ifdef XP_MAC
     /* Platforms on which modal windows are always application-modal, not
@@ -596,7 +596,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
        but the Mac, right?) know how to stack dependent windows. On these
        platforms, give the dependent window the same level as its parent,
        so we won't try to override the normal platform behaviour. */
-    if ((aChromeMask & nsIWebBrowserChrome::dependent) && aParent)
+    if ((aChromeMask & nsIWebBrowserChrome::CHROME_DEPENDENT) && aParent)
       aParent->GetZlevel(&zlevel);
 #endif
 
@@ -629,7 +629,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
 
     }
 
-    if (aChromeMask & nsIWebBrowserChrome::centerScreen)
+    if (aChromeMask & nsIWebBrowserChrome::CHROME_CENTER_SCREEN)
       window->Center(nsnull, PR_TRUE, PR_FALSE);
   }
 

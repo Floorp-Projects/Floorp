@@ -859,10 +859,10 @@ NS_IMETHODIMP GlobalWindowImpl::SetStatus(const nsAReadableString& aStatus)
 {
   mStatus = aStatus;
 
-  nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-  GetWebBrowserChrome(getter_AddRefs(browserChrome));
-  if (browserChrome)
-    browserChrome->SetJSStatus(nsPromiseFlatString(aStatus));
+   nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+   GetWebBrowserChrome(getter_AddRefs(browserChrome));
+   if(browserChrome)
+      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT, nsPromiseFlatString(aStatus));
 
   return NS_OK;
 }
@@ -877,10 +877,10 @@ NS_IMETHODIMP GlobalWindowImpl::SetDefaultStatus(const nsAReadableString& aDefau
 {
   mDefaultStatus = aDefaultStatus;
 
-  nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-  GetWebBrowserChrome(getter_AddRefs(browserChrome));
-  if (browserChrome)
-    browserChrome->SetJSDefaultStatus(nsPromiseFlatString(aDefaultStatus));
+   nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+   GetWebBrowserChrome(getter_AddRefs(browserChrome));
+   if(browserChrome)
+      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT_DEFAULT, nsPromiseFlatString(aDefaultStatus));
 
   return NS_OK;
 }
@@ -2924,7 +2924,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext *cx,
 
   if (!newDocShellItem) {
     windowIsNew = PR_TRUE;
-    if (chromeFlags & nsIWebBrowserChrome::modal) {
+    if (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) {
       eventQService = do_GetService(kEventQueueServiceCID);
       if (eventQService &&
           NS_SUCCEEDED(eventQService->
@@ -3060,14 +3060,14 @@ NS_IMETHODIMP GlobalWindowImpl::AttachArguments(nsIDOMWindow *aWindow,
  */
 PRUint32 GlobalWindowImpl::CalculateChromeFlags(char *aFeatures, PRBool aDialog)
 {
-  if (!aFeatures) {
-    if (aDialog)
-      return nsIWebBrowserChrome::allChrome |
-             nsIWebBrowserChrome::openAsDialog |
-             nsIWebBrowserChrome::openAsChrome;
-    else
-      return nsIWebBrowserChrome::allChrome;
-  }
+   if(!aFeatures) {
+      if(aDialog)
+         return   nsIWebBrowserChrome::CHROME_ALL | 
+                  nsIWebBrowserChrome::CHROME_OPENAS_DIALOG | 
+                  nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
+      else
+         return nsIWebBrowserChrome::CHROME_ALL;
+   }
 
   /* This function has become complicated since browser windows and
      dialogs diverged. The difference is, browser windows assume all
@@ -3080,32 +3080,31 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char *aFeatures, PRBool aDialog)
   PRUint32 chromeFlags = 0;
   PRBool presenceFlag = PR_FALSE;
 
-
-  chromeFlags = nsIWebBrowserChrome::windowBordersOn;
+  chromeFlags = nsIWebBrowserChrome::CHROME_WINDOW_BORDERS;
   if (aDialog && WinHasOption(aFeatures, "all", 0, &presenceFlag))
-    chromeFlags = nsIWebBrowserChrome::allChrome;
+    chromeFlags = nsIWebBrowserChrome::CHROME_ALL;
 
   /* Next, allow explicitly named options to override the initial settings */
 
   chromeFlags |= WinHasOption(aFeatures, "titlebar", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::titlebarOn : 0;
+                 ? nsIWebBrowserChrome::CHROME_TITLEBAR : 0;
   chromeFlags |= WinHasOption(aFeatures, "close", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::windowCloseOn : 0;
+                 ? nsIWebBrowserChrome::CHROME_WINDOW_CLOSE : 0;
   chromeFlags |= WinHasOption(aFeatures, "toolbar", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::toolBarOn : 0;
+                 ? nsIWebBrowserChrome::CHROME_TOOLBAR : 0;
   chromeFlags |= WinHasOption(aFeatures, "location", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::locationBarOn : 0;
+                 ? nsIWebBrowserChrome::CHROME_LOCATIONBAR : 0;
   chromeFlags |= (WinHasOption(aFeatures, "directories", 0, &presenceFlag) ||
                   WinHasOption(aFeatures, "personalbar", 0, &presenceFlag))
-                 ? nsIWebBrowserChrome::personalToolBarOn : 0;
+                 ? nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR : 0;
   chromeFlags |= WinHasOption(aFeatures, "status", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::statusBarOn : 0;
+                 ? nsIWebBrowserChrome::CHROME_STATUSBAR : 0;
   chromeFlags |= WinHasOption(aFeatures, "menubar", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::menuBarOn : 0;
+                 ? nsIWebBrowserChrome::CHROME_MENUBAR : 0;
   chromeFlags |= WinHasOption(aFeatures, "scrollbars", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::scrollbarsOn : 0;
+                 ? nsIWebBrowserChrome::CHROME_SCROLLBARS : 0;
   chromeFlags |= WinHasOption(aFeatures, "resizable", 0, &presenceFlag)
-                 ? nsIWebBrowserChrome::windowResizeOn : 0;
+                 ? nsIWebBrowserChrome::CHROME_WINDOW_RESIZE : 0;
 
   /* OK.
      Normal browser windows, in spite of a stated pattern of turning off
@@ -3116,12 +3115,12 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char *aFeatures, PRBool aDialog)
 
   // default titlebar and closebox to "on," if not mentioned at all
   if (!PL_strcasestr(aFeatures, "titlebar"))
-    chromeFlags |= nsIWebBrowserChrome::titlebarOn;
+    chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
   if (!PL_strcasestr(aFeatures, "close"))
-    chromeFlags |= nsIWebBrowserChrome::windowCloseOn;
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
 
   if (aDialog && !presenceFlag)
-    chromeFlags = nsIWebBrowserChrome::defaultChrome;
+    chromeFlags = nsIWebBrowserChrome::CHROME_DEFAULT;
 
   /* Finally, once all the above normal chrome has been divined, deal
      with the features that are more operating hints than appearance
@@ -3129,28 +3128,28 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char *aFeatures, PRBool aDialog)
 
   if (WinHasOption(aFeatures, "alwaysLowered", 0, nsnull) ||
       WinHasOption(aFeatures, "z-lock", 0, nsnull))
-    chromeFlags |= nsIWebBrowserChrome::windowLowered;
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
   else if (WinHasOption(aFeatures, "alwaysRaised", 0, nsnull))
-    chromeFlags |= nsIWebBrowserChrome::windowRaised;
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
 
   chromeFlags |= WinHasOption(aFeatures, "chrome", 0, nsnull) ?
-    nsIWebBrowserChrome::openAsChrome : 0;
+    nsIWebBrowserChrome::CHROME_OPENAS_CHROME : 0;
   chromeFlags |= WinHasOption(aFeatures, "centerscreen", 0, nsnull) ?
-    nsIWebBrowserChrome::centerScreen : 0;
+    nsIWebBrowserChrome::CHROME_CENTER_SCREEN : 0;
   chromeFlags |= WinHasOption(aFeatures, "dependent", 0, nsnull) ?
-    nsIWebBrowserChrome::dependent : 0;
+    nsIWebBrowserChrome::CHROME_DEPENDENT : 0;
   chromeFlags |= WinHasOption(aFeatures, "modal", 0, nsnull) ?
-    (nsIWebBrowserChrome::modal | nsIWebBrowserChrome::dependent) : 0;
+    (nsIWebBrowserChrome::CHROME_MODAL | nsIWebBrowserChrome::CHROME_DEPENDENT) : 0;
   chromeFlags |= WinHasOption(aFeatures, "dialog", 0, nsnull) ?
-    nsIWebBrowserChrome::openAsDialog : 0;
+    nsIWebBrowserChrome::CHROME_OPENAS_DIALOG : 0;
 
   /* and dialogs need to have the last word. assume dialogs are dialogs,
      and opened as chrome, unless explicitly told otherwise. */
   if (aDialog) {
     if (!PL_strcasestr(aFeatures, "dialog"))
-      chromeFlags |= nsIWebBrowserChrome::openAsDialog;
+      chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
     if (!PL_strcasestr(aFeatures, "chrome"))
-      chromeFlags |= nsIWebBrowserChrome::openAsChrome;
+      chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
   }
 
   /* missing
@@ -3174,14 +3173,16 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char *aFeatures, PRBool aDialog)
   nsresult res =
     securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
 
+   res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+ 
   if (NS_FAILED(res) || !enabled) {
     //If priv check fails, set all elements to minimum reqs., else leave them alone.
-    chromeFlags |= nsIWebBrowserChrome::titlebarOn;
-    chromeFlags &= ~nsIWebBrowserChrome::windowLowered;
-    chromeFlags &= ~nsIWebBrowserChrome::windowRaised;
+    chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
+    chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
+    chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
     //XXX Temporarily removing this check to allow modal dialogs to be
     //raised from script.  A more complete security based fix is needed.
-    //chromeFlags &= ~nsIWebBrowserChrome::modal;
+    //chromeFlags &= ~nsIWebBrowserChrome::CHROME_MODAL;
   }
 
   return chromeFlags;

@@ -856,7 +856,7 @@ nsWebShell::OnOverLink(nsIContent* aContent,
     nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
 
    if(browserChrome)
-      browserChrome->SetOverLink(aURLSpec);
+      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, aURLSpec);
 
    return NS_OK;
 }
