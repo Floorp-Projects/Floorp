@@ -49,28 +49,14 @@ PRBool PrintPreviewContext::IsPaginated()
 
 nscoord PrintPreviewContext::GetPageWidth()
 {
-#if 0
   // XXX assumes a 1/2 margin around all sides
   return (nscoord) NS_INCHES_TO_TWIPS(7.5);
-#else
-  // For testing purposes make the page width smaller than the visible
-  // area
-  float sbWidth, sbHeight;
-  mDeviceContext->GetScrollBarDimensions(sbWidth, sbHeight);
-  nscoord sbar = NSToCoordRound(sbWidth);
-  return mVisibleArea.width - sbar - 2*100;
-#endif
 }
 
 nscoord PrintPreviewContext::GetPageHeight()
 {
-#if 0
   // XXX assumes a 1/2 margin around all sides
   return (nscoord) NS_INCHES_TO_TWIPS(10);
-#else
-  // For testing purposes make the page height 60% of the visible area
-  return mVisibleArea.height * 60 / 100;
-#endif
 }
 
 NS_LAYOUT nsresult
