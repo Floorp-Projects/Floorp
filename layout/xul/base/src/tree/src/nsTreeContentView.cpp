@@ -906,20 +906,37 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
   if (childTag == nsXULAtoms::treeitem ||
       childTag == nsXULAtoms::treeseparator) {
     PRInt32 parentIndex = -1;
+    PRBool insertRow = PR_FALSE;
 
     nsCOMPtr<nsIContent> parent;
     aContainer->GetParent(*getter_AddRefs(parent));
     nsCOMPtr<nsIAtom> parentTag;
     parent->GetTag(*getter_AddRefs(parentTag));
-    if (parentTag != nsXULAtoms::tree)
+    if (parentTag == nsXULAtoms::tree) {
+      // Allow insertion to the outermost container.
+      insertRow = PR_TRUE;
+    }
+    else {
+      // Test insertion to an inner container.
+
+      // First try to find this parent in our array of rows, if we find one
+      // we can be sure that all other parents are open too.
       parentIndex = FindContent(parent);
+      if (parentIndex >= 0) {
+        // Got it, now test if it is open.
+        if (((Row*)mRows[parentIndex])->IsOpen())
+          insertRow = PR_TRUE;
+      }
+    }
 
-    PRInt32 index = 0;
-    GetIndexInSubtree(aContainer, aChild, &index);
+    if (insertRow) {
+      PRInt32 index = 0;
+      GetIndexInSubtree(aContainer, aChild, &index);
 
-    PRInt32 count;
-    InsertRow(parentIndex, index, aChild, &count);
-    mBoxObject->RowCountChanged(parentIndex + index + 1, count);
+      PRInt32 count;
+      InsertRow(parentIndex, index, aChild, &count);
+      mBoxObject->RowCountChanged(parentIndex + index + 1, count);
+    }
   }
   else if (childTag == nsHTMLAtoms::option) {
     PRInt32 count;
