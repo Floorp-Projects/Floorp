@@ -254,7 +254,7 @@ pref("intl.auto_detect_encoding",           true);
 pref("intl.character_set",                  2);     // CS_LATIN1
 pref("intl.font_encoding",                  6);     // CS_MAC_ROMAN
 
-pref("intl.charset_menu.static",           "iso-8859-1, iso-2022-jp, shift_jis, euc-jp,big5, x-euc-tw, gb2312, euc-kr, utf-7, utf-8");
+pref("intl.charset_menu.static",           "iso-8859-1, iso-2022-jp, shift_jis, euc-jp");
 pref("intl.charset_menu.cache",            "");
 
 pref("browser.enable_webfonts",         true);
