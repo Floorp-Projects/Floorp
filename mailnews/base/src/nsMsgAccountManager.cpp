@@ -171,10 +171,9 @@ nsresult nsMsgAccountManager::Init()
   {    
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     observerService->AddObserver(this, topic.get());
-    topic.AssignWithConversion("quit-application");
-    observerService->AddObserver(this, topic.get());
-    topic.Assign(NS_LITERAL_STRING("network:offline-status-changed"));
-    observerService->AddObserver(this, topic.get());
+    observerService->AddObserver(this, NS_LITERAL_STRING("quit-application").get());
+    observerService->AddObserver(this, NS_LITERAL_STRING("network:offline-status-changed").get());
+    observerService->AddObserver(this, NS_LITERAL_STRING("profile-before-change").get());
   }
 
   return NS_OK;
@@ -189,8 +188,10 @@ nsresult nsMsgAccountManager::Shutdown()
   CloseCachedConnections();
   UnloadAccounts();
 
-  if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
-
+  if (m_prefs) {
+    nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
+    m_prefs = 0;
+  }
 
   m_haveShutdown = PR_TRUE;
   return NS_OK;
@@ -212,6 +213,7 @@ NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnicha
   nsAutoString quitApplicationString;
   quitApplicationString.AssignWithConversion("quit-application");
   nsAutoString offlineStatusChangedString(NS_LITERAL_STRING("network:offline-status-changed"));
+  NS_NAMED_LITERAL_STRING(beforeProfileChangeString, "profile-before-change");
   if(topicString == shutdownString)
   {
     Shutdown();
@@ -229,6 +231,9 @@ NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnicha
       if (dataString == someDataString)
         CloseCachedConnections();
     }
+  }
+  else if (beforeProfileChangeString.Equals(topicString)) {
+    Shutdown();
   }
 	
  return NS_OK;
@@ -836,6 +841,10 @@ nsMsgAccountManager::hashUnloadServer(nsHashKey *aKey, void *aData,
 
 	nsCOMPtr<nsIFolder> rootFolder;
 	rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+
+    accountManager->mFolderListeners->EnumerateForwards(removeListenerFromFolder,
+                                        (void *)(nsIFolder*)rootFolder);
+
 	if(NS_SUCCEEDED(rv))
 		rootFolder->Shutdown(PR_TRUE);
 

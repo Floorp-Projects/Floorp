@@ -44,6 +44,8 @@
 #include "nsIAppShellService.h"
 #include "nsIProfileInternal.h"
 #include "rdf.h"
+#include "nsIXULWindow.h"
+#include "nsIInterfaceRequestor.h"
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -310,6 +312,7 @@ public:
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
     NS_IMETHOD StartServerMode();
+    NS_IMETHOD OnLastWindowClosing( nsIXULWindow *aWindow );
     NS_IMETHOD SetIsServerMode( PRBool isServerMode );
 
     // The "old" Start method (renamed).
@@ -362,6 +365,8 @@ private:
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
     static char *mAppName;
+    static nsIDOMWindow *mInitialWindow;
+    static nsXPIDLString mLastProfileName;
     friend struct MessageWindow;
 }; // nsNativeAppSupportWin
 
@@ -661,6 +666,8 @@ int   nsNativeAppSupportWin::mConversations = 0;
 HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
+nsIDOMWindow* nsNativeAppSupportWin::mInitialWindow = nsnull;
+nsXPIDLString nsNativeAppSupportWin::mLastProfileName;
 
 NOTIFYICONDATA nsNativeAppSupportWin::mIconData = { sizeof(NOTIFYICONDATA),
                                                     0,
@@ -1448,9 +1455,24 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
 nsresult
 nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
 {
-  nsresult rv = NS_OK;  
-  nsCOMPtr<nsIAppShellService> appShell = do_GetService( "@mozilla.org/appshell/appShellService;1", &rv );
+  nsresult rv;  
+
+  nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  // If we have a profile, everything is fine.
+  PRBool haveProfile;
+  rv = profileMgr->IsCurrentProfileAvailable(&haveProfile);
+  if (NS_SUCCEEDED(rv) && haveProfile)
+      return NS_OK;
+  
+  // If the profile selection is happening, fail.
+  PRBool doingProfileStartup;
+  rv = profileMgr->GetIsStartingUp(&doingProfileStartup);
+  if (NS_FAILED(rv) || doingProfileStartup) return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsINativeAppSupport> nativeApp;
   rv = appShell->GetNativeAppSupport(getter_AddRefs(nativeApp));
   if (NS_FAILED(rv)) return rv;
@@ -1458,25 +1480,12 @@ nsNativeAppSupportWin::EnsureProfile(nsICmdLineService* args)
   rv = nativeApp->GetNeedsProfileUI(&needsProfileUI);
   if (NS_FAILED(rv)) return rv; 
 
-  nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
- 
-  if (needsProfileUI) {
-    // We need profile UI because we started in
-    // server mode and could not show it then.
-    rv = profileMgr->StartupWithArgs(args, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-    nativeApp->SetNeedsProfileUI(PR_FALSE);
-  }
-  else {
-    // Even if not started in server mode, ensure
-    // that we have a profile. We can hit this case
-    // if somebody double-clicks the app twice.
-    PRBool haveProfile = PR_FALSE;
-    (void)profileMgr->IsCurrentProfileAvailable(&haveProfile);
-    if (!haveProfile) return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
+  if (needsProfileUI)
+    rv = appShell->DoProfileStartup(args, PR_TRUE);
+  else
+    rv = profileMgr->SetCurrentProfile(mLastProfileName.get());
+
+  return rv;
 }
 
 nsresult
@@ -1798,6 +1807,7 @@ nsNativeAppSupportWin::StartServerMode() {
     if ( !newWindow ) {
         return NS_OK;
     }
+    mInitialWindow = newWindow;
 
     // Hide this window by re-parenting it (to ensure it doesn't appear).
     ReParent( newWindow, (HWND)MessageWindow() );
@@ -1817,6 +1827,33 @@ nsNativeAppSupportWin::SetIsServerMode( PRBool isServerMode ) {
     return nsNativeAppSupportBase::SetIsServerMode( isServerMode );
 }
 
+NS_IMETHODIMP
+nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
+ 
+    nsresult rv;
+
+    if (!mServerMode)
+        return NS_OK;
+
+    // If the last window closed is our special "turbo" window made
+    // in StartServerMode(), don't do anything.
+    nsCOMPtr<nsIDocShell> docShell;
+    (void)aWindow->GetDocShell(getter_AddRefs(docShell));
+    nsCOMPtr<nsIDOMWindow> domWindow(do_GetInterface(docShell));
+    if (domWindow == mInitialWindow) {
+        mInitialWindow = nsnull;
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIProfileInternal> profileMgr(do_GetService(NS_PROFILE_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+    rv = profileMgr->GetCurrentProfile(getter_Copies(mLastProfileName));
+    if (NS_FAILED(rv)) return rv;
+    rv = profileMgr->ShutDownCurrentProfile(nsIProfile::SHUTDOWN_PERSIST);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
 
 // go through the command line arguments, and try to load a handler
 // for one, and when we do, get the chrome URL for its task

@@ -250,6 +250,7 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
 nsProfile::nsProfile()
 {
     NS_INIT_REFCNT();
+    mStartingUp = PR_FALSE;
     mAutomigrate = PR_FALSE;
     mOutofDiskSpace = PR_FALSE;
     mDiskSpaceErrorQuitCalled = PR_FALSE;
@@ -370,6 +371,17 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
 {
     nsresult rv;
 
+    struct ScopeFlag
+    {
+        ScopeFlag(PRBool *flagPtr) : mFlagPtr(flagPtr)
+        { *mFlagPtr = PR_TRUE; }
+
+        ~ScopeFlag()
+        { *mFlagPtr = PR_FALSE; }
+
+        PRBool *mFlagPtr;
+    };
+
     // initializations for profile manager
     PRBool profileDirSet = PR_FALSE;
     nsCString profileURLStr("");
@@ -378,8 +390,10 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     printf("Profile Manager : Profile Wizard and Manager activites : Begin\n");
 #endif
 
+    ScopeFlag startupFlag(&mStartingUp);
+
     if (cmdLineArgs)
-        rv = ProcessArgs(cmdLineArgs, &profileDirSet, profileURLStr);
+        rv = ProcessArgs(cmdLineArgs, canInteract, &profileDirSet, profileURLStr);
 
     // This boolean is set only when an automigrated user runs out of disk space
     // and chooses to cancel further operations from the dialogs presented...
@@ -391,6 +405,15 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
 
         if (NS_FAILED(rv)) return rv;
     }
+
+    // Ensure that by this point we have a current profile.
+    // If -CreateProfile was used, we won't, and we're supposed to exit.
+    nsXPIDLString currentProfileStr;
+    rv = GetCurrentProfile(getter_Copies(currentProfileStr));
+    if (NS_FAILED(rv) || (*(const PRUnichar*)currentProfileStr == 0)) {
+        return NS_ERROR_ABORT;
+    }
+
 
     // check UILocale is specified on profileManager, otherwise,
     // when -UILocale option is specified, install the UILocale
@@ -464,6 +487,13 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsProfile::GetIsStartingUp(PRBool *aIsStartingUp)
+{
+    NS_ENSURE_ARG_POINTER(aIsStartingUp);
+    *aIsStartingUp = mStartingUp;
+    return NS_OK;
+}
 
 nsresult
 nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
@@ -586,7 +616,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
 }
 
 nsresult
-nsProfile::ConfirmAutoMigration(PRBool *confirmed)
+nsProfile::ConfirmAutoMigration(PRBool canInteract, PRBool *confirmed)
 {
     NS_ENSURE_ARG_POINTER(confirmed);
     *confirmed = PR_FALSE;
@@ -603,7 +633,10 @@ nsProfile::ConfirmAutoMigration(PRBool *confirmed)
         return NS_OK;
     }
     
-    // Put up a confirm dialog and ask the user
+    // If allowed, put up a confirm dialog and ask the user
+    if (!canInteract)
+        return NS_ERROR_PROFILE_REQUIRES_INTERACTION;
+
     nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
 
@@ -670,6 +703,7 @@ nsProfile::AutoMigrate()
 
 nsresult
 nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
+                       PRBool canInteract,
                        PRBool* profileDirSet,
                        nsCString & profileURLStr)
 {
@@ -868,7 +902,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             }
             else if (num4xProfiles == 1 && numProfiles == 0) {
                 PRBool confirmed = PR_FALSE;
-                if (NS_SUCCEEDED(ConfirmAutoMigration(&confirmed)) && confirmed)
+                if (NS_SUCCEEDED(ConfirmAutoMigration(canInteract, &confirmed)) && confirmed)
                     AutoMigrate();
                 else
                     profileURLStr = PROFILE_MANAGER_URL;

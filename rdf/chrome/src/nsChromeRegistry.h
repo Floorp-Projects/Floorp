@@ -86,6 +86,7 @@ protected:
   nsresult GetUserSheetURL(PRBool aIsChrome, nsCString & aURL);
   nsresult GetFormSheetURL(nsCString& aURL);
   
+  nsresult LoadInstallDataSource();
   nsresult LoadProfileDataSource();
   
   nsresult FlushCaches();
