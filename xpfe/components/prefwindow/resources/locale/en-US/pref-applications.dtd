@@ -2,7 +2,7 @@
 
 <!--LOCALIZATION NOTE : FILE The Applications prefs dialog -->
 <!ENTITY window.title                   "Advanced">
-<!ENTITY lHeader                        "Applications">
+<!ENTITY lHeader                        "Helper Applications">
 <!ENTITY descript                       "Specify which application should handle each file type">
 <!ENTITY fileTypes.label                "File types:">
 <!ENTITY aimLaunchSelect.label          "AOL Instant Messenger Launch">
