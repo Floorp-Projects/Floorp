@@ -47,7 +47,6 @@ class basic_nsAWritableString
   {
     protected:
       typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
-      typedef typename basic_nsAReadableString<CharT>::ConstFragment    ConstFragment;
 
       struct Fragment
         {
@@ -203,7 +202,6 @@ class basic_nsAWritableString
           return Iterator(fragment, startPos, *this);
         }
 
-      virtual void Splice();
 
       virtual void SetCapacity( PRUint32 ) = 0;
       virtual void SetLength( PRUint32 ) = 0;
@@ -217,7 +215,9 @@ class basic_nsAWritableString
         }
 
 
-      // virtual PRBool SetCharAt( char_type, index_type ) = 0;
+      // PRBool SetCharAt( char_type, index_type ) = 0;
+
+
 
       // void ToLowerCase();
       // void ToUpperCase();
@@ -231,13 +231,19 @@ class basic_nsAWritableString
       // void CompressSet( ... );
       // void CompareWhitespace( ... );
 
-      virtual void Assign( const basic_nsAReadableString<CharT>& rhs );
 
-      // Assign
-      // Append( ... )
-      // Insert
 
-      // SetString
+      virtual void Assign( const basic_nsAReadableString<CharT>& rhs ) = 0;
+      // virtual void AssignChar( CharT ) = 0;
+
+      virtual void Append( const basic_nsAReadableString<CharT>& ) = 0;
+      virtual void AppendChar( CharT ) = 0;
+
+      virtual void Insert( const basic_nsAReadableString<CharT>&, PRUint32 atPosition ) = 0;
+      // virtual void InsertChar( CharT, PRUint32 atPosition ) = 0;
+
+      virtual void Cut( PRUint32 cutStart, PRUint32 cutEnd ) = 0;
+
 
       basic_nsAWritableString<CharT>&
       operator+=( const basic_nsAReadableString<CharT>& rhs )
@@ -269,21 +275,6 @@ class basic_nsAWritableString
   };
 
 NS_DEF_STRING_COMPARISONS(basic_nsAWritableString<CharT>)
-
-template <class CharT>
-void
-basic_nsAWritableString<CharT>::Splice()
-  {
-  }
-
-template <class CharT>
-void
-basic_nsAWritableString<CharT>::Assign( const basic_nsAReadableString<CharT>& rhs )
-    // Default implementation.  Derived classes may be able to do something smarter...
-  {
-    SetLength(rhs.Length());
-    std::copy(rhs.Begin(), rhs.End(), Begin());
-  }
 
 
 // operator>>
