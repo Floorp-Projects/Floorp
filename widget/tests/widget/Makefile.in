@@ -38,7 +38,7 @@ CPPSRCS = \
 	$(NULL)
 
 ifndef NECKO
-LIBS := 	\
+NET_LIBS = 	\
 	-lnetlib \
 	-lremoturl \
 	-lnetcnvts \
@@ -55,12 +55,12 @@ LIBS := 	\
 	$(NULL)
 
 else
-LIBS := 	\
+NET_LIBS = 	\
 	-lneckoutil_s \
 	$(NULL)
 endif
 
-LIBS += \
+LIBS = \
 	-lraptorgfx \
 	-lpref \
 	-lsecfree \
@@ -82,6 +82,7 @@ LIBS += \
 	-ljsurl \
 	-ljsdom \
 	-lraptorgfx \
+	$(NET_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
