@@ -85,7 +85,6 @@ nsMimeEmitter::StartHeader(PRBool rootMailHeader)
 {
   mDocHeader = rootMailHeader;
 
-  UtilityWrite("<img src=\"file://N:/MHTML/draft.eml?part=1.2\">");
   if (mDocHeader)
     UtilityWrite("<table BORDER=0 BGCOLOR=\"#99FF99\" >");
   else
