@@ -81,6 +81,8 @@ EX_LIBS = \
 	$(DIST)/bin/libxp.so \
 	$(DIST)/bin/libxpcom.so \
 	$(DIST)/bin/libzlib.so \
+	$(DIST)/bin/libpwcac.so \
+	$(DIST)/bin/libdbm.so \
 	$(NULL)
 
 PROGS   = $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
