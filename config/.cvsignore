@@ -14,3 +14,4 @@ nsBuildID.h
 trace.dll
 trace.exp
 trace.lib
+elf-dynstr-gc
