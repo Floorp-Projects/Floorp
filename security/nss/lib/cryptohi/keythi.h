@@ -202,6 +202,25 @@ struct SECKEYPublicKeyStr {
 };
 typedef struct SECKEYPublicKeyStr SECKEYPublicKey;
 
+#define CachedAttribute(attribute,setbit) \
+static const PRUint32 SECKEY_##attribute = 1 << setbit;
+
+/* bit flag definitions for staticflags */
+#define SECKEY_Attributes_Cached 0x1    /* bit 0 states
+                                           whether attributes are cached */
+CachedAttribute(CKA_PRIVATE,1) /* bit 1 is the value of CKA_PRIVATE */
+
+#define SECKEY_ATTRIBUTES_CACHED(key) \
+     (0 != (key->staticflags & SECKEY_Attributes_Cached))
+
+#define SECKEY_ATTRIBUTE_VALUE(key,attribute) \
+     (0 != (key->staticflags & SECKEY_##attribute))
+
+#define SECKEY_HAS_ATTRIBUTE_SET(key,attribute) \
+    (0 != (key->staticflags & SECKEY_Attributes_Cached)) ? \
+    (0 != (key->staticflags & SECKEY_##attribute)) : \
+    PK11_HasAttributeSet(key->pkcs11Slot,key->pkcs11ID,attribute)
+
 /*
 ** A generic key structure
 */ 
@@ -212,6 +231,7 @@ struct SECKEYPrivateKeyStr {
     CK_OBJECT_HANDLE pkcs11ID;  /* ID of pkcs11 object */
     PRBool pkcs11IsTemp;	/* temp pkcs11 object, delete it when done */
     void *wincx;		/* context for errors and pw prompts */
+    PRUint32 staticflags;       /* bit flag of cached PKCS#11 attributes */
 };
 typedef struct SECKEYPrivateKeyStr SECKEYPrivateKey;
 
