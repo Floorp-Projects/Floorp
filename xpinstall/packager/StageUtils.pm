@@ -322,6 +322,7 @@ sub GetProductBuildID
       $buildID =~ s/..*$aDefine\s+//;
       # strip out any quote characters
       $buildID =~ s/\"//g;
+      chomp ($buildID);
     }
   }
   close($fpInIt);
