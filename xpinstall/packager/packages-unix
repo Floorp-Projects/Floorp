@@ -170,6 +170,9 @@ bin/components/xpcom_components.xpt
 bin/components/xpcom_threads.xpt
 bin/components/autocomplete.so
 bin/components/autocomplete.xpt
+bin/components/xml-rpc.xpt
+bin/components/nsDictionary.js
+bin/components/nsXmlRpcClient.js
 
 bin/chrome/editor/*
 -bin/chrome/editor/content/EditorInitPage.html

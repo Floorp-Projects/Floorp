@@ -138,6 +138,9 @@ viewer:Components:xpconnect.xpt
 viewer:Components:xpinstall.xpt 
 viewer:Components:autocomplete.shlb 
 viewer:Components:autocomplete.xpt 
+viewer:Components:xml-rpc.xpt
+viewer:Components:nsDictionary.js
+viewer:Components:nsXmlRpcClient.js
 
 viewer:Components:Necko.shlb 
 viewer:Components:Necko2.shlb 

@@ -161,6 +161,9 @@ bin\components\xpinstall.xpt
 bin\components\xppref32.dll
 bin\components\autocomp.dll
 bin\components\autocomplete.xpt
+bin\components\xml-rpc.xpt
+bin\components\nsDictionary.js
+bin\components\nsXmlRpcClient.js
 bin\chrome\editor\*
 -bin\chrome\editor\content\EditorInitPage.html
 -bin\chrome\editor\content\EditorInitPagePlain.html
