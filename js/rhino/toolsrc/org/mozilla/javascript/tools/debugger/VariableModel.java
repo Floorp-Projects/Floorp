@@ -217,7 +217,7 @@ class VariableNode {
                 } else {
                     try {
                         result = ScriptableObject.getProperty(scope, name);
-                    } catch (Exception e) {
+                    } catch (RuntimeException e) {
                         result = e.getMessage();
                     }
                 }
