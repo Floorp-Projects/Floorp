@@ -86,6 +86,7 @@ outlinerchildren:-moz-outliner-line {
 /* ::::: outliner separator ::::: */
 
 outlinerchildren:-moz-outliner-separator {
+  -moz-appearance: separator;
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;
 }

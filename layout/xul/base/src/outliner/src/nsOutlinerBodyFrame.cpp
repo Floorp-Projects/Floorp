@@ -2041,31 +2041,45 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, const nsRect& aRowRec
     // Resolve style for the separator.
     nsCOMPtr<nsIStyleContext> separatorContext;
     GetPseudoStyleContext(nsXULAtoms::mozoutlinerseparator, getter_AddRefs(separatorContext));
-
-    // Get border style
-    const nsStyleBorder* borderStyle = (const nsStyleBorder*)separatorContext->GetStyleData(eStyleStruct_Border);
-
-    aRenderingContext.PushState();
-
-    PRUint8 side = NS_SIDE_TOP;
-    nscoord currY = rowRect.y + rowRect.height / 2;
-    for (PRInt32 i = 0; i < 2; i++) {
-      nscolor color;
-      PRBool transparent; PRBool foreground;
-      borderStyle->GetBorderColor(side, color, transparent, foreground);
-      aRenderingContext.SetColor(color);
-      PRUint8 style;
-      style = borderStyle->GetBorderStyle(side);
-      aRenderingContext.SetLineStyle(ConvertBorderStyleToLineStyle(style));
-
-      aRenderingContext.DrawLine(rowRect.x, currY, rowRect.x + rowRect.width, currY);
-
-      side = NS_SIDE_BOTTOM;
-      currY += 16;
+    PRBool useTheme = PR_FALSE;
+    nsCOMPtr<nsITheme> theme;
+    const nsStyleDisplay* displayData = (const nsStyleDisplay*)separatorContext->GetStyleData(eStyleStruct_Display);
+    if ( displayData->mAppearance ) {
+      aPresContext->GetTheme(getter_AddRefs(theme));
+      if (theme && theme->ThemeSupportsWidget(aPresContext, displayData->mAppearance))
+        useTheme = PR_TRUE;
     }
 
-    PRBool clipState;
-    aRenderingContext.PopState(clipState);
+    // use -moz-appearance if provided.
+    if ( useTheme ) 
+      theme->DrawWidgetBackground(&aRenderingContext, this, 
+                                    displayData->mAppearance, rowRect, aDirtyRect); 
+    else {
+      // Get border style
+      const nsStyleBorder* borderStyle = (const nsStyleBorder*)separatorContext->GetStyleData(eStyleStruct_Border);
+
+      aRenderingContext.PushState();
+
+      PRUint8 side = NS_SIDE_TOP;
+      nscoord currY = rowRect.y + rowRect.height / 2;
+      for (PRInt32 i = 0; i < 2; i++) {
+        nscolor color;
+        PRBool transparent; PRBool foreground;
+        borderStyle->GetBorderColor(side, color, transparent, foreground);
+        aRenderingContext.SetColor(color);
+        PRUint8 style;
+        style = borderStyle->GetBorderStyle(side);
+        aRenderingContext.SetLineStyle(ConvertBorderStyleToLineStyle(style));
+
+        aRenderingContext.DrawLine(rowRect.x, currY, rowRect.x + rowRect.width, currY);
+
+        side = NS_SIDE_BOTTOM;
+        currY += 16;
+      }
+
+      PRBool clipState;
+      aRenderingContext.PopState(clipState);
+    }
   }
   else {
     // Now loop over our cells. Only paint a cell if it intersects with our dirty rect.

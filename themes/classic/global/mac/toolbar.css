@@ -106,6 +106,7 @@ toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-texture {
 /* ::::: toolbarseparator ::::: */
 
 toolbarseparator {
+  -moz-appearance       : separator;
   margin                : 2px 0.2em 2px 0.2em;
   border-right          : 1px solid ThreeDHighlight; 
   border-left           : 1px solid ThreeDShadow;

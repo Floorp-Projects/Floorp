@@ -109,6 +109,7 @@ protected:
   void DrawTab ( const Rect& inBoxRect, PRBool inIsDisabled, PRBool inIsFrontmost, 
                   PRBool inIsHorizontal, PRBool inTabBottom, PRInt32 inState ) ;
   void DrawTabPanel ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
+  void DrawSeparator ( const Rect& inBoxRect, PRBool inIsDisabled ) ;
 //  void DrawScrollArrows ( const Rect& inScrollbarRect, PRBool inIsDisabled, PRInt32 inWidget, PRInt32 inState ) ;
   
   void DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PRBool inIsDefault, 
