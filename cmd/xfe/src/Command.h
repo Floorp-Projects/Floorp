@@ -60,8 +60,8 @@ typedef char* CommandType;
 
 class Command {
 public:
-	static CommandType intern(char* foo);
-	static CommandType convertOldRemote(char* foo);
+	static CommandType intern(const char* foo);
+	static CommandType convertOldRemote(const char* foo);
 
 	static char* getString(CommandType command) 
 	{

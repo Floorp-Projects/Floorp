@@ -566,7 +566,7 @@ struct CommandList_t
 static CommandList_t* intern_list;
 
 char *
-Command::intern(char *foo)
+Command::intern(const char *foo)
 {
 	int middle, first, last;
 
@@ -653,6 +653,7 @@ static struct cmd_mapping mapping[] = {
 	{ "forward",		xfeCmdForward },
 	{ "home",			xfeCmdHome },
 	{ "abort",			xfeCmdStopLoading },
+	{ "stop",			xfeCmdStopLoading },
 	{ "viewHistory",	xfeCmdOpenHistory },
 
 	{ "viewBookmark",	xfeCmdOpenBookmarks },
@@ -681,7 +682,7 @@ static struct cmd_mapping mapping[] = {
 static int num_old_cmds = sizeof(mapping) / sizeof(mapping[0]);
 
 char *
-Command::convertOldRemote(char *foo)
+Command::convertOldRemote(const char *foo)
 {
 	int i;
 
