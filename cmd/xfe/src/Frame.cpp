@@ -1457,17 +1457,6 @@ XFE_Frame::doClose()
 							
 	 	if (m_context->is_grid_cell)
 			CONTEXT_DATA (m_context)->being_destroyed = True;
-#ifdef notyet
-		if (context->type == MWContextSaveToDisk) {
-			/* We might be in an extend text selection on the text widgets.
-			   If we destroy this now, we will dump core. So before destroying
-			   we will disable extend of the selection. */
-			XtCallActionProc(CONTEXT_DATA (context)->url_label, "extend-end",
-				NULL, NULL, 0);
-			XtCallActionProc(CONTEXT_DATA (context)->url_text, "extend-end",
-				NULL, NULL, 0);
-		}
-#endif
 		if (m_context->is_grid_cell)
 			w = d->main_pane;
 							
