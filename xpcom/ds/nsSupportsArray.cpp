@@ -18,6 +18,7 @@
 
 #include "nsSupportsArray.h"
 #include "nsSupportsArrayEnumerator.h"
+#include <string.h>
 
 static const PRUint32 kGrowArrayBy = 8;
 
