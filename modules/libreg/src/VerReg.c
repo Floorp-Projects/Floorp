@@ -1014,8 +1014,8 @@ VR_INTERFACE(REGERR) VR_ValidateComponent(char *component_path)
         uint32 len;
         struct stat  statStruct;
 
-        // directories are stored with a trailing separator -- if we
-        // have one of these we have to remove it for stat to work
+        /* directories are stored with a trailing separator -- if we */
+        /* have one of these we have to remove it for stat to work */
         len = strlen(path);
         if ( path[len-1] == VR_FILE_SEP )
             path[len-1] = 0;
