@@ -645,7 +645,7 @@ NS_IMETHODIMP_(nsrefcnt) _class::AddRef(void)                                 \
  */
 
 #define NS_IMPL_THREADSAFE_RELEASE(_class)                                    \
-nsrefcnt _class::Release(void)                                                \
+NS_IMETHODIMP_(nsrefcnt) _class::Release(void)                                \
 {                                                                             \
   nsrefcnt count;                                                             \
   NS_PRECONDITION(0 != mRefCnt, "dup release");                               \
