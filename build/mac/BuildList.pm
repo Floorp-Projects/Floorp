@@ -224,7 +224,8 @@ sub DistMozilla()
 		InstallFromManifest(":mozilla:jpeg:MANIFEST",									":mozilla:dist:jpeg:");
 		
 		#JSJ
-		InstallFromManifest(":mozilla:js:jsj:MANIFEST",									":mozilla:dist:jsj:");
+		# beard: this conflicts with LiveConnect's jsjava.h.
+		#InstallFromManifest(":mozilla:js:jsj:MANIFEST",								":mozilla:dist:jsj:");
 		
 		#JSDEBUG
 		InstallFromManifest(":mozilla:js:jsd:MANIFEST",									":mozilla:dist:jsdebug:");
