@@ -39,6 +39,8 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+#include "nsSpecialSystemDirectory.h"
+#include "nsIURL.h"
 
  /************************************************************************
   And now for the main class -- nsExpatTokenizer...
@@ -48,6 +50,7 @@ static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITokenizerIID,      NS_ITOKENIZER_IID);
 static NS_DEFINE_IID(kHTMLTokenizerIID,   NS_HTMLTOKENIZER_IID);
 static NS_DEFINE_IID(kClassIID,           NS_EXPATTOKENIZER_IID);
+
 #ifndef NECKO
 static NS_DEFINE_IID(kNetServiceCID,      NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kINetServiceIID,     NS_INETSERVICE_IID);
@@ -59,6 +62,7 @@ static nsDeque* gTokenDeque=0;
 static XML_Parser gExpatParser=0;
 static const char* kDocTypeDeclPrefix = "<!DOCTYPE";
 static const char* kChromeProtocol = "chrome";
+static const char* kDTDDirectory = "dtd/";
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -495,6 +499,65 @@ void nsExpatTokenizer::HandleUnparsedEntityDecl(void *userData,
   NS_NOTYETIMPLEMENTED("Error: nsExpatTokenizer::HandleUnparsedEntityDecl() not yet implemented.");
 }
 
+
+// aDTD is an in/out parameter.  Returns true if the aDTD is a chrome url or if the
+// filename contained within the url exists in the special DTD directory ("dtd"
+// relative to the current process directory).  For the latter case, aDTD is set
+// to the file: url that points to the DTD file found in the local DTD directory.
+static PRBool
+IsLoadableDTD(nsIURI** aDTD)
+{
+  char* scheme = nsnull;
+  PRBool isLoadable = PR_FALSE;
+  nsresult res = NS_OK;
+
+  if (!aDTD || !*aDTD) {
+    NS_ASSERTION(0, "Null parameter.");
+    return PR_FALSE;
+  }
+
+  // Return true if the url is a chrome url
+  res = (*aDTD)->GetScheme(&scheme);
+  if (NS_SUCCEEDED(res) && nsnull != scheme) {
+    if (PL_strcmp(scheme, kChromeProtocol) == 0)
+      isLoadable = PR_TRUE;
+    nsCRT::free(scheme);
+  }
+
+  // If the url is not a chrome url, check to see if a DTD file of the same name
+  // exists in the special DTD directory
+  if (!isLoadable) {   
+    nsCOMPtr<nsIURL> dtdURL;
+    dtdURL = do_QueryInterface(*aDTD, &res);
+    if (NS_SUCCEEDED(res)) {
+      char* fileName = nsnull;    
+      res = dtdURL->GetFileName(&fileName);
+      if (NS_SUCCEEDED(res) && nsnull != fileName) {
+        nsSpecialSystemDirectory dtdPath(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+        nsString path(kDTDDirectory);        
+        path.Append(fileName);
+        dtdPath += path;
+        if (dtdPath.Exists()) {
+          // The DTD was found in the local DTD directory.
+          // Set aDTD to a file: url pointing to the local DTD
+          nsFileURL dtdFile(dtdPath);
+          nsCOMPtr<nsIURI> dtdURI;
+          res = NS_NewURI(getter_AddRefs(dtdURI), dtdFile.GetURLString());
+          if (NS_SUCCEEDED(res) && nsnull != dtdURI) {
+            NS_IF_RELEASE(*aDTD);
+            *aDTD = dtdURI;
+            NS_ADDREF(*aDTD);
+            isLoadable = PR_TRUE;
+          }
+        }
+        nsCRT::free(fileName);
+      }
+    }
+  }  
+
+  return isLoadable;
+}
+
 nsresult
 nsExpatTokenizer::OpenInputStream(const nsString& aURLStr, 
                                   const nsString& aBaseURL, 
@@ -539,12 +602,7 @@ nsExpatTokenizer::OpenInputStream(const nsString& aURLStr,
     nsCOMPtr<nsIURI> uri = nsnull;
     rv = NS_NewURI(getter_AddRefs(uri), aURLStr, baseURI);
     if (NS_SUCCEEDED(rv) && nsnull != uri) {
-      char* scheme = nsnull;
-      rv = uri->GetScheme(&scheme);
-      if (NS_SUCCEEDED(rv) &&
-        nsnull != scheme &&
-        PL_strcmp(scheme, kChromeProtocol) == 0 ) 
-      {
+      if (IsLoadableDTD((nsIURI**) &uri)) {
         rv = NS_OpenURI(in, uri);
         char* absURL = nsnull;
         uri->GetSpec(&absURL);
@@ -554,7 +612,6 @@ nsExpatTokenizer::OpenInputStream(const nsString& aURLStr,
       else {
         rv = NS_ERROR_NOT_IMPLEMENTED;
       }
-      if (scheme) nsCRT::free(scheme);
     }    
   }
 #endif // NECKO
@@ -632,7 +689,7 @@ int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
   if (NS_SUCCEEDED(rv) && nsnull != in) {
     PRUint32 retLen = 0;
     PRUnichar *uniBuf = nsnull;
-    rv = LoadStream(in, uniBuf, retLen);    
+    rv = LoadStream(in, uniBuf, retLen);
 
     // Pass the buffer to expat for parsing
     if (NS_SUCCEEDED(rv) && nsnull != uniBuf) {    
@@ -649,7 +706,7 @@ int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
         XML_ParserFree(entParser);
       }
 
-      PR_FREEIF(uniBuf);      
+      PR_FREEIF(uniBuf);
     }
   }
 #else /* ! XML_DTD */
