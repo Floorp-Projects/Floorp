@@ -19,8 +19,44 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..
+DEPTH=..\..\..
 
-DIRS=public src
+LIBRARY_NAME=raptorxbl_s 
+MODULE=raptor 
+REQUIRES=xpcom raptor pref
+
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+
+CPPSRCS=					\
+  nsXBLService.cpp \
+	$(NULL)
+
+CPP_OBJS=					\
+  .\$(OBJDIR)\nsXBLService.obj \
+	$(NULL)
+
+EXPORTS =					\
+	$(NULL)
+
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
+  -I..\..\html\style\src -I..\..\html\base\src -I$(PUBLIC)\dom \
+   -I..\..\html\document\src \
+   -I..\..\html\content\src \
+   -I..\..\html\table\src \
+   -I..\..\html\forms\src \
+  -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref \
+  -I..\..\xml\content\src \
+  -I..\public
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
+
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
