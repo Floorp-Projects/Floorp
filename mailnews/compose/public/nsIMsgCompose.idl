@@ -23,7 +23,7 @@
 
 %{ C++
 #include "nsIDOMWindow.h"
-#include "nsIDOMEditorAppCore.h"
+#include "nsIEditorShell.h"
 %}
 
 
