@@ -627,7 +627,39 @@ NS_IMETHODIMP nsImapMailFolder::BuildFolderURL(char **url)
     
 NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals() 
 {
-    nsresult rv = NS_ERROR_FAILURE;
+	// could we move this into nsMsgDBFolder, or do we need to deal
+	// with the pending imap counts?
+	nsresult rv;
+
+	PRInt32 oldUnreadMessages = mNumUnreadMessages;
+	PRInt32 oldTotalMessages = mNumTotalMessages;
+	//We need to read this info from the database
+	ReadDBFolderInfo(PR_TRUE);
+
+	// If we asked, but didn't get any, stop asking
+	if (mNumUnreadMessages == -1)
+		mNumUnreadMessages = -2;
+
+	//Need to notify listeners that total count changed.
+	if(oldTotalMessages != mNumTotalMessages)
+	{
+		char *oldTotalMessagesStr = PR_smprintf("%d", oldTotalMessages);
+		char *totalMessagesStr = PR_smprintf("%d",mNumTotalMessages);
+		NotifyPropertyChanged("TotalMessages", oldTotalMessagesStr, totalMessagesStr);
+		PR_smprintf_free(totalMessagesStr);
+		PR_smprintf_free(oldTotalMessagesStr);
+	}
+
+	if(oldUnreadMessages != mNumUnreadMessages)
+	{
+		char *oldUnreadMessagesStr = PR_smprintf("%d", oldUnreadMessages);
+		char *totalUnreadMessages = PR_smprintf("%d",mNumUnreadMessages);
+		NotifyPropertyChanged("TotalUnreadMessages", oldUnreadMessagesStr, totalUnreadMessages);
+		PR_smprintf_free(totalUnreadMessages);
+		PR_smprintf_free(oldUnreadMessagesStr);
+	}
+
+	return NS_OK;
     return rv;
 }
     
@@ -786,8 +818,27 @@ NS_IMETHODIMP nsImapMailFolder::Adopt(nsIMsgFolder *srcFolder,
 nsresult nsImapMailFolder::GetDBFolderInfoAndDB(
     nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
+    nsresult openErr=NS_ERROR_UNEXPECTED;
+    if(!db || !folderInfo)
+		return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
+
+	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+	nsCOMPtr<nsIMsgDatabase> mailDB;
+
+	nsresult rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(mailDBFactory));
+	if (NS_SUCCEEDED(rv) && mailDBFactory)
+	{
+	   nsNativeFileSpec dbName;
+
+		GetPathName(dbName);
+		openErr = mailDBFactory->Open(dbName, PR_FALSE, (nsIMsgDatabase **) &mailDB, PR_FALSE);
+	}
+
+    *db = mailDB;
+	NS_IF_ADDREF(*db);
+    if (NS_SUCCEEDED(openErr)&& *db)
+        openErr = (*db)->GetDBFolderInfo(folderInfo);
+    return openErr;
 }
 
 NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages)
