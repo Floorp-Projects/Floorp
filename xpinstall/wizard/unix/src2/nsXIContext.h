@@ -77,12 +77,9 @@ public:
     int                 nextID;     /* signal handler id for next btn */
     int                 bMoving;    /* when moving between dlgs signals are
                                        emitted twice; this notes the state */
-    int                 bThSpawned; /* boolean set so we can "if join" the 
-                                       engine thread */
     int                 bDone;      /* engine thread sets boolean when done
                                        so that ui/main thread can exit */
 
-    pthread_t           eng_th;     /* engine thread: so we can join later */
     pthread_mutex_t     prog_mutex; /* mutex for sync between ui and eng th */
     pthread_cond_t      prog_cv;    /* cond var for ui/eng th communication */
     int                 threadTurn; /* toggle between engine and ui threads */
