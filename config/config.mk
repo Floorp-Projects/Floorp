@@ -45,6 +45,9 @@ endif
 ifeq ($(OS_ARCH),BSD_386)
 OS_ARCH		:= BSD_OS
 endif
+ifeq ($(OS_ARCH),dgux)
+OS_ARCH		:= DGUX
+endif
 ifeq ($(OS_ARCH),IRIX64)
 OS_ARCH		:= IRIX
 endif
@@ -283,7 +286,7 @@ endif
 # be put in the library directories where it belongs so that it can
 # get exported to dist properly.
 #
-INCLUDES	= $(LOCAL_PREINCLUDES) $(MODULE_PREINCLUDES) -I$(topsrcdir)/include $(LOCAL_INCLUDES) $(OS_INCLUDES)
+INCLUDES	= $(LOCAL_PREINCLUDES) $(MODULE_PREINCLUDES) -I$(topsrcdir)/include $(LOCAL_INCLUDES) $(OS_INCLUDES) $(G++INCLUDES)
 
 LIBNT		= $(DIST)/lib/libnt.$(LIB_SUFFIX)
 LIBAWT		= $(DIST)/lib/libawt.$(LIB_SUFFIX)
@@ -343,11 +346,11 @@ endif
 # Need to define these before include the $ARCH.mk makefile
 #
 ifneq (,$(filter Linux,$(OS_ARCH)))
-MOZILLA_DETECT			= 1
-MOZILLA_DETECT_DIR		= $(DEPTH)/config/mkdetect
+MOZILLA_DETECT		= 1
+MOZILLA_DETECT_DIR	= $(DEPTH)/config/mkdetect
 MOZILLA_DETECT_IDENT	= $(shell $(topsrcdir)/config/mkdetect/detect_hostident.sh)
-MOZILLA_DETECT_NAME		= detect_$(MOZILLA_DETECT_IDENT)_gen.mk
-MOZILLA_DETECT_GEN		= $(MOZILLA_DETECT_DIR)/$(MOZILLA_DETECT_NAME)
+MOZILLA_DETECT_NAME	= detect_$(MOZILLA_DETECT_IDENT)_gen.mk
+MOZILLA_DETECT_GEN	= $(MOZILLA_DETECT_DIR)/$(MOZILLA_DETECT_NAME)
 endif
 
 #
