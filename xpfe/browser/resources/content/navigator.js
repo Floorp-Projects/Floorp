@@ -46,7 +46,6 @@ var gBrowser = null;
 // focused frame URL
 var gFocusedURL = null;
 
-
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.
@@ -760,6 +759,13 @@ function BrowserOpenTab()
 function delayedOpenWindow(chrome,flags,url)
 {
   setTimeout("openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
+}
+
+/* Required because the tab needs time to set up its content viewers and get the load of
+   the URI kicked off before becoming the active content area. */
+function delayedOpenTab(url)
+{
+  setTimeout(function(aTabElt) { getBrowser().selectedTab = aTabElt; }, 0, getBrowser().addTab(url));
 }
 
 function BrowserOpenFileWindow()
