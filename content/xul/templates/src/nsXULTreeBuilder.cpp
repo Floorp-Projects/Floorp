@@ -1060,7 +1060,7 @@ nsXULOutlinerBuilder::GetTemplateActionCellFor(PRInt32 aRow,
             nsAutoString ref;
             child->GetAttribute(kNameSpaceID_None, nsXULAtoms::ref, ref);
 
-            if (ref == aColID) {
+            if (ref.Equals(aColID)) {
                 NS_ADDREF(*aResult = child.get());
                 return NS_OK;
             }
