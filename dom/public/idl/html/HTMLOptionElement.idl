@@ -6,7 +6,7 @@
 
    readonly attribute  HTMLFormElement      form;
             attribute  boolean              defaultSelected;
-   readonly attribute  DOMString            text;
+            attribute  DOMString            text;
             attribute  long                 index;
             attribute  boolean              disabled;
             attribute  DOMString            label;
