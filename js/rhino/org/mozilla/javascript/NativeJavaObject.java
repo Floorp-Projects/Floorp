@@ -97,13 +97,17 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     }
     
     public Scriptable getPrototype() {
-        if (javaObject.getClass() == ScriptRuntime.StringClass) {
+    	if (prototype == null && javaObject.getClass() == ScriptRuntime.StringClass) {
             return ScriptableObject.getClassPrototype(parent, "String");
         }
-        return null;
+        return prototype;
     }
 
-    public void setPrototype(Scriptable prototype) {
+    /**
+     * Sets the prototype of the object.
+     */
+    public void setPrototype(Scriptable m) {
+    	prototype = m;
     }
 
     /**
@@ -863,6 +867,11 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         }
     }
         
+    /**
+     * The prototype of this object.
+     */
+    protected Scriptable prototype;
+
     /**
      * The parent scope of this object.
      */
