@@ -43,3 +43,8 @@ interface nsIToolkit : nsISupports
   void Init(in PRThread aThread);
 
 };
+
+
+%{ C++
+extern NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult);
+%}

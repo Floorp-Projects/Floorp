@@ -24,6 +24,12 @@
 
 NS_IMPL_ISUPPORTS(nsToolkit, NS_ITOOLKIT_IID)
 
+//
+// Static thread local storage index of the Toolkit 
+// object associated with a given thread...
+//
+static PRUintn gToolkitTLSIndex = 0;
+
 HINSTANCE nsToolkit::mDllInstance = 0;
 
 nsWindow     *MouseTrailer::mCaptureWindow  = NULL;
@@ -138,6 +144,9 @@ nsToolkit::~nsToolkit()
     // Destroy the Dispatch Window
     ::DestroyWindow(mDispatchWnd);
     mDispatchWnd = NULL;
+
+    // Remove the TLS reference to the toolkit...
+    PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
 
 
@@ -239,6 +248,58 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
 
     return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
+
+
+
+//-------------------------------------------------------------------------
+//
+// Return the nsIToolkit for the current thread.  If a toolkit does not
+// yet exist, then one will be created...
+//
+//-------------------------------------------------------------------------
+NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
+{
+  nsIToolkit* toolkit = nsnull;
+  nsresult rv = NS_OK;
+  PRStatus status;
+
+  // Create the TLS index the first time through...
+  if (0 == gToolkitTLSIndex) {
+    status = PR_NewThreadPrivateIndex(&gToolkitTLSIndex, NULL);
+    if (PR_FAILURE == status) {
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    toolkit = (nsIToolkit*)PR_GetThreadPrivate(gToolkitTLSIndex);
+
+    //
+    // Create a new toolkit for this thread...
+    //
+    if (!toolkit) {
+      toolkit = new nsToolkit();
+
+      if (!toolkit) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      } else {
+        NS_ADDREF(toolkit);
+        toolkit->Init(PR_GetCurrentThread());
+        //
+        // The reference stored in the TLS is weak.  It is removed in the
+        // nsToolkit destructor...
+        //
+        PR_SetThreadPrivate(gToolkitTLSIndex, (void*)toolkit);
+      }
+    } else {
+      NS_ADDREF(toolkit);
+    }
+    *aResult = toolkit;
+  }
+
+  return rv;
+}
+
 
 //-------------------------------------------------------------------------
 //
