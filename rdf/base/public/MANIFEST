@@ -5,6 +5,7 @@ nsIRDFCursor.h
 nsIRDFDataSource.h
 nsIRDFNode.h
 nsIRDFObserver.h
+nsIRDFResource.h
 nsIRDFResourceFactory.h
 nsIRDFService.h
 nsIRDFXMLDataSource.h

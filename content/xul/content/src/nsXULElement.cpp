@@ -83,7 +83,6 @@
 #include "nsIDOMFormListener.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIStyledContent.h"
-#include "nsIRDFContent.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
 #include "nsXULTreeElement.h"
@@ -255,8 +254,6 @@ public:
     NS_DECL_IDOMXULELEMENT
 
     // Implementation methods
-    nsresult GetResource(nsIRDFResource** aResource);
-
     nsresult EnsureContentsGenerated(void) const;
 
     nsresult AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
@@ -2268,6 +2265,71 @@ RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anE
 }
 
 
+NS_IMETHODIMP
+RDFElementImpl::GetResource(nsIRDFResource** aResource)
+{
+    nsAutoString uri;
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(kNameSpaceID_None, kIdAtom, uri)) {
+        // RDF will treat all document IDs as absolute URIs, so we'll need convert 
+        // a possibly-relative ID attribute into a fully-qualified (that is, with
+        // the current document's URL) URI.
+        if (nsnull != mDocument) {
+          nsIURL* docURL = nsnull;
+          mDocument->GetBaseURL(docURL);
+          if (docURL) {
+            const char* url;
+            docURL->GetSpec(&url);
+            rdf_PossiblyMakeAbsolute(url, uri);
+            NS_RELEASE(docURL);
+          }
+        }
+        return gRDFService->GetUnicodeResource(uri, aResource);
+    }
+
+    *aResource = nsnull;
+    return NS_OK;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Implementation methods
+
+nsresult
+RDFElementImpl::EnsureContentsGenerated(void) const
+{
+    if (! mContentsMustBeGenerated)
+        return NS_OK;
+
+    nsresult rv;
+
+    NS_PRECONDITION(mDocument != nsnull, "not initialized");
+    if (!mDocument)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    // XXX hack because we can't use "mutable"
+    RDFElementImpl* unconstThis = NS_CONST_CAST(RDFElementImpl*, this);
+
+    if (! unconstThis->mChildren) {
+        if (NS_FAILED(rv = NS_NewISupportsArray(&unconstThis->mChildren)))
+            return rv;
+    }
+
+    // Clear this value *first*, so we can re-enter the nsIContent
+    // getters if needed.
+    unconstThis->mContentsMustBeGenerated = PR_FALSE;
+
+    nsCOMPtr<nsIRDFDocument> rdfDoc;
+    if (NS_FAILED(rv = mDocument->QueryInterface(kIRDFDocumentIID,
+                                                 (void**) getter_AddRefs(rdfDoc))))
+        return rv;
+
+    rv = rdfDoc->CreateContents(unconstThis);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "problem creating kids");
+    return rv;
+}
+
+
 nsresult
 RDFElementImpl::ExecuteOnChangeHandler(nsIDOMElement* anElement, const nsString& attrName)
 {
@@ -2349,68 +2411,6 @@ RDFElementImpl::ExecuteJSCode(nsIDOMElement* anElement)
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
-// Implementation methods
-
-nsresult
-RDFElementImpl::EnsureContentsGenerated(void) const
-{
-    if (! mContentsMustBeGenerated)
-        return NS_OK;
-
-    nsresult rv;
-
-    NS_PRECONDITION(mDocument != nsnull, "not initialized");
-    if (!mDocument)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    // XXX hack because we can't use "mutable"
-    RDFElementImpl* unconstThis = NS_CONST_CAST(RDFElementImpl*, this);
-
-    if (! unconstThis->mChildren) {
-        if (NS_FAILED(rv = NS_NewISupportsArray(&unconstThis->mChildren)))
-            return rv;
-    }
-
-    // Clear this value *first*, so we can re-enter the nsIContent
-    // getters if needed.
-    unconstThis->mContentsMustBeGenerated = PR_FALSE;
-
-    nsCOMPtr<nsIRDFDocument> rdfDoc;
-    if (NS_FAILED(rv = mDocument->QueryInterface(kIRDFDocumentIID,
-                                                 (void**) getter_AddRefs(rdfDoc))))
-        return rv;
-
-    rv = rdfDoc->CreateContents(unconstThis);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "problem creating kids");
-    return rv;
-}
-
-
-nsresult
-RDFElementImpl::GetResource(nsIRDFResource** aResource)
-{
-    nsAutoString uri;
-    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(kNameSpaceID_None, kIdAtom, uri)) {
-        // RDF will treat all document IDs as absolute URIs, so we'll need convert 
-        // a possibly-relative ID attribute into a fully-qualified (that is, with
-        // the current document's URL) URI.
-        if (nsnull != mDocument) {
-          nsIURL* docURL = nsnull;
-          mDocument->GetBaseURL(docURL);
-          if (docURL) {
-            const char* url;
-            docURL->GetSpec(&url);
-            rdf_PossiblyMakeAbsolute(url, uri);
-            NS_RELEASE(docURL);
-          }
-        }
-        return gRDFService->GetUnicodeResource(uri, aResource);
-    }
-
-    *aResource = nsnull;
-    return NS_OK;
-}
 
 
 nsresult
