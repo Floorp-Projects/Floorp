@@ -195,7 +195,8 @@ PR_ImplodeTime(const PRExplodedTime *exploded);
  *     should treat them as "read-only".
  */
 
-PR_EXTERN(void) PR_NormalizeTime(PRExplodedTime *time, PRTimeParamFn params);
+PR_EXTERN(void) PR_NormalizeTime(
+    PRExplodedTime *exploded, PRTimeParamFn params);
 
 /**********************************************************************/
 /*********************** TIME PARAMETER FUNCTIONS *********************/
@@ -269,7 +270,7 @@ PR_EXTERN(PRUint32) PR_FormatTime(char *buf, int buflen, const char *fmt,
  */
 PR_EXTERN(PRUint32)
 PR_FormatTimeUSEnglish( char* buf, PRUint32 bufSize,
-                        const char* format, const PRExplodedTime* time );
+                        const char* format, const PRExplodedTime* tm );
 
 #endif /* NO_NSPR_10_SUPPORT */
 

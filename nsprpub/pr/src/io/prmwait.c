@@ -1060,7 +1060,7 @@ PR_IMPLEMENT(PRStatus) PR_CancelWaitFileDesc(PRWaitGroup *group, PRRecvWait *des
     {
         PR_SetError(PR_INVALID_STATE_ERROR, 0);
         rv = PR_FAILURE;
-        goto stopping;
+        goto unlock;
     }
 
 #ifdef WINNT
@@ -1072,7 +1072,7 @@ PR_IMPLEMENT(PRStatus) PR_CancelWaitFileDesc(PRWaitGroup *group, PRRecvWait *des
         if (NULL == bottom)
         {
             PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-            goto invalid_arg;
+            goto unlock;
         }
         bottom->secret->state = _PR_FILEDESC_CLOSED;
 #if 0
@@ -1089,7 +1089,7 @@ PR_IMPLEMENT(PRStatus) PR_CancelWaitFileDesc(PRWaitGroup *group, PRRecvWait *des
     {
         /* it was in the wait table */
         _MW_DoneInternal(group, recv_wait, PR_MW_INTERRUPT);
-        goto found;
+        goto unlock;
     }
     if (!PR_CLIST_IS_EMPTY(&group->io_ready))
     {
@@ -1098,17 +1098,15 @@ PR_IMPLEMENT(PRStatus) PR_CancelWaitFileDesc(PRWaitGroup *group, PRRecvWait *des
         do
         {
             PRRecvWait *done = (PRRecvWait*)head;
-            if (done == desc) goto found;
+            if (done == desc) goto unlock;
             head = PR_NEXT_LINK(head);
         } while (head != &group->io_ready);
     }
     PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
     rv = PR_FAILURE;
 
-found:
 #endif
-stopping:
-invalid_arg:
+unlock:
     PR_Unlock(group->ml);
     return rv;
 }  /* PR_CancelWaitFileDesc */

@@ -719,7 +719,6 @@ static void pt_ContinuationThreadInternal(pt_Continuation *my_op)
 
             for (pollIndex = 0; pollIndex < pollingListUsed; ++pollIndex)
             {
-                PRIntn fd = pollingList[pollIndex].fd;
                 PRInt16 events = pollingList[pollIndex].events;
                 PRInt16 revents = pollingList[pollIndex].revents;
 
@@ -1218,8 +1217,6 @@ static PRBool pt_hpux_transmitfile_cont(pt_Continuation *op, PRInt16 revents)
 
 void _PR_InitIO()
 {
-    PRIntn rv;
-
     pt_tq.ml = PR_NewLock();
     PR_ASSERT(NULL != pt_tq.ml);
 
@@ -2290,7 +2287,6 @@ static PRInt32 pt_AcceptRead(
         return rv;
     }
 
-failed:
     PR_Close(accepted);
     return rv;
 }  /* pt_AcceptRead */

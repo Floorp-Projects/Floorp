@@ -201,7 +201,6 @@ static void *_pt_root(void *arg)
 static PRThread* pt_AttachThread(void)
 {
     PRThread *thred = NULL;
-    void *privateData = NULL;
 
     /*
      * NSPR must have been initialized when PR_AttachThread is called.
@@ -955,7 +954,9 @@ static sigset_t javagc_intsoff_sigmask;
 static sigset_t sigwait_set;
 
 static struct timespec onemillisec = {0, 1000000L};
+#ifndef PT_NO_SIGTIMEDWAIT
 static struct timespec hundredmillisec = {0, 100000000L};
+#endif
 
 static void suspend_signal_handler(PRIntn sig);
 

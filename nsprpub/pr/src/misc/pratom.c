@@ -86,7 +86,6 @@ void _PR_MD_INIT_ATOMIC()
 {
 char *eval;
 int index;
-PRIntn lock_count;
 
 
 	PR_ASSERT(PR_FloorLog2(MAX_ATOMIC_LOCKS) ==
