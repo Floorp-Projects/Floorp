@@ -533,7 +533,6 @@ public class NativeGlobal {
 	    char C, C2;
 	    int V;
 	    char utf8buf[] = new char[6];
-	    char hexBuf[] = new char[4];
 	    StringBuffer R;
 
 	    R = new StringBuffer();
