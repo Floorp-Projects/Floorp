@@ -577,7 +577,7 @@ nsXBLService::~nsXBLService(void)
 // This function loads a particular XBL file and installs all of the bindings
 // onto the element.
 NS_IMETHODIMP
-nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aAugmentFlag,
+nsXBLService::LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, PRBool aAugmentFlag,
                            nsIXBLBinding** aBinding) 
 { 
   *aBinding = nsnull;
@@ -605,7 +605,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aA
         // See if the URIs match.
         nsCAutoString uri;
         styleBinding->GetBindingURI(uri);
-        if (uri.EqualsWithConversion(aURL))
+        if (uri.EqualsWithConversion(nsPromiseFlatString(aURL)))
           return NS_OK;
         else {
           FlushStyleBindings(aContent);

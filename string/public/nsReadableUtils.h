@@ -28,7 +28,10 @@
 
 #include "nsAReadableString.h"
 #include "nsAWritableString.h"
+#include "nsCRT.h"
 
+NS_COM void CopyUCS2toASCII( const nsAReadableString& aSource, nsAWritableCString& aDest );
+NS_COM void CopyASCIItoUCS2( const nsAReadableCString& aSource, nsAWritableString& aDest );
 
   /**
    * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
@@ -54,6 +57,19 @@ NS_COM char* ToNewCString( const nsAReadableString& aSource );
    * @return a new |char| buffer you must free with |nsMemory::Free|.
    */
 NS_COM char* ToNewCString( const nsAReadableCString& aSource );
+
+  /**
+   * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
+   *
+   * Allocates and returns a new |char| buffer which you must free with |nsMemory::Free|.
+   * Performs a encoding conversion by converting 16-bit wide characters down to UTF8 encoded 8-bits wide string copying |aSource| to your new buffer.
+   * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
+   *
+   * @param aSource a 16-bit wide string
+   * @return a new |char| buffer you must free with |nsMemory::Free|.
+   */
+
+NS_COM char* ToNewUTF8String( const nsAReadableString& aSource );
 
 
   /**
@@ -81,6 +97,21 @@ NS_COM PRUnichar* ToNewUnicode( const nsAReadableString& aSource );
    */
 NS_COM PRUnichar* ToNewUnicode( const nsAReadableCString& aSource );
 
+  /**
+   * Copies |aLength| 16-bit characters from the start of |aSource| to the
+   * |PRUnichar| buffer |aDest|.
+   *
+   * After this operation |aDest| is not null terminated.
+   *
+   * @param aSource a 16-bit wide string
+   * @param aDest a |PRUnichar| buffer
+   * @param aLength the number of 16-bit characters to copy
+   * @return pointer to destination buffer - identical to |aDest|
+   */
+NS_COM PRUnichar* CopyUnicodeTo( const nsAReadableString& aSource,
+                                 PRUnichar* aDest,
+                                 PRUint32 aLength );
+
 
   /**
    * Returns |PR_TRUE| if |aString| contains only ASCII characters, that is, characters in the range (0x00, 0x7F).
@@ -88,5 +119,53 @@ NS_COM PRUnichar* ToNewUnicode( const nsAReadableCString& aSource );
    * @param aString a 16-bit wide string to scan
    */
 NS_COM PRBool IsASCII( const nsAReadableString& aString );
+
+
+  //
+  // |ToUpperCase(basic_nsAWritableString<CharT>&)|
+  //
+template <class CharT>
+void
+ToUpperCase(basic_nsAWritableString<CharT>& aString)
+  {
+    nsWritingIterator<CharT> start( aString.BeginWriting() );
+    nsWritingIterator<CharT> end( aString.EndWriting() );
+
+    while ( start != end ) {
+      PRUint32 fraglen = start.size_forward();
+      CharT *buf = start.get();
+
+      while ( fraglen-- ) {
+        *buf = nsCRT::ToUpper(*buf);
+        ++buf;
+      }
+
+      start += fraglen;
+    }
+  }
+
+  //
+  // |ToUpperCase(basic_nsAWritableString<CharT>&)|
+  //
+template <class CharT>
+void
+ToLowerCase(basic_nsAWritableString<CharT>& aString)
+  {
+    nsWritingIterator<CharT> start( aString.BeginWriting() );
+    nsWritingIterator<CharT> end( aString.EndWriting() );
+
+    while ( start != end ) {
+      PRUint32 fraglen = start.size_forward();
+      CharT *buf = start.get();
+
+      while ( fraglen-- ) {
+        *buf = nsCRT::ToLower(*buf);
+        ++buf;
+      }
+
+      start += fraglen;
+    }
+  }
+
 
 #endif // !defined(nsReadableUtils_h___)

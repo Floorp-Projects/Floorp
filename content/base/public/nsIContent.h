@@ -26,13 +26,12 @@
 #include "nslayout.h"
 #include "nsISupports.h"
 #include "nsGUIEvent.h"
+#include "nsAWritableString.h"
 
 // Forward declarations
 class nsIAtom;
 class nsIDocument;
 class nsIPresContext;
-class nsString;
-class nsString;
 class nsVoidArray;
 class nsIXIFConverter;
 class nsIDOMEvent;
@@ -107,7 +106,7 @@ public:
    * @param aNameSpaceID out parameter reprsenting the namespace 
    *                     of the attribute
    */
-  NS_IMETHOD ParseAttributeString(const nsString& aStr, 
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr, 
                                   nsIAtom*& aName,
                                   PRInt32& aNameSpaceID) = 0;
 
@@ -136,7 +135,7 @@ public:
    * notified of the attribute change.
    */
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsString& aValue,
+                          const nsAReadableString& aValue,
                           PRBool aNotify) = 0;
 
   /**
@@ -153,7 +152,7 @@ public:
    * @param aNotify specifies whether or not the document should be
    * notified of the attribute change.
    */
-  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo, const nsString& aValue,
+  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
                           PRBool aNotify) = 0;
 
   /**
@@ -174,7 +173,7 @@ public:
    * </UL>
    */
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                          nsString& aResult) const = 0;
+                          nsAWritableString& aResult) const = 0;
 
   /**
    * Get the current value and prefix of the attribute. This returns a form
@@ -197,7 +196,7 @@ public:
    */
 
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsIAtom*& aPrefix, nsString& aResult) const = 0;
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const = 0;
 
   /**
    * Remove an attribute so that it is no longer explicitly specified.

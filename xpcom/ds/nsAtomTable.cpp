@@ -75,7 +75,12 @@ AtomImpl::~AtomImpl()
 {
   NS_PRECONDITION(nsnull != gAtomHashTable, "null atom hashtable");
   if (nsnull != gAtomHashTable) {
-    PL_HashTableRemove(gAtomHashTable, mString);
+    // The hash table uses nsAReadableString& as the key so we must
+    // instanciate a nsAReadableString (nsLiteralString) and use that
+    // as the key
+    nsLiteralString key(mString);
+
+    PL_HashTableRemove(gAtomHashTable, &key);
     nsrefcnt cnt = --gAtoms;
     if (0 == cnt) {
       // When the last atom is destroyed, the atom arena is destroyed
@@ -88,17 +93,52 @@ AtomImpl::~AtomImpl()
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(AtomImpl, nsIAtom)
 
-void* AtomImpl::operator new(size_t size, const PRUnichar* us, PRInt32 uslen)
+class CalculateHash
+  {
+    public:
+      typedef PRUnichar value_type;
+
+      CalculateHash() : mHash(0), mLengthHashed(0) { }
+
+
+      PRUint32
+      write( const PRUnichar* s, PRUint32 N )
+        {
+          for ( PRUint32 n=0; n<N; ++n )
+            mHash = (mHash<<5) + (mHash<<2) + mHash + *s++;  // mHash = mHash*37 + *s
+
+          mLengthHashed += N;
+          return N;
+        }
+
+
+      PRUint32 GetHash() const            { return mHash; }
+      PRUint32 GetLengthHashed() const    { return mLengthHashed; }
+
+    private:
+      PRUint32 mHash;
+      PRUint32 mLengthHashed;
+  };
+
+void* AtomImpl::operator new ( size_t size, const nsAReadableString& aString )
 {
-  size = size + uslen * sizeof(PRUnichar);
+    /*
+      Note: since the |size| will initially also include the |PRUnichar| member
+        |mString|, our size calculation will give us one character too many.
+        We use that extra character for a zero-terminator.
+
+      Note: this construction is not guaranteed to be possible by the C++
+        compiler.  A more reliable scheme is used by |nsShared[C]String|s, see
+        http://lxr.mozilla.org/seamonkey/source/xpcom/ds/nsSharedString.h#174
+     */
+  size += aString.Length() * sizeof(PRUnichar);
   AtomImpl* ii = (AtomImpl*) ::operator new(size);
-  nsCRT::memcpy(ii->mString, us, uslen * sizeof(PRUnichar));
-  ii->mString[uslen] = 0;
+  *copy_string(aString.BeginReading(), aString.EndReading(), ii->mString) = PRUnichar(0);
   return ii;
 }
 
 NS_IMETHODIMP 
-AtomImpl::ToString(nsString& aBuf) /*FIX: const */
+AtomImpl::ToString(nsAWritableString& aBuf) /*FIX: const */
 {
   aBuf.SetLength(0);
   aBuf.Append(mString, nsCRT::strlen(mString));
@@ -124,55 +164,58 @@ AtomImpl::SizeOf(nsISizeOfHandler* aHandler, PRUint32* _retval) /*FIX: const */
 
 //----------------------------------------------------------------------
 
-static PLHashNumber HashKey(const PRUnichar* k)
+static PLHashNumber HashKey(const nsAReadableString* k)
 {
-  return (PLHashNumber) nsCRT::HashCode(k);
+  return (PLHashNumber) copy_string(k->BeginReading(), k->EndReading(),
+                                    CalculateHash()).GetHash();
 }
 
-static PRIntn CompareKeys(const PRUnichar* k1, const PRUnichar* k2)
+static PRIntn CompareKeys( const nsAReadableString* k1, const PRUnichar* k2 )
 {
-  return nsCRT::strcmp(k1, k2) == 0;
+  return Compare(*k1, k2) == 0;
 }
 
 NS_COM nsIAtom* NS_NewAtom(const char* isolatin1)
 {
-  nsAutoString tmp;
-  tmp.AssignWithConversion(isolatin1);
-  return NS_NewAtom(tmp.GetUnicode());
+  return NS_NewAtom(NS_ConvertASCIItoUCS2(isolatin1));
 }
 
-NS_COM nsIAtom* NS_NewAtom(const nsString& aString)
+NS_COM nsIAtom* NS_NewAtom( const nsAReadableString& aString )
 {
-  return NS_NewAtom(aString.GetUnicode());
-}
+  if ( !gAtomHashTable )
+    gAtomHashTable = PL_NewHashTable(2048, (PLHashFunction)HashKey,
+                                     (PLHashComparator)CompareKeys,
+                                     (PLHashComparator)0, 0, 0);
 
-NS_COM nsIAtom* NS_NewAtom(const PRUnichar* us)
-  // Note: in a low memory condition, this routine could return |NULL|
-{
-  if (nsnull == gAtomHashTable) {
-    gAtomHashTable = PL_NewHashTable(2048, (PLHashFunction) HashKey,
-                                     (PLHashComparator) CompareKeys,
-                                     (PLHashComparator) nsnull,
-                                     nsnull, nsnull);
-  }
-  PRUint32 uslen;
-  PRUint32 hashCode = nsCRT::HashCode(us, &uslen);
-  PLHashEntry** hep = PL_HashTableRawLookup(gAtomHashTable, hashCode, us);
-  PLHashEntry* he = *hep;
-  if (nsnull != he) {
-    nsIAtom* id = (nsIAtom*) he->value;
-    NS_IF_ADDREF(id);
-    return id;
-  }
+  CalculateHash hasher = copy_string(aString.BeginReading(),
+                                     aString.EndReading(), CalculateHash());
 
-  AtomImpl* id = new(us, uslen) AtomImpl();
-  if ( id )
-    {
-      PL_HashTableRawAdd(gAtomHashTable, hep, hashCode, id->mString, id);      
-      NS_ADDREF(id);
+  PRUint32 hashCode = hasher.GetHash();
+
+  PLHashEntry** hep = PL_HashTableRawLookup(gAtomHashTable, hashCode,
+                                            &aString);
+  PLHashEntry*  he  = *hep;
+
+  AtomImpl* id;
+
+  if ( he ) {
+      // if we found one, great
+    id = NS_STATIC_CAST(AtomImpl*, he->value);
+  } else {
+      // otherwise, we'll make a new atom
+    id = new (aString) AtomImpl();
+    if ( id ) {
+      PL_HashTableRawAdd(gAtomHashTable, hep, hashCode, id->mString, id);
     }
+  }
 
+  NS_IF_ADDREF(id);
   return id;
+}
+
+NS_COM nsIAtom* NS_NewAtom( const PRUnichar* us )
+{
+  return NS_NewAtom(nsLiteralString(us));
 }
 
 NS_COM nsrefcnt NS_GetNumberOfAtoms(void)

@@ -55,32 +55,32 @@ public:
 
   NS_IMETHOD    GetTBodies(nsIDOMHTMLCollection** aTBodies)=0;
 
-  NS_IMETHOD    GetAlign(nsString& aAlign)=0;
-  NS_IMETHOD    SetAlign(const nsString& aAlign)=0;
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign)=0;
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign)=0;
 
-  NS_IMETHOD    GetBgColor(nsString& aBgColor)=0;
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor)=0;
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor)=0;
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor)=0;
 
-  NS_IMETHOD    GetBorder(nsString& aBorder)=0;
-  NS_IMETHOD    SetBorder(const nsString& aBorder)=0;
+  NS_IMETHOD    GetBorder(nsAWritableString& aBorder)=0;
+  NS_IMETHOD    SetBorder(const nsAReadableString& aBorder)=0;
 
-  NS_IMETHOD    GetCellPadding(nsString& aCellPadding)=0;
-  NS_IMETHOD    SetCellPadding(const nsString& aCellPadding)=0;
+  NS_IMETHOD    GetCellPadding(nsAWritableString& aCellPadding)=0;
+  NS_IMETHOD    SetCellPadding(const nsAReadableString& aCellPadding)=0;
 
-  NS_IMETHOD    GetCellSpacing(nsString& aCellSpacing)=0;
-  NS_IMETHOD    SetCellSpacing(const nsString& aCellSpacing)=0;
+  NS_IMETHOD    GetCellSpacing(nsAWritableString& aCellSpacing)=0;
+  NS_IMETHOD    SetCellSpacing(const nsAReadableString& aCellSpacing)=0;
 
-  NS_IMETHOD    GetFrame(nsString& aFrame)=0;
-  NS_IMETHOD    SetFrame(const nsString& aFrame)=0;
+  NS_IMETHOD    GetFrame(nsAWritableString& aFrame)=0;
+  NS_IMETHOD    SetFrame(const nsAReadableString& aFrame)=0;
 
-  NS_IMETHOD    GetRules(nsString& aRules)=0;
-  NS_IMETHOD    SetRules(const nsString& aRules)=0;
+  NS_IMETHOD    GetRules(nsAWritableString& aRules)=0;
+  NS_IMETHOD    SetRules(const nsAReadableString& aRules)=0;
 
-  NS_IMETHOD    GetSummary(nsString& aSummary)=0;
-  NS_IMETHOD    SetSummary(const nsString& aSummary)=0;
+  NS_IMETHOD    GetSummary(nsAWritableString& aSummary)=0;
+  NS_IMETHOD    SetSummary(const nsAReadableString& aSummary)=0;
 
-  NS_IMETHOD    GetWidth(nsString& aWidth)=0;
-  NS_IMETHOD    SetWidth(const nsString& aWidth)=0;
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth)=0;
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth)=0;
 
   NS_IMETHOD    CreateTHead(nsIDOMHTMLElement** aReturn)=0;
 
@@ -109,24 +109,24 @@ public:
   NS_IMETHOD    SetTFoot(nsIDOMHTMLTableSectionElement* aTFoot);  \
   NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows);  \
   NS_IMETHOD    GetTBodies(nsIDOMHTMLCollection** aTBodies);  \
-  NS_IMETHOD    GetAlign(nsString& aAlign);  \
-  NS_IMETHOD    SetAlign(const nsString& aAlign);  \
-  NS_IMETHOD    GetBgColor(nsString& aBgColor);  \
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor);  \
-  NS_IMETHOD    GetBorder(nsString& aBorder);  \
-  NS_IMETHOD    SetBorder(const nsString& aBorder);  \
-  NS_IMETHOD    GetCellPadding(nsString& aCellPadding);  \
-  NS_IMETHOD    SetCellPadding(const nsString& aCellPadding);  \
-  NS_IMETHOD    GetCellSpacing(nsString& aCellSpacing);  \
-  NS_IMETHOD    SetCellSpacing(const nsString& aCellSpacing);  \
-  NS_IMETHOD    GetFrame(nsString& aFrame);  \
-  NS_IMETHOD    SetFrame(const nsString& aFrame);  \
-  NS_IMETHOD    GetRules(nsString& aRules);  \
-  NS_IMETHOD    SetRules(const nsString& aRules);  \
-  NS_IMETHOD    GetSummary(nsString& aSummary);  \
-  NS_IMETHOD    SetSummary(const nsString& aSummary);  \
-  NS_IMETHOD    GetWidth(nsString& aWidth);  \
-  NS_IMETHOD    SetWidth(const nsString& aWidth);  \
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign);  \
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign);  \
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor);  \
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor);  \
+  NS_IMETHOD    GetBorder(nsAWritableString& aBorder);  \
+  NS_IMETHOD    SetBorder(const nsAReadableString& aBorder);  \
+  NS_IMETHOD    GetCellPadding(nsAWritableString& aCellPadding);  \
+  NS_IMETHOD    SetCellPadding(const nsAReadableString& aCellPadding);  \
+  NS_IMETHOD    GetCellSpacing(nsAWritableString& aCellSpacing);  \
+  NS_IMETHOD    SetCellSpacing(const nsAReadableString& aCellSpacing);  \
+  NS_IMETHOD    GetFrame(nsAWritableString& aFrame);  \
+  NS_IMETHOD    SetFrame(const nsAReadableString& aFrame);  \
+  NS_IMETHOD    GetRules(nsAWritableString& aRules);  \
+  NS_IMETHOD    SetRules(const nsAReadableString& aRules);  \
+  NS_IMETHOD    GetSummary(nsAWritableString& aSummary);  \
+  NS_IMETHOD    SetSummary(const nsAReadableString& aSummary);  \
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth);  \
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth);  \
   NS_IMETHOD    CreateTHead(nsIDOMHTMLElement** aReturn);  \
   NS_IMETHOD    DeleteTHead();  \
   NS_IMETHOD    CreateTFoot(nsIDOMHTMLElement** aReturn);  \
@@ -147,24 +147,24 @@ public:
   NS_IMETHOD    SetTFoot(nsIDOMHTMLTableSectionElement* aTFoot) { return _to SetTFoot(aTFoot); } \
   NS_IMETHOD    GetRows(nsIDOMHTMLCollection** aRows) { return _to GetRows(aRows); } \
   NS_IMETHOD    GetTBodies(nsIDOMHTMLCollection** aTBodies) { return _to GetTBodies(aTBodies); } \
-  NS_IMETHOD    GetAlign(nsString& aAlign) { return _to GetAlign(aAlign); } \
-  NS_IMETHOD    SetAlign(const nsString& aAlign) { return _to SetAlign(aAlign); } \
-  NS_IMETHOD    GetBgColor(nsString& aBgColor) { return _to GetBgColor(aBgColor); } \
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor) { return _to SetBgColor(aBgColor); } \
-  NS_IMETHOD    GetBorder(nsString& aBorder) { return _to GetBorder(aBorder); } \
-  NS_IMETHOD    SetBorder(const nsString& aBorder) { return _to SetBorder(aBorder); } \
-  NS_IMETHOD    GetCellPadding(nsString& aCellPadding) { return _to GetCellPadding(aCellPadding); } \
-  NS_IMETHOD    SetCellPadding(const nsString& aCellPadding) { return _to SetCellPadding(aCellPadding); } \
-  NS_IMETHOD    GetCellSpacing(nsString& aCellSpacing) { return _to GetCellSpacing(aCellSpacing); } \
-  NS_IMETHOD    SetCellSpacing(const nsString& aCellSpacing) { return _to SetCellSpacing(aCellSpacing); } \
-  NS_IMETHOD    GetFrame(nsString& aFrame) { return _to GetFrame(aFrame); } \
-  NS_IMETHOD    SetFrame(const nsString& aFrame) { return _to SetFrame(aFrame); } \
-  NS_IMETHOD    GetRules(nsString& aRules) { return _to GetRules(aRules); } \
-  NS_IMETHOD    SetRules(const nsString& aRules) { return _to SetRules(aRules); } \
-  NS_IMETHOD    GetSummary(nsString& aSummary) { return _to GetSummary(aSummary); } \
-  NS_IMETHOD    SetSummary(const nsString& aSummary) { return _to SetSummary(aSummary); } \
-  NS_IMETHOD    GetWidth(nsString& aWidth) { return _to GetWidth(aWidth); } \
-  NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to SetWidth(aWidth); } \
+  NS_IMETHOD    GetAlign(nsAWritableString& aAlign) { return _to GetAlign(aAlign); } \
+  NS_IMETHOD    SetAlign(const nsAReadableString& aAlign) { return _to SetAlign(aAlign); } \
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor) { return _to GetBgColor(aBgColor); } \
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor) { return _to SetBgColor(aBgColor); } \
+  NS_IMETHOD    GetBorder(nsAWritableString& aBorder) { return _to GetBorder(aBorder); } \
+  NS_IMETHOD    SetBorder(const nsAReadableString& aBorder) { return _to SetBorder(aBorder); } \
+  NS_IMETHOD    GetCellPadding(nsAWritableString& aCellPadding) { return _to GetCellPadding(aCellPadding); } \
+  NS_IMETHOD    SetCellPadding(const nsAReadableString& aCellPadding) { return _to SetCellPadding(aCellPadding); } \
+  NS_IMETHOD    GetCellSpacing(nsAWritableString& aCellSpacing) { return _to GetCellSpacing(aCellSpacing); } \
+  NS_IMETHOD    SetCellSpacing(const nsAReadableString& aCellSpacing) { return _to SetCellSpacing(aCellSpacing); } \
+  NS_IMETHOD    GetFrame(nsAWritableString& aFrame) { return _to GetFrame(aFrame); } \
+  NS_IMETHOD    SetFrame(const nsAReadableString& aFrame) { return _to SetFrame(aFrame); } \
+  NS_IMETHOD    GetRules(nsAWritableString& aRules) { return _to GetRules(aRules); } \
+  NS_IMETHOD    SetRules(const nsAReadableString& aRules) { return _to SetRules(aRules); } \
+  NS_IMETHOD    GetSummary(nsAWritableString& aSummary) { return _to GetSummary(aSummary); } \
+  NS_IMETHOD    SetSummary(const nsAReadableString& aSummary) { return _to SetSummary(aSummary); } \
+  NS_IMETHOD    GetWidth(nsAWritableString& aWidth) { return _to GetWidth(aWidth); } \
+  NS_IMETHOD    SetWidth(const nsAReadableString& aWidth) { return _to SetWidth(aWidth); } \
   NS_IMETHOD    CreateTHead(nsIDOMHTMLElement** aReturn) { return _to CreateTHead(aReturn); }  \
   NS_IMETHOD    DeleteTHead() { return _to DeleteTHead(); }  \
   NS_IMETHOD    CreateTFoot(nsIDOMHTMLElement** aReturn) { return _to CreateTFoot(aReturn); }  \

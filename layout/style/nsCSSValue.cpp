@@ -23,6 +23,7 @@
 #include "nsString.h"
 #include "nsCSSProps.h"
 #include "nsUnitConversion.h"
+#include "nsReadableUtils.h"
 
 //#include "nsStyleConsts.h"
 
@@ -65,12 +66,12 @@ nsCSSValue::nsCSSValue(float aValue, nsCSSUnit aUnit)
   }
 }
 
-nsCSSValue::nsCSSValue(const nsString& aValue, nsCSSUnit aUnit)
+nsCSSValue::nsCSSValue(const nsAReadableString& aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
   NS_ASSERTION((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Counters), "not a string value");
   if ((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Counters)) {
-    mValue.mString = aValue.ToNewUnicode();
+    mValue.mString = ToNewUnicode(aValue);
   }
   else {
     mUnit = eCSSUnit_Null;
@@ -235,13 +236,14 @@ void nsCSSValue::SetFloatValue(float aValue, nsCSSUnit aUnit)
   }
 }
 
-void nsCSSValue::SetStringValue(const nsString& aValue, nsCSSUnit aUnit)
+void nsCSSValue::SetStringValue(const nsAReadableString& aValue,
+                                nsCSSUnit aUnit)
 {
   NS_ASSERTION((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Counters), "not a string unit");
   Reset();
   if ((eCSSUnit_String <= aUnit) && (aUnit <= eCSSUnit_Counters)) {
     mUnit = aUnit;
-    mValue.mString = aValue.ToNewUnicode();
+    mValue.mString = ToNewUnicode(aValue);
   }
 }
 
@@ -276,103 +278,132 @@ void nsCSSValue::SetNormalValue(void)
   mUnit = eCSSUnit_Normal;
 }
 
-void nsCSSValue::AppendToString(nsString& aBuffer, nsCSSProperty aPropID) const
+void nsCSSValue::AppendToString(nsAWritableString& aBuffer,
+                                nsCSSProperty aPropID) const
 {
   if (eCSSUnit_Null == mUnit) {
     return;
   }
 
   if (-1 < aPropID) {
-    aBuffer.AppendWithConversion(nsCSSProps::GetStringValue(aPropID));
-    aBuffer.AppendWithConversion(": ");
+    aBuffer.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(aPropID)));
+    aBuffer.Append(NS_LITERAL_STRING(": "));
   }
 
   if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters)) {
     switch (mUnit) {
-      case eCSSUnit_URL:      aBuffer.AppendWithConversion("url(");       break;
-      case eCSSUnit_Attr:     aBuffer.AppendWithConversion("attr(");      break;
-      case eCSSUnit_Counter:  aBuffer.AppendWithConversion("counter(");   break;
-      case eCSSUnit_Counters: aBuffer.AppendWithConversion("counters(");  break;
+      case eCSSUnit_URL:      aBuffer.Append(NS_LITERAL_STRING("url("));       break;
+      case eCSSUnit_Attr:     aBuffer.Append(NS_LITERAL_STRING("attr("));      break;
+      case eCSSUnit_Counter:  aBuffer.Append(NS_LITERAL_STRING("counter("));   break;
+      case eCSSUnit_Counters: aBuffer.Append(NS_LITERAL_STRING("counters("));  break;
       default:  break;
     }
     if (nsnull != mValue.mString) {
-      aBuffer.AppendWithConversion('"');
+      aBuffer.Append(PRUnichar('"'));
       aBuffer.Append(mValue.mString);
-      aBuffer.AppendWithConversion('"');
+      aBuffer.Append(PRUnichar('"'));
     }
     else {
-      aBuffer.AppendWithConversion("null str");
+      aBuffer.Append(NS_LITERAL_STRING("null str"));
     }
   }
   else if ((eCSSUnit_Integer <= mUnit) && (mUnit <= eCSSUnit_Enumerated)) {
-    aBuffer.AppendInt(mValue.mInt, 10);
-    aBuffer.AppendWithConversion("[0x");
-    aBuffer.AppendInt(mValue.mInt, 16);
-    aBuffer.AppendWithConversion(']');
+    nsAutoString intStr;
+    intStr.AppendInt(mValue.mInt, 10);
+    aBuffer.Append(intStr);
+
+    aBuffer.Append(NS_LITERAL_STRING("[0x"));
+
+    intStr.Truncate();
+    intStr.AppendInt(mValue.mInt, 16);
+    aBuffer.Append(intStr);
+
+    aBuffer.Append(PRUnichar(']'));
   }
   else if (eCSSUnit_Color == mUnit){
-    aBuffer.AppendWithConversion("(0x");
-    aBuffer.AppendInt(NS_GET_R(mValue.mColor), 16);
-    aBuffer.AppendWithConversion(" 0x");
-    aBuffer.AppendInt(NS_GET_G(mValue.mColor), 16);
-    aBuffer.AppendWithConversion(" 0x");
-    aBuffer.AppendInt(NS_GET_B(mValue.mColor), 16);
-    aBuffer.AppendWithConversion(" 0x");
-    aBuffer.AppendInt(NS_GET_A(mValue.mColor), 16);
-    aBuffer.AppendWithConversion(')');
+    aBuffer.Append(NS_LITERAL_STRING("(0x"));
+
+    nsAutoString intStr;
+    intStr.AppendInt(NS_GET_R(mValue.mColor), 16);
+    aBuffer.Append(intStr);
+
+    aBuffer.Append(NS_LITERAL_STRING(" 0x"));
+
+    intStr.Truncate();
+    intStr.AppendInt(NS_GET_G(mValue.mColor), 16);
+    aBuffer.Append(intStr);
+
+    aBuffer.Append(NS_LITERAL_STRING(" 0x"));
+
+    intStr.Truncate();
+    intStr.AppendInt(NS_GET_B(mValue.mColor), 16);
+    aBuffer.Append(intStr);
+
+    aBuffer.Append(NS_LITERAL_STRING(" 0x"));
+
+    intStr.Truncate();
+    intStr.AppendInt(NS_GET_A(mValue.mColor), 16);
+    aBuffer.Append(intStr);
+
+    aBuffer.Append(PRUnichar(')'));
   }
   else if (eCSSUnit_Percent == mUnit) {
-    aBuffer.AppendFloat(mValue.mFloat * 100.0f);
+    nsAutoString floatString;
+    floatString.AppendFloat(mValue.mFloat * 100.0f);
+    aBuffer.Append(floatString);
   }
   else if (eCSSUnit_Percent < mUnit) {
-    aBuffer.AppendFloat(mValue.mFloat);
+    nsAutoString floatString;
+    floatString.AppendFloat(mValue.mFloat);
+    aBuffer.Append(floatString);
   }
 
   switch (mUnit) {
     case eCSSUnit_Null:         break;
-    case eCSSUnit_Auto:         aBuffer.AppendWithConversion("auto");     break;
-    case eCSSUnit_Inherit:      aBuffer.AppendWithConversion("inherit");  break;
-    case eCSSUnit_None:         aBuffer.AppendWithConversion("none");     break;
-    case eCSSUnit_Normal:       aBuffer.AppendWithConversion("normal");   break;
+    case eCSSUnit_Auto:         aBuffer.Append(NS_LITERAL_STRING("auto"));     break;
+    case eCSSUnit_Inherit:      aBuffer.Append(NS_LITERAL_STRING("inherit"));  break;
+    case eCSSUnit_None:         aBuffer.Append(NS_LITERAL_STRING("none"));     break;
+    case eCSSUnit_Normal:       aBuffer.Append(NS_LITERAL_STRING("normal"));   break;
     case eCSSUnit_String:       break;
     case eCSSUnit_URL:
     case eCSSUnit_Attr:
     case eCSSUnit_Counter:
-    case eCSSUnit_Counters:     aBuffer.AppendWithConversion(')');    break;
-    case eCSSUnit_Integer:      aBuffer.AppendWithConversion("int");  break;
-    case eCSSUnit_Enumerated:   aBuffer.AppendWithConversion("enum"); break;
-    case eCSSUnit_Color:        aBuffer.AppendWithConversion("rbga"); break;
-    case eCSSUnit_Percent:      aBuffer.AppendWithConversion("%");    break;
-    case eCSSUnit_Number:       aBuffer.AppendWithConversion("#");    break;
-    case eCSSUnit_Inch:         aBuffer.AppendWithConversion("in");   break;
-    case eCSSUnit_Foot:         aBuffer.AppendWithConversion("ft");   break;
-    case eCSSUnit_Mile:         aBuffer.AppendWithConversion("mi");   break;
-    case eCSSUnit_Millimeter:   aBuffer.AppendWithConversion("mm");   break;
-    case eCSSUnit_Centimeter:   aBuffer.AppendWithConversion("cm");   break;
-    case eCSSUnit_Meter:        aBuffer.AppendWithConversion("m");    break;
-    case eCSSUnit_Kilometer:    aBuffer.AppendWithConversion("km");   break;
-    case eCSSUnit_Point:        aBuffer.AppendWithConversion("pt");   break;
-    case eCSSUnit_Pica:         aBuffer.AppendWithConversion("pc");   break;
-    case eCSSUnit_Didot:        aBuffer.AppendWithConversion("dt");   break;
-    case eCSSUnit_Cicero:       aBuffer.AppendWithConversion("cc");   break;
-    case eCSSUnit_EM:           aBuffer.AppendWithConversion("em");   break;
-    case eCSSUnit_EN:           aBuffer.AppendWithConversion("en");   break;
-    case eCSSUnit_XHeight:      aBuffer.AppendWithConversion("ex");   break;
-    case eCSSUnit_CapHeight:    aBuffer.AppendWithConversion("cap");  break;
-    case eCSSUnit_Char:         aBuffer.AppendWithConversion("ch");   break;
-    case eCSSUnit_Pixel:        aBuffer.AppendWithConversion("px");   break;
-    case eCSSUnit_Degree:       aBuffer.AppendWithConversion("deg");  break;
-    case eCSSUnit_Grad:         aBuffer.AppendWithConversion("grad"); break;
-    case eCSSUnit_Radian:       aBuffer.AppendWithConversion("rad");  break;
-    case eCSSUnit_Hertz:        aBuffer.AppendWithConversion("Hz");   break;
-    case eCSSUnit_Kilohertz:    aBuffer.AppendWithConversion("kHz");  break;
-    case eCSSUnit_Seconds:      aBuffer.AppendWithConversion("s");    break;
-    case eCSSUnit_Milliseconds: aBuffer.AppendWithConversion("ms");   break;
+    case eCSSUnit_Counters:     aBuffer.Append(NS_LITERAL_STRING(")"));    break;
+    case eCSSUnit_Integer:      aBuffer.Append(NS_LITERAL_STRING("int"));  break;
+    case eCSSUnit_Enumerated:   aBuffer.Append(NS_LITERAL_STRING("enum")); break;
+    case eCSSUnit_Color:        aBuffer.Append(NS_LITERAL_STRING("rbga")); break;
+    case eCSSUnit_Percent:      aBuffer.Append(NS_LITERAL_STRING("%"));    break;
+    case eCSSUnit_Number:       aBuffer.Append(NS_LITERAL_STRING("#"));    break;
+    case eCSSUnit_Inch:         aBuffer.Append(NS_LITERAL_STRING("in"));   break;
+    case eCSSUnit_Foot:         aBuffer.Append(NS_LITERAL_STRING("ft"));   break;
+    case eCSSUnit_Mile:         aBuffer.Append(NS_LITERAL_STRING("mi"));   break;
+    case eCSSUnit_Millimeter:   aBuffer.Append(NS_LITERAL_STRING("mm"));   break;
+    case eCSSUnit_Centimeter:   aBuffer.Append(NS_LITERAL_STRING("cm"));   break;
+    case eCSSUnit_Meter:        aBuffer.Append(NS_LITERAL_STRING("m"));    break;
+    case eCSSUnit_Kilometer:    aBuffer.Append(NS_LITERAL_STRING("km"));   break;
+    case eCSSUnit_Point:        aBuffer.Append(NS_LITERAL_STRING("pt"));   break;
+    case eCSSUnit_Pica:         aBuffer.Append(NS_LITERAL_STRING("pc"));   break;
+    case eCSSUnit_Didot:        aBuffer.Append(NS_LITERAL_STRING("dt"));   break;
+    case eCSSUnit_Cicero:       aBuffer.Append(NS_LITERAL_STRING("cc"));   break;
+    case eCSSUnit_EM:           aBuffer.Append(NS_LITERAL_STRING("em"));   break;
+    case eCSSUnit_EN:           aBuffer.Append(NS_LITERAL_STRING("en"));   break;
+    case eCSSUnit_XHeight:      aBuffer.Append(NS_LITERAL_STRING("ex"));   break;
+    case eCSSUnit_CapHeight:    aBuffer.Append(NS_LITERAL_STRING("cap"));  break;
+    case eCSSUnit_Char:         aBuffer.Append(NS_LITERAL_STRING("ch"));   break;
+    case eCSSUnit_Pixel:        aBuffer.Append(NS_LITERAL_STRING("px"));   break;
+    case eCSSUnit_Degree:       aBuffer.Append(NS_LITERAL_STRING("deg"));  break;
+    case eCSSUnit_Grad:         aBuffer.Append(NS_LITERAL_STRING("grad")); break;
+    case eCSSUnit_Radian:       aBuffer.Append(NS_LITERAL_STRING("rad"));  break;
+    case eCSSUnit_Hertz:        aBuffer.Append(NS_LITERAL_STRING("Hz"));   break;
+    case eCSSUnit_Kilohertz:    aBuffer.Append(NS_LITERAL_STRING("kHz"));  break;
+    case eCSSUnit_Seconds:      aBuffer.Append(NS_LITERAL_STRING("s"));    break;
+    case eCSSUnit_Milliseconds: aBuffer.Append(NS_LITERAL_STRING("ms"));   break;
   }
-  aBuffer.AppendWithConversion(' ');
+  aBuffer.Append(NS_LITERAL_STRING(" "));
 }
 
-void nsCSSValue::ToString(nsString& aBuffer, nsCSSProperty aPropID) const
+void nsCSSValue::ToString(nsAWritableString& aBuffer,
+                          nsCSSProperty aPropID) const
 {
   aBuffer.Truncate();
   AppendToString(aBuffer, aPropID);

@@ -88,8 +88,8 @@ public:
   virtual void Reset(nsIPresContext* aPresContext);
 
        // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
 
   //nsIStatefulFrame
   NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType);

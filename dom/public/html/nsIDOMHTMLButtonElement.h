@@ -41,54 +41,54 @@ public:
 
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm)=0;
 
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey)=0;
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey)=0;
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey)=0;
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey)=0;
 
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
+  NS_IMETHOD    SetName(const nsAReadableString& aName)=0;
 
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex)=0;
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex)=0;
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
 
-  NS_IMETHOD    GetValue(nsString& aValue)=0;
-  NS_IMETHOD    SetValue(const nsString& aValue)=0;
+  NS_IMETHOD    GetValue(nsAWritableString& aValue)=0;
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLBUTTONELEMENT   \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm);  \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey);  \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey);  \
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey);  \
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey);  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
-  NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
+  NS_IMETHOD    SetName(const nsAReadableString& aName);  \
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex);  \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex);  \
-  NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    GetValue(nsString& aValue);  \
-  NS_IMETHOD    SetValue(const nsString& aValue);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
+  NS_IMETHOD    GetValue(nsAWritableString& aValue);  \
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLBUTTONELEMENT(_to)  \
   NS_IMETHOD    GetForm(nsIDOMHTMLFormElement** aForm) { return _to GetForm(aForm); } \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsAReadableString& aName) { return _to SetName(aName); } \
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to GetTabIndex(aTabIndex); } \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
-  NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
-  NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    GetValue(nsAWritableString& aValue) { return _to GetValue(aValue); } \
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue) { return _to SetValue(aValue); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLButtonElementClass(nsIScriptContext *aContext, void **aPrototype);

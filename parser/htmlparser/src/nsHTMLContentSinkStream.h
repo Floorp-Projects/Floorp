@@ -50,6 +50,7 @@
 #include "nsISaveAsCharset.h"
 #include "nsIEntityConverter.h"
 #include "nsIURI.h"
+#include "nsAWritableString.h"
 
 #define NS_IHTMLCONTENTSINKSTREAM_IID  \
   {0xa39c6bff, 0x15f0, 0x11d2, \
@@ -68,8 +69,8 @@ class nsIHTMLContentSinkStream : public nsIHTMLContentSink {
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_HTMLCONTENTSINKSTREAM_CID)
 
   NS_IMETHOD Initialize(nsIOutputStream* aOutStream,
-                        nsString* aOutString,
-                        const nsString* aCharsetOverride,
+                        nsAWritableString* aOutString,
+                        const nsAReadableString* aCharsetOverride,
                         PRUint32 aFlags) = 0;
 };
 
@@ -97,8 +98,8 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSinkStream
 
   // nsIHTMLContentSinkStream
   NS_IMETHOD Initialize(nsIOutputStream* aOutStream,
-                        nsString* aOutString,
-                        const nsString* aCharsetOverride,
+                        nsAWritableString* aOutString,
+                        const nsAReadableString* aCharsetOverride,
                         PRUint32 aFlags);
 
  
@@ -167,7 +168,7 @@ protected:
 
 protected:
     nsIOutputStream* mStream;
-    nsString* mString;
+    nsAWritableString* mString;
 
     int       mTabLevel;
     char*     mBuffer;
@@ -197,14 +198,14 @@ protected:
 
     nsCOMPtr<nsISaveAsCharset> mCharsetEncoder;
     nsCOMPtr<nsIEntityConverter> mEntityConverter;
-    nsCAutoString mCharsetOverride;
+    nsString mCharsetOverride;
 };
 
 
 inline nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                               nsIOutputStream* aOutStream,
-                              const nsString* aCharsetOverride,
+                              const nsAReadableString* aCharsetOverride,
                               PRUint32 aFlags)
 {
   nsCOMPtr<nsIHTMLContentSinkStream> it;
@@ -231,7 +232,7 @@ NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult,
 
 inline nsresult
 NS_New_HTML_ContentSinkStream(nsIHTMLContentSink** aInstancePtrResult, 
-                              nsString* aOutString, PRUint32 aFlags)
+                              nsAWritableString* aOutString, PRUint32 aFlags)
 {
   nsCOMPtr<nsIHTMLContentSinkStream> it;
   nsresult rv;

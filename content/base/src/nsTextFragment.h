@@ -23,6 +23,7 @@
 #define nsTextFragment_h___
 
 #include "nslayout.h"
+#include "nsAWritableString.h"
 class nsString;
 
 // XXX should this normalize the code to keep a \u0000 at the end?
@@ -112,7 +113,7 @@ public:
    * Change the contents of this fragment to be a copy of the
    * the argument string.
    */
-  nsTextFragment& operator=(const nsString& aString);
+  nsTextFragment& operator=(const nsAReadableString& aString);
 
   /**
    * Return PR_TRUE if this fragment is represented by PRUnichar data
@@ -166,8 +167,8 @@ public:
   /**
    * Change the contents of this fragment to be the given buffer and
    * length. The memory becomes owned by the fragment. In addition,
-   * the memory for aBuffer must have been allocated using the "new[]"
-   * because it will be released with "delete []".
+   * the memory for aBuffer must have been allocated using the 
+   * nsIMemory interface.
    */
   void SetTo(PRUnichar* aBuffer, PRInt32 aLength, PRBool aRelease);
 

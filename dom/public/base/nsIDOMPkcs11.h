@@ -37,21 +37,21 @@ class nsIDOMPkcs11 : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMPKCS11_IID; return iid; }
 
-  NS_IMETHOD    Deletemodule(const nsString& aModuleName, PRInt32* aReturn)=0;
+  NS_IMETHOD    Deletemodule(const nsAReadableString& aModuleName, PRInt32* aReturn)=0;
 
-  NS_IMETHOD    Addmodule(const nsString& aModuleName, const nsString& aLibraryFullPath, PRInt32 aCryptoMechanismFlags, PRInt32 aCipherFlags, PRInt32* aReturn)=0;
+  NS_IMETHOD    Addmodule(const nsAReadableString& aModuleName, const nsAReadableString& aLibraryFullPath, PRInt32 aCryptoMechanismFlags, PRInt32 aCipherFlags, PRInt32* aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMPKCS11   \
-  NS_IMETHOD    Deletemodule(const nsString& aModuleName, PRInt32* aReturn);  \
-  NS_IMETHOD    Addmodule(const nsString& aModuleName, const nsString& aLibraryFullPath, PRInt32 aCryptoMechanismFlags, PRInt32 aCipherFlags, PRInt32* aReturn);  \
+  NS_IMETHOD    Deletemodule(const nsAReadableString& aModuleName, PRInt32* aReturn);  \
+  NS_IMETHOD    Addmodule(const nsAReadableString& aModuleName, const nsAReadableString& aLibraryFullPath, PRInt32 aCryptoMechanismFlags, PRInt32 aCipherFlags, PRInt32* aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMPKCS11(_to)  \
-  NS_IMETHOD    Deletemodule(const nsString& aModuleName, PRInt32* aReturn) { return _to Deletemodule(aModuleName, aReturn); }  \
-  NS_IMETHOD    Addmodule(const nsString& aModuleName, const nsString& aLibraryFullPath, PRInt32 aCryptoMechanismFlags, PRInt32 aCipherFlags, PRInt32* aReturn) { return _to Addmodule(aModuleName, aLibraryFullPath, aCryptoMechanismFlags, aCipherFlags, aReturn); }  \
+  NS_IMETHOD    Deletemodule(const nsAReadableString& aModuleName, PRInt32* aReturn) { return _to Deletemodule(aModuleName, aReturn); }  \
+  NS_IMETHOD    Addmodule(const nsAReadableString& aModuleName, const nsAReadableString& aLibraryFullPath, PRInt32 aCryptoMechanismFlags, PRInt32 aCipherFlags, PRInt32* aReturn) { return _to Addmodule(aModuleName, aLibraryFullPath, aCryptoMechanismFlags, aCipherFlags, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitPkcs11Class(nsIScriptContext *aContext, void **aPrototype);

@@ -2428,9 +2428,9 @@ public:
 	virtual ~DOMMimeTypeImpl() {
 	}
 
-	NS_METHOD GetDescription(nsString& aDescription)
+	NS_METHOD GetDescription(nsAWritableString& aDescription)
 	{
-		aDescription = mDescription;
+		aDescription.Assign(mDescription);
 		return NS_OK;
 	}
 
@@ -2441,15 +2441,15 @@ public:
 		return NS_OK;
 	}
 
-	NS_METHOD GetSuffixes(nsString& aSuffixes)
+	NS_METHOD GetSuffixes(nsAWritableString& aSuffixes)
 	{
-		aSuffixes = mSuffixes;
+		aSuffixes.Assign(mSuffixes);
 		return NS_OK;
 	}
 
-	NS_METHOD GetType(nsString& aType)
+	NS_METHOD GetType(nsAWritableString& aType)
 	{
-		aType = mType;
+		aType.Assign(mType);
 		return NS_OK;
 	}
 
@@ -2473,21 +2473,21 @@ public:
 	virtual ~DOMPluginImpl() {
 	}
 
-	NS_METHOD GetDescription(nsString& aDescription)
+	NS_METHOD GetDescription(nsAWritableString& aDescription)
 	{
-		aDescription.AssignWithConversion(mPluginTag.mDescription);
+		aDescription.Assign(NS_ConvertASCIItoUCS2(mPluginTag.mDescription));
 		return NS_OK;
 	}
 
-	NS_METHOD GetFilename(nsString& aFilename)
+	NS_METHOD GetFilename(nsAWritableString& aFilename)
 	{
-		aFilename.AssignWithConversion(mPluginTag.mFileName);
+		aFilename.Assign(NS_ConvertASCIItoUCS2(mPluginTag.mFileName));
 		return NS_OK;
 	}
 
-	NS_METHOD GetName(nsString& aName)
+	NS_METHOD GetName(nsAWritableString& aName)
 	{
-		aName.AssignWithConversion(mPluginTag.mName);
+		aName.Assign(NS_ConvertASCIItoUCS2(mPluginTag.mName));
 		return NS_OK;
 	}
 
@@ -2505,10 +2505,10 @@ public:
 		return NS_OK;
 	}
 
-	NS_METHOD NamedItem(const nsString& aName, nsIDOMMimeType** aReturn)
+	NS_METHOD NamedItem(const nsAReadableString& aName, nsIDOMMimeType** aReturn)
 	{
 		for (int index = mPluginTag.mVariants - 1; index >= 0; --index) {
-			if (aName.EqualsWithConversion(mPluginTag.mMimeTypeArray[index]))
+			if (aName.Equals(NS_ConvertASCIItoUCS2(mPluginTag.mMimeTypeArray[index])))
 				return Item(index, aReturn);
 		}
 		return NS_OK;

@@ -26,6 +26,7 @@
 #include "nsISupports.h"
 #include "nsIUnicharInputStream.h"
 #include "nsGUIEvent.h"
+#include "nsAWritableString.h"
 
 class nsIAtom;
 class nsIArena;
@@ -43,7 +44,6 @@ class nsIStyleRule;
 class nsIURI;
 class nsILoadGroup;
 class nsIViewManager;
-class nsString;
 class nsIScriptGlobalObject;
 class nsIDOMEvent;
 class nsIDeviceContext;
@@ -130,14 +130,14 @@ public:
   /**
    * Return the content (mime) type of this document.
    */
-  NS_IMETHOD GetContentType(nsString& aContentType) const = 0;
+  NS_IMETHOD GetContentType(nsAWritableString& aContentType) const = 0;
 
   /**
    * Return a standard name for the document's character set. This will
    * trigger a startDocumentLoad if necessary to answer the question.
    */
-  NS_IMETHOD GetDocumentCharacterSet(nsString& oCharSetID) = 0;
-  NS_IMETHOD SetDocumentCharacterSet(const nsString& aCharSetID) = 0;
+  NS_IMETHOD GetDocumentCharacterSet(nsAWritableString& oCharSetID) = 0;
+  NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString& aCharSetID) = 0;
 
   /**
    * Add an observer that gets notified whenever the charset changes.
@@ -161,8 +161,8 @@ public:
    * Access HTTP header data (this may also get set from other sources, like
    * HTML META tags).
    */
-  NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const = 0;
-  NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsString& aData) = 0;
+  NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsAWritableString& aData) const = 0;
+  NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsAReadableString& aData) = 0;
 
   /**
    * Create a new presentation shell that will use aContext for
@@ -296,7 +296,7 @@ public:
   /**
     * Finds text in content
    */
-  NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound) = 0;
+  NS_IMETHOD FindNext(const nsAReadableString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound) = 0;
 
   /**
     * Converts the document or a selection of the 
@@ -306,7 +306,7 @@ public:
     * NOTE: we may way to place the result in a stream,
     * but we will use a string for now -- gpk
   */
-  NS_IMETHOD   CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection = nsnull) = 0;
+  NS_IMETHOD   CreateXIF(nsAWritableString & aBuffer, nsIDOMSelection* aSelection = nsnull) = 0;
   NS_IMETHOD   ToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
   virtual void BeginConvertToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
   virtual void ConvertChildrenToXIF(nsIXIFConverter * aConverter, nsIDOMNode* aNode) = 0;
@@ -348,8 +348,8 @@ extern NS_LAYOUT nsresult
                           nsIDocument* aOwnerDocument);
 extern NS_LAYOUT nsresult
    NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
-                     const nsString& aNamespaceURI, 
-                     const nsString& aQualifiedName, 
+                     const nsAReadableString& aNamespaceURI, 
+                     const nsAReadableString& aQualifiedName, 
                      nsIDOMDocumentType* aDoctype,
                      nsIURI* aBaseURI);
 

@@ -122,10 +122,10 @@ nsGfxRadioControlFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 }
 
 //--------------------------------------------------------------
-NS_IMETHODIMP nsGfxRadioControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsGfxRadioControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue)
 {
   if (nsHTMLAtoms::checked == aName) {
-    PRBool state = (aValue.EqualsWithConversion(NS_STRING_TRUE)) ? PR_TRUE : PR_FALSE;
+    PRBool state = (aValue.Equals(NS_STRING_TRUE)) ? PR_TRUE : PR_FALSE;
 
 
     // if there is no form than the radiobtn is an orphan
@@ -147,7 +147,7 @@ NS_IMETHODIMP nsGfxRadioControlFrame::SetProperty(nsIPresContext* aPresContext, 
 }
 
 //--------------------------------------------------------------
-NS_IMETHODIMP nsGfxRadioControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP nsGfxRadioControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
   // Return the value of the property from the widget it is not null.
   // If is null, assume the widget is GFX-rendered and return a member variable instead.

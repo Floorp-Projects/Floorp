@@ -38,69 +38,69 @@ class nsIDOMHTMLAreaElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLAREAELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey)=0;
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey)=0;
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey)=0;
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey)=0;
 
-  NS_IMETHOD    GetAlt(nsString& aAlt)=0;
-  NS_IMETHOD    SetAlt(const nsString& aAlt)=0;
+  NS_IMETHOD    GetAlt(nsAWritableString& aAlt)=0;
+  NS_IMETHOD    SetAlt(const nsAReadableString& aAlt)=0;
 
-  NS_IMETHOD    GetCoords(nsString& aCoords)=0;
-  NS_IMETHOD    SetCoords(const nsString& aCoords)=0;
+  NS_IMETHOD    GetCoords(nsAWritableString& aCoords)=0;
+  NS_IMETHOD    SetCoords(const nsAReadableString& aCoords)=0;
 
-  NS_IMETHOD    GetHref(nsString& aHref)=0;
-  NS_IMETHOD    SetHref(const nsString& aHref)=0;
+  NS_IMETHOD    GetHref(nsAWritableString& aHref)=0;
+  NS_IMETHOD    SetHref(const nsAReadableString& aHref)=0;
 
   NS_IMETHOD    GetNoHref(PRBool* aNoHref)=0;
   NS_IMETHOD    SetNoHref(PRBool aNoHref)=0;
 
-  NS_IMETHOD    GetShape(nsString& aShape)=0;
-  NS_IMETHOD    SetShape(const nsString& aShape)=0;
+  NS_IMETHOD    GetShape(nsAWritableString& aShape)=0;
+  NS_IMETHOD    SetShape(const nsAReadableString& aShape)=0;
 
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex)=0;
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex)=0;
 
-  NS_IMETHOD    GetTarget(nsString& aTarget)=0;
-  NS_IMETHOD    SetTarget(const nsString& aTarget)=0;
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget)=0;
+  NS_IMETHOD    SetTarget(const nsAReadableString& aTarget)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLAREAELEMENT   \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey);  \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey);  \
-  NS_IMETHOD    GetAlt(nsString& aAlt);  \
-  NS_IMETHOD    SetAlt(const nsString& aAlt);  \
-  NS_IMETHOD    GetCoords(nsString& aCoords);  \
-  NS_IMETHOD    SetCoords(const nsString& aCoords);  \
-  NS_IMETHOD    GetHref(nsString& aHref);  \
-  NS_IMETHOD    SetHref(const nsString& aHref);  \
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey);  \
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey);  \
+  NS_IMETHOD    GetAlt(nsAWritableString& aAlt);  \
+  NS_IMETHOD    SetAlt(const nsAReadableString& aAlt);  \
+  NS_IMETHOD    GetCoords(nsAWritableString& aCoords);  \
+  NS_IMETHOD    SetCoords(const nsAReadableString& aCoords);  \
+  NS_IMETHOD    GetHref(nsAWritableString& aHref);  \
+  NS_IMETHOD    SetHref(const nsAReadableString& aHref);  \
   NS_IMETHOD    GetNoHref(PRBool* aNoHref);  \
   NS_IMETHOD    SetNoHref(PRBool aNoHref);  \
-  NS_IMETHOD    GetShape(nsString& aShape);  \
-  NS_IMETHOD    SetShape(const nsString& aShape);  \
+  NS_IMETHOD    GetShape(nsAWritableString& aShape);  \
+  NS_IMETHOD    SetShape(const nsAReadableString& aShape);  \
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex);  \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex);  \
-  NS_IMETHOD    GetTarget(nsString& aTarget);  \
-  NS_IMETHOD    SetTarget(const nsString& aTarget);  \
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget);  \
+  NS_IMETHOD    SetTarget(const nsAReadableString& aTarget);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLAREAELEMENT(_to)  \
-  NS_IMETHOD    GetAccessKey(nsString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
-  NS_IMETHOD    SetAccessKey(const nsString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
-  NS_IMETHOD    GetAlt(nsString& aAlt) { return _to GetAlt(aAlt); } \
-  NS_IMETHOD    SetAlt(const nsString& aAlt) { return _to SetAlt(aAlt); } \
-  NS_IMETHOD    GetCoords(nsString& aCoords) { return _to GetCoords(aCoords); } \
-  NS_IMETHOD    SetCoords(const nsString& aCoords) { return _to SetCoords(aCoords); } \
-  NS_IMETHOD    GetHref(nsString& aHref) { return _to GetHref(aHref); } \
-  NS_IMETHOD    SetHref(const nsString& aHref) { return _to SetHref(aHref); } \
+  NS_IMETHOD    GetAccessKey(nsAWritableString& aAccessKey) { return _to GetAccessKey(aAccessKey); } \
+  NS_IMETHOD    SetAccessKey(const nsAReadableString& aAccessKey) { return _to SetAccessKey(aAccessKey); } \
+  NS_IMETHOD    GetAlt(nsAWritableString& aAlt) { return _to GetAlt(aAlt); } \
+  NS_IMETHOD    SetAlt(const nsAReadableString& aAlt) { return _to SetAlt(aAlt); } \
+  NS_IMETHOD    GetCoords(nsAWritableString& aCoords) { return _to GetCoords(aCoords); } \
+  NS_IMETHOD    SetCoords(const nsAReadableString& aCoords) { return _to SetCoords(aCoords); } \
+  NS_IMETHOD    GetHref(nsAWritableString& aHref) { return _to GetHref(aHref); } \
+  NS_IMETHOD    SetHref(const nsAReadableString& aHref) { return _to SetHref(aHref); } \
   NS_IMETHOD    GetNoHref(PRBool* aNoHref) { return _to GetNoHref(aNoHref); } \
   NS_IMETHOD    SetNoHref(PRBool aNoHref) { return _to SetNoHref(aNoHref); } \
-  NS_IMETHOD    GetShape(nsString& aShape) { return _to GetShape(aShape); } \
-  NS_IMETHOD    SetShape(const nsString& aShape) { return _to SetShape(aShape); } \
+  NS_IMETHOD    GetShape(nsAWritableString& aShape) { return _to GetShape(aShape); } \
+  NS_IMETHOD    SetShape(const nsAReadableString& aShape) { return _to SetShape(aShape); } \
   NS_IMETHOD    GetTabIndex(PRInt32* aTabIndex) { return _to GetTabIndex(aTabIndex); } \
   NS_IMETHOD    SetTabIndex(PRInt32 aTabIndex) { return _to SetTabIndex(aTabIndex); } \
-  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to GetTarget(aTarget); } \
-  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to SetTarget(aTarget); } \
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget) { return _to GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsAReadableString& aTarget) { return _to SetTarget(aTarget); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLAreaElementClass(nsIScriptContext *aContext, void **aPrototype);

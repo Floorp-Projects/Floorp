@@ -101,14 +101,14 @@ public:
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener)=0;
   NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener)=0;
 
-  NS_IMETHOD    GetStatus(nsString& aStatus)=0;
-  NS_IMETHOD    SetStatus(const nsString& aStatus)=0;
+  NS_IMETHOD    GetStatus(nsAWritableString& aStatus)=0;
+  NS_IMETHOD    SetStatus(const nsAReadableString& aStatus)=0;
 
-  NS_IMETHOD    GetDefaultStatus(nsString& aDefaultStatus)=0;
-  NS_IMETHOD    SetDefaultStatus(const nsString& aDefaultStatus)=0;
+  NS_IMETHOD    GetDefaultStatus(nsAWritableString& aDefaultStatus)=0;
+  NS_IMETHOD    SetDefaultStatus(const nsAReadableString& aDefaultStatus)=0;
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
+  NS_IMETHOD    SetName(const nsAReadableString& aName)=0;
 
   NS_IMETHOD    GetInnerWidth(PRInt32* aInnerWidth)=0;
   NS_IMETHOD    SetInnerWidth(PRInt32 aInnerWidth)=0;
@@ -140,7 +140,7 @@ public:
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 
-  NS_IMETHOD    Dump(const nsString& aStr)=0;
+  NS_IMETHOD    Dump(const nsAReadableString& aStr)=0;
 
   NS_IMETHOD    Alert(JSContext* cx, jsval* argv, PRUint32 argc)=0;
 
@@ -198,7 +198,7 @@ public:
 
   NS_IMETHOD    DisableExternalCapture()=0;
 
-  NS_IMETHOD    SetCursor(const nsString& aCursor)=0;
+  NS_IMETHOD    SetCursor(const nsAReadableString& aCursor)=0;
 
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
 
@@ -208,11 +208,11 @@ public:
 
   NS_IMETHOD    Close(JSContext* cx, jsval* argv, PRUint32 argc)=0;
 
-  NS_IMETHOD    UpdateCommands(const nsString& aAction)=0;
+  NS_IMETHOD    UpdateCommands(const nsAReadableString& aAction)=0;
 
-  NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn)=0;
+  NS_IMETHOD    Escape(const nsAReadableString& aStr, nsAWritableString& aReturn)=0;
 
-  NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn)=0;
+  NS_IMETHOD    Unescape(const nsAReadableString& aStr, nsAWritableString& aReturn)=0;
 
   NS_IMETHOD    GetSelection(nsIDOMSelection** aReturn)=0;
 };
@@ -244,12 +244,12 @@ public:
   NS_IMETHOD    GetControllers(nsIControllers** aControllers);  \
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);  \
   NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener);  \
-  NS_IMETHOD    GetStatus(nsString& aStatus);  \
-  NS_IMETHOD    SetStatus(const nsString& aStatus);  \
-  NS_IMETHOD    GetDefaultStatus(nsString& aDefaultStatus);  \
-  NS_IMETHOD    SetDefaultStatus(const nsString& aDefaultStatus);  \
-  NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetStatus(nsAWritableString& aStatus);  \
+  NS_IMETHOD    SetStatus(const nsAReadableString& aStatus);  \
+  NS_IMETHOD    GetDefaultStatus(nsAWritableString& aDefaultStatus);  \
+  NS_IMETHOD    SetDefaultStatus(const nsAReadableString& aDefaultStatus);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
+  NS_IMETHOD    SetName(const nsAReadableString& aName);  \
   NS_IMETHOD    GetInnerWidth(PRInt32* aInnerWidth);  \
   NS_IMETHOD    SetInnerWidth(PRInt32 aInnerWidth);  \
   NS_IMETHOD    GetInnerHeight(PRInt32* aInnerHeight);  \
@@ -269,7 +269,7 @@ public:
   NS_IMETHOD    GetScrollX(PRInt32* aScrollX);  \
   NS_IMETHOD    GetScrollY(PRInt32* aScrollY);  \
   NS_IMETHOD    GetLength(PRUint32* aLength);  \
-  NS_IMETHOD    Dump(const nsString& aStr);  \
+  NS_IMETHOD    Dump(const nsAReadableString& aStr);  \
   NS_IMETHOD    Alert(JSContext* cx, jsval* argv, PRUint32 argc);  \
   NS_IMETHOD    Confirm(JSContext* cx, jsval* argv, PRUint32 argc, PRBool* aReturn);  \
   NS_IMETHOD    Prompt(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);  \
@@ -298,14 +298,14 @@ public:
   NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt);  \
   NS_IMETHOD    EnableExternalCapture();  \
   NS_IMETHOD    DisableExternalCapture();  \
-  NS_IMETHOD    SetCursor(const nsString& aCursor);  \
+  NS_IMETHOD    SetCursor(const nsAReadableString& aCursor);  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
   NS_IMETHOD    Close();  \
   NS_IMETHOD    Close(JSContext* cx, jsval* argv, PRUint32 argc);  \
-  NS_IMETHOD    UpdateCommands(const nsString& aAction);  \
-  NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn);  \
-  NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn);  \
+  NS_IMETHOD    UpdateCommands(const nsAReadableString& aAction);  \
+  NS_IMETHOD    Escape(const nsAReadableString& aStr, nsAWritableString& aReturn);  \
+  NS_IMETHOD    Unescape(const nsAReadableString& aStr, nsAWritableString& aReturn);  \
   NS_IMETHOD    GetSelection(nsIDOMSelection** aReturn);  \
 
 
@@ -336,12 +336,12 @@ public:
   NS_IMETHOD    GetControllers(nsIControllers** aControllers) { return _to GetControllers(aControllers); } \
   NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener) { return _to GetOpener(aOpener); } \
   NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener) { return _to SetOpener(aOpener); } \
-  NS_IMETHOD    GetStatus(nsString& aStatus) { return _to GetStatus(aStatus); } \
-  NS_IMETHOD    SetStatus(const nsString& aStatus) { return _to SetStatus(aStatus); } \
-  NS_IMETHOD    GetDefaultStatus(nsString& aDefaultStatus) { return _to GetDefaultStatus(aDefaultStatus); } \
-  NS_IMETHOD    SetDefaultStatus(const nsString& aDefaultStatus) { return _to SetDefaultStatus(aDefaultStatus); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetStatus(nsAWritableString& aStatus) { return _to GetStatus(aStatus); } \
+  NS_IMETHOD    SetStatus(const nsAReadableString& aStatus) { return _to SetStatus(aStatus); } \
+  NS_IMETHOD    GetDefaultStatus(nsAWritableString& aDefaultStatus) { return _to GetDefaultStatus(aDefaultStatus); } \
+  NS_IMETHOD    SetDefaultStatus(const nsAReadableString& aDefaultStatus) { return _to SetDefaultStatus(aDefaultStatus); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsAReadableString& aName) { return _to SetName(aName); } \
   NS_IMETHOD    GetInnerWidth(PRInt32* aInnerWidth) { return _to GetInnerWidth(aInnerWidth); } \
   NS_IMETHOD    SetInnerWidth(PRInt32 aInnerWidth) { return _to SetInnerWidth(aInnerWidth); } \
   NS_IMETHOD    GetInnerHeight(PRInt32* aInnerHeight) { return _to GetInnerHeight(aInnerHeight); } \
@@ -361,7 +361,7 @@ public:
   NS_IMETHOD    GetScrollX(PRInt32* aScrollX) { return _to GetScrollX(aScrollX); } \
   NS_IMETHOD    GetScrollY(PRInt32* aScrollY) { return _to GetScrollY(aScrollY); } \
   NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD    Dump(const nsString& aStr) { return _to Dump(aStr); }  \
+  NS_IMETHOD    Dump(const nsAReadableString& aStr) { return _to Dump(aStr); }  \
   NS_IMETHOD    Alert(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Alert(cx, argv, argc); }  \
   NS_IMETHOD    Confirm(JSContext* cx, jsval* argv, PRUint32 argc, PRBool* aReturn) { return _to Confirm(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Prompt(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn) { return _to Prompt(cx, argv, argc, aReturn); }  \
@@ -390,14 +390,14 @@ public:
   NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt) { return _to RouteEvent(aEvt); }  \
   NS_IMETHOD    EnableExternalCapture() { return _to EnableExternalCapture(); }  \
   NS_IMETHOD    DisableExternalCapture() { return _to DisableExternalCapture(); }  \
-  NS_IMETHOD    SetCursor(const nsString& aCursor) { return _to SetCursor(aCursor); }  \
+  NS_IMETHOD    SetCursor(const nsAReadableString& aCursor) { return _to SetCursor(aCursor); }  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to Open(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to OpenDialog(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Close() { return _to Close(); }  \
   NS_IMETHOD    Close(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Close(cx, argv, argc); }  \
-  NS_IMETHOD    UpdateCommands(const nsString& aAction) { return _to UpdateCommands(aAction); }  \
-  NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn) { return _to Escape(aStr, aReturn); }  \
-  NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn) { return _to Unescape(aStr, aReturn); }  \
+  NS_IMETHOD    UpdateCommands(const nsAReadableString& aAction) { return _to UpdateCommands(aAction); }  \
+  NS_IMETHOD    Escape(const nsAReadableString& aStr, nsAWritableString& aReturn) { return _to Escape(aStr, aReturn); }  \
+  NS_IMETHOD    Unescape(const nsAReadableString& aStr, nsAWritableString& aReturn) { return _to Unescape(aStr, aReturn); }  \
   NS_IMETHOD    GetSelection(nsIDOMSelection** aReturn) { return _to GetSelection(aReturn); }  \
 
 

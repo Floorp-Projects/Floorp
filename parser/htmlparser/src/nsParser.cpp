@@ -1609,16 +1609,11 @@ nsresult nsParser::Parse(nsIInputStream& aStream,const nsString& aMimeType,PRBoo
  * @param   aMimeType tells us what type of content to expect in the given string
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(const nsString& aSourceBuffer,void* aKey,const nsString&
+nsresult nsParser::Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsString&
 aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){ 
   
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again! 
-
-#if 0
-    //this is only for debug purposes 
-  aSourceBuffer.DebugDump(); 
-#endif 
 
   nsresult result=NS_OK; 
   nsParser* me = this; 
@@ -1701,7 +1696,7 @@ aMimeType,PRBool aVerifyEnabled,PRBool aLastCall,nsDTDMode aMode){
  *  @param   aMimeType tells us what kind of stuff you're inserting
  *  @return  TRUE if valid, otherwise FALSE
  */
-PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,nsDTDMode aMode){
+PRBool nsParser::IsValidFragment(const nsAReadableString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,nsDTDMode aMode){
 
   /************************************************************************************
     This method works like this:
@@ -1754,7 +1749,7 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
  *  @param   
  *  @return  
  */
-nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,nsDTDMode aMode){
+nsresult nsParser::ParseFragment(const nsAReadableString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aMimeType,nsDTDMode aMode){
 
   nsresult result=NS_OK;
   nsAutoString  theContext;

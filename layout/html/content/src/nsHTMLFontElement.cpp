@@ -58,12 +58,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLFontElement
-  NS_IMETHOD GetColor(nsString& aColor);
-  NS_IMETHOD SetColor(const nsString& aColor);
-  NS_IMETHOD GetFace(nsString& aFace);
-  NS_IMETHOD SetFace(const nsString& aFace);
-  NS_IMETHOD GetSize(nsString& aSize);
-  NS_IMETHOD SetSize(const nsString& aSize);
+  NS_DECL_IDOMHTMLFONTELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -138,7 +133,7 @@ NS_IMPL_STRING_ATTR(nsHTMLFontElement, Size, size)
 
 NS_IMETHODIMP
 nsHTMLFontElement::StringToAttribute(nsIAtom* aAttribute,
-                              const nsString& aValue,
+                              const nsAReadableString& aValue,
                               nsHTMLValue& aResult)
 {
   if ((aAttribute == nsHTMLAtoms::size) ||
@@ -167,22 +162,25 @@ nsHTMLFontElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
                                      const nsHTMLValue& aValue,
-                                     nsString& aResult) const
+                                     nsAWritableString& aResult) const
 {
   if ((aAttribute == nsHTMLAtoms::size) ||
       (aAttribute == nsHTMLAtoms::pointSize) ||
       (aAttribute == nsHTMLAtoms::fontWeight)) {
     aResult.Truncate();
+    nsAutoString intVal;
     if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
-      aResult.AppendInt(aValue.GetIntValue(), 10);
+      intVal.AppendInt(aValue.GetIntValue(), 10);
+      aResult.Append(intVal);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
     else if (aValue.GetUnit() == eHTMLUnit_Integer) {
       PRInt32 value = aValue.GetIntValue(); 
       if (value >= 0) {
-        aResult.AppendWithConversion('+');
+        aResult.Append(NS_LITERAL_STRING("+"));
       }
-      aResult.AppendInt(value, 10);
+      intVal.AppendInt(value, 10);      
+      aResult.Append(intVal);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
     return NS_CONTENT_ATTR_NOT_THERE;

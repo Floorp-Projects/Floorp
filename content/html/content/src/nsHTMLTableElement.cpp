@@ -72,40 +72,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLTableElement
-  NS_IMETHOD GetCaption(nsIDOMHTMLTableCaptionElement** aCaption);
-  NS_IMETHOD SetCaption(nsIDOMHTMLTableCaptionElement* aCaption);
-  NS_IMETHOD GetTHead(nsIDOMHTMLTableSectionElement** aTHead);
-  NS_IMETHOD SetTHead(nsIDOMHTMLTableSectionElement* aTHead);
-  NS_IMETHOD GetTFoot(nsIDOMHTMLTableSectionElement** aTFoot);
-  NS_IMETHOD SetTFoot(nsIDOMHTMLTableSectionElement* aTFoot);
-  NS_IMETHOD GetRows(nsIDOMHTMLCollection** aRows);
-  NS_IMETHOD GetTBodies(nsIDOMHTMLCollection** aTBodies);
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
-  NS_IMETHOD GetBgColor(nsString& aBgColor);
-  NS_IMETHOD SetBgColor(const nsString& aBgColor);
-  NS_IMETHOD GetBorder(nsString& aBorder);
-  NS_IMETHOD SetBorder(const nsString& aBorder);
-  NS_IMETHOD GetCellPadding(nsString& aCellPadding);
-  NS_IMETHOD SetCellPadding(const nsString& aCellPadding);
-  NS_IMETHOD GetCellSpacing(nsString& aCellSpacing);
-  NS_IMETHOD SetCellSpacing(const nsString& aCellSpacing);
-  NS_IMETHOD GetFrame(nsString& aFrame);
-  NS_IMETHOD SetFrame(const nsString& aFrame);
-  NS_IMETHOD GetRules(nsString& aRules);
-  NS_IMETHOD SetRules(const nsString& aRules);
-  NS_IMETHOD GetSummary(nsString& aSummary);
-  NS_IMETHOD SetSummary(const nsString& aSummary);
-  NS_IMETHOD GetWidth(nsString& aWidth);
-  NS_IMETHOD SetWidth(const nsString& aWidth);
-  NS_IMETHOD CreateTHead(nsIDOMHTMLElement** aReturn);
-  NS_IMETHOD DeleteTHead();
-  NS_IMETHOD CreateTFoot(nsIDOMHTMLElement** aReturn);
-  NS_IMETHOD DeleteTFoot();
-  NS_IMETHOD CreateCaption(nsIDOMHTMLElement** aReturn);
-  NS_IMETHOD DeleteCaption();
-  NS_IMETHOD InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aReturn);
-  NS_IMETHOD DeleteRow(PRInt32 aIndex);
+  NS_DECL_IDOMHTMLTABLEELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -136,7 +103,7 @@ public:
 
   NS_IMETHOD    GetLength(PRUint32* aLength);
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn);
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
 
   NS_IMETHOD    ParentDestroyed();
 
@@ -299,7 +266,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP 
-TableRowsCollection::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
+TableRowsCollection::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
 
@@ -868,7 +835,7 @@ static nsGenericHTMLElement::EnumTable kLayoutTable[] = {
 
 NS_IMETHODIMP
 nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsString& aValue,
+                                      const nsAReadableString& aValue,
                                       nsHTMLValue& aResult)
 {
   /* ignore summary, just a string */
@@ -962,7 +929,7 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsString& aResult) const
+                               nsAWritableString& aResult) const
 {
   /* ignore summary, just a string */
   /* ignore attributes that are of standard types

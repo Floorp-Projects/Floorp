@@ -73,8 +73,8 @@ public:
   virtual const nsIID& GetIID();
 
     // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
   virtual void Reset(nsIPresContext* aPresContext);
   virtual PRInt32 GetMaxNumValues();
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,

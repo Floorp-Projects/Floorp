@@ -41,12 +41,12 @@ class nsXMLDocumentType : public nsIDOMDocumentType,
                           public nsIContent
 {
 public:
-  nsXMLDocumentType(const nsString& aName,
+  nsXMLDocumentType(const nsAReadableString& aName,
                     nsIDOMNamedNodeMap *aEntities,
                     nsIDOMNamedNodeMap *aNotations,
-                    const nsString& aPublicId,
-                    const nsString& aSystemId,
-                    const nsString& aInternalSubset);
+                    const nsAReadableString& aPublicId,
+                    const nsAReadableString& aSystemId,
+                    const nsAReadableString& aInternalSubset);
 
   virtual ~nsXMLDocumentType();
 
@@ -85,12 +85,12 @@ protected:
 
 nsresult
 NS_NewXMLDocumentType(nsIContent** aInstancePtrResult,
-                      const nsString& aName,
+                      const nsAReadableString& aName,
                       nsIDOMNamedNodeMap *aEntities,
                       nsIDOMNamedNodeMap *aNotations,
-                      const nsString& aPublicId,
-                      const nsString& aSystemId,
-                      const nsString& aInternalSubset)
+                      const nsAReadableString& aPublicId,
+                      const nsAReadableString& aSystemId,
+                      const nsAReadableString& aInternalSubset)
 
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
@@ -105,12 +105,12 @@ NS_NewXMLDocumentType(nsIContent** aInstancePtrResult,
   return it->QueryInterface(kIContentIID, (void **) aInstancePtrResult);
 }
 
-nsXMLDocumentType::nsXMLDocumentType(const nsString& aName,
+nsXMLDocumentType::nsXMLDocumentType(const nsAReadableString& aName,
                                      nsIDOMNamedNodeMap *aEntities,
                                      nsIDOMNamedNodeMap *aNotations,
-                                     const nsString& aPublicId,
-                                     const nsString& aSystemId,
-                                     const nsString& aInternalSubset) :
+                                     const nsAReadableString& aPublicId,
+                                     const nsAReadableString& aSystemId,
+                                     const nsAReadableString& aInternalSubset) :
   mName(aName),
   mPublicId(aPublicId),
   mSystemId(aSystemId),
@@ -184,9 +184,9 @@ nsXMLDocumentType::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 }
 
 NS_IMETHODIMP    
-nsXMLDocumentType::GetName(nsString& aName)
+nsXMLDocumentType::GetName(nsAWritableString& aName)
 {
-  aName=mName;
+  aName.Assign(mName);
 
   return NS_OK;
 }
@@ -218,25 +218,25 @@ nsXMLDocumentType::GetNotations(nsIDOMNamedNodeMap** aNotations)
 }
 
 NS_IMETHODIMP
-nsXMLDocumentType::GetPublicId(nsString& aPublicId)
+nsXMLDocumentType::GetPublicId(nsAWritableString& aPublicId)
 {
-  aPublicId = mPublicId;
+  aPublicId.Assign(mPublicId);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXMLDocumentType::GetSystemId(nsString& aSystemId)
+nsXMLDocumentType::GetSystemId(nsAWritableString& aSystemId)
 {
-  aSystemId = mSystemId;
+  aSystemId.Assign(mSystemId);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXMLDocumentType::GetInternalSubset(nsString& aInternalSubset)
+nsXMLDocumentType::GetInternalSubset(nsAWritableString& aInternalSubset)
 {
-  aInternalSubset = mInternalSubset;
+  aInternalSubset.Assign(mInternalSubset);
 
   return NS_OK;
 }
@@ -292,9 +292,9 @@ nsXMLDocumentType::GetNodeInfo(nsINodeInfo*& aResult) const
 }
 
 NS_IMETHODIMP
-nsXMLDocumentType::GetNodeName(nsString& aNodeName)
+nsXMLDocumentType::GetNodeName(nsAWritableString& aNodeName)
 {
-  aNodeName=mName;
+  aNodeName.Assign(mName);
   return NS_OK;
 }
 

@@ -269,7 +269,7 @@ FileGen::GetVariableTypeForParameter(char *aBuffer, IdlVariable &aVariable)
         strcpy(aBuffer, "float");
         break;
       case TYPE_STRING:
-        strcpy(aBuffer, "nsString&");
+        strcpy(aBuffer, "nsAReadableString&");
         break;
       case TYPE_OBJECT:
         sprintf(aBuffer, kObjTypeStr, aVariable.GetTypeName());
@@ -287,6 +287,17 @@ FileGen::GetVariableTypeForParameter(char *aBuffer, IdlVariable &aVariable)
         // XXX Fail for other cases
         break;
     }
+}
+
+void
+FileGen::GetVariableTypeForReturnValue(char *aBuffer, IdlVariable &aVariable)
+{
+  if (TYPE_STRING == aVariable.GetType()) {
+    strcpy(aBuffer, "nsAWritableString&");
+  }
+  else {
+    GetVariableTypeForParameter(aBuffer, aVariable);
+  }
 }
 
 void

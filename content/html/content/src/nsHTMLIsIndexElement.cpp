@@ -54,9 +54,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLIsIndexElement
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD GetPrompt(nsString& aPrompt);
-  NS_IMETHOD SetPrompt(const nsString& aPrompt);
+  NS_DECL_IDOMHTMLISINDEXELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -137,7 +135,7 @@ NS_IMPL_STRING_ATTR(nsHTMLIsIndexElement, Prompt, prompt)
 
 NS_IMETHODIMP
 nsHTMLIsIndexElement::StringToAttribute(nsIAtom* aAttribute,
-                                        const nsString& aValue,
+                                        const nsAReadableString& aValue,
                                         nsHTMLValue& aResult)
 {
   // XXX write me
@@ -147,7 +145,7 @@ nsHTMLIsIndexElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLIsIndexElement::AttributeToString(nsIAtom* aAttribute,
                                         const nsHTMLValue& aValue,
-                                        nsString& aResult) const
+                                        nsAWritableString& aResult) const
 {
   // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);

@@ -37,12 +37,12 @@ class nsDOMDocumentType : public nsIDOMDocumentType,
                           public nsIContent
 {
 public:
-  nsDOMDocumentType(const nsString& aName,
+  nsDOMDocumentType(const nsAReadableString& aName,
                     nsIDOMNamedNodeMap *aEntities,
                     nsIDOMNamedNodeMap *aNotations,
-                    const nsString& aPublicId,
-                    const nsString& aSystemId,
-                    const nsString& aInternalSubset);
+                    const nsAReadableString& aPublicId,
+                    const nsAReadableString& aSystemId,
+                    const nsAReadableString& aInternalSubset);
 
   virtual ~nsDOMDocumentType();
 
@@ -78,11 +78,11 @@ protected:
 };
 
 extern nsresult NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
-                                      const nsString& aName,
+                                      const nsAReadableString& aName,
                                       nsIDOMNamedNodeMap *aEntities,
                                       nsIDOMNamedNodeMap *aNotations,
-                                      const nsString& aPublicId,
-                                      const nsString& aSystemId,
-                                      const nsString& aInternalSubset);
+                                      const nsAReadableString& aPublicId,
+                                      const nsAReadableString& aSystemId,
+                                      const nsAReadableString& aInternalSubset);
 
 #endif // nsDOMDocument_h___

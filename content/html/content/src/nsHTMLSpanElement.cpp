@@ -114,7 +114,7 @@ nsHTMLSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMETHODIMP
 nsHTMLSpanElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsString& aValue,
+                                     const nsAReadableString& aValue,
                                      nsHTMLValue& aResult)
 {
   // XXX write me
@@ -124,7 +124,7 @@ nsHTMLSpanElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLSpanElement::AttributeToString(nsIAtom* aAttribute,
                                      const nsHTMLValue& aValue,
-                                     nsString& aResult) const
+                                     nsAWritableString& aResult) const
 {
   // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);

@@ -89,7 +89,7 @@ public:
     GetClasses(nsClassList* aList, nsVoidArray& aArray);
 
     static nsresult
-    ParseClasses(nsClassList** aList, const nsString& aValue);
+    ParseClasses(nsClassList** aList, const nsAReadableString& aValue);
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -114,7 +114,7 @@ protected:
 
     nsXULAttribute(nsIContent* aContent,
                    nsINodeInfo* aNodeInfo,
-                   const nsString& aValue);
+                   const nsAReadableString& aValue);
 
     virtual ~nsXULAttribute();
 
@@ -122,7 +122,7 @@ public:
     static nsresult
     Create(nsIContent* aContent,
            nsINodeInfo* aNodeInfo,
-           const nsString& aValue,
+           const nsAReadableString& aValue,
            nsXULAttribute** aResult);
 
     // nsISupports interface
@@ -139,10 +139,10 @@ public:
     NS_IMETHOD SetScriptObject(void *aScriptObject);
 
     // Implementation methods
-    void GetQualifiedName(nsString& aAttributeName);
+    void GetQualifiedName(nsAWritableString& aAttributeName);
 
     nsINodeInfo* GetNodeInfo() const { return mNodeInfo; }
-    nsresult     SetValueInternal(const nsString& aValue);
+    nsresult     SetValueInternal(const nsAReadableString& aValue);
     nsresult     GetValueAsAtom(nsIAtom** aResult);
 
 protected:
@@ -168,7 +168,7 @@ protected:
         return (PRWord(mValue) & kTypeMask) == kStringType;
     }
 
-    nsresult GetValueInternal(nsString& aResult) {
+    nsresult GetValueInternal(nsAWritableString& aResult) {
         nsresult rv = NS_OK;
         if (! mValue) {
             aResult.Truncate();
@@ -185,7 +185,7 @@ protected:
 
     void ReleaseValue() {
         if (IsStringValue()) {
-            delete[] (PRUnichar*)(mValue);
+            nsMemory::Free(mValue);
         }
         else {
             nsIAtom* atom = (nsIAtom*)(PRWord(mValue) & ~PRWord(kTypeMask));
@@ -226,8 +226,8 @@ public:
     nsresult HasClass(nsIAtom* aClass) const;
 
     nsresult SetClassList(nsClassList* aClassList);
-    nsresult UpdateClassList(const nsString& aValue);
-    nsresult UpdateStyleRule(nsIURI* aDocURL, const nsString& aValue);
+    nsresult UpdateClassList(const nsAReadableString& aValue);
+    nsresult UpdateStyleRule(nsIURI* aDocURL, const nsAReadableString& aValue);
 
     nsresult SetInlineStyleRule(nsIStyleRule* aRule);
     nsresult GetInlineStyleRule(nsIStyleRule*& aRule);

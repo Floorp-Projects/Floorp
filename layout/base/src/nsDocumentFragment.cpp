@@ -49,9 +49,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // interface nsIDOMDocumentFragment
-  NS_IMETHOD    GetNodeName(nsString& aNodeName);
-  NS_IMETHOD    GetNodeValue(nsString& aNodeValue);
-  NS_IMETHOD    SetNodeValue(const nsString& aNodeValue);
+  NS_IMETHOD    GetNodeName(nsAWritableString& aNodeName);
+  NS_IMETHOD    GetNodeValue(nsAWritableString& aNodeValue);
+  NS_IMETHOD    SetNodeValue(const nsAReadableString& aNodeValue);
   NS_IMETHOD    GetNodeType(PRUint16* aNodeType);
   NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode)
     { 
@@ -93,12 +93,12 @@ public:
   NS_IMETHOD    HasChildNodes(PRBool* aReturn)
     { return mInner.HasChildNodes(aReturn); }
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
-  NS_IMETHOD    GetPrefix(nsString& aPrefix);
-  NS_IMETHOD    SetPrefix(const nsString& aPrefix);
-  NS_IMETHOD    GetNamespaceURI(nsString& aNamespaceURI);
-  NS_IMETHOD    GetLocalName(nsString& aLocalName);
+  NS_IMETHOD    GetPrefix(nsAWritableString& aPrefix);
+  NS_IMETHOD    SetPrefix(const nsAReadableString& aPrefix);
+  NS_IMETHOD    GetNamespaceURI(nsAWritableString& aNamespaceURI);
+  NS_IMETHOD    GetLocalName(nsAWritableString& aLocalName);
   NS_IMETHOD    Normalize();
-  NS_IMETHOD    Supports(const nsString& aFeature, const nsString& aVersion,
+  NS_IMETHOD    Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion,
                          PRBool* aReturn);
 
   // interface nsIScriptObjectOwner
@@ -106,7 +106,7 @@ public:
   NS_IMETHOD SetScriptObject(void* aScriptObject);
 
   // interface nsIContent
-  NS_IMETHOD ParseAttributeString(const nsString& aStr, 
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr, 
                                   nsIAtom*& aName,
                                   PRInt32& aNameSpaceID)
     { aName = nsnull;
@@ -166,18 +166,18 @@ public:
   NS_IMETHOD IsSynthetic(PRBool& aResult)
     { return mInner.IsSynthetic(aResult); }
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsString& aValue,
+                          const nsAReadableString& aValue,
                           PRBool aNotify)
     { return NS_OK; }
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsString& aValue,
+                          const nsAReadableString& aValue,
                           PRBool aNotify)
     { return NS_OK; }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                          nsString& aResult) const
+                          nsAWritableString& aResult) const
     { return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                          nsIAtom*& aPrefix, nsString& aResult) const
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const
     { return NS_CONTENT_ATTR_NOT_THERE; }
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                             PRBool aNotify)
@@ -352,21 +352,21 @@ nsDocumentFragment::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP    
-nsDocumentFragment::GetNodeName(nsString& aNodeName)
+nsDocumentFragment::GetNodeName(nsAWritableString& aNodeName)
 {
-  aNodeName.AssignWithConversion("#document-fragment");
+  aNodeName.Assign(NS_ConvertASCIItoUCS2("#document-fragment"));
   return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsDocumentFragment::GetNodeValue(nsString& aNodeValue)
+nsDocumentFragment::GetNodeValue(nsAWritableString& aNodeValue)
 {
   aNodeValue.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsDocumentFragment::SetNodeValue(const nsString& aNodeValue)
+nsDocumentFragment::SetNodeValue(const nsAReadableString& aNodeValue)
 {
   // The node value can't be modified
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
@@ -392,27 +392,27 @@ nsDocumentFragment::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 NS_IMETHODIMP
-nsDocumentFragment::GetNamespaceURI(nsString& aNamespaceURI)
+nsDocumentFragment::GetNamespaceURI(nsAWritableString& aNamespaceURI)
 { 
   aNamespaceURI.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocumentFragment::GetPrefix(nsString& aPrefix)
+nsDocumentFragment::GetPrefix(nsAWritableString& aPrefix)
 {
   aPrefix.Truncate();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocumentFragment::SetPrefix(const nsString& aPrefix)
+nsDocumentFragment::SetPrefix(const nsAReadableString& aPrefix)
 {
   return NS_ERROR_DOM_NAMESPACE_ERR;
 }
 
 NS_IMETHODIMP
-nsDocumentFragment::GetLocalName(nsString& aLocalName)
+nsDocumentFragment::GetLocalName(nsAWritableString& aLocalName)
 {
   return GetNodeName(aLocalName);
 }
@@ -438,7 +438,7 @@ nsDocumentFragment::Normalize()
 
 
 NS_IMETHODIMP
-nsDocumentFragment::Supports(const nsString& aFeature, const nsString& aVersion,
+nsDocumentFragment::Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion,
                              PRBool* aReturn)
 {
   return nsGenericElement::InternalSupports(aFeature, aVersion, aReturn);

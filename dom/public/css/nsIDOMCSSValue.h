@@ -43,23 +43,23 @@ public:
     CSS_CUSTOM = 3
   };
 
-  NS_IMETHOD    GetCssText(nsString& aCssText)=0;
-  NS_IMETHOD    SetCssText(const nsString& aCssText)=0;
+  NS_IMETHOD    GetCssText(nsAWritableString& aCssText)=0;
+  NS_IMETHOD    SetCssText(const nsAReadableString& aCssText)=0;
 
   NS_IMETHOD    GetValueType(PRUint16* aValueType)=0;
 };
 
 
 #define NS_DECL_IDOMCSSVALUE   \
-  NS_IMETHOD    GetCssText(nsString& aCssText);  \
-  NS_IMETHOD    SetCssText(const nsString& aCssText);  \
+  NS_IMETHOD    GetCssText(nsAWritableString& aCssText);  \
+  NS_IMETHOD    SetCssText(const nsAReadableString& aCssText);  \
   NS_IMETHOD    GetValueType(PRUint16* aValueType);  \
 
 
 
 #define NS_FORWARD_IDOMCSSVALUE(_to)  \
-  NS_IMETHOD    GetCssText(nsString& aCssText) { return _to GetCssText(aCssText); } \
-  NS_IMETHOD    SetCssText(const nsString& aCssText) { return _to SetCssText(aCssText); } \
+  NS_IMETHOD    GetCssText(nsAWritableString& aCssText) { return _to GetCssText(aCssText); } \
+  NS_IMETHOD    SetCssText(const nsAReadableString& aCssText) { return _to SetCssText(aCssText); } \
   NS_IMETHOD    GetValueType(PRUint16* aValueType) { return _to GetValueType(aValueType); } \
 
 

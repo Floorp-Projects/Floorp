@@ -43,23 +43,23 @@ public:
 
   NS_IMETHOD    GetLength(PRInt32* aLength)=0;
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
+  NS_IMETHOD    SetName(const nsAReadableString& aName)=0;
 
-  NS_IMETHOD    GetAcceptCharset(nsString& aAcceptCharset)=0;
-  NS_IMETHOD    SetAcceptCharset(const nsString& aAcceptCharset)=0;
+  NS_IMETHOD    GetAcceptCharset(nsAWritableString& aAcceptCharset)=0;
+  NS_IMETHOD    SetAcceptCharset(const nsAReadableString& aAcceptCharset)=0;
 
-  NS_IMETHOD    GetAction(nsString& aAction)=0;
-  NS_IMETHOD    SetAction(const nsString& aAction)=0;
+  NS_IMETHOD    GetAction(nsAWritableString& aAction)=0;
+  NS_IMETHOD    SetAction(const nsAReadableString& aAction)=0;
 
-  NS_IMETHOD    GetEnctype(nsString& aEnctype)=0;
-  NS_IMETHOD    SetEnctype(const nsString& aEnctype)=0;
+  NS_IMETHOD    GetEnctype(nsAWritableString& aEnctype)=0;
+  NS_IMETHOD    SetEnctype(const nsAReadableString& aEnctype)=0;
 
-  NS_IMETHOD    GetMethod(nsString& aMethod)=0;
-  NS_IMETHOD    SetMethod(const nsString& aMethod)=0;
+  NS_IMETHOD    GetMethod(nsAWritableString& aMethod)=0;
+  NS_IMETHOD    SetMethod(const nsAReadableString& aMethod)=0;
 
-  NS_IMETHOD    GetTarget(nsString& aTarget)=0;
-  NS_IMETHOD    SetTarget(const nsString& aTarget)=0;
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget)=0;
+  NS_IMETHOD    SetTarget(const nsAReadableString& aTarget)=0;
 
   NS_IMETHOD    Submit()=0;
 
@@ -70,18 +70,18 @@ public:
 #define NS_DECL_IDOMHTMLFORMELEMENT   \
   NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements);  \
   NS_IMETHOD    GetLength(PRInt32* aLength);  \
-  NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    SetName(const nsString& aName);  \
-  NS_IMETHOD    GetAcceptCharset(nsString& aAcceptCharset);  \
-  NS_IMETHOD    SetAcceptCharset(const nsString& aAcceptCharset);  \
-  NS_IMETHOD    GetAction(nsString& aAction);  \
-  NS_IMETHOD    SetAction(const nsString& aAction);  \
-  NS_IMETHOD    GetEnctype(nsString& aEnctype);  \
-  NS_IMETHOD    SetEnctype(const nsString& aEnctype);  \
-  NS_IMETHOD    GetMethod(nsString& aMethod);  \
-  NS_IMETHOD    SetMethod(const nsString& aMethod);  \
-  NS_IMETHOD    GetTarget(nsString& aTarget);  \
-  NS_IMETHOD    SetTarget(const nsString& aTarget);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
+  NS_IMETHOD    SetName(const nsAReadableString& aName);  \
+  NS_IMETHOD    GetAcceptCharset(nsAWritableString& aAcceptCharset);  \
+  NS_IMETHOD    SetAcceptCharset(const nsAReadableString& aAcceptCharset);  \
+  NS_IMETHOD    GetAction(nsAWritableString& aAction);  \
+  NS_IMETHOD    SetAction(const nsAReadableString& aAction);  \
+  NS_IMETHOD    GetEnctype(nsAWritableString& aEnctype);  \
+  NS_IMETHOD    SetEnctype(const nsAReadableString& aEnctype);  \
+  NS_IMETHOD    GetMethod(nsAWritableString& aMethod);  \
+  NS_IMETHOD    SetMethod(const nsAReadableString& aMethod);  \
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget);  \
+  NS_IMETHOD    SetTarget(const nsAReadableString& aTarget);  \
   NS_IMETHOD    Submit();  \
   NS_IMETHOD    Reset();  \
 
@@ -90,18 +90,18 @@ public:
 #define NS_FORWARD_IDOMHTMLFORMELEMENT(_to)  \
   NS_IMETHOD    GetElements(nsIDOMHTMLCollection** aElements) { return _to GetElements(aElements); } \
   NS_IMETHOD    GetLength(PRInt32* aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
-  NS_IMETHOD    GetAcceptCharset(nsString& aAcceptCharset) { return _to GetAcceptCharset(aAcceptCharset); } \
-  NS_IMETHOD    SetAcceptCharset(const nsString& aAcceptCharset) { return _to SetAcceptCharset(aAcceptCharset); } \
-  NS_IMETHOD    GetAction(nsString& aAction) { return _to GetAction(aAction); } \
-  NS_IMETHOD    SetAction(const nsString& aAction) { return _to SetAction(aAction); } \
-  NS_IMETHOD    GetEnctype(nsString& aEnctype) { return _to GetEnctype(aEnctype); } \
-  NS_IMETHOD    SetEnctype(const nsString& aEnctype) { return _to SetEnctype(aEnctype); } \
-  NS_IMETHOD    GetMethod(nsString& aMethod) { return _to GetMethod(aMethod); } \
-  NS_IMETHOD    SetMethod(const nsString& aMethod) { return _to SetMethod(aMethod); } \
-  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to GetTarget(aTarget); } \
-  NS_IMETHOD    SetTarget(const nsString& aTarget) { return _to SetTarget(aTarget); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsAReadableString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetAcceptCharset(nsAWritableString& aAcceptCharset) { return _to GetAcceptCharset(aAcceptCharset); } \
+  NS_IMETHOD    SetAcceptCharset(const nsAReadableString& aAcceptCharset) { return _to SetAcceptCharset(aAcceptCharset); } \
+  NS_IMETHOD    GetAction(nsAWritableString& aAction) { return _to GetAction(aAction); } \
+  NS_IMETHOD    SetAction(const nsAReadableString& aAction) { return _to SetAction(aAction); } \
+  NS_IMETHOD    GetEnctype(nsAWritableString& aEnctype) { return _to GetEnctype(aEnctype); } \
+  NS_IMETHOD    SetEnctype(const nsAReadableString& aEnctype) { return _to SetEnctype(aEnctype); } \
+  NS_IMETHOD    GetMethod(nsAWritableString& aMethod) { return _to GetMethod(aMethod); } \
+  NS_IMETHOD    SetMethod(const nsAReadableString& aMethod) { return _to SetMethod(aMethod); } \
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget) { return _to GetTarget(aTarget); } \
+  NS_IMETHOD    SetTarget(const nsAReadableString& aTarget) { return _to SetTarget(aTarget); } \
   NS_IMETHOD    Submit() { return _to Submit(); }  \
   NS_IMETHOD    Reset() { return _to Reset(); }  \
 

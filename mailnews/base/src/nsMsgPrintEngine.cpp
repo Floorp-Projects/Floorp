@@ -214,7 +214,7 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindow *aWin)
 NS_IMETHODIMP
 nsMsgPrintEngine::AddPrintURI(const PRUnichar *aMsgURI)
 {
-  mURIArray.AppendString(nsAutoString(aMsgURI));
+  mURIArray.AppendString(nsLiteralString(aMsgURI));
   return NS_OK;
 }
 

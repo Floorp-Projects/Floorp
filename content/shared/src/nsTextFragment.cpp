@@ -22,6 +22,8 @@
 #include "nsTextFragment.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
+#include "nsMemory.h"
 
 nsTextFragment::~nsTextFragment()
 {
@@ -33,10 +35,10 @@ nsTextFragment::ReleaseText()
 {
   if (mState.mLength && m1b && mState.mInHeap) {
     if (mState.mIs2b) {
-      delete [] m2b;
+      nsMemory::Free(m2b);
     }
     else {
-      delete [] m1b;
+      nsMemory::Free(m1b);
     }
   }
   m1b = nsnull;
@@ -105,9 +107,24 @@ nsTextFragment::operator=(const PRUnichar* aString)
 }
 
 nsTextFragment&
-nsTextFragment::operator=(const nsString& aString)
+nsTextFragment::operator=(const nsAReadableString& aString)
 {
-  SetTo(aString.GetUnicode(), aString.Length());
+  ReleaseText();
+
+  PRUint32 length = aString.Length();
+  if (length > 0) {
+    if (IsASCII(aString)) {
+      m1b = NS_REINTERPRET_CAST(unsigned char *, ToNewCString(aString));
+      mState.mIs2b = 0;
+    }
+    else {
+      m2b = ToNewUnicode(aString);
+      mState.mIs2b = 1;
+    }
+    mState.mInHeap = 1;
+    mState.mLength = (PRInt32)length;
+  }
+
   return *this;
 }
 
@@ -141,7 +158,7 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
 
     if (need2) {
       // Use ucs2 storage because we have to
-      PRUnichar* nt = new PRUnichar[aLength];
+      PRUnichar* nt = (PRUnichar*)nsMemory::Alloc(aLength*sizeof(PRUnichar));
       if (nsnull != nt) {
         // Copy data
         nsCRT::memcpy(nt, aBuffer, sizeof(PRUnichar) * aLength);
@@ -155,7 +172,7 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
     }
     else {
       // Use 1 byte storage because we can
-      unsigned char* nt = new unsigned char[aLength];
+      unsigned char* nt = (unsigned char*)nsMemory::Alloc(aLength*sizeof(unsigned char));
       if (nsnull != nt) {
         // Copy data
         unsigned char* cp = nt;
@@ -179,7 +196,7 @@ nsTextFragment::SetTo(const char* aBuffer, PRInt32 aLength)
 {
   ReleaseText();
   if (0 != aLength) {
-    unsigned char* nt = new unsigned char[aLength];
+    unsigned char* nt = (unsigned char*)nsMemory::Alloc(aLength*sizeof(unsigned char));
     if (nsnull != nt) {
       nsCRT::memcpy(nt, aBuffer, sizeof(unsigned char) * aLength);
 

@@ -38,55 +38,55 @@ class nsIDOMHTMLBodyElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLBODYELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetALink(nsString& aALink)=0;
-  NS_IMETHOD    SetALink(const nsString& aALink)=0;
+  NS_IMETHOD    GetALink(nsAWritableString& aALink)=0;
+  NS_IMETHOD    SetALink(const nsAReadableString& aALink)=0;
 
-  NS_IMETHOD    GetBackground(nsString& aBackground)=0;
-  NS_IMETHOD    SetBackground(const nsString& aBackground)=0;
+  NS_IMETHOD    GetBackground(nsAWritableString& aBackground)=0;
+  NS_IMETHOD    SetBackground(const nsAReadableString& aBackground)=0;
 
-  NS_IMETHOD    GetBgColor(nsString& aBgColor)=0;
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor)=0;
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor)=0;
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor)=0;
 
-  NS_IMETHOD    GetLink(nsString& aLink)=0;
-  NS_IMETHOD    SetLink(const nsString& aLink)=0;
+  NS_IMETHOD    GetLink(nsAWritableString& aLink)=0;
+  NS_IMETHOD    SetLink(const nsAReadableString& aLink)=0;
 
-  NS_IMETHOD    GetText(nsString& aText)=0;
-  NS_IMETHOD    SetText(const nsString& aText)=0;
+  NS_IMETHOD    GetText(nsAWritableString& aText)=0;
+  NS_IMETHOD    SetText(const nsAReadableString& aText)=0;
 
-  NS_IMETHOD    GetVLink(nsString& aVLink)=0;
-  NS_IMETHOD    SetVLink(const nsString& aVLink)=0;
+  NS_IMETHOD    GetVLink(nsAWritableString& aVLink)=0;
+  NS_IMETHOD    SetVLink(const nsAReadableString& aVLink)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLBODYELEMENT   \
-  NS_IMETHOD    GetALink(nsString& aALink);  \
-  NS_IMETHOD    SetALink(const nsString& aALink);  \
-  NS_IMETHOD    GetBackground(nsString& aBackground);  \
-  NS_IMETHOD    SetBackground(const nsString& aBackground);  \
-  NS_IMETHOD    GetBgColor(nsString& aBgColor);  \
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor);  \
-  NS_IMETHOD    GetLink(nsString& aLink);  \
-  NS_IMETHOD    SetLink(const nsString& aLink);  \
-  NS_IMETHOD    GetText(nsString& aText);  \
-  NS_IMETHOD    SetText(const nsString& aText);  \
-  NS_IMETHOD    GetVLink(nsString& aVLink);  \
-  NS_IMETHOD    SetVLink(const nsString& aVLink);  \
+  NS_IMETHOD    GetALink(nsAWritableString& aALink);  \
+  NS_IMETHOD    SetALink(const nsAReadableString& aALink);  \
+  NS_IMETHOD    GetBackground(nsAWritableString& aBackground);  \
+  NS_IMETHOD    SetBackground(const nsAReadableString& aBackground);  \
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor);  \
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor);  \
+  NS_IMETHOD    GetLink(nsAWritableString& aLink);  \
+  NS_IMETHOD    SetLink(const nsAReadableString& aLink);  \
+  NS_IMETHOD    GetText(nsAWritableString& aText);  \
+  NS_IMETHOD    SetText(const nsAReadableString& aText);  \
+  NS_IMETHOD    GetVLink(nsAWritableString& aVLink);  \
+  NS_IMETHOD    SetVLink(const nsAReadableString& aVLink);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLBODYELEMENT(_to)  \
-  NS_IMETHOD    GetALink(nsString& aALink) { return _to GetALink(aALink); } \
-  NS_IMETHOD    SetALink(const nsString& aALink) { return _to SetALink(aALink); } \
-  NS_IMETHOD    GetBackground(nsString& aBackground) { return _to GetBackground(aBackground); } \
-  NS_IMETHOD    SetBackground(const nsString& aBackground) { return _to SetBackground(aBackground); } \
-  NS_IMETHOD    GetBgColor(nsString& aBgColor) { return _to GetBgColor(aBgColor); } \
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor) { return _to SetBgColor(aBgColor); } \
-  NS_IMETHOD    GetLink(nsString& aLink) { return _to GetLink(aLink); } \
-  NS_IMETHOD    SetLink(const nsString& aLink) { return _to SetLink(aLink); } \
-  NS_IMETHOD    GetText(nsString& aText) { return _to GetText(aText); } \
-  NS_IMETHOD    SetText(const nsString& aText) { return _to SetText(aText); } \
-  NS_IMETHOD    GetVLink(nsString& aVLink) { return _to GetVLink(aVLink); } \
-  NS_IMETHOD    SetVLink(const nsString& aVLink) { return _to SetVLink(aVLink); } \
+  NS_IMETHOD    GetALink(nsAWritableString& aALink) { return _to GetALink(aALink); } \
+  NS_IMETHOD    SetALink(const nsAReadableString& aALink) { return _to SetALink(aALink); } \
+  NS_IMETHOD    GetBackground(nsAWritableString& aBackground) { return _to GetBackground(aBackground); } \
+  NS_IMETHOD    SetBackground(const nsAReadableString& aBackground) { return _to SetBackground(aBackground); } \
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor) { return _to GetBgColor(aBgColor); } \
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor) { return _to SetBgColor(aBgColor); } \
+  NS_IMETHOD    GetLink(nsAWritableString& aLink) { return _to GetLink(aLink); } \
+  NS_IMETHOD    SetLink(const nsAReadableString& aLink) { return _to SetLink(aLink); } \
+  NS_IMETHOD    GetText(nsAWritableString& aText) { return _to GetText(aText); } \
+  NS_IMETHOD    SetText(const nsAReadableString& aText) { return _to SetText(aText); } \
+  NS_IMETHOD    GetVLink(nsAWritableString& aVLink) { return _to GetVLink(aVLink); } \
+  NS_IMETHOD    SetVLink(const nsAReadableString& aVLink) { return _to SetVLink(aVLink); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLBodyElementClass(nsIScriptContext *aContext, void **aPrototype);

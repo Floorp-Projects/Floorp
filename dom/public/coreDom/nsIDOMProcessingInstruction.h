@@ -38,24 +38,24 @@ class nsIDOMProcessingInstruction : public nsIDOMNode {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMPROCESSINGINSTRUCTION_IID; return iid; }
 
-  NS_IMETHOD    GetTarget(nsString& aTarget)=0;
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget)=0;
 
-  NS_IMETHOD    GetData(nsString& aData)=0;
-  NS_IMETHOD    SetData(const nsString& aData)=0;
+  NS_IMETHOD    GetData(nsAWritableString& aData)=0;
+  NS_IMETHOD    SetData(const nsAReadableString& aData)=0;
 };
 
 
 #define NS_DECL_IDOMPROCESSINGINSTRUCTION   \
-  NS_IMETHOD    GetTarget(nsString& aTarget);  \
-  NS_IMETHOD    GetData(nsString& aData);  \
-  NS_IMETHOD    SetData(const nsString& aData);  \
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget);  \
+  NS_IMETHOD    GetData(nsAWritableString& aData);  \
+  NS_IMETHOD    SetData(const nsAReadableString& aData);  \
 
 
 
 #define NS_FORWARD_IDOMPROCESSINGINSTRUCTION(_to)  \
-  NS_IMETHOD    GetTarget(nsString& aTarget) { return _to GetTarget(aTarget); } \
-  NS_IMETHOD    GetData(nsString& aData) { return _to GetData(aData); } \
-  NS_IMETHOD    SetData(const nsString& aData) { return _to SetData(aData); } \
+  NS_IMETHOD    GetTarget(nsAWritableString& aTarget) { return _to GetTarget(aTarget); } \
+  NS_IMETHOD    GetData(nsAWritableString& aData) { return _to GetData(aData); } \
+  NS_IMETHOD    SetData(const nsAReadableString& aData) { return _to SetData(aData); } \
 
 
 extern "C" NS_DOM nsresult NS_InitProcessingInstructionClass(nsIScriptContext *aContext, void **aPrototype);

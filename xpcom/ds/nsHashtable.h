@@ -37,6 +37,7 @@
 #include "prlock.h"
 #include "nsCom.h"
 #include "nscore.h"
+#include "nsString.h"
 
 class nsHashtable;
 class nsStringKey;
@@ -304,7 +305,7 @@ public:
   };
 
   nsStringKey(const PRUnichar* str, PRInt32 strLen = -1, Ownership own = OWN_CLONE);
-  nsStringKey(const nsString& str);
+  nsStringKey(const nsAReadableString& str);
   ~nsStringKey(void);
 
   PRUint32 HashCode(void) const;

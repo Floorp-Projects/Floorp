@@ -75,9 +75,9 @@ public:
 
   NS_IMETHOD    GetFloatValue(PRUint16 aUnitType, float* aReturn)=0;
 
-  NS_IMETHOD    SetStringValue(PRUint16 aStringType, const nsString& aStringValue)=0;
+  NS_IMETHOD    SetStringValue(PRUint16 aStringType, const nsAReadableString& aStringValue)=0;
 
-  NS_IMETHOD    GetStringValue(nsString& aReturn)=0;
+  NS_IMETHOD    GetStringValue(nsAWritableString& aReturn)=0;
 
   NS_IMETHOD    GetCounterValue(nsIDOMCounter** aReturn)=0;
 
@@ -91,8 +91,8 @@ public:
   NS_IMETHOD    GetPrimitiveType(PRUint16* aPrimitiveType);  \
   NS_IMETHOD    SetFloatValue(PRUint16 aUnitType, float aFloatValue);  \
   NS_IMETHOD    GetFloatValue(PRUint16 aUnitType, float* aReturn);  \
-  NS_IMETHOD    SetStringValue(PRUint16 aStringType, const nsString& aStringValue);  \
-  NS_IMETHOD    GetStringValue(nsString& aReturn);  \
+  NS_IMETHOD    SetStringValue(PRUint16 aStringType, const nsAReadableString& aStringValue);  \
+  NS_IMETHOD    GetStringValue(nsAWritableString& aReturn);  \
   NS_IMETHOD    GetCounterValue(nsIDOMCounter** aReturn);  \
   NS_IMETHOD    GetRectValue(nsIDOMRect** aReturn);  \
   NS_IMETHOD    GetRGBColorValue(nsIDOMRGBColor** aReturn);  \
@@ -103,8 +103,8 @@ public:
   NS_IMETHOD    GetPrimitiveType(PRUint16* aPrimitiveType) { return _to GetPrimitiveType(aPrimitiveType); } \
   NS_IMETHOD    SetFloatValue(PRUint16 aUnitType, float aFloatValue) { return _to SetFloatValue(aUnitType, aFloatValue); }  \
   NS_IMETHOD    GetFloatValue(PRUint16 aUnitType, float* aReturn) { return _to GetFloatValue(aUnitType, aReturn); }  \
-  NS_IMETHOD    SetStringValue(PRUint16 aStringType, const nsString& aStringValue) { return _to SetStringValue(aStringType, aStringValue); }  \
-  NS_IMETHOD    GetStringValue(nsString& aReturn) { return _to GetStringValue(aReturn); }  \
+  NS_IMETHOD    SetStringValue(PRUint16 aStringType, const nsAReadableString& aStringValue) { return _to SetStringValue(aStringType, aStringValue); }  \
+  NS_IMETHOD    GetStringValue(nsAWritableString& aReturn) { return _to GetStringValue(aReturn); }  \
   NS_IMETHOD    GetCounterValue(nsIDOMCounter** aReturn) { return _to GetCounterValue(aReturn); }  \
   NS_IMETHOD    GetRectValue(nsIDOMRect** aReturn) { return _to GetRectValue(aReturn); }  \
   NS_IMETHOD    GetRGBColorValue(nsIDOMRGBColor** aReturn) { return _to GetRGBColorValue(aReturn); }  \

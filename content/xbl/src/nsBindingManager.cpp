@@ -163,9 +163,9 @@ public:
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, 
                                      PRBool* aMultipleInsertionPoints);
 
-  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsString& aURL);
-  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsString& aURL);
-  NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, const nsString& aURL);
+  NS_IMETHOD AddLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL);
+  NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL);
+  NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableString& aURL);
 
   NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding);
   NS_IMETHOD ClearAttachedQueue();
@@ -314,7 +314,7 @@ nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aRes
 }
 
 NS_IMETHODIMP
-nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsString& aURL)
+nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL)
 {
   // First we need to load our binding.
   nsresult rv;
@@ -334,7 +334,7 @@ nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsString& aURL)
 }
 
 NS_IMETHODIMP
-nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsString& aURL)
+nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsAReadableString& aURL)
 {
   /*
   nsCOMPtr<nsIXBLBinding> binding;
@@ -371,7 +371,7 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, const nsString& aUR
 }
 
 NS_IMETHODIMP
-nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsString& aURL)
+nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsAReadableString& aURL)
 {
   // First we need to load our binding.
   nsresult rv;
@@ -380,7 +380,7 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc, const nsString& aU
     return rv;
 
   // Load the binding doc.
-  nsCString url; url.AssignWithConversion(aURL);
+  nsCString url; url.AssignWithConversion((const PRUnichar*)nsPromiseFlatString(aURL));
   nsCOMPtr<nsIXBLDocumentInfo> info;
   xblService->LoadBindingDocumentInfo(nsnull, aBoundDoc, url, nsCAutoString(), PR_TRUE, getter_AddRefs(info));
   if (!info)

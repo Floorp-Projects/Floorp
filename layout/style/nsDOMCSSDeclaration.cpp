@@ -115,7 +115,7 @@ nsDOMCSSDeclaration::SetScriptObject(void* aScriptObject)
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetCssText(nsString& aCssText)
+nsDOMCSSDeclaration::GetCssText(nsAWritableString& aCssText)
 {
   aCssText.Truncate();
   // XXX TBI
@@ -123,7 +123,7 @@ nsDOMCSSDeclaration::GetCssText(nsString& aCssText)
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetCssText(const nsString& aCssText)
+nsDOMCSSDeclaration::SetCssText(const nsAReadableString& aCssText)
 {
   // XXX TBI
   return NS_OK;
@@ -162,7 +162,7 @@ nsDOMCSSDeclaration::GetParentRule(nsIDOMCSSRule** aParentRule)
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPropertyCSSValue(const nsString& aPropertyName,
+nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
                                          nsIDOMCSSValue** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -174,7 +174,7 @@ nsDOMCSSDeclaration::GetPropertyCSSValue(const nsString& aPropertyName,
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::Item(PRUint32 aIndex, nsString& aReturn)
+nsDOMCSSDeclaration::Item(PRUint32 aIndex, nsAWritableString& aReturn)
 {
   nsICSSDeclaration *decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
@@ -189,8 +189,8 @@ nsDOMCSSDeclaration::Item(PRUint32 aIndex, nsString& aReturn)
 }
 
 NS_IMETHODIMP    
-nsDOMCSSDeclaration::GetPropertyValue(const nsString& aPropertyName, 
-                                     nsString& aReturn)
+nsDOMCSSDeclaration::GetPropertyValue(const nsAReadableString& aPropertyName, 
+                                     nsAWritableString& aReturn)
 {
   nsCSSValue val;
   nsICSSDeclaration *decl;
@@ -206,8 +206,8 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsString& aPropertyName,
 }
 
 NS_IMETHODIMP    
-nsDOMCSSDeclaration::GetPropertyPriority(const nsString& aPropertyName, 
-                                        nsString& aReturn)
+nsDOMCSSDeclaration::GetPropertyPriority(const nsAReadableString& aPropertyName, 
+                                        nsAWritableString& aReturn)
 {
   nsICSSDeclaration *decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
@@ -219,7 +219,7 @@ nsDOMCSSDeclaration::GetPropertyPriority(const nsString& aPropertyName,
   }
 
   if ((NS_OK == result) && isImportant) {
-    aReturn.AssignWithConversion("!important");    
+    aReturn.Assign(NS_LITERAL_STRING("!important"));    
   }
   else {
     aReturn.SetLength(0);
@@ -229,9 +229,9 @@ nsDOMCSSDeclaration::GetPropertyPriority(const nsString& aPropertyName,
 }
 
 NS_IMETHODIMP    
-nsDOMCSSDeclaration::SetProperty(const nsString& aPropertyName, 
-                                 const nsString& aValue, 
-                                 const nsString& aPriority)
+nsDOMCSSDeclaration::SetProperty(const nsAReadableString& aPropertyName, 
+                                 const nsAReadableString& aValue, 
+                                 const nsAReadableString& aPriority)
 {
   if (!aValue.Length()) {
      // If the new value of the property is an empty string we remove the
@@ -243,7 +243,7 @@ nsDOMCSSDeclaration::SetProperty(const nsString& aPropertyName,
   nsAutoString declString;
 
   declString.Assign(aPropertyName);
-  declString.AppendWithConversion(":");
+  declString.Append(PRUnichar(':'));
   declString.Append(aValue);
   declString.Append(aPriority);
 
@@ -251,1490 +251,1490 @@ nsDOMCSSDeclaration::SetProperty(const nsString& aPropertyName,
 }
 
 NS_IMETHODIMP 
-nsDOMCSSDeclaration::GetAzimuth(nsString& aAzimuth)
+nsDOMCSSDeclaration::GetAzimuth(nsAWritableString& aAzimuth)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("azimuth"), aAzimuth);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetAzimuth(const nsString& aAzimuth)
+nsDOMCSSDeclaration::SetAzimuth(const nsAReadableString& aAzimuth)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("azimuth"), aAzimuth, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBackground(nsString& aBackground)
+nsDOMCSSDeclaration::GetBackground(nsAWritableString& aBackground)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("background"), aBackground);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBackground(const nsString& aBackground)
+nsDOMCSSDeclaration::SetBackground(const nsAReadableString& aBackground)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("background"), aBackground, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBackgroundAttachment(nsString& aBackgroundAttachment)
+nsDOMCSSDeclaration::GetBackgroundAttachment(nsAWritableString& aBackgroundAttachment)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("background-attachment"), aBackgroundAttachment);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBackgroundAttachment(const nsString& aBackgroundAttachment)
+nsDOMCSSDeclaration::SetBackgroundAttachment(const nsAReadableString& aBackgroundAttachment)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("background-attachment"), aBackgroundAttachment, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBackgroundColor(nsString& aBackgroundColor)
+nsDOMCSSDeclaration::GetBackgroundColor(nsAWritableString& aBackgroundColor)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("background-color"), aBackgroundColor);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBackgroundColor(const nsString& aBackgroundColor)
+nsDOMCSSDeclaration::SetBackgroundColor(const nsAReadableString& aBackgroundColor)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("background-color"), aBackgroundColor, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBackgroundImage(nsString& aBackgroundImage)
+nsDOMCSSDeclaration::GetBackgroundImage(nsAWritableString& aBackgroundImage)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("background-image"), aBackgroundImage);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBackgroundImage(const nsString& aBackgroundImage)
+nsDOMCSSDeclaration::SetBackgroundImage(const nsAReadableString& aBackgroundImage)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("background-image"), aBackgroundImage, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBackgroundPosition(nsString& aBackgroundPosition)
+nsDOMCSSDeclaration::GetBackgroundPosition(nsAWritableString& aBackgroundPosition)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("background-position"), aBackgroundPosition);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBackgroundPosition(const nsString& aBackgroundPosition)
+nsDOMCSSDeclaration::SetBackgroundPosition(const nsAReadableString& aBackgroundPosition)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("background-position"), aBackgroundPosition, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBackgroundRepeat(nsString& aBackgroundRepeat)
+nsDOMCSSDeclaration::GetBackgroundRepeat(nsAWritableString& aBackgroundRepeat)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("background-repeat"), aBackgroundRepeat);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBackgroundRepeat(const nsString& aBackgroundRepeat)
+nsDOMCSSDeclaration::SetBackgroundRepeat(const nsAReadableString& aBackgroundRepeat)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("background-repeat"), aBackgroundRepeat, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBehavior(nsString& aBehavior)
+nsDOMCSSDeclaration::GetBehavior(nsAWritableString& aBehavior)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("behavior"), aBehavior);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBehavior(const nsString& aBehavior)
+nsDOMCSSDeclaration::SetBehavior(const nsAReadableString& aBehavior)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("behavior"), aBehavior, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorder(nsString& aBorder)
+nsDOMCSSDeclaration::GetBorder(nsAWritableString& aBorder)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border"), aBorder);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorder(const nsString& aBorder)
+nsDOMCSSDeclaration::SetBorder(const nsAReadableString& aBorder)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border"), aBorder, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderCollapse(nsString& aBorderCollapse)
+nsDOMCSSDeclaration::GetBorderCollapse(nsAWritableString& aBorderCollapse)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-collapse"), aBorderCollapse);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderCollapse(const nsString& aBorderCollapse)
+nsDOMCSSDeclaration::SetBorderCollapse(const nsAReadableString& aBorderCollapse)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-collapse"), aBorderCollapse, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderColor(nsString& aBorderColor)
+nsDOMCSSDeclaration::GetBorderColor(nsAWritableString& aBorderColor)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-color"), aBorderColor);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderColor(const nsString& aBorderColor)
+nsDOMCSSDeclaration::SetBorderColor(const nsAReadableString& aBorderColor)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-color"), aBorderColor, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderSpacing(nsString& aBorderSpacing)
+nsDOMCSSDeclaration::GetBorderSpacing(nsAWritableString& aBorderSpacing)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-spacing"), aBorderSpacing);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderSpacing(const nsString& aBorderSpacing)
+nsDOMCSSDeclaration::SetBorderSpacing(const nsAReadableString& aBorderSpacing)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-spacing"), aBorderSpacing, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderStyle(nsString& aBorderStyle)
+nsDOMCSSDeclaration::GetBorderStyle(nsAWritableString& aBorderStyle)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-style"), aBorderStyle);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderStyle(const nsString& aBorderStyle)
+nsDOMCSSDeclaration::SetBorderStyle(const nsAReadableString& aBorderStyle)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-style"), aBorderStyle, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderTop(nsString& aBorderTop)
+nsDOMCSSDeclaration::GetBorderTop(nsAWritableString& aBorderTop)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-top"), aBorderTop);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderTop(const nsString& aBorderTop)
+nsDOMCSSDeclaration::SetBorderTop(const nsAReadableString& aBorderTop)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-top"), aBorderTop, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderRight(nsString& aBorderRight)
+nsDOMCSSDeclaration::GetBorderRight(nsAWritableString& aBorderRight)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-right"), aBorderRight);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderRight(const nsString& aBorderRight)
+nsDOMCSSDeclaration::SetBorderRight(const nsAReadableString& aBorderRight)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-right"), aBorderRight, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderBottom(nsString& aBorderBottom)
+nsDOMCSSDeclaration::GetBorderBottom(nsAWritableString& aBorderBottom)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-bottom"), aBorderBottom);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderBottom(const nsString& aBorderBottom)
+nsDOMCSSDeclaration::SetBorderBottom(const nsAReadableString& aBorderBottom)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-bottom"), aBorderBottom, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderLeft(nsString& aBorderLeft)
+nsDOMCSSDeclaration::GetBorderLeft(nsAWritableString& aBorderLeft)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-left"), aBorderLeft);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderLeft(const nsString& aBorderLeft)
+nsDOMCSSDeclaration::SetBorderLeft(const nsAReadableString& aBorderLeft)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-left"), aBorderLeft, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderTopColor(nsString& aBorderTopColor)
+nsDOMCSSDeclaration::GetBorderTopColor(nsAWritableString& aBorderTopColor)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-top-color"), aBorderTopColor);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderTopColor(const nsString& aBorderTopColor)
+nsDOMCSSDeclaration::SetBorderTopColor(const nsAReadableString& aBorderTopColor)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-top-color"), aBorderTopColor, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderRightColor(nsString& aBorderRightColor)
+nsDOMCSSDeclaration::GetBorderRightColor(nsAWritableString& aBorderRightColor)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-right-color"), aBorderRightColor);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderRightColor(const nsString& aBorderRightColor)
+nsDOMCSSDeclaration::SetBorderRightColor(const nsAReadableString& aBorderRightColor)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-right-color"), aBorderRightColor, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderBottomColor(nsString& aBorderBottomColor)
+nsDOMCSSDeclaration::GetBorderBottomColor(nsAWritableString& aBorderBottomColor)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-bottom-color"), aBorderBottomColor);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderBottomColor(const nsString& aBorderBottomColor)
+nsDOMCSSDeclaration::SetBorderBottomColor(const nsAReadableString& aBorderBottomColor)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-bottom-color"), aBorderBottomColor, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderLeftColor(nsString& aBorderLeftColor)
+nsDOMCSSDeclaration::GetBorderLeftColor(nsAWritableString& aBorderLeftColor)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-left-color"), aBorderLeftColor);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderLeftColor(const nsString& aBorderLeftColor)
+nsDOMCSSDeclaration::SetBorderLeftColor(const nsAReadableString& aBorderLeftColor)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-left-color"), aBorderLeftColor, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderTopStyle(nsString& aBorderTopStyle)
+nsDOMCSSDeclaration::GetBorderTopStyle(nsAWritableString& aBorderTopStyle)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-top-style"), aBorderTopStyle);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderTopStyle(const nsString& aBorderTopStyle)
+nsDOMCSSDeclaration::SetBorderTopStyle(const nsAReadableString& aBorderTopStyle)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-top-style"), aBorderTopStyle, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderRightStyle(nsString& aBorderRightStyle)
+nsDOMCSSDeclaration::GetBorderRightStyle(nsAWritableString& aBorderRightStyle)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-right-style"), aBorderRightStyle);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderRightStyle(const nsString& aBorderRightStyle)
+nsDOMCSSDeclaration::SetBorderRightStyle(const nsAReadableString& aBorderRightStyle)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-right-style"), aBorderRightStyle, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderBottomStyle(nsString& aBorderBottomStyle)
+nsDOMCSSDeclaration::GetBorderBottomStyle(nsAWritableString& aBorderBottomStyle)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-bottom-style"), aBorderBottomStyle);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderBottomStyle(const nsString& aBorderBottomStyle)
+nsDOMCSSDeclaration::SetBorderBottomStyle(const nsAReadableString& aBorderBottomStyle)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-bottom-style"), aBorderBottomStyle, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderLeftStyle(nsString& aBorderLeftStyle)
+nsDOMCSSDeclaration::GetBorderLeftStyle(nsAWritableString& aBorderLeftStyle)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-left-style"), aBorderLeftStyle);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderLeftStyle(const nsString& aBorderLeftStyle)
+nsDOMCSSDeclaration::SetBorderLeftStyle(const nsAReadableString& aBorderLeftStyle)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-left-style"), aBorderLeftStyle, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderTopWidth(nsString& aBorderTopWidth)
+nsDOMCSSDeclaration::GetBorderTopWidth(nsAWritableString& aBorderTopWidth)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-top-width"), aBorderTopWidth);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderTopWidth(const nsString& aBorderTopWidth)
+nsDOMCSSDeclaration::SetBorderTopWidth(const nsAReadableString& aBorderTopWidth)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-top-width"), aBorderTopWidth, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderRightWidth(nsString& aBorderRightWidth)
+nsDOMCSSDeclaration::GetBorderRightWidth(nsAWritableString& aBorderRightWidth)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-right-width"), aBorderRightWidth);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderRightWidth(const nsString& aBorderRightWidth)
+nsDOMCSSDeclaration::SetBorderRightWidth(const nsAReadableString& aBorderRightWidth)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-right-width"), aBorderRightWidth, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderBottomWidth(nsString& aBorderBottomWidth)
+nsDOMCSSDeclaration::GetBorderBottomWidth(nsAWritableString& aBorderBottomWidth)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-bottom-width"), aBorderBottomWidth);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderBottomWidth(const nsString& aBorderBottomWidth)
+nsDOMCSSDeclaration::SetBorderBottomWidth(const nsAReadableString& aBorderBottomWidth)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-bottom-width"), aBorderBottomWidth, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderLeftWidth(nsString& aBorderLeftWidth)
+nsDOMCSSDeclaration::GetBorderLeftWidth(nsAWritableString& aBorderLeftWidth)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-left-width"), aBorderLeftWidth);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderLeftWidth(const nsString& aBorderLeftWidth)
+nsDOMCSSDeclaration::SetBorderLeftWidth(const nsAReadableString& aBorderLeftWidth)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-left-width"), aBorderLeftWidth, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBorderWidth(nsString& aBorderWidth)
+nsDOMCSSDeclaration::GetBorderWidth(nsAWritableString& aBorderWidth)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("border-width"), aBorderWidth);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBorderWidth(const nsString& aBorderWidth)
+nsDOMCSSDeclaration::SetBorderWidth(const nsAReadableString& aBorderWidth)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("border-width"), aBorderWidth, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetBottom(nsString& aBottom)
+nsDOMCSSDeclaration::GetBottom(nsAWritableString& aBottom)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("bottom"), aBottom);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetBottom(const nsString& aBottom)
+nsDOMCSSDeclaration::SetBottom(const nsAReadableString& aBottom)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("bottom"), aBottom, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetCaptionSide(nsString& aCaptionSide)
+nsDOMCSSDeclaration::GetCaptionSide(nsAWritableString& aCaptionSide)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("caption-side"), aCaptionSide);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetCaptionSide(const nsString& aCaptionSide)
+nsDOMCSSDeclaration::SetCaptionSide(const nsAReadableString& aCaptionSide)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("caption-side"), aCaptionSide, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetClear(nsString& aClear)
+nsDOMCSSDeclaration::GetClear(nsAWritableString& aClear)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("clear"), aClear);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetClear(const nsString& aClear)
+nsDOMCSSDeclaration::SetClear(const nsAReadableString& aClear)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("clear"), aClear, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetClip(nsString& aClip)
+nsDOMCSSDeclaration::GetClip(nsAWritableString& aClip)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("clip"), aClip);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetClip(const nsString& aClip)
+nsDOMCSSDeclaration::SetClip(const nsAReadableString& aClip)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("clip"), aClip, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetColor(nsString& aColor)
+nsDOMCSSDeclaration::GetColor(nsAWritableString& aColor)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("color"), aColor);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetColor(const nsString& aColor)
+nsDOMCSSDeclaration::SetColor(const nsAReadableString& aColor)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("color"), aColor, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetContent(nsString& aContent)
+nsDOMCSSDeclaration::GetContent(nsAWritableString& aContent)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("content"), aContent);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetContent(const nsString& aContent)
+nsDOMCSSDeclaration::SetContent(const nsAReadableString& aContent)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("content"), aContent, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetCounterIncrement(nsString& aCounterIncrement)
+nsDOMCSSDeclaration::GetCounterIncrement(nsAWritableString& aCounterIncrement)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("counter-increment"), aCounterIncrement);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetCounterIncrement(const nsString& aCounterIncrement)
+nsDOMCSSDeclaration::SetCounterIncrement(const nsAReadableString& aCounterIncrement)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("counter-increment"), aCounterIncrement, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetCounterReset(nsString& aCounterReset)
+nsDOMCSSDeclaration::GetCounterReset(nsAWritableString& aCounterReset)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("counter-reset"), aCounterReset);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetCounterReset(const nsString& aCounterReset)
+nsDOMCSSDeclaration::SetCounterReset(const nsAReadableString& aCounterReset)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("counter-reset"), aCounterReset, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetCssFloat(nsString& aCssFloat)
+nsDOMCSSDeclaration::GetCssFloat(nsAWritableString& aCssFloat)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("float"), aCssFloat);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetCssFloat(const nsString& aCssFloat)
+nsDOMCSSDeclaration::SetCssFloat(const nsAReadableString& aCssFloat)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("float"), aCssFloat, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetCue(nsString& aCue)
+nsDOMCSSDeclaration::GetCue(nsAWritableString& aCue)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("cue"), aCue);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetCue(const nsString& aCue)
+nsDOMCSSDeclaration::SetCue(const nsAReadableString& aCue)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("cue"), aCue, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetCueAfter(nsString& aCueAfter)
+nsDOMCSSDeclaration::GetCueAfter(nsAWritableString& aCueAfter)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("cue-after"), aCueAfter);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetCueAfter(const nsString& aCueAfter)
+nsDOMCSSDeclaration::SetCueAfter(const nsAReadableString& aCueAfter)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("cue-after"), aCueAfter, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetCueBefore(nsString& aCueBefore)
+nsDOMCSSDeclaration::GetCueBefore(nsAWritableString& aCueBefore)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("cue-before"), aCueBefore);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetCueBefore(const nsString& aCueBefore)
+nsDOMCSSDeclaration::SetCueBefore(const nsAReadableString& aCueBefore)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("cue-before"), aCueBefore, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetCursor(nsString& aCursor)
+nsDOMCSSDeclaration::GetCursor(nsAWritableString& aCursor)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("cursor"), aCursor);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetCursor(const nsString& aCursor)
+nsDOMCSSDeclaration::SetCursor(const nsAReadableString& aCursor)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("cursor"), aCursor, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetDirection(nsString& aDirection)
+nsDOMCSSDeclaration::GetDirection(nsAWritableString& aDirection)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("direction"), aDirection);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetDirection(const nsString& aDirection)
+nsDOMCSSDeclaration::SetDirection(const nsAReadableString& aDirection)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("direction"), aDirection, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetDisplay(nsString& aDisplay)
+nsDOMCSSDeclaration::GetDisplay(nsAWritableString& aDisplay)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("display"), aDisplay);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetDisplay(const nsString& aDisplay)
+nsDOMCSSDeclaration::SetDisplay(const nsAReadableString& aDisplay)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("display"), aDisplay, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetElevation(nsString& aElevation)
+nsDOMCSSDeclaration::GetElevation(nsAWritableString& aElevation)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("elevation"), aElevation);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetElevation(const nsString& aElevation)
+nsDOMCSSDeclaration::SetElevation(const nsAReadableString& aElevation)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("elevation"), aElevation, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetEmptyCells(nsString& aEmptyCells)
+nsDOMCSSDeclaration::GetEmptyCells(nsAWritableString& aEmptyCells)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("empty-cells"), aEmptyCells);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetEmptyCells(const nsString& aEmptyCells)
+nsDOMCSSDeclaration::SetEmptyCells(const nsAReadableString& aEmptyCells)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("empty-cells"), aEmptyCells, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetFont(nsString& aFont)
+nsDOMCSSDeclaration::GetFont(nsAWritableString& aFont)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("font"), aFont);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetFont(const nsString& aFont)
+nsDOMCSSDeclaration::SetFont(const nsAReadableString& aFont)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("font"), aFont, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetFontFamily(nsString& aFontFamily)
+nsDOMCSSDeclaration::GetFontFamily(nsAWritableString& aFontFamily)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("font-family"), aFontFamily);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetFontFamily(const nsString& aFontFamily)
+nsDOMCSSDeclaration::SetFontFamily(const nsAReadableString& aFontFamily)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("font-family"), aFontFamily, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetFontSize(nsString& aFontSize)
+nsDOMCSSDeclaration::GetFontSize(nsAWritableString& aFontSize)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("font-size"), aFontSize);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetFontSize(const nsString& aFontSize)
+nsDOMCSSDeclaration::SetFontSize(const nsAReadableString& aFontSize)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("font-size"), aFontSize, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetFontSizeAdjust(nsString& aFontSizeAdjust)
+nsDOMCSSDeclaration::GetFontSizeAdjust(nsAWritableString& aFontSizeAdjust)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("font-size-adjust"), aFontSizeAdjust);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetFontSizeAdjust(const nsString& aFontSizeAdjust)
+nsDOMCSSDeclaration::SetFontSizeAdjust(const nsAReadableString& aFontSizeAdjust)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("font-size-adjust"), aFontSizeAdjust, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetFontStretch(nsString& aFontStretch)
+nsDOMCSSDeclaration::GetFontStretch(nsAWritableString& aFontStretch)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("font-stretch"), aFontStretch);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetFontStretch(const nsString& aFontStretch)
+nsDOMCSSDeclaration::SetFontStretch(const nsAReadableString& aFontStretch)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("font-stretch"), aFontStretch, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetFontStyle(nsString& aFontStyle)
+nsDOMCSSDeclaration::GetFontStyle(nsAWritableString& aFontStyle)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("font-style"), aFontStyle);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetFontStyle(const nsString& aFontStyle)
+nsDOMCSSDeclaration::SetFontStyle(const nsAReadableString& aFontStyle)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("font-style"), aFontStyle, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetFontVariant(nsString& aFontVariant)
+nsDOMCSSDeclaration::GetFontVariant(nsAWritableString& aFontVariant)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("font-variant"), aFontVariant);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetFontVariant(const nsString& aFontVariant)
+nsDOMCSSDeclaration::SetFontVariant(const nsAReadableString& aFontVariant)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("font-variant"), aFontVariant, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetFontWeight(nsString& aFontWeight)
+nsDOMCSSDeclaration::GetFontWeight(nsAWritableString& aFontWeight)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("font-weight"), aFontWeight);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetFontWeight(const nsString& aFontWeight)
+nsDOMCSSDeclaration::SetFontWeight(const nsAReadableString& aFontWeight)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("font-weight"), aFontWeight, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetHeight(nsString& aHeight)
+nsDOMCSSDeclaration::GetHeight(nsAWritableString& aHeight)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("height"), aHeight);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetHeight(const nsString& aHeight)
+nsDOMCSSDeclaration::SetHeight(const nsAReadableString& aHeight)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("height"), aHeight, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetLeft(nsString& aLeft)
+nsDOMCSSDeclaration::GetLeft(nsAWritableString& aLeft)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("left"), aLeft);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetLeft(const nsString& aLeft)
+nsDOMCSSDeclaration::SetLeft(const nsAReadableString& aLeft)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("left"), aLeft, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetLetterSpacing(nsString& aLetterSpacing)
+nsDOMCSSDeclaration::GetLetterSpacing(nsAWritableString& aLetterSpacing)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("letter-spacing"), aLetterSpacing);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetLetterSpacing(const nsString& aLetterSpacing)
+nsDOMCSSDeclaration::SetLetterSpacing(const nsAReadableString& aLetterSpacing)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("letter-spacing"), aLetterSpacing, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetLineHeight(nsString& aLineHeight)
+nsDOMCSSDeclaration::GetLineHeight(nsAWritableString& aLineHeight)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("line-height"), aLineHeight);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetLineHeight(const nsString& aLineHeight)
+nsDOMCSSDeclaration::SetLineHeight(const nsAReadableString& aLineHeight)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("line-height"), aLineHeight, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetListStyle(nsString& aListStyle)
+nsDOMCSSDeclaration::GetListStyle(nsAWritableString& aListStyle)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("list-style"), aListStyle);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetListStyle(const nsString& aListStyle)
+nsDOMCSSDeclaration::SetListStyle(const nsAReadableString& aListStyle)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("list-style"), aListStyle, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetListStyleImage(nsString& aListStyleImage)
+nsDOMCSSDeclaration::GetListStyleImage(nsAWritableString& aListStyleImage)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("list-style-image"), aListStyleImage);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetListStyleImage(const nsString& aListStyleImage)
+nsDOMCSSDeclaration::SetListStyleImage(const nsAReadableString& aListStyleImage)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("list-style-image"), aListStyleImage, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetListStylePosition(nsString& aListStylePosition)
+nsDOMCSSDeclaration::GetListStylePosition(nsAWritableString& aListStylePosition)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("list-style-position"), aListStylePosition);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetListStylePosition(const nsString& aListStylePosition)
+nsDOMCSSDeclaration::SetListStylePosition(const nsAReadableString& aListStylePosition)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("list-style-position"), aListStylePosition, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetListStyleType(nsString& aListStyleType)
+nsDOMCSSDeclaration::GetListStyleType(nsAWritableString& aListStyleType)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("list-style-type"), aListStyleType);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetListStyleType(const nsString& aListStyleType)
+nsDOMCSSDeclaration::SetListStyleType(const nsAReadableString& aListStyleType)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("list-style-type"), aListStyleType, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetMargin(nsString& aMargin)
+nsDOMCSSDeclaration::GetMargin(nsAWritableString& aMargin)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("margin"), aMargin);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetMargin(const nsString& aMargin)
+nsDOMCSSDeclaration::SetMargin(const nsAReadableString& aMargin)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("margin"), aMargin, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetMarginTop(nsString& aMarginTop)
+nsDOMCSSDeclaration::GetMarginTop(nsAWritableString& aMarginTop)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("margin-top"), aMarginTop);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetMarginTop(const nsString& aMarginTop)
+nsDOMCSSDeclaration::SetMarginTop(const nsAReadableString& aMarginTop)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("margin-top"), aMarginTop, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetMarginRight(nsString& aMarginRight)
+nsDOMCSSDeclaration::GetMarginRight(nsAWritableString& aMarginRight)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("margin-right"), aMarginRight);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetMarginRight(const nsString& aMarginRight)
+nsDOMCSSDeclaration::SetMarginRight(const nsAReadableString& aMarginRight)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("margin-right"), aMarginRight, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetMarginBottom(nsString& aMarginBottom)
+nsDOMCSSDeclaration::GetMarginBottom(nsAWritableString& aMarginBottom)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("margin-bottom"), aMarginBottom);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetMarginBottom(const nsString& aMarginBottom)
+nsDOMCSSDeclaration::SetMarginBottom(const nsAReadableString& aMarginBottom)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("margin-bottom"), aMarginBottom, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetMarginLeft(nsString& aMarginLeft)
+nsDOMCSSDeclaration::GetMarginLeft(nsAWritableString& aMarginLeft)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("margin-left"), aMarginLeft);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetMarginLeft(const nsString& aMarginLeft)
+nsDOMCSSDeclaration::SetMarginLeft(const nsAReadableString& aMarginLeft)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("margin-left"), aMarginLeft, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetMarkerOffset(nsString& aMarkerOffset)
+nsDOMCSSDeclaration::GetMarkerOffset(nsAWritableString& aMarkerOffset)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("marker-offset"), aMarkerOffset);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetMarkerOffset(const nsString& aMarkerOffset)
+nsDOMCSSDeclaration::SetMarkerOffset(const nsAReadableString& aMarkerOffset)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("marker-offset"), aMarkerOffset, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetMarks(nsString& aMarks)
+nsDOMCSSDeclaration::GetMarks(nsAWritableString& aMarks)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("marks"), aMarks);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetMarks(const nsString& aMarks)
+nsDOMCSSDeclaration::SetMarks(const nsAReadableString& aMarks)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("marks"), aMarks, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetMaxHeight(nsString& aMaxHeight)
+nsDOMCSSDeclaration::GetMaxHeight(nsAWritableString& aMaxHeight)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("max-height"), aMaxHeight);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetMaxHeight(const nsString& aMaxHeight)
+nsDOMCSSDeclaration::SetMaxHeight(const nsAReadableString& aMaxHeight)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("max-height"), aMaxHeight, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetMaxWidth(nsString& aMaxWidth)
+nsDOMCSSDeclaration::GetMaxWidth(nsAWritableString& aMaxWidth)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("max-width"), aMaxWidth);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetMaxWidth(const nsString& aMaxWidth)
+nsDOMCSSDeclaration::SetMaxWidth(const nsAReadableString& aMaxWidth)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("max-width"), aMaxWidth, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetMinHeight(nsString& aMinHeight)
+nsDOMCSSDeclaration::GetMinHeight(nsAWritableString& aMinHeight)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("min-height"), aMinHeight);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetMinHeight(const nsString& aMinHeight)
+nsDOMCSSDeclaration::SetMinHeight(const nsAReadableString& aMinHeight)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("min-height"), aMinHeight, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetMinWidth(nsString& aMinWidth)
+nsDOMCSSDeclaration::GetMinWidth(nsAWritableString& aMinWidth)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("min-width"), aMinWidth);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetMinWidth(const nsString& aMinWidth)
+nsDOMCSSDeclaration::SetMinWidth(const nsAReadableString& aMinWidth)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("min-width"), aMinWidth, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetOrphans(nsString& aOrphans)
+nsDOMCSSDeclaration::GetOrphans(nsAWritableString& aOrphans)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("orphans"), aOrphans);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetOrphans(const nsString& aOrphans)
+nsDOMCSSDeclaration::SetOrphans(const nsAReadableString& aOrphans)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("orphans"), aOrphans, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetOutline(nsString& aOutline)
+nsDOMCSSDeclaration::GetOutline(nsAWritableString& aOutline)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("outline"), aOutline);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetOutline(const nsString& aOutline)
+nsDOMCSSDeclaration::SetOutline(const nsAReadableString& aOutline)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("outline"), aOutline, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetOutlineColor(nsString& aOutlineColor)
+nsDOMCSSDeclaration::GetOutlineColor(nsAWritableString& aOutlineColor)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("outline-color"), aOutlineColor);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetOutlineColor(const nsString& aOutlineColor)
+nsDOMCSSDeclaration::SetOutlineColor(const nsAReadableString& aOutlineColor)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("outline-color"), aOutlineColor, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetOutlineStyle(nsString& aOutlineStyle)
+nsDOMCSSDeclaration::GetOutlineStyle(nsAWritableString& aOutlineStyle)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("outline-style"), aOutlineStyle);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetOutlineStyle(const nsString& aOutlineStyle)
+nsDOMCSSDeclaration::SetOutlineStyle(const nsAReadableString& aOutlineStyle)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("outline-style"), aOutlineStyle, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetOutlineWidth(nsString& aOutlineWidth)
+nsDOMCSSDeclaration::GetOutlineWidth(nsAWritableString& aOutlineWidth)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("outline-width"), aOutlineWidth);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetOutlineWidth(const nsString& aOutlineWidth)
+nsDOMCSSDeclaration::SetOutlineWidth(const nsAReadableString& aOutlineWidth)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("outline-width"), aOutlineWidth, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetOverflow(nsString& aOverflow)
+nsDOMCSSDeclaration::GetOverflow(nsAWritableString& aOverflow)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("overflow"), aOverflow);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetOverflow(const nsString& aOverflow)
+nsDOMCSSDeclaration::SetOverflow(const nsAReadableString& aOverflow)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("overflow"), aOverflow, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPadding(nsString& aPadding)
+nsDOMCSSDeclaration::GetPadding(nsAWritableString& aPadding)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("padding"), aPadding);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPadding(const nsString& aPadding)
+nsDOMCSSDeclaration::SetPadding(const nsAReadableString& aPadding)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("padding"), aPadding, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPaddingTop(nsString& aPaddingTop)
+nsDOMCSSDeclaration::GetPaddingTop(nsAWritableString& aPaddingTop)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("padding-top"), aPaddingTop);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPaddingTop(const nsString& aPaddingTop)
+nsDOMCSSDeclaration::SetPaddingTop(const nsAReadableString& aPaddingTop)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("padding-top"), aPaddingTop, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPaddingRight(nsString& aPaddingRight)
+nsDOMCSSDeclaration::GetPaddingRight(nsAWritableString& aPaddingRight)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("padding-right"), aPaddingRight);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPaddingRight(const nsString& aPaddingRight)
+nsDOMCSSDeclaration::SetPaddingRight(const nsAReadableString& aPaddingRight)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("padding-right"), aPaddingRight, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPaddingBottom(nsString& aPaddingBottom)
+nsDOMCSSDeclaration::GetPaddingBottom(nsAWritableString& aPaddingBottom)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("padding-bottom"), aPaddingBottom);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPaddingBottom(const nsString& aPaddingBottom)
+nsDOMCSSDeclaration::SetPaddingBottom(const nsAReadableString& aPaddingBottom)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("padding-bottom"), aPaddingBottom, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPaddingLeft(nsString& aPaddingLeft)
+nsDOMCSSDeclaration::GetPaddingLeft(nsAWritableString& aPaddingLeft)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("padding-left"), aPaddingLeft);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPaddingLeft(const nsString& aPaddingLeft)
+nsDOMCSSDeclaration::SetPaddingLeft(const nsAReadableString& aPaddingLeft)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("padding-left"), aPaddingLeft, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPage(nsString& aPage)
+nsDOMCSSDeclaration::GetPage(nsAWritableString& aPage)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("page"), aPage);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPage(const nsString& aPage)
+nsDOMCSSDeclaration::SetPage(const nsAReadableString& aPage)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("page"), aPage, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPageBreakAfter(nsString& aPageBreakAfter)
+nsDOMCSSDeclaration::GetPageBreakAfter(nsAWritableString& aPageBreakAfter)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("page-break-after"), aPageBreakAfter);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPageBreakAfter(const nsString& aPageBreakAfter)
+nsDOMCSSDeclaration::SetPageBreakAfter(const nsAReadableString& aPageBreakAfter)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("page-break-after"), aPageBreakAfter, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPageBreakBefore(nsString& aPageBreakBefore)
+nsDOMCSSDeclaration::GetPageBreakBefore(nsAWritableString& aPageBreakBefore)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("page-break-before"), aPageBreakBefore);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPageBreakBefore(const nsString& aPageBreakBefore)
+nsDOMCSSDeclaration::SetPageBreakBefore(const nsAReadableString& aPageBreakBefore)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("page-break-before"), aPageBreakBefore, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPageBreakInside(nsString& aPageBreakInside)
+nsDOMCSSDeclaration::GetPageBreakInside(nsAWritableString& aPageBreakInside)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("page-break-inside"), aPageBreakInside);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPageBreakInside(const nsString& aPageBreakInside)
+nsDOMCSSDeclaration::SetPageBreakInside(const nsAReadableString& aPageBreakInside)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("page-break-inside"), aPageBreakInside, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPause(nsString& aPause)
+nsDOMCSSDeclaration::GetPause(nsAWritableString& aPause)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("pause"), aPause);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPause(const nsString& aPause)
+nsDOMCSSDeclaration::SetPause(const nsAReadableString& aPause)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("pause"), aPause, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPauseAfter(nsString& aPauseAfter)
+nsDOMCSSDeclaration::GetPauseAfter(nsAWritableString& aPauseAfter)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("pause-after"), aPauseAfter);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPauseAfter(const nsString& aPauseAfter)
+nsDOMCSSDeclaration::SetPauseAfter(const nsAReadableString& aPauseAfter)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("pause-after"), aPauseAfter, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPauseBefore(nsString& aPauseBefore)
+nsDOMCSSDeclaration::GetPauseBefore(nsAWritableString& aPauseBefore)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("pause-before"), aPauseBefore);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPauseBefore(const nsString& aPauseBefore)
+nsDOMCSSDeclaration::SetPauseBefore(const nsAReadableString& aPauseBefore)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("pause-before"), aPauseBefore, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPitch(nsString& aPitch)
+nsDOMCSSDeclaration::GetPitch(nsAWritableString& aPitch)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("pitch"), aPitch);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPitch(const nsString& aPitch)
+nsDOMCSSDeclaration::SetPitch(const nsAReadableString& aPitch)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("pitch"), aPitch, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPitchRange(nsString& aPitchRange)
+nsDOMCSSDeclaration::GetPitchRange(nsAWritableString& aPitchRange)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("pitch-range"), aPitchRange);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPitchRange(const nsString& aPitchRange)
+nsDOMCSSDeclaration::SetPitchRange(const nsAReadableString& aPitchRange)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("pitch-range"), aPitchRange, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPlayDuring(nsString& aPlayDuring)
+nsDOMCSSDeclaration::GetPlayDuring(nsAWritableString& aPlayDuring)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("play-during"), aPlayDuring);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPlayDuring(const nsString& aPlayDuring)
+nsDOMCSSDeclaration::SetPlayDuring(const nsAReadableString& aPlayDuring)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("play-during"), aPlayDuring, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPosition(nsString& aPosition)
+nsDOMCSSDeclaration::GetPosition(nsAWritableString& aPosition)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("position"), aPosition);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetPosition(const nsString& aPosition)
+nsDOMCSSDeclaration::SetPosition(const nsAReadableString& aPosition)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("position"), aPosition, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetQuotes(nsString& aQuotes)
+nsDOMCSSDeclaration::GetQuotes(nsAWritableString& aQuotes)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("quotes"), aQuotes);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetQuotes(const nsString& aQuotes)
+nsDOMCSSDeclaration::SetQuotes(const nsAReadableString& aQuotes)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("quotes"), aQuotes, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetRichness(nsString& aRichness)
+nsDOMCSSDeclaration::GetRichness(nsAWritableString& aRichness)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("richness"), aRichness);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetRichness(const nsString& aRichness)
+nsDOMCSSDeclaration::SetRichness(const nsAReadableString& aRichness)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("richness"), aRichness, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetRight(nsString& aRight)
+nsDOMCSSDeclaration::GetRight(nsAWritableString& aRight)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("right"), aRight);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetRight(const nsString& aRight)
+nsDOMCSSDeclaration::SetRight(const nsAReadableString& aRight)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("right"), aRight, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetSize(nsString& aSize)
+nsDOMCSSDeclaration::GetSize(nsAWritableString& aSize)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("size"), aSize);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetSize(const nsString& aSize)
+nsDOMCSSDeclaration::SetSize(const nsAReadableString& aSize)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("size"), aSize, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetSpeak(nsString& aSpeak)
+nsDOMCSSDeclaration::GetSpeak(nsAWritableString& aSpeak)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("speak"), aSpeak);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetSpeak(const nsString& aSpeak)
+nsDOMCSSDeclaration::SetSpeak(const nsAReadableString& aSpeak)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("speak"), aSpeak, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetSpeakHeader(nsString& aSpeakHeader)
+nsDOMCSSDeclaration::GetSpeakHeader(nsAWritableString& aSpeakHeader)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("speak-header"), aSpeakHeader);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetSpeakHeader(const nsString& aSpeakHeader)
+nsDOMCSSDeclaration::SetSpeakHeader(const nsAReadableString& aSpeakHeader)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("speak-header"), aSpeakHeader, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetSpeakNumeral(nsString& aSpeakNumeral)
+nsDOMCSSDeclaration::GetSpeakNumeral(nsAWritableString& aSpeakNumeral)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("speak-numeral"), aSpeakNumeral);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetSpeakNumeral(const nsString& aSpeakNumeral)
+nsDOMCSSDeclaration::SetSpeakNumeral(const nsAReadableString& aSpeakNumeral)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("speak-numeral"), aSpeakNumeral, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetSpeakPunctuation(nsString& aSpeakPunctuation)
+nsDOMCSSDeclaration::GetSpeakPunctuation(nsAWritableString& aSpeakPunctuation)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("speak-punctuation"), aSpeakPunctuation);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetSpeakPunctuation(const nsString& aSpeakPunctuation)
+nsDOMCSSDeclaration::SetSpeakPunctuation(const nsAReadableString& aSpeakPunctuation)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("speak-punctuation"), aSpeakPunctuation, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetSpeechRate(nsString& aSpeechRate)
+nsDOMCSSDeclaration::GetSpeechRate(nsAWritableString& aSpeechRate)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("speech-rate"), aSpeechRate);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetSpeechRate(const nsString& aSpeechRate)
+nsDOMCSSDeclaration::SetSpeechRate(const nsAReadableString& aSpeechRate)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("speech-rate"), aSpeechRate, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetStress(nsString& aStress)
+nsDOMCSSDeclaration::GetStress(nsAWritableString& aStress)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("stress"), aStress);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetStress(const nsString& aStress)
+nsDOMCSSDeclaration::SetStress(const nsAReadableString& aStress)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("stress"), aStress, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetTableLayout(nsString& aTableLayout)
+nsDOMCSSDeclaration::GetTableLayout(nsAWritableString& aTableLayout)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("table-layout"), aTableLayout);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetTableLayout(const nsString& aTableLayout)
+nsDOMCSSDeclaration::SetTableLayout(const nsAReadableString& aTableLayout)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("table-layout"), aTableLayout, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetTextAlign(nsString& aTextAlign)
+nsDOMCSSDeclaration::GetTextAlign(nsAWritableString& aTextAlign)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("text-align"), aTextAlign);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetTextAlign(const nsString& aTextAlign)
+nsDOMCSSDeclaration::SetTextAlign(const nsAReadableString& aTextAlign)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("text-align"), aTextAlign, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetTextDecoration(nsString& aTextDecoration)
+nsDOMCSSDeclaration::GetTextDecoration(nsAWritableString& aTextDecoration)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("text-decoration"), aTextDecoration);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetTextDecoration(const nsString& aTextDecoration)
+nsDOMCSSDeclaration::SetTextDecoration(const nsAReadableString& aTextDecoration)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("text-decoration"), aTextDecoration, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetTextIndent(nsString& aTextIndent)
+nsDOMCSSDeclaration::GetTextIndent(nsAWritableString& aTextIndent)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("text-indent"), aTextIndent);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetTextIndent(const nsString& aTextIndent)
+nsDOMCSSDeclaration::SetTextIndent(const nsAReadableString& aTextIndent)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("text-indent"), aTextIndent, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetTextShadow(nsString& aTextShadow)
+nsDOMCSSDeclaration::GetTextShadow(nsAWritableString& aTextShadow)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("text-shadow"), aTextShadow);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetTextShadow(const nsString& aTextShadow)
+nsDOMCSSDeclaration::SetTextShadow(const nsAReadableString& aTextShadow)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("text-shadow"), aTextShadow, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetTextTransform(nsString& aTextTransform)
+nsDOMCSSDeclaration::GetTextTransform(nsAWritableString& aTextTransform)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("text-transform"), aTextTransform);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetTextTransform(const nsString& aTextTransform)
+nsDOMCSSDeclaration::SetTextTransform(const nsAReadableString& aTextTransform)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("text-transform"), aTextTransform, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetTop(nsString& aTop)
+nsDOMCSSDeclaration::GetTop(nsAWritableString& aTop)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("top"), aTop);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetTop(const nsString& aTop)
+nsDOMCSSDeclaration::SetTop(const nsAReadableString& aTop)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("top"), aTop, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetUnicodeBidi(nsString& aUnicodeBidi)
+nsDOMCSSDeclaration::GetUnicodeBidi(nsAWritableString& aUnicodeBidi)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("unicode-bidi"), aUnicodeBidi);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetUnicodeBidi(const nsString& aUnicodeBidi)
+nsDOMCSSDeclaration::SetUnicodeBidi(const nsAReadableString& aUnicodeBidi)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("unicode-bidi"), aUnicodeBidi, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetVerticalAlign(nsString& aVerticalAlign)
+nsDOMCSSDeclaration::GetVerticalAlign(nsAWritableString& aVerticalAlign)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("vertical-align"), aVerticalAlign);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetVerticalAlign(const nsString& aVerticalAlign)
+nsDOMCSSDeclaration::SetVerticalAlign(const nsAReadableString& aVerticalAlign)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("vertical-align"), aVerticalAlign, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetVisibility(nsString& aVisibility)
+nsDOMCSSDeclaration::GetVisibility(nsAWritableString& aVisibility)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("visibility"), aVisibility);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetVisibility(const nsString& aVisibility)
+nsDOMCSSDeclaration::SetVisibility(const nsAReadableString& aVisibility)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("visibility"), aVisibility, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetVoiceFamily(nsString& aVoiceFamily)
+nsDOMCSSDeclaration::GetVoiceFamily(nsAWritableString& aVoiceFamily)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("voice-family"), aVoiceFamily);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetVoiceFamily(const nsString& aVoiceFamily)
+nsDOMCSSDeclaration::SetVoiceFamily(const nsAReadableString& aVoiceFamily)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("voice-family"), aVoiceFamily, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetVolume(nsString& aVolume)
+nsDOMCSSDeclaration::GetVolume(nsAWritableString& aVolume)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("volume"), aVolume);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetVolume(const nsString& aVolume)
+nsDOMCSSDeclaration::SetVolume(const nsAReadableString& aVolume)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("volume"), aVolume, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetWhiteSpace(nsString& aWhiteSpace)
+nsDOMCSSDeclaration::GetWhiteSpace(nsAWritableString& aWhiteSpace)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("white-space"), aWhiteSpace);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetWhiteSpace(const nsString& aWhiteSpace)
+nsDOMCSSDeclaration::SetWhiteSpace(const nsAReadableString& aWhiteSpace)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("white-space"), aWhiteSpace, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetWidows(nsString& aWidows)
+nsDOMCSSDeclaration::GetWidows(nsAWritableString& aWidows)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("widows"), aWidows);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetWidows(const nsString& aWidows)
+nsDOMCSSDeclaration::SetWidows(const nsAReadableString& aWidows)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("widows"), aWidows, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetWidth(nsString& aWidth)
+nsDOMCSSDeclaration::GetWidth(nsAWritableString& aWidth)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("width"), aWidth);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetWidth(const nsString& aWidth)
+nsDOMCSSDeclaration::SetWidth(const nsAReadableString& aWidth)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("width"), aWidth, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetWordSpacing(nsString& aWordSpacing)
+nsDOMCSSDeclaration::GetWordSpacing(nsAWritableString& aWordSpacing)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("word-spacing"), aWordSpacing);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetWordSpacing(const nsString& aWordSpacing)
+nsDOMCSSDeclaration::SetWordSpacing(const nsAReadableString& aWordSpacing)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("word-spacing"), aWordSpacing, nsAutoString());
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::GetZIndex(nsString& aZIndex)
+nsDOMCSSDeclaration::GetZIndex(nsAWritableString& aZIndex)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("z-index"), aZIndex);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetZIndex(const nsString& aZIndex)
+nsDOMCSSDeclaration::SetZIndex(const nsAReadableString& aZIndex)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("z-index"), aZIndex, nsAutoString());
 }
 
 
 NS_IMETHODIMP 
-nsDOMCSSDeclaration::GetOpacity(nsString& aOpacity)
+nsDOMCSSDeclaration::GetOpacity(nsAWritableString& aOpacity)
 {
   return GetPropertyValue(NS_ConvertASCIItoUCS2("opacity"), aOpacity);
 }
 
 NS_IMETHODIMP
-nsDOMCSSDeclaration::SetOpacity(const nsString& aOpacity)
+nsDOMCSSDeclaration::SetOpacity(const nsAReadableString& aOpacity)
 {
   return SetProperty(NS_ConvertASCIItoUCS2("opacity"), aOpacity, nsAutoString());
 }

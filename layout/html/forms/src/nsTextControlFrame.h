@@ -88,8 +88,8 @@ private:
 /* ---------- abstract methods derived class must implement ---------- */
 public:  
   // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)=0;
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue)=0; 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue)=0;
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue)=0; 
 
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext* aPresContext)=0;
 

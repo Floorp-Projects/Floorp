@@ -97,13 +97,13 @@ public:
   // nsIDOMElement
     // can't use the macro here because input type=text needs to notify up to 
     // frame system on SetAttribute("value");
-  NS_IMETHOD GetTagName(nsString& aTagName) {
+  NS_IMETHOD GetTagName(nsAWritableString& aTagName) {
     return mInner.GetTagName(aTagName);
   }
-  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aReturn) {      
+  NS_IMETHOD GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn) {      
     return mInner.GetAttribute(aName, aReturn);                                
   }                                                                        
-  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue) { 
+  NS_IMETHOD SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue) { 
     nsAutoString valueAttribute;
     nsHTMLAtoms::value->ToString(valueAttribute);
     if (PR_TRUE==valueAttribute.Equals(aName)) {
@@ -112,10 +112,10 @@ public:
     }
     return mInner.SetAttribute(aName, aValue);                                 
   }                                                                        
-  NS_IMETHOD RemoveAttribute(const nsString& aName) {                      
+  NS_IMETHOD RemoveAttribute(const nsAReadableString& aName) {                      
     return mInner.RemoveAttribute(aName);                                      
   }                                                                        
-  NS_IMETHOD GetAttributeNode(const nsString& aName,                       
+  NS_IMETHOD GetAttributeNode(const nsAReadableString& aName,                       
                               nsIDOMAttr** aReturn) {                      
     return mInner.GetAttributeNode(aName, aReturn);                            
   }                                                                        
@@ -125,41 +125,41 @@ public:
   NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {
     return mInner.RemoveAttributeNode(aOldAttr, aReturn);                      
   }                                                                        
-  NS_IMETHOD GetElementsByTagName(const nsString& aTagname,                
+  NS_IMETHOD GetElementsByTagName(const nsAReadableString& aTagname,                
                                   nsIDOMNodeList** aReturn) {              
     return mInner.GetElementsByTagName(aTagname, aReturn);                     
   }                                                                        
-  NS_IMETHOD GetAttributeNS(const nsString& aNamespaceURI,
-                            const nsString& aLocalName, nsString& aReturn) {
+  NS_IMETHOD GetAttributeNS(const nsAReadableString& aNamespaceURI,
+                            const nsAReadableString& aLocalName, nsAWritableString& aReturn) {
     return mInner.GetAttributeNS(aNamespaceURI, aLocalName, aReturn);
   }
-  NS_IMETHOD SetAttributeNS(const nsString& aNamespaceURI,
-                            const nsString& aQualifiedName,
-                            const nsString& aValue) {
+  NS_IMETHOD SetAttributeNS(const nsAReadableString& aNamespaceURI,
+                            const nsAReadableString& aQualifiedName,
+                            const nsAReadableString& aValue) {
     return mInner.SetAttributeNS(aNamespaceURI, aQualifiedName, aValue);
   }
-  NS_IMETHOD RemoveAttributeNS(const nsString& aNamespaceURI,
-                               const nsString& aLocalName) {
+  NS_IMETHOD RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
+                               const nsAReadableString& aLocalName) {
     return mInner.RemoveAttributeNS(aNamespaceURI, aLocalName);
   }
-  NS_IMETHOD GetAttributeNodeNS(const nsString& aNamespaceURI,
-                                const nsString& aLocalName,
+  NS_IMETHOD GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
+                                const nsAReadableString& aLocalName,
                                 nsIDOMAttr** aReturn) {
     return mInner.GetAttributeNodeNS(aNamespaceURI, aLocalName, aReturn);
   }
   NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
     return mInner.SetAttributeNodeNS(aNewAttr, aReturn);
   }
-  NS_IMETHOD GetElementsByTagNameNS(const nsString& aNamespaceURI,
-                                    const nsString& aLocalName,
+  NS_IMETHOD GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
+                                    const nsAReadableString& aLocalName,
                                     nsIDOMNodeList** aReturn) {
     return mInner.GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
   }
-  NS_IMETHOD HasAttribute(const nsString& aName, PRBool* aReturn) {
+  NS_IMETHOD HasAttribute(const nsAReadableString& aName, PRBool* aReturn) {
     return mInner.HasAttribute(aName, aReturn);
   }
-  NS_IMETHOD HasAttributeNS(const nsString& aNamespaceURI,
-                            const nsString& aLocalName, PRBool* aReturn) {
+  NS_IMETHOD HasAttributeNS(const nsAReadableString& aNamespaceURI,
+                            const nsAReadableString& aLocalName, PRBool* aReturn) {
     return mInner.HasAttributeNS(aNamespaceURI, aLocalName, aReturn);
   }
 
@@ -318,13 +318,13 @@ nsHTMLInputElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 NS_IMETHODIMP 
-nsHTMLInputElement::GetDefaultValue(nsString& aDefaultValue)
+nsHTMLInputElement::GetDefaultValue(nsAWritableString& aDefaultValue)
 {
   return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue);
 }
 
 NS_IMETHODIMP 
-nsHTMLInputElement::SetDefaultValue(const nsString& aDefaultValue)
+nsHTMLInputElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
 {
   return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aDefaultValue, PR_TRUE); 
 }
@@ -374,7 +374,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Type, type)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
 
 NS_IMETHODIMP 
-nsHTMLInputElement::GetValue(nsString& aValue)
+nsHTMLInputElement::GetValue(nsAWritableString& aValue)
 {
   PRInt32 type;
   GetType(&type);
@@ -392,8 +392,7 @@ nsHTMLInputElement::GetValue(nsString& aValue)
 
       // Obtain the value property from the presentation state.
       if (presState) {
-        nsAutoString value;
-        presState->GetStateProperty(NS_ConvertASCIItoUCS2("value"), aValue);
+        presState->GetStateProperty(NS_LITERAL_STRING("value"), aValue);
       }
     }
       
@@ -405,7 +404,7 @@ nsHTMLInputElement::GetValue(nsString& aValue)
 
 
 NS_IMETHODIMP 
-nsHTMLInputElement::SetValue(const nsString& aValue)
+nsHTMLInputElement::SetValue(const nsAReadableString& aValue)
 {
   PRInt32 type;
   GetType(&type);
@@ -444,7 +443,7 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
 
       // Obtain the value property from the presentation state.
       if (presState) {
-        presState->SetStateProperty(NS_ConvertASCIItoUCS2("value"), aValue);
+        presState->SetStateProperty(NS_LITERAL_STRING("value"), aValue);
       }
     }
     return NS_OK;
@@ -1026,13 +1025,14 @@ static nsGenericHTMLElement::EnumTable kInputTypeTable[] = {
 
 NS_IMETHODIMP
 nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsString& aValue,
+                                      const nsAReadableString& aValue,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::type) {
     nsGenericHTMLElement::EnumTable *table = kInputTypeTable;
+    nsAutoString valueStr(aValue);
     while (nsnull != table->tag) { 
-      if (aValue.EqualsIgnoreCase(table->tag)) {
+      if (valueStr.EqualsIgnoreCase(table->tag)) {
         aResult.SetIntValue(table->value, eHTMLUnit_Enumerated);
         mType = table->value;  // set the type of this input 
         return NS_CONTENT_ATTR_HAS_VALUE;
@@ -1101,7 +1101,7 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsString& aResult) const
+                                      nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {

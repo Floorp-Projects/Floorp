@@ -73,49 +73,49 @@ nsXULMenuListElement::~nsXULMenuListElement()
 }
 
 NS_IMETHODIMP
-nsXULMenuListElement::GetValue(nsString& aValue)
+nsXULMenuListElement::GetValue(nsAWritableString& aValue)
 {
   return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("value"), aValue);
 }
 
 NS_IMETHODIMP
-nsXULMenuListElement::SetValue(const nsString& aValue)
+nsXULMenuListElement::SetValue(const nsAReadableString& aValue)
 {
   return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("value"), aValue);
 }
 
 NS_IMETHODIMP
-nsXULMenuListElement::GetCrop(nsString& aCrop)
+nsXULMenuListElement::GetCrop(nsAWritableString& aCrop)
 {
   return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("crop"), aCrop);
 }
 
 NS_IMETHODIMP
-nsXULMenuListElement::SetCrop(const nsString& aCrop)
+nsXULMenuListElement::SetCrop(const nsAReadableString& aCrop)
 {
   return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("crop"), aCrop);
 }
 
 NS_IMETHODIMP
-nsXULMenuListElement::GetSrc(nsString& aSrc)
+nsXULMenuListElement::GetSrc(nsAWritableString& aSrc)
 {
   return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("src"), aSrc);
 }
 
 NS_IMETHODIMP
-nsXULMenuListElement::SetSrc(const nsString& aSrc)
+nsXULMenuListElement::SetSrc(const nsAReadableString& aSrc)
 {
   return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("src"), aSrc);
 }
 
 NS_IMETHODIMP
-nsXULMenuListElement::GetData(nsString& aData)
+nsXULMenuListElement::GetData(nsAWritableString& aData)
 {
   return mOuter->GetAttribute(NS_ConvertASCIItoUCS2("data"), aData);
 }
 
 NS_IMETHODIMP
-nsXULMenuListElement::SetData(const nsString& aData)
+nsXULMenuListElement::SetData(const nsAReadableString& aData)
 {
   return mOuter->SetAttribute(NS_ConvertASCIItoUCS2("data"), aData);
 }

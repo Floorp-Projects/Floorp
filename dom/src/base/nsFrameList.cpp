@@ -108,7 +108,7 @@ nsFrameList::Item(PRUint32 aIndex, nsIDOMWindow** aReturn)
 }
 
 NS_IMETHODIMP 
-nsFrameList::NamedItem(const nsString& aName, nsIDOMWindow** aReturn)
+nsFrameList::NamedItem(const nsAReadableString& aName, nsIDOMWindow** aReturn)
 {
   nsCOMPtr<nsIWebShell> item;
 

@@ -54,10 +54,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLBaseElement
-  NS_IMETHOD GetHref(nsString& aHref);
-  NS_IMETHOD SetHref(const nsString& aHref);
-  NS_IMETHOD GetTarget(nsString& aTarget);
-  NS_IMETHOD SetTarget(const nsString& aTarget);
+  NS_DECL_IDOMHTMLBASEELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -131,7 +128,7 @@ NS_IMPL_STRING_ATTR(nsHTMLBaseElement, Target, target)
 
 NS_IMETHODIMP
 nsHTMLBaseElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsString& aValue,
+                                     const nsAReadableString& aValue,
                                      nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -140,7 +137,7 @@ nsHTMLBaseElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLBaseElement::AttributeToString(nsIAtom* aAttribute,
                                      const nsHTMLValue& aValue,
-                                     nsString& aResult) const
+                                     nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

@@ -55,20 +55,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLScriptElement
-  NS_IMETHOD GetText(nsString& aText);
-  NS_IMETHOD SetText(const nsString& aText);
-  NS_IMETHOD GetHtmlFor(nsString& aHtmlFor);
-  NS_IMETHOD SetHtmlFor(const nsString& aHtmlFor);
-  NS_IMETHOD GetEvent(nsString& aEvent);
-  NS_IMETHOD SetEvent(const nsString& aEvent);
-  NS_IMETHOD GetCharset(nsString& aCharset);
-  NS_IMETHOD SetCharset(const nsString& aCharset);
-  NS_IMETHOD GetDefer(PRBool* aDefer);
-  NS_IMETHOD SetDefer(PRBool aDefer);
-  NS_IMETHOD GetSrc(nsString& aSrc);
-  NS_IMETHOD SetSrc(const nsString& aSrc);
-  NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD SetType(const nsString& aType);
+  NS_DECL_IDOMHTMLSCRIPTELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -138,7 +125,7 @@ nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::GetText(nsString& aValue)
+nsHTMLScriptElement::GetText(nsAWritableString& aValue)
 {
   PRInt32 i, count = 0;
   nsresult rv = NS_OK;
@@ -167,7 +154,7 @@ nsHTMLScriptElement::GetText(nsString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::SetText(const nsString& aValue)
+nsHTMLScriptElement::SetText(const nsAReadableString& aValue)
 {
   nsCOMPtr<nsIContent> content;
   PRInt32 i, count = 0;
@@ -202,7 +189,7 @@ nsHTMLScriptElement::SetText(const nsString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::GetHtmlFor(nsString& aValue)
+nsHTMLScriptElement::GetHtmlFor(nsAWritableString& aValue)
 {
   // XXX write me
 //  mInner.GetAttribute(nsHTMLAtoms::charset, aValue);
@@ -210,7 +197,7 @@ nsHTMLScriptElement::GetHtmlFor(nsString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::SetHtmlFor(const nsString& aValue)
+nsHTMLScriptElement::SetHtmlFor(const nsAReadableString& aValue)
 {
   // XXX write me
 //  return mInner.SetAttr(nsHTMLAtoms::charset, aValue);
@@ -218,7 +205,7 @@ nsHTMLScriptElement::SetHtmlFor(const nsString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::GetEvent(nsString& aValue)
+nsHTMLScriptElement::GetEvent(nsAWritableString& aValue)
 {
   // XXX write me
 //  mInner.GetAttribute(nsHTMLAtoms::charset, aValue);
@@ -226,7 +213,7 @@ nsHTMLScriptElement::GetEvent(nsString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLScriptElement::SetEvent(const nsString& aValue)
+nsHTMLScriptElement::SetEvent(const nsAReadableString& aValue)
 {
   // XXX write me
 //  return mInner.SetAttr(nsHTMLAtoms::charset, aValue);
@@ -240,7 +227,7 @@ NS_IMPL_STRING_ATTR(nsHTMLScriptElement, Type, type)
 
 NS_IMETHODIMP
 nsHTMLScriptElement::StringToAttribute(nsIAtom* aAttribute,
-                                const nsString& aValue,
+                                const nsAReadableString& aValue,
                                 nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -249,7 +236,7 @@ nsHTMLScriptElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLScriptElement::AttributeToString(nsIAtom* aAttribute,
                                 const nsHTMLValue& aValue,
-                                nsString& aResult) const
+                                nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

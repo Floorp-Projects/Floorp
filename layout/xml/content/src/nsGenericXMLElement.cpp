@@ -86,17 +86,17 @@ nsGenericXMLElement::CopyInnerTo(nsIContent* aSrcContent,
   return NS_OK;
 }
 
-  nsresult GetNodeName(nsString& aNodeName);
-  nsresult GetLocalName(nsString& aLocalName);
+  nsresult GetNodeName(nsAWritableString& aNodeName);
+  nsresult GetLocalName(nsAWritableString& aLocalName);
 
 nsresult
-nsGenericXMLElement::GetNodeName(nsString& aNodeName)
+nsGenericXMLElement::GetNodeName(nsAWritableString& aNodeName)
 {
   return mNodeInfo->GetQualifiedName(aNodeName);
 }
 
 nsresult
-nsGenericXMLElement::GetLocalName(nsString& aLocalName)
+nsGenericXMLElement::GetLocalName(nsAWritableString& aLocalName)
 {
   return mNodeInfo->GetLocalName(aLocalName);
 }
@@ -176,7 +176,7 @@ nsGenericXMLElement::GetScriptObject(nsIScriptContext* aContext,
 }
 
 nsresult 
-nsGenericXMLElement::ParseAttributeString(const nsString& aStr, 
+nsGenericXMLElement::ParseAttributeString(const nsAReadableString& aStr, 
                                           nsIAtom*& aName,
                                           PRInt32& aNameSpaceID)
 {

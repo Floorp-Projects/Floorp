@@ -40,15 +40,15 @@ public:
   NS_IMETHOD Init(nsINameSpaceManager *aNameSpaceManager);
   NS_IMETHOD GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo);
-  NS_IMETHOD GetNodeInfo(const nsString& aName, nsIAtom *aPrefix,
+  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo);
-  NS_IMETHOD GetNodeInfo(const nsString& aName, const nsString& aPrefix,
+  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, const nsAReadableString& aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo);
-  NS_IMETHOD GetNodeInfo(const nsString& aName, const nsString& aPrefix,
-                         const nsString& aNamespaceURI,
+  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, const nsAReadableString& aPrefix,
+                         const nsAReadableString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo);
-  NS_IMETHOD GetNodeInfo(const nsString& aQualifiedName,
-                         const nsString& aNamespaceURI,
+  NS_IMETHOD GetNodeInfo(const nsAReadableString& aQualifiedName,
+                         const nsAReadableString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo); 
   NS_IMETHOD GetNamespaceManager(nsINameSpaceManager*& aNameSpaceManager);
 

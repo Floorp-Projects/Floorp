@@ -126,8 +126,8 @@ public:
   virtual void ControlChanged(nsIPresContext* aPresContext);
 
   // nsIFormControLFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                                      nsIContent*     aChild,
@@ -1211,7 +1211,7 @@ nsSelectControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue)
 {
   if (nsHTMLAtoms::selected == aName) {
     return NS_ERROR_INVALID_ARG; // Selected is readonly according to spec.
@@ -1385,7 +1385,7 @@ NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIPresContext* aPresContext, ns
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSelectControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP nsSelectControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
   // Get the selected value of option from local cache (optimization vs. widget)
   if (nsHTMLAtoms::selected == aName) {

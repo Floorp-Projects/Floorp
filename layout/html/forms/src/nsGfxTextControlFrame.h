@@ -434,8 +434,8 @@ public:
   NS_IMETHOD CreateEditor();
 
   // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext* aPresContext);
 

@@ -3404,7 +3404,7 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
         nsCOMPtr<nsIURI> baseURI = mCurrentURI;
 
         PRInt32 millis = -1;
-        PRUnichar *uriAttrib = nsnull;
+        nsAutoString uriAttrib;
         nsString result; result.AssignWithConversion (refreshHeader);
 
         PRInt32 semiColon = result.FindCharInSet(";,");
@@ -3441,7 +3441,7 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
                     if (loc > -1)
                         token.Cut(0, loc+1);
                      token.Trim(" \"'");
-                     uriAttrib = token.ToNewUnicode();
+                     uriAttrib = token;
             } else {
                 // Increment to the next token.
                     if (semiColon > -1) {
@@ -3457,11 +3457,10 @@ nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, nsDocShellInfoLoadType 
         } // end while
 
         nsCOMPtr<nsIURI> uri;
-        if (!uriAttrib) {
+        if (!uriAttrib.Length()) {
             uri = baseURI;
         } else {
-            NS_NewURI(getter_AddRefs(uri), nsAutoString(uriAttrib), baseURI);
-            nsMemory::Free(uriAttrib);
+            NS_NewURI(getter_AddRefs(uri), uriAttrib, baseURI);
         }
 
         RefreshURI (uri, millis, PR_FALSE);

@@ -40,6 +40,8 @@
   // for |NS_MIN|, |NS_MAX|, and |NS_COUNT|...
 #endif
 
+#include "nsMemory.h"
+
 /*
   This file defines the abstract interfaces |nsAReadableString| and
   |nsAReadableCString| (the 'A' is for 'abstract', as opposed to the 'I' in
@@ -310,7 +312,7 @@ class basic_nsAReadableString
       PRUint32  Right( basic_nsAWritableString<CharT>&, PRUint32 ) const;
 
       // Find( ... ) const;
-      // FindChar( ... ) const;
+      PRInt32 FindChar( CharT, PRUint32 aOffset = 0 ) const;
       // FindCharInSet( ... ) const;
       // RFind( ... ) const;
       // RFindChar( ... ) const;
@@ -625,7 +627,27 @@ basic_nsAReadableString<CharT>::Right( basic_nsAWritableString<CharT>& aResult, 
     return Mid(aResult, myLength-aLengthToCopy, aLengthToCopy);
   }
 
+template <class CharT>
+PRInt32
+basic_nsAReadableString<CharT>::FindChar( CharT aChar, PRUint32 aOffset ) const
+  {
+    nsReadingIterator<CharT> start( BeginReading() );
+    nsReadingIterator<CharT> end( EndReading() );
 
+    start += aOffset;
+
+    PRUint32 pos = 0;
+    while (start != end) {
+      PRUint32 fraglen = start.size_forward();
+      const CharT* findPtr = nsCharTraits<CharT>::find(start.get(), fraglen, aChar);
+      if (findPtr) {
+        return pos + (findPtr-start.get());
+      }
+      pos += fraglen;
+      start += fraglen;
+    }
+    return -1;
+  }
 
 template <class CharT>
 inline
@@ -1126,11 +1148,11 @@ nsPromiseSubstring<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFrag
       {
           // if there's more physical data in the returned fragment than I logically have left...
         size_t logical_size_backward = aPosition - mStartPos;
-        if ( position_ptr - aFragment.mStart > logical_size_backward )
+        if ( size_t(position_ptr - aFragment.mStart) > logical_size_backward )
           aFragment.mStart = position_ptr - logical_size_backward;
 
         size_t logical_size_forward = mLength - logical_size_backward;
-        if ( aFragment.mEnd - position_ptr > logical_size_forward )
+        if ( size_t(aFragment.mEnd - position_ptr) > logical_size_forward )
           aFragment.mEnd = position_ptr + logical_size_forward;
       }
 
@@ -1300,6 +1322,90 @@ operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsLiteralString<
     return nsPromiseConcatenation<CharT>(lhs, rhs);
   }
 
+#define kDefaultFlatStringSize 64
+
+template <class CharT>
+class basic_nsPromiseFlatString :
+   public basic_nsAReadableString<CharT>
+{
+ public:
+  explicit basic_nsPromiseFlatString( const basic_nsAReadableString<CharT>& );
+  virtual ~basic_nsPromiseFlatString( ) {
+    if (mOwnsBuffer) {
+      nsMemory::Free((void*)mBuffer);
+    }
+  }
+
+  virtual PRUint32  Length() const { return mLength; }
+  virtual const CharT* GetReadableFragment( nsReadableFragment<CharT>&, nsFragmentRequest, PRUint32 = 0 ) const;
+
+  operator const CharT*() const { return mBuffer; }
+
+ protected:
+  PRUint32 mLength;
+  const CharT *mBuffer;
+  PRBool mOwnsBuffer;
+  CharT mInlineBuffer[kDefaultFlatStringSize<<sizeof(CharT)];
+};
+
+template <class CharT>
+basic_nsPromiseFlatString<CharT>::basic_nsPromiseFlatString( const basic_nsAReadableString<CharT>& aString ) : mLength(aString.Length()), mOwnsBuffer(PR_FALSE)
+{
+  typedef basic_nsAReadableString<CharT>::const_iterator iterator;
+
+  iterator start( aString.BeginReading() );
+  iterator end( aString.EndReading() );
+
+  // First count the number of buffers
+  PRInt32 buffer_count = 0;
+  while ( start != end ) {
+    buffer_count++;
+    start += start.size_forward();
+  }
+
+  // Now figure out what we want to do with the string
+  start = aString.BeginReading();
+  // XXX Not guaranteed null-termination in the first case
+  // If it's a single buffer, we just use the implementation's buffer
+  if ( buffer_count == 1 ) 
+    mBuffer = start.get();
+  // If it's too big for our inline buffer, we allocate a new one
+  else if ( mLength > kDefaultFlatStringSize-1 ) {
+    CharT* result = NS_STATIC_CAST(CharT*, 
+				   nsMemory::Alloc((mLength+1) * sizeof(CharT)));
+    *copy_string(start, end, result) = CharT(0);
+
+    mBuffer = result;
+    mOwnsBuffer = PR_TRUE;
+  }
+  // Otherwise copy into our internal buffer
+  else {
+    mBuffer = mInlineBuffer;
+    copy_string( start, end, mInlineBuffer );
+    mInlineBuffer[mLength] = 0;
+  }
+}
+
+
+template <class CharT>
+const CharT* 
+basic_nsPromiseFlatString<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFragment, 
+						 nsFragmentRequest aRequest, 
+						 PRUint32 aOffset ) const 
+{
+  switch ( aRequest ) {
+    case kFirstFragment:
+    case kLastFragment:
+    case kFragmentAt:
+      aFragment.mEnd = (aFragment.mStart = mBuffer) + mLength;
+      return aFragment.mStart + aOffset;
+    
+    case kPrevFragment:
+    case kNextFragment:
+    default:
+      return 0;
+  }
+}
 
 
 typedef basic_nsAReadableString<PRUnichar>  nsAReadableString;
@@ -1307,6 +1413,9 @@ typedef basic_nsAReadableString<char>       nsAReadableCString;
 
 typedef basic_nsLiteralString<PRUnichar>    nsLiteralString;
 typedef basic_nsLiteralString<char>         nsLiteralCString;
+
+typedef basic_nsPromiseFlatString<PRUnichar> nsPromiseFlatString;
+typedef basic_nsPromiseFlatString<char>      nsPromiseFlatCString;
 
 
 #ifdef HAVE_CPP_2BYTE_WCHAR_T

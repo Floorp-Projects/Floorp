@@ -33,6 +33,7 @@
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "plstr.h"
+#include "prprf.h"
 #include "prmem.h"
 #include "nsCOMPtr.h"
 #include "nsJSUtils.h"
@@ -172,7 +173,7 @@ LocationImpl::SetURL(nsIURI* aURL)
 }
 
 NS_IMETHODIMP    
-LocationImpl::GetHash(nsString& aHash)
+LocationImpl::GetHash(nsAWritableString& aHash)
 {
   nsAutoString href;
   nsIURI *uri;
@@ -191,8 +192,8 @@ LocationImpl::GetHash(nsString& aHash)
         NS_RELEASE(url);
       }
       if (result == NS_OK && (nsnull != ref) && ('\0' != *ref)) {
-        aHash.AssignWithConversion("#");
-        aHash.AppendWithConversion(ref);
+        aHash.Assign(NS_LITERAL_STRING("#"));
+        aHash.Append(NS_ConvertASCIItoUCS2(ref));
         nsCRT::free(ref);
       }
       else {
@@ -206,7 +207,7 @@ LocationImpl::GetHash(nsString& aHash)
 }
 
 NS_IMETHODIMP    
-LocationImpl::SetHash(const nsString& aHash)
+LocationImpl::SetHash(const nsAReadableString& aHash)
 {
   nsAutoString href;
   nsIURI *uri;
@@ -220,10 +221,8 @@ LocationImpl::SetHash(const nsString& aHash)
     result = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
     NS_RELEASE(uri);
     if (NS_OK == result) {
-      char *buf = aHash.ToNewCString();
-      url->SetRef(buf);
+      url->SetRef(NS_ConvertUCS2toUTF8(aHash));
       SetURL(url);
-      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
   }
@@ -232,7 +231,7 @@ LocationImpl::SetHash(const nsString& aHash)
 }
 
 NS_IMETHODIMP    
-LocationImpl::GetHost(nsString& aHost)
+LocationImpl::GetHost(nsAWritableString& aHost)
 {
   nsAutoString href;
   nsIURI *url;
@@ -245,13 +244,17 @@ LocationImpl::GetHost(nsString& aHost)
       char* host;
       result = url->GetHost(&host);
       if (result == NS_OK) {
-        aHost.AssignWithConversion(host);
+        CopyASCIItoUCS2(nsLiteralCString(host), aHost);
         nsCRT::free(host);
         PRInt32 port;
         (void)url->GetPort(&port);
         if (-1 != port) {
-          aHost.AppendWithConversion(":");
-          aHost.AppendInt(port, 10);
+          aHost.Append(NS_LITERAL_STRING(":"));
+
+          nsAutoString tmpHost;
+          tmpHost.AppendInt(port);
+
+          aHost.Append(tmpHost);
         }
       }
       NS_RELEASE(url);
@@ -262,7 +265,7 @@ LocationImpl::GetHost(nsString& aHost)
 }
 
 NS_IMETHODIMP    
-LocationImpl::SetHost(const nsString& aHost)
+LocationImpl::SetHost(const nsAReadableString& aHost)
 {
   nsAutoString href;
   nsIURI *url;
@@ -272,10 +275,8 @@ LocationImpl::SetHost(const nsString& aHost)
   if (NS_OK == result) {
     result = NS_NewURI(&url, href);
     if (NS_OK == result) {
-      char *buf = aHost.ToNewCString();
-      url->SetHost(buf);
+      url->SetHost(NS_ConvertUCS2toUTF8(aHost));
       SetURL(url);
-      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
   }
@@ -284,7 +285,7 @@ LocationImpl::SetHost(const nsString& aHost)
 }
 
 NS_IMETHODIMP    
-LocationImpl::GetHostname(nsString& aHostname)
+LocationImpl::GetHostname(nsAWritableString& aHostname)
 {
   nsAutoString href;
   nsIURI *url;
@@ -297,7 +298,7 @@ LocationImpl::GetHostname(nsString& aHostname)
       char* host;
       result = url->GetHost(&host);
       if (result == NS_OK) {
-        aHostname.AssignWithConversion(host);
+        CopyASCIItoUCS2(nsLiteralCString(host), aHostname);
         nsCRT::free(host);
       }
       NS_RELEASE(url);
@@ -308,7 +309,7 @@ LocationImpl::GetHostname(nsString& aHostname)
 }
 
 NS_IMETHODIMP    
-LocationImpl::SetHostname(const nsString& aHostname)
+LocationImpl::SetHostname(const nsAReadableString& aHostname)
 {
   nsAutoString href;
   nsIURI *url;
@@ -318,10 +319,8 @@ LocationImpl::SetHostname(const nsString& aHostname)
   if (NS_OK == result) {
     result = NS_NewURI(&url, href);
     if (NS_OK == result) {
-      char *buf = aHostname.ToNewCString();
-      url->SetHost(buf);
+      url->SetHost(NS_ConvertUCS2toUTF8(aHostname));
       SetURL(url);
-      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
   }
@@ -330,7 +329,7 @@ LocationImpl::SetHostname(const nsString& aHostname)
 }
 
 NS_IMETHODIMP    
-LocationImpl::GetHref(nsString& aHref)
+LocationImpl::GetHref(nsAWritableString& aHref)
 {
   nsresult result = NS_OK;
 
@@ -338,10 +337,10 @@ LocationImpl::GetHref(nsString& aHref)
     nsCOMPtr<nsIURI> uri;
     result = mDocShell->GetCurrentURI(getter_AddRefs(uri));
     if (NS_SUCCEEDED(result) && uri) {
-        nsXPIDLCString uriString;
-        result = uri->GetSpec(getter_Copies(uriString));
-        if (NS_SUCCEEDED(result))
-            aHref.AssignWithConversion(uriString);
+      nsXPIDLCString uriString;
+      result = uri->GetSpec(getter_Copies(uriString));
+      if (NS_SUCCEEDED(result))
+        CopyASCIItoUCS2(nsLiteralCString(uriString), aHref);
     }
   }
 
@@ -349,7 +348,7 @@ LocationImpl::GetHref(nsString& aHref)
 }
 
 NS_IMETHODIMP    
-LocationImpl::SetHref(const nsString& aHref)
+LocationImpl::SetHref(const nsAReadableString& aHref)
 {
   nsAutoString oldHref;
   nsIURI *oldUrl;
@@ -368,7 +367,7 @@ LocationImpl::SetHref(const nsString& aHref)
 }
 
 nsresult
-LocationImpl::SetHrefWithBase(const nsString& aHref, 
+LocationImpl::SetHrefWithBase(const nsAReadableString& aHref, 
                               nsIURI* aBase,
                               PRBool aReplace)
 {
@@ -393,7 +392,7 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
 }
 
 NS_IMETHODIMP    
-LocationImpl::GetPathname(nsString& aPathname)
+LocationImpl::GetPathname(nsAWritableString& aPathname)
 {
   nsAutoString href;
   nsIURI *uri;
@@ -408,7 +407,7 @@ LocationImpl::GetPathname(nsString& aPathname)
         char* file;
         result = url->GetFilePath(&file);
         if (result == NS_OK) {
-          aPathname.AssignWithConversion(file);
+          CopyASCIItoUCS2(nsLiteralCString(file), aPathname);
           nsCRT::free(file);
         }
       }
@@ -420,7 +419,7 @@ LocationImpl::GetPathname(nsString& aPathname)
 }
 
 NS_IMETHODIMP    
-LocationImpl::SetPathname(const nsString& aPathname)
+LocationImpl::SetPathname(const nsAReadableString& aPathname)
 {
   nsAutoString href;
   nsIURI *url;
@@ -430,10 +429,8 @@ LocationImpl::SetPathname(const nsString& aPathname)
   if (NS_OK == result) {
     result = NS_NewURI(&url, href);
     if (NS_OK == result) {
-      char *buf = aPathname.ToNewCString();
-      url->SetPath(buf);
+      url->SetPath(NS_ConvertUCS2toUTF8(aPathname));
       SetURL(url);
-      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
   }
@@ -442,7 +439,7 @@ LocationImpl::SetPathname(const nsString& aPathname)
 }
 
 NS_IMETHODIMP    
-LocationImpl::GetPort(nsString& aPort)
+LocationImpl::GetPort(nsAWritableString& aPort)
 {
   nsAutoString href;
   nsIURI *url;
@@ -456,7 +453,9 @@ LocationImpl::GetPort(nsString& aPort)
       PRInt32 port;
       (void)url->GetPort(&port);
       if (-1 != port) {
-        aPort.AppendInt(port, 10);
+        nsAutoString portStr;
+        portStr.AppendInt(port);
+        aPort.Append(portStr);
       }
       NS_RELEASE(url);
     }
@@ -466,7 +465,7 @@ LocationImpl::GetPort(nsString& aPort)
 }
 
 NS_IMETHODIMP    
-LocationImpl::SetPort(const nsString& aPort)
+LocationImpl::SetPort(const nsAReadableString& aPort)
 {
   nsAutoString href;
   nsIURI *url;
@@ -476,7 +475,7 @@ LocationImpl::SetPort(const nsString& aPort)
   if (NS_OK == result) {
     result = NS_NewURI(&url, href);
     if (NS_OK == result) {
-      char *buf = aPort.ToNewCString();
+      const char *buf = NS_ConvertUCS2toUTF8(aPort).GetBuffer();
       PRInt32 port = -1;
 
       if (buf) {
@@ -489,7 +488,6 @@ LocationImpl::SetPort(const nsString& aPort)
       }
       url->SetPort(port);
       SetURL(url);
-      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
   }
@@ -498,7 +496,7 @@ LocationImpl::SetPort(const nsString& aPort)
 }
 
 NS_IMETHODIMP    
-LocationImpl::GetProtocol(nsString& aProtocol)
+LocationImpl::GetProtocol(nsAWritableString& aProtocol)
 {
   nsAutoString href;
   nsIURI *url;
@@ -511,8 +509,8 @@ LocationImpl::GetProtocol(nsString& aProtocol)
       char* protocol;
       result = url->GetScheme(&protocol);
       if (result == NS_OK) {
-        aProtocol.AssignWithConversion(protocol);
-        aProtocol.AppendWithConversion(":");
+        aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol));
+        aProtocol.Append(NS_LITERAL_STRING(":"));
         nsCRT::free(protocol);
       }
       NS_RELEASE(url);
@@ -523,7 +521,7 @@ LocationImpl::GetProtocol(nsString& aProtocol)
 }
 
 NS_IMETHODIMP    
-LocationImpl::SetProtocol(const nsString& aProtocol)
+LocationImpl::SetProtocol(const nsAReadableString& aProtocol)
 {
   nsAutoString href;
   nsIURI *url;
@@ -533,10 +531,8 @@ LocationImpl::SetProtocol(const nsString& aProtocol)
   if (NS_OK == result) {
     result = NS_NewURI(&url, href);
     if (NS_OK == result) {
-      char *buf = aProtocol.ToNewCString();
-      url->SetScheme(buf);
+      url->SetScheme(NS_ConvertUCS2toUTF8(aProtocol));
       SetURL(url);
-      nsCRT::free(buf);
       NS_RELEASE(url);      
     }
   }
@@ -545,7 +541,7 @@ LocationImpl::SetProtocol(const nsString& aProtocol)
 }
 
 NS_IMETHODIMP    
-LocationImpl::GetSearch(nsString& aSearch)
+LocationImpl::GetSearch(nsAWritableString& aSearch)
 {
   nsAutoString href;
   nsIURI *uri;
@@ -563,8 +559,8 @@ LocationImpl::GetSearch(nsString& aSearch)
         NS_RELEASE(url);
       }
       if (result == NS_OK && (nsnull != search) && ('\0' != *search)) {
-        aSearch.AssignWithConversion("?");
-        aSearch.AppendWithConversion(search);
+        aSearch.Assign(NS_LITERAL_STRING("?"));
+        aSearch.Append(NS_ConvertASCIItoUCS2(search));
         nsCRT::free(search);
       }
       else {
@@ -578,7 +574,7 @@ LocationImpl::GetSearch(nsString& aSearch)
 }
 
 NS_IMETHODIMP    
-LocationImpl::SetSearch(const nsString& aSearch)
+LocationImpl::SetSearch(const nsAReadableString& aSearch)
 {
   nsAutoString href;
   nsIURI *uri;
@@ -588,15 +584,13 @@ LocationImpl::SetSearch(const nsString& aSearch)
   if (NS_OK == result) {
     result = NS_NewURI(&uri, href);
     if (NS_OK == result) {
-      char *buf = aSearch.ToNewCString();
       nsIURL* url;
       result = uri->QueryInterface(NS_GET_IID(nsIURL), (void**)&url);
       if (NS_SUCCEEDED(result)) {
-        result = url->SetQuery(buf);
+        result = url->SetQuery(NS_ConvertUCS2toUTF8(aSearch));
         NS_RELEASE(url);
       }
       SetURL(uri);
-      nsCRT::free(buf);
       NS_RELEASE(uri);      
     }
   }
@@ -617,7 +611,7 @@ LocationImpl::Reload(PRBool aForceget)
 }
 
 NS_IMETHODIMP    
-LocationImpl::Replace(const nsString& aUrl)
+LocationImpl::Replace(const nsAReadableString& aUrl)
 {
   nsAutoString oldHref;
   nsIURI *oldUrl;
@@ -674,7 +668,7 @@ LocationImpl::Replace(JSContext *cx, jsval *argv, PRUint32 argc)
 }
 
 NS_IMETHODIMP    
-LocationImpl::ToString(nsString& aReturn)
+LocationImpl::ToString(nsAWritableString& aReturn)
 {
   return GetHref(aReturn);
 }

@@ -50,6 +50,7 @@
 #include "nsIURL.h"
 #include "nsXULAttributes.h"
 #include "nsLayoutCID.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -93,7 +94,7 @@ nsClassList::GetClasses(nsClassList* aList, nsVoidArray& aArray)
 
 
 nsresult
-nsClassList::ParseClasses(nsClassList** aList, const nsString& aClassString)
+nsClassList::ParseClasses(nsClassList** aList, const nsAReadableString& aClassString)
 {
     static const PRUnichar kNullCh = PRUnichar('\0');
 
@@ -205,7 +206,7 @@ nsXULAttribute::operator delete(void* aObject, size_t aSize)
 
 nsXULAttribute::nsXULAttribute(nsIContent* aContent,
                                nsINodeInfo* aNodeInfo,
-                               const nsString& aValue)
+                               const nsAReadableString& aValue)
     : mContent(aContent),
       mScriptObject(nsnull),
       mNodeInfo(aNodeInfo),
@@ -234,7 +235,7 @@ nsXULAttribute::~nsXULAttribute()
 nsresult
 nsXULAttribute::Create(nsIContent* aContent,
                        nsINodeInfo* aNodeInfo,
-                       const nsString& aValue,
+                       const nsAReadableString& aValue,
                        nsXULAttribute** aResult)
 {
     NS_ENSURE_ARG_POINTER(aNodeInfo);
@@ -281,20 +282,20 @@ nsXULAttribute::QueryInterface(REFNSIID aIID, void** aResult)
 // nsIDOMNode interface
 
 NS_IMETHODIMP
-nsXULAttribute::GetNodeName(nsString& aNodeName)
+nsXULAttribute::GetNodeName(nsAWritableString& aNodeName)
 {
     GetQualifiedName(aNodeName);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXULAttribute::GetNodeValue(nsString& aNodeValue)
+nsXULAttribute::GetNodeValue(nsAWritableString& aNodeValue)
 {
     return GetValueInternal(aNodeValue);
 }
 
 NS_IMETHODIMP
-nsXULAttribute::SetNodeValue(const nsString& aNodeValue)
+nsXULAttribute::SetNodeValue(const nsAReadableString& aNodeValue)
 {
     return SetValue(aNodeValue);
 }
@@ -363,19 +364,19 @@ nsXULAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 NS_IMETHODIMP
-nsXULAttribute::GetNamespaceURI(nsString& aNamespaceURI)
+nsXULAttribute::GetNamespaceURI(nsAWritableString& aNamespaceURI)
 {
   return mNodeInfo->GetNamespaceURI(aNamespaceURI);
 }
 
 NS_IMETHODIMP
-nsXULAttribute::GetPrefix(nsString& aPrefix)
+nsXULAttribute::GetPrefix(nsAWritableString& aPrefix)
 {
   return mNodeInfo->GetPrefix(aPrefix);
 }
 
 NS_IMETHODIMP
-nsXULAttribute::SetPrefix(const nsString& aPrefix)
+nsXULAttribute::SetPrefix(const nsAReadableString& aPrefix)
 {
     // XXX: Validate the prefix string!
 
@@ -397,7 +398,7 @@ nsXULAttribute::SetPrefix(const nsString& aPrefix)
 }
 
 NS_IMETHODIMP
-nsXULAttribute::GetLocalName(nsString& aLocalName)
+nsXULAttribute::GetLocalName(nsAWritableString& aLocalName)
 {
   return mNodeInfo->GetLocalName(aLocalName);
 }
@@ -448,8 +449,9 @@ nsXULAttribute::Normalize()
 }
 
 NS_IMETHODIMP
-nsXULAttribute::Supports(const nsString& aFeature, const nsString& aVersion,
-                       PRBool* aReturn)
+nsXULAttribute::Supports(const nsAReadableString& aFeature,
+                         const nsAReadableString& aVersion,
+                         PRBool* aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -459,7 +461,7 @@ nsXULAttribute::Supports(const nsString& aFeature, const nsString& aVersion,
 // nsIDOMAttr interface
 
 NS_IMETHODIMP
-nsXULAttribute::GetName(nsString& aName)
+nsXULAttribute::GetName(nsAWritableString& aName)
 {
     GetQualifiedName(aName);
     return NS_OK;
@@ -474,13 +476,13 @@ nsXULAttribute::GetSpecified(PRBool* aSpecified)
 }
 
 NS_IMETHODIMP
-nsXULAttribute::GetValue(nsString& aValue)
+nsXULAttribute::GetValue(nsAWritableString& aValue)
 {
     return GetValueInternal(aValue);
 }
 
 NS_IMETHODIMP
-nsXULAttribute::SetValue(const nsString& aValue)
+nsXULAttribute::SetValue(const nsAReadableString& aValue)
 {
     // We call back to the content node's SetValue() method so we can
     // share all of the work that it does.
@@ -537,7 +539,7 @@ nsXULAttribute::SetScriptObject(void *aScriptObject)
 // Implementation methods
 
 void
-nsXULAttribute::GetQualifiedName(nsString& aQualifiedName)
+nsXULAttribute::GetQualifiedName(nsAWritableString& aQualifiedName)
 {
 // This should be removed, call sites should be replaced with mNodeInfo->Get...
     aQualifiedName.Truncate();
@@ -553,7 +555,7 @@ nsXULAttribute::GetQualifiedName(nsString& aQualifiedName)
             const PRUnichar *unicodeString;
             prefix->GetUnicode(&unicodeString);
             aQualifiedName.Append(unicodeString);
-            aQualifiedName.AppendWithConversion(':');
+            aQualifiedName.Append(PRUnichar(':'));
             NS_RELEASE(prefix);
         }
     }
@@ -572,7 +574,7 @@ nsXULAttribute::GetQualifiedName(nsString& aQualifiedName)
 
 
 nsresult
-nsXULAttribute::SetValueInternal(const nsString& aValue)
+nsXULAttribute::SetValueInternal(const nsAReadableString& aValue)
 {
     nsCOMPtr<nsIAtom> newAtom;
 
@@ -582,7 +584,7 @@ nsXULAttribute::SetValueInternal(const nsString& aValue)
     // table is "unprimed" we see quite a bit of thrashing as the 'id'
     // value is repeatedly added and then removed from the atom table.
     if ((aValue.Length() <= kMaxAtomValueLength) || mNodeInfo->Equals(kIdAtom)) {
-        newAtom = getter_AddRefs( NS_NewAtom(aValue.GetUnicode()) );
+        newAtom = getter_AddRefs( NS_NewAtom(aValue) );
     }
 
     if (mValue) {
@@ -597,12 +599,10 @@ nsXULAttribute::SetValueInternal(const nsString& aValue)
     }
     else {
         PRInt32 len = aValue.Length();
-        PRUnichar* str = new PRUnichar[len + 1];
+        PRUnichar* str = ToNewUnicode(aValue);
         if (! str)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        nsCRT::memcpy(str, aValue.GetUnicode(), len * sizeof(PRUnichar));
-        str[len] = PRUnichar(0);
         mValue = str;
     }
 
@@ -711,7 +711,8 @@ nsXULAttributes::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-nsXULAttributes::GetNamedItem(const nsString& aName, nsIDOMNode** aReturn)
+nsXULAttributes::GetNamedItem(const nsAReadableString& aName,
+                              nsIDOMNode** aReturn)
 {
     NS_PRECONDITION(aReturn != nsnull, "null ptr");
     if (! aReturn)
@@ -758,7 +759,8 @@ nsXULAttributes::SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP
-nsXULAttributes::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
+nsXULAttributes::RemoveNamedItem(const nsAReadableString& aName,
+                                 nsIDOMNode** aReturn)
 {
     nsCOMPtr<nsIDOMElement> element( do_QueryInterface(mContent) );
     if (element) {
@@ -780,8 +782,8 @@ nsXULAttributes::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 nsresult
-nsXULAttributes::GetNamedItemNS(const nsString& aNamespaceURI, 
-                                const nsString& aLocalName,
+nsXULAttributes::GetNamedItemNS(const nsAReadableString& aNamespaceURI, 
+                                const nsAReadableString& aLocalName,
                                 nsIDOMNode** aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
@@ -796,8 +798,8 @@ nsXULAttributes::SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)
 }
 
 nsresult
-nsXULAttributes::RemoveNamedItemNS(const nsString& aNamespaceURI, 
-                                   const nsString&aLocalName,
+nsXULAttributes::RemoveNamedItemNS(const nsAReadableString& aNamespaceURI, 
+                                   const nsAReadableString& aLocalName,
                                    nsIDOMNode** aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
@@ -867,12 +869,12 @@ nsresult nsXULAttributes::SetClassList(nsClassList* aClassList)
     return NS_OK;
 }
 
-nsresult nsXULAttributes::UpdateClassList(const nsString& aValue)
+nsresult nsXULAttributes::UpdateClassList(const nsAReadableString& aValue)
 {
     return nsClassList::ParseClasses(&mClassList, aValue);
 }
 
-nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsString& aValue)
+nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsAReadableString& aValue)
 {
     if (aValue.IsEmpty())
     {

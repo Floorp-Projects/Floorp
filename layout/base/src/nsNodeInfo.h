@@ -65,29 +65,29 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsINodeInfo
-  NS_IMETHOD GetName(nsString& aName);
+  NS_IMETHOD GetName(nsAWritableString& aName);
   NS_IMETHOD GetNameAtom(nsIAtom*& aAtom);
-  NS_IMETHOD GetQualifiedName(nsString& aQualifiedName);
-  NS_IMETHOD GetLocalName(nsString& aLocalName);
-  NS_IMETHOD GetPrefix(nsString& aPrefix);
+  NS_IMETHOD GetQualifiedName(nsAWritableString& aQualifiedName);
+  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName);
+  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix);
   NS_IMETHOD GetPrefixAtom(nsIAtom*& aAtom);
-  NS_IMETHOD GetNamespaceURI(nsString& aNameSpaceURI);
+  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNameSpaceURI);
   NS_IMETHOD GetNamespaceID(PRInt32& aResult);
   NS_IMETHOD GetNodeInfoManager(nsINodeInfoManager*& aNodeInfoManager);
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom);
-  NS_IMETHOD_(PRBool) Equals(const nsString& aName);
+  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName);
 
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom);
-  NS_IMETHOD_(PRBool) Equals(const nsString& aName,
-                             const nsString& aPrefix);
+  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName,
+                             const nsAReadableString& aPrefix);
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, PRInt32 aNamespaceID);
-  NS_IMETHOD_(PRBool) Equals(const nsString& aName, PRInt32 aNamespaceID);
+  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName, PRInt32 aNamespaceID);
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
                              PRInt32 aNamespaceID);
-  NS_IMETHOD_(PRBool) Equals(const nsString& aName, const nsString& aPrefix,
+  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName, const nsAReadableString& aPrefix,
                              PRInt32 aNamespaceID);
   NS_IMETHOD_(PRBool) NamespaceEquals(PRInt32 aNamespaceID);
-  NS_IMETHOD_(PRBool) NamespaceEquals(const nsString& aNamespaceURI);
+  NS_IMETHOD_(PRBool) NamespaceEquals(const nsAReadableString& aNamespaceURI);
   NS_IMETHOD NameChanged(nsIAtom *aName, nsINodeInfo*& aResult);
   NS_IMETHOD PrefixChanged(nsIAtom *aPrefix, nsINodeInfo*& aResult);
 

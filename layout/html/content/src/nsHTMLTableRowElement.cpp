@@ -158,24 +158,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLTableRowElement
-  NS_IMETHOD GetRowIndex(PRInt32* aRowIndex);
-  NS_IMETHOD SetRowIndex(PRInt32 aRowIndex);
-  NS_IMETHOD GetSectionRowIndex(PRInt32* aSectionRowIndex);
-  NS_IMETHOD SetSectionRowIndex(PRInt32 aSectionRowIndex);
-  NS_IMETHOD GetCells(nsIDOMHTMLCollection** aCells);
-  NS_IMETHOD SetCells(nsIDOMHTMLCollection* aCells);
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
-  NS_IMETHOD GetBgColor(nsString& aBgColor);
-  NS_IMETHOD SetBgColor(const nsString& aBgColor);
-  NS_IMETHOD GetCh(nsString& aCh);
-  NS_IMETHOD SetCh(const nsString& aCh);
-  NS_IMETHOD GetChOff(nsString& aChOff);
-  NS_IMETHOD SetChOff(const nsString& aChOff);
-  NS_IMETHOD GetVAlign(nsString& aVAlign);
-  NS_IMETHOD SetVAlign(const nsString& aVAlign);
-  NS_IMETHOD InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aReturn);
-  NS_IMETHOD DeleteCell(PRInt32 aIndex);
+  NS_DECL_IDOMHTMLTABLEROWELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -580,7 +563,7 @@ NS_IMPL_STRING_ATTR(nsHTMLTableRowElement, VAlign, valign)
 
 NS_IMETHODIMP
 nsHTMLTableRowElement::StringToAttribute(nsIAtom* aAttribute,
-                                  const nsString& aValue,
+                                  const nsAReadableString& aValue,
                                   nsHTMLValue& aResult)
 {
   /* ignore these attributes, stored simply as strings
@@ -629,7 +612,7 @@ nsHTMLTableRowElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLTableRowElement::AttributeToString(nsIAtom* aAttribute,
                                   const nsHTMLValue& aValue,
-                                  nsString& aResult) const
+                                  nsAWritableString& aResult) const
 {
   /* ignore these attributes, stored already as strings
      ch

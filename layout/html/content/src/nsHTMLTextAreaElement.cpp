@@ -80,29 +80,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLTextAreaElement
-  NS_IMETHOD GetDefaultValue(nsString& aDefaultValue);
-  NS_IMETHOD SetDefaultValue(const nsString& aDefaultValue);
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD GetAccessKey(nsString& aAccessKey);
-  NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
-  NS_IMETHOD GetCols(PRInt32* aCols);
-  NS_IMETHOD SetCols(PRInt32 aCols);
-  NS_IMETHOD GetDisabled(PRBool* aDisabled);
-  NS_IMETHOD SetDisabled(PRBool aDisabled);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetReadOnly(PRBool* aReadOnly);
-  NS_IMETHOD SetReadOnly(PRBool aReadOnly);
-  NS_IMETHOD GetRows(PRInt32* aRows);
-  NS_IMETHOD SetRows(PRInt32 aRows);
-  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-  NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD GetValue(nsString& aValue);
-  NS_IMETHOD SetValue(const nsString& aValue);
-  NS_IMETHOD Blur();
-  NS_IMETHOD Focus();
-  NS_IMETHOD Select();
+  NS_DECL_IDOMHTMLTEXTAREAELEMENT
 
   // nsIDOMNSHTMLTextAreaElement
   NS_DECL_IDOMNSHTMLTEXTAREAELEMENT
@@ -364,19 +342,20 @@ NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, TabIndex, tabindex)
   
 
 NS_IMETHODIMP 
-nsHTMLTextAreaElement::GetType(nsString& aType)
+nsHTMLTextAreaElement::GetType(nsAWritableString& aType)
 {
-  aType.AssignWithConversion("textarea");
+  aType.Assign(NS_LITERAL_STRING("textarea"));
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsHTMLTextAreaElement::GetValue(nsString& aValue)
+nsHTMLTextAreaElement::GetValue(nsAWritableString& aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
-      formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
-      return NS_OK;
+    formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
+
+    return NS_OK;
   }
    //XXX: Should this ASSERT instead of getting the default value here?
   return mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue); 
@@ -384,7 +363,7 @@ nsHTMLTextAreaElement::GetValue(nsString& aValue)
 
 
 NS_IMETHODIMP 
-nsHTMLTextAreaElement::SetValue(const nsString& aValue)
+nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
@@ -400,7 +379,7 @@ nsHTMLTextAreaElement::SetValue(const nsString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::GetDefaultValue(nsString& aDefaultValue)
+nsHTMLTextAreaElement::GetDefaultValue(nsAWritableString& aDefaultValue)
 {
   mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::defaultvalue,
                       aDefaultValue);
@@ -409,7 +388,7 @@ nsHTMLTextAreaElement::GetDefaultValue(nsString& aDefaultValue)
 }  
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::SetDefaultValue(const nsString& aDefaultValue)
+nsHTMLTextAreaElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
 {
   nsAutoString defaultValue(aDefaultValue);
 
@@ -431,7 +410,7 @@ nsHTMLTextAreaElement::SetDefaultValue(const nsString& aDefaultValue)
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::StringToAttribute(nsIAtom* aAttribute,
-                                         const nsString& aValue,
+                                         const nsAReadableString& aValue,
                                          nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::disabled) {
@@ -463,7 +442,7 @@ nsHTMLTextAreaElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLTextAreaElement::AttributeToString(nsIAtom* aAttribute,
                                          const nsHTMLValue& aValue,
-                                         nsString& aResult) const
+                                         nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

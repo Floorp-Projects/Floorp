@@ -30,6 +30,7 @@
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
@@ -67,11 +68,11 @@ NS_NewURI(nsIURI* *result,
 
 inline nsresult
 NS_NewURI(nsIURI* *result, 
-          const nsString& spec, 
+          const nsAReadableString& spec, 
           nsIURI* baseURI = nsnull,
           nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
-    char* specStr = spec.ToNewUTF8String(); // this forces a single byte char*
+    char* specStr = ToNewUTF8String(spec); // this forces a single byte char*
     if (specStr == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     nsresult rv = NS_NewURI(result, specStr, baseURI, ioService);
@@ -202,13 +203,13 @@ NS_MakeAbsoluteURI(char* *result,
 }
 
 inline nsresult
-NS_MakeAbsoluteURI(nsString& result,
-                   const nsString& spec, 
+NS_MakeAbsoluteURI(nsAWritableString& result,
+                   const nsAReadableString& spec, 
                    nsIURI* baseURI = nsnull,
                    nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
     char* resultStr;
-    char* specStr = spec.ToNewUTF8String();
+    char* specStr = ToNewUTF8String(spec);
     if (!specStr) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

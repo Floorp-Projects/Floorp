@@ -41,46 +41,46 @@ public:
                        nsGenericXMLElement* aDest,
                        PRBool aDeep);
 
-  nsresult GetNodeName(nsString& aNodeName);
-  nsresult GetLocalName(nsString& aLocalName);
+  nsresult GetNodeName(nsAWritableString& aNodeName);
+  nsresult GetLocalName(nsAWritableString& aLocalName);
 
   // Implementation for nsIDOMElement
-  nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 
+  nsresult    GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn) 
   {
     return nsGenericContainerElement::GetAttribute(aName, aReturn);
   }
-  nsresult    SetAttribute(const nsString& aName, const nsString& aValue)
+  nsresult    SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
   {
     return nsGenericContainerElement::SetAttribute(aName, aValue);
   }
 
   // nsIContent
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                        const nsString& aValue,
+                        const nsAReadableString& aValue,
                         PRBool aNotify)
   {
     return nsGenericContainerElement::SetAttribute(aNameSpaceID, aName,
                                                    aValue, aNotify);
   }
   nsresult SetAttribute(nsINodeInfo *aNodeInfo,
-                        const nsString& aValue,
+                        const nsAReadableString& aValue,
                         PRBool aNotify)
   {
     return nsGenericContainerElement::SetAttribute(aNodeInfo, aValue, aNotify);
   }
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                        nsString& aResult) const
+                        nsAWritableString& aResult) const
   {
     return nsGenericContainerElement::GetAttribute(aNameSpaceID, aName,
                                                    aResult);
   }
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                        nsIAtom*& aPrefix, nsString& aResult) const
+                        nsIAtom*& aPrefix, nsAWritableString& aResult) const
   {
     return nsGenericContainerElement::GetAttribute(aNameSpaceID, aName,
                                                    aPrefix, aResult);
   }
-  nsresult ParseAttributeString(const nsString& aStr, 
+  nsresult ParseAttributeString(const nsAReadableString& aStr, 
                                 nsIAtom*& aName,
                                 PRInt32& aNameSpaceID);
   nsresult GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,

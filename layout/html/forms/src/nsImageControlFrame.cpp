@@ -132,8 +132,8 @@ public:
 
 
         // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
 protected:
@@ -507,13 +507,16 @@ nsresult nsImageControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 
 
 NS_IMETHODIMP nsImageControlFrame::SetProperty(nsIPresContext* aPresContext,
-                                               nsIAtom* aName, const nsString& aValue)
+                                               nsIAtom* aName,
+                                               const nsAReadableString& aValue)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP nsImageControlFrame::GetProperty(nsIAtom* aName,
+                                               nsAWritableString& aValue)
 {
+  aValue.Truncate();
   return NS_OK;
 }
 

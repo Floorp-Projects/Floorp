@@ -38,21 +38,21 @@ class nsIDOMNotation : public nsIDOMNode {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNOTATION_IID; return iid; }
 
-  NS_IMETHOD    GetPublicId(nsString& aPublicId)=0;
+  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId)=0;
 
-  NS_IMETHOD    GetSystemId(nsString& aSystemId)=0;
+  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId)=0;
 };
 
 
 #define NS_DECL_IDOMNOTATION   \
-  NS_IMETHOD    GetPublicId(nsString& aPublicId);  \
-  NS_IMETHOD    GetSystemId(nsString& aSystemId);  \
+  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId);  \
+  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId);  \
 
 
 
 #define NS_FORWARD_IDOMNOTATION(_to)  \
-  NS_IMETHOD    GetPublicId(nsString& aPublicId) { return _to GetPublicId(aPublicId); } \
-  NS_IMETHOD    GetSystemId(nsString& aSystemId) { return _to GetSystemId(aSystemId); } \
+  NS_IMETHOD    GetPublicId(nsAWritableString& aPublicId) { return _to GetPublicId(aPublicId); } \
+  NS_IMETHOD    GetSystemId(nsAWritableString& aSystemId) { return _to GetSystemId(aSystemId); } \
 
 
 extern "C" NS_DOM nsresult NS_InitNotationClass(nsIScriptContext *aContext, void **aPrototype);

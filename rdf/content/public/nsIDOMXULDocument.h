@@ -56,9 +56,9 @@ public:
 
   NS_IMETHOD    GetControls(nsIDOMHTMLCollection** aControls)=0;
 
-  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn)=0;
+  NS_IMETHOD    GetElementsByAttribute(const nsAReadableString& aName, const nsAReadableString& aValue, nsIDOMNodeList** aReturn)=0;
 
-  NS_IMETHOD    Persist(const nsString& aId, const nsString& aAttr)=0;
+  NS_IMETHOD    Persist(const nsAReadableString& aId, const nsAReadableString& aAttr)=0;
 };
 
 
@@ -71,8 +71,8 @@ public:
   NS_IMETHOD    GetWidth(PRInt32* aWidth);  \
   NS_IMETHOD    GetHeight(PRInt32* aHeight);  \
   NS_IMETHOD    GetControls(nsIDOMHTMLCollection** aControls);  \
-  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
-  NS_IMETHOD    Persist(const nsString& aId, const nsString& aAttr);  \
+  NS_IMETHOD    GetElementsByAttribute(const nsAReadableString& aName, const nsAReadableString& aValue, nsIDOMNodeList** aReturn);  \
+  NS_IMETHOD    Persist(const nsAReadableString& aId, const nsAReadableString& aAttr);  \
 
 
 
@@ -85,8 +85,8 @@ public:
   NS_IMETHOD    GetWidth(PRInt32* aWidth) { return _to GetWidth(aWidth); } \
   NS_IMETHOD    GetHeight(PRInt32* aHeight) { return _to GetHeight(aHeight); } \
   NS_IMETHOD    GetControls(nsIDOMHTMLCollection** aControls) { return _to GetControls(aControls); } \
-  NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
-  NS_IMETHOD    Persist(const nsString& aId, const nsString& aAttr) { return _to Persist(aId, aAttr); }  \
+  NS_IMETHOD    GetElementsByAttribute(const nsAReadableString& aName, const nsAReadableString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
+  NS_IMETHOD    Persist(const nsAReadableString& aId, const nsAReadableString& aAttr) { return _to Persist(aId, aAttr); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitXULDocumentClass(nsIScriptContext *aContext, void **aPrototype);

@@ -44,26 +44,26 @@ public:
 
   NS_IMETHOD    GetHeight(PRInt32* aHeight)=0;
 
-  NS_IMETHOD    GetAlinkColor(nsString& aAlinkColor)=0;
-  NS_IMETHOD    SetAlinkColor(const nsString& aAlinkColor)=0;
+  NS_IMETHOD    GetAlinkColor(nsAWritableString& aAlinkColor)=0;
+  NS_IMETHOD    SetAlinkColor(const nsAReadableString& aAlinkColor)=0;
 
-  NS_IMETHOD    GetLinkColor(nsString& aLinkColor)=0;
-  NS_IMETHOD    SetLinkColor(const nsString& aLinkColor)=0;
+  NS_IMETHOD    GetLinkColor(nsAWritableString& aLinkColor)=0;
+  NS_IMETHOD    SetLinkColor(const nsAReadableString& aLinkColor)=0;
 
-  NS_IMETHOD    GetVlinkColor(nsString& aVlinkColor)=0;
-  NS_IMETHOD    SetVlinkColor(const nsString& aVlinkColor)=0;
+  NS_IMETHOD    GetVlinkColor(nsAWritableString& aVlinkColor)=0;
+  NS_IMETHOD    SetVlinkColor(const nsAReadableString& aVlinkColor)=0;
 
-  NS_IMETHOD    GetBgColor(nsString& aBgColor)=0;
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor)=0;
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor)=0;
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor)=0;
 
-  NS_IMETHOD    GetFgColor(nsString& aFgColor)=0;
-  NS_IMETHOD    SetFgColor(const nsString& aFgColor)=0;
+  NS_IMETHOD    GetFgColor(nsAWritableString& aFgColor)=0;
+  NS_IMETHOD    SetFgColor(const nsAReadableString& aFgColor)=0;
 
-  NS_IMETHOD    GetLastModified(nsString& aLastModified)=0;
+  NS_IMETHOD    GetLastModified(nsAWritableString& aLastModified)=0;
 
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds)=0;
 
-  NS_IMETHOD    GetSelection(nsString& aReturn)=0;
+  NS_IMETHOD    GetSelection(nsAWritableString& aReturn)=0;
 
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn)=0;
 
@@ -86,19 +86,19 @@ public:
 #define NS_DECL_IDOMNSHTMLDOCUMENT   \
   NS_IMETHOD    GetWidth(PRInt32* aWidth);  \
   NS_IMETHOD    GetHeight(PRInt32* aHeight);  \
-  NS_IMETHOD    GetAlinkColor(nsString& aAlinkColor);  \
-  NS_IMETHOD    SetAlinkColor(const nsString& aAlinkColor);  \
-  NS_IMETHOD    GetLinkColor(nsString& aLinkColor);  \
-  NS_IMETHOD    SetLinkColor(const nsString& aLinkColor);  \
-  NS_IMETHOD    GetVlinkColor(nsString& aVlinkColor);  \
-  NS_IMETHOD    SetVlinkColor(const nsString& aVlinkColor);  \
-  NS_IMETHOD    GetBgColor(nsString& aBgColor);  \
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor);  \
-  NS_IMETHOD    GetFgColor(nsString& aFgColor);  \
-  NS_IMETHOD    SetFgColor(const nsString& aFgColor);  \
-  NS_IMETHOD    GetLastModified(nsString& aLastModified);  \
+  NS_IMETHOD    GetAlinkColor(nsAWritableString& aAlinkColor);  \
+  NS_IMETHOD    SetAlinkColor(const nsAReadableString& aAlinkColor);  \
+  NS_IMETHOD    GetLinkColor(nsAWritableString& aLinkColor);  \
+  NS_IMETHOD    SetLinkColor(const nsAReadableString& aLinkColor);  \
+  NS_IMETHOD    GetVlinkColor(nsAWritableString& aVlinkColor);  \
+  NS_IMETHOD    SetVlinkColor(const nsAReadableString& aVlinkColor);  \
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor);  \
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor);  \
+  NS_IMETHOD    GetFgColor(nsAWritableString& aFgColor);  \
+  NS_IMETHOD    SetFgColor(const nsAReadableString& aFgColor);  \
+  NS_IMETHOD    GetLastModified(nsAWritableString& aLastModified);  \
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds);  \
-  NS_IMETHOD    GetSelection(nsString& aReturn);  \
+  NS_IMETHOD    GetSelection(nsAWritableString& aReturn);  \
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn);  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc);  \
   NS_IMETHOD    Write(JSContext* cx, jsval* argv, PRUint32 argc);  \
@@ -113,19 +113,19 @@ public:
 #define NS_FORWARD_IDOMNSHTMLDOCUMENT(_to)  \
   NS_IMETHOD    GetWidth(PRInt32* aWidth) { return _to GetWidth(aWidth); } \
   NS_IMETHOD    GetHeight(PRInt32* aHeight) { return _to GetHeight(aHeight); } \
-  NS_IMETHOD    GetAlinkColor(nsString& aAlinkColor) { return _to GetAlinkColor(aAlinkColor); } \
-  NS_IMETHOD    SetAlinkColor(const nsString& aAlinkColor) { return _to SetAlinkColor(aAlinkColor); } \
-  NS_IMETHOD    GetLinkColor(nsString& aLinkColor) { return _to GetLinkColor(aLinkColor); } \
-  NS_IMETHOD    SetLinkColor(const nsString& aLinkColor) { return _to SetLinkColor(aLinkColor); } \
-  NS_IMETHOD    GetVlinkColor(nsString& aVlinkColor) { return _to GetVlinkColor(aVlinkColor); } \
-  NS_IMETHOD    SetVlinkColor(const nsString& aVlinkColor) { return _to SetVlinkColor(aVlinkColor); } \
-  NS_IMETHOD    GetBgColor(nsString& aBgColor) { return _to GetBgColor(aBgColor); } \
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor) { return _to SetBgColor(aBgColor); } \
-  NS_IMETHOD    GetFgColor(nsString& aFgColor) { return _to GetFgColor(aFgColor); } \
-  NS_IMETHOD    SetFgColor(const nsString& aFgColor) { return _to SetFgColor(aFgColor); } \
-  NS_IMETHOD    GetLastModified(nsString& aLastModified) { return _to GetLastModified(aLastModified); } \
+  NS_IMETHOD    GetAlinkColor(nsAWritableString& aAlinkColor) { return _to GetAlinkColor(aAlinkColor); } \
+  NS_IMETHOD    SetAlinkColor(const nsAReadableString& aAlinkColor) { return _to SetAlinkColor(aAlinkColor); } \
+  NS_IMETHOD    GetLinkColor(nsAWritableString& aLinkColor) { return _to GetLinkColor(aLinkColor); } \
+  NS_IMETHOD    SetLinkColor(const nsAReadableString& aLinkColor) { return _to SetLinkColor(aLinkColor); } \
+  NS_IMETHOD    GetVlinkColor(nsAWritableString& aVlinkColor) { return _to GetVlinkColor(aVlinkColor); } \
+  NS_IMETHOD    SetVlinkColor(const nsAReadableString& aVlinkColor) { return _to SetVlinkColor(aVlinkColor); } \
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor) { return _to GetBgColor(aBgColor); } \
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor) { return _to SetBgColor(aBgColor); } \
+  NS_IMETHOD    GetFgColor(nsAWritableString& aFgColor) { return _to GetFgColor(aFgColor); } \
+  NS_IMETHOD    SetFgColor(const nsAReadableString& aFgColor) { return _to SetFgColor(aFgColor); } \
+  NS_IMETHOD    GetLastModified(nsAWritableString& aLastModified) { return _to GetLastModified(aLastModified); } \
   NS_IMETHOD    GetEmbeds(nsIDOMHTMLCollection** aEmbeds) { return _to GetEmbeds(aEmbeds); } \
-  NS_IMETHOD    GetSelection(nsString& aReturn) { return _to GetSelection(aReturn); }  \
+  NS_IMETHOD    GetSelection(nsAWritableString& aReturn) { return _to GetSelection(aReturn); }  \
   NS_IMETHOD    NamedItem(JSContext* cx, jsval* argv, PRUint32 argc, jsval* aReturn) { return _to NamedItem(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Open(cx, argv, argc); }  \
   NS_IMETHOD    Write(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Write(cx, argv, argc); }  \

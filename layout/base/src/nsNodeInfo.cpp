@@ -96,7 +96,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsNodeInfo, NS_GET_IID(nsINodeInfo));
 // nsINodeInfo
 
 NS_IMETHODIMP
-nsNodeInfo::GetName(nsString& aName)
+nsNodeInfo::GetName(nsAWritableString& aName)
 {
   NS_ENSURE_TRUE(mInner.mName, NS_ERROR_NOT_INITIALIZED);
 
@@ -117,7 +117,7 @@ nsNodeInfo::GetNameAtom(nsIAtom*& aAtom)
 
 
 NS_IMETHODIMP
-nsNodeInfo::GetQualifiedName(nsString& aQualifiedName)
+nsNodeInfo::GetQualifiedName(nsAWritableString& aQualifiedName)
 {
   NS_ENSURE_TRUE(mInner.mName, NS_ERROR_NOT_INITIALIZED);
 
@@ -133,7 +133,7 @@ nsNodeInfo::GetQualifiedName(nsString& aQualifiedName)
   aQualifiedName.Append(name);
 
   if (kStrictDOMLevel2 && mInner.mPrefix) {
-    nsCAutoString tmp; tmp.AssignWithConversion(aQualifiedName);
+    nsCAutoString tmp; tmp.Assign(NS_ConvertUCS2toUTF8(aQualifiedName));
     printf ("Possible DOM Error: .name, .nodeName or .tagName requested on a namespace element/attribute with the qulaified name '%s', is this OK?\n", (const char *)tmp);
   }
 
@@ -142,7 +142,7 @@ nsNodeInfo::GetQualifiedName(nsString& aQualifiedName)
 
 
 NS_IMETHODIMP
-nsNodeInfo::GetLocalName(nsString& aLocalName)
+nsNodeInfo::GetLocalName(nsAWritableString& aLocalName)
 {
   NS_ENSURE_TRUE(mInner.mName, NS_ERROR_NOT_INITIALIZED);
 
@@ -161,7 +161,7 @@ nsNodeInfo::GetLocalName(nsString& aLocalName)
 
 
 NS_IMETHODIMP
-nsNodeInfo::GetPrefix(nsString& aPrefix)
+nsNodeInfo::GetPrefix(nsAWritableString& aPrefix)
 {
   if (mInner.mPrefix) {
     mInner.mPrefix->ToString(aPrefix);
@@ -184,7 +184,7 @@ nsNodeInfo::GetPrefixAtom(nsIAtom*& aAtom)
 
 
 NS_IMETHODIMP
-nsNodeInfo::GetNamespaceURI(nsString& aNameSpaceURI)
+nsNodeInfo::GetNamespaceURI(nsAWritableString& aNameSpaceURI)
 {
   NS_ENSURE_TRUE(mOwnerManager, NS_ERROR_NOT_INITIALIZED);
   nsresult rv = NS_OK;
@@ -234,7 +234,7 @@ nsNodeInfo::Equals(nsIAtom *aNameAtom)
 
 
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(const nsString& aName)
+nsNodeInfo::Equals(const nsAReadableString& aName)
 {
   if (!mInner.mName) return PR_FALSE;
 
@@ -253,7 +253,7 @@ nsNodeInfo::Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom)
 
 
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(const nsString& aName, const nsString& aPrefix)
+nsNodeInfo::Equals(const nsAReadableString& aName, const nsAReadableString& aPrefix)
 {
   if (!mInner.mName) return PR_FALSE;
 
@@ -275,7 +275,7 @@ nsNodeInfo::Equals(nsIAtom *aNameAtom, PRInt32 aNamespaceID)
 
 
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(const nsString& aName, PRInt32 aNamespaceID)
+nsNodeInfo::Equals(const nsAReadableString& aName, PRInt32 aNamespaceID)
 {
   if (!mInner.mName) return PR_FALSE;
 
@@ -297,7 +297,7 @@ nsNodeInfo::Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
 
 
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::Equals(const nsString& aName, const nsString& aPrefix,
+nsNodeInfo::Equals(const nsAReadableString& aName, const nsAReadableString& aPrefix,
                    PRInt32 aNamespaceID)
 {
   if (!mInner.mName) return PR_FALSE;
@@ -321,7 +321,7 @@ nsNodeInfo::NamespaceEquals(PRInt32 aNamespaceID)
 
 
 NS_IMETHODIMP_(PRBool)
-nsNodeInfo::NamespaceEquals(const nsString& aNamespaceURI)
+nsNodeInfo::NamespaceEquals(const nsAReadableString& aNamespaceURI)
 {
   NS_ENSURE_TRUE(mOwnerManager, NS_ERROR_NOT_INITIALIZED);
   nsCOMPtr<nsINameSpaceManager> nsmgr;

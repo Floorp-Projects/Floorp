@@ -38,20 +38,20 @@ class nsIDOMHTMLBRElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLBRELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetClear(nsString& aClear)=0;
-  NS_IMETHOD    SetClear(const nsString& aClear)=0;
+  NS_IMETHOD    GetClear(nsAWritableString& aClear)=0;
+  NS_IMETHOD    SetClear(const nsAReadableString& aClear)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLBRELEMENT   \
-  NS_IMETHOD    GetClear(nsString& aClear);  \
-  NS_IMETHOD    SetClear(const nsString& aClear);  \
+  NS_IMETHOD    GetClear(nsAWritableString& aClear);  \
+  NS_IMETHOD    SetClear(const nsAReadableString& aClear);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLBRELEMENT(_to)  \
-  NS_IMETHOD    GetClear(nsString& aClear) { return _to GetClear(aClear); } \
-  NS_IMETHOD    SetClear(const nsString& aClear) { return _to SetClear(aClear); } \
+  NS_IMETHOD    GetClear(nsAWritableString& aClear) { return _to GetClear(aClear); } \
+  NS_IMETHOD    SetClear(const nsAReadableString& aClear) { return _to SetClear(aClear); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLBRElementClass(nsIScriptContext *aContext, void **aPrototype);

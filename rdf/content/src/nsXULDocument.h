@@ -116,7 +116,7 @@ public:
     // nsIDocument interface
     virtual nsIArena* GetArena();
 
-    NS_IMETHOD GetContentType(nsString& aContentType) const;
+    NS_IMETHOD GetContentType(nsAWritableString& aContentType) const;
 
     NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                  nsIChannel* aChannel,
@@ -139,9 +139,9 @@ public:
 
     NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
 
-    NS_IMETHOD GetDocumentCharacterSet(nsString& oCharSetID);
+    NS_IMETHOD GetDocumentCharacterSet(nsAWritableString& oCharSetID);
 
-    NS_IMETHOD SetDocumentCharacterSet(const nsString& aCharSetID);
+    NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString& aCharSetID);
 
     NS_IMETHOD AddCharSetObserver(nsIObserver* aObserver);
     NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver);
@@ -151,8 +151,10 @@ public:
     NS_IMETHOD GetWordBreaker(nsIWordBreaker** aResult) ;
     NS_IMETHOD SetWordBreaker(nsIWordBreaker* aWordBreaker) ;
 
-    NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsString& aData) const;
-    NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsString& aData);
+    NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField,
+                             nsAWritableString& aData) const;
+    NS_IMETHOD SetHeaderData(nsIAtom* aheaderField,
+                             const nsAReadableString& aData);
 
     NS_IMETHOD CreateShell(nsIPresContext* aContext,
                            nsIViewManager* aViewManager,
@@ -262,9 +264,9 @@ public:
 
     NS_IMETHOD SelectAll();
 
-    NS_IMETHOD FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+    NS_IMETHOD FindNext(const nsAReadableString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
 
-    NS_IMETHOD CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection);
+    NS_IMETHOD CreateXIF(nsAWritableString & aBuffer, nsIDOMSelection* aSelection);
 
     NS_IMETHOD ToXIF(nsIXIFConverter *aConverter, nsIDOMNode* aNode);
 
@@ -308,9 +310,9 @@ public:
 #endif
 
     // nsIXULDocument interface
-    NS_IMETHOD AddElementForID(const nsString& aID, nsIContent* aElement);
-    NS_IMETHOD RemoveElementForID(const nsString& aID, nsIContent* aElement);
-    NS_IMETHOD GetElementsForID(const nsString& aID, nsISupportsArray* aElements);
+    NS_IMETHOD AddElementForID(const nsAReadableString& aID, nsIContent* aElement);
+    NS_IMETHOD RemoveElementForID(const nsAReadableString& aID, nsIContent* aElement);
+    NS_IMETHOD GetElementsForID(const nsAReadableString& aID, nsISupportsArray* aElements);
     NS_IMETHOD CreateContents(nsIContent* aElement);
     NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder);
     NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
@@ -330,8 +332,8 @@ public:
                               const char* aCommand );
 
     // nsIDOMEventCapturer interface
-    NS_IMETHOD    CaptureEvent(const nsString& aType);
-    NS_IMETHOD    ReleaseEvent(const nsString& aType);
+    NS_IMETHOD    CaptureEvent(const nsAReadableString& aType);
+    NS_IMETHOD    ReleaseEvent(const nsAReadableString& aType);
 
     // nsIDOMEventReceiver interface (yuck. inherited from nsIDOMEventCapturer)
     NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -341,9 +343,11 @@ public:
     NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
 
     // nsIDOMEventTarget interface
-    NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener,
+    NS_IMETHOD AddEventListener(const nsAReadableString& aType,
+                                nsIDOMEventListener* aListener,
                                 PRBool aUseCapture);
-    NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener,
+    NS_IMETHOD RemoveEventListener(const nsAReadableString& aType,
+                                   nsIDOMEventListener* aListener,
                                    PRBool aUseCapture);
     NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent);
 
@@ -360,41 +364,13 @@ public:
     NS_DECL_IDOMDOCUMENTXBL
 
     // nsIDOMNSDocument interface
-    NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetList** aStyleSheets);
-    NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet);
-    NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aResult);
-    NS_IMETHOD    CreateRange(nsIDOMRange** aRange);
-    NS_IMETHOD    Load (const nsString& aUrl);
-    NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);
+    NS_DECL_IDOMNSDOCUMENT
 
     // nsIDOMXULDocument interface
     NS_DECL_IDOMXULDOCUMENT
 
     // nsIDOMNode interface
-    NS_IMETHOD    GetNodeName(nsString& aNodeName);
-    NS_IMETHOD    GetNodeValue(nsString& aNodeValue);
-    NS_IMETHOD    SetNodeValue(const nsString& aNodeValue);
-    NS_IMETHOD    GetNodeType(PRUint16* aNodeType);
-    NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode);
-    NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes);
-    NS_IMETHOD    HasChildNodes(PRBool* aHasChildNodes);
-    NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild);
-    NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild);
-    NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
-    NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling);
-    NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes);
-    NS_IMETHOD    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
-    NS_IMETHOD    GetNamespaceURI(nsString& aNamespaceURI);
-    NS_IMETHOD    GetPrefix(nsString& aPrefix);
-    NS_IMETHOD    SetPrefix(const nsString& aPrefix);
-    NS_IMETHOD    GetLocalName(nsString& aLocalName);
-    NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
-    NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-    NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
-    NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
-    NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
-    NS_IMETHOD    Normalize();
-    NS_IMETHOD    Supports(const nsString& aFeature, const nsString& aVersion, PRBool* aReturn);
+    NS_DECL_IDOMNODE
 
     // nsIJSScriptObject interface
     virtual PRBool AddProperty(JSContext *aContext, JSObject *aObj, 
@@ -420,7 +396,7 @@ public:
 
     static nsresult
     GetElementsByTagName(nsIContent* aContent,
-                         const nsString& aTagName,
+                         const nsAReadableString& aTagName,
                          PRInt32 aNamespaceID,
                          nsRDFDOMNodeList* aElements);
 
@@ -458,12 +434,12 @@ protected:
 
     static nsresult
     GetElementsByAttribute(nsIDOMNode* aNode,
-                           const nsString& aAttribute,
-                           const nsString& aValue,
+                           const nsAReadableString& aAttribute,
+                           const nsAReadableString& aValue,
                            nsRDFDOMNodeList* aElements);
 
     nsresult
-    ParseTagString(const nsString& aTagName, nsIAtom*& aName,
+    ParseTagString(const nsAReadableString& aTagName, nsIAtom*& aName,
                    nsIAtom*& aPrefix);
 
     void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };

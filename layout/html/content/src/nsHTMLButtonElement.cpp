@@ -60,15 +60,15 @@ public:
 
   // nsIDOMElement
 //  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
-  NS_IMETHOD GetTagName(nsString& aTagName) {
+  NS_IMETHOD GetTagName(nsAWritableString& aTagName) {
     return mInner.GetTagName(aTagName);
   }
-  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aReturn);
-  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue);
-  NS_IMETHOD RemoveAttribute(const nsString& aName) {
+  NS_IMETHOD GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn);
+  NS_IMETHOD SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue);
+  NS_IMETHOD RemoveAttribute(const nsAReadableString& aName) {
     return mInner.RemoveAttribute(aName);
   }
-  NS_IMETHOD GetAttributeNode(const nsString& aName,
+  NS_IMETHOD GetAttributeNode(const nsAReadableString& aName,
                               nsIDOMAttr** aReturn) {
     return mInner.GetAttributeNode(aName, aReturn);
   }
@@ -78,41 +78,41 @@ public:
   NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {
     return mInner.RemoveAttributeNode(aOldAttr, aReturn);
   }
-  NS_IMETHOD GetElementsByTagName(const nsString& aTagname,
+  NS_IMETHOD GetElementsByTagName(const nsAReadableString& aTagname,
                                   nsIDOMNodeList** aReturn) {
     return mInner.GetElementsByTagName(aTagname, aReturn);
   }
-  NS_IMETHOD GetAttributeNS(const nsString& aNamespaceURI,
-                            const nsString& aLocalName, nsString& aReturn) {
+  NS_IMETHOD GetAttributeNS(const nsAReadableString& aNamespaceURI,
+                            const nsAReadableString& aLocalName, nsAWritableString& aReturn) {
     return mInner.GetAttributeNS(aNamespaceURI, aLocalName, aReturn);
   }
-  NS_IMETHOD SetAttributeNS(const nsString& aNamespaceURI,
-                            const nsString& aQualifiedName,
-                            const nsString& aValue) {
+  NS_IMETHOD SetAttributeNS(const nsAReadableString& aNamespaceURI,
+                            const nsAReadableString& aQualifiedName,
+                            const nsAReadableString& aValue) {
     return mInner.SetAttributeNS(aNamespaceURI, aQualifiedName, aValue);
   }
-  NS_IMETHOD RemoveAttributeNS(const nsString& aNamespaceURI,
-                               const nsString& aLocalName) {
+  NS_IMETHOD RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
+                               const nsAReadableString& aLocalName) {
     return mInner.RemoveAttributeNS(aNamespaceURI, aLocalName);
   }
-  NS_IMETHOD GetAttributeNodeNS(const nsString& aNamespaceURI,
-                                const nsString& aLocalName,
+  NS_IMETHOD GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
+                                const nsAReadableString& aLocalName,
                                 nsIDOMAttr** aReturn) {
     return mInner.GetAttributeNodeNS(aNamespaceURI, aLocalName, aReturn);
   }
   NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
     return mInner.SetAttributeNodeNS(aNewAttr, aReturn);
   }
-  NS_IMETHOD GetElementsByTagNameNS(const nsString& aNamespaceURI,
-                                    const nsString& aLocalName,
+  NS_IMETHOD GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
+                                    const nsAReadableString& aLocalName,
                                     nsIDOMNodeList** aReturn) {
     return mInner.GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
   }
-  NS_IMETHOD HasAttribute(const nsString& aName, PRBool* aReturn) {
+  NS_IMETHOD HasAttribute(const nsAReadableString& aName, PRBool* aReturn) {
     return mInner.HasAttribute(aName, aReturn);
   }
-  NS_IMETHOD HasAttributeNS(const nsString& aNamespaceURI,
-                            const nsString& aLocalName, PRBool* aReturn) {
+  NS_IMETHOD HasAttributeNS(const nsAReadableString& aNamespaceURI,
+                            const nsAReadableString& aLocalName, PRBool* aReturn) {
     return mInner.HasAttributeNS(aNamespaceURI, aLocalName, aReturn);
   }
 
@@ -120,18 +120,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLButtonElement
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD GetAccessKey(nsString& aAccessKey);
-  NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
-  NS_IMETHOD GetDisabled(PRBool* aDisabled);
-  NS_IMETHOD SetDisabled(PRBool aDisabled);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
-  NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-  NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD GetValue(nsString& aValue);
-  NS_IMETHOD SetValue(const nsString& aValue);
+  NS_DECL_IDOMHTMLBUTTONELEMENT
 
   // nsIDOMHTMLButtonElement
   NS_IMETHOD Blur();
@@ -215,14 +204,15 @@ nsHTMLButtonElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::GetAttribute(const nsString& aName, nsString& aReturn)
+nsHTMLButtonElement::GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn)
 {
-  if (aName.EqualsWithConversion("disabled", PR_TRUE)) {
+  nsAutoString name(aName);
+  if (name.EqualsWithConversion("disabled", PR_TRUE)) {
     nsresult rv = GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, aReturn);
     if (rv == NS_CONTENT_ATTR_NOT_THERE) {
-      aReturn.AssignWithConversion("false");
+      aReturn.Assign(NS_LITERAL_STRING("false"));
     } else {
-      aReturn.AssignWithConversion("true");
+      aReturn.Assign(NS_LITERAL_STRING("true"));
     }
 
     return NS_OK;
@@ -232,10 +222,11 @@ nsHTMLButtonElement::GetAttribute(const nsString& aName, nsString& aReturn)
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::SetAttribute(const nsString& aName, const nsString& aValue)
+nsHTMLButtonElement::SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
 {
-  if (aName.EqualsWithConversion("disabled", PR_TRUE) &&
-      aValue.EqualsWithConversion("false", PR_TRUE)) {
+  nsAutoString name(aName), value(aValue);
+  if (name.EqualsWithConversion("disabled", PR_TRUE) &&
+      value.EqualsWithConversion("false", PR_TRUE)) {
     return mInner.RemoveAttribute(aName);
   }
 
@@ -285,7 +276,7 @@ nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return result;
 }
 NS_IMETHODIMP
-nsHTMLButtonElement::GetType(nsString& aType)
+nsHTMLButtonElement::GetType(nsAWritableString& aType)
 {
   return AttributeToString(nsHTMLAtoms::type,
                            nsHTMLValue(mType, eHTMLUnit_Enumerated),
@@ -387,7 +378,7 @@ static nsGenericHTMLElement::EnumTable kButtonTypeTable[] = {
 
 NS_IMETHODIMP
 nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsString& aValue,
+                                       const nsAReadableString& aValue,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
@@ -398,8 +389,9 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::type) {
     nsGenericHTMLElement::EnumTable *table = kButtonTypeTable;
+    nsAutoString val(aValue);
     while (nsnull != table->tag) { 
-      if (aValue.EqualsIgnoreCase(table->tag)) {
+      if (val.EqualsIgnoreCase(table->tag)) {
         aResult.SetIntValue(table->value, eHTMLUnit_Enumerated);
         mType = table->value;  
         return NS_CONTENT_ATTR_HAS_VALUE;
@@ -417,7 +409,7 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLButtonElement::AttributeToString(nsIAtom* aAttribute,
                                        const nsHTMLValue& aValue,
-                                       nsString& aResult) const
+                                       nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::type) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {

@@ -128,8 +128,8 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
 
 NS_LAYOUT nsresult
 NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
-                  const nsString& aNamespaceURI, 
-                  const nsString& aQualifiedName, 
+                  const nsAReadableString& aNamespaceURI, 
+                  const nsAReadableString& aQualifiedName, 
                   nsIDOMDocumentType* aDoctype,
                   nsIURI* aBaseURI)
 {
@@ -274,15 +274,15 @@ nsXMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 }
 
 NS_IMETHODIMP 
-nsXMLDocument::GetContentType(nsString& aContentType) const
+nsXMLDocument::GetContentType(nsAWritableString& aContentType) const
 {
   // XXX Should get document type from incoming stream
-  aContentType.AssignWithConversion("text/xml");
+  aContentType.Assign(NS_LITERAL_STRING("text/xml"));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXMLDocument::Load(const nsString& aUrl)
+nsXMLDocument::Load(const nsAReadableString& aUrl)
 {
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsIURI> uri;
@@ -685,7 +685,7 @@ nsXMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn)
+nsXMLDocument::CreateCDATASection(const nsAReadableString& aData, nsIDOMCDATASection** aReturn)
 {
   nsIContent* content;
   nsresult rv = NS_NewXMLCDATASection(&content);
@@ -700,15 +700,15 @@ nsXMLDocument::CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aR
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn)
+nsXMLDocument::CreateEntityReference(const nsAReadableString& aName, nsIDOMEntityReference** aReturn)
 {
   *aReturn = nsnull;
   return NS_OK;
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateProcessingInstruction(const nsString& aTarget, 
-                                           const nsString& aData, 
+nsXMLDocument::CreateProcessingInstruction(const nsAReadableString& aTarget, 
+                                           const nsAReadableString& aData, 
                                            nsIDOMProcessingInstruction** aReturn)
 {
   nsIContent* content;
@@ -725,7 +725,7 @@ nsXMLDocument::CreateProcessingInstruction(const nsString& aTarget,
 }
  
 NS_IMETHODIMP    
-nsXMLDocument::CreateElement(const nsString& aTagName, 
+nsXMLDocument::CreateElement(const nsAReadableString& aTagName, 
                               nsIDOMElement** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -749,8 +749,8 @@ nsXMLDocument::CreateElement(const nsString& aTagName,
 }
 
 NS_IMETHODIMP    
-nsXMLDocument::CreateElementWithNameSpace(const nsString& aTagName, 
-                                          const nsString& aNameSpace, 
+nsXMLDocument::CreateElementWithNameSpace(const nsAReadableString& aTagName, 
+                                          const nsAReadableString& aNameSpace, 
                                           nsIDOMElement** aReturn)
 {
   printf ("Deprecated method CreateElementWithNameSpace() used, use CreateElementNS() in stead!\n");
@@ -864,8 +864,8 @@ nsXMLDocument::ImportNode(nsIDOMNode* aImportedNode,
 }
 
 NS_IMETHODIMP
-nsXMLDocument::CreateAttributeNS(const nsString& aNamespaceURI,
-                                 const nsString& aQualifiedName,
+nsXMLDocument::CreateAttributeNS(const nsAReadableString& aNamespaceURI,
+                                 const nsAReadableString& aQualifiedName,
                                  nsIDOMAttr** aReturn)
 {
   NS_NOTYETIMPLEMENTED("write me");
@@ -873,8 +873,8 @@ nsXMLDocument::CreateAttributeNS(const nsString& aNamespaceURI,
 }
 
 NS_IMETHODIMP
-nsXMLDocument::CreateElementNS(const nsString& aNamespaceURI,
-                               const nsString& aQualifiedName,
+nsXMLDocument::CreateElementNS(const nsAReadableString& aNamespaceURI,
+                               const nsAReadableString& aQualifiedName,
                                nsIDOMElement** aReturn)
 {
   nsresult rv = NS_OK;
@@ -908,7 +908,7 @@ nsXMLDocument::CreateElementNS(const nsString& aNamespaceURI,
 }
 
 static nsIContent *
-MatchName(nsIContent *aContent, const nsString& aName)
+MatchName(nsIContent *aContent, const nsAReadableString& aName)
 {
   nsAutoString value;
   nsIContent *result = nsnull;
@@ -939,7 +939,7 @@ MatchName(nsIContent *aContent, const nsString& aName)
 }
 
 NS_IMETHODIMP
-nsXMLDocument::GetElementById(const nsString& aElementId,
+nsXMLDocument::GetElementById(const nsAReadableString& aElementId,
                              nsIDOMElement** aReturn)
 {
   // XXX Since we don't have a validating parser, the only content

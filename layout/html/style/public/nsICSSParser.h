@@ -24,11 +24,11 @@
 
 #include "nslayout.h"
 #include "nsISupports.h"
+#include "nsAWritableString.h"
 class nsIStyleRule;
 class nsICSSStyleSheet;
 class nsIUnicharInputStream;
 class nsIURI;
-class nsString;
 class nsICSSDeclaration;
 class nsICSSLoader;
 
@@ -65,26 +65,26 @@ public:
   // Parse declarations assuming that the outer curly braces have
   // already been accounted for. aBaseURL is the base url to use for
   // relative links in the declaration.
-  NS_IMETHOD ParseDeclarations(const nsString& aDeclaration,
-                               nsIURI*         aBaseURL,
-                               nsIStyleRule*&  aResult) = 0;
+  NS_IMETHOD ParseDeclarations(const nsAReadableString& aDeclaration,
+                               nsIURI*                  aBaseURL,
+                               nsIStyleRule*&           aResult) = 0;
 
-  NS_IMETHOD ParseAndAppendDeclaration(const nsString&    aBuffer,
-                                       nsIURI*            aBaseURL,
-                                       nsICSSDeclaration* aDeclaration,
-                                       PRBool             aParseOnlyOneDecl,
-                                       PRInt32*           aHint) = 0;
+  NS_IMETHOD ParseAndAppendDeclaration(const nsAReadableString& aBuffer,
+                                       nsIURI*                  aBaseURL,
+                                       nsICSSDeclaration*       aDeclaration,
+                                       PRBool                   aParseOnlyOneDecl,
+                                       PRInt32*                 aHint) = 0;
 
   // Charset management method:
   //  Set the charset before calling any of the Parse emthods if you want the 
   //  charset to be anything other than the default
 
   // sets the out-param to the current charset, as set by SetCharset
-  NS_IMETHOD GetCharset(/*out*/nsString &aCharsetDest) const = 0;
+  NS_IMETHOD GetCharset(/*out*/nsAWritableString &aCharsetDest) const = 0;
 
   // SetCharset expects the charset to be the preferred charset
   // and it just records the string exactly as passed in (no alias resolution)
-  NS_IMETHOD SetCharset(/*in*/ const nsString &aCharsetSrc) = 0;
+  NS_IMETHOD SetCharset(/*in*/ const nsAReadableString &aCharsetSrc) = 0;
 };
 
 // Values or'd in the GetInfoMask; other bits are reserved

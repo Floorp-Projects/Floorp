@@ -110,7 +110,7 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {
     aResult = nsnull; return NS_OK;
   }
-  NS_IMETHOD ParseAttributeString(const nsString& aStr,
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,
                                   nsIAtom*& aName,
                                   PRInt32& aNameSpaceID) {
     return mInner.ParseAttributeString(aStr, aName, aNameSpaceID);
@@ -120,19 +120,19 @@ public:
     return mInner.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);
   }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                          nsString &aResult) const {
+                          nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aAttribute, aResult);
   }
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                          nsIAtom*& aPrefix, nsString &aResult) const {
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {
     return mInner.GetAttribute(aNameSpaceID, aAttribute, aPrefix, aResult);
   }
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                          const nsString& aValue, PRBool aNotify) {
+                          const nsAReadableString& aValue, PRBool aNotify) {
     return mInner.SetAttribute(aNameSpaceID, aAttribute, aValue, aNotify);
   }
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsString& aValue, PRBool aNotify) {
+                          const nsAReadableString& aValue, PRBool aNotify) {
     return mInner.SetAttribute(aNodeInfo, aValue, aNotify);
   }
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
@@ -215,11 +215,13 @@ public:
   NS_IMETHOD GetTextLength(PRInt32* aLengthResult) {
     return mInner.GetTextLength(aLengthResult);
   }
-  NS_IMETHOD CopyText(nsString& aResult) {
+  NS_IMETHOD CopyText(nsAWritableString& aResult) {
     return mInner.CopyText(aResult);
   }
   NS_IMETHOD SetText(const PRUnichar* aBuffer,
                      PRInt32 aLength,
+                     PRBool aNotify);
+  NS_IMETHOD SetText(const nsAReadableString& aStr,
                      PRBool aNotify);
   NS_IMETHOD SetText(const char* aBuffer,
                      PRInt32 aLength,
@@ -289,9 +291,9 @@ nsCommentNode::GetTag(nsIAtom*& aResult) const
 }
 
 NS_IMETHODIMP
-nsCommentNode::GetNodeName(nsString& aNodeName)
+nsCommentNode::GetNodeName(nsAWritableString& aNodeName)
 {
-  aNodeName.AssignWithConversion("#comment");
+  aNodeName.Assign(NS_LITERAL_STRING("#comment"));
   return NS_OK;
 }
 
@@ -540,6 +542,16 @@ nsCommentNode::SetText(const PRUnichar* aBuffer,
                        PRBool aNotify)
 {
   nsAutoString str(aBuffer);
+
+  StripCommentDelimiters(str);
+  return mInner.SetText(this, str.GetUnicode(), str.Length(), aNotify);
+}
+
+NS_IMETHODIMP 
+nsCommentNode::SetText(const nsAReadableString& aStr,
+                       PRBool aNotify)
+{
+  nsAutoString str(aStr);
 
   StripCommentDelimiters(str);
   return mInner.SetText(this, str.GetUnicode(), str.Length(), aNotify);

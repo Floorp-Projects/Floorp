@@ -37,45 +37,45 @@ class nsIDOMNSHTMLAnchorElement : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLANCHORELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetProtocol(nsString& aProtocol)=0;
+  NS_IMETHOD    GetProtocol(nsAWritableString& aProtocol)=0;
 
-  NS_IMETHOD    GetHost(nsString& aHost)=0;
+  NS_IMETHOD    GetHost(nsAWritableString& aHost)=0;
 
-  NS_IMETHOD    GetHostname(nsString& aHostname)=0;
+  NS_IMETHOD    GetHostname(nsAWritableString& aHostname)=0;
 
-  NS_IMETHOD    GetPathname(nsString& aPathname)=0;
+  NS_IMETHOD    GetPathname(nsAWritableString& aPathname)=0;
 
-  NS_IMETHOD    GetSearch(nsString& aSearch)=0;
+  NS_IMETHOD    GetSearch(nsAWritableString& aSearch)=0;
 
-  NS_IMETHOD    GetPort(nsString& aPort)=0;
+  NS_IMETHOD    GetPort(nsAWritableString& aPort)=0;
 
-  NS_IMETHOD    GetHash(nsString& aHash)=0;
+  NS_IMETHOD    GetHash(nsAWritableString& aHash)=0;
 
-  NS_IMETHOD    GetText(nsString& aText)=0;
+  NS_IMETHOD    GetText(nsAWritableString& aText)=0;
 };
 
 
 #define NS_DECL_IDOMNSHTMLANCHORELEMENT   \
-  NS_IMETHOD    GetProtocol(nsString& aProtocol);  \
-  NS_IMETHOD    GetHost(nsString& aHost);  \
-  NS_IMETHOD    GetHostname(nsString& aHostname);  \
-  NS_IMETHOD    GetPathname(nsString& aPathname);  \
-  NS_IMETHOD    GetSearch(nsString& aSearch);  \
-  NS_IMETHOD    GetPort(nsString& aPort);  \
-  NS_IMETHOD    GetHash(nsString& aHash);  \
-  NS_IMETHOD    GetText(nsString& aText);  \
+  NS_IMETHOD    GetProtocol(nsAWritableString& aProtocol);  \
+  NS_IMETHOD    GetHost(nsAWritableString& aHost);  \
+  NS_IMETHOD    GetHostname(nsAWritableString& aHostname);  \
+  NS_IMETHOD    GetPathname(nsAWritableString& aPathname);  \
+  NS_IMETHOD    GetSearch(nsAWritableString& aSearch);  \
+  NS_IMETHOD    GetPort(nsAWritableString& aPort);  \
+  NS_IMETHOD    GetHash(nsAWritableString& aHash);  \
+  NS_IMETHOD    GetText(nsAWritableString& aText);  \
 
 
 
 #define NS_FORWARD_IDOMNSHTMLANCHORELEMENT(_to)  \
-  NS_IMETHOD    GetProtocol(nsString& aProtocol) { return _to GetProtocol(aProtocol); } \
-  NS_IMETHOD    GetHost(nsString& aHost) { return _to GetHost(aHost); } \
-  NS_IMETHOD    GetHostname(nsString& aHostname) { return _to GetHostname(aHostname); } \
-  NS_IMETHOD    GetPathname(nsString& aPathname) { return _to GetPathname(aPathname); } \
-  NS_IMETHOD    GetSearch(nsString& aSearch) { return _to GetSearch(aSearch); } \
-  NS_IMETHOD    GetPort(nsString& aPort) { return _to GetPort(aPort); } \
-  NS_IMETHOD    GetHash(nsString& aHash) { return _to GetHash(aHash); } \
-  NS_IMETHOD    GetText(nsString& aText) { return _to GetText(aText); } \
+  NS_IMETHOD    GetProtocol(nsAWritableString& aProtocol) { return _to GetProtocol(aProtocol); } \
+  NS_IMETHOD    GetHost(nsAWritableString& aHost) { return _to GetHost(aHost); } \
+  NS_IMETHOD    GetHostname(nsAWritableString& aHostname) { return _to GetHostname(aHostname); } \
+  NS_IMETHOD    GetPathname(nsAWritableString& aPathname) { return _to GetPathname(aPathname); } \
+  NS_IMETHOD    GetSearch(nsAWritableString& aSearch) { return _to GetSearch(aSearch); } \
+  NS_IMETHOD    GetPort(nsAWritableString& aPort) { return _to GetPort(aPort); } \
+  NS_IMETHOD    GetHash(nsAWritableString& aHash) { return _to GetHash(aHash); } \
+  NS_IMETHOD    GetText(nsAWritableString& aText) { return _to GetText(aText); } \
 
 
 #endif // nsIDOMNSHTMLAnchorElement_h__

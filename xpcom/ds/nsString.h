@@ -110,7 +110,7 @@ public:
   nsCString(const nsCString& aString);   
 
 #ifdef NEW_STRING_APIS
-  nsCString( const nsAReadableCString& );
+  explicit nsCString( const nsAReadableCString& );
 
   nsCString(const char*);
   nsCString(const char*, PRInt32);
@@ -428,6 +428,9 @@ public:
 
   void AssignWithConversion(const PRUnichar*,PRInt32=-1);
   void AssignWithConversion( const nsString& aString );
+#ifdef NEW_STRING_APIS
+  void AssignWithConversion( const nsAReadableString& aString );
+#endif
   void AssignWithConversion(PRUnichar);
 
 #ifndef NEW_STRING_APIS
@@ -472,6 +475,9 @@ public:
 
   void AppendWithConversion(const nsString&, PRInt32=-1);
   void AppendWithConversion(PRUnichar aChar);
+#ifdef NEW_STRING_APIS
+  void AppendWithConversion( const nsAReadableString& aString );
+#endif
   void AppendWithConversion(const PRUnichar*, PRInt32=-1);
   // Why no |AppendWithConversion(const PRUnichar*, PRInt32)|? --- now I know, because implicit construction hid the need for this routine
   void AppendInt(PRInt32 aInteger,PRInt32 aRadix=10); //radix=8,10 or 16
@@ -834,6 +840,7 @@ public:
 
     nsCAutoString();
     nsCAutoString(const nsCString& );
+    nsCAutoString(const nsAReadableCString& aString);
     nsCAutoString(const char* aString);
     nsCAutoString(const char* aString,PRInt32 aLength);
     nsCAutoString(const CBufDescriptor& aBuffer);
@@ -897,18 +904,22 @@ class NS_COM NS_ConvertUCS2toUTF8
     public:
       NS_ConvertUCS2toUTF8( const PRUnichar* aString )
         {
-          Init( aString, ~PRUint32(0) /* MAXINT */);
+          Append( aString, ~PRUint32(0) /* MAXINT */);
         }
 
       NS_ConvertUCS2toUTF8( const PRUnichar* aString, PRUint32 aLength )
         {
-          Init( aString, aLength );
+          Append( aString, aLength );
         }
 
       NS_ConvertUCS2toUTF8( PRUnichar aChar )
         {
-          Init( &aChar, 1 );
+          Append( &aChar, 1 );
         }
+
+#ifdef NEW_STRING_APIS
+      NS_ConvertUCS2toUTF8( const nsAReadableString& aString );
+#endif
 
       operator const char*() const
         {
@@ -916,7 +927,7 @@ class NS_COM NS_ConvertUCS2toUTF8
         }
 
     protected:
-      void Init( const PRUnichar* aString, PRUint32 aLength );
+      void Append( const PRUnichar* aString, PRUint32 aLength );
 
     private:
         // NOT TO BE IMPLEMENTED

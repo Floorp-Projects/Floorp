@@ -42,7 +42,7 @@ public:
 
   NS_IMETHOD    GetLength(PRUint32* aLength);
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn);
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
 
   NS_IMETHOD    ParentDestroyed();
 

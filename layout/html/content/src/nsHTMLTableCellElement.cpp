@@ -70,36 +70,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
 // nsIDOMHTMLTableCellElement
-  NS_IMETHOD GetCellIndex(PRInt32* aCellIndex);
-  NS_IMETHOD SetCellIndex(PRInt32 aCellIndex);
-  NS_IMETHOD GetAbbr(nsString& aAbbr);
-  NS_IMETHOD SetAbbr(const nsString& aAbbr);
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
-  NS_IMETHOD GetAxis(nsString& aAxis);
-  NS_IMETHOD SetAxis(const nsString& aAxis);
-  NS_IMETHOD GetBgColor(nsString& aBgColor);
-  NS_IMETHOD SetBgColor(const nsString& aBgColor);
-  NS_IMETHOD GetCh(nsString& aCh);
-  NS_IMETHOD SetCh(const nsString& aCh);
-  NS_IMETHOD GetChOff(nsString& aChOff);
-  NS_IMETHOD SetChOff(const nsString& aChOff);
-  NS_IMETHOD GetColSpan(PRInt32* aColSpan);
-  NS_IMETHOD SetColSpan(PRInt32 aColSpan);
-  NS_IMETHOD GetHeaders(nsString& aHeaders);
-  NS_IMETHOD SetHeaders(const nsString& aHeaders);
-  NS_IMETHOD GetHeight(nsString& aHeight);
-  NS_IMETHOD SetHeight(const nsString& aHeight);
-  NS_IMETHOD GetNoWrap(PRBool* aNoWrap);
-  NS_IMETHOD SetNoWrap(PRBool aNoWrap);
-  NS_IMETHOD GetRowSpan(PRInt32* aRowSpan);
-  NS_IMETHOD SetRowSpan(PRInt32 aRowSpan);
-  NS_IMETHOD GetScope(nsString& aScope);
-  NS_IMETHOD SetScope(const nsString& aScope);
-  NS_IMETHOD GetVAlign(nsString& aVAlign);
-  NS_IMETHOD SetVAlign(const nsString& aVAlign);
-  NS_IMETHOD GetWidth(nsString& aWidth);
-  NS_IMETHOD SetWidth(const nsString& aWidth);
+  NS_DECL_IDOMHTMLTABLECELLELEMENT
 
 // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -333,7 +304,7 @@ static nsGenericHTMLElement::EnumTable kCellScopeTable[] = {
 
 NS_IMETHODIMP
 nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
-                                   const nsString& aValue,
+                                   const nsAReadableString& aValue,
                                    nsHTMLValue& aResult)
 {
   /* ignore these attributes, stored simply as strings
@@ -401,7 +372,7 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLTableCellElement::AttributeToString(nsIAtom* aAttribute,
                                    const nsHTMLValue& aValue,
-                                   nsString& aResult) const
+                                   nsAWritableString& aResult) const
 {
   /* ignore these attributes, stored already as strings
      abbr, axis, ch, headers

@@ -131,7 +131,7 @@ NS_IMPL_INT_ATTR(nsHTMLPreElement, Width, width)
 
 NS_IMETHODIMP
 nsHTMLPreElement::StringToAttribute(nsIAtom* aAttribute,
-                                    const nsString& aValue,
+                                    const nsAReadableString& aValue,
                                     nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::cols) {
@@ -147,7 +147,8 @@ nsHTMLPreElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::tabstop) {
-    PRInt32 ec, tabstop = aValue.ToInteger(&ec);
+    nsAutoString val(aValue);
+    PRInt32 ec, tabstop = val.ToInteger(&ec);
     if (tabstop <= 0) {
       tabstop = 8;
     }
@@ -160,7 +161,7 @@ nsHTMLPreElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLPreElement::AttributeToString(nsIAtom* aAttribute,
                                     const nsHTMLValue& aValue,
-                                    nsString& aResult) const
+                                    nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

@@ -129,7 +129,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLDListElement, Compact, compact)
 
 NS_IMETHODIMP
 nsHTMLDListElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsString& aValue,
+                                      const nsAReadableString& aValue,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::compact) {
@@ -142,7 +142,7 @@ nsHTMLDListElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLDListElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsString& aResult) const
+                                      nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

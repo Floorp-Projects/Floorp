@@ -42,21 +42,21 @@ public:
 
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;
 
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLCOLLECTION   \
   NS_IMETHOD    GetLength(PRUint32* aLength);  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLCOLLECTION(_to)  \
   NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn) { return _to Item(aIndex, aReturn); }  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn) { return _to NamedItem(aName, aReturn); }  \
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn) { return _to NamedItem(aName, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLCollectionClass(nsIScriptContext *aContext, void **aPrototype);

@@ -26,6 +26,7 @@
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIScriptContext.h"
+#include "nsAReadableString.h"
 
 class nsIScriptContext;
 
@@ -103,7 +104,7 @@ public:
   NS_IMETHOD CompileEventHandler(nsIScriptContext* aContext,
                                  void* aTarget,
                                  nsIAtom *aName,
-                                 const nsString& aBody,
+                                 const nsAReadableString& aBody,
                                  void** aHandler) = 0;
 
   /**

@@ -54,8 +54,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLQuoteElement
-  NS_IMETHOD GetCite(nsString& aCite);
-  NS_IMETHOD SetCite(const nsString& aCite);
+  NS_DECL_IDOMHTMLQUOTEELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -128,7 +127,7 @@ NS_IMPL_STRING_ATTR(nsHTMLQuoteElement, Cite, cite)
 
 NS_IMETHODIMP
 nsHTMLQuoteElement::StringToAttribute(nsIAtom* aAttribute,
-                               const nsString& aValue,
+                               const nsAReadableString& aValue,
                                nsHTMLValue& aResult)
 {
   // XXX write me
@@ -138,7 +137,7 @@ nsHTMLQuoteElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLQuoteElement::AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsString& aResult) const
+                               nsAWritableString& aResult) const
 {
   // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);

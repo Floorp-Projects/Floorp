@@ -131,49 +131,49 @@ public:
   void Init(nsIContent* aOuterContentObject, nsINodeInfo *aNodeInfo);
 
   // Implementation for nsIDOMNode
-  nsresult    GetNodeValue(nsString& aNodeValue);
-  nsresult    SetNodeValue(const nsString& aNodeValue);
+  nsresult    GetNodeValue(nsAWritableString& aNodeValue);
+  nsresult    SetNodeValue(const nsAReadableString& aNodeValue);
   nsresult    GetNodeType(PRUint16* aNodeType);
   nsresult    GetParentNode(nsIDOMNode** aParentNode);
   nsresult    GetAttributes(nsIDOMNamedNodeMap** aAttributes);
   nsresult    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
   nsresult    GetNextSibling(nsIDOMNode** aNextSibling);
   nsresult    GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
-  nsresult    GetNamespaceURI(nsString& aNamespaceURI);
-  nsresult    GetPrefix(nsString& aPrefix);
-  nsresult    SetPrefix(const nsString& aPrefix);
+  nsresult    GetNamespaceURI(nsAWritableString& aNamespaceURI);
+  nsresult    GetPrefix(nsAWritableString& aPrefix);
+  nsresult    SetPrefix(const nsAReadableString& aPrefix);
   nsresult    Normalize();
-  nsresult    Supports(const nsString& aFeature,
-                       const nsString& aVersion, PRBool* aReturn);
+  nsresult    Supports(const nsAReadableString& aFeature,
+                       const nsAReadableString& aVersion, PRBool* aReturn);
 
   // Implementation for nsIDOMElement
-  nsresult    GetTagName(nsString& aTagName);
-  nsresult    GetAttribute(const nsString& aName, nsString& aReturn);
-  nsresult    SetAttribute(const nsString& aName, const nsString& aValue);
-  nsresult    RemoveAttribute(const nsString& aName);
-  nsresult    GetAttributeNode(const nsString& aName,
+  nsresult    GetTagName(nsAWritableString& aTagName);
+  nsresult    GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn);
+  nsresult    SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue);
+  nsresult    RemoveAttribute(const nsAReadableString& aName);
+  nsresult    GetAttributeNode(const nsAReadableString& aName,
                                nsIDOMAttr** aReturn);
   nsresult    SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);
   nsresult    RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn);
-  nsresult    GetElementsByTagName(const nsString& aTagname,
+  nsresult    GetElementsByTagName(const nsAReadableString& aTagname,
                                    nsIDOMNodeList** aReturn);
-  nsresult    GetAttributeNS(const nsString& aNamespaceURI,
-                             const nsString& aLocalName, nsString& aReturn);
-  nsresult    SetAttributeNS(const nsString& aNamespaceURI,
-                             const nsString& aQualifiedName,
-                             const nsString& aValue);
-  nsresult    RemoveAttributeNS(const nsString& aNamespaceURI,
-                                const nsString& aLocalName);
-  nsresult    GetAttributeNodeNS(const nsString& aNamespaceURI,
-                                 const nsString& aLocalName,
+  nsresult    GetAttributeNS(const nsAReadableString& aNamespaceURI,
+                             const nsAReadableString& aLocalName, nsAWritableString& aReturn);
+  nsresult    SetAttributeNS(const nsAReadableString& aNamespaceURI,
+                             const nsAReadableString& aQualifiedName,
+                             const nsAReadableString& aValue);
+  nsresult    RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
+                                const nsAReadableString& aLocalName);
+  nsresult    GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
+                                 const nsAReadableString& aLocalName,
                                  nsIDOMAttr** aReturn);
   nsresult    SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);
-  nsresult    GetElementsByTagNameNS(const nsString& aNamespaceURI,
-                                     const nsString& aLocalName,
+  nsresult    GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
+                                     const nsAReadableString& aLocalName,
                                      nsIDOMNodeList** aReturn);
-  nsresult    HasAttribute(const nsString& aName, PRBool* aReturn);
-  nsresult    HasAttributeNS(const nsString& aNamespaceURI,
-                             const nsString& aLocalName, PRBool* aReturn);
+  nsresult    HasAttribute(const nsAReadableString& aName, PRBool* aReturn);
+  nsresult    HasAttributeNS(const nsAReadableString& aNamespaceURI,
+                             const nsAReadableString& aLocalName, PRBool* aReturn);
 
   // nsIScriptObjectOwner interface
   nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -251,7 +251,7 @@ public:
   nsresult RenderFrame(nsIPresContext*);
 
   nsresult AddScriptEventListener(nsIAtom* aAttribute,
-                                  const nsString& aValue,
+                                  const nsAReadableString& aValue,
                                   REFNSIID aIID);
 
   nsresult TriggerLink(nsIPresContext* aPresContext,
@@ -273,8 +273,8 @@ public:
 
   static nsIAtom* CutNameSpacePrefix(nsString& aString);
 
-  static nsresult InternalSupports(const nsString& aFeature,
-                                   const nsString& aVersion, PRBool* aReturn);
+  static nsresult InternalSupports(const nsAReadableString& aFeature,
+                                   const nsAReadableString& aVersion, PRBool* aReturn);
 
   nsDOMSlots *GetDOMSlots();
   void MaybeClearDOMSlots();
@@ -303,11 +303,11 @@ public:
                        PRBool aDeep);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
-  nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 
+  nsresult    GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn) 
   {
     return nsGenericElement::GetAttribute(aName, aReturn);
   }
-  nsresult    SetAttribute(const nsString& aName, const nsString& aValue)
+  nsresult    SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
   {
     return nsGenericElement::SetAttribute(aName, aValue);
   }
@@ -337,14 +337,14 @@ public:
 
   // Remainder of nsIContent
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                        const nsString& aValue,
+                        const nsAReadableString& aValue,
                         PRBool aNotify);
-  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsString& aValue,
+  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
                         PRBool aNotify);
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                        nsString& aResult) const;
+                        nsAWritableString& aResult) const;
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                        nsIAtom*& aPrefix, nsString& aResult) const;
+                        nsIAtom*& aPrefix, nsAWritableString& aResult) const;
   nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                           PRBool aNotify);
   nsresult GetAttributeNameAt(PRInt32 aIndex,
@@ -386,13 +386,13 @@ public:
  *       NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
  */
 #define NS_IMPL_IDOMNODE_USING_GENERIC(_g)                              \
-  NS_IMETHOD GetNodeName(nsString& aNodeName) {                         \
+  NS_IMETHOD GetNodeName(nsAWritableString& aNodeName) {                         \
     return _g.GetNodeName(aNodeName);                                   \
   }                                                                     \
-  NS_IMETHOD GetNodeValue(nsString& aNodeValue) {                       \
+  NS_IMETHOD GetNodeValue(nsAWritableString& aNodeValue) {                       \
     return _g.GetNodeValue(aNodeValue);                                 \
   }                                                                     \
-  NS_IMETHOD SetNodeValue(const nsString& aNodeValue) {                 \
+  NS_IMETHOD SetNodeValue(const nsAReadableString& aNodeValue) {                 \
     return _g.SetNodeValue(aNodeValue);                                 \
   }                                                                     \
   NS_IMETHOD GetNodeType(PRUint16* aNodeType) {                         \
@@ -422,16 +422,16 @@ public:
   NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes) {          \
     return _g.GetAttributes(aAttributes);                               \
   }                                                                     \
-  NS_IMETHOD GetNamespaceURI(nsString& aNamespaceURI) {                 \
+  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNamespaceURI) {                 \
     return _g.GetNamespaceURI(aNamespaceURI);                           \
   }                                                                     \
-  NS_IMETHOD GetPrefix(nsString& aPrefix) {                             \
+  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix) {                             \
     return _g.GetPrefix(aPrefix);                                       \
   }                                                                     \
-  NS_IMETHOD SetPrefix(const nsString& aPrefix) {                       \
+  NS_IMETHOD SetPrefix(const nsAReadableString& aPrefix) {                       \
     return _g.SetPrefix(aPrefix);                                       \
   }                                                                     \
-  NS_IMETHOD GetLocalName(nsString& aLocalName) {                       \
+  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName) {                       \
     return _g.GetLocalName(aLocalName);                                 \
   }                                                                     \
   NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, \
@@ -455,8 +455,8 @@ public:
   NS_IMETHOD Normalize() {                                              \
     return _g.Normalize();                                              \
   }                                                                     \
-  NS_IMETHOD Supports(const nsString& aFeature,                         \
-                      const nsString& aVersion, PRBool* aReturn) {      \
+  NS_IMETHOD Supports(const nsAReadableString& aFeature,                         \
+                      const nsAReadableString& aVersion, PRBool* aReturn) {      \
     return _g.Supports(aFeature, aVersion, aReturn);                    \
   }
 
@@ -466,19 +466,19 @@ public:
  * nsGenericHTMLContainerContent)
  */
 #define NS_IMPL_IDOMELEMENT_USING_GENERIC(_g)                                 \
-  NS_IMETHOD GetTagName(nsString& aTagName) {                                 \
+  NS_IMETHOD GetTagName(nsAWritableString& aTagName) {                                 \
     return _g.GetTagName(aTagName);                                           \
   }                                                                           \
-  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aReturn) {         \
+  NS_IMETHOD GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn) {         \
     return _g.GetAttribute(aName, aReturn);                                   \
   }                                                                           \
-  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue) {    \
+  NS_IMETHOD SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue) {    \
     return _g.SetAttribute(aName, aValue);                                    \
   }                                                                           \
-  NS_IMETHOD RemoveAttribute(const nsString& aName) {                         \
+  NS_IMETHOD RemoveAttribute(const nsAReadableString& aName) {                         \
     return _g.RemoveAttribute(aName);                                         \
   }                                                                           \
-  NS_IMETHOD GetAttributeNode(const nsString& aName,                          \
+  NS_IMETHOD GetAttributeNode(const nsAReadableString& aName,                          \
                               nsIDOMAttr** aReturn) {                         \
     return _g.GetAttributeNode(aName, aReturn);                               \
   }                                                                           \
@@ -488,41 +488,41 @@ public:
   NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {\
     return _g.RemoveAttributeNode(aOldAttr, aReturn);                         \
   }                                                                           \
-  NS_IMETHOD GetElementsByTagName(const nsString& aTagname,                   \
+  NS_IMETHOD GetElementsByTagName(const nsAReadableString& aTagname,                   \
                                   nsIDOMNodeList** aReturn) {                 \
     return _g.GetElementsByTagName(aTagname, aReturn);                        \
   }                                                                           \
-  NS_IMETHOD GetAttributeNS(const nsString& aNamespaceURI,                    \
-                            const nsString& aLocalName, nsString& aReturn) {  \
+  NS_IMETHOD GetAttributeNS(const nsAReadableString& aNamespaceURI,                    \
+                            const nsAReadableString& aLocalName, nsAWritableString& aReturn) {  \
     return _g.GetAttributeNS(aNamespaceURI, aLocalName, aReturn);             \
   }                                                                           \
-  NS_IMETHOD SetAttributeNS(const nsString& aNamespaceURI,                    \
-                            const nsString& aQualifiedName,                   \
-                            const nsString& aValue) {                         \
+  NS_IMETHOD SetAttributeNS(const nsAReadableString& aNamespaceURI,                    \
+                            const nsAReadableString& aQualifiedName,                   \
+                            const nsAReadableString& aValue) {                         \
     return _g.SetAttributeNS(aNamespaceURI, aQualifiedName, aValue);          \
   }                                                                           \
-  NS_IMETHOD RemoveAttributeNS(const nsString& aNamespaceURI,                 \
-                               const nsString& aLocalName) {                  \
+  NS_IMETHOD RemoveAttributeNS(const nsAReadableString& aNamespaceURI,                 \
+                               const nsAReadableString& aLocalName) {                  \
     return _g.RemoveAttributeNS(aNamespaceURI, aLocalName);                   \
   }                                                                           \
-  NS_IMETHOD GetAttributeNodeNS(const nsString& aNamespaceURI,                \
-                                const nsString& aLocalName,                   \
+  NS_IMETHOD GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,                \
+                                const nsAReadableString& aLocalName,                   \
                                 nsIDOMAttr** aReturn) {                       \
     return _g.GetAttributeNodeNS(aNamespaceURI, aLocalName, aReturn);         \
   }                                                                           \
   NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) { \
     return _g.SetAttributeNodeNS(aNewAttr, aReturn);                          \
   }                                                                           \
-  NS_IMETHOD GetElementsByTagNameNS(const nsString& aNamespaceURI,            \
-                                    const nsString& aLocalName,               \
+  NS_IMETHOD GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,            \
+                                    const nsAReadableString& aLocalName,               \
                                     nsIDOMNodeList** aReturn) {               \
     return _g.GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);     \
   }                                                                           \
-  NS_IMETHOD HasAttribute(const nsString& aName, PRBool* aReturn) {           \
+  NS_IMETHOD HasAttribute(const nsAReadableString& aName, PRBool* aReturn) {           \
     return _g.HasAttribute(aName, aReturn);                                   \
   }                                                                           \
-  NS_IMETHOD HasAttributeNS(const nsString& aNamespaceURI,                    \
-                            const nsString& aLocalName, PRBool* aReturn) {    \
+  NS_IMETHOD HasAttributeNS(const nsAReadableString& aNamespaceURI,                    \
+                            const nsAReadableString& aLocalName, PRBool* aReturn) {    \
     return _g.HasAttributeNS(aNamespaceURI, aLocalName, aReturn);             \
   }
 
@@ -549,12 +549,12 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) {                                 \
     return _g.HandleEvent(aEvent);                                              \
   }                                                                             \
-  NS_IMETHOD AddEventListener(const nsString& aType,                            \
+  NS_IMETHOD AddEventListener(const nsAReadableString& aType,                            \
                               nsIDOMEventListener* aListener,                   \
                               PRBool aUseCapture) {                             \
     return _g.AddEventListener(aType, aListener, aUseCapture);    \
   }                                                                             \
-  NS_IMETHOD RemoveEventListener(const nsString& aType,                         \
+  NS_IMETHOD RemoveEventListener(const nsAReadableString& aType,                         \
                                  nsIDOMEventListener* aListener,                \
                                  PRBool aUseCapture) {                          \
     return _g.RemoveEventListener(aType, aListener, aUseCapture); \
@@ -611,7 +611,7 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
                                   nsIAtom*& aName,                         \
                                   PRInt32& aNameSpaceID) {                 \
     return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
@@ -621,19 +621,19 @@ public:
     return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsString& aResult) const {                       \
+                          nsAWritableString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {    \
     return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
   }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
@@ -750,7 +750,7 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
                                   nsIAtom*& aName,                         \
                                   PRInt32& aNameSpaceID) {                 \
     return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
@@ -760,19 +760,19 @@ public:
     return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsString& aResult) const {                       \
+                          nsAWritableString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {    \
     return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
   }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
@@ -889,7 +889,7 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
                                   nsIAtom*& aName,                         \
                                   PRInt32& aNameSpaceID) {                 \
     return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
@@ -899,19 +899,19 @@ public:
     return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsString& aResult) const {                       \
+                          nsAWritableString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {    \
     return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
   }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
@@ -1026,7 +1026,7 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
                                   nsIAtom*& aName,                         \
                                   PRInt32& aNameSpaceID) {                 \
     return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
@@ -1036,19 +1036,19 @@ public:
     return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsString& aResult) const {                       \
+                          nsAWritableString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {    \
     return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
   }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
@@ -1167,7 +1167,7 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
                                   nsIAtom*& aName,                         \
                                   PRInt32& aNameSpaceID) {                 \
     return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
@@ -1177,19 +1177,19 @@ public:
     return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsString& aResult) const {                       \
+                          nsAWritableString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {    \
     return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
   }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
@@ -1300,7 +1300,7 @@ public:
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const {                    \
     return _g.GetNodeInfo(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD ParseAttributeString(const nsString& aStr,                    \
+  NS_IMETHOD ParseAttributeString(const nsAReadableString& aStr,                    \
                                   nsIAtom*& aName,                         \
                                   PRInt32& aNameSpaceID) {                 \
     return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
@@ -1310,19 +1310,19 @@ public:
     return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNameSpaceID, aName, aValue, aNotify);          \
   }                                                                        \
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsString& aValue, PRBool aNotify) {        \
+                          const nsAReadableString& aValue, PRBool aNotify) {        \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsString& aResult) const {                       \
+                          nsAWritableString& aResult) const {                       \
     return _g.GetAttribute(aNameSpaceID, aName, aResult);                  \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
-                          nsIAtom*& aPrefix, nsString& aResult) const {    \
+                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {    \
     return _g.GetAttribute(aNameSpaceID, aName, aPrefix, aResult);         \
   }                                                                        \
   NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \

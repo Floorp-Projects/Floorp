@@ -25,7 +25,7 @@
 #include "nsIStreamConverter.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsILocale.h"
 #include "nsIDateTimeFormat.h"
 

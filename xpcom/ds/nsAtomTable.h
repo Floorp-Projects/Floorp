@@ -33,7 +33,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIATOM
 
-  void* operator new(size_t size, const PRUnichar* us, PRInt32 uslen);
+  void* operator new(size_t size, const nsAReadableString& aString);
 
   void operator delete(void* ptr) {
     ::operator delete(ptr);

@@ -147,7 +147,7 @@ public:
   NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove);
   NS_IMETHOD    GetEnumerator(nsIEnumerator **aIterator);
 
-  NS_IMETHOD    ToString(const nsString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsString& aReturn);
+  NS_IMETHOD    ToString(const nsAReadableString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsAWritableString& aReturn);
 
   NS_IMETHOD    SetHint(PRBool aHintRight);
   NS_IMETHOD    GetHint(PRBool *aHintRight);
@@ -1528,10 +1528,10 @@ nsSelection::HandleKeyEvent(nsIPresContext* aPresContext, nsGUIEvent *aGuiEvent)
 //BEGIN nsIFrameSelection methods
 
 NS_IMETHODIMP
-nsDOMSelection::ToString(const nsString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsString& aReturn)
+nsDOMSelection::ToString(const nsAReadableString& aFormatType, PRUint32 aFlags, PRInt32 aWrapCount, nsAWritableString& aReturn)
 {
   nsresult rv = NS_OK;
-
+  
   nsCOMPtr<nsIDocumentEncoder> encoder;
   nsCAutoString formatType( NS_DOC_ENCODER_PROGID_BASE );
   formatType.AppendWithConversion(aFormatType);
@@ -4342,7 +4342,7 @@ nsDOMSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
     content->GetTag(tag);
     if (tag)
     {
-	    nsString tagString;
+	    nsAutoString tagString;
 	    tag->ToString(tagString);
 	    char * tagCString = tagString.ToNewCString();
 	    printf ("Sel. Collapse to %p %s %d\n", content, tagCString, aOffset);
@@ -5158,7 +5158,7 @@ nsDOMSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
     content->GetTag(tag);
     if (tag)
     {
-	    nsString tagString;
+	    nsAutoString tagString;
 	    tag->ToString(tagString);
 	    char * tagCString = tagString.ToNewCString();
 	    printf ("Sel. Extend to %p %s %d\n", content, tagCString, aOffset);

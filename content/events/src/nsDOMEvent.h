@@ -90,13 +90,13 @@ public:
     eDOMEvents_overflowchanged
   };
 
-  nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsString& aEventType);
+  nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAReadableString& aEventType);
   virtual ~nsDOMEvent();
 
   NS_DECL_ISUPPORTS
 
   // nsIDOMEvent Interface
-  NS_IMETHOD    GetType(nsString& aType);
+  NS_IMETHOD    GetType(nsAWritableString& aType);
   NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget);
   NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget);
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase);
@@ -107,12 +107,12 @@ public:
   NS_IMETHOD    PreventBubble();
   NS_IMETHOD    PreventCapture();
   NS_IMETHOD    PreventDefault();
-  NS_IMETHOD    InitEvent(const nsString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg);
+  NS_IMETHOD    InitEvent(const nsAReadableString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg);
 
   // nsIDOMUIEvent Interface
   NS_IMETHOD    GetView(nsIDOMAbstractView** aView);
   NS_IMETHOD    GetDetail(PRInt32* aDetail);
-  NS_IMETHOD    InitUIEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg);
+  NS_IMETHOD    InitUIEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg);
 
   // nsIDOMMouseEvent Interface and nsIDOMKeyEvent Interface
   NS_IMETHOD    GetScreenX(PRInt32* aScreenX);
@@ -127,8 +127,8 @@ public:
   NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget);
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode);
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);
-  NS_IMETHOD    InitMouseEvent(const nsString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg);
-  NS_IMETHOD    InitKeyEvent(const nsString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg);
+  NS_IMETHOD    InitMouseEvent(const nsAReadableString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg);
+  NS_IMETHOD    InitKeyEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg, nsIDOMAbstractView* aViewArg);
     
   // nsIDOMNSUIEvent interface
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX);
@@ -166,7 +166,7 @@ protected:
 
   //Internal helper funcs
   nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T, float* aT2P);
-  nsresult SetEventType(const nsString& aEventTypeArg);
+  nsresult SetEventType(const nsAReadableString& aEventTypeArg);
 
   nsEvent* mEvent;
   PRBool mEventIsInternal;

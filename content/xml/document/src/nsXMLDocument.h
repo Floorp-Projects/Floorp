@@ -48,7 +48,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  NS_IMETHOD GetContentType(nsString& aContentType) const;
+  NS_IMETHOD GetContentType(nsAWritableString& aContentType) const;
 
   NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                nsIChannel* aChannel,
@@ -64,26 +64,26 @@ public:
 
   // nsIDOMDocument interface
   NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDocumentType);
-  NS_IMETHOD    CreateCDATASection(const nsString& aData, nsIDOMCDATASection** aReturn);
-  NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
-  NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn);
-  NS_IMETHOD    CreateElement(const nsString& aTagName, 
+  NS_IMETHOD    CreateCDATASection(const nsAReadableString& aData, nsIDOMCDATASection** aReturn);
+  NS_IMETHOD    CreateEntityReference(const nsAReadableString& aName, nsIDOMEntityReference** aReturn);
+  NS_IMETHOD    CreateProcessingInstruction(const nsAReadableString& aTarget, const nsAReadableString& aData, nsIDOMProcessingInstruction** aReturn);
+  NS_IMETHOD    CreateElement(const nsAReadableString& aTagName, 
                               nsIDOMElement** aReturn);
-  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, 
-                                           const nsString& aNameSpace, 
+  NS_IMETHOD    CreateElementWithNameSpace(const nsAReadableString& aTagName, 
+                                           const nsAReadableString& aNameSpace, 
                                            nsIDOMElement** aReturn);
   NS_IMETHOD    ImportNode(nsIDOMNode* aImportedNode,
                            PRBool aDeep,
                            nsIDOMNode** aReturn);
-  NS_IMETHOD    CreateElementNS(const nsString& aNamespaceURI,
-                               const nsString& aQualifiedName,
+  NS_IMETHOD    CreateElementNS(const nsAReadableString& aNamespaceURI,
+                               const nsAReadableString& aQualifiedName,
                                nsIDOMElement** aReturn);
-  NS_IMETHOD    CreateAttributeNS(const nsString& aNamespaceURI,
-                                  const nsString& aQualifiedName,
+  NS_IMETHOD    CreateAttributeNS(const nsAReadableString& aNamespaceURI,
+                                  const nsAReadableString& aQualifiedName,
                                   nsIDOMAttr** aReturn);
-  NS_IMETHOD    GetElementById(const nsString& aElementId,
+  NS_IMETHOD    GetElementById(const nsAReadableString& aElementId,
                                nsIDOMElement** aReturn);
-  NS_IMETHOD    Load(const nsString& aUrl);
+  NS_IMETHOD    Load(const nsAReadableString& aUrl);
 
   // nsIXMLDocument interface
 #ifdef MOZ_XSL

@@ -750,13 +750,14 @@ nsresult nsHTMLButtonControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 
 
 NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsIPresContext* aPresContext,
-                                                    nsIAtom* aName, const nsString& aValue)
+                                                    nsIAtom* aName, const nsAReadableString& aValue)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
+  aValue.Truncate();
   return NS_OK;
 }
 

@@ -67,13 +67,13 @@ public:
   * Sets events listeners of all types.
   * @param an event listener
   */
-  virtual nsresult AddEventListenerByType(nsIDOMEventListener *aListener, const nsString& type, PRInt32 flags) = 0;
+  virtual nsresult AddEventListenerByType(nsIDOMEventListener *aListener, const nsAReadableString& type, PRInt32 flags) = 0;
 
   /**
   * Removes events listeners of all types.
   * @param an event listener
   */
-  virtual nsresult RemoveEventListenerByType(nsIDOMEventListener *aListener, const nsString& type, PRInt32 flags) = 0;
+  virtual nsresult RemoveEventListenerByType(nsIDOMEventListener *aListener, const nsAReadableString& type, PRInt32 flags) = 0;
 
   /**
   * Creates a script event listener for the given script object with name mName and function
@@ -83,7 +83,7 @@ public:
   virtual nsresult AddScriptEventListener(nsIScriptContext*aContext,
                                           nsIScriptObjectOwner *aScriptObjectOwner,
                                           nsIAtom *aName,
-                                          const nsString& aFunc,
+                                          const nsAReadableString& aFunc,
                                           REFNSIID aIID,
                                           PRBool aDeferCompilation) = 0;
 
@@ -116,7 +116,7 @@ public:
   */
   virtual nsresult CreateEvent(nsIPresContext* aPresContext,
                                nsEvent* aEvent,
-                               const nsString& aEventType,
+                               const nsAReadableString& aEventType,
                                nsIDOMEvent** aDOMEvent) = 0;
 
   /**

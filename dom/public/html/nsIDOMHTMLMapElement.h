@@ -41,22 +41,22 @@ public:
 
   NS_IMETHOD    GetAreas(nsIDOMHTMLCollection** aAreas)=0;
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
+  NS_IMETHOD    SetName(const nsAReadableString& aName)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLMAPELEMENT   \
   NS_IMETHOD    GetAreas(nsIDOMHTMLCollection** aAreas);  \
-  NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
+  NS_IMETHOD    SetName(const nsAReadableString& aName);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLMAPELEMENT(_to)  \
   NS_IMETHOD    GetAreas(nsIDOMHTMLCollection** aAreas) { return _to GetAreas(aAreas); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsAReadableString& aName) { return _to SetName(aName); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLMapElementClass(nsIScriptContext *aContext, void **aPrototype);

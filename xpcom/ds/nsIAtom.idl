@@ -25,12 +25,10 @@
 
 interface nsISizeOfHandler;
 
-
-[ref] native nsStringRef(nsString);
-%{ C++
-class nsString;
+%{C++
+#include "nsAWritableString.h"
 %}
-
+[ref] native nsStringRef(nsAWritableString);
 
 [scriptable, uuid(3d1b15b0-93b4-11d1-895b-006008911b81)]
 interface nsIAtom : nsISupports
@@ -69,7 +67,7 @@ extern NS_COM nsIAtom* NS_NewAtom(const PRUnichar* unicode);
 /**
  * Find an atom that matches the given string.
  */
-extern NS_COM nsIAtom* NS_NewAtom(const nsString& aString);
+extern NS_COM nsIAtom* NS_NewAtom(const nsAReadableString& aString);
 
 /**
  * Return a count of the total number of atoms currently

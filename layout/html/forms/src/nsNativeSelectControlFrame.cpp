@@ -144,8 +144,8 @@ public:
   virtual void ControlChanged(nsIPresContext* aPresContext);
 
   // nsIFormControLFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                                      nsIContent*     aChild,
@@ -1419,7 +1419,7 @@ NS_IMETHODIMP nsNativeSelectControlFrame::RemoveOption(nsIPresContext* aPresCont
     return NS_OK;
 }
 
-NS_IMETHODIMP nsNativeSelectControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP nsNativeSelectControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
   // Get the selected value of option from local cache (optimization vs. widget)
   if (nsHTMLAtoms::selected == aName) {

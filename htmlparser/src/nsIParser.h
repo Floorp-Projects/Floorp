@@ -224,12 +224,12 @@ class nsIParser : public nsISupports {
     
     virtual nsresult  Parse(nsIURI* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     virtual nsresult	Parse(nsIInputStream& aStream, const nsString& aMimeType,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
-    virtual nsresult  Parse(const nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall,nsDTDMode aMode=eDTDMode_autodetect) = 0;
+    virtual nsresult  Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     
     virtual nsresult  Terminate(void) = 0;
 
-    virtual PRBool    IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,nsDTDMode aMode=eDTDMode_autodetect)=0;
-    virtual nsresult  ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,nsDTDMode aMode=eDTDMode_autodetect)=0;
+    virtual PRBool    IsValidFragment(const nsAReadableString& aSourceBuffer,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,nsDTDMode aMode=eDTDMode_autodetect)=0;
+    virtual nsresult  ParseFragment(const nsAReadableString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,nsDTDMode aMode=eDTDMode_autodetect)=0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time

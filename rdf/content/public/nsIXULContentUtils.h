@@ -71,22 +71,22 @@ public:
     GetElementRefResource(nsIContent* aElement, nsIRDFResource** aResult) = 0;
 
     NS_IMETHOD
-    GetTextForNode(nsIRDFNode* aNode, nsString& aResult) = 0;
+    GetTextForNode(nsIRDFNode* aNode, nsAWritableString& aResult) = 0;
 
     NS_IMETHOD
-    GetElementLogString(nsIContent* aElement, nsString& aResult) = 0;
+    GetElementLogString(nsIContent* aElement, nsAWritableString& aResult) = 0;
 
     NS_IMETHOD
-    GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsString& aResult) = 0;
+    GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpaceID, nsIAtom* aTag, nsAWritableString& aResult) = 0;
 
     NS_IMETHOD
-    MakeElementURI(nsIDocument* aDocument, const nsString& aElementID, nsCString& aURI) = 0;
+    MakeElementURI(nsIDocument* aDocument, const nsAReadableString& aElementID, nsCString& aURI) = 0;
 
     NS_IMETHOD
-    MakeElementResource(nsIDocument* aDocument, const nsString& aElementID, nsIRDFResource** aResult) = 0;
+    MakeElementResource(nsIDocument* aDocument, const nsAReadableString& aElementID, nsIRDFResource** aResult) = 0;
 
     NS_IMETHOD
-    MakeElementID(nsIDocument* aDocument, const nsString& aURI, nsString& aElementID) = 0;
+    MakeElementID(nsIDocument* aDocument, const nsAReadableString& aURI, nsAWritableString& aElementID) = 0;
 
     NS_IMETHOD_(PRBool)
     IsContainedBy(nsIContent* aElement, nsIContent* aContainer) = 0;
@@ -95,7 +95,7 @@ public:
     GetResource(PRInt32 aNameSpaceID, nsIAtom* aAttribute, nsIRDFResource** aResult) = 0;
 
     NS_IMETHOD
-    GetResource(PRInt32 aNameSpaceID, const nsString& aAttribute, nsIRDFResource** aResult) = 0;
+    GetResource(PRInt32 aNameSpaceID, const nsAReadableString& aAttribute, nsIRDFResource** aResult) = 0;
 
     NS_IMETHOD
     SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement) = 0;

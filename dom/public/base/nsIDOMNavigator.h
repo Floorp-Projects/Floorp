@@ -40,33 +40,33 @@ class nsIDOMNavigator : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNAVIGATOR_IID; return iid; }
 
-  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName)=0;
+  NS_IMETHOD    GetAppCodeName(nsAWritableString& aAppCodeName)=0;
 
-  NS_IMETHOD    GetAppName(nsString& aAppName)=0;
+  NS_IMETHOD    GetAppName(nsAWritableString& aAppName)=0;
 
-  NS_IMETHOD    GetAppVersion(nsString& aAppVersion)=0;
+  NS_IMETHOD    GetAppVersion(nsAWritableString& aAppVersion)=0;
 
-  NS_IMETHOD    GetLanguage(nsString& aLanguage)=0;
+  NS_IMETHOD    GetLanguage(nsAWritableString& aLanguage)=0;
 
   NS_IMETHOD    GetMimeTypes(nsIDOMMimeTypeArray** aMimeTypes)=0;
 
-  NS_IMETHOD    GetPlatform(nsString& aPlatform)=0;
+  NS_IMETHOD    GetPlatform(nsAWritableString& aPlatform)=0;
 
-  NS_IMETHOD    GetOscpu(nsString& aOscpu)=0;
+  NS_IMETHOD    GetOscpu(nsAWritableString& aOscpu)=0;
 
-  NS_IMETHOD    GetVendor(nsString& aVendor)=0;
+  NS_IMETHOD    GetVendor(nsAWritableString& aVendor)=0;
 
-  NS_IMETHOD    GetVendorSub(nsString& aVendorSub)=0;
+  NS_IMETHOD    GetVendorSub(nsAWritableString& aVendorSub)=0;
 
-  NS_IMETHOD    GetProduct(nsString& aProduct)=0;
+  NS_IMETHOD    GetProduct(nsAWritableString& aProduct)=0;
 
-  NS_IMETHOD    GetProductSub(nsString& aProductSub)=0;
+  NS_IMETHOD    GetProductSub(nsAWritableString& aProductSub)=0;
 
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins)=0;
 
-  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy)=0;
+  NS_IMETHOD    GetSecurityPolicy(nsAWritableString& aSecurityPolicy)=0;
 
-  NS_IMETHOD    GetUserAgent(nsString& aUserAgent)=0;
+  NS_IMETHOD    GetUserAgent(nsAWritableString& aUserAgent)=0;
 
   NS_IMETHOD    GetCookieEnabled(PRBool* aCookieEnabled)=0;
 
@@ -79,20 +79,20 @@ public:
 
 
 #define NS_DECL_IDOMNAVIGATOR   \
-  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName);  \
-  NS_IMETHOD    GetAppName(nsString& aAppName);  \
-  NS_IMETHOD    GetAppVersion(nsString& aAppVersion);  \
-  NS_IMETHOD    GetLanguage(nsString& aLanguage);  \
+  NS_IMETHOD    GetAppCodeName(nsAWritableString& aAppCodeName);  \
+  NS_IMETHOD    GetAppName(nsAWritableString& aAppName);  \
+  NS_IMETHOD    GetAppVersion(nsAWritableString& aAppVersion);  \
+  NS_IMETHOD    GetLanguage(nsAWritableString& aLanguage);  \
   NS_IMETHOD    GetMimeTypes(nsIDOMMimeTypeArray** aMimeTypes);  \
-  NS_IMETHOD    GetPlatform(nsString& aPlatform);  \
-  NS_IMETHOD    GetOscpu(nsString& aOscpu);  \
-  NS_IMETHOD    GetVendor(nsString& aVendor);  \
-  NS_IMETHOD    GetVendorSub(nsString& aVendorSub);  \
-  NS_IMETHOD    GetProduct(nsString& aProduct);  \
-  NS_IMETHOD    GetProductSub(nsString& aProductSub);  \
+  NS_IMETHOD    GetPlatform(nsAWritableString& aPlatform);  \
+  NS_IMETHOD    GetOscpu(nsAWritableString& aOscpu);  \
+  NS_IMETHOD    GetVendor(nsAWritableString& aVendor);  \
+  NS_IMETHOD    GetVendorSub(nsAWritableString& aVendorSub);  \
+  NS_IMETHOD    GetProduct(nsAWritableString& aProduct);  \
+  NS_IMETHOD    GetProductSub(nsAWritableString& aProductSub);  \
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);  \
-  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy);  \
-  NS_IMETHOD    GetUserAgent(nsString& aUserAgent);  \
+  NS_IMETHOD    GetSecurityPolicy(nsAWritableString& aSecurityPolicy);  \
+  NS_IMETHOD    GetUserAgent(nsAWritableString& aUserAgent);  \
   NS_IMETHOD    GetCookieEnabled(PRBool* aCookieEnabled);  \
   NS_IMETHOD    JavaEnabled(PRBool* aReturn);  \
   NS_IMETHOD    TaintEnabled(PRBool* aReturn);  \
@@ -101,20 +101,20 @@ public:
 
 
 #define NS_FORWARD_IDOMNAVIGATOR(_to)  \
-  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName) { return _to GetAppCodeName(aAppCodeName); } \
-  NS_IMETHOD    GetAppName(nsString& aAppName) { return _to GetAppName(aAppName); } \
-  NS_IMETHOD    GetAppVersion(nsString& aAppVersion) { return _to GetAppVersion(aAppVersion); } \
-  NS_IMETHOD    GetLanguage(nsString& aLanguage) { return _to GetLanguage(aLanguage); } \
+  NS_IMETHOD    GetAppCodeName(nsAWritableString& aAppCodeName) { return _to GetAppCodeName(aAppCodeName); } \
+  NS_IMETHOD    GetAppName(nsAWritableString& aAppName) { return _to GetAppName(aAppName); } \
+  NS_IMETHOD    GetAppVersion(nsAWritableString& aAppVersion) { return _to GetAppVersion(aAppVersion); } \
+  NS_IMETHOD    GetLanguage(nsAWritableString& aLanguage) { return _to GetLanguage(aLanguage); } \
   NS_IMETHOD    GetMimeTypes(nsIDOMMimeTypeArray** aMimeTypes) { return _to GetMimeTypes(aMimeTypes); } \
-  NS_IMETHOD    GetPlatform(nsString& aPlatform) { return _to GetPlatform(aPlatform); } \
-  NS_IMETHOD    GetOscpu(nsString& aOscpu) { return _to GetOscpu(aOscpu); } \
-  NS_IMETHOD    GetVendor(nsString& aVendor) { return _to GetVendor(aVendor); } \
-  NS_IMETHOD    GetVendorSub(nsString& aVendorSub) { return _to GetVendorSub(aVendorSub); } \
-  NS_IMETHOD    GetProduct(nsString& aProduct) { return _to GetProduct(aProduct); } \
-  NS_IMETHOD    GetProductSub(nsString& aProductSub) { return _to GetProductSub(aProductSub); } \
+  NS_IMETHOD    GetPlatform(nsAWritableString& aPlatform) { return _to GetPlatform(aPlatform); } \
+  NS_IMETHOD    GetOscpu(nsAWritableString& aOscpu) { return _to GetOscpu(aOscpu); } \
+  NS_IMETHOD    GetVendor(nsAWritableString& aVendor) { return _to GetVendor(aVendor); } \
+  NS_IMETHOD    GetVendorSub(nsAWritableString& aVendorSub) { return _to GetVendorSub(aVendorSub); } \
+  NS_IMETHOD    GetProduct(nsAWritableString& aProduct) { return _to GetProduct(aProduct); } \
+  NS_IMETHOD    GetProductSub(nsAWritableString& aProductSub) { return _to GetProductSub(aProductSub); } \
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins) { return _to GetPlugins(aPlugins); } \
-  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy) { return _to GetSecurityPolicy(aSecurityPolicy); } \
-  NS_IMETHOD    GetUserAgent(nsString& aUserAgent) { return _to GetUserAgent(aUserAgent); } \
+  NS_IMETHOD    GetSecurityPolicy(nsAWritableString& aSecurityPolicy) { return _to GetSecurityPolicy(aSecurityPolicy); } \
+  NS_IMETHOD    GetUserAgent(nsAWritableString& aUserAgent) { return _to GetUserAgent(aUserAgent); } \
   NS_IMETHOD    GetCookieEnabled(PRBool* aCookieEnabled) { return _to GetCookieEnabled(aCookieEnabled); } \
   NS_IMETHOD    JavaEnabled(PRBool* aReturn) { return _to JavaEnabled(aReturn); }  \
   NS_IMETHOD    TaintEnabled(PRBool* aReturn) { return _to TaintEnabled(aReturn); }  \

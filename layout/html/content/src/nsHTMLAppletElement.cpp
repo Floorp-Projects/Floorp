@@ -72,28 +72,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLAppletElement
-  NS_IMETHOD GetAlign(nsString& aAlign);
-  NS_IMETHOD SetAlign(const nsString& aAlign);
-  NS_IMETHOD GetAlt(nsString& aAlt);
-  NS_IMETHOD SetAlt(const nsString& aAlt);
-  NS_IMETHOD GetArchive(nsString& aArchive);
-  NS_IMETHOD SetArchive(const nsString& aArchive);
-  NS_IMETHOD GetCode(nsString& aCode);
-  NS_IMETHOD SetCode(const nsString& aCode);
-  NS_IMETHOD GetCodeBase(nsString& aCodeBase);
-  NS_IMETHOD SetCodeBase(const nsString& aCodeBase);
-  NS_IMETHOD GetHeight(nsString& aHeight);
-  NS_IMETHOD SetHeight(const nsString& aHeight);
-  NS_IMETHOD GetHspace(nsString& aHspace);
-  NS_IMETHOD SetHspace(const nsString& aHspace);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetObject(nsString& aObject);
-  NS_IMETHOD SetObject(const nsString& aObject);
-  NS_IMETHOD GetVspace(nsString& aVspace);
-  NS_IMETHOD SetVspace(const nsString& aVspace);
-  NS_IMETHOD GetWidth(nsString& aWidth);
-  NS_IMETHOD SetWidth(const nsString& aWidth);
+  NS_DECL_IDOMHTMLAPPLETELEMENT
 
   // nsIJSScriptObject
   virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj,
@@ -209,7 +188,7 @@ NS_IMPL_STRING_ATTR(nsHTMLAppletElement, Width, width)
 
 NS_IMETHODIMP
 nsHTMLAppletElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsString& aValue,
+                                       const nsAReadableString& aValue,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
@@ -227,7 +206,7 @@ nsHTMLAppletElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLAppletElement::AttributeToString(nsIAtom* aAttribute,
                                        const nsHTMLValue& aValue,
-                                       nsString& aResult) const
+                                       nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {

@@ -74,8 +74,8 @@ public:
                                                   jsval* aReturn);
 
   static NS_EXPORT void nsConvertStringToJSVal(const nsString& aProp,
-                                     JSContext* aContext,
-                                     jsval* aReturn);
+                                               JSContext* aContext,
+                                               jsval* aReturn);
 
   static NS_EXPORT PRBool nsConvertJSValToObject(nsISupports** aSupports,
                                        REFNSIID aIID,
@@ -88,9 +88,9 @@ public:
                                                     JSContext* aContext,
                                                     jsval aValue);
 
-  static NS_EXPORT void nsConvertJSValToString(nsString& aString,
-                                     JSContext* aContext,
-                                     jsval aValue);
+  static NS_EXPORT void nsConvertJSValToString(nsAWritableString& aString,
+                                               JSContext* aContext,
+                                               jsval aValue);
 
   static NS_EXPORT PRBool nsConvertJSValToBool(PRBool* aProp,
                                      JSContext* aContext,

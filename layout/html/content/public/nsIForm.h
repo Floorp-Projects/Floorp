@@ -60,7 +60,7 @@ public:
     * attributes.  The name or id attributes of the form control
     * are used as a key into the table.
     */
-  NS_IMETHOD AddElementToTable(nsIFormControl* aElement, const nsString& aName) = 0;
+  NS_IMETHOD AddElementToTable(nsIFormControl* aElement, const nsAReadableString& aName) = 0;
 
   /**
     * Get the element at a specified index position
@@ -95,7 +95,7 @@ public:
     * @param aName the name or id of the element to remove
     * @return NS_OK if the element was successfully removed.
     */
-  NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement, const nsString& aName) = 0;
+  NS_IMETHOD RemoveElementFromTable(nsIFormControl* aElement, const nsAReadableString& aName) = 0;
 
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
 };

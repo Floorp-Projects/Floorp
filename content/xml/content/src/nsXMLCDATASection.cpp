@@ -142,9 +142,9 @@ nsXMLCDATASection::GetNodeInfo(nsINodeInfo*& aResult) const
 }
 
 NS_IMETHODIMP
-nsXMLCDATASection::GetNodeName(nsString& aNodeName)
+nsXMLCDATASection::GetNodeName(nsAWritableString& aNodeName)
 {
-  aNodeName.AssignWithConversion("#cdata-section");
+  aNodeName.Assign(NS_LITERAL_STRING("#cdata-section"));
   return NS_OK;
 }
 

@@ -823,7 +823,7 @@ public:
                              nsIHTMLContent* aContent,
                              nsIHTMLStyleSheet* aSheet,
                              PRInt32& aAttrCount);
-  NS_IMETHOD SetAttributeFor(nsIAtom* aAttrName, const nsString& aValue,
+  NS_IMETHOD SetAttributeFor(nsIAtom* aAttrName, const nsAReadableString& aValue,
                              PRBool aMappedToStyle,
                              nsIHTMLContent* aContent,
                              nsIHTMLStyleSheet* aSheet);
@@ -987,7 +987,7 @@ NS_IMPL_QUERY_INTERFACE(HTMLAttributesImpl, kIHTMLAttributesIID);
 
 const PRUnichar kNullCh = PRUnichar('\0');
 
-static void ParseClasses(const nsString& aClassString, nsClassList& aClassList)
+static void ParseClasses(const nsAReadableString& aClassString, nsClassList& aClassList)
 {
   nsAutoString  classStr(aClassString);  // copy to work buffer
   classStr.Append(kNullCh);  // put an extra null at the end
@@ -1154,7 +1154,7 @@ HTMLAttributesImpl::UniqueMapped(nsIHTMLStyleSheet* aSheet)
 }
 
 NS_IMETHODIMP
-HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName, const nsString& aValue,
+HTMLAttributesImpl::SetAttributeFor(nsIAtom* aAttrName, const nsAReadableString& aValue,
                                     PRBool aMappedToStyle, nsIHTMLContent* aContent,
                                     nsIHTMLStyleSheet* aSheet)
 {

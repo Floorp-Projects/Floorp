@@ -26,6 +26,7 @@
 #include "nsDOMError.h"
 #include "prprf.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -169,10 +170,10 @@ nsDOMException::GetResult(PRUint32* aResult)
 }
 
 NS_IMETHODIMP    
-nsDOMException::GetMessage(nsString& aMessage)
+nsDOMException::GetMessage(nsAWritableString& aMessage)
 {
   if (mMessage) {
-    aMessage.AssignWithConversion(mMessage);
+    CopyASCIItoUCS2(nsLiteralCString(mMessage), aMessage);
   }
   else {
     aMessage.Truncate();
@@ -182,10 +183,10 @@ nsDOMException::GetMessage(nsString& aMessage)
 }
 
 NS_IMETHODIMP    
-nsDOMException::GetName(nsString& aName)
+nsDOMException::GetName(nsAWritableString& aName)
 {
   if (mName) {
-    aName.AssignWithConversion(mName);
+    CopyASCIItoUCS2(nsLiteralCString(mName), aName);
   }
   else {
     aName.Truncate();
@@ -195,7 +196,7 @@ nsDOMException::GetName(nsString& aName)
 }
 
 NS_IMETHODIMP    
-nsDOMException::ToString(nsString& aReturn)
+nsDOMException::ToString(nsAWritableString& aReturn)
 {
   static const char defaultMsg[] = "<no message>";
   static const char defaultLocation[] = "<unknown>";
@@ -211,7 +212,7 @@ nsDOMException::ToString(nsString& aReturn)
   GetCode(&code);
   char* temp = PR_smprintf(format, msg, code, mResult, resultName, location);
   if (temp) {
-    aReturn.AssignWithConversion(temp);
+    CopyASCIItoUCS2(nsLiteralCString(temp), aReturn);
     PR_smprintf_free(temp);
   }
 

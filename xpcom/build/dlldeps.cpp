@@ -62,6 +62,7 @@
 #include "nsIBinaryInputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIByteArrayInputStream.h"
+#include "nsReadableUtils.h"
 #include "nsStaticNameTable.h"
 #ifdef DEBUG
 #include "pure.h"
@@ -143,4 +144,10 @@ void XXXNeverCalled()
     NS_NewLocalFile(NULL, PR_FALSE, NULL);
     NS_NewByteArrayInputStream (NULL, NULL, 0);
     nsStaticCaseInsensitiveNameTable();
+    nsAutoString str1;
+    nsCAutoString str2;
+    ToNewUnicode(str1);
+    ToNewUnicode(str2);
+    ToNewCString(str1);
+    ToNewCString(str2);
 }

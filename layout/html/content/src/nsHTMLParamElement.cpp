@@ -54,14 +54,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLParamElement
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD SetType(const nsString& aType);
-  NS_IMETHOD GetValue(nsString& aValue);
-  NS_IMETHOD SetValue(const nsString& aValue);
-  NS_IMETHOD GetValueType(nsString& aValueType);
-  NS_IMETHOD SetValueType(const nsString& aValueType);
+  NS_DECL_IDOMHTMLPARAMELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -137,7 +130,7 @@ NS_IMPL_STRING_ATTR(nsHTMLParamElement, ValueType, valuetype)
 
 NS_IMETHODIMP
 nsHTMLParamElement::StringToAttribute(nsIAtom* aAttribute,
-                               const nsString& aValue,
+                               const nsAReadableString& aValue,
                                nsHTMLValue& aResult)
 {
   // XXX write me
@@ -147,7 +140,7 @@ nsHTMLParamElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLParamElement::AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsString& aResult) const
+                               nsAWritableString& aResult) const
 {
   // XXX write me
   return mInner.AttributeToString(aAttribute, aValue, aResult);

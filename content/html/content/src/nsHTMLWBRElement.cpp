@@ -126,7 +126,7 @@ nsHTMLWBRElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
 NS_IMETHODIMP
 nsHTMLWBRElement::StringToAttribute(nsIAtom* aAttribute,
-                                    const nsString& aValue,
+                                    const nsAReadableString& aValue,
                                     nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -135,7 +135,7 @@ nsHTMLWBRElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLWBRElement::AttributeToString(nsIAtom* aAttribute,
                                     const nsHTMLValue& aValue,
-                                    nsString& aResult) const
+                                    nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

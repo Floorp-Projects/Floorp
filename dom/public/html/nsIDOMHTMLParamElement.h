@@ -38,41 +38,41 @@ class nsIDOMHTMLParamElement : public nsIDOMHTMLElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMHTMLPARAMELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
+  NS_IMETHOD    SetName(const nsAReadableString& aName)=0;
 
-  NS_IMETHOD    GetType(nsString& aType)=0;
-  NS_IMETHOD    SetType(const nsString& aType)=0;
+  NS_IMETHOD    GetType(nsAWritableString& aType)=0;
+  NS_IMETHOD    SetType(const nsAReadableString& aType)=0;
 
-  NS_IMETHOD    GetValue(nsString& aValue)=0;
-  NS_IMETHOD    SetValue(const nsString& aValue)=0;
+  NS_IMETHOD    GetValue(nsAWritableString& aValue)=0;
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue)=0;
 
-  NS_IMETHOD    GetValueType(nsString& aValueType)=0;
-  NS_IMETHOD    SetValueType(const nsString& aValueType)=0;
+  NS_IMETHOD    GetValueType(nsAWritableString& aValueType)=0;
+  NS_IMETHOD    SetValueType(const nsAReadableString& aValueType)=0;
 };
 
 
 #define NS_DECL_IDOMHTMLPARAMELEMENT   \
-  NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    SetName(const nsString& aName);  \
-  NS_IMETHOD    GetType(nsString& aType);  \
-  NS_IMETHOD    SetType(const nsString& aType);  \
-  NS_IMETHOD    GetValue(nsString& aValue);  \
-  NS_IMETHOD    SetValue(const nsString& aValue);  \
-  NS_IMETHOD    GetValueType(nsString& aValueType);  \
-  NS_IMETHOD    SetValueType(const nsString& aValueType);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
+  NS_IMETHOD    SetName(const nsAReadableString& aName);  \
+  NS_IMETHOD    GetType(nsAWritableString& aType);  \
+  NS_IMETHOD    SetType(const nsAReadableString& aType);  \
+  NS_IMETHOD    GetValue(nsAWritableString& aValue);  \
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue);  \
+  NS_IMETHOD    GetValueType(nsAWritableString& aValueType);  \
+  NS_IMETHOD    SetValueType(const nsAReadableString& aValueType);  \
 
 
 
 #define NS_FORWARD_IDOMHTMLPARAMELEMENT(_to)  \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
-  NS_IMETHOD    GetType(nsString& aType) { return _to GetType(aType); } \
-  NS_IMETHOD    SetType(const nsString& aType) { return _to SetType(aType); } \
-  NS_IMETHOD    GetValue(nsString& aValue) { return _to GetValue(aValue); } \
-  NS_IMETHOD    SetValue(const nsString& aValue) { return _to SetValue(aValue); } \
-  NS_IMETHOD    GetValueType(nsString& aValueType) { return _to GetValueType(aValueType); } \
-  NS_IMETHOD    SetValueType(const nsString& aValueType) { return _to SetValueType(aValueType); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsAReadableString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetType(nsAWritableString& aType) { return _to GetType(aType); } \
+  NS_IMETHOD    SetType(const nsAReadableString& aType) { return _to SetType(aType); } \
+  NS_IMETHOD    GetValue(nsAWritableString& aValue) { return _to GetValue(aValue); } \
+  NS_IMETHOD    SetValue(const nsAReadableString& aValue) { return _to SetValue(aValue); } \
+  NS_IMETHOD    GetValueType(nsAWritableString& aValueType) { return _to GetValueType(aValueType); } \
+  NS_IMETHOD    SetValueType(const nsAReadableString& aValueType) { return _to SetValueType(aValueType); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLParamElementClass(nsIScriptContext *aContext, void **aPrototype);

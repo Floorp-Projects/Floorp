@@ -37,37 +37,37 @@ class nsIDOMPlugin : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMPLUGIN_IID; return iid; }
 
-  NS_IMETHOD    GetDescription(nsString& aDescription)=0;
+  NS_IMETHOD    GetDescription(nsAWritableString& aDescription)=0;
 
-  NS_IMETHOD    GetFilename(nsString& aFilename)=0;
+  NS_IMETHOD    GetFilename(nsAWritableString& aFilename)=0;
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
 
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMMimeType** aReturn)=0;
 
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMMimeType** aReturn)=0;
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMMimeType** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMPLUGIN   \
-  NS_IMETHOD    GetDescription(nsString& aDescription);  \
-  NS_IMETHOD    GetFilename(nsString& aFilename);  \
-  NS_IMETHOD    GetName(nsString& aName);  \
+  NS_IMETHOD    GetDescription(nsAWritableString& aDescription);  \
+  NS_IMETHOD    GetFilename(nsAWritableString& aFilename);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
   NS_IMETHOD    GetLength(PRUint32* aLength);  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMMimeType** aReturn);  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMMimeType** aReturn);  \
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMMimeType** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMPLUGIN(_to)  \
-  NS_IMETHOD    GetDescription(nsString& aDescription) { return _to GetDescription(aDescription); } \
-  NS_IMETHOD    GetFilename(nsString& aFilename) { return _to GetFilename(aFilename); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    GetDescription(nsAWritableString& aDescription) { return _to GetDescription(aDescription); } \
+  NS_IMETHOD    GetFilename(nsAWritableString& aFilename) { return _to GetFilename(aFilename); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
   NS_IMETHOD    GetLength(PRUint32* aLength) { return _to GetLength(aLength); } \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMMimeType** aReturn) { return _to Item(aIndex, aReturn); }  \
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMMimeType** aReturn) { return _to NamedItem(aName, aReturn); }  \
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMMimeType** aReturn) { return _to NamedItem(aName, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitPluginClass(nsIScriptContext *aContext, void **aPrototype);

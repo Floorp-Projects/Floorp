@@ -37,8 +37,8 @@ class nsIDOMImage : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMIMAGE_IID; return iid; }
 
-  NS_IMETHOD    GetLowsrc(nsString& aLowsrc)=0;
-  NS_IMETHOD    SetLowsrc(const nsString& aLowsrc)=0;
+  NS_IMETHOD    GetLowsrc(nsAWritableString& aLowsrc)=0;
+  NS_IMETHOD    SetLowsrc(const nsAReadableString& aLowsrc)=0;
 
   NS_IMETHOD    GetComplete(PRBool* aComplete)=0;
 
@@ -60,8 +60,8 @@ public:
 
 
 #define NS_DECL_IDOMIMAGE   \
-  NS_IMETHOD    GetLowsrc(nsString& aLowsrc);  \
-  NS_IMETHOD    SetLowsrc(const nsString& aLowsrc);  \
+  NS_IMETHOD    GetLowsrc(nsAWritableString& aLowsrc);  \
+  NS_IMETHOD    SetLowsrc(const nsAReadableString& aLowsrc);  \
   NS_IMETHOD    GetComplete(PRBool* aComplete);  \
   NS_IMETHOD    GetBorder(PRInt32* aBorder);  \
   NS_IMETHOD    SetBorder(PRInt32 aBorder);  \
@@ -77,8 +77,8 @@ public:
 
 
 #define NS_FORWARD_IDOMIMAGE(_to)  \
-  NS_IMETHOD    GetLowsrc(nsString& aLowsrc) { return _to GetLowsrc(aLowsrc); } \
-  NS_IMETHOD    SetLowsrc(const nsString& aLowsrc) { return _to SetLowsrc(aLowsrc); } \
+  NS_IMETHOD    GetLowsrc(nsAWritableString& aLowsrc) { return _to GetLowsrc(aLowsrc); } \
+  NS_IMETHOD    SetLowsrc(const nsAReadableString& aLowsrc) { return _to SetLowsrc(aLowsrc); } \
   NS_IMETHOD    GetComplete(PRBool* aComplete) { return _to GetComplete(aComplete); } \
   NS_IMETHOD    GetBorder(PRInt32* aBorder) { return _to GetBorder(aBorder); } \
   NS_IMETHOD    SetBorder(PRInt32 aBorder) { return _to SetBorder(aBorder); } \

@@ -32,7 +32,7 @@
 #include "nsTextContentChangeData.h"
 #include "nsIDOMSelection.h"
 #include "nsIEnumerator.h"
-
+#include "nsReadableUtils.h"
 
 #include "nsCRT.h"
 #include "nsIEventStateManager.h"
@@ -79,14 +79,14 @@ nsGenericDOMDataNode::~nsGenericDOMDataNode()
 }
 
 nsresult
-nsGenericDOMDataNode::GetNodeValue(nsString& aNodeValue)
+nsGenericDOMDataNode::GetNodeValue(nsAWritableString& aNodeValue)
 {
   return GetData(aNodeValue);
 }
 
 nsresult
 nsGenericDOMDataNode::SetNodeValue(nsIContent *aOuterContent,
-                                   const nsString& aNodeValue)
+                                   const nsAReadableString& aNodeValue)
 {
   return SetData(aOuterContent, aNodeValue);
 }
@@ -215,21 +215,21 @@ nsGenericDOMDataNode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 nsresult
-nsGenericDOMDataNode::GetNamespaceURI(nsString& aNamespaceURI)
+nsGenericDOMDataNode::GetNamespaceURI(nsAWritableString& aNamespaceURI)
 {
   aNamespaceURI.Truncate();
   return NS_OK;
 }
 
 nsresult
-nsGenericDOMDataNode::GetPrefix(nsString& aPrefix)
+nsGenericDOMDataNode::GetPrefix(nsAWritableString& aPrefix)
 {
   aPrefix.Truncate();
   return NS_OK;
 }
 
 nsresult
-nsGenericDOMDataNode::SetPrefix(const nsString& aPrefix)
+nsGenericDOMDataNode::SetPrefix(const nsAReadableString& aPrefix)
 {
   return NS_ERROR_DOM_NAMESPACE_ERR;
 }
@@ -241,8 +241,8 @@ nsGenericDOMDataNode::Normalize()
 }
 
 nsresult
-nsGenericDOMDataNode::Supports(const nsString& aFeature,
-                               const nsString& aVersion,
+nsGenericDOMDataNode::Supports(const nsAReadableString& aFeature,
+                               const nsAReadableString& aVersion,
                                PRBool* aReturn)
 {
   return nsGenericElement::InternalSupports(aFeature, aVersion, aReturn);
@@ -268,19 +268,19 @@ nsGenericDOMDataNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
 // Implementation of nsIDOMCharacterData
 
 nsresult    
-nsGenericDOMDataNode::GetData(nsString& aData)
+nsGenericDOMDataNode::GetData(nsAWritableString& aData)
 {
   if (mText.Is2b()) {
     aData.Assign(mText.Get2b(), mText.GetLength());
   }
   else {
-    aData.AssignWithConversion(mText.Get1b(), mText.GetLength());
+    aData.Assign(NS_ConvertASCIItoUCS2(mText.Get1b(), mText.GetLength()));
   }
   return NS_OK;
 }
 
 nsresult    
-nsGenericDOMDataNode::SetData(nsIContent *aOuterContent, const nsString& aData)
+nsGenericDOMDataNode::SetData(nsIContent *aOuterContent, const nsAReadableString& aData)
 {
   // inform any enclosed ranges of change
   // we can lie and say we are deleting all the text, since in a total
@@ -294,13 +294,10 @@ nsGenericDOMDataNode::SetData(nsIContent *aOuterContent, const nsString& aData)
 
   // If possible, let the container content object have a go at it.
   if (NS_SUCCEEDED(result)) {
-    result = textContent->SetText(aData.GetUnicode(), 
-                                  aData.Length(), 
-                                  PR_TRUE); 
+    result = textContent->SetText(aData, PR_TRUE); 
   }
   else {
-    result = SetText(aOuterContent, aData.GetUnicode(), aData.Length(),
-                     PR_TRUE); 
+    result = SetText(aOuterContent, aData, PR_TRUE); 
   }
 
   return result;
@@ -316,7 +313,7 @@ nsGenericDOMDataNode::GetLength(PRUint32* aLength)
 nsresult    
 nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
                                     PRUint32 aCount,
-                                    nsString& aReturn)
+                                    nsAWritableString& aReturn)
 {
   aReturn.Truncate();
 
@@ -334,7 +331,7 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
     aReturn.Assign(mText.Get2b() + aStart, amount);
   }
   else {
-    aReturn.AssignWithConversion(mText.Get1b() + aStart, amount);
+    aReturn.Assign(NS_ConvertASCIItoUCS2(mText.Get1b() + aStart, amount), amount);
   }
 
   return NS_OK;
@@ -344,12 +341,12 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
 
 nsresult    
 nsGenericDOMDataNode::AppendData(nsIContent *aOuterContent,
-                                 const nsString& aData)
+                                 const nsAReadableString& aData)
 {
 #if 1
   // Allocate new buffer
   nsresult result = NS_OK;
-  PRInt32 dataLength = aData.Length();
+  PRUint32 dataLength = aData.Length();
   PRInt32 textLength = mText.GetLength();
   PRInt32 newSize = textLength + dataLength;
   PRUnichar* to = new PRUnichar[newSize + 1];
@@ -363,8 +360,7 @@ nsGenericDOMDataNode::AppendData(nsIContent *aOuterContent,
   if (textLength) {
     mText.CopyTo(to, 0, textLength);
   }
-  nsCRT::memcpy(to + textLength, aData.GetUnicode(),
-                sizeof(PRUnichar) * dataLength);
+  CopyUnicodeTo(aData, to + textLength, dataLength);
 
   // Null terminate the new buffer...
   to[newSize] = (PRUnichar)0;
@@ -405,7 +401,7 @@ nsGenericDOMDataNode::AppendData(nsIContent *aOuterContent,
 
 nsresult    
 nsGenericDOMDataNode::InsertData(nsIContent *aOuterContent, PRUint32 aOffset,
-                                 const nsString& aData)
+                                 const nsAReadableString& aData)
 {
   return ReplaceData(aOuterContent, aOffset, 0, aData);
 }
@@ -420,7 +416,7 @@ nsGenericDOMDataNode::DeleteData(nsIContent *aOuterContent, PRUint32 aOffset,
 
 nsresult    
 nsGenericDOMDataNode::ReplaceData(nsIContent *aOuterContent, PRUint32 aOffset,
-                                  PRUint32 aCount, const nsString& aData)
+                                  PRUint32 aCount, const nsAReadableString& aData)
 {
   nsresult result = NS_OK;
 
@@ -452,8 +448,7 @@ nsGenericDOMDataNode::ReplaceData(nsIContent *aOuterContent, PRUint32 aOffset,
     mText.CopyTo(to, 0, aOffset);
   }
   if (0 != dataLength) {
-    nsCRT::memcpy(to + aOffset, aData.GetUnicode(),
-                  sizeof(PRUnichar) * dataLength);
+    CopyUnicodeTo(aData, to+aOffset, dataLength);
   }
   if (endOffset != textLength) {
     mText.CopyTo(to + aOffset + dataLength, endOffset, textLength - endOffset);
@@ -599,7 +594,7 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
             continue;   // This range doesn't intersect the node at all
 
           // Put all of our text into the buffer, initially:
-          nsString  buffer;
+          nsAutoString  buffer;
           mText.AppendTo(buffer);
 
           // Clip to whatever is inside the range:
@@ -640,7 +635,7 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
   }
   else  
   {
-    nsString  buffer;
+    nsAutoString  buffer;
     mText.AppendTo(buffer);
     aConverter->AddContent(buffer);
   }
@@ -648,7 +643,7 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
 }
 
 void
-nsGenericDOMDataNode::ToCString(nsString& aBuf, PRInt32 aOffset,
+nsGenericDOMDataNode::ToCString(nsAWritableString& aBuf, PRInt32 aOffset,
                                 PRInt32 aLen) const
 {
   if (mText.Is2b()) {
@@ -657,15 +652,15 @@ nsGenericDOMDataNode::ToCString(nsString& aBuf, PRInt32 aOffset,
     while (cp < end) {
       PRUnichar ch = *cp++;
       if (ch == '\r') {
-        aBuf.AppendWithConversion("\\r");
+        aBuf.Append(NS_LITERAL_STRING("\\r"));
       } else if (ch == '\n') {
-        aBuf.AppendWithConversion("\\n");
+        aBuf.Append(NS_LITERAL_STRING("\\n"));
       } else if (ch == '\t') {
-        aBuf.AppendWithConversion("\\t");
+        aBuf.Append(NS_LITERAL_STRING("\\t"));
       } else if ((ch < ' ') || (ch >= 127)) {
         char buf[10];
         PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
-        aBuf.AppendWithConversion(buf);
+        aBuf.Append(NS_ConvertASCIItoUCS2(buf));
       } else {
         aBuf.Append(ch);
       }
@@ -677,15 +672,15 @@ nsGenericDOMDataNode::ToCString(nsString& aBuf, PRInt32 aOffset,
     while (cp < end) {
       PRUnichar ch = *cp++;
       if (ch == '\r') {
-        aBuf.AppendWithConversion("\\r");
+        aBuf.Append(NS_LITERAL_STRING("\\r"));
       } else if (ch == '\n') {
-        aBuf.AppendWithConversion("\\n");
+        aBuf.Append(NS_LITERAL_STRING("\\n"));
       } else if (ch == '\t') {
-        aBuf.AppendWithConversion("\\t");
+        aBuf.Append(NS_LITERAL_STRING("\\t"));
       } else if ((ch < ' ') || (ch >= 127)) {
         char buf[10];
         PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
-        aBuf.AppendWithConversion(buf);
+        aBuf.Append(NS_ConvertASCIItoUCS2(buf));
       } else {
         aBuf.Append(ch);
       }
@@ -1008,13 +1003,14 @@ nsGenericDOMDataNode::GetTextLength(PRInt32* aLengthResult)
 }
 
 nsresult
-nsGenericDOMDataNode::CopyText(nsString& aResult)
+nsGenericDOMDataNode::CopyText(nsAWritableString& aResult)
 {
   if (mText.Is2b()) {
     aResult.Assign(mText.Get2b(), mText.GetLength());
   }
   else {
-    aResult.AssignWithConversion(mText.Get1b(), mText.GetLength());
+    aResult.Assign(NS_ConvertASCIItoUCS2(mText.Get1b(), mText.GetLength()),
+                   mText.GetLength());
   }
   return NS_OK;
 }
@@ -1069,6 +1065,23 @@ nsGenericDOMDataNode::SetText(nsIContent *aOuterContent, const char* aBuffer,
   return NS_OK;
 }
 
+nsresult 
+nsGenericDOMDataNode::SetText(nsIContent *aOuterContent,
+                              const nsAReadableString& aStr,
+                              PRBool aNotify)
+{
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->BeginUpdate();
+  }
+  mText = aStr;
+
+  // Trigger a reflow
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->ContentChanged(aOuterContent, nsnull);
+    mDocument->EndUpdate();
+  }
+  return NS_OK;
+}
 
 nsresult
 nsGenericDOMDataNode::IsOnlyWhitespace(PRBool* aResult)

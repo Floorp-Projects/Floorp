@@ -40,17 +40,17 @@ class nsIDOMDocumentCSS : public nsIDOMDocumentStyle {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTCSS_IID; return iid; }
 
-  NS_IMETHOD    GetOverrideStyle(nsIDOMElement* aElt, const nsString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn)=0;
+  NS_IMETHOD    GetOverrideStyle(nsIDOMElement* aElt, const nsAReadableString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMDOCUMENTCSS   \
-  NS_IMETHOD    GetOverrideStyle(nsIDOMElement* aElt, const nsString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn);  \
+  NS_IMETHOD    GetOverrideStyle(nsIDOMElement* aElt, const nsAReadableString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMDOCUMENTCSS(_to)  \
-  NS_IMETHOD    GetOverrideStyle(nsIDOMElement* aElt, const nsString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn) { return _to GetOverrideStyle(aElt, aPseudoElt, aReturn); }  \
+  NS_IMETHOD    GetOverrideStyle(nsIDOMElement* aElt, const nsAReadableString& aPseudoElt, nsIDOMCSSStyleDeclaration** aReturn) { return _to GetOverrideStyle(aElt, aPseudoElt, aReturn); }  \
 
 
 #endif // nsIDOMDocumentCSS_h__

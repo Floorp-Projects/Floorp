@@ -66,24 +66,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLLinkElement
-  NS_IMETHOD GetDisabled(PRBool* aDisabled);
-  NS_IMETHOD SetDisabled(PRBool aDisabled);
-  NS_IMETHOD GetCharset(nsString& aCharset);
-  NS_IMETHOD SetCharset(const nsString& aCharset);
-  NS_IMETHOD GetHref(nsString& aHref);
-  NS_IMETHOD SetHref(const nsString& aHref);
-  NS_IMETHOD GetHreflang(nsString& aHreflang);
-  NS_IMETHOD SetHreflang(const nsString& aHreflang);
-  NS_IMETHOD GetMedia(nsString& aMedia);
-  NS_IMETHOD SetMedia(const nsString& aMedia);
-  NS_IMETHOD GetRel(nsString& aRel);
-  NS_IMETHOD SetRel(const nsString& aRel);
-  NS_IMETHOD GetRev(nsString& aRev);
-  NS_IMETHOD SetRev(const nsString& aRev);
-  NS_IMETHOD GetTarget(nsString& aTarget);
-  NS_IMETHOD SetTarget(const nsString& aTarget);
-  NS_IMETHOD GetType(nsString& aType);
-  NS_IMETHOD SetType(const nsString& aType);
+  NS_DECL_IDOMHTMLLINKELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -237,13 +220,13 @@ NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Target, target)
 NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
 
 NS_IMETHODIMP
-nsHTMLLinkElement::GetHref(nsString& aValue)
+nsHTMLLinkElement::GetHref(nsAWritableString& aValue)
 {
   char *buf;
   nsresult rv = GetHrefCString(buf);
   if (NS_FAILED(rv)) return rv;
   if (buf) {
-    aValue.AssignWithConversion(buf);
+    aValue.Assign(NS_ConvertASCIItoUCS2(buf));
     nsCRT::free(buf);
   }
   // NS_IMPL_STRING_ATTR does nothing where we have (buf == null)
@@ -251,7 +234,7 @@ nsHTMLLinkElement::GetHref(nsString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLLinkElement::SetHref(const nsString& aValue)
+nsHTMLLinkElement::SetHref(const nsAReadableString& aValue)
 {
   // Clobber our "cache", so we'll recompute it the next time
   // somebody asks for it.
@@ -282,7 +265,7 @@ nsHTMLLinkElement::GetStyleSheet(nsIStyleSheet*& aStyleSheet)
 
 NS_IMETHODIMP
 nsHTMLLinkElement::StringToAttribute(nsIAtom* aAttribute,
-                              const nsString& aValue,
+                              const nsAReadableString& aValue,
                               nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -291,7 +274,7 @@ nsHTMLLinkElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLLinkElement::AttributeToString(nsIAtom* aAttribute,
                               const nsHTMLValue& aValue,
-                              nsString& aResult) const
+                              nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }

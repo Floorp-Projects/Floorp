@@ -62,9 +62,9 @@ class nsIHTMLToTXTSinkStream : public nsIHTMLContentSink {
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_HTMLTOTXTSINKSTREAM_CID)
 
   NS_IMETHOD Initialize(nsIOutputStream* aOutStream, 
-                        nsString* aOutString,
+                        nsAWritableString* aOutString,
                         PRUint32 aFlags) = 0;
-  NS_IMETHOD SetCharsetOverride(const nsString* aCharset) = 0;
+  NS_IMETHOD SetCharsetOverride(const nsAReadableString* aCharset) = 0;
   NS_IMETHOD SetWrapColumn(PRUint32 aWrapCol) = 0;
 };
 
@@ -85,10 +85,10 @@ class nsHTMLToTXTSinkStream : public nsIHTMLToTXTSinkStream
   virtual ~nsHTMLToTXTSinkStream();
 
   NS_IMETHOD Initialize(nsIOutputStream* aOutStream, 
-                        nsString* aOutString,
+                        nsAWritableString* aOutString,
                         PRUint32 aFlags);
 
-  NS_IMETHOD SetCharsetOverride(const nsString* aCharset);
+  NS_IMETHOD SetCharsetOverride(const nsAReadableString* aCharset);
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -159,8 +159,11 @@ protected:
   
 
 protected:
-  nsIOutputStream* mStream;
-  nsString*        mString;
+  nsIOutputStream* mStream; 
+  // XXX This is wrong. It violates XPCOM string ownership rules.
+  // We're only getting away with this because instances of this
+  // class are restricted to single function scope.
+  nsAWritableString* mString;
   nsString         mCurrentLine;
 
   PRInt32          mIndent;
@@ -222,7 +225,7 @@ protected:
 inline nsresult
 NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
                             nsIOutputStream* aOutStream,
-                            const nsString* aCharsetOverride=nsnull,
+                            const nsAReadableString* aCharsetOverride=nsnull,
                             PRUint32 aWrapColumn=0, PRUint32 aFlags=0)
 {
   nsCOMPtr<nsIHTMLToTXTSinkStream> it;
@@ -250,7 +253,7 @@ NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult,
 
 inline nsresult
 NS_New_HTMLToTXT_SinkStream(nsIHTMLContentSink** aInstancePtrResult, 
-                            nsString* aOutString,
+                            nsAWritableString* aOutString,
                             PRUint32 aWrapColumn=0, PRUint32 aFlags=0)
 {
   nsCOMPtr<nsIHTMLToTXTSinkStream> it;

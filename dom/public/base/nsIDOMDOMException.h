@@ -58,29 +58,29 @@ public:
 
   NS_IMETHOD    GetResult(PRUint32* aResult)=0;
 
-  NS_IMETHOD    GetMessage(nsString& aMessage)=0;
+  NS_IMETHOD    GetMessage(nsAWritableString& aMessage)=0;
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
 
-  NS_IMETHOD    ToString(nsString& aReturn)=0;
+  NS_IMETHOD    ToString(nsAWritableString& aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMDOMEXCEPTION   \
   NS_IMETHOD    GetCode(PRUint32* aCode);  \
   NS_IMETHOD    GetResult(PRUint32* aResult);  \
-  NS_IMETHOD    GetMessage(nsString& aMessage);  \
-  NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    ToString(nsString& aReturn);  \
+  NS_IMETHOD    GetMessage(nsAWritableString& aMessage);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
+  NS_IMETHOD    ToString(nsAWritableString& aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMDOMEXCEPTION(_to)  \
   NS_IMETHOD    GetCode(PRUint32* aCode) { return _to GetCode(aCode); } \
   NS_IMETHOD    GetResult(PRUint32* aResult) { return _to GetResult(aResult); } \
-  NS_IMETHOD    GetMessage(nsString& aMessage) { return _to GetMessage(aMessage); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
-  NS_IMETHOD    ToString(nsString& aReturn) { return _to ToString(aReturn); }  \
+  NS_IMETHOD    GetMessage(nsAWritableString& aMessage) { return _to GetMessage(aMessage); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    ToString(nsAWritableString& aReturn) { return _to ToString(aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitDOMExceptionClass(nsIScriptContext *aContext, void **aPrototype);

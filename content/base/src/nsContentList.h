@@ -57,7 +57,7 @@ public:
 
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
 
-  NS_IMETHOD NamedItem(const nsString& aName, nsIDOMNode** aReturn);
+  NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
 
   // nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);

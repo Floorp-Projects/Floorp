@@ -67,39 +67,39 @@ public:
                        PRBool aDeep);
 
   // Implementation for nsIDOMNode
-  nsresult    GetNodeName(nsString& aNodeName);
-  nsresult    GetLocalName(nsString& aLocalName);
+  nsresult    GetNodeName(nsAWritableString& aNodeName);
+  nsresult    GetLocalName(nsAWritableString& aLocalName);
 
   // Implementation for nsIDOMElement
-  nsresult    GetAttribute(const nsString& aName, nsString& aReturn) 
+  nsresult    GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn) 
   {
     return nsGenericElement::GetAttribute(aName, aReturn);
   }
-  nsresult    SetAttribute(const nsString& aName, const nsString& aValue)
+  nsresult    SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
   {
     return nsGenericElement::SetAttribute(aName, aValue);
   }
-  nsresult GetTagName(nsString& aTagName);
+  nsresult GetTagName(nsAWritableString& aTagName);
 
   // Implementation for nsIDOMHTMLElement
-  nsresult    GetId(nsString& aId);
-  nsresult    SetId(const nsString& aId);
-  nsresult    GetTitle(nsString& aTitle);
-  nsresult    SetTitle(const nsString& aTitle);
-  nsresult    GetLang(nsString& aLang);
-  nsresult    SetLang(const nsString& aLang);
-  nsresult    GetDir(nsString& aDir);
-  nsresult    SetDir(const nsString& aDir);
-  nsresult    GetClassName(nsString& aClassName);
-  nsresult    SetClassName(const nsString& aClassName);
+  nsresult    GetId(nsAWritableString& aId);
+  nsresult    SetId(const nsAReadableString& aId);
+  nsresult    GetTitle(nsAWritableString& aTitle);
+  nsresult    SetTitle(const nsAReadableString& aTitle);
+  nsresult    GetLang(nsAWritableString& aLang);
+  nsresult    SetLang(const nsAReadableString& aLang);
+  nsresult    GetDir(nsAWritableString& aDir);
+  nsresult    SetDir(const nsAReadableString& aDir);
+  nsresult    GetClassName(nsAWritableString& aClassName);
+  nsresult    SetClassName(const nsAReadableString& aClassName);
   nsresult    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);
   nsresult    GetOffsetTop(PRInt32* aOffsetTop);
   nsresult    GetOffsetLeft(PRInt32* aOffsetLeft);
   nsresult    GetOffsetWidth(PRInt32* aOffsetWidth);
   nsresult    GetOffsetHeight(PRInt32* aOffsetHeight);
   nsresult    GetOffsetParent(nsIDOMElement** aOffsetParent);
-  nsresult    GetInnerHTML(nsString& aInnerHTML);
-  nsresult    SetInnerHTML(const nsString& aInnerHTML);
+  nsresult    GetInnerHTML(nsAWritableString& aInnerHTML);
+  nsresult    SetInnerHTML(const nsAReadableString& aInnerHTML);
   nsresult    GetOffsetRect(nsRect& aRect, 
                             nsIAtom* aOffsetParentTag,
                             nsIContent** aOffsetParent);
@@ -108,17 +108,17 @@ public:
   // Implementation for nsIContent
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
-  nsresult ParseAttributeString(const nsString& aStr, 
+  nsresult ParseAttributeString(const nsAReadableString& aStr, 
                                 nsIAtom*& aName,
                                 PRInt32& aNameSpaceID);
   nsresult GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
                                     nsIAtom*& aPrefix);
-  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
+  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue,
                         PRBool aNotify);
-  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsString& aValue,
+  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
                         PRBool aNotify);
-  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;
-  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom*& aPrefix, nsString& aResult) const;
+  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritableString& aResult) const;
+  nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom*& aPrefix, nsAWritableString& aResult) const;
   nsresult UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
   nsresult GetAttributeNameAt(PRInt32 aIndex,
                               PRInt32& aNameSpaceID, 
@@ -153,8 +153,8 @@ public:
   nsresult GetContentStyleRules(nsISupportsArray* aRules);
   nsresult GetInlineStyleRules(nsISupportsArray* aRules);
   nsresult GetBaseURL(nsIURI*& aBaseURL) const;
-  nsresult GetBaseTarget(nsString& aBaseTarget) const;
-  nsresult ToHTMLString(nsString& aResult) const;
+  nsresult GetBaseTarget(nsAWritableString& aBaseTarget) const;
+  nsresult ToHTMLString(nsAWritableString& aResult) const;
   nsresult ToHTML(FILE* out) const;
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
                   size_t aInstanceSize) const;
@@ -162,7 +162,7 @@ public:
   //----------------------------------------
   nsresult AttributeToString(nsIAtom* aAttribute,
                              const nsHTMLValue& aValue,
-                             nsString& aResult) const;
+                             nsAWritableString& aResult) const;
 
   void ListAttributes(FILE* out) const;
 
@@ -176,100 +176,100 @@ public:
     PRInt32 value;
   };
 
-  static PRBool ParseEnumValue(const nsString& aValue,
+  static PRBool ParseEnumValue(const nsAReadableString& aValue,
                                EnumTable* aTable,
                                nsHTMLValue& aResult);
 
-  static PRBool ParseCaseSensitiveEnumValue(const nsString& aValue,
+  static PRBool ParseCaseSensitiveEnumValue(const nsAReadableString& aValue,
                                             EnumTable* aTable,
                                             nsHTMLValue& aResult);
 
   static PRBool EnumValueToString(const nsHTMLValue& aValue,
                                   EnumTable* aTable,
-                                  nsString& aResult,
+                                  nsAWritableString& aResult,
                                   PRBool aFoldCase=PR_TRUE);
 
-  static PRBool ParseValueOrPercent(const nsString& aString,
+  static PRBool ParseValueOrPercent(const nsAReadableString& aString,
                                     nsHTMLValue& aResult,
                                     nsHTMLUnit aValueUnit);
 
-  static PRBool ParseValueOrPercentOrProportional(const nsString& aString,
+  static PRBool ParseValueOrPercentOrProportional(const nsAReadableString& aString,
                                                   nsHTMLValue& aResult, 
                                                   nsHTMLUnit aValueUnit);
 
   static PRBool ValueOrPercentToString(const nsHTMLValue& aValue,
-                                       nsString& aResult);
+                                       nsAWritableString& aResult);
 
   static PRBool ValueOrPercentOrProportionalToString(const nsHTMLValue& aValue,
-                                                     nsString& aResult);
+                                                     nsAWritableString& aResult);
 
-  static PRBool ParseValue(const nsString& aString, PRInt32 aMin,
+  static PRBool ParseValue(const nsAReadableString& aString, PRInt32 aMin,
                            nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
-  static PRBool ParseValue(const nsString& aString, PRInt32 aMin, PRInt32 aMax,
+  static PRBool ParseValue(const nsAReadableString& aString, PRInt32 aMin, PRInt32 aMax,
                            nsHTMLValue& aResult, nsHTMLUnit aValueUnit);
 
-  static PRBool ParseColor(const nsString& aString, nsIDocument* aDocument,
+  static PRBool ParseColor(const nsAReadableString& aString, nsIDocument* aDocument,
                            nsHTMLValue& aResult);
 
   static PRBool ColorToString(const nsHTMLValue& aValue,
-                              nsString& aResult);
+                              nsAWritableString& aResult);
 
   static PRBool ParseCommonAttribute(nsIAtom* aAttribute, 
-                                     const nsString& aValue, 
+                                     const nsAReadableString& aValue, 
                                      nsHTMLValue& aResult);
-  static PRBool ParseAlignValue(const nsString& aString, nsHTMLValue& aResult);
+  static PRBool ParseAlignValue(const nsAReadableString& aString, nsHTMLValue& aResult);
 
-  PRBool ParseDivAlignValue(const nsString& aString,
+  PRBool ParseDivAlignValue(const nsAReadableString& aString,
                             nsHTMLValue& aResult) const;
   PRBool DivAlignValueToString(const nsHTMLValue& aValue,
-                               nsString& aResult) const;
+                               nsAWritableString& aResult) const;
 
-  PRBool ParseTableHAlignValue(const nsString& aString,
+  PRBool ParseTableHAlignValue(const nsAReadableString& aString,
                                nsHTMLValue& aResult) const;
   PRBool TableHAlignValueToString(const nsHTMLValue& aValue,
-                                  nsString& aResult) const;
+                                  nsAWritableString& aResult) const;
 
-  PRBool ParseTableCellHAlignValue(const nsString& aString,
+  PRBool ParseTableCellHAlignValue(const nsAReadableString& aString,
                                    nsHTMLValue& aResult) const;
   PRBool TableCellHAlignValueToString(const nsHTMLValue& aValue,
-                                      nsString& aResult) const;
+                                      nsAWritableString& aResult) const;
 
-  static PRBool ParseTableVAlignValue(const nsString& aString,
+  static PRBool ParseTableVAlignValue(const nsAReadableString& aString,
                                       nsHTMLValue& aResult);
 
   static PRBool TableVAlignValueToString(const nsHTMLValue& aValue,
-                                         nsString& aResult);
+                                         nsAWritableString& aResult);
 
   static PRBool AlignValueToString(const nsHTMLValue& aValue,
-                                   nsString& aResult);
+                                   nsAWritableString& aResult);
 
   static PRBool ParseImageAttribute(nsIAtom* aAttribute,
-                                    const nsString& aString,
+                                    const nsAReadableString& aString,
                                     nsHTMLValue& aResult);
 
   static PRBool ImageAttributeToString(nsIAtom* aAttribute,
                                        const nsHTMLValue& aValue,
-                                       nsString& aResult);
+                                       nsAWritableString& aResult);
 
   static PRBool ParseFrameborderValue(PRBool aStandardMode,
-                                      const nsString& aString,
+                                      const nsAReadableString& aString,
                                       nsHTMLValue& aResult);
 
   static PRBool FrameborderValueToString(PRBool aStandardMode,
                                          const nsHTMLValue& aValue,
-                                         nsString& aResult);
+                                         nsAWritableString& aResult);
 
   static PRBool ParseScrollingValue(PRBool aStandardMode,
-                                    const nsString& aString,
+                                    const nsAReadableString& aString,
                                     nsHTMLValue& aResult);
 
   static PRBool ScrollingValueToString(PRBool aStandardMode,
                                        const nsHTMLValue& aValue,
-                                       nsString& aResult);
+                                       nsAWritableString& aResult);
 
   nsresult  ReparseStyleAttribute(void);
-  nsresult  ParseStyleAttribute(const nsString& aValue, nsHTMLValue& aResult);
+  nsresult  ParseStyleAttribute(const nsAReadableString& aValue, nsHTMLValue& aResult);
 
   /** Attribute Mapping Helpers
    *
@@ -466,11 +466,11 @@ public:
   ~nsGenericHTMLContainerFormElement();
 
   nsresult SetForm(nsIForm* aForm);
-  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
+  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue,
                           PRBool aNotify);
-  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsString& aValue,
+  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
                           PRBool aNotify);
-  nsresult SetAttribute(const nsString& aName, const nsString& aValue)
+  nsresult SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }
@@ -487,11 +487,11 @@ public:
   ~nsGenericHTMLLeafFormElement();
 
   nsresult SetForm(nsIForm* aForm);
-  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
+  nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue,
                           PRBool aNotify);
-  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsString& aValue,
+  nsresult SetAttribute(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
                           PRBool aNotify);
-  nsresult SetAttribute(const nsString& aName, const nsString& aValue)
+  nsresult SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
   {
     return nsGenericHTMLElement::SetAttribute(aName, aValue);
   }
@@ -508,34 +508,34 @@ public:
  * nsGenericHTMLContainerContent)
  */
 #define NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(_g)       \
-  NS_IMETHOD GetId(nsString& aId) {                     \
+  NS_IMETHOD GetId(nsAWritableString& aId) {                     \
     return _g.GetId(aId);                               \
   }                                                     \
-  NS_IMETHOD SetId(const nsString& aId) {               \
+  NS_IMETHOD SetId(const nsAReadableString& aId) {               \
     return _g.SetId(aId);                               \
   }                                                     \
-  NS_IMETHOD GetTitle(nsString& aTitle) {               \
+  NS_IMETHOD GetTitle(nsAWritableString& aTitle) {               \
     return _g.GetTitle(aTitle);                         \
   }                                                     \
-  NS_IMETHOD SetTitle(const nsString& aTitle) {         \
+  NS_IMETHOD SetTitle(const nsAReadableString& aTitle) {         \
     return _g.SetTitle(aTitle);                         \
   }                                                     \
-  NS_IMETHOD GetLang(nsString& aLang) {                 \
+  NS_IMETHOD GetLang(nsAWritableString& aLang) {                 \
     return _g.GetLang(aLang);                           \
   }                                                     \
-  NS_IMETHOD SetLang(const nsString& aLang) {           \
+  NS_IMETHOD SetLang(const nsAReadableString& aLang) {           \
     return _g.SetLang(aLang);                           \
   }                                                     \
-  NS_IMETHOD GetDir(nsString& aDir) {                   \
+  NS_IMETHOD GetDir(nsAWritableString& aDir) {                   \
     return _g.GetDir(aDir);                             \
   }                                                     \
-  NS_IMETHOD SetDir(const nsString& aDir) {             \
+  NS_IMETHOD SetDir(const nsAReadableString& aDir) {             \
     return _g.SetDir(aDir);                             \
   }                                                     \
-  NS_IMETHOD GetClassName(nsString& aClassName) {       \
+  NS_IMETHOD GetClassName(nsAWritableString& aClassName) {       \
     return _g.GetClassName(aClassName);                 \
   }                                                     \
-  NS_IMETHOD SetClassName(const nsString& aClassName) { \
+  NS_IMETHOD SetClassName(const nsAReadableString& aClassName) { \
     return _g.SetClassName(aClassName);                 \
   }                                                     \
   NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { \
@@ -556,10 +556,10 @@ public:
   NS_IMETHOD GetOffsetParent(nsIDOMElement** aOffsetParent) { \
     return _g.GetOffsetParent(aOffsetParent);           \
   }                                                     \
-  NS_IMETHOD GetInnerHTML(nsString& aInnerHTML) {       \
+  NS_IMETHOD GetInnerHTML(nsAWritableString& aInnerHTML) {       \
     return _g.GetInnerHTML(aInnerHTML);                 \
   }                                                     \
-  NS_IMETHOD SetInnerHTML(const nsString& aInnerHTML) { \
+  NS_IMETHOD SetInnerHTML(const nsAReadableString& aInnerHTML) { \
     return _g.SetInnerHTML(aInnerHTML);                 \
   }
 
@@ -594,21 +594,21 @@ public:
   NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const {                     \
     return _g.GetBaseURL(aBaseURL);                                    \
   }                                                                    \
-  NS_IMETHOD GetBaseTarget(nsString& aBaseTarget) const {              \
+  NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const {              \
     return _g.GetBaseTarget(aBaseTarget);                              \
   }                                                                    \
-  NS_IMETHOD ToHTMLString(nsString& aResult) const {                   \
+  NS_IMETHOD ToHTMLString(nsAWritableString& aResult) const {                   \
     return _g.ToHTMLString(aResult);                                   \
   }                                                                    \
   NS_IMETHOD ToHTML(FILE* out) const {                                 \
     return _g.ToHTML(out);                                             \
   }                                                                    \
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,                    \
-                               const nsString& aValue,                 \
+                               const nsAReadableString& aValue,                 \
                                nsHTMLValue& aResult);                  \
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
                                const nsHTMLValue& aValue,              \
-                               nsString& aResult) const;               \
+                               nsAWritableString& aResult) const;               \
   NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,  \
                                           nsMapAttributesFunc& aMapFunc) const;  \
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,       \
@@ -640,21 +640,21 @@ public:
   NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const {                     \
     return _g.GetBaseURL(aBaseURL);                                    \
   }                                                                    \
-  NS_IMETHOD GetBaseTarget(nsString& aBaseTarget) const {              \
+  NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const {              \
     return _g.GetBaseTarget(aBaseTarget);                              \
   }                                                                    \
-  NS_IMETHOD ToHTMLString(nsString& aResult) const {                   \
+  NS_IMETHOD ToHTMLString(nsAWritableString& aResult) const {                   \
     return _g.ToHTMLString(aResult);                                   \
   }                                                                    \
   NS_IMETHOD ToHTML(FILE* out) const {                                 \
     return _g.ToHTML(out);                                             \
   }                                                                    \
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,                    \
-                               const nsString& aValue,                 \
+                               const nsAReadableString& aValue,                 \
                                nsHTMLValue& aResult);                  \
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
                                const nsHTMLValue& aValue,              \
-                               nsString& aResult) const;               \
+                               nsAWritableString& aResult) const;               \
   NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, \
                                           nsMapAttributesFunc& aMapFunc) const;  \
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,       \
@@ -692,13 +692,13 @@ public:
  */
 #define NS_IMPL_STRING_ATTR(_class, _method, _atom)                  \
   NS_IMETHODIMP                                                      \
-  _class::Get##_method(nsString& aValue)                             \
+  _class::Get##_method(nsAWritableString& aValue)                    \
   {                                                                  \
     mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue); \
     return NS_OK;                                                    \
   }                                                                  \
   NS_IMETHODIMP                                                      \
-  _class::Set##_method(const nsString& aValue)                       \
+  _class::Set##_method(const nsAReadableString& aValue)              \
   {                                                                  \
     return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue, PR_TRUE); \
   }

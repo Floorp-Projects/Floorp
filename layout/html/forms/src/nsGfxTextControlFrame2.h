@@ -87,8 +87,8 @@ public:
                                             PRBool aCompileEventHandlers);
 
   // Utility methods to get and set current widget state
-  void GetTextControlFrameState(nsString& aValue);
-  void SetTextControlFrameState(const nsString& aValue);
+  void GetTextControlFrameState(nsAWritableString& aValue);
+  void SetTextControlFrameState(const nsAReadableString& aValue);
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
@@ -117,8 +117,8 @@ public:
   NS_IMETHOD GetFont(nsIPresContext* aPresContext, 
                      const nsFont*&  aFont);
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
 
 
 //==== END NSIFORMCONTROLFRAME

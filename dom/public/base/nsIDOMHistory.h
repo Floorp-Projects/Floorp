@@ -40,11 +40,11 @@ public:
 
   NS_IMETHOD    GetLength(PRInt32* aLength)=0;
 
-  NS_IMETHOD    GetCurrent(nsString& aCurrent)=0;
+  NS_IMETHOD    GetCurrent(nsAWritableString& aCurrent)=0;
 
-  NS_IMETHOD    GetPrevious(nsString& aPrevious)=0;
+  NS_IMETHOD    GetPrevious(nsAWritableString& aPrevious)=0;
 
-  NS_IMETHOD    GetNext(nsString& aNext)=0;
+  NS_IMETHOD    GetNext(nsAWritableString& aNext)=0;
 
   NS_IMETHOD    Back()=0;
 
@@ -52,31 +52,31 @@ public:
 
   NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc)=0;
 
-  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn)=0;
+  NS_IMETHOD    Item(PRUint32 aIndex, nsAWritableString& aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMHISTORY   \
   NS_IMETHOD    GetLength(PRInt32* aLength);  \
-  NS_IMETHOD    GetCurrent(nsString& aCurrent);  \
-  NS_IMETHOD    GetPrevious(nsString& aPrevious);  \
-  NS_IMETHOD    GetNext(nsString& aNext);  \
+  NS_IMETHOD    GetCurrent(nsAWritableString& aCurrent);  \
+  NS_IMETHOD    GetPrevious(nsAWritableString& aPrevious);  \
+  NS_IMETHOD    GetNext(nsAWritableString& aNext);  \
   NS_IMETHOD    Back();  \
   NS_IMETHOD    Forward();  \
   NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc);  \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn);  \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsAWritableString& aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMHISTORY(_to)  \
   NS_IMETHOD    GetLength(PRInt32* aLength) { return _to GetLength(aLength); } \
-  NS_IMETHOD    GetCurrent(nsString& aCurrent) { return _to GetCurrent(aCurrent); } \
-  NS_IMETHOD    GetPrevious(nsString& aPrevious) { return _to GetPrevious(aPrevious); } \
-  NS_IMETHOD    GetNext(nsString& aNext) { return _to GetNext(aNext); } \
+  NS_IMETHOD    GetCurrent(nsAWritableString& aCurrent) { return _to GetCurrent(aCurrent); } \
+  NS_IMETHOD    GetPrevious(nsAWritableString& aPrevious) { return _to GetPrevious(aPrevious); } \
+  NS_IMETHOD    GetNext(nsAWritableString& aNext) { return _to GetNext(aNext); } \
   NS_IMETHOD    Back() { return _to Back(); }  \
   NS_IMETHOD    Forward() { return _to Forward(); }  \
   NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Go(cx, argv, argc); }  \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn) { return _to Item(aIndex, aReturn); }  \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsAWritableString& aReturn) { return _to Item(aIndex, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitHistoryClass(nsIScriptContext *aContext, void **aPrototype);

@@ -43,6 +43,7 @@
 #include "cmtcmn.h"
 #include "cmtjs.h"
 #include <ctype.h>
+#include "nsReadableUtils.h"
 
 /*
  * These are the most common error strings that are returned
@@ -272,7 +273,7 @@ cryptojs_interpret_key_gen_type(char *keyAlg)
 
 
 NS_IMETHODIMP
-nsCrypto::GetVersion(nsString& aVersion)
+nsCrypto::GetVersion(nsAWritableString& aVersion)
 {
   if (!mVersionStringSet) {
     PCMT_CONTROL control = NULL;
@@ -293,7 +294,7 @@ nsCrypto::GetVersion(nsString& aVersion)
     mVersionStringSet = PR_TRUE;
   }
   
-  aVersion = mVersionString;
+  aVersion.Assign(mVersionString);
   return NS_OK;
 }
 //These defines are taken from the PKCS#11 spec
@@ -1063,10 +1064,10 @@ nsCrypto::GenerateCRMFRequest(JSContext* cx, jsval* argv, PRUint32 argc,
 }
 
 NS_IMETHODIMP
-nsCrypto::ImportUserCertificates(const nsString& aNickname, 
-                                 const nsString& aCmmfResponse, 
+nsCrypto::ImportUserCertificates(const nsAReadableString& aNickname, 
+                                 const nsAReadableString& aCmmfResponse, 
                                  PRBool aDoForcedBackup, 
-                                 nsString& aReturn)
+                                 nsAWritableString& aReturn)
 {
   char *nickname=nsnull, *cmmfResponse=nsnull;
   nsresult nrv;
@@ -1075,8 +1076,8 @@ nsCrypto::ImportUserCertificates(const nsString& aNickname,
   char *retString=nsnull;
   char *freeString=nsnull;
 
-  nickname = aNickname.ToNewCString();
-  cmmfResponse = aCmmfResponse.ToNewCString();
+  nickname = ToNewCString(aNickname);
+  cmmfResponse = ToNewCString(aCmmfResponse);
   if (PL_strcmp("null", nickname) == 0) {
     nsCRT::free(nickname);
     nickname = nsnull;
@@ -1097,7 +1098,7 @@ nsCrypto::ImportUserCertificates(const nsString& aNickname,
   }
   retString = "";
  loser:
-  aReturn.AssignWithConversion(retString);
+  aReturn.Assign(NS_ConvertASCIItoUCS2(retString));
   if (freeString != NULL) {
     PR_smprintf_free(freeString);
   }
@@ -1111,21 +1112,21 @@ nsCrypto::ImportUserCertificates(const nsString& aNickname,
 }
 
 NS_IMETHODIMP
-nsCrypto::PopChallengeResponse(const nsString& aChallenge, 
-                               nsString& aReturn)
+nsCrypto::PopChallengeResponse(const nsAReadableString& aChallenge, 
+                               nsAWritableString& aReturn)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsCrypto::Random(PRInt32 aNumBytes, nsString& aReturn)
+nsCrypto::Random(PRInt32 aNumBytes, nsAWritableString& aReturn)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsCrypto::SignText(JSContext *cx, jsval *argv, PRUint32 argc,
-                   nsString& aReturn)
+                   nsAWritableString& aReturn)
 {
   return NS_ERROR_FAILURE;
 }
@@ -1156,11 +1157,11 @@ alertUser(char *message)
 
 
 NS_IMETHODIMP
-nsCrypto::Alert(const nsString& aMessage)
+nsCrypto::Alert(const nsAReadableString& aMessage)
 {
   char *message;
 
-  message = aMessage.ToNewCString();
+  message = ToNewCString(aMessage);
   if (message == nsnull) {
     return NS_ERROR_FAILURE;
   }
@@ -1235,9 +1236,9 @@ nsCRMFObject::init()
 }
 
 NS_IMETHODIMP
-nsCRMFObject::GetRequest(nsString& aRequest)
+nsCRMFObject::GetRequest(nsAWritableString& aRequest)
 {
-  aRequest = mBase64Request;
+  aRequest.Assign(mBase64Request);
   return NS_OK;
 }
 
@@ -1447,7 +1448,7 @@ confirm_user(char *message)
 
 
 NS_IMETHODIMP
-nsPkcs11::Deletemodule(const nsString& aModuleName, PRInt32* aReturn)
+nsPkcs11::Deletemodule(const nsAReadableString& aModuleName, PRInt32* aReturn)
 {
   PCMT_CONTROL control;
   char *errorString = nsnull, *warning = nsnull, *wholeMsg = nsnull;
@@ -1468,7 +1469,7 @@ nsPkcs11::Deletemodule(const nsString& aModuleName, PRInt32* aReturn)
     *aReturn = JS_ERR_BAD_MODULE_NAME;
     goto loser;
   }
-  moduleName = aModuleName.ToNewCString();
+  moduleName = ToNewCString(aModuleName);
   status = CMT_GetLocalizedString(control, SSM_STRING_DEL_MOD_WARN,
                                 &warning);
   if (status != CMTSuccess) {
@@ -1548,8 +1549,8 @@ nsPkcs11::Deletemodule(const nsString& aModuleName, PRInt32* aReturn)
 }
 
 NS_IMETHODIMP
-nsPkcs11::Addmodule(const nsString& aModuleName, 
-                    const nsString& aLibraryFullPath, 
+nsPkcs11::Addmodule(const nsAReadableString& aModuleName, 
+                    const nsAReadableString& aLibraryFullPath, 
                     PRInt32 aCryptoMechanismFlags, 
                     PRInt32 aCipherFlags, PRInt32* aReturn)
 {
@@ -1588,8 +1589,8 @@ nsPkcs11::Addmodule(const nsString& aModuleName,
     goto loser;
   }
 
-  moduleName  = aModuleName.ToNewCString();
-  libraryPath = aLibraryFullPath.ToNewCString();
+  moduleName  = ToNewCString(aModuleName);
+  libraryPath = ToNewCString(aLibraryFullPath);
 
   length = strlen(warning)   + strlen(modPrompt)   + strlen(moduleName) +
            strlen(dllPrompt) + strlen(libraryPath) + 5;

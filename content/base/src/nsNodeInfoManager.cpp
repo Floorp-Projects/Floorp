@@ -149,7 +149,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
 
 
 NS_IMETHODIMP
-nsNodeInfoManager::GetNodeInfo(const nsString& aName, nsIAtom *aPrefix,
+nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aName, nsIAtom *aPrefix,
                                PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo)
 {
   NS_ENSURE_ARG(aName.Length());
@@ -162,7 +162,7 @@ nsNodeInfoManager::GetNodeInfo(const nsString& aName, nsIAtom *aPrefix,
 
 
 NS_IMETHODIMP
-nsNodeInfoManager::GetNodeInfo(const nsString& aName, const nsString& aPrefix,
+nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aName, const nsAReadableString& aPrefix,
                                PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo)
 {
   NS_ENSURE_ARG(aName.Length());
@@ -182,8 +182,8 @@ nsNodeInfoManager::GetNodeInfo(const nsString& aName, const nsString& aPrefix,
 
 
 NS_IMETHODIMP
-nsNodeInfoManager::GetNodeInfo(const nsString& aName, const nsString& aPrefix,
-                               const nsString& aNamespaceURI,
+nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aName, const nsAReadableString& aPrefix,
+                               const nsAReadableString& aNamespaceURI,
                                nsINodeInfo*& aNodeInfo)
 {
   NS_ENSURE_ARG(aName.Length());
@@ -214,8 +214,8 @@ nsNodeInfoManager::GetNodeInfo(const nsString& aName, const nsString& aPrefix,
 
 
 NS_IMETHODIMP
-nsNodeInfoManager::GetNodeInfo(const nsString& aQualifiedName,
-                               const nsString& aNamespaceURI,
+nsNodeInfoManager::GetNodeInfo(const nsAReadableString& aQualifiedName,
+                               const nsAReadableString& aNamespaceURI,
                                nsINodeInfo*& aNodeInfo)
 {
   NS_ENSURE_ARG(aQualifiedName.Length());

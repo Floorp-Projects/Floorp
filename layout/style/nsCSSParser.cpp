@@ -142,19 +142,19 @@ public:
                    nsIURI*                aInputURL,
                    nsICSSStyleSheet*&     aResult);
 
-  NS_IMETHOD ParseDeclarations(const nsString& aDeclaration,
-                               nsIURI*         aBaseURL,
-                               nsIStyleRule*&  aResult);
+  NS_IMETHOD ParseDeclarations(const nsAReadableString& aDeclaration,
+                               nsIURI*                  aBaseURL,
+                               nsIStyleRule*&           aResult);
   
-  NS_IMETHOD ParseAndAppendDeclaration(const nsString&    aBuffer,
-                                       nsIURI*            aBaseURL,
-                                       nsICSSDeclaration* aDeclaration,
-                                       PRBool             aParseOnlyOneDecl,
-                                       PRInt32*           aHint);
+  NS_IMETHOD ParseAndAppendDeclaration(const nsAReadableString& aBuffer,
+                                       nsIURI*                  aBaseURL,
+                                       nsICSSDeclaration*       aDeclaration,
+                                       PRBool                   aParseOnlyOneDecl,
+                                       PRInt32*                 aHint);
 
-  NS_IMETHOD GetCharset(/*out*/nsString &aCharsetDest) const;
+  NS_IMETHOD GetCharset(/*out*/nsAWritableString &aCharsetDest) const;
     // sets the out-param to the current charset, as set by SetCharset
-  NS_IMETHOD SetCharset(/*in*/ const nsString &aCharsetSrc);
+  NS_IMETHOD SetCharset(/*in*/ const nsAReadableString &aCharsetSrc);
     // NOTE: SetCharset expects the charset to be the preferred charset
     //       and it just records the string exactly as passed in (no alias resolution)
 
@@ -517,9 +517,9 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 }
 
 NS_IMETHODIMP
-CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
-                                 nsIURI*         aBaseURL,
-                                 nsIStyleRule*&  aResult)
+CSSParserImpl::ParseDeclarations(const nsAReadableString& aDeclaration,
+                                 nsIURI*                  aBaseURL,
+                                 nsIStyleRule*&           aResult)
 {
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
@@ -562,11 +562,11 @@ CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
 }
 
 NS_IMETHODIMP
-CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
-                                         nsIURI*            aBaseURL,
-                                         nsICSSDeclaration* aDeclaration,
-                                         PRBool             aParseOnlyOneDecl,
-                                         PRInt32*           aHint)
+CSSParserImpl::ParseAndAppendDeclaration(const nsAReadableString& aBuffer,
+                                         nsIURI*                  aBaseURL,
+                                         nsICSSDeclaration*       aDeclaration,
+                                         PRBool                   aParseOnlyOneDecl,
+                                         PRInt32*                 aHint)
 {
 //  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
 
@@ -4354,13 +4354,13 @@ PRBool CSSParserImpl::ParseTextShadow(PRInt32& aErrorCode,
   return PR_FALSE;
 }
 
-NS_IMETHODIMP CSSParserImpl::GetCharset(/*out*/nsString &aCharsetDest) const
+NS_IMETHODIMP CSSParserImpl::GetCharset(/*out*/nsAWritableString &aCharsetDest) const
 { 
   aCharsetDest = mCharset; 
   return NS_OK;
 }
 
-NS_IMETHODIMP CSSParserImpl::SetCharset(/*in*/ const nsString &aCharsetSrc)
+NS_IMETHODIMP CSSParserImpl::SetCharset(/*in*/ const nsAReadableString &aCharsetSrc)
 {
   mCharset = aCharsetSrc;
   return NS_OK;

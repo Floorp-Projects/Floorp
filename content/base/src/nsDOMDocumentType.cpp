@@ -29,12 +29,12 @@
 
 nsresult
 NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
-                      const nsString& aName,
+                      const nsAReadableString& aName,
                       nsIDOMNamedNodeMap *aEntities,
                       nsIDOMNamedNodeMap *aNotations,
-                      const nsString& aPublicId,
-                      const nsString& aSystemId,
-                      const nsString& aInternalSubset)
+                      const nsAReadableString& aPublicId,
+                      const nsAReadableString& aSystemId,
+                      const nsAReadableString& aInternalSubset)
 {
   NS_ENSURE_ARG_POINTER(aDocType);
 
@@ -49,12 +49,12 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   return NS_OK;
 }
 
-nsDOMDocumentType::nsDOMDocumentType(const nsString& aName,
+nsDOMDocumentType::nsDOMDocumentType(const nsAReadableString& aName,
                                      nsIDOMNamedNodeMap *aEntities,
                                      nsIDOMNamedNodeMap *aNotations,
-                                     const nsString& aPublicId,
-                                     const nsString& aSystemId,
-                                     const nsString& aInternalSubset) :
+                                     const nsAReadableString& aPublicId,
+                                     const nsAReadableString& aSystemId,
+                                     const nsAReadableString& aInternalSubset) :
   mName(aName),
   mPublicId(aPublicId),
   mSystemId(aSystemId),
@@ -87,7 +87,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMDocumentType)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 NS_IMETHODIMP    
-nsDOMDocumentType::GetName(nsString& aName)
+nsDOMDocumentType::GetName(nsAWritableString& aName)
 {
   aName=mName;
 
@@ -119,7 +119,7 @@ nsDOMDocumentType::GetNotations(nsIDOMNamedNodeMap** aNotations)
 }
 
 NS_IMETHODIMP
-nsDOMDocumentType::GetPublicId(nsString& aPublicId)
+nsDOMDocumentType::GetPublicId(nsAWritableString& aPublicId)
 {
   aPublicId = mPublicId;
 
@@ -127,7 +127,7 @@ nsDOMDocumentType::GetPublicId(nsString& aPublicId)
 }
 
 NS_IMETHODIMP
-nsDOMDocumentType::GetSystemId(nsString& aSystemId)
+nsDOMDocumentType::GetSystemId(nsAWritableString& aSystemId)
 {
   aSystemId = mSystemId;
 
@@ -135,7 +135,7 @@ nsDOMDocumentType::GetSystemId(nsString& aSystemId)
 }
 
 NS_IMETHODIMP
-nsDOMDocumentType::GetInternalSubset(nsString& aInternalSubset)
+nsDOMDocumentType::GetInternalSubset(nsAWritableString& aInternalSubset)
 {
   aInternalSubset = mInternalSubset;
 
@@ -158,7 +158,7 @@ nsDOMDocumentType::GetNodeInfo(nsINodeInfo*& aResult) const
 }
 
 NS_IMETHODIMP
-nsDOMDocumentType::GetNodeName(nsString& aNodeName)
+nsDOMDocumentType::GetNodeName(nsAWritableString& aNodeName)
 {
   aNodeName=mName;
 

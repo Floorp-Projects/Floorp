@@ -25,14 +25,13 @@
 #include "nsISupports.h"
 #include "nscore.h"
 #include "nsIDiskDocument.h"
+#include "nsString.h"
 
 #define NS_IEDITOR_IID \
 {/* A3C5EE71-742E-11d2-8F2C-006008310194*/ \
 0xa3c5ee71, 0x742e, 0x11d2, \
 {0x8f, 0x2c, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94} }
 
-
-class nsString;
 
 class nsIPresShell;
 class nsIDOMNode;
@@ -418,8 +417,8 @@ public:
    * Output methods:
    * aFormatType is a mime type, like text/plain.
    */
-  NS_IMETHOD OutputToString(nsString& aOutputString,
-                            const nsString& aFormatType,
+  NS_IMETHOD OutputToString(nsAWritableString& aOutputString,
+                            const nsAReadableString& aFormatType,
                             PRUint32 aFlags) = 0;
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
                             const nsString& aFormatType,

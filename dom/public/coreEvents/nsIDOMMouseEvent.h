@@ -59,7 +59,7 @@ public:
 
   NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)=0;
 
-  NS_IMETHOD    InitMouseEvent(const nsString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg)=0;
+  NS_IMETHOD    InitMouseEvent(const nsAReadableString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg)=0;
 };
 
 
@@ -74,7 +74,7 @@ public:
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey);  \
   NS_IMETHOD    GetButton(PRUint16* aButton);  \
   NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget);  \
-  NS_IMETHOD    InitMouseEvent(const nsString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg);  \
+  NS_IMETHOD    InitMouseEvent(const nsAReadableString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg);  \
 
 
 
@@ -89,7 +89,7 @@ public:
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey) { return _to GetMetaKey(aMetaKey); } \
   NS_IMETHOD    GetButton(PRUint16* aButton) { return _to GetButton(aButton); } \
   NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget) { return _to GetRelatedTarget(aRelatedTarget); } \
-  NS_IMETHOD    InitMouseEvent(const nsString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg) { return _to InitMouseEvent(aTypeArg, aCtrlKeyArg, aAltKeyArg, aShiftKeyArg, aMetaKeyArg, aScreenXArg, aScreenYArg, aClientXArg, aClientYArg, aButtonArg, aDetailArg); }  \
+  NS_IMETHOD    InitMouseEvent(const nsAReadableString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg) { return _to InitMouseEvent(aTypeArg, aCtrlKeyArg, aAltKeyArg, aShiftKeyArg, aMetaKeyArg, aScreenXArg, aScreenYArg, aClientXArg, aClientYArg, aButtonArg, aDetailArg); }  \
 
 
 #endif // nsIDOMMouseEvent_h__

@@ -61,21 +61,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLLayerElement
-  NS_IMETHOD    GetTop(PRInt32* aTop);
-  NS_IMETHOD    SetTop(PRInt32 aTop);
-  NS_IMETHOD    GetLeft(PRInt32* aLeft);
-  NS_IMETHOD    SetLeft(PRInt32 aLeft);
-  NS_IMETHOD    GetVisibility(nsString& aVisibility);
-  NS_IMETHOD    SetVisibility(const nsString& aVisibility);
-  NS_IMETHOD    GetBackground(nsString& aBackground);
-  NS_IMETHOD    SetBackground(const nsString& aBackground);
-  NS_IMETHOD    GetBgColor(nsString& aBgColor);
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor);
-  NS_IMETHOD    GetName(nsString& aName);
-  NS_IMETHOD    SetName(const nsString& aName);
-  NS_IMETHOD    GetZIndex(PRInt32* aZIndex);
-  NS_IMETHOD    SetZIndex(PRInt32 aZIndex);
-  NS_IMETHOD    GetDocument(nsIDOMDocument** aReturn);
+  NS_DECL_IDOMHTMLLAYERELEMENT
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -182,7 +168,7 @@ static nsGenericHTMLElement::EnumTable kVisibilityTable[] = {
 
 NS_IMETHODIMP
 nsHTMLLayerElement::StringToAttribute(nsIAtom*        aAttribute,
-                                      const nsString& aValue,
+                                      const nsAReadableString& aValue,
                                       nsHTMLValue&    aResult)
 {
   // XXX CLIP
@@ -218,7 +204,7 @@ nsHTMLLayerElement::StringToAttribute(nsIAtom*        aAttribute,
 NS_IMETHODIMP
 nsHTMLLayerElement::AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsString& aResult) const
+                               nsAWritableString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::visibility) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {

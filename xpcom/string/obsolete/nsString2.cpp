@@ -2275,6 +2275,15 @@ nsAutoString::nsAutoString( const nsString& aString )
   Append(aString);
 }
 
+nsAutoString::nsAutoString( const nsAReadableString& aString )
+  : nsString()
+{
+  Initialize(*this, mBuffer, (sizeof(mBuffer)>>eTwoByte)-1, 0, eTwoByte, PR_FALSE);
+  AddNullTerminator(*this);
+  Append(aString);
+}
+
+
 
 /**
  * constructor that uses external buffer

@@ -1305,11 +1305,11 @@ nsTitledButtonFrame :: CheckStateToString ( CheckState inState, nsString& outSta
 {
   switch ( inState ) {
     case eOn:
-      outStateAsString.AssignWithConversion(NS_STRING_TRUE);
+      outStateAsString.Assign(NS_STRING_TRUE);
 	  break;
 
     case eOff:
-      outStateAsString.AssignWithConversion(NS_STRING_FALSE);
+      outStateAsString.Assign(NS_STRING_FALSE);
       break;
  
     case eMixed:

@@ -27,9 +27,6 @@
 
 #include "nsMimeTransition.h"
 
-#ifndef XP_MAC
-#include "nsTextFragment.h"
-#endif
 #include "msgCore.h"
 #include "mimebuf.h"
 

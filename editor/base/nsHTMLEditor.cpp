@@ -5432,20 +5432,22 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
   return res;
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
-                                           const nsString& aFormatType,
+NS_IMETHODIMP nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
+                                           const nsAReadableString& aFormatType,
                                            PRUint32 aFlags)
 {
   PRBool cancel, handled;
   nsString resultString;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
   ruleInfo.outString = &resultString;
-  ruleInfo.outputFormat = &aFormatType;
+  // XXX Struct should store a nsAReadable*
+  nsAutoString str(aFormatType);
+  ruleInfo.outputFormat = &str;
   nsresult rv = mRules->WillDoAction(nsnull, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) { return rv; }
   if (handled)
   { // this case will get triggered by password fields
-    aOutputString = *(ruleInfo.outString);
+    aOutputString.Assign(*(ruleInfo.outString));
   }
   else
   {

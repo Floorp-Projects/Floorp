@@ -41,6 +41,7 @@
 #define nsINodeInfo_h___
 
 #include "nsISupports.h"
+#include "nsAWritableString.h"
 
 // Forward declarations
 class nsIAtom;
@@ -73,7 +74,7 @@ public:
    * For the HTML element "<body>" this will return "body" and for the XML
    * element "<html:body>" this will return "body".
    */
-  NS_IMETHOD GetName(nsString& aName) = 0;
+  NS_IMETHOD GetName(nsAWritableString& aName) = 0;
 
   /*
    * Get the name from this node as an atom, this does not include the prefix.
@@ -91,7 +92,7 @@ public:
    * For the HTML element "<body>" this will return "body" and for the XML
    * element "<html:body>" this will return "html:body".
    */
-  NS_IMETHOD GetQualifiedName(nsString& aQualifiedName) = 0;
+  NS_IMETHOD GetQualifiedName(nsAWritableString& aQualifiedName) = 0;
 
   /*
    * Get the local name from this node as a string, GetLocalName() gets the
@@ -102,7 +103,7 @@ public:
    * For the HTML element "<body>" in a HTML document this will return a null
    * string and for the XML element "<html:body>" this will return "body".
    */
-  NS_IMETHOD GetLocalName(nsString& aLocalName) = 0;
+  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName) = 0;
 
   /*
    * Get the prefix from this node as a string.
@@ -110,7 +111,7 @@ public:
    * For the HTML element "<body>" this will return a null string and for
    * the XML element "<html:body>" this will return the string "html".
    */
-  NS_IMETHOD GetPrefix(nsString& aPrefix) = 0;  
+  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix) = 0;  
 
   /*
    * Get the prefix from this node as an atom.
@@ -129,7 +130,7 @@ public:
    * xmlns:html='http://www.w3.org/1999/xhtml' attribute) this will return
    * the string "http://www.w3.org/1999/xhtml".
    */
-  NS_IMETHOD GetNamespaceURI(nsString& aNameSpaceURI) = 0;
+  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNameSpaceURI) = 0;
 
   /*
    * Get the namespace ID for a node if the node has a namespace, if not this
@@ -154,18 +155,19 @@ public:
    * namespace ID.
    */
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom) = 0;
-  NS_IMETHOD_(PRBool) Equals(const nsString& aName) = 0;
+  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName) = 0;
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom) = 0;
-  NS_IMETHOD_(PRBool) Equals(const nsString& aName,
-                             const nsString& aPrefix) = 0;
+  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName,
+                             const nsAReadableString& aPrefix) = 0;
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, PRInt32 aNamespaceID) = 0;
-  NS_IMETHOD_(PRBool) Equals(const nsString& aName, PRInt32 aNamespaceID) = 0;
+  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName, PRInt32 aNamespaceID) = 0;
   NS_IMETHOD_(PRBool) Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
                              PRInt32 aNamespaceID) = 0;
-  NS_IMETHOD_(PRBool) Equals(const nsString& aName, const nsString& aPrefix,
+  NS_IMETHOD_(PRBool) Equals(const nsAReadableString& aName, 
+                             const nsAReadableString& aPrefix,
                              PRInt32 aNamespaceID) = 0;
   NS_IMETHOD_(PRBool) NamespaceEquals(PRInt32 aNamespaceID) = 0;
-  NS_IMETHOD_(PRBool) NamespaceEquals(const nsString& aNamespaceURI) = 0;
+  NS_IMETHOD_(PRBool) NamespaceEquals(const nsAReadableString& aNamespaceURI) = 0;
 
   /*
    * This is a convinience method that creates a new nsINodeInfo that differs
@@ -197,15 +199,17 @@ public:
    */
   NS_IMETHOD GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsString& aName, nsIAtom *aPrefix,
+  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, nsIAtom *aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsString& aName, const nsString& aPrefix,
+  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, 
+                         const nsAReadableString& aPrefix,
                          PRInt32 aNamespaceID, nsINodeInfo*& aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsString& aName, const nsString& aPrefix,
-                         const nsString& aNamespaceURI,
+  NS_IMETHOD GetNodeInfo(const nsAReadableString& aName, 
+                         const nsAReadableString& aPrefix,
+                         const nsAReadableString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo) = 0;
-  NS_IMETHOD GetNodeInfo(const nsString& aQualifiedName,
-                         const nsString& aNamespaceURI,
+  NS_IMETHOD GetNodeInfo(const nsAReadableString& aQualifiedName,
+                         const nsAReadableString& aNamespaceURI,
                          nsINodeInfo*& aNodeInfo) = 0;
 
   /*

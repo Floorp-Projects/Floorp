@@ -53,7 +53,7 @@ public:
   // nsIDOMHTMLCollection interface
   NS_IMETHOD    GetLength(PRUint32* aLength)=0;
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;
-  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)=0;
 
 protected:
   void*        mScriptObject;

@@ -235,7 +235,7 @@ void nsRadioControlFrame::SetRadioControlFrameState(nsIPresContext* aPresContext
   SetRadioState(aPresContext, state);
 }         
 
-NS_IMETHODIMP nsRadioControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsRadioControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue)
 {
   if (nsHTMLAtoms::checked == aName) {
       // Set the current state for the radio button because
@@ -253,7 +253,7 @@ NS_IMETHODIMP nsRadioControlFrame::SetProperty(nsIPresContext* aPresContext, nsI
   return NS_OK;    
 }
 
-NS_IMETHODIMP nsRadioControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
+NS_IMETHODIMP nsRadioControlFrame::GetProperty(nsIAtom* aName, nsAWritableString& aValue)
 {
   // Return the value of the property from the widget it is not null.
   // If is null, assume the widget is GFX-rendered and return a member variable instead.

@@ -45,17 +45,17 @@ public:
   NS_IMETHOD    GetLeft(PRInt32* aLeft)=0;
   NS_IMETHOD    SetLeft(PRInt32 aLeft)=0;
 
-  NS_IMETHOD    GetVisibility(nsString& aVisibility)=0;
-  NS_IMETHOD    SetVisibility(const nsString& aVisibility)=0;
+  NS_IMETHOD    GetVisibility(nsAWritableString& aVisibility)=0;
+  NS_IMETHOD    SetVisibility(const nsAReadableString& aVisibility)=0;
 
-  NS_IMETHOD    GetBackground(nsString& aBackground)=0;
-  NS_IMETHOD    SetBackground(const nsString& aBackground)=0;
+  NS_IMETHOD    GetBackground(nsAWritableString& aBackground)=0;
+  NS_IMETHOD    SetBackground(const nsAReadableString& aBackground)=0;
 
-  NS_IMETHOD    GetBgColor(nsString& aBgColor)=0;
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor)=0;
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor)=0;
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor)=0;
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(const nsString& aName)=0;
+  NS_IMETHOD    GetName(nsAWritableString& aName)=0;
+  NS_IMETHOD    SetName(const nsAReadableString& aName)=0;
 
   NS_IMETHOD    GetZIndex(PRInt32* aZIndex)=0;
   NS_IMETHOD    SetZIndex(PRInt32 aZIndex)=0;
@@ -69,14 +69,14 @@ public:
   NS_IMETHOD    SetTop(PRInt32 aTop);  \
   NS_IMETHOD    GetLeft(PRInt32* aLeft);  \
   NS_IMETHOD    SetLeft(PRInt32 aLeft);  \
-  NS_IMETHOD    GetVisibility(nsString& aVisibility);  \
-  NS_IMETHOD    SetVisibility(const nsString& aVisibility);  \
-  NS_IMETHOD    GetBackground(nsString& aBackground);  \
-  NS_IMETHOD    SetBackground(const nsString& aBackground);  \
-  NS_IMETHOD    GetBgColor(nsString& aBgColor);  \
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor);  \
-  NS_IMETHOD    GetName(nsString& aName);  \
-  NS_IMETHOD    SetName(const nsString& aName);  \
+  NS_IMETHOD    GetVisibility(nsAWritableString& aVisibility);  \
+  NS_IMETHOD    SetVisibility(const nsAReadableString& aVisibility);  \
+  NS_IMETHOD    GetBackground(nsAWritableString& aBackground);  \
+  NS_IMETHOD    SetBackground(const nsAReadableString& aBackground);  \
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor);  \
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor);  \
+  NS_IMETHOD    GetName(nsAWritableString& aName);  \
+  NS_IMETHOD    SetName(const nsAReadableString& aName);  \
   NS_IMETHOD    GetZIndex(PRInt32* aZIndex);  \
   NS_IMETHOD    SetZIndex(PRInt32 aZIndex);  \
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);  \
@@ -88,14 +88,14 @@ public:
   NS_IMETHOD    SetTop(PRInt32 aTop) { return _to SetTop(aTop); } \
   NS_IMETHOD    GetLeft(PRInt32* aLeft) { return _to GetLeft(aLeft); } \
   NS_IMETHOD    SetLeft(PRInt32 aLeft) { return _to SetLeft(aLeft); } \
-  NS_IMETHOD    GetVisibility(nsString& aVisibility) { return _to GetVisibility(aVisibility); } \
-  NS_IMETHOD    SetVisibility(const nsString& aVisibility) { return _to SetVisibility(aVisibility); } \
-  NS_IMETHOD    GetBackground(nsString& aBackground) { return _to GetBackground(aBackground); } \
-  NS_IMETHOD    SetBackground(const nsString& aBackground) { return _to SetBackground(aBackground); } \
-  NS_IMETHOD    GetBgColor(nsString& aBgColor) { return _to GetBgColor(aBgColor); } \
-  NS_IMETHOD    SetBgColor(const nsString& aBgColor) { return _to SetBgColor(aBgColor); } \
-  NS_IMETHOD    GetName(nsString& aName) { return _to GetName(aName); } \
-  NS_IMETHOD    SetName(const nsString& aName) { return _to SetName(aName); } \
+  NS_IMETHOD    GetVisibility(nsAWritableString& aVisibility) { return _to GetVisibility(aVisibility); } \
+  NS_IMETHOD    SetVisibility(const nsAReadableString& aVisibility) { return _to SetVisibility(aVisibility); } \
+  NS_IMETHOD    GetBackground(nsAWritableString& aBackground) { return _to GetBackground(aBackground); } \
+  NS_IMETHOD    SetBackground(const nsAReadableString& aBackground) { return _to SetBackground(aBackground); } \
+  NS_IMETHOD    GetBgColor(nsAWritableString& aBgColor) { return _to GetBgColor(aBgColor); } \
+  NS_IMETHOD    SetBgColor(const nsAReadableString& aBgColor) { return _to SetBgColor(aBgColor); } \
+  NS_IMETHOD    GetName(nsAWritableString& aName) { return _to GetName(aName); } \
+  NS_IMETHOD    SetName(const nsAReadableString& aName) { return _to SetName(aName); } \
   NS_IMETHOD    GetZIndex(PRInt32* aZIndex) { return _to GetZIndex(aZIndex); } \
   NS_IMETHOD    SetZIndex(PRInt32 aZIndex) { return _to SetZIndex(aZIndex); } \
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument) { return _to GetDocument(aDocument); } \

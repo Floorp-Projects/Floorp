@@ -22,6 +22,7 @@
 
 #include "nsHTMLValue.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsISizeOfHandler.h"
 
@@ -60,14 +61,14 @@ nsHTMLValue::nsHTMLValue(float aValue)
   mValue.mFloat = aValue;
 }
 
-nsHTMLValue::nsHTMLValue(const nsString& aValue, nsHTMLUnit aUnit)
+nsHTMLValue::nsHTMLValue(const nsAReadableString& aValue, nsHTMLUnit aUnit)
   : mUnit(aUnit)
 {
   NS_ASSERTION((eHTMLUnit_String == aUnit) ||
                (eHTMLUnit_ColorName == aUnit), "not a string value");
   if ((eHTMLUnit_String == aUnit) ||
       (eHTMLUnit_ColorName == aUnit)) {
-    mValue.mString = aValue.ToNewUnicode();
+    mValue.mString = ToNewUnicode(aValue);
   }
   else {
     mUnit = eHTMLUnit_Null;
@@ -226,12 +227,13 @@ void nsHTMLValue::SetPercentValue(float aValue)
   mValue.mFloat = aValue;
 }
 
-void nsHTMLValue::SetStringValue(const nsString& aValue, nsHTMLUnit aUnit)
+void nsHTMLValue::SetStringValue(const nsAReadableString& aValue,
+                                 nsHTMLUnit aUnit)
 {
   Reset();
   if ((eHTMLUnit_String == aUnit) || (eHTMLUnit_ColorName == aUnit)) {
     mUnit = aUnit;
-    mValue.mString = aValue.ToNewUnicode();
+    mValue.mString = ToNewUnicode(aValue);
   }
 }
 
@@ -256,7 +258,7 @@ void nsHTMLValue::SetEmptyValue(void)
   mUnit = eHTMLUnit_Empty;
 }
 
-void nsHTMLValue::AppendToString(nsString& aBuffer) const
+void nsHTMLValue::AppendToString(nsAWritableString& aBuffer) const
 {
   if (eHTMLUnit_Null == mUnit) {
     return;
@@ -266,37 +268,48 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
   }
   else if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
     if (nsnull != mValue.mString) {
-      aBuffer.AppendWithConversion('"');
+      aBuffer.Append(PRUnichar('"'));
       aBuffer.Append(mValue.mString);
-      aBuffer.AppendWithConversion('"');
+      aBuffer.Append(PRUnichar('"'));
     }
     else {
-      aBuffer.AppendWithConversion("null str");
+      aBuffer.Append(NS_LITERAL_STRING("null str"));
     }
   }
   else if (eHTMLUnit_ISupports == mUnit) {
-    aBuffer.AppendWithConversion("0x");
-    aBuffer.AppendInt((PRInt32)mValue.mISupports, 16);
+    aBuffer.Append(NS_LITERAL_STRING("0x"));
+    nsAutoString intStr;
+    intStr.AppendInt((PRInt32)mValue.mISupports, 16);
+    aBuffer.Append(intStr);
   }
   else if (eHTMLUnit_Color == mUnit){
-    aBuffer.AppendWithConversion("(0x");
-    aBuffer.AppendInt(NS_GET_R(mValue.mColor), 16);
-    aBuffer.AppendWithConversion(" 0x");
-    aBuffer.AppendInt(NS_GET_G(mValue.mColor), 16);
-    aBuffer.AppendWithConversion(" 0x");
-    aBuffer.AppendInt(NS_GET_B(mValue.mColor), 16);
-    aBuffer.AppendWithConversion(" 0x");
-    aBuffer.AppendInt(NS_GET_A(mValue.mColor), 16);
-    aBuffer.AppendWithConversion(')');
+    nsAutoString intStr;
+    intStr.Append(NS_LITERAL_STRING("(0x"));
+    intStr.AppendInt(NS_GET_R(mValue.mColor), 16);
+    intStr.Append(intStr);
+    intStr.Append(NS_LITERAL_STRING(" 0x"));
+    intStr.AppendInt(NS_GET_G(mValue.mColor), 16);
+    intStr.Append(NS_LITERAL_STRING(" 0x"));
+    intStr.AppendInt(NS_GET_B(mValue.mColor), 16);
+    intStr.Append(NS_LITERAL_STRING(" 0x"));
+    intStr.AppendInt(NS_GET_A(mValue.mColor), 16);
+    intStr.Append(PRUnichar(')'));
+
+    aBuffer.Append(intStr);
   }
   else if (eHTMLUnit_Percent == mUnit) {
-    aBuffer.AppendFloat(mValue.mFloat * 100.0f);
+    nsAutoString floatStr;
+    floatStr.AppendFloat(mValue.mFloat * 100.0f);
+    aBuffer.Append(floatStr);
   }
   else {
-    aBuffer.AppendInt(mValue.mInt, 10);
-    aBuffer.AppendWithConversion("[0x");
-    aBuffer.AppendInt(mValue.mInt, 16);
-    aBuffer.AppendWithConversion(']');
+    nsAutoString intStr;
+    intStr.AppendInt(mValue.mInt, 10);
+    intStr.Append(NS_LITERAL_STRING("[0x"));
+    intStr.AppendInt(mValue.mInt, 16);
+    intStr.Append(PRUnichar(']'));
+
+    aBuffer.Append(intStr);
   }
 
   switch (mUnit) {
@@ -304,18 +317,18 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
     case eHTMLUnit_Empty:      break;
     case eHTMLUnit_String:     break;
     case eHTMLUnit_ColorName:  break;
-    case eHTMLUnit_ISupports:  aBuffer.AppendWithConversion("ptr");  break;
+    case eHTMLUnit_ISupports:  aBuffer.Append(NS_LITERAL_STRING("ptr"));  break;
     case eHTMLUnit_Integer:    break;
-    case eHTMLUnit_Enumerated: aBuffer.AppendWithConversion("enum"); break;
-    case eHTMLUnit_Proportional:  aBuffer.AppendWithConversion("*"); break;
-    case eHTMLUnit_Color:      aBuffer.AppendWithConversion("rbga"); break;
-    case eHTMLUnit_Percent:    aBuffer.AppendWithConversion("%");    break;
-    case eHTMLUnit_Pixel:      aBuffer.AppendWithConversion("px");   break;
+    case eHTMLUnit_Enumerated: aBuffer.Append(NS_LITERAL_STRING("enum")); break;
+    case eHTMLUnit_Proportional:  aBuffer.Append(NS_LITERAL_STRING("*")); break;
+    case eHTMLUnit_Color:      aBuffer.Append(NS_LITERAL_STRING("rbga")); break;
+    case eHTMLUnit_Percent:    aBuffer.Append(NS_LITERAL_STRING("%"));    break;
+    case eHTMLUnit_Pixel:      aBuffer.Append(NS_LITERAL_STRING("px"));   break;
   }
-  aBuffer.AppendWithConversion(' ');
+  aBuffer.Append(PRUnichar(' '));
 }
 
-void nsHTMLValue::ToString(nsString& aBuffer) const
+void nsHTMLValue::ToString(nsAWritableString& aBuffer) const
 {
   aBuffer.Truncate();
   AppendToString(aBuffer);

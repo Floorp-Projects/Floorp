@@ -64,31 +64,35 @@ public:
 
   // nsIDOMElement, because of the "htmlFor" attribute handling we can't
   // use the NS_IMPL_IDOMELEMENT_USING_GENERIC macro here...
-  NS_IMETHOD GetTagName(nsString& aTagName) {
+  NS_IMETHOD GetTagName(nsAWritableString& aTagName) {
     return mInner.GetTagName(aTagName);
   }
-  NS_IMETHOD GetAttribute(const nsString& aName, nsString& aReturn) {
-    if (aName.EqualsIgnoreCase("htmlfor")) {
-      return mInner.GetAttribute(NS_ConvertASCIItoUCS2("for"), aReturn);
+  NS_IMETHOD GetAttribute(const nsAReadableString& aName, nsAWritableString& aReturn) {
+    nsAutoString name(aName);
+    if (name.EqualsIgnoreCase("htmlfor")) {
+      return mInner.GetAttribute(NS_LITERAL_STRING("for"), aReturn);
     }
     return mInner.GetAttribute(aName, aReturn);
   }
-  NS_IMETHOD SetAttribute(const nsString& aName, const nsString& aValue) {
-    if (aName.EqualsIgnoreCase("htmlfor")) {
-      return mInner.SetAttribute(NS_ConvertASCIItoUCS2("for"), aValue);
+  NS_IMETHOD SetAttribute(const nsAReadableString& aName, const nsAReadableString& aValue) {
+    nsAutoString name(aName);
+    if (name.EqualsIgnoreCase("htmlfor")) {
+      return mInner.SetAttribute(NS_LITERAL_STRING("for"), aValue);
     }
     return mInner.SetAttribute(aName, aValue);
   }
-  NS_IMETHOD RemoveAttribute(const nsString& aName) {
-    if (aName.EqualsIgnoreCase("htmlfor")) {
-      return mInner.RemoveAttribute(NS_ConvertASCIItoUCS2("for"));
+  NS_IMETHOD RemoveAttribute(const nsAReadableString& aName) {
+    nsAutoString name(aName);
+    if (name.EqualsIgnoreCase("htmlfor")) {
+      return mInner.RemoveAttribute(NS_LITERAL_STRING("for"));
     }
     return mInner.RemoveAttribute(aName);
   }
-  NS_IMETHOD GetAttributeNode(const nsString& aName,
+  NS_IMETHOD GetAttributeNode(const nsAReadableString& aName,
                               nsIDOMAttr** aReturn) {
-    if (aName.EqualsIgnoreCase("htmlfor")) {
-      return mInner.GetAttributeNode(NS_ConvertASCIItoUCS2("for"), aReturn);
+    nsAutoString name(aName);
+    if (name.EqualsIgnoreCase("htmlfor")) {
+      return mInner.GetAttributeNode(NS_LITERAL_STRING("for"), aReturn);
     }
     return mInner.GetAttributeNode(aName, aReturn);
   }
@@ -98,41 +102,41 @@ public:
   NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn) {
     return mInner.RemoveAttributeNode(aOldAttr, aReturn);
   }
-  NS_IMETHOD GetElementsByTagName(const nsString& aTagname,
+  NS_IMETHOD GetElementsByTagName(const nsAReadableString& aTagname,
                                   nsIDOMNodeList** aReturn) {
     return mInner.GetElementsByTagName(aTagname, aReturn);
   }
-  NS_IMETHOD GetAttributeNS(const nsString& aNamespaceURI,
-                            const nsString& aLocalName, nsString& aReturn) {
+  NS_IMETHOD GetAttributeNS(const nsAReadableString& aNamespaceURI,
+                            const nsAReadableString& aLocalName, nsAWritableString& aReturn) {
     return mInner.GetAttributeNS(aNamespaceURI, aLocalName, aReturn);
   }
-  NS_IMETHOD SetAttributeNS(const nsString& aNamespaceURI,
-                            const nsString& aQualifiedName,
-                            const nsString& aValue) {
+  NS_IMETHOD SetAttributeNS(const nsAReadableString& aNamespaceURI,
+                            const nsAReadableString& aQualifiedName,
+                            const nsAReadableString& aValue) {
     return mInner.SetAttributeNS(aNamespaceURI, aQualifiedName, aValue);
   }
-  NS_IMETHOD RemoveAttributeNS(const nsString& aNamespaceURI,
-                               const nsString& aLocalName) {
+  NS_IMETHOD RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
+                               const nsAReadableString& aLocalName) {
     return mInner.RemoveAttributeNS(aNamespaceURI, aLocalName);
   }
-  NS_IMETHOD GetAttributeNodeNS(const nsString& aNamespaceURI,
-                                const nsString& aLocalName,
+  NS_IMETHOD GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
+                                const nsAReadableString& aLocalName,
                                 nsIDOMAttr** aReturn) {
     return mInner.GetAttributeNodeNS(aNamespaceURI, aLocalName, aReturn);
   }
   NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn) {
     return mInner.SetAttributeNodeNS(aNewAttr, aReturn);
   }
-  NS_IMETHOD GetElementsByTagNameNS(const nsString& aNamespaceURI,
-                                    const nsString& aLocalName,
+  NS_IMETHOD GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
+                                    const nsAReadableString& aLocalName,
                                     nsIDOMNodeList** aReturn) {
     return mInner.GetElementsByTagNameNS(aNamespaceURI, aLocalName, aReturn);
   }
-  NS_IMETHOD HasAttribute(const nsString& aName, PRBool* aReturn) {
+  NS_IMETHOD HasAttribute(const nsAReadableString& aName, PRBool* aReturn) {
     return HasAttribute(aName, aReturn);
   }
-  NS_IMETHOD HasAttributeNS(const nsString& aNamespaceURI,
-                            const nsString& aLocalName, PRBool* aReturn) {
+  NS_IMETHOD HasAttributeNS(const nsAReadableString& aNamespaceURI,
+                            const nsAReadableString& aLocalName, PRBool* aReturn) {
     return mInner.HasAttributeNS(aNamespaceURI, aLocalName, aReturn);
   }
 
@@ -140,12 +144,8 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLLabelElement
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
+  NS_DECL_IDOMHTMLLABELELEMENT
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
-  NS_IMETHOD GetAccessKey(nsString& aAccessKey);
-  NS_IMETHOD SetAccessKey(const nsString& aAccessKey);
-  NS_IMETHOD GetHtmlFor(nsString& aHtmlFor);
-  NS_IMETHOD SetHtmlFor(const nsString& aHtmlFor);
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -307,14 +307,14 @@ NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey)
 //NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for)
 
 NS_IMETHODIMP
-nsHTMLLabelElement::GetHtmlFor(nsString& aValue)
+nsHTMLLabelElement::GetHtmlFor(nsAWritableString& aValue)
 {
   mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_for, aValue);                 
   return NS_OK;                                                    
 }  
 
 NS_IMETHODIMP
-nsHTMLLabelElement::SetHtmlFor(const nsString& aValue)
+nsHTMLLabelElement::SetHtmlFor(const nsAReadableString& aValue)
 {
   // trim leading and trailing whitespace 
   static char whitespace[] = " \r\n\t";
@@ -325,7 +325,7 @@ nsHTMLLabelElement::SetHtmlFor(const nsString& aValue)
 
 NS_IMETHODIMP
 nsHTMLLabelElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsString& aValue,
+                                      const nsAReadableString& aValue,
                                       nsHTMLValue& aResult)
 {
   return NS_CONTENT_ATTR_NOT_THERE;
@@ -334,7 +334,7 @@ nsHTMLLabelElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLLabelElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsString& aResult) const
+                                      nsAWritableString& aResult) const
 {
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
