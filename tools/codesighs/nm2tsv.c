@@ -139,7 +139,7 @@ int nm2tsv(Options* inOptions)
 **  Output tab seperated value data.
 **
 **  We expect our data to be in a particular format.
-**  nm --format=bsd --size-sort --print-file-name
+**  nm --format=bsd --size-sort --print-file-name --demangle
 */
 {
     int retval = 0;
@@ -472,6 +472,11 @@ void showHelp(Options* inOptions)
         printf("\t %s%s", gSwitches[loop]->mShortName, valueText);
         printf(DESC_NEWLINE "%s\n\n", gSwitches[loop]->mDescription);
     }
+
+    printf("This tool normalizes nm output for use by other tools.\n");
+    printf("GNU nm is assumed for symbol type determination.\n");
+    printf("i.e. Use this tool to parse the output of:\n");
+    printf("\t/usr/bin/nm --format=bsd --size-sort --print-file-name --demangle <exefile>\n");
 }
 
 
