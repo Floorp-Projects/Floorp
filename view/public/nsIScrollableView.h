@@ -50,8 +50,7 @@ typedef enum
 class nsIScrollableView : public nsISupports
 {
 public:
-  
-  static const nsIID& GetIID() { static nsIID iid = NS_ISCROLLABLEVIEW_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLEVIEW_IID)
 
   /**
    * Create the controls used to allow scrolling. Call this method
