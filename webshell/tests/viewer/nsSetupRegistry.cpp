@@ -49,10 +49,6 @@
 
 #include "nsUnicharUtilCIID.h"
 #include "nsIProperties.h"
-#include "nsCollationCID.h"
-#include "nsDateTimeFormatCID.h"
-#include "nsLocaleCID.h"
-#include "nsLWBrkCIID.h"
 
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
@@ -87,8 +83,6 @@
     #define STRRES_DLL   "strres.dll"
     #define UNICHARUTIL_DLL   "unicharutil.dll"
     #define BASE_DLL   "raptorbase.dll"
-    #define NSLOCALE_DLL "nslocale.dll"
-    #define LWBRK_DLL "lwbrk.dll"
     #define PROFILE_DLL "xpprofile32.dll"
 #elif defined(XP_MAC)
     #define XPCOM_DLL   "XPCOM_DLL"
@@ -113,8 +107,6 @@
     #define STRRES_DLL   "STRRES_DLL"
     #define UNICHARUTIL_DLL   "UNICHARUTIL_DLL"
     #define BASE_DLL   "base.shlb"
-    #define NSLOCALE_DLL "NSLOCALE_DLL"
-    #define LWBRK_DLL "LWBRK_DLL"
     #define PROFILE_DLL "PROFILE_DLL"
 #else
     #define XPCOM_DLL  "libxpcom.so"
@@ -147,8 +139,6 @@
     #define STRRES_DLL   "libstrres.so"
     #define UNICHARUTIL_DLL   "libunicharutil.so"
     #define BASE_DLL     "libraptorbase.so"
-    #define NSLOCALE_DLL "libnslocale.so"
-    #define LWBRK_DLL "liblwbrk.so"
     #define PROFILE_DLL "libprofile.so"
 #endif
 
@@ -224,14 +214,6 @@ static NS_DEFINE_IID(kCMenuItemCID,               NS_MENUITEM_CID);
 
 static NS_DEFINE_IID(kUnicharUtilCID,             NS_UNICHARUTIL_CID);
 
-static NS_DEFINE_IID(kCollationCID,               NS_COLLATION_CID);
-static NS_DEFINE_IID(kCollationFactoryCID,        NS_COLLATIONFACTORY_CID); // do we need this ???
-static NS_DEFINE_IID(kDateTimeFormatCID,          NS_DATETIMEFORMAT_CID);
-static NS_DEFINE_IID(kLocaleCID,                  NS_LOCALE_CID);
-static NS_DEFINE_IID(kLocaleFactoryCID,           NS_LOCALEFACTORY_CID); // do we need this ???
-
-static NS_DEFINE_IID(kLWBrkCID,                   NS_LWBRK_CID); 
-
 extern "C" void
 NS_SetupRegistry()
 {
@@ -296,14 +278,6 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kUnicharUtilCID,          NULL, NULL, UNICHARUTIL_DLL, PR_FALSE, PR_FALSE);
 
   nsComponentManager::RegisterComponent(kPersistentPropertiesCID, NULL, NULL, BASE_DLL, PR_FALSE, PR_FALSE);
-
-  nsComponentManager::RegisterComponent(kCollationCID,            NULL, NULL, NSLOCALE_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCollationFactoryCID,     NULL, NULL, NSLOCALE_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kDateTimeFormatCID,       NULL, NULL, NSLOCALE_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kLocaleCID,               NULL, NULL, NSLOCALE_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kLocaleFactoryCID,        NULL, NULL, NSLOCALE_DLL, PR_FALSE, PR_FALSE);
-
-  nsComponentManager::RegisterComponent(kLWBrkCID,        NULL, NULL, LWBRK_DLL, PR_FALSE, PR_FALSE);
 
   nsComponentManager::RegisterComponent(kCPluginManagerCID, NULL, NULL, PLUGIN_DLL,      PR_FALSE, PR_FALSE);
 #ifdef OJI
