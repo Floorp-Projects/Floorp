@@ -34,7 +34,7 @@ CPPSRCS		= \
 		  $(NULL)
 
 # SunOS i86pc should use the intel code too.
-ifneq (,$(filter SunOS Linux FreeBSD NetBSD BSD_OS,$(OS_ARCH)))
+ifneq (,$(filter SunOS Linux FreeBSD NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		= \
 		  xptcinvoke_unixish_x86.cpp \
