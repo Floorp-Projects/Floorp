@@ -73,12 +73,21 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
     }    
     else // use the system default
     {
-      // use the app registry name to launch a shell execute....
-      LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
-      if (r < 32) 
-        rv = NS_ERROR_FAILURE;
+      // Launch the temp file, unless it is an executable.
+      nsCOMPtr<nsILocalFile> local(do_QueryInterface(aTempFile));
+      if (!local)
+        return NS_ERROR_FAILURE;
+
+      PRBool executable = PR_TRUE;
+      local->IsExecutable(&executable);
+      if (!executable)
+      {
+        rv = local->Launch();
+      }
       else
-        rv = NS_OK;
+      {
+        rv = NS_ERROR_FAILURE;
+      }     
     }
   }
 
