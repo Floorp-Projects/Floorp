@@ -1157,8 +1157,9 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
     if(!FindTagInSet(aChildTag,gWhitespaceTags,sizeof(gWhitespaceTags)/sizeof(aChildTag))) {
       isNotWhiteSpace = mSaveBadTokens  = PR_TRUE;
     }
-    if(mSaveBadTokens &&(isNotWhiteSpace || mBodyContext->TokenCountAt(theBCIndex) > 0)) {
+    if(mSaveBadTokens) {
       mBodyContext->SaveToken(aToken,theBCIndex);
+      // If the token is attributed then save those attributes too.
       if(attrCount > 0) {
         nsCParserNode* theAttrNode = (nsCParserNode*)&aNode;
         while(attrCount > 0){ 
@@ -1460,18 +1461,12 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
           if(theTag != eHTMLTag_unknown) {
             attrCount    = theToken->GetAttributeCount();
             // Put back attributes, which once got popped out, into the tokenizer
-            if(attrCount > 0) {
-              PRInt32 theAttrCount  = 0;
-              for(PRInt32 i=0;i<attrCount; i++){
-                CToken* theAttrToken = mBodyContext->RestoreTokenFrom(theBadContentIndex);
-                if(theAttrToken) {
-                  mTokenizer->PushTokenFront(theAttrToken);
-                  theAttrCount++;
-                }
-                theBadTokenCount--;
+            for(PRInt32 i=0;i<attrCount; i++){
+              CToken* theAttrToken = mBodyContext->RestoreTokenFrom(theBadContentIndex);
+              if(theAttrToken) {
+                mTokenizer->PushTokenFront(theAttrToken);
               }
-              // XXX Hack. Wonder why the attribute count changes, sometimes!!!!!!
-              theToken->SetAttributeCount(theAttrCount);
+              theBadTokenCount--;
             }
             result = HandleStartToken(theToken);
           }
@@ -1482,7 +1477,8 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
          CloseContainersTo(mBodyContext->TagAt(theTopIndex),PR_TRUE);
       }
      
-      // Put back tags, in temp context, into body context
+      // Bad-contents were successfully processed. Now, itz time to get
+      // back to the original body context state.
       for(PRInt32 j=0; j<(theTagCount - theTopIndex); j++)
         mBodyContext->Push(temp.Pop());
       
