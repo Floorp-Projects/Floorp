@@ -117,6 +117,11 @@ nsUrlbarHistory::~nsUrlbarHistory()
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
         gRDFService = nsnull;
     }
+    if (gRDFCUtils)
+    {
+        nsServiceManager::ReleaseService(kRDFCUtilsCID, gRDFCUtils);
+        gRDFCUtils = nsnull;
+    }
 	mDataSource = nsnull;
 	NS_IF_RELEASE(kNC_URLBARHISTORY);
 	NS_IF_RELEASE(kNC_CHILD);
