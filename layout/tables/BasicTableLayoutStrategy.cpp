@@ -853,12 +853,12 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(const nsHTMLReflowSt
     result = BalanceColumnsTableFits(aReflowState, bigSpace, 
                                      bigSpace, aTableSpecifiedWidth, aTableIsAutoWidth);
   }
-  else if (mMinTableWidth >= actualMaxWidth)
+  else if (mMinTableWidth > actualMaxWidth)
   { // the table doesn't fit in the available space
     if (gsDebug) printf ("  * table minTW does not fit, calling BalanceColumnsTableDoesNotFit\n");
     result = BalanceColumnsTableDoesNotFit();
   }
-  else if (mMaxTableWidth < actualMaxWidth)
+  else if (mMaxTableWidth <= actualMaxWidth)
   { // the max width of the table fits comfortably in the available space
     if (gsDebug) printf ("  * table desired size fits, calling BalanceColumnsTableFits\n");
     result = BalanceColumnsTableFits(aReflowState, aAvailWidth, 
@@ -1831,7 +1831,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsHTMLReflowSt
         nsSize cellMinSize = cellFrame->GetPass1MaxElementSize();
         nsSize cellDesiredSize = cellFrame->GetPass1DesiredSize();
 
-        nscoord cellMinWidth=colFrame->GetMinColWidth();
+        nscoord cellMinWidth=colFrame->GetAdjustedMinColWidth();
         nscoord cellDesiredWidth=colFrame->GetMaxColWidth(); 
         if (1==colSpan)
         {
@@ -2133,7 +2133,7 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
   if (kRecursionLimit<=aRecursionControl) // only allow kRecursionLimit iterations, as per Nav4. See laytable.c
     return;
   nscoord sumOfMinWidths = 0;   // sum of min widths of each auto column
-  nscoord aStartingComputedTableWidth = aComputedTableWidth;  // remember this so we can see if we're making any progress
+  nscoord startingComputedTableWidth = aComputedTableWidth;  // remember this so we can see if we're making any progress
   if (PR_TRUE==gsDebug) 
     printf ("DistributeRemainingSpace: fixed width %d > computed table width %d\n",
             aTableSpecifiedWidth, aComputedTableWidth);
@@ -2190,7 +2190,7 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
             percent = ((float)maxEffectiveColWidth)/((float)totalEffectiveWidthOfAutoColumns);
           else
             percent = ((float)1)/((float)numColumnsToBeResized);
-          nscoord colWidth =  startingColWidth + (nscoord)(availWidth*percent);
+          nscoord colWidth =  startingColWidth + NSToCoordRound(((float)(availWidth))*percent);
           if (PR_TRUE==gsDebug)
             printf("  colWidth = %d from startingColWidth %d plus %d percent of availWidth %d\n",
                   colWidth, startingColWidth, (nscoord)((float)100*percent), availWidth);
@@ -2208,7 +2208,7 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
       }
     }
 
-    if (aComputedTableWidth!=aStartingComputedTableWidth)
+    if (aComputedTableWidth!=startingComputedTableWidth)
     {  // othewise we made no progress and shouldn't continue
       if (aComputedTableWidth<aTableSpecifiedWidth)
       {

@@ -2436,6 +2436,8 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
   if (PR_FALSE==RequiresPass1Layout())
   {
     reason = aReflowState.reflowState.reason;
+    if (eReflowReason_Incremental==reason)
+      reason = eReflowReason_Resize;
   }
   else
     reason = eReflowReason_Resize;
