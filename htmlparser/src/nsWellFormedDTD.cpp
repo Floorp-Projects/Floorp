@@ -59,6 +59,7 @@ static NS_DEFINE_IID(kClassIID,     NS_WELLFORMED_DTD_IID);
 //static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kXMLTextContentType = "text/xml";
 static const char* kRDFTextContentType = "text/rdf";
+static const char* kXULTextContentType = "text/xul";
 static const char* kViewSourceCommand= "view-source";
 
 static nsAutoString gEmpty;
@@ -185,7 +186,8 @@ PRBool CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCommand, PRIn
   PRBool result=PR_FALSE;
   if(!aCommand.Equals(kViewSourceCommand)) {
     result=(aContentType.Equals(kXMLTextContentType) ||
-            aContentType.Equals(kRDFTextContentType));
+            aContentType.Equals(kRDFTextContentType) ||
+			aContentType.Equals(kXULTextContentType));
   }
   return result;
 }
@@ -200,7 +202,8 @@ PRBool CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCommand, PRIn
 eAutoDetectResult CWellFormedDTD::AutoDetectContentType(nsString& aBuffer,nsString& aType){
   eAutoDetectResult result=eUnknownDetect;
   if(PR_TRUE==aType.Equals(kXMLTextContentType) ||
-     PR_TRUE==aType.Equals(kRDFTextContentType)) 
+     PR_TRUE==aType.Equals(kRDFTextContentType) ||
+	 PR_TRUE==aType.Equals(kXULTextContentType))
     result=eValidDetect;
   return result;
 }
