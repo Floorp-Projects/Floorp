@@ -25,6 +25,8 @@ toolkit.jar:
 	content/global/wizardOverlay.js             (resources/content/wizardOverlay.js) 
 	content/global/wizardOverlay.xul            (resources/content/wizardOverlay.xul) 
 	content/global/treePopups.js                (resources/content/treePopups.js) 
+	content/global/nsTreeController.js            (resources/content/nsTreeController.js) 
+	content/global/nsTreeUtils.js            (resources/content/nsTreeUtils.js) 
 	content/global/xulBindings.xml              (resources/content/xulBindings.xml) 
 	content/global/menulistBindings.xml         (resources/content/menulistBindings.xml) 
 	content/global/radioBindings.xml            (resources/content/radioBindings.xml)

@@ -34,7 +34,6 @@
 
 <window title="&historyWindowTitle.label;" id="bookmark-window"
   onload="HistoryInit();"
-  onunload="doUnload()"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:web="http://home.netscape.com/WEB-rdf#"
@@ -43,8 +42,9 @@
   orient="vertical"
   windowtype="history:manager">
 
-  <script src="chrome://communicator/content/bookmarks/bookmarks.js"/>
   <script src="chrome://communicator/content/history/history.js"/>
+  <script src="chrome://global/content/nsTreeController.js"/>
+  <script src="chrome://global/content/nsTreeUtils.js"/>
   <script src="chrome://global/content/treePopups.js"/>
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://global/content/globalOverlay.js"/>

@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *  Alec Flett <alecf@netscape.com>
  */
 
 // The history window uses JavaScript in bookmarks.js too.
@@ -30,57 +31,14 @@ function debug(msg)
 
 function HistoryInit() {
     var tree = document.getElementById("bookmarksTree");
-    debug("adding controller to tree");
-    tree.controllers.appendController(HistoryController);
+    debug("adding controller to tree\n");
+    var historyController = new nsTreeController(tree);
+
     var children = document.getElementById('treechildren-bookmarks');
-    tree.selectItem(children.firstChild);
+    if (children.firstChild)
+        tree.selectItem(children.firstChild);
     tree.focus();
 }
-
-var HistoryController = {
-    supportsCommand: function(command)
-    {
-        debug("history in supports with " + command);
-        switch(command)
-        {
-            case "cmd_copy":
-            case "cmd_delete":
-            case "cmd_selectAll":
-                return true;
-            default:
-                return false;
-        }
-    },
-    isCommandEnabled: function(command)
-    {
-        debug("history in enabled with " + command);
-        switch(command)
-        {
-            case "cmd_copy":
-            case "cmd_delete":
-            case "cmd_selectAll":
-                return true;
-            default:
-                return false;
-        }
-    },
-    doCommand: function(command)
-    {
-        debug("history in do with " + command);
-        switch(command)
-        {
-            case "cmd_copy":
-                doCopy();
-                break;
-            case "cmd_delete":
-                doDelete();
-                break;
-            case "cmd_selectAll":
-                doSelectAll();
-                break;
-        }
-    }
-};
 
 var historyDNDObserver = {
   onDragStart: function (aEvent)
