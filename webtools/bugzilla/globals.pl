@@ -1060,42 +1060,61 @@ sub quoteUrls {
 
 sub GetBugLink {
     my ($bug_num, $link_text) = (@_);
-    my ($link_return) = "";
+    detaint_natural($bug_num) || die "GetBugLink() called with non-integer bug number";
 
-    # TODO - Add caching capabilites... possibly use a global variable in the form
-    # of $buglink{$bug_num} that contains the text returned by this sub.  If that
-    # variable is defined, simply return it's value rather than running the SQL
-    # query.  This would cut down on the number of SQL calls when the same bug is
-    # referenced multiple times.
-    
-    # Make sure any unfetched data from a currently running query
-    # is saved off rather than overwritten
-    PushGlobalSQLState();
-    
-    # Get this bug's info from the SQL Database
-    SendSQL("select bugs.bug_status, resolution, short_desc, groupset
-             from bugs where bugs.bug_id = $bug_num");
-    my ($bug_stat, $bug_res, $bug_desc, $bug_grp) = (FetchSQLData());
-    
-    # Format the retrieved information into a link
-    if ($bug_stat eq "UNCONFIRMED") { $link_return .= "<i>" }
-    if ($bug_res ne "") { $link_return .= "<strike>" }
-    $bug_desc = value_quote($bug_desc);
-    $link_text = value_quote($link_text);
-    $link_return .= qq{<a href="show_bug.cgi?id=$bug_num" title="$bug_stat};
-    if ($bug_res ne "") {$link_return .= " $bug_res"}
-    if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
-        $link_return .= " - $bug_desc";
+    # If we've run GetBugLink() for this bug number before, %::buglink
+    # will contain an anonymous array ref of relevent values, if not
+    # we need to get the information from the database.
+    if (! defined $::buglink{$bug_num}) {
+        # Make sure any unfetched data from a currently running query
+        # is saved off rather than overwritten
+        PushGlobalSQLState();
+
+        SendSQL("SELECT bugs.bug_status, resolution, short_desc, groupset " .
+                "FROM bugs WHERE bugs.bug_id = $bug_num");
+
+        # If the bug exists, save its data off for use later in the sub
+        if (MoreSQLData()) {
+            my ($bug_state, $bug_res, $bug_desc, $bug_grp) = FetchSQLData();
+            # Initialize these variables to be "" so that we don't get warnings
+            # if we don't change them below (which is highly likely).
+            my ($pre, $title, $post) = ("", "", "");
+
+            $title = $bug_state;
+            if ($bug_state eq $::unconfirmedstate) {
+                $pre = "<i>";
+                $post = "</i>";
+            }
+            elsif (! IsOpenedState($bug_state)) {
+                $pre = "<strike>";
+                $title .= " $bug_res";
+                $post = "</strike>";
+            }
+            if ($bug_grp == 0 || CanSeeBug($bug_num, $::userid, $::usergroupset)) {
+                $title .= " - $bug_desc";
+            }
+            $::buglink{$bug_num} = [$pre, value_quote($title), $post];
+        }
+        else {
+            # Even if there's nothing in the database, we want to save a blank
+            # anonymous array in the %::buglink hash so the query doesn't get
+            # run again next time we're called for this bug number.
+            $::buglink{$bug_num} = [];
+        }
+        # All done with this sidetrip
+        PopGlobalSQLState();
     }
-    $link_return .= qq{">$link_text</a>};
-    if ($bug_res ne "") { $link_return .= "</strike>" }
-    if ($bug_stat eq "UNCONFIRMED") { $link_return .= "</i>"}
-    
-    # Put back any query in progress
-    PopGlobalSQLState();
 
-    return $link_return; 
-
+    # Now that we know we've got all the information we're gonna get, let's
+    # return the link (which is the whole reason we were called :)
+    my ($pre, $title, $post) = @{$::buglink{$bug_num}};
+    # $title will be undefined if the bug didn't exist in the database.
+    if (defined $title) {
+        return qq{$pre<a href="show_bug.cgi?id=$bug_num" title="$title">$link_text</a>$post};
+    }
+    else {
+        return qq{$link_text};
+    }
 }
 
 sub GetLongDescriptionAsText {
