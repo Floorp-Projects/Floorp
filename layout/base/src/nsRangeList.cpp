@@ -50,7 +50,6 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static void selectFrames(nsIFrame *aBegin, PRInt32 aBeginOffset, nsIFrame *aEnd, PRInt32 aEndOffset, PRBool aSelect, PRBool aForwards);
 static PRInt32 compareFrames(nsIFrame *aBegin, nsIFrame *aEnd);
 static nsIFrame * getNextFrame(nsIFrame *aStart);
-static PRBool getRangeFromFrame(nsIFrame *aFrame, nsIDOMRange *aRange,  PRInt32 aContentOffset, PRInt32 aContentLength);
 static void printRange(nsIDOMRange *aDomRange);
 static nsIFrame *findFrameFromContent(nsIFrame *aParent, nsIContent *aContent, PRBool aTurnOff);
 
@@ -95,6 +94,8 @@ see the nsICollection for more details*/
   NS_IMETHOD Extend(nsIDOMNode* aParentNode, PRInt32 aOffset);
   NS_IMETHOD ClearSelection();
   NS_IMETHOD AddRange(nsIDOMRange* aRange);
+  NS_IMETHOD GetAnchorNodeAndOffset(nsIDOMNode** outAnchorNode, PRInt32 *outAnchorOffset);
+  NS_IMETHOD GetFocusNodeAndOffset(nsIDOMNode** outFocusNode, PRInt32 *outFocusOffset);
 /*END nsIDOMSelection interface implementations*/
 
   nsRangeList();
@@ -956,7 +957,7 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
         //now we keep selecting until we hit the last content, or the end of the page.
         anchorOffset = -1;
         frameOffset = -1;
-        while(result = getNextFrame(result)){
+        while((result = getNextFrame(result)) != nsnull){
           nsCOMPtr<nsIContent> content;
           result->GetContent(*getter_AddRefs(content));
           if (content == endContent){
@@ -981,6 +982,7 @@ nsRangeList::ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame)
 //END nsISelection methods
 
 //BEGIN nsIDOMSelection interface implementations
+#pragma mark -
 
 /** ClearSelection zeroes the selection
  */
@@ -1082,6 +1084,7 @@ nsRangeList::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 /** DeleteFromDocument
  *  will return NS_OK if it handles the event or NS_COMFALSE if not.
  */
@@ -1156,6 +1159,31 @@ nsRangeList::DeleteFromDocument()
 
   return NS_OK;
 }
+
+
+/*
+ * Return the anchor node and offset for the anchor point
+ */
+NS_IMETHODIMP
+nsRangeList::GetAnchorNodeAndOffset(nsIDOMNode** outAnchorNode, PRInt32 *outAnchorOffset)
+{
+  *outAnchorNode = mAnchorNode;
+  *outAnchorOffset = mAnchorOffset;
+	return NS_OK;
+}
+
+
+/*
+ * Return the anchor node and offset for the focus point
+ */
+NS_IMETHODIMP
+nsRangeList::GetFocusNodeAndOffset(nsIDOMNode** outFocusNode, PRInt32 *outFocusOffset)
+{
+  *outFocusNode = mFocusNode;
+  *outFocusOffset = mFocusOffset;
+  return NS_OK;
+}
+
 
 //END nsIDOMSelection interface implementations
 

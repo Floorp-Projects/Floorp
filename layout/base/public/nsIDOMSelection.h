@@ -40,7 +40,18 @@ class nsIDOMSelection : public nsISupports {
 public:
   static const nsIID& IID() { static nsIID iid = NS_IDOMSELECTION_IID; return iid; }
 
-  /** ClearSelection zeroes the selection
+  /*
+   * Get the node and offset for the anchor point
+   */
+  NS_IMETHOD GetAnchorNodeAndOffset(nsIDOMNode** outAnchorNode, PRInt32 *outAnchorOffset) = 0;
+
+  /*
+   * Get the node and offset for the focus point
+   */
+  NS_IMETHOD GetFocusNodeAndOffset(nsIDOMNode** outFocusNode, PRInt32 *outFocusOffset) = 0;
+
+  /*
+   * ClearSelection zeroes the selection
    */
   NS_IMETHOD ClearSelection() = 0;
 
