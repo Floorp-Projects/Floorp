@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.34 2001/05/31 00:12:18 wtc%netscape.com Exp $
+ *  $Id: mpi.c,v 1.35 2001/06/18 19:54:21 wtc%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -2453,13 +2453,8 @@ mp_err  mp_read_raw(mp_int *mp, char *str, int len)
 
   /* Read the rest of the digits */
   for(ix = 1; ix < len; ix++) {
-#if DIGIT_MAX < 256
-    if((res = s_mp_lshd(mp, 1)) != MP_OKAY)
-      return res;
-#else
     if((res = mp_mul_d(mp, 256, mp)) != MP_OKAY)
       return res;
-#endif
     if((res = mp_add_d(mp, ustr[ix], mp)) != MP_OKAY)
       return res;
   }
