@@ -138,10 +138,12 @@ depend_tool : initial_state com_netscape_jsdebugging_tools_depend
 tools : depend_tool
 
 dependency_checks : check_depend_jslogger \
-                    check_depend_netscape_jsdebug
+                    check_depend_netscape_jsdebug \
+                    check_depend_ifcui
 
 jars : jslogger_jar \
-       netscape_jsdebug_jar
+       netscape_jsdebug_jar \
+       ifcui_jar
 
 netscape_security : initial_state
     @echo building stubbed netscape.security classes
