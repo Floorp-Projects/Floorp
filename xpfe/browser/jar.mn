@@ -7,14 +7,14 @@ packages/core.jar:
         navigator/content/pageInfo.js                  (resources/content/pageInfo.js)
         navigator/content/pageInfo.xul                 (resources/content/pageInfo.xul)
         navigator/content/navigator.xul                (resources/content/navigator.xul)
-        navigator/content/sessionHistoryUI.js          (resources/content/sessionHistoryUI.js
+        navigator/content/sessionHistoryUI.js          (resources/content/sessionHistoryUI.js)
         navigator/content/keywords.js                  (resources/content/keywords.js)
         navigator/content/navigatorOverlay.xul         (resources/content/navigatorOverlay.xul)
         navigator/content/navExtraOverlay.xul          (resources/content/navExtraOverlay.xul)
         navigator/content/navigator.js                 (resources/content/navigator.js)
         navigator/content/navigatorDD.js               (resources/content/navigatorDD.js)
         navigator/content/NetSupportConfirmYN.xul      (resources/content/NetSupportConfirmYN.xul)
-        navigator/content/NetSupportConfirmCheckYN.xul (resources/content/NetSupportConfirmCheckYN.xul
+        navigator/content/NetSupportConfirmCheckYN.xul (resources/content/NetSupportConfirmCheckYN.xul)
         navigator/content/tooltip.js                   (resources/content/tooltip.js)
         navigator/content/nsContextMenu.js             (resources/content/nsContextMenu.js)
 
