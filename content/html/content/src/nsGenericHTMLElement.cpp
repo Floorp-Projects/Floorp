@@ -621,6 +621,11 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
     next->GetNextInFlow(&next);
   } while (next);
 
+  if (rcFrame.IsEmpty()) {
+    // It could happen that all the rects are empty (eg zero-width or
+    // zero-height).  In that case, use the first rect for the frame.
+    rcFrame = frame->GetRect();
+  }
 
   nsIContent *docElement = mDocument->GetRootContent();
 
