@@ -46,6 +46,13 @@ protected:
 
   // prepare the load cookie for the window context
   nsresult SetupLoadCookie(nsISupports * aWindowContext, nsISupports ** aLoadCookie);
+
+  // a small helper function
+  PRBool ShouldHandleContent(nsIURIContentListener * aCntListener, 
+                             const char * aContentType,
+                             nsURILoadCommand aCommand,
+                             const char * aWindowTarget,
+                             char ** aContentTypeToUse);
 };
 
 #endif /* nsURILoader_h__ */

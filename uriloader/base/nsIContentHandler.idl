@@ -34,7 +34,3 @@ interface nsIContentHandler : nsISupports
                      in nsIChannel aChannel);
 };
 
-%{ C++
-#define NS_CONTENT_HANDLER_PROGID               "component://netscape/uriloader/content-handler"
-#define NS_CONTENT_HANDLER_PROGID_PREFIX	     NS_CONTENT_HANDLER_PROGID "?type="
-%}
