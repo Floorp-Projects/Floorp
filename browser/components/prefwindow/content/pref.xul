@@ -30,12 +30,6 @@
       throw "failed to create prefwindow";
 
     hPrefWindow.init();
-
-    var prefsCategories = document.getElementById("prefsCategories");
-    var index = prefsCategories.getAttribute("lastpanel") || 0;
-    var button = prefsCategories.childNodes[index];
-    button.click();
-    button.focus();
   }
     
   function Shutdown ()
@@ -43,8 +37,9 @@
     var prefsCategories = document.getElementById("prefsCategories");
     for (var i = 0; i < prefsCategories.childNodes.length; ++i) {
       if (prefsCategories.childNodes[i].checked) {
-        prefsCategories.setAttribute("lastpanel", i);
-        document.persist("prefsCategories", "lastpanel");
+        var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+        pref.setIntPref("browser.preferences.lastpanel", i);
         break;
       }
     }
@@ -54,10 +49,9 @@
    
   function switchPage(aEvent)
   {
-    var newURL = "chrome://browser/content/pref/" + aEvent.target.getAttribute("url");
-    var newTag = aEvent.target.getAttribute("tag");
+    var newURL = aEvent.target.getAttribute("url");
     if (hPrefWindow)
-      hPrefWindow.switchPage(newURL, newTag);
+      hPrefWindow.switchPage(newURL, "");
   }    
 
   function visitLink(aEvent)
@@ -80,14 +74,19 @@
   <script type="application/x-javascript" src="chrome://browser/content/pref/nsPrefWindow.js"/>
 
   <hbox flex="1">
-    <vbox id="prefsCategories" class="listBox buttonBox" oncommand="switchPage(event);" orient="vertical" lastpanel="0" persist="lastpanel">
-      <button id="catGeneralButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&general.label;"   url="pref-navigator.xul"/>
-      <button id="catPrivacyButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&privacy.label;"   url="pref-privacy.xul"/>
-      <button id="catFeaturesbutton"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&features.label;"  url="pref-features.xul"/>
-      <button id="catThemesButton"    orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&themes.label;"    url="pref-themes.xul"/>
-      <button id="catExtButton"       orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&ext.label;"       url="pref-extensions.xul"/>
-      <button id="catFontsButton"     orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&fonts.label;"     url="pref-fonts.xul"/>
-      <button id="catProxiesButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&proxies.label;"   url="pref-connection.xul"/>
+    <vbox id="prefsCategories" class="listBox buttonBox" oncommand="switchPage(event);" orient="vertical" lastpanel="1" persist="lastpanel">
+      <button id="catGeneralButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&general.label;"   
+              url="chrome://browser/content/pref/pref-navigator.xul"/>
+      <button id="catPrivacyButton"   orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&privacy.label;"   
+              url="chrome://browser/content/pref/pref-privacy.xul"/>
+      <button id="catFeaturesbutton"  orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&features.label;"  
+              url="chrome://browser/content/pref/pref-features.xul"/>
+      <button id="catDownloadsButton" orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&downloads.label;" 
+              url="chrome://browser/content/pref/pref-downloads.xul"/>
+      <button id="catThemesButton"    orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&themes.label;"    
+              url="chrome://browser/content/pref/pref-themes.xul"/>
+      <button id="catExtButton"       orient="vertical" class="buttonBoxButton" type="radio" group="categories" label="&ext.label;"       
+              url="chrome://browser/content/pref/pref-extensions.xul"/>
     </vbox>
     
     <vbox flex="1">
@@ -96,6 +95,27 @@
     </vbox>
   </hbox>
 
+  <!-- sigh. this dirty little thing is necessary because the load handler of the 
+       preferences dialog causes the window to be shown even though the preferences
+       panel itself hasn't finished loading. -->
+  <script type="application/x-javascript">
+  <![CDATA[
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                        .getService(Components.interfaces.nsIPrefBranch);
+    var lastPanel = 0;
+    try {
+      lastPanel = pref.getIntPref("browser.preferences.lastpanel");
+    }
+    catch (e) {
+    }
+    
+    var prefsCategories = document.getElementById("prefsCategories");
+    var button = prefsCategories.childNodes[lastPanel];
+    document.getElementById("panelFrame").setAttribute("src", button.getAttribute("url"));
+    button.focus();
+  ]]>
+  </script>
+  
   <separator/>
      
 </dialog>

@@ -27,12 +27,15 @@ const _DEBUG = false;
  **/ 
 
 var queuedTag; 
-function initPanel ( aPrefTag )
+var queuedWindow;
+function initPanel ( aPrefTag, aWindow )
   {
     if( hPrefWindow )
-      hPrefWindow.onpageload( aPrefTag )
-    else
+      hPrefWindow.onpageload( aPrefTag, aWindow )
+    else {
       queuedTag = aPrefTag;
+      queuedWindow = aWindow;
+    }
   } 
  
 window.doneLoading = false; 
@@ -75,7 +78,7 @@ nsPrefWindow.prototype =
           {        
             if( window.queuedTag )
               {
-                this.onpageload( window.queuedTag );
+                this.onpageload( window.queuedTag, window.queuedWindow );
               }
           },
                   
@@ -87,7 +90,7 @@ nsPrefWindow.prototype =
               {
                 tag = document.getElementById( hPrefWindow.contentFrame ).getAttribute("src");
               }
-            hPrefWindow.wsm.savePageData( tag );
+            hPrefWindow.wsm.savePageData( tag, null );
             for( var i = 0; i < hPrefWindow.okHandlers.length; i++ )
               {
                 hPrefWindow.okHandlers[i]();
@@ -279,7 +282,7 @@ nsPrefWindow.prototype =
               {
                 oldURL = document.getElementById( this.contentFrame ).getAttribute("src");
               }
-            this.wsm.savePageData( oldURL );      // save data from the current page. 
+            this.wsm.savePageData( oldURL, null );      // save data from the current page. 
             if( aNewURL != oldURL )
               {
                 document.getElementById( this.contentFrame ).setAttribute( "src", aNewURL );
@@ -291,14 +294,23 @@ nsPrefWindow.prototype =
           },
               
       onpageload: 
-        function ( aPageTag )
+        function ( aPageTag, aWindow )
           {
-            var header = document.getElementById("header");
-            header.setAttribute("title",
-                                window.frames[this.contentFrame].document.documentElement.getAttribute("headertitle"));
+            if (!aWindow)
+              aWindow = window.frames[this.contentFrame];
+            
+            // Only update the header title for panels that are loaded in the main dialog, 
+            // not sub-dialogs. (Removing this check will cause the header display area to
+            // be cleared whenever you open a sub-dialog that uses WSM)
+            if (aWindow == window.frames[this.contentFrame]) {
+              var header = document.getElementById("header");
+              header.setAttribute("title",
+                                  aWindow.document.documentElement.getAttribute("headertitle"));
+            }
+            
             if( !(aPageTag in this.wsm.dataManager.pageData) )
               {
-                var prefElements = window.frames[this.contentFrame].document.getElementsByAttribute( "prefstring", "*" );
+                var prefElements = aWindow.document.getElementsByAttribute( "prefstring", "*" );
                 this.wsm.dataManager.pageData[aPageTag] = [];
                 for( var i = 0; i < prefElements.length; i++ )
                   {
@@ -337,11 +349,11 @@ nsPrefWindow.prototype =
                     root.localname = prefElements[i].localName;
                   }
               }      
-            this.wsm.setPageData( aPageTag );  // do not set extra elements, accept hard coded defaults
+            this.wsm.setPageData( aPageTag, aWindow );  // do not set extra elements, accept hard coded defaults
             
-            if( 'Startup' in window.frames[ this.contentFrame ])
+            if( 'Startup' in aWindow)
               {
-                window.frames[ this.contentFrame ].Startup();
+                aWindow.Startup();
               }
             this.wsm.dataManager.pageData[aPageTag].initialized=true;
           }
