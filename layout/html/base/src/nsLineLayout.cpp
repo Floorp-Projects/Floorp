@@ -415,7 +415,7 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
     }
 #ifdef NOISY_REFLOW
     printf("  span %p: oldRightEdge=%d newRightEdge=%d\n",
-           psd->mRightEdge - deltaWidth, psd->mRightEdge);
+           psd, psd->mRightEdge - deltaWidth, psd->mRightEdge);
 #endif
     psd = psd->mParent;
   }
