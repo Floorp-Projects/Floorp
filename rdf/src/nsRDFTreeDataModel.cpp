@@ -21,9 +21,10 @@
 #include "nsRDFTreeDataModelItem.h"
 #include "rdf-int.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDataModelIID, NS_IDATAMODEL_IID);
+static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIDataModelIID,     NS_IDATAMODEL_IID);
 static NS_DEFINE_IID(kITreeDataModelIID, NS_ITREEDATAMODEL_IID);
+static NS_DEFINE_IID(kIRDFResourceIID,   NS_IRDFRESOURCE_IID);
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -80,7 +81,11 @@ nsRDFTreeDataModel::QueryInterface(const nsIID& iid, void** result)
 NS_IMETHODIMP
 nsRDFTreeDataModel::InitFromURL(const nsString& url)
 {
-    return nsRDFDataModel::InitFromURL(url);
+    nsresult res = nsRDFDataModel::InitFromURL(url);
+    if (NS_SUCCEEDED(res))
+        res = CreateColumns();
+
+    return res;
 }
 
 
@@ -170,12 +175,6 @@ nsRDFTreeDataModel::GetNthTreeItem(nsITreeDMItem*& pItem, PRUint32 n) const
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#ifdef DYNAMIC_CASTING
-#define DYNAMIC_CAST(__type, __pointer) dynamic_cast<__type>(__pointer)
-#else
-#define DYNAMIC_CAST(__type, __pointer) ((__type)(__pointer))
-#endif
-
 NS_IMETHODIMP
 nsRDFTreeDataModel::GetItemTextForColumn(nsString& nodeText,
                                          nsITreeDMItem* pItem,
@@ -185,34 +184,60 @@ nsRDFTreeDataModel::GetItemTextForColumn(nsString& nodeText,
     // HT_GetNodeData() does. Hopefully it's enough to do the job for
     // now.
 
-    // XXX may need to turn off the dynamic_cast stuff...
-    nsRDFTreeDataModelItem* item =
-        DYNAMIC_CAST(nsRDFTreeDataModelItem*, pItem);
+    nsresult res = NS_OK;
+    nsIRDFResource* itemRsrc = NULL;
+    nsIRDFResource* columnRsrc = NULL;
 
-    PR_ASSERT(item);
-    if (! item)
-        return NS_ERROR_UNEXPECTED; // XXX
+    do {
+        if (NS_FAILED(pItem->QueryInterface(kIRDFResourceIID, (void**) &itemRsrc))) {
+            res = NS_ERROR_INVALID_ARG;
+            PR_ASSERT(0);
+            break;
+        }
 
-    nsRDFTreeColumn* column =
-        DYNAMIC_CAST(nsRDFTreeColumn*, pColumn);
+        if (NS_FAILED(pColumn->QueryInterface(kIRDFResourceIID, (void**) &columnRsrc))) {
+            res = NS_ERROR_INVALID_ARG;
+            PR_ASSERT(0);
+            break;
+        }
 
-    PR_ASSERT(column);
-    if (! column)
-        return NS_ERROR_UNEXPECTED; // XXX
+        RDF_Resource item;
+        if (NS_FAILED(itemRsrc->GetResource(item))) {
+            res = NS_ERROR_UNEXPECTED;
+            PR_ASSERT(0);
+            break;
+        }
+
+        RDF_Resource property;
+        if (NS_FAILED(columnRsrc->GetResource(property))) {
+            res = NS_ERROR_UNEXPECTED;
+            PR_ASSERT(0);
+            break;
+        }
     
-    const char* result =
-        (const char*) RDF_GetSlotValue(GetDB(),
-                                       item->GetResource(),   // resource
-                                       column->GetProperty(), // property
-                                       RDF_STRING_TYPE,
-                                       PR_FALSE,
-                                       PR_TRUE);
+        const char* result =
+            (const char*) RDF_GetSlotValue(GetDB(),
+                                           item,
+                                           property, // property
+                                           RDF_STRING_TYPE,
+                                           PR_FALSE,
+                                           PR_TRUE);
 
-    PR_ASSERT(result);
-    if (! result)
-        return NS_ERROR_NULL_POINTER;
+        if (! result) {
+            res = NS_ERROR_UNEXPECTED;
+            PR_ASSERT(0);
+            break;
+        }
 
-    nodeText = result;
+        nodeText = result;
+    } while (0);
+
+    if (columnRsrc)
+        columnRsrc->Release();
+
+    if (itemRsrc)
+        itemRsrc->Release();
+
     return NS_OK;
 }
 
@@ -220,23 +245,27 @@ nsRDFTreeDataModel::GetItemTextForColumn(nsString& nodeText,
 ////////////////////////////////////////////////////////////////////////
 // nsRDFTreeDataModel implementation methods
 
-void
+nsresult
 nsRDFTreeDataModel::CreateColumns(void)
 {
     // This mostly came over from HT_NewView()
     nsRDFDataModelItem* root = GetRoot();
     PR_ASSERT(root);
     if (! root)
-        return;
+        return NS_ERROR_NULL_POINTER; // XXX need something better here
+
+    RDF_Resource rootResource;
+    if (NS_FAILED(root->GetResource(rootResource)))
+        return NS_ERROR_UNEXPECTED;
 
     RDF_Cursor cursor;
-    cursor = RDF_GetTargets(GetDB(), root->GetResource(),
+    cursor = RDF_GetTargets(GetDB(), rootResource,
                             gNavCenter->RDF_Column,
                             RDF_RESOURCE_TYPE, PR_TRUE);
 
     PR_ASSERT(cursor != NULL);
     if (cursor == NULL)
-        return;
+        return NS_ERROR_UNEXPECTED; // XXX need something better here
 
     RDF_Resource r;
     while ((r = static_cast<RDF_Resource>(RDF_NextValue(cursor))) != NULL) {
@@ -270,6 +299,8 @@ nsRDFTreeDataModel::CreateColumns(void)
         mColumns.Add(column);
     }	
     RDF_DisposeCursor(cursor);
+
+    return NS_OK;
 }
 
 void
