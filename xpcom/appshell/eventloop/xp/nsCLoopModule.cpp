@@ -20,7 +20,11 @@
  *   Travis Bogard <travis@netscape.com>
  */
 
+#include "nsCAppLoop.h"
+#include "nsCThreadLoop.h"
+#include "nsCBreathLoop.h"
 #include "nsIGenericFactory.h"
+
 static nsModuleComponentInfo components[] =
 {
   { "Native App Service", NS_EVENTLOOP_APP_CID, NS_EVENTLOOP_APP_PROGID,
