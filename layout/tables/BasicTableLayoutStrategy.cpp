@@ -1979,9 +1979,7 @@ PRBool BasicTableLayoutStrategy::
   // first, assign autoWidth columns a width
   if (PR_TRUE == atLeastOneAutoWidthColumn) {
     // proportionately distribute the remaining space to autowidth columns
-    // "0" for the last param tells DistributeRemainingSpace that this is the top (non-recursive) call
-    PRInt32 topRecursiveControl=0;
-    DistributeRemainingSpace(aMaxWidth, tableWidth, aTableIsAutoWidth, topRecursiveControl);
+    DistributeRemainingSpace(aMaxWidth, tableWidth, aTableIsAutoWidth);
   }
   
   // second, fix up tables where column width attributes give us a table that is too wide or too narrow
@@ -2042,17 +2040,46 @@ PRBool BasicTableLayoutStrategy::
   return result;
 }
 
-static const PRInt32 kRecursionLimit = 10;  // backwards compatible with Nav4
+struct nsColInfo {
+  nsColInfo(nsTableColFrame* aColFrame,
+            PRInt32          aColIndex,
+            PRInt32          aColWidth,
+            float            aMaximizeFactor)
+    : mColFrame(aColFrame), mColIndex(aColIndex), mColWidth(aColWidth), 
+      mMaximizeFactor(aMaximizeFactor)
+    {}
+  nsTableColFrame* mColFrame;
+  PRInt32          mColIndex;
+  PRInt32          mColWidth;
+  float            mMaximizeFactor;
+};
 
-// take the remaining space in the table and distribute it proportionately 
-// to the auto-width cells in the table (based on desired width)
+void
+DistributeRemainingSpaceCleanup(PRInt32 aNumItems, nsColInfo** aInfoArray)
+{
+  for (int i = 0; i < aNumItems; i++) {
+    delete aInfoArray[i];
+  }
+  delete [] aInfoArray;
+}
+
+// Take the remaining space in the table and distribute it to the auto-width cols
+// in the table. If a col reaches its desired width, stop at that width unless all
+// other cols have reached their desired widths.
+
+// This algorithm has been reworked from the orignal to fix bugs (e.g. bug 6184) 
+// and remove the recursion. For auto width tables it uses colFrame->GetMaxColSize() 
+// instead of GetMaxEffectiveColSize, so for some auto width tables with colspans 
+// it claculates more like IE5 than Nav4.5, which appears to be more reasonable.
 void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecifiedWidth,
                                                         nscoord& aComputedTableWidth, 
-                                                        PRBool   aTableIsAutoWidth,
-                                                        PRInt32& aRecursionControl)
+                                                        PRBool   aTableIsAutoWidth)
 {
-  aRecursionControl++;
-  if (kRecursionLimit <= aRecursionControl) { // only allow kRecursionLimit iterations, as per Nav4. See laytable.c
+  // availWidth is the difference between the total available width and the 
+  // amount of space already assigned, assuming auto col widths were assigned 0.
+  nscoord availWidth = PR_MAX(aTableSpecifiedWidth - aComputedTableWidth, 0);
+  TDBG_SDD("  aTableSpecifiedWidth specified as %d, availWidth is = %d\n", aTableSpecifiedWidth, availWidth);
+  if ((0 == availWidth) || (aTableSpecifiedWidth <= 0)) {
     return;
   }
   nscoord sumOfMinWidths = 0;   // sum of min widths of each auto column
@@ -2061,79 +2088,108 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
            aTableSpecifiedWidth, aComputedTableWidth);
   // if there are auto-sized columns, give them the extra space
   PRInt32 numAutoColumns = 0;
-  PRInt32* autoColumns=nsnull;
+  PRInt32* autoColumns = nsnull;
   mTableFrame->GetColumnsByType(eStyleUnit_Auto, numAutoColumns, autoColumns);
-  if (0 != numAutoColumns) {
-    PRInt32 numColumnsToBeResized = 0;
-    // there's at least one auto-width column, so give it (them) the extra space
-    // proportionately distributed extra space, based on the column's desired size
-    nscoord totalEffectiveWidthOfAutoColumns = 0;
-    // 1. first, get the total width of the auto columns
-    PRInt32 i;
-    for (i = 0; i < numAutoColumns; i++) {
-      PRInt32 colIndex = autoColumns[i];
-      nsTableColFrame* colFrame = mTableFrame->GetColFrame(autoColumns[i]);
-      nscoord startingColWidth = mTableFrame->GetColumnWidth(colIndex);
-      nscoord maxEffectiveColWidth = colFrame->GetEffectiveMaxColWidth();
-      if ((PR_FALSE == aTableIsAutoWidth) || (startingColWidth<maxEffectiveColWidth)) {
-        numColumnsToBeResized++;
-        if (0 != maxEffectiveColWidth) {
-          totalEffectiveWidthOfAutoColumns += maxEffectiveColWidth;
-        }
-        else {
-          totalEffectiveWidthOfAutoColumns += mTableFrame->GetColumnWidth(autoColumns[i]);
-        }
-      }
+  if (0 == numAutoColumns) {
+    return;
+  }
+  nscoord totalResizeColWidth = 0;
+  // populate an array of col info for cols that qualify for being increased in width
+  PRInt32 numResizeCols = 0;
+  nsColInfo** resizeCols = new nsColInfo*[numAutoColumns];
+  PRInt32 i;
+  for (i = 0; i < numAutoColumns; i++) {
+    PRInt32 colIndex = autoColumns[i];
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(autoColumns[i]);
+    nscoord startingColWidth = mTableFrame->GetColumnWidth(colIndex);
+    nscoord maxColWidth = (PR_FALSE == aTableIsAutoWidth) 
+      ? colFrame->GetEffectiveMaxColWidth() : colFrame->GetMaxColWidth();
+    if ((PR_FALSE == aTableIsAutoWidth) || (startingColWidth < maxColWidth)) {
+      if (0 == maxColWidth) 
+        maxColWidth = startingColWidth;
+      totalResizeColWidth += maxColWidth;
+      // the maximizeFactor is a relative metric for determining when cols reach their max. 
+      // A col with a smaller value will reach its max before one with a larger value.
+      nscoord delta = maxColWidth - startingColWidth;
+      float maximizeFactor = (0 == delta) 
+        ? 1000000 : ((float)maxColWidth) / ((float)(maxColWidth - startingColWidth));
+      resizeCols[numResizeCols] = new nsColInfo(colFrame, colIndex, startingColWidth, 
+                                                maximizeFactor);
+      numResizeCols++;
     }
-    // availWidth is the difference between the total available width and the 
-    // amount of space already assigned, assuming auto col widths were assigned 0.
-    nscoord availWidth;
-    availWidth = aTableSpecifiedWidth - aComputedTableWidth;
-    TDBG_SDD("  aTableSpecifiedWidth specified as %d, availWidth is = %d\n", aTableSpecifiedWidth, availWidth);
-    
-    // 2. next, compute the proportion to be added to each column, and add it
-    for (i = 0; i < numAutoColumns; i++) {
-      PRInt32 colIndex = autoColumns[i];
-      nsTableColFrame* colFrame = mTableFrame->GetColFrame(colIndex);
-      nscoord startingColWidth = mTableFrame->GetColumnWidth(colIndex);
-      nscoord maxEffectiveColWidth = colFrame->GetEffectiveMaxColWidth();
-      // if we actually have room to distribute, do it here
-      // otherwise, the auto columns already are set to their minimum
-      if (0 < availWidth) {
-        if ((PR_FALSE == aTableIsAutoWidth) || (startingColWidth<maxEffectiveColWidth)) {
-          float percent;
-          if (0 != aTableSpecifiedWidth) {
-            percent = ((float)maxEffectiveColWidth)/((float)totalEffectiveWidthOfAutoColumns);
-          }
-          else {
-            percent = ((float)1) / ((float)numColumnsToBeResized);
-          }
-          nscoord colWidth = startingColWidth + NSToCoordRound(((float)(availWidth)) * percent);
-          TDBG_SDDDD("  colWidth = %d from startingColWidth %d plus %d percent of availWidth %d\n",
-                     colWidth, startingColWidth, (nscoord)((float)100*percent), availWidth);
-          // in an auto width table, the column cannot be wider than its max width
-          if (PR_TRUE == aTableIsAutoWidth) {
-            // since the table shrinks to the content width, don't be wider than the content max width
-            colWidth = PR_MIN(colWidth, colFrame->GetMaxColWidth());
-          }
-          aComputedTableWidth += colWidth - startingColWidth;
-          TDBG_SDDD("  distribute width to auto columns:  column %d was %d, now set to %d\n", 
-                    colIndex, colFrame->GetEffectiveMaxColWidth(), colWidth);
-          mTableFrame->SetColumnWidth(colIndex, colWidth);
-        }
-      }
-    }
-
-    if (aComputedTableWidth!=startingComputedTableWidth) {  
-      // othewise we made no progress and shouldn't continue
-      if (aComputedTableWidth < aTableSpecifiedWidth) {
-        DistributeRemainingSpace(aTableSpecifiedWidth, aComputedTableWidth, aTableIsAutoWidth, aRecursionControl);
+  }
+  if (totalResizeColWidth <= 0) { 
+    NS_ASSERTION(PR_TRUE, "need to handle this case");
+    DistributeRemainingSpaceCleanup(numResizeCols, resizeCols);
+    return;
+  }
+      
+  // sort the cols based on the maximizeFactor so that in one pass cols that reach their 
+  // max earlier will get their max earlier and allow the other cols to reach their max.
+  // This is an innefficient bubble sort, but unless there are an unlikely large number of
+  // cols, it is not an issue.
+  for (int j = numResizeCols - 1; j > 0; j--) {
+    for (i = 0; i < j; i++) {
+      if (resizeCols[i]->mMaximizeFactor < resizeCols[i+1]->mMaximizeFactor) { // swap them
+        nsColInfo* save = resizeCols[i];
+        resizeCols[i]   = resizeCols[i+1];
+        resizeCols[i+1] = save;
       }
     }
   }
+
+    
+  // compute the proportion to be added to each column, don't go beyond the col's max
+  // at this stage
+  PRInt32 totalResizeColWidthRemaining = totalResizeColWidth;
+  for (i = 0; i < numResizeCols; i++) {
+    if ((availWidth <= 0) || (totalResizeColWidthRemaining <= 0)) {
+      break;
+    }
+    nsTableColFrame* colFrame    = resizeCols[i]->mColFrame;
+    nscoord startingColWidth     = resizeCols[i]->mColWidth;
+    nscoord maxColWidth = (PR_FALSE == aTableIsAutoWidth) 
+      ? colFrame->GetEffectiveMaxColWidth() : colFrame->GetMaxColWidth();
+    // if we actually have room to distribute, do it here
+    // otherwise, the auto columns already are set to their minimum
+    float percent = ((float)maxColWidth) / (float)totalResizeColWidthRemaining;
+    nscoord delta = PR_MIN(availWidth, NSToCoordRound(((float)(availWidth)) * percent));
+    // don't go over the col max right now
+    nscoord excess = (startingColWidth + delta) - maxColWidth; 
+    if (excess > 0) {
+      delta -= excess;
+    }
+    resizeCols[i]->mColWidth += delta;
+    availWidth -= delta;
+    totalResizeColWidthRemaining -= maxColWidth;
+    mTableFrame->SetColumnWidth(resizeCols[i]->mColIndex, resizeCols[i]->mColWidth);
+    TDBG_SDDDD("  DSR-1 colX=%d went from %d to %d based on percent=%d \n", resizeCols[i]->mColIndex, 
+               startingColWidth, resizeCols[i]->mColWidth, (nscoord)((float)100*percent));
+  }
+  // Auto width tables have reached their max at this point. If there is any remaining space
+  // in a fixed width table, allocate it to the cols based on max width,
+  if ((availWidth > 0) && (PR_FALSE == aTableIsAutoWidth)) {
+    for (i = 0; i < numResizeCols; i++) {
+      if (availWidth <= 0) {
+        break;
+      }
+      nsTableColFrame* colFrame    = resizeCols[i]->mColFrame;
+      nscoord startingColWidth     = resizeCols[i]->mColWidth;
+      nscoord maxColWidth          = colFrame->GetEffectiveMaxColWidth();
+      // if we actually have room to distribute, do it here
+      float percent = ((float)maxColWidth) / (float)totalResizeColWidth;
+      nscoord delta = PR_MIN(availWidth, NSToCoordRound(((float)(availWidth)) * percent));
+      nscoord newWidth = resizeCols[i]->mColWidth + delta;
+      mTableFrame->SetColumnWidth(resizeCols[i]->mColIndex, newWidth);
+      availWidth -= delta;
+      TDBG_SDDDD("  DSR-2 colX=%d went from %d to %d based on percent=%d \n", resizeCols[i]->mColIndex, 
+                 startingColWidth, resizeCols[i]->mColWidth, (nscoord)((float)100*percent));
+    }
+  }
+  aComputedTableWidth = aTableSpecifiedWidth - availWidth;
+  DistributeRemainingSpaceCleanup(numResizeCols, resizeCols);
   TDBG_WIDTHS4("at end of DistributeRemainingSpace: ",PR_FALSE,PR_FALSE);
 }
-
 
 void BasicTableLayoutStrategy::AdjustTableThatIsTooWide(nscoord aComputedWidth, 
                                                         nscoord aTableWidth, 
