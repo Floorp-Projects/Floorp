@@ -649,12 +649,12 @@ PRInt32 StyleSpacingImpl::CalcDifference(const StyleSpacingImpl& aOther) const
   if ((mMargin == aOther.mMargin) && 
       (mPadding == aOther.mPadding) && 
       (mBorder == aOther.mBorder)) {
-    PRInt32 index;
-    for (index = 0; index < 4; index++) {
-      if ((mBorderStyle[index] != aOther.mBorderStyle[index]) || 
-          (mBorderColor[index] != aOther.mBorderColor[index])) {
-        if ((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[index]) ||
-          (NS_STYLE_BORDER_STYLE_NONE == aOther.mBorderStyle[index])) {
+    PRInt32 ix;
+    for (ix = 0; ix < 4; ix++) {
+      if ((mBorderStyle[ix] != aOther.mBorderStyle[ix]) || 
+          (mBorderColor[ix] != aOther.mBorderColor[ix])) {
+        if ((NS_STYLE_BORDER_STYLE_NONE == mBorderStyle[ix]) ||
+          (NS_STYLE_BORDER_STYLE_NONE == aOther.mBorderStyle[ix])) {
           return NS_STYLE_HINT_REFLOW;  // border on or off
         }
         return NS_STYLE_HINT_VISUAL;
@@ -1153,9 +1153,9 @@ StyleContentImpl::ResetFrom(const StyleContentImpl* aParent, nsIPresContext* aPr
   // inherited data
   if (aParent) {
     if (NS_SUCCEEDED(AllocateQuotes(aParent->mQuotesCount))) {
-      PRUint32 index = (mQuotesCount * 2);
-      while (0 < index--) {
-        mQuotes[index] = aParent->mQuotes[index];
+      PRUint32 ix = (mQuotesCount * 2);
+      while (0 < ix--) {
+        mQuotes[ix] = aParent->mQuotes[ix];
       }
     }
   }
@@ -1173,30 +1173,30 @@ StyleContentImpl::CalcDifference(const StyleContentImpl& aOther) const
         (mIncrementCount == aOther.mIncrementCount) && 
         (mResetCount == aOther.mResetCount) &&
         (mQuotesCount == aOther.mQuotesCount)) {
-      PRUint32 index = mContentCount;
-      while (0 < index--) {
-        if ((mContents[index].mType != aOther.mContents[index].mType) || 
-            (mContents[index].mContent != aOther.mContents[index].mContent)) {
+      PRUint32 ix = mContentCount;
+      while (0 < ix--) {
+        if ((mContents[ix].mType != aOther.mContents[ix].mType) || 
+            (mContents[ix].mContent != aOther.mContents[ix].mContent)) {
           return NS_STYLE_HINT_REFLOW;
         }
       }
-      index = mIncrementCount;
-      while (0 < index--) {
-        if ((mIncrements[index].mValue != aOther.mIncrements[index].mValue) || 
-            (mIncrements[index].mCounter != aOther.mIncrements[index].mCounter)) {
+      ix = mIncrementCount;
+      while (0 < ix--) {
+        if ((mIncrements[ix].mValue != aOther.mIncrements[ix].mValue) || 
+            (mIncrements[ix].mCounter != aOther.mIncrements[ix].mCounter)) {
           return NS_STYLE_HINT_REFLOW;
         }
       }
-      index = mResetCount;
-      while (0 < index--) {
-        if ((mResets[index].mValue != aOther.mResets[index].mValue) || 
-            (mResets[index].mCounter != aOther.mResets[index].mCounter)) {
+      ix = mResetCount;
+      while (0 < ix--) {
+        if ((mResets[ix].mValue != aOther.mResets[ix].mValue) || 
+            (mResets[ix].mCounter != aOther.mResets[ix].mCounter)) {
           return NS_STYLE_HINT_REFLOW;
         }
       }
-      index = (mQuotesCount * 2);
-      while (0 < index--) {
-        if (mQuotes[index] != aOther.mQuotes[index]) {
+      ix = (mQuotesCount * 2);
+      while (0 < ix--) {
+        if (mQuotes[ix] != aOther.mQuotes[ix]) {
           return NS_STYLE_HINT_REFLOW;
         }
       }
@@ -1825,8 +1825,9 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
       StyleContextImpl* holdParent = mParent;
       mParent = nsnull; // cut off all inheritance. this really blows
 
-      // XXX the one piece of style we do preserve is visibility
+      // XXX the style we do preserve is visibility, direction
       PRUint8 visible = mDisplay.mVisible;
+      PRUint8 direction = mDisplay.mDirection;
 
       // time to emulate a sub-document
       // This is ugly, but we need to map style once to determine display type
@@ -1841,13 +1842,14 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
       mPosition.ResetFrom(nsnull, aPresContext);
       mDisplay.ResetFrom(nsnull, aPresContext);
       mDisplay.mVisible = visible;
+      mDisplay.mDirection = direction;
 
-      PRUint32 cnt = 0;
+      PRUint32 numRules = 0;
       if (mRules) {
-        nsresult rv = mRules->Count(&cnt);
+        nsresult rv = mRules->Count(&numRules);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
       }
-      if (0 < cnt) {
+      if (0 < numRules) {
         MapStyleData  data(this, aPresContext);
         mRules->EnumerateForwards(MapStyleRuleFont, &data);
         mRules->EnumerateForwards(MapStyleRule, &data);
@@ -1998,8 +2000,8 @@ StyleContextImpl::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) c
 void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
 {
   // Indent
-  PRInt32 index;
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
+  PRInt32 ix;
+  for (ix = aIndent; --ix >= 0; ) fputs("  ", out);
   fprintf(out, "%p(%d) ", this, mRefCnt);
   if (nsnull != mPseudoTag) {
     nsAutoString  buffer;
@@ -2011,13 +2013,13 @@ void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
   if (0 < count) {
     fputs("{\n", out);
 
-    for (index = 0; index < count; index++) {
-      nsIStyleRule* rule = (nsIStyleRule*)mRules->ElementAt(index);
+    for (ix = 0; ix < count; ix++) {
+      nsIStyleRule* rule = (nsIStyleRule*)mRules->ElementAt(ix);
       rule->List(out, aIndent + 1);
       NS_RELEASE(rule);
     }
 
-    for (index = aIndent; --index >= 0; ) fputs("  ", out);
+    for (ix = aIndent; --ix >= 0; ) fputs("  ", out);
     fputs("}\n", out);
   }
   else {
