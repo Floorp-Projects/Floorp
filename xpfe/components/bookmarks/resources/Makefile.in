@@ -29,6 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 CHROME_DIR	= bookmarks
 
 CHROME_CONTENT	= \
+		bm-find.js \
+		bm-find.xul \
 		bm-panel.js \
 		bm-panel.xul \
 		bm-props.js \
@@ -52,6 +54,7 @@ CHROME_SKIN	= \
 		$(NULL)
 
 CHROME_L10N	= \
+		locale/en-US/bm-find.dtd \
 		locale/en-US/bm-props.dtd \
 		locale/en-US/bookmarks.dtd \
 		locale/en-US/bookmark.properties \

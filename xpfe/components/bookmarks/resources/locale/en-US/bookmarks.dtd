@@ -38,7 +38,7 @@
 <!ENTITY menuitem.paste.label           "Paste">
 <!ENTITY menuitem.delete.label          "Delete">
 <!ENTITY menuitem.selectAll.label       "Select All">
-<!ENTITY menuitem.find.label            "Search in Bookmarks...">
+<!ENTITY menuitem.find.label            "Find...">
 <!ENTITY menuitem.properties.label      "Properties...">
 
 <!ENTITY menu.view.label                "View">
