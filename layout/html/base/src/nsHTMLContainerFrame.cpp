@@ -54,6 +54,9 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
 {
+  if (NS_FRAME_IS_UNFLOWABLE & mState) {
+    return NS_OK;
+  }
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
