@@ -518,11 +518,32 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
         mMenuParent->SetActive(PR_TRUE);
 
       // Sync up the view.
+      nsCOMPtr<nsIContent> menuPopupContent;
+      menuPopup->GetContent(getter_AddRefs(menuPopupContent));
+
+      nsAutoString popupAnchor, popupAlign;
+      
+      menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
+      menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupalign, popupAlign);
+
       PRBool onMenuBar = PR_TRUE;
       if (mMenuParent)
         mMenuParent->IsMenuBar(onMenuBar);
 
-      menuPopup->SyncViewWithFrame(mPresContext, onMenuBar, this, -1, -1);
+      if (onMenuBar) {
+        if (popupAnchor == "")
+          popupAnchor = "bottomleft";
+        if (popupAlign == "")
+          popupAlign = "topleft";
+      }
+      else {
+        if (popupAnchor == "")
+          popupAnchor = "topright";
+        if (popupAlign == "")
+          popupAlign = "topleft";
+      }
+
+      menuPopup->SyncViewWithFrame(mPresContext, popupAnchor, popupAlign, this, -1, -1);
     }
 
     ActivateMenu(PR_TRUE);
@@ -650,11 +671,31 @@ nsMenuFrame::DidReflow(nsIPresContext* aPresContext,
   nsIFrame* frame = mPopupFrames.FirstChild();
   nsMenuPopupFrame* menuPopup = (nsMenuPopupFrame*)frame;
   if (mMenuOpen && menuPopup) {
+    nsCOMPtr<nsIContent> menuPopupContent;
+    menuPopup->GetContent(getter_AddRefs(menuPopupContent));
+    nsAutoString popupAnchor, popupAlign;
+      
+    menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
+    menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupalign, popupAlign);
+
     PRBool onMenuBar = PR_TRUE;
     if (mMenuParent)
       mMenuParent->IsMenuBar(onMenuBar);
 
-    menuPopup->SyncViewWithFrame(aPresContext, onMenuBar, this, -1, -1);
+    if (onMenuBar) {
+      if (popupAnchor == "")
+          popupAnchor = "bottomleft";
+      if (popupAlign == "")
+          popupAlign = "topleft";
+    }
+    else {
+      if (popupAnchor == "")
+        popupAnchor = "topright";
+      if (popupAlign == "")
+        popupAlign = "topleft";
+    }
+
+    menuPopup->SyncViewWithFrame(aPresContext, popupAnchor, popupAlign, this, -1, -1);
   }
 
   return rv;

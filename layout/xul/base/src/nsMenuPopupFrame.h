@@ -91,7 +91,8 @@ public:
   void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
   static void GetNearestEnclosingView(nsIPresContext* aPresContext, nsIFrame* aStartFrame, nsIView** aResult);
 
-  nsresult SyncViewWithFrame(nsIPresContext* aPresContext, PRBool aOnMenuBar, 
+  nsresult SyncViewWithFrame(nsIPresContext* aPresContext, const nsString& aPopupAnchor,
+                             const nsString& aPopupAlign,
                              nsIFrame* aFrame, PRInt32 aXPos, PRInt32 aYPos);
 
   NS_IMETHOD CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
