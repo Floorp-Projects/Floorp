@@ -108,6 +108,9 @@ public:
 
     void Activate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 
+    BOOL OpenViewSourceWindow(const char* pUrl);
+    BOOL IsViewSourceUrl(CString& strUrl);
+
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CBrowserView)
