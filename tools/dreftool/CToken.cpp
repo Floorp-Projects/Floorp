@@ -138,7 +138,7 @@ void CToken::setStringValue(const char* name){
  *  @update gess 3/25/98
  *  @return nsCString reference to internal string value
  */
-nsAFlatCString& CToken::getStringValue(void) {
+const nsAFlatCString& CToken::getStringValue(void) {
   return mTextValue;
 }
 

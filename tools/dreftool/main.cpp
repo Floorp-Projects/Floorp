@@ -48,6 +48,10 @@
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsISimpleEnumerator.h"
+#include "nsIInputStream.h"
+#include "nsILineInputStream.h"
+#include "nsHashSets.h"
+#include "nsNetUtil.h"
 
 //*******************************************************************************
 // Global variables...
@@ -57,7 +61,14 @@ bool  gShowIncludeErrors=false;
 bool  gEmitHTML=false;
 bool  gSloppy=false;
 const char *gRootDir;
+const char *gWatchFile;
 
+struct WatchLists {
+  nsCStringHashSet mTableC, mTableCPP;
+};
+
+WatchLists *gWatchLists;
+nsCStringHashSet *gWatchList;
 
 class IPattern {
 public:
@@ -77,12 +88,12 @@ public:
   {
   }
 
-  CToken* matchID(nsDeque& aDeque,nsAFlatCString& aName){
+  CToken* matchID(nsDeque& aDeque,const nsAFlatCString& aName){
     int theMax=aDeque.GetSize();
     for(int theIndex=0;theIndex<theMax;theIndex++){
       CToken* theToken=(CToken*)aDeque.ObjectAt(theIndex);
       if(theToken){
-        nsAFlatCString& theName=theToken->getStringValue();
+        const nsAFlatCString& theName=theToken->getStringValue();
         if(theName==aName) {
           return theToken;
         }
@@ -105,7 +116,7 @@ public:
     CToken* theToken=0;
     while((theToken=aTokenizer.getTokenAt(++mIndex))) {
       int   theType=theToken->getTokenType();
-      nsAFlatCString& theString=theToken->getStringValue();
+      const nsAFlatCString& theString=theToken->getStringValue();
       char theChar=theString.First();
 
       switch(theState) {
@@ -194,7 +205,7 @@ public:
     CToken* theToken=0;
     while((theToken=aTokenizer.getTokenAt(++mIndex))) {
       int   theType=theToken->getTokenType();
-      nsAFlatCString& theString=theToken->getStringValue();
+      const nsAFlatCString& theString=theToken->getStringValue();
       char theChar=theString.First();
 
       switch(theState) {
@@ -275,7 +286,7 @@ public:
     while((theToken=aTokenizer.getTokenAt(--anIndex))){
       if(theToken) {
         int theType=theToken->getTokenType();
-        nsAFlatCString& theString=theToken->getStringValue();
+        const nsAFlatCString& theString=theToken->getStringValue();
         switch(theType){
         case eToken_semicolon:
           return 0;
@@ -316,7 +327,7 @@ public:
     
     while((theToken=aTokenizer.getTokenAt(++anIndex))){
       if(theToken) {
-        nsAFlatCString& theString=theToken->getStringValue();
+        const nsAFlatCString& theString=theToken->getStringValue();
         int     theType=theToken->getTokenType();
         
         anOpChar=theString.First();
@@ -355,15 +366,7 @@ public:
                 theState=eFindPunct;
                 break;
               case eFindNew:
-                if(theString.Equals(NS_LITERAL_CSTRING("new")) ||
-                   theString.Equals(NS_LITERAL_CSTRING("malloc")) ||
-                   theString.Equals(NS_LITERAL_CSTRING("calloc")) ||
-                   theString.Equals(NS_LITERAL_CSTRING("PR_Malloc")) ||
-                   theString.Equals(NS_LITERAL_CSTRING("PR_Calloc")) ||
-                   theString.Equals(NS_LITERAL_CSTRING("ToNewCString")) ||
-                   theString.Equals(NS_LITERAL_CSTRING("ToNewUTF8String")) ||
-                   theString.Equals(NS_LITERAL_CSTRING("ToNewUnicode")) ||
-                   theString.Equals(NS_LITERAL_CSTRING("UTF8ToNewUnicode")))
+                if (gWatchList->Contains(theString))
                   return theID;
                 return 0;
               default:
@@ -389,7 +392,7 @@ public:
     for(int theIndex=anIndex-1;theIndex>theMin;theIndex--){
       CToken* theToken=aTokenizer.getTokenAt(theIndex);
       if(theToken) {
-        nsAFlatCString& theString=theToken->getStringValue();
+        const nsAFlatCString& theString=theToken->getStringValue();
         int     theType=theToken->getTokenType();
         char   theChar=theString.First();
         if(eToken_operator==theType) {
@@ -405,7 +408,7 @@ public:
       for(int theIndex=anIndex;theIndex<theMax;theIndex++){
         CToken* theToken=aTokenizer.getTokenAt(theIndex);
         if(theToken) {
-          nsAFlatCString& theString=theToken->getStringValue();
+          const nsAFlatCString& theString=theToken->getStringValue();
           int     theType=theToken->getTokenType();
           char   theChar=theString.First();
           if(eToken_operator==theType) {
@@ -427,7 +430,7 @@ public:
     if(foo)
       foo->
    ***************************************************************************/
-  bool hasUnconditionedDeref(nsAFlatCString& aName,CCPPTokenizer& aTokenizer,int anIndex) {
+  bool hasUnconditionedDeref(const nsAFlatCString& aName,CCPPTokenizer& aTokenizer,int anIndex) {
     bool result=false;
 
     enum eState {eFailure,eFindIf,eFindDeref};
@@ -437,7 +440,7 @@ public:
     while(eFailure!=theState){
       CToken* theToken=aTokenizer.getTokenAt(theIndex);
       if(theToken) {
-        nsAFlatCString& theString=theToken->getStringValue();
+        const nsAFlatCString& theString=theToken->getStringValue();
         int     theType=theToken->getTokenType();
         char   theChar=theString.First();
         switch(theState){
@@ -511,7 +514,7 @@ public:
     CToken*   theToken=0;
     while((theToken=aTokenizer.getTokenAt(++mIndex))){
       int     theType=theToken->getTokenType();
-      nsAFlatCString& theString=theToken->getStringValue();
+      const nsAFlatCString& theString=theToken->getStringValue();
       char   theChar=theString.First();
 
       switch(theType){
@@ -635,7 +638,7 @@ public:
     while(mIndex<theMax){
       CToken*   theToken=aTokenizer.getTokenAt(mIndex);
       int     theType=theToken->getTokenType();
-      nsAFlatCString& theString=theToken->getStringValue();
+      const nsAFlatCString& theString=theToken->getStringValue();
       if (!theString.IsEmpty())
       switch(theType){
         case eToken_operator:
@@ -717,7 +720,7 @@ public:
                    (hasSimpleDeref(aTokenizer,mIndex))){
                   CToken* theSafeID=matchID(mSafeNames,theString);
                   if(theSafeID) {
-                    nsAFlatCString& s1=theSafeID->getStringValue();
+                    const nsAFlatCString& s1=theSafeID->getStringValue();
                     if(s1.Equals(theString))
                       break;
                   }
@@ -788,12 +791,17 @@ void IteratePath(nsIFile *aPath,
           IteratePath(path, aFilecount, aLinecount, anErrcount);
         }
       }
-    }  
-  } else if (NS_SUCCEEDED(aPath->IsFile(&is)) && is &&
-             (StringEndsWith(name, NS_LITERAL_CSTRING(".cpp")) ||
-              StringEndsWith(name, NS_LITERAL_CSTRING(".c")))) {
-    aFilecount++;
-    ScanFile(aPath,aLinecount,anErrcount);
+    }
+  } else if (NS_SUCCEEDED(aPath->IsFile(&is)) && is) {
+    if (StringEndsWith(name, NS_LITERAL_CSTRING(".cpp"))) {
+      aFilecount++;
+      gWatchList=&gWatchLists->mTableCPP;
+      ScanFile(aPath,aLinecount,anErrcount);
+    } else if (StringEndsWith(name, NS_LITERAL_CSTRING(".c"))) {
+      aFilecount++;
+      gWatchList=&gWatchLists->mTableC;
+      ScanFile(aPath,aLinecount,anErrcount);
+    }
   }
 }
  
@@ -807,8 +815,12 @@ void ConsumeArguments(int argc, char* argv[]) {
         switch(argv[index][1]){
           case 'd':
           case 'D': // Starting directory
-            gRootDir = argv[index+1];
-            index++;
+            gRootDir = argv[++index];
+            break;
+
+          case 'f':
+          case 'F': // list of functions to complain about
+            gWatchFile = argv[++index];
             break;
 
           case 'h':
@@ -822,10 +834,12 @@ void ConsumeArguments(int argc, char* argv[]) {
 
           default:
             fprintf(stderr,
-                    "Usage: dreftool [-h] [-d sourcepath]\n"
+                    "Usage: dreftool [-h] [-s] [-f wordlist] [-d sourcepath]\n"
                     "-d path to root of source tree\n"
-                    "-s sloppy mode no warnings if member variables are used unsafe\n"
-                    "-h emit as HTML\n");
+                    "-f file containing a list of functions which can return null\n"
+                    "-h emit as HTML\n"
+                    "-s sloppy mode: no warnings if member variables are used unsafe\n"
+            );
             exit(1);
         }
         break;
@@ -838,24 +852,80 @@ void ConsumeArguments(int argc, char* argv[]) {
 int main(int argc, char* argv[]){
 
   gRootDir = ".";
+  gWatchFile = "nullfunc.lst";
   ConsumeArguments(argc,argv);
 
-  int fileCount=0;
-  int lineCount=0;
-  int errCount=0;
+  int fileCount=0, lineCount=0, errCount=0;
 
-#if 0
-  nsCAutoString temp("test3.cpp");
-  ScanFile(temp,lineCount,errCount);
-  fileCount++;
-#endif
-
-#if 1
   if(gEmitHTML) {
-    fprintf(stdout, "<html><body>\n");
+    fprintf(stdout, "<html><title>DRefTool analysis");
+    if (gRootDir[0]!='.' || gRootDir[1])
+      fprintf(stdout, " for %s", gRootDir);
+    fprintf(stdout,"</title><body>\n");
   }
 
   {
+    WatchLists myWatchList;
+    if (NS_FAILED(myWatchList.mTableC.Init(16)) ||
+        NS_FAILED(myWatchList.mTableCPP.Init(16)))
+      return -1;
+    if (!gWatchFile) {
+      const char* wordList[] = {
+        "malloc",
+        "calloc",
+        "PR_Malloc",
+        "PR_Calloc",
+        "ToNewCString",
+        "ToNewUTF8String",
+        "ToNewUnicode",
+        "UTF8ToNewUnicode",
+        0
+      };
+      int i=0;
+      while (const char* word=wordList[i++]) {
+        if (NS_FAILED(myWatchList.mTableC.Put(nsDependentCString(word))) ||
+            NS_FAILED(myWatchList.mTableCPP.Put(nsDependentCString(word))))
+          return -1;
+      }
+    } else {
+      nsCOMPtr<nsILocalFile> file;
+      if (NS_FAILED(NS_NewNativeLocalFile(nsDependentCString(gWatchFile), PR_TRUE, getter_AddRefs(file))))
+         return -2;
+      nsCOMPtr<nsIInputStream> fileInputStream;
+      if (NS_FAILED(NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), file)))
+        return -3;
+      nsCOMPtr<nsILineInputStream> lineInputStream = do_QueryInterface(fileInputStream);
+      if (!lineInputStream)
+        return -4;
+
+      nsAutoString bufferUnicode;
+      nsCAutoString buffer;
+      PRBool isMore = PR_TRUE;
+      fprintf(stdout, "Function calls that will be checked for errors:\n");
+      if (gEmitHTML)
+        fprintf(stdout, "<ul>\n");
+      while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore))) {
+        LossyCopyUTF16toASCII(bufferUnicode, buffer);
+        if (NS_FAILED(myWatchList.mTableC.Put(buffer)) ||
+            NS_FAILED(myWatchList.mTableCPP.Put(buffer)))
+          return -1;
+        if (gEmitHTML)
+          fprintf(stdout, "<li>");
+        fprintf(stdout, "%s\n", buffer.get());
+      }
+    }
+    if (NS_FAILED(myWatchList.mTableCPP.Put(NS_LITERAL_CSTRING("new"))))
+      return -1;
+    if (gEmitHTML)
+      fprintf(stdout, "</ul>\n");
+    fprintf(stdout, "C++ only:\n");
+    if (gEmitHTML)
+      fprintf(stdout, "<ul>\n<li>");
+    fprintf(stdout, "new\n");
+    if (gEmitHTML)
+      fprintf(stdout, "</ul>\n");
+    fprintf(stdout, "\n");
+    gWatchLists = &myWatchList;
     nsCOMPtr<nsIFile> root;
     nsCOMPtr<nsILocalFile> localroot;
     if (NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(gRootDir), PR_TRUE, getter_AddRefs(localroot))) &&
@@ -865,7 +935,6 @@ int main(int argc, char* argv[]){
     else
       fprintf(stderr, "Could not find path: %s\n", gRootDir);
   }
-#endif
 
   if(gEmitHTML) {
     fprintf(stdout, "<PRE>\n");

@@ -114,7 +114,7 @@ class  CToken {
      * @update	gess5/11/98
      * @return  reference to string containing string value
      */
-    virtual nsAFlatCString& getStringValue(void);
+    virtual const nsAFlatCString& getStringValue(void);
 
     /**
      * Retrieve string value of the token

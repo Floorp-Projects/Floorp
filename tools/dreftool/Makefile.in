@@ -45,6 +45,7 @@ PROGRAM   = dreftool$(BIN_SUFFIX)
 REQUIRES  = \
             xpcom \
             string \
+            necko \
             $(NULL)
 
 LIBS      = $(NSPR_LIBS) \
@@ -58,5 +59,8 @@ CPPSRCS = \
         tokens.cpp \
         main.cpp \
         $(NULL)
+
+libs:: nullfunc.lst
+	$(INSTALL) $< $(DIST)/bin
 
 include $(topsrcdir)/config/rules.mk
