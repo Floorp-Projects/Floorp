@@ -24,6 +24,7 @@ DIRS=\
         util            \
         content         \
         datasource      \
+        resources       \
         build           \
         brprof          \
 	chrome		\
