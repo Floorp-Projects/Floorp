@@ -311,7 +311,7 @@ nsresult nsDocFactoryImpl::InitUAStyleSheet()
 
   if (nsnull == gUAStyleSheet) {  // snarf one
     nsIURL* uaURL;
-    rv = NS_NewURL(&uaURL, nsnull, UA_CSS_URL); // XXX this bites, fix it
+    rv = NS_NewURL(&uaURL, nsnull, nsString(UA_CSS_URL)); // XXX this bites, fix it
     if (NS_OK == rv) {
       // Get an input stream from the url
       PRInt32 ec;

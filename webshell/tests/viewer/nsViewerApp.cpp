@@ -53,6 +53,7 @@ nsViewerApp::nsViewerApp()
   mDelay = 1;
   mRepeatCount = 1;
   mNumSamples = 10;
+  mAllowPlugins = PR_TRUE;
 }
 
 nsViewerApp::~nsViewerApp()
@@ -164,7 +165,7 @@ nsViewerApp::Exit()
 static void
 PrintHelpInfo(char **argv)
 {
-  fprintf(stderr, "Usage: %s [-p][-q][-md #][-f filename][-d #] [starting url]\n", argv[0]);
+  fprintf(stderr, "Usage: %s [-p][-q][-md #][-f filename][-d #][-np] [starting url]\n", argv[0]);
   fprintf(stderr, "\t-p[#]   -- run purify, optionally with a # that says which sample to stop at.  For example, -p2 says to run samples 0, 1, and 2.\n");
   fprintf(stderr, "\t-q   -- run quantify\n");
   fprintf(stderr, "\t-md # -- set the crt debug flags to #\n");
@@ -176,6 +177,7 @@ PrintHelpInfo(char **argv)
   fprintf(stderr, "\t-S domain -- add a domain/host that is safe to crawl (e.g. www.netscape.com)\n");
   fprintf(stderr, "\t-A domain -- add a domain/host that should be avoided (e.g. microsoft.com)\n");
   fprintf(stderr, "\t-N pages -- set the max # of pages to crawl\n");
+  fprintf(stderr, "\t-np -- no plugins\n");
 }
 
 static void
@@ -324,6 +326,9 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
         }
         mCrawler->SetMaxPages(pages);
       }
+      else if (PL_strcmp(argv[i], "-np") == 0) {
+        mAllowPlugins = PR_FALSE;
+      }
       else {
         PrintHelpInfo(argv);
         exit(-1);
@@ -347,7 +352,7 @@ nsViewerApp::OpenWindow()
                                              kIBrowserWindowIID,
                                              (void**) &bw);
   bw->SetApp(this);
-  bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), PRUint32(~0));
+  bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
   bw->Show();
   mCrawler->SetBrowserWindow(bw);
 

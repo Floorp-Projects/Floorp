@@ -504,7 +504,8 @@ nsresult
 nsBrowserWindow::Init(nsIAppShell* aAppShell,
                       nsIPref* aPrefs,
                       const nsRect& aBounds,
-                      PRUint32 aChromeMask)
+                      PRUint32 aChromeMask,
+                      PRBool aAllowPlugins)
 {
   mChromeMask = aChromeMask;
 
@@ -527,7 +528,8 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     return rv;
   }
   r.x = r.y = 0;
-  rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), r);
+  rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), r,
+                       nsScrollPreference_kAuto, aAllowPlugins);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
   mWebShell->SetObserver((nsIStreamObserver*)this);
   mWebShell->SetPrefs(aPrefs);
