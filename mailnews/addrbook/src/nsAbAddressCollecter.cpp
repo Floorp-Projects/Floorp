@@ -249,9 +249,11 @@ nsresult nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char
 		INTL_ConvertToUnicode((const char *)firstName, nsCRT::strlen(firstName), (void**)&unicodeStr, &unicharLength);
 		senderCard->SetFirstName(unicodeStr);
 		PR_Free(unicodeStr);
-		INTL_ConvertToUnicode((const char *)lastName, nsCRT::strlen(lastName), (void**)&unicodeStr, &unicharLength);
-		senderCard->SetLastName(unicodeStr);
-		PR_Free(unicodeStr);
+        if (lastName) {
+            INTL_ConvertToUnicode((const char *)lastName, nsCRT::strlen(lastName), (void**)&unicodeStr, &unicharLength);
+            senderCard->SetLastName(unicodeStr);
+            PR_Free(unicodeStr);
+        }
 	}
 	PR_FREEIF(firstName);
 	PR_FREEIF(lastName);
