@@ -47,9 +47,13 @@ public:
 
   virtual PRBool IsLocalFileURL(char *aAddress)=0;
 
+#ifdef NU_CACHE
+  virtual PRBool IsURLInCache(ilIURL* iUrl)=0;
+#else
   virtual PRBool IsURLInMemCache(ilIURL *aUrl)=0;
 
   virtual PRBool IsURLInDiskCache(ilIURL *aUrl)=0;
+#endif /* NU_CACHE */
 
   virtual int GetURL (ilIURL * aUrl, NET_ReloadMethod aLoadMethod,
 		      ilINetReader *aReader)=0;
