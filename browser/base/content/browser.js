@@ -1552,7 +1552,16 @@ function canonizeUrl(aTriggeringEvent, aPostDataRef)
 
     else if (aTriggeringEvent && 'ctrlKey' in aTriggeringEvent &&
         aTriggeringEvent.ctrlKey)
-      suffix = ".com/";
+    {
+      try {
+        suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
+        if (suffix.charAt(suffix.length - 1) != '/')
+          suffix += "/";
+      }
+      catch(e) {
+        suffix = ".com/";
+      }
+    }
 
     else if (aTriggeringEvent && 'shiftKey' in aTriggeringEvent &&
         aTriggeringEvent.shiftKey)
