@@ -23,7 +23,7 @@ static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
 
 static CActiveXPlugin *gpFactory = NULL;
 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory)
 {
     if (aClass.Equals(kIPluginIID))
 	{
@@ -137,12 +137,11 @@ NS_IMETHODIMP CActiveXPlugin::LockFactory(PRBool aLock)
 ///////////////////////////////////////////////////////////////////////////////
 // nsIPlugin overrides
 
-static char *gpszMime = "application/x-activex-plugin:smp:Mozilla ActiveX Control Plug-in";
-static char *gpszPluginName = "Mozilla ActiveX Control Plug-in";
-static char *gpszPluginDesc = "Hosts ActiveX controls";
+static const char *gpszMime = "application/x-oleobject:smp:Mozilla ActiveX Control Plug-in";
+static const char *gpszPluginName = "Mozilla ActiveX Control Plug-in";
+static const char *gpszPluginDesc = "ActiveX control host";
 
-
-NS_IMETHODIMP CActiveXPlugin::Initialize(nsISupports* browserInterfaces)
+NS_IMETHODIMP CActiveXPlugin::Initialize()
 {
 	return NS_OK;
 }
@@ -166,11 +165,11 @@ NS_IMETHODIMP CActiveXPlugin::GetValue(nsPluginVariable variable, void *value)
     nsresult err = NS_OK;
     if (variable == nsPluginVariable_NameString)
 	{
-        *((char **)value) = gpszPluginName;
+        *((char **)value) = const_cast<char *>(gpszPluginName);
 	}
     else if (variable == nsPluginVariable_DescriptionString)
 	{
-        *((char **)value) = gpszPluginDesc;
+        *((char **)value) = const_cast<char *>(gpszPluginDesc);
 	}
     else
 	{

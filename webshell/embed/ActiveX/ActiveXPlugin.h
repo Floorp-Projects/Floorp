@@ -17,7 +17,7 @@ public:
 	NS_IMETHOD LockFactory(PRBool aLock);
 
 	// nsIPlugin overrides
-    NS_IMETHOD Initialize(nsISupports* browserInterfaces);
+	NS_IMETHOD Initialize();
     NS_IMETHOD Shutdown(void);
     NS_IMETHOD GetMIMEDescription(const char* *resultingDesc);
     NS_IMETHOD GetValue(nsPluginVariable variable, void *value);
