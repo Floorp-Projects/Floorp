@@ -155,7 +155,7 @@ class CCommentToken: public CHTMLToken {
 	public:
                         CCommentToken(const nsString& aString);
    	virtual PRInt32     Consume(PRUnichar aChar,CScanner* aScanner);
-    virtual const char*	GetClassName(void) {return "/**/";}
+    virtual const char*	GetClassName(void);
 		virtual PRInt32	    GetTokenType(void) {return eToken_comment;}
             char        mLeadingChar;
 };
