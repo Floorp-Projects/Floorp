@@ -127,7 +127,7 @@ function calendarManager( CalendarWindow )
          this.addCalendar( Calendar );
       }
       // Add autoreload timers for all calendars
-      autoreload = Calendar.getAttribute( "http://home.netscape.com/NC-rdf#autoreload" );
+      var autoreload = Calendar.getAttribute( "http://home.netscape.com/NC-rdf#autoreload" );
       if ( autoreload > 0 ) 
       {
          function closure( ThisObject,ThisCalendar ) {
