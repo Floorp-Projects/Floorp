@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.11 $ 
-# $Date: 2001/01/05 17:30:35 $ 
+# $Revision: 1.12 $ 
+# $Date: 2001/01/06 01:31:30 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -58,7 +58,7 @@ sub security_check_data_dir {
   my ($dir) = (@_);
 
   ( -l $dir ) &&
-    die("Security Error. dir: $dir is a symbolic link\n");
+    die("Security Error. dir: $dir is a symbolic link.\n");
   
   mkdir_R($dir);
 
@@ -73,11 +73,11 @@ sub security_check_data_dir {
   my $tinderbox_uid = $<;
 
   ( $uid == $tinderbox_uid ) ||
-    die("Security Error. dir: $dir is not owned by ".
-        "the tinderbox id: $tinderbox_uid\n");
+    die("Security Error. dir: $dir, owner: $uid is not owned by ".
+        "the tinderbox id: $tinderbox_uid.\n");
 
   ( $mode & 02) &&
-    die("Security Error. dir: $dir is writable by other\n");
+    die("Security Error. dir: $dir is writable by other.\n");
 
   return 1;
 }
@@ -103,8 +103,10 @@ sub set_static_vars {
   # rather then some mysterious constants hard coded into the code.
 
   $SECONDS_PER_MINUTE = (60);
-  $SECONDS_PER_HOUR = (60*60);
-  $SECONDS_PER_DAY = (60*60*24);
+  $SECONDS_PER_HOUR = (60*$SECONDS_PER_MINUTE);
+  $SECONDS_PER_DAY = (24*$SECONDS_PER_HOUR);
+  $SECONDS_PER_MONTH = (30*$SECONDS_PER_DAY);
+  $SECONDS_PER_YEAR = (365*$SECONDS_PER_DAY);
 
   # where errors are loged
   
