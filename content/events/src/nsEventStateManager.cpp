@@ -2502,20 +2502,9 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
   switch(aEvent->message) {
   case NS_MOUSE_MOVE:
     {
-      // Optimization if we're over the same frame as before
-      if (mCurrentTarget == mLastMouseOverFrame) {
-        break;
-      }
-
-      // Check whether we are over the same element as before
+      // Get the target content target (mousemove target == mouseover target)
       nsCOMPtr<nsIContent> targetElement;
-      nsIFrame* targetFrame;
-      if (mCurrentTarget) {
-        mCurrentTarget->GetContentForEvent(aPresContext, aEvent,
-                                           getter_AddRefs(targetElement));
-        targetFrame = mCurrentTarget;
-      }
-
+      GetEventTargetContent(aEvent, getter_AddRefs(targetElement));
       if (mLastMouseOverElement == targetElement) {
         break;
       }
@@ -2547,14 +2536,6 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
       // Before firing mouseover, check for recursion
       if (targetElement != mFirstMouseOverEventElement) {
       
-        // If we actually went and got a parent element, we need to fetch its
-        // frame so we can send it events
-        if (!targetFrame) {
-          nsCOMPtr<nsIPresShell> shell;
-          aPresContext->GetShell(getter_AddRefs(shell));
-          shell->GetPrimaryFrameFor(targetElement, &targetFrame);
-        }
-
         // Store the first mouseOver event we fire and don't refire mouseOver
         // to that element while the first mouseOver is still ongoing.
         mFirstMouseOverEventElement = targetElement;
@@ -2564,9 +2545,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
         }
 
         // Fire mouseover
+        nsIFrame* targetFrame = nsnull;
+        GetEventTarget(&targetFrame);
         DispatchMouseEvent(aPresContext, aEvent, NS_MOUSE_ENTER_SYNTH,
-                           targetElement, targetFrame,
-                           mLastMouseOverElement);
+                           targetElement, targetFrame, mLastMouseOverElement);
 
         mLastMouseOverFrame = targetFrame;
         mLastMouseOverElement = targetElement;
@@ -2826,10 +2808,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
 {
   nsresult ret = NS_OK;
   nsMouseEvent event;
-  nsCOMPtr<nsIContent> mouseContent;
   PRInt32 flags = NS_EVENT_FLAG_INIT;
-
-  mCurrentTarget->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(mouseContent));
 
   //If mouse is still over same element, clickcount will be > 1.
   //If it has moved it will be zero, so no click.
@@ -2863,6 +2842,9 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> presShell;
     mPresContext->GetShell(getter_AddRefs(presShell));
     if (presShell) {
+      nsCOMPtr<nsIContent> mouseContent;
+      GetEventTargetContent(aEvent, getter_AddRefs(mouseContent));
+
       ret = presShell->HandleEventWithTarget(&event, mCurrentTarget, mouseContent, flags, aStatus);
       if (NS_SUCCEEDED(ret) && aEvent->clickCount == 2) {
         nsMouseEvent event2;
@@ -3742,25 +3724,10 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent, nsIContent** aConten
     return NS_OK;
   }
 
-  if (!mCurrentTarget) {
-    nsCOMPtr<nsIPresShell> presShell;
-    mPresContext->GetShell(getter_AddRefs(presShell));
-    if (presShell) {
-      presShell->GetEventTargetFrame(&mCurrentTarget);
-
-      //This may be new frame that hasn't been through the ESM so we
-      //must set its NS_FRAME_EXTERNAL_REFERENCE bit.
-      if (mCurrentTarget) {
-        nsFrameState state;
-        mCurrentTarget->GetFrameState(&state);
-        state |= NS_FRAME_EXTERNAL_REFERENCE;
-        mCurrentTarget->SetFrameState(state);
-      }
-    }
-  }
-
-  if (mCurrentTarget) {
-    mCurrentTarget->GetContentForEvent(mPresContext, aEvent, aContent);
+  nsCOMPtr<nsIPresShell> presShell;
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  if (presShell) {
+    presShell->GetEventTargetContent(aEvent, aContent);
     return NS_OK;
   }
 
