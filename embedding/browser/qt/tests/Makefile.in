@@ -28,6 +28,8 @@ MOCSRCS		= \
 		moc_mainwindow.cpp \
 		$(NULL)
 
+IMAGES = fileopen.png reload.png back.png forward.png stop.png
+
 CXXFLAGS	+= $(MOZ_QT_CFLAGS)
 PROGRAM = $(CPPSRCS:.cpp=)
 
@@ -40,6 +42,7 @@ LIBS		+= \
 endif
 
 include $(topsrcdir)/config/config.mk
+include $(srcdir)/../src/config/qtconfig.mk
 
 # Force applications to be built non-statically
 # when building the mozcomps meta component
@@ -64,6 +67,7 @@ EXTRA_LIBS	+= $(MOZ_JS_LIBS)
 EXTRA_LIBS	+= $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
+include $(srcdir)/../src/config/qtrules.mk
 
 CXXFLAGS	+= $(MOZ_QT_CFLAGS)
 
