@@ -64,7 +64,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #back-button 
   {
     list-style-image      : url("chrome://navigator/skin/back.gif");
-    min-width			  : 55px;
+    min-width	            : 55px;
   }
 
 #back-button[disabled="true"],
@@ -92,7 +92,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #forward-button 
   {
     list-style-image      : url("chrome://navigator/skin/forward.gif");
-    min-width			  : 55px;
+    min-width             : 55px;
   }
 
 #forward-button[disabled="true"],
@@ -120,7 +120,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #stop-button 
   {
 	  list-style-image      : url("chrome://navigator/skin/stop.gif");
-	  min-width			    : 46px;
+	  min-width	            : 46px;
   } 
 
 #stop-button[disabled="true"],
@@ -143,7 +143,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #reload-button 
   {
   list-style-image        : url("chrome://navigator/skin/reload.gif");
-  min-width			      : 46px;
+  min-width	              : 46px;
   }
 
 #reload-button:hover
@@ -169,7 +169,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
 	  list-style-image      : url("chrome://communicator/skin/bookmarks/location.gif"); 
 	  cursor                : grab;
-      margin                : 0px 2px 0px 0px;
+    margin                : 0px 2px 0px 0px;
   } 
 
 #page-proxy-button:hover
@@ -207,11 +207,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     margin-right          : 2px;
   }
   
-.menuitem-iconic
-  {
-    padding               : 0px !important;
-  }
-
 #statusbar-icon
   {
     margin-left           : 0px;

@@ -29,23 +29,6 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); 
 @namespace html url("http://www.w3.org/1999/xhtml"); 
 
-/**
- * XXX-DEBUG: HTML namespace/titledbutton striping. 
- **/ 
-  html|* 
-    {
-      border              : 1px solid green !important;
-    }
-  
-  html|form 
-    {
-      border              : none !important;
-    }
-  
-  titledbutton 
-    {
-      border              : 1px solid purple !important;
-    }
 
 /**  
  * XUL <window> element
@@ -66,10 +49,6 @@
     { 
       background-color    : #DDDDDD;
       padding             : 7px 5px 5px 5px;
-      border-left         : 1px solid #FFFFFF;
-      border-top          : 1px solid #FFFFFF;
-      border-right        : 1px solid #DDDDDD;
-      border-bottom       : 1px solid #DDDDDD;
     }
 
   window.non-resizable-dialog
@@ -139,8 +118,8 @@
       overflow            : hidden;
       min-width           : 1px;
       border-right        : 1px solid #FFFFFF;
+      border-left         : 1px solid #9D9D9D;
       border-bottom       : 1px solid #FFFFFF;
-      border-top		  : 1px solid #000000;
     }
   
   statusbarpanel

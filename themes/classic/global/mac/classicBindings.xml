@@ -184,4 +184,18 @@
     </content>
   </binding>  
 
+  <binding id="toolbarbutton-left" extends="chrome://global/content/xulBindings.xml#buttonleft">
+    <content autostretch="never" excludes="observes,template">
+      <xul:image class="toolbarbutton-left-icon" inherits="src,disabled"/>
+      <xul:text class="toolbarbutton-left-text" inherits="value,crop"/>
+    </content>
+  </binding>  
+
+  <binding id="toolbarbutton-top" extends="chrome://global/content/xulBindings.xml#buttontop">
+    <content autostretch="never" orient="vertical" excludes="observes,template">
+      <xul:image class="toolbarbutton-top-icon" inherits="src,disabled"/>
+      <xul:text class="toolbarbutton-top-text" inherits="value,crop"/>
+    </content>
+  </binding>  
+
 </bindings>
