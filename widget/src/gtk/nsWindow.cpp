@@ -2471,12 +2471,15 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
   if (mIsToplevel && mShell)
   {
 #ifdef DEBUG
-    // complain if a window is moved offscreen (legal, but potentially worrisome)
-    PRInt32 screenWidth = gdk_screen_width();
-    PRInt32 screenHeight = gdk_screen_height();
-    // no annoying assertions. just mention the issue.
-    if (aX < 0 || aX >= screenWidth || aY < 0 || aY >= screenHeight)
-      printf("window moved to offscreen position\n");
+    /* complain if a top-level window is moved offscreen
+       (legal, but potentially worrisome) */
+    if (!mParent) {
+      PRInt32 screenWidth = gdk_screen_width();
+      PRInt32 screenHeight = gdk_screen_height();
+      // no annoying assertions. just mention the issue.
+      if (aX < 0 || aX >= screenWidth || aY < 0 || aY >= screenHeight)
+        printf("window moved to offscreen position\n");
+    }
 #endif
 
     // do it the way it should be done period.
