@@ -287,12 +287,12 @@ ImageConsumer::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
       }
       else {
         mStatus = MK_IMAGE_LOSSAGE;
-        NS_RELEASE(mStream);
+        NS_IF_RELEASE(mStream);
       }
     }
     else {
       mStatus = MK_IMAGE_LOSSAGE;
-      NS_RELEASE(mStream);
+      NS_IF_RELEASE(mStream);
     }
   }
 
