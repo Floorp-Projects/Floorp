@@ -44,6 +44,7 @@
 
   <xsl:template match="/">
     <link href="chrome://communicator/content/xml/XMLPrettyPrint.css" type="text/css" rel="stylesheet"/>
+    <link title="Monospace" href="chrome://communicator/content/xml/XMLMonoPrint.css" type="text/css" rel="alternate stylesheet"/>
     <div id="header">
       <p>
         This XML file does not appear to have any style information

@@ -1,4 +1,5 @@
 comm.jar:
     content/communicator/xml/XMLPrettyPrint.css                 (XMLPrettyPrint.css)
+    content/communicator/xml/XMLMonoPrint.css                   (XMLMonoPrint.css)
     content/communicator/xml/XMLPrettyPrint.xml                 (XMLPrettyPrint.xml)
     content/communicator/xml/XMLPrettyPrint.xsl                 (XMLPrettyPrint.xsl)
