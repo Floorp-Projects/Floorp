@@ -113,11 +113,11 @@
   <menubar id="zmain-menubar">
     <menu id="menu_File">
       <menupopup id="filemenu-popup">
-        <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" observes="cmd_newNavigator"/>
+        <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
         <menu id="menu_New">
           <menupopup id="menu_NewPopup">
-            <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
-            <menuitem id="menu_newEditor"    observes="cmd_newEditor"/>
+            <menuitem id="menu_newNavigator" command="cmd_newNavigator"/>
+            <menuitem id="menu_newEditor"    command="cmd_newEditor"/>
           </menupopup>
         </menu>
         
