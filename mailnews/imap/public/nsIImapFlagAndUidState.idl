@@ -40,13 +40,15 @@
 [scriptable, uuid(70378b9a-6480-11d3-a533-0060b0fc04b7)]
 interface nsIImapFlagAndUidState : nsISupports 
 {
-	readonly attribute long numberOfMessages;
-	readonly attribute long numberOfRecentMessages;
-    void GetUidOfMessage(in long zeroBasedIndex, out unsigned long result);
-    void GetMessageFlags(in long zeroBasedIndex, out unsigned short result);
-	void ExpungeByIndex(in unsigned long zeroBasedIndex);
-	void AddUidFlagPair(in unsigned long uid, in unsigned short flags);
-	void Reset(in unsigned long howManyLeft);
-	void SetSupportedUserFlags(in unsigned short flags);
+  readonly attribute long numberOfMessages;
+  readonly attribute long numberOfRecentMessages;
+  void GetUidOfMessage(in long zeroBasedIndex, out unsigned long result);
+  void GetMessageFlags(in long zeroBasedIndex, out unsigned short result);
+  void ExpungeByIndex(in unsigned long zeroBasedIndex);
+  void AddUidFlagPair(in unsigned long uid, in unsigned short flags);
+  void addUidCustomFlagPair(in unsigned long uid, in string customFlag);
+  string getCustomFlags(in unsigned long uid); // returns space-separated keywords
+  void Reset(in unsigned long howManyLeft);
+  void SetSupportedUserFlags(in unsigned short flags);
 };
 

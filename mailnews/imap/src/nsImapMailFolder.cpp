@@ -115,6 +115,8 @@ static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,    NS_MSGCOPYSERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 
+nsIAtom* nsImapMailFolder::mImapHdrDownloadedAtom=nsnull;
+
 #define FOUR_K 4096
 #define MAILNEWS_CUSTOM_HEADERS "mailnews.customHeaders"
 
@@ -200,7 +202,9 @@ nsImapMailFolder::nsImapMailFolder() :
     m_downloadingFolderForOfflineUse(PR_FALSE)
 {
       MOZ_COUNT_CTOR(nsImapMailFolder); // double count these for now.
-      
+
+      if (mImapHdrDownloadedAtom == nsnull)
+        mImapHdrDownloadedAtom = NS_NewAtom("ImapHdrDownloaded");
       m_appendMsgMonitor = nsnull;  // since we're not using this (yet?) make it null.
       // if we do start using it, it should be created lazily
       
@@ -228,6 +232,9 @@ nsImapMailFolder::~nsImapMailFolder()
     if (m_appendMsgMonitor)
         PR_DestroyMonitor(m_appendMsgMonitor);
 
+  // I think our destructor gets called before the base class...
+  if (mInstanceCount == 1)
+    NS_IF_RELEASE(mImapHdrDownloadedAtom);
   if (m_moveCoalescer)
     delete m_moveCoalescer;
   delete m_pathName;
@@ -2569,6 +2576,17 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
     char *headers;
     PRInt32 headersSize;
 
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server));
+    if (NS_SUCCEEDED(rv)) // don't use NS_ENSURE_SUCCESS here; it's not a fatal error
+    {
+      nsXPIDLCString redirectorType;
+      server->GetRedirectorType(getter_Copies(redirectorType));
+
+      // only notify redirected type servers of new hdrs for performance
+      if (!redirectorType.IsEmpty())
+        NotifyFolderEvent(mImapHdrDownloadedAtom);
+    }
     newMsgHdr->SetMessageKey(m_curMsgUid);
     TweakHeaderFlags(aProtocol, newMsgHdr);
     m_msgMovedByFilter = PR_FALSE;
@@ -3211,6 +3229,36 @@ NS_IMETHODIMP nsImapMailFolder::SetAdminUrl(const char *adminUrl)
   m_adminUrl = adminUrl;
   return NS_OK;
 }
+
+NS_IMETHODIMP nsImapMailFolder::GetHdrParser(nsIMsgParseMailMsgState **aHdrParser)
+{
+  NS_ENSURE_ARG_POINTER(aHdrParser);
+  NS_IF_ADDREF(*aHdrParser = m_msgParser);
+  return NS_OK;
+}
+
+  // this is used to issue an arbitrary imap command on the passed in msgs.
+  // It assumes the command needs to be run in the selected state.
+NS_IMETHODIMP nsImapMailFolder::IssueCommandOnMsgs(const char *command, const char *uids, nsIMsgWindow *aWindow, nsIURI **url)
+{
+  nsresult rv;
+ nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
+  if (NS_FAILED(rv)) return rv;
+  // selecting the folder with m_downloadingFolderForOfflineUse true will cause
+  // us to fetch any message bodies we don't have.
+  return imapService->IssueCommandOnMsgs(m_eventQueue, this, aWindow, command, uids, url);
+}
+
+NS_IMETHODIMP nsImapMailFolder::FetchCustomMsgAttribute(const char *attribute, const char *uids, nsIMsgWindow *aWindow, nsIURI **url)
+{
+  nsresult rv;
+ nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
+  if (NS_FAILED(rv)) return rv;
+  // selecting the folder with m_downloadingFolderForOfflineUse true will cause
+  // us to fetch any message bodies we don't have.
+  return imapService->FetchCustomMsgAttribute(m_eventQueue, this, aWindow, attribute, uids, url);
+}
+
 nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
                                                    nsIMsgDatabase *sourceDB, 
                                                    const char *destFolderUri,
@@ -3626,7 +3674,8 @@ nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey u
                                                                                 
   return rv;
 }
-    
+
+
 NS_IMETHODIMP
 nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, 
                                           PRBool markRead,
@@ -3634,7 +3683,7 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
 {
   nsresult res = NS_OK;
   PRBool commit = PR_FALSE;
-
+  PRBool needMsgID = PR_FALSE;
   if (m_offlineHeader)
   {
     EndNewOfflineMessage();
@@ -3645,61 +3694,84 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
     m_tempMessageStream->Close();
     m_tempMessageStream = nsnull;
   }
-  if (markRead)
+  nsCOMPtr<nsIMsgDBHdr> msgHdr;
+  m_curMsgUid = uidOfMessage;
+  res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
+  nsXPIDLCString messageID;
+  nsCOMPtr<nsIMsgMailNewsUrl> msgUrl(do_QueryInterface(imapUrl, &res));
+  nsCOMPtr<nsIMsgWindow> msgWindow;
+  res = msgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+  if (msgHdr)
   {
-    nsCOMPtr<nsIMsgDBHdr> msgHdr;
-
-    m_curMsgUid = uidOfMessage;
-    res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
+    // if we didn't get the message id when we downloaded the message header,
+    // we cons up an md5: message id. If we've done that, set needMsgID to true
+    // so we'll try to extract the message id out of the mime headers for the whole message.
+    msgHdr->GetMessageId(getter_Copies(messageID));
+    if (!strncmp(messageID, "md5:", 4))
+      needMsgID = PR_TRUE;
+  }
+  if (markRead || needMsgID)
+  {
     if (NS_SUCCEEDED(res))
     {
       PRBool isRead;
       msgHdr->GetIsRead(&isRead);
-      if (!isRead)
+      if (!isRead || needMsgID)
       {
         PRUint32 msgFlags, newFlags;
         msgHdr->GetFlags(&msgFlags);
 
-            nsCOMPtr<nsIMsgMailNewsUrl> 
-                msgUrl(do_QueryInterface(imapUrl, &res));
             if (NS_SUCCEEDED(res))
             {
           nsCOMPtr<nsIMimeHeaders> mimeHeaders;
           res = msgUrl->GetMimeHeaders(getter_AddRefs(mimeHeaders));
           if (NS_SUCCEEDED(res) && mimeHeaders)
           {
-            nsXPIDLCString mdnDnt;
-            mimeHeaders->ExtractHeader("Disposition-Notification-To",
-                                       PR_FALSE, getter_Copies(mdnDnt));
-            if (mdnDnt.Length() && !(msgFlags & MSG_FLAG_MDN_REPORT_SENT))
+            if (!isRead)
+            {
+              nsXPIDLCString mdnDnt;
+              mimeHeaders->ExtractHeader("Disposition-Notification-To",
+                                         PR_FALSE, getter_Copies(mdnDnt));
+              if (mdnDnt.Length() && !(msgFlags & MSG_FLAG_MDN_REPORT_SENT))
+              {
+                if(NS_SUCCEEDED(res))
                 {
-              nsCOMPtr<nsIMsgWindow> msgWindow;
-                    res = msgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-                    if(NS_SUCCEEDED(res))
-                    {
-                nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
-                mdnGenerator =
-                  do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &res);
-                if (mdnGenerator && !(msgFlags & MSG_FLAG_IMAP_DELETED))
-                        {
-                            mdnGenerator->Process(nsIMsgMdnGenerator::eDisplayed,
-                                                  msgWindow, this, uidOfMessage, 
-                                                  mimeHeaders, PR_FALSE);
-                            msgUrl->SetMimeHeaders(nsnull);
-                        }
-                    }
-              msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
-              msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
-                }
+                  nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
+                  mdnGenerator =
+                    do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &res);
+                  if (mdnGenerator && !(msgFlags & MSG_FLAG_IMAP_DELETED))
+                  {
+                      mdnGenerator->Process(nsIMsgMdnGenerator::eDisplayed,
+                                            msgWindow, this, uidOfMessage, 
+                                            mimeHeaders, PR_FALSE);
+                      msgUrl->SetMimeHeaders(nsnull);
+                  }
+               }
+               msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
+               msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
+              }
             }
+            if (needMsgID)
+            {
+              nsXPIDLCString messageID;
+              mimeHeaders->ExtractHeader("Message-Id",
+                                         PR_FALSE, getter_Copies(messageID));
+              if (messageID.Length())
+                msgHdr->SetMessageId(messageID);
+            }
+          }
         }
-        msgHdr->MarkRead(PR_TRUE);
-        commit = PR_TRUE;
+        if (markRead)
+        {
+          msgHdr->MarkRead(PR_TRUE);
+          commit = PR_TRUE;
+        }
       }
     }
   }
   if (commit && mDatabase)
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+
   return res;
 }
 
@@ -3832,9 +3904,29 @@ nsresult nsImapMailFolder::SyncFlags(nsIImapFlagAndUidState *flagState)
     flagState->GetUidOfMessage(flagIndex, &uidOfMessage);
     imapMessageFlagsType flags;
     flagState->GetMessageFlags(flagIndex, &flags);
-    // ### dmb need to do something about imap deleted flag;
-    NotifyMessageFlags(flags, uidOfMessage);
+    if (flags & kImapMsgCustomKeywordFlag)
+    {
+      char *keywords;
+      nsresult rv = flagState->GetCustomFlags(uidOfMessage, &keywords);
+      if (NS_SUCCEEDED(rv) && keywords)
+      {
+        nsCOMPtr<nsIMsgDBHdr> dbHdr;
+        PRBool containsKey;
+        rv = mDatabase->ContainsKey(uidOfMessage , &containsKey);
+        // if we don't have the header, don't diddle the flags.
+        // GetMsgHdrForKey will create the header if it doesn't exist.
+        if (NS_FAILED(rv) || !containsKey)
+          return rv;
+    
+        rv = mDatabase->GetMsgHdrForKey(uidOfMessage, getter_AddRefs(dbHdr));
+        if (dbHdr && NS_SUCCEEDED(rv))
+        {
+          dbHdr->SetStringProperty("keywords", keywords);
+        }
+      }
     }
+    NotifyMessageFlags(flags, uidOfMessage);
+  }
   return NS_OK;
 }
 
@@ -4147,7 +4239,6 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 
   m_urlRunning = PR_FALSE;
   m_downloadingFolderForOfflineUse = PR_FALSE;
-  SetNotifyDownloadedLines(PR_FALSE);
   nsCOMPtr<nsIMsgMailSession> session = 
            do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
   nsCOMPtr <nsIMsgCopyServiceListener> listener;
@@ -4171,6 +4262,9 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
    {
         nsImapAction imapAction = nsIImapUrl::nsImapTest;
         imapUrl->GetImapAction(&imapAction);
+        if (imapAction == nsIImapUrl::nsImapMsgFetch || imapAction == nsIImapUrl::nsImapMsgDownloadForOffline)
+          SetNotifyDownloadedLines(PR_FALSE);
+
         switch(imapAction)
         {
         case nsIImapUrl::nsImapDeleteMsg:
@@ -5500,7 +5594,6 @@ nsImapMailFolder::SetUrlState(nsIImapProtocol* aProtocol,
     ProgressStatus(aProtocol, IMAP_DONE, nsnull);
     m_urlRunning = PR_FALSE;
     m_downloadingFolderForOfflineUse = PR_FALSE;
-    SetNotifyDownloadedLines(PR_FALSE);
   }
 
     if (aUrl)
@@ -6642,75 +6735,6 @@ NS_IMETHODIMP nsImapMailFolder::SetFolderVerifiedOnline(PRBool bVal)
 {
     m_verifiedAsOnlineFolder = bVal;
     return NS_OK;
-}
-
-NS_IMETHODIMP nsImapMailFolder::ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result)
-{
-  // check if we're storing mail we read in the inbox in a personal filing cabinet.
-  // if not, just use base class implementation.
-  if (mFlags & MSG_FOLDER_FLAG_INBOX)
-  {
-    PRBool hasMsgOffline = PR_FALSE;
-
-    HasMsgOffline(msgKey, &hasMsgOffline);
-    if (hasMsgOffline)
-    {
-      *result = PR_FALSE;
-      return NS_OK;
-    }
-    nsCOMPtr<nsIImapIncomingServer> imapServer;
-    nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
-    if (NS_SUCCEEDED(rv) && imapServer)
-    {
-      PRBool storeReadMailInPFC;
-      imapServer->GetStoreReadMailInPFC(&storeReadMailInPFC);
-      if (storeReadMailInPFC)
-      {
-        *result = PR_TRUE;
-        return NS_OK;
-      }
-    }
-  }
-  return nsMsgDBFolder::ShouldStoreMsgOffline(msgKey, result);
-}
-
-nsresult nsImapMailFolder::GetOfflineStoreOutputStream(nsIOutputStream **outputStream)
-{
-  // check if we're storing mail we read in the inbox in a personal filing cabinet.
-  // if not, just use base class implementation.
-  if (mFlags & MSG_FOLDER_FLAG_INBOX)
-  {
-    nsCOMPtr<nsIImapIncomingServer> imapServer;
-    nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
-    if (NS_SUCCEEDED(rv) && imapServer)
-    {
-      PRBool storeReadMailInPFC;
-      imapServer->GetStoreReadMailInPFC(&storeReadMailInPFC);
-      if (storeReadMailInPFC)
-      {
-        nsresult rv = NS_ERROR_NULL_POINTER;
-        nsCOMPtr <nsIMsgFolder> outputPFC;
-
-        imapServer->GetReadMailPFC(PR_TRUE, getter_AddRefs(outputPFC));
-        if (outputPFC)
-        {
-          nsCOMPtr <nsIFileSpec> outputPFCPath;
-          outputPFC->GetPath(getter_AddRefs(outputPFCPath));
-          nsCOMPtr<nsISupports>  supports;
-          nsFileSpec fileSpec;
-          outputPFCPath->GetFileSpec(&fileSpec);
-          rv = NS_NewIOFileStream(getter_AddRefs(supports), fileSpec, PR_WRONLY | PR_CREATE_FILE, 00700);
-          supports->QueryInterface(NS_GET_IID(nsIOutputStream), (void **) outputStream);
-
-          nsCOMPtr <nsISeekableStream> seekable = do_QueryInterface(supports);
-          if (seekable)
-            seekable->Seek(nsISeekableStream::NS_SEEK_END, 0);
-        }
-        return rv;
-      }
-    }
-  }
-  return nsMsgDBFolder::GetOfflineStoreOutputStream(outputStream);
 }
 
 NS_IMETHODIMP nsImapMailFolder::PerformExpand(nsIMsgWindow *aMsgWindow)

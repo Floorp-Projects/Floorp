@@ -43,6 +43,8 @@
 
 const PRInt32 kImapFlagAndUidStateSize =	100;
 
+#include "nsHashTable.h"
+
 class nsImapFlagAndUidState : public nsIImapFlagAndUidState
 {
 public:
@@ -69,11 +71,13 @@ public:
 
 private:
     
+  static PRBool FreeCustomFlags(nsHashKey *aKey, void *aData, void *closure);
     PRInt32                 fNumberOfMessagesAdded;
     PRInt32					fNumberOfMessageSlotsAllocated;
 	PRInt32					fNumberDeleted;
     nsMsgKeyArray           fUids;
     imapMessageFlagsType    *fFlags;
+    nsHashtable             *m_customFlagsHash;	// Hash table, mapping uids to extra flags
 	PRUint16				fSupportedUserFlags;
 };
 

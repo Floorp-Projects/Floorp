@@ -329,10 +329,10 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
       rv = CreateStartOfImapUrl(aMessageURI, getter_AddRefs(imapUrl), folder, nsnull, urlSpec, hierarchySeparator);
       if (NS_FAILED(rv)) return rv;
     	imapUrl->SetImapMessageSink(imapMessageSink);
-      imapUrl->SetImapFolder(folder);
+      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl);
+      mailnewsUrl->SetFolder(folder);
       if (folder)
       {
-        nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl);
         if (mailnewsUrl)
         {
           PRBool useLocalCache = PR_FALSE;
@@ -1683,7 +1683,8 @@ nsImapService::SetImapUrlSink(nsIMsgFolder* aMsgFolder,
   NS_IF_RELEASE (aInst);
   aInst = nsnull;
 
-  aImapUrl->SetImapFolder(aMsgFolder);
+  nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl);
+  mailnewsUrl->SetFolder(aMsgFolder);
 
   return NS_OK;
 }
@@ -3354,7 +3355,7 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
         nsCOMPtr <nsIMsgFolder> imapFolder;
         nsCOMPtr <nsIImapServerSink> serverSink;
 
-        imapUrl->GetImapFolder(getter_AddRefs(imapFolder));
+        mailnewsUrl->GetFolder(getter_AddRefs(imapFolder));
         imapUrl->GetImapServerSink(getter_AddRefs(serverSink));
         // need to see if this is a link click - one way is to check if the url is set up correctly
         // if not, it's probably a url click. We need a better way of doing this. 
@@ -3740,6 +3741,110 @@ nsImapService::GetFolderAdminUrl(nsIEventQueue *aClientEventQueue,
       urlSpec.Append("/refreshfolderurls>");
       urlSpec.Append(char(hierarchySeparator));
       urlSpec.Append((const char *) folderName);
+      rv = mailNewsUrl->SetSpec(urlSpec);
+      if (NS_SUCCEEDED(rv))
+        rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
+        imapUrl,
+        nsnull,
+        aURL);
+    }
+  } // if we have a url to run....
+  
+  return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::IssueCommandOnMsgs(nsIEventQueue *aClientEventQueue,
+                      nsIMsgFolder *anImapFolder,
+                      nsIMsgWindow   *aMsgWindow,
+                      const char *aCommand,
+                      const char *uids,
+                      nsIURI** aURL)
+{
+  NS_ENSURE_ARG_POINTER(aClientEventQueue);
+  NS_ENSURE_ARG_POINTER(anImapFolder);
+  NS_ENSURE_ARG_POINTER(aMsgWindow);
+  nsCOMPtr<nsIImapUrl> imapUrl;
+  nsCAutoString urlSpec;
+  nsresult rv;
+  PRUnichar hierarchySeparator = GetHierarchyDelimiter(anImapFolder);
+  rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), anImapFolder, nsnull, urlSpec, hierarchySeparator);
+  
+  if (NS_SUCCEEDED(rv) && imapUrl)
+  {
+    // nsImapUrl::SetSpec() will set the imap action properly
+    rv = imapUrl->SetImapAction(nsIImapUrl::nsImapUserDefinedMsgCommand);
+    
+    nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
+    mailNewsUrl->SetMsgWindow(aMsgWindow);
+    mailNewsUrl->SetUpdatingFolder(PR_TRUE);
+    imapUrl->AddChannelToLoadGroup();
+    rv = SetImapUrlSink(anImapFolder, imapUrl);
+    
+    if (NS_SUCCEEDED(rv))
+    {
+      nsXPIDLCString folderName;
+      GetFolderName(anImapFolder, getter_Copies(folderName));
+      urlSpec.Append("/");
+      urlSpec.Append(aCommand);
+      urlSpec.Append(">");
+      urlSpec.Append(uidString);
+      urlSpec.Append(">");
+      urlSpec.Append(char(hierarchySeparator));
+      urlSpec.Append((const char *) folderName);
+      urlSpec.Append(">");
+      urlSpec.Append(uids);
+      rv = mailNewsUrl->SetSpec(urlSpec);
+      if (NS_SUCCEEDED(rv))
+        rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
+        imapUrl,
+        nsnull,
+        aURL);
+    }
+  } // if we have a url to run....
+  
+  return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::FetchCustomMsgAttribute(nsIEventQueue *aClientEventQueue,
+                      nsIMsgFolder *anImapFolder,
+                      nsIMsgWindow   *aMsgWindow,
+                      const char *aAttribute,
+                      const char *uids,
+                      nsIURI** aURL)
+{
+  NS_ENSURE_ARG_POINTER(aClientEventQueue);
+  NS_ENSURE_ARG_POINTER(anImapFolder);
+  NS_ENSURE_ARG_POINTER(aMsgWindow);
+  nsCOMPtr<nsIImapUrl> imapUrl;
+  nsCAutoString urlSpec;
+  nsresult rv;
+  PRUnichar hierarchySeparator = GetHierarchyDelimiter(anImapFolder);
+  rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), anImapFolder, nsnull, urlSpec, hierarchySeparator);
+  
+  if (NS_SUCCEEDED(rv) && imapUrl)
+  {
+    // nsImapUrl::SetSpec() will set the imap action properly
+    rv = imapUrl->SetImapAction(nsIImapUrl::nsImapUserDefinedFetchAttribute);
+    
+    nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
+    mailNewsUrl->SetMsgWindow(aMsgWindow);
+    mailNewsUrl->SetUpdatingFolder(PR_TRUE);
+    imapUrl->AddChannelToLoadGroup();
+    rv = SetImapUrlSink(anImapFolder, imapUrl);
+    
+    if (NS_SUCCEEDED(rv))
+    {
+      nsXPIDLCString folderName;
+      GetFolderName(anImapFolder, getter_Copies(folderName));
+      urlSpec.Append("/customFetch>UID>");
+      urlSpec.Append(char(hierarchySeparator));
+      urlSpec.Append((const char *) folderName);
+      urlSpec.Append(">");
+      urlSpec.Append(uids);
+      urlSpec.Append(">");
+      urlSpec.Append(aAttribute);
       rv = mailNewsUrl->SetSpec(urlSpec);
       if (NS_SUCCEEDED(rv))
         rv = GetImapConnectionAndLoadUrl(aClientEventQueue,

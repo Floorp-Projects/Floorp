@@ -1016,48 +1016,17 @@ NS_IMETHODIMP nsImapIncomingServer::GetIsPFC(const char *folderName, PRBool *res
 
 NS_IMETHODIMP nsImapIncomingServer::GetPFC(PRBool createIfMissing, nsIMsgFolder **pfcFolder)
 {
+  nsresult rv;
   nsCOMPtr<nsIFolder> rootFolder;
-  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
-  if (NS_SUCCEEDED(rv) && rootFolder)
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+           do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr <nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder);
-    nsCOMPtr <nsIMsgFolder> pfcParent;
-    nsXPIDLCString serverUri;
-    rv = GetServerURI(getter_Copies(serverUri));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCAutoString folderUri(serverUri);
-    folderUri.ReplaceSubstring("imap://", "mailbox://");
-    folderUri.Append("/");
-    folderUri.Append(GetPFCName());
-
-    rootMsgFolder->GetChildWithURI(folderUri.get(), PR_FALSE, PR_FALSE /*caseInsensitive */, pfcFolder);
-    if (!*pfcFolder && createIfMissing)
+    nsCOMPtr <nsIMsgIncomingServer> server; 
+    rv = accountManager->GetLocalFoldersServer(getter_AddRefs(server)); 
+    if (NS_SUCCEEDED(rv) && server)
     {
-			// get the URI from the incoming server
-	    nsCOMPtr<nsIRDFResource> res;
-      nsCOMPtr<nsIFileSpec> pfcFileSpec;
-	    nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
-	    rv = rdf->GetResource(folderUri.get(), getter_AddRefs(res));
-	    NS_ENSURE_SUCCESS(rv, rv);
-      nsCOMPtr <nsIMsgFolder> parentToCreate = do_QueryInterface(res, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-      parentToCreate->SetParent(rootFolder);
-      parentToCreate->GetPath(getter_AddRefs(pfcFileSpec));
-
-      nsFileSpec path;
-      pfcFileSpec->GetFileSpec(&path);
-     	nsOutputFileStream outputStream(path, PR_WRONLY | PR_CREATE_FILE, 00600);	
-      // can't call CreateStorageIfMissing because our parent is an imap folder
-      // and that would create an imap folder.
-      // parentToCreate->CreateStorageIfMissing(nsnull);
-      *pfcFolder = parentToCreate;
-      rootFolder->NotifyItemAdded(rootFolder, parentToCreate, "folderView");
-      nsCOMPtr <nsISupports> supports = do_QueryInterface(parentToCreate);
-      NS_ASSERTION(supports, "couldn't get isupports from imap folder");
-      if (supports)
-        rootFolder->AppendElement(supports);
-
-      NS_IF_ADDREF(*pfcFolder);
+      return server->GetRootMsgFolder(pfcFolder);
     }
   }
   return rv;
@@ -1342,6 +1311,10 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
 
         if (NS_SUCCEEDED(rv))
           child->SetPrettyName(convertedName);
+        if (onlineName.Equals("RECYCLE"))
+          child->SetFlag(MSG_FOLDER_FLAG_TRASH);
+        else if (onlineName.Equals("Sent Items"))
+          child->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
       }
     }
   }
@@ -2410,7 +2383,6 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
 
     GetRealHostName(getter_Copies(hostName));
     GetRealUsername(getter_Copies(userName));
-
     passwordText = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
     nsresult rv =  GetPasswordWithUI(passwordText, passwordTitle, aMsgWindow,
                                      &okayValue, aPassword);

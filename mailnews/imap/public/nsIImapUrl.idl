@@ -77,13 +77,15 @@ interface nsIImapUrl : nsISupports
   [noscript] attribute nsIImapExtensionSink imapExtensionSink;
   [noscript] attribute nsIImapMiscellaneousSink imapMiscellaneousSink;
   attribute nsIImapServerSink imapServerSink;
-  attribute nsIMsgFolder imapFolder;
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap url state
 	///////////////////////////////////////////////////////////////////////////////
   attribute nsImapAction imapAction; 
   readonly attribute nsImapState requiredImapState;
   readonly attribute string imapPartToFetch;
+  readonly attribute string customAttributeToFetch;
+  attribute string customAttributeResult;
+  readonly attribute string command;
   void allocateCanonicalPath(in string aServerPath, in char aOnlineDelimiter, out string aAllocatedPath);
   void allocateServerPath(in string aCanonicalPath, in char aOnlineDelimiter, out string aAllocatedPath);
   string createServerSourceFolderPathString();
@@ -183,7 +185,8 @@ interface nsIImapUrl : nsISupports
   const long nsImapOpenMimePart = 0x10000031;
   const long nsImapMsgDownloadForOffline	= 0x10000032;
   const long nsImapDeleteFolderAndMsgs = 0x10000033;
-
+  const long nsImapUserDefinedMsgCommand = 0x10000034;
+  const long nsImapUserDefinedFetchAttribute = 0x10000035;
 };
 
 %{C++

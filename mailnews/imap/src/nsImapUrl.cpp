@@ -193,7 +193,7 @@ NS_IMETHODIMP nsImapUrl::SetImapAction(nsImapAction aImapAction)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::GetImapFolder(nsIMsgFolder **aMsgFolder)
+NS_IMETHODIMP nsImapUrl::GetFolder(nsIMsgFolder **aMsgFolder)
 {
   NS_ENSURE_ARG_POINTER(aMsgFolder);
   NS_ENSURE_ARG_POINTER(m_imapFolder);
@@ -204,7 +204,7 @@ NS_IMETHODIMP nsImapUrl::GetImapFolder(nsIMsgFolder **aMsgFolder)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::SetImapFolder(nsIMsgFolder  * aMsgFolder)
+NS_IMETHODIMP nsImapUrl::SetFolder(nsIMsgFolder  * aMsgFolder)
 {
   nsresult rv;
   m_imapFolder = getter_AddRefs(NS_GetWeakReference(aMsgFolder, &rv));
@@ -383,7 +383,36 @@ NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char ** aResult)
   *aResult = ToNewCString(newStr);
 	return NS_OK;
 }
-  
+
+NS_IMETHODIMP nsImapUrl::GetCommand(char **result)
+{
+  NS_ENSURE_ARG_POINTER(result);
+  *result = nsCRT::strdup(m_command.get());
+  return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+
+NS_IMETHODIMP nsImapUrl::GetCustomAttributeToFetch(char **result)
+{
+  NS_ENSURE_ARG_POINTER(result);
+  *result = nsCRT::strdup(m_msgFetchAttribute.get());
+  return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP nsImapUrl::GetCustomAttributeResult(char **result)
+{
+  NS_ENSURE_ARG_POINTER(result);
+  *result = nsCRT::strdup(m_customAttributeResult.get());
+  return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP nsImapUrl::SetCustomAttributeResult(const char *result)
+{
+  m_customAttributeResult = result;
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result) 
 {
 	//  here's the old code....
@@ -484,6 +513,13 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
       ParseUidChoice();
       ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
       ParseListOfMessageIds();
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "customFetch"))
+    {
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+      ParseCustomMsgFetchAttribute();
     }
     else if (!nsCRT::strcasecmp(m_urlidSubString, "deletemsg"))
     {
@@ -721,6 +757,13 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
     {
       m_imapAction = nsImapFolderStatus;
       ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (m_imapAction == nsIImapUrl::nsImapUserDefinedMsgCommand)
+    {
+      m_command = m_urlidSubString; // save this
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
     }
     else
     {
@@ -1484,6 +1527,10 @@ void nsImapUrl::ParseListOfMessageIds()
 	}
 }
 
+void nsImapUrl::ParseCustomMsgFetchAttribute()
+{
+  m_msgFetchAttribute = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
+}
 // nsIMsgI18NUrl support
 
 nsresult nsImapUrl::GetMsgFolder(nsIMsgFolder **msgFolder)

@@ -956,7 +956,8 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, PRBool *interr
       if (NS_SUCCEEDED(rv) && runningImapURL)
       {
         nsCOMPtr <nsIMsgFolder> runningImapFolder;
-        runningImapURL->GetImapFolder(getter_AddRefs(runningImapFolder));
+        nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(runningImapURL);
+        mailnewsUrl->GetFolder(getter_AddRefs(runningImapFolder));
         if (aImapFolder == runningImapFolder)
         {
           PseudoInterrupt(PR_TRUE);
@@ -2004,6 +2005,26 @@ void nsImapProtocol::ProcessSelectedStateURL()
                 // drop the results on the floor for now
         }
         break;
+      case nsIImapUrl::nsImapUserDefinedMsgCommand:
+        {
+          nsXPIDLCString messageIdString;
+          nsXPIDLCString command;
+    
+          m_runningUrl->GetCommand(getter_Copies(command));
+          m_runningUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
+          IssueUserDefinedMsgCommand(command, messageIdString);
+        }
+        break;
+      case nsIImapUrl::nsImapUserDefinedFetchAttribute:
+        {
+          nsXPIDLCString messageIdString;
+          nsXPIDLCString attribute;
+    
+          m_runningUrl->GetCustomAttributeToFetch(getter_Copies(attribute));
+          m_runningUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
+          FetchMsgAttribute(messageIdString, attribute);
+        }
+        break;
       case nsIImapUrl::nsImapDeleteMsg:
         {
           nsXPIDLCString messageIdString;
@@ -2529,7 +2550,23 @@ void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePa
 }
 
 
-
+void nsImapProtocol::FetchMsgAttribute(const char * messageIds, const char *attribute)
+{
+    IncrementCommandTagNumber();
+    
+    nsCAutoString commandString (GetServerCommandTag());
+    commandString.Append(" UID fetch ");
+    commandString.Append(messageIds);
+    commandString.Append(" (");
+    commandString.Append(attribute);
+    commandString.Append(")"CRLF);
+    nsresult rv = SendData(commandString.get());
+      
+    if (NS_SUCCEEDED(rv))
+       ParseIMAPandCheckForNewMail(commandString.get());
+    GetServerStateParser().SetFetchingFlags(PR_FALSE);
+    GetServerStateParser().SetFetchingEverythingRFC822(PR_FALSE); // always clear this flag after every fetch....
+}
 
 // this routine is used to fetch a message or messages, or headers for a
 // message...
@@ -4352,6 +4389,38 @@ nsImapProtocol::Store(const char * messageList, const char * messageData,
                   commandTag, // command tag
                   messageList,
                   messageData);
+      
+    nsresult rv = SendData(protocolString);
+    if (NS_SUCCEEDED(rv))
+      ParseIMAPandCheckForNewMail(protocolString);
+    PR_Free(protocolString);
+  }
+  else
+    HandleMemoryFailure();
+}
+
+void
+nsImapProtocol::IssueUserDefinedMsgCommand(const char *command, const char * messageList)
+{
+  IncrementCommandTagNumber();
+    
+  const char *formatString;
+  formatString = "%s uid %s %s\015\012";
+        
+  const char *commandTag = GetServerCommandTag();
+  int protocolStringSize = PL_strlen(formatString) +
+        PL_strlen(messageList) + PL_strlen(command) +
+        PL_strlen(commandTag) + 1;
+  char *protocolString = (char *) PR_CALLOC( protocolStringSize );
+
+  if (protocolString)
+  {
+    PR_snprintf(protocolString, // string to create
+                  protocolStringSize, // max size
+                  formatString, // format string
+                  commandTag, // command tag
+                  command, 
+                  messageList);
       
     nsresult rv = SendData(protocolString);
     if (NS_SUCCEEDED(rv))
@@ -7545,7 +7614,7 @@ PRBool nsImapMockChannel::ReadFromLocalCache()
 
     imapUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
     nsCOMPtr <nsIMsgFolder> folder;
-    rv = imapUrl->GetImapFolder(getter_AddRefs(folder));
+    rv = mailnewsUrl->GetFolder(getter_AddRefs(folder));
     if (folder && NS_SUCCEEDED(rv))
     {
       // we want to create a file channel and read the msg from there.

@@ -264,6 +264,8 @@ public:
                          PRBool idsAreUids,
                          imapMessageFlagsType flags,
                          PRBool addFlags);
+        void IssueUserDefinedMsgCommand(const char *command, const char * messageList);
+        void FetchMsgAttribute(const char * messageIds, const char *attribute);
 	void Expunge();
   void UidExpunge(const char* messageSet);
 	void Close();

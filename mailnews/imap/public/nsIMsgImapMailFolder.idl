@@ -40,6 +40,7 @@
 
 interface nsIMsgWindow;
 interface nsIImapIncomingServer;
+interface nsIMsgParseMailMsgState;
 
 // this is a simple interface which allows the imap folder to update some values
 // that the folder props js code will use to update the sharing tab in the folder props.
@@ -78,6 +79,11 @@ interface nsIMsgImapMailFolder : nsISupports {
   nsIMsgImapMailFolder findOnlineSubFolder(in string onlineName);
   void addFolderRights(in string userName, in string rights);
   void refreshFolderRights();
+
+  // this is used to issue an arbitrary imap command on the passed in msgs.
+  // It assumes the command needs to be run in the selected state.
+  nsIURI issueCommandOnMsgs(in string command, in string uids, in nsIMsgWindow aWindow);
+  nsIURI fetchCustomMsgAttribute(in string msgAttribute, in string uids, in nsIMsgWindow aWindow);
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;
   attribute wchar hierarchyDelimiter;
@@ -89,5 +95,6 @@ interface nsIMsgImapMailFolder : nsISupports {
   attribute string adminUrl;
   readonly attribute boolean hasAdminUrl;
   attribute boolean performingBiff;
+  readonly attribute nsIMsgParseMailMsgState hdrParser;
 };
 

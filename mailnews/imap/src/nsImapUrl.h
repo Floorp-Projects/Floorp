@@ -71,7 +71,8 @@ public:
   // nsIMsgMailNewsUrl overrides
   NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
   NS_IMETHOD SetMsgWindow(nsIMsgWindow *aMsgWindow);
-
+  NS_IMETHOD GetFolder(nsIMsgFolder **aFolder);
+  NS_IMETHOD SetFolder(nsIMsgFolder *aFolder);
   // nsIMsgMessageUrl
   NS_DECL_NSIMSGMESSAGEURL
   NS_DECL_NSIMSGI18NURL
@@ -100,7 +101,8 @@ protected:
   void		ParseUidChoice();
   void		ParseMsgFlags();
   void		ParseListOfMessageIds();
-  
+  void          ParseCustomMsgFetchAttribute();
+
   nsresult GetMsgFolder(nsIMsgFolder **msgFolder);
   
   char        *m_sourceCanonicalFolderPathSubString;
@@ -109,7 +111,9 @@ protected:
   char		*m_urlidSubString;
   char		m_onlineSubDirSeparator;
   char		*m_searchCriteriaString;	// should we use m_search, or is this special?
-  
+  nsCString     m_command;       // for custom commands
+  nsCString     m_msgFetchAttribute; // for fetching custom msg attributes
+  nsCString     m_customAttributeResult; // for fetching custom msg attributes
   PRPackedBool m_validUrl;
   PRPackedBool m_runningUrl;
   PRPackedBool m_idsAreUids;
