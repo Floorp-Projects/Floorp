@@ -18,7 +18,7 @@
         <template>
             <rule>
 	            <menupopup>
-                <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+                <menuitem type="checkbox" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
 	            </menupopup>
             </rule>
         </template>
