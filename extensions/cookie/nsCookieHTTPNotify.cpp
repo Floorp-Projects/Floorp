@@ -89,7 +89,7 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext) {
     NS_RELEASE(pHTTPConnection);
     return rv;
   }
-  const char* cookie = ::COOKIE_GetCookie(url);
+  const char* cookie = ::COOKIE_GetCookie((const char*)url);
   if (cookie == nsnull) {
     NS_RELEASE(pURL);
     NS_RELEASE(pHTTPConnection);
@@ -178,7 +178,7 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext) {
     }
     if (NS_SUCCEEDED(rv)) {
       if(pDate) {
-        COOKIE_SetCookieStringFromHttp(url, cookie, pDate);
+        COOKIE_SetCookieStringFromHttp((const char*)url, cookie, pDate);
         nsCRT::free(pDate);
       }
     }
