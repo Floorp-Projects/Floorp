@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = base util content datasource build
+DIRS = base util content datasource chrome build
 
 ifdef MOZ_BRPROF
 DIRS += brprof
