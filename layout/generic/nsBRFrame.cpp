@@ -65,8 +65,7 @@ BRFrame::Paint(nsIPresContext& aPresContext,
                const nsRect& aDirtyRect,
                nsFramePaintLayer aWhichLayer)
 {
-  if ((eFramePaintLayer_Overlay == aWhichLayer) &&
-      nsIFrame::GetShowFrameBorders()) {
+  if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     float p2t;
     aPresContext.GetPixelsToTwips(&p2t);
     nscoord five = NSIntPixelsToTwips(5, p2t);
@@ -90,16 +89,23 @@ BRFrame::Reflow(nsIPresContext& aPresContext,
   aMetrics.width = 0;
   aMetrics.ascent = 0;
   aMetrics.descent = 0;
-  NS_ASSERTION(nsnull != aReflowState.lineLayout, "no line layout");
-  aReflowState.lineLayout->SetBRFrame(this);
 
-  // Return our reflow status
-  PRUint32 breakType = aReflowState.mStyleDisplay->mBreakType;
-  if (NS_STYLE_CLEAR_NONE == breakType) {
-    breakType = NS_STYLE_CLEAR_LINE;
+  // Only when the BR is operating in a line-layout situation will it
+  // behave like a BR.
+  if (nsnull != aReflowState.lineLayout) {
+    aReflowState.lineLayout->SetBRFrame(this);
+
+    // Return our reflow status
+    PRUint32 breakType = aReflowState.mStyleDisplay->mBreakType;
+    if (NS_STYLE_CLEAR_NONE == breakType) {
+      breakType = NS_STYLE_CLEAR_LINE;
+    }
+
+    aStatus = NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
+      NS_INLINE_MAKE_BREAK_TYPE(breakType);
   }
-
-  aStatus = NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |
-    NS_INLINE_MAKE_BREAK_TYPE(breakType);
+  else {
+    aStatus = NS_FRAME_COMPLETE;
+  }
   return NS_OK;
 }
