@@ -108,22 +108,22 @@ box[orient="vertical"] > splitter[collapse="after"] > grippy {
 
 /* vertical grippies */
 splitter[collapse="before"] > grippy:hover:active {
-  background-image: url("chrome://global/skin/splitter/grip-vrt-active.gif");
+  background-image: url("chrome://global/skin/splitter/grip-vrt-act.gif");
 }
 
 splitter[collapse="after"] > grippy:hover:active {
-  background-image: url("chrome://global/skin/splitter/grip-vrt-active.gif");
+  background-image: url("chrome://global/skin/splitter/grip-vrt-act.gif");
 }
 
 /* horizontal grippies */
 window[orient="vertical"] > splitter[collapse="before"] > grippy:hover:active,
 box[orient="vertical"] > splitter[collapse="before"] > grippy:hover:active {
-  background-image: url("chrome://global/skin/splitter/grip-hrz-active.gif");
+  background-image: url("chrome://global/skin/splitter/grip-hrz-act.gif");
 }
 
 window[orient="vertical"] > splitter[collapse="after"] > grippy:hover:active,
 box[orient="vertical"] > splitter[collapse="after"] > grippy:hover:active {
-  background-image: url("chrome://global/skin/splitter/grip-hrz-active.gif");
+  background-image: url("chrome://global/skin/splitter/grip-hrz-act.gif");
 }
 
 /* ..... collapsed state ..... */
