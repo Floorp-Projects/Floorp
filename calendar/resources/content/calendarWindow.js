@@ -154,6 +154,19 @@ function CalendarWindow( )
     calendar.addObserver(calendarObserver, calendar.ITEM_FILTER_TYPE_ALL);
 
 
+
+
+
+    // fill in the calendars list
+    dump("\n\n\nlooking for calendars!!\n\n\n");
+    var calendars = getCalendarManager().getCalendars({});
+    for (var i = 0; i < calendars.length; i++) {
+        dump(calendars[i]);
+        addCalendarToUI(calendars[i]);
+    }
+
+
+
 /*
    this.calendarEventDataSourceObserver =
    {
@@ -232,6 +245,19 @@ function CalendarWindow( )
    //gICalLib.addObserver( this.calendarEventDataSourceObserver );
 */
 }
+
+
+function addCalendarToUI(calendar)
+{
+    var listItem = document.createElement("listitem");
+    var listCell = document.createElement("listcell");
+    listCell.setAttribute("label", calendar.name);
+    listItem.appendChild(listCell);
+    listItem.calendar = calendar;
+    var calendarList = document.getElementById("list-calendars-listbox");
+    calendarList.appendChild(listItem);
+}
+
 
 
 /** PUBLIC
@@ -1044,4 +1070,45 @@ CalendarView.prototype.preferredDaysOff = function() {
     isDayOff[i] = getBoolPref(this.calendarWindow.calendarPreferences.calendarPref, prefName, isDefaultDayOff);
   }
   return isDayOff;
+}
+
+function deleteCalendar( )
+{
+   // Show a dialog with option to import events with or without dialogs
+   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(); 
+   promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService); 
+   var result = {value:0}; 
+
+   var buttonPressed = 
+      promptService.confirmEx(window, 
+                            gCalendarBundle.getString( "deleteCalendarTitle" ), gCalendarBundle.getString( "deleteCalendarMessage" ), 
+                            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) + 
+                            (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) + 
+                            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2), 
+                            gCalendarBundle.getString( "deleteCalendarOnly" ),null,gCalendarBundle.getString( "deleteCalendarAndFile" ),null, result); 
+
+
+
+   var calendarList = document.getElementById("list-calendars-listbox");
+   var selectedCalendar = calendarList.currentItem.calendar;
+
+   if (buttonPressed == 0) {
+      // Delete calendar
+      getCalendarManager().unregisterCalendar(selectedCalendar);
+   }
+   else if(buttonPressed == 2) //delete calendar and file
+   {
+      getCalendarManager().unregisterCalendar(selectedCalendar);
+      getCalendarManager().deleteCalendar(selectedCalendar);
+   } 
+   else if(buttonPressed == 1) // CANCEL
+   { 
+      return false; 
+   }
+
+   calendarList.removeChild(calendarList.currentItem);
+
+   refreshView();
+
+   return true;
 }

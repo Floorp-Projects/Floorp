@@ -196,8 +196,8 @@ function calendarInit()
    update_date();
    	
    checkForMailNews();
-   
-   //updateColors();
+
+    //updateColors();
 }
 
 function updateColors()
@@ -331,6 +331,11 @@ function calendarFinish()
    gCalendarWindow.close();
 
    gICalLib.removeObserver( gEventSource.alarmObserver );
+}
+
+function newCalendarDialog()
+{
+    openDialog("chrome://calendar/content/calendarCreation.xul", "caEditServer", "chrome,titlebar,modal" );
 }
 
 function launchPreferences()
@@ -721,6 +726,11 @@ function createAttendee()
 function createAttachment()
 {
     return Components.classes["@mozilla.org/calendar/attachment;1"].createInstance(Components.interfaces.calIAttachment);
+}
+
+function getCalendarManager()
+{
+    return Components.classes["@mozilla.org/calendar/manager;1"].getService(Components.interfaces.calICalendarManager);
 }
 
 function makeURL(uriString)
@@ -1670,4 +1680,28 @@ function calendarDefaultTimezone() {
     }
 
     return gDefaultTimezone;
+}
+
+function doCreateWizardFinish()
+{
+    var name = document.getElementById("calendar-name").value;
+    var uri = document.getElementById("calendar-uri").value;
+    var type = document.getElementById("initial-radiogroup").value;
+
+    dump(name + "\n");
+    dump(uri + "\n");
+    dump(type + "\n");
+
+    var calManager = getCalendarManager();
+    try {
+        var newCalendar = calManager.createCalendar(name, type, makeURL(uri));
+    } catch (ex) {
+        dump(ex);
+        return false;
+    }
+    calManager.registerCalendar(newCalendar);
+
+    addCalendarToUI(newCalendar);
+
+    return true;
 }

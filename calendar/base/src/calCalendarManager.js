@@ -73,21 +73,11 @@ calCalendarManager.prototype = {
         return this;
     },
 
-    findDB: function() {
-        var pathString = "c:\\builds\\mozilla\\objdir-sunbird\\dist\\bin\\calendar.db";
-        var dbFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-        dbFile.initWithPath(pathString);
-        var ioservice = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-        uri = ioservice.newFileURI(dbFile);
-        return uri.QueryInterface(Components.interfaces.nsIFileURL);
-    },
-
     initDB: function() {
         var calendarTable = "id INTEGER PRIMARY KEY, name STRING, type STRING, uri STRING";
         var dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
 
         this.mDB = dbService.getProfileStorage("profile");
-//        this.mDB = dbService.openDatabase(this.findDB().file);
         try {
             this.mDB.createTable("cal_calendars", calendarTable);
         } catch (e) {
@@ -138,6 +128,7 @@ calCalendarManager.prototype = {
      */
     createCalendar: function(name, type, uri) {
         var calendar = Components.classes["@mozilla.org/calendar/calendar;1?type=" + type].createInstance(Components.interfaces.calICalendar);
+        calendar.name = name;
         calendar.uri = uri;
         return calendar;
     },

@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+
+<!-- Style sheets -->
+<?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!-- The Window  -->
+
+<wizard
+	id="calendar-wizard"
+	title="Mozilla Calendar Wizard"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	onwizardfinish="return doCreateWizardFinish();"
+	persist="screenX screenY"
+	>
+
+   <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
+
+   <wizardpage pageid="initialPage" description="Create new calendar" next="finish" onpageshow="">
+      <hbox><label value="name:"/><textbox id="calendar-name"/></hbox>
+      <hbox><label value="uri:"/><textbox id="calendar-uri"/></hbox>
+      <radiogroup id="initial-radiogroup">
+         <radio value="local"
+                label="Local Calendar"
+                selected="true"/>
+         <radio value="ics"
+                label="WebCal Calendar"/>
+         <radio value="caldav"
+                label="CalDAV Calendar"/>
+      </radiogroup>
+   </wizardpage>
+
+<!--
+   <wizardpage pageid="remote"
+               label="Select your remote control"
+               description="Pick your type"
+               onpagehide=""
+               onpageshow="onPageShow( 'import' );">
+      <radiogroup id="remote-type">
+         <radio value="caldav"
+                label="CalDAV"
+                selected="true"/>
+         <radio value="webcal"
+                label="WebCal"/>
+      </radiogroup>
+      <textbox id="url"/> 
+   </wizardpage>
+-->
+
+   <wizardpage pageid="finish"
+               label="Done"
+               description="Hi mom"
+               onpagehide=""
+               onpageshow="">
+              label="Find a File"/>
+      <description>
+         Calendar created! Way to go!
+      </description>
+         
+   </wizardpage>
+</wizard>

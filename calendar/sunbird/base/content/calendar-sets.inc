@@ -70,7 +70,7 @@
   <command id="modify_todo_command" oncommand="modifyToDoCommand( event )"/>
   <command id="delete_todo_command" oncommand="deleteToDoCommand()" disabled="true"/>
 
-  <command id="new_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchNewCalendarFileDialog()"/>
+  <command id="new_local_calendar_command" oncommand="newCalendarDialog()"/>
   <command id="open_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchOpenCalendarFileDialog()"/>
   <command id="edit_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
   <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddRemoteCalendarDialog()"/>

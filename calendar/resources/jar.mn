@@ -20,6 +20,7 @@ calendar.jar:
     content/calendar/calPrintEngine.js (content/calPrintEngine.js)
     content/calendar/calPrintEngine.xul (content/calPrintEngine.xul)
     content/calendar/calPrintEngine.css (content/calPrintEngine.css)
+    content/calendar/calendarCreation.xul (content/calendarCreation.xul)
     content/calendar/clipboard.js (content/clipboard.js)
 *   content/calendar/contents.rdf (content/contents.rdf)
     content/calendar/dateUtils.js (content/dateUtils.js)
