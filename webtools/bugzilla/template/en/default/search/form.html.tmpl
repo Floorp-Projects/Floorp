@@ -207,7 +207,7 @@ function merge_arrays(a, b, b_is_select) {
   #      indexes
   #    - want_values: boolean; we store values when true and indexes when
   #      false %]
-function getSelection(control, findall, want_values) {
+function get_selection(control, findall, want_values) {
     var ret = new Array();
 
     if ((!findall) && (control.selectedIndex == -1)) {
@@ -281,7 +281,7 @@ function selectProduct(f) {
 
     [%# if nothing selected, pick all %]
     var findall = f.product.selectedIndex == -1;
-    sel = getSelection(f.product, findall, false);
+    sel = get_selection(f.product, findall, false);
     if (!findall) {
         [%# save sel for the next invocation of selectProduct() %]
         var tmp = sel;
@@ -297,10 +297,10 @@ function selectProduct(f) {
         last_sel = tmp;
     }
     [%# save original options selected %]
-    var saved_cpts = getSelection(f.component, false, true);
-    var saved_vers = getSelection(f.version, false, true);
+    var saved_cpts = get_selection(f.component, false, true);
+    var saved_vers = get_selection(f.version, false, true);
     [% IF Param('usetargetmilestone') %]
-    var saved_tms = getSelection(f.target_milestone, false, true);
+    var saved_tms = get_selection(f.target_milestone, false, true);
     [% END %]
 
     [%# do the actual fill/update, reselect originally selected options %]
