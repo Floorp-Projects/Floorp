@@ -26,8 +26,12 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS = GenerateIdFunctionCall.cpp \
-          DocumentFunctionCall.cpp
+CPPSRCS = CurrentFunctionCall.cpp      \
+          DocumentFunctionCall.cpp     \
+          ElementAvailableFnCall.cpp   \
+          FunctionAvailableFnCall.cpp  \
+          GenerateIdFunctionCall.cpp   \
+          SystemPropertyFunctionCall.cpp
 
 include $(topsrcdir)/config/rules.mk
 

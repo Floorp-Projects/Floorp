@@ -16,7 +16,7 @@
  * Peter Van der Beken, Peter.VanderBeken@pandora.be
  *   -- original author.
  *
- * $Id: NamespaceResolver.h,v 1.4 2001/01/22 20:23:43 axel%pike.org Exp $
+ * $Id: NamespaceResolver.h,v 1.5 2001/01/24 14:44:01 axel%pike.org Exp $
  */
 
 
@@ -33,12 +33,21 @@ class NamespaceResolver {
 public:
 
     /**
-     * Returns the namespace URI for the given name
+     * Returns the namespace URI for the given name, this method should only be
+     * called for returning a namespace declared within in the result document.
     **/ 
     virtual void getResultNameSpaceURI(const String& name, String& nameSpaceURI) = 0;
 
     /**
-     * Returns the namespace URI for the given namespace prefix
+     * Returns the namespace URI for the given name, this method should only be
+     * called for determining a namespace declared within the context (ie. the stylesheet)
+    **/ 
+    virtual void getNameSpaceURI(const String& name, String& nameSpaceURI) = 0;
+
+    /**
+     * Returns the namespace URI for the given namespace prefix, this method should
+     * only be called for determining a namespace declared within the context
+     * (ie. the stylesheet)
     **/
     virtual void getNameSpaceURIFromPrefix(const String& prefix, String& nameSpaceURI) = 0;
 

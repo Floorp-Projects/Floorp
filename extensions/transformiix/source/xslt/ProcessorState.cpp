@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.16 2001/01/22 20:23:50 axel%pike.org Exp $
+ * $Id: ProcessorState.cpp,v 1.17 2001/01/24 14:44:02 axel%pike.org Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.16 $ $Date: 2001/01/22 20:23:50 $
+ * @version $Revision: 1.17 $ $Date: 2001/01/24 14:44:02 $
 **/
 
 #include "ProcessorState.h"
@@ -790,12 +790,10 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
        return new SystemPropertyFunctionCall();
    }
    else if (ELEMENT_AVAILABLE_FN.isEqual(name)) {
-       err = "function not yet implemented: ";
-       err.append(name);
+       return new ElementAvailableFunctionCall();
    }
    else if (FUNCTION_AVAILABLE_FN.isEqual(name)) {
-       err = "function not yet implemented: ";
-       err.append(name);
+       return new FunctionAvailableFunctionCall();
    }
    else {
        err = "invalid function call: ";

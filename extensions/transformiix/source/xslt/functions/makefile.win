@@ -26,17 +26,21 @@ DEFINES=$(DEFINES) -DMOZ_XSL
 !endif
 
 CPPSRCS=					\
-	GenerateIDFunctionCall.cpp		\
-	DocumentFunctionCall.cpp		\
-	SystemPropertyFunctionCall.cpp	\
 	CurrentFunctionCall.cpp			\
+	DocumentFunctionCall.cpp		\
+	ElementAvailableFnCall.cpp		\
+	FunctionAvailableFnCall.cpp		\
+	GenerateIDFunctionCall.cpp		\
+	SystemPropertyFunctionCall.cpp	\
 	$(NULL)
 
 CPP_OBJS=						\
-	.\$(OBJDIR)\GenerateIDFunctionCall.obj		\
-	.\$(OBJDIR)\DocumentFunctionCall.obj		\
-	.\$(OBJDIR)\SystemPropertyFunctionCall.obj	\
 	.\$(OBJDIR)\CurrentFunctionCall.obj			\
+	.\$(OBJDIR)\DocumentFunctionCall.obj		\
+	.\$(OBJDIR)\ElementAvailableFnCall.obj		\
+	.\$(OBJDIR)\FunctionAvailableFnCall.obj		\
+	.\$(OBJDIR)\GenerateIDFunctionCall.obj		\
+	.\$(OBJDIR)\SystemPropertyFunctionCall.obj	\
 	$(NULL)
 
 EXPORTS =	\
