@@ -22,9 +22,9 @@ LIBRARY_NAME	= plug
 
 CSRCS		= npassoc.c
 
-CPPSRCS		= nsplugin.cpp npglue.cpp
+CPPSRCS		= nsplugin.cpp npglue.cpp nsMalloc.cpp
 
-EXPORTS		= nppg.h npglue.h nppriv.h
+EXPORTS		= nppg.h npglue.h nppriv.h nsMalloc.h
 
 REQUIRES	= lay layer js style applet nspr dbm img util java pref xpcom raptor netcnvts plugin plugimpl oji ojiimpl caps
 
