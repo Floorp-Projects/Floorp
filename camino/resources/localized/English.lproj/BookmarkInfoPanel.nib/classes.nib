@@ -13,12 +13,14 @@
                 mBookmarkKeywordField = NSTextField; 
                 mBookmarkLocationField = NSTextField; 
                 mBookmarkNameField = NSTextField; 
+                mBookmarkView = NSBox; 
                 mClearNumberVisitsButton = NSButton; 
                 mDockMenuCheckbox = NSButton; 
+                mDummyView = NSBox; 
                 mFolderDescField = NSTextField; 
                 mFolderKeywordField = NSTextField; 
-                mFolderKeywordLabel = NSTextField; 
                 mFolderNameField = NSTextField; 
+                mFolderView = NSBox; 
                 mLastVisitField = NSTextField; 
                 mNumberVisitsField = NSTextField; 
                 mStatusField = NSTextField; 
