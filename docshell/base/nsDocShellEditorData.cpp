@@ -53,7 +53,7 @@ nsDocShellEditorData::~nsDocShellEditorData()
 {
   // Get editing session on the root docShell
   nsCOMPtr <nsIEditingSession> editingSession;
-  nsresult rv = GetOrCreateEditingSession(PR_FALSE, getter_AddRefs(editingSession));
+  GetOrCreateEditingSession(PR_FALSE, getter_AddRefs(editingSession));
 
   if (editingSession)
   {
