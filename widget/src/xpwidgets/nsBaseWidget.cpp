@@ -975,21 +975,20 @@ nsBaseWidget::ResolveIconName(const nsAString &aIconName,
   nsCOMPtr<nsISimpleEnumerator> dirs;
   dirSvc->Get(NS_APP_CHROME_DIR_LIST, NS_GET_IID(nsISimpleEnumerator),
               getter_AddRefs(dirs));
-  if (!dirs)
-    return;
-
-  PRBool hasMore;
-  while (NS_SUCCEEDED(dirs->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> element;
-    dirs->GetNext(getter_AddRefs(element));
-    if (!element)
-      continue;
-    nsCOMPtr<nsILocalFile> file = do_QueryInterface(element);
-    if (!file)
-      continue;
-    if (ResolveIconNameHelper(file, aIconName, aIconSuffix)) {
-      NS_ADDREF(*aResult = file);
-      return;
+  if (dirs) {
+    PRBool hasMore;
+    while (NS_SUCCEEDED(dirs->HasMoreElements(&hasMore)) && hasMore) {
+      nsCOMPtr<nsISupports> element;
+      dirs->GetNext(getter_AddRefs(element));
+      if (!element)
+        continue;
+      nsCOMPtr<nsILocalFile> file = do_QueryInterface(element);
+      if (!file)
+        continue;
+      if (ResolveIconNameHelper(file, aIconName, aIconSuffix)) {
+        NS_ADDREF(*aResult = file);
+        return;
+      }
     }
   }
 
@@ -998,9 +997,7 @@ nsBaseWidget::ResolveIconName(const nsAString &aIconName,
   nsCOMPtr<nsILocalFile> file;
   dirSvc->Get(NS_APP_CHROME_DIR, NS_GET_IID(nsILocalFile),
               getter_AddRefs(file));
-  if (!file)
-    return;
-  if (ResolveIconNameHelper(file, aIconName, aIconSuffix))
+  if (file && ResolveIconNameHelper(file, aIconName, aIconSuffix))
     NS_ADDREF(*aResult = file);
 }
 
