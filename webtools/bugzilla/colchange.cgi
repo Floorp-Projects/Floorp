@@ -94,7 +94,7 @@ $desc{'summaryfull'} = "Full Summary";
 print "\n";
 PutHeader ("Change columns");
 print "Check which columns you wish to appear on the list, and then click\n";
-print "on submit.\n";
+print "on submit.  (Cookies are required.)\n";
 print "<p>\n";
 print "<FORM ACTION=colchange.cgi>\n";
 print "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$::buffer>\n";
