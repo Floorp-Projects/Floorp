@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 CHROME_DIR	= packages/embedding
-CHOME_L10N_DIR	= browser/locale
+CHROME_L10N_DIR	= browser/locale
 
 CHROME_L10N	= \
 		embedding.dtd \
