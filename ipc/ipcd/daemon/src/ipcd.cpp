@@ -73,6 +73,8 @@ IPC_DispatchMsg(ipcClient *client, const ipcMessage *msg)
     // next message sent to the client.
     if (msg->TestFlag(IPC_MSG_FLAG_SYNC_QUERY)) {
         PR_ASSERT(client->GetExpectsSyncReply() == PR_FALSE);
+        // XXX shouldn't we remember the TargetID as well, and only set the
+        //     SYNC_REPLY flag on the next message sent to the same TargetID?
         client->SetExpectsSyncReply(PR_TRUE);
     }
 
@@ -110,6 +112,32 @@ IPC_SendMsg(ipcClient *client, ipcMessage *msg)
 
     LOG(("  no registered message handler\n"));
     return PR_FAILURE;
+}
+
+void
+IPC_NotifyClientUp(ipcClient *client)
+{
+    // notify modules before other clients
+    IPC_NotifyModulesClientUp(client);
+
+    for (int i=0; i<ipcClientCount; ++i) {
+        if (&ipcClients[i] != client)
+            IPC_SendMsg(&ipcClients[i],
+                new ipcmMessageClientState(client->ID(), IPCM_CLIENT_STATE_UP));
+    }
+}
+
+void
+IPC_NotifyClientDown(ipcClient *client)
+{
+    // notify modules before other clients
+    IPC_NotifyModulesClientDown(client);
+
+    for (int i=0; i<ipcClientCount; ++i) {
+        if (&ipcClients[i] != client)
+            IPC_SendMsg(&ipcClients[i],
+                new ipcmMessageClientState(client->ID(), IPCM_CLIENT_STATE_DOWN));
+    }
 }
 
 //-----------------------------------------------------------------------------

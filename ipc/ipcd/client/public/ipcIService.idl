@@ -39,7 +39,6 @@
 
 interface ipcIMessageObserver;
 interface ipcIClientObserver;
-interface ipcIClientQueryHandler;
 
 /**
  * ipcIService
@@ -82,7 +81,7 @@ interface ipcIService : nsISupports
      *
      * @throws NS_ERROR_NOT_AVAILABLE if no connection to the IPC daemon.
      */
-    readonly attribute unsigned long clientID;
+    readonly attribute unsigned long ID;
 
     /**
      * this process can appear under several client names.  use the following
@@ -95,71 +94,42 @@ interface ipcIService : nsISupports
      *
      * XXX An IPC client name resembles a XPCOM contract ID.
      */
-    void addClientName(in string aName);
-    void removeClientName(in string aName);
+    void addName(in string aName);
+    void removeName(in string aName);
 
+    /**
+     * add a new observer of client status change notifications.
+     */
+    void addClientObserver(in ipcIClientObserver aObserver);
+
+    /**
+     * remove an observer of client status change notifications.
+     */
+    void removeClientObserver(in ipcIClientObserver aObserver);
 
     /**************************************************************************
      * client query methods
      */
 
     /**
-     * query info about a particular client given its client name. the
-     * observer's onClientInfo method is called with the result of the lookup,
-     * or if there is no client matching the given name, the observer's
-     * onClientDown method will be called instead.
-     *
-     * @param aName
-     *        the name of the client being queried.
-     * @param aHandler
-     *        the handler to be notified with result.
-     * @param aSync
-     *        block the calling thread until the query completes.
-     *
-     * @return integer value identifying this query.
+     * resolve the given client name to the id of a connected client.  this
+     * involves a round trip to the daemon, and as a result the calling thread
+     * may block on this function call while waiting for the daemon to respond.
      */
-    unsigned long queryClientByName(in string                 aName,
-                                    in ipcIClientQueryHandler aHandler,
-                                    in boolean                aSync);
+    unsigned long resolveClientName(in string aName);
+
 
     /**
-     * query info about a particular client given its client ID. the observer's
-     * onClientInfo method is called with the result of the lookup, or if there
-     * is no client matching the given name, the observer's onClientDown method
-     * will be called instead.
-     *
-     * @param aClientID
-     *        the ID of the client being queried.
-     * @param aHandler
-     *        the handler to be notified with result.
-     * @param aSync
-     *        block the calling thread until the query completes.
-     *
-     * @return integer value identifying this query.
+     * tests whether a particular client is connected to the IPC daemon.
      */
-    unsigned long queryClientByID(in unsigned long          aClientID,
-                                  in ipcIClientQueryHandler aHandler,
-                                  in boolean                aSync);
+    boolean clientExists(in unsigned long aClientID);
 
-    /**
-     * called to cancel a pending query.
-     *
-     * @param aQueryID
-     *        the return value from one of the "query" methods.
-     */
-    void cancelQuery(in unsigned long aQueryID);
-
-    /**
-     * set client observer.  observer's onClientUp method is called whenever 
-     * a new client comes online, and the observer's onClientDown method is
-     * called whenever a client goes offline.
-     *
-     * @param aObserver
-     *        the client observer.
-     */
-    void setClientObserver(in ipcIClientObserver aObserver);
 
     // XXX need other functions to enumerate clients, clients implementing targets, etc.
+    // enumerator getClients();
+    // enumerator getClientsSupportingTarget(in nsIDRef aTarget);
+    // enumerator getClientNames(in unsigned long aClientID);
+    // enumerator getClientTargets(in unsigned long aClientID);
 
 
     /**************************************************************************
@@ -176,7 +146,7 @@ interface ipcIService : nsISupports
      *        the message observer to receive incoming messages for the
      *        specified target.  pass null to remove the existing observer.
      */
-    void setMessageObserver(in nsIDRef aTarget, in ipcIMessageObserver aObserver);
+    void defineTarget(in nsIDRef aTarget, in ipcIMessageObserver aObserver);
 
     /**
      * send message asynchronously to a client or a module in the IPC daemon.
@@ -192,33 +162,50 @@ interface ipcIService : nsISupports
      *        the message data.
      * @param aDataLen
      *        the message length.
-     * @param aSync
-     *        block the calling thread until a response to this message is
-     *        received.
      */
-    void sendMessage(in unsigned long aClientID,
+    void sendMessage(in unsigned long aReceiverID,
                      in nsIDRef       aTarget,
                     [array, const, size_is(aDataLen)]
                      in octet         aData,
-                     in unsigned long aDataLen,
-                     in boolean       aSync);
+                     in unsigned long aDataLen);
+
+    /**
+     * block the calling thread until a matching message is received.
+     *
+     * @param aSenderID
+     *        pass 0 to wait for a message from the daemon.  pass PR_UINT32_MAX
+     *        to wait for a message from any source.  otherwise, pass a client
+     *        id to wait for a message from that particular client.
+     * @param aTarget
+     *        wait for a message to be delivered to this target.
+     * @param aObserver
+     *        this observer's OnMessageAvailable method is called when a
+     *        matching message is available.  pass null to use the default
+     *        observer associated with aTarget.
+     * @param aTimeout
+     *        indicates maximum length of time in milliseconds that this
+     *        function may block the calling thread.
+     *
+     * @throws IPC_ERROR_WOULD_BLOCK if the timeout expires.
+     *
+     * the observer's OnMessageAvailable method may throw IPC_WAIT_NEXT_MESSAGE
+     * to indicate that it does not wish to handle the message that it was
+     * given, and that it will wait to be called with the next message.  this
+     * enables the observer to keep messages in the queue that do not match the
+     * desired message.  messages that remain in the queue will be dispatched
+     * asynchronously to the default message handler after waitMessage finishes.
+     *
+     * NOTE: this function may hang the calling thread until a matching message
+     * is received, so use it with caution.
+     */
+    void waitMessage(in unsigned long       aSenderID,
+                     in nsIDRef             aTarget,
+                     in ipcIMessageObserver aObserver,
+                     in unsigned long       aTimeout);
 };
 
 %{C++
-// singleton implementing ipcIService
-#define IPC_SERVICE_CLASSNAME \
-    "ipcService"
-#define IPC_SERVICE_CONTRACTID \
-    "@mozilla.org/ipc/service;1"
-#define IPC_SERVICE_CID                              \
-{ /* 9f12676a-5168-4a08-beb8-edf8a593a1ca */         \
-    0x9f12676a,                                      \
-    0x5168,                                          \
-    0x4a08,                                          \
-    {0xbe, 0xb8, 0xed, 0xf8, 0xa5, 0x93, 0xa1, 0xca} \
-}
-
-// category and observer event defines
+// category and observer event defines (XXX not yet implemented)
 #define IPC_SERVICE_STARTUP_CATEGORY "ipc-startup-category"
 #define IPC_SERVICE_STARTUP_TOPIC    "ipc-startup"
 #define IPC_SERVICE_SHUTDOWN_TOPIC   "ipc-shutdown"

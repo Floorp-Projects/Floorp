@@ -45,11 +45,16 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ipcd
 
+EXPORTS		= \
+			ipcdclient.h \
+			ipcCID.h \
+			$(NULL)
+
 XPIDLSRCS	= \
 			ipcIService.idl \
 			ipcIMessageObserver.idl \
 			ipcIClientObserver.idl \
-			ipcIClientQueryHandler.idl \
+			ipcIClientInfo.idl \
 			$(NULL)
 
 include $(topsrcdir)/config/rules.mk

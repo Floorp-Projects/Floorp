@@ -73,4 +73,10 @@ PRStatus IPC_DispatchMsg(ipcClientHandle client, const ipcMessage *msg);
 //
 PRStatus IPC_SendMsg(ipcClientHandle client, ipcMessage *msg);
 
+//
+// dispatch notifications about client connects and disconnects
+//
+void IPC_NotifyClientUp(ipcClientHandle client);
+void IPC_NotifyClientDown(ipcClientHandle client);
+
 #endif // !IPCD_H__

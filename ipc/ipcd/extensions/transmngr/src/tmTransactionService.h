@@ -38,7 +38,7 @@
 #ifndef _tmTransactionService_H_
 #define _tmTransactionService_H_
 
-#include "ipcIService.h"
+#include "ipcdclient.h"
 #include "ipcILockService.h"
 #include "ipcIMessageObserver.h"
 #include "ipcITransactionService.h"
@@ -187,7 +187,6 @@ protected:
   tmVector mQueueMaps;                // queue - name - domain mappings
   tmVector mWaitingMessages;          // messages sent before ATTACH_REPLY
 
-  nsCOMPtr<ipcIService> ipcService;       // cache the ipc service
   nsCOMPtr<ipcILockService> lockService;  // cache the lock service
 
 private:

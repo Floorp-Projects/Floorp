@@ -42,29 +42,23 @@
 #include "ipcLockProtocol.h"
 #include "ipcLog.h"
 
-static NS_DEFINE_IID(kIPCServiceCID, IPC_SERVICE_CID);
 static const nsID kLockTargetID = IPC_LOCK_TARGETID;
 
-ipcLockService::ipcLockService()
-{
-}
-
-ipcLockService::~ipcLockService()
-{
-}
+//-----------------------------------------------------------------------------
 
 nsresult
 ipcLockService::Init()
 {
     nsresult rv;
 
-    mIPCService = do_GetService(kIPCServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    rv = IPC_Init();
+    if (NS_FAILED(rv))
+        return rv;
 
-    return mIPCService->SetMessageObserver(kLockTargetID, this);
+    return IPC_DefineTarget(kLockTargetID, this);
 }
 
-NS_IMPL_ISUPPORTS1(ipcLockService, ipcILockService)
+NS_IMPL_ISUPPORTS2(ipcLockService, ipcILockService, ipcIMessageObserver)
 
 NS_IMETHODIMP
 ipcLockService::AcquireLock(const char *lockName, ipcILockNotify *notify, PRBool waitIfBusy)
@@ -82,7 +76,7 @@ ipcLockService::AcquireLock(const char *lockName, ipcILockNotify *notify, PRBool
     if (!buf)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = mIPCService->SendMessage(0, kLockTargetID, buf, bufLen, (notify == nsnull));
+    nsresult rv = IPC_SendMessage(0, kLockTargetID, buf, bufLen);
     free(buf);
     if (NS_FAILED(rv)) {
         LOG(("  SendMessage failed [rv=%x]\n", rv));
@@ -92,9 +86,16 @@ ipcLockService::AcquireLock(const char *lockName, ipcILockNotify *notify, PRBool
     if (notify) {
         nsCStringKey hashKey(lockName);
         mPendingTable.Put(&hashKey, notify);
+        return NS_OK;
     }
 
-    return NS_OK;
+    // block the calling thread until we get a response from the daemon
+
+    mSyncLockName = lockName;
+    rv = IPC_WaitMessage(0, kLockTargetID, nsnull, PR_INTERVAL_NO_TIMEOUT);
+    mSyncLockName = nsnull;
+
+    return NS_FAILED(rv) ? rv : mSyncLockStatus;
 }
 
 NS_IMETHODIMP
@@ -112,7 +113,7 @@ ipcLockService::ReleaseLock(const char *lockName)
     if (!buf)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = mIPCService->SendMessage(0, kLockTargetID, buf, bufLen, PR_FALSE);
+    nsresult rv = IPC_SendMessage(0, kLockTargetID, buf, bufLen);
     free(buf);
 
     if (NS_FAILED(rv)) return rv;
@@ -123,12 +124,13 @@ ipcLockService::ReleaseLock(const char *lockName)
 }
 
 NS_IMETHODIMP
-ipcLockService::OnMessageAvailable(const nsID &target, const PRUint8 *data, PRUint32 dataLen)
+ipcLockService::OnMessageAvailable(PRUint32 unused, const nsID &target,
+                                   const PRUint8 *data, PRUint32 dataLen)
 {
     ipcLockMsg msg;
     IPC_UnflattenLockMsg(data, dataLen, &msg);
 
-    LOG(("ipcLockService::OnMessageAvailable [lock=%s opcode=%u]\n", msg.key, msg.opcode)); 
+    LOG(("ipcLockService::OnMessageAvailable [lock=%s opcode=%u sync-lock=%s]\n", msg.key, msg.opcode, mSyncLockName)); 
 
     nsresult status;
     if (msg.opcode == IPC_LOCK_OP_STATUS_ACQUIRED)
@@ -136,6 +138,16 @@ ipcLockService::OnMessageAvailable(const nsID &target, const PRUint8 *data, PRUi
     else
         status = NS_ERROR_FAILURE;
 
+    // handle synchronous waiting case first
+    if (mSyncLockName) {
+        if (strcmp(mSyncLockName, msg.key) == 0) {
+            mSyncLockStatus = status;
+            return NS_OK;
+        }
+        return IPC_WAIT_NEXT_MESSAGE;
+    }
+    
+    // otherwise, this is an asynchronous notification
     NotifyComplete(msg.key, status);
     return NS_OK;
 }

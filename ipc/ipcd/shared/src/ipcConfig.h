@@ -64,7 +64,7 @@ inline void IPC_GetClientWindowName(PRUint32 pid, char *buf)
 }
 
 #else
-#include "prtypes.h"
+#include "nscore.h"
 //
 // use UNIX domain socket
 //
@@ -79,7 +79,7 @@ inline void IPC_GetClientWindowName(PRUint32 pid, char *buf)
 #define IPC_MODULES_DIR         "ipc/modules"
 #endif
 
-void IPC_GetDefaultSocketPath(char *buf, PRUint32 bufLen);
+NS_HIDDEN_(void) IPC_GetDefaultSocketPath(char *buf, PRUint32 bufLen);
 
 #endif
 

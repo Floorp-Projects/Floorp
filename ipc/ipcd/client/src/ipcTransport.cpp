@@ -126,7 +126,7 @@ end:
     if (attr)
         PR_DestroyProcessAttr(attr);
     return rv;
-    }
+}
 
 //-----------------------------------------------------------------------------
 // ipcTransport

@@ -95,8 +95,8 @@ public:
     }
 
 private:
-    static ipcIDNode *FindNode      (ipcIDNode *head, const nsID &id);
-    static ipcIDNode *FindNodeBefore(ipcIDNode *head, const nsID &id);
+    static NS_HIDDEN_(ipcIDNode *) FindNode      (ipcIDNode *head, const nsID &id);
+    static NS_HIDDEN_(ipcIDNode *) FindNodeBefore(ipcIDNode *head, const nsID &id);
 };
 
 #endif // !ipcIDList_h__

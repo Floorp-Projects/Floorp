@@ -37,7 +37,7 @@
 
 #include <string.h>
 #include "ipcm.h"
-#include "prlog.h"
+#include "pratom.h"
 
 const nsID IPCM_TARGET =
 { /* 753ca8ff-c8c2-4601-b115-8c2944da1150 */
@@ -46,6 +46,15 @@ const nsID IPCM_TARGET =
     0x4601,
     {0xb1, 0x15, 0x8c, 0x29, 0x44, 0xda, 0x11, 0x50}
 };
+
+PRUint32
+IPCM_NewRequestIndex()
+{
+    static PRInt32 sRequestIndex;
+    return (PRUint32) PR_AtomicIncrement(&sRequestIndex);
+}
+
+#if 0
 
 //
 // MSG_TYPE values
@@ -62,6 +71,7 @@ const PRUint32 ipcmMessageClientDelTarget::MSG_TYPE = IPCM_MSG_TYPE_CLIENT_DEL_T
 const PRUint32 ipcmMessageQueryClientByName::MSG_TYPE = IPCM_MSG_TYPE_QUERY_CLIENT_BY_NAME;
 const PRUint32 ipcmMessageQueryClientInfo::MSG_TYPE = IPCM_MSG_TYPE_QUERY_CLIENT_INFO;
 const PRUint32 ipcmMessageForward::MSG_TYPE = IPCM_MSG_TYPE_FORWARD;
+const PRUint32 ipcmMessageClientStatus::MSG_TYPE = IPCM_MSG_TYPE_CLIENT_STATUS;
 
 //
 // CLIENT_INFO message
@@ -70,6 +80,8 @@ const PRUint32 ipcmMessageForward::MSG_TYPE = IPCM_MSG_TYPE_FORWARD;
 //  | DWORD : MSG_TYPE                        |
 //  +--------------------+--------------------+
 //  | DWORD : clientID                        |
+//  +--------------------+--------------------+
+//  | DWORD : requestIndex                    |
 //  +--------------------+--------------------+
 //  | WORD : nameStart   | WORD : nameCount   |
 //  +--------------------+--------------------+
@@ -95,18 +107,20 @@ struct ipcmClientInfoHeader
 {
     PRUint32 mType;
     PRUint32 mID;
+    PRUint32 mRequestIndex;
     PRUint16 mNameStart;
     PRUint16 mNameCount;
     PRUint16 mTargetStart;
     PRUint16 mTargetCount;
 };
 
-ipcmMessageClientInfo::ipcmMessageClientInfo(PRUint32 cID, const char *names[], const nsID *targets[])
+ipcmMessageClientInfo::ipcmMessageClientInfo(PRUint32 cID, PRUint32 rIdx, const char *names[], const nsID *targets[])
 {
     ipcmClientInfoHeader hdr = {0};
 
     hdr.mType = MSG_TYPE;
     hdr.mID = cID;
+    hdr.mRequestIndex = rIdx;
     hdr.mNameStart = sizeof(hdr);
 
     PRUint32 i, namesLen = 0;
@@ -164,6 +178,13 @@ ipcmMessageClientInfo::ClientID() const
 }
 
 PRUint32
+ipcmMessageClientInfo::RequestIndex() const
+{
+    ipcmClientInfoHeader *hdr = (ipcmClientInfoHeader *) Data();
+    return hdr->mRequestIndex;
+}
+
+PRUint32
 ipcmMessageClientInfo::NameCount() const
 {
     ipcmClientInfoHeader *hdr = (ipcmClientInfoHeader *) Data();
@@ -203,6 +224,7 @@ ipcmMessageClientInfo::NextTarget(const nsID *target) const
         target = NULL;
     return target;
 }
+#endif
 
 //
 // FORWARD message
@@ -218,20 +240,24 @@ ipcmMessageClientInfo::NextTarget(const nsID *target) const
 //  +-------------------------+
 //
 
-ipcmMessageForward::ipcmMessageForward(PRUint32 cID,
+ipcmMessageForward::ipcmMessageForward(PRUint32 type,
+                                       PRUint32 cID,
                                        const nsID &target,
                                        const char *data,
                                        PRUint32 dataLen)
 {
-    int len = sizeof(MSG_TYPE) +     // MSG_TYPE
-              sizeof(cID) +          // cID
-              IPC_MSG_HEADER_SIZE +  // innerMsgHeader
-              dataLen;               // innerMsgData
+    int len = sizeof(ipcmMessageHeader) +  // IPCM header
+              sizeof(cID) +                // cID
+              IPC_MSG_HEADER_SIZE +        // innerMsgHeader
+              dataLen;                     // innerMsgData
 
     Init(IPCM_TARGET, NULL, len);
 
-    SetData(0, (char *) &MSG_TYPE, sizeof(MSG_TYPE));
-    SetData(4, (char *) &cID, sizeof(cID));
+    ipcmMessageHeader ipcmHdr =
+        { type, IPCM_NewRequestIndex() };
+
+    SetData(0, (char *) &ipcmHdr, sizeof(ipcmHdr));
+    SetData(sizeof(ipcmHdr), (char *) &cID, sizeof(cID));
 
     ipcMessageHeader hdr;
     hdr.mLen = IPC_MSG_HEADER_SIZE + dataLen;
@@ -239,7 +265,7 @@ ipcmMessageForward::ipcmMessageForward(PRUint32 cID,
     hdr.mFlags = 0;
     hdr.mTarget = target;
 
-    SetData(8, (char *) &hdr, IPC_MSG_HEADER_SIZE);
+    SetData(sizeof(ipcmHdr) + sizeof(cID), (char *) &hdr, IPC_MSG_HEADER_SIZE);
     if (data)
         SetInnerData(0, data, dataLen);
 }
@@ -247,31 +273,31 @@ ipcmMessageForward::ipcmMessageForward(PRUint32 cID,
 void
 ipcmMessageForward::SetInnerData(PRUint32 offset, const char *data, PRUint32 dataLen)
 {
-    SetData(8 + IPC_MSG_HEADER_SIZE + offset, data, dataLen);
+    SetData(sizeof(ipcmMessageHeader) + 4 + IPC_MSG_HEADER_SIZE + offset, data, dataLen);
 }
 
 PRUint32
-ipcmMessageForward::DestClientID() const
+ipcmMessageForward::ClientID() const
 {
-    return ((PRUint32 *) Data())[1];
+    return ((PRUint32 *) Data())[2];
 }
 
 const nsID &
 ipcmMessageForward::InnerTarget() const
 {
-    ipcMessageHeader *hdr = (ipcMessageHeader *) (Data() + 8);
+    ipcMessageHeader *hdr = (ipcMessageHeader *) (Data() + 12);
     return hdr->mTarget;
 }
 
 const char *
 ipcmMessageForward::InnerData() const
 {
-    return Data() + 8 + IPC_MSG_HEADER_SIZE;
+    return Data() + 12 + IPC_MSG_HEADER_SIZE;
 }
 
 PRUint32
 ipcmMessageForward::InnerDataLen() const
 {
-    ipcMessageHeader *hdr = (ipcMessageHeader *) (Data() + 8);
+    ipcMessageHeader *hdr = (ipcMessageHeader *) (Data() + 12);
     return hdr->mLen - IPC_MSG_HEADER_SIZE;
 }

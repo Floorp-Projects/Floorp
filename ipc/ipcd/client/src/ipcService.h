@@ -38,52 +38,19 @@
 #ifndef ipcService_h__
 #define ipcService_h__
 
-#include "nsHashtable.h"
-#include "nsAutoPtr.h"
-#include "plevent.h"
-
 #include "ipcIService.h"
-#include "ipcTransport.h"
-#include "ipcList.h"
-#include "ipcMessage.h"
-#include "ipcMessageQ.h"
-#include "ipcm.h"
-
-typedef ipcList<class ipcClientQuery> ipcClientQueryQ;
-
-//----------------------------------------------------------------------------
-// ipcService
-//----------------------------------------------------------------------------
+#include "ipcdclient.h"
 
 class ipcService : public ipcIService
-                 , public ipcTransportObserver
-                 , public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_IPCISERVICE
-    NS_DECL_NSIOBSERVER
 
-    ipcService();
-    virtual ~ipcService();
-
-    nsresult Init();
-    void Shutdown();
-
-    // ipcTransportObserver:
-    void OnConnectionLost();
-    void OnMessageAvailable(const ipcMessage *);
+    NS_HIDDEN_(nsresult) Init() { return IPC_Init(); }
 
 private:
-    nsresult ErrorAccordingToIPCM(PRUint32 err);
-    void     OnIPCMClientID(const ipcmMessageClientID *);
-    void     OnIPCMClientInfo(const ipcmMessageClientInfo *);
-    void     OnIPCMError(const ipcmMessageError *);
-
-    nsHashtable            mObserverDB;
-    nsRefPtr<ipcTransport> mTransport;
-    ipcClientQueryQ        mQueryQ;
-    PRUint32               mClientID;
+    ~ipcService() { IPC_Shutdown(); }
 };
 
-#endif // !ipcService_h__
+#endif // !defined( ipcService_h__ )

@@ -97,6 +97,8 @@ tmTransactionService::~tmTransactionService() {
     if (qmap)
       delete qmap;
   }
+
+  IPC_Shutdown();
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -112,12 +114,15 @@ NS_IMPL_ISUPPORTS2(tmTransactionService,
 NS_IMETHODIMP
 tmTransactionService::Init(const nsACString & aNamespace) {
 
-  // register with the IPC service
-  ipcService = do_GetService("@mozilla.org/ipc/service;1");
-  if (!ipcService)
-    return NS_ERROR_FAILURE;
-  if(NS_FAILED(ipcService->SetMessageObserver(kTransModuleID, this)))
-    return NS_ERROR_FAILURE;
+  nsresult rv;
+  
+  rv = IPC_Init();
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = IPC_DefineTarget(kTransModuleID, this);
+  if (NS_FAILED(rv))
+    return rv;
 
   // get the lock service
   lockService = do_GetService("@mozilla.org/ipc/lock-service;1");
@@ -185,6 +190,7 @@ tmTransactionService::Attach(const nsACString & aDomainName,
   // acquire a lock if neccessary
   if (aLockingCall)
     lockService->AcquireLock(joinedQueueName, nsnull, PR_TRUE);
+  // XXX need to handle lock failures
 
   if (NS_SUCCEEDED(trans.Init(0,                             // no IPC client
                               TM_NO_ID,                      // qID gets returned to us
@@ -269,7 +275,8 @@ tmTransactionService::PostTransaction(const nsACString & aDomainName,
 // ipcIMessageObserver
 
 NS_IMETHODIMP
-tmTransactionService::OnMessageAvailable(const nsID & aTarget, 
+tmTransactionService::OnMessageAvailable(const PRUint32 aSenderID,
+                                         const nsID & aTarget, 
                                          const PRUint8 *aData, 
                                          PRUint32 aDataLength) {
 
@@ -319,13 +326,12 @@ void
 tmTransactionService::SendMessage(tmTransaction *aTrans, PRBool aSync) {
 
   NS_ASSERTION(aTrans, "tmTransactionService::SendMessage called with null transaction");
-  NS_ASSERTION(ipcService, "Failed to get the ipcService");
 
-  ipcService->SendMessage(0, 
-                          kTransModuleID, 
-                          aTrans->GetRawMessage(), 
-                          aTrans->GetRawMessageLength(),
-                          aSync);
+  IPC_SendMessage(0, kTransModuleID, 
+                  aTrans->GetRawMessage(), 
+                  aTrans->GetRawMessageLength());
+  if (aSync)
+    IPC_WaitMessage(0, kTransModuleID, nsnull, PR_INTERVAL_NO_TIMEOUT);
 }
 
 void

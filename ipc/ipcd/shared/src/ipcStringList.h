@@ -40,7 +40,7 @@
 
 #include <string.h>
 #include "plstr.h"
-#include "xpcom-config.h"
+#include "nscore.h"
 #include "ipcList.h"
 
 //-----------------------------------------------------------------------------
@@ -101,8 +101,8 @@ public:
     }
 
 private:
-    static ipcStringNode *FindNode      (ipcStringNode *head, const char *str);
-    static ipcStringNode *FindNodeBefore(ipcStringNode *head, const char *str);
+    static NS_HIDDEN_(ipcStringNode *) FindNode      (ipcStringNode *head, const char *str);
+    static NS_HIDDEN_(ipcStringNode *) FindNodeBefore(ipcStringNode *head, const char *str);
 };
 
 #endif // !ipcStringList_h__
