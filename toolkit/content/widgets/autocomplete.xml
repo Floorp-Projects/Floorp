@@ -305,6 +305,7 @@
                 break;
               case KeyEvent.DOM_VK_DOWN:
                 cancel = this.mController.handleKeyNavigation(IController.KEY_DOWN);
+                aEvent.preventBubble();
                 break;
               case KeyEvent.DOM_VK_LEFT:
                 cancel = this.mController.handleKeyNavigation(IController.KEY_LEFT);
