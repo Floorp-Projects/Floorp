@@ -55,6 +55,7 @@
 #include "nsIRollupListener.h"
 #include "nsIEventSink.h"
 #include "nsIScrollableView.h"
+#include "nsIInterfaceRequestor.h"
 
 #include "nsCarbonHelpers.h"
 #include "nsGfxUtils.h"
@@ -2245,7 +2246,9 @@ nsChildView::Idle()
     [currView widget]->GetClientData(clientData);
 
     nsISupports* data = (nsISupports*)clientData;
-    data->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&aScrollableView);
+    nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
+    if (req)
+      req->GetInterface(NS_GET_IID(nsIScrollableView), &aScrollableView);
 
     if ([[currView superview] isMemberOfClass:[ChildView class]])
         currView = [currView superview];
