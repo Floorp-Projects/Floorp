@@ -910,7 +910,7 @@ ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset)
   {
     nsCOMPtr<nsIContent> parent;
     result = content->GetParent(*getter_AddRefs(parent));
-    if (NS_SUCCEEDED(result))
+    if (NS_SUCCEEDED(result) && parent)
     {
       result = parent->IndexOf(content, *aChildOffset);
       if (NS_SUCCEEDED(result))
@@ -1087,6 +1087,8 @@ nsRangeList::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
   nsresult	result = NS_OK;
   
   nsCOMPtr<nsIDOMNode> node = dont_QueryInterface(FetchFocusNode());
+  if (!node)
+    return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIContent> content = do_QueryInterface(node, &result);
   if (NS_FAILED(result) || !content)
     return result;
@@ -1174,7 +1176,7 @@ nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
     nsIFrame *frame;
 //we must call first one explicitly
     content = do_QueryInterface(FetchStartParent(aRange), &result);
-    if (NS_FAILED(result))
+    if (NS_FAILED(result) || !content)
       return result;
     PRBool canContainChildren = PR_FALSE;
     result = content->CanContainChildren(canContainChildren);
@@ -1191,7 +1193,7 @@ nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
       while (NS_COMFALSE == iter->IsDone())
       {
         result = iter->CurrentNode(getter_AddRefs(content));
-        if (NS_FAILED(result))
+        if (NS_FAILED(result) || !content)
           return result;
         result = mTracker->GetPrimaryFrameFor(content, &frame);
         if (NS_SUCCEEDED(result) && frame)
@@ -1205,7 +1207,7 @@ nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
     if (FetchEndParent(aRange) != FetchStartParent(aRange))
     {
       content = do_QueryInterface(FetchEndParent(aRange), &result);
-      if (NS_FAILED(result))
+      if (NS_FAILED(result) || !content)
         return result;
       canContainChildren = PR_FALSE;
       result = content->CanContainChildren(canContainChildren);
@@ -1541,6 +1543,8 @@ nsRangeList::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
   {
     nsCOMPtr<nsIContent>content;
     content = do_QueryInterface(aParentNode);
+    if (!content)
+      return NS_ERROR_FAILURE;
     nsIAtom *tag;
     content->GetTag(tag);
     if (tag)
