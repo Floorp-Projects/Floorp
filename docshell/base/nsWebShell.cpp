@@ -441,7 +441,8 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   mDeviceContext->Init(aNativeParent);
   mDeviceContext->SetDevUnitsToAppUnits(mDeviceContext->GetDevUnitsToTwips());
   mDeviceContext->SetAppUnitsToDevUnits(mDeviceContext->GetTwipsToDevUnits());
-  mDeviceContext->SetGamma(1.7f);
+//  mDeviceContext->SetGamma(1.7f);
+  mDeviceContext->SetGamma(1.0f);
 
   // Create a Native window for the shell container...
   rv = NSRepository::CreateInstance(kChildCID,
