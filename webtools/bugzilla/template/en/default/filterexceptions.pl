@@ -370,6 +370,14 @@
   'field', 
 ],
 
+'bug/summarize-time.html.tmpl' => [
+  'global.grand_total FILTER format("%.2f")',
+  'subtotal FILTER format("%.2f")',
+  'work_time FILTER format("%.2f")',
+  'global.total FILTER format("%.2f")',
+],
+
+
 'bug/time.html.tmpl' => [
   'time_unit FILTER format(\'%.1f\')', 
   'time_unit FILTER format(\'%.2f\')', 

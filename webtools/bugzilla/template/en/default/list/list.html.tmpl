@@ -133,8 +133,15 @@
             <input type="hidden" name="id" value="[% id FILTER html %]">
           [% END %]
           <input type="hidden" name="format" value="multiple">
-          <input type="submit" value="Long Format">
+          <input type="submit" value="&nbsp;&nbsp;Long Format&nbsp;">
         </form>
+
+        [% IF UserInGroup(Param('timetrackinggroup')) %]
+          <form method="post" action="summarize_time.cgi">
+            <input type="hidden" name="id" value="[% buglist_joined FILTER html %]">
+            <input type="submit" value="Time Summary">
+          </form>
+        [% END %]
       </td>
       
       <td>&nbsp;</td>

@@ -894,6 +894,7 @@ if (@bugidlist) {
 
 $vars->{'bugs'} = \@bugs;
 $vars->{'buglist'} = \@bugidlist;
+$vars->{'buglist_joined'} = join(',', @bugidlist);
 $vars->{'columns'} = $columns;
 $vars->{'displaycolumns'} = \@displaycolumns;
 
