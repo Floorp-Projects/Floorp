@@ -763,15 +763,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
 #endif
       case NS_FORM_INPUT_IMAGE:
       {
-        // Apply the image border as well. For form elements the color is
-        // always forced to blue.
-        static nscolor blue[4] = {
-          NS_RGB(0, 0, 255),
-          NS_RGB(0, 0, 255),
-          NS_RGB(0, 0, 255),
-          NS_RGB(0, 0, 255)
-        };
-        nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext, aPresContext, blue);
+        nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aContext, aPresContext, nsnull);
         nsGenericHTMLElement::MapImageAttributesInto(aAttributes, aContext, aPresContext);
         break;
       }
