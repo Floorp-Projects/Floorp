@@ -228,3 +228,32 @@
     {
       margin: 0px 2px 0px 1px !important;
     }
+
+
+/* class for text with a 'link' appearance */
+  .text-link
+    {
+      color                 : blue;
+      text-decoration       : underline;
+    }
+  
+  .text-link:focus
+    {
+      color                 : red;
+      -moz-outline: 1px dotted invert;
+    }
+
+  .text-link:hover
+    {
+      cursor                : pointer;
+    } 
+  
+  .text-link:hover:active
+    {
+      color                 : red;
+    } 
+
+  .text-link[visited="true"] 
+    {
+      color                 : purple;
+    }
