@@ -6193,31 +6193,34 @@ void EDT_SetRefresh( MWContext* pContext, XP_Bool bRefreshOn ){
 }
 
 
-// Warning this deletes (and recreates) the CEditBuffer.
+// Warning this deletes (and recreates) the CEditBuffer if we ChangeEncoding
 XP_Bool EDT_SetEncoding(MWContext* pContext, int16 csid){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) FALSE;
-    ED_CharsetEncode bDoIt;
-//  if ( pEditBuffer->HasEncoding() ) {
+    ED_CharsetEncode result;
+
     char* pMessage = XP_GetString(XP_EDT_I18N_HAS_CHARSET);
     if ( pMessage ) {
-        bDoIt = FE_EncodingDialog(pContext);
+        result = FE_EncodingDialog(pContext);
     }
     else {
         XP_ASSERT(0);
     }
 
-    switch (bDoIt)
+    switch (result)
     {
         case ED_ENDCODE_CHANGE_CHARSET:
             // Change encoding and translate document
             pEditBuffer->ChangeEncoding(csid);
             return TRUE;
+
         case ED_ENCODE_CHANGE_METATAG:
-            // Change encoding and but don't translate document
-            XP_ASSERT(0);     // Not implemented yet
+            // Set charset param in Content-Type metatag, but don't translate document
+            pEditBuffer->SetEncoding(csid);
             return FALSE;
+
         case ED_ENCODE_CANCEL:
             return FALSE;
+
         default:
             XP_ASSERT(0);
             return FALSE;

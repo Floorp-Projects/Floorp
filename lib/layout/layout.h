@@ -1570,11 +1570,16 @@ lo_ScriptEvalExitFn(void * data, char * str, size_t len, char * wysiwyg_url,
 		    char * base_href, Bool valid);
 
 extern Bool
-lo_ConvertMochaEntities(MWContext * context, lo_DocState *state, PA_Tag * tag);
+lo_ConvertMochaEntities(MWContext * pContext, lo_DocState *state, PA_Tag * tag);
 
 extern void
-LO_EditorReflow(MWContext *context, ED_TagCursor *pCursor, 
+lo_EditorReflow(MWContext *pContext, ED_TagCursor *pCursor, 
 			int32 iStartLine, int iStartEditOffset);
+
+/* Reflow contents of a cell into a new docstate, then merge back into table */
+extern void 
+lo_EditorCellReflow(MWContext *context, ED_TagCursor *pCursor, LO_CellStruct *pCell);
+
 
 /********************** Image observers and observer lists. ******************/
 /* The layout observer for an image request. */
@@ -1678,5 +1683,8 @@ int32 lo_GetCellTagHeight(LO_Element *pCellElement);
 int32 lo_GetRowSpan(LO_Element *pCellElement);
 int32 lo_GetColSpan(LO_Element *pCellElement);
 int32 lo_GetCellPadding(LO_Element *pCellElement);
+
+lo_DocState * lo_CreateStateForCellLayout(MWContext *context, LO_CellStruct *cell);
+void lo_RebuildCell(MWContext *context, lo_DocState *state, LO_CellStruct *cell);
 
 #endif /* _Layout_h_ */

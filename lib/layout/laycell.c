@@ -990,6 +990,130 @@ void lo_CreateCellFromSubDoc( MWContext *context, lo_DocState *state,
 	}
 }
 
+/* 
+**  New functions used by the editor to improve the performance of typing in tables 
+**/ 
+
+/* Creates and returns a new lo_DocState for an existing LO_CELL layout element to get 
+   relaid out on.  Sets the dimensions of the lo_DocState structure to those 
+   of the LO_CELL element. */ 
+lo_DocState * lo_CreateStateForCellLayout(MWContext *context, LO_CellStruct *cell) 
+{ 
+    lo_DocState *new_doc = NULL; 
+
+    if (context && cell) 
+    { 
+        new_doc = lo_NewLayout( context, cell->width, cell->height, 0, 0, NULL ); 
+    } 
+
+    return new_doc; 
+} 
+
+/* This function is identical to lo_ShiftCell() except that it does not move 
+   the cell's layers */ 
+static void 
+lo_OffsetCellContents(LO_CellStruct *cell, int32 dx, int32 dy) 
+{ 
+    LO_Element *eptr; 
+
+    if (cell == NULL) 
+    return; 
+
+    eptr = cell->cell_list; 
+    while (eptr != NULL) 
+    { 
+        eptr->lo_any.x += dx; 
+        eptr->lo_any.y += dy; 
+        if (eptr->type == LO_CELL) 
+        { 
+            /* 
+            * This would cause an infinite loop. 
+            */ 
+            if ((LO_CellStruct *)eptr == cell) 
+            { 
+                XP_ASSERT(FALSE); 
+                break; 
+            } 
+            lo_OffsetCellContents((LO_CellStruct *)eptr, dx, dy); 
+        } 
+
+        lo_MoveElementLayers( eptr );
+        eptr = eptr->lo_any.next; 
+    } 
+
+    eptr = cell->cell_float_list; 
+    while (eptr != NULL) 
+    { 
+        eptr->lo_any.x += dx; 
+        eptr->lo_any.y += dy; 
+        if (eptr->type == LO_CELL) 
+        { 
+            lo_OffsetCellContents((LO_CellStruct *)eptr, dx, dy); 
+        } 
+
+        lo_MoveElementLayers( eptr ); 
+
+        eptr = eptr->lo_any.next; 
+    } 
+} 
+
+/* Populates the LO_CELL element with the freshly generated contents of the 
+   lo_DocState structure.  Assumes that the layout elements on the lo_DocState 
+   are hooked up to their peer editor elements in the editor content model. 
+   Recycles the old layout elements contained in the LO_CELL element. */ 
+void lo_RebuildCell(MWContext *context, lo_DocState *state, LO_CellStruct *cell) 
+{ 
+    /*** Recycle old contents of the cell ***/ 
+    if (!cell) 
+        return; 
+
+    /* If cell list exists, cell_list_end must exist too */ 
+    XP_ASSERT((cell->cell_list && cell->cell_list_end) || 
+              (!cell->cell_list && !cell->cell_list_end)); 
+
+    if (cell->cell_list && cell->cell_list_end) 
+    { 
+        XP_ASSERT(cell->cell_list_end->lo_any.next == NULL); 
+        lo_RecycleElements(context, state, cell->cell_list); 
+    } 
+    if (cell->cell_float_list) 
+        lo_RecycleElements(context, state, cell->cell_float_list); 
+
+    cell->cell_list = NULL; 
+    cell->cell_float_list = NULL; 
+    cell->cell_list_end = NULL; 
+
+    /*** Copy pointers to new content from the doc state to the cell ***/ 
+
+    /* If line array exists, end_last_line must exist too */ 
+    XP_ASSERT((state->line_array[0] && state->end_last_line) || 
+              (!state->line_array[0] && !state->end_last_line)); 
+
+    /* Ensure that the line list on the doc state has been flushed to 
+    the line array */ 
+    XP_ASSERT(state->line_list == NULL); 
+
+    if (state->line_array[0] && state->end_last_line) 
+    { 
+        XP_ASSERT(state->end_last_line->lo_any.next == NULL); 
+        cell->cell_list = state->line_array[0]; 
+        cell->cell_list_end = state->end_last_line; 
+
+        state->line_array[0] = NULL; 
+        state->end_last_line = NULL; 
+    } 
+
+    if (state->float_list) 
+    { 
+        cell->cell_float_list = state->float_list; 
+        state->float_list = NULL; 
+    } 
+
+    /*** Offset new content of the cell relative to the cell's position ***/ 
+    lo_OffsetCellContents( cell, cell->x, cell->y ); 
+} 
+
+
 #ifdef TEST_16BIT
 #undef XP_WIN16
 #endif /* TEST_16BIT */

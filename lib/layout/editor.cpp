@@ -1035,9 +1035,15 @@ intn EDT_ProcessTag(void *data_object, PA_Tag *tag, intn status){
         }
         parseRet = pDocData->edit_buffer->ParseTag( pDocData, tag, status );
     }
+    
+    //Braindead: Any value except NOT_OK will continue parsing
+    // 9/1/98 OK_STOP is not currently used at all
+    // NOT_OK is used to abort while parsing the Content-Type metatag
+    //   because charset is bad
+    if( parseRet == NOT_OK )
+        return NOT_OK;
 
     if( parseRet != OK_IGNORE ){
-
 #if 0
         //
         // Check to see if the tag went away.  Text without an Edit Element
@@ -1061,7 +1067,7 @@ intn EDT_ProcessTag(void *data_object, PA_Tag *tag, intn status){
     }
     else{
     	PA_FreeTag(tag);
-        return 1;
+        return OK_CONTINUE;
     }
 }
 
@@ -1492,9 +1498,16 @@ void EDT_SetTableAlign( MWContext *pContext, ED_Alignment eAlign ){
 void EDT_MorphContainer( MWContext *pContext, TagType t ){
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
     pEditBuffer->BeginBatchChanges(kParagraphAlignCommandID);
+    // These are no longer supported
+	if( t == P_DIRECTORY ||
+        t == P_MENU )
+    {
+        t = P_UNUM_LIST;
+    }
+    
 	if( t == P_BLOCKQUOTE ||
-        t == P_DIRECTORY ||
-        t == P_MENU ||
+        t == P_UNUM_LIST ||
+        t == P_NUM_LIST ||
         t == P_DESC_LIST){
         pEditBuffer->MorphListContainer( t );
     } else {
@@ -1898,10 +1911,9 @@ void EDT_ConvertTableToText(MWContext *pMWContext)
 }
 
 /* Save the character and paragraph style of selection or at caret */
+/* TODO: REMOVE AFTER CONFIRMING ITS NOT BEING USED ON ALL PLATFORMS */
 void EDT_CopyStyle(MWContext *pMWContext)
 {
-    GET_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer);
-    pEditBuffer->CopyStyle();
 }
 
 /* TRUE if no mouse actions taken since last EDT_CopyStyle call */

@@ -6239,29 +6239,94 @@ void CEditTableCellElement::SplitCell()
 
     pBuffer->SetFillNewCellWithSpace();
     CEditTableCellElement *pNewCell;
-    for( intn iRow = 0; iRow < m_iRowSpan; iRow++ )
+    int32 iNewRows = m_iRowSpan - 1;
+    int32 iNewCells = m_iColSpan - 1;
+    intn iNextRow = m_iRow + 1;
+    CEditTableRowElement *pCurrentRow = (CEditTableRowElement*)GetParent();
+    XP_ASSERT(pCurrentRow && pCurrentRow->IsTableRow());
+    CEditTableRowElement *pRow = pCurrentRow;
+
+    // Copy current cell's color and background image to all new cells
+    EDT_TableCellData *pData = GetData();
+    EDT_TableCellData *pNewData = NewData();
+    XP_ASSERT(pData && pNewData);
+    if( !pData || !pNewData )
+        return;
+    pData->mask = CF_BACK_COLOR | CF_BACK_IMAGE;
+    edt_CopyTableCellData(pNewData, pData);
+
+    // Insert new cells in the current row if needed
+    for( int i = 0; i < iNewCells; i++ )
     {
-        for( intn iCol = 0; iCol < m_iColSpan; iCol++ )
+        pNewCell = new CEditTableCellElement;
+        pNewCell->InsertAfter(this);
+        pNewCell->FinishedLoad(pBuffer);
+        // Set background attributes
+        pNewCell->SetData(pNewData);
+    }
+
+    // Insert new cells in following rows
+    for( int iRow = 0; iRow < iNewRows; iRow++ )
+    {
+        // Get the next existing row
+        if( pRow )
+            pRow = (CEditTableRowElement*)pRow->GetNextSibling();
+
+        if( pRow )
         {
-            pNewCell = new CEditTableCellElement;
-            pNewCell->InsertAfter(this);
-            pNewCell->FinishedLoad(pBuffer);
+            // Starting with first cell in row, find the cell 
+            //   just after "this" cell's column
+            CEditTableCellElement *pCell = (CEditTableCellElement*)pRow->GetChild();
+            while( pCell && pCell->GetX() <= m_X )
+                pCell = (CEditTableCellElement*)pCell->GetNextSibling();
+
+            // Insert new cells before the one we found
+            for( int i = 0; i < m_iColSpan; i++ )
+            {
+                pNewCell = new CEditTableCellElement;
+                if( pCell )
+                    pNewCell->InsertBefore(pCell);
+                else
+                    // Row has no cells! (Table is messed up)
+                    pNewCell->InsertAsFirstChild(pRow);
+
+                pNewCell->FinishedLoad(pBuffer);
+                // Set background attributes
+                pNewCell->SetData(pNewData);
+            }
+        }
+        else
+        {
+            // If no row, table is messed up.
+            // But we can fix it by simply inserting a new row
+            CEditTableRowElement *pNewRow = new CEditTableRowElement(m_iColSpan);
+            if( pNewRow == NULL )
+                break;
+            pNewRow->InsertAfter(pCurrentRow);
+            pCurrentRow = pNewRow;
+            pRow->FinishedLoad(pBuffer);
+            // Set background attributes in cells created with the row
+            CEditTableCellElement *pNewRowCell = (CEditTableCellElement*)pRow->GetChild();
+            while( pNewRowCell )
+            {
+                pNewRowCell->SetData(pNewData);
+                pNewRowCell = (CEditTableCellElement*)pNewRowCell->GetNextSibling();
+            }
         }
     }
+
     // Now reset values in current cell
-    EDT_TableCellData *pData = GetData();
-    if( pData )
-    {
-        pData->iColSpan = 1;
-        pData->iRowSpan = 1;
-        SetData(pData);
-        EDT_FreeTableCellData(pData);
-    }
+    pData->iColSpan = 1;
+    pData->iRowSpan = 1;
+    SetData(pData);
+    EDT_FreeTableCellData(pData);
+    EDT_FreeTableCellData(pNewData);
+
     pBuffer->ClearFillNewCellWithSpace();
 }
 
 // Move all contents of supplied cell into this cell
-void CEditTableCellElement::MergeCells(CEditTableCellElement* pCell)
+void CEditTableCellElement::MergeCells(CEditTableCellElement* pCell, int32& iNewRowSpan)
 {
     if( !pCell || pCell == this )
         return;
@@ -6317,7 +6382,19 @@ void CEditTableCellElement::MergeCells(CEditTableCellElement* pCell)
         // Clear pointer to children just moved
         pCell->SetChild(0);
     }
-    delete pCell;
+    CEditElement *pNext = pCell->GetNextSibling();
+    CEditElement *pPrev = pCell->GetPreviousSibling();
+    if( pCell->GetNextSibling() == NULL && pCell->GetPreviousSibling() == NULL )
+    {
+        // pCell is the only cell in this row, so delete the row
+        delete pCell->GetParent();
+        // Because we removed a row, the ROWSPAN is now 1 less
+        iNewRowSpan--;
+    }
+    else
+    {
+        delete pCell;
+    }
 }
 
 void CEditTableCellElement::DeleteContents(XP_Bool bMarkAsDeleted)

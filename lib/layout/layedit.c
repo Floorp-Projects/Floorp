@@ -734,9 +734,11 @@ void lo_MergeElements( MWContext *context, lo_DocState *old_state, int32 iStartL
 #endif /* DEBUG */
 }
 
+
+
 PRIVATE
 LO_RelayoutData* lo_NewRelayoutData( MWContext* context, ED_TagCursor* pCursor, 
-			int32 iStartLine, int iStartEditOffset )
+			int32 iStartLine, int iStartEditOffset, lo_DocState *new_state )
 {
 	int32 doc_id;
 	LO_RelayoutData *pRd;
@@ -765,9 +767,14 @@ LO_RelayoutData* lo_NewRelayoutData( MWContext* context, ED_TagCursor* pCursor,
 	pRd->iStartLine = iStartLine;
 	pRd->iStartEditOffset = iStartEditOffset;
 
-	pRd->new_state = lo_NewLayout( context, pRd->old_state->win_width, 
-					pRd->old_state->win_height, pRd->old_state->win_left, 
-					pRd->old_state->win_top, pRd->old_state );
+    /* new state was supplied */
+    if( new_state )
+        pRd->new_state = new_state;
+    else
+	    pRd->new_state = lo_NewLayout( context, pRd->old_state->win_width, 
+					    pRd->old_state->win_height, pRd->old_state->win_left, 
+					    pRd->old_state->win_top, pRd->old_state );
+
 	pRd->new_state->display_blocked = TRUE;
 	pRd->new_state->edit_relayout_display_blocked = TRUE;
 	
@@ -862,7 +869,310 @@ LO_Element *lo_strip_mquotes(LO_Element **elist)
   return mquotes;
 }
 
-void LO_EditorReflow(MWContext *context, ED_TagCursor *pCursor, 
+void lo_EditorCellReflow(MWContext *context, ED_TagCursor *pCursor, LO_CellStruct *pCell)
+{
+	PA_Tag *pTag;
+	PA_Tag *pNextTag = 0;
+	LO_Element *eptr;
+	LO_Element **line_array;
+	int32 changedY, changedHeight;
+	LO_RelayoutData* pRd;
+	Bool bFoundBreak, bBreakIsEndTag;
+	int32 iEndLine = -1;
+    LO_Element *leadingMquotes = NULL;
+
+    int32 x = pCell->x + 1;
+    int32 y = pCell->y + 1;
+    lo_DocState *new_state;
+    int iStartEditOffset = 0;
+    int32 iStartLine;
+
+    if( !context || !pCursor || !pCell )
+        return;
+
+    LO_FirstElementOnLine(context, x, y, &iStartLine);
+    context->is_editor |= EDT_RELAYOUT_FLAG; /* Relayout flag */
+
+    /* Create a new doc state to layout into */
+    new_state = lo_CreateStateForCellLayout(context, pCell);
+	pRd = lo_NewRelayoutData( context, pCursor, iStartLine, iStartEditOffset, new_state );
+
+/*************************************************************/
+/* This block was copied from lo_Relayout
+   TODO: When things work, extract common code into a separate function */
+
+	/* save the floating element list for later deletion. */
+	if( pRd->old_state->float_list != 0 )
+	{
+		lo_relayout_recycle(context, pRd->new_state, pRd->old_state->float_list);
+        pRd->old_state->float_list = NULL;
+	}
+
+	while( (pTag = pNextTag) != 0 
+			|| (pTag = EDT_TagCursorGetNextState(pCursor)) != 0 )
+	{
+		lo_LayoutTag(pRd->context, pRd->new_state, pTag);
+		pNextTag = pTag->next;
+		PA_FreeTag(pTag);
+	}
+
+/* What the heck is this doing? */	
+	eptr = NULL;
+	XP_LOCK_BLOCK(line_array, LO_Element **, pRd->new_state->line_array);
+	eptr = line_array[0];
+	if (eptr != NULL )
+	{
+		lo_relayout_recycle(context, pRd->new_state, eptr); 	
+	}
+	XP_UNLOCK_BLOCK(pRd->old_state->line_array);
+
+  /* 
+     Get list of any mailing quote bullets, removing them from line_list.
+     These are the only elements that we want to preserve. 
+     lo_strip_mquotes deals properly with a NULL input.
+     Note that this can change the value of pRd->new_state->line_list.
+  */
+  leadingMquotes = lo_strip_mquotes(&pRd->new_state->line_list);
+  if ( pRd->new_state->line_list ) {
+		lo_relayout_recycle(context, pRd->new_state, pRd->new_state->line_list);
+  }
+
+  /* Only leave the leading mquote bullets, if any. */
+	pRd->new_state->line_list = leadingMquotes; 
+	pRd->new_state->line_num = 1;
+
+	/* while there are tags to parse... */
+	bFoundBreak = FALSE;
+	pNextTag = NULL;
+	while( !bFoundBreak )
+	{
+		if( pNextTag == NULL )
+		{
+			pTag = EDT_TagCursorGetNext(pRd->pTagCursor);
+		}
+		else 
+		{
+			pTag = pNextTag;
+		}
+		if( pTag == NULL ){
+			break;
+		}
+
+		pRd->new_state->display_blocked = TRUE;
+		pNextTag = pTag->next;
+		if( iStartEditOffset && pTag->type == P_TEXT )
+		{
+			pRd->new_state->edit_current_offset = iStartEditOffset;
+			pRd->new_state->edit_force_offset = TRUE;
+			lo_LayoutTag(pRd->context, pRd->new_state, pTag);
+			iStartEditOffset = 0;
+			pRd->new_state->edit_force_offset = FALSE;
+		    PA_FreeTag(pTag);
+		}
+		else
+		{
+/*			lo_LayoutTag(pRd->context, pRd->new_state, pTag);*/
+            /* Matches code at end of LO_ProcessTag */
+            lo_DocState *state = pRd->new_state;
+	        lo_DocState *orig_state;
+	        lo_DocState *up_state;
+            PA_Tag* tag = pTag;
+
+	        /*
+	         * Divert all tags to the current sub-document if there is one.
+	         */
+	        up_state = NULL;
+	        orig_state = state;
+
+            /* Note: we always display tables, so we ignore bDisplayTables now */
+            while (state->sub_state != NULL)
+	        {
+		        lo_DocState *new_state;
+
+		        up_state = state;
+		        new_state = state->sub_state;
+		        state = new_state;
+	        }
+
+	        /* orig_state->top_state->layout_status = status; */
+
+	        {
+		        lo_DocState *tmp_state;
+		        Bool may_save;
+
+		        if ((state->is_a_subdoc == SUBDOC_CELL)||
+			        (state->is_a_subdoc == SUBDOC_CAPTION))
+		        {
+			        may_save = TRUE;
+		        }
+		        else
+		        {
+			        may_save = FALSE;
+		        }
+
+                /* Some table routines reach out to find the top doc state.
+                 * So we replace it for the duration of this call.
+                 */
+                pRd->top_state->doc_state = pRd->new_state;
+	            state->edit_relayout_display_blocked = TRUE;
+	            state->display_blocked = TRUE;
+
+		        lo_LayoutTag(context, state, tag);
+                pRd->top_state->doc_state = pRd->old_state;
+		        tmp_state = lo_CurrentSubState(orig_state);
+
+		        if (may_save != FALSE)
+		        {
+			        /*
+			         * That tag popped us up one state level.  If this new
+			         * state is still a subdoc, save the tag there.
+			         */
+			        if (tmp_state == up_state)
+			        {
+				        if ((tmp_state->is_a_subdoc == SUBDOC_CELL)||
+				            (tmp_state->is_a_subdoc == SUBDOC_CAPTION))
+				        {
+				            lo_SaveSubdocTags(context, tmp_state, tag);
+				        }
+				        else
+				        {
+				            PA_FreeTag(tag);
+				        }
+			        }
+			        /*
+			         * Else that tag put us in a new subdoc on the same
+			         * level.  It needs to be saved one level up,
+			         * if the parent is also a subdoc.
+			         */
+			        else if ((up_state != NULL)&&
+				        (tmp_state == up_state->sub_state)&&
+				        (tmp_state != state))
+			        {
+				        if ((up_state->is_a_subdoc == SUBDOC_CELL)||
+				             (up_state->is_a_subdoc == SUBDOC_CAPTION))
+				        {
+				            lo_SaveSubdocTags(context, up_state, tag);
+				        }
+				        else
+				        {
+				            PA_FreeTag(tag);
+				        }
+			        }
+			        /*
+			         * Else we are still in the same subdoc
+			         */
+			        else if (tmp_state == state)
+			        {
+				        lo_SaveSubdocTags(context, state, tag);
+			        }
+			        /*
+			         * Else that tag started a new, nested subdoc.
+			         * Add the starting tag to the parent.
+			         */
+			        else if (tmp_state == state->sub_state)
+			        {
+				        lo_SaveSubdocTags(context, state, tag);
+				        /*
+				         * Since we have extended the parent chain,
+				         * we need to reset the child to the new
+				         * parent end-chain.
+				         */
+				        if ((tmp_state->is_a_subdoc == SUBDOC_CELL)||
+				            (tmp_state->is_a_subdoc == SUBDOC_CAPTION))
+				        {
+					        tmp_state->subdoc_tags =
+						        state->subdoc_tags_end;
+				        }
+			        }
+			        /*
+			         * This can never happen.
+			         */
+			        else
+			        {
+				        PA_FreeTag(tag);
+			        }
+
+			        state = tmp_state;
+		        }
+		        else
+		        {
+			        PA_FreeTag(tag);
+		        }
+	        }
+		}
+/*		pNextTag = pTag->next;
+		PA_FreeTag(pTag);
+*/		if( pNextTag == 0 ){
+			bFoundBreak = EDT_TagCursorAtBreak( pRd->pTagCursor, &bBreakIsEndTag );
+		}
+	}
+
+	if( bFoundBreak )
+	{
+		if( bBreakIsEndTag ){
+			pTag = EDT_TagCursorGetNext(pRd->pTagCursor);
+			lo_LayoutTag(pRd->context, pRd->new_state, pTag);
+			iEndLine = EDT_TagCursorCurrentLine( pRd->pTagCursor );
+		}
+		else {
+			iEndLine = EDT_TagCursorCurrentLine( pRd->pTagCursor );
+			pTag = EDT_TagCursorGetNext(pRd->pTagCursor);
+            if ( pTag->type == P_TABLE ) {
+                lo_CloseOutLayout( pRd->context, pRd->new_state);
+            }
+            else {
+			    lo_LayoutTag(pRd->context, pRd->new_state, pTag);
+            }
+		}
+        EDT_DeleteTagChain(pTag);
+
+		/* don't close layout.  We just flushed this line to the proper
+		 *  height, there is a start of a new tag in the buffer.
+		*/
+	}
+	else {
+		lo_CloseOutLayout( pRd->context, pRd->new_state);
+	}
+
+	
+    if( iEndLine == -1 ){
+		iEndLine = pRd->old_state->line_num-1;
+	}
+
+
+    /* Go up the liststack, closing out any mquotes. */
+    {
+        lo_ListStack *lptr;
+        lptr = pRd->new_state->list_stack;
+        while (lptr->type != P_UNKNOWN && lptr->next != NULL)
+        {
+            if (lptr->quote_type == QUOTE_MQUOTE)
+            {
+                lo_add_leading_bullets(context,pRd->new_state,
+                                       lptr->mquote_line_num - 1,
+                                       pRd->new_state->line_num - 2,
+                                       lptr->mquote_x);
+            }
+                    
+            lptr = lptr->next;
+        }
+    }
+
+/**************************************************************/
+
+    lo_RebuildCell(context, new_state, pCell);
+    /* TODO -- RESET POINTERS SO NEW TAGS ARE NOT DELETED AND DELETE new_state */
+
+    /* For now, assume same Y and height doesn't change */
+    changedY = pCell->y;
+    /* Note: using -1 for this will redraw to the end of the window */
+    changedHeight = pCell->line_height;
+
+    context->is_editor &= ~EDT_RELAYOUT_FLAG;
+	FE_DocumentChanged( context, changedY, changedHeight );
+}
+
+void lo_EditorReflow(MWContext *context, ED_TagCursor *pCursor, 
 			int32 iStartLine, int iStartEditOffset)
 {
 	PA_Tag *pTag;
@@ -880,7 +1190,7 @@ void LO_EditorReflow(MWContext *context, ED_TagCursor *pCursor,
 	LO_Element ** old_line_array;
     
     context->is_editor |= EDT_RELAYOUT_FLAG; /* Relayout flag */
-	pRd = lo_NewRelayoutData( context, pCursor, iStartLine, iStartEditOffset );
+	pRd = lo_NewRelayoutData( context, pCursor, iStartLine, iStartEditOffset, 0 );
 
 	/* save the floating element list for later deletion. */
 	if( pRd->old_state->float_list != 0 )
@@ -1077,7 +1387,7 @@ void LO_Relayout(MWContext *context, ED_TagCursor *pCursor,
 	int32 iEndLine = -1;
     LO_Element *leadingMquotes = NULL;
     context->is_editor |= EDT_RELAYOUT_FLAG; /* Relayout flag */
-	pRd = lo_NewRelayoutData( context, pCursor, iStartLine, iStartEditOffset );
+	pRd = lo_NewRelayoutData( context, pCursor, iStartLine, iStartEditOffset, 0 );
 
     /* We need to keep images loaded during relayout. Images are reference counted.
      * When the total number of layout elements that use an image drops to zero,

@@ -23,7 +23,8 @@
 #include "prefapi.h"
 #include "intl_csi.h"
 
-#define CONTENT_TYPE "Content-Type"
+#define CONTENT_TYPE  "Content-Type"
+#define PARAM_CHARSET "charset"
 
 // Maximum length of "positional text" - see GetPositionalText(). 
 #ifdef XP_WIN16
@@ -567,6 +568,11 @@ intn CEditBuffer::ParseTag(pa_DocData *pData, PA_Tag* pTag, intn status){
     XP_Bool bTagIsEnd = (XP_Bool) pTag->is_end;
 
     NormalizeEOLsInTag(pTag);
+    
+    // 8/31/98: List types no longer supported
+    // (they were always displayed the same as P_UNUM_LIST anyway)
+    if( pTag->type == P_MENU || P_DIRECTORY )
+        pTag->type == P_UNUM_LIST;
 
     /* P_STRIKE is a synonym for P_STRIKEOUT. Since pre-3.0 versions of
      * Navigator don't recognize P_STRIKE ( "<S>" ), we switch it to
@@ -1187,7 +1193,7 @@ intn CEditBuffer::ParseOpenTag(pa_DocData *pData, PA_Tag* pTag, intn status){
             break;
 
         case P_META:
-            ParseMetaTag( pTag );
+            ParseMetaTag( pTag, retVal );
             break;
 
         case P_BASE:
@@ -2123,7 +2129,7 @@ void CEditBuffer::Reflow( CEditElement* pStartElement,
     }
 #endif
 
-    XP_Bool bInTableCell = pStartElement ? (pStartElement->GetTableIgnoreSubdoc() != NULL) : FALSE;
+    CEditTableCellElement *pCell = FALSE;
 
     // laying out from the beginning of the document
     if( pNewStartElement == 0 ){
@@ -2156,23 +2162,39 @@ void CEditBuffer::Reflow( CEditElement* pStartElement,
         // Note: If here, we must have a pStartElement and associated LO_Element
         XP_ASSERT(pStartElement && pLayoutElement);
 
-        // Find the first element on this line and get the current line number
-        pLoStartLine = FirstElementOnLine( pLayoutElement, &iLineNum );
-        //
-        // Position the tag cursor at this position
-        //
-        pLoStartLine = FirstElementOnLine( pLayoutElement, &iLineNum );
-        pEdStart = pLoStartLine->lo_any.edit_element;
-        iOffset = pLoStartLine->lo_any.edit_offset;
+        // If we are entirely within one cell, then use new cell reflow
+        // ****** TODO: FINISH THIS WORK BEFORE ACTIVATING
+        //pCell = pStartElement->GetTableCellIgnoreSubdoc();
+
+        if( pCell && pCell == pEndElement->GetTableCellIgnoreSubdoc() )
+        {
+            // Start with first element in the cell
+            pEdStart = pCell->GetFirstMostChild()->Leaf();
+            XP_ASSERT(pEdStart);
+            iOffset = 0;
+        }
+        else
+        {
+            // Clear this - we use it below to tell how to reflow
+            pCell = NULL;
+            
+            // Find the first element on this line and get the current line number
+            pLoStartLine = FirstElementOnLine( pLayoutElement, &iLineNum );
+            //
+            // Position the tag cursor at this position
+            //
+            pLoStartLine = FirstElementOnLine( pLayoutElement, &iLineNum );
+            pEdStart = pLoStartLine->lo_any.edit_element;
+            iOffset = pLoStartLine->lo_any.edit_offset;
+        }
     }
 
-
-    // Create a new cursor.
+    // Create a new cursor and reflow
     CEditTagCursor cursor(this, pEdStart, iOffset, pEndElement);
-    //CEditTagCursor *pCursor = new CEditTagCursor(this, m_pRoot, iOffset);
-
-    LO_EditorReflow(m_pContext, &cursor, iLineNum, iOffset);
-
+    if( pCell )
+        lo_EditorCellReflow(m_pContext, &cursor, GetLoCell(pCell));
+    else
+        lo_EditorReflow(m_pContext, &cursor, iLineNum, iOffset);
 
 #if defined( DEBUG_shannon )
     XP_TRACE(("\n\nEDITOR REFLOW"));
@@ -4245,7 +4267,9 @@ void CEditBuffer::MorphContainer( TagType t )
             TagType tList = pList->GetType();
             // Assure that list-type items are only contained in their proper parents. 
             // If not the right type, terminate the list
-            if( ((tList == P_UNUM_LIST || tList == P_NUM_LIST || tList == P_MENU || tList == P_DIRECTORY) && 
+            // We should never see P_MENU or P_DIRECTORY any more
+            // (translated into P_UNUM_LIST in ::ParseTag() )
+            if( ((tList == P_UNUM_LIST || tList == P_NUM_LIST /*|| tList == P_MENU || tList == P_DIRECTORY*/) && 
                   t != P_LIST_ITEM) ||
                 (tList == P_DESC_LIST && !(t == P_DESC_TITLE || t == P_DESC_TEXT)) )
             {
@@ -5872,16 +5896,8 @@ void CEditBuffer::ConvertTableToText()
     }
 }
 
-// Save the character and paragraph style of selection or at caret
-void CEditBuffer::CopyStyle()
-{
-    if( m_pCopyStyleCharacterData )
-        EDT_FreeCharacterData(m_pCopyStyleCharacterData);
-    
-    m_pCopyStyleCharacterData = GetCharacterData();
-}
-
-// Apply the style to selection or at caret. Use bApplyStyle = FALSE to cancel
+// Apply the style to selection or at caret. 
+// Use bApplyStyle = FALSE to delete the saved style data
 void CEditBuffer::PasteStyle(XP_Bool bApplyStyle)
 {
     if( m_pCopyStyleCharacterData )
@@ -5890,8 +5906,11 @@ void CEditBuffer::PasteStyle(XP_Bool bApplyStyle)
         {
             SetCharacterData(m_pCopyStyleCharacterData);
         }
-        EDT_FreeCharacterData(m_pCopyStyleCharacterData);
-        m_pCopyStyleCharacterData = NULL;
+        else
+        {
+            EDT_FreeCharacterData(m_pCopyStyleCharacterData);
+            m_pCopyStyleCharacterData = NULL;
+        }
     }
 }
 
@@ -6160,38 +6179,209 @@ void CEditBuffer::FreeMetaData( EDT_MetaData *pData ){
     }
 }
 
-void CEditBuffer::ParseMetaTag( PA_Tag *pTag ){
+void CEditBuffer::ParseMetaTag( PA_Tag *pTag, intn& retVal )
+{
     XP_Bool bHttpEquiv = TRUE;
     char *pName;
     char *pContent;
     INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(m_pContext);
     int16 win_csid = INTL_GetCSIWinCSID(c);
+    retVal = OK_CONTINUE;
 
     pContent = edt_FetchParamString( pTag, PARAM_CONTENT, win_csid );
     pName = edt_FetchParamString( pTag, PARAM_HTTP_EQUIV, win_csid );
 
     // if we didn't get http-equiv, try for name=
-    if( pName == 0 ){
+    if( pName == 0 )
+    {
         bHttpEquiv = FALSE;
         pName = edt_FetchParamString( pTag, PARAM_NAME, win_csid );
     }
 
     // if we got one or the other, add it to the list of meta tags.
-    if( pName ){
+    if( pName )
+    {
         EDT_MetaData *pData = MakeMetaData( bHttpEquiv, pName, pContent );
-        // We want to allow multiple entries with the same NAME,
-        //  as long as CONTENT is different. So setting these the same
-        //  will make FindMetaData() match CONTENT as well as NAME
-        //  when deciding to replace and existing meta entry
-        pData->pPrevContent = pData->pContent;
-        SetMetaData( pData );
-        FreeMetaData( pData );
+
+        // Check our charset string for validity
+        // (We may close done the buffer in this routine)
+        if( CheckCharset(pData, win_csid) )
+        {
+
+            // We want to allow multiple entries with the same NAME,
+            //  as long as CONTENT is different. So setting these the same
+            //  will make FindMetaData() match CONTENT as well as NAME
+            //  when deciding to replace and existing meta entry
+            pData->pPrevContent = pData->pContent;
+            SetMetaData( pData );
+            FreeMetaData( pData );
+        }
+        else
+        {
+            // Signal to stop parsing
+            // This alone seems to be enough to abort parsing,
+            //  the net stream, and close the window!
+            retVal = NOT_OK;
+        }
     }
 
     if( pName ) XP_FREE( pName );
     if( pContent ) XP_FREE( pContent );
 }
 
+static void edt_ReplaceCharset(EDT_MetaData *pData, char *pNewCharset)
+{
+    // Find the string "charset" in the content string
+    char *pCharset = XP_STRSTR(pData->pContent, PARAM_CHARSET);
+    if( !pCharset )
+    {
+CHARSET_ERROR:
+        XP_ASSERT(0);
+        return;
+    }
+    // Find the '=' after "charset"
+    char *pEqual = XP_STRCHR(pCharset, '=');
+    if( !pEqual )
+        goto CHARSET_ERROR;
+
+    char *tptr = pEqual+1;
+
+    // Terminate here -- this is where we will append the new string
+    *tptr = '\0';
+    tptr++;
+
+    // Skip over whitespace before chaset name
+	while (XP_IS_SPACE(*tptr))
+		tptr++;
+    
+    //Then find end of old charset string
+    // This assumes charset string can have no spaces in it
+	while( *tptr && !XP_IS_SPACE(*tptr) && *tptr != '\"' && *tptr != '>')
+		tptr++;
+
+    // Copy this to append at the end,
+    //  (this allows other params after charset to be retained)
+    char *pEnd = NULL;
+    if( *tptr )
+        pEnd = XP_STRDUP(tptr);
+
+    // Rebuild complete "Content=" string
+    // This avoids realloc if new and old string are the same size
+    pData->pContent = PR_sprintf_append(pData->pContent, pNewCharset);
+    if( pEnd )
+    {
+        pData->pContent = PR_sprintf_append(pData->pContent, pEnd);
+        XP_FREE(pEnd);
+    }
+}
+
+// Return FALSE only if we are closing down
+XP_Bool CEditBuffer::CheckCharset( EDT_MetaData *pData, int16 win_csid )
+{
+    XP_Bool bRetVal = TRUE;
+    int16 default_csid = FE_DefaultDocCharSetID(m_pContext);
+
+    if( CS_USRDEF2 != default_csid && 
+        CS_USER_DEFINED_ENCODING != default_csid &&
+        pData && pData->bHttpEquiv && pData->pName && pData->pContent &&
+        0 == XP_STRCASECMP(pData->pName, CONTENT_TYPE) )
+    {
+        // Example of a charset meta tag:
+        //<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+
+        // Create a simple tag so we can use tag-parsing to extract charset
+        // PA_FetchParamValue (called from edt_FetchParamString)
+        //  needs a terminal '>' to work
+        int iLen = XP_STRLEN(pData->pContent);
+        char *pContent = (char*)XP_ALLOC(iLen+1);
+        if( !pContent )
+            return FALSE; //Abort if not enough memory?
+        
+        XP_STRCPY(pContent, pData->pContent);
+        pContent[iLen] = '>';
+        iLen++;
+        pContent[iLen] = '\0';
+
+        PA_Tag *pTag = XP_NEW( PA_Tag );
+        XP_BZERO( pTag, sizeof( PA_Tag ) );
+    	pTag->data_len = iLen;
+        pTag->data_str = XP_STRDUP(pContent);
+
+        char *pCharset = edt_FetchParamString(pTag, PARAM_CHARSET, win_csid );
+        PA_FREE(pTag);
+
+        if( pCharset )
+        {
+            int iBufLen = 255;
+            char buf[256];
+            char *pMsg = NULL;
+
+            //ftang: Implement this!
+//            if(CS_UNKNOWN == INTL_NameToCharSetID(pCharset))  
+            if(FALSE)  
+            {
+                // Get the default charset
+                //INTL_CharSetIDToName(default_csid, &pDefaultCharset);
+                // Above uses presized buffer, but calls following, so this is safer:
+                // (Don't free this string!)
+                char *pDefaultCharset = (char *)INTL_CsidToCharsetNamePt(default_csid);
+                if( pDefaultCharset )
+                {
+                    // Build a very wordy message box with the default and current 
+                    //   charset strings inserted
+	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_LABEL), pCharset);
+                    pMsg = PR_sprintf_append(pMsg, buf);
+                    pMsg = PR_sprintf_append(pMsg, XP_GetString(XP_EDT_CHARSET_CANT_EDIT));
+	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CURRENT_CHARSET), pDefaultCharset);
+                    pMsg = PR_sprintf_append(pMsg, buf);
+	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_REPLACE), pDefaultCharset);
+                    pMsg = PR_sprintf_append(pMsg, buf);
+                    pMsg = PR_sprintf_append(pMsg, XP_GetString(XP_EDT_CHARSET_EDIT_CANCEL));
+                    // If user chooses "Cancel", then we should abort editing
+                    bRetVal = FE_Confirm(m_pContext, pMsg);
+                    if( bRetVal )
+                    {
+                        // Change to the default charset
+                        edt_ReplaceCharset(pData, pDefaultCharset);
+                    }
+                }
+                else
+                    bRetVal = FALSE; //Abort if no default charset?
+            }
+            else
+            {
+                //ftang: Implement this! If this should NOT be freed, 
+                //       then please remove the XP_FREEIF below
+                //pNewCharset = INTL_CharsetCorrection(pCharset);
+                char *pCorrectCharset = XP_STRDUP(pCharset);
+                // ftang: If this should be XP_STRCMP instead, please change it
+                if( pCorrectCharset && 0 != XP_STRCASECMP(pCorrectCharset, pCharset) )
+                {
+                    // See if user wants to replace charset with the "correct" string
+                    // In either case, we continue editing
+	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_LABEL), pCharset);
+                    pMsg = PR_sprintf_append(pMsg, buf);
+	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CURRENT_CHARSET), pCorrectCharset);
+                    pMsg = PR_sprintf_append(pMsg, buf);
+	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_REPLACE), pCorrectCharset);
+                    pMsg = PR_sprintf_append(pMsg, buf);
+	                PR_snprintf(buf, iBufLen, XP_GetString(XP_EDT_CHARSET_EDIT_NOREPLACE), pCharset);
+                    pMsg = PR_sprintf_append(pMsg, buf);
+
+                    if( FE_Confirm(m_pContext, pMsg) )
+                    {
+                        // Change to the "correct" charset
+                        edt_ReplaceCharset(pData, pCorrectCharset);
+                    }
+                }
+                XP_FREEIF(pCorrectCharset);
+            }
+            XP_FREE(pCharset);
+        }
+    }
+
+    return bRetVal;
+}
 
 // Image
 
@@ -6798,7 +6988,7 @@ void CEditBuffer::MergeTableCells()
                 EDT_FreeTableCellData(pNextCellData);
             }
             // Move all contents of Next cell into First cell and delete Next cell
-            pFirstCell->MergeCells(pNextCell);
+            pFirstCell->MergeCells(pNextCell, pFirstCellData->iRowSpan);
         }
     } else {
         // We are merging with just the next cell to the right
@@ -6809,7 +6999,7 @@ void CEditBuffer::MergeTableCells()
             pFirstCellData->iColSpan += pNextCellData->iColSpan;
             EDT_FreeTableCellData(pNextCellData);
         }
-        pFirstCell->MergeCells( pNextCell );
+        pFirstCell->MergeCells(pNextCell, pFirstCellData->iRowSpan);
     }
     // Set the COLSPAN and ROWSPAN data for the merged cell
     pFirstCell->SetData(pFirstCellData);
@@ -6832,13 +7022,19 @@ void CEditBuffer::MergeTableCells()
 */
 void CEditBuffer::SplitTableCell()
 {
+    // Set beginning of UNDO block
+    BeginBatchChanges(kGroupOfChangesCommandID);
+
     CEditInsertPoint ip;
     GetTableInsertPoint(ip);
+    CEditTableElement* pTable = ip.m_pElement->GetTableIgnoreSubdoc();
     CEditTableCellElement* pCell = ip.m_pElement->GetTableCellIgnoreSubdoc();
-    if( !pCell )
+    if( pTable == NULL || pCell == NULL )
         return;
-
     pCell->SplitCell();
+    Relayout(pTable, 0, pTable);
+
+    EndBatchChanges();
 }
 
 
@@ -13952,6 +14148,17 @@ EDT_ClipboardResult CEditBuffer::CopySelection( char **ppText, int32* pTextLen,
         // Get normal selection
         GetSelection(selection);
         iCopyType = ED_COPY_NORMAL;
+        
+        // Copy character attributes only if start of selection is text
+        // This can be "pasted" onto a selection or at the caret
+        if( selection.m_start.m_pElement->IsText() )
+        {
+            if( m_pCopyStyleCharacterData )
+                EDT_FreeCharacterData(m_pCopyStyleCharacterData);
+            
+            // Save attributes of start element only
+            m_pCopyStyleCharacterData = selection.m_start.m_pElement->Text()->GetData();
+        }
     }
     // Build the HTML stream from the selection
     if( !selection.IsEmpty() )
@@ -17043,17 +17250,31 @@ void CEditBuffer::ChangeEncoding(int16 csid) {
 // See RFC 2070, "Internationalization of the Hypertext Markup Language"
 // http://ds.internic.net/rfc/rfc2070.txt
 // <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=ISO-2022-JP">
-void CEditBuffer::SetEncoding(int16 csid) {
- 	char contentValue[200];
-    char charSet[100];
+void CEditBuffer::SetEncoding(int16 csid)
+{
     int16 plainCSID = csid & ~CS_AUTO;
-    INTL_CharSetIDToName(plainCSID, charSet);
-    XP_SPRINTF(contentValue, "text/html; charset=%.100s", charSet);
+    // This is better than INTL_CharSetIDToName, which needs presized buffer;
+    // (Don't free this string!)
+    char *charSet = (char *)INTL_CsidToCharsetNamePt(plainCSID);
+    SetEncoding(charSet);
+}
 
-    EDT_MetaData *pData = MakeMetaData( TRUE, CONTENT_TYPE, contentValue);
+void CEditBuffer::SetEncoding(char *pCharset)
+{
+ 	char pContent[128];
+    if( pCharset && *pCharset )
+    {
+        XP_SPRINTF(pContent, "text/html; charset=%.100s", pCharset);
 
-    SetMetaData( pData );
-    FreeMetaData( pData );
+        EDT_MetaData *pData = MakeMetaData( TRUE, CONTENT_TYPE, pContent);
+        if( pData )
+        {
+            SetMetaData( pData );
+            FreeMetaData( pData );
+        }
+        else
+            XP_ASSERT(0);
+    }
 }
 
 XP_Bool CEditBuffer::HasEncoding() {

@@ -341,7 +341,7 @@ void LO_Reflow(MWContext *context, lo_DocState * state, LO_Element *startElement
 
 	/* init this by hand as we don't want to create a new state */
 	relay_state.context = context;
-	relay_state.top_state = lo_FetchTopState(XP_DOCID(context));
+	relay_state.top_state = top_state; /*lo_FetchTopState(XP_DOCID(context));*/
 	relay_state.doc_state = state;
 
 	firstElement = TRUE;

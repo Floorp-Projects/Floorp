@@ -1263,7 +1263,8 @@ public:
     void    SetSpecialSelected(XP_Bool bSelected) { m_bSpecialSelected = bSelected; }
 
     // Move contents of supplied cell into this cell
-    void MergeCells(CEditTableCellElement* pCell);
+    // If merging results in a row deletion, iNewRowSpan is adjusted
+    void MergeCells(CEditTableCellElement* pCell, int32& iNewRowSpan);
     void SplitCell();
 
     // Delete all contents, leaving just the minimum empty text element
@@ -3368,10 +3369,7 @@ public:
     // Convert the table into text - unravel existing paragraphs in cells
     void ConvertTableToText();
 
-    // Save the character and paragraph style of selection or at caret
-    void CopyStyle();
-    
-    // This is TRUE after EDT_CopyStyle is called, until the next left mouse up call
+    // This is TRUE after any HTML is copied
     XP_Bool CanPasteStyle() { return (m_pCopyStyleCharacterData != NULL); }
 
     // Apply the style to selection or at caret. Use bApplyStyle = FALSE to cancel
@@ -3497,9 +3495,11 @@ public:
     void SetMetaData( EDT_MetaData *pMetaData );
     void DeleteMetaData( EDT_MetaData *pMetaData );
     static void FreeMetaData( EDT_MetaData *pMetaData );
-    void ParseMetaTag( PA_Tag *pTag );
+    void ParseMetaTag( PA_Tag *pTag, intn& retVal );
     void PrintMetaData( CPrintState *pPrintState );
     void PrintMetaData( CPrintState *pPrintState, int index );
+    // Return FALSE only if we are closing down
+    XP_Bool CheckCharset( EDT_MetaData *pData,int16 win_csid );
 
     EDT_HorizRuleData* GetHorizRuleData();
     void SetHorizRuleData( EDT_HorizRuleData* pData );
@@ -3986,6 +3986,8 @@ public:
 
     void ChangeEncoding(int16 csid);
     void SetEncoding(int16 csid);
+    void SetEncoding(char *pCharset);
+
     XP_Bool HasEncoding();
 
     // Used for QA only - Ctrl+Alt+Shift+N accelerator for automated testing
