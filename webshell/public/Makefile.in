@@ -27,12 +27,13 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= webshell
+XPIDL_MODULE = webshell_idls
 
 XPIDLSRCS = \
-        .\nsIRefreshURI.idl \
-        .\nsIClipboardCommands.idl \
-        .\nsIContentViewerContainer.idl \
-        .\nsIDocumentLoaderFactory.idl \
+        nsIRefreshURI.idl \
+        nsIClipboardCommands.idl \
+        nsIContentViewerContainer.idl \
+        nsIDocumentLoaderFactory.idl \
         $(NULL)
 
 EXPORTS		= \
