@@ -109,14 +109,6 @@
       <menuitem id="viewSourceMenuitem"/>
       <menuitem id="viewParagraphMarks"/>
       <menuseparator />
-<!-- Deprecated BEGIN
-      <menu id="charsetMenu"/>
-      <menu id="charsetMenu1"/>
-      <menu id="charsetMenu2"/>
-      <menu id="charsetMenu3"/>
-      <menu id="charsetMenu4"/>
-      <menu id="charsetMenu5"/>
-END of Deprecated -->
       <menu id = "composerCharsetMenu" />
     </menupopup>
     </menu>
