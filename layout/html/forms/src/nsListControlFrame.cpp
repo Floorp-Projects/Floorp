@@ -179,6 +179,55 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 }
 
 //---------------------------------------------------------
+nsresult nsListControlFrame::CountAllChild(nsIDOMNode * aNode, PRInt32& aCount) 
+{
+  nsresult status = NS_OK;
+  nsIDOMNode * child;
+  aNode->GetFirstChild(&child);
+  while (child) {
+
+    // note: both optgroup and option elements can have DOM child
+    // option elements have text nodes as COM child, but they don't have too
+    nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroup;
+    child->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptGroupElement>::GetIID(),(void**) &optGroup);
+    if (optGroup) {
+      aCount++;
+
+      // check for children
+      PRBool hasChildren;
+      status = child->HasChildNodes(&hasChildren);
+      if (NS_FAILED(status)) {
+        NS_RELEASE(child);
+        return status;
+      }
+      if (hasChildren) {
+        status = CountAllChild(child, aCount);
+        if (NS_FAILED(status)) {
+          NS_RELEASE(child);
+          return status;
+        }
+      }
+    } else {
+      // don't query interface againa if it was an optgroup
+      nsCOMPtr<nsIDOMHTMLOptionElement> option;
+      child->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLOptionElement>::GetIID(),(void**) &option);
+      if (option) {
+        aCount++;
+      }
+    }
+
+    nsIDOMNode * tmp = child;
+    status = child->GetNextSibling(&child);
+    if (NS_FAILED(status)) {
+      NS_RELEASE(tmp);
+      return status;
+    }
+    NS_RELEASE(tmp);
+  }
+  return status;
+}
+
+//---------------------------------------------------------
 // Reflow is overriden to constrain the listbox height to the number of rows and columns
 // specified. 
 
@@ -365,11 +414,15 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
       PRInt32 numRows = 1;
       GetSizeAttribute(&numRows);
       if (numRows == kNoSizeSpecified) {
-        visibleHeight = aReflowState.mComputedHeight;
-        visibleHeight -= (border.top + border.bottom + padding.top + padding.bottom);
-      } else {
-        visibleHeight = numRows * heightOfARow;
+        nsIDOMNode* node;
+        nsresult rv = mContent->QueryInterface(nsCOMTypeInfo<nsIDOMNode>::GetIID(),(void**) &node);
+        if (node && NS_SUCCEEDED(rv)) {
+          numRows = 0;
+          CountAllChild(node, numRows);
+          NS_RELEASE(node);
+        }
       }
+      visibleHeight = numRows * heightOfARow;
     }
   }
 
