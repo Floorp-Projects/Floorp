@@ -48,7 +48,7 @@
       <tab id="nocapture" value="&tab.nocapture.label;"/>
       <spring flex="1"/>
     </tabbox>
-    <tabpanel align="horizontal" style="width: 460px;">
+    <tabpanel align="horizontal" style="width: 480px;">
       <!-- saved signons -->
       <box class="tabpanel" id="savedsignons" flex="100%" align="vertical">
         <div>
