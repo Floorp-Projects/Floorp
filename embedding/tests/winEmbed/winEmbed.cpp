@@ -116,7 +116,7 @@ class ProfileChangeObserver : public nsIObserver,
 
 {
 public:
-	ProfileChangeObserver();
+    ProfileChangeObserver();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
@@ -141,44 +141,44 @@ int main(int argc, char *argv[])
     
     // Sophisticated command-line parsing in action
     char *szFirstURL = "http://www.mozilla.org/projects/embedding";
-	char *szDefaultProfile = nsnull;
-	int argn;
-	for (argn = 1; argn < argc; argn++)
-	{
-		if (stricmp("-P", argv[argn]) == 0)
-		{
-			if (argn + 1 < argc)
-			{
-				szDefaultProfile = argv[++argn];
-			}
-		}
-		else
-		{
-	        szFirstURL = argv[argn];
-		}
+    char *szDefaultProfile = nsnull;
+    int argn;
+    for (argn = 1; argn < argc; argn++)
+    {
+        if (stricmp("-P", argv[argn]) == 0)
+        {
+            if (argn + 1 < argc)
+            {
+                szDefaultProfile = argv[++argn];
+            }
+        }
+        else
+        {
+            szFirstURL = argv[argn];
+        }
     }
-	strncpy(gFirstURL, szFirstURL, sizeof(gFirstURL) - 1);
+    strncpy(gFirstURL, szFirstURL, sizeof(gFirstURL) - 1);
 
     ghInstanceApp = GetModuleHandle(NULL);
     ghInstanceResources = GetModuleHandle(NULL);
 
-	// Initialize global strings
+    // Initialize global strings
     TCHAR szTitle[MAX_LOADSTRING];
-	LoadString(ghInstanceResources, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-	MyRegisterClass(ghInstanceApp);
+    LoadString(ghInstanceResources, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    MyRegisterClass(ghInstanceApp);
 
     // Init Embedding APIs
     NS_InitEmbedding(nsnull, nsnull);
 
-	// Choose the new profile
-	if (!ChooseNewProfile(TRUE, szDefaultProfile))
+    // Choose the new profile
+    if (!ChooseNewProfile(TRUE, szDefaultProfile))
     {
         NS_TermEmbedding();
         return 1;
     }
     WPARAM rv;
     {    
-    	// Now register an observer to watch for profile changes
+        // Now register an observer to watch for profile changes
         nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
 
         ProfileChangeObserver *observer = new ProfileChangeObserver;
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
         // Open the initial browser window
         OpenWebPage(gFirstURL);
 
-	    // Main message loop.
+        // Main message loop.
         // NOTE: We use a fake event and a timeout in order to process idle stuff for
         //       Mozilla every 1/10th of a second.
         PRBool runCondition = PR_TRUE;
@@ -215,7 +215,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(ProfileChangeObserver, nsIObserver, nsISupportsWea
 
 ProfileChangeObserver::ProfileChangeObserver()
 {
-	NS_INIT_ISUPPORTS();
+    NS_INIT_ISUPPORTS();
 }
 
 // ---------------------------------------------------------------------------
@@ -228,7 +228,7 @@ NS_IMETHODIMP ProfileChangeObserver::Observe(nsISupports *aSubject, const char *
 
     if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0)
     {
-		// The profile is about to change!
+        // The profile is about to change!
 
         // Ask the user if they want to
         int result = ::MessageBox(NULL, "Do you want to close all windows in order to switch the profile?", "Confirm", MB_YESNO | MB_ICONQUESTION);
@@ -241,15 +241,15 @@ NS_IMETHODIMP ProfileChangeObserver::Observe(nsISupports *aSubject, const char *
     }
     else if (nsCRT::strcmp(aTopic, "profile-change-teardown") == 0)
     {
-		// The profile is changing!
+        // The profile is changing!
 
-		// Prevent WM_QUIT by incrementing the dialog count
-		gDialogCount++;
+        // Prevent WM_QUIT by incrementing the dialog count
+        gDialogCount++;
     }
     else if (nsCRT::strcmp(aTopic, "profile-after-change") == 0)
     {
-		// Decrease the dialog count so WM_QUIT can once more happen
-		gDialogCount--;
+        // Decrease the dialog count so WM_QUIT can once more happen
+        gDialogCount--;
         if (gDialogCount == 0)
         {
             // All the dialogs have been torn down so open new page
@@ -257,7 +257,7 @@ NS_IMETHODIMP ProfileChangeObserver::Observe(nsISupports *aSubject, const char *
         }
         else
         {
-		    // The profile has changed, but dialogs are still being
+            // The profile has changed, but dialogs are still being
             // torn down. Set this flag so when the last one goes
             // it can finish the switch.
             gProfileSwitch = TRUE;
@@ -337,9 +337,9 @@ HWND GetBrowserFromChrome(nsIWebBrowserChrome *aChrome)
     {
         return NULL;
     }
-	nsCOMPtr<nsIEmbeddingSiteWindow> baseWindow = do_QueryInterface(aChrome);
+    nsCOMPtr<nsIEmbeddingSiteWindow> baseWindow = do_QueryInterface(aChrome);
     HWND hwnd = NULL;
-	baseWindow->GetSiteWindow((void **) & hwnd);
+    baseWindow->GetSiteWindow((void **) & hwnd);
     return hwnd;
 }
 
@@ -365,50 +365,50 @@ void SaveWebPage(nsIWebBrowser *aWebBrowser)
 {
     // Use the browser window title as the initial file name
     nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(aWebBrowser);
-	nsXPIDLString windowTitle;
-	webBrowserAsWin->GetTitle(getter_Copies(windowTitle));
+    nsXPIDLString windowTitle;
+    webBrowserAsWin->GetTitle(getter_Copies(windowTitle));
     nsCString fileName; fileName.AssignWithConversion(windowTitle);
 
-	// Sanitize the title of all illegal characters
+    // Sanitize the title of all illegal characters
     fileName.CompressWhitespace();     // Remove whitespace from the ends
     fileName.StripChars("\\*|:\"><?"); // Strip illegal characters
     fileName.ReplaceChar('.', L'_');   // Dots become underscores
     fileName.ReplaceChar('/', L'-');   // Forward slashes become hyphens
 
     // Copy filename to a character buffer
-	char szFile[_MAX_PATH];
+    char szFile[_MAX_PATH];
     memset(szFile, 0, sizeof(szFile));
     PL_strncpyz(szFile, fileName.get(), sizeof(szFile) - 1); // XXXldb probably should be just sizeof(szfile)
 
     // Initialize the file save as information structure
     OPENFILENAME saveFileNameInfo;
     memset(&saveFileNameInfo, 0, sizeof(saveFileNameInfo));
-	saveFileNameInfo.lStructSize = sizeof(saveFileNameInfo);
-	saveFileNameInfo.hwndOwner = NULL;
-	saveFileNameInfo.hInstance = NULL;
-	saveFileNameInfo.lpstrFilter =
+    saveFileNameInfo.lStructSize = sizeof(saveFileNameInfo);
+    saveFileNameInfo.hwndOwner = NULL;
+    saveFileNameInfo.hInstance = NULL;
+    saveFileNameInfo.lpstrFilter =
         "Web Page, HTML Only (*.htm;*.html)\0*.htm;*.html\0"
         "Web Page, Complete (*.htm;*.html)\0*.htm;*.html\0"
         "Text File (*.txt)\0*.txt\0"; 
-	saveFileNameInfo.lpstrCustomFilter = NULL; 
-	saveFileNameInfo.nMaxCustFilter = NULL; 
-	saveFileNameInfo.nFilterIndex = 1; 
-	saveFileNameInfo.lpstrFile = szFile; 
-	saveFileNameInfo.nMaxFile = sizeof(szFile); 
-	saveFileNameInfo.lpstrFileTitle = NULL;
-	saveFileNameInfo.nMaxFileTitle = 0; 
-	saveFileNameInfo.lpstrInitialDir = NULL; 
-	saveFileNameInfo.lpstrTitle = NULL; 
-	saveFileNameInfo.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT; 
-	saveFileNameInfo.nFileOffset = NULL; 
-	saveFileNameInfo.nFileExtension = NULL; 
-	saveFileNameInfo.lpstrDefExt = "htm"; 
-	saveFileNameInfo.lCustData = NULL; 
-	saveFileNameInfo.lpfnHook = NULL; 
-	saveFileNameInfo.lpTemplateName = NULL; 
+    saveFileNameInfo.lpstrCustomFilter = NULL; 
+    saveFileNameInfo.nMaxCustFilter = NULL; 
+    saveFileNameInfo.nFilterIndex = 1; 
+    saveFileNameInfo.lpstrFile = szFile; 
+    saveFileNameInfo.nMaxFile = sizeof(szFile); 
+    saveFileNameInfo.lpstrFileTitle = NULL;
+    saveFileNameInfo.nMaxFileTitle = 0; 
+    saveFileNameInfo.lpstrInitialDir = NULL; 
+    saveFileNameInfo.lpstrTitle = NULL; 
+    saveFileNameInfo.Flags = OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT; 
+    saveFileNameInfo.nFileOffset = NULL; 
+    saveFileNameInfo.nFileExtension = NULL; 
+    saveFileNameInfo.lpstrDefExt = "htm"; 
+    saveFileNameInfo.lCustData = NULL; 
+    saveFileNameInfo.lpfnHook = NULL; 
+    saveFileNameInfo.lpTemplateName = NULL; 
 
-	if (GetSaveFileName(&saveFileNameInfo))
-	{
+    if (GetSaveFileName(&saveFileNameInfo))
+    {
         // Does the user want to save the complete document including
         // all frames, images, scripts, stylesheets etc. ?
         char *pszDataPath = NULL;
@@ -457,7 +457,7 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
     
     nsCOMPtr<nsIEmbeddingSiteWindow> embeddingSite = do_QueryInterface(chrome);
     HWND hWnd;
-	embeddingSite->GetSiteWindow((void **) & hWnd);
+    embeddingSite->GetSiteWindow((void **) & hWnd);
     
     if (!hWnd)
         return NS_ERROR_NULL_POINTER;
@@ -465,19 +465,19 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
     RECT rect;
     GetClientRect(hWnd, &rect);
     
-	// Make sure the browser is visible and sized
-	nsCOMPtr<nsIWebBrowser> webBrowser;
-	chrome->GetWebBrowser(getter_AddRefs(webBrowser));
+    // Make sure the browser is visible and sized
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    chrome->GetWebBrowser(getter_AddRefs(webBrowser));
     nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(webBrowser);
-	if (webBrowserAsWin)
-	{
+    if (webBrowserAsWin)
+    {
         webBrowserAsWin->SetPositionAndSize(rect.left, 
                                    rect.top, 
                                    rect.right - rect.left, 
                                    rect.bottom - rect.top,
                                    PR_TRUE);
-		webBrowserAsWin->SetVisibility(PR_TRUE);
-	}
+        webBrowserAsWin->SetVisibility(PR_TRUE);
+    }
 
     return NS_OK;
 }
@@ -498,23 +498,23 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-	WNDCLASSEX wcex;
+    WNDCLASSEX wcex;
 
     memset(&wcex, 0, sizeof(wcex));
-	wcex.cbSize = sizeof(WNDCLASSEX); 
+    wcex.cbSize = sizeof(WNDCLASSEX); 
 
-	wcex.style			= CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc	= (WNDPROC) BrowserWndProc;
-	wcex.cbClsExtra		= 0;
-	wcex.cbWndExtra		= 0;
-	wcex.hInstance		= hInstance;
-	wcex.hIcon			= LoadIcon(ghInstanceResources, (LPCTSTR)IDI_WINEMBED);
-	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszClassName	= szWindowClass;
-	wcex.hIconSm		= LoadIcon(ghInstanceResources, (LPCTSTR)IDI_SMALL);
+    wcex.style            = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc    = (WNDPROC) BrowserWndProc;
+    wcex.cbClsExtra        = 0;
+    wcex.cbWndExtra        = 0;
+    wcex.hInstance        = hInstance;
+    wcex.hIcon            = LoadIcon(ghInstanceResources, (LPCTSTR)IDI_WINEMBED);
+    wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
+    wcex.hbrBackground    = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.lpszClassName    = szWindowClass;
+    wcex.hIconSm        = LoadIcon(ghInstanceResources, (LPCTSTR)IDI_SMALL);
 
-	return RegisterClassEx(&wcex);
+    return RegisterClassEx(&wcex);
 }
 
 
@@ -588,11 +588,11 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
 //
 BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (uMsg == WM_COMMAND && LOWORD(wParam) == MOZ_SwitchProfile)
-	{
+    if (uMsg == WM_COMMAND && LOWORD(wParam) == MOZ_SwitchProfile)
+    {
         ChooseNewProfile(FALSE, NULL);
-		return FALSE;
-	}
+        return FALSE;
+    }
 
     // Get the browser and other pointers since they are used a lot below
     HWND hwndBrowser = GetDlgItem(hwndDlg, IDC_BROWSER);
@@ -630,7 +630,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         break;
 
     case WM_DESTROY:
-	    return TRUE;
+        return TRUE;
 
     case WM_COMMAND:
         if (!webBrowser)
@@ -640,7 +640,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
         // Test which command was selected
         switch (LOWORD(wParam))
-		{
+        {
         case IDC_ADDRESS:
             if (HIWORD(wParam) == CBN_EDITCHANGE || HIWORD(wParam) == CBN_SELCHANGE)
             {
@@ -767,9 +767,9 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 MessageBox(NULL, szAbout, szAboutTitle, MB_OK);
             }
             break;
-		}
+        }
 
-	    return TRUE;
+        return TRUE;
 
     case WM_ACTIVATE:
         {
@@ -868,8 +868,8 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 LRESULT CALLBACK BrowserWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     nsIWebBrowserChrome *chrome = (nsIWebBrowserChrome *) GetWindowLong(hWnd, GWL_USERDATA);
-	switch (message) 
-	{
+    switch (message) 
+    {
     case WM_SIZE:
         // Resize the embedded browser
         ResizeEmbedding(chrome);
@@ -955,9 +955,9 @@ BOOL ChooseNewProfile(BOOL bShowForMultipleProfilesOnly, const char *szDefaultPr
 LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     nsresult rv;
-	switch (message)
-	{
-	case WM_INITDIALOG:
+    switch (message)
+    {
+    case WM_INITDIALOG:
         {
             HWND hwndProfileList = GetDlgItem(hDlg, IDC_PROFILELIST);
 
@@ -998,11 +998,11 @@ LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
                 SendMessage(hwndProfileList, LB_SETCURSEL, currentProfileIndex, 0);
             }
         }
-		return TRUE;
+        return TRUE;
 
-	case WM_COMMAND:
-		if (LOWORD(wParam) == IDOK ||
-			(HIWORD(wParam) & LBN_DBLCLK && LOWORD(wParam) == IDC_PROFILELIST))
+    case WM_COMMAND:
+        if (LOWORD(wParam) == IDOK ||
+            (HIWORD(wParam) & LBN_DBLCLK && LOWORD(wParam) == IDC_PROFILELIST))
         {
             HWND hwndProfileList = GetDlgItem(hDlg, IDC_PROFILELIST);
 
@@ -1019,14 +1019,14 @@ LRESULT CALLBACK ChooseProfileDlgProc(HWND hDlg, UINT message, WPARAM wParam, LP
                 nsAutoString newProfile; newProfile.AssignWithConversion(profileName);
                 rv = profileService->SetCurrentProfile(newProfile.get());
             }
-	        EndDialog(hDlg, IDOK);
+            EndDialog(hDlg, IDOK);
         }
-		else if (LOWORD(wParam) == IDCANCEL)
-		{
-	        EndDialog(hDlg, LOWORD(wParam));
-		}
+        else if (LOWORD(wParam) == IDCANCEL)
+        {
+            EndDialog(hDlg, LOWORD(wParam));
+        }
         return TRUE;
-	}
+    }
 
     return FALSE;
 }
@@ -1139,15 +1139,15 @@ void WebBrowserChromeUI::Destroy(nsIWebBrowserChrome* chrome)
 void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(chrome);
-	if (hwndDlg == NULL)
-	{
-		return;
-	}
+    if (hwndDlg == NULL)
+    {
+        return;
+    }
 
     // Clear the window user data
     HWND hwndBrowser = GetDlgItem(hwndDlg, IDC_BROWSER);
     SetWindowLong(hwndBrowser, GWL_USERDATA, nsnull);
-	DestroyWindow(hwndBrowser);
+    DestroyWindow(hwndBrowser);
     DestroyWindow(hwndDlg);
 
     --gDialogCount;
@@ -1173,10 +1173,10 @@ void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
 void WebBrowserChromeUI::SetFocus(nsIWebBrowserChrome *chrome)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(chrome);
-	if (hwndDlg == NULL)
-	{
-		return;
-	}
+    if (hwndDlg == NULL)
+    {
+        return;
+    }
     
     HWND hwndBrowser = GetDlgItem(hwndDlg, IDC_BROWSER);
     ::SetFocus(hwndBrowser);
