@@ -33,22 +33,27 @@ extern "C" {
 	char * NET_SACat (char **destination, const char *source);
 };
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
+nsresult NS_NewSmtpUrl(const nsIID &aIID, void ** aInstancePtrResult)
+{
+	/* note this new macro for assertions...they can take a string describing the assertion */
+	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
+	if (aInstancePtrResult)
+	{
+		nsSmtpUrl * smtpUrl = new nsSmtpUrl(); 
+		if (smtpUrl)
+			return smtpUrl->QueryInterface(nsISmtpUrl::GetIID(), aInstancePtrResult);
+		else
+			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
+	}
+	else
+		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
+}
 
-nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup) :
+nsSmtpUrl::nsSmtpUrl() : nsMsgMailNewsUrl(), 
     m_userPassword(""),
     m_userName(""),
     m_fileName("")
 {
-    NS_INIT_REFCNT();
-
-	// nsINetLibUrl specific state
-    m_URL_s = nsnull;
-
 	// nsISmtpUrl specific state...
 	m_toPart = nsnull;
 	m_ccPart = nsnull;
@@ -68,190 +73,21 @@ nsSmtpUrl::nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup) :
 
 	m_userNameString = nsnull;
  
-	// nsIURL specific state
-    m_protocol = nsnull;
-    m_host = nsnull;
-    m_file = nsnull;
-    m_ref = nsnull;
     m_port = SMTP_PORT;
-    m_spec = nsnull;
-    m_search = nsnull;
-	m_errorMessage = nsnull;
-	m_runningUrl = PR_FALSE;
-	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), (void **) getter_AddRefs(m_urlListeners));
- 
-    m_container = aContainer;
-    NS_IF_ADDREF(m_container);
 }
  
 nsSmtpUrl::~nsSmtpUrl()
 {
 	CleanupSmtpState(); 
-
-    NS_IF_RELEASE(m_container);
-	PR_FREEIF(m_errorMessage);
-
-	if (m_userNameString)
-		delete [] m_userNameString;
-
-    PR_FREEIF(m_spec);
-    PR_FREEIF(m_protocol);
-    PR_FREEIF(m_host);
-    PR_FREEIF(m_file);
-    PR_FREEIF(m_ref);
-    PR_FREEIF(m_search);
+	delete [] m_userNameString;
 	PR_FREEIF(m_toPart);
 }
   
-NS_IMPL_THREADSAFE_ADDREF(nsSmtpUrl);
-NS_IMPL_THREADSAFE_RELEASE(nsSmtpUrl);
-
-nsresult nsSmtpUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
- 
-    if (aIID.Equals(nsISmtpUrl::GetIID()) ||
-        aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) ((nsISmtpUrl*)this);
-        AddRef();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsIURL::GetIID())) {
-        *aInstancePtr = (void*) ((nsIURL*)this);
-        AddRef();
-        return NS_OK;
-    }
-    if (aIID.Equals(nsINetlibURL::GetIID())) {
-        *aInstancePtr = (void*) ((nsINetlibURL*)this);
-        AddRef();
-        return NS_OK;
-    }
-
-	if (aIID.Equals(nsIMsgMailNewsUrl::GetIID()))
-	{
-		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl*) this);
-		AddRef();
-		return NS_OK;
-	}
-
-#if defined(NS_DEBUG)
-    /*
-     * Check for the debug-only interface indicating thread-safety
-     */
-    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
-    if (aIID.Equals(kIsThreadsafeIID)) {
-        return NS_OK;
-    }
-#endif
- 
-    return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS_INHERITED(nsSmtpUrl, nsMsgMailNewsUrl, nsISmtpUrl)  
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsISmtpUrl specific support
 
-////////////////////////////////////////////////////////////////////////////////////
-
-nsresult nsSmtpUrl::GetUrlState(PRBool * aRunningUrl)
-{
-	if (aRunningUrl)
-		*aRunningUrl = m_runningUrl;
-
-	return NS_OK;
-}
-
-nsresult nsSmtpUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
-{
-	m_runningUrl = aRunningUrl;
-	if (m_urlListeners)
-	{
-		if (m_runningUrl)
-			m_urlListeners->OnStartRunningUrl(this);
-		else
-			m_urlListeners->OnStopRunningUrl(this, aExitCode);
-	}
-
-	return NS_OK;
-}
-
-nsresult nsSmtpUrl::RegisterListener (nsIUrlListener * aUrlListener)
-{
-	if (m_urlListeners)
-		m_urlListeners->RegisterListener(aUrlListener);
-	return NS_OK;
-}
-
-nsresult nsSmtpUrl::UnRegisterListener (nsIUrlListener * aUrlListener)
-{
-	if (m_urlListeners)
-		m_urlListeners->UnRegisterListener(aUrlListener);
-	return NS_OK;
-}
-
-nsresult nsSmtpUrl::SetErrorMessage (char * errorMessage)
-{
-	NS_LOCK_INSTANCE();
-	if (errorMessage)
-	{
-		PR_FREEIF(m_errorMessage);
-		m_errorMessage = errorMessage;
-	}
-	NS_UNLOCK_INSTANCE();
-	return NS_OK;
-}
-
-// caller must free using PR_FREE
-nsresult nsSmtpUrl::GetErrorMessage (char ** errorMessage) const
-{
-	NS_LOCK_INSTANCE();
-	if (errorMessage)
-	{
-		if (m_errorMessage)
-			*errorMessage = nsCRT::strdup(m_errorMessage);
-		else
-			*errorMessage = nsnull;
-	}
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// End nsISmtpUrl specific support
-////////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////////
-// Begin nsINetlibURL support
-////////////////////////////////////////////////////////////////////////////////////
-
-NS_METHOD nsSmtpUrl::SetURLInfo(URL_Struct *URL_s)
-{
-    nsresult result = NS_OK;
-  
-    /* Hook us up with the world. */
-    m_URL_s = URL_s;
-//    NET_HoldURLStruct(URL_s);
-    return result;
-}
-  
-NS_METHOD nsSmtpUrl::GetURLInfo(URL_Struct_** aResult) const
-{
-  nsresult rv;
-
-  if (nsnull == aResult) {
-    rv = NS_ERROR_NULL_POINTER;
-  } else {
-    /* XXX: Should the URL be reference counted here?? */
-    *aResult = m_URL_s;
-    rv = NS_OK;
-  }
-
-  return rv;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// End nsINetlibURL support
 ////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -444,25 +280,10 @@ nsresult nsSmtpUrl::ParseMessageToPost(char * searchPart)
 // XXX don't bother with ref's
 // XXX null pointer checks are incomplete
 
-nsresult nsSmtpUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
+nsresult nsSmtpUrl::ParseUrl(const nsString& aSpec)
 {
     // XXX hack!
     char* cSpec = aSpec.ToNewCString();
-
-    const char* uProtocol = nsnull;
-    const char* uHost = nsnull;
-    const char* uFile = nsnull;
-    PRUint32 uPort;
-    if (nsnull != aURL) {
-        nsresult rslt = aURL->GetProtocol(&uProtocol);
-        if (rslt != NS_OK) return rslt;
-        rslt = aURL->GetHost(&uHost);
-        if (rslt != NS_OK) return rslt;
-        rslt = aURL->GetFile(&uFile);
-        if (rslt != NS_OK) return rslt;
-        rslt = aURL->GetHostPort(&uPort);
-        if (rslt != NS_OK) return rslt;
-    }
 
     NS_LOCK_INSTANCE();
 
@@ -472,23 +293,6 @@ nsresult nsSmtpUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 	PR_FREEIF(m_search);
 
     m_port = SMTP_PORT;
-
-    if (nsnull == cSpec) 
-	{
-        if (nsnull == aURL) 
-		{
-            NS_UNLOCK_INSTANCE();
-            return NS_ERROR_ILLEGAL_VALUE;
-        }
-        
-		m_protocol = (nsnull != uProtocol) ? PL_strdup(uProtocol) : nsnull;
-        m_host = (nsnull != uHost) ? PL_strdup(uHost) : nsnull;
-        m_port = uPort;
-        m_file = (nsnull != uFile) ? PL_strdup(uFile) : nsnull;
-
-        NS_UNLOCK_INSTANCE();
-        return NS_OK;
-    }
 
     // Strip out reference and search info
     char* ref = strpbrk(cSpec, "#?");
@@ -510,7 +314,7 @@ nsresult nsSmtpUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
             search = ref + 1;
         }
 
-        if (nsnull != search) {
+        if (search) {
             // The rest is the search
             PRIntn searchLen = PL_strlen(search);
             if (0 != searchLen) {
@@ -793,248 +597,3 @@ nsresult nsSmtpUrl::GetPostMessageFile(const nsFilePath ** aFileName)
 	
 	return rv;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-nsresult nsSmtpUrl::SetPostHeader(const char* name, const char* value)
-{
-    NS_LOCK_INSTANCE();
-    // XXX
-    PR_ASSERT(0);
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::SetPostData(nsIInputStream* input)
-{
-    return NS_OK;
-}
-
-
-PRBool nsSmtpUrl::Equals(const nsIURL* aURL) const 
-{
-    PRBool bIsEqual;
-    nsSmtpUrl* other;
-    NS_LOCK_INSTANCE();
-	// are they both Smtp urls?? if yes...for now just compare the pointers until 
-	// I figure out if we need to check any of the guts for equality....
-    if (((nsIURL*)aURL)->QueryInterface(nsISmtpUrl::GetIID(), (void**)&other) == NS_OK) {
-        bIsEqual = other == this; // compare the pointers...
-    }
-    else
-        bIsEqual = PR_FALSE;
-    NS_UNLOCK_INSTANCE();
-    return bIsEqual;
-}
-
-nsresult nsSmtpUrl::GetProtocol(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_protocol;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::SetProtocol(const char *aNewProtocol)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_protocol = nsCRT::strdup(aNewProtocol);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::GetHost(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_host;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::SetHost(const char *aNewHost)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_host = nsCRT::strdup(aNewHost);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::GetFile(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_file;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::SetFile(const char *aNewFile)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_file = nsCRT::strdup(aNewFile);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::GetSpec(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_spec;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::SetSpec(const char *aNewSpec)
-{
-    // XXX is this right, or should we call ParseURL?
-    nsresult rv = NS_OK;
-//    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    rv = ParseURL(aNewSpec);
-#if 0
-    PR_FREEIF(m_spec);
-    m_spec = nsCRT::strdup(aNewSpec);
-#endif
-    NS_UNLOCK_INSTANCE();
-    return rv;
-}
-
-nsresult nsSmtpUrl::GetRef(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_ref;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::SetRef(const char *aNewRef)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_ref = nsCRT::strdup(aNewRef);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::GetHostPort(PRUint32 *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_port;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::SetHostPort(PRUint32 aNewPort)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_port = aNewPort;
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::GetSearch(const char* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_search;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::SetSearch(const char *aNewSearch)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    m_search = nsCRT::strdup(aNewSearch);
-    ReconstructSpec();
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::GetContainer(nsISupports* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = m_container;
-    NS_IF_ADDREF(m_container);
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-  
-nsresult nsSmtpUrl::SetContainer(nsISupports* container)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    NS_LOCK_INSTANCE();
-    NS_IF_RELEASE(m_container);
-    m_container = container;
-    NS_IF_ADDREF(m_container);
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::GetContentLength(PRInt32 *len)
-{
-    NS_LOCK_INSTANCE();
-    *len = m_URL_s->content_length;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// End of nsIURL support
-////////////////////////////////////////////////////////////////////////////////////
- 
-////////////////////////////////////////////////////////////////////////////////////
-// The following set of functions should become obsolete once we take them out of
-// nsIURL.....
-////////////////////////////////////////////////////////////////////////////////////
-nsresult nsSmtpUrl::GetLoadAttribs(nsILoadAttribs* *result) const
-{
-    NS_LOCK_INSTANCE();
-    *result = NULL;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-  
-nsresult nsSmtpUrl::SetLoadAttribs(nsILoadAttribs* aLoadAttribs)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::GetURLGroup(nsIURLGroup* *result) const
-{
-    return NS_OK;
-}
-  
-nsresult nsSmtpUrl::SetURLGroup(nsIURLGroup* group)
-{
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::GetServerStatus(PRInt32 *status)
-{
-    NS_LOCK_INSTANCE();
-    *status = m_URL_s->server_status;
-    NS_UNLOCK_INSTANCE();
-    return NS_OK;
-}
-
-nsresult nsSmtpUrl::ToString(PRUnichar* *aString) const
-{ 
-	if (aString)
-		*aString = nsnull; 
-	return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////////
-// End of functions which should be made obsolete after modifying nsIURL
-////////////////////////////////////////////////////////////////////////////////////
-

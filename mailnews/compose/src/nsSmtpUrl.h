@@ -20,53 +20,15 @@
 #define nsSmtpUrl_h__
 
 #include "nsISmtpUrl.h"
-#include "nsCOMPtr.h"
-#include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
-#include "nsIUrlListenerManager.h"
+#include "nsMsgMailNewsUrl.h"
 
-class nsSmtpUrl : public nsISmtpUrl, public nsINetlibURL
+class nsSmtpUrl : public nsISmtpUrl, public nsMsgMailNewsUrl
 {
 public:
-    // from nsIURL:
-
-	// mscott: some of these we won't need to implement..as part of the netlib re-write we'll be removing them
-	// from nsIURL and then we can remove them from here as well....
-    NS_IMETHOD_(PRBool) Equals(const nsIURL *aURL) const;
-    NS_IMETHOD GetSpec(const char* *result) const;
-    NS_IMETHOD SetSpec(const char* spec);
-    NS_IMETHOD GetProtocol(const char* *result) const;
-    NS_IMETHOD SetProtocol(const char* protocol);
-    NS_IMETHOD GetHost(const char* *result) const;
-    NS_IMETHOD SetHost(const char* host);
-    NS_IMETHOD GetHostPort(PRUint32 *result) const;
-    NS_IMETHOD SetHostPort(PRUint32 port);
-    NS_IMETHOD GetFile(const char* *result) const;
-    NS_IMETHOD SetFile(const char* file);
-    NS_IMETHOD GetRef(const char* *result) const;
-    NS_IMETHOD SetRef(const char* ref);
-    NS_IMETHOD GetSearch(const char* *result) const;
-    NS_IMETHOD SetSearch(const char* search);
-    NS_IMETHOD GetContainer(nsISupports* *result) const;
-    NS_IMETHOD SetContainer(nsISupports* container);	
-    NS_IMETHOD GetLoadAttribs(nsILoadAttribs* *result) const;	// make obsolete
-    NS_IMETHOD SetLoadAttribs(nsILoadAttribs* loadAttribs);	// make obsolete
-    NS_IMETHOD GetURLGroup(nsIURLGroup* *result) const;	// make obsolete
-    NS_IMETHOD SetURLGroup(nsIURLGroup* group);	// make obsolete
-    NS_IMETHOD SetPostHeader(const char* name, const char* value);	// make obsolete
-    NS_IMETHOD SetPostData(nsIInputStream* input);	// make obsolete
-    NS_IMETHOD GetContentLength(PRInt32 *len);
-    NS_IMETHOD GetServerStatus(PRInt32 *status);  // make obsolete
-    NS_IMETHOD ToString(PRUnichar* *aString) const;
-
-	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aStatusCode);
-	NS_IMETHOD GetUrlState(PRBool * aRunningUrl);
-
-    // from nsINetlibURL:
-
-    NS_IMETHOD GetURLInfo(URL_Struct_ **aResult) const;
-    NS_IMETHOD SetURLInfo(URL_Struct_ *URL_s);
+	NS_DECL_ISUPPORTS_INHERITED
 
 	// From nsISmtpUrl
+
 	// mscott: I used to have individual getters for ALL of these fields but it was
 	// getting way out of hand...besides in the actual protocol, we want all of these
 	// fields anyway so why go through the extra step of making the protocol call
@@ -105,29 +67,17 @@ public:
 	NS_IMETHOD SetUserEmailAddress(const nsString& aUserName);
 	NS_IMETHOD GetUserPassword(const nsString ** aUserPassword);
 	NS_IMETHOD SetUserPassword(const nsString& aUserPassword);
-	
-	// nsIMsgMailNewsUrl
-	NS_IMETHOD SetErrorMessage (char * errorMessage);
-	// caller must free using PR_FREE
-	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;
-	
-	NS_IMETHOD RegisterListener (nsIUrlListener * aUrlListener);
-	NS_IMETHOD UnRegisterListener (nsIUrlListener * aUrlListener);
 
     // nsSmtpUrl
 
-    nsSmtpUrl(nsISupports* aContainer, nsIURLGroup* aGroup);
-
-    NS_DECL_ISUPPORTS
+    nsSmtpUrl();
 
 	// protocol specific code to parse a url...
-    nsresult ParseURL(const nsString& aSpec, const nsIURL* aURL = nsnull);
+    virtual nsresult ParseUrl(const nsString& aSpec);
 
 protected:
     virtual ~nsSmtpUrl();
-
-    /* Here's our link to the netlib world.... */
-    URL_Struct *m_URL_s;
+	virtual void ReconstructSpec(void);
 
 	// data retrieved from parsing the url: (Note the url could be a post from file or it could be inthe url)
     char		*m_toPart;
@@ -146,22 +96,8 @@ protected:
 	char		*m_replyToPart;
 	char		*m_priorityPart;
 
-	char		*m_spec;
-    char		*m_protocol;
-    char		*m_host;
-    char		*m_file;
-    char		*m_ref;
-    char		*m_search;
-	char		*m_errorMessage;
 
 	PRBool	    m_forcePlainText;
-	PRBool		m_runningUrl;
-    
-	PRInt32 m_port;
-    nsISupports*    m_container;
-
-	// manager of all of current url listeners....
-	nsCOMPtr<nsIUrlListenerManager> m_urlListeners;
 
 	/* Smtp specific event sinks */
 	nsString	m_userPassword;
@@ -170,7 +106,6 @@ protected:
 
 	nsFilePath  m_fileName;
 
-	void ReconstructSpec(void);
 	// it is possible to encode the message to parse in the form of a url.
 	// This function is used to decompose the search and path part into the bare
 	// message components (to, fcc, bcc, etc.)
@@ -178,5 +113,8 @@ protected:
 	// generic function to clear out our local url state...
 	nsresult CleanupSmtpState();
 };
+
+// factory method
+extern nsresult NS_NewSmtpUrl(const nsIID &aIID, void ** aInstancePtrResult);
 
 #endif // nsSmtpUrl_h__
