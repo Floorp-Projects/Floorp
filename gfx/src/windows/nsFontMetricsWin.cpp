@@ -3272,6 +3272,7 @@ nsFontMetricsWin::RealizeFont()
   OUTLINETEXTMETRIC oMetrics;
   TEXTMETRIC& metrics = oMetrics.otmTextMetrics;
   nscoord onePixel = NSToCoordRound(1 * dev2app);
+  nscoord descentPos = 0;
 
   if (0 < ::GetOutlineTextMetrics(dc, sizeof(oMetrics), &oMetrics)) {
 //    mXHeight = NSToCoordRound(oMetrics.otmsXHeight * dev2app);  XXX not really supported on windows
@@ -3282,9 +3283,11 @@ nsFontMetricsWin::RealizeFont()
     mStrikeoutSize = PR_MAX(onePixel, NSToCoordRound(oMetrics.otmsStrikeoutSize * dev2app));
     mStrikeoutOffset = NSToCoordRound(oMetrics.otmsStrikeoutPosition * dev2app);
     mUnderlineSize = PR_MAX(onePixel, NSToCoordRound(oMetrics.otmsUnderscoreSize * dev2app));
-    if (gDoingLineheightFixup)
-      mUnderlineOffset = NSToCoordRound(PR_MIN(oMetrics.otmsUnderscorePosition*dev2app, 
-                                               oMetrics.otmDescent*dev2app + mUnderlineSize));
+    if (gDoingLineheightFixup) {
+      mUnderlineOffset = NSToCoordRound(PR_MIN(oMetrics.otmsUnderscorePosition, oMetrics.otmDescent + oMetrics.otmsUnderscoreSize) * dev2app);
+      // keep descent position, use it for mUnderlineOffset if leading allows
+      descentPos = NSToCoordRound(oMetrics.otmDescent * dev2app);
+    }
     else
       mUnderlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * dev2app);
 
@@ -3324,6 +3327,24 @@ nsFontMetricsWin::RealizeFont()
   mMaxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * dev2app);
   mAveCharWidth = PR_MAX(1, NSToCoordRound(metrics.tmAveCharWidth * dev2app));
 
+  // descent position is preferred, but we need to make sure there is enough 
+  // space available. Baseline need to be raised so that underline will stay 
+  // within boundary.
+  // only do this for CJK to minimize possible risk
+  if (mLangGroup.get() == gJA || 
+      mLangGroup.get() == gKO || 
+      mLangGroup.get() == gZHTW || 
+      mLangGroup.get() == gZHCN ) {
+    if (gDoingLineheightFixup && 
+        mInternalLeading+mExternalLeading > mUnderlineSize &&
+        descentPos < mUnderlineOffset) {
+      mEmAscent -= mUnderlineSize;
+      mEmDescent += mUnderlineSize;
+      mMaxAscent -= mUnderlineSize;
+      mMaxDescent += mUnderlineSize;
+      mUnderlineOffset = descentPos;
+    }
+  }
   // Cache the width of a single space.
   SIZE  size;
   ::GetTextExtentPoint32(dc, " ", 1, &size);
