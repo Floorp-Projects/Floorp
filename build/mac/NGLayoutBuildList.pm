@@ -1381,25 +1381,25 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:xpcom:macbuild:XPCOMIDL.mcp",							"xpcom");
 
 	# necko
-	BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","netwerk");
+	BuildIDLProject(":mozilla:netwerk:macbuild:netwerkIDL.mcp","necko");
 
 	# protocols
-	BuildIDLProject(":mozilla:netwerk:protocol:about:macbuild:aboutIDL.mcp","about");
-	BuildIDLProject(":mozilla:netwerk:protocol:data:macbuild:dataIDL.mcp","data");
-	#BuildIDLProject(":mozilla:netwerk:protocol:file:macbuild:fileIDL.mcp","file");
-	BuildIDLProject(":mozilla:netwerk:protocol:ftp:macbuild:ftpIDL.mcp","ftp");
-	BuildIDLProject(":mozilla:netwerk:protocol:http:macbuild:httpIDL.mcp","http");
-	BuildIDLProject(":mozilla:netwerk:protocol:jar:macbuild:jarIDL.mcp","jar");
-	BuildIDLProject(":mozilla:netwerk:protocol:res:macbuild:resIDL.mcp","res");
+	#BuildIDLProject(":mozilla:netwerk:protocol:about:macbuild:aboutIDL.mcp","necko_about");
+	#BuildIDLProject(":mozilla:netwerk:protocol:data:macbuild:dataIDL.mcp","necko_data");
+	#BuildIDLProject(":mozilla:netwerk:protocol:file:macbuild:fileIDL.mcp","necko_file");
+	#BuildIDLProject(":mozilla:netwerk:protocol:ftp:macbuild:ftpIDL.mcp","necko_ftp");
+	#BuildIDLProject(":mozilla:netwerk:protocol:http:macbuild:httpIDL.mcp","necko_http");
+	#BuildIDLProject(":mozilla:netwerk:protocol:jar:macbuild:jarIDL.mcp","necko_jar");
+	#BuildIDLProject(":mozilla:netwerk:protocol:res:macbuild:resIDL.mcp","necko_res");
 	
 	# mime service
 	# Just a placeholder as mime.xpt is currently part of the netwerkIDL.mcp build
 
 	# cache
-	BuildIDLProject(":mozilla:netwerk:cache:macbuild:nkcacheIDL.mcp","nkcache");
+	#BuildIDLProject(":mozilla:netwerk:cache:macbuild:nkcacheIDL.mcp","necko_cache");
 	
 	# stream conversion.
-	BuildIDLProject(":mozilla:netwerk:streamconv:macbuild:streamconvIDL.mcp","streamconv");
+	#BuildIDLProject(":mozilla:netwerk:streamconv:macbuild:streamconvIDL.mcp","necko_strconv");
 	
 	BuildIDLProject(":mozilla:uriloader:macbuild:uriLoaderIDL.mcp",					"uriloader");
 	BuildIDLProject(":mozilla:uriloader:extprotocol:mac:extProtocolIDL.mcp",		"extprotocol");
@@ -1682,34 +1682,35 @@ sub BuildNeckoProjects()
 
 	print("--- Starting Necko projects ----\n");
 
-	BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",					"Network$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",					"Necko$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:netwerk:macbuild:netwerk2.mcp",					"Necko2$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
-	# utils library
+	# utils library  (!!! this is really just Timer stuff now !!!)
 	BuildOneProject(":mozilla:netwerk:util:macbuild:netwerkUtil.mcp",			"NetworkModular$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
 	# cache
-	BuildOneProject(":mozilla:netwerk:cache:macbuild:nkcache.mcp",				"nkcache$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:cache:macbuild:nkcache.mcp",				"nkcache$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	
 	# protocols
-	BuildOneProject(":mozilla:netwerk:protocol:about:macbuild:about.mcp",		"about$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:netwerk:protocol:data:macbuild:data.mcp",			"data$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:netwerk:protocol:datetime:macbuild:datetime.mcp", "datetime$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:netwerk:protocol:finger:macbuild:finger.mcp", "finger$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:netwerk:protocol:jar:macbuild:jar.mcp",			"jar$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);	
-	BuildOneProject(":mozilla:netwerk:protocol:keyword:macbuild:keyword.mcp",	"keyword$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:netwerk:protocol:res:macbuild:res.mcp",			"res$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:protocol:about:macbuild:about.mcp",		"about$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:protocol:data:macbuild:data.mcp",			"data$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:protocol:datetime:macbuild:datetime.mcp", "datetime$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:protocol:file:macbuild:file.mcp",			"file$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:protocol:finger:macbuild:finger.mcp", "finger$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:protocol:jar:macbuild:jar.mcp",			"jar$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);	
+#	BuildOneProject(":mozilla:netwerk:protocol:keyword:macbuild:keyword.mcp",	"keyword$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:protocol:res:macbuild:res.mcp",			"res$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 #	BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp", "resource$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",				"JSUrl$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 	# mime service
-	BuildOneProject(":mozilla:netwerk:mime:macbuild:mime.mcp",					"mimetype$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:mime:macbuild:mime.mcp",					"mimetype$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	
 	# stream conversion
-	BuildOneProject(":mozilla:netwerk:streamconv:macbuild:streamconv.mcp",		"streamconv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
-	BuildOneProject(":mozilla:netwerk:streamconv:macbuild:multiMixedConv.mcp",	"multiMixedConv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:streamconv:macbuild:streamconv.mcp",		"streamconv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+#	BuildOneProject(":mozilla:netwerk:streamconv:macbuild:multiMixedConv.mcp",	"multiMixedConv$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 
 	# security stuff
 #	BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp",			"PSMClient$D.o", "", 0, 0, 0);
