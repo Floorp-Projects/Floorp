@@ -37,6 +37,7 @@ SHARED_LIBRARY_LIBS=yes
 
 SHARED_LIBRARY_DIRS = \
     ../org/mozilla/jss/crypto \
+    ../org/mozilla/jss/SecretDecoderRing \
     ../org/mozilla/jss \
     ../org/mozilla/jss/pkcs11 \
     ../org/mozilla/jss/ssl \

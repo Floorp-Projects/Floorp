@@ -250,7 +250,7 @@ Java_org_mozilla_jss_ssl_SocketProxy_releaseNativeResources;
 ;+    local:
 ;+       *;
 ;+};
-;+JSS_3.2.1 {       # JSS 3.2.1 release
+;+JSS_3.3 {       # JSS 3.3 release
 ;+    global:
 Java_org_mozilla_jss_ssl_SSLSocket_getImplementedCipherSuites;
 Java_org_mozilla_jss_ssl_SSLSocket_getCipherPreferenceDefault;
@@ -259,6 +259,10 @@ Java_org_mozilla_jss_ssl_SSLSocket_getCipherPreference;
 Java_org_mozilla_jss_CryptoManager_configureOCSPNative;
 Java_org_mozilla_jss_pkcs11_PK11SymKey_getLength;
 Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_getCertObject;
+Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineGetKeyNative;
+Java_org_mozilla_jss_SecretDecoderRing_KeyManager_generateKeyNative;
+Java_org_mozilla_jss_SecretDecoderRing_KeyManager_lookupKeyNative;
+Java_org_mozilla_jss_SecretDecoderRing_KeyManager_deleteKeyNative;
 ;+    local:
 ;+       *;
 ;+};

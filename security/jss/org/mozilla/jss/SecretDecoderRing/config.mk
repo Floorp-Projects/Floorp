@@ -30,30 +30,8 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 # 
+TARGETS=$(LIBRARY)
+SHARED_LIBRARY=
+IMPORT_LIBRARY=
 
-CORE_DEPTH = ../../../..
-
-NS_USE_JDK = 1
-
-MODULE = jss
-
-REQUIRES =      nspr20 nss
-
-DIRS =	\
-	util	\
-	crypto	\
-    SecretDecoderRing \
-	pkcs11	\
-    ssl     \
-    provider \
-	$(NULL)
-
-PACKAGE =       org/mozilla/jss
-
-CSRCS =                             \
-            CryptoManager.c         \
-            PK11Finder.c            \
-            $(NULL)
-
-
-LIBRARY_NAME = jssmanage
+NO_MD_RELEASE = 1

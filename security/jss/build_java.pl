@@ -47,6 +47,7 @@ org.mozilla.jss.pkcs11.PK11RSAPublicKey
 org.mozilla.jss.pkcs11.PK11DSAPublicKey
 org.mozilla.jss.pkcs11.PK11SecureRandom 
 org.mozilla.jss.provider.java.security.JSSKeyStoreSpi
+org.mozilla.jss.SecretDecoderRing.KeyManager
 org.mozilla.jss.ssl.SSLSocket 
 org.mozilla.jss.ssl.SSLServerSocket 
 org.mozilla.jss.ssl.SocketBase 
@@ -70,6 +71,7 @@ org.mozilla.jss.pkix.cms
 org.mozilla.jss.pkix.crmf
 org.mozilla.jss.provider.java.security
 org.mozilla.jss.provider.javax.crypto
+org.mozilla.jss.SecretDecoderRing
 org.mozilla.jss.ssl
 org.mozilla.jss.tests
 org.mozilla.jss.util
@@ -282,7 +284,7 @@ sub javadoc {
     ensure_dir_exists("$dist_dir/jssdoc");
     my $targets = join(" ", @packages);
     print "$targets\n";
-    print_do("$javadoc -private -breakiterator -sourcepath . -d $dist_dir/jssdoc $html_header_opt $targets");
+    print_do("$javadoc -breakiterator -sourcepath . -d $dist_dir/jssdoc $html_header_opt $targets");
     print_do("cp $dist_dir/jssdoc/index.html $dist_dir/jssdoc/index.html.bak");
     print_do("cp $dist_dir/jssdoc/overview-summary.html $dist_dir/jssdoc/index.html");
 }

@@ -31,29 +31,18 @@
 # GPL.
 # 
 
-CORE_DEPTH = ../../../..
-
-NS_USE_JDK = 1
+CORE_DEPTH = ../../../../..
 
 MODULE = jss
 
+NS_USE_JDK = 1
+
 REQUIRES =      nspr20 nss
 
-DIRS =	\
-	util	\
-	crypto	\
-    SecretDecoderRing \
-	pkcs11	\
-    ssl     \
-    provider \
-	$(NULL)
+PACKAGE =       org/mozilla/jss/SecretDecoderRing
 
-PACKAGE =       org/mozilla/jss
-
-CSRCS =                             \
-            CryptoManager.c         \
-            PK11Finder.c            \
-            $(NULL)
+CSRCS =		KeyManager.c		\
+			$(NULL)
 
 
-LIBRARY_NAME = jssmanage
+LIBRARY_NAME = jsssdr
