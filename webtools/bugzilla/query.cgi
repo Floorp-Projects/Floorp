@@ -68,7 +68,10 @@ foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platform",
                   "emailassigned_to1", "emailcc1", "emailqa_contact1",
                   "email2", "emailtype2", "emailreporter2",
                   "emailassigned_to2", "emailcc2", "emailqa_contact2",
-                  "changedin") {
+                  "changedin", "short_desc", "short_desc_type",
+                  "long_desc", "long_desc_type", "bug_file_loc",
+                  "bug_file_loc_type", "status_whiteboard",
+                  "status_whiteboard_type") {
     $default{$name} = "";
     $type{$name} = 0;
 }
@@ -472,38 +475,49 @@ if (Param("usetargetmilestone")) {
 </td>";
 }
 
+
+sub StringSearch {
+    my ($desc, $name) = (@_);
+    my $type = $name . "_type";
+    my $def = value_quote($default{$name});
+    print qq{<tr>
+<td align=right>$desc:</td>
+<td><input name=$name size=30 value="$def"></td>
+<td><SELECT NAME=$type>
+};
+    if ($default{$type} eq "") {
+        $default{$type} = "substring";
+    }
+    foreach my $i (["substring", "case-insensitive substring"],
+                   ["casesubstring", "case-sensitive substring"],
+                   ["regexp", "regular expression"],
+                   ["notregexp", "not ( regular expression )"]) {
+        my ($n, $d) = (@$i);
+        my $sel = "";
+        if ($default{$type} eq $n) {
+            $sel = " SELECTED";
+        }
+        print qq{<OPTION VALUE="$n"$sel>$d\n};
+    }
+    print "</SELECT></TD>
+</tr>
+";
+}
+
 print "
 </tr>
 </table>
 
 <table border=0>
 <tr>
-<td align=right>Summary:</td>
-<td><input name=short_desc size=30></td>
-<td><input type=radio name=short_desc_type value=substr checked>Substring</td>
-<td><input type=radio name=short_desc_type value=regexp>Regexp</td>
-</tr>
-<tr>
-<td align=right>Description:</td>
-<td><input name=long_desc size=30></td>
-<td><input type=radio name=long_desc_type value=substr checked>Substring</td>
-<td><input type=radio name=long_desc_type value=regexp>Regexp</td>
-</tr>
-<tr>
-<td align=right>URL:</td>
-<td><input name=bug_file_loc size=30></td>
-<td><input type=radio name=bug_file_loc_type value=substr checked>Substring</td>
-<td><input type=radio name=bug_file_loc_type value=regexp>Regexp</td>
-</tr>";
+";
+
+StringSearch("Summary", "short_desc");
+StringSearch("Description", "long_desc");
+StringSearch("URL", "bug_file_loc");
 
 if (Param("usestatuswhiteboard")) {
-    print "
-<tr>
-<td align=right>Status whiteboard:</td>
-<td><input name=status_whiteboard size=30></td>
-<td><input type=radio name=status_whiteboard_type value=substr checked>Substring</td>
-<td><input type=radio name=status_whiteboard_type value=regexp>Regexp</td>
-</tr>";
+    StringSearch("Status whiteboard", "status_whiteboard");
 }
 
 print "

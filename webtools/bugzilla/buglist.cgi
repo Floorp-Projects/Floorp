@@ -421,8 +421,12 @@ foreach my $f ("short_desc", "long_desc", "bug_file_loc",
             $s = SqlQuote($s);
             if ($::FORM{$f . "_type"} eq "regexp") {
                 $query .= "and $f regexp $s\n";
-            } else {
+            } elsif ($::FORM{$f . "_type"} eq "notregexp") {
+                $query .= "and $f not regexp $s\n";
+            } elsif ($::FORM{$f . "_type"} eq "casesubstring") {
                 $query .= "and instr($f, $s)\n";
+            } else {
+                $query .= "and instr(lower($f), lower($s))\n";
             }
         }
     }
