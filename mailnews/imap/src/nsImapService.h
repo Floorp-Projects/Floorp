@@ -104,12 +104,13 @@ protected:
                                          nsIURI** aURL);
     nsresult SetImapUrlSink(nsIMsgFolder* aMsgFolder,
                               nsIImapUrl* aImapUrl);
+
     nsresult FetchMimePart(nsIImapUrl * aImapUrl,
                             nsImapAction aImapAction,
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
                             nsIURI ** aURL,
-							              nsISupports * aDisplayConsumer, 
+                            nsISupports * aDisplayConsumer, 
                             const char *messageIdentifierList,
                             const char *mimePart);
 

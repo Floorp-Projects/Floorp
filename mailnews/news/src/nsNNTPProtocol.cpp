@@ -173,7 +173,6 @@ protected:
     PRUint32    mLength;
 };
 
-static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
@@ -755,23 +754,42 @@ nsNntpCacheStreamListener::OnDataAvailable(nsIRequest *request, nsISupports * aC
 
 nsresult nsNNTPProtocol::SetupPartExtractorListener(nsIStreamListener * aConsumer)
 {
-  if (m_newsAction == nsINntpUrl::ActionFetchPart)
+  PRBool convertData;
+  nsresult rv = NS_OK;
+
+  if (m_newsAction == nsINntpUrl::ActionFetchArticle)
   {
-    nsCOMPtr<nsIStreamConverterService> converter = do_GetService(kIStreamConverterServiceCID);
+    nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(m_runningURL, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCAutoString queryStr;
+    rv = msgUrl->GetQuery(queryStr);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // check if this is a filter plugin requesting the message.
+    // in that case, set up a text converter
+    convertData = (queryStr.Find("header=filter") != kNotFound);
+  }
+  else
+  {
+    convertData = (m_newsAction == nsINntpUrl::ActionFetchPart);
+  }
+  if (convertData)
+  {
+    nsCOMPtr<nsIStreamConverterService> converter = do_GetService("@mozilla.org/streamConverters;1");
     if (converter && aConsumer)
     {
       nsCOMPtr<nsIStreamListener> newConsumer;
-      nsIChannel * channel;
-      QueryInterface(NS_GET_IID(nsIChannel), (void **) &channel);
+      nsCOMPtr<nsIChannel> channel;
+      QueryInterface(NS_GET_IID(nsIChannel), getter_AddRefs(channel));
       converter->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(), NS_LITERAL_STRING("*/*").get(),
            aConsumer, channel, getter_AddRefs(newConsumer));
       if (newConsumer)
         m_channelListener = newConsumer;
-      NS_IF_RELEASE(channel);
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsNNTPProtocol::ReadFromMemCache(nsICacheEntryDescriptor *entry)

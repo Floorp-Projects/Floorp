@@ -43,11 +43,10 @@
 #include "nsNetUtil.h"
 #include "nsQuickSort.h"
 #include "nsIProfileInternal.h"
-#include "nsIStreamConverterService.h"
-#include "nsIMsgMailSession.h"
-#include "nsIMsgMailNewsUrl.h"
-#include "nsMsgBaseCID.h"
+#include "nsIMsgMessageService.h"
+#include "nsMsgUtils.h" // for GetMessageServiceFromURI
 #include "prnetdb.h"
+#include "nsIMsgWindow.h"
 
 static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f!\"#%&()*+,./:;<=>?@[\\]^_`{|}~";
 
@@ -299,7 +298,17 @@ class TokenAnalyzer {
 public:
     virtual ~TokenAnalyzer() {}
     
-    virtual void analyzeTokens(const char* source, Tokenizer& tokenizer) = 0;
+    virtual void analyzeTokens(Tokenizer& tokenizer) = 0;
+    void setTokenListener(nsIStreamListener *aTokenListener)
+    {
+      mTokenListener = aTokenListener;
+    }
+
+    void setSource(const char *sourceURI) {mTokenSource = sourceURI;}
+
+    nsCOMPtr<nsIStreamListener> mTokenListener;
+    nsCString mTokenSource;
+
 };
 
 /**
@@ -314,11 +323,9 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     
-    TokenStreamListener(const char* tokenSource, TokenAnalyzer* analyzer);
+    TokenStreamListener(TokenAnalyzer* analyzer);
     virtual ~TokenStreamListener();
-    
 protected:
-    nsCString mTokenSource;
     TokenAnalyzer* mAnalyzer;
     char* mBuffer;
     PRUint32 mBufferSize;
@@ -328,8 +335,8 @@ protected:
 
 const PRUint32 kBufferSize = 16384;
 
-TokenStreamListener::TokenStreamListener(const char* tokenSource, TokenAnalyzer* analyzer)
-    :   mTokenSource(tokenSource), mAnalyzer(analyzer),
+TokenStreamListener::TokenStreamListener(TokenAnalyzer* analyzer)
+    :   mAnalyzer(analyzer),
         mBuffer(NULL), mBufferSize(kBufferSize), mLeftOverCount(0)
 {
     NS_INIT_ISUPPORTS();
@@ -346,11 +353,15 @@ NS_IMPL_ISUPPORTS2(TokenStreamListener, nsIRequestObserver, nsIStreamListener)
 /* void onStartRequest (in nsIRequest aRequest, in nsISupports aContext); */
 NS_IMETHODIMP TokenStreamListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
+    mLeftOverCount = 0;
     if (!mTokenizer)
         return NS_ERROR_OUT_OF_MEMORY;
-    mBuffer = new char[mBufferSize];
     if (!mBuffer)
-        return NS_ERROR_OUT_OF_MEMORY;
+    {
+        mBuffer = new char[mBufferSize];
+        if (!mBuffer)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
     return NS_OK;
 }
 
@@ -430,7 +441,7 @@ NS_IMETHODIMP TokenStreamListener::OnStopRequest(nsIRequest *aRequest, nsISuppor
     
     /* finally, analyze the tokenized message. */
     if (mAnalyzer)
-        mAnalyzer->analyzeTokens(mTokenSource.get(), mTokenizer);
+        mAnalyzer->analyzeTokens(mTokenizer);
     
     return NS_OK;
 }
@@ -452,67 +463,73 @@ nsBayesianFilter::nsBayesianFilter()
 
 nsBayesianFilter::~nsBayesianFilter() {}
 
+// this object is used for one call to classifyMessage or classifyMessages(). 
+// So if we're classifying multiple messages, this object will be used for each message.
+// It's going to hold a reference to itself, basically, to stay in memory.
 class MessageClassifier : public TokenAnalyzer {
 public:
-    MessageClassifier(nsBayesianFilter* filter, nsIJunkMailClassificationListener* listener)
-        :   mFilter(filter), mSupports(filter), mListener(listener)
+    MessageClassifier(nsBayesianFilter* aFilter, nsIJunkMailClassificationListener* aListener, 
+      nsIMsgWindow *aMsgWindow,
+      PRUint32 aNumMessagesToClassify, const char **aMessageURIs)
+        :   mFilter(aFilter), mSupports(aFilter), mListener(aListener), mMsgWindow(aMsgWindow)
     {
+      mCurMessageToClassify = 0;
+      mNumMessagesToClassify = aNumMessagesToClassify;
+      mMessageURIs = (char **) nsMemory::Alloc(sizeof(char *) * aNumMessagesToClassify);
+      for (PRInt32 i = 0; i < aNumMessagesToClassify; i++)
+        mMessageURIs[i] = PL_strdup(aMessageURIs[i]);
+
     }
     
-    virtual void analyzeTokens(const char* source, Tokenizer& tokenizer)
+    virtual ~MessageClassifier()
     {
-        mFilter->classifyMessage(tokenizer, source, mListener);
+       if (mMessageURIs)
+       {
+         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mNumMessagesToClassify, mMessageURIs);
+       }
+    }
+    void setMessagesToClassify(const char **aMessageURIs, PRInt32 aNumMessagesToClassify)
+    {
+    }
+
+    virtual void analyzeTokens(Tokenizer& tokenizer)
+    {
+        mFilter->classifyMessage(tokenizer, mTokenSource.get(), mListener);
+        classifyNextMessage();
+    }
+
+    virtual void classifyNextMessage()
+    {
+      if (++mCurMessageToClassify < mNumMessagesToClassify && mMessageURIs[mCurMessageToClassify])
+        mFilter->tokenizeMessage(mMessageURIs[mCurMessageToClassify], mMsgWindow, this);
+      else
+      {
+        mTokenListener = nsnull; // this breaks the circular ref that keeps this object alive
+                                 // so we will be destroyed as a result.
+      }
     }
 
 private:
     nsBayesianFilter* mFilter;
     nsCOMPtr<nsISupports> mSupports;
     nsCOMPtr<nsIJunkMailClassificationListener> mListener;
+    nsCOMPtr<nsIMsgWindow> mMsgWindow;
+    PRInt32 mNumMessagesToClassify;
+    PRInt32 mCurMessageToClassify; // 0-based index
+    char **mMessageURIs;
 };
 
-nsresult nsBayesianFilter::tokenizeMessage(const char* messageURI, nsIMsgWindow *aMsgWindow, TokenAnalyzer* analyzer)
+nsresult nsBayesianFilter::tokenizeMessage(const char* aMessageURI, nsIMsgWindow *aMsgWindow, TokenAnalyzer* aAnalyzer)
 {
-    nsresult rv;
-    nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
+
+    nsCOMPtr <nsIMsgMessageService> msgService;
+    nsresult rv = GetMessageServiceFromURI(aMessageURI, getter_AddRefs(msgService));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLCString messageURL;
-    rv = mailSession->ConvertMsgURIToMsgURL(messageURI, nsnull, getter_Copies(messageURL));
-    // Tell mime we just want to scan the message data
-    nsCAutoString aUrl(messageURL);
-    aUrl.FindChar('?') == kNotFound ? aUrl += "?" : aUrl += "&";
-    aUrl += "header=filter";
-
-    nsCOMPtr<nsIChannel> channel;
-    rv = ioService->NewChannel(aUrl, NULL, NULL, getter_AddRefs(channel));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    nsCOMPtr <nsIURI> channelURI;
-    channel->GetURI(getter_AddRefs(channelURI));
-    if (channelURI)
-    {
-      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(channelURI);
-      if (mailnewsUrl)
-        mailnewsUrl->SetMsgWindow(aMsgWindow);
-    }
-    nsCOMPtr<nsIStreamListener> tokenListener = new TokenStreamListener(messageURI, analyzer);
-    if (!tokenListener) return NS_ERROR_OUT_OF_MEMORY;
-
-    static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-    nsCOMPtr<nsIStreamConverterService> streamConverter = do_GetService(kIStreamConverterServiceCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIStreamListener> conversionListener;
-    rv = streamConverter->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(),
-                                           NS_LITERAL_STRING("*/*").get(),
-                                           tokenListener, channel, getter_AddRefs(conversionListener));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = channel->AsyncOpen(conversionListener, NULL);
-    return rv;
+    aAnalyzer->setSource(aMessageURI);
+    return msgService->StreamMessage(aMessageURI, aAnalyzer->mTokenListener, aMsgWindow,
+						nsnull, PR_TRUE /* convert data */, 
+                                                "filter", nsnull);
 }
 
 inline double abs(double x) { return (x >= 0 ? x : -x); }
@@ -627,8 +644,10 @@ NS_IMETHODIMP nsBayesianFilter::EndBatch(void)
 /* void classifyMessage (in string aMsgURL, in nsIJunkMailClassificationListener aListener); */
 NS_IMETHODIMP nsBayesianFilter::ClassifyMessage(const char *aMessageURL, nsIMsgWindow *aMsgWindow, nsIJunkMailClassificationListener *aListener)
 {
-    TokenAnalyzer* analyzer = new MessageClassifier(this, aListener);
+    MessageClassifier* analyzer = new MessageClassifier(this, aListener, aMsgWindow, 1, &aMessageURL);
     if (!analyzer) return NS_ERROR_OUT_OF_MEMORY;
+    TokenStreamListener *tokenListener = new TokenStreamListener(analyzer);
+    analyzer->setTokenListener(tokenListener);
     return tokenizeMessage(aMessageURL, aMsgWindow, analyzer);
 }
 
@@ -636,12 +655,11 @@ NS_IMETHODIMP nsBayesianFilter::ClassifyMessage(const char *aMessageURL, nsIMsgW
 NS_IMETHODIMP nsBayesianFilter::ClassifyMessages(PRUint32 aCount, const char **aMsgURLs, nsIMsgWindow *aMsgWindow, nsIJunkMailClassificationListener *aListener)
 {
     nsresult rv = NS_OK;
-    for (PRUint32 i = 0; i < aCount; ++i) {
-        rv = ClassifyMessage(aMsgURLs[i], aMsgWindow, aListener);
-        if (NS_FAILED(rv))
-            break;
-    }
-    return rv;
+    TokenAnalyzer* analyzer = new MessageClassifier(this, aListener, aMsgWindow, aCount, aMsgURLs);
+    if (!analyzer) return NS_ERROR_OUT_OF_MEMORY;
+    TokenStreamListener *tokenListener = new TokenStreamListener(analyzer);
+    analyzer->setTokenListener(tokenListener);
+    return tokenizeMessage(aMsgURLs[0], aMsgWindow, analyzer);
 }
 
 class MessageObserver : public TokenAnalyzer {
@@ -656,10 +674,13 @@ public:
     {
     }
     
-    virtual void analyzeTokens(const char* source, Tokenizer& tokenizer)
+    virtual void analyzeTokens(Tokenizer& tokenizer)
     {
-        mFilter->observeMessage(tokenizer, source, mOldClassification,
+        mFilter->observeMessage(tokenizer, mTokenSource.get(), mOldClassification,
                                 mNewClassification, mListener);
+        // release reference to listener, which will allow us to go away as well.
+        mTokenListener = nsnull;
+
     }
 
 private:
@@ -909,5 +930,7 @@ NS_IMETHODIMP nsBayesianFilter::SetMessageClassification(const char *aMsgURL,
 {
     MessageObserver* analyzer = new MessageObserver(this, aOldClassification, aNewClassification, aListener);
     if (!analyzer) return NS_ERROR_OUT_OF_MEMORY;
+    TokenStreamListener *tokenListener = new TokenStreamListener(analyzer);
+    analyzer->setTokenListener(tokenListener);
     return tokenizeMessage(aMsgURL, aMsgWindow, analyzer);
 }

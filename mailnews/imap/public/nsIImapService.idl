@@ -80,11 +80,12 @@ interface nsIImapService : nsISupports
                     in nsImapState aImapAction,
                     in nsIMsgFolder aImapMailFolder,
                     in nsIImapMessageSink aImapMessageSink,
-					in nsIMsgWindow aMsgWindow, 
-                    out nsIURI aOutURL,
+                    in nsIMsgWindow aMsgWindow, 
                     in nsISupports aConsumer,
-                    in string aMessageIdnetifierList,
-                    in boolean aMessageIdsAreUID);
+                    in string aMessageIdentifierList,
+                    in boolean convertDataToText,
+                    in string additionalHeader,
+                    out nsIURI aOutURL);
 
   void noop(in nsIEventQueue aClientEventQueue, 
             in nsIMsgFolder aImapMailFolder,
@@ -95,7 +96,7 @@ interface nsIImapService : nsISupports
                   in nsIMsgFolder aImapMailFolder,
                   in nsIUrlListener aUrlListener,
                   out nsIURI aURL,
-                  in string aMessageIdnetifierList,
+                  in string aMessageIdentifierList,
                   in boolean aMessageIdsAreUID);
 
   void expunge(in nsIEventQueue aClientEventQueue, 
@@ -148,7 +149,7 @@ interface nsIImapService : nsISupports
   void discoverAllFolders(in nsIEventQueue aClientEventQueue, 
                           in nsIMsgFolder aImapMailFolder,
                           in nsIUrlListener aUrlListener,
-						  in nsIMsgWindow aMsgWindow,
+                          in nsIMsgWindow aMsgWindow,
                           out nsIURI aURL);
 
   void discoverAllAndSubscribedFolders(in nsIEventQueue aClientEventQueue, 
@@ -158,13 +159,13 @@ interface nsIImapService : nsISupports
   void discoverChildren(in nsIEventQueue aClientEventQueue, 
                         in nsIMsgFolder aImapMailFolder,
                         in nsIUrlListener aUrlListener,
-						in string folderPath,
+                        in string folderPath,
                         out nsIURI aURL);
 
   void discoverLevelChildren(in nsIEventQueue aClientEventQueue, 
                              in nsIMsgFolder aImapMailFolder,
                              in nsIUrlListener aUrlListener,
-							 in string folderPath,
+                             in string folderPath,
                              in long aLevel,
                              out nsIURI aURL);
 
@@ -233,9 +234,9 @@ interface nsIImapService : nsISupports
   // otherwise, it will try to create the folder. It will try to do this
   // with one url.
   nsIURI ensureFolderExists(in nsIEventQueue aClientEventQueue,
-							in nsIMsgFolder aParentFolder,
-							in wstring aLeafName,
-							in nsIUrlListener aUrlListener);
+                            in nsIMsgFolder aParentFolder,
+                            in wstring aLeafName,
+                            in nsIUrlListener aUrlListener);
 
 
   nsIURI getFolderAdminUrl(in nsIEventQueue aClientEventQueue,

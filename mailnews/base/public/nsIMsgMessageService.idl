@@ -45,6 +45,7 @@ interface nsIFileSpec;
 interface nsIMsgFolder;
 interface nsIMsgSearchSession;
 interface nsIMsgDBHdr;
+interface nsIStreamConverter;
 
 %{C++
 #include "nsMsgKeyArray.h"
@@ -152,6 +153,21 @@ interface nsIMsgMessageService : nsISupports {
 
 	void Search(in nsIMsgSearchSession aSearchSession, in nsIMsgWindow aMsgWindow, in nsIMsgFolder aMsgFolder, in string aSearchUri);
 
+  // this method streams a message to the passed in consumer. If aConvertData is true, it
+  // will create a stream converter from message rfc822 to star/star. It will also tack
+  // aAdditionalHeader onto the url (e.g., "header=filter").
+  // @param aMessageURI  uri of message to stream
+  // @param aConsumer    generally, a stream listener listening to the message
+  // @param aMsgWindow   msgWindow for give progress and status feedback
+  // @param aUrlListener gets notified when url starts and stops
+  // @param aConvertData should we create a stream converter?
+  // @param aAdditionalHeader added to URI, e.g., "header=filter"
+  // @return the URL that gets run
+  nsIURI streamMessage(in string aMessageURI, in nsISupports aConsumer, 
+                    in nsIMsgWindow aMsgWindow,
+                    in nsIUrlListener aUrlListener, 
+                    in boolean aConvertData,
+                    in string aAdditionalHeader);
     /**
      * now the the message datasource is going away
      * we need away to go from message uri to go nsIMsgDBHdr

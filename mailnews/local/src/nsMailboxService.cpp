@@ -61,8 +61,6 @@
 #include "nsEscape.h"
 #include "nsIMsgHdr.h"
 
-static NS_DEFINE_CID(kIStreamConverterServiceCID,
-                     NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
@@ -250,6 +248,29 @@ NS_IMETHODIMP nsMailboxService::DisplayMessage(const char* aMessageURI,
                       nsIMailboxUrl::ActionFetchMessage, aCharsetOveride, aURL);
 }
 
+NS_IMETHODIMP
+nsMailboxService::StreamMessage(const char *aMessageURI, nsISupports *aConsumer, 
+					nsIMsgWindow *aMsgWindow,
+					nsIUrlListener *aUrlListener, 
+                                        PRBool /* aConvertData */,
+                                        const char *aAdditionalHeader,
+					nsIURI **aURL)
+{
+    // The mailbox protocol object will look for "header=filter" to decide if it wants to convert 
+    // the data instead of using aConvertData. It turns out to be way too hard to pass aConvertData 
+    // all the way over to the mailbox protocol object.
+    nsCAutoString aURIString(aMessageURI);
+    if (aAdditionalHeader)
+    {
+      aURIString.FindChar('?') == kNotFound ? aURIString += "?" : aURIString += "&";
+      aURIString += "header=";
+      aURIString += aAdditionalHeader;
+    }
+
+    return FetchMessage(aURIString.get(), aConsumer, aMsgWindow, aUrlListener, nsnull, 
+                                        nsIMailboxUrl::ActionFetchMessage, nsnull, aURL);
+}
+
 NS_IMETHODIMP nsMailboxService::OpenAttachment(const char *aContentType, 
                                                const char *aFileName,
                                                const char *aUrl, 
@@ -365,6 +386,7 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
     nsFileSpec folderPath;
     nsMsgKey msgKey;
     const char *part = PL_strstr(aSrcMsgMailboxURI, "part=");
+    const char *header = PL_strstr(aSrcMsgMailboxURI, "header=");
     rv = nsParseLocalMessageURI(aSrcMsgMailboxURI, folderURI, &msgKey);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = nsLocalURI2Path(kMailboxRootURI, folderURI.get(), folderPath);
@@ -382,6 +404,9 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
       else if (part)
         urlSpec = PR_smprintf("mailbox://%s?number=%d&%s", (const char *)
         filePath, msgKey, part);
+      else if (header)
+        urlSpec = PR_smprintf("mailbox://%s?number=%d&%s", (const char *)
+          filePath, msgKey, header);
       else
         urlSpec = PR_smprintf("mailbox://%s?number=%d", (const char *) filePath, msgKey);
       

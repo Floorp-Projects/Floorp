@@ -406,9 +406,18 @@ NS_IMETHODIMP nsNntpService::FetchMimePart(nsIURI *aURI, const char *aMessageURI
   msgUrl->SetMsgWindow(aMsgWindow);
 
   // set up the url listener
-	if (aUrlListener)
-		msgUrl->RegisterListener(aUrlListener);
+    if (aUrlListener)
+      msgUrl->RegisterListener(aUrlListener);
  
+    nsCOMPtr<nsIMsgMessageUrl> msgMessageUrl = do_QueryInterface(aURI);
+// this code isn't ready yet, but it helps getting opening attachments
+// while offline working
+//    if (msgMessageUrl)
+//    {
+//      nsCAutoString spec;
+//      aURI->GetSpec(spec);
+//      msgMessageUrl->SetOriginalSpec(spec.get());
+//    }
   return RunNewsUrl(msgUrl, aMsgWindow, aDisplayConsumer);
 }
 
@@ -437,7 +446,11 @@ NS_IMETHODIMP nsNntpService::OpenAttachment(const char *aContentType,
     nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(url));
     msgUrl->SetMsgWindow(aMsgWindow);
     msgUrl->SetFileName(nsDependentCString(aFileName));
-
+// this code isn't ready yet, but it helps getting opening attachments
+// while offline working
+//   nsCOMPtr<nsIMsgMessageUrl> msgMessageUrl = do_QueryInterface(url);
+//    if (msgMessageUrl)
+//      msgMessageUrl->SetOriginalSpec(newsUrl.get());
     // set up the url listener
 	  if (aUrlListener)
 	  	msgUrl->RegisterListener(aUrlListener);
@@ -498,7 +511,7 @@ NS_IMETHODIMP
 nsNntpService::DecomposeNewsURI(const char *uri, nsIMsgFolder **folder, nsMsgKey *aMsgKey)
 {
   nsresult rv;
-
+  // if we fix DecomposeNewsMessage to handle news message scheme, we could use it exclusively
   if (nsCRT::strncmp(uri, kNewsMessageRootURI, kNewsMessageRootURILen) == 0) {
     rv = DecomposeNewsMessageURI(uri, folder, aMsgKey);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -520,13 +533,75 @@ nsNntpService::DecomposeNewsMessageURI(const char * aMessageURI, nsIMsgFolder **
 
     nsresult rv = NS_OK;
     nsCAutoString folderURI;
+#if 0 // this not ready yet.
+    // check if we have a url of this form:
+    // "news://news.mozilla.org:119/3D612B96.1050301%40netscape.com?part=1.2&type=image/gif&filename=hp_icon_logo.gif"
+    // if so, we're going to iterate through the open msg windows, finding ones with news folders loaded,
+    // opening the db's for those folders, and searching for messages with the message id
+    if (!PL_strncmp(aMessageURI, kNewsRootURI, kNewsRootURILen)) {
+      nsCAutoString messageUri(aMessageURI + kNewsRootURILen + 1);
+      PRInt32 slashPos = messageUri.FindChar('/');
+      if (slashPos != kNotFound && slashPos + 1 != messageUri.Length())
+      {
+        nsCAutoString messageId;
+        PRInt32 questionPos = messageUri.FindChar('?');
+        if (questionPos == kNotFound)
+          questionPos = messageUri.Length();
 
-    rv = nsParseNewsMessageURI(aMessageURI, folderURI, aMsgKey);
-    NS_ENSURE_SUCCESS(rv,rv);
+        PRInt32 atPos = messageUri.Find("%40");
+        if (atPos != kNotFound)
+        {
+          PRInt32 messageIdLength = questionPos - slashPos - 1;
+          messageUri.Mid(messageId, slashPos + 1, messageIdLength);
+          nsUnescape(NS_CONST_CAST(char*, messageId.get()));
+          nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
+          nsCOMPtr <nsISupportsArray> msgWindows;
+          rv = mailSession->GetMsgWindowsArray(getter_AddRefs(msgWindows));
+          NS_ENSURE_SUCCESS(rv, rv);
+          PRUint32 numMsgWindows;
+          msgWindows->Count(&numMsgWindows);
+          for (PRUint32 windowIndex = 0; windowIndex < numMsgWindows; windowIndex++)
+          {
+            nsCOMPtr <nsIMsgWindow> msgWindow;
+            rv = msgWindows->QueryElementAt(windowIndex, NS_GET_IID(nsIMsgWindow), getter_AddRefs(msgWindow));
+            NS_ENSURE_SUCCESS(rv, rv);
+            nsCOMPtr <nsIMsgFolder> openFolder;
+            msgWindow->GetOpenFolder(getter_AddRefs(openFolder));
+            if (openFolder)
+            {
+              nsCOMPtr <nsIMsgNewsFolder> newsFolder = do_QueryInterface(openFolder);
+              // only interested in news folders.
+              if (newsFolder)
+              {
+                nsCOMPtr <nsIMsgDatabase> msgDatabase;
+                openFolder->GetMsgDatabase(msgWindow, getter_AddRefs(msgDatabase));
+                if (msgDatabase)
+                {
+                  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+                  msgDatabase->GetMsgHdrForMessageID(messageId.get(), getter_AddRefs(msgHdr));
+                  if (msgHdr)
+                  {
+                    msgHdr->GetMessageKey(aMsgKey);
+                    NS_ADDREF(*aFolder = openFolder);
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    else
+#endif
+    {
+      rv = nsParseNewsMessageURI(aMessageURI, folderURI, aMsgKey);
+      NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = GetFolderFromUri(folderURI.get(), aFolder);
-    NS_ENSURE_SUCCESS(rv,rv);
-
+      rv = GetFolderFromUri(folderURI.get(), aFolder);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
     return NS_OK;
 }
 
@@ -1140,7 +1215,11 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   rv = aUri->GetSpec(spec);
 
   // if this is a news-message:/ uri, decompose it and set hasMsgOffline on the uri
-  if (!PL_strncmp(spec.get(), kNewsMessageRootURI, kNewsMessageRootURILen)) {
+  // Or, if it's of this form, we need to do the same.
+  // "news://news.mozilla.org:119/3D612B96.1050301%40netscape.com?part=1.2&type=image/gif&filename=hp_icon_logo.gif"
+
+  if (!PL_strncmp(spec.get(), kNewsMessageRootURI, kNewsMessageRootURILen)
+    || !PL_strncmp(spec.get(), kNewsRootURI, kNewsRootURILen)) {
     nsCOMPtr <nsIMsgFolder> folder;
     nsMsgKey key = nsMsgKey_None;
     rv = DecomposeNewsMessageURI(spec.get(), getter_AddRefs(folder), &key);
@@ -1493,6 +1572,27 @@ NS_IMETHODIMP nsNntpService::DisplayMessageForPrinting(const char* aMessageURI, 
   nsresult rv = DisplayMessage(aMessageURI, aDisplayConsumer, aMsgWindow, aUrlListener, nsnull, aURL);
   mPrintingOperation = PR_FALSE;
   return rv;
+}
+
+NS_IMETHODIMP
+nsNntpService::StreamMessage(const char *aMessageURI, nsISupports *aConsumer, 
+                              nsIMsgWindow *aMsgWindow,
+                              nsIUrlListener *aUrlListener, 
+                              PRBool /* convertData */,
+                              const char *aAdditionalHeader,
+                              nsIURI **aURL)
+{
+    // The nntp protocol object will look for "header=filter" to decide if it wants to convert 
+    // the data instead of using aConvertData. It turns out to be way too hard to pass aConvertData 
+    // all the way over to the nntp protocol object.
+    nsCAutoString aURIString(aMessageURI);
+    if (aAdditionalHeader)
+    {
+      aURIString.FindChar('?') == kNotFound ? aURIString += "?" : aURIString += "&";
+      aURIString += "header=";
+      aURIString += aAdditionalHeader;
+    }
+    return DisplayMessage(aURIString.get(), aConsumer, aMsgWindow, aUrlListener, nsnull, aURL);
 }
 
 NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, nsIMsgFolder *aMsgFolder, const char *aSearchUri)

@@ -3371,6 +3371,13 @@ nsMsgLocalMailFolder::SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *
   return aJunkMailPlugin->ClassifyMessage(aURI, aMsgWindow, this);   
 }
 
+nsresult
+nsMsgLocalMailFolder::SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin)
+{
+  mNumFilterClassifyRequests += aURICount;
+  return aJunkMailPlugin->ClassifyMessages(aURICount, aURIArray, aMsgWindow, this);   
+}
+
 
 NS_IMETHODIMP
 nsMsgLocalMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClassification)

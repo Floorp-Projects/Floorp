@@ -3980,7 +3980,7 @@ nsresult nsImapMailFolder::SyncFlags(nsIImapFlagAndUidState *flagState)
     flagState->GetMessageFlags(flagIndex, &flags);
     nsCOMPtr<nsIMsgDBHdr> dbHdr;
     PRBool containsKey;
-    nsresult rv = mDatabase->ContainsKey(uidOfMessage , &containsKey);
+    rv = mDatabase->ContainsKey(uidOfMessage , &containsKey);
     // if we don't have the header, don't diddle the flags.
     // GetMsgHdrForKey will create the header if it doesn't exist.
     if (NS_FAILED(rv) || !containsKey)
@@ -7105,6 +7105,14 @@ nsImapMailFolder::SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsg
 {
   ++m_numFilterClassifyRequests;
   return aJunkMailPlugin->ClassifyMessage(aURI, aMsgWindow, this);   
+}
+
+
+nsresult
+nsImapMailFolder::SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin)
+{
+  m_numFilterClassifyRequests += aURICount;
+  return aJunkMailPlugin->ClassifyMessages(aURICount, aURIArray, aMsgWindow, this);   
 }
 
 

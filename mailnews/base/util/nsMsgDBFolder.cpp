@@ -1678,6 +1678,12 @@ nsMsgDBFolder::SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWin
   return aJunkMailPlugin->ClassifyMessage(aURI, aMsgWindow, nsnull);   
 }
 
+nsresult
+nsMsgDBFolder::SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin)
+{
+  return aJunkMailPlugin->ClassifyMessages(aURICount, aURIArray, aMsgWindow, nsnull);   
+}
+
 /**
  * Call the filter plugins (XXX currently just one)
  */
@@ -1723,7 +1729,7 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow)
 
     // if there weren't any, just return 
     //
-    if (!newMessageKeys) 
+    if (!newMessageKeys || !newMessageKeys->GetSize()) 
         return NS_OK;
 
     spamSettings->GetUseWhiteList(&useWhiteList);
@@ -1748,18 +1754,10 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow)
       // if we can't get the db, we probably want to continue firing spam filters.
     }
 
-    // tell the plugin this is the beginning of a batch.  this is an 
-    // optimization, so if it fails, try to continue anyway.
-    //
-    rv = filterPlugin->StartBatch();
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsMsgDBFilter::CallFilterPlugins(): "
-                 "filterPlugin->StartBatch failed");
-    }
-
-    // for each message...
+    // build up list of keys to classify
     //
     nsXPIDLCString uri;
+    nsMsgKeyArray keysToClassify;
 
     PRUint32 numNewMessages = newMessageKeys->GetSize();
     for ( PRUint32 i=0 ; i < numNewMessages ; ++i ) 
@@ -1797,36 +1795,36 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow)
           }
         }
 
-        // generate a URI for the message
-        //
-        rv = GenerateMessageURI(newMessageKeys->GetAt(i), getter_Copies(uri));
-        if (NS_FAILED(rv)) 
-        {
-            NS_WARNING("nsMsgDBFolder::CallFilterPlugins(): could not"
-                       " generate URI for message");
-            continue; // continue through the array
-        }
+        keysToClassify.Add(newMessageKeys->GetAt(i));
 
-        // filterMsg
-        //
-        nsCOMPtr <nsIJunkMailPlugin> junkMailPlugin = do_QueryInterface(filterPlugin);
-        rv = SpamFilterClassifyMessage(uri, aMsgWindow, junkMailPlugin); 
-        if (NS_FAILED(rv)) 
-        {
-            NS_WARNING("nsMsgDBFolder::CallFilterPlugins(): filter plugin"
-                       " call failed");
-            continue; // continue through the array
-        }
     }
 
-    // this batch is done
-    // 
-    rv = filterPlugin->EndBatch();
-    if (NS_FAILED(rv)) {
-      NS_WARNING("nsMsgDBFilter::CallFilterPlugins(): "
-                 "filterPlugin->EndBatch() failed");
-    }
+    if (keysToClassify.GetSize() > 0)
+    {
+      PRUint32 numMessagesToClassify = keysToClassify.GetSize();
+      char ** messageURIs = (char **) PR_MALLOC(sizeof(const char *) * numMessagesToClassify);
+      if (!messageURIs)
+        return NS_ERROR_OUT_OF_MEMORY;
 
+      for ( PRUint32 msgIndex=0 ; msgIndex < numMessagesToClassify ; ++msgIndex ) 
+      {
+          // generate a URI for the message
+          //
+          rv = GenerateMessageURI(keysToClassify.GetAt(msgIndex), &messageURIs[msgIndex]);
+          if (NS_FAILED(rv)) 
+              NS_WARNING("nsMsgDBFolder::CallFilterPlugins(): could not"
+                         " generate URI for message");
+      }
+      // filterMsgs
+      //
+      nsCOMPtr <nsIJunkMailPlugin> junkMailPlugin = do_QueryInterface(filterPlugin);
+      rv = SpamFilterClassifyMessages((const char **) messageURIs, numMessagesToClassify, aMsgWindow, junkMailPlugin); 
+
+      for ( PRUint32 freeIndex=0 ; freeIndex < numMessagesToClassify ; ++freeIndex ) 
+        PR_Free(messageURIs[freeIndex]);
+      PR_Free(messageURIs);
+
+    }
     NS_DELETEXPCOM(newMessageKeys);
     return rv;
 }

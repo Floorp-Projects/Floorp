@@ -151,6 +151,7 @@ protected:
   nsresult GetPurgeThreshold(PRInt32 *aThreshold);
 
   virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
+  virtual nsresult SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
 
 protected:
   nsCOMPtr<nsIMsgDatabase> mDatabase;
