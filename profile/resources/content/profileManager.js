@@ -268,3 +268,12 @@ function HandleKeyEvent( aEvent )
   }
 }
 
+function HandleClickEvent( aEvent )
+{
+  if( aEvent.clickCount == 2 ) {
+    if( aEvent.target.nodeName.toLowerCase() == "treecell" )
+      return onStart(); 
+  }
+  else 
+    return showSelection(aEvent.target.parentNode.parentNode);
+}
