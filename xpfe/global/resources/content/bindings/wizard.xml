@@ -26,8 +26,8 @@
     </content>
     
     <implementation>
-      <property name="title" onget="return this.getAttribute('title')"
-                             onset="this.setAttribute('title', val);"/>
+      <property name="title" onget="return document.title;"
+                             onset="return document.title = val;"/>
 
       <property name="canAdvance" onget="return this._canAdvance;"
                                   onset="this._canAdvance=val; this._nextButton.setAttribute('disabled', !val);"/>

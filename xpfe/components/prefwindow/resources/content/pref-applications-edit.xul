@@ -124,8 +124,7 @@
       if ( !handlerInfo.URI )
       {
         // Opening for "New Type".
-        var newTitle = document.documentElement.getAttribute("newtitle");
-        document.documentElement.setAttribute("title", newTitle);
+        document.title = document.documentElement.getAttribute("newtitle");
         
         // Initialize some stuff to blank for new types.
         gOldMIME = gOldDesc = gOldExtensions = "";

@@ -89,14 +89,13 @@ function setWindowName()
 {
   //  Get the cert from the cert database
   var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-  var windowReference=document.getElementById('certDetails');
   var myName = self.name;
   bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var cert;
 
   var certDetails = bundle.GetStringFromName('certDetails');
   if (myName != "") {
-    windowReference.setAttribute("title",certDetails+'"'+myName+'"');
+    document.title = certDetails + '"' + myName + '"'; // XXX l10n?
     //  Get the token
     //  XXX ignore this for now.  NSS will find the cert on a token
     //      by "tokenname:certname", which is what we have.
@@ -110,8 +109,7 @@ function setWindowName()
     var pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);
     var isupport = pkiParams.getISupportAtIndex(1);
     cert = isupport.QueryInterface(nsIX509Cert);
-    windowReference.setAttribute("title", 
-                                 certDetails+'"'+cert.windowTitle+'"');
+    document.title = certDetails + '"' + cert.windowTitle + '"'; // XXX l10n?
   }
 
   //
