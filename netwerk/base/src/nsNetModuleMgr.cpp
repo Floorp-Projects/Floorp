@@ -214,11 +214,13 @@ nsNetModuleMgr::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
-    nsNetModuleMgr* mgr = new nsNetModuleMgr();
-    if (mgr == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    static nsNetModuleMgr* mgr = nsnull;
+    if (!mgr) mgr = new nsNetModuleMgr();
+    if (!mgr) return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(mgr);
     nsresult rv = mgr->QueryInterface(aIID, aResult);
-    NS_RELEASE(mgr);
+
+    // don't release our ref as this is a singleton service.
+    //NS_RELEASE(mgr);
     return rv;
 }
