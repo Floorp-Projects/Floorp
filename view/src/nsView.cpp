@@ -149,10 +149,13 @@ nsView :: nsView()
 {
   mVis = nsViewVisibility_kShow;
   mXForm = nsnull;
+  mDying = PR_FALSE;
 }
 
 nsView :: ~nsView()
 {
+  mDying = PR_TRUE;
+
   if (GetChildCount() > 0)
   {
     nsIView *kid;
@@ -254,29 +257,33 @@ nsrefcnt nsView::Release()
 {
   mRefCnt--;
 
-  if ((mRefCnt == 1) && (nsnull != mViewManager))
+  if (mDying == PR_FALSE)
   {
-    nsIView *pRoot = mViewManager->GetRootView();
-
-    if (nsnull != pRoot)
+    if ((mRefCnt == 1) && (nsnull != mViewManager))
     {
-      if (pRoot == this)
+      nsIView *pRoot = mViewManager->GetRootView();
+
+      if (nsnull != pRoot)
       {
-        nsIViewManager *vm = mViewManager;
-        mViewManager = nsnull;  //set to null so that we don't get in here again
-        NS_RELEASE(pRoot);      //set our ref count back to 1
-        NS_RELEASE(vm);         //kill the ViewManager
+        if (pRoot == this)
+        {
+          nsIViewManager *vm = mViewManager;
+          mViewManager = nsnull;  //set to null so that we don't get in here again
+          NS_RELEASE(pRoot);      //set our ref count back to 1
+          NS_RELEASE(vm);         //kill the ViewManager
+        }
+        else
+          NS_RELEASE(pRoot);  //release root again
       }
-      else
-        NS_RELEASE(pRoot);  //release root again
+    }
+
+    if (mRefCnt == 0)
+    {
+      delete this;
+      return 0;
     }
   }
 
-  if (mRefCnt == 0)
-  {
-    delete this;
-    return 0;
-  }
   return mRefCnt;
 }
 

@@ -24,6 +24,7 @@
 #include "nsIPresContext.h"
 #include "nsIWidget.h"
 #include "nsITimer.h"
+#include "prtime.h"
 
 class nsViewManager : public nsIViewManager
 {
@@ -174,6 +175,7 @@ private:
   nsIWidget         *mRootWindow;
   nsRect            mDSBounds;
   nsDrawingSurface  mDrawingSurface;
+  PRTime            mLastRefresh;
                             
 public:
   //these are public so that our timer callback can poke them.

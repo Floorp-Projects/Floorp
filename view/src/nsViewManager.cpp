@@ -76,7 +76,7 @@ nsViewManager :: ~nsViewManager()
     if (NS_OK == rv)
     {
       rc->DestroyDrawingSurface(mDrawingSurface);
-      rc->Release();
+      NS_RELEASE(rc);
     }
     
     mDrawingSurface = nsnull;
@@ -130,6 +130,8 @@ nsresult nsViewManager::Init(nsIPresContext* aPresContext)
   mFrameRate = 0;
 
   rv = SetFrameRate(UPDATE_QUANTUM);
+
+  mLastRefresh = PR_Now();
 
   return rv;
 }
@@ -287,7 +289,10 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
     //couldn't get rendering context. ack.
 
     if (nsnull == localcx)
+{
+printf("unable to get rc\n");
       return;
+}
   }
   else
     localcx = aContext;
@@ -335,25 +340,14 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
     if (updaterect.Contains(mDirtyRect))
       ClearDirtyRegion();
   }
+
+  mLastRefresh = PR_Now();
 }
 
 void nsViewManager :: Composite()
 {
   if (mDirtyRect.IsEmpty() == PR_FALSE)
-  {
-    nsIRenderingContext *cx;
-    nsIDeviceContext    *dx = mContext->GetDeviceContext();
-
-    cx = dx->CreateRenderingContext(mRootView);
-
-    if (nsnull != cx)
-    {
-      Refresh(mRootView, cx, &mDirtyRect, NS_VMREFRESH_DOUBLE_BUFFER);
-      NS_RELEASE(cx);
-    }
-
-    NS_RELEASE(dx);
-  }
+    Refresh(mRootView, nsnull, &mDirtyRect, NS_VMREFRESH_DOUBLE_BUFFER);
 }
 
 void nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aUpdateFlags)
@@ -396,20 +390,24 @@ void nsViewManager :: UpdateView(nsIView *aView, nsRect &aRect, PRUint32 aUpdate
   else
     mDirtyRect.UnionRect(mDirtyRect, trect);
 
-  if ((aUpdateFlags & NS_VMREFRESH_IMMEDIATE) && (nsnull != mContext))
+  if (nsnull != mContext)
   {
-    nsIRenderingContext *cx;
-    nsIDeviceContext    *dx = mContext->GetDeviceContext();
-
-    cx = dx->CreateRenderingContext(mRootView);
-
-    if (nsnull != cx)
+    if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE)
+      Refresh(mRootView, nsnull, &mDirtyRect, aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER);
+    else if (mFrameRate > 0)
     {
-      Refresh(aView, cx, &mDirtyRect, aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER);
-      NS_RELEASE(cx);
-    }
+      PRTime now = PR_Now();
+      PRTime conversion, ustoms;
+      PRInt32 deltams;
 
-    NS_RELEASE(dx);
+      LL_I2L(ustoms, 1000);
+      LL_SUB(conversion, now, mLastRefresh);
+      LL_DIV(conversion, conversion, ustoms);
+      LL_L2I(deltams, conversion);
+
+      if (deltams > (1000 / (PRInt32)mFrameRate))
+        Composite();
+    }
   }
 }
 
