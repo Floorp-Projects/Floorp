@@ -106,6 +106,11 @@ typedef struct nsTMStats {
 PR_EXTERN(void) NS_TraceMallocStartup(int logfd);
 
 /**
+ * Initialize malloc tracing, using the ``standard'' startup arguments.
+ */
+PR_EXTERN(int) NS_TraceMallocStartupArgs(int argc, char* argv[]);
+
+/**
  * Stop all malloc tracing, flushing any buffered events to the logfile.
  */
 PR_EXTERN(void) NS_TraceMallocShutdown(void);
