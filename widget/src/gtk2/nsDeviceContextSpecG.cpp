@@ -17,10 +17,9 @@
  */
 
 #include "nsDeviceContextSpecG.h"
+
 //#include "prmem.h"
 //#include "plstr.h"
-
-#include "stdlib.h"  // getenv() on Solaris/CC
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecGTK
@@ -106,8 +105,8 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 
   // PWD, HOME, or fail 
 
-  if ( ( path = getenv( "PWD" ) ) == (char *) NULL ) 
-	if ( ( path = getenv( "HOME" ) ) == (char *) NULL )
+  if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
+	if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
   		strcpy( mPrData.path, "netscape.ps" );
   if ( path != (char *) NULL )
 	sprintf( mPrData.path, "%s/netscape.ps", path );
