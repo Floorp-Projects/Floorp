@@ -584,7 +584,11 @@ The changes made were:
 
     if ($::comma ne "") {
         SendSQL($query);
+        SendSQL("select delta_ts from bugs where bug_id = $id");
+    } else {
+        SendSQL("select now()");
     }
+    $timestamp = FetchOneColumn();
     
     if (defined $::FORM{'comment'}) {
         AppendComment($id, $::FORM{'who'}, $::FORM{'comment'});
@@ -597,8 +601,6 @@ The changes made were:
         }
     }
 
-    SendSQL("select delta_ts from bugs where bug_id = $id");
-    $timestamp = FetchOneColumn();
 
     if (defined $::FORM{'dependson'}) {
         my $me = "blocked";
@@ -684,7 +686,7 @@ The changes made were:
             $col = SqlQuote($col);
             $old = SqlQuote($old);
             $new = SqlQuote($new);
-            my $q = "insert into bugs_activity (bug_id,who,bug_when,field,oldvalue,newvalue) values ($id,$whoid,$timestamp,$col,$old,$new)";
+            my $q = "insert into bugs_activity (bug_id,who,bug_when,field,oldvalue,newvalue) values ($id,$whoid,'$timestamp',$col,$old,$new)";
             # puts "<pre>$q</pre>"
             SendSQL($q);
         }
