@@ -707,13 +707,17 @@ InMemoryDataSource::AddRef()
 NS_IMETHODIMP_(nsrefcnt)
 InMemoryDataSource::Release()
 {
+    nsrefcnt refcnt;
     if (mOuter) {
-        return mOuter->Release();
+        refcnt = mOuter->Release();
     }
-    else if (--mRefCnt == 0) {
+    else {
+        refcnt = --mRefCnt;
+    }
+    if (refcnt == 0) {
         delete this;
     }
-    return mRefCnt;
+    return refcnt;
 }
 
 
