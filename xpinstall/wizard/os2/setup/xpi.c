@@ -310,7 +310,8 @@ HRESULT SmartUpdateJars()
 
     LogMSXPInstallStatus(NULL, hrResult);
     pfnXpiExit();
-//    DeInitProgressDlg();
+    if(sgProduct.ulMode != SILENT)
+      WinDestroyWindow(dlgInfo.hWndDlg);
   }
   else
   {
@@ -360,7 +361,6 @@ void cbXPIFinal(const char *URL, PRInt32 finalStatus)
 
 
 
-#ifdef OLDCODE
 /////////////////////////////////////////////////////////////////////////////
 // Progress bar
 
@@ -369,16 +369,17 @@ void cbXPIFinal(const char *URL, PRInt32 finalStatus)
 static void
 CenterWindow(HWND hWndDlg)
 {
-	RECT	rect;
-	int		iLeft, iTop;
+  SWP swpDlg;
 
-	GetWindowRect(hWndDlg, &rect);
-	iLeft = (GetSystemMetrics(SM_CXSCREEN) - (rect.right - rect.left)) / 2;
-	iTop  = (GetSystemMetrics(SM_CYSCREEN) - (rect.bottom - rect.top)) / 2;
-
-	SetWindowPos(hWndDlg, NULL, iLeft, iTop, -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+  WinQueryWindowPos(hWndDlg, &swpDlg);
+  WinSetWindowPos(hWndDlg,
+                  0,
+                  (WinQuerySysValue(HWND_DESKTOP, SV_CXSCREEN)/2)-(swpDlg.cx/2),
+                  (WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN)/2)-(swpDlg.cy/2),
+                  0,
+                  0,
+                  SWP_MOVE);
 }
-#endif
 
 // Window proc for dialog
 MRESULT APIENTRY
@@ -387,25 +388,19 @@ ProgressDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch (msg)
   {
     case WM_INITDLG:
-    WinSendMsg(WinWindowFromID(hWndDlg, IDC_GAUGE_ARCHIVE), SLM_SETSLIDERINFO,
+      AdjustDialogSize(hWndDlg);
+      WinSetPresParam(hWndDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
+      WinSendMsg(WinWindowFromID(hWndDlg, IDC_GAUGE_ARCHIVE), SLM_SETSLIDERINFO,
                                MPFROM2SHORT(SMA_SHAFTDIMENSIONS, 0),
-                               (MPARAM)30);
+                               (MPARAM)20);
+//      DisableSystemMenuItems(hWndDlg, TRUE);
+      CenterWindow(hWndDlg);
+      break;
+   case WM_CLOSE:
+   case WM_COMMAND:
+      return (MRESULT)TRUE;
   }
-#ifdef OLDCODE
-      DisableSystemMenuItems(hWndDlg, TRUE);
-			CenterWindow(hWndDlg);
-      SendDlgItemMessage (hWndDlg, IDC_STATUS0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hWndDlg, IDC_GAUGE_ARCHIVE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hWndDlg, IDC_STATUS3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hWndDlg, IDC_GAUGE_FILE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-			return FALSE;
-
-		case WM_COMMAND:
-			return TRUE;
-	}
-
-	return FALSE;  // didn't handle the message
-#endif
   return WinDefDlgProc(hWndDlg, msg, mp1, mp2);
 }
 
@@ -414,48 +409,20 @@ ProgressDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
 static void
 UpdateGaugeArchiveProgressBar(unsigned value)
 {
-  if(sgProduct.ulMode != SILENT)
+  if(sgProduct.ulMode != SILENT) {
+    printf("value=%d\n");
     WinSendMsg(WinWindowFromID(dlgInfo.hWndDlg, IDC_GAUGE_ARCHIVE), SLM_SETSLIDERINFO,
                                MPFROM2SHORT(SMA_SLIDERARMPOSITION, SMA_INCREMENTVALUE),
                                (MPARAM)(value-1));
+  }
 }
 
 void InitProgressDlg()
 {
+  if(sgProduct.ulMode != SILENT)
+  {
     dlgInfo.hWndDlg = WinLoadDlg(HWND_DESKTOP, hWndMain, ProgressDlgProc, hSetupRscInst, DLG_EXTRACTING, NULL);
     WinShowWindow(dlgInfo.hWndDlg, TRUE);
-#ifdef OLDCODE
-	WNDCLASS	wc;
-
-  if(sgProduct.dwMode != SILENT)
-  {
-    memset(&wc, 0, sizeof(wc));
-    wc.style          = CS_GLOBALCLASS;
-    wc.hInstance      = hInst;
-    wc.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
-    wc.lpfnWndProc    = (WNDPROC)GaugeFileWndProc;
-    wc.lpszClassName  = "GaugeFile";
-    RegisterClass(&wc);
-
-    wc.lpfnWndProc    = (WNDPROC)GaugeArchiveWndProc;
-    wc.lpszClassName  = "GaugeArchive";
-    RegisterClass(&wc);
-
-    // Display the dialog box
-    dlgInfo.hWndDlg = CreateDialog(hSetupRscInst, MAKEINTRESOURCE(DLG_EXTRACTING), hWndMain, (WNDPROC)ProgressDlgProc);
-    UpdateWindow(dlgInfo.hWndDlg);
-  }
-#endif
-}
-
-#ifdef OLDCODE
-void DeInitProgressDlg()
-{
-  if(sgProduct.dwMode != SILENT)
-  {
-    DestroyWindow(dlgInfo.hWndDlg);
-    UnregisterClass("GaugeFile", hInst);
-    UnregisterClass("GaugeArchive", hInst);
   }
 }
-#endif
+

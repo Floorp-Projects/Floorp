@@ -87,6 +87,7 @@ void AdjustDialogSize(HWND hwndDlg)
   HENUM henum;
   HWND hwndNext;
   USHORT id;
+  CHAR classname[4];
 
   hps = WinGetPS(hwndDlg);
   GpiQueryFontMetrics(hps, sizeof(FONTMETRICS), &fm);
@@ -117,12 +118,26 @@ void AdjustDialogSize(HWND hwndDlg)
       continue;
     }
     WinQueryWindowPos(hwndNext, &swpCurrent);
-    WinSetWindowPos(hwndNext, 0,
-                    (swpCurrent.x-4)/duX+cyDlgFrame,
-                    (swpCurrent.y-4)/duY+cyDlgFrame,
-                    swpCurrent.cx/duX,
-                    swpCurrent.cy/duY,
-                    SWP_MOVE | SWP_SIZE);
+    WinQueryClassName(hwndNext, 4, classname);
+    if (strcmp(classname, "#6") == 0) {
+      swpCurrent.x += 3;
+      swpCurrent.y += 3;
+      swpCurrent.cx -= 6;
+      swpCurrent.cy -= 6;
+      WinSetWindowPos(hwndNext, 0,
+                      (swpCurrent.x-4)/duX+cyDlgFrame+3,
+                      (swpCurrent.y-4)/duY+cyDlgFrame+3,
+                      swpCurrent.cx/duX-6,
+                      swpCurrent.cy/duY-6,
+                      SWP_MOVE | SWP_SIZE);
+    } else {
+      WinSetWindowPos(hwndNext, 0,
+                      (swpCurrent.x-4)/duX+cyDlgFrame,
+                      (swpCurrent.y-4)/duY+cyDlgFrame,
+                      swpCurrent.cx/duX,
+                      swpCurrent.cy/duY,
+                      SWP_MOVE | SWP_SIZE);
+    }
   }
 }
 
@@ -148,19 +163,6 @@ MRESULT EXPENTRY DlgProcWelcome(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
       WinSetDlgItemText(hDlg, IDC_STATIC2, diWelcome.szMessage2);
       WinSetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
       WinSetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-
-#ifdef OLDCODE
-      /* Position image */
-      WinQueryWindowPos(WinWindowFromID(hDlg, IDC_MOZILLA), &swpImage);
-      WinQueryWindowPos(WinWindowFromID(hDlg, IDC_STATIC3), &swpImageBorder);
-      swpImageBorder.cx++;
-      WinSetWindowPos(WinWindowFromID(hDlg, IDC_STATIC3), 0, 0, 0,
-                      swpImageBorder.cx, swpImageBorder.cy, SWP_SIZE);
-      WinSetWindowPos(WinWindowFromID(hDlg, IDC_MOZILLA), 0, 
-                      swpImageBorder.x+((swpImageBorder.cx-swpImage.cx)/2),
-                      swpImageBorder.y+((swpImageBorder.cy-swpImage.cy)/2),
-                      0, 0, SWP_MOVE);
-#endif
 
       /* Center dialog */
       WinQueryWindowPos(hDlg, &swpDlg);
@@ -1623,16 +1625,6 @@ LPSTR GetStartInstallMessage()
     strcat(szMessageBuf, "    "); // add 4 indentation spaces
     strcat(szMessageBuf, sgProduct.szPath);
     strcat(szMessageBuf, "\r\n\r\n");
-
-    /* program folder */
-    if(GetPrivateProfileString("Messages", "STR_PROGRAM_FOLDER", "", szBuf, sizeof(szBuf), szFileIniInstall))
-    {
-      strcat(szMessageBuf, szBuf);
-      strcat(szMessageBuf, "\r\n");
-    }
-    strcat(szMessageBuf, "    "); // add 4 indentation spaces
-    strcat(szMessageBuf, sgProduct.szProgramFolderName);
-    strcat(szMessageBuf, "\r\n");
 
     if(GetTotalArchivesToDownload() > 0)
     {

@@ -45,6 +45,7 @@ typedef int PRInt32;
 #include <assert.h>
 #include <direct.h>
 #include <tchar.h>
+#include <ctype.h>
 //#include <commctrl.h>
 #include "setuprsc.h"
 #include "resource.h"

@@ -86,7 +86,6 @@ double GetPercentSoFar(void);
 static void UpdateGaugeFileProgressBar(double value);
        int  ProgressCB(int aBytesSoFar, int aTotalFinalSize);
        void InitDownloadDlg(void);
-       void DeInitDownloadDlg();
 
 /* local prototypes */
 siC *GetObjectFromArchiveName(char *szArchiveName);
@@ -115,7 +114,6 @@ struct TickInfo
   BOOL  bTickDownloadResumed;
 } gtiPaused;
 
-#ifdef OLDCODE
 BOOL CheckInterval(long *lModLastValue, int iInterval)
 {
   BOOL bRv = FALSE;
@@ -123,13 +121,13 @@ BOOL CheckInterval(long *lModLastValue, int iInterval)
 
   if(iInterval == 1)
   {
-    lModCurrentValue = time(NULL);
+    lModCurrentValue = (long)time(NULL);
     if(lModCurrentValue != *lModLastValue)
       bRv = TRUE;
   }
   else
   {
-    lModCurrentValue = time(NULL) % iInterval;
+    lModCurrentValue = (long)time(NULL) % iInterval;
     if((lModCurrentValue == 0) && (*lModLastValue != 0))
       bRv = TRUE;
   }
@@ -143,23 +141,15 @@ char *GetTimeLeft(DWORD dwTimeLeft,
                   DWORD dwTimeStringBufSize)
 {
   DWORD      dwTimeLeftPP;
-  SYSTEMTIME stTime;
+  ULONG hour, minute, second;
 
-  memset(&stTime, 0, sizeof(stTime));
   dwTimeLeftPP         = dwTimeLeft + 1;
-  stTime.wHour         = (unsigned)(dwTimeLeftPP / 60 / 60);
-  stTime.wMinute       = (unsigned)((dwTimeLeftPP / 60) % 60);
-  stTime.wSecond       = (unsigned)(dwTimeLeftPP % 60);
+  hour         = (unsigned)(dwTimeLeftPP / 60 / 60);
+  minute       = (unsigned)((dwTimeLeftPP / 60) % 60);
+  second       = (unsigned)(dwTimeLeftPP % 60);
 
   memset(szTimeString, 0, dwTimeStringBufSize);
-  /* format time string using user's local time format information */
-  GetTimeFormat(LOCALE_USER_DEFAULT,
-                TIME_NOTIMEMARKER|TIME_FORCE24HOURFORMAT,
-                &stTime,
-                NULL,
-                szTimeString,
-                dwTimeStringBufSize);
-
+  sprintf(szTimeString, "%d:%d:%d", hour, minute, second);
   return(szTimeString);
 }
 
@@ -167,7 +157,7 @@ DWORD AddToTick(DWORD dwTick, DWORD dwTickMoreToAdd)
 {
   DWORD dwTickLeftTillWrap = 0;
 
-  /* Since GetTickCount() is the number of milliseconds since the system
+  /* Since WinGetCurrentTime() is the number of milliseconds since the system
    * has been on and the return value is a DWORD, this value will wrap
    * every 49.71 days or 0xFFFFFFFF milliseconds. */
   dwTickLeftTillWrap = 0xFFFFFFFF - dwTick;
@@ -183,7 +173,7 @@ DWORD GetTickDif(DWORD dwTickEnd, DWORD dwTickStart)
 {
   DWORD dwTickDif;
 
-  /* Since GetTickCount() is the number of milliseconds since the system
+  /* Since WinGetCurrentTime(NULLHANDLE) is the number of milliseconds since the system
    * has been on and the return value is a DWORD, this value will wrap
    * every 49.71 days or 0xFFFFFFFF milliseconds. 
    *
@@ -238,19 +228,19 @@ void SetStatusStatus(void)
     InitTickInfo();
   }
 
-  /* GetTickCount() returns time in milliseconds.  This is more accurate,
+  /* WinGetCurrentTime(NULLHANDLE) returns time in milliseconds.  This is more accurate,
    * which will allow us to get at a 2 decimal precision value for the
    * download rate. */
-  dwTickNow = GetTickCount();
+  dwTickNow = WinGetCurrentTime(NULLHANDLE);
   if((gdwTickStart == 0) && gbStartTickCounter)
-    dwTickNow = gdwTickStart = GetTickCount();
+    dwTickNow = gdwTickStart = WinGetCurrentTime(NULLHANDLE);
 
   dwTickDif = GetTickDif(dwTickNow, gdwTickStart);
 
   /* Only update the UI every UPDATE_INTERVAL_STATUS interval,
    * which is currently set to 1 sec. */
-//  if(!CheckInterval(&lModLastValue, UPDATE_INTERVAL_STATUS))
-//    return;
+  if(!CheckInterval(&lModLastValue, UPDATE_INTERVAL_STATUS))
+    return;
 
   if(glAbsoluteBytesSoFar == 0)
     dRateCounter = 0.0;
@@ -335,7 +325,6 @@ void SetStatusStatus(void)
   WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS_STATUS, szCurrentStatusInfo);
   WinSetDlgItemText(dlgInfo.hWndDlg, IDC_PERCENTAGE, szPercentString);
 }
-#endif
 
 void SetStatusFile(void)
 {
@@ -344,7 +333,7 @@ void SetStatusFile(void)
   /* Set the download dialog status*/
   sprintf(szString, gszFileInfo, gszCurrentDownloadFileDescription);
   WinSetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS_FILE, szString);
-//  SetStatusStatus();
+  SetStatusStatus();
 }
 
 void SetStatusUrl(void)
@@ -784,7 +773,7 @@ void PauseTheDownload(int rv, int *iFileDownloadRetries)
 
   while(gdwDownloadDialogStatus == CS_PAUSE)
   {
-    DosSleep(200);
+    DosSleep(0);
     ProcessWindowsMessages();
   }
 }
@@ -856,6 +845,7 @@ int DownloadFiles(char *szInputIniFile,
   char      szTempURL[MAX_BUF];
   char      szWorkingURLPathOnly[MAX_BUF];
   siC       *siCCurrentFileObj = NULL;
+  ULONG     ulBuf, ulDiskNum, ulDriveMap;
 
   memset(szTempURL, 0, sizeof(szTempURL));
   memset(szWorkingURLPathOnly, 0, sizeof(szWorkingURLPathOnly));
@@ -865,8 +855,22 @@ int DownloadFiles(char *szInputIniFile,
   if(szFailedFile)
     memset(szFailedFile, 0, dwFailedFileSize);
 
-//  InitTickInfo();
-//  GetCurrentDirectory(sizeof(szSavedCwd), szSavedCwd);
+  InitTickInfo();
+  ulBuf = sizeof(szSavedCwd-3);
+  DosQueryCurrentDir(0, &szSavedCwd[3], &ulBuf);
+  // Directory does not start with 'x:\', so add it.
+  DosQueryCurrentDisk(&ulDiskNum, &ulDriveMap);
+
+  // Follow the case of the first letter in the path.
+  if (isupper(szSavedCwd[3]))
+     szSavedCwd[0] = (char)('A' - 1 + ulDiskNum);
+  else
+     szSavedCwd[0] = (char)('a' - 1 + ulDiskNum);
+  szSavedCwd[1] = ':';
+  szSavedCwd[2] = '\\';
+
+  if (toupper(szSavedCwd[0]) != toupper(szDownloadDir[0]))
+     DosSetDefaultDisk(toupper(szDownloadDir[0]) - 'A' + 1);
   DosSetCurrentDir(szDownloadDir);
 
   rv                        = WIZ_OK;
@@ -935,6 +939,7 @@ int DownloadFiles(char *szInputIniFile,
                             0,
                             gszConfigIniFile);
 #endif
+    iIgnoreFileNetworkError = 0;
 
     /* save the file name to be downloaded */
     ParsePath(szTempURL,
@@ -1052,7 +1057,7 @@ int DownloadFiles(char *szInputIniFile,
            * long before the user will dismiss the MessageBox() */
           if(!gtiPaused.bTickStarted)
           {
-//            gtiPaused.dwTickBegin          = GetTickCount();
+            gtiPaused.dwTickBegin          = WinGetCurrentTime(NULLHANDLE);
             gtiPaused.bTickStarted         = TRUE;
             gtiPaused.bTickDownloadResumed = FALSE;
           }
@@ -1182,8 +1187,12 @@ int DownloadFiles(char *szInputIniFile,
   }
 
   CloseSocket(szProxyServer, szProxyPort);
-//  DeInitDownloadDlg();
-//  SetCurrentDirectory(szSavedCwd);
+  if(sgProduct.ulMode != SILENT) 
+    WinDestroyWindow(dlgInfo.hWndDlg);
+  if (toupper(szSavedCwd[0]) != toupper(szDownloadDir[0]))
+     DosSetDefaultDisk(toupper(szSavedCwd[0]) -1 + 'A');
+  DosSetCurrentDir(szSavedCwd);
+
   return(rv);
 }
 
@@ -1213,8 +1222,8 @@ int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
     if(gbDlgDownloadMinimized)
       SetMinimizedDownloadTitle((int)dPercentSoFar);
 
-//    UpdateGaugeFileProgressBar(dPercentSoFar);
-//    SetStatusStatus();
+    UpdateGaugeFileProgressBar(dPercentSoFar);
+    SetStatusStatus();
 
     if((gdwDownloadDialogStatus == CS_CANCEL) ||
        (gdwDownloadDialogStatus == CS_PAUSE))
@@ -1229,20 +1238,20 @@ int ProgressCB(int aBytesSoFar, int aTotalFinalSize)
 // Progress bar
 // Centers the specified window over the desktop. Assumes the window is
 // smaller both horizontally and vertically than the desktop
-#ifdef OLDCODE
 static void
 CenterWindow(HWND hWndDlg)
 {
-	RECT	rect;
-	int		iLeft, iTop;
+  SWP swpDlg;
 
-	GetWindowRect(hWndDlg, &rect);
-	iLeft = (GetSystemMetrics(SM_CXSCREEN) - (rect.right - rect.left)) / 2;
-	iTop  = (GetSystemMetrics(SM_CYSCREEN) - (rect.bottom - rect.top)) / 2;
-
-	SetWindowPos(hWndDlg, NULL, iLeft, iTop, -1, -1, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+  WinQueryWindowPos(hWndDlg, &swpDlg);
+  WinSetWindowPos(hWndDlg,
+                  0,
+                  (WinQuerySysValue(HWND_DESKTOP, SV_CXSCREEN)/2)-(swpDlg.cx/2),
+                  (WinQuerySysValue(HWND_DESKTOP, SV_CYSCREEN)/2)-(swpDlg.cy/2),
+                  0,
+                  0,
+                  SWP_MOVE);
 }
-#endif
 
 // Window proc for dialog
 MRESULT EXPENTRY
@@ -1251,6 +1260,12 @@ DownloadDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
   switch (msg)
   {
     case WM_INITDLG:
+      AdjustDialogSize(hWndDlg);
+      WinSetPresParam(hWndDlg, PP_FONTNAMESIZE,
+                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
+      WinSendMsg(WinWindowFromID(hWndDlg, IDC_GAUGE_FILE), SLM_SETSLIDERINFO,
+                                 MPFROM2SHORT(SMA_SHAFTDIMENSIONS, 0),
+                                 (MPARAM)20);
       GetPrivateProfileString("Strings",
                               "Status File Info",
                               "",
@@ -1258,33 +1273,20 @@ DownloadDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
                               sizeof(gszFileInfo),
                               szFileIniConfig);
 //      DisableSystemMenuItems(hWndDlg, FALSE);
-//      CenterWindow(hWndDlg);
+      CenterWindow(hWndDlg);
       if(gbShowDownloadRetryMsg)
         WinSetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageRetry0);
       else
         WinSetDlgItemText(hWndDlg, IDC_MESSAGE0, diDownload.szMessageDownload0);
 
       WinEnableWindow(WinWindowFromID(hWndDlg, IDRESUME), FALSE);
-      WinSetDlgItemText(hWndDlg, IDC_STATIC1, sgInstallGui.szStatus);
-      WinSetDlgItemText(hWndDlg, IDC_STATIC2, sgInstallGui.szFile);
-      WinSetDlgItemText(hWndDlg, IDC_STATIC4, sgInstallGui.szTo);
-      WinSetDlgItemText(hWndDlg, IDC_STATIC3, sgInstallGui.szUrl);
+      WinSetDlgItemText(hWndDlg, IDC_STATIC1, sgInstallGui.szFile);
+      WinSetDlgItemText(hWndDlg, IDC_STATIC2, sgInstallGui.szUrl);
+      WinSetDlgItemText(hWndDlg, IDC_STATIC3, sgInstallGui.szTo);
+      WinSetDlgItemText(hWndDlg, IDC_STATIC4, sgInstallGui.szStatus);
       WinSetDlgItemText(hWndDlg, IDCANCEL, sgInstallGui.szCancel_);
       WinSetDlgItemText(hWndDlg, IDPAUSE, sgInstallGui.szPause_);
       WinSetDlgItemText(hWndDlg, IDRESUME, sgInstallGui.szResume_);
-#ifdef OLDCODE
-      SendDlgItemMessage (hWndDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hWndDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hWndDlg, IDPAUSE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hWndDlg, IDRESUME, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hWndDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATUS_STATUS, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATUS_FILE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATUS_URL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATUS_TO, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-#endif
       break;
 
 #ifdef OLDCODE
@@ -1304,9 +1306,10 @@ DownloadDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
           break;
       }
       return(FALSE);
+#endif
 
     case WM_COMMAND:
-      switch(LOWORD(wParam))
+      switch ( SHORT1FROMMP( mp1 ) )
       {
         case IDCANCEL:
           if(AskCancelDlg(hWndDlg))
@@ -1316,234 +1319,57 @@ DownloadDlgProc(HWND hWndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
         case IDPAUSE:
           if(!gtiPaused.bTickStarted)
           {
-            gtiPaused.dwTickBegin          = GetTickCount();
+            gtiPaused.dwTickBegin          = WinGetCurrentTime(NULLHANDLE);
             gtiPaused.bTickStarted         = TRUE;
             gtiPaused.bTickDownloadResumed = FALSE;
           }
 
-          EnableWindow(WinWindowFromID(hWndDlg, IDPAUSE),  FALSE);
-          EnableWindow(WinWindowFromID(hWndDlg, IDRESUME), TRUE);
+          WinEnableWindow(WinWindowFromID(hWndDlg, IDPAUSE),  FALSE);
+          WinEnableWindow(WinWindowFromID(hWndDlg, IDRESUME), TRUE);
           gdwDownloadDialogStatus = CS_PAUSE;
           break;
 
         case IDRESUME:
-          gtiPaused.dwTickEnd = GetTickCount();
+          gtiPaused.dwTickEnd = WinGetCurrentTime(NULLHANDLE);
           gtiPaused.dwTickDif = GetTickDif(gtiPaused.dwTickEnd,
                                            gtiPaused.dwTickBegin);
           gtiPaused.bTickDownloadResumed = TRUE;
 
-          EnableWindow(WinWindowFromID(hWndDlg, IDRESUME), FALSE);
-          EnableWindow(WinWindowFromID(hWndDlg, IDPAUSE),  TRUE);
+          WinEnableWindow(WinWindowFromID(hWndDlg, IDRESUME), FALSE);
+          WinEnableWindow(WinWindowFromID(hWndDlg, IDPAUSE),  TRUE);
           gdwDownloadDialogStatus = CS_NONE;
           break;
 
         default:
           break;
       }
-      return(TRUE);
-#endif
+      return (MRESULT)TRUE;
   }
 
   return WinDefDlgProc(hWndDlg, msg, mp1, mp2);
 }
 
-#ifdef OLDCODE
 // This routine will update the File Gauge progress bar to the specified percentage
 // (value between 0 and 100)
 static void
 UpdateGaugeFileProgressBar(double value)
 {
-	int	        nBars;
-  static long lModLastValue = 0;
-
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.ulMode != SILENT)
   {
-    if(!CheckInterval(&lModLastValue, UPDATE_INTERVAL_PROGRESS_BAR))
-      return;
-
-    // Figure out how many bars should be displayed
-    nBars = (int)(dlgInfo.nMaxFileBars * value / 100);
-
-    // Only paint if we need to display more bars
-    if((nBars > dlgInfo.nFileBars) || (dlgInfo.nFileBars == 0))
-    {
-      HWND	hWndGauge = WinWindowFromID(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
-      RECT	rect;
-
-      // Update the gauge state before painting
-      dlgInfo.nFileBars = nBars;
-
-      // Only invalidate the part that needs updating
-      GetClientRect(hWndGauge, &rect);
-      InvalidateRect(hWndGauge, &rect, FALSE);
-    
-      // Update the whole extracting dialog. We do this because we don't
-      // have a message loop to process WM_PAINT messages in case the
-      // extracting dialog was exposed
-      UpdateWindow(dlgInfo.hWndDlg);
-    }
+    ULONG ulPercentage = 100*value/100;
+    printf("ulp = %d\n", ulPercentage);
+    WinSendMsg(WinWindowFromID(dlgInfo.hWndDlg, IDC_GAUGE_FILE), SLM_SETSLIDERINFO,
+                               MPFROM2SHORT(SMA_SLIDERARMPOSITION, SMA_INCREMENTVALUE),
+                               (MPARAM)(ulPercentage-1));
   }
 }
-
-// Draws a recessed border around the gauge
-static void
-DrawGaugeBorder(HWND hWnd)
-{
-	HDC		hDC = GetWindowDC(hWnd);
-	RECT	rect;
-	int		cx, cy;
-	HPEN	hShadowPen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNSHADOW));
-	HGDIOBJ	hOldPen;
-
-	GetWindowRect(hWnd, &rect);
-	cx = rect.right - rect.left;
-	cy = rect.bottom - rect.top;
-
-	// Draw a dark gray line segment
-	hOldPen = SelectObject(hDC, (HGDIOBJ)hShadowPen);
-	MoveToEx(hDC, 0, cy - 1, NULL);
-	LineTo(hDC, 0, 0);
-	LineTo(hDC, cx - 1, 0);
-
-	// Draw a white line segment
-	SelectObject(hDC, GetStockObject(WHITE_PEN));
-	MoveToEx(hDC, 0, cy - 1, NULL);
-	LineTo(hDC, cx - 1, cy - 1);
-	LineTo(hDC, cx - 1, 0);
-
-	SelectObject(hDC, hOldPen);
-	DeleteObject(hShadowPen);
-	ReleaseDC(hWnd, hDC);
-}
-
-// Draws the blue progress bar
-static void
-DrawProgressBar(HWND hWnd, int nBars)
-{
-  int         i;
-	PAINTSTRUCT	ps;
-	HDC         hDC;
-	RECT        rect;
-	HBRUSH      hBrush;
-
-  hDC = BeginPaint(hWnd, &ps);
-	GetClientRect(hWnd, &rect);
-  if(nBars <= 0)
-  {
-    /* clear the bars */
-    hBrush = CreateSolidBrush(GetSysColor(COLOR_MENU));
-    FillRect(hDC, &rect, hBrush);
-  }
-  else
-  {
-  	// Draw the bars
-    hBrush = CreateSolidBrush(RGB(0, 0, 128));
-	  rect.left     = rect.top = BAR_LIBXPNET_MARGIN;
-	  rect.bottom  -= BAR_LIBXPNET_MARGIN;
-	  rect.right    = rect.left + BAR_LIBXPNET_WIDTH;
-
-	  for(i = 0; i < nBars; i++)
-    {
-		  RECT	dest;
-
-		  if(IntersectRect(&dest, &ps.rcPaint, &rect))
-			  FillRect(hDC, &rect, hBrush);
-
-      OffsetRect(&rect, BAR_LIBXPNET_WIDTH + BAR_LIBXPNET_SPACING, 0);
-	  }
-  }
-
-	DeleteObject(hBrush);
-	EndPaint(hWnd, &ps);
-}
-
-// Adjusts the width of the gauge based on the maximum number of bars
-static void
-SizeToFitGauge(HWND hWnd, int nMaxBars)
-{
-	RECT	rect;
-	int		cx;
-
-	// Get the window size in pixels
-	GetWindowRect(hWnd, &rect);
-
-	// Size the width to fit
-	cx = 2 * GetSystemMetrics(SM_CXBORDER) + 2 * BAR_LIBXPNET_MARGIN +
-		nMaxBars * BAR_LIBXPNET_WIDTH + (nMaxBars - 1) * BAR_LIBXPNET_SPACING;
-
-	SetWindowPos(hWnd, NULL, -1, -1, cx, rect.bottom - rect.top,
-		SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
-}
-
-// Window proc for Download gauge
-BOOL CALLBACK
-GaugeDownloadWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	DWORD	dwStyle;
-	RECT	rect;
-
-	switch(msg)
-  {
-		case WM_NCCREATE:
-			dwStyle = GetWindowLong(hWnd, GWL_STYLE);
-			SetWindowLong(hWnd, GWL_STYLE, dwStyle | WS_BORDER);
-			return(TRUE);
-
-		case WM_CREATE:
-			// Figure out the maximum number of bars that can be displayed
-			GetClientRect(hWnd, &rect);
-			dlgInfo.nFileBars = 0;
-			dlgInfo.nMaxFileBars = (rect.right - rect.left - 2 * BAR_LIBXPNET_MARGIN + BAR_LIBXPNET_SPACING) / (BAR_LIBXPNET_WIDTH + BAR_LIBXPNET_SPACING);
-
-			// Size the gauge to exactly fit the maximum number of bars
-			SizeToFitGauge(hWnd, dlgInfo.nMaxFileBars);
-			return(FALSE);
-
-		case WM_NCPAINT:
-			DrawGaugeBorder(hWnd);
-			return(FALSE);
-
-		case WM_PAINT:
-			DrawProgressBar(hWnd, dlgInfo.nFileBars);
-			return(FALSE);
-	}
-
-	return(DefWindowProc(hWnd, msg, wParam, lParam));
-}
-#endif
 
 void InitDownloadDlg(void)
 {
+  if(sgProduct.ulMode != SILENT)
+  {
     dlgInfo.hWndDlg = WinLoadDlg(HWND_DESKTOP, hWndMain, DownloadDlgProc, hSetupRscInst, DLG_DOWNLOADING, NULL);
     WinShowWindow(dlgInfo.hWndDlg, TRUE);
-#ifdef OLDCODE
-	WNDCLASS	wc;
-
-  if(sgProduct.dwMode != SILENT)
-  {
-    memset(&wc, 0, sizeof(wc));
-    wc.style          = CS_GLOBALCLASS;
-    wc.hInstance      = hInst;
-    wc.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
-    wc.lpfnWndProc    = (WNDPROC)GaugeDownloadWndProc;
-    wc.lpszClassName  = "GaugeFile";
-    RegisterClass(&wc);
-
-    // Display the dialog box
-    dlgInfo.hWndDlg = CreateDialog(hSetupRscInst, MAKEINTRESOURCE(DLG_DOWNLOADING), hWndMain, (DLGPROC)DownloadDlgProc);
-    UpdateWindow(dlgInfo.hWndDlg);
-    UpdateGaugeFileProgressBar(0);
-  }
-#endif
-}
-
-#ifdef OLDCODE
-void DeInitDownloadDlg()
-{
-  if(sgProduct.dwMode != SILENT)
-  {
-    WinDestroyWindow(dlgInfo.hWndDlg);
-    UnregisterClass("GaugeFile", hInst);
   }
 }
-#endif
+
