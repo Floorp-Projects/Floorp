@@ -46,7 +46,7 @@ interface nsIMsgWindow;
 interface nsILoadGroup;
 interface nsIMsgSearchSession;
 interface nsICacheEntryDescriptor;
-
+interface nsICacheSession;
 [scriptable, uuid(6CFFCEB0-CB8C-11d2-8065-006008128C4E)]
 interface nsIMsgMailNewsUrl : nsIURL {
 	///////////////////////////////////////////////////////////////////////////////
@@ -85,7 +85,14 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	attribute boolean suppressErrorMsgs; // used to avoid displaying biff error messages
 
 	attribute nsICacheEntryDescriptor memCacheEntry;
-
+        // if we want mime to cache images fetched by this message, set this cache session.
+        attribute nsICacheSession imageCacheSession; 
+        // hold onto this cache entry until url goes away. This is used by mime to keep
+        // images cached until the url is deleted so we don't get entries evicted
+        // before we've used them. We need to be sure this doesn't introduce
+        // circular references or the url will never get freed.
+        void cacheCacheEntry(in nsICacheEntryDescriptor cacheEntry);
+        void removeCacheEntry(in nsICacheEntryDescriptor cacheEntry);
 	const unsigned long eCopy     = 0;
 	const unsigned long eMove     = 1;
 	const unsigned long eDisplay  = 2;

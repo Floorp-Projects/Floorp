@@ -51,7 +51,8 @@
 #include "nsILoadGroup.h"
 #include "nsIMsgSearchSession.h"
 #include "nsICacheEntryDescriptor.h"
-
+#include "nsICacheSession.h"
+#include "nsISupportsArray.h"
 ///////////////////////////////////////////////////////////////////////////////////
 // Okay, I found that all of the mail and news url interfaces needed to support
 // several common interfaces (in addition to those provided through nsIURI). 
@@ -82,6 +83,8 @@ protected:
 	nsCOMPtr<nsILoadGroup> m_loadGroup;
   nsCOMPtr<nsIMsgSearchSession> m_searchSession;
   nsCOMPtr<nsICacheEntryDescriptor> m_memCacheEntry;
+  nsCOMPtr<nsICacheSession> m_imageCacheSession;
+  nsCOMPtr<nsISupportsArray> m_cachedMemCacheEntries;
 	char		*m_errorMessage;
 	PRBool	m_runningUrl;
 	PRBool	m_updatingFolder;
