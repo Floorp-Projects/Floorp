@@ -72,7 +72,7 @@ my $readelf = $ENV{'READELF_PROG'};
 if (!$readelf) {
     $readelf = 'readelf';
 }
-open(READELF_OUTPUT, "$readelf -Ss $ARGV[0] | c++filt |") or die "readelf failed to run on $ARGV[0]\n";
+open(READELF_OUTPUT, "$readelf -Ss $ARGV[0] 2>/dev/null | c++filt |") or die "readelf failed to run on $ARGV[0]\n";
 
 my @section_list;
 my @symbol_list;
