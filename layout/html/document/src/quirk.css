@@ -243,6 +243,12 @@ hr:after {
   margin-right: 40px;
 }
 
+/* quirk to indent nested DL elements (b=8749) */
+dl > dl {
+  display: block;
+  margin-left: 40px;
+}
+
 /* Quirk: MAP acts like an inline, not a block */
 map {
   display: inline;
