@@ -2074,18 +2074,6 @@ nsLocalFile::GetDirectoryEntries(nsISimpleEnumerator * *entries)
     return NS_OK;
 }
 
-/* attribute PRBool followLinks; */
-NS_IMETHODIMP 
-nsLocalFile::GetFollowLinks(PRBool *aFollowLinks)
-{
-    *aFollowLinks = PR_TRUE;
-    return NS_OK;
-}
-NS_IMETHODIMP 
-nsLocalFile::SetFollowLinks(PRBool aFollowLinks)
-{
-    return NS_OK;
-}
 
 nsresult 
 NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
