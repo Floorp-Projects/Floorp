@@ -2900,8 +2900,23 @@ nsBookmarksService::GetSynthesizedType(nsIRDFResource *aNode, nsIRDFNode **aType
     // else is annotated)
     PRBool isContainer = PR_FALSE;
     (void)gRDFC->IsSeq(mInner, aNode, &isContainer);
-    *aType = (isContainer) ? kNC_Folder : kNC_Bookmark;
-    NS_ADDREF(*aType);
+    if (isContainer)
+    {
+      *aType = kNC_Folder;
+      NS_ADDREF(*aType);
+    }
+    else
+    {
+      // only return bookmark type for nodes that actually exist,
+      // so check for a required attribute (such as "add date")
+      nsCOMPtr<nsIRDFNode> val;
+      if (NS_FAILED(rv = mInner->GetTarget(aNode, kNC_BookmarkAddDate,
+        PR_TRUE, getter_AddRefs(val))) || (rv == NS_RDF_NO_VALUE))
+        return(rv);
+
+      *aType = kNC_Bookmark;
+      NS_ADDREF(*aType);
+    }
   }
   return(NS_OK);
 }
