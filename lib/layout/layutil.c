@@ -2571,7 +2571,7 @@ lo_SetNodeElement(lo_DocState *state, LO_Element *element)
     LO_Element *eptr;
     DOM_Node *node = CURRENT_NODE(state);
 
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_0
     fprintf(stderr, "lo_SetNodeElement: state %x: ", state);
     if (!node)
         fprintf(stderr, "NULL node\n");

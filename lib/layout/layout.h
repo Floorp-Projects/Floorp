@@ -1186,6 +1186,7 @@ extern Bool lo_SetNamedAnchor(lo_DocState *, PA_Block);
 
 #ifdef DOM
 extern Bool lo_SetNamedSpan(lo_DocState *, PA_Block);
+extern void lo_SetColor( LO_Element *ele, LO_Color *color, Bool background);
 #endif
 
 extern void lo_AddNameList(lo_DocState *, lo_DocState *);

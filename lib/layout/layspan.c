@@ -30,7 +30,7 @@
 
 
 /* Initial attempt at DOM by letting JS set style of SPAN contents */
-static void lo_SetColor( LO_Element *ele, LO_Color *color, Bool background);
+void lo_SetColor( LO_Element *ele, LO_Color *color, Bool background);
 static void lo_SetFontFamily( MWContext *context, LO_Element *ele, char *family);
 static void lo_SetFontWeight( MWContext *context, LO_Element *ele, char *weight);
 static void lo_SetFontSlant( MWContext *context, LO_Element *ele, char *weight);
@@ -167,8 +167,7 @@ lo_FindParentSpan( LO_Element *ele )
   return (LO_SpanStruct *) ele;
 }
 
-/* Functions internal to this file */
-static void lo_SetColor( LO_Element *ele, LO_Color *color, Bool background)
+void lo_SetColor( LO_Element *ele, LO_Color *color, Bool background)
 {
   switch (ele->lo_any.type)
     {
@@ -210,6 +209,7 @@ static void lo_SetColor( LO_Element *ele, LO_Color *color, Bool background)
     }
 }
 
+/* Functions internal to this file */
 static void 
 lo_SetFontFamily( MWContext *context,
                   LO_Element *ele, 

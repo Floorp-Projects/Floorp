@@ -136,6 +136,48 @@ static void lo_UpdateCaptionCellFromSubDoc( MWContext *context, lo_DocState *sta
 static void lo_FreeCaptionCell( MWContext *context, lo_DocState *state, LO_CellStruct *cell_ele);
 static void lo_FreeTableCaption( MWContext *context, lo_DocState *state, lo_TableRec *table );
 
+#ifdef DEBUG_shaver
+extern char *element_names[];
+#endif
+
+void LO_SetTableCellAttributes(MWContext *context, void *cell_v,
+                               const char *name, const char *value)
+{
+  lo_TableCell *cell = (lo_TableCell *)cell_v;
+  LO_Element *start = cell->cell->cell_list, *end = cell->cell->cell_list_end;
+
+  if (!start)
+    return;
+#ifdef DEBUG_shaver
+  fprintf(stderr, "setting %s=%s on <TD>\n", name, value);
+#endif
+
+  if (!XP_STRCASECMP(name, "bgcolor")) {
+      LO_Color rgb;
+      LO_Element *iter = start;
+      if (!LO_ParseRGB((char *)value, &rgb.red, &rgb.green, &rgb.blue))
+        return;
+/*      while (iter && iter != end) { */
+#ifdef DEBUG_shaver
+        fprintf(stderr, "setting bgcolor of %s to %s\n",
+                element_names[iter->type], value);
+#endif
+        lo_SetColor(start, &rgb, TRUE);
+/*        iter = iter->lo_any.next;
+      }
+      if (iter != start) {
+#ifdef DEBUG_shaver
+        fprintf(stderr, "setting bgcolor of %s to %s\n",
+                element_names[iter->type], value);
+#endif
+        lo_SetColor(start, &rgb, TRUE);
+      }
+*/
+  }
+  /* XXX LO_JustRedrawNothingChangedThatsImportant */
+  LO_RelayoutFromElement(context, start);
+}
+
 static int32
 lo_ComputeCellEmptySpace(MWContext *context, lo_TableRec *table,
 	LO_SubDocStruct *subdoc)
