@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= embedcomponents
 LIBRARY_NAME	= embedcomponents
+SHORT_LIBNAME	= embedcmp
 IS_COMPONENT	= 1
 REQUIRES	= js xpcom windowwatcher embed_base
 
