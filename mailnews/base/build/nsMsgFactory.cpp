@@ -102,6 +102,8 @@ static NS_DEFINE_CID(kCopyMessageStreamListenerCID,
                      NS_COPYMESSAGESTREAMLISTENER_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID, NS_MSGCOPYSERVICE_CID);
 
+// Msg Folder Cache stuff
+static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
@@ -283,6 +285,9 @@ nsMsgFactory::CreateInstance(nsISupports * /* aOuter */,
   }
   else if (mClassID.Equals(kMsgCopyServiceCID)) {
       rv = NS_NewMsgCopyService(aIID, aResult);
+  }
+  else if (mClassID.Equals(kMsgFolderCacheCID)) {
+		rv = NS_ERROR_NO_INTERFACE;
   }
 
   return rv;
@@ -486,6 +491,12 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
 	rv = compMgr->RegisterComponent(kMsgCopyServiceCID,
                                   "Mail/News Message Copy Service",
                                   NS_MSGCOPYSERVICE_PROGID,
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
+
+	rv = compMgr->RegisterComponent(kMsgFolderCacheCID,
+                                  "Mail/News Folder Cache",
+                                  NS_MSGFOLDERCACHE_PROGID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
