@@ -554,7 +554,6 @@
          <body>
            <![CDATA[
              var currCol = this.parentNode.parentNode.firstChild;
-             var count = 0;
 
              // we no longer cache the picker content.  
              // remove the old content
@@ -574,16 +573,22 @@
                      var columnName = currCol.getAttribute("label");
                      var popupChild = document.createElement("menuitem");
                      popupChild.setAttribute("type", "checkbox");
-                     popupChild.setAttribute("label", columnName);
                      if (columnName == "") {
                        var display = currCol.getAttribute("display");
                        popupChild.setAttribute("label", display);
                      }
+                     else {
+                       popupChild.setAttribute("label", columnName);
+                     }
                      popupChild.setAttribute("colid", currCol.id);
                      popupChild.setAttribute("oncommand",
                                              "this.parentNode.parentNode.parentNode.toggleColumnState(this);");
-                     if (currCol.getAttribute("hidden") != "true")
+                     if (currCol.getAttribute("collapsed") != "true")
                        popupChild.setAttribute("checked", "true");
+                     if (currCol.getAttribute("primary") == "true")
+                       popupChild.setAttribute("disabled", "true");
+
+
                      aPopup.appendChild(popupChild);
                  }
               } 
@@ -602,9 +607,9 @@
              if (colNode) {
                var checkedState = aPopup.getAttribute("checked");
                if (checkedState == "true")
-                 colNode.removeAttribute("hidden");
+                 colNode.removeAttribute("collapsed");
                else
-                 colNode.setAttribute("hidden", "true");
+                 colNode.setAttribute("collapsed", "true");
              }
            ]]>
          </body>
