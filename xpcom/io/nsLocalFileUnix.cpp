@@ -1159,8 +1159,11 @@ NS_IMETHODIMP
 nsLocalFile::IsSymlink(PRBool *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    VALIDATE_STAT_CACHE();
-    *_retval = S_ISLNK(mCachedStat.st_mode);
+    CHECK_mPath();
+
+    struct stat symStat;
+    lstat(mPath, &symStat);
+    *_retval=S_ISLNK(symStat.st_mode);
     return NS_OK;
 }
 
