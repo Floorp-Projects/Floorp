@@ -129,7 +129,7 @@ PR_STATIC_CALLBACK(JSBool)
 XPConnectFactoryCreateInstance(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXPConnectFactory *nativeThis = (nsIDOMXPConnectFactory*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
+  //JSBool rBool = JS_FALSE;
   nsISupports* nativeRet;
   nsAutoString b0;
 

@@ -133,9 +133,9 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
 
 	// nsISessionHistory methods 
-    NS_IMETHOD Forward(nsIWebShell * prev);
+    NS_IMETHOD GoForward(nsIWebShell * prev);
 
-    NS_IMETHOD Back(nsIWebShell * prev);
+    NS_IMETHOD GoBack(nsIWebShell * prev);
 
     NS_IMETHOD canForward(PRBool &aResult);
 

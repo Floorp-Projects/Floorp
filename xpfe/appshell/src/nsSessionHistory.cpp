@@ -387,7 +387,7 @@ GenerateTree(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistor
   if (cnt > 0) {
     for (int i=0; i<cnt; i++) {
       nsIWebShell * childWS = nsnull;
-      nsHistoryEntry * hChild = nsnull;
+      //nsHistoryEntry * hChild = nsnull;
 
       aWebShell->ChildAt(i, childWS); 
       if (childWS) {
@@ -475,7 +475,8 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry) {
    nsHistoryEntry * cur=nsnull;
    PRBool urlChanged = PR_FALSE;
    int i = 0; 
-   nsIWebShell * pWS = nsnull, *cWS=nsnull, *prev=nsnull;
+   //nsIWebShell * pWS = nsnull, *cWS=nsnull;
+   nsIWebShell *prev=nsnull;
    PRBool result = PR_FALSE;
    nsString*  cSURL=nsnull, * pSURL=nsnull;
    const PRUnichar *  pURL=nsnull, * cURL=nsnull;   
@@ -498,7 +499,9 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry) {
 //   NS_ADDREF(aPrevEntry);
 
    if (!cur || !prev) {
+#ifdef DEBUG
      printf("SessionHistory::Load cur or prev is null, cur = %x, prev = %x\n", cur, prev);
+#endif
      return NS_ERROR_NULL_POINTER;
    }
 
@@ -554,7 +557,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry) {
     
 
    for (i=0; i<cnt; i++){
-      nsIWebShell * cws=nsnull, *pws=nsnull;
+     //nsIWebShell * cws=nsnull, *pws=nsnull;
       nsHistoryEntry *cChild=nsnull;
       nsIWebShell *  pChild=nsnull;
 
@@ -630,12 +633,12 @@ public:
   /**
    * Go forward in history 
    */
-  NS_IMETHOD Forward(nsIWebShell * prev);
+  NS_IMETHOD GoForward(nsIWebShell * prev);
 
   /**
    * Go Back in History
    */
-  NS_IMETHOD Back(nsIWebShell * prev);
+  NS_IMETHOD GoBack(nsIWebShell * prev);
 
   /**
    * Reload the current history entry
@@ -773,8 +776,7 @@ NS_IMPL_ISUPPORTS(nsSessionHistory, kISessionHistoryIID);
 NS_IMETHODIMP
 nsSessionHistory::add(nsIWebShell * aWebShell)
 {
-
-   nsresult  rv = NS_OK;
+  //nsresult  rv = NS_OK;
    nsHistoryEntry * hEntry = nsnull;
    nsIWebShell * parent = nsnull;
 
@@ -822,9 +824,9 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
        */
 
        for(int i=mHistoryLength-1; i>mHistoryCurrentIndex; i--) {
-          nsHistoryEntry * hEntry = (nsHistoryEntry *)mHistoryEntries.ElementAt(i);
-          //NS_IF_RELEASE(hEntry);
-          delete hEntry;
+          nsHistoryEntry * hEntry2 = (nsHistoryEntry *)mHistoryEntries.ElementAt(i);
+          //NS_IF_RELEASE(hEntry2);
+          delete hEntry2;
           mHistoryEntries.RemoveElementAt(i);
           mHistoryLength--;
        }
@@ -1286,10 +1288,10 @@ nsSessionHistory::Reload(nsURLReloadType aReloadType)
 }
 
 NS_IMETHODIMP
-nsSessionHistory::Back(nsIWebShell * prev)
+nsSessionHistory::GoBack(nsIWebShell * prev)
 {
    nsresult rv = NS_OK;
-   nsHistoryEntry * hEntry=nsnull;
+   //nsHistoryEntry * hEntry=nsnull;
 
    if (mHistoryCurrentIndex <= 0) 
       return NS_ERROR_NULL_POINTER;
@@ -1300,7 +1302,7 @@ nsSessionHistory::Back(nsIWebShell * prev)
 }
 
 NS_IMETHODIMP
-nsSessionHistory::Forward(nsIWebShell * prev)
+nsSessionHistory::GoForward(nsIWebShell * prev)
 {
    nsresult rv = NS_OK;
    PRInt32  prevIndex = 0;
@@ -1423,9 +1425,10 @@ nsSessionHistoryFactory::nsSessionHistoryFactory()
 }
 
 nsresult
-nsSessionHistoryFactory::LockFactory(PRBool lock)
+nsSessionHistoryFactory::LockFactory(PRBool aLock)
 {
-
+  NS_ASSERTION(0,"this can't be right, fix me!");
+  printf("this can't be right, fix me!\n");
   return NS_OK;
 }
 
