@@ -689,7 +689,7 @@ char* nsCString::ToCString(char* aBuf, PRUint32 aBufLength,PRUint32 anOffset) co
 
     CBufDescriptor theDescr(aBuf,PR_TRUE,aBufLength,0);
     nsCAutoString temp(theDescr);
-    temp.Assign(*this,aBufLength-1);
+    temp.Assign(*this, PR_MIN(mLength, aBufLength-1));
     temp.mStr=0;
   }
   return aBuf;
