@@ -62,7 +62,8 @@ sub getDefaultString {
  !
  !  This example uses almost all the features of COSES, and so is
  !  quite a useful example to study. (It doesn't use all of the values
- !  of <set>'s attributes nor the escaping attributes of <text>.) It's
+ !  of <set>'s attributes, the escaping attributes of <text>, nor the
+ !  special '.length' and '.coses: original key' hidden keys.) It's
  !  also a great help when debugging! You can use it at any point in a
  !  COSES document merely by nesting it, so you can, for example,
  !  study what is happening with a <set> statement. If you declare
@@ -91,6 +92,13 @@ sub getDefaultString {
         <else>
           <set variable="prefix" value="(prefix).(index)">
             <include href="debug.dumpVars"/>
+            <!-- if ((prefix)) is an array, then
+                    ((prefix).length) would give the length of the array
+                 if ((prefix)) is a hash element, then
+                    ((prefix).coses: original key) would give the
+                    original name of the hash key, even if it contained
+                    characters like '.' or '()'.
+             -->
           </set>
         </else>
       </set>

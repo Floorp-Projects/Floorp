@@ -286,22 +286,32 @@ sub expand {
 
 sub evaluateVariable {
     my $self = shift;
-    my($variable, $scope) = @_;
+    my($variable, $scope) = @_; # $scope is the whole data hash at this point
     my @parts = split(/\./o, $variable, -1); # split variable at dots ('.') (the negative number prevents null trailing fields from being stripped)
     # drill down through scope
+    my $scopeName = '';
     foreach my $part (@parts) {
-        if (ref($scope) eq 'HASH') {
-            $scope = $scope->{$part};
-        } elsif (ref($scope) eq 'ARRAY') {
-            if ($part =~ /^\d+$/o) {
-                $scope = $scope->[$part];
-            } elsif ($part eq 'length') {
-                $scope = scalar(@$scope);
-            } else {
-                $self->assert(1, "Tried to drill into an array using a non-numeric key ('$part')");
-            }
+        if ($part eq 'coses: original key') {
+            $scope = $scopeName;
         } else {
-            $self->error(1, "Could not resolve '$variable' (the part giving me trouble was '$part')");
+            $scopeName = $part;
+            if (ref($scope) eq 'HASH') {
+                if (defined($scope->{'coses: original keys'}) and
+                    defined($scope->{'coses: original keys'}->{$part})) {
+                    $scopeName = $scope->{'coses: original keys'}->{$part};
+                }
+                $scope = $scope->{$part};
+            } elsif (ref($scope) eq 'ARRAY') {
+                if ($part =~ /^\d+$/o) {
+                    $scope = $scope->[$part];
+                } elsif ($part eq 'length') {
+                    $scope = scalar(@$scope);
+                } else {
+                    $self->assert(1, "Tried to drill into an array using a non-numeric key ('$part')");
+                }
+            } else {
+                $self->error(1, "Could not resolve '$variable' (the part giving me trouble was '$part')");
+            }
         }
     }
     if (defined($scope)) {
@@ -309,7 +319,7 @@ sub evaluateVariable {
         while (ref($scope) eq 'SCALAR') {
             $scope = $$scope;
         }
-        return $scope;
+        return $scope; # $scope is the string resulting from evaluating the variable at this point
     } else {
         return '';
     }
