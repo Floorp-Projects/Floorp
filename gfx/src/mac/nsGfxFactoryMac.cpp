@@ -33,6 +33,7 @@
 #include "nsIImageManager.h"
 #include "nsDeviceContextSpecMac.h"
 #include "nsDeviceContextSpecFactoryM.h"
+#include "nsBlender.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
@@ -44,6 +45,7 @@ static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
 static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 static NS_DEFINE_IID(kImageManagerImpl, NS_IMAGEMANAGER_CID);
+static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -106,6 +108,9 @@ nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,
 	else if (mClassID.Equals(kCRegion)) {
 		NS_NEWXPCOM(inst, nsRegionMac);
 	}
+    else if (mClassID.Equals(kCBlender)) {
+        NS_NEWXPCOM(inst, nsBlender);
+    }
 	else if (mClassID.Equals(kCScriptableRegion)) {
 		nsCOMPtr<nsIRegion> rgn;
 		NS_NEWXPCOM(rgn, nsRegionMac);
