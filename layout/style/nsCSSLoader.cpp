@@ -26,7 +26,6 @@
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
-
 #include "nsIUnicharStreamLoader.h"
 #include "nsIUnicharInputStream.h"
 
@@ -36,8 +35,9 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNeckoUtil.h"
-#endif // NECKO
+#else
 #include "nsIURLGroup.h"
+#endif // NECKO
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
