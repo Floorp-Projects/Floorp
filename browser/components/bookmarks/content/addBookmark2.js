@@ -91,6 +91,20 @@ function Startup()
   gName.focus();
   onFieldInput();
   gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
+
+  // fix no more persisted class attribute in old profiles
+  var localStore = RDF.GetDataSource("rdf:local-store");
+  var rAttribute = RDF.GetResource("class");
+  var rElement   = RDF.GetResource("chrome://browser/content/bookmarks/addBookmark2.xul#expander");
+  var rDialog    = RDF.GetResource("chrome://browser/content/bookmarks/addBookmark2.xul");
+  var rPersist   = RDF.GetResource(NC_NS+"persist");
+  
+  var rOldValue = localStore.GetTarget(rElement, rAttribute, true);
+  if (rOldValue) {
+    localStore.Unassert(rElement, rAttribute, rOldValue, true);
+    localStore.Unassert(rDialog, rPersist, rElement, true);
+    document.getElementById("expander").setAttribute("class", "down");
+  }
 } 
 
 function onFieldInput()
