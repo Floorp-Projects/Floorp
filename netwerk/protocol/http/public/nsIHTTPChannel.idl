@@ -88,6 +88,17 @@ interface nsIHTTPChannel : nsIChannel
 
     attribute PRBool AuthTriedWithPrehost;
 
+	/* 
+		We need a way to switch off gzip, etc. compression on the fly 
+		so that SaveAs would work as expected. Eventually this needs to 
+		go away since the content-conversion should occur only in URI-Loader
+		land. See bug 43092 
+
+		By default this value is TRUE. 
+
+	*/
+	attribute PRBool ApplyConversion; 
+
     readonly attribute PRBool UsingProxy;
 
     readonly attribute nsIPrompt prompter;

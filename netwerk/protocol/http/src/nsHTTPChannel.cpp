@@ -99,7 +99,8 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mBufferMaxSize(0),
     mStatus(NS_OK),
     mPipeliningAllowed (PR_TRUE),
-    mPipelinedRequest (nsnull)
+    mPipelinedRequest (nsnull),
+    mApplyConversion(PR_TRUE)
 {
     NS_INIT_REFCNT();
 			NS_NewISupportsArray ( getter_AddRefs (mStreamAsFileObserverArray ) );
@@ -2428,6 +2429,20 @@ nsHTTPChannel::RemoveObserver(nsIStreamAsFileObserver *aObserver)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTTPChannel::GetApplyConversion(PRBool *aApplyConversion)
+{
+    NS_ENSURE_ARG_POINTER(aApplyConversion);
+    *aApplyConversion = mApplyConversion;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetApplyConversion(PRBool aApplyConversion)
+{
+    mApplyConversion = aApplyConversion;
+    return NS_OK;
+}
 
 static NS_DEFINE_CID(kEventQServiceCID, NS_EVENTQUEUESERVICE_CID);
 // nsISupports implementation

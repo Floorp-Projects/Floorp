@@ -190,6 +190,7 @@ protected:
     nsCOMPtr<nsISupports>               mSecurityInfo;
     // Stream as file
     nsCOMPtr<nsISupportsArray>						mStreamAsFileObserverArray;
+    PRBool                              mApplyConversion;
 };
 
 #include "nsIRunnable.h"
