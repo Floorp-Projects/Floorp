@@ -535,7 +535,5 @@ public abstract class IdScriptable extends ScriptableObject
 
     private static final boolean CACHE_NAMES = true;
     private int lastIdCache;
-
-    private static final int SEAL_FUNCTIONS_FLAG    = 1 << 1;
 }
 
