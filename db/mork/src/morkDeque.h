@@ -33,6 +33,81 @@ which are used interchangeably with the name IronDoc in the sources.)
 #endif
 
 /*=============================================================================
+ * morkNext: linked list node for very simple, singly-linked list
+ */
+
+class morkNext /*d*/ {  
+public:
+  morkNext*  mNext_Link;
+  
+public:
+  morkNext(int inZero) : mNext_Link( 0 ) { }
+  
+  morkNext(morkNext* ioLink) : mNext_Link( ioLink ) { }
+  
+  morkNext(); // mNext_Link( 0 ), { }
+  
+public:
+  morkNext*  GetNextLink() const { return mNext_Link; }
+  
+public: // link memory management methods
+  static void* MakeNewNext(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev);
+  void ZapOldNext(morkEnv* ev, nsIMdbHeap* ioHeap);
+
+public: // link memory management operators
+  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
+  { return morkNext::MakeNewNext(inSize, ioHeap, ev); }
+  
+  void operator delete(void* ioAddress) // DO NOT CALL THIS, hope to crash:
+  { ((morkNext*) 0)->ZapOldNext((morkEnv*) 0, (nsIMdbHeap*) 0); } // boom
+};
+
+/*=============================================================================
+ * morkList: simple, singly-linked list
+ */
+
+/*| morkList: a list of singly-linked members (instances of morkNext), where
+**| the number of list members might be so numerous that we must about cost
+**| for two pointer link slots per member (as happens with morkLink).
+**|
+**|| morkList is intended to support lists of changes in morkTable, where we
+**| are worried about the space cost of representing such changes. (Later we
+**| can use an array instead, when we get even more worried, to avoid cost
+**| of link slots at all, per member).
+**|
+**|| Do NOT create cycles in links using this list class, since we do not
+**| deal with them very nicely.
+|*/
+class morkList /*d*/  {  
+public:
+  morkNext*  mList_Head; // first link in the list
+  morkNext*  mList_Tail; // last link in the list
+  
+public:
+  morkNext*  GetListHead() const { return mList_Head; }
+  morkNext*  GetListTail() const { return mList_Tail; }
+
+  mork_bool IsListEmpty() const { return ( mList_Head == 0 ); }
+  
+public:
+  morkList(); // : mList_Head( 0 ), mList_Tail( 0 ) { }
+  
+  void CutAndZapAllListMembers(morkEnv* ev, nsIMdbHeap* ioHeap);
+  // make empty list, zapping every member by calling ZapOldNext()
+
+  void CutAllListMembers();
+  // just make list empty, dropping members without zapping
+
+public:
+  morkNext* PopHead(); // cut head of list
+  
+  // Note we don't support PopTail(), so use morkDeque if you need that.
+  
+  void PushHead(morkNext* ioLink); // add to head of list
+  void PushTail(morkNext* ioLink); // add to tail of list
+};
+
+/*=============================================================================
  * morkLink: linked list node embedded in objs to allow insertion in morkDeques
  */
 
@@ -40,6 +115,11 @@ class morkLink /*d*/ {
 public:
   morkLink*  mLink_Next;
   morkLink*  mLink_Prev;
+  
+public:
+  morkLink(int inZero) : mLink_Next( 0 ), mLink_Prev( 0 ) { }
+  
+  morkLink(); // mLink_Next( 0 ), mLink_Prev( 0 ) { }
   
 public:
   morkLink*  Next() const { return mLink_Next; }
@@ -62,8 +142,19 @@ public:
   
   void Remove()
   {
-    (mLink_Prev->mLink_Next = mLink_Next)->mLink_Prev =  mLink_Prev;
+    (mLink_Prev->mLink_Next = mLink_Next)->mLink_Prev = mLink_Prev;
   }
+  
+public: // link memory management methods
+  static void* MakeNewLink(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev);
+  void ZapOldLink(morkEnv* ev, nsIMdbHeap* ioHeap);
+
+public: // link memory management operators
+  void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
+  { return morkLink::MakeNewLink(inSize, ioHeap, ev); }
+  
+  void operator delete(void* ioAddress) // DO NOT CALL THIS, hope to crash:
+  { ((morkLink*) 0)->ZapOldLink((morkEnv*) 0, (nsIMdbHeap*) 0); } // boom
 };
 
 /*=============================================================================
@@ -75,7 +166,7 @@ public:
   morkLink  mDeque_Head;
 
 public: // construction
-  morkDeque() { mDeque_Head.SelfRefer(); }
+  morkDeque(); // { mDeque_Head.SelfRefer(); }
 
 public:// methods
   morkLink* RemoveFirst();

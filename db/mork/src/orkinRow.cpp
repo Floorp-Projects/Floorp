@@ -377,6 +377,8 @@ orkinRow::BecomeContent(nsIMdbEnv* mev,
     &outErr, &row);
   if ( ev )
   {
+    // remember row->MaybeDirtySpaceStoreAndRow();
+    
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }

@@ -250,6 +250,8 @@ morkNode::morkNode(const morkUsage& inUsage, nsIMdbHeap* ioHeap)
 , mNode_Uses( 1 )
 , mNode_Refs( 1 )
 {
+  if ( !ioHeap && mNode_Usage == morkUsage_kHeap )
+    MORK_ASSERT(ioHeap);
 }
 
 /*public non-poly*/
@@ -339,13 +341,32 @@ morkNode::CloseNode(morkEnv* ev) // called by CloseMorkNode();
     ev->NilPointerError();
 }
 
+
+extern void // utility method very similar to morkNode::SlotStrongNode():
+nsIMdbFile_SlotStrongFile(nsIMdbFile* self, morkEnv* ev, nsIMdbFile** ioSlot)
+  // If *ioSlot is non-nil, that file is released by CutStrongRef() and
+  // then zeroed out.  Then if self is non-nil, this is acquired by
+  // calling AddStrongRef(), and if the return value shows success,
+  // then self is put into slot *ioSlot.  Note self can be nil, so we take
+  // expression 'nsIMdbFile_SlotStrongFile(0, ev, &slot)'.
+{
+  nsIMdbEnv* menv = ev->AsMdbEnv();
+  nsIMdbFile* file = *ioSlot;
+  if ( file )
+  {
+    *ioSlot = 0;
+    file->CutStrongRef(menv);
+  }
+  if ( self && ev->Good() && (self->AddStrongRef(menv)==0) && ev->Good() )
+    *ioSlot = self;
+}
   
 void // utility method very similar to morkNode::SlotStrongNode():
 nsIMdbHeap_SlotStrongHeap(nsIMdbHeap* self, morkEnv* ev, nsIMdbHeap** ioSlot)
   // If *ioSlot is non-nil, that heap is released by CutStrongRef() and
-  // then zeroed out.  Then if this is non-nil, this is acquired by
+  // then zeroed out.  Then if self is non-nil, self is acquired by
   // calling AddStrongRef(), and if the return value shows success,
-  // then this is put into slot *ioSlot.  Note self can be nil, so we
+  // then self is put into slot *ioSlot.  Note self can be nil, so we
   // permit expression 'nsIMdbHeap_SlotStrongHeap(0, ev, &slot)'.
 {
   nsIMdbEnv* menv = ev->AsMdbEnv();

@@ -299,6 +299,8 @@ orkinCell::SetBlob(nsIMdbEnv* mev,
     &outErr, &cell);
   if ( ev )
   {
+    // remember row->MaybeDirtySpaceStoreAndRow();
+
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -317,6 +319,8 @@ orkinCell::ClearBlob( // make empty (so content has zero length)
     &outErr, &cell);
   if ( ev )
   {
+    // remember row->MaybeDirtySpaceStoreAndRow();
+
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -363,7 +367,11 @@ orkinCell::SetYarn(nsIMdbEnv* mev,
     {
       morkStore* store = row->GetRowSpaceStore(ev);
       if ( store )
+      {
         cell->SetYarn(ev, inYarn, store);
+        if ( row->IsRowClean() && store->mStore_CanDirty )
+          row->MaybeDirtySpaceStoreAndRow();
+      }
     }
     else
       ev->NilPointerError();
@@ -429,8 +437,11 @@ orkinCell::SetColumn(nsIMdbEnv* mev, mdb_column inColumn)
     &outErr, &cell);
   if ( ev )
   {
-    morkCellObject* cellObj;
-    cellObj = (morkCellObject*) mHandle_Object;
+    // remember row->MaybeDirtySpaceStoreAndRow();
+
+    morkCellObject* cellObj = (morkCellObject*) mHandle_Object;
+    MORK_USED_1(cellObj);
+    
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -518,6 +529,7 @@ orkinCell::GetRow(nsIMdbEnv* mev, // parent row for this cell
     *acqRow = outRow;
   return outErr;
 }
+
 /*virtual*/ mdb_err
 orkinCell::GetPort(nsIMdbEnv* mev, // port containing cell
   nsIMdbPort** acqPort)
@@ -623,8 +635,11 @@ orkinCell::SetChildRow( // access table of specific attribute
     &outErr, &cell);
   if ( ev )
   {
-    morkCellObject* cellObj;
-    cellObj = (morkCellObject*) mHandle_Object;
+    // remember row->MaybeDirtySpaceStoreAndRow();
+
+    morkCellObject* cellObj = (morkCellObject*) mHandle_Object;
+    MORK_USED_1(cellObj);
+
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -668,8 +683,11 @@ orkinCell::SetChildTable( // access table of specific attribute
     &outErr, &cell);
   if ( ev )
   {
-    morkCellObject* cellObj;
-    cellObj = (morkCellObject*) mHandle_Object;
+    // remember row->MaybeDirtySpaceStoreAndRow();
+
+    morkCellObject* cellObj = (morkCellObject*) mHandle_Object;
+    MORK_USED_1(cellObj);
+
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }

@@ -36,6 +36,10 @@
 #include "morkFile.h"
 #endif
 
+// #ifndef _ORKINFILE_
+// #include "orkinFile.h"
+// #endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 
@@ -65,7 +69,7 @@ morkFile::~morkFile() // assert CloseFile() executed earlier
 /*public non-poly*/
 morkFile::morkFile(morkEnv* ev, const morkUsage& inUsage, 
   nsIMdbHeap* ioHeap, nsIMdbHeap* ioSlotHeap)
-: morkNode(ev, inUsage, ioHeap)
+: morkObject(ev, inUsage, ioHeap, (morkHandle*) 0)
 , mFile_Frozen( 0 )
 , mFile_DoTrace( 0 )
 , mFile_IoOpen( 0 )
@@ -73,6 +77,7 @@ morkFile::morkFile(morkEnv* ev, const morkUsage& inUsage,
 
 , mFile_SlotHeap( 0 )
 , mFile_Name( 0 )
+, mFile_Thief( 0 )
 {
   if ( ev->Good() )
   {
@@ -101,6 +106,10 @@ morkFile::CloseFile(morkEnv* ev) // called by CloseMorkNode();
       
       if ( mFile_Name )
         this->SetFileName(ev, (const char*) 0);
+
+      nsIMdbHeap_SlotStrongHeap((nsIMdbHeap*) 0, ev, &mFile_SlotHeap);
+      nsIMdbFile_SlotStrongFile((nsIMdbFile*) 0, ev, &mFile_Thief);
+
       this->MarkShut();
     }
     else
@@ -112,6 +121,28 @@ morkFile::CloseFile(morkEnv* ev) // called by CloseMorkNode();
 
 // } ===== end morkNode methods =====
 // ````` ````` ````` ````` ````` 
+
+nsIMdbFile*
+morkFile::AcquireFileHandle(morkEnv* ev)
+{
+  nsIMdbFile* outFile = 0;
+
+#ifdef MORK_CONFIG_USE_ORKINFILE
+  orkinFile* f = (orkinFile*) mObject_Handle;
+  if ( f ) // have an old handle?
+    f->AddStrongRef(ev->AsMdbEnv());
+  else // need new handle?
+  {
+    f = orkinFile::MakeFile(ev, this);
+    mObject_Handle = f;
+  }
+  if ( f )
+    outFile = f;
+#endif /*MORK_CONFIG_USE_ORKINFILE*/
+  MORK_USED_1(ev);
+    
+  return outFile;
+}
 
 /*virtual*/ void
 morkFile::BecomeTrunk(morkEnv* ev)
@@ -159,6 +190,12 @@ morkFile::NewMissingIoError(morkEnv* ev) const
 }
 
 /*static*/ void
+morkFile::NonFileTypeError(morkEnv* ev)
+{
+  ev->NewError("non morkFile");
+}
+
+/*static*/ void
 morkFile::NilSlotHeapError(morkEnv* ev)
 {
   ev->NewError("nil mFile_SlotHeap");
@@ -168,6 +205,12 @@ morkFile::NilSlotHeapError(morkEnv* ev)
 morkFile::NilFileNameError(morkEnv* ev)
 {
   ev->NewError("nil mFile_Name");
+}
+
+void
+morkFile::SetThief(morkEnv* ev, nsIMdbFile* ioThief)
+{
+  nsIMdbFile_SlotStrongFile(ioThief, ev, &mFile_Thief);
 }
 
 void
@@ -216,7 +259,8 @@ void
 morkFile::NewFileErrnoError(morkEnv* ev) const
 // call NewFileErrnoError() to convert std C errno into AB fault
 {
-  ev->NewError("errno"); // maybe pass value of strerror() instead
+  const char* errnoString = strerror(errno);
+  ev->NewError(errnoString); // maybe pass value of strerror() instead
 }
 
 // ````` ````` ````` ````` newlines ````` ````` ````` `````  
@@ -347,8 +391,9 @@ morkStdioFile::CreateNewStdioFile(morkEnv* ev, nsIMdbHeap* ioHeap,
 }
 
 
+
 /*public virtual*/ void
-morkStdioFile:: BecomeTrunk(morkEnv* ev)
+morkStdioFile::BecomeTrunk(morkEnv* ev)
   // If this file is a file version branch created by calling AcquireBud(),
   // BecomeTrunk() causes this file's content to replace the original
   // file's content, typically by assuming the original file's identity.
@@ -414,7 +459,15 @@ morkStdioFile::AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap)
       if ( ev->Good() && this->AddStrongRef(ev) )
         outFile = this;
     }
-    else this->NewMissingIoError(ev);
+    else if ( mFile_Thief )
+    {
+      nsIMdbFile* outBud = 0;
+      mFile_Thief->AcquireBud(ev->AsMdbEnv(), ioHeap, &outBud);
+      if ( outBud )
+        outBud->CutStrongRef(ev->AsMdbEnv()); // convert to morkFile later
+    }
+    else
+      this->NewMissingIoError(ev);
   }
   else this->NewFileDownError(ev);
   
@@ -452,7 +505,10 @@ morkStdioFile::Length(morkEnv* ev) const
       }
       else this->new_stdio_file_fault(ev);
     }
-    else this->NewMissingIoError(ev);
+    else if ( mFile_Thief )
+      mFile_Thief->Eof(ev->AsMdbEnv(), &outPos);
+    else
+      this->NewMissingIoError(ev);
   }
   else this->NewFileDownError(ev);
 
@@ -475,7 +531,10 @@ morkStdioFile::Tell(morkEnv* ev) const
       else
         this->new_stdio_file_fault(ev);
     }
-    else this->NewMissingIoError(ev);
+    else if ( mFile_Thief )
+      mFile_Thief->Tell(ev->AsMdbEnv(), &outPos);
+    else
+      this->NewMissingIoError(ev);
   }
   else this->NewFileDownError(ev);
 
@@ -499,7 +558,10 @@ morkStdioFile::Read(morkEnv* ev, void* outBuf, mork_size inSize)
       }
       else this->new_stdio_file_fault(ev);
     }
-    else this->NewMissingIoError(ev);
+    else if ( mFile_Thief )
+      mFile_Thief->Read(ev->AsMdbEnv(), outBuf, inSize, &outCount);
+    else
+      this->NewMissingIoError(ev);
   }
   else this->NewFileDownError(ev);
 
@@ -522,7 +584,10 @@ morkStdioFile::Seek(morkEnv* ev, mork_pos inPos)
       else
         this->new_stdio_file_fault(ev);
     }
-    else this->NewMissingIoError(ev);
+    else if ( mFile_Thief )
+      mFile_Thief->Seek(ev->AsMdbEnv(), inPos);
+    else
+      this->NewMissingIoError(ev);
   }
   else this->NewFileDownError(ev);
 
@@ -539,12 +604,16 @@ morkStdioFile::Write(morkEnv* ev, const void* inBuf, mork_size inSize)
     FILE* file = (FILE*) mStdioFile_File;
     if ( file )
     {
-      if ( fwrite(inBuf, 1, inSize, file) >= 0 )
+      fwrite(inBuf, 1, inSize, file);
+      if ( !ferror(file) )
         outCount = inSize;
       else
         this->new_stdio_file_fault(ev);
     }
-    else this->NewMissingIoError(ev);
+    else if ( mFile_Thief )
+      mFile_Thief->Write(ev->AsMdbEnv(), inBuf, inSize, &outCount);
+    else
+      this->NewMissingIoError(ev);
   }
   else this->NewFileDownError(ev);
 
@@ -562,7 +631,10 @@ morkStdioFile::Flush(morkEnv* ev)
       MORK_FILEFLUSH(file);
 
     }
-    else this->NewMissingIoError(ev);
+    else if ( mFile_Thief )
+      mFile_Thief->Flush(ev->AsMdbEnv());
+    else
+      this->NewMissingIoError(ev);
   }
   else this->NewFileDownError(ev);
 }
@@ -575,9 +647,14 @@ morkStdioFile::new_stdio_file_fault(morkEnv* ev) const
 {
   FILE* file = (FILE*) mStdioFile_File;
 
+  int copyErrno = errno; // facilitate seeing error in debugger
+  
   //  bunch of stuff not ported here
-  if ( !errno && file )
-    errno = ferror(file);
+  if ( !copyErrno && file )
+  {
+    copyErrno = ferror(file);
+    errno = copyErrno;
+  }
 
   this->NewFileErrnoError(ev);
 }
@@ -712,6 +789,25 @@ morkStdioFile::CloseStdio(morkEnv* ev)
     this->SetFileIoOpen(morkBool_kFalse);
   }
 }
+
+
+/*public virtual*/ void
+morkStdioFile::Steal(morkEnv* ev, nsIMdbFile* ioThief)
+  // If this file is a file version branch created by calling AcquireBud(),
+  // BecomeTrunk() causes this file's content to replace the original
+  // file's content, typically by assuming the original file's identity.
+{
+  if ( mStdioFile_File && this->FileActive() && this->FileIoOpen() )
+  {
+    FILE* file = (FILE*) mStdioFile_File;
+    if ( MORK_FILECLOSE(file) < 0 )
+      this->new_stdio_file_fault(ev);
+    
+    mStdioFile_File = 0;
+  }
+  this->SetThief(ev, ioThief);
+}
+
 
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789

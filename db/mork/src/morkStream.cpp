@@ -92,6 +92,8 @@ morkStream::morkStream(morkEnv* ev, const morkUsage& inUsage,
       if ( ioContentFile->FileFrozen() ) // forced to be readonly?
         inFrozen = morkBool_kTrue; // override the input value
         
+      mork_pos fileEnd = ioContentFile->Length(ev);
+        
       morkFile::SlotStrongFile(ioContentFile, ev, &mStream_ContentFile);
       if ( ev->Good() )
       {
@@ -354,6 +356,22 @@ morkStream::PutLineBreak(morkEnv* ev)
 // ````` ````` ````` `````   ````` ````` ````` `````  
 // public: // virtual morkFile methods
 
+
+/*public virtual*/ void
+morkStream::Steal(morkEnv* ev, nsIMdbFile* ioThief)
+  // Steal: tell this file to close any associated i/o stream in the file
+  // system, because the file ioThief intends to reopen the file in order
+  // to provide the MDB implementation with more exotic file access than is
+  // offered by the nsIMdbFile alone.  Presumably the thief knows enough
+  // from Path() in order to know which file to reopen.  If Steal() is
+  // successful, this file should probably delegate all future calls to
+  // the nsIMdbFile interface down to the thief files, so that even after
+  // the file has been stolen, it can still be read, written, or forcibly
+  // closed (by a call to CloseMdbObject()).
+{
+  MORK_USED_1(ioThief);
+  ev->StubMethodOnlyError();
+}
 
 /*public virtual*/ void
 morkStream::BecomeTrunk(morkEnv* ev)

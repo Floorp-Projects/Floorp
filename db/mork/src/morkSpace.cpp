@@ -91,12 +91,18 @@ morkSpace::morkSpace(morkEnv* ev,
 , mSpace_Scope( inScope )
 , mSpace_DoAutoIDs( morkBool_kFalse )
 , mSpace_HaveDoneAutoIDs( morkBool_kFalse )
+, mSpace_CanDirty( morkBool_kFalse ) // only when store can be dirtied
 {
   if ( ev->Good() )
   {
     if ( ioStore && ioSlotHeap )
     {
       morkStore::SlotWeakStore(ioStore, ev, &mSpace_Store);
+
+      mSpace_CanDirty = ioStore->mStore_CanDirty;
+      if ( mSpace_CanDirty ) // this new space dirties the store?
+        this->MaybeDirtyStoreAndSpace();
+        
       if ( ev->Good() )
         mNode_Derived = morkDerived_kSpace;
     }
@@ -132,9 +138,33 @@ morkSpace::NonAsciiSpaceScopeName(morkEnv* ev)
   ev->NewError("mSpace_Scope > 0x7F");
 }
 
+/*static*/ void 
+morkSpace::NilSpaceStoreError(morkEnv* ev)
+{
+  ev->NewError("nil mSpace_Store");
+}
+
 morkPool* morkSpace::GetSpaceStorePool() const
 {
   return &mSpace_Store->mStore_Pool;
+}
+
+mork_bool morkSpace::MaybeDirtyStoreAndSpace()
+{
+  morkStore* store = mSpace_Store;
+  if ( store && store->mStore_CanDirty )
+  {
+    store->SetStoreDirty();
+    mSpace_CanDirty = morkBool_kTrue;
+  }
+  
+  if ( mSpace_CanDirty )
+  {
+    this->SetSpaceDirty();
+    return morkBool_kTrue;
+  }
+  
+  return morkBool_kFalse;
 }
 
 

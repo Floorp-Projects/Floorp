@@ -274,6 +274,78 @@ orkinFactory::IsOpenMdbObject(nsIMdbEnv* mev, mdb_bool* outOpen)
 
 // { ===== begin nsIMdbFactory methods =====
 
+// { ----- begin file methods -----
+/*virtual*/ mdb_err
+orkinFactory::OpenOldFile(nsIMdbEnv* mev, nsIMdbHeap* ioHeap,
+  const char* inFilePath, mork_bool inFrozen, nsIMdbFile** acqFile)
+  // Choose some subclass of nsIMdbFile to instantiate, in order to read
+  // (and write if not frozen) the file known by inFilePath.  The file
+  // returned should be open and ready for use, and presumably positioned
+  // at the first byte position of the file.  The exact manner in which
+  // files must be opened is considered a subclass specific detail, and
+  // other portions or Mork source code don't want to know how it's done.
+{
+  mdb_err outErr = 0;
+  nsIMdbFile* outFile = 0;
+  morkEnv* ev = this->CanUseFactory(mev,
+    /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkFactory* factory = (morkFactory*) this->mHandle_Object;
+    if ( !ioHeap )
+      ioHeap = &factory->mFactory_Heap;
+      
+    morkFile* file = morkFile::OpenOldFile(ev, ioHeap, inFilePath, inFrozen);
+    if ( file )
+    {
+      outFile = file->AcquireFileHandle(ev);
+      file->CutStrongRef(ev);
+    }
+      
+    outErr = ev->AsErr();
+  }
+  if ( acqFile )
+    *acqFile = outFile;
+    
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinFactory::CreateNewFile(nsIMdbEnv* mev, nsIMdbHeap* ioHeap,
+  const char* inFilePath, nsIMdbFile** acqFile)
+  // Choose some subclass of nsIMdbFile to instantiate, in order to read
+  // (and write if not frozen) the file known by inFilePath.  The file
+  // returned should be created and ready for use, and presumably positioned
+  // at the first byte position of the file.  The exact manner in which
+  // files must be opened is considered a subclass specific detail, and
+  // other portions or Mork source code don't want to know how it's done.
+{
+  mdb_err outErr = 0;
+  nsIMdbFile* outFile = 0;
+  morkEnv* ev = this->CanUseFactory(mev,
+    /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkFactory* factory = (morkFactory*) this->mHandle_Object;
+    if ( !ioHeap )
+      ioHeap = &factory->mFactory_Heap;
+      
+    morkFile* file = morkFile::CreateNewFile(ev, ioHeap, inFilePath);
+    if ( file )
+    {
+      outFile = file->AcquireFileHandle(ev);
+      file->CutStrongRef(ev);
+    }
+      
+    outErr = ev->AsErr();
+  }
+  if ( acqFile )
+    *acqFile = outFile;
+    
+  return outErr;
+}
+// } ----- end file methods -----
+
 // { ----- begin env methods -----
 /*virtual*/ mdb_err
 orkinFactory::MakeEnv(nsIMdbHeap* ioHeap, nsIMdbEnv** acqEnv)
@@ -451,6 +523,9 @@ orkinFactory::ThumbToOpenPort( // redeeming a completed thumb from OpenFilePort(
         if ( store )
         {
           store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
+          store->mStore_CanDirty = morkBool_kTrue;
+          store->SetStoreAndAllSpacesCanDirty(ev, morkBool_kTrue);
+          
           outPort = orkinStore::MakeStore(ev, store);
         }
       }
@@ -555,7 +630,7 @@ orkinFactory::OpenFileStore( // open an existing database
           if ( thumb )
           {
             outThumb = orkinThumb::MakeThumb(ev, thumb);
-			thumb->CutStrongRef(ev);
+            thumb->CutStrongRef(ev);
           }
         }
         store->CutStrongRef(ev); // always cut ref (handle has its own ref)
@@ -595,6 +670,9 @@ orkinFactory::ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
         if ( store )
         {
           store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
+          store->mStore_CanDirty = morkBool_kTrue;
+          store->SetStoreAndAllSpacesCanDirty(ev, morkBool_kTrue);
+          
           outStore = orkinStore::MakeStore(ev, store);
         }
       }
@@ -635,6 +713,9 @@ orkinFactory::CreateNewFileStore( // create a new db with minimal content
       if ( store )
       {
         store->mStore_CanAutoAssignAtomIdentity = morkBool_kTrue;
+        store->mStore_CanDirty = morkBool_kTrue;
+        store->SetStoreAndAllSpacesCanDirty(ev, morkBool_kTrue);
+
         if ( store->CreateStoreFile(ev, inFilePath, inOpenPolicy) )
           outStore = orkinStore::MakeStore(ev, store);
           

@@ -82,6 +82,15 @@ public: // other map methods
   // GetRow() returns the row equal to ioRow, or else nil
   
   // note the rows are owned elsewhere, usuall by morkRowSpace
+
+public: // typesafe refcounting inlines calling inherited morkNode methods
+  static void SlotWeakRowMap(morkMap* me,
+    morkEnv* ev, morkRowMap** ioSlot)
+  { morkNode::SlotWeakNode((morkNode*) me, ev, (morkNode**) ioSlot); }
+  
+  static void SlotStrongRowMap(morkMap* me,
+    morkEnv* ev, morkRowMap** ioSlot)
+  { morkNode::SlotStrongNode((morkNode*) me, ev, (morkNode**) ioSlot); }
 };
 
 class morkRowMapIter: public morkMapIter{ // typesafe wrapper class

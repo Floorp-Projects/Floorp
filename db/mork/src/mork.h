@@ -91,6 +91,8 @@ typedef mork_u4 mork_size;       // unsigned physical media size
 typedef mork_u4 mork_fill;       // unsigned logical content size
 typedef mork_u4 mork_more;       // more available bytes for larger buffer
 
+typedef mdb_u4 mork_percent; // 0..100, with values >100 same as 100
+
 typedef mork_i4 mork_pos; // negative means "before first" (at zero pos)
 typedef mork_i4 mork_line; // negative means "before first line in file"
 
@@ -98,12 +100,21 @@ typedef mork_u1 mork_usage;   // 1-byte magic usage signature slot in object
 typedef mork_u1 mork_access;  // 1-byte magic access signature slot in object
 
 typedef mork_u1 mork_change; // add, cut, put, set, nil
+typedef mork_u1 mork_priority; // 0..9, for a total of ten different values
 
 typedef mork_u1 mork_able; // on, off, asleep (clone IronDoc's fe_able)
 typedef mork_u1 mork_load; // dirty or clean (clone IronDoc's fe_load)
 // } %%%%% end specific-size integer scalar typedefs %%%%%
 
 // { %%%%% begin constants for Mork scalar types %%%%%
+#define morkPriority_kHi  ((mork_priority) 0) /* best priority */
+#define morkPriority_kMin ((mork_priority) 0) /* best priority is smallest */
+
+#define morkPriority_kLo  ((mork_priority) 9) /* worst priority */
+#define morkPriority_kMax ((mork_priority) 9) /* worst priority is biggest */
+
+#define morkPriority_kCount 10 /* number of distinct priority values */
+
 #define morkAble_kEnabled  ((mork_able) 0x55) /* same as IronDoc constant */
 #define morkAble_kDisabled ((mork_able) 0xAA) /* same as IronDoc constant */
 #define morkAble_kAsleep   ((mork_able) 0x5A) /* same as IronDoc constant */
@@ -188,6 +199,7 @@ class morkSpan;
 class morkStore;
 class morkStream;
 class morkTable;
+class morkTableChange;
 class morkTableRowCursor;
 class morkThumb;
 class morkWriter;

@@ -60,6 +60,14 @@ public:
 
   mork_bool IsBook() const { return this->IsWeeBook() || this->IsBigBook(); }
 
+public: // clean vs dirty
+
+  void SetAtomClean() { mAtom_Change = morkChange_kNil; }
+  void SetAtomDirty() { mAtom_Change = morkChange_kAdd; }
+  
+  mork_bool IsAtomClean() const { return mAtom_Change == morkChange_kNil; }
+  mork_bool IsAtomDirty() const { return mAtom_Change == morkChange_kAdd; }
+
 public: // atom space scope if IsBook() is true, or else zero:
 
   mork_scope GetBookAtomSpaceScope(morkEnv* ev) const;
@@ -79,8 +87,6 @@ public: // one-byte refcounting, freezing at maximum
   mork_bool  IsCellUseForever() const 
   { return mAtom_CellUses == morkAtom_kForeverCellUses; }
   
-  void       SetAtomDirty() { mAtom_Change = morkChange_kAdd; }
-
 private: // warnings
 
   static void CellUsesUnderflowWarning(morkEnv* ev);

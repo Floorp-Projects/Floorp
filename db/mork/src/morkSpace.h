@@ -62,7 +62,15 @@ public: // state is public because the entire Mork system is private
   
   mork_bool   mSpace_DoAutoIDs;    // whether db should assign member IDs
   mork_bool   mSpace_HaveDoneAutoIDs; // whether actually auto assigned IDs
-  mork_u1     mSpace_Pad[ 2 ];     // pad to u4 alignment
+  mork_bool   mSpace_CanDirty; // changes imply the store becomes dirty?
+  mork_u1     mSpace_Pad;    // pad to u4 alignment
+
+public: // more specific dirty methods for space:
+  void SetSpaceDirty() { this->SetNodeDirty(); }
+  void SetSpaceClean() { this->SetNodeClean(); }
+  
+  mork_bool IsSpaceClean() const { return this->IsNodeClean(); }
+  mork_bool IsSpaceDirty() const { return this->IsNodeDirty(); }
 
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
@@ -83,8 +91,11 @@ public: // dynamic type identification
 // } ===== end morkNode methods =====
 
 public: // other space methods
+  
+  mork_bool MaybeDirtyStoreAndSpace();
 
   static void NonAsciiSpaceScopeName(morkEnv* ev);
+  static void NilSpaceStoreError(morkEnv* ev);
 
   morkPool* GetSpaceStorePool() const;
 

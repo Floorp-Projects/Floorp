@@ -25,6 +25,10 @@ which are used interchangeably with the name IronDoc in the sources.)
  * There are no warranties, no guarantees, no promises, and no remedies.
  */
 
+#ifndef _MDB_
+#include "mdb.h"
+#endif
+
 #ifndef _MORK_
 #include "mork.h"
 #endif
@@ -32,6 +36,174 @@ which are used interchangeably with the name IronDoc in the sources.)
 #ifndef _MORKDEQUE_
 #include "morkDeque.h"
 #endif
+
+#ifndef _MORKNODE_
+#include "morkNode.h"
+#endif
+
+#ifndef _MORKENV_
+#include "morkEnv.h"
+#endif
+
+/*=============================================================================
+ * morkNext: linked list node for very simple, singly-linked list
+ */
+ 
+morkNext::morkNext() : mNext_Link( 0 )
+{
+}
+
+/*static*/ void*
+morkNext::MakeNewNext(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
+{
+  void* next = 0;
+  if ( &ioHeap )
+  {
+    ioHeap.Alloc(ev->AsMdbEnv(), inSize, (void**) &next);
+    if ( !next )
+      ev->OutOfMemoryError();
+  }
+  else
+    ev->NilPointerError();
+  
+  return next;
+}
+
+/*static*/
+void morkNext::ZapOldNext(morkEnv* ev, nsIMdbHeap* ioHeap)
+{
+  if ( &ioHeap )
+  {
+    if ( this )
+      ioHeap->Free(ev->AsMdbEnv(), this);
+  }
+  else
+    ev->NilPointerError();
+}
+
+/*=============================================================================
+ * morkList: simple, singly-linked list
+ */
+
+morkList::morkList() : mList_Head( 0 ), mList_Tail( 0 )
+{
+}
+
+void morkList::CutAndZapAllListMembers(morkEnv* ev, nsIMdbHeap* ioHeap)
+// make empty list, zapping every member by calling ZapOldNext()
+{
+  if ( ioHeap )
+  {
+    morkNext* next = 0;
+    while ( (next = this->PopHead()) != 0 )
+      next->ZapOldNext(ev, ioHeap);
+      
+    mList_Head = 0;
+    mList_Tail = 0;
+  }
+  else
+    ev->NilPointerError();
+}
+
+void morkList::CutAllListMembers()
+// just make list empty, dropping members without zapping
+{
+  while ( this->PopHead() )
+    /* empty */;
+
+  mList_Head = 0;
+  mList_Tail = 0;
+}
+
+morkNext* morkList::PopHead() // cut head of list
+{
+  morkNext* outHead = mList_Head;
+  if ( outHead ) // anything to cut from list?
+  {
+    morkNext* next = outHead->mNext_Link;
+    mList_Head = next;
+    if ( !next ) // cut the last member, so tail no longer exists?
+      mList_Tail = 0;
+      
+    outHead->mNext_Link = 0; // nil outgoing node link; unnecessary, but tidy
+  }
+  return outHead;
+}
+
+
+void morkList::PushHead(morkNext* ioLink) // add to head of list
+{
+  morkNext* head = mList_Head; // old head of list
+  morkNext* tail = mList_Tail; // old tail of list
+  
+  MORK_ASSERT( (head && tail) || (!head && !tail));
+  
+  ioLink->mNext_Link = head; // make old head follow the new link
+  if ( !head ) // list was previously empty?
+    mList_Tail = ioLink; // head is also tail for first member added
+
+  mList_Head = ioLink; // head of list is the new link
+}
+
+void morkList::PushTail(morkNext* ioLink) // add to tail of list
+{
+  morkNext* head = mList_Head; // old head of list
+  morkNext* tail = mList_Tail; // old tail of list
+  
+  MORK_ASSERT( (head && tail) || (!head && !tail));
+  
+  ioLink->mNext_Link = tail; // make old tail follow the new link
+  if ( !tail ) // list was previously empty?
+    mList_Head = ioLink; // tail is also head for first member added
+  
+  mList_Tail = ioLink; // tail of list is the new link
+}
+
+/*=============================================================================
+ * morkLink: linked list node embedded in objs to allow insertion in morkDeques
+ */
+ 
+morkLink::morkLink() : mLink_Next( 0 ), mLink_Prev( 0 )
+{
+}
+
+/*static*/ void*
+morkLink::MakeNewLink(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
+{
+  void* link = 0;
+  if ( &ioHeap )
+  {
+    ioHeap.Alloc(ev->AsMdbEnv(), inSize, (void**) &link);
+    if ( !link )
+      ev->OutOfMemoryError();
+  }
+  else
+    ev->NilPointerError();
+  
+  return link;
+}
+
+/*static*/
+void morkLink::ZapOldLink(morkEnv* ev, nsIMdbHeap* ioHeap)
+{
+  if ( &ioHeap )
+  {
+    if ( this )
+      ioHeap->Free(ev->AsMdbEnv(), this);
+  }
+  else
+    ev->NilPointerError();
+}
+  
+/*=============================================================================
+ * morkDeque: doubly linked list modeled after VAX queue instructions
+ */
+
+morkDeque::morkDeque()
+{
+  mDeque_Head.SelfRefer();
+}
+
 
 /*| RemoveFirst: 
 |*/

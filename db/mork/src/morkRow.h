@@ -23,18 +23,25 @@
 #include "mork.h"
 #endif
 
+#ifndef _MORKCELL_
+#include "morkCell.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 class nsIMdbRow;
 class nsIMdbCell;
 #define morkDerived_kRow  /*i*/ 0x5277 /* ascii 'Rw' */
 
-#define morkRow_kMaxTableUses 0x0FFFF /* max for 16-bit unsigned int */
+#define morkRow_kMaxGcUses 0x0FF /* max for 8-bit unsigned int */
 #define morkRow_kMaxLength 0x0FFFF /* max for 16-bit unsigned int */
 #define morkRow_kMinusOneRid ((mork_rid) -1)
 
 #define morkRow_kTag 'r' /* magic signature for mRow_Tag */
 
+#define morkRow_kNotedBit   ((mork_u1) (1 << 0)) /* space has change notes */
+#define morkRow_kRewriteBit ((mork_u1) (1 << 1)) /* must rewrite all cells */
+#define morkRow_kDirtyBit   ((mork_u1) (1 << 2)) /* row has been changed */
 
 class morkRow { // row of cells
 
@@ -43,14 +50,58 @@ public: // state is public because the entire Mork system is private
   morkRowObject*  mRow_Object; // refcount & other state for object sharing
   morkCell*       mRow_Cells;
   mdbOid          mRow_Oid;
+  
+  mork_delta      mRow_Delta;   // space to note a single column change
 
   mork_u2         mRow_Length;     // physical count of cells in mRow_Cells 
   mork_u2         mRow_Seed;       // count changes in mRow_Cells structure
 
-  mork_u2         mRow_TableUses;  // persistent references from tables
-  mork_load       mRow_Load;       // is this row clean or dirty?
-  mork_u1         mRow_Tag;        // one-byte tag (need u4 alignment pad)
+  mork_u1         mRow_GcUses;  // persistent references from tables
+  mork_u1         mRow_Pad;     // for u1 alignment
+  mork_u1         mRow_Flags;   // one-byte flags slot
+  mork_u1         mRow_Tag;     // one-byte tag (need u4 alignment pad)
+
+public: // interpreting mRow_Delta
   
+  mork_bool HasRowDelta() const { return ( mRow_Delta != 0 ); }
+  
+  void ClearRowDelta() { mRow_Delta = 0; }
+  
+  void SetRowDelta(mork_column inCol, mork_change inChange)
+  { morkDelta_Init(mRow_Delta, inCol, inChange); }
+  
+  mork_column  GetDeltaColumn() const { return morkDelta_Column(mRow_Delta); }
+  mork_change  GetDeltaChange() const { return morkDelta_Change(mRow_Delta); }
+
+public: // noting row changes
+
+  void NoteRowSetAll(morkEnv* ev);
+  void NoteRowSetCol(morkEnv* ev, mork_column inCol);
+  void NoteRowAddCol(morkEnv* ev, mork_column inCol);
+  void NoteRowCutCol(morkEnv* ev, mork_column inCol);
+
+public: // flags bit twiddling
+
+  void SetRowNoted() { mRow_Flags |= morkRow_kNotedBit; }
+  void SetRowRewrite() { mRow_Flags |= morkRow_kRewriteBit; }
+  void SetRowDirty() { mRow_Flags |= morkRow_kDirtyBit; }
+
+  void ClearRowNoted() { mRow_Flags &= (mork_u1) ~morkRow_kNotedBit; }
+  void ClearRowRewrite() { mRow_Flags &= (mork_u1) ~morkRow_kRewriteBit; }
+  void SetRowClean() { mRow_Flags = 0; mRow_Delta = 0; }
+  
+  mork_bool IsRowNoted() const
+  { return ( mRow_Flags & morkRow_kNotedBit ) != 0; }
+  
+  mork_bool IsRowRewrite() const
+  { return ( mRow_Flags & morkRow_kRewriteBit ) != 0; }
+   
+  mork_bool IsRowClean() const
+  { return ( mRow_Flags & morkRow_kDirtyBit ) == 0; }
+  
+  mork_bool IsRowDirty() const
+  { return ( mRow_Flags & morkRow_kDirtyBit ) != 0; }
+
 public: // other row methods
   morkRow( ) { }
   morkRow(const mdbOid* inOid) :mRow_Oid(*inOid) { }
@@ -63,14 +114,11 @@ public: // other row methods
   nsIMdbCell* AcquireCellHandle(morkEnv* ev, morkCell* ioCell,
     mdb_column inColumn, mork_pos inPos);
   
-  mork_u2 AddTableUse(morkEnv* ev);
-  mork_u2 CutTableUse(morkEnv* ev);
+  mork_u2 AddRowGcUse(morkEnv* ev);
+  mork_u2 CutRowGcUse(morkEnv* ev);
 
-  void SetRowClean() { mRow_Load = morkLoad_kClean; }
-  void SetRowDirty() { mRow_Load = morkLoad_kDirty; }
   
-  mork_bool IsRowClean() const { return mRow_Load == morkLoad_kClean; }
-  mork_bool IsRowDirty() const { return mRow_Load == morkLoad_kDirty; }
+  mork_bool MaybeDirtySpaceStoreAndRow();
 
 public: // internal row methods
 
@@ -129,8 +177,8 @@ public: // external row methods
   void SetRow(morkEnv* ev, const morkRow* inSourceRow);
   void CutAllColumns(morkEnv* ev);
 
-  void OnZeroTableUse(morkEnv* ev);
-  // OnZeroTableUse() is called when CutTableUse() returns zero.
+  void OnZeroRowGcUse(morkEnv* ev);
+  // OnZeroRowGcUse() is called when CutRowGcUse() returns zero.
 
 public: // dynamic typing
 
@@ -167,7 +215,7 @@ public: // errors
   static void NilCellsError(morkEnv* ev);
   static void NonRowTypeError(morkEnv* ev);
   static void NonRowTypeWarning(morkEnv* ev);
-  static void TableUsesUnderflowWarning(morkEnv* ev);
+  static void GcUsesUnderflowWarning(morkEnv* ev);
 
 private: // copying is not allowed
   morkRow(const morkRow& other);

@@ -68,6 +68,10 @@
 #include "morkThumb.h"
 #endif
 
+#ifndef _MORKFILE_
+#include "morkFile.h"
+#endif
+
 #ifndef _ORKINTHUMB_
 #include "orkinThumb.h"
 #endif
@@ -566,7 +570,7 @@ orkinStore::GetRowRefCount( // get number of tables that contain a row
     morkStore* store = (morkStore*) mHandle_Object;
     morkRow* row = store->GetRow(ev, inOid);
     if ( row && ev->Good() )
-      count = row->mRow_TableUses;
+      count = row->mRow_GcUses;
       
     outErr = ev->AsErr();
   }
@@ -758,6 +762,35 @@ orkinStore::GetPortTableCursor( // get cursor for all tables of specific type
 }
 // } ----- end table methods -----
 
+// { ----- begin commit methods -----
+  
+/*virtual*/ mdb_err
+orkinStore::ShouldCompress( // store wastes at least inPercentWaste?
+  nsIMdbEnv* mev, // context
+  mdb_percent inPercentWaste, // 0..100 percent file size waste threshold
+  mdb_percent* outActualWaste, // 0..100 percent of file actually wasted
+  mdb_bool* outShould) // true when about inPercentWaste% is wasted
+{
+  mdb_percent actualWaste = 0;
+  mdb_bool shouldCompress = morkBool_kFalse;
+  mdb_err outErr = 0;
+  morkEnv* ev = this->CanUseStore(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    actualWaste = ((morkStore*) mHandle_Object)->PercentOfStoreWasted(ev);
+    if ( inPercentWaste > 100 )
+      inPercentWaste = 100;
+    shouldCompress = ( actualWaste >= inPercentWaste );
+    outErr = ev->AsErr();
+  }
+  if ( outActualWaste )
+    *outActualWaste = actualWaste;
+  if ( outShould )
+    *outShould = shouldCompress;
+  return outErr;
+}
+
+
 // } ===== end nsIMdbPort methods =====
 
 // { ===== begin nsIMdbStore methods =====
@@ -809,7 +842,7 @@ orkinStore::NewTableWithOid( // make one new table of specific type
     {
       table->mTable_Kind = inTableKind;
       if ( inMustBeUnique )
-        table->mTable_MustBeUnique = inMustBeUnique;
+        table->SetTableUnique();
       outTable = table->AcquireTableHandle(ev);
     }
     outErr = ev->AsErr();
@@ -1030,10 +1063,24 @@ orkinStore::LargeCommit( // save important changes if at all possible
   {
     morkStore* store = (morkStore*) mHandle_Object;
     nsIMdbHeap* heap = store->mPort_Heap;
-    mork_bool doCollect = morkBool_kFalse;
-    morkThumb* thumb = morkThumb::Make_CompressCommit(ev, heap, store, doCollect);
+    
+    morkThumb* thumb = 0;
+    morkFile* file = store->mStore_File;
+    if ( file && file->Length(ev) > 128 && store->mStore_CanWriteIncremental )
+    {
+      thumb = morkThumb::Make_LargeCommit(ev, heap, store);
+    }
+    else
+    {
+      mork_bool doCollect = morkBool_kFalse;
+      thumb = morkThumb::Make_CompressCommit(ev, heap, store, doCollect);
+    }
+    
     if ( thumb )
+    {
       outThumb = orkinThumb::MakeThumb(ev, thumb);
+      thumb->CutStrongRef(ev);
+    }
       
     outErr = ev->AsErr();
   }
@@ -1058,11 +1105,24 @@ orkinStore::SessionCommit( // save all changes if large commits delayed
   {
     morkStore* store = (morkStore*) mHandle_Object;
     nsIMdbHeap* heap = store->mPort_Heap;
-    mork_bool doCollect = morkBool_kFalse;
-    morkThumb* thumb = morkThumb::Make_CompressCommit(ev, heap, store, doCollect);
+    
+    morkThumb* thumb = 0;
+    morkFile* file = store->mStore_File;
+    if ( file && file->Length(ev) > 128 && store->mStore_CanWriteIncremental )
+    {
+      thumb = morkThumb::Make_LargeCommit(ev, heap, store);
+    }
+    else
+    {
+      mork_bool doCollect = morkBool_kFalse;
+      thumb = morkThumb::Make_CompressCommit(ev, heap, store, doCollect);
+    }
+    
     if ( thumb )
+    {
       outThumb = orkinThumb::MakeThumb(ev, thumb);
-      
+      thumb->CutStrongRef(ev);
+    }
     outErr = ev->AsErr();
   }
   if ( acqThumb )
@@ -1078,7 +1138,6 @@ orkinStore::CompressCommit( // commit and make db smaller if possible
 // then the commit will be finished.  Note the store is effectively write
 // locked until commit is finished or canceled through the thumb instance.
 // Until the commit is done, the store will report it has readonly status.
-// } ----- end commit methods -----
 {
   mdb_err outErr = 0;
   nsIMdbThumb* outThumb = 0;
@@ -1090,7 +1149,11 @@ orkinStore::CompressCommit( // commit and make db smaller if possible
     mork_bool doCollect = morkBool_kFalse;
     morkThumb* thumb = morkThumb::Make_CompressCommit(ev, heap, store, doCollect);
     if ( thumb )
+    {
       outThumb = orkinThumb::MakeThumb(ev, thumb);
+      thumb->CutStrongRef(ev);
+      store->mStore_CanWriteIncremental = morkBool_kTrue;
+    }
       
     outErr = ev->AsErr();
   }
@@ -1098,6 +1161,8 @@ orkinStore::CompressCommit( // commit and make db smaller if possible
     *acqThumb = outThumb;
   return outErr;
 }
+
+// } ----- end commit methods -----
 
 // } ===== end nsIMdbStore methods =====
 

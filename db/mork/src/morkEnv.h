@@ -93,7 +93,7 @@ public: // state is public because the entire Mork system is private
   mork_bool         mEnv_DoTrace;
   mork_able         mEnv_AutoClear;
   mork_bool         mEnv_ShouldAbort;
-  mork_bool         mEnv_Pad;
+  mork_bool         mEnv_BeVerbose;
   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
@@ -129,6 +129,7 @@ public: // utility env methods
  
   char* CopyString(nsIMdbHeap* ioHeap, const char* inString);
   void  FreeString(nsIMdbHeap* ioHeap, char* ioString);
+  void  StringToYarn(const char* inString, mdbYarn* outYarn);
 
 public: // other env methods
 
@@ -157,6 +158,7 @@ public: // other env methods
   void StubMethodOnlyError();
   void OutOfMemoryError();
   void NilPointerError();
+  void CantMakeWhenBadError();
   void NewNonEnvError();
   void NilEnvSlotError();
     

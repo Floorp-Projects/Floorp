@@ -60,8 +60,18 @@ public:
   
   mork_column  GetColumn() const { return morkDelta_Column(mCell_Delta); }
   mork_change  GetChange() const { return morkDelta_Change(mCell_Delta); }
+  
+  mork_bool IsCellClean() const { return GetChange() == morkChange_kNil; }
+  mork_bool IsCellDirty() const { return GetChange() != morkChange_kNil; }
 
-  void SetCellDirty();
+  void SetCellClean(); // set change to kNil
+  void SetCellDirty(); // set change to kAdd
+  
+  void SetCellColumnDirty(mork_column inCol)
+  { this->SetColumnAndChange(inCol, morkChange_kAdd); }
+  
+  void SetCellColumnClean(mork_column inCol)
+  { this->SetColumnAndChange(inCol, morkChange_kNil); }
   
   void         SetColumnAndChange(mork_column inCol, mork_change inChange)
   { morkDelta_Init(mCell_Delta, inCol, inChange); }
