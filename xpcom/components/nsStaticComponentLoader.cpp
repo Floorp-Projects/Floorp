@@ -196,7 +196,7 @@ nsStaticComponentLoader::AutoRegisterComponents(PRInt32 when, nsIFile *dir)
     if (mAutoRegistered)
         return NS_OK;
 
-    if (dir)
+    if (!dir)
         return NS_OK;
 
     nsresult rv;
