@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Bradley Baetz <bbaetz@cs.mcgill.ca>
+ * Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -627,14 +627,20 @@ nsFTPDirListingConv::ConvertDOSDate(char *aCStr, PRExplodedTime& outDate) {
 
     PRExplodedTime curTime, nowTime;
     PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &nowTime);
-    PRInt16 century = (nowTime.tm_year/1000 + nowTime.tm_year/100) * 100;
+    PRInt16 currCentury = nowTime.tm_year / 100;
 
     InitPRExplodedTime(curTime);
 
-    curTime.tm_month      = (aCStr[1]-'0')-1;
+    curTime.tm_month      = ((aCStr[0]-'0')*10 + (aCStr[1]-'0')) - 1;
 
     curTime.tm_mday     = (((aCStr[3]-'0')*10) + aCStr[4]-'0');
-    curTime.tm_year     = century + (((aCStr[6]-'0')*10) + aCStr[7]-'0'); 
+    curTime.tm_year     = currCentury*100 + ((aCStr[6]-'0')*10) + aCStr[7]-'0';
+    // year is only 2-digit, so we've converted. If its in the future,
+    // it must have been last century
+    if (curTime.tm_year > nowTime.tm_year) {
+        curTime.tm_year -= 100;
+    }
+
     curTime.tm_hour     = (((aCStr[10]-'0')*10) + aCStr[11]-'0'); 
 
     if (aCStr[15] == 'P')
