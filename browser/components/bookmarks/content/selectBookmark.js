@@ -41,6 +41,8 @@ var gOK;
 
 function Startup()
 {
+  initServices();
+  initBMService();
   var textNode = document.createTextNode(window.arguments[0]);
   document.getElementById("selectBookmarkDescription").appendChild(textNode);
   gBookmarkTree = document.getElementById("bookmarks-view");  

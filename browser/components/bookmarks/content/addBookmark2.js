@@ -69,15 +69,18 @@
  *                        properties, one for each group member.
  */
 
-var gSelectedFolder = null;
-var gName  = null;
-var gGroup = null;
-var gList  = null;
-var gIndentation = null; // temporary hack to indent the folders
-const gNameArc = RDF.GetResource(NC_NS+"Name");
+var gSelectedFolder;
+var gName;
+var gGroup;
+var gList;
+var gIndentation; // temporary hack to indent the folders
+var gNameArc;
 
 function Startup()
 {
+  initServices();
+  initBMService();
+  gNameArc = RDF.GetResource(NC_NS+"Name");
   gName  = document.getElementById("name");
   gGroup = document.getElementById("addgroup");
   gList  = document.getElementById("select-menu");
@@ -108,7 +111,7 @@ function onOK()
   var url, rSource;
   if (gGroup && gGroup.checked) {
     rSource = BMDS.createFolder(gName.value);
-    const groups  = window.arguments[5];
+    const groups = window.arguments[5];
     for (var i = 0; i < groups.length; ++i) {
       url = getNormalizedURL(groups[i].url);
       BMDS.createBookmarkInContainer(groups[i].name, url,

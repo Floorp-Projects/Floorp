@@ -43,6 +43,8 @@ var gSearchBox;
 // tree widget, etc. 
 function Startup() 
 {
+  initServices();
+  initBMService();
   var bookmarksView = document.getElementById("bookmarks-view");  
   bookmarksView.treeBoxObject.selection.select(0);
   gSearchBox = document.getElementById("search-box");
