@@ -1316,16 +1316,12 @@ Array(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (argc > 1) {
 	    length = (jsuint) argc;
 	    vector = argv;
-        }
-        else {
-            if (!ValueIsLength(cx, argv[0], &length)) {
-                vector = argv;
-                length = 1;
-            } else {
-                vector = NULL;
-            }
-            
-        }
+	} else if (!ValueIsLength(cx, argv[0], &length)) {
+	    length = 1;
+	    vector = argv;
+	} else {
+	    vector = NULL;
+	}
     }
     return InitArrayObject(cx, obj, length, vector);
 }
