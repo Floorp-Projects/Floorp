@@ -32,7 +32,6 @@ require "CGI.pl";
 
 # Shut up misguided -w warnings about "used only once":
 use vars qw(
-  %FORM
   $template
   $vars
 );
@@ -54,11 +53,11 @@ Bugzilla->logout();
 my $cgi = Bugzilla->cgi;
 print $cgi->header();
 
-my $login = $::FORM{'login'};
+my $login = $cgi->param('login');
 
 if (defined($login)) {
     # We've been asked to create an account.
-    my $realname = trim($::FORM{'realname'});
+    my $realname = trim($cgi->param('realname'));
     CheckEmailSyntax($login);
     $vars->{'login'} = $login;
     
