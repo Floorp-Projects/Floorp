@@ -541,7 +541,7 @@ nsFtpConnectionThread::Run() {
 
                         char *p = newPath.ToNewCString();
                         mUrl->SetPath(p);
-                        delete [] p;
+                        nsAllocator::Free(p);
                     }
                 }
 

@@ -721,7 +721,7 @@ nsresult nsHTTPResponseListener::ProcessRedirection(PRInt32 aStatusCode)
           m_ResponseContext = nsnull;
         }
       }
-      delete[] location;
+      nsCRT::free(location);
     }
   }
   return rv;

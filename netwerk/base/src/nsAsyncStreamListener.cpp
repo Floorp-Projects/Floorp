@@ -198,21 +198,11 @@ class nsOnStartRequestEvent : public nsStreamListenerEvent
 public:
     nsOnStartRequestEvent(nsAsyncStreamObserver* listener, 
                           nsIChannel* channel, nsISupports* context)
-        : nsStreamListenerEvent(listener, channel, context),
-          mContentType(nsnull) {}
-    virtual ~nsOnStartRequestEvent();
+        : nsStreamListenerEvent(listener, channel, context) {}
+    virtual ~nsOnStartRequestEvent() {}
 
     NS_IMETHOD HandleEvent();
-
-protected:
-    char*       mContentType;
 };
-
-nsOnStartRequestEvent::~nsOnStartRequestEvent()
-{
-    if (mContentType)
-        delete[] mContentType;
-}
 
 NS_IMETHODIMP
 nsOnStartRequestEvent::HandleEvent()
