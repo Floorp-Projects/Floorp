@@ -24,7 +24,6 @@
 #include "modlmime.h"
 #include "libi18n.h"
 #include "nsCRT.h"
-#include "msgcom.h"
 #include "mimeobj.h"
 #include "mimemsg.h"
 #include "mimetric.h"   /* for MIME_RichtextConverter */
