@@ -37,8 +37,6 @@
 #include "nsIFontMetrics.h"
 #include "nsStyleUtil.h"
 
-#include "nsMathMLAtoms.h"
-#include "nsMathMLParts.h"
 #include "nsMathMLmmultiscriptsFrame.h"
 
 //
@@ -103,12 +101,12 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext&          aPresContext,
       childFrame->GetContent(getter_AddRefs(childContent));
       childContent->GetTag(*getter_AddRefs(childTag));
 
-      if (childTag == nsMathMLAtoms::mprescripts) {
+      if (childTag.get() == nsMathMLAtoms::mprescripts) {
 //        NS_ASSERTION(mprescriptsFrame == nsnull,"duplicate <mprescripts/>");
 //printf("mprescripts Found ...\n");  // should ignore?
         mprescriptsFrame = childFrame;
       }
-      else if (childTag == nsMathMLAtoms::none) {
+      else if (childTag.get() == nsMathMLAtoms::none) {
         childDesiredSize.height = 0;
         childDesiredSize.width = 0;
         childDesiredSize.ascent = 0;
