@@ -111,7 +111,7 @@ nsresult nsNewsDatabase::Open(nsFileSpec &newsgroupName, PRBool create, nsIMsgDa
   newsDB->AddRef();
 
   /* sspitzer:  temporary work, don't panic */
-  err = newsDB->OpenMDB("/tmp/mozillamaildb", create);
+  err = newsDB->OpenMDB("/tmp/mozillanews/bar", create);
   if (NS_SUCCEEDED(err)) {
     printf("newsDB->OpenMDB succeeded!\n");
     newsDB->PrePopulate();
