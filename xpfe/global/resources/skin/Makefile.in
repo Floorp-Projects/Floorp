@@ -36,6 +36,7 @@ EXPORT_CHROME	= xul.css \
 		htmlBindings.xml \
 		xulBindings.xml \
 		radioBindings.xml \
+		treeBindings.xml \
 		menulistBindings.xml \
 		$(NULL)
 

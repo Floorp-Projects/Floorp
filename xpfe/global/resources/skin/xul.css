@@ -8,6 +8,7 @@
 
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for HTML elements */
+@namespace xbl url("http://www.mozilla.org/xbl"); /* namespace for XBL elements */
 
 * {
   display: block;
@@ -39,6 +40,10 @@ treechildren, treehead, treerows {
  */
 commands, commandset, command {
 	display: none;
+}
+
+xbl|children {
+  display: none;
 }
 
 broadcasterset, broadcaster {
@@ -190,9 +195,15 @@ tree {
  min-height: 0px;
 }
 
-treerows {
- behavior: url("resource:/chrome/xulBindings.xml#treerows");
+/*
+tree {
+ behavior: url("resource:/chrome/treeBindings.xml#tree");
 }
+
+tree > treechildren {
+ behavior: url("resource:/chrome/treeBindings.xml#treerows");
+}
+*/
 
 treeitem { 
  display: table-row-group; 
@@ -213,27 +224,27 @@ treechildren {
 treecell { 
  display: table-cell;
  vertical-align: middle;
- behavior: url("resource:/chrome/xulBindings.xml#treecell");
+ behavior: url("resource:/chrome/treeBindings.xml#treecell");
 } 
 
 .treecell-indent {
-  behavior: url("resource:/chrome/xulBindings.xml#treecell-indented-leaf");
+  behavior: url("resource:/chrome/treeBindings.xml#treecell-indented-leaf");
 }
 
 treeitem[container="true"] > treerow > .treecell-indent {
-  behavior: url("resource:/chrome/xulBindings.xml#treecell-indented-folder");
+  behavior: url("resource:/chrome/treeBindings.xml#treecell-indented-folder");
 }
 
 .treecell-iconic {
- behavior: url("resource:/chrome/xulBindings.xml#treecell-iconic");
+ behavior: url("resource:/chrome/treeBindings.xml#treecell-iconic");
 }
   
 .treecell-image {
- behavior: url("resource:/chrome/xulBindings.xml#treecell-image");
+ behavior: url("resource:/chrome/treeBindings.xml#treecell-image");
 }
 
 .treecell-header {
-  behavior: url("resource:/chrome/xulBindings.xml#treecell-header");
+  behavior: url("resource:/chrome/treeBindings.xml#treecell-header");
 }
 
 treeitem > treechildren {
