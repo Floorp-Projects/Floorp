@@ -68,23 +68,16 @@
               <treeindentation />
               <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
             </treecell>
-
-            <treecell>
-              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right"
-                            style="list-style-image: none;" />
-            </treecell>
           </treerow>
         </treeitem>
       </rule>
     </template>
 
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" />
-    <treecol rdf:resource="http://home.netscape.com/NC-rdf#URL" />
 
     <treehead>
       <treerow>
         <treecell>&tree.header.name.label;</treecell>
-        <treecell>&tree.header.url.label;</treecell>
       </treerow>
     </treehead>
 
@@ -92,14 +85,12 @@
       <treeitem id="NC:RelatedLinks">
         <treerow>
           <treecell><treeindentation/><titledbutton />Related Links</treecell>
-          <treecell></treecell>
         </treerow>
       </treeitem>
 
       <treeitem id="NC:SiteMapRoot">
         <treerow>
           <treecell><treeindentation/><titledbutton />Site Map</treecell>
-          <treecell></treecell>
         </treerow>
       </treeitem>
     </treechildren>
