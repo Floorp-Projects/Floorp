@@ -62,10 +62,16 @@ static nsIImageRequest  *gImageReq = nsnull;
 #define FILE_URL_PREFIX "file://"
 #endif
 
+#if !defined(WIDGET_DLL)
+#error WIDGET_DLL must be defined
+#endif
+
+#if !defined(GFXWIN_DLL)
+#error GFXWIN_DLL must be defined
+#endif
+
 #ifdef XP_UNIX
 #define XPCOM_DLL "libxpcom.so"
-#define WIDGET_DLL "libwidgetgtk.so"
-#define GFXWIN_DLL "libgfxgtk.so"
 #define TEXT_HEIGHT 30
 #define FILE_URL_PREFIX "file://"
 #endif

@@ -27,7 +27,7 @@ PROGRAM = widget
 
 # Hardcoding dlopen()'s?  This needs to get fixed.
 #
-TOOLKIT_CFLAGS := \
+TOOLKIT_CXXFLAGS := \
 	-DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
 	-DGFXWIN_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
 	$(TK_CFLAGS)
@@ -81,6 +81,7 @@ LIBS := \
 
 
 CFLAGS += $(TOOLKIT_CFLAGS)
+CXXFLAGS += $(TOOLKIT_CXXFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
