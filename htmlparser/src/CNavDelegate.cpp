@@ -282,6 +282,7 @@ PRInt32 CNavDelegate::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& 
      else {
        //oops, we're actually looking at plain text...
        nsAutoString temp("&");
+       temp.Append(ch);
        result=ConsumeText(temp,aScanner,aToken);
      }
    }//if
