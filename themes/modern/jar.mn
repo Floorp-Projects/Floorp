@@ -392,7 +392,6 @@ modern.jar:
   skin/modern/messenger/icons/junk-hov.gif                         (messenger/icons/junk-hov.gif)
   skin/modern/messenger/icons/junk-dis.gif                         (messenger/icons/junk-dis.gif)
   skin/modern/messenger/icons/message-junk-other.gif               (messenger/icons/message-junk-other.gif)
-  skin/modern/messenger/icons/message-junk-unknown.gif             (messenger/icons/message-junk-unknown.gif)
   skin/modern/messenger/messengercompose/messengercompose.css      (messenger/messengercompose/messengercompose.css)
   skin/modern/messenger/messengercompose/icons/mast-msgcomp.gif    (messenger/messengercompose/icons/mast-msgcomp.gif)
   skin/modern/messenger/smime/msgReadSecurityInfo.css              (messenger/smime/msgReadSecurityInfo.css)
