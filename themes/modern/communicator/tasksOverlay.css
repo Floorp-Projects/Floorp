@@ -50,13 +50,6 @@
     -moz-user-focus       : ignore;
   }
 
-/*.taskbar-image-left
-  {
-	background			  : url(chrome://global/skin/taskbar-bg-left.gif) no-repeat;
-	width				  : 12px;
-	height				  : 17px;
-  }
-*/
 .taskbar-image-middle
   {
 	background			  : url(chrome://global/skin/taskbar-bg.gif) repeat-x;
@@ -77,17 +70,15 @@
 	padding				  : 0px;
   }
 
-.taskbarspacer 
+.taskbarspacer
   {
-    min-width             : 0.3em;
-    width                 : 1em;
+  	max-width				  : 0px;
   }
 
 #taskbarMenuBox 
   {
 	-moz-binding      : url(chrome://global/skin/globalBindings.xml#taskbar-menu-box);
 	-moz-user-focus	  : ignore;
-	margin-left			  : 100px;  // Need to change the XUL Later
   }
 
 .taskbar-mb-image-left
