@@ -31,6 +31,9 @@
 <!ENTITY attachPageCmd.label "Attach Web Page...">
 <!ENTITY attachPageCmd.accesskey "W">
 <!ENTITY attachPageButton.label "Web Page...">
+<!ENTITY attachVCardCmd.accesskey "P">
+<!--LOCALIZATION NOTE attachVCardButton.label Don't translate the term 'vCard' -->
+<!ENTITY attachVCardButton.label "Personal Card (vCard)">
 <!ENTITY sendNowCmd.label "Send Now">
 <!ENTITY sendCmd.keycode "VK_RETURN">
 <!ENTITY sendNowCmd.accesskey "d">

@@ -1219,7 +1219,7 @@ function ComposeStartup(recycled, aParams)
       }
       document.getElementById("returnReceiptMenu").setAttribute('checked', 
                                          gMsgCompose.compFields.returnReceipt);
-      document.getElementById("attachVCardMenu").setAttribute('checked', 
+      document.getElementById("cmd_attachVCard").setAttribute('checked', 
                                          gMsgCompose.compFields.attachVCard);
 
       // If recycle, editor is already created
@@ -2451,7 +2451,7 @@ function LoadIdentity(startup)
               prevAttachVCard != newAttachVCard)
           {
             msgCompFields.attachVCard = newAttachVCard;
-            document.getElementById("attachVCardMenu").setAttribute('checked',msgCompFields.attachVCard);
+            document.getElementById("cmd_attachVCard").setAttribute('checked',msgCompFields.attachVCard);
           }
 
           if (newReplyTo != prevReplyTo)
