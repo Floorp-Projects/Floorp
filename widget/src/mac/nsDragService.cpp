@@ -42,6 +42,7 @@
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsILocalFileMac.h"
+#include "nsWatchTask.h"
 
 // rjc
 #include <Gestalt.h>
@@ -254,9 +255,11 @@ printf("**** created drag ref %ld\n", theDragRef);
 
   // start the drag. Be careful, mDragRef will be invalid AFTER this call (it is
   // reset by the dragTrackingHandler).
+  nsWatchTask::GetTask().Suspend();
   StartDragSession();
   ::TrackDrag ( theDragRef, &theEvent, theDragRgn );
   EndDragSession();
+  nsWatchTask::GetTask().Resume();
   
   // clean up after ourselves 
   ::DisposeRgn ( theDragRgn );
