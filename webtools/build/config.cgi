@@ -51,17 +51,15 @@ $default{MOZ_CO_DATE} = strftime("%d %b %Y %H:%M %Z",
 $default_objdir_fillin='@TOPSRCDIR@/obj-@CONFIG_GUESS@';
 $fillin{MOZ_OBJDIR} = $default_objdir_fillin;
 
-
 if ($query->param()) {
   &parse_params;
-
   if ($query->param(preview) eq "1") {
     print "Content-type: text/html\n\n";
     &print_script_preview;
     exit 0;
   } elsif ($query->param(saveas) eq "1") {
     print "Content-type: text/saveas\n\n";
-    &print_script;
+    print print_script();
     exit 0;
   }
 }
