@@ -34,21 +34,21 @@
 #include "prerr.h"
 #include "secerr.h"
 
-/*#include "prtypes.h"*/
 #include "blapi.h"
 #include "secitem.h"
 #include "mpi.h"
 #include "mpprime.h"
 #include "secmpi.h"
 
-#define DH_SECRET_KEY_LEN 20
+#define DH_SECRET_KEY_LEN      20
+#define KEA_DERIVED_SECRET_LEN 128
 
 SECStatus 
 DH_GenParam(int primeLen, DHParams **params)
 {
     PRArenaPool *arena;
     DHParams *dhparams;
-    unsigned char *pb = NULL;
+    unsigned char *qb = NULL;
     unsigned char *ab = NULL;
     unsigned long counter = 0;
     mp_int p, q, a, h, psub1, test;
@@ -83,19 +83,16 @@ DH_GenParam(int primeLen, DHParams **params)
     CHECK_MPI_OK( mp_init(&psub1) );
     CHECK_MPI_OK( mp_init(&test) );
     /* generate prime with MPI, uses Miller-Rabin to generate strong prime. */
-    pb = PORT_Alloc(primeLen);
-    CHECK_SEC_OK( RNG_GenerateGlobalRandomBytes(pb, primeLen) );
-    pb[0]          |= 0x80; /* set high-order bit */
-    pb[primeLen-1] |= 0x01; /* set low-order bit  */
-    CHECK_MPI_OK( mp_read_unsigned_octets(&p, pb, primeLen) );
-    CHECK_MPI_OK( mpp_make_prime(&p, primeLen * 8, PR_TRUE, &counter) );
-    /* construct Sophie-Germain prime q = (p-1)/2. */
-    CHECK_MPI_OK( mp_sub_d(&p, 1, &psub1) );
-    CHECK_MPI_OK( mp_div_2(&psub1, &q)    );
-    /*
-    ** construct a generator from the prime.
-    **
-    */
+    qb = PORT_Alloc(primeLen);
+    CHECK_SEC_OK(RNG_GenerateGlobalRandomBytes(qb, primeLen) );
+    qb[0]          |= 0x80; /* set high-order bit */
+    qb[primeLen-1] |= 0x01; /* set low-order bit  */
+    CHECK_MPI_OK( mp_read_unsigned_octets(&q, qb, primeLen) );
+    CHECK_MPI_OK( mpp_make_prime(&q, primeLen * 8, PR_TRUE, &counter) );
+    /* construct Sophie-Germain prime p = 2q + 1. */
+    CHECK_MPI_OK( mp_mul_2(&q, &psub1)    );
+    CHECK_MPI_OK( mp_add_d(&psub1, 1, &p) );
+    /* construct a generator from the prime. */
     ab = PORT_Alloc(primeLen);
     do {
 	/* generate a candidate number a in p's field */
@@ -119,7 +116,7 @@ cleanup:
     mp_clear(&h);
     mp_clear(&psub1);
     mp_clear(&test);
-    if (pb) PORT_ZFree(pb, primeLen);
+    if (qb) PORT_ZFree(qb, primeLen);
     if (ab) PORT_ZFree(ab, primeLen);
     if (err) {
 	MP_TO_SEC_ERROR(err);
@@ -251,11 +248,93 @@ KEA_Derive(SECItem *prime,
            SECItem *private2,
            SECItem *derivedSecret)
 {
-    return SECFailure;
+    mp_int p, Y, R, r, x, t, u, w;
+    mp_err err;
+    if (!prime || !public1 || !public2 || !private1 || !private2 ||
+        !derivedSecret) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    MP_DIGITS(&p) = 0;
+    MP_DIGITS(&Y) = 0;
+    MP_DIGITS(&R) = 0;
+    MP_DIGITS(&r) = 0;
+    MP_DIGITS(&x) = 0;
+    MP_DIGITS(&t) = 0;
+    MP_DIGITS(&u) = 0;
+    MP_DIGITS(&w) = 0;
+    CHECK_MPI_OK( mp_init(&p) );
+    CHECK_MPI_OK( mp_init(&Y) );
+    CHECK_MPI_OK( mp_init(&R) );
+    CHECK_MPI_OK( mp_init(&r) );
+    CHECK_MPI_OK( mp_init(&x) );
+    CHECK_MPI_OK( mp_init(&t) );
+    CHECK_MPI_OK( mp_init(&u) );
+    CHECK_MPI_OK( mp_init(&w) );
+    SECITEM_TO_MPINT(*prime,    &p);
+    SECITEM_TO_MPINT(*public1,  &Y);
+    SECITEM_TO_MPINT(*public2,  &R);
+    SECITEM_TO_MPINT(*private1, &r);
+    SECITEM_TO_MPINT(*private2, &x);
+    /* t = DH(Y, r, p) = Y ** r mod p */
+    CHECK_MPI_OK( mp_exptmod(&Y, &r, &p, &t) );
+    /* u = DH(R, x, p) = R ** x mod p */
+    CHECK_MPI_OK( mp_exptmod(&R, &x, &p, &u) );
+    /* w = (t + u) mod p */
+    CHECK_MPI_OK( mp_addmod(&t, &u, &p, &w) );
+    /* allocate output buffer and return */
+    SECITEM_AllocItem(NULL, derivedSecret, KEA_DERIVED_SECRET_LEN);
+    err = mp_to_fixlen_octets(&w, derivedSecret->data, KEA_DERIVED_SECRET_LEN);
+    if (err > 0) err = MP_OKAY;
+cleanup:
+    mp_clear(&p);
+    mp_clear(&Y);
+    mp_clear(&R);
+    mp_clear(&r);
+    mp_clear(&x);
+    mp_clear(&t);
+    mp_clear(&u);
+    mp_clear(&w);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	return SECFailure;
+    }
+    return SECSuccess;
 }
 
 PRBool 
 KEA_Verify(SECItem *Y, SECItem *prime, SECItem *subPrime)
 {
-    return PR_FALSE;
+    mp_int p, q, y, r;
+    mp_err err;
+    int cmp = 1;  /* default is false */
+    if (!Y || !prime || !subPrime) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
+    MP_DIGITS(&p) = 0;
+    MP_DIGITS(&q) = 0;
+    MP_DIGITS(&y) = 0;
+    MP_DIGITS(&r) = 0;
+    CHECK_MPI_OK( mp_init(&p) );
+    CHECK_MPI_OK( mp_init(&q) );
+    CHECK_MPI_OK( mp_init(&y) );
+    CHECK_MPI_OK( mp_init(&r) );
+    SECITEM_TO_MPINT(*prime,    &p);
+    SECITEM_TO_MPINT(*subPrime, &q);
+    SECITEM_TO_MPINT(*Y,        &y);
+    /* compute r = y**q mod p */
+    CHECK_MPI_OK( mp_exptmod(&y, &q, &p, &r) );
+    /* compare to 1 */
+    cmp = mp_cmp_d(&r, 1);
+cleanup:
+    mp_clear(&p);
+    mp_clear(&q);
+    mp_clear(&y);
+    mp_clear(&r);
+    if (err) {
+	MP_TO_SEC_ERROR(err);
+	return PR_FALSE;
+    }
+    return (cmp == 0) ? PR_TRUE : PR_FALSE;
 }
