@@ -19,7 +19,6 @@
 #define nsSelection_h___
 
 #include "nsSelectionRange.h"
-//#include "nsISupports.h"
 #include "nsISelection.h"
 
 class nsSelection : public nsISelection {
@@ -30,9 +29,7 @@ class nsSelection : public nsISelection {
     NS_DECL_ISUPPORTS
 
     nsSelection();
-
-    /** supports implementation */
-    //NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtrResult);
+    virtual ~nsSelection();
 
     /**
       * Returns whether there is a valid selection

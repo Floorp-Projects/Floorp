@@ -30,6 +30,7 @@ EXPORTS =			\
 	nsIPresContext.h	\
 	nsIPresShell.h		\
 	nsIRunaround.h		\
+	nsISelection.h	\
 	nsISpaceManager.h	\
 	nsStyleCoord.h	\
 	nsIStyleContext.h	\

@@ -33,6 +33,8 @@ class nsSelectionPoint {
                      PRInt32      aOffset,
                      PRBool       aIsAnchor);
 
+    virtual ~nsSelectionPoint();
+
     nsIContent * GetContent() { return fContent; }
     PRInt32      GetOffset()  { return fOffset;  }
     PRBool       IsAnchor()   { return fIsAnchor;}
