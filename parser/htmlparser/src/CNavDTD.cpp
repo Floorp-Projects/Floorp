@@ -599,7 +599,6 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
 
       CStartToken *theToken=(CStartToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body,"body");
       mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack, don't recycle it 
-      mTokenizer->PrependTokens(mMisplacedContent); //push misplaced content 
       result=BuildModel(aParser,mTokenizer,0,aSink);
     } 
 
@@ -761,7 +760,10 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         case eHTMLTag_markupDecl:
         case eHTMLTag_userdefined:
           break;  //simply pass these through to token handler without further ado...
-
+        case eHTMLTag_newline:
+        case eHTMLTag_whitespace:
+          if(mMisplacedContent.GetSize()<=0) // fix for bugs 17017,18308,23765, and 24275
+            break;                           // Push only when it's absolutely necessary.
         default:
           if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
             if((!mHadBody) && (!mHadFrameset)){
@@ -777,8 +779,13 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 
                 //If you're here then we found a child of the body that was out of place.
                 //We're going to move it to the body by storing it temporarily on the misplaced stack.
+                //However, in quirks mode, a few tags request, ambiguosly, for a BODY. - Bugs 18928, 24204.-
                 mMisplacedContent.Push(aToken);
                 aToken->mUseCount++;
+                if(mParseMode==eParseMode_quirks && (gHTMLElements[theTag].HasSpecialProperty(kRequiresBody))) {
+                  CToken* theBodyToken=(CToken*)mTokenRecycler->CreateTokenOfType(eToken_start,eHTMLTag_body,"body");
+                  result=HandleToken(theBodyToken,aParser);
+                }
                 return result;
               }
 

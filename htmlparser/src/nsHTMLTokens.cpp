@@ -807,11 +807,9 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
       result=aScanner.GetChar(aChar);
       if(NS_OK==result) {
         if(kMinus==aChar) {
-             //in this case, we're reading a long-form comment <-- xxx -->
-
-          nsAutoString gDfltEndComment("-->");
-
+          //in this case, we're reading a long-form comment <-- xxx -->
           aString+=aChar;
+          
           PRInt32 findpos=kNotFound;
           while((kNotFound==findpos) && (NS_OK==result)) {
             result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);          
@@ -822,31 +820,17 @@ nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) 
                 if(kMinus==aChar) return result; // We have found the dflt end comment delimiter ("-->")
               }
               if(kNotFound==theBestAltPos) {
-                const PRUnichar* theBuf=aString.GetUnicode();
-                findpos=aString.Length()-3;
-                theBuf=(PRUnichar*)&theBuf[findpos];
-                if(!gDfltEndComment.Equals(theBuf,PR_FALSE,3)) {
-                  //we didn't find the dflt end comment delimiter, so look for alternatives...
-                  findpos=kNotFound;
-                  theRightChars.Truncate(0);
-                  aString.Right(theRightChars,15);
-                  theRightChars.StripChars(" ");
-
-                  int rclen=theRightChars.Length();
-                  aChar=theRightChars[rclen-2];
-                  if(('!'==aChar) || ('-'==aChar)) {
-                    theBestAltPos=aString.Length();
-                    theStartOffset=aScanner.GetOffset();
-                  }
-                }
+                // If we did not find the dflt then assume that '>' is the end comment
+                // until we find '-->'. Nav. Compatibility -- Ref: Bug# 24006
+                theBestAltPos=aString.Length();
+                theStartOffset=aScanner.GetOffset();
               }
-
             }
           } //while
           if((kNotFound==findpos) && (!aScanner.IsIncremental())) {
             //if you're here, then we're in a special state. 
             //The problem at hand is that we've hit the end of the document without finding the normal endcomment delimiter "-->".
-            //In this case, the first thing we try is to see if we found one of the alternate endcomment delimiters "->" or "!>".
+            //In this case, the first thing we try is to see if we found one of the alternate endcomment delimiter ">".
             //If so, rewind just pass than, and use everything up to that point as your comment.
             //If not, the document has no end comment and should be treated as one big comment.
             if(kNotFound<theBestAltPos) {
@@ -1514,7 +1498,7 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner&
           result=aScanner.ReadNumber(aString);
         }
       }
-      else result=aScanner.ReadIdentifier(aString);
+      else result=aScanner.ReadIdentifier(aString,PR_TRUE); // Ref. Bug# 23791 - For setting aIgnore to PR_TRUE.
       if(NS_OK==result) {
         result=aScanner.Peek(theChar);
         if(NS_OK==result) {

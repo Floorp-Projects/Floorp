@@ -222,6 +222,7 @@ static const int kMustCloseSelf    = 0x0100;
 static const int kSaveMisplaced    = 0x0200; //If set, then children this tag can't contain are pushed onto the misplaced stack
 static const int kNonContainer     = 0x0400; //If set, then this tag is not a container.
 static const int kHandleStrayTag   = 0x0800; //If set, we automatically open a start tag
+static const int kRequiresBody     = 0x1000; //If set, then in case of no BODY one will be opened up immediately.
 
 
 #endif

@@ -648,14 +648,14 @@ nsresult nsScanner::SkipPast(nsString& aValidSet){
 
 
 /**
- *  Consume characters until you find the terminal char
+ *  Consume characters until you did not find the terminal char
  *  
  *  @update  gess 3/25/98
- *  @param   aString receives new data from stream
- *  @param   addTerminal tells us whether to append terminal to aString
+ *  @param   aString - receives new data from stream
+ *  @param   aIgnore - If set ignores ':','-','_'
  *  @return  error code
  */
-nsresult nsScanner::ReadIdentifier(nsString& aString) {
+nsresult nsScanner::ReadIdentifier(nsString& aString,PRBool aIgnore) {
 
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
@@ -672,7 +672,8 @@ nsresult nsScanner::ReadIdentifier(nsString& aString) {
         case ':':
         case '_':
         case '-':
-          found=PR_TRUE;
+          if(!aIgnore)
+            found=PR_TRUE;
           break;
         default:
           if(('a'<=theChar) && (theChar<='z'))

@@ -49,7 +49,7 @@ TagList  gInTR={1,{eHTMLTag_tr}};
 TagList  gInDL={2,{eHTMLTag_dl,eHTMLTag_body}};
 TagList  gInFrameset={1,{eHTMLTag_frameset}};
 TagList  gInNoframes={1,{eHTMLTag_noframes}};
-TagList  gInP={4,{eHTMLTag_address,eHTMLTag_span,eHTMLTag_table,eHTMLTag_form}}; // P containing TABLE - Ref: Bug# 11229
+TagList  gInP={3,{eHTMLTag_address,eHTMLTag_span,eHTMLTag_form}}; // P used to contain TABLE - Ref: Bug# 11229 - Removed TABLE to solve Bug# 24673
 TagList  gOptgroupParents={2,{eHTMLTag_select,eHTMLTag_optgroup}};
 TagList  gBodyParents={2,{eHTMLTag_html,eHTMLTag_noframes}};
 TagList  gColParents={2,{eHTMLTag_table,eHTMLTag_colgroup}};
@@ -117,7 +117,7 @@ TagList  gNoframeRoot={2,{eHTMLTag_body,eHTMLTag_frameset}};
 //*********************************************************************************************
 
 TagList  gBodyAutoClose={1,{eHTMLTag_head}};
-TagList  gTBodyAutoClose={3,{eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_tbody}};
+TagList  gTBodyAutoClose={5,{eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_tbody,eHTMLTag_td,eHTMLTag_th}};  // TD|TH inclusion - Bug# 24112
 TagList  gCaptionAutoClose={1,{eHTMLTag_tbody}};
 TagList  gLIAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
 TagList  gPAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
@@ -685,7 +685,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFormControl, kNone, kNone,	
-      /*special props, prop-range*/       kNonContainer,kDefaultPropRange,
+      /*special props, prop-range*/       kNonContainer|kRequiresBody,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1232,7 +1232,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gInBody,&gInBody,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kFlowEntity, kNone, kNone,	
-      /*special props, prop-range*/       kNonContainer,kNoPropRange,
+      /*special props, prop-range*/       kNonContainer|kRequiresBody,kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
@@ -1386,10 +1386,10 @@ PRBool nsHTMLElement::IsBlockCloser(eHTMLTags aTag){
             gHTMLElements[aTag].IsBlockEntity() ||
             (kHeading==gHTMLElements[aTag].mParentBits));
     if(!result) {
-
+      // NOBR is a block closure - Ref. Bug# 24462
       static eHTMLTags gClosers[]={ eHTMLTag_table,eHTMLTag_tbody,eHTMLTag_caption,eHTMLTag_dd,eHTMLTag_dt,
                                     /* eHTMLTag_td,eHTMLTag_tfoot,eHTMLTag_th,eHTMLTag_thead,eHTMLTag_tr, */
-                                    eHTMLTag_optgroup,eHTMLTag_ol,eHTMLTag_ul};
+                                    eHTMLTag_nobr,eHTMLTag_optgroup,eHTMLTag_ol,eHTMLTag_ul};
       result=FindTagInSet(aTag,gClosers,sizeof(gClosers)/sizeof(eHTMLTag_body));
     }
   }
