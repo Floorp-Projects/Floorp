@@ -114,6 +114,7 @@ protected:
   nsCString     m_command;       // for custom commands
   nsCString     m_msgFetchAttribute; // for fetching custom msg attributes
   nsCString     m_customAttributeResult; // for fetching custom msg attributes
+  nsCString     m_customCommandResult; // custom command response
   PRPackedBool m_validUrl;
   PRPackedBool m_runningUrl;
   PRPackedBool m_idsAreUids;

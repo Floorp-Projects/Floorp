@@ -86,6 +86,7 @@ interface nsIImapUrl : nsISupports
   readonly attribute string customAttributeToFetch;
   attribute string customAttributeResult;
   readonly attribute string command;
+  attribute string customCommandResult;
   void allocateCanonicalPath(in string aServerPath, in char aOnlineDelimiter, out string aAllocatedPath);
   void allocateServerPath(in string aCanonicalPath, in char aOnlineDelimiter, out string aAllocatedPath);
   string createServerSourceFolderPathString();
