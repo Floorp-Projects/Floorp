@@ -1469,11 +1469,7 @@ static NSArray* sToolbarDefaults = nil;
     nsCOMPtr<nsIURI> fixedURI;
     mURIFixer->CreateFixupURI(utf8URL, 0, getter_AddRefs(fixedURI));
     if (fixedURI)
-    {
-      nsCAutoString spec;
-      fixedURI->GetSpec(spec);
-      mGlobalHistory->MarkPageAsTyped(spec.get());
-    }
+      mGlobalHistory->MarkPageAsTyped(fixedURI);
   }
 }
 

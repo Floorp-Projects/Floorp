@@ -330,7 +330,7 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAString& aResult)
         const char* p;
         rv = resource->GetValueConst(&p);
         if (NS_FAILED(rv)) return rv;
-        CopyASCIItoUTF16(p, aResult);
+        CopyUTF8toUTF16(p, aResult);
         return NS_OK;
     }
 

@@ -310,6 +310,9 @@ protected:
   nsresult AddNewPageToDatabase(const char *aURL,
                                 PRInt64 aDate,
                                 nsIMdbRow **aResult);
+
+  nsresult RemovePageInternal(const char *aSpec);
+
   //
   // generic routines for setting/retrieving various datatypes
   //

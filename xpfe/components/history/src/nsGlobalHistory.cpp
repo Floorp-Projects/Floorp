@@ -808,6 +808,36 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
 }
 
 nsresult
+nsGlobalHistory::RemovePageInternal(const char *aSpec)
+{
+  if (!mTable) return NS_ERROR_NOT_INITIALIZED;
+  // find the old row, ignore it if we don't have it
+  nsCOMPtr<nsIMdbRow> row;
+  nsresult rv = FindRow(kToken_URLColumn, aSpec, getter_AddRefs(row));
+  if (NS_FAILED(rv)) return NS_OK;
+
+  // remove the row
+  mdb_err err = mTable->CutRow(mEnv, row);
+  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
+
+  // if there are batches in progress, we don't want to notify
+  // observers that we're deleting items. the caller promises
+  // to handle whatever UI updating is necessary when we're finished.  
+  if (!mBatchesInProgress) {
+    // get the resource so we can do the notification
+    nsCOMPtr<nsIRDFResource> oldRowResource;
+    gRDFService->GetResource(nsDependentCString(aSpec), getter_AddRefs(oldRowResource));
+    NotifyFindUnassertions(oldRowResource, row);
+  }
+
+  // not a fatal error if we can't cut all column
+  err = row->CutAllColumns(mEnv);
+  NS_ASSERTION(err == 0, "couldn't cut all columns");
+
+  return Commit(kCompressCommit);
+}
+
+nsresult
 nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt64& aValue)
 {
   mdb_err err;
@@ -1074,45 +1104,24 @@ nsGlobalHistory::SetPageTitle(nsIURI *aURI, const nsAString& aTitle)
 
 
 NS_IMETHODIMP
-nsGlobalHistory::RemovePage(const char *aURL)
+nsGlobalHistory::RemovePage(nsIURI *aURI)
 {
-  mdb_err err;
-  nsresult rv;
-
-  if (!mTable) return NS_ERROR_NOT_INITIALIZED;
-  // find the old row, ignore it if we don't have it
-  nsCOMPtr<nsIMdbRow> row;
-  rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
-  if (NS_FAILED(rv)) return NS_OK;
-
-  // remove the row
-  err = mTable->CutRow(mEnv, row);
-  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
-
-  // if there are batches in progress, we don't want to notify
-  // observers that we're deleting items. the caller promises
-  // to handle whatever UI updating is necessary when we're finished.  
-  if (!mBatchesInProgress) {
-    // get the resource so we can do the notification
-    nsCOMPtr<nsIRDFResource> oldRowResource;
-    gRDFService->GetResource(nsDependentCString(aURL), getter_AddRefs(oldRowResource));
-    NotifyFindUnassertions(oldRowResource, row);
-  }
-
-  // not a fatal error if we can't cut all column
-  err = row->CutAllColumns(mEnv);
-  NS_ASSERTION(err == 0, "couldn't cut all columns");
-
-  return Commit(kCompressCommit);
+  nsCAutoString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  if (NS_SUCCEEDED(rv))
+    rv = RemovePageInternal(spec.get());
+  return rv;
 }
 
 NS_IMETHODIMP
-nsGlobalHistory::RemovePagesFromHost(const char *aHost, PRBool aEntireDomain)
+nsGlobalHistory::RemovePagesFromHost(const nsACString &aHost, PRBool aEntireDomain)
 {
+  const nsCString &host = PromiseFlatCString(aHost);
+
   matchHost_t hostInfo;
   hostInfo.history = this;
   hostInfo.entireDomain = aEntireDomain;
-  hostInfo.host = aHost;
+  hostInfo.host = host.get();
   
   nsresult rv = RemoveMatchingRows(matchHostCallback, (void *)&hostInfo, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
@@ -1359,12 +1368,16 @@ nsGlobalHistory::HidePage(nsIURI *aURI)
 }
 
 NS_IMETHODIMP
-nsGlobalHistory::MarkPageAsTyped(const char* aURL)
+nsGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
 {
+  nsCAutoString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  if (NS_FAILED(rv)) return rv;
+
   nsCOMPtr<nsIMdbRow> row;
-  nsresult rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
+  rv = FindRow(kToken_URLColumn, spec.get(), getter_AddRefs(row));
   if (NS_FAILED(rv)) {
-    rv = AddNewPageToDatabase(aURL, GetNow(), getter_AddRefs(row));
+    rv = AddNewPageToDatabase(spec.get(), GetNow(), getter_AddRefs(row));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // We don't know if this is a valid URI yet. Hide it until it finishes
@@ -1985,7 +1998,7 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
     }
 
     // ignore any error
-    rv = RemovePage(targetUrl);
+    rv = RemovePageInternal(targetUrl);
     if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED;
 
     return NS_OK;

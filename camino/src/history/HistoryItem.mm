@@ -51,6 +51,7 @@
 
 #include "nsXPIDLString.h"
 #include "nsString.h"
+#include "nsNetUtil.h"
 
 #include "nsComponentManagerUtils.h"
 
@@ -98,7 +99,10 @@
   histDataSource->BeginUpdateBatch();
   if( ![self isExpandable] ) {
     NSString* urlString = [self url];
-    historyService->RemovePage([urlString UTF8String]);
+    nsCOMPtr<nsIURI> uri;
+    NS_NewURI(getter_AddRefs(uri), [urlString UTF8String]);
+    if (uri)
+      historyService->RemovePage(uri);
   }
   else {
     // delete a folder by iterating over each of its children and deleting them. There

@@ -510,6 +510,7 @@ nsresult
 nsIEProfileMigrator::CopyHistory(PRBool aReplace) 
 {
   nsCOMPtr<nsIBrowserHistory> hist(do_GetService(kGlobalHistoryCID));
+  nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
 
   // First, Migrate standard IE History entries...
   ::CoInitialize(NULL);
@@ -527,11 +528,10 @@ nsIEProfileMigrator::CopyHistory(PRBool aReplace)
       STATURL statURL;
       ULONG fetched;
       _bstr_t url, title;
-      nsCAutoString str;
+      nsCAutoString scheme;
       SYSTEMTIME st;
       PRBool validScheme = PR_FALSE;
       PRUnichar* tempTitle = nsnull;
-      nsCOMPtr<nsIURI> uri(do_CreateInstance("@mozilla.org/network/standard-url;1"));
 
       for (int count = 0; (hr = enumURLs->Next(1, &statURL, &fetched)) == S_OK; ++count) {
         if (statURL.pwcsUrl) {
@@ -557,26 +557,32 @@ nsIEProfileMigrator::CopyHistory(PRBool aReplace)
           // 3 - URL
           url = statURL.pwcsUrl;
 
-          str = (char*)(url);
-          uri->SetSpec(str);
+          nsDependentCString urlStr((const char *) url);
+          if (NS_FAILED(ios->ExtractScheme(urlStr, scheme)))
+            continue;
+          ToLowerCase(scheme);
+
           // XXXben - 
           // MSIE stores some types of URLs in its history that we can't handle, like HTMLHelp
           // and others. At present Necko isn't clever enough to delegate handling of these types
           // to the system, so we should just avoid importing them. 
           const char* schemes[] = { "http", "https", "ftp", "file" };
           for (int i = 0; i < 4; ++i) {
-            uri->SchemeIs(schemes[i], &validScheme);
-            if (validScheme)
+            if (validScheme = scheme.EqualsASCII(schemes[i]))
               break;
           }
           
           // 4 - Now add the page
           if (validScheme) {
-            if (tempTitle) 
-              hist->AddPageWithDetails((char*)url, tempTitle, lastVisited);
-            else {
-              nsAutoString urlTitle; urlTitle.AssignWithConversion(url);
-              hist->AddPageWithDetails((char*)url, urlTitle.get(), lastVisited);
+            nsCOMPtr<nsIURI> uri;
+            ios->NewURI(urlStr, nsnull, nsnull, getter_AddRefs(uri));
+            if (uri) {
+              if (tempTitle) 
+                hist->AddPageWithDetails(uri, tempTitle, lastVisited);
+              else {
+                NS_ConvertUTF8toUTF16 urlTitle(urlStr);
+                hist->AddPageWithDetails(uri, urlTitle.get(), lastVisited);
+              }
             }
           }
         }
@@ -612,8 +618,13 @@ nsIEProfileMigrator::CopyHistory(PRBool aReplace)
 
       nsCAutoString valueNameStr(valueName);
       const nsACString& prefix = Substring(valueNameStr, 0, 3);
-      if (prefix.Equals("url"))
-        hist->MarkPageAsTyped((const char*)data);
+      if (prefix.Equals("url")) {
+        nsCOMPtr<nsIURI> uri;
+        ios->NewURI(nsDependentCString((const char *) data), nsnull, nsnull,
+                                       getter_AddRefs(uri));
+        if (uri)
+          hist->MarkPageAsTyped(uri);
+      }
       ++offset;
 
     }

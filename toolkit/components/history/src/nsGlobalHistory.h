@@ -312,6 +312,9 @@ protected:
                                 PRBool aRedirect,
                                 PRBool aTopLevel,
                                 nsIMdbRow **aResult);
+
+  nsresult RemovePageInternal(const char *aSpec);
+
   //
   // generic routines for setting/retrieving various datatypes
   //
