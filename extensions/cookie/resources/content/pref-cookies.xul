@@ -24,7 +24,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://cookie/locale/pref-cookies.dtd">
+<!DOCTYPE page SYSTEM "chrome://cookie/locale/pref-cookies.dtd">
 
 <page id="cookiesPanel" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="init();"
