@@ -35,6 +35,10 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libnkmemcache_s.$(LIB_SUFFIX) \
 		$(NULL)
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+SHARED_LIBRARY_LIBS	+= $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX)
+endif
+
 LOCAL_INCLUDES	= \
 		-I$(DEPTH)/netwerk/cache/memcache \
 		-I$(DEPTH)/netwerk/cache/filecache \
