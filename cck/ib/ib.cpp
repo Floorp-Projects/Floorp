@@ -47,11 +47,11 @@ CString remoteAdminFile;
 CString curPlatform;
 CString platformPath;
 CString templinuxPath;
-CString nsinstPath;
-CString nsinstallerDir;
+CString templinuxDirPath;
 CString xpiDir;
 CString templinuxDir;
-CString tarfile;
+CString targzfile;
+CString strNscpInstaller = "./netscape-installer";
 
 // For use with PrefsTree
 CString gstrCFGPrefFile;
@@ -2118,12 +2118,17 @@ void CreateLinuxInstaller()
 {
 	char currentdir[_MAX_PATH];
 	_getcwd(currentdir,_MAX_PATH);
-	if (FileExists(xpiDstPath+"\\"+tarfile))
-		DeleteFile(xpiDstPath+"\\"+tarfile);
+	
+	// delete tar.gz file of output dir if it already exists
+	if (FileExists(xpiDstPath+"\\"+targzfile))
+		DeleteFile(xpiDstPath+"\\"+targzfile);
+	
+	// Copy customized files to templinux directory
 	CopyDirectory(xpiDstPath, templinuxPath + xpiDir, TRUE);
 	CopyFile(xpiDstPath+"\\Config.ini", templinuxPath+"\\Config.ini",FALSE);
 	DeleteFile(templinuxPath + xpiDir + "\\Config.ini");
 
+	// Remove extra carriage returns in config.ini file
 	FILE *fout = fopen(templinuxPath+"\\config.tmp", "wb");
 	if (!fout)
 	{
@@ -2173,14 +2178,23 @@ void CreateLinuxInstaller()
 	fputs("[END]\n", fout);
 	fclose(fout);
 	DeleteFile(templinuxPath+"\\Config.ini");
-	rename(templinuxPath+"\\config.tmp",templinuxPath+"\\config.ini");	
+	rename(templinuxPath+"\\config.tmp", templinuxPath+"\\config.ini");	
 
 	_chdir(outputPath);
-	templinuxPath = tempPath;
-	templinuxPath.Replace("\\", "/");
-	templinuxPath.Replace(":","");
-	templinuxPath.Insert(0,"/cygdrive/");
-	CString command = "tar -zcvf " + tarfile + " -C " +quotes+ templinuxPath + "/" + templinuxDir +quotes+ spaces + nsinstallerDir;    
+	int pos = targzfile.ReverseFind('.');
+	CString tarfile = targzfile.Left(pos);
+	CopyFile(nscpxpiPath+"\\"+tarfile, xpiDstPath+"\\"+tarfile, FALSE);
+	templinuxDirPath.Replace("\\", "/");
+	templinuxDirPath.Replace(":","");
+	templinuxDirPath.Insert(0,"/cygdrive/");
+	
+	// Add customized xpi files to linux tar file
+	CString command = "tar -rvf " + tarfile + " -C " + quotes + 
+		templinuxDirPath + quotes + spaces + strNscpInstaller;
+	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+
+	// Compress tar file to create customized tar.gz file
+	command = "gzip " + tarfile;
 	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 	_chdir(currentdir);
 }
@@ -2414,12 +2428,11 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	SetGlobal("%REGION%", strREGION);
 
 	// initializing variables for CCK linux build
-	templinuxPath  = tempPath + "\\templinux\\netscape-installer";
-	nsinstPath     = "\\netscape-installer\\xpi";
-	nsinstallerDir = "netscape-installer";
-	xpiDir         = "\\xpi";
-	templinuxDir   = "tempLinux";
-	tarfile        = "netscape-i686-pc-linux-gnu-sea.tar.gz";
+	templinuxPath    = tempPath + "\\templinux\\netscape-installer";
+	xpiDir           = "\\xpi";
+	templinuxDir     = "tempLinux";
+	targzfile        = "netscape-i686-pc-linux-gnu-sea.tar.gz";
+	templinuxDirPath = tempPath + "\\" + templinuxDir;
 
 //  AfxMessageBox("set breakpoint",MB_OK);
 
@@ -2433,23 +2446,12 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 
 	if (curPlatform == "Linux")
 	{
+		// Create directories for temporarily storing customized files
 		_mkdir(tempPath);
 		_chdir(tempPath);
 		_mkdir(templinuxDir);
-		_chdir(templinuxDir);
-		_mkdir(nsinstallerDir);
-
-		CopyDirectory(nscpxpiPath+"\\"+nsinstallerDir, templinuxPath, TRUE);
-	
-		// get rid of this ugly code when bugzilla bug 105351 is fixed
-		CopyFile(nscpxpiPath+"\\full.start", 
-			templinuxPath+"\\xpi\\full.start", FALSE);
-		CopyFile(nscpxpiPath+"\\full.end", 
-			templinuxPath+"\\xpi\\full.end", FALSE);
-		CopyFile(nscpxpiPath+"\\recommended.start", 
-			templinuxPath+"\\xpi\\recommended.start", FALSE);
-		CopyFile(nscpxpiPath+"\\recommended.end",
-			templinuxPath+"\\xpi\\recommended.end", FALSE);
+		_mkdir(templinuxPath);
+		_mkdir(templinuxPath + xpiDir);
 	}
 
 	iniSrcPath	= nscpxpiPath + "\\config.ini";

@@ -7,12 +7,15 @@
 __declspec(dllexport) WIDGET GlobalWidgetArray[1000];
 __declspec(dllexport) int GlobalArrayIndex=0;
 __declspec(dllexport) BOOL IsSameCache = TRUE;
+CString strNscpInstaller = "./netscape-installer/";
+CString strXpi = strNscpInstaller + "xpi/*.xpi";
+CString strConfigini = strNscpInstaller + "config.ini";
 
 void ExtractContents(CString rootPath, CString instblobPath, 
 					 CString instFilename, CString platformInfo, 
 					 CString platformPath, CString extractPath);
-void PopulateNscpxpi(CString rootpath, CString platformInfo, 
-					 CString nscpxpiPath, CString extractPath);
+void PopulateNscpxpi(CString rootpath, CString platformInfo, CString instFilename, CString instblobPath,
+					 CString tarfile, CString nscpxpiPath, CString extractPath);
 
 extern "C" __declspec(dllexport)
 int GetAttrib(CString theValue, char* attribArray[MAX_SIZE])
@@ -236,7 +239,7 @@ void CreateDirectories(CString instblobPath)
 {
 	CString rootPath, curVersion, instDirname, instFilename, fileExtension, 
 			platformInfo, platformPath, extractPath, languageInfo, 
-			languagePath, nscpxpiPath;
+			languagePath, nscpxpiPath, tarfile;
 	int blobPathlen, findfilePos, finddirPos;
 	char oldDir[MAX_SIZE];
 
@@ -248,6 +251,8 @@ void CreateDirectories(CString instblobPath)
 	instFilename    = instblobPath.Right(blobPathlen - finddirPos - 1);
 	findfilePos     = instFilename.Find('.');
 	fileExtension   = instFilename.Right(instFilename.GetLength()- findfilePos - 1);
+	findfilePos     = instFilename.ReverseFind('.');
+	tarfile         = instFilename.Left(findfilePos);
 
 	if (fileExtension == "tar.gz")
 		platformInfo = "Linux";
@@ -277,8 +282,12 @@ void CreateDirectories(CString instblobPath)
 			platformInfo + "\\" + languageInfo;
 		nscpxpiPath    = languagePath + "\\Nscpxpi";
 		_mkdir(languagePath);
-		_mkdir(nscpxpiPath);
-		PopulateNscpxpi(rootPath, platformInfo, nscpxpiPath, extractPath);
+		if (GetFileAttributes(nscpxpiPath) != -1)
+		// directory exists
+			EraseDirectory(nscpxpiPath);
+		else
+			_mkdir(nscpxpiPath);
+		PopulateNscpxpi(rootPath, platformInfo, instFilename, instblobPath, tarfile, nscpxpiPath, extractPath);
 	}		
 	EraseDirectory(extractPath);
 	RemoveDirectory(extractPath);
@@ -295,11 +304,13 @@ void ExtractContents(CString rootPath, CString instblobPath,
 
 	if (platformInfo == "Linux")
 	{
+		// change path to linux format
 		extractPath.Replace("\\","/");
 		extractPath.Replace(":","");
 		extractPath.Insert(0,"/cygdrive/");
-		command = "tar -zxvf " + instFilename + " -C " + quotes + 
-			extractPath + quotes;
+		// Extract config.ini and .xpi files from tar.gz file
+		command = "tar -zxvf " + instFilename + " -C " + quotes + extractPath + 
+			quotes + spaces + strXpi + spaces + strConfigini;
 		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 	}
 	else if (platformInfo == "Windows")
@@ -322,23 +333,36 @@ void ExtractContents(CString rootPath, CString instblobPath,
 
 }
 
-void PopulateNscpxpi(CString rootPath, CString platformInfo, 
-					 CString nscpxpiPath, CString extractPath)
+void PopulateNscpxpi(CString rootPath, CString platformInfo, CString instFilename, CString instblobPath,
+					 CString tarfile, CString nscpxpiPath, CString extractPath)
 // Populate Nscpxpi directory with appropriate installer files
 {
 	CString command, 
 			quotes = "\"", 
 			spaces = " ",
 			nscpzipFile = nscpxpiPath + "\\NSSetup.zip";
+
 	if (platformInfo == "Linux")
 	{
 		CString strNscpInstaller = "\\netscape-installer";
-		_mkdir(nscpxpiPath+strNscpInstaller);
+		CString tempnscpxpiPath = nscpxpiPath;
+
 		CopyDirectory(extractPath+strNscpInstaller+"\\xpi", nscpxpiPath, TRUE);
-		CopyDirectory(extractPath+strNscpInstaller, nscpxpiPath+strNscpInstaller, 
-			FALSE);
-		CopyFile(nscpxpiPath+strNscpInstaller+"\\Config.ini", 
-			nscpxpiPath+"\\Config.ini", FALSE);
+		CopyFile(extractPath+strNscpInstaller+"\\Config.ini", nscpxpiPath+"\\Config.ini", FALSE);
+		CopyFile(instblobPath, nscpxpiPath+"\\"+instFilename, FALSE);
+
+		// change path to linux format
+		tempnscpxpiPath.Replace("\\","/");
+		tempnscpxpiPath.Replace(":","");
+		tempnscpxpiPath.Insert(0,"/cygdrive/");
+		// Decompress tar.gz file
+		CString command = "gzip -d " + quotes + tempnscpxpiPath + "/" + instFilename + quotes;
+		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+		// Delete .xpi and config.ini files in tar.gz
+		command = "tar --delete -f " + quotes + tempnscpxpiPath + "/" + 
+			tarfile + quotes + spaces + strXpi + spaces + strConfigini;
+		ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+		
 	}
 	else if (platformInfo == "Windows")
 	{
