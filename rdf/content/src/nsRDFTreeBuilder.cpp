@@ -729,9 +729,7 @@ RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
 
         	        for (loop=0; loop<numElements; loop++)
 				flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
-#ifdef	XP_MAC		// XXX only Mac for the moment, need to test on other platforms
         		rdf_qsort((void *)flatArray, numElements, sizeof(void *), rdfSortCallback, (void *)&sortInfo);
-#endif
         		for (loop=0; loop<numElements; loop++)
         		{
 				nsIRDFResource	*valueResource;
