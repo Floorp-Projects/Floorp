@@ -2726,7 +2726,10 @@ nsXULElement::SetAttribute(nsINodeInfo* aNodeInfo,
                 NS_REINTERPRET_CAST(XULBroadcastListener*, BroadcastListeners()->ElementAt(i));
 
             if (xulListener->ObservingAttribute(attribute) && 
-               (!aNodeInfo->Equals(nsXULAtoms::id))) {
+               (!aNodeInfo->Equals(nsXULAtoms::id)) &&
+               (!aNodeInfo->Equals(nsXULAtoms::persist)) &&
+               (!aNodeInfo->Equals(nsXULAtoms::ref)))
+            {
                 // XXX Should have a function that knows which attributes are special.
                 // First we set the attribute in the observer.
                 xulListener->mListener->SetAttribute(attribute, aValue);
@@ -2955,7 +2958,10 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID,
                 nsAutoString str;
                 aName->ToString(str);
                 if (xulListener->ObservingAttribute(str) && 
-                   (aName != nsXULAtoms::id)) {
+                   (aName != nsXULAtoms::id) &&
+                   (aName != nsXULAtoms::persist) &&
+                   (aName != nsXULAtoms::ref))
+                {
                     // XXX Should have a function that knows which attributes are special.
                     // Unset the attribute in the broadcast listener.
                     nsCOMPtr<nsIDOMElement> element;
