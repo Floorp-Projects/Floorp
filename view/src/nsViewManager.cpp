@@ -194,8 +194,13 @@ nsresult nsViewManager :: SetFrameRate(PRUint32 aFrameRate)
 
 void nsViewManager :: GetWindowDimensions(nscoord *width, nscoord *height)
 {
-  *width = 0;
-  *height = 0;
+  if (nsnull != mRootView)
+    mRootView->GetDimensions(width, height);
+  else
+  {
+    *width = 0;
+    *height = 0;
+  }
 }
 
 void nsViewManager :: SetWindowDimensions(nscoord width, nscoord height)
@@ -203,10 +208,12 @@ void nsViewManager :: SetWindowDimensions(nscoord width, nscoord height)
   nsIPresShell* presShell = mContext->GetShell();
 
   // Resize the root view
-  mRootView->SetDimensions(width, height);
+  if (nsnull != mRootView)
+    mRootView->SetDimensions(width, height);
 
   // Inform the presentation shell that we've been resized
-  if (nsnull != presShell) {
+  if (nsnull != presShell)
+  {
     presShell->ResizeReflow(width, height);
     NS_RELEASE(presShell);
   }
@@ -509,6 +516,58 @@ void nsViewManager :: MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
 
 void nsViewManager :: ResizeView(nsIView *aView, nscoord width, nscoord height)
 {
+  nscoord twidth, theight, left, top, right, bottom, x, y;
+
+  aView->GetPosition(&x, &y);
+  aView->GetDimensions(&twidth, &theight);
+
+  if (width < twidth)
+  {
+    left = width;
+    right = twidth;
+  }
+  else
+  {
+    left = twidth;
+    right = width;
+  }
+
+  if (height < theight)
+  {
+    top = height;
+    bottom = theight;
+  }
+  else
+  {
+    top = theight;
+    bottom = height;
+  }
+
+  //now damage the right edge of the view,
+  //and the bottom edge of the view,
+
+  nsRect  trect;
+	nsIView *parent = aView->GetParent();  // no addref
+
+  //right edge...
+
+  trect.x = left;
+  trect.y = y;
+  trect.width = right - left;
+  trect.height = bottom - y;
+
+  UpdateView(parent, trect, 0);
+
+  //bottom edge...
+
+  trect.x = x;
+  trect.y = top;
+  trect.width = right - x;
+  trect.height = bottom - top;
+
+  UpdateView(parent, trect, 0);
+
+  aView->SetDimensions(width, height);
 }
 
 void nsViewManager :: SetViewClip(nsIView *aView, nsRect *rect)
