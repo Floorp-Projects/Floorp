@@ -48,7 +48,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 	// the URL should be queried for a nsIMailboxURL. If it doesn't support a mailbox URL interface then
 	// we have an error.
 	nsIMailboxUrl *runningUrl;
-	printf("\n+++ nsMsgMailboxParserStub::OnStartBinding: URL: %p, Content type: %s\n", aURL, aContentType);
+	printf("\n+++ nsMsgMailboxParser::OnStartBinding: URL: %p, Content type: %s\n", aURL, aContentType);
 
 	nsresult rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **)&runningUrl);
 	if (NS_SUCCEEDED(rv) && runningUrl)
