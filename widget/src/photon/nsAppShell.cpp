@@ -568,9 +568,8 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
   
   if (aListen)
   {
-	/* Priority 0=Invalid 1=Really Slow, trying 5 */
-	err = PtAppAddFdPri(NULL,aQueue->GetEventQueueSelectFD(),Pt_FD_READ,
-	        event_processor_callback,aQueue,15);
+	err = PtAppAddFd(NULL,aQueue->GetEventQueueSelectFD(),Pt_FD_READ,
+	        event_processor_callback,aQueue);
     if (err == -1)
 	{
 		printf("nsAppShell::ListenToEventQueue Error calling PtAppAddFd errno=<%d>\n", errno);
