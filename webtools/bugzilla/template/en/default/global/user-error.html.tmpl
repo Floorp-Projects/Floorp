@@ -213,6 +213,7 @@
     0 and 1.
          
   [% ELSIF error == "illegal_change" %]
+    [% title = "Not allowed" %]
     You tried to change the <strong>[% field %]</strong> field 
     from <em>[% oldvalue FILTER html %]</em> to 
     <em>[% newvalue FILTER html %]</em>, 

@@ -1108,7 +1108,7 @@ foreach my $id (@idlist) {
             if (!CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col})) {
                 # More fun hacking... don't display component_id
                 if ($col eq 'component_id') {
-                    $vars->{'oldvalue'} = get_component_name($product_id, $oldhash{'component_id'});
+                    $vars->{'oldvalue'} = get_component_name($oldhash{'component_id'});
                     $vars->{'newvalue'} = $::FORM{'component'};
                     $vars->{'field'} = 'component';
                 }
