@@ -74,6 +74,15 @@ public:
      */
     virtual void  GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize) = 0;
 
+    /**
+     * Sets the indices of the selected items.
+     * @param aIndices Array to hold the selected items. Use GetSelectedCount to
+     *        determine how large the array needs to be.
+     * @param aSize Size of the aIndices array
+     *
+     */
+    virtual void  SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize) = 0;
+
 };
 
 #endif // nsIListBox_h__
