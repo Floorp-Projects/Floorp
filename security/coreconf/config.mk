@@ -50,9 +50,17 @@ include $(CORE_DEPTH)/coreconf/command.mk
 #######################################################################
 # [3.0] Master "Core Components" <architecture>-specific macros       #
 #       (dependent upon <architecture> tags)                          #
+#                                                                     #
+#       We are moving towards just having a $(OS_TARGET).mk file      #
+#       as opposed to multiple $(OS_CONFIG).mk files, one for         #
+#       each OS release.                                              #
 #######################################################################
 
+ifeq (,$(filter-out NetBSD,$(OS_TARGET)))
+include $(CORE_DEPTH)/coreconf/$(OS_TARGET).mk
+else
 include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
+endif
 
 #######################################################################
 # [4.0] Master "Core Components" source and release <platform> tags   #
