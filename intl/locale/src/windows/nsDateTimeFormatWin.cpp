@@ -285,10 +285,13 @@ int nsDateTimeFormatWin::nsGetTimeFormatW(DWORD dwFlags, const SYSTEMTIME *lpTim
 {
   int len = 0;
 
+#ifndef WINCE // Always use wide APIs on Win CE.
   if (mW_API) {
+#endif
     nsString formatString; if (format) formatString.AssignWithConversion(format);
     LPCWSTR wstr = format ? (LPCWSTR) formatString.get() : NULL;
     len = GetTimeFormatW(mLCID, dwFlags, lpTime, wstr, (LPWSTR) timeStr, cchTime);
+#ifndef WINCE // Always use wide APIs on Win CE.
   }
   else {
     char cstr_time[NSDATETIMEFORMAT_BUFFER_LEN];
@@ -300,6 +303,7 @@ int nsDateTimeFormatWin::nsGetTimeFormatW(DWORD dwFlags, const SYSTEMTIME *lpTim
     if (len > 0)
       len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR) cstr_time, len, (LPWSTR) timeStr, cchTime);
   }
+#endif
   return len;
 }
 
@@ -308,10 +312,13 @@ int nsDateTimeFormatWin::nsGetDateFormatW(DWORD dwFlags, const SYSTEMTIME *lpDat
 {
   int len = 0;
 
+#ifndef WINCE // Always use wide APIs on Win CE.
   if (mW_API) {
+#endif
     nsString formatString; if (format) formatString.AssignWithConversion(format);
     LPCWSTR wstr = format ? (LPCWSTR) formatString.get() : NULL;
     len = GetDateFormatW(mLCID, dwFlags, lpDate, wstr, (LPWSTR) dateStr, cchDate);
+#ifndef WINCE // Always use wide APIs on Win CE.
   }
   else {
     char cstr_date[NSDATETIMEFORMAT_BUFFER_LEN];
@@ -323,5 +330,6 @@ int nsDateTimeFormatWin::nsGetDateFormatW(DWORD dwFlags, const SYSTEMTIME *lpDat
     if (len > 0)
       len = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, (LPCSTR) cstr_date, len, (LPWSTR) dateStr, cchDate);
   }
+#endif
   return len;
 }
