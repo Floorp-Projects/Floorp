@@ -216,6 +216,7 @@ bin/chrome/htmlBindings.xml
 bin/chrome/platformHTMLBindings.xml
 bin/defaults/pref/editor.js
 bin/defaults/pref/all.js
+bin/defaults/pref/mailnews.js
 bin/defaults/pref/config.js
 bin/defaults/pref/initpref.js
 bin/defaults/pref/unix.js
@@ -289,6 +290,5 @@ bin/components/import.xpt
 bin/chrome/addressbook/*
 bin/chrome/messenger/*
 bin/chrome/messengercompose/*
-bin/defaults/pref/mailnews.js
 ; this doesn't seem to be in the tree. -blizzard
 ;bin/help/mailhelp/*
