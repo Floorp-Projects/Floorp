@@ -198,35 +198,6 @@ endif
 CVSCO_NSPR = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(NSPR_CO_MODULE)
 
 ####################################
-# CVS defines for L10N
-#
-ifdef MOZ_LANGPACKS
-L10N_CO_MODULE = \
-	mozilla/l10n/Makefile.in \
-	mozilla/l10n/makefiles.all \
-	mozilla/l10n/langpacks
-else
-L10N_CO_MODULE = \
-	mozilla/l10n/Makefile.in \
-	mozilla/l10n/makefiles \
-	mozilla/l10n/langpacks/Makefile.in \
-	mozilla/l10n/langpacks/en-GB/Makefile.in \
-	mozilla/l10n/langpacks/en-GB/theme.mk \
-	mozilla/l10n/langpacks/en-GB/chrome/Makefile.in \
-	mozilla/l10n/langpacks/en-GB/chrome/en-GB/Makefile.in \
-	mozilla/l10n/langpacks/en-GB/chrome/en-GB/manifest.rdf \
-	mozilla/l10n/langpacks/en-GB/defaults/Makefile.in \
-	mozilla/l10n/langpacks/en-GB/defaults/profile/Makefile.in \
-	mozilla/l10n/langpacks/en-GB/defaults/profile/en-GB
-endif
-
-L10N_CO_FLAGS := -P
-ifdef L10N_CO_TAG
-  L10N_CO_FLAGS := $(L10N_CO_FLAGS) -r $(L10N_CO_TAG)
-endif
-CVSCO_L10N = cvs $(CVS_FLAGS) co $(L10N_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(L10N_CO_MODULE)
-
-####################################
 # CVS defines for the C LDAP SDK
 #
 LDAPCSDK_CO_MODULE = mozilla/directory/c-sdk
@@ -376,11 +347,7 @@ $(TOPSRCDIR)/configure: $(TOPSRCDIR)/configure.in $(EXTRA_CONFIG_DEPS)
 	cd $(TOPSRCDIR); $(AUTOCONF)
 endif
 
-ifdef MOZ_LANGPACKS
 CONFIG_STATUS_DEPS_L10N := $(wildcard $(TOPSRCDIR)/l10n/makefiles.all)
-else
-CONFIG_STATUS_DEPS_L10N := $(wildcard $(TOPSRCDIR)/l10n/makefiles)
-endif
 
 CONFIG_STATUS_DEPS := \
 	$(TOPSRCDIR)/configure \

@@ -160,24 +160,6 @@ pull_seamonkey: pull_clientmak
 	cd $(MOZ_SRC)\.
 	$(CVSCO) SeaMonkeyAll
 
-pull_l10n:
-	cd $(MOZ_SRC)\.
-!if defined(MOZ_LANGPACKS)
-	$(CVSCO) mozilla/l10n/makefile.win
-	$(CVSCO) mozilla/l10n/langpacks
-!else
-	$(CVSCO) mozilla/l10n/makefile.win
-	$(CVSCO) mozilla/l10n/langpacks/makefile.win
-	$(CVSCO) mozilla/l10n/langpacks/en-GB/makefile.win
-	$(CVSCO) mozilla/l10n/langpacks/en-GB/theme.mk
-	$(CVSCO) mozilla/l10n/langpacks/en-GB/chrome/makefile.win
-	$(CVSCO) mozilla/l10n/langpacks/en-GB/chrome/en-GB/makefile.win
-	$(CVSCO) mozilla/l10n/langpacks/en-GB/chrome/en-GB/manifest.rdf
-	$(CVSCO) mozilla/l10n/langpacks/en-GB/defaults/makefile.win
-	$(CVSCO) mozilla/l10n/langpacks/en-GB/defaults/profile/makefile.win
-	$(CVSCO) mozilla/l10n/langpacks/en-GB/defaults/profile/en-GB
-!endif
-
 pull_clientmak:
     cd $(MOZ_SRC)\.
     $(CVSCO) mozilla/client.mak
