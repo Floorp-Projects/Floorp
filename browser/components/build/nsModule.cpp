@@ -96,19 +96,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsICabProfileMigrator)
 static const nsModuleComponentInfo components[] =
 {
 #if defined(XP_WIN)
-  { "Browser Shell Shervice",
+  { "Browser Shell Service",
     NS_SHELLSERVICE_CID,
     NS_SHELLSERVICE_CONTRACTID,
     nsWindowsShellServiceConstructor },
 
-#elif defined (XP_MACOSX)
-  { "Browser Shell Shervice",
-    NS_SHELLSERVICE_CID,
-    NS_SHELLSERVICE_CONTRACTID,
-    nsMacShellServiceConstructor },
-
 #elif defined(MOZ_WIDGET_GTK2)
-  { "Browser Shell Shervice",
+  { "Browser Shell Service",
     NS_SHELLSERVICE_CID,
     NS_SHELLSERVICE_CONTRACTID,
     nsGNOMEShellServiceConstructor },
