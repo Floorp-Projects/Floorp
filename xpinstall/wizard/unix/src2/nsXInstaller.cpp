@@ -28,12 +28,14 @@
 
 nsXIContext *gCtx = NULL;
 
-nsXInstaller::nsXInstaller()
+nsXInstaller::nsXInstaller() :
+    mTitle(NULL)
 {
 }
 
 nsXInstaller::~nsXInstaller()
 {
+    XI_IF_FREE(mTitle);
     XI_IF_DELETE(gCtx);
 }
 
@@ -121,7 +123,10 @@ nsXInstaller::RunWizard(int argc, char **argv)
 
     gtk_widget_set_usize(gCtx->window, XI_WIN_WIDTH, XI_WIN_HEIGHT);
     gtk_container_set_border_width(GTK_CONTAINER(gCtx->window), 5);
-    gtk_window_set_title(GTK_WINDOW(gCtx->window), "Mozilla Installer"); // XXX
+    if (mTitle)
+        gtk_window_set_title(GTK_WINDOW(gCtx->window), mTitle);
+    else
+        gtk_window_set_title(GTK_WINDOW(gCtx->window), DEFAULT_TITLE);
     gtk_widget_show(gCtx->window);
 
     // create and display the logo and cancel button
@@ -274,13 +279,23 @@ int
 nsXInstaller::ParseGeneral(nsINIParser *aParser)
 {
     int     err = OK;
-    char    *dest = NULL;
+    char    *dest = NULL, *title = NULL;
     int     size = 0;
  
     /* optional: destination directory can be specified in config.ini */
     err = aParser->GetStringAlloc(GENERAL, DEFAULT_LOCATION, &dest, &size);
-    if (err == OK)
+    if (err == OK && size > 0)
         gCtx->opt->mDestination = dest;
+    else
+        err = OK; /* optional so no error if we didn't find it */
+
+    /* optional: installer app window title */
+    size = 0;
+    err = aParser->GetStringAlloc(GENERAL, TITLE, &title, &size);
+    if (err == OK && size > 0)
+        mTitle = title;
+    else
+        err = OK; /* optional so no error if we didn't find it */
 
     return err;
 }
