@@ -653,7 +653,7 @@ CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::const_ite
    */
 NS_COM
 PRBool
-RFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd )
+RFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd, const nsStringComparator& aComparator)
   {
     PRBool found_it = PR_FALSE;
 
@@ -662,7 +662,7 @@ RFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchSt
 
     while ( searchStart != searchEnd )
       {
-        if ( FindInReadable(aPattern, searchStart, searchEnd) )
+        if ( FindInReadable(aPattern, searchStart, searchEnd, aComparator) )
           {
             found_it = PR_TRUE;
 
@@ -686,7 +686,7 @@ RFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchSt
 
 NS_COM
 PRBool
-RFindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd )
+RFindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd, const nsCStringComparator& aComparator)
   {
     PRBool found_it = PR_FALSE;
 
@@ -695,7 +695,7 @@ RFindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearch
 
     while ( searchStart != searchEnd )
       {
-        if ( FindInReadable(aPattern, searchStart, searchEnd) )
+        if ( FindInReadable(aPattern, searchStart, searchEnd, aComparator) )
           {
             found_it = PR_TRUE;
 

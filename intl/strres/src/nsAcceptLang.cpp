@@ -113,7 +113,7 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
 
   /* not in languageNames.properties; lang only?
    */
-  PRInt32  dash = lc_tmp.FindCharInSet("-");
+  PRInt32  dash = lc_tmp.FindChar('-');
   nsAutoString lang;
   nsAutoString country;
   if (dash > 0) {
@@ -167,7 +167,7 @@ nsAcceptLang::GetLocaleFromAcceptLang(const PRUnichar *aName, PRUnichar **_retva
 
   /* always return lang-country 
    */
-  PRInt32   dash = acceptLang.FindCharInSet("-");
+  PRInt32   dash = acceptLang.FindChar('-');
   if (dash > 0) {
     /* lang-country already */
     *_retval = ToNewUnicode(acceptLang);

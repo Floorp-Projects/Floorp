@@ -3681,7 +3681,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                 result = PRBool(localTrue == value.Equals(attr->mValue));
               }
               else {
-                result = PRBool(localTrue == value.EqualsIgnoreCase(attr->mValue));
+                result = PRBool(localTrue == value.Equals(attr->mValue, nsCaseInsensitiveStringComparator()));
               }
               break;
             case NS_ATTR_FUNC_INCLUDES: 
@@ -3738,7 +3738,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
               }
               break;
             case NS_ATTR_FUNC_CONTAINSMATCH:
-              result = PRBool(localTrue == (-1 != value.Find(attr->mValue, isCaseSensitive)));
+              result = PRBool(localTrue == (FindInReadable(attr->mValue, value, nsCaseInsensitiveStringComparator())));
               break;
           }
         }

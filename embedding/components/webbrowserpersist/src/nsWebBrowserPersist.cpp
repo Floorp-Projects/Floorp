@@ -36,6 +36,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsEscape.h"
+#include "nsUnicharUtils.h"
 
 #include "nsCExternalHandlerService.h"
 
@@ -1119,7 +1120,7 @@ nsWebBrowserPersist::GetDocEncoderContentType(nsIDOMDocument *aDocument, const P
     //   text/plain
 
     if (contentType.Length() > 0 &&
-        !contentType.EqualsIgnoreCase(defaultContentType))
+        !contentType.Equals(defaultContentType, nsCaseInsensitiveStringComparator()))
     {
         // Check if there is an encoder for the desired content type
         nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);

@@ -210,6 +210,26 @@ NS_COM void ToLowerCase( const nsACString& aSource, nsACString& aDest );
 
 NS_COM PRBool FindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator&, const nsStringComparator& = nsDefaultStringComparator() );
 NS_COM PRBool FindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator&, const nsCStringComparator& = nsDefaultCStringComparator() );
+
+/* sometimes we don't care about where the string was, just that we
+ * found it or not */
+inline PRBool FindInReadable( const nsAString& aPattern, nsAString& aSource, const nsStringComparator& compare = nsDefaultStringComparator() )
+{
+  nsAString::const_iterator start, end;
+  aSource.BeginReading(start);
+  aSource.EndReading(end);
+  return FindInReadable(aPattern, start, end, compare);
+}
+
+inline PRBool FindInReadable( const nsACString& aPattern, nsACString& aSource, const nsCStringComparator& compare = nsDefaultCStringComparator() )
+{
+  nsACString::const_iterator start, end;
+  aSource.BeginReading(start);
+  aSource.EndReading(end);
+  return FindInReadable(aPattern, start, end, compare);
+}
+
+
 NS_COM PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator& );
 
   /**
@@ -220,8 +240,8 @@ NS_COM PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACStr
    * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
    * If we need something faster, then we can implement that later.
    */
-NS_COM PRBool RFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator& );
-NS_COM PRBool RFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator& );
+NS_COM PRBool RFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator&, const nsStringComparator& = nsDefaultStringComparator() );
+NS_COM PRBool RFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator&, const nsCStringComparator& = nsDefaultCStringComparator() );
 
    /**
    * Finds the leftmost occurance of |aChar|, if any in the range 

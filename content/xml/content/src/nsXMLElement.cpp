@@ -367,6 +367,10 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
   nsresult rv = NS_OK;
 
   if (mIsLink) {
+    // preload and precalculate length of atom outside of loop
+    const PRUnichar *onloadUnicode;
+    kOnLoadAtom->GetUnicode(&onloadUnicode);
+    nsDependentString onloadString(onloadUnicode);
     do {
       // actuate="onLoad" ?
       nsAutoString value;
@@ -374,7 +378,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
                                               kActuateAtom,
                                               value);
       if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
-          value.EqualsAtom(kOnLoadAtom, PR_FALSE)) {
+          value.Equals(onloadString)) {
 
         // show= ?
         nsLinkVerb verb = eLinkVerb_Undefined;

@@ -98,8 +98,7 @@ nsCertOutliner::CmpByToken(nsIX509Cert *a, nsIX509Cert *b)
   a->GetTokenName(getter_Copies(aTok));
   b->GetTokenName(getter_Copies(bTok));
   if (aTok != nsnull && bTok != nsnull) {
-    nsAutoString aStr(aTok);
-    cmp1 = aStr.CompareWithConversion(bTok);
+    cmp1 = Compare(aTok, bTok);
   } else {
     cmp1 = (aTok == nsnull) ? -1 : 1;
   }
@@ -118,8 +117,7 @@ nsCertOutliner::CmpByIssuerOrg(nsIX509Cert *a, nsIX509Cert *b)
   a->GetIssuerOrganization(getter_Copies(aOrg));
   b->GetIssuerOrganization(getter_Copies(bOrg));
   if (aOrg != nsnull && bOrg != nsnull) {
-    nsAutoString aStr(aOrg);
-    cmp1 = aStr.CompareWithConversion(bOrg);
+    cmp1 = Compare(aOrg, bOrg);
   } else {
     cmp1 = (aOrg == nsnull) ? -1 : 1;
   }
@@ -138,8 +136,7 @@ nsCertOutliner::CmpByName(nsIX509Cert *a, nsIX509Cert *b)
   a->GetOrganization(getter_Copies(aName));
   b->GetOrganization(getter_Copies(bName));
   if (aName != nsnull && bName != nsnull) {
-    nsAutoString aStr(aName);
-    cmp1 = aStr.CompareWithConversion(bName);
+    cmp1 = Compare(aName, bName);
   } else {
     cmp1 = (aName == nsnull) ? -1 : 1;
   }

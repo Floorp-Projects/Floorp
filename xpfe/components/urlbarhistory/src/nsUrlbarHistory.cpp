@@ -253,11 +253,13 @@ nsUrlbarHistory::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteRe
        nsString * match = (nsString *)mIgnoreArray.ElementAt(i);
 	   
 	   if (match) {
-          PRInt32 index = match->Find(uSearchString, PR_TRUE);
-		  if (index == 0) {
-			  listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
-		      return NS_OK;
-		  }
+           nsDependentString searchString(uSearchString);
+           if (searchString.Length() <= match->Length() &&
+               searchString.Equals(Substring(*match, 0, searchString.Length()),
+                                   nsCaseInsensitiveStringComparator())) {
+               listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
+               return NS_OK;
+           }
 	   }  // match
 	}  //for
     
@@ -472,8 +474,10 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 	//       NS_LossyConvertUCS2toASCII(rdfProtocol).get());
        // We have all the data we need. Let's do the comparison
        // We compare the path first and compare the protocol next
-       index = rdfPath.Find(searchPath, PR_TRUE);       
-       if (index == 0) {
+       
+       if (rdfPath.Length() >= searchPath.Length() &&
+           searchPath.Equals(Substring(rdfPath, 0, searchPath.Length()),
+                             nsCaseInsensitiveStringComparator())) {
            // The paths match. Now let's compare protocols
            if (searchProtocol.Length() && rdfProtocol.Length()) {
               // Both the strings have a protocol part. Compare them.

@@ -229,7 +229,7 @@ static const char kApostrophe = '\'';
     PRInt32 endOffset = -1;
     nsresult result = NS_OK;
 
-    offset = aSource.Find(aAttribute);
+    offset = aSource.Find(aAttribute, 0);
     if (-1 != offset) {
         offset = aSource.FindChar('=', offset);
 

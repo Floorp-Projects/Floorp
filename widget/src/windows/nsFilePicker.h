@@ -24,7 +24,6 @@
 #ifndef nsFilePicker_h__
 #define nsFilePicker_h__
 
-#include "nsIFileChannel.h"
 #include "nsILocalFile.h"
 
 #include "nsICharsetConverterManager.h"

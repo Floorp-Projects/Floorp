@@ -82,7 +82,7 @@ getCountry(PRUnichar *lc_name_unichar, PRUnichar **aCountry)
   lc_name.Assign(lc_name_unichar);
   // nsMemory::Free(lc_name_unichar);
 
-  PRInt32   dash = lc_name.FindCharInSet("-");
+  PRInt32   dash = lc_name.FindChar('-');
   if (dash > 0) {
     /* 
      */

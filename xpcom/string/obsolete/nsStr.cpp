@@ -647,7 +647,7 @@ PRInt32 nsStrPrivate::FindSubstr1in2(const nsStr& aDest,const nsStr& aTarget, PR
   return kNotFound;
 }
 
-PRInt32 nsStrPrivate::FindSubstr2in2(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+PRInt32 nsStrPrivate::FindSubstr2in2(const nsStr& aDest,const nsStr& aTarget, PRInt32 anOffset,PRInt32 aCount) {
   
   NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
   NS_ASSERTION(aTarget.GetCharSize() == eTwoByte, "Must be 2 byte");
@@ -675,7 +675,7 @@ PRInt32 nsStrPrivate::FindSubstr2in2(const nsStr& aDest,const nsStr& aTarget, PR
   const PRUnichar* right = (last<max) ? last : max;
   
   while(left<=right){
-    PRInt32 cmp=Compare2To2(left,aTarget.mUStr,aTarget.mLength,aIgnoreCase);
+    PRInt32 cmp=Compare2To2(left,aTarget.mUStr,aTarget.mLength);
     if(0==cmp) {
       return (left-root);
     }
@@ -857,7 +857,7 @@ PRInt32 nsStrPrivate::RFindSubstr1in2(const nsStr& aDest,const nsStr& aTarget,PR
   return kNotFound;
 }
 
-PRInt32 nsStrPrivate::RFindSubstr2in2(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+PRInt32 nsStrPrivate::RFindSubstr2in2(const nsStr& aDest,const nsStr& aTarget,PRInt32 anOffset,PRInt32 aCount) {
 
   NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
   NS_ASSERTION(aTarget.GetCharSize() == eTwoByte, "Must be 2 byte");
@@ -885,7 +885,7 @@ PRInt32 nsStrPrivate::RFindSubstr2in2(const nsStr& aDest,const nsStr& aTarget,PR
   while(leftmost<=rightmost) {
     //don't forget to divide by delta in next text (bug found by rhp)...
     if(aTarget.mLength<=PRUint32(destLast-rightmost)) {
-      PRInt32 result = Compare2To2(rightmost,aTarget.mUStr,aTarget.mLength,aIgnoreCase);
+      PRInt32 result = Compare2To2(rightmost,aTarget.mUStr,aTarget.mLength);
       
       if(0==result) {
         return (rightmost-root);
@@ -1048,13 +1048,13 @@ PRInt32 nsStrPrivate::StrCompare2To1(const nsStr& aDest,const nsStr& aSource,PRI
   return 0;
 }
 
-PRInt32 nsStrPrivate::StrCompare2To2(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PRBool aIgnoreCase) {
+PRInt32 nsStrPrivate::StrCompare2To2(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount) {
   NS_ASSERTION(aDest.GetCharSize() == eTwoByte, "Must be 2 byte");
   NS_ASSERTION(aSource.GetCharSize() == eTwoByte, "Must be 2 byte");
   
   if (aCount) {
     PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
-    PRInt32 result = Compare2To2(aDest.mUStr, aSource.mUStr, theCount, aIgnoreCase);
+    PRInt32 result = Compare2To2(aDest.mUStr, aSource.mUStr, theCount);
     result = TranslateCompareResult(aDest.mLength, aSource.mLength, result, aCount);
     return result;
   }

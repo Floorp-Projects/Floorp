@@ -68,7 +68,7 @@ nsEntityConverter::~nsEntityConverter()
 NS_IMETHODIMP 
 nsEntityConverter::LoadVersionPropertyFile()
 {
-	nsString	aUrl(NS_LITERAL_STRING("resource:/res/entityTables/htmlEntityVersions.properties"));
+    NS_NAMED_LITERAL_STRING(aUrl, "resource:/res/entityTables/htmlEntityVersions.properties");
 	nsIPersistentProperties* entityProperties = NULL;
 	nsIURI* url = NULL;
 	nsIInputStream* in = NULL;
