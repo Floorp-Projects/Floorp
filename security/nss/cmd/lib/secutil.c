@@ -677,6 +677,7 @@ SECU_PrintAsHex(FILE *out, SECItem *data, char *m, int level)
 {
     unsigned i;
     int column;
+    PRBool isString = PR_TRUE;
 
     if ( m ) {
 	SECU_Indent(out, level); fprintf(out, "%s:\n", m);
@@ -685,6 +686,11 @@ SECU_PrintAsHex(FILE *out, SECItem *data, char *m, int level)
     
     SECU_Indent(out, level); column = level*INDENT_MULT;
     for (i = 0; i < data->len; i++) {
+	unsigned char val = data->data[i];
+
+        if (isString && val && !isprint(val)) {
+	    isString = PR_FALSE;
+	}
 	if (i != data->len - 1) {
 	    fprintf(out, "%02x:", data->data[i]);
 	    column += 4;
@@ -698,6 +704,25 @@ SECU_PrintAsHex(FILE *out, SECItem *data, char *m, int level)
 	    SECU_Indent(out, level); column = level*INDENT_MULT;
 	}
     }
+    if (isString) {
+	secu_Newline(out);
+        SECU_Indent(out, level); column = level*INDENT_MULT;
+	for (i = 0; i < data->len; i++) {
+	    unsigned char val = data->data[i];
+
+	    if (val) {
+		fprintf(out,"%c",val);
+		column++;
+	    } else {
+		column = 77;
+	    }
+	    if (column > 76) {
+		secu_Newline(out);
+        	SECU_Indent(out, level); column = level*INDENT_MULT;
+	    }
+	}
+    }
+	    
     level--;
     if (column != level*INDENT_MULT) {
 	secu_Newline(out);
@@ -898,7 +923,7 @@ static void secu_PrintAny(FILE *out, SECItem *i, char *m, int level);
 void
 SECU_PrintSet(FILE *out, SECItem *t, char *m, int level)
 {
-    int type= t->data[0] & 0x1f;
+    int type= t->data[0] & SEC_ASN1_TAGNUM_MASK;
     int start;
     unsigned char *bp;
 
@@ -906,8 +931,8 @@ SECU_PrintSet(FILE *out, SECItem *t, char *m, int level)
     if (m) {
     	fprintf(out, "%s: ", m);
     }
-    fprintf(out,"%s {\n", 
-		type == SEC_ASN1_SET ? "Set" : "Sequence");
+
+    fprintf(out,"%s {\n", type == SEC_ASN1_SET ? "Set" : "Sequence"); /* } */
 
     start = 2;
     if (t->data[1] & 0x80) {
@@ -932,15 +957,34 @@ SECU_PrintSet(FILE *out, SECItem *t, char *m, int level)
 	bp += tmp.len;
 	secu_PrintAny(out,&tmp,NULL,level+1);
     }
-    SECU_Indent(out, level); fprintf(out, "}\n");
+    /* { */SECU_Indent(out, level); fprintf(out, "}\n");
+}
+static void
+secu_PrintContextSpecific(FILE *out, SECItem *i, char *m, int level)
+{
+    int type= i->data[0] & SEC_ASN1_TAGNUM_MASK;
+    SECItem tmp;
+    int start;
 
+    SECU_Indent(out, level);
+    if (m) {
+    	fprintf(out, "%s: ", m);
+    }
+
+    fprintf(out,"Option %d\n", type);
+    start = 2;
+    if (i->data[1] & 0x80) {
+	start = (i->data[1] & 0x7f) +1;
+    }
+    tmp.data = &i->data[start];
+    tmp.len = i->len -start;
+    SECU_PrintAsHex(out, &tmp, m, level+1);
 }
 
-static void
-secu_PrintAny(FILE *out, SECItem *i, char *m, int level)
+static
+secu_PrintUniversal(FILE *out, SECItem *i, char *m, int level)
 {
-    if ( i->len ) {
-	switch (i->data[0] & 0x1f) {
+	switch (i->data[0] & SEC_ASN1_TAGNUM_MASK) {
 	  case SEC_ASN1_INTEGER:
 	    SECU_PrintInteger(out, i, m, level);
 	    break;
@@ -974,6 +1018,23 @@ secu_PrintAny(FILE *out, SECItem *i, char *m, int level)
 	    break;
 	    
 	  default:
+	    SECU_PrintAsHex(out, i, m, level);
+	    break;
+	}
+}
+
+static void
+secu_PrintAny(FILE *out, SECItem *i, char *m, int level)
+{
+    if ( i->len ) {
+	switch (i->data[0] & SEC_ASN1_CLASS_MASK) {
+	case SEC_ASN1_CONTEXT_SPECIFIC:
+	    secu_PrintContextSpecific(out, i, m, level);
+	    break;
+	case SEC_ASN1_UNIVERSAL:
+	    secu_PrintUniversal(out, i, m, level);
+	    break;
+	default:
 	    SECU_PrintAsHex(out, i, m, level);
 	    break;
 	}
