@@ -55,18 +55,16 @@
 					</template>
 
 					<treehead>
-						<treeitem>
-							<treerow>
-								<treecell>
-									&checkbox.column.label;
-								</treecell>
-								<treecell resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending" >
-									<observes element="NameColumn" attribute="sortActive"/>
-									<observes element="NameColumn" attribute="sortDirection"/>
-									&engine.column.label;
-								</treecell>
-							</treerow>
-						</treeitem>
+						<treerow>
+							<treecell>
+								&checkbox.column.label;
+							</treecell>
+							<treecell resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending" >
+								<observes element="NameColumn" attribute="sortActive"/>
+								<observes element="NameColumn" attribute="sortDirection"/>
+								&engine.column.label;
+							</treecell>
+						</treerow>
 					</treehead>
 
 					<treechildren id="NC:SearchEngineRoot" open="true" />
