@@ -30,6 +30,7 @@
 #include "CNavDelegate.h"
 #include "CNavDTD.h"
 #include "prenv.h"  //this is here for debug reasons...
+#include "prio.h"
 #include "plstr.h"
 #include <fstream.h>
 #include "nsIInputStream.h"
@@ -48,6 +49,7 @@ static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 
 static char*  gVerificationOutputDir=0;
+static char*  gURLRef=0;
 static int    rickGDebug=0;
 static const int gTransferBufferSize=4096;  //size of the buffer used in moving data from iistream
 
@@ -160,6 +162,7 @@ nsHTMLParser::nsHTMLParser() {
   mHasOpenForm=PR_FALSE;
   InitializeDefaultTokenHandlers();
   gVerificationOutputDir = PR_GetEnv("VERIFY_PARSER");
+  gURLRef = 0;
 }
 
 
@@ -172,6 +175,11 @@ nsHTMLParser::nsHTMLParser() {
  */
 nsHTMLParser::~nsHTMLParser() {
   DeleteTokenHandlers();
+  if (gURLRef)
+  {
+     PL_strfree(gURLRef);
+     gURLRef = 0;
+  }
   if(mTransferBuffer)
     delete [] mTransferBuffer;
   mTransferBuffer=0;
@@ -279,12 +287,12 @@ PRInt32 nsHTMLParser::GetTopmostIndex(eHTMLTags aTag) const {
   return kNotFound;
 }
 
-
 /**
- *  Destroy the list of token handlers
+ *  Finds a tag handler for the given tag type, given in string.
  *  
  *  @update  gess 4/2/98
- *  @return  this
+ *  @param   aString contains name of tag to be handled
+ *  @return  valid tag handler (if found) or null
  */
 nsHTMLParser& nsHTMLParser::DeleteTokenHandlers(void) {
   int i=0;
@@ -374,8 +382,6 @@ PRBool VerifyContextVector(PRInt32 aTags[],PRInt32 count,nsIDTD* aDTD) {
 
   if(0!=gVerificationOutputDir) {
   
-    if(aDTD){
-
 #ifdef XP_PC
       char    path[_MAX_PATH+1];
       strcpy(path,gVerificationOutputDir);
@@ -393,8 +399,22 @@ PRBool VerifyContextVector(PRInt32 aTags[],PRInt32 count,nsIDTD* aDTD) {
       }
       //ok, now see if we understand this vector
       result=aDTD->VerifyContextVector(aTags,count);
-    }
-    if(PR_FALSE==result){
+
+	  if(PR_FALSE==result){
+#ifdef NS_WIN32
+      // save file to directory indicated by bad context vector
+      int iCount = 1;
+      char filename[_MAX_PATH];
+      do {
+         sprintf(filename,"%s/html%04d.dbg", path, iCount++);
+      } while (PR_Access(filename,PR_ACCESS_EXISTS) == PR_SUCCESS);
+      PRFileDesc * debugFile = PR_Open(filename,PR_CREATE_FILE|PR_RDWR,0);
+      if (debugFile) {
+         PR_Write(debugFile,gURLRef,PL_strlen(gURLRef));
+         PR_Write(debugFile,"\n",PL_strlen("\n"));
+         PR_Close(debugFile);
+      }
+#endif
       //add debugging code here to record the fact that we just encountered
       //a context vector we don't know how to handle.
     }
@@ -528,7 +548,13 @@ PRInt32 nsHTMLParser::ParseFileIncrementally(const char* aFilename){
   nsString  theBuffer;
   const int kLocalBufSize=10;
 
+  if (gURLRef)
+     PL_strfree(gURLRef);
+  if (aFilename)
+     gURLRef = PL_strdup(aFilename);
+
   mIteration=-1;
+
 #if defined(XP_UNIX) && defined(IRIX)
   /* XXX: IRIX does not support ios::binary */
   mFileStream=new fstream(aFilename,ios::in);
@@ -576,14 +602,15 @@ PRInt32 nsHTMLParser::ParseFileIncrementally(const char* aFilename){
  */
 PRBool nsHTMLParser::Parse(const char* aFilename,PRBool aIncremental){
   NS_PRECONDITION(0!=aFilename,kNullFilename);
-
   PRInt32 status=kBadFilename;
-
   mIncremental=aIncremental;
   mParseMode=DetermineParseMode();  
 
   if(aFilename) {
 
+    if (gURLRef)
+       PL_strfree(gURLRef);
+    gURLRef = PL_strdup(aFilename);
     GetDelegateAndDTD(mParseMode,mDelegate,mDTD);
     if(mDelegate) {
 
@@ -631,6 +658,14 @@ PRInt32 nsHTMLParser::Parse(nsIURL* aURL,PRBool aIncremental ){
   mParseMode=DetermineParseMode();   
 
   if(aURL) {
+
+     if (gURLRef)
+     {
+        PL_strfree(gURLRef);
+        gURLRef = 0;
+     }
+     if (aURL->GetSpec())
+        gURLRef = PL_strdup(aURL->GetSpec());
 
     GetDelegateAndDTD(mParseMode,mDelegate,mDTD);
     if(mDelegate) {
@@ -1334,7 +1369,7 @@ PRInt32 nsHTMLParser::CloseContainer(const nsIParserNode& aNode){
       break;
 
     case eHTMLTag_head:
-      //result=CloseHead(aNode); 
+      result=CloseHead(aNode); 
       break;
 
     case eHTMLTag_body:
