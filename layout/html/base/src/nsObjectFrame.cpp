@@ -95,7 +95,6 @@
 #include "nsIDOMRange.h"
 #include "nsIPrintContext.h"
 #include "nsIPrintPreviewContext.h"
-#include "nsIWidget.h"
 #include "nsIPluginWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
@@ -346,17 +345,17 @@ public:
 #endif
 
 private:
-  nsPluginNativeWindow *mPluginWindow;
-  nsIPluginInstance *mInstance;
-  nsObjectFrame     *mOwner;
-  nsCString          mDocumentBase;
-  char              *mTagText;
-  nsIWidget         *mWidget;
-  nsIPresContext    *mContext;
-  nsCOMPtr<nsITimer> mPluginTimer;
-  nsIPluginHost     *mPluginHost;
-  PRPackedBool       mContentFocused;
-  PRPackedBool       mWidgetVisible;    // used on Mac to store our widget's visible state
+  nsPluginNativeWindow       *mPluginWindow;
+  nsCOMPtr<nsIPluginInstance> mInstance;
+  nsObjectFrame              *mOwner;
+  nsCString                   mDocumentBase;
+  char                       *mTagText;
+  nsCOMPtr<nsIWidget>         mWidget;
+  nsIPresContext             *mContext;
+  nsCOMPtr<nsITimer>          mPluginTimer;
+  nsCOMPtr<nsIPluginHost>     mPluginHost;
+  PRPackedBool                mContentFocused;
+  PRPackedBool                mWidgetVisible;    // used on Mac to store our widget's visible state
   PRUint16          mNumCachedAttrs;
   PRUint16          mNumCachedParams;
   char              **mCachedAttrParamNames;
@@ -391,9 +390,7 @@ nsObjectFrame::~nsObjectFrame()
     mInstanceOwner->Destroy();
   }
 
-  NS_IF_RELEASE(mWidget);
   NS_IF_RELEASE(mInstanceOwner);
-  NS_IF_RELEASE(mFullURL);
 
 }
 
@@ -645,6 +642,8 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
     if(rv != NS_OK)
       return rv;
 
+    // XXX we're using the same style context for ourselves and the
+    // image frame.  If this ever changes, please fix HandleChild() to deal.
     rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
     if(rv == NS_OK)
     {
@@ -677,6 +676,8 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
     if(NS_FAILED(rv))
       return rv;
 
+    // XXX we're using the same style context for ourselves and the
+    // iframe.  If this ever changes, please fix HandleChild() to deal.
     rv = aNewFrame->Init(aPresContext, aContent, this, aContext, aPrevInFlow);
     if(NS_SUCCEEDED(rv))
     {
@@ -790,7 +791,7 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
   if (NS_OK != result) {
     return result;
   }
-  nsIViewManager *viewMan;    // need to release
+  nsCOMPtr<nsIViewManager> viewMan;
 
   nsRect boundBox(0, 0, aWidth, aHeight);
 
@@ -800,7 +801,7 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
   GetParentWithView(aPresContext, &parWithView);
   parWithView->GetView(aPresContext, &parView);
 
-  if (NS_OK == parView->GetViewManager(viewMan))
+  if (NS_SUCCEEDED(parView->GetViewManager(*getter_AddRefs(viewMan))))
   {
   //  nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
     // initialize the view as hidden since we don't know the (x,y) until Paint
@@ -809,9 +810,8 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
   //    delete(initData);
   //  }
 
-    if (NS_OK != result) {
-      result = NS_OK;       //XXX why OK? MMP
-      goto exit;            //XXX sue me. MMP
+    if (NS_FAILED(result)) {
+      return NS_OK;       //XXX why OK? MMP
     }
 
 #if 0
@@ -848,9 +848,8 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
       nsWidgetInitData initData;
       initData.mUnicode = PR_FALSE;
       result = view->CreateWidget(kWidgetCID, &initData);
-      if (NS_OK != result) {
-        result = NS_OK;       //XXX why OK? MMP
-        goto exit;            //XXX sue me. MMP
+      if (NS_FAILED(result)) {
+        return NS_OK;       //XXX why OK? MMP
       }
     }
   }
@@ -889,9 +888,6 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
 
   SetView(aPresContext, view);
 
-exit:
-  NS_IF_RELEASE(viewMan);  
-
   return result;
 }
 
@@ -909,91 +905,52 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aMetrics.ascent = 0;
   aMetrics.descent = 0;
 
-  if (IsHidden(PR_FALSE))
+  if (IsHidden(PR_FALSE)) {
+    if (aMetrics.mComputeMEW) {
+      aMetrics.mMaxElementWidth = 0;
+    }      
     return;
+  }
+  
+  aMetrics.width = aReflowState.mComputedWidth;
+  aMetrics.height = aReflowState.mComputedHeight;
 
   // for EMBED and APPLET, default to 240x200 for compatibility
   nsCOMPtr<nsIAtom> atom;
   mContent->GetTag(*getter_AddRefs(atom));
-  if ( nsnull != atom &&
-     ((atom == nsHTMLAtoms::applet) || (atom == nsHTMLAtoms::embed))) {
-    
+  if (atom == nsHTMLAtoms::applet || atom == nsHTMLAtoms::embed) {
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
-    aMetrics.width  = NSIntPixelsToTwips(EMBED_DEF_WIDTH,  p2t);
-    aMetrics.height = NSIntPixelsToTwips(EMBED_DEF_HEIGHT, p2t);
-  }
-
-  // now find out size stylisticly
-  const nsStylePosition*  position;
-  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-
-  // width
-  nsStyleUnit unit = position->mWidth.GetUnit();
-  if (eStyleUnit_Coord == unit) {
-    aMetrics.width = position->mWidth.GetCoordValue();
-  }
-  else if (eStyleUnit_Percent == unit) 
-  {
-    float factor = position->mWidth.GetPercentValue();
-
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth)
-      aMetrics.width = NSToCoordRound (factor * aReflowState.availableWidth);
-    else // unconstrained percent case
-      aMetrics.width = (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) ? 0 : aReflowState.mComputedWidth;
-  }
-
-  // height
-  unit = position->mHeight.GetUnit();
-  if (eStyleUnit_Coord == unit) {
-    aMetrics.height = position->mHeight.GetCoordValue();
-  }
-  else if (eStyleUnit_Percent == unit) 
-  {
-    float factor = position->mHeight.GetPercentValue();
-
-    if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight)
-      aMetrics.height = NSToCoordRound (factor * aReflowState.availableHeight);
-    else {// unconstrained percent case
-      nsCOMPtr<nsIAtom>  fType;
-      const nsHTMLReflowState* cbrs = aReflowState.parentReflowState;
-      nsIFrame* f = cbrs->parentReflowState->frame;
-      f->GetFrameType(getter_AddRefs(fType));
-      if (fType.get() == nsLayoutAtoms::tableCellFrame || fType.get() == nsLayoutAtoms::bcTableCellFrame) {
-        if (aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE)
-          aMetrics.height = aReflowState.mComputedHeight;
-      }
-      else {
-        // Make it nicely fit in the viewport considering margins
-        nsRect rect;
-        aPresContext->GetVisibleArea(rect);
-        nscoord h = rect.height;
-        // Get the containing block reflow state
-        const nsHTMLReflowState* containingBlockRS = aReflowState.parentReflowState;
-        for ( ; containingBlockRS; containingBlockRS = containingBlockRS->parentReflowState) {
-          PRBool isPercentBase;
-          containingBlockRS->frame->IsPercentageBase(isPercentBase);
-          if (isPercentBase)
-            break;
-        }
-        // Substract out top and bottom margins from the containing block up to the canvas
-        if (containingBlockRS) {
-          for (const nsHTMLReflowState* rs = containingBlockRS; rs; rs = rs->parentReflowState) {
-            nsCOMPtr<nsIAtom> fType;
-            rs->frame->GetFrameType(getter_AddRefs(fType));
-            if (nsLayoutAtoms::canvasFrame == fType) 
-              break;
-            h -= rs->mComputedMargin.top + rs->mComputedMargin.bottom;
-          }
-        }
-        else NS_ASSERTION(containingBlockRS, "no containing block");
-
-        aMetrics.height = NSToCoordRound (factor * h);
-      }
+    if (aMetrics.width == NS_UNCONSTRAINEDSIZE) {
+      aMetrics.width  = NSIntPixelsToTwips(EMBED_DEF_WIDTH,  p2t);
+    }
+    if (aMetrics.height == NS_UNCONSTRAINEDSIZE) {
+      aMetrics.height = NSIntPixelsToTwips(EMBED_DEF_HEIGHT, p2t);
     }
   }
+
+  // At this point, the width has an unconstrained value only if we have
+  // nothing to go on (no width set, no information from the plugin, nothing).
+  // Make up a number.
+  if (aMetrics.width == NS_UNCONSTRAINEDSIZE) {
+    aMetrics.width = 0;
+  }
+
+  // At this point, the height has an unconstrained value only in two cases:
+  // a) We are in standards mode with percent heights and parent is auto-height
+  // b) We have no height information at all.
+  // In either case, we have to make up a number.
+  if (aMetrics.height == NS_UNCONSTRAINEDSIZE) {
+    aMetrics.height = 0;
+  }
+
+  // XXXbz don't add in the border and padding, because we screw up our
+  // plugin's size and positioning if we do...  Eventually we _do_ want to
+  // paint borders, though!  At that point, we will need to adjust the desired
+  // size either here or in Reflow....  Further, we will need to fix Paint() to
+  // call the superclass in all cases.
   
-  // accent
+  // ascent
   aMetrics.ascent = aMetrics.height;
 
   if (aMetrics.mComputeMEW) {
@@ -1032,13 +989,17 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
   nsresult rv = NS_OK;
 
+  // If we have a child, we toss the reflow over to it.
+  nsIFrame * child = mFrames.FirstChild();
+  if (child) {
+    // Reflow the child; our size just depends on that of the child,
+    // pure and simple
+    return HandleChild(aPresContext, aMetrics, aReflowState, aStatus, child);
+  }
+
   // Get our desired size
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
 
-  // handle an image or iframes elsewhere
-  nsIFrame * child = mFrames.FirstChild();
-  if(child != nsnull)
-    return HandleChild(aPresContext, aMetrics, aReflowState, aStatus, child);
   // if we are printing or print previewing, bail for now
   nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
   nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext = do_QueryInterface(aPresContext);
@@ -1259,12 +1220,14 @@ nsObjectFrame::InstantiateWidget(nsIPresContext*          aPresContext,
   PRInt32 height = NSTwipsToIntPixels(aMetrics.height, t2p);
   nsRect r = nsRect(x, y, width, height);
 
-  if((rv = nsComponentManager::CreateInstance(aWidgetCID, nsnull, NS_GET_IID(nsIWidget), (void**)&mWidget)) != NS_OK)
+  mWidget = do_CreateInstance(aWidgetCID, &rv);
+  if (NS_FAILED(rv)) {
     return rv;
+  }
 
   nsCOMPtr<nsIWidget> parent;
   parentWithView->GetOffsetFromWidget(nsnull, nsnull, *getter_AddRefs(parent));
-  mWidget->Create(NS_STATIC_CAST(nsIWidget*,parent), r, nsnull, nsnull);
+  mWidget->Create(parent, r, nsnull, nsnull);
 
   mWidget->Show(PR_TRUE);
   return rv;
@@ -1290,9 +1253,6 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
   // we need to recalculate this now that we have access to the nsPluginInstanceOwner
   // and its size info (as set in the tag)
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
-  if (aMetrics.mComputeMEW) {
-    aMetrics.mMaxElementWidth = aMetrics.width;
-  }
 
   mInstanceOwner->GetWindow(window);
 
@@ -1392,9 +1352,6 @@ nsObjectFrame::ReinstantiatePlugin(nsIPresContext* aPresContext, nsHTMLReflowMet
   // we need to recalculate this now that we have access to the nsPluginInstanceOwner
   // and its size info (as set in the tag)
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
-  if (aMetrics.mComputeMEW) {
-    aMetrics.mMaxElementWidth = aMetrics.width;
-  }
 
   mInstanceOwner->GetWindow(window);
 
@@ -1424,47 +1381,15 @@ nsObjectFrame::HandleChild(nsIPresContext*          aPresContext,
                            nsReflowStatus&          aStatus,
                            nsIFrame* child)
 {
-  nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  nsHTMLReflowMetrics kidDesiredSize(aMetrics.mComputeMEW);
-  
-  nsReflowReason reflowReason;
-  nsFrameState frameState;
-  child->GetFrameState(&frameState);
-  if (frameState & NS_FRAME_FIRST_REFLOW)
-    reflowReason = eReflowReason_Initial;
-  else
-    reflowReason = eReflowReason_Resize;
-
-  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, child,
-                                   availSize, reflowReason);
-
-  if(kidReflowState.mStylePosition->mWidth.GetUnit() == eStyleUnit_Coord ||
-       kidReflowState.mStylePosition->mWidth.GetUnit() == eStyleUnit_Percent) {
-    //the object frame has already calculated the constraints
-    kidReflowState.mComputedWidth = aMetrics.width;
-  }
-
-  if(kidReflowState.mStylePosition->mHeight.GetUnit() == eStyleUnit_Coord ||
-       kidReflowState.mStylePosition->mHeight.GetUnit() == eStyleUnit_Percent) {
-    //the object frame has already calculated the constraints
-    kidReflowState.mComputedHeight = aMetrics.height;
-  }
+  // Note that the child shares our style context, so we simply want
+  // to reflow the child with pretty much our own reflow state....
+  // XXXbz maybe it should have a different style context?
 
   nsReflowStatus status;
 
-  kidDesiredSize.width = NS_UNCONSTRAINEDSIZE;
-  kidDesiredSize.height = NS_UNCONSTRAINEDSIZE;
+  ReflowChild(child, aPresContext, aMetrics, aReflowState, 0, 0, 0, status);
+  FinishReflowChild(child, aPresContext, &aReflowState, aMetrics, 0, 0, 0);
 
-  ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, 0, 0, 0, status);
-  FinishReflowChild(child, aPresContext, &kidReflowState, kidDesiredSize, 0, 0, 0);
-
-  aMetrics.width   = kidDesiredSize.width;
-  aMetrics.height  = kidDesiredSize.height;
-  aMetrics.ascent  = kidDesiredSize.ascent;
-  aMetrics.descent = kidDesiredSize.descent;
-  if (aMetrics.mComputeMEW) {
-    aMetrics.mMaxElementWidth = kidDesiredSize.mMaxElementWidth;
-  }
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
@@ -1992,9 +1917,7 @@ nsObjectFrame::Scrolled(nsIView *aView)
 nsresult
 nsObjectFrame::SetFullURL(nsIURI* aURL)
 {
-  NS_IF_RELEASE(mFullURL);
   mFullURL = aURL;
-  NS_IF_ADDREF(mFullURL);
   return NS_OK;
 }
 
@@ -2184,12 +2107,9 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   else
     mPluginWindow = nsnull;
 
-  mInstance = nsnull;
   mOwner = nsnull;
-  mWidget = nsnull;
   mContext = nsnull;
   mTagText = nsnull;
-  mPluginHost = nsnull;
   mContentFocused = PR_FALSE;
   mWidgetVisible = PR_TRUE;
   mNumCachedAttrs = 0;
@@ -2207,8 +2127,6 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
     CancelTimer();
   }
 
-  NS_IF_RELEASE(mInstance);
-  NS_IF_RELEASE(mPluginHost);
   mOwner = nsnull;
 
   for (cnt = 0; cnt < (mNumCachedAttrs + 1 + mNumCachedParams); cnt++) {
@@ -2238,7 +2156,6 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
     mTagText = nsnull;
   }
 
-  NS_IF_RELEASE(mWidget);
   mContext = nsnull;
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
@@ -2287,9 +2204,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP nsPluginInstanceOwner::SetInstance(nsIPluginInstance *aInstance)
 {
-  NS_IF_RELEASE(mInstance);
   mInstance = aInstance;
-  NS_IF_ADDREF(mInstance);
 
   return NS_OK;
 }
@@ -2375,10 +2290,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDOMElement(nsIDOMElement* *result)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)
 {
-  if (nsnull != mInstance)
+  if (mInstance)
   {
     aInstance = mInstance;
-    NS_ADDREF(mInstance);
+    NS_ADDREF(aInstance);
 
     return NS_OK;
   }
@@ -3282,7 +3197,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScr
 #if defined(XP_MAC) || defined(XP_MACOSX)
     CancelTimer();
 
-    if (mInstance != NULL)
+    if (mInstance)
     {
         nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
         if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin()))
@@ -3308,7 +3223,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScr
 nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
 #if defined(XP_MAC) || defined(XP_MACOSX)
-    if (mInstance != NULL)
+    if (mInstance)
     {
         nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
         if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin()))
@@ -3715,7 +3630,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
     return rv;
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
-    if (mWidget != NULL)  // check for null mWidget
+    if (mWidget)  // check for null mWidget
     {
       nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
       if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin()))
@@ -3904,7 +3819,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
     // validate the plugin clipping information by syncing the plugin window info to
     // reflect the current widget location. This makes sure that everything is updated
     // correctly in the event of scrolling in the window.
-    if (mInstance != NULL)
+    if (mInstance)
     {
         nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
         if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin()))
@@ -4055,7 +3970,7 @@ nsPluginPort* nsPluginInstanceOwner::GetPluginPort()
 //!!! Port must be released for windowless plugins on Windows, because it is HDC !!!
 
   nsPluginPort* result = NULL;
-    if (mWidget != NULL)
+  if (mWidget)
   {
 #ifdef XP_WIN
     if(mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable)
@@ -4070,7 +3985,7 @@ nsPluginPort* nsPluginInstanceOwner::GetPluginPort()
 void nsPluginInstanceOwner::ReleasePluginPort(nsPluginPort * pluginPort)
 {
 #ifdef XP_WIN
-    if (mWidget != NULL)
+  if (mWidget)
   {
     if(mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable)
       mWidget->FreeNativeData((HDC)pluginPort, NS_NATIVE_GRAPHIC);
@@ -4086,13 +4001,13 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
   nsresult  rv = NS_ERROR_FAILURE;
   float p2t;
 
-  if (nsnull != mOwner)
+  if (mOwner)
   {
     // Create view if necessary
 
     mOwner->GetView(mContext, &view);
 
-    if (nsnull == view || nsnull == mWidget)
+    if (!view || !mWidget)
     {
       PRBool windowless = PR_FALSE;
 
@@ -4109,7 +4024,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
         mOwner->GetView(mContext, &view);
         if (view)
         {
-          view->GetWidget(mWidget);
+          view->GetWidget(*getter_AddRefs(mWidget));
           PRBool fTransparent = PR_FALSE;
           mInstance->GetValue(nsPluginInstanceVariable_TransparentBool, (void *)&fTransparent);
           
@@ -4151,11 +4066,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
 void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
 {
-  if(mPluginHost != nsnull)
-    NS_RELEASE(mPluginHost);
- 
   mPluginHost = aHost;
-  NS_IF_ADDREF(mPluginHost);
 }
 
 // convert frame coordinates from twips to pixels

@@ -43,6 +43,7 @@
 #include "nsIPresShell.h"
 #include "nsIPluginHost.h"
 #include "nsplugin.h"
+#include "nsIWidget.h"
 #include "nsIObjectFrame.h"
 
 #ifdef ACCESSIBILITY
@@ -132,7 +133,6 @@ public:
 
   void FixUpURLS(const nsString &name, nsString &value);
 
-  nsIPresContext *mPresContext;  // weak ref
 protected:
   // nsISupports
   NS_IMETHOD_(nsrefcnt) AddRef(void);
@@ -142,10 +142,11 @@ protected:
 
   virtual PRIntn GetSkipSides() const;
 
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
-
+  // NOTE:  This frame class does not inherit from |nsLeafFrame|, so
+  // this is not a virtual method implementation.
+  void GetDesiredSize(nsIPresContext* aPresContext,
+                      const nsHTMLReflowState& aReflowState,
+                      nsHTMLReflowMetrics& aDesiredSize);
 
   nsresult SetFullURL(nsIURI* aURL);
 
@@ -180,11 +181,14 @@ protected:
 
   nsresult GetWindowOriginInPixels(nsIPresContext * aPresContext, PRBool aWindoless, nsPoint* aOrigin);
 
+  friend nsPluginInstanceOwner;
+  
+  nsIPresContext *mPresContext;  // weak ref
 private:
   nsPluginInstanceOwner *mInstanceOwner;
-  nsIURI                *mFullURL;
+  nsCOMPtr<nsIURI>      mFullURL;
   nsIFrame              *mFirstChild;
-  nsIWidget             *mWidget;
+  nsCOMPtr<nsIWidget>   mWidget;
   nsRect                mWindowlessRect;
 };
 
