@@ -294,7 +294,7 @@ nsresult nsCharsetConverterManager::GetCharsetConverter(
   GetCharsetName(aSrc, &str);
 
   *aResult = NULL;
-  for (PRInt32 i=0; i<aSize; i++) if (str->Equals(*(aArray[i].mCharset))) {
+  for (PRInt32 i=0; i<aSize; i++) if (str->EqualsIgnoreCase(*(aArray[i].mCharset))) {
     res = nsRepository::CreateInstance(*(aArray[i].mCID),NULL,*aCID,aResult);
     break;
   }
