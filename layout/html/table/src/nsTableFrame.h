@@ -240,6 +240,7 @@ public:
                                       nsIFrame*       aPriorChildFrame,
                                       nsIAtom*        aChildType);
   PRBool IsAutoWidth(PRBool* aIsPctWidth = nsnull);
+  PRBool IsAutoHeight();
   
   /** @return PR_TRUE if aDisplayType represents a rowgroup of any sort
     * (header, footer, or body)
