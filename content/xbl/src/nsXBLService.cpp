@@ -276,6 +276,8 @@ nsXBLStreamListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aCtxt, nsr
   }
 
   if (NS_FAILED(rv) || NS_FAILED(aStatus)) {
+    NS_WARNING("Failed to load XBL document!!!!!!!!!!!!!\n");
+
     PRUint32 count = mBindingRequests.Count();
     for (PRUint32 i = 0; i < count; i++) {
       nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);

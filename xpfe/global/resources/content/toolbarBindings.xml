@@ -73,7 +73,7 @@ Contributor(s):
   </binding>  
 
   <binding id="toolbox" extends="xul:box">
-    <content orient="vertical" persist="collapsed">
+    <content orient="vertical">
       <xul:box orient="vertical" flex="1" class="toolbar-internal-box">
         <children/>
       </xul:box>

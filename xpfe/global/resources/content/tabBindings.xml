@@ -5,7 +5,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="tabcontrol" extends="xul:box">
-    <content orient="vertical" excludes="*"/>
+    <content orient="vertical"/>
     <!-- pass-through implementation -->
     <implementation>
       <property name="selectedTab">
