@@ -1124,34 +1124,32 @@ static void AddCoveringWidgetsToOpaqueRegion(nsIRegion* aRgn, nsIDeviceContext* 
     // 
     // NB: we must NOT add widgets that correspond to floating views!
     // We may be required to paint behind them
-    if (nsnull != aRgn) {
+    if (aRgn) {
       aRgn->SetTo(0, 0, 0, 0);
       nsCOMPtr<nsIWidget> widget;
       aRootView->GetWidget(*getter_AddRefs(widget));
-      if (widget != nsnull) {
+      if (widget) {
         nsCOMPtr<nsIEnumerator> children(dont_AddRef(widget->GetChildren()));
-        if (children != nsnull) {
+        if (children) {
           children->First();
           do {
             nsCOMPtr<nsISupports> child;
             if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
               nsCOMPtr<nsIWidget> childWidget = do_QueryInterface(child);
-              if (childWidget != nsnull) {
+              if (childWidget) {
                 nsIView* view = nsView::GetViewFor(childWidget);
-
-                nsViewVisibility visible = nsViewVisibility_kHide;
-                view->GetVisibility(visible);
-
-                if (visible == nsViewVisibility_kShow) {
-                  PRBool floating = PR_FALSE;
-                  view->GetFloating(floating);               
-
-                  if (!floating) {
-                    nsRect bounds;
-
-                    view->GetBounds(bounds);
-                    if (bounds.width > 0 && bounds.height > 0) {
-                      aRgn->Union(bounds.x, bounds.y, bounds.width, bounds.height);
+                if (view) {
+                  nsViewVisibility visible = nsViewVisibility_kHide;
+                  view->GetVisibility(visible);
+                  if (visible == nsViewVisibility_kShow) {
+                    PRBool floating = PR_FALSE;
+                    view->GetFloating(floating);
+                    if (!floating) {
+                      nsRect bounds;
+                      view->GetBounds(bounds);
+                      if (bounds.width > 0 && bounds.height > 0) {
+                        aRgn->Union(bounds.x, bounds.y, bounds.width, bounds.height);
+                      }
                     }
                   }
                 }
