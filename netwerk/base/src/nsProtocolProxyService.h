@@ -38,11 +38,13 @@ public:
     nsProtocolProxyService() {
         NS_INIT_REFCNT();
         mUseProxy = PR_FALSE;
-        mFilters = nsnull;
+        mFilters=0;
     };
+
     virtual ~nsProtocolProxyService() {
-        if (mFilters) nsAllocator::Free(mFilters);
+        CRTFREEIF(mFilters);
     };
+
     NS_IMETHOD Init();
 
     static NS_METHOD

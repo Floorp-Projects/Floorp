@@ -105,7 +105,6 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mFiredOnHeadersAvailable(PR_FALSE),
     mFiredOpenOnStartRequest(PR_FALSE),
     mAuthTriedWithPrehost(PR_FALSE),
-    mUsingProxy(PR_FALSE),
     mProxy(0),
     mProxyPort(-1),
     mBufferSegmentSize(bufferSegmentSize),
@@ -124,8 +123,7 @@ nsHTTPChannel::~nsHTTPChannel()
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPChannel [this=%x].\n", this));
 
-    //TODO if we keep our copy of mURI, then delete it too.
-    NS_RELEASE(mRequest);
+    NS_IF_RELEASE(mRequest);
     NS_IF_RELEASE(mResponse);
     NS_IF_RELEASE(mCachedResponse);
 
@@ -1205,7 +1203,7 @@ nsHTTPChannel::Open(void)
         rv = pModules->GetNext(getter_AddRefs(supEntry)); // go around again
     }
 
-    rv = mRequest->WriteRequest(transport, mUsingProxy);
+    rv = mRequest->WriteRequest(transport, (mProxy && *mProxy));
     if (NS_FAILED(rv)) return rv;
     
     mState = HS_WAITING_FOR_RESPONSE;
@@ -1283,10 +1281,19 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   rv = securityManager->CheckLoadURI(mOriginalURI, newURI);
   if (NS_FAILED(rv)) return rv;
 
-  rv = serv->NewChannelFromURI(mVerb.GetBuffer(), newURI, mLoadGroup, mCallbacks,
-                               mLoadAttributes, mOriginalURI, 
-                               mBufferSegmentSize, mBufferMaxSize, getter_AddRefs(channel));
+  rv = serv->NewChannelFromURI(mVerb.GetBuffer(), newURI, mLoadGroup, 
+           mCallbacks, mLoadAttributes, mOriginalURI, 
+           mBufferSegmentSize, mBufferMaxSize, getter_AddRefs(channel));
   if (NS_FAILED(rv)) return rv;
+
+  // Convey the referrer if one was used for this channel to the next one-
+  nsXPIDLCString referrer;
+  GetRequestHeader(nsHTTPAtoms::Referer, getter_Copies(referrer));
+  if (referrer && *referrer)
+  {
+      nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
+      httpChannel->SetRequestHeader(nsHTTPAtoms::Referer, referrer);
+  }
 
   // Start the redirect...
   rv = channel->AsyncRead(0, -1, mResponseContext, mResponseDataListener);
@@ -1658,7 +1665,7 @@ nsHTTPChannel::ProcessStatusCode(void)
         nsXPIDLCString authString;
         if (statusCode != 407)
         {
-            if (mUsingProxy)
+            if (mProxy && *mProxy)
             {
                 rv = GetRequestHeader(nsHTTPAtoms::Proxy_Authorization,
                                 getter_Copies(authString));
@@ -1893,55 +1900,6 @@ nsHTTPChannel::SetProxyPort(PRInt32 i_ProxyPort)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::SetUsingProxy(PRBool i_UsingProxy)
-{
-    mUsingProxy = i_UsingProxy;
-    nsresult rv = NS_OK;
-    // Check for proxy associated header if needed-
-    if (mUsingProxy)
-    {
-        nsAuthEngine* pAuthEngine = nsnull; 
-        NS_ASSERTION(mHandler, "Handler went away!");
-        if (!mHandler) return rv;
-        rv = mHandler->GetAuthEngine(&pAuthEngine);
-        if (NS_SUCCEEDED(rv) && pAuthEngine)
-        {
-            nsXPIDLCString authStr;
-            nsXPIDLCString proxyHost;
-            PRInt32 proxyPort;
-            // When we switch on proxy auto config this will change...
-            mHandler->GetProxyHost(getter_Copies(proxyHost));
-            mHandler->GetProxyPort(&proxyPort);
-
-            if (NS_SUCCEEDED(pAuthEngine->GetProxyAuthString(proxyHost, 
-                            proxyPort,
-                            getter_Copies(authStr))))
-            {
-                if (authStr && *authStr)
-                    mRequest->SetHeader(nsHTTPAtoms::Proxy_Authorization, 
-                            authStr);
-            }
-            // check for auth as well...
-            if (NS_SUCCEEDED(pAuthEngine->GetAuthString(mURI,
-                            getter_Copies(authStr))))
-            {
-                if (authStr && *authStr)
-                    mRequest->SetHeader(nsHTTPAtoms::Authorization, 
-                            authStr);
-            }
-        }
-    }
-    return rv;
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::GetUsingProxy(PRBool* o_UsingProxy)
-{
-    *o_UsingProxy = mUsingProxy;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHTTPChannel::SetProxyRequestURI(const char * i_Spec)
 {
     return mRequest ? 
@@ -1953,6 +1911,40 @@ nsHTTPChannel::GetProxyRequestURI(char * *o_Spec)
 {
     return mRequest ? 
         mRequest->GetOverrideRequestSpec(o_Spec) : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP 
+nsHTTPChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerLevel)
+{
+    NS_ASSERTION(referrerLevel > 0, "No need to call SetReferrer with 0 level");
+    if (referrerLevel == 0)
+        return NS_OK;
+
+    if (!referrer)
+        return NS_ERROR_NULL_POINTER;
+
+    // Referer - misspelled, but per the HTTP spec
+    nsXPIDLCString spec;
+    referrer->GetSpec(getter_Copies(spec));
+    if (spec && (referrerLevel <= mHandler->ReferrerLevel()))
+    {
+        if ((referrerLevel == nsIHTTPChannel::REFERRER_NON_HTTP) || 
+            (0 == PL_strncasecmp((const char*)spec, "http",4)))
+#ifdef DEBUG_gagan
+        {
+            PRINTF_CYAN;
+            nsXPIDLCString thisURL;
+            mURI->GetSpec(getter_Copies(thisURL));
+            printf("For: %s\nUsing Referrer: %s\n", 
+                    (const char*)thisURL,
+                    (const char*)spec);
+#endif
+            return SetRequestHeader(nsHTTPAtoms::Referer, spec);
+#ifdef DEBUG_gagan
+        }
+#endif
+    }
+    return NS_OK; 
 }
 
 nsresult DupString(char* *o_Dest, const char* i_Src)
@@ -1971,3 +1963,11 @@ nsresult DupString(char* *o_Dest, const char* i_Src)
     }
 }
 
+NS_IMETHODIMP 
+nsHTTPChannel::GetUsingProxy(PRBool *aUsingProxy)
+{
+    if (!aUsingProxy)
+        return NS_ERROR_NULL_POINTER;
+    *aUsingProxy = (mProxy && *mProxy);
+    return NS_OK;
+}

@@ -674,6 +674,25 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     rv = NS_OpenURI(getter_AddRefs(channel), nsurl, group);
     if (NS_FAILED(rv)) goto error;
 
+    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
+    if (httpChannel)
+    {
+        // Get the defloadchannel from the loadgroup-
+        nsCOMPtr<nsIChannel> defLoadChannel;
+        if (NS_SUCCEEDED(group->GetDefaultLoadChannel(
+                        getter_AddRefs(defLoadChannel))) && defLoadChannel)
+        {
+            // Get the referrer from the loadchannel-
+            nsCOMPtr<nsIURI> referrer;
+            if (NS_SUCCEEDED(defLoadChannel->GetURI(getter_AddRefs(referrer))))
+            {
+                // Set the referrer-
+                httpChannel->SetReferrer(referrer, 
+                    nsIHTTPChannel::REFERRER_INLINES);
+            }
+        }
+    }
+
     PRBool bIsBackground = aURL->GetBackgroundLoad();
     if (bIsBackground) {
       (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND);
