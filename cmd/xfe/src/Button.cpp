@@ -92,13 +92,20 @@ XFE_Button::tipCB(Widget /* w */, XtPointer cb_data)
 XFE_Button::XFE_Button(XFE_Frame *		frame,
 					   Widget			parent,
                        const char *		name,
-                       IconGroup *		iconGroup)
+                       IconGroup *		iconGroup,
+                       IconGroup *		iconGroup2,
+                       IconGroup *		iconGroup3,
+                       IconGroup *		iconGroup4)
 	: XFE_Component(frame)
 {
 	XP_ASSERT(parent);
 	XP_ASSERT(frame);
 
-	m_icons = iconGroup;
+	m_icons[0] = iconGroup;
+	m_icons[1] = iconGroup2;
+	m_icons[2] = iconGroup3;
+	m_icons[3] = iconGroup4;
+	m_currentIconGroup = 0;
 	
 	m_name = name ? name : XP_GetString(XFE_UNTITLED);
 	m_cmd = Command::intern((char *) m_name);
@@ -109,21 +116,30 @@ XFE_Button::XFE_Button(XFE_Frame *		frame,
 	installDestroyHandler();
 
 	// Set the new pixmap group if needed
-	if (m_icons)
-		setPixmap(m_icons);
+	if (m_icons[m_currentIconGroup])
+	{
+		setPixmap(m_icons[m_currentIconGroup]);
+	}
 }
 //////////////////////////////////////////////////////////////////////////
 XFE_Button::XFE_Button(XFE_Frame *		frame,
 					   Widget			parent,
                        const char *		name,
 					   MenuSpec *		spec,
-                       IconGroup *		iconGroup)
+                       IconGroup *		iconGroup,
+                       IconGroup *		iconGroup2,
+                       IconGroup *		iconGroup3,
+                       IconGroup *		iconGroup4)
 	: XFE_Component(frame)
 {
 	XP_ASSERT(parent);
 	XP_ASSERT(frame);
 
-	m_icons = iconGroup;
+	m_icons[0] = iconGroup;
+	m_icons[1] = iconGroup2;
+	m_icons[2] = iconGroup3;
+	m_icons[3] = iconGroup4;
+	m_currentIconGroup = 0;
 
 	m_name = name ? name : XP_GetString(XFE_UNTITLED);
 	m_cmd = Command::intern((char *) m_name);
@@ -134,8 +150,10 @@ XFE_Button::XFE_Button(XFE_Frame *		frame,
 	installDestroyHandler();
 	
 	// Set the new pixmap group if needed
-	if (m_icons)
-		setPixmap(m_icons);
+	if (m_icons[m_currentIconGroup])
+	{
+		setPixmap(m_icons[m_currentIconGroup]);
+	}
 
 	setMenuSpec(spec);
 
@@ -146,13 +164,20 @@ XFE_Button::XFE_Button(XFE_Frame *			frame,
                        const char *			name,
 					   dynamenuCreateProc	generateProc,
 					   void *				generateArg,
-                       IconGroup *			iconGroup)
+                       IconGroup *			iconGroup,
+                       IconGroup *			iconGroup2,
+                       IconGroup *			iconGroup3,
+                       IconGroup *			iconGroup4)
 	: XFE_Component(frame)
 {
 	XP_ASSERT(parent);
 	XP_ASSERT(frame);
 
-	m_icons = iconGroup;
+	m_icons[0] = iconGroup;
+	m_icons[1] = iconGroup2;
+	m_icons[2] = iconGroup3;
+	m_icons[3] = iconGroup4;
+	m_currentIconGroup = 0;
 
 	m_name = name ? name : XP_GetString(XFE_UNTITLED);
 	m_cmd = Command::intern((char *) m_name);
@@ -163,8 +188,10 @@ XFE_Button::XFE_Button(XFE_Frame *			frame,
 	installDestroyHandler();
 	
 	// Set the new pixmap group if needed
-	if (m_icons)
-		setPixmap(m_icons);
+	if (m_icons[m_currentIconGroup])
+	{
+		setPixmap(m_icons[m_currentIconGroup]);
+	}
 
 	(*generateProc)(m_widget,generateArg,frame);
 
@@ -496,6 +523,39 @@ XFE_Button::setMenuSpec(MenuSpec * spec)
 		}
 		
 		cur_spec++;
+    }
+}
+//////////////////////////////////////////////////////////////////////////
+int
+XFE_Button::getIconGroupIndex()
+{
+  return m_currentIconGroup;
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_Button::setIconGroups (IconGroup *iconGroup,
+                           IconGroup *iconGroup2,
+                           IconGroup *iconGroup3,
+                           IconGroup *iconGroup4)
+{
+  m_icons[0] = iconGroup;
+  m_icons[1] = iconGroup2;
+  m_icons[2] = iconGroup3;
+  m_icons[3] = iconGroup4;
+  if (m_icons[m_currentIconGroup] == NULL) 
+    m_currentIconGroup = 0;
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_Button::useIconGroup (int iconGroupIndex)
+{
+  if (m_currentIconGroup != iconGroupIndex
+      && iconGroupIndex >= 0
+      && iconGroupIndex < MAX_ICON_GROUPS
+      && m_icons[iconGroupIndex] != NULL)
+    {
+      setPixmap(m_icons[iconGroupIndex]);
+      m_currentIconGroup = iconGroupIndex;
     }
 }
 //////////////////////////////////////////////////////////////////////////

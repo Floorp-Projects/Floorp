@@ -199,7 +199,7 @@ ToolbarSpec XFE_BrowserFrame::toolbar_spec[] = {
 	{ 
 		xfeCmdBack,
 		DYNA_CASCADEBUTTON,
-		&TB_Back_group,                 					// Icons
+		&TB_Back_group, NULL, NULL, NULL,					// Icons
 		NULL,												// Submenu spec
 		XFE_BackForwardMenu::generate , (XtPointer) False, 	// Generate proc/arg
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
@@ -207,7 +207,7 @@ ToolbarSpec XFE_BrowserFrame::toolbar_spec[] = {
 	{
 		xfeCmdForward,
 		DYNA_CASCADEBUTTON,
-		&TB_Forward_group,                  				// Icons
+		&TB_Forward_group, NULL, NULL, NULL,				// Icons
 		NULL,												// Submenu spec
 		XFE_BackForwardMenu::generate , (XtPointer) True,	// Generate proc/arg
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
@@ -224,7 +224,7 @@ ToolbarSpec XFE_BrowserFrame::toolbar_spec[] = {
   { 
 	  xfeCmdDestinations,
 	  CASCADEBUTTON,
-	  &TB_Places_group,
+	  &TB_Places_group, NULL, NULL, NULL,	// Icons
 	  (MenuSpec*) &XFE_Frame::tb_places_menu_spec,			// Submenu spec
 	  NULL, NULL,	// Generate proc/arg
 	  XFE_TOOLBAR_DELAY_LONG				// Popup delay
@@ -282,9 +282,9 @@ static ToolbarSpec editor_style_toolbar_spec[] = {
 
 	{ xfeCmdOutdent,	PUSHBUTTON, &ed_outdent_group },
 	{ xfeCmdIndent,	PUSHBUTTON, &ed_indent_group },
-	{ xfeCmdSetAlignmentStyle, CASCADEBUTTON, &ed_left_group,
+	{ xfeCmdSetAlignmentStyle, CASCADEBUTTON, &ed_left_group, 0, 0, 0,
 	  (MenuSpec*)&alignment_menu_spec },
-	{ "editorGoodiesMenu", CASCADEBUTTON, &ed_insert_group,
+	{ "editorGoodiesMenu", CASCADEBUTTON, &ed_insert_group, 0, 0, 0,
 	  (MenuSpec*)&goodies_menu_spec },
 	{ NULL }
 };

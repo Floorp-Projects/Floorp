@@ -52,20 +52,29 @@ public:
     XFE_Button(XFE_Frame *			frame,
 			   Widget				parent,
                const char *			name,
-               IconGroup *			iconGroup);
+               IconGroup *			iconGroup,
+               IconGroup *			iconGroup2 = NULL,
+               IconGroup *			iconGroup3 = NULL,
+               IconGroup *			iconGroup4 = NULL);
 
     XFE_Button(XFE_Frame *			frame,
                Widget				parent,
                const char *			name,
 			   MenuSpec *			menu_spec,
-               IconGroup *			iconGroup);
+               IconGroup *			iconGroup,
+               IconGroup *			iconGroup2 = NULL,
+               IconGroup *			iconGroup3 = NULL,
+               IconGroup *			iconGroup4 = NULL);
 
     XFE_Button(XFE_Frame *			frame,
                Widget				parent,
                const char *			name,
 			   dynamenuCreateProc	generateProc,
 			   void *				generateArg,
-               IconGroup *			iconGroup);
+               IconGroup *			iconGroup,
+               IconGroup *			iconGroup2 = NULL,
+               IconGroup *			iconGroup3 = NULL,
+               IconGroup *			iconGroup4 = NULL);
 
     virtual ~XFE_Button();
 
@@ -81,6 +90,16 @@ public:
   void setLabel	(char *label);
 
   void setPixmap (IconGroup * icons);
+
+  int getIconGroupIndex();
+  
+  // Give a complete list of replacements with each call
+  void setIconGroups (IconGroup *iconGroup,
+                      IconGroup *iconGroup2 = NULL,
+                      IconGroup *iconGroup3 = NULL,
+                      IconGroup *iconGroup4 = NULL);
+
+  void useIconGroup (int index);
 
   void setMenuSpec(MenuSpec *menu_spec);
 
@@ -102,7 +121,9 @@ protected:
 	
 	// For now allow up to four possible icons groups
 	// where each icon group can have up to four states
-	IconGroup  *m_icons;
+	IconGroup  *m_icons[MAX_ICON_GROUPS];
+
+	int m_currentIconGroup;
 
 	// The command executed by this button
 	CommandType		m_cmd;

@@ -329,7 +329,7 @@ ToolbarSpec XFE_ThreadFrame::toolbar_spec[] = {
 	{  // XX mail only
 		xfeCmdComposeMessage,	
 		CASCADEBUTTON, 
-		&MNTB_Compose_group,                				// Icons
+		&MNTB_Compose_group, NULL, NULL, NULL,				// Icons
 		compose_message_submenu_spec,									// Submenu spec
 		NULL, NULL,											// Generate proc/arg
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
@@ -337,7 +337,7 @@ ToolbarSpec XFE_ThreadFrame::toolbar_spec[] = {
 	{  // XX newsgroup only
 		xfeCmdComposeArticle,	
 		CASCADEBUTTON, 
-		&MNTB_Compose_group,                				// Icons
+		&MNTB_Compose_group, NULL, NULL, NULL,				// Icons
 		compose_article_submenu_spec,									// Submenu spec
 		NULL, NULL,											// Generate proc/arg
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
@@ -346,7 +346,7 @@ ToolbarSpec XFE_ThreadFrame::toolbar_spec[] = {
 	{  // XX mail only
 		xfeCmdReplyToSender,	
 		CASCADEBUTTON, 
-		&MNTB_Reply_group,                  				// Icons
+		&MNTB_Reply_group, NULL, NULL, NULL,				// Icons
 		reply_submenu_spec,									// Submenu spec
 		NULL, NULL,											// Generate proc/arg
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
@@ -354,7 +354,7 @@ ToolbarSpec XFE_ThreadFrame::toolbar_spec[] = {
 	{  // XX news only
 		xfeCmdReplyToNewsgroup,	
 		CASCADEBUTTON, 
-		&MNTB_Reply_group,                   				// Icons
+		&MNTB_Reply_group, NULL, NULL, NULL,				// Icons
 		reply_submenu_spec,									// Submenu spec
 		NULL, NULL,											// Generate proc/arg
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
@@ -364,23 +364,21 @@ ToolbarSpec XFE_ThreadFrame::toolbar_spec[] = {
 	{
 		xfeCmdCopyMessage,  // XX news only
 		DYNA_CASCADEBUTTON, 
-		NULL,												// Submenu spec
-		&MNTB_File_group,
+		&MNTB_File_group, NULL, NULL, NULL, NULL,
 		XFE_FolderMenu::generate, (void*)xfeCmdCopyMessage,
 		XFE_TOOLBAR_DELAY_SHORT
 	},
 	{
 		xfeCmdMoveMessage, // XX mail only
 		DYNA_CASCADEBUTTON, 
-		NULL,												// Submenu spec
-		&MNTB_File_group,
+		&MNTB_File_group, NULL, NULL, NULL, NULL,
 		XFE_FolderMenu::generate, (void*)xfeCmdMoveMessage,
 		XFE_TOOLBAR_DELAY_SHORT
 	},
 	{
 		xfeCmdNextUnreadMessage,
 		CASCADEBUTTON, 
-		&MNTB_Next_group,                   				// Icons
+		&MNTB_Next_group, NULL, NULL, NULL,					// Icons
 		next_submenu_spec,									// Submenu spec
 		NULL, NULL,											// Generate proc/arg
 		XFE_TOOLBAR_DELAY_LONG								// Popup delay
@@ -389,7 +387,7 @@ ToolbarSpec XFE_ThreadFrame::toolbar_spec[] = {
 	HG20938
 	{ xfeCmdMarkMessageRead, // XX news only
 	  CASCADEBUTTON, 
-	  &MNTB_MarkRead_group,                  				// Icons
+	  &MNTB_MarkRead_group, NULL, NULL, NULL,				// Icons
 	  mark_submenu_spec,									// Submenu spec
 	  NULL, NULL,											// Generate proc/arg
 	  XFE_TOOLBAR_DELAY_LONG								// Popup delay
