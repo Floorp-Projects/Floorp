@@ -552,6 +552,22 @@ endif
 endif
 endif
 
+# Dependent libs
+ifdef USE_DEPENDENT_LIBS
+ifdef IS_COMPONENT
+
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+DEPENDENT_LIBS = $(filter-out %_s$(DLL_SUFFIX), $(patsubst %.$(IMPORT_LIB_SUFFIX),$(LIB_PREFIX)%$(DLL_SUFFIX),$(notdir $(filter %.$(IMPORT_LIB_SUFFIX), $(EXTRA_DSO_LDOPTS)))))
+else
+DEPENDENT_LIBS = $(filter-out %_s$(DLL_SUFFIX), $(patsubst -l%,$(LIB_PREFIX)%$(DLL_SUFFIX),$(filter -l%, $(EXTRA_DSO_LDOPTS))))
+endif
+
+ifneq (,$(strip $(DEPENDENT_LIBS)))
+DEFINES += -DDEPENDENT_LIBS="$(foreach f,$(DEPENDENT_LIBS),\"${f}\",)"
+endif
+endif
+endif
+
 ################################################################################
 
 all:: 
@@ -1703,6 +1719,7 @@ ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $
 	@echo "SHARED_LIBS         = $(SHARED_LIBS)"
 	@echo "EXTRA_DSO_LIBS      = $(EXTRA_DSO_LIBS)"
 	@echo "EXTRA_DSO_LDOPTS    = $(EXTRA_DSO_LDOPTS)"
+	@echo "DEPENDENT_LIBS      = $(DEPENDENT_LIBS)"
 	@echo --------------------------------------------------------------------------------
 endif
 	+$(LOOP_OVER_MOZ_DIRS)
