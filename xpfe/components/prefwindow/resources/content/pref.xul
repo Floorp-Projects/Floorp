@@ -25,9 +25,9 @@
 
   <box flex="1">
     <!-- tree sidebar -->
-    <tree class="inset" id="prefsTree"/>      
+    <tree class="inset" id="prefsTree" flex="1"/>      
 
-    <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="1"/>
+    <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="4"/>
     <script language="JavaScript">
     <![CDATA[
       if( window.arguments && window.arguments[0] ) {
