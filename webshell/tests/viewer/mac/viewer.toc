@@ -8,8 +8,6 @@ mozilla/lib/xp/xp_qsort.c
 mozilla/lib/xp/xp_str.c
 mozilla/modules/libpref/src/prefapi.c
 mozilla/modules/libutil/src/obs.c
-mozilla/modules/plugin/nglsrc/nsPluginFactory.cpp
-mozilla/modules/plugin/nglsrc/nsPluginHostImpl.cpp
 mozilla/webshell/tests/viewer/nsBrowserWindow.cpp
 mozilla/webshell/tests/viewer/nsEditorInterfaces.cpp
 mozilla/webshell/tests/viewer/nsEditorMode.cpp
