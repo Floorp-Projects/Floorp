@@ -25,12 +25,19 @@
 
 #include "nsCWebBrowser.h"
 
-class nsWebBrowser : public nsIWebBrowser
+class nsWebBrowser : public nsIWebBrowser, public nsIWebBrowserNav,
+   public nsIProgress, public nsIGenericWindow, public nsIScrollable,
+   public nsITextScroll
 {
 public:
    NS_DECL_ISUPPORTS
 
    NS_DECL_NSIWEBBROWSER
+   NS_DECL_NSIWEBBROWSERNAV
+   NS_DECL_NSIPROGRESS
+   NS_DECL_NSIGENERICWINDOW
+   NS_DECL_NSISCROLLABLE   
+   NS_DECL_NSITEXTSCROLL
 
    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
