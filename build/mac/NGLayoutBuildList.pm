@@ -215,6 +215,10 @@ sub BuildDist()
 
 	#LIVECONNECT
 	InstallFromManifest(":mozilla:js:src:liveconnect:MANIFEST",						"$distdirectory:liveconnect:");
+	
+	#CAPS
+	InstallFromManifest(":mozilla:caps:public:MANIFEST",							"$distdirectory:caps:");
+	InstallFromManifest(":mozilla:caps:include:MANIFEST",							"$distdirectory:caps:");
 
 	#SECURITY_freenav
     InstallFromManifest(":mozilla:modules:security:freenav:MANIFEST",				"$distdirectory:security:");
@@ -452,6 +456,10 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:js:macbuild:LiveConnect.mcp",						"LiveConnect$D.shlb", "", 1, $main::ALIAS_SYM_FILES);
 
 	BuildOneProject(":mozilla:modules:zlib:macbuild:zlib.mcp",					"zlib$D.shlb", "zlib.toc", 1, $main::ALIAS_SYM_FILES);
+	
+	BuildOneProject(":mozilla:caps:macbuild:Caps.mcp",						 	"Caps$D.shlb", "", 1, $main::ALIAS_SYM_FILES);
+	
+	BuildOneProject(":mozilla:modules:oji:macbuild:oji.mcp",					"oji$D.shlb", "", 1, $main::ALIAS_SYM_FILES);
 
 	BuildOneProject(":mozilla:modules:libpref:macbuild:libpref.mcp",			"libpref$D.shlb", "libpref.toc", 1, $main::ALIAS_SYM_FILES);
 
