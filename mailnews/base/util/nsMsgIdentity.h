@@ -98,12 +98,18 @@ private:
   nsIPref *m_prefs;
   
 protected:
-  static char *getPrefName(const char *identityKey, const char *pref);
+  char *getPrefName(const char *identityKey, const char *pref);
+  char *getDefaultPrefName(const char *pref);
   nsresult getCharPref(const char *pref, char **);
+  nsresult getDefaultCharPref(const char *pref, char **);
   nsresult setCharPref(const char *pref, char *);
+
   nsresult getBoolPref(const char *pref, PRBool *);
+  nsresult getDefaultBoolPref(const char *pref, PRBool *);
   nsresult setBoolPref(const char *pref, PRBool);
+
   nsresult getIntPref(const char *pref, PRInt32 *);
+  nsresult getDefaultIntPref(const char *pref, PRInt32 *);
   nsresult setIntPref(const char *pref, PRInt32);
 
 };

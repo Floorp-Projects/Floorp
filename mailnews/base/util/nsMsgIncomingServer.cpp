@@ -128,7 +128,7 @@ nsresult
 nsMsgIncomingServer::getDefaultBoolPref(const char *prefname,
                                         PRBool *val) {
   
-  char *fullPrefName = getDefaultPrefName(m_serverKey);
+  char *fullPrefName = getDefaultPrefName(prefname);
   nsresult rv = m_prefs->GetBoolPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
@@ -178,7 +178,7 @@ nsresult
 nsMsgIncomingServer::getDefaultIntPref(const char *prefname,
                                         PRInt32 *val) {
   
-  char *fullPrefName = getDefaultPrefName(m_serverKey);
+  char *fullPrefName = getDefaultPrefName(prefname);
   nsresult rv = m_prefs->GetIntPref(fullPrefName, val);
   PR_Free(fullPrefName);
 
@@ -228,7 +228,7 @@ nsresult
 nsMsgIncomingServer::getDefaultCharPref(const char *prefname,
                                         char **val) {
   
-  char *fullPrefName = getDefaultPrefName(m_serverKey);
+  char *fullPrefName = getDefaultPrefName(prefname);
   nsresult rv = m_prefs->CopyCharPref(fullPrefName, val);
   PR_Free(fullPrefName);
 

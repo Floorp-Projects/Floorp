@@ -59,6 +59,14 @@ nsMsgIdentity::getPrefName(const char *identityKey,
   return PR_smprintf("mail.identity.%s.%s", identityKey, prefName);
 }
 
+// this will be slightly faster than the above, and allows
+// the "default" identity preference root to be set in one place
+char *
+nsMsgIdentity::getDefaultPrefName(const char *fullPrefName)
+{
+  return PR_smprintf("mail.identity.default.%s", fullPrefName);
+}
+
 /* The following are equivalent to the nsIPref's Get/CopyXXXPref
    except they construct the preference name with the above function
 */
@@ -66,13 +74,28 @@ nsresult
 nsMsgIdentity::getBoolPref(const char *prefname,
                            PRBool *val)
 {
-  char *prefName = getPrefName(m_identityKey, prefname);
-  nsresult rv = m_prefs->GetBoolPref(prefName, val);
+  char *fullPrefName = getPrefName(m_identityKey, prefname);
+  nsresult rv = m_prefs->GetBoolPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
+  if (NS_FAILED(rv))
+    rv = getDefaultBoolPref(prefname, val);
+  
+  return rv;
+}
+
+nsresult
+nsMsgIdentity::getDefaultBoolPref(const char *prefname,
+                                        PRBool *val) {
+  
+  char *fullPrefName = getDefaultPrefName(prefname);
+  nsresult rv = m_prefs->GetBoolPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
   if (NS_FAILED(rv)) {
     *val = PR_FALSE;
     rv = NS_OK;
   }
-  PR_Free(prefName);
   return rv;
 }
 
@@ -90,13 +113,28 @@ nsresult
 nsMsgIdentity::getCharPref(const char *prefname,
                            char **val)
 {
-  char *prefName = getPrefName(m_identityKey, prefname);
-  nsresult rv = m_prefs->CopyCharPref(prefName, val);
+  char *fullPrefName = getPrefName(m_identityKey, prefname);
+  nsresult rv = m_prefs->CopyCharPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
+  if (NS_FAILED(rv))
+    rv = getDefaultCharPref(prefname, val);
+
+  return rv;
+}
+
+nsresult
+nsMsgIdentity::getDefaultCharPref(const char *prefname,
+                                        char **val) {
+  
+  char *fullPrefName = getDefaultPrefName(prefname);
+  nsresult rv = m_prefs->CopyCharPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
   if (NS_FAILED(rv)) {
-    *val=nsnull;
+    *val = nsnull;              // null is ok to return here
     rv = NS_OK;
   }
-  PR_Free(prefName);
   return rv;
 }
 
@@ -114,13 +152,29 @@ nsresult
 nsMsgIdentity::getIntPref(const char *prefname,
                                 PRInt32 *val)
 {
-  char *prefName = getPrefName(m_identityKey, prefname);
-  nsresult rv = m_prefs->GetIntPref(prefName, val);
+  char *fullPrefName = getPrefName(m_identityKey, prefname);
+  nsresult rv = m_prefs->GetIntPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
+  if (NS_FAILED(rv))
+	rv = getDefaultIntPref(prefname, val);
+
+  return rv;
+}
+
+nsresult
+nsMsgIdentity::getDefaultIntPref(const char *prefname,
+                                        PRInt32 *val) {
+  
+  char *fullPrefName = getDefaultPrefName(prefname);
+  nsresult rv = m_prefs->GetIntPref(fullPrefName, val);
+  PR_Free(fullPrefName);
+
   if (NS_FAILED(rv)) {
     *val = 0;
     rv = NS_OK;
   }
-  PR_Free(prefName);
+  
   return rv;
 }
 
