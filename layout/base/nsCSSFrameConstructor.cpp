@@ -150,9 +150,6 @@ static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
-#include "nsISVGAttribute.h"
-#include "nsISVGValue.h"
-#include "nsISVGStyleValue.h"
 #include "nsISVGTextContainerFrame.h"
 
 nsresult
