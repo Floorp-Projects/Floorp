@@ -202,6 +202,12 @@ calStorageCalendar.prototype = {
     // calICalendar interface
     //
 
+    // attribute AUTF8String name;
+    name: "",
+
+    // readonly attribute AUTF8String type;
+    get type() { return "storage"; },
+
     mURI: null,
     // attribute nsIURI uri;
     get uri() { return this.mURI; },

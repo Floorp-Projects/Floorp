@@ -80,6 +80,10 @@ calICSCalendar.prototype = {
         this.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
     },
 
+    name: "",
+
+    get type() { return "ics"; },
+
     mUri: null,
     get uri() { return this.mUri },
     set uri(aUri) {

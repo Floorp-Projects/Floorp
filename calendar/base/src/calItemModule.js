@@ -46,6 +46,11 @@ const componentData =
      script: "calItemBase.js",
      constructor: null},
 
+    {cid: Components.ID("{f42585e7-e736-4600-985d-9624c1c51992}"),
+     contractid: "@mozilla.org/calendar/manager;1",
+     script: "calCalendarManager.js",
+     constructor: "calCalendarManager"},
+
     {cid: Components.ID("{974339d5-ab86-4491-aaaf-2b2ca177c12b}"),
      contractid: "@mozilla.org/calendar/event;1",
      script: "calEvent.js",

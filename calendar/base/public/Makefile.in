@@ -49,6 +49,7 @@ XPIDL_MODULE	= calbase
 XPIDLSRCS	= calIAttachment.idl \
 		  calIAttendee.idl   \
 		  calICalendar.idl   \
+		  calICalendarManager.idl \
 		  calIDateTime.idl   \
 		  calIEvent.idl      \
 		  calIICSService.idl \

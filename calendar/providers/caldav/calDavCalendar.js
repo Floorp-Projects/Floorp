@@ -101,6 +101,12 @@ calDavCalendar.prototype = {
     // nsICalendar interface
     //
 
+    // attribute AUTF8String name;
+    name: "",
+
+    // readonly attribute AUTF8String type;
+    get type() { return "caldav"; },
+
     // attribute nsIURI uri;
     mUri: null,
     get uri() { return this.mUri },

@@ -53,9 +53,20 @@ interface calIOperationListener;
 interface calIRange;
 interface calIDateTime;
 
-[scriptable, uuid(4c352774-2c4f-11d9-9c63-00045ace3b8d)]
+[scriptable, uuid(2ab0652d-9a66-43db-b481-fe77a53eb4ea)]
 interface calICalendar : nsISupports
 {
+  /**
+   * Name of the calendar
+   */
+  attribute AUTF8String name;
+
+  /**
+   * Type of the calendar
+   *   'memory', 'storage', 'caldav', etc
+   */
+  readonly attribute AUTF8String type;
+
   /**
    * Setting this URI causes the calendar to be (re)loaded.
    */
