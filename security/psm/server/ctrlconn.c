@@ -1367,9 +1367,6 @@ static SSMStatus ssm_enable_security_prefs(SSMControlConnection* ctrl)
     }
     SSL_EnableDefault(SSL_ENABLE_SSL3, prefval);
 
-    /* We need to disable TLS because some servers (e.g. IBM Domino) have */        /* implemented version rollback incorrectly */
-    SSL_EnableDefault(SSL_ENABLE_TLS, PR_FALSE);
-
     /* set password values */
     if (PREF_GetIntPref(ctrl->m_prefs, "security.ask_for_password", &ask) !=
         PR_SUCCESS) {
