@@ -107,7 +107,7 @@ MaiInterfaceComponent::RefAccessibleAtPoint(gint aAccX, gint aAccY,
     nsIAccessible *accessible = GetNSAccessible();
     g_return_val_if_fail(accessible != NULL, NULL);
 
-    // or ATK_XY_SCREEN  what is definition this in nsIAccessible?
+    // or ATK_XY_SCREEN  what is definition this in nsIAccessible ???
     if (aCoordType == ATK_XY_WINDOW) {
         /* deal with the coord type */
     }
@@ -117,9 +117,7 @@ MaiInterfaceComponent::RefAccessibleAtPoint(gint aAccX, gint aAccY,
     if (NS_FAILED(rv))
         return NULL;
 
-    /* ??? when to free ??? */
-    MaiWidget *maiWidget = new MaiWidget(pointAcc);
-    return maiWidget;
+    return MaiWidget::CreateAndCache(pointAcc);
 }
 
 void

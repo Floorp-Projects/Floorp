@@ -23,7 +23,7 @@
  *
  * Original Author: Bolian Yin (bolian.yin@sun.com)
  *
- * Contributor(s): 
+ * Contributor(s): John Sun (john.sun@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -61,14 +61,17 @@ static AtkObject*          getParentCB(AtkObject *aObj);
 static gint                getChildCountCB(AtkObject *aObj);
 static AtkObject*          refChildCB(AtkObject *aObj, gint aChildIndex);
 static gint                getIndexInParentCB(AtkObject *aObj);
-//static AtkRelationSet*     refRelationSetCB(AtkObject *aObj);
+
+/* implemented by MaiWidget */
+//static AtkStateSet*        refStateSetCB(AtkObject *aObj);
 //static AtkRole             getRoleCB(AtkObject *aObj);
+
+//static AtkRelationSet*     refRelationSetCB(AtkObject *aObj);
 //static AtkLayer            getLayerCB(AtkObject *aObj);
 //static gint                getMdiZorderCB(AtkObject *aObj);
 
 /* the missing atkobject virtual functions */
 /*
-  static AtkStateSet*        refStateSetCB(AtkObject *aObj);
   static void                SetNameCB(AtkObject *aObj,
   const gchar *name);
   static void                SetDescriptionCB(AtkObject *aObj,
@@ -140,8 +143,8 @@ MaiObject::MaiObject(nsIAccessible *aAcc)
 
 MaiObject::~MaiObject()
 {
-    /* mAccessible will get released here automatically */
-    mMaiAtkObject = NULL;
+    NS_ASSERTION((mMaiAtkObject == NULL),
+                 "Cannot Del MaiObject: alive atk object");
 
 #ifdef MAI_LOGGING
     num_deleted_mai_object++;
@@ -160,7 +163,7 @@ MaiObject::GetNSAccessible(void)
 
 /* for those get functions who have a related memeber vairable in AtkObject
  * (see atkobject.h), save a copy of the value in atkobject, return them
- * when available, get a new one and save if not.
+ * when available, create one and save if not.
  *
  * virtual functions that fall into this scope:
  *   GetName x
@@ -253,6 +256,11 @@ MaiObject::Initialize(void)
 void
 MaiObject::Finalize(void)
 {
+    //here we know that the action is originated from the MaiAtkObject,
+    //and the MaiAtkObject itself will be destroyed.
+    //Mark MaiAtkObject to nil
+    mMaiAtkObject = NULL;
+
     delete this;
 }
 
@@ -283,7 +291,7 @@ classInitCB(AtkObjectClass *aClass)
     aClass->get_n_children = getChildCountCB;
     aClass->ref_child = refChildCB;
     aClass->get_index_in_parent = getIndexInParentCB;
-    //  aClass->ref_state_set = refStateSetCB;
+
     aClass->initialize = initializeCB;
 
     gobject_class->finalize = finalizeCB;
@@ -312,10 +320,17 @@ void
 finalizeCB(GObject *aObj)
 {
     MAI_CHECK_ATK_OBJECT_RETURN_IF_FAIL(aObj);
+
     MaiObject *maiObject = MAI_ATK_OBJECT(aObj)->maiObject;
+    MAI_LOG_DEBUG(("====release MaiAtkObject=0x%x, MaiObject=0x%x\n",
+                   (guint)aObj, (guint)maiObject));
     maiObject->Finalize();
 
-    /* call parent finalize function */
+    // never call MaiObject later
+    MAI_ATK_OBJECT(aObj)->maiObject = NULL;
+
+    // call parent finalize function
+    // finalize of GObjectClass will unref the accessible parent if has
     if (G_OBJECT_CLASS (parent_class)->finalize)
         G_OBJECT_CLASS (parent_class)->finalize(aObj);
 }
@@ -375,6 +390,7 @@ refChildCB(AtkObject *aObj, gint aChildIndex)
     if (childAtkObj) {
         g_object_ref(childAtkObj);
         if (!childAtkObj->accessible_parent)
+            //this will addref parent
             atk_object_set_parent(childAtkObj, aObj);
     }
     return childAtkObj;
@@ -393,7 +409,8 @@ getIndexInParentCB(AtkObject *aObj)
 The following nsIAccessible states aren't translated, just ignored.
   STATE_MIXED:         For a three-state check box.
   STATE_READONLY:      The object is designated read-only.
-  STATE_HOTTRACKED:    Its appearance has changed to indicate mouse over it.
+  STATE_HOTTRACKED:    Means its appearance has changed to indicate mouse
+                       over it.
   STATE_DEFAULT:       Represents the default button in a window.
   STATE_FLOATING:      Not supported yet.
   STATE_MARQUEED:      Indicate scrolling or moving text or graphics.
@@ -402,7 +419,7 @@ The following nsIAccessible states aren't translated, just ignored.
   STATE_MOVEABLE:
   STATE_SELFVOICING:   The object has self-TTS.
   STATE_LINKED:        The object is formatted as a hyperlink.
-  STATE_TRAVERSE:      The object is a hyperlink that has been visited by a user.
+  STATE_TRAVERSE:      The object is a hyperlink that has been visited.
   STATE_EXTSELECTABLE: Indicates that an object extends its selectioin.
   STATE_ALERT_LOW:     Not supported yet.
   STATE_ALERT_MEDIUM:  Not supported yet.
@@ -421,14 +438,12 @@ Returned AtkStatusSet never contain the following AtkStates.
                         rectangular region
   ATK_STATE_STALE:      The index associated with this object has changed since
                         the user accessed the object
-*******************************************************************************/
+******************************************************************************/
 
-AtkStateSet*
-MaiObject::TranslateStates(PRUint32 aAccState)
+void
+MaiObject::TranslateStates(PRUint32 aAccState, AtkStateSet *state_set)
 {
-    AtkStateSet *state_set;
-
-    state_set = atk_state_set_new ();  // state_set contains  ATK_STATE_INVALID
+    g_return_if_fail(state_set);
 
     if (aAccState & nsIAccessible::STATE_SELECTED)
         atk_state_set_add_state (state_set, ATK_STATE_SELECTED);
@@ -508,5 +523,4 @@ MaiObject::TranslateStates(PRUint32 aAccState)
     if (aAccState & nsIAccessible::STATE_VERTICAL)
         atk_state_set_add_state (state_set, ATK_STATE_VERTICAL);
 
-    return state_set;
 }

@@ -131,7 +131,8 @@ public:
 public:
     virtual AtkObject *GetAtkObject(void) = 0;
     virtual nsIAccessible *GetNSAccessible(void);
-    static AtkStateSet* TranslateStates(PRUint32 aAccState);
+    static void TranslateStates(PRUint32 aAccState,
+                                AtkStateSet *state_set);
 
     /* virtual functions called by callbacks */
     virtual void Initialize(void);

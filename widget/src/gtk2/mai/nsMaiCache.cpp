@@ -53,15 +53,17 @@ MaiCache::MaiCache()
 
 MaiCache::~MaiCache()
 {
+    AtkObject *tmpAtkObj = NULL;
     for (int index = 0; index < MAI_CACHE_SIZE; index++) {
         if (mCache[index].maiObject && mCache[index].uid != 0) {
-
-            MAI_LOG_DEBUG(("de-caching : maiObj=0x%x, uid=%x\n",
+            tmpAtkObj = mCache[index].maiObject->GetAtkObject();
+            MAI_LOG_DEBUG(("Mai Cache: de-caching, maiAtkObj=0x%x, ref=%d\
+                            maiObj=0x%x, uid=%x\n", (guint)tmpAtkObj,
+                           G_OBJECT(tmpAtkObj)->ref_count,
                            (guint)mCache[index].maiObject, mCache[index].uid));
-            g_object_unref(mCache[index].maiObject->GetAtkObject());
+            g_object_unref(tmpAtkObj);
             mCache[index].uid = 0;
             mCache[index].maiObject = NULL;
-
         }
     }
 }
@@ -76,7 +78,7 @@ MaiCache::Add(MaiObject *aMaiObj)
     // different nsIAccessible object can have the same ID,
     // but we deem them equal for accessible user.
     if (Fetch(aMaiObj)) {
-        MAI_LOG_DEBUG(("**Object is already in Cache: aMaiObj=0x%x, uid=%x\n",
+        MAI_LOG_DEBUG(("Mai Cache: already in Cache: aMaiObj=0x%x, uid=%x\n",
                        (guint)aMaiObj, aMaiObj->GetNSAccessibleUniqueID()));
         return TRUE;
     }
@@ -84,20 +86,32 @@ MaiCache::Add(MaiObject *aMaiObj)
     /* try to find a vacant place */
     while (counter < MAI_CACHE_SIZE) {
         counter++;
-        mCacheIndex = (mCacheIndex++) % MAI_CACHE_SIZE;
+        mCacheIndex = (++mCacheIndex) % MAI_CACHE_SIZE;
         if ((mCache[mCacheIndex].maiObject == NULL) &&
             (mCache[mCacheIndex].uid == 0))
             break;
     }
     /* if fail to find a vacant place, remove the old */
+    AtkObject *tmpAtkObj = NULL;
     if (counter >= MAI_CACHE_SIZE) {
-        g_object_unref(mCache[mCacheIndex].maiObject->GetAtkObject());
+        mCacheIndex = (++mCacheIndex) % MAI_CACHE_SIZE;
+        tmpAtkObj = mCache[mCacheIndex].maiObject->GetAtkObject();
+        MAI_LOG_DEBUG(("Mai Cache: de-caching, maiAtkObj=0x%x, ref=%d \
+                        maiObj=0x%x, uid=%x\n", (guint)tmpAtkObj,
+                       G_OBJECT(tmpAtkObj)->ref_count,
+                       (guint)mCache[mCacheIndex].maiObject,
+                       (guint)mCache[mCacheIndex].uid));
+        MAI_LOG_DEBUG(("Mai Cache: added in %d, replace", mCacheIndex));
+        g_object_unref(tmpAtkObj);
     }
+    else
+        MAI_LOG_DEBUG(("Mai Cache: added in %d, vacant", mCacheIndex));
+
     g_object_ref(aMaiObj->GetAtkObject());
     mCache[mCacheIndex].uid = aMaiObj->GetNSAccessibleUniqueID();
     mCache[mCacheIndex].maiObject = aMaiObj;
 
-    MAI_LOG_DEBUG(("Add in Cache: aMaiObj=0x%x, uid=%x\n",
+    MAI_LOG_DEBUG(("Mai Cache: Add in Cache, aMaiObj=0x%x, uid=%x\n",
                    (guint)aMaiObj, mCache[mCacheIndex].uid));
 
     return TRUE;

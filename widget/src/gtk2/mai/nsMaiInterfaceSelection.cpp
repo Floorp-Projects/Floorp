@@ -97,7 +97,7 @@ MaiInterfaceSelection::GetInterfaceInfo()
     if (!(accessIface)) \
         return (retvalue)
 
-/*interface virtual functions*/
+/*interface functions*/
 gboolean
 MaiInterfaceSelection::AddSelection(gint i)
 {
@@ -122,7 +122,7 @@ MaiInterfaceSelection::RefSelection(gint i)
         accessInterfaceSelectable->RefSelection(i, getter_AddRefs(aSelection));
     MaiWidget *maiWidget;
     if (NS_SUCCEEDED(rv))
-        maiWidget = new MaiWidget(aSelection);
+        maiWidget = MaiWidget::CreateAndCache(aSelection);
     return (maiWidget != NULL) ? maiWidget : NULL;
 }
 
@@ -176,10 +176,12 @@ getSelection(AtkSelection *aSelection)
 {
     MAI_CHECK_ATK_OBJECT_RETURN_VAL_IF_FAIL(aSelection, NULL);
     g_return_val_if_fail(MAI_IS_ATK_WIDGET(aSelection), NULL);
-    MaiWidget *maiWidget = (MaiWidget*)(MAI_ATK_OBJECT(aSelection)->maiObject);
-    
-    MaiInterfaceSelection *maiInterfaceSelection = (MaiInterfaceSelection*)
-        maiWidget->GetMaiInterface(MAI_INTERFACE_SELECTION);
+    MaiWidget *maiWidget =
+        NS_STATIC_CAST(MaiWidget*, (MAI_ATK_OBJECT(aSelection)->maiObject));
+
+    MaiInterfaceSelection *maiInterfaceSelection =
+        NS_STATIC_CAST(MaiInterfaceSelection*,
+                       maiWidget->GetMaiInterface(MAI_INTERFACE_SELECTION));
     return maiInterfaceSelection;
 }
 

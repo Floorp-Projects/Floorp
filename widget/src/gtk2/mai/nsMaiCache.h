@@ -64,7 +64,7 @@ public:
     MaiObject *Fetch(AtkObject *aAtkObj);
 
 private:
-    enum { MAI_CACHE_SIZE = 100 };
+    enum { MAI_CACHE_SIZE = 10 };
     MaiCacheItem mCache [MAI_CACHE_SIZE];
     gint mCacheIndex;
 };

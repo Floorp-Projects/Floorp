@@ -84,11 +84,11 @@ public:
 
     MaiCache *GetCache(void);
 public:
+    /* virtual functions for MaiObject */
     virtual AtkObject *GetAtkObject(void);
     virtual void Initialize(void);
     virtual void Finalize(void);
 
-    /* virtual functions for MaiObject */
     virtual gchar *GetName(void);
     virtual gchar *GetDescription(void);
     virtual MaiObject *GetParent(void);

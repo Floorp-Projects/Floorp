@@ -141,6 +141,10 @@ MaiInterfaceText::GetText(gint aStartOffset, gint aEndOffset)
 {
     MAI_IFACE_RETURN_VAL_IF_FAIL(accessIface, NULL);
 
+    //currently nsIAccessibleText does not know the meaning of -1
+    //after fixing that, remove this
+    if (aEndOffset < 0 )
+        aEndOffset = 1024;
     nsAutoString autoStr;
     nsresult rv = accessIface->GetText(aStartOffset, aEndOffset, autoStr);
     if (NS_FAILED(rv))

@@ -241,6 +241,7 @@ setRunAttributesCB(AtkEditableText *aText, AtkAttributeSet *aAttribSet,
 void
 setTextContentsCB(AtkEditableText *aText, const gchar *aString)
 {
+    MAI_LOG_DEBUG(("EditableText: setTextContentsCB, aString=%s", aString));
     MaiInterfaceEditableText *maiIfaceEditableText = getEditableText(aText);
     if (!maiIfaceEditableText)
         return;
@@ -255,11 +256,15 @@ insertTextCB(AtkEditableText *aText,
     if (!maiIfaceEditableText)
         return;
     maiIfaceEditableText->InsertText(aString, aLength, aPosition);
+    MAI_LOG_DEBUG(("EditableText: insertTextCB, aString=%s, aLength=%d, \
+                   aPosition=%d", aString, aLength, *aPosition));
 }
 
 void
 copyTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 {
+    MAI_LOG_DEBUG(("EditableText: copyTextCB, aStartPos=%d, aEndPos=%d",
+                   aStartPos, aEndPos));
     MaiInterfaceEditableText *maiIfaceEditableText = getEditableText(aText);
     if (!maiIfaceEditableText)
         return;
@@ -269,6 +274,8 @@ copyTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 void
 cutTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 {
+    MAI_LOG_DEBUG(("EditableText: cutTextCB, aStartPos=%d, aEndPos=%d",
+                   aStartPos, aEndPos));
     MaiInterfaceEditableText *maiIfaceEditableText = getEditableText(aText);
     if (!maiIfaceEditableText)
         return;
@@ -278,6 +285,8 @@ cutTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 void
 deleteTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 {
+    MAI_LOG_DEBUG(("EditableText: deleteTextCB, aStartPos=%d, aEndPos=%d",
+                   aStartPos, aEndPos));
     MaiInterfaceEditableText *maiIfaceEditableText = getEditableText(aText);
     if (!maiIfaceEditableText)
         return;
@@ -287,6 +296,7 @@ deleteTextCB(AtkEditableText *aText, gint aStartPos, gint aEndPos)
 void
 pasteTextCB(AtkEditableText *aText, gint aPosition)
 {
+    MAI_LOG_DEBUG(("EditableText: pasteTextCB, aPosition=%d", aPosition));
     MaiInterfaceEditableText *maiIfaceEditableText = getEditableText(aText);
     if (!maiIfaceEditableText)
         return;

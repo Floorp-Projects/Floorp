@@ -49,6 +49,7 @@ MaiAppRoot::MaiAppRoot()
     /* for mai root, mAccessible is always NULL */
     mTopLevelList = NULL;
     mMaiCache = new MaiCache();
+    NS_ASSERTION(mMaiCache, "Fail to create MaiCache");
 }
 
 MaiAppRoot::~MaiAppRoot()
@@ -69,9 +70,13 @@ MaiAppRoot::~MaiAppRoot()
             g_object_unref(maiTopLevel->GetAtkObject());
         }
         g_list_free(tmp_list2);
+        mTopLevelList = NULL;
     }
-    if (mMaiCache)
+
+    if (mMaiCache) {
         delete mMaiCache;
+        mMaiCache = NULL;
+    }
 }
 
 #ifdef MAI_LOGGING
@@ -81,20 +86,24 @@ MaiAppRoot::DumpMaiObjectInfo(int aDepth)
     --aDepth;
     if (aDepth < 0)
         return;
-    g_print("<<<<<Begin of MaiObject: this=0x%x, aDepth=%d, type=%s\n",
+    g_print("MaiAppRoot: this=0x%x, aDepth=%d, type=%s\n",
             (unsigned int)this, aDepth, "MaiAppRoot");
-
     gint nChild = GetChildCount();
-    g_print("== %d toplevel children\n", nChild);
+    g_print("#child=%d<br>\n", nChild);
+    g_print("Iface num: 1=component, 2=action, 3=value, 4=editabletext,"
+            "5=hyperlink, 6=hypertext, 7=selection, 8=table, 9=text\n");
+    g_print("<ul>\n");
 
     MaiObject *maiChild;
     for (int childIndex = 0; childIndex < nChild; childIndex++) {
         maiChild = RefChild(childIndex);
         if (maiChild) {
+            g_print("  <li>");
             maiChild->DumpMaiObjectInfo(aDepth);
         }
     }
-    g_print(">>>>>End of MaiObject: this=0x%x, type=%s\n",
+    g_print("</ul>\n");
+    g_print("End of MaiAppRoot: this=0x%x, type=%s\n<br>",
             (unsigned int)this, "MaiAppRoot");
 }
 #endif
@@ -111,17 +120,20 @@ gboolean
 MaiAppRoot::AddMaiTopLevel(MaiTopLevel *aTopLevel)
 {
     g_return_val_if_fail(aTopLevel != NULL, FALSE);
+    MAI_LOG_DEBUG(("MaiAppRoot: add MaiTopLevel = 0x%x", (guint)aTopLevel));
 
     /* if the nsIAccessible with the same UniqueID is already added,
-     * we only add atk object ref of the one in list, not really
-     * add the new mai object. They are think to be same (??)
+     * we only increase the count of this item in the list.
+     * They are same.
      */
 
     TopLevelItem *item = FindTopLevelItem(aTopLevel->GetNSAccessible());
 
     if (!item) {
+        MAI_LOG_DEBUG(("MaiAppRoot: new item created\n"));
         item = new TopLevelItem();
-        item->ref = 1;
+        NS_ASSERTION(item, "Fail to create TopLevelItem");
+        item->ref = 0;
         item->maiTopLevel = aTopLevel;
 
         mTopLevelList = g_list_append(mTopLevelList, item);
@@ -132,6 +144,8 @@ MaiAppRoot::AddMaiTopLevel(MaiTopLevel *aTopLevel)
         }
     }
     item->ref++;
+    MAI_LOG_DEBUG(("MaiAppRoot: item ref = %d\n", item->ref));
+
     return TRUE;
 }
 
@@ -139,14 +153,18 @@ gboolean
 MaiAppRoot::RemoveMaiTopLevel(MaiTopLevel *aTopLevel)
 {
     g_return_val_if_fail(aTopLevel != NULL, TRUE);
+    MAI_LOG_DEBUG(("MaiAppRoot: remove MaiTopLevel = 0x%x", (guint)aTopLevel));
+
     TopLevelItem *item = FindTopLevelItem(aTopLevel->GetNSAccessible());
     if (!item)
         return FALSE;
     item->ref--;
+    MAI_LOG_DEBUG(("MaiAppRoot: item ref = %d\n", item->ref));
     if (item->ref == 0) {
         mTopLevelList = g_list_remove(mTopLevelList, item);
         g_object_unref(item->maiTopLevel->GetAtkObject());
         delete item;
+        MAI_LOG_DEBUG(("MaiAppRoot: Toplevel deleted\n"));
     }
     return TRUE;
 }
@@ -185,7 +203,8 @@ MaiAppRoot::FindTopLevelItem(nsIAccessible *aTopLevel)
         while (tmp_list) {
             item = (TopLevelItem*)tmp_list->data;
             tmp_list = tmp_list->next;
-            if (item->maiTopLevel->GetNSAccessibleUniqueID() ==
+            if (item && item->maiTopLevel &&
+                item->maiTopLevel->GetNSAccessibleUniqueID() ==
                 ::GetNSAccessibleUniqueID(aTopLevel))
                 return item;
         }
