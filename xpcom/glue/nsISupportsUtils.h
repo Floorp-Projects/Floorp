@@ -853,6 +853,9 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
 
 
 
+extern "C++" {
+// ...because some one is accidentally including this file inside
+// an |extern "C"|
 
 template <class T>
 inline
@@ -864,6 +867,8 @@ ns_if_addref( T expr )
   {
     return expr ? expr->AddRef() : 0;
   }
+
+ } /* extern "C++" */
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 
