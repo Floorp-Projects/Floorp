@@ -146,7 +146,7 @@ Contributor(s):
            disabled="true"/>
 
   <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
-  <command id="View:PageInfo"   />
+  <command id="View:PageInfo" oncommand="BrowserPageInfo();"/>
   <command id="View:FullScreen" oncommand="BrowserFullScreen();"/>
   
   <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
