@@ -33,6 +33,7 @@
 #include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "nsISecurityContext.h"
+#include "nsIPrincipal.h"
 
 struct JSContext;
 
@@ -61,6 +62,26 @@ public:
      */
     NS_IMETHOD Implies(const char* target, const char* action, PRBool *bAllowedAccess);
 
+    /**
+     * Get the code base of the subject (caller).
+     *
+     * @param buf        -- Result buffer.
+     * @param len        -- Buffer length.
+     * @return           -- NS_OK if the codebase string was obtained.
+     *                   -- NS_FALSE otherwise.
+     */
+    NS_IMETHOD GetOrigin(char* buf, int len);
+
+    /**
+     * Get the certificate thumbprint of the subject (caller).
+     *
+     * @param buf        -- Result buffer.
+     * @param len        -- Buffer length.
+     * @return           -- NS_OK if the codebase string was obtained.
+     *                   -- NS_FALSE otherwise.
+     */
+    NS_IMETHOD GetCertificateID(char* buf, int len);
+
     ////////////////////////////////////////////////////////////////////////////
     // from nsCSecurityContext:
 
@@ -70,6 +91,11 @@ public:
 protected:
     JSStackFrame *m_pJStoJavaFrame;
     JSContext    *m_pJSCX;
+private:
+    nsIPrincipal *m_pPrincipal;
+    PRBool        m_HasUniversalJavaCapability;
+    PRBool        m_HasUniversalBrowserReadCapability;
+
 };
 
 #endif // nsCSecurityContext_h___

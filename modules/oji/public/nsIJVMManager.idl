@@ -54,6 +54,7 @@
 
 interface nsIJVMPlugin;
 interface nsISecureEnv;
+interface nsIPrincipal;
 native JNIEnv(JNIEnv *);
 
 [scriptable, uuid(a1e5ed50-aa4a-11d1-85b2-00805f0e4dfe)]
@@ -90,11 +91,19 @@ interface nsIJVMManager : nsISupports {
 	void ShowJavaConsole();
 
     /**
-	 * IsAllPermissionGranted
+	 * IsAllPermissionGranted [Deprecated Sep-10-2000]
 	 */
 
     void IsAllPermissionGranted(in string lastFingerprint,in string lastCommonName,
 	                            in string rootFingerprint,in string rootCommonName,
                                 out boolean isGranted);
+
+    /**
+	 * IsAppletTrusted
+	 */
+
+    nsIPrincipal IsAppletTrusted(in string aRSABuf, in PRUint32 aRSABufLen, 
+                         in string aPlaintext, in PRUint32 aPlaintextLen,    
+                         out boolean isTrusted);
 
 };

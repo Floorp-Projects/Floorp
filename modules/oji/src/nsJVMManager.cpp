@@ -50,11 +50,13 @@
 #include "nspr.h"
 #include "plstr.h"
 #include "nsCOMPtr.h"
-#include "nsJSPrincipals.h"
-#include "nsSystemPrincipal.h"
-#include "nsCodebasePrincipal.h"
+//#include "nsJSPrincipals.h"
+//#include "nsSystemPrincipal.h"
+//#include "nsCodebasePrincipal.h"
 #include "nsCertificatePrincipal.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsISignatureVerifier.h"
+
 //#include "nsScriptSecurityManager.h"
 
 extern "C" int XP_PROGRESS_STARTING_JAVA;
@@ -852,18 +854,6 @@ nsJVMManager::IsAllPermissionGranted(
                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
     if (NS_FAILED(rv) || !secMan) return FALSE;
 
-
-    /*
-     * WARNING: we need to add code here to check if the certificate is
-     * trust worthy. Without this, the user may be granting rights to a
-     * misrepresented signer.
-     */
-
-
-    /*
-     * END WARNING.
-     */
-
     // Ask the Script Security Manager to make a Certificate Principal.
     // The fingerprint is a one way hash of this certificate. It is used
     // as the key to store the principal in the principal database.
@@ -890,6 +880,53 @@ nsJVMManager::IsAllPermissionGranted(
 
     return PR_TRUE;
 }
+
+NS_METHOD
+nsJVMManager::IsAppletTrusted(
+    const char* aRSABuf, 
+    PRUint32    aRSABufLen, 
+    const char* aPlaintext, 
+    PRUint32    aPlaintextLen,    
+    PRBool*     isTrusted,
+    nsIPrincipal** pIPrincipal)
+{
+    nsresult rv      = NS_OK;
+    PRBool   success = PR_FALSE;
+
+    //-- Get the signature verifier service
+    NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_PROGID, &rv);
+    if (NS_FAILED(rv)) // No signature verifier available
+        return NS_OK;
+
+
+  // Get the Script Security Manager.
+
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
+    if (NS_FAILED(rv) || !secMan) return FALSE;
+
+
+    // Ask the Script Security Manager to make a Certificate Principal.
+    // The fingerprint is a one way hash of this certificate. It is used
+    // as the key to store the principal in the principal database.
+
+    {
+        PRInt32 ret;
+        PR_ASSERT(pIPrincipal);
+        rv = verifier->VerifySignature(aRSABuf,aRSABufLen,aPlaintext,aPlaintextLen,&ret,pIPrincipal);
+        if (NS_FAILED(rv)) return PR_FALSE;
+    }
+
+    {
+        PRInt16 ret = 0;
+        secMan->RequestCapability(*pIPrincipal,"UniversalBrowserRead",&ret);
+        PR_ASSERT(isTrusted);
+        *isTrusted = (ret!=0);
+    }
+
+    return PR_TRUE;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

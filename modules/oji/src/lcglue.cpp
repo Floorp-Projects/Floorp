@@ -27,6 +27,8 @@
 #include "ProxyJNI.h"
 #include "lcglue.h"
 #include "nscore.h"
+#include "nsISecurityContext.h"
+#include "nsCRT.h"
 
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
@@ -381,35 +383,43 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
 		// pJSCX = LM_GetCrippledContext();
 	}
 
-	// Setup tls to maintain a stack of security contexts.
-	// [Fix to #5427: test numPrincipals rather than pNSIPrincipaArray. This 
-	// allows the caller to pass in the address of a null reference to an 
-	// principal array without having to check it. jeff.dyer@compilercompany.com,
-	// Oct-4-1999]
-	if ((numPrincipals!=0) && (pNSISecurityContext != NULL)) {
-		JVMSecurityStack *pSecInfoNew    = new JVMSecurityStack;
-        if (NULL == pSecInfoNew) {
+	if (pNSISecurityContext != NULL) {
+
+        nsISecurityContext* jscontext = JVM_GetJSSecurityContext();
+        nsISecurityContext* jvcontext = (nsISecurityContext*)pNSISecurityContext;
+
+        // Check that the origin + certificate are the same.
+        // If not, then return false.
+
+        const int buflen = 128;
+        char jsorigin[buflen];
+        char jvorigin[buflen];
+        *jsorigin = nsnull;
+        *jvorigin = nsnull;
+        
+        jscontext->GetOrigin(jsorigin,buflen);
+        jvcontext->GetOrigin(jvorigin,buflen);
+
+        if( nsCRT::strcmp(jsorigin,jvorigin) ) {
             return PR_FALSE;
         }
-		pSecInfoNew->pNSIPrincipaArray   = pNSIPrincipaArray;
-		pSecInfoNew->numPrincipals       = numPrincipals;
-		pSecInfoNew->pNSISecurityContext = pNSISecurityContext;
-		pSecInfoNew->prev                = pSecInfoNew;
-		pSecInfoNew->next                = pSecInfoNew;
-		JSStackFrame *fp                 = NULL;
-		pSecInfoNew->pJavaToJSFrame      = JS_FrameIterator(pJSCX, &fp);
-		pSecInfoNew->pJSToJavaFrame      = NULL;
 
-		JVMSecurityStack *pSecInfoBottom = context->securityStack;
-		if (pSecInfoBottom == NULL) {
-			context->securityStack = pSecInfoNew;
-		} else {
-			pSecInfoBottom->prev->next = pSecInfoNew;
-			pSecInfoNew->prev          = pSecInfoBottom->prev;
-			pSecInfoNew->next          = pSecInfoBottom;
-			pSecInfoBottom->prev       = pSecInfoNew;
-		}
-	}
+        char jscertid[buflen];
+        char jvcertid[buflen];
+        *jscertid = nsnull;
+        *jvcertid = nsnull;
+
+        jscontext->GetCertificateID(jscertid,buflen);
+        jvcontext->GetCertificateID(jvcertid,buflen);
+
+        if( nsCRT::strcmp(jscertid,jvcertid) ) {
+            return PR_FALSE;
+        }
+
+    } else {
+        return PR_FALSE;
+    }
+
 	return PR_TRUE;
 }
 

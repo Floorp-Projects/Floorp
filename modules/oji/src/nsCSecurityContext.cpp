@@ -35,6 +35,15 @@
 #include "nsCSecurityContext.h"
 #include "jvmmgr.h"
 
+// For GetOrigin()
+
+#include "nsCOMPtr.h"
+#include "nsJSPrincipals.h"
+#include "nsSystemPrincipal.h"
+#include "nsCodebasePrincipal.h"
+#include "nsCertificatePrincipal.h"
+#include "nsScriptSecurityManager.h"
+
 static NS_DEFINE_IID(kISecurityContextIID, NS_ISECURITYCONTEXT_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -69,38 +78,131 @@ nsCSecurityContext::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_METHOD 
 nsCSecurityContext::Implies(const char* target, const char* action, PRBool *bAllowedAccess)
 {
-    //NOTE: Test purpose only. Turn this on if you do not want security stack walking code.
-    //*bAllowedAccess = PR_TRUE;
-    //if(1)
-     //return NS_OK;
+    nsIPrincipal* pIPrincipal = NULL;
 
-    if(m_pJStoJavaFrame == NULL)
-    {
-      *bAllowedAccess = PR_FALSE;
-       return NS_OK;
+    if(!bAllowedAccess) {
+        return PR_FALSE;
     }
-    JSStackFrame** startFrame = JVM_GetStartJSFrameFromParallelStack();
-    *startFrame = m_pJStoJavaFrame; // This updates the TLS start frame for a brief period
-                                    // until the following code runs.
-    /*
-    ** TODO: Get a new API from Tom. 
-    ** bAllowedAccess = LM_CanAccessTargetStr(m_pJSCX, target);
-    */
-    *startFrame = NULL;
-    return NS_OK;
+  
+    if(!nsCRT::strcmp(target,"UniversalBrowserRead")) {
+        *bAllowedAccess = m_HasUniversalBrowserReadCapability;
+        return NS_OK;
+    } else if(!nsCRT::strcmp(target,"UniversalJavaPermission")) {
+        *bAllowedAccess = m_HasUniversalJavaCapability;
+        return NS_OK;
+    } else {
+        *bAllowedAccess = PR_FALSE;
+    }
+    return PR_TRUE;
 }
 
+
+NS_METHOD 
+nsCSecurityContext::GetOrigin(char* buf, int buflen)
+{
+    nsCOMPtr<nsIPrincipal> principal = NULL;
+    //    nsIPrincipal* principal = NULL;
+  
+    // Get the Script Security Manager.
+
+    nsresult rv      = NS_OK;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
+    if (NS_FAILED(rv) || !secMan) return FALSE;
+
+
+    if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+    if (!codebase) 
+        return NS_ERROR_FAILURE;
+
+    char* origin=nsnull;
+    codebase->GetOrigin(&origin);
+
+    if( origin ) {
+        PRInt32 originlen = (PRInt32) nsCRT::strlen(origin);
+        if(!buf || buflen<=originlen) {
+            if( origin ) {
+                nsCRT::free(origin);
+            }
+            return FALSE;
+        }
+
+        // Copy the string into to user supplied buffer. Is there a better
+        // way to do this?
+
+        nsCRT::memcpy(buf,origin,originlen);
+        buf[originlen]=nsnull; // Gotta terminate it.
+        nsCRT::free(origin);
+    } else {
+        *buf = nsnull;
+    }
+
+    return PR_TRUE;
+}
+
+NS_METHOD 
+nsCSecurityContext::GetCertificateID(char* buf, int buflen)
+{
+    nsCOMPtr<nsIPrincipal> principal = NULL;
+    //nsIPrincipal* principal = NULL;
+  
+    // Get the Script Security Manager.
+
+    nsresult rv      = NS_OK;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
+    if (NS_FAILED(rv) || !secMan) return FALSE;
+
+
+    secMan->GetSubjectPrincipal(getter_AddRefs(principal));
+    nsCOMPtr<nsICertificatePrincipal> cprincipal = do_QueryInterface(principal);
+    if (!cprincipal) 
+        return NS_ERROR_FAILURE;
+
+    char* certificate = nsnull;
+    cprincipal->GetCertificateID(&certificate);
+
+    if( certificate ) {
+        PRInt32 certlen = (PRInt32) nsCRT::strlen(certificate);
+        if( buflen<=certlen ) {
+            nsCRT::free(certificate);
+            return FALSE;
+        }
+        nsCRT::memcpy(buf,certificate,certlen);
+        buf[certlen]=nsnull;
+        nsCRT::free(certificate);
+    } else {
+        *buf = nsnull;
+    }
+
+    return PR_TRUE;
+}
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsCSecurityContext:
 extern PRUintn tlsIndex3_g;
 nsCSecurityContext::nsCSecurityContext(JSContext* cx)
-                   : m_pJStoJavaFrame(NULL), m_pJSCX(NULL)
+                   : m_pJStoJavaFrame(NULL), m_pJSCX(NULL),
+                     m_pPrincipal(NULL),
+                     m_HasUniversalBrowserReadCapability(FALSE),
+                     m_HasUniversalJavaCapability(FALSE)
 {
     NS_INIT_REFCNT();
-    JSStackFrame *fp = NULL;
-    m_pJStoJavaFrame = JS_FrameIterator(cx, &fp);
-    m_pJSCX          = cx;
+
+      // Get the Script Security Manager.
+
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
+                  NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
+    if (NS_FAILED(rv) || !secMan) return;
+
+    // Do early evaluation of "UniversalJavaPermission" capability.
+    
+    secMan->IsCapabilityEnabled("UniversalBrowserRead",&m_HasUniversalBrowserReadCapability);
+    secMan->IsCapabilityEnabled("UniversalJavaPermission",&m_HasUniversalJavaCapability);
 }
 
 nsCSecurityContext::~nsCSecurityContext()
