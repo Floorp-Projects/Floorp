@@ -77,6 +77,37 @@ nsTableCellFrame::Init(nsIPresContext&  aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP
+nsTableCellFrame::AppendFrames(nsIPresContext& aPresContext,
+                               nsIPresShell&   aPresShell,
+                               nsIAtom*        aListName,
+                               nsIFrame*       aFrameList)
+{
+  NS_PRECONDITION(PR_FALSE, "unsupported operation");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsTableCellFrame::InsertFrames(nsIPresContext& aPresContext,
+                               nsIPresShell&   aPresShell,
+                               nsIAtom*        aListName,
+                               nsIFrame*       aPrevFrame,
+                               nsIFrame*       aFrameList)
+{
+  NS_PRECONDITION(PR_FALSE, "unsupported operation");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsTableCellFrame::RemoveFrame(nsIPresContext& aPresContext,
+                              nsIPresShell&   aPresShell,
+                              nsIAtom*        aListName,
+                              nsIFrame*       aOldFrame)
+{
+  NS_PRECONDITION(PR_FALSE, "unsupported operation");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
 {
   NS_PRECONDITION(0<=aColIndex, "bad col index arg");
