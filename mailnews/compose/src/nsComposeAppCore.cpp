@@ -374,7 +374,7 @@ nsresult nsComposeAppCore::Dispose()
 		appCoreManager->Remove((nsIDOMBaseAppCore *) this);
 	}
 
-	//NS_RELEASE(this);	//??
+	Release();
 	return NS_OK;
 }
 
