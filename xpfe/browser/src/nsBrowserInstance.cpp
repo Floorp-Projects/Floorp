@@ -1119,9 +1119,9 @@ nsBrowserAppCore::LoadInitialPage(void)
 #ifdef DEBUG
     // First, check if there's a URL file to load (for testing), and if there 
     // is, process it instead of anything else.
-    char* file;
+    char* file = 0;
     rv = cmdLineArgs->GetCmdLineValue("-f", &file);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv) && file) {
       PageCycler* bb = new PageCycler(this);
       if (bb == nsnull) {
         nsCRT::free(file);
