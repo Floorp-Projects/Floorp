@@ -167,8 +167,13 @@ private:
   NS_IMETHOD RemoveTooltipListener();
 
   nsWebBrowser* mWebBrowser;
-  nsIWebBrowserChrome* mWebBrowserChrome;
   nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
+  
+    // This must be a strong ref in order to make sure we can hide the tooltip
+    // if the window goes away while we're displaying one. If we don't hold
+    // a strong ref, the chrome might have been disposed of before we get a chance
+    // to tell it, and no one would ever tell us of that fact.
+  nsCOMPtr<nsIWebBrowserChrome> mWebBrowserChrome;
 
   PRPackedBool mContextMenuListenerInstalled;
   PRPackedBool mTooltipListenerInstalled;

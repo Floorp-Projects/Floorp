@@ -650,7 +650,6 @@ ChromeListener :: ChromeListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome*
 //
 ChromeListener :: ~ChromeListener ( )
 {
-  RemoveChromeListeners();
   
 } // dtor
 
@@ -760,17 +759,14 @@ ChromeListener :: AddTooltipListener()
 NS_IMETHODIMP
 ChromeListener :: RemoveChromeListeners ( )
 {
+  HideTooltip();
+
   if ( mContextMenuListenerInstalled )
     RemoveContextMenuListener();
     
   if ( mTooltipListenerInstalled )
     RemoveTooltipListener();
   
-  // because of a bug in the EventListenerManager with listeners registered to multiple
-  // IID's, we might not have release all refs when removing the listeners. Clearing
-  // our ref to the listener will free them, but use a deathgrip to make sure we don't
-  // go away until we're truly ready.
-  nsCOMPtr<nsIDOMMouseListener> kungFuDeathGrip ( this );
   mEventReceiver = nsnull;
   
   // it really doesn't matter if these fail...
@@ -789,9 +785,6 @@ NS_IMETHODIMP
 ChromeListener :: RemoveContextMenuListener()
 {
   if (mEventReceiver) {
-    // Removing the mouse listener may cause this instance to
-    // be deleted...  So, keep an extra reference to defer destruction..
-    nsCOMPtr<nsIDOMMouseListener> kungFuDeathGrip(this);
     nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
     nsresult rv = mEventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
     if (NS_SUCCEEDED(rv))
@@ -811,9 +804,6 @@ NS_IMETHODIMP
 ChromeListener :: RemoveTooltipListener()
 {
   if (mEventReceiver) {
-    // Removing the mouse listener may cause this instance to
-    // be deleted...  So, keep an extra reference to defer destruction..
-    nsCOMPtr<nsIDOMMouseListener> kungFuDeathGrip(this);
     nsIDOMMouseListener *pListener = NS_STATIC_CAST(nsIDOMMouseListener *, this);
     nsresult rv = mEventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseListener));
     nsresult rv2 = mEventReceiver->RemoveEventListenerByIID(pListener, NS_GET_IID(nsIDOMMouseMotionListener));
