@@ -37,18 +37,18 @@ titledbutton#BackColorPopup {
   margin-left: -3px;
 }
 
-titledbutton#BoldButton {
+titledbutton#boldButton {
   min-width: 16px; 
   font-size: 19px; 
   font-weight: bold; 
   font-family: times, serif, sans-serif;
 }
 
-titledbutton#BoldButton:hover {
+titledbutton#boldButton:hover {
   text-decoration: none;
 }
 
-titledbutton#ItalicButton {
+titledbutton#italicButton {
   min-width: 16px; 
   font-size: 19px; 
   font-weight: bold; 
@@ -56,11 +56,11 @@ titledbutton#ItalicButton {
   font-style:  italic;
 }
 
-titledbutton#ItalicButton:hover {
+titledbutton#italicButton:hover {
   text-decoration: none;
 }
 
-titledbutton#UnderlineButton {
+titledbutton#underlineButton {
   min-width: 16px; 
   font-size: 19px; 
   font-weight: normal; 
@@ -91,3 +91,12 @@ titledbutton.PopupButton {
   min-height: 10px;
   list-style-image: url(chrome://editor/skin/images/ED_Left.gif); 
 }
+
+titledbutton#SaveButton {
+  list-style-image:url(chrome://editor/skin/images/ED_SaveFile.gif); 
+}
+
+titledbutton#SaveButton[dirty="true"] {
+  list-style-image:url(chrome://editor/skin/images/ED_SaveMod.gif); 
+}
+
