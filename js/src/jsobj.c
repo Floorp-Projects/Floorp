@@ -168,25 +168,26 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 obj_getCount(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    jsval iter_state;
+    jsval iter_state = JSVAL_NULL;
     jsid num_properties;
-
-    iter_state = JSVAL_NULL;
+    JSBool ok = JS_FALSE;
 
     /* Get the number of properties to enumerate. */
     if (!OBJ_ENUMERATE(cx, obj, JSENUMERATE_INIT, &iter_state, &num_properties))
-	goto error;
+	goto out;
     if (!JSVAL_IS_INT(num_properties)) {
 	JS_ASSERT(0);
-	goto error;
+	goto out;
     }
     *vp = num_properties;
-    return JS_TRUE;
+    ok = JS_TRUE;
 
-error:
-    if (iter_state != JSVAL_NULL)
-	OBJ_ENUMERATE(cx, obj, JSENUMERATE_DESTROY, &iter_state, 0);
-    return JS_FALSE;
+ out:
+    if (iter_state != JSVAL_NULL &&
+	!OBJ_ENUMERATE(cx, obj, JSENUMERATE_DESTROY, &iter_state, 0))
+        ok = JS_FALSE;
+
+    return ok;
 }
 
 #else  /* !JS_HAS_OBJ_PROTO_PROP */
