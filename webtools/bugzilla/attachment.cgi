@@ -870,7 +870,7 @@ sub insert
   $comment = Text::Wrap::wrap('', '', $comment);
 
   AppendComment($::FORM{'bugid'}, 
-                $::COOKIE{"Bugzilla_login"},
+                Bugzilla->user->login,
                 $comment,
                 $isprivate);
 
@@ -934,7 +934,7 @@ sub insert
   }   
   
   # Define the variables and functions that will be passed to the UI template.
-  $vars->{'mailrecipients'} =  { 'changer' => $::COOKIE{'Bugzilla_login'},
+  $vars->{'mailrecipients'} =  { 'changer' => Bugzilla->user->login,
                                  'owner'   => $owner };
   my $bugid = $::FORM{'bugid'};
   detaint_natural($bugid); # don't bother with error condition, we know it'll work
@@ -1156,7 +1156,7 @@ sub update
   }
   
   # Define the variables and functions that will be passed to the UI template.
-  $vars->{'mailrecipients'} = { 'changer' => $::COOKIE{'Bugzilla_login'} };
+  $vars->{'mailrecipients'} = { 'changer' => Bugzilla->user->login };
   $vars->{'attachid'} = $::FORM{'id'}; 
   $vars->{'bugid'} = $bugid; 
 
