@@ -66,8 +66,12 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
   return result;
 }
 
+MOZ_DECL_CTOR_COUNTER(nsView);
+
 nsView :: nsView()
 {
+  MOZ_COUNT_CTOR(nsView);
+
   mVis = nsViewVisibility_kShow;
   mXForm = nsnull;
   mVFlags = 0;
@@ -77,6 +81,8 @@ nsView :: nsView()
 
 nsView :: ~nsView()
 {
+  MOZ_COUNT_DTOR(nsView);
+
   mVFlags |= NS_VIEW_PUBLIC_FLAG_DYING;
 
   PRInt32 numKids;

@@ -102,14 +102,20 @@ PRInt32 nsViewManager::gBlendHeight = 0;
 
 static NS_DEFINE_IID(knsViewManagerIID, NS_IVIEWMANAGER_IID);
 
+MOZ_DECL_CTOR_COUNTER(nsViewManager);
+
 nsViewManager :: nsViewManager()
 {
+  MOZ_COUNT_CTOR(nsViewManager);
+
   mVMCount++;
   mUpdateBatchCnt = 0;
 }
 
 nsViewManager :: ~nsViewManager()
 {
+  MOZ_COUNT_DTOR(nsViewManager);
+
   if (nsnull != mTimer)
   {
     mTimer->Cancel();     //XXX this should not be necessary. MMP
