@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if_struct.h,v 1.7 1999/11/13 22:37:36 cls%seawood.org Exp $
+ * $Id: if_struct.h,v 1.8 1999/12/03 00:52:29 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -62,22 +62,18 @@ typedef struct il_container_struct il_container;
 
 #include "il.h"
 
+#ifdef XP_WIN
+#define _USD 1              /* scanlines upside-down */ 
+#endif
+
 /* For debugging counts of loading, looping and aborted images, needed for
    group observer notification. */
 /* #define DEBUG_GROUP_OBSERVER */
 
 #ifdef DEBUG
-#define Debug 1
-#endif
-
-#ifdef XP_WIN
-#define _USD 1              /* scanlines upside-down */ 
-#endif
-
-/* extern PRLogModuleInfo *il_log_module; */
-
-#ifdef DEBUG
-/* #define ILTRACE(l,t) { if(il_debug>l) {PR_LOG(il_log_module, 1, t);} } */
+extern int il_debug;
+extern PRLogModuleInfo *il_log_module;
+#define ILTRACE(l,t) { if(il_debug>l) {PR_LOG(il_log_module, 1, t);} } 
 #else
 #define ILTRACE(l,t) {}
 #endif
@@ -348,12 +344,7 @@ struct _IL_ImageReq {
     struct _IL_ImageReq *next;  /* Next entry in a list of image requests. */
 };
 
-extern int il_debug;
-#ifdef DEBUG
-#define ILTRACE(l,t) {}
-#else
-#define ILTRACE(l,t) {}
-#endif
+
 
 #endif
 #endif
