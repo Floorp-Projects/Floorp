@@ -858,6 +858,8 @@ RDFXMLDataSourceImpl::SetReadOnly(PRBool aIsReadOnly)
     return NS_OK;
 }
 
+#include "nsITimelineService.h"
+
 NS_IMETHODIMP
 RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
 {
@@ -888,7 +890,10 @@ RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
     if (NS_FAILED(rv)) return rv;
 
     if (aBlocking) {
+        NS_TIMELINE_START_TIMER("rdf blocking parse");
         rv = BlockingParse(mURL, this);
+        NS_TIMELINE_STOP_TIMER("rdf blocking parse");
+        NS_TIMELINE_MARK_TIMER("rdf blocking parse");
 
         mListener = nsnull; // release the parser
 
