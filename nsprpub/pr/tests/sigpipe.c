@@ -69,7 +69,7 @@ int main(void)
 #endif
 #include <errno.h>
 
-int main(void)
+static void Test(void *arg)
 {
 #ifdef XP_OS2
     HFILE pipefd[2];
@@ -78,9 +78,6 @@ int main(void)
 #endif
     int rv;
     char c = '\0';
-
-    /* This initializes NSPR. */
-    PR_SetError(0, 0);
 
 #ifdef XP_OS2
     if (DosCreatePipe(&pipefd[0], &pipefd[1], 4096) != 0) {
@@ -103,6 +100,27 @@ int main(void)
     }
     close(pipefd[1]);
     printf("write to broken pipe failed with EPIPE, as expected\n");
+}
+
+int main(void)
+{
+    PRThread *thread;
+
+    /* This initializes NSPR. */
+    PR_SetError(0, 0);
+
+    thread = PR_CreateThread(PR_USER_THREAD, Test, NULL, PR_PRIORITY_NORMAL,
+            PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+    if (thread == NULL) {
+        fprintf(stderr, "PR_CreateThread failed\n");
+        exit(1);
+    }
+    if (PR_JoinThread(thread) == PR_FAILURE) {
+        fprintf(stderr, "PR_JoinThread failed\n");
+        exit(1);
+    }
+    Test(NULL);
+
     printf("PASSED\n");
     return 0;
 }
