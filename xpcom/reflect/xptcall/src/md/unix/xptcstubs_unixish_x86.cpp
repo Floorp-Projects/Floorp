@@ -98,7 +98,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 #define STUB_ENTRY(n) \
 nsresult nsXPTCStubBase::Stub##n() \
 { \
-  register nsresult (*method) (nsXPTCStubBase *, unsigned int, PRUint32 *) = PrepareAndDispatch; \
+  register nsresult (*method) (nsXPTCStubBase *, uint32, PRUint32 *) = PrepareAndDispatch; \
   int temp0, temp1; \
   register nsresult result; \
   __asm__ __volatile__( \
