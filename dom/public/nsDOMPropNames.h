@@ -333,6 +333,11 @@
     "htmlelement.dir", \
     "htmlelement.id", \
     "htmlelement.lang", \
+    "htmlelement.offsetheight", \
+    "htmlelement.offsetleft", \
+    "htmlelement.offsetparent", \
+    "htmlelement.offsettop", \
+    "htmlelement.offsetwidth", \
     "htmlelement.style", \
     "htmlelement.title", \
     "htmlembedelement.align", \

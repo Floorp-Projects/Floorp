@@ -29,6 +29,7 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMElement.h"
 
+class nsIDOMElement;
 class nsIDOMCSSStyleDeclaration;
 
 #define NS_IDOMHTMLELEMENT_IID \
@@ -55,6 +56,16 @@ public:
   NS_IMETHOD    SetClassName(const nsString& aClassName)=0;
 
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
+
+  NS_IMETHOD    GetOffsetTop(PRInt32* aOffsetTop)=0;
+
+  NS_IMETHOD    GetOffsetLeft(PRInt32* aOffsetLeft)=0;
+
+  NS_IMETHOD    GetOffsetWidth(PRInt32* aOffsetWidth)=0;
+
+  NS_IMETHOD    GetOffsetHeight(PRInt32* aOffsetHeight)=0;
+
+  NS_IMETHOD    GetOffsetParent(nsIDOMElement** aOffsetParent)=0;
 };
 
 
@@ -70,6 +81,11 @@ public:
   NS_IMETHOD    GetClassName(nsString& aClassName);  \
   NS_IMETHOD    SetClassName(const nsString& aClassName);  \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
+  NS_IMETHOD    GetOffsetTop(PRInt32* aOffsetTop);  \
+  NS_IMETHOD    GetOffsetLeft(PRInt32* aOffsetLeft);  \
+  NS_IMETHOD    GetOffsetWidth(PRInt32* aOffsetWidth);  \
+  NS_IMETHOD    GetOffsetHeight(PRInt32* aOffsetHeight);  \
+  NS_IMETHOD    GetOffsetParent(nsIDOMElement** aOffsetParent);  \
 
 
 
@@ -85,6 +101,11 @@ public:
   NS_IMETHOD    GetClassName(nsString& aClassName) { return _to GetClassName(aClassName); } \
   NS_IMETHOD    SetClassName(const nsString& aClassName) { return _to SetClassName(aClassName); } \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to GetStyle(aStyle); } \
+  NS_IMETHOD    GetOffsetTop(PRInt32* aOffsetTop) { return _to GetOffsetTop(aOffsetTop); } \
+  NS_IMETHOD    GetOffsetLeft(PRInt32* aOffsetLeft) { return _to GetOffsetLeft(aOffsetLeft); } \
+  NS_IMETHOD    GetOffsetWidth(PRInt32* aOffsetWidth) { return _to GetOffsetWidth(aOffsetWidth); } \
+  NS_IMETHOD    GetOffsetHeight(PRInt32* aOffsetHeight) { return _to GetOffsetHeight(aOffsetHeight); } \
+  NS_IMETHOD    GetOffsetParent(nsIDOMElement** aOffsetParent) { return _to GetOffsetParent(aOffsetParent); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLElementClass(nsIScriptContext *aContext, void **aPrototype);
