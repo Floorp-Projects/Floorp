@@ -1105,8 +1105,8 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
       nsAutoString v(aAttributes[1]);
       nsRDFParserUtils::StripAndConvert(v);
 
-      const PRUnichar* attrName;
-      attr->GetUnicode(&attrName);
+      nsAutoString attrName;
+      attr->ToString(attrName);
 
       nsCAutoString propertyStr;
     
@@ -1256,8 +1256,8 @@ RDFContentSinkImpl::OpenObject(const PRUnichar* aName,
         if (nameSpaceURI)
             typeStr = nameSpaceURI;
 
-        const PRUnichar *attrName;
-        tag->GetUnicode(&attrName);
+        nsAutoString attrName;
+        tag->ToString(attrName);
 
         typeStr += NS_ConvertUCS2toUTF8(attrName);
 
@@ -1288,8 +1288,8 @@ RDFContentSinkImpl::OpenProperty(const PRUnichar* aName, const PRUnichar** aAttr
     ParseTagString(aName, &nameSpaceURI, getter_AddRefs(tag));
 
 
-    const PRUnichar *attrName;
-    tag->GetUnicode(&attrName);
+    nsAutoString attrName;
+    tag->ToString(attrName);
 
     nsCAutoString propertyStr;
     if (nameSpaceURI) {
