@@ -42,7 +42,8 @@
 #include "nsITXTToHTMLConv.h"
 #include "nsIEventQueue.h"
 #include "nsEventQueueUtils.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -758,31 +759,22 @@ nsGopherChannel::PushStreamConverters(nsIStreamListener *listener, nsIStreamList
 NS_IMETHODIMP
 nsGopherChannel::SetListFormat(PRUint32 format)
 {
-    if (format != FORMAT_PREF &&
-        format != FORMAT_RAW &&
-        format != FORMAT_HTML &&
-        format != FORMAT_HTTP_INDEX) {
-        return NS_ERROR_FAILURE;
-    }
-
     // Convert the pref value
     if (format == FORMAT_PREF) {
-        nsresult rv;
-        nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        PRInt32 sFormat;
-        rv = prefs->GetIntPref("network.dir.format", &sFormat);
-        if (NS_FAILED(rv))
-            format = FORMAT_HTML; // default
-        else
-            format = sFormat;
-
-        if (format == FORMAT_PREF) {
-            NS_WARNING("Who set the directory format pref to 'read from prefs'??");
-            return NS_ERROR_FAILURE;
+        format = FORMAT_HTML; // default
+        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefs) {
+            PRInt32 sFormat;
+            if (NS_SUCCEEDED(prefs->GetIntPref("network.dir.format", &sFormat)))
+                format = sFormat;
         }
     }
-    
+    if (format != FORMAT_RAW &&
+        format != FORMAT_HTML &&
+        format != FORMAT_HTTP_INDEX) {
+        NS_WARNING("invalid directory format");
+        return NS_ERROR_FAILURE;
+    }
     mListFormat = format;
     return NS_OK;
 }

@@ -44,7 +44,8 @@
 #include "nsMimeTypes.h"
 #include "nsIProxyObjectManager.h"
 #include "nsReadableUtils.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIStreamConverterService.h"
 #include "nsISocketTransport.h"
 
@@ -742,38 +743,31 @@ nsFTPChannel::GetUploadStream(nsIInputStream **stream)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::SetListFormat(PRUint32 format) {
-    if (format != FORMAT_PREF &&
-        format != FORMAT_RAW &&
-        format != FORMAT_HTML &&
-        format != FORMAT_HTTP_INDEX) {
-        return NS_ERROR_FAILURE;
-    }
-
+nsFTPChannel::SetListFormat(PRUint32 format)
+{
     // Convert the pref value
     if (format == FORMAT_PREF) {
-        nsresult rv;
-        nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        PRInt32 sFormat;
-        rv = prefs->GetIntPref("network.dir.format", &sFormat);
-        if (NS_FAILED(rv))
-            format = FORMAT_HTML; // default
-        else
-            format = sFormat;
-
-        if (format == FORMAT_PREF) {
-            NS_WARNING("Who set the directory format pref to 'read from prefs'??");
-            return NS_ERROR_FAILURE;
+        format = FORMAT_HTML; // default
+        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefs) {
+            PRInt32 sFormat;
+            if (NS_SUCCEEDED(prefs->GetIntPref("network.dir.format", &sFormat)))
+                format = sFormat;
         }
     }
-
+    if (format != FORMAT_RAW &&
+        format != FORMAT_HTML &&
+        format != FORMAT_HTTP_INDEX) {
+        NS_WARNING("invalid directory format");
+        return NS_ERROR_FAILURE;
+    }
     mListFormat = format;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::GetListFormat(PRUint32 *format) {
+nsFTPChannel::GetListFormat(PRUint32 *format)
+{
     *format = mListFormat;
     return NS_OK;
 }

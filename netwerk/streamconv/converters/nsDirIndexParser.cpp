@@ -51,7 +51,9 @@
 #include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsCRT.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefLocalizedString.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsDirIndexParser,
                               nsIRequestObserver,
@@ -63,38 +65,43 @@ nsDirIndexParser::nsDirIndexParser() {
 
 nsresult
 nsDirIndexParser::Init() {
-  nsresult rv = NS_OK;
-
   mLineStart = 0;
   mHasDescription = PR_FALSE;
   mFormat = nsnull;
 
+  // get default charset to be used for directory listings (fallback to
+  // ISO-8859-1 if pref is unavailable).
   NS_NAMED_LITERAL_CSTRING(kFallbackEncoding, "ISO-8859-1");
-
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-  if (prefs)  {
-    nsXPIDLString defCharset;
-    rv = prefs->GetLocalizedUnicharPref("intl.charset.default", getter_Copies(defCharset));
-    if (NS_SUCCEEDED(rv) && !defCharset.IsEmpty())
-      mEncoding.Assign(NS_ConvertUCS2toUTF8(defCharset).get());
-    else
-      mEncoding.Assign(kFallbackEncoding);
+  nsXPIDLString defCharset;
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefs) {
+    nsCOMPtr<nsIPrefLocalizedString> prefVal;
+    prefs->GetComplexValue("intl.charset.default",
+                           NS_GET_IID(nsIPrefLocalizedString),
+                           getter_AddRefs(prefVal));
+    if (prefVal)
+      prefVal->ToString(getter_Copies(defCharset));
   }
+  if (!defCharset.IsEmpty())
+    LossyCopyUTF16toASCII(defCharset, mEncoding); // charset labels are always ASCII
   else
     mEncoding.Assign(kFallbackEncoding);
  
-  if (gRefCntParser++ == 0) {
+  nsresult rv;
+  // XXX not threadsafe
+  if (gRefCntParser++ == 0)
     rv = nsServiceManager::GetService(NS_ITEXTTOSUBURI_CONTRACTID,
                                       NS_GET_IID(nsITextToSubURI),
                                       NS_REINTERPRET_CAST(nsISupports**, &gTextToSubURI));
-    if (NS_FAILED(rv)) return rv;
-  }
+  else
+    rv = NS_OK;
 
   return rv;
 }
 
 nsDirIndexParser::~nsDirIndexParser() {
   delete[] mFormat;
+  // XXX not threadsafe
   if (--gRefCntParser == 0) {
     NS_IF_RELEASE(gTextToSubURI);
   }

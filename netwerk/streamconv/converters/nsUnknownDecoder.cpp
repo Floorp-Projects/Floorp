@@ -45,7 +45,8 @@
 #include "nsMimeTypes.h"
 #include "netCore.h"
 #include "nsXPIDLString.h"
-#include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "imgILoader.h"
 
 #include "nsCRT.h"
@@ -58,8 +59,6 @@
 
 #define MAX_BUFFER_SIZE 1024
 
-static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
-
 #if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN
 #define LITTLE_TO_NATIVE16(x) ((((x) & 0xFF) << 8) | ((x) >> 8))
 #else
@@ -67,18 +66,16 @@ static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 #endif
 
 nsUnknownDecoder::nsUnknownDecoder()
+  : mBuffer(nsnull)
+  , mBufferLen(0)
+  , mRequireHTMLsuffix(PR_FALSE)
 {
-  mBuffer = nsnull;
-  mBufferLen = 0;
-  mRequireHTMLsuffix = PR_FALSE;
-
-  nsresult rv;
-  nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = pPrefService->GetBoolPref("security.requireHTMLsuffix", &mRequireHTMLsuffix);
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRBool val;
+    if (NS_SUCCEEDED(prefs->GetBoolPref("security.requireHTMLsuffix", &val)))
+      mRequireHTMLsuffix = val;
   }
-
-
 }
 
 nsUnknownDecoder::~nsUnknownDecoder()

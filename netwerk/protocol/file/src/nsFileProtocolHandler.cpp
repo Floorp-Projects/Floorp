@@ -48,7 +48,6 @@
 #include "nsIDirectoryListing.h"
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREFSERVICE_CID);
 
 //-----------------------------------------------------------------------------
 
@@ -60,17 +59,12 @@ nsFileProtocolHandler::nsFileProtocolHandler()
 nsresult
 nsFileProtocolHandler::Init()
 {
-    nsresult rv;
-    nsCOMPtr<nsIPrefService> prefService = do_GetService(kPrefServiceCID, &rv);
-    if (NS_SUCCEEDED(rv)) { 
-        nsCOMPtr<nsIPrefBranch> prefBranch;
-        rv = prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
-        if (NS_SUCCEEDED(rv)) {
-            PRInt32 sFormat;
-            rv = prefBranch->GetIntPref("network.dir.format", &sFormat);
-            if (NS_SUCCEEDED(rv) && sFormat == nsIDirectoryListing::FORMAT_HTML)
-                mGenerateHTMLDirs = PR_TRUE;
-        }
+    nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (prefs) {
+        PRInt32 sFormat;
+        nsresult rv = prefs->GetIntPref("network.dir.format", &sFormat);
+        if (NS_SUCCEEDED(rv) && sFormat == nsIDirectoryListing::FORMAT_HTML)
+            mGenerateHTMLDirs = PR_TRUE;
     }
     return NS_OK;
 }

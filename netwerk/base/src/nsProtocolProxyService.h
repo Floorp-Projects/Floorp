@@ -41,27 +41,30 @@
 #include "plevent.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsIPref.h"
 #include "nsVoidArray.h"
+#include "nsIPrefBranch.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIProxyAutoConfig.h"
 #include "nsIProxyInfo.h"
 #include "nsIIOService.h"
+#include "nsIObserver.h"
 #include "prmem.h"
 #include "prio.h"
 
 class nsProtocolProxyService : public nsIProtocolProxyService
+                             , public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLPROXYSERVICE
+    NS_DECL_NSIOBSERVER
 
     nsProtocolProxyService();
     virtual ~nsProtocolProxyService();
 
     nsresult Init();
 
-    void PrefsChanged(const char* pref);
+    void PrefsChanged(nsIPrefBranch *, const char* pref);
 
     class nsProxyInfo : public nsIProxyInfo
     {
@@ -104,8 +107,6 @@ protected:
 
     nsresult GetProtocolInfo(const char *scheme, PRUint32 &flags, PRInt32 &defaultPort);
     nsresult NewProxyInfo_Internal(const char *type, char *host, PRInt32 port, nsIProxyInfo **);
-    void     GetStringPref(const char *pref, nsCString &result);
-    void     GetIntPref(const char *pref, PRInt32 &result);
     void     LoadFilters(const char *filters);
     PRBool   CanUseProxy(nsIURI *aURI, PRInt32 defaultPort);
 
@@ -142,7 +143,6 @@ protected:
 
     nsCOMPtr<nsIIOService>  mIOService;
 
-    nsCOMPtr<nsIPref>       mPrefs;
     PRUint16                mUseProxy;
 
     nsCString               mHTTPProxyHost;
