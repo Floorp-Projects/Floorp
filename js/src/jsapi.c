@@ -2533,14 +2533,12 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
     JSAtom *funAtom, *argAtom;
     uintN i;
     JSScopeProperty *sprop;
-    jsval junk;
 
     CHECK_REQUEST(cx);
     mark = JS_ARENA_MARK(&cx->tempPool);
     ts = js_NewTokenStream(cx, chars, length, filename, lineno, principals);
     if (!ts) {
 	fun = NULL;
-	funAtom = NULL;
 	goto out;
     }
     if (!name) {
@@ -2552,8 +2550,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
 	    goto out;
 	}
     }
-/* XXXbe new-function, bind name only on success */
-    fun = js_DefineFunction(cx, obj, funAtom, NULL, nargs, 0);
+    fun = js_NewFunction(cx, NULL, NULL, nargs, 0, obj, funAtom);
     if (!fun)
 	goto out;
     if (nargs) {
@@ -2572,14 +2569,20 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
 	    OBJ_DROP_PROPERTY(cx, fun->object, (JSProperty *)sprop);
 	}
 	if (i < nargs) {
-	    (void) OBJ_DELETE_PROPERTY(cx, obj, (jsid)funAtom, &junk);
 	    fun = NULL;
 	    goto out;
 	}
     }
     if (!js_CompileFunctionBody(cx, ts, fun)) {
-	(void) OBJ_DELETE_PROPERTY(cx, obj, (jsid)funAtom, &junk);
 	fun = NULL;
+        goto out;
+    }
+    if (funAtom) {
+        if (!OBJ_DEFINE_PROPERTY(cx, obj, (jsid)funAtom,
+                                 OBJECT_TO_JSVAL(fun->object),
+                                 NULL, NULL, 0, NULL)) {
+            return NULL;
+        }
     }
 out:
     if (ts)
