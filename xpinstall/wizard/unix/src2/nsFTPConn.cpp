@@ -390,8 +390,10 @@ nsFTPConn::RawClose(int aFd)
 {
     int err = OK;
 
+#if 0
     err = shutdown(aFd, SHUT_RDWR);
     if (err != 0) err = E_SOCK_CLOSE;
+#endif
 
     return err;
 }
