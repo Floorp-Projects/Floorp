@@ -155,6 +155,13 @@ res/acceptlanguage.properties
 res/unixcharset.properties
 res/strres.properties 
 
+; required i18n libs
+components/libstrres.so
+
+; required prefs files
+defaults/pref/all.js
+defaults/pref/initpref.js
+defaults/pref/unix.js
 
 ; uriloader
 components/liburiloader.so
