@@ -3124,12 +3124,14 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
     parentBG = NS_STATIC_CAST(const nsStyleBackground*,
                          parentContext->GetStyleData(eStyleStruct_Background));
   PRBool inherited = aInherited;
+  // save parentFlags in case bg == parentBG and we clobber them later
+  PRUint8 parentFlags = parentBG->mBackgroundFlags;
 
   // background-color: color, string, enum (flags), inherit
   if (eCSSUnit_Inherit == colorData.mBackColor.GetUnit()) { // do inherit first, so SetColor doesn't do it
     bg->mBackgroundColor = parentBG->mBackgroundColor;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
-    bg->mBackgroundFlags |= (parentBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+    bg->mBackgroundFlags |= (parentFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
     inherited = PR_TRUE;
   }
   else if (SetColor(colorData.mBackColor, parentBG->mBackgroundColor, 
@@ -3154,7 +3156,7 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
     inherited = PR_TRUE;
     bg->mBackgroundImage = parentBG->mBackgroundImage;
     bg->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
-    bg->mBackgroundFlags |= (parentBG->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE);
+    bg->mBackgroundFlags |= (parentFlags & NS_STYLE_BG_IMAGE_NONE);
   }
 
   // background-repeat: enum, inherit
@@ -3196,7 +3198,7 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
     inherited = PR_TRUE;
     bg->mBackgroundXPosition = parentBG->mBackgroundXPosition;
     bg->mBackgroundFlags &= ~(NS_STYLE_BG_X_POSITION_LENGTH | NS_STYLE_BG_X_POSITION_PERCENT);
-    bg->mBackgroundFlags |= (parentBG->mBackgroundFlags & (NS_STYLE_BG_X_POSITION_LENGTH | NS_STYLE_BG_X_POSITION_PERCENT));
+    bg->mBackgroundFlags |= (parentFlags & (NS_STYLE_BG_X_POSITION_LENGTH | NS_STYLE_BG_X_POSITION_PERCENT));
   }
 
   if (eCSSUnit_Percent == colorData.mBackPositionY.GetUnit()) {
@@ -3219,7 +3221,7 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
     inherited = PR_TRUE;
     bg->mBackgroundYPosition = parentBG->mBackgroundYPosition;
     bg->mBackgroundFlags &= ~(NS_STYLE_BG_Y_POSITION_LENGTH | NS_STYLE_BG_Y_POSITION_PERCENT);
-    bg->mBackgroundFlags |= (parentBG->mBackgroundFlags & (NS_STYLE_BG_Y_POSITION_LENGTH | NS_STYLE_BG_Y_POSITION_PERCENT));
+    bg->mBackgroundFlags |= (parentFlags & (NS_STYLE_BG_Y_POSITION_LENGTH | NS_STYLE_BG_Y_POSITION_PERCENT));
   }
 
   if (inherited)
