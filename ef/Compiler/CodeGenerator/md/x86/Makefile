@@ -36,6 +36,7 @@ LOCAL_MD_EXPORTS_x86 = 	x86ArgumentList.h			\
 			x86Float.h				\
 			x86Formatter.h				\
 			x86Linux_Support.h			\
+			x86FreeBSD_Support.h			\
 			x86Opcode.h				\
 			x86StdCall.h				\
 			x86Win32Cpu.h				\
@@ -67,6 +68,11 @@ ASFILES			= x86Linux.s
 OS_SUPPORT		= x86Linux_Support.cpp
 endif
 
+ifeq ($(OS_ARCH),FreeBSD)
+ASFILES			= x86FreeBSD.s
+OS_SUPPORT		= x86FreeBSD_Support.cpp
+endif
+
 #######################################################################
 # (4) Execute "component" rules. (OPTIONAL)                           #
 #######################################################################
@@ -86,7 +92,7 @@ x86-win32.nad.burg.cpp: x86-win32.nad.burg $(BURG)
 
 x86-win32.nad.burg: x86-win32.nad $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations $(DEPTH)/Tools/Nad/nad.pl
 	$(PERL) $(DEPTH)/Tools/Nad/nad.pl $< $(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations	\
-		$(LOCAL_EXPORT_DIR)/PrimitiveOperations.h									\
+		$(LOCAL_EXPORT_DIR)/PrimitiveOperations.h						\
 		$(DEPTH)/Compiler/PrimitiveGraph/PrimitiveOperations.cpp								\
 		$<.burg.h > $@
 else
