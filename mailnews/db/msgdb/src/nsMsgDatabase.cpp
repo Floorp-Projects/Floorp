@@ -694,6 +694,15 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
 	nsresult	err = NS_OK;
 	nsIMdbThumb	*commitThumb = NULL;
 
+	if (commitType == nsMsgDBCommitType::kLargeCommit || commitType == nsMsgDBCommitType::kSessionCommit)
+	{
+		mdb_percent outActualWaste = 0;
+		mdb_bool outShould;
+
+		err = m_mdbStore->ShouldCompress(GetEnv(), 30, &outActualWaste, &outShould);
+		if (NS_SUCCEEDED(err) && outShould)
+			commitType = nsMsgDBCommitType::kCompressCommit;
+	}
 //	commitType = nsMsgDBCommitType::kCompressCommit;	// ### until incremental writing works.
 
 	if (m_mdbStore)
@@ -707,7 +716,6 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
 			err = m_mdbStore->LargeCommit(GetEnv(), &commitThumb);
 			break;
 		case nsMsgDBCommitType::kSessionCommit:
-			// comment out until persistence works.
 			err = m_mdbStore->SessionCommit(GetEnv(), &commitThumb);
 			break;
 		case nsMsgDBCommitType::kCompressCommit:
@@ -1131,16 +1139,18 @@ NS_IMETHODIMP nsMsgDatabase::IsIgnored(nsMsgKey key, PRBool *pIgnored)
 	PR_ASSERT(pIgnored != NULL);
 	if (!pIgnored)
 		return NS_ERROR_NULL_POINTER;
-#ifdef WE_DO_THREADING_YET
-	nsIMsgThread *threadHdr = GetnsThreadHdrForMsgID(nsMsgKey);
+	nsCOMPtr <nsIMsgThread> threadHdr;
+	
+	nsresult rv = GetThreadForMsgKey(key, getter_AddRefs(threadHdr));
 	// This should be very surprising, but we leave that up to the caller
 	// to determine for now.
 	if (threadHdr == NULL)
 		return NS_MSG_MESSAGE_NOT_FOUND;
-	*pIgnored = (threadHdr->GetFlags() & MSG_FLAG_IGNORED) ? PR_TRUE : PR_FALSE;
-	NS_RELEASE(threadHdr);
-#endif
-	return NS_OK;
+
+	PRUint32 threadFlags;
+	threadHdr->GetFlags(&threadFlags);
+	*pIgnored = (threadFlags & MSG_FLAG_IGNORED) ? PR_TRUE : PR_FALSE;
+	return rv;
 }
 
 nsresult nsMsgDatabase::HasAttachments(nsMsgKey key, PRBool *pHasThem)
@@ -1367,14 +1377,15 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 	// if the flag is already correct in the db, don't change it
 	if (!!isRead != !!bRead)
 	{
-#ifdef WE_DO_THREADING_YET
-		nsIMsgThread *threadHdr = GetnsThreadHdrForMsgID(msgHdr->GetMessageKey());
+		nsCOMPtr <nsIMsgThread> threadHdr;
+		nsMsgKey msgKey;
+		msgHdr->GetMessageKey(&msgKey);
+
+		rv = GetThreadForMsgKey(msgKey, getter_AddRefs(threadHdr));
 		if (threadHdr != NULL)
 		{
 			threadHdr->MarkChildRead(bRead);
-			NS_RELEASE(threadHdr);
 		}
-#endif
 		rv = MarkHdrReadInDB(msgHdr, bRead, instigator);
 	}
 	return rv;
@@ -1705,6 +1716,7 @@ NS_IMETHODIMP nsMsgDatabase::EnumerateKeys(nsIEnumerator* *result)
 	return keys->Enumerate(result);
 }
 #else
+// resulting output array is sorted by key.
 NS_IMETHODIMP nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 {
 	nsresult	err = NS_OK;
@@ -1726,6 +1738,7 @@ NS_IMETHODIMP nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 		}
 		rowCursor->Release();
 	}
+	outputKeys.QuickSort();
 	return err;
 }
 #endif
