@@ -411,6 +411,9 @@ pref("network.ftp.idleConnectionTimeout", 300);
 // Do not set this to 0...
 pref("network.dir.format", 2);
 
+// enables the prefetch service (i.e., prefetching of <link rel="next"> URLs).
+pref("network.prefetch-next", true);
+
 // sspitzer:  change this back to "news" when we get to beta.
 // for now, set this to news.mozilla.org because you can only
 // post to the server specified by this pref.
