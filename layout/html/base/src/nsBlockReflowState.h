@@ -157,7 +157,7 @@ InitDebugFlags()
 #undef NOISY_REFLOW_REASON        // gives a little info about why each reflow was requested
 #undef REFLOW_STATUS_COVERAGE     // I think this is most useful for printing, to see which frames return "incomplete"
 #undef NOISY_SPACEMANAGER         // enables debug output for space manager use, useful for analysing reflow of floaters and positioned elements
-#define NOISY_BLOCK_INVALIDATE     // enables debug output for all calls to invalidate
+#undef NOISY_BLOCK_INVALIDATE     // enables debug output for all calls to invalidate
 #undef REALLY_NOISY_REFLOW       // some extra debug info
 
 #endif
