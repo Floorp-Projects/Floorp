@@ -155,6 +155,7 @@ sub pickos {
             /Mozilla.*\(.*;.*; BSD\/OS.*\)/ && do {return "BSDI";};
             /Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
             /Mozilla.*\(Win95.*\)/          && do {return "Windows 95";};
+            /Mozilla.*\(Win98.*\)/          && do {return "Windows 98";};
             /Mozilla.*\(WinNT.*\)/          && do {return "Windows NT";};
         }
     }
