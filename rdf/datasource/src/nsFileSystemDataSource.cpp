@@ -1144,7 +1144,8 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
         {
             if (nsnull != (url = PR_smprintf("file:///%c|/", volNum + 'A')))
             {
-                rv = gRDFService->GetResource(url, getter_AddRefs(vol));
+                rv = gRDFService->GetResource(nsDependentCString(url),
+                                              getter_AddRefs(vol));
                 PR_Free(url);
 
                 if (NS_FAILED(rv)) return rv;
