@@ -186,7 +186,7 @@ void nsCheckButton::DisArmed()
 // Set this button label
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsCheckButton::SetState(PRBool aState) 
+NS_METHOD nsCheckButton::SetState(const PRBool aState) 
 {
   int state = aState;
   if (mIsArmed) {
@@ -194,6 +194,7 @@ NS_METHOD nsCheckButton::SetState(PRBool aState)
     mValueWasSet = PR_TRUE;
   }
   XmToggleButtonSetState(mWidget, aState, TRUE);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -249,7 +250,7 @@ NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
     XtFree(text);
   }
   XmStringFree(str);
-
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
