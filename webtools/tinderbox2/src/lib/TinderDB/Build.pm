@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.35 $ 
-# $Date: 2002/04/26 23:49:06 $ 
+# $Revision: 1.36 $ 
+# $Date: 2002/04/27 04:55:33 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -379,7 +379,7 @@ sub compute_metadata {
   # order is important for these operations.
   my ($ignore_builds) = TinderHeader::gettree_header('IgnoreBuilds', $tree);
 
-  foreach $buildname (split(/\s+/, $ignore_builds)) {
+  foreach $buildname (split(/,/, $ignore_builds)) {
     $IGNORE_BUILDS{$tree}{$buildname} = 1;
   }
 

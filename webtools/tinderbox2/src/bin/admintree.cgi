@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.19 $ 
-# $Date: 2002/04/26 22:42:44 $ 
+# $Revision: 1.20 $ 
+# $Date: 2002/04/27 04:55:37 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -198,7 +198,7 @@ sub get_current_ignore_builds  {
   my (@ignore_builds) = ();
 
   @ignore_builds = split(
-                         /\s+/, 
+                         /,/, 
                          TinderHeader::gettree_header('IgnoreBuilds', $TREE)
                         );
   
@@ -449,7 +449,8 @@ sub change_ignore_builds {
   ("@NEW_IGNORE_BUILDS" eq "@CURRENT_IGNORE_BUILDS") &&
     return ;
 
-  TinderHeader::savetree_header('IgnoreBuilds', $TREE, "@NEW_IGNORE_BUILDS");
+  $ignore_builds = join(',', @NEW_IGNORE_BUILDS);
+  TinderHeader::savetree_header('IgnoreBuilds', $TREE, $ignore_builds);
 
   push @results, "ignore_builds changed: @NEW_IGNORE_BUILDS \n";
 
