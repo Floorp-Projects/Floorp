@@ -76,22 +76,31 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow,
                                nsIURI ** aURL)
 {
 	nsresult rv = NS_OK;
-	char * hostname = nsnull;
+
+	nsXPIDLCString popHost;
+	nsXPIDLCString popUser;
 
     nsCOMPtr<nsIMsgIncomingServer> server;
 	nsCOMPtr<nsIURI> url;
 
 	server = do_QueryInterface(popServer);
-    if (server) 
-		server->GetHostName(&hostname);
+
+	if (!server) return NS_ERROR_FAILURE;
+
+	rv = server->GetHostName(getter_Copies(popHost));
+	if (NS_FAILED(rv)) return rv;
+	if (!((const char *)popHost)) return NS_ERROR_FAILURE;
+
+	rv = server->GetUsername(getter_Copies(popUser));
+	if (NS_FAILED(rv)) return rv;
+	if (!((const char *)popUser)) return NS_ERROR_FAILURE;
     
-	if (NS_SUCCEEDED(rv) && popServer && hostname)
+	if (NS_SUCCEEDED(rv) && popServer)
 	{
         // now construct a pop3 url...
-        char * urlSpec = PR_smprintf("pop3://%s:%d?check", hostname, POP3_PORT);
+        char * urlSpec = PR_smprintf("pop3://%s@%s:%d?check", (const char *)popUser, (const char *)popHost, POP3_PORT);
         rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
         PR_FREEIF(urlSpec);
-		if (hostname) PL_strfree(hostname);
     }
 
     
@@ -113,21 +122,27 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
                                    nsIURI ** aURL)
 {
 	nsresult rv = NS_OK;
-	char * popHost = nsnull;
+	nsXPIDLCString popHost;
+	nsXPIDLCString popUser;
 	nsCOMPtr<nsIURI> url;
 
 	nsCOMPtr<nsIMsgIncomingServer> server;
 	server = do_QueryInterface(popServer);    
 
-    if (server) 
-		server->GetHostName(&popHost);
+    if (!server) return NS_ERROR_FAILURE;
 
-    if (!popHost) return NS_ERROR_FAILURE;
+	rv = server->GetHostName(getter_Copies(popHost));
+	if (NS_FAILED(rv)) return rv;
+	if (!((const char *)popHost)) return NS_ERROR_FAILURE;
+
+	rv = server->GetUsername(getter_Copies(popUser));
+	if (NS_FAILED(rv)) return rv;
+	if (!((const char *)popUser)) return NS_ERROR_FAILURE;
     
 	if (NS_SUCCEEDED(rv) && popServer)
 	{
         // now construct a pop3 url...
-        char * urlSpec = PR_smprintf("pop3://%s:%d", popHost, POP3_PORT);
+        char * urlSpec = PR_smprintf("pop3://%s@%s:%d", (const char *)popUser, (const char *)popHost, POP3_PORT);
         rv = BuildPop3Url(urlSpec, nsnull, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
         PR_FREEIF(urlSpec);
 	}
@@ -139,8 +154,6 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
 			mailNewsUrl->SetMsgWindow(aMsgWindow);
 		rv = RunPopUrl(server, url);
 	}
-
-    if (popHost) PL_strfree(popHost);
 
 	if (aURL && url) // we already have a ref count on pop3url...
 	{
