@@ -291,10 +291,9 @@ extern "C" void RunInstallOnThread(void *data)
     
     nsISoftwareUpdate *softwareUpdate;
 
-    nsresult rv = nsComponentManager::CreateInstance( kSoftwareUpdateCID, 
-                                                      nsnull,
-                                                      kISoftwareUpdateIID,
-                                                      (void**) &softwareUpdate);
+    nsresult rv = nsServiceManager::GetService( kSoftwareUpdateCID, 
+                                                kISoftwareUpdateIID,
+                                                (nsISupports**)&softwareUpdate);
     
     nsIXPInstallProgressNotifier *notifier;
 

@@ -32,6 +32,10 @@
 
 #include "nsIXPInstallProgressNotifier.h"
 
+#define NS_IXPINSTALLCOMPONENT_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/xpinstall"
+#define NS_IXPINSTALLCOMPONENT_CLASSNAME "Mozilla XPInstall Component"
+
+
 #define NS_ISOFTWAREUPDATE_IID                   \
 { 0x18c2f992, 									 \
   0xb09f, 										 \
@@ -40,11 +44,11 @@
 } 
 
 
-class nsISoftwareUpdate : public nsISupports 
+class nsISoftwareUpdate : public nsISupports  
 {
     public:
         	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOFTWAREUPDATE_IID)
-        	
+            
             NS_IMETHOD InstallJar(const nsString& fromURL,
                                   const nsString& localFile,
                                   long  flags) = 0; 
