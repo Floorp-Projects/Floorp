@@ -1,0 +1,93 @@
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License.  You may obtain a copy of the License at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Communicator client code, 
+# released March 31, 1998. 
+#
+# The Initial Developer of the Original Code is Netscape Communications 
+# Corporation.  Portions created by Netscape are 
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+#
+
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+#
+# This is how we create the Unix binary packages we release to the public.
+# Currently the only format is tar.gz (TGZ), but it should be fairly easy
+# to add .rpm (RPM) and .deb (DEB) later.
+#
+ifndef MOZ_PKG_FORMAT
+MOZ_PKG_FORMAT	= TGZ
+endif
+
+ifeq ($(MOZ_PKG_FORMAT),TGZ)
+PKG_SUFFIX	= .tar.gz
+endif
+ifeq ($(MOZ_PKG_FORMAT),RPM)
+PKG_SUFFIX	= .rpm
+endif
+ifeq ($(MOZ_PKG_FORMAT),DEB)
+PKG_SUFFIX	= .deb
+endif
+
+PKG_BASENAME	:= mozilla-$(shell $(topsrcdir)/build/autoconf/config.guess)
+PACKAGE		:= $(PKG_BASENAME).$(PKG_SUFFIX)
+
+ifdef BUILD_OFFICIAL
+TARGETS		= $(DIST)/$(PACKAGE)
+endif
+
+NSPR_DIR	= $(DIST)/bin
+ifndef EXCLUDE_NSPR_LIBS
+NSPR_LDIR	= $(findstring -L,$(NSPR_LIBS))
+ifneq ($(NSPR_LDIR),)
+NSPR_DIR	= $(patsubst %lib,%bin,$(subst -L,,$(NSPR_LDIR)))
+endif
+endif
+
+NOT_IN_PACKAGE	= \
+		$(DIST)/bin/core \
+		$(DIST)/bin/bsdecho \
+		$(DIST)/bin/gtscc \
+		$(DIST)/bin/jscpucfg \
+		$(DIST)/bin/nsinstall \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),IRIX)
+STRIP_FLAGS	= -f
+endif
+
+$(DIST)/$(PACKAGE): $(DIST)/bin/apprunner
+ifneq ($(NSPR_DIR),$(DIST)/bin)
+	@chmod 755 $(NSPR_DIR)/*
+	@cp -p $(NSPR_DIR)/* $(DIST)/bin/.
+endif
+	@rm -f $(DIST)/package $(DIST)/$(PKG_BASENAME).tar $@ $(NOT_IN_PACKAGE)
+	@ln -s $(DIST)/bin $(DIST)/package
+	@cd $(DIST)/bin; find . ! -type d -exec strip $(STRIP_FLAGS) {} \;
+ifeq ($(MOZ_PKG_FORMAT),TGZ)
+	cd $(DIST); tar -cvhf - package | gzip -v > $@
+endif
+ifeq ($(MOZ_PKG_FORMAT),RPM)
+	@echo "Sorry, don't know how to build an RPM file yet...."
+endif
+ifeq ($(MOZ_PKG_FORMAT),DEB)
+	@echo "Sorry, don't know how to build a DEB file yet...."
+endif
+
