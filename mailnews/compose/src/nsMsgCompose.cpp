@@ -830,11 +830,15 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   //
   // For now, you need to set a pref to do the old quoting
   //
-/*
-  PRBool  oldQuoting = PR_FALSE;
-
+  PRBool      oldQuoting = PR_FALSE;
   nsString    tmpURI(originalMsgURI);
   char        *compString = tmpURI.ToNewCString();
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+  if (NS_SUCCEEDED(rv) && prefs) 
+  {
+    rv = prefs->GetBoolPref("mail.old_quoting", &oldQuoting);
+  }
 
   if (compString)
   {
@@ -844,15 +848,6 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
     }
   }
   PR_FREEIF(compString);
- */
-
-  PRBool  oldQuoting = PR_TRUE;
-
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-  if (NS_SUCCEEDED(rv) && prefs) 
-  {
-    rv = prefs->GetBoolPref("mail.old_quoting", &oldQuoting);
-  }
 
   if (oldQuoting)
   {
