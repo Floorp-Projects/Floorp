@@ -2525,6 +2525,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // are doing plain text compose, we should insert some sort of message
   // saying "Image Signature Omitted" or something.
   //
+  nsAutoString  urlStr;
   nsXPIDLCString sigNativePath;
   PRBool        useSigFile = PR_FALSE;
   PRBool        htmlSig = PR_FALSE;
@@ -2645,21 +2646,16 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     else
       sigOutput.AppendWithConversion(CRLF);
 
-    nsAString& firstFourChars = Substring(sigData, 0, 4);
-    
-    if (!(firstFourChars.Equals(NS_LITERAL_STRING("-- \n"))) ||
-          firstFourChars.Equals(NS_LITERAL_STRING("-- \r")))
-    {
-      sigOutput.AppendWithConversion(dashes);
-    
-      if (!m_composeHTML || !htmlSig)
-        sigOutput.AppendWithConversion(CRLF);
-      else if (m_composeHTML)
-        sigOutput.AppendWithConversion(htmlBreak);
-    }
+    sigOutput.AppendWithConversion(dashes);
+
+    if ( (!m_composeHTML) || ((m_composeHTML) && (!htmlSig)) )
+      sigOutput.AppendWithConversion(CRLF);
+    else if (m_composeHTML)
+      sigOutput.AppendWithConversion(htmlBreak);
 
     sigOutput.Append(sigData);
-    
+         //DELETEME: I18N: Converting down (2byte->1byte) OK?
+
     if (m_composeHTML)
     {
       if (htmlSig)
