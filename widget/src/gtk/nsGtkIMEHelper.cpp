@@ -1021,9 +1021,15 @@ nsIMEGtkIC::SetFocusWindow(nsWindow * aFocusWindow)
   gdk_im_begin((GdkIC *) mIC, gdkWindow);
 
   if (mInputStyle & GDK_IM_PREEDIT_POSITION) {
-    SetPreeditArea(0, 0,
-		   (int)((GdkWindowPrivate*)gdkWindow)->width,
-		   (int)((GdkWindowPrivate*)gdkWindow)->height);
+    static int oldw=0;
+    static int oldh=0;
+    int neww=(int)((GdkWindowPrivate*)gdkWindow)->width;
+    int newh=(int)((GdkWindowPrivate*)gdkWindow)->height;
+    if (oldw != neww || oldh != newh) {
+      SetPreeditArea(0, 0, neww, newh);
+      oldw = neww;
+      oldh = newh;
+    }
   }
 
   if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
@@ -1332,20 +1338,6 @@ nsIMEGtkIC::IsPreeditComposing()
     }
   }
   return PR_TRUE;
-}
-
-GdkFont*
-nsIMEGtkIC::GetPreeditFont() {
-  mIC->mask = GDK_IC_PREEDIT_FONTSET; // hack
-  GdkFont *fontset = 0;
-  GdkICAttr *attr = gdk_ic_attr_new();
-  if (attr) {
-    GdkICAttributesType attrMask = GDK_IC_PREEDIT_FONTSET;
-    gdk_ic_get_attr((GdkIC*)mIC, attr, attrMask);
-    fontset = attr->preedit_fontset;
-    gdk_ic_attr_destroy(attr);
-  }
-  return fontset;
 }
 
 void

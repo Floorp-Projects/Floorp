@@ -156,7 +156,6 @@ class nsIMEGtkIC {
   static GdkIMStyle GetInputStyle();
 
   GdkIMStyle mInputStyle;
-  GdkFont *GetPreeditFont();
   char *mStatusText;
   void SetStatusText(const char*);
   void SetPreeditFont(GdkFont*);
