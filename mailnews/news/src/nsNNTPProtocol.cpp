@@ -29,6 +29,9 @@
 #include "nsIWebShell.h"
 
 #include "nsINetService.h"
+
+#include "nsMsgBaseCID.h"
+
 #include "nsNntpUrl.h"
 
 #include "nntpCore.h"
@@ -3474,7 +3477,12 @@ PRInt32 nsNNTPProtocol::Cancel()
     nsIMsgRFC822Parser *parser;
     nsresult rv;
     PRBool ok = PR_FALSE;
-
+    NS_DEFINE_CID(kCRFC822Parser, NS_MSGRFC822PARSER_CID);
+                  
+    rv = nsComponentManager::CreateInstance(kCRFC822Parser,
+                                            nsnull,
+                                            nsIMsgRFC822Parser::IID(),
+                                            (void **)&parser);
     rv = NS_NewRFC822Parser(&parser);
     if (NS_SUCCEEDED(rv)) 
 	{
