@@ -55,3 +55,5 @@ LIBS		= \
 			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS	+=	$(MOZ_GTK_CFLAGS)
