@@ -61,7 +61,7 @@ CORECONF=coreconf
 CORECONF=
 !endif
 
-DIRS = $(CORECONF) $(XTRADIRS) include jpeg modules\zlib \
+DIRS = $(CORECONF) $(XTRADIRS) lib network include jpeg modules\zlib \
 !ifdef MOZ_NETCAST
     netcast \
 !endif
