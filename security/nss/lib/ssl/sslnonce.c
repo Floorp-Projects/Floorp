@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslnonce.c,v 1.6 2001/01/30 21:02:24 wtc%netscape.com Exp $
+ * $Id: sslnonce.c,v 1.7 2001/06/09 03:20:13 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -44,7 +44,9 @@
 #include "sslproto.h"
 #include "nssilock.h"
 #include "nsslocks.h"
-
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(_WINDOWS)
+#include <time.h>
+#endif
 
 PRUint32 ssl_sid_timeout = 100;
 PRUint32 ssl3_sid_timeout = 86400L; /* 24 hours */
@@ -337,14 +339,19 @@ SSL_ClearSessionCache(void)
 PRUint32
 ssl_Time(void)
 {
+    PRUint32 myTime;
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(_WINDOWS)
+    myTime = time(NULL);	/* accurate until the year 2038. */
+#else
+    /* portable, but possibly slower */
     PRTime now;
     PRInt64 ll;
-    PRUint32 time;
 
     now = PR_Now();
     LL_I2L(ll, 1000000L);
     LL_DIV(now, now, ll);
-    LL_L2UI(time, now);
-    return time;
+    LL_L2UI(myTime, now);
+#endif
+    return myTime;
 }
 
