@@ -786,16 +786,14 @@ quick_test(TestTransactionFactory *factory)
   printf("Create transaction manager instance ... ");
 
   PRInt32 i, numitems = 0;
-  nsITransactionManager *mgr = 0;
+  nsCOMPtr<nsITransactionManager> mgr;
   nsITransaction  *tx        = 0;
   TestTransaction *tximpl    = 0;
   nsITransaction *u1 = 0, *u2 = 0;
   nsITransaction *r1 = 0, *r2 = 0;
   nsresult result;
 
-  result = nsComponentManager::CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, nsnull,
-                                        NS_GET_IID(nsITransactionManager), (void **)&mgr);
-
+  mgr = do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &result);
   if (NS_FAILED(result) || !mgr) {
     printf("ERROR: Failed to create Transaction Manager instance.\n");
     return NS_ERROR_OUT_OF_MEMORY;
@@ -2670,13 +2668,6 @@ quick_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  result = mgr->Release();
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsITransactionManager Release() failed. (%d)\n", result);
-    return result;
-  }
-
   printf("passed\n");
 
   /*******************************************************************
@@ -2776,16 +2767,14 @@ quick_batch_test(TestTransactionFactory *factory)
   printf("Create transaction manager instance ... ");
 
   PRInt32 i, numitems = 0;
-  nsITransactionManager  *mgr = 0;
+  nsCOMPtr<nsITransactionManager> mgr;
   nsITransaction *tx          = 0;
   TestTransaction *tximpl   = 0;
   nsITransaction *u1 = 0, *u2 = 0;
   nsITransaction *r1 = 0, *r2 = 0;
   nsresult result;
 
-  result = nsComponentManager::CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, nsnull,
-                                        NS_GET_IID(nsITransactionManager), (void **)&mgr);
-
+  mgr = do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &result);
   if (NS_FAILED(result) || !mgr) {
     printf("ERROR: Failed to create Transaction Manager instance.\n");
     return NS_ERROR_OUT_OF_MEMORY;
@@ -4381,13 +4370,6 @@ quick_batch_test(TestTransactionFactory *factory)
     return NS_ERROR_FAILURE;
   }
 
-  result = mgr->Release();
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsITransactionManager Release() failed. (%d)\n", result);
-    return result;
-  }
-
   printf("passed\n");
 
   /*******************************************************************
@@ -4489,13 +4471,11 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
   fflush(stdout);
 
   PRInt32 i, j;
-  nsITransactionManager  *mgr = 0;
+  nsCOMPtr<nsITransactionManager> mgr;
   nsITransaction *tx          = 0;
   nsresult result;
 
-  result = nsComponentManager::CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, nsnull,
-                                        NS_GET_IID(nsITransactionManager), (void **)&mgr);
-
+  mgr = do_CreateInstance(NS_TRANSACTIONMANAGER_CONTRACTID, &result);
   if (NS_FAILED(result) || !mgr) {
     printf("ERROR: Failed to create Transaction Manager instance.\n");
     return NS_ERROR_OUT_OF_MEMORY;
@@ -4576,13 +4556,6 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
         return result;
       }
     }
-  }
-
-  result = mgr->Release();
-
-  if (NS_FAILED(result)) {
-    printf("ERROR: nsITransactionManager Release() failed. (%d)\n", result);
-    return result;
   }
 
   // printf("%d  %d -  ", sConstructorCount, sDestructorCount);

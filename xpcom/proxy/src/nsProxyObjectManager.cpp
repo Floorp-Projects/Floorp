@@ -74,26 +74,31 @@ class nsProxyCreateInstance : public nsIProxyCreateInstance
     NS_IMETHOD CreateInstanceByIID(const nsIID & cid, nsISupports *aOuter, const nsIID & iid, void * *result);
     NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aOuter, const nsIID & iid, void * *result);
 
-    nsProxyCreateInstance() {}
+    nsProxyCreateInstance()
+    {
+        NS_GetComponentManager(getter_AddRefs(mCompMgr));
+        NS_ASSERTION(mCompMgr, "no component manager");
+    }
 
 private:
-    ~nsProxyCreateInstance() {}
+
+    nsCOMPtr<nsIComponentManager> mCompMgr;
 };
 
 NS_IMPL_ISUPPORTS1(nsProxyCreateInstance, nsIProxyCreateInstance)
 
 NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByIID(const nsIID & cid, nsISupports *aOuter, const nsIID & iid, void * *result)
 {
-    return nsComponentManager::CreateInstance(  cid, 
-                                                aOuter,
-                                                iid,
-                                                result);
+    return mCompMgr->CreateInstance(cid, 
+                                    aOuter,
+                                    iid,
+                                    result);
 }
 
 
 NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByContractID(const char *aContractID, nsISupports *aOuter, const nsIID & iid, void * *result)
 {
-    return nsComponentManager::CreateInstance(  aContractID, 
+    return mCompMgr->CreateInstanceByContractID(aContractID, 
                                                 aOuter,
                                                 iid,
                                                 result);

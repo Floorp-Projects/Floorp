@@ -154,11 +154,8 @@ nsresult TestMCTransport(const char *filename)
     nsCOMPtr<nsITransport> transport;
 
 #ifdef USE_CREATE_INSTANCE
-    rv = nsComponentManager::CreateInstance(
-                    "@mozilla.org/network/memory-cache-transport;1",
-                    nsnull,
-                    NS_GET_IID(nsITransport),
-                    getter_AddRefs(transport));
+    transport = do_CreateInstance(
+            "@mozilla.org/network/memory-cache-transport;1", &rv);
     if (NS_FAILED(rv))
         return rv;
 #else

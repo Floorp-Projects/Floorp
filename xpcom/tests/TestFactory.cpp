@@ -126,10 +126,7 @@ int main(int argc, char **argv) {
                                  new TestFactory());
 
     ITestClass *t = NULL;
-    nsComponentManager::CreateInstance(kTestFactoryCID,
-                                       NULL,
-                                       NS_GET_IID(ITestClass),
-                                       (void **) &t);
+    CallCreateInstance(kTestFactoryCID, &t);
 
     if (t != NULL) {
       t->Test();
@@ -140,10 +137,7 @@ int main(int argc, char **argv) {
 
     t = NULL;
 
-    nsComponentManager::CreateInstance(kTestLoadedFactoryCID,
-                                       NULL,
-                                       NS_GET_IID(ITestClass),
-                                       (void **) &t);
+    CallCreateInstance(kTestLoadedFactoryCID, &t);
 
     if (t != NULL) {
       t->Test();

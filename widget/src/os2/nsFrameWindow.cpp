@@ -207,12 +207,10 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
    }
    else
    {
-      nsresult rc = NS_OK;
+      nsresult rc;
       static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
-      rc = nsComponentManager::CreateInstance( kDeviceContextCID, nsnull,
-                                               NS_GET_IID(nsIDeviceContext),
-                                               (void **)&mContext);
+      rc = CallCreateInstance(kDeviceContextCID, &mContext);
       if( NS_SUCCEEDED(rc))
          mContext->Init( (nsNativeWidget) mWnd);
 #ifdef DEBUG

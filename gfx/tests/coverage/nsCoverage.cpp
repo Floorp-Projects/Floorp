@@ -370,7 +370,7 @@ nsresult CoverageTest(int *argc, char **argv)
     //
     // Create Device Context based on main window
     //
-    res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, kDeviceContextIID, (void **)&deviceContext);
+    res = CallCreateInstance(kDeviceContextCID, &deviceContext);
 
     if (NS_OK == res)
     {

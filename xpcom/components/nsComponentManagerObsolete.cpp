@@ -47,6 +47,7 @@
 nsresult
 nsComponentManager::Initialize(void)
 {
+    NS_NOTREACHED("nsComponentManager::Initialize is deprecated");
     return NS_OK;
 }
 
@@ -54,6 +55,8 @@ nsresult
 nsComponentManager::FindFactory(const nsCID &aClass,
                                 nsIFactory **aFactory)
 {
+    NS_NOTREACHED("nsComponentManager::FindFactory is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -64,6 +67,8 @@ nsresult
 nsComponentManager::GetClassObject(const nsCID &aClass, const nsIID &aIID,
                                    void **aResult)
 {
+    // XXX still in use by nsComponentManagerUtils.h
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -75,6 +80,8 @@ nsComponentManager::GetClassObjectByContractID(const char *aContractID,
                                                const nsIID &aIID,
                                                void **aResult)
 {
+    // XXX still in use by nsComponentManagerUtils.h
+
     nsCOMPtr<nsIComponentManager> cm;
     nsresult rv = NS_GetComponentManager(getter_AddRefs(cm));
     if (NS_FAILED(rv)) return rv;
@@ -85,6 +92,8 @@ nsresult
 nsComponentManager::ContractIDToClassID(const char *aContractID,
                                   nsCID *aClass)
 {
+    NS_NOTREACHED("nsComponentManager::ContractIDToClassID is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -96,6 +105,8 @@ nsComponentManager::CLSIDToContractID(nsCID *aClass,
                                   char* *aClassName,
                                   char* *aContractID)
 {
+    NS_NOTREACHED("nsComponentManager::CLSIDToContractID is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -108,6 +119,8 @@ nsComponentManager::CreateInstance(const nsCID &aClass,
                                    const nsIID &aIID,
                                    void **aResult)
 {
+    // XXX still in use by nsComponentManagerUtils.h
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -120,6 +133,8 @@ nsComponentManager::CreateInstance(const char *aContractID,
                                    const nsIID &aIID,
                                    void **aResult)
 {
+    // XXX still in use by nsComponentManagerUtils.h
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -133,6 +148,8 @@ nsComponentManager::RegisterFactory(const nsCID &aClass,
                                     nsIFactory *aFactory,
                                     PRBool aReplace)
 {
+    NS_NOTREACHED("nsComponentManager::RegisterFactory is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -148,6 +165,8 @@ nsComponentManager::RegisterComponent(const nsCID &aClass,
                                       PRBool aReplace,
                                       PRBool aPersist)
 {
+    NS_NOTREACHED("nsComponentManager::RegisterComponent is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -163,6 +182,8 @@ nsComponentManager::RegisterComponentSpec(const nsCID &aClass,
                                       PRBool aReplace,
                                       PRBool aPersist)
 {
+    NS_NOTREACHED("nsComponentManager::RegisterComponentSpec is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -178,6 +199,8 @@ nsComponentManager::RegisterComponentLib(const nsCID &aClass,
                                          PRBool aReplace,
                                          PRBool aPersist)
 {
+    NS_NOTREACHED("nsComponentManager::RegisterComponentLib is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -189,6 +212,8 @@ nsresult
 nsComponentManager::UnregisterFactory(const nsCID &aClass,
                                       nsIFactory *aFactory)
 {
+    NS_NOTREACHED("nsComponentManager::UnregisterFactory is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -199,6 +224,8 @@ nsresult
 nsComponentManager::UnregisterComponent(const nsCID &aClass,
                                         const char *aLibrary)
 {
+    NS_NOTREACHED("nsComponentManager::UnregisterComponent is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -209,6 +236,8 @@ nsresult
 nsComponentManager::UnregisterComponentSpec(const nsCID &aClass,
                                             nsIFile *aLibrarySpec)
 {
+    NS_NOTREACHED("nsComponentManager::UnregisterComponentSpec is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -218,6 +247,8 @@ nsComponentManager::UnregisterComponentSpec(const nsCID &aClass,
 nsresult
 nsComponentManager::FreeLibraries(void)
 {
+    NS_NOTREACHED("nsComponentManager::FreeLibraries is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -227,6 +258,8 @@ nsComponentManager::FreeLibraries(void)
 nsresult
 nsComponentManager::AutoRegister(PRInt32 when, nsIFile *directory)
 {
+    NS_NOTREACHED("nsComponentManager::AutoRegister is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -237,6 +270,8 @@ nsresult
 nsComponentManager::AutoRegisterComponent(PRInt32 when,
                                           nsIFile *fullname)
 {
+    NS_NOTREACHED("nsComponentManager::AutoRegisterComponent is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -247,6 +282,8 @@ nsresult
 nsComponentManager::AutoUnregisterComponent(PRInt32 when,
                                           nsIFile *fullname)
 {
+    NS_NOTREACHED("nsComponentManager::AutoUnregisterComponent is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -257,6 +294,8 @@ nsresult
 nsComponentManager::IsRegistered(const nsCID &aClass,
                                  PRBool *aRegistered)
 {
+    NS_NOTREACHED("nsComponentManager::IsRegistered is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -266,6 +305,8 @@ nsComponentManager::IsRegistered(const nsCID &aClass,
 nsresult 
 nsComponentManager::EnumerateCLSIDs(nsIEnumerator** aEnumerator)
 {
+    NS_NOTREACHED("nsComponentManager::EnumerateCLSIDs is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
@@ -275,9 +316,10 @@ nsComponentManager::EnumerateCLSIDs(nsIEnumerator** aEnumerator)
 nsresult 
 nsComponentManager::EnumerateContractIDs(nsIEnumerator** aEnumerator)
 {
+    NS_NOTREACHED("nsComponentManager::EnumerateContractIDs is deprecated");
+
     nsIComponentManagerObsolete* cm;
     nsresult rv = NS_GetGlobalComponentManager((nsIComponentManager**)&cm);
     if (NS_FAILED(rv)) return rv;
     return cm->EnumerateContractIDs(aEnumerator);
 }
-

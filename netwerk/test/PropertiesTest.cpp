@@ -96,9 +96,8 @@ main(int argc, char* argv[])
   ret = channel->Open(&in);
   if (NS_FAILED(ret)) return ret;
 
-  nsIPersistentProperties* props = nsnull;
-  ret = nsComponentManager::CreateInstance(kPersistentPropertiesCID, nsnull,
-    NS_GET_IID(nsIPersistentProperties), (void**) &props);
+  nsIPersistentProperties* props;
+  ret = CallCreateInstance(kPersistentPropertiesCID, &props);
   if (NS_FAILED(ret) || (!props)) {
     printf("create nsIPersistentProperties failed\n");
     return 1;

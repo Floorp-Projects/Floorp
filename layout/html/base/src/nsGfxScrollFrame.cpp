@@ -2220,36 +2220,28 @@ nsGfxScrollFrameInner::SaveState()
   nsresult rv = NS_NewPresState(getter_AddRefs(state));
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsCOMPtr<nsISupportsPRInt32> xoffset;
-  nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
-    nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(xoffset));
+  nsCOMPtr<nsISupportsPRInt32> xoffset = do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
   if (xoffset) {
     rv = xoffset->SetData(x);
     NS_ENSURE_SUCCESS(rv, nsnull);
     state->SetStatePropertyAsSupports(NS_LITERAL_STRING("x-offset"), xoffset);
   }
 
-  nsCOMPtr<nsISupportsPRInt32> yoffset;
-  nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
-    nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(yoffset));
+  nsCOMPtr<nsISupportsPRInt32> yoffset = do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
   if (yoffset) {
     rv = yoffset->SetData(y);
     NS_ENSURE_SUCCESS(rv, nsnull);
     state->SetStatePropertyAsSupports(NS_LITERAL_STRING("y-offset"), yoffset);
   }
 
-  nsCOMPtr<nsISupportsPRInt32> width;
-  nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
-    nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(width));
+  nsCOMPtr<nsISupportsPRInt32> width = do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
   if (width) {
     rv = width->SetData(childRect.width);
     NS_ENSURE_SUCCESS(rv, nsnull);
     state->SetStatePropertyAsSupports(NS_LITERAL_STRING("width"), width);
   }
 
-  nsCOMPtr<nsISupportsPRInt32> height;
-  nsComponentManager::CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID,
-    nsnull, NS_GET_IID(nsISupportsPRInt32), (void**)getter_AddRefs(height));
+  nsCOMPtr<nsISupportsPRInt32> height = do_CreateInstance(NS_SUPPORTS_PRINT32_CONTRACTID);
   if (height) {
     rv = height->SetData(childRect.height);
     NS_ENSURE_SUCCESS(rv, nsnull);

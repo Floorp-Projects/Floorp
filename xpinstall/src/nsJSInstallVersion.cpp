@@ -521,16 +521,13 @@ InstallVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
   static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
-  result = nsComponentManager::CreateInstance(kInstallVersion_CID,
-                                        nsnull,
-                                        NS_GET_IID(nsIDOMInstallVersion),
-                                        (void **)&nativeThis);
-  if (NS_OK != result) return JS_FALSE;
+  result = CallCreateInstance(kInstallVersion_CID, &nativeThis);
+  if (NS_FAILED(result)) return JS_FALSE;
 
             
   result = nativeThis->QueryInterface(NS_GET_IID(nsIScriptObjectOwner),
                                       (void **)&owner);
-  if (NS_OK != result) {
+  if (NS_FAILED(result)) {
     NS_RELEASE(nativeThis);
     return JS_FALSE;
   }

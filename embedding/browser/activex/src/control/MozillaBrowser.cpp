@@ -1048,20 +1048,27 @@ HRESULT CMozillaBrowser::Initialize()
         nsCOMPtr<nsIFactory> promptFactory;
         rv = NS_NewPromptServiceFactory(getter_AddRefs(promptFactory));
         if (NS_FAILED(rv)) return rv;
-        rv = nsComponentManager::RegisterFactory(kPromptServiceCID,
+
+        nsCOMPtr<nsIComponentRegistrar> registrar;
+        rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
+        if (NS_FAILED(rv)) return rv;
+
+        rv = registrar->RegisterFactory(kPromptServiceCID,
             "Prompt Service",
             "@mozilla.org/embedcomp/prompt-service;1",
-            promptFactory,
-            PR_TRUE); // replace existing
+            promptFactory);
+        if (NS_FAILED(rv)) return rv;
 
         // Helper app launcher dialog
         nsCOMPtr<nsIFactory> helperAppDlgFactory;
         rv = NS_NewHelperAppLauncherDlgFactory(getter_AddRefs(helperAppDlgFactory));
-        rv = nsComponentManager::RegisterFactory(kHelperAppLauncherDialogCID,
+        if (NS_FAILED(rv)) return rv;
+
+        rv = registrar->RegisterFactory(kHelperAppLauncherDialogCID,
             "Helper App Launcher Dialog",
             "@mozilla.org/helperapplauncherdialog;1",
-            helperAppDlgFactory,
-            PR_TRUE); // replace existing
+            helperAppDlgFactory);
+        if (NS_FAILED(rv)) return rv;
 
         // create our local object
         CWindowCreator *creator = new CWindowCreator();

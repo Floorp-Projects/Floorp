@@ -692,9 +692,8 @@ PRBool nsUnicodeRenderingToolkit :: LoadTransliterator()
 		return PR_TRUE;
 		
 	nsresult res;
-    if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(
-    	kSaveAsCharsetCID, 0, NS_GET_IID(nsISaveAsCharset), 
-        getter_AddRefs(mTrans) ) ) )
+    mTrans = do_CreateInstance(kSaveAsCharsetCID, &res);
+    if ( NS_SUCCEEDED(res) )
     {
        res = mTrans->Init("x-mac-roman",
                nsISaveAsCharset::attr_FallbackQuestionMark +

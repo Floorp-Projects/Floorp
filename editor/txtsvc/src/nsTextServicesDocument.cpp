@@ -2773,10 +2773,7 @@ nsTextServicesDocument::CreateDocumentContentRange(nsIDOMRange **aRange)
   if (!node)
     return NS_ERROR_NULL_POINTER;
 
-  result = nsComponentManager::CreateInstance("@mozilla.org/content/range;1", nsnull,
-                                              NS_GET_IID(nsIDOMRange), 
-                                              (void **)aRange);
-
+  result = CallCreateInstance("@mozilla.org/content/range;1", aRange);
   if (NS_FAILED(result))
     return result;
 
@@ -2863,10 +2860,7 @@ nsTextServicesDocument::CreateDocumentContentRootToNodeOffsetRange(nsIDOMNode *a
     }
   }
 
-  result = nsComponentManager::CreateInstance("@mozilla.org/content/range;1", nsnull,
-                                              NS_GET_IID(nsIDOMRange), 
-                                              (void **)aRange);
-
+  result = CallCreateInstance("@mozilla.org/content/range;1", aRange);
   if (NS_FAILED(result))
     return result;
 
@@ -4044,10 +4038,7 @@ nsTextServicesDocument::CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffs
 {
   nsresult result;
 
-  result = nsComponentManager::CreateInstance("@mozilla.org/content/range;1", nsnull,
-                                              NS_GET_IID(nsIDOMRange), 
-                                              (void **)aRange);
-
+  result = CallCreateInstance("@mozilla.org/content/range;1", aRange);
   if (NS_FAILED(result))
     return result;
 

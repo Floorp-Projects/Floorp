@@ -346,10 +346,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetDeviceContextFor(nsIDeviceContextSpec *aDe
   nsresult rv;
   nsIDeviceContextPS *dcps;
   
-  rv = nsComponentManager::CreateInstance(kCDeviceContextPS,
-                                          nsnull,
-                                          NS_GET_IID(nsIDeviceContextPS),
-                                          (void **)&dcps);
+  rv = CallCreateInstance(kCDeviceContextPS, &dcps);
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
   

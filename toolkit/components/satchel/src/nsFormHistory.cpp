@@ -412,8 +412,8 @@ nsFormHistory::OpenDatabase()
 
   // Get an Mdb Factory
   static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
-  nsCOMPtr<nsIMdbFactoryFactory> mdbFactory;
-  rv = nsComponentManager::CreateInstance(kMorkCID, nsnull, NS_GET_IID(nsIMdbFactoryFactory), getter_AddRefs(mdbFactory));
+  nsCOMPtr<nsIMdbFactoryFactory> mdbFactory =
+      do_CreateInstance(kMorkCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mdbFactory->GetMdbFactory(getter_AddRefs(mMdbFactory));
   NS_ENSURE_SUCCESS(rv, rv);

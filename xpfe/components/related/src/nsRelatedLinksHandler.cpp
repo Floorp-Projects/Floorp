@@ -660,9 +660,8 @@ RelatedLinksHandlerImpl::Init()
 		}
 	}
 
-	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-		nsnull, NS_GET_IID(nsIRDFDataSource), getter_AddRefs(mInner));
-	return(rv);
+	mInner = do_CreateInstance(kRDFInMemoryDataSourceCID, &rv);
+	return rv;
 }
 
 

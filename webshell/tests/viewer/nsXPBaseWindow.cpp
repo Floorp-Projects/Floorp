@@ -205,10 +205,8 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
 
   // Create top level window
   nsresult rv;
-  rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
-                                             (void**)&mWindow);
-
-  if (NS_OK != rv) {
+  rv = CallCreateInstance(kWindowCID, &mWindow);
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
@@ -224,10 +222,8 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
   mWindow->GetBounds(r);
 
   // Create web shell
-  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
-                                    kIWebShellIID,
-                                    (void**)&mWebShell);
-  if (NS_OK != rv) {
+  rv = CallCreateInstance(kWebShellCID, &mWebShell);
+  if (NS_FAILED(rv)) {
     return rv;
   }
   r.x = r.y = 0;

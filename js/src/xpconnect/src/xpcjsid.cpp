@@ -716,10 +716,16 @@ nsJSCID::NewID(const char* str)
         }
         else
         {
-            nsCID cid;
-            if(NS_SUCCEEDED(nsComponentManager::ContractIDToClassID(str, &cid)))
+            nsCOMPtr<nsIComponentRegistrar> registrar;
+            NS_GetComponentRegistrar(getter_AddRefs(registrar));
+            if (registrar)
             {
-                success = idObj->mDetails.InitWithName(cid, str);
+                nsCID *cid;
+                if(NS_SUCCEEDED(registrar->ContractIDToCID(str, &cid)))
+                {
+                    success = idObj->mDetails.InitWithName(*cid, str);
+                    nsMemory::Free(cid);
+                }
             }
         }
         if(!success)
@@ -794,11 +800,13 @@ nsJSCID::CreateInstance(nsISupports **_retval)
     else
         iid = NS_GET_IID(nsISupports);
 
-    nsCOMPtr<nsISupports> inst;
-    nsresult rv;
+    nsCOMPtr<nsIComponentManager> compMgr;
+    nsresult rv = NS_GetComponentManager(getter_AddRefs(compMgr));
+    if (NS_FAILED(rv))
+        return NS_ERROR_UNEXPECTED;
 
-    rv = nsComponentManager::CreateInstance(*mDetails.GetID(), nsnull, iid,
-                                            (void**) getter_AddRefs(inst));
+    nsCOMPtr<nsISupports> inst;
+    rv = compMgr->CreateInstance(*mDetails.GetID(), nsnull, iid, getter_AddRefs(inst));
     NS_ASSERTION(NS_FAILED(rv) || inst, "component manager returned success, but instance is null!");
 
     if(NS_FAILED(rv) || !inst)

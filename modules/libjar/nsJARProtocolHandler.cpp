@@ -71,10 +71,8 @@ nsresult
 nsJARProtocolHandler::Init()
 {
     nsresult rv;
-    rv = nsComponentManager::CreateInstance(kZipReaderCacheCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIZipReaderCache),
-                                            getter_AddRefs(mJARCache));
+
+    mJARCache = do_CreateInstance(kZipReaderCacheCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = mJARCache->Init(NS_JAR_CACHE_SIZE);

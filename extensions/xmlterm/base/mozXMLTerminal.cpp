@@ -749,11 +749,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
     return result;
     
   // Generic transferable for getting clipboard data
-  nsCOMPtr<nsITransferable> trans;
-  result = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
-                                              NS_GET_IID(nsITransferable), 
-                                              (void**) getter_AddRefs(trans));
-
+  nsCOMPtr<nsITransferable> trans = do_CreateInstance(kCTransferableCID, &result);
   if (NS_FAILED(result) || !trans)
     return NS_ERROR_FAILURE;
 

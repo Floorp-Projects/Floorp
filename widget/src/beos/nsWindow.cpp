@@ -2401,7 +2401,7 @@ PRBool nsWindow::OnPaint(nsRect &r)
 			static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 			static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
-			if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&event.renderingContext))
+			if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext)))
 			{
 				event.renderingContext->Init(mContext, this);
 				result = DispatchWindowEvent(&event);

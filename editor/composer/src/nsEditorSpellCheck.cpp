@@ -139,10 +139,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
     }
   }
 
-  rv = nsComponentManager::CreateInstance(NS_SPELLCHECKER_CONTRACTID,
-                                          nsnull,
-                                          NS_GET_IID(nsISpellChecker),
-                                       (void **)getter_AddRefs(mSpellChecker));
+  mSpellChecker = do_CreateInstance(NS_SPELLCHECKER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mSpellChecker)

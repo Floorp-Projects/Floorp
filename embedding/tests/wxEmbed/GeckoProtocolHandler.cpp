@@ -34,6 +34,7 @@
 #include "nsNetUtil.h"
 #include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIProgressEventSink.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
@@ -152,8 +153,11 @@ nsresult GeckoProtocolHandler::RegisterHandler(const char *aScheme, const char *
     // Create a factory object which will create the protocol handler on demand
     nsCOMPtr<nsIGenericFactory> factory;
     NS_NewGenericFactory(getter_AddRefs(factory), &ci);
-    nsComponentManager::RegisterFactory(
-        cid, aDescription, contractID.get(), factory, PR_FALSE);
+
+    nsCOMPtr<nsIComponentRegistrar> registrar;
+    NS_GetComponentRegistrar(getter_AddRefs(registrar));
+    if (registrar)
+        registrar->RegisterFactory(cid, aDescription, contractID.get(), factory);
 
     return NS_OK;
 }
@@ -224,9 +228,8 @@ NS_IMETHODIMP GeckoProtocolHandlerImpl::GetProtocolFlags(PRUint32 *aProtocolFlag
 NS_IMETHODIMP GeckoProtocolHandlerImpl::NewURI(const nsACString & aSpec, const char *aOriginCharset, nsIURI *aBaseURI, nsIURI **_retval)
 {
     nsresult rv;
-    nsIURI* url = nsnull;
-    rv = nsComponentManager::CreateInstance(
-        kSimpleURICID, nsnull, NS_GET_IID(nsIURI), (void**) &url);
+    nsIURI* url;
+    rv = CallCreateInstance(kSimpleURICID, &url);
     if (NS_FAILED(rv))
         return rv;
     rv = url->SetSpec(aSpec);

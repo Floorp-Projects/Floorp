@@ -48,6 +48,7 @@
 
 #include "nsNetUtil.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIComponentRegistrar.h"
 #include "nsIStorageStream.h"
 #include "nsISeekableStream.h"
 #include "nsIHttpChannel.h"
@@ -1399,11 +1400,16 @@ nsWebBrowserPersist::GetDocEncoderContentType(nsIDOMDocument *aDocument, const P
         nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
         contractID.AppendWithConversion(contentType);
 
-        nsCID cid;
-        nsresult rv = nsComponentManager::ContractIDToClassID(contractID.get(), &cid);
-        if (NS_SUCCEEDED(rv))
+        nsCOMPtr<nsIComponentRegistrar> registrar;
+        NS_GetComponentRegistrar(getter_AddRefs(registrar));
+        if (registrar)
         {
-            *aRealContentType = ToNewUnicode(contentType);
+            PRBool result;
+            nsresult rv = registrar->IsContractIDRegistered(contractID.get(), &result);
+            if (NS_SUCCEEDED(rv) && result)
+            {
+                *aRealContentType = ToNewUnicode(contentType);
+            }
         }
     }
 

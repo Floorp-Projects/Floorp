@@ -2495,9 +2495,7 @@ SubstituteChars(const PRUnichar*    aString,
 {
   nsresult res;
   if (!gFontSubstituteConverter) {
-    nsComponentManager::CreateInstance(NS_SAVEASCHARSET_CONTRACTID, nsnull,
-                                       NS_GET_IID(nsISaveAsCharset),
-                                       (void**)&gFontSubstituteConverter);
+    CallCreateInstance(NS_SAVEASCHARSET_CONTRACTID, &gFontSubstituteConverter);
     if (gFontSubstituteConverter) {
       res = gFontSubstituteConverter->Init("ISO-8859-1",
                               nsISaveAsCharset::attr_EntityAfterCharsetConv +

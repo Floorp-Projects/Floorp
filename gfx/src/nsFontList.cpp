@@ -144,8 +144,7 @@ nsFontListEnumerator::GetNext(nsISupports **aFont)
   PRUnichar *fontName = mFonts[mIndex++];
   nsCOMPtr<nsISupportsString> fontNameWrapper;
   nsresult rv;
-  rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
-                    NS_GET_IID(nsISupportsString), getter_AddRefs(fontNameWrapper));
+  fontNameWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(fontNameWrapper, NS_ERROR_OUT_OF_MEMORY);
   fontNameWrapper->SetData(nsDependentString(fontName));

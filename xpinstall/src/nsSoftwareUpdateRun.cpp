@@ -436,13 +436,10 @@ extern "C" void RunInstallOnThread(void *data)
     JSContext   *cx;
     JSObject    *glob;
 
-    nsCOMPtr<nsIZipReader> hZip;
-
-    static NS_DEFINE_IID(kIZipReaderIID, NS_IZIPREADER_IID);
     static NS_DEFINE_IID(kZipReaderCID,  NS_ZIPREADER_CID);
-    nsresult rv = nsComponentManager::CreateInstance(kZipReaderCID, nsnull, kIZipReaderIID,
-                                                     getter_AddRefs(hZip));
 
+    nsresult rv;
+    nsCOMPtr<nsIZipReader> hZip = do_CreateInstance(kZipReaderCID, &rv);
     if (NS_FAILED(rv))
         return;
 

@@ -632,7 +632,7 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
 {
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, NS_GET_IID(nsIMenu), (void**)&pnsMenu);
+  nsresult rv = CallCreateInstance(kMenuCID, &pnsMenu);
   if (NS_OK == rv) {
     // Call Create
     nsISupports * supports = nsnull;
@@ -712,7 +712,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
   menuitemElement->GetAttribute(NS_LITERAL_STRING("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuItemCID, nsnull, NS_GET_IID(nsIMenuItem), (void**)&pnsMenuItem);
+  nsresult rv = CallCreateInstance(kMenuItemCID, &pnsMenuItem);
   if (NS_OK == rv) {
     // Create MenuDelegate - this is the intermediator inbetween 
     // the DOM node and the nsIMenuItem
@@ -843,7 +843,7 @@ void nsWebShellWindow::LoadSubMenu(
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, NS_GET_IID(nsIMenu), (void**)&pnsMenu);
+  nsresult rv = CallCreateInstance(kMenuCID, &pnsMenu);
   if (NS_OK == rv) {
     // Call Create
     nsISupports * supports = nsnull;
@@ -935,7 +935,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
   nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(NS_LITERAL_STRING("menubar"), window, endCount, 1));
   if (menubarNode) {
     nsIMenuBar * pnsMenuBar = nsnull;
-    rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, NS_GET_IID(nsIMenuBar), (void**)&pnsMenuBar);
+    rv = CallCreateInstance(kMenuBarCID, &pnsMenuBar);
     if (NS_OK == rv) {
       if (nsnull != pnsMenuBar) {      
         // set pnsMenuBar as a nsMenuListener on aParentWindow
@@ -1012,7 +1012,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
   nsCOMPtr<nsIDOMNode> menubarNode(FindNamedDOMNode(NS_LITERAL_STRING("menubar"), window, endCount, 1));
   if (menubarNode) {
     nsIMenuBar * pnsMenuBar = nsnull;
-    rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, NS_GET_IID(nsIMenuBar), (void**)&pnsMenuBar);
+    rv = CallCreateInstance(kMenuBarCID, &pnsMenuBar);
     if (NS_OK == rv) {
       if (nsnull != pnsMenuBar) {
         pnsMenuBar->Create(aParentWindow);

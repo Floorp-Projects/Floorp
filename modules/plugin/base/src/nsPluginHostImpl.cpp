@@ -4487,22 +4487,16 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
     if(plugin == NULL)
     {
       // nsIPlugin* of xpcom plugins can be found thru a call to
-      //  nsComponentManager::GetClassObject()
-      nsCID clsid;
+      // nsIComponentManager::GetClassObjectByContractID()
       nsCAutoString contractID(
               NS_LITERAL_CSTRING(NS_INLINE_PLUGIN_CONTRACTID_PREFIX) +
               nsDependentCString(aMimeType));
-      nsresult rv =
-          nsComponentManager::ContractIDToClassID(contractID.get(), &clsid);
-      if (NS_SUCCEEDED(rv))
+      nsresult rv = CallGetClassObject(contractID.get(), &plugin);
+      if (NS_SUCCEEDED(rv) && plugin)
       {
-        rv = nsComponentManager::GetClassObject(clsid, nsIPlugin::GetIID(), (void**)&plugin);
-        if (NS_SUCCEEDED(rv) && plugin)
-        {
-          // plugin was addref'd by nsComponentManager::GetClassObject
-          pluginTag->mEntryPoint = plugin;
-          plugin->Initialize();
-        }
+        // plugin is already addref'd
+        pluginTag->mEntryPoint = plugin;
+        plugin->Initialize();
       }
     }
 

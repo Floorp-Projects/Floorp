@@ -1125,9 +1125,12 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 
 	nsCOMPtr<nsIFactory> promptFactory;
 	NS_NewPromptServiceFactory(getter_AddRefs(promptFactory));
-	nsComponentManager::RegisterFactory(kPromptServiceCID, "Prompt Service", 
+
+  nsCOMPtr<nsIComponentRegistrar> registrar;
+  NS_GetComponentRegistrar(getter_AddRefs(registrar));
+  registrar->RegisterFactory(kPromptServiceCID, "Prompt Service", 
 			"@mozilla.org/embedcomp/prompt-service;1",
-			promptFactory, PR_TRUE); // replace existing
+			promptFactory);
 	PtMozilla->wclass = PtCreateWidgetClass(PtContainer, 0, sizeof(args)/sizeof(args[0]), args);
 
 	return (PtMozilla->wclass);

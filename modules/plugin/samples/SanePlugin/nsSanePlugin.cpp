@@ -94,7 +94,6 @@ static unsigned char * scale_image(unsigned char *rgb_data, int rgb_width,
 
 static PRInt32 gPluginObjectCount = 0;
 
-static NS_DEFINE_IID(kIPluginManagerIID,        NS_IPLUGINMANAGER_IID        );
 static NS_DEFINE_CID(kCPluginManagerCID,        NS_PLUGINMANAGER_CID         );
 static NS_DEFINE_CID(kEventQueueService,        NS_EVENTQUEUESERVICE_CID     );
 
@@ -137,9 +136,7 @@ nsSanePluginInstance::nsSanePluginInstance( void )
     mEvent_box = nsnull;
     mDrawing_area = nsnull;
 
-    if(nsComponentManager::CreateInstance(kCPluginManagerCID, 
-                                          NULL, kIPluginManagerIID, 
-                                          (void**)&mPluginManager) != NS_OK) {
+    if (NS_FAILED(CallCreateInstance(kCPluginManagerCID, &mPluginManager))) {
         NS_ERROR("Error trying to create plugin manager!");
         return;
     }

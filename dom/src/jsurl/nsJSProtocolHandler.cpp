@@ -807,9 +807,7 @@ nsJSProtocolHandler::NewURI(const nsACString &aSpec,
     // CreateInstance.
 
     nsIURI* url;
-    rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull,
-                                            NS_GET_IID(nsIURI),
-                                            (void**)&url);
+    rv = CallCreateInstance(kSimpleURICID, &url);
 
     if (NS_FAILED(rv))
         return rv;

@@ -238,9 +238,7 @@ NS_IMETHODIMP nsTableDecoderSupport::ConvertNoBuff(const char * aSrc,
   nsresult res;
 
   if (mHelper == nsnull) {
-    res = nsComponentManager::CreateInstance(kUnicodeDecodeHelperCID, NULL, 
-        NS_GET_IID(nsIUnicodeDecodeHelper), (void**) & mHelper);
-    
+    res = CallCreateInstance(kUnicodeDecodeHelperCID, &mHelper);
     if (NS_FAILED(res)) return NS_ERROR_UDEC_NOHELPER;
   }
 
@@ -283,9 +281,7 @@ NS_IMETHODIMP nsMultiTableDecoderSupport::ConvertNoBuff(const char * aSrc,
   nsresult res;
 
   if (mHelper == nsnull) {
-    res = nsComponentManager::CreateInstance(kUnicodeDecodeHelperCID, NULL, 
-        NS_GET_IID(nsIUnicodeDecodeHelper), (void**) &mHelper);
-    
+    res = CallCreateInstance(kUnicodeDecodeHelperCID, &mHelper);
     if (NS_FAILED(res)) return NS_ERROR_UDEC_NOHELPER;
   }
 
@@ -323,8 +319,7 @@ NS_IMETHODIMP nsOneByteDecoderSupport::Convert(const char * aSrc,
   nsresult res;
 
   if (mHelper == nsnull) {
-    res = nsComponentManager::CreateInstance(kUnicodeDecodeHelperCID, NULL, 
-        NS_GET_IID(nsIUnicodeDecodeHelper), (void**) &mHelper);
+    res = CallCreateInstance(kUnicodeDecodeHelperCID, &mHelper);
     if (NS_FAILED(res)) return NS_ERROR_UDEC_NOHELPER;
 
     res = mHelper -> CreateFastTable(mShiftTable, mMappingTable, mFastTable, 
@@ -621,9 +616,7 @@ NS_IMETHODIMP nsTableEncoderSupport::FillInfo(PRUint32 *aInfo)
   nsresult res;
 
   if (mHelper == nsnull) {
-    res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
-        NS_GET_IID(nsIUnicodeEncodeHelper), (void**) & mHelper);
-    
+    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
     if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
   }
 
@@ -642,9 +635,7 @@ NS_IMETHODIMP nsTableEncoderSupport::ConvertNoBuffNoErr(
   nsresult res;
 
   if (mHelper == nsnull) {
-    res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
-        NS_GET_IID(nsIUnicodeEncodeHelper), (void**) & mHelper);
-    
+    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
     if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
   }
 
@@ -679,9 +670,7 @@ NS_IMETHODIMP nsMultiTableEncoderSupport::FillInfo(PRUint32 *aInfo)
   nsresult res;
 
   if (mHelper == nsnull) {
-    res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
-        NS_GET_IID(nsIUnicodeEncodeHelper), (void**) & mHelper);
-    
+    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
     if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
   }
 
@@ -700,9 +689,7 @@ NS_IMETHODIMP nsMultiTableEncoderSupport::ConvertNoBuffNoErr(
   nsresult res;
 
   if (mHelper == nsnull) {
-    res = nsComponentManager::CreateInstance(kUnicodeEncodeHelperCID, NULL, 
-        NS_GET_IID(nsIUnicodeEncodeHelper), (void**) & mHelper);
-    
+    res = CallCreateInstance(kUnicodeEncodeHelperCID, &mHelper);
     if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
   }
 

@@ -4360,17 +4360,8 @@ GlobalWindowImpl::GetComputedStyle(nsIDOMElement* aElt,
   nsCOMPtr<nsIComputedDOMStyle> compStyle;
 
   if (!sComputedDOMStyleFactory) {
-    nsCID cid;
-    rv = nsComponentManager::
-      ContractIDToClassID("@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1",
-                          &cid);
-
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = nsComponentManager::
-      GetClassObject(cid, NS_GET_IID(nsIFactory),
-                     (void **)&sComputedDOMStyleFactory);
-
+    rv = CallGetClassObject("@mozilla.org/DOM/Level2/CSS/computedStyleDeclaration;1",
+                            &sComputedDOMStyleFactory);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

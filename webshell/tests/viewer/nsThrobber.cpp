@@ -236,7 +236,7 @@ nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds, const nsString& aFil
   mNumImages = aNumImages;
 
   // Create widget
-  nsresult rv = nsComponentManager::CreateInstance(kChildCID, nsnull, kIWidgetIID, (void**)&mWidget);
+  nsresult rv = CallCreateInstance(kChildCID, &mWidget);
   if (NS_OK != rv) {
     return rv;
   }

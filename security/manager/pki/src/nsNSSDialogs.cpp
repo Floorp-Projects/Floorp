@@ -315,9 +315,7 @@ nsNSSDialogs::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo,
   rv = cert->GetCommonName(commonName);
 
   nsIDateTimeFormat *aDateTimeFormat;
-  rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
-                                          NS_GET_IID(nsIDateTimeFormat), 
-                                          (void **) &aDateTimeFormat);
+  rv = CallCreateInstance(kDateTimeFormatCID, &aDateTimeFormat);
 
   aDateTimeFormat->FormatPRTime(nsnull, kDateFormatShort, 
                                 kTimeFormatNoSeconds, timeToUse, 

@@ -987,12 +987,10 @@ void nsWindow::RealDoCreate( HWND              hwndP,
    }
    else
    {
-      nsresult rc = NS_OK;
+      nsresult rc;
       static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
-      rc = nsComponentManager::CreateInstance( kDeviceContextCID, nsnull,
-                                               NS_GET_IID(nsIDeviceContext),
-                                               (void **)&mContext);
+      rc = CallCreateInstance(kDeviceContextCID, &mContext);
       if( NS_SUCCEEDED(rc))
          mContext->Init( (nsNativeWidget) mWnd);
 #ifdef DEBUG
@@ -2940,9 +2938,7 @@ PRBool nsWindow::OnPaint()
              
               static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
              
-              if( NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull,
-                                                       NS_GET_IID(nsIRenderingContext),
-                                                       (void **)&event.renderingContext) )
+              if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext)))
               {
                  nsIRenderingContextOS2 *winrc;
 

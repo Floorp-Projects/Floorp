@@ -931,8 +931,8 @@ inline nsIRegion *nsWindow::GetRegion()
 
   static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
-  res = nsComponentManager::CreateInstance( kRegionCID, nsnull, NS_GET_IID(nsIRegion), (void **)&region );
-  if (NS_OK == res) region->Init();
+  res = CallCreateInstance( kRegionCID, &region );
+  if (NS_SUCCEEDED(res)) region->Init();
 
   NS_ASSERTION(NULL != region, "Null region context");
   

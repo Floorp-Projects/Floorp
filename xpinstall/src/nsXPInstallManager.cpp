@@ -749,11 +749,8 @@ void nsXPInstallManager::Shutdown()
 NS_IMETHODIMP
 nsXPInstallManager::LoadParams(PRUint32 aCount, const PRUnichar** aPackageList, nsIDialogParamBlock** aParams)
 {
-    nsIDialogParamBlock* paramBlock = 0;
-    nsresult rv = nsComponentManager::CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID,
-                                            nsnull,
-                                            NS_GET_IID(nsIDialogParamBlock),
-                                            (void**)&paramBlock);
+    nsIDialogParamBlock* paramBlock;
+    nsresult rv = CallCreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID, &paramBlock);
 
     if (NS_SUCCEEDED(rv))
     {

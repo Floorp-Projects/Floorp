@@ -193,8 +193,10 @@ nsresult NS_InitLeakDetector()
 	if (NS_FAILED(rv))
 		return rv;
 
-	// register this factory with the component manager.
-	return nsComponentManager::RegisterFactory(info.mCID, info.mDescription, info.mContractID, factory, PR_TRUE);
+	nsCOMPtr<nsIComponentRegistrar> registrar;
+	NS_GetComponentRegistrar(getter_AddRefs(registrar));
+
+	return registrar->RegisterFactory(info.mCID, info.mDescription, info.mContractID, factory);
 }
 
 #ifdef XP_MAC

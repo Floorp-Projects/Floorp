@@ -863,13 +863,10 @@ BookmarkParser::Parse(nsIRDFResource *aContainer, nsIRDFResource *nodeType)
 {
     // tokenize the input stream.
     // XXX this needs to handle quotes, etc. it'd be nice to use the real parser for this...
-    nsresult            rv;
 
-    nsCOMPtr<nsIRDFContainer> container;
-    rv = nsComponentManager::CreateInstance(kRDFContainerCID,
-                        nsnull,
-                        NS_GET_IID(nsIRDFContainer),
-                        getter_AddRefs(container));
+    nsresult rv;
+    nsCOMPtr<nsIRDFContainer> container =
+            do_CreateInstance(kRDFContainerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = container->Init(mDataSource, aContainer);
@@ -2357,10 +2354,8 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                                schedule,
                                nsCaseInsensitiveStringComparator()))
             {
-                nsCOMPtr<nsISound>  soundInterface;
-                rv = nsComponentManager::CreateInstance(kSoundCID,
-                        nsnull, NS_GET_IID(nsISound),
-                        getter_AddRefs(soundInterface));
+                nsCOMPtr<nsISound> soundInterface =
+                        do_CreateInstance(kSoundCID, &rv);
                 if (NS_SUCCEEDED(rv))
                 {
                     // for the moment, just beep
@@ -4634,9 +4629,9 @@ nsBookmarksService::deleteBookmarkItem(nsIRDFResource *src,
     nsCOMPtr<nsIRDFResource>    argParent = do_QueryInterface(aNode);
     if (!argParent) return NS_ERROR_NO_INTERFACE;
 
-    nsCOMPtr<nsIRDFContainer>   container;
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
-            NS_GET_IID(nsIRDFContainer), getter_AddRefs(container))))
+    nsCOMPtr<nsIRDFContainer> container =
+            do_CreateInstance(kRDFContainerCID, &rv);
+    if (NS_FAILED(rv))
         return rv;
     if (NS_FAILED(rv = container->Init(this, argParent)))
         return rv;
@@ -5469,15 +5464,12 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
     // rv is used for various functions
     nsresult rv;
 
-    nsCOMPtr<nsIRDFContainer> container;
-    rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
-                                            NS_GET_IID(nsIRDFContainer),
-                                            getter_AddRefs(container));
+    nsCOMPtr<nsIRDFContainer> container =
+            do_CreateInstance(kRDFContainerCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCAutoString   indentation;
 
-    // STRING USE WARNING: converting in a loop.  Probably not a good idea
     for (PRInt32 loop=0; loop<level; loop++)
         indentation.Append(kIndent, sizeof(kIndent)-1);
 

@@ -187,10 +187,7 @@ static void TestCollation(nsILocale *locale)
    printf("Start nsICollation Test \n");
    printf("==============================\n");
    
-   res = nsComponentManager::CreateInstance(kCollationFactoryCID,
-                                            NULL,
-                                            NS_GET_IID(nsICollationFactory),
-                                            (void**) &f);
+   res = CallCreateInstance(kCollationFactoryCID, &f);
            
    printf("Test 1 - CreateInstance():\n");
    if(NS_FAILED(res) || ( f == NULL ) ) {
@@ -199,10 +196,7 @@ static void TestCollation(nsILocale *locale)
      f->Release();
    }
 
-   res = nsComponentManager::CreateInstance(kCollationFactoryCID,
-                                            NULL,
-                                            NS_GET_IID(nsICollationFactory),
-                                            (void**) &f);
+   res = CallCreateInstance(kCollationFactoryCID, &f);
    if(NS_FAILED(res) || ( f == NULL ) ) {
      printf("\t2nd CreateInstance failed\n");
    }
@@ -576,10 +570,7 @@ static void TestSort(nsILocale *locale, PRInt32 collationStrength, FILE *fp)
   printf("Start sort Test \n");
   printf("==============================\n");
 
-  res = nsComponentManager::CreateInstance(kCollationFactoryCID,
-                                           NULL,
-                                           NS_GET_IID(nsICollationFactory),
-                                           (void**) &factoryInst);
+  res = CallCreateInstance(kCollationFactoryCID, &factoryInst);
   if(NS_FAILED(res)) {
     printf("\tFailed!! return value != NS_OK\n");
   }
@@ -696,10 +687,7 @@ static void TestDateTimeFormat(nsILocale *locale)
   printf("==============================\n");
 
   nsIScriptableDateFormat *aScriptableDateFormat;
-  res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
-                                           NULL,
-                                           NS_GET_IID(nsIScriptableDateFormat),
-                                           (void**) &aScriptableDateFormat);
+  res = CallCreateInstance(kDateTimeFormatCID, &aScriptableDateFormat);
   if(NS_FAILED(res) || ( aScriptableDateFormat == NULL ) ) {
     printf("\tnsIScriptableDateFormat CreateInstance failed\n");
   }
@@ -742,10 +730,7 @@ static void TestDateTimeFormat(nsILocale *locale)
   printf("==============================\n");
 
   nsIDateTimeFormat *t = NULL;
-  res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
-                                           NULL,
-                                           NS_GET_IID(nsIDateTimeFormat),
-                                           (void**) &t);
+  res = CallCreateInstance(kDateTimeFormatCID, &t);
        
   printf("Test 1 - CreateInstance():\n");
   if(NS_FAILED(res) || ( t == NULL ) ) {
@@ -754,10 +739,7 @@ static void TestDateTimeFormat(nsILocale *locale)
     t->Release();
   }
 
-  res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
-                                           NULL,
-                                           NS_GET_IID(nsIDateTimeFormat),
-                                           (void**) &t);
+  res = CallCreateInstance(kDateTimeFormatCID, &t);
        
   if(NS_FAILED(res) || ( t == NULL ) ) {
     printf("\t2nd CreateInstance failed\n");
@@ -841,10 +823,9 @@ static void TestDateTimeFormat(nsILocale *locale)
 
 static nsresult NewLocale(const nsString* localeName, nsILocale** locale)
 {
-  nsCOMPtr<nsILocaleFactory>	localeFactory;
   nsresult res;
 
-  res = nsComponentManager::FindFactory(kLocaleFactoryCID, getter_AddRefs(localeFactory)); 
+  nsCOMPtr<nsILocaleFactory> localeFactory = do_GetClassObject(kLocaleFactoryCID, &res);
   if (NS_FAILED(res) || localeFactory == nsnull) printf("FindFactory nsILocaleFactory failed\n");
 
   res = localeFactory->NewLocale(localeName, locale);
@@ -1019,9 +1000,7 @@ int main(int argc, char** argv) {
   nsCOMPtr<nsILocale> locale;
   nsresult res; 
 
-	nsCOMPtr<nsILocaleFactory>	localeFactory;
-
-	res = nsComponentManager::FindFactory(kLocaleFactoryCID, getter_AddRefs(localeFactory)); 
+	nsCOMPtr<nsILocaleFactory>	localeFactory = do_GetClassObject(kLocaleFactoryCID, &res);
   if (NS_FAILED(res) || localeFactory == nsnull) printf("FindFactory nsILocaleFactory failed\n");
 
   res = localeFactory->GetApplicationLocale(getter_AddRefs(locale));
@@ -1096,11 +1075,5 @@ int main(int argc, char** argv) {
 
   printf("Finish All The Test Cases\n");
 
-  res = nsComponentManager::FreeLibraries();
-  if(NS_FAILED(res))
-    printf("nsComponentManager failed\n");
-  else
-    printf("nsComponentManager FreeLibraries Done\n");
-  
   return 0;
 }

@@ -285,10 +285,12 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const
 {
     mEventQService = do_GetService(kEventQueueServiceCID);
 
-    nsComponentManager::CreateInstance(aClass, 
-                                       aDelegate,
-                                       aIID,
-                                       getter_AddRefs(mRealObject));
+    nsCOMPtr<nsIComponentManager> compMgr;
+    NS_GetComponentManager(getter_AddRefs(compMgr));
+    compMgr->CreateInstance(aClass, 
+                            aDelegate,
+                            aIID,
+                            getter_AddRefs(mRealObject));
 
     mDestQueue       = do_QueryInterface(destQueue);
     mProxyType       = proxyType;
