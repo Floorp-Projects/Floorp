@@ -55,9 +55,7 @@
 #MOZ_CO_TAG = <tag>
 NSPR_CO_TAG = NSPRPUB_PRE_4_2_CLIENT_BRANCH
 PSM_CO_TAG = #We will now build PSM from the tip instead of a branch.
-ifndef NSS_3_4
 NSS_CO_TAG = NSS_CLIENT_TAG
-endif
 LDAPCSDK_CO_TAG = LDAPCSDK_40_BRANCH
 ACCESSIBLE_CO_TAG = 
 GFX2_CO_TAG = 

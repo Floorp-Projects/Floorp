@@ -1511,6 +1511,51 @@ sub BuildNeckoProjects()
 #// Build Security projects
 #//--------------------------------------------------------------------------------------------------
 
+
+sub CreateNSSExportList($$)
+{
+  my ($source_def_file, $final_exp_file) = @_;
+  
+  if (! -e $source_def_file) {
+  	die "NSS file $source_def_file does not exist";
+  }
+  
+  my($def_mod_time) = GetFileModDate($source_def_file);
+  my($exp_mod_time) = (-e $final_exp_file ? GetFileModDate($final_exp_file) : 0);
+  
+  if ($exp_mod_time > $def_mod_time) {
+    return;
+  }
+  
+  open (DEF_FILE, "< $source_def_file") || die "can't open NSS def file $!";
+  open (EXP_FILE, "> $final_exp_file");
+  
+  print("Creating $final_exp_file from $source_def_file\n");
+  while (<DEF_FILE>) {
+    my ($line) = $_;
+    if ($line =~ /^;\+./) {
+      next;
+    }
+    if ($line =~ /^LIBRARY/) {
+      next;
+    }
+    if ($line =~ /^EXPORTS/) {
+      next;
+    }
+    if ($line =~ s/^;;(.*) DATA ;//) {
+      print EXP_FILE "$1\n";
+    }
+    if ($line =~ s/^(.*) DATA ;//) {
+      print EXP_FILE "$1\n";
+    }
+    if ($line =~ s/^(.*);//) {
+      print EXP_FILE "$1\n";
+    }
+  }
+  close DEF_FILE;
+  close EXP_FILE;
+}
+
 sub BuildSecurityProjects()
 {
     unless( $main::build{security} && $main::options{psm}) { return; }
@@ -1523,7 +1568,28 @@ sub BuildSecurityProjects()
 
     StartBuildModule("security");
 
-    BuildProject(":mozilla:security:nss:macbuild:NSS.xml","NSS$D.o");
+    #First we need to build all of the NSS shared libraries now.  
+    #The order is important because they link against each other.
+    BuildProject(":mozilla:security:nss:macbuild:util.xml","util$D.o");
+    BuildProject(":mozilla:security:nss:macbuild:crmf.xml","crmf$D.o");
+    
+    CreateNSSExportList(":mozilla:security:nss:lib:softoken:softokn.def",
+                        ":mozilla:security:nss:macbuild:softoken.mcp.exp");                        
+    BuildOneProjectWithOutput(":mozilla:security:nss:macbuild:softoken.xml","Softoken3$D.shlb","Softoken3$D.shlb",1, $main::ALIAS_SYM_FILES, 0);
+    
+    CreateNSSExportList(":mozilla:security:nss:lib:nss:nss.def",
+                        ":mozilla:security:nss:macbuild:NSS.mcp.exp"); 
+    BuildOneProjectWithOutput(":mozilla:security:nss:macbuild:NSS.xml","NSS3$D.shlb","NSS3$D.shlb",1, $main::ALIAS_SYM_FILES, 0);
+    
+    CreateNSSExportList(":mozilla:security:nss:lib:ssl:ssl.def",
+                        ":mozilla:security:nss:macbuild:ssl.mcp.exp");
+    BuildOneProjectWithOutput(":mozilla:security:nss:macbuild:ssl.xml","SSL3$D.shlb","SSL3$D.shlb",1, $main::ALIAS_SYM_FILES, 0);
+    
+    CreateNSSExportList(":mozilla:security:nss:lib:smime:smime.def",
+                        ":mozilla:security:nss:macbuild:smime.mcp.exp");
+    BuildOneProjectWithOutput(":mozilla:security:nss:macbuild:smime.xml","SMIME3$D.shlb","SMIME3$D.shlb",1, $main::ALIAS_SYM_FILES, 0);
+    
+    
     BuildOneProject(":mozilla:security:manager:boot:macbuild:pipboot.xml", "pipboot$D.$S",  1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:security:manager:ssl:macbuild:PIPNSS.xml",   "PIPNSS$D.$S",  1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:security:manager:pki:macbuild:PIPPKI.xml",   "PIPPKI$D.$S",  1, $main::ALIAS_SYM_FILES, 1); 

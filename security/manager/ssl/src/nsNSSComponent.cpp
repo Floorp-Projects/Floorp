@@ -92,29 +92,6 @@ static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 int nsNSSComponent::mInstanceCount = 0;
 
-#ifdef XP_MAC
-
-OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath)
-{
-  PRIntn len;
-  char *cursor;
-  
-  len = PL_strlen(macPath);
-  cursor = (char*)PR_Malloc(len+2);
-  if (!cursor)
-    return memFullErr;
-    
-  memcpy(cursor+1, macPath, len+1);
-  *unixPath = cursor;
-  *cursor = '/';
-  while ((cursor = PL_strchr(cursor, ':')) != NULL) {
-    *cursor = '/';
-    cursor++;
-  }
-  return noErr;
-}
-#endif
-
 // XXX tmp callback for slot password
 #ifdef NSS_3_4
 extern char * PR_CALLBACK 
@@ -401,10 +378,7 @@ nsNSSComponent::InstallLoadableRoots()
     char *unixModulePath=nsnull;
     mozFile->Append("Essential Files");
     mozFile->Append(LOADABLE_CERTS_MODULE);
-    mozFile->GetPath(&fullModuleName);
-    ConvertMacPathToUnixPath(fullModuleName, &unixModulePath);
-    nsMemory::Free(fullModuleName);
-    fullModuleName = unixModulePath;
+    mozFile->GetPath(&fullModuleName);    
 #else
     char *processDir = nsnull;
     mozFile->GetPath(&processDir);

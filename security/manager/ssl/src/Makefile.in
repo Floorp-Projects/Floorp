@@ -96,16 +96,26 @@ REQUIRES	= nspr \
 		  pipboot \
 		  $(NULL)
 
+NSS_3_4=1
+
 ifdef NSS_3_4
 DEFINES += -DNSS_3_4
 
+ifeq ($(OS_ARCH),OS2)
+# Link with import libs on OS/2
+NSS3_LIB = nss3.$(LIB_SUFFIX)
+SMIME3_LIB = smime3.$(LIB_SUFFIX)
+SSL3_LIB = ssl3.$(LIB_SUFFIX)
+SOFTOKEN3_LIB = softokn3.$(LIB_SUFFIX)
+else
 NSS3_LIB = $(LIB_PREFIX)nss3$(DLL_SUFFIX)
 SMIME3_LIB = $(LIB_PREFIX)smime3$(DLL_SUFFIX)
 SSL3_LIB = $(LIB_PREFIX)ssl3$(DLL_SUFFIX)
 SOFTOKEN3_LIB = $(LIB_PREFIX)softokn3$(DLL_SUFFIX)
+endif
 
 EXTRA_LIBS = \
-    $(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+    $(DIST)/lib/$(NSS_LIB_PREFIX)crmf.$(LIB_SUFFIX) \
     $(DIST)/lib/$(SMIME3_LIB) \
     $(DIST)/lib/$(SSL3_LIB) \
     $(DIST)/lib/$(NSS3_LIB) \
@@ -117,8 +127,10 @@ endif
 
 EXTRA_DEPS = $(EXTRA_LIBS)
 
+ifndef NSS_3_4
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DNSS_USE_STATIC_LIBS
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
