@@ -24,11 +24,11 @@
 
 
 class nsDrawingSurfacePh : public nsIDrawingSurface,
-                            nsIDrawingSurfacePh
+                           public nsIDrawingSurfacePh
 {
 public:
   nsDrawingSurfacePh();
-
+  
   NS_DECL_ISUPPORTS
 
   //nsIDrawingSurface interface

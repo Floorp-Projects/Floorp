@@ -64,7 +64,7 @@ nsRegionPh :: nsRegionPh()
 
 nsRegionPh :: ~nsRegionPh()
 {
-//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::~nsRegion Destructor called\n"));
+PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::~nsRegion Destructor\n"));
   
 #ifdef DEBUG_REGION
   DumpTiles(mRegion);
@@ -74,10 +74,7 @@ nsRegionPh :: ~nsRegionPh()
     PhFreeTiles(mRegion);
 }
 
-
-NS_IMPL_QUERY_INTERFACE(nsRegionPh, kRegionIID)
-NS_IMPL_ADDREF(nsRegionPh)
-NS_IMPL_RELEASE(nsRegionPh)
+NS_IMPL_ISUPPORTS1(nsRegionPh, nsIRegion)
 
 nsresult nsRegionPh :: Init(void)
 {

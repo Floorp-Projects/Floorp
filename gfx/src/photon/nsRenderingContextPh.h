@@ -30,21 +30,19 @@
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
 #include "nsRect.h"
-//#include "nsImagePh.h"
 #include "nsIDeviceContext.h"
 #include "nsVoidArray.h"
-#include "nsIRenderingContextPh.h"
+//#include "nsIRenderingContextPh.h"
 
 #include "nsDrawingSurfacePh.h"
-//#include "nsRegionPh.h"
 
 class GraphicsState;
 class nsDrawingSurfacePh;
 class nsImagePh;
+class nsIRegion;
 class nsRegionPh;
 
-class nsRenderingContextPh : public nsIRenderingContext,
-                             nsIRenderingContextPh
+class nsRenderingContextPh : public nsIRenderingContext
 {
 public:
   nsRenderingContextPh();
@@ -159,7 +157,7 @@ public:
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
   // nsIRenderingContextPh
-  NS_IMETHOD CreateDrawingSurface(PhGC_t *aGC, nsDrawingSurface &aSurface);
+  // NS_IMETHOD CreateDrawingSurface(PhGC_t *aGC, nsDrawingSurface &aSurface);
 
 private:
   ~nsRenderingContextPh();
@@ -176,7 +174,7 @@ protected:
   PhGC_t             *mholdGC;
   PhGC_t             *mOldGC;
   nscolor            mCurrentColor;
-  nsLineStyle        mLineStyle;
+  nsLineStyle        mCurrentLineStyle;
   nsTransform2D      *mTMatrix;		// transform that all the graphics drawn here will obey
   nsIFontMetrics     *mFontMetrics;
   nsDrawingSurfacePh *mOffscreenSurface;
@@ -185,7 +183,7 @@ protected:
   nsIWidget          *mDCOwner;
   nsIDeviceContext   *mContext;
   float              mP2T;
-  nsRegionPh         *mRegion;
+  nsIRegion         *mClipRegion;
   PtWidget_t         *mWidget;
   char               *mPhotonFontName;
   nsRegionPh         *mGlobalClip;
@@ -196,12 +194,9 @@ protected:
   nsVoidArray       *mStateCache;
   PRUint8           *mGammaTable;
 
-  static PhGC_t     *mPtGC;
+  static PhGC_t     *mPtGC;				/* Default Photon Graphics Context */
   PRBool            mBufferIsEmpty;
-
-#ifdef NS_DEBUG
   PRBool            mInitialized;
-#endif
 };
 
 #endif /* nsRenderingContextPh_h___ */

@@ -23,11 +23,9 @@
 
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
+NS_IMPL_ISUPPORTS1(nsImagePh, nsIImage)
 
-/** ----------------------------------------------------------------
-  * Constructor for nsImagePh
-  * @update dc - 11/20/98
-  */
+// ----------------------------------------------------------------
 nsImagePh :: nsImagePh()
 {
   NS_INIT_REFCNT();
@@ -53,10 +51,7 @@ nsImagePh :: nsImagePh()
   mImage.image = nsnull;
 }
 
-/** ----------------------------------------------------------------
-  * destructor for nsImagePh
-  * @update dc - 11/20/98
-  */
+// ----------------------------------------------------------------
 nsImagePh :: ~nsImagePh()
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::~nsImagePh Destructor called\n"));
@@ -65,11 +60,8 @@ nsImagePh :: ~nsImagePh()
   CleanUp(PR_TRUE);
 }
 
-NS_IMPL_ISUPPORTS(nsImagePh, kIImageIID);
-
 /** ----------------------------------------------------------------
  * Initialize the nsImagePh object
- * @update dc - 11/20/98
  * @param aWidth - Width of the image
  * @param aHeight - Height of the image
  * @param aDepth - Depth of the image
@@ -78,12 +70,8 @@ NS_IMPL_ISUPPORTS(nsImagePh, kIImageIID);
  */
 nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Init (%p) - aWidth=%d aHeight=%d aDepth=%d\n", this,
-  	aWidth, aHeight, aDepth));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Init (%p) - aWidth=%d aHeight=%d aDepth=%d\n", this, aWidth, aHeight, aDepth));
 
-
-//  mHBitmap = nsnull;
-//  mAlphaHBitmap = nsnull;
   CleanUp(PR_TRUE);
 
   if (8 == aDepth)
@@ -271,7 +259,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 				 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
 				 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw1 (%p)\n", this ));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw1 this=<%p> aS=(%d,%d,%d,%d) aD=(%d,%d,%d,%d)\n", this,
+    aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight ));
 
   if( !mImage.image )
   {
@@ -280,20 +269,44 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   }
 
   PhPoint_t pos = { aDX, aDY };
-
-//  PgDrawPhImagemx( &pos, &mImage, 0 );
+  int       err;
 
   if( mColorMap )
   {
-    PgSetPalette( (PgColor_t*) mColorMap->Index, 0, 0, mColorMap->NumColors, Pg_PALSET_SOFT, 0 );
+    err=PgSetPalette( (PgColor_t*) mColorMap->Index, 0, 0, mColorMap->NumColors, Pg_PALSET_SOFT, 0 );
+    if (err == -1)
+    {
+      NS_ASSERTION(0,"nsImagePh::Draw Error calling PgSetPalette");
+	  return NS_ERROR_FAILURE;
+    }
   }
 
-  if( mAlphaBits )
-    PgDrawTImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
-  else
-    PgDrawImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0 );
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw1 this=<%p> mImage.size=(%ld,%ld)\n", this, mImage.size.w, mImage.size.h));
 
-//  PgFlush();
+
+/* Kirk Hack to see what this does 9/27/99 */
+/* I think this is needed... but I can't find anything that calls it... */
+/* This draw may be able to call the other draw to save space */
+#if 1
+  if( mAlphaBits )
+  {
+    err=PgDrawTImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
+    if (err == -1)
+    {
+      NS_ASSERTION(0,"nsImagePh::Draw Error calling PgDrawTImage");
+	  return NS_ERROR_FAILURE;
+    }
+  }
+  else
+  {
+    err=PgDrawImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0 );
+    if (err == -1)
+    {
+      NS_ASSERTION(0,"nsImagePh::Draw Error calling PgDrawImage");
+	  return NS_ERROR_FAILURE;
+    }
+  }
+#endif
 
   return NS_OK;
 }
@@ -313,9 +326,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 				 PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 (%p) (%ld,%ld,%ld,%ld)\n", this, aX, aY, aWidth, aHeight ));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=(%p) dest=(%ld,%ld,%ld,%ld) aSurface=<%p>\n", this, aX, aY, aWidth, aHeight, aSurface ));
 
-//printf ("kedl: draw2\n");
   // REVISIT - this is a brute-force implementation. We currently have no h/w blit
   // capabilities.
 
@@ -326,20 +338,39 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   }
 
   PhPoint_t pos = { aX, aY };
+  int       err;
+  
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld)\n", this, mImage.size.w, mImage.size.h));
 
+
+/* Kirk Hack to see what this does 9/27/99 */
+/* No Images draw without this  enabled.. Check out Test 2 */
+#if 1
   if( mAlphaBits )
-    PgDrawTImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
+  {
+    err=PgDrawTImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
+    if (err == -1)
+    {
+      NS_ASSERTION(0,"nsImagePh::Draw Error calling PgDrawTImage");
+      return NS_ERROR_FAILURE;
+    }
+  }
   else
-    PgDrawImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0 );
-
-//  PgDrawPhImagemx( &pos, &mImage, 0 );
-//  PgFlush();
+  {
+    err=PgDrawImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0 );
+    if (err == -1)
+    {
+      NS_ASSERTION(0,"nsImagePh::Draw Error calling PgDrawImage");
+	  return NS_ERROR_FAILURE;
+    }
+  }
+#endif
 
   return NS_OK;
 }
 
 /** ----------------------------------------------------------------
- * Create an optimezed bitmap, -- this routine may need to be deleted, not really used now
+ * Create an optimized bitmap, -- this routine may need to be deleted, not really used now
  * @update dc - 11/20/98
  * @param aContext - The device context to use for the optimization
  */

@@ -38,13 +38,15 @@ static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
 static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
 
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+
 static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
-static NS_DEFINE_IID(kCDrawingSurface, NS_DRAWING_SURFACE_CID);
-
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+//static NS_DEFINE_IID(kCDrawingSurface, NS_DRAWING_SURFACE_CID);
+//static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+//static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 class nsGfxFactoryPh : public nsIFactory
 {   
@@ -80,7 +82,7 @@ nsGfxFactoryPh::~nsGfxFactoryPh()
 {   
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::~nsGfxFactoryPh Destructor\n"));
 
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
+  NS_ASSERTION(mRefCnt == 0, "nsGfxFactoryGTK::~nsGfxFactoryGTK non-zero refcnt at destruction");   
 }   
 
 nsresult nsGfxFactoryPh::QueryInterface(const nsIID &aIID,   
@@ -141,27 +143,19 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
   if (mClassID.Equals(kCFontMetrics))
   {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsFontMetricsPh.\n"));
-    nsFontMetricsPh* fm;
-    NS_NEWXPCOM(fm, nsFontMetricsPh);
-    inst = (nsISupports *)fm;
+    inst = (nsISupports *) new nsFontMetricsPh();
   }
   else if (mClassID.Equals(kCDeviceContext)) {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsDeviceContextPh.\n"));
-    nsDeviceContextPh* dc;
-    NS_NEWXPCOM(dc, nsDeviceContextPh);
-    inst = (nsISupports *)dc;
+    inst = (nsISupports *)new nsDeviceContextPh();
   }
   else if (mClassID.Equals(kCRenderingContext)) {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsRenderingContextPh.\n"));
-    nsRenderingContextPh*  rc;
-    NS_NEWXPCOM(rc, nsRenderingContextPh);
-    inst = (nsISupports *)((nsIRenderingContext*)rc);
+    inst = (nsISupports *)new nsRenderingContextPh();
   }
   else if (mClassID.Equals(kCImage)) {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsImagePh.\n"));
-    nsImagePh* image;
-    NS_NEWXPCOM(image, nsImagePh);
-    inst = (nsISupports *)image;
+    inst = (nsISupports *)new nsImagePh();
   }
   else if (mClassID.Equals(kCRegion)) {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance asking for nsRegionPh.\n"));

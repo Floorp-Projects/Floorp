@@ -36,11 +36,13 @@ CPPSRCS		= \
 		nsGfxFactoryPh.cpp \
 		nsImagePh.cpp \
 		nsRegionPh.cpp \
+		nsGraphicsStatePh.cpp \
 		nsRenderingContextPh.cpp \
 		clip.cpp \
 		$(NULL)
 
-EXPORTS		= nsIRenderingContextPh.h
+# Force Debug on to make logging work
+DEFINES     += -DDEBUG
 
 include $(topsrcdir)/config/rules.mk
 

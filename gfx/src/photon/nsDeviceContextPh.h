@@ -20,6 +20,12 @@
 #define nsDeviceContextPh_h___
 
 #include "nsDeviceContext.h"
+#include "nsUnitConversion.h"
+#include "nsIWidget.h"
+#include "nsIView.h"
+#include "nsIRenderingContext.h"
+
+#include "nsRenderingContextPh.h"
 #include <Pt.h>
 
 class nsDeviceContextPh : public DeviceContextImpl
@@ -27,6 +33,8 @@ class nsDeviceContextPh : public DeviceContextImpl
 public:
   nsDeviceContextPh();
 
+  NS_DECL_ISUPPORTS
+  
   NS_IMETHOD  Init(nsNativeWidget aWidget);
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);

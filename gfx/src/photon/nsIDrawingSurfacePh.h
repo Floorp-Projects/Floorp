@@ -31,6 +31,8 @@
 class nsIDrawingSurfacePh : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAWING_SURFACE_PH_IID)
+
   /**
    * Initialize a drawing surface using a windows DC.
    * aDC is "owned" by the drawing surface until the drawing
