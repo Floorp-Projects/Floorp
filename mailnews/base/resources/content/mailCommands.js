@@ -435,10 +435,13 @@ function analyze(aMsgHdr, aNextFunction)
     var listener = {
         onMessageClassified: function(aMsgURI, aClassification)
         {
+            // XXX todo
+            // update status bar, or a progress dialog
+            // running junk mail controls manually, on a large folder
+            // can take a while, and the user doesn't know when we are done.
             dump(aMsgURI + ' is ' 
                  + (aClassification == nsIJunkMailPlugin.JUNK
                     ? 'JUNK' : 'GOOD') + '\n');
-
             // XXX TODO, make the cut off 50, like in nsMsgSearchTerm.cpp
             var score = 
                 aClassification == nsIJunkMailPlugin.JUNK ? "100" : "0";
@@ -464,7 +467,10 @@ function analyze(aMsgHdr, aNextFunction)
       headerParser.extractHeaderAddressMailboxes(null, aMsgHdr.author, authorEmailAddress);
       if (whiteListDirectory.hasCardForEmailAddress(authorEmailAddress.value))
       {
-        listener.onMessageClassified(aMsgHdr.folder.generateMessageURI(aMsgHdr.messageKey), nsIJunkMailPlugin.GOOD);
+        // skip over this message, like we do on incoming mail
+        // the difference is it could be marked as junk from previous analysis
+        // or from being manually marked by the user.
+        aNextFunction();
         return;
       }
     }
