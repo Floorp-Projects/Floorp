@@ -40,16 +40,6 @@ nsUnicodeToCNS11643p1::nsUnicodeToCNS11643p1()
 {
 }
 
-nsresult nsUnicodeToCNS11643p1::CreateInstance(nsISupports ** aResult) 
-{
-  nsIUnicodeEncoder *p = new nsUnicodeToCNS11643p1();
-  if(p) {
-   *aResult = p;
-   return NS_OK;
-  }
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
