@@ -1159,7 +1159,10 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 					}
 					else
                     {
-                      lastLineWasComplete = PR_FALSE;
+						line[L++] = CR;
+                        line[L++] = LF;
+                        line[L] = 0;
+						lastLineWasComplete = PR_FALSE;
                     }
 
 					bsize -= L;
