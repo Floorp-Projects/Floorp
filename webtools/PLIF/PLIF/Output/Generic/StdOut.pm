@@ -44,5 +44,6 @@ sub provides {
 sub output {
     my $self = shift;
     my($app, $session, $string) = @_;
+    $| = 1; # flush output even if no newline
     print $string;
 }
