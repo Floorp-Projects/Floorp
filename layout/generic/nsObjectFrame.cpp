@@ -1915,12 +1915,6 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsObjectFrame::Scrolled(nsIView *aView)
-{
-  return NS_OK;
-}
-
-nsresult
 nsObjectFrame::SetFullURL(nsIURI* aURL)
 {
   mFullURL = aURL;
