@@ -37,7 +37,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- */
 
 const nsIMsgDBHdr       = Components.interfaces.nsIMsgDBHdr;
 
