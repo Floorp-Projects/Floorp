@@ -1591,11 +1591,9 @@ nsImageFrame::GetContentForEvent(nsIPresContext* aPresContext,
   if (nsnull != map) {
     nsPoint p;
     TranslateEventCoords(aPresContext, aEvent->point, p);
-    nsAutoString absURL, target, altText;
     PRBool inside = PR_FALSE;
     nsCOMPtr<nsIContent> area;
-    inside = map->IsInside(p.x, p.y, getter_AddRefs(area),
-                           absURL, target, altText);
+    inside = map->IsInside(p.x, p.y, getter_AddRefs(area));
     if (inside && area) {
       *aContent = area;
       NS_ADDREF(*aContent);
@@ -1626,7 +1624,6 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
       if ((nsnull != map) || isServerMap) {
         nsPoint p;
         TranslateEventCoords(aPresContext, aEvent->point, p);
-        nsAutoString absURL, target, altText;
         PRBool inside = PR_FALSE;
         // Even though client-side image map triggering happens
         // through content, we need to make sure we're not inside
@@ -1634,8 +1631,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
         // sever-side on the same image - it happens!)
         if (nsnull != map) {
           nsCOMPtr<nsIContent> area;
-          inside = map->IsInside(p.x, p.y, getter_AddRefs(area),
-                                 absURL, target, altText);
+          inside = map->IsInside(p.x, p.y, getter_AddRefs(area));
         }
 
         if (!inside && isServerMap) {
@@ -1643,6 +1639,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
           // Server side image maps use the href in a containing anchor
           // element to provide the basis for the destination url.
           nsCOMPtr<nsIURI> uri;
+          nsAutoString target;
           if (GetAnchorHREFAndTarget(getter_AddRefs(uri), target)) {
             // XXX if the mouse is over/clicked in the border/padding area
             // we should probably just pretend nothing happened. Nav4

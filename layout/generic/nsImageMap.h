@@ -64,21 +64,16 @@ public:
 
   /**
    * See if the given aX,aY <b>pixel</b> coordinates are in the image
-   * map. If they are then NS_OK is returned and aAbsURL, aTarget, and
-   * aAltText are filled in with the values from the underlying area
-   * element. If the coordinates are not in the map then NS_NOT_INSIDE
+   * map. If they are then PR_TRUE is returned and aContent points to the
+   * found area. If the coordinates are not in the map then PR_FALSE
    * is returned.
    */
   PRBool IsInside(nscoord aX, nscoord aY,
-                  nsIContent** aContent,
-                  nsAString& aAbsURL,
-                  nsAString& aTarget,
-                  nsAString& aAltText) const;
+                  nsIContent** aContent) const;
 
   /**
    * See if the given aX,aY <b>pixel</b> coordinates are in the image
-   * map. If they are then NS_OK is returned otherwise NS_NOT_INSIDE
-   * is returned.
+   * map.
    */
   PRBool IsInside(nscoord aX, nscoord aY) const;
 

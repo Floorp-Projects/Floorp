@@ -71,7 +71,7 @@ static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 class Area {
 public:
-  Area(nsIContent* aArea, PRBool aHasURL);
+  Area(nsIContent* aArea);
   virtual ~Area();
 
   virtual void ParseCoords(const nsAString& aSpec);
@@ -84,22 +84,18 @@ public:
   void HasFocus(PRBool aHasFocus);
 
   void GetHREF(nsAString& aHref) const;
-  void GetTarget(nsAString& aTarget) const;
-  void GetAltText(nsAString& aAltText) const;
-  PRBool GetHasURL() const { return mHasURL; }
   void GetArea(nsIContent** aArea) const;
 
   nsCOMPtr<nsIContent> mArea;
   nscoord* mCoords;
   PRInt32 mNumCoords;
-  PRPackedBool mHasURL;
   PRPackedBool mHasFocus;
 };
 
 MOZ_DECL_CTOR_COUNTER(Area)
 
-Area::Area(nsIContent* aArea, PRBool aHasURL)
-  : mArea(aArea), mHasURL(aHasURL)
+Area::Area(nsIContent* aArea)
+  : mArea(aArea)
 {
   MOZ_COUNT_CTOR(Area);
   mCoords = nsnull;
@@ -122,24 +118,6 @@ Area::GetHREF(nsAString& aHref) const
   }
 }
  
-void 
-Area::GetTarget(nsAString& aTarget) const
-{
-  aTarget.Truncate();
-  if (mArea) {
-    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aTarget);
-  }
-}
- 
-void 
-Area::GetAltText(nsAString& aAltText) const
-{
-  aAltText.Truncate();
-  if (mArea) {
-    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, aAltText);
-  }
-}
-
 void 
 Area::GetArea(nsIContent** aArea) const
 {
@@ -332,8 +310,7 @@ void Area::HasFocus(PRBool aHasFocus)
 
 class DefaultArea : public Area {
 public:
-  DefaultArea(nsIContent* aArea, PRBool aHasURL);
-  ~DefaultArea();
+  DefaultArea(nsIContent* aArea);
 
   virtual PRBool IsInside(nscoord x, nscoord y) const;
   virtual void Draw(nsIPresContext* aCX,
@@ -341,12 +318,8 @@ public:
   virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
 };
 
-DefaultArea::DefaultArea(nsIContent* aArea, PRBool aHasURL)
-  : Area(aArea, aHasURL)
-{
-}
-
-DefaultArea::~DefaultArea()
+DefaultArea::DefaultArea(nsIContent* aArea)
+  : Area(aArea)
 {
 }
 
@@ -367,8 +340,7 @@ void DefaultArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 
 class RectArea : public Area {
 public:
-  RectArea(nsIContent* aArea, PRBool aHasURL);
-  ~RectArea();
+  RectArea(nsIContent* aArea);
 
   virtual void ParseCoords(const nsAString& aSpec);
   virtual PRBool IsInside(nscoord x, nscoord y) const;
@@ -377,12 +349,8 @@ public:
   virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
 };
 
-RectArea::RectArea(nsIContent* aArea, PRBool aHasURL)
-  : Area(aArea, aHasURL)
-{
-}
-
-RectArea::~RectArea()
+RectArea::RectArea(nsIContent* aArea)
+  : Area(aArea)
 {
 }
 
@@ -529,8 +497,7 @@ void RectArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 
 class PolyArea : public Area {
 public:
-  PolyArea(nsIContent* aArea, PRBool aHasURL);
-  ~PolyArea();
+  PolyArea(nsIContent* aArea);
 
   virtual PRBool IsInside(nscoord x, nscoord y) const;
   virtual void Draw(nsIPresContext* aCX,
@@ -538,12 +505,8 @@ public:
   virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
 };
 
-PolyArea::PolyArea(nsIContent* aArea, PRBool aHasURL)
-  : Area(aArea, aHasURL)
-{
-}
-
-PolyArea::~PolyArea()
+PolyArea::PolyArea(nsIContent* aArea)
+  : Area(aArea)
 {
 }
 
@@ -657,8 +620,7 @@ void PolyArea::GetRect(nsIPresContext* aCX, nsRect& aRect)
 
 class CircleArea : public Area {
 public:
-  CircleArea(nsIContent* aArea, PRBool aHasURL);
-  ~CircleArea();
+  CircleArea(nsIContent* aArea);
 
   virtual PRBool IsInside(nscoord x, nscoord y) const;
   virtual void Draw(nsIPresContext* aCX,
@@ -666,12 +628,8 @@ public:
   virtual void GetRect(nsIPresContext* aCX, nsRect& aRect);
 };
 
-CircleArea::CircleArea(nsIContent* aArea, PRBool aHasURL)
-  : Area(aArea, aHasURL)
-{
-}
-
-CircleArea::~CircleArea()
+CircleArea::CircleArea(nsIContent* aArea)
+  : Area(aArea)
 {
 }
 
@@ -894,7 +852,6 @@ nsImageMap::AddArea(nsIContent* aArea)
   nsAutoString shape, coords;
   aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::shape, shape);
   aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::coords, coords);
-  PRBool hasURL = !aArea->HasAttr(kNameSpaceID_None, nsHTMLAtoms::nohref);
 
   //Add focus listener to track area focus changes
   nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(aArea));
@@ -910,18 +867,18 @@ nsImageMap::AddArea(nsIContent* aArea)
   if (shape.IsEmpty() ||
       shape.EqualsIgnoreCase("rect") ||
       shape.EqualsIgnoreCase("rectangle")) {
-    area = new RectArea(aArea, hasURL);
+    area = new RectArea(aArea);
   }
   else if (shape.EqualsIgnoreCase("poly") ||
            shape.EqualsIgnoreCase("polygon")) {
-    area = new PolyArea(aArea, hasURL);
+    area = new PolyArea(aArea);
   }
   else if (shape.EqualsIgnoreCase("circle") ||
            shape.EqualsIgnoreCase("circ")) {
-    area = new CircleArea(aArea, hasURL);
+    area = new CircleArea(aArea);
   }
   else if (shape.EqualsIgnoreCase("default")) {
-    area = new DefaultArea(aArea, hasURL);
+    area = new DefaultArea(aArea);
   }
   else {
     // Unknown area type; bail
@@ -936,35 +893,13 @@ nsImageMap::AddArea(nsIContent* aArea)
 
 PRBool
 nsImageMap::IsInside(nscoord aX, nscoord aY,
-                     nsIContent** aContent,
-                     nsAString& aAbsURL,
-                     nsAString& aTarget,
-                     nsAString& aAltText) const
+                     nsIContent** aContent) const
 {
   NS_ASSERTION(mMap, "Not initialized");
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {
     Area* area = (Area*) mAreas.ElementAt(i);
     if (area->IsInside(aX, aY)) {
-      if (area->GetHasURL()) {
-        // Set the image loader's source URL and base URL
-        nsCOMPtr<nsIURI> baseUri = mMap->GetBaseURI();
-
-        if (!baseUri) {
-          return PR_FALSE;
-        }
-
-        nsAutoString href;
-        area->GetHREF(href);
-        NS_MakeAbsoluteURI(aAbsURL, href, baseUri);
-      }
-
-      area->GetTarget(aTarget);
-      if (aTarget.IsEmpty())
-        mMap->GetBaseTarget(aTarget);
-
-      area->GetAltText(aAltText);
-
       area->GetArea(aContent);
 
       return PR_TRUE;

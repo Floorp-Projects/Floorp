@@ -341,8 +341,8 @@ nsHTMLAnchorElement::GetTarget(nsAString& aValue)
 
   nsresult rv;
   rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue);
-  if (rv == NS_CONTENT_ATTR_NOT_THERE && mDocument) {
-    mDocument->GetBaseTarget(aValue);
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    GetBaseTarget(aValue);
   }
   return NS_OK;
 }

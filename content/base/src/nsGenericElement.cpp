@@ -2263,12 +2263,6 @@ nsGenericElement::GetBaseURI() const
   return base;    
 }
 
-NS_IMETHODIMP
-nsGenericElement::GetBaseTarget(nsAString& aBaseTarget) const
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 nsresult
 nsGenericElement::RangeAdd(nsIDOMRange* aRange)
 {
