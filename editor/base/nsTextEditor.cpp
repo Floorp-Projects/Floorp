@@ -2907,6 +2907,30 @@ nsTextEditor::SetTypeInStateForProperty(TypeInState    &aTypeInState,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTextEditor::SetBackgroundColor(const nsString& aColor)
+{
+// This is done in nsHTMLEditor::SetBackgroundColor should we do it here?
+#ifdef ENABLE_JS_EDITOR_LOG
+  nsAutoJSEditorLogLock logLock(mJSEditorLog);
+
+  if (mJSEditorLog)
+    mJSEditorLog->SetBackgroundColor(aColor);
+#endif // ENABLE_JS_EDITOR_LOG
+
+  nsresult res;
+  NS_ASSERTION(mDoc, "Missing Editor DOM Document");
+  
+  // Set the background color attribute on the body tag
+  nsCOMPtr<nsIDOMElement> bodyElement;
+  res = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
+  if (NS_SUCCEEDED(res) && bodyElement)
+  {
+    nsAutoEditBatch beginBatching(this);
+    bodyElement->SetAttribute("bgcolor", aColor);
+  }
+  return res;
+}
+
 // This file should be rearranged to put all methods that simply call nsEditor together
 NS_IMETHODIMP
 nsTextEditor::CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)

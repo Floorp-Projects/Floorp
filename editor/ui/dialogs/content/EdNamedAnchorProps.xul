@@ -26,7 +26,7 @@
     </tr>
   </table>
 <!-- A classic case of box layout fighting what I want to do!
-  <xul:box flex="100%">
+  <xul:box>
     <div class="spacedtext">
     Enter a name for this target:
     </div>

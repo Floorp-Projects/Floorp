@@ -1,4 +1,3 @@
-var editorShell;
 var insertNew = true;
 var imageElement;
 var tagName = "img"
@@ -9,16 +8,8 @@ var hasAnyChanged = false;
 // dialog initialization code
 function Startup()
 {
-  dump("Doing Startup...\n");
-  
-  // get the editor shell from the parent window
-  editorShell = window.opener.editorShell;
-  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-  if(!editorShell) {
-    dump("EditoreditorShell not found!!!\n");
-    window.close();
+  if (!InitEditorShell())
     return;
-  }
   dump("EditoreditorShell found for Image Properties dialog\n");
 
   // Create dialog object to store controls for easy access
@@ -263,6 +254,10 @@ function doOverallEnabling()
 //  SetLabelEnabledByID( "bordertypeLabel", canEnableAll );
 }
 
+function SetImageAlignment()
+{
+}
+
 function onOK()
 {
   imageElement.setAttribute("src",dialog.srcInput.value);
@@ -316,7 +311,8 @@ function onOK()
   // handle insertion of new image
   if (insertNew) {
     dump("src="+imageElement.getAttribute("src")+" alt="+imageElement.getAttribute("alt")+"\n");
-    editorShell.InsertElement(imageElement, false);
+    // 'true' means delete the selection before inserting
+    editorShell.InsertElement(imageElement, true);
   }
 
   // dismiss dialog

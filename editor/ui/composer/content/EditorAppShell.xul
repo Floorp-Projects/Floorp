@@ -267,7 +267,6 @@
     <menu name="&fileMenu.label;">
       <menuitem name="&newCmd.label;" onclick="EditorNew()"/>
       <menuitem name="&openCmd.label;" onclick="EditorOpen()"/>
-      <menuitem name="&closeCmd.label;" onclick="EditorClose()"/>
       <separator />
       <menuitem name="&saveCmd.label;" onclick="EditorSave()"/>
       <menuitem name="&saveAsCmd.label;" onclick="EditorSaveAs()"/>
@@ -276,6 +275,7 @@
       <menuitem name="&printPreviewCmd.label;" onclick="EditorPrintPreview()"/>
       <menuitem name="&printCmd.label;" onclick="EditorPrint()"/>
       <separator />
+      <menuitem name="&closeCmd.label;" onclick="EditorClose()"/>
       <menuitem name="&quitCmd.label;" onclick="EditorExit()"/>
     </menu>
 

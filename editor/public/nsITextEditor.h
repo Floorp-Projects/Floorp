@@ -124,6 +124,11 @@ public:
   NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty, const nsString *aAttribute)=0;
 
   /** 
+   * Set the background color of the the document background
+   */
+  NS_IMETHOD SetBackgroundColor(const nsString& aColor)=0;
+
+  /** 
    * DeleteSelection removes all nodes in the current selection.
    * @param aDir  if eLTR, delete to the right (for example, the DEL key)
    *              if eRTL, delete to the left (for example, the BACKSPACE key)

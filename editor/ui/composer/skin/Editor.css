@@ -63,7 +63,7 @@ titledbutton#ItalicButton:hover {
 titledbutton#UnderlineButton {
   min-width: 16px; 
   font-size: 19px; 
-  font-weight: bold; 
+  font-weight: normal; 
   font-family: times, serif, sans-serif; 
   text-decoration: underline;
 }

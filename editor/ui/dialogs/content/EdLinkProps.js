@@ -1,4 +1,3 @@
-var editorShell;
 var anchorElement = null;
 var imageElement = null;
 var insertNew = true;
@@ -14,17 +13,8 @@ var dialog;
 // dialog initialization code
 function Startup()
 {
-  dump("Doing Startup...\n");
-
-  // get the editor shell from the parent window
-  editorShell = window.opener.editorShell;
-  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-
-  if(!editorShell) {
-    dump("editorShell not found!!!\n");
-    window.close();
-    return;  
-  }
+  if (!InitEditorShell())
+    return;
   
   // Create dialog object to store controls for easy access
   dialog = new Object;

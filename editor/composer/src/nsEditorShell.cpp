@@ -973,9 +973,8 @@ nsEditorShell::CloseWindow()
       
       }
     }
-  
+    mWebShellWin->Close();
   }
-
   return rv;
 }
 

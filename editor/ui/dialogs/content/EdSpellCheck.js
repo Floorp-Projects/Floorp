@@ -1,19 +1,21 @@
-var editorShell;
 var misspelledWord;
+var spellChecker;
 
 // dialog initialization code
 function Startup()
 {
-  dump("Doing Startup...\n");
+  if (!InitEditorShell())
+    return;
+  dump("EditorShell found for Spell Checker dialog\n");
 
-  // get the editor shell from the parent window
-  editorShell = window.opener.editorShell;
-  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
-  if(!editorShell) {
-    dump("EditoreditorShell not found!!!\n");
+  // Get the spellChecker shell
+  spellChecker = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
+  if (!spellChecker) {
+    dump("SpellChecker not found!!!\n");
     window.close();
   }
-  dump("EditoreditorShell found for Spell Checker dialog\n");
+  // Save as a property of the window so it can be used by child dialogs
+  window.spellChecker = spellChecker;
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -52,7 +54,7 @@ function Startup()
 
 function NextWord()
 {
-  misspelledWord = editorShell.GetNextMisspelledWord();
+  misspelledWord = spellChecker.GetNextMisspelledWord();
   dialog.wordInput.value = misspelledWord;
   if (misspelledWord == "") {
     dump("FINISHED SPELL CHECKING\n");
@@ -68,7 +70,7 @@ function CheckWord()
   word = dialog.wordInput.value;
   if (word != "") {
     dump("CheckWord: Word in edit field="+word+"\n");
-    isMisspelled = editorShell.CheckCurrentWord(word);
+    isMisspelled = spellChecker.CheckCurrentWord(word);
     if (isMisspelled) {
       dump("CheckWord says word was misspelled\n");
       misspelledWord = word;
@@ -96,7 +98,7 @@ function IgnoreAll()
 {
   dump("SpellCheck: IgnoreAll\n");
   if (misspelledWord != "") {
-    editorShell.IgnoreWordAllOccurrences(misspelledWord);
+    spellChecker.IgnoreWordAllOccurrences(misspelledWord);
   }
   NextWord();
 }
@@ -106,7 +108,7 @@ function Replace()
   dump("SpellCheck: Replace\n");
   newWord = dialog.wordInput.value;
   if (misspelledWord != "" && misspelledWord != newWord) {
-    isMisspelled = editorShell.ReplaceWord(misspelledWord, newWord, false);
+    isMisspelled = spellChecker.ReplaceWord(misspelledWord, newWord, false);
   }
   NextWord();
 }
@@ -116,7 +118,7 @@ function ReplaceAll()
   dump("SpellCheck: ReplaceAll\n");
   newWord = dialog.wordInput.value;
   if (misspelledWord != "" && misspelledWord != newWord) {
-    isMisspelled = editorShell.ReplaceWord(misspelledWord, newWord, true);
+    isMisspelled = spellChecker.ReplaceWord(misspelledWord, newWord, true);
   }
   NextWord();
 }
@@ -125,15 +127,13 @@ function AddToDictionary()
 {
   dump("SpellCheck: AddToDictionary\n");
   if (misspelledWord != "") {
-    editorShell.AddWordToDictionary(misspelledWord);
+    spellChecker.AddWordToDictionary(misspelledWord);
   }
 }
 
 function EditDictionary()
 {
-  dump("SpellCheck: EditDictionary TODO: IMPLEMENT DIALOG\n");
-  window.width = 700;
-  window.height = 700;
+  window.openDialog("chrome://editordlgs/content/EdDictionary.xul", "Dictionary", "chrome", "", misspelledWord);
 }
 
 function SelectLanguage()
@@ -144,9 +144,9 @@ function SelectLanguage()
 
 function Close()
 {
-  dump("SpellCheck: Spell Checker Closed\n");
+  dump("SpellCheck: Spell Checker is closing...\n");
   // Shutdown the spell check and close the dialog
-  editorShell.CloseSpellChecking();
+  spellChecker.CloseSpellChecking();
   window.close();
 }
 
@@ -165,7 +165,7 @@ function FillSuggestedList(firstWord)
 
   // Get suggested words until an empty string is returned
   do {
-    word = editorShell.GetSuggestedWord();
+    word = spellChecker.GetSuggestedWord();
     dump("Suggested Word = "+word+"\n");
     if (word != "") {
       AppendStringToList(list, word);

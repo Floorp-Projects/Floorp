@@ -1,5 +1,3 @@
-//Cancel() is in EdDialogCommon.js
-var editorShell;
 var insertNew = true;
 var tagName = "anchor"
 var anchorElement = null;
@@ -7,14 +5,8 @@ var anchorElement = null;
 // dialog initialization code
 function Startup()
 {
-  // get the editor shell from the parent window
-  editorShell = window.opener.editorShell;
-  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-  if(!editorShell) {
-    dump("EditoreditorShell not found!!!\n");
-    window.close();
+  if (!InitEditorShell())
     return;
-  }
   dump("EditoreditorShell found for NamedAnchor Properties dialog\n");
 
   // Create dialog object to store controls for easy access

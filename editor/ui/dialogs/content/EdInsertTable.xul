@@ -16,20 +16,44 @@
 
   <xul:broadcaster id="args" value=""/>
   <table>
-    <tr>
+    <tr class="vcenter">
       <td align="right">
         <span>Number of rows:</span>
       </td>
-      <td>
+      <td cellspan="2">
         <input type="text" id="rows" size="4"/>
       </td>
     </tr>
-    <tr>
+    <tr class="vcenter">
       <td align="right">
         <span>Number of columns:</span>
       </td>
-      <td>
+      <td cellspan="2">
         <input type="text" id="columns" size="4"/>
+      </td>
+    </tr>
+    <tr class="vcenter">
+      <td align="right" valign="middle">
+        <span>Width:</span>
+      </td>
+      <td>
+        <input type="text" id="width" size="4" maxlength="4"/>
+       </td>
+       <td>
+        <xul:titledbutton class="popup PixelOrPercent" id="pixelOrPercentButton" value="percent" align="left" popup="PixelOrPercentMenu" popupanchor="bottomleft"/>
+      </td>
+    </tr>
+    <tr class="vcenter">
+      <td align="right">
+        <span>Border:</span>
+      </td>
+      <td>
+        <!-- THIS IS DUMB Can't figure out how to put "pixels" after the 
+             input box and make them center vertically. Used another TD instead -->
+        <input type="text" id="border" size="4"/>
+      </td>
+      <td>
+        <span>pixels</span>
       </td>
     </tr>
   </table>
@@ -40,4 +64,12 @@
     <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="OK"/>  
     <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="Cancel"/>
   </xul:box>
+
+<xul:popup id="PixelOrPercentMenu">
+  <xul:menu>
+    <xul:menuitem name="pixels" onclick="SetPixelOrPercentByID('pixelOrPercentButton', '')"/>
+    <xul:menuitem name="percent" onclick="SetPixelOrPercentByID('pixelOrPercentButton', '%')"/>
+  </xul:menu>
+</xul:popup>
+
 </xul:window>

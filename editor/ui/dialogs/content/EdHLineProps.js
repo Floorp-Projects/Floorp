@@ -1,4 +1,3 @@
-var editorShell;
 var toolkitCore;
 var tagName = "hr";
 var hLineElement;
@@ -10,17 +9,11 @@ var shading = true;
 // dialog initialization code
 function Startup()
 {
-  // get the editor shell from the parent window
-  editorShell = window.opener.editorShell;
-  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-  if(!editorShell) {
-    dump("editorShell not found!!!\n");
-    window.close();
+  if (!InitEditorShell())
     return;
-  }
 
   // Get the selected horizontal line
-  hLineElement = window.editorShell.GetSelectedElement(tagName);
+  hLineElement = editorShell.GetSelectedElement(tagName);
 
   if (!hLineElement) {
     // We should never be here if not editing an existing HLine
@@ -29,7 +22,7 @@ function Startup()
     return;
   }
   // Create a temporary element to use with Save Settings as default
-  tempLineElement = window.editorShell.editorDocument.createElement("HR");
+  tempLineElement = editorShell.editorDocument.createElement("HR");
   if (!hLineElement) {
     dump("Temporary HLine element was not created!\n");
     window.close();
@@ -44,27 +37,17 @@ function Startup()
   dialog.centerAlign = document.getElementById("centerAlign");
   dialog.rightAlign = document.getElementById("rightAlign");
   dialog.shading = document.getElementById("3dShading");
-  dialog.pixelOrPercentButton = document.getElementById("pixelOrPercentButton");
 
+ 
   // Initialize control values based on existing attributes
 
     // Just to be confusing, "size" is used instead of height
     // We will use "height" here and in UI
   dialog.heightInput.value = hLineElement.getAttribute("size");
-  width = hLineElement.getAttribute("width");
 
-  // This assumes initial button text is "percent"
-  // Search for a "%" character
-  percentIndex = width.search(/%/);
-  if (percentIndex > 0) {
-    percentChar = "%";
-    // Strip out the %
-    width = width.substr(0, percentIndex);
-  } else {
-    dialog.pixelOrPercentButton.setAttribute("value","pixels");
-  }
-
-  dialog.widthInput.value = width;
+  // Get the width attribute of the element, stripping out "%"
+  // This sets contents of button text and "percentChar" variable
+  dialog.widthInput.value = InitPixelOrPercentPopupButton(hLineElement, "width", "pixelOrPercentButton");
 
   align = hLineElement.getAttribute("align");
   if (align == "center") {
@@ -79,22 +62,6 @@ function Startup()
 
   // SET FOCUS TO FIRST CONTROL
   dialog.heightInput.focus();
-}
-
-// Input string is "" for pixel, or "%" for percent
-function SetPixelOrPercent(percentString)
-{
-  percentChar = percentString;
-  dump("SetPixelOrPercent. PercentChar="+percentChar+"\n");
-
-  if (percentChar == "%") {
-    dialog.pixelOrPercentButton.setAttribute("value","percent");
-    dump("TODO: Set button text to PERCENT\n");
-  } else {
-    dialog.pixelOrPercentButton.setAttribute("value","pixels");
-    dump("TODO: Set button text to PIXELS\n");
-  }
-  
 }
 
 function onSaveDefault()
@@ -118,6 +85,7 @@ function ValidateData(setAttributes)
   height = ValidateNumberString(dialog.heightInput.value, 1, maxPixels);
   if (height == "") {
     // Set focus to the offending control
+    dump("Height is empty\n");
     dialog.heightInput.focus();
     return false;
   }
@@ -139,6 +107,7 @@ function ValidateData(setAttributes)
 
   width = ValidateNumberString(dialog.widthInput.value, 1, maxLimit);
   if (width == "") {
+    dump("Width is empty\n");
     dialog.widthInput.focus();
     return false;
   }
@@ -181,11 +150,11 @@ function ValidateData(setAttributes)
 
 function onOK()
 {
+  dump("************* onOK for HLine props\n");
   // Since we only edit existing HLines, 
   //  ValidateData will set the new attributes
   //   so there's nothing else to do
   if (ValidateData(true)) {
     window.close();
-    dump("CLOSING EdHLineProps\n");
   }  
 }

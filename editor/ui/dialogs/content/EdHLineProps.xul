@@ -71,8 +71,8 @@
 
 <xul:popup id="PixelOrPercentMenu">
   <xul:menu>
-    <xul:menuitem name="pixels" onclick="SetPixelOrPercent('')"/>
-    <xul:menuitem name="percent" onclick="SetPixelOrPercent('%')"/>
+    <xul:menuitem name="pixels" onclick="SetPixelOrPercentByID('pixelOrPercentButton', '')"/>
+    <xul:menuitem name="percent" onclick="SetPixelOrPercentByID('pixelOrPercentButton', '%')"/>
   </xul:menu>
 </xul:popup>
 

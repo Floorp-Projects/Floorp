@@ -1754,7 +1754,7 @@ nsEditor::InsertText(const nsString& aStringToInsert)
       if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(&offset)) && selectedNode)
       {
         nsCOMPtr<nsIDOMNode> newNode;
-        result = CreateNode(GetTextNodeTag(), selectedNode, offset+1, 
+        result = CreateNode(GetTextNodeTag(), selectedNode, offset, // offset+1, why the +1???
                             getter_AddRefs(newNode));
         if (NS_SUCCEEDED(result) && newNode)
         {
@@ -1795,6 +1795,23 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
     result = mPresShell->GetSelection(getter_AddRefs(selection));
     if ((NS_SUCCEEDED(result)) && selection)
     {
+#if 0
+      // Trap the simple case where the collapsed selection
+      //  is pointing to the beginning of a text node.
+      //  That's where we should insert new text
+      // *** If we don't do this, we will return NS_ERROR_EDITOR_NO_TEXTNODE
+      //   from the iterator block below.
+      //  This may be OK, now that I fixed InsertText so it inserts 
+      //    at the offset of the selection anchor (i.e., the caret offset)
+      //    instead of at offset+1
+      PRBool collapsed
+      result = selection->GetIsCollapsed(&collapsed);
+      if (NS_SUCCEEDED(result) && collapsed) 
+      {
+        // Check if the node at selection offset is a textNode
+        //   and use that with offset = 0.
+      }
+#endif
       result = NS_ERROR_UNEXPECTED; 
       nsCOMPtr<nsIEnumerator> enumerator;
       enumerator = do_QueryInterface(selection);
@@ -2007,6 +2024,14 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
       PRUint32 selectedNodeContentCount=0;
       nsCOMPtr<nsIDOMCharacterData>selectedParentNodeAsText;
       selectedParentNodeAsText = do_QueryInterface(parentSelectedNode);
+#ifdef DEBUG_cmanske
+      // What is the parent node for the selection?
+      nsAutoString tag;
+      parentSelectedNode->GetNodeName(tag);
+      printf("Parent of selected node's NodeName = ");
+      wprintf(tag.GetUnicode());
+      printf("\n");
+#endif
       /* if the selection is a text node, split the text node if necesary
          and compute where to put the new node
       */
@@ -2050,15 +2075,38 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
           result = parentChildList->Item(offsetOfSelectedNode, getter_AddRefs(selectedNode));
           if ((NS_SUCCEEDED(result)) && selectedNode)
           {
+#if 0 //def DEBUG_cmanske
+            // What is the item at the selected offset?
+            nsAutoString tag;
+            selectedNode->GetNodeName(tag);
+            printf("Selected Node's name = ");
+            wprintf(tag.GetUnicode());
+            printf("\n");
+#endif
             nsCOMPtr<nsIDOMCharacterData>selectedNodeAsText;
             selectedNodeAsText = do_QueryInterface(selectedNode);
             nsCOMPtr<nsIDOMNodeList>childList;
-            selectedNode->GetChildNodes(getter_AddRefs(childList));
-            if ((NS_SUCCEEDED(result)) && childList) {
-              childList->GetLength(&selectedNodeContentCount);
+            //CM: I added "result ="
+            result = selectedNode->GetChildNodes(getter_AddRefs(childList));
+            if (NS_SUCCEEDED(result)) 
+            {
+              if (childList)
+              {
+                childList->GetLength(&selectedNodeContentCount);
+              } 
+              else 
+              {
+                // This is the case where the collapsed selection offset
+                //   points to an inline node with no children
+                //   This must also be where the new node should be inserted
+                //   and there is no splitting necessary
+                offsetOfNewNode = offsetOfSelectedNode;
+                return NS_OK;
+              }
             }
-            else {
-              return NS_ERROR_NULL_POINTER;
+            else 
+            {
+              return NS_ERROR_FAILURE;
             }
             if ((offsetOfSelectedNode!=0) && (((PRUint32)offsetOfSelectedNode)!=selectedNodeContentCount))
             {
