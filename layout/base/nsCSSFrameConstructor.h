@@ -690,7 +690,7 @@ protected:
 
   // Probes the PresContext for the boolean value "nglayout.widget.gfxscrollbars"
   //
-  PRBool HasGfxScrollbars(nsIPresContext* aPresContext);
+  PRBool HasGfxScrollbars();
 
 
   nsresult RecreateFramesForContent(nsIPresContext* aPresContext,
@@ -922,6 +922,12 @@ protected:
   nsIFrame*           mFixedContainingBlock;
   nsIFrame*           mDocElementContainingBlock;
   nsIFrame*           mGfxScrollFrame;
+
+  // Cached Prefs
+  PRBool              mGotGfxPrefs;
+  PRBool              mHasGfxScrollbars;
+  PRBool              mDoGfxListbox;     // XXX temporary
+  PRBool              mDoGfxCombobox;    // XXX temporary
 
   nsCOMPtr<nsILayoutHistoryState> mTempFrameTreeState;
 };
