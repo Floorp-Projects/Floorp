@@ -357,6 +357,22 @@ NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
         xpcomFunctions.cstringCopy(aDest, aSrc);
 }
 
+extern "C" NS_COM nsresult
+NS_CStringToUTF16(const nsACString &aSrc, PRUint32 aSrcEncoding, nsAString &aDest)
+{
+    if (!xpcomGlueInit)
+        return NS_ERROR_NOT_INITIALIZED;
+    return xpcomFunctions.cstringToUTF16(aSrc, aSrcEncoding, aDest);
+}
+
+extern "C" NS_COM nsresult
+NS_UTF16ToCString(const nsAString &aSrc, PRUint32 aDestEncoding, nsACString &aDest)
+{
+    if (!xpcomGlueInit)
+        return NS_ERROR_NOT_INITIALIZED;
+    return xpcomFunctions.utf16ToCString(aSrc, aDestEncoding, aDest);
+}
+
 #endif // #ifndef  XPCOM_GLUE_NO_DYNAMIC_LOADING
 
 

@@ -520,4 +520,59 @@ NS_CStringCutData(nsACString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
   NS_CStringSetDataRange(aStr, aCutOffset, aCutLength, nsnull, 0);
 }
 
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Encodings that can be used with the following conversion routines.
+ */
+enum {
+  /* Conversion between ASCII and UTF-16 assumes that all bytes in the source
+   * string are 7-bit ASCII and can be inflated to UTF-16 by inserting null
+   * bytes.  Reverse conversion is done by truncating every other byte.  The
+   * conversion may result in loss and/or corruption of information if the
+   * strings do not strictly contain ASCII data. */
+  NS_ENCODING_ASCII = 0,
+
+  /* Conversion between UTF-8 and UTF-16 is non-lossy. */
+  NS_ENCODING_UTF8 = 1,
+
+  /* Conversion from UTF-16 to the native filesystem charset may result in a
+   * loss of information.  No attempt is made to protect against data loss in
+   * this case.  The native filesystem charset applies to strings passed to
+   * the "Native" method variants on nsIFile and nsILocalFile. */
+  NS_ENCODING_NATIVE_FILESYSTEM = 2
+};
+
+/**
+ * NS_CStringToUTF16
+ *
+ * This function converts the characters in a nsACString to an array of UTF-16
+ * characters, in the platform endianness.  The result is stored in a nsAString
+ * object.
+ *
+ * @param aSource       abstract string reference containing source string
+ * @param aSrcEncoding  character encoding of the source string
+ * @param aDest         abstract string reference to hold the result
+ */
+NS_STRINGAPI(nsresult)
+NS_CStringToUTF16(const nsACString &aSource, PRUint32 aSrcEncoding,
+                  nsAString &aDest);
+
+/**
+ * NS_UTF16ToCString
+ *
+ * This function converts the UTF-16 characters in a nsAString to a single-byte
+ * encoding.  The result is stored in a nsACString object.  In some cases this
+ * conversion may be lossy.  In such cases, the conversion may succeed with a
+ * return code indicating loss of information.  The exact behavior is not
+ * specified at this time.
+ *
+ * @param aSource       abstract string reference containing source string
+ * @param aDestEncoding character encoding of the resulting string
+ * @param aDest         abstract string reference to hold the result
+ */
+NS_STRINGAPI(nsresult)
+NS_UTF16ToCString(const nsAString &aSource, PRUint32 aDestEncoding,
+                  nsACString &aDest);
+
 #endif // nsStringAPI_h__

@@ -873,6 +873,8 @@ NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
         GET_FUNC(cstringSetData,         CStringSetDataFunc,             "NS_CStringSetData");
         GET_FUNC(cstringSetDataRange,    CStringSetDataRangeFunc,        "NS_CStringSetDataRange");
         GET_FUNC(cstringCopy,            CStringCopyFunc,                "NS_CStringCopy");
+        GET_FUNC(cstringToUTF16,         CStringToUTF16,                 "NS_CStringToUTF16");
+        GET_FUNC(utf16ToCString,         UTF16ToCString,                 "NS_UTF16ToCString");
     }
 
     rv = NS_OK;
