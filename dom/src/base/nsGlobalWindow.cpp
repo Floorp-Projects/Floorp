@@ -3041,7 +3041,9 @@ PRUint32 GlobalWindowImpl::CalculateChromeFlags(char* aFeatures, PRBool aDialog)
      chromeFlags |= nsIWebBrowserChrome::titlebarOn;
      chromeFlags &= ~nsIWebBrowserChrome::windowLowered;
      chromeFlags &= ~nsIWebBrowserChrome::windowRaised;
-     chromeFlags &= ~nsIWebBrowserChrome::modal;
+	 //XXX Temporarily removing this check to allow modal dialogs to be
+	 //raised from script.  A more complete security based fix is needed.
+     //chromeFlags &= ~nsIWebBrowserChrome::modal;
    }
 
    return chromeFlags;
