@@ -2563,7 +2563,8 @@ nsNSSCertificateDB::GetCertByNickname(nsIPK11Token *aToken,
 {
   CERTCertificate *cert = NULL;
   char *asciiname = NULL;
-  asciiname = NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(nickname).get());
+  NS_ConvertUCS2toUTF8 aUtf8Nickname(nickname);
+  asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", asciiname));
 #if 0
   // what it should be, but for now...
@@ -4303,7 +4304,8 @@ nsNSSCertificateDB::GetEmailEncryptionCert(const PRUnichar* aNickname, nsIX509Ce
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsNSSCertificate *nssCert = nsnull;
   char *asciiname = NULL;
-  asciiname = NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aNickname).get());
+  NS_ConvertUCS2toUTF8 aUtf8Nickname(aNickname);
+  asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
 
   *_retval = 0;
 
@@ -4335,7 +4337,8 @@ nsNSSCertificateDB::GetEmailSigningCert(const PRUnichar* aNickname, nsIX509Cert 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsNSSCertificate *nssCert = nsnull;
   char *asciiname = NULL;
-  asciiname = NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(aNickname).get());
+  NS_ConvertUCS2toUTF8 aUtf8Nickname(aNickname);
+  asciiname = NS_CONST_CAST(char*, aUtf8Nickname.get());
 
   *_retval = 0;
 

@@ -194,8 +194,9 @@ NS_IMETHODIMP nsPK11Token::CheckPassword(const PRUnichar *password, PRBool *_ret
 {
   SECStatus srv;
   PRInt32 prerr;
+  NS_ConvertUCS2toUTF8 aUtf8Password(password);
   srv = PK11_CheckUserPassword(mSlot, 
-                  NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(password).get()));
+                  NS_CONST_CAST(char *, aUtf8Password.get()));
   if (srv != SECSuccess) {
     *_retval =  PR_FALSE;
     prerr = PR_GetError();
@@ -215,7 +216,8 @@ NS_IMETHODIMP nsPK11Token::InitPassword(const PRUnichar *initialPassword)
     nsresult rv = NS_OK;
     SECStatus status;
 
-    status = PK11_InitPin(mSlot, "", NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(initialPassword).get()));
+    NS_ConvertUCS2toUTF8 aUtf8InitialPassword(initialPassword);
+    status = PK11_InitPin(mSlot, "", NS_CONST_CAST(char*, aUtf8InitialPassword.get()));
     if (status == SECFailure) { rv = NS_ERROR_FAILURE; goto done; }
 
 done:
@@ -257,9 +259,11 @@ nsPK11Token::SetAskPasswordDefaults(const PRInt32 askTimes,
 NS_IMETHODIMP nsPK11Token::ChangePassword(const PRUnichar *oldPassword, const PRUnichar *newPassword)
 {
   SECStatus rv;
+  NS_ConvertUCS2toUTF8 aUtf8OldPassword(oldPassword);
+  NS_ConvertUCS2toUTF8 aUtf8NewPassword(newPassword);
   rv = PK11_ChangePW(mSlot, 
-               NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(oldPassword).get()), 
-               NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(newPassword).get()));
+               NS_CONST_CAST(char *, aUtf8OldPassword.get()), 
+               NS_CONST_CAST(char *, aUtf8NewPassword.get()));
   return (rv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -335,7 +339,8 @@ FindTokenByName(const PRUnichar* tokenName, nsIPK11Token **_retval)
 {
   nsresult rv = NS_OK;
   PK11SlotInfo *slot = 0;
-  slot = PK11_FindSlotByName(NS_CONST_CAST(char*, NS_ConvertUCS2toUTF8(tokenName).get()));
+  NS_ConvertUCS2toUTF8 aUtf8TokenName(tokenName);
+  slot = PK11_FindSlotByName(NS_CONST_CAST(char*, aUtf8TokenName.get()));
   if (!slot) { rv = NS_ERROR_FAILURE; goto done; }
 
   *_retval = new nsPK11Token(slot);

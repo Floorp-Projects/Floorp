@@ -470,7 +470,8 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
                             nsAString& _retval)
 {
   nsresult rv;
-  char *col = NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(colID).get());
+  NS_ConvertUCS2toUTF8 aUtf8ColID(colID);
+  const char *col = aUtf8ColID.get();
   outlinerArrayEl *el = GetThreadDescAtIndex(row);
   if (el != nsnull) {
     if (strcmp(col, "certcol") == 0)
