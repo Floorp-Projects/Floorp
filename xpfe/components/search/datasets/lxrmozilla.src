@@ -6,6 +6,7 @@
 	name = "LXR @ mozilla.org"
 	method = "get"
 	action = "http://lxr.mozilla.org/seamonkey/search"
+	searchForm = "http://lxr.mozilla.org/seamonkey/search"
 	>
 	
 <input name="string" user>

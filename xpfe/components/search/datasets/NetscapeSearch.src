@@ -12,6 +12,7 @@
    action          = "http://info.netscape.com/fwd/clk61srsid/http://search.netscape.com/search.psp"
    actionButton    = "http://info.netscape.com/fwd/clk61srurl1/http://search.netscape.com/search.psp?search="
    actionBar       = "http://info.netscape.com/fwd/clk61srurl2/http://search.netscape.com/search.psp?search="
+   searchForm      = "http://search.netscape.com/nscp_index.adp"
  >
 
 <INPUT NAME="search" USER>

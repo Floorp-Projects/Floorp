@@ -82,6 +82,7 @@ private:
   static nsIRDFResource    *kNC_Version;
   static nsIRDFResource    *kNC_actionButton;
   static nsIRDFResource    *kNC_actionBar;
+  static nsIRDFResource    *kNC_searchForm;
   static nsIRDFResource    *kNC_LastText;
   static nsIRDFResource    *kNC_URL;
   static nsIRDFResource    *kRDF_InstanceOf;

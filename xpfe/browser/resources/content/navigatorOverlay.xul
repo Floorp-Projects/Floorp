@@ -90,6 +90,9 @@
     <key id="addBookmarkAsKb" key="&addCurPageCmd.commandkey;" command="Browser:AddBookmarkAs" modifiers="accel,shift"/>
     <key id="manBookmarkKb" key="&manBookmarksCmd.commandkey;" command="Browser:ManageBookmark" modifiers="accel"/>
 
+    <!-- Tools Menu -->
+    <key id="searchInternetKb" key="&searchInternet.commandKey;" modifiers="accel,shift" command="Browser:SearchInternet"/>
+
     <!-- Misc -->
     <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
           <!-- the amazing fishcam dept. -->
@@ -160,6 +163,10 @@
     <command id="Browser:Forward" oncommand="BrowserForward();" observes="canGoForward"/>
     <commandset id="viewZoomCommands"/>
     <commandset id="tasksCommands"/>
+
+    <!-- Tools Menu -->
+    <command id="Browser:SearchInternet" oncommand="BrowserSearchInternet();"/>
+
   </commandset>
 
   <broadcasterset id="navBroadcasters">
@@ -346,7 +353,7 @@
       
   <menu id="tasksMenu">
     <menupopup id="taskPopup">
-      <menuitem id="menu_searchWeb" label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="loadXURL('urn:clienturl:srchmenu:srchinternet');"/>
+      <menuitem id="menu_searchWeb" label="&searchInternetCmd.label;" key="searchInternetKb" accesskey="&searchInternetCmd.accesskey;" command="Browser:SearchInternet"/>
       <menuseparator id="navBeginGlobalItems"/>
     </menupopup>
   </menu>

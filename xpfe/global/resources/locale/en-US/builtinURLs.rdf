@@ -46,13 +46,6 @@
     <NC:content>http://www.mozilla.org/projects/l10n/mlp_status.html#contrib</NC:content>
   </RDF:Description>
 
-  <!-- Search Menu -->
-
-  <RDF:Description about='urn:clienturl:srchmenu:srchinternet'>
-    <NC:title>Search Internet</NC:title>
-    <NC:content>http://home.netscape.com/bookmark/6_0/ssearch.html</NC:content>
-  </RDF:Description>
-
   <!-- Composer -->
 
   <RDF:Description about='urn:clienturl:composer:spellcheckers'>
