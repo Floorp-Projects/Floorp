@@ -202,7 +202,7 @@
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:8">
-	<NC:Name>Netscape Open Directory</NC:Name>
+	<NC:Name>Netscape Search</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:9">
@@ -210,63 +210,63 @@
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:10">
-	<NC:Name>Netscape Search - Business</NC:Name>
+	<NC:Name>Business</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:11">
-	<NC:Name>Netscape Search - Computing</NC:Name>
+	<NC:Name>Computing</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:12">
-	<NC:Name>Netscape Search - Entertainment</NC:Name>
+	<NC:Name>Entertainment</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:13">
-	<NC:Name>Netscape Search - Games</NC:Name>
+	<NC:Name>Games</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:14">
-	<NC:Name>Netscape Search - Health</NC:Name>
+	<NC:Name>Health</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:15">
-	<NC:Name>Netscape Search - Music</NC:Name>
+	<NC:Name>Music</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:16">
-	<NC:Name>Netscape Search - Recreation</NC:Name>
+	<NC:Name>Recreation</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:17">
-	<NC:Name>Netscape Search - Reference</NC:Name>
+	<NC:Name>Reference</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:18">
-	<NC:Name>Netscape Search - Regional</NC:Name>
+	<NC:Name>Regional</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:19">
-	<NC:Name>Netscape Search - Relationships</NC:Name>
+	<NC:Name>Relationships</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:20">
-	<NC:Name>Netscape Search - Shopping</NC:Name>
+	<NC:Name>Shopping</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:21">
-	<NC:Name>Netscape Search - Society</NC:Name>
+	<NC:Name>Society</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:22">
-	<NC:Name>Netscape Search - Sports</NC:Name>
+	<NC:Name>Sports</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:23">
-	<NC:Name>Netscape Search - Travel</NC:Name>
+	<NC:Name>Travel</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:24">
-	<NC:Name>Netscape Search - World</NC:Name>
+	<NC:Name>World</NC:Name>
 </RDF:Description>
 
 </RDF:RDF>

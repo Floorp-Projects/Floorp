@@ -4,10 +4,10 @@
 # 
 
 <search 
-     name        = "Netscape Search - Business"
+     name        = "Business"
      description = "Netscape Search - Business"
      method      = "GET"
-     action      = "http://search.netscape.com/cgi-bin/search"
+     action      = "http://info.netscape.com/fwd/sidb1/http://search.netscape.com/cgi-bin/search"
 >
 
 <INPUT NAME="utf8" VALUE="1"> 
