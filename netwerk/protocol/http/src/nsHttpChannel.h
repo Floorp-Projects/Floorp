@@ -39,6 +39,7 @@
 #include "nsICachingChannel.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheListener.h"
+#include "nsIEncodedChannel.h"
 #include "nsITransport.h"
 #include "nsIUploadChannel.h"
 #include "nsISimpleEnumerator.h"
@@ -65,6 +66,7 @@ class nsHttpChannel : public nsIHttpChannel
                     , public nsICachingChannel
                     , public nsIUploadChannel
                     , public nsICacheListener
+                    , public nsIEncodedChannel
 {
 public:
     NS_DECL_ISUPPORTS
@@ -78,6 +80,7 @@ public:
     NS_DECL_NSICACHINGCHANNEL
     NS_DECL_NSIUPLOADCHANNEL
     NS_DECL_NSICACHELISTENER
+    NS_DECL_NSIENCODEDCHANNEL
 
     nsHttpChannel();
     virtual ~nsHttpChannel();

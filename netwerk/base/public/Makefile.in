@@ -44,6 +44,7 @@ XPIDLSRCS	= \
 		nsIAuthPrompt.idl \
 		nsIDirectoryListing.idl \
 		nsIDownloader.idl \
+		nsIEncodedChannel.idl \
 		nsIFileChannel.idl \
 		nsIFileStreams.idl \
 		nsIFileTransportService.idl \

@@ -38,6 +38,7 @@
 #include "nsIFileTransportService.h"
 #include "nsIStorageStream.h"
 #include "nsIHttpChannel.h"
+#include "nsIEncodedChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsEscape.h"
 #include "nsUnicharUtils.h"
@@ -1111,10 +1112,10 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     // Disable content conversion
     if (mPersistFlags & PERSIST_FLAGS_NO_CONVERSION)
     {
-        nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(inputChannel));
-        if (httpChannel)
+        nsCOMPtr<nsIEncodedChannel> encodedChannel(do_QueryInterface(inputChannel));
+        if (encodedChannel)
         {
-            httpChannel->SetApplyConversion(PR_FALSE);
+            encodedChannel->SetApplyConversion(PR_FALSE);
         }
     }
 

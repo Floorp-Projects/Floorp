@@ -1547,8 +1547,12 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
         // convey the referrer if one was used for this channel to the next one
         if (mReferrer)
             httpChannel->SetReferrer(mReferrer);
+        
         // convey the mApplyConversion flag (bug 91862)
-        httpChannel->SetApplyConversion(mApplyConversion);
+        nsCOMPtr<nsIEncodedChannel> encodedChannel(do_QueryInterface(httpChannel));
+        NS_ENSURE_TRUE(encodedChannel, NS_ERROR_UNEXPECTED);
+        encodedChannel->SetApplyConversion(mApplyConversion);
+        
         // convey the mAllowPipelining flag
         httpChannel->SetAllowPipelining(mAllowPipelining);
         // convey the new redirection limit
@@ -2071,7 +2075,7 @@ nsHttpChannel::GetCurrentPath(nsACString &path)
 // nsHttpChannel::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS10(nsHttpChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS11(nsHttpChannel,
                                nsIRequest,
                                nsIChannel,
                                nsIRequestObserver,
@@ -2081,7 +2085,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS10(nsHttpChannel,
                                nsIProgressEventSink,
                                nsICachingChannel,
                                nsIUploadChannel,
-                               nsICacheListener)
+                               nsICacheListener,
+                               nsIEncodedChannel)
 
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIRequest

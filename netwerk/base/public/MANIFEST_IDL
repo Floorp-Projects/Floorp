@@ -7,6 +7,7 @@ nsIAuthPrompt.idl
 nsIChannel.idl
 nsIDirectoryListing.idl
 nsIDownloader.idl
+nsIEncodedChannel.idl
 nsIFileURL.idl
 nsIFileChannel.idl
 nsIFileTransportService.idl
