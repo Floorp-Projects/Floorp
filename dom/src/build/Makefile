@@ -32,6 +32,11 @@ CPPSRCS=nsDOMFactory.cpp nsHTMLTagsEnums.cpp
 INCLUDES +=  -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
 	-I$(PUBLIC)/dom -I$(PUBLIC)/js -I../base -I$(PUBLIC)/jsurl
 
+ifeq ($(OS_ARCH),IRIX)
+LD_ALL = -all
+LD_NONE = -none
+endif
+
 #
 # Rhapsody is using a more-portable way of specifying
 # the link line, Linux and other OS's probably want
