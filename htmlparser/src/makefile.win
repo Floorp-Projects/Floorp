@@ -28,7 +28,7 @@ CPPSRCS=					\
 	nsHTMLTokenizer.cpp \
 	nsXMLTokenizer.cpp \
 	nsExpatTokenizer.cpp \
-    nsElementTable.cpp \
+	nsElementTable.cpp \
 	CNavDTD.cpp				\
 	COtherDTD.cpp				\
 	CRtfDTD.cpp				\
@@ -50,8 +50,8 @@ CPPSRCS=					\
 	nsValidDTD.cpp				\
 	nsWellFormedDTD.cpp			\
 	nsViewSourceHTML.cpp \
-    nsXIFDTD.cpp				\
-    nsExpatDTD.cpp			\
+	nsXIFDTD.cpp				\
+	nsExpatDTD.cpp			\
 	prstrm.cpp				\
 	$(NULL)
 
@@ -98,6 +98,9 @@ EXPORTS=					\
 	nsIHTMLFragmentContentSink.h		\
 	nsHTMLToTXTSinkStream.h		\
 	nsHTMLEntities.h			\
+	nsHTMLEntityList.h			\
+	nsHTMLTags.h				\
+	nsHTMLTagList.h				\
 	nsHTMLTokens.h				\
 	nsIParserNode.h				\
 	nsIParser.h				\
@@ -113,14 +116,11 @@ EXPORTS=					\
 	nsIDTD.h				\
 	nsXIFDTD.h				\
 	nsExpatDTD.h				\
-        nsParserCIID.h 				\
+	nsParserCIID.h 				\
 	nsParserError.h 			\
 	nsIElementObserver.h			\
 	$(NULL)
 
-EXTRA_EXPORTS=					\
-	nsHTMLTags.h				\
-	$(NULL)
 
 LINCS=  -I$(PUBLIC)\xpcom  \
         -I$(PUBLIC)\raptor \
@@ -157,10 +157,10 @@ LLFLAGS= /NODEFAULTLIB msvcirt.lib msvcrt.lib
 
 include <$(DEPTH)\config\rules.mak>
 
-export:: generate $(XPDIST)\include
-	$(MAKE_INSTALL) $(EXTRA_EXPORTS) $(XPDIST)\include
+#export:: $(XPDIST)\include
+#	$(MAKE_INSTALL) $(XPDIST)\include
 
-libs:: generate $(DLL)
+libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
@@ -168,17 +168,3 @@ clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
 	rm -f $(DIST)\lib\$(DLLNAME).lib
 
-generate: nsHTMLTags.h nsHTMLEntities.cpp
-
-.\$(OBJDIR)\nsHTMLTags.obj: nsHTMLTags.h
-
-GENTAGS = $(DEPTH)\htmlparser\tools\gentags.pl
-GENENTITIES = $(DEPTH)\htmlparser\tools\genentities.pl
-
-nsHTMLTags.h: $(GENTAGS)
-	rm -f nsHTMLTags.h
-	$(PERL) $(GENTAGS) nsHTMLTags
-
-nsHTMLEntities.cpp: $(GENENTITIES)
-	rm -f nsHTMLEntities.cpp
-	$(PERL) $(GENENTITIES) nsHTMLEntities

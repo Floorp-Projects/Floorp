@@ -26,6 +26,9 @@
 #include "nsParserNode.h"
 #include "nsWellFormedDTD.h"
 
+#include "nsHTMLTags.h"
+#include "nsHTMLEntities.h"
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
@@ -62,11 +65,15 @@ nsParserFactory::nsParserFactory(const nsCID &aClass)
 {   
   mRefCnt = 0;
   mClassID = aClass;
+  nsHTMLTags::AddRefTable();
+  nsHTMLEntities::AddRefTable();
 }   
 
 nsParserFactory::~nsParserFactory()   
 {   
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
+  nsHTMLEntities::ReleaseTable();
+  nsHTMLTags::ReleaseTable();
 }   
 
 nsresult nsParserFactory::QueryInterface(const nsIID &aIID,   

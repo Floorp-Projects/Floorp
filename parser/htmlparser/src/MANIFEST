@@ -20,8 +20,10 @@ CNavDTD.h
 CRtfDTD.h
 nsXIFDTD.h
 nsHTMLTags.h
+nsHTMLTagList.h
 nsParserCIID.h
 nsHTMLEntities.h
+nsHTMLEntityList.h
 nsWellFormedDTD.h
 nsExpatDTD.h
 nsIExpatTokenizer.h

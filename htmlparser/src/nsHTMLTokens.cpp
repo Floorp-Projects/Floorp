@@ -74,7 +74,7 @@ CHTMLToken::CHTMLToken(eHTMLTags aTag) : CToken(aTag) {
 void CHTMLToken::SetStringValue(const char* name){
   if(name) {
     mTextValue=name;
-    mTypeID = NS_TagToEnum(name);
+    mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
 }
 
@@ -124,10 +124,7 @@ void CStartToken::Reinitialize(PRInt32 aTag, const nsString& aString){
  */
 PRInt32 CStartToken::GetTypeID(){
   if(eHTMLTag_unknown==mTypeID) {
-    nsAutoString tmp(mTextValue);
-    char cbuf[20];
-    tmp.ToCString(cbuf, sizeof(cbuf));
-    mTypeID = NS_TagToEnum(cbuf);
+    mTypeID = nsHTMLTags::LookupTag(mTextValue);
   }
   return mTypeID;
 }
@@ -227,9 +224,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
 
   mTextValue=aChar;
   nsresult result=aScanner.ReadWhile(mTextValue,GetIdentChars(),PR_TRUE,PR_FALSE);
-  char buffer[300];
-  mTextValue.ToCString(buffer,sizeof(buffer)-1);
-  mTypeID = NS_TagToEnum(buffer);
+  mTypeID = nsHTMLTags::LookupTag(mTextValue);
 
   if(eHTMLTag_image==mTypeID){
     mTypeID=eHTMLTag_img;
@@ -325,12 +320,10 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
 
   if(NS_OK==result){
 
-    char buffer[20];
     PRInt32 theIndex=mTextValue.FindCharInSet(" \r\n\t\b",0);
-    PRInt32 theMaxLen=(kNotFound==theIndex) ? sizeof(buffer)-1 : theIndex;
-    mTextValue.ToCString(buffer,theMaxLen+1);
-    buffer[theMaxLen]=0;
-    mTypeID= NS_TagToEnum(buffer);
+    nsAutoString  buffer(mTextValue);
+    buffer.Truncate(theIndex);
+    mTypeID= nsHTMLTags::LookupTag(buffer);
     result=aScanner.GetChar(aChar); //eat the closing '>;
   }
   return result;
@@ -348,10 +341,7 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
  */
 PRInt32 CEndToken::GetTypeID(){
   if(eHTMLTag_unknown==mTypeID) {
-    nsAutoString tmp(mTextValue);
-    char cbuf[200];
-    tmp.ToCString(cbuf, sizeof(cbuf));
-    mTypeID = NS_TagToEnum(cbuf);
+    mTypeID = nsHTMLTags::LookupTag(mTextValue);
     switch(mTypeID) {
       case eHTMLTag_dir:
       case eHTMLTag_menu:
@@ -1542,9 +1532,7 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
       }//if
     }
     else{
-      char cbuf[30];
-      mTextValue.ToCString(cbuf, sizeof(cbuf)-1);
-      value = NS_EntityToUnicode(cbuf);
+      value = nsHTMLEntities::EntityToUnicode(mTextValue);
       if(-1<value) {
         //we found a named entity...
         aString=PRUnichar(value);
@@ -1776,11 +1764,11 @@ void CSkippedContentToken::GetSource(nsString& anOutputString){
  * @return
  */
 const char* GetTagName(PRInt32 aTag) {
-  const char* result = NS_EnumToTag((nsHTMLTag) aTag);
-  if (0 == result) {
+  const nsCString& result = nsHTMLTags::GetStringValue((nsHTMLTag) aTag);
+  if (0 == result.Length()) {
     if(aTag>=eHTMLTag_userdefined)
-      result = gUserdefined;
-    else result=0;
+      return gUserdefined;
+    else return 0;
   }
   return result;
 }

@@ -1723,7 +1723,7 @@ void nsHTMLElement::DebugDumpContainment(const char* aFilename,const char* aTitl
   int linenum=5;
   for(i=1;i<eHTMLTag_text;i++){
 
-    const char* tag=NS_EnumToTag((eHTMLTags)i);
+    const char* tag=nsHTMLTags::GetStringValue((eHTMLTags)i);
     out << endl << endl << "Tag: <" << tag << ">" << endl;
     out << prefix;
     linenum+=3;
@@ -1731,7 +1731,7 @@ void nsHTMLElement::DebugDumpContainment(const char* aFilename,const char* aTitl
     char startChar=0;
     if(IsContainer((eHTMLTags)i)) {
       for(j=1;j<eHTMLTag_text;j++){
-        tag=NS_EnumToTag((eHTMLTags)j);
+        tag=nsHTMLTags::GetStringValue((eHTMLTags)j);
         if(tag) {
           if(!startChar)
             startChar=tag[0];
@@ -1782,7 +1782,7 @@ void nsHTMLElement::DebugDumpMembership(const char* aFilename){
   char* answer[]={".","Y"};
   char startChar=0;
   for(i=1;i<eHTMLTag_text;i++){
-    const char* tag=NS_EnumToTag((eHTMLTags)i);
+    const char* tag=nsHTMLTags::GetStringValue((eHTMLTags)i);
     out << tag; 
     int len=strlen(tag);
 
@@ -1840,7 +1840,7 @@ void nsHTMLElement::DebugDumpContainType(const char* aFilename){
   char* answer[]={".","Y"};
   char startChar=0;
   for(i=1;i<eHTMLTag_text;i++){
-    const char* tag=NS_EnumToTag((eHTMLTags)i);
+    const char* tag=nsHTMLTags::GetStringValue((eHTMLTags)i);
     out << tag; 
     int len=strlen(tag);
 

@@ -435,7 +435,6 @@ void nsHTMLContentSinkStream::UnicodeToHTMLString(const nsString& aSrc,
 {
   PRInt32       length = aSrc.Length();
   PRUnichar     ch; 
-  const char*   entity = nsnull;
 
   if (mUnicodeEncoder == nsnull)
     InitEncoder("");
@@ -449,14 +448,11 @@ void nsHTMLContentSinkStream::UnicodeToHTMLString(const nsString& aSrc,
     {
       ch = aSrc.CharAt(i);
       
-      entity = NS_UnicodeToEntity(ch);
-      if (entity)
+      const nsCString& entity = nsHTMLEntities::UnicodeToEntity(ch);
+      if (0 < entity.Length())
       {
-        nsAutoString temp(entity);
-
-        temp.ToLowerCase();
         aDst.Append('&');
-        aDst.Append(temp);
+        aDst.Append(entity);
         aDst.Append(';');
       }
       else
@@ -936,7 +932,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
 {
   eHTMLTags         tag = (eHTMLTags)aNode.GetNodeType();
 //  const nsString&   name = aNode.GetText();
-  nsString          tagName;
+  nsAutoString      tagName;
 
   if (tag == eHTMLTag_body)
     mInBody = PR_FALSE;
@@ -951,8 +947,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   }
   else
   {
-    const char*  name =  NS_EnumToTag(tag);
-    tagName = name;
+    tagName = nsHTMLTags::GetStringValue(tag);
   }
   if (mLowerCaseTags == PR_TRUE)
     tagName.ToLowerCase();

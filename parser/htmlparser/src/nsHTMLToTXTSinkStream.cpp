@@ -789,10 +789,9 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   } 
   else if (type == eHTMLTag_entity)
   {
-    text = aNode.GetText();
-    EncodeToBuffer(text);
-    PRUnichar entity = NS_EntityToUnicode(mBuffer);
-    nsString temp;
+    PRUnichar entity = nsHTMLEntities::EntityToUnicode(aNode.GetText());
+
+    nsAutoString temp;
     
     temp.Append(entity);
     Write(temp);

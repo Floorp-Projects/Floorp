@@ -74,6 +74,9 @@ EXPORTS =     \
 	nsIHTMLFragmentContentSink.h \
 	nsHTMLToTXTSinkStream.h \
 	nsHTMLEntities.h \
+	nsHTMLEntityList.h \
+	nsHTMLTags.h \
+	nsHTMLTagList.h \
 	nsHTMLTokens.h \
 	nsILoggingSink.h \
 	nsIParserNode.h \
@@ -95,43 +98,13 @@ EXPORTS =     \
 	nsIElementObserver.h \
   $(NULL)
 
-EXTRA_EXPORTS = \
-	nsHTMLTags.h \
-	$(NULL)
-
-EXPORTS += $(EXTRA_EXPORTS)
-
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE=htmlparser
 
 REQUIRES = xpcom netlib raptor
 
-ifdef IGNORE_THIS_SECTION_UNTIL_DECISION_IS_MADE
-GARBAGE	+= $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLTags.cpp $(OBJDIR)/nsHTMLEntities.cpp
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I.
-
-ifdef IGNORE_THIS_SECTION_UNTIL_DECISION_IS_MADE
-export:: generate
-	$(INSTALL) $(EXTRA_EXPORTS) $(PUBLIC)/$(MODULE)
-
-generate: $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLEntities.cpp
-
-$(OBJDIR)/nsHTMLTags.o: $(OBJDIR)/nsHTMLTags.h
-
-GENTAGS = $(topsrcdir)/htmlparser/tools/gentags.pl
-GENENTITIES = $(topsrcdir)/htmlparser/tools/genentities.pl
-
-$(OBJDIR)/nsHTMLTags.h: $(GENTAGS)
-	rm -f $@
-	$(PERL) $(GENTAGS) nsHTMLTags
-
-$(OBJDIR)/nsHTMLEntities.cpp: $(GENENTITIES)
-	rm -f $@
-	$(PERL) $(GENENTITIES) nsHTMLEntities
-endif
 
