@@ -1,3 +1,2 @@
 nsIAccessibilityService.idl
 nsIAccessible.idl
-nsIMutableAccessible.idl
