@@ -311,7 +311,7 @@ function selectProduct(f) {
   <td>
     <table>
       <tr valign="bottom">
-        <th align="left">Program:</th>
+        <th align="left">Product:</th>
         <th align="left"><a href="describecomponents.cgi">Component</a>:</th>
         <th align="left">Version:</th>
 

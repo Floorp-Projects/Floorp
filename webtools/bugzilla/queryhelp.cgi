@@ -566,8 +566,8 @@ print qq{
 
 <br>
 
-<p>Module options are where you select what program, module and version the bugs you want to 
-find describe. Selecting one or more of the programs, versions, components, or milestones will limit your search.
+<p>Module options are where you select what product, module and version the bugs you want to 
+find describe. Selecting one or more of the products, versions, components, or milestones will limit your search.
 
 <p><a name="product"></a>
 <h4>Products</h4> 
