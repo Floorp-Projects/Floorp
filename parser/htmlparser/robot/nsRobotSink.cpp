@@ -99,7 +99,9 @@ protected:
 nsresult NS_NewRobotSink(nsIRobotSink** aInstancePtrResult)
 {
   RobotSink* it = new RobotSink();
-  return it->QueryInterface(kIRobotSinkIID, (void**) aInstancePtrResult);
+  if(it)
+    return it->QueryInterface(kIRobotSinkIID, (void**) aInstancePtrResult);
+  return NS_OK;
 }
 
 RobotSink::RobotSink()

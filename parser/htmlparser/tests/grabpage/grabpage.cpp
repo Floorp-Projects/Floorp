@@ -242,34 +242,36 @@ PageGrabber::Grab(const nsString& aURL)
 
   // Start the URL load...
   StreamToFile* copier = new StreamToFile(fp);
-  NS_ADDREF(copier);
+  if(copier) {
+    NS_ADDREF(copier);
 
-#ifndef NECKO
-  rv = url->Open(copier);
-#else
-  rv = channel->AsyncRead(0, -1, nsnull, copier);
-#endif // NECKO
+  #ifndef NECKO
+    rv = url->Open(copier);
+  #else
+    rv = channel->AsyncRead(0, -1, nsnull, copier);
+  #endif // NECKO
 
-  if (NS_OK != rv) {
-    NS_RELEASE(copier);
-    NS_RELEASE(url);
-    return rv;
-  }
-        
-  // Enter the message pump to allow the URL load to proceed.
-#ifdef XP_PC
-  MSG msg;
-  while ( !copier->IsDone() ) {
-    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
+    if (NS_OK != rv) {
+      NS_RELEASE(copier);
+      NS_RELEASE(url);
+      return rv;
     }
-  }
-#endif
+        
+    // Enter the message pump to allow the URL load to proceed.
+  #ifdef XP_PC
+    MSG msg;
+    while ( !copier->IsDone() ) {
+      if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+      }
+    }
+  #endif
 
-  PRBool error = copier->HaveError();
+    PRBool error = copier->HaveError();
+    NS_RELEASE(copier);
+  }
   NS_RELEASE(url);
-  NS_RELEASE(copier);
   return error ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
@@ -285,9 +287,11 @@ main(int argc, char **argv)
     return -1;
   }
   PageGrabber* grabber = new PageGrabber();
-  grabber->Init(argv[2]);
-  if (NS_OK != grabber->Grab(argv[1])) {
-    return -1;
+  if(grabber) {
+    grabber->Init(argv[2]);
+    if (NS_OK != grabber->Grab(argv[1])) {
+      return -1;
+    }
   }
   return 0;
 }
