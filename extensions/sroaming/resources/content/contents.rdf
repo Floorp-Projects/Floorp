@@ -52,7 +52,7 @@
         chrome:description="Session-Roaming up-/downloads selected profile files to/from a server during application shutdown/start, to faciliate working on different computers (but not at the same time)"
         chrome:author="Ben Bucksch, Beonex"
         chrome:authorURL="http://www.beonex.com"
-        chrome:localeVersion="0.9.4"
+#expand        chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"
         chrome:skinVersion="1.0"
         chrome:extension="true"
         chrome:settingsURL="chrome://sroaming/content/prefs/firefox.xul"

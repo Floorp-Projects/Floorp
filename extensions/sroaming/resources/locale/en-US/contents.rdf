@@ -55,5 +55,5 @@
   </RDF:Description>
 
   <RDF:Description about="urn:mozilla:locale:en-US:sroaming"
-	                 chrome:localeVersion="0.9.4"/>
+#expand                  chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"/>
 </RDF:RDF>
