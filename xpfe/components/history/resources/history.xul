@@ -56,6 +56,8 @@
               commandupdater="true"
               events="select"
               oncommandupdate="updateHistoryCommands()"/>
+  <command id="cmd_searchHistory" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable', 'history');"/>
+
 </commands>
 
 <broadcasterset id="broadcasterset">
@@ -73,7 +75,9 @@
   <broadcaster id="cmd_selectAll"/>
   <broadcaster id="cmd_deleteByHostname" oncommand="goDoCommand('cmd_deleteByHostname');"/>
   <broadcaster id="cmd_deleteByDomain" oncommand="goDoCommand('cmd_deleteByDomain');"/>
+
 </broadcasterset>
+
 <keyset id="keyset">
   <!-- File Menu -->
   <key id="key_newNavigator"/>
@@ -86,6 +90,7 @@
   <key id="key_copy"/>
   <key id="key_delete"/>
   <key id="key_selectAll"/>
+  <key id="key_searchHistory" key="&findHisCmd.commandkey;" command="cmd_searchHistory" modifiers="accel"/>
 </keyset>
 
 <toolbox id="history-toolbox">
@@ -115,7 +120,7 @@
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
       <menuseparator/>
-      <menuitem label="&findHisCmd.label;" accesskey="&findHisCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable', 'history');"/>
+      <menuitem id="menu_searchHistory" label="&findHisCmd.label;" key="key_searchHistory" accesskey="&findHisCmd.accesskey;" command="cmd_searchHistory"/>
     </menupopup>
   </menu>
   <menu id="menu_View">
