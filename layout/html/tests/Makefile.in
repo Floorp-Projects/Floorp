@@ -31,6 +31,9 @@ REQUIRES	= xpcom \
 		  necko \
 		  content \
 		  layout \
+		  gfx \
+		  widget \
+		  locale \
 		  $(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))

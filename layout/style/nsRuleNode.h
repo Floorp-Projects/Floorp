@@ -256,7 +256,7 @@ struct nsRuleData
   nsRuleDataColor* mColorData;
   nsRuleDataContent* mContentData;
   nsRuleDataText* mTextData;
-  nsRuleDataUserInterface* mUIData;
+  nsRuleDataUserInterface* mUserInterfaceData;
   nsRuleDataXUL* mXULData;
 
 #ifdef MOZ_SVG
@@ -267,7 +267,7 @@ struct nsRuleData
     :mSID(aSID), mPresContext(aContext), mStyleContext(aStyleContext), mPostResolveCallback(nsnull),
      mFontData(nsnull), mDisplayData(nsnull), mMarginData(nsnull), mListData(nsnull), 
      mPositionData(nsnull), mTableData(nsnull), mColorData(nsnull), mContentData(nsnull), mTextData(nsnull),
-     mUIData(nsnull)
+     mUserInterfaceData(nsnull)
   {
     mCanStoreInRuleTree = PR_TRUE;
     mXULData = nsnull;

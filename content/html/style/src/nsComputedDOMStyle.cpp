@@ -1228,9 +1228,9 @@ nsComputedDOMStyle::GetOutlineWidth(nsIFrame *aFrame,
       case eStyleUnit_Enumerated:
       case eStyleUnit_Chars:
         {
-          const nsAFlatCString& width =
-            nsCSSProps::LookupPropertyValue(eCSSProperty__moz_outline_width,
-                                            outline->mOutlineWidth.GetIntValue());
+          const nsAFlatCString& width=
+            nsCSSProps::SearchKeywordTable(outline->mOutlineWidth.GetIntValue(),
+                                           nsCSSProps::kBorderWidthKTable);
           val->SetIdent(width);
           break;
         }

@@ -91,7 +91,8 @@ public:
                                        nsIURI*                  aBaseURL,
                                        nsCSSDeclaration*        aDeclaration,
                                        PRBool                   aParseOnlyOneDecl,
-                                       nsChangeHint*            aHint) = 0;
+                                       nsChangeHint*            aHint,
+                                       PRBool                   aClearOldDecl) = 0;
 
   NS_IMETHOD ParseRule(const nsAString&   aRule,
                        nsIURI*            aBaseURL,

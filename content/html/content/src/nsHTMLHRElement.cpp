@@ -219,7 +219,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
     return;
 
   if (aData->mSID == eStyleStruct_Margin) {
-    nsCSSRect* margin = aData->mMarginData->mMargin;
+    nsCSSRect& margin = aData->mMarginData->mMargin;
     nsHTMLValue value;
     // align: enum
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
@@ -227,22 +227,22 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
       // Map align attribute into auto side margins
       switch (value.GetIntValue()) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
-        if (margin->mLeft.GetUnit() == eCSSUnit_Null)
-          margin->mLeft.SetFloatValue(0.0f, eCSSUnit_Pixel);
-        if (margin->mRight.GetUnit() == eCSSUnit_Null)
-          margin->mRight.SetAutoValue();
+        if (margin.mLeft.GetUnit() == eCSSUnit_Null)
+          margin.mLeft.SetFloatValue(0.0f, eCSSUnit_Pixel);
+        if (margin.mRight.GetUnit() == eCSSUnit_Null)
+          margin.mRight.SetAutoValue();
         break;
       case NS_STYLE_TEXT_ALIGN_RIGHT:
-        if (margin->mLeft.GetUnit() == eCSSUnit_Null)
-          margin->mLeft.SetAutoValue();
-        if (margin->mRight.GetUnit() == eCSSUnit_Null)
-          margin->mRight.SetFloatValue(0.0f, eCSSUnit_Pixel);
+        if (margin.mLeft.GetUnit() == eCSSUnit_Null)
+          margin.mLeft.SetAutoValue();
+        if (margin.mRight.GetUnit() == eCSSUnit_Null)
+          margin.mRight.SetFloatValue(0.0f, eCSSUnit_Pixel);
         break;
       case NS_STYLE_TEXT_ALIGN_CENTER:
-        if (margin->mLeft.GetUnit() == eCSSUnit_Null)
-          margin->mLeft.SetAutoValue();
-        if (margin->mRight.GetUnit() == eCSSUnit_Null)
-          margin->mRight.SetAutoValue();
+        if (margin.mLeft.GetUnit() == eCSSUnit_Null)
+          margin.mLeft.SetAutoValue();
+        if (margin.mRight.GetUnit() == eCSSUnit_Null)
+          margin.mRight.SetAutoValue();
         break;
       }
     }
