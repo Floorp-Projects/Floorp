@@ -152,7 +152,11 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // update the global lock icon to the current state of this browser. We need
   // to do this after we set |mIsPrimary|.
   [self onSecurityStateChange:mSecureState];
-  
+
+  // update the window's title
+  if ( mTitle )
+    [[self window] setTitle:mTitle];
+
   if ([[self window] isKeyWindow])
     [mBrowserView setActive: YES];
   
@@ -290,8 +294,10 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (void)onLocationChange:(NSURL*)url 
 {
-  NSString* spec = [url absoluteString];
-  [mWindowController updateLocationFields:spec];
+  if ( mIsPrimary ) {
+    NSString* spec = [url absoluteString];
+    [mWindowController updateLocationFields:spec];
+  }
 }
 
 - (void)onStatusChange:(NSString*)aStatusString
@@ -339,34 +345,38 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 - (NSString *)title 
 {
-  return [[mWindowController window] title];
+  return mTitle;
 }
 
 - (void)setTitle:(NSString *)title
 {
-    // We must be the primary content area.
-    if (mIsPrimary && mWindowController) {
-        if (mOffline) {
-            NSString* newTitle;
-            if (title && ![title isEqualToString:@""])
-                newTitle = [title stringByAppendingString: @" [Working Offline]"];
-            else
-                newTitle = @"Untitled [Working Offline]";
-            [[mWindowController window] setTitle: newTitle];
-        }
-        else {
-            if (title && ![title isEqualToString:@""])
-                [[mWindowController window] setTitle:title];
-            else
-                [[mWindowController window] setTitle:@"Untitled"];
-        }
+  [mTitle autorelease];
+  
+  // We must be the primary content area to actually set the title, but we
+  // still want to hold onto the title in case we become the primary later.
+  if (mWindowController) {
+    NSString* newTitle = nil;
+    if (mOffline) {
+      if (title && ![title isEqualToString:@""])
+          newTitle = [title stringByAppendingString: @" [Working Offline]"];
+      else
+          newTitle = [NSString stringWithString:@"Untitled [Working Offline]"];
+      mTitle = [newTitle retain];
     }
-    
-    // Always set the tab.
-    if (title && ![title isEqualToString:@""])
-        [mTab setLabel:title];
-    else
-        [mTab setLabel:@"Untitled"];
+    else {
+      if (!title || [title isEqualToString:@""])
+        title = [NSString stringWithString:@"Untitled"];
+      mTitle = [title retain];
+    }
+    if ( mIsPrimary )
+      [[mWindowController window] setTitle:mTitle];
+  }
+  
+  // Always set the tab.
+  if (title && ![title isEqualToString:@""])
+    [mTab setLabel:title];
+  else
+    [mTab setLabel:@"Untitled"];
 }
 
 //
