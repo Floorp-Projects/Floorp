@@ -38,15 +38,6 @@
  */
 #define NS_STRBUNDLE_LOADED_TOPIC (NS_LITERAL_STRING("strbundle-loaded").get())
 
-/** callbacks
- *
- *   args: 
- *     bundle handle
- *     urlSpec
- *     closure
- */
-typedef nsresult (*PR_CALLBACK nsStrBundleLoadedFunc) (void *, const char *, void *); 
-
 %}
 
 native nsStrBundleLoadedFunc(nsStrBundleLoadedFunc);
@@ -81,10 +72,6 @@ interface nsIStringBundle : nsISupports
   /* stream loaded
    */
   attribute boolean loaded;
-
-  /* callback */
-  [noscript] void RegisterCallback(in nsStrBundleLoadedFunc callback,
-                                   in voidPtr closure);
 
 };
 
