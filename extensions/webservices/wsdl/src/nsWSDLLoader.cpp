@@ -1332,7 +1332,7 @@ nsWSDLLoadRequest::ProcessBindingElement(nsIDOMElement* aElement)
   nsAutoString name;
   aElement->GetAttribute(NS_LITERAL_STRING("name"), name);
 
-  PRBool foundSOAPBinding;
+  PRBool foundSOAPBinding = PR_FALSE;
   nsCOMPtr<nsIWSDLBinding> binding;
   nsSOAPPortBinding* bindingInst = new nsSOAPPortBinding(name);
   if (!bindingInst) {
