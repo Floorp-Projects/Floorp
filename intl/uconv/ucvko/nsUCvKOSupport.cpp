@@ -75,41 +75,6 @@ nsresult nsBasicDecoderSupport::QueryInterface(REFNSIID aIID,
 //----------------------------------------------------------------------
 // Interface nsIUnicodeDecoder [implementation]
 
-NS_IMETHODIMP nsBasicDecoderSupport::Convert(PRUnichar * aDest, 
-                                            PRInt32 aDestOffset, 
-                                            PRInt32 * aDestLength, 
-                                            const char * aSrc, 
-                                            PRInt32 aSrcOffset, 
-                                            PRInt32 * aSrcLength)
-{
-  // XXX deprecated
-  return ((nsIUnicodeDecoder *)this)->Convert(aSrc + aSrcOffset, aSrcLength, aDest + aDestOffset, 
-    aDestLength);
-}
-
-NS_IMETHODIMP nsBasicDecoderSupport::Finish(PRUnichar * aDest, 
-                                            PRInt32 aDestOffset, 
-                                            PRInt32 * aDestLength)
-{
-  // XXX deprecated
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsBasicDecoderSupport::Length(const char * aSrc, 
-                                            PRInt32 aSrcOffset, 
-                                            PRInt32 aSrcLength, 
-                                            PRInt32 * aDestLength) 
-{
-  // XXX deprecated
-  return GetMaxLength(aSrc + aSrcOffset, aSrcLength, aDestLength);
-}
-
-NS_IMETHODIMP nsBasicDecoderSupport::SetInputErrorBehavior(PRInt32 aBehavior)
-{
-  // XXX deprecated
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Class nsBufferDecoderSupport [implementation]
 

@@ -64,16 +64,6 @@ public:
 
   //--------------------------------------------------------------------
   // Interface nsIUnicodeDecoder [declaration]
-
-  // XXX deprecated methods - to go away when interface change.
-  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength, const char * aSrc, PRInt32 aSrcOffset, 
-      PRInt32 * aSrcLength);
-  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength);
-  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, 
-      PRInt32 aSrcLength, PRInt32 * aDestLength);
-  NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
 };
 
 //----------------------------------------------------------------------
