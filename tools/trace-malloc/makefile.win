@@ -26,9 +26,15 @@ REQUIRES=xpcom
 include <$(DEPTH)\config\config.mak>
 
 MAKE_OBJ_TYPE=EXE
-PROGRAM=.\$(OBJDIR)\bloatblame.exe
+PROG1 = .\$(OBJDIR)\bloatblame.exe
+PROG2 = .\$(OBJDIR)\spacetrace.exe
+PROG3 = .\$(OBJDIR)\leakstats.exe
 
-CPP_OBJS=.\$(OBJDIR)\tmreader.obj .\$(OBJDIR)\bloatblame.obj
+LIB1 = .\$(OBJDIR)\tmreader.lib
+
+PROGRAMS = $(PROG1) $(PROG2) $(PROG3)
+
+CPP_OBJS=.\$(OBJDIR)\tmreader.obj
 
 LINCS=\
 	-I$(DEPTH)\config\os2 \
@@ -36,13 +42,27 @@ LINCS=\
 
 LLIBS= \
 	$(DIST)\lib\xpcom.lib \
-    $(LIBNSPR) \
+	$(LIBNSPR) \
+	$(LIB1) \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
-$(PROGRAM):: $(OBJDIR)
+install:: $(PROGRAMS)
+	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
-install:: $(PROGRAM)
-	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+clobber::
+	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
+
+$(CPP_OBJS): $(OBJDIR)
+
+$(LIB1): $(CPP_OBJS)
+	$(RM) $@
+	lib /nologo /out:$@ $**
+
+$(PROG1): $(LIB1) bloatblame.c
+
+$(PROG2): $(LIB1) spacetrace.c
+
+$(PROG3): $(LIB1) leakstats.c
 

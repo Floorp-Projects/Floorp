@@ -43,6 +43,9 @@
 extern int  getopt(int argc, char *const *argv, const char *shortopts);
 extern char *optarg;
 extern int  optind;
+#ifdef XP_WIN32
+int optind=1;
+#endif
 #endif
 #include <time.h>
 #include "nsTraceMalloc.h"
