@@ -67,7 +67,6 @@
 
 class nsIView;
 class nsStyleContext;
-class nsIHTMLContent;
 class nsIListControlFrame;
 class nsIScrollableView;
 
