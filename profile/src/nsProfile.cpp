@@ -124,9 +124,9 @@
 #define PREF_CONFIRM_AUTOMIGRATION     "profile.confirm_automigration"
 
 #if defined (XP_MAC)
-#define CHROME_STYLE nsIWebBrowserChrome::windowBordersOn | nsIWebBrowserChrome::windowCloseOn
+#define CHROME_STYLE nsIWebBrowserChrome::windowBordersOn | nsIWebBrowserChrome::windowCloseOn | nsIWebBrowserChrome::centerScreen
 #else /* the rest */
-#define CHROME_STYLE nsIWebBrowserChrome::allChrome
+#define CHROME_STYLE nsIWebBrowserChrome::allChrome | nsIWebBrowserChrome::centerScreen
 #endif 
 
 // we want everyone to have the debugging info to the console for now
