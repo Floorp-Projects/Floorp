@@ -1226,6 +1226,16 @@ icaltimetype oeICalEventImpl::GetNextAlarmTime( icaltimetype begin ) {
     if( !m_hasalarm )
         return result;
 
+    // Check for related to the start, and no start set
+    // or a start year set to -1, which might occur for invalid start times
+    // due to timezone weirdness
+    PRBool isSet = PR_FALSE;
+    m_start->GetIsSet(&isSet);
+    PRInt16 year;
+    m_start->GetYear(&year);
+    if( m_alarmtriggerrelation == ICAL_RELATED_START && (!isSet || year == -1) )
+        return result;
+
     icaltimetype starting = begin;
 
     if( !icaltime_is_null_time( m_lastalarmack ) && icaltime_compare( begin, m_lastalarmack ) < 0 )
