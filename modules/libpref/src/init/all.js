@@ -189,7 +189,7 @@ pref("network.accept_cookies",              0);     // 0 = Always, 1 = warn, 2 =
 pref("network.foreign_cookies",             0); // 0 = Accept, 1 = Don't accept
 pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
 pref("network.cookie.warnAboutCookies",     false);
-pref("network.signon.rememberSignons",                  false);
+pref("network.signon.rememberSignons",      true);
 pref("network.cookie.filterName",			"");
 pref("network.sendRefererHeader",           true);
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
