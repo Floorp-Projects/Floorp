@@ -34,6 +34,7 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #include "nsFTPChannel.h"
 #include "nsFtpConnectionThread.h"
 #include "nsFtpControlConnection.h"
@@ -1237,7 +1238,7 @@ nsFtpState::R_type() {
 nsresult
 nsFtpState::S_cwd() {
     nsCAutoString cwdStr(mPath);
-    if (cwdStr.First() != '/')
+    if (cwdStr.IsEmpty() || cwdStr.First() != '/')
         cwdStr.Insert(mPwd,0);
     cwdStr.Insert("CWD ",0);
     cwdStr.Append(CRLF);
@@ -1260,7 +1261,7 @@ nsFtpState::R_cwd() {
 nsresult
 nsFtpState::S_size() {
     nsCAutoString sizeBuf(mPath);
-    if (sizeBuf.First() != '/')
+    if (sizeBuf.IsEmpty() || sizeBuf.First() != '/')
         sizeBuf.Insert(mPwd,0);
     sizeBuf.Insert("SIZE ",0);
     sizeBuf.Append(CRLF);
@@ -1360,7 +1361,7 @@ nsresult
 nsFtpState::S_retr() {
     nsresult rv = NS_OK;
     nsCAutoString retrStr(mPath);
-    if (retrStr.First() != '/')
+    if (retrStr.IsEmpty() || retrStr.First() != '/')
         retrStr.Insert(mPwd,0);
     retrStr.Insert("RETR ",0);
     retrStr.Append(CRLF);
@@ -1429,7 +1430,7 @@ nsresult
 nsFtpState::S_stor() {
     nsresult rv = NS_OK;
     nsCAutoString storStr(mPath.get());
-    if (storStr.First() != '/')
+    if (storStr.IsEmpty() || storStr.First() != '/')
         storStr.Insert(mPwd,0);
     storStr.Insert("STOR ",0);
     storStr.Append(CRLF);
@@ -1874,10 +1875,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     char* fwdPtr= NS_CONST_CAST(char*, path);
     if (fwdPtr && (*fwdPtr == '/'))
         fwdPtr++;
-    if (*fwdPtr == '\0') {
-        // make it at least a dot
-        mPath.Adopt(nsCRT::strdup("."));
-    } else {
+    if (*fwdPtr != '\0') {
         // now unescape it
         char *unescPath = nsnull;
         nsStdUnescape(fwdPtr,&unescPath);
