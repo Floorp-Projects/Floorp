@@ -457,3 +457,12 @@ nsFontEnumeratorBeOS::EnumerateFonts(const char* aLangGroup,
   return EnumFonts(langGroup, aGeneric, aCount, aResult); 
 }
 
+NS_IMETHODIMP
+nsFontEnumeratorBeOS::HaveFontFor(const char* aLangGroup, PRBool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aLangGroup); 
+  NS_ENSURE_ARG_POINTER(aResult); 
+  *aResult = PR_FALSE; 
+  // XXX stub
+  return NS_OK;
+}

@@ -1378,3 +1378,12 @@ nsFontEnumeratorOS2::EnumerateFonts(const char* aLangGroup,
 
   return NS_OK;
 }
+NS_IMETHODIMP
+nsFontEnumeratorOS2::HaveFontFor(const char* aLangGroup, PRBool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aLangGroup);
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
+  // XXX stub
+  return NS_OK;
+}
