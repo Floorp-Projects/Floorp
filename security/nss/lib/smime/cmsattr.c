@@ -34,7 +34,7 @@
 /*
  * CMS attributes.
  *
- * $Id: cmsattr.c,v 1.4 2001/01/07 08:13:07 nelsonb%netscape.com Exp $
+ * $Id: cmsattr.c,v 1.5 2001/08/22 23:22:12 wtc%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -234,8 +234,8 @@ cms_attr_choose_attr_value_template(void *src_or_dest, PRBool encoding)
 	theTemplate = SEC_ASN1_GET(SEC_AnyTemplate);
     } else {
 	switch (oiddata->offset) {
-	SEC_OID_PKCS9_SMIME_CAPABILITIES:
-	SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE:
+	case SEC_OID_PKCS9_SMIME_CAPABILITIES:
+	case SEC_OID_SMIME_ENCRYPTION_KEY_PREFERENCE:
 	    /* these guys need to stay DER-encoded */
 	default:
 	    /* same goes for OIDs that are not handled here */
