@@ -686,17 +686,6 @@ const MESSAGE_TEMPLATE = "\n\
         border: none;\n\
         padding: 0;\n\
       }\n\
-      #toolbar {\n\
-        position: fixed;\n\
-        top: 0;\n\
-        right: 0;\n\
-        left: 0;\n\
-        height: 1.4em;\n\
-        margin: 0;\n\
-        border-bottom: thin solid black;\n\
-        padding-left: 0.5em;\n\
-        background-color: -moz-dialog;\n\
-      }\n\
       %STYLE%\n\
     </style>\n\
   </head>\n\
@@ -715,7 +704,7 @@ const REMOTE_CONTENT_TEMPLATE = "\n\
 const REMOTE_STYLE = "\n\
       iframe {\n\
         position: fixed;\n\
-        top: 1.4em;\n\
+        top: 0;\n\
         right: 0;\n\
         bottom: 0;\n\
         left: 0;\n\
