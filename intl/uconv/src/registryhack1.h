@@ -23,5 +23,8 @@
 #include "nsUCVJACID.h"
 #include "nsUCVJA2CID.h"
 #include "nsUCvCnCID.h"
+#include "nsUCvTWCID.h"
+#include "nsUCvTW2CID.h"
+#include "nsUCvKOCID.h"
 
 #endif /* __REGISTRYHACK1_H__ */
