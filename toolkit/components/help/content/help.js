@@ -631,7 +631,7 @@ function doFind() {
     doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
     // search glossary.
-    tree = helpSearchPanel;
+    tree = helpGlossaryPanel;
     sourceDS = tree.database;
     // If the glossary has never been displayed this will be null (sigh!).
     if (!sourceDS)
