@@ -23,7 +23,7 @@
     
   #panel-bar
     {
-      border-left         : none;
-      border-right        : none;
+      border-top          : 1px solid ThreedHighlight;
+      border-bottom       : 1px solid ThreeDShadow;
     }    
 

@@ -7,7 +7,7 @@ classic.jar:
     skin/classic/communicator/broken.gif                                 (communicator/broken.gif)
     skin/classic/communicator/lock.gif                                   (communicator/lock.gif)
     skin/classic/communicator/unlock.gif                                 (communicator/unlock.gif)
-    skin/classic/communicator/menubuttonBindings.xml                     (communicator/menubuttonBindings.xml)
++    skin/classic/communicator/menubuttonBindings.xml                     (communicator/menubuttonBindings.xml)
     skin/classic/communicator/offline.gif                                (communicator/offline.gif)
     skin/classic/communicator/online.gif                                 (communicator/online.gif)
     skin/classic/communicator/securityOverlay.css                        (communicator/securityOverlay.css)

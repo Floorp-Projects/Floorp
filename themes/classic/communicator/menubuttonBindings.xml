@@ -6,22 +6,24 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
    
   <binding id="menubutton-toolbar">
-    <content includes="menupopup">
+    <content>
       <xul:button class="menubutton-dual-button button-toolbar-1 top" allowevents="true" 
                   inherits="tooltiptext=buttontooltiptext,oncommand=buttonaction,src,value,crop,accesskey,disabled"/>
       <xul:box class="menubutton-dual-dropmarker-box" autostretch="never" valign="middle" flex="1">
         <xul:image class="menubutton-dual-dropmarker" inherits="disabled"/>
       </xul:box>
+      <children includes="menupopup"/>
     </content>
   </binding>
   
   <binding id="menubutton-toolbar-single" extends="chrome://global/content/menulistBindings.xml#menubutton-single-left">
-    <content includes="menupopup">
+    <content>
       <xul:box class="menubutton-toolbar-single-internal-box" flex="1" autostretch="never">
         <xul:image class="menubutton-toolbar-single-icon" inherits="src,disabled"/>
         <xul:text class="menubutton-toolbar-single-text" inherits="value,accesskey,crop,disabled,dragover-top" flex="1"/>
         <xul:image class="menubutton-toolbar-single-dropmarker" inherits="menubuttontype,disabled"/>
       </xul:box>
+      <children includes="menupopup"/>
     </content>
   </binding>
   

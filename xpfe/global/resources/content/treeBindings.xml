@@ -108,6 +108,7 @@
         })
       ]]>
       </property>
+      <property name="valueIsRejected">false</property>
       <method name="addObserver">
         <parameter name="aObserver"/>
         <parameter name="aTopic"/>
@@ -124,11 +125,11 @@
           var nodes = document.getAnonymousNodes(cell);
           var box = nodes[nodes.length-1];
           if (aEvent.keyCode == 13) {
-            cell.valueIsAccepted = true;
-            for (var i = 0; i < cell._observers["accept"].length; ++i) 
-              cell._observers["accept"][i].callback(cell._observers["accept"][i].params.concat(box.lastChild.value), "accept");
+            cell.valueIsRejected = false;
+            cell.fieldChange(aEvent);
           }
-          else if (aEvent.keyCode == 27) {
+          if (aEvent.keyCode == 27) {
+            cell.valueIsRejected = true;
             for (i = 0; i < cell._observers["reject"].length; ++i) 
               cell._observers["reject"][i].callback(cell._observers["reject"][i].params.concat(box.lastChild.value), "reject");
             if ("setMode" in cell) 
@@ -146,12 +147,11 @@
           var cell = aEvent.target.parentNode.parentNode;
           var nodes = document.getAnonymousNodes(cell);
           var box = nodes[nodes.length-1];
-          var newValue = box.lastChild.value;
-          var topic = "reject"; // cell.valueIsAccepted ? "accept" : "reject";
-          for (var i = 0; i < cell._observers[topic].length; ++i) 
-            cell._observers[topic][i].callback(cell._observers[topic][i].params.concat(box.lastChild.value), topic);
-          if ("setMode" in cell) 
+          if (!cell.valueIsRejected) {
+            for (var i = 0; i < cell._observers["accept"].length; ++i)
+              cell._observers["accept"][i].callback(cell._observers["accept"][i].params.concat(box.lastChild.value), "accept");
             cell.setMode("normal");
+          }
         ]]>
         </body>
       </method>
