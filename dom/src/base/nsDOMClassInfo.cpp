@@ -257,7 +257,7 @@ nsDOMClassInfoData sClassInfoData[] = {
 
   // StyleSheet classes
   NS_DEFINE_CLASSINFO_DATA(DocumentStyleSheetList, nsStyleSheetListSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           ARRAY_SCRIPTABLE_FLAGS)
 
   // Event
   NS_DEFINE_CLASSINFO_DATA(Event, nsDOMGenericSH,
@@ -410,7 +410,7 @@ nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MediaList, nsMediaListSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(StyleSheetList, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSStyleSheet, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(CSSStyleDeclaration, nsCSSStyleDeclSH,
@@ -2185,7 +2185,8 @@ nsHTMLCollectionSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 }
 
 nsresult
-nsHTMLCollectionSH::GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+nsHTMLCollectionSH::GetNamedItem(nsISupports *aNative,
+                                 nsAReadableString& aName,
                                  nsISupports **aResult)
 {
   nsCOMPtr<nsIDOMHTMLCollection> collection(do_QueryInterface(aNative));
