@@ -1250,24 +1250,6 @@ ConvertUnixPathToMacPath(const char *unixPath, char **macPath)
 			}
 		}
 		
-		else if (strncmp(unixPath, "/bin", strlen("/bin")) == 0) {
-			dprintf("Unable to translate Unix file path %s to Mac path\n", unixPath);
-			err = -1;
-			goto Exit_ConvertUnixPathToMacPath;
-		}
-		
-		else if (strncmp(unixPath, "/dev", strlen("/dev")) == 0) {
-			dprintf("Unable to translate Unix file path %s to Mac path\n", unixPath);
-			err = -1;
-			goto Exit_ConvertUnixPathToMacPath;
-		}
-	
-		else if (strncmp(unixPath, "/etc", strlen("/etc")) == 0) {
-			dprintf("Unable to translate Unix file path %s to Mac path\n", unixPath);
-			err = -1;
-			goto Exit_ConvertUnixPathToMacPath;
-		}
-	
 		else if (!strncmp(unixPath, "/usr/local/netscape/", (tempLen = strlen("/usr/local/netscape/")))) {
 			
 			unixPath += tempLen;
@@ -1723,24 +1705,6 @@ static OSErr ConvertUnixPathToMacPath(const char *unixPath, char **macPath)
 								&foundVRefNum, &foundDirID);
 		}
 		
-		else if (strncmp(unixPath, "/bin", strlen("/bin")) == 0) {
-			dprintf("Unable to translate Unix file path %s to Mac path\n", unixPath);
-			err = -1;
-			goto Exit_ConvertUnixPathToMacPath;
-		}
-		
-		else if (strncmp(unixPath, "/dev", strlen("/dev")) == 0) {
-			dprintf("Unable to translate Unix file path %s to Mac path\n", unixPath);
-			err = -1;
-			goto Exit_ConvertUnixPathToMacPath;
-		}
-	
-		else if (strncmp(unixPath, "/etc", strlen("/etc")) == 0) {
-			dprintf("Unable to translate Unix file path %s to Mac path\n", unixPath);
-			err = -1;
-			goto Exit_ConvertUnixPathToMacPath;
-		}
-	
 		else if (strncmp(unixPath, "/usr", strlen("/usr")) == 0) {
 		
 			int		usrNetscapePathLen;
