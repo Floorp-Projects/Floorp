@@ -1614,6 +1614,8 @@ nsBrowserAppCore::DoDialog()
     return rv;
 
   rv = appShell->RunModalDialog(mWebShellWin, urlObj, window, nsnull, nsnull, 300, 200);
+  if (NS_SUCCEEDED(rv))
+    NS_RELEASE(window);
   return rv;
 }
 

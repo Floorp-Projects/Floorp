@@ -325,6 +325,8 @@ nsToolkitCore::ShowModalDialog(const nsString& aUrl, nsIDOMWindow* aParent) {
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
   rv = appShell->RunModalDialog(parent, urlObj, window, nsnull, nsnull, 615, 480);
+  if (NS_SUCCEEDED(rv))
+    NS_RELEASE(window);
   return rv;
 }
 
