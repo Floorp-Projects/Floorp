@@ -189,6 +189,9 @@ nsABDirectoryDataSource::~nsABDirectoryDataSource (void)
 		nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService); 
 		mRDFService = nsnull;
 	}
+	
+	/* free all directories */
+	DIR_ShutDown();
 }
 
 
