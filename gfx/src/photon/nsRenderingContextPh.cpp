@@ -659,6 +659,11 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRegion(const nsIRegion& aRegion, ns
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextPh :: CopyClipRegion(nsIRegion &aRegion)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyClipRegion  - Not Implemented\n"));
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP nsRenderingContextPh :: GetClipRegion(nsIRegion **aRegion)
 {
