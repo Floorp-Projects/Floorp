@@ -504,8 +504,7 @@ function GetNumSelectedMessages()
 function CommandUpdate_Mail()
 {
 
-	//goUpdateCommand('button_delete');
-
+	goUpdateCommand('button_delete');
 	goUpdateCommand('cmd_delete');
 	goUpdateCommand('cmd_nextMsg');
 	goUpdateCommand('cmd_nextUnreadMsg');
