@@ -1,7 +1,9 @@
-#include "windows.h"
-#include <stdio.h>
 #include "stopwatch.h"
+#include <stdio.h>
 #include <time.h>
+#ifdef XP_WIN
+#include "windows.h"
+#endif
 
 Stopwatch::Stopwatch() {
 
@@ -179,7 +181,7 @@ double Stopwatch::GetCPUTime(){
     ret = GetProcessTimes (hProcess, &ftCreate, &ftExit,
                                      &ftKernel.ftFileTime,
                                      &ftUser.ftFileTime);
-    if (ret != TRUE){
+    if (ret != PR_TRUE){
       ret = GetLastError ();
       printf("%s 0x%lx\n"," Error on GetProcessTimes", (int)ret);
     }
