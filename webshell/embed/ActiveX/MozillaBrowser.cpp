@@ -34,6 +34,7 @@
 #include "nsFileSpec.h"
 #include "nsILocalFile.h"
 #include "nsIContentViewerFile.h"
+#include "nsIWebNavigation.h"
 
 static const TCHAR *c_szInvalidArg = _T("Invalid parameter");
 static const TCHAR *c_szUninitialized = _T("Method called while control is uninitialized");
@@ -1496,7 +1497,11 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh2(VARIANT __RPC_FAR *Level)
 		RETURN_E_UNEXPECTED();
 	}
 
-	m_pIWebShell->Reload(type);
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIWebShell);
+	if (spIWebNavigation)
+	{
+		spIWebNavigation->Reload(type);
+	}
 	
 	return S_OK;
 }
@@ -1512,7 +1517,11 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Stop()
 		RETURN_E_UNEXPECTED();
 	}
 
-	m_pIWebShell->Stop();
+	nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(m_pIWebShell);
+	if (spIWebNavigation)
+	{
+		spIWebNavigation->Stop();
+	}
 	
 	return S_OK;
 }
