@@ -49,6 +49,19 @@
                     oncommand="WalletAction('encrypt');"/>
                   <menuitem value="&walletObscureCmd.label;" id="obscure"
                     oncommand="WalletAction('obscure');"/>
+                  <menuitem value="&walletClearCmd.label;" id="clear"
+                    oncommand="WalletAction('clear');"/>
+                </menupopup>
+              </menu>
+              <menu value="&walletFormManager.label;" id="wallet">
+                <menupopup>
+                  <menuitem id="walleteditor" value="&walletContentsCmd.label;" oncommand="WalletDialog('wallet');"/> 
+                  <menuitem value="&walletSafeFillCmd.label;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
+                  <menuitem value="&walletQuickFillCmd.label;" id="walletQuickFill" oncommand="WalletAction('quickfill');"/> 
+                  <menuitem value="&walletRequestToCaptureCmd.label;" id="walletCapture" oncommand="WalletAction('capture');"/> 
+                  <menuseparator/>
+                  <menuitem value="&walletInterviewCmd.label;" id="walletInterview" oncommand="WalletDialog('interview');"/> 
+                  <menuitem value="&walletSamplesCmd.label;" id="walletSamples" oncommand="WalletDialog('samples');"/> 
                 </menupopup>
               </menu>
               <menu value="&walletCookieManager.label;">
@@ -73,16 +86,6 @@
                   <menuitem id="BlockImages" value="&walletBlockImagesCmd.label;"
                             msg="&walletBlockImagesMsg.label;"
                             oncommand="WalletAction('imageBlock');"/> 
-                </menupopup>
-              </menu>
-              <menu value="&walletFormManager.label;" id="wallet">
-                <menupopup>
-                  <menuitem id="walleteditor" value="&walletContentsCmd.label;" oncommand="WalletDialog('wallet');"/> 
-                  <menuitem value="&walletSafeFillCmd.label;" id="walletSafeFill" oncommand="WalletAction('safefill');"/> 
-                  <menuitem value="&walletQuickFillCmd.label;" id="walletQuickFill" oncommand="WalletAction('quickfill');"/> 
-                  <menuitem value="&walletRequestToCaptureCmd.label;" id="walletCapture" oncommand="WalletAction('capture');"/> 
-                  <menuitem value="&walletInterviewCmd.label;" id="walletInterview" oncommand="WalletDialog('interview');"/> 
-                  <menuitem value="&walletSamplesCmd.label;" id="walletSamples" oncommand="WalletDialog('samples');"/> 
                 </menupopup>
               </menu>
             </menupopup> 
