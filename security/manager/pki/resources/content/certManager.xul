@@ -78,22 +78,6 @@
       </row>
     </rows>
   </grid>
-  <box orient="vertical">
-    <button id="viewButton" class="normal" 
-            value="&certmgr.view.label;" orient="horizontal" 
-            disabled="true" onclick="viewCerts();"/>
-<!--
-    <button id="editButton" class="normal" 
-            value="&certmgr.edit.label;" orient="horizontal" 
-            disabled="true" onclick="viewCerts();"/>
--->
-    <button id="deleteButton" class="normal" 
-            value="&certmgr.delete.label;" orient="horizontal" 
-            disabled="true" onclick="deleteCerts();"/>
-    <button id="addButton" class="normal" 
-            value="&certmgr.add.label;" orient="horizontal" 
-            onclick="addCerts();"/>
-  </box>
 </box>
 
 </window>

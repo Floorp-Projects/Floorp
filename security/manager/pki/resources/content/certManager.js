@@ -137,54 +137,102 @@ function LoadCertNames()
   GetNameList(2, "mine");
 }
 
-function enableButtons()
+function ca_enableButtons()
 {
-  var mine_tab = document.getElementById("mine_tab");
-  //var others_tab = document.getElementById("others_tab");
-  var websites_tab = document.getElementById("websites_tab");
   var tree = document.getElementById('ca_treeset');
-  if (mine_tab.selected) {
-    tree = document.getElementById('mine_treeset');
-  } else if (websites_tab.selected) {
-    tree = document.getElementById('websites_treeset');
-  }
   var items = tree.selectedItems;
   var toggle="false";
   if (items.length == 0) {
     toggle="true";
   }
-/*
-  va enablebackupbutton=document.getElementById('backupButton');
-  enablebackupbutton.setAttribute("disabled",toggle);
-*/
-  var enableViewButton=document.getElementById('viewButton');
+  var enableViewButton=document.getElementById('ca_viewButton');
   enableViewButton.setAttribute("disabled",toggle);
-  var enableDeleteButton=document.getElementById('deleteButton');
+  var enableEditButton=document.getElementById('ca_editButton');
+  enableEditButton.setAttribute("disabled",toggle);
+  var enableDeleteButton=document.getElementById('ca_deleteButton');
   enableDeleteButton.setAttribute("disabled",toggle);
 }
 
-function doBackup()
+function mine_enableButtons()
 {
-  var tree = document.getElementById('treeset');
+  var tree = document.getElementById('mine_treeset');
   var items = tree.selectedItems;
-  if (items.length==0){
-//    alert("No items are selected.");
-    return;
-  } else {
-    txt="(Insert real dialog box here)\nYou want to view these certificates:\n\n";
-    for (t=0; t<items.length; t++) {
-      txt += items[t].firstChild.firstChild.getAttribute('value')+'\n';
+  var toggle="false";
+  if (items.length == 0) {
+    toggle="true";
+  }
+  var enableViewButton=document.getElementById('mine_viewButton');
+  enableViewButton.setAttribute("disabled",toggle);
+  var enableBackupButton=document.getElementById('mine_backupButton');
+  enableBackupButton.setAttribute("disabled",toggle);
+  var enableDeleteButton=document.getElementById('mine_deleteButton');
+  enableDeleteButton.setAttribute("disabled",toggle);
+}
+
+function websites_enableButtons()
+{
+  var tree = document.getElementById('websites_treeset');
+  var items = tree.selectedItems;
+  var toggle="false";
+  if (items.length == 0) {
+    toggle="true";
+  }
+  var enableViewButton=document.getElementById('websites_viewButton');
+  enableViewButton.setAttribute("disabled",toggle);
+  var enableEditButton=document.getElementById('websites_editButton');
+  enableEditButton.setAttribute("disabled",toggle);
+  var enableDeleteButton=document.getElementById('websites_deleteButton');
+  enableDeleteButton.setAttribute("disabled",toggle);
+}
+
+function backupCerts()
+{
+  getSelectedCerts();
+  var windowName = "";
+  for (var t=0; t<selected_certs.length; t++) {
+    if (selected_certs[t][0]) { // token name
+      windowName = selected_certs[t].join(":");
+    } else {
+      windowName = selected_certs[t][1];
     }
-    alert(txt);
+    alert("You want to backup \"" + windowName + "\"");
   }
 }
 
-function doBackupAll()
+function backupAllCerts()
 {
   // Select all rows, then call doBackup()
-  var tree = document.getElementById('treeset');
-  tree.selectAll();
-  doBackup();
+  var tree = document.getElementById('mine_treeset');
+  // XXX need to catch this in UI
+  if (tree.getRowCount() == 0) {
+    alert("You have no certs to backup");
+  } else {
+    tree.selectAll();
+    backupCerts();
+  }
+}
+
+function editCerts()
+{
+  getSelectedCerts();
+  var windowName = "";
+  for (var t=0; t<selected_certs.length; t++) {
+    if (selected_certs[t][0]) { // token name
+      windowName = selected_certs[t].join(":");
+    } else {
+      windowName = selected_certs[t][1];
+    }
+    alert("You want to edit \"" + windowName + "\"");
+/*
+    window.open('chrome://pippki/content/editCert.xul', windowName, 
+                'chrome,width=500,height=400,resizable=1');
+*/
+  }
+}
+
+function restoreCerts()
+{
+  alert("needs to be coded");
 }
 
 function deleteCerts()
@@ -197,8 +245,11 @@ function deleteCerts()
     } else {
       windowName = selected_certs[t][1];
     }
+    alert("You want to delete \"" + windowName + "\"");
+/*
     window.open('chrome://pippki/content/deleteCert.xul', windowName, 
                 'chrome,width=500,height=400,resizable=1');
+*/
   }
 }
 
@@ -219,4 +270,5 @@ function viewCerts()
 
 function addCerts()
 {
+  alert("Add cert chosen");
 }

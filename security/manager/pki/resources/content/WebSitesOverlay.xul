@@ -36,12 +36,28 @@
     <box><html>&certmgr.websites;</html></box>
     <separator class="thin"/>
     <tree id="websites_treeset" debug="false" flex="0" multiple="true"
-          height="100" onselect="enableButtons()">
+          height="100" onselect="websites_enableButtons()">
       <treecolgroup>
         <treecol flex="1"/>
         <treecol collapsed="true" flex="1"/>
       </treecolgroup>
       <treechildren id="servers" flex="1" />
     </tree>
+    <box>
+      <button id="websites_viewButton" class="normal" 
+              value="&certmgr.view.label;" orient="horizontal" 
+              disabled="true" onclick="viewCerts();"/>
+      <button id="websites_editButton" class="normal" 
+              value="&certmgr.edit.label;" orient="horizontal" 
+              disabled="true" onclick="editCerts();"/>
+<!-- future - import a DER cert?
+      <button id="websites_addButton" class="normal" 
+              value="&certmgr.add.label;" orient="horizontal" 
+              onclick="addCerts();"/>
+-->
+      <button id="websites_deleteButton" class="normal" 
+              value="&certmgr.delete.label;" orient="horizontal" 
+              disabled="true" onclick="deleteCerts();"/>
+    </box>
   </box>
 </overlay>
