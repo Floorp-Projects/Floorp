@@ -48,13 +48,14 @@ final class InterpreterData implements Serializable, DebuggableScript {
     static final int INITIAL_STRINGTABLE_SIZE = 64;
     static final int INITIAL_NUMBERTABLE_SIZE = 64;
 
-    InterpreterData(Object securityDomain) {
+    InterpreterData(Object securityDomain, int languageVersion) {
         itsICodeTop = INITIAL_MAX_ICODE_LENGTH;
         itsICode = new byte[itsICodeTop];
 
         itsStringTable = new String[INITIAL_STRINGTABLE_SIZE];
 
         this.securityDomain = securityDomain;
+        this.languageVersion = languageVersion;
     }
 
     String itsName;
@@ -90,6 +91,8 @@ final class InterpreterData implements Serializable, DebuggableScript {
     String encodedSource;
     int encodedSourceStart;
     int encodedSourceEnd;
+
+    int languageVersion;
 
     public boolean isFunction() {
         return itsFunctionType != 0;

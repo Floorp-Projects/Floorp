@@ -37,13 +37,14 @@ package org.mozilla.javascript;
 
 import java.util.*;
 
-final class InterpretedScript extends NativeScript
+final class InterpretedScript extends NativeFunction implements Script
 {
 
-    InterpretedScript(Context cx, InterpreterData theData)
+    InterpretedScript(InterpreterData theData)
     {
         itsData = theData;
-        initScriptFunction(cx, "", itsData.argNames, itsData.argCount);
+        initScriptFunction(itsData.languageVersion, "",
+                           itsData.argNames, itsData.argCount);
     }
 
     public Object exec(Context cx, Scriptable scope)

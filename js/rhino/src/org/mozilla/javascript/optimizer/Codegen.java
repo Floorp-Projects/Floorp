@@ -226,16 +226,12 @@ public class Codegen extends Interpreter {
             OptRuntime.initFunction(f, ftype, scope, cx);
             return f;
         } else {
-            NativeScript script;
+            Script script;
             try {
-                script = (NativeScript) result.newInstance();
+                script = (Script) result.newInstance();
             } catch (Exception ex) {
                 throw new RuntimeException
                     ("Unable to instantiate compiled class:"+ex.toString());
-            }
-            if (scope != null) {
-                script.setPrototype(script.getClassPrototype(scope, "Script"));
-                script.setParentScope(scope);
             }
             return script;
         }
@@ -333,16 +329,14 @@ public class Codegen extends Interpreter {
     private ClassFileWriter generateScriptSpecific(String sourceFile,
                                                    String encodedSource)
     {
-        String superClassName = SCRIPT_SUPER_CLASS_NAME;
-
         ClassFileWriter cfw = new ClassFileWriter(mainClassName,
-                                                  superClassName,
+                                                  SUPER_CLASS_NAME,
                                                   sourceFile);
         cfw.addInterface("org/mozilla/javascript/Script");
         cfw.addField(REGEXP_ARRAY_FIELD_NAME, REGEXP_ARRAY_FIELD_TYPE,
                      (short)0);
 
-        generateScriptCtor(cfw, superClassName);
+        generateScriptCtor(cfw);
         generateMain(cfw);
         generateExecute(cfw);
         if (encodedSource != null) {
@@ -355,10 +349,8 @@ public class Codegen extends Interpreter {
     private ClassFileWriter generateFunctionSpecific(String sourceFile,
                                                      String encodedSource)
     {
-        String superClassName = FUNCTION_SUPER_CLASS_NAME;
-
         ClassFileWriter cfw = new ClassFileWriter(functionClassName,
-                                                  superClassName,
+                                                  SUPER_CLASS_NAME,
                                                   sourceFile);
         cfw.addField(ID_FIELD_NAME, "I",
                      ClassFileWriter.ACC_PRIVATE);
@@ -367,7 +359,7 @@ public class Codegen extends Interpreter {
         cfw.addField(REGEXP_ARRAY_FIELD_NAME, REGEXP_ARRAY_FIELD_TYPE,
                      (short)0);
 
-        generateFunctionConstructor(cfw, superClassName);
+        generateFunctionConstructor(cfw);
         generateFunctionCallMethod(cfw);
         if (encodedSource != null) {
             generateGetEncodedSource(cfw, false);
@@ -622,19 +614,18 @@ public class Codegen extends Interpreter {
         cfw.stopMethod((short)3, null);
     }
 
-    private static void generateScriptCtor(ClassFileWriter cfw,
-                                           String superClassName)
+    private static void generateScriptCtor(ClassFileWriter cfw)
     {
         cfw.startMethod("<init>", "()V", ClassFileWriter.ACC_PUBLIC);
         cfw.add(ByteCode.ALOAD_0);
-        cfw.addInvoke(ByteCode.INVOKESPECIAL, superClassName, "<init>", "()V");
+        cfw.addInvoke(ByteCode.INVOKESPECIAL, SUPER_CLASS_NAME,
+                      "<init>", "()V");
         cfw.add(ByteCode.RETURN);
         // 1 parameter = this
         cfw.stopMethod((short)1, null);
     }
 
-    private void generateFunctionConstructor(ClassFileWriter cfw,
-                                             String superClassName)
+    private void generateFunctionConstructor(ClassFileWriter cfw)
     {
         final byte SCOPE_ARG = 1;
         final byte CONTEXT_ARG = 2;
@@ -643,8 +634,8 @@ public class Codegen extends Interpreter {
         cfw.startMethod("<init>", FUNCTION_CONSTRUCTOR_SIGNATURE,
                         ClassFileWriter.ACC_PUBLIC);
         cfw.addALoad(0);
-        cfw.addInvoke(ByteCode.INVOKESPECIAL,
-                      superClassName, "<init>", "()V");
+        cfw.addInvoke(ByteCode.INVOKESPECIAL, SUPER_CLASS_NAME,
+                      "<init>", "()V");
 
         cfw.addLoadThis();
         cfw.addILoad(ID_ARG);
@@ -718,9 +709,9 @@ public class Codegen extends Interpreter {
                             ClassFileWriter.ACC_PUBLIC);
         }
 
-        // Prepare stack to call NativeScript.initScriptFunction
+        // Prepare stack to call NativeFunction.initScriptFunction
         cfw.addALoad(SELF_ARG);
-        cfw.addALoad(CONTEXT_ARG);
+        cfw.addPush(languageVersion);
 
         if (fn != null) {
             cfw.addPush(fn.getFunctionName());
@@ -750,11 +741,7 @@ public class Codegen extends Interpreter {
         cfw.addInvoke(ByteCode.INVOKEVIRTUAL,
                     "org/mozilla/javascript/NativeFunction",
                     "initScriptFunction",
-                    "(Lorg/mozilla/javascript/Context;"
-                    +"Ljava/lang/String;"
-                    +"[Ljava/lang/String;"
-                    +"I"
-                    +")V");
+                    "(ILjava/lang/String;[Ljava/lang/String;I)V");
 
         if (fn != null) {
             cfw.addALoad(SELF_ARG);
@@ -1077,10 +1064,8 @@ public class Codegen extends Interpreter {
         throw new RuntimeException("Bad tree in codegen");
     }
 
-    private static final String FUNCTION_SUPER_CLASS_NAME =
-                          "org.mozilla.javascript.NativeFunction";
-    private static final String SCRIPT_SUPER_CLASS_NAME =
-                          "org.mozilla.javascript.NativeScript";
+    private static final String SUPER_CLASS_NAME
+        = "org.mozilla.javascript.NativeFunction";
 
     static final String DIRECT_CALL_PARENT_FIELD = "_dcp";
 
@@ -1167,7 +1152,7 @@ class BodyCodegen
         } else {
             fnCurrent = null;
         }
-        
+
         isTopLevel = (scriptOrFn == codegen.scriptOrFnNodes[0]);
 
         inDirectCallFunction = (fnCurrent == null) ? false

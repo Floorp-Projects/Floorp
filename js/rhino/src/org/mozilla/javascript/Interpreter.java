@@ -119,8 +119,7 @@ public class Interpreter
                           Object securityDomain, String encodedSource)
     {
         scriptOrFn = tree;
-        version = cx.getLanguageVersion();
-        itsData = new InterpreterData(securityDomain);
+        itsData = new InterpreterData(securityDomain, cx.getLanguageVersion());
         itsData.itsSourceFile = scriptOrFn.getSourceName();
         itsData.encodedSource = encodedSource;
         if (tree instanceof FunctionNode) {
@@ -128,7 +127,7 @@ public class Interpreter
             return createFunction(cx, scope, itsData, false);
         } else {
             generateICodeFromTree(cx, scope, scriptOrFn);
-            return new InterpretedScript(cx, itsData);
+            return new InterpretedScript(itsData);
         }
     }
 
@@ -249,7 +248,8 @@ public class Interpreter
             FunctionNode def = scriptOrFn.getFunctionNode(i);
             Interpreter jsi = new Interpreter();
             jsi.scriptOrFn = def;
-            jsi.itsData = new InterpreterData(itsData.securityDomain);
+            jsi.itsData = new InterpreterData(itsData.securityDomain,
+                                              itsData.languageVersion);
             jsi.itsData.itsSourceFile = itsData.itsSourceFile;
             jsi.itsData.encodedSource = itsData.encodedSource;
             jsi.itsData.itsCheckThis = def.getCheckThis();
@@ -1582,7 +1582,7 @@ public class Interpreter
                                                       InterpreterData idata,
                                                       boolean fromEvalCode)
     {
-        InterpretedFunction fn = new InterpretedFunction(cx, idata);
+        InterpretedFunction fn = new InterpretedFunction(idata);
         if (cx.hasCompileFunctionsWithDynamicScope()) {
              // Nested functions are not affected by the dynamic scope flag
              // as dynamic scope is already a parent of their scope
@@ -3031,8 +3031,6 @@ public class Interpreter
     private static final int EXCEPTION_CATCH_SLOT      = 2;
     private static final int EXCEPTION_FINALLY_SLOT    = 3;
     private static final int EXCEPTION_WITH_DEPTH_SLOT = 4;
-
-    private int version;
 
     private static final Object DBL_MRK = new Object();
 }

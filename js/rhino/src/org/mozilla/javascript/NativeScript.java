@@ -48,26 +48,36 @@ import java.io.IOException;
  * structures in the C runtime, we cannot duplicate it.
  *
  * Since we cannot replace 'this' as a result of the compile method,
- * this class has a dual nature. Generated scripts will have a null
- * 'script' field and will override 'exec' and 'call'. Scripts created
- * using the JavaScript constructor will forward requests to the
- * nonnull 'script' field.
+ * will forward requests to execute to the nonnull 'script' field.
  *
  * @since 1.3
  * @author Norris Boyd
  */
 
-public class NativeScript extends NativeFunction implements Script {
+public class NativeScript extends NativeFunction implements Script
+{
 
     static void init(Context cx, Scriptable scope, boolean sealed)
     {
-        NativeScript obj = new NativeScript();
+        NativeScript obj = new NativeScript(null);
         obj.prototypeIdShift = obj.getMaxId();
         obj.addAsPrototype(obj.prototypeIdShift + MAX_PROTOTYPE_ID,
                            cx, scope, sealed);
     }
 
-    public NativeScript() { }
+    private NativeScript(Script script)
+    {
+        this.script = script;
+    }
+
+    /**
+     * @deprecated NativeScript is internal class for Rhino and should not
+     * be used explicitly.
+     */
+    public NativeScript()
+    {
+        this(null);
+    }
 
     /**
      * Returns the name of this JavaScript class, "Script".
@@ -75,6 +85,22 @@ public class NativeScript extends NativeFunction implements Script {
     public String getClassName()
     {
         return "Script";
+    }
+
+    public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+                       Object[] args)
+        throws JavaScriptException
+    {
+        if (script != null) {
+            return script.exec(cx, scope);
+        }
+        return Undefined.instance;
+    }
+
+    public Scriptable construct(Context cx, Scriptable scope, Object[] args)
+        throws JavaScriptException
+    {
+        throw Context.reportRuntimeError0("msg.script.is.not.constructor");
     }
 
     public int getLength()
@@ -93,6 +119,19 @@ public class NativeScript extends NativeFunction implements Script {
             return ((NativeFunction)script).getEncodedSource();
         }
         return super.getEncodedSource();
+    }
+
+    /**
+     * @deprecated
+     *
+     * NativeScript implements {@link Script} and its
+     * {@link Script#exec(Context cx, Scriptable scope)} method only for
+     * backward compatibility.
+     */
+    public Object exec(Context cx, Scriptable scope)
+        throws JavaScriptException
+    {
+        return script == null ? Undefined.instance : script.exec(cx, scope);
     }
 
     public int methodArity(int methodId)
@@ -119,7 +158,7 @@ public class NativeScript extends NativeFunction implements Script {
                     return jsConstructor(cx, scope, args);
 
                 case Id_toString:
-                    return realThis(thisObj, f).js_toString(cx, args);
+                    return realThis(thisObj, f).js_toString(cx, scope, args);
 
                 case Id_exec:
                     throw Context.reportRuntimeError1(
@@ -127,7 +166,7 @@ public class NativeScript extends NativeFunction implements Script {
 
                 case Id_compile:
                     return realThis(thisObj, f).
-                        js_compile(cx, ScriptRuntime.toString(args, 0));
+                        js_compile(cx, scope, ScriptRuntime.toString(args, 0));
             }
         }
 
@@ -151,7 +190,22 @@ public class NativeScript extends NativeFunction implements Script {
         String source = (args.length == 0)
                         ? ""
                         : ScriptRuntime.toString(args[0]);
-        return compile(cx, scope, source);
+
+        Script script = compile(cx, scope, source);
+        return new NativeScript(script);
+    }
+
+    private Scriptable js_compile(Context cx, Scriptable scope, String source)
+    {
+        script = compile(cx, scope, source);
+        return this;
+    }
+
+    private Object js_toString(Context cx, Scriptable scope, Object[] args)
+    {
+        Script thisScript = script;
+        if (thisScript == null) { thisScript = this; }
+        return cx.decompileScript(thisScript, getTopLevelScope(scope), 0);
     }
 
     private static Script compile(Context cx, Scriptable scope, String source)
@@ -163,44 +217,6 @@ public class NativeScript extends NativeFunction implements Script {
             linep[0] = 1;
         }
         return cx.compileString(scope, source, filename, linep[0], null);
-    }
-
-    private Scriptable js_compile(Context cx, String source)
-    {
-        script = compile(cx, null, source);
-        return this;
-    }
-
-    private Object js_toString(Context cx, Object[] args)
-    {
-        Script thisScript = script;
-        if (thisScript == null) { thisScript = this; }
-        Scriptable scope = getTopLevelScope(this);
-        return cx.decompileScript(thisScript, scope, 0);
-    }
-
-    /**
-     * Execute the script.
-     *
-     * Will be overridden by generated scripts; needed to implement Script.
-     */
-    public Object exec(Context cx, Scriptable scope)
-        throws JavaScriptException
-    {
-        return script == null ? Undefined.instance : script.exec(cx, scope);
-    }
-
-    public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-                       Object[] args)
-        throws JavaScriptException
-    {
-        return exec(cx, scope);
-    }
-
-    public Scriptable construct(Context cx, Scriptable scope, Object[] args)
-        throws JavaScriptException
-    {
-        throw Context.reportRuntimeError0("msg.script.is.not.constructor");
     }
 
     protected String getIdName(int id)

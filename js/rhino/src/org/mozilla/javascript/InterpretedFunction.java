@@ -43,10 +43,10 @@ final class InterpretedFunction extends NativeFunction
 
     static final long serialVersionUID = -6235150451107527319L;
 
-    InterpretedFunction(Context cx, InterpreterData theData)
+    InterpretedFunction(InterpreterData theData)
     {
         itsData = theData;
-        initScriptFunction(cx, itsData.itsName,
+        initScriptFunction(itsData.languageVersion, itsData.itsName,
                            itsData.argNames, itsData.argCount);
     }
 

@@ -46,7 +46,7 @@ package org.mozilla.javascript;
 public class NativeFunction extends BaseFunction
 {
 
-    public final void initScriptFunction(Context cx, String functionName,
+    public final void initScriptFunction(int version, String functionName,
                                          String[] argNames, int argCount)
     {
         if (!(argNames != null
@@ -62,8 +62,8 @@ public class NativeFunction extends BaseFunction
 
         this.functionName = functionName;
         this.argNames = argNames;
-        this.argCount = (short)argCount;
-        this.version = (short)cx.getLanguageVersion();
+        this.argCount = argCount;
+        this.version = version;
     }
 
     /**
@@ -127,9 +127,9 @@ public class NativeFunction extends BaseFunction
      * argNames[argCount] through argNames[args.length-1]: the names of the
      * variables declared in var statements
      */
-    protected String[] argNames;
-    protected short argCount;
+    String[] argNames;
+    int argCount;
 
-    protected short version;
+    int version;
 }
 
