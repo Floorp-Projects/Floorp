@@ -3,9 +3,9 @@
   { 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0x8a, 0xdd, 0x32 } } */
 
 
-		    const unsigned short	BUBBLING_PHASE	= 1;
-		    const unsigned short	CAPTURING_PHASE = 2;
-		    const unsigned short	AT_TARGET		= 3;
+          const unsigned short	CAPTURING_PHASE = 1;
+		  const unsigned short	AT_TARGET       = 2;		
+		  const unsigned short	BUBBLING_PHASE  = 3;
 
 	      const int MOUSEDOWN	= 0x00000001;
 	      const int MOUSEUP		= 0x00000002;
