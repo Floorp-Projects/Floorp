@@ -34,7 +34,7 @@
 int NativeDeleteFile(const char* aFileToDelete)
 {
     struct stat fileStack;
-    if (stat(aFileToDelete, &fileStack))
+    if (stat(aFileToDelete, &fileStack) != 0)
     {
       return DONE;// No file to delete, do nothing.
     }
@@ -47,14 +47,14 @@ int NativeDeleteFile(const char* aFileToDelete)
 }
 
 //----------------------------------------------------------------------------
-// Native Windows file replacement function
+// Native Unix file replacement function
 //----------------------------------------------------------------------------
 int NativeReplaceFile(const char* replacementFile, const char* doomedFile )
 {
     struct stat fileStack;
 
     // replacement file must exist, doomed file doesn't have to
-    if (!stat(replacementFile, &fileStack))
+    if (stat(replacementFile, &fileStack) != 0)
         return DONE;
 
     // don't have to do anything if the files are the same
@@ -63,7 +63,7 @@ int NativeReplaceFile(const char* replacementFile, const char* doomedFile )
 
     if (!unlink(doomedFile))
     {
-        if (stat(doomedFile, &fileStack))    
+        if (stat(doomedFile, &fileStack) == 0)    
             return TRY_LATER;
     }
     else
@@ -76,22 +76,29 @@ int NativeReplaceFile(const char* replacementFile, const char* doomedFile )
     return DONE;
 }
 
-int main()
+int main(int argc,char* argv[])
 {
     HREG reg;
     int status = DONE;
+    struct stat fileStack;
 
     if ( REGERR_OK == NR_StartupRegistry())
     {
-        if ( REGERR_OK == NR_RegOpen("", &reg) )
+        char regFilePath[256];
+        strcpy(regFilePath, argv[0]);
+        strcat(regFilePath, ".dat");
+        if ( stat(regFilePath, &fileStack) != 0)
+            regFilePath[0] =  '\0';
+        if ( REGERR_OK == NR_RegOpen(regFilePath, &reg) )
         {
             do {
                 status = PerformScheduledTasks(reg);
                 if (status != DONE)
                    sleep(15000);
             } while (status == TRY_LATER);
+            NR_RegClose(&reg);
         }
-        NR_ShutdownRegistry();
+        unlink(regFilePath);
     }
     return(0);
 }

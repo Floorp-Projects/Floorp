@@ -33,6 +33,10 @@ OBJS =                                   \
     .\$(OBJDIR)\InstallCleanupWin.obj     \
     $(NULL)
 
+EXPORTS=    InstallCleanupDefines.h       \
+            $(NULL)
+
+
 #//------------------------------------------------------------------------
 #//
 #// Define any local options for the make tools 
@@ -65,6 +69,7 @@ WIN_LIBS=                       \
 include <$(DEPTH)/config/rules.mak> 
 install:: $(PROGRAM)
     $(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+    $(MAKE_INSTALL) cmessage.txt $(DIST)\bin\res
 
 clobber_all::
     $(RM) $(DIST)\install\$(MODULE).exe

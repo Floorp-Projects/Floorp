@@ -35,6 +35,12 @@ CPPSRCS		= \
         InstallCleanup.cpp \
         $(NULL)
 
+EXPORTS        = InstallCleanupDefines.h \
+	$(NULL)
+
+install::
+	$(INSTALL) $(srcdir)/cmessage.txt $(DIST)/bin/res
+
 ifeq ($(OS_ARCH),OS2)
 CPPSRCS += InstallCleanupOS2.cpp
 else
