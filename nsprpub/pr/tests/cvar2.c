@@ -102,7 +102,7 @@ SharedCondVarThread(void *_info)
 
     for (index=0; index<info->loops; index++) {
         PR_Lock(info->lock);
-        if (*info->tcount == 0)
+        while (*info->tcount == 0)
             PR_WaitCondVar(info->cvar, info->timeout);
 #if 0
         printf("shared thread %ld notified in loop %ld\n", info->id, index);
@@ -129,7 +129,7 @@ PrivateCondVarThread(void *_info)
 
     for (index=0; index<info->loops; index++) {
         PR_Lock(info->lock);
-        if (*info->tcount == 0) {
+        while (*info->tcount == 0) {
 	    DPRINTF(("PrivateCondVarThread: thread 0x%lx waiting on cvar = 0x%lx\n",
 				PR_GetCurrentThread(), info->cvar));
             PR_WaitCondVar(info->cvar, info->timeout);
