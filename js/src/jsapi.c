@@ -2517,6 +2517,31 @@ JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 }
 
 JS_PUBLIC_API(JSBool)
+JS_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, const char *name,
+                           uintN flags, jsval *vp)
+{
+    JSAtom *atom;
+    JSBool ok;
+    JSObject *obj2;
+    JSProperty *prop;
+
+    CHECK_REQUEST(cx);
+    atom = js_Atomize(cx, name, strlen(name), 0);
+    if (!atom)
+        return JS_FALSE;
+    ok = OBJ_IS_NATIVE(obj)
+         ? js_LookupPropertyWithFlags(cx, obj, (jsid)atom, flags, &obj2, &prop
+#if defined JS_THREADSAFE && defined DEBUG
+                                      , __FILE__, __LINE__
+#endif
+                                      )
+         : OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &obj2, &prop);
+    if (ok)
+        *vp = LookupResult(cx, obj, obj2, prop);
+    return ok;
+}
+
+JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
     JSAtom *atom;

@@ -364,6 +364,17 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 		  JSProperty **propp);
 #endif
 
+/*
+ * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.
+ */
+extern JSBool
+js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                           JSObject **objp, JSProperty **propp
+#if defined JS_THREADSAFE && defined DEBUG
+                           , const char *file, uintN line
+#endif
+                           );
+
 extern JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
 		JSProperty **propp);

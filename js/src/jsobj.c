@@ -156,8 +156,6 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     uintN attrs;
 
     slot = (uint32) JSVAL_TO_INT(id);
-    if (JS_HAS_STRICT_OPTION(cx) && !ReportStrictSlot(cx, slot))
-        return JS_FALSE;
     if (id == INT_TO_JSVAL(JSSLOT_PROTO)) {
         id = (jsid)cx->runtime->atomState.protoAtom;
         mode = JSACC_PROTO;
@@ -1892,8 +1890,15 @@ FindConstructor(JSContext *cx, JSObject *start, const char *name, jsval *vp)
         }
     }
 
-    if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, &prop))
+    JS_ASSERT(OBJ_IS_NATIVE(obj));
+    if (!js_LookupPropertyWithFlags(cx, obj, (jsid)atom, JSRESOLVE_CLASSNAME,
+                                    &pobj, &prop
+#if defined JS_THREADSAFE && defined DEBUG
+                                    , __FILE__, __LINE__
+#endif
+                                    )) {
         return JS_FALSE;
+    }
     if (!prop)  {
         *vp = JSVAL_VOID;
         return JS_TRUE;
@@ -2329,15 +2334,13 @@ Detecting(JSContext *cx, jsbytecode *pc)
     return JS_FALSE;
 }
 
+JSBool
+js_LookupPropertyWithFlags(JSContext *cx, JSObject *obj, jsid id, uintN flags,
+                           JSObject **objp, JSProperty **propp
 #if defined JS_THREADSAFE && defined DEBUG
-JS_FRIEND_API(JSBool)
-_js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
-                   JSProperty **propp, const char *file, uintN line)
-#else
-JS_FRIEND_API(JSBool)
-js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
-                  JSProperty **propp)
+                           , const char *file, uintN line
 #endif
+                           )
 {
     JSObject *start, *obj2, *proto;
     JSScope *scope;
@@ -2348,7 +2351,6 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     JSResolvingEntry *entry;
     uint32 generation;
     JSNewResolveOp newresolve;
-    uintN flags;
     jsbytecode *pc;
     const JSCodeSpec *cs;
     uint32 format;
@@ -2404,7 +2406,6 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 
                 if (clasp->flags & JSCLASS_NEW_RESOLVE) {
                     newresolve = (JSNewResolveOp)resolve;
-                    flags = 0;
                     if (cx->fp && (pc = cx->fp->pc)) {
                         cs = &js_CodeSpec[*pc];
                         format = cs->format;
@@ -2418,6 +2419,8 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                             if (Detecting(cx, pc))
                                 flags |= JSRESOLVE_DETECTING;
                         }
+                        if (format & JOF_DECLARING)
+                            flags |= JSRESOLVE_DECLARING;
                     }
                     obj2 = (clasp->flags & JSCLASS_NEW_RESOLVE_GETS_START)
                            ? start
@@ -2511,6 +2514,22 @@ out:
     *propp = NULL;
     return JS_TRUE;
 }
+
+#if defined JS_THREADSAFE && defined DEBUG
+JS_FRIEND_API(JSBool)
+_js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                   JSProperty **propp, const char *file, uintN line)
+{
+    return js_LookupPropertyWithFlags(cx, obj, id, 0, objp, propp, file, line);
+}
+#else
+JS_FRIEND_API(JSBool)
+js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
+                  JSProperty **propp)
+{
+    return js_LookupPropertyWithFlags(cx, obj, id, 0, objp, propp);
+}
+#endif
 
 JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
