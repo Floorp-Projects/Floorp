@@ -1,0 +1,16 @@
+<!ENTITY windowtitle.label              "Popup Exceptions">
+
+<!ENTITY allowExcept.label              "Suppress popups from the following web sites:">
+
+<!ENTITY blockExcept.label              "Allow popups from the following web sites:">
+
+<!ENTITY addSite.label                  "Add">
+<!ENTITY addSite.accesskey              "A">
+
+<!ENTITY treehead.sitename.label        "Site">
+
+<!ENTITY remove.label                   "Remove">
+<!ENTITY remove.accesskey               "R">
+
+<!ENTITY removeAll.label                "Remove All">
+<!ENTITY removeAll.accesskey            "e">

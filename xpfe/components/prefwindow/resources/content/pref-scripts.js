@@ -44,7 +44,6 @@ function changeDisabledState(state){
   //Set the states of the groupbox children state based on the "javascript enabled" checkbox value
   document.getElementById("allowScripts").disabled = state;
   document.getElementById("allowWindowMoveResize").disabled = state;
-  document.getElementById("allowWindowOpen").disabled = state;
   document.getElementById("allowImageSrcChange").disabled = state;
   document.getElementById("allowDocumentCookieSet").disabled = state;
   document.getElementById("allowDocumentCookieGet").disabled = state;
@@ -87,8 +86,7 @@ function Startup(){
 
   //If scriptData does not exist, then it is the first time the panel was shown and we default to false 
   if (!("scriptData" in data)){
-    var changedList = ["allowWindowOpenChanged",
-                       "allowWindowMoveResizeChanged",
+    var changedList = ["allowWindowMoveResizeChanged",
                        "allowWindowStatusChangeChanged",
                        "allowWindowFlipChanged",
                        "allowDocumentCookieSetChanged",
@@ -102,7 +100,6 @@ function Startup(){
       data.scriptData[ changedList[run] ].value = false;
     }
 
-    document.getElementById("allowWindowOpen").checked = getPrefValueForCheckbox("dom.disable_open_during_load");
     document.getElementById("allowWindowMoveResize").checked =  getPrefValueForCheckbox("dom.disable_window_move_resize");
     document.getElementById("allowWindowFlip").checked = getPrefValueForCheckbox("dom.disable_window_flip");
     document.getElementById("allowWindowStatusChange").checked = getPrefValueForCheckbox("dom.disable_window_status_change");
@@ -142,11 +139,6 @@ function doOnOk(){
   }
 
   var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-scripts.xul"];
- 
-  if (data.scriptData["allowWindowOpenChanged"].value){
-    parent.hPrefWindow.setPref("bool", "dom.disable_open_during_load",
-      !getCheckboxValue('allowWindowOpen'));
-  }
 
   if (data.scriptData["allowWindowMoveResizeChanged"].value){
     parent.hPrefWindow.setPref("bool", "dom.disable_window_move_resize",

@@ -837,4 +837,6 @@ pref("browser.popups.showPopupBlocker", true);
 // See http://bugzilla.mozilla.org/show_bug.cgi?id=169483 for further details...
 pref("viewmanager.do_doublebuffering", true);
 
-
+pref("privacy.popups.sound_enabled",              true);
+pref("privacy.popups.sound_url",                  "");
+pref("privacy.popups.statusbar_icon_enabled",     true);

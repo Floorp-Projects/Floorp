@@ -48,69 +48,143 @@
       onload="init()"
       headertitle="&title;">
           
-<script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://cookie-/content/cookieOverlay.js"/>
 
-<script type="application/x-javascript">
-<![CDATA[
-  var _elementIDs = ["popupPolicy","popupCustom"];
-  var domCbox = null;
-  var policyButton;
-  var customCbox;
-  var manageButton;
+  <script type="application/x-javascript">
+    <![CDATA[
 
-  function init() {
-    parent.initPanel('chrome://cookie/content/pref-popups.xul');
-    policyButton = document.getElementById("popupPolicy");
-    customCbox = document.getElementById("popupCustom");
-    manageButton = document.getElementById("popupView");
-    setButtons(true);
-  }
-  function setButtons(all) {
-    if (all)
-      customCbox.disabled = policyButton.value == 2;
-    manageButton.disabled = policyButton.value == 2 || !customCbox.checked;
-  }
-  function selectPolicy() {
-    if (!domCbox) {
-      // any selection clears the competing DOM pref
-      domCbox = document.getElementById("popupDomShadow");
-      _elementIDs.push("popupDomShadow");
-      domCbox.checked = false;
-    }
-    setButtons(true);
-  }
-  function selectCustom() {
-    setButtons(false);
-  }
-]]>
-</script>
+      var _elementIDs = ["popupPolicy","playSound","playSoundUrl","displayIcon"];
 
-<groupbox id="popupsArea">
-  <caption label="&popupBlocking.label;"/>
+      var gPolicyButton;
+      var gSoundCheckbox;
+      var gSoundUrlBox;
+      var gSoundUrlButton;
+      var gIconCheckbox;
 
-  <description>&popupDetails;</description>
+      const POPUP_TYPE = 2;
 
-  <radiogroup id="popupPolicy" prefstring="privacy.popups.policy">
-    <radio value="1" label="&popupAllow.label;"
-            accesskey="&popupAllow.accesskey;"
-            oncommand="selectPolicy()"/>
-      <checkbox id="popupCustom" label="&popupCustom.label;"
-                style="margin-left:2em"
-                prefstring="privacy.popups.usecustom"
-                oncommand="selectCustom(this)"/>
-    <radio value="2" label="&popupReject.label;"
-            accesskey="&popupReject.accesskey;"
-            oncommand="selectPolicy()"/>
-  </radiogroup>
+      function init() {
+        parent.initPanel("chrome://cookie/content/pref-popups.xul");
 
-  <checkbox id="popupDomShadow" hidden="true"
-            prefstring="dom.disable_open_during_load"/>
+        gPolicyButton = document.getElementById("popupPolicy");
+        gSoundCheckbox = document.getElementById("playSound");
+        gSoundUrlBox = document.getElementById("playSoundUrl");
+        gSoundUrlButton = document.getElementById("selectSound");
+        gIconCheckbox = document.getElementById("displayIcon");   
 
-  <hbox pack="end">
-    <button id="popupView" label="&popupView.label;"
-            accesskey="&popupView.accesskey;" oncommand="viewPopups();"/>
-  </hbox>
+        setButtons();
+      }
 
-</groupbox>
+      function blacklistEmpty() {
+        var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"]
+                                          .getService(Components.interfaces.nsIPermissionManager);
+
+        var popupManager = Components.classes["@mozilla.org/PopupWindowManager;1"]
+                                     .getService(Components.interfaces.nsIPopupWindowManager);
+        var enumerator = popupManager.getEnumerator();
+
+        while (enumerator.hasMoreElements()) {
+          var permission = enumerator.getNext()
+                                     .QueryInterface(Components.interfaces.nsIPermission);
+          if (!permission.capability)
+            return false;
+        }
+        return true;
+      }
+
+      function setButtons() {
+        var exceptionsAllow = document.getElementById("exceptionsAllow");
+        var exceptionsBlock = document.getElementById("exceptionsBlock");
+
+        exceptionsAllow.disabled = (gPolicyButton.value == "true");
+        exceptionsBlock.disabled = (!exceptionsAllow.disabled);
+
+        if (blacklistEmpty() && (gPolicyButton.value == "false")) {
+          gSoundCheckbox.disabled = true;
+          gSoundUrlBox.disabled = true;
+          gSoundUrlButton.disabled = true;
+          gIconCheckbox.disabled = true;
+        }
+        else {
+          gSoundCheckbox.disabled = false;
+          gSoundUrlBox.disabled = false;
+          gSoundUrlButton.disabled = false;
+          gIconCheckbox.disabled = false;
+                  
+          enableSoundUrl(gSoundCheckbox.checked);
+        }
+      }
+
+      function selectSound() {
+        var nsIFilePicker = Components.interfaces.nsIFilePicker;
+        var filepicker = Components.classes["@mozilla.org/filepicker;1"]
+                                   .createInstance(nsIFilePicker);
+
+        filepicker.init(window, document.getElementById("selectSound").getAttribute("filepickertitle"), nsIFilePicker.modeOpen);
+        filepicker.appendFilters(nsIFilePicker.filterAll);
+
+        var ret = filepicker.show();
+        if (ret == nsIFilePicker.returnOK)
+          gSoundUrlBox.value = filepicker.file.path;
+      }
+
+      function enableSoundUrl(soundChecked) {
+        gSoundUrlBox.disabled = !soundChecked;
+        gSoundUrlButton.disabled = !soundChecked;
+      }
+
+      function viewPopups() {
+        window.openDialog("chrome://communicator/content/popupManager.xul", "",
+                          "chrome,resizable=yes,modal=yes", 
+                          (gPolicyButton.value == "true"),
+                          "",
+                          true);
+      }
+
+    ]]>
+  </script>
+
+  <groupbox id="popupsArea">
+    <caption label="&popupBlocking.label;"/>
+    <description>&popupDetails;</description>
+    <hbox align="center">      
+      <radiogroup id="popupPolicy" preftype="bool" prefstring="dom.disable_open_during_load">
+        <vbox flex="1">
+          <hbox>
+            <radio value="false" label="&popupAllow.label;" 
+                   oncommand="setButtons()"/>
+            <spacer flex="1"/>
+            <button id="exceptionsAllow" label="&popupView.label;"
+                    oncommand="viewPopups();"/>
+          </hbox>        
+          <hbox>
+            <radio value="true" label="&popupBlock.label;"
+                   oncommand="setButtons()"/>
+            <spacer flex="1"/>
+            <button id="exceptionsBlock" label="&popupView.label;"
+                    oncommand="viewPopups();"/>
+          </hbox>
+        </vbox>
+      </radiogroup>      
+    </hbox>
+    <separator class="thin"/>
+    <description id="whenBlock">&whenBlock.description;</description>
+    <hbox align="center">
+      <checkbox id="playSound" label="&playSound.label;"
+                oncommand="enableSoundUrl(this.checked);"
+                preftype="bool" prefstring="privacy.popups.sound_enabled"
+                prefattribute="checked"/>
+      <textbox flex="1" id="playSoundUrl" prefstring="privacy.popups.sound_url"/>
+      <button id="selectSound" label="&selectSound.label;" accesskey="&selectSound.accesskey;"
+              filepickertitle="&selectSound.title;" oncommand="selectSound();"/>
+    </hbox>
+    <hbox align="center">
+      <checkbox id="displayIcon" label="&displayIcon.label;"
+                preftype="bool" prefstring="privacy.popups.statusbar_icon_enabled"
+                prefattribute="checked"/>
+    </hbox>
+    <separator class="thin"/>
+    <description>&popupNote.description;</description>
+  </groupbox>
 
 </page>
