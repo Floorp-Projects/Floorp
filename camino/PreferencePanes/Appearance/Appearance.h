@@ -35,43 +35,55 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-#import <PreferencePaneBase.h>
+
+#import "PreferencePaneBase.h"
 
 @interface OrgMozillaChimeraPreferenceAppearance : PreferencePaneBase 
 {
-  IBOutlet NSTabView    *tabView;
+  IBOutlet NSTabView*     mTabView;
 
-  IBOutlet NSButton     *checkboxUnderlineLinks;
-  IBOutlet NSButton     *checkboxUseMyColors;
-  IBOutlet NSColorWell  *colorwellBackgroundColor;
-  IBOutlet NSColorWell  *colorwellTextColor;
-  IBOutlet NSColorWell  *colorwellUnvisitedLinks;
-  IBOutlet NSColorWell  *colorwellVisitedLinks;  
+  // colors tab
+  IBOutlet NSColorWell*   mTextColorWell;
+  IBOutlet NSColorWell*   mBackgroundColorWell;
 
-  IBOutlet NSButton      *chooseProportionalFontButton;
-  IBOutlet NSButton      *chooseMonospaceFontButton;
-  IBOutlet NSPopUpButton *popupFontRegion;
+  IBOutlet NSColorWell*   mVisitedLinksColorWell;  
+  IBOutlet NSColorWell*   mUnvisitedLinksColorWell;
 
-  IBOutlet NSTextField *fontSampleProportional;
-  IBOutlet NSTextField *fontSampleMonospace;
+  IBOutlet NSButton*      mUnderlineLinksCheckbox;
+  IBOutlet NSButton*      mUseMyColorsCheckbox;
 
-  IBOutlet NSTextField	*proportionalSampleLabel;
+  IBOutlet NSButton*      mColorsResetButton;
+
+  // fonts tab
+  IBOutlet NSButton*      mChooseProportionalFontButton;
+  IBOutlet NSButton*      mChooseMonospaceFontButton;
+  IBOutlet NSPopUpButton* mFontRegionPopup;
+
+  IBOutlet NSTextField*   mFontSampleProportional;
+  IBOutlet NSTextField*   mFontSampleMonospace;
+
+  IBOutlet NSTextField*   mProportionalSampleLabel;
+
+  IBOutlet NSButton*      mFontsResetButton;
 
   // advanced panel stuff
-  IBOutlet NSPanel       *advancedFontsDialog;
-  IBOutlet NSPopUpButton *serifFontPopup;
-  IBOutlet NSPopUpButton *sansSerifFontPopup;
-  IBOutlet NSPopUpButton *cursiveFontPopup;
-  IBOutlet NSPopUpButton *fantasyFontPopup;
-  IBOutlet NSPopUpButton *minFontSizePopup;
-  IBOutlet NSTextField *advancedFontsLabel;
-  IBOutlet NSMatrix *defaultFontMatrix;
+  IBOutlet NSPanel*       mAdvancedFontsDialog;
+  IBOutlet NSPopUpButton* mSerifFontPopup;
+  IBOutlet NSPopUpButton* mSansSerifFontPopup;
+  IBOutlet NSPopUpButton* mCursiveFontPopup;
+  IBOutlet NSPopUpButton* mFantasyFontPopup;
+
+  IBOutlet NSPopUpButton* mMinFontSizePopup;
+  IBOutlet NSTextField*   mAdvancedFontsLabel;
+
+  IBOutlet NSMatrix*      mDefaultFontMatrix;
   
+  NSArray*                mRegionMappingTable;
   
-  NSArray  *regionMappingTable;
+  NSButton*               mFontButtonForEditor;
   
-  NSButton *fontButtonForEditor;
+  NSTextView*             mPropSampleFieldEditor;
+  NSTextView*             mMonoSampleFieldEditor;
 }
 
 - (void)mainViewDidLoad;

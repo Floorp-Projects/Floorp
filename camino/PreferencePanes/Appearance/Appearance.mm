@@ -73,37 +73,66 @@
 
 @end
 
+#pragma mark -
+
+@interface SampleTextView : NSTextView
+{
+  id    mPrefPane;
+}
+- (void)setPrefPane:(id)inPrefPane;
+
+@end
+
+// try making these a real text view, then override changeFont:
+@implementation SampleTextView
+
+- (void)setPrefPane:(id)inPrefPane
+{
+  mPrefPane = inPrefPane;
+}
+
+- (void)changeFont:(id)sender
+{
+  [mPrefPane changeFont:sender];
+}
+
+@end
+
+#pragma mark -
 
 @implementation OrgMozillaChimeraPreferenceAppearance
 
 - (void)dealloc
 {
-  [regionMappingTable release];
+  [mRegionMappingTable release];
+  [mPropSampleFieldEditor release];
+  [mMonoSampleFieldEditor release];
+
   [super dealloc];
 }
 
 - (id)initWithBundle:(NSBundle *)bundle
 {
   self = [super initWithBundle:bundle];
-  fontButtonForEditor = nil;
+  mFontButtonForEditor = nil;
   return self;
 }
 
 - (void)mainViewDidLoad
 {
   BOOL gotPref;
-  [checkboxUnderlineLinks setState:
+  [mUnderlineLinksCheckbox setState:
       [self getBooleanPref:"browser.underline_anchors" withSuccess:&gotPref]];
-  [checkboxUseMyColors setState:
+  [mUseMyColorsCheckbox setState:
       ![self getBooleanPref:"browser.display.use_document_colors" withSuccess:&gotPref]];
 
   // should save and restore this
   [[NSColorPanel sharedColorPanel] setContinuous:NO];
   
-  [colorwellBackgroundColor setColor:[self getColorPref:"browser.display.background_color" withSuccess:&gotPref]];
-  [colorwellTextColor setColor:[self getColorPref:"browser.display.foreground_color" withSuccess:&gotPref]];
-  [colorwellUnvisitedLinks setColor:[self getColorPref:"browser.anchor_color" withSuccess:&gotPref]];
-  [colorwellVisitedLinks setColor:[self getColorPref:"browser.visited_color" withSuccess:&gotPref]];
+  [mBackgroundColorWell     setColor:[self getColorPref:"browser.display.background_color"  withSuccess:&gotPref]];
+  [mTextColorWell           setColor:[self getColorPref:"browser.display.foreground_color"  withSuccess:&gotPref]];
+  [mUnvisitedLinksColorWell setColor:[self getColorPref:"browser.anchor_color"              withSuccess:&gotPref]];
+  [mVisitedLinksColorWell   setColor:[self getColorPref:"browser.visited_color"             withSuccess:&gotPref]];
 
   [self setupFontRegionPopup];
   [self updateFontPreviews];
@@ -115,6 +144,10 @@
   [self saveFontPrefs];
 }
 
+- (void)tabView:(NSTabView *)tabView didSelectTabViewItem:(NSTabViewItem *)tabViewItem
+{
+}
+
 - (void)setupFontRegionPopup
 {
   NSBundle* prefBundle = [NSBundle bundleForClass:[self class]];
@@ -122,22 +155,22 @@
 
   // we use the dictionaries in this array as temporary storage of font
   // values until the pane is unloaded, at which time they are saved
-  regionMappingTable = [[NSArray arrayWithContentsOfFile:resPath] retain];
+  mRegionMappingTable = [[NSArray arrayWithContentsOfFile:resPath] retain];
 
   [self loadFontPrefs];
 
-  [popupFontRegion removeAllItems];
-  for (unsigned int i = 0; i < [regionMappingTable count]; i++) {
-    NSDictionary* regionDict = [regionMappingTable objectAtIndex:i];
-    [popupFontRegion addItemWithTitle:[regionDict objectForKey:@"region"]];
+  [mFontRegionPopup removeAllItems];
+  for (unsigned int i = 0; i < [mRegionMappingTable count]; i++) {
+    NSDictionary* regionDict = [mRegionMappingTable objectAtIndex:i];
+    [mFontRegionPopup addItemWithTitle:[regionDict objectForKey:@"region"]];
   }
 }
 
 - (IBAction)buttonClicked:(id)sender
 {
-  if (sender == checkboxUnderlineLinks)
+  if (sender == mUnderlineLinksCheckbox)
     [self setPref:"browser.underline_anchors" toBoolean:[sender state]];
-  else if (sender == checkboxUseMyColors)
+  else if (sender == mUseMyColorsCheckbox)
     [self setPref:"browser.display.use_document_colors" toBoolean:![sender state]];
 }
 
@@ -145,13 +178,13 @@
 {
   const char* prefName = NULL;
   
-  if (sender == colorwellBackgroundColor)
+  if (sender == mBackgroundColorWell)
   	prefName = "browser.display.background_color";
-  else if (sender == colorwellTextColor)
+  else if (sender == mTextColorWell)
   	prefName = "browser.display.foreground_color";
-  else if (sender == colorwellUnvisitedLinks)
+  else if (sender == mUnvisitedLinksColorWell)
   	prefName = "browser.anchor_color";
-  else if (sender == colorwellVisitedLinks)
+  else if (sender == mVisitedLinksColorWell)
   	prefName = "browser.visited_color";
 
   if (prefName)
@@ -161,8 +194,8 @@
 - (IBAction)proportionalFontChoiceButtonClicked:(id)sender
 {
   NSFontManager *fontManager = [NSFontManager sharedFontManager];
-  NSFont *newFont = [[self getFontSampleForType:[chooseProportionalFontButton alternateTitle]] font];
-  fontButtonForEditor = chooseProportionalFontButton;
+  NSFont *newFont = [[self getFontSampleForType:[mChooseProportionalFontButton alternateTitle]] font];
+  mFontButtonForEditor = mChooseProportionalFontButton;
   [fontManager setSelectedFont:newFont isMultiple:NO];
   [[fontManager fontPanel:YES] makeKeyAndOrderFront:self];
 }
@@ -170,8 +203,8 @@
 - (IBAction)monospaceFontChoiceButtonClicked:(id)sender
 {
   NSFontManager *fontManager = [NSFontManager sharedFontManager];
-  NSFont *newFont = [[self getFontSampleForType:[chooseMonospaceFontButton alternateTitle]] font];
-  fontButtonForEditor = chooseMonospaceFontButton;
+  NSFont *newFont = [[self getFontSampleForType:[mChooseMonospaceFontButton alternateTitle]] font];
+  mFontButtonForEditor = mChooseMonospaceFontButton;
   [fontManager setSelectedFont:newFont isMultiple:NO];
   [[fontManager fontPanel:YES] makeKeyAndOrderFront:self];
 }
@@ -184,8 +217,8 @@
 
 - (void)loadFontPrefs
 {
-  for (unsigned int i = 0; i < [regionMappingTable count]; i++) {
-    NSMutableDictionary	*regionDict = [regionMappingTable objectAtIndex:i];
+  for (unsigned int i = 0; i < [mRegionMappingTable count]; i++) {
+    NSMutableDictionary	*regionDict = [mRegionMappingTable objectAtIndex:i];
     NSString *regionCode = [regionDict objectForKey:@"code"];
     
     /*
@@ -257,11 +290,11 @@
 
 - (void)saveFontPrefs
 {
-  if (!regionMappingTable)
+  if (!mRegionMappingTable)
     return;
 
-  for (unsigned int i = 0; i < [regionMappingTable count]; i++) {
-    NSMutableDictionary	*regionDict = [regionMappingTable objectAtIndex:i];
+  for (unsigned int i = 0; i < [mRegionMappingTable count]; i++) {
+    NSMutableDictionary	*regionDict = [mRegionMappingTable objectAtIndex:i];
 
     [self saveFontNamePrefsForRegion:regionDict forFontType:@"serif"];
     [self saveFontNamePrefsForRegion:regionDict forFontType:@"sans-serif"];
@@ -329,7 +362,7 @@
   return fontDict;
 }
 
-- (void)saveFontNamePrefsForRegion:(NSDictionary*)regionDict forFontType:(NSString*)fontType;
+- (void)saveFontNamePrefsForRegion:(NSDictionary*)regionDict forFontType:(NSString*)fontType
 {
   NSString *regionCode = [regionDict objectForKey:@"code"];
 
@@ -408,7 +441,7 @@
   }
 }
  
-- (NSFont*)getFontOfType:(NSString*)fontType fromDict:(NSDictionary*)regionDict;
+- (NSFont*)getFontOfType:(NSString*)fontType fromDict:(NSDictionary*)regionDict
 {
   NSDictionary	*fontTypeDict = [regionDict objectForKey:fontType];
   NSDictionary	*fontSizeDict = [regionDict objectForKey:@"fontsize"];
@@ -447,7 +480,7 @@
   [self setupFontSampleOfType:@"monospace" fromDict:regionDict];
 }
 
-- (void)setupFontSampleOfType:(NSString*)fontType fromDict:(NSDictionary*)regionDict;
+- (void)setupFontSampleOfType:(NSString*)fontType fromDict:(NSDictionary*)regionDict
 {
   NSFont *foundFont = [self getFontOfType:fontType fromDict:regionDict];
   [self setFontSampleOfType:fontType withFont:foundFont andDict:regionDict];
@@ -498,11 +531,11 @@
 
 - (void)updateFontSampleOfType:(NSString *)fontType
 {
-  int selectedRegion = [popupFontRegion indexOfSelectedItem];
+  int selectedRegion = [mFontRegionPopup indexOfSelectedItem];
   if (selectedRegion == -1)
     return;
 
-  NSMutableDictionary *regionDict = [regionMappingTable objectAtIndex:selectedRegion];
+  NSMutableDictionary *regionDict = [mRegionMappingTable objectAtIndex:selectedRegion];
 
   NSTextField *sampleCell = [self getFontSampleForType:fontType];
   NSFont *sampleFont = [[NSFontManager sharedFontManager] convertFont:[sampleCell font]];
@@ -516,10 +549,10 @@
 - (NSTextField*)getFontSampleForType:(NSString *)fontType
 {
   if ([fontType isEqualToString:@"serif"] || [fontType isEqualToString:@"sans-serif"])
-    return fontSampleProportional;
+    return mFontSampleProportional;
 
   if ([fontType isEqualToString:@"monospace"])
-    return fontSampleMonospace;
+    return mFontSampleMonospace;
 
   return nil;
 }
@@ -534,18 +567,18 @@
 
 - (void)updateFontPreviews
 {
-  int selectedRegion = [popupFontRegion indexOfSelectedItem];
+  int selectedRegion = [mFontRegionPopup indexOfSelectedItem];
   if (selectedRegion == -1)
     return;
 
-  NSDictionary *regionDict = [regionMappingTable objectAtIndex:selectedRegion];
+  NSDictionary *regionDict = [mRegionMappingTable objectAtIndex:selectedRegion];
 
   NSString *defaultFontType = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
-  [chooseProportionalFontButton setAlternateTitle:defaultFontType];
+  [mChooseProportionalFontButton setAlternateTitle:defaultFontType];
 
   // make sure the 'proportional' label matches
   NSString* propLabelString = [NSString stringWithFormat:[self getLocalizedString:@"ProportionalLableFormat"], [self getLocalizedString:defaultFontType]];
-  [proportionalSampleLabel setStringValue:propLabelString];
+  [mProportionalSampleLabel setStringValue:propLabelString];
   
   [self setupFontSamplesFromDict:regionDict];
 }
@@ -557,38 +590,38 @@ const int kDefaultFontSansSerifTag = 1;
 
 - (IBAction)showAdvancedFontsDialog:(id)sender
 {
-  int selectedRegion = [popupFontRegion indexOfSelectedItem];
+  int selectedRegion = [mFontRegionPopup indexOfSelectedItem];
   if (selectedRegion == -1)
     return;
 
-  NSDictionary *regionDict = [regionMappingTable objectAtIndex:selectedRegion];
+  NSDictionary *regionDict = [mRegionMappingTable objectAtIndex:selectedRegion];
 
   NSString* advancedLabel = [NSString stringWithFormat:[self getLocalizedString:@"AdditionalFontsLabelFormat"], [regionDict objectForKey:@"region"]];
-  [advancedFontsLabel setStringValue:advancedLabel];
+  [mAdvancedFontsLabel setStringValue:advancedLabel];
   
   // set up the dialog for the current region
-  [self setupFontPopup:serifFontPopup forType:@"serif" fromDict:regionDict];
-  [self setupFontPopup:sansSerifFontPopup forType:@"sans-serif" fromDict:regionDict];
-  [self setupFontPopup:cursiveFontPopup forType:@"cursive" fromDict:regionDict];
-  [self setupFontPopup:fantasyFontPopup forType:@"fantasy" fromDict:regionDict];
+  [self setupFontPopup:mSerifFontPopup forType:@"serif" fromDict:regionDict];
+  [self setupFontPopup:mSansSerifFontPopup forType:@"sans-serif" fromDict:regionDict];
+  [self setupFontPopup:mCursiveFontPopup forType:@"cursive" fromDict:regionDict];
+  [self setupFontPopup:mFantasyFontPopup forType:@"fantasy" fromDict:regionDict];
   
   // setup min size popup
   int itemIndex = 0;
   NSMutableDictionary *fontSizeDict = [regionDict objectForKey:@"fontsize"];
   NSNumber* minSize = [fontSizeDict objectForKey:@"minimum"];
   if (minSize) {
-    itemIndex = [minFontSizePopup indexOfItemWithTag:[minSize intValue]];
+    itemIndex = [mMinFontSizePopup indexOfItemWithTag:[minSize intValue]];
     if (itemIndex == -1)
       itemIndex = 0;
   }
-  [minFontSizePopup selectItemAtIndex:itemIndex];
+  [mMinFontSizePopup selectItemAtIndex:itemIndex];
   
   // set up default font radio buttons (default to serif)
   NSString *defaultFontType = [[regionDict objectForKey:@"defaultFontType"] objectForKey:@"type"];
-  [defaultFontMatrix selectCellWithTag:([defaultFontType isEqualToString:@"sans-serif"] ? kDefaultFontSansSerifTag : kDefaultFontSerifTag)];
+  [mDefaultFontMatrix selectCellWithTag:([defaultFontType isEqualToString:@"sans-serif"] ? kDefaultFontSansSerifTag : kDefaultFontSerifTag)];
   
-	[NSApp beginSheet:advancedFontsDialog
-        modalForWindow:[tabView window] // any old window accessor
+	[NSApp beginSheet:mAdvancedFontsDialog
+        modalForWindow:[mTabView window] // any old window accessor
         modalDelegate:self
         didEndSelector:@selector(advancedFontsSheetDidEnd:returnCode:contextInfo:)
         contextInfo:NULL];
@@ -597,29 +630,29 @@ const int kDefaultFontSansSerifTag = 1;
 - (IBAction)advancedFontsDone:(id)sender
 {
   // save settings
-  int selectedRegion = [popupFontRegion indexOfSelectedItem];
+  int selectedRegion = [mFontRegionPopup indexOfSelectedItem];
   if (selectedRegion == -1)
     return;
 
-  NSDictionary *regionDict = [regionMappingTable objectAtIndex:selectedRegion];
+  NSDictionary *regionDict = [mRegionMappingTable objectAtIndex:selectedRegion];
 
-  [self getFontFromPopup:serifFontPopup forType:@"serif" intoDict:regionDict];
-  [self getFontFromPopup:sansSerifFontPopup forType:@"sans-serif" intoDict:regionDict];
-  [self getFontFromPopup:cursiveFontPopup forType:@"cursive" intoDict:regionDict];
-  [self getFontFromPopup:fantasyFontPopup forType:@"fantasy" intoDict:regionDict];
+  [self getFontFromPopup:mSerifFontPopup forType:@"serif" intoDict:regionDict];
+  [self getFontFromPopup:mSansSerifFontPopup forType:@"sans-serif" intoDict:regionDict];
+  [self getFontFromPopup:mCursiveFontPopup forType:@"cursive" intoDict:regionDict];
+  [self getFontFromPopup:mFantasyFontPopup forType:@"fantasy" intoDict:regionDict];
 
-  int minSize = [[minFontSizePopup selectedItem] tag];
+  int minSize = [[mMinFontSizePopup selectedItem] tag];
   // a value of 0 indicates 'none'; we'll clear the pref on save
   NSMutableDictionary *fontSizeDict = [regionDict objectForKey:@"fontsize"];
   [fontSizeDict setObject:[NSNumber numberWithInt:(int)minSize] forKey:@"minimum"];
 
   // save the default font type
   NSDictionary *defaultFontTypeDict = [regionDict objectForKey:@"defaultFontType"];
-  NSString *defaultFontType = ([[defaultFontMatrix selectedCell] tag] == kDefaultFontSerifTag) ? @"serif" : @"sans-serif";
+  NSString *defaultFontType = ([[mDefaultFontMatrix selectedCell] tag] == kDefaultFontSerifTag) ? @"serif" : @"sans-serif";
   [defaultFontTypeDict setObject:defaultFontType forKey:@"type"];
   
-  [advancedFontsDialog orderOut:self];
-  [NSApp endSheet:advancedFontsDialog];
+  [mAdvancedFontsDialog orderOut:self];
+  [NSApp endSheet:mAdvancedFontsDialog];
 
   [self updateFontPreviews];
 }
@@ -637,23 +670,23 @@ const int kDefaultFontSansSerifTag = 1;
   // update the UI of the Appearance pane
   int state;
   state = [self getBooleanPref:"browser.underline_anchors" withSuccess:NULL] ? NSOnState : NSOffState;
-  [checkboxUnderlineLinks setState:state];
+  [mUnderlineLinksCheckbox setState:state];
   state = [self getBooleanPref:"browser.display.use_document_colors" withSuccess:NULL] ? NSOffState : NSOnState;
-  [checkboxUseMyColors setState:state];
+  [mUseMyColorsCheckbox setState:state];
   
-  [colorwellBackgroundColor setColor:[self getColorPref:"browser.display.background_color" withSuccess:NULL]];
-  [colorwellTextColor setColor:[self getColorPref:"browser.display.foreground_color" withSuccess:NULL]];
-  [colorwellUnvisitedLinks setColor:[self getColorPref:"browser.anchor_color" withSuccess:NULL]];
-  [colorwellVisitedLinks setColor:[self getColorPref:"browser.visited_color" withSuccess:NULL]];
+  [mBackgroundColorWell setColor:[self getColorPref:"browser.display.background_color" withSuccess:NULL]];
+  [mTextColorWell setColor:[self getColorPref:"browser.display.foreground_color" withSuccess:NULL]];
+  [mUnvisitedLinksColorWell setColor:[self getColorPref:"browser.anchor_color" withSuccess:NULL]];
+  [mVisitedLinksColorWell setColor:[self getColorPref:"browser.visited_color" withSuccess:NULL]];
 }
 
 // Reset the Fonts tab to application factory defaults.
 - (IBAction)resetFontsToDefaults:(id)sender
 {
   // clear all the preferences for the font regions
-  for (unsigned int i = 0; i < [regionMappingTable count]; i++)
+  for (unsigned int i = 0; i < [mRegionMappingTable count]; i++)
   {
-    NSMutableDictionary* regionDict = [regionMappingTable objectAtIndex:i];
+    NSMutableDictionary* regionDict = [mRegionMappingTable objectAtIndex:i];
     // NSString* regionCode = [regionDict objectForKey:@"code"];
     
     // for each region, we reset the dictionaries to be empty.
@@ -782,10 +815,43 @@ const int kMissingFontPopupItemTag = 9999;
 
 @implementation OrgMozillaChimeraPreferenceAppearance (FontManagerDelegate)
 
+- (id)fieldEditorForObject:(id)inObject
+{
+  if (inObject == mFontSampleProportional)
+  {
+    if (!mPropSampleFieldEditor)
+    {
+      SampleTextView* propFieldEditor = [[SampleTextView alloc] initWithFrame:[inObject bounds]];
+      [propFieldEditor setPrefPane:self];
+      [propFieldEditor setFieldEditor:YES];
+      [propFieldEditor setDelegate:inObject];
+      mPropSampleFieldEditor = propFieldEditor;
+    }
+      
+    return mPropSampleFieldEditor;
+  }
+  else if (inObject == mFontSampleMonospace)
+  {
+    if (!mMonoSampleFieldEditor)
+    {
+      SampleTextView* monoFieldEditor = [[SampleTextView alloc] initWithFrame:[inObject bounds]];
+      [monoFieldEditor setPrefPane:self];
+      [monoFieldEditor setFieldEditor:YES];
+      [monoFieldEditor setDelegate:inObject];
+      mMonoSampleFieldEditor = monoFieldEditor;
+    }
+    
+    return mMonoSampleFieldEditor;
+  }
+  
+  return nil;
+}
+
+
 - (void)changeFont:(id)sender
 {
-  if (fontButtonForEditor) {
-    NSString *fontType = [fontButtonForEditor alternateTitle];
+  if (mFontButtonForEditor) {
+    NSString *fontType = [mFontButtonForEditor alternateTitle];
     [self updateFontSampleOfType:fontType];
   }
 }
