@@ -1118,16 +1118,18 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aObject));
 
+  nsCOMPtr<nsIDocument> doc;
+
   if (content) {
     // Try to get context from doc
-    nsIDocument *doc = content->GetDocument();
+    doc = content->GetDocument();
     nsIScriptGlobalObject *global;
 
     if (doc && (global = doc->GetScriptGlobalObject())) {
       context = global->GetContext();
     }
   } else {
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(aObject));
+    doc = do_QueryInterface(aObject);
 
     nsCOMPtr<nsIScriptGlobalObject> global;
 
@@ -1193,15 +1195,25 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
     }
 
     if (!done) {
+      PRUint32 lineNo = 0;
+      nsCAutoString url (NS_LITERAL_CSTRING("-moz-evil:lying-event-listener"));
+      if (doc) {
+        nsIURI *uri = doc->GetDocumentURI();
+        if (uri) {
+          uri->GetSpec(url);
+          lineNo = 1;
+        }
+      }
+
       if (handlerOwner) {
         // Always let the handler owner compile the event handler, as
         // it may want to use a special context or scope object.
         rv = handlerOwner->CompileEventHandler(context, scriptObject, aName,
-                                               aBody, nsnull, 0, &handler);
+                                               aBody, url.get(), lineNo, &handler);
       }
       else {
         rv = context->CompileEventHandler(scriptObject, aName, aBody,
-                                          nsnull, 0,
+                                          url.get(), lineNo,
                                           (handlerOwner != nsnull),
                                           &handler);
       }
@@ -1321,7 +1333,7 @@ nsEventListenerManager::CompileScriptEventListener(nsIScriptContext *aContext,
   }
 
   if (ls->mHandlerIsString & subType) {
-    rv = CompileEventHandlerInternal(aContext, aObject, aName, ls, subType);
+    rv = CompileEventHandlerInternal(aContext, aObject, aName, ls, /*XXX fixme*/nsnull, subType);
   }
 
   // Set *aDidCompile to true even if we didn't really compile
@@ -1339,6 +1351,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
                                                     nsISupports *aObject,
                                                     nsIAtom *aName,
                                                     nsListenerStruct *aListenerStruct,
+                                                    nsIDOMEventTarget* aCurrentTarget,
                                                     PRUint32 aSubType)
 {
   nsresult result = NS_OK;
@@ -1382,18 +1395,34 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
       result = content->GetAttr(kNameSpaceID_None, aName, handlerBody);
 
       if (NS_SUCCEEDED(result)) {
+        PRUint32 lineNo = 0;
+        nsCAutoString url (NS_LITERAL_CSTRING("javascript:alert('TODO: FIXME')"));
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCurrentTarget);
+        if (!doc) {
+          nsCOMPtr<nsIContent> content = do_QueryInterface(aCurrentTarget);
+          if (content)
+            doc = content->GetDocument();
+        }
+        if (doc) {
+          nsIURI *uri = doc->GetDocumentURI();
+          if (uri) {
+            uri->GetSpec(url);
+            lineNo = 1;
+          }
+        }
+
         if (handlerOwner) {
           // Always let the handler owner compile the event
           // handler, as it may want to use a special
           // context or scope object.
           result = handlerOwner->CompileEventHandler(aContext, jsobj, aName,
                                                      handlerBody,
-                                                     nsnull, 0,
+                                                     url.get(), lineNo,
                                                      &handler);
         }
         else {
           result = aContext->CompileEventHandler(jsobj, aName, handlerBody,
-                                                 nsnull, 0,
+                                                 url.get(), lineNo,
                                                  (handlerOwner != nsnull),
                                                  &handler);
         }
@@ -1444,6 +1473,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
           result = CompileEventHandlerInternal(jslistener->GetEventContext(),
                                                jslistener->GetEventTarget(),
                                                atom, aListenerStruct,
+                                               aCurrentTarget,
                                                aSubType);
         }
       }
