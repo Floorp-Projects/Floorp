@@ -10946,7 +10946,7 @@ keepLooking:
       // to the parent content.
       nsCOMPtr<nsIContent> parentScope;
       kidContent->GetBindingParent(getter_AddRefs(parentScope));
-      if (kidContent.get() == parentContent || IsFrameSpecial(kidFrame) || 
+      if (parentContent == kidContent.get() || IsFrameSpecial(kidFrame) || 
           (parentContent && (parentContent == parentScope.get()))) 
       {
 #ifdef NOISY_FINDFRAME
