@@ -72,7 +72,6 @@
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_CID(kChromeRegistryCID,         NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
@@ -593,7 +592,7 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
     // Canonify the "chrome:" URL; e.g., so that we collapse
     // "chrome://navigator/content/navigator.xul" and "chrome://navigator/content"
     // and "chrome://navigator/content/navigator.xul".
-    nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
+    nsCOMPtr<nsIChromeRegistry> reg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = reg->Canonify(aURI);

@@ -168,7 +168,6 @@
 //
 
 static NS_DEFINE_CID(kCSSLoaderCID,              NS_CSS_LOADER_CID);
-static NS_DEFINE_CID(kChromeRegistryCID,         NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(kEventListenerManagerCID,   NS_EVENTLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kHTMLCSSStyleSheetCID,      NS_HTML_CSS_STYLESHEET_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,     NS_HTML_ELEMENT_FACTORY_CID);
@@ -1752,7 +1751,8 @@ nsXULDocument::EndLoad()
         IsChromeURI(uri))
         gXULCache->WritePrototype(mCurrentPrototype);
 
-    nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
+    nsCOMPtr<nsIXULChromeRegistry> reg =
+        do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISupportsArray> sheets;
@@ -5380,7 +5380,7 @@ nsresult
 nsXULDocument::AddChromeOverlays()
 {
     nsresult rv;
-    nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
+    nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv));
 
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;

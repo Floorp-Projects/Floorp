@@ -79,6 +79,7 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsHashtable.h"
+#include "nsIAtom.h"
 
 // Interfaces Needed
 #include "nsIDocShell.h"
@@ -183,7 +184,6 @@ static NS_DEFINE_CID(kPrefMigrationCID, NS_PREFMIGRATION_CID);
 static NS_DEFINE_CID(kPrefConverterCID, NS_PREFCONVERTER_CID);
 static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
-static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 
@@ -457,7 +457,8 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     }
     gLocaleProfiles->Remove(&key);
 
-    nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+    nsCOMPtr<nsIXULChromeRegistry> chromeRegistry =
+        do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // Install to the profile
@@ -1621,7 +1622,8 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
     rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, getter_AddRefs(profDefaultsDir));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+    nsCOMPtr<nsIXULChromeRegistry> chromeRegistry =
+        do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
 
         const PRUnichar* uiLocale = aUILocale;
@@ -2123,7 +2125,7 @@ nsProfile::DefineLocaleDefaultsDir()
     if (NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIXULChromeRegistry> packageRegistry = 
-                 do_GetService(kChromeRegistryCID, &rv);
+                 do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv))
         {
             nsXPIDLString localeName;

@@ -54,7 +54,7 @@ static const nsModuleComponentInfo components[] =
 {
     { "Chrome Registry", 
       NS_CHROMEREGISTRY_CID,
-      "@mozilla.org/chrome/chrome-registry;1", 
+      NS_CHROMEREGISTRY_CONTRACTID, 
       nsChromeRegistryConstructor
     },
 

@@ -157,9 +157,6 @@ interface nsIXULChromeRegistry : nsIChromeRegistry {
 
 %{ C++
 
-// for component registration
-// {D8C7D8A2-E84C-11d2-BF87-00105A1B0627}
-#define NS_CHROMEREGISTRY_CID \
-{ 0xd8c7d8a2, 0xe84c, 0x11d2, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
-
+#define NS_CHROMEREGISTRY_CONTRACTID \
+  "@mozilla.org/chrome/chrome-registry;1"
 %}
