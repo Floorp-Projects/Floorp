@@ -104,6 +104,7 @@ XUL_ATOM(titledbox, "titledbox")
 XUL_ATOM(title, "title")
 XUL_ATOM(titledboxContentPseudo, ":titledbox-content")
 
+XUL_ATOM(stack, "stack")
 XUL_ATOM(deck, "deck")
 XUL_ATOM(tabcontrol, "tabcontrol")
 XUL_ATOM(tab, "tab")
@@ -124,6 +125,7 @@ XUL_ATOM(collapse, "collapse")
 XUL_ATOM(resizebefore, "resizebefore")
 XUL_ATOM(resizeafter, "resizeafter")
 XUL_ATOM(state, "state")
+XUL_ATOM(debug, "debug")
 
 // toolbar & toolbar d&d atoms
 XUL_ATOM(ddDropLocation, "dd-droplocation")

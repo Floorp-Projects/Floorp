@@ -53,7 +53,7 @@ class nsIDOMXULDocument;
 class nsMenuPopupFrame : public nsBoxFrame, public nsIMenuParent, public nsITimerCallback
 {
 public:
-  nsMenuPopupFrame();
+  nsMenuPopupFrame(nsIPresShell* aShell);
 
   NS_DECL_ISUPPORTS
 

@@ -23,13 +23,12 @@
 #define nsTitledButtonFrame_h___
 
 #include "nsHTMLImageLoader.h"
-#include "nsLeafFrame.h"
-#include "nsIBox.h"
+#include "nsXULLeafFrame.h"
 
 class nsIPopUpMenu;
 class nsTitledButtonRenderer;
 
-class nsTitledButtonFrame : public nsLeafFrame, public nsIBox
+class nsTitledButtonFrame : public nsXULLeafFrame
 {
 public:
 
@@ -39,9 +38,8 @@ public:
 
   // nsIBox frame interface
   NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD InvalidateCache(nsIFrame* aChild);
 
-  NS_DECL_ISUPPORTS
+  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug) { return NS_OK; }
 
   NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
@@ -111,10 +109,6 @@ protected:
                                    const nsRect& aDirtyRect,
                                    nsFramePaintLayer aWhichLayer);
 
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize);
-
 
   void DisplayAltFeedback(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
@@ -147,11 +141,6 @@ protected:
   void GetImageSource(nsString& aResult);
 
   virtual void GetImageSize(nsIPresContext* aPresContext);
-
-  NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
-                            nsIContent*     aChild,
-                            nsISupports*    aSubContent);
-
 
 private:
 

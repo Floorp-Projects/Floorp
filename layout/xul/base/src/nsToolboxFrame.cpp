@@ -82,7 +82,7 @@ NS_NewToolboxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsToolboxFrame* it = new (aPresShell) nsToolboxFrame;
+  nsToolboxFrame* it = new (aPresShell) nsToolboxFrame (aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -98,8 +98,8 @@ NS_NewToolboxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 //
 // Init, if necessary
 //
-nsToolboxFrame :: nsToolboxFrame ( )
-  : mSumOfToolbarHeights(0), mNumToolbars(0), 
+nsToolboxFrame :: nsToolboxFrame (nsIPresShell* aShell):nsBoxFrame(aShell)
+  , mSumOfToolbarHeights(0), mNumToolbars(0), 
     mGrippyHilighted(kNoGrippyHilighted),
     kCollapsedAtom(dont_AddRef( NS_NewAtom("collapsed"))), 
     kHiddenAtom(dont_AddRef( NS_NewAtom("hidden"))),
@@ -571,7 +571,8 @@ nsToolboxFrame :: ClearGrippyList ( nsVoidArray & inList )
 void
 nsToolboxFrame::GetInset(nsMargin& margin)
 {
-   margin = mInset;
+   nsBoxFrame::GetInset(margin);
+   margin += mInset;
 }
 
 

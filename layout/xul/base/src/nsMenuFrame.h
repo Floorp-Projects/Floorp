@@ -54,7 +54,7 @@ class nsMenuFrame : public nsBoxFrame,
                     public nsIAnonymousContentCreator
 {
 public:
-  nsMenuFrame();
+  nsMenuFrame(nsIPresShell* aShell);
 
   NS_DECL_ISUPPORTS
   
@@ -69,6 +69,8 @@ public:
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
 
   NS_IMETHOD IsActive(PRBool& aResult) { aResult = PR_TRUE; return NS_OK; };
 
@@ -187,6 +189,8 @@ protected:
   NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
 
 protected:
+  nsresult SetDebug(nsIPresContext* aPresContext, nsIFrame* aList, PRBool aDebug);
+
   nsFrameList mPopupFrames;
   PRPackedBool mIsMenu; // Whether or not we can even have children or not.
   PRPackedBool mMenuOpen;

@@ -44,6 +44,8 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
+
   // Called to set the one and only child frame. Returns NS_ERROR_INVALID_ARG
   // if the child frame is NULL, and NS_ERROR_UNEXPECTED if the child list
   // contains more than one frame

@@ -140,7 +140,7 @@ NS_NewToolbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsToolbarFrame* it = new (aPresShell) nsToolbarFrame;
+  nsToolbarFrame* it = new (aPresShell) nsToolbarFrame (aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -156,8 +156,8 @@ NS_NewToolbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 //
 // Most of the work need to be delayed until Init(). Lame!
 //
-nsToolbarFrame :: nsToolbarFrame ( )
-  : mXDropLoc ( -1 )
+nsToolbarFrame :: nsToolbarFrame (nsIPresShell* aShell):nsBoxFrame(aShell),
+   mXDropLoc ( -1 )
 {
 }
 

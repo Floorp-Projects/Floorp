@@ -70,12 +70,8 @@ public:
    */
   NS_IMETHOD InvalidateCache(nsIFrame* aChild)=0;
 
-  /**
-   * Helper method from doing box reflow
-   */
-  static void HandleRootBoxReflow(nsIPresContext* aPresContext,
-                                  nsIFrame* aBox, 
-                                  const nsHTMLReflowState& aReflowState);
+
+  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug)=0;
 
 };
 

@@ -70,6 +70,9 @@ public:
 
   NS_IMETHOD InvalidateCache(nsIFrame* aChild);
 
+  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug) { return NS_OK; }
+
+
     // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,

@@ -21,7 +21,6 @@
  */
 
 #include "nsTableOuterFrame.h"
-#include "nsIBox.h"
 #include "nsISelfScrollingFrame.h"
 #include "nsITreeFrame.h"
 

@@ -53,7 +53,7 @@
 class nsTitledBoxFrame : public nsBoxFrame {
 public:
 
-  nsTitledBoxFrame();
+  nsTitledBoxFrame(nsIPresShell* aShell);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
@@ -96,7 +96,7 @@ public:
 class nsTitledBoxInnerFrame : public nsBoxFrame {
 public:
 
-    nsTitledBoxInnerFrame() {}
+    nsTitledBoxInnerFrame(nsIPresShell* aShell):nsBoxFrame(aShell) {}
 
 
 #ifdef DEBUG
@@ -117,7 +117,7 @@ NS_NewTitledBoxInnerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTitledBoxInnerFrame* it = new (aPresShell) nsTitledBoxInnerFrame;
+  nsTitledBoxInnerFrame* it = new (aPresShell) nsTitledBoxInnerFrame(aPresShell);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -133,7 +133,7 @@ NS_NewTitledBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTitledBoxFrame* it = new (aPresShell) nsTitledBoxFrame;
+  nsTitledBoxFrame* it = new (aPresShell) nsTitledBoxFrame(aPresShell);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -142,7 +142,7 @@ NS_NewTitledBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-nsTitledBoxFrame::nsTitledBoxFrame()
+nsTitledBoxFrame::nsTitledBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell)
 {
 }
 

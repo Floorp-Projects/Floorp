@@ -125,7 +125,7 @@ protected:
     PRBool         mCollapsed;
   };
 
-  nsToolboxFrame();
+  nsToolboxFrame(nsIPresShell* aShell);
   virtual ~nsToolboxFrame();
 
   virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal); 

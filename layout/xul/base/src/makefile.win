@@ -28,6 +28,8 @@ REQUIRES=xpcom raptor pref
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=					\
+        nsSpringFrame.cpp \
+        nsXULLeafFrame.cpp \
         nsXULTextFrame.cpp \
         nsTitleFrame.cpp        \
         nsTitledBoxFrame.cpp        \
@@ -38,6 +40,7 @@ CPPSRCS=					\
         nsSplitterFrame.cpp        \
         nsGrippyFrame.cpp        \
         nsTabFrame.cpp        \
+        nsStackFrame.cpp        \
         nsDeckFrame.cpp        \
         nsBoxFrame.cpp        \
         nsProgressMeterFrame.cpp        \
@@ -70,8 +73,10 @@ CPPSRCS=					\
 	$(NULL)
 
 CPP_OBJS=					\
-        .\$(OBJDIR)\nsTitleFrame.obj    \
+        .\$(OBJDIR)\nsSpringFrame.obj    \
+        .\$(OBJDIR)\nsXULLeafFrame.obj    \
         .\$(OBJDIR)\nsXULTextFrame.obj    \
+        .\$(OBJDIR)\nsTitleFrame.obj    \
         .\$(OBJDIR)\nsTitledBoxFrame.obj    \
         .\$(OBJDIR)\nsFrameNavigator.obj    \
         .\$(OBJDIR)\nsRepeatService.obj    \
@@ -81,6 +86,7 @@ CPP_OBJS=					\
         .\$(OBJDIR)\nsSplitterFrame.obj    \
         .\$(OBJDIR)\nsTabFrame.obj    \
         .\$(OBJDIR)\nsDeckFrame.obj    \
+        .\$(OBJDIR)\nsStackFrame.obj    \
         .\$(OBJDIR)\nsBoxFrame.obj    \
         .\$(OBJDIR)\nsProgressMeterFrame.obj    \
         .\$(OBJDIR)\nsTitledButtonFrame.obj    \

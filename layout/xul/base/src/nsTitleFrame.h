@@ -31,7 +31,7 @@
 class nsTitleFrame : public nsBoxFrame {
 public:
 
-  nsTitleFrame();
+  nsTitleFrame(nsIPresShell* aShell);
   virtual ~nsTitleFrame();
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

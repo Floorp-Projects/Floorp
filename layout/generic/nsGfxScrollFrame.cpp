@@ -1465,8 +1465,6 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext*  aPresContext,
             nsSize size;
             GetScrolledContentSize(aPresContext, size);
 
-            PRBool  mustReflow = PR_FALSE;
-
             // There are two cases to consider
               if (size.height <= scrollAreaSize.height
                   || aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL
@@ -1488,6 +1486,13 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext*  aPresContext,
 
             // Go ahead and reflow the child a second time if we added or removed the scrollbar
             if (mustReflow) {
+
+              // make sure we mark it as dirty so it will reflow again.
+              nsFrameState childState;
+              mScrollAreaFrame->GetFrameState(&childState);
+              childState |= NS_FRAME_IS_DIRTY;
+              mScrollAreaFrame->SetFrameState(childState);
+
               scrollAreaReflowSize.SizeTo(scrollAreaSize.width, scrollAreaSize.height);
 
               resized = PR_FALSE;
@@ -1748,6 +1753,22 @@ nsGfxScrollFrame::InvalidateCache(nsIFrame* aChild)
 {
     // we don't cache any layout information. So do nothing.
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGfxScrollFrame::SetDebug(nsIPresContext* aPresContext, PRBool aDebug)
+{
+  nsIFrame* kid = mFrames.FirstChild();
+  while (nsnull != kid) {
+    nsIBox* ibox = nsnull;
+    if (NS_SUCCEEDED(kid->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
+      ibox->SetDebug(aPresContext, aDebug);
+    }
+
+    kid->GetNextSibling(&kid);
+  }
+
+  return NS_OK;
 }
 
 

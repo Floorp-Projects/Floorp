@@ -44,47 +44,6 @@ window.dialog {
 
 /******** Box *********/
 
-
-/* Conditional debug 
-
-*[debug="true"]:-moz-horizontal-box-debug {
-  border: 2px solid blue;
-  border-top-width: 10px;
-  color: white;
-  padding: 2px;
-  margin: 2px;
-}
-
-*[debug="true"]:-moz-vertical-box-debug {
-  border: 2px solid red;
-  border-left-width: 10px;
-  color: white;
-  padding: 2px;
-  margin: 2px;
-}
-
-*[debug="true"] *:-moz-horizontal-box-debug {
-  border: 2px solid blue;
-  border-top-width: 10px;
-  color: white;
-  padding: 2px;
-  margin: 2px;
-}
-
-*[debug="true"] *:-moz-vertical-box-debug {
-  border: 2px solid red;
-  border-left-width: 10px;
-  color: white;
-  padding: 2px;
-  margin: 2px;
-}
-
-*/
-
-/* comment this in to make all boxes show their
-   debug info automatically. Otherwise use debug="true"
-   to show it and use the rules above.  */
-
 :-moz-horizontal-box-debug {
   border: 2px solid blue;
   border-top-width: 10px;
@@ -101,6 +60,9 @@ window.dialog {
   color: white;
 }
 
+box {
+   overflow: hidden;
+}
 
 
 

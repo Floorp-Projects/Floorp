@@ -52,7 +52,7 @@ NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMenuBarFrame* it = new (aPresShell) nsMenuBarFrame;
+  nsMenuBarFrame* it = new (aPresShell) nsMenuBarFrame (aPresShell);
   if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
   *aNewFrame = it;
@@ -83,8 +83,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsToolbarFrame)
 //
 // nsMenuBarFrame cntr
 //
-nsMenuBarFrame::nsMenuBarFrame()
-:mIsActive(PR_FALSE), mTarget(nsnull), mKeyboardNavigator(nsnull), mMenuBarListener(nsnull)
+nsMenuBarFrame::nsMenuBarFrame(nsIPresShell* aShell):nsToolbarFrame(aShell),
+mIsActive(PR_FALSE), mTarget(nsnull), mKeyboardNavigator(nsnull), mMenuBarListener(nsnull)
 {
 
 } // cntr

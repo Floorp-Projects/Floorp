@@ -63,7 +63,7 @@ NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsPopupSetFrame* it = new (aPresShell) nsPopupSetFrame;
+  nsPopupSetFrame* it = new (aPresShell) nsPopupSetFrame (aPresShell);
   if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
   *aNewFrame = it;
@@ -93,8 +93,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 //
 // nsPopupSetFrame cntr
 //
-nsPopupSetFrame::nsPopupSetFrame()
-:mPresContext(nsnull), mElementFrame(nsnull)
+nsPopupSetFrame::nsPopupSetFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
+mPresContext(nsnull), mElementFrame(nsnull)
 {
 
 } // cntr
@@ -265,6 +265,42 @@ nsPopupSetFrame::Reflow(nsIPresContext*   aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP
+nsPopupSetFrame::SetDebug(nsIPresContext* aPresContext, PRBool aDebug)
+{
+  // see if our state matches the given debug state
+  PRBool debugSet = mState & NS_STATE_CURRENTLY_IN_DEBUG;
+  PRBool debugChanged = (!aDebug && debugSet) || (aDebug && !debugSet);
+
+  // if it doesn't then tell each child below us the new debug state
+  if (debugChanged)
+  {
+      nsBoxFrame::SetDebug(aPresContext, aDebug);
+      SetDebug(aPresContext, mPopupFrames.FirstChild(), aDebug);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsPopupSetFrame::SetDebug(nsIPresContext* aPresContext, nsIFrame* aList, PRBool aDebug)
+{
+      if (!aList)
+          return NS_OK;
+
+      while (aList) {
+          nsIBox* ibox = nsnull;
+          if (NS_SUCCEEDED(aList->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
+              ibox->SetDebug(aPresContext, aDebug);
+          }
+
+          aList->GetNextSibling(&aList);
+      }
+
+      return NS_OK;
+}
+
+
 
 NS_IMETHODIMP
 nsPopupSetFrame::DidReflow(nsIPresContext* aPresContext,
@@ -326,6 +362,7 @@ nsPopupSetFrame::InsertFrames(nsIPresContext* aPresContext,
   frameChild->GetTag(*getter_AddRefs(tag));
   if (tag && tag.get() == nsXULAtoms::popup) {
     mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
+    SetDebug(aPresContext, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
     rv = GenerateDirtyReflowCommand(aPresContext, aPresShell);
   } else {
     rv = nsBoxFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);  
@@ -352,6 +389,7 @@ nsPopupSetFrame::AppendFrames(nsIPresContext* aPresContext,
   frameChild->GetTag(*getter_AddRefs(tag));
   if (tag && tag.get() == nsXULAtoms::popup) {
     mPopupFrames.AppendFrames(nsnull, aFrameList);
+    SetDebug(aPresContext, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
     rv = GenerateDirtyReflowCommand(aPresContext, aPresShell);
   } else {
     rv = nsBoxFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList); 

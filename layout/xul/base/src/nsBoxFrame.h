@@ -41,6 +41,7 @@ class nsBoxDebugInner;
 class nsHTMLReflowCommand;
 class nsHTMLInfo;
 
+// flags for box info
 #define NS_FRAME_BOX_SIZE_VALID    0x0001
 #define NS_FRAME_BOX_IS_COLLAPSED  0x0002
 #define NS_FRAME_BOX_NEEDS_RECALC  0x0004
@@ -49,14 +50,11 @@ class nsHTMLInfo;
 class nsCalculatedBoxInfo : public nsBoxInfo {
 public:
     nsSize calculatedSize;
-    /*
-    PRBool sizeValid;
-    PRBool collapsed;
-    PRBool needsRecalc;
-    */
     PRInt16 mFlags;
     nsCalculatedBoxInfo* next;
     nsIFrame* frame;
+
+    virtual void Recycle(nsIPresShell* aShell);
 };
 
 class nsInfoList 
@@ -67,11 +65,19 @@ public:
     virtual PRInt32 GetCount()=0;
 };
 
+// flags from box
+#define NS_STATE_IS_HORIZONTAL           0x00400000
+#define NS_STATE_AUTO_STRETCH            0x00800000
+#define NS_STATE_IS_ROOT                 0x01000000
+#define NS_STATE_CURRENTLY_IN_DEBUG      0x02000000
+#define NS_STATE_SET_TO_DEBUG            0x04000000
+#define NS_STATE_DEBUG_WAS_SET           0x08000000
+
 class nsBoxFrame : public nsHTMLContainerFrame, public nsIBox
 {
 public:
 
-  friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot = PR_FALSE);
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.
 
@@ -149,22 +155,11 @@ public:
 
   virtual void GetChildBoxInfo(PRInt32 aIndex, nsBoxInfo& aSize);
 
-  // Paint one child frame
-  virtual void PaintChild(nsIPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsIFrame*            aFrame,
-                             nsFramePaintLayer    aWhichLayer);
-
-  virtual void PaintChildren(nsIPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer);
-
   // nsIBox methods
   NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
   NS_IMETHOD InvalidateCache(nsIFrame* aChild);
+  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
 
     enum Halignment {
         hAlign_Left,
@@ -179,7 +174,19 @@ public:
         vAlign_Bottom
     };
 protected:
-    nsBoxFrame();
+    nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = PR_FALSE);
+
+    // Paint one child frame
+    virtual void PaintChild(nsIPresContext*      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect&        aDirtyRect,
+                             nsIFrame*            aFrame,
+                             nsFramePaintLayer    aWhichLayer);
+
+    virtual void PaintChildren(nsIPresContext*      aPresContext,
+                             nsIRenderingContext& aRenderingContext,
+                             const nsRect&        aDirtyRect,
+                             nsFramePaintLayer    aWhichLayer);
 
 
     virtual void GetRedefinedMinPrefMax(nsIPresContext* aPresContext, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
@@ -216,7 +223,7 @@ protected:
 private: 
   
     friend class nsBoxFrameInner;
-    friend class nsBoxDebugInner;
+    friend class nsBoxDebug;
     nsBoxFrameInner* mInner;
 }; // class nsBoxFrame
 

@@ -28,55 +28,28 @@
  
 **/
 
-#ifndef nsDeckFrame_h___
-#define nsDeckFrame_h___
+#ifndef nsSpringFrame_h___
+#define nsSpringFrame_h___
 
-#include "nsStackFrame.h"
+#include "nsXULLeafFrame.h"
 
-class nsDeckFrame : public nsStackFrame
+class nsSpringFrame : public nsXULLeafFrame
 {
 public:
 
-  friend nsresult NS_NewDeckFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsresult NS_NewSpringFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
  
-
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
-                              nsIContent* aChild,
-                              PRInt32 aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              PRInt32 aHint);
-
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                      nsDidReflowStatus aStatus);
-
-  NS_IMETHOD Paint(nsIPresContext* aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect,
-                    nsFramePaintLayer aWhichLayer);
-
- 
-  NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
-                               const nsPoint& aPoint, 
-                               nsIFrame**     aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
+                             nsIFrame**     aFrame);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult = "Deck";
+      aResult = "Spring";
       return NS_OK;
   }
-
-protected:
-
-  nsDeckFrame(nsIPresShell* aPresShell);
-
-  virtual nsIFrame* GetSelectedFrame();
-
-private:
-
-  nsIFrame* mSelected;
-
-}; // class nsDeckFrame
+}; // class nsSpringFrame
 
 
 

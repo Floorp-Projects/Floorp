@@ -67,7 +67,7 @@ NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMenuPopupFrame* it = new (aPresShell) nsMenuPopupFrame;
+  nsMenuPopupFrame* it = new (aPresShell) nsMenuPopupFrame (aPresShell);
   if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
   *aNewFrame = it;
@@ -99,8 +99,8 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 //
 // nsMenuPopupFrame ctor
 //
-nsMenuPopupFrame::nsMenuPopupFrame()
-  : mCurrentMenu(nsnull), mTimerMenu(nsnull), mCloseTimer(nsnull)
+nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell):nsBoxFrame(aShell),
+mCurrentMenu(nsnull), mTimerMenu(nsnull), mCloseTimer(nsnull)
 {
   SetIsContextMenu(PR_FALSE);   // we're not a context menu by default
 

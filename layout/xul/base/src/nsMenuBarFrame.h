@@ -45,7 +45,7 @@ nsresult NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 class nsMenuBarFrame : public nsToolbarFrame, public nsIMenuParent
 {
 public:
-  nsMenuBarFrame();
+  nsMenuBarFrame(nsIPresShell* aShell);
   ~nsMenuBarFrame();
 
   NS_DECL_ISUPPORTS
