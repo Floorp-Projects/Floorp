@@ -594,6 +594,10 @@ XPCNativeSet::GetNewOrUsed(XPCCallContext& ccx, nsIClassInfo* classInfo)
         for(PRUint32 i = 0; i < iidCount; i++)
         {
             nsIID* iid = *(currentIID++);
+            if (!iid) {
+                NS_ERROR("Null found in classinfo interface list");
+                continue;
+            }
 
             AutoMarkingNativeInterfacePtr iface(ccx);
             iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
