@@ -49,6 +49,7 @@ LINCS=  \
   -I$(PUBLIC)\caps \
   -I$(PUBLIC)\oji \
   -I$(PUBLIC)\editor \
+  -I$(PUBLIC)\uconv \
   -I$(PUBLIC)\pref \
   -I$(PUBLIC)\rdf
 
