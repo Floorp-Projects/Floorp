@@ -284,10 +284,11 @@ Register ICodeGenerator::op(ICodeOp op, Register source)
 {
     Register dest = getRegister();
     ASSERT(source != NotARegister);    
-    Compare *instr = new Compare (op, dest, source);
+    Unary *instr = new Unary (op, dest, source);
     iCode->push_back(instr);
     return dest;
 }
+
     
 void ICodeGenerator::move(Register destination, Register source)
 {
@@ -295,12 +296,14 @@ void ICodeGenerator::move(Register destination, Register source)
     ASSERT(source != NotARegister);    
     Move *instr = new Move(destination, source);
     iCode->push_back(instr);
-} 
+}
 
-void ICodeGenerator::complement(Register destination, Register source)
+Register ICodeGenerator::not(Register source)
 {
-    Not *instr = new Not(destination, source);
+    Register dest = getRegister();
+    Not *instr = new Not(dest, source);
     iCode->push_back(instr);
+    return dest;
 } 
 
 Register ICodeGenerator::test(Register source)
@@ -921,29 +924,32 @@ ICodeOp ICodeGenerator::mapExprNodeToICodeOp(ExprNode::Kind kind)
     case ExprNode::minus:
         return NEGATE;
     case ExprNode::complement:
-        return NOT;
+        return BITNOT;
 
    // relational
-    case ExprNode::equal:
-        return COMPARE_EQ;
-    case ExprNode::notEqual:
-        return COMPARE_NE;
-    case ExprNode::lessThan:
-        return COMPARE_LT;
-    case ExprNode::lessThanOrEqual:
-        return COMPARE_LE;
-    case ExprNode::greaterThan:
-        return COMPARE_GT;
-    case ExprNode::greaterThanOrEqual:
-        return COMPARE_GE;
-    case ExprNode::identical:
-        return STRICT_EQ;
-    case ExprNode::notIdentical:
-        return STRICT_NE;
     case ExprNode::In:
         return COMPARE_IN;
     case ExprNode::Instanceof:
         return INSTANCEOF;
+
+    case ExprNode::equal:
+        return COMPARE_EQ;
+    case ExprNode::lessThan:
+        return COMPARE_LT;
+    case ExprNode::lessThanOrEqual:
+        return COMPARE_LE;
+    case ExprNode::identical:
+        return STRICT_EQ;
+
+  // these get reversed by the generator
+    case ExprNode::notEqual:        
+        return COMPARE_EQ;
+    case ExprNode::greaterThan:
+        return COMPARE_LT;
+    case ExprNode::greaterThanOrEqual:
+        return COMPARE_LE;
+    case ExprNode::notIdentical:
+        return STRICT_EQ;
 
 
     default:
@@ -1155,13 +1161,9 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
         }
         break;
     case ExprNode::equal:
-    case ExprNode::notEqual:
     case ExprNode::lessThan:
     case ExprNode::lessThanOrEqual:
-    case ExprNode::greaterThan:
-    case ExprNode::greaterThanOrEqual:
     case ExprNode::identical:
-    case ExprNode::notIdentical:
     case ExprNode::In:
     case ExprNode::Instanceof:
         {
@@ -1180,6 +1182,47 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
             }
         }
         break;
+    case ExprNode::greaterThan:
+    case ExprNode::greaterThanOrEqual:
+        {
+            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
+            Register r1 = genExpr(b->op1);
+            Register r2 = genExpr(b->op2);
+            ret = op(mapExprNodeToICodeOp(p->getKind()), r2, r1);   // will return reverse case
+            if (trueBranch || falseBranch) {
+                if (trueBranch == NULL)
+                    branchNotConditional(falseBranch, ret);
+                else {
+                    branchConditional(trueBranch, ret);
+                    if (falseBranch)
+                        branch(falseBranch);
+                }
+            }
+        }
+        break;
+
+    case ExprNode::notEqual:
+    case ExprNode::notIdentical:
+        {
+            BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
+            Register r1 = genExpr(b->op1);
+            Register r2 = genExpr(b->op2);
+            ret = op(mapExprNodeToICodeOp(p->getKind()), r1, r2);
+            if (trueBranch || falseBranch) {
+                if (trueBranch == NULL)
+                    branchNotConditional(falseBranch, ret);
+                else {
+                    branchConditional(trueBranch, ret);
+                    if (falseBranch)
+                        branch(falseBranch);
+                }
+            }
+            else
+                ret = not(ret);
+
+        }
+        break;
+    
     case ExprNode::logicalAnd:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
@@ -1253,7 +1296,7 @@ Register ICodeGenerator::genExpr(ExprNode *p, bool needBoolValueInBranch, Label 
         break;
     default:
         {
-            assert (0); /* quiet linux warnings */
+            NOT_REACHED("Unsupported ExprNode kind");
         }   
     }
     return ret;

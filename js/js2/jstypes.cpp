@@ -109,6 +109,8 @@ const JSType *JSValue::getType() const
         return &Boolean_Type;
     case JSValue::undefined_tag:
         return &Void_Type;
+    case JSValue::type_tag:
+        return &Type_Type;
     default:
         NOT_REACHED("Bad tag");
         return &None_Type;

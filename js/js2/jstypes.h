@@ -77,6 +77,7 @@ namespace JSTypes {
             JSArray* array;
             JSFunction *function;
             JSString *string;
+            JSType *type;
             bool boolean;
         };
         
@@ -92,7 +93,7 @@ namespace JSTypes {
             i32_tag, u32_tag,
             i64_tag, u64_tag,
             f32_tag, f64_tag,
-            object_tag, array_tag, function_tag, string_tag, boolean_tag,
+            object_tag, array_tag, function_tag, string_tag, boolean_tag, type_tag,
             undefined_tag
         } tag;
         
@@ -105,6 +106,7 @@ namespace JSTypes {
         explicit JSValue(JSFunction* function) : function(function), tag(function_tag) {}
         explicit JSValue(JSString* string) : string(string), tag(string_tag) {}
         explicit JSValue(bool boolean) : boolean(boolean), tag(boolean_tag) {}
+        explicit JSValue(JSType* type) : type(type), tag(type_tag) {}
 
         int32& operator=(int32 i32)                     { return (tag = i32_tag, this->i32 = i32); }
         uint32& operator=(uint32 u32)                   { return (tag = u32_tag, this->u32 = u32); }
@@ -114,6 +116,7 @@ namespace JSTypes {
         JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
         JSString*& operator=(JSString* string)          { return (tag = string_tag, this->string = string); }
         bool& operator=(bool boolean)                   { return (tag = boolean_tag, this->boolean = boolean); }
+        JSType*& operator=(JSType* type)                { return (tag = type_tag, this->type = type); }
         
         bool isFunction() const                         { return (tag == function_tag); }
         bool isObject() const                           { return ((tag == object_tag) || (tag == function_tag) || (tag == array_tag)); }
@@ -123,6 +126,8 @@ namespace JSTypes {
                                                         /* this is correct wrt ECMA, The i32 & u32 kinds
                                                            will have to be converted to doubles anyway because
                                                            we can't have overflow happening in generic arithmetic */
+        bool isUndefined() const                        { return (tag == undefined_tag); }
+        bool isNull() const                             { return ((tag == object_tag) && (this->object == NULL)); }
         bool isNaN() const;
 
         JSValue toString() const                        { return (isString() ? *this : valueToString(*this)); }
@@ -290,6 +295,14 @@ namespace JSTypes {
         typedef JSValue (*JSCode)(const JSValues& argv);
         JSCode mCode;
         JSNativeFunction(JSCode code) : mCode(code) {}
+        virtual bool isNative()    { return true; }
+    };
+        
+    class JSBinaryOperator : public JSFunction {
+    public:
+        typedef JSValue (*JSBinaryCode)(const JSValue& arg1, const JSValue& arg2);
+        JSBinaryCode mCode;
+        JSBinaryOperator(JSBinaryCode code) : mCode(code) {}
         virtual bool isNative()    { return true; }
     };
         
