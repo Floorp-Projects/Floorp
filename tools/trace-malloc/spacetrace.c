@@ -380,9 +380,24 @@ gdImagePtr createGraph(int* aTransparencyColor)
 ** This function mainly exists to simplify putitng all the pretty lace
 **  around a home made graph.
 */
-void drawGraph(gdImagePtr aImage, int aColor, const char* aGraphTitle, const char* aXAxisTitle, const char* aYAxisTitle, PRUint32 aXMarkCount, PRUint32* aXMarkPercents, const char** aXMarkTexts, PRUint32 aYMarkCount, PRUint32* aYMarkPercents, const char** aYMarkTexts, PRUint32 aLegendCount, int* aLegendColors, const char** aLegendTexts)
+void drawGraph(gdImagePtr aImage, int aColor,
+               const char* aGraphTitle,
+               const char* aXAxisTitle,
+               const char* aYAxisTitle,
+               PRUint32 aXMarkCount,
+               PRUint32* aXMarkPercents,
+               const char** aXMarkTexts,
+               PRUint32 aYMarkCount,
+               PRUint32* aYMarkPercents,
+               const char** aYMarkTexts,
+               PRUint32 aLegendCount,
+               int* aLegendColors, const char** aLegendTexts)
 {
-    if(NULL != aImage && NULL != aGraphTitle && NULL != aXAxisTitle && NULL != aYAxisTitle && (0 == aXMarkCount || (NULL != aXMarkPercents && NULL != aXMarkTexts)) && (0 == aYMarkCount || (NULL != aYMarkPercents && NULL != aYMarkTexts)) && (0 == aLegendCount || (NULL != aLegendColors && NULL != aLegendTexts)))
+    if(NULL != aImage && NULL != aGraphTitle &&
+       NULL != aXAxisTitle && NULL != aYAxisTitle &&
+       (0 == aXMarkCount || (NULL != aXMarkPercents && NULL != aXMarkTexts)) &&
+       (0 == aYMarkCount || (NULL != aYMarkPercents && NULL != aYMarkTexts)) &&
+       (0 == aLegendCount || (NULL != aLegendColors && NULL != aLegendTexts)))
     {
         int margin = 1;
         PRUint32 traverse = 0;
@@ -682,8 +697,10 @@ int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun*
         aRun->mStats[inContext->mIndex].mCompositeCount++;
         aRun->mStats[inContext->mIndex].mHeapRuntimeCost += heapCost;
         aRun->mStats[inContext->mIndex].mSize += size;
-        LL_ADD(aRun->mStats[inContext->mIndex].mTimeval64, aRun->mStats[inContext->mIndex].mTimeval64, timeval64);
-        LL_ADD(aRun->mStats[inContext->mIndex].mWeight64, aRun->mStats[inContext->mIndex].mWeight64, weight64);
+        LL_ADD(aRun->mStats[inContext->mIndex].mTimeval64,
+               aRun->mStats[inContext->mIndex].mTimeval64, timeval64);
+        LL_ADD(aRun->mStats[inContext->mIndex].mWeight64,
+               aRun->mStats[inContext->mIndex].mWeight64, weight64);
 
         /*
         ** Use the first event of the allocation to update the parent
@@ -707,10 +724,13 @@ int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun*
                     /*
                     ** Do we init it?
                     */
-                    if(callsiteRun->mStats[inContext->mIndex].mStamp != aRun->mStats[inContext->mIndex].mStamp)
+                    if(callsiteRun->mStats[inContext->mIndex].mStamp !=
+                       aRun->mStats[inContext->mIndex].mStamp)
                     {
-                        memset(&callsiteRun->mStats[inContext->mIndex], 0, sizeof(STCallsiteStats));
-                        callsiteRun->mStats[inContext->mIndex].mStamp = aRun->mStats[inContext->mIndex].mStamp;
+                        memset(&callsiteRun->mStats[inContext->mIndex], 0,
+                               sizeof(STCallsiteStats));
+                        callsiteRun->mStats[inContext->mIndex].mStamp =
+                            aRun->mStats[inContext->mIndex].mStamp;
                     }
                             
                     /*
@@ -730,10 +750,15 @@ int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun*
                     **  is perhaps good enough for now.
                     */
                     callsiteRun->mStats[inContext->mIndex].mCompositeCount++;
-                    callsiteRun->mStats[inContext->mIndex].mHeapRuntimeCost += heapCost;
+                    callsiteRun->mStats[inContext->mIndex].mHeapRuntimeCost +=
+                        heapCost;
                     callsiteRun->mStats[inContext->mIndex].mSize += size;
-                    LL_ADD(callsiteRun->mStats[inContext->mIndex].mTimeval64, callsiteRun->mStats[inContext->mIndex].mTimeval64, timeval64);
-                    LL_ADD(callsiteRun->mStats[inContext->mIndex].mWeight64, callsiteRun->mStats[inContext->mIndex].mWeight64, weight64);
+                    LL_ADD(callsiteRun->mStats[inContext->mIndex].mTimeval64,
+                           callsiteRun->mStats[inContext->mIndex].mTimeval64,
+                           timeval64);
+                    LL_ADD(callsiteRun->mStats[inContext->mIndex].mWeight64,
+                           callsiteRun->mStats[inContext->mIndex].mWeight64,
+                           weight64);
                 }
                         
                 callsite = callsite->parent;
@@ -756,7 +781,9 @@ int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun*
 **  such information when it was created.
 ** Returns !0 on success.
 */
-int appendAllocation(STOptions* inOptions, STContext* inContext, STRun* aRun, STAllocation* aAllocation)
+int
+appendAllocation(STOptions* inOptions, STContext* inContext,
+                 STRun* aRun, STAllocation* aAllocation)
 {
     int retval = 0;
 
@@ -767,7 +794,8 @@ int appendAllocation(STOptions* inOptions, STContext* inContext, STRun* aRun, ST
         /*
         ** Expand the size of the array if needed.
         */
-        expand = (STAllocation**)realloc(aRun->mAllocations, sizeof(STAllocation*) * (aRun->mAllocationCount + 1));
+        expand = (STAllocation**)realloc(aRun->mAllocations,
+                                         sizeof(STAllocation*) * (aRun->mAllocationCount + 1));
         if(NULL != expand)
         {
             /*
@@ -828,7 +856,8 @@ int hasCallsiteMatch(tmcallsite* aCallsite, const char* aMatch, int aDirection)
 {
     int retval = 0;
 
-    if(NULL != aCallsite && NULL != aCallsite->method && NULL != aMatch && '\0' != *aMatch)
+    if(NULL != aCallsite && NULL != aCallsite->method &&
+       NULL != aMatch && '\0' != *aMatch)
     {
         const char* methodName = NULL;
 
@@ -884,7 +913,9 @@ int hasCallsiteMatch(tmcallsite* aCallsite, const char* aMatch, int aDirection)
 **
 ** Returns !0 on error, though aOutRun may contain a partial data set.
 */
-int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions, STContext* inContext)
+int
+harvestRun(const STRun* aInRun, STRun* aOutRun,
+           STOptions* aOptions, STContext* inContext)
 {
     int retval = 0;
 
@@ -898,7 +929,8 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions, STConte
         PRUint32 traverse = 0;
         STAllocation* current = NULL;
 
-        for(traverse = 0; 0 == retval && traverse < aInRun->mAllocationCount; traverse++)
+        for(traverse = 0;
+            0 == retval && traverse < aInRun->mAllocationCount; traverse++)
         {
             current = aInRun->mAllocations[traverse];
             if(NULL != current)
@@ -927,11 +959,10 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions, STConte
                 ** We have to slide the recorded timevals to be zero
                 **  based, so that the comparisons make sense.
                 */
-                if(aOptions->mAllocationTimevalMin > (current->mMinTimeval - globals.mMinTimeval))
-                {
-                    continue;
-                }
-                else if(aOptions->mAllocationTimevalMax < (current->mMinTimeval - globals.mMinTimeval))
+                if ((aOptions->mAllocationTimevalMin >
+                     (current->mMinTimeval - globals.mMinTimeval)) ||
+                    (aOptions->mAllocationTimevalMax <
+                     (current->mMinTimeval - globals.mMinTimeval)))
                 {
                     continue;
                 }
@@ -941,11 +972,10 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions, STConte
                 ** We have to slide the recorded timevals to be zero
                 **  based, so that the comparisons make sense.
                 */
-                if(aOptions->mTimevalMin > (current->mMaxTimeval - globals.mMinTimeval))
-                {
-                    continue;
-                }
-                else if(aOptions->mTimevalMax < (current->mMinTimeval - globals.mMinTimeval))
+                if ((aOptions->mTimevalMin >
+                     (current->mMinTimeval - globals.mMinTimeval)) ||
+                    (aOptions->mTimevalMax <
+                     (current->mMinTimeval - globals.mMinTimeval)))
                 {
                     continue;
                 }
@@ -954,11 +984,8 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions, STConte
                 ** Check lifetime restrictions.
                 */
                 lifetime = current->mMaxTimeval - current->mMinTimeval;
-                if(lifetime < aOptions->mLifetimeMin)
-                {
-                    continue;
-                }
-                else if(lifetime > aOptions->mLifetimeMax)
+                if ((lifetime < aOptions->mLifetimeMin) ||
+                    (lifetime > aOptions->mLifetimeMax))
                 {
                     continue;
                 }
@@ -967,11 +994,8 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions, STConte
                 ** Check byte size restrictions.
                 */
                 bytesize = byteSize(aOptions, current);
-                if(bytesize < aOptions->mSizeMin)
-                {
-                    continue;
-                }
-                else if(bytesize > aOptions->mSizeMax)
+                if ((bytesize < aOptions->mSizeMin) ||
+                    (bytesize > aOptions->mSizeMax))
                 {
                     continue;
                 }
@@ -982,11 +1006,8 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions, STConte
                 LL_UI2L(bytesize64, bytesize);
                 LL_UI2L(lifetime64, lifetime);
                 LL_MUL(weight64, bytesize64, lifetime64);
-                if(LL_UCMP(weight64, <, aOptions->mWeightMin64))
-                {
-                    continue;
-                }
-                else if(LL_UCMP(weight64, >, aOptions->mWeightMax64))
+                if(LL_UCMP(weight64, <, aOptions->mWeightMin64) ||
+                   LL_UCMP(weight64, >, aOptions->mWeightMax64))
                 {
                     continue;
                 }
@@ -1002,7 +1023,9 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions, STConte
                 {
                     if('\0' != aOptions->mRestrictText[looper][0])
                     {
-                        if(0 == hasCallsiteMatch(current->mEvents[0].mCallsite, aOptions->mRestrictText[looper], ST_FOLLOW_PARENTS))
+                        if(0 == hasCallsiteMatch(current->mEvents[0].mCallsite,
+                                                 aOptions->mRestrictText[looper],
+                                                 ST_FOLLOW_PARENTS))
                         {
                             break;
                         }
@@ -2312,16 +2335,16 @@ void htmlCallsiteAnchor(STRequest* inRequest, tmcallsite* aCallsite, const char*
             {
                 char lxrHREFBuf[512];
 
-                PR_snprintf(lxrHREFBuf, sizeof(lxrHREFBuf), "<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" class=\"lxr\" target=\"_st_lxr\">(%s:%u)</a>", namesite->method->sourcefile + 8, namesite->method->linenumber, sourceFile, namesite->method->linenumber);
+                PR_snprintf(lxrHREFBuf, sizeof(lxrHREFBuf), " [<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" class=\"lxr\" target=\"_st_lxr\">%s:%u</a>]", namesite->method->sourcefile + 8, namesite->method->linenumber, sourceFile, namesite->method->linenumber);
                 PR_snprintf(textBuf, sizeof(textBuf), "<span class=\"source mozilla-source\">%s</span>%s", methodName, lxrHREFBuf);
             }
             else if(NULL != sourceFile)
             {
-                PR_snprintf(textBuf, sizeof(textBuf), "<span class=\"source external-source\">%s<span class=\"source-extra\">(%s:%u)</span></span>", methodName, sourceFile, namesite->method->linenumber);
+                PR_snprintf(textBuf, sizeof(textBuf), "<span class=\"source external-source\">%s [<span class=\"source-extra\">%s:%u</span>]</span>", methodName, sourceFile, namesite->method->linenumber);
             }
             else
             {
-                PR_snprintf(textBuf, sizeof(textBuf), "<span class=\"source binary-source\">%s<span class=\"source-extra\">+%u(%u)</span></span>", methodName, namesite->offset, (PRUint32)namesite->entry.key);
+                PR_snprintf(textBuf, sizeof(textBuf), "<span class=\"source binary-source\">%s [<span class=\"source-extra\">+%u(%u)</span>]</span>", methodName, namesite->offset, (PRUint32)namesite->entry.key);
             }
 
             aText = textBuf;
@@ -2352,7 +2375,8 @@ void htmlHeader(STRequest* inRequest, const char* aTitle)
                "</head>\n"
                "<body>\n"
                "<div class=spacetrace-header>\n"
-               "<div class=navigate>\n"
+               "<span class=spacetrace-title>Spacetrace</span>"
+               "<span class=navigate>\n"
                "<span class=\"category-title header-text\">Category:</span>\n"
                "<span class=\"current-category\">%s</span>\n",
                aTitle,
@@ -2364,9 +2388,9 @@ void htmlHeader(STRequest* inRequest, const char* aTitle)
 
     PR_fprintf(inRequest->mFD,"<span class=\"header-item\">");
     htmlAnchor(inRequest, "options.html", "Options", NULL, "header-menuitem", &inRequest->mOptions);
-    PR_fprintf(inRequest->mFD,"</span>\n");
+    PR_fprintf(inRequest->mFD,"</span>\n"); 
 
-    PR_fprintf(inRequest->mFD,"</div>\n");
+    PR_fprintf(inRequest->mFD,"</span>\n"); /* class=navigate */
 
     PR_fprintf(inRequest->mFD, "</div>\n<div class=\"header-separator\"></div>\n");
 }
@@ -5660,7 +5684,7 @@ void handleClient(void* inArg)
                 **      mime type, otherwise, say it is text/html. 
                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.42 2003/05/22 20:59:55 alecf%flett.org Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.43 2003/06/04 20:15:07 alecf%flett.org Exp $", crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if(NULL != strstr(start, ".png"))
                 {

@@ -1,16 +1,25 @@
 body {
   margin: 0px;
   padding: 0px;
+  font: Arial, sans-serif;
 }
 
 /* header stuff */
 .spacetrace-header {
+  color: white;
   background: green;
-  min-height: 2em;
+/*  min-height: 2em; */
+}
+
+.spacetrace-title {
+  font-size: x-large;
+  font-weight: bold;
+  padding: 0.5em;
 }
 
 .navigate {
-  background: lightgrey;
+/*  background: lightgrey; */
+  color: black;
   position: absolute;
   right: 0px;
   margin: 0px;
@@ -18,8 +27,11 @@ body {
 }
 
 .header-item {
-  border: 2px outset;
+  border: 1px outset;
+  color: ButtonText;
+  background: ButtonFace;
   margin: 0px;
+  padding: 2px;
 }
 
 .header-item > a {
