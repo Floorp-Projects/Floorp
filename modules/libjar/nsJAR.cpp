@@ -813,7 +813,7 @@ nsJAR::RestoreModTime(nsZipItem *aItem, nsIFile *aExtractedFile)
     {
     	PRTime conversion = LL_ZERO;
     	PRTime newTime = LL_ZERO;
-    	LL_I2L(conversion, PR_USEC_PER_SEC);
+    	LL_I2L(conversion, PR_USEC_PER_MSEC);
     	LL_DIV(newTime, prtime, conversion);
         // nsIFile needs usecs.
       	rv = aExtractedFile->SetLastModificationDate(newTime);
