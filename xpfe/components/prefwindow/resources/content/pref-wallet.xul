@@ -44,12 +44,17 @@
   <![CDATA[
     function viewSignons()
     {
-      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","","modal=yes,chrome,resizable=no");
+      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","","modal=yes,chrome,resizable=no", "S");
     }
     
     function viewWallet()
     {
       window.openDialog("chrome://communicator/content/wallet/WalletEditor.xul","","modal=yes,chrome,resizable=no");
+    }
+
+    function viewWalletSites()
+    {
+      window.openDialog("chrome://communicator/content/wallet/SignonViewer.xul","","modal=yes,chrome,resizable=no", "W");
     }
 
     function changePasswords()
@@ -88,6 +93,8 @@
     <box autostretch="never" halign="right">
       <button class="dialog" value="&viewWallet.label;" accesskey="&viewWallet.accesskey;" 
               oncommand="viewWallet();"/>
+      <button class="dialog" value="&viewWalletSites.label;" accesskey="&viewWalletSites.accesskey;" 
+              oncommand="viewWalletSites();"/>
     </box>
   </titledbox>
 
