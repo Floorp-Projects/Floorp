@@ -641,7 +641,7 @@ void nsEudoraAddress::BuildABCards( PRUint32 *pBytes, nsIAddrDatabase *pDb)
 void nsEudoraAddress::ExtractNoteField( nsCString& note, nsCString& value, const char *pFieldName)
 {
 	value.Truncate( 0);
-	nsCString	field = "<";
+	nsCString	field("<");
 	field.Append( pFieldName);
 	field.Append( ':');
 

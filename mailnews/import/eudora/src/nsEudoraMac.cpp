@@ -445,7 +445,7 @@ nsresult nsEudoraMac::FindTOCFile( nsIFileSpec *pMailFile, nsIFileSpec **ppTOCFi
 	if (NS_FAILED( rv))
 		return( rv);
 
-	nsCString	leaf = pName;
+	nsCString	leaf(pName);
 	nsCRT::free( pName);
 	leaf.Append( ".toc");
 	
@@ -779,7 +779,7 @@ void nsEudoraMac::SetIdentities( nsIMsgAccountManager *accMgr, nsIMsgAccount *ac
 		nsCOMPtr<nsIMsgIdentity>	id;
 		rv = accMgr->CreateIdentity( getter_AddRefs( id));
 		if (id) {
-			nsString	fullName = *(pStrs[kFullNameStr]);
+			nsString	fullName; fullName.AssignWithConversion(*(pStrs[kFullNameStr]));
 			id->SetFullName( fullName.GetUnicode());
 			id->SetIdentityName( fullName.GetUnicode());
 			id->SetEmail( *(pStrs[kReturnAddressStr]));
@@ -838,7 +838,7 @@ nsresult nsEudoraMac::GetAttachmentInfo( const char *pFileName, nsIFileSpec *pSp
 	int			i;
 	PRUnichar	c;
 	
-	nsCString	str = pFileName;
+	nsCString	str(pFileName);
 	if (str.Length() > 22) {
 		// try and extract the mac file info from the attachment line
 		nsCString	fileNum;

@@ -213,7 +213,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const
 	SimpleBuffer			body;
 	SimpleBuffer			copy;
 	PRInt32					written;
-	nsCString				fromLine = eudoraFromLine;
+	nsCString				fromLine(eudoraFromLine);
 	
 	headers.m_convertCRs = PR_TRUE;
 	body.m_convertCRs = PR_TRUE;
