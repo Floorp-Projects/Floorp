@@ -38,18 +38,14 @@
 #include "nsISupports.idl"
 #include "nsIMsgCompFields.idl"
 #include "nsIMsgComposeParams.idl"
-#include "nsIEditorShell.idl"
 #include "nsIMsgIdentity.idl"
 #include "nsIMsgSend.idl"
 #include "nsIMsgProgress.idl"
 
-%{ C++
-#include "nsIEditorShell.h"
-%}
-
 interface nsIDOMWindowInternal;
 interface nsIDOMNode;
-
+interface nsIEditorShell;
+interface nsIEditor;
 
 typedef long MSG_ComposeSaveType;
 
@@ -196,7 +192,10 @@ interface nsIMsgCompose : nsISupports {
   readonly attribute nsIMsgSend messageSend;
   
 	/* ... */
-  attribute nsIEditorShell editor;
+  readonly attribute nsIEditor editor;
+
+	/* ... */
+  attribute nsIEditorShell editorShell;
 
 	/* ... */
   readonly attribute nsIDOMWindowInternal domWindow;
@@ -222,6 +221,9 @@ interface nsIMsgCompose : nsISupports {
 
 	/* The following functions are for internal use, essentially for the listener */
 
+	/* Clear the editor */
+	[noscript] void clearEditor();
+
 	/* ... */
 	[noscript] void setCiteReference(in nsString citeReference);
 
@@ -235,8 +237,14 @@ interface nsIMsgCompose : nsISupports {
   [noscript] void processReplyFlags();
 
   /* ... */
-  [noscript] void convertAndLoadComposeWindow(in nsIEditorShell aEditorShell, in nsStringRef aPrefix, in nsStringRef aBuf, 
-                                              in nsStringRef aSignature, in boolean aQuoted, in boolean aHTMLEditor);
+  [noscript] void setEditorFromEditorShell();
+
+  /* ... */
+  [noscript] void convertAndLoadComposeWindow(in nsStringRef aPrefix,
+                                              in nsStringRef aBuf, 
+                                              in nsStringRef aSignature,
+                                              in boolean aQuoted,
+                                              in boolean aHTMLEditor);
 
   /* Tell the doc state listeners that the doc state has changed */
   [noscript] void notifyStateListeners(in TStateListenerNotification aNotificationType, in nsresult aResult);

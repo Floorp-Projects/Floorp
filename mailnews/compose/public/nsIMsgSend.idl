@@ -49,7 +49,6 @@
 #include "nsIMsgIdentity.idl"
 #include "nsIMsgCompFields.idl"
 #include "nsIMsgSendListener.idl"
-#include "nsIEditorShell.idl"
 #include "nsIMsgProgress.idl"
 #include "nsIMsgSendReport.idl"
 #include "domstubs.idl"
@@ -71,6 +70,7 @@ interface nsIDocShell;
 interface nsIFileSpec;
 interface nsIMsgComposeSecure;
 interface nsIMsgStatusFeedback;
+interface nsIEditor;
 
 typedef long nsMsgDeliverMode;
 
@@ -186,7 +186,7 @@ interface nsIMsgSend : nsISupports
     const nsMsgDeliverMode nsMsgSendUnsent = 6;
 
     [noscript]
-    void createAndSendMessage(in nsIEditorShell               aEditor,      
+    void createAndSendMessage(in nsIEditor                    aEditor,      
                               in nsIMsgIdentity               aUserIdentity,
                               in nsIMsgCompFields             fields,
                               in PRBool                       digest_p,

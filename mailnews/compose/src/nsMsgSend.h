@@ -149,7 +149,7 @@
 #include "nsMsgCompFields.h"
 #include "nsIMsgSendListener.h"
 #include "nsIDOMNode.h"
-#include "nsIEditorShell.h"
+#include "nsIEditor.h"
 #include "nsIUrlListener.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgStringService.h"
@@ -334,7 +334,7 @@ public:
   PRBool                    mNeedToPerformSecondFCC;
 
   // For MHTML message creation
-  nsIEditorShell            *mEditor;
+  nsCOMPtr<nsIEditor>       mEditor;
 
   //
   // The first attachment, if any (typed in by the user.)

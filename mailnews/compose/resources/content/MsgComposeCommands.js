@@ -634,7 +634,10 @@ var defaultController =
       //Options Menu
       case "cmd_selectAddress"      : if (defaultController.isCommandEnabled(command)) SelectAddress();         break;
       case "cmd_quoteMessage"       : if (defaultController.isCommandEnabled(command)) QuoteSelectedMessage();  break;
-      case "cmd_rewrap"             : editorShell.Rewrap(false);                                                break;
+      case "cmd_rewrap"             :
+          gMsgCompose.editor.QueryInterface(Components.interfaces.nsIEditorMailSupport);
+          gMsgCompose.editor.rewrap(false);
+          break;
       default:
 //        dump("##MsgCompose: don't know what to do with command " + command + "!\n");
         return;

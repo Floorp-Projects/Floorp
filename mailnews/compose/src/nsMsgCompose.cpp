@@ -72,8 +72,10 @@
 #include "nsMimeTypes.h"
 #include "nsICharsetConverterManager.h"
 #include "nsTextFormatter.h"
-#include "nsIEditor.h"
+#include "nsIEditorShell.h"
 #include "nsIPlaintextEditor.h"
+#include "nsIHTMLEditor.h"
+#include "nsIEditorMailSupport.h"
 #include "nsEscape.h"
 #include "plstr.h"
 #include "nsIDocShell.h"
@@ -242,6 +244,7 @@ nsMsgCompose::nsMsgCompose()
   mWhatHolder = 1;
   mDocumentListener = nsnull;
   m_window = nsnull;
+  m_editorShell = nsnull;
   m_editor = nsnull;
   mQuoteStreamListener=nsnull;
   mCharsetOverride = PR_FALSE;
@@ -404,17 +407,17 @@ PRBool nsMsgCompose::IsEmbeddedObjectSafe(const char * originalScheme,
    That will prevent us to attach data not specified by the user or not present in the
    original message.
 */
-nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorShell *aEditorShell)
+nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorMailSupport *aEditor)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsISupportsArray> aNodeList;
   PRUint32 count;
   PRUint32 i;
 
-  if (!aEditorShell)
+  if (!aEditor)
     return NS_ERROR_FAILURE;
 
-  rv = aEditorShell->GetEmbeddedObjects(getter_AddRefs(aNodeList));
+  rv = aEditor->GetEmbeddedObjects(getter_AddRefs(aNodeList));
   if ((NS_FAILED(rv) || (!aNodeList)))
     return NS_ERROR_FAILURE;
 
@@ -467,21 +470,34 @@ nsresult nsMsgCompose::TagEmbeddedObjects(nsIEditorShell *aEditorShell)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString& aPrefix, nsString& aBuf,
-                                                  nsString& aSignature, PRBool aQuoted, PRBool aHTMLEditor)
+NS_IMETHODIMP
+nsMsgCompose::SetEditorFromEditorShell()
 {
+  NS_ASSERTION(m_editorShell, "SetEditorFromEditorShell() but no editor shell yet!");
+  if (!m_editorShell)
+    return NS_ERROR_UNEXPECTED;
+  return m_editorShell->GetEditor(getter_AddRefs(m_editor));
+}
+
+NS_IMETHODIMP
+nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
+                                          nsString& aBuf,
+                                          nsString& aSignature,
+                                          PRBool aQuoted,
+                                          PRBool aHTMLEditor)
+{
+  NS_ASSERTION(m_editor, "ConvertAndLoadComposeWindow but no editor\n");
+  if (!m_editor)
+    return NS_ERROR_FAILURE;
+
   // First, get the nsIEditor interface for future use
-  nsCOMPtr<nsIEditor> editor;
   nsCOMPtr<nsIDOMNode> nodeInserted;
 
   TranslateLineEnding(aPrefix);
   TranslateLineEnding(aBuf);
   TranslateLineEnding(aSignature);
 
-  nsresult rv = aEditorShell->GetEditor(getter_AddRefs(editor));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-    editor->EnableUndo(PR_FALSE);
+  m_editor->EnableUndo(PR_FALSE);
 
   // Ok - now we need to figure out the charset of the aBuf we are going to send
   // into the editor shell. There are I18N calls to sniff the data and then we need
@@ -489,45 +505,48 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
   //
 
   // Now, insert it into the editor...
-  aEditorShell->BeginBatchChanges();
+  nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(m_editor));
+  nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(m_editor));
+  m_editor->BeginTransaction();
   if ( (aQuoted) )
   {
     if (!aPrefix.IsEmpty())
     {
-      if (aHTMLEditor)
-        aEditorShell->InsertSource(aPrefix.get());
-      else
-        aEditorShell->InsertText(aPrefix.get());
-      editor->EndOfDocument();
+      if (aHTMLEditor && htmlEditor)
+        htmlEditor->InsertHTML(aPrefix);
+      else if (textEditor)
+        textEditor->InsertText(aPrefix);
+      m_editor->EndOfDocument();
     }
 
-    if (!aBuf.IsEmpty())
+    nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(m_editor));
+    if (!aBuf.IsEmpty() && mailEditor)
     {
       if (!mCiteReference.IsEmpty())
-        aEditorShell->InsertAsCitedQuotation(aBuf.get(),
-                               mCiteReference.get(),
-                               PR_TRUE,
-                               NS_LITERAL_STRING("UTF-8").get(),
-                               getter_AddRefs(nodeInserted));
+        mailEditor->InsertAsCitedQuotation(aBuf,
+                                           mCiteReference,
+                                           PR_TRUE,
+                                           NS_LITERAL_STRING("UTF-8"),
+                                           getter_AddRefs(nodeInserted));
       else
-        aEditorShell->InsertAsQuotation(aBuf.get(),
-                                        getter_AddRefs(nodeInserted));
-      editor->EndOfDocument();
+        mailEditor->InsertAsQuotation(aBuf,
+                                      getter_AddRefs(nodeInserted));
+      m_editor->EndOfDocument();
     }
 
-    (void)TagEmbeddedObjects(aEditorShell);
+    (void)TagEmbeddedObjects(mailEditor);
 
     if (!aSignature.IsEmpty())
     {
-      if (aHTMLEditor)
-        aEditorShell->InsertSource(aSignature.get());
-      else
-        aEditorShell->InsertText(aSignature.get());
+      if (aHTMLEditor && htmlEditor)
+        htmlEditor->InsertHTML(aSignature);
+      else if (textEditor)
+        textEditor->InsertText(aSignature);
     }
   }
   else
   {
-    if (aHTMLEditor)
+    if (aHTMLEditor && htmlEditor)
     {
       if (!aBuf.IsEmpty())
       {
@@ -566,43 +585,42 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
         }
 
         if (!headContent.IsEmpty())
-          aEditorShell->ReplaceHeadContentsWithHTML(headContent.get());
-        aEditorShell->InsertSource(aBuf.get());
+          htmlEditor->ReplaceHeadContentsWithHTML(headContent);
+        htmlEditor->InsertHTML(aBuf);
 
-        editor->EndOfDocument();
+        m_editor->EndOfDocument();
         SetBodyAttributes(bodyAttributes);
       }
       if (!aSignature.IsEmpty())
-        aEditorShell->InsertSource(aSignature.get());
+        htmlEditor->InsertHTML(aSignature);
     }
-    else
+    else if (textEditor)
     {
       if (!aBuf.IsEmpty())
       {
-        aEditorShell->InsertText(aBuf.get());
-        editor->EndOfDocument();
+        textEditor->InsertText(aBuf);
+        m_editor->EndOfDocument();
       }
 
       if (!aSignature.IsEmpty())
-        aEditorShell->InsertText(aSignature.get());
+        textEditor->InsertText(aSignature);
     }
   }
-  aEditorShell->EndBatchChanges();
+  m_editor->EndTransaction();
   
-  if (editor)
+  if (m_editor)
   {
     if (aBuf.IsEmpty())
-      editor->BeginningOfDocument();
+      m_editor->BeginningOfDocument();
     else
       switch (GetReplyOnTop())
       {
         // This should set the cursor after the body but before the sig
         case 0  :
         {
-          nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(editor);
           if (!textEditor)
           {
-            editor->BeginningOfDocument();
+            m_editor->BeginningOfDocument();
             break;
           }
 
@@ -615,15 +633,15 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
           rv = GetNodeLocation(nodeInserted, address_of(parent), &offset);
           if (NS_FAILED(rv) || (!parent))
           {
-            editor->BeginningOfDocument();
+            m_editor->BeginningOfDocument();
             break;
           }
 
           // get selection
-          editor->GetSelection(getter_AddRefs(selection));
+          m_editor->GetSelection(getter_AddRefs(selection));
           if (!selection)
           {
-            editor->BeginningOfDocument();
+            m_editor->BeginningOfDocument();
             break;
           }
 
@@ -642,23 +660,23 @@ NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorS
       
       case 2  : 
       {
-        editor->SelectAll();
+        m_editor->SelectAll();
         break;
       }
       
       // This should set the cursor to the top!
-      default : editor->BeginningOfDocument();    break;
+      default : m_editor->BeginningOfDocument();    break;
     }
 
     nsCOMPtr<nsISelectionController> selCon;
-    editor->GetSelectionController(getter_AddRefs(selCon));
+    m_editor->GetSelectionController(getter_AddRefs(selCon));
 
     if (selCon)
       selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_ANCHOR_REGION, PR_TRUE);
   }
 
-  if (editor)
-    editor->EnableUndo(PR_TRUE);
+  if (m_editor)
+    m_editor->EnableUndo(PR_TRUE);
   SetBodyModified(PR_FALSE);
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
@@ -740,7 +758,7 @@ nsresult nsMsgCompose::SetDocumentCharset(const char *charset)
   m_compFields->SetCharacterSet(charset);
   
   // notify the change to editor
-  m_editor->SetDocumentCharacterSet(NS_ConvertASCIItoUCS2(charset).get());
+  m_editor->SetDocumentCharacterSet(NS_ConvertASCIItoUCS2(charset));
 
   return NS_OK;
 }
@@ -903,7 +921,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       //
       nsCOMPtr<nsIMsgSendListener> sendListener = do_QueryInterface(composeSendListener);
       rv = mMsgSend->CreateAndSendMessage(
-                    m_composeHTML?m_editor:nsnull,
+                    m_composeHTML ? m_editor : nsnull,
                     identity,
                     m_compFields, 
                     PR_FALSE,                           // PRBool                            digest_p,
@@ -952,7 +970,6 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
     // The plain text compose window was used
     const char contentType[] = "text/plain";
     nsAutoString msgBody;
-    PRUnichar *bodyText = nsnull;
     nsAutoString format; format.AssignWithConversion(contentType);
     PRUint32 flags = nsIDocumentEncoder::OutputFormatted;
 
@@ -960,13 +977,10 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
     if(UseFormatFlowed(charset))
         flags |= nsIDocumentEncoder::OutputFormatFlowed;
     
-    rv = m_editor->GetContentsAs(format.get(), flags, &bodyText);
+    rv = m_editor->OutputToString(format, flags, msgBody);
     
-    if (NS_SUCCEEDED(rv) && nsnull != bodyText)
+    if (NS_SUCCEEDED(rv) && !msgBody.IsEmpty())
     {
-      msgBody = bodyText;
-      nsMemory::Free(bodyText);
-
       // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
       char *outCString = nsnull;
       nsXPIDLCString fallbackCharset;
@@ -1145,17 +1159,14 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
       NS_ASSERTION(m_editor, "no editor");
       if (m_editor)
       {
-        m_editor->UnregisterDocumentStateListener(mDocumentListener);
-        nsCOMPtr <nsIEditor> editor;
-        rv = m_editor->GetEditor(getter_AddRefs(editor));
-        NS_ENSURE_SUCCESS(rv,rv);
+        m_editor->RemoveDocumentStateListener(mDocumentListener);
 
         // XXX clear undo txn manager?
 
-        rv = editor->EnableUndo(PR_FALSE);
+        rv = m_editor->EnableUndo(PR_FALSE);
         NS_ENSURE_SUCCESS(rv,rv);
 
-        rv = m_editor->BeginBatchChanges();
+        rv = m_editor->BeginTransaction();
         NS_ENSURE_SUCCESS(rv,rv);
 
         rv = m_editor->SelectAll();
@@ -1164,10 +1175,10 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
         rv = m_editor->DeleteSelection(0);
         NS_ENSURE_SUCCESS(rv,rv);
 
-        rv = m_editor->EndBatchChanges();
+        rv = m_editor->EndTransaction();
         NS_ENSURE_SUCCESS(rv,rv);
 
-        rv = editor->EnableUndo(PR_TRUE);
+        rv = m_editor->EnableUndo(PR_TRUE);
         NS_ENSURE_SUCCESS(rv,rv);
 
         SetBodyModified(PR_FALSE);
@@ -1202,9 +1213,12 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
   {
     if (m_editor)
     {
-    m_editor->UnregisterDocumentStateListener(mDocumentListener);
-    m_editor = nsnull;  /* m_editor will be destroyed during yje close window. Set it to null to */
-                        /* be sure we wont uses it anymore */
+      m_editor->RemoveDocumentStateListener(mDocumentListener);
+      m_editorShell = nsnull;
+      m_editor = nsnull;
+        /* The editor will be destroyed during yje close window.
+         * Set it to null to be sure we wont uses it anymore
+         */
     }
     nsIBaseWindow * aWindow = m_baseWindow;
     m_baseWindow = nsnull;
@@ -1225,19 +1239,32 @@ nsresult nsMsgCompose::Abort()
   return NS_OK;
 }
 
-nsresult nsMsgCompose::GetEditor(nsIEditorShell * *aEditor) 
+nsresult nsMsgCompose::GetEditorShell(nsIEditorShell * *aEditorShell)
 { 
-  *aEditor = m_editor;
-  NS_IF_ADDREF(*aEditor);
+  NS_IF_ADDREF(*aEditorShell = m_editorShell);
   return NS_OK;
 } 
 
-nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor) 
+nsresult nsMsgCompose::GetEditor(nsIEditor * *aEditor)
+{ 
+  NS_IF_ADDREF(*aEditor = m_editor);
+  return NS_OK;
+} 
+
+nsresult nsMsgCompose::ClearEditor()
+{
+  m_editor = nsnull;
+  m_editorShell = nsnull;
+  return NS_OK;
+}
+
+nsresult nsMsgCompose::SetEditorShell(nsIEditorShell * aEditorShell)
 { 
     // First, store the editor shell but do not addref it (see sfraser@netscape.com for explanation).
-    m_editor = aEditor;
+    m_editorShell = aEditorShell;
+    m_editor = nsnull;
 
-    if (nsnull == m_editor)
+    if (nsnull == m_editorShell)
       return NS_OK;
     
     //
@@ -1252,12 +1279,12 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
     NS_ADDREF(mDocumentListener);
 
     // Make sure we setup to listen for editor state changes...
-    m_editor->RegisterDocumentStateListener(mDocumentListener);
+    m_editorShell->RegisterDocumentStateListener(mDocumentListener);
 
     // Set the charset
     nsAutoString msgCharSet;
     msgCharSet.AssignWithConversion(m_compFields->GetCharacterSet());
-    m_editor->SetDocumentCharacterSet(msgCharSet.get());
+    m_editorShell->SetDocumentCharacterSet(msgCharSet.get());
 
     if (mRecycledWindow)
     {
@@ -1269,7 +1296,7 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
     {
       // Now, lets init the editor here!
       // Just get a blank editor started...
-      m_editor->LoadUrl(NS_LITERAL_STRING("about:blank").get());
+      m_editorShell->LoadUrl(NS_LITERAL_STRING("about:blank").get());
     }
     return NS_OK;
 } 
@@ -1285,14 +1312,9 @@ nsresult nsMsgCompose::GetBodyModified(PRBool * modified)
       
   if (m_editor)
   {
-    nsCOMPtr<nsIEditor> editor;
-    rv = m_editor->GetEditor(getter_AddRefs(editor));
-    if (NS_SUCCEEDED(rv) && editor)
-    {
-      rv = editor->GetDocumentModified(modified);
-      if (NS_FAILED(rv))
-        *modified = PR_TRUE;
-    }
+    rv = m_editor->GetDocumentModified(modified);
+    if (NS_FAILED(rv))
+      *modified = PR_TRUE;
   }
 
   return NS_OK;   
@@ -1304,20 +1326,15 @@ nsresult nsMsgCompose::SetBodyModified(PRBool modified)
 
   if (m_editor)
   {
-    nsCOMPtr<nsIEditor> editor;
-    rv = m_editor->GetEditor(getter_AddRefs(editor));
-    if (NS_SUCCEEDED(rv) && editor)
+    if (modified)
     {
-      if (modified)
-      {
-        PRInt32  modCount = 0;
-        editor->GetModificationCount(&modCount);
-        if (modCount == 0)
-          editor->IncrementModificationCount(1);
-      }
-      else
-        editor->ResetModificationCount();
+      PRInt32  modCount = 0;
+      m_editor->GetModificationCount(&modCount);
+      if (modCount == 0)
+        m_editor->IncrementModificationCount(1);
     }
+    else
+      m_editor->ResetModificationCount();
   }
 
   return rv;  
@@ -2095,12 +2112,14 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     }
 
     compose->ProcessSignature(mIdentity, &mSignature);
-    
-    nsCOMPtr<nsIEditorShell>editor;
+
+    nsCOMPtr<nsIEditor> editor;
     if (NS_SUCCEEDED(compose->GetEditor(getter_AddRefs(editor))) && editor)
     {
       if (mQuoteOriginal)
-        compose->ConvertAndLoadComposeWindow(editor, mCitePrefix, mMsgBody, mSignature, PR_TRUE, composeHTML);
+        compose->ConvertAndLoadComposeWindow(mCitePrefix,
+                                             mMsgBody, mSignature,
+                                             PR_TRUE, composeHTML);
       else
         InsertToCompose(editor, composeHTML);
     }
@@ -2237,40 +2256,43 @@ QuotingOutputStreamListener::SetMimeHeaders(nsIMimeHeaders * headers)
   return NS_OK;
 }
 
-NS_IMETHODIMP QuotingOutputStreamListener::InsertToCompose(nsIEditorShell *aEditorShell, PRBool aHTMLEditor)
+NS_IMETHODIMP
+QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
+                                             PRBool aHTMLEditor)
 {
   // First, get the nsIEditor interface for future use
-  nsCOMPtr<nsIEditor> editor;
   nsCOMPtr<nsIDOMNode> nodeInserted;
 
   TranslateLineEnding(mMsgBody);
 
-  aEditorShell->GetEditor(getter_AddRefs(editor));
-
   // Now, insert it into the editor...
-  if (editor)
-    editor->EnableUndo(PR_TRUE);
+  if (aEditor)
+    aEditor->EnableUndo(PR_TRUE);
 
-  aEditorShell->BeginBatchChanges();
+  aEditor->BeginTransaction();
 
   if (!mMsgBody.IsEmpty())
   {
     if (!mCitePrefix.IsEmpty())
-      aEditorShell->InsertSource(mCitePrefix.get());
+    {
+      nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(aEditor));
+      htmlEditor->InsertHTML(mCitePrefix);
+    }
 
+    nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(aEditor));
     nsAutoString empty;
-    aEditorShell->InsertAsCitedQuotation(mMsgBody.get(),
-                                         empty.get(),
+    mailEditor->InsertAsCitedQuotation(mMsgBody,
+                                         empty,
                                          PR_TRUE,
-                                         NS_LITERAL_STRING("UTF-8").get(),
+                                         NS_LITERAL_STRING("UTF-8"),
                                          getter_AddRefs(nodeInserted));
   }
 
-  aEditorShell->EndBatchChanges();
+  aEditor->EndTransaction();
 
-  if (editor)
+  if (aEditor)
   {
-    nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(editor);
+    nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(aEditor);
     if (textEditor)
     {
       nsCOMPtr<nsISelection> selection;
@@ -2283,7 +2305,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::InsertToCompose(nsIEditorShell *aEdit
       NS_ENSURE_SUCCESS(rv, rv);
 
       // get selection
-      editor->GetSelection(getter_AddRefs(selection));
+      aEditor->GetSelection(getter_AddRefs(selection));
       if (selection)
       {
         // place selection after mailcite
@@ -2293,7 +2315,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::InsertToCompose(nsIEditorShell *aEdit
         selection->Collapse(parent, offset+1);
       }
       nsCOMPtr<nsISelectionController> selCon;
-      editor->GetSelectionController(getter_AddRefs(selCon));
+      aEditor->GetSelectionController(getter_AddRefs(selCon));
 
       if (selCon)
         selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL, nsISelectionController::SELECTION_ANCHOR_REGION, PR_TRUE);
@@ -3056,6 +3078,8 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
   nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
   if (compose)
   {
+    compose->SetEditorFromEditorShell();
+
     PRBool quotingToFollow = PR_FALSE;
     compose->GetQuotingToFollow(&quotingToFollow);
     if (quotingToFollow)
@@ -3074,8 +3098,10 @@ nsMsgDocumentStateListener::NotifyDocumentWillBeDestroyed(void)
 {
   nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
   if (compose)
-    compose->SetEditor(nsnull); /* m_editor will be destroyed. Set it to null to */
-                                /* be sure we wont use it anymore. */
+    compose->SetEditorShell(nsnull);
+      /* The editor will be destroyed. Set it to null to
+       * be sure we wont use it anymore.
+       */
   return NS_OK;
 }
 
@@ -3197,6 +3223,7 @@ nsMsgCompose::BuildQuotedMessageAndSignature(void)
   // 
   // This should never happen...if it does, just bail out...
   //
+  NS_ASSERTION(m_editor, "BuildQuotedMessageAndSignature but no editor!\n");
   if (!m_editor)
     return NS_ERROR_FAILURE;
 
@@ -3436,18 +3463,15 @@ nsMsgCompose::BuildBodyMessageAndSignature()
       break;
   }
 
-  if (m_editor)
-  {
-    nsAutoString empty;
-    nsAutoString bodStr(bod);
-    nsAutoString tSignature;
+  nsAutoString empty;
+  nsAutoString bodStr(bod);
+  nsAutoString tSignature;
 
-    if (addSignature)
-      ProcessSignature(m_identity, &tSignature);
+  if (addSignature)
+    ProcessSignature(m_identity, &tSignature);
 
-    rv = ConvertAndLoadComposeWindow(m_editor, empty, bodStr, tSignature,
-                                       PR_FALSE, m_composeHTML);
-  }
+  rv = ConvertAndLoadComposeWindow(empty, bodStr, tSignature,
+                                   PR_FALSE, m_composeHTML);
 
   PR_FREEIF(bod);
   return rv;
@@ -4326,13 +4350,11 @@ nsresult nsMsgCompose::BodyConvertible(PRInt32 *_retval)
 
     nsresult rv;
     
-    nsCOMPtr<nsIEditor> editor;
-    rv = m_editor->GetEditor(getter_AddRefs(editor));
-    if (NS_FAILED(rv) || nsnull == editor)
-      return rv;
+    if (!m_editor)
+      return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDOMElement> rootElement;
-    rv = editor->GetRootElement(getter_AddRefs(rootElement));
+    rv = m_editor->GetRootElement(getter_AddRefs(rootElement));
     if (NS_FAILED(rv) || nsnull == rootElement)
       return rv;
       
@@ -4375,13 +4397,11 @@ nsresult nsMsgCompose::SetBodyAttributes(nsString& attributes)
   if (attributes.IsEmpty()) //Nothing to do...
     return NS_OK;
 
-  nsCOMPtr<nsIEditor> editor;
-  rv = m_editor->GetEditor(getter_AddRefs(editor));
-  if (NS_FAILED(rv) || nsnull == editor)
-    return rv;
+  if (!m_editor)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMElement> rootElement;
-  rv = editor->GetRootElement(getter_AddRefs(rootElement));
+  rv = m_editor->GetRootElement(getter_AddRefs(rootElement));
   if (NS_FAILED(rv) || nsnull == rootElement)
     return rv;
   
@@ -4444,7 +4464,7 @@ nsresult nsMsgCompose::SetBodyAttributes(nsString& attributes)
         {
           /* we found the end of an attribute value */
           attributeValue.Assign(start, data - start);
-          rv = SetBodyAttribute(editor, rootElement, attributeName, attributeValue);
+          rv = SetBodyAttribute(m_editor, rootElement, attributeName, attributeValue);
           NS_ENSURE_SUCCESS(rv, rv);
 
           /* restart the search for the next pair of attribute */
@@ -4465,7 +4485,7 @@ nsresult nsMsgCompose::SetBodyAttributes(nsString& attributes)
   if (!attributeName.IsEmpty() && attributeValue.IsEmpty() && delimiter == ' ')
   {
     attributeValue.Assign(start, data - start);
-    rv = SetBodyAttribute(editor, rootElement, attributeName, attributeValue);
+    rv = SetBodyAttribute(m_editor, rootElement, attributeName, attributeValue);
   }
 
   return rv;
@@ -4478,13 +4498,8 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
   if (! m_editor)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIEditor> editor;
-  rv = m_editor->GetEditor(getter_AddRefs(editor));
-  if (NS_FAILED(rv) || nsnull == editor)
-    return rv;
-
   nsCOMPtr<nsIDOMElement> rootElement;
-  rv = editor->GetRootElement(getter_AddRefs(rootElement));
+  rv = m_editor->GetRootElement(getter_AddRefs(rootElement));
   if (NS_FAILED(rv) || nsnull == rootElement)
     return rv;
 
@@ -4515,12 +4530,12 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
           if (attributeValue.Find("moz-signature", PR_TRUE) != kNotFound)
           {
             //Now, I am sure I get the right node!
-            editor->BeginTransaction();
+            m_editor->BeginTransaction();
             node->GetPreviousSibling(getter_AddRefs(tempNode));
-            rv = editor->DeleteNode(node);
+            rv = m_editor->DeleteNode(node);
             if (NS_FAILED(rv))
             {
-              editor->EndTransaction();
+              m_editor->EndTransaction();
               return rv;
             }
 
@@ -4529,9 +4544,9 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
             {
               tempNode->GetLocalName(tagLocalName);
               if (tagLocalName.Equals(NS_LITERAL_STRING("BR")))
-                editor->DeleteNode(tempNode);
+                m_editor->DeleteNode(tempNode);
             }
-            editor->EndTransaction();
+            m_editor->EndTransaction();
           }
         }
       }
@@ -4584,7 +4599,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
       if (searchState == 3)
       {
         //Now, I am sure I get the right node!
-        editor->BeginTransaction();
+        m_editor->BeginTransaction();
 
         tempNode = lastNode;
         lastNode = node;
@@ -4592,15 +4607,15 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
         {
           node = tempNode;
           node->GetPreviousSibling(getter_AddRefs(tempNode));
-          rv = editor->DeleteNode(node);
+          rv = m_editor->DeleteNode(node);
           if (NS_FAILED(rv))
           {
-            editor->EndTransaction();
+            m_editor->EndTransaction();
             return rv;
           }
 
         } while (node != lastNode && tempNode);
-        editor->EndTransaction();
+        m_editor->EndTransaction();
       }
     }
   }
@@ -4613,13 +4628,19 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
   {
     TranslateLineEnding(aSignature);
 
-    editor->BeginTransaction();
-    editor->EndOfDocument();
+    m_editor->BeginTransaction();
+    m_editor->EndOfDocument();
     if (m_composeHTML)
-      rv = m_editor->InsertSource(aSignature.get());
+    {
+      nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(m_editor));
+      rv = htmlEditor->InsertHTML(aSignature);
+    }
     else
-      rv = m_editor->InsertText(aSignature.get());
-    editor->EndTransaction();
+    {
+      nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(m_editor));
+      rv = textEditor->InsertText(aSignature);
+    }
+    m_editor->EndTransaction();
   }
 
   return rv;

@@ -57,12 +57,14 @@
 #include "nsIAbDirectory.h"
 #include "nsIMimeConverter.h"
 #include "nsICharsetConverterManager2.h"
+#include "nsIEditor.h"
 
 // Forward declares
 class QuotingOutputStreamListener;
 class nsMsgComposeSendListener;
 class nsMsgDocumentStateListener;
 class nsIAddrDatabase;
+class nsIEditorMailSupport;
 
 class nsMsgCompose : public nsIMsgCompose, public nsSupportsWeakReference
 {
@@ -88,7 +90,7 @@ private:
                                                      const char * originalHost,
                                                      const char * originalPath,
                                                      nsIDOMNode * object);
-  nsresult                      TagEmbeddedObjects(nsIEditorShell *aEditorShell);
+  nsresult                      TagEmbeddedObjects(nsIEditorMailSupport *aMailEditor);
 
   nsCString                     mQuoteURI;
   nsCString                     mOriginalMsgURI; // used so we can mark message disposition flags after we send the message
@@ -131,7 +133,8 @@ private:
        // Helper function. Parameters are not checked.
   PRBool                                    mConvertStructs;    // for TagConvertible
   
-	nsIEditorShell                            *m_editor;
+	nsCOMPtr<nsIEditor>                       m_editor;
+	nsIEditorShell                            *m_editorShell;
 	nsIDOMWindowInternal                      *m_window;
   nsCOMPtr<nsIBaseWindow>                   m_baseWindow;
 	nsMsgCompFields                           *m_compFields;
@@ -185,7 +188,7 @@ public:
     NS_IMETHOD  SetComposeObj(nsIMsgCompose *obj);
 	  NS_IMETHOD  ConvertToPlainText(PRBool formatflowed = PR_FALSE);
 	  NS_IMETHOD	SetMimeHeaders(nsIMimeHeaders * headers);
-    NS_IMETHOD InsertToCompose(nsIEditorShell *aEditorShell, PRBool aHTMLEditor);
+    NS_IMETHOD InsertToCompose(nsIEditor *aEditor, PRBool aHTMLEditor);
 
 private:
     nsWeakPtr                 mWeakComposeObj;

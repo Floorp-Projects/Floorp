@@ -94,6 +94,7 @@
 #include "nsISmtpUrl.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIEditorMailSupport.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
 #include "nsILoadGroup.h"
 #include "nsMsgSendReport.h"
@@ -503,7 +504,6 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   PRBool tonews;
   PRBool body_is_us_ascii = PR_TRUE;
 
-  nsMsgSendPart   *mpartcontainer = nsnull;
   nsMsgSendPart* toppart = nsnull;      // The very top most container of the message
                       // that we are going to send.
 
@@ -1277,7 +1277,6 @@ nsresult nsMsgComposeAndSend::BeginCryptoEncapsulation ()
       // bah i'd like to move the following blurb into the implementation of BeginCryptoEncapsulation; however
       // the apis for nsIMsgComposeField just aren't rich enough. It requires the implementor to jump through way
       // too many string conversions....
-	    int status = 0;
 	    char * recipients = (char *)
       PR_MALLOC((mCompFields->GetTo()  ? strlen(mCompFields->GetTo())  : 0) +
 				 (mCompFields->GetCc()  ? strlen(mCompFields->GetCc())  : 0) +
@@ -1540,10 +1539,11 @@ nsMsgComposeAndSend::GetMultipartRelatedCount(PRBool forceToBeCalculated /*=PR_F
 
   //First time here, let's calculate the correct number of related part we need to generate
   mMultipartRelatedAttachmentCount = 0;
-  if (!mEditor)
+  nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(mEditor));
+  if (!mailEditor)
     return 0;
 
-  rv = mEditor->GetEmbeddedObjects(getter_AddRefs(mEmbeddedObjectList));
+  rv = mailEditor->GetEmbeddedObjects(getter_AddRefs(mEmbeddedObjectList));
   if ((NS_FAILED(rv) || (!mEmbeddedObjectList)))
     return 0;
 
@@ -1602,19 +1602,23 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   //
   nsString  format; format.AssignWithConversion(TEXT_HTML);
   PRUint32  flags = nsIDocumentEncoder::OutputFormatted  | nsIDocumentEncoder::OutputNoFormattingInPre;
-  PRUnichar *bodyText = nsnull;
+  nsAutoString bodyStr;
+  PRUnichar* bodyText = nsnull;
   nsresult rv;
   PRUnichar *origHTMLBody = nsnull;
 
   // Ok, get the body...the DOM should have been whacked with 
   // Content ID's already
-  mEditor->GetContentsAs(format.get(), flags, &bodyText);
+  mEditor->OutputToString(format, flags, bodyStr);
 
  //
   // If we really didn't get a body, just return NS_OK
   //
-  if ((!bodyText) || (!*bodyText))
+  if (bodyStr.IsEmpty())
     return NS_OK;
+  bodyText = ToNewUnicode(bodyStr);
+  if (!bodyText)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // If we are forcing this to be plain text, we should not be
   // doing this conversion.
@@ -3812,7 +3816,7 @@ nsMsgComposeAndSend::NotifyListenerOnStopCopy(nsresult aStatus)
  */
 nsresult 
 nsMsgComposeAndSend::CreateAndSendMessage(
-              nsIEditorShell                    *aEditor,
+              nsIEditor                         *aEditor,
               nsIMsgIdentity                    *aUserIdentity,
               nsIMsgCompFields                  *fields,
               PRBool                            digest_p,
