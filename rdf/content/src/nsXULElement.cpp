@@ -694,6 +694,7 @@ RDFElementImpl::~RDFElementImpl()
     NS_IF_RELEASE(mListenerManager);
 
     if (mChildren) {
+#if 0
         // Force child's parent to be null. This ensures that we don't
         // have dangling pointers if a child gets leaked.
         PRUint32 cnt;
@@ -705,6 +706,7 @@ RDFElementImpl::~RDFElementImpl()
 
             child->SetParent(nsnull);
         }
+#endif
         NS_RELEASE(mChildren);
     }
 
