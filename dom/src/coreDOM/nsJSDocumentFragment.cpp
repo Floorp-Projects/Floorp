@@ -113,6 +113,15 @@ SetDocumentFragmentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// DocumentFragment class properties
+//
+static JSPropertySpec DocumentFragmentProperties[] =
+{
+  {0}
+};
+
+
+//
 // DocumentFragment finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -128,7 +137,7 @@ FinalizeDocumentFragment(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateDocumentFragment(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -138,7 +147,7 @@ EnumerateDocumentFragment(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveDocumentFragment(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -159,15 +168,6 @@ JSClass DocumentFragmentClass = {
   FinalizeDocumentFragment,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// DocumentFragment class properties
-//
-static JSPropertySpec DocumentFragmentProperties[] =
-{
-  {0}
 };
 
 

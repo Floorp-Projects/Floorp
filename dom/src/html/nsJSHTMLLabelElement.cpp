@@ -182,6 +182,18 @@ SetHTMLLabelElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLLabelElement class properties
+//
+static JSPropertySpec HTMLLabelElementProperties[] =
+{
+  {"form",    HTMLLABELELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"accessKey",    HTMLLABELELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
+  {"htmlFor",    HTMLLABELELEMENT_HTMLFOR,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLLabelElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -197,7 +209,7 @@ FinalizeHTMLLabelElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLLabelElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -207,7 +219,7 @@ EnumerateHTMLLabelElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLLabelElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -228,18 +240,6 @@ JSClass HTMLLabelElementClass = {
   FinalizeHTMLLabelElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLLabelElement class properties
-//
-static JSPropertySpec HTMLLabelElementProperties[] =
-{
-  {"form",    HTMLLABELELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"accessKey",    HTMLLABELELEMENT_ACCESSKEY,    JSPROP_ENUMERATE},
-  {"htmlFor",    HTMLLABELELEMENT_HTMLFOR,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

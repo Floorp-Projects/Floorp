@@ -847,8 +847,11 @@ LocationImpl::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 }
 
 PRBool    
-LocationImpl::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+LocationImpl::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                      PRBool* aDidDefineProperty)
 {
+  *aDidDefineProperty = PR_FALSE;
+
   if (JSVAL_IS_STRING(aID)) {
     JSString *str;
 
@@ -863,6 +866,8 @@ LocationImpl::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
       ::JS_DefineUCProperty(aContext, (JSObject *)mScriptObject,
                             chars, ::JS_GetStringLength(str),
                             JSVAL_VOID, nsnull, nsnull, 0);
+
+      *aDidDefineProperty = PR_TRUE;
     }
   }
 

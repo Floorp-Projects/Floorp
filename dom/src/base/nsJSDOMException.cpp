@@ -169,6 +169,19 @@ SetDOMExceptionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// DOMException class properties
+//
+static JSPropertySpec DOMExceptionProperties[] =
+{
+  {"code",    DOMEXCEPTION_CODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"result",    DOMEXCEPTION_RESULT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"message",    DOMEXCEPTION_MESSAGE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"name",    DOMEXCEPTION_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // DOMException finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -184,7 +197,7 @@ FinalizeDOMException(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateDOMException(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -194,7 +207,7 @@ EnumerateDOMException(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveDOMException(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -251,19 +264,6 @@ JSClass DOMExceptionClass = {
   FinalizeDOMException,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// DOMException class properties
-//
-static JSPropertySpec DOMExceptionProperties[] =
-{
-  {"code",    DOMEXCEPTION_CODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"result",    DOMEXCEPTION_RESULT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"message",    DOMEXCEPTION_MESSAGE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"name",    DOMEXCEPTION_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

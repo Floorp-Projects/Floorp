@@ -130,6 +130,16 @@ SetCRMFObjectProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// CRMFObject class properties
+//
+static JSPropertySpec CRMFObjectProperties[] =
+{
+  {"request",    CRMFOBJECT_REQUEST,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // CRMFObject finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -145,7 +155,7 @@ FinalizeCRMFObject(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCRMFObject(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -155,7 +165,7 @@ EnumerateCRMFObject(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCRMFObject(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -176,16 +186,6 @@ JSClass CRMFObjectClass = {
   FinalizeCRMFObject,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// CRMFObject class properties
-//
-static JSPropertySpec CRMFObjectProperties[] =
-{
-  {"request",    CRMFOBJECT_REQUEST,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

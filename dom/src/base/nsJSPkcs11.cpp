@@ -113,6 +113,15 @@ SetPkcs11Property(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Pkcs11 class properties
+//
+static JSPropertySpec Pkcs11Properties[] =
+{
+  {0}
+};
+
+
+//
 // Pkcs11 finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -128,7 +137,7 @@ FinalizePkcs11(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumeratePkcs11(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -138,7 +147,7 @@ EnumeratePkcs11(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolvePkcs11(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -253,15 +262,6 @@ JSClass Pkcs11Class = {
   FinalizePkcs11,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Pkcs11 class properties
-//
-static JSPropertySpec Pkcs11Properties[] =
-{
-  {0}
 };
 
 

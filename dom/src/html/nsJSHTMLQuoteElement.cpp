@@ -141,6 +141,16 @@ SetHTMLQuoteElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLQuoteElement class properties
+//
+static JSPropertySpec HTMLQuoteElementProperties[] =
+{
+  {"cite",    HTMLQUOTEELEMENT_CITE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLQuoteElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -156,7 +166,7 @@ FinalizeHTMLQuoteElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLQuoteElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -166,7 +176,7 @@ EnumerateHTMLQuoteElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLQuoteElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -187,16 +197,6 @@ JSClass HTMLQuoteElementClass = {
   FinalizeHTMLQuoteElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLQuoteElement class properties
-//
-static JSPropertySpec HTMLQuoteElementProperties[] =
-{
-  {"cite",    HTMLQUOTEELEMENT_CITE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

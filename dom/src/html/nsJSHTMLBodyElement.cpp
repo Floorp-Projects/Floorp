@@ -266,6 +266,21 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLBodyElement class properties
+//
+static JSPropertySpec HTMLBodyElementProperties[] =
+{
+  {"aLink",    HTMLBODYELEMENT_ALINK,    JSPROP_ENUMERATE},
+  {"background",    HTMLBODYELEMENT_BACKGROUND,    JSPROP_ENUMERATE},
+  {"bgColor",    HTMLBODYELEMENT_BGCOLOR,    JSPROP_ENUMERATE},
+  {"link",    HTMLBODYELEMENT_LINK,    JSPROP_ENUMERATE},
+  {"text",    HTMLBODYELEMENT_TEXT,    JSPROP_ENUMERATE},
+  {"vLink",    HTMLBODYELEMENT_VLINK,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLBodyElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -281,7 +296,7 @@ FinalizeHTMLBodyElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLBodyElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -291,7 +306,7 @@ EnumerateHTMLBodyElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLBodyElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -312,21 +327,6 @@ JSClass HTMLBodyElementClass = {
   FinalizeHTMLBodyElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLBodyElement class properties
-//
-static JSPropertySpec HTMLBodyElementProperties[] =
-{
-  {"aLink",    HTMLBODYELEMENT_ALINK,    JSPROP_ENUMERATE},
-  {"background",    HTMLBODYELEMENT_BACKGROUND,    JSPROP_ENUMERATE},
-  {"bgColor",    HTMLBODYELEMENT_BGCOLOR,    JSPROP_ENUMERATE},
-  {"link",    HTMLBODYELEMENT_LINK,    JSPROP_ENUMERATE},
-  {"text",    HTMLBODYELEMENT_TEXT,    JSPROP_ENUMERATE},
-  {"vLink",    HTMLBODYELEMENT_VLINK,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

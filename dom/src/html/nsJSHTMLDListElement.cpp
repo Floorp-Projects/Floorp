@@ -144,6 +144,16 @@ SetHTMLDListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLDListElement class properties
+//
+static JSPropertySpec HTMLDListElementProperties[] =
+{
+  {"compact",    HTMLDLISTELEMENT_COMPACT,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLDListElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -159,7 +169,7 @@ FinalizeHTMLDListElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLDListElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -169,7 +179,7 @@ EnumerateHTMLDListElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLDListElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -190,16 +200,6 @@ JSClass HTMLDListElementClass = {
   FinalizeHTMLDListElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLDListElement class properties
-//
-static JSPropertySpec HTMLDListElementProperties[] =
-{
-  {"compact",    HTMLDLISTELEMENT_COMPACT,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

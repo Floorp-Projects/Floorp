@@ -399,6 +399,26 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLIFrameElement class properties
+//
+static JSPropertySpec HTMLIFrameElementProperties[] =
+{
+  {"align",    HTMLIFRAMEELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {"frameBorder",    HTMLIFRAMEELEMENT_FRAMEBORDER,    JSPROP_ENUMERATE},
+  {"height",    HTMLIFRAMEELEMENT_HEIGHT,    JSPROP_ENUMERATE},
+  {"longDesc",    HTMLIFRAMEELEMENT_LONGDESC,    JSPROP_ENUMERATE},
+  {"marginHeight",    HTMLIFRAMEELEMENT_MARGINHEIGHT,    JSPROP_ENUMERATE},
+  {"marginWidth",    HTMLIFRAMEELEMENT_MARGINWIDTH,    JSPROP_ENUMERATE},
+  {"name",    HTMLIFRAMEELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"scrolling",    HTMLIFRAMEELEMENT_SCROLLING,    JSPROP_ENUMERATE},
+  {"src",    HTMLIFRAMEELEMENT_SRC,    JSPROP_ENUMERATE},
+  {"width",    HTMLIFRAMEELEMENT_WIDTH,    JSPROP_ENUMERATE},
+  {"contentDocument",    HTMLIFRAMEELEMENT_CONTENTDOCUMENT,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLIFrameElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -414,7 +434,7 @@ FinalizeHTMLIFrameElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLIFrameElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -424,7 +444,7 @@ EnumerateHTMLIFrameElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLIFrameElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -445,26 +465,6 @@ JSClass HTMLIFrameElementClass = {
   FinalizeHTMLIFrameElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLIFrameElement class properties
-//
-static JSPropertySpec HTMLIFrameElementProperties[] =
-{
-  {"align",    HTMLIFRAMEELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {"frameBorder",    HTMLIFRAMEELEMENT_FRAMEBORDER,    JSPROP_ENUMERATE},
-  {"height",    HTMLIFRAMEELEMENT_HEIGHT,    JSPROP_ENUMERATE},
-  {"longDesc",    HTMLIFRAMEELEMENT_LONGDESC,    JSPROP_ENUMERATE},
-  {"marginHeight",    HTMLIFRAMEELEMENT_MARGINHEIGHT,    JSPROP_ENUMERATE},
-  {"marginWidth",    HTMLIFRAMEELEMENT_MARGINWIDTH,    JSPROP_ENUMERATE},
-  {"name",    HTMLIFRAMEELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"scrolling",    HTMLIFRAMEELEMENT_SCROLLING,    JSPROP_ENUMERATE},
-  {"src",    HTMLIFRAMEELEMENT_SRC,    JSPROP_ENUMERATE},
-  {"width",    HTMLIFRAMEELEMENT_WIDTH,    JSPROP_ENUMERATE},
-  {"contentDocument",    HTMLIFRAMEELEMENT_CONTENTDOCUMENT,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

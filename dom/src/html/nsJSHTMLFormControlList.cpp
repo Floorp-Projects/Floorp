@@ -123,6 +123,15 @@ SetHTMLFormControlListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
 
 //
+// HTMLFormControlList class properties
+//
+static JSPropertySpec HTMLFormControlListProperties[] =
+{
+  {0}
+};
+
+
+//
 // HTMLFormControlList finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -138,7 +147,7 @@ FinalizeHTMLFormControlList(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLFormControlList(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -148,7 +157,7 @@ EnumerateHTMLFormControlList(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLFormControlList(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -241,15 +250,6 @@ JSClass HTMLFormControlListClass = {
   FinalizeHTMLFormControlList,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLFormControlList class properties
-//
-static JSPropertySpec HTMLFormControlListProperties[] =
-{
-  {0}
 };
 
 

@@ -191,6 +191,18 @@ SetHTMLBaseFontElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
 
 //
+// HTMLBaseFontElement class properties
+//
+static JSPropertySpec HTMLBaseFontElementProperties[] =
+{
+  {"color",    HTMLBASEFONTELEMENT_COLOR,    JSPROP_ENUMERATE},
+  {"face",    HTMLBASEFONTELEMENT_FACE,    JSPROP_ENUMERATE},
+  {"size",    HTMLBASEFONTELEMENT_SIZE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLBaseFontElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -206,7 +218,7 @@ FinalizeHTMLBaseFontElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLBaseFontElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -216,7 +228,7 @@ EnumerateHTMLBaseFontElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLBaseFontElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -237,18 +249,6 @@ JSClass HTMLBaseFontElementClass = {
   FinalizeHTMLBaseFontElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLBaseFontElement class properties
-//
-static JSPropertySpec HTMLBaseFontElementProperties[] =
-{
-  {"color",    HTMLBASEFONTELEMENT_COLOR,    JSPROP_ENUMERATE},
-  {"face",    HTMLBASEFONTELEMENT_FACE,    JSPROP_ENUMERATE},
-  {"size",    HTMLBASEFONTELEMENT_SIZE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -113,6 +113,15 @@ SetEntityReferenceProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// EntityReference class properties
+//
+static JSPropertySpec EntityReferenceProperties[] =
+{
+  {0}
+};
+
+
+//
 // EntityReference finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -128,7 +137,7 @@ FinalizeEntityReference(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateEntityReference(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -138,7 +147,7 @@ EnumerateEntityReference(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveEntityReference(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -159,15 +168,6 @@ JSClass EntityReferenceClass = {
   FinalizeEntityReference,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// EntityReference class properties
-//
-static JSPropertySpec EntityReferenceProperties[] =
-{
-  {0}
 };
 
 

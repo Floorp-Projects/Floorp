@@ -353,6 +353,26 @@ SetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// UIEvent class properties
+//
+static JSPropertySpec UIEventProperties[] =
+{
+  {"view",    UIEVENT_VIEW,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"detail",    UIEVENT_DETAIL,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"layerX",    NSUIEVENT_LAYERX,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"layerY",    NSUIEVENT_LAYERY,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"pageX",    NSUIEVENT_PAGEX,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"pageY",    NSUIEVENT_PAGEY,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"which",    NSUIEVENT_WHICH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"rangeParent",    NSUIEVENT_RANGEPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"rangeOffset",    NSUIEVENT_RANGEOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"cancelBubble",    NSUIEVENT_CANCELBUBBLE,    JSPROP_ENUMERATE},
+  {"isChar",    NSUIEVENT_ISCHAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // UIEvent finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -368,7 +388,7 @@ FinalizeUIEvent(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateUIEvent(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -378,7 +398,7 @@ EnumerateUIEvent(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveUIEvent(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -501,26 +521,6 @@ JSClass UIEventClass = {
   FinalizeUIEvent,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// UIEvent class properties
-//
-static JSPropertySpec UIEventProperties[] =
-{
-  {"view",    UIEVENT_VIEW,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"detail",    UIEVENT_DETAIL,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"layerX",    NSUIEVENT_LAYERX,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"layerY",    NSUIEVENT_LAYERY,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"pageX",    NSUIEVENT_PAGEX,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"pageY",    NSUIEVENT_PAGEY,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"which",    NSUIEVENT_WHICH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"rangeParent",    NSUIEVENT_RANGEPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"rangeOffset",    NSUIEVENT_RANGEOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"cancelBubble",    NSUIEVENT_CANCELBUBBLE,    JSPROP_ENUMERATE},
-  {"isChar",    NSUIEVENT_ISCHAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

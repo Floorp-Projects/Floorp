@@ -174,6 +174,16 @@ SetMimeTypeArrayProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// MimeTypeArray class properties
+//
+static JSPropertySpec MimeTypeArrayProperties[] =
+{
+  {"length",    MIMETYPEARRAY_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // MimeTypeArray finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -189,7 +199,7 @@ FinalizeMimeTypeArray(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateMimeTypeArray(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -199,7 +209,7 @@ EnumerateMimeTypeArray(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveMimeTypeArray(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -306,16 +316,6 @@ JSClass MimeTypeArrayClass = {
   FinalizeMimeTypeArray,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// MimeTypeArray class properties
-//
-static JSPropertySpec MimeTypeArrayProperties[] =
-{
-  {"length",    MIMETYPEARRAY_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

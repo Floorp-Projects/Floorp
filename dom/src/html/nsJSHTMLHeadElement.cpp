@@ -141,6 +141,16 @@ SetHTMLHeadElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLHeadElement class properties
+//
+static JSPropertySpec HTMLHeadElementProperties[] =
+{
+  {"profile",    HTMLHEADELEMENT_PROFILE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLHeadElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -156,7 +166,7 @@ FinalizeHTMLHeadElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLHeadElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -166,7 +176,7 @@ EnumerateHTMLHeadElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLHeadElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -187,16 +197,6 @@ JSClass HTMLHeadElementClass = {
   FinalizeHTMLHeadElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLHeadElement class properties
-//
-static JSPropertySpec HTMLHeadElementProperties[] =
-{
-  {"profile",    HTMLHEADELEMENT_PROFILE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

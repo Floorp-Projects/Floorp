@@ -149,6 +149,17 @@ SetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// CSSStyleSheet class properties
+//
+static JSPropertySpec CSSStyleSheetProperties[] =
+{
+  {"ownerRule",    CSSSTYLESHEET_OWNERRULE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"cssRules",    CSSSTYLESHEET_CSSRULES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // CSSStyleSheet finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -164,7 +175,7 @@ FinalizeCSSStyleSheet(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSSStyleSheet(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -174,7 +185,7 @@ EnumerateCSSStyleSheet(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSSStyleSheet(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -284,17 +295,6 @@ JSClass CSSStyleSheetClass = {
   FinalizeCSSStyleSheet,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// CSSStyleSheet class properties
-//
-static JSPropertySpec CSSStyleSheetProperties[] =
-{
-  {"ownerRule",    CSSSTYLESHEET_OWNERRULE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"cssRules",    CSSSTYLESHEET_CSSRULES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

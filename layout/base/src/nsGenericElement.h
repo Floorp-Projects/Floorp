@@ -224,7 +224,8 @@ public:
   PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
   PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                    PRBool *aDidDefineProperty);
   PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
   void      Finalize(JSContext *aContext, JSObject *aObj);
 
@@ -1393,11 +1394,12 @@ public:
   virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj) { \
     return _g.EnumerateProperty(aContext, aObj);                             \
   }                                                                          \
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID) { \
-    return _g.EnumerateProperty(aContext, aObj);                              \
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,  \
+                            PRBool *aDidDefineProperty) {                    \
+    return _g.Resolve(aContext, aObj, aID, aDidDefineProperty);              \
   }                                                                           \
   virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID) { \
-    return _g.EnumerateProperty(aContext, aObj);                              \
+    return _g.Convert(aContext, aObj, aID);                                   \
   }                                                                           \
   virtual void      Finalize(JSContext *aContext, JSObject *aObj) {     \
     _g.Finalize(aContext, aObj);                                        \

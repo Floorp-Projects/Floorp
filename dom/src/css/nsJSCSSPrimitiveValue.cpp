@@ -136,6 +136,16 @@ SetCSSPrimitiveValueProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// CSSPrimitiveValue class properties
+//
+static JSPropertySpec CSSPrimitiveValueProperties[] =
+{
+  {"primitiveType",    CSSPRIMITIVEVALUE_PRIMITIVETYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // CSSPrimitiveValue finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -151,7 +161,7 @@ FinalizeCSSPrimitiveValue(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSSPrimitiveValue(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -161,7 +171,7 @@ EnumerateCSSPrimitiveValue(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSSPrimitiveValue(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -462,16 +472,6 @@ JSClass CSSPrimitiveValueClass = {
   FinalizeCSSPrimitiveValue,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// CSSPrimitiveValue class properties
-//
-static JSPropertySpec CSSPrimitiveValueProperties[] =
-{
-  {"primitiveType",    CSSPRIMITIVEVALUE_PRIMITIVETYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

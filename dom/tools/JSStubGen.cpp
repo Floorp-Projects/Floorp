@@ -81,12 +81,12 @@ JSStubGen::Generate(char *aFileName,
   GeneratePropertyFunc(aSpec, PR_TRUE);
   GeneratePropertyFunc(aSpec, PR_FALSE);
   GenerateCustomPropertyFuncs(aSpec);
+  GenerateClassProperties(aSpec);
   GenerateFinalize(aSpec);
   GenerateEnumerate(aSpec);
   GenerateResolve(aSpec);
   GenerateMethods(aSpec);
   GenerateJSClass(aSpec);
-  GenerateClassProperties(aSpec);
   GenerateClassFunctions(aSpec);
   GenerateConstructor(aSpec);
   GenerateInitClass(aSpec);
@@ -273,7 +273,7 @@ JSStubGen::GeneratePropertySlots(IdlSpecification &aSpec)
       IdlAttribute *attr = iface->GetAttributeAt(a);
       char attr_name[128];
 
-      if (attr->GetIsNoScript()) {
+      if (attr->GetIsNoScript() || attr->GetReplaceable()) {
         continue;
       }
 
@@ -1190,6 +1190,28 @@ JSStubGen::GenerateCustomPropertyFuncs(IdlSpecification &aSpec)
 }
 
 
+static int HasReplaceableAttrs(IdlSpecification &aSpec)
+{
+  int i, icount = aSpec.InterfaceCount();
+  for (i = 0; i < icount; i++) {
+    IdlInterface *iface = aSpec.GetInterfaceAt(i);
+
+    int a, acount = iface->AttributeCount();
+
+    for (a = 0; a < acount; a++) {
+      IdlAttribute *attr = iface->GetAttributeAt(a);
+
+      if (attr->GetReplaceable()) {
+        return 1;
+      }
+    }
+  }
+
+
+  return 0;
+}
+
+
 static const char kFinalizeStr[] = 
 "\n\n//\n"
 "// %s finalizer\n"
@@ -1219,11 +1241,8 @@ static const char kEnumerateStr[] =
 "PR_STATIC_CALLBACK(JSBool)\n"
 "Enumerate%s(JSContext *cx, JSObject *obj)\n"
 "{\n"
-"  return nsJSUtils::nsGenericEnumerate(cx, obj);\n"
+"  return nsJSUtils::nsGenericEnumerate(cx, obj, %s);\n"
 "}\n";
-
-#define JSGEN_GENERATE_ENUMERATE(buf, className)                           \
-  sprintf(buf, kEnumerateStr, className, className);
 
 void     
 JSStubGen::GenerateEnumerate(IdlSpecification &aSpec)
@@ -1233,26 +1252,35 @@ JSStubGen::GenerateEnumerate(IdlSpecification &aSpec)
   IdlInterface *iface = aSpec.GetInterfaceAt(0);
   char *name = iface->GetName();
 
-  JSGEN_GENERATE_ENUMERATE(buf, name);
+  char tmpbuf[512];
+
+  if (HasReplaceableAttrs(aSpec)) {
+    sprintf(tmpbuf, "%sReplaceableProperties", name);
+  } else {
+    sprintf(tmpbuf, "nsnull");
+  }
+
+  sprintf(buf, kEnumerateStr, name, name, tmpbuf);
+
   *file << buf;
 }
 
 
-static const char kResolveStr[] =
+static const char kResolveStrStart[] =
 "\n\n//\n"
 "// %s resolve\n"
 "//\n"
 "PR_STATIC_CALLBACK(JSBool)\n"
 "Resolve%s(JSContext *cx, JSObject *obj, jsval id)\n"
-"{\n"
-"%s"
-"}\n";
+"{\n";
+
+static const char kResolveStrEnd[] = "}\n";
 
 static const char* kGenericResolveStr = 
-"  return nsJSUtils::nsGenericResolve(cx, obj, id);\n";
+"  return nsJSUtils::nsGenericResolve(cx, obj, id, %s);\n";
 
 static const char* kGlobalResolveStr = 
-"  return nsJSUtils::nsGlobalResolve(cx, obj, id);\n";
+"  return nsJSUtils::nsGlobalResolve(cx, obj, id, %s);\n";
 
 #define JSGEN_GENERATE_RESOLVE(buf, className, str)                       \
   sprintf(buf, kResolveStr, className, className, str);
@@ -1265,12 +1293,31 @@ JSStubGen::GenerateResolve(IdlSpecification &aSpec)
   IdlInterface *iface = aSpec.GetInterfaceAt(0);
   char *name = iface->GetName();
 
+  sprintf(buf, kResolveStrStart, name, name);
+
+  *file << buf;
+
+  int hasreplaceable = HasReplaceableAttrs(aSpec);
+
+  char tmpbuf[512];
+
+  if (HasReplaceableAttrs(aSpec)) {
+    sprintf(tmpbuf, "%sReplaceableProperties", name);
+  } else {
+    sprintf(tmpbuf, "nsnull");
+  }
+
   if (mIsGlobal) {
-    JSGEN_GENERATE_RESOLVE(buf, name, kGlobalResolveStr);
+    sprintf(buf, kGlobalResolveStr, tmpbuf);
   }
   else {
-    JSGEN_GENERATE_RESOLVE(buf, name, kGenericResolveStr);
+    sprintf(buf, kGenericResolveStr, tmpbuf);
   }
+
+  *file << buf;
+
+  sprintf(buf, kResolveStrEnd, name);
+
   *file << buf;
 }
 
@@ -1737,11 +1784,18 @@ static const char kPropSpecEntryStr[] =
 static const char kPropSpecReadOnlyStr[] = " | JSPROP_READONLY";
 
 static const char kPropSpecEntryReplaceableStr[] = 
-"  {\"%s\",    %s_%s,    JSPROP_ENUMERATE, %s%sGetter, %s%sSetter},\n";
+"  {\"%s\",    0,    JSPROP_ENUMERATE, %s%sGetter, %s%sSetter},\n";
 
 static const char kPropSpecEndStr[] = 
 "  {0}\n"
 "};\n";
+
+static const char kReplaceablePropSpecBeginStr[] = 
+"\n\n//\n"
+"// %s class replaceable properties\n"
+"//\n"
+"static JSPropertySpec %sReplaceableProperties[] =\n"
+"{\n";
 
 void     
 JSStubGen::GenerateClassProperties(IdlSpecification &aSpec)
@@ -1766,28 +1820,54 @@ JSStubGen::GenerateClassProperties(IdlSpecification &aSpec)
       IdlAttribute *attr = iface->GetAttributeAt(a);
       char attr_name[128];
 
-      if (attr->GetIsNoScript()) {
+      if (attr->GetIsNoScript() || attr->GetReplaceable()) {
         continue;
       }
 
       strcpy(attr_name, attr->GetName());
       StrUpr(attr_name);
 
-      if (attr->GetReplaceable()) {
-        sprintf(buf, kPropSpecEntryReplaceableStr, attr->GetName(),
-                iface_name, attr_name, iface->GetName(), attr->GetName(),
-                iface->GetName(), attr->GetName());
-      }
-      else {
-        sprintf(buf, kPropSpecEntryStr, attr->GetName(),
-                iface_name, attr_name, 
-                attr->GetReadOnly() ? kPropSpecReadOnlyStr : "");
-      }
+      sprintf(buf, kPropSpecEntryStr, attr->GetName(),
+              iface_name, attr_name, 
+              attr->GetReadOnly() ? kPropSpecReadOnlyStr : "");
+
       *file << buf;
     }
   }
 
   *file << kPropSpecEndStr;
+
+  if (HasReplaceableAttrs(aSpec)) {
+    sprintf(buf, kReplaceablePropSpecBeginStr, primary_iface->GetName(),
+            primary_iface->GetName());
+    *file << buf;
+  
+    icount = aSpec.InterfaceCount();
+    for (i = 0; i < icount; i++) {
+      IdlInterface *iface = aSpec.GetInterfaceAt(i);
+
+      int a, acount = iface->AttributeCount();
+      for (a = 0; a < acount; a++) {
+        IdlAttribute *attr = iface->GetAttributeAt(a);
+        char attr_name[128];
+
+        if (attr->GetIsNoScript() || !attr->GetReplaceable()) {
+          continue;
+        }
+
+        strcpy(attr_name, attr->GetName());
+        StrUpr(attr_name);
+
+        sprintf(buf, kPropSpecEntryReplaceableStr, attr->GetName(),
+                iface->GetName(), attr->GetName(),
+                iface->GetName(), attr->GetName());
+
+        *file << buf;
+      }
+    }
+
+    *file << kPropSpecEndStr;
+  }
 }
 
 

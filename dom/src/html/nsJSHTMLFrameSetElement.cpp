@@ -166,6 +166,17 @@ SetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
 
 
 //
+// HTMLFrameSetElement class properties
+//
+static JSPropertySpec HTMLFrameSetElementProperties[] =
+{
+  {"cols",    HTMLFRAMESETELEMENT_COLS,    JSPROP_ENUMERATE},
+  {"rows",    HTMLFRAMESETELEMENT_ROWS,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLFrameSetElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -181,7 +192,7 @@ FinalizeHTMLFrameSetElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLFrameSetElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -191,7 +202,7 @@ EnumerateHTMLFrameSetElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLFrameSetElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -212,17 +223,6 @@ JSClass HTMLFrameSetElementClass = {
   FinalizeHTMLFrameSetElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLFrameSetElement class properties
-//
-static JSPropertySpec HTMLFrameSetElementProperties[] =
-{
-  {"cols",    HTMLFRAMESETELEMENT_COLS,    JSPROP_ENUMERATE},
-  {"rows",    HTMLFRAMESETELEMENT_ROWS,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -468,56 +468,6 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// HTMLAreaElement finalizer
-//
-PR_STATIC_CALLBACK(void)
-FinalizeHTMLAreaElement(JSContext *cx, JSObject *obj)
-{
-  nsJSUtils::nsGenericFinalize(cx, obj);
-}
-
-
-//
-// HTMLAreaElement enumerate
-//
-PR_STATIC_CALLBACK(JSBool)
-EnumerateHTMLAreaElement(JSContext *cx, JSObject *obj)
-{
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
-}
-
-
-//
-// HTMLAreaElement resolve
-//
-PR_STATIC_CALLBACK(JSBool)
-ResolveHTMLAreaElement(JSContext *cx, JSObject *obj, jsval id)
-{
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
-}
-
-
-/***********************************************************************/
-//
-// class for HTMLAreaElement
-//
-JSClass HTMLAreaElementClass = {
-  "HTMLAreaElement", 
-  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  GetHTMLAreaElementProperty,
-  SetHTMLAreaElementProperty,
-  EnumerateHTMLAreaElement,
-  ResolveHTMLAreaElement,
-  JS_ConvertStub,
-  FinalizeHTMLAreaElement,
-  nsnull,
-  nsJSUtils::nsCheckAccess
-};
-
-
-//
 // HTMLAreaElement class properties
 //
 static JSPropertySpec HTMLAreaElementProperties[] =
@@ -538,6 +488,56 @@ static JSPropertySpec HTMLAreaElementProperties[] =
   {"port",    NSHTMLAREAELEMENT_PORT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"hash",    NSHTMLAREAELEMENT_HASH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
+};
+
+
+//
+// HTMLAreaElement finalizer
+//
+PR_STATIC_CALLBACK(void)
+FinalizeHTMLAreaElement(JSContext *cx, JSObject *obj)
+{
+  nsJSUtils::nsGenericFinalize(cx, obj);
+}
+
+
+//
+// HTMLAreaElement enumerate
+//
+PR_STATIC_CALLBACK(JSBool)
+EnumerateHTMLAreaElement(JSContext *cx, JSObject *obj)
+{
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
+}
+
+
+//
+// HTMLAreaElement resolve
+//
+PR_STATIC_CALLBACK(JSBool)
+ResolveHTMLAreaElement(JSContext *cx, JSObject *obj, jsval id)
+{
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
+}
+
+
+/***********************************************************************/
+//
+// class for HTMLAreaElement
+//
+JSClass HTMLAreaElementClass = {
+  "HTMLAreaElement", 
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetHTMLAreaElementProperty,
+  SetHTMLAreaElementProperty,
+  EnumerateHTMLAreaElement,
+  ResolveHTMLAreaElement,
+  JS_ConvertStub,
+  FinalizeHTMLAreaElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

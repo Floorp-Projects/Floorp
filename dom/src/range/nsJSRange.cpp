@@ -204,6 +204,21 @@ SetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Range class properties
+//
+static JSPropertySpec RangeProperties[] =
+{
+  {"startContainer",    RANGE_STARTCONTAINER,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"startOffset",    RANGE_STARTOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"endContainer",    RANGE_ENDCONTAINER,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"endOffset",    RANGE_ENDOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"collapsed",    RANGE_COLLAPSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"commonAncestorContainer",    RANGE_COMMONANCESTORCONTAINER,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Range finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -219,7 +234,7 @@ FinalizeRange(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateRange(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -229,7 +244,7 @@ EnumerateRange(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveRange(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -1351,21 +1366,6 @@ JSClass RangeClass = {
   FinalizeRange,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Range class properties
-//
-static JSPropertySpec RangeProperties[] =
-{
-  {"startContainer",    RANGE_STARTCONTAINER,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"startOffset",    RANGE_STARTOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"endContainer",    RANGE_ENDCONTAINER,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"endOffset",    RANGE_ENDOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"collapsed",    RANGE_COLLAPSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"commonAncestorContainer",    RANGE_COMMONANCESTORCONTAINER,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

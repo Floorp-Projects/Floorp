@@ -142,6 +142,16 @@ SetCSSRuleListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// CSSRuleList class properties
+//
+static JSPropertySpec CSSRuleListProperties[] =
+{
+  {"length",    CSSRULELIST_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // CSSRuleList finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -157,7 +167,7 @@ FinalizeCSSRuleList(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSSRuleList(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -167,7 +177,7 @@ EnumerateCSSRuleList(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSSRuleList(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -232,16 +242,6 @@ JSClass CSSRuleListClass = {
   FinalizeCSSRuleList,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// CSSRuleList class properties
-//
-static JSPropertySpec CSSRuleListProperties[] =
-{
-  {"length",    CSSRULELIST_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -163,6 +163,17 @@ SetMediaListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// MediaList class properties
+//
+static JSPropertySpec MediaListProperties[] =
+{
+  {"mediaText",    MEDIALIST_MEDIATEXT,    JSPROP_ENUMERATE},
+  {"length",    MEDIALIST_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // MediaList finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -178,7 +189,7 @@ FinalizeMediaList(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateMediaList(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -188,7 +199,7 @@ EnumerateMediaList(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveMediaList(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -335,17 +346,6 @@ JSClass MediaListClass = {
   FinalizeMediaList,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// MediaList class properties
-//
-static JSPropertySpec MediaListProperties[] =
-{
-  {"mediaText",    MEDIALIST_MEDIATEXT,    JSPROP_ENUMERATE},
-  {"length",    MEDIALIST_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

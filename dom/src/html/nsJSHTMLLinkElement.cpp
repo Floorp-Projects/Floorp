@@ -369,6 +369,25 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLLinkElement class properties
+//
+static JSPropertySpec HTMLLinkElementProperties[] =
+{
+  {"disabled",    HTMLLINKELEMENT_DISABLED,    JSPROP_ENUMERATE},
+  {"charset",    HTMLLINKELEMENT_CHARSET,    JSPROP_ENUMERATE},
+  {"href",    HTMLLINKELEMENT_HREF,    JSPROP_ENUMERATE},
+  {"hreflang",    HTMLLINKELEMENT_HREFLANG,    JSPROP_ENUMERATE},
+  {"media",    HTMLLINKELEMENT_MEDIA,    JSPROP_ENUMERATE},
+  {"rel",    HTMLLINKELEMENT_REL,    JSPROP_ENUMERATE},
+  {"rev",    HTMLLINKELEMENT_REV,    JSPROP_ENUMERATE},
+  {"target",    HTMLLINKELEMENT_TARGET,    JSPROP_ENUMERATE},
+  {"type",    HTMLLINKELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"sheet",    LINKSTYLE_SHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // HTMLLinkElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -384,7 +403,7 @@ FinalizeHTMLLinkElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLLinkElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -394,7 +413,7 @@ EnumerateHTMLLinkElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLLinkElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -415,25 +434,6 @@ JSClass HTMLLinkElementClass = {
   FinalizeHTMLLinkElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLLinkElement class properties
-//
-static JSPropertySpec HTMLLinkElementProperties[] =
-{
-  {"disabled",    HTMLLINKELEMENT_DISABLED,    JSPROP_ENUMERATE},
-  {"charset",    HTMLLINKELEMENT_CHARSET,    JSPROP_ENUMERATE},
-  {"href",    HTMLLINKELEMENT_HREF,    JSPROP_ENUMERATE},
-  {"hreflang",    HTMLLINKELEMENT_HREFLANG,    JSPROP_ENUMERATE},
-  {"media",    HTMLLINKELEMENT_MEDIA,    JSPROP_ENUMERATE},
-  {"rel",    HTMLLINKELEMENT_REL,    JSPROP_ENUMERATE},
-  {"rev",    HTMLLINKELEMENT_REV,    JSPROP_ENUMERATE},
-  {"target",    HTMLLINKELEMENT_TARGET,    JSPROP_ENUMERATE},
-  {"type",    HTMLLINKELEMENT_TYPE,    JSPROP_ENUMERATE},
-  {"sheet",    LINKSTYLE_SHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -157,6 +157,17 @@ SetHTMLIsIndexElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLIsIndexElement class properties
+//
+static JSPropertySpec HTMLIsIndexElementProperties[] =
+{
+  {"form",    HTMLISINDEXELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"prompt",    HTMLISINDEXELEMENT_PROMPT,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLIsIndexElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -172,7 +183,7 @@ FinalizeHTMLIsIndexElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLIsIndexElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -182,7 +193,7 @@ EnumerateHTMLIsIndexElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLIsIndexElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -203,17 +214,6 @@ JSClass HTMLIsIndexElementClass = {
   FinalizeHTMLIsIndexElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLIsIndexElement class properties
-//
-static JSPropertySpec HTMLIsIndexElementProperties[] =
-{
-  {"form",    HTMLISINDEXELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"prompt",    HTMLISINDEXELEMENT_PROMPT,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

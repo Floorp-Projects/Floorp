@@ -272,6 +272,21 @@ SetHTMLEmbedElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLEmbedElement class properties
+//
+static JSPropertySpec HTMLEmbedElementProperties[] =
+{
+  {"align",    HTMLEMBEDELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {"height",    HTMLEMBEDELEMENT_HEIGHT,    JSPROP_ENUMERATE},
+  {"name",    HTMLEMBEDELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"src",    HTMLEMBEDELEMENT_SRC,    JSPROP_ENUMERATE},
+  {"type",    HTMLEMBEDELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"width",    HTMLEMBEDELEMENT_WIDTH,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLEmbedElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -287,7 +302,7 @@ FinalizeHTMLEmbedElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLEmbedElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -297,7 +312,7 @@ EnumerateHTMLEmbedElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLEmbedElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -318,21 +333,6 @@ JSClass HTMLEmbedElementClass = {
   FinalizeHTMLEmbedElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLEmbedElement class properties
-//
-static JSPropertySpec HTMLEmbedElementProperties[] =
-{
-  {"align",    HTMLEMBEDELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {"height",    HTMLEMBEDELEMENT_HEIGHT,    JSPROP_ENUMERATE},
-  {"name",    HTMLEMBEDELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"src",    HTMLEMBEDELEMENT_SRC,    JSPROP_ENUMERATE},
-  {"type",    HTMLEMBEDELEMENT_TYPE,    JSPROP_ENUMERATE},
-  {"width",    HTMLEMBEDELEMENT_WIDTH,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

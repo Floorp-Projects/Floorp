@@ -161,6 +161,18 @@ SetRGBColorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// RGBColor class properties
+//
+static JSPropertySpec RGBColorProperties[] =
+{
+  {"red",    RGBCOLOR_RED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"green",    RGBCOLOR_GREEN,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"blue",    RGBCOLOR_BLUE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // RGBColor finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -176,7 +188,7 @@ FinalizeRGBColor(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateRGBColor(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -186,7 +198,7 @@ EnumerateRGBColor(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveRGBColor(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -207,18 +219,6 @@ JSClass RGBColorClass = {
   FinalizeRGBColor,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// RGBColor class properties
-//
-static JSPropertySpec RGBColorProperties[] =
-{
-  {"red",    RGBCOLOR_RED,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"green",    RGBCOLOR_GREEN,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"blue",    RGBCOLOR_BLUE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -141,6 +141,16 @@ SetHTMLHtmlElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLHtmlElement class properties
+//
+static JSPropertySpec HTMLHtmlElementProperties[] =
+{
+  {"version",    HTMLHTMLELEMENT_VERSION,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLHtmlElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -156,7 +166,7 @@ FinalizeHTMLHtmlElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLHtmlElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -166,7 +176,7 @@ EnumerateHTMLHtmlElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLHtmlElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -187,16 +197,6 @@ JSClass HTMLHtmlElementClass = {
   FinalizeHTMLHtmlElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLHtmlElement class properties
-//
-static JSPropertySpec HTMLHtmlElementProperties[] =
-{
-  {"version",    HTMLHTMLELEMENT_VERSION,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

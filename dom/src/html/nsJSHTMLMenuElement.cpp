@@ -144,6 +144,16 @@ SetHTMLMenuElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLMenuElement class properties
+//
+static JSPropertySpec HTMLMenuElementProperties[] =
+{
+  {"compact",    HTMLMENUELEMENT_COMPACT,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLMenuElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -159,7 +169,7 @@ FinalizeHTMLMenuElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLMenuElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -169,7 +179,7 @@ EnumerateHTMLMenuElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLMenuElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -190,16 +200,6 @@ JSClass HTMLMenuElementClass = {
   FinalizeHTMLMenuElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLMenuElement class properties
-//
-static JSPropertySpec HTMLMenuElementProperties[] =
-{
-  {"compact",    HTMLMENUELEMENT_COMPACT,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -193,6 +193,18 @@ SetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// XULTreeElement class properties
+//
+static JSPropertySpec XULTreeElementProperties[] =
+{
+  {"selectedItems",    XULTREEELEMENT_SELECTEDITEMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"currentItem",    XULTREEELEMENT_CURRENTITEM,    JSPROP_ENUMERATE},
+  {"suppressOnSelect",    XULTREEELEMENT_SUPPRESSONSELECT,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // XULTreeElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -208,7 +220,7 @@ FinalizeXULTreeElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateXULTreeElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -218,7 +230,7 @@ EnumerateXULTreeElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveXULTreeElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -638,18 +650,6 @@ JSClass XULTreeElementClass = {
   FinalizeXULTreeElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// XULTreeElement class properties
-//
-static JSPropertySpec XULTreeElementProperties[] =
-{
-  {"selectedItems",    XULTREEELEMENT_SELECTEDITEMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"currentItem",    XULTREEELEMENT_CURRENTITEM,    JSPROP_ENUMERATE},
-  {"suppressOnSelect",    XULTREEELEMENT_SUPPRESSONSELECT,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

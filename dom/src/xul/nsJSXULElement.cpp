@@ -266,6 +266,23 @@ SetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// XULElement class properties
+//
+static JSPropertySpec XULElementProperties[] =
+{
+  {"id",    XULELEMENT_ID,    JSPROP_ENUMERATE},
+  {"className",    XULELEMENT_CLASSNAME,    JSPROP_ENUMERATE},
+  {"style",    XULELEMENT_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"database",    XULELEMENT_DATABASE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"builder",    XULELEMENT_BUILDER,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"resource",    XULELEMENT_RESOURCE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"controllers",    XULELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"boxObject",    XULELEMENT_BOXOBJECT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // XULElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -281,7 +298,7 @@ FinalizeXULElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateXULElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -291,7 +308,7 @@ EnumerateXULElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveXULElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -594,23 +611,6 @@ JSClass XULElementClass = {
   FinalizeXULElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// XULElement class properties
-//
-static JSPropertySpec XULElementProperties[] =
-{
-  {"id",    XULELEMENT_ID,    JSPROP_ENUMERATE},
-  {"className",    XULELEMENT_CLASSNAME,    JSPROP_ENUMERATE},
-  {"style",    XULELEMENT_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"database",    XULELEMENT_DATABASE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"builder",    XULELEMENT_BUILDER,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"resource",    XULELEMENT_RESOURCE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"controllers",    XULELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"boxObject",    XULELEMENT_BOXOBJECT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

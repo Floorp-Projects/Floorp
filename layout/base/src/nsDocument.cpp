@@ -3280,8 +3280,11 @@ PRBool    nsDocument::EnumerateProperty(JSContext *aContext, JSObject *aObj)
   return PR_TRUE;
 }
 
-PRBool    nsDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+PRBool    nsDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                              PRBool *aDidDefineProperty)
 {
+  *aDidDefineProperty = PR_FALSE;
+
   return PR_TRUE;
 }
 

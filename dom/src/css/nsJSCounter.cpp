@@ -156,6 +156,18 @@ SetCounterProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Counter class properties
+//
+static JSPropertySpec CounterProperties[] =
+{
+  {"identifier",    COUNTER_IDENTIFIER,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"listStyle",    COUNTER_LISTSTYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"separator",    COUNTER_SEPARATOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Counter finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -171,7 +183,7 @@ FinalizeCounter(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCounter(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -181,7 +193,7 @@ EnumerateCounter(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCounter(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -202,18 +214,6 @@ JSClass CounterClass = {
   FinalizeCounter,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Counter class properties
-//
-static JSPropertySpec CounterProperties[] =
-{
-  {"identifier",    COUNTER_IDENTIFIER,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"listStyle",    COUNTER_LISTSTYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"separator",    COUNTER_SEPARATOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -184,6 +184,19 @@ SetCSSRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// CSSRule class properties
+//
+static JSPropertySpec CSSRuleProperties[] =
+{
+  {"type",    CSSRULE_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"cssText",    CSSRULE_CSSTEXT,    JSPROP_ENUMERATE},
+  {"parentStyleSheet",    CSSRULE_PARENTSTYLESHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"parentRule",    CSSRULE_PARENTRULE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // CSSRule finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -199,7 +212,7 @@ FinalizeCSSRule(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSSRule(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -209,7 +222,7 @@ EnumerateCSSRule(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSSRule(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -230,19 +243,6 @@ JSClass CSSRuleClass = {
   FinalizeCSSRule,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// CSSRule class properties
-//
-static JSPropertySpec CSSRuleProperties[] =
-{
-  {"type",    CSSRULE_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"cssText",    CSSRULE_CSSTEXT,    JSPROP_ENUMERATE},
-  {"parentStyleSheet",    CSSRULE_PARENTSTYLESHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"parentRule",    CSSRULE_PARENTRULE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -352,6 +352,24 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLFrameElement class properties
+//
+static JSPropertySpec HTMLFrameElementProperties[] =
+{
+  {"frameBorder",    HTMLFRAMEELEMENT_FRAMEBORDER,    JSPROP_ENUMERATE},
+  {"longDesc",    HTMLFRAMEELEMENT_LONGDESC,    JSPROP_ENUMERATE},
+  {"marginHeight",    HTMLFRAMEELEMENT_MARGINHEIGHT,    JSPROP_ENUMERATE},
+  {"marginWidth",    HTMLFRAMEELEMENT_MARGINWIDTH,    JSPROP_ENUMERATE},
+  {"name",    HTMLFRAMEELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"noResize",    HTMLFRAMEELEMENT_NORESIZE,    JSPROP_ENUMERATE},
+  {"scrolling",    HTMLFRAMEELEMENT_SCROLLING,    JSPROP_ENUMERATE},
+  {"src",    HTMLFRAMEELEMENT_SRC,    JSPROP_ENUMERATE},
+  {"contentDocument",    HTMLFRAMEELEMENT_CONTENTDOCUMENT,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLFrameElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -367,7 +385,7 @@ FinalizeHTMLFrameElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLFrameElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -377,7 +395,7 @@ EnumerateHTMLFrameElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLFrameElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -398,24 +416,6 @@ JSClass HTMLFrameElementClass = {
   FinalizeHTMLFrameElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLFrameElement class properties
-//
-static JSPropertySpec HTMLFrameElementProperties[] =
-{
-  {"frameBorder",    HTMLFRAMEELEMENT_FRAMEBORDER,    JSPROP_ENUMERATE},
-  {"longDesc",    HTMLFRAMEELEMENT_LONGDESC,    JSPROP_ENUMERATE},
-  {"marginHeight",    HTMLFRAMEELEMENT_MARGINHEIGHT,    JSPROP_ENUMERATE},
-  {"marginWidth",    HTMLFRAMEELEMENT_MARGINWIDTH,    JSPROP_ENUMERATE},
-  {"name",    HTMLFRAMEELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"noResize",    HTMLFRAMEELEMENT_NORESIZE,    JSPROP_ENUMERATE},
-  {"scrolling",    HTMLFRAMEELEMENT_SCROLLING,    JSPROP_ENUMERATE},
-  {"src",    HTMLFRAMEELEMENT_SRC,    JSPROP_ENUMERATE},
-  {"contentDocument",    HTMLFRAMEELEMENT_CONTENTDOCUMENT,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -52,7 +52,8 @@ public:
   virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, 
                                 jsval *aVp) = 0;
   virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj) = 0;
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID) = 0;
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj,
+                            jsval aID, PRBool *aDidDefineProperty) = 0;
   virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID) = 0;
   virtual void      Finalize(JSContext *aContext, JSObject *aObj) = 0;
 };

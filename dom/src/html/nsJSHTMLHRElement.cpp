@@ -219,6 +219,19 @@ SetHTMLHRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLHRElement class properties
+//
+static JSPropertySpec HTMLHRElementProperties[] =
+{
+  {"align",    HTMLHRELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {"noShade",    HTMLHRELEMENT_NOSHADE,    JSPROP_ENUMERATE},
+  {"size",    HTMLHRELEMENT_SIZE,    JSPROP_ENUMERATE},
+  {"width",    HTMLHRELEMENT_WIDTH,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLHRElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -234,7 +247,7 @@ FinalizeHTMLHRElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLHRElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -244,7 +257,7 @@ EnumerateHTMLHRElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLHRElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -265,19 +278,6 @@ JSClass HTMLHRElementClass = {
   FinalizeHTMLHRElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLHRElement class properties
-//
-static JSPropertySpec HTMLHRElementProperties[] =
-{
-  {"align",    HTMLHRELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {"noShade",    HTMLHRELEMENT_NOSHADE,    JSPROP_ENUMERATE},
-  {"size",    HTMLHRELEMENT_SIZE,    JSPROP_ENUMERATE},
-  {"width",    HTMLHRELEMENT_WIDTH,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

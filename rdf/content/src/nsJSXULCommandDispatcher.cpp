@@ -270,6 +270,20 @@ SetXULCommandDispatcherProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
 
 
 //
+// XULCommandDispatcher class properties
+//
+static JSPropertySpec XULCommandDispatcherProperties[] =
+{
+  {"focusedElement",    XULCOMMANDDISPATCHER_FOCUSEDELEMENT,    JSPROP_ENUMERATE},
+  {"focusedWindow",    XULCOMMANDDISPATCHER_FOCUSEDWINDOW,    JSPROP_ENUMERATE},
+  {"suppressFocus",    XULCOMMANDDISPATCHER_SUPPRESSFOCUS,    JSPROP_ENUMERATE},
+  {"suppressFocusScroll",    XULCOMMANDDISPATCHER_SUPPRESSFOCUSSCROLL,    JSPROP_ENUMERATE},
+  {"active",    XULCOMMANDDISPATCHER_ACTIVE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // XULCommandDispatcher finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -285,7 +299,7 @@ FinalizeXULCommandDispatcher(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateXULCommandDispatcher(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -295,7 +309,7 @@ EnumerateXULCommandDispatcher(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveXULCommandDispatcher(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -535,20 +549,6 @@ JSClass XULCommandDispatcherClass = {
   FinalizeXULCommandDispatcher,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// XULCommandDispatcher class properties
-//
-static JSPropertySpec XULCommandDispatcherProperties[] =
-{
-  {"focusedElement",    XULCOMMANDDISPATCHER_FOCUSEDELEMENT,    JSPROP_ENUMERATE},
-  {"focusedWindow",    XULCOMMANDDISPATCHER_FOCUSEDWINDOW,    JSPROP_ENUMERATE},
-  {"suppressFocus",    XULCOMMANDDISPATCHER_SUPPRESSFOCUS,    JSPROP_ENUMERATE},
-  {"suppressFocusScroll",    XULCOMMANDDISPATCHER_SUPPRESSFOCUSSCROLL,    JSPROP_ENUMERATE},
-  {"active",    XULCOMMANDDISPATCHER_ACTIVE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -3150,8 +3150,11 @@ nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject
 }
 
 PRBool    
-nsHTMLDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+nsHTMLDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                        PRBool *aDidDefineProperty)
 {
+  *aDidDefineProperty = PR_FALSE;
+
   if (!JSVAL_IS_STRING(aID)) {
     return PR_TRUE;
   }
@@ -3166,6 +3169,8 @@ nsHTMLDocument::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
     ret = ::JS_DefineProperty(aContext, aObj,
                               str, val,
                               nsnull, nsnull, 0);
+
+    *aDidDefineProperty = PR_TRUE;
   }
   if (NS_FAILED(result)) {
     ret = PR_FALSE;

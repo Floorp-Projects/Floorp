@@ -318,6 +318,30 @@ SetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Navigator class properties
+//
+static JSPropertySpec NavigatorProperties[] =
+{
+  {"appCodeName",    NAVIGATOR_APPCODENAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"appName",    NAVIGATOR_APPNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"appVersion",    NAVIGATOR_APPVERSION,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"language",    NAVIGATOR_LANGUAGE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"mimeTypes",    NAVIGATOR_MIMETYPES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"platform",    NAVIGATOR_PLATFORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"oscpu",    NAVIGATOR_OSCPU,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"vendor",    NAVIGATOR_VENDOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"vendorSub",    NAVIGATOR_VENDORSUB,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"product",    NAVIGATOR_PRODUCT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"productSub",    NAVIGATOR_PRODUCTSUB,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"plugins",    NAVIGATOR_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"securityPolicy",    NAVIGATOR_SECURITYPOLICY,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"userAgent",    NAVIGATOR_USERAGENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"cookieEnabled",    NAVIGATOR_COOKIEENABLED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Navigator finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -333,7 +357,7 @@ FinalizeNavigator(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateNavigator(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -343,7 +367,7 @@ EnumerateNavigator(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveNavigator(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -472,30 +496,6 @@ JSClass NavigatorClass = {
   FinalizeNavigator,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Navigator class properties
-//
-static JSPropertySpec NavigatorProperties[] =
-{
-  {"appCodeName",    NAVIGATOR_APPCODENAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"appName",    NAVIGATOR_APPNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"appVersion",    NAVIGATOR_APPVERSION,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"language",    NAVIGATOR_LANGUAGE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"mimeTypes",    NAVIGATOR_MIMETYPES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"platform",    NAVIGATOR_PLATFORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"oscpu",    NAVIGATOR_OSCPU,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"vendor",    NAVIGATOR_VENDOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"vendorSub",    NAVIGATOR_VENDORSUB,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"product",    NAVIGATOR_PRODUCT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"productSub",    NAVIGATOR_PRODUCTSUB,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"plugins",    NAVIGATOR_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"securityPolicy",    NAVIGATOR_SECURITYPOLICY,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"userAgent",    NAVIGATOR_USERAGENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"cookieEnabled",    NAVIGATOR_COOKIEENABLED,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

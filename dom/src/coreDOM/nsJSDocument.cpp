@@ -325,6 +325,23 @@ SetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Document class properties
+//
+static JSPropertySpec DocumentProperties[] =
+{
+  {"doctype",    DOCUMENT_DOCTYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"implementation",    DOCUMENT_IMPLEMENTATION,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"documentElement",    DOCUMENT_DOCUMENTELEMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"styleSheets",    DOCUMENTSTYLE_STYLESHEETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"defaultView",    DOCUMENTVIEW_DEFAULTVIEW,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"characterSet",    NSDOCUMENT_CHARACTERSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"plugins",    NSDOCUMENT_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"location",    NSDOCUMENT_LOCATION,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // Document finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -340,7 +357,7 @@ FinalizeDocument(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateDocument(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -350,7 +367,7 @@ EnumerateDocument(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveDocument(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -1421,23 +1438,6 @@ JSClass DocumentClass = {
   FinalizeDocument,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Document class properties
-//
-static JSPropertySpec DocumentProperties[] =
-{
-  {"doctype",    DOCUMENT_DOCTYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"implementation",    DOCUMENT_IMPLEMENTATION,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"documentElement",    DOCUMENT_DOCUMENTELEMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"styleSheets",    DOCUMENTSTYLE_STYLESHEETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"defaultView",    DOCUMENTVIEW_DEFAULTVIEW,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"characterSet",    NSDOCUMENT_CHARACTERSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"plugins",    NSDOCUMENT_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"location",    NSDOCUMENT_LOCATION,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

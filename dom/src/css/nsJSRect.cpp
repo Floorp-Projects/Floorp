@@ -175,6 +175,19 @@ SetRectProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Rect class properties
+//
+static JSPropertySpec RectProperties[] =
+{
+  {"top",    RECT_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"right",    RECT_RIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"bottom",    RECT_BOTTOM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"left",    RECT_LEFT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Rect finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -190,7 +203,7 @@ FinalizeRect(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateRect(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -200,7 +213,7 @@ EnumerateRect(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveRect(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -221,19 +234,6 @@ JSClass RectClass = {
   FinalizeRect,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Rect class properties
-//
-static JSPropertySpec RectProperties[] =
-{
-  {"top",    RECT_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"right",    RECT_RIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"bottom",    RECT_BOTTOM,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"left",    RECT_LEFT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

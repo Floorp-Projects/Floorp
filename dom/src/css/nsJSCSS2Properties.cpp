@@ -3216,56 +3216,6 @@ SetCSS2PropertiesProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// CSS2Properties finalizer
-//
-PR_STATIC_CALLBACK(void)
-FinalizeCSS2Properties(JSContext *cx, JSObject *obj)
-{
-  nsJSUtils::nsGenericFinalize(cx, obj);
-}
-
-
-//
-// CSS2Properties enumerate
-//
-PR_STATIC_CALLBACK(JSBool)
-EnumerateCSS2Properties(JSContext *cx, JSObject *obj)
-{
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
-}
-
-
-//
-// CSS2Properties resolve
-//
-PR_STATIC_CALLBACK(JSBool)
-ResolveCSS2Properties(JSContext *cx, JSObject *obj, jsval id)
-{
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
-}
-
-
-/***********************************************************************/
-//
-// class for CSS2Properties
-//
-JSClass CSS2PropertiesClass = {
-  "CSS2Properties", 
-  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  GetCSS2PropertiesProperty,
-  SetCSS2PropertiesProperty,
-  EnumerateCSS2Properties,
-  ResolveCSS2Properties,
-  JS_ConvertStub,
-  FinalizeCSS2Properties,
-  nsnull,
-  nsJSUtils::nsCheckAccess
-};
-
-
-//
 // CSS2Properties class properties
 //
 static JSPropertySpec CSS2PropertiesProperties[] =
@@ -3395,6 +3345,56 @@ static JSPropertySpec CSS2PropertiesProperties[] =
   {"MozBinding",    CSS2PROPERTIES_MOZBINDING,    JSPROP_ENUMERATE},
   {"MozOpacity",    CSS2PROPERTIES_MOZOPACITY,    JSPROP_ENUMERATE},
   {0}
+};
+
+
+//
+// CSS2Properties finalizer
+//
+PR_STATIC_CALLBACK(void)
+FinalizeCSS2Properties(JSContext *cx, JSObject *obj)
+{
+  nsJSUtils::nsGenericFinalize(cx, obj);
+}
+
+
+//
+// CSS2Properties enumerate
+//
+PR_STATIC_CALLBACK(JSBool)
+EnumerateCSS2Properties(JSContext *cx, JSObject *obj)
+{
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
+}
+
+
+//
+// CSS2Properties resolve
+//
+PR_STATIC_CALLBACK(JSBool)
+ResolveCSS2Properties(JSContext *cx, JSObject *obj, jsval id)
+{
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
+}
+
+
+/***********************************************************************/
+//
+// class for CSS2Properties
+//
+JSClass CSS2PropertiesClass = {
+  "CSS2Properties", 
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetCSS2PropertiesProperty,
+  SetCSS2PropertiesProperty,
+  EnumerateCSS2Properties,
+  ResolveCSS2Properties,
+  JS_ConvertStub,
+  FinalizeCSS2Properties,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

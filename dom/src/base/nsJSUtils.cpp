@@ -439,19 +439,42 @@ nsJSUtils::nsGenericFinalize(JSContext* aContext,
 
 NS_EXPORT JSBool 
 nsJSUtils::nsGenericEnumerate(JSContext* aContext,
-                              JSObject* aObj)
+                              JSObject* aObj,
+                              JSPropertySpec* aLazyPropSpec)
 {
   nsISupports* nativeThis = (nsISupports*)JS_GetPrivate(aContext, 
                                                         aObj);
   
   if (nsnull != nativeThis) {
     // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == nativeThis->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
+    nsCOMPtr<nsIJSScriptObject> object(do_QueryInterface(nativeThis));
+    if (object) {
       object->EnumerateProperty(aContext, aObj);
-      NS_RELEASE(object);
+    }
+
+    if (aLazyPropSpec) {
+      PRInt32 i = 0;
+
+      while (aLazyPropSpec[i].name) {
+        jsval v = JSVAL_VOID;
+
+        if (!::JS_LookupProperty(aContext, aObj, aLazyPropSpec[i].name, &v))
+          return JS_FALSE;
+
+        if (JSVAL_IS_VOID(v)) {
+          if (!::JS_DefineProperty(aContext, aObj, aLazyPropSpec[i].name,
+                                   JSVAL_VOID,
+                                   aLazyPropSpec[i].getter,
+                                   aLazyPropSpec[i].setter,
+                                   aLazyPropSpec[i].flags))
+            return JS_FALSE;
+        }
+
+        i++;
+      }
     }
   }
+
   return JS_TRUE;
 }
 
@@ -521,7 +544,8 @@ StubConstructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 NS_EXPORT JSBool
 nsJSUtils::nsGlobalResolve(JSContext* aContext,
                            JSObject* aObj, 
-                           jsval aId)
+                           jsval aId,
+                           JSPropertySpec* aLazyPropSpec)
 {
   nsresult result;
   jsval val;
@@ -573,25 +597,55 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
       }
     }
   }
-  return nsGenericResolve(aContext, aObj, aId);
+  return nsGenericResolve(aContext, aObj, aId, aLazyPropSpec);
 }
 
 NS_EXPORT JSBool 
 nsJSUtils::nsGenericResolve(JSContext* aContext,
                             JSObject* aObj, 
-                            jsval aId)
+                            jsval aId,
+                            JSPropertySpec* aLazyPropSpec)
 {
   nsISupports* nativeThis = (nsISupports*)JS_GetPrivate(aContext, 
                                                         aObj);
-  
+
   if (nsnull != nativeThis) {
     // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == nativeThis->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      object->Resolve(aContext, aObj, aId);
-      NS_RELEASE(object);
+    nsCOMPtr<nsIJSScriptObject> object(do_QueryInterface(nativeThis));
+    if (object) {
+      PRBool didDefineProperty = PR_FALSE;
+
+      if (!object->Resolve(aContext, aObj, aId, &didDefineProperty))
+        return JS_FALSE;
+
+      if (!didDefineProperty && JSVAL_IS_STRING(aId) && aLazyPropSpec) {
+        PRInt32 i;
+        JSString *str = JSVAL_TO_STRING(aId);
+        const unsigned char *bytes = (unsigned char *)::JS_GetStringBytes(str);
+        const jschar *chars = ::JS_GetStringChars(str);
+        for (i = 0; bytes[i]; i++) {
+          if (jschar(bytes[i]) != chars[i])
+            return JS_TRUE;
+        }
+
+        if (size_t(i) != ::JS_GetStringLength(str))
+          return JS_TRUE;
+
+        for (i = 0; aLazyPropSpec[i].name; i++) {
+          if (nsCRT::strcmp(aLazyPropSpec[i].name, (const char *)bytes) == 0) {
+            return ::JS_DefineUCProperty(aContext, aObj,
+                                         ::JS_GetStringChars(str),
+                                         ::JS_GetStringLength(str),
+                                         JSVAL_VOID,
+                                         aLazyPropSpec[i].getter,
+                                         aLazyPropSpec[i].setter,
+                                         aLazyPropSpec[i].flags);
+          }
+        }
+      }
     }
   }
+
   return JS_TRUE;
 }
 

@@ -173,6 +173,17 @@ SetHTMLLIElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLLIElement class properties
+//
+static JSPropertySpec HTMLLIElementProperties[] =
+{
+  {"type",    HTMLLIELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"value",    HTMLLIELEMENT_VALUE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLLIElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -188,7 +199,7 @@ FinalizeHTMLLIElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLLIElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -198,7 +209,7 @@ EnumerateHTMLLIElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLLIElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -219,17 +230,6 @@ JSClass HTMLLIElementClass = {
   FinalizeHTMLLIElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLLIElement class properties
-//
-static JSPropertySpec HTMLLIElementProperties[] =
-{
-  {"type",    HTMLLIELEMENT_TYPE,    JSPROP_ENUMERATE},
-  {"value",    HTMLLIELEMENT_VALUE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

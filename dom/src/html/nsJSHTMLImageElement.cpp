@@ -635,56 +635,6 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// HTMLImageElement finalizer
-//
-PR_STATIC_CALLBACK(void)
-FinalizeHTMLImageElement(JSContext *cx, JSObject *obj)
-{
-  nsJSUtils::nsGenericFinalize(cx, obj);
-}
-
-
-//
-// HTMLImageElement enumerate
-//
-PR_STATIC_CALLBACK(JSBool)
-EnumerateHTMLImageElement(JSContext *cx, JSObject *obj)
-{
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
-}
-
-
-//
-// HTMLImageElement resolve
-//
-PR_STATIC_CALLBACK(JSBool)
-ResolveHTMLImageElement(JSContext *cx, JSObject *obj, jsval id)
-{
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
-}
-
-
-/***********************************************************************/
-//
-// class for HTMLImageElement
-//
-JSClass HTMLImageElementClass = {
-  "HTMLImageElement", 
-  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  GetHTMLImageElementProperty,
-  SetHTMLImageElementProperty,
-  EnumerateHTMLImageElement,
-  ResolveHTMLImageElement,
-  JS_ConvertStub,
-  FinalizeHTMLImageElement,
-  nsnull,
-  nsJSUtils::nsCheckAccess
-};
-
-
-//
 // HTMLImageElement class properties
 //
 static JSPropertySpec HTMLImageElementProperties[] =
@@ -706,6 +656,56 @@ static JSPropertySpec HTMLImageElementProperties[] =
   {"naturalHeight",    IMAGE_NATURALHEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"naturalWidth",    IMAGE_NATURALWIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
+};
+
+
+//
+// HTMLImageElement finalizer
+//
+PR_STATIC_CALLBACK(void)
+FinalizeHTMLImageElement(JSContext *cx, JSObject *obj)
+{
+  nsJSUtils::nsGenericFinalize(cx, obj);
+}
+
+
+//
+// HTMLImageElement enumerate
+//
+PR_STATIC_CALLBACK(JSBool)
+EnumerateHTMLImageElement(JSContext *cx, JSObject *obj)
+{
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
+}
+
+
+//
+// HTMLImageElement resolve
+//
+PR_STATIC_CALLBACK(JSBool)
+ResolveHTMLImageElement(JSContext *cx, JSObject *obj, jsval id)
+{
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
+}
+
+
+/***********************************************************************/
+//
+// class for HTMLImageElement
+//
+JSClass HTMLImageElementClass = {
+  "HTMLImageElement", 
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetHTMLImageElementProperty,
+  SetHTMLImageElementProperty,
+  EnumerateHTMLImageElement,
+  ResolveHTMLImageElement,
+  JS_ConvertStub,
+  FinalizeHTMLImageElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

@@ -216,6 +216,19 @@ SetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLParamElement class properties
+//
+static JSPropertySpec HTMLParamElementProperties[] =
+{
+  {"name",    HTMLPARAMELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"type",    HTMLPARAMELEMENT_TYPE,    JSPROP_ENUMERATE},
+  {"value",    HTMLPARAMELEMENT_VALUE,    JSPROP_ENUMERATE},
+  {"valueType",    HTMLPARAMELEMENT_VALUETYPE,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLParamElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -231,7 +244,7 @@ FinalizeHTMLParamElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLParamElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -241,7 +254,7 @@ EnumerateHTMLParamElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLParamElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -262,19 +275,6 @@ JSClass HTMLParamElementClass = {
   FinalizeHTMLParamElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLParamElement class properties
-//
-static JSPropertySpec HTMLParamElementProperties[] =
-{
-  {"name",    HTMLPARAMELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"type",    HTMLPARAMELEMENT_TYPE,    JSPROP_ENUMERATE},
-  {"value",    HTMLPARAMELEMENT_VALUE,    JSPROP_ENUMERATE},
-  {"valueType",    HTMLPARAMELEMENT_VALUETYPE,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

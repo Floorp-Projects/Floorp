@@ -141,6 +141,16 @@ SetHTMLBRElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLBRElement class properties
+//
+static JSPropertySpec HTMLBRElementProperties[] =
+{
+  {"clear",    HTMLBRELEMENT_CLEAR,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLBRElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -156,7 +166,7 @@ FinalizeHTMLBRElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLBRElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -166,7 +176,7 @@ EnumerateHTMLBRElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLBRElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -187,16 +197,6 @@ JSClass HTMLBRElementClass = {
   FinalizeHTMLBRElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLBRElement class properties
-//
-static JSPropertySpec HTMLBRElementProperties[] =
-{
-  {"clear",    HTMLBRELEMENT_CLEAR,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

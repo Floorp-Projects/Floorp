@@ -628,6 +628,35 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLDocument class properties
+//
+static JSPropertySpec HTMLDocumentProperties[] =
+{
+  {"title",    HTMLDOCUMENT_TITLE,    JSPROP_ENUMERATE},
+  {"referrer",    HTMLDOCUMENT_REFERRER,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"domain",    HTMLDOCUMENT_DOMAIN,    JSPROP_ENUMERATE},
+  {"URL",    HTMLDOCUMENT_URL,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"body",    HTMLDOCUMENT_BODY,    JSPROP_ENUMERATE},
+  {"images",    HTMLDOCUMENT_IMAGES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"applets",    HTMLDOCUMENT_APPLETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"links",    HTMLDOCUMENT_LINKS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"forms",    HTMLDOCUMENT_FORMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"anchors",    HTMLDOCUMENT_ANCHORS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"cookie",    HTMLDOCUMENT_COOKIE,    JSPROP_ENUMERATE},
+  {"width",    NSHTMLDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"height",    NSHTMLDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"alinkColor",    NSHTMLDOCUMENT_ALINKCOLOR,    JSPROP_ENUMERATE},
+  {"linkColor",    NSHTMLDOCUMENT_LINKCOLOR,    JSPROP_ENUMERATE},
+  {"vlinkColor",    NSHTMLDOCUMENT_VLINKCOLOR,    JSPROP_ENUMERATE},
+  {"bgColor",    NSHTMLDOCUMENT_BGCOLOR,    JSPROP_ENUMERATE},
+  {"fgColor",    NSHTMLDOCUMENT_FGCOLOR,    JSPROP_ENUMERATE},
+  {"lastModified",    NSHTMLDOCUMENT_LASTMODIFIED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"embeds",    NSHTMLDOCUMENT_EMBEDS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // HTMLDocument finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -643,7 +672,7 @@ FinalizeHTMLDocument(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLDocument(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -653,7 +682,7 @@ EnumerateHTMLDocument(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLDocument(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -1141,35 +1170,6 @@ JSClass HTMLDocumentClass = {
   FinalizeHTMLDocument,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLDocument class properties
-//
-static JSPropertySpec HTMLDocumentProperties[] =
-{
-  {"title",    HTMLDOCUMENT_TITLE,    JSPROP_ENUMERATE},
-  {"referrer",    HTMLDOCUMENT_REFERRER,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"domain",    HTMLDOCUMENT_DOMAIN,    JSPROP_ENUMERATE},
-  {"URL",    HTMLDOCUMENT_URL,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"body",    HTMLDOCUMENT_BODY,    JSPROP_ENUMERATE},
-  {"images",    HTMLDOCUMENT_IMAGES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"applets",    HTMLDOCUMENT_APPLETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"links",    HTMLDOCUMENT_LINKS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"forms",    HTMLDOCUMENT_FORMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"anchors",    HTMLDOCUMENT_ANCHORS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"cookie",    HTMLDOCUMENT_COOKIE,    JSPROP_ENUMERATE},
-  {"width",    NSHTMLDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"height",    NSHTMLDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"alinkColor",    NSHTMLDOCUMENT_ALINKCOLOR,    JSPROP_ENUMERATE},
-  {"linkColor",    NSHTMLDOCUMENT_LINKCOLOR,    JSPROP_ENUMERATE},
-  {"vlinkColor",    NSHTMLDOCUMENT_VLINKCOLOR,    JSPROP_ENUMERATE},
-  {"bgColor",    NSHTMLDOCUMENT_BGCOLOR,    JSPROP_ENUMERATE},
-  {"fgColor",    NSHTMLDOCUMENT_FGCOLOR,    JSPROP_ENUMERATE},
-  {"lastModified",    NSHTMLDOCUMENT_LASTMODIFIED,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"embeds",    NSHTMLDOCUMENT_EMBEDS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

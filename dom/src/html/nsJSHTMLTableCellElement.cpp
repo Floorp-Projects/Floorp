@@ -515,56 +515,6 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
 
 
 //
-// HTMLTableCellElement finalizer
-//
-PR_STATIC_CALLBACK(void)
-FinalizeHTMLTableCellElement(JSContext *cx, JSObject *obj)
-{
-  nsJSUtils::nsGenericFinalize(cx, obj);
-}
-
-
-//
-// HTMLTableCellElement enumerate
-//
-PR_STATIC_CALLBACK(JSBool)
-EnumerateHTMLTableCellElement(JSContext *cx, JSObject *obj)
-{
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
-}
-
-
-//
-// HTMLTableCellElement resolve
-//
-PR_STATIC_CALLBACK(JSBool)
-ResolveHTMLTableCellElement(JSContext *cx, JSObject *obj, jsval id)
-{
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
-}
-
-
-/***********************************************************************/
-//
-// class for HTMLTableCellElement
-//
-JSClass HTMLTableCellElementClass = {
-  "HTMLTableCellElement", 
-  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
-  JS_PropertyStub,
-  JS_PropertyStub,
-  GetHTMLTableCellElementProperty,
-  SetHTMLTableCellElementProperty,
-  EnumerateHTMLTableCellElement,
-  ResolveHTMLTableCellElement,
-  JS_ConvertStub,
-  FinalizeHTMLTableCellElement,
-  nsnull,
-  nsJSUtils::nsCheckAccess
-};
-
-
-//
 // HTMLTableCellElement class properties
 //
 static JSPropertySpec HTMLTableCellElementProperties[] =
@@ -585,6 +535,56 @@ static JSPropertySpec HTMLTableCellElementProperties[] =
   {"vAlign",    HTMLTABLECELLELEMENT_VALIGN,    JSPROP_ENUMERATE},
   {"width",    HTMLTABLECELLELEMENT_WIDTH,    JSPROP_ENUMERATE},
   {0}
+};
+
+
+//
+// HTMLTableCellElement finalizer
+//
+PR_STATIC_CALLBACK(void)
+FinalizeHTMLTableCellElement(JSContext *cx, JSObject *obj)
+{
+  nsJSUtils::nsGenericFinalize(cx, obj);
+}
+
+
+//
+// HTMLTableCellElement enumerate
+//
+PR_STATIC_CALLBACK(JSBool)
+EnumerateHTMLTableCellElement(JSContext *cx, JSObject *obj)
+{
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
+}
+
+
+//
+// HTMLTableCellElement resolve
+//
+PR_STATIC_CALLBACK(JSBool)
+ResolveHTMLTableCellElement(JSContext *cx, JSObject *obj, jsval id)
+{
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
+}
+
+
+/***********************************************************************/
+//
+// class for HTMLTableCellElement
+//
+JSClass HTMLTableCellElementClass = {
+  "HTMLTableCellElement", 
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  GetHTMLTableCellElementProperty,
+  SetHTMLTableCellElementProperty,
+  EnumerateHTMLTableCellElement,
+  ResolveHTMLTableCellElement,
+  JS_ConvertStub,
+  FinalizeHTMLTableCellElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

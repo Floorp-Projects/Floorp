@@ -174,6 +174,16 @@ SetHTMLCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLCollection class properties
+//
+static JSPropertySpec HTMLCollectionProperties[] =
+{
+  {"length",    HTMLCOLLECTION_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // HTMLCollection finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -189,7 +199,7 @@ FinalizeHTMLCollection(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLCollection(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -199,7 +209,7 @@ EnumerateHTMLCollection(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLCollection(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -306,16 +316,6 @@ JSClass HTMLCollectionClass = {
   FinalizeHTMLCollection,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLCollection class properties
-//
-static JSPropertySpec HTMLCollectionProperties[] =
-{
-  {"length",    HTMLCOLLECTION_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

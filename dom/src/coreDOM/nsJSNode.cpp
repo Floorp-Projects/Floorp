@@ -342,6 +342,29 @@ SetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Node class properties
+//
+static JSPropertySpec NodeProperties[] =
+{
+  {"nodeName",    NODE_NODENAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"nodeValue",    NODE_NODEVALUE,    JSPROP_ENUMERATE},
+  {"nodeType",    NODE_NODETYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"parentNode",    NODE_PARENTNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"childNodes",    NODE_CHILDNODES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"firstChild",    NODE_FIRSTCHILD,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"lastChild",    NODE_LASTCHILD,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"previousSibling",    NODE_PREVIOUSSIBLING,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"nextSibling",    NODE_NEXTSIBLING,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"attributes",    NODE_ATTRIBUTES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"ownerDocument",    NODE_OWNERDOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"namespaceURI",    NODE_NAMESPACEURI,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"prefix",    NODE_PREFIX,    JSPROP_ENUMERATE},
+  {"localName",    NODE_LOCALNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Node finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -357,7 +380,7 @@ FinalizeNode(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateNode(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -367,7 +390,7 @@ EnumerateNode(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveNode(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -957,29 +980,6 @@ JSClass NodeClass = {
   FinalizeNode,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Node class properties
-//
-static JSPropertySpec NodeProperties[] =
-{
-  {"nodeName",    NODE_NODENAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"nodeValue",    NODE_NODEVALUE,    JSPROP_ENUMERATE},
-  {"nodeType",    NODE_NODETYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"parentNode",    NODE_PARENTNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"childNodes",    NODE_CHILDNODES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"firstChild",    NODE_FIRSTCHILD,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"lastChild",    NODE_LASTCHILD,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"previousSibling",    NODE_PREVIOUSSIBLING,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"nextSibling",    NODE_NEXTSIBLING,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"attributes",    NODE_ATTRIBUTES,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"ownerDocument",    NODE_OWNERDOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"namespaceURI",    NODE_NAMESPACEURI,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"prefix",    NODE_PREFIX,    JSPROP_ENUMERATE},
-  {"localName",    NODE_LOCALNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

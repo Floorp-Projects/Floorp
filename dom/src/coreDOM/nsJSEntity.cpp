@@ -156,6 +156,18 @@ SetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Entity class properties
+//
+static JSPropertySpec EntityProperties[] =
+{
+  {"publicId",    ENTITY_PUBLICID,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"systemId",    ENTITY_SYSTEMID,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"notationName",    ENTITY_NOTATIONNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Entity finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -171,7 +183,7 @@ FinalizeEntity(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateEntity(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -181,7 +193,7 @@ EnumerateEntity(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveEntity(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -202,18 +214,6 @@ JSClass EntityClass = {
   FinalizeEntity,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Entity class properties
-//
-static JSPropertySpec EntityProperties[] =
-{
-  {"publicId",    ENTITY_PUBLICID,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"systemId",    ENTITY_SYSTEMID,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"notationName",    ENTITY_NOTATIONNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

@@ -391,6 +391,26 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLAppletElement class properties
+//
+static JSPropertySpec HTMLAppletElementProperties[] =
+{
+  {"align",    HTMLAPPLETELEMENT_ALIGN,    JSPROP_ENUMERATE},
+  {"alt",    HTMLAPPLETELEMENT_ALT,    JSPROP_ENUMERATE},
+  {"archive",    HTMLAPPLETELEMENT_ARCHIVE,    JSPROP_ENUMERATE},
+  {"code",    HTMLAPPLETELEMENT_CODE,    JSPROP_ENUMERATE},
+  {"codeBase",    HTMLAPPLETELEMENT_CODEBASE,    JSPROP_ENUMERATE},
+  {"height",    HTMLAPPLETELEMENT_HEIGHT,    JSPROP_ENUMERATE},
+  {"hspace",    HTMLAPPLETELEMENT_HSPACE,    JSPROP_ENUMERATE},
+  {"name",    HTMLAPPLETELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"object",    HTMLAPPLETELEMENT_OBJECT,    JSPROP_ENUMERATE},
+  {"vspace",    HTMLAPPLETELEMENT_VSPACE,    JSPROP_ENUMERATE},
+  {"width",    HTMLAPPLETELEMENT_WIDTH,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLAppletElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -406,7 +426,7 @@ FinalizeHTMLAppletElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLAppletElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -416,7 +436,7 @@ EnumerateHTMLAppletElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLAppletElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -437,26 +457,6 @@ JSClass HTMLAppletElementClass = {
   FinalizeHTMLAppletElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLAppletElement class properties
-//
-static JSPropertySpec HTMLAppletElementProperties[] =
-{
-  {"align",    HTMLAPPLETELEMENT_ALIGN,    JSPROP_ENUMERATE},
-  {"alt",    HTMLAPPLETELEMENT_ALT,    JSPROP_ENUMERATE},
-  {"archive",    HTMLAPPLETELEMENT_ARCHIVE,    JSPROP_ENUMERATE},
-  {"code",    HTMLAPPLETELEMENT_CODE,    JSPROP_ENUMERATE},
-  {"codeBase",    HTMLAPPLETELEMENT_CODEBASE,    JSPROP_ENUMERATE},
-  {"height",    HTMLAPPLETELEMENT_HEIGHT,    JSPROP_ENUMERATE},
-  {"hspace",    HTMLAPPLETELEMENT_HSPACE,    JSPROP_ENUMERATE},
-  {"name",    HTMLAPPLETELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"object",    HTMLAPPLETELEMENT_OBJECT,    JSPROP_ENUMERATE},
-  {"vspace",    HTMLAPPLETELEMENT_VSPACE,    JSPROP_ENUMERATE},
-  {"width",    HTMLAPPLETELEMENT_WIDTH,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

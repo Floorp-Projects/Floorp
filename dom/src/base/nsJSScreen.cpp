@@ -247,6 +247,25 @@ SetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Screen class properties
+//
+static JSPropertySpec ScreenProperties[] =
+{
+  {"top",    SCREEN_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"left",    SCREEN_LEFT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"width",    SCREEN_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"height",    SCREEN_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"pixelDepth",    SCREEN_PIXELDEPTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"colorDepth",    SCREEN_COLORDEPTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"availWidth",    SCREEN_AVAILWIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"availHeight",    SCREEN_AVAILHEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"availLeft",    SCREEN_AVAILLEFT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"availTop",    SCREEN_AVAILTOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // Screen finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -262,7 +281,7 @@ FinalizeScreen(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateScreen(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -272,7 +291,7 @@ EnumerateScreen(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveScreen(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -293,25 +312,6 @@ JSClass ScreenClass = {
   FinalizeScreen,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Screen class properties
-//
-static JSPropertySpec ScreenProperties[] =
-{
-  {"top",    SCREEN_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"left",    SCREEN_LEFT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"width",    SCREEN_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"height",    SCREEN_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"pixelDepth",    SCREEN_PIXELDEPTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"colorDepth",    SCREEN_COLORDEPTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"availWidth",    SCREEN_AVAILWIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"availHeight",    SCREEN_AVAILHEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"availLeft",    SCREEN_AVAILLEFT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"availTop",    SCREEN_AVAILTOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

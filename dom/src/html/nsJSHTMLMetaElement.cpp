@@ -216,6 +216,19 @@ SetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLMetaElement class properties
+//
+static JSPropertySpec HTMLMetaElementProperties[] =
+{
+  {"content",    HTMLMETAELEMENT_CONTENT,    JSPROP_ENUMERATE},
+  {"httpEquiv",    HTMLMETAELEMENT_HTTPEQUIV,    JSPROP_ENUMERATE},
+  {"name",    HTMLMETAELEMENT_NAME,    JSPROP_ENUMERATE},
+  {"scheme",    HTMLMETAELEMENT_SCHEME,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLMetaElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -231,7 +244,7 @@ FinalizeHTMLMetaElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLMetaElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -241,7 +254,7 @@ EnumerateHTMLMetaElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLMetaElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -262,19 +275,6 @@ JSClass HTMLMetaElementClass = {
   FinalizeHTMLMetaElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLMetaElement class properties
-//
-static JSPropertySpec HTMLMetaElementProperties[] =
-{
-  {"content",    HTMLMETAELEMENT_CONTENT,    JSPROP_ENUMERATE},
-  {"httpEquiv",    HTMLMETAELEMENT_HTTPEQUIV,    JSPROP_ENUMERATE},
-  {"name",    HTMLMETAELEMENT_NAME,    JSPROP_ENUMERATE},
-  {"scheme",    HTMLMETAELEMENT_SCHEME,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

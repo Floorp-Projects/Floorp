@@ -157,6 +157,17 @@ SetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLMapElement class properties
+//
+static JSPropertySpec HTMLMapElementProperties[] =
+{
+  {"areas",    HTMLMAPELEMENT_AREAS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"name",    HTMLMAPELEMENT_NAME,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLMapElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -172,7 +183,7 @@ FinalizeHTMLMapElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLMapElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -182,7 +193,7 @@ EnumerateHTMLMapElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLMapElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -203,17 +214,6 @@ JSClass HTMLMapElementClass = {
   FinalizeHTMLMapElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLMapElement class properties
-//
-static JSPropertySpec HTMLMapElementProperties[] =
-{
-  {"areas",    HTMLMAPELEMENT_AREAS,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"name",    HTMLMAPELEMENT_NAME,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -96,7 +96,8 @@ public:
   PRBool    SetProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
   PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                    PRBool *aDidDefineProperty);
   PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
   void      Finalize(JSContext *aContext, JSObject *aObj);
 
@@ -294,7 +295,8 @@ public:
   virtual PRBool    SetProperty(JSContext *aContext, JSObject *aObj,
                                 jsval aID, jsval *aVp);
   virtual PRBool    EnumerateProperty(JSContext *aContext, JSObject *aObj);
-  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID);
+  virtual PRBool    Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                            PRBool *aDidDefineProperty);
   virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
   virtual void      Finalize(JSContext *aContext, JSObject *aObj);
 
@@ -1545,9 +1547,9 @@ nsHTMLSelectElement::GetProperty(JSContext *aContext,
 
 PRBool    
 nsHTMLSelectElement::SetProperty(JSContext *aContext, 
-                          JSObject *aObj, 
-                          jsval aID, 
-                          jsval *aVp)
+                                 JSObject *aObj, 
+                                 jsval aID, 
+                                 jsval *aVp)
 {
   nsresult res = NS_OK;
   // Set options in the options list by indexing into select
@@ -1571,8 +1573,11 @@ nsHTMLSelectElement::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 }
 
 PRBool    
-nsHTMLSelectElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+nsHTMLSelectElement::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                             PRBool *aDidDefineProperty)
 {
+  *aDidDefineProperty = PR_FALSE;
+
   return PR_TRUE;
 }
 
@@ -1926,8 +1931,11 @@ nsHTMLOptionCollection::EnumerateProperty(JSContext *aContext, JSObject *aObj)
 }
 
 PRBool    
-nsHTMLOptionCollection::Resolve(JSContext *aContext, JSObject *aObj, jsval aID)
+nsHTMLOptionCollection::Resolve(JSContext *aContext, JSObject *aObj, jsval aID,
+                                PRBool *aDidDefineProperty)
 {
+  *aDidDefineProperty = PR_FALSE;
+
   return PR_TRUE;
 }
 

@@ -224,6 +224,17 @@ SetNSHTMLOptionCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval 
 
 
 //
+// NSHTMLOptionCollection class properties
+//
+static JSPropertySpec NSHTMLOptionCollectionProperties[] =
+{
+  {"length",    NSHTMLOPTIONCOLLECTION_LENGTH,    JSPROP_ENUMERATE},
+  {"selectedIndex",    NSHTMLOPTIONCOLLECTION_SELECTEDINDEX,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // NSHTMLOptionCollection finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -239,7 +250,7 @@ FinalizeNSHTMLOptionCollection(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateNSHTMLOptionCollection(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -249,7 +260,7 @@ EnumerateNSHTMLOptionCollection(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveNSHTMLOptionCollection(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -356,17 +367,6 @@ JSClass NSHTMLOptionCollectionClass = {
   FinalizeNSHTMLOptionCollection,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// NSHTMLOptionCollection class properties
-//
-static JSPropertySpec NSHTMLOptionCollectionProperties[] =
-{
-  {"length",    NSHTMLOPTIONCOLLECTION_LENGTH,    JSPROP_ENUMERATE},
-  {"selectedIndex",    NSHTMLOPTIONCOLLECTION_SELECTEDINDEX,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

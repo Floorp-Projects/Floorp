@@ -309,6 +309,22 @@ SetXULMenuListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// XULMenuListElement class properties
+//
+static JSPropertySpec XULMenuListElementProperties[] =
+{
+  {"value",    XULMENULISTELEMENT_VALUE,    JSPROP_ENUMERATE},
+  {"data",    XULMENULISTELEMENT_DATA,    JSPROP_ENUMERATE},
+  {"selectedItem",    XULMENULISTELEMENT_SELECTEDITEM,    JSPROP_ENUMERATE},
+  {"selectedIndex",    XULMENULISTELEMENT_SELECTEDINDEX,    JSPROP_ENUMERATE},
+  {"crop",    XULMENULISTELEMENT_CROP,    JSPROP_ENUMERATE},
+  {"disabled",    XULMENULISTELEMENT_DISABLED,    JSPROP_ENUMERATE},
+  {"src",    XULMENULISTELEMENT_SRC,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // XULMenuListElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -324,7 +340,7 @@ FinalizeXULMenuListElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateXULMenuListElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -334,7 +350,7 @@ EnumerateXULMenuListElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveXULMenuListElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -355,22 +371,6 @@ JSClass XULMenuListElementClass = {
   FinalizeXULMenuListElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// XULMenuListElement class properties
-//
-static JSPropertySpec XULMenuListElementProperties[] =
-{
-  {"value",    XULMENULISTELEMENT_VALUE,    JSPROP_ENUMERATE},
-  {"data",    XULMENULISTELEMENT_DATA,    JSPROP_ENUMERATE},
-  {"selectedItem",    XULMENULISTELEMENT_SELECTEDITEM,    JSPROP_ENUMERATE},
-  {"selectedIndex",    XULMENULISTELEMENT_SELECTEDINDEX,    JSPROP_ENUMERATE},
-  {"crop",    XULMENULISTELEMENT_CROP,    JSPROP_ENUMERATE},
-  {"disabled",    XULMENULISTELEMENT_DISABLED,    JSPROP_ENUMERATE},
-  {"src",    XULMENULISTELEMENT_SRC,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

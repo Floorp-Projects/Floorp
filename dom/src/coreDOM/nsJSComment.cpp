@@ -113,6 +113,15 @@ SetCommentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// Comment class properties
+//
+static JSPropertySpec CommentProperties[] =
+{
+  {0}
+};
+
+
+//
 // Comment finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -128,7 +137,7 @@ FinalizeComment(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateComment(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -138,7 +147,7 @@ EnumerateComment(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveComment(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -159,15 +168,6 @@ JSClass CommentClass = {
   FinalizeComment,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// Comment class properties
-//
-static JSPropertySpec CommentProperties[] =
-{
-  {0}
 };
 
 

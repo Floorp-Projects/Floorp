@@ -157,6 +157,17 @@ SetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// CSSPageRule class properties
+//
+static JSPropertySpec CSSPageRuleProperties[] =
+{
+  {"selectorText",    CSSPAGERULE_SELECTORTEXT,    JSPROP_ENUMERATE},
+  {"style",    CSSPAGERULE_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {0}
+};
+
+
+//
 // CSSPageRule finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -172,7 +183,7 @@ FinalizeCSSPageRule(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateCSSPageRule(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -182,7 +193,7 @@ EnumerateCSSPageRule(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveCSSPageRule(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -203,17 +214,6 @@ JSClass CSSPageRuleClass = {
   FinalizeCSSPageRule,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// CSSPageRule class properties
-//
-static JSPropertySpec CSSPageRuleProperties[] =
-{
-  {"selectorText",    CSSPAGERULE_SELECTORTEXT,    JSPROP_ENUMERATE},
-  {"style",    CSSPAGERULE_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
 };
 
 

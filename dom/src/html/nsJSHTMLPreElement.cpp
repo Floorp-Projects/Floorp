@@ -148,6 +148,16 @@ SetHTMLPreElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
+// HTMLPreElement class properties
+//
+static JSPropertySpec HTMLPreElementProperties[] =
+{
+  {"width",    HTMLPREELEMENT_WIDTH,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLPreElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -163,7 +173,7 @@ FinalizeHTMLPreElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLPreElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -173,7 +183,7 @@ EnumerateHTMLPreElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLPreElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -194,16 +204,6 @@ JSClass HTMLPreElementClass = {
   FinalizeHTMLPreElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLPreElement class properties
-//
-static JSPropertySpec HTMLPreElementProperties[] =
-{
-  {"width",    HTMLPREELEMENT_WIDTH,    JSPROP_ENUMERATE},
-  {0}
 };
 
 

@@ -144,6 +144,16 @@ SetHTMLDirectoryElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
 
 
 //
+// HTMLDirectoryElement class properties
+//
+static JSPropertySpec HTMLDirectoryElementProperties[] =
+{
+  {"compact",    HTMLDIRECTORYELEMENT_COMPACT,    JSPROP_ENUMERATE},
+  {0}
+};
+
+
+//
 // HTMLDirectoryElement finalizer
 //
 PR_STATIC_CALLBACK(void)
@@ -159,7 +169,7 @@ FinalizeHTMLDirectoryElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 EnumerateHTMLDirectoryElement(JSContext *cx, JSObject *obj)
 {
-  return nsJSUtils::nsGenericEnumerate(cx, obj);
+  return nsJSUtils::nsGenericEnumerate(cx, obj, nsnull);
 }
 
 
@@ -169,7 +179,7 @@ EnumerateHTMLDirectoryElement(JSContext *cx, JSObject *obj)
 PR_STATIC_CALLBACK(JSBool)
 ResolveHTMLDirectoryElement(JSContext *cx, JSObject *obj, jsval id)
 {
-  return nsJSUtils::nsGenericResolve(cx, obj, id);
+  return nsJSUtils::nsGenericResolve(cx, obj, id, nsnull);
 }
 
 
@@ -190,16 +200,6 @@ JSClass HTMLDirectoryElementClass = {
   FinalizeHTMLDirectoryElement,
   nsnull,
   nsJSUtils::nsCheckAccess
-};
-
-
-//
-// HTMLDirectoryElement class properties
-//
-static JSPropertySpec HTMLDirectoryElementProperties[] =
-{
-  {"compact",    HTMLDIRECTORYELEMENT_COMPACT,    JSPROP_ENUMERATE},
-  {0}
 };
 
 
