@@ -503,9 +503,12 @@ namespace JSTypes {
     class JSType : public JSObject {
     protected:
         String mName;
-        const JSType *mBaseType;
+        JSType *mBaseType;
     public:
-        JSType(const String &name, const JSType *baseType) : mName(name), mBaseType(baseType) { }
+        JSType(const String &name, JSType *baseType) : mName(name), mBaseType(baseType)
+        {
+            mType = &Type_Type;
+        }
 
         enum { NoRelation = 0x7FFFFFFF };
 
