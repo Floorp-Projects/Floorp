@@ -105,11 +105,11 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIHTMLContent.h"
 #include "nsIDOMHTMLInputElement.h"
 
-#include "xp_file.h"
 #include "prio.h"
 #include "prmem.h"
 #include "prenv.h"
 #include "prlong.h"
+#include "xp_path.h"  // For PR_DIRECTORY_SEPARATOR_STR
 
 // Rewrite of Multipart form posting
 #include "nsDirectoryServiceDefs.h"
