@@ -71,6 +71,19 @@ NS_NewNativeTextControlFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+nsNativeTextControlFrame::nsNativeTextControlFrame()
+: mCachedState(nsnull)
+{
+}
+
+nsNativeTextControlFrame::~nsNativeTextControlFrame()
+{
+  if (mCachedState) {
+    delete mCachedState;
+    mCachedState = nsnull;
+  }
+}
+
 void
 nsNativeTextControlFrame::EnterPressed(nsIPresContext& aPresContext) 
 {
@@ -244,7 +257,12 @@ nsNativeTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   nsITextAreaWidget* textArea = nsnull;
   nsITextWidget* text = nsnull;
   if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
-    GetText(&value, PR_TRUE);
+    if (mCachedState) {
+      value = *mCachedState;
+      delete mCachedState;
+      mCachedState = nsnull;
+    } else
+      GetText(&value, PR_TRUE);
     text->SetText(value, ignore);
     PRInt32 maxLength;
     nsresult result = GetMaxLength(&maxLength);
@@ -253,7 +271,12 @@ nsNativeTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
     }
     NS_RELEASE(text);
   } else if (NS_OK == mWidget->QueryInterface(kITextAreaWidgetIID,(void**)&textArea)) {
-    GetText(&value, PR_TRUE);
+    if (mCachedState) {
+      value = *mCachedState;
+      delete mCachedState;
+      mCachedState = nsnull;
+    } else
+      GetText(&value, PR_TRUE);
     textArea->SetText(value, ignore);
     NS_RELEASE(textArea);
   }
@@ -539,7 +562,9 @@ void nsNativeTextControlFrame::SetTextControlFrameState(const nsString& aValue)
       textArea->SetText(aValue,size);
       NS_RELEASE(textArea);
     }
-  }    
+  } else {
+    mCachedState = new nsString(aValue);
+  }
 }
 
 NS_IMETHODIMP nsNativeTextControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
