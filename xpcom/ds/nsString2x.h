@@ -1,341 +1,603 @@
-#ifndef _NSSTRING_CLASSES_
-#define _NSSTRING_CLASSES_
-
-#include "nsStringImpl.h"
-#include "nsAutoStringImpl.h"
-
-
-/***************************************************************************
+/*****************************************************************************************************************
+ *  
+ * This template provides the basic implementation for nsString.
  *
- *  Now the basic nsCString class, which uses nsSymmetricStringImpl as a
- *  base so that it gets all the char behaviors, and conversion functionality
- *  via the AltCharType.
+ * Contributor(s):
+ *   Rick Gessner <rickg@netscape.com>
+ * 
+ * History:
  *
- ***************************************************************************/
+ *  02.29.2000: Original files (rickg)
+ *  03.02.2000: Expand the API's to be a bit more realistic (rickg): 
+ *                 1. Flesh out the interface to be compatible with old library 
+ *                 2. Enable both nsString-based interfaces and nsAReadableString interfaces 
+ *                 3. Build enough infrastructure to test nsString(s) and nsImmutableString constructions.
+ *  03.03.2000: Finished mapping original nsString functionality to template form (rickg)
+ *  
+ *****************************************************************************************************************/
 
-class nsString : public nsStringImpl<PRUnichar> {
+
+#ifndef _NS_STRING_
+#define _NS_STRING_
+
+#include "nsStringValue.h"
+#include "nsBufferManager.h"
+
+
+class nsCString;
+
+class nsString: public nsAReadableString {
 public:
+
+  //******************************************
+  // Ctor's
+  //******************************************
   
-  nsString() : nsStringImpl<PRUnichar>() {
-  }
+  nsString();
   
-  nsString(const nsString& aString,PRInt32 aLength=-1) : nsStringImpl<PRUnichar>() {
-    Assign(aString,aLength);
-  }
+    //copy constructor
+  nsString(const nsString& aString,PRInt32 aLength=-1);
+
+    //call this version for nsCString
+  nsString(const nsCString& aString,PRInt32 aLength=-1);
+
+    //call this version for prunichar*'s....
+  nsString(const PRUnichar* aString,PRInt32 aLength=-1) ;
+
+    //call this version for a single char of type char...
+  nsString(const char aChar);
+
+    //call this version for a single char of type prunichar...
+  nsString(const PRUnichar aChar);
+
+    //call this version for char's....
+  nsString(const char* aString,PRInt32 aLength=-1) ;
+
+    //call this version for all other ABT versions of readable strings
+  nsString(const nsAReadableString &aString) ;
+
+    //call this version for stack-based string buffers...
+  nsString(const nsStackBuffer<PRUnichar> &aBuffer);
+
+  virtual ~nsString();
 
   
-  nsString(const PRUnichar* aString, PRInt32 aLength=-1) : nsStringImpl<PRUnichar>(aString,aLength) {
-  }
-
-  //call this version for string ptrs that match the alternate chartype
-  nsString(const char* aString, PRInt32 aLength=-1) : nsStringImpl<PRUnichar>(){
-    Assign(aString,aLength);
-  }
-
-  //call this version for string ptrs that match the alternate chartype
-  nsString(const nsStringImpl<char>& aString, PRInt32 aLength=-1) : nsStringImpl<PRUnichar>(){
-    Assign(aString,aLength);
-  }
-
-  virtual ~nsString() { }
+  //******************************************
+  // Assigment operators
+  //******************************************
   
-  nsString& operator=(const nsString& aString) {
-    nsStringImpl<PRUnichar>::operator=(aString);
-    return *this;
-  }
+    
+  nsString& operator=(const nsString& aString);
 
-  nsString& operator=(const nsStringImpl<PRUnichar>& aString) {
-    Assign(aString);
-    return *this;
-  }
+  nsString& operator=(const nsCString& aString);
 
-  nsString& operator=(const PRUnichar* aString) {
-    nsStringImpl<PRUnichar>::operator=(aString);
-    return *this;
-  } 
+  nsString& operator=(const PRUnichar* aString);
 
-  nsString& operator=(const char* aString) {
-    Assign(aString);
-    return *this;
-  }
+  nsString& operator=(const char* aString);
+
+  nsString& operator=(const char aChar);
+
+  nsString& operator=(const PRUnichar aChar);
+
 
   //******************************************
   // Here are the accessor methods...
   //******************************************
 
-  PRUnichar*  GetUnicode() {return mStringValue.mBuffer;}  //this needs to be cleaned up soon.
-  virtual     PRUnichar  operator[](PRUint32 aOffset)  {return mStringValue[aOffset];}
-
-
-  //******************************************
-  // Here are the mutation methods...
-  //******************************************
-
-    //assign from a stringimpl
-  nsresult Assign(const nsString& aString,PRInt32 aLength=-1) {
-    Truncate();
-    return Append(aString);
-  }
-
-    //assign from a stringimpl<PRUnichar>
-  nsresult Assign(const nsStringImpl<char>& aString,PRInt32 aLength=-1) {
-    Truncate();
-    return Append(aString,aLength);
-  }
-
-    //assign from a compatible string pointer
-  virtual nsresult Assign(const char* aString,PRInt32 aLength=-1) {
-    Truncate();
-    return Append(aString,aLength);
-  }
-
-    //assign from a stringimpl
-  nsresult Append(const nsString& aString,PRInt32 aLength=-1) {
-    SVAppend< PRUnichar, PRUnichar> (mStringValue,aString.mStringValue,0,aString.mStringValue.mLength);
-    return NS_OK;
-  }
-    //append from a stringimpl
-  virtual nsresult Append(const nsStringImpl<char> &aString,PRInt32 aLength=-1) {
-    SVAppend< PRUnichar, char> (mStringValue,aString.mStringValue,0,aString.mStringValue.mLength);
+  virtual nsresult SetLength(PRUint32 aLength) {
+    Truncate(aLength);
     return NS_OK;
   }
 
-    //append from a type compatible string pointer
-  virtual nsresult Append(const char* aString,PRInt32 aLength=-1) {
-    nsresult result=NS_OK;
-    if(aString) {
-      nsStringValueImpl<char> theTempString(const_cast<char*>(aString),aLength);
-      SVAppend< PRUnichar, char > (mStringValue,theTempString,0,aLength);
-    }
-    return result;
+  virtual nsresult SetCapacity(PRUint32 aCapacity);
+
+  PRUnichar* GetUnicode() { return mStringValue.mBuffer;}
+
+  PRUnichar& operator[](PRUint32 aOffset);  
+
+//  operator const char* const() {return mStringValue.mBuffer;}
+
+  PRUint32  Length() const {return mStringValue.mLength;}  
+  
+  size_t    GetCharSize() const {return sizeof(char);}
+  PRBool    IsUnicode() const {return PRBool(sizeof(PRUnichar)==sizeof(char));}
+  
+  PRBool    IsEmpty(void) const {return PRBool(mStringValue.mLength==0);}
+
+  PRUnichar CharAt(PRUint32 anIndex) const {
+    return (anIndex<mStringValue.mLength) ? mStringValue.mBuffer[anIndex] : 0;
   }
+
+  PRBool SetCharAt(PRUnichar aChar,PRUint32 anIndex);
+
+  PRUnichar First(void) const {
+    return CharAt(0);
+  } 
+  
+  PRUnichar Last(void) const {
+    return CharAt(mStringValue.mLength-1);
+  }
+
+
+    //these aren't the real deal, but serve as a placeholder for us to implement iterators.
+  virtual nsAReadableStringIterator* First();
+  virtual nsAReadableStringIterator* Last();
+
+
+  //******************************************
+  // Here are the Assignment methods, 
+  // and other mutators...
+  //******************************************
+
+  virtual nsresult Truncate(PRUint32 anOffset=0);
+
+
+  /*
+   *  This method assign from a stringimpl 
+   *  string at aString[anOffset].
+   *  
+   *  @update  rickg 03.01.2000
+   *  @param  aString -- source String to be inserted into this
+   *  @param  aLength -- number of chars to be copied from aCopy
+   *  @param  aSrcOffset -- insertion position within this str
+   *  @return this
+   */
+  virtual nsresult Assign(const nsString& aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
+
+  virtual nsresult Assign(const PRUnichar* aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
+
+  virtual nsresult Assign(const char* aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
+
+    //assign from a stringValueImpl of a compatible type
+  virtual nsresult Assign(const nsCString& aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
+
+  virtual nsresult Assign(const nsAReadableString &aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
+
+  virtual nsresult Assign(char aChar); 
+
+  virtual nsresult Assign(PRUnichar aChar);
+
+  /**
+   * Functionally equivalent to assign or operator=, and deprecated!
+   * 
+   */
+  nsresult SetString(const char* aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
+  nsresult SetString(const PRUnichar* aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
+  nsresult SetString(const nsString &aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
+
+    //***************************************
+    //  Here come the append methods...
+    //***************************************
+
+  /*
+   *  This method appends a stringimpl starting at aString[aSrcOffset]
+   *  
+   *  @update  rickg 03.01.2000
+   *  @param  aString -- source String to be inserted into this
+   *  @param  aLength -- number of chars to be copied from aCopy
+   *  @param  aSrcOffset -- insertion position within this str
+   *  @return this
+   */
+  virtual nsresult Append(const nsString &aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
+
+  virtual nsresult Append(const nsCString &aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
+
+  virtual nsresult Append(const PRUnichar* aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
+
+  virtual nsresult Append(const char* aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
+
+  virtual nsresult Append(const PRUnichar aChar) ;
+
+  virtual nsresult Append(const char aChar);
+
+  virtual nsresult Append(const nsAReadableString &aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
+
+  virtual nsresult Append(PRInt32 anInteger,PRInt32 aRadix=10);
+
+  virtual nsresult Append(float aFloat);
+
+
+    //***************************************
+    //  Here come a few deletion methods...
+    //***************************************
+
+  nsresult Cut(PRUint32 anOffset,PRInt32 aCount);
+
+  nsresult Trim(const char* aTrimSet,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE,PRBool aIgnoreQuotes=PR_FALSE);
+
+  /**
+   *  This method compresses multiple chars in a row into a single instance
+   *  You can control whether chars are yanked from ends too.
+   *  
+   * @update  rickg 03.01.2000
+   *  @param   aEliminateLeading controls stripping of leading ws
+   *  @param   aEliminateTrailing controls stripping of trailing ws
+   *  @return  this
+   */
+  nsresult CompressSet(const char* aSet, PRUnichar aChar,PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE);
+
+  /**
+   *  This method strips whitespace from string.
+   *  You can control whether whitespace is yanked from
+   *  start and end of string as well.
+   *  
+   *  @update  rickg 03.01.2000
+   *  @param   aEliminateLeading controls stripping of leading ws
+   *  @param   aEliminateTrailing controls stripping of trailing ws
+   *  @return  this
+   */
+  nsresult CompressWhitespace( PRBool aEliminateLeading=PR_TRUE,PRBool aEliminateTrailing=PR_TRUE);
 
 
     //***************************************
     //  Here come a wad of insert methods...
     //***************************************
 
-  nsString& Insert(const char* aChar,PRUint32 anOffset,PRInt32 aCount=-1){
-    return *this;
-  }
+  /*
+   *  This method inserts n chars from given string into this
+   *  string at str[anOffset].
+   *  
+   *  @update  rickg 03.01.2000
+   *  @param  aString -- source String to be inserted into this
+   *  @param  anOffset -- insertion position within this str
+   *  @param  aCount -- number of chars to be copied from aCopy
+   *  @return this
+   */
+  nsresult Insert(const nsString& aString,PRUint32 anOffset=0,PRInt32 aCount=-1);
 
-  nsString& Insert(char aChar,PRUint32 anOffset){
-    return *this;
-  }
+  nsresult Insert(const char* aString,PRUint32 anOffset=0,PRInt32 aLength=-1);
 
+  nsresult Insert(const PRUnichar* aString,PRUint32 anOffset=0,PRInt32 aLength=-1);
 
+  nsresult Insert(char aChar,PRUint32 anOffset=0);
+
+  
     //*******************************************
     //  Here come inplace replacement  methods...
     //*******************************************
 
+  /**
+   *  swaps occurence of 1 char for another
+   *  
+   *  @return  this
+   */
+  nsresult ReplaceChar(char anOldChar,char aNewChar);
 
-  nsString& ReplaceSubstring(const char* aTarget,const PRUnichar* aNewValue) {
-    return *this;
-  }
+  nsresult ReplaceChar(const char* aSet,char aNewChar);
 
-    //*******************************************
+  nsresult ReplaceSubstring( const nsString& aTarget,const nsString& aNewValue);
+
+  nsresult ReplaceSubstring(const char* aTarget,const char* aNewValue);
+
+
+  //*******************************************
     //  Here come the stripchar methods...
     //*******************************************
 
-  nsString& StripChar(char aChar,PRInt32 anOffset=0){
-    return *this;
-  }
+  /**
+   *  This method is used to remove all occurances of the
+   *  given character from this string.
+   *  
+   *  @update  rickg 03.01.2000
+   *  @param  aChar -- char to be stripped
+   *  @param  anOffset -- where in this string to start stripping chars
+   *  @return *this 
+   */
+  nsresult StripChar(char aChar,PRUint32 anOffset=0);
+
+  nsresult StripChar(PRInt32 anInt,PRUint32 anOffset=0);
+
+  nsresult StripChars(const char* aSet);
+
+  nsresult StripWhitespace();
+
+    //**************************************************
+    //  Here are some methods that extract substrings...
+    //**************************************************
+
+  nsresult Left(nsString& aCopy,PRInt32 aCount) const;
+
+  nsresult Mid(nsString& aCopy,PRUint32 anOffset,PRInt32 aCount) const;
+
+  nsresult Right(nsString& aCopy,PRInt32 aCount) const;
+
 
     //*******************************************
     //  Here come the operator+=() methods...
     //*******************************************
 
-  nsString& operator+=(const char* aUCString) {
-    Append(aUCString);
-    return *this;
-  }
+  nsString& operator+=(const nsString& aString);
+
+  nsString& operator+=(const char* aString);
   
-  nsString& operator+=(const char aChar){
-    // Append(aChar);
-    return *this;
-  }
+  nsString& operator+=(const PRUnichar* aString);
+  
+  nsString& operator+=(const char aChar);
+
+  nsString& operator+=(const PRUnichar aChar);
+  
+  nsString& operator+=(const int anInt);
 
 
   /***********************************
     Comparison methods...
    ***********************************/
 
+  PRBool operator==(const nsString& aString) const {return Equals(aString);}      
+  PRBool operator==(const nsCString& aString) const {return Equals(aString);}      
   PRBool operator==(const char* aString) const {return Equals(aString);}
+  PRBool operator==(const PRUnichar* aString) const {return Equals(aString);}
 
+  PRBool operator!=(const nsString& aString) const {return PRBool(Compare(aString)!=0);}
+  PRBool operator!=(const nsCString& aString) const {return PRBool(Compare(aString)!=0);}
   PRBool operator!=(const char* aString) const {return PRBool(Compare(aString)!=0);}
+  PRBool operator!=(const PRUnichar* aString) const {return PRBool(Compare(aString)!=0);}
 
+  PRBool operator<(const nsString& aString) const {return PRBool(Compare(aString)<0);}
+  PRBool operator<(const nsCString& aString) const {return PRBool(Compare(aString)<0);}
   PRBool operator<(const char* aString) const {return PRBool(Compare(aString)<0);}
+  PRBool operator<(const PRUnichar* aString) const {return PRBool(Compare(aString)<0);}
 
+  PRBool operator>(const nsString& aString) const {return PRBool(Compare(aString)>0);}
+  PRBool operator>(const nsCString& aString) const {return PRBool(Compare(aString)>0);}
   PRBool operator>(const char* aString) const {return PRBool(Compare(aString)>0);}
+  PRBool operator>(const PRUnichar* aString) const {return PRBool(Compare(aString)>0);}
 
+  PRBool operator<=(const nsString& aString) const {return PRBool(Compare(aString)<=0);}
+  PRBool operator<=(const nsCString& aString) const {return PRBool(Compare(aString)<=0);}
   PRBool operator<=(const char* aString) const {return PRBool(Compare(aString)<=0);}
+  PRBool operator<=(const PRUnichar* aString) const {return PRBool(Compare(aString)<=0);}
 
+  PRBool operator>=(const nsString& aString) const {return PRBool(Compare(aString)>=0);}
+  PRBool operator>=(const nsCString& aString) const {return PRBool(Compare(aString)>=0);}
   PRBool operator>=(const char* aString) const {return PRBool(Compare(aString)>=0);}
+  PRBool operator>=(const PRUnichar* aString) const {return PRBool(Compare(aString)>=0);}
 
 
-  PRInt32 Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+  PRInt32  Compare(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+
+  PRInt32  Compare(const nsCString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+
+  PRInt32  Compare(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   
+  PRInt32  Compare(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const ;
+
+  PRBool  Equals(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+
+  PRBool  Equals(const nsCString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+
   PRBool  Equals(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
-  PRBool  Equals(const char* s1, const char* s2,PRBool aIgnoreCase=PR_FALSE) const;
+
+  PRBool  Equals(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+
+  PRBool  EqualsIgnoreCase(const nsString &aString) const {return Equals(aString,PR_TRUE);}
+  PRBool  EqualsIgnoreCase(const nsCString &aString) const {return Equals(aString,PR_TRUE);}
+  PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const {return Equals(aString,PR_TRUE);}
+  PRBool  EqualsIgnoreCase(const PRUnichar* s1, const PRUnichar* s2) const;
+
+  // PRBool  Equals(/*FIX: const */nsIAtom* anAtom,PRBool aIgnoreCase) const;   
 
 
   /***************************************
     These are string searching methods...
    ***************************************/
 
-  PRInt32 FindChar(char aChar) {
-    return -1;
-  }
+  /**
+   *  search for given string within this string
+   *  
+   *  @update  rickg 03.01.2000
+   *  @param   aString - substr to be found
+   *  @param   aIgnoreCase tells us whether or not to do caseless compare
+   *  @param   anOffset tells us where in this string to start searching
+   *  @param   aRepCount tells us how many iterations to make starting at the given offset
+   *  @return  offset in string, or -1 (kNotFound)
+   */
+  PRInt32 Find(const nsString& aTarget,PRBool aIgnoreCase=PR_FALSE,PRUint32 anOffset=0,PRInt32 aRepCount=-1) const;
+  PRInt32 Find(const nsCString &aString,PRBool aIgnoreCase=PR_FALSE,PRUint32 anOffset=0,PRInt32 aRepCount=-1) const;
+  PRInt32 Find(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRUint32 anOffset=0,PRInt32 aRepCount=-1) const;
+  PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRUint32 anOffset=0,PRInt32 aRepCount=-1) const;
+  PRInt32 FindChar(char aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aRepCount=-1) const ;
+  
+  PRInt32 FindCharInSet(const nsString& aString,PRUint32 anOffset=0) const;
+  PRInt32 FindCharInSet(const char *aString,PRUint32 anOffset=0) const;
+  PRInt32 FindCharInSet(const PRUnichar *aString,PRUint32 anOffset=0) const;
 
-  PRInt32 Find(const nsStringImpl<char>& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const {
-    return -1;
-  }
+  PRInt32 RFind(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aRepCount=-1) const;
+  PRInt32 RFind(const nsCString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aRepCount=-1) const;
+  PRInt32 RFind(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aRepCount=-1) const;
+  PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aRepCount=-1) const;
+  PRInt32 RFindChar(char aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aRepCount=-1) const;
 
-  PRInt32 Find(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const{
-    return -1;
-  }
-    
-  PRInt32 FindCharInSet(const char* aString,PRInt32 anOffset=-1) const{
-    return -1;
-  }
+  PRInt32 RFindCharInSet(const nsString& aString,PRInt32 anOffset=-1) const ;
+  PRInt32 RFindCharInSet(const PRUnichar* aString,PRInt32 anOffset=-1) const;
+  PRInt32 RFindCharInSet(const char* aString,PRInt32 anOffset=-1) const;
 
-  PRInt32 FindChar(char aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const {
-    return -1;
-  }
+  /***************************************
+    These convert to a different type
+   ***************************************/
 
-  PRInt32 RFindChar(char aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const{
-    return -1;
-  }
+  static void  Recycle(nsString* aString);
 
-  PRInt32 RFind(const nsStringImpl<char>& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const{
-    return -1;
-  }
+  static nsString* CreateString(void);
 
-  PRInt32 RFind(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const{
-    return -1;
-  }
-    
-  PRInt32 RFindCharInSet(const nsStringImpl<char>& aString,PRInt32 anOffset=-1) const {
-    return -1;
-  }
+  nsString* ToNewString() const;
 
-  PRInt32 RFindCharInSet(const char* aString,PRInt32 anOffset=-1) const{
-    return -1;
-  }
+  char* ToNewCString() const;
 
+  char* ToNewUTF8String() const;
+
+  PRUnichar* ToNewUnicode() const;
+
+  char* ToCString(char* aBuf,PRUint32 aBufLength,PRUint32 anOffset=0) const;
+
+  //******************************************
+  // Utility methods
+  //******************************************
+
+  PRInt32 CountChar(PRUnichar aChar);
+  
+    //This will not work correctly for any unicode set other than ascii
+  void DebugDump(void) const;
+
+  /**
+   * Perform string to float conversion.
+   * @param   aErrorCode will contain error if one occurs
+   * @return  float rep of string value
+   */
+  float ToFloat(PRInt32* aErrorCode) const;
+
+  /**
+   * Perform string to int conversion.
+   * @param   aErrorCode will contain error if one occurs
+   * @param   aRadix tells us which radix to assume; kAutoDetect tells us to determine the radix for you.
+   * @return  int rep of string value, and possible (out) error code
+   */
+  PRInt32 ToInteger(PRInt32* anErrorCode,PRUint32 aRadix=kAutoDetect) const;
+
+  void ToLowerCase();
+
+  void ToLowerCase(nsString &aString) const;
+
+  void ToUpperCase();
+
+  void ToUpperCase(nsString &aString) const;
+
+
+protected:
+  
+  nsresult Append(const nsStringValueImpl<char> &aString,PRInt32 aLength=-1,PRUint32 aSrcOffset=0);
+
+  nsStringValueImpl<PRUnichar>  mStringValue;
+
+  friend class nsCString;
 };
 
 
-/***************************************************************************
- *
- *  Now the basic nsCString class, which uses nsSymmetricStringImpl as a
- *  base so that it gets all the char behaviors, and conversion functionality
- *  via the AltCharType.
- *
- ***************************************************************************/
 
-class nsAutoString : public nsAutoStringImpl<PRUnichar>  {
+
+/*****************************************************************
+  Now we declare the nsAutoString class
+ *****************************************************************/
+
+
+class nsAutoString : public nsString {
 public:
   
-  nsAutoString() : nsAutoStringImpl<PRUnichar>() {
+  nsAutoString() : nsString() {
+    memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+    mStringValue.mCapacity=kDefaultStringSize;
+    mStringValue.mBuffer=mInternalBuffer;
   }
   
-  nsAutoString(const nsAutoString& aString,PRInt32 aLength=-1) : nsAutoStringImpl<PRUnichar>(aString,aLength) {
-    //Assign(aString,aLength);
-  }
-  
-  nsAutoString(const PRUnichar* aString, PRInt32 aLength=-1) : nsAutoStringImpl<PRUnichar>(aString,aLength) {
-  }
-
-  //call this version for string ptrs that match the internal chartype
-  nsAutoString(const char* aString, PRInt32 aLength=-1) : nsAutoStringImpl<PRUnichar>() {
+    //call this version nsAutoString derivatives...
+  nsAutoString(const nsAutoString& aString,PRInt32 aLength=-1) : nsString() {
+    memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+    mStringValue.mCapacity=kDefaultStringSize;
+    mStringValue.mBuffer=mInternalBuffer;
     Assign(aString,aLength);
   }
 
-  //call this version for string ptrs that match the internal chartype
-  nsAutoString(const nsStringImpl<PRUnichar>& aString, PRInt32 aLength=-1) : nsAutoStringImpl<PRUnichar>() {
+  //call this version for nsString,nsCString and the autostrings
+  nsAutoString(const nsString& aString,PRInt32 aLength=-1) : nsString() {
+    memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+    mStringValue.mCapacity=kDefaultStringSize;
+    mStringValue.mBuffer=mInternalBuffer;
+    Assign(aString,aLength);
   }
+
+    //call this version with nsStringValueImpls (start of COW)
+  nsAutoString(const nsCString& aString) : nsString(aString) {
+  }
+
+    //call this version for char*'s....
+  nsAutoString(const char* aString,PRInt32 aLength=-1) : nsString() {
+    memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+
+    nsStringValueImpl<char> theString(const_cast<char*>(aString),aLength);
+    mStringValue.mCapacity=kDefaultStringSize;
+    mStringValue.mBuffer=mInternalBuffer;
+    SVAssign<PRUnichar,char>(mStringValue,theString,aLength,0);
+  }
+
+    //call this version for a single char of type char...
+  nsAutoString(const char aChar) : nsString() {
+    char theBuffer[]={aChar,0};
+
+    memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+    mStringValue.mCapacity=kDefaultStringSize;
+    mStringValue.mBuffer=mInternalBuffer;
+
+    nsStringValueImpl<char> theString(theBuffer,1);
+    Assign(theString,1,0);
+  }
+
+
+    //call this version for PRUnichar*'s....
+  nsAutoString(const PRUnichar* aString,PRInt32 aLength=-1) : nsString() {
+    memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+    mStringValue.mCapacity=kDefaultStringSize;
+    mStringValue.mBuffer=mInternalBuffer;
+    nsStringValueImpl<PRUnichar> theString(const_cast<PRUnichar*>(aString),aLength);
+    SVAssign<PRUnichar,PRUnichar>(mStringValue,theString,theString.mLength,0);
+  }
+
+
+    //call this version for all other ABT versions of readable strings
+  nsAutoString(const nsAReadableString &aString) : nsString() {
+    memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+    mStringValue.mCapacity=kDefaultStringSize;
+    mStringValue.mBuffer=mInternalBuffer;
+    Assign(aString);
+  }
+
+  nsAutoString(const nsStackBuffer<PRUnichar> &aBuffer) : nsString() {
+
+    memset(mInternalBuffer,0,sizeof(mInternalBuffer));
+
+    mStringValue.mRefCount=2;
+    mStringValue.mLength=aBuffer.mLength;
+    mStringValue.mCapacity=aBuffer.mCapacity;
+    mStringValue.mBuffer=aBuffer.mBuffer;
+    
+  }
+
 
   virtual ~nsAutoString() { }
+
   
-  nsAutoString& operator=(const nsAutoString& aString) {
-    nsStringImpl<PRUnichar>::operator=(aString);
+  nsAutoString& operator=(const nsAutoString& aCopy) {
+    if(aCopy.mStringValue.mBuffer!=mStringValue.mBuffer) {
+      Assign(aCopy);
+    }
     return *this;
   }
-
-  nsAutoString& operator=(const char* aString) {
+  
+  nsAutoString& operator=(const nsString& aString) {
     Assign(aString);
     return *this;
-  } 
+  }
 
   nsAutoString& operator=(const PRUnichar* aString) {
-    nsStringImpl<PRUnichar>::operator=(aString);
+    if(mStringValue.mBuffer!=aString) {
+      nsStringValueImpl<PRUnichar> theStringValue(const_cast<PRUnichar*>(aString));
+      Assign(aString);
+    }
     return *this;
   } 
 
-  nsAutoString& operator=(const nsStringImpl<PRUnichar>& aString) {
-    Assign(aString);
+  nsAutoString& operator=(const char* aString) {
+    nsStringValueImpl<char> theStringValue(const_cast<char*>(aString));
+    SVAssign<PRUnichar,char>(mStringValue,theStringValue,theStringValue.mLength,0);
     return *this;
   }
 
+  nsAutoString& operator=(const char aChar) {
+    Assign(aChar);
+    return *this;
+  } 
 
-  //******************************************
-  // Here are the mutation methods...
-  //******************************************
-
-    //assign from a stringimpl
-  nsresult Assign(const nsString& aString,PRInt32 aLength=-1) {
-    Truncate();
-    return Append(aString);
-  }
-
-    //assign from a stringimpl<PRUnichar>
-  nsresult Assign(const nsStringImpl<PRUnichar>& aString,PRInt32 aLength=-1) {
-    Truncate();
-    return Append(aString,aLength);
-  }
-
-    //assign from a compatible string pointer
-  virtual nsresult Assign(const PRUnichar* aString,PRInt32 aLength=-1) {
-    Truncate();
-    return Append(aString,aLength);
-  }
-
-    //assign from a stringimpl
-  nsresult Append(const nsString& aString,PRInt32 aLength=-1) {
-    SVAppend< PRUnichar, PRUnichar> (mStringValue,aString.mStringValue,0,aString.mStringValue.mLength);
-    return NS_OK;
-  }
-    //append from a stringimpl
-  virtual nsresult Append(const nsStringImpl<char> &aString,PRInt32 aLength=-1) {
-    SVAppend< PRUnichar,char > (mStringValue,aString.mStringValue,0,aString.mStringValue.mLength);
-    return NS_OK;
-  }
-
-    //append from a type compatible string pointer
-  virtual nsresult Append(const char* aString,PRInt32 aLength=-1) {
-    nsresult result=NS_OK;
-    if(aString) {
-      nsStringValueImpl<char> theTempString(const_cast<char*>(aString),aLength);
-      SVAppend< PRUnichar, char > (mStringValue,theTempString,0,aLength);
-    }
-    return result;
-  }
-
-
-  /***********************************
-    These come from stringsearcher
-   ***********************************/
-
-  virtual PRInt32 Find(const char* aTarget) {
-    return -1;
-  }
-
-  virtual PRInt32 FindChar(PRUnichar aChar) {
-    return -1;
-  }
-
+protected:
+  PRUnichar mInternalBuffer[kDefaultStringSize+1];
 };
-
 
 #endif
