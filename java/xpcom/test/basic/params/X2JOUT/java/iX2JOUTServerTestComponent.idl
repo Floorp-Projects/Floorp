@@ -56,7 +56,7 @@ interface iX2JOUTServerTestComponent : nsISupports {
 			[array, size_is(count)] out long intArray);
 	void testObject(out iX2JOUTServerTestComponent obj);
 	void testObj();
-//	void testIID(out nsIIDRef iid);
+//	void testIID(out nsIIDRef aNameRef);
 //	void testCID(out nsCIDRef cid);
 
 };

@@ -174,8 +174,8 @@ NS_IMETHODIMP J2XINServerTestComponentImpl::TestChar(char i) {
 NS_IMETHODIMP J2XINServerTestComponentImpl::TestWChar(PRUnichar i) {
     fBuffer = PR_sprintf_append(fBuffer,"%d\n",i);
     return NS_OK;
-}
-*/
+} */
+
   /* void TestString (in string i); */
 NS_IMETHODIMP J2XINServerTestComponentImpl::TestString(const char *i) {
     fBuffer = PR_sprintf_append(fBuffer,"%s\n",i);
@@ -203,16 +203,16 @@ NS_IMETHODIMP J2XINServerTestComponentImpl::TestLongArray(PRUint32 count, PRInt3
 }
 
   /* void TestCharArray (in unsigned long count, [array, size_is (count)] in char valueArray); */
-NS_IMETHODIMP J2XINServerTestComponentImpl::TestCharArray(PRUint32 count, char *valueArray) {
+/*NS_IMETHODIMP J2XINServerTestComponentImpl::TestCharArray(PRUint32 count, char *valueArray) {
     return PrintResultArray("j2x.in.server.charArray",count,valueArray);;
-}
+} */
 
   /* void TestMixed (in boolean bBool, in char cChar, in octet nByte, in short nShort, in unsigned short nUShort, in long nLong, in unsigned long nULong, in long long nHyper, in unsigned long long nUHyper, in float fFloat, in double fDouble, in string aString, in unsigned long count, [array, size_is (count)] in long longArray); */
-
-NS_IMETHODIMP J2XINServerTestComponentImpl::TestMixed(PRBool bBool,/* char cChar,*/ PRUint8 nByte, PRInt16 nShort, PRUint16 nUShort, PRInt32 nLong, PRUint32 nULong, PRInt64 nHyper, PRUint64 nUHyper, float fFloat, double fDouble, const char *aString, PRUint32 count, PRInt32 *longArray) {
+/*
+NS_IMETHODIMP J2XINServerTestComponentImpl::TestMixed(PRBool bBool, char cChar, PRUint8 nByte, PRInt16 nShort, PRUint16 nUShort, PRInt32 nLong, PRUint32 nULong, PRInt64 nHyper, PRUint64 nUHyper, float fFloat, double fDouble, const char *aString, PRUint32 count, PRInt32 *longArray) {
     char cChar = '0';
     return PrintResultMixed("j2x.in.server.mixed",(PRBool)bBool,(char)cChar,(PRUint8)nByte,(PRInt16)nShort, (PRUint16)nUShort, (PRInt32)nLong, (PRUint32)nULong,  (PRInt64)nHyper, (PRUint64)nUHyper, (float)fFloat, (double)fDouble, (char*)aString, (PRUint32)count, (PRInt32*)longArray);
-}
+} */
 
   /* void TestObject (in iJ2XINServerTestComponent obj); */
 NS_IMETHODIMP J2XINServerTestComponentImpl::TestObject(iJ2XINServerTestComponent *obj) {

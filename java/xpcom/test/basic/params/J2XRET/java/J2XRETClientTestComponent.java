@@ -108,8 +108,12 @@ public class J2XRETClientTestComponent implements iJ2XRETClientTestComponent, iC
              System.err.println("Server is not initialized!!!");
              return;
          }
-
-         if(!exclusionHash.containsKey("short"))
+/*
+         if(!exclusionHash.containsKey("char"))
+             testChar();
+         if(!exclusionHash.containsKey("wchar"))
+             testWChar();
+*/         if(!exclusionHash.containsKey("short"))
              testShort();
          if(!exclusionHash.containsKey("long"))
              testLong();
@@ -137,8 +141,8 @@ public class J2XRETClientTestComponent implements iJ2XRETClientTestComponent, iC
              testStringArray();
          if(!exclusionHash.containsKey("longArray"))
              testLongArray();
-         if(!exclusionHash.containsKey("charArray"))
-             testCharArray();
+//         if(!exclusionHash.containsKey("charArray"))
+//             testCharArray();
          if(!exclusionHash.containsKey("object"))
              testObject();
 
@@ -254,17 +258,23 @@ public class J2XRETClientTestComponent implements iJ2XRETClientTestComponent, iC
          server.testBoolean();
     }
 
+
     private void testString() {
          s = new StringBuffer();
          String stringVar ="8";
+
          stringVar=server.testString();
+try{
 	while(!stringVar.equals("112")) {
          s.append(stringVar+"\n");
          stringVar=server.testString();
         }
+}catch(Exception e) {
          s.append(stringVar+"\n");
+}
+
          printResult(s.toString(),"j2x.ret.client.string");
-         server.testString();
+         server.flush("string");
     }
 
     private void testWString() {
@@ -288,7 +298,7 @@ public class J2XRETClientTestComponent implements iJ2XRETClientTestComponent, iC
            s.append(intAVar[i]+"\n");
          printResult(s.toString(),"j2x.ret.client.longArray");
     }
-
+/*
     private void testCharArray() {
          s = new StringBuffer();
          char[] charAVar = {'0','0','0'};
@@ -298,7 +308,7 @@ public class J2XRETClientTestComponent implements iJ2XRETClientTestComponent, iC
            s.append(charAVar[i]+"\n");
          printResult(s.toString(),"j2x.ret.client.charArray");
     }
-
+*/
     private void testStringArray() {
          s = new StringBuffer();
          String[] stringAVar = {"0","0","0"};
@@ -320,7 +330,7 @@ public class J2XRETClientTestComponent implements iJ2XRETClientTestComponent, iC
 	 }
          printResult("!!!Right string!!!","j2x.ret.client.object");
     }
-
+/*
     private void testWChar() {
          s = new StringBuffer();
          char wcharVar = '8';
@@ -342,7 +352,7 @@ public class J2XRETClientTestComponent implements iJ2XRETClientTestComponent, iC
          }
          printResult(s.toString(),"j2x.ret.client.char");
      }
-
+*/
     public Object queryInterface(IID iid) {
         System.out.println("DEbug:avm:J2XRETClientTestComponent::queryInterface iid="+iid);
         if ( iid.equals(nsISupports.IID)

@@ -18,6 +18,8 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# Client QA Team, St. Petersburg, Russia
+#
 
 DEPTH=..\..\..\..\..\..
 topsrcdir       = $(DEPTH)
@@ -29,6 +31,10 @@ MAKE_OBJ_TYPE 	= DLL
 DLLNAME 	= $(MODULE)
 DLL		=.\$(OBJDIR)\$(DLLNAME).dll
 COMPONENT	= 1
+JAVA_OR_NSJVM=1
+NO_CAFE=1
+
+include <$(DEPTH)\config\config.mak>
 
 CPP_OBJS	= \
         	.\$(OBJDIR)\MThreadComponent2.obj \
@@ -39,20 +45,19 @@ XPIDLSRCS	= \
 		.\iMThreadComponent2.idl \
 		$(NULL)
 
-JAVAI		= iMThreadComponent2.java
-
 LLIBS		=$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib
 
+JDIRS = . 
+JAVAC_PROG=$(JDKHOME)\bin\javac
+JAVAC_FLAGS=-classpath $(CLASSPATH);$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
+
 include <$(topsrcdir)\config\rules.mak>
+include <$(topsrcdir)\config\javarules.mak>
 
-javai:
-	echo $(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes $(JAVAI)
-	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes $(JAVAI)
-
-install:: $(DLL) javai
+install:: $(DLL) 
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 
 clobber::
 	del /f $(DIST)\bin\components\$(DLLNAME).dll
 	del /f $(DIST)\bin\components\$(DLLNAME).xpt
-	del /f $(DIST)\..\classes\org\mozilla\xpcom\iMThreadComponent2.class
+

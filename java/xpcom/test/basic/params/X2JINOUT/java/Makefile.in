@@ -35,21 +35,18 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 
-JAVA_SRC=X2JINOUTServerTestComponent.java
-
-JAVAI_SRC=iX2JINOUTServerTestComponent.java
+X2JINOUTServerTestComponent.class:
+	$(JDKHOME)/bin/javac -classpath $(CLASSPATH) X2JINOUTServerTestComponent.java
 
 X2JINOUTServerTestComponent.jar.comp: manifest X2JINOUTServerTestComponent.class
 	$(JDKHOME)/bin/jar cvfm X2JINOUTServerTestComponent.jar.comp  manifest *.class
 
-X2JINOUTServerTestComponent.class:
-	$(JDKHOME)/bin/javac  -classpath $(DEPTH)/dist/classes $(JAVA_SRC)
-
-javai::
-	$(JDKHOME)/bin/javac  -classpath $(DEPTH)/dist/classes -d $(DEPTH)/dist/classes $(JAVAI_SRC)
+export::
+	$(JDKHOME)/bin/javac -classpath $(CLASSPATH) -d $(DEPTH)/dist/classes iX2JINOUTServerTestComponent.java
 
 
-install-component: javai X2JINOUTServerTestComponent.jar.comp X2JINOUTServerTestComponent.jar.info
+
+install-component: X2JINOUTServerTestComponent.jar.comp X2JINOUTServerTestComponent.jar.info
 	cp -f X2JINOUTServerTestComponent.jar* $(DIST)/bin/components
 
 clobber::

@@ -37,8 +37,8 @@
 #define char_last 'Z'
 #define wchar_first '0'
 #define wchar_last 'Z'
-#define string_first "iddqd"
+#define string_first NULL
 #define string_empty ""
-#define string_null "Here must be the NULL string"
+#define string_null "iddqd"
 #define string_last "112"
 

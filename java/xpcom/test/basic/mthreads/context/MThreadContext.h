@@ -27,8 +27,7 @@ class MThreadContextImpl : public iMThreadContext
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_IMTHREADCONTEXT
-    char** LoadComponentList();
-    int countChars(char* buf, char ch);
+    PRBool makeParamFile();
 
     MThreadContextImpl();
     virtual ~MThreadContextImpl();
@@ -46,13 +45,3 @@ public:
   virtual ~_MYCLASS_();
   /* additional members */
 };
-
-
-
-
-
-
-
-
-
-

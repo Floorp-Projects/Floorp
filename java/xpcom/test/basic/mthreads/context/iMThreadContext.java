@@ -20,8 +20,20 @@ public interface iMThreadContext extends nsISupports
        new IID("a7b26685-9816-4eb6-a075-36f539a7a823");
 
 
-    /* string GetNext (); */
-    public String getNext();
+    /* long GetStages (); */
+    public int getStages();
+
+    /* long GetThreads (); */
+    public int getThreads();
+
+    /* string GetResFile (); */
+    public String getResFile();
+
+    /* string GetPath (in boolean i); */
+    public String getPath(boolean i);
+
+    /* string GetContractID (in long i, in long j); */
+    public String getContractID(int i, int j);
 
     /* nsIComponentManager GetComponentManager (); */
     public nsIComponentManager getComponentManager();

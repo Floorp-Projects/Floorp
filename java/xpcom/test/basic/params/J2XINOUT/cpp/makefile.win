@@ -28,7 +28,10 @@ DLLNAME = J2XINOUTServerTestComponent
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 MODULE = J2XINOUTServerTestComponent
 COMPONENT = 1
+JAVA_OR_NSJVM=1
+NO_CAFE=1
 
+include <$(DEPTH)\config\config.mak>
 
 CPP_OBJS= \
 	.\$(OBJDIR)\J2XINOUTServerTestComponent.obj \
@@ -37,22 +40,18 @@ CPP_OBJS= \
 
 XPIDLSRCS	= .\iJ2XINOUTServerTestComponent.idl 
 
-JAVAI=		iJ2XINOUTServerTestComponent.java
-
 LLIBS=	$(LLIBS) $(LIBNSPR) $(DIST)\lib\xpcom.lib
 
+JDIRS = . 
+JAVAC_PROG=$(JDKHOME)\bin\javac
+JAVAC_FLAGS=-classpath $(CLASSPATH);$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
 
 include <$(DEPTH)\config\rules.mak>
-
-
-JAVAC=$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes
+include <$(DEPTH)\config\javarules.mak>
 
 install:: $(DLL) 
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 clobber::
 	del /f $(DIST)\bin\components\$(DLLNAME).dll
 	del /f $(DIST)\bin\components\J2XINOUT*.xpt
-
-export::
-	$(JAVAC) $(JAVAI)
 

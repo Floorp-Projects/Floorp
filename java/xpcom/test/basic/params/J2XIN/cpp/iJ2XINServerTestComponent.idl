@@ -39,19 +39,19 @@ interface iJ2XINServerTestComponent : nsISupports
     void TestDouble(in double i);
     void TestBoolean(in boolean i);
 //    void TestChar(in char i);
-    //void TestWChar(in wchar i);
+//    void TestWChar(in wchar i);
     void TestString(in string i);
     void TestWString(in wstring i);
     void TestStringArray(in unsigned long count,[array, size_is(count)] in string valueArray);
     void TestLongArray(in unsigned long count, [array, size_is(count)] in long longArray);
-    void TestCharArray(in unsigned long count,[array, size_is(count)] in char valueArray);
-    void TestMixed(in boolean bBool,/*in char cChar*,*/ in octet nByte,
-                  in short nShort, in unsigned short nUShort,
-                  in long nLong, in unsigned long nULong,
-                  in long long nHyper, in unsigned long long nUHyper,
-                  in float fFloat, in double fDouble,
-                  in string aString,
-                  in unsigned long count, [array, size_is(count)] in long longArray);
+//    void TestCharArray(in unsigned long count,[array, size_is(count)] in char valueArray);
+//    void TestMixed(in boolean bBool,/*in char cChar*,*/ in octet nByte,
+//                  in short nShort, in unsigned short nUShort,
+//                  in long nLong, in unsigned long nULong,
+//                  in long long nHyper, in unsigned long long nUHyper,
+//                  in float fFloat, in double fDouble,
+//                  in string aString,
+//                  in unsigned long count, [array, size_is(count)] in long longArray);
     void TestObject(in iJ2XINServerTestComponent obj);
     string GetTestObjectString();
     void TestIID(in nsIIDRef iid);

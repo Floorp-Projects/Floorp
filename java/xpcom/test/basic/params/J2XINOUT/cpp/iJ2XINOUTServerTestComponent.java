@@ -26,6 +26,12 @@ public interface iJ2XINOUTServerTestComponent extends nsISupports
     /* void Flush (in string s); */
     public void flush(String s);
 
+    /* void TestChar (inout char i); */
+    public void testChar(char[] i);
+
+    /* void TestWChar (inout wchar i); */
+    public void testWChar(char[] i);
+
     /* void TestShort (inout short i); */
     public void testShort(short[] i);
 
@@ -56,12 +62,6 @@ public interface iJ2XINOUTServerTestComponent extends nsISupports
     /* void TestBoolean (inout boolean i); */
     public void testBoolean(boolean[] i);
 
-    /* void TestChar (inout char i); */
-    public void testChar(char[] i);
-
-    /* void TestWChar (inout wchar i); */
-    public void testWChar(char[] i);
-
     /* void TestString (inout string i); */
     public void testString(String[] i);
 
@@ -77,11 +77,11 @@ public interface iJ2XINOUTServerTestComponent extends nsISupports
     /* void TestCharArray (in unsigned long count, [array, size_is (count)] inout char valueArray); */
     public void testCharArray(int count, char[][] valueArray);
 
-    /* void TestMixed (inout boolean bBool, inout char cChar, inout octet nByte, inout short nShort, inout unsigned short nUShort, inout long nLong, inout unsigned long nULong, inout long long nHyper, inout unsigned long long nUHyper, inout float fFloat, inout double fDouble, inout string aString, in unsigned long count, [array, size_is (count)] inout long longArray); */
-    public void testMixed(boolean[] bBool, char[] cChar, byte[] nByte, short[] nShort, short[] nUShort, int[] nLong, int[] nULong, long[] nHyper, long[] nUHyper, float[] fFloat, double[] fDouble, String[] aString, int count, int[][] longArray);
-
     /* void TestObject (inout iJ2XINOUTServerTestComponent obj); */
     public void testObject(iJ2XINOUTServerTestComponent[] obj);
+
+    /* void TestMixed (inout char cChar, inout octet nByte, inout short nShort, inout unsigned short nUShort, inout long nLong, inout unsigned long nULong, inout long long nHyper, inout unsigned long long nUHyper, inout string aString); */
+    public void testMixed(char[] cChar, byte[] nByte, short[] nShort, short[] nUShort, int[] nLong, int[] nULong, long[] nHyper, long[] nUHyper, String[] aString);
 
     /* void TestObj (); */
     public void testObj();

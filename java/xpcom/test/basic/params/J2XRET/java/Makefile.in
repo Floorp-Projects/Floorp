@@ -31,22 +31,26 @@ JAVA_OR_NSJVM=1
 include $(DEPTH)/config/autoconf.mk
 
 
-include $(topsrcdir)/config/rules.mk
-
-
 JAVA_SRC	= \
 	J2XRETClientTestComponent.java
 
-JAVAI_SRC	= \
-	iJ2XRETClientTestComponent.java
-J2XRETClientTestComponent.jar.comp: manifest javai J2XRETClientTestComponent.class
+#JAVAI_SRC	= \
+#	iJ2XRETClientTestComponent.java
+J2XRETClientTestComponent.jar.comp: manifest J2XRETClientTestComponent.class
 	$(JDKHOME)/bin/jar cvfm J2XRETClientTestComponent.jar.comp  manifest *.class
 
 J2XRETClientTestComponent.class:
 	$(JDKHOME)/bin/javac  -classpath $(DEPTH)/dist/classes $(JAVA_SRC)
 
-javai::
-	$(JDKHOME)/bin/javac  -classpath $(DEPTH)/dist/classes -d $(DEPTH)/dist/classes $(JAVAI_SRC)
+#javai::
+#	$(JDKHOME)/bin/javac  -classpath $(DEPTH)/dist/classes -d $(DEPTH)/dist/classes $(JAVAI_SRC)
+
+JDIRS = . 
+JAVAC_PROG=$(JDKHOME)\bin\javac
+JAVAC_FLAGS=-classpath $(CLASSPATH);$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
+
+include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/config/config.mk
 
 install-component: J2XRETClientTestComponent.jar.comp J2XRETClientTestComponent.jar.info
 	cp -f J2XRETClientTestComponent.jar* $(DIST)/bin/components
@@ -55,3 +59,4 @@ clobber::
 	rm -f $(DIST)/bin/components/J2XRETClientTestComponent.jar.*
 clobber_all:: clobber
 install:: install-component
+	rm -f $(DIST)/../classes/J2XRETClientTestComponent.class

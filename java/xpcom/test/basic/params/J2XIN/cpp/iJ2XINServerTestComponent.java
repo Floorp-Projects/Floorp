@@ -68,12 +68,6 @@ public interface iJ2XINServerTestComponent extends nsISupports
     /* void TestLongArray (in unsigned long count, [array, size_is (count)] in long longArray); */
     public void testLongArray(int count, int[] longArray);
 
-    /* void TestCharArray (in unsigned long count, [array, size_is (count)] in char valueArray); */
-    public void testCharArray(int count, char[] valueArray);
-
-    /* void TestMixed (in boolean bBool, in octet nByte, in short nShort, in unsigned short nUShort, in long nLong, in unsigned long nULong, in long long nHyper, in unsigned long long nUHyper, in float fFloat, in double fDouble, in string aString, in unsigned long count, [array, size_is (count)] in long longArray); */
-    public void testMixed(boolean bBool, byte nByte, short nShort, short nUShort, int nLong, int nULong, long nHyper, long nUHyper, float fFloat, double fDouble, String aString, int count, int[] longArray);
-
     /* void TestObject (in iJ2XINServerTestComponent obj); */
     public void testObject(iJ2XINServerTestComponent obj);
 

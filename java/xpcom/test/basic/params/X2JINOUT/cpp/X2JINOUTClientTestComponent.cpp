@@ -492,6 +492,23 @@ void X2JINOUTClientTestComponentImpl::TestWString(){
    NS_FREE_STR_BUF(aBuf2)
   }
 
+  _string=NULL;
+  cstr=new nsCString(_string);
+  _wstring=cstr->ToNewUnicode();
+  str = *(new nsString(_wstring));
+  {
+   NS_ALLOC_STR_BUF(aBuf5,str,100)
+   val=PR_sprintf_append(val,"%s\n",aBuf5);
+   NS_FREE_STR_BUF(aBuf5)
+  }
+  serverComponent->TestWString(&_wstring);     
+  str = *(new nsString(_wstring));
+  {
+   NS_ALLOC_STR_BUF(aBuf6,str,100)
+   xval=PR_sprintf_append(xval,"%s\n",aBuf6);
+   NS_FREE_STR_BUF(aBuf6)
+  }
+
   _string="Test string.";
   cstr=new nsCString(_string);
   _wstring=cstr->ToNewUnicode();

@@ -18,6 +18,8 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# Client QA Team, St. Petersburg, Russia
+#
 
 DEPTH=../../../../../..
 topsrcdir       = $(DEPTH)
@@ -50,11 +52,4 @@ include $(topsrcdir)/config/rules.mk
 export::
 	$(JDKHOME)/bin/javac  -classpath $(DIST)/classes -d $(DIST)/classes $(JAVAI_SRC)
 	$(JDKHOME)/bin/javac  -classpath $(DIST)/classes -d $(DIST)/classes $(JAVA_SRC)
-
-
-
-
-
-
-
 

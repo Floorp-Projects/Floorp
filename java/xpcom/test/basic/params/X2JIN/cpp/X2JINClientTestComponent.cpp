@@ -424,11 +424,25 @@
    _wstring=cstr->ToNewUnicode();
 
    nsString str = *(new nsString(_wstring));
- 
-   NS_ALLOC_STR_BUF(aBuf,str,14)
+  {
+   NS_ALLOC_STR_BUF(aBuf,str,256)
    val=PR_sprintf_append(val,"%s\n",aBuf);
    NS_FREE_STR_BUF(aBuf)
+  }
+   serverComponent->TestWString(_wstring);
 
+
+   _string=NULL;
+
+   cstr=new nsCString(_string);
+   _wstring=cstr->ToNewUnicode();
+
+   str = *(new nsString(_wstring));
+  {
+   NS_ALLOC_STR_BUF(aBuf1,str,256)
+   val=PR_sprintf_append(val,"%s\n",aBuf1);
+   NS_FREE_STR_BUF(aBuf1)
+  }
    serverComponent->TestWString(_wstring);
 
    PrintResult("x2j.in.client.wstring",val);

@@ -40,7 +40,7 @@ interface iMTStart : nsISupports
     {0x8a, 0xb2, 0x97, 0x83, 0xf8, 0x98, 0x06, 0x55} \
 }
 
-#define MTSTART_PROGID "component://netscape/blackwood/blackconnect/test/mthreads/MTStart"
+#define MTSTART_PROGID "@mozilla/blackwood/blackconnect/test/mthreads/MTStart;1"
 
 %}
 

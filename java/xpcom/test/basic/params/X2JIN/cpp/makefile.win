@@ -48,4 +48,5 @@ install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 clobber::
 	del /f $(DIST)\bin\components\$(DLLNAME).dll
-	del /f $(DIST)\bin\components\X2JIN*.xpt
+	del /f $(DIST)\bin\components\X2JINC*.xpt
+	del /f $(DIST)\bin\components\X2JINS*.xpt

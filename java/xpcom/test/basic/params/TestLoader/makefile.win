@@ -18,6 +18,8 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# Client QA Team, St. Petersburg, Russia
+#
 
 DEPTH=..\..\..\..\..\..
 MODULE=BCTestLoader
@@ -25,11 +27,11 @@ MODULE=BCTestLoader
 MAKE_OBJ_TYPE=DLL
 DLLNAME=$(MODULE)
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
-JAVAI=		iClientTestComponent.java \
-		iJClientTestComponent.java \
-		iExclusionSupport.java 
 
-COMMON_JAVA=	VarContainer.java
+JAVA_OR_NSJVM=1
+NO_CAFE=1
+
+include <$(DEPTH)\config\config.mak>
 
 XPIDLSRCS=      .\BCITestLoader.idl \
 		.\iClientTestComponent.idl \
@@ -54,16 +56,16 @@ LINCS=\
         -I$(PUBLIC)\xpcom \
         $(NULL)
 
-include <$(DEPTH)\config\rules.mak>
+JDIRS = . 
+JAVAC_PROG=$(JDKHOME)\bin\javac
+JAVAC_FLAGS=-classpath $(CLASSPATH);$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
 
-javai:
-	echo $(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes; -d $(DEPTH)\dist\classes $(JAVAI) $(COMMON_JAVA)
-	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes $(JAVAI) $(COMMON_JAVA)
+include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\config\javarules.mak>
 
 #A little temporary hack with messenger
-install:: $(DLL) javai
+install:: $(DLL) 
         $(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
-        $(MAKE_INSTALL) start.html $(DIST)\bin\chrome\messenger\content\messenger
 	$(MAKE_INSTALL) BCTest.h  $(DIST)\..\include
 	$(MAKE_INSTALL) ProceedResults.h  $(DIST)\..\include
 	$(MAKE_INSTALL) PseudoHash.h  $(DIST)\..\include
@@ -76,7 +78,4 @@ clobber::
 	del /f $(DIST)\..\include\Values.h
 	del /f $(DIST)\..\include\VarContainer.h
 	del /f $(DIST)\..\include\PseudoHash.h
-	del /f $(DIST)\..\classes\org\mozilla\xpcom\iClientTestComponent.class
-	del /f $(DIST)\..\classes\org\mozilla\xpcom\iJClientTestComponent.class
-	del /f $(DIST)\..\classes\org\mozilla\xpcom\iExclusionSupport.class
 	del /f $(DIST)\..\classes\VarContainer.class

@@ -24,8 +24,8 @@
 DEPTH = ..\..\..\..\..\..
 
 DIRS=   \
-        java \
-	cpp \
+        cpp \
+	java \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

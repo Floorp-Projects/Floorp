@@ -18,6 +18,8 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# Client QA Team, St. Petersburg, Russia
+#
 
 DEPTH=..\..\..\..\..
 topsrcdir       = $(DEPTH)
@@ -30,8 +32,6 @@ DIRS=   \
         context \
 	1 \
 	2 \
-	3 \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
-

@@ -327,7 +327,7 @@ public class X2JRETServerTestComponent implements iX2JRETServerTestComponent {
   switch (all) {
 	case 0: _string=""; break;
 	case 1: _string="abc"; break;
-	case 2: _string="NULL string must be here"; break;
+	case 2: _string=null; break;
   }
   all++; 
   S=S+_string+"\n";
@@ -347,7 +347,7 @@ public class X2JRETServerTestComponent implements iX2JRETServerTestComponent {
   switch (all) {
 	case 0: _wstring=""; break;
 	case 1: _wstring="abc"; break;
-	case 2: _wstring="ctrl"; break;
+	case 2: _wstring=null; break;
   }
   all++; 
   S=S+_wstring+"\n";

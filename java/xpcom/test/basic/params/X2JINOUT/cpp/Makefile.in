@@ -37,9 +37,9 @@ CPPSRCS		= \
         X2JINOUTClientTestComponent.cpp \
         X2JINOUTClientTestComponentFactory.cpp \
         $(NULL)
+
 XPIDLSRCS	= iX2JINOUTClientTestComponent.idl
 
-JAVAI		= iX2JINOUTClientTestComponent.class 
 DSO_LDOPTS            += \
                 $(XPCOM_LIBS) \
                 $(NSPR_LIBS) \
@@ -47,7 +47,3 @@ DSO_LDOPTS            += \
 
 include $(topsrcdir)/config/rules.mk
 
-$(JAVAI)::
-	$(JDKHOME)/bin/javac  -classpath .:$(DIST)/classes -d $(DIST)/classes $<
-
-install:: $(JAVAI)

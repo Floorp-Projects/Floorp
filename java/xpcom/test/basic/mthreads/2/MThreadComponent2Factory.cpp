@@ -29,18 +29,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(MThreadComponent2Impl)
 
 static nsModuleComponentInfo components[] =
 {
-  { "X2JIN Client Test Component", MTHREADCOMPONENT2_CID, MTHREADCOMPONENT2_PROGID, MThreadComponent2ImplConstructor,
+  { "MultiThread Component 2", MTHREADCOMPONENT2_CID, MTHREADCOMPONENT2_PROGID, MThreadComponent2ImplConstructor,
      NULL /* NULL if you dont need one */,
      NULL /* NULL if you dont need one */
   }
 };
 
 NS_IMPL_NSGETMODULE("MThreadComponent2Factory", components)
-
-
-
-
-
-
-
-

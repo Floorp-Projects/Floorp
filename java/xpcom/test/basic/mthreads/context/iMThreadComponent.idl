@@ -28,5 +28,6 @@
 interface iMThreadComponent : nsISupports
 {
     void Initialize(in iMThreadContext c);
-    void Execute(in string tName);
+    void THack(in nsIComponentManager cm);
+    void Execute(in long thread, in long stage);
 };

@@ -25,9 +25,10 @@ DEPTH=../../../../../../..
 topsrcdir       = $(DEPTH)
 srcdir          = .
 VPATH           = .
+JAVA_OR_NSJVM=1
+NO_CAFE=1
 
 include $(DEPTH)/config/autoconf.mk
-include $(DEPTH)/config/config.mk
 
 MODULE		= J2XRETServerTestComponent
 LIBRARY_NAME	= $(MODULE)
@@ -50,11 +51,16 @@ CPPSRCS		= \
         $(NULL)
 XPIDLSRCS	= iJ2XRETServerTestComponent.idl
 
-JAVAI		= iJ2XRETServerTestComponent.java 
+#JAVAI		= iJ2XRETServerTestComponent.java 
+
+JDIRS = . 
+JAVAC_PROG=$(JDKHOME)\bin\javac
+JAVAC_FLAGS=-classpath $(CLASSPATH);$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
 
 include $(topsrcdir)/config/rules.mk
+include $(DEPTH)/config/config.mk
 
-JAVAC=$(JDKHOME)/bin/javac -classpath $(DIST)/classes -d $(DIST)/classes
+#JAVAC=$(JDKHOME)/bin/javac -classpath $(DIST)/classes -d $(DIST)/classes
 
-export::
-	$(JAVAC) $(JAVAI)
+#export::
+#	$(JAVAC) $(JAVAI)

@@ -27,8 +27,7 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.util.Hashtable;
 
-public class J2XINClientTestComponent implements iJ2XINClientTestComponent, iClientTestComponent, iJClientTestComponent, 
-                                                 iExclusionSupport {
+public class J2XINClientTestComponent implements iJ2XINClientTestComponent, iClientTestComponent, iJClientTestComponent, iExclusionSupport {
     private iJ2XINServerTestComponent server = null;
     private VarContainer varContainer = null;
     private String testLocation = null;
@@ -105,7 +104,11 @@ public class J2XINClientTestComponent implements iJ2XINClientTestComponent, iCli
              return;
          }
 
-         if(!exclusionHash.containsKey("short"))
+/*         if(!exclusionHash.containsKey("char"))
+             testChar();
+         if(!exclusionHash.containsKey("wchar"))
+             testWChar();
+*/         if(!exclusionHash.containsKey("short"))
              testShort();
          if(!exclusionHash.containsKey("long"))
              testLong();
@@ -133,12 +136,12 @@ public class J2XINClientTestComponent implements iJ2XINClientTestComponent, iCli
              testStringArray();
          if(!exclusionHash.containsKey("longArray"))
              testLongArray();
-         if(!exclusionHash.containsKey("charArray"))
-             testCharArray();
+//         if(!exclusionHash.containsKey("charArray"))
+//             testCharArray();
          if(!exclusionHash.containsKey("object"))
              testObject();
-         if(!exclusionHash.containsKey("mixed"))
-             testMixed();
+//       if(!exclusionHash.containsKey("mixed"))
+//             testMixed();
          if(!exclusionHash.containsKey("iid"))
              testIID();
          if(!exclusionHash.containsKey("cid"))
@@ -264,23 +267,45 @@ public class J2XINClientTestComponent implements iJ2XINClientTestComponent, iCli
          printResult("true\nfalse","j2x.in.client.boolean");
          server.flush("boolean");
     }
-
-//    private void testChar() {
+/*
+    private void testChar() {
 //         server.testChar('S');
-//         server.testWChar(VarContainer.charVar);
-//         printResult("S","j2x.in.client.char");
-//         server.flush("char");
-//      }
+         server.testChar(VarContainer.charVar);
+         printResult((new Character(VarContainer.charVar)).toString(),"j2x.in.client.char");
+         server.flush("char");
+      }
 
+    private void testWChar() {
+//         server.testWChar('S');
+         server.testWChar(VarContainer.charVar);
+         printResult((new Character(VarContainer.charVar)).toString(),"j2x.in.client.wchar");
+         server.flush("wchar");
+      }
+*/
     private void testString() {
-         printResult(VarContainer.charPVar,"j2x.in.client.string");
+         buf = new StringBuffer("");
+	buf.append(VarContainer.charPVar+"\n");
          server.testString(VarContainer.charPVar);
+	buf.append(VarContainer.charPVar2+"\n");
+         server.testString(VarContainer.charPVar2);
+	buf.append(VarContainer.charPVar3+"\n");
+         server.testString(VarContainer.charPVar3);
+
+         printResult(buf.toString(),"j2x.in.client.string");
          server.flush("string");
     }
 
     private void testWString() {
-         printResult(VarContainer.unicharPVar,"j2x.in.client.wstring");
+         buf = new StringBuffer("");
+
+	buf.append(VarContainer.unicharPVar+"\n");
          server.testWString(VarContainer.unicharPVar);
+	buf.append(VarContainer.unicharPVar2+"\n");
+         server.testWString(VarContainer.unicharPVar2);
+	buf.append(VarContainer.unicharPVar3+"\n");
+         server.testWString(VarContainer.unicharPVar3);
+
+         printResult(buf.toString(),"j2x.in.client.wstring");
          server.flush("wstring");
     }
 
@@ -304,7 +329,7 @@ public class J2XINClientTestComponent implements iJ2XINClientTestComponent, iCli
          printResult(s.toString(),"j2x.in.client.longArray");
          server.testLongArray(intArray.length, intArray);
     }
-     
+/*     
     private void testCharArray() {
          char[] charArray = {'A','B','c','L','ï','u','Ô','p'};
          s = new StringBuffer();
@@ -349,7 +374,7 @@ public class J2XINClientTestComponent implements iJ2XINClientTestComponent, iCli
          printResult(s.toString(),"j2x.in.client.mixed");
          server.testMixed(bBool, nByte, nShort, nUShort,nLong,nULong, nHyper, nUHyper, fFloat,fDouble, aString, intArray.length, intArray);
     }
-     
+*/     
     private void testObject() {
          printResult(server.getTestObjectString(),"j2x.in.client.object");
          server.testObject(server);
@@ -358,7 +383,7 @@ public class J2XINClientTestComponent implements iJ2XINClientTestComponent, iCli
     private void testIID() {
          buf = new StringBuffer("");
  	 IID iid=new IID("cc7480e0-3a37-11d5-b653-005004552ed1");
-         buf.append(iid + "\n");
+         buf.append(iid.getString() + "\n");
 
          server.testIID(iid);
          printResult(buf.toString(),"j2x.in.client.iid");
@@ -368,7 +393,7 @@ public class J2XINClientTestComponent implements iJ2XINClientTestComponent, iCli
     private void testCID() {
          buf = new StringBuffer("");
  	 CID cid=new CID("cc7480e0-3a37-11d5-b653-005004552ed1");
-         buf.append(cid + "\n");
+         buf.append(cid.getString() + "\n");
 
          server.testCID(cid);
          printResult(buf.toString(),"j2x.in.client.cid");

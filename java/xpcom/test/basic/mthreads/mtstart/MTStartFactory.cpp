@@ -36,11 +36,3 @@ static nsModuleComponentInfo components[] =
 };
 
 NS_IMPL_NSGETMODULE("MTStartFactory", components)
-
-
-
-
-
-
-
-

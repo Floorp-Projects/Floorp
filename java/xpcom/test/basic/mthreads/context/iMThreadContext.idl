@@ -27,7 +27,11 @@
 [scriptable, uuid(a7b26685-9816-4eb6-a075-36f539a7a823)]
 interface iMThreadContext : nsISupports
 {
-    string GetNext();
+    long GetStages();
+    long GetThreads();
+    string GetResFile();
+    string GetPath(in boolean i);
+    string GetContractID(in long i,in long j);
     nsIComponentManager GetComponentManager();
 };
 
@@ -40,6 +44,5 @@ interface iMThreadContext : nsISupports
     {0x8a, 0xfc, 0xf1, 0x93, 0x91, 0x73, 0xc2, 0xea} \
 }
 
-#define MTHREADCONTEXT_PROGID "component://netscape/blackwood/blackconnect/test/mthreads/MThreadContext"
-
+#define MTHREADCONTEXT_PROGID "@mozilla/blackwood/blackconnect/test/params/MThreadContext;1"
 %}

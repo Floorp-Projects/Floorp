@@ -56,6 +56,12 @@ public interface iJ2XOUTServerTestComponent extends nsISupports
     /* void TestBoolean (out boolean i); */
     public void testBoolean(boolean[] i);
 
+    /* void TestChar (out char i); */
+    public void testChar(char[] i);
+
+    /* void TestWChar (out wchar i); */
+    public void testWChar(char[] i);
+
     /* void TestString (out string i); */
     public void testString(String[] i);
 

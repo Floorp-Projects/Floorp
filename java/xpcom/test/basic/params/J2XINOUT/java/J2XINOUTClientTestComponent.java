@@ -99,6 +99,10 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
             System.err.println("Server is not initialized!!!");
             return;
         }
+         if(!exclusionHash.containsKey("char"))
+             testChar();
+         if(!exclusionHash.containsKey("wchar"))
+             testWChar();
          if(!exclusionHash.containsKey("short"))
              testShort();
          if(!exclusionHash.containsKey("long"))
@@ -133,6 +137,50 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
              testObject();
          if(!exclusionHash.containsKey("mixed"))
              testMixed();
+    }
+
+
+    private void testChar() {
+        StringBuffer s = new StringBuffer();
+        StringBuffer s2 = new StringBuffer();
+        System.err.println("server.testChar");
+        char[] charVar = new char[1];
+        
+        charVar[0]='0';
+        s.append(charVar[0]+"\n");
+        server.testChar(charVar);
+        s2.append(charVar[0]+"\n");
+        charVar[0]='Z';
+        s.append(charVar[0]+"\n");
+        server.testChar(charVar);
+        s2.append(charVar[0]+"\n");
+        charVar[0]='x';
+        server.testChar(charVar);
+        
+        printResult(s.toString(),"j2x.inout.client.char");
+        printResult(s2.toString(),"j2x.inout.xclient.char");
+    }
+
+
+    private void testWChar() {
+        StringBuffer s = new StringBuffer();
+        StringBuffer s2 = new StringBuffer();
+        System.err.println("server.testWChar");
+        char[] wcharVar = new char[1];
+        
+        wcharVar[0]='0';
+        s.append(wcharVar[0]+"\n");
+        server.testWChar(wcharVar);
+        s2.append(wcharVar[0]+"\n");
+        wcharVar[0]='Z';
+        s.append(wcharVar[0]+"\n");
+        server.testWChar(wcharVar);
+        s2.append(wcharVar[0]+"\n");
+     	wcharVar[0]='x';
+        server.testWChar(wcharVar);
+        
+        printResult(s.toString(),"j2x.inout.client.wchar");
+        printResult(s2.toString(),"j2x.inout.xclient.wchar");
     }
 
     private void testShort() {
@@ -176,7 +224,7 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
         s.append(intVar[0]+"\n");
         server.testLong(intVar);
         s2.append(intVar[0]+"\n");
-        intVar[0]=1000;//VarContainer.intVar;
+        intVar[0]=VarContainer.intVar;
         s.append(intVar[0]+"\n");
         server.testLong(intVar);
         s2.append(intVar[0]+"\n");
@@ -225,19 +273,15 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
         System.err.println("server.testByte");
         byte[] byteVar = new byte[1];
         
-        byteVar[0]=java.lang.Byte.MIN_VALUE;
+        byteVar[0]=VarContainer.byteMin;
         s.append(byteVar[0]+"\n");
         server.testByte(byteVar);
         s2.append(byteVar[0]+"\n");
-        byteVar[0]=0;
+        byteVar[0]=VarContainer.byteMid;
         s.append(byteVar[0]+"\n");
         server.testByte(byteVar);
         s2.append(byteVar[0]+"\n");
-        byteVar[0]=VarContainer.unsignedByteVar;
-        s.append(byteVar[0]+"\n");
-        server.testByte(byteVar);
-        s2.append(byteVar[0]+"\n");
-        byteVar[0]=java.lang.Byte.MAX_VALUE;
+        byteVar[0]=VarContainer.byteMax;
         s.append(byteVar[0]+"\n");
         server.testByte(byteVar);
         s2.append(byteVar[0]+"\n");
@@ -333,7 +377,7 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
         s.append(floatVar[0]+"\n");
         server.testFloat(floatVar);
         s2.append(floatVar[0]+"\n");
-        floatVar[0]=1000;//VarContainer.floatVar;
+        floatVar[0]=VarContainer.floatVar;
         s.append(floatVar[0]+"\n");
         server.testFloat(floatVar);
         s2.append(floatVar[0]+"\n");
@@ -397,49 +441,6 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
     }
     
     
-    private void testChar() {
-        StringBuffer s = new StringBuffer();
-        StringBuffer s2 = new StringBuffer();
-        System.err.println("server.testChar");
-        char[] charVar = new char[1];
-        
-        charVar[0]='0';
-        s.append(charVar[0]+"\n");
-        server.testChar(charVar);
-        s2.append(charVar[0]+"\n");
-        charVar[0]='Z';
-        s.append(charVar[0]+"\n");
-        server.testChar(charVar);
-        s2.append(charVar[0]+"\n");
-        charVar[0]='x';
-        server.testChar(charVar);
-        
-        printResult(s.toString(),"j2x.inout.client.char");
-        printResult(s2.toString(),"j2x.inout.xclient.char");
-    }
-
-
-    private void testWChar() {
-        StringBuffer s = new StringBuffer();
-        StringBuffer s2 = new StringBuffer();
-        System.err.println("server.testWChar");
-        char[] wcharVar = new char[1];
-        
-        wcharVar[0]='0';
-        s.append(wcharVar[0]+"\n");
-        server.testWChar(wcharVar);
-        s2.append(wcharVar[0]+"\n");
-        wcharVar[0]='Z';
-        s.append(wcharVar[0]+"\n");
-        server.testWChar(wcharVar);
-        s2.append(wcharVar[0]+"\n");
-        //	 wcharVar[0]='x';
-        //         server.testWChar(wcharVar);
-        
-        printResult(s.toString(),"j2x.inout.client.wchar");
-        printResult(s2.toString(),"j2x.inout.xclient.wchar");
-    }
-
 
     private void testString() {
         StringBuffer s = new StringBuffer();
@@ -447,7 +448,7 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
         System.err.println("server.testString");
         String[] stringVar = new String[1];
         
-        stringVar[0]="111";//VarContainer.charPVar;
+        stringVar[0]=null;//VarContainer.charPVar;
         s.append(stringVar[0]+"\n");
         server.testString(stringVar);
         s2.append(stringVar[0]+"\n");
@@ -455,19 +456,16 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
         s.append(stringVar[0]+"\n");
         server.testString(stringVar);
         s2.append(stringVar[0]+"\n");
-        stringVar[0]="NULL string";
+        stringVar[0]="112";
         s.append(stringVar[0]+"\n");
         server.testString(stringVar);
         s2.append(stringVar[0]+"\n");
-        //	 stringVar[0]="112";
-        //         server.testString(stringVar);
-        
         
         printResult(s.toString(),"j2x.inout.client.string");
         printResult(s2.toString(),"j2x.inout.xclient.string");
     }
 
-
+                         
     private void testWString() {
         StringBuffer s = new StringBuffer();
         StringBuffer s2 = new StringBuffer();
@@ -482,12 +480,10 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
         s.append(wstringVar[0]+"\n");
         server.testWString(wstringVar);
         s2.append(wstringVar[0]+"\n");
-        wstringVar[0]="NULL string";
+        wstringVar[0]=null;
         s.append(wstringVar[0]+"\n");
         server.testWString(wstringVar);
         s2.append(wstringVar[0]+"\n");
-        //	 wstringVar[0]="112";
-        //         server.testWString(wstringVar);
         printResult(s.toString(),"j2x.inout.client.wstring");
         printResult(s2.toString(),"j2x.inout.xclient.wstring");
     }
@@ -555,6 +551,18 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
         printResult(s.toString(),"j2x.inout.client.charArray");
         printResult(s2.toString(),"j2x.inout.xclient.charArray");
     }
+
+    private void testObject() {
+        StringBuffer s = new StringBuffer();
+        StringBuffer s2 = new StringBuffer();
+        System.err.println("server.testObject");
+        iJ2XINOUTServerTestComponent[] objectVar= new iJ2XINOUTServerTestComponent[1];
+        objectVar[0] = server;
+        
+        printResult("!!!Right string!!!","j2x.inout.client.object"); //!!!Mat' Mat' 
+        server.testObject(objectVar);
+        objectVar[0].testObj2();	 
+	}
     
     private void testMixed() {
         StringBuffer s = new StringBuffer();
@@ -569,12 +577,7 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
         int[] uintVar=new int[1];
         char[] charVar=new char[1];
         long[] ulongVar=new long[1];
-        float[] floatVar=new float[1];
-        double[] doubleVar=new double[1];
-        int count=3;
         String[] stringVar=new String[1];
-        boolean[] boolVar=new boolean[1];
-        int[][] intAVar=new int[1][3];
         
         shortVar[0]=VarContainer.shortVar;
         intVar[0]=VarContainer.intVar;
@@ -583,46 +586,26 @@ public class J2XINOUTClientTestComponent implements iJ2XINOUTClientTestComponent
         ushortVar[0]=VarContainer.unsignedShortVar;
         uintVar[0]=VarContainer.unsignedIntVar;
         ulongVar[0]=VarContainer.unsignedLongVar;
-        floatVar[0]=VarContainer.floatVar;
-        doubleVar[0]=VarContainer.doubleVar;
-        boolVar[0]=VarContainer.booleanVar;
         charVar[0]=VarContainer.charVar;
         stringVar[0]=VarContainer.charPVar;
-        intAVar[0][0]=333;
-        intAVar[0][1]=444;
-        intAVar[0][2]=555;
         
-        s.append(boolVar[0]+"\n"+charVar[0]+"\n"+byteVar[0]+"\n"+
+        s.append(charVar[0]+"\n"+byteVar[0]+"\n"+
                  shortVar[0]+"\n"+ushortVar[0]+"\n"+intVar[0]+"\n"+
                  uintVar[0]+"\n"+longVar[0]+"\n"+ulongVar[0]+"\n"+
-                 floatVar[0]+"\n"+doubleVar[0]+"\n"+stringVar[0]+"\n"+
-                 intAVar[0][0]+"\n"+intAVar[0][1]+"\n"+intAVar[0][2]+"\n");
+                 stringVar[0]+"\n");
         
-        server.testMixed(boolVar, charVar, byteVar, shortVar, ushortVar,
-                         intVar, uintVar, longVar, ulongVar, floatVar, 
-                         doubleVar, stringVar, count, intAVar);
+        server.testMixed(charVar, byteVar, shortVar, ushortVar,
+                         intVar, uintVar, longVar, ulongVar, stringVar);
         
-        s2.append(boolVar[0]+"\n"+charVar[0]+"\n"+byteVar[0]+"\n"+
+        s2.append(charVar[0]+"\n"+byteVar[0]+"\n"+
                   shortVar[0]+"\n"+ushortVar[0]+"\n"+intVar[0]+"\n"+
                   uintVar[0]+"\n"+longVar[0]+"\n"+ulongVar[0]+"\n"+
-                  floatVar[0]+"\n"+doubleVar[0]+"\n"+stringVar[0]+"\n"+
-                  intAVar[0][0]+"\n"+intAVar[0][1]+"\n"+intAVar[0][2]+"\n");
+                  stringVar[0]+"\n");
         
         printResult(s.toString(),"j2x.inout.client.mixed");
         printResult(s2.toString(),"j2x.inout.xclient.mixed");
     }
 
-    private void testObject() {
-        StringBuffer s = new StringBuffer();
-        StringBuffer s2 = new StringBuffer();
-        System.err.println("server.testObject");
-        iJ2XINOUTServerTestComponent[] objectVar= new iJ2XINOUTServerTestComponent[1];
-        objectVar[0] = server;
-        
-        printResult("!!!Right string!!!","j2x.inout.client.object"); //!!!Mat' Mat' 
-        server.testObject(objectVar);
-        objectVar[0].testObj2();	 
-	}
 
     public Object queryInterface(IID iid) {
         System.out.println("DEbug:avm:J2XINOUTClientTestComponent::queryInterface iid="+iid);

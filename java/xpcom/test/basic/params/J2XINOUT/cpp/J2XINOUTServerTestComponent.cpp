@@ -35,7 +35,7 @@
 
 char* testLocation=NULL;
 char* logLocation=NULL;
-char* fBuffer=NULL;
+char* fBuffer;
 PRUint8 end_of_data = 112;
 int all=0;
 
@@ -49,7 +49,8 @@ J2XINOUTServerTestComponentImpl::J2XINOUTServerTestComponentImpl()
         fprintf(stderr,"ERROR: %s or %s isn't set !", BC_TEST_LOCATION_VAR_NAME, BC_LOG_LOCATION_VAR_NAME);
     }
     InitStackVars();
-    printf("DEbug:avm:J2XINOUTServerTestComponentImpl::J2XINOUTServerTestComponentImp\n");
+//    fBuffer=(char*)PR_Malloc(sizeof(char*));
+//    printf("DEbug:avm:J2XINOUTServerTestComponentImpl::J2XINOUTServerTestComponentImp\n");
 }
 
 J2XINOUTServerTestComponentImpl::~J2XINOUTServerTestComponentImpl()
@@ -67,32 +68,38 @@ NS_IMETHODIMP J2XINOUTServerTestComponentImpl::GetTestLocation(char **tLocation,
 }
 
 NS_IMETHODIMP J2XINOUTServerTestComponentImpl::Flush(const char *type) {
-    char* fileName = NULL;
-
+    char* fileName = NULL;//(char*)PR_Malloc(sizeof(char*));
     fileName = PR_sprintf_append(fileName,"j2x.inout.server.%s",type);
     if(fBuffer) {
         PrintResult(fileName,fBuffer);
         PR_smprintf_free(fBuffer);
         fBuffer = NULL;
-    } else {
     }
-  PR_smprintf_free(fileName);
-
-    if(fBuffer != NULL ) {
-    }else {
-    }
+    PR_smprintf_free(fBuffer);
+    fBuffer = NULL;
+    PR_smprintf_free(fileName);
     all=0;
+    return NS_OK;
+}
 
+//Test methods
+
+NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestChar(char *i) {
+    if (*i!='x') fBuffer = PR_sprintf_append(fBuffer,"%c\n",*i);
+	else Flush("char");
+    return NS_OK;
+}
+
+  
+NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestWChar(PRUnichar *i) {
+    if (*i!='x') fBuffer = PR_sprintf_append(fBuffer,"%c\n",*i);
+	else Flush("wchar");
     return NS_OK;
 }
 
 
-//Test methods
-
-
-
 NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestShort(PRInt16 *i) {
-    if (*i!=112) fBuffer = PR_sprintf_append(fBuffer,"%d\n",*i);
+    if (*i!=112) fBuffer = PR_sprintf_append(fBuffer,"%hd\n",*i);
       else Flush("short");
     return NS_OK;
 
@@ -100,7 +107,8 @@ NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestShort(PRInt16 *i) {
 
   
 NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestLong(PRInt32 *i) {
-    if (*i!=112) fBuffer = PR_sprintf_append(fBuffer,"%d\n",*i);
+//fprintf(stderr,"L==%ld\n",*i);
+    if (*i!=112) fBuffer = PR_sprintf_append(fBuffer,"%ld\n",*i);
       else Flush("long");
     return NS_OK;
 }
@@ -114,23 +122,22 @@ NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestLonglong(PRInt64 *i) {
 
   
 NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestByte(PRUint8 *i) {
-// Strange bug here
-/*    if (*i!=112)*/ fBuffer = PR_sprintf_append(fBuffer,"%d\n",*i);
-    all++;
-    if (all==4) Flush("octet");
+    if (*i!=112) fBuffer = PR_sprintf_append(fBuffer,"%d\n",*i);
+	else Flush("octet");
     return NS_OK;
 }
 
   
 NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestUShort(PRUint16 *i) {
-    if (*i!=112) fBuffer = PR_sprintf_append(fBuffer,"%d\n",*i);
+//fprintf(stderr,"S==%hu\n",*i);
+    if (*i!=112) fBuffer = PR_sprintf_append(fBuffer,"%hu\n",*i);
       else Flush("ushort");
     return NS_OK;
 }
 
   
 NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestULong(PRUint32 *i) {
-    if (*i!=112) fBuffer = PR_sprintf_append(fBuffer,"%d\n",*i);
+    if (*i!=112) fBuffer = PR_sprintf_append(fBuffer,"%lu\n",*i);
       else Flush("ulong");
     return NS_OK;
 }
@@ -138,7 +145,7 @@ NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestULong(PRUint32 *i) {
 
   
 NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestULonglong(PRUint64 *i) {
-    if (*i!=112) fBuffer = PR_sprintf_append(fBuffer,"%lld\n",*i);
+    if (*i!=112) fBuffer = PR_sprintf_append(fBuffer,"%llu\n",*i);
       else Flush("ulonglong");
     return NS_OK;
 }
@@ -168,28 +175,13 @@ NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestBoolean(PRBool *i) {
 }
 
 
-NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestChar(char *i) {
-// Strange bug here
-/*    if (*i!='x')*/ fBuffer = PR_sprintf_append(fBuffer,"%c\n",i);
-	all++;
-     if (all==2) Flush("char");
-    return NS_OK;
-}
-
-  
-NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestWChar(PRUnichar *i) {
-// Strange bug here
-/*    if (*i!='x')*/ fBuffer = PR_sprintf_append(fBuffer,"%c\n",i);
-	all++;
-    if (all==2) Flush("wchar");
-    return NS_OK;
-}
-
-  
 NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestString(char **i) {
-    fBuffer = PR_sprintf_append(fBuffer,"%s\n",*i);
-    all++;
-    if (all==3) Flush("string");
+//fprintf(stderr,"==>%d\n",PL_strcmp(*i,"112"));
+    if (0!=PL_strcmp(*i,"112")) fBuffer = PR_sprintf_append(fBuffer,"%s\n",*i);
+	else {
+		fBuffer = PR_sprintf_append(fBuffer,"%s\n",*i);
+		Flush("string");
+	     }
   return NS_OK;
 }
 
@@ -218,7 +210,7 @@ NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestStringArray(PRUint32 count, c
   
 NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestLongArray(PRUint32 count, PRInt32 **longArray) {
     for(int i=0;i<count;i++)
-      fBuffer = PR_sprintf_append(fBuffer,"%d\n",longArray[i]);
+      fBuffer = PR_sprintf_append(fBuffer,"%d\n",longArray[0][i]);
     Flush("longArray");
     return NS_OK;//PrintResultArray("j2x.in.server.longArray",count,longArray);
 }
@@ -226,17 +218,9 @@ NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestLongArray(PRUint32 count, PRI
   
 NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestCharArray(PRUint32 count, char **valueArray) {
     for(int i=0;i<count;i++)
-      fBuffer = PR_sprintf_append(fBuffer,"%c\n",valueArray[i]);
+      fBuffer = PR_sprintf_append(fBuffer,"%c\n",valueArray[0][i]);
     Flush("charArray");
     return NS_OK;//PrintResultArray("j2x.in.server.charArray",count,valueArray);;
-}
-
-  
-
-NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestMixed(PRBool *bBool, char *cChar, PRUint8 *nByte, PRInt16 *nShort, PRUint16 *nUShort, PRInt32 *nLong, PRUint32 *nULong, PRInt64 *nHyper, PRUint64 *nUHyper, float *fFloat, double *fDouble, char **aString, PRUint32 count, PRInt32 **longArray) {
-    fBuffer = PR_sprintf_append(fBuffer,"%d\n%d\n%d",nByte, nShort, nUShort);
-    Flush("mixed");
-    return NS_OK;
 }
 
   
@@ -245,6 +229,13 @@ NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestObject(iJ2XINOUTServerTestCom
     return NS_OK;
 }
 
+NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestMixed(char *cChar, PRUint8 *nByte, PRInt16 *nShort, PRUint16 *nUShort, PRInt32 *nLong, PRUint32 *nULong, PRInt64 *nHyper, PRUint64 *nUHyper, char **aString) {
+    fBuffer = PR_sprintf_append(fBuffer,"%c\n%d\n%hd\n%hu\n%ld\n%lu\n%lld\n%llu\n%s\n",*cChar,*nByte, *nShort, *nUShort, *nLong, *nULong, *nHyper, *nUHyper, *aString);
+    Flush("mixed");
+    return NS_OK;
+}
+
+  
 NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestObj() {
     fBuffer = PR_sprintf_append(fBuffer,"!!!Right string!!!");    	
     Flush("object");
@@ -264,7 +255,6 @@ NS_IMETHODIMP J2XINOUTServerTestComponentImpl::TestObj2() {
     } else {
     }
   PR_smprintf_free(fileName);
-
 
     return NS_OK;
 }

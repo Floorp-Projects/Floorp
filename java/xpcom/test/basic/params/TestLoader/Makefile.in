@@ -18,6 +18,8 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# Client QA Team, St. Petersburg, Russia
+#
 
 DEPTH=../../../../../..
 topsrcdir       = $(DEPTH)
@@ -30,28 +32,29 @@ MODULE		= BCTestLoader
 LIBRARY_NAME	= $(MODULE)
 XPIDL_MODULE 	= $(MODULE)
 IS_COMPONENT	= 1
+JAVA_OR_NSJVM=1
+NO_CAFE=1
 
 EXPORTS 	= \
 	BCTest.h \
 	ProceedResults.h \
 	Values.h \
-	VarContainer.h \
+	VarContainer.h	\
 	PseudoHash.h \
 	$(NULL)
-	
+
 CPPSRCS		= \
         BCTestLoader.cpp \
         BCTestLoaderFactory.cpp \
         $(NULL)
+
 XPIDLSRCS	= \
 	     	BCITestLoader.idl \
 		iClientTestComponent.idl \
 		iJClientTestComponent.idl\
 		iExclusionSupport.idl\
                 $(NULL)
-JAVAI=		iClientTestComponent.java \
-		iJClientTestComponent.java \
-		iExclusionSupport.java
+
 DSO_LDOPTS            += \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
@@ -59,28 +62,27 @@ DSO_LDOPTS            += \
 
 COMMON_JAVA =   VarContainer.java
 
+JDIRS = . 
+JAVAC_PROG=$(JDKHOME)/bin/javac
+JAVAC_FLAGS=-classpath $(CLASSPATH):$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
+
+include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 export::
-	$(JDKHOME)/bin/javac -classpath .:$(DEPTH)/dist/classes -d $(DEPTH)/dist/classes $(JAVAI) $(COMMON_JAVA)
+	$(JDKHOME)/bin/javac -classpath .:$(DEPTH)/dist/classes -d $(DEPTH)/dist/classes $(COMMON_JAVA)
 
-
-#A little temporary hack with messenger
-install:: 
-	cp -f start.html $(DIST)/bin/chrome/messenger/content/messenger
-
-clobber-java:
+clobber::
 	rm -f *.class *.jar
-clobber:: clobber-java
+	rm -f $(DIST)/include/BCTest.h
+	rm -f $(DIST)/include/ProceedResults.h
+	rm -f $(DIST)/include/Values.h
+	rm -f $(DIST)/include/VarContainer.h
+	rm -f $(DIST)/include/PseudoHash.h
+	rm -f $(DIST)/classes/VarContainer.class
+	rm -f $(DIST)/classes/org/mozilla/xpcom/iClientTestComponent.class
+	rm -f $(DIST)/classes/org/mozilla/xpcom/iJClientTestComponent.class
+	rm -f $(DIST)/classes/org/mozilla/xpcom/iExclusionSupport.class
+
+clobber-java:: clobber
 clobber_all:: clobber-java
-
-
-
-
-
-
-
-
-
-
-

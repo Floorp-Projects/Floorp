@@ -31,25 +31,19 @@ JAVA_OR_NSJVM	= 1
 
 include $(DEPTH)/config/autoconf.mk
 
+export::
+	$(JDKHOME)/bin/javac -classpath $(CLASSPATH) -d $(JAVA_DESTPATH) iX2JINServerTestComponent.java
 
-include $(topsrcdir)/config/rules.mk
-
-
-JAVA_SRC=X2JINServerTestComponent.java
-
-JAVAI_SRC=iX2JINServerTestComponent.java
+X2JINServerTestComponent.class:
+	$(JDKHOME)/bin/javac -classpath $(CLASSPATH) X2JINServerTestComponent.java
 
 X2JINServerTestComponent.jar.comp: manifest X2JINServerTestComponent.class
 	$(JDKHOME)/bin/jar cvfm X2JINServerTestComponent.jar.comp  manifest *.class
 
-X2JINServerTestComponent.class:
-	$(JDKHOME)/bin/javac  -classpath $(DEPTH)/dist/classes $(JAVA_SRC)
-
-javai::
-	$(JDKHOME)/bin/javac  -classpath $(DEPTH)/dist/classes -d $(DEPTH)/dist/classes $(JAVAI_SRC)
-
-		
-install-component: javai X2JINServerTestComponent.jar.comp X2JINServerTestComponent.jar.info
+include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/config/config.mk
+	
+install-component: X2JINServerTestComponent.jar.comp X2JINServerTestComponent.jar.info
 	cp -f X2JINServerTestComponent.jar* $(DIST)/bin/components
 	
 clobber::

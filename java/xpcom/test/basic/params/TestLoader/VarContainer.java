@@ -36,12 +36,16 @@ public class VarContainer {
     public static int unsignedIntVar = 3000000;
     public static long unsignedLongVar = 1000001;
     public static float floatVar = (float)2.0;
-    public static double doubleVar = 3.0;
+    public static double doubleVar = (double)3.0;
     public static boolean booleanVar = true;
     public static char charTruncVar = 'A';
     public static char charVar = 'B';
     public static String charPVar = "This is some string";
+    public static String charPVar2 = "";
+    public static String charPVar3 = null;
     public static String unicharPVar = "UUUAAARRR";
+    public static String unicharPVar2 = "";
+    public static String unicharPVar3 = null;
     //end of compatibility section
     
     public static byte endOfData = 112;
@@ -84,8 +88,12 @@ public class VarContainer {
 	public static  char wcharLast = 'Z';
 	public static  String stringFirst = "iddqd";
 	public static  String stringEmpty = "";
-	public static  String stringNull = "Here must be the NULL string";
+	public static  String stringNull = null;
 	public static  String stringLast = "112";
+	public static  String wstringFirst = "iddqd";
+	public static  String wstringEmpty = "";
+	public static  String wstringNull = null;
+	public static  String wstringLast = "112";
 
     //stacks
 public Stack byteStack = null;
@@ -100,6 +108,7 @@ public Stack doubleStack = null;
 public Stack charStack = null;
 public Stack wcharStack = null;
 public Stack stringStack = null;
+public Stack wstringStack = null;
     //Constructor with stacks initialization
 public VarContainer() {
     byteStack = new Stack();
@@ -154,6 +163,11 @@ public VarContainer() {
     stringStack.push(stringEmpty);
     stringStack.push(stringNull);
     stringStack.push(stringLast);
+	wstringStack = new Stack();
+    wstringStack.push(wstringFirst);
+    wstringStack.push(wstringEmpty);
+    wstringStack.push(wstringNull);
+    wstringStack.push(wstringLast);
 
 }
 
@@ -245,6 +259,14 @@ public String getNextString() {
         return (String)stringStack.pop();
     }catch(EmptyStackException e) {
         return stringLast;
+    }
+}
+
+public String getNextWString() {
+    try {
+        return (String)wstringStack.pop();
+    }catch(EmptyStackException e) {
+        return wstringLast;
     }
 }
 

@@ -316,7 +316,7 @@ public class X2JOUTServerTestComponent implements iX2JOUTServerTestComponent {
  public void testWString(String[] i) {
   switch (all) {
 	case 0: i[0]=""; break;
-	case 1: i[0]="Null must be here"; break;
+	case 1: i[0]=null; break;
 	case 2: i[0]="abc"; break;
   }
   all++; 

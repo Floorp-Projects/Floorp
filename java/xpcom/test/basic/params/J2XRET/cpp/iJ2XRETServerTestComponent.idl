@@ -38,13 +38,13 @@ interface iJ2XRETServerTestComponent : nsISupports
     float TestFloat();
     double TestDouble();
     boolean TestBoolean();
-    char TestChar();
-    wchar TestWChar();
+//    char TestChar();
+//    wchar TestWChar();
     string TestString();
     wstring TestWString();
     void TestStringArray(in unsigned long count, [retval, array, size_is(count)] out string stringArray);
     void TestLongArray(in unsigned long count, [retval, array, size_is(count)] out long intArray);
-    void TestCharArray(in unsigned long count,[retval, array, size_is(count)] out char charArray);
+//    void TestCharArray(in unsigned long count,[retval, array, size_is(count)] out char charArray);
     iJ2XRETServerTestComponent TestObject();
     void TestObj();
 };

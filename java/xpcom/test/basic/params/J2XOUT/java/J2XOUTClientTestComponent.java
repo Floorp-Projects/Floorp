@@ -97,6 +97,10 @@ public class J2XOUTClientTestComponent implements iJ2XOUTClientTestComponent, iC
              return;
          }
 
+         if(!exclusionHash.containsKey("char"))
+             testChar();
+         if(!exclusionHash.containsKey("wchar"))
+             testWChar();
          if(!exclusionHash.containsKey("short"))
              testShort();
          if(!exclusionHash.containsKey("long"))
@@ -262,22 +266,60 @@ private void testBoolean() {
     printResult(s.toString(),"j2x.out.client.boolean");
     server.flush("boolean");
 }
-       
-         /*  
-         //server.testChar(charVar);
-         //server.testWChar(charVar);
-         */
-private void testString() {
+
+
+private void testChar() {
     StringBuffer s = new StringBuffer();
+    char [] charVar = new char[1];
+    System.err.println("server.testChar");
+    server.testChar(charVar);
+    s.append(charVar[0]+"\n");
+    printResult(s.toString(),"j2x.out.client.char");
+    server.flush("char");
+}
+
+private void testWChar() {
+    StringBuffer s = new StringBuffer();
+    char [] wcharVar = new char[1];
+    System.err.println("server.testWChar");
+    server.testWChar(wcharVar);
+    s.append(wcharVar[0]+"\n");
+    printResult(s.toString(),"j2x.out.client.wchar");
+    server.flush("wchar");
+}
+       
+private void testString() {
+/*    StringBuffer s = new StringBuffer();
     String[] stringVar = new String[1];
     server.testString(stringVar);
     s.append(stringVar[0]+"\n");
     printResult(s.toString(),"j2x.out.client.string");
     server.flush("string");
+*/
+    StringBuffer s = new StringBuffer();
+    String[] sVar = new String[1];
+//    System.err.println("server.string");
+    server.testString(sVar);
+System.err.println("-->"+sVar[0]);
+try{
+    while(!sVar[0].equals("112")) {
+             s.append(sVar[0]+"\n");
+             server.testString(sVar);
+System.err.println("-->"+sVar[0]);
+    }
+}catch(Exception e) {
+             s.append("null"+"\n");
+
 }
+    printResult(s.toString(),"j2x.out.client.string");
+    server.flush("string");
+}
+
 private void testsWstring() {    
     StringBuffer s = new StringBuffer();
     String[] stringVar = new String[1];
+    server.testWString(stringVar);
+    s.append(stringVar[0]+"\n");
     server.testWString(stringVar);
     s.append(stringVar[0]+"\n");
     printResult(s.toString(),"j2x.out.client.wstring");
@@ -297,8 +339,8 @@ private void testStringArray() {
 }
 private void testLongArray() {
     StringBuffer s = new StringBuffer();
-    int[][] intArray = new int[1][100];
-    int count = 100;
+    int[][] intArray = new int[1][3];
+    int count = 3;
     server.testLongArray(count, intArray);
     for(int i=0;i<count;i++) {
         s.append(intArray[0][i]+"\n");
@@ -307,8 +349,8 @@ private void testLongArray() {
          
 }
 private void testCharArray() {
-    char[][] charArray = new char[1][100];
-    int count = 100;
+    char[][] charArray = new char[1][6];
+    int count = 6;
     StringBuffer s = new StringBuffer();
     server.testCharArray(count, charArray);
     for(int i=0;i<count;i++) {
@@ -330,7 +372,7 @@ private void testCharArray() {
         float[] fFloat = new float[1];
         double[] fDouble = new double[1];
         String[] aString = new String[1];
-        int count = 5;
+        int count = 3;
         int[][] longArray = new int[1][count];
         server.testMixed(bBool, nByte, nShort, nUShort, nLong, nULong, nHyper, nUHyper, fFloat, fDouble, aString, count, longArray);
         StringBuffer s = new StringBuffer();

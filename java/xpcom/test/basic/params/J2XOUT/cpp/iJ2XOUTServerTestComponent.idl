@@ -38,8 +38,8 @@ interface iJ2XOUTServerTestComponent : nsISupports
     void TestFloat(out float i);
     void TestDouble(out double i);
     void TestBoolean(out boolean i);
-    //    void TestChar(out char i);
-    //void TestWChar(out wchar i);
+    void TestChar(out char i);
+    void TestWChar(out wchar i);
     void TestString(out string i);
     void TestWString(out wstring i);
     void TestStringArray(in unsigned long count,[array, size_is(count)] out string valueArray);

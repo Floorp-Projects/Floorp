@@ -37,7 +37,7 @@ char* testLocation=NULL;
 char* logLocation=NULL;
 char* fBuffer=NULL;
 PRUint8 end_of_data = 112;
-
+int all=0;
 
 J2XOUTServerTestComponentImpl::J2XOUTServerTestComponentImpl()
 {    
@@ -277,18 +277,19 @@ NS_IMETHODIMP J2XOUTServerTestComponentImpl::TestBoolean(PRBool *i) {
 }
 
 
-/*
+
 NS_IMETHODIMP J2XOUTServerTestComponentImpl::TestChar(char *i) {
-    fBuffer = PR_sprintf_append(fBuffer,"%c\n",i);
+    *i='Z';
+    fBuffer = PR_sprintf_append(fBuffer,"%c\n",*i);
     return NS_OK;
 }
 
   
 NS_IMETHODIMP J2XOUTServerTestComponentImpl::TestWChar(PRUnichar *i) {
-    fBuffer = PR_sprintf_append(fBuffer,"%d\n",i);
+    *i='Z';
+    fBuffer = PR_sprintf_append(fBuffer,"%c\n",*i);
     return NS_OK;
 }
-*/
   
 /**
    
@@ -297,10 +298,21 @@ NS_IMETHODIMP J2XOUTServerTestComponentImpl::TestWChar(PRUnichar *i) {
 
  */
 NS_IMETHODIMP J2XOUTServerTestComponentImpl::TestString(char **i) {
-    char* str = "Some string";
-    PrintResult("j2x.out.server.string",str);
-    *i = PL_strdup(str);
+    if(stringVars.size()) {
+        *i = stringVars.top();
+        stringVars.pop();
+//fprintf(stderr,"C++==>%s\n",*i);
+        fBuffer = PR_sprintf_append(fBuffer,"%s\n",*i);
+    } else {
+        *i = "112";
+    }
     return NS_OK;
+
+
+//    char* str = "Some string";
+//    PrintResult("j2x.out.server.string",fbuffer);
+//    *i = PL_strdup(str);
+//    return NS_OK;
 }
 
 /**
@@ -310,19 +322,32 @@ NS_IMETHODIMP J2XOUTServerTestComponentImpl::TestString(char **i) {
 
  */
 NS_IMETHODIMP J2XOUTServerTestComponentImpl::TestWString(PRUnichar **i) {
+    //Verification code.
+    if(all==0) {
     char* str = "Some test string";
     nsCString* cStr = new nsCString(str);
     *i = cStr->ToNewUnicode();
-    //Verification code.
-    nsString nsStr = *(new nsString(*i));
-    NS_ALLOC_STR_BUF(aBuf,nsStr,100)
-    printf("aBuf is %s",aBuf);
-    PrintResult("j2x.out.server.wstring",aBuf);
-    NS_FREE_STR_BUF(aBuf)
+	nsString nsStr = *(new nsString(*i));
+	NS_ALLOC_STR_BUF(aBuf,nsStr,100);
+        fBuffer = PR_sprintf_append(fBuffer,"%s\n",aBuf);
+	NS_FREE_STR_BUF(aBuf);
+     }	
+    if(all==1) {
+    char* str = NULL;
+    nsCString* cStr = new nsCString(str);
+    *i = cStr->ToNewUnicode();
+	nsString nsStr = *(new nsString(*i));
+	NS_ALLOC_STR_BUF(aBuf,nsStr,100);
+        fBuffer = PR_sprintf_append(fBuffer,"%s\n",aBuf);
+	NS_FREE_STR_BUF(aBuf);
+     }	
+
+//    if(all==2) Flush("wstring");
+	all++;
     return NS_OK;
     //
-    PrintResult("j2x.out.server.wstring",str);
-    return NS_OK;
+//    PrintResult("j2x.out.server.wstring",str);
+//    return NS_OK;
 }
 /**
    

@@ -29,7 +29,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(MThreadContextImpl)
 
 static nsModuleComponentInfo components[] =
 {
-  { "J2XIN Server Test Component", MTHREADCONTEXT_CID, MTHREADCONTEXT_PROGID, MThreadContextImplConstructor,
+  { "MTContext Test Component", MTHREADCONTEXT_CID, MTHREADCONTEXT_PROGID, MThreadContextImplConstructor,
      NULL /* NULL if you dont need one */,
      NULL /* NULL if you dont need one */
   }

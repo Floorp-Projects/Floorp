@@ -18,36 +18,41 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# Client QA Team, St. Petersburg, Russia
+#
 
 DEPTH=..\..\..\..\..\..
 topsrcdir       = $(DEPTH)
 srcdir          = .
 VPATH           = .
-
 JAVA_OR_NSJVM=1
+NO_CAFE=1
 
-include <$(topsrcdir)\config\rules.mak>
-
+include <$(DEPTH)\config\config.mak>
 
 JAVA_SRC	= \
-	MThreadComponent1.java 
+	MThreadComponent1.java \
+	$(NULL)
 
-JAVAI_SRC	= \
-	iMThreadComponent1.java
+JDIRS = . 
+JAVAC_PROG=$(JDKHOME)\bin\javac
+JAVAC_FLAGS=-classpath $(CLASSPATH);$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
+
+include <$(topsrcdir)\config\rules.mak>
+include <$(topsrcdir)\config\javarules.mak>
+
 MThreadComponent1.jar.comp: manifest MThreadComponent1.class
 	$(JDKHOME)\bin\jar cvfm MThreadComponent1.jar.comp  manifest *.class
 
 MThreadComponent1.class:
 	$(JDKHOME)\bin\javac  -classpath $(DEPTH)\dist\classes $(JAVA_SRC)
 
-export::
-	$(JDKHOME)\bin\javac  -classpath $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes $(JAVAI_SRC)
-
 install-component: MThreadComponent1.jar.comp MThreadComponent1.jar.info
 	copy MThreadComponent1.jar* $(DIST)\bin\components
 clobber::
 	del /f *.class *.jar.comp
 	del /f $(DIST)\bin\components\MThreadComponent1.jar.*
-	del /f $(DIST)\..\classes\org\mozilla\xpcom\iMThreadComponent1.class
+	del /f $(DIST)\..\classes\MThreadComponent1.class
+
 clobber_all:: clobber
 install:: install-component

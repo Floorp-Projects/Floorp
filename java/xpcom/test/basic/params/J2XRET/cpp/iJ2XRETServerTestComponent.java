@@ -56,12 +56,6 @@ public interface iJ2XRETServerTestComponent extends nsISupports
     /* boolean TestBoolean (); */
     public boolean testBoolean();
 
-    /* char TestChar (); */
-    public char testChar();
-
-    /* wchar TestWChar (); */
-    public char testWChar();
-
     /* string TestString (); */
     public String testString();
 
@@ -73,9 +67,6 @@ public interface iJ2XRETServerTestComponent extends nsISupports
 
     /* void TestLongArray (in unsigned long count, [array, size_is (count), retval] out long intArray); */
     public int[] testLongArray(int count);
-
-    /* void TestCharArray (in unsigned long count, [array, size_is (count), retval] out char charArray); */
-    public char[] testCharArray(int count);
 
     /* iJ2XRETServerTestComponent TestObject (); */
     public iJ2XRETServerTestComponent testObject();

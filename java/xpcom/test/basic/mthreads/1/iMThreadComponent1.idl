@@ -40,7 +40,7 @@ interface iMThreadComponent1 : nsISupports
     {0x80, 0x67, 0xdd, 0x19, 0x28, 0xc6, 0x01, 0x38} \
 }
 
-#define MTHREADCOMPONENT1_PROGID "component://netscape/blackwood/blackconnect/test/mthreads/MThreadComponent1"
+#define MTHREADCOMPONENT1_PROGID "@mozilla/blackwood/blackconnect/test/mthreads/MThreadComponent1;1"
 
 %}
 

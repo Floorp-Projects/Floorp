@@ -30,28 +30,35 @@ JAVA_OR_NSJVM=1
 
 include $(DEPTH)/config/autoconf.mk
 
-
-include $(topsrcdir)/config/rules.mk
-
-
 JAVA_SRC	= \
 	J2XINClientTestComponent.java
 
-JAVAI_SRC	= \
-	iJ2XINClientTestComponent.java
-J2XINClientTestComponent.jar.comp: manifest javai J2XINClientTestComponent.class
+#JAVAI_SRC	= \
+#	iJ2XINClientTestComponent.java
+
+
+JDIRS = . 
+JAVAC_PROG=$(JDKHOME)\bin\javac
+JAVAC_FLAGS=-classpath $(CLASSPATH);$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
+
+include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/config/config.mk
+
+J2XINClientTestComponent.jar.comp: manifest J2XINClientTestComponent.class
 	$(JDKHOME)/bin/jar cvfm J2XINClientTestComponent.jar.comp  manifest *.class
 
 J2XINClientTestComponent.class:
 	$(JDKHOME)/bin/javac  -classpath $(DEPTH)/dist/classes $(JAVA_SRC)
 
-javai::
-	$(JDKHOME)/bin/javac  -classpath $(DEPTH)/dist/classes -d $(DEPTH)/dist/classes $(JAVAI_SRC)
+#javai::
+#	$(JDKHOME)/bin/javac  -classpath $(DEPTH)/dist/classes -d $(DEPTH)/dist/classes $(JAVAI_SRC)
 
 install-component: J2XINClientTestComponent.jar.comp J2XINClientTestComponent.jar.info
 	cp -f J2XINClientTestComponent.jar* $(DIST)/bin/components
+
 clobber::
 	rm -f *.class *.jar.comp
 	rm -f $(DIST)/bin/components/J2XINClientTestComponent.jar.*
 clobber_all:: clobber
 install:: install-component
+	  rm -f $(DIST)/../classes/J2XINClientTestComponent.class

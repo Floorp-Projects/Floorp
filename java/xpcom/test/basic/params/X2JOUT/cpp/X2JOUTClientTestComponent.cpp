@@ -455,10 +455,10 @@ void X2JOUTClientTestComponentImpl::TestObject(){
   PrintResult("x2j.out.client.object","!!!Right string!!!");
 }
 
+/*
+ void X2JOUTClientTestComponentImpl::TestIID() {
 
-// void X2JOUTClientTestComponentImpl::TestIID() {
-
-/*   const nsIID& iid=NS_GET_IID(iX2JOUTServerTestComponent);
+   const nsIID& iid=NS_GET_IID(iX2JOUTServerTestComponent);
    val=NULL;
 
    val=iid.ToString();
@@ -466,9 +466,9 @@ void X2JOUTClientTestComponentImpl::TestObject(){
    val=PR_sprintf_append(val,"%s\n",val);
    PrintResult("x2j.out.client.iid",val);
    serverComponent->TestIID(&iid);
-*/
-// }
 
+ }
+*/
 // void X2JOUTClientTestComponentImpl::TestCID() {
 /*
    NS_DEFINE_CID(cid,X2JOUTCLIENTTESTCOMPONENT_CID);

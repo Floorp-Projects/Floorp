@@ -41,8 +41,8 @@ X2JINOUTServerTestComponent.jar.comp: manifest iX2JINOUTServerTestComponent.clas
 .SUFFIXES: .java .class
 
 .java.class:
-	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes -d $(DEPTH)\dist\classes iX2JINOUTServerTestComponent.java
-	$(JDKHOME)\bin\javac -classpath $(DEPTH)\dist\classes X2JINOUTServerTestComponent.java
+	$(JDKHOME)\bin\javac -classpath $(CLASSPATH) -d $(DEPTH)\dist\classes iX2JINOUTServerTestComponent.java
+	$(JDKHOME)\bin\javac -classpath $(CLASSPATH) X2JINOUTServerTestComponent.java
 
 install-component: X2JINOUTServerTestComponent.jar.comp X2JINOUTServerTestComponent.jar.info $(DLL)
 	copy X2JINOUTServerTestComponent.jar* $(DIST)\bin\components
@@ -50,6 +50,6 @@ install-component: X2JINOUTServerTestComponent.jar.comp X2JINOUTServerTestCompon
 clobber::
 	-del /f *.class *.jar.comp
 	-del /f $(DIST)\bin\components\X2JINOUTServerTestComponent.jar.*
-	-del /f $(DIST)\..\classes\org\mozilla\xpcom\iX2JINOUTServerTestComponent.*
+
 clobber_all:: clobber
 install:: install-component

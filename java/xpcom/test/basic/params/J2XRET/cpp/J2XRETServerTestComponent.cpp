@@ -216,7 +216,7 @@ NS_IMETHODIMP J2XRETServerTestComponentImpl::TestBoolean(PRBool *i) {
     return NS_OK;
 }
   
-
+/*
 NS_IMETHODIMP J2XRETServerTestComponentImpl::TestChar(char *i) {
     if(charVars.size()) {
         *i = charVars.top();
@@ -241,7 +241,7 @@ NS_IMETHODIMP J2XRETServerTestComponentImpl::TestWChar(PRUnichar *i) {
     }
     return NS_OK;
 }
-
+*/
     
 NS_IMETHODIMP J2XRETServerTestComponentImpl::TestString(char* *i) {
 
@@ -249,7 +249,9 @@ NS_IMETHODIMP J2XRETServerTestComponentImpl::TestString(char* *i) {
        *i = stringVars.top();
         stringVars.pop();
 	fBuffer = PR_sprintf_append(fBuffer,"%s\n",*i);
+//fprintf(stderr,"\n==>%s\n",*i);
     } else {
+//fprintf(stderr,"\n==>FLASH\n");
 	*i="";
 	fBuffer = PR_sprintf_append(fBuffer,"%s",*i);
 	Flush("string");
@@ -285,7 +287,7 @@ char* _string="";
      }
     }
     if (all==2) { 
-     _string="null string";
+     _string=NULL;
      nsCString* cstr=new nsCString(_string);
      *i=cstr->ToNewUnicode();
      nsString str = *(new nsString(*i));
@@ -335,7 +337,7 @@ NS_IMETHODIMP J2XRETServerTestComponentImpl::TestLongArray(PRUint32 count, int *
     return NS_OK;
 }
 
-  
+/*  
 NS_IMETHODIMP J2XRETServerTestComponentImpl::TestCharArray(PRUint32 count, char **valueArray) {
 
     char* ret=(char*)PR_Malloc(sizeof(char)*3);
@@ -350,7 +352,7 @@ NS_IMETHODIMP J2XRETServerTestComponentImpl::TestCharArray(PRUint32 count, char 
     *valueArray=ret;
     return NS_OK;
 }
-
+*/
   
 NS_IMETHODIMP J2XRETServerTestComponentImpl::TestObject(iJ2XRETServerTestComponent **obj) {
     *obj=this;

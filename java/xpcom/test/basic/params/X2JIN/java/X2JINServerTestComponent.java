@@ -271,7 +271,7 @@ System.out.println("TESTOBJ");
  *	C++ client side.
  */
  public void testIID(IID iid) {
-  S=S+iid.toString()+"\n";
+  S=S+iid.getString()+"\n";
  }
 
 /**
@@ -279,7 +279,7 @@ System.out.println("TESTOBJ");
  *	C++ client side.
  */
  public void testCID(CID cid) {
-  S=S+cid.toString()+"\n";
+  S=S+cid.getString()+"\n";
 //CID c=new CID("1ddc5b10-9852-11d4-aa22-00a024a8bbac");
  }
 

@@ -23,8 +23,11 @@ public interface iMThreadComponent extends nsISupports
     /* void Initialize (in iMThreadContext c); */
     public void initialize(iMThreadContext c);
 
-    /* void Execute (in string tName); */
-    public void execute(String tName);
+    /* void THack (in nsIComponentManager cm); */
+    public void tHack(nsIComponentManager cm);
+
+    /* void Execute (in long thread, in long stage); */
+    public void execute(int thread, int stage);
 
 }
 

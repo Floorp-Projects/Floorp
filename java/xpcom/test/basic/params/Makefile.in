@@ -18,6 +18,9 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# Client QA Team, St. Petersburg, Russia
+#
+
 
 DEPTH=../../../../..
 topsrcdir       = $(DEPTH)
