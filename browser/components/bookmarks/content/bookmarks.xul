@@ -130,6 +130,13 @@
                     accesskey="&command.newSeparator.accesskey;"
                     observes="cmd_bm_newseparator"/>
           <menuseparator/>
+          <menuitem label="&menuitem.import.label;"
+                    accesskey="&menuitem.import.accesskey;"
+                    observes="cmd_bm_import"/>
+          <menuitem label="&menuitem.export.label;"
+                    accesskey="&menuitem.export.accesskey;"
+                    observes="cmd_bm_export"/>
+          <menuseparator/>
           <menuitem id="menu_close"/>
         </menupopup>
       </menu>
