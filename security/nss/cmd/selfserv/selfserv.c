@@ -170,7 +170,7 @@ Usage(const char *progName)
 
 "Usage: %s -n rsa_nickname -p port [-3DRTmrvx] [-w password] [-t threads]\n"
 "         [-i pid_file] [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
-"         [-M maxProcs] \n"
+"         [-M maxProcs] [-l]\n"
 "-3 means disable SSL v3\n"
 "-D means disable Nagle delays in TCP\n"
 "-T means disable TLS\n"
@@ -187,6 +187,7 @@ Usage(const char *progName)
 "-t threads -- specify the number of threads to use for connections.\n"
 "-i pid_file file to write the process id of selfserve\n"
 "-c ciphers   Letter(s) chosen from the following list\n"
+"-l means use local threads instead of global threads"
 "A    SSL2 RC4 128 WITH MD5\n"
 "B    SSL2 RC4 128 EXPORT40 WITH MD5\n"
 "C    SSL2 RC2 128 CBC WITH MD5\n"
@@ -443,7 +444,8 @@ launch_threads(
     startFn    *startFunc,
     PRFileDesc *a,
     PRFileDesc *b,
-    int         c)
+    int         c,
+    PRBool      local)
 {
     int i;
     SECStatus rv = SECSuccess;
@@ -479,7 +481,8 @@ launch_threads(
 	slot->startFunc = startFunc;
 	slot->prThread = PR_CreateThread(PR_USER_THREAD, 
 			thread_wrapper, slot, PR_PRIORITY_NORMAL, 
-			PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD, 0);
+                        (PR_TRUE==local)?PR_LOCAL_THREAD:PR_GLOBAL_THREAD,
+                        PR_UNJOINABLE_THREAD, 0);
 	if (slot->prThread == NULL) {
 	    printf("selfserv: Failed to launch thread!\n");
 	    slot->state = rs_idle;
@@ -1333,6 +1336,7 @@ main(int argc, char **argv)
     SECStatus            rv;
     PRStatus             prStatus;
     PRBool               useExportPolicy = PR_FALSE;
+    PRBool               useLocalThreads = PR_FALSE;
     PLOptState		*optstate;
     PLOptStatus          status;
 
@@ -1344,7 +1348,7 @@ main(int argc, char **argv)
 
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 
-    optstate = PL_CreateOptState(argc, argv, "2:3DM:RTc:d:p:mn:hi:f:rt:vw:x");
+    optstate = PL_CreateOptState(argc, argv, "2:3DM:RTc:d:p:mn:hi:f:rt:vw:xl");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
@@ -1353,6 +1357,8 @@ main(int argc, char **argv)
 	case '3': disableSSL3 = PR_TRUE; break;
 
 	case 'D': noDelay = PR_TRUE; break;
+
+        case 'l': useLocalThreads = PR_TRUE; break;
 
 	case 'M': 
 	    maxProcs = PORT_Atoi(optstate->value); 
@@ -1554,7 +1560,7 @@ main(int argc, char **argv)
     }
 
     /* allocate the array of thread slots, and launch the worker threads. */
-    rv = launch_threads(&jobLoop, 0, 0, requestCert);
+    rv = launch_threads(&jobLoop, 0, 0, requestCert, useLocalThreads);
 
     if ( rv == SECSuccess) {
 	server_main(listen_sock, requestCert, privKey, cert);
