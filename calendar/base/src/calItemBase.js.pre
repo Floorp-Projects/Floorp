@@ -128,18 +128,17 @@ calItemBase.prototype = {
 #define MEMBER_ATTR(varname, initvalue, attrname) \
     varname: initvalue,                           \
     get attrname() { return this.varname; },          \
-    set attrname(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.varname = v; }
+    set attrname(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.varname = v; dump("set " + #attrname + " to " + v + "\n");}
 
     MEMBER_ATTR(mGeneration, 0, generation),
     MEMBER_ATTR(mCreationDate, null, creationDate),
-    MEMBER_ATTR(mLastModifiedTime, 0, lastModifiedTime),
+    MEMBER_ATTR(mLastModifiedTime, null, lastModifiedTime),
     MEMBER_ATTR(mParent, null, parent),
     MEMBER_ATTR(mId, null, id),
     MEMBER_ATTR(mTitle, "", title),
     MEMBER_ATTR(mPriority, 0, priority),
-    MEMBER_ATTR(mIsPrivate, 0, isPrivate),
-    MEMBER_ATTR(mMethod, ICAL.INVALID_VALUE, method),
-    MEMBER_ATTR(mStatus, ICAL.INVALID_VALUE, status),
+    MEMBER_ATTR(mPrivacy, "PUBLIC", isPrivate),
+    MEMBER_ATTR(mStatus, null, status),
     MEMBER_ATTR(mHasAlarm, false, hasAlarm),
     MEMBER_ATTR(mAlarmTime, null, alarmTime),
     MEMBER_ATTR(mRecurrenceInfo, null, recurrenceInfo),
@@ -205,8 +204,22 @@ calItemBase.prototype = {
     get icalString() {
         throw Components.results.NS_NOT_IMPLEMENTED;
     },
+
     set icalString() {
         throw Components.results.NS_NOT_IMPLEMENTED;
+    },
+
+    itemBasePromotedProps: {
+        "CREATED": true,
+        "UID": true,
+        "LASTMODIFIED": true,
+        "SUMMARY": true,
+        "PRIORITY": true,
+        "METHOD": true,
+        "STATUS": true,
+        "CLASS": true,
+        "DTALARM": true,
+        "X-MOZILLA-GENERATION": true,
     },
 
     mapPropsFromICS: function(icalcomp, propmap) {
@@ -236,17 +249,42 @@ calItemBase.prototype = {
     { cal: "mTitle", ics: "summary" },
     { cal: "mPriority", ics: "priority" },
     { cal: "mMethod", ics: "method" },
-    { cal: "mStatus", ics: "status" }],
+    { cal: "mStatus", ics: "status" },
+    { cal: "mPrivacy", ics: "icalClass" }],
 
     setItemBaseFromICS: function (icalcomp) {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
         this.mapPropsFromICS(icalcomp, this.icsBasePropMap);
-        // XXX roundtrip
-        if (icalcomp.icalClass == ICAL.VISIBILITY_PUBLIC)
+        this.mPrivacy = icalcomp.icalClass;
+        if (icalcomp.icalClass == "PUBLIC")
             this.mIsPrivate = false;
         else
             this.mIsPrivate = true;
+
+        for (var attprop = icalcomp.getFirstProperty("ATTENDEE");
+             attprop;
+             attprop = icalcomp.getNextProperty("ATTENDEE")) {
+            
+            var att = new CalAttendee();
+            att.icalProperty = attprop;
+            this.addAttendee(att);
+        }
+        
+        var gen = icalcomp.getFirstProperty("X-MOZILLA-GENERATION");
+        if (gen)
+            this.mGeneration = parseInt(gen.stringValue);
+    },
+
+    importUnpromotedProperties: function (icalcomp, promoted) {
+        for (var prop = icalcomp.getFirstProperty("ANY");
+             prop;
+             prop = icalcomp.getNextProperty("ANY")) {
+            if (!promoted[prop.propertyName]) {
+                // XXX keep parameters around, sigh
+                this.setProperty(prop.propertyName, prop.stringValue);
+            }
+        }
     },
 
     get icalComponent() {
@@ -255,11 +293,14 @@ calItemBase.prototype = {
 
     fillIcalComponentFromBase: function (icalcomp) {
         this.mapPropsToICS(icalcomp, this.icsBasePropMap);
-        // XXX roundtrip
-        if (this.mIsPrivate)
-            icalcomp.icalClass = ICAL.VISIBILITY_PRIVATE;
-        else
-            icalcomp.icalClass = ICAL.VISIBILITY_PUBLIC;
+        icalcomp.icalClass = this.mPrivacy;
+        for (var i = 0; i < this.mAttendees.length; i++)
+            icalcomp.addProperty(this.mAttendees[i].icalProperty);
+        if (this.mGeneration != 0) {
+            var genprop = icalProp("X-MOZILLA-GENERATION");
+            genprop.stringValue = String(this.mGeneration);
+            icalcomp.addProperty(genprop);
+        }
     },
     
 };
@@ -315,8 +356,20 @@ const CalDateTime =
     new Components.Constructor("@mozilla.org/calendar/datetime;1",
                                Components.interfaces.calIDateTime);
 
-function icalFromString(str) {
+const CalAttendee =
+    new Components.Constructor("@mozilla.org/calendar/attendee;1",
+                               Components.interfaces.calIAttendee);
+
+function icalFromString(str)
+{
     const icssvc = Components.classes["@mozilla.org/calendar/ics-service;1"].
         getService(Components.interfaces.calIICSService);
     return icssvc.parseICS(str);
+}
+
+function icalProp(kind)
+{
+    const icssvc = Components.classes["@mozilla.org/calendar/ics-service;1"].
+        getService(Components.interfaces.calIICSService);
+    return icssvc.createIcalProperty(kind);
 }

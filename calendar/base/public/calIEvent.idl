@@ -47,9 +47,6 @@
 [scriptable, uuid(5ab15c1c-e295-4d8e-a9a9-ba5bc848b59a)]
 interface calIEvent : calIItemBase
 {
-  const long CAL_EVENT_STATUS_TENTATIVE = 2;
-  const long CAL_EVENT_STATUS_CONFIRMED = 3;
-
   // these attributes are marked readonly, as the calIDates are owned
   // by the event; however, the actual caIDate objects are not read
   // only and are intended to be manipulated to adjust dates.

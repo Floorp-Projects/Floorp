@@ -38,6 +38,9 @@
 
 #include "nsISupports.idl"
 
+interface calIIcalProperty;
+interface nsISimpleEnumerator;
+
 [scriptable,uuid(5d1f2c7c-29bb-4090-94c2-cabe278fe567)]
 interface calIAttendee : nsISupports
 {
@@ -53,22 +56,38 @@ interface calIAttendee : nsISupports
   attribute AUTF8String commonName;
   attribute boolean     rsvp;
 
-  const PRUint32 ROLE_CHAIR = 20041;
-  const PRUint32 ROLE_REQ_PARTICIPANT = 20042;
-  const PRUint32 ROLE_OPT_PARTICIPANT = 20043;
-  const PRUint32 ROLE_NON_PARTICIPANT = 20044;
-  attribute PRUint32    role;
+  /**
+   * CHAIR
+   * REQUIRED_PARTICIPANT
+   * OPTIONAL_PARTICIPANT
+   * NON_PARTICIPANT
+   */
+  attribute AUTF8String    role;
 
-  const PRUint32 PARTSTAT_NEEDSACTION = 20018;
-  const PRUint32 PARTSTAT_ACCEPTED    = 20019;
-  const PRUint32 PARTSTAT_DECLINED    = 20020;
-  const PRUint32 PARTSTAT_NONE        = 20025;
-  attribute PRUint32    participationStatus;
+  /**
+   * NEEDSACTION
+   * ACCEPTED
+   * DECLINED
+   * TENTATIVE
+   * DELEGATED
+   * COMPLETED
+   * INPROCESS
+   */
+  attribute AUTF8String    participationStatus;
 
-  const PRUint32 CUTYPE_INDIVIDUAL    = 20001;
-  const PRUint32 CUTYPE_GROUP         = 20002;
-  const PRUint32 CUTYPE_RESOURCE      = 20003;
-  const PRUint32 CUTYPE_ROOM          = 20004;
-  attribute PRUint32    userType;
+  /**
+   * INDIVIDUAL
+   * GROUP
+   * RESOURCE
+   * ROOM
+   * UNKNOWN
+   */
+  attribute AUTF8String    userType;
 
+  readonly attribute nsISimpleEnumerator propertyEnumerator;
+  AUTF8String getProperty(in AString name);
+  void setProperty(in AString name, in AUTF8String value);
+  void deleteProperty(in AString name);
+
+  attribute calIIcalProperty icalProperty;
 };

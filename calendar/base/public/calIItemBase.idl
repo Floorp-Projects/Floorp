@@ -87,18 +87,6 @@ interface calIItemBase : nsISupports
   //
   readonly attribute PRUint32 generation;
 
-  // methods
-  const PRUint32 METHOD_PUBLISH = 10012;
-  const PRUint32 METHOD_REQUEST = 10013;
-  const PRUint32 METHOD_REPLY = 10014;
-  const PRUint32 METHOD_ADD = 10015;
-  const PRUint32 METHOD_CANCEL = 10016;
-  const PRUint32 METHOD_NONE = 10027;
-
-  // statuses, extended by each event/todo/journal subclass
-  const long CAL_ITEM_STATUS_NONE = 0;
-  const long CAL_ITEM_STATUS_CANCELLED = 1;
-
   // the time when this item was created
   readonly attribute calIDateTime creationDate;
 
@@ -116,11 +104,10 @@ interface calIItemBase : nsISupports
 
   // event priority
   attribute short priority;
-  attribute boolean isPrivate;
+  attribute AUTF8String privacy;
 
-  // event/status of the event (see consts above)
-  attribute long method;
-  attribute long status;
+  // status of the event
+  attribute AUTF8String status;
 
   // ical interop; writing this means parsing
   // the ical string into this event

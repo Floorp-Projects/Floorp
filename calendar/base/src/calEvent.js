@@ -69,22 +69,32 @@ calEvent.prototype = {
     set icalString(value) {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
-        var ical = icalFromString(value);
-        var event = ical.getFirstSubcomponent(Components.interfaces.calIIcalComponent.VEVENT_COMPONENT);
-        if (!event)
+        var event = icalFromString(value);
+        if (event.componentType != "VEVENT"); {
+            event = event.getFirstSubcomponent("VEVENT");
+            if (!event)
 
-            throw Components.results.NS_ERROR_INVALID_ARG;
+                throw Components.results.NS_ERROR_INVALID_ARG;
+        }
 
         this.setItemBaseFromICS(event);
         this.mapPropsFromICS(event, this.icsEventPropMap);
         this.mIsAllDay = this.mStartDate && this.mStartDate.isDate;
+
+        var promotedProps = {
+            "DTSTART": true,
+            "DTEND": true,
+            "DTSTAMP": true,
+            __proto__: this.itemBasePromotedProps
+        };
+        this.importUnpromotedProperties(event, promotedProps);
     },
 
     get icalString() {
         const icssvc = Components.
           classes["@mozilla.org/calendar/ics-service;1"].
           getService(Components.interfaces.calIICSService);
-        var calcomp = icssvc.createIcalComponent(ICAL.VCALENDAR_COMPONENT);
+        var calcomp = icssvc.createIcalComponent("VCALENDAR");
         calcomp.prodid = "-//Mozilla Calendar//NONSGML Sunbird//EN";
         calcomp.version = "2.0";
         calcomp.addSubcomponent(this.icalComponent);
@@ -95,9 +105,22 @@ calEvent.prototype = {
         const icssvc = Components.
           classes["@mozilla.org/calendar/ics-service;1"].
           getService(Components.interfaces.calIICSService);
-        var icalcomp = icssvc.createIcalComponent(ICAL.VEVENT_COMPONENT);
+        var icalcomp = icssvc.createIcalComponent("VEVENT");
         this.fillIcalComponentFromBase(icalcomp);
         this.mapPropsToICS(icalcomp, this.icsEventPropMap);
+        var bagenum = this.mProperties.enumerator;
+        while (bagenum.hasMoreElements()) {
+            var iprop = bagenum.getNext().
+                QueryInterface(Components.interfaces.nsIProperty);
+            try {
+                var icalprop = icssvc.createIcalProperty(iprop.name);
+                icalprop.stringValue = iprop.value;
+                icalcomp.addProperty(icalprop);
+            } catch (e) {
+
+
+            }
+        }
         return icalcomp;
     },
 };

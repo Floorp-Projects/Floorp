@@ -1,5 +1,4 @@
 var C = Components;
-var ICAL = C.interfaces.calIIcalComponent;
 var eventClass = C.classes["@mozilla.org/calendar/event;1"];
 var eventIID = C.interfaces.calIEvent;
 
@@ -16,7 +15,7 @@ var expectedProps =
   [["title", "Christmas"],
    ["id", "20041119T052239Z-1000472-1-5c0746bb-Oracle"],
    ["priority", 0],
-   ["status", ICAL.STATUS_CONFIRMED],
+   ["status", "CONFIRMED"],
    ["generation", 0],
    ["isAllDay", true]];
 function checkProps(expectedProps, obj) {
@@ -32,7 +31,7 @@ checkProps(expectedProps, e);
 
 dump("* Checking start date\n");
 expectedProps =
-  [["month", 11],
+  [["month", 10],
    ["day", 25],
    ["year", 2004],
    ["isDate", true]];

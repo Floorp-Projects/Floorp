@@ -371,7 +371,10 @@ function onOKCommand()
 
     // calIItemBase properties
     event.title = getFieldValue( "title-field" );
-    event.isPrivate = getFieldValue( "private-checkbox", "checked" );
+    if (getFieldValue("private-checkbox", "checked"))
+        event.privacy = "PRIVATE";
+    else
+        event.privacy = "PUBLIC";
     if (getFieldValue( "alarm-type" ) != "" && getFieldValue( "alarm-type" ) != "none")
         event.hasAlarm == 1
     if (event.hasAlarm) {

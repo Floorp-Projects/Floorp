@@ -74,17 +74,16 @@ protected:
 NS_IMPL_ISUPPORTS1(calIcalProperty, calIIcalProperty)
 
 NS_IMETHODIMP
-calIcalProperty::GetIsA(PRInt32 *isa)
-{
-    *isa = (PRInt32)icalproperty_isa(mProperty);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 calIcalProperty::GetStringValue(nsACString &str)
 {
     const char *icalstr = icalproperty_get_value_as_string(mProperty);
     if (!icalstr) {
+        if (icalerrno == ICAL_BADARG_ERROR) {
+            str.Truncate();
+            str.SetIsVoid(PR_TRUE);
+            return NS_OK;
+        }
+        
 #ifdef DEBUG
         fprintf(stderr, "Error getting string value: %d (%s)\n",
                 icalerrno, icalerror_strerror(icalerrno));
@@ -94,7 +93,6 @@ calIcalProperty::GetStringValue(nsACString &str)
 
     str.Assign(icalstr);
     return NS_OK;
-    
 }
 
 NS_IMETHODIMP
@@ -109,42 +107,168 @@ calIcalProperty::SetStringValue(const nsACString &str)
 }
 
 NS_IMETHODIMP
-calIcalProperty::GetXParameter(const nsACString &xparamname,
-                               nsACString &xparamvalue)
+calIcalProperty::GetPropertyName(nsACString &name)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    const char *icalstr = icalproperty_get_name(mProperty);
+    if (!icalstr) {
+#ifdef DEBUG
+        fprintf(stderr, "Error getting property name: %d (%s)\n",
+                icalerrno, icalerror_strerror(icalerrno));
+#endif
+        return NS_ERROR_FAILURE;
+    }
+    name.Assign(icalstr);
+    return NS_OK;
+}
+
+static icalparameter*
+FindXParameter(icalproperty *prop, const nsACString &param)
+{
+    for (icalparameter *icalparam =
+             icalproperty_get_first_parameter(prop, ICAL_X_PARAMETER);
+         icalparam;
+         icalparam = icalproperty_get_next_parameter(prop, ICAL_X_PARAMETER)) {
+        if (param.Equals(icalparameter_get_xname(icalparam)))
+            return icalparam;
+    }
+    return nsnull;
 }
 
 NS_IMETHODIMP
-calIcalProperty::SetXParameter(const nsACString &xparamname,
-                               const nsACString &xparamvalue)
+calIcalProperty::GetParameter(const nsACString &param, nsACString &value)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // More ridiculous parameter/X-PARAMETER handling.
+    icalparameter_kind paramkind = 
+        icalparameter_string_to_kind(PromiseFlatCString(param).get());
+
+    if (paramkind == ICAL_NO_PARAMETER)
+        return NS_ERROR_INVALID_ARG;
+
+    const char *icalstr = nsnull;
+    if (paramkind == ICAL_X_PARAMETER) {
+        icalparameter *icalparam = FindXParameter(mProperty, param);
+        if (icalparam)
+            icalstr = icalparameter_get_xvalue(icalparam);
+    } else {
+        icalstr = icalproperty_get_parameter_as_string(mProperty,
+                                                        PromiseFlatCString(param).get());
+    }
+
+    if (!icalstr) {
+        value.Truncate();
+        value.SetIsVoid(PR_TRUE);
+    } else {
+        value.Assign(icalstr);
+    }
+    return NS_OK;
 }
 
-
 NS_IMETHODIMP
-calIcalProperty::RemoveXParameter(const nsACString &xparamname)
+calIcalProperty::SetParameter(const nsACString &param, const nsACString &value)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    icalparameter_kind paramkind = 
+        icalparameter_string_to_kind(PromiseFlatCString(param).get());
+
+    if (paramkind == ICAL_NO_PARAMETER)
+        return NS_ERROR_INVALID_ARG;
+
+    // Because libical's support for manipulating parameters is weak, and
+    // X-PARAMETERS doubly so, we walk the list looking for an existing one of
+    // that name, and reset its value if found.
+    if (paramkind == ICAL_X_PARAMETER) {
+        icalparameter *icalparam = FindXParameter(mProperty, param);
+        if (icalparam) {
+            icalparameter_set_xvalue(icalparam,
+                                     PromiseFlatCString(value).get());
+            return NS_OK;
+        }
+        // If not found, fall through to adding a new parameter below.
+    } else {
+        // We could try getting an existing parameter here and resetting its
+        // value, but this is easier and I don't care that much about parameter
+        // performance at this point.
+        RemoveParameter(param);
+    }
+
+    icalparameter *icalparam = 
+        icalparameter_new_from_value_string(paramkind,
+                                            PromiseFlatCString(value).get());
+    if (!icalparam)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // You might ask me "why does libical not do this for us?" and I would 
+    // just nod knowingly but sadly at you in return.
+    //
+    // You might also, if you were not too distracted by the first question,
+    // ask why we have icalproperty_set_x_name but icalparameter_set_xname.
+    // More nodding would ensue.
+    if (paramkind == ICAL_X_PARAMETER)
+        icalparameter_set_xname(icalparam, PromiseFlatCString(param).get());
+    
+    icalproperty_add_parameter(mProperty, icalparam);
+    // XXX check ical errno
+    return NS_OK;
+}
+
+static nsresult
+FillParameterName(icalparameter *icalparam, nsACString &name)
+{
+    if (!icalparam) {
+        name.Truncate();
+        name.SetIsVoid(PR_TRUE);
+        return NS_OK;
+    }
+
+    icalparameter_kind paramkind = icalparameter_isa(icalparam);
+    if (paramkind == ICAL_X_PARAMETER)
+        name.Assign(icalparameter_get_xname(icalparam));
+    else
+        name.Assign(icalparameter_kind_to_string(paramkind));
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-calIcalProperty::GetParameter(PRInt32 kind, nsACString &value)
+calIcalProperty::GetFirstParameterName(nsACString &name)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    icalparameter *icalparam =
+        icalproperty_get_first_parameter(mProperty,
+                                         ICAL_ANY_PARAMETER);
+    return FillParameterName(icalparam, name);
 }
 
 NS_IMETHODIMP
-calIcalProperty::SetParameter(PRInt32 kind, const nsACString &value)
+calIcalProperty::GetNextParameterName(nsACString &name)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    icalparameter *icalparam =
+        icalproperty_get_next_parameter(mProperty,
+                                        ICAL_ANY_PARAMETER);
+    return FillParameterName(icalparam, name);
 }
 
 NS_IMETHODIMP
-calIcalProperty::RemoveParameter(PRInt32 kind)
+calIcalProperty::RemoveParameter(const nsACString &param)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    icalparameter_kind paramkind =
+        icalparameter_string_to_kind(PromiseFlatCString(param).get());
+
+    if (paramkind == ICAL_NO_PARAMETER || paramkind == ICAL_X_PARAMETER)
+        return NS_ERROR_INVALID_ARG;
+
+    icalproperty_remove_parameter(mProperty, paramkind);
+    // XXX check ical errno
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calIcalProperty::ClearXParameters()
+{
+    int oldcount, paramcount = 0;
+    do {
+        oldcount = paramcount;
+        icalproperty_remove_parameter(mProperty, ICAL_X_PARAMETER);
+        paramcount = icalproperty_count_parameters(mProperty);
+    } while (oldcount != paramcount);
+    return NS_OK;
 }
 
 class calIcalComponent : public calIIcalComponent
@@ -237,6 +361,56 @@ calIcalComponent::SetProperty(icalproperty_kind kind, icalproperty *prop)
     return NS_OK;
 }
 
+#define COMP_STRING_TO_GENERAL_ENUM_ATTRIBUTE(Attrname, ICALNAME, lcname) \
+NS_IMETHODIMP                                                           \
+calIcalComponent::Get##Attrname(nsACString &str)                        \
+{                                                                       \
+    PRInt32 val;                                                        \
+    nsresult rv = GetIntProperty(ICAL_##ICALNAME##_PROPERTY, &val);     \
+    if (NS_FAILED(rv))                                                  \
+        return rv;                                                      \
+    if (val == -1) {                                                    \
+        str.Truncate();                                                 \
+        str.SetIsVoid(PR_TRUE);                                         \
+    } else {                                                            \
+        str.Assign(icalproperty_enum_to_string(val));                   \
+    }                                                                   \
+    return NS_OK;                                                       \
+}                                                                       \
+                                                                        \
+NS_IMETHODIMP                                                           \
+calIcalComponent::Set##Attrname(const nsACString &str)                  \
+{                                                                       \
+    int val = icalproperty_string_to_enum(PromiseFlatCString(str).get()); \
+    icalvalue *ival = icalvalue_new_##lcname((icalproperty_##lcname)val); \
+    return SetPropertyValue(ICAL_##ICALNAME##_PROPERTY, ival);          \
+}                                                                       \
+
+#define COMP_STRING_TO_ENUM_ATTRIBUTE(Attrname, ICALNAME, lcname)       \
+NS_IMETHODIMP                                                           \
+calIcalComponent::Get##Attrname(nsACString &str)                        \
+{                                                                       \
+    PRInt32 val;                                                        \
+    nsresult rv = GetIntProperty(ICAL_##ICALNAME##_PROPERTY, &val);     \
+    if (NS_FAILED(rv))                                                  \
+        return rv;                                                      \
+    if (val == -1) {                                                    \
+        str.Truncate();                                                 \
+        str.SetIsVoid(PR_TRUE);                                         \
+    } else {                                                            \
+        str.Assign(icalproperty_##lcname##_to_string((icalproperty_##lcname)val)); \
+    }                                                                   \
+    return NS_OK;                                                       \
+}                                                                       \
+                                                                        \
+NS_IMETHODIMP                                                           \
+calIcalComponent::Set##Attrname(const nsACString &str)                  \
+{                                                                       \
+    icalproperty_##lcname val =                                         \
+        icalproperty_string_to_##lcname(PromiseFlatCString(str).get()); \
+    icalproperty *prop = icalproperty_new_##lcname(val);                \
+    return SetProperty(ICAL_##ICALNAME##_PROPERTY, prop);               \
+}                                                                       \
 
 #define COMP_GENERAL_STRING_ATTRIBUTE(Attrname, ICALNAME)       \
 NS_IMETHODIMP                                                   \
@@ -268,26 +442,26 @@ calIcalComponent::Set##Attrname(const nsACString &str)          \
 
 #define COMP_GENERAL_INT_ATTRIBUTE(Attrname, ICALNAME)          \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Get##Attrname(PRInt32 *valp)                 \
+calIcalComponent::Get##Attrname(PRInt32 *valp)                  \
 {                                                               \
     return GetIntProperty(ICAL_##ICALNAME##_PROPERTY, valp);    \
 }                                                               \
                                                                 \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Set##Attrname(PRInt32 val)                   \
+calIcalComponent::Set##Attrname(PRInt32 val)                    \
 {                                                               \
     return SetIntProperty(ICAL_##ICALNAME##_PROPERTY, val);     \
 }                                                               \
 
 #define COMP_ENUM_ATTRIBUTE(Attrname, ICALNAME, lcname)         \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Get##Attrname(PRInt32 *valp)                 \
+calIcalComponent::Get##Attrname(PRInt32 *valp)                  \
 {                                                               \
     return GetIntProperty(ICAL_##ICALNAME##_PROPERTY, valp);    \
 }                                                               \
                                                                 \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Set##Attrname(PRInt32 val)                   \
+calIcalComponent::Set##Attrname(PRInt32 val)                    \
 {                                                               \
     icalproperty *prop =                                        \
       icalproperty_new_##lcname((icalproperty_##lcname)val);    \
@@ -296,13 +470,13 @@ calIcalComponent::Set##Attrname(PRInt32 val)                   \
 
 #define COMP_INT_ATTRIBUTE(Attrname, ICALNAME, lcname)          \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Get##Attrname(PRInt32 *valp)                 \
+calIcalComponent::Get##Attrname(PRInt32 *valp)                  \
 {                                                               \
     return GetIntProperty(ICAL_##ICALNAME##_PROPERTY, valp);    \
 }                                                               \
                                                                 \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Set##Attrname(PRInt32 val)                   \
+calIcalComponent::Set##Attrname(PRInt32 val)                    \
 {                                                               \
     icalproperty *prop = icalproperty_new_##lcname(val);        \
     return SetProperty(ICAL_##ICALNAME##_PROPERTY, prop);       \
@@ -349,12 +523,18 @@ calIcalComponent::Set##Attrname(calIDateTime *dt)                       \
 NS_IMPL_ISUPPORTS1(calIcalComponent, calIIcalComponent)
 
 NS_IMETHODIMP
-calIcalComponent::GetFirstSubcomponent(PRInt32 componentType,
+calIcalComponent::GetFirstSubcomponent(const nsACString& kind,
                                        calIIcalComponent **subcomp)
 {
+    icalcomponent_kind compkind =
+        icalcomponent_string_to_kind(PromiseFlatCString(kind).get());
+
+    // Maybe someday I'll support X-COMPONENTs
+    if (compkind == ICAL_NO_COMPONENT || compkind == ICAL_X_COMPONENT)
+        return NS_ERROR_INVALID_ARG;
+
     icalcomponent *ical =
-        icalcomponent_get_first_component(mComponent,
-                                          (icalcomponent_kind)componentType);
+        icalcomponent_get_first_component(mComponent, compkind);
     if (!ical) {
         *subcomp = nsnull;
         return NS_OK;
@@ -368,12 +548,18 @@ calIcalComponent::GetFirstSubcomponent(PRInt32 componentType,
 }
 
 NS_IMETHODIMP
-calIcalComponent::GetNextSubcomponent(PRInt32 componentType,
+calIcalComponent::GetNextSubcomponent(const nsACString& kind,
                                       calIIcalComponent **subcomp)
 {
+    icalcomponent_kind compkind =
+        icalcomponent_string_to_kind(PromiseFlatCString(kind).get());
+
+    // Maybe someday I'll support X-COMPONENTs
+    if (compkind == ICAL_NO_COMPONENT || compkind == ICAL_X_COMPONENT)
+        return NS_ERROR_INVALID_ARG;
+
     icalcomponent *ical =
-        icalcomponent_get_next_component(mComponent,
-                                         (icalcomponent_kind)componentType);
+        icalcomponent_get_next_component(mComponent, compkind);
     if (!ical) {
         *subcomp = nsnull;
         return NS_OK;
@@ -387,9 +573,9 @@ calIcalComponent::GetNextSubcomponent(PRInt32 componentType,
 }
 
 NS_IMETHODIMP
-calIcalComponent::GetIsA(PRInt32 *isa)
+calIcalComponent::GetComponentType(nsACString &componentType)
 {
-    *isa = icalcomponent_isa(mComponent);
+    componentType.Assign(icalcomponent_kind_to_string(icalcomponent_isa(mComponent)));
     return NS_OK;
 }
 
@@ -397,16 +583,16 @@ calIcalComponent::GetIsA(PRInt32 *isa)
 COMP_STRING_ATTRIBUTE(Uid, UID, uid)
 COMP_STRING_ATTRIBUTE(Prodid, PRODID, prodid)
 COMP_STRING_ATTRIBUTE(Version, VERSION, version)
-COMP_ENUM_ATTRIBUTE(Method, METHOD, method)
-COMP_ENUM_ATTRIBUTE(Status, STATUS, status)
-COMP_GENERAL_INT_ATTRIBUTE(Transp, TRANSP)
+COMP_STRING_TO_ENUM_ATTRIBUTE(Method, METHOD, method)
+COMP_STRING_TO_ENUM_ATTRIBUTE(Status, STATUS, status)
+COMP_STRING_TO_GENERAL_ENUM_ATTRIBUTE(Transp, TRANSP, transp)
 COMP_STRING_ATTRIBUTE(Summary, SUMMARY, summary)
 COMP_STRING_ATTRIBUTE(Description, DESCRIPTION, description)
 COMP_STRING_ATTRIBUTE(Location, LOCATION, location)
 COMP_STRING_ATTRIBUTE(Categories, CATEGORIES, categories)
 COMP_STRING_ATTRIBUTE(URL, URL, url)
 COMP_INT_ATTRIBUTE(Priority, PRIORITY, priority)
-COMP_ENUM_ATTRIBUTE(IcalClass, CLASS, class)
+COMP_STRING_TO_GENERAL_ENUM_ATTRIBUTE(IcalClass, CLASS, class)
 COMP_DATE_ATTRIBUTE(StartTime, DTSTART)
 COMP_DATE_ATTRIBUTE(EndTime, DTEND)
 COMP_DATE_ATTRIBUTE(DueTime, DUE)
@@ -414,38 +600,6 @@ COMP_DATE_ATTRIBUTE(StampTime, DTSTAMP)
 COMP_DATE_ATTRIBUTE(LastModified, LASTMODIFIED)
 COMP_DATE_ATTRIBUTE(CreatedTime, CREATED)
 COMP_DATE_ATTRIBUTE(CompletedTime, COMPLETED)
-
-NS_IMETHODIMP
-calIcalComponent::GetAttendees(PRUint32 *count, char ***attendees)
-{
-    char **attlist = nsnull;
-    PRUint32 attcount = 0;
-    for (icalproperty *prop =
-             icalcomponent_get_first_property(mComponent, ICAL_ATTENDEE_PROPERTY);
-         prop;
-         prop = icalcomponent_get_next_property(mComponent, ICAL_ATTENDEE_PROPERTY)) {
-        attcount++;
-        char **newlist = 
-            NS_STATIC_CAST(char **,
-                           NS_Realloc(attlist, attcount * sizeof(char *)));
-        if (!newlist)
-            goto oom;
-        attlist = newlist;
-        attlist[attcount - 1] = nsCRT::strdup(icalproperty_get_attendee(prop));
-        if (!attlist[attcount - 1])
-            goto oom;
-    }
-
-    *attendees = attlist;
-    *count = attcount;
-    return NS_OK;
-
- oom:
-    for (PRUint32 i = 0; i < attcount - 1; i++)
-        NS_Free(attlist[i]);
-    NS_Free(attlist);
-    return NS_ERROR_OUT_OF_MEMORY;
-}
 
 void
 calIcalComponent::ClearAllProperties(icalproperty_kind kind)
@@ -458,20 +612,6 @@ calIcalComponent::ClearAllProperties(icalproperty_kind kind)
         next = icalcomponent_get_next_property(mComponent, kind);
         icalcomponent_remove_property(mComponent, prop);
     }
-}
-
-NS_IMETHODIMP
-calIcalComponent::SetAttendees(PRUint32 count, const char **attendees)
-{
-    ClearAllProperties(ICAL_ATTENDEE_PROPERTY);
-    for (PRUint32 i = 0; i < count; i++) {
-        icalproperty *prop = icalproperty_new_attendee(attendees[i]);
-        if (!prop)
-            return NS_ERROR_OUT_OF_MEMORY;
-        icalcomponent_add_property(mComponent, prop);
-    }
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -518,10 +658,30 @@ calIcalComponent::RemoveSubcomponent(calIIcalComponent *comp)
 }
 
 NS_IMETHODIMP
-calIcalComponent::GetFirstProperty(PRInt32 kind, calIIcalProperty **prop)
+calIcalComponent::GetFirstProperty(const nsACString &kind,
+                                   calIIcalProperty **prop)
 {
-    icalproperty *icalprop =
-        icalcomponent_get_first_property(mComponent, (icalproperty_kind)kind);
+    icalproperty_kind propkind =
+        icalproperty_string_to_kind(PromiseFlatCString(kind).get());
+
+    if (propkind == ICAL_NO_PROPERTY)
+        return NS_ERROR_INVALID_ARG;
+
+    icalproperty *icalprop = nsnull;
+    if (propkind == ICAL_X_PROPERTY) {
+        for (icalprop = 
+                 icalcomponent_get_first_property(mComponent, ICAL_X_PROPERTY);
+             icalprop;
+             icalprop = icalcomponent_get_next_property(mComponent,
+                                                        ICAL_X_PROPERTY)) {
+            
+            if (kind.Equals(icalproperty_get_x_name(icalprop)))
+                break;
+        }
+    } else {
+        icalprop = icalcomponent_get_first_property(mComponent, propkind);
+    }
+
     if (!icalprop) {
         *prop = nsnull;
         return NS_OK;
@@ -535,10 +695,29 @@ calIcalComponent::GetFirstProperty(PRInt32 kind, calIIcalProperty **prop)
 }
 
 NS_IMETHODIMP
-calIcalComponent::GetNextProperty(PRInt32 kind, calIIcalProperty **prop)
+calIcalComponent::GetNextProperty(const nsACString &kind,
+                                  calIIcalProperty **prop)
 {
-    icalproperty *icalprop =
-        icalcomponent_get_next_property(mComponent, (icalproperty_kind)kind);
+    icalproperty_kind propkind =
+        icalproperty_string_to_kind(PromiseFlatCString(kind).get());
+
+    if (propkind == ICAL_NO_PROPERTY)
+        return NS_ERROR_INVALID_ARG;
+    icalproperty *icalprop = nsnull;
+    if (propkind == ICAL_X_PROPERTY) {
+        for (icalprop = 
+                 icalcomponent_get_next_property(mComponent, ICAL_X_PROPERTY);
+             icalprop;
+             icalprop = icalcomponent_get_next_property(mComponent,
+                                                        ICAL_X_PROPERTY)) {
+            
+            if (kind.Equals(icalproperty_get_x_name(icalprop)))
+                break;
+        }
+    } else {
+        icalprop = icalcomponent_get_next_property(mComponent, propkind);
+    }
+
     if (!icalprop) {
         *prop = nsnull;
         return NS_OK;
@@ -552,15 +731,12 @@ calIcalComponent::GetNextProperty(PRInt32 kind, calIIcalProperty **prop)
 }
 
 NS_IMETHODIMP
-calIcalComponent::AddProperty(PRInt32 kind, calIIcalProperty **prop)
+calIcalComponent::AddProperty(calIIcalProperty *prop)
 {
-    icalproperty *icalprop = icalproperty_new((icalproperty_kind)kind);
-    if (!icalprop)
-        return NS_ERROR_OUT_OF_MEMORY; // XXX translate
-    *prop = new calIcalProperty(icalprop, this);
-    if (!*prop)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(*prop);
+    // XXX like AddSubcomponent, this is questionable
+    calIcalProperty *ical = NS_STATIC_CAST(calIcalProperty *, prop);
+    icalcomponent_add_property(mComponent, ical->mProperty);
+    ical->mParent = this;
     return NS_OK;
 }
 
@@ -571,72 +747,6 @@ calIcalComponent::RemoveProperty(calIIcalProperty *prop)
     calIcalProperty *ical = NS_STATIC_CAST(calIcalProperty *, prop);
     icalcomponent_remove_property(mComponent, ical->mProperty);
     ical->mParent = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-calIcalComponent::GetFirstXProperty(const nsACString &xpropname,
-                                    calIIcalProperty **prop)
-{
-    for (icalproperty *icalprop = 
-             icalcomponent_get_first_property(mComponent, ICAL_X_PROPERTY);
-         icalprop;
-         icalprop = icalcomponent_get_next_property(mComponent,
-                                                    ICAL_X_PROPERTY)) {
-
-        if (xpropname.Equals(icalproperty_get_x_name(icalprop))) {
-            *prop = new calIcalProperty(icalprop, this);
-            if (!*prop)
-                return NS_ERROR_OUT_OF_MEMORY;
-            NS_ADDREF(*prop);
-            return NS_OK;
-        }
-
-    }
-    *prop = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-calIcalComponent::GetNextXProperty(const nsACString &xpropname,
-                                    calIIcalProperty **prop)
-{
-    for (icalproperty *icalprop = 
-             icalcomponent_get_next_property(mComponent, ICAL_X_PROPERTY);
-         icalprop;
-         icalprop = icalcomponent_get_next_property(mComponent,
-                                                    ICAL_X_PROPERTY)) {
-
-        if (xpropname.Equals(icalproperty_get_x_name(icalprop))) {
-            *prop = new calIcalProperty(icalprop, this);
-            if (!*prop)
-                return NS_ERROR_OUT_OF_MEMORY;
-            NS_ADDREF(*prop);
-            return NS_OK;
-        }
-
-    }
-    *prop = nsnull;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-calIcalComponent::AddXProperty(const nsACString &xpropname,
-                               const nsACString &xpropval,
-                               calIIcalProperty **prop)
-{
-    icalproperty* icalprop = icalproperty_new(ICAL_X_PROPERTY);
-    if (!icalprop)
-        return NS_ERROR_OUT_OF_MEMORY;
-    icalproperty_set_value_from_string(icalprop,
-                                       PromiseFlatCString(xpropname).get(),
-                                       PromiseFlatCString(xpropval).get());
-    *prop = new calIcalProperty(icalprop, this);
-    if (!*prop) {
-        icalproperty_free(icalprop);
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    NS_ADDREF(*prop);
     return NS_OK;
 }
 
@@ -666,9 +776,17 @@ calICSService::ParseICS(const nsACString& serialized,
 }
 
 NS_IMETHODIMP
-calICSService::CreateIcalComponent(PRInt32 kind, calIIcalComponent **comp)
+calICSService::CreateIcalComponent(const nsACString &kind,
+                                   calIIcalComponent **comp)
 {
-    icalcomponent *ical = icalcomponent_new((icalcomponent_kind)kind);
+    icalcomponent_kind compkind = 
+        icalcomponent_string_to_kind(PromiseFlatCString(kind).get());
+
+    // Maybe someday I'll support X-COMPONENTs
+    if (compkind == ICAL_NO_COMPONENT || compkind == ICAL_X_COMPONENT)
+        return NS_ERROR_INVALID_ARG;
+
+    icalcomponent *ical = icalcomponent_new(compkind);
     if (!ical)
         return NS_ERROR_OUT_OF_MEMORY; // XXX translate
 
@@ -679,5 +797,29 @@ calICSService::CreateIcalComponent(PRInt32 kind, calIIcalComponent **comp)
     }
 
     NS_ADDREF(*comp);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calICSService::CreateIcalProperty(const nsACString &kind,
+                                  calIIcalProperty **prop)
+{
+    icalproperty_kind propkind = 
+        icalproperty_string_to_kind(PromiseFlatCString(kind).get());
+
+    if (propkind == ICAL_NO_PROPERTY)
+        return NS_ERROR_INVALID_ARG;
+
+    icalproperty *icalprop = icalproperty_new(propkind);
+    if (!icalprop)
+        return NS_ERROR_OUT_OF_MEMORY; // XXX translate
+
+    if (propkind == ICAL_X_PROPERTY)
+        icalproperty_set_x_name(icalprop, PromiseFlatCString(kind).get());
+
+    *prop = new calIcalProperty(icalprop, nsnull);
+    if (!*prop)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(*prop);
     return NS_OK;
 }
