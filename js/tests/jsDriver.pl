@@ -57,7 +57,9 @@ if ($os_type eq "MAC") {
 my $opt_trace = 0;
 my $opt_classpath = "";
 my $opt_rhino_interp = 0;
+my @opt_engine_list;
 my $opt_engine_type = "";
+my $opt_user_output_file = 0;
 my $opt_output_file = "";
 my @opt_test_list_files;
 my @opt_neg_list_files;
@@ -75,17 +77,15 @@ my $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
 
 &parse_args;
 
-my $redirect_command = ($os_type ne "MAC") ? " 2>&1" : "";
-my $engine_command = &get_engine_command;
+my $user_exit = 0;
+my ($engine_command, $html, $failures_reported, $tests_completed,
+    $redirect_command, $exec_time_string); 
+my @failed_tests;
 my @test_list = &get_test_list;
 
-my $user_exit = 0;
-my $html = "";
-my @failed_tests;
-my $failures_reported = 0;
-my $tests_completed = 0;
-my $exec_time_string;
-my $start_time = time;
+if ($#test_list == -1) {
+    die ("Nothing to test.\n");
+}
 
 if ($unixish) {
     # on unix, ^C pauses the tests, and gives the user a chance to quit but 
@@ -96,31 +96,50 @@ if ($unixish) {
     $SIG{INT} = 'int_handler';
 }
 
-if ($#test_list == -1) {
-    die ("Nothing to test.\n");
-}
-
-&execute_tests (@test_list);
-
-my $exec_time = (time - $start_time);
-my $exec_hours = int($exec_time / 60 / 60);
-$exec_time -= $exec_hours * 60 * 60;
-my $exec_mins = int($exec_time / 60);
-$exec_time -= $exec_mins * 60;
-my $exec_secs = ($exec_time % 60);
-
-if ($exec_hours > 0) {
-    $exec_time_string = "$exec_hours hours, $exec_mins minutes, " .
-      "$exec_secs seconds";
-} elsif ($exec_mins > 0) {
-    $exec_time_string = "$exec_mins minutes, $exec_secs seconds";
-} else {
-    $exec_time_string = "$exec_secs seconds";
-}
-
-&write_results;
+&main;
 
 #End.
+
+sub main {
+    my $start_time;
+
+    while ($opt_engine_type = pop (@opt_engine_list)) {
+        dd ("Testing engine '$opt_engine_type'");
+
+        $engine_command = &get_engine_command;
+        $html = "";
+        @failed_tests = ();
+        $failures_reported = 0;
+        $tests_completed = 0;
+        $start_time = time;
+
+
+        &execute_tests (@test_list);
+
+        my $exec_time = (time - $start_time);
+        my $exec_hours = int($exec_time / 60 / 60);
+        $exec_time -= $exec_hours * 60 * 60;
+        my $exec_mins = int($exec_time / 60);
+        $exec_time -= $exec_mins * 60;
+        my $exec_secs = ($exec_time % 60);
+
+        if ($exec_hours > 0) {
+            $exec_time_string = "$exec_hours hours, $exec_mins minutes, " .
+              "$exec_secs seconds";
+        } elsif ($exec_mins > 0) {
+            $exec_time_string = "$exec_mins minutes, $exec_secs seconds";
+        } else {
+            $exec_time_string = "$exec_secs seconds";
+        }
+
+        if (!$opt_user_output_file) {
+            $opt_output_file = &get_tempfile_name;
+        }
+    
+        &write_results;
+        
+    }
+}
 
 sub execute_tests {
     my (@test_list) = @_;
@@ -348,15 +367,16 @@ sub parse_args {
             &dd ("opt: setting classpath to '$value'.");
             $opt_classpath = $value;
             
-        } elsif ($option eq "e") {            
-            &dd ("opt: setting engine to $value.");
-            $opt_engine_type = $value;
-            
+        } elsif (($option eq "e") || (($option eq "") && ($lastopt eq "e"))) {
+            &dd ("opt: adding engine $value.");
+            push (@opt_engine_list, $value);
+
         } elsif ($option eq "f") {
             if (!$value) {
                 die ("Output file cannot be null.\n");
             }
             &dd ("opt: setting output file to '$value'.");
+            $opt_user_output_file = 1;
             $opt_output_file = $value;
             
         } elsif ($option eq "h") {
@@ -417,15 +437,9 @@ sub parse_args {
     
     Getopt::Mixed::cleanup();
     
-    if (!$opt_engine_type) {
+    if ($#opt_engine_list == -1) {
         die "You must select a shell to test in.\n";
     }
-
-    if (!$opt_output_file) {
-        $opt_output_file = &get_tempfile_name;
-    }
-    
-    &dd ("output file is '$opt_output_file'");
 
 }
 
@@ -438,8 +452,8 @@ sub usage {
        "(-b|--bugurl)             Bugzilla URL.\n" .
        "                          (default is $opt_bug_url)\n" .
        "(-c|--classpath)          Classpath (Rhino only.)\n" .
-       "(-e|--engine) <type>      Specify the type of engine to test. <type> " .
-       "is one of \n" .
+       "(-e|--engine) <type> ...  Specify the type of engine(s) to test.\n"
+       "                          <type> is one or more of\n" .
        "                          (smopt|smdebug|lcopt|lcdebug|xpcshell|" .
        "rhino|rhinoi).\n" .
        "(-f|--file) <file>        Redirect output to file named <file>.\n" .
