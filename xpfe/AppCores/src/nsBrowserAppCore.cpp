@@ -953,7 +953,9 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRI
     
 done:
      // Stop the throbber and set the urlbar string
-    setAttribute( mWebShell, "urlbar", "value", spec );
+	if (aStatus == NS_OK)
+      setAttribute( mWebShell, "urlbar", "value", spec);
+
     setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
 
      // Check with the content area webshell if back and forward
