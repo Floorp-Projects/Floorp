@@ -1711,6 +1711,12 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
     }
   }
 
+  // Handle animations
+  aImage->SetAnimationMode(mPresContext->ImageAnimationMode());
+  // Ensure the animation (if any) is started.
+  aImage->StartAnimation();
+
+  
   return NS_OK;
 }
 

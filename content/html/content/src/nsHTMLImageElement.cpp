@@ -723,10 +723,24 @@ nsHTMLImageElement::SetSrc(const nsAString& aSrc)
     }
   }
 
+  nsCOMPtr<imgIRequest> oldCurrentRequest = mCurrentRequest;
+  
   // Call ImageURIChanged first so that our image load will kick off
   // before the SetAttr triggers a reflow
   ImageURIChanged(aSrc);
 
+  if (mCurrentRequest && !mPendingRequest &&
+      oldCurrentRequest != mCurrentRequest) {
+    // We have a current request, and it's not the same one as we used
+    // to have, and we have no pending request.  So imglib already had
+    // that image.  Reset the animation on it -- see bug 210001
+    nsCOMPtr<imgIContainer> container;
+    mCurrentRequest->GetImage(getter_AddRefs(container));
+    if (container) {
+      container->ResetAnimation();
+    }
+  }
+  
   return nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_None,
                                            nsHTMLAtoms::src, aSrc, PR_TRUE);
 }
