@@ -19,8 +19,11 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
+
 #include "nsWidget.h"
 #include "nsAppShell.h"
+#include "nsKeyCode.h"
+
 #include "nsIWidget.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
@@ -289,38 +292,57 @@ nsAppShell::DispatchEvent(XEvent *event)
   nsWidget *widget;
   XEvent    config_event;
   widget = nsWidget::GetWidgetForWindow(event->xany.window);
+
   // switch on the type of event
-  switch (event->type) {
+  switch (event->type) 
+  {
   case Expose:
-    HandleExposeEvent(event, widget);
+	HandleExposeEvent(event, widget);
     break;
+
   case ConfigureNotify:
     // we need to make sure that this is the LAST of the
     // config events.
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("DispatchEvent: ConfigureNotify event for window 0x%lx %d %d %d %d\n",
                                          event->xconfigure.window,
-                                         event->xconfigure.x, event->xconfigure.y,
-                                         event->xconfigure.width, event->xconfigure.height));
-    while (XCheckWindowEvent(mDisplay, event->xany.window, StructureNotifyMask, &config_event) == True) {
-      // make sure that we don't get other types of events.  StructureNotifyMask
-      // includes other kinds of events, too.
-      if (config_event.type == ConfigureNotify) {
-        *event = config_event;
-        PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("DispatchEvent: Extra ConfigureNotify event for window 0x%lx %d %d %d %d\n",
-                                             event->xconfigure.window,
-                                             event->xconfigure.x, event->xconfigure.y,
-                                             event->xconfigure.width, event->xconfigure.height));
-      }
+                                         event->xconfigure.x, 
+                                         event->xconfigure.y,
+                                         event->xconfigure.width, 
+                                         event->xconfigure.height));
+
+    while (XCheckWindowEvent(mDisplay, 
+                             event->xany.window, 
+                             StructureNotifyMask, 
+                             &config_event) == True) 
+    {
+        // make sure that we don't get other types of events.  
+        // StructureNotifyMask includes other kinds of events, too.
+        if (config_event.type == ConfigureNotify) 
+        {
+            *event = config_event;
+
+            PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("DispatchEvent: Extra ConfigureNotify event for window 0x%lx %d %d %d %d\n",
+                                                 event->xconfigure.window,
+                                                 event->xconfigure.x, 
+                                                 event->xconfigure.y,
+                                                 event->xconfigure.width, 
+                                                 event->xconfigure.height));
+        }
     }
+
     HandleConfigureNotifyEvent(event, widget);
+
     break;
+
   case ButtonPress:
   case ButtonRelease:
     HandleButtonEvent(event, widget);
     break;
+
   case MotionNotify:
     HandleMotionNotifyEvent(event, widget);
     break;
+
   case KeyPress:
     HandleKeyPressEvent(event, widget);
     break;
@@ -333,11 +355,11 @@ nsAppShell::DispatchEvent(XEvent *event)
   case FocusOut:
     HandleFocusOutEvent(event, widget);
     break;
+
   case NoExpose:
     break;
 
   default:
-
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Unhandled window event: Window 0x%lx Got a %s event\n",
                                          event->xany.window, event_names[event->type]));
 
@@ -366,12 +388,16 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
   nsMouseEvent mevent;
   PRUint32 eventType = 0;
 
+  // XXX hack for now
+  PRBool doFocus = PR_FALSE;
+
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Button event for window 0x%lx button %d type %s\n",
          event->xany.window, event->xbutton.button, (event->type == ButtonPress ? "ButtonPress" : "ButtonRelease")));
   switch(event->type) {
   case ButtonPress:
     switch(event->xbutton.button) {
     case 1:
+      doFocus = PR_TRUE;
       eventType = NS_MOUSE_LEFT_BUTTON_DOWN;
       break;
     case 2:
@@ -396,6 +422,31 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
     }
     break;
   }
+
+  // XXX This is a hack that lets the text widgets get focus
+  // XXX ill fix it later.
+  if (doFocus)
+  {
+    nsGUIEvent focusEvent;
+
+    focusEvent.message = NS_GOTFOCUS;
+    focusEvent.widget  = aWidget;
+
+    focusEvent.eventStructType = NS_GUI_EVENT;
+
+    focusEvent.time = 0;
+    focusEvent.point.x = 0;
+    focusEvent.point.y = 0;
+
+    NS_ADDREF(aWidget);
+
+    printf("Button, and doing focus too, dude\n");
+  
+    aWidget->DispatchFocusEvent(focusEvent);
+  
+    NS_ADDREF(aWidget);
+  }
+
   mevent.message = eventType;
   mevent.widget = aWidget;
   mevent.eventStructType = NS_MOUSE_EVENT;
@@ -458,6 +509,28 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("KeyPress event for window 0x%lx\n",
                                        event->xkey.window));
+  nsKeyEvent keyEvent;
+  KeySym     keysym;
+
+  keysym = XKeycodeToKeysym(event->xkey.display, event->xkey.keycode, 0);
+
+  keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
+  keyEvent.charCode = 0;
+  keyEvent.time = event->xkey.time;
+  keyEvent.isShift = event->xkey.state & ShiftMask;
+  keyEvent.isControl = event->xkey.state & ControlMask;
+  keyEvent.isAlt = event->xkey.state & Mod1Mask;
+  keyEvent.point.x = 0;
+  keyEvent.point.y = 0;
+  keyEvent.message = NS_KEY_DOWN;
+  keyEvent.widget = aWidget;
+  keyEvent.eventStructType = NS_KEY_EVENT;
+
+  NS_ADDREF(aWidget);
+
+  aWidget->DispatchKeyEvent(keyEvent);
+
+  NS_ADDREF(aWidget);
 }
 
 void
@@ -465,6 +538,29 @@ nsAppShell::HandleKeyReleaseEvent(XEvent *event, nsWidget *aWidget)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("KeyRelease event for window 0x%lx\n",
                                        event->xkey.window));
+
+  nsKeyEvent keyEvent;
+  KeySym     keysym;
+
+  keysym = XKeycodeToKeysym(event->xkey.display, event->xkey.keycode, 0);
+
+  keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
+  keyEvent.charCode = 0;
+  keyEvent.time = event->xkey.time;
+  keyEvent.isShift = event->xkey.state & ShiftMask;
+  keyEvent.isControl = event->xkey.state & ControlMask;
+  keyEvent.isAlt = event->xkey.state & Mod1Mask;
+  keyEvent.point.x = 0;
+  keyEvent.point.y = 0;
+  keyEvent.message = NS_KEY_UP;
+  keyEvent.widget = aWidget;
+  keyEvent.eventStructType = NS_KEY_EVENT;
+
+  NS_ADDREF(aWidget);
+
+  aWidget->DispatchKeyEvent(keyEvent);
+
+  NS_ADDREF(aWidget);
 }
 
 void

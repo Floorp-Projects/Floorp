@@ -34,8 +34,13 @@ class nsWindow : public nsWidget
   NS_IMETHOD Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
   NS_IMETHOD SetTitle(const nsString& aTitle);
 protected:
-  void DestroyNative(void);
-  void CreateNative(Window aParent, nsRect aRect);
+  virtual void DestroyNative(void);
+
+  virtual long GetEventMask();
+
+#if 0
+  virtual void CreateNative(Window aParent, nsRect aRect);
+#endif
 };
 
 class ChildWindow : public nsWindow
