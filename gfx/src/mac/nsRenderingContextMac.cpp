@@ -36,29 +36,23 @@
 
 #define STACK_TREASHOLD 1000
 
-#define DrawingSurface	nsDrawingSurfaceMac
-
-static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
-
-
 nsRenderingContextMac::nsRenderingContextMac()
 {
-  NS_INIT_REFCNT();
+	NS_INIT_REFCNT();
 
-  mP2T							= 1.0f;
-  mContext					= nsnull ;
+	mP2T						= 1.0f;
+	mContext					= nsnull ;
 
 	mSavePort					= nsnull;
-  mFrontSurface			= new nsDrawingSurfaceMac();
+	mFrontSurface				= new nsDrawingSurfaceMac();
 
-	mCurrentSurface		= nsnull;
-  mPort							= nsnull;
-	mGS								= nsnull;
+	mCurrentSurface				= nsnull;
+	mPort						= nsnull;
+	mGS							= nsnull;
 
-  mGSStack					= new nsVoidArray();
+	mGSStack					= new nsVoidArray();
   
-  mChanges					= kEverythingChanged;
+	mChanges					= kEverythingChanged;
 }
 
 
@@ -67,16 +61,14 @@ nsRenderingContextMac::nsRenderingContextMac()
 nsRenderingContextMac::~nsRenderingContextMac()
 {
 	// restore stuff
-  NS_IF_RELEASE(mContext);
-  if (mSavePort)
-  {
+	NS_IF_RELEASE(mContext);
+	if (mSavePort) {
 		::SetPort(mSavePort);
 		::SetOrigin(mSavePortRect.left, mSavePortRect.top);
 	}
 
 	// delete surfaces
-	if (mFrontSurface)
-	{
+	if (mFrontSurface) {
 		delete mFrontSurface;
 		mFrontSurface = nsnull;
 	}
@@ -86,13 +78,11 @@ nsRenderingContextMac::~nsRenderingContextMac()
 	mGS = nsnull;
 
 	// delete the stack and its contents
-	if (mGSStack)
-	{
+	if (mGSStack != nsnull) {
 	  PRInt32 cnt = mGSStack->Count();
-	  for (PRInt32 i = 0; i < cnt; i ++)
-	  {
+	  for (PRInt32 i = 0; i < cnt; i ++) {
 	    nsGraphicState* gs = (nsGraphicState*)mGSStack->ElementAt(i);
-    	if (gs)
+    	if (gs != nsnull)
     		sGraphicStatePool.ReleaseGS(gs); //delete gs;
 	  }
 	  delete mGSStack;
@@ -101,7 +91,7 @@ nsRenderingContextMac::~nsRenderingContextMac()
 }
 
 
-NS_IMPL_QUERY_INTERFACE(nsRenderingContextMac, kRenderingContextIID);
+NS_IMPL_QUERY_INTERFACE(nsRenderingContextMac, nsIRenderingContext::GetIID());
 NS_IMPL_ADDREF(nsRenderingContextMac);
 NS_IMPL_RELEASE(nsRenderingContextMac);
 
@@ -110,11 +100,15 @@ NS_IMPL_RELEASE(nsRenderingContextMac);
 
 NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget* aWindow)
 {
-  if (nsnull == aWindow->GetNativeData(NS_NATIVE_WINDOW))
-    return NS_ERROR_NOT_INITIALIZED;
+	// make sure all allocations in the constructor succeeded.
+	if (nsnull == mFrontSurface || nsnull == mGSStack)
+		return NS_ERROR_OUT_OF_MEMORY;
+		
+	if (nsnull == aWindow->GetNativeData(NS_NATIVE_WINDOW))
+		return NS_ERROR_NOT_INITIALIZED;
 
-  mContext = aContext;
-  NS_IF_ADDREF(mContext);
+	mContext = aContext;
+	NS_IF_ADDREF(mContext);
 
  	// select the surface
 	mFrontSurface->Init(aWindow);
@@ -127,7 +121,7 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 	// with the children already clipped out (as well as the areas masked by the 
 	// widget's parents).
 
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
@@ -135,14 +129,18 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 // should only be called for an offscreen drawing surface, without an offset or clip region
 NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
 {
-  mContext = aContext;
-  NS_IF_ADDREF(mContext);
+	// make sure all allocations in the constructor succeeded.
+	if (nsnull == mFrontSurface || nsnull == mGSStack)
+		return NS_ERROR_OUT_OF_MEMORY;
+		
+	mContext = aContext;
+	NS_IF_ADDREF(mContext);
 
 	// select the surface
-	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
+	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
 	SelectDrawingSurface(surface);
 
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
@@ -150,25 +148,28 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingS
 // used by nsDeviceContextMac::CreateRenderingContext() for printing
 nsresult nsRenderingContextMac::Init(nsIDeviceContext* aContext, GrafPtr aPort)
 {
-  mContext = aContext;
-  NS_IF_ADDREF(mContext);
+	// make sure all allocations in the constructor succeeded.
+	if (nsnull == mFrontSurface || nsnull == mGSStack)
+		return NS_ERROR_OUT_OF_MEMORY;
+		
+	mContext = aContext;
+	NS_IF_ADDREF(mContext);
 
  	// select the surface
 	mFrontSurface->Init(aPort);
 	SelectDrawingSurface(mFrontSurface);
 
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface, PRUint32 aChanges)
+void nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, PRUint32 aChanges)
 {
 	if (! aSurface)
 		return;
 
-	if (!mSavePort)
-	{
+	if (!mSavePort) {
 		::GetPort(&mSavePort);
 		if (mSavePort) {
 		  #if TARGET_CARBON
@@ -188,12 +189,12 @@ void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface, PRUin
 	mGS = aSurface->GetGS();
 
 	// quickdraw initialization
-  ::SetPort(mPort);
+	::SetPort(mPort);
 
-  ::SetOrigin(-mGS->mOffx, -mGS->mOffy);		// line order...
+	::SetOrigin(-mGS->mOffx, -mGS->mOffy);		// line order...
 
 	if (aChanges & kClippingChanged)
-		::SetClip(mGS->mClipRegion);						// ...does matter
+		::SetClip(mGS->mClipRegion);			// ...does matter
 
 	::PenNormal();
 	::PenMode(patCopy);
@@ -208,18 +209,18 @@ void	nsRenderingContextMac::SelectDrawingSurface(DrawingSurface* aSurface, PRUin
 	if (!mContext) return;
 	
 	// GS and context initializations
-  ((nsDeviceContextMac *)mContext)->SetDrawingSurface(mPort);
+	((nsDeviceContextMac *)mContext)->SetDrawingSurface(mPort);
 #if 0
 	((nsDeviceContextMac *)mContext)->InstallColormap();
 #endif
 
-  mContext->GetDevUnitsToAppUnits(mP2T);
+	mContext->GetDevUnitsToAppUnits(mP2T);
 
-  if (mGS->mTMatrix.GetType() == MG_2DIDENTITY) {
+	if (mGS->mTMatrix.GetType() == MG_2DIDENTITY) {
 		// apply the new scaling
-	  float app2dev;
-	  mContext->GetAppUnitsToDevUnits(app2dev);
-  	mGS->mTMatrix.AddScale(app2dev, app2dev);
+		float app2dev;
+		mContext->GetAppUnitsToDevUnits(app2dev);
+		mGS->mTMatrix.AddScale(app2dev, app2dev);
 	}
 }
 
@@ -253,10 +254,10 @@ NS_IMETHODIMP nsRenderingContextMac::SetPortTextState()
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: PushState(void)
+NS_IMETHODIMP nsRenderingContextMac::PushState(void)
 {
 	// create a GS
-  nsGraphicState * gs = sGraphicStatePool.GetNewGS();	//new nsGraphicState();
+	nsGraphicState * gs = sGraphicStatePool.GetNewGS();
 	if (!gs)
 		return NS_ERROR_OUT_OF_MEMORY;
 
@@ -267,22 +268,24 @@ NS_IMETHODIMP nsRenderingContextMac :: PushState(void)
 	gs->Duplicate(mGS);
 
 	// put the new GS at the end of the stack
-  mGSStack->AppendElement(gs);
+	mGSStack->AppendElement(gs);
   
-  // reset the graphics changes. this always represents a delta from previous state to current.
-  mChanges = 0;
+	// reset the graphics changes. this always represents a delta from previous state to current.
+	mChanges = 0;
 
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: PopState(PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextMac::PopState(PRBool &aClipEmpty)
 {
-  PRUint32 cnt = mGSStack->Count();
-  if (cnt > 0) {
-    // get the GS from the stack
-    nsGraphicState* gs = (nsGraphicState *)mGSStack->ElementAt(cnt - 1);
+	PRInt32 count = mGSStack->Count();
+	if (count > 0) {
+		PRInt32 index = count - 1;
+	
+		// get the GS from the stack
+		nsGraphicState* gs = (nsGraphicState *)mGSStack->ElementAt(index);
 
 		// copy the GS into the current one and tell the current surface to use it
 		mGS->Duplicate(gs);
@@ -291,14 +294,14 @@ NS_IMETHODIMP nsRenderingContextMac :: PopState(PRBool &aClipEmpty)
 		// restore the current set of changes.
 		mChanges = mGS->GetChanges();
 
-    // remove the GS object from the stack and delete it
-    mGSStack->RemoveElementAt(cnt - 1);
-    sGraphicStatePool.ReleaseGS(gs); //delete gs;
+		// remove the GS object from the stack and delete it
+		mGSStack->RemoveElementAt(index);
+		sGraphicStatePool.ReleaseGS(gs);
 	}
 
-  aClipEmpty = (::EmptyRgn(mGS->mClipRegion));
+	aClipEmpty = (::EmptyRgn(mGS->mClipRegion));
 
-  return NS_OK;
+	return NS_OK;
 }
 
 #pragma mark -
@@ -310,14 +313,14 @@ NS_IMETHODIMP nsRenderingContextMac::LockDrawingSurface(PRInt32 aX, PRInt32 aY,
                                                           void **aBits, PRInt32 *aStride,
                                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac::UnlockDrawingSurface(void)
 {
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
@@ -325,12 +328,12 @@ NS_IMETHODIMP nsRenderingContextMac::UnlockDrawingSurface(void)
 
 NS_IMETHODIMP nsRenderingContextMac::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {  
-	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
+	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
 
-  if (surface != nsnull)
+	if (surface != nsnull)
 		SelectDrawingSurface(surface);				// select the offscreen surface...
-  else
-		SelectDrawingSurface(mFrontSurface);	// ...or get back to the window port
+	else
+		SelectDrawingSurface(mFrontSurface);		// ...or get back to the window port
 
 	return NS_OK;
 }
@@ -339,13 +342,13 @@ NS_IMETHODIMP nsRenderingContextMac::SelectOffScreenDrawingSurface(nsDrawingSurf
 
 NS_IMETHODIMP nsRenderingContextMac::GetDrawingSurface(nsDrawingSurface *aSurface)
 {  
-  *aSurface = mCurrentSurface;
-  return NS_OK;
+	*aSurface = mCurrentSurface;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                                                          PRInt32 aSrcX, PRInt32 aSrcY,
                                                          const nsRect &aDestBounds,
                                                          PRUint32 aCopyFlags)
@@ -357,91 +360,74 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 			return NS_OK;
 
 	// retrieve the surface
-	DrawingSurface* srcSurface = static_cast<DrawingSurface*>(aSrcSurf);
+	nsDrawingSurfaceMac* srcSurface = static_cast<nsDrawingSurfaceMac*>(aSrcSurf);
 	GrafPtr srcPort;
 	srcSurface->GetGrafPtr(&srcPort);
 
 	// apply the selected transformations
-  PRInt32	x = aSrcX;
-  PRInt32	y = aSrcY;
-  if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
-    mGS->mTMatrix.TransformCoord(&x, &y);
+	PRInt32 x = aSrcX;
+	PRInt32 y = aSrcY;
+	if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
+		mGS->mTMatrix.TransformCoord(&x, &y);
 
-  nsRect dstRect = aDestBounds;
-  if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
-    mGS->mTMatrix.TransformCoord(&dstRect.x, &dstRect.y, &dstRect.width, &dstRect.height);
+	nsRect dstRect = aDestBounds;
+	if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
+		mGS->mTMatrix.TransformCoord(&dstRect.x, &dstRect.y, &dstRect.width, &dstRect.height);
 
 	// get the source and destination rectangles
-  Rect macSrcRect, macDstRect;
-  ::SetRect(&macSrcRect,
-  		x,
-  		y,
-  		x + dstRect.width,
-  		y + dstRect.height);
-
-  ::SetRect(&macDstRect, 
-	    dstRect.x, 
-	    dstRect.y, 
-	    dstRect.x + dstRect.width, 
-	    dstRect.y + dstRect.height);
+	Rect macSrcRect, macDstRect;
+	::SetRect(&macSrcRect, x, y, x + dstRect.width, y + dstRect.height);
+	::SetRect(&macDstRect, dstRect.x, dstRect.y, dstRect.x + dstRect.width, dstRect.y + dstRect.height);
   
 	// get the source clip region
 #if TARGET_CARBON
-	RgnHandle clipRgn = ::NewRgn();
+	RgnHandle clipRgn = sNativeRegionPool.GetNewRegion();
 #else
-	RgnHandle clipRgn;
+	RgnHandle clipRgn = nsnull;
 #endif
-  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION) {
+	if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION) {
 #if TARGET_CARBON
-  	::GetPortClipRegion(srcPort, clipRgn);
+		::GetPortClipRegion(srcPort, clipRgn);
 #else
-  	clipRgn = srcPort->clipRgn;
+		clipRgn = srcPort->clipRgn;
 #endif
-  }
-  else
+	} else
 		clipRgn = mGS->mMainRegion;
-//	clipRgn = nil;		
 
 	// get the destination port and surface
-  GrafPtr destPort;
-	DrawingSurface* destSurface;
-  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
-  {
-    destSurface	= mCurrentSurface;
-    destPort		= mPort;
-    NS_ASSERTION((destPort != nsnull), "no back buffer");
-  }
-  else
-  {
-    destSurface	= mFrontSurface;
+	GrafPtr destPort;
+	nsDrawingSurfaceMac* destSurface;
+	if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER) {
+		destSurface	= mCurrentSurface;
+		destPort		= mPort;
+		NS_ASSERTION((destPort != nsnull), "no back buffer");
+	} else {
+		destSurface	= mFrontSurface;
 		mFrontSurface->GetGrafPtr(&destPort);
 	}
 
 	// select the destination surface to set the colors
-	DrawingSurface* saveSurface = nsnull;
-	if (mCurrentSurface != destSurface)
-	{
+	nsDrawingSurfaceMac* saveSurface = nsnull;
+	if (mCurrentSurface != destSurface) {
 		saveSurface = mCurrentSurface;
 		SelectDrawingSurface(destSurface);
 	}
 
 	// set the right colors for CopyBits
-  RGBColor foreColor;
-  Boolean changedForeColor = false;
-  ::GetForeColor(&foreColor);
-  if ((foreColor.red != 0x0000) || (foreColor.green != 0x0000) || (foreColor.blue != 0x0000))
-  {
-	  RGBColor rgbBlack = {0x0000,0x0000,0x0000};
+	RGBColor foreColor;
+	Boolean changedForeColor = false;
+	::GetForeColor(&foreColor);
+	if ((foreColor.red != 0x0000) || (foreColor.green != 0x0000) || (foreColor.blue != 0x0000)) {
+		RGBColor rgbBlack = {0x0000,0x0000,0x0000};
 		::RGBForeColor(&rgbBlack);
 		changedForeColor = true;
 	}
 
-  RGBColor backColor;
-  Boolean changedBackColor = false;
-  ::GetBackColor(&backColor);
-  if ((backColor.red != 0xFFFF) || (backColor.green != 0xFFFF) || (backColor.blue != 0xFFFF))
-  {
-	  RGBColor rgbWhite = {0xFFFF,0xFFFF,0xFFFF};
+	RGBColor backColor;
+	Boolean changedBackColor = false;
+	::GetBackColor(&backColor);
+	if ((backColor.red != 0xFFFF) || (backColor.green != 0xFFFF) || (backColor.blue != 0xFFFF)) {
+		RGBColor rgbWhite = {0xFFFF,0xFFFF,0xFFFF};
 		::RGBBackColor(&rgbWhite);
 		changedBackColor = true;
 	}
@@ -460,37 +446,40 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 		  srcCopy,
 		  clipRgn);
 
+#if TARGET_CARBON
+	if (clipRgn != nsnull)
+		sNativeRegionPool.ReleaseRegion(clipRgn);
+#endif
+
 	// restore colors and surface
 	if (changedForeColor)
 		::RGBForeColor(&foreColor);
 	if (changedBackColor)
-			::RGBBackColor(&backColor);
+		::RGBBackColor(&backColor);
 
 	if (saveSurface != nsnull)
 		SelectDrawingSurface(saveSurface);
 
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
+NS_IMETHODIMP nsRenderingContextMac::CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
 	aSurface = nsnull;
 
-  PRUint32 depth = 8;
-  if (mContext)
-  	mContext->GetDepth(depth);
+	PRUint32 depth = 8;
+	if (mContext)
+		mContext->GetDepth(depth);
 
 	// get rect
-  Rect macRect;
-  if (aBounds != nsnull)
-  {
-  	// fyi, aBounds->x and aBounds->y are always 0 here
-  	::SetRect(&macRect, aBounds->x, aBounds->y, aBounds->XMost(), aBounds->YMost());
-  }
-  else
-  	::SetRect(&macRect, 0, 0, 2, 2);
+	Rect macRect;
+	if (aBounds != nsnull) {
+  		// fyi, aBounds->x and aBounds->y are always 0 here
+  		::SetRect(&macRect, aBounds->x, aBounds->y, aBounds->XMost(), aBounds->YMost());
+	} else
+		::SetRect(&macRect, 0, 0, 2, 2);
 
 	nsDrawingSurfaceMac* surface = new nsDrawingSurfaceMac();
 	if (!surface)
@@ -502,15 +491,15 @@ NS_IMETHODIMP nsRenderingContextMac :: CreateDrawingSurface(nsRect *aBounds, PRU
 	else
 		delete surface;
 
-  return rv;
+	return rv;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aSurface)
+NS_IMETHODIMP nsRenderingContextMac::DestroyDrawingSurface(nsDrawingSurface aSurface)
 {
 	if (!aSurface)
-  	return NS_ERROR_FAILURE;
+		return NS_ERROR_FAILURE;
 
 	// if that surface is still the current one, select the front surface
 
@@ -518,7 +507,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aS
 		SelectDrawingSurface(mFrontSurface);
 
 	// delete the offscreen
-	DrawingSurface* surface = static_cast<DrawingSurface*>(aSurface);
+	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
 	GWorldPtr offscreenGWorld;
 	surface->GetGrafPtr(&(GrafPtr)offscreenGWorld);
 	::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
@@ -527,7 +516,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aS
 	// delete the surface
 	delete surface;
 
-  return NS_OK;
+	return NS_OK;
 }
 
 
@@ -536,78 +525,77 @@ NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aS
 
 NS_IMETHODIMP nsRenderingContextMac::GetHints(PRUint32& aResult)
 {
-  PRUint32 result = 0;
+	PRUint32 result = 0;
 
-  // QuickDraw is prefered over to ATSUI for drawing 7-bit text
-  // (it's not 8-bit: the name of the constant is misleading)
-  result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
+	// QuickDraw is prefered over to ATSUI for drawing 7-bit text
+	// (it's not 8-bit: the name of the constant is misleading)
+	result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
 
-  aResult = result;
-  return NS_OK;
+	aResult = result;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: Reset(void)
+NS_IMETHODIMP nsRenderingContextMac::Reset(void)
 {
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetDeviceContext(nsIDeviceContext *&aContext)
+NS_IMETHODIMP nsRenderingContextMac::GetDeviceContext(nsIDeviceContext *&aContext)
 {
-  NS_IF_ADDREF(mContext);
-  aContext = mContext;
-  return NS_OK;
+	NS_IF_ADDREF(mContext);
+	aContext = mContext;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
+NS_IMETHODIMP nsRenderingContextMac::IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
 {
-  aVisible = PR_TRUE;
-  return NS_OK;
+	aVisible = PR_TRUE;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextMac::SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
-  nsRect  trect = aRect;
+	nsRect  trect = aRect;
 
-  mGS->mTMatrix.TransformCoord(&trect.x, &trect.y, &trect.width, &trect.height);
+	mGS->mTMatrix.TransformCoord(&trect.x, &trect.y, &trect.width, &trect.height);
 
 	Rect macRect;
 	::SetRect(&macRect, trect.x, trect.y, trect.x + trect.width, trect.y + trect.height);
 
-	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion(); //::NewRgn();
+	RgnHandle rectRgn = sNativeRegionPool.GetNewRegion();
 	RgnHandle clipRgn = mGS->mClipRegion;
 	if (!clipRgn || !rectRgn)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	::RectRgn(rectRgn, &macRect);
 
-	switch (aCombine)
-	{
-	  case nsClipCombine_kIntersect:
-	  	::SectRgn(clipRgn, rectRgn, clipRgn);
-	  	break;
+	switch (aCombine) {
+	case nsClipCombine_kIntersect:
+		::SectRgn(clipRgn, rectRgn, clipRgn);
+		break;
 
-	  case nsClipCombine_kUnion:
-	  	::UnionRgn(clipRgn, rectRgn, clipRgn);
-	  	break;
+	case nsClipCombine_kUnion:
+		::UnionRgn(clipRgn, rectRgn, clipRgn);
+		break;
 
-	  case nsClipCombine_kSubtract:
-	  	::DiffRgn(clipRgn, rectRgn, clipRgn);
-	  	break;
+	case nsClipCombine_kSubtract:
+		::DiffRgn(clipRgn, rectRgn, clipRgn);
+		break;
 
-	  case nsClipCombine_kReplace:
+	case nsClipCombine_kReplace:
 //  	::CopyRgn(rectRgn, clipRgn);
-	  	::SectRgn(rectRgn, mGS->mMainRegion, clipRgn);
-	  	break;
+		::SectRgn(rectRgn, mGS->mMainRegion, clipRgn);
+		break;
 	}
-	sNativeRegionPool.ReleaseRegion(rectRgn); //::DisposeRgn(rectRgn);
+	sNativeRegionPool.ReleaseRegion(rectRgn);
 
 	StartDraw();
 		::SetClip(clipRgn);
@@ -619,37 +607,34 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRect(const nsRect& aRect, nsClipCo
 	// note that the clipping changed.
 	mChanges |= kClippingChanged;
 
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetClipRect(nsRect &aRect, PRBool &aClipValid)
+NS_IMETHODIMP nsRenderingContextMac::GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
-  Rect	cliprect;
+	Rect	cliprect;
 
-  if (mGS->mClipRegion != nsnull) 
-  {
+	if (mGS->mClipRegion != nsnull) {
 #if TARGET_CARBON
-  	::GetRegionBounds(mGS->mClipRegion, &cliprect);
+		::GetRegionBounds(mGS->mClipRegion, &cliprect);
 #else
-  	cliprect = (**mGS->mClipRegion).rgnBBox;
+		cliprect = (**mGS->mClipRegion).rgnBBox;
 #endif
-    aRect.SetRect(cliprect.left, cliprect.top, cliprect.right-cliprect.left, cliprect.bottom-cliprect.top);
-    aClipValid = PR_TRUE;
- 	} 
- 	else 
-	{
-    aRect.SetRect(0,0,0,0);
-    aClipValid = PR_FALSE;
+		aRect.SetRect(cliprect.left, cliprect.top, cliprect.right - cliprect.left, cliprect.bottom - cliprect.top);
+		aClipValid = PR_TRUE;
+ 	} else {
+		aRect.SetRect(0,0,0,0);
+		aClipValid = PR_FALSE;
  	}
 
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextMac::SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
 	RgnHandle regionH;
 	aRegion.GetNativeRegion(regionH);
@@ -657,24 +642,23 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, n
 	RgnHandle clipRgn = mGS->mClipRegion;
 	if (!clipRgn) return NS_ERROR_OUT_OF_MEMORY;
 
-	switch (aCombine)
-	{
-	  case nsClipCombine_kIntersect:
-	  	::SectRgn(clipRgn, regionH, clipRgn);
-	  	break;
+	switch (aCombine) {
+	case nsClipCombine_kIntersect:
+		::SectRgn(clipRgn, regionH, clipRgn);
+		break;
 
-	  case nsClipCombine_kUnion:
-	  	::UnionRgn(clipRgn, regionH, clipRgn);
-	  	break;
+	case nsClipCombine_kUnion:
+		::UnionRgn(clipRgn, regionH, clipRgn);
+		break;
 
-	  case nsClipCombine_kSubtract:
-	  	::DiffRgn(clipRgn, regionH, clipRgn);
-	  	break;
+	case nsClipCombine_kSubtract:
+		::DiffRgn(clipRgn, regionH, clipRgn);
+		break;
 
-	  case nsClipCombine_kReplace:
+	case nsClipCombine_kReplace:
 //  	::CopyRgn(regionH, clipRgn);
-	  	::SectRgn(regionH, mGS->mMainRegion, clipRgn);
-	  	break;
+		::SectRgn(regionH, mGS->mMainRegion, clipRgn);
+		break;
 	}
 
 	StartDraw();
@@ -687,232 +671,199 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, n
 	// note that the clipping changed.
 	mChanges |= kClippingChanged;
 
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetClipRegion(nsIRegion **aRegion)
+NS_IMETHODIMP nsRenderingContextMac::GetClipRegion(nsIRegion **aRegion)
 {
-  nsresult  rv = NS_OK;
+	nsresult  rv = NS_OK;
 
-  NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
+	NS_ASSERTION(!(nsnull == aRegion), "no region ptr");
 
-  if (nsnull == *aRegion)
-  {
-    nsRegionMac *rgn = new nsRegionMac();
+	if (nsnull == *aRegion) {
+		nsRegionMac *rgn = new nsRegionMac();
 
-    if (nsnull != rgn)
-    {
-      NS_ADDREF(rgn);
+		if (nsnull != rgn) {
+			NS_ADDREF(rgn);
+			rv = rgn->Init();
 
-      rv = rgn->Init();
+			if (NS_OK != rv)
+				NS_RELEASE(rgn);
+			else
+				*aRegion = rgn;
+		} else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+	}
 
-      if (NS_OK != rv)
-        NS_RELEASE(rgn);
-      else
-        *aRegion = rgn;
-    }
-    else
-      rv = NS_ERROR_OUT_OF_MEMORY;
-  }
+	if (rv == NS_OK) {
+		nsRegionMac* macRegion = *(nsRegionMac**)aRegion;
+		macRegion->SetNativeRegion(mGS->mClipRegion);
+	}
 
-  if (rv == NS_OK)
-  {
-		nsRegionMac** macRegion = (nsRegionMac**)aRegion;
-		(*macRegion)->SetNativeRegion(mGS->mClipRegion);
-  }
-
-  return rv;
+	return rv;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: SetColor(nscolor aColor)
+NS_IMETHODIMP nsRenderingContextMac::SetColor(nscolor aColor)
 {
 	StartDraw();
 
 	#define COLOR8TOCOLOR16(color8)	 ((color8 << 8) | color8)
 
-  RGBColor	thecolor;
-	thecolor.red = COLOR8TOCOLOR16(NS_GET_R(aColor));
-	thecolor.green = COLOR8TOCOLOR16(NS_GET_G(aColor));
-	thecolor.blue = COLOR8TOCOLOR16(NS_GET_B(aColor));
-	::RGBForeColor(&thecolor);
-  mGS->mColor = aColor ;
-	  
-  mChanges |= kColorChanged;
+	RGBColor color;
+	color.red = COLOR8TOCOLOR16(NS_GET_R(aColor));
+	color.green = COLOR8TOCOLOR16(NS_GET_G(aColor));
+	color.blue = COLOR8TOCOLOR16(NS_GET_B(aColor));
+	::RGBForeColor(&color);
+	mGS->mColor = aColor ;
+
+	mChanges |= kColorChanged;
   	
 	EndDraw();
-  return NS_OK;
+
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetColor(nscolor &aColor) const
+NS_IMETHODIMP nsRenderingContextMac::GetColor(nscolor &aColor) const
 {
-  aColor = mGS->mColor;
-  return NS_OK;
+	aColor = mGS->mColor;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: SetLineStyle(nsLineStyle aLineStyle)
+NS_IMETHODIMP nsRenderingContextMac::SetLineStyle(nsLineStyle aLineStyle)
 {
 	// note: the line style must be saved in the nsGraphicState like font, color, etc...
 	NS_NOTYETIMPLEMENTED("nsRenderingContextMac::SetLineStyle");//¥TODO
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetLineStyle(nsLineStyle &aLineStyle)
+NS_IMETHODIMP nsRenderingContextMac::GetLineStyle(nsLineStyle &aLineStyle)
 {
 	NS_NOTYETIMPLEMENTED("nsRenderingContextMac::GetLineStyle");//¥TODO
-  return NS_OK;
+	return NS_OK;
 }
 
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: SetFont(const nsFont& aFont)
+NS_IMETHODIMP nsRenderingContextMac::SetFont(const nsFont& aFont)
 {
 	NS_IF_RELEASE(mGS->mFontMetrics);
 
 	if (mContext)
 		mContext->GetMetricsFor(aFont, mGS->mFontMetrics);
-		mChanges |= kFontChanged;
 		
-  return NS_OK;
+	mChanges |= kFontChanged;
+		
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: SetFont(nsIFontMetrics *aFontMetrics)
+NS_IMETHODIMP nsRenderingContextMac::SetFont(nsIFontMetrics *aFontMetrics)
 {
 	NS_IF_RELEASE(mGS->mFontMetrics);
 	mGS->mFontMetrics = aFontMetrics;
 	NS_IF_ADDREF(mGS->mFontMetrics);
 	mChanges |= kFontChanged;
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetFontMetrics(nsIFontMetrics *&aFontMetrics)
+NS_IMETHODIMP nsRenderingContextMac::GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 {
-  NS_IF_ADDREF(mGS->mFontMetrics);
-  aFontMetrics = mGS->mFontMetrics;
-  return NS_OK;
+	NS_IF_ADDREF(mGS->mFontMetrics);
+	aFontMetrics = mGS->mFontMetrics;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
 // add the passed in translation to the current translation
-NS_IMETHODIMP nsRenderingContextMac :: Translate(nscoord aX, nscoord aY)
+NS_IMETHODIMP nsRenderingContextMac::Translate(nscoord aX, nscoord aY)
 {
-  mGS->mTMatrix.AddTranslation((float)aX,(float)aY);
-  return NS_OK;
+	mGS->mTMatrix.AddTranslation((float)aX,(float)aY);
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
 // add the passed in scale to the current scale
-NS_IMETHODIMP nsRenderingContextMac :: Scale(float aSx, float aSy)
+NS_IMETHODIMP nsRenderingContextMac::Scale(float aSx, float aSy)
 {
-  mGS->mTMatrix.AddScale(aSx, aSy);
-  return NS_OK;
+	mGS->mTMatrix.AddScale(aSx, aSy);
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetCurrentTransform(nsTransform2D *&aTransform)
+NS_IMETHODIMP nsRenderingContextMac::GetCurrentTransform(nsTransform2D *&aTransform)
 {
-  aTransform = &mGS->mTMatrix;
-  return NS_OK;
+	aTransform = &mGS->mTMatrix;
+	return NS_OK;
 }
 
 
 #pragma mark -
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
+NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
 	StartDraw();
 
-  mGS->mTMatrix.TransformCoord(&aX0,&aY0);
-  mGS->mTMatrix.TransformCoord(&aX1,&aY1);
+	mGS->mTMatrix.TransformCoord(&aX0,&aY0);
+	mGS->mTMatrix.TransformCoord(&aX1,&aY1);
 	::MoveTo(aX0, aY0);
 	::LineTo(aX1, aY1);
 
 	EndDraw();
-  return NS_OK;
+
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
+NS_IMETHODIMP nsRenderingContextMac::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-
 	StartDraw();
 
-  PRUint32   i;
-  PRInt32    x,y;
-	
-  x = aPoints[0].x;
-  y = aPoints[0].y;
-  mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
-  ::MoveTo(x,y);
+	PRUint32   i;
+	PRInt32    x,y;
 
-  for (i = 1; i < aNumPoints; i++){
-    x = aPoints[i].x;
-    y = aPoints[i].y;
-		
+	x = aPoints[0].x;
+	y = aPoints[0].y;
+	mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+	::MoveTo(x,y);
+
+	for (i = 1; i < aNumPoints; i++){
+		x = aPoints[i].x;
+		y = aPoints[i].y;
+
 		mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 		::LineTo(x,y);
 	}
 
 	EndDraw();
-  return NS_OK;
+	return NS_OK;
 }
 
-//------------------------------------------------------------------------
-
-NS_IMETHODIMP nsRenderingContextMac :: DrawRect(const nsRect& aRect)
-{
-  return DrawRect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-//------------------------------------------------------------------------
-
-NS_IMETHODIMP nsRenderingContextMac :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
-{
-	StartDraw();
-	
-  nscoord x,y,w,h;
-  Rect		therect;
-
-  x = aX;
-  y = aY;
-  w = aWidth;
-  h = aHeight;
-
-  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
-	::SetRect(&therect,x,y,x+w,y+h);
-	::FrameRect(&therect);
-
-	EndDraw();
-  return NS_OK;
-}
-
-//------------------------------------------------------------------------
-
-NS_IMETHODIMP nsRenderingContextMac :: FillRect(const nsRect& aRect)
-{
-	return FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-//------------------------------------------------------------------------
+	/**
+	 * A note about Quickdraw coordinates:  When Apple designed Quickdraw, signed 16-bit coordinates
+	 * were considered to be large enough. Although computer displays with > 65535 pixels in either
+	 * dimension are still far off, most modern graphics systems allow at least 32-bit signed coordinates
+	 * so we have to take extra care when converting from GFX coordinates to Quickdraw coordinates,
+	 * especially when constructing rectangles.
+	 */
 
 	inline short pinToShort(nscoord value)
 	{
@@ -923,28 +874,64 @@ NS_IMETHODIMP nsRenderingContextMac :: FillRect(const nsRect& aRect)
 		return (short) value;
 	}
 
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac::DrawRect(const nsRect& aRect)
+{
+	return DrawRect(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+{
+	StartDraw();
+	
+	nscoord x,y,w,h;
+	Rect	therect;
+
+	x = aX;
+	y = aY;
+	w = aWidth;
+	h = aHeight;
+
+	mGS->mTMatrix.TransformCoord(&x, &y, &w, &h);
+	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
+	::FrameRect(&therect);
+
+	EndDraw();
+	return NS_OK;
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac::FillRect(const nsRect& aRect)
+{
+	return FillRect(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
+//------------------------------------------------------------------------
+
 NS_IMETHODIMP nsRenderingContextMac::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  StartDraw();
+	StartDraw();
 
-  nscoord  x,y,w,h;
+	nscoord x,y,w,h;
+	Rect	therect;
 
-  x = aX;
-  y = aY;
-  w = aWidth;
-  h = aHeight;
+	x = aX;
+	y = aY;
+	w = aWidth;
+	h = aHeight;
 
-  // TODO - cps - must debug and fix this 
-  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
+	// TODO - cps - must debug and fix this 
+	mGS->mTMatrix.TransformCoord(&x, &y, &w, &h);
+	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
+	::PaintRect(&therect);
 
-  // beard:  keep rectangle within Quickdraw representable space.
-  Rect therect = { pinToShort(y), pinToShort(x),
-                   pinToShort(y + h), pinToShort(x + w) };
-
-  ::PaintRect(&therect);
-
-  EndDraw();
-  return NS_OK;
+	EndDraw();
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
@@ -953,32 +940,37 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt3
 {
 	StartDraw();
 
-  PRUint32   i;
-  PolyHandle thepoly;
-  PRInt32    x,y;
+	PRUint32   i;
+	PolyHandle thepoly;
+	PRInt32    x,y;
 
-  thepoly = ::OpenPoly();
-	
-  x = aPoints[0].x;
-  y = aPoints[0].y;
-  mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
-  ::MoveTo(x,y);
+	thepoly = ::OpenPoly();
+	if (nsnull == thepoly) {
+		EndDraw();
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
 
-  for (i = 1; i < aNumPoints; i++)
-  {
-    x = aPoints[i].x;
-    y = aPoints[i].y;
+	x = aPoints[0].x;
+	y = aPoints[0].y;
+	mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+	::MoveTo(x,y);
+
+	for (i = 1; i < aNumPoints; i++) {
+		x = aPoints[i].x;
+		y = aPoints[i].y;
 		
 		mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 		::LineTo(x,y);
 	}
 
-	ClosePoly();
-	
+	::ClosePoly();
+
 	::FramePoly(thepoly);
+	::KillPoly(thepoly);
 
 	EndDraw();
-  return NS_OK;
+
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
@@ -987,202 +979,203 @@ NS_IMETHODIMP nsRenderingContextMac::FillPolygon(const nsPoint aPoints[], PRInt3
 {
 	StartDraw();
 
-  PRUint32   i;
-  PolyHandle thepoly;
-  PRInt32    x,y;
+	PRUint32   i;
+	PolyHandle thepoly;
+	PRInt32    x,y;
 
-  thepoly = ::OpenPoly();
-	
-  x = aPoints[0].x;
-  y = aPoints[0].y;
-  mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
-  ::MoveTo(x,y);
+	thepoly = ::OpenPoly();
+	if (nsnull == thepoly) {
+		EndDraw();
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
 
-  for (i = 1; i < aNumPoints; i++)
-  {
-    x = aPoints[i].x;
-    y = aPoints[i].y;
+	x = aPoints[0].x;
+	y = aPoints[0].y;
+	mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+	::MoveTo(x,y);
+
+	for (i = 1; i < aNumPoints; i++) {
+		x = aPoints[i].x;
+		y = aPoints[i].y;
 		mGS->mTMatrix.TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 		::LineTo(x,y);
 	}
 
 	::ClosePoly();
-	
 	::PaintPoly(thepoly);
+	::KillPoly(thepoly);
 
 	EndDraw();
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawEllipse(const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextMac::DrawEllipse(const nsRect& aRect)
 {
-  return DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
+	return DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
-{
-	StartDraw();
-
-  nscoord x,y,w,h;
-  Rect    therect;
-
-  x = aX;
-  y = aY;
-  w = aWidth;
-  h = aHeight;
-
-  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
-  ::SetRect(&therect,x,y,x+w,y+h);
-  ::FrameOval(&therect);
-
-	EndDraw();
-  return NS_OK;
-}
-
-//------------------------------------------------------------------------
-
-NS_IMETHODIMP nsRenderingContextMac :: FillEllipse(const nsRect& aRect)
-{
-  return FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-//------------------------------------------------------------------------
-
-NS_IMETHODIMP nsRenderingContextMac :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsRenderingContextMac::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
 	StartDraw();
 
 	nscoord x,y,w,h;
-  Rect    therect;
+	Rect    therect;
 
-  x = aX;
-  y = aY;
-  w = aWidth;
-  h = aHeight;
+	x = aX;
+	y = aY;
+	w = aWidth;
+	h = aHeight;
 
-  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
-  ::SetRect(&therect,x,y,x+w,y+h);
-  ::PaintOval(&therect);
+	mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
+	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
+	::FrameOval(&therect);
 
 	EndDraw();
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawArc(const nsRect& aRect,
+NS_IMETHODIMP nsRenderingContextMac::FillEllipse(const nsRect& aRect)
+{
+	return FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+{
+	StartDraw();
+
+	nscoord x,y,w,h;
+	Rect    therect;
+
+	x = aX;
+	y = aY;
+	w = aWidth;
+	h = aHeight;
+
+	mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
+	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
+	::PaintOval(&therect);
+
+	EndDraw();
+	return NS_OK;
+}
+
+//------------------------------------------------------------------------
+
+NS_IMETHODIMP nsRenderingContextMac::DrawArc(const nsRect& aRect,
                                  float aStartAngle, float aEndAngle)
 {
-  return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
+	return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+NS_IMETHODIMP nsRenderingContextMac::DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
 	StartDraw();
 
-  nscoord x,y,w,h;
-  Rect    therect;
+	nscoord x,y,w,h;
+	Rect    therect;
 
-  x = aX;
-  y = aY;
-  w = aWidth;
-  h = aHeight;
-  
-  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
-  ::SetRect(&therect,x,y,x+w,y+h);
-  ::FrameArc(&therect,aStartAngle,aEndAngle);
+	x = aX;
+	y = aY;
+	w = aWidth;
+	h = aHeight;
+
+	mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
+	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
+	::FrameArc(&therect,aStartAngle,aEndAngle);
 
 	EndDraw();
-  return NS_OK;
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: FillArc(const nsRect& aRect,
+NS_IMETHODIMP nsRenderingContextMac::FillArc(const nsRect& aRect,
                                  float aStartAngle, float aEndAngle)
 {
-  return FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
+	return FillArc(aRect.x, aRect.y, aRect.width, aRect.height, aStartAngle, aEndAngle);
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
+NS_IMETHODIMP nsRenderingContextMac::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
 	StartDraw();
 
-  nscoord x,y,w,h;
-  Rect		therect;
+	nscoord x,y,w,h;
+	Rect	therect;
 
-  x = aX;
-  y = aY;
-  w = aWidth;
-  h = aHeight;
-  
-  mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
-  ::SetRect(&therect,x,y,x+w,y+h);
-  ::PaintArc(&therect,aStartAngle,aEndAngle);
+	x = aX;
+	y = aY;
+	w = aWidth;
+	h = aHeight;
+
+	mGS->mTMatrix.TransformCoord(&x,&y,&w,&h);
+	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
+	::PaintArc(&therect,aStartAngle,aEndAngle);
 
 	EndDraw();
-  return NS_OK;
+	return NS_OK;
 }
 
 #pragma mark -
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetWidth(char ch, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextMac::GetWidth(char ch, nscoord &aWidth)
 {
-	if (ch == ' ' && mGS->mFontMetrics)
-	{
+	if (ch == ' ' && mGS->mFontMetrics) {
 		nsFontMetricsMac* fontMetricsMac = static_cast<nsFontMetricsMac*>(mGS->mFontMetrics);
 		return fontMetricsMac->GetSpaceWidth(aWidth);
 	}
 
-  char buf[1];
-  buf[0] = ch;
-  return GetWidth(buf, 1, aWidth);
+	char buf[1];
+	buf[0] = ch;
+	return GetWidth(buf, 1, aWidth);
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetWidth(PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID)
+NS_IMETHODIMP nsRenderingContextMac::GetWidth(PRUnichar ch, nscoord &aWidth, PRInt32 *aFontID)
 {
-	if (ch == ' ' && mGS->mFontMetrics)
-	{
+	if (ch == ' ' && mGS->mFontMetrics) {
 		nsFontMetricsMac* fontMetricsMac = static_cast<nsFontMetricsMac*>(mGS->mFontMetrics);
 		return fontMetricsMac->GetSpaceWidth(aWidth);
 	}
 
-  PRUnichar buf[1];
-  buf[0] = ch;
-  return GetWidth(buf, 1, aWidth, aFontID);
+	PRUnichar buf[1];
+	buf[0] = ch;
+	return GetWidth(buf, 1, aWidth, aFontID);
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const nsString& aString, nscoord &aWidth, PRInt32 *aFontID)
+NS_IMETHODIMP nsRenderingContextMac::GetWidth(const nsString& aString, nscoord &aWidth, PRInt32 *aFontID)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
+	return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const char *aString, nscoord &aWidth)
+NS_IMETHODIMP nsRenderingContextMac::GetWidth(const char *aString, nscoord &aWidth)
 {
-  return GetWidth(aString, strlen(aString), aWidth);
+	return GetWidth(aString, strlen(aString), aWidth);
 }
 
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth)
+nsRenderingContextMac::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth)
 {
 	StartDraw();
 
@@ -1202,7 +1195,7 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
+NS_IMETHODIMP nsRenderingContextMac::GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
 {
 	StartDraw();
  	nsresult res = NS_OK;
@@ -1231,7 +1224,7 @@ end_of_func:
 #pragma mark -
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextMac::DrawString(const char *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY,
                                          const nscoord* aSpacing)
 {
@@ -1241,8 +1234,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 	PRInt32 x = aX;
 	PRInt32 y = aY;
 	
-  if (mGS->mFontMetrics)
-  {
+	if (mGS->mFontMetrics) {
 		// set native font and attributes
 		SetPortTextState();
 
@@ -1252,13 +1244,13 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 		y += ascent;
 	}
 
-  mGS->mTMatrix.TransformCoord(&x,&y);
+	mGS->mTMatrix.TransformCoord(&x,&y);
 
 	::MoveTo(x,y);
-  if ( aSpacing == NULL )
+	if ( aSpacing == NULL )
 		::DrawText(aString,0,aLength);
-  else
-  {
+	else
+	{
 		int buffer[STACK_TREASHOLD];
 		int* spacing = (aLength <= STACK_TREASHOLD ? buffer : new int[aLength]);
 		if (spacing)
@@ -1276,17 +1268,17 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 		}
 		else
 			res =  NS_ERROR_OUT_OF_MEMORY;
-  }
+	}
 
-  EndDraw();
-  return res;
+	EndDraw();
+	return res;
 }
 
 
 
 
 //------------------------------------------------------------------------
-NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextMac::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {
@@ -1315,7 +1307,7 @@ end_of_func:
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawString(const nsString& aString,
+NS_IMETHODIMP nsRenderingContextMac::DrawString(const nsString& aString,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {
@@ -1329,44 +1321,44 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const nsString& aString,
 #pragma mark -
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
+NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY)
 {
-  nscoord width,height;
+	nscoord width,height;
 
-  width = NSToCoordRound(mP2T * aImage->GetWidth());
-  height = NSToCoordRound(mP2T * aImage->GetHeight());
-  
-  return DrawImage(aImage,aX,aY,width,height);
+	width = NSToCoordRound(mP2T * aImage->GetWidth());
+	height = NSToCoordRound(mP2T * aImage->GetHeight());
+
+	return DrawImage(aImage,aX,aY,width,height);
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
+NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
                                         nscoord aWidth, nscoord aHeight) 
 {
-  nsRect	tr;
+	nsRect	tr;
 
-  tr.x = aX;
-  tr.y = aY;
-  tr.width = aWidth;
-  tr.height = aHeight;
+	tr.x = aX;
+	tr.y = aY;
+	tr.width = aWidth;
+	tr.height = aHeight;
 
-  return DrawImage(aImage,tr);
+	return DrawImage(aImage,tr);
 }
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
+NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
 	StartDraw();
 
-  nsRect sr = aSRect;
-  nsRect dr = aDRect;
-  mGS->mTMatrix.TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
-  mGS->mTMatrix.TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
-  
-  nsresult result =  aImage->Draw(*this,mPort,sr.x,sr.y,sr.width,sr.height,
-                      dr.x,dr.y,dr.width,dr.height);
+	nsRect sr = aSRect;
+	nsRect dr = aDRect;
+	mGS->mTMatrix.TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
+	mGS->mTMatrix.TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
+
+	nsresult result =  aImage->Draw(*this,mPort,sr.x,sr.y,sr.width,sr.height,
+									dr.x,dr.y,dr.width,dr.height);
 
 	EndDraw();
 	return result;
@@ -1374,12 +1366,12 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, const nsRect&
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, const nsRect& aRect)
+NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
 	StartDraw();
 
-  nsRect tr = aRect;
-  mGS->mTMatrix.TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+	nsRect tr = aRect;
+	mGS->mTMatrix.TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
   
 	nsresult result = aImage->Draw(*this,mPort,tr.x,tr.y,tr.width,tr.height);
 
