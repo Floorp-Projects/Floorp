@@ -298,7 +298,10 @@ nsOnStopRequestEvent::HandleEvent()
     if (NS_SUCCEEDED(rv) && NS_FAILED(status)) {
         mStatus = status;
     }
-    return receiver->OnStopRequest(mChannel, mContext, mStatus, mStatusArg.GetUnicode());
+    rv = receiver->OnStopRequest(mChannel, mContext, mStatus, mStatusArg.GetUnicode());
+    // Call clear on the listener to make sure it's cleanup is done on the correct thread
+    mListener->Clear();
+    return rv;
 }
 
 NS_IMETHODIMP 
