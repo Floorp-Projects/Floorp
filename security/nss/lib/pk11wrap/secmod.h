@@ -117,6 +117,7 @@ extern void SECMOD_ReleaseWriteLock(SECMODListLock *);
 extern SECMODModule *SECMOD_FindModule(char *name);
 extern SECStatus SECMOD_DeleteModule(char *name, int *type);
 extern SECStatus SECMOD_DeleteInternalModule(char *name);
+extern PRBool SECMOD_CanDeleteInternalModule(void);
 extern SECStatus SECMOD_AddNewModule(char* moduleName, char* dllPath,
                               unsigned long defaultMechanismFlags,
                               unsigned long cipherEnableFlags);
