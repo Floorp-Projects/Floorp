@@ -908,6 +908,14 @@ nsFontMetricsXft::RealizeFont(void)
     return CacheFontMetrics();
 }
 
+// ceiling and truncation functions for a Freetype floating point number 
+// (FT26Dot6) stored in a 32bit integer with high 26 bits for the integer
+// part and low 6 bits for the fractional part. 
+#define MOZ_FT_CEIL(x) (((x) + 63) & ~63) // 63 = 2^6 - 1
+#define MOZ_FT_TRUNC(x) ((x) >> 6)
+#define CONVERT_DESIGN_UNITS_TO_PIXELS(v, s) \
+        MOZ_FT_TRUNC(MOZ_FT_CEIL(FT_MulFix((v) , (s))))
+
 nsresult
 nsFontMetricsXft::CacheFontMetrics(void)
 {
@@ -984,7 +992,8 @@ nsFontMetricsXft::CacheFontMetrics(void)
     mXHeight = nscoord(mXHeight * f);
 
     // mUnderlineOffset (offset for underlines)
-    val = face->underline_position >> 16;
+    val = CONVERT_DESIGN_UNITS_TO_PIXELS(face->underline_position,
+                                         face->size->metrics.y_scale);
     if (val) {
         mUnderlineOffset = NSToIntRound(val * f);
     }
@@ -994,7 +1003,8 @@ nsFontMetricsXft::CacheFontMetrics(void)
     }
 
     // mUnderlineSize (thickness of an underline)
-    val = face->underline_thickness >> 16;
+    val = CONVERT_DESIGN_UNITS_TO_PIXELS(face->underline_thickness,
+                                         face->size->metrics.y_scale);
     if (val) {
         mUnderlineSize = nscoord(PR_MAX(f, NSToIntRound(val * f)));
     }
@@ -1005,7 +1015,8 @@ nsFontMetricsXft::CacheFontMetrics(void)
 
     // mSuperscriptOffset
     if (os2 && os2->ySuperscriptYOffset) {
-        val = os2->ySuperscriptYOffset >> 16;
+        val = CONVERT_DESIGN_UNITS_TO_PIXELS(os2->ySuperscriptYOffset,
+                                             face->size->metrics.y_scale);
         mSuperscriptOffset = nscoord(PR_MAX(f, NSToIntRound(val * f)));
     }
     else {
@@ -1014,7 +1025,8 @@ nsFontMetricsXft::CacheFontMetrics(void)
 
     // mSubscriptOffset
     if (os2 && os2->ySubscriptYOffset) {
-        val = os2->ySubscriptYOffset >> 16;
+        val = CONVERT_DESIGN_UNITS_TO_PIXELS(os2->ySubscriptYOffset,
+                                             face->size->metrics.y_scale);
         mSubscriptOffset = nscoord(PR_MAX(f, NSToIntRound(val * f)));
     }
     else {
