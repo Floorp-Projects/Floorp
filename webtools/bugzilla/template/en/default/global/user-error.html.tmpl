@@ -668,27 +668,27 @@
 
   [% ELSIF error == "still_unresolved_bugs" %]
     [% IF dependency_count == 1 %]
-      [% terms.Bug %]# <a href="show_bug.cgi?id=[% dependencies.0.bug_id %]">[% dependencies.0.bug_id %]</a>
+      [% terms.Bug %]# <a href="show_bug.cgi?id=[% dependencies.0.bug_id FILTER none %]">[% dependencies.0.bug_id FILTER none %]</a>
       has still [% dependencies.0.dependencies FILTER html %] unresolved
       [% IF dependencies.0.dependencies == 1 %]
         dependency
       [% ELSE %]
         dependencies
       [% END %]. Show
-      <a href="showdependencytree.cgi?id=[% dependencies.0.bug_id %]">Dependency Tree</a>.
+      <a href="showdependencytree.cgi?id=[% dependencies.0.bug_id FILTER none %]">Dependency Tree</a>.
     [% ELSE %]
-      There are [% dependency_count %] open [% terms.bugs %] which
+      There are [% dependency_count FILTER none %] open [% terms.bugs %] which
       have unresolved dependencies.
       <br>
       [% FOREACH bug = dependencies %]
-        [% terms.Bug %]# <a href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>
+        [% terms.Bug %]# <a href="show_bug.cgi?id=[% bug.bug_id FILTER none %]">[% bug.bug_id FILTER none %]</a>
         has [% bug.dependencies FILTER html %] open
         [% IF bug.dependencies == 1 %]
           dependency.
         [% ELSE %]
           dependencies.
         [% END %]
-        (<a href="showdependencytree.cgi?id=[% bug.bug_id %]">Dependency Tree</a>)<br>
+        (<a href="showdependencytree.cgi?id=[% bug.bug_id FILTER none %]">Dependency Tree</a>)<br>
       [% END %]
     [% END %]
 
