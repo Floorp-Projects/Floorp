@@ -452,6 +452,20 @@ nsresult nsPrefWindow::InitializeWidgetsRecursive(nsIDOMNode* inParentNode)
 nsresult nsPrefWindow::InitializePrefWidgets()
 //----------------------------------------------------------------------------------------
 {
+    // mPrefs is only initialized in nsPrefWindow::showWindow(), which
+    // is not be called if we load preferences page (PrefsWindow.xul)
+    // directly in the browser instead of going through the preference window 
+    // (menu Edit=>Preferences, or apprunner -pref). Without the initialization
+    // here, browser crashes if we load PrefsWindow.xul in main window
+    if (!mPrefs) {
+                nsIPref* prefs = nsnull;
+            nsresult rv = nsServiceManager::GetService(
+                kPrefCID, nsIPref::GetIID(), (nsISupports**)&prefs);
+            if (NS_FAILED(rv))
+                return rv;
+            mPrefs = prefs;
+        }
+
     NS_ASSERTION(mPanelFrame, "panel window is null");
     NS_ASSERTION(mPrefs, "prefs pointer is null");
     if (!mPanelFrame || !mPrefs)
