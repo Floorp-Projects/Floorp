@@ -180,12 +180,16 @@ interface(TreeState *state)
               continue;
 
           case IDLN_CODEFRAG:
+/* IDL_tree_warning crashes in libIDL 0.6.5, sometimes */
+#if !(LIBIDL_MAJOR_VERSION == 0 && LIBIDL_MINOR_VERSION == 6 && \
+      LIBIDL_MICRO_VERSION == 5)
               IDL_tree_warning(iter, IDL_WARNING1,
                                "%%{ .. %%} code fragment within interface "
                                "ignored when generating NS_DECL_IFOO macro; "
                                "if the code fragment contains method "
                                "declarations, the macro probably isn't "
                                "complete.");
+#endif
               break;
 
           default:
