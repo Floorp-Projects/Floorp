@@ -18,9 +18,7 @@
 
 #include "nsChildWindow.h"
 #include "nsCOMPtr.h"
-
-
-
+#include "nsRegionMac.h"
 
 //-------------------------------------------------------------------------
 //
@@ -114,36 +112,38 @@ void nsChildWindow::CalcWindowRegions()
 	// clip the siblings out of the window region and visRegion 
 	if (mClipSiblings && mParent)
 	{
-		RgnHandle siblingRgn = ::NewRgn();
-		if (!siblingRgn) return;
-
 		nsCOMPtr<nsIEnumerator> children(dont_AddRef(mParent->GetChildren()));
 		if (children)
 		{
-			children->First();
-			do
-			{
-				nsISupports* child;
-				if (NS_SUCCEEDED(children->CurrentItem(&child)))
+			StRegionFromPool siblingRgn;
+			if (siblingRgn != nsnull) {
+				children->First();
+				do
 				{
-					nsWindow* childWindow = static_cast<nsWindow*>(child);
-					NS_RELEASE(child);
-
-					if (childWindow != this)	// don't clip myself
+					nsISupports* child;
+					if (NS_SUCCEEDED(children->CurrentItem(&child)))
 					{
-						nsRect childRect;
-						childWindow->GetBounds(childRect);
+						nsWindow* childWindow = static_cast<nsWindow*>(child);
+						NS_RELEASE(child);
+						
+						PRBool visible;
+						childWindow->IsVisible(visible);
 
-						Rect macRect;
-						::SetRect(&macRect, childRect.x, childRect.y, childRect.XMost(), childRect.YMost());
-						::RectRgn(siblingRgn, &macRect);
-						::DiffRgn(mWindowRegion, siblingRgn, mWindowRegion);
-						::DiffRgn(mVisRegion, siblingRgn, mVisRegion);
+						if (visible && childWindow != this)	// don't clip myself
+						{
+							nsRect childRect;
+							childWindow->GetBounds(childRect);
+
+							Rect macRect;
+							::SetRect(&macRect, childRect.x, childRect.y, childRect.XMost(), childRect.YMost());
+							::RectRgn(siblingRgn, &macRect);
+							::DiffRgn(mWindowRegion, siblingRgn, mWindowRegion);
+							::DiffRgn(mVisRegion, siblingRgn, mVisRegion);
+						}
 					}
-				}
-			} while (NS_SUCCEEDED(children->Next()));
+				} while (NS_SUCCEEDED(children->Next()));
+			}
 		}
-		::DisposeRgn(siblingRgn);
 	}
 }
 
