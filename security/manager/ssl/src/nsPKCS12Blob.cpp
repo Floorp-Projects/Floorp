@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.12 2001/06/20 22:41:29 mcgreer%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.13 2001/06/24 19:15:59 mcgreer%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -247,6 +247,8 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   SEC_PKCS12ExportContext *ecx = NULL;
   SEC_PKCS12SafeInfo *certSafe = NULL, *keySafe = NULL;
   SECItem unicodePw;
+  nsXPIDLCString xpidlFilePath;
+  nsAutoString filePath;
   int i;
   NS_ASSERTION(mToken, "Need to set the token before exporting");
   // init slot
@@ -326,9 +328,14 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
   }
   // prepare the instance to write to an export file
   this->mTmpFile = NULL;
-  rv = file->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600,
-                              &this->mTmpFile);
-  if (NS_FAILED(rv)) goto finish;
+  file->GetPath(getter_Copies(xpidlFilePath));
+  filePath.AssignWithConversion(xpidlFilePath);
+  if (filePath.RFind(".p12", PR_TRUE, -1, 4) < 0) {
+    filePath.AppendWithConversion(".p12");
+  }
+  this->mTmpFile = PR_Open(NS_ConvertUCS2toUTF8(filePath.get()).get(),
+                           PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0600);
+  if (!this->mTmpFile) goto finish;
   // encode and write
   srv = SEC_PKCS12Encode(ecx, write_export_file, this);
   if (srv) goto finish;
