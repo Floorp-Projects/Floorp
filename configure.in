@@ -1361,7 +1361,7 @@ MOZ_ARG_ENABLE_BOOL(java,
 [  --enable-java           Enable use of java applets (untested)],
   [MOZ_JAVA=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
 
-if test "$MOZ_OJI" -eq 1 -a "$MOZ_JAVA" -eq 1
+if test "$MOZ_OJI" -a "$MOZ_JAVA"
 then
   echo "configure: error: Simultaneous use of --enable-java and\
         --enable-oji is no longer supported." 1>&2
