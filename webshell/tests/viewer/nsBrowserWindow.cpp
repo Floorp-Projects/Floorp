@@ -47,6 +47,7 @@
 #include "nsRepository.h"
 #include "nsParserCIID.h"
 #include "nsIEnumerator.h"
+#include "nsCOMPtr.h"
 
 #include "nsIDocument.h"
 #include "nsIPresContext.h"
@@ -147,6 +148,7 @@ static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
 static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
 static NS_DEFINE_IID(kCTreeViewCID, NS_TREEVIEW_CID);
+static NS_DEFINE_IID(kCToolboxCID, NS_TOOLBARMANAGER_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
@@ -478,6 +480,12 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 	DoTreeView();
 	break;
 #endif
+#if defined(XP_WIN) || defined(XP_MAC)
+  case VIEWER_TOOLBARDEMO:
+	// Instantiate a tree widget
+	DoToolbarDemo();
+	break;
+#endif
   }
 
   return nsEventStatus_eIgnore;
@@ -781,6 +789,39 @@ HandleTreeWindowEvent(nsGUIEvent *aEvent)
 }
 
 
+static nsEventStatus PR_CALLBACK
+HandleToolbarDemoWindowEvent(nsGUIEvent *aEvent)
+{ 
+  nsEventStatus result = nsEventStatus_eIgnore;
+  if (NS_SIZE == aEvent->message)
+  {
+	  nsIEnumerator* pEnumerator = aEvent->widget->GetChildren();
+	  pEnumerator->First();
+
+	  // HACK! Resize the tree view window.
+	  nsISupports* pTree;
+	  pEnumerator->CurrentItem(&pTree);
+	  nsIWidget* widget;
+	
+	  if (NS_OK == pTree->QueryInterface(kIWidgetIID, (void**)&widget))
+	  {
+	      nsRect r;
+		  aEvent->widget->GetClientBounds(r);
+		  widget->Resize(0, 0, r.width, r.height, PR_TRUE);
+		  NS_IF_RELEASE(widget);
+	  }
+	  NS_IF_RELEASE(pEnumerator);
+	  NS_IF_RELEASE(pTree);
+  }
+#ifdef XP_MAC
+  else if ( aEvent->message == NS_DESTROY ) {
+	NS_IF_RELEASE(aEvent->widget);
+	result = nsEventStatus_eConsumeDoDefault;
+  }
+#endif
+  
+  return result;
+}
 // XXX This is a hack to get tree widget/RDF testing alive. It should
 // most definitely go away ASAP. It creates the bookmark data source,
 // attaches it to an RDF document, and sets the document's root
@@ -923,6 +964,73 @@ nsBrowserWindow::DoTreeView()
     NS_RELEASE(doc); // i.e., unless you've refcounted "doc", root dies _now_
   }
 }
+
+
+//
+// DoToolbarDemo
+//
+// Creates a standalone window for testing the toolbar and toolbox widgets. This
+// is a hack, and will leak the window.
+//
+void
+nsBrowserWindow::DoToolbarDemo()
+{
+	// Create top level window
+  nsCOMPtr<nsIWidget> pToolbarWindow;
+  nsresult rv = nsRepository::CreateInstance(kWindowCID, nsnull, kIWindowIID,
+                                    getter_AddRefs(pToolbarWindow));
+  if (NS_FAILED(rv))
+    return;
+  
+  // hack to get toolbar window to stick around after this exits. I know this sucks.
+  nsIWidget* hack = pToolbarWindow;
+  NS_ADDREF(hack);
+  
+  nsWidgetInitData initData;
+  initData.mBorderStyle = eBorderStyle_dialog;
+  nsRect r(0, 0, 400, 100);
+	
+  pToolbarWindow->Create((nsIWidget*)NULL, r, HandleToolbarDemoWindowEvent,
+                      nsnull, mAppShell, nsnull, &initData);
+  
+	pToolbarWindow->SetTitle("Toolbar Widget Tester");
+
+	// Create and place a tree view.
+	pToolbarWindow->GetClientBounds(r);
+	rv = nsRepository::CreateInstance(kCToolboxCID, nsnull, kIContentConnectorIID,
+                                       (void**)&mToolbox);
+	if (NS_OK != rv)
+	  return;
+
+	nsCOMPtr<nsIWidget> widget(mToolbox);	
+	if ( widget ) {
+      widget->Create(pToolbarWindow, r, nsnull, nsnull);	
+      widget->Show(PR_TRUE);
+    }
+
+	pToolbarWindow->Show(PR_TRUE);
+
+#if NO_DOM_CONNECT_YET
+  nsIDocument* doc;
+  if (NS_SUCCEEDED(rv = rdf_CreateBookmarkDocument(doc))) {
+    nsIContent* root = doc->GetRootContent();
+    if (root) {
+      // XXX Dump the content model that the tree is going to be built
+      // on.
+      root->List();
+
+      // XXX do whatever here. Note that the RDF nsIContent currently
+      // doesn't refcount the document in which it lives, so you'll
+      // need to keep a pointer to *both* the document and the
+      // content.
+	  mTreeView->SetContentRoot(root);
+      NS_RELEASE(root);
+    }
+    NS_RELEASE(doc); // i.e., unless you've refcounted "doc", root dies _now_
+  }
+#endif
+
+} // DoToolbarDemo
 
 void
 nsBrowserWindow::DoFind()

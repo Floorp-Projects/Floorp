@@ -145,6 +145,7 @@ public:
   NS_IMETHOD ForceRefresh();
 
   void DoTreeView();
+  void DoToolbarDemo();
 
   void ShowPrintPreview(PRInt32 aID);
   void DoPrint(void);
@@ -200,7 +201,8 @@ public:
   nsIButton* mBack;
   nsIButton* mForward;
   nsIThrobber* mThrobber;
-  nsIContentConnector* mTreeView;
+  nsIContentConnector* mTreeView;   // HACK
+  nsIContentConnector* mToolbox;    // HACK
   
   // "Status bar"
   nsITextWidget* mStatus;
