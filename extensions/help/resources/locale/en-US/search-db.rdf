@@ -125,9 +125,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="allowing_users_to_contact_you"
-         nc:name="allowing users to contact you"
-	 nc:link="chrome://help/locale/im_help.html#allowing_users_to_contact_youSDX"/>
+       <rdf:Description ID="allowing_contact_you"
+         nc:name="allowing contact you"
+	 nc:link="chrome://help/locale/im_help.html#allowing_contact_youSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -238,6 +238,16 @@
        <rdf:Description ID="bookmark_properties"
          nc:name="bookmark properties"
 	 nc:link="chrome://help/locale/customize_help.html#bookmark_propertiesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="bookmarking_Navigator_tabs"
+         nc:name="bookmarking Navigator tabs"
+	 nc:link="chrome://help/locale/customize_help.html#bookmarking_Navigator_tabsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -415,6 +425,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="color_codes"
+         nc:name="color codes"
+	 nc:link="chrome://help/locale/composer_help.html#color_codesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="Communicator"
          nc:name="Communicator"
 	 nc:link="chrome://help/locale/mail_help.html#CommunicatorSDX"/>
@@ -468,6 +488,26 @@
        <rdf:Description ID="connect"
          nc:name="connect"
 	 nc:link="chrome://help/locale/mail_help.html#connectSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="connect_at_launch"
+         nc:name="connect at launch"
+	 nc:link="chrome://help/locale/icq_help.html#connect_at_launchSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="connect_at_startup"
+         nc:name="connect at startup"
+	 nc:link="chrome://help/locale/icq_help.html#connect_at_startupSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -875,6 +915,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="GIF"
+         nc:name="GIF"
+	 nc:link="chrome://help/locale/composer_help.html#GIFSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="group"
          nc:name="group"
 	 nc:link="chrome://help/locale/mail_help.html#groupSDX"/>
@@ -918,6 +968,16 @@
        <rdf:Description ID="HTML"
          nc:name="HTML"
 	 nc:link="chrome://help/locale/mail_help.html#HTMLSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="HTML_color_codes"
+         nc:name="HTML color codes"
+	 nc:link="chrome://help/locale/composer_help.html#HTML_color_codesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1085,6 +1145,26 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="Instant_Messenger_keyboard_shortcuts"
+         nc:name="Instant Messenger keyboard shortcuts"
+	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger_keyboard_shortcutsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Instant_Messenger_privacy"
+         nc:name="Instant Messenger privacy"
+	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger_privacySDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="internet_keywords"
          nc:name="internet keywords"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#internet_keywordsSDX"/>
@@ -1135,9 +1215,19 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="keyboard_shortcuts"
-         nc:name="keyboard shortcuts"
-	 nc:link="chrome://help/locale/im_help.html#keyboard_shortcutsSDX"/>
+       <rdf:Description ID="JPEG"
+         nc:name="JPEG"
+	 nc:link="chrome://help/locale/composer_help.html#JPEGSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="JPG"
+         nc:name="JPG"
+	 nc:link="chrome://help/locale/composer_help.html#JPGSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1775,6 +1865,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="PNG"
+         nc:name="PNG"
+	 nc:link="chrome://help/locale/composer_help.html#PNGSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="POP"
          nc:name="POP"
 	 nc:link="chrome://help/locale/mail_help.html#POPSDX"/>
@@ -1785,9 +1885,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="POP_account"
-         nc:name="POP account"
-	 nc:link="chrome://help/locale/mail_help.html#POP_accountSDX"/>
+       <rdf:Description ID="pop_account"
+         nc:name="pop account"
+	 nc:link="chrome://help/locale/mail_help.html#pop_accountSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1795,9 +1895,9 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="pop_account"
-         nc:name="pop account"
-	 nc:link="chrome://help/locale/mail_help.html#pop_accountSDX"/>
+       <rdf:Description ID="POP_account"
+         nc:name="POP account"
+	 nc:link="chrome://help/locale/mail_help.html#POP_accountSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2108,6 +2208,16 @@
        <rdf:Description ID="searching_help"
          nc:name="searching help"
 	 nc:link="chrome://help/locale/help_help.html#searching_helpSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="searching_selected_words"
+         nc:name="searching selected words"
+	 nc:link="chrome://help/locale/nav_help.html#searching_selected_wordsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2638,6 +2748,16 @@
        <rdf:Description ID="viewing_mail"
          nc:name="viewing mail"
 	 nc:link="chrome://help/locale/mail_help.html#viewing_mailSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="viewing_P3P_policy"
+         nc:name="viewing P3P policy"
+	 nc:link="chrome://help/locale/page_info_help.html#viewing_P3P_policySDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
