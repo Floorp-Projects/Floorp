@@ -994,9 +994,8 @@ nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIPluginInstance *aInst
 {
 #ifdef NS_DEBUG
   printf("created stream for (unknown URL)\n");
-#endif
-
   printf("Inside nsPluginStreamListenerPeer::InitializeFullPage...\n");
+#endif
 
   mInstance = aInstance;
   NS_ADDREF(mInstance);
@@ -1392,21 +1391,21 @@ NS_IMETHODIMP nsPluginHostImpl::GetURL(nsISupports* pluginInst,
 
   rv = pluginInst->QueryInterface(kIPluginInstanceIID, (void **)&instance);
 
-  if (NS_OK == rv)
+  if (NS_SUCCEEDED(rv))
   {
     if (nsnull != target)
     {
       nsPluginInstancePeerImpl *peer;
 
-      rv = instance->GetPeer((nsIPluginInstancePeer **)&peer);
+      rv = instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
 
-      if (NS_OK == rv)
+      if (NS_SUCCEEDED(rv))
       {
-        nsIPluginInstanceOwner  *owner;
+        nsCOMPtr<nsIPluginInstanceOwner> owner;
 
-        rv = peer->GetOwner(owner);
+        rv = peer->GetOwner(*getter_AddRefs(owner));
 
-        if (NS_OK == rv)
+        if (NS_SUCCEEDED(rv))
         {
           if ((0 == PL_strcmp(target, "newwindow")) || 
               (0 == PL_strcmp(target, "_new")))
@@ -1415,7 +1414,6 @@ NS_IMETHODIMP nsPluginHostImpl::GetURL(nsISupports* pluginInst,
             target = "_self";
 
           rv = owner->GetURL(url, target, nsnull);
-          NS_RELEASE(owner);
         }
 
         NS_RELEASE(peer);
@@ -1456,21 +1454,21 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
 
   rv = pluginInst->QueryInterface(kIPluginInstanceIID, (void **)&instance);
 
-  if (NS_OK == rv)
+  if (NS_SUCCEEDED(rv))
   {
     if (nsnull != target)
     {
       nsPluginInstancePeerImpl *peer;
 
-      rv = instance->GetPeer((nsIPluginInstancePeer **)&peer);
+      rv = instance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
 
-      if (NS_OK == rv)
+      if (NS_SUCCEEDED(rv))
       {
-        nsIPluginInstanceOwner  *owner;
+        nsCOMPtr<nsIPluginInstanceOwner> owner;
 
-        rv = peer->GetOwner(owner);
+        rv = peer->GetOwner(*getter_AddRefs(owner));
 
-        if (NS_OK == rv)
+        if (NS_SUCCEEDED(rv))
         {
           if ((0 == PL_strcmp(target, "newwindow")) || 
               (0 == PL_strcmp(target, "_new")))
@@ -1479,7 +1477,6 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
             target = "_self";
 
           rv = owner->GetURL(url, target, (void*)postData);
-          NS_RELEASE(owner);
         }
 
         NS_RELEASE(peer);
@@ -2637,27 +2634,55 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
                                                   nsIPluginInstance *aInstance,
 												  nsIPluginStreamListener* aListener)
 {
-  nsIURI *url;
-  nsPluginStreamListenerPeer  *listenerPeer = (nsPluginStreamListenerPeer *)new nsPluginStreamListenerPeer();
-  if (listenerPeer == NULL)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsIURI> url;
+  nsAutoString  absUrl;
   nsresult rv;
   
   if (aURL.Length() <= 0)
     return NS_OK;
 
-  rv = NS_NewURI(&url, aURL);
-
-  if (NS_OK == rv)
+  // get the full URL of the document that the plugin is embedded
+  //   in to create an absolute url in case aURL is relative
+  nsPluginInstancePeerImpl *peer;
+  rv = aInstance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
+  if (NS_SUCCEEDED(rv))
   {
+    nsCOMPtr<nsIPluginInstanceOwner> owner;
+    rv = peer->GetOwner(*getter_AddRefs(owner));
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIDocument> doc;
+      rv = owner->GetDocument(getter_AddRefs(doc));
+      if (NS_SUCCEEDED(rv))
+      {
+        nsCOMPtr<nsIURI> docURL( getter_AddRefs(doc->GetDocumentURL()) );
+ 
+        // Create an absolute URL
+        rv = NS_MakeAbsoluteURI(absUrl, aURL, docURL);
+      }
+    }
+    NS_RELEASE(peer);
+  }
+
+  if (absUrl.IsEmpty())
+    absUrl.Assign(aURL);
+
+  rv = NS_NewURI(getter_AddRefs(url), absUrl);
+
+  if (NS_SUCCEEDED(rv))
+  {
+    nsPluginStreamListenerPeer *listenerPeer = new nsPluginStreamListenerPeer;
+    if (listenerPeer == NULL)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(listenerPeer);
     rv = listenerPeer->Initialize(url, aInstance, aListener);
 
-    if (NS_OK == rv) {
+    if (NS_SUCCEEDED(rv)) {
       // XXX: Null LoadGroup?
       rv = NS_OpenURI(listenerPeer, nsnull, url, nsnull);
     }
-
-    NS_RELEASE(url);
+    NS_RELEASE(listenerPeer);
   }
 
   return rv;
