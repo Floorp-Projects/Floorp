@@ -49,6 +49,8 @@
 #include "prmem.h"
 #include "nsSpecialSystemDirectory.h"
 
+#include <ctype.h>  // toupper()
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_WELLFORMED_DTD_IID); 
