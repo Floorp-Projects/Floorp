@@ -34,6 +34,7 @@
 #include "nsDOMEvent.h"
 #include "nsXULAttributes.h"
 #include "nsIXULPopupListener.h"
+#include "nsIHTMLContentContainer.h"
 #include "nsHashtable.h"
 #include "nsIPresShell.h"
 #include "nsIAtom.h"
@@ -65,6 +66,8 @@
 #include "nsRDFContentUtils.h"
 #include "nsRDFDOMNodeList.h"
 #include "nsStyleConsts.h"
+#include "nsIStyleSheet.h"
+#include "nsIHTMLStyleSheet.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMLoadListener.h"
@@ -75,6 +78,7 @@
 #include "nsIDOMMenuListener.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIStyledContent.h"
+#include "nsIStyleContext.h"
 #include "nsIFocusableContent.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
@@ -83,6 +87,7 @@
 #include "rdfutil.h"
 #include "prlog.h"
 #include "rdf.h"
+#include "nsHTMLValue.h"
 
 #include "nsIController.h"
 
@@ -227,7 +232,8 @@ class RDFElementImpl : public nsIDOMXULElement,
                        public nsIStyledContent,
                        public nsIXMLContent,
                        public nsIXULContent,
-                       public nsIFocusableContent
+                       public nsIFocusableContent,
+                       public nsIStyleRule
 {
 public:
     RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag);
@@ -341,6 +347,13 @@ public:
     NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
     NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
+    // nsIStyleRule interface. The node implements this to deal with attributes that
+    // need to be mapped into style contexts (e.g., width in treecols).
+    NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
+    NS_IMETHOD GetStrength(PRInt32& aStrength) const;
+    NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+    NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+    
     // nsIJSScriptObject
     virtual PRBool AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
     virtual PRBool DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
@@ -368,6 +381,12 @@ public:
 
     static nsresult
     ExecuteJSCode(nsIDOMElement* anElement);
+
+    // Used with treecol width attributes
+    static ParseNumericValue(const nsString& aString,
+                                  PRInt32& aIntValue,
+                                  float& aFloatValue,
+                                  nsHTMLUnit& aValueUnit);
 
     static nsresult
     GetElementsByTagName(nsIDOMNode* aNode,
@@ -405,6 +424,7 @@ private:
     static nsIAtom*             kTreeRowAtom;
     static nsIAtom*             kTreeCellAtom;
     static nsIAtom*             kTreeChildrenAtom;
+    static nsIAtom*             kTreeColAtom;
 
     static nsIAtom*             kTitledButtonAtom;
 
@@ -453,6 +473,7 @@ nsIAtom*             RDFElementImpl::kTreeItemAtom;
 nsIAtom*             RDFElementImpl::kTreeRowAtom;
 nsIAtom*             RDFElementImpl::kTreeCellAtom;
 nsIAtom*             RDFElementImpl::kTreeChildrenAtom;
+nsIAtom*             RDFElementImpl::kTreeColAtom;
 nsIAtom*             RDFElementImpl::kSelectedAtom;
 nsIAtom*             RDFElementImpl::kTitledButtonAtom;
 nsIAtom*             RDFElementImpl::kPopupAtom;
@@ -548,6 +569,7 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
         kTreeRowAtom     = NS_NewAtom("treerow");
         kTreeCellAtom    = NS_NewAtom("treecell");
         kTreeChildrenAtom = NS_NewAtom("treechildren");
+        kTreeColAtom     = NS_NewAtom("treecol");
         kSelectedAtom    = NS_NewAtom("selected");
         kTitledButtonAtom = NS_NewAtom("titledbutton");
         kPopupAtom       = NS_NewAtom("popup");
@@ -631,6 +653,7 @@ RDFElementImpl::~RDFElementImpl()
         NS_IF_RELEASE(kTreeRowAtom);
         NS_IF_RELEASE(kTreeCellAtom);
         NS_IF_RELEASE(kTreeChildrenAtom);
+        NS_IF_RELEASE(kTreeColAtom);
         NS_IF_RELEASE(kSelectedAtom);
         NS_IF_RELEASE(kTitledButtonAtom);
         NS_IF_RELEASE(kPopupAtom);
@@ -714,6 +737,9 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
              (mNameSpaceID == kNameSpaceID_XUL) &&
              IsFocusableContent()) {
         *result = NS_STATIC_CAST(nsIFocusableContent*, this);
+    }
+    else if (iid.Equals(nsIStyleRule::GetIID())) {
+        *result = NS_STATIC_CAST(nsIStyleRule*, this);
     }
     else if ((iid.Equals(nsIDOMXULTreeElement::GetIID()) ||
               iid.Equals(nsIXULTreeContent::GetIID())) &&
@@ -3389,6 +3415,22 @@ RDFElementImpl::HasClass(nsIAtom* aClass) const
 NS_IMETHODIMP
 RDFElementImpl::GetContentStyleRules(nsISupportsArray* aRules)
 {
+  // For treecols, we support proportional widths using the WIDTH attribute.
+	if (mTag == kTreeColAtom) {
+    // If the width attribute is set, then we should return ourselves as a style
+    // rule.
+    nsCOMPtr<nsIAtom> widthAtom = dont_AddRef(NS_NewAtom("width"));
+    nsAutoString width;
+    GetAttribute(kNameSpaceID_None, widthAtom, width);
+    if (width != "") {
+      // XXX This should ultimately be factored out if we find that
+      // a bunch of XUL widgets are implementing attributes that need
+      // to be mapped into style.  I'm hoping treecol will be the only
+      // one that needs to do this though.
+      // QI ourselves to be an nsIStyleRule.
+      aRules->AppendElement((nsIStyleRule*)this);
+    }
+	}
   return NS_OK;
 }
     
@@ -3536,4 +3578,103 @@ RDFElementImpl::IsFocusableContent()
 {
   return (mTag == kTitledButtonAtom) ||
          (mTag == kTreeAtom);
+}
+
+// nsIStyleRule interface
+NS_IMETHODIMP 
+RDFElementImpl::GetStyleSheet(nsIStyleSheet*& aSheet) const
+{
+  nsresult rv = NS_OK;
+  aSheet = nsnull;
+  if (mDocument) {
+    nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(mDocument);
+    if (container) {
+      nsCOMPtr<nsIHTMLStyleSheet> htmlStyleSheet;
+      rv = container->GetAttributeStyleSheet(getter_AddRefs(htmlStyleSheet));
+      if (NS_FAILED(rv))
+        return rv;
+      nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(htmlStyleSheet);
+      aSheet = styleSheet;
+      NS_IF_ADDREF(aSheet);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP 
+RDFElementImpl::GetStrength(PRInt32& aStrength) const
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFElementImpl::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+RDFElementImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  if (mTag == kTreeColAtom) {
+    // Should only get called if we had a width attribute set. Retrieve it.
+    nsAutoString widthVal;
+    GetAttribute("width", widthVal);
+    if (widthVal != "") {
+      PRInt32 intVal;
+      float floatVal;
+      nsHTMLUnit unit = eHTMLUnit_Null;
+      if (ParseNumericValue(widthVal, intVal, floatVal, unit)) {
+        // Success. Update the width for the style context.
+        nsStylePosition* position = (nsStylePosition*)
+        aContext->GetMutableStyleData(eStyleStruct_Position);
+        switch (unit) {
+          case eHTMLUnit_Percent:
+            position->mWidth.SetPercentValue(floatVal);
+            break;
+
+          case eHTMLUnit_Pixel:
+            float p2t;
+            aPresContext->GetScaledPixelsToTwips(&p2t);
+            position->mWidth.SetCoordValue(NSIntPixelsToTwips(intVal, p2t));
+            break;
+
+          case eHTMLUnit_Proportional:
+            position->mWidth.SetIntValue(intVal, eStyleUnit_Proportional);
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+      
+  return NS_OK;
+}
+
+PRBool
+RDFElementImpl::ParseNumericValue(const nsString& aString,
+                                  PRInt32& aIntValue,
+                                  float& aFloatValue,
+                                  nsHTMLUnit& aValueUnit)
+{
+  nsAutoString tmp(aString);
+  tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
+  PRInt32 ec, val = tmp.ToInteger(&ec);
+  if (NS_OK == ec) {
+    if (val < 0) val = 0;
+    if (tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
+      if (val > 100) val = 100;
+      aFloatValue = (float(val)/100.0f);
+      aValueUnit = eHTMLUnit_Percent;
+	  } else if (tmp.Last() == '*') {
+      aIntValue = val;
+      aValueUnit = eHTMLUnit_Proportional;
+    } else {
+      aIntValue = val;
+      aValueUnit = eHTMLUnit_Pixel;
+    }
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
