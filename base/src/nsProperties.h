@@ -19,19 +19,65 @@
 #ifndef nsProperties_h___
 #define nsProperties_h___
 
-#include "nsIFactory.h"
+#include "nsIProperties.h"
+#include "nsHashtable.h"
 
-class nsPersistentPropertiesFactory : public nsIFactory
-{
+class nsIUnicharInputStream;
+
+class nsProperties : public nsIProperties, public nsHashtable {
 public:
-  nsPersistentPropertiesFactory();
-  virtual ~nsPersistentPropertiesFactory();
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD CreateInstance(nsISupports* aOuter, REFNSIID aIID,
-                            void** aResult);
-  NS_IMETHOD LockFactory(PRBool aLock);
+  // nsIProperties methods:
+  NS_IMETHOD DefineProperty(const char* prop, nsISupports* initialValue);
+  NS_IMETHOD UndefineProperty(const char* prop);
+  NS_IMETHOD GetProperty(const char* prop, nsISupports* *result);
+  NS_IMETHOD SetProperty(const char* prop, nsISupports* value);
+  NS_IMETHOD HasProperty(const char* prop, nsISupports* value); 
+
+  // nsProperties methods:
+  nsProperties();
+  virtual ~nsProperties();
+
+  static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
+
+};
+
+class nsPersistentProperties : public nsIPersistentProperties
+{
+public:
+  nsPersistentProperties();
+  virtual ~nsPersistentProperties();
+
+  NS_DECL_ISUPPORTS
+
+  // nsIProperties methods:
+  NS_IMETHOD DefineProperty(const char* prop, nsISupports* initialValue);
+  NS_IMETHOD UndefineProperty(const char* prop);
+  NS_IMETHOD GetProperty(const char* prop, nsISupports* *result);
+  NS_IMETHOD SetProperty(const char* prop, nsISupports* value);
+  NS_IMETHOD HasProperty(const char* prop, nsISupports* value); 
+
+  // nsIPersistentProperties methods:
+  NS_IMETHOD Load(nsIInputStream* aIn);
+  NS_IMETHOD Save(nsIOutputStream* aOut, const nsString& aHeader);
+  NS_IMETHOD Subclass(nsIPersistentProperties* aSubclass);
+
+  // XXX these 2 methods will be subsumed by the ones from 
+  // nsIProperties once we figure this all out
+  NS_IMETHOD GetProperty(const nsString& aKey, nsString& aValue);
+  NS_IMETHOD SetProperty(const nsString& aKey, nsString& aNewValue,
+                         nsString& aOldValue);
+
+  // nsPersistentProperties methods:
+  PRInt32 Read();
+  PRInt32 SkipLine(PRInt32 c);
+  PRInt32 SkipWhiteSpace(PRInt32 c);
+
+  nsIUnicharInputStream* mIn;
+  nsIPersistentProperties* mSubclass;
+  struct PLHashTable*    mTable;
 };
 
 #endif /* nsProperties_h___ */

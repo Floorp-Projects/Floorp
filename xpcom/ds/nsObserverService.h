@@ -19,27 +19,4 @@
 #ifndef nsObserverService_h___
 #define nsObserverService_h___
 
-#include "nsIFactory.h"
-
-class nsObserverServiceFactory : public nsIFactory {
-public:
-
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods:
-
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              REFNSIID aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-    // nsObserverService methods:
-
-    nsObserverServiceFactory(void);
-    virtual ~nsObserverServiceFactory(void);
-
-};
-
-
 #endif /* nsObserverService_h___ */

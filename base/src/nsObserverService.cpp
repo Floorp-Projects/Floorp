@@ -129,7 +129,7 @@ nsresult nsObserverService::GetObserverList(nsIObserverList** anObserverList, ns
 	nsCStringKey key(topic);
 
     nsIObserverList *topicObservers = nsnull;
-    if(mObserverTopicTable->Exists(&key)) {
+    if (mObserverTopicTable->Exists(&key)) {
         topicObservers = (nsIObserverList *) mObserverTopicTable->Get(&key);
         if (topicObservers != NULL) {
 	        *anObserverList = topicObservers;	
@@ -221,61 +221,6 @@ nsresult nsObserverService::EnumerateObserverList(nsIEnumerator** anEnumerator, 
  	
 	return NS_ERROR_FAILURE;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-// nsObserverServiceFactory Implementation
-
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsObserverServiceFactory, kIFactoryIID);
-
-nsObserverServiceFactory::nsObserverServiceFactory(void)
-{
-    NS_INIT_REFCNT();
-}
-
-nsObserverServiceFactory::~nsObserverServiceFactory(void)
-{
-  
-}
-
-nsresult
-nsObserverServiceFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-    
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    *aResult = nsnull;
-
-    nsresult rv;
-    nsIObserverService* inst = nsnull;
-
-    
-    if (NS_FAILED(rv = NS_NewObserverService(&inst)))
-        return rv;
-   
-
-    if (!inst)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = inst->QueryInterface(aIID, aResult);
-
-    if (NS_FAILED(rv)) {
-        *aResult = NULL;
-    }
-    return rv;
-}
-
-nsresult
-nsObserverServiceFactory::LockFactory(PRBool aLock)
-{
-    return NS_OK;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -33,7 +33,7 @@ static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
 // nsObserver Implementation
 
 
-NS_IMPL_ISUPPORTS(nsObserver, kIObserverIID);
+NS_IMPL_AGGREGATED(nsObserver);
 
 NS_BASE nsresult NS_NewObserver(nsIObserver** anObserver)
 {
@@ -58,7 +58,20 @@ nsObserver::nsObserver()
 
 nsObserver::~nsObserver(void)
 {
+}
 
+NS_IMETHODIMP
+nsObserver::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (aInstancePtr == nsnull)
+        return NS_ERROR_NULL_POINTER;
+    if (aIID.Equals(nsIObserver::GetIID()) ||
+        aIID.Equals(nsISupports::GetIID())) {
+        *aInstancePtr = this;
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
 }
 
 nsresult nsObserver::Notify(nsISupports** result)
@@ -66,58 +79,5 @@ nsresult nsObserver::Notify(nsISupports** result)
     return NS_OK;
     
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-// nsObserverFactory Implementation
-
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsObserverFactory, kIFactoryIID);
-
-nsObserverFactory::nsObserverFactory(void)
-{
-    NS_INIT_REFCNT();
-}
-
-nsObserverFactory::~nsObserverFactory(void)
-{
-
-}
-
-nsresult
-nsObserverFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-    
-    if (aOuter)
-        return NS_ERROR_NO_AGGREGATION;
-
-    *aResult = nsnull;
-
-    nsresult rv;
-    nsIObserver* inst = nsnull;
-
-    if (NS_FAILED(rv = NS_NewObserver(&inst)))
-        return rv;
-
-    if (!inst)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = inst->QueryInterface(aIID, aResult);
-
-    if (NS_FAILED(rv)) {
-        *aResult = NULL;
-    }
-    return rv;
-}
-
-nsresult
-nsObserverFactory::LockFactory(PRBool aLock)
-{
-    return NS_OK;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////

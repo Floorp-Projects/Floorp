@@ -19,8 +19,8 @@
 #ifndef nsObserver_h___
 #define nsObserver_h___
 
-#include "nsIFactory.h"
 #include "nsIObserver.h"
+#include "nsAgg.h"
 
 class nsObserver : public nsIObserver {
 public:
@@ -30,32 +30,11 @@ public:
     nsObserver();
     virtual ~nsObserver(void);
      
-    NS_DECL_ISUPPORTS
+    NS_DECL_AGGREGATED
 
    
 private:
 
 };
-
-class nsObserverFactory : public nsIFactory {
-public:
-
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods:
-
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              REFNSIID aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-    // nsObserver methods:
-
-    nsObserverFactory(void);
-    virtual ~nsObserverFactory(void);
-
-};
-
 
 #endif /* nsObserver_h___ */

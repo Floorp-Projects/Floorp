@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -27,46 +27,188 @@
 #include "nsObserverService.h"
 #include "nsIObserver.h"
 #include "nsObserver.h"
-
+#include "nsProperties.h"
+#include "nsPageMgr.h"
+#include "pratom.h"
+#include "nsBuffer.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kPageManagerCID, NS_PAGEMANAGER_CID);
+static NS_DEFINE_CID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
+static NS_DEFINE_CID(kObserverCID, NS_OBSERVER_CID);
+static NS_DEFINE_CID(kBufferCID, NS_BUFFER_CID);
 
-static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
-static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
+////////////////////////////////////////////////////////////////////////////////
 
+class nsBaseFactory : public nsIFactory
+{   
+public:
+  // nsISupports methods
+  NS_DECL_ISUPPORTS 
 
-PRInt32 gLockCount = 0;
+  nsBaseFactory(const nsCID &aClass); 
 
-NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+  // nsIFactory methods   
+  NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
+  NS_IMETHOD LockFactory(PRBool aLock);   
+
+protected:
+  virtual ~nsBaseFactory();   
+
+  static PRInt32 gLockCount;
+
+  nsCID mClassID;
+};
+
+PRInt32 nsBaseFactory::gLockCount = 0;
+
+nsBaseFactory::nsBaseFactory(const nsCID &aClass)
+  : mClassID(aClass)
+{   
+  NS_INIT_REFCNT();
+}   
+
+nsBaseFactory::~nsBaseFactory()   
+{
+  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
+}   
+
+nsresult
+nsBaseFactory::QueryInterface(const nsIID &aIID, void **aResult)   
+{   
+  if (aResult == nsnull)  
+    return NS_ERROR_NULL_POINTER;  
+
+  *aResult = nsnull;   
+
+  if (aIID.Equals(nsIFactory::GetIID()) ||
+      aIID.Equals(nsISupports::GetIID())) {
+    *aResult = (void *)(nsIFactory*)this;   
+  }
+  if (*aResult == nsnull)
+    return NS_NOINTERFACE;
+
+  NS_ADDREF_THIS();
+  return NS_OK;   
+}   
+
+NS_IMPL_ADDREF(nsBaseFactory)
+NS_IMPL_RELEASE(nsBaseFactory)
+
+nsresult
+nsBaseFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult)  
+{  
+  nsresult rv = NS_OK;
+
+  if (aOuter) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+  if (aResult == nsnull) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aResult = nsnull;  
+  
+  if (mClassID.Equals(kPersistentPropertiesCID)) {
+    nsPersistentProperties* props = new nsPersistentProperties();
+    if (props == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+    rv = props->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {
+      delete props;
+    }
+    return rv;
+  }
+
+  if (mClassID.Equals(kObserverServiceCID)) {
+    return NS_NewObserverService((nsIObserverService**)aResult);
+  }
+
+  if (mClassID.Equals(kObserverCID)) {
+    return NS_NewObserver((nsIObserver**)aResult);
+  }
+
+  if (mClassID.Equals(kPageManagerCID)) {
+    nsPageMgr* pageMgr = new nsPageMgr();
+    if (pageMgr == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+    rv = pageMgr->Init();
+    if (NS_FAILED(rv)) {
+      delete pageMgr;
+      return rv;
+    }
+    rv = pageMgr->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {
+      delete pageMgr;
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  if (mClassID.Equals(kBufferCID)) {
+    nsBuffer* buffer = new nsBuffer();
+    if (buffer == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+    rv = buffer->QueryInterface(aIID, aResult); 
+    if (NS_FAILED(rv)) {
+      delete buffer;
+      return rv;
+    }
+    return NS_OK;
+  }
+
+  return NS_NOINTERFACE;
+}  
+
+nsresult nsBaseFactory::LockFactory(PRBool aLock)  
+{  
+  if (aLock) { 
+    PR_AtomicIncrement(&gLockCount); 
+  } else { 
+    PR_AtomicDecrement(&gLockCount); 
+  } 
+
+  return NS_OK;
+}  
+
+////////////////////////////////////////////////////////////////////////////////
 
 extern "C" NS_EXPORT nsresult
 NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  NS_WITH_SERVICE1(nsIComponentManager, compMgr, 
+                   aServMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->RegisterComponent(kPersistentPropertiesCID, NULL, NULL,
+  rv = compMgr->RegisterComponent(kPersistentPropertiesCID, 
+                                  "Persistent Properties", NULL,
                                   path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kObserverServiceCID,
-                                   "ObserverService", 
-                                   NS_OBSERVERSERVICE_PROGID,
-                                   path,PR_TRUE, PR_TRUE);
+                                  "ObserverService", 
+                                  NS_OBSERVERSERVICE_PROGID,
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
   rv = compMgr->RegisterComponent(kObserverCID, 
-                                   "Observer", 
-                                   NS_OBSERVER_PROGID,
-                                   path,PR_TRUE, PR_TRUE);
+                                  "Observer", 
+                                  NS_OBSERVER_PROGID,
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 
+  rv = compMgr->RegisterComponent(kPageManagerCID, 
+                                  "Page Manager", NULL,
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  rv = compMgr->RegisterComponent(kBufferCID, 
+                                  "Buffer", NULL,
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
   return rv;
 }
 
@@ -75,23 +217,25 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  NS_WITH_SERVICE1(nsIComponentManager, compMgr, 
+                   aServMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
+  rv = compMgr->UnregisterComponent(kPersistentPropertiesCID, path);
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterFactory(kPersistentPropertiesCID, path);
+  rv = compMgr->UnregisterComponent(kObserverServiceCID, path);
+  if (NS_FAILED(rv)) return rv;
 
+  rv = compMgr->UnregisterComponent(kObserverCID, path);
+  if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->UnregisterFactory(kObserverServiceCID, path);
-  rv = compMgr->UnregisterFactory(kObserverCID, path);
+  rv = compMgr->UnregisterComponent(kPageManagerCID, path);
+  if (NS_FAILED(rv)) return rv;
 
+  rv = compMgr->UnregisterComponent(kBufferCID, path);
+  if (NS_FAILED(rv)) return rv;
 
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
@@ -102,55 +246,16 @@ NSGetFactory(nsISupports* aServMgr,
              const char *aProgID,
              nsIFactory** aFactory)
 {
-  nsresult  res;
-
   if (!aFactory) {
     return NS_ERROR_NULL_POINTER;
   }
+  nsBaseFactory* factory = new nsBaseFactory(aClass);
+  if (factory == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  if (aClass.Equals(kPersistentPropertiesCID)) {
-    nsPersistentPropertiesFactory *propsFactory = new nsPersistentPropertiesFactory();
-    if (!propsFactory) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    res = propsFactory->QueryInterface(kIFactoryIID, (void**) aFactory);
-    if (NS_FAILED(res)) {
-      *aFactory = nsnull;
-      delete propsFactory;
-    }
-
-    return res;
-  }
-  else if (aClass.Equals(kObserverServiceCID)) {
-      nsObserverServiceFactory *observerServiceFactory = new nsObserverServiceFactory();
-
-      if (observerServiceFactory == nsnull)
-          return NS_ERROR_OUT_OF_MEMORY;
-
-      res = observerServiceFactory->QueryInterface(kIFactoryIID, (void**) aFactory);
-      if (NS_FAILED(res)) {
-          *aFactory = nsnull;
-          delete observerServiceFactory;
-      }
-
-    return res;
-  } else if (aClass.Equals(kObserverCID)) {
-      nsObserverFactory *observerFactory = new nsObserverFactory();
-
-      if (observerFactory == nsnull)
-          return NS_ERROR_OUT_OF_MEMORY;
-
-      res = observerFactory->QueryInterface(kIFactoryIID, (void**) aFactory);
-      if (NS_FAILED(res)) {
-          *aFactory = nsnull;
-          delete observerFactory;
-      }
-
-    return res;
-  }
-
-
-  return NS_NOINTERFACE;
+  NS_ADDREF(factory);
+  *aFactory = factory;
+  return NS_OK;
 }
 
 extern "C" NS_EXPORT PRBool
@@ -158,3 +263,6 @@ NSCanUnload(nsISupports* serviceMgr)
 {
   return PR_FALSE;      // XXX can we unload this?
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
