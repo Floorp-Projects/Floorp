@@ -39,17 +39,13 @@ $error_file_ref = '';
 $error_line = 0;
 $error_guess = 0;
 
-$next_err = 0;
-@log_errors = ();
-$log_line = 0;
-
 #############################################################
 # CGI inputs
 
 if (defined($args = $form{log}) or defined($args = $form{exerpt})) {
 
   ($full_logfile, $linenum) = split /:/,  $args;
-  ($tree, $logfile)        = split /\//, $full_logfile;
+  ($tree, $logfile) = split /\//, $full_logfile;
 
   my $br = tb_find_build_record($tree, $logfile);
   $errorparser = $br->{errorparser};
@@ -67,24 +63,24 @@ if (defined($args = $form{log}) or defined($args = $form{exerpt})) {
 }
 $fulltext    = $form{fulltext};
 
-$enc_buildname = &url_encode($buildname);
+$enc_buildname = url_encode($buildname);
 
 die "the \"tree\" parameter must be provided\n" unless $tree;
 require "$tree/treedata.pl";
 
-$time_str = print_time( $buildtime );
+$time_str = print_time($buildtime);
 
 $|=1;
 
 if ($linenum) {
 
-  &print_fragment;
+  print_fragment();
 
   exit;
 }
 
-&print_header;
-&print_notes;
+print_header();
+print_notes();
 
 # Dynamically load the error parser
 #
@@ -93,8 +89,8 @@ require "ep_${errorparser}.pl";
 
 if ($fulltext)
 {
-  &print_summary;
-  &print_log;
+  my $errors = print_summary();
+  print_log($errors);
 }
 else
 {
@@ -102,15 +98,15 @@ else
   $brief_filename =~ s/.gz$/.brief.html/;
   if (-T "$tree/$brief_filename" and -M _ > -M $tree/$logfile) 
   {
-    open (BRIEFFILE, "<$tree/$brief_filename");
+    open(BRIEFFILE, "<$tree/$brief_filename");
     print while (<BRIEFFILE>)
   }
   else
   {
-    open (BRIEFFILE, ">$tree/$brief_filename");
+    open(BRIEFFILE, ">$tree/$brief_filename");
 
-    &print_summary;
-    &print_log;
+    my $errors = print_summary();
+    print_log($errors);
   }
 }
 
@@ -136,7 +132,7 @@ sub print_fragment {
   my $last_line  = $linenum + ($numlines/2);
 
   print "<pre><b>.<br>.<br>.<br></b>";
-  while(<BUILD_IN>) {
+  while (<BUILD_IN>) {
     next if $. < $first_line;
     last if $. > $last_line;
     print "<b><font color='red'>" if $. == $linenum;
@@ -150,7 +146,7 @@ sub print_fragment {
 sub print_header {
   print "Content-type: text/html\n\n";
 
-  if( $fulltext ){
+  if ($fulltext) {
     $s = 'Show <b>Brief</b> Log';
     $s1 = '';
     $s2 = 'Full';
@@ -186,18 +182,18 @@ sub print_notes {
   $found_note = 0;
   open(NOTES,"<$tree/notes.txt") 
     or print "<h2>warning: Couldn't open $tree/notes.txt </h2>\n";
-print "$buildtime, $buildname<br>\n";
-  while(<NOTES>){
+  print "$buildtime, $buildname<br>\n";
+  while (<NOTES>) {
     chop;
     ($nbuildtime,$nbuildname,$nwho,$nnow,$nenc_note) = split(/\|/);
     #print "$_<br>\n";
-    if( $nbuildtime == $buildtime && $nbuildname eq $buildname ){
-      if( !$found_note ){
+    if ($nbuildtime == $buildtime and $nbuildname eq $buildname) {
+      if (not $found_note) {
 	print "<H2>Build Comments</H2>\n";
 	$found_note = 1;
       }
-      $now_str = &print_time($nnow);
-      $note = &url_decode($nenc_note);
+      $now_str = print_time($nnow);
+      $note = url_decode($nenc_note);
       print "<pre>\n[<b><a href=mailto:$nwho>$nwho</a> - $now_str</b>]\n$note\n</pre>";
     }
   }
@@ -210,15 +206,25 @@ sub print_summary {
   #
   logprint('<H2>Build Error Summary</H2><PRE>');
 
-  $log_line = 0;
-  open( BUILD_IN, "$gzip -d -c $tree/$logfile|" );
-  while( $line = <BUILD_IN> ){
-    &output_summary_line( $line );
+  @log_errors = ();
+
+  my $line_num = 0;
+  my $error_num = 0;
+  open(BUILD_IN, "$gzip -d -c $tree/$logfile|");
+  while ($line = <BUILD_IN>) {
+    $line_has_error = output_summary_line($line, $error_num);
+    
+    if ($line_has_error) {
+      push @log_errors, $line_num;        
+      $error_num++;
+    }
+    $line_num++;
   }
-  close( BUILD_IN );
-  push @log_errors, 9999999;        
+  close(BUILD_IN);
 
   logprint('</PRE>');
+
+  return \@log_errors;
 }
 
 sub print_log_section {
@@ -254,107 +260,121 @@ sub print_log_section {
 }
 
 sub print_log {
-  #
-  # reset the error counter
-  #
-  $next_err = 0;
-  
+  my ($errors) = $_[0];
+
   logprint('<H2>Build Error Log</H2><pre>');
 
-  $log_line = 0;
-  open( BUILD_IN, "$gzip -d -c $tree/$logfile|" );
-  while( $line = <BUILD_IN> ){
-    &output_log_line( $line );
+  $line_num = 0;
+  open(BUILD_IN, "$gzip -d -c $tree/$logfile|");
+  while ($line = <BUILD_IN>) {
+    output_log_line($line, $line_num, $errors);
+    $line_num++;
   }
-  close( BUILD_IN );
+  close(BUILD_IN);
 
   logprint('</PRE><p>'
-     ."<font size=+1><a name=\"err$next_err\">No More Errors</a></font>"
+     ."<font size=+1>No More Errors</a></font>"
      .'<br><br><br>');
 }
 
-sub output_summary_line {
-    my( $line ) = $_[0];
-    my( $has_error );
+BEGIN {
+  my $last_was_error = 0; 
 
-    $has_error = &has_error( $line );
-
-    $line =~ s/&/&amp;/g;
-    $line =~ s/</&lt;/g;
-
-    if( $has_error ){
-        push @log_errors, $log_line + $LINES_AFTER_ERROR;        
-        if( ! $last_was_error ) {
-            logprint("<a href=\"#err$next_err\">$line</a>");
-            $next_err++;
-        }
-        $last_was_error = 1;
+  sub output_summary_line {
+    my ($line, $error_id) = @_;
+    
+    if (has_error($line)) {
+      $line =~ s/&/&amp;/g;
+      $line =~ s/</&lt;/g;
+      
+      if (not $last_was_error) {
+        logprint("<a href=\"#err$error_id\">$line</a>");
+      } else {
+        logprint("$line");
+      }
+      $last_was_error = 1;
+    } else {
+      $last_was_error = 0;
     }
-    else {
-        $last_was_error = 0;
-    }
-
-    $log_line++;
+    return $last_was_error;
+  }
 }
 
 
+BEGIN {
+  my $next_error = 0;
 
-sub output_log_line {
-  my $line = $_[0];
+  sub output_log_line {
+    my ($line, $line_num, $errors) = @_;
+    
+    my $has_error   = $line_num == $errors->[$next_error];
+    my $has_warning = has_warning($line);
+    
+    $line =~ s/&/&amp;/g;
+    $line =~ s/</&lt;/g unless $line =~ /^<a name=[^>]*>(?:<\/a>)?$/i or
+                               $line =~ /^<\/a>$/i;
 
-  my $has_error   = &has_error($line);
-  my $has_warning = &has_warning($line);
+    my $logline = '';
+    
+    my %out = ();
 
-  $line =~ s/&/&amp;/g;
-  $line =~ s/</&lt;/g unless $line =~ /^<a name=[^>]*>(?:<\/a>)?$/i or
-                             $line =~ /^<\/a>$/i;
-
-  my $logline = '';
-
-  my %out = ();
-
-  if (($has_error or $has_warning) and &has_errorline($line, \%out)) {
-    $q = quotemeta( $out{error_file} );
-    $goto_line = $out{error_line} > 10 ? $out{error_line} - 10 : 1;
-    $cvsblame = $out{error_guess} ? "cvsguess.cgi" : "cvsblame.cgi"; 
-    $line =~ s@$q@<a href=../bonsai/$cvsblame?file=$out{error_file_ref}&rev=$cvs_branch&mark=$out{error_line}#$goto_line>$out{error_file}</a>@
-  }
-
-  if ($has_error) {
-    unless ($last_was_error) {
-      $logline .= "<a name=\"err$next_err\"></a>";
-      $next_err++;
-      $logline .= "<a href=\"#err$next_err\">NEXT</a> ";
+    if (($has_error or $has_warning) and has_errorline($line, \%out)) {
+      $q = quotemeta($out{error_file});
+      $goto_line = $out{error_line} > 10 ? $out{error_line} - 10 : 1;
+      $cvsblame = $out{error_guess} ? "cvsguess.cgi" : "cvsblame.cgi"; 
+      $line =~ s@$q@<a href=../bonsai/$cvsblame?file=$out{error_file_ref}&rev=$cvs_branch&mark=$out{error_line}#$goto_line>$out{error_file}</a>@
     }
-    $logline .= "<font color=\"000080\">$line</font>";
-        
-    $last_was_error = 1;
-  }
-  elsif ($has_warning) {
-    $logline = "<font color=000080>$line</font>";
-  }
-  else {
-    $logline = $line;
-    $last_was_error = 0;
-  }
 
-  &push_log_line($logline);
+    if ($has_error) {
+      $next_error++;
+
+      unless ($last_was_error) {
+        $logline .= "<a name='err".($next_error - 1)."'></a>";
+
+        # Only print "NEXT ERROR" link if there is another error to jump to
+        $have_more_errors = 0;
+        my $ii = $next_error;
+        while ($ii < $#{$errors} - 1) {
+          if ($errors->[$ii] != $errors->[$ii + 1] - 1) {
+            $have_more_errors = 1;
+            last;
+          }
+          $ii++;
+        }
+        if ($have_more_errors) {
+          $logline .= "<a href='#err$next_error'>NEXT ERROR</a> ";
+        }
+      }
+      $logline .= "<font color='000080'>$line</font>";
+      
+      $last_was_error = 1;
+    }
+    elsif ($has_warning) {
+      $logline = "<font color='000080'>$line</font>";
+    }
+    else {
+      $logline = $line;
+      $last_was_error = 0;
+    }
+    
+    push_log_line($logline, $errors);
+  }
 }
 
 
 sub push_log_line {
-    my( $line ) = $_[0];
-    if( $fulltext ){
+    my ($line, $log_errors) = @_;
+    if ($fulltext) {
         logprint($line);
         return;
     }
 
-    if( $log_line > $log_errors[$cur_error] ){
+    if ($log_line > $log_errors->[$cur_error] + $LINES_AFTER_ERROR) {
         $cur_error++;
     }
     
-    if( $log_line >= $log_errors[$cur_error] - $LINES_BEFORE_ERROR ){
-        if( $log_skip != 0 ){
+    if ($log_line >= $log_errors->[$cur_error] - $LINES_BEFORE_ERROR) {
+        if ($log_skip != 0) {
             logprint("\n<i><font size=+1> Skipping $log_skip Lines...</i></font>\n\n");
             $log_skip = 0;
         }
