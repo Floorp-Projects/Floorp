@@ -133,6 +133,9 @@ function con_icline (e)
 console.onSingleLineKeypress =
 function con_slkeypress (e)
 {
+    var w;
+    var newOfs;
+    
     switch (e.keyCode)
     {
         case 13:

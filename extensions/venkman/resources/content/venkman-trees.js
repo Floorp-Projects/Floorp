@@ -388,7 +388,7 @@ function sv_cellprops (row, colID, properties)
         if (typeof this.childData.lines[row] == "object" &&
             "bpRecord" in this.childData.lines[row])
             properties.AppendElement(this.atomBreakpoint);
-        else if (row in this.childData.lineMap &&
+        else if ("lineMap" in this.childData && row in this.childData.lineMap &&
                  this.childData.lineMap[row] & this.LINE_BREAKABLE)
             properties.AppendElement(this.atomCode);
         else
