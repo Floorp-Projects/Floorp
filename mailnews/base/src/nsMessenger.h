@@ -54,9 +54,9 @@ private:
   nsCOMPtr<nsITransactionManager> mTxnMgr;
 
   /* rhp - need this to drive message display */
-  nsIDOMWindow       *mWindow;
-  nsCOMPtr<nsIMsgWindow> mMsgWindow;
-  nsIWebShell        *mWebShell;
+  nsIDOMWindow              *mWindow;
+  nsCOMPtr<nsIMsgWindow>    mMsgWindow;
+  nsCOMPtr<nsIWebShell>     mWebShell;
 
   nsCOMPtr <nsIDocumentLoaderObserver> m_docLoaderObserver;
   // mscott: temporary variable used to support running urls through the 'Demo' menu....
