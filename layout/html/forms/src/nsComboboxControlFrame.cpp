@@ -1525,13 +1525,13 @@ nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext,
         REFLOW_DEBUG_MSG3("--- Bailing because of mCachedUncDropdownSize %d,%d\n\n", PX(mCachedUncDropdownSize.width), PX(mCachedUncDropdownSize.height)); 
         aDesiredSize.width  = mCachedUncComboSize.width;
         aDesiredSize.height = mCachedUncComboSize.height;
+        aDesiredSize.ascent = mCachedAscent;
+        aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
         if (aDesiredSize.maxElementSize != nsnull) {
           aDesiredSize.maxElementSize->width  = mCachedMaxElementSize.width;
           aDesiredSize.maxElementSize->height = mCachedMaxElementSize.height;
         }
-        aDesiredSize.ascent = aDesiredSize.height;
-        aDesiredSize.descent = 0;
         UNCONSTRAINED_CHECK();
         REFLOW_DEBUG_MSG3("#** Done nsCCF DW: %d  DH: %d\n\n", PX(aDesiredSize.width), PX(aDesiredSize.height));
         NS_ASSERTION(aDesiredSize.width != kSizeNotSet,  "aDesiredSize.width != kSizeNotSet");
