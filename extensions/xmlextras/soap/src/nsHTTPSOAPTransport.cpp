@@ -49,9 +49,22 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse 
   nsresult rv;
   nsCOMPtr<nsIXMLHttpRequest> request;
 
+  nsCOMPtr<nsIDOMDocument> messageDocument;
+  rv = aCall->GetMessage(getter_AddRefs(messageDocument));
+  if (NS_FAILED(rv)) return rv;
+  if (!messageDocument) return NS_ERROR_NOT_INITIALIZED;
+
   request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
+  nsAutoString uri;
+  rv = aCall->GetTransportURI(uri);
+  if (NS_FAILED(rv)) return rv;
+  if (AStringIsNull(uri)) return NS_ERROR_NOT_INITIALIZED;
+
+  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(), PR_FALSE, nsnull, nsnull);
+  if (NS_FAILED(rv)) return rv;
+			    
   nsAutoString action;
   rv = aCall->GetActionURI(action);
   if (NS_FAILED(rv)) return rv;
@@ -60,19 +73,6 @@ NS_IMETHODIMP nsHTTPSOAPTransport::SyncCall(nsISOAPCall *aCall, nsISOAPResponse 
     if (NS_FAILED(rv)) return rv;
   }
 
-  nsAutoString uri;
-  rv = aCall->GetTransportURI(uri);
-  if (NS_FAILED(rv)) return rv;
-  if (!AStringIsNull(uri)) return NS_ERROR_NOT_INITIALIZED;
-
-  nsCOMPtr<nsIDOMDocument> messageDocument;
-  rv = aCall->GetMessage(getter_AddRefs(messageDocument));
-  if (NS_FAILED(rv)) return rv;
-  if (!messageDocument) return NS_ERROR_NOT_INITIALIZED;
-
-  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(), PR_FALSE, nsnull, nsnull);
-  if (NS_FAILED(rv)) return rv;
-			    
   nsCOMPtr<nsIWritableVariant> variant = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -100,6 +100,7 @@ class nsHTTPSOAPTransportCompletion : public nsIDOMEventListener
 {
 public:
   nsHTTPSOAPTransportCompletion();
+  nsHTTPSOAPTransportCompletion(nsISOAPCall *call, nsISOAPResponse *response, nsIXMLHttpRequest *request, nsISOAPResponseListener *listener);
   virtual ~nsHTTPSOAPTransportCompletion();
 
   NS_DECL_ISUPPORTS
@@ -120,6 +121,13 @@ nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion()
 {
   NS_INIT_ISUPPORTS();
 }
+nsHTTPSOAPTransportCompletion::nsHTTPSOAPTransportCompletion(
+		nsISOAPCall *call, 
+		nsISOAPResponse *response, 
+		nsIXMLHttpRequest *request, 
+		nsISOAPResponseListener *listener):
+                  mCall(call), mResponse(response), mRequest(request), mListener(listener) {}
+
 nsHTTPSOAPTransportCompletion::~nsHTTPSOAPTransportCompletion()
 {
 }
@@ -128,7 +136,7 @@ nsHTTPSOAPTransportCompletion::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsresult rv;
   mRequest->GetStatus(&rv);
-  if (NS_SUCCEEDED(rv)) {
+  if (mResponse && NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDOMDocument> document;
     rv = mRequest->GetResponseXML(getter_AddRefs(document));
     if (NS_SUCCEEDED(rv)) {
@@ -148,12 +156,25 @@ NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponse
   nsresult rv;
   nsCOMPtr<nsIXMLHttpRequest> request;
 
-  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(request, &rv);
+  nsCOMPtr<nsIDOMDocument> messageDocument;
+  rv = aCall->GetMessage(getter_AddRefs(messageDocument));
   if (NS_FAILED(rv)) return rv;
+  if (!messageDocument) return NS_ERROR_NOT_INITIALIZED;
 
   request = do_CreateInstance(NS_XMLHTTPREQUEST_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
+  nsCOMPtr<nsIDOMEventTarget> eventTarget = do_QueryInterface(request, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString uri;
+  rv = aCall->GetTransportURI(uri);
+  if (NS_FAILED(rv)) return rv;
+  if (AStringIsNull(uri)) return NS_ERROR_NOT_INITIALIZED;
+
+  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(), PR_TRUE, nsnull, nsnull);
+  if (NS_FAILED(rv)) return rv;
+			    
   nsAutoString action;
   rv = aCall->GetActionURI(action);
   if (NS_FAILED(rv)) return rv;
@@ -161,24 +182,16 @@ NS_IMETHODIMP nsHTTPSOAPTransport::AsyncCall(nsISOAPCall *aCall, nsISOAPResponse
     rv = request->SetRequestHeader("SOAPAction", NS_ConvertUCS2toUTF8(action).get());
     if (NS_FAILED(rv)) return rv;
   }
-  nsCOMPtr<nsIDOMEventListener> listener = new nsHTTPSOAPTransportCompletion();
-  if (!listener) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsAutoString uri;
-  rv = aCall->GetTransportURI(uri);
-  if (NS_FAILED(rv)) return rv;
-  if (!AStringIsNull(uri)) return NS_ERROR_NOT_INITIALIZED;
-
-  nsCOMPtr<nsIDOMDocument> messageDocument;
-  rv = aCall->GetMessage(getter_AddRefs(messageDocument));
-  if (NS_FAILED(rv)) return rv;
-  if (!messageDocument) return NS_ERROR_NOT_INITIALIZED;
-
-  rv = request->OpenRequest("POST", NS_ConvertUCS2toUTF8(uri).get(), PR_TRUE, nsnull, nsnull);
-  if (NS_FAILED(rv)) return rv;
-			    
-  eventTarget->AddEventListener(NS_LITERAL_STRING("load"), listener, PR_FALSE);
-  eventTarget->AddEventListener(NS_LITERAL_STRING("error"), listener, PR_FALSE);
+  if (aListener) {
+    nsCOMPtr<nsIDOMEventListener> listener;
+    listener = new nsHTTPSOAPTransportCompletion(aCall, aResponse, request, aListener);
+    if (!listener) return NS_ERROR_OUT_OF_MEMORY;
+    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("load"), listener, PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+    rv = eventTarget->AddEventListener(NS_LITERAL_STRING("error"), listener, PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+  }
 
   nsCOMPtr<nsIWritableVariant> variant = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
