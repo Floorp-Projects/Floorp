@@ -352,7 +352,8 @@ SHA1_NewContext(void)
 {
     SHA1Context *cx;
 
-    cx = PORT_ZNew(SHA1Context);
+    /* no need to ZNew, SHA1_Begin will init the context */
+    cx = PORT_New(SHA1Context);
     return cx;
 }
 

@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: prng_fips1861.c,v 1.12 2001/11/15 02:41:17 nelsonb%netscape.com Exp $
+ * $Id: prng_fips1861.c,v 1.13 2003/03/24 22:25:51 ian.mcgreer%sun.com Exp $
  */
 
 #include "prerr.h"
@@ -166,8 +166,6 @@ alg_fips186_1_x3_1(RNGContext *rng,
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
-    /* initialize the SHA1 context */
-    memset(&sha1cx, 0, sizeof(sha1cx));
     /* 
      * <Step 2> Initialize t, taken care of in SHA-1 (same initial values) 
      */
