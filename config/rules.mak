@@ -804,7 +804,7 @@ chrome::
 
 regchrome:
 !if !defined(MOZ_DISABLE_JAR_PACKAGING)
-  $(PERL) $(DEPTH)\config\zipchrome.pl win32 $(DIST)\bin\chrome
+  $(PERL) $(DEPTH)\config\zipchrome.pl win32 update $(DIST)\bin\chrome
   $(PERL) $(DEPTH)\config\installchrome.pl win32 jar $(DIST)\bin\chrome
 !else
 #  XXX do it this way once everyone has perl installed. For now some

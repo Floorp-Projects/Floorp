@@ -239,7 +239,7 @@ sub MakeXpiFile
 
   # Make chrome archive files
   # We don't care if it fails because not all components have chrome archives.
-  &ZipChrome("win32", "$inStagePath\\$componentName\\bin\\chrome", "$inStagePath\\$componentName\\bin\\chrome");
+  &ZipChrome("win32", "noupdate", "$inStagePath\\$componentName\\bin\\chrome", "$inStagePath\\$componentName\\bin\\chrome");
 
   # Make .js files
   MakeJsFile($componentName);
