@@ -829,8 +829,6 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
         NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
         stuffToPaste.Assign ( text.get(), len / 2 );
         nsAutoEditBatch beginBatching(this);
-        // pasting does not inherit local inline styles
-        RemoveAllInlineProperties();
         rv = InsertText(stuffToPaste);
       }
     }
