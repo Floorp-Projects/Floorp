@@ -98,9 +98,10 @@ protected:
   
 // Utility Methods
 
-  virtual void IsTextPropertySetByContent(nsIDOMNode *aNode,
-                                          nsIAtom    *aProperty, 
-                                          PRBool     &aIsSet) const;
+  virtual void IsTextPropertySetByContent(nsIDOMNode  *aNode,
+                                          nsIAtom     *aProperty, 
+                                          PRBool      &aIsSet,
+                                          nsIDOMNode **aStyleNode) const;
 
   virtual void IsTextStyleSet(nsIStyleContext *aSC, 
                               nsIAtom         *aProperty, 
