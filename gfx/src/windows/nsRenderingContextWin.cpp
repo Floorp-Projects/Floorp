@@ -20,6 +20,7 @@
 #include "nsRegionWin.h"
 #include <math.h>
 #include "libimg.h"
+#include "nsDeviceContextWin.h"
 
 #ifdef NGLAYOUT_DDRAW
 #include "ddraw.h"
@@ -223,8 +224,6 @@ nsresult nsDrawingSurfaceWin :: Init(LPDIRECTDRAWSURFACE aSurface)
 #endif
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
-HPALETTE  nsRenderingContextWin::gPalette = NULL;
 
 #ifdef NGLAYOUT_DDRAW
 IDirectDraw *nsRenderingContextWin::mDDraw = NULL;
@@ -440,10 +439,15 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   mOrigFont = ::SelectObject(aNewDC, mDefFont);
   mOrigSolidPen = ::SelectObject(aNewDC, mBlackPen);
 
-  if (gPalette) {
-    mOrigPalette = ::SelectPalette(aNewDC, gPalette, FALSE);
-    // XXX Don't do the realization for an off-screen memory DC...
-    ::RealizePalette(aNewDC);
+  // If this is a palette device, then select and realize the palette
+  HPALETTE  pal = ((nsDeviceContextWin*)mContext)->GetLogicalPalette();
+
+  if (nsnull != pal) {
+    mOrigPalette = ::SelectPalette(aNewDC, pal, FALSE);
+    // Don't do the realization for an off-screen memory DC
+    if (nsnull == aOldDC) {
+      ::RealizePalette(aNewDC);
+    }
   }
 
   return NS_OK;

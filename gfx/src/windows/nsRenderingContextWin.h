@@ -185,9 +185,6 @@ protected:
   static IDirectDraw2 *mDDraw2;
   static nsresult     mDDrawResult;
 #endif
-
-public:
-  static HPALETTE   gPalette;
 };
 
 class nsDrawingSurfaceWin : public nsISupports
