@@ -3648,10 +3648,14 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
                           PRInt32 aStateFlags, nsresult aStatus)
 {
     nsresult rv;
+
     // Update the busy cursor
     if ((~aStateFlags & (STATE_START | STATE_IS_NETWORK)) == 0) {
-        nsCOMPtr<nsIWyciwygChannel>  wcwgChannel(do_QueryInterface(aRequest));        
-        if (wcwgChannel && !mLSHE && (mItemType == typeContent)) {
+        nsCOMPtr<nsIWyciwygChannel>  wcwgChannel(do_QueryInterface(aRequest));
+        nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+
+        // Was the wyciwyg document loaded on this docshell?   
+        if (wcwgChannel && !mLSHE && (mItemType == typeContent) && aProgress == webProgress.get()) {
             nsCOMPtr<nsIURI> uri;
             wcwgChannel->GetURI(getter_AddRefs(uri));
         
