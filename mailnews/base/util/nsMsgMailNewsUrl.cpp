@@ -103,38 +103,39 @@ nsresult nsMsgMailNewsUrl::GetUrlState(PRBool * aRunningUrl)
 
 nsresult nsMsgMailNewsUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 {
-  if (m_runningUrl == aRunningUrl) // we already knew this.
+  // if we already knew this running state, return, unless the url was aborted
+  if (m_runningUrl == aRunningUrl && aExitCode != NS_MSG_ERROR_URL_ABORTED)
     return NS_OK;
-	m_runningUrl = aRunningUrl;
-	nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
-
+  m_runningUrl = aRunningUrl;
+  nsCOMPtr <nsIMsgStatusFeedback> statusFeedback;
+  
   // put this back - we need it for urls that don't run through the doc loader
-	if (NS_SUCCEEDED(GetStatusFeedback(getter_AddRefs(statusFeedback))) && statusFeedback)
-	{
-		if (m_runningUrl)
-			statusFeedback->StartMeteors();
-		else
-		{
-			statusFeedback->ShowProgress(0);
-			statusFeedback->StopMeteors();
-		}
-	}
-	if (m_urlListeners)
-	{
-		if (m_runningUrl)
-		{
-			m_urlListeners->OnStartRunningUrl(this);
-		}
-		else
-		{
-			m_urlListeners->OnStopRunningUrl(this, aExitCode);
+  if (NS_SUCCEEDED(GetStatusFeedback(getter_AddRefs(statusFeedback))) && statusFeedback)
+  {
+    if (m_runningUrl)
+      statusFeedback->StartMeteors();
+    else
+    {
+      statusFeedback->ShowProgress(0);
+      statusFeedback->StopMeteors();
+    }
+  }
+  if (m_urlListeners)
+  {
+    if (m_runningUrl)
+    {
+      m_urlListeners->OnStartRunningUrl(this);
+    }
+    else
+    {
+      m_urlListeners->OnStopRunningUrl(this, aExitCode);
       m_loadGroup = nsnull; // try to break circular refs.
-		}
-	}
+    }
+  }
   else
     printf("no listeners in set url state\n");
-
-	return NS_OK;
+  
+  return NS_OK;
 }
 
 nsresult nsMsgMailNewsUrl::RegisterListener (nsIUrlListener * aUrlListener)
