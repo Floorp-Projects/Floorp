@@ -1812,19 +1812,19 @@ function LoadIdentity(startup)
             var start = emailAddr.lastIndexOf("@");
             session.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
         }
+        var autocompleteLdap = false;
+        var autocompleteDirectory = null;
         try {
-          var autocompleteLdap = prefs.GetBoolPref("ldap_2.autoComplete.useDirectory");
-          var autocompleteDirectory = prefs.CopyCharPref("ldap_2.autoComplete.directoryServer");
+          autocompleteLdap = prefs.GetBoolPref("ldap_2.autoComplete.useDirectory");
+          if (autocompleteLdap)
+            autocompleteDirectory = prefs.CopyCharPref("ldap_2.autoComplete.directoryServer");
         }
-        catch(ex) {
-          autocompleteLdap = false;
-          autocompleteDirectory = null;
-        }
+        catch(ex) {dump("ERROR: " + ex + "\n");}
         if(currentIdentity.overrideGlobalPref)
         {
           autocompleteDirectory = currentIdentity.directoryServer;
         }
-        if(autocompleteDirectory)
+        if (autocompleteDirectory)
         {
           document.getElementById('msgRecipient#1').setAttribute("searchSessions", "addrbook ldap");
           var session2 = Components.classes["@mozilla.org/autocompleteSession;1?type=ldap"].getService(Components.interfaces.nsILDAPAutoCompleteSession);
@@ -1835,7 +1835,9 @@ function LoadIdentity(startup)
                 createInstance().QueryInterface(                                              
                 Components.interfaces.nsILDAPURL);
 
-            serverURL.spec = prefs.CopyCharPref(autocompleteDirectory + ".uri");
+            try {
+              serverURL.spec = prefs.CopyCharPref(autocompleteDirectory + ".uri");
+            } catch (ex) {dump("ERROR: " + ex + "\n");}
             dump("url is " +  serverURL.spec +"\n");
             session2.serverURL = serverURL;
             session2.filterTemplate = "cn=";
