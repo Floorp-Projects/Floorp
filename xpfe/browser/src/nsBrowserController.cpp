@@ -122,6 +122,7 @@ nsBrowserController::Initialize(nsIDOMDocument* aDocument, nsISupports* aContain
     NS_RELEASE(doc);
   }
 
+  doUpdateToolbarState();
 done:
   return rv;
 }
@@ -181,7 +182,7 @@ nsresult nsBrowserController::Load(nsIDOMEvent* aLoadEvent)
 {
   nsresult rv = NS_OK;
 
-///  doUpdateToolbarState();
+  doUpdateToolbarState();
 
   return rv;
 }
@@ -194,24 +195,42 @@ nsresult nsBrowserController::Unload(nsIDOMEvent* aLoadEvent)
 void nsBrowserController::doUpdateToolbarState(void)
 {
   nsresult rv;
-  nsIDOMHTMLInputElement* button;
+  nsIDOMHTMLInputElement* element;
 
   if (nsnull != mWebWindow) {
+    /* Update the state of the back button... */
     if (nsnull != mBackBtn) {
-      rv = mBackBtn->QueryInterface(kIDOMHTMLInputElementIID, (void**)&button);
+      rv = mBackBtn->QueryInterface(kIDOMHTMLInputElementIID, (void**)&element);
       if (NS_SUCCEEDED(rv)) {
         rv = mWebWindow->CanBack();
-        button->SetDisabled((rv == NS_OK) ? PR_FALSE : PR_TRUE);
-        NS_RELEASE(button);
+        element->SetDisabled((rv == NS_OK) ? PR_FALSE : PR_TRUE);
+        NS_RELEASE(element);
       }
     }
-
+    /* Update the state of the forward button... */
     if (nsnull != mForwardBtn) {
-      rv = mForwardBtn->QueryInterface(kIDOMHTMLInputElementIID, (void**)&button);
+      rv = mForwardBtn->QueryInterface(kIDOMHTMLInputElementIID, (void**)&element);
       if (NS_SUCCEEDED(rv)) {
         rv = mWebWindow->CanForward();
-        button->SetDisabled((rv == NS_OK) ? PR_FALSE : PR_TRUE);
-        NS_RELEASE(button);
+        element->SetDisabled((rv == NS_OK) ? PR_FALSE : PR_TRUE);
+        NS_RELEASE(element);
+      }
+    }
+    /* Update the value of the URL typein... */
+    if (nsnull != mURLTypeIn) {
+      rv = mURLTypeIn->QueryInterface(kIDOMHTMLInputElementIID, (void**)&element);
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString name;
+        PRInt32 index = 0;
+        PRUnichar* url;
+
+        mWebWindow->GetHistoryIndex(index);
+        rv = mWebWindow->GetURL(index, &url);
+        if (NS_SUCCEEDED(rv)) {
+          name = url;
+          element->SetValue(name);
+        }
+        NS_RELEASE(element);
       }
     }
   }
