@@ -1204,7 +1204,9 @@ bash# ./checksetup.pl
 	<glossterm><filename>.htaccess</filename></glossterm> files
 	which the Apache webserver can use to restrict  access to
 	the bugzilla data files. The checksetup script  will
-	generate the <filename>.htaccess</filename> files.
+	generate the <filename>.htaccess</filename> files. These .htaccess files
+  will not work with Apache 1.2.x - but this has security holes, so you
+  shouldn't be using it anyway.
 	
 	<note>
 	  <para>
