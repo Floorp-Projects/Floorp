@@ -96,6 +96,9 @@ $moz_cvsroot   = $ENV{CVSROOT};
 #- Set these proper values for your tinderbox server
 $Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
 
+# Allow for non-client builds, e.g. camino.
+$moz_client_mk = 'client.mk';
+
 #- Set if you want to build in a separate object tree
 $ObjDir = '';
 

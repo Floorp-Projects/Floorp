@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.241 $ ';
+$::UtilsVersion = '$Revision: 1.242 $ ';
 
 package TinderUtils;
 
@@ -88,7 +88,7 @@ Options:
   --notimestamp          Do not pull by date.
    -tag TREETAG          Pull by tag (-r TREETAG).
    -t TREENAME           The name of the tree
-  --mozconfig FILENAME   Provide a mozconfig file for client.mk to use.
+  --mozconfig FILENAME   Provide a mozconfig file for $Settings::moz_client_mk
   --version              Print the version number (same as cvs revision).
   --help
 More details:
@@ -785,15 +785,15 @@ sub BuildIt {
         # Allow skipping of mozilla phase.
         unless ($Settings::SkipMozilla) {
           
-          # Make sure we have client.mk
-          unless (-e "$TreeSpecific::name/client.mk") {
+          # Make sure we have $Settings::moz_client_mk
+          unless (-e "$TreeSpecific::name/$Settings::moz_client_mk") {
             
             # Set CVSROOT here.  We should only need to checkout a new
-            # version of client.mk once; we might have more than one
-            # cvs tree so set CVSROOT here to avoid confusion.
+            # version of $Settings::moz_client_mk once; we might have 
+            # more than one cvs tree so set CVSROOT here to avoid confusion.
             $ENV{CVSROOT} = $Settings::moz_cvsroot;
             
-            run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/client.mk");
+            run_shell_command("$Settings::CVS $cvsco $TreeSpecific::name/$Settings::moz_client_mk");
           }
           
           # Create toplevel source directory.
@@ -821,9 +821,9 @@ sub BuildIt {
               }
             }
             # Build up initial make command.
-            my $make = "$Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs'";
+            my $make = "$Settings::Make -f $Settings::moz_client_mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs'";
             if ($Settings::FastUpdate) {
-              $make = "$Settings::Make -f client.mk fast-update && $Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs' build";
+              $make = "$Settings::Make -f $Settings::moz_client_mk fast-update && $Settings::Make -f $Settings::moz_client_mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs' build";
             }
 
             # Build up target string.
