@@ -571,8 +571,8 @@ xpmenubar button {
 }
 
 xpmenubar button:hover {
-  border: 1px outset white;
-  color:#333366;
+  border: 1px solid transparent;
+  color: inherit;
   text-decoration: none;
 }
 
@@ -582,10 +582,6 @@ xpmenu[menuactive="true"] button {
   text-decoration: none;
 }
 
-xpmenubar button:hover:-moz-outline {
-   border : 1px solid black;
-}
- 
 xpmenubar button:active {
   text-decoration:none;
   border: 1px inset;
