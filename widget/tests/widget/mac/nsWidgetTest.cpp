@@ -888,7 +888,11 @@ void DumpRects()
   // print all children's position
   nsIEnumerator *enumerator = window->GetChildren();
   nsISupports * widget;
-  while (widget = enumerator->Next()) {
+  nsISupports * widget;
+  do {
+      if (!NS_SUCCEEDED(enumerator->CurrentItem(&widget))) {
+        return;
+      }
       nsIWidget *child;
       if (NS_OK == widget->QueryInterface(kIWidgetIID, (void**)&child)) {
           //
@@ -896,8 +900,10 @@ void DumpRects()
           printf("Bounds(%d, %d, %d, %d)\n", rect.x, rect.y, rect.width, rect.height);
           NS_RELEASE(child);
       }
+      NS_RELEASE(child);
       NS_RELEASE(widget);
   }
+  while (NS_SUCCEEDED(enumerator->Next()));
 
   NS_RELEASE(enumerator);
   delete enumerator;

@@ -657,7 +657,6 @@ NS_IMETHODIMP	nsWindow::Update()
 				{
           if (NS_SUCCEEDED(children->CurrentItem(&child)))  {
 					  child->Update();
-					  child = (nsWindow*)children->Next();
           }
 				}
         while (NS_SUCCEEDED(children->Next()));			
@@ -964,8 +963,6 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 					  widgetHit = deeperHit;
 					  break;
 				  }
-				  else
-					  child = (nsWindow*)children->Next();
         }
 			}
       while (NS_SUCCEEDED(children->Next()));

@@ -232,6 +232,10 @@ nsIEnumerator* nsBaseWidget::GetChildren()
     do
     {
       nsIWidget *widget;
+      if (!NS_SUCCEEDED(mChildren->CurrentItem(&child))) {
+        delete children;
+        return NULL;
+      }
       if (NS_OK == child->QueryInterface(kIWidgetIID, (void**)&widget)) {
         children->Append(widget);
       }
