@@ -206,12 +206,21 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
         secStatus = (nsIWebProgressListener::STATE_IS_SECURE |
                      nsIWebProgressListener::STATE_SECURE_LOW);
 
-      CERTName* certName = CERT_AsciiToName(signer);
-      char* caName = CERT_GetOrgName(certName);
+      CERTCertificate *peerCert = SSL_PeerCertificate(fd);
+      char* caName = CERT_GetOrgName(&peerCert->subject);
+      CERT_DestroyCertificate(peerCert);
+      if (!caName) {
+        caName = signer;
+      }
 
       // If the CA name is RSA Data Security, then change the name to the real
       // name of the company i.e. VeriSign, Inc.
       if (nsCRT::strcmp((const char*)caName, "RSA Data Security, Inc.") == 0) {
+        // In this case, caName != signer since the logic implies signer
+        // would be at minimal "O=RSA Data Security, Inc" because caName
+        // is what comes after to O=.  So we're OK just freeing this memory
+        // without checking to see if it's equal to signer;
+        NS_ASSERTION(caName != signer, "caName was equal to caName when it shouldn't be");
         PR_Free(caName);
         caName = PL_strdup("Verisign, Inc.");
       }
@@ -244,8 +253,8 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
       infoObject->SetSSLStatus(status);
 
-      PR_Free(caName);
-      CERT_DestroyName(certName);
+      if (caName != signer)
+        PR_Free(caName);
       PR_Free(signer);
       PR_Free(cipherName);
     }
