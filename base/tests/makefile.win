@@ -20,13 +20,13 @@ DEPTH=..\..
 MAKE_OBJ_TYPE	= EXE
 PROG0 = .\$(OBJDIR)\TimerTest.exe
 PROG1 = .\$(OBJDIR)\TestAtoms.exe
-#PROG2 = .\$(OBJDIR)\CvtURL.exe
+PROG2 = .\$(OBJDIR)\CvtURL.exe
 PROG3 = .\$(OBJDIR)\TestCRT.exe
 RESFILE = timer.res
 PROGRAMS = $(PROG0) $(PROG1) \
 !ifdef MODULAR_NETLIB
-#        $(PROG2) \
-		$(PROG3) \
+        $(PROG2) \
+	$(PROG3) \
 !endif
         $(NULL)
 
@@ -35,7 +35,9 @@ LINCS=-I..\src -I$(PUBLIC)\xpcom -I$(PUBLIC)\netlib
 LLIBS=				\
  $(DIST)\lib\xpcom32.lib	\
  $(DIST)\lib\raptorbase.lib	\
- $(DIST)\lib\network.lib        \
+!ifdef MODULAR_NETLIB
+ $(DIST)\lib\netlib.lib         \
+!endif
  $(LIBNSPR)			\
  $(DIST)\lib\libplc21.lib	\
  $(RESFILE)
@@ -46,7 +48,7 @@ install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG0) $(DIST)\bin
 	$(MAKE_INSTALL) $(PROG1) $(DIST)\bin
 !ifdef MODULAR_NETLIB
-#	$(MAKE_INSTALL) $(PROG2) $(DIST)\bin
+	$(MAKE_INSTALL) $(PROG2) $(DIST)\bin
 	$(MAKE_INSTALL) $(PROG3) $(DIST)\bin
 !endif
 
@@ -78,6 +80,8 @@ $(PROG0): $(OBJDIR) TimerTest.cpp $(RESFILE)
 
 $(PROG1): $(OBJDIR) TestAtoms.cpp
 
-# $(PROG2): $(OBJDIR) CvtURL.cpp
+!ifdef MODULAR_NETLIB
+$(PROG2): $(OBJDIR) CvtURL.cpp
 
-# $(PROG2): $(OBJDIR) TestCRT.cpp
+$(PROG3): $(OBJDIR) TestCRT.cpp
+!endif
