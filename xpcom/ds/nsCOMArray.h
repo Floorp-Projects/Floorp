@@ -149,13 +149,13 @@ class nsCOMArray : public nsCOMArray_base
 
     // index of the element in question.. does NOT refcount
     PRInt32 IndexOf(T* aObject) const {
-        return nsCOMArray_base::IndexOf(aObject);
+        return nsCOMArray_base::IndexOf(NS_STATIC_CAST(nsISupports*, aObject));
     }
 
     // inserts aObject at aIndex, shifting the objects at aIndex and
     // later to make space
     PRBool InsertObjectAt(T* aObject, PRInt32 aIndex) {
-        return nsCOMArray_base::InsertObjectAt(aObject, aIndex);
+        return nsCOMArray_base::InsertObjectAt(NS_STATIC_CAST(nsISupports*, aObject), aIndex);
     }
 
     // inserts the objects from aObject at aIndex, shifting the
@@ -167,7 +167,7 @@ class nsCOMArray : public nsCOMArray_base
     // replaces an existing element. Warning: if the array grows,
     // the newly created entries will all be null
     PRBool ReplaceObjectAt(T* aObject, PRInt32 aIndex) {
-        return nsCOMArray_base::ReplaceObjectAt(aObject, aIndex);
+        return nsCOMArray_base::ReplaceObjectAt(NS_STATIC_CAST(nsISupports*, aObject), aIndex);
     }
 
     // override nsVoidArray stuff so that they can be accessed by
@@ -202,7 +202,7 @@ class nsCOMArray : public nsCOMArray_base
 
     // append an object, growing the array as necessary
     PRBool AppendObject(T *aObject) {
-        return nsCOMArray_base::AppendObject(aObject);
+        return nsCOMArray_base::AppendObject(NS_STATIC_CAST(nsISupports*, aObject));
     }
 
     // append objects, growing the array as necessary
@@ -214,7 +214,7 @@ class nsCOMArray : public nsCOMArray_base
     // array as necessary
     // Warning: if you pass null here, it will remove the first null element
     PRBool RemoveObject(T *aObject) {
-        return nsCOMArray_base::RemoveObject(aObject);
+        return nsCOMArray_base::RemoveObject(NS_STATIC_CAST(nsISupports*, aObject));
     }
 
     // remove an element at a specific position, shrinking the array
