@@ -49,6 +49,7 @@
 #include "nsBidiKeyboard.h"
 #include "nsCanvas.h"
 #include "nsDragService.h"
+#include "nsILocalFile.h"
 #include "nsFilePicker.h"
 #include "nsFileWidget.h"
 #include "nsFontRetrieverService.h"
