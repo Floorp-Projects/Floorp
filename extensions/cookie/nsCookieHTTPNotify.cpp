@@ -52,6 +52,7 @@ NS_COOKIE nsresult NS_NewCookieHTTPNotify(nsIHTTPNotify** aHTTPNotify)
 nsCookieHTTPNotify::nsCookieHTTPNotify()
 {
     NS_INIT_REFCNT();
+    mCookieService = nsnull;
 }
 
 NS_IMETHODIMP
@@ -88,7 +89,11 @@ nsCookieHTTPNotify::SetupCookieService()
 {
     nsresult rv = NS_OK;
     if (!mCookieService)
-        mCookieService = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
+    {
+      nsCOMPtr<nsICookieService> cookieService = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
+      // we want a NON-owning reference to the cookie service
+      mCookieService = cookieService;
+    }
     return rv;
 }
 

@@ -44,9 +44,6 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsICookieService
-  static nsresult GetCookieService(nsICookieService** aCookieService);
-
   NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie);
   NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie);
   NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURL, const char *aCookie, const char *aExpires);
@@ -57,47 +54,25 @@ public:
 
   nsCookieService();
   virtual ~nsCookieService(void);
+  nsresult Init();
   
 protected:
     
 private:
-  nsIHTTPNotify *mCookieHTTPNotify;
-  nsresult Init();
+  nsCOMPtr<nsIHTTPNotify> mCookieHTTPNotify;
 };
-
-static nsCookieService* gCookieService = nsnull; // The one-and-only CookieService
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsCookieService Implementation
 
 NS_IMPL_ISUPPORTS1(nsCookieService, nsICookieService);
 
-NS_EXPORT nsresult NS_NewCookieService(nsICookieService** aCookieService) {
-  return nsCookieService::GetCookieService(aCookieService);
-}
-
 nsCookieService::nsCookieService() {
   NS_INIT_REFCNT();
-  mCookieHTTPNotify = nsnull;
   Init();
 }
 
 nsCookieService::~nsCookieService(void) {
-  NS_IF_RELEASE(mCookieHTTPNotify);
-  gCookieService = nsnull;
-}
-
-nsresult nsCookieService::GetCookieService(nsICookieService** aCookieService) {
-  if (! gCookieService) {
-    nsCookieService* it = new nsCookieService();
-    if (! it) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    gCookieService = it;
-  }
-  NS_ADDREF(gCookieService);
-  *aCookieService = gCookieService;
-  return NS_OK;
 }
 
 nsresult nsCookieService::Init() {
@@ -107,7 +82,7 @@ nsresult nsCookieService::Init() {
   rv = eventQService->CreateThreadEventQueue();
   if (NS_FAILED(rv)) return rv;
   
-  if (NS_FAILED(rv = NS_NewCookieHTTPNotify(&mCookieHTTPNotify))) {
+  if (NS_FAILED(rv = NS_NewCookieHTTPNotify(getter_AddRefs(mCookieHTTPNotify)))) {
     return rv;
   }
 
@@ -184,32 +159,8 @@ NS_IMETHODIMP nsCookieService::Cookie_GetPermissionListForViewer(nsString& aPerm
 // NOTE: This creates an instance of objects by using the default constructor
 //
 // NS_GENERIC_FACTORY_CONSTRUCTOR(nsCookieService)
-static NS_IMETHODIMP    
-CreateNewCookieService(nsISupports* aOuter, REFNSIID aIID, void **aResult)
-{                                                                    
-    if (!aResult) {                                              
-        return NS_ERROR_INVALID_POINTER; 
-    }                            
-    if (aOuter) {          
-        *aResult = nsnull;
-        return NS_ERROR_NO_AGGREGATION;
-    }                                 
-    nsICookieService* inst = nsnull;                   
-    nsresult rv = NS_NewCookieService(&inst); 
-    if (NS_FAILED(rv)) {       
-        *aResult = nsnull;     
-        return rv;          
-    } 
-    if(!inst) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    rv = inst->QueryInterface(aIID, aResult); 
-    if (NS_FAILED(rv)) { 
-        *aResult = nsnull; 
-    }                      
-    NS_RELEASE(inst);             /* get rid of extra refcnt */ 
-    return rv;                
-}
+
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieService, Init)
 
 ////////////////////////////////////////////////////////////////////////
 // Define a table of CIDs implemented by this module along with other
@@ -218,7 +169,7 @@ CreateNewCookieService(nsISupports* aOuter, REFNSIID aIID, void **aResult)
 //
 static nsModuleComponentInfo components[] = {
     { "CookieService", NS_COOKIESERVICE_CID,
-      NS_COOKIESERVICE_PROGID, CreateNewCookieService, },	// XXX Singleton
+      NS_COOKIESERVICE_PROGID, nsCookieServiceConstructor, },	// XXX Singleton
 };
 
 ////////////////////////////////////////////////////////////////////////
