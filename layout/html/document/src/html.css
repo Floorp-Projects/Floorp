@@ -757,7 +757,7 @@ input[type="button"]:-moz-focus-inner {
 /*XXX[PERF] setup a border so the size does 
   not change between focus changes to prevent 
   reflows */
-   border : 1px solid inherit;
+   border : 1px solid transparent;
 }
 
 input[type="button"]:focus:-moz-focus-inner {
