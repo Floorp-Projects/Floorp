@@ -2390,9 +2390,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 
         if (listener) //notify after clearing the copy state;
           listener->OnStopCopy(NS_OK);
-
-        
-        if (NS_SUCCEEDED(result))
+        // OnStopCopy() should be called only once (listener is null when drag and drop msgs).
+        else if (NS_SUCCEEDED(result))
           copyService->NotifyCompletion(srcSupport, this, rv);
         
       }
