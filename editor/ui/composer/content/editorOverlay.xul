@@ -368,7 +368,7 @@
       <menuitem accesskey="&insertanchor.accesskey;"     observes="cmd_anchor"      value="&insertAnchorCmd.label;"/>
       <menuitem accesskey="&insertimage.accesskey;"      observes="cmd_image"       value="&insertImageCmd.label;"/>
       <menuitem accesskey="&inserthline.accesskey;"      observes="cmd_hline"       value="&insertHLineCmd.label;"/>
-      <menuitem accesskey="&inserttable.accesskey;"      observes="cmd_table"       value="&insertTableCmd.label;"/>
+      <menuitem accesskey="&inserttable.accesskey;"      observes="cmd_InsertTable" value="&insertTableCmd.label;"/>
       <menuitem accesskey="&HTMLSourceMode.accesskey;"   observes="cmd_insertHTML"  key="inserthtmlkb"/>
       <menuitem accesskey="&insertchars.accesskey;"      observes="cmd_insertChars" />
     </menupopup>
