@@ -299,9 +299,19 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
       // we must give the frame being reflowed the same amount of available
       // width; otherwise, it's not only just an incremental reflow but also
       // a resize reflow
+      nsSize  oldScrollSize(mRect.width, mRect.height);
       nsSize  kidSize;
+
       kidFrame->GetSize(kidSize);
-      if (kidSize.height > scrollAreaSize.height) {
+      oldScrollSize.width -= border.left + border.right;
+      oldScrollSize.height -= border.top + border.bottom;
+
+      if (kidSize.width > oldScrollSize.width) {
+        // Horizontal scrollbar is showing
+        oldScrollSize.height -= NSToCoordRound(sbHeight);
+      }
+
+      if (kidSize.height > oldScrollSize.height) {
         roomForVerticalScrollbar = PR_TRUE;
       }
     }
