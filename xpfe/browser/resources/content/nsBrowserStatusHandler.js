@@ -149,6 +149,10 @@ nsBrowserStatusHandler.prototype =
   {
     this.overLink = link;
     this.updateStatusField();
+    if (link)
+      this.statusTextField.setAttribute('crop', 'center');
+    else
+      this.statusTextField.removeAttribute('crop');
   },
 
   updateStatusField : function()
