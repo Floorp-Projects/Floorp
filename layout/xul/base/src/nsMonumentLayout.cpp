@@ -321,6 +321,7 @@ nsBoxSizeListImpl::Append(nsBoxLayoutState& aState, nsBoxSizeList* aChild)
       mLast->SetNext(aState, aChild);
 
   mLast = aChild;
+  mLast->SetNext(aState, nsnull);
   aChild->SetParent(this);
 }
 
