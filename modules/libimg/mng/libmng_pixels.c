@@ -935,7 +935,7 @@ mng_retcode display_rgb8_a8 (mng_datap pData)
         for (iX = pData->iSourcel + pData->iCol; iX < pData->iSourcer; iX += pData->iColinc)
         {
           iFGa8 = *(pDataline+3);      /* get alpha values */
-          iBGa8 = *(pScanline+3);
+          iBGa8 = *pAlphaline;
 
           if (iFGa8)                   /* any opacity at all ? */
           {                            /* fully opaque or background fully transparent ? */
