@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 <!--
    The contents of this file are subject to the Netscape Public
@@ -17,33 +17,44 @@
    Copyright (C) 1998-1999 Netscape Communications Corporation. All
    Rights Reserved.
    
-   Contributor(s): 
+   Contributor(s):
+     Håkan Waara <hwaara@chello.se>
+     Peter Annema <disttsc@bart.nl>
   -->
+
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-%brandDTD;
-<!ENTITY % prefCookieDTD SYSTEM "chrome://cookie/locale/pref-cookies.dtd" >
-%prefCookieDTD;
-]>
+<!DOCTYPE window SYSTEM "chrome://cookie/locale/pref-cookies.dtd">
 
 <window debug="false" xmlns:html="http://www.w3.org/1999/xhtml" id="cookieWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         align="vertical"
-        onload="parent.initPanel('chrome://cookie/content/pref-cookies.xul');">
-          
+        onload="init();">
+
   <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
 
-  <script>
+  <script type="application/x-javascript">
   <![CDATA[
-  
+
   var _elementIDs = ["networkCookieBehaviour", "networkWarnAboutCookies"];
 
+  function init()
+  {
+    parent.initPanel('chrome://cookie/content/pref-cookies.xul');
+
+    var enabled = document.getElementById("networkCookieBehaviour").data != "2";
+    setWarnAboutCookiesEnabled(enabled);
+  }
+
+  function setWarnAboutCookiesEnabled(aEnabled)
+  {
+    document.getElementById("networkWarnAboutCookies").disabled = !aEnabled;
+  }
+
   ]]>
-  </script>   
+  </script>
 
   <box class="box-smallheader" id="cookieHeader" title="&lHeader;"/>
 
@@ -55,19 +66,28 @@
     <radiogroup id="networkCookieBehaviour" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="network.cookie.cookieBehavior"
                 prefattribute="value">
-      <radio group="networkCookieBehaviour" value="0" label="&accAllCookiesRadio.label;" accesskey="&accAllCookiesRadio.accesskey;"/>
-      <radio group="networkCookieBehaviour" value="1" label="&accOrgCookiesRadio.label;" accesskey="&accOrgCookiesRadio.accesskey;"/>
-      <radio group="networkCookieBehaviour" value="2" label="&disableCookies.label;" accesskey="&disableCookies.accesskey;"/>
+      <radio group="networkCookieBehaviour" value="2" label="&disableCookies.label;"
+             accesskey="&disableCookies.accesskey;" oncommand="setWarnAboutCookiesEnabled(false);"/>
+      <radio group="networkCookieBehaviour" value="1" label="&accOrgCookiesRadio.label;"
+             accesskey="&accOrgCookiesRadio.accesskey;" oncommand="setWarnAboutCookiesEnabled(true);"/>
+      <radio group="networkCookieBehaviour" value="0" label="&accAllCookiesRadio.label;"
+             accesskey="&accAllCookiesRadio.accesskey;" oncommand="setWarnAboutCookiesEnabled(true);"/>
     </radiogroup>
+
+    <separator/>
+
     <box autostretch="never">
-      <checkbox class="indent" id="networkWarnAboutCookies" label="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
-              pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"
-              prefattribute="checked"/>
+      <checkbox id="networkWarnAboutCookies" label="&warnAboutCookies.label;" accesskey="&warnAboutCookies.accesskey;"
+                pref="true" preftype="bool" prefstring="network.cookie.warnAboutCookies"
+                prefattribute="checked"/>
     </box>
+
+    <separator/>
+
     <box autostretch="never" halign="right">
       <button class="dialog" label="&viewCookies.label;" accesskey="&viewCookies.accesskey;" oncommand="viewCookies();"/>
       <button class="dialog" label="&viewTutorial.label;" accesskey="&viewTutorial.accesskey;" oncommand="viewTutorial();"/>
-    </box>              
+    </box>
   </titledbox>
 
 </window>
