@@ -430,6 +430,7 @@ void CColorPopup::FinishCreateSelf()
 
 	mEditView = (CEditView *)superview->FindPaneByID( CEditView::pane_ID );
 	mDoSetLastPickedPreference = false;
+	SetTicksBeforeDisplayingPopup( 1 );    //display popup instantaneously
 
 	// need to Finish FinishCreateSelf to get menus set for retrieval
 	super::FinishCreateSelf();
