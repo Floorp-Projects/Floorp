@@ -2081,6 +2081,13 @@ nsHttpHandler::Observe(nsISupports *subject,
         if (mAuthCache)
             mAuthCache->ClearAll();
 
+        // kill mIdleConnections - these sockets could be holding onto other resources
+        // that need to be freed.
+        {
+          nsAutoLock lock(mConnectionLock);
+          DropConnections(mIdleConnections);
+        }
+
         // need to reset the session start time since cache validation may
         // depend on this value.
         mSessionStartTime = NowInSeconds();
