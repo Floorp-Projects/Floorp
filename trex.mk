@@ -57,7 +57,7 @@ pull_platform:
 	cd $(MOZ_SRC)
 
 pull_julian:
-ifeq ($(MOZ_ZULU_FREE),1)
+ifneq ($(MOZ_ZULU_FREE),1)
 	cd $(MOZ_SRC); \
 	$(CVST) ns/client.mk; \
 	cd $(MOZ_SRC)/ns/.; \
@@ -72,7 +72,7 @@ endif
 pull_trex:
 	cd $(MOZ_SRC); \
 	$(CVS)  mozilla/gconfig; \
-    $(CVS)  $(TREX_MSGSDK_BRANCH)   $(TREX_MSGSDK_DIR); \
+	$(CVS)  $(TREX_MSGSDK_BRANCH)   $(TREX_MSGSDK_DIR); \
 	$(CVS)  mozilla/xpfc; \
 	$(CVS)  mozilla/calendar; \
 	cd $(MOZ_SRC)/.
@@ -86,7 +86,7 @@ build_platform:
 
 
 build_julian:: 
-ifeq ($(MOZ_ZULU_FREE),1)
+ifneq ($(MOZ_ZULU_FREE),1)
 	cd $(MOZ_SRC)/ns/modules/libnls; \
 	gmake; \
 	cd $(MOZ_SRC)
