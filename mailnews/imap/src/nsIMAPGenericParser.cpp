@@ -317,33 +317,27 @@ void nsIMAPGenericParser::AdvanceToNextLine()
     HandleMemoryFailure();
 }
 
+// advances |fLineOfTokens| by |bytesToAdvance| bytes
 void nsIMAPGenericParser::AdvanceTokenizerStartingPoint(int32 bytesToAdvance)
 {
-  PRInt32 startingDiff = fLineOfTokens - fStartOfLineOfTokens;
-  PRInt32 nextTokenOffset;
-  
-  // save off offset into fStartOfLineOfTokens of fNextToken so we can set it appropriately
-  // when we destroy the current line and create a new one. I'm pretty sure fNextToken must
-  // point somewhere in the current line.
-  nextTokenOffset = fNextToken - fStartOfLineOfTokens;
-  
-  PR_FREEIF(fStartOfLineOfTokens);
-  if (fCurrentLine)
+  NS_PRECONDITION(bytesToAdvance>=0, "bytesToAdvance must not be negative");
+  if(!fStartOfLineOfTokens)
+      return;
+
+  // In the last call to GetNextToken(), the token separator was cleared to '\0'
+  // iff |fCurrentTokenPlaceHolder|.  We must recover this token separator now.
+  if (fCurrentTokenPlaceHolder)
   {
-    fStartOfLineOfTokens = PL_strdup(fCurrentLine);
-    fNextToken = fStartOfLineOfTokens + nextTokenOffset;
-    
-    if (fStartOfLineOfTokens && ((int32) strlen(fStartOfLineOfTokens) >= bytesToAdvance))
-    {
-      fLineOfTokens = fStartOfLineOfTokens + bytesToAdvance  + startingDiff;
-      fCurrentTokenPlaceHolder = fLineOfTokens;
-      fTokenizerAdvanced = PR_TRUE;
-    }
-    else
-      HandleMemoryFailure();
+    int endTokenOffset = fCurrentTokenPlaceHolder - fStartOfLineOfTokens - 1;
+    if (endTokenOffset >= 0)
+      fStartOfLineOfTokens[endTokenOffset] = fCurrentLine[endTokenOffset];
   }
-  else
-    HandleMemoryFailure();
+
+  NS_ASSERTION(bytesToAdvance + (fLineOfTokens-fStartOfLineOfTokens) <=
+    (int32)strlen(fCurrentLine), "cannot advance beyond end of fLineOfTokens");
+  fLineOfTokens += bytesToAdvance;
+  fCurrentTokenPlaceHolder = fLineOfTokens;
+  fTokenizerAdvanced = PR_TRUE;
 }
 
 // Lots of things in the IMAP protocol are defined as an "astring."
