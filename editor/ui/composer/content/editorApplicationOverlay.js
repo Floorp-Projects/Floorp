@@ -83,9 +83,8 @@ function editPageOrFrame()
 //   and we need a delay to let dialog close)
 function editPage(url, launchWindow, delay)
 {
-  // Always strip off "view-source:"
-  if (url.slice(0,12) == "view-source:")
-    url = url.slice(13);
+  // Always strip off "view-source:" and #anchors
+  url = url.replace(/^view-source:/, "").replace(/#.*/, "");
 
   // User may not have supplied a window
   if (!launchWindow)
