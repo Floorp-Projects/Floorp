@@ -28,7 +28,12 @@
 #define nsSVGPathFrame_h__
 
 
-#include "nsPolygonFrame.h"
+#include "nsLeafFrame.h"
+#include "prtypes.h"
+#include "nsIAtom.h"
+#include "nsCOMPtr.h"
+#include "nsVoidArray.h"
+#include "nsISVGFrame.h"
 
 class nsString;
 
@@ -41,11 +46,69 @@ nsresult NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 // we really want to create our own container class from the nsIFrame
 // interface and not derive from any HTML Frames
 // XXX - !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-class nsSVGPathFrame : public nsPolygonFrame
+class nsSVGPathFrame : public nsLeafFrame, public nsISVGFrame
 {
-  NS_IMETHOD RenderPoints(nsIRenderingContext& aRenderingContext,
-                          const nsPoint aPoints[], PRInt32 aNumPoints);
-   
+public:
+  nsSVGPathFrame();
+  virtual ~nsSVGPathFrame();
+
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD Reflow(nsIPresContext*          aCX,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
+   // nsISVGFrame
+  NS_IMETHOD GetXY(nscoord* aX, nscoord* aY) { *aX = mX; *aY = mY; return NS_OK; }
+
+   // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
+#ifdef DEBUG
+  NS_IMETHOD GetFrameName(nsString& aResult) const {
+    return MakeFrameName("SVGPathFrame", aResult);
+  }
+#endif
+
+  // nsIFrame overrides
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus*  aEventStatus);
+  nsresult HandleMouseDownEvent(nsIPresContext* aPresContext,
+                                nsGUIEvent*     aEvent,
+                                nsEventStatus*  aEventStatus);
+
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
+
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
+
+protected:
+
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsHTMLReflowState& aReflowState,
+                              nsHTMLReflowMetrics& aDesiredSize) ;
+
+
+  nscoord    mX;
+  nscoord    mY;
+  // make this a path object
+  void * mPath;
+
+private:
+  NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 }; // class nsSVGPathFrame
 
 #endif
