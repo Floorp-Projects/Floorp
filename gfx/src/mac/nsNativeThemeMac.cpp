@@ -444,6 +444,14 @@ nsNativeThemeMac::DrawButton ( ThemeButtonKind inKind, const Rect& inBoxRect, PR
 void
 nsNativeThemeMac::DrawToolbar ( const Rect& inBoxRect )
 {
+#if 0
+  const PRInt32 kThemeBrushToolbarBackground = 52;    // from 3.4.1 headers
+  ::SetThemeBackground(kThemeBrushToolbarBackground, 24, true);
+  ::EraseRect(&inBoxRect);
+  ::SetThemeBackground(kThemeBrushWhite, 24, true);
+printf("told to draw at %ld %ld w %ld h %ld\n", inBoxRect.left, inBoxRect.top, inBoxRect.right-inBoxRect.left,
+        inBoxRect.bottom - inBoxRect.top);
+#endif
   ThemeDrawState drawState = kThemeStateActive;
   ::DrawThemeWindowHeader(&inBoxRect, drawState);
 }
@@ -664,12 +672,13 @@ nsNativeThemeMac::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* 
       break;
 
     case NS_THEME_TOOLTIP:
-      {
-        RGBColor yellow = {65535,65535,45000};
-        ::RGBBackColor(&yellow);
-        ::EraseRect(&macRect);
-        break;
-      }
+    {
+      RGBColor yellow = {65535,65535,45000};
+      ::RGBBackColor(&yellow);
+      ::EraseRect(&macRect);
+      ::SetThemeBackground(kThemeBrushWhite, 24, true);
+      break;
+    }
 
     case NS_THEME_CHECKBOX:
       DrawCheckbox ( macRect, IsChecked(aFrame), IsDisabled(aFrame), eventState );
@@ -920,7 +929,11 @@ nsNativeThemeMac::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       break;
       
     case NS_THEME_TEXTFIELD:
-      //XXX ?
+      // at minimum, we should be tall enough for 9pt text.
+      SInt32 shadow = 0, frameOutset = 0;
+      ::GetThemeMetric(kThemeMetricEditTextWhitespace, &shadow);
+      ::GetThemeMetric(kThemeMetricEditTextFrameOutset, &frameOutset);
+      aResult->SizeTo(0, (shadow + frameOutset) * 2 + 9);      
       break;
       
     case NS_THEME_PROGRESSBAR:
@@ -988,6 +1001,7 @@ nsNativeThemeMac::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
   switch ( aWidgetType ) {
     case NS_THEME_TOOLBOX:
     case NS_THEME_TOOLBAR:
+    case NS_THEME_TOOLBAR_BUTTON:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL: 
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     case NS_THEME_STATUSBAR:
