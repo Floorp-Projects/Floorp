@@ -184,6 +184,7 @@ protected:
     nsCString mProduct;
     nsCString mProductSub;
     nsCString mProductComment;
+    nsCString mAppUserAgentOverride;
 
 
 private:

@@ -607,11 +607,20 @@ nsHTTPHandler::nsHTTPHandler():
 }
 
 #define UA_PREF_PREFIX "general.useragent."
+#define UA_APPNAME "Mozilla"
+#define UA_APPVERSION "5.0"
+#define UA_APPSECURITY_FALLBACK "N"
 nsresult
 nsHTTPHandler::InitUserAgentComponents()
 {
-    nsresult rv = NS_OK;
+    nsresult rv;
     nsXPIDLCString UAPrefVal;
+
+    // User-specified override
+    rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "override",
+        getter_Copies(UAPrefVal));
+    if (NS_SUCCEEDED(rv))
+        mAppUserAgentOverride.Assign(UAPrefVal);
 
     // Gather vendor values.
     rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "vendor",
@@ -652,8 +661,8 @@ nsHTTPHandler::InitUserAgentComponents()
         mAppMisc.Assign(UAPrefVal);
 
     // Gather Application name and Version.
-    mAppName = "Mozilla";
-    mAppVersion = "5.0";
+    mAppName = UA_APPNAME;
+    mAppVersion = UA_APPVERSION;
 
     // Get Security level supported
     rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "security",
@@ -661,7 +670,7 @@ nsHTTPHandler::InitUserAgentComponents()
     if (NS_SUCCEEDED(rv))
         mAppSecurity.Assign(NS_STATIC_CAST(const char*, UAPrefVal));
     else
-        mAppSecurity = "N";
+        mAppSecurity = UA_APPSECURITY_FALLBACK;
 
     // Gather locale.
     nsXPIDLString uval;
@@ -1255,6 +1264,15 @@ nsHTTPHandler::FollowRedirects(PRBool bFollow)
 // This guy needs to be called each time one of it's comprising pieces changes.
 nsresult
 nsHTTPHandler::BuildUserAgent() {
+
+    // First, check, if we have a user-specified override
+    if (!mAppUserAgentOverride.IsEmpty())
+    {
+        mAppUserAgent = mAppUserAgentOverride;
+        return NS_OK;
+    }
+    // No, we don't. Go on normally.
+
     NS_ASSERTION((!mAppName.IsEmpty()
                   || !mAppVersion.IsEmpty()
                   || !mAppPlatform.IsEmpty()
