@@ -141,7 +141,6 @@ function filepickerLoad() {
   // start out with a filename sort
   handleColumnClick("FilenameColumn");
 
-  document.documentElement.setAttribute("ondialogcancel", "return onCancel();");
   try {
     var buttonLabel = getOKAction();
     okButton.setAttribute("label", buttonLabel);
@@ -160,8 +159,7 @@ function filepickerLoad() {
 
   // Start out with the ok button disabled since nothing will be
   // selected and nothing will be in the text field.
-  okButton.disabled = true;
-  textInput.focus();
+  okButton.disabled = filePickerMode != nsIFilePicker.modeGetFolder;
 
   // This allows the window to show onscreen before we begin
   // loading the file list
@@ -218,23 +216,9 @@ function showErrorDialog(titleStrName, messageStrName, file)
 function openOnOK()
 {
   var dir = treeView.selectedFiles.queryElementAt(0, nsIFile);
-  if (!dir.isReadable()) {
-    showErrorDialog("errorOpenFileDoesntExistTitle",
-                    "errorDirNotReadableMessage",
-                    dir);
-    return false;
-  }
-
   if (dir)
     gotoDirectory(dir);
 
-  retvals.fileList = new Array(dir);
-
-  retvals.buttonStatus = nsIFilePicker.returnCancel;
-  
-  var filterMenuList = document.getElementById("filterMenuList");
-  retvals.filterIndex = filterMenuList.selectedIndex;
-  
   return false;
 }
 
@@ -501,11 +485,10 @@ function onKeypress(e) {
 }
 
 function doEnabling() {
+  if (filePickerMode != nsIFilePicker.modeGetFolder)
   // Maybe add check if textInput.value would resolve to an existing
   // file or directory in .modeOpen. Too costly I think.
-  var enable = (textInput.value != "");
-
-  okButton.disabled = !enable;
+    okButton.disabled = (textInput.value == "")
 }
 
 function onTreeFocus(event) {
@@ -516,7 +499,7 @@ function onTreeFocus(event) {
 function getOKAction(file) {
   var buttonLabel;
 
-  if (file && file.isDirectory() && filePickerMode != nsIFilePicker.modeGetFolder) {
+  if (file && file.isDirectory()) {
     document.documentElement.setAttribute("ondialogaccept", "return openOnOK();");
     buttonLabel = gFilePickerBundle.getString("openButtonLabel");
   }
@@ -578,7 +561,7 @@ function onFileSelected(/* nsIArray */ selectedFileList) {
     var buttonLabel = getOKAction(file);
     okButton.setAttribute("label", buttonLabel);
     okButton.disabled = invalidSelection;
-  } else
+  } else if (filePickerMode != nsIFilePicker.modeGetFolder)
     okButton.disabled = (textInput.value == "");
 }
 
