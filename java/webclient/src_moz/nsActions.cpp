@@ -36,6 +36,7 @@
 #include "nsISHEntry.h"
 #include "nsIURI.h"
 
+#include "jni_util.h"
 
 void *          handleEvent     (PLEvent * event);
 void            destroyEvent    (PLEvent * event);
@@ -663,6 +664,61 @@ wsAddDocLoaderObserverEvent::handleEvent ()
     }
     return result;
 } // handleEvent()
+
+wsDeallocateInitContextEvent::wsDeallocateInitContextEvent(WebShellInitContext* yourInitContext) :
+        nsActionEvent(),
+        mInitContext(yourInitContext)
+{
+}
+
+void *
+wsDeallocateInitContextEvent::handleEvent ()
+{
+    void *result = nsnull;
+    if (!mInitContext) {
+        return (void *) NS_ERROR_UNEXPECTED;
+    }
+
+    mInitContext->parentHWnd = nsnull;
+    //    ((nsISupports *)mInitContext->docShell)->Release();
+    mInitContext->docShell = nsnull;
+    //    ((nsISupports *)mInitContext->webShell)->Release();
+
+    // PENDING(edburns): this is a leak.  For some reason, webShell's
+    // refcount is two.  I believe it should be one.
+    // see http://bugzilla.mozilla.org/show_bug.cgi?id=38271
+
+    mInitContext->webShell = nsnull;
+    mInitContext->webNavigation = nsnull;
+    mInitContext->presShell = nsnull;
+    mInitContext->sHistory = nsnull;
+    mInitContext->baseWindow = nsnull;
+
+    mInitContext->embeddedThread = nsnull;
+    mInitContext->env = nsnull;
+    if (nsnull != mInitContext->nativeEventThread) {
+        ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2), 
+                               mInitContext->nativeEventThread);
+        mInitContext->nativeEventThread = nsnull;
+    }
+    mInitContext->stopThread = -1;
+    mInitContext->initComplete = FALSE;
+    mInitContext->initFailCode = 0;
+    mInitContext->x = -1;
+    mInitContext->y = -1;
+    mInitContext->w = -1;
+    mInitContext->h = -1;    
+    mInitContext->gtkWinPtr = nsnull;
+    mInitContext->searchContext = nsnull;
+    mInitContext->currentDocument = nsnull;
+    mInitContext->propertiesClass = nsnull;
+    mInitContext->browserContainer = nsnull;
+
+    //  delete mInitContext;
+        
+    return (void *) NS_OK;
+} // handleEvent()
+
 
 // EOF
 

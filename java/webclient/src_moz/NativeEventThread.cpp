@@ -149,8 +149,6 @@ nsresult InitMozillaStuff (WebShellInitContext * arg);
 nsISHistory *gHistory = nsnull;
 nsIComponentManager *gComponentManager = nsnull;
 static PRBool	gFirstTime = PR_TRUE;
-static PLEventQueue	*	gActionQueue;
-static PRThread		*	gEmbeddedThread;
 
 
 
@@ -375,6 +373,11 @@ int processEventLoop(WebShellInitContext * initContext)
         
         return 0;
       }
+
+    // PENDING(edburns): revisit this.  Not sure why this is necessary, but
+    // this fixes bug 44327
+    printf("%c", 8); // 8 is ASCII for backspace
+
     return 1;
 }
 
@@ -469,72 +472,67 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     
     PR_ASSERT(gComponentManager);
 
-    if (gFirstTime) {
-        nsCOMPtr<nsIEventQueueService> 
-            aEventQService = do_GetService(NS_EVENTQUEUESERVICE_PROGID);
-        
-        // if we get here, we know that aEventQService is not null.
-        nsresult rv = NS_ERROR_FAILURE;
-        
-        //TODO Add tracing from nspr.
-        
+    nsCOMPtr<nsIEventQueueService> 
+        aEventQService = do_GetService(NS_EVENTQUEUESERVICE_PROGID);
+    
+    // if we get here, we know that aEventQService is not null.
+    if (!aEventQService) {
+        rv = NS_ERROR_FAILURE;
+        return rv;
+    }
+    
+    //TODO Add tracing from nspr.
+    
 #if DEBUG_RAPTOR_CANVAS
-        if (prLogModuleInfo) {
-            PR_LOG(prLogModuleInfo, 3, 
-                   ("InitMozillaStuff(%lx): Create the Event Queue for the UI thread...\n", 
-                    initContext));
-        }
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("InitMozillaStuff(%lx): Create the Event Queue for the UI thread...\n", 
+                initContext));
+    }
 #endif
+    
+    // Create the Event Queue for the UI thread...
+    if (!aEventQService) {
+        initContext->initFailCode = kEventQueueError;
+        return rv;
+    }
+    
+    // Create the event queue.
+    rv = aEventQService->CreateThreadEventQueue();
+    initContext->embeddedThread = PR_GetCurrentThread();
+    
+    // Create the action queue
+    if (initContext->embeddedThread) {
         
-        // Create the Event Queue for the UI thread...
-        if (!aEventQService) {
-            initContext->initFailCode = kEventQueueError;
-            return rv;
-        }
-        
-        // Create the event queue.
-        rv = aEventQService->CreateThreadEventQueue();
-        initContext->embeddedThread = PR_GetCurrentThread();
-        gEmbeddedThread = initContext->embeddedThread;
-        
-        // Create the action queue
-        if (initContext->embeddedThread) {
+        if (initContext->actionQueue == nsnull) {
+            printf("InitMozillaStuff(%lx): Create the action queue\n", initContext);
             
-            if (initContext->actionQueue == nsnull) {
-                printf("InitMozillaStuff(%lx): Create the action queue\n", initContext);
-                
-                // We need to do something different for Unix
-                nsIEventQueue * EQueue = nsnull;
-                
-                rv = aEventQService->GetThreadEventQueue(initContext->embeddedThread, 
-                                                         &EQueue);
-                if (NS_FAILED(rv)) {
-                    initContext->initFailCode = kCreateWebShellError;
-                    return rv;
-                }
-                
-#ifdef XP_UNIX
-                gdk_input_add(EQueue->GetEventQueueSelectFD(),
-                              GDK_INPUT_READ,
-                              event_processor_callback,
-                              EQueue);
-#endif
-                
-                PLEventQueue * plEventQueue = nsnull;
-                
-                EQueue->GetPLEventQueue(&plEventQueue);
-                initContext->actionQueue = plEventQueue;
-                gActionQueue = initContext->actionQueue;
+            // We need to do something different for Unix
+            nsIEventQueue * EQueue = nsnull;
+            
+            rv = aEventQService->GetThreadEventQueue(initContext->embeddedThread, 
+                                                     &EQueue);
+            if (NS_FAILED(rv)) {
+                initContext->initFailCode = kCreateWebShellError;
+                return rv;
             }
-        }
-        else {
-            initContext->initFailCode = kCreateWebShellError;
-            return NS_ERROR_UNEXPECTED;
+            
+#ifdef XP_UNIX
+            gdk_input_add(EQueue->GetEventQueueSelectFD(),
+                          GDK_INPUT_READ,
+                          event_processor_callback,
+                          EQueue);
+#endif
+            
+            PLEventQueue * plEventQueue = nsnull;
+            
+            EQueue->GetPLEventQueue(&plEventQueue);
+            initContext->actionQueue = plEventQueue;
         }
     }
     else {
-        initContext->embeddedThread = gEmbeddedThread;
-        initContext->actionQueue = gActionQueue;
+        initContext->initFailCode = kCreateWebShellError;
+        return NS_ERROR_UNEXPECTED;
     }
     
     // Setup Prefs obj and read default prefs
@@ -666,9 +664,6 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
                ("InitMozillaStuff(%lx): enter event loop\n", initContext));
     }
 #endif
-    PRThread *thread = PR_GetCurrentThread();
-    printf("debug: edburns: InitMozillaStuff currentThread %p\n", thread);
-    
     // Just need to loop once to clear out events before returning
     processEventLoop(initContext);
     

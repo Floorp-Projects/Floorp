@@ -123,43 +123,17 @@ Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitCo
 		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativeDestroyInitContext");
 		return;
 	}
-
-    initContext->parentHWnd = nsnull;
-    //    ((nsISupports *)initContext->docShell)->Release();
-    initContext->docShell = nsnull;
-    //    ((nsISupports *)initContext->webShell)->Release();
-
-    // PENDING(edburns): this is a leak.  For some reason, webShell's
-    // refcount is two.  I believe it should be one.
-    // see http://bugzilla.mozilla.org/show_bug.cgi?id=38271
-
-    initContext->webShell = nsnull;
-    initContext->webNavigation = nsnull;
-    initContext->presShell = nsnull;
-    initContext->sHistory = nsnull;
-    initContext->baseWindow = nsnull;
-
-    // PENDING(edburns): not sure if these need to be deleted
+    wsDeallocateInitContextEvent	* actionEvent = 
+            new wsDeallocateInitContextEvent(initContext);
+    PLEvent			* event       = (PLEvent*) *actionEvent;
+    nsresult rv;
+    
+    rv = (nsresult) ::util_PostSynchronousEvent(initContext, event);
+    if (NS_FAILED(rv)) {
+		::util_ThrowExceptionToJava(env, "Exception: Can't destroy initContext");
+		return;
+	}
     initContext->actionQueue = nsnull;
-    initContext->embeddedThread = nsnull;
-    initContext->env = nsnull;
-    if (nsnull != initContext->nativeEventThread) {
-        ::util_DeleteGlobalRef(env, initContext->nativeEventThread);
-        initContext->nativeEventThread = nsnull;
-    }
-    initContext->stopThread = -1;
-    initContext->initComplete = FALSE;
-    initContext->initFailCode = 0;
-    initContext->x = -1;
-    initContext->y = -1;
-    initContext->w = -1;
-    initContext->h = -1;    
-    initContext->gtkWinPtr = nsnull;
-    initContext->searchContext = nsnull;
-    initContext->currentDocument = nsnull;
-    initContext->propertiesClass = nsnull;
-    initContext->browserContainer = nsnull;
-
     delete initContext;
 }
 

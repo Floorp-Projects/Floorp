@@ -44,6 +44,8 @@
 #include "nsString.h"
 #include "plevent.h"
 
+
+
 /**
 
  * Concrete subclasses of nsActionEvent are used to safely convey an
@@ -341,6 +343,19 @@ protected:
     nsIDocShell *mDocShell;
     nsIDocumentLoaderObserver *mDocObserver;
 };
+
+struct WebShellInitContext;
+
+class wsDeallocateInitContextEvent : public nsActionEvent {
+public:
+    wsDeallocateInitContextEvent(WebShellInitContext *yourInitContext);
+
+    void    *       handleEvent    (void);
+
+protected:
+    WebShellInitContext *mInitContext;
+};
+
 
 #endif /* nsActions_h___ */
 
