@@ -322,7 +322,8 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, nsIMsgWindow *aMsgWindow, PRB
     {
       if (uidlDownload)
         m_newMailParser->DisableFilters();
-      FindPartialMessages(&fileSpec);
+      else
+        FindPartialMessages(&fileSpec);
     }
 
 
