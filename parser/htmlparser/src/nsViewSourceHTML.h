@@ -278,6 +278,7 @@ protected:
     nsIDTD              *mValidator;
     nsString            mTags;
     nsString            mErrors;
+    PRBool              mShowErrors;
 };
 
 extern NS_HTMLPARS nsresult NS_NewViewSourceHTML(nsIDTD** aInstancePtrResult);

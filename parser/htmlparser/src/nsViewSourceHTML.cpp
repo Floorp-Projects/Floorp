@@ -28,9 +28,6 @@
  */
  
 
-//#define ENABLE_ERROR_OUTPUT   //debug only for now...
-
-
 #ifdef RAPTOR_PERF_METRICS
 #  define START_TIMER()                    \
     if(mParser) mParser->mParseTime.Start(PR_FALSE); \
@@ -202,7 +199,6 @@ public:
   nsCParserNode       mTextNode;
 };
 
-
 /**
  *  Default constructor
  *  
@@ -232,6 +228,10 @@ CViewSourceHTML::CViewSourceHTML() : mTags(), mErrors() {
   mTokenizer=0;
   mDocType=eHTML3Text;
   mValidator=0;
+
+  //set this to 1 if you want to see errors in your HTML markup.
+  char* theEnvString = PR_GetEnv("MOZ_VALIDATE_HTML"); 
+  mShowErrors=PRBool(theEnvString);
 
 #ifdef rickgdebug
   gDumpFile = new fstream("c:/temp/viewsource.xml",ios::trunc);
@@ -911,27 +911,26 @@ nsresult CViewSourceHTML::WriteTagWithError(nsString &theXMLTagName,CToken* aTok
 
 void CViewSourceHTML::AddContainmentError(eHTMLTags aChildTag,eHTMLTags aParentTag,PRInt32 aLineNumber) {
 
-#ifdef  ENABLE_ERROR_OUTPUT
+  if (mShowErrors) {
+    mErrorCount++;
 
-  mErrorCount++;
+    if(mErrorCount<=gErrorThreshold) {
 
-  if(mErrorCount<=gErrorThreshold) {
+      char theChildMsg[100];
+      if(eHTMLTag_text==aChildTag) 
+        strcpy(theChildMsg,"text");
+      else sprintf(theChildMsg,"<%s>",nsHTMLTags::GetCStringValue(aChildTag));
 
-    char theChildMsg[100];
-    if(eHTMLTag_text==aChildTag) 
-      strcpy(theChildMsg,"text");
-    else sprintf(theChildMsg,"<%s>",nsHTMLTags::GetCStringValue(aChildTag));
+      char theMsg[256];
+      sprintf(theMsg,"\n -- Line (%i) error: %s is not a legal child of <%s>",
+              aLineNumber,theChildMsg,nsHTMLTags::GetCStringValue(aParentTag));
 
-    char theMsg[256];
-    sprintf(theMsg,"\n -- Line (%i) error: %s is not a legal child of <%s>",
-            aLineNumber,theChildMsg,nsHTMLTags::GetCStringValue(aParentTag));
-
-    mErrors.AppendWithConversion(theMsg);
+      mErrors.AppendWithConversion(theMsg);
+    }
+    else if(gErrorThreshold+1==mErrorCount){
+      mErrors.AppendWithConversion("\n -- Too many errors -- terminating output.");
+    }
   }
-  else if(gErrorThreshold+1==mErrorCount){
-    mErrors.AppendWithConversion("\n -- Too many errors -- terminating output.");
-  }
-#endif
 
 }
 
@@ -961,25 +960,24 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         mTagCount++;
 
-#ifdef ENABLE_ERROR_OUTPUT
-        PRBool theChildIsValid=PR_TRUE;
-        if(mValidator) {
-          theChildIsValid=mValidator->CanContain(theParent,theChild);
-          if(theChildIsValid) {
-            if(mValidator->IsContainer(theChild))
-              mTags.Append(PRUnichar(theChild));
+        if(mShowErrors) {
+          PRBool theChildIsValid=PR_TRUE;
+          if(mValidator) {
+            theChildIsValid=mValidator->CanContain(theParent,theChild);
+            if(theChildIsValid) {
+              if(mValidator->IsContainer(theChild))
+                mTags.Append(PRUnichar(theChild));
+            }
+          }
+
+          if(theChildIsValid)
+            result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
+          else {
+            AddContainmentError(theChild,theParent,mLineNumber);
+            result=WriteTagWithError(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
           }
         }
-
-        if(theChildIsValid)
-          result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
-        else {
-          AddContainmentError(theChild,theParent,mLineNumber);
-          result=WriteTagWithError(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
-        }
-#else
-        result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
-#endif
+        else result=WriteTag(mStartTag,aToken,aToken->GetAttributeCount(),PR_TRUE);
 
         if((ePlainText!=mDocType) && mParser && (NS_OK==result)) {
           CObserverService* theService=mParser->GetObserverService();
@@ -1029,16 +1027,15 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_text:
 
-#ifdef ENABLE_ERROR_OUTPUT
-      if((0==mValidator) || mValidator->CanContain(theParent,eHTMLTag_text))
-        result=WriteTag(mText,aToken,aToken->GetAttributeCount(),PR_TRUE);
-      else {
-        AddContainmentError(eHTMLTag_text,theParent,mLineNumber);
-        result=WriteTagWithError(mText,aToken,aToken->GetAttributeCount(),PR_FALSE);
+      if(mShowErrors) {
+        if((0==mValidator) || mValidator->CanContain(theParent,eHTMLTag_text))
+          result=WriteTag(mText,aToken,aToken->GetAttributeCount(),PR_TRUE);
+        else {
+          AddContainmentError(eHTMLTag_text,theParent,mLineNumber);
+          result=WriteTagWithError(mText,aToken,aToken->GetAttributeCount(),PR_FALSE);
+        }
       }
-#else
-      result=WriteTag(mText,aToken,aToken->GetAttributeCount(),PR_TRUE);
-#endif
+      else result=WriteTag(mText,aToken,aToken->GetAttributeCount(),PR_TRUE);
       break;
 
     case eToken_entity:
