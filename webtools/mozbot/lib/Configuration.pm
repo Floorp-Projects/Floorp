@@ -89,7 +89,7 @@ sub Save {
     my %seen;
     foreach (@lines) {
         chomp;
-        if (/^ *([^#;][^=\n\r]*)=(.*)$/os) {
+        if (/^ *([^#;][^=\n\r]*)(?:=(.*))?$/os) {
             if (defined($$config{$1})) {
                 unless ($seen{$1}) {
                     my $value = $$config{$1};
@@ -135,7 +135,11 @@ sub Save {
                     $seen{$1} = 1;
                 } # else seen it already
             } else { # unknown
-                print FILE "$1=$2\n";
+                if (defined($2)) {
+                    print FILE "$1=$2\n";
+                } else {
+                    print FILE "$1\n";
+                }
             }
         } else {
             # might be a comment
