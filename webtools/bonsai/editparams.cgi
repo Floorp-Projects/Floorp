@@ -33,6 +33,24 @@ use vars @::param_desc,
 
 print "Content-type: text/html\n\n";
 
+#    
+# Check to ensure they've logged in properly
+#    
+
+unless ((defined($::FORM{password})) && (CheckPassword($::FORM{password}))) {
+    print "<form method=post action=editparams.cgi><table>\n";
+    print "<H2>Sorry, you must enter a password to see Bonsai paramters.</H2>\n";
+    print "<hr><B>Enter password to access parameters:</B> <INPUT NAME=password TYPE=password> <BR>";
+    print "</form>\n";
+    print "<input type=submit value=\"Enter Password\">\n";
+    print "<hr>\n";
+    exit;
+}   
+
+#         
+# We're verified, now bring everything up
+#    
+
 PutsHeader("Edit parameters");
 
 print "This lets you edit the basic operating parameters of bonsai.\n";
