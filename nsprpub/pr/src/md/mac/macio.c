@@ -264,8 +264,11 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 			*/
 			if ( bytes > 20480L )
 			{
-	   			me->io_pending = PR_TRUE; /* Only mark thread io pending in async call */
-				(void) PBReadAsync(&pbAsync.pb);
+				err = PBReadAsync(&pbAsync.pb);
+				if (err != noErr && err != eofErr)
+					goto ErrorExit;
+				
+	   			me->io_pending = PR_TRUE; /* Only mark thread io pending if async call worked */
 			}
 			else
 			{
@@ -280,14 +283,20 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 		}
 		else
 		{
-			/* writes are currently always async so mark thread io pending */
+			/* writes are currently always async */
+			err = PBWriteAsync(&pbAsync.pb);
+				if (err != noErr)
+					goto ErrorExit;
+			
+			/* Didn't get an error on the asyn call so mark thread io pending */
 	   		me->io_pending = PR_TRUE;
-			(void) PBWriteAsync(&pbAsync.pb);
 		}
 		
 		/* See if the i/o call is still pending before we actually yield */
 		if (pbAsync.pb.ioParam.ioResult == 1)
 			WaitOnThisThread(me, PR_INTERVAL_NO_TIMEOUT);
+		else
+			me->io_pending = PR_FALSE; /* io completed so don't mark thread io pending */
 	}
 	
 	err = me->md.osErrCode;
