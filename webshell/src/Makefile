@@ -22,7 +22,7 @@ LIBRARY_NAME = raptorwebwidget
 
 MODULE=raptor
 
-REQUIRES=xpcom raptor dom js netlib
+REQUIRES=xpcom raptor dom js plugin java netlib
 
 EXTRA_DSO_LDOPTS += -lm
 
