@@ -214,7 +214,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                            NS_CHARSET_DETECTOR_REG_BASE "japsm" ,&key);
   if (NS_SUCCEEDED(rv)) {
     rv = registry-> SetString(key, "type", "japsm");
-    rv = registry-> SetString(key, "defaultEnglishText", "Japaneser");
+    rv = registry-> SetString(key, "defaultEnglishText", "Japanese");
   }
   //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kKOPSMDetectorCID, 
