@@ -3,8 +3,13 @@
 #################################################################
 # Rest of program
 
+# get requirements from the same dir as the script
+use FindBin;
+push @INC, $FindBin::Bin;
+
+require GenerateManifest;
+import GenerateManifest;
 use Getopt::Long;
-use GenerateManifest;
 
 # Configuration
 $win32 = ($^O eq "MSWin32") ? 1 : 0; # ActiveState Perl
