@@ -1,13 +1,14 @@
 var editorShell;
 var anchorElement = null;
+var imageElement = null;
 var insertNew = true;
 var needLinkText = false;
 var selection;
 var insertLinkAroundSelection = false;
 
-// NOTE: Use "HREF" instead of "A" to distinguish from Named Anchor
-// The returned node is has an "A" tagName
-var tagName = "HREF";
+// NOTE: Use "href" instead of "a" to distinguish from Named Anchor
+// The returned node is has an "a" tagName
+var tagName = "href";
 var dialog;
 
 // dialog initialization code
@@ -79,29 +80,49 @@ function initDialog()
     // We found an element and don't need to insert one
     insertNew = false;
   } else {
-    // We don't have an element selected, 
-    //  so create one with default attributes
-    dump("Element not selected - calling createElementWithDefaults\n");
-    anchorElement = editorShell.CreateElementWithDefaults(tagName);
+    // See if we have a selected image instead of text
+    imageElement = editorShell.GetSelectedElement("img");
+    if (imageElement) {
+      // See if the image is a child of a link
+      dump("Image element found - check if its a link...\n");
+      dump("Image Parent="+parent);
+      parent = imageElement.parentNode;
+        dump("Parent="+parent+" nodeName="+parent.nodeName+"\n");
+      if (parent) {
+        anchorElement = parent;
+        insertNew = false;
+        // Link source string is the source URL of image
+        // TODO: THIS STILL DOESN'T HANDLE MULTIPLE SELECTED IMAGES!
+        dialog.linkMessage.data = imageElement.getAttribute("src");;
+      }
+    } else {
+      // We don't have an element selected, 
+      //  so create one with default attributes
+      dump("Element not selected - calling createElementWithDefaults\n");
+      anchorElement = editorShell.CreateElementWithDefaults(tagName);
 
-    // We will insert a new link at caret location if there's no selection
-    // TODO: This isn't entirely correct. If selection doesn't have any text
-    //   or an image, then shouldn't we clear the selection and insert new text?
-    insertNew = selection.isCollapsed;
-    dump("insertNew is " + insertNew + "\n");
+      // We will insert a new link at caret location if there's no selection
+      // TODO: This isn't entirely correct. If selection doesn't have any text
+      //   or an image, then shouldn't we clear the selection and insert new text?
+      insertNew = selection.isCollapsed;
+      dump("insertNew is " + insertNew + "\n");
+    }
   }
   if(!anchorElement)
   {
     dump("Failed to get selected element or create a new one!\n");
     window.close();
-  } else if (!insertNew) {
-      dump("Need to get selected text\n");
+  } else if (!insertNew && !imageElement) {
 
     // Replace the link message with the link source string
-    // TODO: Get the text of the selection WHAT ABOUT IMAGES?
-    //  Maybe have a special method "GetLinkSource" that resolves images as
-    //   their URL? E.g.: "Link source [image:http://myimage.gif]"
-    dialog.linkMessage.data = "[Link source text or image URL goes here]";
+    selectedText = editorShell.selectionAsText;
+    if (selectedText.length > 0) {
+      // Use just the first 50 characters and add "..."
+      selectedText = TruncateStringAtWordEnd(selectedText, 50, true);
+    } else {
+      dump("Selected text for link source not found. Non-text elements selected?\n");
+    }
+    dialog.linkMessage.data = selectedText;
   }
 
   if (!selection.isCollapsed)

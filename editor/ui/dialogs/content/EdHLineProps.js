@@ -125,7 +125,7 @@ function ValidateData(setAttributes)
   if (setAttributes) {
     hLineElement.setAttribute("size", height);
   } else {
-    hLineElement.setAttribute("size", height);
+    tempLineElement.setAttribute("size", height);
   }
 
   var maxLimit;
