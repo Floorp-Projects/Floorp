@@ -59,7 +59,7 @@
 #include "mplugin.h"
 #include "prpriv.h"
 #include "URDFUtilities.h"	// for LaunchURL
-
+#include "CAutoPtrXP.h"
 
 #if defined (JAVA)
 #include "mjava.h"
@@ -3527,15 +3527,14 @@ char** content_type_ret )
 
 			if ( doSprintf )
 				{
-				// Security stuff ( 3 strings -> 1 )
+				// Security stuff ( 3 strings -> 1 ). |s1| and |s2| may be NULL if we are running with
+				// Mozilla (no security). PR_smprintf() won't die unless |s0| is null, so we check for that.
 				char*           s0 = (char *)GetCString(SECURITY_LEVEL_RESID );
 				char*           s1 = SECNAV_SecurityVersion( PR_TRUE );
 				char*           s2 = SECNAV_SSLCapabilities();
 				ThrowIfNil_(s0);
-				ThrowIfNil_(s1);
-				ThrowIfNil_(s2);
-				char * secStr = PR_smprintf( s0, s1, s2 );
-				ThrowIfNil_(secStr);
+				CAutoPtrXP<char> secStr = PR_smprintf( s0, s1, s2 );
+				ThrowIfNil_(secStr.get());
 
 				// Version
 				CStr255         vers;
@@ -3553,19 +3552,17 @@ char** content_type_ret )
 				
 				// Create the final string
 				::HLock(data);
-				char * finalStr = PR_smprintf((char*)*data, (char*)vers, (char*)vers, (char*)secStr);
+				CAutoPtrXP<char> finalStr = PR_smprintf((char*)*data, (char*)vers, (char*)vers, (char*)secStr.get());
 				::HUnlock(data);
 
-				XP_FREE( secStr );
-				ThrowIfNil_(finalStr);
+				ThrowIfNil_(finalStr.get());
 
 				// Make handle out of final string
 
-				dataSize = strlen(finalStr) + 1;
+				dataSize = strlen(finalStr.get()) + 1;
 				Handle finalHandle = ::NewHandle( dataSize );
 				ThrowIfNil_(finalHandle);
-				::BlockMoveData( finalStr, *finalHandle, dataSize );
-				XP_FREE( finalStr );
+				::BlockMoveData( finalStr.get(), *finalHandle, dataSize );
 				// Exchange
 				::DisposeHandle(data);
 				data = finalHandle;
