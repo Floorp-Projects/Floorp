@@ -34,7 +34,6 @@
 #include "shist.h"
 #include "fe_proto.h"
 #include "lo_ele.h"
-#include "jscookie.h"
 
 NSPR_BEGIN_EXTERN_C
 
