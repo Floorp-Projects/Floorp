@@ -24,6 +24,11 @@
 
 interface nsIDOMNode;
 
+/* IMPORTANT - This is not part of the DOM spec. Do not use these interfaces,
+   use nsIDOMTreeWalker instead. This interface will be removed by bug 155066
+ */
+
+
 /**
  * @status UNDER_REVIEW
  */
@@ -48,6 +53,8 @@ interface nsIDOMWalkerCallback : nsISupports
 interface nsIDOMWalker : nsISupports
 {
   /**
+   * DO NOT USE - See bug 155066
+   *
    * Traverse the specified DOM recursively starting with the supplied root
    * node and walking through each child node in turn. The supplied callback
    * interface will be called on each DOM node until traversal is completed
