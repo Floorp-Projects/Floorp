@@ -749,7 +749,7 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
                                    nsString &aResult) const
 {
   NS_ASSERTION((kNameSpaceID_HTML == aNameSpaceID) || 
-               (kNameSpaceID_HTML == aNameSpaceID) || 
+               (kNameSpaceID_None == aNameSpaceID) || 
                (kNameSpaceID_Unknown == aNameSpaceID), 
                "html content only holds HTML attributes");
 
