@@ -274,7 +274,7 @@ NS_METHOD nsWindow::CreateNative( PtWidget_t *parentWidget ) {
   else
   {
     // No border or decorations is the default
-    render_flags = Ph_WM_RENDER_RESIZE;
+    render_flags = 0; // Ph_WM_RENDER_RESIZE;
 
     if( mWindowType != eWindowType_popup ) {
 

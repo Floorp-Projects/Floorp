@@ -185,33 +185,30 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
             nsXPIDLCString flavorStr;
             currentFlavor->ToString ( getter_Copies(flavorStr) );
 						const char *FlavourStr = ( const char * ) flavorStr;
-						if( !strcmp( FlavourStr, kUnicodeMime ) || !strcmp( FlavourStr, kTextMime ) ||
-								!strcmp( FlavourStr, kURLMime ) || !strcmp( FlavourStr, kHTMLMime ) ) {
-							nsCOMPtr<nsISupports> data;
-							PRUint32 tmpDataLen = 0;
-							nsresult rv = currItem->GetTransferData( FlavourStr, getter_AddRefs(data), &tmpDataLen );
-							if( NS_SUCCEEDED( rv ) ) {
-								/* insert FlavourStr, data into the PtTransportCtrl_t */
-								int len = sizeof( PRUint32 ) + sizeof( PRUint32 ) + strlen( FlavourStr ) + 1 + tmpDataLen;
-								/* we reserve space for itemIndex|tmpDataLen|flavorStr|data */
-								len = ( ( len + 3 ) / 4 ) * 4;
-								pdata = ( char * ) realloc( pdata, len + pDataLen );
-								if( pdata ) {
-									char *p = pdata + pDataLen;
-									PRUint32 *d = ( PRUint32 * ) p;
-									d[0] = itemIndex; /* copy itemIndex*/
-									d[1] = tmpDataLen; /* copy PRUint32 tmpDataLen */
-									strcpy( p + sizeof( PRUint32 ) + sizeof( PRUint32 ), FlavourStr ); /* copy flavorStr */
+						nsCOMPtr<nsISupports> data;
+						PRUint32 tmpDataLen = 0;
+						nsresult rv = currItem->GetTransferData( FlavourStr, getter_AddRefs(data), &tmpDataLen );
+						if( NS_SUCCEEDED( rv ) ) {
+							/* insert FlavourStr, data into the PtTransportCtrl_t */
+							int len = sizeof( PRUint32 ) + sizeof( PRUint32 ) + strlen( FlavourStr ) + 1 + tmpDataLen;
+							/* we reserve space for itemIndex|tmpDataLen|flavorStr|data */
+							len = ( ( len + 3 ) / 4 ) * 4;
+							pdata = ( char * ) realloc( pdata, len + pDataLen );
+							if( pdata ) {
+								char *p = pdata + pDataLen;
+								PRUint32 *d = ( PRUint32 * ) p;
+								d[0] = itemIndex; /* copy itemIndex*/
+								d[1] = tmpDataLen; /* copy PRUint32 tmpDataLen */
+								strcpy( p + sizeof( PRUint32 ) + sizeof( PRUint32 ), FlavourStr ); /* copy flavorStr */
 	
-									void *mem_data;
-									nsPrimitiveHelpers::CreateDataFromPrimitive ( FlavourStr, data, &mem_data, tmpDataLen );
+								void *mem_data;
+								nsPrimitiveHelpers::CreateDataFromPrimitive ( FlavourStr, data, &mem_data, tmpDataLen );
 	
-									memcpy( p + sizeof( PRUint32 ) + sizeof( PRUint32 ) + strlen( FlavourStr ) + 1, mem_data, tmpDataLen ); /* copy the data */
-									pDataLen += len;
-									totalItems++;
-									}
+								memcpy( p + sizeof( PRUint32 ) + sizeof( PRUint32 ) + strlen( FlavourStr ) + 1, mem_data, tmpDataLen ); /* copy the data */
+								pDataLen += len;
+								totalItems++;
 								}
-            	}
+							}
 						}
           }
         }
@@ -291,9 +288,6 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
 	const char *ask;
 	if( !strcmp( aDataFlavor, kMimeCustom ) )  ask = kHTMLMime;
 	else ask = aDataFlavor;
-
-	if( strcmp( ask, kUnicodeMime ) && strcmp( ask, kTextMime ) &&
-    strcmp( ask, kURLMime ) && strcmp( ask, kHTMLMime ) ) return NS_OK;
 
 	if(!mSourceDataItems) return NS_OK;
 	PRUint32 numDragItems = 0;
