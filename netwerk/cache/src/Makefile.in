@@ -30,7 +30,7 @@ MODULE		= nkcache
 LIBRARY_NAME	= nkcache
 SHORT_LIBNAME	= nkcache
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string necko pref js
+REQUIRES	= xpcom string necko pref
 
 EXPORTS		= \
 		nsCacheService.h \

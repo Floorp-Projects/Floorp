@@ -40,7 +40,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcshell
 SIMPLE_PROGRAMS	= xpcshell$(BIN_SUFFIX)
-REQUIRES	= xpconnect xpcom string js caps
+REQUIRES	= xpconnect xpcom string js
 
 CPPSRCS		= xpcshell.cpp
 

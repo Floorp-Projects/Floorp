@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = layout
 LIBRARY_NAME = gkconxsldoc_s
-REQUIRES = xpcom string htmlparser view widget dom locale necko
+REQUIRES = xpcom string htmlparser view widget dom necko
 
 include $(topsrcdir)/config/config.mk
 

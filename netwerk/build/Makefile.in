@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= necko
 LIBRARY_NAME	= necko
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string nkcache pref js mime dbm util jar locale intl
+REQUIRES	= xpcom string nkcache pref mime dbm util jar locale intl
 
 CPPSRCS		= nsNetModule.cpp
 EXPORTS		= nsNetCID.h
