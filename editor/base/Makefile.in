@@ -67,6 +67,8 @@ CPPSRCS =                       \
     nsEditorShellFactory.cpp    \
     nsJSEditorLog.cpp           \
     nsJSTxnLog.cpp              \
+	IMETextTxn.cpp				\
+	IMECommitTxn.cpp			\
     $(NULL)
 
 MODULE = editor

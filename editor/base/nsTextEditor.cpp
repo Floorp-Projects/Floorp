@@ -2804,9 +2804,9 @@ nsTextEditor::BeginComposition(void)
 }
 
 NS_IMETHODIMP
-nsTextEditor::SetCompositionString(const nsString& aCompositionString)
+nsTextEditor::SetCompositionString(const nsString& aCompositionString,nsIDOMTextRangeList* aTextRangeList)
 {
-	return nsEditor::SetCompositionString(aCompositionString);
+	return nsEditor::SetCompositionString(aCompositionString,aTextRangeList);
 }
 
 NS_IMETHODIMP

@@ -196,9 +196,10 @@ protected:
     void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
 
     void GetNonClientBounds(nsRect &aRect);
-	void HandleTextEvent(PRBool commit);
+	void HandleTextEvent(void);
 	void HandleStartComposition(void);
 	void HandleEndComposition(void);
+	void MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult, nsTextRangeArray* textRangeListResult);
 
 protected:
     static      nsWindow* gCurrentWindow;
@@ -232,8 +233,16 @@ protected:
 	PRBool		mIMEIsComposing;
 	char*		mIMECompositionString;
 	PRUnichar*	mIMECompositionUniString;
+	PRInt32		mIMECompositionUniStringSize;
 	PRInt32		mIMECompositionStringLength;
 	PRInt32		mIMECompositionStringSize;
+	char*		mIMEAttributeString;
+	PRInt32		mIMEAttributeStringLength;
+	PRInt32		mIMEAttributeStringSize;
+	char*		mIMECompClauseString;
+	PRInt32		mIMECompClauseStringLength;
+	PRInt32		mIMECompClauseStringSize;
+
 #if 1
 	BOOL		mHaveDBCSLeadByte;
 	unsigned char mDBCSLeadByte;

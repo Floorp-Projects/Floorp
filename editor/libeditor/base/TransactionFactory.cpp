@@ -39,7 +39,9 @@
 #include "DeleteTableColumnTxn.h"
 #include "DeleteTableRowTxn.h"
 #include "JoinTableCellsTxn.h"
+#include "IMETextTxn.h"
 
+#include "IMECommitTxn.h"
 static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
 static NS_DEFINE_IID(kPlaceholderTxnIID,    PLACEHOLDER_TXN_IID);
 static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
@@ -61,6 +63,8 @@ static NS_DEFINE_IID(kDeleteTableCellTxnIID,   DELETE_CELL_TXN_IID);
 static NS_DEFINE_IID(kDeleteTableColumnTxnIID, DELETE_COLUMN_TXN_IID);
 static NS_DEFINE_IID(kDeleteTableRowTxnIID,    DELETE_ROW_TXN_IID);
 static NS_DEFINE_IID(kJoinTableCellsTxnIID,    JOIN_CELLS_TXN_IID);
+static NS_DEFINE_IID(kIMETextTxnIID,			IME_TEXT_TXN_IID);
+static NS_DEFINE_IID(kIMECommitTxnIID,			IME_COMMIT_TXN_IID);
 
 TransactionFactory::TransactionFactory()
 {
@@ -97,6 +101,10 @@ TransactionFactory::GetNewTransaction(REFNSIID aTxnType, EditTxn **aResult)
     *aResult = new JoinElementTxn();
   else if (aTxnType.Equals(kEditAggregateTxnIID))
     *aResult = new EditAggregateTxn();
+  else if (aTxnType.Equals(kIMETextTxnIID))
+    *aResult = new IMETextTxn();
+  else if (aTxnType.Equals(kIMECommitTxnIID))
+    *aResult = new IMECommitTxn();
   else if (aTxnType.Equals(kPlaceholderTxnIID))
     *aResult = new PlaceholderTxn();
   else

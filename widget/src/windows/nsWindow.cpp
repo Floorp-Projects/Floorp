@@ -112,8 +112,16 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mIMEIsComposing		= PR_FALSE;
 	mIMECompositionString = NULL;
 	mIMECompositionStringSize = 0;
-	mIMECompositionStringSize = 0;
+	mIMECompositionStringLength = 0;
 	mIMECompositionUniString = NULL;
+	mIMECompositionUniStringSize = 0;
+	mIMEAttributeString = NULL;
+	mIMEAttributeStringSize = 0;
+	mIMEAttributeStringLength = 0;
+	mIMECompClauseString = NULL;
+	mIMECompClauseStringSize = 0;
+	mIMECompClauseStringLength = 0;
+
 #if 1
 	mHaveDBCSLeadByte = false;
 	mDBCSLeadByte = '\0';
@@ -152,6 +160,13 @@ nsWindow::~nsWindow()
   
   //XXX Temporary: Should not be caching the font
   delete mFont;
+
+  //
+  // delete any of the IME structures that we allocated
+  //
+  if (mIMECompositionString!=NULL) delete [] mIMECompositionString;
+  if (mIMEAttributeString!=NULL) delete [] mIMEAttributeString;
+  if (mIMECompositionUniString!=NULL) delete [] mIMECompositionUniString;
 }
 
 
@@ -2641,6 +2656,40 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				return PR_TRUE;
 			}
 
+			//
+			// This provides us with the attribute string necessary for doing hiliting
+			//
+			if (lParam & GCS_COMPATTR) {
+				long attrStrLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPATTR,NULL,0);
+				if (attrStrLen+1>mIMEAttributeStringSize) {
+					if (mIMEAttributeString!=NULL) delete [] mIMEAttributeString;
+					mIMEAttributeString = new char[attrStrLen+32];
+					mIMEAttributeStringSize = attrStrLen+32;
+				}
+
+				::ImmGetCompositionString(hIMEContext,GCS_COMPATTR,mIMEAttributeString,mIMEAttributeStringSize);
+				mIMEAttributeStringLength = attrStrLen;
+				mIMEAttributeString[attrStrLen]='\0';
+			}
+
+			if (lParam & GCS_COMPCLAUSE) {
+				long compClauseLen = ::ImmGetCompositionString(hIMEContext,GCS_COMPCLAUSE,NULL,0);
+				if (compClauseLen+1>mIMECompClauseStringSize) {
+					if (mIMECompClauseString!=NULL) delete [] mIMECompClauseString;
+					mIMECompClauseString = new char [compClauseLen+32];
+					mIMECompClauseStringSize = compClauseLen+32;
+				}
+
+				::ImmGetCompositionString(hIMEContext,GCS_COMPCLAUSE,mIMECompClauseString,mIMECompClauseStringSize);
+				mIMECompClauseStringLength = compClauseLen;
+				mIMECompClauseString[compClauseLen]='\0';
+			} else {
+				mIMECompClauseStringLength = 0;
+			}
+
+			//
+			// This provides us with a composition string
+			//
 			if (lParam & GCS_COMPSTR) {
 #ifdef DEBUG_tague
 				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_COMPSTR\n");
@@ -2655,10 +2704,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				::ImmGetCompositionString(hIMEContext,GCS_COMPSTR,mIMECompositionString,mIMECompositionStringSize);
 				mIMECompositionStringLength = compStrLen;
 				mIMECompositionString[compStrLen]='\0';
-				HandleTextEvent(PR_FALSE);
+				HandleTextEvent();
 				result = PR_TRUE;
 			}
 
+			//
+			// This catches a fixed result
+			//
 			if (lParam & GCS_RESULTSTR) {
 #ifdef DEBUG_tague
 				fprintf(stderr,"nsWindow::WM_IME_COMPOSITION: handling GCS_RESULTSTR\n");
@@ -2674,7 +2726,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				mIMECompositionStringLength = compStrLen;
 				mIMECompositionString[compStrLen]='\0';
 				result = PR_TRUE;
-				HandleTextEvent(PR_TRUE);
+				HandleTextEvent();
 				HandleEndComposition();
 				HandleStartComposition();
 			}
@@ -3304,31 +3356,42 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
 }
 
 void
-nsWindow::HandleTextEvent(PRBool commit)
+nsWindow::HandleTextEvent()
 {
-  nsTextEvent event;
-  nsPoint point;
-  size_t	unicharSize;
-
+  nsTextEvent		event;
+  nsPoint			point;
+  size_t			unicharSize;
+ 
   point.x = 0;
   point.y = 0;
 
   InitEvent(event, NS_TEXT_EVENT, &point);
-  if (mIMECompositionUniString!=NULL)
-	  delete [] mIMECompositionUniString;
-  
+ 
+  //
+  // convert the composition string text into unicode before it is sent to xp-land
+  //
   unicharSize = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
 	  mIMECompositionUniString,0);
-  mIMECompositionUniString = new PRUnichar[unicharSize+1];
+
+  if (mIMECompositionUniStringSize < unicharSize) {
+	if (mIMECompositionUniString!=NULL) delete [] mIMECompositionUniString;
+		mIMECompositionUniString = new PRUnichar[unicharSize+32];
+		mIMECompositionUniStringSize = unicharSize+32;
+  }
   ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,mIMECompositionStringLength,
 	  mIMECompositionUniString,unicharSize);
   mIMECompositionUniString[unicharSize] = (PRUnichar)0;
 
-  event.theText      = mIMECompositionUniString;
-  event.commitText	 = commit;
-  event.isShift   = mIsShiftDown;
+  //
+  // we need to convert the attribute array, which is alligned with the mutibyte text into an array of offsets
+  // mapped to the unicode text
+  //
+  MapDBCSAtrributeArrayToUnicodeOffsets(&(event.rangeCount),&(event.rangeArray));
+
+  event.theText = mIMECompositionUniString;
+  event.isShift	= mIsShiftDown;
   event.isControl = mIsControlDown;
-  event.isAlt     = mIsAltDown;
+  event.isAlt = mIsAltDown;
   event.eventStructType = NS_TEXT_EVENT;
 
   (void)DispatchWindowEvent(&event);
@@ -3366,4 +3429,89 @@ nsWindow::HandleEndComposition(void)
 	event.compositionMessage = NS_COMPOSITION_END;
 	(void)DispatchWindowEvent(&event);
 	NS_RELEASE(event.widget);
+}
+
+//
+// This function converters the composition string (CGS_COMPSTR) into Unicode while mapping the 
+//  attribute (GCS_ATTR) string t
+void 
+nsWindow::MapDBCSAtrributeArrayToUnicodeOffsets(PRUint32* textRangeListLengthResult,nsTextRangeArray* textRangeListResult)
+{
+	int			i,rangePointer;
+	size_t		lastUnicodeOffset, substringLength, lastMBCSOffset;
+	
+	//
+	// figure out the ranges from the compclause string
+	//
+	if (mIMECompClauseStringLength==0) {
+		*textRangeListLengthResult = 1;
+		*textRangeListResult = new nsTextRange[1];
+		(*textRangeListResult)[0].mStartOffset=0;
+		substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString,
+								mIMECompositionStringLength,NULL,0);
+		(*textRangeListResult)[0].mEndOffset = substringLength-1;
+		(*textRangeListResult)[0].mRangeType = mIMEAttributeString[0];
+	} else {
+		
+		*textRangeListLengthResult = 0;
+		for(i=0;i<mIMECompClauseStringLength;i++) {
+			if (mIMECompClauseString[i]!=0x00) 
+				(*textRangeListLengthResult)++;
+		}
+
+		//
+		//  allocate the offset array
+		//
+		*textRangeListResult = new nsTextRange[*textRangeListLengthResult];
+
+		//
+		// iterate over the attributes and convert them into unicode 
+		lastUnicodeOffset = 0;
+		lastMBCSOffset = 0;
+		rangePointer = 0;
+		for(i=0;i<mIMECompClauseStringLength;i++) {
+			if (mIMECompClauseString[i]!=0) {
+				(*textRangeListResult)[rangePointer].mStartOffset = lastUnicodeOffset;
+				substringLength = ::MultiByteToWideChar(CP_ACP,MB_PRECOMPOSED,mIMECompositionString+lastMBCSOffset,
+										mIMECompClauseString[i]-lastMBCSOffset,NULL,0);
+				(*textRangeListResult)[rangePointer].mEndOffset = lastUnicodeOffset + substringLength -1;
+				(*textRangeListResult)[rangePointer].mRangeType = mIMEAttributeString[mIMECompClauseString[i]-1];
+				lastUnicodeOffset+= substringLength;
+				lastMBCSOffset = mIMECompClauseString[i];
+				rangePointer++;
+			}
+		}
+	}
+
+#ifdef DEBUG_tague
+	printf("rangeCount =%d\n",*textRangeListLengthResult);
+	for(i=0;i<*textRangeListLengthResult;i++) {
+		printf("range %d: rangeStart=%d\trangeEnd=%d ",i,(*textRangeListResult)[i].mStartOffset,
+			(*textRangeListResult)[i].mEndOffset);
+		if ((*textRangeListResult)[i].mRangeType==ATTR_INPUT) printf("ATTR_INPUT\n");
+		if ((*textRangeListResult)[i].mRangeType==ATTR_TARGET_CONVERTED) printf("ATTR_TARGET_CONVERTED\n");
+		if ((*textRangeListResult)[i].mRangeType==ATTR_CONVERTED) printf("ATTR_CONVERTED\n");
+		if ((*textRangeListResult)[i].mRangeType==ATTR_TARGET_NOTCONVERTED) printf("ATTR_TARGET_NOTCONVERTED\n");
+		if ((*textRangeListResult)[i].mRangeType==ATTR_INPUT_ERROR) printf("ATTR_INPUT_ERROR\n");
+		if ((*textRangeListResult)[i].mRangeType==ATTR_FIXEDCONVERTED) printf("ATTR_FIXEDCONVERTED\n");
+	}
+#endif
+
+	//
+	// convert from windows attributes into nsGUI/DOM attributes
+	//
+	for(i=0;i<*textRangeListLengthResult;i++) {
+		if ((*textRangeListResult)[i].mRangeType==ATTR_INPUT)
+			(*textRangeListResult)[i].mRangeType=NS_TEXTRANGE_RAWINPUT;
+		else 
+			if ((*textRangeListResult)[i].mRangeType==ATTR_TARGET_CONVERTED)
+				(*textRangeListResult)[i].mRangeType=NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+		else
+			if ((*textRangeListResult)[i].mRangeType==ATTR_CONVERTED)
+				(*textRangeListResult)[i].mRangeType=NS_TEXTRANGE_CONVERTEDTEXT;
+		else
+			if ((*textRangeListResult)[i].mRangeType==ATTR_TARGET_NOTCONVERTED)
+				(*textRangeListResult)[i].mRangeType=NS_TEXTRANGE_RAWINPUT;
+	}
+
 }

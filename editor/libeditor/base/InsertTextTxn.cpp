@@ -25,6 +25,7 @@
 
 static NS_DEFINE_IID(kInsertTextTxnIID, INSERT_TEXT_TXN_IID);
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
+static NS_DEFINE_IID(kEditAggregateTxnIID, EDIT_AGGREGATE_TXN_IID);
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;

@@ -30,6 +30,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMUIEvent.h"
+#include "nsIDOMTextRangeList.h"
 #include "nsIDOMRenderingContext.h"
 
 
@@ -39,11 +40,13 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINSUIEventIID, NS_IDOMNSUIEVENT_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIUIEventIID, NS_IDOMUIEVENT_IID);
+static NS_DEFINE_IID(kITextRangeListIID, NS_IDOMTEXTRANGELIST_IID);
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 
 NS_DEF_PTR(nsIDOMNSUIEvent);
 NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMUIEvent);
+NS_DEF_PTR(nsIDOMTextRangeList);
 NS_DEF_PTR(nsIDOMRenderingContext);
 
 //
@@ -51,7 +54,7 @@ NS_DEF_PTR(nsIDOMRenderingContext);
 //
 enum UIEvent_slots {
   UIEVENT_TEXT = -1,
-  UIEVENT_COMMITTEXT = -2,
+  UIEVENT_INPUTRANGE = -2,
   UIEVENT_SCREENX = -3,
   UIEVENT_SCREENY = -4,
   UIEVENT_CLIENTX = -5,
@@ -111,16 +114,17 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case UIEVENT_COMMITTEXT:
+      case UIEVENT_INPUTRANGE:
       {
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.committext", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.inputrange", &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
         }
-        PRBool prop;
-        if (NS_OK == a->GetCommitText(&prop)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
+        nsIDOMTextRangeList* prop;
+        if (NS_OK == a->GetInputRange(&prop)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
         else {
           return JS_FALSE;
@@ -539,20 +543,22 @@ SetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
-      case UIEVENT_COMMITTEXT:
+      case UIEVENT_INPUTRANGE:
       {
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.committext", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.inputrange", &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
         }
-        PRBool prop;
-        if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
+        nsIDOMTextRangeList* prop;
+        if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
+                                                kITextRangeListIID, "TextRangeList",
+                                                cx, *vp)) {
           return JS_FALSE;
         }
       
-        a->SetCommitText(prop);
-        
+        a->SetInputRange(prop);
+        NS_IF_RELEASE(prop);
         break;
       }
       default:
@@ -622,7 +628,7 @@ JSClass UIEventClass = {
 static JSPropertySpec UIEventProperties[] =
 {
   {"text",    UIEVENT_TEXT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"commitText",    UIEVENT_COMMITTEXT,    JSPROP_ENUMERATE},
+  {"inputRange",    UIEVENT_INPUTRANGE,    JSPROP_ENUMERATE},
   {"screenX",    UIEVENT_SCREENX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"screenY",    UIEVENT_SCREENY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"clientX",    UIEVENT_CLIENTX,    JSPROP_ENUMERATE | JSPROP_READONLY},

@@ -110,7 +110,7 @@ public:
 
 // Input/Output
   NS_IMETHOD BeginComposition(void);
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString);
+  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIDOMTextRangeList* aRangeList);
   NS_IMETHOD EndComposition(void);
   NS_IMETHOD OutputTextToString(nsString& aOutputString, PRBool aSelectionOnly);
   NS_IMETHOD OutputHTMLToString(nsString& aOutputString, PRBool aSelectionOnly);

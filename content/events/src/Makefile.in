@@ -31,6 +31,7 @@ CPPSRCS =				\
 	nsEventStateManager.cpp	\
 	nsDOMEvent.cpp			\
 	nsDOMEventsIIDs.cpp			\
+	nsDOMTextRange.cpp			\
 	$(NULL)
 
 MODULE=layout
@@ -40,6 +41,7 @@ EXPORTS = \
 	nsEventStateManager.h \
 	nsDOMEvent.h \
 	nsDOMEventsIIDs.h \
+	nsDOMTextRange.h  \
 	$(NULL)
 
 EXPORTS :=  $(addprefix $(srcdir)/, $(EXPORTS))
