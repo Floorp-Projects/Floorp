@@ -837,6 +837,8 @@ cookie_GetStatus(char decision) {
       return nsICookie::STATUS_DOWNGRADED;
     case 'f':
       return nsICookie::STATUS_FLAGGED;
+    case 'r':
+      return nsICookie::STATUS_REJECTED;
   }
   return nsICookie::STATUS_UNKNOWN;
 }
@@ -1425,6 +1427,10 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
   if (cookie_GetBehaviorPref() == PERMISSION_P3P) {
     status = cookie_P3PDecision(curURL, firstURL, ioService, aHttpChannel);
     if (status == nsICookie::STATUS_REJECTED) {
+      nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+      if (os) {
+        nsresult rv = os->NotifyObservers(nsnull, "cookieIcon", NS_ConvertASCIItoUCS2("on").get());
+      }
       return;
     }
   }
