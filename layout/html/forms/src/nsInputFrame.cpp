@@ -46,7 +46,7 @@
 #include "nsHTMLForms.h"
 
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 
 struct nsInputCallbackData
 {
@@ -353,14 +353,17 @@ NS_METHOD nsInputFrame::HandleEvent(nsIPresContext& aPresContext,
   return nsEventStatus_eConsumeDoDefault;
 }
 
-void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext, const nsSize& aMaxSize, nsSize& aSize)
+void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext,
+                                const nsSize& aMaxSize, nsSize& aSize)
 {
   nsInput* input;
   GetContent((nsIContent *&) input); // this must be an nsInput
-  nsStyleMolecule* mol = (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+  nsStylePosition* position = (nsStylePosition*)
+    mStyleContext->GetData(kStylePositionSID);
 
 //printf("\n ** %d %d", mol->fixedWidth, mol->proportionalWidth);
   // set the width, height
+#if 0
   aSize.width = mol->fixedWidth;
   if ((CSS_NOTSET == aSize.width) && (CSS_NOTSET != mol->proportionalWidth)) {
     aSize.width = (aMaxSize.width * mol->proportionalWidth) / 100;
@@ -369,6 +372,10 @@ void nsInputFrame::GetStyleSize(nsIPresContext& aPresContext, const nsSize& aMax
   if ((CSS_NOTSET == aSize.height) && (CSS_NOTSET != mol->proportionalHeight)) {
     aSize.height = (aMaxSize.height * mol->proportionalHeight) / 100;
   }
+#else
+  aSize.width = -1;
+  aSize.height = -1;
+#endif
 
   NS_RELEASE(input);
 }

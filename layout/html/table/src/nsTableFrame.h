@@ -26,8 +26,9 @@ class nsTableCell;
 class nsVoidArray;
 class nsTableCellFrame;
 class CellData;
-struct nsStyleMolecule;
 struct InnerTableReflowState;
+struct nsStylePosition;
+struct nsStyleSpacing;
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
   * Used as a pseudo-frame within nsTableOuterFrame, 
@@ -133,7 +134,7 @@ public:
 
   /** returns PR_TRUE if this table has proportional width
     */
-          PRBool IsProportionalWidth(nsStyleMolecule* aMol);
+  PRBool IsProportionalWidth(nsStylePosition* aStylePosition);
 
 
           
@@ -193,11 +194,10 @@ protected:
     *
     * @see ResizeReflow
     */
-  virtual nsIFrame::ReflowStatus ResizeReflowPass1(nsIPresContext*  aPresContext,
-                                                   nsReflowMetrics& aDesiredSize,
-                                                   const nsSize&    aMaxSize,
-                                                   nsSize*          aMaxElementSize,
-                                                   nsStyleMolecule* aTableStyle);
+  virtual ReflowStatus ResizeReflowPass1(nsIPresContext*  aPresContext,
+                                         nsReflowMetrics& aDesiredSize,
+                                         const nsSize&    aMaxSize,
+                                         nsSize*          aMaxElementSize);
 
   /** second pass of ResizeReflow.
     * lays out all table content with aMaxSize(computed_table_width, given_table_height) 
@@ -210,17 +210,16 @@ protected:
     * @see ResizeReflow
     * @see NeedsReflow
     */
-  virtual nsIFrame::ReflowStatus ResizeReflowPass2(nsIPresContext*  aPresContext,
-                                                   nsReflowMetrics& aDesiredSize,
-                                                   const nsSize&    aMaxSize,
-                                                   nsSize*          aMaxElementSize,
-                                                   nsStyleMolecule* aTableStyle,
-                                                   PRInt32 aMinCaptionWidth,
-                                                   PRInt32 mMaxCaptionWidth);
+  virtual ReflowStatus ResizeReflowPass2(nsIPresContext*  aPresContext,
+                                         nsReflowMetrics& aDesiredSize,
+                                         const nsSize&    aMaxSize,
+                                         nsSize*          aMaxElementSize,
+                                         PRInt32 aMinCaptionWidth,
+                                         PRInt32 mMaxCaptionWidth);
 
   nscoord GetTopMarginFor(nsIPresContext* aCX,
                           InnerTableReflowState& aState,
-                          nsStyleMolecule* aKidMol);
+                          nsStyleSpacing* aKidSpacing);
 
   void PlaceChild(nsIPresContext*    aPresContext,
                   InnerTableReflowState& aState,
@@ -273,7 +272,6 @@ protected:
     * @param aMaxElementSize  the min size of the largest indivisible object
     */
   virtual void BalanceColumnWidths(nsIPresContext*  aPresContext, 
-                                   nsStyleMolecule* aTableStyle,
                                    const nsSize&    aMaxSize, 
                                    nsSize*          aMaxElementSize);
 
@@ -296,7 +294,6 @@ protected:
   virtual PRBool AssignFixedColumnWidths(nsIPresContext* aPresContext, 
                                          PRInt32   aMaxWidth, 
                                          PRInt32   aNumCols, 
-                                         nsStyleMolecule* aTableStyleMol,
                                          PRInt32 & aTotalFixedWidth,
                                          PRInt32 & aMinTableWidth, 
                                          PRInt32 & aMaxTableWidth);
@@ -317,7 +314,6 @@ protected:
     * TODO: rename this method to reflect that it is a Nav4 compatibility method
     */
   virtual PRBool BalanceProportionalColumnsForSpecifiedWidthTable(nsIPresContext*  aPresContext,
-                                                                  nsStyleMolecule* aTableStyleMol,
                                                                   PRInt32 aAvailWidth,
                                                                   PRInt32 aMaxWidth,
                                                                   PRInt32 aMinTableWidth, 
@@ -339,7 +335,6 @@ protected:
     * TODO: rename this method to reflect that it is a Nav4 compatibility method
     */
   virtual PRBool BalanceProportionalColumnsForAutoWidthTable(nsIPresContext*  aPresContext,
-                                                             nsStyleMolecule* aTableStyleMol,
                                                              PRInt32 aAvailWidth,
                                                              PRInt32 aMaxWidth,
                                                              PRInt32 aMinTableWidth, 
@@ -366,7 +361,6 @@ protected:
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     */
   virtual PRBool BalanceColumnsTableFits(nsIPresContext*  aPresContext, 
-                                         nsStyleMolecule* aTableStyleMol, 
                                          PRInt32          aAvailWidth);
 
   /** assign widths for each column that has proportional width inside a table that 
@@ -386,15 +380,13 @@ protected:
     * TODO: rename this method to reflect that it is a Nav4 compatibility method
     */
   virtual PRBool BalanceColumnsHTML4Constrained(nsIPresContext*  aPresContext,
-                                                nsStyleMolecule* aTableStyleMol, 
                                                 PRInt32 aAvailWidth,
                                                 PRInt32 aMaxWidth,
                                                 PRInt32 aMinTableWidth, 
                                                 PRInt32 aMaxTableWidth);
 
   /** sets the width of the table according to the computed widths of each column. */
-  virtual void SetTableWidth(nsIPresContext*  aPresContext, 
-                             nsStyleMolecule* aTableStyle);
+  virtual void SetTableWidth(nsIPresContext*  aPresContext);
 
   /**
     */
@@ -413,7 +405,7 @@ protected:
     * according to its content.  
     * In NAV4, this is when there is a COLS attribute on the table.
     */
-  virtual PRBool AutoColumnWidths(nsStyleMolecule* aTableStyleMol);
+  virtual PRBool AutoColumnWidths();
 
   /** given the new parent size, do I really need to do a reflow? */
   virtual PRBool NeedsReflow(const nsSize& aMaxSize);

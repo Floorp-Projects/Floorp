@@ -22,8 +22,6 @@
 #include "nsContainerFrame.h"
 #include "nsTableCell.h"
 
-struct nsStyleMolecule;
-
 /**
  * nsTableCellFrame
  * data structure to maintain information about a single table cell's frame

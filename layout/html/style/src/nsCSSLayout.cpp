@@ -25,7 +25,7 @@
 #include "nsRect.h"
 #include "nsIPtr.h"
 
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 
 NS_DEF_PTR(nsIStyleContext);
@@ -64,10 +64,8 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
 
     kid->GetStyleContext(aCX, kidSC.AssignRef());
     kid->GetContent(kidContent.AssignRef());
-    nsStyleMolecule* kidMol =
-      (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-    PRIntn verticalAlign = kidMol->verticalAlign;
-    float verticalAlignPct = kidMol->verticalAlignPct;
+    nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(kStyleTextSID);
+    PRIntn verticalAlign = textStyle->mVerticalAlign;
 
     kid->GetRect(kidRect);
 
@@ -146,9 +144,8 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
 
       kid->GetStyleContext(aCX, kidSC.AssignRef());
       kid->GetContent(kidContent.AssignRef());
-      nsStyleMolecule* kidMol =
-        (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-      PRIntn verticalAlign = kidMol->verticalAlign;
+      nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(kStyleTextSID);
+      PRIntn verticalAlign = textStyle->mVerticalAlign;
 
       // Vertically align the child
       if (verticalAlign == NS_STYLE_VERTICAL_ALIGN_BOTTOM) {
@@ -174,14 +171,13 @@ nscoord nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
  */
 void nsCSSLayout::HorizontallyPlaceChildren(nsIPresContext* aCX,
                                             nsIFrame* aContainer,
-                                            nsStyleMolecule* aContainerStyle,
+                                            nsStyleText* aContainerStyle,
                                             nsIFrame* aFirstChild,
                                             PRInt32 aChildCount,
                                             nscoord aLineWidth,
                                             nscoord aMaxWidth)
 {
-  PRIntn textAlign = aContainerStyle->textAlign;
-
+  PRIntn textAlign = aContainerStyle->mTextAlign;
   nscoord dx = 0;
   switch (textAlign) {
   case NS_STYLE_TEXT_ALIGN_LEFT:
@@ -213,7 +209,6 @@ void nsCSSLayout::HorizontallyPlaceChildren(nsIPresContext* aCX,
  */
 void nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
                                            nsIFrame* aContainer,
-                                           nsStyleMolecule* aContainerStyle,
                                            nsIFrame* aFirstChild,
                                            PRInt32 aChildCount)
 {
@@ -225,7 +220,8 @@ void nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
 
     kid->GetContent(kidContent.AssignRef());
     kid->GetStyleContext(aCX, kidSC.AssignRef());
-    nsStylePosition* kidPosition = (nsStylePosition*)kidSC->GetData(kStylePositionSID);
+    nsStylePosition* kidPosition = (nsStylePosition*)
+      kidSC->GetData(kStylePositionSID);
     if (NS_STYLE_POSITION_RELATIVE == kidPosition->mPosition) {
       kid->GetOrigin(origin);
       // XXX Check the flags: could be auto or percent (not just length)

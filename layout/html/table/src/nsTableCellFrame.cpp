@@ -35,9 +35,10 @@ static PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebug = PR_FALSE;
 #endif
 
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kStyleBorderSID, NS_STYLEBORDER_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
 /**
   */
@@ -86,20 +87,15 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
 **/
 
 void  nsTableCellFrame::VerticallyAlignChild(nsIPresContext* aPresContext)
-  {
+{
+  nsStyleSpacing* spacing =
+      (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  nsStyleText* textStyle =
+      (nsStyleText*)mStyleContext->GetData(kStyleTextSID);
   
-  nsStyleMolecule* mol =
-      (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
-  NS_ASSERTION(nsnull!=mol, "bad style molecule");
-  nscoord topInset=0, bottomInset=0;
-  PRInt32 verticalAlign = NS_STYLE_VERTICAL_ALIGN_MIDDLE;
-  
-  if (nsnull!=mol)
-  {
-    topInset = mol->borderPadding.top;
-    bottomInset =mol->borderPadding.bottom;
-    verticalAlign = mol->verticalAlign;
-  }
+  nscoord topInset = spacing->mBorderPadding.top;
+  nscoord bottomInset = spacing->mBorderPadding.bottom;
+  PRUint8 verticalAlign = textStyle->mVerticalAlign;
   nscoord       height = mRect.height;
 
   nsRect        kidRect;  
@@ -225,17 +221,12 @@ NS_METHOD nsTableCellFrame::ResizeReflow(nsIPresContext* aPresContext,
   // SEC: what about ascent and decent???
 
   // Compute the insets (sum of border and padding)
-  nsStyleMolecule* myMol =
-      (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
-  NS_ASSERTION(nsnull!=myMol, "bad style molecule");
-  nscoord topInset=0,rightInset=0, bottomInset=0, leftInset=0;
-  if (nsnull!=myMol)
-  {
-    topInset = myMol->borderPadding.top;
-    rightInset = myMol->borderPadding.right;
-    bottomInset =myMol->borderPadding.bottom;
-    leftInset = myMol->borderPadding.left;
-  }
+  nsStyleSpacing* spacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
+  nscoord topInset = spacing->mBorderPadding.top;
+  nscoord rightInset = spacing->mBorderPadding.right;
+  nscoord bottomInset = spacing->mBorderPadding.bottom;
+  nscoord leftInset = spacing->mBorderPadding.left;
 
   // reduce available space by insets
   if (NS_UNCONSTRAINEDSIZE!=availSize.width)

@@ -23,9 +23,9 @@
 
 class nsTableFrame;
 class nsVoidArray;
-struct nsStyleMolecule;
 class nsTableCaptionFrame;
 struct OuterTableReflowState;
+struct nsStyleSpacing;
 
 /**
  * main frame for an nsTable content object, 
@@ -137,8 +137,7 @@ protected:
 
   /** reflow the captions in an infinite space, caching the min/max sizes for each
     */
-  virtual ReflowStatus ResizeReflowCaptionsPass1(nsIPresContext*  aPresContext, 
-                                                 nsStyleMolecule* aTableStyle);
+  virtual ReflowStatus ResizeReflowCaptionsPass1(nsIPresContext* aPresContext);
 
   /** reflow the top captions in a space constrained by the computed table width
     * and the heigth given to us by our parent.  Top captions are laid down
@@ -147,8 +146,7 @@ protected:
   virtual ReflowStatus ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
                                                     nsReflowMetrics& aDesiredSize,
                                                     const nsSize&    aMaxSize,
-                                                    nsSize*          aMaxElementSize,
-                                                    nsStyleMolecule* aTableStyle);
+                                                    nsSize*          aMaxElementSize);
 
   /** reflow the bottom captions in a space constrained by the computed table width
     * and the heigth given to us by our parent.  Bottom captions are laid down
@@ -158,12 +156,11 @@ protected:
                                                        nsReflowMetrics& aDesiredSize,
                                                        const nsSize&    aMaxSize,
                                                        nsSize*          aMaxElementSize,
-                                                       nsStyleMolecule* aTableStyle,
                                                        nscoord          aYOffset);
 
   nscoord       GetTopMarginFor(nsIPresContext* aCX,
                                 OuterTableReflowState& aState,
-                                nsStyleMolecule* aKidMol);
+                                nsStyleSpacing* aKidSpacing);
 
   void          PlaceChild( OuterTableReflowState& aState,
                             nsIFrame*          aKidFrame,

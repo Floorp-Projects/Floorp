@@ -21,7 +21,7 @@
 #include "nsCoord.h"
 class nsIPresContext;
 struct nsStyleFont;
-struct nsStyleMolecule;
+struct nsStyleText;
 class nsIFrame;
 
 class nsCSSLayout {
@@ -44,7 +44,7 @@ public:
    */
   static void HorizontallyPlaceChildren(nsIPresContext* aPresContext,
                                         nsIFrame* aContainer,
-                                        nsStyleMolecule* aContainerStyle,
+                                        nsStyleText* aContainerStyle,
                                         nsIFrame* aFirstChild,
                                         PRInt32 aChildCount,
                                         nscoord aLineWidth,
@@ -55,7 +55,6 @@ public:
    */
   static void RelativePositionChildren(nsIPresContext* aPresContext,
                                        nsIFrame* aContainer,
-                                       nsStyleMolecule* aContainerStyle,
                                        nsIFrame* aFirstChild,
                                        PRInt32 aChildCount);
 };

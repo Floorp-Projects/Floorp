@@ -32,9 +32,9 @@
 
 #undef DEBUG_HR_REFCNT
 
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 // Default alignment value (so we can tell an unset value from a set value)
 #define ALIGN_UNSET PRUint8(-1)
@@ -117,16 +117,16 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
   nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->mThickness);
 
   // Get style data
-  nsStyleMolecule* mol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+  nsStyleSpacing* spacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
   nsStyleColor* color =
     (nsStyleColor*)mStyleContext->GetData(kStyleColorSID);
-  nscoord x0 = mol->borderPadding.left;
-  nscoord y0 = mol->borderPadding.top;
+  nscoord x0 = spacing->mBorderPadding.left;
+  nscoord y0 = spacing->mBorderPadding.top;
   nscoord width = mRect.width -
-    (mol->borderPadding.left + mol->borderPadding.right);
+    (spacing->mBorderPadding.left + spacing->mBorderPadding.right);
   nscoord height = mRect.height -
-    (mol->borderPadding.top + mol->borderPadding.bottom);
+    (spacing->mBorderPadding.top + spacing->mBorderPadding.bottom);
 
   // Center hrule vertically within the available space
   y0 += (height - thickness) / 2;

@@ -22,8 +22,6 @@
 #include "nsContainerFrame.h"
 #include "nsTableCaption.h"
 
-struct nsStyleMolecule;
-
 /**
  * nsTableCaptionFrame
  * data structure to maintain information about a single table caption geometry

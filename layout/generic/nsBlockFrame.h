@@ -25,7 +25,9 @@
 #include "nsVoidArray.h"
 struct BlockBandData;
 struct nsMargin;
+struct nsStyleDisplay;
 struct nsStyleFont;
+struct nsStyleText;
 
 /**
  * Block frames have some state which needs to be made
@@ -65,9 +67,11 @@ struct nsBlockReflowState {
   // Space manager to use
   nsISpaceManager* spaceManager;
 
-  // Block's style data
-  nsStyleFont* font;
-  nsStyleMolecule* mol;
+  // Block's style context
+  nsIStyleContext* styleContext;
+  nsStyleText* styleText;
+  nsStyleFont* styleFont;
+  nsStyleDisplay* styleDisplay;
 
   // Block's available size (computed from the block's parent)
   nsSize availSize;
@@ -139,7 +143,7 @@ struct nsBlockReflowState {
   ~nsBlockReflowState();
 
   void Init(const nsSize& aMaxSize, nsSize* aMaxElementSize,
-            nsStyleFont* aFont, nsStyleMolecule* aMol, nsISpaceManager* aSpaceManager);
+            nsIStyleContext* aStyleContext, nsISpaceManager* aSpaceManager);
 
   void AddAscent(nscoord aAscent);
   void AdvanceToNextLine(nsIFrame* aPrevLineLastFrame, nscoord aPrevLineHeight);
@@ -247,7 +251,7 @@ protected:
   nscoord GetTopMarginFor(nsIPresContext* aCX,
                           nsBlockReflowState& aState,
                           nsIFrame* aKidFrame,
-                          nsStyleMolecule* aKidMol,
+                          nsIStyleContext* aKidSC,
                           PRBool aIsInline);
 
   PRBool AdvanceToNextLine(nsIPresContext* aPresContext,
@@ -258,24 +262,24 @@ protected:
                             nsIFrame* aKidFrame,
                             nsReflowMetrics& aKidSize,
                             nsSize* aKidMaxElementSize,
-                            nsStyleMolecule* aKidMol);
+                            nsIStyleContext* aKidSC);
 
   void AddBlockChild(nsIPresContext* aCX,
                      nsBlockReflowState& aState,
                      nsIFrame* aKidFrame,
                      nsRect& aKidRect,
                      nsSize* aKidMaxElementSize,
-                     nsStyleMolecule* aKidMol);
+                     nsIStyleContext* aKidSC);
 
   void GetAvailSize(nsSize& aResult,
                     nsBlockReflowState& aState,
-                    nsStyleMolecule* aKidMol,
+                    nsIStyleContext* aKidSC,
                     PRBool aIsInline);
 
   PRIntn PlaceAndReflowChild(nsIPresContext* aCX,
                              nsBlockReflowState& aState,
                              nsIFrame* kidFrame,
-                             nsStyleMolecule* aKidMol);
+                             nsIStyleContext* aKidSC);
 
   void PushKids(nsBlockReflowState& aState);
 

@@ -26,6 +26,7 @@
 #include "nsCSSLayout.h"
 #include "nsPlaceholderFrame.h"
 #include "nsReflowCommand.h"
+#include "nsHTMLAtoms.h"
 #include "nsAbsoluteFrame.h"
 
 // XXX To Do:
@@ -36,16 +37,22 @@
 // 6. direction support
 // 7. CSS line-height property
 
+/* XXX */
+#include "nsHTMLIIDs.h"
+#include "nsBlockFrame.h"
+
 #define DEFAULT_ASCENT_LEN  10
+
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
+static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 class nsInlineState
 {
 public:
   nsStyleFont*      font;           // style font
-  nsStyleMolecule*  mol;            // style molecule
+  nsStyleSpacing*   spacing;        // style spacing
   nsSize            availSize;      // available space in which to reflow (starts as max size minus insets)
   nsSize*           maxElementSize; // maximum element size (may be null)
   nscoord           x;              // running x-offset (starts at left inner edge)
@@ -58,14 +65,14 @@ public:
 
   // Constructor
   nsInlineState(nsStyleFont*     aStyleFont,
-                nsStyleMolecule* aStyleMolecule,
+                nsStyleSpacing*  aSpacing,
                 const nsSize&    aMaxSize,
                 nsSize*          aMaxElementSize)
-    : x(aStyleMolecule->borderPadding.left),  // determined by inner edge
-      y(aStyleMolecule->borderPadding.top)    // determined by inner edge
+    : x(aSpacing->mBorderPadding.left),  // determined by inner edge
+      y(aSpacing->mBorderPadding.top)    // determined by inner edge
   {
     font = aStyleFont;
-    mol = aStyleMolecule;
+    spacing = aSpacing;
 
     unconstrainedWidth = PRBool(aMaxSize.width == NS_UNCONSTRAINEDSIZE);
     unconstrainedHeight = PRBool(aMaxSize.height == NS_UNCONSTRAINEDSIZE);
@@ -74,11 +81,11 @@ public:
     // needed for border/padding
     availSize.width = aMaxSize.width;
     if (PR_FALSE == unconstrainedWidth) {
-      availSize.width -= mol->borderPadding.left + mol->borderPadding.right;
+      availSize.width -= aSpacing->mBorderPadding.left + aSpacing->mBorderPadding.right;
     }
     availSize.height = aMaxSize.height;
     if (PR_FALSE == unconstrainedHeight) {
-      availSize.height -= mol->borderPadding.top + mol->borderPadding.bottom;
+      availSize.height -= aSpacing->mBorderPadding.top + aSpacing->mBorderPadding.bottom;
     }
 
     // Initialize max element size
@@ -360,6 +367,10 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
       }
     }
 
+    // XXX if the frame being pulled up is not appropriate (e.g. a block
+    // frame) then we should stop! If we have an inline BR tag we should
+    // stop too!
+
     // See if the child fits in the available space. If it fits or
     // it's splittable then reflow it. The reason we can't just move
     // it is that we still need ascent/descent information
@@ -531,6 +542,7 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
   PRInt32   kidIndex = NextChildOffset();
   nsIFrame* prevKidFrame;
 
+  PRBool breakAfter = PR_FALSE;
   LastChild(prevKidFrame);
   for (;;) {
     // Get the next content object
@@ -553,19 +565,21 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
 
     // Figure out how we should treat the child
     nsIFrame*        kidFrame;
-    nsStylePosition* kidPosition = (nsStylePosition*)kidStyleContext->GetData(kStylePositionSID);
-    nsStyleMolecule* kidMol = (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
+    nsStyleDisplay*  kidDisplay =
+      (nsStyleDisplay*)kidStyleContext->GetData(kStyleDisplaySID);
+    nsStylePosition* kidPosition = (nsStylePosition*)
+      kidStyleContext->GetData(kStylePositionSID);
 
     // Check whether it wants to floated or absolutely positioned
     if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
       AbsoluteFrame::NewFrame(&kidFrame, kid, kidIndex, this);
       kidFrame->SetStyleContext(kidStyleContext);
-    } else if (kidMol->floats != NS_STYLE_FLOAT_NONE) {
+    } else if (kidDisplay->mFloats != NS_STYLE_FLOAT_NONE) {
       PlaceholderFrame::NewFrame(&kidFrame, kid, kidIndex, this);
       kidFrame->SetStyleContext(kidStyleContext);
     } else if (nsnull == kidPrevInFlow) {
       nsIContentDelegate* kidDel;
-      switch (kidMol->display) {
+      switch (kidDisplay->mDisplay) {
       case NS_STYLE_DISPLAY_BLOCK:
       case NS_STYLE_DISPLAY_LIST_ITEM:
         if (kidIndex != mFirstContentOffset) {
@@ -578,6 +592,42 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
         // FALLTHROUGH
 
       case NS_STYLE_DISPLAY_INLINE:
+        // XXX temporary hack to make plain BR's in inlines "work"
+        // get style for break-before-after; get break-type (line, page, etc.)
+        {
+          nsIAtom* tag = kid->GetTag();
+          if (nsHTMLAtoms::br == tag) {
+            // Set break-after flag so we stop mapping children (we
+            // will end up being continued if there are more children)
+            breakAfter = PR_TRUE;
+
+            // Get cached state for containing block frame
+            // XXX how about QueryInterface(kIHTMLBlockFrameIID)? DOH!
+            nsBlockReflowState* state = nsnull;
+            nsIFrame* parent = mGeometricParent;
+            while (nsnull != parent) {
+              nsIHTMLFrameType* ft;
+              nsresult status =
+                parent->QueryInterface(kIHTMLFrameTypeIID, (void**) &ft);
+              if (NS_OK == status) {
+                nsHTMLFrameType type = ft->GetFrameType();
+                if (eHTMLFrame_Block == type) {
+                  break;
+                }
+              }
+              parent->GetGeometricParent(parent);
+            }
+            if (nsnull != parent) {
+              nsIPresShell* shell = aPresContext->GetShell();
+              state = (nsBlockReflowState*) shell->GetCachedData(parent);
+              // XXX Of course this won't work if the inline span is nested
+              // in another inline span!
+              state->breakAfterChild = PR_TRUE;
+              NS_RELEASE(shell);
+            }
+          }
+          NS_IF_RELEASE(tag);
+        }
         kidDel = kid->GetDelegate(aPresContext);
         kidFrame = kidDel->CreateFrame(aPresContext, kid, kidIndex, this);
         NS_RELEASE(kidDel);
@@ -634,6 +684,11 @@ nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
       break;
     }
     kidPrevInFlow = nsnull;
+
+    // If we need to break after the kidFrame, then do so now
+    if (breakAfter) {
+      break;
+    }
   }
 
 done:;
@@ -668,15 +723,15 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
   // Get the style molecule
   nsStyleFont* styleFont =
     (nsStyleFont*)mStyleContext->GetData(kStyleFontSID);
-  nsStyleMolecule* styleMolecule =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+  nsStyleSpacing* styleSpacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
 
   // Check for an overflow list
   MoveOverflowToChildList();
 
   // Initialize our reflow state. We must wait until after we've processed
   // the overflow list, because our first content offset might change
-  nsInlineState state(styleFont, styleMolecule, aMaxSize, aMaxElementSize);
+  nsInlineState state(styleFont, styleSpacing, aMaxSize, aMaxElementSize);
   state.SetNumAscents(mContent->ChildCount() - mFirstContentOffset);
 
   // Reflow any existing frames
@@ -710,7 +765,7 @@ NS_METHOD nsInlineFrame::ResizeReflow(nsIPresContext*  aPresContext,
     }
   }
 
-  const nsMargin&  insets = styleMolecule->borderPadding;
+  const nsMargin&  insets = styleSpacing->mBorderPadding;
 
   // Vertically align the children
   nscoord lineHeight =
@@ -895,9 +950,7 @@ NS_METHOD nsInlineFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
     // Recover the reflow state as if we had reflowed our children up
     // to but not including the child that is next in the reflow chain
-    nsStyleMolecule* styleMolecule =
-      (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
-    nsInlineState state(styleMolecule, aMaxSize, nsnull);
+    nsInlineState state(aMaxSize, nsnull);
     state.SetNumAscents(mChildCount);
     PRIntn nextIndex = RecoverState(aPresContext, state, nextInChain);
 
@@ -981,8 +1034,8 @@ nsInlineFrame::AdjustChildren(nsIPresContext* aPresContext,
                               nsReflowMetrics& aKidMetrics,
                               ReflowStatus aKidReflowStatus)
 {
-  nsStyleMolecule* mol = aState.mol;
-  nscoord xr = aState.availSize.width + mol->borderPadding.left;
+  nsStyleSpacing* spacing = aState.spacing;
+  nscoord xr = aState.availSize.width + spacing->mBorderPadding.left;
   nscoord remainingSpace = xr - aState.x;
   nscoord x = aState.x;
 
@@ -1000,7 +1053,7 @@ nsInlineFrame::AdjustChildren(nsIPresContext* aPresContext,
   }
 
   // Vertically align the children
-  const nsMargin& insets = mol->borderPadding;
+  const nsMargin& insets = spacing->mBorderPadding;
   nsCSSLayout::VerticallyAlignChildren(aPresContext, this, aState.font,
                                        insets.top, mFirstChild, mChildCount,
                                        aState.ascents, aState.maxAscent);

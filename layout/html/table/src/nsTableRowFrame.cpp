@@ -38,15 +38,11 @@ static const PRBool gsDebug1 = PR_FALSE;
 static const PRBool gsDebug2 = PR_FALSE;
 #endif
 
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 /* ----------- RowReflowState ---------- */
 
 struct RowReflowState {
-
-  // The body's style molecule
-  nsStyleMolecule* mol;
-
   // The body's available size (computed from the body's parent)
   nsSize availSize;
 
@@ -68,10 +64,8 @@ struct RowReflowState {
    
 
   RowReflowState( nsIPresContext*  aPresContext,
-                  const nsSize&    aMaxSize,
-                  nsStyleMolecule* aMol)
+                  const nsSize&    aMaxSize)
   {
-    mol = aMol;
     availSize.width = aMaxSize.width;
     availSize.height = aMaxSize.height;
     prevMaxPosBottomMargin = 0;
@@ -175,12 +169,12 @@ PRInt32 nsTableRowFrame::GetTallestChild() const
 // Collapse child's top margin with previous bottom margin
 nscoord nsTableRowFrame::GetTopMarginFor( nsIPresContext*  aCX,
                                           RowReflowState&  aState,
-                                          nsStyleMolecule* aKidMol)
+                                          nsStyleSpacing* aKidSpacing)
 {
   nscoord margin;
   nscoord maxNegTopMargin = 0;
   nscoord maxPosTopMargin = 0;
-  if ((margin = aKidMol->margin.top) < 0) {
+  if ((margin = aKidSpacing->mMargin.top) < 0) {
     maxNegTopMargin = -margin;
   } else {
     maxPosTopMargin = margin;
@@ -284,9 +278,10 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     // Get top margin for this kid
     nsIStyleContext* kidSC;
     kidFrame->GetStyleContext(aPresContext, kidSC);
-    nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
-    nscoord bottomMargin = kidMol->margin.bottom;
+    nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
+      kidSC->GetData(kStyleSpacingSID);
+    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidSpacing);
+    nscoord bottomMargin = kidSpacing->mMargin.bottom;
     NS_RELEASE(kidSC);
 
     // Figure out the amount of available size for the child (subtract
@@ -296,7 +291,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     }
     // Subtract off for left and right margin
     if (PR_FALSE == aState.unconstrainedWidth) {
-      kidAvailSize.width -= kidMol->margin.left + kidMol->margin.right;
+      kidAvailSize.width -= kidSpacing->mMargin.left + kidSpacing->mMargin.right;
     }
 
     if (NS_UNCONSTRAINEDSIZE == aState.availSize.width)
@@ -315,7 +310,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       nscoord availWidth = 0;
       for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
         availWidth += aState.tableFrame->GetColumnWidth(cellStartingCol+numColSpan);
-      NS_ASSERTION(0<availWidth, "illegal width for this column");
+//      NS_ASSERTION(0<availWidth, "illegal width for this column");
       kidAvailSize.width = availWidth;
       status = ReflowChild(kidFrame, aPresContext, desiredSize, 
                            kidAvailSize, pKidMaxElementSize);
@@ -427,7 +422,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     // Add back in the left and right margins, because one row does not 
     // impact another row's width
     if (PR_FALSE == aState.unconstrainedWidth) {
-      kidAvailSize.width += kidMol->margin.left + kidMol->margin.right;
+      kidAvailSize.width += kidSpacing->mMargin.left + kidSpacing->mMargin.right;
     }
 
     // Get the next child
@@ -801,10 +796,10 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
     // Resolve style
     nsIStyleContext* kidStyleContext =
       aPresContext->ResolveStyleContextFor(cell, this);
-    nsStyleMolecule* kidMol =
-      (nsStyleMolecule*)kidStyleContext->GetData(kStyleMoleculeSID);
-    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
-    nscoord bottomMargin = kidMol->margin.bottom;
+    nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
+      kidStyleContext->GetData(kStyleSpacingSID);
+    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidSpacing);
+    nscoord bottomMargin = kidSpacing->mMargin.bottom;
 
     nsIFrame* kidFrame;
 
@@ -956,9 +951,7 @@ nsTableRowFrame::ResizeReflow(nsIPresContext*  aPresContext,
   // Check for an overflow list
   MoveOverflowToChildList();
 
-  nsStyleMolecule* myMol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
-  RowReflowState state(aPresContext, aMaxSize, myMol);
+  RowReflowState state(aPresContext, aMaxSize);
   mContentParent->GetContentParent((nsIFrame*&)(state.tableFrame));
 
   // Reflow the existing frames

@@ -43,7 +43,8 @@ static PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebug = PR_FALSE;
 #endif
 
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 static NS_DEFINE_IID(kITableContentIID, NS_ITABLECONTENT_IID);
 
 NS_DEF_PTR(nsIStyleContext);
@@ -53,9 +54,6 @@ struct OuterTableReflowState {
 
   // The presentation context
   nsIPresContext *pc;
-
-  // The body's style molecule
-  nsStyleMolecule* mol;
 
   // The total available size (computed from the parent)
   nsSize availSize;
@@ -78,11 +76,9 @@ struct OuterTableReflowState {
   PRBool processingCaption;
 
   OuterTableReflowState(nsIPresContext*  aPresContext,
-                        const nsSize&    aMaxSize,
-                        nsStyleMolecule* aMol)
+                        const nsSize&    aMaxSize)
   {
     pc = aPresContext;
-    mol = aMol;
     availSize.width = aMaxSize.width;
     availSize.height = aMaxSize.height;
     prevMaxPosBottomMargin = 0;
@@ -213,17 +209,14 @@ NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
     aStatus = frComplete;
     return NS_OK;
   }
-
-  nsStyleMolecule* tableStyleMol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
   
-  OuterTableReflowState state(aPresContext, aMaxSize, tableStyleMol);
+  OuterTableReflowState state(aPresContext, aMaxSize);
 
   // lay out captions pass 1, if necessary
   if (PR_FALSE==IsFirstPassValid())
   {
     mFirstPassValid = PR_TRUE;
-    aStatus = ResizeReflowCaptionsPass1(aPresContext, tableStyleMol);
+    aStatus = ResizeReflowCaptionsPass1(aPresContext);
 
   }
 
@@ -232,7 +225,7 @@ NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
   { // we treat the table as if we've never seen the layout data before
     mInnerTableFrame->SetReflowPass(nsTableFrame::kPASS_FIRST);
     aStatus = mInnerTableFrame->ResizeReflowPass1(aPresContext, aDesiredSize, aMaxSize, 
-                                                  &innerTableMaxElementSize, tableStyleMol);
+                                                  &innerTableMaxElementSize);
   
 #ifdef NOISY_MARGINS
     nsIContentPtr content = mInnerTableFrame->GetContent();
@@ -252,9 +245,9 @@ NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
   if (nsnull==prevInFlow)
   {
     // assign column widths, and assign aMaxElementSize->width
-    mInnerTableFrame->BalanceColumnWidths(aPresContext, tableStyleMol, aMaxSize, aMaxElementSize);
+    mInnerTableFrame->BalanceColumnWidths(aPresContext, aMaxSize, aMaxElementSize);
     // assign table width
-    mInnerTableFrame->SetTableWidth(aPresContext, tableStyleMol);
+    mInnerTableFrame->SetTableWidth(aPresContext);
   }
   // inner table max is now the computed width and assigned  height
   nsSize  innerTableSize;
@@ -350,12 +343,12 @@ NS_METHOD nsTableOuterFrame::ResizeReflow(nsIPresContext* aPresContext,
 // Collapse child's top margin with previous bottom margin
 nscoord nsTableOuterFrame::GetTopMarginFor(nsIPresContext*        aCX,
                                            OuterTableReflowState& aState,
-                                           nsStyleMolecule*       aKidMol)
+                                           nsStyleSpacing* aKidSpacing)
 {
   nscoord margin;
   nscoord maxNegTopMargin = 0;
   nscoord maxPosTopMargin = 0;
-  if ((margin = aKidMol->margin.top) < 0) {
+  if ((margin = aKidSpacing->mMargin.top) < 0) {
     maxNegTopMargin = -margin;
   } else {
     maxPosTopMargin = margin;
@@ -468,9 +461,10 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     nsIStyleContextPtr kidSC;
 
     kidFrame->GetStyleContext(aPresContext, kidSC.AssignRef());
-    nsStyleMolecule* kidMol = (nsStyleMolecule*)kidSC->GetData(kStyleMoleculeSID);
-    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMol);
-    nscoord bottomMargin = kidMol->margin.bottom;
+    nsStyleSpacing* kidSpacing =
+      (nsStyleSpacing*)kidSC->GetData(kStyleSpacingSID);
+    nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidSpacing);
+    nscoord bottomMargin = kidSpacing->mMargin.bottom;
 
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
@@ -479,7 +473,7 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     }
     // Subtract off for left and right margin
     if (PR_FALSE == aState.unconstrainedWidth) {
-      aState.availSize.width -= kidMol->margin.left + kidMol->margin.right;
+      aState.availSize.width -= kidSpacing->mMargin.left + kidSpacing->mMargin.right;
     }
 
     // Only skip the reflow if this is not our first child and we are
@@ -509,7 +503,7 @@ PRBool nsTableOuterFrame::ReflowMappedChildren( nsIPresContext*      aPresContex
     // Place the child after taking into account it's margin
     aState.y += topMargin;
     nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-    kidRect.x += kidMol->margin.left;
+    kidRect.x += kidSpacing->mMargin.left;
     kidRect.y += aState.y;
     PlaceChild(aState, kidFrame, kidRect, aMaxElementSize, kidMaxElementSize);
     if (bottomMargin < 0) {
@@ -894,29 +888,28 @@ nsTableOuterFrame::ReflowChild( nsIFrame*        aKidFrame,
 
     aKidFrame->GetStyleContext(aPresContext, captionStyleContext.AssignRef());
     NS_ASSERTION(nsnull != captionStyleContext, "null style context for caption");
-    nsStyleMolecule* captionStyle =
-      (nsStyleMolecule*)captionStyleContext->GetData(kStyleMoleculeSID);
+    nsStyleText* captionStyle =
+      (nsStyleText*)captionStyleContext->GetData(kStyleTextSID);
     NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");
-    if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->verticalAlign)
+    if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlign)
     {
       if (PR_TRUE==gsDebug) printf("reflowChild called with a bottom caption\n");
       status = ResizeReflowBottomCaptionsPass2(aPresContext, aDesiredSize,
                                                aMaxSize, aMaxElementSize,
-                                               aState.mol, aState.y);
+                                               aState.y);
     }
     else
     {
       if (PR_TRUE==gsDebug) printf("reflowChild called with a top caption\n");
       status = ResizeReflowTopCaptionsPass2(aPresContext, aDesiredSize,
-                                            aMaxSize, aMaxElementSize,
-                                            aState.mol);
+                                            aMaxSize, aMaxElementSize);
     }
   }
   else
   {
     if (PR_TRUE==gsDebug) printf("reflowChild called with a table body\n");
-    status = ((nsTableFrame*)aKidFrame)->ResizeReflowPass2(aPresContext, aDesiredSize, aState.availSize, 
-                                                           aMaxElementSize, aState.mol,
+    status = ((nsTableFrame*)aKidFrame)->ResizeReflowPass2(aPresContext, aDesiredSize, aState.innerTableMaxSize, 
+                                                           aMaxElementSize,
                                                            mMinCaptionWidth, mMaxCaptionWidth);
   }
   if (PR_TRUE==gsDebug)
@@ -977,12 +970,12 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
       nsIStyleContextPtr captionStyleContext =
         aPresContext->ResolveStyleContextFor(caption, this);
       NS_ASSERTION(nsnull!=captionStyleContext, "bad style context for caption.");
-      nsStyleMolecule* captionStyle = 
-        (nsStyleMolecule*)captionStyleContext->GetData(kStyleMoleculeSID);
+      nsStyleText* captionStyle = 
+        (nsStyleText*)captionStyleContext->GetData(kStyleTextSID);
       captionFrame->SetStyleContext(captionStyleContext);
       mChildCount++;
       // Link child frame into the list of children
-      if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->verticalAlign)
+      if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlign)
       { // bottom captions get added to the end of the outer frame child list
         prevKidFrame->SetNextSibling(captionFrame);
         prevKidFrame = captionFrame;
@@ -1018,7 +1011,7 @@ void nsTableOuterFrame::CreateChildFrames(nsIPresContext*  aPresContext)
 
 
 nsIFrame::ReflowStatus
-nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext, nsStyleMolecule* aTableStyle)
+nsTableOuterFrame::ResizeReflowCaptionsPass1(nsIPresContext* aPresContext)
 {
   if (nsnull!=mCaptionFrames)
   {
@@ -1046,8 +1039,7 @@ nsIFrame::ReflowStatus
 nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
                                                 nsReflowMetrics& aDesiredSize,
                                                 const nsSize&    aMaxSize,
-                                                nsSize*          aMaxElementSize,
-                                                nsStyleMolecule* aTableStyle)
+                                                nsSize*          aMaxElementSize)
 {
   ReflowStatus result = frComplete;
   nscoord topCaptionY = 0;
@@ -1064,11 +1056,11 @@ nsTableOuterFrame::ResizeReflowTopCaptionsPass2(nsIPresContext*  aPresContext,
        
       captionFrame->GetStyleContext(aPresContext, captionStyleContext.AssignRef());
       NS_ASSERTION(nsnull != captionStyleContext, "null style context for caption");
-      nsStyleMolecule* captionStyle =
-        (nsStyleMolecule*)captionStyleContext->GetData(kStyleMoleculeSID);
+      nsStyleText* captionStyle =
+        (nsStyleText*)captionStyleContext->GetData(kStyleTextSID);
       NS_ASSERTION(nsnull != captionStyle, "null style molecule for caption");
 
-      if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->verticalAlign)
+      if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==captionStyle->mVerticalAlign)
       { 
       }
       else
@@ -1113,7 +1105,6 @@ nsTableOuterFrame::ResizeReflowBottomCaptionsPass2(nsIPresContext*  aPresContext
                                                    nsReflowMetrics& aDesiredSize,
                                                    const nsSize&    aMaxSize,
                                                    nsSize*          aMaxElementSize,
-                                                   nsStyleMolecule* aTableStyle,
                                                    nscoord          aYOffset)
 {
   ReflowStatus result = frComplete;

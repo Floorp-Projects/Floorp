@@ -29,7 +29,6 @@
 #include "nsViewsCID.h"
 
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 NS_DEF_PTR(nsIStyleContext);

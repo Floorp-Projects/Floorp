@@ -31,7 +31,8 @@
 
 static NS_DEFINE_IID(kIRunaroundIID, NS_IRUNAROUND_IID);
 static NS_DEFINE_IID(kIAnchoredItemsIID, NS_IANCHOREDITEMS_IID);
-static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
+
+static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
 
 nsresult nsBodyFrame::NewFrame(nsIFrame** aInstancePtrResult,
                                nsIContent* aContent,
@@ -104,7 +105,7 @@ void nsBodyFrame::CreateColumnFrame(nsIPresContext* aPresContext)
 }
 
 nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
-                                        nsStyleMolecule* aMol,
+                                        nsStyleSpacing*  aSpacing,
                                         const nsSize&    aMaxSize)
 {
   nsSize  result(aMaxSize);
@@ -114,7 +115,8 @@ nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
   if (!IsPseudoFrame()) {
     // If our width is constrained then subtract for the border/padding
     if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
-      result.width -= aMol->borderPadding.left + aMol->borderPadding.right;
+      result.width -= aSpacing->mBorderPadding.left +
+        aSpacing->mBorderPadding.right;
       if (! aPresContext->IsPaginated()) {
         nsIDeviceContext* dc = aPresContext->GetDeviceContext();
         result.width -= NS_TO_INT_ROUND(dc->GetScrollBarWidth());
@@ -123,7 +125,8 @@ nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
     }
     // If our height is constrained then subtract for the border/padding
     if (aMaxSize.height != NS_UNCONSTRAINEDSIZE) {
-      result.height -= aMol->borderPadding.top + aMol->borderPadding.bottom;
+      result.height -= aSpacing->mBorderPadding.top +
+        aSpacing->mBorderPadding.bottom;
     }
   }
 
@@ -150,18 +153,19 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
     mSpaceManager->ClearRegions();
 
     // Get our border/padding info
-    nsStyleMolecule* myMol =
-      (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+    nsStyleSpacing* mySpacing =
+      (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
 
     // Compute the column's max size
-    nsSize  columnMaxSize = GetColumnAvailSpace(aPresContext, myMol, aMaxSize);
+    nsSize  columnMaxSize = GetColumnAvailSpace(aPresContext, mySpacing,
+                                                aMaxSize);
 
     // XXX Style code should be dealing with this...
     PRBool  isPseudoFrame = IsPseudoFrame();
     nscoord leftInset = 0, topInset = 0;
     if (!isPseudoFrame) {
-      leftInset = myMol->borderPadding.left;
-      topInset = myMol->borderPadding.top;
+      leftInset = mySpacing->mBorderPadding.left;
+      topInset = mySpacing->mBorderPadding.top;
     }
 
     // Get the column's desired rect
@@ -188,8 +192,8 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
     aDesiredSize.height = PR_MAX(desiredRect.YMost(), mSpaceManager->YMost());
 
     if (!isPseudoFrame) {
-      aDesiredSize.width += myMol->borderPadding.left + myMol->borderPadding.right;
-      aDesiredSize.height += myMol->borderPadding.top + myMol->borderPadding.bottom;
+      aDesiredSize.width += mySpacing->mBorderPadding.left + mySpacing->mBorderPadding.right;
+      aDesiredSize.height += mySpacing->mBorderPadding.top + mySpacing->mBorderPadding.bottom;
     }
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
@@ -247,15 +251,15 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                          ReflowStatus&    aStatus)
 {
   // Get our border/padding info
-  nsStyleMolecule* myMol =
-    (nsStyleMolecule*)mStyleContext->GetData(kStyleMoleculeSID);
+  nsStyleSpacing* mySpacing =
+    (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
 
   // XXX Style code should be dealing with this...
   PRBool  isPseudoFrame = IsPseudoFrame();
   nscoord leftInset = 0, topInset = 0;
   if (!isPseudoFrame) {
-    leftInset = myMol->borderPadding.left;
-    topInset = myMol->borderPadding.top;
+    leftInset = mySpacing->mBorderPadding.left;
+    topInset = mySpacing->mBorderPadding.top;
   }
 
   // XXX Clear the list of regions. This fixes a problem with the way reflow
@@ -271,7 +275,8 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
     }
 
     // Compute the column's max size
-    nsSize  columnMaxSize = GetColumnAvailSpace(aPresContext, myMol, aMaxSize);
+    nsSize  columnMaxSize = GetColumnAvailSpace(aPresContext, mySpacing,
+                                                aMaxSize);
 
     // Pass the command along to our column pseudo frame
     nsIRunaround* reflowRunaround;
@@ -295,8 +300,8 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
     aDesiredSize.width = aDesiredRect.XMost();
     aDesiredSize.height = aDesiredRect.YMost();
     if (!isPseudoFrame) {
-      aDesiredSize.width += myMol->borderPadding.left + myMol->borderPadding.right;
-      aDesiredSize.height += myMol->borderPadding.top + myMol->borderPadding.bottom;
+      aDesiredSize.width += mySpacing->mBorderPadding.left + mySpacing->mBorderPadding.right;
+      aDesiredSize.height += mySpacing->mBorderPadding.top + mySpacing->mBorderPadding.bottom;
     }
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
