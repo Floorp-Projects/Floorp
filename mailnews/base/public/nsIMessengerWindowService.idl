@@ -44,6 +44,6 @@ interface nsIMessengerWindowService : nsISupports {
        aFolderURI --> the folder resource you want pre-selected (if any)
 	   aMsgKey --> a particular message you may want selected in that folder (if any)
 	*/ 
-	void OpenMessengerWindowWithUri(in string aWindowType, in string aFolderURI, in nsMsgKey aMsgKey);
+	void openMessengerWindowWithUri(in string aWindowType, in string aFolderURI, in nsMsgKey aMsgKey);
 };
 

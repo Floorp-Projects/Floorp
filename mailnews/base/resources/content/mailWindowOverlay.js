@@ -963,7 +963,7 @@ function MsgOpenNewWindowForFolder(uri, key)
    // get the messenger window open service and ask it to open a new window for us
    var mailWindowService = Components.classes["@mozilla.org/messenger/windowservice;1"].getService(Components.interfaces.nsIMessengerWindowService);
    if (mailWindowService)
-     mailWindowService.openMessengerWindowWithUri(uriToOpen, keyToSelect);
+     mailWindowService.openMessengerWindowWithUri("mail:3pane", uriToOpen, keyToSelect);
   }
 }
 
