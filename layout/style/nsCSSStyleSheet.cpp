@@ -885,12 +885,13 @@ nsresult CSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
 
 static const PRUnichar kNullCh = PRUnichar('\0');
 
-static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue)
+static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, PRBool aCaseSensitive)
 {
   nsAutoString  valueList(aValueList);
 
   valueList.Append(kNullCh);  // put an extra null at the end
 
+  PRUnichar* value = (PRUnichar*)aValue;
   PRUnichar* start = (PRUnichar*)valueList;
   PRUnichar* end   = start;
 
@@ -905,8 +906,17 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue)
     }
     *end = kNullCh; // end string here
 
-    if ((start < end) && (aValue == start)) {
-      return PR_TRUE;
+    if (start < end) {
+      if (aCaseSensitive) {
+        if (aValue.Equals(value, start)) {
+          return PR_TRUE;
+        }
+      }
+      else {
+        if (aValue.EqualsIgnoreCase(value, start)) {
+          return PR_TRUE;
+        }
+      }
     }
 
     start = ++end;
@@ -916,12 +926,13 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue)
 
 static const PRUnichar kDashCh = PRUnichar('-');
 
-static PRBool ValueDashMatch(const nsString& aValueList, const nsString& aValue)
+static PRBool ValueDashMatch(const nsString& aValueList, const nsString& aValue, PRBool aCaseSensitive)
 {
   nsAutoString  valueList(aValueList);
 
   valueList.Append(kNullCh);  // put an extra null at the end
 
+  PRUnichar* value = (PRUnichar*)aValue;
   PRUnichar* start = (PRUnichar*)valueList;
   PRUnichar* end   = start;
 
@@ -936,8 +947,17 @@ static PRBool ValueDashMatch(const nsString& aValueList, const nsString& aValue)
     }
     *end = kNullCh; // end string here
 
-    if ((start < end) && (aValue == start)) {
-      return PR_TRUE;
+    if (start < end) {
+      if (aCaseSensitive) {
+        if (aValue.Equals(value, start)) {
+          return PR_TRUE;
+        }
+      }
+      else {
+        if (aValue.EqualsIgnoreCase(value, start)) {
+          return PR_TRUE;
+        }
+      }
     }
   }
   return PR_FALSE;
@@ -977,16 +997,10 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
               }
               break;
             case NS_ATTR_FUNC_INCLUDES: 
-              if (PR_FALSE == attr->mCaseSensitive) {
-                value.ToUpperCase();
-              }
-              result = ValueIncludes(value, attr->mValue);
+              result = ValueIncludes(value, attr->mValue, attr->mCaseSensitive);
               break;
             case NS_ATTR_FUNC_DASHMATCH: 
-              if (PR_FALSE == attr->mCaseSensitive) {
-                value.ToUpperCase();
-              }
-              result = ValueDashMatch(value, attr->mValue);
+              result = ValueDashMatch(value, attr->mValue, attr->mCaseSensitive);
               break;
           }
         }
