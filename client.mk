@@ -147,7 +147,7 @@ else
 endif
 
 ifdef MOZ_CO_DATE
-  CVS_CO_FLAGS := $(CVS_CO_FLAGS) -D "$(MOZ_CO_DATE)"
+  CVS_CO_DATE_FLAGS := -D "$(MOZ_CO_DATE)"
 endif
 
 ifeq "$(origin MOZ_MAKE_FLAGS)" "undefined"
@@ -170,7 +170,7 @@ endif
 ifndef MOZ_CO_MODULE
   MOZ_CO_MODULE := SeaMonkeyAll
 endif
-CVSCO_SEAMONKEY := $(CVSCO) $(MOZ_CO_MODULE)
+CVSCO_SEAMONKEY := $(CVSCO) $(CVS_CO_DATE_FLAGS) $(MOZ_CO_MODULE)
 
 ####################################
 # CVS defines for PSM
@@ -180,7 +180,7 @@ PSM_CO_FLAGS := -P
 ifdef PSM_CO_TAG
   PSM_CO_FLAGS := $(PSM_CO_FLAGS) -r $(PSM_CO_TAG)
 endif
-CVSCO_PSM = cvs $(CVS_FLAGS) co $(PSM_CO_FLAGS) $(PSM_CO_MODULE)
+CVSCO_PSM = cvs $(CVS_FLAGS) co $(PSM_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(PSM_CO_MODULE)
 
 ####################################
 # CVS defines for NSPR
@@ -190,7 +190,7 @@ NSPR_CO_FLAGS := -P
 ifdef NSPR_CO_TAG
   NSPR_CO_FLAGS := $(NSPR_CO_FLAGS) -r $(NSPR_CO_TAG)
 endif
-CVSCO_NSPR = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(NSPR_CO_MODULE)
+CVSCO_NSPR = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(NSPR_CO_MODULE)
 
 
 #######################################################################
@@ -326,7 +326,7 @@ $(OBJDIR)/Makefile $(OBJDIR)/config.status: $(CONFIG_STATUS_DEPS)
 	@if test ! -d $(OBJDIR); then $(MKDIR) $(OBJDIR); else true; fi
 	@echo cd $(OBJDIR);
 	@echo $(CONFIGURE)
-	@cd $(OBJDIR) && $(CONFIGURE) \
+	@cd $(OBJDIR) && $(CONFIGURE_ENV_ARGS) $(CONFIGURE) \
 	  || ( echo "*** Fix above errors and then restart with\
                \"$(MAKE) -f client.mk build\"" && exit 1 )
 	@touch $(OBJDIR)/Makefile
