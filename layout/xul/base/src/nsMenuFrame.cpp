@@ -83,6 +83,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIStringBundle.h"
 #include "nsGUIEvent.h"
+#include "nsIEventStateManager.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -890,6 +891,18 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
         mMenuParent->RemoveKeyboardNavigator();
       else if (!mMenuParent)
         menuPopup->RemoveKeyboardNavigator();
+
+      // XXX, bug 137033, In Windows, if mouse is outside the window when the menupopup closes, no
+      // mouse_enter/mouse_exit event will be fired to clear current hover state, we should clear it manually.
+      // This code may not the best solution, but we can leave it here untill we find the better approach.
+      nsCOMPtr<nsIContent> menuPopupContent;
+      menuPopup->GetContent(getter_AddRefs(menuPopupContent));
+      nsCOMPtr<nsIEventStateManager> esm;
+      mPresContext->GetEventStateManager(getter_AddRefs(esm));
+      PRInt32 state;
+      esm->GetContentState(menuPopupContent, state);
+      if (state & NS_EVENT_STATE_HOVER)
+        esm->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
     }
 
     // activate false will also set the mMenuOpen to false.
