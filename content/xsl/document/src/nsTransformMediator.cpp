@@ -96,13 +96,12 @@ NS_IMPL_ISUPPORTS1(nsTransformMediator, nsITransformMediator)
 void
 nsTransformMediator::TryToTransform()
 {
-  nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
-  if (mSourceDOM && mStyleDOM && observer) 
+  if (mSourceDOM && mStyleDOM && mObserver) 
   {
     if (mEnabled && mTransformer) {
       mTransformer->TransformDocument(mSourceDOM, 
                                       mStyleDOM,
-                                      observer,
+                                      mObserver,
                                       getter_AddRefs(mResultDoc));
     }
     else if (mStyleInvalid) {
@@ -113,7 +112,7 @@ nsTransformMediator::TryToTransform()
       // the error message.
       nsCOMPtr<nsIDOMDocument> errorDoc;
       mStyleDOM->GetOwnerDocument(getter_AddRefs(errorDoc));
-      observer->OnTransformDone(NS_ERROR_FAILURE, errorDoc);
+      mObserver->OnTransformDone(NS_ERROR_FAILURE, errorDoc);
     }
   }
 }
@@ -154,7 +153,7 @@ nsTransformMediator::GetResultDocument(nsIDOMDocument** aDoc)
 NS_IMETHODIMP
 nsTransformMediator::SetTransformObserver(nsITransformObserver* aObserver)
 {
-  mObserver = do_GetWeakReference(aObserver);
+  mObserver = aObserver;
   TryToTransform();
   return NS_OK;
 }

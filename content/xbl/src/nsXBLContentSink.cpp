@@ -69,6 +69,7 @@ NS_NewXBLContentSink(nsIXMLContentSink** aResult,
   NS_NEWXPCOM(it, nsXBLContentSink);
   NS_ENSURE_TRUE(it, NS_ERROR_OUT_OF_MEMORY);
 
+  nsCOMPtr<nsIXMLContentSink> kungFuDeathGrip = it;
   nsresult rv = it->Init(aDoc, aURL, aWebShell);
   NS_ENSURE_SUCCESS(rv, rv);
 

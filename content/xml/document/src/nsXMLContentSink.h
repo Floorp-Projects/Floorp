@@ -166,7 +166,6 @@ protected:
                               const nsString& aMedia);
 
   nsresult LoadXSLStyleSheet(nsIURI* aUrl);
-  nsresult SetupTransformMediator();
 
   static void
   GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);

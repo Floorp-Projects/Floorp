@@ -154,10 +154,9 @@ protected:
   PRInt32 mCountCatalogSheets;
   nsString mBaseTarget;
 
-  nsIParser *mParser;
-
   nsCOMPtr<nsIScriptContext> mScriptContext;
   PRPackedBool mCrossSiteAccessEnabled;
+  PRPackedBool mLoadedAsData;
 
   PRUint8 mXMLDeclarationBits;
 };
