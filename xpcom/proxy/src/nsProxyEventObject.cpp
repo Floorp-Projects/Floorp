@@ -171,10 +171,10 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
     
 
     // find in our hash table 
-    if(realToProxyMap->Exists(&rootkey))
+    root  = (nsProxyEventObject*) realToProxyMap->Get(&rootkey);
+	if(root)
     {
-        root  = (nsProxyEventObject*) realToProxyMap->Get(&rootkey);
-        proxy = root->Find(aIID);
+		proxy = root->Find(aIID);
         
         if(proxy)  
         {

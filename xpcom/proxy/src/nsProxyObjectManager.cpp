@@ -99,9 +99,20 @@ nsProxyObjectManager::nsProxyObjectManager()
     mProxyObjectMap = new nsHashtable(256, PR_TRUE);
 }
 
+static PRBool PurgeProxyClasses(nsHashKey *aKey, void *aData, void* closure)
+{
+    nsProxyEventClass* ptr = NS_REINTERPRET_CAST(nsProxyEventClass*, aData);
+    NS_RELEASE(ptr);
+    return PR_TRUE;
+}
+
 nsProxyObjectManager::~nsProxyObjectManager()
 {
-    delete mProxyClassMap;
+    if (mProxyClassMap)
+    {
+        mProxyClassMap->Reset(PurgeProxyClasses, nsnull);
+        delete mProxyClassMap;
+    }
     delete mProxyObjectMap;
     nsProxyObjectManager::mInstance = nsnull;
     
