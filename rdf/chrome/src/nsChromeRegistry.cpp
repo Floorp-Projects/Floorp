@@ -3452,8 +3452,14 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength)
     *++aBuffer = '\0';
 
     // process the parsed line
-    isProfile = profile.Equals(chromeProfile);
     isSelection = select.Equals(chromeLocType);
+    isProfile = profile.Equals(chromeProfile);
+    if (isProfile && !mProfileInitialized) 
+    { // load profile chrome.rdf only if needed
+      rv = LoadProfileDataSource();
+      if (NS_FAILED(rv)) 
+        return rv;
+    }
 
     if (path.Equals(chromeLocType)) {
       // location is a (full) path. convert it to an URL.
