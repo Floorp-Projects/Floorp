@@ -156,7 +156,7 @@ BookmarksUIElement.prototype = {
       const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
       var currCommand = commonCommands[i].QueryInterface(Components.interfaces.nsIRDFResource).Value;
       var element = null;
-      if (currCommand != NC_NS_CMD + "separator") {
+      if (currCommand != NC_NS_CMD + "bm_separator") {
         var commandName = this.getCommandName(currCommand);
         element = this.createMenuItem(commandName, currCommand, itemNode);
       }
@@ -213,33 +213,56 @@ BookmarksUIElement.prototype = {
         return null;
     }
     var commands = [];
+    // menu order:
+    // 
+    // bm_open
+    // bm_openfolder
+    // bm_openinnewwindow
+    // /* bm_openinnewtab not yet supported */
+    // ---------------------
+    // /* bm_find removed */
+    // bm_newfolder
+    // ---------------------
+    // bm_cut
+    // bm_copy
+    // bm_paste
+    // bm_fileBookmark
+    // ---------------------
+    // bm_delete
+    // bm_rename
+    // ---------------------
+    // bm_properties
     switch (type) {
     case "http://home.netscape.com/NC-rdf#BookmarkSeparator":
-      commands = ["bm_find", "separator", "bm_cut", "bm_copy", "bm_paste", 
-                  "bm_delete", "separator", "bm_fileBookmark", "separator", 
-                  "bm_newfolder"];
+      commands = ["bm_newfolder", "bm_separator", 
+                  "bm_cut", "bm_copy", "bm_paste", "bm_separator",
+                  "bm_delete"];
       break;
     case "http://home.netscape.com/NC-rdf#Bookmark":
-      commands = ["bm_open", "bm_openinnewwindow", "separator", "bm_cut", 
-                  "bm_copy", "bm_paste", "bm_delete", "separator", "bm_rename",
-                  "separator", "bm_fileBookmark", "separator", "bm_newfolder", 
-                  "separator", "bm_properties"];
+      commands = ["bm_open", "bm_openinnewwindow", /* "bm_openinnewtab", */ "bm_separator",
+                  "bm_newfolder", "bm_separator",
+                  "bm_cut", "bm_copy", "bm_paste", "bm_fileBookmark", "bm_separator",
+                  "bm_delete", "bm_rename", "bm_separator",
+                  "bm_properties"];
       break;
     case "http://home.netscape.com/NC-rdf#Folder":
-      commands = ["bm_openfolder", "bm_openinnewwindow", "separator", 
-                  "bm_cut", "bm_copy", "bm_paste", "bm_delete", "separator", "bm_rename", 
-                  "separator", "bm_fileBookmark", "separator", 
-                  "bm_newfolder", "separator", "bm_properties"];
+      commands = ["bm_openfolder", "bm_openinnewwindow", "bm_separator", 
+                  "bm_newfolder", "bm_separator",
+                  "bm_cut", "bm_copy", "bm_paste", "bm_fileBookmark", "bm_separator",
+                  "bm_delete", "bm_rename", "bm_separator",
+                  "bm_properties"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavoriteFolder":
-      commands = ["bm_open", "bm_openinnewwindow", "separator", "bm_copy", "bm_delete", "separator", "bm_rename", "separator",
-                  "bm_fileBookmark", "separator", "separator", "bm_properties"];
+      commands = ["bm_openfolder", "bm_openinnewwindow", "bm_separator",
+                  "bm_copy"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavorite":
-      commands = ["bm_open", "bm_openinnewwindow", "separator", "bm_copy"];
+      commands = ["bm_open", "bm_openinnewwindow", /* "bm_openinnewtab", */ "bm_separator",
+                  "bm_copy"];
       break;
     case "http://home.netscape.com/NC-rdf#FileSystemObject":
-      commands = ["bm_open", "bm_openinnewwindow", "separator", "bm_copy"];
+      commands = ["bm_open", "bm_openinnewwindow", /* "bm_openinnewtab", */ "bm_separator",
+                  "bm_copy"];
       break;
     default: 
       var source = this.RDF.GetResource(aNodeID);
