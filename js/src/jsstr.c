@@ -1136,7 +1136,7 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
     mdata = (MatchData *)data;
     arrayobj = mdata->arrayobj;
     if (!arrayobj) {
-        arrayobj = js_ConstructObject(cx, &js_ArrayClass, NULL, NULL);
+        arrayobj = js_ConstructObject(cx, &js_ArrayClass, NULL, NULL, 0, NULL);
         if (!arrayobj)
             return JS_FALSE;
         mdata->arrayobj = arrayobj;
@@ -1758,7 +1758,7 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     argv[-1] = STRING_TO_JSVAL(str);
 
-    arrayobj = js_ConstructObject(cx, &js_ArrayClass, NULL, NULL);
+    arrayobj = js_ConstructObject(cx, &js_ArrayClass, NULL, NULL, 0, NULL);
     if (!arrayobj)
         return JS_FALSE;
     *rval = OBJECT_TO_JSVAL(arrayobj);
