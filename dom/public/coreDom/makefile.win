@@ -23,6 +23,7 @@ EXPORTS=nsIDOMAttribute.h nsIDOMAttributeList.h nsIDOMComment.h \
 	nsIDOMDOM.h nsIDOMDocument.h nsIDOMDocumentContext.h \
 	nsIDOMDocumentFragment.h nsIDOMElement.h nsIDOMNode.h \
 	nsIDOMNodeIterator.h nsIDOMPI.h nsIDOMText.h nsIDOMTreeIterator.h
+
 MODULE=dom 
 
 include <$(DEPTH)\config\rules.mak>

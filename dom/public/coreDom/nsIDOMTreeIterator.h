@@ -29,7 +29,7 @@ class nsIDOMTreeIterator;
 class nsIDOMNode;
 
 #define NS_IDOMTREEITERATOR_IID \
-{ 0x6f7652ec,  0xee43, 0x11d1, \
+{ 0x6f7652ed,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMTreeIterator : public nsIDOMNodeIterator {

@@ -32,7 +32,7 @@ EXPORTS =               \
 	nsIDOMNodeIterator.h \
 	nsIDOMPI.h \
 	nsIDOMText.h \
-	nsIDOMTreeIterator.h
+	nsIDOMTreeIterator.h \
         $(NULL)
 
 MODULE = dom

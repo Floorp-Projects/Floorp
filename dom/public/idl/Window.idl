@@ -1,4 +1,7 @@
       interface Window {
+	readonly attribute  Window window;
 	readonly attribute  Document document;
+	readonly attribute  Navigator navigator;
 	void  dump(in wstring str);
+	void  alert(in wstring str);
       };

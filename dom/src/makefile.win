@@ -34,20 +34,22 @@ CPPSRCS =				\
 	nsJSAttribute.cpp	\
 	nsJSAttributeList.cpp   \
 	nsJSWindow.cpp          \
+	nsJSNavigator.cpp       \
 	nsGlobalWindow.cpp      \
 	$(NULL)
 
 MODULE=raptor 
 
-REQUIRES=xpcom raptor js
+REQUIRES=xpcom raptor js netlib
 
 CPP_OBJS=	.\$(OBJDIR)\nsJSEnvironment.obj	.\$(OBJDIR)\nsJSNode.obj .\$(OBJDIR)\nsJSDocument.obj \
     .\$(OBJDIR)\nsJSElement.obj .\$(OBJDIR)\nsJSText.obj \
     .\$(OBJDIR)\nsJSNodeIterator.obj .\$(OBJDIR)\nsJSAttribute.obj \
     .\$(OBJDIR)\nsJSAttributeList.obj .\$(OBJDIR)\nsJSWindow.obj \
-    .\$(OBJDIR)\nsGlobalWindow.obj .\$(OBJDIR)\nsJSDocumentFragment.obj
+    .\$(OBJDIR)\nsGlobalWindow.obj .\$(OBJDIR)\nsJSDocumentFragment.obj \
+    .\$(OBJDIR)\nsJSNavigator.obj
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js 
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I$(PUBLIC)\netlib
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -57,6 +59,7 @@ LCFLAGS = \
 LLIBS=				\
  $(DIST)\lib\xpcom32.lib	\
  $(DIST)\lib\raptorbase.lib	\
+ $(DIST)\lib\netlib.lib         \
  $(DIST)\lib\js3240.lib	\
  $(LIBNSPR)  
 

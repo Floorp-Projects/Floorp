@@ -17,40 +17,41 @@
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMNodeIterator_h__
-#define nsIDOMNodeIterator_h__
+#ifndef nsIDOMNavigator_h__
+#define nsIDOMNavigator_h__
 
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
-class nsIDOMNodeIterator;
-class nsIDOMNode;
+class nsIDOMNavigator;
 
-#define NS_IDOMNODEITERATOR_IID \
-{ 0x6f7652ea,  0xee43, 0x11d1, \
+#define NS_IDOMNAVIGATOR_IID \
+{ 0x6f7652e8,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-class nsIDOMNodeIterator : public nsISupports {
+class nsIDOMNavigator : public nsISupports {
 public:
 
-  NS_IMETHOD    GetLength(PRUint32* aReturn)=0;
+  NS_IMETHOD    GetUserAgent(nsString& aUserAgent)=0;
 
-  NS_IMETHOD    GetCurrentNode(nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName)=0;
 
-  NS_IMETHOD    GetNextNode(nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetAppVersion(nsString& aAppVersion)=0;
 
-  NS_IMETHOD    GetPreviousNode(nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetAppName(nsString& aAppName)=0;
 
-  NS_IMETHOD    ToFirst(nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetLanguage(nsString& aLanguage)=0;
 
-  NS_IMETHOD    ToLast(nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetPlatform(nsString& aPlatform)=0;
 
-  NS_IMETHOD    MoveTo(PRInt32 aN, nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy)=0;
+
+  NS_IMETHOD    JavaEnabled(PRBool* aReturn)=0;
 };
 
-extern nsresult NS_InitNodeIteratorClass(nsIScriptContext *aContext, void **aPrototype);
+extern nsresult NS_InitNavigatorClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptNodeIterator(nsIScriptContext *aContext, nsIDOMNodeIterator *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM NS_NewScriptNavigator(nsIScriptContext *aContext, nsIDOMNavigator *aSupports, nsISupports *aParent, void **aReturn);
 
-#endif // nsIDOMNodeIterator_h__
+#endif // nsIDOMNavigator_h__

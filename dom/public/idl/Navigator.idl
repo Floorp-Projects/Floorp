@@ -1,0 +1,11 @@
+      interface Navigator {
+        readonly attribute wstring userAgent;
+        readonly attribute wstring appCodeName;
+        readonly attribute wstring appVersion;
+        readonly attribute wstring appName;
+        readonly attribute wstring language;
+        readonly attribute wstring platform;
+        readonly attribute wstring securityPolicy;
+
+        boolean javaEnabled();
+      };
