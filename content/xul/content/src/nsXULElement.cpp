@@ -1859,7 +1859,9 @@ nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsAReadableString& aV
         if (NS_FAILED(rv)) return rv;
     }
 
-    if (NodeInfo()->Equals(nsXULAtoms::window)) {
+    nsCOMPtr<nsIContent> root(getter_AddRefs(mDocument->GetRootContent()));
+    nsCOMPtr<nsIContent> content(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this)));
+    if ((!root || root == content) && !NodeInfo()->Equals(nsXULAtoms::overlay)) {
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(global);
         if (! receiver)
             return NS_ERROR_UNEXPECTED;

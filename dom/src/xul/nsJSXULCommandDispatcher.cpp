@@ -445,6 +445,123 @@ XULCommandDispatcherGetControllers(JSContext *cx, JSObject *obj, uintN argc, jsv
 }
 
 
+//
+// Native method AdvanceFocus
+//
+PR_STATIC_CALLBACK(JSBool)
+XULCommandDispatcherAdvanceFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_ADVANCEFOCUS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->AdvanceFocus();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method RewindFocus
+//
+PR_STATIC_CALLBACK(JSBool)
+XULCommandDispatcherRewindFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_REWINDFOCUS, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->RewindFocus();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method AdvanceFocusIntoSubtree
+//
+PR_STATIC_CALLBACK(JSBool)
+XULCommandDispatcherAdvanceFocusIntoSubtree(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULCommandDispatcher *nativeThis = (nsIDOMXULCommandDispatcher*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMElement> b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULCOMMANDDISPATCHER_ADVANCEFOCUSINTOSUBTREE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kIElementIID,
+                                           NS_ConvertASCIItoUCS2("Element"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+
+    result = nativeThis->AdvanceFocusIntoSubtree(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for XULCommandDispatcher
@@ -475,6 +592,9 @@ static JSFunctionSpec XULCommandDispatcherMethods[] =
   {"updateCommands",          XULCommandDispatcherUpdateCommands,     1},
   {"getControllerForCommand",          XULCommandDispatcherGetControllerForCommand,     1},
   {"getControllers",          XULCommandDispatcherGetControllers,     0},
+  {"advanceFocus",          XULCommandDispatcherAdvanceFocus,     0},
+  {"rewindFocus",          XULCommandDispatcherRewindFocus,     0},
+  {"advanceFocusIntoSubtree",          XULCommandDispatcherAdvanceFocusIntoSubtree,     1},
   {0}
 };
 

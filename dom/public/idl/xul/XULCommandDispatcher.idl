@@ -13,4 +13,8 @@ interface XULCommandDispatcher {
 
 	xpidl nsIController getControllerForCommand(in DOMString command);
 	xpidl nsIControllers getControllers();
+
+	void advanceFocus();
+	void rewindFocus();
+	void advanceFocusIntoSubtree(in Element elt);
 };

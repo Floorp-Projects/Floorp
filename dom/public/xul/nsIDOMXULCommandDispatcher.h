@@ -56,6 +56,12 @@ public:
   NS_IMETHOD    GetControllerForCommand(const nsAReadableString& aCommand, nsIController** aReturn)=0;
 
   NS_IMETHOD    GetControllers(nsIControllers** aReturn)=0;
+
+  NS_IMETHOD    AdvanceFocus()=0;
+
+  NS_IMETHOD    RewindFocus()=0;
+
+  NS_IMETHOD    AdvanceFocusIntoSubtree(nsIDOMElement* aElt)=0;
 };
 
 
@@ -69,6 +75,9 @@ public:
   NS_IMETHOD    UpdateCommands(const nsAReadableString& aEventName);  \
   NS_IMETHOD    GetControllerForCommand(const nsAReadableString& aCommand, nsIController** aReturn);  \
   NS_IMETHOD    GetControllers(nsIControllers** aReturn);  \
+  NS_IMETHOD    AdvanceFocus();  \
+  NS_IMETHOD    RewindFocus();  \
+  NS_IMETHOD    AdvanceFocusIntoSubtree(nsIDOMElement* aElt);  \
 
 
 
@@ -82,6 +91,9 @@ public:
   NS_IMETHOD    UpdateCommands(const nsAReadableString& aEventName) { return _to UpdateCommands(aEventName); }  \
   NS_IMETHOD    GetControllerForCommand(const nsAReadableString& aCommand, nsIController** aReturn) { return _to GetControllerForCommand(aCommand, aReturn); }  \
   NS_IMETHOD    GetControllers(nsIControllers** aReturn) { return _to GetControllers(aReturn); }  \
+  NS_IMETHOD    AdvanceFocus() { return _to AdvanceFocus(); }  \
+  NS_IMETHOD    RewindFocus() { return _to RewindFocus(); }  \
+  NS_IMETHOD    AdvanceFocusIntoSubtree(nsIDOMElement* aElt) { return _to AdvanceFocusIntoSubtree(aElt); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitXULCommandDispatcherClass(nsIScriptContext *aContext, void **aPrototype);

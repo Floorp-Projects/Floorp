@@ -169,6 +169,33 @@ nsXULCommandDispatcher::SetFocusedWindow(nsIDOMWindowInternal* aWindow)
 }
 
 NS_IMETHODIMP
+nsXULCommandDispatcher::AdvanceFocus()
+{
+  EnsureFocusController();
+  if (mFocusController)
+    return mFocusController->MoveFocus(PR_TRUE, nsnull);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULCommandDispatcher::RewindFocus()
+{
+  EnsureFocusController();
+  if (mFocusController)
+    return mFocusController->MoveFocus(PR_FALSE, nsnull);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULCommandDispatcher::AdvanceFocusIntoSubtree(nsIDOMElement* aElt)
+{
+  EnsureFocusController();
+  if (mFocusController)
+    return mFocusController->MoveFocus(PR_TRUE, aElt);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
                                           const nsAReadableString& aEvents,
                                           const nsAReadableString& aTargets)

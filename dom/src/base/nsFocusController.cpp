@@ -37,6 +37,7 @@
 #include "nsFocusController.h"
 #include "prlog.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIEventStateManager.h"
 
 #ifdef INCLUDE_XUL
 #include "nsIDOMXULDocument.h"
@@ -162,6 +163,56 @@ nsFocusController::GetControllers(nsIControllers** aResult)
   }
 
   *aResult = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFocusController::MoveFocus(PRBool aForward, nsIDOMElement* aElt)
+{
+  // Obtain the doc that we'll be shifting focus inside.
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIContent> content;
+  if (aElt) {
+    content = do_QueryInterface(aElt);
+    content->GetDocument(*getter_AddRefs(doc));
+  }
+  else {
+    if (mCurrentElement) {
+      content = do_QueryInterface(mCurrentElement);
+      content->GetDocument(*getter_AddRefs(doc));
+      content = nsnull;
+    }
+    else if (mCurrentWindow) {
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      mCurrentWindow->GetDocument(getter_AddRefs(domDoc));
+      doc = do_QueryInterface(domDoc);
+    }
+  }
+
+  if (!doc)
+    // No way to obtain an event state manager.  Give up.
+    return NS_OK;
+
+
+  // Obtain a presentation context
+  PRInt32 count = doc->GetNumberOfShells();
+  if (count == 0)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresShell> shell(getter_AddRefs(doc->GetShellAt(0)));
+  if (!shell)
+    return NS_OK;
+
+  // Retrieve the context
+  nsCOMPtr<nsIPresContext> presContext;
+  shell->GetPresContext(getter_AddRefs(presContext));
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  presContext->GetEventStateManager(getter_AddRefs(esm));
+  if (esm)
+    // Make this ESM shift the focus per our instructions.
+    esm->MoveFocus(aForward, content); 
+
   return NS_OK;
 }
 
