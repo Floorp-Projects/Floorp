@@ -223,3 +223,10 @@ NSS_CMSRecipientInfo_CreateWithSubjKeyIDFromCert;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.7.2 {   # NSS 3.7.2 release
+;+    global:
+NSS_CMSRecipientInfo_WrapBulkKey;
+NSS_CMSRecipientInfo_UnwrapBulkKey;
+;+    local:
+;+       *;
+;+};
