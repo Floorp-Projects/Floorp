@@ -84,7 +84,8 @@ int ParseFTPList(const char *line, struct list_state *state,
   {
     static const char *month_names = "JanFebMarAprMayJunJulAugSepOctNovDec";
     const char *tokens[16]; /* 16 is more than enough */
-    unsigned int toklen[16];
+    unsigned int toklen[(sizeof(tokens)/sizeof(tokens[0]))];
+    unsigned int linelen_sans_wsp;  // line length sans whitespace
     unsigned int numtoks = 0;
     unsigned int tokmarker = 0; /* extra info for lstyle handler */
     unsigned int month_num = 0;
@@ -117,6 +118,15 @@ int ParseFTPList(const char *line, struct list_state *state,
         }
       }
     }    
+
+    linelen_sans_wsp = &(tokens[numtoks-1][toklen[numtoks-1]]) - tokens[0];
+    if (numtoks == (sizeof(tokens)/sizeof(tokens[0])) )
+    {
+      pos = linelen;
+      while (pos > 0 && (line[pos-1] == ' ' || line[pos-1] == '\t'))
+        pos--;
+      linelen_sans_wsp = pos;
+    }
 
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 
@@ -178,7 +188,7 @@ int ParseFTPList(const char *line, struct list_state *state,
             state->parsed_one = 1;
             state->lstyle = lstyle = 'E';
 
-            p = &(tokens[numtoks-1][toklen[numtoks-1]]);
+            p = &(line[linelen_sans_wsp]);
             result->fe_fname = tokens[1];
             result->fe_fnlen = p - tokens[1];
 
@@ -748,7 +758,7 @@ int ParseFTPList(const char *line, struct list_state *state,
         state->parsed_one = 1;
         state->lstyle = lstyle;
 
-        p = &(tokens[numtoks-1][toklen[numtoks-1]]); /* line end sans wsp */
+        p = &(line[linelen_sans_wsp]); /* line end sans wsp */
         result->fe_cinfs = 1;
         result->fe_fname = tokens[3];
         result->fe_fnlen = p - tokens[3];
@@ -765,19 +775,24 @@ int ParseFTPList(const char *line, struct list_state *state,
         }
         else if ((tokens[2][1]) != 'D') /* not <DIR> */
         {
-          result->fe_type = 'l';
-          for (pos = 4; (pos+1) < numtoks; pos++)
+          result->fe_type = '?'; /* unknown until junc for sure */
+          if (result->fe_fnlen > 4)
           {
-            if (toklen[pos] == 2 && (tokens[pos][1]) == '>' &&
-               (*tokens[pos] == '=' || *tokens[pos] == '-'))
+            p = result->fe_fname;
+            for (pos = result->fe_fnlen - 4; pos > 0; pos--)
             {
-              p = &(tokens[pos-1][toklen[pos-1]]);
-              result->fe_fnlen = p - tokens[3];
-              p = &(tokens[numtoks-1][toklen[numtoks-1]]);
-              result->fe_lname = tokens[pos+1];
-              result->fe_lnlen = p - tokens[pos+1];
-              break;
-            }
+              if (p[0] == ' ' && p[3] == ' ' && p[2] == '>' &&
+                  (p[1] == '=' || p[1] == '-'))
+              {
+                result->fe_type = 'l';
+                result->fe_fnlen = p - result->fe_fname;
+                result->fe_lname = p + 4;
+                result->fe_lnlen = &(line[linelen_sans_wsp]) 
+                                   - result->fe_lname;
+                break;
+              }
+              p++;
+            }    
           }
         }
       
@@ -868,7 +883,7 @@ int ParseFTPList(const char *line, struct list_state *state,
 
         result->fe_cinfs = 1;
         result->fe_fname = &p[53-18];
-        result->fe_fnlen = (&(tokens[numtoks-1][toklen[numtoks-1]]))
+        result->fe_fnlen = (&(line[linelen_sans_wsp]))
                            - (result->fe_fname);
         result->fe_type = 'f';
 
@@ -1113,22 +1128,23 @@ int ParseFTPList(const char *line, struct list_state *state,
         } /* time/year */
         
         result->fe_fname = tokens[tokmarker+4];
-        result->fe_fnlen = (&(tokens[numtoks-1][toklen[numtoks-1]]))
+        result->fe_fnlen = (&(line[linelen_sans_wsp]))
                            - (result->fe_fname);
 
         if (result->fe_type == 'l' && result->fe_fnlen > 4)
         {
-          p = tokens[tokmarker+4] + 1;
+          p = result->fe_fname + 1;
           for (pos = 1; pos < (result->fe_fnlen - 4); pos++)
           {
             if (*p == ' ' && p[1] == '-' && p[2] == '>' && p[3] == ' ')
             {
               result->fe_lname = p + 4;
-              result->fe_lnlen = (&(tokens[numtoks-1][toklen[numtoks-1]]))
+              result->fe_lnlen = (&(line[linelen_sans_wsp]))
                                - (result->fe_lname);
               result->fe_fnlen = pos;
               break;
             }
+            p++;
           }
         }
 
