@@ -78,7 +78,7 @@ function ComposeStartup()
 	if (editorAppCore)
 	{
 		dump("initalizing the editor app core\n");
-		editorName = appCoreName; //Very important to set this variable used by Editor js
+		EditorSetup(appCoreName, editorAppCore); //defined into EditorCommands.js
 
 		// setEditorType MUST be call before setContentWindow
 		var useHtml;

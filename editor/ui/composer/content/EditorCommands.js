@@ -37,6 +37,14 @@ function EditorStartup()
   } else {
     dump("EditorAppCore has already been created! Why?\n");
   }
+  EditorSetup(editorName, appCore)
+}
+
+function EditorSetup(p_editorName, p_appCore)
+{
+  editorName = p_editorName;
+  appCore = p_appCore;
+  
   toolkitCore = XPAppCoresManager.Find("ToolkitCore");
   if (!toolkitCore)
   {
@@ -49,7 +57,6 @@ function EditorStartup()
     dump("ToolkitCore found\n");
   }
 }
-
 
 function EditorShutdown()
 {
@@ -373,19 +380,21 @@ function EditorTestSelection()
   {
     dump("Testing selection\n");
     var selection = appCore.editorSelection;
-  if (selection)
-  {
-    dump("Got selection\n");
-    var  firstRange = selection.getRangeAt(0);
-    if (firstRange)
+    if (selection)
     {
-      dump("Range contains \"");
-      dump(firstRange.toString() + "\"\n");
+      dump("Got selection\n");
+      var  firstRange = selection.getRangeAt(0);
+      if (firstRange)
+      {
+        dump("Range contains \"");
+        dump(firstRange.toString() + "\"\n");
+      }
     }
   }
+}
   
-  function EditorExit()
-  {
+function EditorExit()
+{
     if (appCore) {
 	    dump("Exiting\n");
       appCore.exit();
