@@ -147,7 +147,6 @@ return_wrapper:
     //
     if (rootObject)
         NS_RELEASE(rootObject);
-    
     return proxy;
 }
 
@@ -163,84 +162,63 @@ nsProxyEventObject::nsProxyEventObject(nsIEventQueue *destQueue,
     : mClass(aClass),
       mNext(NULL)
 {
-    mRoot           = (root ? root : this);
-    mProxyObject    = new nsProxyObject(destQueue, proxyType, aObj);
-
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
+    
+    mProxyObject    = new nsProxyObject(destQueue, proxyType, aObj);
+
+    mRoot = (root ? root : this);
+
+    // if we have a root, lets addref it.
+    if (root)
+        NS_ADDREF(mRoot);
+    
     NS_ADDREF(aClass);
 }
 
 nsProxyEventObject::~nsProxyEventObject()
 {
-    NS_PRECONDITION(0 == mRefCnt, "refcounting error");
-    if(mRoot == this && GetClass())
-    {   
-        nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-        nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
-
-        if (realToProxyMap != nsnull)
-        {
-        	nsVoidKey key(this);
-            realToProxyMap->Remove(&key);
-        }
-    }
-
-    if (mProxyObject != nsnull)
-       mProxyObject->Release();
-
-    NS_RELEASE(mClass);
+    NS_IF_RELEASE(mProxyObject);
+    NS_IF_RELEASE(mClass);
     
-    if(mNext)
-        NS_DELETEXPCOM(mNext);  // cascaded delete
+    if (mRoot)
+    {
+        if (mRoot != this)
+        {
+            mRoot->RootRemoval();
+        }
+        else
+        {
+            nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
+            nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
+
+            if (realToProxyMap != nsnull)
+            {
+        	    nsVoidKey key(this);
+                realToProxyMap->Remove(&key);
+            }
+        }
+    }   
 }
 
+nsresult
+nsProxyEventObject::RootRemoval()
+{
+    if (--mRefCnt <= 1)
+        NS_DELETEXPCOM(this); 
+    return NS_OK;
+}
+
+NS_IMPL_ADDREF(nsProxyEventObject);
+NS_IMPL_RELEASE(nsProxyEventObject);
 
 NS_IMETHODIMP
 nsProxyEventObject::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-    if(NULL == aInstancePtr)
-    {
-        NS_PRECONDITION(0, "null pointer");
-        return NS_ERROR_NULL_POINTER;
-    }
+    // TODO:  we need to wrap the object if it is not a proxy.
 
     return mClass->DelegatedQueryInterface(this, aIID, aInstancePtr);
 }
-
-
-nsrefcnt
-nsProxyEventObject::AddRef(void)
-{
-    NS_PRECONDITION(mRoot, "bad root");
-
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsProxyEventObject", sizeof(*this));
-    if(1 == mRefCnt && mRoot && mRoot != this)
-        NS_ADDREF(mRoot);
-
-    return mRefCnt;
-}
-
-nsrefcnt
-nsProxyEventObject::Release(void)
-{
-    NS_PRECONDITION(mRoot, "bad root");
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsProxyEventObject");
-
-    if(0 == mRefCnt)
-    {
-        NS_DELETEXPCOM(this);
-        return 0;
-    }
-#if 0 // removed on dougt's suggestion
-    else if(1 == mRefCnt)
-            mRoot->Release();    // do NOT zero out the ptr (weak ref)
-#endif
-    return mRefCnt;
-}
-
 
 nsProxyEventObject*
 nsProxyEventObject::Find(REFNSIID aIID)

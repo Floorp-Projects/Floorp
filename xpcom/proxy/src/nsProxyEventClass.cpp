@@ -175,6 +175,7 @@ nsProxyEventClass::~nsProxyEventClass()
 nsresult
 nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID aIID, nsProxyEventObject** aInstancePtr)
 {
+    nsresult rv;
 
 	*aInstancePtr = (nsProxyEventObject*)0xDEADBEEF;  // in case of error.
 
@@ -197,7 +198,15 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
     iim->GetInfoForName("nsISupports", &nsISupportsInfo);
     nsISupportsInfo->GetMethodInfo(0, &mi); // 0 is QueryInterface
 
-    return self->CallMethod(0, mi, var);
+    rv = self->CallMethod(0, mi, var);
+
+    // if we are going to return another interface,
+    // lets make sure that we increment the wrapper.
+
+    if (NS_SUCCEEDED(rv))
+        NS_ADDREF(self);
+    
+    return rv;
 }
 
 
@@ -230,14 +239,12 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
                                           REFNSIID aIID,
                                           void** aInstancePtr)
 {
-    if(aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+    if(NULL == aInstancePtr)
     {
-        nsProxyEventObject* root = self->GetRootProxyObject();
-        *aInstancePtr = (void*) root;
-        NS_ADDREF(root);
-        return NS_OK;
+        NS_PRECONDITION(0, "null pointer");
+        return NS_ERROR_NULL_POINTER;
     }
-    
+
     if(aIID.Equals(self->GetIID()))
     {
         *aInstancePtr = (void*) self;
@@ -251,15 +258,5 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
         return NS_OK;
     }
     
-
     return CallQueryInterfaceOnProxy(self, aIID, (nsProxyEventObject**)aInstancePtr);
 }
-
-
-
-nsresult
-nsProxyEventClass::GetRootProxyObject(nsProxyEventObject* anObject, nsProxyEventObject** result)
-{
-	return CallQueryInterfaceOnProxy(anObject, nsCOMTypeInfo<nsISupports>::GetIID(), result);
-}
-
