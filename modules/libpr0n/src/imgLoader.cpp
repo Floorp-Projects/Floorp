@@ -39,6 +39,7 @@
 #include "imgRequest.h"
 #include "imgRequestProxy.h"
 
+#include "ImageErrors.h"
 #include "ImageLogging.h"
 
 #include "nsIComponentRegistrar.h"
@@ -47,8 +48,6 @@
 // so we can associate the document URI with the load group.
 // until this point, we have an evil hack:
 #include "nsIHttpChannelInternal.h"  
-
-#include "ImageErrors.h"
 
 #if defined(DEBUG_pavlov) || defined(DEBUG_timeless)
 #include "nsISimpleEnumerator.h"
