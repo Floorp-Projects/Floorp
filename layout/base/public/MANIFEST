@@ -11,7 +11,6 @@ nsIFrameImageLoader.h
 nsIPresContext.h
 nsIPresShell.h
 nsIReflowCommand.h
-nsIRangeList.h
 nsISelection.h
 nsISpaceManager.h
 nsStyleCoord.h
