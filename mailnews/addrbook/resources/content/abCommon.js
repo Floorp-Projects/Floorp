@@ -321,11 +321,19 @@ function RestoreResultsTreeSelection(selectionArray)
 
 function WaitUntilDocumentIsLoaded()
 {
-  // FIX ME - we should really have this function available in a global place that does not
-  // require that we have access to mailnews code (msgNavigationService) from address book.
-  var msgNavigationService = Components.classes["@mozilla.org/messenger/msgviewnavigationservice;1"].getService();
-  msgNavigationService= msgNavigationService.QueryInterface(Components.interfaces.nsIMsgViewNavigationService);
-  msgNavigationService.EnsureDocumentIsLoaded(document);
+    // we used to call msgNavigationService.EnsureDocumentIsLoaded(document);
+    // just to do this.  there is no more msg navigation service, so we need 
+    // to find another way to do this.
+    // is it still needed?
+    //
+    // here's the C++:
+    // nsCOMPtr <nsIDocument> doc = do_QueryInterface(document);
+    // doc->FlushPendingNotifcations();
+    //
+    // nsIDocument isn't scriptable, so we can't do that from js.
+    // it seems like a hack.  perhaps we should add it to an address book service
+    // if we still need it.
+    dump("XXX fix me to flush pending notifcations\n");
 }
 
 function GetResultsTreeChildren()
