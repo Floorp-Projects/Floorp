@@ -20,6 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   philip zhao <philip.zhao@sun.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -509,9 +511,14 @@ nsMessenger::PromptIfFileExists(nsFileSpec &fileSpec)
               filePicker->SetDisplayDirectory(lastSaveDir);
             }
 
-            filePicker->Show(&dialogReturn);
-            if (dialogReturn == nsIFilePicker::returnCancel)
+            rv = filePicker->Show(&dialogReturn);
+            if (NS_FAILED(rv) || dialogReturn == nsIFilePicker::returnCancel) {
+                // XXX todo
+                // don't overload the return value like this
+                // change this function to have an out boolean
+                // that we check to see if the user cancelled
                 return NS_ERROR_FAILURE;
+            }
 
             nsCOMPtr<nsILocalFile> localFile;
             nsCAutoString filePath;
@@ -593,7 +600,6 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
                             void *closure)
 {
   nsIMsgMessageService * messageService = nsnull;
-  nsSaveMsgListener *aListener = nsnull;
   nsSaveAllAttachmentsState *saveState= (nsSaveAllAttachmentsState*) closure;
   nsCOMPtr<nsISupports> channelSupport;
   nsCOMPtr<nsIMsgMessageFetchPartService> fetchService;
@@ -603,17 +609,19 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   nsCAutoString fullMessageUri(messageUri);
   nsresult rv = NS_OK;
 
-  // XXX whacky ref counting here...what's the deal? when does aListener get released? it's not clear.
-  aListener = new nsSaveMsgListener(fileSpec, this);
-  if (!aListener)
+  // XXX todo
+  // document the ownership model of saveListener
+  // whacky ref counting here...what's the deal? when does saveListener get released? it's not clear.
+  nsSaveMsgListener *saveListener = new nsSaveMsgListener(fileSpec, this);
+  if (!saveListener)
   {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  NS_ADDREF(aListener);
+  NS_ADDREF(saveListener);
 
-  aListener->m_contentType = contentType;
+  saveListener->m_contentType = contentType;
   if (saveState)
-      aListener->m_saveAllAttachmentsState = saveState;
+      saveListener->m_saveAllAttachmentsState = saveState;
 
   urlString.AssignWithConversion(unescapedUrl);
 
@@ -642,7 +650,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
       }
 
       nsCOMPtr<nsIStreamListener> convertedListener;
-      aListener->QueryInterface(NS_GET_IID(nsIStreamListener),
+      saveListener->QueryInterface(NS_GET_IID(nsIStreamListener),
                                  getter_AddRefs(convertedListener));
 #ifndef XP_MAC
       // if the content type is bin hex we are going to do a hokey hack and make sure we decode the bin hex 
@@ -651,7 +659,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
       {
         nsCOMPtr<nsIStreamListener> listener (do_QueryInterface(convertedListener));
         nsCOMPtr<nsIStreamConverterService> streamConverterService = do_GetService(kIStreamConverterServiceCID, &rv);
-        nsCOMPtr<nsISupports> channelSupport = do_QueryInterface(aListener->m_channel);
+        nsCOMPtr<nsISupports> channelSupport = do_QueryInterface(saveListener->m_channel);
           
         rv = streamConverterService->AsyncConvertData(NS_ConvertASCIItoUCS2(APPLICATION_BINHEX).get(),
                                                       NS_LITERAL_STRING("*/*").get(), 
@@ -669,7 +677,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
 
   if (NS_FAILED(rv))
   {
-      NS_IF_RELEASE(aListener);
+      NS_IF_RELEASE(saveListener);
       Alert("saveAttachmentFailed");
   }
 	return rv;
@@ -734,12 +742,9 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
     filePicker->SetDisplayDirectory(lastSaveDir);
   }
 
-  filePicker->Show(&dialogResult);
-  if (dialogResult == nsIFilePicker::returnCancel)
-  {
-    rv = NS_OK;
+  rv = filePicker->Show(&dialogResult);
+  if (NS_FAILED(rv) || dialogResult == nsIFilePicker::returnCancel)
     goto done;
-  }
 
   rv = filePicker->GetFile(getter_AddRefs(localFile));
   if (NS_FAILED(rv)) goto done;
@@ -787,8 +792,8 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
       filePicker->SetDisplayDirectory(lastSaveDir);
     }
     
-    filePicker->Show(&dialogResult);
-    if (dialogResult == nsIFilePicker::returnCancel)
+    rv = filePicker->Show(&dialogResult);
+    if (NS_FAILED(rv) || dialogResult == nsIFilePicker::returnCancel)
         goto done;
 
     rv = filePicker->GetFile(getter_AddRefs(localFile));
@@ -841,7 +846,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIMsgMessageService> messageService;
     nsCOMPtr<nsIUrlListener> urlListener;
-    nsSaveMsgListener *aListener = nsnull;
+    nsSaveMsgListener *saveListener = nsnull;
     nsCOMPtr<nsIURI> aURL;
     nsAutoString urlString;
     char *urlCString = nsnull;
@@ -882,11 +887,10 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
           filePicker->SetDisplayDirectory(lastSaveDir);
         }
 
-        filePicker->Show(&dialogResult);
-
-        if (dialogResult == nsIFilePicker::returnCancel)
-            goto done;
-            
+        rv = filePicker->Show(&dialogResult);
+        if (NS_FAILED(rv) || dialogResult == nsIFilePicker::returnCancel)
+          goto done;
+        
         nsCOMPtr<nsILocalFile> localFile;
         rv = filePicker->GetFile(getter_AddRefs(localFile));
         if (NS_FAILED(rv)) goto done;
@@ -923,15 +927,16 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         rv = NS_NewFileSpecFromIFile(localFile, getter_AddRefs(fileSpec));
         if (NS_FAILED(rv)) goto done;
 
-        aListener = new nsSaveMsgListener(fileSpec, this);
-        if (!aListener) {
+        // XXX todo
+        // document the ownership model of saveListener
+        saveListener = new nsSaveMsgListener(fileSpec, this);
+        if (!saveListener) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto done;
         }
-        
-        NS_ADDREF(aListener);
+        NS_ADDREF(saveListener);
 
-        rv = aListener->QueryInterface(NS_GET_IID(nsIUrlListener),
+        rv = saveListener->QueryInterface(NS_GET_IID(nsIUrlListener),
                                        getter_AddRefs(urlListener));
         if (NS_FAILED(rv)) goto done;
         
@@ -960,8 +965,8 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
             nsCRT::free(urlCString);
             if (NS_FAILED(rv)) goto done;
 
-            aListener->m_channel = nsnull;
-            rv = NS_NewInputStreamChannel(getter_AddRefs(aListener->m_channel),
+            saveListener->m_channel = nsnull;
+            rv = NS_NewInputStreamChannel(getter_AddRefs(saveListener->m_channel),
                                           aURL, 
                                           nsnull,                 // inputStream
                                           NS_LITERAL_CSTRING(""), // contentType
@@ -969,19 +974,19 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
                                           -1);                    // contentLength
             if (NS_FAILED(rv)) goto done;
 
-            aListener->m_outputFormat.AssignWithConversion(saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN);
+            saveListener->m_outputFormat.AssignWithConversion(saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN);
             
             // Mark the fact that we need to do charset handling/text conversion!
-            if (aListener->m_outputFormat.EqualsWithConversion(TEXT_PLAIN))
-                aListener->m_doCharsetConversion = PR_TRUE;
+            if (saveListener->m_outputFormat.EqualsWithConversion(TEXT_PLAIN))
+                saveListener->m_doCharsetConversion = PR_TRUE;
             
-            channelSupport = do_QueryInterface(aListener->m_channel);
+            channelSupport = do_QueryInterface(saveListener->m_channel);
             
             rv = streamConverterService->AsyncConvertData(NS_ConvertASCIItoUCS2(MESSAGE_RFC822).get(),
             // RICHIE - we should be able to go RFC822 to TXT, but not until
-            // Bug #1775 is fixed. aListener->m_outputFormat.get() 
+            // Bug #1775 is fixed. saveListener->m_outputFormat.get() 
                                                           NS_ConvertASCIItoUCS2(TEXT_HTML).get(), 
-                                                          aListener,
+                                                          saveListener,
                                                           channelSupport,
                                                           getter_AddRefs(convertedListener));
             if (NS_FAILED(rv)) goto done;
@@ -1000,25 +1005,26 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         rv = NS_NewFileSpecWithSpec(tmpFileSpec, getter_AddRefs(fileSpec));
         if (NS_FAILED(rv)) goto done;
 
-        aListener = new nsSaveMsgListener(fileSpec, this);
-        if (!aListener) {
+        // XXX todo
+        // document the ownership model of saveListener
+        saveListener = new nsSaveMsgListener(fileSpec, this);
+        if (!saveListener) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto done;
         }
-        
-        NS_ADDREF(aListener);
+        NS_ADDREF(saveListener);
 
         if (identity)
-            rv = identity->GetStationeryFolder(getter_Copies(aListener->m_templateUri));
+            rv = identity->GetStationeryFolder(getter_Copies(saveListener->m_templateUri));
         if (NS_FAILED(rv)) goto done;
 
         needDummyHeader =
-            PL_strcasestr(aListener->m_templateUri, "mailbox://") 
+            PL_strcasestr(saveListener->m_templateUri, "mailbox://") 
             != nsnull;
         canonicalLineEnding =
-            PL_strcasestr(aListener->m_templateUri, "imap://")
+            PL_strcasestr(saveListener->m_templateUri, "imap://")
             != nsnull;
-        rv = aListener->QueryInterface(
+        rv = saveListener->QueryInterface(
                                        NS_GET_IID(nsIUrlListener),
                                        getter_AddRefs(urlListener));
         if (NS_FAILED(rv)) goto done;
@@ -1030,7 +1036,9 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
     }
 done:
     if (NS_FAILED(rv)) {
-        NS_IF_RELEASE(aListener);
+        // XXX todo
+        // document the ownership model of saveListener
+        NS_IF_RELEASE(saveListener);
         Alert("saveMessageFailed");
     }
 	return rv;
