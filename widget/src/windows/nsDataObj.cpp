@@ -284,8 +284,21 @@ STDMETHODIMP nsDataObj::GetCanonicalFormatEtc
 STDMETHODIMP nsDataObj::SetData(LPFORMATETC pFE, LPSTGMEDIUM pSTM, BOOL fRelease)
 {
   PRNTDEBUG("nsDataObj::SetData\n");
+  static CLIPFORMAT PerformedDropEffect = ::RegisterClipboardFormat( CFSTR_PERFORMEDDROPEFFECT );  
 
-  return ResultFromScode(E_FAIL);
+  if (pFE && pFE->cfFormat == PerformedDropEffect) {
+    // The drop operation has completed.  Delete the temp file if it exists.
+    if (mCachedTempFile) {
+      mCachedTempFile->Remove(PR_FALSE);
+      mCachedTempFile = NULL;
+    }
+  }
+
+  if (fRelease) {
+    ReleaseStgMedium(pSTM);
+  }
+
+  return ResultFromScode(S_OK);
 }
 
 
