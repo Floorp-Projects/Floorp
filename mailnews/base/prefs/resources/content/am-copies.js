@@ -168,11 +168,6 @@ function SetFolderDisplay(pickerMode, disableMode,
       selectFolderRadioElem.setAttribute("disabled","true");
       accountPicker.setAttribute("disabled","true");
       folderPicker.setAttribute("disabled","true");
-    } else {
-      selectAccountRadioElem.removeAttribute("disabled");
-      selectFolderRadioElem.removeAttribute("disabled");
-      accountPicker.removeAttribute("disabled");
-      folderPicker.removeAttribute("disabled");
     }
 }
 
