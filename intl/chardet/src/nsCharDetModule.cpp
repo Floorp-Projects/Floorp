@@ -462,3 +462,13 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
     gModule = m;                  // WARNING: Weak Reference
     return rv;
 }
+
+#ifdef XP_WIN32
+  //in addition to returning a version number for this module,
+  //this also provides a convenient hook for the preloader
+  //to keep (some if not all) of the module resident.
+extern "C" __declspec(dllexport) float GetVersionNumber(void) {
+  return 1.0;
+}
+#endif
+
