@@ -43,7 +43,7 @@ ifndef NS_USE_NATIVE
 else
   CC = cc
   CCC = CC
-  CFLAGS += -mt -Kpic
+  CFLAGS += -mt -KPIC
 #  LD = CC
 endif
 
