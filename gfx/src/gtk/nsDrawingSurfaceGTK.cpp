@@ -16,10 +16,6 @@
  * Reserved.
  */
 
-#if defined (HAVE_IPC_H) && defined (HAVE_SHM_H) && defined (HAVE_XSHM_H)
-#define USE_SHM
-#endif
-
 //#define USE_SHM
 
 #include <gdk/gdkx.h>
