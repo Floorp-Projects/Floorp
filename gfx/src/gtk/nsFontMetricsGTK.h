@@ -165,7 +165,6 @@ protected:
   nsFontGTK           *mWesternFont;
   GdkFont             *mFontHandle;
 
-  nscoord             mHeight;
   nscoord             mLeading;
   nscoord             mEmHeight;
   nscoord             mEmAscent;
