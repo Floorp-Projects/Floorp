@@ -2443,9 +2443,6 @@ nsInstall::BadRegName(const nsString& regName)
     if ( regName.Find("/ ") != -1  )
         return PR_TRUE;
 
-    if ( regName.Find("=") != -1 )
-        return PR_TRUE;
-
     return PR_FALSE;
 }
 
