@@ -148,15 +148,15 @@ nsInstall::nsInstall(nsIZipReader * theJARFile)
     mScriptObject           = nsnull;           // this is the jsobject for our context
     mVersionInfo            = nsnull;           // this is the version information passed to us in StartInstall()
     mInstalledFiles         = nsnull;           // the list of installed objects
-    mRegistryPackageName    = "";               // this is the name that we will add into the registry for the component we are installing
-    mUIName                 = "";               // this is the name that will be displayed in UI.
+//  mRegistryPackageName    = "";               // this is the name that we will add into the registry for the component we are installing
+//  mUIName                 = "";               // this is the name that will be displayed in UI.
     mPatchList              = nsnull;
     mUninstallPackage       = PR_FALSE;
     mRegisterPackage        = PR_FALSE;
     mStatusSent             = PR_FALSE;
     mStartInstallCompleted  = PR_FALSE;
     mJarFileLocation        = "";
-    mInstallArguments       = "";
+//  mInstallArguments       = "";
     mPackageFolder          = nsnull;
 
     // mJarFileData is an opaque handle to the jarfile.
@@ -292,7 +292,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
     nsInstallFile* ie = nsnull;
     PRInt32 result;
     
-    if ( aJarSource.Equals("") || aFolder == nsnull ) 
+    if ( aJarSource.IsEmpty() || aFolder == nsnull ) 
     {
         *aReturn = SaveError(nsInstall::INVALID_ARGUMENTS);
         return NS_OK;
@@ -308,7 +308,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
     
     nsString qualifiedRegName;
     
-    if ( aRegName.Equals("")) 
+    if ( aRegName.IsEmpty()) 
     {
         // Default subName = location in jar file
         *aReturn = GetQualifiedRegName( aJarSource, qualifiedRegName);
@@ -340,7 +340,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
 
     if (!subdirectory.IsEmpty())
     {
-        subdirectory.Append("/");
+        subdirectory.AppendWithConversion("/");
     }
 
     
@@ -372,11 +372,11 @@ nsInstall::AddDirectory(const nsString& aRegName,
         nsString *thisPath = (nsString *)paths->ElementAt(i);
 
         nsString newJarSource = aJarSource;
-        newJarSource += "/";
+        newJarSource.AppendWithConversion("/");
         newJarSource += *thisPath;
         
         nsString fullRegName = qualifiedRegName;
-        fullRegName += "/";
+        fullRegName.AppendWithConversion("/");
         fullRegName += *thisPath;
         
 
@@ -446,7 +446,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
                         PRInt32* aReturn)
 {
     return AddDirectory(aRegName, 
-                        "", 
+                        nsAutoString(), 
                         aJarSource, 
                         aFolder, 
                         aSubdir, 
@@ -464,11 +464,11 @@ nsInstall::AddDirectory(const nsString& aJarSource,
         return NS_OK;
     }
     
-    return AddDirectory("", 
-                        "", 
+    return AddDirectory(nsAutoString(), 
+                        nsAutoString(), 
                         aJarSource, 
                         mPackageFolder, 
-                        "", 
+                        nsAutoString(), 
                         INSTALL_NO_COMPARE,
                         aReturn);
 }
@@ -490,7 +490,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     PRInt32         errcode = nsInstall::SUCCESS;
 
 
-    if(aJarSource.Equals("") || aFolder == nsnull ) 
+    if(aJarSource.IsEmpty() || aFolder == nsnull ) 
     {
         *aReturn = SaveError( nsInstall::INVALID_ARGUMENTS );
         return NS_OK;
@@ -510,14 +510,14 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
         return NS_OK;
     }
     
-    if( aTargetName.Equals("") )
+    if( aTargetName.IsEmpty() )
       tempTargetName = aJarSource;
     
     if (qualifiedVersion.IsEmpty())
-        qualifiedVersion.Assign("0.0.0.0");   	
+        qualifiedVersion.AssignWithConversion("0.0.0.0");   	
 
 
-    if ( aRegName.Equals("") ) 
+    if ( aRegName.IsEmpty() ) 
     {
         // Default subName = location in jar file
         *aReturn = GetQualifiedRegName( aJarSource, qualifiedRegName);
@@ -637,11 +637,11 @@ nsInstall::AddSubcomponent(const nsString& aJarSource,
         return NS_OK;
     }
 
-    return AddSubcomponent("", 
+    return AddSubcomponent(nsAutoString(), 
                            version, 
                            aJarSource, 
                            mPackageFolder, 
-                           "",
+                           nsAutoString(),
                            INSTALL_NO_COMPARE, 
                            aReturn);
 }
@@ -767,7 +767,7 @@ nsInstall::Execute(const nsString& aJarSource, const nsString& aArgs, PRInt32* a
 PRInt32    
 nsInstall::Execute(const nsString& aJarSource, PRInt32* aReturn)
 {
-    return Execute(aJarSource, "", aReturn);
+    return Execute(aJarSource, nsAutoString(), aReturn);
 }
 
 PRInt32    
@@ -845,7 +845,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                 char *objString = ie->toString();
                 if (objString)
                 {
-                    mNotifier->FinalizeProgress(nsAutoString(objString).GetUnicode(),
+                    mNotifier->FinalizeProgress(NS_ConvertASCIItoUCS2(objString).GetUnicode(),
                                                (i+1), mInstalledFiles->Count());
                     delete [] objString;
                 }
@@ -973,7 +973,7 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
         {
             int i;
 
-            nsString dirStr(dir);
+            nsString dirStr; dirStr.AssignWithConversion(dir);
             if (  (i = dirStr.RFindChar(FILESEP)) > 0 ) 
             {
                 // i is the index in the string, not the total number of
@@ -996,7 +996,7 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
 
     if(*dir != '\0') 
     {
-      *aNewFolder = new nsInstallFolder(dir, aSubdirectory);
+      *aNewFolder = new nsInstallFolder(NS_ConvertASCIItoUCS2(dir), aSubdirectory);
     }
 
     if (componentCString)
@@ -1008,7 +1008,7 @@ nsInstall::GetComponentFolder(const nsString& aComponentName, const nsString& aS
 PRInt32    
 nsInstall::GetComponentFolder(const nsString& aComponentName, nsInstallFolder** aNewFolder)
 {
-    return GetComponentFolder(aComponentName, "", aNewFolder);
+    return GetComponentFolder(aComponentName, nsAutoString(), aNewFolder);
 }
 
 PRInt32
@@ -1031,7 +1031,7 @@ PRInt32
 nsInstall::GetFolder(const nsString& targetFolder, nsInstallFolder** aNewFolder)
 {
     /* This version of GetFolder takes an nsString object as the only param */
-    return GetFolder(targetFolder, "", aNewFolder);
+    return GetFolder(targetFolder, nsAutoString(), aNewFolder);
 }
 
 PRInt32
@@ -1328,7 +1328,7 @@ nsInstall::Patch(const nsString& aRegName, const nsString& aVersion, const nsStr
 PRInt32    
 nsInstall::Patch(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aTargetName, PRInt32* aReturn)
 {
-    return Patch(aRegName, "", aJarSource, aFolder, aTargetName, aReturn);
+    return Patch(aRegName, nsAutoString(), aJarSource, aFolder, aTargetName, aReturn);
 }
 
 PRInt32    
@@ -1344,7 +1344,7 @@ nsInstall::SetPackageFolder(nsInstallFolder& aFolder)
     if (mPackageFolder)
         delete mPackageFolder;
     
-    mPackageFolder = new nsInstallFolder(aFolder, "");
+    mPackageFolder = new nsInstallFolder(aFolder, nsAutoString());
 
     return NS_OK;
 }
@@ -1387,7 +1387,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
 
     if(REGERR_OK == VR_GetDefaultDirectory(szRegPackageName, MAXREGPATHLEN, szRegPackagePath))
     {
-      mPackageFolder = new nsInstallFolder(szRegPackagePath, "");
+      mPackageFolder = new nsInstallFolder(NS_ConvertASCIItoUCS2(szRegPackagePath), nsAutoString());
     }
     else
     {
@@ -2002,7 +2002,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     // flash current item
 
     if (mNotifier)
-        mNotifier->ItemScheduled(nsAutoString(objString).GetUnicode());
+        mNotifier->ItemScheduled(NS_ConvertASCIItoUCS2(objString).GetUnicode());
 
 
     // do any unpacking or other set-up
@@ -2025,12 +2025,12 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
     else if ( mNotifier )
     {
         // error in preparation step -- log it
-        char* errRsrc = GetResourcedString("ERROR");
+        char* errRsrc = GetResourcedString(NS_ConvertASCIItoUCS2("ERROR"));
         if (errRsrc)
         {
             char* errprefix = PR_smprintf("%s (%d): ", errRsrc, error);
-            nsString errstr = errprefix;
-            errstr += objString;
+            nsString errstr; errstr.AssignWithConversion(errprefix);
+            errstr.AppendWithConversion(objString);
 
             mNotifier->LogComment( errstr.GetUnicode() );
 
@@ -2082,7 +2082,7 @@ nsInstall::GetQualifiedPackageName( const nsString& name, nsString& qualifiedNam
     nsString startOfName;
     name.Left(startOfName, 7);
 
-    if ( startOfName.Equals( "=USER=/") )
+    if ( startOfName.EqualsWithConversion( "=USER=/") )
     {
         CurrentUserNode(qualifiedName);
         qualifiedName += name;
@@ -2124,7 +2124,7 @@ nsInstall::GetQualifiedRegName(const nsString& name, nsString& qualifiedRegName 
 
     nsString usr ();
 
-    if ( startOfName.Equals("=COMM=/") || startOfName.Equals("=USER=/")) 
+    if ( startOfName.EqualsWithConversion("=COMM=/") || startOfName.EqualsWithConversion("=USER=/")) 
     {
         qualifiedRegName = name;
         qualifiedRegName.Cut( 0, 7 );
@@ -2134,7 +2134,7 @@ nsInstall::GetQualifiedRegName(const nsString& name, nsString& qualifiedRegName 
         if (!mRegistryPackageName.IsEmpty())
         {
             qualifiedRegName = mRegistryPackageName;
-            qualifiedRegName += "/";
+            qualifiedRegName.AppendWithConversion("/");
             qualifiedRegName += name;
         }
         else
@@ -2187,11 +2187,11 @@ nsInstall::CurrentUserNode(nsString& userRegNode)
         profname = NULL;
     }
     
-    userRegNode = "/Netscape/Users/";
+    userRegNode.AssignWithConversion("/Netscape/Users/");
     if (profname != nsnull)
     {
-        userRegNode += nsString(profname);
-        userRegNode += "/";
+        userRegNode.AppendWithConversion(profname);
+        userRegNode.AppendWithConversion("/");
         PR_FREEIF(profname);
     }
 }
@@ -2266,7 +2266,7 @@ nsInstall::CleanUp(void)
       mPackageFolder = nsnull;
     }
 
-    mRegistryPackageName = ""; // used to see if StartInstall() has been called
+    mRegistryPackageName.SetLength(0); // used to see if StartInstall() has been called
     mStartInstallCompleted = PR_FALSE;
 }
 
@@ -2274,7 +2274,7 @@ nsInstall::CleanUp(void)
 void       
 nsInstall::GetJarFileLocation(nsString& aFile)
 {
-    aFile = mJarFileLocation.GetCString();
+    aFile.AssignWithConversion(mJarFileLocation.GetCString());
 }
 
 void       
@@ -2339,7 +2339,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
     if (aSuggestedName == nsnull)
     {
         nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-        nsString tempFileName = "xpinstall";
+        nsString tempFileName; tempFileName.AssignWithConversion("xpinstall");
 
         // Get the extension of the file in the JAR
         extpos = aJarfile.RFindChar('.');
@@ -2436,7 +2436,7 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
 char*
 nsInstall::GetResourcedString(const nsString& aResName)
 {
-    nsString rscdStr = "";
+    nsString rscdStr;
     PRBool bStrBdlSuccess = PR_FALSE;
 
     if (mStringBundle)
@@ -2459,7 +2459,7 @@ nsInstall::GetResourcedString(const nsString& aResName)
     if (!bStrBdlSuccess)
     {
         char *cResName = aResName.ToNewCString();
-        rscdStr = nsInstallResources::GetDefaultVal(cResName);
+        rscdStr.AssignWithConversion(nsInstallResources::GetDefaultVal(cResName));
         if (cResName)
             Recycle(cResName);
     }
@@ -2478,7 +2478,7 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVoidArray *paths)
     if ( paths )
     {
         nsString pattern(directory);
-        pattern += "/*";
+        pattern.AppendWithConversion("/*");
         PRInt32 prefix_length = directory.Length()+1; // account for slash
 
         nsresult rv = mJarFileData->FindEntries( nsAutoCString(pattern), &jarEnum );
@@ -2504,7 +2504,8 @@ nsInstall::ExtractDirEntries(const nsString& directory, nsVoidArray *paths)
                     if ( buf[namelen-1] != '/' ) 
                     {
                         // XXX manipulation should be in caller
-                        paths->AppendElement( new nsString(buf+prefix_length) );
+                        nsString* tempString = new nsString; tempString->AssignWithConversion(buf+prefix_length);
+                        paths->AppendElement(tempString);
                     }
 
                     PR_FREEIF( buf );

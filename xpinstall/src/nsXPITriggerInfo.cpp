@@ -49,7 +49,6 @@ nsXPITriggerItem::nsXPITriggerItem( const PRUnichar* aName,
     if ( pos == -1 ) {
         // no arguments
         mURL = URL;
-        mArguments = "";
     }
     else
     {

@@ -300,71 +300,73 @@ char* nsInstallFileOpItem::toString()
   char*    resultCString;
 
   // XXX these hardcoded strings should be replaced by nsInstall::GetResourcedString(id)
+
+    // STRING USE WARNING: perhaps |result| should be an |nsCAutoString| to avoid all this double converting
   
   switch(mCommand)
   {
     case NS_FOP_FILE_COPY:
-      result = "Copy File: ";
-      result.Append(mSrc->GetNativePathCString());
-      result.Append(" to ");
-      result.Append(mTarget->GetNativePathCString());
+      result.AssignWithConversion("Copy File: ");
+      result.AppendWithConversion(mSrc->GetNativePathCString());
+      result.AppendWithConversion(" to ");
+      result.AppendWithConversion(mTarget->GetNativePathCString());
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_FILE_DELETE:
-      result = "Delete File: ";
-      result.Append(mTarget->GetNativePathCString());
+      result.AssignWithConversion("Delete File: ");
+      result.AppendWithConversion(mTarget->GetNativePathCString());
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_FILE_EXECUTE:
-      result = "Execute File: ";
-      result.Append(mTarget->GetNativePathCString());
-      result.Append(" ");
+      result.AssignWithConversion("Execute File: ");
+      result.AppendWithConversion(mTarget->GetNativePathCString());
+      result.AppendWithConversion(" ");
       result.Append(*mParams);
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_FILE_MOVE:
-      result = "Move File: ";
-      result.Append(mSrc->GetNativePathCString());
-      result.Append(" to ");
-      result.Append(mTarget->GetNativePathCString());
+      result.AssignWithConversion("Move File: ");
+      result.AppendWithConversion(mSrc->GetNativePathCString());
+      result.AppendWithConversion(" to ");
+      result.AppendWithConversion(mTarget->GetNativePathCString());
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_FILE_RENAME:
-      result = "Rename File: ";
+      result.AssignWithConversion("Rename File: ");
       result.Append(*mStrTarget);
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_DIR_CREATE:
-      result = "Create Folder: ";
-      result.Append(mTarget->GetNativePathCString());
+      result.AssignWithConversion("Create Folder: ");
+      result.AppendWithConversion(mTarget->GetNativePathCString());
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_DIR_REMOVE:
-      result = "Remove Folder: ";
-      result.Append(mTarget->GetNativePathCString());
+      result.AssignWithConversion("Remove Folder: ");
+      result.AppendWithConversion(mTarget->GetNativePathCString());
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_DIR_RENAME:
-      result = "Rename Dir: ";
+      result.AssignWithConversion("Rename Dir: ");
       result.Append(*mStrTarget);
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_WIN_SHORTCUT:
-      result = "Windows Shortcut: ";
-      result.Append(*mShortcutPath);
-      result.Append("\\");
+      result.AssignWithConversion("Windows Shortcut: ");
+      result.AppendWithConversion(*mShortcutPath);
+      result.AppendWithConversion("\\");
       result.Append(*mDescription);
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_MAC_ALIAS:
-      result = "Mac Alias: ";
-      result.Append(mSrc->GetCString());
+      result.AssignWithConversion("Mac Alias: ");
+      result.AppendWithConversion(mSrc->GetCString());
       resultCString = result.ToNewCString();
       break;
     case NS_FOP_UNIX_LINK:
       break;
     default:
-      result = "Unkown file operation command!";
+      result.AssignWithConversion("Unkown file operation command!");
       resultCString = result.ToNewCString();
       break;
   }

@@ -61,7 +61,7 @@ class nsXPITriggerItem
 
     nsCOMPtr<nsIFileSpec>  mFile;
 
-    PRBool  IsFileURL() { return mURL.Equals("file:/",PR_FALSE,6); }
+    PRBool  IsFileURL() { return mURL.EqualsWithConversion("file:/",PR_FALSE,6); }
     PRBool  IsRelativeURL();
 
   private:

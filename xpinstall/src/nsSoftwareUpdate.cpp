@@ -553,13 +553,13 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
     result = aScriptContext->GetNameSpaceManager(&manager);
     if (NS_SUCCEEDED(result)) 
     {
-        result = manager->RegisterGlobalName("InstallVersion", 
+        result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("InstallVersion"), 
                                              kInstallVersion_CID, 
                                              PR_TRUE);
         
         if (NS_FAILED(result))  return result;
         
-        result = manager->RegisterGlobalName("InstallTrigger", 
+        result = manager->RegisterGlobalName(NS_ConvertASCIItoUCS2("InstallTrigger"), 
                                              kInstallTrigger_CID, 
                                              PR_FALSE);
 

@@ -207,9 +207,9 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
     } 
     else 
     {
-        mChildFile = mVersionRegistryName->Equals( regPackageName,
-                                                   PR_FALSE,
-                                                   regPackageName.Length() );
+        mChildFile = mVersionRegistryName->EqualsWithConversion( regPackageName,
+                                                                 PR_FALSE,
+                                                                 regPackageName.Length() );
     }
 }
 
@@ -299,15 +299,15 @@ char* nsInstallFile::toString()
     
     if (mReplaceFile)
     {
-        rsrcVal = mInstall->GetResourcedString("ReplaceFile");
+        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("ReplaceFile"));
     }
     else if (mSkipInstall)
     {
-        rsrcVal = mInstall->GetResourcedString("SkipFile");
+        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("SkipFile"));
     }
     else
     {
-        rsrcVal = mInstall->GetResourcedString("InstallFile");
+        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("InstallFile"));
     }
 
     if (rsrcVal)

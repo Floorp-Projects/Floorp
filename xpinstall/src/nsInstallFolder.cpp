@@ -86,7 +86,7 @@ MOZ_DECL_CTOR_COUNTER(nsInstallFolder);
 
 nsInstallFolder::nsInstallFolder(const nsString& aFolderID)
 {
-    nsInstallFolder( aFolderID, "" );
+    nsInstallFolder( aFolderID, nsAutoString() );
 }
 
 nsInstallFolder::nsInstallFolder(const nsString& aFolderID, const nsString& aRelativePath)
@@ -121,7 +121,7 @@ nsInstallFolder::nsInstallFolder(const nsString& aFolderID, const nsString& aRel
                 nsString morePath(aRelativePath);
 
                 if ( morePath.Last() != '/' || morePath.Last() != '\\' )
-                    morePath += '/';
+                    morePath.AppendWithConversion('/');
 
                 *mFileSpec += morePath;
             }
@@ -160,17 +160,17 @@ nsInstallFolder::~nsInstallFolder()
 void 
 nsInstallFolder::GetDirectoryPath(nsString& aDirectoryPath)
 {
-	aDirectoryPath = "";
+	aDirectoryPath.SetLength(0);
     
     if (mFileSpec != nsnull)
     {
         // We want the a NATIVE path.
-       aDirectoryPath.Assign(mFileSpec->GetCString());
+       aDirectoryPath.AssignWithConversion(mFileSpec->GetCString());
 
        if (mFileSpec->IsDirectory())
        {
           if (aDirectoryPath.Last() != FILESEP)
-              aDirectoryPath.Append(FILESEP);
+              aDirectoryPath.AppendWithConversion(FILESEP);
        }
     }
 }
@@ -404,7 +404,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
             nsString tempPath(aRelativePath);
 
             if (aRelativePath.Last() != '/' || aRelativePath.Last() != '\\')
-                tempPath += '/';
+                tempPath.AppendWithConversion('/');
 
             *mFileSpec += tempPath;
         }
@@ -424,7 +424,7 @@ nsInstallFolder::MapNameToEnum(const nsString& name)
 {
 	int i = 0;
 
-	if ( name.Equals(""))
+	if ( name.IsEmpty())
         return -1;
 
 	while ( DirectoryTable[i].directoryName[0] != 0 )
@@ -462,6 +462,6 @@ nsInstallFolder::ToString(nsAutoString* outString)
   //XXX: May need to fix. Native charset paths will be converted into Unicode when the get to JS
   //     This will appear to work on Latin-1 charsets but won't work on Mac or other charsets.
 
-  *outString = mFileSpec->GetCString();
+  outString->AssignWithConversion( mFileSpec->GetCString() );
   return NS_OK;
 }

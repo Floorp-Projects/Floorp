@@ -48,7 +48,7 @@ nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
 {
     MOZ_COUNT_CTOR(nsInstallExecute);
 
-    if ((inInstall == nsnull) || (inJarLocation.Equals("")) )
+    if ((inInstall == nsnull) || (inJarLocation.IsEmpty()) )
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
@@ -73,7 +73,7 @@ nsInstallExecute::~nsInstallExecute()
 
 PRInt32 nsInstallExecute::Prepare()
 {
-    if (mInstall == NULL || mJarLocation.Equals("")) 
+    if (mInstall == NULL || mJarLocation.IsEmpty()) 
         return nsInstall::INVALID_ARGUMENTS;
 
     return mInstall->ExtractFileFromJar(mJarLocation, nsnull, &mExecutableFile);
@@ -120,7 +120,7 @@ char* nsInstallExecute::toString()
     if (mExecutableFile == nsnull)
     {
         char *tempString = mJarLocation.ToNewCString();
-        rsrcVal = mInstall->GetResourcedString("Execute");
+        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("Execute"));
 
         if (rsrcVal)
         {
@@ -133,7 +133,7 @@ char* nsInstallExecute::toString()
     }
     else
     {
-        rsrcVal = mInstall->GetResourcedString("Execute");
+        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("Execute"));
 
         if (rsrcVal)
         {

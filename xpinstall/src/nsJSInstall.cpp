@@ -297,7 +297,7 @@ PRBool ConvertJSValToObj(nsISupports** aSupports,
 
 void ConvertJSvalToVersionString(nsString& versionString, JSContext* cx, jsval argument)
 {
-    versionString = "";
+    versionString.SetLength(0);
     
     if( JSVAL_IS_OBJECT(argument) )
     {

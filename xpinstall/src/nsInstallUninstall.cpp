@@ -44,7 +44,7 @@ nsInstallUninstall::nsInstallUninstall( nsInstall* inInstall,
 {
     MOZ_COUNT_CTOR(nsInstallUninstall);
 
-    if (regName.Equals("")) 
+    if (regName.IsEmpty()) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
@@ -57,7 +57,7 @@ nsInstallUninstall::nsInstallUninstall( nsInstall* inInstall,
                                            userName, 
                                            MAXREGPATHLEN );
     
-    mUIName.Assign(userName);
+    mUIName.AssignWithConversion(userName);
     
     if (err != REGERR_OK)
     {
@@ -108,7 +108,7 @@ char* nsInstallUninstall::toString()
     
     if (temp)
     {
-        rsrcVal = mInstall->GetResourcedString("Uninstall");
+        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("Uninstall"));
 
         if (rsrcVal)
         {
