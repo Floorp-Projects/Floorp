@@ -41,6 +41,7 @@
 #include "nsHTMLBase.h"
 #include "nsIDocumentLoader.h"
 #include "nsGenericHTMLElement.h"
+#include "nsHTMLParts.h"
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -948,9 +949,12 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
         nsIAtom* tag;
         child->GetTag(tag);
         if ((nsHTMLAtoms::frameset == tag) || (nsHTMLAtoms::frame == tag)) {
-          nsresult result = nsHTMLBase::CreateFrame(&aPresContext, this, child, nsnull, frame);
+          nsIStyleContext* kidSC = aPresContext.ResolveStyleContextFor(child, this);
+          nsresult         result;
 
           if (nsHTMLAtoms::frameset == tag) {
+            result = NS_NewHTMLFramesetFrame(child, this, frame);
+
             childTypes[mChildCount] = FRAMESET;
             nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
             childFrame->SetParentFrameborder(frameborder);
@@ -958,6 +962,8 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
             childFrame->SetParentBorderColor(borderColor);
             childBorderColors[mChildCount].Set(childFrame->GetBorderColor());
           } else { // frame
+            result = NS_NewHTMLFrameOuterFrame(child, this, frame);
+
             childTypes[mChildCount] = FRAME;
             //
             childFrameborder[mChildCount] = GetFrameBorder(child, PR_FALSE);
@@ -967,8 +973,14 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
           if (NS_OK != result) {
             NS_RELEASE(tag);
             NS_RELEASE(child);
+            NS_RELEASE(kidSC);
             return result;
           }
+
+          // Set the style context
+          frame->SetStyleContext(&aPresContext, kidSC);
+          NS_RELEASE(kidSC);
+
           if (nsnull == lastChild) {
             mFirstChild = frame;
           } else {
