@@ -159,6 +159,12 @@ sub InstallDefaultsFiles()
       InstallResources(":mozilla:extensions:inspector:resources:content:prefs:MANIFEST", "$default_pref_dir", 0);
     }
 
+    if ($main::options{typeaheadfind})
+    {
+      InstallResources(":mozilla:extensions:typeaheadfind:resources:content:prefs:MANIFEST", "$default_pref_dir", 0);
+    }
+
+
     if ($main::options{mdn}) {
     	InstallResources(":mozilla:mailnews:extensions:mdn:resources:content:MANIFEST_PREFS", "$default_pref_dir", 0);
     }
@@ -270,7 +276,12 @@ sub InstallNonChromeResources()
     {
         InstallResources(":mozilla:extensions:inspector:resources:content:res:MANIFEST",   "$resource_dir" . "inspector:");
     }
-
+    
+    if ($main::options{typeaheadfind})
+    {
+        MakeAlias(":mozilla:extensions:typeaheadfind:resources:locale:en-US:typeaheadfind.properties", "$resource_dir");
+    }
+	
     print("--- End Resource copying ----\n");
 }
 
@@ -571,6 +582,10 @@ sub ProcessJarManifests()
     if ($main::options{jsd} && $main::options{venkman})
     {
       CreateJarFromManifest(":mozilla:extensions:venkman:resources:jar.mn", $chrome_dir, \%jars);
+    }
+    if ($main::options{typeaheadfind})
+    {
+      CreateJarFromManifest(":mozilla:extensions:typeaheadfind:resources:jar.mn", $chrome_dir, \%jars);
     }
     
     CreateJarFromManifest(":mozilla:accessible:src:base:jar.mn", $chrome_dir, \%jars);
@@ -1188,6 +1203,12 @@ sub BuildClientDist()
         InstallFromManifest(":mozilla:extensions:inspector:base:public:MANIFEST_IDL", "$distdirectory:idl:");
     }
 
+    #TYPE AHEAD FIND
+    if ($main::options{typeaheadfind})
+    {
+        InstallFromManifest(":mozilla:extensions:typeaheadfind:public:MANIFEST_IDL", "$distdirectory:idl:");
+    }
+
     #P3P
     if ($main::options{p3p})
     {
@@ -1507,6 +1528,11 @@ sub BuildIDLProjects()
     if ($main::options{inspector})
     {
         BuildIDLProject(":mozilla:extensions:inspector:macbuild:inspectorIDL.xml", "inspector");
+    }
+
+    if ($main::options{typeaheadfind})
+    {
+        BuildIDLProject(":mozilla:extensions:typeaheadfind:macbuild:typeaheadfindIDL.xml", "typeaheadfind");
     }
 
     if ($main::options{p3p})
@@ -2273,6 +2299,12 @@ sub BuildExtensionsProjects()
     if ($main::options{inspector})
     {
         BuildOneProject(":mozilla:extensions:inspector:macbuild:inspector.xml", "inspector$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    }
+    
+    # Type Ahead Find
+    if ($main::options{typeaheadfind})
+    {
+        BuildOneProject(":mozilla:extensions:typeaheadfind:macbuild:typeaheadfind.xml", "typeaheadfind$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     }
     
     # P3P

@@ -572,13 +572,13 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
   if (((charCode == 'g' || charCode=='G') && isAlt + isMeta + isCtrl == 1 && (
       (nsTypeAheadFind::sAccelKey == nsIDOMKeyEvent::DOM_VK_CONTROL && isCtrl) ||
       (nsTypeAheadFind::sAccelKey == nsIDOMKeyEvent::DOM_VK_ALT     && isAlt ) ||
-      (nsTypeAheadFind::sAccelKey == nsIDOMKeyEvent::DOM_VK_META    && isMeta))) ||
+      (nsTypeAheadFind::sAccelKey == nsIDOMKeyEvent::DOM_VK_META    && isMeta)))
 #ifdef XP_MAC
      // We don't use F3 for find next on Macintosh, function keys are user
      // definable there
      ) {
 #else
-    (keyCode == nsIDOMKeyEvent::DOM_VK_F3 && !isCtrl && !isMeta && !isAlt)) {
+    || (keyCode == nsIDOMKeyEvent::DOM_VK_F3 && !isCtrl && !isMeta && !isAlt)) {
 #endif
     // We steal Accel+G, F3 (find next) and Accel+Shift+G, Shift+F3
     // (find prev), avoid early return, so we can use our find loop
