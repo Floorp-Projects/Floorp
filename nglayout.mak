@@ -123,6 +123,7 @@ RAPTOR_DIRS =			\
   view				\
   widget			\
   layout			\
+  rdf                           \
   webshell			\
   xpfe			
 
