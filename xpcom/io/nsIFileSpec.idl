@@ -102,6 +102,7 @@ interface nsIFileSpec : nsISupports
 	boolean isSymlink();
 	void resolveSymlink();
 
+	void delete(in boolean recursive);
     void truncate(in long aNewLength);
 	void rename([const] in string newLeafName);
 	void copyToDir([const] in nsIFileSpec newParentDir);

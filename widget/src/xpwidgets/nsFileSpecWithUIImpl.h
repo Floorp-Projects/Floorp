@@ -166,6 +166,10 @@ class nsFileSpecWithUIImpl
 	NS_IMETHOD Touch ()
 		{ return mBaseFileSpec ? mBaseFileSpec->Touch() : NS_ERROR_NOT_INITIALIZED; }
        
+	/* void delete (in boolean aRecursive); */
+	NS_IMETHOD Delete(PRBool aRecursive)
+		{ return mBaseFileSpec ? mBaseFileSpec->Delete(aRecursive) : NS_ERROR_NOT_INITIALIZED; }
+
 	/* void truncate (in long aNewLength); */
 	NS_IMETHOD Truncate(PRInt32 aNewLength)
 		{ return mBaseFileSpec ? mBaseFileSpec->Truncate(aNewLength) : NS_ERROR_NOT_INITIALIZED; }
