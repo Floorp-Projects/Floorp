@@ -76,7 +76,7 @@ LLIBS=					\
  $(DIST)\lib\jsdom.lib		        \
  $(DIST)\lib\netlib.lib		        \
  $(DIST)\lib\libplc21.lib		\
- $(DIST)\lib\js3250.lib			\
+ $(DIST)\lib\js32$(VERSION_NUMBER).lib	\
  $(LIBNSPR)
 
 include <$(DEPTH)\layout\config\rules.mak>
