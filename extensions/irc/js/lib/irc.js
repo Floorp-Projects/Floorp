@@ -1965,7 +1965,7 @@ CIRCChannel.prototype.getURL =
 function chan_geturl ()
 {
     var target;
-    if (this.normalizedName[0] == "#")
+    if (this.normalizedName.match(/^#[^!+&]/))
         target = ecmaEscape(this.normalizedName.substr(1));
     else
         target = ecmaEscape(this.normalizedName);
