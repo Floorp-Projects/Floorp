@@ -205,10 +205,16 @@ public:
                                 nsBoundingMetrics& aBoundingMetrics,
                                 PRInt32*           aFontID = nsnull);
 #endif /* MOZ_MATHML */
-	
+  //LockAndUpdateView() - method, similar to UpdateGC (from gtk gfx).
+  //Acquires "fresh" drawable mView (BView) from drawing surface, locks it (BeOS specifics),
+  //updates font, color and sets clipping region. 
+  //In if() statement actually replaces (mView && mView->LockLooper);
+  //Each LockAndUpdateView() statement must have UnlockLooper() counterpart somewhere, 
+  //if returned true.
+  bool LockAndUpdateView();	
+
 protected:
 	NS_IMETHOD CommonInit();
-	void UpdateView();
 	
 	// ConditionRect is used to fix coordinate overflow problems for
 	// rectangles after they are transformed to screen coordinates
