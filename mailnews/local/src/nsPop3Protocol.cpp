@@ -117,14 +117,8 @@ net_pop3_remove_messages_marked_delete(PLHashEntry* he,
                                        void *arg)
 {
   Pop3UidlEntry *uidlEntry = (Pop3UidlEntry *) he->value;
-  if (uidlEntry->status == DELETE_CHAR)
-  {
-    PR_Free(uidlEntry->uidl);
-    delete uidlEntry;
-    return HT_ENUMERATE_REMOVE;
-  }
-  else
-    return HT_ENUMERATE_NEXT;     /* XP_Maphash will continue traversing the hash */
+  return (uidlEntry->status == DELETE_CHAR) 
+    ? HT_ENUMERATE_REMOVE : HT_ENUMERATE_NEXT;     
 }
 
 PRUint32 TimeInSecondsFromPRTime(PRTime prTime)
@@ -188,8 +182,7 @@ FreeUidlInfo(void * /* pool */, PLHashEntry *he, PRUintn flag)
     Pop3UidlEntry *uidlEntry = (Pop3UidlEntry *) he->value;
     if (uidlEntry)
     {
-      if (uidlEntry->uidl)
-        PR_Free(uidlEntry->uidl);
+      PR_Free(uidlEntry->uidl);
       PR_Free(uidlEntry);
     }
     PR_Free(he);
