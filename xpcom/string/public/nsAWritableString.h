@@ -839,6 +839,38 @@ basic_nsAWritableString<CharT>::do_ReplaceFromReadable( PRUint32 cutStart, PRUin
   }
 
 
+template <class CharT>
+PRUint32
+basic_nsAReadableString<CharT>::Mid( basic_nsAWritableString<CharT>& aResult, PRUint32 aStartPos, PRUint32 aLengthToCopy ) const
+  {
+      // If we're just assigning our entire self, give |aResult| the opportunity to share
+    if ( aStartPos == 0 && aLengthToCopy >= Length() )
+      aResult = *this;
+    else
+      aResult = Substring(*this, aStartPos, aLengthToCopy);
+
+    return aResult.Length();
+  }
+
+template <class CharT>
+inline
+PRUint32
+basic_nsAReadableString<CharT>::Left( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
+  {
+    return Mid(aResult, 0, aLengthToCopy);
+  }
+
+template <class CharT>
+PRUint32
+basic_nsAReadableString<CharT>::Right( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
+  {
+    PRUint32 myLength = Length();
+    aLengthToCopy = NS_MIN(myLength, aLengthToCopy);
+    return Mid(aResult, myLength-aLengthToCopy, aLengthToCopy);
+  }
+
+
+
 
   //
   // Types
