@@ -22,6 +22,8 @@
 #include "nsISupports.h"
 #include "nsMimeHeaderConverter.h"
 #include "comi18n.h"
+#include "prmem.h"
+#include "plstr.h"
 
 /* 
  * This function will be used by the factory to generate an 
@@ -68,6 +70,43 @@ nsMimeHeaderConverter::nsMimeHeaderConverter()
 
 nsMimeHeaderConverter::~nsMimeHeaderConverter()
 {
+}
+
+nsresult 
+nsMimeHeaderConverter::DecodeMimePartIIStr(const nsString& header, 
+                                           nsString& charset, 
+                                           nsString& decodedString)
+{
+  char charsetCstr[kMAX_CSNAME];
+  char *encodedCstr;
+  char *decodedCstr;
+  nsresult res = NS_OK;
+
+  encodedCstr = header.ToNewCString();
+  if (nsnull != encodedCstr) {
+    // apply MIME decode.
+    decodedCstr = MIME_DecodeMimePartIIStr((const char *) encodedCstr, charsetCstr);
+    delete [] encodedCstr;
+    if (nsnull == decodedCstr) {
+      // no decode needed, set an input string
+      charset.SetString("");
+      decodedString.SetString(header);
+    }
+    else {
+      // convert to unicode
+      PRUnichar *unichars;
+      PRInt32 unicharLength;
+      res = MIME_ConvertToUnicode(charsetCstr, (const char *) decodedCstr, PL_strlen((const char *) decodedCstr),
+                                  (void **) &unichars, &unicharLength);
+      if (NS_SUCCEEDED(res)) {
+        charset.SetString(charsetCstr);
+        decodedString.SetString(unichars, unicharLength);
+        PR_Free(unichars);
+      }
+      PR_Free(decodedCstr);
+    }
+  }
+  return res;
 }
 
 nsresult

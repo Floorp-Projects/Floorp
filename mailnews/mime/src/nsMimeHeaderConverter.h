@@ -48,6 +48,11 @@ public:
   NS_IMETHOD DecodeMimePartIIStr(const char *header, 
                                  char       *charset, 
                                  char **decodedString);
+
+  // Decode routine (also converts output to unicode)
+  NS_IMETHOD DecodeMimePartIIStr(const nsString& header, 
+                                 nsString& charset, 
+                                 nsString& decodedString);
   // Encode routine
   NS_IMETHOD EncodeMimePartIIStr(const char    *header, 
                                  const char    *mailCharset, 

@@ -25,6 +25,7 @@
 #define nsIMimeHeaderConverter_h_
 
 #include "prtypes.h"
+#include "nsString.h"
 
 // {C09EDB23-B7AF-11d2-B35E-525400E2D63A}
 #define NS_IMIME_HEADER_CONVERTER_IID \
@@ -48,6 +49,11 @@ public:
   NS_IMETHOD DecodeMimePartIIStr(const char *header, 
                                  char       *charset, 
                                  char **decodedString) = 0;
+
+  // Decode routine (also converts output to unicode)
+  NS_IMETHOD DecodeMimePartIIStr(const nsString& header, 
+                                 nsString& charset, 
+                                 nsString& decodedString) = 0;
 
   // Encode routine
   NS_IMETHOD EncodeMimePartIIStr(const char    *header, 
