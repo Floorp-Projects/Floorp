@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set et ts=4 sts=4 sw=4 cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -50,18 +51,19 @@
 #include "nsString.h"
 
 class nsIProxyInfo;
+class nsITransportEventSink;
 
 class nsFtpControlConnection  : public nsIStreamListener
 {
 public:
-	NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
 
-	nsFtpControlConnection(const char* host, PRUint32 port);
-	virtual ~nsFtpControlConnection();
-    
-    nsresult Connect(nsIProxyInfo* proxyInfo);
+    nsFtpControlConnection(const char* host, PRUint32 port);
+    virtual ~nsFtpControlConnection();
+
+    nsresult Connect(nsIProxyInfo* proxyInfo, nsITransportEventSink* eventSink);
     nsresult Disconnect(nsresult status);
     nsresult Write(nsCString& command, PRBool suspend);
     
@@ -78,7 +80,7 @@ public:
     nsCString        mPwd;
 
 private:
-	PRLock* mLock;  // protects mListener.
+    PRLock* mLock;  // protects mListener.
 
     
     nsXPIDLCString   mHost;
