@@ -35,23 +35,60 @@ class nsString;
 class nsIPresContext;
 class nsIUnicodeEncoder;
 class nsIDOMNode;
+class nsAString;
 
 class nsFormSubmitter {
 
 public:
   // JBK moved methods necessary for submit
-  static nsresult OnSubmit(nsIForm* form, nsIPresContext* aPresContext, nsIContent* submitElement);
+  static nsresult OnSubmit(nsIForm* form,
+                           nsIPresContext* aPresContext,
+                           nsIContent* submitElement);
 
 protected:
-  static nsresult CompareNodes(nsIDOMNode* a, nsIDOMNode* b, PRInt32* retval);
-  static nsresult ProcessAsURLEncoded(nsIForm* form, nsIPresContext* aPresContext, nsIFormProcessor* aFormProcessor, PRBool isPost, nsString& aData, nsIContent* submitElement, PRInt32 aSubmitPosition);
-  static nsresult ProcessAsMultipart(nsIForm* form, nsIPresContext* aPresContext, nsIFormProcessor* aFormProcessor,nsIFileSpec*& aMultipartDataFile, nsIContent* submitElement, PRInt32 aSubmitPosition);
-  static void GetSubmitCharset(nsIForm* form, nsString& oCharset, nsIPresContext* aPresContext);
-  static nsresult GetEncoder(nsIForm* form, nsIPresContext* aPresContext, nsIUnicodeEncoder** encoder);
-  static nsString* URLEncode(const nsString& aString, nsIUnicodeEncoder* encoder);
-  static char* UnicodeToNewBytes(const PRUnichar* aSrc, PRUint32 aLen, nsIUnicodeEncoder* encoder);
+  static nsresult CompareNodes(nsIDOMNode* a,
+                               nsIDOMNode* b,
+                               PRInt32* retval);
+  static nsresult ProcessAsURLEncoded(nsIForm* form,
+                                      nsIPresContext* aPresContext,
+                                      nsIFormProcessor* aFormProcessor,
+                                      PRBool isPost,
+                                      nsAString& aData,
+                                      nsIContent* submitElement,
+                                      PRInt32 aSubmitPosition,
+                                      PRUint8 aCtrlsModAtSubmit,
+                                      PRUint8 aTextDirAtSubmit);
+  static nsresult ProcessAsMultipart(nsIForm* form,
+                                     nsIPresContext* aPresContext,
+                                     nsIFormProcessor* aFormProcessor,
+                                     nsIFileSpec*& aMultipartDataFile,
+                                     nsIContent* submitElement,
+                                     PRInt32 aSubmitPosition,
+                                     PRUint8 aCtrlsModAtSubmit,
+                                     PRUint8 aTextDirAtSubmit);
+  static void GetSubmitCharset(nsIForm* form,
+                               nsAString& oCharset,
+                               nsIPresContext*
+                               aPresContext,
+                               PRUint8 aCtrlsModAtSubmit);
+  static nsresult GetEncoder(nsIForm* form,
+                             nsIPresContext* aPresContext,
+                             nsIUnicodeEncoder** encoder,
+                             PRUint8 aCtrlsModAtSubmit,
+                             const nsAString& mCharset);
+  static nsString* URLEncode(const nsAString& aString,
+                             nsIUnicodeEncoder* encoder,
+                             PRUint8 aCtrlsModAtSubmit,
+                             PRUint8 aTextDirAtSubmit,
+                             const nsAString& mCharset);
+  static char* UnicodeToNewBytes(const PRUnichar* aSrc,
+                                 PRUint32 aLen,
+                                 nsIUnicodeEncoder* encoder,
+                                 PRUint8 aCtrlsModAtSubmit,
+                                 PRUint8 aTextDirAtSubmit,
+                                 const nsAString& mCharset);
   static nsresult GetPlatformEncoder(nsIUnicodeEncoder** encoder);
-  static PRUint32 GetFileNameWithinPath(nsString aPathName);
+  static PRUint32 GetFileNameWithinPath(nsString& aPathName);
   static nsresult GetContentType(char* aPathName, char** aContentType);
 
   // Detection of first form to notify observers
