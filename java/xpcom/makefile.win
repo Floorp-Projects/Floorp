@@ -24,6 +24,7 @@
 DEPTH = ..\..
 
 DIRS=   \
+	java\xpidl \
         connect \
 	xpcom   \
 	wrappers \
