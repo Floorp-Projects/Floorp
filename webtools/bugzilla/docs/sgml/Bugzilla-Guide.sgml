@@ -101,10 +101,10 @@ try to avoid clutter and feel free to waste space in the code to make it more re
         <surname>Barnson</surname>
       </author>
       <author>
-        <firstname>The</firstname>
-        <othername>Bugzilla</othername>
-        <surname>Team</surname>
+        <firstname>Jacob</firstname>
+        <surname>Steenhagen</surname>
       </author>
+      <corpauthor>The Bugzilla Team</corpauthor>
     </authorgroup>
 
     <pubdate>&bz-date;</pubdate>

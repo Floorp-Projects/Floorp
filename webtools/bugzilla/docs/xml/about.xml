@@ -118,43 +118,87 @@
       numerous e-mail and IRC support sessions, and overall excellent
       contribution to the Bugzilla community:
     </para>
-    <para>
-      <ulink url="mailto://mbarnson@sisna.com">Matthew P. Barnson</ulink>
-      for the Herculaean task of pulling together the Bugzilla Guide and
-      shepherding it to 2.14.
-    </para>
-    <para>
-      <ulink url="mailto://terry@mozilla.org">Terry Weissman</ulink>
-      for initially writing Bugzilla and creating the
-      README upon which the UNIX installation documentation is largely based.
-    </para>
-    <para>
-      <ulink url="mailto://tara@tequilarista.org">Tara Hernandez</ulink>  
-      for keeping Bugzilla development going
-      strong after Terry left mozilla.org
-    </para>
-    <para>
-      <ulink url="mailto://dkl@redhat.com">Dave Lawrence</ulink> 
-      for providing insight into the key differences between Red Hat's
-      customized Bugzilla, and being largely responsible for the "Red
-      Hat Bugzilla" appendix
-    </para>
-    <para>
-      <ulink url="mailto://endico@mozilla.org">Dawn Endico</ulink> for
-      being a hacker extraordinaire and putting up with my incessant
-      questions and arguments on irc.mozilla.org in #mozwebtools
-    </para>
+
+    <!-- TODO: This is evil... there has to be a valid way to get this look -->
+    <variablelist>
+      <varlistentry>
+        <term>Matthew P. Barnson <email>mbarnson@sisna.com</email></term>
+        <listitem>
+          <para>for the Herculaean task of pulling together the Bugzilla Guide
+          and shepherding it to 2.14.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Terry Weissman <email>terry@mozilla.org</email></term>
+        <listitem>
+          <para>for initially writing Bugzilla and creating the README upon
+          which the UNIX installation documentation is largely based.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Tara Hernandez <email>tara@tequilarists.org</email></term>
+        <listitem>
+          <para>for keeping Bugzilla development going strong after Terry left
+          mozilla.org and for running landfill.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Dave Lawrence <email>dkl@redhat.com</email></term>
+        <listitem>
+          <para>for providing insight into the key differences between Red
+          Hat's customized Bugzilla, and being largely responsible for
+          <xref linkend="varient-redhat"/>.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Dawn Endico <email>endico@mozilla.org</email></term>
+        <listitem>
+          <para>for being a hacker extraordinaire and putting up with Matthew's
+          incessant questions and arguments on irc.mozilla.org in #mozwebtools
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Jacob Steenhagen <email>jake@bugzilla.org</email></term>
+        <listitem>
+          <para>for taking over documentation during the 2.17 development
+          period.
+          </para>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
+
     <para>
       Last but not least, all the members of the 
-      <ulink url="news://news.mozilla.org/netscape/public/mozilla/webtools"> netscape.public.mozilla.webtools</ulink> newsgroup.  Without your discussions, insight, suggestions, and patches, this could never have happened.
+      <ulink url="news://news.mozilla.org/netscape/public/mozilla/webtools"/>
+      newsgroup.  Without your discussions, insight, suggestions, and patches,
+      this could never have happened.
     </para>
     <para>
       Thanks also go to the following people for significant contributions 
-      to this documentation (in no particular order):
-    </para>
-    <para>
-      Zach Liption, Andrew Pearson, Spencer Smith, Eric Hanson, Kevin Brannen,
-      Ron Teitelbaum, Jacob Steenhagen, Joe Robins, Gervase Markham.
+      to this documentation (in alphabetical order):
+      <simplelist type="inline">
+        <member>Andrew Pearson</member>
+        <member>Ben FrantzDale</member>
+        <member>Eric Hanson</member>
+        <member>Gervase Markham</member>
+        <member>Joe Robins</member>
+        <member>Kevin Brannen</member>
+        <member>Ron Teitelbaum</member>
+        <member>Spencer Smith</member>
+        <member>Zach Liption</member>
+      </simplelist>
+      .
     </para>
   </section>
 

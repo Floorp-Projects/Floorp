@@ -10,7 +10,7 @@
   http://linas.org/linux/pm.html</ulink>
   </para>
 
-  <section id="rhbugzilla" xreflabel="Red Hat Bugzilla">
+  <section id="varient-redhat">
     <title>Red Hat Bugzilla</title>
 
     <para>Red Hat's old fork of Bugzilla which was based on version 2.8 is now
@@ -33,7 +33,7 @@
     <para>This section last updated 24 Dec 2002</para>
   </section>
 
-  <section id="variant-fenris" xreflabel="Loki Bugzilla, a.k.a. Fenris">
+  <section id="variant-fenris">
     <title>Loki Bugzilla (Fenris)</title>
 
     <para>Fenris was a fork from Bugzilla made by Loki Games; when
@@ -44,7 +44,7 @@
     <para>This section last updated 27 Jul 2002</para>
   </section>
 
-  <section id="variant-issuezilla" xreflabel="Issuezilla">
+  <section id="variant-issuezilla">
     <title>Issuezilla</title>
 
     <para>Issuezilla was another fork from Bugzilla, made by collab.net and
@@ -55,7 +55,7 @@
     <para>This section last updated 27 Jul 2002</para>
   </section>
 
-  <section id="variant-scarab" xreflabel="Scarab">
+  <section id="variant-scarab">
     <title>Scarab</title>
 
     <para>Scarab is a new open source bug-tracking system built using Java
@@ -68,7 +68,7 @@
     <para>This section last updated 18 Jan 2003</para>
   </section>
 
-  <section id="variant-perforce" xreflabel="Using Perforce to track bugs">
+  <section id="variant-perforce">
     <title>Perforce SCM</title>
 
     <para>Although Perforce isn't really a bug tracker, it can be used as
@@ -84,7 +84,7 @@
     <para>This section last updated 27 Jul 2002</para>
   </section>
 
-  <section id="variant-sourceforge" xreflabel="SourceForge">
+  <section id="variant-sourceforge">
     <title>SourceForge</title>
 
     <para>SourceForge is a way of coordinating geographically
