@@ -144,6 +144,7 @@ js/src/xpconnect/shell/Makefile
 js/src/xpconnect/src/Makefile
 js/src/xpconnect/tests/Makefile
 js/src/xpconnect/tests/components/Makefile
+js/src/xpconnect/shell/Makefile
 # js/src/xpconnect/md/Makefile
 # js/src/xpconnect/md/unix/Makefile
 # js/src/xpconnect/test/Makefile
