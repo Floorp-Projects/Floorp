@@ -321,11 +321,11 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 	if (line_length == 0)
 		return 0;
 
-	name_buf = (char *)PL_Malloc(line_length * 2 + 10);
+	name_buf = (char *)PR_Malloc(line_length * 2 + 10);
 	if (!name_buf)
 		return MK_OUT_OF_MEMORY;
 
-	addr_buf = (char *)PL_Malloc(line_length * 2 + 10);
+	addr_buf = (char *)PR_Malloc(line_length * 2 + 10);
 	if (!addr_buf)
 	{
 		FREEIF(name_buf);
@@ -845,7 +845,7 @@ msg_quote_phrase_or_addr(PRInt16 csid, char *address, PRInt32 length, PRBool add
     new_length = length + unquotable_count + 3;
 
     in = address;
-    out = orig_out = (char *)PL_Malloc(new_length);
+    out = orig_out = (char *)PR_Malloc(new_length);
 	if (!out)
 	{
 		*orig_address = 0;
@@ -975,7 +975,7 @@ msg_extract_rfc822_address_mailboxes(PRInt16 csid, const char *line)
 		size += j + 2;
 	}
 
-	result = (char*)PL_Malloc(size + 1);
+	result = (char*)PR_Malloc(size + 1);
 	if (!result)
 	{
 		PR_Free(addrs);
@@ -1033,7 +1033,7 @@ msg_extract_rfc822_address_names(PRInt16 csid, const char *line)
 		size += (j1 ? j1 : j2) + 2;
 	}
 
-	result = (char *)PL_Malloc(size + 1);
+	result = (char *)PR_Malloc(size + 1);
 	if (!result)
 	{
 		PR_Free(names);
@@ -1132,7 +1132,7 @@ msg_format_rfc822_addresses (const char *names, const char *addrs,
 		size += j1 + j2 + 10;
 	}
 
-	result = (char *)PL_Malloc(size + 1);
+	result = (char *)PR_Malloc(size + 1);
 	if (!result) return 0;
 
 	out = result;
@@ -1271,21 +1271,21 @@ msg_remove_duplicate_addresses(PRInt16 csid, const char *addrs, const char *othe
 		size2 += j1 + j2 + 10;
 	}
 
-	a_array1 = (char **)PL_Malloc(count1 * sizeof(char *));
+	a_array1 = (char **)PR_Malloc(count1 * sizeof(char *));
 	if (!a_array1) goto FAIL;
-	n_array1 = (char **)PL_Malloc(count1 * sizeof(char *));
+	n_array1 = (char **)PR_Malloc(count1 * sizeof(char *));
 	if (!n_array1) goto FAIL;
 
 	if (count2 > 0)
 	{
-		a_array2 = (char **)PL_Malloc(count2 * sizeof(char *));
+		a_array2 = (char **)PR_Malloc(count2 * sizeof(char *));
 		if (!a_array2) goto FAIL;
 		/* don't need an n_array2 */
 	}
 
-	a_array3 = (char **)PL_Malloc(count1 * sizeof(char *));
+	a_array3 = (char **)PR_Malloc(count1 * sizeof(char *));
 	if (!a_array3) goto FAIL;
-	n_array3 = (char **)PL_Malloc(count1 * sizeof(char *));
+	n_array3 = (char **)PR_Malloc(count1 * sizeof(char *));
 	if (!n_array3) goto FAIL;
 
 
@@ -1347,7 +1347,7 @@ msg_remove_duplicate_addresses(PRInt16 csid, const char *addrs, const char *othe
 		}
 	}
 
-	output = (char *)PL_Malloc(size3 + 1);
+	output = (char *)PR_Malloc(size3 + 1);
 	if (!output) goto FAIL;
 
 	*output = 0;
@@ -1398,7 +1398,7 @@ msg_make_full_address(PRInt16 csid, const char* name, const char* addr)
 	int L;
 	if (al == 0)
 		return 0;
-	buf = (char *)PL_Malloc((nl * 2) + (al * 2) + 20);
+	buf = (char *)PR_Malloc((nl * 2) + (al * 2) + 20);
 	if (!buf)
 		return 0;
 	if (nl > 0)
