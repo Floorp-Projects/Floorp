@@ -539,11 +539,6 @@ finish:
     return statusObj;
 }
 
-#ifdef _WINDOWS
-#define SNPRINTF _snprintf
-#else
-#define SNPRINTF snprintf
-#endif
 
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SSLSocket_setCipherPreference(
