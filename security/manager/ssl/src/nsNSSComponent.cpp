@@ -116,7 +116,12 @@ OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath)
 #endif
 
 // XXX tmp callback for slot password
-extern char * pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg);
+#ifdef NSS_3_4
+extern char * PR_CALLBACK 
+#else
+extern char *
+#endif
+pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg);
 
 #define PIPNSS_STRBUNDLE_URL "chrome://pipnss/locale/pipnss.properties"
 

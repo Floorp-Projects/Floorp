@@ -27,7 +27,13 @@
 #include "pk11func.h"
 #include "nspr.h"
 
-char* PK11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void* arg);
+#ifdef NSS_3_4
+char* PR_CALLBACK
+#else
+char*
+#endif
+PK11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void* arg);
+
 void PR_CALLBACK HandshakeCallback(PRFileDesc *fd, void *client_data);
 SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
                                               PRBool checksig, PRBool isServer);
