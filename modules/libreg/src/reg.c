@@ -371,7 +371,7 @@ fail:
  */
 static void nr_AddNode(REGFILE* pReg);
 static void nr_DeleteNode(REGFILE *pReg);
-static REGFILE* vr_findRegFile(char *filename);
+static REGFILE* vr_findRegFile(const char *filename);
 
 /* -------------------------------------------------------------------- */
 
@@ -411,7 +411,7 @@ static void nr_DeleteNode(REGFILE* pReg)
     XP_FREE( pReg );
 }
 
-static REGFILE* vr_findRegFile(char *filename)
+static REGFILE* vr_findRegFile(const char *filename)
 {
     REGFILE *pReg;
 
@@ -436,7 +436,7 @@ static REGFILE* vr_findRegFile(char *filename)
  *  Platform-specifics go in this section
  * --------------------------------------------------------------------
  */
-static REGERR nr_OpenFile(char *path, FILEHANDLE *fh);
+static REGERR nr_OpenFile(const char *path, FILEHANDLE *fh);
 static REGERR nr_CloseFile(FILEHANDLE *fh); /* Note: fh is a pointer */
 static REGERR nr_ReadFile(FILEHANDLE fh, REGOFF offset, int32 len, void *buffer);
 static REGERR nr_WriteFile(FILEHANDLE fh, REGOFF offset, int32 len, void *buffer);
@@ -446,7 +446,7 @@ static int32  nr_GetFileLength(FILEHANDLE fh);
 /* -------------------------------------------------------------------- */
 
 #ifdef STANDALONE_REGISTRY
-static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
+static REGERR nr_OpenFile(const char *path, FILEHANDLE *fh)
 {
     XP_ASSERT( path != NULL );
     XP_ASSERT( fh != NULL );
@@ -486,7 +486,7 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
 
 }   /* OpenFile */
 #else
-static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
+static REGERR nr_OpenFile(const char *path, FILEHANDLE *fh)
 {
     PR_ASSERT( path != NULL );
     PR_ASSERT( fh != NULL );
@@ -1342,7 +1342,7 @@ static XP_Bool nr_IsValidUTF8(char *string)
  * Path Parsing
  * --------------------------------------------------------------------
  */
-static REGERR nr_NextName(char *pPath, char *buf, uint32 bufsize, char **newPath);
+static REGERR nr_NextName(const char *pPath, char *buf, uint32 bufsize, const char **newPath);
 static REGERR nr_RemoveName(char *path);
 static REGERR nr_CatName(REGFILE *reg, REGOFF node, char *path, uint32 bufsize,
                     REGDESC *desc);
@@ -1354,7 +1354,7 @@ static REGERR nr_ReplaceName(REGFILE *reg, REGOFF node, char *path,
 /* Scans path at 'pPath' and copies next name segment into 'buf'.
  * Also sets 'newPath' to point at the next segment of pPath.
  */
-static REGERR nr_NextName(char *pPath, char *buf, uint32 bufsize, char **newPath)
+static REGERR nr_NextName(const char *pPath, char *buf, uint32 bufsize, const char **newPath)
 {
     uint32 len = 0;
     REGERR err = REGERR_OK;
@@ -1528,10 +1528,10 @@ static REGERR nr_RemoveName(char *path)
  * Key/Entry Management
  * --------------------------------------------------------------------
  */
-static REGERR nr_Find(REGFILE *reg, REGOFF offParent, char *pPath,
+static REGERR nr_Find(REGFILE *reg, REGOFF offParent, const char *pPath,
     REGDESC *pDesc, REGOFF *pPrev, REGOFF *pParent, XP_Bool raw);
 
-static REGERR nr_FindAtLevel(REGFILE *reg, REGOFF offFirst, char *pName,
+static REGERR nr_FindAtLevel(REGFILE *reg, REGOFF offFirst, const char *pName,
     REGDESC *pDesc, REGOFF *pOffPrev);
 
 static REGERR nr_CreateSubKey(REGFILE *reg, REGOFF parent, REGDESC *pDesc,
@@ -1546,7 +1546,7 @@ static REGERR nr_CreateEntry(REGFILE *reg, REGDESC *pParent, char *name,
 
 static REGERR nr_Find(REGFILE *reg,
             REGOFF offParent,
-            char *pPath,
+            const char *pPath,
             REGDESC *pDesc,
             REGOFF *pPrev,
             REGOFF *pParent,
@@ -1557,7 +1557,7 @@ static REGERR nr_Find(REGFILE *reg,
     REGDESC desc;
     REGOFF  offPrev = 0;
     char    namebuf[MAXREGNAMELEN];
-    char    *p;
+    const char    *p;
 
     XP_ASSERT( pPath != NULL );
     XP_ASSERT( offParent >= HDRRESERVE );
@@ -1634,7 +1634,7 @@ static REGERR nr_Find(REGFILE *reg,
  */
 static REGERR nr_FindAtLevel(REGFILE *reg,
                              REGOFF offset,
-                             char *pName,
+                             const char *pName,
                              REGDESC *pDesc,
                              REGOFF *pOffPrev)
 {
@@ -1821,10 +1821,10 @@ static REGERR  nr_InitStdRkeys( REGFILE *reg );
 static XP_Bool nr_ProtectedNode( REGFILE *reg, REGOFF key );
 static REGERR  nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey, XP_Bool raw );
 static REGERR  nr_RegDeleteKey( REGFILE *reg, RKEY key, char *path, XP_Bool raw );
-static REGERR  nr_RegOpen( char *filename, HREG *hReg );
+static REGERR  nr_RegOpen( const char *filename, HREG *hReg );
 static REGERR  nr_RegClose( HREG hReg );
 static char*   nr_GetUsername();
-static char*   nr_GetRegName (char *name);
+static const char* nr_GetRegName (const char *name);
 static int     nr_RegSetBufferSize( HREG hReg, int bufsize );
 
 /* --------------------------------------------------------------------- */
@@ -2139,7 +2139,7 @@ static int nr_RegSetBufferSize( HREG hReg, int bufsize )
 
 
 
-static REGERR nr_RegOpen( char *filename, HREG *hReg )
+static REGERR nr_RegOpen( const char *filename, HREG *hReg )
 {
     REGERR    status = REGERR_OK;
     REGFILE   *pReg;
@@ -2324,7 +2324,7 @@ static char *nr_GetUsername()
   }
 }
 
-static char* nr_GetRegName (char *name)
+static const char* nr_GetRegName (const char *name)
 {
     if (name == NULL || *name == '\0') {
         XP_ASSERT( globalRegName != NULL );
@@ -2493,7 +2493,7 @@ VR_INTERFACE(REGERR) NR_RegGetUniqueName(HREG hReg, char* outbuf, uint32 buflen)
  * Output:
  * ---------------------------------------------------------------------
  */
-VR_INTERFACE(REGERR) NR_RegOpen( char *filename, HREG *hReg )
+VR_INTERFACE(REGERR) NR_RegOpen( const char *filename, HREG *hReg )
 {
     REGERR    status = REGERR_OK;
 
@@ -2819,7 +2819,7 @@ VR_INTERFACE(REGERR) NR_RegDeleteKeyRaw( HREG hReg, RKEY key, char *keyname )
  *    result   - if successful the RKEY of the specified sub-key
  * ---------------------------------------------------------------------
  */
-VR_INTERFACE(REGERR) NR_RegGetKey( HREG hReg, RKEY key, char *path, RKEY *result )
+VR_INTERFACE(REGERR) NR_RegGetKey( HREG hReg, RKEY key, const char *path, RKEY *result )
 {
     REGERR      err;
     REGOFF      start;

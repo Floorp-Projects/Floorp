@@ -172,8 +172,8 @@ VR_INTERFACE(int) NR_RegSetBufferSize(
  * ---------------------------------------------------------------------
  */
 VR_INTERFACE(REGERR) NR_RegOpen(
-         char *filename,   /* reg. file to open (NULL == standard registry) */
-         HREG *hReg        /* OUT: handle to opened registry */
+         const char *filename, /* reg. file to open (NULL == standard registry) */
+         HREG *hReg            /* OUT: handle to opened registry */
        );
 
 
@@ -377,7 +377,7 @@ VR_INTERFACE(REGERR) NR_RegDeleteKeyRaw(
 VR_INTERFACE(REGERR) NR_RegGetKey(
          HREG hReg,        /* handle of open registry */
          RKEY key,         /* root key */
-         char *path,       /* relative path of subkey to find */
+         const char *path, /* relative path of subkey to find */
          RKEY *result      /* returns RKEY of specified sub-key */
        );
 
