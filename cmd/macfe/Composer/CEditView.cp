@@ -2471,11 +2471,18 @@ void CEditView::ClickSelf( const SMouseDownEvent &where )
 	
 	FLUSH_JAPANESE_TEXT
 	
-	// the user may have clicked in a new location
-	// erase caret in case it happens to be drawn in the window now
+	// the user may have clicked in a new location erase caret in case it happens to be drawn in the window now
 	EraseCaret();
 	
-	FocusDraw();
+	// There is a problem with the last line because Idling is still on and 
+	// we may just redraw the caret before the InvalRect updates the screen.  So instead of
+	// calling FocusDraw, we use the same "hack" as the one used in CEditView::DocumentChanged. 
+	// The following four lines cause the updated region to be redrawn immediately.
+	
+	Rect	updateRect;
+	CalcPortFrameRect( updateRect );	
+	InvalPortRect( &updateRect );
+	UpdatePort();
 	
 	SPoint32 firstP;
 	LocalToImagePoint( where.whereLocal, firstP );
@@ -3133,7 +3140,10 @@ void CEditView::ToFromList(intn listType, ED_ListType elementType)
 			EDT_MorphContainer( *GetContext(), P_LIST_ITEM );
 			list = EDT_GetListData( *GetContext() );
 			if ( list == NULL )
+			{
+				EDT_EndBatchChanges ( *GetContext() );
 				return;	// assert?
+			}
 		}
 		
 		list->iTagType = listType;
