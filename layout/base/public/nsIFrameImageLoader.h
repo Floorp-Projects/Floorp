@@ -53,6 +53,7 @@ public:
                   const nsString& aURL,
                   const nscolor* aBackgroundColor,
                   nsIFrame* aTargetFrame,
+                  const nsSize& aDesiredSize,
                   nsFrameImageLoaderCB aCallBack,
                   PRBool aNeedSizeUpdate,
                   PRBool aNeedErrorNotification) = 0;
