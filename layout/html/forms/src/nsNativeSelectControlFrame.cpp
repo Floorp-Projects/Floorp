@@ -108,7 +108,7 @@ public:
                                 nsString* aValues, nsString* aNames);
 
   NS_METHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
-  virtual void Reset();
+  virtual void Reset(nsIPresContext* aPresContext);
 
   NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
                            nsIPresShell&   aPresShell,
@@ -655,7 +655,7 @@ nsNativeSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
     }
   }
 
-  Reset();  // initializes selections
+  Reset(aPresContext);  // initializes selections
 }
 
 nsresult
@@ -766,7 +766,7 @@ nsNativeSelectControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumV
 
 
 void
-nsNativeSelectControlFrame::Reset() 
+nsNativeSelectControlFrame::Reset(nsIPresContext* aPresContext)
 {
   if (mCachedState) {
     mCachedState = PR_FALSE;
