@@ -22,6 +22,8 @@
 
 #include "rdf_util.h"
 
+#include "ns_globals.h" // for prLogModuleInfo
+
 #include "nsIServiceManager.h"
 
 static PRBool rdf_inited = PR_FALSE;
@@ -152,7 +154,6 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
     if (result) {
         // It's a folder
         
-        printf("FOLDER:\n");
         rdf_printArcLabels(currentResource);
 
         // see if it has a name target
@@ -168,15 +169,20 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
                                       getter_AddRefs(literal));
             if (NS_SUCCEEDED(rv)) {
                 rv = literal->GetValueConst(&textForNode);
-                printf("folder: %S\n", textForNode);
             }
             else {
-                printf("recursiveResourceTraversal: node is not an nsIRDFLiteral.\n");
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("recursiveResourceTraversal: node is not an nsIRDFLiteral.\n"));
+                }
             }
             
         } 
         else {
-            printf("recursiveResourceTraversal: can't get name from currentResource.\n");
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("recursiveResourceTraversal: can't get name from currentResource.\n"));
+            }
         }
             
         // get a container in order to recurr
@@ -185,13 +191,19 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
                                                 NS_GET_IID(nsIRDFContainer),
                                                 getter_AddRefs(container));
         if (NS_FAILED(rv)) {
-            printf("recursiveResourceTraversal: can't get a new container\n");
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("recursiveResourceTraversal: can't get a new container\n"));
+            }
             return;
         }
         
         rv = container->Init(gBookmarksDataSource, currentResource);
         if (NS_FAILED(rv)) {
-            printf("recursiveResourceTraversal: can't init container\n");
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("recursiveResourceTraversal: can't init container\n"));
+            }
             return;
         }
         
@@ -199,20 +211,29 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
         rv = container->GetElements(getter_AddRefs(elements));
 
         if (NS_FAILED(rv)) {
-            printf("recursiveResourceTraversal: can't get elements from folder\n");
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("recursiveResourceTraversal: can't get elements from folder\n"));
+            }
             return;
         }
 
         rv = elements->HasMoreElements(&result);
         if (NS_FAILED(rv)) {
-            printf("recursiveResourceTraversal: folder %s has no children.\n",
-                   textForNode); 
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("recursiveResourceTraversal: folder %s has no children.\n",
+                        textForNode)); 
+            }
             return;
         }
         while (result) {
             rv = elements->GetNext(getter_AddRefs(supportsResult));
             if (NS_FAILED(rv)) {
-                printf("Exception: Can't get next from enumerator.\n");
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("Exception: Can't get next from enumerator.\n"));
+                }
                 return;
             }
 
@@ -220,7 +241,10 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
             rv = supportsResult->QueryInterface(NS_GET_IID(nsIRDFResource), 
                                                 getter_AddRefs(childResource));
             if (NS_FAILED(rv)) {
-                printf("Exception: next from enumerator is not an nsIRDFResource.\n");
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("Exception: next from enumerator is not an nsIRDFResource.\n"));
+                }
                 return;
             }
 
@@ -228,14 +252,16 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
 
             rv = elements->HasMoreElements(&result);
             if (NS_FAILED(rv)) {
-                printf("Exception: can't tell if we have more elements.\n"); 
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("Exception: can't tell if we have more elements.\n")); 
+                }
                 return;
             }
         }
     }
     else {
         // It's a bookmark
-        printf("BOOKMARK:\n");
         rdf_printArcLabels(currentResource);
 
         // see if it has a URL target
@@ -245,7 +271,10 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
                                                     kNC_URL, PR_TRUE, 
                                                     getter_AddRefs(node));
         if (NS_FAILED(rv)) {
-            printf("recursiveResourceTraversal: can't get url from currentResource\n");
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("recursiveResourceTraversal: can't get url from currentResource\n"));
+            }
             return;
         }
         
@@ -253,18 +282,29 @@ void rdf_recursiveResourceTraversal(nsCOMPtr<nsIRDFResource> currentResource)
         rv = node->QueryInterface(NS_GET_IID(nsIRDFLiteral), 
                                   getter_AddRefs(literal));
         if (NS_FAILED(rv)) {
-            printf("recursiveResourceTraversal: node is not an nsIRDFLiteral.\n");
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("recursiveResourceTraversal: node is not an nsIRDFLiteral.\n"));
+            }
             return;
         }
 
         // get the value of the literal
         rv = literal->GetValueConst(&textForNode);
         if (NS_FAILED(rv)) {
-            printf("recursiveResourceTraversal: node doesn't have a value.\n");
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("recursiveResourceTraversal: node doesn't have a value.\n"));
+            }
             return;
         }
 
-        printf("\turl: %S\n", textForNode);
+#if DEBUG_RAPTOR_CANVAS
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("\turl: %S\n", textForNode));
+        }
+#endif
         
     }
     
@@ -282,30 +322,45 @@ void rdf_printArcLabels(nsCOMPtr<nsIRDFResource> currentResource)
 
     rv = currentResource->GetValueConst(&currentResourceValue);
     if (NS_SUCCEEDED(rv)) {
-        printf("resource: %s\n", currentResourceValue);
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("resource: %s\n", currentResourceValue));
+        }
     }
     else {
-        printf("printArcLabels: can't get value from current resource.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("printArcLabels: can't get value from current resource.\n"));
+        }
     }
 
     rv = gBookmarksDataSource->ArcLabelsOut(currentResource, 
                                             getter_AddRefs(labels));
 
     if (NS_FAILED(rv)) {
-        printf("printArcLabels: currentResource has no outgoing arcs.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("printArcLabels: currentResource has no outgoing arcs.\n"));
+        }
         return;
     }
     
     rv = labels->HasMoreElements(&result);
     if (NS_FAILED(rv)) {
-        printf("printArcLabels: can't get elements from currentResource's enum.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("printArcLabels: can't get elements from currentResource's enum.\n"));
+        }
         return;
     }
 
     while (result) {
         rv = labels->GetNext(getter_AddRefs(supportsResult));
         if (NS_FAILED(rv)) {
-            printf("printArcLabels: Can't get next arc from enumerator.\n");
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("printArcLabels: Can't get next arc from enumerator.\n"));
+            }
             return;
         }
         
@@ -315,18 +370,30 @@ void rdf_printArcLabels(nsCOMPtr<nsIRDFResource> currentResource)
         if (NS_SUCCEEDED(rv)) {
             rv = resourceResult->GetValueConst(&arcLabel);
             if (NS_SUCCEEDED(rv)) {
-                printf("\tarc label: %s\n", arcLabel);
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("\tarc label: %s\n", arcLabel));
+                }
             }
             else {
-                printf("printArcLabels: can't get value from current arc.\n");
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("printArcLabels: can't get value from current arc.\n"));
+                }
             }
         }
         else {
-            printf("printArcLabels: next arc from enumerator is not an nsIRDFResource.\n");
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("printArcLabels: next arc from enumerator is not an nsIRDFResource.\n"));
+            }
         }
         rv = labels->HasMoreElements(&result);
         if (NS_FAILED(rv)) {
-            printf("printArcLabels: can't get elements from currentResource's enum.\n");
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("printArcLabels: can't get elements from currentResource's enum.\n"));
+            }
             return;
         }
     }

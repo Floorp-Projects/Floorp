@@ -147,7 +147,12 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStartDocumentLoad(nsIDocumentLoader*
 							      nsIURI* aURL, 
 							      const char* aCommand) 
 {
-    printf("DocumentLoaderObserverImpl.cpp: OnStartDocumentLoad\n");
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("DocumentLoaderObserverImpl.cpp: OnStartDocumentLoad\n"));
+    }
+#endif
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mTarget, 
 			 maskValues[START_DOCUMENT_LOAD_EVENT_MASK]);
@@ -159,7 +164,12 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnEndDocumentLoad(nsIDocumentLoader* l
 							    nsIChannel* channel, 
 							    nsresult aStatus) 
 {
-    printf("!!DocumentLoaderObserverImpl.cpp: OnEndDocumentLoad\n");
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("!!DocumentLoaderObserverImpl.cpp: OnEndDocumentLoad\n"));
+    }
+#endif
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mTarget, 
@@ -170,7 +180,12 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnEndDocumentLoad(nsIDocumentLoader* l
 NS_IMETHODIMP DocumentLoaderObserverImpl::OnStartURLLoad(nsIDocumentLoader* loader, 
 							 nsIChannel* channel) 
 {
-    printf("!DocumentLoaderObserverImpl: OnStartURLLoad\n");
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("!DocumentLoaderObserverImpl: OnStartURLLoad\n"));
+    }
+#endif
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
 			 maskValues[START_URL_LOAD_EVENT_MASK]);
     
@@ -182,7 +197,12 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnProgressURLLoad(nsIDocumentLoader* l
 			       PRUint32 aProgress, 
                                PRUint32 aProgressMax) 
 {
-    printf("!DocumentLoaderObserverImpl: OnProgressURLLoad\n");
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("!DocumentLoaderObserverImpl: OnProgressURLLoad\n"));
+    }
+#endif
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
 			 maskValues[PROGRESS_URL_LOAD_EVENT_MASK]);
 
@@ -194,7 +214,12 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnStatusURLLoad(nsIDocumentLoader* loa
 			     nsIChannel* channel, 
 			     nsString& aMsg) 
 {
-    printf("!DocumentLoaderObserverImpl: OnStatusURLLoad\n");
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("!DocumentLoaderObserverImpl: OnStatusURLLoad\n"));
+    }
+#endif
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
 			 maskValues[STATUS_URL_LOAD_EVENT_MASK]);
 
@@ -206,7 +231,12 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnEndURLLoad(nsIDocumentLoader* loader
 			  nsIChannel* channel, 
 			  nsresult aStatus) 
 {
-    printf("!DocumentLoaderObserverImpl: OnEndURLLoad\n");
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("!DocumentLoaderObserverImpl: OnEndURLLoad\n"));
+    }
+#endif
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
 			 maskValues[END_URL_LOAD_EVENT_MASK]);
 
@@ -218,7 +248,12 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::HandleUnknownContentType(nsIDocumentLo
 				      const char *aContentType,
 				      const char *aCommand) 
 {
-    printf("!DocumentLoaderObserverImpl: HandleUnknownContentType\n");
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("!DocumentLoaderObserverImpl: HandleUnknownContentType\n"));
+    }
+#endif
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, mTarget, 
 			 maskValues[UNKNOWN_CONTENT_EVENT_MASK]);
     

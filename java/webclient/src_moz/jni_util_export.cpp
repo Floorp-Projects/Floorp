@@ -27,6 +27,8 @@
 
 #include "nscore.h" // for nsnull
 
+#include "ns_globals.h" // for prLogModuleInfo
+
 JNIEXPORT const char * JNICALL util_GetStringUTFChars(JNIEnv *env, 
                                                       jstring inString)
 {
@@ -101,7 +103,10 @@ JNIEXPORT  void JNICALL util_DeleteStringUTF(JNIEnv *env, jstring toDelete)
 #ifdef BAL_INTERFACE
     util_DeleteString(env, toDelete);
 #else
-    printf("This shouldn't get called in a non-BAL context!\n");
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("This shouldn't get called in a non-BAL context!\n"));
+    }
 #endif
 
 }
@@ -123,7 +128,10 @@ JNIEXPORT  void JNICALL util_DeleteString(JNIEnv *env, jstring toDelete)
 #ifdef BAL_INTERFACE
     bal_jstring_release(toDelete);
 #else
-    printf("This shouldn't get called in a non-BAL context!\n");
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("This shouldn't get called in a non-BAL context!\n"));
+    }
 #endif
 
 }

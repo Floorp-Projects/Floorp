@@ -99,7 +99,6 @@ wsResizeEvent::handleEvent ()
     nsresult rv = NS_ERROR_FAILURE;
     if (mWebShell) {
         
-        printf("handleEvent(resize(x = %d y = %d w = %d h = %d))\n", mLeft, mBottom, mWidth, mHeight);
         nsCOMPtr<nsIBaseWindow> baseWindow;
         
         rv = mWebShell->QueryInterface(NS_GET_IID(nsIBaseWindow),
@@ -111,7 +110,6 @@ wsResizeEvent::handleEvent ()
         rv = baseWindow->SetPositionAndSize(mLeft, mBottom, mWidth, mHeight, 
                                             PR_TRUE);
         
-        printf("result = %lx\n", rv);
         
         return (void *) rv;
     }
@@ -139,11 +137,7 @@ wsLoadURLEvent::handleEvent ()
 {
         if (mWebShell && mURL) {
                 
-                printf("handleEvent(loadURL))\n");
-
                 nsresult rv = mWebShell->LoadURL(mURL->GetUnicode());
-
-                printf("result = %lx\n", rv);
         }
         return nsnull;
 } // handleEvent()
@@ -172,12 +166,7 @@ void *
 wsStopEvent::handleEvent ()
 {
         if (mWebShell) {
-                
-                printf("handleEvent(Stop))\n");
-
                 nsresult rv = mWebShell->Stop();
-
-                printf("result = %lx\n", rv);
         }
         return nsnull;
 } // handleEvent()
@@ -199,9 +188,6 @@ void *
 wsShowEvent::handleEvent ()
 {
         if (mWebShell) {
-                
-                printf("handleEvent(Show))\n");
-
                 nsresult rv;
                 nsCOMPtr<nsIBaseWindow> baseWindow;
                 
@@ -212,8 +198,6 @@ wsShowEvent::handleEvent ()
                     return nsnull;
                 }
                 baseWindow->SetVisibility(PR_TRUE);
-                
-                printf("result = %lx\n", rv);
         }
         return nsnull;
 } // handleEvent()
@@ -235,9 +219,6 @@ void *
 wsHideEvent::handleEvent ()
 {
         if (mWebShell) {
-                
-                printf("handleEvent(Hide))\n");
-
                 nsresult rv;
                 nsCOMPtr<nsIBaseWindow> baseWindow;
                 
@@ -248,8 +229,6 @@ wsHideEvent::handleEvent ()
                     return nsnull;
                 }
                 baseWindow->SetVisibility(PR_FALSE);
-                
-                printf("result = %lx\n", rv);
         }
         return nsnull;
 } // handleEvent()
@@ -273,9 +252,6 @@ void *
 wsMoveToEvent::handleEvent ()
 {
         if (mWebShell) {
-                
-                printf("handleEvent(MoveTo(%ld, %ld))\n", mX, mY);
-
                 nsresult rv;
                 nsCOMPtr<nsIBaseWindow> baseWindow;
                 
@@ -286,8 +262,6 @@ wsMoveToEvent::handleEvent ()
                     return nsnull;
                 }
                 rv = baseWindow->SetPosition(mX, mY);
-
-                printf("result = %lx\n", rv);
         }
         return nsnull;
 } // handleEvent()
@@ -308,9 +282,6 @@ void *
 wsSetFocusEvent::handleEvent ()
 {
         if (mWebShell) {
-                
-                printf("handleEvent(SetFocus())\n");
-
                 nsresult rv;
                 nsCOMPtr<nsIBaseWindow> baseWindow;
                 
@@ -321,8 +292,6 @@ wsSetFocusEvent::handleEvent ()
                     return nsnull;
                 }
                 rv = baseWindow->SetFocus();
-
-                printf("result = %lx\n", rv);
         }
         return nsnull;
 } // handleEvent()
@@ -344,12 +313,7 @@ void *
 wsRemoveFocusEvent::handleEvent ()
 {
         if (mWebShell) {
-                
-                printf("handleEvent(RemoveFocus())\n");
-
                 nsresult rv = mWebShell->RemoveFocus();
-
-                printf("result = %lx\n", rv);
         }
         return nsnull;
 } // handleEvent()
@@ -372,9 +336,6 @@ void *
 wsRepaintEvent::handleEvent ()
 {
         if (mWebShell) {
-                
-                printf("handleEvent(Repaint(%d))\n", mForceRepaint);
-
                 nsresult rv;
                 nsCOMPtr<nsIBaseWindow> baseWindow;
                 
@@ -385,8 +346,6 @@ wsRepaintEvent::handleEvent ()
                     return nsnull;
                 }
                 rv = baseWindow->Repaint(mForceRepaint);
-
-                printf("result = %lx\n", rv);
         }
         return nsnull;
 } // handleEvent()
@@ -411,7 +370,6 @@ wsCanBackEvent::handleEvent ()
         nsresult rv;
         PRBool canGoBack;
         
-        printf("handleEvent(CanBack()): ");
         rv = mHistory->CanGoBack(&canGoBack);
         
         if (NS_FAILED(rv)) {
@@ -419,13 +377,6 @@ wsCanBackEvent::handleEvent ()
         }
         
         result = (void *)canGoBack;
-        
-        if (PR_TRUE == canGoBack) {
-            printf("result: true\n");
-        }
-        else {
-            printf("result: false\n");
-        }
     }
     return result;
 } // handleEvent()
@@ -448,7 +399,6 @@ wsCanForwardEvent::handleEvent ()
         nsresult rv;
         PRBool canGoForward;
         
-        printf("handleEvent(CanForward()): ");
         rv = mHistory->CanGoForward(&canGoForward);
         
         if (NS_FAILED(rv)) {
@@ -457,12 +407,6 @@ wsCanForwardEvent::handleEvent ()
         
         result = (void *)canGoForward;
         
-        if (PR_TRUE == canGoForward) {
-            printf("result: true\n");
-        }
-        else {
-            printf("result: false\n");
-        }
     }
     return result;
 } // handleEvent()
@@ -485,11 +429,7 @@ wsBackEvent::handleEvent ()
 {
     void *result = nsnull;
     if (mHistory && mWebShell) {
-        printf("handleEvent(Back())\n");
-
         nsresult rv = mHistory->GoBack(mWebShell);
-        
-        printf("result = %lx\n", rv);
         
         result = (void *) rv;
     }
@@ -516,12 +456,7 @@ wsForwardEvent::handleEvent ()
     void *result = nsnull;
     if (mHistory && mWebShell) {
                 
-        printf("handleEvent(Forward())\n");
-
         nsresult rv = mHistory->GoForward(mWebShell);
-        
-        printf("result = %lx\n", rv);
-        
         result = (void *) rv;
     }
     return result;
@@ -546,13 +481,7 @@ wsGoToEvent::handleEvent ()
 {
     void *result = nsnull;
     if (mHistory && mWebShell) {
-                
-        printf("handleEvent(GoTo(%ld))\n", mHistoryIndex);
-        
         nsresult rv = mHistory->Goto(mHistoryIndex, mWebShell, PR_TRUE);
-                
-        printf("result = %lx\n", rv);
-        
         result = (void *) rv;
     }
     return result;
@@ -575,15 +504,9 @@ wsGetHistoryLengthEvent::handleEvent ()
 {
     void *result = nsnull;
     if (mHistory) {
-                
-        printf("handleEvent(wsGetHistoryLengthEvent())\n");
-
         PRInt32 historyLength = 0;
         
         nsresult rv = mHistory->GetHistoryLength(&historyLength);
-        
-        printf("result = %lx\n", rv);
-        
         result = (void *) historyLength;
     }
     return result;
@@ -606,15 +529,9 @@ wsGetHistoryIndexEvent::handleEvent ()
 {
     void *result = nsnull;
     if (mHistory) {
-                
-        printf("handleEvent(wsGetHistoryIndexEvent())\n");
-
         PRInt32 historyIndex = 0;
 
         nsresult rv = mHistory->GetCurrentIndex(&historyIndex);
-                
-        printf("result = %lx\n", rv);
-        
         result = (void *) historyIndex;
     }
     return result;
@@ -644,7 +561,6 @@ wsGetURLEvent::handleEvent ()
         nsresult rv;
 
         rv = mHistory->GetCurrentIndex(&currentIndex);
-        printf("handleEvent(wsGetURLEvent(%ld))\n", currentIndex);
         
         if (NS_FAILED(rv)) {
             return result;
@@ -656,9 +572,6 @@ wsGetURLEvent::handleEvent ()
         if (NS_FAILED(rv)) {
             return result;
         }
-        
-        printf("wsGetURLEvent: currentIndex: %ld, currentURL: %s\n",
-               currentIndex, currentURL);
         
         result = (void *) currentURL;
     }
@@ -684,18 +597,11 @@ wsGetURLForIndexEvent::handleEvent ()
     if (mHistory) {
         nsresult rv;
         char *indexURL = nsnull;
-
-        printf("handleEvent(GetURLForIndex(%ld))\n", mHistoryIndex);
-        
         rv = mHistory->GetURLForIndex(mHistoryIndex, &indexURL);
 
         if (NS_FAILED(rv)) {
             return result;
         }
-                
-        printf("wsGetURLForIndexEvent: index: %ld, indexURL: %s\n",
-               mHistoryIndex, indexURL);
-        
         result = (void *) indexURL;
     }
     return result;
@@ -721,13 +627,7 @@ void *
 wsRefreshEvent::handleEvent ()
 {
         if (mWebShell) {
-                
-                printf("handleEvent(Refresh())\n");
-
                 nsresult rv = mWebShell->Reload(loadFlags);
-                
-                printf("result = %lx\n", rv);
-
                 return (void *) rv;
         }
         return nsnull;
@@ -746,12 +646,8 @@ wsAddDocLoaderObserverEvent::handleEvent ()
     void *result = nsnull;
     
     if (mDocShell && mDocObserver) {
-        printf("handleEvent(AddDocLoaderObserver())\n");
         
         nsresult rv = mDocShell->SetDocLoaderObserver(mDocObserver);
-                
-        printf("result = %lx\n", rv);
-        
         result = (void *) rv;
     }
     return result;

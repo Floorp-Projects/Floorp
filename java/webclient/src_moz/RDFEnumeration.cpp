@@ -100,7 +100,10 @@ Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeNextElement
   
   rv = enumerator->GetNext(getter_AddRefs(supportsResult));
   if (NS_FAILED(rv)) {
-      printf("Exception: nativeNextElement: Can't get next from enumerator.\n");
+      if (prLogModuleInfo) {
+          PR_LOG(prLogModuleInfo, 3, 
+                 ("Exception: nativeNextElement: Can't get next from enumerator.\n"));
+      }
       return result;
   }
   
@@ -108,7 +111,10 @@ Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeNextElement
   rv = supportsResult->QueryInterface(NS_GET_IID(nsIRDFNode), 
                                       getter_AddRefs(nodeResult));
   if (NS_FAILED(rv)) {
-      printf("Exception: nativeNextElement: next from enumerator is not an nsIRDFNode.\n");
+      if (prLogModuleInfo) {
+          PR_LOG(prLogModuleInfo, 3, 
+                 ("Exception: nativeNextElement: next from enumerator is not an nsIRDFNode.\n"));
+      }
       return result;
   }
 
@@ -126,7 +132,10 @@ Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeFinalize
     // release the nsISimpleEnumerator
     if (-1 == (nativeEnum = 
                ::util_GetIntValueFromInstance(env, obj, "nativeEnum"))) {
-        printf("nativeFinalize: Can't get fieldID for nativeEnum.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("nativeFinalize: Can't get fieldID for nativeEnum.\n"));
+        }
         return;
     }
     nsCOMPtr<nsISimpleEnumerator> enumerator = 
@@ -136,7 +145,10 @@ Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeFinalize
     // release the nsIRDFContainer
     if (-1 == (nativeContainer = 
                ::util_GetIntValueFromInstance(env, obj, "nativeContainer"))) {
-        printf("nativeFinalize: Can't get fieldID for nativeContainerFieldID.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("nativeFinalize: Can't get fieldID for nativeContainerFieldID.\n"));
+        }
         return;
     }
     nsCOMPtr<nsIRDFContainer> container = 
@@ -174,7 +186,10 @@ jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
     rv = node->QueryInterface(NS_GET_IID(nsIRDFResource), 
                               getter_AddRefs(nodeResource));
     if (NS_FAILED(rv)) {
-        printf("getNativeEnumFromJava: Argument nativeRDFNode isn't an nsIRDFResource.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("getNativeEnumFromJava: Argument nativeRDFNode isn't an nsIRDFResource.\n"));
+        }
         return -1;
     }
     
@@ -184,19 +199,28 @@ jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
                                             NS_GET_IID(nsIRDFContainer),
                                             getter_AddRefs(container));
     if (NS_FAILED(rv)) {
-        printf("recursiveResourceTraversal: can't get a new container\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("recursiveResourceTraversal: can't get a new container\n"));
+        }
         return -1;
     }
     
     rv = container->Init(gBookmarksDataSource, nodeResource);
     if (NS_FAILED(rv)) {
-        printf("getNativeEnumFromJava: Can't Init container.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("getNativeEnumFromJava: Can't Init container.\n"));
+        }
         return -1;
     }
 
     rv = container->GetElements(getter_AddRefs(enumerator));
     if (NS_FAILED(rv)) {
-        printf("getNativeEnumFromJava: Can't get enumeration from container.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("getNativeEnumFromJava: Can't get enumeration from container.\n"));
+        }
         return -1;
     }
 

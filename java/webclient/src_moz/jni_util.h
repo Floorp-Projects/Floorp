@@ -44,6 +44,8 @@
 #include "nsIWebShell.h" // for nsIWebShell
 #include "nsIEventQueueService.h" // for PLEventQueue
 
+#include "ns_globals.h"
+
 // Ashu
 #ifdef XP_UNIX
 #include "nsIWidget.h" // for GTKWidget
@@ -91,7 +93,7 @@ enum {
     kClipboardWebShellError
 };
 
-extern JavaVM *gVm;
+extern JavaVM *gVm; // defined in jni_util.cpp
 
 void    util_ThrowExceptionToJava (JNIEnv * env, const char * message);
 

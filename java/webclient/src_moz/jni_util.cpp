@@ -27,7 +27,8 @@
 
 #include "jni_util.h"
 
-JavaVM *gVm = nsnull;
+JavaVM *gVm = nsnull; // declared in ns_globals.h, which is included in
+                      // jni_util.h
 
 void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
 {
@@ -113,7 +114,10 @@ void util_SendEventToJava(JNIEnv *yourEnv, jobject nativeEventThread,
         env->CallVoidMethod(nativeEventThread, mid, webclientEventListener,
                             eventType);
     } else {
-        printf("cannot call the Java Method!\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("cannot call the Java Method!\n"));
+        }
     }
 }
 
@@ -293,13 +297,19 @@ jint util_GetIntValueFromInstance(JNIEnv *env, jobject obj,
 #else
     jclass objClass = env->GetObjectClass(obj);
     if (nsnull == objClass) {
-        printf("util_GetIntValueFromInstance: Can't get object class from instance.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("util_GetIntValueFromInstance: Can't get object class from instance.\n"));
+        }
         return result;
     }
 
     jfieldID theFieldID = env->GetFieldID(objClass, fieldName, "I");
     if (nsnull == theFieldID) {
-        printf("util_GetIntValueFromInstance: Can't get fieldID for fieldName.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("util_GetIntValueFromInstance: Can't get fieldID for fieldName.\n"));
+        }
         return result;
     }
 
@@ -315,13 +325,19 @@ void util_SetIntValueForInstance(JNIEnv *env, jobject obj,
 #else
     jclass objClass = env->GetObjectClass(obj);
     if (nsnull == objClass) {
-        printf("util_SetIntValueForInstance: Can't get object class from instance.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("util_SetIntValueForInstance: Can't get object class from instance.\n"));
+        }
         return;
     }
 
     jfieldID fieldID = env->GetFieldID(objClass, fieldName, "I");
     if (nsnull == fieldID) {
-        printf("util_SetIntValueForInstance: Can't get fieldID for fieldName.\n");
+        if (prLogModuleInfo) {
+            PR_LOG(prLogModuleInfo, 3, 
+                   ("util_SetIntValueForInstance: Can't get fieldID for fieldName.\n"));
+        }
         return;
     }
     
@@ -362,7 +378,6 @@ JNU_CallMethodByNameV(JNIEnv *env,
     jmethodID mid;
     jvalue result;
     const char *p = signature;
-    printf("jni_util: call method by name if 0");
     /* find out the return type */
     while (*p && *p != ')')
         p++;
@@ -372,14 +387,10 @@ JNU_CallMethodByNameV(JNIEnv *env,
 	
     if (env->EnsureLocalCapacity(3) < 0)
         goto done2;
-    printf("jni_util: call method by name if 1");
     clazz = env->GetObjectClass(obj);
-    printf("jni_util: call method by name 2");
     mid = env->GetMethodID(clazz, name, signature);
-    printf("jni_util: call method by name 3");
     if (mid == 0)
         goto done1;
-    printf("jni_util: call method by name if 4");
     switch (*p) {
     case 'V':
         env->CallVoidMethodV(obj, mid, args);

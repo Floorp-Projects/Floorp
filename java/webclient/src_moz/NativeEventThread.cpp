@@ -313,12 +313,17 @@ static void event_processor_callback(gpointer data,
                                      gint source,
                                      GdkInputCondition condition) {
 #if DEBUG_RAPTOR_CANVAS
-    printf("EventHandler: event_processor_callback()\n");
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3,
+               "EventHandler: event_processor_callback()\n");
+    }
 #endif
     nsIEventQueue *eventQueue = (nsIEventQueue*)data;
     eventQueue->ProcessPendingEvents();
 #if DEBUG_RAPTOR_CANVAS
-    printf("EventHandler: Done processing pending events\n");
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, "EventHandler: Done processing pending events\n");
+    }
 #endif
 }
 #endif
@@ -333,7 +338,11 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     //TODO Add tracing from nspr.
     
 #if DEBUG_RAPTOR_CANVAS
-    printf("InitMozillaStuff(%lx): Create the Event Queue for the UI thread...\n", initContext);
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("InitMozillaStuff(%lx): Create the Event Queue for the UI thread...\n", 
+               initContext));
+    }
 #endif
     
     // Create the Event Queue for the UI thread...
@@ -355,11 +364,15 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     if (initContext->embeddedThread) {
 
 #if DEBUG_RAPTOR_CANVAS
-		printf("InitMozillaStuff(%lx): embeddedThread != nsnull\n", initContext);
+    if (prLogModuleInfo) {
+		PR_LOG(prLogModuleInfo, 3, ("InitMozillaStuff(%lx): embeddedThread != nsnull\n", initContext));
+    }
 #endif
 		if (initContext->actionQueue == nsnull) {
 #if DEBUG_RAPTOR_CANVAS
-			printf("InitMozillaStuff(%lx): Create the action queue\n", initContext);
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, ("InitMozillaStuff(%lx): Create the action queue\n", initContext));
+            }
 #endif
             // We need to do something different for Unix
             nsIEventQueue * EQueue = nsnull;
@@ -390,7 +403,10 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     }
 
 #if DEBUG_RAPTOR_CANVAS
-	printf("InitMozillaStuff(%lx): Create the WebShell...\n", initContext);
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("InitMozillaStuff(%lx): Create the WebShell...\n", initContext));
+    }
 #endif
     // Create the WebShell.
     rv = nsRepository::CreateInstance(kWebShellCID, nsnull, kIWebShellIID, getter_AddRefs(initContext->webShell));
@@ -400,7 +416,10 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     }
     
 #if DEBUG_RAPTOR_CANVAS
-	printf("InitMozillaStuff(%lx): Init the WebShell...\n", initContext);
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("InitMozillaStuff(%lx): Init the WebShell...\n", initContext));
+    }
 #endif
    
 #ifdef XP_UNIX
@@ -420,7 +439,10 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     }
 
 #if DEBUG_RAPTOR_CANVAS
-	printf("InitMozillaStuff(%lx): Install Prefs in the Webshell...\n", initContext);
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("InitMozillaStuff(%lx): Install Prefs in the Webshell...\n", initContext));
+    }
 #endif
 
     nsIPref *prefs;
@@ -451,7 +473,10 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     initContext->sessionHistory = gHistory;
     
 #if DEBUG_RAPTOR_CANVAS
-	printf("InitMozillaStuff(%lx): Show the WebShell...\n", initContext);
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("InitMozillaStuff(%lx): Show the WebShell...\n", initContext));
+    }
 #endif
 
     nsCOMPtr<nsIBaseWindow> baseWindow;
@@ -482,7 +507,10 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     initContext->initComplete = TRUE;
     
 #if DEBUG_RAPTOR_CANVAS
-    printf("InitMozillaStuff(%lx): enter event loop\n", initContext);
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("InitMozillaStuff(%lx): enter event loop\n", initContext));
+    }
 #endif
 
     // Just need to loop once to clear out events before returning

@@ -50,23 +50,6 @@ Java_org_mozilla_webclient_wrapper_1native_HistoryImpl_nativeBack
           new wsBackEvent(initContext->sessionHistory, initContext->webShell);
       PLEvent	   	* event       = (PLEvent*) *actionEvent;
 
-#ifdef XP_PC
-    // debug: edburns:
-      DWORD nativeThreadID = GetCurrentThreadId();
-      printf("debug: edburns: HistoryImpl_nativeBack() nativeThreadID: %d\n",
-             nativeThreadID);
-#endif
-
-      char *currentThreadName = nsnull;
-      
-      if (nsnull != (currentThreadName = util_GetCurrentThreadName(env))) {
-          printf("debug: edburns: HistoryImpl_nativeBack() java threadName: %s\n",
-                 currentThreadName);
-          delete currentThreadName;
-      }
-
-
-      
       ::util_PostSynchronousEvent(initContext, event);
     }
 

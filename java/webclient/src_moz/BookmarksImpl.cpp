@@ -64,7 +64,6 @@ Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeNewRDFNode
     const char *url = ::util_GetStringUTFChars(env, urlString);
 	uri.Append("#$");
 	uri.Append(url);
-    printf("debug: edburns: nativeNewRDFNode: url: %s\n", url);
     
     rv = gRDF->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(newNode));
     ::util_ReleaseStringUTFChars(env, urlString, url);

@@ -174,7 +174,10 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString
                 rv = literal->GetValueConst(&textForNode);
             }
             else {
-                printf("nativeToString: node is not an nsIRDFLiteral.\n");
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("nativeToString: node is not an nsIRDFLiteral.\n"));
+                }
             }
         }
     }
@@ -197,17 +200,26 @@ Java_org_mozilla_webclient_wrapper_1native_RDFTreeNode_nativeToString
                 // get the value of the literal
                 rv = literal->GetValueConst(&textForNode);
                 if (NS_FAILED(rv)) {
-                    printf("nativeToString: node doesn't have a value.\n");
+                    if (prLogModuleInfo) {
+                        PR_LOG(prLogModuleInfo, 3, 
+                               ("nativeToString: node doesn't have a value.\n"));
+                    }
                 }
             }
             else {
                 rdf_printArcLabels(currentResource);
-                printf("nativeToString: node is not an nsIRDFLiteral.\n");
+                if (prLogModuleInfo) {
+                    PR_LOG(prLogModuleInfo, 3, 
+                           ("nativeToString: node is not an nsIRDFLiteral.\n"));
+                }
             }
         }
         else {
             rdf_printArcLabels(currentResource);
-            printf("nativeToString: node doesn't have a URL.\n");
+            if (prLogModuleInfo) {
+                PR_LOG(prLogModuleInfo, 3, 
+                       ("nativeToString: node doesn't have a URL.\n"));
+            }
         }
     }
 

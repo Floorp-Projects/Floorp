@@ -35,11 +35,16 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
 (JNIEnv *env, jobject obj, jint webShellPtr, jstring urlString)
 {
     jobject			jobj = obj;
+
+#if DEBUG_RAPTOR_CANVAS
     const char	*	urlChars = (char *) ::util_GetStringUTFChars(env, 
                                                                  urlString);
-    
-    printf("Native URL = \"%s\"\n", urlChars);
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 3, 
+               ("Native URL = \"%s\"\n", urlChars));
+    }
     ::util_ReleaseStringUTFChars(env, urlString, urlChars);
+#endif
     
     PRUnichar	*	urlStringChars = (PRUnichar *) ::util_GetStringChars(env,
                                                                          urlString);

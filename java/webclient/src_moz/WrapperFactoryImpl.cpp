@@ -33,6 +33,8 @@
 #include "nsAppShellCIDs.h" // for NS_SESSIONHISTORY_CID
 #include "nsCRT.h" // for nsCRT::strcmp
 
+#include "prenv.h"
+
 static NS_DEFINE_CID(kSessionHistoryCID, NS_SESSIONHISTORY_CID);
 
 #ifdef XP_PC
@@ -64,6 +66,8 @@ static NS_DEFINE_CID(kSessionHistoryCID, NS_SESSIONHISTORY_CID);
 
 static nsFileSpec gBinDir; 
 
+PRLogModuleInfo *prLogModuleInfo = NULL; // declared in jni_util.h
+
 const char *gImplementedInterfaces[] = {
         "webclient.WindowControl",
         "webclient.Navigation",
@@ -91,6 +95,13 @@ Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeAppInitializ
     
     NS_InitXPCOM(nsnull, &gBinDir);
     NS_SetupRegistry();
+    prLogModuleInfo = PR_NewLogModule("webclient");
+    const char *webclientLogFile = PR_GetEnv("WEBCLIENT_LOG_FILE");
+    if (nsnull != webclientLogFile) {
+        PR_SetLogFile(webclientLogFile);
+        // If this fails, it just goes to stdout/stderr
+    }
+
     nsComponentManager::RegisterComponentLib(kSessionHistoryCID, nsnull, 
 					     nsnull, APPSHELL_DLL, 
 					     PR_FALSE, PR_FALSE);
