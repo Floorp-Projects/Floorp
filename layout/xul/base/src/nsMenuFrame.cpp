@@ -371,7 +371,8 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
                              nsEventStatus*  aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
-  *aEventStatus = nsEventStatus_eConsumeDoDefault;
+  if (*aEventStatus == nsEventStatus_eIgnore)
+    *aEventStatus = nsEventStatus_eConsumeDoDefault;
   
   if (aEvent->message == NS_KEY_PRESS && !IsDisabled()) {
     nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
