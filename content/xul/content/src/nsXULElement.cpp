@@ -921,13 +921,15 @@ NS_IMETHODIMP
 nsXULElement::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
     if (mDocument) {
-        return mDocument->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**) aOwnerDocument);
+        return CallQueryInterface(mDocument, aOwnerDocument);
     }
-    else {
-        nsCOMPtr<nsIDocument> doc;
-        NodeInfo()->GetDocument(*getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc;
+    NodeInfo()->GetDocument(*getter_AddRefs(doc));
+    if (doc) {
         return CallQueryInterface(doc, aOwnerDocument);
     }
+    *aOwnerDocument = nsnull;
+    return NS_OK;
 }
 
 
