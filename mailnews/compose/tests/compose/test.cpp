@@ -1,3 +1,8 @@
+#include "msgCore.h"
+#include "nsMsgBaseCID.h"
+#include "nsMsgLocalCID.h"
+#include "nsMsgCompCID.h"
+
 #include <stdio.h>
 #ifdef XP_PC
 #include <windows.h>
@@ -51,6 +56,7 @@
 #endif
 #endif
 
+
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
 /////////////////////////////////////////////////////////////////////////////////
@@ -61,13 +67,13 @@ static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_IID(kIMsgComposeIID, NS_IMSGCOMPOSE_IID); 
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgComposeCID, NS_MSGCOMPOSE_CID); 
 static NS_DEFINE_IID(kIMsgCompFieldsIID, NS_IMSGCOMPFIELDS_IID); 
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_IID(kIMsgSendIID, NS_IMSGSEND_IID); 
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 
 nsresult OnIdentityCheck()
@@ -85,7 +91,7 @@ nsresult OnIdentityCheck()
 			char * value = nsnull;
 			incomingServer->GetPrettyName(&value);
 			printf("Server pretty name: %s\n", value ? value : "");
-			incomingServer->GetUserName(&value);
+			incomingServer->GetUsername(&value);
 			printf("User Name: %s\n", value ? value : "");
 			incomingServer->GetHostName(&value);
 			printf("Pop Server: %s\n", value ? value : "");
