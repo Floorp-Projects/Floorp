@@ -687,9 +687,7 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
     }
 
     // Set clipping of child views.
-    nsRegion region;
-    region.Copy(nsRectFast(clipRect));
-    vm->SetViewChildClipRegion(aView, &region);
+    vm->SetViewChildClipRegion(aView, &nsRegion(clipRect));
   } else {
     // Remove clipping of child views.
     vm->SetViewChildClipRegion(aView, nsnull);
