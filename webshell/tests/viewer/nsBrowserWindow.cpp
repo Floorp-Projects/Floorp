@@ -1413,6 +1413,9 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
   webBrowserWin->Create();
 
+  // Give the embedding app a chance to do platforms-specific window setup
+  InitNativeWindow();
+
   // Disable global history because we don't have profile-relative file locations
   nsCOMPtr<nsIWebBrowserSetup> setup(do_QueryInterface(mWebBrowser));
   if (setup)
@@ -1447,9 +1450,6 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
       return rv;
     }
   }
-
-  // Give the embedding app a chance to do platforms-specific window setup
-  InitNativeWindow();
 
   // Now lay it all out
   Layout(r.width, r.height);
