@@ -1133,12 +1133,15 @@ nsBindingManager::GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsI
 {
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aParent, getter_AddRefs(binding));
+
+  if (!binding) {
+    *aResult = nsnull;
+    return NS_OK;
+  }
   
   nsCOMPtr<nsIContent> defContent;
-  if (binding)
-    return binding->GetInsertionPoint(aChild, aResult, aIndex, getter_AddRefs(defContent));
-  
-  return NS_OK;
+  return binding->GetInsertionPoint(aChild, aResult, aIndex,
+                                    getter_AddRefs(defContent));
 }
 
 NS_IMETHODIMP
@@ -1148,12 +1151,16 @@ nsBindingManager::GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aRes
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aParent, getter_AddRefs(binding));
   
-  nsCOMPtr<nsIContent> defContent;
+  if (!binding) {
+    *aMultipleInsertionPoints = PR_FALSE;
+    *aResult = nsnull;
+    return NS_OK;
+  }
 
-  if (binding)
-    return binding->GetSingleInsertionPoint(aResult, aIndex, aMultipleInsertionPoints, getter_AddRefs(defContent));
-  
-  return NS_OK;
+  nsCOMPtr<nsIContent> defContent;
+  return binding->GetSingleInsertionPoint(aResult, aIndex,
+                                          aMultipleInsertionPoints,
+                                          getter_AddRefs(defContent));
 }
 
 NS_IMETHODIMP
