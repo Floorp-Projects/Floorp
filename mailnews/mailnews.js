@@ -259,6 +259,7 @@ pref("mail.collect_email_address_size_limit", 700);
 pref("mail.default_sendlater_uri","mailbox://nobody@Local Folders/Unsent Messages");
 
 pref("mail.server.default.port", -1);
+pref("mail.server.default.offline_support_level", -1);
 pref("mail.server.default.leave_on_server", false);
 pref("mail.server.default.download_on_biff", false);
 pref("mail.server.default.check_time", 10);
