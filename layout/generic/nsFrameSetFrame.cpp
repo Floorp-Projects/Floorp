@@ -726,8 +726,8 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec,
     // data in it other than a terminating comma (or the end of the spec)
     aSpecs[i].mUnit = eFramesetUnit_Fixed;
     if (end > start) {
-      PRInt32 numberEnd = end - 1;
-      PRUnichar ch = aSpec.CharAt(numberEnd);
+      PRInt32 numberEnd = end;
+      PRUnichar ch = aSpec.CharAt(numberEnd - 1);
       if (ASTER == ch) {
         aSpecs[i].mUnit = eFramesetUnit_Relative;
         numberEnd--;
@@ -738,18 +738,39 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec,
 
       // Translate value to an integer
       nsString token("");
-      aSpec.Mid(token, start, 1 + numberEnd - start);
-      //aValues[i] = nsCRT::atoi(token);  XXX this is broken, consequently the next 3 lines?
-      char* tokenIso = token.ToNewCString(); 
-      aSpecs[i].mValue = atoi(tokenIso);
-      nsCRT::free(tokenIso); 
-      if (eFramesetUnit_Percent == aSpecs[i].mUnit) {
-        if (aSpecs[i].mValue <= 0) {
-          aSpecs[i].mValue = 100 / count;
+      aSpec.Mid(token, start, numberEnd - start);
+
+      // Treat * as 1*
+      if ((eFramesetUnit_Relative == aSpecs[i].mUnit) &&
+        (numberEnd == start)) {
+        aSpecs[i].mValue = 1;
+      }
+
+      // Otherwise just convert to integer.
+      else {
+        PRInt32 err;
+        aSpecs[i].mValue = token.ToInteger(&err);
+        if (err) {
+          aSpecs[i].mValue = 0;
         }
       }
-      if (aSpecs[i].mValue < 1) aSpecs[i].mValue = 1;
 
+      // Catch zero and negative frame sizes for Nav compatability
+      // Nav resized absolute and relative frames to "1" and
+      // percent frames to an even percentage of the width
+      //
+      //if ((eCompatibility_NavQuirks == aMode) && (aSpecs[i].mValue <= 0)) {
+      //  if (eFramesetUnit_Percent == aSpecs[i].mUnit) {
+      //    aSpecs[i].mValue = 100 / count;
+      //  } else {
+      //    aSpecs[i].mValue = 1;
+      //  }
+      //} else {
+
+      // In standards mode, just set negative sizes to zero
+      if (aSpecs[i].mValue < 0) {
+        aSpecs[i].mValue = 0;
+      }
       start = end + 1;
     }
   }
