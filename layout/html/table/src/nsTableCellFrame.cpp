@@ -372,7 +372,10 @@ PRInt32 nsTableCellFrame::GetColSpan()
 }
 
 
-void DebugCheckChildSize(nsIFrame* aChild, nsHTMLReflowMetrics& aMet, nsSize& aAvailSize)
+void DebugCheckChildSize(nsIFrame*            aChild, 
+                         nsHTMLReflowMetrics& aMet, 
+                         nsSize&              aAvailSize,
+                         PRBool               aIsPass2Reflow)
 {
   if (aMet.width > aAvailSize.width) {
     nsAutoString tmp;
@@ -380,19 +383,21 @@ void DebugCheckChildSize(nsIFrame* aChild, nsHTMLReflowMetrics& aMet, nsSize& aA
     printf("WARNING: cell %s content has desired width %d given avail width %d\n",
             tmp, aMet.width, aAvailSize.width);
   }
-  if ((aMet.width < 0) || (aMet.width > 30000)) {
-    printf("WARNING: cell content %X has large width %d \n", aChild, aMet.width);
-  }
-  if ((aMet.height < 0) || (aMet.height > 30000)) {
-    printf("WARNING: cell content %X has large height %d \n", aChild, aMet.height);
+  if (aIsPass2Reflow) {
+    if ((aMet.width < 0) || (aMet.width > 60000)) {
+      printf("WARNING: cell content %X has large width %d \n", aChild, aMet.width);
+    }
+    if ((aMet.height < 0) || (aMet.height > 60000)) {
+      printf("WARNING: cell content %X has large height %d \n", aChild, aMet.height);
+    }
   }
   if (aMet.maxElementSize) {
     nscoord tmp = aMet.maxElementSize->width;
-    if ((tmp < 0) || (tmp > 30000)) {
+    if ((tmp < 0) || (tmp > 60000)) {
       printf("WARNING: cell content %X has large max element width %d \n", aChild, tmp);
     }
     tmp = aMet.maxElementSize->height;
-    if ((tmp < 0) || (tmp > 30000)) {
+    if ((tmp < 0) || (tmp > 60000)) {
       printf("WARNING: cell content %X has large max element height %d \n", aChild, tmp);
     }
   }
@@ -400,10 +405,10 @@ void DebugCheckChildSize(nsIFrame* aChild, nsHTMLReflowMetrics& aMet, nsSize& aA
 
 /**
   */
-NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
-                                   nsHTMLReflowMetrics& aDesiredSize,
+NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
+                                   nsHTMLReflowMetrics&     aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
-                                   nsReflowStatus& aStatus)
+                                   nsReflowStatus&          aStatus)
 {
 #ifdef NS_DEBUG
   //PreReflowCheck();
@@ -526,7 +531,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
 
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState, aStatus);
 #ifdef NS_DEBUG
-  DebugCheckChildSize(firstKid, kidSize, availSize);
+  DebugCheckChildSize(firstKid, kidSize, availSize, (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth));
 #endif
 
   // 0 dimensioned cells need to be treated specially in Standard/NavQuirks mode 
