@@ -84,6 +84,7 @@ volatile enum  {
 PRFileDesc  *file1;
 PRIntn  iCounter = 0;
 PRIntn  jitter = JITTER_DEFAULT;
+PRBool  resume = PR_FALSE;
 
 /*
 ** Emit help text for this test
@@ -155,6 +156,11 @@ static void ConnectThread( void *arg )
 
     PR_ASSERT(clientSock);
 
+    if ( resume ) {
+        if ( debug ) printf("pausing 3 seconds before connect\n");
+        PR_Sleep( PR_SecondsToInterval(3));
+    }
+
     memset(&serverAddress, 0, sizeof(serverAddress));
     rv = PR_InitializeNetAddr(PR_IpAddrLoopback, BASE_PORT, &serverAddress);
     PR_ASSERT( PR_SUCCESS == rv );
@@ -187,7 +193,7 @@ PRIntn main(PRIntn argc, char *argv[])
         ** Get command line options
         */
         PLOptStatus os;
-        PLOptState *opt = PL_CreateOptState(argc, argv, "hdvj:");
+        PLOptState *opt = PL_CreateOptState(argc, argv, "hdrvj:");
 
 	    while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
         {
@@ -206,6 +212,9 @@ PRIntn main(PRIntn argc, char *argv[])
                 jitter = atoi(opt->value);
                 if ( jitter == 0)
                     jitter = JITTER_DEFAULT;
+                break;
+            case 'r':
+                resume = PR_TRUE;
                 break;
             case 'h':  /* help message */
 			    Help();

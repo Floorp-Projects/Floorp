@@ -149,7 +149,10 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
         access |= GENERIC_READ;
     if (osflags & PR_WRONLY || osflags & PR_RDWR)
         access |= GENERIC_WRITE;
-    if (osflags & PR_CREATE_FILE) {
+
+    if ( osflags & PR_CREATE_FILE && osflags & PR_EXCL )
+        flags = CREATE_NEW;
+    else if (osflags & PR_CREATE_FILE) {
         if (osflags & PR_TRUNCATE)
             flags = CREATE_ALWAYS;
         else

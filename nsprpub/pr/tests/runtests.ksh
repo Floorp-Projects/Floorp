@@ -112,7 +112,9 @@ multiwait
 nameshm1
 nblayer
 nonblock
+ntioto
 op_2long
+op_excl
 op_filnf
 op_filok
 op_nofil

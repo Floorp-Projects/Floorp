@@ -551,6 +551,9 @@ PR_EXTERN(PRFileDesc*) PR_PopIOLayer(PRFileDesc *fd_stack, PRDescIdentity id);
  *		PR_APPEND        The file pointer is set to the end of
  *                              the file prior to each write.
  *		PR_TRUNCATE      If the file exists, its length is truncated to 0.
+ *      PR_EXCL          With PR_CREATE_FILE, if the file does not exist,
+ *                              the file is created. If the file already 
+ *                              exists, no action and NULL is returned
  *
  *     PRIntn mode
  *         The access permission bits of the file mode, if the file is
@@ -580,6 +583,7 @@ PR_EXTERN(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode);
 #define PR_APPEND       0x10
 #define PR_TRUNCATE     0x20
 #define PR_SYNC         0x40
+#define PR_EXCL         0x80
 
 /*
 ** File modes ....
