@@ -545,10 +545,10 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
                                        "[iid_is(%s)]\n", iid_is);
                         return FALSE;
                       }
-                    td->prefix.flags = TD_INTERFACE_IS_TYPE;
+                    td->prefix.flags = TD_INTERFACE_IS_TYPE | XPT_TDP_POINTER;
                     td->type.argnum = argnum;
                 } else {
-                    td->prefix.flags = TD_INTERFACE_TYPE;
+                    td->prefix.flags = TD_INTERFACE_TYPE | XPT_TDP_POINTER;
                     ide = FindInterfaceByName(ides, num_ifaces, className);
                     if (!ide || ide < ides || ide > ides + num_ifaces) {
                         IDL_tree_error(type, "unknown iface %s in param\n",
@@ -698,7 +698,7 @@ typelib_attr_accessor(TreeState *state, XPTMethodDescriptor *meth,
     if (!XPT_FillMethodDescriptor(meth, getter ? XPT_MD_GETTER : XPT_MD_SETTER,
                                   ATTR_IDENT(state->tree).str, 1) ||
         !fill_pd_from_type(state, meth->params,
-                           getter ? XPT_PD_OUT : XPT_PD_IN,
+                           getter ? (XPT_PD_RETVAL | XPT_PD_OUT) : XPT_PD_IN,
                           ATTR_TYPE_DECL(state->tree)))
         return FALSE;
 
