@@ -51,6 +51,8 @@
 #include "nsHTMLEditor.h"
 #include "TypeInState.h"
 
+#include "nsIServiceManager.h"
+
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMNode.h"

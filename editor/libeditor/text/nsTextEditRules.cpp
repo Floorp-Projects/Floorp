@@ -42,6 +42,7 @@
 #include "nsTextEditUtils.h"
 
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
