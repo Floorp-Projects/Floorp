@@ -49,7 +49,7 @@ LOCAL_INCLUDES	= -I$(srcdir)/.. -I$(srcdir)/../../public -I$(XPIDL_GEN_DIR)
 EXTRA_DSO_LDOPTS += \
 	-L$(DIST)/lib \
 	-lgtksuperwin \
-	$(MOZ_COMPONENT_XPCOM_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_GTK_LDFLAGS) \
 	$(NULL)
 
