@@ -77,40 +77,33 @@ public:
                            nsIContent* aContent,
                            nsIFrame*   aParent);
 
-  // nsISupports
-  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
   // Overloaded new operator. Initializes the memory to 0
   void* operator new(size_t size);
 
-  NS_IMETHOD  DeleteFrame();
+  // nsISupports
+  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame
+  NS_IMETHOD  DeleteFrame();
+  NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD  GetContent(nsIContent*& aContent) const;
   NS_IMETHOD  GetContentIndex(PRInt32& aIndexInParent) const;
-
-  NS_IMETHOD  GetStyleContext(nsIPresContext* aContext, nsIStyleContext*& aStyleContext);
-  NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext, nsIStyleContext* aContext);
-
-  // Get the style struct associated with this frame
-  NS_IMETHOD  GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& aStyleStruct) const;
-
-
-  // Geometric and content parent
+  NS_IMETHOD  GetStyleContext(nsIPresContext* aContext,
+                              nsIStyleContext*& aStyleContext);
+  NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext,
+                              nsIStyleContext* aContext);
+  NS_IMETHOD  GetStyleData(nsStyleStructID aSID,
+                           const nsStyleStruct*& aStyleStruct) const;
   NS_IMETHOD  GetContentParent(nsIFrame*& aParent) const;
   NS_IMETHOD  SetContentParent(const nsIFrame* aParent);
   NS_IMETHOD  GetGeometricParent(nsIFrame*& aParent) const;
   NS_IMETHOD  SetGeometricParent(const nsIFrame* aParent);
-
-  // Bounding rect
   NS_IMETHOD  GetRect(nsRect& aRect) const;
   NS_IMETHOD  GetOrigin(nsPoint& aPoint) const;
   NS_IMETHOD  GetSize(nsSize& aSize) const;
   NS_IMETHOD  SetRect(const nsRect& aRect);
   NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
-
-  // Child frame enumeration
   NS_IMETHOD  ChildCount(PRInt32& aChildCount) const;
   NS_IMETHOD  ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const;
   NS_IMETHOD  IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const;
@@ -118,7 +111,6 @@ public:
   NS_IMETHOD  NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const;
   NS_IMETHOD  PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const;
   NS_IMETHOD  LastChild(nsIFrame*& aLastChild) const;
-
   NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect);
@@ -129,11 +121,8 @@ public:
                           const nsPoint&  aPoint,
                           nsIFrame**      aFrame,
                           PRInt32&        aCursor);
-
   NS_IMETHOD  GetFrameState(nsFrameState& aResult);
   NS_IMETHOD  SetFrameState(nsFrameState aNewState);
-
-  // Reflow methods
   NS_IMETHOD  WillReflow(nsIPresContext& aPresContext);
   NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
                         nsDidReflowStatus aStatus);
@@ -168,59 +157,40 @@ public:
                              nsISupports*    aSubContent);
   NS_IMETHOD  GetReflowMetrics(nsIPresContext*  aPresContext,
                                nsReflowMetrics& aMetrics);
-
-  // Flow member functions
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD  CreateContinuingFrame(nsIPresContext*  aPresContext,
                                     nsIFrame*        aParent,
                                     nsIStyleContext* aStyleContext,
                                     nsIFrame*&       aContinuingFrame);
-
   NS_IMETHOD  GetPrevInFlow(nsIFrame*& aPrevInFlow) const;
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
   NS_IMETHOD  GetNextInFlow(nsIFrame*& aNextInFlow) const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
-
   NS_IMETHOD  AppendToFlow(nsIFrame* aAfterFrame);
   NS_IMETHOD  PrependToFlow(nsIFrame* aAfterFrame);
   NS_IMETHOD  RemoveFromFlow();
   NS_IMETHOD  BreakFromPrevFlow();
   NS_IMETHOD  BreakFromNextFlow();
-
-  // Associated view object
   NS_IMETHOD  GetView(nsIView*& aView) const;
   NS_IMETHOD  SetView(nsIView* aView);
-
-  // Find the first geometric parent that has a view
   NS_IMETHOD  GetParentWithView(nsIFrame*& aParent) const;
-
-  // Returns the offset from this frame to the closest geometric parent that
-  // has a view. Also returns the containing view, or null in case of error
   NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) const;
-
-  // Returns the closest geometric parent that has a view which has a
-  // a window.
   NS_IMETHOD  GetWindow(nsIWidget*&) const;
-
-  // Style sizing methods
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
   NS_IMETHOD  GetAutoMarginSize(PRUint8 aSide, nscoord& aSize) const;
-
-  // Sibling pointer used to link together frames
   NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
+  NS_IMETHOD  IsTransparent(PRBool& aTransparent) const;
+  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  NS_IMETHOD  ListTag(FILE* out = stdout) const;
+  NS_IMETHOD  VerifyTree() const;
 
-  // Transparency query
-  NS_IMETHOD IsTransparent(PRBool& aTransparent) const;
+  //--------------------------------------------------
+  // Additional methods
 
   // Invalidate part of the frame by asking the view manager to repaint.
   // aDamageRect is in the frame's local coordinate space
   void        Invalidate(const nsRect& aDamageRect) const;
-
-  // Debugging
-  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-  NS_IMETHOD  ListTag(FILE* out = stdout) const;
-  NS_IMETHOD  VerifyTree() const;
 
 #ifdef NS_DEBUG
   /**
@@ -285,6 +255,8 @@ protected:
   nsFrame(nsIContent* aContent, nsIFrame* aParent);
 
   virtual ~nsFrame();
+
+  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   nsRect           mRect;
   nsIContent*      mContent;

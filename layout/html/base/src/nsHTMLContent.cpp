@@ -26,6 +26,7 @@
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
 #include "nsIDocument.h"
+#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIContentDelegateIID, NS_ICONTENTDELEGATE_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
@@ -393,9 +394,18 @@ void nsHTMLContent::List(FILE* out, PRInt32 aIndent) const
   fputs(">\n", out);
 }
 
-PRUint32 nsHTMLContent::SizeOf(nsISizeofHandler* aHandler) const
+NS_IMETHODIMP
+nsHTMLContent::SizeOf(nsISizeOfHandler* aHandler) const
 {
-  return 0;
+  aHandler->Add(sizeof(*this));
+  nsHTMLContent::SizeOfWithoutThis(aHandler);
+  return NS_OK;
+}
+
+void
+nsHTMLContent::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
+{
+  // XXX mScriptObject
 }
 
 nsIAtom* nsHTMLContent::GetTag() const

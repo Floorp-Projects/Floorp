@@ -23,6 +23,7 @@
 #include "nsHTMLValue.h"
 #include "nsIContent.h"
 class nsIAtom;
+class nsISizeOfHandler;
 class nsISupportsArray;
 class nsIHTMLContent;
 
@@ -48,6 +49,11 @@ public:
   virtual nsIAtom*  GetID(void) const = 0;
   virtual PRInt32   SetClass(nsIAtom* aClass) = 0;  // XXX this will have to change for CSS2
   virtual nsIAtom*  GetClass(void) const = 0;  // XXX this will have to change for CSS2
+
+  /**
+   * Add this object's size information to the sizeof handler.
+   */
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 };

@@ -29,6 +29,7 @@
 #include "nsStyleConsts.h"
 #include "nsIView.h"
 #include "nsVoidArray.h"
+#include "nsISizeOfHandler.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -55,6 +56,24 @@ nsContainerFrame::~nsContainerFrame()
     child->GetNextSibling(nextChild);
     child->DeleteFrame();
     child = nextChild;
+  }
+}
+
+NS_IMETHODIMP
+nsContainerFrame::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  nsContainerFrame::SizeOfWithoutThis(aHandler);
+  return NS_OK;
+}
+
+void
+nsContainerFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
+{
+  nsSplittableFrame::SizeOfWithoutThis(aHandler);
+  for (nsIFrame* child = mFirstChild; child; ) {
+    child->SizeOf(aHandler);
+    child->GetNextSibling(child);
   }
 }
 

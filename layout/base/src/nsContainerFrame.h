@@ -105,6 +105,8 @@
 class nsContainerFrame : public nsSplittableFrame
 {
 public:
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
+
   /**
    * Default implementation is to use the content delegate to create a new
    * frame. After the frame is created it uses PrepareContinuingFrame() to
@@ -196,6 +198,8 @@ protected:
   nsContainerFrame(nsIContent* aContent, nsIFrame* aParent);
 
   virtual ~nsContainerFrame();
+
+  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   /**
    * Prepare a continuation frame of this frame for reflow. Appends

@@ -32,6 +32,7 @@
 #include "prprf.h"
 #include <stdarg.h>
 #include "nsIPtr.h"
+#include "nsISizeOfHandler.h"
 
 #define DO_SELECTION 0
 
@@ -248,6 +249,24 @@ NS_METHOD nsFrame::DeleteFrame()
 
   delete this;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrame::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  SizeOfWithoutThis(aHandler);
+  return NS_OK;
+}
+
+void
+nsFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
+{
+  // Note: style context's are accounted for via the style system's
+  // sizeof support
+
+  // Note: content is accounted for via the content system's sizeof
+  // support
 }
 
 NS_METHOD nsFrame::GetContent(nsIContent*& aContent) const

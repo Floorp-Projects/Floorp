@@ -25,7 +25,7 @@ class nsIAtom;
 class nsIContentDelegate;
 class nsIDocument;
 class nsIPresContext;
-class nsISizeofHandler;
+class nsISizeOfHandler;
 class nsString;
 class nsString;
 class nsVoidArray;
@@ -124,10 +124,10 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 
   /**
-   * Return the number of bytes consumed by this node of content and
-   * anything that it can reach.
+   * Add this object's size information to the sizeof handler and
+   * any objects that it can reach.
    */
-  virtual PRUint32 SizeOf(nsISizeofHandler* aHandler) const = 0;
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
 };
 
 #endif /* nsIContent_h___ */

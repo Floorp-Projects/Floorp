@@ -24,6 +24,7 @@
 class nsSplittableFrame : public nsFrame
 {
 public:
+  NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler) const;
   // CreateContinuingFrame() does the default behavior of using the
   // content delegate to create a new frame
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
@@ -64,6 +65,8 @@ protected:
   nsSplittableFrame(nsIContent* aContent, nsIFrame* aParent);
 
   virtual ~nsSplittableFrame();
+
+  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   nsIFrame*   mPrevInFlow;
   nsIFrame*   mNextInFlow;

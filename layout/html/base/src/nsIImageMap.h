@@ -24,6 +24,7 @@
 class nsIAtom;
 class nsIPresContext;
 class nsIRenderingContext;
+class nsISizeOfHandler;
 class nsIURL;
 class nsString;
 
@@ -67,6 +68,8 @@ public:
   NS_IMETHOD IsInside(nscoord aX, nscoord aY) = 0;
 
   NS_IMETHOD Draw(nsIPresContext& aCX, nsIRenderingContext& aRC) = 0;
+
+  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
 };
 
 // XXX get an error space to alloc from

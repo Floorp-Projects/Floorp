@@ -28,6 +28,7 @@
 #include "nsDOMAttributes.h"
 #include "nsICSSParser.h"
 #include "nsISupportsArray.h"
+#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -78,6 +79,23 @@ nsIAtom* nsHTMLTagContent::GetTag() const
 {
   NS_IF_ADDREF(mTag);
   return mTag;
+}
+
+NS_IMETHODIMP
+nsHTMLTagContent::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  nsHTMLTagContent::SizeOfWithoutThis(aHandler);
+  return NS_OK;
+}
+
+void
+nsHTMLTagContent::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
+{
+  // XXX tag
+  if (!aHandler->HaveSeen(mAttributes)) {
+    mAttributes->SizeOf(aHandler);
+  }
 }
 
 void nsHTMLTagContent::ToHTMLString(nsString& aBuf) const

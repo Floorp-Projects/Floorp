@@ -27,6 +27,7 @@
 #include "nsIImageRequest.h"
 #include "nsString.h"
 #include "prlog.h"
+#include "nsISizeOfHandler.h"
 
 static NS_DEFINE_IID(kIFrameImageLoaderIID, NS_IFRAME_IMAGE_LOADER_IID);
 static NS_DEFINE_IID(kIImageRequestObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
@@ -304,5 +305,14 @@ NS_METHOD
 nsFrameImageLoader::GetImageLoadStatus(PRIntn& aLoadStatus) const
 {
   aLoadStatus = mImageLoadStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameImageLoader::SizeOf(nsISizeOfHandler* aHandler) const
+{
+  aHandler->Add(sizeof(*this));
+  // XXX mImage
+  // XXX mImageRequest
   return NS_OK;
 }
