@@ -77,6 +77,7 @@
 #include "nsISHistoryInternal.h"
 #include "nsIPrincipal.h"
 #include "nsIHistoryEntry.h"
+#include "nsISHistoryListener.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -2340,6 +2341,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
 NS_IMETHODIMP
 nsDocShell::Reload(PRUint32 aReloadFlags)
 {
+    nsresult rv;
     NS_ASSERTION(((aReloadFlags & 0xf) == 0),
                  "Reload command not updated to use load flags!");
 
@@ -2351,7 +2353,22 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
     else if (aReloadFlags & LOAD_FLAGS_CHARSET_CHANGE)
         type = LOAD_RELOAD_CHARSET_CHANGE;
 
-    nsresult rv;
+    // Send notifications to the HistoryListener if any, about the impending reload
+    nsCOMPtr<nsISHistory> rootSH;
+    rv = GetRootSessionHistory(getter_AddRefs(rootSH));
+    nsCOMPtr<nsISHistoryInternal> shistInt(do_QueryInterface(rootSH));
+    PRBool canReload = PR_TRUE; 
+    if (rootSH) {
+      nsCOMPtr<nsISHistoryListener> listener;
+      shistInt->GetListener(getter_AddRefs(listener));
+      if (listener) {
+        listener->OnHistoryReload(mCurrentURI, aReloadFlags, &canReload);
+      }
+    }
+
+    if (!canReload)
+      return NS_OK;
+    
     /* If you change this part of code, make sure bug 45297 does not re-occur */
     if (mOSHE)
         rv = LoadHistoryEntry(mOSHE, type);
