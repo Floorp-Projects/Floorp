@@ -42,6 +42,7 @@
 #include "nsUCSupport.h"
 
 #define MBYTE       0x8e
+#undef PMASK
 #define PMASK       0xa0
 
 #define SI          0x0f 
