@@ -1067,10 +1067,11 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsString& aData)
 
 #if 0
 // XXX Temp hack: moved to nsMarkupDocument
-nsresult nsDocument::CreateShell(nsIPresContext* aContext,
-                                 nsIViewManager* aViewManager,
-                                 nsIStyleSet* aStyleSet,
-                                 nsIPresShell** aInstancePtrResult)
+NS_IMETHODIMP
+nsDocument::CreateShell(nsIPresContext* aContext,
+                        nsIViewManager* aViewManager,
+                        nsIStyleSet* aStyleSet,
+                        nsIPresShell** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {

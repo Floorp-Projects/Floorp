@@ -169,10 +169,10 @@ public:
    */
 #if 0
   // XXX Temp hack: moved to nsMarkupDocument
-  virtual nsresult CreateShell(nsIPresContext* aContext,
-                               nsIViewManager* aViewManager,
-                               nsIStyleSet* aStyleSet,
-                               nsIPresShell** aInstancePtrResult);
+  NS_IMETHOD CreateShell(nsIPresContext* aContext,
+                         nsIViewManager* aViewManager,
+                         nsIStyleSet* aStyleSet,
+                         nsIPresShell** aInstancePtrResult);
 #endif
   virtual PRBool DeleteShell(nsIPresShell* aShell);
   virtual PRInt32 GetNumberOfShells();
