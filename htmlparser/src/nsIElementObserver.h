@@ -53,10 +53,10 @@ public:
    *   @param valueArray - array of value
    */
   NS_IMETHOD Notify(PRUint32 aDocumentID, const nsString& aTag, PRUint32 numOfAttributes, 
-                    const nsString* nameArray, const nsString* valueArray,
-                    PRBool *oContinue) = 0;
-};
+                 const nsString* nameArray, const nsString* valueArray) = 0;
 
+
+};
 
 #endif /* nsIElementObserver_h__ */
 
