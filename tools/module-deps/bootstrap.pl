@@ -21,7 +21,7 @@ sub get_system_cwd {
 
  # Pull core build stuff.
  print "Pulling core build files...\n";
- my $core_build_files = "mozilla/client.mk mozilla/config mozilla/configure mozilla/allmakefiles.sh mozilla/configure.in mozilla/build mozilla/tools/module-deps";
+ my $core_build_files = "mozilla/client.mk mozilla/config mozilla/configure mozilla/allmakefiles.sh mozilla/configure.in mozilla/Makefile.in mozilla/build mozilla/tools/module-deps";
  system("cvs co $core_build_files");
 
 
@@ -34,6 +34,7 @@ sub get_system_cwd {
 
 
  # Pull modules, write out to file to grap stdout.
+ # Hard-coding this for xpcom to start off.
  print "Pulling modules...\n";
  my $modules;
  my $cmd = "cvs co `mozilla/tools/module-deps/module-graph\.pl --file all\.dot --start-module xpcom --list-only | mozilla/config/module2dir\.pl --list-only`";
@@ -65,8 +66,9 @@ sub get_system_cwd {
  #system("$nspr_configure_cmd");
 
  print "Configuring ... \n";
+ unlink("$base/mozilla/config.cache");
  chdir("$base/mozilla");
- my $configure_cmd = "./configure --disable-ldap --disable-mailnews";
+ my $configure_cmd = "./configure --enable-standalone-modules=xpcom";
  system("$configure_cmd");
 
  print "Building ... \n";
