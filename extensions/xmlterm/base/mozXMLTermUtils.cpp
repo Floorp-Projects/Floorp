@@ -35,7 +35,6 @@
 
 #include "nsIPrincipal.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDocument.h"
@@ -141,8 +140,6 @@ NS_EXPORT nsresult
 mozXMLTermUtils::ConvertWebShellToDOMWindow(nsIWebShell* aWebShell,
                                     nsIDOMWindow** aDOMWindow)
 {
-  nsresult result;
-
   XMLT_LOG(mozXMLTermUtils::ConvertWebShellToDOMWindow,30,("\n"));
 
   if (!aDOMWindow)
@@ -150,18 +147,12 @@ mozXMLTermUtils::ConvertWebShellToDOMWindow(nsIWebShell* aWebShell,
 
   *aDOMWindow = nsnull;
 
-  nsCOMPtr<nsIScriptContextOwner> scriptContextOwner =
-                                              do_QueryInterface(aWebShell);
-  if (!scriptContextOwner)
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObj(do_QueryInterface(aWebShell));
+
+  if (!scriptGlobalObj)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  result = scriptContextOwner->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
-
-  if (NS_FAILED(result) || !scriptGlobalObject)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject);
+  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(scriptGlobalObj));
   if (!domWindow)
     return NS_ERROR_FAILURE;
 

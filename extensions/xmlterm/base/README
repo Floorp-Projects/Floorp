@@ -1,4 +1,10 @@
-base --- core source code for XMLterm and LineTerm
+ base --- core source code for XMLterm and LineTerm
+
+XMLterm may be invoked in one of two ways:
+ 1. By loading the URL "chrome://xmlterm/content/xmlterm.html" in mozilla, or
+ 2. By running the stand-alone executable "../geckoterm/xmlterm".
+The diagram below shows the control-flow/layering hierarchy for both ways
+of invoking XMLterm.
 
               XMLterm control-flow/layering hierarchy
               =======================================
@@ -22,13 +28,7 @@ base --- core source code for XMLterm and LineTerm
    (rendering ...)      (pseudo-TTY/shell)
 
 
-XMLterm may be invoked one of two ways:
- 1. By loading the URL chrome://xmlterm/content/xmlterm.html in mozilla, or
- 2. By running the stand-alone executable "../geckoterm/xmlterm".
-The diagram above shows the control-flow/layering hierarchy for both ways
-of invoking XMLterm.
-
-28 Nov 1999
+2 Dec 1999
 ===========================================================================
 FILES:
 
@@ -72,25 +72,30 @@ mozIXMLTermStream.h     XPCOM interface for displaying HTML/XML streams in
 IMPLEMENTATIONS:
 
 
-mozLineTerm.h/cpp          Implementation of mozILineTerm, mozILineTermAux
+mozLineTerm.h
+mozLineTermcpp             Implementation of mozILineTerm, mozILineTermAux
                              Uses LineTerm to access shell
 
-mozXMLTermShell.h/cpp      Implementation of mozIXMLTermShell
+mozXMLTermShell.h
+mozXMLTermShell.cpp        Implementation of mozIXMLTermShell
                              Uses mozIXMLTerminal to create XMLterm
 
-mozXMLTerminal.h/cpp       Implementation of mozIXMLTerminal,
+mozXMLTerminal.h
+mozXMLTerminal.cpp         Implementation of mozIXMLTerminal,
                                              nsIDocumentLoaderObserver, and
                                              nsIObserver
                              Uses mozILineTermAux to create LineTerm
                              Uses mozXMLTermListeners to capture user input
                              Uses mozXMLTermSession to display input/output
 
-mozXMLTermListeners.h/cpp  Implementations of nsIDOMKeyListener,
+mozXMLTermListeners.h
+mozXMLTermListeners.cpp    Implementations of nsIDOMKeyListener,
                                               nsIDOMTextListener,
                                               nsIDOMMouseListener,
                                               nsIDOMDragListener
 
-mozXMLTermStream.h/cpp     Implementation of mozIXMLTermStream
+mozXMLTermStream.h
+mozXMLTermStreamcpp        Implementation of mozIXMLTermStream
 
 
 CLASSES:
@@ -120,8 +125,13 @@ ltermEscape.c     Escape sequence handler
 
 Low-level packages:
 
-ptystream.h/c     Stream-like interface to Unix pseudo-TTY
-tracelog.h/c      Simple tracing/logging diagnostic library
-unistring.h/c     Simple Unicode manipulation library
+ptystream.h
+ptystream.c       Stream-like interface to Unix pseudo-TTY
+
+tracelog.h
+tracelog.c        Simple tracing/logging diagnostic library
+
+unistring.h
+unistring.c       Simple Unicode manipulation library
 
 ============================================================================
