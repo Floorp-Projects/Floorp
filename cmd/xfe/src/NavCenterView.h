@@ -45,7 +45,7 @@ public:
 
   virtual void notify(HT_Resource n, HT_Event whatHappened);
 
-#ifdef USE_SELECTOR_BAR
+#ifdef MOZ_SELECTOR_BAR
   void setRDFView(HT_View view);
   void addRDFView(HT_View view);
   Widget  getSelector(void);
@@ -61,7 +61,7 @@ public:
 private:
   XFE_HTMLView * m_htmlview;
   XFE_RDFView  * m_rdfview;
-#ifdef USE_SELECTOR_BAR
+#ifdef MOZ_SELECTOR_BAR
   Widget         m_selector;
 #endif /*USE_SELECTORY_BAR*/
   Widget         rdf_parent;

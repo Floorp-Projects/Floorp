@@ -43,16 +43,12 @@ void ncview_image_complete_cb(XtPointer client_data);
 };
 
 
-#ifdef USE_SELECTOR_BAR
+#ifdef MOZ_SELECTOR_BAR
 typedef struct _SelectorCBStruct {
   XFE_NavCenterView *ncview;
   HT_View view;
 } SelectorCBStruct;
-
-// Selector bar images list
-/* static */ RDFImageList * 
-XFE_NavCenterView::selectorBarImagesCache = NULL;
-#endif /*USE_SELECTOR_BAR*/
+#endif /*MOZ_SELECTOR_BAR*/
 
 //////////////////////////////////////////////////////////////////////////
 XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
@@ -78,7 +74,7 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 
   setBaseWidget(navCenterMainForm);
 
-#ifdef USE_SELECTOR_BAR
+#ifdef MOZ_SELECTOR_BAR
   m_selector = XtVaCreateManagedWidget("selector",
                    xfeToolScrollWidgetClass,
                    navCenterMainForm,
@@ -99,7 +95,7 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   XtVaSetValues(toolbar,
                 XmNshadowThickness,      0,
                 NULL);
-#endif /*USE_SELECTOR_BAR*/
+#endif /*MOZ_SELECTOR_BAR*/
 
   m_rdfview = new XFE_RDFView(this, m_widget, this, context);
 
@@ -110,12 +106,12 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
 #else
                 XmNbottomAttachment, XmATTACH_FORM,
 #endif
-#ifdef USE_SELECTOR_BAR
+#ifdef MOZ_SELECTOR_BAR
                 XmNleftAttachment,   XmATTACH_WIDGET,
                 XmNleftWidget,       m_selector,
 #else
                 XmNleftAttachment,   XmATTACH_FORM,
-#endif /*USE_SELECTOR_BAR*/
+#endif /*MOZ_SELECTOR_BAR*/
                 XmNrightAttachment,  XmATTACH_FORM,
 
 
@@ -139,12 +135,12 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
                 XmNtopWidget,        m_rdfview->getBaseWidget(),
                 XmNbottomAttachment, XmATTACH_FORM,
                 XmNleftAttachment,   XmATTACH_WIDGET,
-#ifdef USE_SELECTOR_BAR
+#ifdef MOZ_SELECTOR_BAR
                 XmNleftAttachment,   XmATTACH_WIDGET,
                 XmNleftWidget,       m_selector,
 #else
                 XmNleftAttachment,   XmATTACH_FORM,
-#endif /*USE_SELECTOR_BAR*/
+#endif /*MOZ_SELECTOR_BAR*/
                 XmNrightAttachment,  XmATTACH_FORM,
                 NULL);
 #endif
@@ -180,9 +176,9 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   addView(m_htmlview);
 #endif 
 
-#ifdef USE_SELECTOR_BAR
+#ifdef MOZ_SELECTOR_BAR
   XtManageChild(m_selector);
-#endif /*USE_SELECTOR_BAR*/
+#endif /*MOZ_SELECTOR_BAR*/
   m_rdfview->show();
 #ifdef HTML_PANE
   m_htmlview->show();
@@ -220,7 +216,7 @@ XFE_NavCenterView::notify(HT_Resource		n,
       D(printf("HT_Event: %s on %s\n","HT_EVENT_VIEW_SELECTED",
                HT_GetNodeName(n)););
       
-#ifdef USE_SELECTOR_BAR
+#ifdef MOZ_SELECTOR_BAR
       HT_View view = HT_GetView(n);
 
       /* The following block of code is to make sure that the view that is
@@ -251,7 +247,7 @@ XFE_NavCenterView::notify(HT_Resource		n,
           XfeToolBarSetSelectedButton(toolbar, button);
 
        }
-#endif /*USE_SELECTOR_BAR*/      
+#endif /*MOZ_SELECTOR_BAR*/      
     }
     break;
   case HT_EVENT_VIEW_ADDED: 
@@ -259,7 +255,7 @@ XFE_NavCenterView::notify(HT_Resource		n,
       D(printf("HT_Event: %s on %s\n","HT_EVENT_VIEW_ADDED",
                HT_GetNodeName(n)););
       
-#ifdef USE_SELECTOR_BAR
+#ifdef MOZ_SELECTOR_BAR
       HT_View view = HT_GetView(n);
       
       addRDFView(view);
@@ -284,7 +280,7 @@ XFE_NavCenterView::notify(HT_Resource		n,
   m_rdfview->notify(n,whatHappened);
 }
 //////////////////////////////////////////////////////////////////////
-#ifdef USE_SELECTOR_BAR
+#ifdef MOZ_SELECTOR_BAR
 void
 XFE_NavCenterView::setRDFView(HT_View view) 
 {
@@ -430,7 +426,7 @@ XFE_NavCenterView::getSelector(void)
   return (m_selector);
 
 }
-#endif /*USE_SELECTOR_BAR*/
+#endif /*MOZ_SELECTOR_BAR*/
 
  void 
 XFE_NavCenterView::handleDisplayPixmap(Widget w, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  width, PRInt32 height)

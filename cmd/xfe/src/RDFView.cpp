@@ -203,7 +203,7 @@ XFE_RDFView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtPointer /* 
 /*   XtVaSetValues(nc_base_widget, XmNresizable, True, NULL); */
   XtUnmanageChild(parent);
 
-#ifdef USE_SELECTOR_BAR
+#ifdef MOZ_SELECTOR_BAR
   Widget  selector  = (Widget )ncview->getSelector();
   XtUnmanageChild(selector);  
   XtVaSetValues(selector, XmNrightAttachment, XmATTACH_FORM, 
@@ -212,7 +212,7 @@ XFE_RDFView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtPointer /* 
                           XmNbottomAttachment, XmATTACH_FORM,
                           NULL);
   XtManageChild(selector);
-#endif /*USE_SELECTOR_BAR*/
+#endif /*MOZ_SELECTOR_BAR*/
 }
 //////////////////////////////////////////////////////////////////////////
 //
