@@ -368,13 +368,14 @@ calDavCalendar.prototype = {
               </filter>
           </calendar-query>;
 
-        this.reportInternal(queryXml.toXMLString(), false, aListener);
+        this.reportInternal(queryXml.toXMLString(), false, 1, aListener);
         return;
     },
 
-    reportInternal: function (aQuery, aOccurrences, aListener)
+    reportInternal: function (aQuery, aOccurrences, aCount, aListener)
     {
         var reportListener = new WebDavListener();
+        var count = 0;  // maximum number of hits to return
 
         reportListener.onOperationDetail = function(aStatusCode, aResource,
                                                     aOperation, aDetail,
@@ -392,6 +393,14 @@ calDavCalendar.prototype = {
 
             // XXX need to do better than looking for just 200
             if (aStatusCode == 200) {
+
+                // we've already called back the maximum number of hits, so 
+                // we're done here.
+                // 
+                if (aCount && count >= aCount) {
+                    return;
+                }
+                ++count;
 
                 // aDetail is the response element from the multi-status
                 // XXX try-catch
@@ -506,8 +515,6 @@ calDavCalendar.prototype = {
                          </filter>
                        </calendar-query>;
 
-        // XXX aCount
-
         // if a time range has been specified, do the appropriate restriction.
         // XXX no way to express "end of time" in caldav in either direction
         if (aRangeStart && aRangeStart.valid && 
@@ -528,7 +535,7 @@ calDavCalendar.prototype = {
         dump("queryString = " + queryString + "\n");
         var occurrences = (aItemFilter &
                            calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0; 
-        this.reportInternal(queryString, occurrences, aListener);
+        this.reportInternal(queryString, occurrences, aCount, aListener);
     },
 
     //
