@@ -146,6 +146,14 @@ namespace ICG {
         return dest;
     }
 
+    Register ICodeGenerator::loadString(String &value)
+    {
+        Register dest = getRegister();
+        LoadString *instr = new LoadString(dest, &value);
+        iCode->push_back(instr);
+        return dest;
+    }
+
     Register ICodeGenerator::newObject()
     {
         Register dest = getRegister();

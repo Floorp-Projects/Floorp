@@ -196,6 +196,7 @@ namespace ICG {
         Register compare(ICodeOp op, Register source1, Register source2);
         
         Register loadImmediate(double value);
+        Register loadString(String &value);
                 
         Register newObject();
         Register newArray();

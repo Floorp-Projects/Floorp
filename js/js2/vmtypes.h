@@ -70,6 +70,7 @@ namespace VM {
         JSR, /* target */
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
         LOAD_NAME, /* dest, name */
+        LOAD_STRING, /* dest, immediate value (string) */
         MOVE, /* dest, source */
         MULTIPLY, /* dest, source1, source2 */
         NEGATE, /* dest, source */
@@ -129,6 +130,7 @@ namespace VM {
         "JSR           ",
         "LOAD_IMMEDIATE",
         "LOAD_NAME     ",
+        "LOAD_STRING   ",
         "MOVE          ",
         "MULTIPLY      ",
         "NEGATE        ",
@@ -627,6 +629,22 @@ namespace VM {
             (LOAD_NAME, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[LOAD_NAME] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'";
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1 << '=' << registers[mOp1];
+            return f;
+        }
+    };
+
+    class LoadString : public Instruction_2<Register, String *> {
+    public:
+        /* dest, immediate value (string) */
+        LoadString (Register aOp1, String *aOp2) :
+            Instruction_2<Register, String *>
+            (LOAD_STRING, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[LOAD_STRING] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
