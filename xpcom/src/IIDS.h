@@ -965,31 +965,31 @@ nsIFrameImageLoader = { /* a6cf90ec-15b3-11d2-932e-00805f8add32 */
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90ed-15b3-11d2-932e-00805f8add32 */
+nsIAppShellComponent = { /* a6cf90ed-15b3-11d2-932e-00805f8add32 */
     0xa6cf90ed,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90ee-15b3-11d2-932e-00805f8add32 */
+nsIFindComponent = { /* a6cf90ee-15b3-11d2-932e-00805f8add32 */
     0xa6cf90ee,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90ef-15b3-11d2-932e-00805f8add32 */
+nsIUnknownContentTypeComponent = { /* a6cf90ef-15b3-11d2-932e-00805f8add32 */
     0xa6cf90ef,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90f0-15b3-11d2-932e-00805f8add32 */
+nsIFileDownloadComponent = { /* a6cf90f0-15b3-11d2-932e-00805f8add32 */
     0xa6cf90f0,
     0x15b3,
     0x11d2,
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}
   };
-INTERFACENAME = { /* a6cf90f1-15b3-11d2-932e-00805f8add32 */
+nsIBrowserComponent = { /* a6cf90f1-15b3-11d2-932e-00805f8add32 */
     0xa6cf90f1,
     0x15b3,
     0x11d2,
