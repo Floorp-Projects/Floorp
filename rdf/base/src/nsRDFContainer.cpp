@@ -196,7 +196,7 @@ RDFContainerImpl::GetCount(PRInt32 *aCount)
     rv = nextValLiteral->GetValue( getter_Copies(s) );
     if (NS_FAILED(rv)) return rv;
 
-    nsAutoString nextValStr = (const PRUnichar*) s;
+    nsAutoString nextValStr(NS_STATIC_CAST(const PRUnichar*, s));
 
     PRInt32 nextVal;
     PRInt32 err;

@@ -6557,7 +6557,7 @@ nsXULDocument::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResu
   nsAutoString nameSpace;
   gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
 
-  nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
+  nsCAutoString progID(NS_ELEMENT_FACTORY_PROGID_PREFIX);
   progID.AppendWithConversion(nameSpace);
 
   // Retrieve the appropriate factory.

@@ -1485,7 +1485,7 @@ static const char kRDFLILiteral1[] = "    <RDF:li>";
 static const char kRDFLILiteral2[] = "</RDF:li>\n";
 
             rdf_BlockingWrite(aStream, kRDFLILiteral1, sizeof(kRDFLILiteral1) - 1);
-            rdf_BlockingWrite(aStream, (const PRUnichar*) value);
+            rdf_BlockingWrite(aStream, nsAutoString(NS_STATIC_CAST(const PRUnichar*, value)));
             rdf_BlockingWrite(aStream, kRDFLILiteral2, sizeof(kRDFLILiteral2) - 1);
         }
         NS_RELEASE(literal);
@@ -1662,7 +1662,8 @@ static const char kXMLNS[]    = "\n     xmlns";
 nsresult
 RDFXMLDataSourceImpl::SerializeEpilogue(nsIOutputStream* aStream)
 {
-    rdf_BlockingWrite(aStream, NS_LITERAL_STRING("</RDF:RDF>\n"));
+      // can't use |NS_LITERAL_STRING| here until |rdf_BlockingWrite| is fixed to accept readables
+    rdf_BlockingWrite(aStream, NS_ConvertASCIItoUCS2("</RDF:RDF>\n"));
     return NS_OK;
 }
 
