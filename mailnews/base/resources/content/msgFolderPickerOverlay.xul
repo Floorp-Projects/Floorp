@@ -493,7 +493,7 @@ Rights Reserved.
               sortDirection="ascending"
               datasources="rdf:msgaccountmanager rdf:mailnewsfolders">
       <template>
-        <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+        <rule nc:NoSelect="false" iscontainer="true" isempty="false">
           <menupopup>
               <menu uri="..." 
                 class="folderMenuItem menu-iconic"
@@ -512,7 +512,7 @@ Rights Reserved.
               </menu>
           </menupopup>
        </rule>
-       <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+       <rule nc:NoSelect="true" iscontainer="true" isempty="false">
           <menupopup>
              <menu uri="..."
                class="folderMenuItem menu-iconic"
@@ -523,11 +523,11 @@ Rights Reserved.
                IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
                label="rdf:http://home.netscape.com/NC-rdf#Name">
-			   <menupopup class="menulist-menupopup"/>
+                <menupopup class="menulist-menupopup"/>
               </menu>
           </menupopup>
         </rule>
-        <rule nc:CanFileMessages="true">
+        <rule nc:NoSelect="false">
           <menupopup>
              <menuitem uri="..." value="..."  
               class="folderMenuItem menuitem-iconic"
