@@ -2249,7 +2249,8 @@ NS_IMETHODIMP nsViewManager2::Display(nsIView* aView)
 	localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
 
 	// Paint the view. The clipping rect was set above set don't clip again.
-	aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
+	//aView->Paint(*localcx, trect, NS_VIEW_FLAG_CLIP_SET, result);
+  RenderViews(aView,*localcx,trect,result);
 
 	// XXX Reset the view's origin
 	aView->SetPosition(x, y);
