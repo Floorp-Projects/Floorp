@@ -230,18 +230,24 @@
 
     <toolbar id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
       <toolbarbutton id="newfolder" label="&button.newFolder.label;"
+                     accesskey="&button.newFolder.accesskey;"
                      command="cmd_bm_newfolder"/>
       <toolbarbutton id="newseparator" label="&button.newSeparator.label;"
+                     accesskey="&button.newSeparator.accesskey;"
                      command="cmd_bm_newseparator"/>
       <toolbarseparator/>
       <toolbarbutton id="fileBookmark" label="&command.fileBookmark.label;"
+                     accesskey="&button.fileBookmark.accesskey;"
                      command="cmd_bm_fileBookmark"/>
       <toolbarseparator/>
       <toolbarbutton id="properties" label="&command.properties.label;"
+                     accesskey="&button.properties.accesskey;"
                      command="cmd_bm_properties"/>
       <toolbarbutton id="rename" label="&command.rename.label;"
+                     accesskey="&button.rename.accesskey;"
                      command="cmd_bm_rename"/>
       <toolbarbutton id="delete" label="&command.delete.label;"
+                     accesskey="&button.delete.accesskey;"
                      command="cmd_bm_delete"/>
     </toolbar>
 
