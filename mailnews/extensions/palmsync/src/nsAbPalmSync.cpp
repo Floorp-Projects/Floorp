@@ -54,6 +54,15 @@
 
 #define PERSONAL_ADDRBOOK_URL   "moz-abmdbdirectory://abook.mab" // defined in MozABConduitSync.h
 
+void PRTime2Seconds(PRTime prTime, PRUint32 *seconds)
+{
+  PRInt64 microSecondsPerSecond, intermediateResult;
+  
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_DIV(intermediateResult, prTime, microSecondsPerSecond);
+  LL_L2UI((*seconds), intermediateResult);
+}
+
 #ifdef DEBUG_bienvenu
    PRBool PalmDataDisplayed = PR_FALSE;
    void DisplayTestData(nsABCOMCardStruct * aIPCCard, PRBool IsUnicode)
@@ -312,7 +321,7 @@ nsresult nsAbPalmHotSync::AddAllRecordsToAB(PRBool existingAB, PRInt32 aCount, l
     if(NS_SUCCEEDED(rv)) {
         mDBOpen = PR_FALSE;
         PRUint32 modTimeInSec;
-        nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
+        PRTime2Seconds(PR_Now(), &modTimeInSec);
         rv = UpdateABInfo(modTimeInSec, mPalmCategoryIndex);
     }
     else { // get back the previous file
@@ -471,7 +480,7 @@ nsresult nsAbPalmHotSync::DoSyncAndGetUpdatedCards(PRInt32 aPalmCount, lpnsABCOM
         {
             mDBOpen = PR_FALSE;
             PRUint32 modTimeInSec;
-            nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
+            PRTime2Seconds(PR_Now(), &modTimeInSec);
             rv = UpdateABInfo(modTimeInSec, mPalmCategoryIndex);
         }
         else
@@ -888,7 +897,7 @@ nsresult nsAbPalmHotSync::UpdateMozABWithPalmRecords()
             || (ipcCard.GetStatus() == ATTR_NONE)) 
         {
             PRUint32 modTimeInSec;
-            nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
+            PRTime2Seconds(PR_Now(), &modTimeInSec);
             ipcCard.SetLastModifiedDate(modTimeInSec);
             rv = mABDB->CreateNewCardAndAddToDB(newCard, PR_FALSE);
             if(NS_SUCCEEDED(rv)) 
@@ -940,7 +949,7 @@ nsresult nsAbPalmHotSync::Done(PRBool aSuccess, PRInt32 aPalmCatIndex, PRUint32 
             {
                 mDBOpen = PR_FALSE;
                 PRUint32 modTimeInSec;
-                nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
+                PRTime2Seconds(PR_Now(), &modTimeInSec);
                 rv = UpdateABInfo(modTimeInSec, aPalmCatIndex);
             }
         }
@@ -976,7 +985,7 @@ nsresult nsAbPalmHotSync::UpdateSyncInfo(long aCategoryIndex)
   // aCategoryIndex = -1 means that callers want to reset the mod time as well. 
   mDBOpen = PR_FALSE;
   PRUint32 modTimeInSec;
-  nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
+  PRTime2Seconds(PR_Now(), &modTimeInSec);
   if (aCategoryIndex >= 0)
     return(UpdateABInfo(modTimeInSec, aCategoryIndex));
   else
@@ -1041,7 +1050,7 @@ nsresult nsAbPalmHotSync::RenameAB(long aCategoryIndex, const char * aABUrl)
   rv = properties->SetCategoryId(aCategoryIndex);
   NS_ENSURE_SUCCESS(rv,rv);
   PRUint32 modTimeInSec;
-  nsAddrDatabase::PRTime2Seconds(PR_Now(), &modTimeInSec);
+  PRTime2Seconds(PR_Now(), &modTimeInSec);
   rv = properties->SetSyncTimeStamp(modTimeInSec);
   NS_ENSURE_SUCCESS(rv,rv);
 
