@@ -242,9 +242,6 @@ public:
   /**********************************************************************
     string conversion methods...
    *********************************************************************/
-//#ifndef STANDALONE_STRING_TESTS
-  operator const char*() const {return (const char*)mStr;}
-//#endif
 
   /**
    * Perform string to float conversion.
@@ -513,7 +510,6 @@ class NS_COM NS_ConvertUCS2toUTF8
     private:
         // NOT TO BE IMPLEMENTED
       NS_ConvertUCS2toUTF8( char );
-      operator const char*() const;  // use |get()|
   };
 
 /**
@@ -542,7 +538,6 @@ class NS_COM NS_LossyConvertUCS2toASCII
     private:
         // NOT TO BE IMPLEMENTED
       NS_LossyConvertUCS2toASCII( char );
-      operator const char*() const;  // use |get()|
   };
 #endif
 
