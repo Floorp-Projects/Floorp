@@ -2537,7 +2537,7 @@ void DIR_SetFileName(char** fileName, const char* leafName)
 	char* tempName = WH_TempName(type, leafName);
 	char* nativeName = WH_FileName(tempName, type);
 	char* urlName = XP_PlatformFileToURL(nativeName);
-#if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_MAC) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_MAC) || defined(XP_OS2) || defined(XP_BEOS)
 	char* newLeafName = XP_STRRCHR (urlName + PL_strlen("file://"), '/');
 	(*fileName) = newLeafName ? PL_strdup(newLeafName + 1) : PL_strdup(urlName + PL_strlen("file://"));
 #else

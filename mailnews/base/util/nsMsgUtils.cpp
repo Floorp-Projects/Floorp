@@ -238,7 +238,7 @@ nsresult NS_MsgHashIfNecessary(nsString &name)
   const PRUint32 MAX_LEN = 8;
 #elif defined(XP_MAC)
   const PRUint32 MAX_LEN = 25;
-#elif defined(XP_UNIX) || defined(XP_PC)
+#elif defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
   const PRUint32 MAX_LEN = 55;
 #else
 #error need_to_define_your_max_filename_length

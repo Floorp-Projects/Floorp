@@ -88,7 +88,7 @@ GetTheTempDirectoryOnTheSystem(void)
 
   // RICHIE - should do something better here!
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
   PL_strncpy(retPath, "/tmp/", 1024);
 #endif
 

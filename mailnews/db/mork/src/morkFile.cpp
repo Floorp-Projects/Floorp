@@ -231,11 +231,11 @@ morkFile::NewFileErrnoError(morkEnv* ev) const
        "\015\012\015\012\015\012\015\012\015\012\015\012\015\012\015\012";
 #    define morkFile_kNewlinesCount 8
 #  else
-#    ifdef MORK_UNIX
+#    if defined(MORK_UNIX) || defined(MORK_BEOS)
        static const char* morkFile_kNewlines = 
        "\012\012\012\012\012\012\012\012\012\012\012\012\012\012\012\012";
 #      define morkFile_kNewlinesCount 16
-#    endif /* MORK_UNIX */
+#    endif /* MORK_UNIX || MORK_BEOS */
 #  endif /* MORK_WIN */
 #endif /* MORK_MAC */
 
