@@ -27,6 +27,7 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 #include <windows.h>
+#include <winuser.h>
 
 #include "nsIAppShell.h"
 #include "nsGUIEvent.h"
@@ -98,6 +99,7 @@ nsContextMenu::nsContextMenu()
   mWebShell       = nsnull;
   mConstructed    = false;
   mAlignment      = "topleft";
+  mAnchorAlignment = "none";
 }
 
 //-------------------------------------------------------------------------
@@ -119,7 +121,8 @@ nsContextMenu::~nsContextMenu()
 // Create the proper widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignment)
+NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignment,
+                                const nsString& anAnchorAlignment)
 {
   if(aParent)
   {
@@ -132,7 +135,7 @@ NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignmen
   }
 
   mAlignment = anAlignment;
-
+  mAnchorAlignment = anAnchorAlignment;
   mMenu = CreatePopupMenu();
   return NS_OK;
 }
@@ -411,6 +414,51 @@ nsEventStatus nsContextMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
     alignFlags = TPM_BOTTOMALIGN | TPM_RIGHTALIGN;
   }
   alignFlags |= TPM_RETURNCMD;
+
+/* Commented out. Don't understand how to compile this so that it works.
+  if (mAnchorAlignment == "topleft") {
+    // Fancy animation in this case matters for 
+    // bottomleft and topright
+    if (mAlignment == "topright") {
+      // Sliding from right to left
+      alignFlags |= TPM_HORPOSANIMATION;
+    }
+    else if (mAlignment == "bottomleft") {
+      // Sliding from bottom to top
+      alignFlags |= TPM_VERNEGANIMATION;
+    }
+  }
+  else if (mAnchorAlignment == "topright") {
+    if (mAlignment == "topleft") {
+      // Sliding from left to right
+      alignFlags |= TPM_HORNEGANIMATION;
+    }
+    else if (mAlignment == "bottomright") {
+      // Sliding from bottom to top
+      alignFlags |= TPM_VERNEGANIMATION;
+    }
+  }
+  else if (mAnchorAlignment == "bottomright") {
+    if (mAlignment == "bottomleft") {
+      // Sliding from left to right
+      alignFlags |= TPM_HORNEGANIMATION;
+    }
+    else if (mAlignment == "topright") {
+      // Sliding from top to bottom
+      alignFlags |= TPM_VERPOSANIMATION;
+    }
+  }
+  else if (mAnchorAlignment == "bottomleft") {
+    if (mAlignment == "topleft") {
+      // Sliding from top to bottom
+      alignFlags |= TPM_VERPOSANIMATION;
+    }
+    else if (mAlignment == "bottomright") {
+      // Sliding from right to left
+      alignFlags |= TPM_HORPOSANIMATION;
+    }
+  }
+*/
 
   PRInt32 identifier = ::TrackPopupMenu(
 	  mMenu, 

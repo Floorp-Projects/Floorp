@@ -152,7 +152,8 @@ nsContextMenu::~nsContextMenu()
 // Create the proper widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignment)
+NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignment,
+                                const nsString& anAnchorAlignment)
 {
   mParent = aParent;
   mMacMenuHandle = ::NewMenu(mMacMenuIDCount, (const unsigned char *)"");
