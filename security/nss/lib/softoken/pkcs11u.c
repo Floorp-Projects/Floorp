@@ -1018,7 +1018,15 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	    nsslowkey_DestroyPublicKey(pubKey);
 	    break;
 	}
-	SHA1_HashBuf(hash,item->data,item->len);
+	/* Temporary workaround for bug 115360, backwards compatibility
+	 * failures with DSA certs.  Strips the leading 0 when computing
+	 * CKA_ID.
+	 */
+	if (pubKey->keyType == NSSLOWKEYDSAKey && item->data[0] == 0) {
+	    SHA1_HashBuf(hash,item->data + 1,item->len - 1);
+	} else {
+	    SHA1_HashBuf(hash,item->data,item->len);
+	}
 	/* item is imbedded in pubKey, just free the key */
 	nsslowkey_DestroyPublicKey(pubKey);
 	return pk11_NewTokenAttribute(type, hash, SHA1_LENGTH, PR_TRUE);
