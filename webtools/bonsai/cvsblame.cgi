@@ -398,7 +398,7 @@ print "</TD></TR></TABLE>\n";
 if ($use_layers || $use_dom) {
   # Write out cvs log messages as a JS variables
   # or hidden <div>'s
-  print "<SCRIPT>" if $use_layers;
+  print "<SCRIPT type='application/x-javascript'><--\n" if $use_layers;
   while (my ($revision, $junk) = each %usedlog) {
     
     # Create a safe variable name for a revision log
@@ -423,7 +423,7 @@ if ($use_layers || $use_dom) {
     print "\";\n" if $use_layers;
     print "</div>\n" if $use_dom;
   }
-  print "</SCRIPT>";
+  print "//--></SCRIPT>";
 }
 
 &print_bottom;
@@ -452,7 +452,7 @@ sub print_top {
     print "<HTML><HEAD><TITLE>CVS Blame $title_text</TITLE>";
 
     print <<__TOP__ if $use_layers;
-<SCRIPT>
+<SCRIPT type='application/x-javascript'><!--
 var event = 0;	// Nav3.0 compatibility
 document.loaded = false;
 
@@ -517,14 +517,14 @@ max_link_length = 0;
 
 initialLayer = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A000><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=6><TR><TD BGCOLOR=#FFFFFF><B>Page loading...please wait.</B></TD></TR></TABLE></td></tr></table>";
 
-</SCRIPT>
+//--></SCRIPT>
 </HEAD>
 <BODY onLoad="finishedLoad();" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">
 <LAYER SRC="javascript:initialLayer" NAME='popup' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
 <LAYER SRC="javascript:initialLayer" NAME='popup_guide' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 VISIBILITY='hide'></LAYER>
 __TOP__
     print <<__TOP__ if $use_dom;
-<script language="JavaScript">
+<script type="application/x-javascript"><!--
 var r
 function showMessage(rev,line) {
     if (r) {
@@ -548,7 +548,7 @@ function hideMessage() {
         r.style.display='none'
     }
 }
-</script>
+//--></script>
 
 <style type="text/css">
 body {

@@ -520,7 +520,7 @@ sub parse_date {
 sub setup_script {
 
     my $script_str = qq{
-<script>
+<script type="application/x-javascript"><!--
 var event = 0;	// Nav3.0 compatibility
 
 function js_who_menu(n,extra,d) {
@@ -567,7 +567,7 @@ function js_file_menu(repos,dir,file,rev,branch,d) {
 }
 
 
-</script>
+//--></script>
 
 <layer name="popup"  onMouseOut="this.visibility='hide';" left=0 top=0 bgcolor="#ffffff" visibility="hide">
 </layer>

@@ -477,9 +477,9 @@ sub do_diff_frameset {
 # Create links to document created by DIFF command.
 sub do_diff_links {
 
-    print qq{
+    print qq%
         <HEAD>
-        <SCRIPT LANGUAGE='JavaScript'>
+        <SCRIPT type="application/x-javascript"><!--
         var anchor = -1;
         function nextAnchor() {
             if (anchor < parent.frames[0].document.anchors.length)
@@ -489,12 +489,12 @@ sub do_diff_links {
             if (anchor > 0)
                 parent.frames[0].location.hash = --anchor;
         };
-        </SCRIPT>
+        //--></SCRIPT>
         <TITLE>$opt_file: $opt_rev1 vs. $opt_rev2</TITLE>
         </HEAD>
         <BODY BGCOLOR="#FFFFFF" TEXT="#000000"
             LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
-    };
+    %;
     CheckHidden("$dir/$opt_file");
 
     chdir($dir);
