@@ -2,12 +2,12 @@
 
 <!ENTITY title.label                  "Mouse Wheel">
 <!ENTITY mouseWheelTitle.label        "Mouse wheel configuration">
-<!ENTITY mouseWheelPanel.label        "When ">
+<!ENTITY mouseWheelPanel.label        "Specify mouse wheel behavior when used with this modifier key: ">
 <!ENTITY mouseWheelPanel.accesskey    "w">
-<!ENTITY usingJustTheWheel.label      "using just the mouse wheel">
-<!ENTITY usingWheelAndAlt.label       "using the wheel while pressing the &altKey.label; key">
-<!ENTITY usingWheelAndCtrl.label      "using the wheel while pressing the &ctrlKey.label; key">
-<!ENTITY usingWheelAndShft.label      "using the wheel while pressing the &shiftKey.label; key">
+<!ENTITY usingJustTheWheel.label      "No modifier key">
+<!ENTITY usingWheelAndAlt.label       "&altKey.label;">
+<!ENTITY usingWheelAndCtrl.label      "&ctrlKey.label;">
+<!ENTITY usingWheelAndShft.label      "&shiftKey.label;">
 <!ENTITY scroll.label                 "Scroll the document by ">
 <!ENTITY scroll.accesskey             "s">
 <!ENTITY scrollLines.label            " lines. ">
