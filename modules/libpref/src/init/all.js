@@ -335,9 +335,6 @@ pref("capability.principal.codebase.foo.granted", "UniversalFoo");
 //////////////////////////////////////////////////////////
 
 pref("dom.disable_open_during_load", false);
-// 0 = never allow scripts to close windows that weren't opened by script,
-// 1 = prompt user,  2 = always allow. Default is prompt.
-pref("dom.allow_scripts_to_close_windows", 1);
 
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
