@@ -44,7 +44,6 @@
 #include "nsICookieManager.h"
 #include "nsICookieManager2.h"
 #include "nsIObserver.h"
-#include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
 #include "nsCookie.h"
@@ -71,14 +70,12 @@ class nsInt64;
 class nsCookieService : public nsICookieService
                       , public nsICookieManager2
                       , public nsIObserver
-                      , public nsIWebProgressListener
                       , public nsSupportsWeakReference
 {
   public:
     // nsISupports
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
-    NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSICOOKIESERVICE
     NS_DECL_NSICOOKIEMANAGER
     NS_DECL_NSICOOKIEMANAGER2
@@ -92,7 +89,7 @@ class nsCookieService : public nsICookieService
     nsresult                      ReadPrefs();
     nsresult                      Read();
     nsresult                      Write();
-    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsDependentCString &aCookieHeader, nsInt64 aServerTime, nsCookieStatus aStatus, nsCookiePolicy aPolicy);
+    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, nsDependentCString &aCookieHeader, nsInt64 aServerTime, nsCookieStatus aStatus, nsCookiePolicy aPolicy);
     nsresult                      AddInternal(nsCookie *aCookie, nsInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentSingleFragmentCSubstring &aTokenString, nsDependentSingleFragmentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
@@ -115,8 +112,13 @@ class nsCookieService : public nsICookieService
 
     // Use LazyWrite to save the cookies file on a timer. It will write
     // the file only once if repeatedly hammered quickly.
-    void                          LazyWrite(PRBool aForce);
+    void                          LazyWrite();
     static void                   DoLazyWrite(nsITimer *aTimer, void *aClosure);
+
+    // Use LazyNotify to broadcast the "cookieChanged" notification at
+    // a reasonable frequency.
+    void                          LazyNotify();
+    static void                   DoLazyNotify(nsITimer *aTimer, void *aClosure);
 
   protected:
     // cached members
@@ -128,9 +130,8 @@ class nsCookieService : public nsICookieService
 
     // impl members
     nsCOMPtr<nsITimer>            mWriteTimer;
+    nsCOMPtr<nsITimer>            mNotifyTimer;
     nsVoidArray                   mCookieList;
-    PRUint32                      mLoadCount;
-    PRPackedBool                  mWritePending;
     PRPackedBool                  mCookieChanged;
     PRPackedBool                  mCookieIconVisible;
 
@@ -142,10 +143,8 @@ class nsCookieService : public nsICookieService
     PRPackedBool                  mCookiesEnabled_temp,               // These two prefs are collapsed
                                   mCookiesForDomainOnly_temp;         // into mCookiesPermissions.
 #endif
-    PRPackedBool                  mCookiesAskPermission, // Ask user permission before storing cookie
-                                  mCookiesLifetimeEnabled,            // Cookie lifetime limit enabled
+    PRPackedBool                  mCookiesLifetimeEnabled,            // Cookie lifetime limit enabled
                                   mCookiesLifetimeCurrentSession,     // Limit cookie lifetime to current session
-                                  mCookiesDisabledForMailNews,        // Disable cookies in mailnews
                                   mCookiesStrictDomains; // Optional pref to apply stricter domain checks
     PRUint8                       mCookiesPermissions;   // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT, P3P}
     PRInt32                       mCookiesLifetimeSec;                // Lifetime limit specified in seconds

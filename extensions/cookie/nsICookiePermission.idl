@@ -36,36 +36,91 @@
 
 #include "nsISupports.idl"
 
+interface nsICookie;
+interface nsIURI;
+interface nsIChannel;
+
+typedef long nsCookieAccess;
+
 /**
  * An interface to test for cookie permissions
  */
-
-interface nsICookie;
-interface nsIURI;
-interface nsIDOMWindow;
-
-[scriptable, uuid(EF565D0A-AB9A-4A13-9160-0644CDFD859A)]
+[scriptable, uuid(91f1c3ec-73a0-4bf0-bdc5-348a1f181b0e)]
 interface nsICookiePermission : nsISupports
 {
   /**
-   * Test if a cookie from the given host should be accepted or denied,
-   * only by prompting the user (does not perform a permissionlist lookup)
-   * @param uri             the website to be tested
-   * @param cookie          the cookie that wants to be set
-   * @param parent          the parant window
-   * @param cookiesFromHost number of cookies this host already has set
-   * @param changingCookie  are we changing this cookie?
-   * @param showDialog      show a prompt to the user?
-   * @return                whether the cookie has permission to be loaded
+   * nsCookieAccess values
    */
-  boolean testPermission(in nsIURI uri,
-                         in nsICookie cookie,
-                         in nsIDOMWindow parent,
-                         in long cookiesFromHost,
-                         in boolean changingCookie,
-                         in boolean showDialog);
+  const nsCookieAccess ACCESS_DEFAULT = 0;
+  const nsCookieAccess ACCESS_ALLOW   = 1;
+  const nsCookieAccess ACCESS_DENY    = 2;
+
+  /**
+   * setAccess
+   *
+   * this method is called to block cookie access for the given URI.  this
+   * may result in other URIs being blocked as well (e.g., URIs which share
+   * the same host name).
+   *
+   * @param aURI
+   *        the URI to block
+   * @param aAccess
+   *        the new cookie access for the URI
+   */
+  void setAccess(in nsIURI         aURI,
+                 in nsCookieAccess aAccess);
+
+  /**
+   * canAccess
+   *
+   * this method is called to test whether or not the given URI/channel may
+   * access the cookie database, either to set or get cookies.
+   *
+   * @param aURI
+   *        the URI trying to access cookies
+   * @param aFirstURI
+   *        the URI initiated by the user that resulted in aURI being loaded
+   * @param aChannel
+   *        the channel corresponding to aURI
+   *
+   * @return nsCookieAccess value
+   */
+  nsCookieAccess canAccess(in nsIURI     aURI,
+                           in nsIURI     aFirstURI,
+                           in nsIChannel aChannel);
+
+  /**
+   * canSetCookie
+   *
+   * this method is called to test whether or not the given URI/channel may
+   * set a specific cookie.  this method is always preceded by a call to
+   * canAccessCookies.
+   *
+   * @param aURI
+   *        the URI trying to set the cookie
+   * @param aChannel
+   *        the corresponding to aURI
+   * @param aCookie
+   *        the cookie being added to the cookie database
+   * @param aNumCookiesFromHost
+   *        the number of cookies this host already has set
+   * @param aChangingCookie
+   *        PR_TRUE if the cookie is being modified; otherwise, the cookie
+   *        is new
+   *
+   * @return true if the cookie can be set.
+   */
+  boolean canSetCookie(in nsIURI     aURI,
+                       in nsIChannel aChannel,
+                       in nsICookie  aCookie,
+                       in long       aNumCookiesFromHost,
+                       in boolean    aChangingCookie);
 };
 
 %{ C++
+/**
+ * The nsICookiePermission implementation is an XPCOM service registered
+ * under the ContractID:
+ */
 #define NS_COOKIEPERMISSION_CONTRACTID "@mozilla.org/cookie/permission;1"
 %}
