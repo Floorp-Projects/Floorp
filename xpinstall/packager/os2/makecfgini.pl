@@ -91,7 +91,7 @@ $nameCompany      = $ENV{WIZ_nameCompany};
 $nameProduct      = $ENV{WIZ_nameProduct};
 $nameProductNoVersion = $ENV{WIZ_nameProductNoVersion};
 $fileMainExe      = $ENV{WIZ_fileMainExe};
-$fileMainIco      = $ENV{WIZ_fileMainIco;
+$fileMainIco      = $ENV{WIZ_fileMainIco};
 $fileUninstall    = $ENV{WIZ_fileUninstall};
 $fileUninstallZip = $ENV{WIZ_fileUninstallZip};
 
