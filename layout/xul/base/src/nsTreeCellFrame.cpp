@@ -281,10 +281,9 @@ nsTreeCellFrame::CanResize(nsPoint& aPoint, nsTableColFrame** aResult) {
   parent->IndexOf(mContent, index);
   PRInt32 count;
   parent->ChildCount(count);
-  count--;
-
+  
   PRBool onLeftEdge = (index > 0 && (rect.width - diff) <= 90);
-  PRBool onRightEdge = (index < count && diff <= 90);
+  PRBool onRightEdge = (index < (count-1) && diff <= 90);
 
   if (onLeftEdge || onRightEdge) {
     // We're over the right place.

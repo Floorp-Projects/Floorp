@@ -235,7 +235,7 @@ nsTreeRowFrame::GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture
     *aFrame = this;
     nsRect rect;
     GetRect(rect);
-    if (!rect.Contains(aPoint)) {
+    if (rect.x > aPoint.x || (rect.x+rect.width < aPoint.x)) {
       mHitFrame = nsnull;
     }
   }
@@ -251,7 +251,7 @@ nsTreeRowFrame::GetCursor(nsIPresContext& aPresContext,
   if (mDraggingHeader) {
     nsRect rect;
     GetRect(rect);
-    if (rect.Contains(aPoint)) {
+    if (rect.x > aPoint.x || (rect.x+rect.width < aPoint.x)) {
       aCursor = NS_STYLE_CURSOR_W_RESIZE;
     }
     else {
