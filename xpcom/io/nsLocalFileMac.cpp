@@ -1093,7 +1093,7 @@ nsLocalFile::ResolveAndStat()
 	    }
         mFollowLinksDirty = PR_TRUE;
     }
-    if (mFollowLinksDirty)
+    if (mFollowLinksDirty && (err == noErr))
     {
         if (mFollowLinks)
         {
