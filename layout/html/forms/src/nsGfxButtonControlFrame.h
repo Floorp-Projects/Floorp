@@ -95,7 +95,6 @@ private:
   nscoord mSuggestedWidth;
   nscoord mSuggestedHeight;
   nsCOMPtr<nsITextContent> mTextContent;
-  nsString mUpdateValue;
 };
 
 
