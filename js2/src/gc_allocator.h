@@ -1,4 +1,4 @@
-// -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+// -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*-
 //
 // The contents of this file are subject to the Netscape Public
 // License Version 1.1 (the "License"); you may not use this file
@@ -78,7 +78,7 @@ namespace JavaScript {
 		static void finalizer(void* obj, void* client_data)
 		{
 			T* t = static_cast<T*>(obj);
-			size_t n = static_cast<size_t>(client_data);
+			size_t n = reinterpret_cast<size_t>(client_data);
 			for (size_t i = 0; i < n; ++i)
 				t[i].~T();
 		}
@@ -87,7 +87,7 @@ namespace JavaScript {
 		{
 			T* t = gc_traits<T>::allocate(n);
 			GC_finalization_proc old_proc; void* old_client_data;
-			GC_register_finalizer((void*)t, &finalizer, (void*)n, &old_proc, &old_client_data);
+			GC_register_finalizer(t, &finalizer, reinterpret_cast<void*>(n), &old_proc, &old_client_data);
 			return t;
 		}
 	};
@@ -118,7 +118,11 @@ namespace JavaScript {
 		static void construct(pointer p, const T &val) { new(p) T(val);}
 		static void destroy(pointer p) { p->~T(); }
 		
+#ifdef __GNUC__
+        static size_type max_size() { return size_type(-1) / sizeof(T); }
+#else
 		static size_type max_size() { return std::numeric_limits<size_type>::max() / sizeof(T); }
+#endif
 
 		template<class U> struct rebind { typedef gc_allocator<U> other; };
 		

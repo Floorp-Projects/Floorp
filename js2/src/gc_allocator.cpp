@@ -1,3 +1,8 @@
+// -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4 -*-
+//
+// The contents of this file are subject to the Netscape Public
+// License Version 1.1 (the "License"); you may not use this file
+// except in compliance with the License. You may obtain a copy of
 // the License at http://www.mozilla.org/NPL/
 //
 // Software distributed under the License is distributed on an "AS
@@ -17,10 +22,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
-namespace JavaScript {
+#include <algorithm>
 
 /*
+namespace JavaScript {
+
 template <class T>
 typename gc_allocator<T>::pointer
 gc_allocator<T>::allocate(gc_allocator<T>::size_type n, const void*)
@@ -34,18 +40,26 @@ void gc_allocator<T>::deallocate(gc_allocator<T>::pointer ptr, gc_allocator<T>::
 	// this can really be a NO-OP with the GC.
 	// ::GC_free(static_cast<void*>(ptr));
 }
- */
 
 }
+ */
 
 // test driver for standalone GC development.
 
 namespace JS = JavaScript;
 
+#ifdef __GNUC__
+// grr, what kind of standard is this?
 template <class T> struct gc_types {
-	typedef std::basic_string<T, std::char_traits<T>, JS::gc_allocator<T> > string;
+	typedef basic_string<T, string_char_traits<T>, JS::gc_allocator<T> > string;
 	typedef std::vector<T, JS::gc_allocator<T> > vector;
 };
+#else
+template <class T> struct gc_types {
+	// typedef std::basic_string<T, std::char_traits<T>, JS::gc_allocator<T> > string;
+	typedef typename std::vector<T, JS::gc_allocator<T> > vector;
+};
+#endif
 
 template <class T>
 void* operator new(std::size_t, const JS::gc_allocator<T>& alloc)
@@ -65,10 +79,7 @@ public:
 	
 	static int instances;
 	
-	void* operator new(std::size_t)
-	{
-		return allocator::allocate(1);
-	}
+	void* operator new(std::size_t) {return allocator::allocate(1);}
 	
 	A()
 	{
@@ -84,24 +95,27 @@ protected:
 	}
 
 private:
-	void operator delete(void*) {}
+	// void operator delete(void*) {}
 };
 
 int A::instances = 0;
 
-void main(int /* argc */, char* /* argv[] */)
+int main(int /* argc */, char* /* argv[] */)
 {
 	using namespace std;
 	using namespace JS;
 
 	cout << "testing the GC allocator." << endl;
 
+#ifdef XP_MAC
 	// allocate a string, using the GC, and owned by an auto_ptr, that knows how to correctly destroy the string.
 	typedef gc_types<char>::string char_string;
 	typedef gc_allocator<char_string> char_string_alloc;
-	auto_ptr<char_string, char_string_alloc> ptr(new(char_string_alloc()) char_string("This is a garbage collectable string."));
-	const char_string& str = *ptr;
+	// auto_ptr<char_string, char_string_alloc> ptr(new(char_string_alloc()) char_string("This is a garbage collectable string."));
+	// const char_string& str = *ptr;
+	char_string str("This is a garbage collectable string.");
 	cout << str << endl;
+#endif
 	
 	// question, how can we partially evaluate a template?
 	// can we say, typedef template <class T> vector<typename T>.
@@ -111,7 +125,7 @@ void main(int /* argc */, char* /* argv[] */)
 	// generate 1000 random values.
 	int_vector values;
 	for (int i = 0; i < 1000; ++i) {
-		int value = rand();
+		int value = rand() % 32767;
 		values.push_back(value);
 		// allocate a random amount of garbage.
 		if (!GC_malloc(static_cast<size_t>(value)))
@@ -121,7 +135,8 @@ void main(int /* argc */, char* /* argv[] */)
 	}
 
 	// run a collection.
-	gc_allocator<void>::collect();
+	// gc_allocator<void>::collect();
+	GC_gcollect();
 
 	// print out instance count.
 	cout << "A::instances = " << A::instances << endl;
@@ -135,7 +150,11 @@ void main(int /* argc */, char* /* argv[] */)
 	while (iter < last)
 		cout << ' ' << *iter++;
 	cout << endl;
-	
+
+#ifdef XP_MAC	
 	// finally, print the string again.
 	cout << str << endl;
+#endif
+
+	return 0;
 }
