@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nss.h,v 1.37 2004/04/27 23:04:38 gerv%gerv.net Exp $ */
+/* $Id: nss.h,v 1.38 2004/09/16 16:31:45 saul.edwards%sun.com Exp $ */
 
 #ifndef __nss_h_
 #define __nss_h_
@@ -78,6 +78,11 @@ extern PRBool NSS_VersionCheck(const char *importedVersion);
  * Default policy settings disallow all ciphers.
  */
 extern SECStatus NSS_Init(const char *configdir);
+
+/*
+ * Returns whether NSS has already been initialized or not.
+ */
+extern PRBool NSS_IsInitialized(void);
 
 /*
  * Open the Cert, Key, and Security Module databases, read/write.
