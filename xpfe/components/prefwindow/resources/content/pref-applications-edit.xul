@@ -308,10 +308,6 @@
     </rows>
   </grid>
   
-  <hbox autostretch="never">
-    <checkbox id="outgoingDefault" label="&outgoingDefault.label;" accesskey="&outgoingDefault.accesskey;" disabled="true"/>
-  </hbox>
-  
   <separator class="thin"/>
 
   <groupbox orient="vertical">

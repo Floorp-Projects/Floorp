@@ -68,6 +68,7 @@
         <text class="label" value="&newAppPath.label;" accesskey="&newAppPath.accesskey;"
               for="appPath"/>
         <textbox id="appPath" flex="1"/>
+        
       </row>
       <row>
         <spring/>
@@ -79,13 +80,7 @@
       </row>
     </rows>
   </grid>
-  
-  <separator class="thin"/>
-  
-  <hbox autostretch="never">
-    <checkbox id="outgoingDefault" label="&outgoingDefault.label;" accesskey="&outgoingDefault.accesskey;" disabled="true"/>
-  </hbox>
-  
+    
   <separator/>
   
   <hbox id="okCancelButtonsRight"/>

@@ -2,7 +2,6 @@ var gDescriptionField = null;
 var gExtensionField   = null;
 var gMIMEField        = null;
 var gAppPath          = null;
-var gOutgoingMIME     = null;
 
 var gPrefApplicationsBundle = null;
 
@@ -14,7 +13,6 @@ function Startup()
   gExtensionField   = document.getElementById("extensions");
   gMIMEField        = document.getElementById("mimeType");
   gAppPath          = document.getElementById("appPath");
-  gOutgoingMime     = document.getElementById("outgoingDefault");
     
   gPrefApplicationsBundle = document.getElementById("bundle_prefApplications");
 
