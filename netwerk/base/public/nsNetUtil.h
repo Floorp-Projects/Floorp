@@ -561,10 +561,10 @@ NS_CheckPortSafety(PRInt32       port,
 }
 
 inline nsresult
-NS_NewProxyInfo(const char    *type,
-                const char    *host,
-                PRInt32        port,
-                nsIProxyInfo **result)
+NS_NewProxyInfo(const nsACString &type,
+                const nsACString &host,
+                PRInt32           port,
+                nsIProxyInfo    **result)
 {
     nsresult rv;
     static NS_DEFINE_CID(kPPSServiceCID, NS_PROTOCOLPROXYSERVICE_CID);

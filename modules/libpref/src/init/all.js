@@ -598,6 +598,7 @@ pref("network.proxy.socks",                 "");
 pref("network.proxy.socks_port",            0);
 pref("network.proxy.socks_version",         5);
 pref("network.proxy.no_proxies_on",         "localhost, 127.0.0.1");
+pref("network.proxy.failover_timeout",      1800); // 30 minutes
 pref("network.online",                      true); //online/offline
 pref("network.cookie.cookieBehavior",       3); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
 pref("network.cookie.disableCookieForMailNews", true); // disable all cookies for mail

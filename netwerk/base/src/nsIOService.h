@@ -75,36 +75,29 @@ class nsIOService : public nsIIOService
 {
 public:
     NS_DECL_ISUPPORTS
-
-    // nsIIOService methods:
     NS_DECL_NSIIOSERVICE
-
-    // nsIObserver methods:
     NS_DECL_NSIOBSERVER
 
-    // nsIOService methods:
-    nsIOService();
-    virtual ~nsIOService();
+    nsIOService() NS_HIDDEN;
+    ~nsIOService() NS_HIDDEN;
 
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
-
-    nsresult Init();
-    nsresult NewURI(const char* aSpec, nsIURI* aBaseURI,
-                    nsIURI* *result, nsIProtocolHandler* *hdlrResult);
+    NS_HIDDEN_(nsresult) Init();
+    NS_HIDDEN_(nsresult) NewURI(const char* aSpec, nsIURI* aBaseURI,
+                                nsIURI* *result,
+                                nsIProtocolHandler* *hdlrResult);
 
 protected:
-    nsresult GetCachedProtocolHandler(const char *scheme,
-                                       nsIProtocolHandler* *hdlrResult,
-                                       PRUint32 start=0,
-                                       PRUint32 end=0);
-    nsresult CacheProtocolHandler(const char *scheme,
-                                   nsIProtocolHandler* hdlr);
+    NS_HIDDEN_(nsresult) GetCachedProtocolHandler(const char *scheme,
+                                                  nsIProtocolHandler* *hdlrResult,
+                                                  PRUint32 start=0,
+                                                  PRUint32 end=0);
+    NS_HIDDEN_(nsresult) CacheProtocolHandler(const char *scheme,
+                                              nsIProtocolHandler* hdlr);
 
     // Prefs wrangling
-    void PrefsChanged(nsIPrefBranch *prefs, const char *pref = nsnull);
-    void GetPrefBranch(nsIPrefBranchInternal **);
-    void ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove);
+    NS_HIDDEN_(void) PrefsChanged(nsIPrefBranch *prefs, const char *pref = nsnull);
+    NS_HIDDEN_(void) GetPrefBranch(nsIPrefBranchInternal **);
+    NS_HIDDEN_(void) ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove);
 
 protected:
     PRPackedBool                        mOffline;
@@ -126,5 +119,3 @@ public:
 };
 
 #endif // nsIOService_h__
-
-

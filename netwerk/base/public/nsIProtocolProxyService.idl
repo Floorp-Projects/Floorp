@@ -1,4 +1,5 @@
 /* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 sts=4 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,20 +38,96 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIURI.idl"
 
 interface nsIProxyInfo;
+interface nsIChannel;
+interface nsIURI;
 
-[scriptable, uuid(91c4fe40-76c2-433f-9324-ffdae12df4b4)]
+/**
+ * nsIProtocolProxyService provides methods to access information about
+ * various network proxies.
+ */
+[scriptable, uuid(6b40d918-c01a-42a2-ab4d-4ea0b707f91f)]
 interface nsIProtocolProxyService : nsISupports
 {
+    /**
+     * This attribute indicates whether or not support for proxies is enabled.
+     */
     readonly attribute PRBool proxyEnabled;
 
-    /** Given a uri, return a proxyInfo */
+    /**
+     * This method returns a nsIProxyInfo instance that identifies a proxy to
+     * be used for loading the given URL.  Otherwise, this method returns null
+     * indicating that a direct connection should be used.
+     *
+     * @param aURI
+     *        The URI to test.
+     *
+     * NOTE: If this proxy is unavailable, getFailoverForProxy may be called
+     * to determine the correct secondary proxy to be used.
+     *
+     * NOTE: If the protocol handler for the given URI supports
+     * nsIProxiedProtocolHandler, then the nsIProxyInfo instance returned
+     * from examineForProxy may be passed to the newProxiedChannel method
+     * to create a nsIChannel to the given URI that uses the specified proxy.
+     *
+     * NOTE: However, if the nsIProxyInfo type is "HTTP", then it means that
+     * the given URI should be loaded using the HTTP protocol handler, which
+     * also supports nsIProxiedProtocolHandler.
+     *
+     * @see nsIProxiedProtocolHandler::newProxiedChannel 
+     */
     nsIProxyInfo examineForProxy(in nsIURI aURI);
 
-    /** Return a proxyInfo with the given data */
-    nsIProxyInfo newProxyInfo(in string type, in string host, in long port);
+    /**
+     * This method may be called to construct a nsIProxyInfo instance from
+     * the given parameters.  This method may be useful in conjunction with
+     * nsISocketTransportService::createTransport for creating, for example,
+     * a SOCKS connection.
+     *
+     * @param aType
+     *        The proxy type.  This is a string value that identifies the proxy
+     *        type.  Standard values include:
+     *          "HTTP"   - specifies a HTTP proxy
+     *          "SOCKS"  - specifies a SOCKS version 5 proxy
+     *          "SOCKS4" - specifies a SOCKS version 4 proxy
+     *        The type name is case insensitive.  Other string values may be
+     *        possible.
+     * @param aHost
+     *        The proxy hostname or IP address.
+     * @param aPort
+     *        The proxy port.
+     */
+    nsIProxyInfo newProxyInfo(in ACString aType, in AUTF8String aHost, in long aPort);
 
-    void configureFromPAC(in string url);
+    /**
+     * This method may be called to re-configure proxy settings given a URI
+     * to a new proxy auto config file.  This method may return before the
+     * configuration actually takes affect (i.e., the URI may be loaded
+     * asynchronously).
+     *
+     * @param aURI
+     *        The location of the PAC file to load.
+     */
+    void configureFromPAC(in AUTF8String aURI);
+
+    /**
+     * If the proxy identified by aProxyInfo is unavailable for some reason,
+     * this method may be called to access an alternate proxy that may be used
+     * instead.  As a side-effect, this method may affect future return values
+     * from examineForProxy as well as from getFailoverProxy.
+     *
+     * @param aProxyInfo
+     *        The proxy that was unavailable.
+     * @param aURI
+     *        The URI that was originally passed to ExamineForProxy.
+     * @param aReason
+     *        The error code corresponding to the proxy failure.  This value
+     *        may be used to tune the delay before this proxy is used again.
+     *
+     * @throw NS_ERROR_NOT_AVAILABLE if there is no alternate proxy available.
+     */
+    nsIProxyInfo getFailoverForProxy(in nsIProxyInfo aProxyInfo,
+                                     in nsIURI       aURI,
+                                     in nsresult     aReason);
 };

@@ -41,15 +41,22 @@
 #include "plevent.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsVoidArray.h"
 #include "nsIPrefBranch.h"
 #include "nsIProtocolProxyService.h"
 #include "nsIProxyAutoConfig.h"
 #include "nsIProxyInfo.h"
-#include "nsIIOService.h"
 #include "nsIObserver.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
+#include "prtime.h"
 #include "prmem.h"
 #include "prio.h"
+
+typedef nsDataHashtable<nsCStringHashKey, PRUint32> nsFailedProxyTable;
+
+class nsProxyInfo;
 
 class nsProtocolProxyService : public nsIProtocolProxyService
                              , public nsIObserver
@@ -59,56 +66,27 @@ public:
     NS_DECL_NSIPROTOCOLPROXYSERVICE
     NS_DECL_NSIOBSERVER
 
-    nsProtocolProxyService();
-    virtual ~nsProtocolProxyService();
+    nsProtocolProxyService() NS_HIDDEN;
+    ~nsProtocolProxyService() NS_HIDDEN;
 
-    nsresult Init();
+    NS_HIDDEN_(nsresult) Init();
 
     void PrefsChanged(nsIPrefBranch *, const char* pref);
 
-    class nsProxyInfo : public nsIProxyInfo
-    {
-    public:
-        NS_DECL_ISUPPORTS
-
-        NS_IMETHOD_(const char*) Host() {
-            return mHost;
-        }
-
-        NS_IMETHOD_(PRInt32) Port() {
-            return mPort;
-        }
-
-        NS_IMETHOD_(const char*) Type() {
-            return mType;
-        }
-
-        NS_IMETHOD GetNext(nsIProxyInfo **result) {
-            NS_IF_ADDREF(*result = mNext);
-            return NS_OK;
-        }
-
-        virtual ~nsProxyInfo() {
-            if (mHost) nsMemory::Free(mHost);
-        }
-
-        nsProxyInfo() : mType(nsnull), mHost(nsnull), mPort(-1) {
-        }
-
-        const char            *mType;
-        char                  *mHost; // owning reference
-        PRInt32                mPort;
-        nsCOMPtr<nsIProxyInfo> mNext;
-    };
-
 protected:
 
-    const char *ExtractProxyInfo(const char *proxy, PRBool permitHttp, nsProxyInfo **);
-
-    nsresult GetProtocolInfo(const char *scheme, PRUint32 &flags, PRInt32 &defaultPort);
-    nsresult NewProxyInfo_Internal(const char *type, char *host, PRInt32 port, nsIProxyInfo **);
-    void     LoadFilters(const char *filters);
-    PRBool   CanUseProxy(nsIURI *aURI, PRInt32 defaultPort);
+    NS_HIDDEN_(const char *) ExtractProxyInfo(const char *proxy, PRBool permitHttp, nsProxyInfo **);
+    NS_HIDDEN_(nsProxyInfo *)BuildProxyList(const char *proxyStr, PRBool permitHttp, PRBool pruneDisabledProxies);
+    NS_HIDDEN_(void)         GetProxyKey(nsProxyInfo *, nsCString &);
+    NS_HIDDEN_(PRUint32)     SecondsSinceSessionStart();
+    NS_HIDDEN_(void)         EnableProxy(nsProxyInfo *);
+    NS_HIDDEN_(void)         DisableProxy(nsProxyInfo *);
+    NS_HIDDEN_(PRBool)       IsProxyDisabled(nsProxyInfo *);
+    NS_HIDDEN_(nsresult)     ExaminePACForProxy(nsIURI *aURI, PRUint32 protoFlags, nsIProxyInfo **aResult);
+    NS_HIDDEN_(nsresult)     GetProtocolInfo(const char *scheme, PRUint32 &flags, PRInt32 &defaultPort);
+    NS_HIDDEN_(nsresult)     NewProxyInfo_Internal(const char *type, const nsACString &host, PRInt32 port, nsIProxyInfo **);
+    NS_HIDDEN_(void)         LoadFilters(const char *filters);
+    NS_HIDDEN_(PRBool)       CanUseProxy(nsIURI *aURI, PRInt32 defaultPort);
 
     static PRBool PR_CALLBACK CleanupFilterArray(void *aElement, void *aData);
     static void*  PR_CALLBACK HandlePACLoadEvent(PLEvent* aEvent);
@@ -150,31 +128,31 @@ protected:
         }
     };
 
-    nsVoidArray             mFiltersArray;
+    nsVoidArray                  mFiltersArray;
+    PRUint16                     mUseProxy;
 
-    nsCOMPtr<nsIIOService>  mIOService;
+    nsCString                    mHTTPProxyHost;
+    PRInt32                      mHTTPProxyPort;
 
-    PRUint16                mUseProxy;
+    nsCString                    mFTPProxyHost;
+    PRInt32                      mFTPProxyPort;
 
-    nsCString               mHTTPProxyHost;
-    PRInt32                 mHTTPProxyPort;
+    nsCString                    mGopherProxyHost;
+    PRInt32                      mGopherProxyPort;
 
-    nsCString               mFTPProxyHost;
-    PRInt32                 mFTPProxyPort;
-
-    nsCString               mGopherProxyHost;
-    PRInt32                 mGopherProxyPort;
-
-    nsCString               mHTTPSProxyHost;
-    PRInt32                 mHTTPSProxyPort;
+    nsCString                    mHTTPSProxyHost;
+    PRInt32                      mHTTPSProxyPort;
     
-    nsCString               mSOCKSProxyHost;
-    PRInt32                 mSOCKSProxyPort;
-    PRInt32                 mSOCKSProxyVersion;
+    nsCString                    mSOCKSProxyHost;
+    PRInt32                      mSOCKSProxyPort;
+    PRInt32                      mSOCKSProxyVersion;
 
     nsCOMPtr<nsIProxyAutoConfig> mPAC;
-    nsCString                    mPACURL;
+    nsCString                    mPACURI;
+
+    PRTime                       mSessionStart;
+    nsFailedProxyTable           mFailedProxies;
+    PRInt32                      mFailedProxyTimeout;
 };
 
 #endif // !nsProtocolProxyService_h__
-

@@ -895,28 +895,36 @@ nsHttpChannel::ProxyFailover()
 {
     LOG(("nsHttpChannel::ProxyFailover [this=%x]\n", this));
 
-    NS_ASSERTION(mConnectionInfo->ProxyInfo(), "no proxy info");
+    nsresult rv;
+
+    nsCOMPtr<nsIProtocolProxyService> pps =
+            do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
 
     nsCOMPtr<nsIProxyInfo> pi;
-    mConnectionInfo->ProxyInfo()->GetNext(getter_AddRefs(pi));
-    // if null result, then bail...
-    if (!pi)
-        return NS_ERROR_FAILURE;
+    rv = pps->GetFailoverForProxy(mConnectionInfo->ProxyInfo(), mURI, mStatus,
+                                  getter_AddRefs(pi));
+    if (NS_FAILED(rv))
+        return rv;
 
-    nsresult rv;
     nsCOMPtr<nsIChannel> newChannel;
     rv = gHttpHandler->NewProxiedChannel(mURI, pi, getter_AddRefs(newChannel));
-    if (NS_SUCCEEDED(rv)) {
-        SetupReplacementChannel(mURI, newChannel, PR_TRUE);
+    if (NS_FAILED(rv))
+        return rv;
 
-        // open new channel
-        rv = newChannel->AsyncOpen(mListener, mListenerContext);
-        if (NS_SUCCEEDED(rv)) {
-            mStatus = NS_BINDING_REDIRECTED;
-            mListener = nsnull;
-            mListenerContext = nsnull;
-        }
-    }
+    rv = SetupReplacementChannel(mURI, newChannel, PR_TRUE);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // open new channel
+    rv = newChannel->AsyncOpen(mListener, mListenerContext);
+    if (NS_FAILED(rv))
+        return rv;
+
+    mStatus = NS_BINDING_REDIRECTED;
+    mListener = nsnull;
+    mListenerContext = nsnull;
     return rv;
 }
 
@@ -3557,8 +3565,10 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     }
 
     // on proxy errors, try to failover
-    if (mStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
-        mStatus == NS_ERROR_UNKNOWN_PROXY_HOST) {
+    if (mConnectionInfo->ProxyInfo() &&
+           (mStatus == NS_ERROR_PROXY_CONNECTION_REFUSED ||
+            mStatus == NS_ERROR_UNKNOWN_PROXY_HOST ||
+            mStatus == NS_ERROR_NET_TIMEOUT)) {
         if (NS_SUCCEEDED(ProxyFailover()))
             return NS_OK;
     }
