@@ -256,6 +256,8 @@ extern PRInt32 _MD_CloseFile(PRInt32 osfd);
 #define _MD_INIT_FILEDESC(fd)
 extern void _MD_MakeNonblock(PRFileDesc *f);
 #define _MD_MAKE_NONBLOCK             _MD_MakeNonblock
+#define _MD_INIT_FD_INHERITABLE       (_PR_MD_INIT_FD_INHERITABLE)
+#define _MD_QUERY_FD_INHERITABLE      (_PR_MD_QUERY_FD_INHERITABLE)
 #define _MD_SHUTDOWN                  (_PR_MD_SHUTDOWN)
 #define _MD_LISTEN(s, backlog)        listen(s->secret->md.osfd,backlog)
 extern PRInt32 _MD_CloseSocket(PRInt32 osfd);

@@ -303,6 +303,8 @@ struct protoent* getprotobynumber(int number);
 #define _MD_READ_DIR _MD_read_dir
 #define _MD_CLOSE_DIR _MD_close_dir
 #define _MD_MAKE_NONBLOCK _MD_make_nonblock
+#define _MD_INIT_FD_INHERITABLE _MD_init_fd_inheritable
+#define _MD_QUERY_FD_INHERITABLE _MD_query_fd_inheritable
 #define _MD_OPEN _MD_open
 #define _MD_OPEN_FILE _MD_open
 #define _MD_CLOSE_FILE _MD_close_file
@@ -500,6 +502,8 @@ NSPR_API(PRStatus) _MD_open_dir(struct _MDDir *md,const char *name);
 NSPR_API(char *) _MD_read_dir(struct _MDDir *md, PRIntn flags);
 NSPR_API(PRInt32) _MD_close_dir(struct _MDDir *md);
 NSPR_API(void) _MD_make_nonblock(PRFileDesc *fd);
+NSPR_API(void) _MD_init_fd_inheritable(PRFileDesc *fd, PRBool imported);
+NSPR_API(void) _MD_query_fd_inheritable(PRFileDesc *fd);
 NSPR_API(PRInt32) _MD_open(const char *name, PRIntn osflags, PRIntn mode);
 NSPR_API(PRInt32) _MD_close_file(PRInt32 osfd);
 NSPR_API(PRInt32) _MD_read(PRFileDesc *fd, void *buf, PRInt32 amount);

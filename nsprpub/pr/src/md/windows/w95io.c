@@ -921,6 +921,31 @@ _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
     return PR_SUCCESS;
 } 
 
+void
+_PR_MD_INIT_FD_INHERITABLE(PRFileDesc *fd, PRBool imported)
+{
+    if (imported) {
+        fd->secret->inheritable = _PR_TRI_UNKNOWN;
+    } else {
+        fd->secret->inheritable = _PR_TRI_FALSE;
+    }
+}
+
+void
+_PR_MD_QUERY_FD_INHERITABLE(PRFileDesc *fd)
+{
+    DWORD flags;
+
+    PR_ASSERT(_PR_TRI_UNKNOWN == fd->secret->inheritable);
+    if (GetHandleInformation((HANDLE)fd->secret->md.osfd, &flags)) {
+        if (flags & HANDLE_FLAG_INHERIT) {
+            fd->secret->inheritable = _PR_TRI_TRUE;
+        } else {
+            fd->secret->inheritable = _PR_TRI_FALSE;
+        }
+    }
+}
+
 PRInt32
 _PR_MD_RENAME(const char *from, const char *to)
 {

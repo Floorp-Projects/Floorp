@@ -359,6 +359,8 @@ PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
         fd = PR_AllocFileDesc(osfd, &_pr_fileMethods);
         if (!fd) {
             (void) _PR_MD_CLOSE_FILE(osfd);
+        } else {
+            _PR_MD_INIT_FD_INHERITABLE(fd, PR_FALSE);
         }
     }
     return fd;
@@ -379,6 +381,8 @@ PR_IMPLEMENT(PRFileDesc*) PR_OpenFile(
         fd = PR_AllocFileDesc(osfd, &_pr_fileMethods);
         if (!fd) {
             (void) _PR_MD_CLOSE_FILE(osfd);
+        } else {
+            _PR_MD_INIT_FD_INHERITABLE(fd, PR_FALSE);
         }
     }
     return fd;
@@ -525,6 +529,8 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportFile(PRInt32 osfd)
     fd = PR_AllocFileDesc(osfd, &_pr_fileMethods);
     if( !fd ) {
         (void) _PR_MD_CLOSE_FILE(osfd);
+    } else {
+        _PR_MD_INIT_FD_INHERITABLE(fd, PR_TRUE);
     }
 
     return fd;
@@ -542,6 +548,8 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportPipe(PRInt32 osfd)
     fd = PR_AllocFileDesc(osfd, &_pr_pipeMethods);
     if( !fd ) {
         (void) _PR_MD_CLOSE_FILE(osfd);
+    } else {
+        _PR_MD_INIT_FD_INHERITABLE(fd, PR_TRUE);
     }
 
     return fd;
@@ -695,8 +703,8 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
     (*readPipe)->secret->md.sync_file_io = PR_TRUE;
     (*writePipe)->secret->md.sync_file_io = PR_TRUE;
 #endif
-    (*readPipe)->secret->inheritable = PR_TRUE;
-    (*writePipe)->secret->inheritable = PR_TRUE;
+    (*readPipe)->secret->inheritable = _PR_TRI_TRUE;
+    (*writePipe)->secret->inheritable = _PR_TRI_TRUE;
     return PR_SUCCESS;
 #elif defined(XP_UNIX) || defined(XP_OS2)
 #ifdef XP_OS2
@@ -729,7 +737,9 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
         return PR_FAILURE;
     }
     _MD_MakeNonblock(*readPipe);
+    _PR_MD_INIT_FD_INHERITABLE(*readPipe, PR_FALSE);
     _MD_MakeNonblock(*writePipe);
+    _PR_MD_INIT_FD_INHERITABLE(*writePipe, PR_FALSE);
     return PR_SUCCESS;
 #else
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);

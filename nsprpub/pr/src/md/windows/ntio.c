@@ -1260,6 +1260,7 @@ _PR_MD_FAST_ACCEPT(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
     PRUint32 llen, err;
     int rv;
 
+    PR_ASSERT(_PR_TRI_UNKNOWN != fd->secret->inheritable);
     if (fd->secret->nonblocking || fd->secret->inheritable) {
         if (!fd->secret->md.io_model_committed) {
             rv = _md_MakeNonblock((HANDLE)osfd);
@@ -1677,6 +1678,7 @@ _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
     int bytes;
     int rv, err;
 
+    PR_ASSERT(_PR_TRI_UNKNOWN != fd->secret->inheritable);
     if (fd->secret->nonblocking || fd->secret->inheritable) {
         if (!fd->secret->md.io_model_committed) {
             rv = _md_MakeNonblock((HANDLE)osfd);
@@ -1776,6 +1778,7 @@ _PR_MD_SEND(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
     int bytes;
     int rv, err;
 
+    PR_ASSERT(_PR_TRI_UNKNOWN != fd->secret->inheritable);
     if (fd->secret->nonblocking || fd->secret->inheritable) {
         if (!fd->secret->md.io_model_committed) {
             rv = _md_MakeNonblock((HANDLE)osfd);
@@ -1874,6 +1877,7 @@ _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
         PR_ASSERT(0 != rv);
         fd->secret->md.io_model_committed = PR_TRUE;
     }
+    PR_ASSERT(_PR_TRI_UNKNOWN != fd->secret->inheritable);
     if (!fd->secret->nonblocking && !fd->secret->inheritable)
         return pt_SendTo(osfd, buf, amount, flags, addr, addrlen, timeout);
     else
@@ -1892,6 +1896,7 @@ _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
         PR_ASSERT(0 != rv);
         fd->secret->md.io_model_committed = PR_TRUE;
     }
+    PR_ASSERT(_PR_TRI_UNKNOWN != fd->secret->inheritable);
     if (!fd->secret->nonblocking && !fd->secret->inheritable)
         return pt_RecvFrom(osfd, buf, amount, flags, addr, addrlen, timeout);
     else
@@ -1907,6 +1912,7 @@ _PR_MD_WRITEV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size, PRIntervalTi
     int sent = 0;
     int rv;
 
+    PR_ASSERT(_PR_TRI_UNKNOWN != fd->secret->inheritable);
     if (fd->secret->nonblocking || fd->secret->inheritable) {
         if (!fd->secret->md.io_model_committed) {
             rv = _md_MakeNonblock((HANDLE)osfd);
@@ -2164,6 +2170,7 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
     LONG hiOffset = 0;
     LONG loOffset;
 
+    PR_ASSERT(_PR_TRI_UNKNOWN != fd->secret->inheritable);
     if (!fd->secret->md.sync_file_io) {
         PRThread *me = _PR_MD_CURRENT_THREAD();
 
@@ -2315,6 +2322,7 @@ _PR_MD_WRITE(PRFileDesc *fd, void *buf, PRInt32 len)
     LONG hiOffset = 0;
     LONG loOffset;
 
+    PR_ASSERT(_PR_TRI_UNKNOWN != fd->secret->inheritable);
     if (!fd->secret->md.sync_file_io) {
         PRThread *me = _PR_MD_CURRENT_THREAD();
 
@@ -2636,6 +2644,40 @@ _PR_MD_SET_FD_INHERITABLE(PRFileDesc *fd, PRBool inheritable)
     }
     return PR_SUCCESS;
 } 
+
+void
+_PR_MD_INIT_FD_INHERITABLE(PRFileDesc *fd, PRBool imported)
+{
+    DWORD flags;
+
+    /*
+     * On NT, fd->secret->inheritable is used to decide whether
+     * we can associate the file handle with the I/O completion
+     * port, so we must not set it to _PR_TRI_UNKNOWN.
+     */
+    fd->secret->inheritable = _PR_TRI_FALSE;
+    if (imported) {
+        if (GetHandleInformation((HANDLE)fd->secret->md.osfd, &flags)) {
+            if (flags & HANDLE_FLAG_INHERIT) {
+                fd->secret->inheritable = _PR_TRI_TRUE;
+            }
+       }
+    }
+}
+
+void
+_PR_MD_QUERY_FD_INHERITABLE(PRFileDesc *fd)
+{
+    DWORD flags;
+
+    if (GetHandleInformation((HANDLE)fd->secret->md.osfd, &flags)) {
+        if (flags & HANDLE_FLAG_INHERIT) {
+            fd->secret->inheritable = _PR_TRI_TRUE;
+        } else {
+            fd->secret->inheritable = _PR_TRI_FALSE;
+        }
+    }
+}
 
 
 /* --- DIR IO ------------------------------------------------------------ */

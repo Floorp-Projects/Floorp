@@ -287,8 +287,7 @@ extern void		_MD_Wakeup_CPUs(void);
 
 /************************************************************************/
 
-extern void		_MD_InitFileDesc(PRFileDesc *fd);
-#define _MD_INIT_FILEDESC			_MD_InitFileDesc
+#define _MD_INIT_FILEDESC(fd)
 
 extern void		_MD_MakeNonblock(PRFileDesc *fd);
 #define _MD_MAKE_NONBLOCK			_MD_MakeNonblock		
@@ -458,6 +457,12 @@ extern PRStatus _MD_setsockopt(PRFileDesc *fd, PRInt32 level,
 
 extern PRStatus _MD_set_fd_inheritable(PRFileDesc *fd, PRBool inheritable);
 #define _MD_SET_FD_INHERITABLE _MD_set_fd_inheritable
+
+extern void _MD_init_fd_inheritable(PRFileDesc *fd, PRBool imported);
+#define _MD_INIT_FD_INHERITABLE _MD_init_fd_inheritable
+
+extern void _MD_query_fd_inheritable(PRFileDesc *fd);
+#define _MD_QUERY_FD_INHERITABLE _MD_query_fd_inheritable
 
 extern PRStatus _MD_gethostname(char *name, PRUint32 namelen);
 #define _MD_GETHOSTNAME		_MD_gethostname
