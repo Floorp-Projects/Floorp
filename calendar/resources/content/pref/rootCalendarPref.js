@@ -105,6 +105,7 @@ function calendarPreferences( CalendarWindow )
      this.calendarPref.setIntPref( "alarms.defaultsnoozelength", 10 );
      this.calendarPref.setCharPref( "categories.names", getDefaultCategories() );
      this.calendarPref.setIntPref( "servers.count", 1 ); //this counts the default server as well, so its 1.
+     this.calendarPref.setBoolPref( "servers.reloadonlaunch", false ); //do we reload the remote servers on launch?
      this.loadPreferences();
   }
   
@@ -118,7 +119,7 @@ calendarPreferences.prototype.loadPreferences = function()
    this.arrayOfPrefs.alarmsplaysound = this.calendarPref.getBoolPref( "alarms.playsound" );
 
    this.arrayOfPrefs.dateformat = this.calendarPref.getIntPref( "date.format" );
-   
+
    this.arrayOfPrefs.weekstart = this.calendarPref.getIntPref( "week.start" );
 
    this.arrayOfPrefs.defaulteventlength = this.calendarPref.getIntPref( "event.defaultlength" );
@@ -128,6 +129,8 @@ calendarPreferences.prototype.loadPreferences = function()
    this.arrayOfPrefs.categories = this.calendarPref.getCharPref( "categories.names" );
 
    this.arrayOfPrefs.numberofservers = this.calendarPref.getIntPref( "servers.count" ); //this counts the default server
+
+   this.arrayOfPrefs.reloadonlaunch = this.calendarPref.getBoolPref( "servers.reloadonlaunch" ); //this counts the default server
 }
 
 calendarPreferences.prototype.getPref = function( Preference )

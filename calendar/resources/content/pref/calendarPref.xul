@@ -49,8 +49,6 @@
       onload="parent.initPanel('chrome://calendar/content/pref/calendarPref.xul');"
       headertitle="&calendarPanel.label;">
 
-   <script type="application/x-javascript" src="chrome://calendar/content/pref/calendarPref.js"/>
-
    <script type="application/x-javascript">
      <![CDATA[
        var _elementIDs = [
@@ -104,6 +102,10 @@
          <textbox id="defaultsnoozelength" preftype="int" prefstring="calendar.alarms.defaultsnoozelength" maxlength="3" size="3"/>
          <label value="Minutes"/>
       </hbox>
+      
+      <checkbox id="reloadonlaunch" preftype="bool" prefstring="calendar.servers.reloadonlaunch" label="&pref.reloadonlaunch;" />
+          
+      
       
    </groupbox>
    <groupbox>

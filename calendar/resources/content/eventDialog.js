@@ -258,7 +258,8 @@ function loadCalendarEventDialog()
    
    for (var i = 0; i < serverList.length ; i++)
    {
-      document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
+      if( serverList[i].remote != true )
+         document.getElementById( "server-field" ).appendItem(serverList[i].name, serverList[i].path);
    }
    
    document.getElementById( "server-field" ).selectedIndex = 0;

@@ -143,7 +143,7 @@ function calendarInit()
    
    //when you switch to a view, it takes care of refreshing the events, so that call is not needed.
    gCalendarWindow.currentView.switchTo( gCalendarWindow.currentView );
-
+   
    // set up the unifinder
    prepareCalendarUnifinder();
 

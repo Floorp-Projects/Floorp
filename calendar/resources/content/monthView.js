@@ -206,7 +206,7 @@ MonthView.prototype.refreshEvents = function( )
    // get this month's events and display them
   
    var monthEventList = this.calendarWindow.eventSource.getEventsForMonth( this.calendarWindow.getSelectedDate() );
-
+   
    // remove old event boxes
    
    var eventBoxList = document.getElementsByAttribute( "eventbox", "monthview" );

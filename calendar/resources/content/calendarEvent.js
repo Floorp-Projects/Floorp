@@ -122,16 +122,6 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
             
       this.gICalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICalContainer);
         
-      var profileComponent = Components.classes["@mozilla.org/profile/manager;1"].createInstance();
-      
-      var profileInternal = profileComponent.QueryInterface(Components.interfaces.nsIProfileInternal);
- 
-      var profileFile = profileInternal.getProfileDir(profileInternal.currentProfile);
-      
-      profileFile.append("CalendarDataFile.ics");
-                      
-      this.gICalLib.addCalendar( profileFile.path );
-
       this.gICalLib.addObserver( observer );
       
       this.prepareAlarms( );

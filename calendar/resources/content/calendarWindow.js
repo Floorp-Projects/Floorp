@@ -135,7 +135,7 @@ function CalendarWindow( calendarDataSource )
       
       onLoad   : function()
       {
-         //not needed, we get the events in the view         
+         //this is basically useless, since the calendar window is not yet made yet.
       },
       onStartBatch   : function()
       {

@@ -84,11 +84,22 @@
         
       <vbox id="standard-dialog-content"  flex="1">
         
-         <description>Name:</description> 
-         <textbox id="server-name-textbox"/>
-         <description>File Location: </description> 
-         <textbox id="server-path-textbox"/>
-         <button oncommand="launchFilePicker()" label="Browse..."/>      
+         <hbox>
+            <description>Name:</description> 
+            <textbox flex="1" id="server-name-textbox"/>
+         </hbox>
+         <vbox>
+            <hbox>
+               <description>File Location:</description> 
+            
+               <textbox id="server-path-textbox" flex="1" />
+            </hbox>
+            
+            <description flex="1" style="max-width: 500px;">You can enter a local file path, or a remote file path like 
+            http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics</description>
+            <button flex="0" oncommand="launchFilePicker()" label="Browse For Local File..."/>      
+            
+         </vbox>
             
       </vbox> <!-- standard-dialog-content -->
     

@@ -245,6 +245,11 @@
 <!ENTITY calendar.context.priority.label              "Priority">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
+                                                                 
+<!-- Server Context Menu -->
+<!ENTITY calendar.context.newserver.label              "New Server">
+<!ENTITY calendar.context.refreshserver.label          "Refresh Remote Calendars">
+
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "About Mozilla Calendar">
 <!ENTITY calendar.about.tab   "About">

@@ -110,6 +110,8 @@
    <command id="import_command" oncommand="loadEventsFromFile()"/>
    <command id="export_command" oncommand="saveEventsToFile()"/>
    
+   <command id="refresh_remote_calendars" oncommand="gCalendarWindow.calendarManager.refreshAllRemoteCalendars()"/>
+   
    <command id="close_calendar_command" oncommand="closeCalendar()"/>
 </commandset>
 
@@ -200,8 +202,6 @@
    <menuseparator/>
    <menuitem label="&calendar.context.reload.label;" accesskey="&calendar.context.reload.accesskey;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
    
-   <menuseparator/>
-   <menuitem label="New Server" observes="new_server_command"/>
 </popup>
 
 <!-- TASK ITEM CONTEXT MENU -->
@@ -230,6 +230,13 @@
       </menupopup>
    </menu>
 </popup>
+
+<!-- CALENDAR LIST CONTEXT MENU -->
+<popup id="calendarlist-context-menu">
+   <menuitem label="&calendar.context.newserver.label;"     observes="new_server_command"/>
+   <menuitem label="&calendar.context.refreshserver.label;" observes="refresh_remote_calendars"/>
+</popup>
+
 
 <popup id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
 
@@ -275,9 +282,11 @@
       <vbox id="left-hand-content" flex="1">
          <vbox id="left-hand-above-splitter" flex="1">
             <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
-               ondragover="return( false );" allowevents="true"> 
+               ondragover="return( false );" contextmenu="calendarlist-context-menu">
+               <listhead>
+                  <listheader label="Calendars"/>
+               </listhead>
                <listcols>
-                  <listcol minwidth="18" maxwidth="18" width="18"/>
                   <listcol flex="1"/>
                </listcols>
             </listbox>

@@ -60,3 +60,5 @@
 <!ENTITY pref.weekstarts.saturday  "Saturday" >
 
 <!ENTITY pref.categories.label   "Categories" >
+
+<!ENTITY pref.reloadonlaunch       "Reload Remote Calendars On Startup">
