@@ -118,7 +118,7 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
       pTerm->GetAttrib(&attribute);
 			if (IsStringAttribute(attribute))
 			{
-        PRUnichar *pchar, *savepChar;
+        nsXPIDLString pchar;
         nsCOMPtr <nsIMsgSearchValue> searchValue;
 
         nsresult rv = pTerm->GetValue(getter_AddRefs(searchValue));
@@ -126,19 +126,10 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
           continue;
 
 
-        rv = searchValue->GetStr(&pchar);
+        rv = searchValue->GetStr(getter_Copies(pchar));
       	if (!NS_SUCCEEDED(rv) || !pchar)
       		continue;
-        savepChar = pchar;
-				for (; *pchar ; pchar++)
-				{
-					if (*pchar & 0xFF80)
-					{
-						asciiOnly = PR_FALSE;
-						break;
-					}
-				}
-        nsCRT::free(savepChar);
+        asciiOnly = nsCRT::IsAscii(NS_CONST_CAST(PRUnichar*, pchar.get()));
 			}
 		}
 	}
