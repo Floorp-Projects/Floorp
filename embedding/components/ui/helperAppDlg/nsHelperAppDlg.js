@@ -243,6 +243,9 @@ nsHelperAppDialog.prototype = {
          } else {
              this.mDialog.centerWindowOnScreen();
          }
+
+         // Set initial focus
+         this.dialogElement( "mode" ).focus();
     },
 
     // initIntro:
