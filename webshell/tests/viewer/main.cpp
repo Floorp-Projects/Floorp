@@ -17,7 +17,7 @@
  */
 
 #include "nsViewer.h"
-//REMOVE-LATER #include "nsMotifMenu.h"
+#include "nsMotifMenu.h"
 #include "nsIImageManager.h"
 
 class nsMotifViewer : public nsViewer {
@@ -61,7 +61,7 @@ void MenuProc(PRUint32 aId)
 //--------------------------------------------------------
 void nsMotifViewer::AddMenu(nsIWidget* aMainWindow)
 {
-//REMOVE-LATER  CreateViewerMenus(XtParent(aMainWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
+  CreateViewerMenus(XtParent(aMainWindow->GetNativeData(NS_NATIVE_WIDGET)), MenuProc);
 }
 
 
