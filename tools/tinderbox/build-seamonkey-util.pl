@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.52 $ ';
+$::UtilsVersion = '$Revision: 1.53 $ ';
 
 package TinderUtils;
 
@@ -293,6 +293,10 @@ sub SetupEnv {
 
     $ENV{LIBPATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
                           . "$ENV{LIBPATH}";
+    $ENV{LIBRARY_PATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
+                          . "$ENV{LIBRARY_PATH}";
+    $ENV{ADDON_PATH} = "$topsrcdir/${Settings::ObjDir}/dist/bin:"
+                          . "$ENV{ADDON_PATH}";
     $ENV{MOZILLA_FIVE_HOME} = "$topsrcdir/${Settings::ObjDir}/dist/bin";
     $ENV{DISPLAY} = $Settings::DisplayServer;
     $ENV{MOZCONFIG} = "$Settings::BaseDir/$Settings::MozConfigFileName" 
@@ -1255,7 +1259,7 @@ sub BloatTest {
     }
 
     print_log "<a href=#bloat>\n######################## BLOAT STATISTICS\n";
-    open DIFF, "$build_dir/../bloatdiff.pl $build_dir/bloat-prev.log $binary_log|"
+    open DIFF, "perl $build_dir/../bloatdiff.pl $build_dir/bloat-prev.log $binary_log|"
       or die "Unable to run bloatdiff.pl";
     print_log $_ while <DIFF>;
     close DIFF;
