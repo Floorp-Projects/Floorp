@@ -30,21 +30,20 @@ NS_IMPL_ISUPPORTS(nsXPConnect, NS_IXPCONNECT_IID)
 
 nsXPConnect* nsXPConnect::mSelf = NULL;
 
+static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
+
 // static
 nsXPConnect*
 nsXPConnect::GetXPConnect()
 {
     if(mSelf)
-    {
         NS_ADDREF(mSelf);
-    }
     else
     {
         mSelf = new nsXPConnect();
         if(mSelf && (!mSelf->mContextMap || !mSelf->mAllocator))
-        {
             NS_RELEASE(mSelf);  // XXX two line macro (bug in nsISupports.h)
-        }
     }
     return mSelf;
 }
@@ -54,17 +53,20 @@ nsXPConnect::nsXPConnect()
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
     mContextMap = JSContext2XPCContextMap::newMap(CONTEXT_MAP_SIZE);
-    mAllocator = new nsMalloc();
+
+    nsServiceManager::GetService(kAllocatorCID,
+                                 kIAllocatorIID,
+                                 (nsISupports **)&mAllocator);
 }
 
 nsXPConnect::~nsXPConnect()
 {
     if(mContextMap)
         delete mContextMap;
+
     if(mAllocator)
-    {
-        NS_RELEASE(mAllocator);  // XXX two line macro (bug in nsISupports.h)
-    }
+        nsServiceManager::ReleaseService(kAllocatorCID, mAllocator);
+
     mSelf = NULL;
 }
 
