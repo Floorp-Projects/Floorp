@@ -3157,7 +3157,7 @@ MSG_CompositionPane::DetermineHTMLAction()
 	
 
 
-#ifndef MOZ_MAIL_NEWS
+#if !defined(MOZ_MAIL_NEWS) && !defined(SMART_MAIL)
 /* This is normally in mkpop3.c, of all the odd places!
    But it's required for converting plain to html.
  */

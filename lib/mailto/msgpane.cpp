@@ -614,7 +614,7 @@ int	MSG_PaneURLChain::GetNextURL()
 	return 0;
 }
 
-#ifndef MOZ_MAIL_NEWS
+#if !defined(MOZ_MAIL_NEWS) && !defined(SMART_MAIL)
 /* This is normally in mkpop3.c, of all the odd places!
    But it's required for mail compose.
  */
