@@ -27,8 +27,8 @@
 
 #include "nsCOMPtr.h"
 
-#define LOCK_TX_MANAGER(mgr)
-#define UNLOCK_TX_MANAGER(mgr)
+#define LOCK_TX_MANAGER(mgr)    (mgr)->Lock()
+#define UNLOCK_TX_MANAGER(mgr)  (mgr)->Unlock()
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITransactionManagerIID, NS_ITRANSACTIONMANAGER_IID);
@@ -37,6 +37,8 @@ nsTransactionManager::nsTransactionManager(PRInt32 aMaxTransactionCount)
   : mMaxTransactionCount(aMaxTransactionCount), mListeners(0)
 {
   mRefCnt = 0;
+
+  mMonitor = ::PR_NewMonitor();
 }
 
 nsTransactionManager::~nsTransactionManager()
@@ -54,6 +56,12 @@ nsTransactionManager::~nsTransactionManager()
 
     delete mListeners;
     mListeners = 0;
+  }
+
+  if (mMonitor)
+  {
+    ::PR_DestroyMonitor(mMonitor);
+    mMonitor = 0;
   }
 }
 
@@ -652,8 +660,13 @@ nsTransactionManager::RemoveListener(nsITransactionListener *aListener)
   if (!mListeners)
     return NS_ERROR_FAILURE;
 
+  LOCK_TX_MANAGER(this);
+
   if (!mListeners->RemoveElement((void *)aListener))
+  {
+    UNLOCK_TX_MANAGER(this);
     return NS_ERROR_FAILURE;
+  }
 
   NS_IF_RELEASE(aListener);
 
@@ -662,6 +675,8 @@ nsTransactionManager::RemoveListener(nsITransactionListener *aListener)
     delete mListeners;
     mListeners = 0;
   }
+
+  UNLOCK_TX_MANAGER(this);
 
   return NS_OK;
 }
@@ -1127,13 +1142,14 @@ nsTransactionManager::EndTransaction()
       if (result != NS_COMFALSE) {
         result = topTransaction->Merge(&didMerge, tint);
 
+        nsresult result2 = DidMergeNotify(topTransaction, tint, didMerge, result);
+
+        if (NS_SUCCEEDED(result))
+          result = result2;
+
         if (NS_FAILED(result)) {
           // XXX: What do we do if this fails?
         }
-
-        nsresult result2 = DidMergeNotify(topTransaction, tint, didMerge, result);
-
-        // XXX: What do we do if this fails?
 
         if (didMerge) {
           delete tx;
@@ -1171,5 +1187,23 @@ nsTransactionManager::EndTransaction()
   }
 
   return result;
+}
+
+nsresult
+nsTransactionManager::Lock()
+{
+  if (mMonitor)
+    PR_EnterMonitor(mMonitor);
+
+  return NS_OK;
+}
+
+nsresult
+nsTransactionManager::Unlock()
+{
+  if (mMonitor)
+    PR_ExitMonitor(mMonitor);
+
+  return NS_OK;
 }
 

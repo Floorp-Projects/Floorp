@@ -43,9 +43,6 @@ LINCS=-I$(PUBLIC)\xpcom \
       -I$(PUBLIC)\base \
       -I$(PUBLIC)\raptor
 
-LLIBS=					\
- $(DIST)\lib\xpcom.lib
-
 MAKE_OBJ_TYPE = DLL
 DLLNAME = txmgr
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
@@ -59,7 +56,10 @@ LCFLAGS = \
         $(NULL)
 
 # These are the libraries we need to link with to create the dll
-LLIBS=$(DIST)\lib\xpcom.lib
+LLIBS =                     \
+      $(DIST)\lib\xpcom.lib \
+      $(LIBNSPR)            \
+      $(NULL)
 
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
