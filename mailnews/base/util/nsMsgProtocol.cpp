@@ -606,7 +606,11 @@ NS_IMETHODIMP nsMsgProtocol::IsPending(PRBool *result)
 
 NS_IMETHODIMP nsMsgProtocol::GetStatus(nsresult *status)
 {
-	return m_channel->GetStatus(status);
+  if (m_channel)
+	  return m_channel->GetStatus(status);
+
+  *status = NS_ERROR_FAILURE;
+  return *status;
 }
 
 NS_IMETHODIMP nsMsgProtocol::Cancel(nsresult status)
