@@ -48,6 +48,10 @@
 
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
+#include "nsISelectionController.h"
+#include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsIDocShell.h"
 #include "nsIURI.h"
 
 #include "nsCOMPtr.h"
@@ -60,6 +64,156 @@
 #define STATE_ENABLED  "state_enabled"
 #define STATE_ATTRIBUTE "state_attribute"
 #define STATE_DATA "state_data"
+
+static
+nsresult
+GetPresContextFromEditor(nsIEditor *aEditor, nsIPresContext **aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+  NS_ENSURE_ARG_POINTER(aEditor);
+
+  nsCOMPtr<nsISelectionController> selCon;
+  nsresult rv = aEditor->GetSelectionController(getter_AddRefs(selCon));
+  if (NS_FAILED(rv)) return rv;
+  if (!selCon) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  presShell = do_QueryInterface(selCon);
+  if (!presShell) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIPresContext> presContext;
+  rv = presShell->GetPresContext(getter_AddRefs(presContext));
+  if (NS_FAILED(rv)) return rv;
+  *aResult = presContext;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSetDocumentOptionsCommand::IsCommandEnabled(const char * aCommandName,
+                                              nsISupports *refCon,
+                                              PRBool *outCmdEnabled)
+{
+  NS_ENSURE_ARG_POINTER(outCmdEnabled);
+  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(refCon);
+  *outCmdEnabled = (editor != nsnull);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSetDocumentOptionsCommand::DoCommand(const char *aCommandName,
+                                       nsISupports *refCon)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSetDocumentOptionsCommand::DoCommandParams(const char *aCommandName,
+                                             nsICommandParams *aParams,
+                                             nsISupports *refCon)
+{
+  NS_ENSURE_ARG_POINTER(aParams);
+
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) return NS_ERROR_INVALID_ARG;
+
+  nsCOMPtr<nsIPresContext> presContext;
+  nsresult rv = GetPresContextFromEditor(editor, getter_AddRefs(presContext));
+  if (NS_FAILED(rv)) return rv;
+  if (!presContext) return NS_ERROR_FAILURE;
+
+  PRInt32 animationMode; 
+  rv = aParams->GetLongValue("imageAnimation", &animationMode);
+  if (NS_SUCCEEDED(rv))
+  {
+    // for possible values of animation mode, see:
+    // http://lxr.mozilla.org/seamonkey/source/modules/libpr0n/public/imgIContainer.idl
+    rv = presContext->SetImageAnimationMode(animationMode);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  PRBool allowPlugins; 
+  rv = aParams->GetBooleanValue("plugins", &allowPlugins);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsISupports> container;
+    rv = presContext->GetContainer(getter_AddRefs(container));
+    if (NS_FAILED(rv)) return rv;
+    if (!container) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container, &rv));
+    if (NS_FAILED(rv)) return rv;
+    if (!docShell) return NS_ERROR_FAILURE;
+
+    rv = docShell->SetAllowPlugins(allowPlugins);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSetDocumentOptionsCommand::GetCommandStateParams(const char *aCommandName,
+                                                   nsICommandParams *aParams,
+                                                   nsISupports *refCon)
+{
+  NS_ENSURE_ARG_POINTER(aParams);
+  NS_ENSURE_ARG_POINTER(refCon);
+
+  // The base editor owns most state info
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
+  if (!editor) return NS_ERROR_INVALID_ARG;
+
+  // Always get the enabled state
+  PRBool outCmdEnabled = PR_FALSE;
+  IsCommandEnabled(aCommandName, refCon, &outCmdEnabled);
+  nsresult rv = aParams->SetBooleanValue(STATE_ENABLED, outCmdEnabled);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // get pres context
+  nsCOMPtr<nsIPresContext> presContext;
+  rv = GetPresContextFromEditor(editor, getter_AddRefs(presContext));
+  if (NS_FAILED(rv)) return rv;
+  if (!presContext) return NS_ERROR_FAILURE;
+
+  PRInt32 animationMode;
+  rv = aParams->GetLongValue("imageAnimation", &animationMode);
+  if (NS_SUCCEEDED(rv))
+  {
+    // for possible values of animation mode, see
+    // http://lxr.mozilla.org/seamonkey/source/modules/libpr0n/public/imgIContainer.idl
+    PRUint16 tmp;
+    rv = presContext->GetImageAnimationMode(&tmp);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aParams->SetLongValue("imageAnimation", animationMode);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  PRBool allowPlugins; 
+  rv = aParams->GetBooleanValue("plugins", &allowPlugins);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsISupports> container;
+    rv = presContext->GetContainer(getter_AddRefs(container));
+    if (NS_FAILED(rv)) return rv;
+    if (!container) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container, &rv));
+    if (NS_FAILED(rv)) return rv;
+    if (!docShell) return NS_ERROR_FAILURE;
+
+    rv = docShell->GetAllowPlugins(&allowPlugins);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aParams->SetBooleanValue("plugins", allowPlugins);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  return NS_OK;
+}
+
 
 /**
  *  Commands for document state that may be changed via doCommandParams
@@ -76,7 +230,7 @@ nsSetDocumentStateCommand::IsCommandEnabled(const char * aCommandName,
 {
   NS_ENSURE_ARG_POINTER(outCmdEnabled);
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(refCon);
-  *outCmdEnabled = editor ? PR_TRUE : PR_FALSE;
+  *outCmdEnabled = (editor != nsnull);
   return NS_OK;
 }
 

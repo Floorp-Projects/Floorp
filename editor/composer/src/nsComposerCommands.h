@@ -278,6 +278,7 @@ protected:
 NS_DECL_COMPOSER_COMMAND(nsCloseCommand)
 NS_DECL_COMPOSER_COMMAND(nsDocumentStateCommand)
 NS_DECL_COMPOSER_COMMAND(nsSetDocumentStateCommand)
+NS_DECL_COMPOSER_COMMAND(nsSetDocumentOptionsCommand)
 //NS_DECL_COMPOSER_COMMAND(nsPrintingCommands)
 
 // Generic commands
