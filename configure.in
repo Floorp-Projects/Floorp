@@ -735,13 +735,17 @@ case "$target" in
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
     LIBS="$LIBS -lc"
 
-    case "${host_cpu}" in
+    case "${target_cpu}" in
     alpha*)
     	CFLAGS="$CFLAGS -mieee"
     	CXXFLAGS="$CXXFLAGS -mieee"
     ;;
     i?86)
     	USE_ELF_DYNSTR_GC=1
+    ;;
+    mips*)
+        CFLAGS="$CFLAGS -Wa,-xgot"
+        CXXFLAGS="$CXXFLAGS -Wa,-xgot"
     ;;
     esac
     ;;
@@ -3139,7 +3143,7 @@ MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS=
 
 if test ! "$MOZ_DEBUG"
 then
-    case "$host" in
+    case "$target" in
         *-linux*)
             MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
