@@ -44,6 +44,7 @@ namespace Silverstone.Manticore.Bookmarks
   using Silverstone.Manticore.Core;
   using Silverstone.Manticore.Toolkit;
   using Silverstone.Manticore.Bookmarks;
+  using Silverstone.Manticore.Browser;
 
   /// <summary>
 	/// Summary description for BookmarksWindow.
@@ -53,19 +54,20 @@ namespace Silverstone.Manticore.Bookmarks
     private System.Windows.Forms.StatusBar statusBar1;
     private System.Windows.Forms.StatusBarPanel statusBarPanel1;
     private BookmarksTreeView mBookmarksTree;
-		/// <summary>
-		/// Required designer variable.
-		/// </summary>
-		private System.ComponentModel.Container components = null;
 
     private BaseTreeBuilder mBuilder = null;
 
 		public BookmarksWindow()
 		{
-			//
-			// Required for Windows Form Designer support
-			//
-			InitializeComponent();
+      mType = "BookmarksWindow";
+      
+      Init();
+    }
+
+    protected void Init()
+    {
+      // Set up UI
+      InitializeComponent();
 
       // 
       // mBookmarksTree
@@ -83,24 +85,11 @@ namespace Silverstone.Manticore.Bookmarks
 
       Controls.Add(mBookmarksTree);
       mBookmarksTree.Build();
+
+      base.Init();
     }
-
-		/// <summary>
-		/// Clean up any resources being used.
-		/// </summary>
-		protected override void Dispose( bool disposing )
-		{
-			if( disposing )
-			{
-				if(components != null)
-				{
-					components.Dispose();
-				}
-			}
-			base.Dispose( disposing );
-		}
-
-		#region Windows Form Designer generated code
+    
+    #region Windows Form Designer generated code
 		/// <summary>
 		/// Required method for Designer support - do not modify
 		/// the contents of this method with the code editor.
@@ -152,7 +141,13 @@ namespace Silverstone.Manticore.Bookmarks
       ManticoreTreeNode node = mBookmarksTree.SelectedNode as ManticoreTreeNode;
       Bookmarks bmks = ServiceManager.Bookmarks;
       String bookmarkURL = bmks.GetBookmarkAttribute(node.Data as String, "url");
-      ManticoreApp.MostRecentBrowserWindow.LoadURL(bookmarkURL);
+      if (bookmarkURL != "") 
+      {
+        WindowMediator wm = ServiceManager.WindowMediator;
+        BrowserWindow window = wm.GetMostRecentWindow("BrowserWindow") as BrowserWindow;
+        if (window != null)
+          window.LoadURL(bookmarkURL);
+      }
     }
 
 	}

@@ -37,12 +37,14 @@ namespace Silverstone.Manticore.Toolkit
   using System;
   using System.Windows.Forms;
 
+  using Silverstone.Manticore.Core;
+
   /// <summary>
 	/// Top level window class
 	/// </summary>
 	public class ManticoreWindow : Form
 	{
-    protected internal String mType = "";
+    protected String mType = "";
 
     public String Type
     {
@@ -58,6 +60,32 @@ namespace Silverstone.Manticore.Toolkit
     public ManticoreWindow(String aType)
 		{
       mType = aType;
-		}
-	}
+    }
+
+    protected void Init()
+    {
+      WindowMediator wm = ServiceManager.WindowMediator;
+      wm.RegisterWindow(this);
+
+      this.Closed += new EventHandler(OnClosed);
+      this.Activated += new EventHandler(OnActivated);
+    }
+
+    public void OnClosed(Object sender, EventArgs e)
+    {
+      WindowMediator wm = ServiceManager.WindowMediator;
+      wm.UnregisterWindow(this);
+    }
+
+    public void OnActivated(Object sender, EventArgs e)
+    {
+      WindowMediator wm = ServiceManager.WindowMediator;
+      wm.SetMostRecentWindow(this);
+    }
+
+    public override void Dispose()
+    {
+      base.Dispose();
+    }
+  }
 }

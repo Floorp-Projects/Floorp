@@ -34,6 +34,7 @@
 
 namespace Silverstone.Manticore.Core
 {
+  using Silverstone.Manticore.App;
 
   /// <summary>
   /// Access point to application-global services. 
@@ -68,6 +69,26 @@ namespace Silverstone.Manticore.Core
           mBookmarks.LoadBookmarks();
         }
         return mBookmarks;
+      }
+    }
+ 
+    private static Silverstone.Manticore.Core.WindowMediator mWindowMediator = null;
+    public static Silverstone.Manticore.Core.WindowMediator WindowMediator
+    {
+      get 
+      {
+        if (mWindowMediator == null) 
+          mWindowMediator = new Silverstone.Manticore.Core.WindowMediator();
+        return mWindowMediator;
+      }
+    }
+
+    internal static Silverstone.Manticore.App.ManticoreApp mApp = null;
+    public static Silverstone.Manticore.App.ManticoreApp App
+    {
+      get 
+      {
+        return mApp;
       }
     }
   }

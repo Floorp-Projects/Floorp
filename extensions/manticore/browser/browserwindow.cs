@@ -47,8 +47,6 @@ namespace Silverstone.Manticore.Browser
 
   public class BrowserWindow : ManticoreWindow, IController
   {
-    private System.ComponentModel.Container components;
-
     private MenuBuilder mMenuBuilder;
     private BrowserToolbarBuilder mToolbarBuilder;
 
@@ -57,7 +55,6 @@ namespace Silverstone.Manticore.Browser
     private StatusBar mStatusBar;
     private StatusBarPanel mProgressMeter;
     private StatusBarPanel mStatusPanel;
-    private ManticoreApp mApplication;
 
     private String mSessionURL = "";
 
@@ -66,49 +63,29 @@ namespace Silverstone.Manticore.Browser
     /// </summary>
     private String mTitle = "";
 
-    public BrowserWindow(ManticoreApp aApp)
+    public BrowserWindow()
     {
-      Init(aApp);
+      Init();
     }
 
-    public BrowserWindow(ManticoreApp aApp, String aURL)
+    public BrowserWindow(String aURL)
     {
       mSessionURL = aURL;
-      Init(aApp);
+      mType = "BrowserWindow";
+
+      Init();
     }
 
-    private void Init(ManticoreApp aApp)
+    protected void Init()
     {
-      mApplication = aApp;
-      mType = "Browser";
-
       // Set up UI
       InitializeComponent();
 
-      this.Closed += new EventHandler(OnFormClosed);
-      this.GotFocus += new EventHandler(OnSetFocus);
-    }
-
-    public void OnFormClosed(Object sender, EventArgs e) 
-    {
-      mApplication.WindowClosed(this);
-    }
-
-    public void OnSetFocus(Object sender, EventArgs e)
-    {
-      ManticoreApp.MostRecentBrowserWindow = this;
-    }
-
-    public override void Dispose()
-    {
-      base.Dispose();
-      components.Dispose();
+      base.Init();
     }
 
     private void InitializeComponent()
     {
-      this.components = new System.ComponentModel.Container();
-
       // XXX read these from a settings file
       this.Width = 640;
       this.Height = 480;
@@ -183,13 +160,24 @@ namespace Silverstone.Manticore.Browser
       }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Window Creation
+    public static BrowserWindow OpenBrowser()
+    {
+      BrowserWindow window = new BrowserWindow();
+      window.Show();
+      return window;
+    }
+
+    public static BrowserWindow OpenBrowserWithURL(String aURL)
+    {
+      BrowserWindow window = new BrowserWindow(aURL);
+      window.Show();
+      return window;
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Menu Command Handlers
-    public void OpenNewBrowser()
-    {
-      mApplication.OpenBrowser();
-    }
 
     public void Open()
     {
@@ -200,7 +188,8 @@ namespace Silverstone.Manticore.Browser
 
     public void Quit() 
     {
-      mApplication.Quit();
+      ManticoreApp app = ServiceManager.App;
+      app.Quit();
     }
 
     public Object currentLayoutEngine
@@ -233,8 +222,7 @@ namespace Silverstone.Manticore.Browser
 
     public Object OnNewWindow()
     {
-      // BrowserWindow window = mApplication.OpenNewBrowser();
-      // return window.currentLayoutEngine;
+      // XXX figure out what this does.
       return new Object();
     }
 
@@ -263,7 +251,7 @@ namespace Silverstone.Manticore.Browser
       switch (aCommand) 
       {
         case "file-new-window":
-          OpenNewBrowser();
+          OpenBrowser();
           break;
         case "file-open":
           Open();

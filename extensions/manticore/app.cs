@@ -45,29 +45,10 @@ namespace Silverstone.Manticore.App
   
   public class ManticoreApp
   {
-    // XXX Need to do something here more similar
-    //     to what mozilla does here for parameterized
-    //     window types.
-    private Hashtable mBrowserWindows;
-    private static BrowserWindow mMostRecentBrowserWindow = null;
-    public static BrowserWindow MostRecentBrowserWindow
-    {
-      get 
-      {
-        return mMostRecentBrowserWindow;
-      }
-      set 
-      {
-        mMostRecentBrowserWindow = value;
-      }
-    }
-        
     public ManticoreApp()
     {
-      mBrowserWindows = new Hashtable();
-
       if (!RestoreSession()) 
-        OpenBrowser();
+        BrowserWindow.OpenBrowser();
 
       Application.Run();
     }
@@ -91,8 +72,8 @@ namespace Silverstone.Manticore.App
     {
       if (ServiceManager.Preferences.GetIntPref("browser.homepage.mode") == 2) {
         bool isLastPageOnly = ServiceManager.Preferences.GetIntPref("browser.session.windowmode") == 0;
-        // XXX need to get all windows of type browser.
-        IEnumerator browsers = mBrowserWindows.Values.GetEnumerator();
+        WindowMediator wm = ServiceManager.WindowMediator;
+        IEnumerator browsers = wm.GetEnumeratorForType("BrowserWindow");
         int count = 0;
         while (browsers.MoveNext()) {
           if (isLastPageOnly && count > 0) {
@@ -131,7 +112,7 @@ namespace Silverstone.Manticore.App
        
           // Create a new browser with the applicable url at the applicable
           // location. 
-          BrowserWindow window = OpenBrowserWithURL(url);
+          BrowserWindow window = BrowserWindow.OpenBrowserWithURL(url);
           window.Location = new Point(x, y);
           window.Size = new Size(width, height);
         }
@@ -142,39 +123,10 @@ namespace Silverstone.Manticore.App
       return false;
     }
 
-    public void WindowClosed(BrowserWindow aWindow) 
-    {
-      if (mBrowserWindows.ContainsKey(aWindow.GetHashCode()))
-        mBrowserWindows.Remove(aWindow.GetHashCode());
-      
-      // When window count drops to zero, quit. 
-      // XXX - a little hacky for now, will eventually reflect
-      //       all windows. 
-      if (mBrowserWindows.Count == 0)
-        Quit();
-    }
-
-    // Opens and displays a new browser window
-    public BrowserWindow OpenBrowser()
-    {
-      BrowserWindow window = new BrowserWindow(this);
-      mBrowserWindows.Add(window.GetHashCode(), window);
-      window.Show();
-      return window;
-    }
-
-    public BrowserWindow OpenBrowserWithURL(String aURL)
-    {
-      BrowserWindow window = new BrowserWindow(this, aURL);
-      mBrowserWindows.Add(window.GetHashCode(), window);
-      window.Show();
-      return window;
-    }
-
     [STAThread]
     public static void Main(string[] args) 
     {
-      ManticoreApp app = new ManticoreApp();
+      ServiceManager.mApp = new ManticoreApp();
     }
   }
 }
