@@ -33,12 +33,14 @@
 ////////////////////////////////////////////////////////////////////////////////////
 
 var msgHeaderParserProgID		   = "component://netscape/messenger/headerparser";
+var abAddressCollectorProgID	 = "component://netscape/addressbook/services/addressCollecter";
 
 var msgPaneData;
 var currentHeaderData;
 var gNumAddressesToShow = 3;
 
 var msgHeaderParser = Components.classes[msgHeaderParserProgID].getService(Components.interfaces.nsIMsgHeaderParser);
+var abAddressCollector = Components.classes[abAddressCollectorProgID].getService(Components.interfaces.nsIAbAddressCollecter);
 
 function OnLoadMsgHeaderPane()
 {
@@ -144,7 +146,9 @@ var messageHeaderSink = {
       }
       if (headerName == "from")
       {
-        currentHeaderData.FromValue = headerValue;  
+        currentHeaderData.FromValue = headerValue;
+        if (headerValue && abAddressCollector)
+          abAddressCollector.collectUnicodeAddress(headerValue);  
       }
       if (headerName == "date")
       {
