@@ -38,7 +38,6 @@ REQUIRES	= xpcom \
 		  webshell \
 		  docshell \
 		  htmlparser \
-		  dom \
 		  necko \
 		  widget \
 		  layout \
@@ -58,7 +57,7 @@ CPPSRCS		= \
 		nsDocumentCharsetInfo.cpp \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) $(MOZ_UNICHARUTIL_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -68,6 +68,7 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

@@ -73,6 +73,7 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(NSPR_LIBS) \
 		$(XPCOM_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

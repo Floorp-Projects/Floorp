@@ -49,6 +49,7 @@ REQUIRES	= xpcom \
 		  string \
 		  js \
 		  caps \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -91,6 +92,7 @@ endif
 
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 

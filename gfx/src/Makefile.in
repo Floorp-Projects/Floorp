@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  gfx2 \
 		  imglib2 \
 		  uconv \
+		  unicharutil \
 		  $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -111,6 +112,7 @@ SHARED_LIBRARY_LIBS = \
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
