@@ -171,7 +171,7 @@ var gDownloadsPane = {
   
   showFileTypeActions: function ()
   {
-    document.documentElement.openSubDialog("chrome://messenger/content/preferences/downloadactions.xul",
+    document.documentElement.openWindow("chrome://messenger/content/preferences/downloadactions.xul",
                                         "", null);
   },
 };
