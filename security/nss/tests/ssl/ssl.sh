@@ -250,14 +250,6 @@ ssl_auth()
             ret=$?
           fi
 
-          # the NT client does not return the same error code as Unix
-          # FIXME - this is a serious bug in the NT testclient
-          if [ ${OS_ARCH} = "WINNT" -a $value -ne 0 -a $ret -ne 0 ]; then
-              echo "$SCRIPTNAME: WARNING! Testclient returned $ret, expect "
-              echo "             $value (no error as tmp workaround)"
-              value=$ret
-          fi
-
           html_msg $ret $value "${testname}" \
                    "produced a returncode of $ret, expected is $value"
           kill_selfserv

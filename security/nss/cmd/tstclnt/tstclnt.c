@@ -191,7 +191,7 @@ static void Usage(const char *progName)
 "m    SSL3 RSA EXPORT WITH RC4 56 SHA\t(new)\n"
 "n    SSL3 RSA WITH RC4 128 SHA\n"
 	);
-    exit(-1);
+    exit(1);
 }
 
 void
@@ -351,7 +351,7 @@ int main(int argc, char **argv)
     rv = CERT_OpenVolatileCertDB(handle);
 	CERT_SetDefaultCertDB(handle);
 #else
-	return -1;
+	return 1;
 #endif
     }
     handle = CERT_GetDefaultCertDB();
@@ -372,11 +372,11 @@ int main(int argc, char **argv)
     status = PR_GetHostByName(host, buf, sizeof(buf), &hp);
     if (status != PR_SUCCESS) {
 	SECU_PrintError(progName, "error looking up host");
-	return -1;
+	return 1;
     }
     if (PR_EnumerateHostEnt(0, &hp, atoi(port), &addr) == -1) {
 	SECU_PrintError(progName, "error looking up host address");
-	return -1;
+	return 1;
     }
 
     ip = PR_ntohl(addr.inet.ip);
@@ -402,7 +402,7 @@ int main(int argc, char **argv)
 		PR_Close(s);
 		SECU_PrintError(progName, 
 		                "Failed to set blocking socket option");
-		return SECFailure;
+		return 1;
 	    }
 	    prStatus = PR_Connect(s, &addr, PR_INTERVAL_NO_TIMEOUT);
 	    if (prStatus == PR_SUCCESS) {
@@ -410,27 +410,27 @@ int main(int argc, char **argv)
     		PR_Close(s);
     		NSS_Shutdown();
     		PR_Cleanup();
-		return SECSuccess;
+		return 0;
 	    }
 	    err = PR_GetError();
 	    if ((err != PR_CONNECT_REFUSED_ERROR) && 
 	        (err != PR_CONNECT_RESET_ERROR)) {
 		SECU_PrintError(progName, "TCP Connection failed");
-		return SECFailure;
+		return 1;
 	    }
 	    PR_Close(s);
 	    PR_Sleep(PR_MillisecondsToInterval(WAIT_INTERVAL));
 	} while (++iter < MAX_WAIT_FOR_SERVER);
 	SECU_PrintError(progName, 
                      "Client timed out while waiting for connection to server");
-	return SECFailure;
+	return 1;
     }
 
     /* Create socket */
     s = PR_NewTCPSocket();
     if (s == NULL) {
 	SECU_PrintError(progName, "error creating socket");
-	return -1;
+	return 1;
     }
 
     opt.option = PR_SockOpt_Nonblocking;
@@ -441,19 +441,19 @@ int main(int argc, char **argv)
     s = SSL_ImportFD(NULL, s);
     if (s == NULL) {
 	SECU_PrintError(progName, "error importing socket");
-	return -1;
+	return 1;
     }
 
     rv = SSL_OptionSet(s, SSL_SECURITY, 1);
     if (rv != SECSuccess) {
         SECU_PrintError(progName, "error enabling socket");
-	return -1;
+	return 1;
     }
 
     rv = SSL_OptionSet(s, SSL_HANDSHAKE_AS_CLIENT, 1);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error enabling client handshake");
-	return -1;
+	return 1;
     }
 
     /* all the SSL2 and SSL3 cipher suites are enabled by default. */
@@ -481,26 +481,26 @@ int main(int argc, char **argv)
     rv = SSL_OptionSet(s, SSL_ENABLE_SSL2, !disableSSL2);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error enabling SSLv2 ");
-	return -1;
+	return 1;
     }
 
     rv = SSL_OptionSet(s, SSL_ENABLE_SSL3, !disableSSL3);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error enabling SSLv3 ");
-	return -1;
+	return 1;
     }
 
     rv = SSL_OptionSet(s, SSL_ENABLE_TLS, !disableTLS);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error enabling TLS ");
-	return -1;
+	return 1;
     }
 
     /* disable ssl2 and ssl2-compatible client hellos. */
     rv = SSL_OptionSet(s, SSL_V2_COMPATIBLE_HELLO, !disableSSL2);
     if (rv != SECSuccess) {
 	SECU_PrintError(progName, "error disabling v2 compatibility");
-	return -1;
+	return 1;
     }
 
     if (useCommandLinePassword) {
@@ -530,13 +530,13 @@ int main(int argc, char **argv)
 		filesReady = PR_Poll(pollset, 1, PR_INTERVAL_NO_TIMEOUT);
 		if (filesReady < 0) {
 		    SECU_PrintError(progName, "unable to connect (poll)");
-		    return -1;
+		    return 1;
 		}
 		PRINTF("%s: PR_Poll returned 0x%02x for socket out_flags.\n",
 			progName, pollset[0].out_flags);
 		if (filesReady == 0) {	/* shouldn't happen! */
 		    PRINTF("%s: PR_Poll returned zero!\n", progName);
-		    return -1;
+		    return 1;
 		}
 		/* Must milliPause between PR_Poll and PR_GetConnectStatus,
 		 * Or else winsock gets mighty confused.
@@ -549,14 +549,14 @@ int main(int argc, char **argv)
 		}
 		if (PR_GetError() != PR_IN_PROGRESS_ERROR) {
 		    SECU_PrintError(progName, "unable to connect (poll)");
-		    return -1;
+		    return 1;
 		}
 		SECU_PrintError(progName, "poll");
 		milliPause(50 * multiplier);
 	    }
 	} else {
 	    SECU_PrintError(progName, "unable to connect");
-	    return -1;
+	    return 1;
 	}
     }
 
@@ -597,12 +597,12 @@ int main(int argc, char **argv)
 	}
 	if (filesReady < 0) {
 	   SECU_PrintError(progName, "select failed");
-	   error=-1;
+	   error=1;
 	   goto done;
 	}
 	if (filesReady == 0) {	/* shouldn't happen! */
 	    PRINTF("%s: PR_Poll returned zero!\n", progName);
-	    return -1;
+	    return 1;
 	}
 	PRINTF("%s: PR_Poll returned!\n", progName);
 	if (pollset[1].in_flags) {
@@ -618,7 +618,7 @@ int main(int argc, char **argv)
 	    if (nb < 0) {
 		if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
 		    SECU_PrintError(progName, "read from stdin failed");
-	            error=-1;
+	            error=1;
 		    break;
 		}
 	    } else if (nb == 0) {
@@ -633,7 +633,7 @@ int main(int argc, char **argv)
 			if (err != PR_WOULD_BLOCK_ERROR) {
 			    SECU_PrintError(progName, 
 			                    "write to SSL socket failed");
-			    error=-2;
+			    error=2;
 			    goto done;
 			}
 			cc = 0;
@@ -668,7 +668,7 @@ int main(int argc, char **argv)
 	    if (nb < 0) {
 		if (PR_GetError() != PR_WOULD_BLOCK_ERROR) {
 		    SECU_PrintError(progName, "read from socket failed");
-		    error=-1;
+		    error=1;
 		    goto done;
 	    	}
 	    } else if (nb == 0) {
