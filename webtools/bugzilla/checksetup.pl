@@ -246,7 +246,7 @@ my $modules = [
     }, 
     { 
         name => 'DBI', 
-        version => '1.32' 
+        version => '1.36' 
     }, 
     { 
         name => 'DBD::mysql', 

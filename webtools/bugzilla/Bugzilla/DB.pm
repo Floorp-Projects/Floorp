@@ -144,10 +144,12 @@ sub _connect {
     # connect using our known info to the specified db
     # Apache::DBI will cache this when using mod_perl
     my $dbh = DBI->connect($dsn,
-                           $db_user,
-                           $db_pass,
+                           '',
+                           '',
                            { RaiseError => 1,
                              PrintError => 0,
+                             Username => $db_user,
+                             Password => $db_pass,
                              ShowErrorStatement => 1,
                              HandleError => \&_handle_error,
                              FetchHashKeyName => 'NAME_lc',
