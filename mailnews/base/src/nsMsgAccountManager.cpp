@@ -118,6 +118,7 @@ public:
   NS_IMETHOD GetAllServers(nsISupportsArray **_retval) ;
 
   NS_IMETHOD LoadAccounts();
+  NS_IMETHOD UnloadAccounts();
 
   NS_IMETHOD FindServer(const char* username,
                         const char* hostname,
@@ -191,12 +192,9 @@ nsMsgAccountManager::nsMsgAccountManager() :
 
 nsMsgAccountManager::~nsMsgAccountManager()
 {
-  // release the default account
-  m_defaultAccount=nsnull;
   
   if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
-  m_accounts->Enumerate(hashTableRemoveAccountFromBiff, this);
-  m_accounts->Enumerate(hashTableRemoveAccount, this);
+  UnloadAccounts();
   delete m_accounts;
 }
 
@@ -503,11 +501,9 @@ nsMsgAccountManager::hashTableRemoveAccount(nsHashKey *aKey, void *aData,
                                             void*closure)
 {
   nsIMsgAccount* account = (nsIMsgAccount*)aData;
-  nsMsgAccountManager* accountManager = (nsMsgAccountManager*) closure;
 
   // remove from hashtable
   NS_RELEASE(account);
-  accountManager->m_accounts->Remove(aKey);
 
   return PR_TRUE;
 }
@@ -688,6 +684,18 @@ nsMsgAccountManager::LoadAccounts()
 
     /* finished loading accounts */
     return NS_OK;
+}
+
+nsresult
+nsMsgAccountManager::UnloadAccounts()
+{
+  // release the default account
+  m_defaultAccount=nsnull;
+  m_accounts->Enumerate(hashTableRemoveAccountFromBiff, this);
+  m_accounts->Enumerate(hashTableRemoveAccount, this);
+  m_accounts->Reset();
+  m_accountsLoaded = PR_FALSE;
+  return NS_OK;
 }
 
 nsIMsgAccount *

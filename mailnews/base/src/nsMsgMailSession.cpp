@@ -54,6 +54,9 @@ nsMsgMailSession::nsMsgMailSession():
 
 nsMsgMailSession::~nsMsgMailSession()
 {
+  if(m_accountManager)
+	  m_accountManager->UnloadAccounts();
+
   NS_IF_RELEASE(m_accountManager);
 
   if (mListeners) 
