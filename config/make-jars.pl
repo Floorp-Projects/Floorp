@@ -11,8 +11,8 @@ use Time::localtime;
 use Cwd;
 use File::Copy;
 use File::Path;
-use Fcntl qw(:DEFAULT :flock);
 use IO::File;
+use mozLock;
 
 my $objdir = getcwd;
 
@@ -64,14 +64,11 @@ if ($verbose) {
         . "\n";
 }
 
-sub zipErrorCheck($$$)
+sub zipErrorCheck($$)
 {
-    my ($err,$lockfile,$lockhandle) = @_;
+    my ($err,$lockfile) = @_;
     return if ($err == 0 || $err == 12);
-    if (!$nofilelocks) {
-	unlink($lockfile);
-	flock($lockhandle, LOCK_UN);
-    }
+    mozUnlock($lockfile) if (!$nofilelocks);
     die ("Error invoking zip: $err");
 }
 
@@ -90,12 +87,8 @@ sub JarIt
     #print "cd $destPath/$jarfile\n";
 
     my $lockfile = "../$jarfile.lck";
-    my $lockhandle = new IO::File;
-    if (!$nofilelocks) {
-	open($lockhandle,">$lockfile") || 
-	    die("WARNING: Could not create lockfile for $lockfile. Exiting.\n");
-	flock($lockhandle, LOCK_EX);
-    }
+
+    mozLock($lockfile) if (!$nofilelocks);
 
     if (!($args eq "")) {
 	my $cwd = getcwd;
@@ -115,13 +108,13 @@ sub JarIt
 	    #print "Length of subargs: " . length($subargs) . "\n";
 	    system("zip $zipmoveopt -u ../$jarfile.jar $subargs") == 0 or
 		$err = $? >> 8;
-	    zipErrorCheck($err,$lockfile,$lockhandle);
+	    zipErrorCheck($err,$lockfile);
 	}
 	#print "Length of args: " . length($args) . "\n";
         #print "zip $zipmoveopt -u ../$jarfile.jar $args\n";
         system("zip $zipmoveopt -u ../$jarfile.jar $args") == 0 or
 	    $err = $? >> 8;
-	zipErrorCheck($err,$lockfile,$lockhandle);
+	zipErrorCheck($err,$lockfile);
     }
 
     if (!($overrides eq "")) {
@@ -139,17 +132,14 @@ sub JarIt
 	    #print "Length of subargs: " . length($subargs) . "\n";
 	    system("zip $zipmoveopt ../$jarfile.jar $subargs") == 0 or
 		$err = $? >> 8;
-	    zipErrorCheck($err,$lockfile,$lockhandle);
+	    zipErrorCheck($err,$lockfile);
 	}
         #print "zip $zipmoveopt ../$jarfile.jar $overrides\n";
         system("zip $zipmoveopt ../$jarfile.jar $overrides\n") == 0 or 
 	    $err = $? >> 8;
-	zipErrorCheck($err,$lockfile,$lockhandle);
+	zipErrorCheck($err,$lockfile);
     }
-    if (!$nofilelocks) {
-	unlink("$lockfile");
-	flock($lockhandle, LOCK_UN);
-    }
+    mozUnlock($lockfile) if (!$nofilelocks);
     chdir($oldDir);
     #print "cd $oldDir\n";
 }

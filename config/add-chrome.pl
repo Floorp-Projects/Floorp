@@ -1,9 +1,9 @@
 #!/perl
 
 use File::Path;
-use Fcntl qw(:DEFAULT :flock);
 use Getopt::Std;
 use IO::File;
+use mozLock;
 
 getopts("l");
 
@@ -33,37 +33,38 @@ else {
 }
 
 my $lockfile = "$installedChromeFile.lck";
-my $lockhandle = new IO::File;
+my $err;
 
-if (!$nofilelocks) {
-    open($lockhandle,">$lockfile") || 
-	die("WARNING: Could not create lockfile for $lockfile. Exiting.\n");
-    flock($lockhandle, LOCK_EX);
-}
-
+mozLock($lockfile) if (!$nofilelocks);
+$err = 0;
 if (open(FILE, "<$installedChromeFile")) {
     while (<FILE>) {
         chomp;
         if ($_ =~ $line) {
             # line already appears in installed-chrome.txt file
             # just update the mod date
-            close(FILE) || die "error: can't close $installedChromeFile: $!";
-	    if (!$nofilelocks) {
-		unlink($lockfile);
-		flock($lockhandle, LOCK_UN);
+            close(FILE) or $err = 1; 
+	    if ($err) {
+		mozUnlock($lockfile) if (!$nofilelocks);
+		die "error: can't close $installedChromeFile: $!";
 	    }
             my $now = time;
-            utime($now, $now, $installedChromeFile) || die "couldn't touch $installedChromeFile";
+            utime($now, $now, $installedChromeFile) or $err = 1;
+	    mozUnlock($lockfile) if (!$nofilelocks);
+	    if ($err) {
+		die "couldn't touch $installedChromeFile";
+	    }
             print "+++ updating chrome $installedChromeFile\n+++\t$line\n";
             exit;
         }
     }
-    close(FILE) || die "error: can't close $installedChromeFile: $!";
+    close(FILE) or $err = 1;
+    if ($err) {
+	mozUnlock($lockfile) if (!$nofilelocks);
+	die "error: can't close $installedChromeFile: $!";
+    }
 }
-if (!$nofilelocks) {
-    unlink($lockfile);
-    flock($lockhandle, LOCK_UN);
-}
+mozUnlock($lockfile) if (!$nofilelocks);
 
 my $dir = $installedChromeFile;
 if ("$dir" =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
@@ -71,17 +72,18 @@ if ("$dir" =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
 }
 mkpath($dir, 0, 0755);
 
-if (!$nofilelocks) {
-    open($lockhandle,">$lockfile") || 
-	die("WARNING: Could not create lockfile for $lockfile. Exiting.\n");
-    flock($lockhandle, LOCK_EX);
+mozLock($lockfile) if (!$nofilelocks);
+$err = 0;
+open(FILE, ">>$installedChromeFile") or $err = 1;
+if ($err) {
+    mozUnlock($lockfile) if (!$nofilelocks);
+    die "can't open $installedChromeFile: $!";
 }
-open(FILE, ">>$installedChromeFile") || die "can't open $installedChromeFile: $!";
 print FILE "$line\n";
-close(FILE) || die "error: can't close $installedChromeFile: $!";
-if (!$nofilelocks) {
-    unlink($lockfile);
-    flock($lockhandle, LOCK_UN);
+close(FILE) or $err = 1;
+mozUnlock($lockfile) if (!$nofilelocks);
+if ($err) {
+    die "error: can't close $installedChromeFile: $!";
 }
 print "+++ adding chrome $installedChromeFile\n+++\t$line\n";
 
