@@ -270,7 +270,7 @@ public class Codegen extends Interpreter {
             fnCurrent = (OptFunctionNode)scriptOrFn;
             inDirectCallFunction = fnCurrent.isTargetOfDirectCall();
             generatedClassName = fnCurrent.getClassName();
-            superClassName = functionSuperClassName;
+            superClassName = FUNCTION_SUPER_CLASS_NAME;
         } else {
             // better be a script
             if (scriptOrFn.getType() != TokenStream.SCRIPT) badTree();
@@ -278,7 +278,7 @@ public class Codegen extends Interpreter {
             boolean isPrimary = (nameHelper.getTargetExtends() == null
                                  && nameHelper.getTargetImplements() == null);
             generatedClassName = getScriptClassName(null, isPrimary);
-            superClassName = scriptSuperClassName;
+            superClassName = SCRIPT_SUPER_CLASS_NAME;
         }
 
         itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
@@ -961,7 +961,6 @@ public class Codegen extends Interpreter {
             OptFunctionNode fn = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
             if (fn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
                 visitFunction(fn, FunctionNode.FUNCTION_STATEMENT);
-                addByteCode(ByteCode.POP);
             }
         }
 
@@ -1498,7 +1497,12 @@ public class Codegen extends Interpreter {
                          "(Lorg/mozilla/javascript/Scriptable;"
                          +"Lorg/mozilla/javascript/Context;)",
                          "V");
-        addByteCode(ByteCode.DUP); // copy of function
+
+        // Dup function reference for function expressions to have it
+        // on top of the stack when initFunction returns
+        if (functionType != FunctionNode.FUNCTION_STATEMENT) {
+            addByteCode(ByteCode.DUP);
+        }
         push(functionType);
         aload(variableObjectLocal);
         aload(contextLocal);           // load 'cx'
@@ -1508,7 +1512,6 @@ public class Codegen extends Interpreter {
                             +"Lorg/mozilla/javascript/Scriptable;"
                             +"Lorg/mozilla/javascript/Context;)",
                             "V");
-        // leave on stack new function instance
     }
 
     private void visitTarget(Node node)
@@ -3820,9 +3823,9 @@ public class Codegen extends Interpreter {
         throw new RuntimeException("Bad tree in codegen");
     }
 
-    private static final String functionSuperClassName =
+    private static final String FUNCTION_SUPER_CLASS_NAME =
                           "org.mozilla.javascript.NativeFunction";
-    private static final String scriptSuperClassName =
+    private static final String SCRIPT_SUPER_CLASS_NAME =
                           "org.mozilla.javascript.NativeScript";
 
     private Codegen mainCodegen;
