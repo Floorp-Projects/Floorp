@@ -99,7 +99,7 @@
 #ifndef NECKO
 #include "nsINetService.h"
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 #else
 #include "nsIIOService.h"
 #include "nsIURL.h"
@@ -111,7 +111,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #if defined(ClientWallet) || defined(SingleSignon)
 #include "nsIWalletService.h"
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
+static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
 
@@ -144,20 +144,20 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #define WEBSHELL_BOTTOM_INSET 0
 #endif
 
-static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
-static NS_DEFINE_IID(kButtonCID, NS_BUTTON_CID);
-static NS_DEFINE_IID(kFileWidgetCID, NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kTextFieldCID, NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
-static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
-static NS_DEFINE_IID(kDialogCID, NS_DIALOG_CID);
-static NS_DEFINE_IID(kCheckButtonCID, NS_CHECKBUTTON_CID);
-static NS_DEFINE_IID(kRadioButtonCID, NS_RADIOBUTTON_CID);
-static NS_DEFINE_IID(kLabelCID, NS_LABEL_CID);
-static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
+static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_CID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
+static NS_DEFINE_CID(kButtonCID, NS_BUTTON_CID);
+static NS_DEFINE_CID(kFileWidgetCID, NS_FILEWIDGET_CID);
+static NS_DEFINE_CID(kTextFieldCID, NS_TEXTFIELD_CID);
+static NS_DEFINE_CID(kThrobberCID, NS_THROBBER_CID);
+static NS_DEFINE_CID(kWebShellCID, NS_WEB_SHELL_CID);
+static NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
+static NS_DEFINE_CID(kDialogCID, NS_DIALOG_CID);
+static NS_DEFINE_CID(kCheckButtonCID, NS_CHECKBUTTON_CID);
+static NS_DEFINE_CID(kRadioButtonCID, NS_RADIOBUTTON_CID);
+static NS_DEFINE_CID(kLabelCID, NS_LABEL_CID);
 
+static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
@@ -180,7 +180,7 @@ static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
 #endif
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
-static NS_DEFINE_IID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
+static NS_DEFINE_CID(kXPBaseWindowCID, NS_XPBASE_WINDOW_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -2175,7 +2175,7 @@ void
 nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
 {
   static NS_DEFINE_CID(kPrintPreviewContextCID, NS_PRINT_PREVIEW_CONTEXT_CID);
-  static NS_DEFINE_CID(kIPresContextIID, NS_IPRESCONTEXT_IID);
+  static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
   nsIContentViewer* cv = nsnull;
   if (nsnull != mWebShell) {
     if ((NS_OK == mWebShell->GetContentViewer(&cv)) && (nsnull != cv)) {
@@ -2217,14 +2217,13 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
 
 void nsBrowserWindow::DoPrint(void)
 {
-  nsIContentViewer *viewer = nsnull;
+  nsCOMPtr <nsIContentViewer> viewer;
 
-  mWebShell->GetContentViewer(&viewer);
+  mWebShell->GetContentViewer(getter_AddRefs(viewer));
 
-  if (nsnull != viewer)
+  if (viewer)
   {
     viewer->Print();
-    NS_RELEASE(viewer);
   }
 }
 
