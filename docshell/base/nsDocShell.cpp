@@ -3894,6 +3894,10 @@ nsDocShell::SetupRefreshURIFromHeader(nsIURI * aBaseURI,
             ++iter;
         }
 
+        // skip any remaining whitespace
+        while (iter != doneIterating && nsCRT::IsAsciiSpace(*iter))
+            ++iter;
+
         // skip ';' or ','
         if (iter != doneIterating && (*iter == ';' || *iter == ',')) {
             ++iter;
