@@ -5070,29 +5070,28 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
 
     shouldPersist = ShouldAddToSessionHistory(aURI);
 
-    //
-    // If the entry is being replaced in SH, then just use the
-    // current entry...
-    //
-    if (LOAD_NORMAL_REPLACE == mLoadType) {
-        // There is no need to go to mSessionHistory and get the entry at
-        // current index. mOSHE works for subframes and top level docshells.
+    // Get a handle to the root docshell 
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    GetSameTypeRootTreeItem(getter_AddRefs(root));     
+    /*
+     * If this is a LOAD_NORMAL_REPLACE in a subframe, we use
+     * the existing SH entry in the page and replace the url and
+     * other vitalities.
+     */
+    if (LOAD_NORMAL_REPLACE == mLoadType && (root.get() != NS_STATIC_CAST(nsIDocShellTreeItem *, this))) {
+        // This is a subframe 
         entry = mOSHE;
-        // If there are children for this entry destroy them, as they are
-        // going out of scope. 
-        if (entry) {
-            nsCOMPtr<nsISHContainer> shContainer(do_QueryInterface(entry));
-            if (shContainer) {
-                PRInt32 childCount = 0;
-                shContainer->GetChildCount(&childCount);
-                // Remove all children of this entry 
-                for (PRInt32 i = childCount - 1; i >= 0; i--) {
-                    nsCOMPtr<nsISHEntry> child;
-                    shContainer->GetChildAt(i, getter_AddRefs(child));
-                    shContainer->RemoveChild(child);
-                }
-            }
-        }
+        nsCOMPtr<nsISHContainer> shContainer(do_QueryInterface(entry));
+        if (shContainer) {
+            PRInt32 childCount = 0;
+            shContainer->GetChildCount(&childCount);
+            // Remove all children of this entry 
+            for (PRInt32 i = childCount - 1; i >= 0; i--) {
+                nsCOMPtr<nsISHEntry> child;
+                shContainer->GetChildAt(i, getter_AddRefs(child));
+                shContainer->RemoveChild(child);
+            }  // for
+        }  // shContainer
     }
 
     // Create a new entry if necessary.
@@ -5174,6 +5173,18 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
         }
         else
             rv = AddChildSHEntry(nsnull, entry, mChildOffset);
+    }
+    else {        
+        if (root.get() == NS_STATIC_CAST(nsIDocShellTreeItem *, this) && mSessionHistory) {
+            // It is a LOAD_NORMAL_REPLACE on the root docshell
+            PRInt32  index = 0;   
+            nsCOMPtr<nsIHistoryEntry> hEntry;
+            mSessionHistory->GetIndex(&index);
+            nsCOMPtr<nsISHistoryInternal>   shPrivate(do_QueryInterface(mSessionHistory));
+            // Replace the current entry with the new entry
+            if (shPrivate)
+                rv = shPrivate->ReplaceEntry(index, entry);
+        }
     }
 
     // Return the new SH entry...
