@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsAreaFrame.h"
+#include "nsBlockBandData.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -147,69 +148,6 @@ nsAreaFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 }
 
 #ifdef NS_DEBUG
-void
-nsAreaFrame::BandData::ComputeAvailSpaceRect()
-{
-  nsBandTrapezoid*  trapezoid = data;
-
-  if (count > 1) {
-    // If there's more than one trapezoid that means there are floaters
-    PRInt32 i;
-
-    // Stop when we get to space occupied by a right floater, or when we've
-    // looked at every trapezoid and none are right floaters
-    for (i = 0; i < count; i++) {
-      nsBandTrapezoid*  trapezoid = &data[i];
-      if (trapezoid->state != nsBandTrapezoid::Available) {
-        const nsStyleDisplay* display;
-        if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
-          PRInt32 j, numFrames = trapezoid->frames->Count();
-          NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
-          for (j = 0; j < numFrames; j++) {
-            nsIFrame* f = (nsIFrame*)trapezoid->frames->ElementAt(j);
-            f->GetStyleData(eStyleStruct_Display,
-                            (const nsStyleStruct*&)display);
-            if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-              goto foundRightFloater;
-            }
-          }
-        } else {
-          trapezoid->frame->GetStyleData(eStyleStruct_Display,
-                                         (const nsStyleStruct*&)display);
-          if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-            break;
-          }
-        }
-      }
-    }
-  foundRightFloater:
-
-    if (i > 0) {
-      trapezoid = &data[i - 1];
-    }
-  }
-
-  if (nsBandTrapezoid::Available == trapezoid->state) {
-    // The trapezoid is available
-    trapezoid->GetRect(availSpace);
-  } else {
-    const nsStyleDisplay* display;
-
-    // The trapezoid is occupied. That means there's no available space
-    trapezoid->GetRect(availSpace);
-
-    // XXX Better handle the case of multiple frames
-    if (nsBandTrapezoid::Occupied == trapezoid->state) {
-      trapezoid->frame->GetStyleData(eStyleStruct_Display,
-                                     (const nsStyleStruct*&)display);
-      if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
-        availSpace.x = availSpace.XMost();
-      }
-    }
-    availSpace.width = 0;
-  }
-}
-
 NS_IMETHODIMP
 nsAreaFrame::Paint(nsIPresContext&      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -226,24 +164,25 @@ nsAreaFrame::Paint(nsIPresContext&      aPresContext,
     nsISpaceManager* sm = mSpaceManager;
 
     if (nsnull != sm) {
-      BandData band;
+      nsBlockBandData band;
+      band.Init(sm, nsSize(mRect.width, mRect.height));
       nscoord y = 0;
       while (y < mRect.height) {
-        sm->GetBandData(y, nsSize(mRect.width, mRect.height - y), band);
-        band.ComputeAvailSpaceRect();
+        nsRect availArea;
+        band.GetAvailableSpace(y, availArea);
   
         // Render a box and a diagonal line through the band
         aRenderingContext.SetColor(NS_RGB(0,255,0));
-        aRenderingContext.DrawRect(0, band.availSpace.y,
-                                   mRect.width, band.availSpace.height);
-        aRenderingContext.DrawLine(0, band.availSpace.y,
-                                   mRect.width, band.availSpace.YMost());
+        aRenderingContext.DrawRect(0, availArea.y,
+                                   mRect.width, availArea.height);
+        aRenderingContext.DrawLine(0, availArea.y,
+                                   mRect.width, availArea.YMost());
   
         // Render boxes and opposite diagonal lines around the
         // unavailable parts of the band.
         PRInt32 i;
-        for (i = 0; i < band.count; i++) {
-          nsBandTrapezoid* trapezoid = &band.data[i];
+        for (i = 0; i < band.GetTrapezoidCount(); i++) {
+          const nsBandTrapezoid* trapezoid = band.GetTrapezoid(i);
           if (nsBandTrapezoid::Available != trapezoid->state) {
             nsRect r;
             trapezoid->GetRect(r);
@@ -257,7 +196,7 @@ nsAreaFrame::Paint(nsIPresContext&      aPresContext,
             aRenderingContext.DrawLine(r.x, r.YMost(), r.XMost(), r.y);
           }
         }
-        y = band.availSpace.YMost();
+        y = availArea.YMost();
       }
     }
   }

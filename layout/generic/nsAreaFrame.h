@@ -107,29 +107,6 @@ protected:
 private:
   nsSpaceManager* mSpaceManager;
   nsFrameList     mAbsoluteFrames;  // additional named child list
-
-#ifdef NS_DEBUG
-  struct BandData : public nsBandData {
-    // Trapezoids used during band processing
-    nsBandTrapezoid data[12];
-
-    // Bounding rect of available space between any left and right floaters
-    nsRect          availSpace;
-
-    BandData() {
-      size = 12;
-      trapezoids = data;
-    }
-
-    /**
-     * Computes the bounding rect of the available space, i.e. space
-     * between any left and right floaters Uses the current trapezoid
-     * data, see nsISpaceManager::GetBandData(). Also updates member
-     * data "availSpace".
-     */
-    void ComputeAvailSpaceRect();
-  };
-#endif
 };
 
 #endif /* nsAreaFrame_h___ */
