@@ -28,7 +28,7 @@
 #include "nsIRenderingContext.h"
 #include "nsLayoutAtoms.h"
 #include "nsPlaceholderFrame.h"
-
+#include "nsIReflowCommand.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIContent.h"
@@ -832,6 +832,33 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     reason = eReflowReason_Incremental;
     // Make sure we only incrementally reflow once
     *aNextRCFrame = nsnull;
+  }
+  else if (psd->mReflowState->reason == eReflowReason_StyleChange) {
+    reason = eReflowReason_StyleChange;
+  }
+  else {
+    const nsReflowState* rs = psd->mReflowState;
+    if (rs->reason == eReflowReason_Incremental) {
+      // If the incremental reflow command is a StyleChanged reflow and
+      // it's target is the current span, then make sure we send
+      // StyleChange reflow reasons down to the children so that they
+      // don't over-optimize their reflow.
+      nsIReflowCommand* rc = rs->reflowCommand;
+      if (rc) {
+        nsIReflowCommand::ReflowType type;
+        rc->GetType(type);
+        if (type == nsIReflowCommand::StyleChanged) {
+          nsIFrame* parentFrame = psd->mFrame
+            ? psd->mFrame->mFrame
+            : mBlockReflowState->frame;
+          nsIFrame* target;
+          rc->GetTarget(target);
+          if (target == parentFrame) {
+            reason = eReflowReason_StyleChange;
+          }
+        }
+      }
+    }
   }
 
   // Setup reflow state for reflowing the frame
