@@ -55,11 +55,13 @@ static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);/* XXX */
 #ifdef NS_DEBUG
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
+#define NOISY_FIRST_LETTER
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_RUNIN
 #else
 #undef NOISY_FIRST_LINE
 #undef REALLY_NOISY_FIRST_LINE
+#undef NOISY_FIRST_LETTER
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_RUNIN
 #endif
@@ -88,7 +90,7 @@ DumpStyleGeneaology(nsIFrame* aFrame, const char* gap)
 #define NS_BLOCK_FRAME_CID \
 { 0x52b33130, 0x0b99, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
-const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
+static const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
 
 // 11-03-98: low hanging memory fruit: get rid of text-runs that have
 // only one piece of text in them!
@@ -265,6 +267,9 @@ public:
   nsBlockFrame(nsIContent* aContent, nsIFrame* aParent);
   ~nsBlockFrame();
 
+  // nsISupports
+  NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
   // nsIFrame
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
@@ -398,7 +403,7 @@ public:
                      LineData* aLine,
                      nsIFrame* aFrame);
 
-  nsBlockFrame* IsReallyRunInFrame(nsIFrame* aFrame);
+  nsBlockFrame* FindFollowingBlockFrame(nsIFrame* aFrame);
 
   PRBool ReflowBlockFrame(nsBlockReflowState& aState,
                           LineData* aLine,
@@ -1496,6 +1501,19 @@ nsBlockFrame::~nsBlockFrame()
 }
 
 NS_IMETHODIMP
+nsBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kBlockFrameCID)) {
+    *aInstancePtr = (void*) this;
+    return NS_OK;
+  }
+  return nsBlockFrameSuper::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP
 nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
                                     nsIStyleContext* aParentContext)
 {
@@ -1519,6 +1537,7 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
         NS_IF_RELEASE(newFirstLineStyle);
       }
 
+#if 0
       // Re-resolve the :first-letter pseudo style context
       nsIStyleContext* newFirstLetterStyle =
         aPresContext->ProbePseudoStyleContextFor(mContent,
@@ -1533,6 +1552,7 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
       else {
         NS_IF_RELEASE(newFirstLetterStyle);
       }
+#endif
     }
 
     // Update the child frames on each line
@@ -1622,8 +1642,12 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                  (nsnull != mFirstLineStyle
                                   ? mFirstLineStyle
                                   : mStyleContext));
-#else
-    mFirstLetterStyle = nsnull;
+#ifdef NOISY_FIRST_LETTER
+    if (nsnull != mFirstLetterStyle) {
+      ListTag(stdout);
+      printf(": first-letter style found\n");
+    }
+#endif
 #endif
   }
 
@@ -2037,17 +2061,33 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
       aState.minWidth + aState.mBorderPadding.right;
   }
   else {
+    nscoord computedWidth = aState.mKidXMost + aState.mBorderPadding.right;
+    PRBool compact = PR_FALSE;
+    if (NS_STYLE_DISPLAY_COMPACT == aState.mStyleDisplay->mDisplay) {
+      // If we are display: compact AND we have no lines or we have
+      // exactly one line and that line is not a block line AND that
+      // line doesn't end in a BR of any sort THEN we remain a compact
+      // frame.
+      if ((nsnull == mLines) ||
+          ((nsnull == mLines->mNext) && !mLines->IsBlock() &&
+           (NS_STYLE_CLEAR_NONE == mLines->mBreakType) &&
+           (computedWidth <= aState.mCompactMarginWidth))) {
+        compact = PR_TRUE;
+      }
+    }
+
     // There are two options here. We either shrink wrap around our
     // contents or we fluff out to the maximum available width. Note:
     // We always shrink wrap when given an unconstrained width.
-    nscoord contentWidth = aState.mKidXMost + aState.mBorderPadding.right;
-    if ((0 == (NS_BODY_SHRINK_WRAP & mFlags)) && !aState.mUnconstrainedWidth) {
+    if ((0 == (NS_BODY_SHRINK_WRAP & mFlags)) &&
+        !aState.mUnconstrainedWidth &&
+        !compact) {
       // Fluff out to the max width if we aren't already that wide
-      if (contentWidth < aState.maxSize.width) {
-        contentWidth = aState.maxSize.width;
+      if (computedWidth < aState.maxSize.width) {
+        computedWidth = aState.maxSize.width;
       }
     }
-    aMetrics.width = contentWidth;
+    aMetrics.width = computedWidth;
   }
 
   // Compute final height
@@ -2223,6 +2263,14 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
       }
     }
     line = line->mNext;
+  }
+  if (nsnull != mBullet) {
+    nsRect r;
+    mBullet->GetRect(r);
+    if (r.x < x0) x0 = r.x;
+    if (r.XMost() > x1) x1 = r.XMost();
+    if (r.y < y0) y0 = r.y;
+    if (r.YMost() > y1) y1 = r.YMost();
   }
   aMetrics.mCombinedArea.x = x0;
   aMetrics.mCombinedArea.y = y0;
@@ -2433,6 +2481,7 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
   // Add the new frames to the child list, and create new lines. Each
   // impacted line will be marked dirty
   AppendNewFrames(aState.mPresContext, firstAppendedFrame);
+  RenumberLists(aState);
 
   // Generate text-run information
   rv = FindTextRuns(aState);
@@ -3318,9 +3367,9 @@ nsBlockFrame::MoveInSpaceManager(nsIPresContext& aPresContext,
 }
 
 nsBlockFrame*
-nsBlockFrame::IsReallyRunInFrame(nsIFrame* aFrame)
+nsBlockFrame::FindFollowingBlockFrame(nsIFrame* aFrame)
 {
-  nsBlockFrame* runInToFrame = nsnull;
+  nsBlockFrame* followingBlockFrame = nsnull;
   nsIFrame* frame = aFrame;
   for (;;) {
     nsIFrame* nextFrame;
@@ -3333,13 +3382,13 @@ nsBlockFrame::IsReallyRunInFrame(nsIFrame* aFrame)
         if (NS_STYLE_DISPLAY_BLOCK == display->mDisplay) {
 #ifdef NOISY_RUNIN
           ListTag(stdout);
-          printf(": run-in: ");
+          printf(": frame: ");
           aFrame->ListTag(stdout);
-          printf(" into: ");
+          printf(" followed by: ");
           nextFrame->ListTag(stdout);
           printf("\n");
 #endif
-          runInToFrame = (nsBlockFrame*) nextFrame;
+          followingBlockFrame = (nsBlockFrame*) nextFrame;
           break;
         }
         else if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
@@ -3356,7 +3405,7 @@ nsBlockFrame::IsReallyRunInFrame(nsIFrame* aFrame)
     else
       break;
   }
-  return runInToFrame;
+  return followingBlockFrame;
 }
 
 PRBool
@@ -3372,6 +3421,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
   // Prepare the inline reflow engine
   nsBlockFrame* runInToFrame;
+  nsBlockFrame* compactWithFrame;
+  nscoord compactMarginWidth = 0;
+  PRBool isCompactFrame = PR_FALSE;
   PRBool asBlock = PR_TRUE;
   const nsStyleDisplay* display;
   nsresult rv = aFrame->GetStyleData(eStyleStruct_Display,
@@ -3389,7 +3441,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       aFrame->ListTag(stdout);
       printf(" is a run-in candidate\n");
 #endif
-      runInToFrame = IsReallyRunInFrame(aFrame);
+      runInToFrame = FindFollowingBlockFrame(aFrame);
       if (nsnull != runInToFrame) {
 // XXX run-in frame should be pushed to the next-in-flow too if the
 // run-in-to frame is pushed.
@@ -3410,7 +3462,21 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         return PR_TRUE;
       }
       break;
-    case NS_STYLE_DISPLAY_BLOCK:
+
+    case NS_STYLE_DISPLAY_COMPACT:
+      compactWithFrame = FindFollowingBlockFrame(aFrame);
+      if (nsnull != compactWithFrame) {
+        const nsStyleSpacing* spacing;
+        nsMargin margin;
+        rv = compactWithFrame->GetStyleData(eStyleStruct_Spacing,
+                                            (const nsStyleStruct*&) spacing);
+        if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
+          // XXX % margins
+          spacing->CalcMarginFor(compactWithFrame, margin);
+          compactMarginWidth = margin.left;
+        }
+        isCompactFrame = PR_TRUE;
+      }
       break;
     }
 
@@ -3422,13 +3488,12 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   PrepareInlineReflow(aState, aFrame, asBlock);
   ir.SetIsFirstChild((aLine == mLines) &&
                      (aFrame == aLine->mFirstChild));
-
-  // Reflow the block frame
+  ir.SetCompactMarginWidth(compactMarginWidth);
   if (aFrame == aState.mRunInToFrame) {
     ir.SetRunInFrame(aState.mRunInFrame);
-    // XXX premature, but hey! this is a prototype impl of run-in...
-    aState.mRunInToFrame = nsnull;
   }
+
+  // Reflow the block frame
   nsReflowStatus reflowStatus = ir.ReflowFrame(aFrame);
   if (NS_IS_REFLOW_ERROR(reflowStatus)) {
     aReflowResult = reflowStatus;
@@ -3465,6 +3530,19 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     PushLines(aState);
     aReflowResult = NS_FRAME_NOT_COMPLETE;
     return PR_FALSE;
+  }
+  if (isCompactFrame) {
+    // For compact frames, we don't adjust the Y coordinate at all IF
+    // the compact frame ended up fitting in the margin space
+    // allocated for it.
+    nsRect r;
+    aFrame->GetRect(r);
+    if (r.width <= compactMarginWidth) {
+      // XXX margins will be wrong
+      // XXX ltr/rtl for horizontal placement within the margin area
+      // XXX vertical alignment with the compactWith frame's *first line*
+      newY = aState.mY;
+    }
   }
   aState.mY = newY;
 
