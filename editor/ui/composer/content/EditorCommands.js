@@ -442,7 +442,7 @@ function EditorViewSource()
   if (fileurl != "" && fileurl != "about:blank")
   {
     // Use a browser window to view source
-    window.openDialog( "chrome://navigator/content/",
+    window.openDialog( "chrome://navigator/content/viewSource.xul",
                        "_blank",
                        "chrome,menubar,status,dialog=no,resizable",
                        fileurl,
