@@ -2714,12 +2714,12 @@ NS_IMETHODIMP
 nsEditor::SetCompositionString(const nsString& aCompositionString)
 {
 
+
 	if (mIMEFirstTransaction==PR_TRUE) {
 		mIMEFirstTransaction = PR_FALSE;
 	} else {
 		// printf("Undo!\n");
 		// mTxnMgr->Undo();
-
 		nsCOMPtr<nsIDOMSelection> selection;
 		nsresult result;
 
@@ -2727,6 +2727,7 @@ nsEditor::SetCompositionString(const nsString& aCompositionString)
 
 		if (NS_FAILED(result))
 		{
+			EndTransaction();
 			return result;
 		}
 
@@ -3028,6 +3029,7 @@ nsEditor::SetPreeditText(const nsString& aStringToInsert)
   mIMESelectionRange->SetEnd(node, offset);
 
   EndTransaction();
+  HACKForceRedraw();
   return result;
 }
 
