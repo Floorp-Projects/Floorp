@@ -1026,41 +1026,68 @@ HKEY ParseRootKey(LPSTR szRootKey)
   return(hkRootKey);
 }
 
-DWORD ParseRegType(LPSTR szType)
+BOOL ParseRegType(LPSTR szType, DWORD *dwType)
 {
-  DWORD dwType;
+  BOOL bSZ;
 
   if(lstrcmpi(szType, "REG_SZ") == 0)
+  {
     /* Unicode NULL terminated string */
-    dwType = REG_SZ;
+    *dwType = REG_SZ;
+    bSZ     = TRUE;
+  }
   else if(lstrcmpi(szType, "REG_EXPAND_SZ") == 0)
+  {
     /* Unicode NULL terminated string
      * (with environment variable references) */
-    dwType = REG_EXPAND_SZ;
+    *dwType = REG_EXPAND_SZ;
+    bSZ     = TRUE;
+  }
   else if(lstrcmpi(szType, "REG_BINARY") == 0)
+  {
     /* Free form binary */
-    dwType = REG_BINARY;
+    *dwType = REG_BINARY;
+    bSZ     = FALSE;
+  }
   else if(lstrcmpi(szType, "REG_DWORD") == 0)
+  {
     /* 32bit number */
-    dwType = REG_DWORD;
+    *dwType = REG_DWORD;
+    bSZ     = FALSE;
+  }
   else if(lstrcmpi(szType, "REG_DWORD_LITTLE_ENDIAN") == 0)
+  {
     /* 32bit number
      * (same as REG_DWORD) */
-    dwType = REG_DWORD_LITTLE_ENDIAN;
+    *dwType = REG_DWORD_LITTLE_ENDIAN;
+    bSZ     = FALSE;
+  }
   else if(lstrcmpi(szType, "REG_DWORD_BIG_ENDIAN") == 0)
+  {
     /* 32bit number */
-    dwType = REG_DWORD_BIG_ENDIAN;
+    *dwType = REG_DWORD_BIG_ENDIAN;
+    bSZ     = FALSE;
+  }
   else if(lstrcmpi(szType, "REG_LINK") == 0)
+  {
     /* Symbolic link (unicode) */
-    dwType = REG_LINK;
+    *dwType = REG_LINK;
+    bSZ     = TRUE;
+  }
   else if(lstrcmpi(szType, "REG_MULTI_SZ") == 0)
+  {
     /* Multiple Unicode strings */
-    dwType = REG_MULTI_SZ;
+    *dwType = REG_MULTI_SZ;
+    bSZ     = TRUE;
+  }
   else /* Default is REG_NONE */
+  {
     /* no value type */
-    dwType = REG_NONE;
+    *dwType = REG_NONE;
+    bSZ     = TRUE;
+  }
 
-  return(dwType);
+  return(bSZ);
 }
 
 BOOL WinRegKeyExists(HKEY hkRootKey, LPSTR szKey)
@@ -1125,7 +1152,7 @@ void GetWinReg(HKEY hkRootKey, LPSTR szKey, LPSTR szName, LPSTR szReturnValue, D
   }
 }
 
-void SetWinReg(HKEY hkRootKey, LPSTR szKey, BOOL bOverwriteKey, LPSTR szName, BOOL bOverwriteName, DWORD dwType, LPSTR szData, DWORD dwSize)
+void SetWinReg(HKEY hkRootKey, LPSTR szKey, BOOL bOverwriteKey, LPSTR szName, BOOL bOverwriteName, DWORD dwType, LPBYTE lpbData, DWORD dwSize)
 {
   HKEY    hkResult;
   DWORD   dwErr;
@@ -1137,6 +1164,7 @@ void SetWinReg(HKEY hkRootKey, LPSTR szKey, BOOL bOverwriteKey, LPSTR szName, BO
   bNameExists = WinRegNameExists(hkRootKey, szKey, szName);
   dwErr       = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
 
+
   if(dwErr != ERROR_SUCCESS)
     dwErr = RegCreateKeyEx(hkRootKey, szKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hkResult, &dwDisp);
 
@@ -1144,7 +1172,7 @@ void SetWinReg(HKEY hkRootKey, LPSTR szKey, BOOL bOverwriteKey, LPSTR szName, BO
   {
     if((bNameExists == FALSE) ||
       ((bNameExists == TRUE) && (bOverwriteName == TRUE)))
-      dwErr = RegSetValueEx(hkResult, szName, 0, dwType, szData, dwSize);
+      dwErr = RegSetValueEx(hkResult, szName, 0, dwType, lpbData, dwSize);
 
     RegCloseKey(hkResult);
   }
@@ -1152,20 +1180,22 @@ void SetWinReg(HKEY hkRootKey, LPSTR szKey, BOOL bOverwriteKey, LPSTR szName, BO
 
 HRESULT ProcessWinReg(DWORD dwTiming)
 {
-  char  szIndex[MAX_BUF];
-  char  szBuf[MAX_BUF];
-  char  szKey[MAX_BUF];
-  char  szName[MAX_BUF];
-  char  szValue[MAX_BUF];
-  char  szDecrypt[MAX_BUF];
-  char  szOverwriteKey[MAX_BUF];
-  char  szOverwriteName[MAX_BUF];
-  char  szSection[MAX_BUF];
-  HKEY  hRootKey;
-  BOOL  bOverwriteKey;
-  BOOL  bOverwriteName;
-  DWORD dwIndex;
-  DWORD dwType;
+  char    szIndex[MAX_BUF];
+  char    szBuf[MAX_BUF];
+  char    szKey[MAX_BUF];
+  char    szName[MAX_BUF];
+  char    szValue[MAX_BUF];
+  char    szDecrypt[MAX_BUF];
+  char    szOverwriteKey[MAX_BUF];
+  char    szOverwriteName[MAX_BUF];
+  char    szSection[MAX_BUF];
+  HKEY    hRootKey;
+  BOOL    bOverwriteKey;
+  BOOL    bOverwriteName;
+  DWORD   dwIndex;
+  DWORD   dwType;
+  DWORD   dwSize;
+  __int64 iiNum;
 
   dwIndex = 0;
   itoa(dwIndex, szIndex, 10);
@@ -1213,11 +1243,24 @@ HRESULT ProcessWinReg(DWORD dwTiming)
       else
         lstrcpy(szValue, szBuf);
 
-      GetPrivateProfileString(szSection, "Type",                "", szBuf,           MAX_BUF, szFileIniConfig);
-      dwType = ParseRegType(szBuf);
+      GetPrivateProfileString(szSection, "Size",                "", szBuf,           MAX_BUF, szFileIniConfig);
+      if(*szBuf != '\0')
+        dwSize = atoi(szBuf);
+      else
+        dwSize = 0;
 
-      /* create/set windows registry key here! */
-      SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName, dwType, szValue, lstrlen(szValue));
+      GetPrivateProfileString(szSection, "Type",                "", szBuf,           MAX_BUF, szFileIniConfig);
+      if(ParseRegType(szBuf, &dwType))
+      {
+        /* create/set windows registry key here (string value)! */
+        SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName, dwType, (CONST LPBYTE)szValue, lstrlen(szValue));
+      }
+      else
+      {
+        iiNum = _atoi64(szValue);
+        /* create/set windows registry key here (binary/dword value)! */
+        SetWinReg(hRootKey, szKey, bOverwriteKey, szName, bOverwriteName, dwType, (CONST LPBYTE)&iiNum, dwSize);
+      }
     }
 
     ++dwIndex;
