@@ -73,7 +73,6 @@
 #include "nsNetUtil.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-
 class nsXULPrototypeCache : public nsIXULPrototypeCache
 {
 public:
@@ -274,12 +273,11 @@ nsXULPrototypeCache::GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _resul
                 if (NS_SUCCEEDED(rv)) {
                     NS_ADDREF(*_result = protoDoc);
                     PutPrototype(protoDoc);
+
+                    gFastLoadService->EndMuxedDocument(aURI);
                 }
 
-                gFastLoadService->EndMuxedDocument(aURI);
-
                 RemoveFromFastLoadSet(aURI);
-
             }
         }
     }
@@ -564,15 +562,6 @@ nsXULPrototypeCache::AbortFastLoads()
     // close open streams to it.
     nsCOMPtr<nsIFile> file = gFastLoadFile;
 
-    // Now rename or remove the file.
-    if (file) {
-#ifdef DEBUG
-        file->MoveToNative(nsnull, NS_LITERAL_CSTRING("Aborted.mfasl"));
-#else
-        file->Remove(PR_FALSE);
-#endif
-    }
-
     // Flush the XUL cache for good measure, in case we cached a bogus/downrev
     // script, somehow.
     Flush();
@@ -604,6 +593,25 @@ nsXULPrototypeCache::AbortFastLoads()
         // input stream now.
         gFastLoadService->SetInputStream(nsnull);
         objectInput->Close();
+    }
+
+    // Now rename or remove the file.
+    if (file) {
+#ifdef DEBUG
+        // Remove any existing Aborted.mfasl files generated in previous runs. 
+        nsCOMPtr<nsIFile> existingAbortedFile;
+        file->Clone(getter_AddRefs(existingAbortedFile));
+        if (existingAbortedFile) {
+            existingAbortedFile->SetLeafName(NS_LITERAL_STRING("Aborted.mfasl"));
+            PRBool fileExists = PR_FALSE;
+            existingAbortedFile->Exists(&fileExists);
+            if (fileExists)
+                existingAbortedFile->Remove(PR_FALSE);
+        }
+        file->MoveToNative(nsnull, NS_LITERAL_CSTRING("Aborted.mfasl"));
+#else
+        file->Remove(PR_FALSE);
+#endif
     }
 
     // If the list is empty now, the FastLoad process is done.
@@ -866,6 +874,7 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
         prefs->RegisterCallback(kChecksumXULFastLoadFilePref,
                                 FastLoadPrefChangedCallback,
                                 nsnull);
+
         if (gDisableXULFastLoad)
             return NS_ERROR_NOT_AVAILABLE;
     }
@@ -1014,5 +1023,4 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
     NS_ADDREF(gFastLoadFile = file);
     return NS_OK;
 }
-
 
