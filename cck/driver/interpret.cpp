@@ -20,7 +20,12 @@
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-#define FILEPATHLENGTH 47
+
+// defines the length of the 'collapsed' (trimmed) filepaths
+// used by GetTrimFile( )
+//
+#define FILEPATHLENGTH 78
+
 extern CWizardMachineApp theApp;
 extern NODE *CurrentNode;
 extern HBITMAP hBitmap;
