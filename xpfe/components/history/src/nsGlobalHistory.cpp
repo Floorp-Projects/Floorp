@@ -535,11 +535,8 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
 
   if (row) {
     // Update last visit date. First get the old date so we can update observers...
-    nsMdbPtr<nsIMdbCell> lastvisitdate(mEnv);
-    err = row->GetCell(mEnv, kToken_LastVisitDateColumn, getter_Acquires(lastvisitdate));
+    err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
     if (err != 0) return NS_ERROR_FAILURE;
-
-    lastvisitdate->AliasYarn(mEnv, &yarn);
 
     PRInt64 oldvalue;
     rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, &oldvalue);
@@ -671,13 +668,12 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
 
   // Get the old title so we can notify observers
   nsMdbPtr<nsIMdbCell> cell(mEnv);
-  err = row->GetCell(mEnv, kToken_NameColumn, getter_Acquires(cell));
+  err = row->AliasCellYarn(mEnv, kToken_NameColumn, &yarn);
   if (err != 0) return NS_ERROR_FAILURE;
 
   nsresult rv;
   nsCOMPtr<nsIRDFLiteral> oldname;
-  if (cell) {
-    cell->AliasYarn(mEnv, &yarn);
+  if (yarn.mYarn_Fill) {
     nsAutoString str((const PRUnichar*) yarn.mYarn_Buf, PRInt32(yarn.mYarn_Fill / sizeof(PRUnichar)));
 
     rv = gRDFService->GetLiteral(str.GetUnicode(), getter_AddRefs(oldname));
@@ -740,11 +736,8 @@ nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
   if (err != 0) return NS_ERROR_FAILURE;
 
   if (row) {
-    nsMdbPtr<nsIMdbCell> lastvisitdate(mEnv);
-    err = row->GetCell(mEnv, kToken_LastVisitDateColumn, getter_Acquires(lastvisitdate));
+    err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
     if (err != 0) return NS_ERROR_FAILURE;
-
-    lastvisitdate->AliasYarn(mEnv, &yarn);
 
     rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, _retval);
     if (NS_FAILED(rv)) return rv;
@@ -1070,13 +1063,8 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     // cell they want out of it.
     if (aProperty == kNC_Date) {
       // Last visit date
-      nsMdbPtr<nsIMdbCell> cell(mEnv);
-      err = row->GetCell(mEnv, kToken_LastVisitDateColumn, getter_Acquires(cell));
+      err = row->AliasCellYarn(mEnv, kToken_LastVisitDateColumn, &yarn);
       if (err != 0) return NS_ERROR_FAILURE;
-
-      if (!cell) return NS_RDF_NO_VALUE;
-
-      cell->AliasYarn(mEnv, &yarn);
 
       PRInt64 i;
       rv = CharsToPRInt64((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill, &i);
@@ -1095,13 +1083,8 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     }
     else if (aProperty == kNC_Name) {
       // Site name (i.e., page title)
-      nsMdbPtr<nsIMdbCell> cell(mEnv);
-      err = row->GetCell(mEnv, kToken_NameColumn, getter_Acquires(cell));
+      err = row->AliasCellYarn(mEnv, kToken_NameColumn, &yarn);
       if (err != 0) return NS_ERROR_FAILURE;
-
-      if (!cell) return NS_RDF_NO_VALUE;
-
-      cell->AliasYarn(mEnv, &yarn);
 
       // Can't alias, because we don't store the terminating null
       // character in the db.
@@ -1116,13 +1099,8 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     }
     else if (aProperty == kNC_Referrer) {
       // Referrer field
-      nsMdbPtr<nsIMdbCell> cell(mEnv);
-      err = row->GetCell(mEnv, kToken_ReferrerColumn, getter_Acquires(cell));
+      err = row->AliasCellYarn(mEnv, kToken_ReferrerColumn, &yarn);
       if (err != 0) return NS_ERROR_FAILURE;
-
-      if (!cell) return NS_RDF_NO_VALUE;
-
-      cell->AliasYarn(mEnv, &yarn);
 
       // XXX Could probably alias the buffer here to avoid copy
       nsCAutoString str((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
@@ -1850,12 +1828,8 @@ nsGlobalHistory::URLEnumerator::IsResult(nsIMdbRow* aRow)
   if (mSelectColumn) {
     mdb_err err;
 
-   nsMdbPtr<nsIMdbCell> cell(mEnv);
-    err = mCurrent->GetCell(mEnv, mURLColumn, getter_Acquires(cell));
-    if (err != 0) return PR_FALSE;
-
     mdbYarn yarn;
-    err = cell->AliasYarn(mEnv, &yarn);
+    err = mCurrent->AliasCellYarn(mEnv, mURLColumn, &yarn);
     if (err != 0) return PR_FALSE;
 
     // Do bitwise comparison
@@ -1880,29 +1854,22 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
 {
   mdb_err err;
 
-   nsMdbPtr<nsIMdbCell> cell(mEnv);
-  err = mCurrent->GetCell(mEnv, mURLColumn, getter_Acquires(cell));
+  mdbYarn yarn;
+  err = mCurrent->AliasCellYarn(mEnv, mURLColumn, &yarn);
   if (err != 0) return NS_ERROR_FAILURE;
 
-  nsresult rv = NS_ERROR_FAILURE;
+  // Since the URLEnumerator always returns the value of the URL
+  // column, we create an RDF resource.
+  nsCAutoString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
 
-  // XXX cell might be null if no value set
-  mdbYarn yarn;
-  err = cell->AliasYarn(mEnv, &yarn);
-  if (err == 0) {
-    // Since the URLEnumerator always returns the value of the URL
-    // column, we create an RDF resource.
-    nsCAutoString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
+  nsresult rv;
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
+  if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIRDFResource> resource;
-    rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
-    if (NS_SUCCEEDED(rv)) {
-      *aResult = resource;
-      NS_ADDREF(*aResult);
-    }
-  }
-  
-  return rv;
+  *aResult = resource;
+  NS_ADDREF(*aResult);
+  return NS_OK;
 }
 
 
