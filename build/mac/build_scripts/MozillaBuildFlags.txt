@@ -58,6 +58,7 @@ cache           1
 useimg2         1
 lowmem          0
 accessible      1
+bidi            0
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"
