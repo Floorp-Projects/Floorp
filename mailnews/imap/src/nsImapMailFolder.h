@@ -178,7 +178,7 @@ public:
                                PRBool isDraftOrTemplate,
                                nsIMsgWindow *msgWindow,
                                nsIMsgCopyServiceListener* listener);
-  NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
+  NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener);
 
   NS_IMETHOD GetPath(nsIFileSpec** aPathName);
 	NS_IMETHOD SetPath(nsIFileSpec * aPath);
@@ -359,6 +359,7 @@ protected:
   PRUint32    m_uidValidity;
 	PRInt32			m_nextMessageByteLength;
   nsCOMPtr<nsIEventQueue> m_eventQueue;
+  nsCOMPtr<nsIUrlListener> m_urlListener;
   PRBool m_urlRunning;
 
   // *** jt - undo move/copy trasaction support

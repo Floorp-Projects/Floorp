@@ -62,6 +62,13 @@
 #include "nsICacheService.h"
 #include "nsNetCID.h"
 #include "nsMsgUtf7Utils.h"
+#include "nsIOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsICopyMsgStreamListener.h"
+#include "nsIFileStream.h"
+#include "nsIMsgParseMailMsgState.h"
+#include "nsMsgLineBuffer.h"
+#include "nsMsgLocalCID.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
@@ -1882,6 +1889,113 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
     return rv;
 }
 
+nsresult nsImapService::OfflineAppendFromFile(nsIFileSpec* aFileSpec,
+                                              nsIURI *aUrl,
+                                     nsIMsgFolder* aDstFolder,
+                                     const char* messageId, // te be replaced
+                                     PRBool inSelectedState, // needs to be in
+                                     nsIUrlListener* aListener,
+                                     nsIURI** aURL,
+                                     nsISupports* aCopyState)
+{
+  nsCOMPtr <nsIMsgDatabase> destDB;
+  nsresult rv = aDstFolder->GetMsgDatabase(nsnull, getter_AddRefs(destDB));
+  // ### might need to send some notifications instead of just returning
+
+  if (NS_SUCCEEDED(rv) && destDB)
+  {
+    nsMsgKey fakeKey;
+    destDB->GetNextFakeOfflineMsgKey(&fakeKey);
+    
+    nsCOMPtr <nsIMsgOfflineImapOperation> op;
+    rv = destDB->GetOfflineOpForKey(fakeKey, PR_TRUE, getter_AddRefs(op));
+    if (NS_SUCCEEDED(rv) && op)
+    {
+      nsXPIDLCString destFolderUri;
+
+      aDstFolder->GetURI(getter_Copies(destFolderUri));
+      op->SetOperation(nsIMsgOfflineImapOperation::kAppendDraft); // ### do we care if it's a template?
+      op->SetDestinationFolderURI(destFolderUri);
+      nsCOMPtr <nsIOutputStream> offlineStore;
+      rv = aDstFolder->GetOfflineStoreOutputStream(getter_AddRefs(offlineStore));
+
+      if (NS_SUCCEEDED(rv) && offlineStore)
+      {
+        PRInt32 curOfflineStorePos = 0;
+        nsCOMPtr <nsIRandomAccessStore> randomStore = do_QueryInterface(offlineStore);
+        if (randomStore)
+          randomStore->Tell(&curOfflineStorePos);
+        else
+        {
+          NS_ASSERTION(PR_FALSE, "needs to be a random store!");
+          return NS_ERROR_FAILURE;
+        }
+
+
+        nsCOMPtr <nsIInputStream> inputStream;
+        nsCOMPtr <nsIMsgParseMailMsgState> msgParser = do_CreateInstance(NS_PARSEMAILMSGSTATE_CONTRACTID, &rv);
+        msgParser->SetMailDB(destDB);
+
+        if (NS_SUCCEEDED(rv))
+          rv = aFileSpec->GetInputStream(getter_AddRefs(inputStream));
+        if (NS_SUCCEEDED(rv) && inputStream)
+        {
+          // now, copy the temp file to the offline store for the dest folder.
+          PRInt32 inputBufferSize = 10240;
+          nsMsgLineStreamBuffer *inputStreamBuffer = new nsMsgLineStreamBuffer(inputBufferSize, CRLF, PR_TRUE /* allocate new lines */, PR_FALSE /* leave CRLFs on the returned string */);
+          PRUint32 fileSize;
+          aFileSpec->GetFileSize(&fileSize);
+          PRUint32 bytesWritten;
+          rv = NS_OK;
+//            rv = inputStream->Read(inputBuffer, inputBufferSize, &bytesRead);
+//            if (NS_SUCCEEDED(rv) && bytesRead > 0)
+          msgParser->SetState(nsIMsgParseMailMsgState::ParseHeadersState);
+          // set the env pos to fake key so the msg hdr will have that for a key
+          msgParser->SetEnvelopePos(fakeKey);
+          PRBool needMoreData = PR_FALSE;
+          char * newLine = nsnull;
+          PRUint32 numBytesInLine = 0;
+          do
+          {
+            newLine = inputStreamBuffer->ReadNextLine(inputStream, numBytesInLine, needMoreData); 
+            if (newLine)
+            {
+              msgParser->ParseAFolderLine(newLine, numBytesInLine);
+              rv = offlineStore->Write(newLine, numBytesInLine, &bytesWritten);
+              nsCRT::free(newLine);
+            }
+          }
+          while (newLine);
+          nsCOMPtr <nsIMsgDBHdr> fakeHdr;
+
+          msgParser->FinishHeader();
+          msgParser->GetNewMsgHdr(getter_AddRefs(fakeHdr));
+          if (fakeHdr)
+          {
+            if (NS_SUCCEEDED(rv) && fakeHdr)
+            {
+              PRUint32 resultFlags;
+              fakeHdr->SetMessageOffset(curOfflineStorePos);
+              fakeHdr->OrFlags(MSG_FLAG_OFFLINE | MSG_FLAG_READ, &resultFlags);
+              fakeHdr->SetOfflineMessageSize(fileSize);
+              destDB->AddNewHdrToDB(fakeHdr, PR_TRUE /* notify */);
+              aDstFolder->SetFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
+            }
+          }
+          // tell the listener we're done.
+          aListener->OnStopRunningUrl(aUrl, NS_OK);
+          delete inputStreamBuffer;
+        }
+      }
+    }
+  }
+          
+         
+  if (destDB)
+    destDB->Close(PR_TRUE);
+  return rv;
+}
+
 /* append message from file url */
 /* imap://HOST>appendmsgfromfile>DESTINATIONMAILBOXPATH */
 /* imap://HOST>appenddraftfromfile>DESTINATIONMAILBOXPATH>UID>messageId */
@@ -1937,6 +2051,11 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
         }
 
         rv = uri->SetSpec(urlSpec.get());
+        if (WeAreOffline())
+        {
+          return OfflineAppendFromFile(aFileSpec, uri, aDstFolder, messageId, inSelectedState, aListener, aURL, aCopyState);
+          // handle offline append to drafts or templates folder here.
+        }
         if (NS_SUCCEEDED(rv))
             rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
                                              nsnull, aURL);

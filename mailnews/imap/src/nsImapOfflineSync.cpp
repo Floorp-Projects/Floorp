@@ -48,6 +48,7 @@ nsImapOfflineSync::nsImapOfflineSync(nsIMsgWindow *window, nsIUrlListener *liste
 
   mCurrentPlaybackOpType = nsIMsgOfflineImapOperation::kFlagsChanged;
   m_mailboxupdatesStarted = PR_FALSE;
+  m_mailboxupdatesFinished = PR_FALSE;
   m_createdOfflineFolders = PR_FALSE;
   m_pseudoOffline = PR_FALSE;
   m_KeyIndex = 0;
@@ -539,7 +540,7 @@ PRInt32 nsImapOfflineSync::GetCurrentUIDValidity()
 
 nsresult nsImapOfflineSync::ProcessNextOperation()
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   // find a folder that needs to process operations
   nsIMsgFolder	*deletedAllOfflineEventsInFolder = nsnull;
   
@@ -792,20 +793,6 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
     }
     else
     {
-      // this means that we are updating all of the folders.  Update the INBOX first so the updates on the remaining
-      // folders pickup the results of any filter moves.
-      //			nsIMsgFolder *inboxFolder;
-      if (!m_pseudoOffline )
-      {
-        NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsISupportsArray> servers;
-        
-        rv = accountManager->GetAllServers(getter_AddRefs(servers));
-        if (NS_FAILED(rv)) return rv;
-        // ### for each imap server, call get new messages.
-        // get next folder...
-      }
     }
     
     //		MSG_FolderIterator *updateFolderIterator = m_singleFolderToUpdate ? (MSG_FolderIterator *) 0 : m_folderIterator;
@@ -872,7 +859,48 @@ nsImapOfflineDownloader::~nsImapOfflineDownloader()
 nsresult nsImapOfflineDownloader::ProcessNextOperation()
 {
   nsresult rv = NS_OK;
+  if (!m_mailboxupdatesStarted)
+  {
+    m_mailboxupdatesStarted = PR_TRUE;
+    // Update the INBOX first so the updates on the remaining
+    // folders pickup the results of any filter moves.
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsISupportsArray> servers;
+  
+    rv = accountManager->GetAllServers(getter_AddRefs(servers));
+    if (NS_FAILED(rv)) return rv;
+  }
+  if (!m_mailboxupdatesFinished)
+  {
+    AdvanceToNextServer();
+    if (m_currentServer)
+    {
+      nsCOMPtr <nsIFolder> rootFolder;
+      m_currentServer->GetRootFolder(getter_AddRefs(rootFolder));
+      nsCOMPtr<nsIMsgFolder> inbox;
+      if (rootFolder)
+      {
+        nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(rootFolder, &rv);
+        if (rootMsgFolder)
+        {
+          PRUint32 numFolders;
+          rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
+          if (inbox)
+            return inbox->GetNewMessages(m_window, this);
+        }
+      }
+      else
+        return ProcessNextOperation(); // recurse and do next server.
+    }
+    else
+    {
+      m_allServers = nsnull;
+      m_mailboxupdatesFinished = PR_TRUE;
+    }
+  }
   AdvanceToNextFolder();
+
 	while (m_currentFolder)
 	{
     PRUint32 folderFlags;

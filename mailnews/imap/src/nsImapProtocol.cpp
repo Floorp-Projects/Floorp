@@ -4702,140 +4702,141 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                                             const char* mailboxName,
                                             imapMessageFlagsType flags)
 {
-    if (!fileSpec || !mailboxName) return;
-    IncrementCommandTagNumber();
-
-    PRUint32 fileSize = 0;
-    PRInt32 totalSize, readCount;
-    char *dataBuffer = nsnull;
-    nsCString command(GetServerCommandTag());
-    char* escapedName = CreateEscapedMailboxName(mailboxName);
-    nsresult rv;
-    PRBool isOpen = PR_FALSE;
-    PRBool eof = PR_FALSE;
-    nsCString flagString;
-    PRBool hasLiteralPlus = (GetServerStateParser().GetCapabilityFlag() &
-                             kLiteralPlusCapability);
-
-    if (escapedName)
+  if (!fileSpec || !mailboxName) return;
+  IncrementCommandTagNumber();
+  
+  PRUint32 fileSize = 0;
+  PRInt32 totalSize;
+  PRUint32 readCount;
+  char *dataBuffer = nsnull;
+  nsCString command(GetServerCommandTag());
+  char* escapedName = CreateEscapedMailboxName(mailboxName);
+  nsresult rv;
+  PRBool isOpen = PR_FALSE;
+  PRBool eof = PR_FALSE;
+  nsCString flagString;
+  PRBool hasLiteralPlus = (GetServerStateParser().GetCapabilityFlag() &
+    kLiteralPlusCapability);
+  
+  nsCOMPtr <nsIInputStream> fileInputStream;
+  
+  if (escapedName)
+  {
+    command.Append(" append \"");
+    command.Append(escapedName);
+    command.Append("\" (");
+    
+    SetupMessageFlagsString(flagString, flags,
+      GetServerStateParser().SupportsUserFlags());
+    command.Append(flagString);
+    command.Append(") {");
+    
+    dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
+    if (!dataBuffer) goto done;
+    rv = fileSpec->GetFileSize(&fileSize);
+    if (NS_FAILED(rv)) goto done;
+    rv = fileSpec->GetInputStream(getter_AddRefs(fileInputStream));
+    if (NS_FAILED(rv) || !fileInputStream) goto done;
+    command.AppendInt((PRInt32)fileSize);
+    if (hasLiteralPlus)
+      command.Append("+}" CRLF);
+    else
+      command.Append("}" CRLF);
+    
+    rv = SendData(command.get());
+    if (NS_FAILED(rv)) goto done;
+    
+    if (!hasLiteralPlus)
+      ParseIMAPandCheckForNewMail();
+    
+    totalSize = fileSize;
+    readCount = 0;
+    while(NS_SUCCEEDED(rv) && !eof && totalSize > 0)
     {
-        command.Append(" append \"");
-        command.Append(escapedName);
-        command.Append("\" (");
-        
-        SetupMessageFlagsString(flagString, flags,
-                                GetServerStateParser().SupportsUserFlags());
-        command.Append(flagString);
-        command.Append(") {");
-
-        dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
-        if (!dataBuffer) goto done;
-        rv = fileSpec->GetFileSize(&fileSize);
-        if (NS_FAILED(rv)) goto done;
-        rv = fileSpec->OpenStreamForReading();
-        if (NS_FAILED(rv)) goto done;
-        command.AppendInt((PRInt32)fileSize);
-        if (hasLiteralPlus)
-            command.Append("+}" CRLF);
-        else
-            command.Append("}" CRLF);
-
-        rv = SendData(command.get());
-        if (NS_FAILED(rv)) goto done;
-
-        if (!hasLiteralPlus)
-            ParseIMAPandCheckForNewMail();
-
-        totalSize = fileSize;
-        readCount = 0;
-        while(NS_SUCCEEDED(rv) && !eof && totalSize > 0)
+      rv = fileInputStream->Read(dataBuffer, FOUR_K, &readCount);
+      if (NS_SUCCEEDED(rv))
+      {
+        dataBuffer[readCount] = 0;
+        rv = SendData(dataBuffer);
+        totalSize -= readCount;
+        rv = fileSpec->Eof(&eof);
+      }
+    }
+    if (NS_SUCCEEDED(rv))
+    {
+      rv = SendData(CRLF); // complete the append
+      ParseIMAPandCheckForNewMail(command.get());
+      
+      nsImapAction imapAction;
+      m_runningUrl->GetImapAction(&imapAction);
+      
+      if (GetServerStateParser().LastCommandSuccessful() &&  (
+        imapAction == nsIImapUrl::nsImapAppendDraftFromFile || imapAction == nsIImapUrl::nsImapAppendMsgFromFile ))
+      {
+        if (GetServerStateParser().GetCapabilityFlag() &
+          kUidplusCapability)
         {
-            rv = fileSpec->Read(&dataBuffer, FOUR_K, &readCount);
-            if (NS_SUCCEEDED(rv))
-            {
-                dataBuffer[readCount] = 0;
-                rv = SendData(dataBuffer);
-                totalSize -= readCount;
-                rv = fileSpec->Eof(&eof);
-            }
+          nsMsgKey newKey =
+            GetServerStateParser().CurrentResponseUID();
+          if (m_imapExtensionSink)
+          {
+            m_imapExtensionSink->SetAppendMsgUid(this, newKey,
+              m_runningUrl);
+            WaitForFEEventCompletion();
+          }
+          nsXPIDLCString oldMsgId;
+          rv = m_runningUrl->CreateListOfMessageIdsString(getter_Copies(oldMsgId));
+          if (NS_SUCCEEDED(rv) && nsCRT::strlen(oldMsgId) > 0)
+          {
+            PRBool idsAreUids = PR_TRUE;
+            m_runningUrl->MessageIdsAreUids(&idsAreUids);
+            Store(oldMsgId, "+FLAGS (\\Deleted)", idsAreUids);
+            UidExpunge(oldMsgId);
+          }
         }
-        if (NS_SUCCEEDED(rv))
-        {
-            rv = SendData(CRLF); // complete the append
-            ParseIMAPandCheckForNewMail(command.get());
-
-            nsImapAction imapAction;
-            m_runningUrl->GetImapAction(&imapAction);
-
-            if (GetServerStateParser().LastCommandSuccessful() &&  (
-                imapAction == nsIImapUrl::nsImapAppendDraftFromFile || imapAction == nsIImapUrl::nsImapAppendMsgFromFile ))
+        else if (m_imapExtensionSink)
+        {   // *** code me to search for the newly appended message
+          // go to selected state
+          AutoSubscribeToMailboxIfNecessary(mailboxName);
+          SelectMailbox(mailboxName);
+          
+          nsCString messageId;
+          rv = m_imapExtensionSink->GetMessageId(this, &messageId,
+            m_runningUrl);
+          WaitForFEEventCompletion();
+          if (NS_SUCCEEDED(rv) && messageId.Length() > 0 &&
+            GetServerStateParser().LastCommandSuccessful())
+          {
+            command = "SEARCH SEEN HEADER Message-ID ";
+            command.Append(messageId);
+            
+            // Clean up result sequence before issuing the cmd.
+            GetServerStateParser().ResetSearchResultSequence();
+            
+            Search(command, PR_TRUE, PR_FALSE);
+            if (GetServerStateParser().LastCommandSuccessful())
             {
-              if (GetServerStateParser().GetCapabilityFlag() &
-                    kUidplusCapability)
-                {
-                    nsMsgKey newKey =
-                        GetServerStateParser().CurrentResponseUID();
-                    if (m_imapExtensionSink)
-                    {
-                        m_imapExtensionSink->SetAppendMsgUid(this, newKey,
-                                                             m_runningUrl);
-                        WaitForFEEventCompletion();
-                    }
-                    nsXPIDLCString oldMsgId;
-                    rv = m_runningUrl->CreateListOfMessageIdsString(getter_Copies(oldMsgId));
-                    if (NS_SUCCEEDED(rv) && nsCRT::strlen(oldMsgId) > 0)
-                    {
-                        PRBool idsAreUids = PR_TRUE;
-                        m_runningUrl->MessageIdsAreUids(&idsAreUids);
-                        Store(oldMsgId, "+FLAGS (\\Deleted)", idsAreUids);
-                        UidExpunge(oldMsgId);
-                    }
-                }
-                else if (m_imapExtensionSink)
-                {   // *** code me to search for the newly appended message
-                    // go to selected state
-                    AutoSubscribeToMailboxIfNecessary(mailboxName);
-                    SelectMailbox(mailboxName);
-
-                    nsCString messageId;
-                    rv = m_imapExtensionSink->GetMessageId(this, &messageId,
-                                                       m_runningUrl);
-                    WaitForFEEventCompletion();
-                    if (NS_SUCCEEDED(rv) && messageId.Length() > 0 &&
-                        GetServerStateParser().LastCommandSuccessful())
-                    {
-                        command = "SEARCH SEEN HEADER Message-ID ";
-                        command.Append(messageId);
-                        
-                        // Clean up result sequence before issuing the cmd.
-                        GetServerStateParser().ResetSearchResultSequence();
- 
-                        Search(command, PR_TRUE, PR_FALSE);
-                        if (GetServerStateParser().LastCommandSuccessful())
-            {
-                            nsMsgKey newkey = nsMsgKey_None;
+              nsMsgKey newkey = nsMsgKey_None;
               nsImapSearchResultIterator *searchResult = 
-              GetServerStateParser().CreateSearchResultIterator();
+                GetServerStateParser().CreateSearchResultIterator();
               newkey = searchResult->GetNextMessageNumber();
               delete searchResult;
-                            if (newkey != nsMsgKey_None)
-                            {
-                                m_imapExtensionSink->SetAppendMsgUid
-                                    (this, newkey, m_runningUrl);
-                                WaitForFEEventCompletion();
-                            }
-                        }
-                    }
-                }
+              if (newkey != nsMsgKey_None)
+              {
+                m_imapExtensionSink->SetAppendMsgUid
+                  (this, newkey, m_runningUrl);
+                WaitForFEEventCompletion();
+              }
             }
+          }
         }
+      }
+    }
     }
 done:
-    PR_FREEIF(dataBuffer);
-    rv = fileSpec->IsStreamOpen(&isOpen);
-    if (NS_SUCCEEDED(rv) && isOpen)
-        fileSpec->CloseStream();
-    nsMemory::Free(escapedName);
+  PR_FREEIF(dataBuffer);
+  fileSpec->CloseStream();
+  nsMemory::Free(escapedName);
 }
 
 //caller must free using PR_Free

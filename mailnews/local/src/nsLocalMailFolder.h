@@ -148,7 +148,7 @@ public:
                              PRBool isDraftOrTemplate, 
                              nsIMsgWindow *msgWindow,
                              nsIMsgCopyServiceListener* listener);
-	NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow);
+	NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener);
 
 
 protected:

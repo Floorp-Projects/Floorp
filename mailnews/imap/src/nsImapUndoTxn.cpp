@@ -100,7 +100,6 @@ nsImapMoveCopyMsgTxn::Init(
 				{
                     srcDB->GetNextPseudoMsgKey(&pseudoKey);
                     pseudoKey--;
-                    srcDB->SetNextPseudoMsgKey(pseudoKey);				
 				    m_dupKeyArray.SetAt(i,pseudoKey);
                     rv = srcDB->CopyHdrFromExistingHdr(pseudoKey,
                                                        srcHdr, PR_FALSE,

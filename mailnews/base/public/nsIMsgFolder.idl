@@ -299,7 +299,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   boolean testSemaphore (in nsISupports semHolder);
   readonly attribute boolean locked;
 
-	void getNewMessages(in nsIMsgWindow aWindow);
+	void getNewMessages(in nsIMsgWindow aWindow, in nsIUrlListener aListener);
 
   /**
    * write out summary data for this folder

@@ -2023,7 +2023,7 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
         return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
+NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener)
 {
   nsresult rv = NS_ERROR_FAILURE;
   NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
@@ -2051,6 +2051,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
       imapServer->GetDownloadBodiesOnGetNewMail(&m_downloadingFolderForOfflineUse);
 
     inbox->SetGettingNewMessages(PR_TRUE);
+    m_urlListener = aListener;
     rv = imapService->SelectFolder(eventQ, inbox, this, aWindow, nsnull);
 
     if (rv == NS_BINDING_ABORTED)
@@ -3945,6 +3946,11 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   // of multiple imap messages, one msg at a time (i.e., moving to a local folder).
   if (listener && sendEndCopyNotification)
     listener->OnStopCopy(aExitCode);
+  if (m_urlListener)
+  {
+    m_urlListener->OnStopRunningUrl(aUrl, aExitCode);
+    m_urlListener = nsnull;
+  }
   return rv;
 }
 

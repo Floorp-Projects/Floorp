@@ -703,7 +703,7 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       }
       else if((aCommand == kNC_GetNewMessages))
       {
-        rv = folder->GetNewMessages(mWindow);
+        rv = folder->GetNewMessages(mWindow, nsnull);
       }
       else if((aCommand == kNC_Copy))
       {

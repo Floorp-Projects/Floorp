@@ -105,6 +105,14 @@ protected:
                          imapMessageFlagsType flags,
                          PRBool messageIdsAreUID);
 
+  nsresult OfflineAppendFromFile(nsIFileSpec* aFileSpec,
+                                     nsIURI *aUrl,
+                                     nsIMsgFolder* aDstFolder,
+                                     const char* messageId, // te be replaced
+                                     PRBool inSelectedState, // needs to be in
+                                     nsIUrlListener* aListener,
+                                     nsIURI** aURL,
+                                     nsISupports* aCopyState);
     // just a little helper method...maybe it should be a macro? which helps break down a imap message uri
     // into the folder and message key equivalents
     nsresult DecomposeImapURI(const char * aMessageURI, nsIMsgFolder ** aFolder,  char ** msgKey);

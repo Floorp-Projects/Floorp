@@ -2060,7 +2060,7 @@ nsresult nsMsgLocalMailFolder::DeleteMessage(nsISupports *message,
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener)
 {
     nsresult rv = NS_OK;
 
@@ -2089,7 +2089,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
     rv = localInbox->GetParsingInbox(&parsingInbox);
     NS_ENSURE_SUCCESS(rv,rv);
     if (!parsingInbox)
-      rv = localMailServer->GetNewMail(aWindow, nsnull, inbox, nsnull); 
+      rv = localMailServer->GetNewMail(aWindow, aListener, inbox, nsnull); 
     else
       rv = localInbox->SetCheckForNewMessagesAfterParsing(PR_TRUE);
   }
@@ -3013,7 +3013,7 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
       if (mCheckForNewMessagesAfterParsing)
       {
         if (msgWindow)
-           rv = GetNewMessages(msgWindow);
+           rv = GetNewMessages(msgWindow, nsnull);
         mCheckForNewMessagesAfterParsing = PR_FALSE;
       }
     }

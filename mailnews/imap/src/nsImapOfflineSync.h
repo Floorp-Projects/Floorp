@@ -69,6 +69,7 @@ protected:
   nsCOMPtr <nsISupportsArray> m_allFolders;
   nsCOMPtr <nsIMsgIncomingServer> m_currentServer;
   nsCOMPtr <nsIEnumerator> m_serverEnumerator;
+  nsCOMPtr <nsIFileSpec> m_curTempFile;
 
 	nsMsgKeyArray				m_CurrentKeys;
 	PRUint32					m_KeyIndex;
@@ -77,6 +78,7 @@ protected:
 	PRInt32				mCurrentUIDValidity;
 	PRInt32				mCurrentPlaybackOpType;	// kFlagsChanged -> kMsgCopy -> kMsgMoved
 	PRBool				m_mailboxupdatesStarted;
+  PRBool        m_mailboxupdatesFinished;
 	PRBool				m_pseudoOffline;		// for queueing online events in offline db
 	PRBool				m_createdOfflineFolders;
 

@@ -1915,7 +1915,7 @@ NS_IMETHODIMP nsMsgFolder::GetHostname(char **hostName)
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetNewMessages(nsIMsgWindow *)
+NS_IMETHODIMP nsMsgFolder::GetNewMessages(nsIMsgWindow *, nsIUrlListener * /* aListener */)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

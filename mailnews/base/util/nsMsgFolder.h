@@ -142,7 +142,7 @@ public:
   NS_IMETHOD ReleaseSemaphore(nsISupports *semHolder);
   NS_IMETHOD TestSemaphore(nsISupports *semHolder, PRBool *_retval);
   NS_IMETHOD GetLocked(PRBool *aLocked);
-  NS_IMETHOD GetNewMessages(nsIMsgWindow *window);
+  NS_IMETHOD GetNewMessages(nsIMsgWindow *window, nsIUrlListener *aListener);
   // NS_IMETHOD WriteToFolderCache(nsIMsgFolderCache *folderCache);
   // NS_IMETHOD GetCharset(PRUnichar * *aCharset);
   // NS_IMETHOD SetCharset(const PRUnichar * aCharset);

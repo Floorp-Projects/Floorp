@@ -423,14 +423,17 @@ nsMsgNewsFolder::UpdateFolder(nsIMsgWindow *aWindow)
   {
     if (mDatabase)
     {
-    nsCOMPtr<nsIMsgRetentionSettings> retentionSettings;
-    nsresult rv = GetRetentionSettings(getter_AddRefs(retentionSettings));
-    if (NS_SUCCEEDED(rv))
-      rv = mDatabase->ApplyRetentionSettings(retentionSettings);
+      nsCOMPtr<nsIMsgRetentionSettings> retentionSettings;
+      nsresult rv = GetRetentionSettings(getter_AddRefs(retentionSettings));
+      if (NS_SUCCEEDED(rv))
+        rv = mDatabase->ApplyRetentionSettings(retentionSettings);
     }
-    rv = GetNewMessages(aWindow);
     rv = AutoCompact(aWindow);
     NS_ENSURE_SUCCESS(rv,rv);
+    // GetNewMessages has to be the last rv set before we get to the next check, so
+    // that we'll have rv set to NS_MSG_ERROR_OFFLINE when offline and send
+    // a folder loaded notification to the front end.
+    rv = GetNewMessages(aWindow, nsnull);
   }
   if (rv == NS_MSG_ERROR_OFFLINE)
   {
@@ -1019,8 +1022,9 @@ nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages, nsIMsgWindow *aMsgWi
   return rv;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aMsgWindow)
+NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aMsgWindow, nsIUrlListener *aListener)
 {
+  NS_ASSERTION(aListener == nsnull, "news can't currently listen for this finishing");
   return GetNewsMessages(aMsgWindow, PR_FALSE);
 }
 
