@@ -37,12 +37,8 @@
 #include "prprf.h"
 #include "nsISizeOfHandler.h"
 
-#include "nsInlineFrame.h"
-#include "nsIWebShell.h"
-
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 nsresult
 NS_NewHTMLContainer(nsIHTMLContent** aInstancePtrResult,

@@ -52,8 +52,6 @@
 #include "nsString.h"
 #include "nsHTMLAtoms.h"
 #include "nsDOMEventsIIDs.h"
-#include "nsBlockFrame.h"
-#include "nsInlineFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
