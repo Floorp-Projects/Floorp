@@ -24,7 +24,6 @@
 #include "nsIURI.h"
 #include "nsEscape.h"
 #include "nsIWebShell.h"
-#include "nsIBaseWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
@@ -39,6 +38,12 @@
 #include "nsIMarkupDocumentViewer.h"
 
 #include "nsMsgPrintEngine.h"
+
+// Interfaces Needed
+#include "nsIBaseWindow.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 
 /////////////////////////////////////////////////////////////////////////
 // nsMsgPrintEngine implementation
@@ -81,8 +86,9 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChan
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContentViewer> viewer;
 
-  NS_ASSERTION(mWebShell,"can't print, there is no webshell");
-  if ( (!mWebShell) || (!aChannel) ) 
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  NS_ASSERTION(docShell,"can't print, there is no webshell");
+  if ( (!docShell) || (!aChannel) ) 
   {
     return StartNextPrintOperation();
   }
@@ -102,7 +108,7 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChan
     }
   }
 
-  mWebShell->GetContentViewer(getter_AddRefs(viewer));  
+  docShell->GetContentViewer(getter_AddRefs(viewer));  
   if (viewer) 
   {
     nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
@@ -139,12 +145,6 @@ nsMsgPrintEngine::OnEndURLLoad(nsIDocumentLoader *aLoader, nsIChannel *aChannel,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMsgPrintEngine::HandleUnknownContentType(nsIDocumentLoader *aLoader, nsIChannel *aChannel, const char *aContentType, const char *aCommand)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP    
 nsMsgPrintEngine::SetWindow(nsIDOMWindow *aWin)
 {
@@ -155,7 +155,6 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindow *aWin)
 		return NS_OK;
   }
 
-  nsAutoString  webShellName("printengine");
   NS_IF_RELEASE(mWindow);
   mWindow = aWin;
   NS_ADDREF(aWin);
@@ -165,22 +164,25 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindow *aWin)
 
   nsCOMPtr<nsIDocShell> docShell;
   globalObj->GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-  if (!webShell) 
-  {
-    return NS_ERROR_FAILURE;
-  }
 
-  nsCOMPtr<nsIWebShell> rootWebShell;
-  webShell->GetRootWebShell(*getter_AddRefs(rootWebShell));
-  if (nsnull != rootWebShell) 
-  {
-    nsresult rv = rootWebShell->FindChildWithName(webShellName.GetUnicode(), *getter_AddRefs(mWebShell));
-    if (NS_SUCCEEDED(rv) && mWebShell) 
-    {
-      SetupObserver();
-    }
-  }
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShellTreeItem> rootAsItem;
+  docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootAsItem));
+
+  nsAutoString childName("printengine");
+  nsCOMPtr<nsIDocShellTreeNode> rootAsNode(do_QueryInterface(rootAsItem));
+  NS_ENSURE_TRUE(rootAsNode, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocShellTreeItem> childItem;
+  rootAsNode->FindChildWithName(childName.GetUnicode(), PR_TRUE, PR_FALSE, nsnull,
+    getter_AddRefs(childItem));
+
+  mWebShell = do_QueryInterface(childItem);
+
+  if(mWebShell)
+    SetupObserver();
 
   return NS_OK;
 }
@@ -268,11 +270,12 @@ void
 nsMsgPrintEngine::InitializeDisplayCharset()
 {
   // libmime always converts to UTF-8 (both HTML and XML)
-  if (mWebShell) 
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  if (docShell) 
   {
     nsAutoString aForceCharacterSet("UTF-8");
     nsCOMPtr<nsIContentViewer> cv;
-    mWebShell->GetContentViewer(getter_AddRefs(cv));
+    docShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) 
     {
       nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
@@ -293,7 +296,8 @@ nsMsgPrintEngine::SetupObserver()
   nsCOMPtr<nsIDocumentLoaderObserver> observer = do_QueryInterface(this);
   if (observer)
   {
-    mWebShell->SetDocLoaderObserver(observer);
+    nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+    docShell->SetDocLoaderObserver(observer);
   } 
 }
 
