@@ -967,7 +967,7 @@ NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Validate()
 {
-	if (!mWindowPtr || !mVisible)
+	if (!mWindowPtr || !mVisible || !ContainerHierarchyIsVisible())
 		return NS_OK;
 
 	nsRect wRect = mBounds;
@@ -1194,7 +1194,7 @@ nsWindow::OnPaint(nsPaintEvent &event)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP	nsWindow::Update()
 {
-	if (! mVisible || !mWindowPtr)
+	if (! mVisible || !mWindowPtr || !ContainerHierarchyIsVisible())
 		return NS_OK;
 
 	static PRBool  reentrant = PR_FALSE;
@@ -1403,7 +1403,7 @@ else
 	ProfileStop(); 
 #endif
 
-	if (! mVisible)
+	if (! mVisible || !ContainerHierarchyIsVisible())
 		return NS_OK;
 
 	// make sure the port is set and origin is (0, 0).
@@ -1649,7 +1649,7 @@ nsWindow::CombineRects ( TRectArray & rectArray )
 //-------------------------------------------------------------------------
 void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 {
-	if (! mVisible)
+	if (! mVisible || !ContainerHierarchyIsVisible())
 		return;
 
 	// initialize the paint event
@@ -1853,7 +1853,7 @@ nsWindow::ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inTop
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-	if (! mVisible)
+	if (! mVisible || !ContainerHierarchyIsVisible())
 		return NS_OK;
 
   nsRect scrollRect;	
@@ -2289,7 +2289,7 @@ PRBool nsWindow::PointInWidget(Point aThePoint)
 //-------------------------------------------------------------------------
 nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 {
-	if (!mVisible || !PointInWidget(aThePoint))
+	if (!mVisible || !ContainerHierarchyIsVisible() || !PointInWidget(aThePoint))
 		return nsnull;
 
 	nsWindow* widgetHit = this;
