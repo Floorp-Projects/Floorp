@@ -9,7 +9,11 @@ interface EditorAppCore : BaseAppCore
 	void EditorAppCore();
 	
 	void setEditorType(in wstring editorType);
-	void setAttribute(in wstring attr, in wstring value);
+	void setTextProperty(in wstring attr);
+	void removeTextProperty(in wstring attr);
+	
+	void getTextProperty(in wstring attr, out boolean anyHas, out boolean allHas);
+	
 	void undo();
 	void redo();
 	
@@ -18,7 +22,10 @@ interface EditorAppCore : BaseAppCore
 	void paste();
 	
 	void selectAll();
-
+	
+	void beginBatchChanges();
+	void endBatchChanges();
+	
 	void showClipboard();
 	
 	void insertText(in wstring textToInsert);
