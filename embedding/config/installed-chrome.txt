@@ -1,0 +1,5 @@
+content,install,url,resource:/chrome/toolkit/content/global/
+locale,install,url,resource:/chrome/en-US/locale/en-US/global/
+skin,install,url,resource:/chrome/classic/skin/classic/global/
+skin,install,select,classic/1.0 
+locale,install,select,en-US 

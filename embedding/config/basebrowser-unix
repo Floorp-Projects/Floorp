@@ -176,28 +176,20 @@ components/xpcom_io.xpt
 components/xpcom_threads.xpt
 components/xpcom_xpti.xpt
 
+;
+; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
 ; 
-; Widget-Toolit:
-; 
-chrome/packages/widget-toolkit/global/content/*
-chrome/skins/modern/manifest.rdf
-
-chrome/skins/modern/global/skin/*
-chrome/locales/en-US/manifest.rdf
-
-chrome/locales/en-us/global/locale/*
-
+chrome/toolkit/content/global/*
+chrome/classic/skin/classic/global/*
+chrome/en-US/locale/en-US/global/*
 ; 
 ; res:
 ; 
 res/html.css   
 res/quirk.css  
 res/ua.css
-
-
-
-
-
+res/forms.css
+res/builtin/*
 
 
 
