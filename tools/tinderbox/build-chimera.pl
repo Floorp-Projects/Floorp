@@ -243,7 +243,7 @@ sub main {
       TinderUtils::AliveTestReturnToken($test_name,
                                         "$chimera_dir/build/Navigator.app/Contents/MacOS",
                                         "Navigator",
-                                        "-url \"http://$Settings::pageload_server/page-loader/loader.pl?delay=1000&nocache=0&maxcyc=4&timeout=15000&auto=1\"", # spider, 64.236.153.13
+                                        "-url \"http://$Settings::pageload_server/page-loader/loader.pl?delay=1000&nocache=0&maxcyc=4&timeout=15000&auto=1\"",
                                         800,
                                         "_x_x_mozilla_page_load",
                                         ",");
