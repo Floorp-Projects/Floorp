@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.16 2000/08/09 20:55:39 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.17 2000/08/10 21:43:16 nelsonb%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -3001,6 +3001,17 @@ mp_err   s_mp_mul_d(mp_int *a, mp_digit d)
   mp_word w, k = 0;
   mp_size ix, max;
   mp_err  res;
+  int     pow;
+
+  if (!d) {
+    mp_zero(a);
+    return MP_OKAY;
+  }
+  if (d == 1)
+    return MP_OKAY;
+  if (0 <= (pow = s_mp_ispow2d(d))) {
+    return s_mp_mul_2d(a, (mp_digit)pow);
+  }
 
   /*
     Single-digit multiplication will increase the precision of the
@@ -3628,22 +3639,20 @@ int      s_mp_ispow2(mp_int *v)
   mp_digit d;
   int      extra = 0, ix;
 
-  d = DIGIT(v, USED(v) - 1); /* most significant digit of v */
+  ix = MP_USED(v) - 1;
+  d = MP_DIGIT(v, ix); /* most significant digit of v */
 
-  while(d && ((d & 1) == 0)) {
-    d >>= 1;
-    ++extra;
+  extra = s_mp_ispow2d(d);
+  if (extra < 0 || ix == 0)
+    return extra;
+
+  while (--ix >= 0) {
+    if (DIGIT(v, ix) != 0)
+      return -1; /* not a power of two */
+    extra += MP_DIGIT_BIT;
   }
 
-  if(d == 1) {
-    for(ix = USED(v) - 2; ix >= 0; ix--)
-      if(DIGIT(v, ix) != 0)
-	return -1; /* not a power of two */
-
-    return ((USED(v) - 1) * DIGIT_BIT) + extra;    
-  } 
-
-  return -1;
+  return extra;
 
 } /* end s_mp_ispow2() */
 
@@ -3653,15 +3662,20 @@ int      s_mp_ispow2(mp_int *v)
 
 int      s_mp_ispow2d(mp_digit d)
 {
-  int   pow = 0;
-
-  while((d & 1) == 0) {
-    ++pow; d >>= 1;
-  }
-
-  if(d == 1)
+  if ((d != 0) && ((d & (d-1)) == 0)) { /* d is a power of 2 */
+    int pow = 0;
+    if (d & 0xffff0000)
+      pow += 16;
+    if (d & 0xff00ff00)
+      pow += 8;
+    if (d & 0xf0f0f0f0)
+      pow += 4;
+    if (d & 0xcccccccc)
+      pow += 2;
+    if (d & 0xaaaaaaaa)
+      pow += 1;
     return pow;
-
+  }
   return -1;
 
 } /* end s_mp_ispow2d() */
