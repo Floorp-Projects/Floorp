@@ -739,6 +739,7 @@ dnl the qsort routine under solaris is faulty
        case `uname -m` in
          sun4u)
            ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC'
+           AC_DEFINE(ULTRA_SPARC)
            ;;
          *)
            ASFLAGS='-xarch=v8 -P -L -D_ASM -D__STDC__=0 -K PIC'
