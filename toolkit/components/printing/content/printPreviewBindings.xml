@@ -39,7 +39,12 @@
 
 # this file depends on printUtils.js
 
-<!DOCTYPE window SYSTEM "chrome://global/locale/printPreview.dtd">
+<!DOCTYPE window [
+<!ENTITY % printPreviewDTD SYSTEM "chrome://global/locale/printPreview.dtd" >
+%printPreviewDTD;
+<!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
+%globalRegionDTD;
+]>
 
 <bindings id="printPreviewBindings"
    xmlns="http://www.mozilla.org/xbl"
@@ -61,9 +66,9 @@
       <xul:vbox align="center" pack="center">
         <xul:label value="&page.label;"/>
       </xul:vbox>
-      <xul:toolbarbutton class="home-arrow"
+      <xul:toolbarbutton class="home-arrow" chromedir="&locale.dir;"
         oncommand="parentNode.navigate(0, 0, 'home');" tooltiptext="&homearrow.tooltip;"/>
-      <xul:toolbarbutton class="left-arrow" 
+      <xul:toolbarbutton class="left-arrow" chromedir="&locale.dir;"
         oncommand="parentNode.navigate(-1, 0, 0);" tooltiptext="&leftarrow.tooltip;"/>
       <xul:hbox align="center" pack="center">
         <xul:textbox size="3" value="1" lastvalid="1"
@@ -72,9 +77,9 @@
         <xul:label value="&of.label;"/>
         <xul:label value="1"/>
       </xul:hbox>
-      <xul:toolbarbutton class="right-arrow" 
+      <xul:toolbarbutton class="right-arrow" chromedir="&locale.dir;"
         oncommand="parentNode.navigate(1, 0, 0);" tooltiptext="&rightarrow.tooltip;"/>
-      <xul:toolbarbutton class="end-arrow"
+      <xul:toolbarbutton class="end-arrow" chromedir="&locale.dir;"
         oncommand="parentNode.navigate(0, 0, 'end');" tooltiptext="&endarrow.tooltip;"/>
 
       <xul:toolbarseparator class="toolbarseparator-primary"/>
