@@ -49,7 +49,7 @@ public:
     CreateCodebasePrincipal(const char *codebaseURL, nsIPrincipal** prin);
 
     NS_IMETHOD
-    CreateCertPrincipal(const unsigned char *certByteData, PRUint32 certByteDataSize, nsIPrincipal** prin);
+    CreateCertPrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, nsIPrincipal** prin);
 
     /**
      * Creates a CodeSourcePrincipal, which has both nsICodebasePrincipal 
@@ -60,7 +60,8 @@ public:
      * @param codebaseURL - the codebase URL
      */
     NS_IMETHOD
-    CreateCodeSourcePrincipal(const unsigned char *certByteData, PRUint32 certByteDataSize, const char *codebaseURL, nsIPrincipal** prin);
+    CreateCodeSourcePrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, const char *codebaseURL, nsIPrincipal** prin);
+
 
     /**
      * Returns the permission for given principal and target
@@ -106,6 +107,10 @@ public:
 
     nsPermission
     ConvertPrivilegeToPermission(nsPrivilege *pNSPrivilege);
+
+    nsPrivilege *
+    ConvertPermissionToPrivilege(nsPermission state);
+
     void
     SetSystemPrivilegeManager();
 

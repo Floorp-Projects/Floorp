@@ -157,14 +157,14 @@ nsPrincipal::nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, cha
 }
 
 nsPrincipal::nsPrincipal(nsPrincipalType type, 
-                         void **certChain, 
+                         const unsigned char **certChain, 
                          PRUint32 *certChainLengths, 
                          PRUint32 noOfCerts)
 {
   /* We will store the signers certificate as the key */
-  init(type, certChain[0], certChainLengths[0]);
+  init(type, (void*)certChain[0], certChainLengths[0]);
   for (PRUint32 i = noOfCerts; i < noOfCerts; i--) {
-    void* cert = certChain[i];
+    void* cert = (void*)certChain[i];
     PRUint32 cert_len = certChainLengths[i];
     /* 
        SOB_ImportCert(cert, cert_len);

@@ -49,32 +49,44 @@ public:
      * Intializes the principal object with the codebase URL.
      *
      * @param codebaseURL - the codebase URL
+     * @param prin  - the return value is passed in this parameter.
      */
     NS_IMETHOD
     CreateCodebasePrincipal(const char *codebaseURL, nsIPrincipal** prin) = 0;
 
     /**
-     * Initializes the Certificate principal with the certificate data. I am thinking
-     * Certificate data should contain all the data about the certificate, 
-     * ie. the signer and the certificate chain.
+     * Initializes the Certificate principal with the certificate data. I am 
+     * thinking Certificate data should contain all the data about the 
+     * certificate, ie. the signer and the certificate chain.
      *
-     * @param certByteData     - The ceritificate's byte array data including the chain.
-     * @param certByteDataSize - the length of certificate byte array.
+     * @param certChain        - An array of pointers, with each pointer 
+     *                           pointing to a certificate data.
+     * @param certChainLengths  - An array of intergers. Each integer indicates 
+     *                            the length of the cert that is in CertChain 
+     *                             parametr.
+     * @param noOfCerts - the number of certifcates that are in the certChain array
+     * @param prin  - the return value is passed in this parameter.
      */
     NS_IMETHOD
-    CreateCertPrincipal(const unsigned char *certByteData, PRUint32 certByteDataSize, nsIPrincipal** prin) = 0;
+    CreateCertPrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, nsIPrincipal** prin) = 0;
 
 
     /**
      * Creates a CodeSourcePrincipal, which has both nsICodebasePrincipal 
      * and nsICertPrincipal
      *
-     * @param certByteData     - The ceritificate's byte array data including the chain.
-     * @param certByteDataSize - the length of certificate byte array.
+     *
+     * @param certChain        - An array of pointers, with each pointer 
+     *                           pointing to a certificate data.
+     * @param certChainLengths  - An array of intergers. Each integer indicates 
+     *                            the length of the cert that is in CertChain 
+     *                             parametr.
+     * @param noOfCerts - the number of certifcates that are in the certChain array
      * @param codebaseURL - the codebase URL
+     * @param prin  - the return value is passed in this parameter.
      */
     NS_IMETHOD
-    CreateCodeSourcePrincipal(const unsigned char *certByteData, PRUint32 certByteDataSize, const char *codebaseURL, nsIPrincipal** prin) = 0;
+    CreateCodeSourcePrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, const char *codebaseURL, nsIPrincipal** prin) = 0;
 
 
     /**

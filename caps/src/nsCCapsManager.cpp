@@ -58,10 +58,12 @@ nsCCapsManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 // from nsICapsManager:
 
 NS_METHOD
-nsCCapsManager::CreateCodebasePrincipal(const char *codebaseURL, nsIPrincipal** prin)
+nsCCapsManager::CreateCodebasePrincipal(const char *codebaseURL, 
+                                        nsIPrincipal** prin)
 {
    nsresult result = NS_OK;
-   nsCCodebasePrincipal *pNSCCodebasePrincipal = new nsCCodebasePrincipal(codebaseURL, &result);
+   nsCCodebasePrincipal *pNSCCodebasePrincipal = 
+       new nsCCodebasePrincipal(codebaseURL, &result);
    if (pNSCCodebasePrincipal == NULL)
    {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -72,10 +74,14 @@ nsCCapsManager::CreateCodebasePrincipal(const char *codebaseURL, nsIPrincipal** 
 }
 
 NS_METHOD
-nsCCapsManager::CreateCertPrincipal(const unsigned char *certByteData, PRUint32 certByteDataSize, nsIPrincipal** prin)
+nsCCapsManager::CreateCertPrincipal(const unsigned char **certChain, 
+                                    PRUint32 *certChainLengths, 
+                                    PRUint32 noOfCerts, 
+                                    nsIPrincipal** prin)
 {
    nsresult result = NS_OK;
-   nsCCertPrincipal *pNSCCertPrincipal = new nsCCertPrincipal(certByteData, certByteDataSize, &result);
+   nsCCertPrincipal *pNSCCertPrincipal = 
+       new nsCCertPrincipal(certChain, certChainLengths, noOfCerts, &result);
    if (pNSCCertPrincipal == NULL)
    {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -86,10 +92,16 @@ nsCCapsManager::CreateCertPrincipal(const unsigned char *certByteData, PRUint32 
 }
 
 NS_METHOD
-nsCCapsManager::CreateCodeSourcePrincipal(const unsigned char *certByteData, PRUint32 certByteDataSize, const char *codebaseURL, nsIPrincipal** prin)
+nsCCapsManager::CreateCodeSourcePrincipal(const unsigned char **certChain, 
+                                          PRUint32 *certChainLengths, 
+                                          PRUint32 noOfCerts, 
+                                          const char *codebaseURL, 
+                                          nsIPrincipal** prin)
 {
    nsresult result = NS_OK;
-   nsCCodeSourcePrincipal *pNSCCodeSourcePrincipal = new nsCCodeSourcePrincipal(certByteData, certByteDataSize, codebaseURL, &result);
+   nsCCodeSourcePrincipal *pNSCCodeSourcePrincipal = 
+       new nsCCodeSourcePrincipal(certChain, certChainLengths, noOfCerts, 
+                                  codebaseURL, &result);
    if (pNSCCodeSourcePrincipal == NULL)
    {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -109,7 +121,9 @@ nsCCapsManager::CreateCodeSourcePrincipal(const unsigned char *certByteData, PRU
 * @param state  - the return value is passed in this parameter.
 */
 NS_METHOD
-nsCCapsManager::GetPermission(nsIPrincipal* pNSIPrincipal, nsITarget* ignoreTarget, nsPermission *state)
+nsCCapsManager::GetPermission(nsIPrincipal* pNSIPrincipal, 
+                              nsITarget* ignoreTarget, 
+                              nsPermission *state)
 {
    nsTarget *target = nsTarget::findTarget("AllPermission");
    nsresult result = NS_OK;
@@ -127,7 +141,10 @@ nsCCapsManager::GetPermission(nsIPrincipal* pNSIPrincipal, nsITarget* ignoreTarg
         return result;
       }
 
-      *state = ConvertPrivilegeToPermission(m_pNSPrivilegeManager->getPrincipalPrivilege(target, pNSPrinicipal, NULL));
+      nsPrivilege* privilege = 
+          m_pNSPrivilegeManager->getPrincipalPrivilege(target, pNSPrinicipal, 
+                                                       NULL);
+      *state = ConvertPrivilegeToPermission(privilege);
    }
    return NS_OK;
 }
@@ -142,10 +159,27 @@ nsCCapsManager::GetPermission(nsIPrincipal* pNSIPrincipal, nsITarget* ignoreTarg
 *                 and target parameters.
 */
 NS_METHOD
-nsCCapsManager::SetPermission(nsIPrincipal* prin, nsITarget* target, nsPermission state)
+nsCCapsManager::SetPermission(nsIPrincipal* pNSIPrincipal, 
+                              nsITarget* ignoreTarget,
+                              nsPermission state)
 {  
-   // XXX sudu/raman: fix it.
-   PR_ASSERT(PR_FALSE);
+   nsTarget *target = nsTarget::findTarget("AllPermission");
+   nsresult result = NS_OK;
+   if( target == NULL )
+   {
+      return NS_OK;
+   }
+   if (m_pNSPrivilegeManager != NULL)
+   {
+      nsPrincipal *pNSPrinicipal  = NULL;
+      result = GetNSPrincipal(pNSIPrincipal, &pNSPrinicipal);
+      if( result != NS_OK)
+      {
+        return result;
+      }
+      nsPrivilege* privilege = ConvertPermissionToPrivilege(state);
+      m_pNSPrivilegeManager->SetPermission(pNSPrinicipal, target, privilege);
+   }
    return NS_OK;
 }
 
@@ -159,7 +193,9 @@ nsCCapsManager::SetPermission(nsIPrincipal* prin, nsITarget* target, nsPermissio
 *                 target
 */
 NS_METHOD
-nsCCapsManager::AskPermission(nsIPrincipal* pNSIPrincipal, nsITarget* ignoreTarget, nsPermission *state)
+nsCCapsManager::AskPermission(nsIPrincipal* pNSIPrincipal, 
+                              nsITarget* ignoreTarget, 
+                              nsPermission *state)
 {
    nsTarget *target = nsTarget::findTarget("AllPermission");
    nsresult result = NS_OK;
@@ -176,9 +212,11 @@ nsCCapsManager::AskPermission(nsIPrincipal* pNSIPrincipal, nsITarget* ignoreTarg
       {
         return result;
       }
-      // XXX raman: Create AskPermission method.
-      m_pNSPrivilegeManager->enablePrivilege(pNSPrinicipal,target, 0);
-      *state = ConvertPrivilegeToPermission(m_pNSPrivilegeManager->getPrincipalPrivilege(target, pNSPrinicipal, NULL));
+      m_pNSPrivilegeManager->AskPermission(pNSPrinicipal,target, NULL);
+      nsPrivilege* privilege = 
+          m_pNSPrivilegeManager->getPrincipalPrivilege(target, pNSPrinicipal, 
+                                                       NULL);
+      *state = ConvertPrivilegeToPermission(privilege);
    }
    return NS_OK;
 }
@@ -197,7 +235,8 @@ nsCCapsManager::~nsCCapsManager()
 }
 
 NS_METHOD
-nsCCapsManager::GetNSPrincipal(nsIPrincipal* pNSIPrincipal, nsPrincipal **ppNSPRincipal)
+nsCCapsManager::GetNSPrincipal(nsIPrincipal* pNSIPrincipal, 
+                               nsPrincipal **ppNSPRincipal)
 {
    nsISupports *pNSISupports   = NULL;
    nsPrincipal *pNSPrinicipal  = NULL;
@@ -215,7 +254,8 @@ nsCCapsManager::GetNSPrincipal(nsIPrincipal* pNSIPrincipal, nsPrincipal **ppNSPR
    if (pNSIPrincipal->QueryInterface(kICodebasePrincipalIID,
                             (void**)&pNSISupports) == NS_OK) 
    {
-      nsCCodebasePrincipal *pNSCCodebasePrincipal = (nsCCodebasePrincipal *)pNSIPrincipal;
+      nsCCodebasePrincipal *pNSCCodebasePrincipal = 
+          (nsCCodebasePrincipal *)pNSIPrincipal;
       pNSPrinicipal = pNSCCodebasePrincipal->GetPeer();
       pNSCCodebasePrincipal->Release();
    }
@@ -234,7 +274,7 @@ nsCCapsManager::ConvertPrivilegeToPermission(nsPrivilege *pNSPrivilege)
   	if(pNSPrivilege->isAllowedForever())
      return nsPermission_AllowedForever;
   	if(pNSPrivilege->isForbiddenForever())
-     return nsPermission_AllowedForever;
+     return nsPermission_DeniedForever;
   	if(pNSPrivilege->isAllowed())
      return nsPermission_AllowedSession;
   	if(pNSPrivilege->isForbidden())
@@ -243,10 +283,43 @@ nsCCapsManager::ConvertPrivilegeToPermission(nsPrivilege *pNSPrivilege)
 	  return nsPermission_Unknown;
 }
 
+nsPrivilege *
+nsCCapsManager::ConvertPermissionToPrivilege(nsPermission state)
+{
+    nsPrivilege *pNSPrivilege;
+    nsPermissionState permission;
+    nsDurationState duration;
+
+    switch (state) {
+    case nsPermission_AllowedForever: 
+        permission = nsPermissionState_Allowed;
+        duration = nsDurationState_Forever;
+        break;
+    case nsPermission_DeniedForever: 
+        permission = nsPermissionState_Forbidden;
+        duration = nsDurationState_Forever;
+        break;
+    case nsPermission_AllowedSession: 
+        permission = nsPermissionState_Allowed;
+        duration = nsDurationState_Session;
+        break;
+    case nsPermission_DeniedSession: 
+        permission = nsPermissionState_Forbidden;
+        duration = nsDurationState_Session;
+        break;
+    default:
+        permission = nsPermissionState_Forbidden;
+        duration = nsDurationState_Session;
+        break;
+    }
+    return nsPrivilege::findPrivilege(permission, duration);
+}
+
 void
 nsCCapsManager::SetSystemPrivilegeManager()
 {
-    nsPrivilegeManager *pNSPrivilegeManager = nsPrivilegeManager::getPrivilegeManager();
+    nsPrivilegeManager *pNSPrivilegeManager = 
+        nsPrivilegeManager::getPrivilegeManager();
      if (   (m_pNSPrivilegeManager  != NULL )
          && (m_pNSPrivilegeManager != pNSPrivilegeManager)
         )

@@ -40,7 +40,7 @@ public:
 	virtual ~nsPrincipal();
 	nsPrincipal(nsPrincipalType type, void * key, PRUint32 key_len, void *zigObject);
 
-	nsPrincipal(nsPrincipalType type, void **certChain, 
+	nsPrincipal(nsPrincipalType type, const unsigned char **certChain, 
                 PRUint32 *certChainLengths, 
                 PRUint32 noOfCerts);
 

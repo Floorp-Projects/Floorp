@@ -57,15 +57,19 @@ nsCCodeSourcePrincipal::IsTrusted(char* scope, PRBool *pbIsTrusted)
  * @param certByteDataSize - the length of certificate byte array.
  */
 NS_METHOD
-nsCCodeSourcePrincipal::GetCertData(unsigned char **certByteData, PRUint32 *certByteDataSize)
+nsCCodeSourcePrincipal::GetCertData(const unsigned char ***certChain, 
+                                    PRUint32 **certChainLengths, 
+                                    PRUint32 *noOfCerts)
 {
-   if(m_pNSICertPrincipal == NULL)
-   {
-      *certByteData     = NULL;
-      *certByteDataSize = 0;
-      return NS_ERROR_ILLEGAL_VALUE;
-   }
-  	return m_pNSICertPrincipal->GetCertData(certByteData, certByteDataSize);
+    *certChain     = NULL;
+    *certChainLengths = 0;
+    *noOfCerts = 0;
+    if(m_pNSICertPrincipal == NULL)
+    {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+    /* XXX: Raman fix it. Return the correct data */
+    return NS_OK;
 }
 
 /**
@@ -76,7 +80,8 @@ nsCCodeSourcePrincipal::GetCertData(unsigned char **certByteData, PRUint32 *cert
  *                        parameter.
  */
 NS_METHOD
-nsCCodeSourcePrincipal::GetPublicKey(unsigned char **publicKey, PRUint32 *publicKeySize)
+nsCCodeSourcePrincipal::GetPublicKey(unsigned char **publicKey, 
+                                     PRUint32 *publicKeySize)
 {
    if(m_pNSICertPrincipal == NULL)
    {
@@ -188,11 +193,15 @@ nsCCodeSourcePrincipal::GetURL(const char **ppCodeBaseURL)
 ////////////////////////////////////////////////////////////////////////////
 // from nsCCodeSourcePrincipal:
 
-nsCCodeSourcePrincipal::nsCCodeSourcePrincipal(const unsigned char *certByteData, PRUint32 certByteDataSize, const char *codebaseURL, nsresult *result)
+nsCCodeSourcePrincipal::nsCCodeSourcePrincipal(const unsigned char **certChain, 
+                                               PRUint32 *certChainLengths, 
+                                               PRUint32 noOfCerts, 
+                                               const char *codebaseURL, 
+                                               nsresult *result)
 {
    *result = NS_OK;
-   // XXX raman fix the error condition.
-   nsCCertPrincipal *pNSCCertPrincipal = new nsCCertPrincipal(certByteData, certByteDataSize, result);
+   nsCCertPrincipal *pNSCCertPrincipal = 
+       new nsCCertPrincipal(certChain, certChainLengths, noOfCerts, result);
    if (pNSCCertPrincipal == NULL)
    {
       return;
@@ -201,8 +210,8 @@ nsCCodeSourcePrincipal::nsCCodeSourcePrincipal(const unsigned char *certByteData
    m_pNSICertPrincipal->AddRef();
  
 
-   // XXX raman fix the error condition.
-   nsCCodebasePrincipal *pNSCCodebasePrincipal = new nsCCodebasePrincipal(codebaseURL, result);
+   nsCCodebasePrincipal *pNSCCodebasePrincipal = 
+       new nsCCodebasePrincipal(codebaseURL, result);
    if (pNSCCodebasePrincipal == NULL)
    {
       return;
