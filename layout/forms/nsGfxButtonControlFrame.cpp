@@ -262,7 +262,7 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
     nsFormControlFrame::GetStyleSize(aPresContext, aReflowState, styleSize);
 
     if (CSS_NOTSET != styleSize.width) {  // css provides width
-      NS_ASSERTION(styleSize.width >= 0, "form control's computed width is < 0"); 
+      NS_ASSERTION(styleSize.width+aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right >= 0, "form control's computed width is < 0"); 
       if (NS_INTRINSICSIZE != styleSize.width) {
         desiredSize.width = styleSize.width;
         desiredSize.width  += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
@@ -287,17 +287,24 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
     desiredSize.height = 0;
   }
 
-  // get border and padding
-  /*const nsStyleSpacing* spacing;
-  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
-  nsMargin borderPadding;
-  borderPadding.SizeTo(0, 0, 0, 0);
-  spacing->CalcBorderPaddingFor(this, borderPadding);
-*/
   // remove it from the the desired size
   // because the content need to fit inside of it
   desiredSize.width  -= (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
   desiredSize.height -= (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
+
+  // Ok, now we think we know what size we are so we can reflow our contents
+  // But we need to make sure we aren't smaller or larger then the min/max
+  if (desiredSize.width < aReflowState.mComputedMinWidth) {
+    desiredSize.width = aReflowState.mComputedMinWidth - (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
+  } else if (desiredSize.width > aReflowState.mComputedMaxWidth) {
+    desiredSize.width = aReflowState.mComputedMaxWidth - (aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right);
+  }
+
+  if (desiredSize.height < aReflowState.mComputedMinHeight) {
+    desiredSize.height = aReflowState.mComputedMinHeight - (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
+  } else if (desiredSize.height > aReflowState.mComputedMaxHeight) {
+    desiredSize.height = aReflowState.mComputedMaxHeight - (aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom);
+  }
 
   // now reflow the first child (genertaed content)
   nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, desiredSize);
@@ -589,7 +596,23 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
         nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
       }
       // Do NavQuirks Sizing and layout
-      rv = DoNavQuirksReflow(aPresContext, aDesiredSize, aReflowState, aStatus);   
+      rv = DoNavQuirksReflow(aPresContext, aDesiredSize, aReflowState, aStatus); 
+      
+      // Make sure we obey min/max-width and min/max-height
+      if (aDesiredSize.width > aReflowState.mComputedMaxWidth) {
+        aDesiredSize.width = aReflowState.mComputedMaxWidth;
+      }
+      if (aDesiredSize.width < aReflowState.mComputedMinWidth) {
+        aDesiredSize.width = aReflowState.mComputedMinWidth;
+      } 
+
+      if (aDesiredSize.height > aReflowState.mComputedMaxHeight) {
+        aDesiredSize.height = aReflowState.mComputedMaxHeight;
+      }
+      if (aDesiredSize.height < aReflowState.mComputedMinHeight) {
+        aDesiredSize.height = aReflowState.mComputedMinHeight;
+      } 
+
     } else {
       // Do Standard mode sizing and layout
       rv = nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -607,7 +630,6 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.maxElementSize->width  = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
-
 
   return rv;
 }
