@@ -20,6 +20,7 @@
 #define nsHTMLEditRules_h__
 
 #include "nsTextEditRules.h"
+#include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 
 class nsISupportsArray;
