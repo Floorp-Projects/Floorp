@@ -1589,10 +1589,96 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
         NS_ASSERTION(text.Length() <= (len/2), "Invalid length!");
         stuffToPaste.Assign ( text.get(), len / 2 );
         nsAutoEditBatch beginBatching(this);
-        rv = InsertAsPlaintextQuotation(stuffToPaste, 0);
+        rv = InsertAsPlaintextQuotation(stuffToPaste, PR_TRUE, 0);
       }
     }
     nsCRT::free(flav);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::InsertTextWithQuotations(const nsAString &aStringToInsert)
+{
+  if (mWrapToWindow)
+    return InsertText(aStringToInsert);
+
+  // We're going to loop over the string, collecting up a "hunk"
+  // that's all the same type (quoted or not),
+  // Whenever the quotedness changes (or we reach the string's end)
+  // we will insert the hunk all at once, quoted or non.
+
+  static const PRUnichar cite('>');
+  PRBool curHunkIsQuoted = (aStringToInsert.First() == cite);
+
+  nsAString::const_iterator hunkStart, strEnd;
+  aStringToInsert.BeginReading(hunkStart);
+  aStringToInsert.EndReading(strEnd);
+
+  // In the loop below, we only look for DOM newlines (\n),
+  // because we don't have a FindChars method that can look
+  // for both \r and \n.  \r is illegal in the dom anyway,
+  // but in debug builds, let's take the time to verify that
+  // there aren't any there:
+#ifdef DEBUG
+  nsAString::const_iterator dbgStart (hunkStart);
+  if (FindCharInReadable('\r', dbgStart, strEnd))
+    NS_ASSERTION(PR_FALSE,
+            "Return characters in DOM! InsertTextWithQuotations may be wrong");
+#endif /* DEBUG */
+
+  // Loop over lines:
+  nsresult rv;
+  nsAString::const_iterator lineStart (hunkStart);
+  while (lineStart != strEnd)
+  {
+    // Search for the end of this line (dom newlines, see above):
+    PRBool found = FindCharInReadable('\n', lineStart, strEnd);
+    PRBool quoted = PR_FALSE;
+    if (found)
+    {
+      // if there's another newline, lineStart now points there.
+      // Loop over any consecutive newline chars:
+      nsAString::const_iterator firstNewline (lineStart);
+      while (*lineStart == '\n')
+        ++lineStart;
+      quoted = (*lineStart == cite);
+      if (quoted == curHunkIsQuoted)
+        continue;
+      // else we're changing state, so we need to insert
+      // from curHunk to lineStart then loop around.
+
+      // But if the current hunk is quoted, then we want to make sure
+      // that any extra newlines on the end do not get included in
+      // the quoted section: blank lines flaking a quoted section
+      // should be considered unquoted, so that if the user clicks
+      // there and starts typing, the new text will be outside of
+      // the quoted block.
+      if (curHunkIsQuoted)
+        lineStart = firstNewline;
+    }
+
+    // If no newline found, lineStart is now strEnd and we can finish up,
+    // inserting from curHunk to lineStart then returning.
+    const nsAString &curHunk (Substring(hunkStart, lineStart));
+    nsCOMPtr<nsIDOMNode> dummyNode;
+#ifdef DEBUG_akkana_verbose
+    printf("==== Inserting text as %squoted: ---\n%s---\n",
+           curHunkIsQuoted ? "" : "non-",
+           NS_LossyConvertUCS2toASCII(curHunk).get());
+#endif
+    if (curHunkIsQuoted)
+      rv = InsertAsPlaintextQuotation(curHunk, PR_FALSE,
+                                      getter_AddRefs(dummyNode));
+    else
+      rv = InsertText(curHunk);
+
+    if (!found)
+      break;
+
+    curHunkIsQuoted = quoted;
+    hunkStart = lineStart;
   }
 
   return rv;
@@ -1602,7 +1688,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsAString & aQuotedText,
                                               nsIDOMNode **aNodeInserted)
 {
   if (mFlags & eEditorPlaintextMask)
-    return InsertAsPlaintextQuotation(aQuotedText, aNodeInserted);
+    return InsertAsPlaintextQuotation(aQuotedText, PR_TRUE, aNodeInserted);
 
   nsAutoString citation;
   nsAutoString charset;
@@ -1616,6 +1702,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsQuotation(const nsAString & aQuotedText,
 // in order to preserve the original line wrapping.
 NS_IMETHODIMP
 nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
+                                         PRBool aAddCites,
                                          nsIDOMNode **aNodeInserted)
 {
   if (mWrapToWindow)
@@ -1689,8 +1776,13 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
         selection->Collapse(preNode, 0);
       }
 
-      //rv = InsertText(quotedStuff.get());
-      rv = nsPlaintextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
+      if (aAddCites)
+        rv = nsPlaintextEditor::InsertAsQuotation(aQuotedText, aNodeInserted);
+      else
+        rv = nsPlaintextEditor::InsertText(aQuotedText);
+      // Note that if !aAddCites, aNodeInserted isn't set.
+      // That's okay because the routines that use aAddCites
+      // don't need to know the inserted node.
 
       if (aNodeInserted && NS_SUCCEEDED(rv))
       {

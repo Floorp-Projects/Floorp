@@ -86,6 +86,7 @@ public:
   NS_DECL_NSIPLAINTEXTEDITOR
 
   /* ------------ nsIEditorMailSupport overrides -------------- */
+  NS_IMETHOD InsertTextWithQuotations(const nsAString &aStringToInsert);
   NS_IMETHOD PasteAsQuotation(PRInt32 aSelectionType);
   NS_IMETHOD InsertAsQuotation(const nsAString& aQuotedText,
                                nsIDOMNode** aNodeInserted);

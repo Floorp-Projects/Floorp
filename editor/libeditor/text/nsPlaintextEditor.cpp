@@ -1596,6 +1596,12 @@ nsPlaintextEditor::OutputToStream(nsIOutputStream* aOutputStream,
 #endif
 
 NS_IMETHODIMP
+nsPlaintextEditor::InsertTextWithQuotations(const nsAString &aStringToInsert)
+{
+  return InsertText(aStringToInsert);
+}
+
+NS_IMETHODIMP
 nsPlaintextEditor::PasteAsQuotation(PRInt32 aSelectionType)
 {
   // Get Clipboard Service
@@ -1702,7 +1708,6 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   if (!aQuotedText.IsEmpty() && (aQuotedText.Last() != PRUnichar('\n')))
     quotedStuff.Append(PRUnichar('\n'));
 
-  nsCOMPtr<nsIDOMNode> preNode;
   // get selection
   nsCOMPtr<nsISelection> selection;
   rv = GetSelection(getter_AddRefs(selection));
@@ -1798,7 +1803,7 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
     rv = SelectAll();
     if (NS_FAILED(rv)) return rv;
 
-    return InsertText(wrapped);
+    return InsertTextWithQuotations(wrapped);
   }
   else                // rewrap only the selection
   {
@@ -1818,7 +1823,7 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
                        wrapped);
     if (NS_FAILED(rv)) return rv;
 
-    return InsertText(wrapped);
+    return InsertTextWithQuotations(wrapped);
   }
   return NS_OK;
 }
