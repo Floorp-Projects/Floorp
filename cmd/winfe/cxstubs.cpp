@@ -273,6 +273,33 @@ XP_Bool CStubsCX::Confirm(MWContext *pContext, const char *pConfirmMessage)	{
     return(iStatus == IDOK);
 }
 
+/*
+ * Run a "confirm" dialog with a checkbox
+ */
+BOOL CStubsCX::CheckConfirm(MWContext *pContext, const char *pMessage,
+	const char *pCheckMessage, const char *pOKMessage,
+	const char *pCancelMessage, XP_Bool *pChecked) {
+
+	CCheckConfirmDialog dialog(GetDialogOwner(), pMessage, pCheckMessage,
+			pOKMessage, pCancelMessage, *pChecked);
+
+	theApp.m_splash.SafeHide();
+	return dialog.DoModal(pChecked);
+}
+
+/*
+ * Run a dialog allowing selection from a list
+ */
+BOOL CStubsCX::SelectDialog(MWContext *pContext, const char *pMessage,
+	const char **pList, int *pCount) {
+
+	CUserSelectionDialog dialog(GetDialogOwner(), pMessage,
+			pList, *pCount);
+
+	theApp.m_splash.SafeHide();
+	return dialog.DoModal(pCount);
+}
+
 MWContext *CStubsCX::CreateNewDocWindow(MWContext *pContext, URL_Struct *pURL)	{
     return(NULL);
 }

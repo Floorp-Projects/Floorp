@@ -55,6 +55,7 @@ static PRThread  * signon_lock_owner = NULL;
 static int signon_lock_count = 0;
 static Bool si_anonymous = FALSE;
 
+#ifndef XP_WIN /* privacy ifdef - last person to get here please remove */
 /*
  * temporary UI until FE implements this function as a single dialog box
  */
@@ -69,6 +70,7 @@ PRIVATE XP_Bool FE_CheckConfirm (
     return userHasAccepted;
 }
 /* end of temporary UI */
+#endif
 
 PRIVATE void
 si_lock_signon_list(void)
@@ -454,10 +456,11 @@ si_CheckForUser(char *URLName, char *userName) {
     return FALSE; /* user not found */
 }
 
+#ifndef XP_WIN /* privacy ifdef - last person to get here please remove */
 /*
  * temporary UI until FE implements this function as a single dialog box
  */
-XP_Bool FE_Select(
+XP_Bool FE_SelectDialog(
 	MWContext* pContext,
 	char* pMessage,
 	char** pList,
@@ -480,6 +483,7 @@ XP_Bool FE_Select(
     XP_FREE(message);
     return FALSE;
 }
+#endif
 
 /*
  * Get the user node for a given URL
@@ -548,7 +552,7 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 	    }
 
 	    /* have user select an item from the list */
-	    if (FE_Select(context, caption, list, &user_count)) {
+	    if (FE_SelectDialog(context, caption, list, &user_count)) {
 		/* user selected an item */
 		user = users[user_count]; /* this is the selected item */
 		URL->chosen_user = user;
@@ -763,6 +767,7 @@ si_OkToSave(MWContext *context, char *URLName, char *userName) {
     if (!FE_CheckConfirm(context,
 	    XP_GetString(MK_SIGNON_NAG),
 	    XP_GetString(MK_SIGNON_REMEMBER),
+            0,0,
 	    &remember_checked)) {
 	if (remember_checked) {
 	    si_PutReject(strippedURLName, userName, TRUE);

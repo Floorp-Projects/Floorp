@@ -215,6 +215,50 @@ XP_Bool CFE_Confirm(MWContext *pContext, const char *pConfirmMessage)	{
 	return(bReturn);
 }
 
+/* return value reflects whether the dialog was OKed (TRUE if OKed) */
+extern XP_Bool CFE_CheckConfirm(MWContext *pContext,
+	const char *pConfirmMessage,	/* main text in dialog */
+	const char *pCheckMessage,	/* text for checkbox */
+	const char *pOKMessage,		/* text for OK button */
+	const char *pCancelMessage,	/* text for cancel button */
+	XP_Bool *pChecked) {		/* in: initial state of checkbox */
+					/* out: state of checkbox */
+
+	// skip destroyed contexts
+	if(ABSTRACTCX(pContext)->IsDestroyed())	{
+		TRACE("Context %p Destroyed :: CheckConfirm Blocking\n", pContext);
+		return FALSE;
+	}
+
+	char *winMsg = FE_Windowsify(pConfirmMessage);
+	XP_Bool accepted = ABSTRACTCX(pContext)->CheckConfirm(pContext, winMsg,
+			pCheckMessage, pOKMessage, pCancelMessage, pChecked);
+	XP_FREE(winMsg);
+
+	return accepted;
+}
+
+/* return value reflects whether the dialog was OKed (TRUE if OKed) */
+extern XP_Bool CFE_SelectDialog(MWContext *pContext,
+	const char *pMessage,		/* message above the list */
+	const char **pList,		/* array of entries in the list */
+	int *pCount) {			/* in: # items in list */
+					/* out: 0-based index of selected item */
+
+	// skip destroyed contexts
+	if(ABSTRACTCX(pContext)->IsDestroyed())	{
+		TRACE("Context %p Destroyed :: SelectDialog Blocking\n", pContext);
+		return FALSE;
+	}
+
+	char *winMsg = FE_Windowsify(pMessage);
+    XP_Bool accepted = ABSTRACTCX(pContext)->SelectDialog(pContext,
+			winMsg, pList, pCount);
+	XP_FREE(winMsg);
+
+	return accepted;
+}
+
 MWContext *CFE_CreateNewDocWindow(MWContext *pContext, URL_Struct *pURL)	{
 	if(pContext != NULL)	{
 		if(ABSTRACTCX(pContext)->IsDestroyed())	{

@@ -341,4 +341,74 @@ class  CDefaultBrowserDlg : public  CDefaultBrowserDlgBase
 }; // END OF CLASS  CDefaultBrowserDlg()
 
 
+/////////////////////////////////////////////////////////////////////////////
+// basic dialog that knows how to adjust itself to fit its contents
+
+class FAR CSelfAdjustingDialog : public CDialog
+{
+public:
+	CSelfAdjustingDialog(UINT nIDTemplate, CWnd *pParent);
+protected:
+	virtual void RectForText(CWnd *window, const char *text, LPRECT wrect, LPPOINT diff);
+	virtual void ResizeItemToFitText(CWnd *window, const char *text,
+		LPPOINT diff);
+	virtual void BumpItemIfAfter(CWnd *item, CWnd *afterWind, LPPOINT diff);
+	DECLARE_MESSAGE_MAP()
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// CheckConfirm dialog
+
+class FAR CCheckConfirmDialog : public CSelfAdjustingDialog
+{
+public:
+    CCheckConfirmDialog(CWnd *pParent, const char *pMessage, const char *pCheckMessage,
+        const char *pOKMessage, const char *pCancelMessage, BOOL checked);
+
+    enum { IDD = IDD_CHECKCONFIRM_BOX };
+
+	BOOL	DoModal(XP_Bool *checkboxSet);
+
+protected:
+    CString mMessage,
+			mCheckMessage,
+			mOKMessage,
+			mCancelMessage;
+	int		mCheckState;
+
+	void AdjustButtons(CWnd *okButton, CWnd *cancelButton, LONG expectedMargin);
+	void AdjustForItemSize(CWnd *afterWind, LPPOINT diff);
+	void CheckOverallSize(LPPOINT diff, BOOL adjust);
+
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+	virtual void OnCancel();
+	DECLARE_MESSAGE_MAP()
+};
+
+/////////////////////////////////////////////////////////////////////////////
+// Single User Signon User Selection Dialog
+
+class FAR CUserSelectionDialog : public CDialog
+{
+public:
+    CUserSelectionDialog(CWnd *pParent, const char *pMessage,
+        const char **pUserList, int nUserListCount);
+    ~CUserSelectionDialog();
+
+    enum { IDD = IDD_SELECT_BOX };
+
+	BOOL	DoModal(LPINT nSelection);
+
+protected:
+    CString mMessage;
+	char		**mList;
+	int		mListCount;
+	int		mSelection;
+
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+	DECLARE_MESSAGE_MAP()
+};
+
 #endif /* _DIALOG_H_ */

@@ -46,12 +46,16 @@
                                   (MAIL_NEWS_TYPE(cp->type)))
 
 
+#ifndef XP_WIN /* privacy ifdef - last person to get here please remove */
 PRIVATE
 XP_Bool FE_CheckConfirm (
         MWContext *pContext,
         char* pConfirmMessage,
         char* pCheckMessage,
+	char* pOKMessage,
+	char* pCancelMessage,
         XP_Bool* pChecked);
+#endif
 
 
 PRIVATE int32
@@ -281,9 +285,9 @@ PRVCY_PrivacyPolicyConfirmSubmit(MWContext *ctxt,
                         "will be used. If you are concerned by this, you may want to cancel\n"
                         "this submission.\n",
                         "Show this alert next time?",
-/*                      "Continue Submission",
+                        "Continue Submission",
                         "Cancel Submission",
-                        TRUE,                                                                   */
+/*                      TRUE,                                                                   */
                         &value);
       if (value != savevalue)
         {
@@ -342,6 +346,7 @@ PRVCY_IsAnonymous() {
     return anonymous;
 }
 
+#ifndef XP_WIN /* privacy ifdef - last person to get here please remove */
 /*
  * temporary UI until FE implements this function as a single dialog box
  */
@@ -350,6 +355,8 @@ XP_Bool FE_CheckConfirm (
         MWContext *pContext,
         char* pConfirmMessage,
         char* pCheckMessage,
+	char* pOKMessage,
+	char* pCancelMessage,
         XP_Bool* pChecked) {
 
     Bool result = ET_PostMessageBox(pContext, pConfirmMessage, TRUE);
@@ -357,3 +364,4 @@ XP_Bool FE_CheckConfirm (
     return result;
 }
 /* end of temporary UI */
+#endif

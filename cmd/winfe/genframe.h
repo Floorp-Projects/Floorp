@@ -282,6 +282,7 @@ protected:
 	afx_msg void OnDisplayPrivacyCookies();
 	afx_msg void OnDisplayPrivacySignons();
 	afx_msg void OnDisplayPrivacyReceipts();
+	afx_msg void OnDisplayPrivacySiteInfo();
 	afx_msg void OnDisplayPrivacyTutorial();
 
 	afx_msg void OnSecurity();

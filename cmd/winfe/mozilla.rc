@@ -3031,6 +3031,7 @@ BEGIN
     ID_PRIVACY_DISPLAY_COOKIES  "Display list of cookies"
     ID_PRIVACY_DISPLAY_SIGNONS  "Display list of remembered signons"
     ID_PRIVACY_DISPLAY_RECEIPTS "Display list of saved receipts"
+    ID_PRIVACY_DISPLAY_SITEINFO "Privacy Central"
     ID_PRIVACY_DISPLAY_TUTORIAL "Show tutorial on privacy"
 END
 

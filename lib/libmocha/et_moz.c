@@ -42,6 +42,9 @@
 #define IL_CLIENT
 #include "libimg.h"             /* Image Library public API. */
 
+#define CHECKBOX_ACCEPTBIT	0x01
+#define CHECKBOX_CHECKBIT	0x02
+
 /* pointer to the mocha thread */
 extern PRThread		    *lm_InterpretThread;
 extern PRThread		    *mozilla_thread;
@@ -109,6 +112,16 @@ typedef struct {
     JSBool    bConfirm;   /* TRUE if confirmation, FALSE if alert */
 } MozillaEvent_MessageBox;
 
+typedef struct {
+	ETEvent	ce;
+	char*	mainMessage,
+	*	checkMessage,
+	*	okMessage,
+	*	cancelMessage;
+	JSBool	accepted,	/* dialog was OKed? */
+		checked;	/* checkbox is checked? */
+} MozillaEvent_CheckConfirmBox;	/* CheckConfirm message box event */
+
 
 PR_STATIC_CALLBACK(void*)
 et_HandleEvent_MessageBox(MozillaEvent_MessageBox* e)
@@ -140,6 +153,44 @@ et_DestroyEvent_MessageBox(MozillaEvent_MessageBox* event)
     XP_FREE(event);
 }
 
+PR_STATIC_CALLBACK(void*)
+et_HandleEvent_CheckConfirmBox(MozillaEvent_CheckConfirmBox* e)
+{
+    void *pRet;
+    Bool bPriorJSCalling = FALSE;
+    if( e->ce.context ) {
+        bPriorJSCalling = e->ce.context->bJavaScriptCalling;
+        e->ce.context->bJavaScriptCalling = TRUE;
+    }
+    
+#ifdef XP_WIN /* privacy ifdef - last person to get here please remove */
+    e->accepted = FE_CheckConfirm(e->ce.context, e->mainMessage,
+		e->checkMessage, e->okMessage, e->cancelMessage,
+		&e->checked);
+#else
+    e->accepted = 0; /* and kill this else clause while you're at it */
+#endif
+	/* we're restricted to a single (void *) return value, and we need to return
+	   two separate booleans, thus the bit hackery: */
+    pRet = (void *)	((e->accepted ? CHECKBOX_ACCEPTBIT : 0x0) |
+					(e->checked ? CHECKBOX_CHECKBIT : 0x0));
+
+    if( e->ce.context ) 
+        e->ce.context->bJavaScriptCalling = bPriorJSCalling;
+            
+    return pRet;
+}
+
+PR_STATIC_CALLBACK(void)
+et_DestroyEvent_CheckConfirmBox(MozillaEvent_CheckConfirmBox* event)
+{
+    XP_FREE((char *)event->mainMessage);
+    XP_FREE((void *)event->checkMessage);
+    XP_FREEIF((void *)event->okMessage);
+    XP_FREEIF((void *)event->cancelMessage);
+    XP_FREE((void *)event);
+}
+
 JSBool
 ET_PostMessageBox(MWContext* context, char* szMessage, JSBool bConfirm)
 {
@@ -157,6 +208,30 @@ ET_PostMessageBox(MWContext* context, char* szMessage, JSBool bConfirm)
 
     return(ok);
 
+}
+
+JSBool
+ET_PostCheckConfirmBox(MWContext* context,
+	char* szMainMessage, char* szCheckMessage,
+	char* szOKMessage, char* szCancelMessage,
+	JSBool *bChecked)
+{
+    uint8 rtnVal;
+    MozillaEvent_CheckConfirmBox* event = PR_NEW(MozillaEvent_CheckConfirmBox);
+    if (event == NULL) 
+        return JS_FALSE;
+    event->ce.context = context;
+    event->mainMessage = strdup(szMainMessage);
+    event->checkMessage = szCheckMessage ? strdup(szCheckMessage) : 0;
+    event->okMessage = szOKMessage ? strdup(szOKMessage) : 0;
+    event->cancelMessage = strdup(szCancelMessage);
+    event->checked = *bChecked;
+    PR_InitEvent(&event->ce.event, context,
+		 (PRHandleEventProc)et_HandleEvent_CheckConfirmBox,
+		 (PRDestroyEventProc)et_DestroyEvent_CheckConfirmBox);
+    rtnVal = (uint8) et_PostEvent(&event->ce, TRUE);
+    *bChecked = (rtnVal & CHECKBOX_CHECKBIT) ? JS_TRUE : JS_FALSE;
+    return (JSBool) (rtnVal & CHECKBOX_ACCEPTBIT) ? JS_TRUE : JS_FALSE;
 }
 
 /****************************************************************************/

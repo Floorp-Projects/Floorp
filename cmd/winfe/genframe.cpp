@@ -786,6 +786,7 @@ BEGIN_MESSAGE_MAP(CGenericFrame, CFrameWnd)
     ON_COMMAND(ID_PRIVACY_DISPLAY_COOKIES, OnDisplayPrivacyCookies)
     ON_COMMAND(ID_PRIVACY_DISPLAY_SIGNONS, OnDisplayPrivacySignons)
     ON_COMMAND(ID_PRIVACY_DISPLAY_RECEIPTS, OnDisplayPrivacyReceipts)
+    ON_COMMAND(ID_PRIVACY_DISPLAY_SITEINFO, OnDisplayPrivacySiteInfo)
     ON_COMMAND(ID_PRIVACY_DISPLAY_TUTORIAL, OnDisplayPrivacyTutorial)
 #if defined(OJI) || defined(JAVA)
     ON_COMMAND(ID_OPTIONS_SHOWJAVACONSOLE, OnToggleJavaConsole)
@@ -2343,6 +2344,11 @@ void CGenericFrame::OnDisplayPrivacySignons()
 
 void CGenericFrame::OnDisplayPrivacyReceipts()
 {
+}
+
+void CGenericFrame::OnDisplayPrivacySiteInfo()
+{
+    // needs to be hooked up
 }
 
 void CGenericFrame::OnDisplayPrivacyTutorial()

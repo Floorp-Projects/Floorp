@@ -67,6 +67,8 @@ void PSFE_ShowAllNewsArticles () {}
 void PSFE_GraphProgressDestroy () {}
 void TXFE_Confirm () {}
 void TXFE_Alert () {}
+void TXFE_CheckConfirm () {}
+void TXFE_SelectDialog () {}
 void TXFE_GraphProgressDestroy () {}
 void TXFE_Progress () {}
 void TXFE_Prompt () {}

@@ -129,6 +129,8 @@
 #define IDD_NETWORK                     135
 #define IDS_MAIL_SERVER                 135
 #define IDC_ARROW_RIGHT                 136
+#define IDD_CHECKCONFIRM_BOX            136
+#define IDD_SELECT_BOX                  137
 #define IDD_USERPASS                    140
 #define IDS_HELP_BUTTON                 140
 #define IDD_MAILURL                     141
@@ -2575,6 +2577,7 @@
 #define ID_PRIVACY_DISPLAY_SIGNONS	35109
 #define ID_PRIVACY_DISPLAY_RECEIPTS	35110
 #define ID_PRIVACY_DISPLAY_TUTORIAL	35111
+#define ID_PRIVACY_DISPLAY_SITEINFO	35112
 
 #define ID_EDT_FILE_SAVE                42001
 #define ID_EDT_FILE_SAVEAS              42002

@@ -943,3 +943,388 @@ void CDefaultBrowserDlg::OnOK()
 		}
 	}	
 }
+
+/* CCheckConfirmDialog: a generic "confirm" dialog including a checkbox.
+   It's used by XP.
+ */
+
+BEGIN_MESSAGE_MAP(CCheckConfirmDialog, CSelfAdjustingDialog)
+END_MESSAGE_MAP()
+
+CCheckConfirmDialog::CCheckConfirmDialog (CWnd *pParent,
+	const char *pMessage, const char *pCheckMessage,
+	const char *pOKMessage, const char *pCancelMessage,
+	BOOL checked) :
+
+	CSelfAdjustingDialog(CCheckConfirmDialog::IDD, pParent),
+	mMessage(pMessage), mCheckMessage(pCheckMessage),
+	mOKMessage(pOKMessage), mCancelMessage(pCancelMessage)
+{
+	mCheckState = checked ? 1 : 0;
+}
+
+
+BOOL CCheckConfirmDialog::OnInitDialog()
+{
+	CSelfAdjustingDialog::OnInitDialog();
+
+	CStatic *messageItem = (CStatic *) GetDlgItem(IDC_STATIC1);
+	CButton *checkItem = (CButton *) GetDlgItem(IDC_CHECK1),
+			*okButton = (CButton *) GetDlgItem(IDOK),
+			*cancelButton = (CButton *) GetDlgItem(IDCANCEL);
+	POINT	windRectDiff,
+			border;
+
+	// set subwindows' text
+	messageItem->SetWindowText((const char *) mMessage);
+	checkItem->SetWindowText((const char *) mCheckMessage);
+	if (!mOKMessage.IsEmpty())
+		okButton->SetWindowText((const char *) mOKMessage);
+	if (!mCancelMessage.IsEmpty())
+		cancelButton->SetWindowText((const char *) mCancelMessage);
+	checkItem->SetCheck(mCheckState);
+
+	// adjust sizes to match text
+	CheckOverallSize(&border, FALSE);
+	ResizeItemToFitText(messageItem, (const char *) mMessage, &windRectDiff);
+	AdjustForItemSize(messageItem, &windRectDiff);
+	ResizeItemToFitText(checkItem, (const char *) mCheckMessage, &windRectDiff);
+	AdjustForItemSize(checkItem, &windRectDiff);
+	AdjustButtons(okButton, cancelButton, border.x);
+	CheckOverallSize(&border, TRUE);
+
+	return TRUE;
+}
+
+BOOL CCheckConfirmDialog::DoModal(XP_Bool *checkboxSet)
+{
+	BOOL	rtnval = CSelfAdjustingDialog::DoModal() == IDOK;
+	*checkboxSet = mCheckState == 1;
+	return rtnval;
+}
+
+void CCheckConfirmDialog::OnOK()
+{
+	CButton	*checkItem = (CButton *) GetDlgItem(IDC_CHECK1);
+	mCheckState = checkItem->GetCheck() == 1;
+	CSelfAdjustingDialog::OnOK();
+}
+
+/* "cancel" really means "no," so fetch the value of the checkbox */
+void CCheckConfirmDialog::OnCancel()
+{
+	CButton	*checkItem = (CButton *) GetDlgItem(IDC_CHECK1);
+	mCheckState = checkItem->GetCheck() == 1;
+	CSelfAdjustingDialog::OnCancel();
+}
+
+/* if (!adjust), calculate the border around our subwindows.
+   if (adjust), resize to have the given border. */
+void CCheckConfirmDialog::CheckOverallSize(LPPOINT diff, BOOL adjust) {
+
+	CStatic *messageItem = (CStatic *) GetDlgItem(IDC_STATIC1);
+	CButton *checkItem = (CButton *) GetDlgItem(IDC_CHECK1),
+			*okButton = (CButton *) GetDlgItem(IDOK),
+			*cancelButton = (CButton *) GetDlgItem(IDCANCEL);
+	RECT	wRect,
+			parentRect;
+	POINT	border;
+	HWND	parent = m_pParentWnd ? m_pParentWnd->GetSafeHwnd() : NULL;
+
+	// calculate current minimum border. assumes buttons fix the bottom margin and
+	// other items fix the right margin
+	messageItem->GetWindowRect(&wRect);
+	border.x = wRect.right;
+	checkItem->GetWindowRect(&wRect);
+	if (wRect.right > border.x)
+		border.x = wRect.right;
+	cancelButton->GetWindowRect(&wRect);
+	border.y = wRect.bottom;
+	if (wRect.right > border.x)
+		border.x = wRect.right;
+	GetWindowRect(&wRect);
+
+	if (adjust) {
+		// since moving the window seems to make the system no longer center it,
+		// we have to do it ourselves
+		if (m_pParentWnd)
+			m_pParentWnd->GetWindowRect(&parentRect);
+		else
+			GetDesktopWindow()->GetWindowRect(&parentRect);
+
+		// adjust dialog window size to keep the same borders between it and its subwindows
+		border.x = diff->x - (wRect.right - border.x);
+		border.y = diff->y - (wRect.bottom - border.y);
+		wRect.right += border.x;
+		wRect.bottom += border.y;
+
+		// center it in its parent
+		border.x = ((parentRect.right + parentRect.left) - (wRect.right + wRect.left)) / 2;
+		border.y = ((parentRect.bottom + parentRect.top) - (wRect.bottom + wRect.top)) / 2;
+		wRect.left += border.x;
+		wRect.right += border.x;
+		wRect.top += border.y;
+		wRect.bottom += border.y;
+		MoveWindow(&wRect, TRUE);
+	} else {
+		diff->x = wRect.right - border.x;
+		diff->y = wRect.bottom - border.y;
+	}
+}
+
+/* special adjustment for the buttons.  we won't make them smaller, and we'll keep
+   them centered.  we also assume they're in a row at the bottom, with OK on the left,
+   and the same size. */
+void CCheckConfirmDialog::AdjustButtons(CWnd *okButton, CWnd *cancelButton,
+										LONG expectedMargin) {
+
+	RECT	okRect,
+			cancelRect,
+			newOKRect,
+			newCancelRect,
+			dialogRect;
+	POINT	diff,
+			tempDiff;
+	LONG	separation,
+			width;
+
+	// assume if OK has no text change, than cancel doesn't either. no adjustment, then.
+	if (mOKMessage.IsEmpty())
+		return;
+
+	okButton->GetWindowRect(&okRect);
+	cancelButton->GetWindowRect(&cancelRect);
+	GetWindowRect(&dialogRect);
+
+	// calculate appropriate size
+	RectForText(okButton, (const char *) mOKMessage, &newOKRect, &diff);
+	RectForText(cancelButton, (const char *) mCancelMessage, &newCancelRect, &tempDiff);
+	if (newOKRect.right - newOKRect.left > newCancelRect.right - newCancelRect.left)
+		width = newOKRect.right - newOKRect.left;
+	else {
+		width = newCancelRect.right - newCancelRect.left;
+		diff.x = tempDiff.x;
+	}
+
+	// don't shrink the buttons; only expand them
+	if (diff.x > 0) {
+		separation = cancelRect.left - okRect.right;
+		okRect.left -= diff.x;
+		cancelRect.right += diff.x;
+		if (okRect.left - dialogRect.left < expectedMargin) {
+			okRect.left = dialogRect.left + expectedMargin;
+			okRect.right = okRect.left + width;
+		}
+		if (cancelRect.left < okRect.right + separation) {
+			cancelRect.left = okRect.right + separation;
+			cancelRect.right = cancelRect.left + width;
+		}
+		::MapWindowPoints(HWND_DESKTOP, GetSafeHwnd(), (LPPOINT) &okRect, 2);
+		::MapWindowPoints(HWND_DESKTOP, GetSafeHwnd(), (LPPOINT) &cancelRect, 2);
+		okButton->MoveWindow(&okRect, TRUE);
+		cancelButton->MoveWindow(&cancelRect, TRUE);
+	}
+}
+
+/* CUserSelectionDialog: presents a scrolling list of items with an initial
+   selection, allowing the user to specify a selection
+*/
+BEGIN_MESSAGE_MAP(CUserSelectionDialog, CDialog)
+END_MESSAGE_MAP()
+
+CUserSelectionDialog::CUserSelectionDialog(CWnd *pParent, const char *pMessage,
+        const char **pUserList, int nUserListCount) :
+
+	CDialog(CUserSelectionDialog::IDD, pParent),
+	mMessage(pMessage) {
+
+	int	ctr;
+
+	mSelection = -1;
+	// copy pUserList
+	mList = (char **) XP_ALLOC(nUserListCount*sizeof(char *));
+	mListCount = nUserListCount;
+	if (mList) {
+		for (ctr = 0; ctr < nUserListCount; ctr++) {
+			int len = 1 + XP_STRLEN(pUserList[ctr]);
+			char *newStr = (char *) XP_ALLOC(len*sizeof(char));
+			if (newStr) {
+				XP_STRCPY(newStr, pUserList[ctr]);
+				mList[ctr] = newStr;
+			} else {
+				mListCount = ctr;
+				break;
+			}
+		}
+		if (mListCount == 0) {
+			XP_FREE(mList);
+			mList = 0;
+		}
+	}
+}
+
+CUserSelectionDialog::~CUserSelectionDialog() {
+
+	int ctr;
+
+	if (mList) {
+		for (ctr = 0; ctr < mListCount; ctr++)
+			XP_FREE(mList[ctr]);
+		XP_FREE(mList);
+	}
+}
+
+BOOL CUserSelectionDialog::DoModal(LPINT nSelection)
+{
+	BOOL	rtnval = CDialog::DoModal() == IDOK;
+	*nSelection = mSelection;
+	return rtnval;
+}
+
+void CUserSelectionDialog::OnOK()
+{
+	CListBox *listItem = (CListBox *) GetDlgItem(IDC_LIST1);
+	mSelection = listItem->GetCurSel();
+	if (mSelection == LB_ERR)
+		mSelection = -1;
+	CDialog::OnOK();
+}
+
+BOOL CUserSelectionDialog::OnInitDialog()
+{
+	CDialog::OnInitDialog();
+
+	CStatic *messageItem = (CStatic *) GetDlgItem(IDC_STATIC1);
+	CListBox *listItem = (CListBox *) GetDlgItem(IDC_LIST1);
+	int ctr;
+
+	// set subwindows' text
+	messageItem->SetWindowText((const char *) mMessage);
+	if (mList)
+		for (ctr = 0; ctr < mListCount; ctr++) {
+			int err;
+			err = listItem->AddString(mList[ctr]);
+			if (err == LB_ERR || err == LB_ERRSPACE)
+				break;
+		}
+
+	return TRUE;
+}
+
+/* CSelfAdjustingDialog: some base code for a dialog that can adjust its size
+   and its subwindows
+ */
+
+BEGIN_MESSAGE_MAP(CSelfAdjustingDialog, CDialog)
+END_MESSAGE_MAP()
+
+CSelfAdjustingDialog::CSelfAdjustingDialog(UINT nIDTemplate, CWnd* pParent) :
+	CDialog(nIDTemplate, pParent) {
+}
+
+/* calculate appropriate window rect for its text. assumes average character width.
+   returns actual (desktop-relative) window rect, adjusted for appropriate size,
+   (without actually changing the window's rect). */
+void CSelfAdjustingDialog::RectForText(CWnd *window, const char *text,
+									   LPRECT wrect, LPPOINT diff) {
+
+	int			height,
+				width;
+	const char	*mark;
+	char		thisChar;
+	BOOL		lastWasCR;
+	CDC			*dc = window->GetDC();
+	CSize		basicExtent = dc->GetTextExtent("W",1),
+				extent;
+
+	window->GetWindowRect(wrect);
+
+	// calculate width and height of text.
+	height = 0;
+	width = 0;
+	mark = text;
+	lastWasCR = FALSE;
+	while (1) {
+		thisChar = *text;
+		if (lastWasCR && thisChar == '\n') {
+			lastWasCR = FALSE;
+			mark = ++text;
+			continue;
+		}
+		if (thisChar == '\r' || thisChar == '\n' || thisChar == '\0') {
+			if (text-mark == 0) // it's a zero-length line
+				height += basicExtent.cy;
+			else {
+				extent = dc->GetTextExtent(mark, text-mark);
+				if (width < extent.cx)
+					width = extent.cx;
+				height += extent.cy;
+			}
+			mark = text+1;
+			if (*text == '\0')
+				break;
+		}
+		lastWasCR = *text++ == '\r';
+	}
+	if (width == 0)
+		width = basicExtent.cx;
+	if (height == 0)
+		height = basicExtent.cy;
+	diff->x = width - (wrect->right - wrect->left);
+	diff->y = height - (wrect->bottom - wrect->top);
+	wrect->right = wrect->left + width;
+	wrect->bottom = wrect->top + height;
+}
+
+/* resize subwindow to fit its text. assumes average character width */
+void CSelfAdjustingDialog::ResizeItemToFitText(CWnd *window, const char *text, LPPOINT diff) {
+
+	RECT	windRect;
+
+	RectForText(window, text, &windRect, diff);
+	::MapWindowPoints(HWND_DESKTOP, GetSafeHwnd(), (LPPOINT) &windRect, 2);
+	window->MoveWindow(&windRect, TRUE);
+}
+
+/* adjust window size for a change in an item size, and then adjust positions of
+   affected subwindows */
+void CCheckConfirmDialog::AdjustForItemSize(CWnd *afterWind, LPPOINT diff) {
+
+	CStatic *messageItem = (CStatic *) GetDlgItem(IDC_STATIC1);
+	CButton *checkItem = (CButton *) GetDlgItem(IDC_CHECK1),
+			*okButton = (CButton *) GetDlgItem(IDOK),
+			*cancelButton = (CButton *) GetDlgItem(IDCANCEL);
+	HWND	parent = m_pParentWnd ? m_pParentWnd->GetSafeHwnd() : NULL;
+
+	// adjust positions of trailing subwindows
+	BumpItemIfAfter(messageItem, afterWind, diff);
+	BumpItemIfAfter(checkItem, afterWind, diff);
+	BumpItemIfAfter(okButton, afterWind, diff);
+	BumpItemIfAfter(cancelButton, afterWind, diff);
+}
+
+/* adjust subwindows affected by a change in size of another subwindow */
+void CSelfAdjustingDialog::BumpItemIfAfter(CWnd *item, CWnd *afterWind, LPPOINT diff) {
+
+	RECT	afterRect,
+			itemRect;
+
+	item->GetWindowRect(&itemRect);
+	afterWind->GetWindowRect(&afterRect);
+	if (	diff->x != 0 &&
+			itemRect.left > afterRect.left &&
+			itemRect.top < afterRect.bottom && itemRect.bottom >= afterRect.top) {
+		::MapWindowPoints(HWND_DESKTOP, GetSafeHwnd(), (LPPOINT) &itemRect, 2);
+		itemRect.left += diff->x;
+		itemRect.right += diff->x;
+		item->MoveWindow(&itemRect, TRUE);
+	}
+	else if (	diff->y != 0 &&
+				itemRect.top > afterRect.top &&
+				itemRect.left < afterRect.right && itemRect.right >= afterRect.left) {
+		::MapWindowPoints(HWND_DESKTOP, GetSafeHwnd(), (LPPOINT) &itemRect, 2);
+		itemRect.top += diff->y;
+		itemRect.bottom += diff->y;
+		item->MoveWindow(&itemRect, TRUE);
+	}
+}
