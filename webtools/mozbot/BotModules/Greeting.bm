@@ -90,7 +90,7 @@ sub RegisterConfig {
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
-    my $now = time();
+    my $now = $event->{'time'};
     $self->{'_lastSpoken'}->{$event->{'user'}} = $now;
     if ($event->{'channel'} ne '') {
         my $channel = $event->{'channel'};
@@ -154,7 +154,7 @@ sub Heard {
     my ($event, $message) = @_;
     if ($event->{'channel'} ne '') {
         my $channel = $event->{'channel'};
-        $seen->{'times'}->{lc $event->{'from'}} = time();
+        $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
         $seen->{'states'}->{lc $event->{'from'}} = "saying '$message' in $channel.";
     }
     my $me = quotemeta($event->{'bot'}->nick);
@@ -183,15 +183,15 @@ sub Heard {
     } elsif ($message =~ /^\s*(?:$me\s*[.?\/]+)\s*$/si) {
         $self->Perform($event, 'listen');
     } elsif ($message =~ /^\s*r+h(e+)t+[!1.\s]*$/osi) {
-        if ((time()-$self->{'lastrheet'}) > $self->{'rheetbuffer'}) {
+        if (($event->{'time'}-$self->{'lastrheet'}) > $self->{'rheetbuffer'}) {
             if (length($1) < $self->{'rheetMaxEs'}) {
                 $self->say($event, "rhe$1$1t!");
             }
-            $self->{'lastrheet'} = time();
+            $self->{'lastrheet'} = $event->{'time'};
         }
     } elsif ($message =~ /^.+\s+c\+\+\s+.+$/osi) {
-        if ((time() - $self->{'lastEvil'}) > $self->{'evilBackoffTime'}) {
-            $self->{'lastEvil'} = time();
+        if (($event->{'time'} - $self->{'lastEvil'}) > $self->{'evilBackoffTime'}) {
+            $self->{'lastEvil'} = $event->{'time'};
             $self->Perform($event, 'evil'); # calls GetNext which calls saveConfig
         }
     } elsif ($message =~ /^\s*!seen\s+(\S+)\s*$/osi) {
@@ -208,7 +208,7 @@ sub Felt {
     if ($event->{'channel'} ne '') {
         my $nick = $event->{'from'};
         my $channel = $event->{'channel'};
-        $seen->{'times'}->{lc $event->{'from'}} = time();
+        $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
         $seen->{'states'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
     }
     my $me = quotemeta($event->{'bot'}->nick);
@@ -246,13 +246,13 @@ sub Saw {
     if ($event->{'channel'} ne '') {
         my $nick = $event->{'from'};
         my $channel = $event->{'channel'};
-        $seen->{'times'}->{lc $event->{'from'}} = time();
+        $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
         $seen->{'states'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
     }
     if ($message =~ /^\s*r+h+e(e+)t+s?[!1.\s]*$/osi) {
-        if ((time()-$self->{'lastrheet'}) > $self->{'rheetbuffer'}) {
+        if (($event->{'time'}-$self->{'lastrheet'}) > $self->{'rheetbuffer'}) {
            $self->say($event, "rhe$1$1t!");
-           $self->{'lastrheet'} = time();
+           $self->{'lastrheet'} = $event->{'time'};
         }
     } elsif (($message =~ /^\s*(?:smiles)\s*[!1.\s]*$/si) and ($self->canAssumeThanks($event))) {
         $self->Perform($event, 'happy');
@@ -270,7 +270,7 @@ sub SpottedJoin {
     my $user = $event->{'user'};
     if ($self->canGreet($event) and $self->{'autoGreetings'}->{$who}) {
         $self->sayOrEmote($event, $self->Expand($event, $self->{'autoGreetings'}->{$who}));
-        $self->{'autoGreeted'}->{$user} = time();
+        $self->{'autoGreeted'}->{$user} = $event->{'time'};
     }
     return 1; # don't block other modules...
 }
@@ -279,7 +279,7 @@ sub SpottedJoin {
 sub SpottedNickChange {
     my $self = shift;
     my ($event, $from, $to) = @_;
-    $seen->{'times'}->{lc $event->{'from'}} = time();
+    $seen->{'times'}->{lc $event->{'from'}} = $event->{'time'};
     $seen->{'states'}->{lc $event->{'from'}} = "changing nick to $to.";
     return $self->SUPER::SpottedNickChange(@_);
 }
@@ -311,7 +311,7 @@ sub canGreet {
     my $user = $event->{'user'};
     my $reply = 1;
     if (defined($self->{'autoGreeted'}->{$user})) {
-       $reply = ((time() - $self->{'autoGreeted'}->{$user}) > $self->{'autoGreetedBackoffTime'});
+       $reply = (($event->{'time'} - $self->{'autoGreeted'}->{$user}) > $self->{'autoGreetedBackoffTime'});
        delete($self->{'autoGreeted'}->{$user});
     }
     return $reply;
@@ -321,7 +321,7 @@ sub canAssumeThanks {
     my $self = shift;
     my ($event) = @_;
     my $who = $event->{'user'};
-    return ((defined($self->{'_lastSpoken'}->{$who})) and ((time() - $self->{'_lastSpoken'}->{$who}) <= $self->{'assumeThanksTime'}));
+    return ((defined($self->{'_lastSpoken'}->{$who})) and (($event->{'time'} - $self->{'_lastSpoken'}->{$who}) <= $self->{'assumeThanksTime'}));
 }
 
 sub Perform {
@@ -368,7 +368,7 @@ sub DoSeen {
     } else {
         my $seconds = $seen->{'times'}->{lc $who};
         if (defined($seconds)) {
-            my $seconds = time() - $seconds;
+            my $seconds = $event->{'time'} - $seconds;
             my $time = '';
             if ($seconds > 90) {
                 my $minutes = int $seconds / 60;

@@ -124,7 +124,7 @@ sub WriteMessage {
     $channel = $self->sanitiseChannelName($channel);
     my $logName = $self->getLogFilename("$channel.xml.part");
     if (open(LOG, ">>$logName")) {
-        my $msgtime = $self->logdate(time()); # XXX use $event->{'time'}
+        my $msgtime = $self->logdate($event->{'time'});
         # sanitise the output
         $_ = $self->escapeXML($_) for ($messageType, $channel, $from, $msgtime, $message);
         print LOG "<$messageType channel=\"$channel\" nick=\"$from\" time=\"$msgtime\">$message</$messageType>\n";
@@ -153,7 +153,7 @@ sub RotateLogFile {
 
     # create new names
     $channel = $self->sanitiseChannelName($channel);
-    my $time = $self->filedate(time()); # XXX should use $event->{'time'}
+    my $time = $self->filedate($event->{'time'});
     my $partName = $self->getLogFilename("$channel.xml.part");
     my $finalName = $self->getLogFilename("$channel-$time.xml");
 
@@ -186,14 +186,14 @@ sub RotateLogFile {
 # logdate: return nice looking date and time stamp
 sub logdate {
     my $self = shift;
-    my ($sec, $min, $hour, $mday, $mon, $year) = gmtime(shift or time);
+    my ($sec, $min, $hour, $mday, $mon, $year) = gmtime(shift or time());
     return sprintf("%d-%02d-%02dT%02d:%02d:%02dZ", $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 }
 
 # return a date and time stamp suitable for file names
 sub filedate {
     my $self = shift;
-    my ($sec, $min, $hour, $mday, $mon, $year) = gmtime(shift or time);
+    my ($sec, $min, $hour, $mday, $mon, $year) = gmtime(shift or time());
     return sprintf('%d%02d%02d-%02d%02d%02d', $year + 1900, $mon + 1, $mday, $hour, $min, $sec);
 }
 

@@ -163,7 +163,9 @@ sub ftp_stamp {
     # $self->ftp_stamp($event, $pattern);
     
 
-        my @day=gmtime(time()); my @tm=@day[0..2]; @day=@day[3..5];
+        # various instances of time() below were changed to use $event->{'time'}
+        # so that we are less prone to time drift
+        my @day=gmtime($event->{'time'}); my @tm=@day[0..2]; @day=@day[3..5];
         my (@filestamp, $filelist, $ahr,$amn,$asc);
         if ($_[2]){  # this code's output is *VERY* ugly. But I just took it as is, so deal with it. Patches welcome.
                 foreach my $filename (keys %latestbuilds){
@@ -181,7 +183,7 @@ sub ftp_stamp {
                         $filelist="Files from today [gmt] $filelist";
                 } else {
                         foreach my $filename (keys %latestbuilds){
-                              @day=gmtime(time()-86400); @day=@day[3..5];
+                              @day=gmtime($event->{'time'}-86400); @day=@day[3..5];
                                 $filelist.=day_str(@day[0..2],$latestbuilds{$filename},$filename);
                         }
                         $filelist="Files from yesterday [gmt] $filelist"|| # next line changed from " to \' and added missing '>'

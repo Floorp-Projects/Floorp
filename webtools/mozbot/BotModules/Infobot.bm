@@ -440,7 +440,7 @@ sub GetFactoid {
                 $answer =~ s/^<reply>\s*//o;
             } else {
                 # pick a 'random' prefix
-                my $prefix = $self->{'prefixes'}->[time() % @{$self->{'prefixes'}}];
+                my $prefix = $self->{'prefixes'}->[$event->{'time'} % @{$self->{'prefixes'}}];
                 if (lc($who) eq lc($subject)) {
                     $answer = "${prefix}you are $answer";
                 } else {
@@ -569,7 +569,7 @@ sub Research {
         }
     }
     # remember to tell these people about $subject if we ever find out about it:
-    my $entry = [$event, 'QUERY', $database, $subject, $target, $direct, $visitedAliases, time()];
+    my $entry = [$event, 'QUERY', $database, $subject, $target, $direct, $visitedAliases, $event->{'time'}];
     push(@{$self->{'researchNotes'}->{lc($subject)}}, $entry);
     my $who = defined($target) ? $target : $event->{'from'};
     if (not $asked) {
@@ -624,7 +624,7 @@ sub ReceivedDunno {
     $self->{'interbots'}++;
     if (not $self->tellBot($event, $subject, $target)) {
         # store the request
-        push(@{$self->{'researchNotes'}->{lc($subject)}}, [$event, 'DUNNO', undef, $1, $target, 0, {}, time()]);
+        push(@{$self->{'researchNotes'}->{lc($subject)}}, [$event, 'DUNNO', undef, $1, $target, 0, {}, $event->{'time'}]);
     }
 }
 
@@ -647,7 +647,7 @@ sub Scheduled {
     my $self = shift;
     my ($event, @data) = @_;
     if ($data[0] eq 'pruneInfobot') {
-        my $now = time();
+        my $now = $event->{'time'};
         foreach my $key (keys %{$self->{'researchNotes'}}) {
             my @new;
             foreach my $entry (@{$self->{'researchNotes'}->{$key}}) {

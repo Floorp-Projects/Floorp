@@ -68,7 +68,7 @@ sub CheckTheBall {
         # pick a reply category that will always be the same for this exact question
         my $response = $self->{['responses-positive', 'responses-negative', 'responses-unknown']->[(length($message) % 3)]};
         # pick a specific reply that will be different to recent ones
-        $response = $response->[time() % @$response];
+        $response = $response->[$event->{'time'} % @$response];
         $self->say($event, "$event->{'from'}: $response");
     } else {
         return 1;

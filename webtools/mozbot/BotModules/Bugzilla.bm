@@ -65,7 +65,7 @@ sub Told {
         my $target = $event->{'target'};
         my $bug = $1;
         $self->FetchBug($event, $bug, 'bugs', 0, 0);
-        $self->{'bugsHistory'}->{$target}->{$bug} = time() if $bug =~ m/^[0-9]+$/os;
+        $self->{'bugsHistory'}->{$target}->{$bug} = $event->{'time'} if $bug =~ m/^[0-9]+$/os;
     } elsif ($message =~ m/^\s*bug-?total\s+(.+?)\s*$/osi) {
         $self->FetchBug($event, $1, 'total', 0, 0);
     } elsif ($self->isAdmin($event)) {
@@ -120,10 +120,10 @@ sub CheckForBugs {
                 $self->debug("Noticed someone mention bug $bug -- investigating...");
                 my $last = 0;
                 $last = $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} if defined($self->{'bugsHistory'}->{$event->{'target'}}->{$bug});
-                if ((time()-$last) > $self->{'backoffTime'}) {
+                if (($event->{'time'}-$last) > $self->{'backoffTime'}) {
                     $bugsToFetch .= "$bug ";
                 }
-                $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} = time();
+                $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} = $event->{'time'};
                 $bugsFound++;
             }
         } while (defined($bug));
@@ -239,7 +239,7 @@ sub GotURI {
                                 push(@output, $self->unescapeXML("Bug $self->{'bugsURI'}show_bug.cgi?id=$bugid @d"));
                             }
                             $output[$#output] =~ s/, (?:, )+/, /gosi;
-                            $self->{'bugsHistory'}->{$event->{'target'}}->{$d[0]} = time();
+                            $self->{'bugsHistory'}->{$event->{'target'}}->{$d[0]} = $event->{'time'};
                         }
                     }
                 }

@@ -276,7 +276,7 @@ sub quizStart { # called by user
             # no game in progress, start one
             $self->{'remainingQuestions'}->{$event->{'channel'}} = $self->{'questionsPerRound'};
             $self->{'paused'}->{$event->{'channel'}} = 0;
-            $self->{'quizTime'}->{$event->{'channel'}} = time();
+            $self->{'quizTime'}->{$event->{'channel'}} = $event->{'time'};
             $self->{'quizScores'}->{$event->{'channel'}} = '';
             $self->{'players'}->{$event->{'channel'}} = '';
             $self->quizQuestion($event);
@@ -296,9 +296,9 @@ sub quizQuestion { # called from quizStart or delayed from quizAnswer
             my $questionCount = scalar keys %{$self->{'questions'}};
             while ($self->{'questions'}->[$self->{'currentQuestion'}->{$event->{'channel'}}]->{'category'} eq $category
                    and $try++ < $questionCount) {
-                $self->{'currentQuestion'}->{$event->{'channel'}} = $self->pickQuestion();
+                $self->{'currentQuestion'}->{$event->{'channel'}} = $self->pickQuestion($event);
             }
-            $self->{'questionsTime'}->{$event->{'channel'}} = time();
+            $self->{'questionsTime'}->{$event->{'channel'}} = $event->{'time'};
             $self->{'tip'}->{$event->{'channel'}} = 0;
             $self->{'skip'}->{$event->{'channel'}} = '';
             $self->schedule($event, \$self->{'tipDelay'}, 1, 'tip', $self->{'questionsTime'}->{$event->{'channel'}});
@@ -320,7 +320,7 @@ sub quizAnswer { # called by user
         defined($self->{'currentQuestion'}->{$event->{'channel'}}) and # in quiz
         $self->{'questionsTime'}->{$event->{'channel'}} and # not answered
         not $self->{'paused'}->{$event->{'channel'}}) { # quiz not paused
-        $self->stringHash(\$self->{'players'}->{$event->{'channel'}}, $event->{'from'}, time());
+        $self->stringHash(\$self->{'players'}->{$event->{'channel'}}, $event->{'from'}, $event->{'time'});
         if (lc($message) eq lc($self->{'questions'}->[$self->{'currentQuestion'}->{$event->{'channel'}}]->{'answer-long'}) or
             (defined($self->{'questions'}->[$self->{'currentQuestion'}->{$event->{'channel'}}]->{'answer-short'}) and
              lc($message) eq lc($self->{'questions'}->[$self->{'currentQuestion'}->{$event->{'channel'}}]->{'answer-short'})) or
@@ -333,7 +333,7 @@ sub quizAnswer { # called by user
             if (not defined($score)) {
                 $score = 1; # use difficulty XXX
             }
-            my $time = time() - $self->{'questionsTime'}->{$event->{'channel'}};
+            my $time = $event->{'time'} - $self->{'questionsTime'}->{$event->{'channel'}};
             my $total = $self->score($event, $who, $score);
             $self->debug("Answered by: $who");
             $self->say($event, "$who got the right answer in $time seconds (+$score points giving $total). The answer was: $answer");
@@ -489,7 +489,8 @@ sub quizSkip { # called by user
 
 sub pickQuestion {
     my $self = shift;
-    $self->{'questionIndex'} += 1 + time() % $self->{'skipMargin'};
+    my($event) = @_;
+    $self->{'questionIndex'} += 1 + $event->{'time'} % $self->{'skipMargin'};
     $self->{'questionIndex'} %= @{$self->{'questions'}};
     return $self->{'questionIndex'};
 }

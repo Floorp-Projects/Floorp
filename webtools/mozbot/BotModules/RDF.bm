@@ -131,7 +131,7 @@ sub GotURI {
     if ($output) {
 
         # last update stamp
-        $self->{'data'}->{$uri}->{'last'} = time();
+        $self->{'data'}->{$uri}->{'last'} = $event->{'time'};
 
         # this, of course, is a disaster waiting to happen.
         # for example, we don't cope with comments.

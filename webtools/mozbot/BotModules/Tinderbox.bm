@@ -140,7 +140,7 @@ sub GotURI {
     my $self = shift;
     my ($event, $uri, $output, $requested, @mode) = @_;
     if ($output) {
-        my $now = time();
+        my $now = $event->{'time'};
         $self->{'_lastupdate'} = $now;
         my @lines = split(/\n/os, $output);
 

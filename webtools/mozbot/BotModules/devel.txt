@@ -499,8 +499,9 @@ The $event variable is a hash with the following keys:
     'maintype' => the name of the first handler called (eg. 'Told')
     'level' => the number of times the handler has been called in a row
     'userName' => the name of the user as they authenticated
-    'userFlags' => used internally for the implementation of isAdmin(). [1]
+    'userFlags' => used internally for the implementation of isAdmin() [1]
     'nick' => the nick of the bot
+    'time' => the value of time() when the event was constructed [4]
 
 It is passed to most functions, as the first parameter. Modify at your 
 own risk! ;-) If you do write to this hash at all, ensure that you make 
@@ -524,8 +525,11 @@ so that you can read directories by branching to a disk address.
 any channel names you get from users before using them in comparisons or
 hash lookups.
 
-[3] This is the same as the 'data' slot except for Told and Baffled
+[3]: This is the same as the 'data' slot except for Told and Baffled
 events where it also contains the prefix that was stripped.
+
+[4]: Use this instead of calling time() so as to avoid time drift when
+comparing times at various points.
 
 
 Module API
@@ -779,7 +783,7 @@ recommended.
  Same as say() but for sending CTCP messages.
 
  Examples:
-    $self->ctcpSend($event, 'PING', time());
+    $self->ctcpSend($event, 'PING', $event->{'time'});
 
 
 *** ctcpReply($event, $type, $data)

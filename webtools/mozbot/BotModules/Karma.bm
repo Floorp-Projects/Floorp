@@ -69,15 +69,15 @@ sub ChangeKarma {
     $self->debug("$who += $delta requested");
     if ((defined($self->{'_lastSpoken'}->{$event->{'user'}})) and
         (defined($self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who})) and
-        ((time() - $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who}) <= $self->{'secondsDelayRequired'})) {
+        (($event->{'time'} - $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who}) <= $self->{'secondsDelayRequired'})) {
         $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who} = $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who}+5;
-        my $delay = $self->{'secondsDelayRequired'} - (time() - $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who});
+        my $delay = $self->{'secondsDelayRequired'} - ($event->{'time'} - $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who});
         $self->directSay($event, "You will have to wait another $delay seconds before being able to change ${who}'s karma.");
     } else {
         if (not defined($self->{'_lastSpoken'}->{$event->{'user'}})) {
             $self->{'_lastSpoken'}->{$event->{'user'}} = {};
         }
-        $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who} = time();
+        $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who} = $event->{'time'};
         if (lc $event->{'from'} eq lc $who) {
             if ($delta > 0) {
                 $delta = -$delta;

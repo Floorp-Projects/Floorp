@@ -759,6 +759,7 @@ sub do {
         'subtype' => $event->type,
         'firsttype' => $_[0],
         'nick' => $self->nick(),
+        'time' => time(),
         # level   (set below)
         # type  (set below)
     };

@@ -1,5 +1,5 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
-# $Id: Flood.bm,v 1.1 2001/08/14 16:53:30 jake%acutex.net Exp $
+# $Id: Flood.bm,v 1.2 2003/10/03 15:46:54 ian%hixie.ch Exp $
 ###########################
 # Flood Protection module #
 ###########################
@@ -63,10 +63,10 @@ sub SpottedJoin {
         return $self->SUPER::SpottedJoin($event, $channel, $who);
     }
     # Here we have the 'join_times' array to push and shift to/from
-    push(@{$self->{"join_$channel"}}, time());
+    push(@{$self->{"join_$channel"}}, $event->{'time'});
     if (scalar(@{$self->{"join_$channel"}}) >= $self->{'numberOfJoins'}) {
         my $oldest = shift(@{$self->{"join_$channel"}});
-        my $timechange = time() - $oldest;
+        my $timechange = $event->{'time'} - $oldest;
         if ($self->{'secondsToTrigger'} >= $timechange) {
             # We have just seen many joins happen very quickly.  This channel should
             # have its mode set to +i until an op can figure out what went wrong.
