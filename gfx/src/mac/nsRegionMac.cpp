@@ -20,7 +20,7 @@
 #include "prmem.h"
 
 
-nsNativeRegionPool sNativeRegionPool;
+NS_EXPORT nsNativeRegionPool sNativeRegionPool;
 
 //------------------------------------------------------------------------
 
