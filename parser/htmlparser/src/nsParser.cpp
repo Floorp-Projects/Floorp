@@ -1002,7 +1002,8 @@ static void DetermineHTMLParseMode(const nsString& aBuffer,
       if (!(resultFlags & PARSE_DTD_HAVE_INTERNAL_SUBSET) &&
           sysIDUCS2 == NS_LITERAL_STRING(
                "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd")) {
-        aParseMode = eDTDMode_almost_standards;
+        aParseMode = eDTDMode_quirks;
+        aDocType = eHTML_Quirks;
       }
 
     } else {
