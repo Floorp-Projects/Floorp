@@ -1746,7 +1746,7 @@ NS_IMETHODIMP
  * if specifying a position.  In these cases, the
  * bracketted values are removed.
  */
-static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* dim, nsAString & dst)
+static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* aDimensionSizes, nsAString & dst)
 {
   dst.Assign(src);
   nsReadingIterator < PRUnichar > i1;
@@ -1763,7 +1763,7 @@ static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* dim, nsAString 
     return -1;                       //  Eliminated white space.
   }
 
-  int d = 1;    //  Counting the dimensions
+  int dimensionCount = 1;    //  Counting the dimensions
   for (;;) {        //  First look for the matching bracket from reverse and commas.
     if (i1 == i2) {                  //  No matching bracket.
       return -1;
@@ -1773,7 +1773,7 @@ static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* dim, nsAString 
       break;
     }
     if (c == ',') {
-      d++;
+      dimensionCount++;
     }
   }
   int len;
@@ -1788,7 +1788,7 @@ static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* dim, nsAString 
     len = Distance(i1, i3);        //  Length remaining in string after operation
   }
 
-  if (d > MAX_ARRAY_DIMENSIONS) {  //  Completely ignore it if too many dimensions.
+  if (dimensionCount > MAX_ARRAY_DIMENSIONS) {  //  Completely ignore it if too many dimensions.
     return -1;
   }
 
@@ -1797,8 +1797,8 @@ static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* dim, nsAString 
   while (*(--i2) != ']')           //  Find end bracket again
     ;
 
-  d = 0;                           //  Start with first dimension.
-  dim[d] = -1;
+  dimensionCount = 0;                           //  Start with first dimension.
+  aDimensionSizes[dimensionCount] = -1;
   PRBool finished = PR_FALSE;      //  Disallow space within numbers
 
   while (i1 != i2) {
@@ -1806,12 +1806,12 @@ static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* dim, nsAString 
     if (c < '0' || c > '9') {
 //  There may be slightly more to do here if alternative radixes are supported.
       if (c <= ' ') {              //  Accept anything < space as whitespace
-        if (dim[d] >= 0) {
+        if (aDimensionSizes[dimensionCount] >= 0) {
           finished = PR_TRUE;
         }
       }
       else if (c == ',') {         //  Introducing new dimension
-        dim[++d] = -1;             //  Restarting it at -1
+        aDimensionSizes[++dimensionCount] = -1;             //  Restarting it at -1
         finished = PR_FALSE;
       }
       else
@@ -1820,10 +1820,10 @@ static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* dim, nsAString 
       if (finished) {
         return -1;                 //  Numbers not allowed after white space
       }
-      if (dim[d] == -1)
-        dim[d] = 0;
-      if (dim[d] < 214748364) {
-        dim[d] = dim[d] * 10 + c - '0';
+      if (aDimensionSizes[dimensionCount] == -1)
+        aDimensionSizes[dimensionCount] = 0;
+      if (aDimensionSizes[dimensionCount] < 214748364) {
+        aDimensionSizes[dimensionCount] = aDimensionSizes[dimensionCount] * 10 + c - '0';
       }
       else {
         return -1;                 //  Number got too big.
@@ -1831,7 +1831,7 @@ static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* dim, nsAString 
     }
   }
   src.Left(dst, len);              //  Truncate the string.
-  return d + 1;                    //  Return the number of dimensions
+  return dimensionCount + 1;                    //  Return the number of dimensions
 }
 
 /**
@@ -1847,25 +1847,72 @@ static PRInt32 GetArrayDimensions(const nsAString& src, PRInt32* dim, nsAString 
  * within the string result in a return of -1, which is
  * bad wherever a position string was interpreted.
  */
-static PRInt32 GetArrayPosition(const nsAString& src, PRInt32 d, PRInt32* dim)
+static PRInt32 GetArrayPosition(const nsAString& src, PRInt32 aDimensionCount, PRInt32* aDimensionSizes)
 {
   PRInt32 pos[MAX_ARRAY_DIMENSIONS];
   nsAutoString leftover;
   PRInt32 result = GetArrayDimensions(src, pos, leftover);
-  if (result != d                //  Easy cases where something went wrong
+  if (result != aDimensionCount                //  Easy cases where something went wrong
     || !leftover.IsEmpty())
     return -1;
   result = 0;
   for (PRInt32 i = 0;;) {
     PRInt32 next = pos[i];
     if (next == -1
-      || next >= dim[i])
+      || next >= aDimensionSizes[i])
       return -1;
     result = result + next;
-    if (++i < d)                 //  Multiply for next round.
-      result = result * dim[i];
+    if (++i < aDimensionCount)                 //  Multiply for next round.
+      result = result * aDimensionSizes[i];
     else
       return result;
+  }
+}
+
+/**
+ * Expand the resulting array out into a nice pseudo-multi-dimensional
+ * array.  We trust that the caller guaranteed aDimensionCount >= 1 and that 
+ * the other sizes are reasonable (or they couldn't pass us a resultant 
+ * array).  * The result is produced recursively as:
+ * an array [of arrays [...]] of the specified type.  
+ * Variants are used to embed arrays inside of * arrays.
+ */
+static nsresult CreateArray(nsIWritableVariant* aResult, PRUint16 aType, const nsIID* aIID, 
+  PRInt32 aDimensionCount, PRInt32* aDimensionSizes, PRUint32 aSizeof, PRUint8* aArray)
+{
+  if (aDimensionCount > 1) {                  //  We cannot reuse variants because they are kept by resulting array
+    PRInt32 count = aDimensionSizes[0];
+    PRUint32 size = aSizeof / count;
+    PRInt32 i;
+    nsIVariant** a = new nsIVariant*[count];  //  Create variant array.
+
+    nsresult rc = NS_OK;
+
+    for (i = 0; i < count; i++) {
+      nsCOMPtr<nsIWritableVariant> v = do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
+      if (NS_FAILED(rc))
+        break;
+      nsresult rc = CreateArray(v, aType, aIID, aDimensionCount - 1, aDimensionSizes + 1,
+        size, aArray);
+      if (NS_FAILED(rc))
+        break;
+      NS_ADDREF(v);                          //  Addref for array reference
+      a[i] = v;
+      aArray += size;
+    }
+    if (!NS_FAILED(rc)) {
+      rc = aResult->SetAsArray(nsIDataType::VTYPE_INTERFACE,&NS_GET_IID(nsIVariant),count,a);
+    }
+    for (i = 0; i < count; i++) {            //  Release variants for array
+      nsIVariant* v = a[i];
+      if (v)
+        v->Release();
+    }
+    delete[] a;
+    return rc;
+  }
+  else {
+    return aResult->SetAsArray(aType,aIID,aDimensionSizes[0],aArray);
   }
 }
 
@@ -1881,20 +1928,20 @@ NS_IMETHODIMP
   nsAutoString name;
   nsCOMPtr < nsISchemaType > subtype;
   nsAutoString value;
-  PRInt32 d;                  //  Number of dimensions
-  PRInt32 dim[MAX_ARRAY_DIMENSIONS];
+  PRInt32 dimensionCount;                  //  Number of dimensions
+  PRInt32 dimensionSizes[MAX_ARRAY_DIMENSIONS];
   PRInt32 size = -1;
   nsresult rc;
   if (nsSOAPUtils::GetAttribute(aEncoding, aSource, *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
                                 kSOAPArrayTypeAttribute, value)) {
     nsAutoString dst;
-    d = GetArrayDimensions(value, dim, dst);
+    dimensionCount = GetArrayDimensions(value, dimensionSizes, dst);
     value.Assign(dst);
 
-    if (d > 0) {
+    if (dimensionCount > 0) {
       PRInt64 tot = 1;  //  Collect in 64 bits, just to make sure it fits
-      for (PRInt32 i = 0; i < d; i++) {
-        PRInt32 next = dim[i];
+      for (PRInt32 i = 0; i < dimensionCount; i++) {
+        PRInt32 next = dimensionSizes[i];
         if (next == -1) {
           tot = -1;
           break;
@@ -1932,28 +1979,28 @@ NS_IMETHODIMP
     PRInt32 pos[MAX_ARRAY_DIMENSIONS];
     nsAutoString leftover;
     offset = GetArrayDimensions(value, pos, leftover);
-    if (d == -1)
-      d = offset;
+    if (dimensionCount == -1)
+      dimensionCount = offset;
     if (offset == -1        //  We have to understand this or report an error
-        || offset != d      //  But the offset does not need to be understood
+        || offset != dimensionCount      //  But the offset does not need to be understood
         || !leftover.IsEmpty())
       return NS_ERROR_ILLEGAL_VALUE;
-    PRInt32 old0 = dim[0];
-    if (dim[0] == -1) {    //  It is OK to have a offset where dimension 0 is unspecified
-       dim[0] = 2147483647;
+    PRInt32 old0 = dimensionSizes[0];
+    if (dimensionSizes[0] == -1) {    //  It is OK to have a offset where dimension 0 is unspecified
+       dimensionSizes[0] = 2147483647;
     }
     offset  = 0;
     for (PRInt32 i = 0;;) {
       PRInt64 next = pos[i];
       if (next == -1
-        || next >= dim[i])
+        || next >= dimensionSizes[i])
         return NS_ERROR_ILLEGAL_VALUE;
       next = (offset + next);
       if (next > 2147483647)
         return NS_ERROR_ILLEGAL_VALUE;
       offset = (PRInt32)next;
-      if (++i < d) {
-        next = offset * dim[i];
+      if (++i < dimensionCount) {
+        next = offset * dimensionSizes[i];
         if (next > 2147483647)
           return NS_ERROR_ILLEGAL_VALUE;
         offset = (PRInt32)next;
@@ -1962,7 +2009,7 @@ NS_IMETHODIMP
         break;
       }
     }
-    dim[0] = old0;
+    dimensionSizes[0] = old0;
   }
   else {
     offset = 0;
@@ -1971,8 +2018,8 @@ NS_IMETHODIMP
     nsCOMPtr<nsIDOMElement> child;
     nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
     PRInt32 pp[MAX_ARRAY_DIMENSIONS];
-    if (d != -1) {
-      for (PRUint32 i = d; i-- != 0;) {
+    if (dimensionCount != -1) {
+      for (PRUint32 i = dimensionCount; i-- != 0;) {
         pp[i] = 0;
       }
     }
@@ -1987,16 +2034,16 @@ NS_IMETHODIMP
         PRInt32 i = GetArrayDimensions(pos, inc, leftover);
         if (i == -1        //  We have to understand this or report an error
             || !leftover.IsEmpty()
-            || (d != -1
-               && d != i))
+            || (dimensionCount != -1
+               && dimensionCount != i))
           return NS_ERROR_ILLEGAL_VALUE;
-        if (d == -1) {
-          d = i;             //  If we never had dimension count before, we do now.
-          for (PRUint32 i = d; i-- != 0;) {
+        if (dimensionCount == -1) {
+          dimensionCount = i;             //  If we never had dimension count before, we do now.
+          for (PRUint32 i = dimensionCount; i-- != 0;) {
             pp[i] = 0;
           }
         }
-        for (i = 0; i < d; i++) {
+        for (i = 0; i < dimensionCount; i++) {
           PRInt32 n = inc[i];
           if (n == -1) {  //  Positions must be concrete
             return NS_ERROR_ILLEGAL_VALUE;
@@ -2013,19 +2060,19 @@ NS_IMETHODIMP
       nsSOAPUtils::GetNextSiblingElement(child, getter_AddRefs(nextchild));
       child = nextchild;
     }
-    if (d == -1) {         //  If unknown or 1 dimension, unpositioned entries can help
-      d = 1;
+    if (dimensionCount == -1) {         //  If unknown or 1 dimension, unpositioned entries can help
+      dimensionCount = 1;
       pp[0] = next;
     }
-    else if (d == 1
+    else if (dimensionCount == 1
       && next > pp[0]) {
       pp[0] = next;
     }
     PRInt64 tot = 1;  //  Collect in 64 bits, just to make sure it fits
-    for (PRInt32 i = 0; i < d; i++) {
-      PRInt32 next = dim[i];
+    for (PRInt32 i = 0; i < dimensionCount; i++) {
+      PRInt32 next = dimensionSizes[i];
       if (next == -1) {          //  Only derive those with no other declaration
-        dim[i] = next = pp[i];
+        dimensionSizes[i] = next = pp[i];
       }
       tot = tot * next;
       if (tot > 2147483647) {
@@ -2051,7 +2098,7 @@ NS_IMETHODIMP
         PRInt32 p;\
         if (nsSOAPUtils::GetAttribute(aEncoding, aSource, *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],\
                                       kSOAPArrayPositionAttribute, pos)) {\
-          PRInt32 p = GetArrayPosition(pos, d, dim);\
+          PRInt32 p = GetArrayPosition(pos, dimensionCount, dimensionSizes);\
           if (p == -1) {\
             rc = NS_ERROR_ILLEGAL_VALUE;\
             break;\
@@ -2077,7 +2124,7 @@ NS_IMETHODIMP
         child = next;\
       }\
       if (!NS_FAILED(rc)) {\
-        rc = result->SetAsArray(nsIDataType::VTYPE_##VTYPE,iid,size,a);\
+        rc = CreateArray(result, nsIDataType::VTYPE_##VTYPE,iid,dimensionCount,dimensionSizes,sizeof(a[0])*size,(PRUint8*)a);\
       }\
       Free\
       delete[] a;\

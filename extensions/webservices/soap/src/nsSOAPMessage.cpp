@@ -444,15 +444,6 @@ NS_IMETHODIMP
     if (NS_FAILED(rv))
       return rv;
     body = call;
-    nsAutoString prefix;
-    rv = nsSOAPUtils::MakeNamespacePrefix(encoding, body, aTargetObjectURI, prefix);
-    if (NS_FAILED(rv))
-      return rv;
-    if (!prefix.IsEmpty()) {
-      rv = body->SetPrefix(prefix);
-      if (NS_FAILED(rv))
-        return rv;
-    }
   }
 //  Encode and add all of the parameters into the body
 
