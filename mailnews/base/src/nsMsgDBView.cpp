@@ -66,6 +66,7 @@
 #include "nsISpamSettings.h"
 #include "nsIMsgAccountManager.h"
 #include "nsITreeColumns.h"
+#include "nsTextFormatter.h"
 
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 
@@ -110,6 +111,8 @@ PRUnichar * nsMsgDBView::kReadString = nsnull;
 PRUnichar * nsMsgDBView::kRepliedString = nsnull;
 PRUnichar * nsMsgDBView::kForwardedString = nsnull;
 PRUnichar * nsMsgDBView::kNewString = nsnull;
+
+PRUnichar * nsMsgDBView::kKiloByteString = nsnull;
 
 nsDateFormatSelector  nsMsgDBView::m_dateFormatDefault = kDateFormatShort;
 nsDateFormatSelector  nsMsgDBView::m_dateFormatThisWeek = kDateFormatShort;
@@ -205,6 +208,8 @@ void nsMsgDBView::InitializeAtomsAndLiterals()
   kRepliedString = GetString(NS_LITERAL_STRING("replied").get());
   kForwardedString = GetString(NS_LITERAL_STRING("forwarded").get());
   kNewString = GetString(NS_LITERAL_STRING("new").get());
+  
+  kKiloByteString = GetString(NS_LITERAL_STRING("kiloByteAbbreviation").get());
 }
 
 nsMsgDBView::~nsMsgDBView()
@@ -255,6 +260,8 @@ nsMsgDBView::~nsMsgDBView()
     nsCRT::free(kRepliedString);
     nsCRT::free(kForwardedString);
     nsCRT::free(kNewString);
+
+    nsCRT::free(kKiloByteString);
   }
 }
 
@@ -711,13 +718,15 @@ nsresult nsMsgDBView::FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString)
     
     PRUint32 sizeInKB = msgSize/1024;
     
-    formattedSizeString.AppendInt(sizeInKB);
-    // XXX todo, fix this hard coded string?
-    formattedSizeString.AppendLiteral("KB");
+    // kKiloByteString is a localized string that we use to get the right
+    // format to add on the "KB" or equivalent
+    nsTextFormatter::ssprintf(formattedSizeString,
+                              kKiloByteString,
+                              sizeInKB);
   }
   
   *aSizeString = ToNewUnicode(formattedSizeString);
-  return NS_OK;
+  return (*aSizeString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult nsMsgDBView::FetchPriority(nsIMsgHdr *aHdr, PRUnichar ** aPriorityString)

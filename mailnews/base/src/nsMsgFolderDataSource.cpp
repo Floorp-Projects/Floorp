@@ -65,6 +65,10 @@
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsArray.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsTextFormatter.h"
+#include "nsIStringBundle.h"
+
+#define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
 
 nsIRDFResource* nsMsgFolderDataSource::kNC_Child = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Folder= nsnull;
@@ -134,6 +138,9 @@ nsIAtom * nsMsgFolderDataSource::kIsDeferredAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kCanFileMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kInVFEditSearchScopeAtom = nsnull;
 
+PRUnichar * nsMsgFolderDataSource::kKiloByteString = nsnull;
+PRUnichar * nsMsgFolderDataSource::kMegaByteString = nsnull;
+
 static const PRUint32 kDisplayBlankCount = 0xFFFFFFFE;
 static const PRUint32 kDisplayQuestionCount = 0xFFFFFFFF;
 
@@ -143,6 +150,9 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
   nsIRDFService* rdf = getRDFService();
   
   if (gFolderResourceRefCnt++ == 0) {
+    nsresult res = NS_OK;
+    nsCOMPtr<nsIStringBundle> sMessengerStringBundle;
+
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_CHILD),   &kNC_Child);
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_FOLDER),  &kNC_Folder);
     rdf->GetResource(NS_LITERAL_CSTRING(NC_RDF_NAME),    &kNC_Name);
@@ -208,6 +218,20 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     kIsDeferredAtom              = NS_NewAtom("isDeferred");
     kCanFileMessagesAtom         = NS_NewAtom("canFileMessages");
     kInVFEditSearchScopeAtom     = NS_NewAtom("inVFEditSearchScope");
+
+    nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res);
+
+    if (NS_SUCCEEDED(res) && sBundleService) 
+      res = sBundleService->CreateBundle(MESSENGER_STRING_URL, getter_AddRefs(sMessengerStringBundle));
+
+    if (NS_SUCCEEDED(res) && sMessengerStringBundle)
+    {
+      if (!NS_SUCCEEDED(sMessengerStringBundle->GetStringFromName(NS_LITERAL_STRING("kiloByteAbbreviation").get(), &kKiloByteString)))
+        kKiloByteString = ToNewUnicode(NS_LITERAL_STRING("kiloByteAbbreviation"));
+
+      if (!NS_SUCCEEDED(sMessengerStringBundle->GetStringFromName(NS_LITERAL_STRING("megaByteAbbreviation").get(), &kMegaByteString)))
+        kMegaByteString = ToNewUnicode(NS_LITERAL_STRING("megaByteAbbreviation"));
+    }
   }
   
   CreateLiterals(rdf);
@@ -282,7 +306,10 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE(kOpenAtom);
     NS_RELEASE(kIsDeferredAtom);
     NS_RELEASE(kCanFileMessagesAtom);
-    NS_RELEASE(kInVFEditSearchScopeAtom);    
+    NS_RELEASE(kInVFEditSearchScopeAtom);
+
+    nsMemory::Free(kKiloByteString);
+    nsMemory::Free(kMegaByteString);
   }
 }
 
@@ -1900,17 +1927,11 @@ nsMsgFolderDataSource::GetFolderSizeNode(PRInt32 aFolderSize, nsIRDFNode **aNode
       folderSize = 1024; // make at least 1 k;
     folderSize /= 1024;  // normalize into k;
     PRBool sizeInMB = (folderSize > 1024);
-    sizeString.AppendInt((sizeInMB) ? folderSize / 1024 : folderSize);
-    // On OS/2, we have an issue where temporaries get destructed in
-    // conditionals. Solution is to break it out
-    //
-    // XXX todo
-    // can we catch this problem at compile time?
-    // see #179234
-    if (sizeInMB)
-      sizeString.AppendLiteral(" MB");
-    else
-      sizeString.AppendLiteral(" KB");
+    // kKiloByteString/kMegaByteString are localized strings that we use
+    // to get the right format to add on the "KB"/"MB" or equivalent
+    nsTextFormatter::ssprintf(sizeString,
+                              (sizeInMB) ? kMegaByteString : kKiloByteString,
+                              (sizeInMB) ? folderSize / 1024 : folderSize);
     createNode(sizeString.get(), aNode, getRDFService());
   }
   return NS_OK;

@@ -290,6 +290,9 @@ protected:
   
   nsCOMPtr<nsISupportsArray> kFolderArcsOutArray;
 
+  static PRUnichar* kKiloByteString;
+  static PRUnichar* kMegaByteString;
+
 };
 
 
