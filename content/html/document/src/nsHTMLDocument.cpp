@@ -2180,9 +2180,8 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc,
 NS_IMETHODIMP    
 nsHTMLDocument::Clear(JSContext* cx, jsval* argv, PRUint32 argc)
 {
-  nsCOMPtr<nsIDOMDocument> doc;
-
-  return Open(cx, argv, argc, getter_AddRefs(doc));
+  // This method has been deprecated
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
