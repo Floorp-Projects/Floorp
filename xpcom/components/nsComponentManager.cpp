@@ -92,7 +92,7 @@ nsFactoryEntry::Init(nsHashtable* dllCollection,
     }
     cid = aClass;
   
-	nsProgIDKey key(aLibrary);
+    nsCStringKey key(aLibrary);
 
     // If dll not already in dllCollection, add it.
     // PR_EnterMonitor(mMon);
@@ -1006,7 +1006,7 @@ nsComponentManagerImpl::ProgIDToCLSID(const char *aProgID, nsCID *aClass)
 #define NS_NO_CID { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
     static NS_DEFINE_CID(kNoCID, NS_NO_CID);
 
-    nsProgIDKey key(aProgID);
+    nsCStringKey key(aProgID);
     nsCID* cid = (nsCID*) mProgIDs->Get(&key);
     if (cid) {
         if (cid == &kNoCID) {
@@ -1759,7 +1759,7 @@ nsComponentManagerImpl::SyncComponentsInFile(const char *fullname)
     }
 	
     // Check if dll is one that we have already seen
-	nsProgIDKey key(fullname);
+    nsCStringKey key(fullname);
     nsDll *dll = (nsDll *) mDllStore->Get(&key);
     nsresult rv = NS_OK;
     if (dll == NULL)

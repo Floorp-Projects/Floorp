@@ -108,6 +108,14 @@ nsHashtable::~nsHashtable() {
   PL_HashTableDestroy(hashtable);
 }
 
+PRBool nsHashtable::Exists(nsHashKey *aKey)
+{
+  PLHashNumber hash = aKey->HashValue();
+  PLHashEntry **hep = PL_HashTableRawLookup(hashtable, hash, (void *) aKey);
+
+  return *hep != NULL;
+}
+
 void *nsHashtable::Put(nsHashKey *aKey, void *aData) {
   void *res =  NULL;
   PLHashNumber hash = aKey->HashValue();
@@ -171,39 +179,6 @@ static PR_CALLBACK PRIntn _hashEnumerateRemove(PLHashEntry *he, PRIntn i, void *
 
 void nsHashtable::Reset() {
   PL_HashTableEnumerateEntries(hashtable, _hashEnumerateRemove, NULL);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-nsProgIDKey::nsProgIDKey(const char* aProgID)
-  : mProgID(mProgIDBuf)
-{
-  PRInt32 len = PL_strlen(aProgID);
-  if (len >= sizeof(mProgIDBuf)) {
-    mProgID = new char[PL_strlen(aProgID) + 1];
-    NS_ASSERTION(mProgID, "out of memory");
-    if (! mProgID)
-      return;
-  }
-
-  PL_strcpy(mProgID, aProgID);
-}
-
-nsProgIDKey::~nsProgIDKey(void) {
-  if (mProgID != mProgIDBuf)
-    delete[] mProgID;
-}
-
-PRUint32 nsProgIDKey::HashValue(void) const {
-  return (PRUint32) PL_HashString((const void*) mProgID);
-}
-
-PRBool nsProgIDKey::Equals(const nsHashKey* aKey) const {
-  return PL_strcmp( ((nsProgIDKey*)aKey)->mProgID, mProgID ) == 0;
-}
-
-nsHashKey* nsProgIDKey::Clone() const {
-  return new nsProgIDKey(mProgID);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
