@@ -146,7 +146,7 @@ LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib\
  odbccp32.lib /nologo /subsystem:windows /dll /incremental:no\
  /pdb:"$(OUTDIR)/js32.pdb" /machine:I386 /out:"$(OUTDIR)/js32.dll"\
- /implib:"$(OUTDIR)/js32.lib" 
+ /implib:"$(OUTDIR)/js32.lib" /opt:ref /opt:noicf
 LINK32_OBJS= \
 	"$(INTDIR)\jsapi.obj" \
 	"$(INTDIR)\jsarena.obj" \
