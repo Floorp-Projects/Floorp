@@ -123,7 +123,7 @@ nsHTMLEncoder::PrettyPrint(PRBool aYes)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
+nsresult
 NS_NewHTMLEncoder(nsIDocumentEncoder** aResult)
 {
   *aResult = new nsHTMLEncoder;
