@@ -1231,7 +1231,8 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     }    
     mEditor->SetFlags(flags);
   }
-  else if (nsHTMLAtoms::size == aAttribute && aHint != NS_STYLE_HINT_REFLOW) {
+  else if ((nsHTMLAtoms::size == aAttribute ||
+            nsHTMLAtoms::rows == aAttribute) && aHint != NS_STYLE_HINT_REFLOW) {
     nsFormFrame::StyleChangeReflow(aPresContext, this);
   }
   // Allow the base class to handle common attributes supported
