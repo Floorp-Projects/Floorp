@@ -701,6 +701,9 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
   NS_IF_RELEASE(mCurrentTargetContent);  
   nsresult ret = NS_OK;
 
+  NS_ASSERTION(mCurrentTarget, "mCurrentTarget is null");
+  if (!mCurrentTarget) return NS_ERROR_NULL_POINTER;
+
   nsFrameState state;
   mCurrentTarget->GetFrameState(&state);
   state |= NS_FRAME_EXTERNAL_REFERENCE;
