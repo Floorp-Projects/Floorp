@@ -47,7 +47,7 @@
   <binding id="searchbar" extends="chrome://global/content/bindings/textbox.xml#textbox">
     <content> 
       <children/>
-      <xul:hbox class="textbox-input-box" flex="1">
+      <xul:hbox class="quick-search-textbox textbox-input-box" flex="1">
         <html:input class="textbox-input" flex="1" anonid="input" allowevents="true"
                     xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       </xul:hbox>

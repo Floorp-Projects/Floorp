@@ -973,9 +973,9 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
 
 /* ..... tree adjustments ..... */
 
-.textbox-input-box
+.quick-search-textbox
 {
-  padding-top: 3px;
+  padding-top: 1px;
 }
 
 #accountCentralBox { 
