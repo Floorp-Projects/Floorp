@@ -1892,6 +1892,366 @@ EmitNumberOp(JSContext *cx, jsdouble dval, JSCodeGenerator *cg)
     return JS_TRUE;
 }
 
+#if JS_HAS_SWITCH_STATEMENT
+static JSBool
+EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
+           JSStmtInfo *stmtInfo)
+{
+    JSOp switchop;
+    JSBool ok, hasDefault;
+    ptrdiff_t top, off, defaultOffset;
+    JSParseNode *pn2, *pn3, *pn4;
+    uint32 ncases, tablen;
+    jsdouble d;
+    jsint i, low, high;
+    JSAtom *atom;
+    JSAtomListElement *ale;
+    intN noteIndex;
+    size_t switchsize, tablesize;
+    JSParseNode **table;
+    jsbytecode *pc;
+
+    /* Try for most optimal, fall back if not dense ints, and per ECMAv2. */
+    switchop = JSOP_TABLESWITCH;
+    ok = JS_TRUE;
+    hasDefault = JS_FALSE;
+    defaultOffset = -1;
+
+    /* Emit code for the discriminant first. */
+    if (!js_EmitTree(cx, cg, pn->pn_kid1))
+        return JS_FALSE;
+
+    /* Switch bytecodes run from here till end of final case. */
+    top = CG_OFFSET(cg);
+    js_PushStatement(&cg->treeContext, stmtInfo, STMT_SWITCH, top);
+
+    pn2 = pn->pn_kid2;
+    ncases = pn2->pn_count;
+    tablen = 0;
+
+    if (ncases == 0 ||
+        (ncases == 1 &&
+         (hasDefault = (pn2->pn_head->pn_type == TOK_DEFAULT)))) {
+        ncases = 0;
+        low = 0;
+        high = -1;
+    } else {
+#define INTMAP_LENGTH   256
+        jsbitmap intmap_space[INTMAP_LENGTH];
+        jsbitmap *intmap = NULL;
+        int32 intmap_bitlen = 0;
+
+        low  = JSVAL_INT_MAX;
+        high = JSVAL_INT_MIN;
+
+        for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+            if (pn3->pn_type == TOK_DEFAULT) {
+                hasDefault = JS_TRUE;
+                ncases--;   /* one of the "cases" was the default */
+                continue;
+            }
+
+            JS_ASSERT(pn3->pn_type == TOK_CASE);
+            if (switchop == JSOP_CONDSWITCH)
+                continue;
+
+            pn4 = pn3->pn_left;
+            switch (pn4->pn_type) {
+              case TOK_NUMBER:
+                d = pn4->pn_dval;
+                if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
+                    pn3->pn_val = INT_TO_JSVAL(i);
+                } else {
+                    atom = js_AtomizeDouble(cx, d, 0);
+                    if (!atom) {
+                        ok = JS_FALSE;
+                        goto release;
+                    }
+                    pn3->pn_val = ATOM_KEY(atom);
+                }
+                break;
+              case TOK_STRING:
+                pn3->pn_val = ATOM_KEY(pn4->pn_atom);
+                break;
+              case TOK_PRIMARY:
+                if (pn4->pn_op == JSOP_TRUE) {
+                    pn3->pn_val = JSVAL_TRUE;
+                    break;
+                }
+                if (pn4->pn_op == JSOP_FALSE) {
+                    pn3->pn_val = JSVAL_FALSE;
+                    break;
+                }
+                /* FALL THROUGH */
+              default:
+                switchop = JSOP_CONDSWITCH;
+                continue;
+            }
+
+            JS_ASSERT(JSVAL_IS_NUMBER(pn3->pn_val) ||
+                      JSVAL_IS_STRING(pn3->pn_val) ||
+                      JSVAL_IS_BOOLEAN(pn3->pn_val));
+
+            if (switchop != JSOP_TABLESWITCH)
+                continue;
+            if (!JSVAL_IS_INT(pn3->pn_val)) {
+                switchop = JSOP_LOOKUPSWITCH;
+                continue;
+            }
+            i = JSVAL_TO_INT(pn3->pn_val);
+            if ((jsuint)(i + (jsint)JS_BIT(15)) >= (jsuint)JS_BIT(16)) {
+                switchop = JSOP_LOOKUPSWITCH;
+                continue;
+            }
+            if (i < low)
+                low = i;
+            if (high < i)
+                high = i;
+
+            /*
+             * Check for duplicates, which require a JSOP_LOOKUPSWITCH.
+             * We bias i by 65536 if it's negative, and hope that's a rare
+             * case (because it requires a malloc'd bitmap).
+             */
+            if (i < 0)
+                i += JS_BIT(16);
+            if (i >= intmap_bitlen) {
+                if (!intmap &&
+                    i < (INTMAP_LENGTH << JS_BITS_PER_WORD_LOG2)) {
+                    intmap = intmap_space;
+                    intmap_bitlen = INTMAP_LENGTH << JS_BITS_PER_WORD_LOG2;
+                } else {
+                    /* Just grab 8K for the worst-case bitmap. */
+                    intmap_bitlen = JS_BIT(16);
+                    intmap = (jsbitmap *)
+                        JS_malloc(cx,
+                                  (JS_BIT(16) >> JS_BITS_PER_WORD_LOG2)
+                                  * sizeof(jsbitmap));
+                    if (!intmap) {
+                        JS_ReportOutOfMemory(cx);
+                        return JS_FALSE;
+                    }
+                }
+                memset(intmap, 0, intmap_bitlen >> JS_BITS_PER_BYTE_LOG2);
+            }
+            if (JS_TEST_BIT(intmap, i)) {
+                switchop = JSOP_LOOKUPSWITCH;
+                continue;
+            }
+            JS_SET_BIT(intmap, i);
+        }
+
+      release:
+        if (intmap && intmap != intmap_space)
+            JS_free(cx, intmap);
+        if (!ok)
+            return JS_FALSE;
+
+        /*
+         * Compute table length and select lookup instead if overlarge or
+         * more than half-sparse.
+         */
+        if (switchop == JSOP_TABLESWITCH) {
+            tablen = (uint32)(high - low + 1);
+            if (tablen >= JS_BIT(16) || tablen > 2 * ncases)
+                switchop = JSOP_LOOKUPSWITCH;
+        }
+    }
+
+    /*
+     * Emit a note with two offsets: first tells total switch code length,
+     * second tells offset to first JSOP_CASE if condswitch.
+     */
+    noteIndex = js_NewSrcNote3(cx, cg, SRC_SWITCH, 0, 0);
+    if (noteIndex < 0)
+        return JS_FALSE;
+
+    if (switchop == JSOP_CONDSWITCH) {
+        /*
+         * 0 bytes of immediate for unoptimized ECMAv2 switch.
+         */
+        switchsize = 0;
+    } else if (switchop == JSOP_TABLESWITCH) {
+        /*
+         * 3 offsets (len, low, high) before the table, 1 per entry.
+         */
+        switchsize = (size_t)(JUMP_OFFSET_LEN * (3 + tablen));
+    } else {
+        /*
+         * JSOP_LOOKUPSWITCH:
+         * 1 offset (len) and 1 atom index (npairs) before the table,
+         * 1 atom index and 1 jump offset per entry.
+         */
+        switchsize = (size_t)(JUMP_OFFSET_LEN + ATOM_INDEX_LEN +
+                              (ATOM_INDEX_LEN + JUMP_OFFSET_LEN) * ncases);
+    }
+
+    /*
+     * Emit switchop followed by switchsize bytes of jump or lookup table.
+     *
+     * If switchop is JSOP_LOOKUPSWITCH or JSOP_TABLESWITCH, it is crucial
+     * to emit the immediate operand(s) by which bytecode readers such as
+     * BuildSpanDepTable discover the length of the switch opcode *before*
+     * calling js_SetJumpOffset (which may call BuildSpanDepTable).  It's
+     * also important to zero all unknown jump offset immediate operands,
+     * so they can be converted to span dependencies with null targets to
+     * be computed later (js_EmitN zeros switchsize bytes after switchop).
+     */
+    if (js_EmitN(cx, cg, switchop, switchsize) < 0)
+        return JS_FALSE;
+
+    off = -1;
+    if (switchop == JSOP_CONDSWITCH) {
+        intN caseNoteIndex = -1;
+
+        /* Emit code for evaluating cases and jumping to case statements. */
+        for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+            pn4 = pn3->pn_left;
+            if (pn4 && !js_EmitTree(cx, cg, pn4))
+                return JS_FALSE;
+            if (caseNoteIndex >= 0) {
+                /* off is the previous JSOP_CASE's bytecode offset. */
+                if (!js_SetSrcNoteOffset(cx, cg, (uintN)caseNoteIndex, 0,
+                                         CG_OFFSET(cg) - off)) {
+                    return JS_FALSE;
+                }
+            }
+            if (pn3->pn_type == TOK_DEFAULT)
+                continue;
+            caseNoteIndex = js_NewSrcNote2(cx, cg, SRC_PCDELTA, 0);
+            if (caseNoteIndex < 0)
+                return JS_FALSE;
+            off = EmitJump(cx, cg, JSOP_CASE, 0);
+            if (off < 0)
+                return JS_FALSE;
+            pn3->pn_offset = off;
+            if (pn3 == pn2->pn_head) {
+                /* Switch note's second offset is to first JSOP_CASE. */
+                if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 1,
+                                         off - top)) {
+                    return JS_FALSE;
+                }
+            }
+        }
+
+        /* Emit default even if no explicit default statement. */
+        defaultOffset = EmitJump(cx, cg, JSOP_DEFAULT, 0);
+        if (defaultOffset < 0)
+            return JS_FALSE;
+    } else if (switchop == JSOP_TABLESWITCH) {
+        /* Fill in switch bounds, which we know fit in 16-bit offsets. */
+        pc = CG_CODE(cg, top + JUMP_OFFSET_LEN);
+        SET_JUMP_OFFSET(pc, low);
+        pc += JUMP_OFFSET_LEN;
+        SET_JUMP_OFFSET(pc, high);
+        pc += JUMP_OFFSET_LEN;
+    } else {
+        JS_ASSERT(switchop == JSOP_LOOKUPSWITCH);
+
+        /* Fill in the number of cases. */
+        pc = CG_CODE(cg, top + JUMP_OFFSET_LEN);
+        SET_ATOM_INDEX(pc, ncases);
+    }
+
+    /* Emit code for each case's statements, copying pn_offset up to pn3. */
+    for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+        if (switchop == JSOP_CONDSWITCH && pn3->pn_type != TOK_DEFAULT)
+            CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, pn3->pn_offset);
+        pn4 = pn3->pn_right;
+        if (!js_EmitTree(cx, cg, pn4))
+            return JS_FALSE;
+        pn3->pn_offset = pn4->pn_offset;
+        if (pn3->pn_type == TOK_DEFAULT)
+            off = pn3->pn_offset - top;
+    }
+
+    if (!hasDefault) {
+        /* If no default case, offset for default is to end of switch. */
+        off = CG_OFFSET(cg) - top;
+    }
+
+    /* We better have set "off" by now. */
+    JS_ASSERT(off != -1);
+
+    /* Set the default offset (to end of switch if no default). */
+    pc = NULL;
+    if (switchop == JSOP_CONDSWITCH) {
+        JS_ASSERT(defaultOffset != -1);
+        if (!js_SetJumpOffset(cx, cg, CG_CODE(cg, defaultOffset),
+                              off - (defaultOffset - top))) {
+            return JS_FALSE;
+        }
+    } else {
+        pc = CG_CODE(cg, top);
+        if (!js_SetJumpOffset(cx, cg, pc, off))
+            return JS_FALSE;
+        pc += JUMP_OFFSET_LEN;
+    }
+
+    /* Set the SRC_SWITCH note's offset operand to tell end of switch. */
+    off = CG_OFFSET(cg) - top;
+    if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, off))
+        return JS_FALSE;
+
+    if (switchop == JSOP_TABLESWITCH) {
+        /* Skip over the already-initialized switch bounds. */
+        pc += 2 * JUMP_OFFSET_LEN;
+
+        /* Fill in the jump table, if there is one. */
+        if (tablen) {
+            /* Avoid bloat for a compilation unit with many switches. */
+            tablesize = (size_t)tablen * sizeof *table;
+            table = (JSParseNode **) JS_malloc(cx, tablesize);
+            if (!table)
+                return JS_FALSE;
+            memset(table, 0, tablesize);
+            for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+                if (pn3->pn_type == TOK_DEFAULT)
+                    continue;
+                i = JSVAL_TO_INT(pn3->pn_val);
+                i -= low;
+                JS_ASSERT((uint32)i < tablen);
+                table[i] = pn3;
+            }
+            for (i = 0; i < (jsint)tablen; i++) {
+                pn3 = table[i];
+                off = pn3 ? pn3->pn_offset - top : 0;
+                ok = js_SetJumpOffset(cx, cg, pc, off);
+                if (!ok)
+                    break;
+                pc += JUMP_OFFSET_LEN;
+            }
+            JS_free(cx, table);
+            if (!ok)
+                return JS_FALSE;
+        }
+    } else if (switchop == JSOP_LOOKUPSWITCH) {
+        /* Skip over the already-initialized number of cases. */
+        pc += ATOM_INDEX_LEN;
+
+        for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
+            if (pn3->pn_type == TOK_DEFAULT)
+                continue;
+            atom = js_AtomizeValue(cx, pn3->pn_val, 0);
+            if (!atom)
+                return JS_FALSE;
+            ale = js_IndexAtom(cx, atom, &cg->atomList);
+            if (!ale)
+                return JS_FALSE;
+            SET_ATOM_INDEX(pc, ALE_INDEX(ale));
+            pc += ATOM_INDEX_LEN;
+
+            off = pn3->pn_offset - top;
+            if (!js_SetJumpOffset(cx, cg, pc, off))
+                return JS_FALSE;
+            pc += JUMP_OFFSET_LEN;
+        }
+    }
+
+    return js_PopStatementCG(cx, cg);
+}
+#endif /* JS_HAS_SWITCH_STATEMENT */
+
 JSBool
 js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
                     JSFunction *fun)
@@ -1970,7 +2330,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     JSBool ok, useful, wantval;
     JSStmtInfo *stmt, stmtInfo;
     ptrdiff_t top, off, tmp, beq, jmp;
-    JSParseNode *pn2, *pn3, *pn4;
+    JSParseNode *pn2, *pn3;
     JSAtom *atom;
     JSAtomListElement *ale;
     jsatomid atomIndex;
@@ -1979,6 +2339,12 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     jsbytecode *pc;
     JSOp op;
     uint32 argc;
+    int stackDummy;
+
+    if (!JS_CHECK_STACK_SIZE(cx, stackDummy)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
+        return JS_FALSE;
+    }
 
     ok = JS_TRUE;
     cg->emitLevel++;
@@ -2198,352 +2564,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #if JS_HAS_SWITCH_STATEMENT
       case TOK_SWITCH:
-      {
-        JSOp switchop;
-        uint32 ncases, tablen = 0;
-        jsint i, low, high;
-        jsdouble d;
-        size_t switchsize, tablesize;
-        JSParseNode **table;
-        JSBool hasDefault = JS_FALSE;
-        ptrdiff_t defaultOffset = -1;
-
-        /* Try for most optimal, fall back if not dense ints, and per ECMAv2. */
-        switchop = JSOP_TABLESWITCH;
-
-        /* Emit code for the discriminant first. */
-        if (!js_EmitTree(cx, cg, pn->pn_kid1))
-            return JS_FALSE;
-
-        /* Switch bytecodes run from here till end of final case. */
-        top = CG_OFFSET(cg);
-        js_PushStatement(&cg->treeContext, &stmtInfo, STMT_SWITCH, top);
-
-        pn2 = pn->pn_kid2;
-        ncases = pn2->pn_count;
-
-        if (ncases == 0 ||
-            (ncases == 1 &&
-             (hasDefault = (pn2->pn_head->pn_type == TOK_DEFAULT)))) {
-            ncases = 0;
-            low = 0;
-            high = -1;
-        } else {
-#define INTMAP_LENGTH   256
-            jsbitmap intmap_space[INTMAP_LENGTH];
-            jsbitmap *intmap = NULL;
-            int32 intmap_bitlen = 0;
-
-            low  = JSVAL_INT_MAX;
-            high = JSVAL_INT_MIN;
-
-            for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
-                if (pn3->pn_type == TOK_DEFAULT) {
-                    hasDefault = JS_TRUE;
-                    ncases--;   /* one of the "cases" was the default */
-                    continue;
-                }
-
-                JS_ASSERT(pn3->pn_type == TOK_CASE);
-                if (switchop == JSOP_CONDSWITCH)
-                    continue;
-
-                pn4 = pn3->pn_left;
-                switch (pn4->pn_type) {
-                  case TOK_NUMBER:
-                    d = pn4->pn_dval;
-                    if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
-                        pn3->pn_val = INT_TO_JSVAL(i);
-                    } else {
-                        atom = js_AtomizeDouble(cx, d, 0);
-                        if (!atom) {
-                            ok = JS_FALSE;
-                            goto release;
-                        }
-                        pn3->pn_val = ATOM_KEY(atom);
-                    }
-                    break;
-                  case TOK_STRING:
-                    pn3->pn_val = ATOM_KEY(pn4->pn_atom);
-                    break;
-                  case TOK_PRIMARY:
-                    if (pn4->pn_op == JSOP_TRUE) {
-                        pn3->pn_val = JSVAL_TRUE;
-                        break;
-                    }
-                    if (pn4->pn_op == JSOP_FALSE) {
-                        pn3->pn_val = JSVAL_FALSE;
-                        break;
-                    }
-                    /* FALL THROUGH */
-                  default:
-                    switchop = JSOP_CONDSWITCH;
-                    continue;
-                }
-
-                JS_ASSERT(JSVAL_IS_NUMBER(pn3->pn_val) ||
-                          JSVAL_IS_STRING(pn3->pn_val) ||
-                          JSVAL_IS_BOOLEAN(pn3->pn_val));
-
-                if (switchop != JSOP_TABLESWITCH)
-                    continue;
-                if (!JSVAL_IS_INT(pn3->pn_val)) {
-                    switchop = JSOP_LOOKUPSWITCH;
-                    continue;
-                }
-                i = JSVAL_TO_INT(pn3->pn_val);
-                if ((jsuint)(i + (jsint)JS_BIT(15)) >= (jsuint)JS_BIT(16)) {
-                    switchop = JSOP_LOOKUPSWITCH;
-                    continue;
-                }
-                if (i < low)
-                    low = i;
-                if (high < i)
-                    high = i;
-
-                /*
-                 * Check for duplicates, which require a JSOP_LOOKUPSWITCH.
-                 * We bias i by 65536 if it's negative, and hope that's a rare
-                 * case (because it requires a malloc'd bitmap).
-                 */
-                if (i < 0)
-                    i += JS_BIT(16);
-                if (i >= intmap_bitlen) {
-                    if (!intmap &&
-                        i < (INTMAP_LENGTH << JS_BITS_PER_WORD_LOG2)) {
-                        intmap = intmap_space;
-                        intmap_bitlen = INTMAP_LENGTH << JS_BITS_PER_WORD_LOG2;
-                    } else {
-                        /* Just grab 8K for the worst-case bitmap. */
-                        intmap_bitlen = JS_BIT(16);
-                        intmap = (jsbitmap *)
-                            JS_malloc(cx,
-                                      (JS_BIT(16) >> JS_BITS_PER_WORD_LOG2)
-                                      * sizeof(jsbitmap));
-                        if (!intmap) {
-                            JS_ReportOutOfMemory(cx);
-                            return JS_FALSE;
-                        }
-                    }
-                    memset(intmap, 0, intmap_bitlen >> JS_BITS_PER_BYTE_LOG2);
-                }
-                if (JS_TEST_BIT(intmap, i)) {
-                    switchop = JSOP_LOOKUPSWITCH;
-                    continue;
-                }
-                JS_SET_BIT(intmap, i);
-            }
-
-          release:
-            if (intmap && intmap != intmap_space)
-                JS_free(cx, intmap);
-            if (!ok)
-                return JS_FALSE;
-
-            /*
-             * Compute table length and select lookup instead if overlarge or
-             * more than half-sparse.
-             */
-            if (switchop == JSOP_TABLESWITCH) {
-                tablen = (uint32)(high - low + 1);
-                if (tablen >= JS_BIT(16) || tablen > 2 * ncases)
-                    switchop = JSOP_LOOKUPSWITCH;
-            }
-        }
-
-        /*
-         * Emit a note with two offsets: first tells total switch code length,
-         * second tells offset to first JSOP_CASE if condswitch.
-         */
-        noteIndex = js_NewSrcNote3(cx, cg, SRC_SWITCH, 0, 0);
-        if (noteIndex < 0)
-            return JS_FALSE;
-
-        if (switchop == JSOP_CONDSWITCH) {
-            /*
-             * 0 bytes of immediate for unoptimized ECMAv2 switch.
-             */
-            switchsize = 0;
-        } else if (switchop == JSOP_TABLESWITCH) {
-            /*
-             * 3 offsets (len, low, high) before the table, 1 per entry.
-             */
-            switchsize = (size_t)(JUMP_OFFSET_LEN * (3 + tablen));
-        } else {
-            /*
-             * JSOP_LOOKUPSWITCH:
-             * 1 offset (len) and 1 atom index (npairs) before the table,
-             * 1 atom index and 1 jump offset per entry.
-             */
-            switchsize = (size_t)(JUMP_OFFSET_LEN + ATOM_INDEX_LEN +
-                                  (ATOM_INDEX_LEN + JUMP_OFFSET_LEN) * ncases);
-        }
-
-        /*
-         * Emit switchop followed by switchsize bytes of jump or lookup table.
-         *
-         * If switchop is JSOP_LOOKUPSWITCH or JSOP_TABLESWITCH, it is crucial
-         * to emit the immediate operand(s) by which bytecode readers such as
-         * BuildSpanDepTable discover the length of the switch opcode *before*
-         * calling js_SetJumpOffset (which may call BuildSpanDepTable).  It's
-         * also important to zero all unknown jump offset immediate operands,
-         * so they can be converted to span dependencies with null targets to
-         * be computed later (js_EmitN zeros switchsize bytes after switchop).
-         */
-        if (js_EmitN(cx, cg, switchop, switchsize) < 0)
-            return JS_FALSE;
-
-        off = -1;
-        if (switchop == JSOP_CONDSWITCH) {
-            intN caseNoteIndex = -1;
-
-            /* Emit code for evaluating cases and jumping to case statements. */
-            for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
-                pn4 = pn3->pn_left;
-                if (pn4 && !js_EmitTree(cx, cg, pn4))
-                    return JS_FALSE;
-                if (caseNoteIndex >= 0) {
-                    /* off is the previous JSOP_CASE's bytecode offset. */
-                    if (!js_SetSrcNoteOffset(cx, cg, (uintN)caseNoteIndex, 0,
-                                             CG_OFFSET(cg) - off)) {
-                        return JS_FALSE;
-                    }
-                }
-                if (pn3->pn_type == TOK_DEFAULT)
-                    continue;
-                caseNoteIndex = js_NewSrcNote2(cx, cg, SRC_PCDELTA, 0);
-                if (caseNoteIndex < 0)
-                    return JS_FALSE;
-                off = EmitJump(cx, cg, JSOP_CASE, 0);
-                if (off < 0)
-                    return JS_FALSE;
-                pn3->pn_offset = off;
-                if (pn3 == pn2->pn_head) {
-                    /* Switch note's second offset is to first JSOP_CASE. */
-                    if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 1,
-                                             off - top)) {
-                        return JS_FALSE;
-                    }
-                }
-            }
-
-            /* Emit default even if no explicit default statement. */
-            defaultOffset = EmitJump(cx, cg, JSOP_DEFAULT, 0);
-            if (defaultOffset < 0)
-                return JS_FALSE;
-        } else if (switchop == JSOP_TABLESWITCH) {
-            /* Fill in switch bounds, which we know fit in 16-bit offsets. */
-            pc = CG_CODE(cg, top + JUMP_OFFSET_LEN);
-            SET_JUMP_OFFSET(pc, low);
-            pc += JUMP_OFFSET_LEN;
-            SET_JUMP_OFFSET(pc, high);
-            pc += JUMP_OFFSET_LEN;
-        } else {
-            JS_ASSERT(switchop == JSOP_LOOKUPSWITCH);
-
-            /* Fill in the number of cases. */
-            pc = CG_CODE(cg, top + JUMP_OFFSET_LEN);
-            SET_ATOM_INDEX(pc, ncases);
-        }
-
-        /* Emit code for each case's statements, copying pn_offset up to pn3. */
-        for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
-            if (switchop == JSOP_CONDSWITCH && pn3->pn_type != TOK_DEFAULT)
-                CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, pn3->pn_offset);
-            pn4 = pn3->pn_right;
-            if (!js_EmitTree(cx, cg, pn4))
-                return JS_FALSE;
-            pn3->pn_offset = pn4->pn_offset;
-            if (pn3->pn_type == TOK_DEFAULT)
-                off = pn3->pn_offset - top;
-        }
-
-        if (!hasDefault) {
-            /* If no default case, offset for default is to end of switch. */
-            off = CG_OFFSET(cg) - top;
-        }
-
-        /* We better have set "off" by now. */
-        JS_ASSERT(off != -1);
-
-        /* Set the default offset (to end of switch if no default). */
-        pc = NULL;
-        if (switchop == JSOP_CONDSWITCH) {
-            JS_ASSERT(defaultOffset != -1);
-            if (!js_SetJumpOffset(cx, cg, CG_CODE(cg, defaultOffset),
-                                  off - (defaultOffset - top))) {
-                return JS_FALSE;
-            }
-        } else {
-            pc = CG_CODE(cg, top);
-            if (!js_SetJumpOffset(cx, cg, pc, off))
-                return JS_FALSE;
-            pc += JUMP_OFFSET_LEN;
-        }
-
-        /* Set the SRC_SWITCH note's offset operand to tell end of switch. */
-        off = CG_OFFSET(cg) - top;
-        if (!js_SetSrcNoteOffset(cx, cg, (uintN)noteIndex, 0, off))
-            return JS_FALSE;
-
-        if (switchop == JSOP_TABLESWITCH) {
-            /* Skip over the already-initialized switch bounds. */
-            pc += 2 * JUMP_OFFSET_LEN;
-
-            /* Fill in the jump table, if there is one. */
-            if (tablen) {
-                /* Avoid bloat for a compilation unit with many switches. */
-                tablesize = (size_t)tablen * sizeof *table;
-                table = (JSParseNode **) JS_malloc(cx, tablesize);
-                if (!table)
-                    return JS_FALSE;
-                memset(table, 0, tablesize);
-                for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
-                    if (pn3->pn_type == TOK_DEFAULT)
-                        continue;
-                    i = JSVAL_TO_INT(pn3->pn_val);
-                    i -= low;
-                    JS_ASSERT((uint32)i < tablen);
-                    table[i] = pn3;
-                }
-                for (i = 0; i < (jsint)tablen; i++) {
-                    pn3 = table[i];
-                    off = pn3 ? pn3->pn_offset - top : 0;
-                    ok = js_SetJumpOffset(cx, cg, pc, off);
-                    if (!ok)
-                        break;
-                    pc += JUMP_OFFSET_LEN;
-                }
-                JS_free(cx, table);
-                if (!ok)
-                    return JS_FALSE;
-            }
-        } else if (switchop == JSOP_LOOKUPSWITCH) {
-            /* Skip over the already-initialized number of cases. */
-            pc += ATOM_INDEX_LEN;
-
-            for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
-                if (pn3->pn_type == TOK_DEFAULT)
-                    continue;
-                atom = js_AtomizeValue(cx, pn3->pn_val, 0);
-                if (!atom)
-                    return JS_FALSE;
-                ale = js_IndexAtom(cx, atom, &cg->atomList);
-                if (!ale)
-                    return JS_FALSE;
-                SET_ATOM_INDEX(pc, ALE_INDEX(ale));
-                pc += ATOM_INDEX_LEN;
-
-                off = pn3->pn_offset - top;
-                if (!js_SetJumpOffset(cx, cg, pc, off))
-                    return JS_FALSE;
-                pc += JUMP_OFFSET_LEN;
-            }
-        }
-
-        ok = js_PopStatementCG(cx, cg);
+        /* Out of line to avoid bloating js_EmitTree's stack frame size. */
+        ok = EmitSwitch(cx, cg, pn, &stmtInfo);
         break;
-      }
 #endif /* JS_HAS_SWITCH_STATEMENT */
 
       case TOK_WHILE:
@@ -2609,6 +2632,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         js_PushStatement(&cg->treeContext, &stmtInfo, STMT_FOR_LOOP, top);
 
         if (pn2->pn_type == TOK_IN) {
+            /* Set stmtInfo type for later testing. */
+            stmtInfo.type = STMT_FOR_IN_LOOP;
+            noteIndex = -1;
+
             /* If the left part is var x = i, bind x, evaluate i, and pop. */
             pn3 = pn2->pn_left;
             if (pn3->pn_type == TOK_VAR && pn3->pn_head->pn_expr) {
@@ -2619,9 +2646,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 JS_ASSERT(pn3->pn_type == TOK_NAME);
             }
 
-            /* Fix stmtInfo and emit a push to allocate the iterator. */
-            stmtInfo.type = STMT_FOR_IN_LOOP;
-            noteIndex = -1;
+            /* Emit a push to allocate the iterator. */
             if (js_Emit1(cx, cg, JSOP_PUSH) < 0)
                 return JS_FALSE;
 
@@ -2675,7 +2700,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 /*
                  * Emit a SRC_WHILE note with offset telling the distance to
                  * the loop-closing jump (we can't reckon from the branch at
-                 * the top of the loop, because the loop-closing jump might be
+                 * the top of the loop, because the loop-closing jump might
                  * need to be an extended jump, independent of whether the
                  * branch is short or long).
                  */
@@ -4282,7 +4307,6 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
 }
 
 #ifdef DEBUG_brendan
-#include <math.h>
 #define NBINS 10
 static uint32 hist[NBINS];
 
