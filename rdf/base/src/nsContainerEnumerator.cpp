@@ -146,26 +146,38 @@ ContainerEnumeratorImpl::HasMoreElements(PRBool* aResult)
 
     // Otherwise, we need to grovel
 
-    // Figure out the upper bound so we'll know when we're done.
-    nsCOMPtr<nsIRDFNode> nextValNode;
-    rv = mDataSource->GetTarget(mContainer, kRDF_nextVal, PR_TRUE, getter_AddRefs(nextValNode));
+    // Figure out the upper bound so we'll know when we're done. Since it's
+    // possible that we're targeting a composite datasource, we'll need to
+    // "GetTargets()" and take the maximum value of "nextVal" to know the
+    // upper bound.
+    PRInt32 count = 0;
+
+    nsCOMPtr<nsISimpleEnumerator> targets;
+    rv = mDataSource->GetTargets(mContainer, kRDF_nextVal, PR_TRUE, getter_AddRefs(targets));
     if (NS_FAILED(rv)) return rv;
 
-    if (rv != NS_OK)
-        return NS_ERROR_UNEXPECTED;
+    while (1) {
+        PRBool hasmore;
+        targets->HasMoreElements(&hasmore);
+        if (! hasmore)
+            break;
 
-    nsCOMPtr<nsIRDFLiteral> nextVal = do_QueryInterface(nextValNode);
-    if (! nextVal)
-        return NS_ERROR_UNEXPECTED;
+        nsCOMPtr<nsISupports> isupports;
+        targets->GetNext(getter_AddRefs(isupports));
 
-    nsXPIDLString nextValStr;
-    rv = nextVal->GetValue(getter_Copies(nextValStr));
-    if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIRDFLiteral> nextValLiteral = do_QueryInterface(isupports);
+        if (! nextValLiteral)
+             continue;
 
-    PRInt32 err;
-    PRInt32 count = nsAutoString(nextValStr).ToInteger(&err);
-    if (NS_FAILED(err))
-        return NS_ERROR_UNEXPECTED;
+         nsXPIDLString nextValStr;
+         nextValLiteral->GetValue(getter_Copies(nextValStr));
+
+         PRInt32 err;
+         PRInt32 nextVal = nsAutoString(nextValStr).ToInteger(&err);
+
+         if (nextVal > count)
+             count = nextVal;
+    }
 
     // Now iterate through each index.
     while (mNextIndex < count) {

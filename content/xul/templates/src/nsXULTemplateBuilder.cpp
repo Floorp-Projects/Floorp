@@ -4457,15 +4457,27 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
             nsCOMPtr<nsIContent> tmpl;
             bestmatch->mRule->GetContent(getter_AddRefs(tmpl));
 
-            BuildContentFromTemplate(tmpl, content, content, PR_TRUE,
-                                     VALUE_TO_IRDFRESOURCE(key->mMemberValue),
-                                     PR_TRUE, bestmatch, nsnull, nsnull);
+            PRBool contentsGenerated = PR_TRUE;
+            nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(content);
+            if (xulcontent)
+                xulcontent->GetLazyState(nsIXULContent::eContainerContentsBuilt, contentsGenerated);
+
+            if (contentsGenerated) {
+                BuildContentFromTemplate(tmpl, content, content, PR_TRUE,
+                                         VALUE_TO_IRDFRESOURCE(key->mMemberValue),
+                                         PR_TRUE, bestmatch, nsnull, nsnull);
+
+                // Remember the best match as the new "last" match
+                matches->SetLastMatch(bestmatch);
+            }
+            else {
+                // If we don't build the content, then pretend we
+                // never saw this match.
+                matches->Remove(bestmatch);
+            }
 
             // Update the 'empty' attribute
             SetContainerAttrs(content, bestmatch);
-
-            // Remember the best match as the new "last" match
-            matches->SetLastMatch(bestmatch);
         }
     }
 
