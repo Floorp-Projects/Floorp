@@ -1672,7 +1672,7 @@ nsresult	GetBookmarkToPing(nsIRDFResource **theBookmark);
 	nsresult insertBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex, nsIRDFResource *objType);
 	nsresult deleteBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex, nsIRDFResource *objType);
 	nsresult setFolderHint(nsIRDFResource *src, nsIRDFResource *objType);
-	nsresult getFolderViaHint(nsIRDFResource *src, nsIRDFResource **folder);
+	nsresult getFolderViaHint(nsIRDFResource *src, PRBool fallbackFlag, nsIRDFResource **folder);
 
 	nsresult getResourceFromLiteralNode(nsIRDFNode *node, nsIRDFResource **res);
 
@@ -2760,7 +2760,7 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	}
 
 	nsCOMPtr<nsIRDFResource>	newBookmarkFolder;
-	if (NS_FAILED(rv = getFolderViaHint(bookmarkType,
+	if (NS_FAILED(rv = getFolderViaHint(bookmarkType, PR_TRUE,
 			getter_AddRefs(newBookmarkFolder))))
 		return(rv);
 
@@ -3419,9 +3419,9 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
 	if (isBookmarkFolder)
 	{
 		nsCOMPtr<nsIRDFResource>	newBookmarkFolder, personalToolbarFolder, newSearchFolder;
-		getFolderViaHint(kNC_NewBookmarkFolder, getter_AddRefs(newBookmarkFolder));
-		getFolderViaHint(kNC_PersonalToolbarFolder, getter_AddRefs(personalToolbarFolder));
-		getFolderViaHint(kNC_NewSearchFolder, getter_AddRefs(newSearchFolder));
+		getFolderViaHint(kNC_NewBookmarkFolder, PR_FALSE, getter_AddRefs(newBookmarkFolder));
+		getFolderViaHint(kNC_PersonalToolbarFolder, PR_FALSE, getter_AddRefs(personalToolbarFolder));
+		getFolderViaHint(kNC_NewSearchFolder, PR_FALSE, getter_AddRefs(newSearchFolder));
 
 		cmdArray->AppendElement(kNC_BookmarkSeparator);
 		if (source != newBookmarkFolder.get())		cmdArray->AppendElement(kNC_BookmarkCommand_SetNewBookmarkFolder);
@@ -3711,7 +3711,7 @@ nsBookmarksService::setFolderHint(nsIRDFResource *newSource, nsIRDFResource *obj
 
 
 nsresult
-nsBookmarksService::getFolderViaHint(nsIRDFResource *objType, nsIRDFResource **folder)
+nsBookmarksService::getFolderViaHint(nsIRDFResource *objType, PRBool fallbackFlag, nsIRDFResource **folder)
 {
 	if (!folder)	return(NS_ERROR_UNEXPECTED);
 	*folder = nsnull;
@@ -3739,16 +3739,22 @@ nsBookmarksService::getFolderViaHint(nsIRDFResource *objType, nsIRDFResource **f
 
 	// if we couldn't find a real "New Internet Search Folder", fallback to looking for
 	// a "New Bookmark Folder", and if can't find that, then default to the bookmarks root
-	if ((!(*folder)) && (objType == kNC_NewSearchFolder))
+	if ((!(*folder)) && (fallbackFlag == PR_TRUE) && (objType == kNC_NewSearchFolder))
 	{
-		rv = getFolderViaHint(kNC_NewBookmarkFolder, folder);
+		rv = getFolderViaHint(kNC_NewBookmarkFolder, fallbackFlag, folder);
 	}
 
 	if (!(*folder))
 	{
 		// fallback to some well-known defaults
-		if (objType == kNC_NewBookmarkFolder)		*folder = kNC_BookmarksRoot;
-		else if (objType == kNC_PersonalToolbarFolder)	*folder = kNC_PersonalToolbarFolder;
+		if (objType == kNC_NewBookmarkFolder || objType == kNC_NewSearchFolder)
+		{
+			*folder = kNC_BookmarksRoot;
+		}
+		else if (objType == kNC_PersonalToolbarFolder)
+		{
+			*folder = kNC_PersonalToolbarFolder;
+		}
 	}
 
 	NS_IF_ADDREF(*folder);
