@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= config build
+DIRS		= dbm config build
 
 #
 ifdef MOZ_L10N
@@ -89,7 +89,11 @@ DIRS		+= \
 		$(NULL)
 
 ifdef MOZ_BUILD_XPFE
-DIRS		+= xpfe extensions
+DIRS		+= xpfe
+endif
+
+ifdef MOZ_EXTENSIONS
+DIRS		+= extensions
 endif
 
 ifdef MOZ_MAIL_NEWS
