@@ -76,7 +76,7 @@ PRE_Fetch(MWContext* context)
 /*	Returns bool to indicate if its OK to prefetch the specified URL.
 	we don't prefetch mailto:, file:, etc. 
 */
-PRIVATE Bool
+MODULE_PRIVATE Bool
 pre_OKToPrefetch(char* url)
 {
 	int type;
@@ -101,7 +101,7 @@ pre_OKToPrefetch(char* url)
 	return FALSE;
 }
 
-PRIVATE void
+MODULE_PRIVATE void
 pre_Finished(URL_Struct* url_struct, int status, MWContext* context)
 {
 	/* this should change to update the colors of 
