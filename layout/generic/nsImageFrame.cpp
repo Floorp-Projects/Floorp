@@ -1263,8 +1263,16 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
       return NS_OK;
 
 
-    // First paint background and borders
-    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    // First paint background and borders, which should be in the
+    // FOREGROUND or BACKGROUND paint layer if the element is
+    // inline-level or block-level, respectively.  (See CSS2 9.5, which
+    // is the rationale for paint layers.)
+    const nsStyleDisplay *display;
+    ::GetStyleData(NS_STATIC_CAST(nsIStyleContext*, mStyleContext), &display);
+    nsFramePaintLayer backgroundLayer = display->IsBlockLevel()
+                                            ? NS_FRAME_PAINT_LAYER_BACKGROUND
+                                            : NS_FRAME_PAINT_LAYER_FOREGROUND;
+    if (aWhichLayer == backgroundLayer) {
       const nsStyleVisibility* vis = 
         (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
       if (vis->IsVisibleOrCollapsed()) {
