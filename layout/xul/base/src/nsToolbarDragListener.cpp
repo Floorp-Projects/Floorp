@@ -490,6 +490,7 @@ nsToolbarDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
                   delete [] buf;
                 }
               }
+              delete [] toolbarItemMime;
             }
           } // foreach drag item
 
