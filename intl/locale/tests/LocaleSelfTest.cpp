@@ -163,7 +163,8 @@ static void TestCollation()
       cout << "case sensitive comparison (string1 vs string2): " << result << "\n";
 
 #ifdef WIN32
-      NS_ASSERTION(result == TestCompare_wcscmp(string1, string2), "WIN32 the result did not match with wcscmp().");
+// always asserts because WinAPI compare 'a' < 'A' whild wcscmp result is 'a' > 'A'
+//      NS_ASSERTION(result == TestCompare_wcscmp(string1, string2), "WIN32 the result did not match with wcscmp().");
 #endif //WIN32
 
       cout << "Test 3 - GetSortKeyLen():\n";
@@ -279,12 +280,7 @@ static nsICollation *g_collationInst = NULL;
 static void TestSortPrint1(nsString *string_array, int len)
 {
   for (int i = 0; i < len; i++) {
-    for (int j = 0; j < string_array[i].Length(); j++) {
-      if (string_array[i][j]) {
-        cout << (char) string_array[i].CharAt(j);  // cast to char
-      }
-    }
-    cout << "\n";
+    string_array[i].DebugDump(cout);
   }
   cout << "\n";
 }
@@ -333,9 +329,9 @@ static void TestSortPrint2(collation_rec *key_array, int len)
     aLength = key_array[i].aLength;
     aKey = key_array[i].aKey;
     for (int j = 0; j < (int)aLength; j++) {
-      if (aKey[j]) {
-        cout << (char) aKey[j];	  // cast to char
-      }
+      char str[8];
+      sprintf(str, "%0.2x ", aKey[j]);
+      cout << str;
     }
     cout << "\n";
   }
@@ -351,11 +347,11 @@ static void TestSort()
   PRUint8 *aKey;
   PRUint32 aLength;
   nsString locale("en-US");
-  nsString string1("abc");
+  nsString string1("AAC");
   nsString string2("aac");
   nsString string3("xyz");
   nsString string4("abb");
-  nsString string5("acc");
+  nsString string5("aacA");
   nsString string_array[5];
 
   cout << "==============================\n";
@@ -403,26 +399,34 @@ static void TestSort()
   cout << "Sort Test by collation key.\n";
   cout << "==============================\n";
 
+  res = CreateCollationKey(collationInst, kCollationCaseSensitive, string1, &aKey, &aLength);
+  if(NS_FAILED(res)) {
+    cout << "\tFailed!! return value != NS_OK\n";
+  }
   key_array[0].aKey = aKey;
   key_array[0].aLength = aLength;
+
   res = CreateCollationKey(collationInst, kCollationCaseSensitive, string2, &aKey, &aLength);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
   }
   key_array[1].aKey = aKey;
   key_array[1].aLength = aLength;
+
   res = CreateCollationKey(collationInst, kCollationCaseSensitive, string3, &aKey, &aLength);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
   }
   key_array[2].aKey = aKey;
   key_array[2].aLength = aLength;
+
   res = CreateCollationKey(collationInst, kCollationCaseSensitive, string4, &aKey, &aLength);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
   }
   key_array[3].aKey = aKey;
   key_array[3].aLength = aLength;
+
   res = CreateCollationKey(collationInst, kCollationCaseSensitive, string5, &aKey, &aLength);
   if(NS_FAILED(res)) {
     cout << "\tFailed!! return value != NS_OK\n";
@@ -487,35 +491,128 @@ static void TestDateTimeFormat()
   }
 
 
-  PRUnichar *dateString;
-  PRUint32 length = 256;
+  PRUnichar dateString[64];
+  PRUint32 length = sizeof(dateString)/sizeof(PRUnichar);
   nsString locale("en-GB");
   time_t  timetTime;
-  int i;
+  nsString s_print;
 
-  dateString = new PRUnichar[length];
-  if (NULL == dateString) {
-    cout << "\tFailed!! memory allocation failed.\n";
-  }
 
   cout << "Test 2 - FormatTime():\n";
   time( &timetTime );
   res = t->FormatTime(locale, kDateFormatShort, kTimeFormatSeconds, timetTime, 
                         dateString, &length);
-  for (i = 0; i < (int) length; i++)
-    cout << "dateString[" << i << "]: " << (char) dateString[i] << "\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
 
   cout << "Test 3 - FormatTMTime():\n";
   time_t ltime;
   time( &ltime );
+  length = sizeof(dateString)/sizeof(PRUnichar);
 
+  // try (almost) all format combination
+  res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatNone, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatNone, kTimeFormatNone:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatSeconds, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatNone, kTimeFormatSeconds:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatNone, kTimeFormatNoSeconds, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatNone, kTimeFormatNoSeconds:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatNone, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatLong, kTimeFormatNone:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatSeconds, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatLong, kTimeFormatSeconds:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatLong, kTimeFormatNoSeconds, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatLong, kTimeFormatNoSeconds:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatNone, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatShort, kTimeFormatNone:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
   res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatSeconds, localtime( &ltime ), 
                         dateString, &length);
-  for (i = 0; i < (int) length; i++)
-    cout << "dateString[" << i << "]: " << (char) dateString[i] << "\n";
-
-  delete [] dateString;
-  
+  cout << "kDateFormatShort, kTimeFormatSeconds:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatShort, kTimeFormatNoSeconds, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatShort, kTimeFormatNoSeconds:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatNone, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatYearMonth, kTimeFormatNone:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatSeconds, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatYearMonth, kTimeFormatSeconds:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatYearMonth, kTimeFormatNoSeconds, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatYearMonth, kTimeFormatNoSeconds:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNone, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatWeekday, kTimeFormatNone:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatSeconds, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatWeekday, kTimeFormatSeconds:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNoSeconds, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatWeekday, kTimeFormatNoSeconds:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatSecondsForce24Hour, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatWeekday, kTimeFormatSecondsForce24Hour:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
+  res = t->FormatTMTime(locale, kDateFormatWeekday, kTimeFormatNoSecondsForce24Hour, localtime( &ltime ), 
+                        dateString, &length);
+  cout << "kDateFormatWeekday, kTimeFormatNoSecondsForce24Hour:\n";
+  s_print.SetString(dateString, length);
+  s_print.DebugDump(cout);
+  length = sizeof(dateString)/sizeof(PRUnichar);
 
   res = t->Release();
   
