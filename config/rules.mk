@@ -506,8 +506,11 @@ ifeq ($(OS_ARCH),OpenVMS)
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/lib
 	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin
 endif
+endif # IS_COMPONENT
+ifdef BEOS_ADDON_WORKAROUND
+	( cd $(DIST)/bin/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
-endif
+endif # SHARED_LIBRARY
 ifdef PROGRAM
 	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(DIST)/bin
 endif
