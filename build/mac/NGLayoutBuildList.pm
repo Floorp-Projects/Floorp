@@ -346,16 +346,18 @@ sub Checkout()
     ActivateApplication('Mcvs');
 
     my($nsprpub_tag) = "NSPRPUB_CLIENT_BRANCH";
-    my($security_tag) = "SECURITY_CLIENT_BRANCH"; 
+    my($nss_tab) = "NSS_30_BRANCH";
+    my($psm_tag) = "SECURITY_MAC_BRANCH";
     
     #//
     #// Checkout commands
     #//
     if ($main::pull{moz})
     {
-        $session->checkout("mozilla/nsprpub", $nsprpub_tag)             || print "checkout of nsprpub failed\n";        
-        $session->checkout("mozilla/security", $security_tag)           || print "checkout of security failed\n";
-        $session->checkout("SeaMonkeyAll")                              || 
+        $session->checkout("mozilla/nsprpub", $nsprpub_tag)            || print "checkout of nsprpub failed\n";        
+        $session->checkout("mozilla/security/nss", $nss_tab)           || print "checkout of security/nss failed\n";
+        $session->checkout("mozilla/security/psm", $psm_tag)           || print "checkout of security/psm failed\n";
+        $session->checkout("SeaMonkeyAll")                             || 
             print "MacCVS reported some errors checking out SeaMonkeyAll, but these are probably not serious.\n";
     }
     elsif ($main::pull{runtime})
@@ -1846,14 +1848,61 @@ sub BuildNeckoProjects()
     BuildOneProject(":mozilla:dom:src:jsurl:macbuild:JSUrl.mcp",                "JSUrl$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     # security stuff
+    BuildOneProject(":mozilla:security:nss:macbuild:NSS.mcp","NSS$D.o", 0, 0, 0);
     BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp","PSMClient$D.o", 0, 0, 0);
     BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp","PSMProtocol$D.o", 0, 0, 0); 
 
-    # now depends on PSM shared library.
-    #BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);    
-    
+    BuildOneProject(":mozilla:security:psm:macbuild:PersonalSecurityMgr.mcp","PSMStubs$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+          
     print("--- Necko projects complete ----\n");
 } # necko
+
+
+#//--------------------------------------------------------------------------------------------------
+#// Build Security projects
+#//--------------------------------------------------------------------------------------------------
+
+sub makeprops
+{
+    @ARGV = @_;
+
+    do ":mozilla:security:psm:ui:makeprops.pl";
+}
+
+sub BuildSecurityProjects()
+{
+    unless( $main::build{security} ) { return; }
+
+    # $D becomes a suffix to target names for selecting either the debug or non-debug target of a project
+    my($D) = $main::DEBUG ? "Debug" : "";
+    my $dist_dir = _getDistDirectory(); # the subdirectory with the libs and executable.
+
+    print("--- Starting Security projects ----\n");
+
+    BuildOneProject(":mozilla:security:nss:macbuild:NSS.mcp","NSS$D.o", 0, 0, 0);
+    BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMClient.mcp","PSMClient$D.o", 0, 0, 0);
+    BuildOneProject(":mozilla:security:psm:lib:macbuild:PSMProtocol.mcp","PSMProtocol$D.o", 0, 0, 0); 
+    BuildOneProject(":mozilla:security:psm:macbuild:PersonalSecurityMgr.mcp","PSMStubs$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:extensions:psm-glue:macbuild:PSMGlue.mcp","PSMGlue$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+
+	 # make properties files for PSM User Interface
+    my($src_dir) = ":mozilla:security:psm:ui:";
+    my($dest_dir) = $dist_dir."UI:";
+    mkdir($dest_dir, 0);
+
+    opendir(DIR,$src_dir) || die "can't open directory $src_dir\n";
+    my(@prop_files) = grep { /\.properties.in$/ } readdir(DIR);
+    closedir DIR;
+
+	my($file);
+    foreach $file (@prop_files) {
+        $file =~ /(.+\.properties)\.in$/;
+        &makeprops($src_dir.$file, $dest_dir.$1);
+    }
+   
+    print("--- Security projects complete ----\n");
+} # Security
 
 
 #//--------------------------------------------------------------------------------------------------
@@ -2302,6 +2351,7 @@ sub BuildProjects()
     BuildCommonProjects();
     BuildImglibProjects();
     BuildNeckoProjects();
+    BuildSecurityProjects();
     BuildBrowserUtilsProjects();        
     BuildInternationalProjects();
     BuildLayoutProjects();
