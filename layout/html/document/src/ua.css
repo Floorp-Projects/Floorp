@@ -214,20 +214,27 @@ TABLE {
   border-color: #C0C0C0;
   cell-spacing: 4px;
 }
-TD {
+TD, TH {
   vertical-align: middle;
+  text-align: left;
   border-style: inset;
   border-color: #C0C0C0;
+  font-family: serif;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: normal;
+  font-size: 11pt;
+  line-height: 1.1;
+  display: block;
+  cursor: arrow;
 }
 TH {
-  vertical-align: middle;
-  text-align: center;
   font-weight: bold;
-  border-style: inset;
-  border-color: #C0C0C0;
+  text-align: center;
 }
 CAPTION {
   text-align: center;
+  display: block;
 }
 MULTICOL {
   display: block;
