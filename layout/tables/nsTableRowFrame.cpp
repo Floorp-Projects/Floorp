@@ -461,7 +461,6 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_FALSE, &isVisible)) && !isVisible) {
     return NS_OK;
   }
-  nsresult rv;
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     nsCompatibility mode;
     aPresContext->GetCompatibilityMode(&mode);
@@ -472,16 +471,8 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext* aPresContext,
         const nsStyleBorder* border =
           (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
         const nsStyleBackground* color =
-          (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);
-        nsTableFrame* tableFrame = nsnull;
-        rv = nsTableFrame::GetTableFrame(this, tableFrame);
-        if (NS_FAILED(rv) || (nsnull == tableFrame)) {
-          return rv;
-        }
-        nscoord cellSpacingX = tableFrame->GetCellSpacingX();
-        // every row is short by the ending cell spacing X
-        nsRect rect(0, 0, mRect.width + cellSpacingX, mRect.height);
-
+          (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background);        
+        nsRect rect(0, 0, mRect.width, mRect.height);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                         aDirtyRect, rect, *color, *border, 0, 0);
       }
