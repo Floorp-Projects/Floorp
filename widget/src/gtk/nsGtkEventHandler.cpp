@@ -207,13 +207,6 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_DIVIDE,     GDK_KP_Divide },
   { NS_VK_RETURN,     GDK_KP_Enter },
 
-  // NS doesn't have dash or equals distinct from the numeric keypad ones,
-  // so we'll use those for now.  See bug 17008:
-  { NS_VK_SUBTRACT, GDK_minus },
-  { NS_VK_EQUALS, GDK_equal },
-  // and we don't have a single-quote symbol either:
-  { NS_VK_QUOTE, GDK_apostrophe },
-
   { NS_VK_COMMA,      GDK_comma },
   { NS_VK_PERIOD,     GDK_period },
   { NS_VK_SLASH,      GDK_slash },
@@ -221,12 +214,20 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_BACK_QUOTE, GDK_grave },
   { NS_VK_OPEN_BRACKET, GDK_bracketleft },
   { NS_VK_CLOSE_BRACKET, GDK_bracketright },
-  { NS_VK_QUOTE, GDK_quotedbl },
   { NS_VK_SEMICOLON, GDK_colon },
+  { NS_VK_QUOTE, GDK_apostrophe },
 
-  // Some shifted keys, see bug 15463.
-  // These should be subject to different keyboard mappings;
-  // how do we do that in gtk?
+  // NS doesn't have dash or equals distinct from the numeric keypad ones,
+  // so we'll use those for now.  See bug 17008:
+  { NS_VK_SUBTRACT, GDK_minus },
+  { NS_VK_EQUALS, GDK_equal },
+
+  // Some shifted keys, see bug 15463 as well as 17008.
+  // These should be subject to different keyboard mappings.
+  { NS_VK_QUOTE, GDK_quotedbl },
+  { NS_VK_OPEN_BRACKET, GDK_braceleft },
+  { NS_VK_CLOSE_BRACKET, GDK_braceright },
+  { NS_VK_BACK_SLASH, GDK_bar },
   { NS_VK_SEMICOLON, GDK_semicolon },
   { NS_VK_BACK_QUOTE, GDK_asciitilde },
   { NS_VK_COMMA, GDK_less },
