@@ -568,9 +568,10 @@ NS_IMETHODIMP nsPref::CreateChildList(const char* parent_node, char **child_list
       char* nextdelim;
       PRUint32 parentlen = PL_strlen(prefName);
       char* substring;
+      childList[0] = '\0';
 
       for (i = 0; i < theCount; ++i) {
-        PL_strncpy(buf, (char *)&childArray[i], PR_MIN(512, PL_strlen((char *)&childArray[i]) + 1));
+        PL_strncpy(buf, (char *)childArray[i], PR_MIN(512, PL_strlen((char *)childArray[i]) + 1));
         nextdelim = buf + parentlen;
         if (parentlen < PL_strlen(buf)) {
           // Find the next delimiter if any and truncate the string there
