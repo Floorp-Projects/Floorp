@@ -27,20 +27,22 @@ BROWSER_CONTENT_FILES = \
 	$(NULL)
 
 export::
-	cp $(addprefix $(srcdir)/, $(BROWSER_APP_FILES)) $(DEPTH)/browser/app/
+	$(NSINSTALL) -D $(DIST)/branding
+	cp $(addprefix $(srcdir)/, $(BROWSER_APP_FILES)) $(DIST)/branding/
 	if [ ! -d $(DEPTH)/browser/base/content ] ; then \
 		mkdir $(DEPTH)/browser/base/content; \
 	fi
-	cp $(addprefix $(srcdir)/, $(BROWSER_CONTENT_FILES)) $(DEPTH)/browser/base/content/
-	if [ ! -d $(DEPTH)/browser/app/macbuild ] ; then \
-		mkdir $(DEPTH)/browser/app/macbuild; \
-	fi
-	cp $(srcdir)/firefox.icns $(DEPTH)/browser/app/macbuild/firefox.icns
-	cp $(srcdir)/document.icns $(DEPTH)/browser/app/macbuild/document.icns
-	cp $(srcdir)/firefox.ico $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/browser.ico
-	cp $(srcdir)/Header.bmp $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/Header.bmp
-	cp $(srcdir)/Watermrk.bmp $(DEPTH)/toolkit/mozapps/installer/windows/wizard/setuprsc/Watermrk.bmp
+	cp $(addprefix $(srcdir)/, $(BROWSER_CONTENT_FILES)) $(DEPTH)/browser/base/content
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	cp $(srcdir)/firefox.icns  $(DIST)/branding/firefox.icns
+	cp $(srcdir)/document.icns $(DIST)/branding/document.icns
 	if [ ! -d $(DEPTH)/toolkit/skin/mac/icons ] ; then \
 		mkdir $(DEPTH)/toolkit/skin/mac/icons; \
 	fi
 	cp $(srcdir)/alert-exclam.png $(DEPTH)/toolkit/skin/mac/icons/alert-exclam.png
+endif
+ifeq ($(OS_ARCH),WINNT)
+	cp $(srcdir)/firefox.ico  $(DIST)/branding/app.ico
+	cp $(srcdir)/Header.bmp   $(DIST)/branding/Header.bmp
+	cp $(srcdir)/Watermrk.bmp $(DIST)/branding/Watermrk.bmp
+endif
