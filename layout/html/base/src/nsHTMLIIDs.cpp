@@ -41,5 +41,4 @@
 
 const nsIID kIHTMLContentIID = NS_IHTMLCONTENT_IID;
 const nsIID kIPageSequenceFrameIID = NS_IPAGESEQUENCEFRAME_IID;
-const nsIID kIStyledContentIID = NS_ISTYLEDCONTENT_IID;
 const nsIID kITextContentIID = NS_ITEXT_CONTENT_IID;
