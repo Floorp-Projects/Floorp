@@ -4162,12 +4162,10 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *
     // act on this div.
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(firstChild);
     if (useCSS) {
-      res = mHTMLEditor->RemoveAttribute(divElem, attr);
-      mHTMLEditor->SetAttributeOrEquivalent(divElem, attr, *alignType); 
+      res = mHTMLEditor->SetAttributeOrEquivalent(divElem, attr, *alignType); 
     }
     else {
       res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
-      if (NS_FAILED(res)) return res;
     }
     if (NS_FAILED(res)) return res;
   }
@@ -4179,13 +4177,12 @@ nsHTMLEditRules::AlignBlockContents(nsIDOMNode *aNode, const nsAReadableString *
     // set up the alignment on the div
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(divNode);
     if (useCSS) {
-      res = mHTMLEditor->RemoveAttribute(divElem, attr);
-      mHTMLEditor->SetAttributeOrEquivalent(divElem, attr, *alignType); 
+      res = mHTMLEditor->SetAttributeOrEquivalent(divElem, attr, *alignType); 
     }
     else {
       res = mHTMLEditor->SetAttribute(divElem, attr, *alignType);
-      if (NS_FAILED(res)) return res;
     }
+    if (NS_FAILED(res)) return res;
     // tuck the children into the end of the active div
     while (lastChild && (lastChild != divNode))
     {
@@ -5983,6 +5980,7 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
   // may be left empty.
   nsCOMPtr<nsIDOMNode> prevItem;
   mHTMLEditor->GetPriorHTMLSibling(aListItem, address_of(prevItem));
+
   if (prevItem && nsHTMLEditUtils::IsListItem(prevItem))
   {
     PRBool bIsEmptyNode;
@@ -7743,13 +7741,14 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, nsAReadableString & aAlignT
       {
         if (nsHTMLEditUtils::IsTable(child) || nsHTMLEditUtils::IsHR(child))
         {
-          mHTMLEditor->SetAttributeOrEquivalent(curElem, NS_LITERAL_STRING("align"), aAlignType); 
+          res = mHTMLEditor->SetAttributeOrEquivalent(curElem, NS_LITERAL_STRING("align"), aAlignType); 
         }
         else
         {
           nsAutoString dummyCssValue;
-          mHTMLEditor->mHTMLCSSUtils->RemoveCSSInlineStyle(child, nsIEditProperty::cssTextAlign, dummyCssValue);
+          res = mHTMLEditor->mHTMLCSSUtils->RemoveCSSInlineStyle(child, nsIEditProperty::cssTextAlign, dummyCssValue);
         }
+        if (NS_FAILED(res)) return res;
       }
       if (!nsHTMLEditUtils::IsTable(child))
       {
@@ -7771,7 +7770,8 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, nsAReadableString & aAlignT
         // if we are in CSS mode and if the element is a DIV, let's remove it
         // if it does not carry any style hint (style attr, class or ID)
         nsAutoString dummyCssValue;
-        mHTMLEditor->mHTMLCSSUtils->RemoveCSSInlineStyle(child, nsIEditProperty::cssTextAlign, dummyCssValue);
+        res = mHTMLEditor->mHTMLCSSUtils->RemoveCSSInlineStyle(child, nsIEditProperty::cssTextAlign, dummyCssValue);
+        if (NS_FAILED(res)) return res;
         nsCOMPtr<nsIDOMElement> childElt = do_QueryInterface(child);
         PRBool hasStyleOrIdOrClass;
         res = mHTMLEditor->HasStyleOrIdOrClass(childElt, &hasStyleOrIdOrClass);
@@ -7908,9 +7908,8 @@ nsHTMLEditRules::AlignBlock(nsIDOMElement * aElement, const nsAReadableString * 
   if (useCSS) {
     // let's use CSS alignment; we use margin-left and margin-right for tables
     // and text-align for other block-level elements
-    res = mHTMLEditor->RemoveAttribute(aElement, attr);
+    res = mHTMLEditor->SetAttributeOrEquivalent(aElement, attr, *aAlignType); 
     if (NS_FAILED(res)) return res;
-    mHTMLEditor->SetAttributeOrEquivalent(aElement, attr, *aAlignType); 
   }
   else {
     // HTML case; this code is supposed to be called ONLY if the element

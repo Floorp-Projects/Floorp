@@ -5054,3 +5054,11 @@ nsEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
 {
   return SetAttribute(aElement, aAttribute, aValue);
 }
+
+nsresult
+nsEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
+                                      const nsAReadableString & aAttribute)
+{
+  return RemoveAttribute(aElement, aAttribute);
+}
+

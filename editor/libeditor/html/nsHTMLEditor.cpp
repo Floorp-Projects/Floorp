@@ -5018,7 +5018,17 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
     PRInt32 count;
     res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(aElement, nsnull, &aAttribute, &aValue, &count);
     if (NS_FAILED(res)) return res;
-    if (!count) {
+    if (count) {
+      // we found an equivalence ; let's remove the HTML attribute itself if it is set
+      nsAutoString existingValue;
+      PRBool wasSet = PR_FALSE;
+      res = GetAttributeValue(aElement, aAttribute, existingValue, &wasSet);
+      if (NS_FAILED(res)) return res;
+      if (wasSet) {
+        res = RemoveAttribute(aElement, aAttribute);
+      }
+    }
+    else {
       // count is an integer that represents the number of CSS declarations applied to the
       // element. If it is zero, we found no equivalence in this implementation for the
       // attribute
@@ -5044,6 +5054,28 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
     // we are not in an HTML+CSS editor; let's set the attribute the HTML way
     res = SetAttribute(aElement, aAttribute, aValue);
   }  
+  return res;
+}
+
+nsresult
+nsHTMLEditor::RemoveAttributeOrEquivalent(nsIDOMElement * aElement,
+                                          const nsAReadableString & aAttribute)
+{
+  PRBool useCSS;
+  nsresult res = NS_OK;
+  GetIsCSSEnabled(&useCSS);
+  if (useCSS && mHTMLCSSUtils) {
+    res = mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aElement, nsnull, &aAttribute, nsnull);
+    if (NS_FAILED(res)) return res;
+  }
+
+  nsAutoString existingValue;
+  PRBool wasSet = PR_FALSE;
+  res = GetAttributeValue(aElement, aAttribute, existingValue, &wasSet);
+  if (NS_FAILED(res)) return res;
+  if (wasSet) {
+    res = RemoveAttribute(aElement, aAttribute);
+  }
   return res;
 }
 
