@@ -54,6 +54,7 @@
 // Interfaces Needed
 #include "nsICharsetConverterManager.h"
 #include "nsIHTTPChannel.h"
+#include "nsIProgressEventSink.h"
 #include "nsILayoutHistoryState.h"
 #include "nsILocaleService.h"
 #include "nsIPlatformCharset.h"
@@ -172,6 +173,18 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
         else
             return NS_NOINTERFACE;
       }
+   else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink)))
+   {
+     nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
+     NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
+     nsCOMPtr<nsIDocumentLoader> docLoader;
+     NS_ENSURE_SUCCESS(uriLoader->GetDocumentLoaderForContext(NS_STATIC_CAST(nsIDocShell*, this),
+      getter_AddRefs(docLoader)), NS_ERROR_FAILURE);  
+     if (docLoader)
+       return docLoader->QueryInterface(aIID, aSink);
+     else
+       return NS_ERROR_FAILURE;
+   }
    else
       return QueryInterface(aIID, aSink);
 
