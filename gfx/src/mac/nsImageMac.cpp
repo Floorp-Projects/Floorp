@@ -282,8 +282,9 @@ void nsImageMac::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect
 NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY,
 								 PRInt32 aSWidth, PRInt32 aSHeight, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-	PixMapHandle	imagePixMap;
-	Rect					srcRect, dstRect, maskRect;
+	PixMapHandle				imagePixMap;
+	Rect								srcRect, dstRect, maskRect;
+	nsDeviceContextMac	*theDevContext;
 
 	if (!mImageGWorld)
 		return NS_ERROR_FAILURE;
@@ -317,7 +318,12 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 		
 		// 1-bit masks?
 		
-		::CopyDeepMask((BitMap*)*imagePixMap, (BitMap*)*maskPixMap, (BitMap*)*destPixels, &srcRect, &maskRect, &dstRect, srcCopy, nsnull);
+		// can only do this if we are NOT printing
+		aContext.GetDeviceContext(theDevContext);
+		
+		if(!theDevContext->IsPrinter()){
+			::CopyDeepMask((BitMap*)*imagePixMap, (BitMap*)*maskPixMap, (BitMap*)*destPixels, &srcRect, &maskRect, &dstRect, srcCopy, nsnull);
+		}
 	}
 	else
 	{
