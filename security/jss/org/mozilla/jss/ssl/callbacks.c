@@ -277,6 +277,7 @@ JSSL_CallCertSelectionCallback(    void * arg,
 
         privkey = PK11_FindKeyByAnyCert(cert, NULL /*pinarg*/);
         if ( privkey == NULL )  {
+        CERT_DestroyCertificate(cert);
         rv = SECFailure;
         goto loser;
     }
