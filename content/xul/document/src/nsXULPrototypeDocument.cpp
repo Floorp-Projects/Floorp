@@ -625,12 +625,9 @@ nsXULPrototypeDocument::GetDocumentPrincipal()
 {
     NS_PRECONDITION(mNodeInfoManager, "missing nodeInfoManager");
     if (!mDocumentPrincipal) {
-        nsresult rv;
-        nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-                 do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-
-        if (NS_FAILED(rv))
-            return nsnull;
+        nsIScriptSecurityManager *securityManager =
+            nsContentUtils::GetSecurityManager();
+        nsresult rv = NS_OK;
 
         // XXX This should be handled by the security manager, see bug 160042
         PRBool isChrome = PR_FALSE;

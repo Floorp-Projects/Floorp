@@ -573,9 +573,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
   rv = docURI->SchemeIs("chrome", &isChrome);
 
   if (NS_FAILED(rv) || !isChrome) {
-    nsCOMPtr<nsIScriptSecurityManager> secMan(
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
     rv = secMan->CheckLoadURI(docURI, aURL,
                               nsIScriptSecurityManager::ALLOW_CHROME);

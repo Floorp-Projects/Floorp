@@ -39,6 +39,7 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
+#include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
@@ -907,13 +908,9 @@ CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
   LOG(("CSSLoaderImpl::CheckLoadAllowed"));
   
   // Check with the security manager
-  nsresult rv;
-  nsCOMPtr<nsIScriptSecurityManager> secMan =
-           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = secMan->CheckLoadURI(aSourceURI, aTargetURI,
-                            nsIScriptSecurityManager::ALLOW_CHROME);
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+  nsresult rv = secMan->CheckLoadURI(aSourceURI, aTargetURI,
+                                     nsIScriptSecurityManager::ALLOW_CHROME);
   if (NS_FAILED(rv)) { // failure is normal here; don't warn
     return rv;
   }

@@ -1233,20 +1233,18 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
   rv = holder->GetJSObject(&jsobj);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-      return rv;
-
   nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aObject);
 
   if (sAddListenerID == JSVAL_VOID) {
     sAddListenerID = STRING_TO_JSVAL(::JS_InternString(cx, "addEventListener"));
   }
 
-  if (NS_FAILED(rv = securityManager->CheckPropertyAccess(cx, jsobj,
-                "EventTarget", sAddListenerID,
-                nsIXPCSecurityManager::ACCESS_SET_PROPERTY))) {
+  rv = nsContentUtils::GetSecurityManager()->
+    CheckPropertyAccess(cx, jsobj,
+                        "EventTarget",
+                        sAddListenerID,
+                        nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+  if (NS_FAILED(rv)) {
       // XXX set pending exception on the native call context?
     return rv;
   }

@@ -196,8 +196,8 @@ static nsresult CheckLoadURI(const nsString& aSpec, nsIURI *aBaseURI,
   rv = nsContentUtils::NewURIWithDocumentCharset(aAbsURI, aSpec, aDocument,
                                                  aBaseURI);
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsIScriptSecurityManager *securityManager =
+      nsContentUtils::GetSecurityManager();
     if (NS_SUCCEEDED(rv)) {
       rv = securityManager->CheckLoadURI(aBaseURI, *aAbsURI,
                                          nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
