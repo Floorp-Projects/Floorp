@@ -132,6 +132,8 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
   PRBool plainHTML = quoting || (obj->options &&
        obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs);
        // Just good(tm) HTML. No reliance on CSS.
+  PRBool rawPlainText = obj->options &&
+       obj->options->format_out == nsMimeOutput::nsMimeMessageFilterSniffer;
 
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_begin(obj);
   if (status < 0) return status;
@@ -166,79 +168,82 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
         prefs->GetBoolPref("mail.quoteasblock", &(text->mBlockquoting));
       }
 
-      // Get font
-      // only used for viewing (!plainHTML)
-      nsCAutoString fontstyle;
-      nsCAutoString fontLang;  // langgroup of the font
-
-      // generic font-family name ( -moz-fixed for fixed font and NULL for
-      // variable font ) is sufficient now that bug 105199 has been fixed.
-
-      if (!obj->options->variable_width_plaintext_p)
-        fontstyle = "font-family: -moz-fixed";
-
-      if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
-          nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
+      if (!rawPlainText)
       {
-        PRInt32 fontSize;       // default font size
-        PRInt32 fontSizePercentage;   // size percentage
-        nsresult rv = GetMailNewsFont(obj,
-                           !obj->options->variable_width_plaintext_p,
-                           &fontSize, &fontSizePercentage, fontLang);
-        if (NS_SUCCEEDED(rv))
+        // Get font
+        // only used for viewing (!plainHTML)
+        nsCAutoString fontstyle;
+        nsCAutoString fontLang;  // langgroup of the font
+
+        // generic font-family name ( -moz-fixed for fixed font and NULL for
+        // variable font ) is sufficient now that bug 105199 has been fixed.
+
+        if (!obj->options->variable_width_plaintext_p)
+          fontstyle = "font-family: -moz-fixed";
+
+        if (nsMimeOutput::nsMimeMessageBodyDisplay == obj->options->format_out ||
+            nsMimeOutput::nsMimeMessagePrintOutput == obj->options->format_out)
         {
-          if ( ! fontstyle.IsEmpty() ) {
-            fontstyle += "; ";
-          }
-          fontstyle += "font-size: ";
-          fontstyle.AppendInt(fontSize);
-          fontstyle += "px;";
-        }
-      }
-
-      // Opening <div>. We currently have to add formatting here. :-(
-      nsCAutoString openingDiv;
-      if (!quoting)
-           /* 4.x' editor can't break <div>s (e.g. to interleave comments).
-              We'll add the class to the <blockquote type=cite> later. */
-      {
-        openingDiv = "<div class=\"moz-text-plain\"";
-        if (!plainHTML)
-        {
-          if (obj->options->wrap_long_lines_p)
-            openingDiv += " wrap=true";
-          else
-            openingDiv += " wrap=false";
-
-          if (graphicalQuote)
-            openingDiv += " graphical-quote=true";
-          else
-            openingDiv += " graphical-quote=false";
-
-          if (!fontstyle.IsEmpty())
+          PRInt32 fontSize;       // default font size
+          PRInt32 fontSizePercentage;   // size percentage
+          nsresult rv = GetMailNewsFont(obj,
+                             !obj->options->variable_width_plaintext_p,
+                             &fontSize, &fontSizePercentage, fontLang);
+          if (NS_SUCCEEDED(rv))
           {
-            openingDiv += " style=\"";
-            openingDiv += fontstyle;
-            openingDiv += '\"';
-          }
-          if (!fontLang.IsEmpty())
-          {
-            openingDiv += " lang=\"";
-            openingDiv += fontLang;
-            openingDiv += '\"';
+            if ( ! fontstyle.IsEmpty() ) {
+              fontstyle += "; ";
+            }
+            fontstyle += "font-size: ";
+            fontstyle.AppendInt(fontSize);
+            fontstyle += "px;";
           }
         }
-        openingDiv += "><pre wrap>";
-      }
-      else
-        openingDiv = "<pre wrap>";
-	  status = MimeObject_write(obj, NS_CONST_CAST(char*, openingDiv.get()), openingDiv.Length(), PR_FALSE);
-	  if (status < 0) return status;
 
-	  /* text/plain objects always have separators before and after them.
-		 Note that this is not the case for text/enriched objects. */
-	  status = MimeObject_write_separator(obj);
-	  if (status < 0) return status;
+        // Opening <div>. We currently have to add formatting here. :-(
+        nsCAutoString openingDiv;
+        if (!quoting)
+             /* 4.x' editor can't break <div>s (e.g. to interleave comments).
+                We'll add the class to the <blockquote type=cite> later. */
+        {
+          openingDiv = "<div class=\"moz-text-plain\"";
+          if (!plainHTML)
+          {
+            if (obj->options->wrap_long_lines_p)
+              openingDiv += " wrap=true";
+            else
+              openingDiv += " wrap=false";
+
+            if (graphicalQuote)
+              openingDiv += " graphical-quote=true";
+            else
+              openingDiv += " graphical-quote=false";
+
+            if (!fontstyle.IsEmpty())
+            {
+              openingDiv += " style=\"";
+              openingDiv += fontstyle;
+              openingDiv += '\"';
+            }
+            if (!fontLang.IsEmpty())
+            {
+              openingDiv += " lang=\"";
+              openingDiv += fontLang;
+              openingDiv += '\"';
+            }
+          }
+          openingDiv += "><pre wrap>";
+        }
+        else
+          openingDiv = "<pre wrap>";
+	    status = MimeObject_write(obj, NS_CONST_CAST(char*, openingDiv.get()), openingDiv.Length(), PR_FALSE);
+	    if (status < 0) return status;
+
+	    /* text/plain objects always have separators before and after them.
+		   Note that this is not the case for text/enriched objects. */
+	    status = MimeObject_write_separator(obj);
+	    if (status < 0) return status;
+    }
 	}
 
   return 0;
@@ -263,6 +268,9 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
          obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting
        )           );  // see above
   
+  PRBool rawPlainText = obj->options &&
+       obj->options->format_out == nsMimeOutput::nsMimeMessageFilterSniffer;
+
   /* Run parent method first, to flush out any buffered data. */
   status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_eof(obj, abort_p);
   if (status < 0) return status;
@@ -272,7 +280,7 @@ MimeInlineTextPlain_parse_eof (MimeObject *obj, PRBool abort_p)
   if (obj->options &&
 	  obj->options->write_html_p &&
 	  obj->options->output_fn &&
-	  !abort_p)
+	  !abort_p && !rawPlainText)
 	{
       MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
       if (text->mIsSig && !quoting)
@@ -312,6 +320,9 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
        obj->options->format_out == nsMimeOutput::nsMimeMessageSaveAs);
        // see above
 
+  PRBool rawPlainText = obj->options &&
+       obj->options->format_out != nsMimeOutput::nsMimeMessageFilterSniffer;
+
   // this routine gets called for every line of data that comes through the
   // mime converter. It's important to make sure we are efficient with 
   // how we allocate memory in this routine. be careful if you go to add
@@ -323,7 +334,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   mozITXTToHTMLConv *conv = GetTextConverter(obj->options);
   MimeInlineTextPlain *text = (MimeInlineTextPlain *) obj;
 
-  PRBool skipConversion = !conv ||
+  PRBool skipConversion = !conv || rawPlainText ||
                           (obj->options && obj->options->force_user_charset);
 
   if (!skipConversion)

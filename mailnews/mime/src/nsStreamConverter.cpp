@@ -408,6 +408,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       char *ptr6 = PL_strcasestr ("print", (header+lenOfHeader));
       char *ptr7 = PL_strcasestr ("saveas", (header+lenOfHeader));
       char *ptr8 = PL_strcasestr ("src", (header+lenOfHeader));
+      char *ptr9 = PL_strcasestr ("filter", (header+lenOfHeader));
       if (ptr5)
       {
         CRTFREEIF(mOutputFormat);
@@ -449,6 +450,12 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
         CRTFREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/plain");
         *aNewType = nsMimeOutput::nsMimeMessageSource;
+      }
+      else if (ptr9)
+      {
+        CRTFREEIF(mOutputFormat);
+        mOutputFormat = nsCRT::strdup("text/plain");
+        *aNewType = nsMimeOutput::nsMimeMessageFilterSniffer;
       }
     }
     else
@@ -615,7 +622,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
       mOutputFormat = nsCRT::strdup("raw");
       break;
       
-    case nsMimeOutput::nsMimeMessageSource:    // the raw RFC822 data (view source) and attachments
+    case nsMimeOutput::nsMimeMessageSource:      // the raw RFC822 data (view source) and attachments
       CRTFREEIF(mOutputFormat);
       CRTFREEIF(mOverrideFormat);
       mOutputFormat = nsCRT::strdup("text/plain");
@@ -631,6 +638,12 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
       CRTFREEIF(mOutputFormat);
       mOutputFormat = nsCRT::strdup("text/html");
       break;
+
+    case nsMimeOutput::nsMimeMessageFilterSniffer: // output all displayable part as raw 
+      CRTFREEIF(mOutputFormat);
+      mOutputFormat = nsCRT::strdup("text/plain");
+      break;
+
     default:
       NS_ASSERTION(0, "this means I made a mistake in my assumptions");
   }

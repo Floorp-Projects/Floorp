@@ -1541,6 +1541,7 @@ mime_bridge_create_display_stream(
     case nsMimeOutput::nsMimeMessageRaw:              // the raw RFC822 data (view source) and attachments
 		case nsMimeOutput::nsMimeMessageDraftOrTemplate:  // Loading drafts & templates
 		case nsMimeOutput::nsMimeMessageEditorTemplate:   // Loading templates into editor
+    case nsMimeOutput::nsMimeMessageFilterSniffer:    // generating an output that can be scan by a message filter
       break;
   }
 

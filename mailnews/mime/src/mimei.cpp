@@ -383,15 +383,16 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
            This mode will limit the features available (e.g. uncommon
            attachment types and inline images) and is for paranoid users.
        */
-  if (pref)
-  {
-    pref->GetIntPref("mailnews.display.html_as", &html_as);
-    pref->GetIntPref("mailnews.display.disallow_mime_handlers",
-                     &types_of_classes_to_disallow);
-    if (types_of_classes_to_disallow > 0 && html_as == 0)
-         // We have non-sensical prefs. Do some fixup.
-      html_as = 1;
-  }
+  if (opts && opts->format_out != nsMimeOutput::nsMimeMessageFilterSniffer)
+    if (pref)
+    {
+      pref->GetIntPref("mailnews.display.html_as", &html_as);
+      pref->GetIntPref("mailnews.display.disallow_mime_handlers",
+                       &types_of_classes_to_disallow);
+      if (types_of_classes_to_disallow > 0 && html_as == 0)
+           // We have non-sensical prefs. Do some fixup.
+        html_as = 1;
+    }
 
   /*
   * What we do first is check for an external content handler plugin. 
@@ -465,38 +466,41 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
       {
         // Preliminary use the normal plain text
         clazz = (MimeObjectClass *)&mimeInlineTextPlainClass;
-
-        PRBool disable_format_flowed = PR_FALSE;
-        if (pref)
-          pref->GetBoolPref("mailnews.display.disable_format_flowed_support",
-                            &disable_format_flowed);
-
-        if(!disable_format_flowed)
+        
+        if (opts && opts->format_out != nsMimeOutput::nsMimeMessageFilterSniffer)
         {
-          // Check for format=flowed, damn, it is already stripped away from
-          // the contenttype!
-          // Look in headers instead even though it's expensive and clumsy
-          // First find Content-Type:
-          char *content_type_row =
-            (hdrs
-             ? MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE,
-                               PR_FALSE, PR_FALSE)
-             : 0);
-          // Then the format parameter if there is one.
-          // I would rather use a PARAM_FORMAT but I can't find the right
-          // place to put the define. The others seems to be in net.h
-          // but is that really really the right place? There is also
-          // a nsMimeTypes.h but that one isn't included. Bug?
-          char *content_type_format =
-            (content_type_row
-             ? MimeHeaders_get_parameter(content_type_row, "format", NULL,NULL)
-             : 0);
+          PRBool disable_format_flowed = PR_FALSE;
+          if (pref)
+            pref->GetBoolPref("mailnews.display.disable_format_flowed_support",
+                              &disable_format_flowed);
 
-          if (content_type_format && !nsCRT::strcasecmp(content_type_format,
-                                                        "flowed"))
-            clazz = (MimeObjectClass *)&mimeInlineTextPlainFlowedClass;
-          PR_FREEIF(content_type_format);
-          PR_FREEIF(content_type_row);
+          if(!disable_format_flowed)
+          {
+            // Check for format=flowed, damn, it is already stripped away from
+            // the contenttype!
+            // Look in headers instead even though it's expensive and clumsy
+            // First find Content-Type:
+            char *content_type_row =
+              (hdrs
+               ? MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE,
+                                 PR_FALSE, PR_FALSE)
+               : 0);
+            // Then the format parameter if there is one.
+            // I would rather use a PARAM_FORMAT but I can't find the right
+            // place to put the define. The others seems to be in net.h
+            // but is that really really the right place? There is also
+            // a nsMimeTypes.h but that one isn't included. Bug?
+            char *content_type_format =
+              (content_type_row
+               ? MimeHeaders_get_parameter(content_type_row, "format", NULL,NULL)
+               : 0);
+
+            if (content_type_format && !nsCRT::strcasecmp(content_type_format,
+                                                          "flowed"))
+              clazz = (MimeObjectClass *)&mimeInlineTextPlainFlowedClass;
+            PR_FREEIF(content_type_format);
+            PR_FREEIF(content_type_row);
+          }
         }
       }
       else if (!exact_match_p)
@@ -562,6 +566,11 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
       if (!clazz && !exact_match_p)
         /* Treat all unknown multipart subtypes as "multipart/mixed" */
         clazz = (MimeObjectClass *)&mimeMultipartMixedClass;
+
+      /* If we are sniffing a message, let's threat alternative parts as mixed */
+      if (opts && opts->format_out == nsMimeOutput::nsMimeMessageFilterSniffer)
+        if (clazz == (MimeObjectClass *)&mimeMultipartAlternativeClass)
+          clazz = (MimeObjectClass *)&mimeMultipartMixedClass;
     }
     
     /* Subtypes of message...
