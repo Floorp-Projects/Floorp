@@ -51,6 +51,7 @@
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
 #include "nsIView.h"
+#include "nsLayoutAtoms.h"
 
 
 //----------------------------------------------------------------------
@@ -498,6 +499,9 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
   // get the context data for the BODY, HTML element, and CANVAS
   nsCOMPtr<nsIStyleContext> parentContext;
   nsCOMPtr<nsIStyleContext> canvasContext;
+  // this is used below to hold the default canvas style. Since we may need the color data
+  // until the end of this function, we declare the nsCOMPtr here.
+  nsCOMPtr<nsIStyleContext> recalculatedCanvasStyle;
   parentContext = dont_AddRef(aContext->GetParent());
 
   if (parentContext){
@@ -542,8 +546,19 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
     // otherwise we use the BODY's background
     if (!(htmlStyleColor->BackgroundIsTransparent())) {
       styleColor = htmlStyleColor;
-    } else {
+    } else if (!(bodyStyleColor->BackgroundIsTransparent())) {
       styleColor = bodyStyleColor;
+    } else {
+      PRBool isPaginated = PR_FALSE;
+      aPresContext->IsPaginated(&isPaginated);
+      nsIAtom* rootPseudo = isPaginated ? nsLayoutAtoms::pageSequencePseudo : nsLayoutAtoms::canvasPseudo;
+
+      nsCOMPtr<nsIStyleContext> canvasParentStyle = getter_AddRefs(canvasContext->GetParent());
+      aPresContext->ResolvePseudoStyleContextFor(nsnull, rootPseudo, canvasParentStyle,
+           PR_TRUE, // IMPORTANT don't share; otherwise things go wrong
+           getter_AddRefs(recalculatedCanvasStyle));
+
+      styleColor = (nsStyleColor*)recalculatedCanvasStyle->GetStyleData(eStyleStruct_Color);
     }
 
     // set the canvas bg values
@@ -559,17 +574,20 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext,
     bFixedBackground = 
       canvasStyleColor->mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED ? PR_TRUE : PR_FALSE;
 
-    // reset the background values for the context that was propogated
-    styleColor->mBackgroundImage.SetLength(0);
-    styleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
-    styleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
-                                   NS_STYLE_BG_IMAGE_NONE |
-                                   NS_STYLE_BG_PROPAGATED_TO_PARENT;  
-    // NOTE: if this was the BODY then this flag is somewhat erroneous
-    // as it was propogated to the GRANDPARENT!  We patch this next by
-    // marking the HTML's background as propagated too, so we can walk
-    // up the chain of contexts that have to propagation bit set (see
-    // nsCSSStyleRule.cpp MapDeclarationColorInto)
+    // only reset the background values if we used something other than the default canvas style
+    if (styleColor == htmlStyleColor || styleColor == bodyStyleColor) {
+      // reset the background values for the context that was propogated
+      styleColor->mBackgroundImage.SetLength(0);
+      styleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
+      styleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
+        NS_STYLE_BG_IMAGE_NONE |
+        NS_STYLE_BG_PROPAGATED_TO_PARENT;  
+      // NOTE: if this was the BODY then this flag is somewhat erroneous
+      // as it was propogated to the GRANDPARENT!  We patch this next by
+      // marking the HTML's background as propagated too, so we can walk
+      // up the chain of contexts that have to propagation bit set (see
+      // nsCSSStyleRule.cpp MapDeclarationColorInto)
+    }
 
     if (styleColor == bodyStyleColor) {
       htmlStyleColor->mBackgroundFlags |= NS_STYLE_BG_PROPAGATED_TO_PARENT;
