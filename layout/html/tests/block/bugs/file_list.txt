@@ -167,6 +167,7 @@ file:///s:/mozilla/layout/html/tests/block/bugs/59200-a.html
 file:///s:/mozilla/layout/html/tests/block/bugs/59200-c.html
 file:///s:/mozilla/layout/html/tests/block/bugs/59200-d.html
 file:///s:/mozilla/layout/html/tests/block/bugs/59200-e.html
+file:///s:/mozilla/layout/html/tests/block/bugs/60992.html
 file:///s:/mozilla/layout/html/tests/block/bugs/63785.html
 file:///s:/mozilla/layout/html/tests/block/bugs/67690.html
 file:///s:/mozilla/layout/html/tests/block/bugs/69960.html
