@@ -412,7 +412,7 @@ function lazyAppendFontNames( i )
          else
            {
              var dataEls = selectElement.listElement.getElementsByAttribute( "value", dataVal );
-             selectedItem = dataEls.length ? dataEls[0] : defaultItem;
+             selectedItem = dataEls.item(0) ? dataEls[0] : defaultItem;
            }
        }
      else
@@ -424,7 +424,7 @@ function lazyAppendFontNames( i )
              var dataEls = selectElement.listElement.getElementsByAttribute( "value", selectVal );
 
              // we need to honor name-list in case name is unavailable 
-             if (!dataEls.length) {
+             if (!dataEls.item(0)) {
                  var fontListPrefString = "font.name-list." + fontTypes[i] + "." + languageList.value;
                  var nameList = gPrefWindow.pref.CopyUnicharPref( fontListPrefString );
                  var fontNames = nameList.split(",");
@@ -433,11 +433,11 @@ function lazyAppendFontNames( i )
                  for (j = 0; j < fontNames.length; j++) {
                    selectVal = fontNames[j].replace(stripWhitespace, "$1");
                    dataEls = selectElement.listElement.getElementsByAttribute("value", selectVal);
-                   if (dataEls.length)  
+                   if (dataEls.item(0))  
                      break;  // exit loop if we find one
                  }
              }
-             selectedItem = dataEls.length ? dataEls[0] : defaultItem;
+             selectedItem = dataEls.item(0) ? dataEls[0] : defaultItem;
            }
          catch(e) {
              selectedItem = defaultItem;
@@ -477,7 +477,7 @@ function saveState()
 function minSizeSelect(size)
   {
     var items = minSize.getElementsByAttribute( "value", size );
-    if (items.length > 0)
+    if (items.item(0))
       minSize.selectedItem = items[0];
     else if (size < 6)
       minSizeSelect(6);
@@ -595,7 +595,7 @@ function setResolution( resolution )
     var userResolution = document.getElementById( "userResolution" );
 
     var items = screenResolution.getElementsByAttribute( "value", resolution );
-    if (items.length)
+    if (items.item(0))
       {
         // If it's one of the hard-coded values, we'll select it directly 
         screenResolution.selectedItem = items[0];
