@@ -122,6 +122,7 @@ function moveDown() {
     var optionAfter    = list.childNodes.item(index+1);
     list.remove(index+1);
     list.insertBefore(optionAfter, selectedOption);
+    list.selectedIndex = index + 1;
     enableButtons();
     enableSave();
   }
