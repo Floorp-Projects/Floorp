@@ -36,7 +36,7 @@ public:
     PRBool SetSize(PRUint32 nNewSize, PRInt32 nGrowBy = PL_VECTOR_GROW_DEFAULT) {
         return PL_VectorSetSize(this, nNewSize, nGrowBy);
     }
-    PRBool IsValidIndex(PRUint32 index) { return PL_VectorIsValidIndex(this, index); }
+    PRBool IsValidIndex(PRUint32 indx) { return PL_VectorIsValidIndex(this, indx); }
 
 // Operations
     // Clean up
@@ -47,23 +47,23 @@ public:
     }
 
     // Accessing elements
-    void* Get(PRUint32 index) const { return PL_VectorGet(this, index); }
-    void Set(PRUint32 index, void* newElement) { PL_VectorSet(this, index, newElement); }
-    void*& ElementAt(PRUint32 index) { return *PL_VectorGetAddr(this, index); }
+    void* Get(PRUint32 indx) const { return PL_VectorGet(this, indx); }
+    void Set(PRUint32 indx, void* newElement) { PL_VectorSet(this, indx, newElement); }
+    void*& ElementAt(PRUint32 indx) { return *PL_VectorGetAddr(this, indx); }
 
     // Potentially growing the array
     PRInt32 Add(void* newElement) { return PL_VectorAdd(this, newElement); }
 
     // overloaded operator helpers
-    void* operator[](PRUint32 index) const { return Get(index); }
-    void*& operator[](PRUint32 index) { return ElementAt(index); }
+    void* operator[](PRUint32 indx) const { return Get(indx); }
+    void*& operator[](PRUint32 indx) { return ElementAt(indx); }
 
     // Operations that move elements around
-    void Insert(PRUint32 index, void* newElement, PRInt32 count = 1) {
-        PL_VectorInsert(this, index, newElement, count);
+    void Insert(PRUint32 indx, void* newElement, PRInt32 count = 1) {
+        PL_VectorInsert(this, indx, newElement, count);
     }
-    void Remove(PRUint32 index, PRInt32 count = 1) {
-        PL_VectorRemove(this, index, count);
+    void Remove(PRUint32 indx, PRInt32 count = 1) {
+        PL_VectorRemove(this, indx, count);
     }
 
 #ifdef DEBUG
