@@ -535,6 +535,8 @@ JSBool pref_InitInitialObjects()
       "unix.js"
 #if defined(VMS)
       , "openvms.js"
+#elif defined(_AIX)
+      , "aix.js"
 #endif
 #if defined(MOZ_WIDGET_PHOTON)
 	  , "photon.js"
