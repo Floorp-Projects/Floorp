@@ -49,9 +49,8 @@ struct nsStyleSpacing;
  * HTML/CSS specific reflow metrics
  */
 struct nsHTMLReflowMetrics : nsReflowMetrics {
-  // Carried out top/bottom margin values. This is the top and bottom
-  // margin values from a frames first/last child.
-  nscoord mCarriedOutTopMargin;
+  // Carried out bottom margin values. This is the collapsed
+  // (generational) bottom margin value.
   nscoord mCarriedOutBottomMargin;
 
   // For frames that have children that stick outside their rect
@@ -64,7 +63,6 @@ struct nsHTMLReflowMetrics : nsReflowMetrics {
   nsHTMLReflowMetrics(nsSize* aMaxElementSize)
     : nsReflowMetrics(aMaxElementSize)
   {
-    mCarriedOutTopMargin = 0;
     mCarriedOutBottomMargin = 0;
     mCombinedArea.x = 0;
     mCombinedArea.y = 0;
