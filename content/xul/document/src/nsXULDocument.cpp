@@ -1714,6 +1714,7 @@ NS_IMETHODIMP
 nsXULDocument::AttributeChanged(nsIContent* aElement,
                                   PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute,
+                                  PRInt32 aModType, 
                                   PRInt32 aHint)
 {
     nsresult rv;
@@ -1737,7 +1738,7 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
     // Now notify external observers
     for (PRInt32 i = 0; i < mObservers.Count(); i++) {
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-        observer->AttributeChanged(this, aElement, aNameSpaceID, aAttribute, aHint);
+        observer->AttributeChanged(this, aElement, aNameSpaceID, aAttribute, aModType, aHint);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
             i--;
         }

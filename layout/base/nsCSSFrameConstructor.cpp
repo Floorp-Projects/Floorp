@@ -10037,6 +10037,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIContent* aContent,
                                         PRInt32 aNameSpaceID,
                                         nsIAtom* aAttribute,
+                                        PRInt32 aModType, 
                                         PRInt32 aHint)
 {
   nsresult  result = NS_OK;
@@ -10064,7 +10065,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
     if (NS_OK == result) { 
       // Get style hint from HTML content object. 
-      styledContent->GetMappedAttributeImpact(aAttribute, aHint);
+      styledContent->GetMappedAttributeImpact(aAttribute, aModType, aHint);
       NS_RELEASE(styledContent); 
     } 
   } 
@@ -10152,7 +10153,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 
   // apply changes
   if (primaryFrame && aHint == NS_STYLE_HINT_ATTRCHANGE)
-    result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, aHint);
+    result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, aModType, aHint);
   else if (reconstruct) {
     result = ReconstructDocElementHierarchy(aPresContext);
   }
@@ -10225,7 +10226,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
               primaryFrame->GetParent(&pCanvasFrameCandidate);
               while (pCanvasFrameCandidate) {
                 if (IsCanvasFrame(pCanvasFrameCandidate)) {
-                  pCanvasFrameCandidate->AttributeChanged(aPresContext,aContent,aNameSpaceID,aAttribute,maxHint);
+                  pCanvasFrameCandidate->AttributeChanged(aPresContext,aContent,aNameSpaceID,aAttribute,aModType,maxHint);
                   break;
                 } else {
                   pCanvasFrameCandidate->GetParent(&pCanvasFrameCandidate);
@@ -10235,7 +10236,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
           }
 
           // let the frame deal with it, since we don't know how to
-          result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, maxHint);
+          result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, aModType, maxHint);
         default:
           break;
       }

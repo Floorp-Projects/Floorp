@@ -235,6 +235,7 @@ nsGfxCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                           nsIContent*     aChild,
                                           PRInt32         aNameSpaceID,
                                           nsIAtom*        aAttribute,
+                                          PRInt32         aModType, 
                                           PRInt32         aHint)
 {
   if ( aAttribute == GetTristateAtom() ) {    
@@ -254,7 +255,7 @@ nsGfxCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     }
   }
   else
-    return nsFormControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+    return nsFormControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
 
   return NS_OK;
 }

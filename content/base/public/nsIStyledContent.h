@@ -52,10 +52,9 @@ public:
    * an attribute on this node changes.
    * This only applies to attributes that map their value
    * DIRECTLY into style contexts via NON-CSS style rules
-   * Only HTML currently does this.
    * All other attributes return NS_STYLE_HINT_CONTENT
    */
-  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
+  NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType, 
                                       PRInt32& aHint) const = 0;
 
 };

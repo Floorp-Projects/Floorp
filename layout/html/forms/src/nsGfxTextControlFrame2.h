@@ -152,6 +152,7 @@ public:
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
+                              PRInt32         aModType, 
                               PRInt32         aHint);
 
   NS_IMETHOD GetText(nsString* aText, PRBool aInitialValue);

@@ -137,6 +137,7 @@ public:
                               nsIContent*     aChild,
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
+                              PRInt32         aModType,
                               PRInt32         aHint);
   
 #ifdef DEBUG
@@ -681,6 +682,7 @@ CanvasFrame::AttributeChanged(nsIPresContext* aPresContext,
                           nsIContent*     aChild,
                           PRInt32         aNameSpaceID,
                           nsIAtom*        aAttribute,
+                          PRInt32         aModType, 
                           PRInt32         aHint)
 {
 // if the background color or image is changing, invalidate the canvas

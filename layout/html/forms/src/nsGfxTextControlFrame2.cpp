@@ -2927,6 +2927,7 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIContent*     aChild,
                                         PRInt32         aNameSpaceID,
                                         nsIAtom*        aAttribute,
+                                        PRInt32         aModType, 
                                         PRInt32         aHint)
 {
   if (!mEditor || !mSelCon) {return NS_ERROR_NOT_INITIALIZED;}
@@ -3026,7 +3027,7 @@ nsGfxTextControlFrame2::AttributeChanged(nsIPresContext* aPresContext,
   // Allow the base class to handle common attributes supported
   // by all form elements... 
   else {
-    rv = nsBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+    rv = nsBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
   }
 
   return rv;

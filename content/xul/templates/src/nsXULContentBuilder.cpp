@@ -96,6 +96,7 @@ public:
                                 nsIContent*  aContent,
                                 PRInt32      aNameSpaceID,
                                 nsIAtom*     aAttribute,
+                                PRInt32      aModType, 
                                 PRInt32      aHint);
 
     NS_IMETHOD DocumentWillBeDestroyed(nsIDocument* aDocument);
@@ -1776,6 +1777,7 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
                                       nsIContent*  aContent,
                                       PRInt32      aNameSpaceID,
                                       nsIAtom*     aAttribute,
+                                      PRInt32      aModType, 
                                       PRInt32      aHint)
 {
     // Handle "open" and "close" cases. We do this handling before
@@ -1796,7 +1798,7 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
     }
 
     // Pass along to the generic template builder.
-    return nsXULTemplateBuilder::AttributeChanged(aDocument, aContent, aNameSpaceID, aAttribute, aHint);
+    return nsXULTemplateBuilder::AttributeChanged(aDocument, aContent, aNameSpaceID, aAttribute, aModType, aHint);
 }
 
 NS_IMETHODIMP

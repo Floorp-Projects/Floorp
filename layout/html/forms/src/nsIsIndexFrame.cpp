@@ -327,13 +327,14 @@ nsIsIndexFrame::AttributeChanged(nsIPresContext* aPresContext,
                                        nsIContent*     aChild,
                                        PRInt32         aNameSpaceID,
                                        nsIAtom*        aAttribute,
+                                       PRInt32         aModType, 
                                        PRInt32         aHint)
 {
   nsresult rv = NS_OK;
   if (nsHTMLAtoms::prompt == aAttribute) {
     rv = UpdatePromptLabel();
   } else {
-    rv = nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+    rv = nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
   }
   return rv;
 }

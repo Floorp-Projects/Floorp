@@ -189,6 +189,7 @@ nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAReadableString& aPropertyN
 
     if (doc) {
       doc->AttributeChanged(mContent, kNameSpaceID_None, nsHTMLAtoms::style,
+                            nsIDOMMutationEvent::MODIFICATION, 
                             hint);
       doc->EndUpdate();
     }
@@ -341,7 +342,7 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAReadableString& aDecl,
       if (doc) {
         if (NS_SUCCEEDED(result) && result != NS_CSS_PARSER_DROP_DECLARATION) {
           doc->AttributeChanged(mContent, kNameSpaceID_None,
-                                nsHTMLAtoms::style, hint);
+                                nsHTMLAtoms::style, nsIDOMMutationEvent::MODIFICATION, hint);
         }
         doc->EndUpdate();
       }
@@ -1502,7 +1503,8 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
 
     // set as string value to avoid another string copy
     PRBool  impact = NS_STYLE_HINT_NONE;
-    GetMappedAttributeImpact(aAttribute, impact);
+    PRInt32 modHint = modification ? nsIDOMMutationEvent::MODIFICATION : nsIDOMMutationEvent::ADDITION;
+    GetMappedAttributeImpact(aAttribute, modHint, impact);
 
     nsCOMPtr<nsIHTMLStyleSheet> sheet(dont_AddRef(GetAttrStyleSheet(mDocument)));
     if (sheet) { // set attr via style sheet
@@ -1560,7 +1562,8 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
     }
 
     if (aNotify) {
-      mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
+      PRInt32 modHint = modification ? nsIDOMMutationEvent::MODIFICATION : nsIDOMMutationEvent::ADDITION;
+      mDocument->AttributeChanged(this, aNameSpaceID, aAttribute, modHint, 
                                   NS_STYLE_HINT_UNKNOWN);
       mDocument->EndUpdate();
     }
@@ -1655,7 +1658,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
   nsresult  result = NS_OK;
 
   PRBool  impact = NS_STYLE_HINT_NONE;
-  GetMappedAttributeImpact(aAttribute, impact);
+  GetMappedAttributeImpact(aAttribute, nsIDOMMutationEvent::MODIFICATION, impact);
   nsCOMPtr<nsIHTMLStyleSheet> sheet;
   if (mDocument) {
     if (aNotify) {
@@ -1718,7 +1721,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
     }
 
     if (aNotify) {
-      mDocument->AttributeChanged(this, kNameSpaceID_None, aAttribute, impact);
+      mDocument->AttributeChanged(this, kNameSpaceID_None, aAttribute, nsIDOMMutationEvent::MODIFICATION, impact);
       mDocument->EndUpdate();
     }
   }
@@ -1825,7 +1828,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBoo
       binding->AttributeChanged(aAttribute, aNameSpaceID, PR_TRUE);
 
     if (aNotify) {
-      mDocument->AttributeChanged(this, aNameSpaceID, aAttribute, impact);
+      mDocument->AttributeChanged(this, aNameSpaceID, aAttribute, nsIDOMMutationEvent::REMOVAL, impact);
       mDocument->EndUpdate();
     }
   }
@@ -2288,6 +2291,7 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsGenericHTMLElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
+                                               PRInt32 aModType,
                                                PRInt32& aHint) const
 {
   if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {

@@ -219,9 +219,10 @@ nsSVGPathFrame::AttributeChanged(nsIPresContext* aPresContext,
                                           nsIContent*     aChild,
                                           PRInt32         aNameSpaceID,
                                           nsIAtom*        aAttribute,
+                                          PRInt32         aModType, 
                                           PRInt32         aHint)
 {
-  return nsLeafFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+  return nsLeafFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
 }
   
 

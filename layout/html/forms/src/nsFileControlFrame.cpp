@@ -544,6 +544,7 @@ nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                        nsIContent*     aChild,
                                        PRInt32         aNameSpaceID,
                                        nsIAtom*        aAttribute,
+                                       PRInt32         aModType, 
                                        PRInt32         aHint)
 {
   // set the text control to readonly or not
@@ -563,7 +564,7 @@ nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     }
   }
 
-  return nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+  return nsAreaFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
 }
 
 NS_IMETHODIMP

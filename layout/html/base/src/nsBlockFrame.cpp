@@ -2668,10 +2668,11 @@ nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent*     aChild,
                                PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
+                               PRInt32         aModType, 
                                PRInt32         aHint)
 {
   nsresult rv = nsBlockFrameSuper::AttributeChanged(aPresContext, aChild,
-                                                    aNameSpaceID, aAttribute, aHint);
+                                                    aNameSpaceID, aAttribute, aModType, aHint);
 
   if (NS_FAILED(rv)) {
     return rv;
