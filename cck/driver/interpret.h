@@ -33,7 +33,7 @@ class CInterpret
 public:
 	CInterpret();
 	~CInterpret();
-	BOOL NewConfig(WIDGET *curWidget, CString globalsName);
+	BOOL NewConfig(WIDGET *curWidget, CString globalsName, CString DialogTitle);
 	BOOL BrowseFile(WIDGET *curWidget);
 	BOOL BrowseDir(WIDGET *curWidget);
 	BOOL Progress();  // Not actually used right now

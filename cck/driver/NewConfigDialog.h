@@ -51,6 +51,7 @@ protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CNewConfigDialog)
+	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

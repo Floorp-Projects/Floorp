@@ -23,6 +23,7 @@
 #include "stdafx.h"
 #include "WizardMachine.h"
 #include "NewConfigDialog.h"
+#include "globals.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -75,6 +76,24 @@ END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
 // CNewConfigDialog message handlers
+
+BOOL CNewConfigDialog::OnInitDialog() 
+{
+	CDialog::OnInitDialog();
+	// TODO: Add extra initialization here
+
+	CString DlgTitle = GetGlobal("DialogTitle");
+	if (!DlgTitle.IsEmpty())
+	{
+		SetWindowText(DlgTitle);
+		GetDlgItem(IDC_STATIC1)->SetWindowText("");
+		GetDlgItem(IDC_STATIC2)->SetWindowText("");
+		GetDlgItem(IDOK)->SetWindowText(DlgTitle);
+	}
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+	              // EXCEPTION: OCX Property Pages should return FALSE
+}
 
 void CNewConfigDialog::OnOK() 
 {

@@ -66,13 +66,15 @@ BOOL CInterpret::InitInstance()
 
 //----------------------------------------------------------
 
-BOOL CInterpret::NewConfig(WIDGET *curWidget, CString globalsName) 
+BOOL CInterpret::NewConfig(WIDGET *curWidget, CString globalsName, CString DialogTitle) 
 {
 	// This doesn't really belong here...
 	WIN32_FIND_DATA data;
 	HANDLE d;
 
 	CNewConfigDialog newDlg;
+	if (!DialogTitle.IsEmpty())
+		SetGlobal("DialogTitle", "CreateCopy");
 	newDlg.DoModal();
 	CString configField = newDlg.GetConfigName();
 	CString newDir = CString(customizationPath); 
@@ -685,7 +687,13 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				else if (strcmp(pcmd, "NewConfigDialog") == 0)
 				{
 					if (curWidget)
-						NewConfig(curWidget, CString(parms));
+						NewConfig(curWidget, CString(parms),"");
+				}
+
+				else if (strcmp(pcmd, "CopyConfig") == 0)
+				{
+					if (curWidget)
+						NewConfig(curWidget, CString(parms),"Create Copy");
 				}
 
 				else if (strcmp(pcmd, "CopyDir") == 0)
