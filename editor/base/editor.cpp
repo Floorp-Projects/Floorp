@@ -825,19 +825,6 @@ nsresult nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
   return result;
 }
 
-nsresult nsEditor::CreateTxnToHandleEnterKey(nsIDOMCharacterData *aElement,
-                                             PRUint32             aOffset,
-                                             PRUint32             aLength)
-{
-  DeleteTextTxn *txn;
-  nsresult result = CreateTxnForDeleteText(aElement, aOffset, aLength, &txn);
-  if (NS_SUCCEEDED(result))  {
-    result = Do(txn);  
-  }
-  return result;
-}
-
-
 nsresult 
 nsEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
