@@ -26,7 +26,7 @@ Contributor(s):
 <?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-windows.dtd">
+<!DOCTYPE page SYSTEM "chrome://messenger/locale/pref-windows.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://messenger/content/pref-windows.xul');"

@@ -22,7 +22,7 @@
    -    Scott MacGregor <mscott@netscape.com>
   -->
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/msgViewPickerOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://messenger/locale/msgViewPickerOverlay.dtd">
 
 <overlay
   xmlns:nc="http://home.netscape.com/NC-rdf#"

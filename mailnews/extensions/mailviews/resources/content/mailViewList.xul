@@ -23,7 +23,7 @@ Rights Reserved.
 <?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % mailViewLisDTD SYSTEM "chrome://messenger/locale/mailViewList.dtd">
 %mailViewLisDTD;
 <!ENTITY % FilterListDialogDTD SYSTEM "chrome://messenger/locale/FilterListDialog.dtd">

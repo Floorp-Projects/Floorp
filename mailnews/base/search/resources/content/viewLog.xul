@@ -22,7 +22,7 @@ Rights Reserved.
 
 <?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/viewLog.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/viewLog.dtd">
 
 <dialog id="viewLogWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -42,7 +42,7 @@
 
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messenger/locale/junkMail.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://messenger/locale/junkMail.dtd">
 
 <dialog id="junkMail"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -37,7 +37,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % junkMailInfoDTD SYSTEM "chrome://messenger/locale/junkMailInfo.dtd" >
