@@ -21,7 +21,6 @@ Rights Reserved.
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
 
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
@@ -65,7 +64,6 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abCommon.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
-<script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/msgPrintEngine.js"/>
 
 <commandset id="tasksCommands">

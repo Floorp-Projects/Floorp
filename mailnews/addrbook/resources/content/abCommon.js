@@ -180,7 +180,6 @@ function AbNewMessage()
   var msgComposFormat = Components.interfaces.nsIMsgCompFormat;
   var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
   msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
-
   msgComposeService.OpenComposeWindowWithValues(null, msgComposeType.New, msgComposFormat.Default,
                                                 GetSelectedAddresses(), null, null,
                                                 null, null, null, null, null);
@@ -247,7 +246,6 @@ function DirPaneSelectionChange()
 function ChangeDirectoryByDOMNode(dirNode)
 {
   var uri = dirNode.getAttribute("id");
-
   if (resultsTree) {
     if (uri != resultsTree.getAttribute("ref")) {
       ClearResultsTreeSelection();

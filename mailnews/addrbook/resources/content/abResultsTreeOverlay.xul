@@ -20,25 +20,26 @@ Rights Reserved.
 --> 
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abResultsTreeOverlay.dtd">
-
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
   <!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
   <tree id="resultsTree"
-      class="abResults" 
-      datasources="rdf:addressdirectory rdf:addresscard"
-      onselect="top.ResultsPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
-      onblur="goOnEvent(this,'blur')"
-      onclick="clickResultsTree(event);"
-      containment="http://home.netscape.com/NC-rdf#CardChild"
-      allownegativeassertions="false"
-          coalesceduplicatearcs="false"
-          ondragover="return DragOverTree(event);"
-          ondraggesture="return BeginDragResultTree(event);"
-          ondragdrop="return DropOnResultTree(event);"
-          multiple="true">
+        class="abResults" 
+        datasources="rdf:addressdirectory rdf:addresscard"
+        onselect="ResultsPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
+        onblur="goOnEvent(this,'blur')"
+        onclick="clickResultsTree(event);"
+        containment="http://home.netscape.com/NC-rdf#CardChild"
+        allownegativeassertions="false"
+        coalesceduplicatearcs="false"
+        ondragover="return DragOverTree(event);"
+        ondraggesture="return BeginDragResultTree(event);"
+        ondragdrop="return DropOnResultTree(event);"
+        multiple="true">
 
     <template>
       <rule>
@@ -67,10 +68,10 @@ Rights Reserved.
     
     <treehead>
       <treerow id="headRow">
-        <treecell id="NameColumnHeader" label="&nameColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#Name');"/>
-        <treecell id="EmailColumnHeader" label="&emailColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail');"/>
-        <treecell id="WorkPhoneColumnHeader" label="&workPhoneColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');"/>
-        <treecell id="OrganizationColumnHeader" label="&organizationColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Company');"/>
+        <treecell id="NameColumnHeader" label="&nameColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#Name');"/>
+        <treecell id="EmailColumnHeader" label="&emailColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail');"/>
+        <treecell id="WorkPhoneColumnHeader" label="&workPhoneColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');"/>
+        <treecell id="OrganizationColumnHeader" label="&organizationColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Company');"/>
       </treerow>
     </treehead>
 

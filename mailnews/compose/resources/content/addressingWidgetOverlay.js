@@ -133,10 +133,9 @@ function CompFields2Recipients(msgCompFields, msgType)
     awSetInputAndPopup(msgCompFields.otherRandomHeaders, "addr_other", newTreeChildrenNode, templateNode);
     awSetInputAndPopup(msgCompFields.newsgroups, "addr_newsgroups", newTreeChildrenNode, templateNode);
     awSetInputAndPopup(msgCompFields.followupTo, "addr_followup", newTreeChildrenNode, templateNode);
-
     //If it's a new message, we need to add an extrat empty recipient.
     var msgComposeType = Components.interfaces.nsIMsgCompType;
-    if ((msgType == msgComposeType.New) || (msgType == msgComposeType.ForwardAsAttachment) || (msgType == msgComposeType.ForwardInline) || (top.MAX_RECIPIENTS == 0))
+    if ((top.MAX_RECIPIENTS == 0 && ((msgType == msgComposeType.New) || (msgType == msgComposeType.ForwardAsAttachment) || (msgType == msgComposeType.ForwardInline))) || top.MAX_RECIPIENTS == 0)
         _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
     dump("replacing child in comp fields 2 recips \n");
       var parent = treeChildren.parentNode;
