@@ -247,6 +247,8 @@ typedef struct
 #define XmNuseTextWidget "useTextWidget"
 #define XmCUseTextWidget "UseTextWidget"
 #define XmNhideButtonTranslations "hideButtonTranslations"
+#define XmNminColumnWidth "minColumnWidth"
+#define XmCMinColumnWidth "MinColumnWidth"
 
 
 /* Grid Row/Column/Cell resources */

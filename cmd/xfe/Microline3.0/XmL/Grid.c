@@ -223,6 +223,7 @@ static void HideColumn(Widget w, XEvent *event, String *, Cardinal *);
 static void UnhideColumn(Widget w, XEvent *event, String *, Cardinal *);
 static void MenuArm(Widget w, XEvent *event, String *, Cardinal *);
 static void MenuDisarm(Widget w, XEvent *event, String *, Cardinal *);
+static int SizeColumnsToFit(XmLGridWidget g, int start_at);
 
 /* XmLGridRow */
 
@@ -673,6 +674,12 @@ static XtResource resources[] =
 		XmNleftFixedMargin, XmCLeftFixedMargin,
 		XmRDimension, sizeof(Dimension),
 		XtOffset(XmLGridWidget, grid.leftFixedMargin),
+		XmRImmediate, (XtPointer)0,
+		},
+		{
+		XmNminColumnWidth, XmCMinColumnWidth,
+		XmRDimension, sizeof(Dimension),
+		XtOffset(XmLGridWidget, grid.minColWidth),
 		XmRImmediate, (XtPointer)0,
 		},
 		{
@@ -1682,6 +1689,29 @@ Redisplay(Widget w,
 	hasDrawCB = 0;
 	if (XtHasCallbacks(w, XmNcellDrawCallback) == XtCallbackHasSome)
 			hasDrawCB = 1;
+/* add extra shadow around the whole widget if 512 is set for shadow regions */
+    if (g->grid.shadowRegions == 512
+        && g->manager.shadow_thickness
+		&& XmLRectIntersect(&eRect, &rRect) != XmLRectInside)
+    {
+#ifdef MOTIF11
+				_XmDrawShadow(dpy, win,
+					g->manager.bottom_shadow_GC,
+					g->manager.top_shadow_GC,
+					g->manager.shadow_thickness,
+                    0,0,
+                    g->core.width, g->core.height);
+#else
+				_XmDrawShadows(dpy, win,
+					g->manager.top_shadow_GC,
+					g->manager.bottom_shadow_GC,
+                    0,0,
+                    g->core.width, g->core.height,
+					g->manager.shadow_thickness,
+					g->grid.shadowType);
+#endif
+    }
+/* end of extra shadow */
 	for (i = 0; i < 9; i++)
 		{
 		if (g->grid.debugLevel > 1)
@@ -1700,8 +1730,9 @@ Redisplay(Widget w,
 		rRect.width -= st * 2;
 		rRect.y += st;
 		rRect.height -= st * 2;
-		if (XmLRectIntersect(&eRect, &rRect) != XmLRectInside &&
-			g->manager.shadow_thickness)
+		if (XmLRectIntersect(&eRect, &rRect) != XmLRectInside
+            && g->manager.shadow_thickness
+            && g->grid.shadowRegions != 512)
 			{
 			if (g->grid.shadowRegions & (1 << i))
 #ifdef MOTIF11
@@ -2589,6 +2620,10 @@ Resize(Widget w)
 
 	g = (XmLGridWidget)w;
 
+    if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
+        {
+            SizeColumnsToFit(g, 0);
+        }
 	if (!g->grid.inResize)
 	  {
 	    cbs.reason = XmCR_RESIZE_GRID;
@@ -3031,7 +3066,12 @@ HorizLayout(XmLGridWidget g,
 		needsResize = 1;
 		newWidth = midWidth + width;
 		if (g->grid.debugLevel)
-			fprintf(stderr, "XmLGrid: HorizLayout VARIABLE width\n");
+            {
+            if (g->grid.hsPolicy == XmVARIABLE)
+                fprintf(stderr, "XmLGrid: HorizLayout VARIABLE width\n");
+            else
+                fprintf(stderr, "XmLGrid: HorizLayout RESIZE_IF_POSSIBLE width\n");
+            }
 		}
 	else
 		{
@@ -3120,6 +3160,7 @@ HorizLayout(XmLGridWidget g,
 		reg[i].col = rightCol;
 		reg[i].ncol = rightNCol;
 		}
+
 	if (g->grid.debugLevel)
 		{
 		fprintf(stderr, "XmLGrid: HorizLayout TOP x %d w %d c %d nc %d\n",
@@ -3273,7 +3314,7 @@ ApplyVisibleCols(XmLGridWidget g)
 	XtWidgetGeometry req;
 	XmLGridCellRefValues *cellValues;
 
-	if (g->grid.vsPolicy != XmCONSTANT)
+	if (g->grid.hsPolicy != XmCONSTANT)
 		{
 		XmLWarning((Widget)g,
 			"horizontalSizePolicy must be XmCONSTANT to set visibleColumns");
@@ -5094,6 +5135,7 @@ CvtStringToSizePolicy(Display *dpy,
 		{
 		{ "CONSTANT", XmCONSTANT },
 		{ "VARIABLE", XmVARIABLE },
+        { "RESIZE_IF_POSSIBLE", XmRESIZE_IF_POSSIBLE },
 		{ 0, 0 },
 		};
 
@@ -7469,6 +7511,13 @@ Select(Widget w,
 					XmNcolumnSizePolicy, XmCONSTANT,
 					NULL);
 				cbs.reason = XmCR_RESIZE_COLUMN;
+
+                if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
+                    {
+                        SizeColumnsToFit(g, cbs.column + 1);
+                        HorizLayout(g, 0);
+                        DrawArea(g, DrawAll, 0, 0);
+                    }
 				}
 			XtCallCallbackList((Widget)g, g->grid.resizeCallback,
 				(XtPointer)&cbs);
@@ -10569,4 +10618,79 @@ MenuDisarm(Widget w,
 }
 
 
+static int
+SizeColumnsToFit(XmLGridWidget g, int starting_at)
+{
+    int total_column_width = 0;
+	int resizable_width = 0;
+    int delta = 0;
+	int ii, column_count;
+    XmLGridColumn colp;
+    
+    /* Total the width of the columns and
+       also total how much of that can be resized */
+    delta = g->core.width;
+    column_count = XmLArrayGetCount(g->grid.colArray);
+    for (ii = 0; ii < column_count; ii ++)
+        {
+            colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, ii);
+            
+            if (colp->grid.sizePolicy != XmCONSTANT)
+                XmLWarning((Widget)g, "SizeColumnsToFit() - only valid for XmNcolumnSizePolicy == XmCONSTANT");
 
+            delta -= colp->grid.width;
+
+            if (ii >= starting_at && colp->grid.resizable)
+                resizable_width += colp->grid.width;
+        }
+
+    if (delta == 0 && resizable_width <= 0)
+        return delta;
+
+    if (g->grid.debugLevel)
+        {
+            fprintf(stderr,"Applying delta(%d) from %d to %d (%d resizable)\n",
+                    delta, starting_at, column_count - 1, resizable_width);
+        }
+
+    /* Adjust each column to fit based on its percentage of the total width */
+	for (ii = starting_at; ii < column_count ; ii ++)
+		{
+			int col_width;
+			int col_delta;
+			int new_col_width;
+
+            colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, ii);
+            col_width = colp->grid.width;
+
+			if (!colp->grid.resizable || col_width == 0)
+                continue;
+
+			if (col_width < resizable_width && resizable_width > 0)
+                col_delta = delta * ((float)col_width / resizable_width);
+            else                    
+                col_delta = delta;
+
+			new_col_width = col_width + col_delta;
+			
+			if (new_col_width < g->grid.minColWidth)
+				{
+					new_col_width = g->grid.minColWidth;
+					col_delta = col_width - new_col_width;
+				}
+			
+            delta -= col_delta;
+            resizable_width -= col_width;
+
+            /* this is actually the character width need to change
+               the pixel width instead */
+			colp->grid.width = new_col_width;
+
+            if (g->grid.debugLevel)
+                fprintf (stderr, "Column %d, width %d -> %d, new delta %d, new resizable width %d\n",
+                         ii, col_width, new_col_width,
+                         delta, resizable_width);
+		}
+
+	return delta;
+}

@@ -334,6 +334,8 @@ typedef struct _XmLGridPart
 
       Dimension iconSpacing;
 
+      Dimension minColWidth;
+
 	/* private data */
 	GC gc;
 	Cursor hResizeCursor, vResizeCursor;
