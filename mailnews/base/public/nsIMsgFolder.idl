@@ -27,12 +27,14 @@
 #include "nsIMessage.h"
 #include "nsITransactionManager.h"
 #include "nsIMsgDatabase.h"
+#include "nsMsgKeyArray.h"
 %}
 
 interface nsISupportsArray;
 interface nsIMessage;
 interface nsITransactionManager;
 interface nsIMsgDatabase;
+interface nsMsgKeyArray;
 
 [scriptable, uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
 interface nsIMsgFolder : nsIFolder {
@@ -120,12 +122,20 @@ interface nsIMsgFolder : nsIFolder {
 
 	void GetExpansionArray(in nsISupportsArray expansionArray);
 
-	void DeleteMessages(in nsISupportsArray message, in nsITransactionManager txnMgr,in boolean deleteStorage);
+	void DeleteMessages(in nsISupportsArray message, in nsITransactionManager
+                      txnMgr,in boolean deleteStorage);
 
-    void AcquireSemaphore (in nsISupports semHolder);
-    void ReleaseSemaphore (in nsISupports semHolder);
-    boolean TestSemaphore (in nsISupports semHolder);
-    boolean IsLocked();
+  void CopyMessages(in nsIMsgFolder srcFolder, in nsISupportsArray messages,
+                    in boolean isMove, in nsITransactionManager txnMgr);
+
+  void CopyFileMessage(in nsIFileSpec fileSpec, in nsIMessage msgToReplace,
+                       in boolean isDraft, in nsISupports aSupport, 
+                       in nsITransactionManager txnMgr);
+
+  void AcquireSemaphore (in nsISupports semHolder);
+  void ReleaseSemaphore (in nsISupports semHolder);
+  boolean TestSemaphore (in nsISupports semHolder);
+  boolean IsLocked();
 
 	nsIMessage CreateMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
 	void GetNewMessages();
