@@ -51,4 +51,9 @@ interface nsIDOMNSHTMLOptionCollection : nsISupports
 
   [noscript] void           setOption(in long index,
                                       in nsIDOMHTMLOptionElement option);
+
+   // The following exists to give us partial compatibility with the
+   // add method as it exists in IE (we don't yet support the second
+   // argument)
+   void                     add(in nsIDOMHTMLOptionElement option);
 };
