@@ -657,6 +657,18 @@ public:
   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                         nscoord aWidth,nscoord aHeight) = 0;
 
+  /**
+   * Draw a path.. given a point array.  The Path currently supported is a Quadratic
+   * Bezier curve
+   * @param aPointArray an array of points on the path
+   * @param aNumPoints number of points in the array
+   * @param aY0 starting y
+   * @param aX1 ending x
+   * @param aY1 ending y
+   * @param aWidth tile width
+   * @param aHeight tile height
+   */
+  NS_IMETHOD DrawPath(nsPoint aPointArray[],PRInt32 aNumPts) = 0;
 
   /**
    * Copy offscreen pixelmap to this RenderingContext.
