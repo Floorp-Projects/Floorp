@@ -676,7 +676,10 @@ if ($db_order =~ /bugs.target_milestone/) {
 
 $query .= " ORDER BY $db_order " if ($order);
 
-if ($fulltext) {
+if ($::FORM{'limit'} && detaint_natural($::FORM{'limit'})) {
+    $query .= " LIMIT $::FORM{'limit'}";
+}
+elsif ($fulltext) {
     $query .= " LIMIT 200";
 }
 
