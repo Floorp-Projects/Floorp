@@ -468,14 +468,21 @@ void nsImapProtocol::SetupWithUrl(nsIURL * aURL)
 			m_runningUrl->GetHost(&hostName);
 			m_runningUrl->GetHostPort(&port);
 
+            /*JT - Should go away when netlib registers itself! */
+            nsComponentManager::RegisterComponent(kNetServiceCID, NULL,
+                                                  NULL, "netlib.dll",
+                                                  PR_FALSE, PR_FALSE);
+
             nsINetService* pNetService;
             rv = nsServiceManager::GetService(kNetServiceCID,
                                               nsINetService::GetIID(),
                                               (nsISupports**)&pNetService);
 			if (NS_SUCCEEDED(rv) && pNetService)
 			{
-				rv = pNetService->CreateSocketTransport(&m_transport, port, hostName);
-                (void)nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
+ 				rv = pNetService->CreateSocketTransport(&m_transport, port,
+                                                        hostName);
+                (void)nsServiceManager::ReleaseService(kNetServiceCID,
+                                                       pNetService);
 			}
 		}
 	}

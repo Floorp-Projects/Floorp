@@ -54,8 +54,6 @@ public:
     // nsIMsgImapMailFolder methods
     NS_IMETHOD GetPathName(nsNativeFileSpec& aPathName);
 
-	NS_IMETHOD GetPath(nsFileSpec& aPathName);
-
     // nsICollection methods:
     NS_IMETHOD Enumerate(nsIEnumerator* *result);
     

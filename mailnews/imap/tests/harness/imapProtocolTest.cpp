@@ -60,6 +60,9 @@
 #include "nsLocalFolderSummarySpec.h"
 #include "nsImapFlagAndUidState.h"
 #include "nsParseMailbox.h"
+#include "nsImapMailFolder.h"
+#include "nsIRDFResource.h"
+#include "nsCOMPtr.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -105,6 +108,7 @@ static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
+static NS_DEFINE_CID(kCImapResource, NS_IMAPRESOURCE_CID);
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
@@ -114,12 +118,8 @@ static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
 #define DEFAULT_PORT		IMAP_PORT
 #define DEFAULT_URL_TYPE	"imap://"	/* do NOT change this value until netlib re-write is done...*/
 
-class nsIMAP4TestDriver  : public nsIUrlListener, 
-                           public nsIImapLog,
-                           public nsIImapMailFolderSink,
-                           public nsIImapMessageSink,
-                           public nsIImapExtensionSink, 
-                           public nsIImapMiscellaneousSink
+class nsIMAP4TestDriver  : public nsIUrlListener,
+                           public nsIImapLog
 {
 public:
 	NS_DECL_ISUPPORTS
@@ -130,127 +130,6 @@ public:
 
 	// nsIImapLog support
 	NS_IMETHOD HandleImapLogData (const char * aLogData);
-
-    // nsIImapMailFolderSink support
-    NS_IMETHOD PossibleImapMailbox(nsIImapProtocol* aProtocol,
-                                   mailbox_spec* aSpec);
-    NS_IMETHOD MailboxDiscoveryDone(nsIImapProtocol* aProtocol);
-    // Tell mail master about the newly selected mailbox
-    NS_IMETHOD UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
-                                     mailbox_spec* aSpec);
-    NS_IMETHOD UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
-                                       mailbox_spec* aSpec);
-    NS_IMETHOD ChildDiscoverySucceeded(nsIImapProtocol* aProtocol);
-    NS_IMETHOD OnlineFolderDelete(nsIImapProtocol* aProtocol,
-                                  const char* folderName);
-    NS_IMETHOD OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
-                                        const char* folderName);
-    NS_IMETHOD OnlineFolderRename(nsIImapProtocol* aProtocol,
-                                  folder_rename_struct* aStruct);
-    NS_IMETHOD SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
-                              EIMAPSubscriptionUpgradeState* aState);
-    NS_IMETHOD PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
-                                                PRBool* aBool);
-    NS_IMETHOD FolderIsNoSelect(nsIImapProtocol* aProtocol,
-                                FolderQueryInfo* aInfo);
-    
-    NS_IMETHOD SetupHeaderParseStream(nsIImapProtocol* aProtocol,
-                                   StreamInfo* aStreamInfo);
-    
-    NS_IMETHOD ParseAdoptedHeaderLine(nsIImapProtocol* aProtocol,
-                                   msg_line_info* aMsgLineInfo);
-    
-    NS_IMETHOD NormalEndHeaderParseStream(nsIImapProtocol* aProtocol);
-    
-    NS_IMETHOD AbortHeaderParseStream(nsIImapProtocol* aProtocol);
-    
-    // nsIImapMessageSink support
-    NS_IMETHOD SetupMsgWriteStream(nsIImapProtocol* aProtocol,
-                                   StreamInfo* aStreamInfo);
-    
-    NS_IMETHOD ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
-                                   msg_line_info* aMsgLineInfo);
-    
-    NS_IMETHOD NormalEndMsgWriteStream(nsIImapProtocol* aProtocol);
-    
-    NS_IMETHOD AbortMsgWriteStream(nsIImapProtocol* aProtocol);
-    
-    // message move/copy related methods
-    NS_IMETHOD OnlineCopyReport(nsIImapProtocol* aProtocol,
-                                ImapOnlineCopyState* aCopyState);
-    NS_IMETHOD BeginMessageUpload(nsIImapProtocol* aProtocol);
-    NS_IMETHOD UploadMessageFile(nsIImapProtocol* aProtocol,
-                                 UploadMessageInfo* aMsgInfo);
-
-    // message flags operation
-    NS_IMETHOD NotifyMessageFlags(nsIImapProtocol* aProtocol,
-                                  FlagsKeyStruct* aKeyStruct);
-
-    NS_IMETHOD NotifyMessageDeleted(nsIImapProtocol* aProtocol,
-                                    delete_message_struct* aStruct);
-    NS_IMETHOD GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
-                                    MessageSizeInfo* sizeInfo);
-
-    // nsIImapExtensionSink support
-  
-    NS_IMETHOD SetUserAuthenticated(nsIImapProtocol* aProtocol,
-								  PRBool aBool);
-    NS_IMETHOD SetMailServerUrls(nsIImapProtocol* aProtocol,
-                                 const char* hostName);
-    NS_IMETHOD SetMailAccountUrl(nsIImapProtocol* aProtocol,
-                                 const char* hostName);
-    NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
-                                 nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
-                               nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
-                                   nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-                                         nsIMAPACLRightsInfo* aclRights);
-    NS_IMETHOD SetFolderAdminURL(nsIImapProtocol* aProtocol,
-                                 FolderQueryInfo* aInfo);
-    
-    // nsIImapMiscellaneousSink support
-	
-	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
-                               const char* searchHitLine);
-	NS_IMETHOD GetArbitraryHeaders(nsIImapProtocol* aProtocol,
-                                   GenericInfo* aInfo);
-	NS_IMETHOD GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
-                                                 GenericInfo* aInfo);
-    NS_IMETHOD GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
-                                        PRBool* aBool);
-	NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol);
-	NS_IMETHOD UpdateSecurityStatus(nsIImapProtocol* aProtocol);
-	// ****
-	NS_IMETHOD FinishImapConnection(nsIImapProtocol* aProtocol);
-	NS_IMETHOD SetImapHostPassword(nsIImapProtocol* aProtocol,
-                                   GenericInfo* aInfo);
-	NS_IMETHOD GetPasswordForUser(nsIImapProtocol* aProtocol,
-                                  const char* userName);
-	NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
-                                     nsMsgBiffState biffState);
-	NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol,
-                                    uid_validity_info* aInfo);
-	NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
-                                     PRUint32 uidValidity);
-	NS_IMETHOD FEAlert(nsIImapProtocol* aProtocol,
-                       const char* aString);
-	NS_IMETHOD FEAlertFromServer(nsIImapProtocol* aProtocol,
-                                 const char* aString);
-	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
-                              const char* statusMsg);
-	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
-                               ProgressInfo* aInfo);
-	NS_IMETHOD PastPasswordCheck(nsIImapProtocol* aProtocol);
-	NS_IMETHOD CommitNamespaces(nsIImapProtocol* aProtocol,
-                                const char* hostName);
-	NS_IMETHOD CommitCapabilityForHost(nsIImapProtocol* aProtocol,
-                                       const char* hostName);
-	NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
-                               msg_line_info* aInfo);
-	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
-                             TunnelInfo *aInfo);
 
 	nsIMAP4TestDriver(PLEventQueue *queue);
 	virtual ~nsIMAP4TestDriver();
@@ -265,6 +144,7 @@ public:
 	nsresult ListCommands();   // will list all available commands to the user...i.e. "get groups, get article, etc."
 	nsresult ReadAndDispatchCommand(); // reads a command number in from the user and calls the appropriate command generator
 	nsresult PromptForUserData(const char * userPrompt);
+	void SetupInbox();
 
 	// command handlers
 	nsresult OnCommand();   // send a command to the imap server
@@ -285,6 +165,7 @@ protected:
 	PRUint32	m_port;
 	char		m_host[200];		
 
+    nsIMsgFolder* m_inbox;
 	nsIImapUrl * m_url; 
 	nsIImapProtocol * m_IMAP4Protocol; // running protocol instance
 	nsParseMailMessageState *m_msgParser ;
@@ -302,17 +183,12 @@ protected:
 	nsresult InitializeProtocol(const char * urlSpec);
 	PRBool m_protocolInitialized; 
     PLEventQueue *m_eventQueue;
-
-	void FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState);
-	void FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState);
-	void PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, const nsMsgKeyArray &keysToFetch, mailbox_spec *boxSpec);
-	void TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMessage *tweakMe);
-
 };
 
 nsIMAP4TestDriver::nsIMAP4TestDriver(PLEventQueue *queue)
 {
 	NS_INIT_REFCNT();
+    m_inbox = 0;
 	m_urlSpec[0] = '\0';
 	m_urlString[0] = '\0';
 	m_url = nsnull;
@@ -351,22 +227,6 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     {
         *aInstancePtr = (void*)(nsIImapLog*)this;
     }
-    else if (aIID.Equals(nsIImapMailFolderSink::GetIID()))
-    {
-        *aInstancePtr = (void*)(nsIImapMailFolderSink*)this;
-    }
-    else if (aIID.Equals(nsIImapMessageSink::GetIID()))
-    {
-        *aInstancePtr = (void*)(nsIImapMessageSink*)this;
-    }
-    else if (aIID.Equals(nsIImapExtensionSink::GetIID()))
-    {
-        *aInstancePtr = (void*)(nsIImapExtensionSink*)this;
-    }
-    else if (aIID.Equals(nsIImapMiscellaneousSink::GetIID()))
-    {
-        *aInstancePtr = (void*)(nsIImapMiscellaneousSink*)this;
-    }
     else if (aIID.Equals(kISupportsIID))
     {
         *aInstancePtr = (void*)(nsISupports*)(nsIUrlListener*)this;
@@ -377,846 +237,6 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
 }
-
-    // nsIImapMailFolderSink support
-NS_IMETHODIMP
-nsIMAP4TestDriver::PossibleImapMailbox(nsIImapProtocol* aProtocol,
-                                       mailbox_spec* aSpec)
-{
-	printf("We found folder on host %s with name %s.\n", aSpec->hostName ? aSpec->hostName : "", aSpec->allocatedPathName ? aSpec->allocatedPathName : "");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::MailboxDiscoveryDone(nsIImapProtocol* aProtocol)
-{
-    printf("**** nsIMAP4TestDriver::MailboxDiscoveryDone\r\n");
-    return NS_OK;
-}
-
-// Tell msglib about the newly selected mailbox
-NS_IMETHODIMP
-nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
-                                     mailbox_spec* aSpec)
-{
-    printf("**** nsIMAP4TestDriver::UpdateImapMailboxInfo\r\n");
-
-	nsIMsgDatabase * mailDBFactory;
-	nsresult rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDBFactory);
-	nsString	pathName = "/tmp/";
-	pathName+= aSpec->allocatedPathName;
-	nsFileSpec dbName(pathName);
-
-	if (NS_SUCCEEDED(rv) && mailDBFactory)
-	{
-		// if we pass in PR_TRUE for upgrading, the db code will ignore the summary out of date problem
-		// for now.
-		rv = mailDBFactory->Open(dbName, PR_TRUE, (nsIMsgDatabase **) &m_mailDB, PR_TRUE);
-	}
-//	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
-    if (NS_FAILED(rv)) 
-	{
-		if (mailDBFactory)
-			NS_RELEASE(mailDBFactory);
-		return rv;
-	}
-    
-    if (aSpec->folderSelected)
-    {
-    	nsMsgKeyArray existingKeys;
-    	nsMsgKeyArray keysToDelete;
-    	nsMsgKeyArray keysToFetch;
-		nsIDBFolderInfo *dbFolderInfo = nsnull;
-		PRInt32 imapUIDValidity = 0;
-
-		rv = m_mailDB->GetDBFolderInfo(&dbFolderInfo);
-
-		if (NS_SUCCEEDED(rv) && dbFolderInfo)
-			dbFolderInfo->GetImapUidValidity(&imapUIDValidity);
-    	m_mailDB->ListAllKeys(existingKeys);
-    	if (m_mailDB->ListAllOfflineDeletes(&existingKeys) > 0)
-			existingKeys.QuickSort();
-    	if ((imapUIDValidity != aSpec->folder_UIDVALIDITY)	/* &&	// if UIDVALIDITY Changed 
-    		!NET_IsOffline() */)
-    	{
-
-			nsIMsgDatabase *saveMailDB = m_mailDB;
-#if TRANSFER_INFO
-			TNeoFolderInfoTransfer *originalInfo = NULL;
-			originalInfo = new TNeoFolderInfoTransfer(dbFolderInfo);
-#endif // 0
-			m_mailDB->ForceClosed();
-			m_mailDB = NULL;
-				
-			nsLocalFolderSummarySpec	summarySpec(dbName);
-			// Remove summary file.
-			summarySpec.Delete(PR_FALSE);
-			
-			// Create a new summary file, update the folder message counts, and
-			// Close the summary file db.
-			rv = mailDBFactory->Open(dbName, PR_TRUE, &m_mailDB, PR_FALSE);
-			if (NS_SUCCEEDED(rv))
-			{
-#if TRANSFER_INFO
-				if (originalInfo)
-				{
-					originalInfo->TransferFolderInfo(*m_mailDB->m_dbFolderInfo);
-					delete originalInfo;
-				}
-				SummaryChanged();
-#endif
-			}
-			// store the new UIDVALIDITY value
-			rv = m_mailDB->GetDBFolderInfo(&dbFolderInfo);
-
-			if (NS_SUCCEEDED(rv) && dbFolderInfo)
-    			dbFolderInfo->SetImapUidValidity(aSpec->folder_UIDVALIDITY);
-    										// delete all my msgs, the keys are bogus now
-											// add every message in this folder
-			existingKeys.RemoveAll();
-//			keysToDelete.CopyArray(&existingKeys);
-
-			if (aSpec->flagState)
-			{
-				nsMsgKeyArray no_existingKeys;
-	  			FindKeysToAdd(no_existingKeys, keysToFetch, aSpec->flagState);
-    		}
-    	}		
-    	else if (!aSpec->flagState /*&& !NET_IsOffline() */)	// if there are no messages on the server
-    	{
-			keysToDelete.CopyArray(&existingKeys);
-    	}
-    	else /* if ( !NET_IsOffline()) */
-    	{
-    		FindKeysToDelete(existingKeys, keysToDelete, aSpec->flagState);
-
-			// if this is the result of an expunge then don't grab headers
-			if (!(aSpec->box_flags & kJustExpunged))
-				FindKeysToAdd(existingKeys, keysToFetch, aSpec->flagState);
-    	}
-    	
-    	
-    	if (keysToDelete.GetSize())
-    	{
-			PRUint32 total;
-
-    		PRBool highWaterDeleted = FALSE;
-			// It would be nice to notify RDF or whoever of a mass delete here.
-    		m_mailDB->DeleteMessages(&keysToDelete,NULL);
-			total = keysToDelete.GetSize();
-			nsMsgKey highWaterMark = nsMsgKey_None;
-		}
-	   	if (keysToFetch.GetSize())
-    	{			
-            PrepareToAddHeadersToMailDB(aProtocol, keysToFetch, aSpec);
-			if (aProtocol)
-				aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
-    	}
-    	else 
-    	{
-            // let the imap libnet module know that we don't need headers
-			if (aProtocol)
-				aProtocol->NotifyHdrsToDownload(NULL, 0);
-			// wait until we can get body id monitor before continuing.
-//			IMAP_BodyIdMonitor(adoptedBoxSpec->connection, TRUE);
-			// I think the real fix for this is to seperate the header ids from body id's.
-			// this is for fetching bodies for offline use
-			if (aProtocol)
-				aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
-//			NotifyFetchAnyNeededBodies(aSpec->connection, mailDB);
-//			IMAP_BodyIdMonitor(adoptedBoxSpec->connection, FALSE);
-    	}
-    }
-
-
-    if (NS_FAILED(rv))
-
-    {
-        dbName.Delete(PR_FALSE);
-    }
- 	if (mailDBFactory)
-		NS_RELEASE(mailDBFactory);
-    return NS_OK;
-}
-
-
-// both of these algorithms assume that key arrays and flag states are sorted by increasing key.
-void nsIMAP4TestDriver::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToDelete, nsImapFlagAndUidState *flagState)
-{
-	PRBool imapDeleteIsMoveToTrash = /* DeleteIsMoveToTrash() */ PR_TRUE;
-	PRUint32 total = existingKeys.GetSize();
-	PRInt32 index;
-
-	int onlineIndex=0; // current index into flagState
-	for (PRUint32 keyIndex=0; keyIndex < total; keyIndex++)
-	{
-		PRUint32 uidOfMessage;
-
-		flagState->GetNumberOfMessages(&index);
-		while ((onlineIndex < index) && 
-			   (flagState->GetUidOfMessage(onlineIndex, &uidOfMessage), (existingKeys[keyIndex] > uidOfMessage) ))
-		{
-			onlineIndex++;
-		}
-		
-		imapMessageFlagsType flags;
-		flagState->GetUidOfMessage(onlineIndex, &uidOfMessage);
-		flagState->GetMessageFlags(onlineIndex, &flags);
-		// delete this key if it is not there or marked deleted
-		if ( (onlineIndex >= index ) ||
-			 (existingKeys[keyIndex] != uidOfMessage) ||
-			 ((flags & kImapMsgDeletedFlag) && imapDeleteIsMoveToTrash) )
-		{
-			nsMsgKey doomedKey = existingKeys[keyIndex];
-			if ((PRInt32) doomedKey < 0 && doomedKey != nsMsgKey_None)
-				continue;
-			else
-				keysToDelete.Add(existingKeys[keyIndex]);
-		}
-		
-		flagState->GetUidOfMessage(onlineIndex, &uidOfMessage);
-		if (existingKeys[keyIndex] == uidOfMessage) 
-			onlineIndex++;
-	}
-}
-
-void nsIMAP4TestDriver::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState)
-{
-	PRBool showDeletedMessages = PR_FALSE /* ShowDeletedMessages() */;
-
-	int dbIndex=0; // current index into existingKeys
-	PRInt32 existTotal, numberOfKnownKeys;
-	PRInt32 index;
-	
-	existTotal = numberOfKnownKeys = existingKeys.GetSize();
-	flagState->GetNumberOfMessages(&index);
-	for (PRInt32 flagIndex=0; flagIndex < index; flagIndex++)
-	{
-		PRUint32 uidOfMessage;
-		flagState->GetUidOfMessage(flagIndex, &uidOfMessage);
-		while ( (flagIndex < numberOfKnownKeys) && (dbIndex < existTotal) &&
-				existingKeys[dbIndex] < uidOfMessage) 
-			dbIndex++;
-		
-		if ( (flagIndex >= numberOfKnownKeys)  || 
-			 (dbIndex >= existTotal) ||
-			 (existingKeys[dbIndex] != uidOfMessage ) )
-		{
-			numberOfKnownKeys++;
-
-			imapMessageFlagsType flags;
-			flagState->GetMessageFlags(flagIndex, &flags);
-			if (showDeletedMessages || ! (flags & kImapMsgDeletedFlag))
-			{
-				keysToFetch.Add(uidOfMessage);
-			}
-		}
-	}
-}
-
-void nsIMAP4TestDriver::PrepareToAddHeadersToMailDB(nsIImapProtocol* aProtocol, const nsMsgKeyArray &keysToFetch,
-                                                mailbox_spec *boxSpec)
-{
-    PRUint32 *theKeys = (PRUint32 *) PR_Malloc( keysToFetch.GetSize() * sizeof(PRUint32) );
-    if (theKeys)
-    {
-		PRUint32 total = keysToFetch.GetSize();
-
-        for (int keyIndex=0; keyIndex < total; keyIndex++)
-        	theKeys[keyIndex] = keysToFetch[keyIndex];
-        
-//        m_DownLoadState = kDownLoadingAllMessageHeaders;
-
-        nsresult res = NS_OK; /*ImapMailDB::Open(m_pathName,
-                                         TRUE, // create if necessary
-                                         &mailDB,
-                                         m_master,
-                                         &dbWasCreated); */
-
-		// don't want to download headers in a composition pane
-        if (NS_SUCCEEDED(res))
-        {
-#if 0
-			SetParseMailboxState(new ParseIMAPMailboxState(m_master, m_host, this,
-														   urlQueue,
-														   boxSpec->flagState));
-	        boxSpec->flagState = NULL;		// adopted by ParseIMAPMailboxState
-			GetParseMailboxState()->SetPane(url_pane);
-
-            GetParseMailboxState()->SetDB(mailDB);
-            GetParseMailboxState()->SetIncrementalUpdate(TRUE);
-	        GetParseMailboxState()->SetMaster(m_master);
-	        GetParseMailboxState()->SetContext(url_pane->GetContext());
-	        GetParseMailboxState()->SetFolder(this);
-	        
-	        GetParseMailboxState()->BeginParsingFolder(0);
-#endif // 0 hook up parsing later.
-	        // the imap libnet module will start downloading message headers imap.h
-			if (aProtocol)
-				aProtocol->NotifyHdrsToDownload(theKeys, total /*keysToFetch.GetSize() */);
-			// now, tell it we don't need any bodies.
-			if (aProtocol)
-				aProtocol->NotifyBodysToDownload(NULL, 0);
-        }
-        else
-        {
-			if (aProtocol)
-				aProtocol->NotifyHdrsToDownload(NULL, 0);
-        }
-    }
-}
-
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
-                                       mailbox_spec* aSpec)
-{
-    printf("**** nsIMAP4TestDriver::UpdateImapMailboxStatus\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::ChildDiscoverySucceeded(nsIImapProtocol* aProtocol)
-{
-    printf("**** nsIMAP4TestDriver::ChildDiscoverySucceeded\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::OnlineFolderDelete(nsIImapProtocol* aProtocol,
-                                  const char* folderName)
-{
-    printf("**** nsIMAP4TestDriver::OnlineFolderDelete\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
-                                        const char* folderName)
-{
-    printf("**** nsIMAP4TestDriver::OnlineFolderCreateFailed\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::OnlineFolderRename(nsIImapProtocol* aProtocol,
-                                  folder_rename_struct* aStruct)
-{
-    printf("**** nsIMAP4TestDriver::OnlineFolderRename\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
-                              EIMAPSubscriptionUpgradeState* aState)
-{
-    printf("**** nsIMAP4TestDriver::SubscribeUpgradeFinished\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
-                                                PRBool* aBool)
-{
-    printf("**** nsIMAP4TestDriver::PromptUserForSubscribeUpdatePath\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::FolderIsNoSelect(nsIImapProtocol* aProtocol,
-                                FolderQueryInfo* aInfo)
-{
-    printf("**** nsIMAP4TestDriver::FolderIsNoSelect\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsIMAP4TestDriver::SetupHeaderParseStream(nsIImapProtocol* aProtocol,
-                               StreamInfo* aStreamInfo)
-{
-    printf("**** nsIMAP4TestDriver::SetupHeaderParseStream\r\n");
-
-	m_nextMessageByteLength = aStreamInfo->size;
-	if (!m_msgParser)
-	{
-		m_msgParser = new nsParseMailMessageState;
-		m_msgParser->SetMailDB(m_mailDB);
-	}
-	else
-		m_msgParser->Clear();
-	if (m_msgParser)
-	{
-		m_msgParser->m_state =  MBOX_PARSE_HEADERS;           
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
-}
-
-NS_IMETHODIMP nsIMAP4TestDriver::ParseAdoptedHeaderLine(nsIImapProtocol* aProtocol,
-                               msg_line_info* aMsgLineInfo)
-{
-    printf("**** nsIMAP4TestDriver::ParseAdoptedHeaderLine\r\n");
-   // we can get blocks that contain more than one line, 
-    // but they never contain partial lines
-	char *str = aMsgLineInfo->adoptedMessageLine;
-	m_curMsgUid = aMsgLineInfo->uidOfMessage;
-	m_msgParser->m_envelope_pos = m_curMsgUid;	// OK, this is silly (but we'll fix it). m_envelope_pos, for local folders,
-												// is the msg key. Setting this will set the msg key for the new header.
-
-	PRInt32 len = nsCRT::strlen(str);
-    char *currentEOL  = PL_strstr(str, LINEBREAK);
-    const char *currentLine = str;
-    while (currentLine < (str + len))
-    {
-        if (currentEOL)
-        {
-            m_msgParser->ParseFolderLine(currentLine, (currentEOL + LINEBREAK_LEN) - currentLine);
-            currentLine = currentEOL + LINEBREAK_LEN;
-            currentEOL  = XP_STRSTR(currentLine, LINEBREAK);
-        }
-        else
-        {
-			m_msgParser->ParseFolderLine(currentLine, PL_strlen(currentLine));
-            currentLine = str + len + 1;
-        }
-    }
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP nsIMAP4TestDriver::NormalEndHeaderParseStream(nsIImapProtocol* aProtocol)
-{
-    printf("**** nsIMAP4TestDriver::NormalEndHeaderParseStream\r\n");
-	if (m_msgParser && m_msgParser->m_newMsgHdr)
-	{
-		m_msgParser->m_newMsgHdr->SetMessageKey(m_curMsgUid);
-		TweakHeaderFlags(aProtocol, m_msgParser->m_newMsgHdr);
-		// here we need to tweak flags from uid state..
-		m_mailDB->AddNewHdrToDB(m_msgParser->m_newMsgHdr, PR_TRUE);
-		m_msgParser->FinishHeader();
-		if (m_mailDB)
-			m_mailDB->Commit(kLargeCommit);	// don't really want to do this for every message...
-											// but I can't find the event that means we've finished getting headers
-	}
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsIMAP4TestDriver::AbortHeaderParseStream(nsIImapProtocol* aProtocol)
-{
-    printf("**** nsIMAP4TestDriver::AbortHeaderParseStream\r\n");
-    return NS_OK;
-}
-
-void nsIMAP4TestDriver::TweakHeaderFlags(nsIImapProtocol* aProtocol, nsIMessage *tweakMe)
-{
-	if (m_mailDB && aProtocol && tweakMe)
-	{
-		tweakMe->SetMessageKey(m_curMsgUid);
-		tweakMe->SetMessageSize(m_nextMessageByteLength);
-		
-		PRBool foundIt = FALSE;
-		imapMessageFlagsType imap_flags;
-		nsresult res = aProtocol->GetFlagsForUID(m_curMsgUid, &foundIt, &imap_flags);
-		if (NS_SUCCEEDED(res) && foundIt)
-		{
-			// make a mask and clear these message flags
-			PRUint32 mask = MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_MARKED | MSG_FLAG_IMAP_DELETED;
-			PRUint32 dbHdrFlags;
-
-			tweakMe->GetFlags(&dbHdrFlags);
-			tweakMe->AndFlags(~mask, &dbHdrFlags);
-			
-			// set the new value for these flags
-			PRUint32 newFlags = 0;
-			if (imap_flags & kImapMsgSeenFlag)
-				newFlags |= MSG_FLAG_READ;
-			else // if (imap_flags & kImapMsgRecentFlag)
-				newFlags |= MSG_FLAG_NEW;
-
-			// Okay here is the MDN needed logic (if DNT header seen):
-			/* if server support user defined flag:
-					MDNSent flag set => clear kMDNNeeded flag
-					MDNSent flag not set => do nothing, leave kMDNNeeded on
-			   else if 
-					not MSG_FLAG_NEW => clear kMDNNeeded flag
-					MSG_FLAG_NEW => do nothing, leave kMDNNeeded on
-			 */
-			PRUint16 userFlags;
-			nsresult res = aProtocol->GetSupportedUserFlags(&userFlags);
-			if (NS_SUCCEEDED(res) && (userFlags & (kImapMsgSupportUserFlag |
-													  kImapMsgSupportMDNSentFlag)))
-			{
-				if (imap_flags & kImapMsgMDNSentFlag)
-				{
-					newFlags |= MSG_FLAG_MDN_REPORT_SENT;
-					if (dbHdrFlags & MSG_FLAG_MDN_REPORT_NEEDED)
-						tweakMe->AndFlags(~MSG_FLAG_MDN_REPORT_NEEDED, &dbHdrFlags);
-				}
-			}
-			else
-			{
-				if (!(imap_flags & kImapMsgRecentFlag) && 
-					dbHdrFlags & MSG_FLAG_MDN_REPORT_NEEDED)
-					tweakMe->AndFlags(~MSG_FLAG_MDN_REPORT_NEEDED, &dbHdrFlags);
-			}
-
-			if (imap_flags & kImapMsgAnsweredFlag)
-				newFlags |= MSG_FLAG_REPLIED;
-			if (imap_flags & kImapMsgFlaggedFlag)
-				newFlags |= MSG_FLAG_MARKED;
-			if (imap_flags & kImapMsgDeletedFlag)
-				newFlags |= MSG_FLAG_IMAP_DELETED;
-			if (imap_flags & kImapMsgForwardedFlag)
-				newFlags |= MSG_FLAG_FORWARDED;
-
-			if (newFlags)
-				tweakMe->OrFlags(newFlags, &dbHdrFlags);
-		}
-	}
-}    
-    
-    // nsIImapMessageSink support
-NS_IMETHODIMP
-nsIMAP4TestDriver::SetupMsgWriteStream(nsIImapProtocol* aProtocol,
-                                   StreamInfo* aStreamInfo)
-{
-    printf("**** nsIMAP4TestDriver::SetupMsgWriteStream\r\n");
-  // we are about to display an article so open up a temp file on the article...
-  PR_Delete(ARTICLE_PATH);
-  m_tempArticleFile = PR_Open(ARTICLE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
-    return NS_OK;
-}
-
-    
-NS_IMETHODIMP
-nsIMAP4TestDriver::ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
-                                   msg_line_info* aMsgLineInfo)
-{
-    printf("**** nsIMAP4TestDriver::ParseAdoptedMsgLine\r\n");
-	if (m_tempArticleFile)
-		PR_Write(m_tempArticleFile,(void *) aMsgLineInfo->adoptedMessageLine, PL_strlen(aMsgLineInfo->adoptedMessageLine));
-    return NS_OK;
-}
-
-    
-NS_IMETHODIMP
-nsIMAP4TestDriver::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
-{
-    printf("**** nsIMAP4TestDriver::NormalEndMsgWriteStream\r\n");
-	if (m_tempArticleFile)
-		PR_Close(m_tempArticleFile);
-    return NS_OK;
-}
-
-    
-NS_IMETHODIMP
-nsIMAP4TestDriver::AbortMsgWriteStream(nsIImapProtocol* aProtocol)
-{
-    printf("**** nsIMAP4TestDriver::AbortMsgWriteStream\r\n");
-    return NS_OK;
-}
-
-    
-    // message move/copy related methods
-NS_IMETHODIMP
-nsIMAP4TestDriver::OnlineCopyReport(nsIImapProtocol* aProtocol,
-                                ImapOnlineCopyState* aCopyState)
-{
-    printf("**** nsIMAP4TestDriver::OnlineCopyReport\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::BeginMessageUpload(nsIImapProtocol* aProtocol)
-{
-    printf("**** nsIMAP4TestDriver::BeginMessageUpload\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::UploadMessageFile(nsIImapProtocol* aProtocol,
-                                 UploadMessageInfo* aMsgInfo)
-{
-    printf("**** nsIMAP4TestDriver::UploadMessageFile\r\n");
-    return NS_OK;
-}
-
-
-    // message flags operation
-NS_IMETHODIMP
-nsIMAP4TestDriver::NotifyMessageFlags(nsIImapProtocol* aProtocol,
-                                  FlagsKeyStruct* aKeyStruct)
-{
-    printf("**** nsIMAP4TestDriver::NotifyMessageFlags\r\n");
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::NotifyMessageDeleted(nsIImapProtocol* aProtocol,
-                                    delete_message_struct* aStruct)
-{
-    printf("**** nsIMAP4TestDriver::NotifyMessageDeleted\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
-                                    MessageSizeInfo* sizeInfo)
-{
-    printf("**** nsIMAP4TestDriver::GetMessageSizeFromDB\r\n");
-	nsresult rv = NS_ERROR_FAILURE;
-	if (sizeInfo && sizeInfo->id)
-	{
-		PRUint32 key = atoi(sizeInfo->id);
-		nsIMessage *mailHdr = nsnull;
-		NS_ASSERTION(sizeInfo->idIsUid, "ids must be uids to get message size");
-		if (sizeInfo->idIsUid)
-			rv = m_mailDB->GetMsgHdrForKey(key, &mailHdr);
-		if (NS_SUCCEEDED(rv) && mailHdr)
-		{
-			rv = mailHdr->GetMessageSize(&sizeInfo->size);
-			NS_RELEASE(mailHdr);
-		}
-	}
-    return rv;
-}
-
-
-    // nsIImapExtensionSink support
-  
-NS_IMETHODIMP
-nsIMAP4TestDriver::SetUserAuthenticated(nsIImapProtocol* aProtocol,
-								  PRBool aBool)
-{
-    printf("**** nsIMAP4TestDriver::SetUserAuthenticated\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::SetMailServerUrls(nsIImapProtocol* aProtocol,
-                                 const char* hostName)
-{
-    printf("**** nsIMAP4TestDriver::SetMailServerUrls\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::SetMailAccountUrl(nsIImapProtocol* aProtocol,
-                                 const char* hostName)
-{
-    printf("**** nsIMAP4TestDriver::SetMailAccountUrl\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::ClearFolderRights(nsIImapProtocol* aProtocol,
-                                 nsIMAPACLRightsInfo* aclRights)
-{
-    printf("**** nsIMAP4TestDriver::ClearFolderRights\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::AddFolderRights(nsIImapProtocol* aProtocol,
-                               nsIMAPACLRightsInfo* aclRights)
-{
-    printf("**** nsIMAP4TestDriver::AddFolderRights\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::RefreshFolderRights(nsIImapProtocol* aProtocol,
-                                   nsIMAPACLRightsInfo* aclRights)
-{
-    printf("**** nsIMAP4TestDriver::RefreshFolderRights\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
-                                         nsIMAPACLRightsInfo* aclRights)
-{
-    printf("**** nsIMAP4TestDriver::FolderNeedsACLInitialized\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::SetFolderAdminURL(nsIImapProtocol* aProtocol,
-                                 FolderQueryInfo* aInfo)
-{
-    printf("**** nsIMAP4TestDriver::SetFolderAdminURL\r\n");
-    return NS_OK;
-}
-
-    
-    // nsIImapMiscellaneousSink support
-	
-NS_IMETHODIMP
-nsIMAP4TestDriver::AddSearchResult(nsIImapProtocol* aProtocol, 
-                               const char* searchHitLine)
-{
-    printf("**** nsIMAP4TestDriver::AddSearchResult\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::GetArbitraryHeaders(nsIImapProtocol* aProtocol,
-                                   GenericInfo* aInfo)
-{
-    printf("**** nsIMAP4TestDriver::GetArbitraryHeaders\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
-                                                 GenericInfo* aInfo)
-{
-    printf("**** nsIMAP4TestDriver::GetShouldDownloadArbitraryHeaders\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::GetShowAttachmentsInline(nsIImapProtocol* aProtocol,
-                                            PRBool* aBool)
-{
-    printf("**** nsIMAP4TestDriver::GetShowAttachmentsInLine\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
-{
-    printf("**** nsIMAP4TestDriver::HeaderFetchCompleted\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::UpdateSecurityStatus(nsIImapProtocol* aProtocol)
-{
-    printf("**** nsIMAP4TestDriver::UpdateSecurityStatus\r\n");
-    return NS_OK;
-}
-
-	// ****
-NS_IMETHODIMP
-nsIMAP4TestDriver::FinishImapConnection(nsIImapProtocol* aProtocol)
-{
-    printf("**** nsIMAP4TestDriver::FinishImapConnection\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::SetImapHostPassword(nsIImapProtocol* aProtocol,
-                                   GenericInfo* aInfo)
-{
-    printf("**** nsIMAP4TestDriver::SetImapHostPassword\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::GetPasswordForUser(nsIImapProtocol* aProtocol,
-                                  const char* userName)
-{
-    printf("**** nsIMAP4TestDriver::GetPasswordForUser\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
-                                     nsMsgBiffState biffState)
-{
-    printf("**** nsIMAP4TestDriver::SetBiffStateAndUpdate\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::GetStoredUIDValidity(nsIImapProtocol* aProtocol,
-                                    uid_validity_info* aInfo)
-{
-    printf("**** nsIMAP4TestDriver::GetStoredUIDValidity\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
-                                     PRUint32 uidValidity)
-{
-    printf("**** nsIMAP4TestDriver::LiteSelectUIDValidity\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::FEAlert(nsIImapProtocol* aProtocol,
-                       const char* aString)
-{
-    printf("**** nsIMAP4TestDriver::FEAlert\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::FEAlertFromServer(nsIImapProtocol* aProtocol,
-                                 const char* aString)
-{
-    printf("**** nsIMAP4TestDriver::FEAlertFromServer\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::ProgressStatus(nsIImapProtocol* aProtocol,
-                              const char* statusMsg)
-{
-    printf("**** nsIMAP4TestDriver::ProgressStatus\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::PercentProgress(nsIImapProtocol* aProtocol,
-                               ProgressInfo* aInfo)
-{
-    printf("**** nsIMAP4TestDriver::PercentProgress\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::PastPasswordCheck(nsIImapProtocol* aProtocol)
-{
-    printf("**** nsIMAP4TestDriver::PastPasswordCheck\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::CommitNamespaces(nsIImapProtocol* aProtocol,
-                                const char* hostName)
-{
-    printf("**** nsIMAP4TestDriver::CommitNamespaces\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::CommitCapabilityForHost(nsIImapProtocol* aProtocol,
-                                       const char* hostName)
-{
-    printf("**** nsIMAP4TestDriver::CommitCapabilityForHost\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::TunnelOutStream(nsIImapProtocol* aProtocol,
-                               msg_line_info* aInfo)
-{
-    printf("**** nsIMAP4TestDriver::TunnelOutStream\r\n");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIMAP4TestDriver::ProcessTunnel(nsIImapProtocol* aProtocol,
-                             TunnelInfo *aInfo)
-{
-    printf("**** nsIMAP4TestDriver::ProcessTunnel\r\n");
-    return NS_OK;
-}
-
 
 nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 {
@@ -1249,6 +269,7 @@ nsIMAP4TestDriver::~nsIMAP4TestDriver()
 	if (m_mailDB)
 		m_mailDB->Commit(kLargeCommit);
 	NS_IF_RELEASE(m_mailDB);
+    NS_IF_RELEASE (m_inbox);
 }
 
 nsresult nsIMAP4TestDriver::RunDriver()
@@ -1424,6 +445,24 @@ nsresult nsIMAP4TestDriver::OnIdentityCheck()
 	return result;
 }
 
+void
+nsIMAP4TestDriver::SetupInbox()
+{
+    if (!m_inbox)
+    {
+        nsresult rv = nsComponentManager::CreateInstance( kCImapResource,
+                nsnull, nsIMsgFolder::GetIID(), (void**)&m_inbox);
+        if (NS_SUCCEEDED(rv) && m_inbox)
+		{
+            nsCOMPtr<nsIRDFResource>
+                rdfResource(do_QueryInterface(m_inbox, &rv));
+            if (NS_SUCCEEDED(rv))
+                rdfResource->Init("imap:/Inbox");
+            m_inbox->SetName("Inbox");
+		}
+    }
+}
+
 nsresult nsIMAP4TestDriver::OnSelectFolder()
 {
 	// go get the imap service and ask it to select a folder
@@ -1435,7 +474,9 @@ nsresult nsIMAP4TestDriver::OnSelectFolder()
 
 	if (NS_SUCCEEDED(rv) && imapService)
 	{
-		rv = imapService->SelectFolder(m_eventQueue, this /* imap folder sink */, this /* url listener */, nsnull);
+		SetupInbox();
+        if (NS_SUCCEEDED(rv) && m_inbox)
+            rv = imapService->SelectFolder(m_eventQueue, m_inbox /* imap folder sink */, this /* url listener */, nsnull);
 		nsServiceManager::ReleaseService(kCImapService, imapService);
 		m_runningURL = PR_TRUE; // we are now running a url...
 	}
@@ -1461,7 +502,9 @@ nsresult nsIMAP4TestDriver::OnFetchMessage()
 
 	if (NS_SUCCEEDED(rv) && imapService)
 	{
-		rv = imapService->FetchMessage(m_eventQueue, this /* imap folder sink */, this, /* imap message sink */ this /* url listener */, nsnull,
+		SetupInbox();
+        if (NS_SUCCEEDED(rv) && m_inbox)
+            rv = imapService->FetchMessage(m_eventQueue, m_inbox /* imap folder sink */, nsnull, /* imap message sink */ this /* url listener */, nsnull,
 			uidString, PR_TRUE);
 		nsServiceManager::ReleaseService(kCImapService, imapService);
 		m_runningURL = PR_TRUE; // we are now running a url...
@@ -1496,10 +539,6 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 	if (NS_SUCCEEDED(rv) && m_url)
     {
         m_url->SetImapLog(this);
-        m_url->SetImapMailFolderSink(this);
-        m_url->SetImapMessageSink(this);
-        m_url->SetImapExtensionSink(this);
-        m_url->SetImapMiscellaneousSink(this);
 
 		rv = m_url->SetSpec(m_urlString); // reset spec
 		m_url->RegisterListener(this);

@@ -33,6 +33,7 @@
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
 #include "nsIImapUrl.h"
+#include "nsIMsgMailSession.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -45,6 +46,7 @@ static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kCImapDB, NS_IMAPDB_CID);
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -286,7 +288,7 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
     if (!m_initialized)
     {
         nsresult rv = NS_OK;
-        nsFileSpec path;
+        nsNativeFileSpec path;
         rv = GetPathName(path);
         if (NS_FAILED(rv)) return rv;
 
@@ -340,17 +342,6 @@ NS_IMETHODIMP nsImapMailFolder::ReplaceElement(nsISupports* element,
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetPath(nsFileSpec& aPathName)
-{
-//  nsFileSpec nopath("/tmp/Inbox");
-//  if (mPath == nopath) {
-    //nsresult rv = nsURI2Path(kMailboxRootURI, mURI, mPath);
-//    if (NS_FAILED(rv)) return rv;
-//  }
-  aPathName = "/tmp/Inbox";
-  return NS_OK;
-}
-
 
 //Makes sure the database is open and exists.  If the database is valid then
 //returns NS_OK.  Otherwise returns a failure error value.
@@ -359,7 +350,7 @@ nsresult nsImapMailFolder::GetDatabase()
 	if (m_mailDatabase == nsnull)
 	{
 		nsNativeFileSpec path;
-		nsresult rv = GetPath(path);
+		nsresult rv = GetPathName(path);
 		if (NS_FAILED(rv)) return rv;
 
 		nsresult folderOpen = NS_OK;
@@ -633,13 +624,62 @@ NS_IMETHODIMP nsImapMailFolder::GetSizeOnDisk(PRUint32 size)
     
 NS_IMETHODIMP nsImapMailFolder::GetUsersName(char** userName)
 {
-    nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    nsIMsgMailSession *session = nsnull;
+    NS_PRECONDITION (userName, "Oops ... null userName pointer");
+    if (!userName)
+        return rv;
+    else
+        *userName = nsnull;
+
+    rv = nsServiceManager::GetService(kMsgMailSessionCID,
+                                      nsIMsgMailSession::GetIID(),
+                                      (nsISupports **)&session);
+    
+    if (NS_SUCCEEDED(rv) && session) 
+    {
+      nsIMsgIncomingServer *server = nsnull;
+      rv = session->GetCurrentServer(&server);
+
+      if (NS_SUCCEEDED(rv) && server)
+          rv = server->GetUserName(userName);
+      NS_IF_RELEASE (server);
+    }
+
+    if (session)
+        nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
+
     return rv;
 }
 
 NS_IMETHODIMP nsImapMailFolder::GetHostName(char** hostName)
 {
-    nsresult rv = NS_ERROR_FAILURE;
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    nsIMsgMailSession *session = nsnull;
+
+    NS_PRECONDITION (hostName, "Oops ... null userName pointer");
+    if (!hostName)
+        return rv;
+    else
+        *hostName = nsnull;
+
+    rv = nsServiceManager::GetService(kMsgMailSessionCID,
+                                      nsIMsgMailSession::GetIID(),
+                                      (nsISupports **)&session);
+    
+    if (NS_SUCCEEDED(rv) && session) 
+    {
+      nsIMsgIncomingServer *server = nsnull;
+      rv = session->GetCurrentServer(&server);
+
+      if (NS_SUCCEEDED(rv) && server)
+          rv = server->GetHostName(hostName);
+      NS_IF_RELEASE (server);
+    }
+
+    if (session)
+        nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
+
     return rv;
 }
 
@@ -707,8 +747,6 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     nsNativeFileSpec dbName;
 
     GetPathName(dbName);
-
-    dbName += aSpec->allocatedPathName;
 
     rv = nsComponentManager::CreateInstance(kCImapDB, nsnull,
                                             nsIMsgDatabase::GetIID(),

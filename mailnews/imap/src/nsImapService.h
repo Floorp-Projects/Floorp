@@ -24,6 +24,7 @@
 class nsIImapHostSessionList; 
 class nsString2;
 class nsIImapUrl;
+class nsIMsgFolder;
 
 class nsImapService : public nsIImapService
 {
@@ -38,69 +39,97 @@ public:
 	// we suppport the nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD CreateImapConnection (PLEventQueue *aEventQueue, nsIImapProtocol ** aImapConnection);
+	NS_IMETHOD CreateImapConnection (PLEventQueue *aEventQueue, 
+                                     nsIImapProtocol ** aImapConnection);
 
-	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink *, nsIUrlListener * aUrlListener, nsIURL ** aURL);	
-	NS_IMETHOD LiteSelectFolder(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
-											  nsIUrlListener * aUrlListener, nsIURL ** aURL);
+	NS_IMETHOD SelectFolder(PLEventQueue * aClientEventQueue, 
+                            nsIMsgFolder *aImapMailFolder, 
+                            nsIUrlListener * aUrlListener, 
+                            nsIURL ** aURL);	
+	NS_IMETHOD LiteSelectFolder(PLEventQueue * aClientEventQueue, 
+                                nsIMsgFolder * aImapMailFolder, 
+                                nsIUrlListener * aUrlListener, 
+                                nsIURL ** aURL);
 	NS_IMETHOD FetchMessage(PLEventQueue * aClientEventQueue, 
-												nsIImapMailFolderSink * aImapMailFolder, 
-												nsIImapMessageSink * aImapMessage,
-												nsIUrlListener * aUrlListener, nsIURL ** aURL,
-												const char *messageIdentifierList,
-												PRBool messageIdsAreUID);
+                            nsIMsgFolder * aImapMailFolder, 
+                            nsIImapMessageSink * aImapMessage,
+                            nsIUrlListener * aUrlListener, 
+                            nsIURL ** aURL,
+                            const char *messageIdentifierList,
+                            PRBool messageIdsAreUID);
 	NS_IMETHOD Noop(PLEventQueue * aClientEventQueue, 
-												nsIImapMailFolderSink * aImapMailFolder,
-												nsIUrlListener * aUrlListener, nsIURL ** aURL);
-	NS_IMETHOD GetHeaders(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
-										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
-		  								 const char *messageIdentifierList,
-										 PRBool messageIdsAreUID);
+                    nsIMsgFolder * aImapMailFolder,
+                    nsIUrlListener * aUrlListener, 
+                    nsIURL ** aURL);
+	NS_IMETHOD GetHeaders(PLEventQueue * aClientEventQueue, 
+                          nsIMsgFolder * aImapMailFolder, 
+                          nsIUrlListener * aUrlListener, 
+                          nsIURL ** aURL,
+                          const char *messageIdentifierList,
+                          PRBool messageIdsAreUID);
 	NS_IMETHOD Expunge(PLEventQueue * aClientEventQueue, 
-												nsIImapMailFolderSink * aImapMailFolder,
-												nsIUrlListener * aUrlListener, nsIURL ** aURL);
+                       nsIMsgFolder * aImapMailFolder,
+                       nsIUrlListener * aUrlListener,
+                       nsIURL ** aURL);
 	NS_IMETHOD Biff(PLEventQueue * aClientEventQueue, 
-												nsIImapMailFolderSink * aImapMailFolder,
-												nsIUrlListener * aUrlListener, nsIURL ** aURL,
-												PRUint32 uidHighWater);
-	NS_IMETHOD DeleteMessages(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
-										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
-		  								 const char *messageIdentifierList,
-										 PRBool messageIdsAreUID);
+                    nsIMsgFolder * aImapMailFolder,
+                    nsIUrlListener * aUrlListener,
+                    nsIURL ** aURL,
+                    PRUint32 uidHighWater);
+	NS_IMETHOD DeleteMessages(PLEventQueue * aClientEventQueue,
+                              nsIMsgFolder * aImapMailFolder, 
+                              nsIUrlListener * aUrlListener,
+                              nsIURL ** aURL,
+                              const char *messageIdentifierList,
+                              PRBool messageIdsAreUID);
 	NS_IMETHOD DeleteAllMessages(PLEventQueue * aClientEventQueue, 
-												nsIImapMailFolderSink * aImapMailFolder,
-												nsIUrlListener * aUrlListener, nsIURL ** aURL);;
-	NS_IMETHOD AddMessageFlags(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
-										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
-		  								 const char *messageIdentifierList,
-										 imapMessageFlagsType flags,
-										 PRBool messageIdsAreUID);
-	NS_IMETHOD SubtractMessageFlags(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
-										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
-		  								 const char *messageIdentifierList,
-										 imapMessageFlagsType flags,
-										 PRBool messageIdsAreUID);
-	NS_IMETHOD SetMessageFlags(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
-										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
-		  								 const char *messageIdentifierList,
-										 imapMessageFlagsType flags,
-										 PRBool messageIdsAreUID);
+                                 nsIMsgFolder * aImapMailFolder,
+                                 nsIUrlListener * aUrlListener,
+                                 nsIURL ** aURL);;
+	NS_IMETHOD AddMessageFlags(PLEventQueue * aClientEventQueue,
+                               nsIMsgFolder * aImapMailFolder, 
+                               nsIUrlListener * aUrlListener,
+                               nsIURL ** aURL,
+                               const char *messageIdentifierList,
+                               imapMessageFlagsType flags,
+                               PRBool messageIdsAreUID);
+	NS_IMETHOD SubtractMessageFlags(PLEventQueue * aClientEventQueue,
+                                    nsIMsgFolder * aImapMailFolder, 
+                                    nsIUrlListener * aUrlListener,
+                                    nsIURL ** aURL,
+                                    const char *messageIdentifierList,
+                                    imapMessageFlagsType flags,
+                                    PRBool messageIdsAreUID);
+	NS_IMETHOD SetMessageFlags(PLEventQueue * aClientEventQueue,
+                               nsIMsgFolder * aImapMailFolder, 
+                               nsIUrlListener * aUrlListener, 
+                               nsIURL ** aURL,
+                               const char *messageIdentifierList,
+                               imapMessageFlagsType flags,
+                               PRBool messageIdsAreUID);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
 protected:
-	nsresult GetImapConnectionAndUrl(PLEventQueue * aClientEventQueue, nsIImapUrl  * &imapUrl, 
-		nsIImapProtocol * &protocolInstance, nsString2 &urlSpec);
-	nsresult CreateStartOfImapUrl(nsIImapUrl &imapUrl, nsString2 &urlString);
-	nsresult DiddleFlags(PLEventQueue * aClientEventQueue, nsIImapMailFolderSink * aImapMailFolder, 
-										  nsIUrlListener * aUrlListener, nsIURL ** aURL,
-		  								 const char *messageIdentifierList,
-										 const char *howToDiddle,
-										 imapMessageFlagsType flags,
-										 PRBool messageIdsAreUID);
+	nsresult GetImapConnectionAndUrl(PLEventQueue * aClientEventQueue,
+                                     nsIImapUrl  * &imapUrl, 
+                                     nsIImapProtocol * &protocolInstance,
+                                     nsString2 &urlSpec);
+	nsresult CreateStartOfImapUrl(nsIImapUrl &imapUrl, 
+                                  nsString2 &urlString);
+    nsresult SetImapUrlSink(nsIMsgFolder* aMsgFolder,
+                              nsIImapUrl* aImapUrl);
+	nsresult DiddleFlags(PLEventQueue * aClientEventQueue,
+                         nsIMsgFolder * aImapMailFolder, 
+                         nsIUrlListener * aUrlListener, 
+                         nsIURL ** aURL,
+                         const char *messageIdentifierList,
+                         const char *howToDiddle,
+                         imapMessageFlagsType flags,
+                         PRBool messageIdsAreUID);
 	nsIImapHostSessionList * m_sessionList; // the one and only list of all host sessions...
-
+    
 };
 
 #endif /* nsImapService_h___ */
