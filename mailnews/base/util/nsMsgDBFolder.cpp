@@ -67,11 +67,39 @@ nsMsgDBFolder::nsMsgDBFolder(void)
 
 nsMsgDBFolder::~nsMsgDBFolder(void)
 {
+	//shutdown but don't shutdown children.
+	Shutdown(PR_FALSE);
+}
+
+NS_IMETHODIMP nsMsgDBFolder::Shutdown(PRBool shutdownChildren)
+{
 	if(mDatabase)
 	{
 		mDatabase->RemoveListener(this);
 		mDatabase->Close(PR_TRUE);
+		mDatabase = null_nsCOMPtr();
+
 	}
+
+	if(shutdownChildren)
+	{
+		PRUint32 count;
+	    nsresult rv = mSubFolders->Count(&count);
+	    if(NS_SUCCEEDED(rv))
+		{
+			for (PRUint32 i = 0; i < count; i++)
+			{
+				nsCOMPtr<nsISupports> childFolderSupports = getter_AddRefs(mSubFolders->ElementAt(i));
+				if(childFolderSupports)
+				{
+					nsCOMPtr<nsIFolder> childFolder = do_QueryInterface(childFolderSupports);
+					if(childFolder)
+						childFolder->Shutdown(PR_TRUE);
+				}
+			}
+		}
+	}
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::StartFolderLoading(void)

@@ -57,31 +57,8 @@ nsMessengerBootstrap::Initialize(nsIAppShellService*,
 nsresult
 nsMessengerBootstrap::Shutdown()
 {
-	nsresult finalrv = NS_OK;
-	nsresult rv;
 
-	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
-	if (NS_SUCCEEDED(rv) && accountManager)
-	{
-		// we should really move the folder cache completely to
-		// the account manager, but I'll wait for m12.
-		nsCOMPtr <nsIMsgFolderCache> folderCache;
-		accountManager->GetFolderCache(getter_AddRefs(folderCache));
-		if (folderCache)
-			accountManager->WriteToFolderCache(folderCache);
-		accountManager->CloseCachedConnections();
-		accountManager->UnloadAccounts();
-	}
-	rv = nsServiceManager::UnregisterService("component://netscape/appshell/component/messenger");
-	if(NS_FAILED(rv)) finalrv = rv;
-
-	rv = nsServiceManager::UnregisterService("component://netscape/messenger/services/session");
-	if(NS_FAILED(rv)) finalrv = rv;
-
-	rv = nsServiceManager::UnregisterService("component://netscape/messenger/biffManager");
-	if(NS_FAILED(rv)) finalrv = rv;
-
-	return finalrv;
+	return NS_OK;
 }
 
 

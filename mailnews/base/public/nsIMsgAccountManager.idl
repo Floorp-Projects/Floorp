@@ -134,8 +134,6 @@ interface nsIMsgAccountManager : nsISupports {
   void RemoveIncomingServerListener(in nsIIncomingServerListener serverListener);
   void NotifyServerLoaded(in nsIMsgIncomingServer server);
   void NotifyServerUnloaded(in nsIMsgIncomingServer server);
-  void NotifyServerAdded(in nsIMsgIncomingServer server);
-  void NotifyServerRemoved(in nsIMsgIncomingServer server);
 
   void createLocalMailAccount(in nsIMsgIdentity identity);
 };

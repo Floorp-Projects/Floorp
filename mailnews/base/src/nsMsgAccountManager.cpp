@@ -48,6 +48,7 @@
 #include "nsISmtpService.h"
 #include "nsString.h"
 #include "nsIMsgBiffManager.h"
+#include "nsIObserverService.h"
 
 // this should eventually be moved to the pop3 server for upgrading
 #include "nsIPop3IncomingServer.h"
@@ -308,16 +309,15 @@ typedef struct _findAccountByKeyEntry {
 
 
 
-NS_IMPL_ISUPPORTS1(nsMsgAccountManager, nsIMsgAccountManager)
+NS_IMPL_ISUPPORTS2(nsMsgAccountManager, nsIMsgAccountManager, nsIObserver)
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
   m_defaultAccount(null_nsCOMPtr()),
-  m_prefs(0)
+  m_prefs(0),
+  m_haveShutdown(PR_FALSE)
 {
   NS_INIT_REFCNT();
-  NS_NewISupportsArray(&m_accounts);
-  NS_NewISupportsArray(getter_AddRefs(m_incomingServerListeners));
 
   m_alreadySetImapDefaultLocalPath = PR_FALSE;
   m_alreadySetNntpDefaultLocalPath = PR_FALSE;
@@ -325,10 +325,70 @@ nsMsgAccountManager::nsMsgAccountManager() :
 
 nsMsgAccountManager::~nsMsgAccountManager()
 {
-  CloseCachedConnections();
-  if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
-  UnloadAccounts();
+  nsresult rv;
+
+  if(!m_haveShutdown)
+  {
+    Shutdown();
+	//Don't remove from Observer service in Shutdown because Shutdown also gets called
+	//from xpcom shutdown observer.  And we don't want to remove from the service in that case.
+	NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+    if (NS_SUCCEEDED(rv))
+	{    
+      nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      observerService->RemoveObserver(this, topic.GetUnicode());
+	}
+  }
+
   NS_IF_RELEASE(m_accounts);
+}
+
+nsresult nsMsgAccountManager::Init()
+{
+  nsresult rv;
+
+  rv = NS_NewISupportsArray(&m_accounts);
+  if(NS_FAILED(rv)) return rv;
+
+  rv = NS_NewISupportsArray(getter_AddRefs(m_incomingServerListeners));
+  if(NS_FAILED(rv)) return rv;
+
+  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {    
+    nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    observerService->AddObserver(this, topic.GetUnicode());
+  }
+
+  return NS_OK;
+}
+
+nsresult nsMsgAccountManager::Shutdown()
+{
+
+
+  WriteToFolderCache(m_msgFolderCache);
+  CloseCachedConnections();
+  UnloadAccounts();
+
+  if (m_prefs) nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
+
+
+  m_haveShutdown = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+  nsAutoString topicString(aTopic);
+  nsAutoString shutdownString(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+
+  if(topicString == shutdownString)
+  {
+    Shutdown();
+  }
+	
+ return NS_OK;
 }
 
 nsresult
@@ -632,7 +692,12 @@ nsMsgAccountManager::hashUnloadServer(nsHashKey *aKey, void *aData,
 	nsMsgAccountManager *accountManager = (nsMsgAccountManager*)closure;
 
 	accountManager->NotifyServerUnloaded(server);
-	
+
+	nsCOMPtr<nsIFolder> rootFolder;
+	rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+	if(NS_SUCCEEDED(rv))
+		rootFolder->Shutdown(PR_TRUE);
+
 	return PR_TRUE;
 
 }
@@ -1282,40 +1347,6 @@ NS_IMETHODIMP nsMsgAccountManager::NotifyServerUnloaded(nsIMsgIncomingServer *se
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgAccountManager::NotifyServerAdded(nsIMsgIncomingServer *server)
-{
-	nsresult rv;
-	PRUint32 count;
-	rv = m_incomingServerListeners->Count(&count);
-	if (NS_FAILED(rv)) return rv;
-
-	
-	for(PRUint32 i = 0; i < count; i++)
-	{
-		nsCOMPtr<nsIIncomingServerListener> listener = 
-			getter_AddRefs((nsIIncomingServerListener*)m_incomingServerListeners->ElementAt(i));
-		listener->OnServerAdded(server);
-	}
-
-	return NS_OK;}
-
-NS_IMETHODIMP nsMsgAccountManager::NotifyServerRemoved(nsIMsgIncomingServer *server)
-{
-	nsresult rv;
-	PRUint32 count;
-	rv = m_incomingServerListeners->Count(&count);
-	if (NS_FAILED(rv)) return rv;
-
-	
-	for(PRUint32 i = 0; i < count; i++)
-	{
-		nsCOMPtr<nsIIncomingServerListener> listener = 
-			getter_AddRefs((nsIIncomingServerListener*)m_incomingServerListeners->ElementAt(i));
-		listener->OnServerRemoved(server);
-	}
-
-	return NS_OK;
-}
 
 nsresult
 nsMsgAccountManager::MigrateIdentity(nsIMsgIdentity *identity)

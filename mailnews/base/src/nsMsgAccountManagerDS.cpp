@@ -180,7 +180,7 @@ nsMsgAccountManagerDataSource::Init()
 
 void nsMsgAccountManagerDataSource::Close()
 {
-	mAccountManager = null_nsCOMPtr();
+//	mAccountManager = null_nsCOMPtr();
 	nsMsgRDFDataSource::Close();
 }
 

@@ -27,6 +27,8 @@
 #include "nsISmtpServer.h"
 #include "nsIPref.h"
 #include "nsIMsgFolderCache.h"
+#include "nsIObserver.h"
+
 /*
  * some platforms (like Windows and Mac) use a map file, because of
  * file name length limitations.
@@ -55,7 +57,7 @@
 
 #endif /* XP_UNIX || XP_BEOS */
 
-class nsMsgAccountManager : public nsIMsgAccountManager
+class nsMsgAccountManager : public nsIMsgAccountManager, public nsIObserver
 {
 public:
 
@@ -67,7 +69,11 @@ public:
   /* nsIMsgAccountManager methods */
   
   NS_DECL_NSIMSGACCOUNTMANAGER
-  
+  NS_DECL_NSIOBSERVER  
+
+  nsresult Init();
+  nsresult Shutdown();
+
 private:
 
   PRBool m_accountsLoaded;
@@ -83,6 +89,9 @@ private:
 
   nsCAutoString accountKeyList;
   
+  PRBool m_haveShutdown;
+
+
   /* internal creation routines - updates m_identities and m_incomingServers */
   nsresult createKeyedAccount(const char* key,
                               nsIMsgAccount **_retval);

@@ -22,12 +22,6 @@
 [scriptable, uuid(E6B64B86-90CB-11d3-8B02-0060B0FC04D2)]
 interface nsIIncomingServerListener : nsISupports {
 
-	/* Notification sent when a new server is created */
-	void OnServerAdded(in nsIMsgIncomingServer server);
-
-	/* Notification sent when a server is deleted */
-	void OnServerRemoved(in nsIMsgIncomingServer server);
-
 	/* Notification sent when a server is first loaded into the account manager */
 	void OnServerLoaded(in nsIMsgIncomingServer server);
 

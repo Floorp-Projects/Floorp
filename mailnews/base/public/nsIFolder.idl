@@ -26,19 +26,21 @@
 [scriptable, uuid(75621650-0fce-11d3-8b49-006008948010)]
 interface nsIFolder : nsICollection {
 
-        readonly attribute string URI;
-        attribute wstring name;
-        attribute wstring prettyName;
-		readonly attribute wstring abbreviatedName;
+	readonly attribute string URI;
+	attribute wstring name;
+	attribute wstring prettyName;
+	readonly attribute wstring abbreviatedName;
 
-        nsISupports GetChildNamed(in string name);
-        attribute nsIFolder parent;
+	nsISupports GetChildNamed(in string name);
+	attribute nsIFolder parent;
 
-        nsIEnumerator GetSubFolders();
-        readonly attribute boolean hasSubFolders;
+	nsIEnumerator GetSubFolders();
+	readonly attribute boolean hasSubFolders;
 
-		void AddFolderListener(in nsIFolderListener listener);
-		void RemoveFolderListener(in nsIFolderListener listener);
-		nsIFolder FindSubFolder(in string subFolderName);
+	void AddFolderListener(in nsIFolderListener listener);
+	void RemoveFolderListener(in nsIFolderListener listener);
+	nsIFolder FindSubFolder(in string subFolderName);
+
+	void Shutdown(in boolean shutdownChildren);
 };
 

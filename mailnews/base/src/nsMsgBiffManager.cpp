@@ -24,10 +24,11 @@
 #include "nsCRT.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
+#include "nsIObserverService.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 
-NS_IMPL_ISUPPORTS2(nsMsgBiffManager, nsIMsgBiffManager, nsIIncomingServerListener)
+NS_IMPL_ISUPPORTS3(nsMsgBiffManager, nsIMsgBiffManager, nsIIncomingServerListener, nsIObserver)
 
 void OnBiffTimer(nsITimer *timer, void *aBiffManager)
 {
@@ -41,10 +42,13 @@ nsMsgBiffManager::nsMsgBiffManager()
 
 	mBiffTimer = nsnull;
 	mBiffArray = nsnull;
+	mHaveShutdown = PR_FALSE;
 }
 
 nsMsgBiffManager::~nsMsgBiffManager()
 {
+	nsresult rv;
+
 	if (mBiffTimer) {
 		mBiffTimer->Cancel();
 	}
@@ -59,13 +63,18 @@ nsMsgBiffManager::~nsMsgBiffManager()
 	}
 	delete mBiffArray;
 
-	nsresult rv;
-	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
-	if(NS_SUCCEEDED(rv))
+	if(!mHaveShutdown)
 	{
-		rv = accountManager->RemoveIncomingServerListener(this);
+		Shutdown();
+		//Don't remove from Observer service in Shutdown because Shutdown also gets called
+		//from xpcom shutdown observer.  And we don't want to remove from the service in that case.
+		NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+		if (NS_SUCCEEDED(rv))
+		{    
+			nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+			observerService->RemoveObserver(this, topic.GetUnicode());
+		}
 	}
-
 }
 
 nsresult nsMsgBiffManager::Init()
@@ -77,10 +86,32 @@ nsresult nsMsgBiffManager::Init()
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
-	if (NS_FAILED(rv)) return rv;
+	if (NS_SUCCEEDED(rv))
+	{
+		accountManager->AddIncomingServerListener(this);
+	}
 
-	rv = accountManager->AddIncomingServerListener(this);
-	return rv;
+	NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+	if (NS_SUCCEEDED(rv))
+	{    
+		nsAutoString topic(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+		observerService->AddObserver(this, topic.GetUnicode());
+	}
+
+	return NS_OK;
+}
+
+nsresult nsMsgBiffManager::Shutdown()
+{
+	nsresult rv;
+	NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+	if (NS_SUCCEEDED(rv))
+	{
+		accountManager->RemoveIncomingServerListener(this);
+	}
+
+	mHaveShutdown = PR_TRUE;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgBiffManager::AddServerBiff(nsIMsgIncomingServer *server)
@@ -130,16 +161,6 @@ NS_IMETHODIMP nsMsgBiffManager::ForceBiffAll()
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgBiffManager::OnServerAdded(nsIMsgIncomingServer *server)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgBiffManager::OnServerRemoved(nsIMsgIncomingServer *server)
-{
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgBiffManager::OnServerLoaded(nsIMsgIncomingServer *server)
 {
 	nsresult rv;
@@ -168,6 +189,19 @@ NS_IMETHODIMP nsMsgBiffManager::OnServerUnloaded(nsIMsgIncomingServer *server)
 	}
 
 	return rv;
+}
+
+NS_IMETHODIMP nsMsgBiffManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
+{
+	nsAutoString topicString(aTopic);
+	nsAutoString shutdownString(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+
+	if(topicString == shutdownString)
+	{
+		Shutdown();
+	}
+	
+	return NS_OK;
 }
 
 PRInt32 nsMsgBiffManager::FindServer(nsIMsgIncomingServer *server)

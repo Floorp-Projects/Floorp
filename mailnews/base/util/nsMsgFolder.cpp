@@ -190,6 +190,10 @@ nsMsgFolder::Init(const char* aURI)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgFolder::Shutdown(PRBool shutdownChildren)
+{
+	return NS_OK;
+}
 
   // nsICollection methods:
 NS_IMETHODIMP

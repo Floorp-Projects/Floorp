@@ -31,6 +31,7 @@
 #include "nsTime.h"
 #include "nsCOMPtr.h"
 #include "nsIIncomingServerListener.h"
+#include "nsIObserver.h"
 
 typedef struct {
 	nsCOMPtr<nsIMsgIncomingServer> server;
@@ -38,7 +39,7 @@ typedef struct {
 } nsBiffEntry;
 
 
-class nsMsgBiffManager: public nsIMsgBiffManager, public nsIIncomingServerListener
+class nsMsgBiffManager: public nsIMsgBiffManager, public nsIIncomingServerListener, public nsIObserver
 {
 public:
 	nsMsgBiffManager(); 
@@ -47,8 +48,10 @@ public:
 	NS_DECL_ISUPPORTS
     NS_DECL_NSIMSGBIFFMANAGER
 	NS_DECL_NSIINCOMINGSERVERLISTENER
+	NS_DECL_NSIOBSERVER
 
 	nsresult Init();
+	nsresult Shutdown();
 	nsresult PerformBiff();
 
 protected:
@@ -60,6 +63,7 @@ protected:
 protected:
 	nsITimer *mBiffTimer;
 	nsVoidArray *mBiffArray;
+	PRBool mHaveShutdown;
 };
 
 

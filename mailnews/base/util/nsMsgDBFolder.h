@@ -67,6 +67,8 @@ public:
 
 	NS_IMETHOD MarkAllMessagesRead(void);
 
+	NS_IMETHOD Shutdown(PRBool shutdownChildren);
+
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);
 	virtual nsresult GetDatabase() = 0;
