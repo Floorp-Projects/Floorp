@@ -41,9 +41,8 @@ import java.util.*;
 
 class OptFunctionNode extends FunctionNode {
 
-    OptFunctionNode(String name, String className) {
+    OptFunctionNode(String name) {
         super(name);
-        itsClassName = className;
     }
 
     protected void finishParsing(IRFactory irFactory) {
@@ -55,27 +54,6 @@ class OptFunctionNode extends FunctionNode {
             String name = getParamOrVarName(i);
             optVars[i] = new OptLocalVariable(name, i < parameterCount);
         }
-    }
-
-    String getDirectCallMethodSignature() {
-        int pCount = getParamCount();
-        switch (pCount) {
-            case 0: return ZERO_PARAM_SIG;
-            case 1: return ONE_PARAM_SIG;
-            case 2: return TWO_PARAM_SIG;
-        }
-        StringBuffer sb = new StringBuffer(ZERO_PARAM_SIG.length()
-                                           + pCount * DIRECT_ARG_SIG.length());
-        sb.append(BEFORE_DIRECT_SIG);
-        for (int i = 0; i != pCount; i++) {
-            sb.append(DIRECT_ARG_SIG);
-        }
-        sb.append(AFTER_DIRECT_SIG);
-        return sb.toString();
-    }
-
-    String getClassName() {
-        return itsClassName;
     }
 
     boolean isTargetOfDirectCall() {
@@ -126,21 +104,7 @@ class OptFunctionNode extends FunctionNode {
         return optVars;
     }
 
-    private static final String
-        BEFORE_DIRECT_SIG = "(Lorg/mozilla/javascript/Context;"
-                            +"Lorg/mozilla/javascript/Scriptable;"
-                            +"Lorg/mozilla/javascript/Scriptable;",
-        DIRECT_ARG_SIG    = "Ljava/lang/Object;D",
-        AFTER_DIRECT_SIG  = "[Ljava/lang/Object;)Ljava/lang/Object;";
-
-    private static final String
-        ZERO_PARAM_SIG = BEFORE_DIRECT_SIG+AFTER_DIRECT_SIG,
-        ONE_PARAM_SIG  = BEFORE_DIRECT_SIG+DIRECT_ARG_SIG+AFTER_DIRECT_SIG,
-        TWO_PARAM_SIG  = BEFORE_DIRECT_SIG+DIRECT_ARG_SIG+DIRECT_ARG_SIG
-                         +AFTER_DIRECT_SIG;
-
     private OptLocalVariable[] optVars;
-    private String itsClassName;
     private int directTargetIndex = -1;
     private boolean itsParameterNumberContext;
     boolean itsContainsCalls0;
