@@ -91,6 +91,21 @@
 
 @implementation BrowserContentView
 
+- (void) dealloc
+{
+  // release the browser content area if it's not visible since we
+  // had to retain it to keep it around outside the view hierarchy.
+  if ([self isBookmarkManagerVisible])
+    [mBrowserContainerView release];
+}
+
+- (void)awakeFromNib
+{
+  // at load time, the browser is the main content area. this can
+  // change if the user shows the bookmark manager.
+  mCurrentContentView = mBrowserContainerView;
+}
+
 - (void)resizeSubviewsWithOldSize:(NSSize)oldFrameSize
 {
   float bmToolbarHeight = 0.0;
@@ -130,7 +145,12 @@
   browserRect.size.height -= statusBarHeight;
   browserRect.origin.y   += statusBarHeight;
   
-  [mBrowserContainerView setFrame:browserRect];
+  // resize our current content area, whatever it may be. We will
+  // take care of resizing the other view when we toggle it to
+  // match the size to avoid taking the hit of resizing it when it's
+  // not visible.
+  [mCurrentContentView setFrame:browserRect];
+  NSLog(@"resizing to %f %f", browserRect.size.width, browserRect.size.height);
 }
 
 
@@ -148,6 +168,35 @@
 {
   // figure out if mStatusBar or mBookmarksToolbar has been added back?
   [super didAddSubview:subview];
+}
+
+- (IBAction) toggleBookmarkManager:(id)sender
+{
+  NSView* newView = [self isBookmarkManagerVisible] ? mBrowserContainerView : mBookmarkManagerView;
+  
+  // detach the old view
+  [mCurrentContentView retain];
+  [mCurrentContentView removeFromSuperview];
+  
+  // add in the new view. Need to resize it _after_ we've added it because
+  // our tab view optimizes away resizes to content views when they're not
+  // visible.
+  [self addSubview:newView];
+  [newView setFrame:[mCurrentContentView frame]];
+  [newView release];
+  mCurrentContentView = newView;
+  
+  // don't worry about who has focus, the BWC will take care of that.
+}
+
+//
+// -isBookmarkManagerVisible
+//
+// YES if the bookmark manager is currently visible in this window.
+//
+- (BOOL) isBookmarkManagerVisible
+{
+  return mCurrentContentView == mBookmarkManagerView;
 }
 
 @end
@@ -175,5 +224,23 @@
 
 @end
 
+#pragma mark -
+
+@implementation BookmarkManagerView
+
+- (BOOL) isOpaque
+{
+  return YES;
+}
+
+- (void)drawRect:(NSRect)aRect
+{
+  [[NSColor windowBackgroundColor] set];
+  NSRectFill(aRect);
+  [[NSColor lightGrayColor] set];
+  NSFrameRect([self bounds]);
+}
+
+@end
 
 

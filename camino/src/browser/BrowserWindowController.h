@@ -340,5 +340,7 @@ typedef enum
 // Accessor for the bm data source
 - (BookmarksDataSource*)bookmarksDataSource;
 
+- (void)toggleBookmarkManager:(id)sender;
+
 @end
 

@@ -44,13 +44,26 @@
 @interface BrowserContentView : NSView
 {
   IBOutlet BookmarksToolbar *mBookmarksToolbar;
-  IBOutlet NSView           *mBrowserContainerView;
+  IBOutlet NSView           *mBrowserContainerView;   // manages tabs and web content
+  IBOutlet NSView           *mBookmarkManagerView;    // swapped in and out by activating bm manager, replacing browser container
   IBOutlet NSView           *mStatusBar;
+  
+  NSView* mCurrentContentView;   // either the bookmark manager or the browser container, whichever is visible
 }
+
+- (IBAction) toggleBookmarkManager:(id)sender;
+- (BOOL) isBookmarkManagerVisible;
+
 @end
 
 
 @interface BrowserContainerView : NSView
+{
+}
+@end
+
+
+@interface BookmarkManagerView : NSView
 {
 }
 @end

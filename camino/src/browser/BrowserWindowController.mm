@@ -39,8 +39,8 @@
 
 #import "BrowserWindowController.h"
 
-#import "BrowserWrapper.h"
 #import "BrowserContentViews.h"
+#import "BrowserWrapper.h"
 #import "PreferenceManager.h"
 #import "BookmarksDataSource.h"
 #import "HistoryDataSource.h"
@@ -77,6 +77,8 @@
 #include "nsIBrowserHistory.h"
 
 #include <QuickTime/QuickTime.h>
+
+#define USE_DRAWER_FOR_BOOKMARKS 1
 
 static NSString *BrowserToolbarIdentifier	= @"Browser Window Toolbar";
 static NSString *BackToolbarItemIdentifier	= @"Back Toolbar Item";
@@ -1241,6 +1243,7 @@ static NSArray* sToolbarDefaults = nil;
 
 - (IBAction)toggleSidebar:(id)aSender
 {
+#if USE_DRAWER_FOR_BOOKMARKS
   // Force the window to shrink and move if necessary in order to accommodate the sidebar. We check
   // if it will fit on either the left or on the right, and if it won't, shrink the window. We 
   // used to do this in |drawerWillOpen:| but the problem is that as soon as wel tell cocoa to 
@@ -1275,6 +1278,9 @@ static NSArray* sToolbarDefaults = nil;
   }
 
   [mSidebarDrawer toggle:aSender];
+#else
+  [self toggleBookmarkManager:self];
+#endif
 }
 
 // map command-left arrow to 'back'
@@ -1516,6 +1522,7 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)tabView:(NSTabView *)aTabView didSelectTabViewItem:(NSTabViewItem *)aTabViewItem
 {
+NSLog(@"Notify: did select %@", [aTabViewItem label]);
   // we'll get called for the sidebar tabs as well. ignore any calls coming from
   // there, we're only interested in the browser tabs.
   if (aTabView != mTabBrowser)
@@ -2099,6 +2106,36 @@ static NSArray* sToolbarDefaults = nil;
   return [mBrowserView currentCharset];
 }
 
+
+//
+// -toggleBookmarkManager
+//
+// switch between a gecko content view and the in-window bookmark manager.
+// This changes the current focus and forces it into the content area.
+//
+- (void)toggleBookmarkManager:(id)sender
+{
+  // deactivate any gecko view that might think it has focus
+	if ([self isResponderGeckoView:[[self window] firstResponder]]) {
+    CHBrowserView* browserView = [mBrowserView getBrowserView];
+    if (browserView)
+      [browserView setActive:NO];
+  }
+  
+  // swap out between content and bookmarks.
+	[mContentView toggleBookmarkManager:sender];
+
+  // if we're now showing the bm manager, force it to have focus,
+  // otherwise give focus back to gecko.
+  if ( [mContentView isBookmarkManagerVisible] ) {
+    //XXX set focus to appropriate area of bm manager
+  }
+  else {
+    CHBrowserView* browserView = [mBrowserView getBrowserView];
+    if (browserView)
+      [browserView setActive:YES];
+  }
+}
 
 @end
 
