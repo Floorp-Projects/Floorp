@@ -66,6 +66,8 @@ CSRCS = \
 	md5.c \
 	alg2268.c \
 	arcfour.c \
+	desblapi.c \
+	des.c \
 	$(MPI_SRCS) \
 	dh.c \
 	$(NULL)
