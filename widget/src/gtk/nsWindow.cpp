@@ -4045,8 +4045,11 @@ NS_IMETHODIMP
 nsWindow::HideWindowChrome(PRBool aShouldHide)
 {
   if (!mShell) {
-    // This is not a top-level window widget.
-    return NS_ERROR_FAILURE;
+    // Pass the request to the toplevel window.
+    GtkWidget *top_mozarea = GetOwningWidget();
+    void *data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
+    nsWindow *mozAreaWindow = NS_STATIC_CAST(nsWindow *, data);
+    return mozAreaWindow->HideWindowChrome(aShouldHide);
   }
 
   // Sawfish, metacity, and presumably other window managers get
