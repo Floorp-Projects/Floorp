@@ -37,7 +37,7 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-NS_IMPL_ISUPPORTS1(nsMimeBaseEmitter, nsIMimeEmitter)
+NS_IMPL_ISUPPORTS2(nsMimeBaseEmitter, nsIMimeEmitter, nsIPipeObserver)
 
 nsMimeBaseEmitter::nsMimeBaseEmitter()
 {
@@ -289,7 +289,8 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
   if (needToWrite > 0)
   {
     rc += mOutStream->Write(mBufferMgr->GetBuffer(), 
-                            mBufferMgr->GetSize(), &written);
+                            needToWrite, &written);
+
     mTotalWritten += written;
     mBufferMgr->ReduceBuffer(written);
 //    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
@@ -318,4 +319,37 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
 //    mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, written);
 
   return rc;
+}
+
+
+NS_IMETHODIMP nsMimeBaseEmitter::OnWrite(nsIPipe* aPipe, PRUint32 aCount)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMimeBaseEmitter::OnEmpty(nsIPipe* aPipe)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMimeBaseEmitter::OnFull(nsIPipe* /* aPipe */)
+{
+  // the pipe is full so we should flush our data to the converter's listener
+  // in order to make more room. 
+
+  // since we only have one pipe per mime emitter, i can ignore the pipe param and use
+  // my outStream object directly (it will be the same thing as what we'd get from aPipe.
+
+  nsresult rv = NS_OK;
+  if (mOutListener && mInputStream)
+  {
+      PRUint32 bytesAvailable = 0;
+      mInputStream->Available(&bytesAvailable);
+      rv = mOutListener->OnDataAvailable(mChannel, mURL, mInputStream, 0, bytesAvailable);
+  }
+  else 
+    rv = NS_ERROR_NULL_POINTER;
+
+  return rv;
 }

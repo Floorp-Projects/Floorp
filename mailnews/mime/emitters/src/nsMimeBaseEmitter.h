@@ -31,8 +31,9 @@
 #include "nsFileSpec.h"
 #include "nsIMimeMiscStatus.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsIPipe.h"
 
-class nsMimeBaseEmitter : public nsIMimeEmitter {
+class nsMimeBaseEmitter : public nsIMimeEmitter, nsIPipeObserver {
 public: 
     nsMimeBaseEmitter ();
     virtual       ~nsMimeBaseEmitter (void);
@@ -41,6 +42,7 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSIMIMEEMITTER
+    NS_DECL_NSIPIPEOBSERVER
 
     NS_IMETHOD    UtilityWriteCRLF(const char *buf);
 
@@ -50,26 +52,26 @@ protected:
 
 	// mscott - dont ref count the streams....the emitter is owned by the converter
 	// which owns these streams...
-    nsIOutputStream     *mOutStream;
+  nsIOutputStream     *mOutStream;
 	nsIInputStream	    *mInputStream;
-    nsIStreamListener   *mOutListener;
+  nsIStreamListener   *mOutListener;
 	nsIChannel			    *mChannel;
 
-    PRUint32            mTotalWritten;
-    PRUint32            mTotalRead;
+  PRUint32            mTotalWritten;
+  PRUint32            mTotalRead;
 
-    // For header determination...
-    PRBool              mDocHeader;
+  // For header determination...
+  PRBool              mDocHeader;
 
-    // For content type...
-    char                *mAttachContentType;
+  // For content type...
+  char                *mAttachContentType;
 
-    // the url for the data being processed...
-    nsIURI              *mURL;
+  // the url for the data being processed...
+  nsIURI              *mURL;
 
-    // The setting for header output...
-    nsIPref             *mPrefs;          /* Connnection to prefs service manager */
-    PRInt32             mHeaderDisplayType; 
+  // The setting for header output...
+  nsIPref             *mPrefs;          /* Connnection to prefs service manager */
+  PRInt32             mHeaderDisplayType; 
 #ifdef DEBUG_rhp
     PRBool              mReallyOutput;
     PRFileDesc          *mLogFile;        /* Temp file to put generated HTML into. */ 
