@@ -56,6 +56,7 @@
 #define _PR_VMBASE		0x30000000
 #define _PR_STACK_VMBASE	0x50000000
 #define _MD_DEFAULT_STACK_SIZE	131072L
+#define _MD_MINIMUM_STACK_SIZE	131072L
 
 /*
 ** This is not defined on OpenVMS. I believe its only used in GC code, and
