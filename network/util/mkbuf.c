@@ -147,7 +147,7 @@ NET_MakeRebufferingStream (NET_StreamClass *next_stream,
 
   XP_ASSERT (next_stream);
 
-  TRACEMSG(("Setting up rebuffering stream. Have URL: %s\n", url->address));
+  /*  TRACEMSG(("Setting up rebuffering stream. Have URL: %s\n", url->address)); */
 
   stream = XP_NEW (NET_StreamClass);
   if (!stream) return 0;
