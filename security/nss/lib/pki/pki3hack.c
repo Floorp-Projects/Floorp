@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.23 $ $Date: 2002/01/08 19:38:56 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.24 $ $Date: 2002/01/10 15:30:06 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -688,12 +688,13 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	    /* ... and the new trust is no different, done) */
 	    return PR_SUCCESS;
 	} else {
+	    /* take over memory already allocated in cc's arena */
 	    cc->trust = oldTrust;
 	}
     } else {
 	cc->trust = PORT_ArenaAlloc(cc->arena, sizeof(CERTCertTrust));
-	memcpy(cc->trust, trust, sizeof(CERTCertTrust));
     }
+    memcpy(cc->trust, trust, sizeof(CERTCertTrust));
     /* Set the NSSCerticate's trust */
     arena = nssArena_Create();
     if (!arena) return PR_FAILURE;
