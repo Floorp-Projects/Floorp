@@ -427,8 +427,15 @@ xptiInterfaceEntry::GetEntryForParam(PRUint16 methodIndex,
     xptiInterfaceEntry* theEntry = 
             mInterface->mWorkingSet->GetTypelibGuts(mInterface->mTypelib)->
                 GetEntryAt(td->type.iface - 1);
+    
+    // This can happen if a declared interface is not available at runtime.
+    if(!theEntry)
+    {
+        NS_WARNING("Declared InterfaceInfo not found");
+        *entry = nsnull;
+        return NS_ERROR_FAILURE;
+    }
 
-    NS_ASSERTION(theEntry, "bad state");
     *entry = theEntry;
     return NS_OK;
 }
