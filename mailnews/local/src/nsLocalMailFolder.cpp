@@ -323,7 +323,7 @@ nsFolderCompactState::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
     msgHdr = nsnull;;
     newMsgHdr = nsnull;
     // no more to copy finish it up
-    FinishCompact();
+   FinishCompact();
     Release(); // kill self
   }
   else
@@ -1101,8 +1101,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact(nsIUrlListener *aListener)
       rv = NS_ERROR_OUT_OF_MEMORY; goto done;
     }
 
-    NotifyStoreClosedAllHeaders();
-
     rv = GetMsgDatabase(nsnull, getter_AddRefs(db));
     if (NS_FAILED(rv)) goto done;
 
@@ -1763,8 +1761,10 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID,
                           &rv);
           if (NS_SUCCEEDED(rv))
-              return copyService->CopyMessages(this, messages, trashFolder,
-                                        PR_TRUE, nsnull, msgWindow);
+          {
+            return copyService->CopyMessages(this, messages, trashFolder,
+                                      PR_TRUE, nsnull, msgWindow);
+          }
       }
       return rv;
   }
@@ -1790,6 +1790,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           DeleteMsgsOnPop3Server(messages);
 
           if (NS_FAILED(rv)) return rv;
+          EnableNotifications(allMessageCountNotifications, PR_FALSE);
           for(PRUint32 i = 0; i < messageCount; i++)
           {
               msgSupport = getter_AddRefs(messages->ElementAt(i));
@@ -1800,6 +1801,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
                   DeleteMessage(message, msgWindow, PR_TRUE);
               }
           }
+          EnableNotifications(allMessageCountNotifications, PR_TRUE);
 		  if(!isMove)
         NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
       }
@@ -1915,6 +1917,10 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 	nsresult rv;
   nsCOMPtr<nsISupports> aSupport(do_QueryInterface(srcFolder, &rv));
   if (NS_FAILED(rv)) return rv;
+
+  // make sure we turn notifications on when the move is done!
+  if (isMove)
+    srcFolder->EnableNotifications(allMessageCountNotifications, PR_FALSE);
 
   rv = InitCopyState(aSupport, messages, isMove, listener, msgWindow);
   if (NS_FAILED(rv)) return rv;
@@ -2500,9 +2506,12 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
 		if (NS_SUCCEEDED(result))
 		{
 			//Notify that a completion finished.
-			nsCOMPtr<nsIFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
+			nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
 			if(srcFolder)
 			{
+        // lets delete these all at once - much faster that way
+    		result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE);
+        srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
         srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
 			}
 
