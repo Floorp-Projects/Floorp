@@ -24,13 +24,15 @@
 #include "Xm/Xm.h"
 #include "nsXtManageWidget.h"
 
+#include "nsIMenuListener.h"
+
 class nsIMenuBar;
 
 /**
  * Native Motif Menu wrapper
  */
 
-class nsMenu : public nsIMenu
+class nsMenu : public nsIMenu, public nsIMenuListener
 {
 
 public:
@@ -38,6 +40,9 @@ public:
   virtual ~nsMenu();
 
   NS_DECL_ISUPPORTS
+ 
+  // nsIMenuListener methods
+  nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
   
   NS_IMETHOD Create(nsIMenuBar * aParent, const nsString &aLabel);
   NS_IMETHOD Create(nsIMenu * aParent, const nsString &aLabel);
