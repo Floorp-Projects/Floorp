@@ -19,12 +19,14 @@
 //
 // simon
 
-#if defined(_WIN32) || defined(LINUX)
+#if defined(_WIN32) || defined(LINUX) || defined(FREEBSD)
 
 #ifndef _X86WIN32_EXCEPTION_H_
 #define _X86WIN32_EXCEPTION_H_
 
+#if defined(_WIN32)
 #include <excpt.h>
+#endif
 
 #include "SysCallsRuntime.h"
 #include "Fundamentals.h"
@@ -58,7 +60,7 @@ struct Context
 	JavaObject* object;
 };
 
-#ifndef LINUX
+#if !defined( LINUX ) && !defined( FREEBSD )
 NS_EXTERN EXCEPTION_DISPOSITION win32HardwareThrow(struct _EXCEPTION_RECORD *ExceptionRecord,
 					void * EstablisherFrame,
 					struct _CONTEXT *ContextRecord,
