@@ -813,7 +813,7 @@ sub expand_user_test_list {
             s/\r*\n*$//;
             if (!(/\s*\#/)) {
                 # It's not a comment, so process it
-                push (@retval, &expand_test_list_entry($_));
+                push (@retval, &expand_test_list_entry(&xp_path($_)));
             }
         }
 
@@ -825,18 +825,37 @@ sub expand_user_test_list {
     
 }
 
+
+#
+# Currently expect all paths to be RELATIVE to the top-level tests directory.
+# One day, this should be improved to allow absolute paths as well -
+#
 sub expand_test_list_entry {
     my ($entry) = @_;
+	my $isFile = -f $entry;
     my @retval;
+
+    #
+    # Trim off the leading path separator that begins relative paths on the Mac.
+    # This makes the pattern-matching the same as it would be on Linux/Windows -
+    #
+    # Also note:
+    #
+    # In execute_tests(), each path gets concatenated with $opt_suite_path,
+    # which ends in a path separator. On the Mac, avoid duplicating it -
+    #
+    if ($os_type eq "MAC") {
+        $entry =~ s/^$path_sep//;
+    }
 
     if ($entry =~ /\.js$/) {
         # it's a regular entry, add it to the list
-        if (-f $entry) {
+        if ($isFile) {
             push (@retval, $entry);
         } else {
             status ("testcase '$entry' not found.");
         }
-    } elsif ($entry =~ /(.*\/[^\*][^\/]*)\/?\*?$/) {
+    } elsif ($entry =~ /(.*$path_sep[^\*][^$path_sep]*)$path_sep?\*?$/) {
         # Entry is in the form suite_dir/test_dir[/*]
         # so iterate all tests under it
         my $suite_and_test_dir = $1;
@@ -850,7 +869,7 @@ sub expand_test_list_entry {
         
         splice (@retval, $#retval + 1, 0, @test_files);
         
-    } elsif ($entry =~ /([^\*][^\/]*)\/?\*?$/) {
+    } elsif ($entry =~ /([^\*][^$path_sep]*)$path_sep?\*?$/) {
         # Entry is in the form suite_dir[/*]
         # so iterate all test dirs and tests under it
         my $suite = $1;
