@@ -34,7 +34,6 @@
 #include "nsAppShellCIDs.h"
 
 #include "nsXULCommand.h"
-#include "nsIXULCommand.h"
 #include "nsIDOMCharacterData.h"
 
 #include "nsIMenuBar.h"
@@ -44,8 +43,6 @@
 // XXX: Only needed for the creation of the widget controller...
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDOMHTMLInputElement.h"
