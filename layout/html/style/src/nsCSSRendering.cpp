@@ -2899,11 +2899,13 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     nsRect viewportArea;
 
     // get the nsIScrollableFrame interface from the scrollFrame
-    nsIFrame* scrollFrame = GetNearestScrollFrame(aForFrame);
     nsIScrollableFrame* scrollableFrame;
-    CallQueryInterface(scrollFrame, &scrollableFrame);
-    if (scrollableFrame) {
-      scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
+    nsIFrame* scrollFrame = GetNearestScrollFrame(aForFrame);
+    if (scrollFrame) {
+      CallQueryInterface(scrollFrame, &scrollableFrame);
+      if (scrollableFrame) {
+        scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
+      }
     }
 
     if (scrolledFrame) {
