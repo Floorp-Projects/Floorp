@@ -237,6 +237,7 @@ protected:
     NS_IMETHOD PersistLayoutHistoryState();
     NS_IMETHOD CloneAndReplace(nsISHEntry * srcEntry, PRUint32 aCloneID,
         nsISHEntry * areplaceEntry, nsISHEntry ** destEntry);
+    nsresult GetRootSessionHistory(nsISHistory ** aReturn);
     
     // Global History
     NS_IMETHOD ShouldAddToGlobalHistory(nsIURI * aURI, PRBool * aShouldAdd);
