@@ -15,12 +15,12 @@
        
        (rule :expr ((value (-> () integer)))
          (production :expr (:digit) expr-digit
-           ((value) (value :digit)))
+           ((value) (return (value :digit))))
          (production :expr (#\t :expr) expr-throw
            ((value) (throw ((value :expr)))))
          (production :expr (#\c #\{ :expr #\} :expr) expr-catch
-           ((value) (catch ((value :expr 1))
-                    (e) (+ (* e 10) ((value :expr 2)))))))
+           ((value) (catch ((return ((value :expr 1))))
+                    (e) (return (+ (* e 10) ((value :expr 2))))))))
        
        (rule :main ((value integer))
          (production :main (:expr) main-expr
@@ -34,13 +34,13 @@
 #|
 (depict-rtf-to-local-file
  "Test/ThrowCatchSemantics.rtf"
- "Base Example Semantics"
+ "Throw-Catch Semantics"
  #'(lambda (rtf-stream)
      (depict-world-commands rtf-stream *tcw*)))
 
 (depict-html-to-local-file
  "Test/ThrowCatchSemantics.html"
- "Base Example Semantics"
+ "Throw-Catch Semantics"
  t
  #'(lambda (html-stream)
      (depict-world-commands html-stream *tcw*))
