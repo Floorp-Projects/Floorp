@@ -46,6 +46,7 @@
 #include "jsconfig.h"
 #include "jsexn.h"
 #include "jsfun.h"
+#include "jsopcode.h"
 #include "jsnum.h"
 
 #if JS_HAS_ERROR_EXCEPTIONS
