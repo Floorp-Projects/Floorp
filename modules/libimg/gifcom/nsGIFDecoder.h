@@ -22,6 +22,10 @@
 #ifndef _nsGIFDec_h
 #define _nsGIFDec_h
 
+#include "nsISupports.h"
+#include "nsIImgDecoder.h"
+#include "gif.h"
+
 #define NS_GIFDECODER_CID \
 { 0x0d471b70, 0xbaf5, 0x11d2, \
 { 0x80, 0x2c, 0x00, 0x60, 0x08, 0x8f, 0x91, 0xa3 } }
@@ -30,5 +34,32 @@
 #define NS_GIFDECODER_IID \
 { 0x402b190, 0xbbd0, 0x11d2, \
 { 0x80, 0x2c, 0x00, 0x60, 0x08, 0x8f, 0x91, 0xa3 } }
+
+//////////////////////////////////////////////////////////////////////
+// GIF Decoder Definition
+
+class GIFDecoder : public nsIImgDecoder   
+{
+public:
+  GIFDecoder(il_container* aContainer);
+  virtual ~GIFDecoder();
+ 
+  NS_DECL_ISUPPORTS
+
+  /* stream */
+  NS_IMETHOD ImgDInit();
+
+  NS_IMETHOD ImgDWriteReady();
+  NS_IMETHOD ImgDWrite(const unsigned char *buf, int32 len);
+  NS_IMETHOD ImgDComplete();
+  NS_IMETHOD ImgDAbort();
+
+  NS_IMETHOD_(il_container *) SetContainer(il_container *ic){ilContainer = ic; return ic;}
+  NS_IMETHOD_(il_container *) GetContainer() {return ilContainer;}
+
+  
+private:
+  il_container* ilContainer;
+};
 
 #endif
