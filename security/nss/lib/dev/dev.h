@@ -41,7 +41,7 @@
  */
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.32 $ $Date: 2003/01/30 03:02:55 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.33 $ $Date: 2003/04/19 00:03:13 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -321,6 +321,18 @@ nssSlot_Logout
 (
   NSSSlot *slot,
   nssSession *sessionOpt
+);
+
+NSS_EXTERN void
+nssSlot_EnterMonitor
+(
+  NSSSlot *slot
+);
+
+NSS_EXTERN void
+nssSlot_ExitMonitor
+(
+  NSSSlot *slot
 );
 
 #define NSSSLOT_ASK_PASSWORD_FIRST_TIME -1

@@ -35,7 +35,7 @@
 #define DEVT_H
 
 #ifdef DEBUG
-static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.17 $ $Date: 2002/04/18 17:29:54 $ $Name:  $";
+static const char DEVT_CVS_ID[] = "@(#) $RCSfile: devt.h,v $ $Revision: 1.18 $ $Date: 2003/04/19 00:03:13 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -96,6 +96,7 @@ struct NSSTokenStr
     NSSTrustDomain *trustDomain;
     PRIntervalTime lastTime;
     nssTokenObjectCache *cache;
+    PZLock *lock;
 #ifdef NSS_3_4_CODE
     PK11SlotInfo *pk11slot;
 #endif
@@ -124,6 +125,7 @@ struct NSSSlotStr
   CK_FLAGS ckFlags; /* from CK_SLOT_INFO.flags */
   struct nssSlotAuthInfoStr authInfo;
   PRIntervalTime lastTokenPing;
+  PZLock *lock;
 #ifdef NSS_3_4_CODE
   void *epv;
   PK11SlotInfo *pk11slot;
@@ -136,6 +138,7 @@ struct nssSessionStr
   CK_SESSION_HANDLE handle;
   NSSSlot *slot;
   PRBool isRW;
+  PRBool ownLock;
 };
 
 typedef enum {
