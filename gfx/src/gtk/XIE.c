@@ -145,9 +145,10 @@ DrawScaledImageXIE(Display *display,
 
   if (!inited) {
     XieExtensionInfo *info;
-    inited = PR_TRUE;
     if (!XieInitialize(display, &info))
       return PR_FALSE;
+
+    inited = PR_TRUE;
 
     /* create the photospace (we only need to do this once) */
     gPhotospace = XieCreatePhotospace(display);
