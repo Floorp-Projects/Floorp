@@ -20,6 +20,7 @@
 #define NS_IMPL_IDS
 #include "nsIAppShellService.h"
 #include "nsICmdLineService.h"
+#include "nsIGlobalHistory.h"
 #include "nsIDOMXPConnectFactory.h"
 #include "nsAppShellCIDs.h"
 
@@ -39,6 +40,7 @@ static NS_DEFINE_IID(kToolbarCoreCID,      NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_IID(kEditorAppCoreCID,    NS_EDITORAPPCORE_CID);
 static NS_DEFINE_IID(kRDFCoreCID,          NS_RDFCORE_CID);
+
 
 #ifdef XP_PC
 
@@ -70,6 +72,7 @@ static NS_DEFINE_IID(kRDFCoreCID,          NS_RDFCORE_CID);
 static NS_DEFINE_IID(kCAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kCCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
+static NS_DEFINE_IID(kGlobalHistoryCID,    NS_GLOBALHISTORY_CID);
 
 ///static NS_DEFINE_IID(kCBrowserControllerCID, NS_BROWSERCONTROLLER_CID);
 //static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
@@ -99,8 +102,8 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponent(kCAppShellServiceCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kGlobalHistoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
-//#if defined(XP_PC) || defined(XP_MAC)
   nsComponentManager::RegisterComponent(kAppCoresManagerCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kToolkitCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kMailCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
@@ -108,7 +111,10 @@ NS_SetupRegistry_1()
   nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kEditorAppCoreCID,  NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kRDFCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+
   //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
-//#endif
+
 ///  nsComponentManager::RegisterComponent(kCBrowserControllerCID, NULL, NULL, BROWSER_DLL, PR_FALSE, PR_FALSE);
 }
+
+
