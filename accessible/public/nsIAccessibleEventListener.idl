@@ -25,6 +25,15 @@
 #include "nsISupports.idl"
 #include "nsIAccessible.idl"
 
+%{ C++
+// extra event data (currently used by ATK)
+struct AccessibleEventData {
+  PRUint32 aUnused;
+};
+%}
+
+[ptr] native AccessibleEventData(AccessibleEventData);
+
 [scriptable, uuid(BEE49E7D-9D06-49bf-8984-1694C697D74F)]
 interface nsIAccessibleEventListener : nsISupports
 {
@@ -42,5 +51,22 @@ interface nsIAccessibleEventListener : nsISupports
   const unsigned long EVENT_MENUPOPUPEND       = 0x0007;
   const unsigned long EVENT_SCROLLINGSTART     = 0x0012;
   const unsigned long EVENT_SCROLLINGEND       = 0x0013;
-  void handleEvent(in unsigned long aEvent, in nsIAccessible aTarget);
+
+  // the additional events for ATK
+  const unsigned long EVENT_ATK_PROPERTY_CHANGE        = 0x0100;
+  const unsigned long EVENT_ATK_SELECTION_CHANGE       = 0x0101;
+  const unsigned long EVENT_ATK_TEXT_CHANGE            = 0x0102;
+  const unsigned long EVENT_ATK_TEXT_SELECTION_CHANGE  = 0x0103;
+  const unsigned long EVENT_ATK_TEXT_CARET_MOVE        = 0x0104;
+  const unsigned long EVENT_ATK_TABLE_MODEL_CHANGE     = 0x0110;
+  const unsigned long EVENT_ATK_TABLE_ROW_INSERT       = 0x0111;
+  const unsigned long EVENT_ATK_TABLE_ROW_DELETE       = 0x0112;
+  const unsigned long EVENT_ATK_TABLE_ROW_REORDER      = 0x0113;
+  const unsigned long EVENT_ATK_TABLE_COLUMN_INSERT    = 0x0114;
+  const unsigned long EVENT_ATK_TABLE_COLUMN_DELETE    = 0x0115;
+  const unsigned long EVENT_ATK_TABLE_COLUMN_REORDER   = 0x0116;
+  
+  [noscript]
+  void handleEvent(in unsigned long aEvent, in nsIAccessible aTarget, in AccessibleEventData aData);
 };
+

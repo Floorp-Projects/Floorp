@@ -1002,7 +1002,7 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
   Accessible::GetNSAccessibleFor(varChild, aAcc);
 }
 
-NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible)
+NS_IMETHODIMP RootAccessible::HandleEvent(PRUint32 aEvent, nsIAccessible* aAccessible, AccessibleEventData* aData)
 {
   if (aEvent == EVENT_FOCUS) {
     // Don't fire accessible focus event for documents, 
