@@ -1165,24 +1165,28 @@ dnl ========================================================
 if test "$MOZ_WIDGET_TOOLKIT" = "gtk"
 then
 	MOZ_ENABLE_GTK=1
+    MOZ_ENABLE_XREMOTE=1
 	AC_DEFINE(MOZ_WIDGET_GTK)
 fi
 
 if test "$MOZ_WIDGET_TOOLKIT" = "xlib"
 then
 	MOZ_ENABLE_XLIB=1
+    MOZ_ENABLE_XREMOTE=1
 	AC_DEFINE(MOZ_WIDGET_XLIB)
 fi
 
 if test "$MOZ_WIDGET_TOOLKIT" = "qt"
 then
 	MOZ_ENABLE_QT=1
+    MOZ_ENABLE_XREMOTE=1
 	AC_DEFINE(MOZ_WIDGET_QT)
 fi
 
 if test "$MOZ_WIDGET_TOOLKIT" = "motif"
 then
 	MOZ_ENABLE_MOTIF=1
+    MOZ_ENABLE_XREMOTE=1
 	AC_DEFINE(MOZ_WIDGET_MOTIF)
 fi
 
@@ -1192,6 +1196,10 @@ then
 	AC_DEFINE(MOZ_WIDGET_PHOTON)
 fi
 
+
+if test "$MOZ_ENABLE_XREMOTE"; then
+    AC_DEFINE(MOZ_ENABLE_XREMOTE)
+fi
 
 dnl ========================================================
 dnl =													   =
@@ -1640,6 +1648,7 @@ AC_SUBST(MOZ_ENABLE_MOTIF)
 AC_SUBST(MOZ_ENABLE_XLIB)
 AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_PHOTON)
+AC_SUBST(MOZ_ENABLE_XREMOTE)
 AC_SUBST(MOZ_GTK_CFLAGS)
 AC_SUBST(MOZ_GTK_LDFLAGS)
 AC_SUBST(MOZ_MOTIF_CFLAGS)
