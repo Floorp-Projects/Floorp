@@ -30,6 +30,7 @@
 
 #include "mozilladom.h"
 #include "nsIDOMElement.h"
+#include "nsINodeInfo.h"
 
 /**
  * Construct a wrapper with the specified Mozilla object and document owner.
@@ -42,9 +43,10 @@ Element::Element(nsIDOMElement* aElement, Document* aOwner) :
 {
     nsCOMPtr<nsIContent> cont(do_QueryInterface(aElement));
     NS_ASSERTION(cont, "Element doesn't implement nsIContent");
-    if (cont) {
-        cont->GetNameSpaceID(mNamespaceID);
-    }
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+    cont->GetNodeInfo(*getter_AddRefs(nodeInfo));
+    NS_ASSERTION(nodeInfo, "a element without nodeinfo");
+    nodeInfo->GetNamespaceID(mNamespaceID);
 }
 
 /**
