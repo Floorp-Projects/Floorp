@@ -547,8 +547,10 @@ static void mozilla_modify( PtWidget_t *widget, PtArg_t const *argt ) {
 			break;
 
 		case Pt_ARG_MOZ_ENCODING: {
-			nsCString mStr( (char*)argt->value );
-			moz->MyBrowser->mPrefs->SetUnicharPref( "intl.charset.default", mStr.get() );
+ 			moz->MyBrowser->mPrefs->SetUnicharPref(
+ 				"intl.charset.default",
+ 				NS_ConvertASCIItoUCS2((char*)argt->value).get()
+ 			);
 			}
 			break;
 
@@ -593,11 +595,8 @@ static void mozilla_modify( PtWidget_t *widget, PtArg_t const *argt ) {
 
 				case Pt_MOZ_COMMAND_FIND: {
 					PtWebCommand_t *wdata = ( PtWebCommand_t * ) argt->len;
-					nsCString searchString( wdata->FindInfo.szString );
 					nsCOMPtr<nsIWebBrowserFind> finder( do_GetInterface( moz->MyBrowser->WebBrowser ) );
-
-					finder->SetSearchString( searchString.get() );
-
+					finder->SetSearchString( NS_ConvertASCIItoUCS2(wdata->FindInfo.szString).get() );
 					finder->SetMatchCase( wdata->FindInfo.flags & FINDFLAG_MATCH_CASE );
 					finder->SetFindBackwards( wdata->FindInfo.flags & FINDFLAG_GO_BACKWARDS );
 					finder->SetWrapFind( wdata->FindInfo.flags & FINDFLAG_START_AT_TOP );
@@ -605,8 +604,6 @@ static void mozilla_modify( PtWidget_t *widget, PtArg_t const *argt ) {
 
 					PRBool didFind;
 					finder->FindNext( &didFind );
-
-					Recycle( u );
 
 					break;
 					}
