@@ -637,12 +637,15 @@ static void ConvertNativeRegionToAppRegion(nsIRegion* aIn, nsRegion* aOut,
   
   float  p2t;
   context->GetDevUnitsToAppUnits(p2t);
+  // roc says:
+  // we mustn't introduce any off by one errors here, so stick to integer arithmetic
+  // this assumes that p2t is an integer, but if it isn't, all kinds of other stuff breaks anyway
+  int pt2i = (int)floor(p2t+0.5);
 
   PRUint32 i;
   for (i = 0; i < rects->mNumRects; i++) {
     const nsRegionRect& inR = rects->mRects[i];
-    nsRect outR(inR.x, inR.y, inR.width, inR.height);
-    outR.ScaleRoundOut(p2t);
+    nsRect outR(inR.x*pt2i, inR.y*pt2i, inR.width*pt2i, inR.height*pt2i);
     aOut->Or(*aOut, outR);
   }
 
