@@ -33,7 +33,7 @@ public:
 			virtual ~nsNetSupportDialog();
 	NS_IMETHOD 	Alert( const nsString &aText );
   	NS_IMETHOD 	Confirm( const nsString &aText,PRInt32* returnValue );
-
+	NS_IMETHOD	ConfirmCheck( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue );
   	NS_IMETHOD 	Prompt(	const nsString &aText,
   				 	const nsString &aDefault,
                           nsString &aResult,PRInt32* returnValue );
@@ -69,10 +69,11 @@ private:
 	nsString*	mUser;
 	nsString*	mPassword;
 	const nsString*	mMsg;
+	const nsString* mCheckMsg;
 	nsIWebShell*	mWebShell;
 	nsIWebShellWindow* mWebShellWindow;
 	PRInt32*			mReturnValue;
-	
+	PRBool*			mCheckValue;
 	nsIDOMElement* mOKButton;
   	nsIDOMElement* mCancelButton;
 };

@@ -152,6 +152,55 @@ static nsresult GetInputFieldValue( nsIWebShell *shell,
     return rv;
 }
 
+static nsresult GetCheckboxValue( nsIWebShell *shell,
+                              const char *id,
+                               PRBool &value ) {
+    nsresult rv = NS_OK;
+  
+    nsCOMPtr<nsIContentViewer> cv;
+    rv = shell->GetContentViewer(getter_AddRefs(cv));
+    if ( cv ) {
+        // Up-cast.
+        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+        if ( docv ) {
+            // Get the document from the doc viewer.
+            nsCOMPtr<nsIDocument> doc;
+            rv = docv->GetDocument(*getter_AddRefs(doc));
+            if ( doc ) {
+                // Up-cast.
+                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
+                if ( xulDoc ) {
+                    // Find specified element.
+                    nsCOMPtr<nsIDOMElement> elem;
+                    rv = xulDoc->GetElementById( id, getter_AddRefs(elem) );
+                    if ( elem ) {
+                    	 nsCOMPtr<nsIDOMHTMLInputElement>  element( do_QueryInterface( elem ) );
+     					 if ( element ){
+       			
+      						 element->GetChecked(&value);
+        				 
+        				}else
+        				{
+        				 if (APP_DEBUG) printf(" Get  nsIDOMHTMLInputElement failed, rv=0x%X\n",(int)rv);
+        				}
+
+                   } else {
+                        if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
+                    }
+                } else {
+                    if (APP_DEBUG) printf("Upcast to nsIDOMXULDocument failed\n");
+                }
+            } else {
+                if (APP_DEBUG) printf("GetDocument failed, rv=0x%X\n",(int)rv);
+            }
+        } else {
+            if (APP_DEBUG) printf("Upcast to nsIDocumentViewer failed\n");
+        }
+    } else {
+        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
+    }
+    return rv;
+}
 static nsresult findDOMNode( nsIWebShell *shell,
                               const char *id,
                               nsIDOMElement **node )
@@ -212,6 +261,8 @@ void nsNetSupportDialog::Init()
 	mReturnValue = NULL;
 	mOKButton = NULL;
 	mCancelButton = NULL;
+	mCheckValue = NULL;
+	mCheckMsg = NULL;
 }
 
 NS_IMETHODIMP nsNetSupportDialog::Alert( const nsString &aText )
@@ -229,6 +280,18 @@ NS_IMETHODIMP nsNetSupportDialog::Confirm( const nsString &aText, PRInt32* retur
 	mMsg = &aText;
 	mReturnValue = returnValue;
 	nsString  url( "resource:/res/samples/NetSupportConfirm.xul") ; 
+	DoDialog( url  );
+	return NS_OK;	
+}
+
+NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue )
+{
+	Init();
+	mMsg = &aText;
+	mReturnValue = returnValue;
+	mCheckValue = checkValue;
+	mCheckMsg = &aCheckMsg;
+	nsString  url( "resource:/res/samples/NetSupportConfirmCheck.xul") ; 
 	DoDialog( url  );
 	return NS_OK;	
 }
@@ -284,13 +347,16 @@ nsresult nsNetSupportDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
 	
 	 if ( mMsg )
 	 	setAttribute( aWebShell, "NetDialog:Message", "text", *mMsg );
-	
+	 	
+	if( mCheckMsg )
+		setAttribute( aWebShell, "NetDialog:CheckMessage", "text", *mCheckMsg );
 	// Hook up the event listeners
 	 findDOMNode( mWebShell,"OKButton", &mOKButton );
 	 findDOMNode( mWebShell,"CancelButton", &mCancelButton );
-	 
-	 AddMouseEventListener( mOKButton );
-	 AddMouseEventListener( mCancelButton );
+	 if ( mOKButton )
+	 	 	AddMouseEventListener( mOKButton );
+	 if ( mCancelButton )
+			AddMouseEventListener( mCancelButton );
 	return NS_OK;
 }
 
@@ -339,6 +405,8 @@ void nsNetSupportDialog::OnOK()
 		GetInputFieldValue( mWebShell,"Password" ,*mPassword);
 	// Fill in NetLib struct
 	*mReturnValue = kOKButton;
+	if ( mCheckValue )
+		GetCheckboxValue( mWebShell, "checkbox", *mCheckValue );
 	// Cleanup
 
 	mWebShellWindow->Close();
