@@ -150,14 +150,12 @@ ifndef NSPR20
 MKICONS_LIB	=  \
 		  $(DIST)/lib/libimg.a \
 		  $(JAVA_JMC) \
-		  $(DIST)/lib/libnspr.a \
 		  $(DIST)/lib/libutil.a \
 		  $(DIST)/lib/libxp.a
 else
 MKICONS_LIB	=  \
 		  $(DIST)/lib/libimg.a \
 		  $(JAVA_JMC) \
-		  $(DIST)/lib/libnspr21.a \
 		  $(DIST)/lib/libutil.a \
 		  $(DIST)/lib/libxp.a \
 		  $(DIST)/lib/libplc21.a \
@@ -182,7 +180,7 @@ else
 MKICONS_LIB	+= $(DIST)/lib/libzlib.a
 endif
 
-MKICONS_EXTRA	= $(OS_LIBS) -lm
+MKICONS_EXTRA	= $(NSPR_LDFLAGS) $(NSPR_LIBS) $(OS_LIBS) -lm
 
 #######################################################################
 # Rules to build mkicons program and then icondata.c

@@ -272,18 +272,16 @@ DYNAMIC_SYMBOLS_F	=
 endif
 
 ifeq ($(OS_ARCH),AIX)
-NSPR_LIB	= 
+NSPR_LIBS	= 
 else
-# XXX To a DSO...
-ifdef FULL_STATIC_BUILD
-NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libnspr21.a
-else
-BASIC_DSOS     += -lplds21 -lplc21 -lnspr21
+ifndef FULL_STATIC_BUILD
+NSPR_LIBS	= 
+BASIC_DSOS     += $(NSPR_DIR)/lib/libplds21.so $(NSPR_DIR)/lib/libplc21.so $(NSPR_DIR)/lib/libnspr21.so
 endif
 endif
 
 ifdef DBMALLOC
-NSPR_LIB	+= $(DIST)/lib/libdbmalloc.a
+NSPR_LIBS	+= $(DIST)/lib/libdbmalloc.a
 endif
 
 XFE2_DIR	= src
@@ -597,7 +595,7 @@ endif
 
 LOCALES		= $(LOCALE_MAP) $(MAIL_IM_HACK) $(NEWS_IM_HACK)
 
-ALL_EXPORT_LIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
+ALL_EXPORT_LIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS)
 
 ALL_EXPORT_DSOS	= $(ALL_EXPORT_LIBS:$(DIST)/lib/lib%.a=-l%)
 PLUGIN_DSO	= $(DIST)/bin/libnullplugin.so
@@ -719,7 +717,8 @@ EXPORT_LDFLAGS				=\
 							$(EXPORT_LIB) \
 							$(BASIC_LIBS_2) \
 							$(BASIC_DSOS) \
-							$(NSPR_LIB) \
+							$(NSPR_LDFLAGS) \
+							$(NSPR_LIBS) \
 							$(OTHER_LIBS)
 
 EXPORT_DYN_MOTIF_LDFLAGS 	=\
@@ -727,14 +726,14 @@ EXPORT_DYN_MOTIF_LDFLAGS 	=\
 							$(EXPORT_LIB) \
 							$(BASIC_LIBS_2) \
 							$(BASIC_DSOS) \
-							$(NSPR_LIB) \
+							$(NSPR_LDFLAGS) \
+							$(NSPR_LIBS) \
 							$(OTHER_DYN_MOTIF_LIBS)
 
 EXPORT_DEPLIBS				=\
 							$(BASIC_LIBS) \
 							$(EXPORT_LIB) \
-							$(BASIC_LIBS_2) \
-							$(NSPR_LIB)
+							$(BASIC_LIBS_2)
 
 DSO_EX_LIBS	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
 
@@ -1077,7 +1076,7 @@ endif
 
 EXPORT_LDFLAGS	= -z defs -L$(MOTIF)/lib -L$(USRLIBDIR) -R$(MOTIF)/lib \
 		  -R$(USRLIBDIR) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) \
-		  $(BASIC_DSOS) $(NSPR_LIB) $(OTHER_LIBS)
+		  $(BASIC_DSOS) $(NSPR_LDFLAGS) $(NSPR_LIBS) $(OTHER_LIBS)
 
 endif
 endif
@@ -1302,10 +1301,10 @@ pure:	$(OBJDIR)/$(XFE_PROGNAME)-export $(OBJDIR)/$(XFE_PROGNAME)-export.pure
 quantify:	$(OBJDIR)/$(XFE_PROGNAME)-export $(OBJDIR)/$(XFE_PROGNAME)-export.quantify
 
 # Use gtscc to find dead code globals.
-unreferenced: $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(DIST)/bin/gtscc 
+unreferenced: $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS) $(DIST)/bin/gtscc 
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(DIST)/bin/gtscc -gtsrootdir $(DEPTH) -gtsdump -gtsnorecompile -gtsnolink $(DEPTH) $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) | awk -n '/ 0 0 / { print $$5 " " $$1 }' | sort > $@
+	$(DIST)/bin/gtscc -gtsrootdir $(DEPTH) -gtsdump -gtsnorecompile -gtsnolink $(DEPTH) $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS) | awk -n '/ 0 0 / { print $$5 " " $$1 }' | sort > $@
 
 # Some dependencies that -MDupdate isn't getting.
 $(OBJDIR)/strids.o:	xfe_err.h

@@ -87,7 +87,7 @@ DEFINES += -DNO_SECURITY
 # writes HTML to stdout
 
 FILT_LIBS=-L$(DIST)/lib -L$(DIST)/bin -li18n -lnetwork -lxp \
-	-lnspr21 -lplc21 -lplds21
+	$(NSPR_LDFLAGS) $(NSPR_LIBS)
 
 $(OBJDIR)/mimefilt: $(FILT_OBJS) $(LIBRARY)
 	@$(MAKE_OBJDIR)

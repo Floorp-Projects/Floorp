@@ -104,8 +104,8 @@ $(SDK_TARGET):: $(PRODUCER_SDK_FILES)
 	$(NSINSTALL) -m 0444 $(PUBLIC)/java/jritypes.h $(SDK_DIR)/$(SDK_NAME)/include
 	$(NSINSTALL) -m 0444 $(PUBLIC)/java/jri_md.h $(SDK_DIR)/$(SDK_NAME)/include
 	$(NSINSTALL) -m 0444 $(PUBLIC)/java/jri.h $(SDK_DIR)/$(SDK_NAME)/include
-	$(NSINSTALL) -m 0444 $(PUBLIC)/nspr/prtypes.h $(SDK_DIR)/$(SDK_NAME)/include
-	$(NSINSTALL) -m 0444 $(PUBLIC)/nspr/prcpucfg.h $(SDK_DIR)/$(SDK_NAME)/include
+	$(NSINSTALL) -m 0444 $(NSPR_DIR)/include/prtypes.h $(SDK_DIR)/$(SDK_NAME)/include
+	$(NSINSTALL) -m 0444 $(NSPR_DIR)/include/prcpucfg.h $(SDK_DIR)/$(SDK_NAME)/include
 	$(NSINSTALL) -m 0664 cfp.c crf.c $(SDK_DIR)/$(SDK_NAME)/src
 	$(NSINSTALL) -m 0444 $(JMC_GEN_DIR)/Mcfp.c $(JMC_GEN_DIR)/Mcrf.c $(SDK_DIR)/$(SDK_NAME)/src
 	$(NSINSTALL) -m 0444 ../sdk/unix/makefile.sgi $(SDK_DIR)/$(SDK_NAME)/unix

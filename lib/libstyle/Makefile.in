@@ -47,8 +47,7 @@ TEST_LIBS	= $(LIBRARY) \
 		  $(DIST)/lib/liburl.$(LIB_SUFFIX) \
 		  $(DIST)/lib/libsec-us.$(LIB_SUFFIX) \
 		  $(DIST)/lib/libdbm.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libxp.$(LIB_SUFFIX) \
-		  $(DIST)/lib/nspr.$(LIB_SUFFIX)
+		  $(DIST)/lib/libxp.$(LIB_SUFFIX) 
 
 CSS_TEST_LIBS	= $(LIBRARY) \
 		  $(DIST)/lib/libxp.$(LIB_SUFFIX)
@@ -62,8 +61,8 @@ endif
 
 ifdef ENABLE_TESTS
 test:
-	$(CC) -g -o $(OBJDIR)/style_test $(CFLAGS) -DSS_TEST stystruc.c $(TEST_LIBS)
-	$(CC) -g -o $(OBJDIR)/stack_test $(CFLAGS) -DTEST_STYLESTACK stystack.c $(TEST_LIBS)
+	$(CC) -g -o $(OBJDIR)/style_test $(CFLAGS) -DSS_TEST stystruc.c $(TEST_LIBS) $(NSPR_LDFLAGS) $(NSPR_LIBS)
+	$(CC) -g -o $(OBJDIR)/stack_test $(CFLAGS) -DTEST_STYLESTACK stystack.c $(TEST_LIBS) $(NSPR_LDFLAGS) $(NSPR_LIBS)
 
 css_test:
 	rm -f $(OBJDIR)/css_test

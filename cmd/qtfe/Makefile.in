@@ -229,13 +229,11 @@ GARBAGE		+= $(MOCSRCS) $(XFEPRIVDIR)/Netscape.mk $(OBJDIR)/icon-pixmaps.inc $(OB
 #ICONS_LIB	= $(DIST)/lib/lib$(LITE_PREFIX)xfeicons.a
 
 ifeq ($(OS_ARCH),AIX)
-NSPR_LIB	= 
-else
-NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libnspr21.a
+NSPR_LIBS	= 
 endif
 
 ifdef DBMALLOC
-NSPR_LIB	+= $(DIST)/lib/libdbmalloc.a
+NSPR_LIBS	+= $(DIST)/lib/libdbmalloc.a
 endif
 
 ifndef DISABLE_MARINER
@@ -509,7 +507,7 @@ endif
 
 LOCALES		= $(LOCALE_MAP) $(MAIL_IM_HACK) $(NEWS_IM_HACK)
 
-ALL_EXPORT_LIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
+ALL_EXPORT_LIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS)
 
 ALL_EXPORT_DSOS	= $(ALL_EXPORT_LIBS:$(DIST)/lib/lib%.a=-l%)
 PLUGIN_DSO	= $(DIST)/bin/libnullplugin.so
@@ -602,8 +600,8 @@ MCS_CMD		= true
 # Only IRIX 5.x uses this.
 EXTRA_POST_LINK_CMD	= echo
 
-EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(OTHER_LIBS) $(NSPR_LIB)
-EXPORT_DEPLIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
+EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(OTHER_LIBS) $(NSPR_LIBS)
+EXPORT_DEPLIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS)
 
 DSO_EX_LIBS	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
 
@@ -768,7 +766,7 @@ ifeq ($(OS_ARCH),OSF1)
 # 
 OTHER_LIBS	= $(QTLIB) -lX11 -lXext -ldnet_stub -lm -lots $(OS_LIBS)
 
-EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(OTHER_LIBS)
+EXPORT_LDFLAGS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS) $(OTHER_LIBS)
 
 endif
 
@@ -857,7 +855,7 @@ endif
 
 EXPORT_LDFLAGS	= -z defs -L$(MOTIF)/lib -L$(USRLIBDIR) -R$(MOTIF)/lib \
 		  -R$(USRLIBDIR) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) \
-		  $(OTHER_LIBS) $(NSPR_LIB)
+		  $(OTHER_LIBS) $(NSPR_LIBS)
 
 endif
 endif
@@ -1019,10 +1017,10 @@ pure:	$(OBJDIR)/$(QTFE_PROGNAME)-export $(OBJDIR)/$(QTFE_PROGNAME)-export.pure
 quantify:	$(OBJDIR)/$(QTFE_PROGNAME)-export $(OBJDIR)/$(QTFE_PROGNAME)-export.quantify
 
 # Use gtscc to find dead code globals.
-unreferenced: $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(DIST)/bin/gtscc 
+unreferenced: $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS) $(DIST)/bin/gtscc 
 	@$(MAKE_OBJDIR)
 	rm -f $@
-	$(DIST)/bin/gtscc -gtsrootdir $(DEPTH) -gtsdump -gtsnorecompile -gtsnolink $(DEPTH) $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) | awk -n '/ 0 0 / { print $$5 " " $$1 }' | sort > $@
+	$(DIST)/bin/gtscc -gtsrootdir $(DEPTH) -gtsdump -gtsnorecompile -gtsnolink $(DEPTH) $(OBJS) $(NET_EXPORT_OBJS) $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIBS) | awk -n '/ 0 0 / { print $$5 " " $$1 }' | sort > $@
 
 ifeq ($(OS_ARCH),AIX)
 AIX_HACK	:= $(notdir $(AIX_NSPR))
