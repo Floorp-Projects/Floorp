@@ -431,7 +431,23 @@ nsNetDiskCache::GetCachedNetDataByID(PRInt32 RecordID, nsINetDataCacheRecord **_
     printf("CACHE: GetCachedNetDataByID(id=%d) created nsDiskCacheRecord %p\n", RecordID, *_retval);
 #endif /* DEBUG_dp */
     return rv;
-  } else if(!info) {
+  }
+
+  // At this point, we didnt succeed in getting the record. This could be caused
+  // by two cases:
+  // 1. mDB->Get() returns NS_OK but info is NULL
+  //		This will be a non-fatal error. Just pass the error up.
+  //
+  // 2. mDB->Get() return NS_ERROR and info is untouched -
+  //		High possibility that DB is corrupted. Go to dev con 3 immediately.
+
+  if (NS_FAILED(rv))
+  {
+    DBRecovery();
+  }
+  else
+  {
+    // We got NS_OK from mDB->Get() but info is null. Return error.
     rv = NS_ERROR_FAILURE;
   }
 
@@ -440,7 +456,6 @@ nsNetDiskCache::GetCachedNetDataByID(PRInt32 RecordID, nsINetDataCacheRecord **_
 #endif /* DEBUG_dp */
 
   NS_WARNING("Error: RecordID not in DB\n");
-  DBRecovery();
   return rv;
 }
 
