@@ -35,13 +35,13 @@ USE_NON_MT_LIBS = 1
 
 EXPORTS		= logkeys.h
 
-CPPSRCS		= \
-		uninstall.cpp \
-		extra.cpp \
-		dialogs.cpp \
-		parser.cpp \
-		ifuncns.cpp \
-		rdi.cpp \
+CSRCS		= \
+		uninstall.c \
+		extra.c \
+		dialogs.c \
+		parser.c \
+		ifuncns.c \
+		rdi.c \
 		$(NULL)
 
 OS_LIBS		+= shell32.lib version.lib

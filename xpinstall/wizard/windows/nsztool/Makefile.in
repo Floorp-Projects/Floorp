@@ -31,7 +31,7 @@ REQUIRES	= $(ZLIB_REQUIRES)
 EXTRA_DSO_LIBS	= mozz_s
 USE_NON_MT_LIBS = 1
 
-CPPSRCS		= nsztool.cpp 
+CSRCS		= nsztool.c
 
 LIBS		= $(EXTRA_DSO_LIBS)
 

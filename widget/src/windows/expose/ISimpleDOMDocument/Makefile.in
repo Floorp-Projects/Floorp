@@ -32,10 +32,10 @@ DEFFILE		= $(srcdir)/ISimpleDOMDocument.def
 
 DEFINES		+= -DREGISTER_PROXY_DLL -D_WIN32_WINNT=0x400
 
-CPPSRCS		= \
-		dlldata.cpp \
-		ISimpleDOMDocument_p.cpp \
-		ISimpleDOMDocument_i.cpp \
+CSRCS		= \
+		dlldata.c \
+		ISimpleDOMDocument_p.c \
+		ISimpleDOMDocument_i.c \
 		$(NULL)
 
 OS_LIBS		+= \

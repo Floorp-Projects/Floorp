@@ -30,7 +30,7 @@ PROGRAM		= ren8dot3$(BIN_SUFFIX)
 
 USE_NON_MT_LIBS = 1
 
-CPPSRCS		= ren8dot3.cpp
+CSRCS		= ren8dot3.c
 
 NO_DIST_INSTALL	= 1
 
