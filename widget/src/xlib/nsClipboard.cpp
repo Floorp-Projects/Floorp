@@ -27,11 +27,8 @@
  * Currently this only supports the transfer of TEXT! FIXME
  */
 
+#include "nsAppShell.h"
 #include "nsClipboard.h"
-
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-#include "string.h"
 
 #include "nsCOMPtr.h"
 #include "nsFileSpec.h"
@@ -47,6 +44,9 @@
 
 #include "nsTextFormatter.h"
 #include "nsVoidArray.h"
+
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
 
 #include "xlibrgb.h"
 
@@ -73,7 +73,7 @@ NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard);
 nsClipboard::nsClipboard() {
   NS_INIT_REFCNT();
 
-  sDisplay = xlib_rgb_get_display();
+  sDisplay = xxlib_rgb_get_display(nsAppShell::GetXlibRgbHandle());
 
   Init();
 }

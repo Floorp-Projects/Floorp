@@ -28,10 +28,8 @@
 #include "nsIImage.h"
 #include "nsPoint.h"
 #include "nsGCCache.h"
+#include "xlibrgb.h"
 
-#include "X11/Xlib.h"
-#include "X11/Xutil.h"
-#include "X11/Xos.h"
 // class nsDrawingSurfaceXlib;
 
 class nsImageXlib : public nsIImage {
@@ -191,6 +189,7 @@ private:
   PRInt32       mDecodedX2;
   PRInt32       mDecodedY2;
 
+  static XlibRgbHandle *mXlibRgbHandle;
   Display      *mDisplay;
 
   // alpha layer members

@@ -167,6 +167,7 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
 static int gFontMetricsXlibCount = 0;
 static int gInitialized = 0;
+static XlibRgbHandle *gXlibRgbHandle = nsnull;
 static PRBool gAllowDoubleByteSpecialChars = PR_TRUE;
 
 // XXX many of these statics need to be freed at shutdown time
@@ -732,7 +733,9 @@ nsFontMetricsXlib::FreeGlobals(void)
   for (charSetMap = gCharSetMap; charSetMap->mFontLangGroup; charSetMap++) {
     NS_IF_RELEASE(charSetMap->mFontLangGroup->mFontLangGroupAtom);
     charSetMap->mFontLangGroup->mFontLangGroupAtom = nsnull;
-  } 
+  }
+  
+  gXlibRgbHandle = nsnull;
 }
 
 /*
@@ -1027,8 +1030,15 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   nsString savedName = mFont->name;
   mFont->name = NS_LITERAL_STRING("serif");
 #endif  /* XPRINT_FONT_HACK */
-  
-  mDeviceContext = aContext;
+
+#ifdef _IMPL_NS_XPRINT
+  mDeviceContext = (nsDeviceContextXp *)aContext;
+#else
+  mDeviceContext = (nsDeviceContextXlib *)aContext;
+#endif /* _IMPL_NS_XPRINT */  
+
+  if (!gXlibRgbHandle)
+    gXlibRgbHandle = mDeviceContext->GetXlibRgbHandle();
 
   float app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
@@ -1845,7 +1855,7 @@ nsFontXlib::LoadFont(void)
 
   mAlreadyCalledLoadFont = PR_TRUE;
 
-  Display *aDisplay = xlib_rgb_get_display();
+  Display *aDisplay = xxlib_rgb_get_display(gXlibRgbHandle);
 
 #ifdef USE_XPRINT
   if (nsFontMetricsXlib::mPrinterMode)
@@ -1937,7 +1947,7 @@ nsFontXlib::~nsFontXlib()
 {
   MOZ_COUNT_DTOR(nsFontXlib);
   if (mFont)
-    XFreeFont(xlib_rgb_get_display(), mFont);
+    XFreeFont(xxlib_rgb_get_display(gXlibRgbHandle), mFont);
 
   if (mCharSetInfo == &ISO106461)
     PR_FREEIF(mMap);
@@ -3153,11 +3163,12 @@ static void
 GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
 {
   nsCAutoString previousNodeName;
+  Display       *dpy = xxlib_rgb_get_display(gXlibRgbHandle);
 
 #ifdef USE_XPRINT
   if(nsFontMetricsXlib::mPrinterMode)
   {
-    if (XpGetContext(xlib_rgb_get_display()) == None)
+    if (XpGetContext(dpy) == None)
     {
       /* applications must not make any assumptions about fonts _before_ XpSetContext() !!! */
       NS_ERROR("Obtaining font information without valid print context (XListFonts()) _before_ XpSetContext()");
@@ -3166,7 +3177,7 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
   }               
 #endif /* USE_XPRINT */
   int count;
-  char** list = ::XListFonts(xlib_rgb_get_display(), aPattern, INT_MAX, &count);
+  char** list = ::XListFonts(dpy, aPattern, INT_MAX, &count);
   if ((!list) || (count < 1)) {
     return;
   }

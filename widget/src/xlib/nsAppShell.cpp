@@ -86,10 +86,12 @@ PRBool nsAppShell::mAltDown = PR_FALSE;
 PRBool nsAppShell::mShiftDown = PR_FALSE;
 PRBool nsAppShell::mCtrlDown = PR_FALSE;
 PRBool nsAppShell::mMetaDown = PR_FALSE;
+XlibRgbHandle *nsAppShell::mXlib_rgb_handle = nsnull;
 
 
 // For debugging.
-static char *event_names[] = {
+static const char *event_names[] = 
+{
   "",
   "",
   "KeyPress",
@@ -283,6 +285,14 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
       argv = bav;
   }
 
+#ifdef NOT_NOW  
+  if (!XInitThreads()) {
+    NS_WARNING("XInitThreads failed");
+    /* fatal ! */
+    exit(EXIT_FAILURE);
+  }
+#endif  
+
   char *displayName=nsnull;
   bool synchronize=false;
 
@@ -312,31 +322,30 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 
   // Open the display
   if (mDisplay == nsnull) {
-    mDisplay = XOpenDisplay(displayName);
-
-    if (synchronize)
-      XSynchronize(mDisplay, True);
-    // Requires XSynchronize(mDisplay, True); To stop X buffering. Use this
-    // to make debugging easier. KenF
-
-    if (mDisplay == NULL) {
-      fprintf(stderr, "%s: Cannot connect to X server %s\n",
-              argv[0], 
-              XDisplayName(displayName));
-      exit(EXIT_FAILURE);
-    }
-
     XtToolkitInitialize();
     app_context = XtCreateApplicationContext();
-    XtDisplayInitialize(app_context, mDisplay, NULL, "Mozilla", 
-                        NULL, 0, &mArgc, mArgv);
 
+    if (!(mDisplay = XtOpenDisplay (app_context, displayName, 
+                                    "Mozilla5", "Mozilla5", NULL, 0, 
+                                    &mArgc, mArgv))) 
+    {
+      fprintf (stderr, "%s:  unable to open display \"%s\"\n", mArgv[0], XDisplayName(displayName));
+      exit (EXIT_FAILURE);
+    }
+    
+    // Requires XSynchronize(mDisplay, True); To stop X buffering. Use this
+    // to make debugging easier. KenF
+    if (synchronize)
+    {
+      NS_WARNING("running via unbuffered X connection.");
+      XSynchronize(mDisplay, True);
+    }
+    
+    mScreen = XDefaultScreenOfDisplay(mDisplay);
+    mXlib_rgb_handle = xxlib_rgb_create_handle(XXLIBRGB_DEFAULT_HANDLE, mDisplay, mScreen);
+    if (!mXlib_rgb_handle)
+      abort();
   }
-  //  _Xdebug = 1;
-
-  mScreen = XDefaultScreenOfDisplay(mDisplay);
-
-  xlib_rgb_init(mDisplay, mScreen);
 
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsAppShell::Create(dpy=%p  screen=%p)\n",
          mDisplay,
@@ -394,8 +403,9 @@ void CallProcessTimeoutsXtProc( XtPointer dummy1, XtIntervalId *dummy2 )
 
   // reset timer
   XtAppContext *app_context = (XtAppContext *) dummy1;
+#define CALLPROCESSTIMEOUTSVAL (10)
   XtAppAddTimeOut(*app_context, 
-                  100,
+                  CALLPROCESSTIMEOUTSVAL,
                   CallProcessTimeoutsXtProc, 
                   app_context);
 }
@@ -433,7 +443,7 @@ nsresult nsAppShell::Run()
 
   // set initial timer
   XtAppAddTimeOut(app_context, 
-                  100,
+                  CALLPROCESSTIMEOUTSVAL,
                   CallProcessTimeoutsXtProc, 
                   &app_context);
                 
@@ -1337,3 +1347,4 @@ void nsAppShell::ForwardEvent(XEvent *event, nsWidget *aWidget)
 
   aWidget->DispatchWindowEvent(ev);
 }
+

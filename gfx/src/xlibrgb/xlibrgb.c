@@ -108,6 +108,7 @@ typedef enum {
   MSB_FIRST
 } ByteOrder;
 
+static void xxlib_deregister_handle_by_handle(XlibRgbHandle *handle);
 
 typedef void (*XlibRgbConvFunc) (XlibRgbHandle *handle,
                                  XImage *image,
@@ -128,7 +129,7 @@ typedef void (*XlibRgbConvFunc) (XlibRgbHandle *handle,
    (i.e. some but not all windows have privately installed
    colormaps). */
 
-typedef struct _XlibRgbHandle
+struct _XlibRgbHandle
 {
   Display          *display;
   Screen           *screen;
@@ -215,7 +216,7 @@ typedef struct _XlibRgbHandle
 
 
 unsigned long
-xxlib_get_prec_from_mask(XlibRgbHandle *handle, unsigned long val)
+xxlib_get_prec_from_mask(unsigned long val)
 {
   unsigned long retval = 0;
   unsigned int cur_bit = 0;
@@ -231,7 +232,7 @@ xxlib_get_prec_from_mask(XlibRgbHandle *handle, unsigned long val)
 }
 
 unsigned long
-xxlib_get_shift_from_mask(XlibRgbHandle *handle, unsigned long val)
+xxlib_get_shift_from_mask(unsigned long val)
 {
   unsigned long cur_bit = 0;
   /* walk through the number, looking for the first 1 */
@@ -658,12 +659,12 @@ xxlib_rgb_choose_visual (XlibRgbHandle *handle)
      this only applies to cool visuals like true color and direct color. */
   if (handle->x_visual_info->class == TrueColor ||
       handle->x_visual_info->class == DirectColor) {
-    handle->red_shift   = xxlib_get_shift_from_mask(handle, handle->x_visual_info->red_mask);
-    handle->red_prec    = xxlib_get_prec_from_mask(handle, handle->x_visual_info->red_mask);
-    handle->green_shift = xxlib_get_shift_from_mask(handle, handle->x_visual_info->green_mask);
-    handle->green_prec  = xxlib_get_prec_from_mask(handle, handle->x_visual_info->green_mask);
-    handle->blue_shift  = xxlib_get_shift_from_mask(handle, handle->x_visual_info->blue_mask);
-    handle->blue_prec   = xxlib_get_prec_from_mask(handle, handle->x_visual_info->blue_mask);
+    handle->red_shift   = xxlib_get_shift_from_mask(handle->x_visual_info->red_mask);
+    handle->red_prec    = xxlib_get_prec_from_mask(handle->x_visual_info->red_mask);
+    handle->green_shift = xxlib_get_shift_from_mask(handle->x_visual_info->green_mask);
+    handle->green_prec  = xxlib_get_prec_from_mask(handle->x_visual_info->green_mask);
+    handle->blue_shift  = xxlib_get_shift_from_mask(handle->x_visual_info->blue_mask);
+    handle->blue_prec   = xxlib_get_prec_from_mask(handle->x_visual_info->blue_mask);
   }
 }
 
@@ -721,12 +722,12 @@ xxlib_rgb_choose_visual_for_xprint (XlibRgbHandle *handle, int aDepth)
      this only applies to cool visuals like true color and direct color. */
   if (handle->x_visual_info->class == TrueColor ||
       handle->x_visual_info->class == DirectColor) {
-    handle->red_shift   = xxlib_get_shift_from_mask(handle, handle->x_visual_info->red_mask);
-    handle->red_prec    = xxlib_get_prec_from_mask(handle, handle->x_visual_info->red_mask);
-    handle->green_shift = xxlib_get_shift_from_mask(handle, handle->x_visual_info->green_mask);
-    handle->green_prec  = xxlib_get_prec_from_mask(handle, handle->x_visual_info->green_mask);
-    handle->blue_shift  = xxlib_get_shift_from_mask(handle, handle->x_visual_info->blue_mask);
-    handle->blue_prec   = xxlib_get_prec_from_mask(handle, handle->x_visual_info->blue_mask);
+    handle->red_shift   = xxlib_get_shift_from_mask(handle->x_visual_info->red_mask);
+    handle->red_prec    = xxlib_get_prec_from_mask(handle->x_visual_info->red_mask);
+    handle->green_shift = xxlib_get_shift_from_mask(handle->x_visual_info->green_mask);
+    handle->green_prec  = xxlib_get_prec_from_mask(handle->x_visual_info->green_mask);
+    handle->blue_shift  = xxlib_get_shift_from_mask(handle->x_visual_info->blue_mask);
+    handle->blue_prec   = xxlib_get_prec_from_mask(handle->x_visual_info->blue_mask);
   }
 }
 
@@ -803,20 +804,33 @@ xxlib_rgb_destroy_handle (XlibRgbHandle *handle)
   
   if (handle->stage_buf)
     free(handle->stage_buf);
+
+  xxlib_deregister_handle_by_handle(handle);
+  
+#ifdef DEBUG
+    /* force crash if someone tries to touch the handle... */
+    memset(handle, 0, sizeof(XlibRgbHandle));
+#endif  
             
   /* done... */
   free(handle); 
 }
 
+/* create a XlibRgbHandle object, see |xxlib_rgb_create_handle_with_depth()| for details */
 XlibRgbHandle *
-xxlib_rgb_create_handle (Display *display, Screen *screen)
+xxlib_rgb_create_handle (const char *name, Display *display, Screen *screen)
 {
   int prefDepth = -1; /* let the function do the visual scoring */
-  return xxlib_rgb_create_handle_with_depth(display, screen, prefDepth);
+  return xxlib_rgb_create_handle_with_depth(name, display, screen, prefDepth);
 }
 
+/* create a XlibRgbHandle object
+ * It is possible to register the handle automagically with a |name|.
+ * Handle names must be unique, but it is possible to register a handle 
+ * with more than one name via |xxlib_register_handle()|.
+ */
 XlibRgbHandle *
-xxlib_rgb_create_handle_with_depth (Display *display, Screen *screen, int prefDepth)
+xxlib_rgb_create_handle_with_depth (const char *name, Display *display, Screen *screen, int prefDepth)
 {
   XlibRgbHandle *handle = NULL;
   int i;
@@ -836,15 +850,21 @@ xxlib_rgb_create_handle_with_depth (Display *display, Screen *screen, int prefDe
     abort();
   }
 #endif /* G_BYTE_ORDER == G_BIG_ENDIAN */
-
-    
-    handle = malloc(sizeof(XlibRgbHandle));
-    
-    if(!handle)
-      return NULL;
-      
+   
+    if (!(handle = malloc(sizeof(XlibRgbHandle))))
+      return NULL;      
     memset(handle, 0, sizeof(XlibRgbHandle));
 
+    /* should we register this handle ? */
+    if (name)
+    {
+      if (!xxlib_register_handle(name, handle))
+      {
+        free(handle);
+        return NULL;
+      }  
+    }
+    
     handle->display = display;
     handle->screen = screen;
     handle->screen_num = XScreenNumberOfScreen(screen);
@@ -1003,7 +1023,7 @@ xxlib_rgb_create_handle_with_depth (Display *display, Screen *screen, int prefDe
       handle->bpp = 4;
       break;
     }
-    xxlib_rgb_select_conv (handle, handle->static_image[0], MSB_FIRST);
+    xxlib_rgb_select_conv (handle, handle->static_image[0], MSB_FIRST);  
     
     return handle;
 }
@@ -3757,269 +3777,129 @@ xxlib_rgb_get_screen (XlibRgbHandle *handle)
   return (handle)?(handle->screen):(NULL);
 }
 
-#ifdef XLIBRGB_ENABLE_OBSOLETE_API
-
-static XlibRgbHandle *static_handle = NULL;
-
-void
-xlib_rgb_init (Display *display, Screen *screen)
+typedef struct _RegisteredHandle
 {
-  if(!static_handle)
-    static_handle = xxlib_rgb_create_handle(display, screen);
-    
-  if(!static_handle)
-    abort();
+  const char    *name;
+  XlibRgbHandle *handle;
+} RegisteredHandle;
+
+static RegisteredHandle *registered_handles      = NULL;
+static unsigned int      registered_handles_size = 0;
+
+/* find registered handle by name */
+static
+RegisteredHandle *xxlib_find_registered_handle(const char *name)
+{
+  unsigned int i;
+  
+  for( i=0 ; i < registered_handles_size ; i++ )
+  {
+    if (name && registered_handles[i].name && 
+        !strcmp(name, registered_handles[i].name))
+      return &registered_handles[i];
+  }
+  
+  return NULL;
 }
 
-void
-xlib_rgb_init_with_depth (Display *display, Screen *screen, int prefDepth)
+/* register handle.
+ * This API is public to register a handle more then once (=alias), or if the handle 
+ * has not been registered yet (e.g. |xxlib_rgb_create_handle()| called with
+ * a NULL-|name| argument).
+ */
+Bool xxlib_register_handle(const char *name, XlibRgbHandle *handle)
 {
-  if(!static_handle)
-    static_handle = xxlib_rgb_create_handle_with_depth(display, screen, prefDepth);
+  RegisteredHandle *entry = NULL;
+  unsigned int i;
+  
+  if (xxlib_find_handle(name) || (handle == NULL))
+    return False;
+  
+  /* search for a free slot... */  
+  for( i=0 ; i < registered_handles_size ; i++ )
+  {
+    if (!registered_handles[i].handle)
+    {
+      entry = &registered_handles[i];
+      break;
+    }
+  }
+  
+  /* ... no unused entry found ? Then allocate a new one... */
+  if (!entry)
+  {
+    registered_handles_size++;
+    registered_handles = realloc(registered_handles, sizeof(RegisteredHandle)*registered_handles_size);
+  
+    if (!registered_handles)
+      abort();
+    entry = &registered_handles[registered_handles_size-1];
+  
+#ifdef DEBUG
+    printf("xxlib_register_handle: new entry '%s' %p\n", name, entry);
+#endif /* DEBUG */
+  }
+  else
+  {
+#ifdef DEBUG
+    printf("xxlib_register_handle: reusing entry '%s' %p\n", name, entry);
+#endif /* DEBUG */
+  }
 
-  if(!static_handle)
-    abort();
+  entry->name   = strdup(name);
+  entry->handle = handle;
+  
+  return True;
 }
 
-void
-xlib_rgb_detach (void)
+/* unregister the given handle by name. 
+ * Return |True| if the |name| was found, |False| otherwise.
+ * Note that |xxlib_rgb_destroy_handle()| unregisters the handle 
+ * automagically (including all aliases).
+ */
+Bool xxlib_deregister_handle(const char *name)
 {
-  xxlib_rgb_destroy_handle(static_handle);
-  static_handle = NULL;  
+  RegisteredHandle *entry;
+  if (entry = xxlib_find_registered_handle(name))
+  {
+    free((void *)entry->name);
+    entry->name   = NULL;
+    entry->handle = NULL;
+    return True;
+  }
+  
+  return False;  
 }
 
-void 
-xlib_disallow_image_tiling (Bool disallow_it)
+/* used by |xxlib_rgb_destroy_handle()| to deregister handle and all
+ * it's aliases... */
+static
+void xxlib_deregister_handle_by_handle(XlibRgbHandle *handle)
 {
-  xxlib_disallow_image_tiling (static_handle, disallow_it);
+  unsigned int i;
+  
+  if (!handle)
+    return;
+  
+  for( i=0 ; i < registered_handles_size ; i++ )
+  {
+    if (registered_handles[i].handle == handle)
+    {
+      free((void *)registered_handles[i].name);
+      registered_handles[i].name   = NULL;
+      registered_handles[i].handle = NULL;    
+    }
+  }
 }
 
-unsigned long
-xlib_rgb_xpixel_from_rgb (uint32 rgb)
+/* find a registered handle by |name| */
+XlibRgbHandle *xxlib_find_handle(const char *name)
 {
-  return xxlib_rgb_xpixel_from_rgb(static_handle, rgb);
+  RegisteredHandle *entry = xxlib_find_registered_handle(name);
+#ifdef DEBUG
+  printf("xxlib_find_handle: '%s' entry %p\n", name, entry);
+#endif /* DEBUG */
+  return (entry)?(entry->handle):(NULL);
 }
-
-void
-xlib_rgb_gc_set_foreground (GC gc, uint32 rgb)
-{
-  xxlib_rgb_gc_set_foreground (static_handle, gc, rgb);
-}
-
-void
-xlib_rgb_gc_set_background (GC gc, uint32 rgb)
-{
-  xxlib_rgb_gc_set_background (static_handle, gc, rgb);
-}
-
-void
-xlib_draw_rgb_image (Drawable drawable,
-                     GC gc,
-                     int x,
-                     int y,
-                     int width,
-                     int height,
-                     XlibRgbDither dith,
-                     unsigned char *rgb_buf,
-                     int rowstride)
-{
-  xxlib_draw_rgb_image (static_handle, 
-                        drawable,
-                        gc,
-                        x,
-                        y,
-                        width,
-                        height,
-                        dith,
-                        rgb_buf,
-                        rowstride);
-}                     
-
-void
-xlib_draw_rgb_image_dithalign (Drawable drawable,
-                               GC gc,
-                               int x,
-                               int y,
-                               int width,
-                               int height,
-                               XlibRgbDither dith,
-                               unsigned char *rgb_buf,
-                               int rowstride,
-                               int xdith,
-                               int ydith)
-{
-  xxlib_draw_rgb_image_dithalign (static_handle,
-                               drawable,
-                               gc,
-                               x,
-                               y,
-                               width,
-                               height,
-                               dith,
-                               rgb_buf,
-                               rowstride,
-                               xdith,
-                               ydith);
-}
-
-void
-xlib_draw_rgb_32_image (Drawable drawable,
-                        GC gc,
-                        int x,
-                        int y,
-                        int width,
-                        int height,
-                        XlibRgbDither dith,
-                        unsigned char *buf,
-                        int rowstride)
-{
-  xxlib_draw_rgb_32_image (static_handle,
-                        drawable,
-                        gc,
-                        x,
-                        y,
-                        width,
-                        height,
-                        dith,
-                        buf,
-                        rowstride);
-}
-
-void
-xlib_draw_gray_image (Drawable drawable,
-                      GC gc,
-                      int x,
-                      int y,
-                      int width,
-                      int height,
-                      XlibRgbDither dith,
-                      unsigned char *buf,
-                      int rowstride)
-{
-  xxlib_draw_gray_image (static_handle,
-                      drawable,
-                      gc,
-                      x,
-                      y,
-                      width,
-                      height,
-                      dith,
-                      buf,
-                      rowstride);
-}
-
-XlibRgbCmap *
-xlib_rgb_cmap_new (uint32 *colors, int n_colors)
-{
-  return xxlib_rgb_cmap_new (static_handle, colors, n_colors);
-}
-
-void
-xlib_rgb_cmap_free (XlibRgbCmap *cmap)
-{
-  xxlib_rgb_cmap_free (static_handle, cmap);
-}
-
-void
-xlib_draw_indexed_image (Drawable drawable,
-                         GC gc,
-                         int x,
-                         int y,
-                         int width,
-                         int height,
-                         XlibRgbDither dith,
-                         unsigned char *buf,
-                         int rowstride,
-                         XlibRgbCmap *cmap)
-{
-  xxlib_draw_indexed_image (static_handle, 
-                         drawable,
-                         gc,
-                         x,
-                         y,
-                         width,
-                         height,
-                         dith,
-                         buf,
-                         rowstride,
-                         cmap);
-}
-
-/* Below are some functions which are primarily useful for debugging
-   and experimentation. */
-Bool
-xlib_rgb_ditherable (void)
-{
-  return xxlib_rgb_ditherable (static_handle);
-}
-
-void
-xlib_rgb_set_verbose (Bool verbose)
-{
-  xxlib_rgb_set_verbose (static_handle, verbose);
-}
-
-/* experimental colormap stuff */
-void
-xlib_rgb_set_install (Bool install)
-{
-  xxlib_rgb_set_install (static_handle, install);
-}
-
-void
-xlib_rgb_set_min_colors (int min_colors)
-{
-  xxlib_rgb_set_min_colors (static_handle, min_colors);
-}
-
-Colormap
-xlib_rgb_get_cmap (void)
-{
-  return xxlib_rgb_get_cmap (static_handle);
-}
-
-Visual *
-xlib_rgb_get_visual (void)
-{
-  return xxlib_rgb_get_visual (static_handle);
-}
-
-XVisualInfo *
-xlib_rgb_get_visual_info (void)
-{
-  return xxlib_rgb_get_visual_info (static_handle);
-}
-
-int
-xlib_rgb_get_depth (void)
-{
-  return xxlib_rgb_get_depth (static_handle);
-}
-
-Display *
-xlib_rgb_get_display (void)
-{
-  return xxlib_rgb_get_display (static_handle);
-}
-
-Screen *
-xlib_rgb_get_screen (void)
-{
-  return xxlib_rgb_get_screen (static_handle);
-}
-
-unsigned long
-xlib_get_prec_from_mask(unsigned long arg)
-{
-  return xxlib_get_prec_from_mask (static_handle, arg);
-}
-
-unsigned long
-xlib_get_shift_from_mask(unsigned long arg)
-{
-  return xxlib_get_shift_from_mask (static_handle, arg);
-}
-
-#endif /* XLIBRGB_ENABLE_OBSOLETE_API */
 
 

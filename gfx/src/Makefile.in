@@ -38,8 +38,8 @@ else
 DIRS		= ps
 endif
 
-# Build xlibrgb only for X toolkits
-ifneq (,$(filter motif xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB))
+# Build xlibrgb only for X toolkits and/or Xprint
+ifneq (,$(filter motif xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB)$(MOZ_ENABLE_XPRINT))
 DIRS		+= xlibrgb
 endif
 

@@ -25,9 +25,7 @@
 
 #include "nsIDrawingSurface.h"
 #include "nsGCCache.h"
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xos.h>
+#include "xlibrgb.h"
 
 class nsDrawingSurfaceXlib : public nsIDrawingSurface
 {
@@ -46,23 +44,18 @@ public:
   NS_IMETHOD IsPixelAddressable(PRBool *aAddressable);
   NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat);
 
-  NS_IMETHOD Init (Display * aDisplay,
-                   Screen *  aScreen,
-                   Visual *  aVisual,
-                   int       aDepth,
+  NS_IMETHOD Init (XlibRgbHandle *aHandle,
                    Drawable  aDrawable, 
                    xGC       * aGC);
 
-  NS_IMETHOD Init (Display * aDisplay,
-                   Screen *  aScreen,
-                   Visual *  aVisual,
-                   int       aDepth,
+  NS_IMETHOD Init (XlibRgbHandle *aHandle,
                    xGC      *  aGC, 
                    PRUint32  aWidth, 
                    PRUint32  aHeight, 
                    PRUint32  aFlags);
 
-  Drawable   GetDrawable(void) { return (mDrawable); }  
+  Drawable   GetDrawable() { return mDrawable; }  
+  XlibRgbHandle *GetXlibRgbHandle() { return mXlibRgbHandle; }
   Display *  GetDisplay() { return mDisplay; }
   Screen *   GetScreen() { return mScreen; }
   Visual *   GetVisual() { return mVisual; }
@@ -71,6 +64,9 @@ public:
   xGC *      GetGC() { mGC->AddRef(); return mGC; }
 
 private:
+  void       CommonInit();
+
+  XlibRgbHandle *mXlibRgbHandle;
   Display *      mDisplay;
   Screen *       mScreen;
   Visual *       mVisual;

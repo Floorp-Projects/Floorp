@@ -25,6 +25,7 @@
 #include "xlibrgb.h"
 #include "nsToolkit.h"
 #include "nsGCCache.h"
+#include "nsAppShell.h" // needed for nsAppShell::GetXlibRgbHandle()
 
 // Static Thread Local Storage index of the toolkit object associated with
 // a given thread...
@@ -33,8 +34,8 @@ static PRUintn gToolkitTLSIndex = 0;
 nsToolkit::nsToolkit()
 {
   NS_INIT_REFCNT();
-  mGC = NULL;
-  mDisplay = xlib_rgb_get_display();
+  mGC = nsnull;
+  mDisplay = xxlib_rgb_get_display(nsAppShell::GetXlibRgbHandle());
 }
 
 nsToolkit::~nsToolkit()
@@ -53,7 +54,7 @@ void nsToolkit::CreateSharedGC()
   if (mGC)
     return;
 
-  mGC = new xGC(mDisplay, DefaultRootWindow(mDisplay), 0, NULL);
+  mGC = new xGC(mDisplay, XDefaultRootWindow(mDisplay), 0, nsnull);
   mGC->AddRef(); // this is for us
 }
 
@@ -82,7 +83,7 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   // Create the TLS (Thread Local Storage) index the first time through
   if (gToolkitTLSIndex == 0)
   {
-    status = PR_NewThreadPrivateIndex(&gToolkitTLSIndex, NULL);
+    status = PR_NewThreadPrivateIndex(&gToolkitTLSIndex, nsnull);
     if (PR_FAILURE == status)
     {
       rv = NS_ERROR_FAILURE;

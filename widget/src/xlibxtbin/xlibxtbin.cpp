@@ -42,8 +42,10 @@ xtbin::~xtbin() {
 
 void xtbin::xtbin_init() {
   initialized = 1;
-  app_context = XtDisplayToApplicationContext(xlib_rgb_get_display());
-  xtdisplay = xlib_rgb_get_display();
+  xtdisplay = xxlib_rgb_get_display(xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE));
+  if (!xtdisplay)
+    abort();
+  app_context = XtDisplayToApplicationContext(xtdisplay);
 }
 
 void xtbin::xtbin_realize() {
@@ -70,15 +72,15 @@ void xtbin::xtbin_realize() {
 
   mask = CWBitGravity | CWEventMask;
 
-  window = XCreateWindow(xlib_rgb_get_display(), parent_window,
+  window = XCreateWindow(xtdisplay, parent_window,
                          x, y, width, height, 0, CopyFromParent,
                          CopyFromParent, CopyFromParent,
                          mask, &attr);
 
-  XSelectInput(xlib_rgb_get_display(), window, ExposureMask);
+  XSelectInput(xtdisplay, window, ExposureMask);
 
-  XMapWindow(xlib_rgb_get_display(), window);
-  XFlush(xlib_rgb_get_display());
+  XMapWindow(xtdisplay, window);
+  XFlush(xtdisplay);
 
   top_widget = XtAppCreateShell("drawingArea", "Wrapper",
                                 applicationShellWidgetClass, xtdisplay,

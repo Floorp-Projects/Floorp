@@ -79,6 +79,9 @@ nsDeviceContextXlib::nsDeviceContextXlib()
   mHeightFloat = 0.0f;
   mWidth = -1;
   mHeight = -1;
+  mXlibRgbHandle = xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE);
+  if (!mXlibRgbHandle)
+    abort();
 }
 
 nsDeviceContextXlib::~nsDeviceContextXlib()
@@ -94,10 +97,10 @@ NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
 
   mWidget = aNativeWidget;
 
-  mDisplay = xlib_rgb_get_display();
-  mScreen = xlib_rgb_get_screen();
-  mVisual = xlib_rgb_get_visual();
-  mDepth = xlib_rgb_get_depth();
+  mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
+  mScreen  = xxlib_rgb_get_screen(mXlibRgbHandle);
+  mVisual  = xxlib_rgb_get_visual(mXlibRgbHandle);
+  mDepth   = xxlib_rgb_get_depth(mXlibRgbHandle);
 
   if (!mDefaultFont)
     mDefaultFont = XLoadQueryFont(mDisplay, XLIB_DEFAULT_FONT1);
@@ -183,10 +186,7 @@ NS_IMETHODIMP nsDeviceContextXlib::CreateRenderingContext(nsIRenderingContext *&
     surface = new nsDrawingSurfaceXlib();
     if (nsnull != surface) {
       xGC *gc = new xGC(mDisplay,(Drawable) mWidget, 0, NULL);
-      rv = surface->Init(mDisplay, 
-                         mScreen, 
-                         mVisual, 
-                         mDepth,
+      rv = surface->Init(mXlibRgbHandle,
                          (Drawable) mWidget, 
                          gc);
 
@@ -380,9 +380,10 @@ NS_IMETHODIMP nsDeviceContextXlib::GetDrawingSurface(nsIRenderingContext &aConte
 NS_IMETHODIMP nsDeviceContextXlib::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::ConvertPixel()\n"));
-  aPixel = xlib_rgb_xpixel_from_rgb(NS_RGB(NS_GET_B(aColor),
-                                           NS_GET_G(aColor),
-                                           NS_GET_R(aColor)));
+  aPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle,
+                                     NS_RGB(NS_GET_B(aColor),
+                                            NS_GET_G(aColor),
+                                            NS_GET_R(aColor)));
   return NS_OK;
 }
 

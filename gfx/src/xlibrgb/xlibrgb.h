@@ -94,10 +94,10 @@ typedef enum
 } XlibRgbDither;
 
 XlibRgbHandle *
-xxlib_rgb_create_handle (Display *display, Screen *screen);
+xxlib_rgb_create_handle (const char *name, Display *display, Screen *screen);
 
 XlibRgbHandle *
-xxlib_rgb_create_handle_with_depth (Display *display, Screen *screen, int prefDepth);
+xxlib_rgb_create_handle_with_depth (const char *name, Display *display, Screen *screen, int prefDepth);
 
 void
 xxlib_rgb_destroy_handle (XlibRgbHandle *handle);
@@ -205,6 +205,7 @@ xxlib_rgb_get_visual_info (XlibRgbHandle *handle);
 int
 xxlib_rgb_get_depth (XlibRgbHandle *handle);
 
+/* hint: if you don't how to obtain a handle - use |xxlib_find_handle()| :-) */
 Display *
 xxlib_rgb_get_display (XlibRgbHandle *handle);
 
@@ -212,139 +213,22 @@ Screen *
 xxlib_rgb_get_screen (XlibRgbHandle *handle);
 
 unsigned long
-xxlib_get_prec_from_mask(XlibRgbHandle *handle, unsigned long);
+xxlib_get_prec_from_mask(unsigned long);
 
 unsigned long
-xxlib_get_shift_from_mask(XlibRgbHandle *handle, unsigned long);
+xxlib_get_shift_from_mask(unsigned long);
 
-#define XLIBRGB_ENABLE_OBSOLETE_API 1
+/* default name - for cases where there is only one XlibRgbHandle required */
+#define XXLIBRGB_DEFAULT_HANDLE ("xxlib-default")
 
-#ifdef XLIBRGB_ENABLE_OBSOLETE_API
-void
-xlib_rgb_init (Display *display, Screen *screen);
+Bool 
+xxlib_register_handle(const char *name, XlibRgbHandle *handle);
 
-void
-xlib_rgb_init_with_depth (Display *display, Screen *screen, int prefDepth);
+Bool 
+xxlib_deregister_handle(const char *name);
 
-void
-xlib_rgb_detach (void);
-
-void 
-xlib_disallow_image_tiling (Bool disallow_it);
-
-unsigned long
-xlib_rgb_xpixel_from_rgb (uint32 rgb);
-
-void
-xlib_rgb_gc_set_foreground (GC gc, uint32 rgb);
-
-void
-xlib_rgb_gc_set_background (GC gc, uint32 rgb);
-
-void
-xlib_draw_rgb_image (Drawable drawable,
-                     GC gc,
-                     int x,
-                     int y,
-                     int width,
-                     int height,
-                     XlibRgbDither dith,
-                     unsigned char *rgb_buf,
-                     int rowstride);
-
-void
-xlib_draw_rgb_image_dithalign (Drawable drawable,
-                               GC gc,
-                               int x,
-                               int y,
-                               int width,
-                               int height,
-                               XlibRgbDither dith,
-                               unsigned char *rgb_buf,
-                               int rowstride,
-                               int xdith,
-                               int ydith);
-
-void
-xlib_draw_rgb_32_image (Drawable drawable,
-                        GC gc,
-                        int x,
-                        int y,
-                        int width,
-                        int height,
-                        XlibRgbDither dith,
-                        unsigned char *buf,
-                        int rowstride);
-
-void
-xlib_draw_gray_image (Drawable drawable,
-                      GC gc,
-                      int x,
-                      int y,
-                      int width,
-                      int height,
-                      XlibRgbDither dith,
-                      unsigned char *buf,
-                      int rowstride);
-
-XlibRgbCmap *
-xlib_rgb_cmap_new (uint32 *colors, int n_colors);
-
-void
-xlib_rgb_cmap_free (XlibRgbCmap *cmap);
-
-void
-xlib_draw_indexed_image (Drawable drawable,
-                         GC gc,
-                         int x,
-                         int y,
-                         int width,
-                         int height,
-                         XlibRgbDither dith,
-                         unsigned char *buf,
-                         int rowstride,
-                         XlibRgbCmap *cmap);
-
-/* Below are some functions which are primarily useful for debugging
-   and experimentation. */
-Bool
-xlib_rgb_ditherable (void);
-
-void
-xlib_rgb_set_verbose (Bool verbose);
-
-/* experimental colormap stuff */
-void
-xlib_rgb_set_install (Bool install);
-
-void
-xlib_rgb_set_min_colors (int min_colors);
-
-Colormap
-xlib_rgb_get_cmap (void);
-
-Visual *
-xlib_rgb_get_visual (void);
-
-XVisualInfo *
-xlib_rgb_get_visual_info (void);
-
-int
-xlib_rgb_get_depth (void);
-
-Display *
-xlib_rgb_get_display (void);
-
-Screen *
-xlib_rgb_get_screen (void);
-
-unsigned long
-xlib_get_prec_from_mask(unsigned long);
-
-unsigned long
-xlib_get_shift_from_mask(unsigned long);
-
-#endif /* XLIBRGB_ENABLE_OBSOLETE_API */
+XlibRgbHandle *
+xxlib_find_handle(const char *name);
 
 #ifdef __cplusplus
 }

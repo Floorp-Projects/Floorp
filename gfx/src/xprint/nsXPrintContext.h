@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  */
 
@@ -34,10 +34,9 @@
 #include "nsCoord.h"
 #include "nsString.h"
 #include "nsIImage.h"
-
 #include "nsGCCache.h"
-
 #include "nsIDeviceContextSpecXPrint.h"
+#include "xlibrgb.h"
 
 class nsDeviceContextXp;
 
@@ -56,10 +55,10 @@ public:
   Drawable   GetDrawable() { return (mDrawable); }
   Screen *   GetScreen() { return mScreen; }
   Visual *   GetVisual() { return mVisual; }
+  XlibRgbHandle *GetXlibRgbHandle() { return mXlibRgbHandle; }
   int        GetDepth() { return mDepth; }
   int        GetHeight() { return mHeight; }
   int        GetWidth() { return mWidth; }
-  int        GetScreenNumber() { return XScreenNumberOfScreen(mScreen); }
   
   Display *  GetDisplay() { return mPDisplay; }
   NS_IMETHOD GetPrintResolution(int &aPrintResolution) const;
@@ -82,12 +81,12 @@ private:
                          PRInt32 aX, PRInt32 aY,
                          PRInt32 aWidth, PRInt32 aHeight); 
 
+  XlibRgbHandle *mXlibRgbHandle;
   Display      *mPDisplay;
   Screen       *mScreen;
   Visual       *mVisual;
   GC            mGC;
   Drawable      mDrawable; /* window */
-  XImage       *mImage;
   int           mDepth;
   int           mScreenNumber;
   int           mWidth;

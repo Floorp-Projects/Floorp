@@ -19,7 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * tim copperfield <timecop@japan.co.jp>
+ *   Tim Copperfield <timecop@japan.co.jp>
  *
  */
 
@@ -47,8 +47,8 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWidget(), nsIScrollbar()
   mLineIncrement = 1;
   mIsVertical = aIsVertical;
   mBackground = NS_RGB(100,100,100);
-  mBackgroundPixel = xlib_rgb_xpixel_from_rgb(mBackground);
-  mBorderPixel = xlib_rgb_xpixel_from_rgb(mBackground);
+  mBackgroundPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, mBackground);
+  mBorderPixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, mBackground);
   mBar = 0;
   mBarBounds.x = mBarBounds.y = mBarBounds.width = mBarBounds.height = 0;
 };
@@ -72,7 +72,7 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
   attr.background_pixel = mBackgroundPixel;
   attr.border_pixel = mBorderPixel;
   // set the colormap
-  attr.colormap = xlib_rgb_get_cmap();
+  attr.colormap = xxlib_rgb_get_cmap(mXlibRgbHandle);
   // here's what's in the struct
   attr_mask = CWBitGravity | CWEventMask | CWBackPixel | CWBorderPixel;
   // check to see if there was actually a colormap.
@@ -82,8 +82,8 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
   CreateNativeWindow(aParent, mBounds, attr, attr_mask);
   // set up the scrolling bar.
   attr.event_mask = Button1MotionMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | FocusChangeMask | VisibilityChangeMask;
-  attr.background_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(192,192,192));
-  attr.border_pixel = xlib_rgb_xpixel_from_rgb(NS_RGB(100,100,100));
+  attr.background_pixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, NS_RGB(192,192,192));
+  attr.border_pixel = xxlib_rgb_xpixel_from_rgb(mXlibRgbHandle, NS_RGB(100,100,100));
   // set up the size
   CalcBarBounds();
   mBar = XCreateWindow(mDisplay,

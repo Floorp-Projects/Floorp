@@ -22,6 +22,7 @@
  * Peter Hartshorn <peter@igelaus.com.au>
 */
 
+#include "nsAppShell.h"
 #include "nsDragService.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
@@ -69,12 +70,14 @@ NS_IMPL_QUERY_INTERFACE3(nsDragService, nsIDragService, nsIDragSession, nsIDragS
 
 nsWidget *nsDragService::sWidget = nsnull;
 Window    nsDragService::sWindow;
+XlibRgbHandle *nsDragService::sXlibRgbHandle;
 Display  *nsDragService::sDisplay;
 PRBool    nsDragService::mDragging = PR_FALSE;
 
 nsDragService::nsDragService()
 {
-  sDisplay = xlib_rgb_get_display();
+  sXlibRgbHandle = nsAppShell::GetXlibRgbHandle();
+  sDisplay = xxlib_rgb_get_display(sXlibRgbHandle);
   mCanDrop = PR_FALSE;
   sWindow = 0;
 }
@@ -252,10 +255,10 @@ void nsDragService::CreateDragCursor(PRUint32 aActionType)
     int depth;
 
     wattr.override_redirect = true;
-    depth = xlib_rgb_get_depth();
+    depth = xxlib_rgb_get_depth(sXlibRgbHandle);
     
     /* make a window off-screen at -64, -64 */
-    sWindow = XCreateWindow(sDisplay, DefaultRootWindow(sDisplay),
+    sWindow = XCreateWindow(sDisplay, XDefaultRootWindow(sDisplay),
                             -64, -64, 32, 32, 0, depth,
                             InputOutput, CopyFromParent,
                             CWOverrideRedirect, &wattr);

@@ -32,9 +32,8 @@
 #include "nsIRenderingContext.h"
 #include "nsVoidArray.h"
 #include "nsIDeviceContextXPrint.h"
+#include "nsXPrintContext.h"
 #include "nsISupportsArray.h"
-
-class nsXPrintContext;
 
 class nsDeviceContextXp : public nsIDeviceContextXp
 {
@@ -78,6 +77,7 @@ public:
 
   NS_IMETHOD         SetSpec(nsIDeviceContextSpec *aSpec);
 
+  XlibRgbHandle     *GetXlibRgbHandle() { return mPrintContext->GetXlibRgbHandle(); }  
   Display           *GetDisplay();
   NS_IMETHOD         GetPrintContext(nsXPrintContext*& aContext);
 

@@ -48,6 +48,7 @@ static PRLogModuleInfo *ImageXlibLM = PR_NewLogModule("ImageXlib");
 static GC s1bitGC = 0;
 static GC sXbitGC = 0;
 
+XlibRgbHandle *nsImageXlib::mXlibRgbHandle = nsnull;
 
 nsImageXlib::nsImageXlib()
 {
@@ -73,7 +74,10 @@ nsImageXlib::nsImageXlib()
   mGC = nsnull;
   mNaturalWidth = 0;
   mNaturalHeight = 0;
-
+  if (!mXlibRgbHandle)
+    mXlibRgbHandle = xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE);
+  if (!mXlibRgbHandle)
+    abort();
 }
 
 nsImageXlib::~nsImageXlib()
@@ -384,7 +388,9 @@ void nsImageXlib::ImageUpdated(nsIDeviceContext *aContext,
       gcv.function = GXcopy;
       sXbitGC  = XCreateGC(mDisplay, mImagePixmap, GCFunction, &gcv);
     }
-    xlib_draw_rgb_image_dithalign(mImagePixmap, sXbitGC,
+    xxlib_draw_rgb_image_dithalign(
+                     mXlibRgbHandle,
+                     mImagePixmap, sXbitGC,
                      aUpdateRect->x, aUpdateRect->y,
                      aUpdateRect->width, aUpdateRect->height,
                      XLIB_RGB_DITHER_MAX,
@@ -489,7 +495,7 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
       XImage *ximage = 0;
       
       if (pixmap) {
-        ximage = XCreateImage(mDisplay, xlib_rgb_get_visual(),
+        ximage = XCreateImage(mDisplay, xxlib_rgb_get_visual(mXlibRgbHandle),
                               1, XYPixmap, 0, (char *)scaledAlpha,
                               aDWidth, aDHeight,
                               8, scaledRowBytes);
@@ -545,10 +551,10 @@ nsImageXlib::DrawScaled(nsIRenderingContext &aContext,
                 0, 0, aDWidth-1, aDHeight-1,
                 mImageBits, mRowBytes, scaledRGB, 3*aDWidth, 24);
 
-    xlib_draw_rgb_image(drawing->GetDrawable(), gc,
-                        aDX, aDY, aDWidth, aDHeight,
-                        XLIB_RGB_DITHER_MAX,
-                        scaledRGB, 3*aDWidth);
+    xxlib_draw_rgb_image(mXlibRgbHandle, drawing->GetDrawable(), gc,
+                         aDX, aDY, aDWidth, aDHeight,
+                         XLIB_RGB_DITHER_MAX,
+                         scaledRGB, 3*aDWidth);
     nsMemory::Free(scaledRGB);
   }
 
@@ -625,7 +631,6 @@ nsImageXlib::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
   if (mDisplay == nsnull)
     mDisplay = drawing->GetDisplay();
-
 
   if (mAlphaDepth == 1)
     CreateAlphaBitmap(mWidth, mHeight);
@@ -704,7 +709,7 @@ void nsImageXlib::DrawComposited32(PRBool isLSB, PRBool flipBytes,
                                    unsigned width, unsigned height,
                                    XImage *ximage, unsigned char *readData)
 {
-  Visual *visual      = xlib_rgb_get_visual();
+  Visual *visual = xxlib_rgb_get_visual(mXlibRgbHandle);
   unsigned redIndex   = findIndex32(visual->red_mask);
   unsigned greenIndex = findIndex32(visual->green_mask);
   unsigned blueIndex  = findIndex32(visual->blue_mask);
@@ -743,7 +748,7 @@ nsImageXlib::DrawComposited24(PRBool isLSB, PRBool flipBytes,
                              unsigned width, unsigned height,
                              XImage *ximage, unsigned char *readData)
 {
-  Visual *visual      = xlib_rgb_get_visual();
+  Visual *visual      = xxlib_rgb_get_visual(mXlibRgbHandle);
   unsigned redIndex   = findIndex24(visual->red_mask);
   unsigned greenIndex = findIndex24(visual->green_mask);
   unsigned blueIndex  = findIndex24(visual->blue_mask);
@@ -791,18 +796,18 @@ nsImageXlib::DrawComposited16(PRBool isLSB, PRBool flipBytes,
                              unsigned width, unsigned height,
                              XImage *ximage, unsigned char *readData)
 {
-  Visual *visual       = xlib_rgb_get_visual();
+  Visual *visual = xxlib_rgb_get_visual(mXlibRgbHandle);
 
-  unsigned *redScale   = (xlib_get_prec_from_mask(visual->red_mask)   == 5)
+  unsigned *redScale   = (xxlib_get_prec_from_mask(visual->red_mask)   == 5)
                           ? scaled5 : scaled6;
-  unsigned *greenScale = (xlib_get_prec_from_mask(visual->green_mask) == 5)
+  unsigned *greenScale = (xxlib_get_prec_from_mask(visual->green_mask) == 5)
                           ? scaled5 : scaled6;
-  unsigned *blueScale  = (xlib_get_prec_from_mask(visual->blue_mask)  == 5)
+  unsigned *blueScale  = (xxlib_get_prec_from_mask(visual->blue_mask)  == 5)
                           ? scaled5 : scaled6;
 
-  unsigned long redShift = xlib_get_shift_from_mask(visual->red_mask);
-  unsigned long greenShift = xlib_get_shift_from_mask(visual->green_mask);
-  unsigned long blueShift = xlib_get_shift_from_mask(visual->blue_mask);
+  unsigned long redShift   = xxlib_get_shift_from_mask(visual->red_mask);
+  unsigned long greenShift = xxlib_get_shift_from_mask(visual->green_mask);
+  unsigned long blueShift  = xxlib_get_shift_from_mask(visual->blue_mask);
 
   for (unsigned y=0; y<height; y++) {
     unsigned char *baseRow   = (unsigned char *)ximage->data
@@ -842,7 +847,7 @@ nsImageXlib::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
                                   unsigned width, unsigned height,
                                   XImage *ximage, unsigned char *readData)
 {
-  Visual *visual     = xlib_rgb_get_visual();
+  Visual *visual = xxlib_rgb_get_visual(mXlibRgbHandle);
 
   unsigned char *target = readData;
 
@@ -889,17 +894,16 @@ nsImageXlib::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
     }
   }
 
-  unsigned redScale, greenScale, blueScale, redFill, greenFill, blueFill;
-  redScale =   8-xlib_get_prec_from_mask(visual->red_mask);
-  greenScale = 8-xlib_get_prec_from_mask(visual->green_mask);
-  blueScale =  8-xlib_get_prec_from_mask(visual->blue_mask);
-  redFill =   0xff>>xlib_get_prec_from_mask(visual->red_mask);
-  greenFill = 0xff>>xlib_get_prec_from_mask(visual->green_mask);
-  blueFill =  0xff>>xlib_get_prec_from_mask(visual->blue_mask);
+  unsigned redScale   = 8 - xxlib_get_prec_from_mask(visual->red_mask);
+  unsigned greenScale = 8 - xxlib_get_prec_from_mask(visual->green_mask);
+  unsigned blueScale  = 8 - xxlib_get_prec_from_mask(visual->blue_mask);
+  unsigned redFill    = 0xff >> xxlib_get_prec_from_mask(visual->red_mask);
+  unsigned greenFill  = 0xff >> xxlib_get_prec_from_mask(visual->green_mask);
+  unsigned blueFill   = 0xff >> xxlib_get_prec_from_mask(visual->blue_mask);
 
-  unsigned long redShift = xlib_get_shift_from_mask(visual->red_mask);
-  unsigned long greenShift = xlib_get_shift_from_mask(visual->green_mask);
-  unsigned long blueShift = xlib_get_shift_from_mask(visual->blue_mask);
+  unsigned long redShift   = xxlib_get_shift_from_mask(visual->red_mask);
+  unsigned long greenShift = xxlib_get_shift_from_mask(visual->green_mask);
+  unsigned long blueShift  = xxlib_get_shift_from_mask(visual->blue_mask);
 
   for (int row=0; row<ximage->height; row++) {
     unsigned char *ptr =
@@ -972,10 +976,9 @@ nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
     return;
 
   nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
-  Visual *visual = xlib_rgb_get_visual();
-
-  Display *dpy = drawing->GetDisplay();
+  mDisplay          = drawing->GetDisplay(); 
   Drawable drawable = drawing->GetDrawable();
+  Visual  *visual   = xxlib_rgb_get_visual(mXlibRgbHandle);
 
   // I hate clipping... too!
   PRUint32 surfaceWidth, surfaceHeight;
@@ -1016,7 +1019,7 @@ nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
   //  fprintf(stderr, "readX=%u readY=%u readWidth=%u readHeight=%u destX=%u destY=%u\n\n",
   //          readX, readY, readWidth, readHeight, destX, destY);
 
-  XImage *ximage = XGetImage(dpy, drawable,
+  XImage *ximage = XGetImage(mDisplay, drawable,
                              readX, readY, readWidth, readHeight,
                              AllPlanes, ZPixmap);
 
@@ -1071,9 +1074,9 @@ nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
   PRBool isLSB;
   unsigned int test = 1;
   isLSB = (((char *)&test)[0]) ? 1 : 0;
-  int red_prec = xlib_get_prec_from_mask(visual->red_mask);
-  int green_prec = xlib_get_prec_from_mask(visual->green_mask);
-  int blue_prec = xlib_get_prec_from_mask(visual->blue_mask);
+  int red_prec   = xxlib_get_prec_from_mask(visual->red_mask);
+  int green_prec = xxlib_get_prec_from_mask(visual->green_mask);
+  int blue_prec  = xxlib_get_prec_from_mask(visual->blue_mask);
   
 
   PRBool flipBytes =
@@ -1111,10 +1114,10 @@ nsImageXlib::DrawComposited(nsIRenderingContext &aContext,
                      readWidth, readHeight, ximage, readData);
 
   xGC *imageGC = ((nsRenderingContextXlib&)aContext).GetGC();
-  xlib_draw_rgb_image(drawing->GetDrawable(), *imageGC,
-                      readX, readY, readWidth, readHeight,
-                      XLIB_RGB_DITHER_MAX,
-                      readData, 3*readWidth);
+  xxlib_draw_rgb_image(mXlibRgbHandle, drawing->GetDrawable(), *imageGC,
+                       readX, readY, readWidth, readHeight,
+                       XLIB_RGB_DITHER_MAX,
+                       readData, 3*readWidth);
   XDestroyImage(ximage);
   imageGC->Release();
   nsMemory::Free(readData);
@@ -1131,7 +1134,7 @@ void nsImageXlib::CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight)
   XGCValues gcv;
 
   if (mDisplay == nsnull)
-    mDisplay = xlib_rgb_get_display();
+    mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
 
   /* Create gc clip-mask on demand */
   if (mAlphaBits && IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags)) {
@@ -1141,7 +1144,7 @@ void nsImageXlib::CreateAlphaBitmap(PRInt32 aWidth, PRInt32 aHeight)
                                    aWidth, aHeight, 1);
 
     // Make an image out of the alpha-bits created by the image library
-    x_image = XCreateImage(mDisplay, xlib_rgb_get_visual(),
+    x_image = XCreateImage(mDisplay, xxlib_rgb_get_visual(mXlibRgbHandle),
                            1, /* visual depth...1 for bitmaps */
                            XYPixmap,
                            0, /* x offset, XXX fix this */
@@ -1190,11 +1193,11 @@ void nsImageXlib::CreateOffscreenPixmap(PRInt32 aWidth, PRInt32 aHeight)
 {
   if (mImagePixmap == nsnull) {
     if (mDisplay == nsnull)
-      mDisplay = xlib_rgb_get_display();
+      mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
 
-    mImagePixmap = XCreatePixmap(mDisplay, DefaultRootWindow(mDisplay),
+    mImagePixmap = XCreatePixmap(mDisplay, XDefaultRootWindow(mDisplay),
                                  aWidth, aHeight,
-                                 xlib_rgb_get_depth());
+                                 xxlib_rgb_get_depth(mXlibRgbHandle));
   }
 }
 
@@ -1242,10 +1245,9 @@ nsImageXlib::Draw(nsIRenderingContext &aContext,
   }
 
   nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
-
   if (mDisplay == nsnull)
     mDisplay = drawing->GetDisplay();
-
+  
   PRInt32
     validX = 0,
     validY = 0,
@@ -1624,7 +1626,7 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
     return NS_ERROR_FAILURE;
 
   if (!mDisplay)
-    mDisplay = xlib_rgb_get_display();
+    mDisplay = xxlib_rgb_get_display(mXlibRgbHandle);
 
   GC gc = XCreateGC(mDisplay, dest->mImagePixmap, 0, NULL);
 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roland.Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsAppShell_h__
@@ -25,7 +26,9 @@
 
 #include "nsIAppShell.h"
 #include "nsIEventQueueService.h"
+#include "nsWidget.h"
 #include "prtime.h"
+#include "xlibrgb.h"
 
 class nsAppShell : public nsIAppShell
 {
@@ -50,8 +53,13 @@ class nsAppShell : public nsIAppShell
   NS_IMETHOD            Exit();
   virtual void *        GetNativeData(PRUint32 aDataType);
   static void           DispatchXEvent(XEvent *event);
+  /* |xxlib_find_handle(XXLIBRGB_DEFAULT_HANDLE)| would be the official 
+   * way - but |nsAppShell::GetXlibRgbHandle()| one is little bit faster... :-)
+   */
+  static XlibRgbHandle *GetXlibRgbHandle() { return mXlib_rgb_handle; }
   static Display * mDisplay;
  private:
+  static XlibRgbHandle *mXlib_rgb_handle;
   int                   xlib_fd;
   nsDispatchListener*     mDispatchListener;
   static void HandleButtonEvent(XEvent *event, nsWidget *aWidget);
