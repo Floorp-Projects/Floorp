@@ -1864,7 +1864,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   // Find out if we're anonymous.
-  nsIContent* bindingParent;
+  nsIContent* bindingParent = nsnull;
   if (*aDOMEvent) {
     (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
     nsCOMPtr<nsIContent> content(do_QueryInterface(oldTarget));
