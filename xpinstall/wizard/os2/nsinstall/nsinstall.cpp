@@ -49,7 +49,7 @@
 
 #include "resource.h"
 #include "zlib.h"
-#include "pplib.h"
+#include "nsINIParser.h"
 
 #define MAX_BUF       4096
 #define WIZ_TEMP_DIR  "ns_temp"
@@ -409,7 +409,7 @@ ExtractFiles(ULONG ulNumFiles, HWND hwndDlg)
     WinSendMsg(WinWindowFromID(hwndDlg, IDC_GAUGE), SLM_SETSLIDERINFO,
                                MPFROM2SHORT(SMA_SLIDERARMPOSITION, SMA_INCREMENTVALUE),
                                MPARAM(nBytesWritten * 100 / nTotalBytes));
-    XP_WritePrivateProfileString("Archives", szFileName, "TRUE", szArcLstFile);
+    WritePrivateProfileString("Archives", szFileName, "TRUE", szArcLstFile);
   }
 }
 
@@ -453,7 +453,7 @@ RunInstaller(ULONG ulNumFiles, HWND hwndDlg)
   GetFullTempPathName("SETUP.EXE",     sizeof(szSetupFile),     szSetupFile);
   GetFullTempPathName("uninstall.exe", sizeof(szUninstallFile), szUninstallFile);
 
-  XP_GetPrivateProfileString("Archives", "uninstall.exe", "", szBuf, sizeof(szBuf), szArcLstFile);
+  GetPrivateProfileString("Archives", "uninstall.exe", "", szBuf, sizeof(szBuf), szArcLstFile);
   if(FileExists(szUninstallFile) && (*szBuf != '\0'))
   {
     strcpy(szCmdLine, szUninstallFile);
