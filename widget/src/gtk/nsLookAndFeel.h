@@ -23,6 +23,7 @@
 #ifndef __nsLookAndFeel
 #define __nsLookAndFeel
 #include "nsILookAndFeel.h"
+#include "nsCOMPtr.h"
 #include <gtk/gtk.h>
 
 class nsLookAndFeel: public nsILookAndFeel {
@@ -50,6 +51,7 @@ public:
 protected:
   GtkStyle *mStyle;
   GtkWidget *mWidget;
+  nsCOMPtr<nsILookAndFeel> mXPLookAndFeel;
 };
 
 #endif

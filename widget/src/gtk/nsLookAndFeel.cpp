@@ -23,6 +23,8 @@
 #include "nsLookAndFeel.h"
 #include <gtk/gtkinvisible.h>
 
+#include "nsXPLookAndFeel.h"
+
 #define GDK_COLOR_TO_NS_RGB(c) \
     ((nscolor) NS_RGB(c.red, c.green, c.blue))
 
@@ -40,6 +42,8 @@ nsLookAndFeel::nsLookAndFeel()
   mWidget = gtk_invisible_new();
   gtk_widget_ensure_style(mWidget);
   mStyle = gtk_widget_get_style(mWidget);
+
+  (void)NS_NewXPLookAndFeel(getter_AddRefs(mXPLookAndFeel));
 }
 
 nsLookAndFeel::~nsLookAndFeel()
@@ -51,6 +55,13 @@ nsLookAndFeel::~nsLookAndFeel()
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
   nsresult res = NS_OK;
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetColor(aID, aColor);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
+
   aColor = 0; // default color black
 
   switch (aID) {
@@ -190,6 +201,14 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
   nsresult res = NS_OK;
+
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetMetric(aID, aMetric);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
+
   switch (aID) {
   case eMetric_WindowTitleHeight:
     aMetric = 0;
@@ -279,6 +298,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
 {
   nsresult res = NS_OK;
+
+  if (mXPLookAndFeel)
+  {
+    res = mXPLookAndFeel->GetMetric(aID, aMetric);
+    if (NS_SUCCEEDED(res))
+      return res;
+  }
+
   switch (aID) {
   case eMetricFloat_TextFieldVerticalInsidePadding:
     aMetric = 0.25f;
@@ -317,6 +344,13 @@ NS_IMETHODIMP nsLookAndFeel::GetNavSize(const nsMetricNavWidgetID aWidgetID,
                                         const PRInt32             aFontSize, 
                                         nsSize &aSize)
 {
+  if (mXPLookAndFeel)
+  {
+    nsresult rv = mXPLookAndFeel->GetNavSize(aWidgetID, aFontID, aFontSize, aSize);
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
+
   aSize.width  = 0;
   aSize.height = 0;
   return NS_ERROR_NOT_IMPLEMENTED;
