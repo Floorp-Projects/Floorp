@@ -38,6 +38,7 @@
 
 #import "PreferencePaneBase.h"
 
+#include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
 
