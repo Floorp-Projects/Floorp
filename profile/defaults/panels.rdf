@@ -15,8 +15,6 @@
       <RDF:Seq>
         <RDF:li resource="urn:sidebar:panel:whats-related"/>
         <RDF:li resource="urn:sidebar:panel:search"/>
-        <RDF:li resource="urn:sidebar:panel:tinderbox"/>
-        <RDF:li resource="urn:sidebar:panel:tinderbox-ports"/>
         <RDF:li resource="urn:sidebar:panel:bookmarks"/>
         <RDF:li resource="urn:sidebar:panel:history"/>
       </RDF:Seq>
@@ -30,14 +28,6 @@
   <RDF:Description about="urn:sidebar:panel:search">
     <NC:title>&sidebar.search.label;</NC:title>
     <NC:content>chrome://communicator/content/search/search-panel.xul</NC:content>
-  </RDF:Description>
-  <RDF:Description about="urn:sidebar:panel:tinderbox">
-    <NC:title>&sidebar.tinderbox-seamonkey.label;</NC:title>
-    <NC:content>http://tinderbox.mozilla.org/SeaMonkey/panel.html</NC:content>
-  </RDF:Description>
-  <RDF:Description about="urn:sidebar:panel:tinderbox-ports">
-    <NC:title>&sidebar.tinderbox-ports.label;</NC:title>
-    <NC:content>http://tinderbox.mozilla.org/SeaMonkey-Ports/panel.html</NC:content>
   </RDF:Description>
   <RDF:Description about="urn:sidebar:panel:bookmarks">
     <NC:title>&sidebar.client-bookmarks.label;</NC:title>
