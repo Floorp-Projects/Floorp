@@ -419,8 +419,21 @@ nsFileInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
 NS_IMETHODIMP
 nsFileInputStream::ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval)
 {
-    NS_NOTREACHED("ReadSegments");
-    return NS_ERROR_NOT_IMPLEMENTED;
+   PRUint32 nBytes;
+   char *readBuf = (char *)nsMemory::Alloc(count);
+   if (!readBuf)
+     return NS_ERROR_OUT_OF_MEMORY;
+   
+   nsresult rv = Read(readBuf, count, &nBytes);
+ 
+   *_retval = 0;
+   if (NS_SUCCEEDED(rv)) {
+     rv = writer(this, closure, readBuf, 0, nBytes, _retval);
+     NS_ASSERTION(NS_SUCCEEDED(rv) ? nBytes == *_retval : PR_TRUE, "Didn't write all Data.");
+   }
+ 
+   nsMemory::Free(readBuf);
+   return rv;
 }
 
 NS_IMETHODIMP
