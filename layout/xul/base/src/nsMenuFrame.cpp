@@ -942,6 +942,23 @@ nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 }
 
 NS_IMETHODIMP
+nsMenuFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+{
+  nsIFrame* popupChild = mPopupFrames.FirstChild();
+
+  if (popupChild) {
+    nsAutoString sizedToPopup;
+    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
+    PRBool sizeToPopup = sizedToPopup.EqualsIgnoreCase("true");
+    
+    if (sizeToPopup)
+      return GetPrefSize(aBoxLayoutState, aSize);
+  }
+
+  return nsBoxFrame::GetMinSize(aBoxLayoutState, aSize);
+}
+
+NS_IMETHODIMP
 nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 {
   nsRect contentRect;
