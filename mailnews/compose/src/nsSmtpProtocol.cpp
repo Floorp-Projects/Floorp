@@ -320,6 +320,9 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
   // if we aren't waiting for a login override, then go ahead an
   // open the network connection like we normally would have.
   if (NS_FAILED(rv) || !TestFlag(SMTP_WAIT_FOR_REDIRECTION)) {
+    nsXPIDLCString hostName;
+    aURL->GetHost(getter_Copies(hostName));
+    PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s", (const char *) hostName));
       // pass in "ssl" for the last arg if you want this to be over SSL
 	  rv = OpenNetworkSocket(aURL, nsnull);
   }
@@ -1657,6 +1660,7 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
   // pass in "ssl" for the last arg if you want this to be over SSL
   {
     nsCAutoString hostCStr; hostCStr.AssignWithConversion(aHost);
+    PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s on port %d.", (const char *) hostCStr, aPort));
     rv = OpenNetworkSocketWithInfo(hostCStr, aPort, nsnull);
   }
 
