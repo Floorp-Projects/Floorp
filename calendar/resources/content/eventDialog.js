@@ -327,7 +327,6 @@ function onOKCommand()
 
    if( gEvent.recur == true )
    {
-      alert( gEvent.recurForever );
       //check that the repeat end time is later than the end time
       if( recurEndDate.getTime() < gEvent.end.getTime() && gEvent.recurForever != false )
       {
