@@ -470,7 +470,7 @@ nsresult PREF_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool get_
         {
             PRInt32 tempInt = pref->defaultPref.intVal;
             /* check to see if we even had a default */
-            if (tempInt != ((PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE))
+            if (tempInt == ((PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE))
                 return NS_ERROR_UNEXPECTED;
             *return_int = tempInt;
         }
