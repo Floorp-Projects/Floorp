@@ -524,6 +524,12 @@
     // Menu for testing.
     <menu name="Debug">
 
+      <menu name="Verification"> // Build verification sites.
+        <menuitem name="Mozilla"  onclick="window.frames[0].location.href='http://www.mozilla.org'"/>
+        <menuitem name="Yahoo"  onclick="window.frames[0].location.href='http://www.yahoo.com'"/>
+        <menuitem name="Netscape"  onclick="window.frames[0].location.href='http://www.netscape.com'"/>
+      </menu>
+
 	  <menu name="Viewer">  // Viewer tests.
         <menuitem name="Demo #0"  onclick="window.frames[0].location.href='resource:/res/samples/test0.html'"/>
         <menuitem name="Demo #1"  onclick="window.frames[0].location.href='resource:/res/samples/test1.html'"/>
