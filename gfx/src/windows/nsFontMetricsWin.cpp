@@ -20,12 +20,15 @@
  * Contributor(s): 
  */
 
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
 #include "nsFontMetricsWin.h"
 #include "nsQuickSort.h"
 #include "prmem.h"
 #include "plhash.h"
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsGlobalFont* nsFontMetricsWin::gGlobalFonts = nsnull;
 static int gGlobalFontsAlloc = 0;
@@ -122,9 +125,11 @@ NS_IMPL_ISUPPORTS(nsFontMetricsWin, kIFontMetricsIID)
 #endif
 
 NS_IMETHODIMP
-nsFontMetricsWin :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
+nsFontMetricsWin :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
+  nsIDeviceContext *aContext)
 {
   mFont = new nsFont(aFont);
+  mLangGroup = aLangGroup;
   //don't addref this to avoid circular refs
   mDeviceContext = (nsDeviceContextWin *)aContext;
   RealizeFont();
@@ -909,6 +914,13 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
       }
     }
     HFONT oldFont = (HFONT) ::SelectObject(aDC, (HGDIOBJ) hfont);
+    char name[sizeof(logFont.lfFaceName)];
+    if ((!::GetTextFace(aDC, sizeof(name), name)) ||
+        strcmp(name, logFont.lfFaceName)) {
+      ::SelectObject(aDC, (HGDIOBJ) oldFont);
+      ::DeleteObject(hfont);
+      return nsnull;
+    }
     int isUnicodeFont = -1;
     PRUint8* map = GetCMAP(aDC, logFont.lfFaceName, &isUnicodeFont);
     if (!map) {
@@ -1389,6 +1401,8 @@ typedef struct nsFontFamilyName
   char* mWinName;
 } nsFontFamilyName;
 
+static nsString* gGeneric = nsnull;
+
 static nsFontFamilyName gFamilyNameTable[] =
 {
 #ifdef MOZ_MATHML
@@ -1403,12 +1417,12 @@ static nsFontFamilyName gFamilyNameTable[] =
   { "courier",         "Courier New" },
   { "courier new",     "Courier New" },
 
-  { "serif",      "Times New Roman" },
-  { "sans-serif", "Arial" },
-  { "fantasy",    "Arial" },
-  { "cursive",    "Arial" },
-  { "monospace",  "Courier New" },
-  { "-moz-fixed", "Courier New" },
+  { "serif",      nsnull },
+  { "sans-serif", nsnull },
+  { "fantasy",    nsnull },
+  { "cursive",    nsnull },
+  { "monospace",  nsnull },
+  { "-moz-fixed", nsnull },
 
   { nsnull, nsnull }
 };
@@ -1424,10 +1438,20 @@ nsFontMetricsWin::InitializeFamilyNames(void)
     if (!gFamilyNames) {
       return nsnull;
     }
+    gGeneric = new nsString("");
+    if (!gGeneric) {
+      return nsnull;
+    }
     nsFontFamilyName* f = gFamilyNameTable;
     while (f->mName) {
       nsString* name = new nsString(f->mName);
-      nsString* winName = new nsString(f->mWinName);
+      nsString* winName;
+      if (f->mWinName) {
+        winName = new nsString(f->mWinName);
+      }
+      else {
+        winName = gGeneric;
+      }
       if (name && winName) {
         PL_HashTableAdd(gFamilyNames, name, (void*) winName);
       }
@@ -1439,7 +1463,7 @@ nsFontMetricsWin::InitializeFamilyNames(void)
 }
 
 nsFontWin*
-nsFontMetricsWin::FindLocalFont(HDC aDC, PRUnichar aChar)
+nsFontMetricsWin::FindLocalFont(HDC aDC, PRUnichar aChar, nsString** aGeneric)
 {
   if (!gFamilyNames) {
     if (!InitializeFamilyNames()) {
@@ -1452,10 +1476,15 @@ nsFontMetricsWin::FindLocalFont(HDC aDC, PRUnichar aChar)
     if (low) {
       low->ToLowerCase();
       nsString* winName = (nsString*) PL_HashTableLookup(gFamilyNames, low);
-      delete low;
-      if (!winName) {
+      if (winName == gGeneric) {
+        mFontsIndex--; // causes us to look for generic next time too
+        *aGeneric = low;
+        return nsnull;
+      }
+      else if (!winName) {
         winName = name;
       }
+      delete low;
       nsFontWin* font = LoadFont(aDC, winName);
       if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
         return font;
@@ -1467,11 +1496,120 @@ nsFontMetricsWin::FindLocalFont(HDC aDC, PRUnichar aChar)
 }
 
 nsFontWin*
+nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName)
+{
+  if (*aName) {
+    // XXX UTF-8 conversion?
+    nsString* fontName = new nsString(*aName);
+    nsAllocator::Free(*aName);
+    *aName = nsnull;
+    if (fontName) {
+      nsFontWin* font = LoadFont(aDC, fontName);
+      delete fontName;
+      if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
+        return font;
+      }
+    }
+  }
+
+  return nsnull;
+}
+
+typedef struct PrefEnumInfo
+{
+  PRUnichar         mChar;
+  HDC               mDC;
+  nsFontWin*        mFont;
+  nsFontMetricsWin* mMetrics;
+} PrefEnumInfo;
+
+static nsIPref* gPref = nsnull;
+
+void
+PrefEnumCallback(const char* aName, void* aClosure)
+{
+  PrefEnumInfo* info = (PrefEnumInfo*) aClosure;
+  if (info->mFont) {
+    return;
+  }
+  PRUnichar ch = info->mChar;
+  HDC dc = info->mDC;
+  nsFontMetricsWin* metrics = info->mMetrics;
+  char* value = nsnull;
+  gPref->CopyCharPref(aName, &value);
+  nsFontWin* font = metrics->LoadGenericFont(dc, ch, &value);
+  if (font) {
+    info->mFont = font;
+  }
+  else {
+    gPref->CopyDefaultCharPref(aName, &value);
+    font = metrics->LoadGenericFont(dc, ch, &value);
+    if (font) {
+      info->mFont = font;
+    }
+  }
+}
+
+nsFontWin*
+nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar, nsString* aGeneric)
+{
+  if (!gPref) {
+    nsServiceManager::GetService(kPrefCID,
+      nsCOMTypeInfo<nsIPref>::GetIID(), (nsISupports**) &gPref);
+    if (!gPref) {
+      return nsnull;
+    }
+  }
+  nsAutoString prefix("font.name.");
+  if (aGeneric) {
+    prefix.Append(*aGeneric);
+  }
+  else {
+    prefix.Append("serif");
+  }
+  char name[128];
+  if (mLangGroup) {
+    nsAutoString pref = prefix;
+    pref.Append('.');
+    const PRUnichar* langGroup = nsnull;
+    mLangGroup->GetUnicode(&langGroup);
+    pref.Append(langGroup);
+    pref.ToCString(name, sizeof(name));
+    char* value = nsnull;
+    gPref->CopyCharPref(name, &value);
+    nsFontWin* font = LoadGenericFont(aDC, aChar, &value);
+    if (font) {
+      return font;
+    }
+    gPref->CopyDefaultCharPref(name, &value);
+    font = LoadGenericFont(aDC, aChar, &value);
+    if (font) {
+      return font;
+    }
+  }
+  prefix.ToCString(name, sizeof(name));
+  PrefEnumInfo info = { aChar, aDC, nsnull, this };
+  gPref->EnumerateChildren(name, PrefEnumCallback, &info);
+  if (info.mFont) {
+    return info.mFont;
+  }
+
+  return nsnull;
+}
+
+nsFontWin*
 nsFontMetricsWin::FindFont(HDC aDC, PRUnichar aChar)
 {
-  nsFontWin* font = FindLocalFont(aDC, aChar);
+  nsString* generic = nsnull;
+  nsFontWin* font = FindLocalFont(aDC, aChar, &generic);
   if (!font) {
-    font = FindGlobalFont(aDC, aChar);
+    font = FindGenericFont(aDC, aChar, generic);
+    if (!font) {
+      font = FindGlobalFont(aDC, aChar);
+    }
+  }
+  if (generic) {
+    delete generic;
   }
 
   return font;
@@ -1672,6 +1810,19 @@ NS_IMETHODIMP
 nsFontMetricsWin :: GetFont(const nsFont *&aFont)
 {
   aFont = mFont;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin::GetLangGroup(nsIAtom** aLangGroup)
+{
+  if (!aLangGroup) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  *aLangGroup = mLangGroup;
+  NS_IF_ADDREF(*aLangGroup);
+
   return NS_OK;
 }
 
