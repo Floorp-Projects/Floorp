@@ -31,7 +31,7 @@
 //
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-#include "Moz_Config.h"
+#include "MacPrefix.h"
 
 #ifdef powerc
 	#pragma precompile_target "Composer_HeadersPPC++"
