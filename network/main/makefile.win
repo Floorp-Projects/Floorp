@@ -113,7 +113,18 @@ EXPORTS= mkstream.h \
 	 mkpadpac.h \
 	 mkautocf.h \
 	 mkutils.h \
-         mktrace.h \
+	 mktrace.h \
+#ifdef MOZ_MAIL_NEWS
+#ifdef MOZ_SECURITY
+	 mkcertld.h \
+#endif /* MOZ_SECURITY */
+	 mkmailbx.h \
+	 mknews.h \
+	 mknewsgr.h \
+	 mkpop3.h \
+	 mkimap4.h \
+	 mkldap.h \
+#endif /* MOZ_MAIL_NEWS */
 	 mkhelp.h
 
 C_OBJS = \
