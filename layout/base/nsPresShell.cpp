@@ -20,9 +20,9 @@
  * Contributor(s): 
  */ 
 
+#define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIArena.h" 
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
@@ -73,6 +73,7 @@
 #include "nsICompositeListener.h"
 #include "nsTimer.h"
 #include "nsWeakPtr.h"
+#include "plarena.h"
 #ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
@@ -102,9 +103,6 @@ static NS_DEFINE_IID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 // comment out to hide caret
 #define SHOW_CARET
 
-// The size of the presshell's recyclers array
-#define RECYCLER_SIZE 300
-
 //----------------------------------------------------------------------
 
 // Class IID's
@@ -132,6 +130,90 @@ static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
+
+// Largest chunk size we recycle
+static const int  gMaxRecycledSize = 200;
+
+// Memory is allocated 4-byte aligned. We have recyclers for chunks up to
+// 200 bytes
+class FrameArena {
+public:
+  FrameArena(PRUint32 aArenaSize = 2048);
+  ~FrameArena();
+
+  // Memory management functions
+  nsresult  AllocateFrame(size_t aSize, void** aResult);
+  nsresult  FreeFrame(size_t aSize, void* aPtr);
+
+private:
+  // Underlying arena pool
+  PLArenaPool mPool;
+
+  // The recycler array is sparse with the indices being multiples of 4,
+  // i.e., 0, 4, 8, 12, 16, 20, ...
+  void*       mRecyclers[gMaxRecycledSize >> 2];
+};
+
+FrameArena::FrameArena(PRUint32 aArenaSize)
+{
+  // Initialize the arena pool
+  PL_INIT_ARENA_POOL(&mPool, "FrameArena", aArenaSize);
+
+  // Zero out the recyclers array
+  nsCRT::memset(mRecyclers, 0, sizeof(mRecyclers));
+}
+
+FrameArena::~FrameArena()
+{
+  // Free the arena in the pool and finish using it
+  PL_FinishArenaPool(&mPool);
+}
+
+nsresult
+FrameArena::AllocateFrame(size_t aSize, void** aResult)
+{
+  void* result = nsnull;
+  
+  // Round size to multiple of 4
+  PR_ROUNDUP(aSize, 4);
+
+  // Check recyclers first
+  if (aSize < gMaxRecycledSize) {
+    const int   index = aSize >> 2;
+
+    result = mRecyclers[index];
+    if (result) {
+      // Need to move to the next object
+      void* next = *((void**)result);
+      mRecyclers[index] = next;
+    }
+  }
+
+  if (!result) {
+    // Allocate a new chunk from the arena
+    PL_ARENA_ALLOCATE(result, &mPool, aSize);
+  }
+
+  *aResult = result;
+  return NS_OK;
+}
+
+nsresult
+FrameArena::FreeFrame(size_t aSize, void* aPtr)
+{
+  // Round size to multiple of 4
+  PR_ROUNDUP(aSize, 4);
+
+  // See if it's a size that we recycle
+  if (aSize < gMaxRecycledSize) {
+    const int   index = aSize >> 2;
+    void*       currentTop = mRecyclers[index];
+    mRecyclers[index] = aPtr;
+    *((void**)aPtr) = currentTop;
+  }
+
+  return NS_OK;
+}
 
 class PresShellViewEventListener : public nsIScrollPositionListener,
                                    public nsICompositeListener
@@ -391,9 +473,7 @@ protected:
   PresShellViewEventListener    *mViewEventListener;
   PRBool                        mPendingReflowEvent;
   nsCOMPtr<nsIEventQueue>       mEventQueue;
-  nsCOMPtr<nsIArena>            mArena;
-
-  void*                         mRecyclers[RECYCLER_SIZE];
+  FrameArena                    mFrameArena;
 
   MOZ_TIMER_DECLARE(mReflowWatch)  // Used for measuring time spent in reflow
   MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation
@@ -632,13 +712,6 @@ PresShell::Init(nsIDocument* aDocument,
   NS_PRECONDITION(nsnull != aPresContext, "null ptr");
   NS_PRECONDITION(nsnull != aViewManager, "null ptr");
 
-  // Make the arena that will be used to allocate frames.
-  NS_NewHeapArena(getter_AddRefs(mArena));
-
-  // Zero out the recyclers array.
-  for (PRInt32 i = 0; i < RECYCLER_SIZE; i++)
-    mRecyclers[i] = nsnull;
-
   if ((nsnull == aDocument) || (nsnull == aPresContext) ||
       (nsnull == aViewManager)) {
     return NS_ERROR_NULL_POINTER;
@@ -719,34 +792,14 @@ PresShell::Init(nsIDocument* aDocument,
 NS_IMETHODIMP
 PresShell::FreeFrame(size_t aSize, void* aPtr)
 {
-  if (aSize >= RECYCLER_SIZE)
-    return NS_OK;
-
-  void* currentTop = mRecyclers[aSize];
-  mRecyclers[aSize] = aPtr;
-  *((void**)aPtr) = currentTop;
+  mFrameArena.FreeFrame(aSize, aPtr);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::AllocateFrame(size_t aSize, void** aResult)
 {
-  void* result = nsnull;
-  if (aSize < RECYCLER_SIZE) {
-    result = mRecyclers[aSize];
-    if (result) {
-      // Need to move to the next object
-      void* next = *((void**)result);
-      mRecyclers[aSize] = next;
-    }
-  }
-
-  if (!result) {
-    result = mArena->Alloc(PRInt32(aSize));
-  }
-
-  *aResult = result;
-  return NS_OK;
+  return mFrameArena.AllocateFrame(aSize, aResult);
 }
 
 NS_IMETHODIMP
