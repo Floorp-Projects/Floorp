@@ -32,7 +32,6 @@ INCLUDES = -I$(DIST)/include -I$(MOD_DEPTH)/pr/include
 
 CSRCS = \
 	plarena.c \
-	plevent.c \
 	plhash.c \
 	plvrsion.c \
 	$(NULL)
@@ -40,7 +39,6 @@ CSRCS = \
 HEADERS = \
 	plarenas.h \
 	plarena.h \
-	plevent.h \
 	plhash.h \
 	$(NULL)
 
