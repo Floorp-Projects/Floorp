@@ -115,7 +115,17 @@ NS_IMETHODIMP nsGenericFactory::GetClassDescription(char * *aClassDescription)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsGenericFactory::GetClassID(nsCID *aClassID)
+NS_IMETHODIMP nsGenericFactory::GetClassID(nsCID * *aClassID)
+{
+    *aClassID =
+        NS_REINTERPRET_CAST(nsCID*,
+                            nsMemory::Clone(&mInfo->mCID, sizeof mInfo->mCID));
+    if (! *aClassID)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsGenericFactory::GetClassIDNoAlloc(nsCID *aClassID)
 {
     *aClassID = mInfo->mCID;
     return NS_OK;
@@ -225,10 +235,15 @@ nsGenericModule::Initialize()
 
     // Eagerly populate factory/class object hash for entries
     // without constructors. If we didn't, the class object would
-    // never get created.
+    // never get created. Also create the factory, which doubles
+    // as the class object, if the EAGER_CLASSINFO flag was given.
+    // This allows objects to be created (within their modules)
+    // via operator new rather than CreateInstance, yet still be
+    // QI'able to nsIClassInfo.
     nsModuleComponentInfo* desc = mComponents;
     for (PRUint32 i = 0; i < mComponentCount; i++) {
-        if (!desc->mConstructor) {
+        if (!desc->mConstructor ||
+            (desc->mFlags & nsIClassInfo::EAGER_CLASSINFO)) {
             nsCOMPtr<nsIGenericFactory> fact;
             nsresult rv = NS_NewGenericFactory(getter_AddRefs(fact), desc);
             if (NS_FAILED(rv)) return rv;

@@ -1942,10 +1942,11 @@ nsScriptSecurityManager::~nsScriptSecurityManager(void)
     delete mPrincipals;
 }
 
+static nsScriptSecurityManager *ssecMan = NULL;
+
 nsScriptSecurityManager *
 nsScriptSecurityManager::GetScriptSecurityManager()
 {
-    static nsScriptSecurityManager *ssecMan = NULL;
     if (!ssecMan)
     {
         ssecMan = new nsScriptSecurityManager();
@@ -1976,6 +1977,19 @@ nsScriptSecurityManager::GetScriptSecurityManager()
     }
     return ssecMan;
 }
+
+// Currently this nsGenericFactory constructor is used only from FastLoad
+// (XPCOM object deserialization) code, when "creating" the system principal
+// singleton.
+static nsSystemPrincipal *
+nsScriptSecurityManager::SystemPrincipalSingletonConstructor()
+{
+    nsIPrincipal *sysprin = nsnull;
+    if (ssecMan)
+        ssecMan->GetSystemPrincipal(&sysprin);
+    return NS_STATIC_CAST(nsSystemPrincipal*, sysprin);
+}
+
 
 const char* nsScriptSecurityManager::sJSEnabledPrefName = "javascript.enabled";
 const char* nsScriptSecurityManager::sJSMailEnabledPrefName = "javascript.allow.mailnews";

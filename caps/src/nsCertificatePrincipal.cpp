@@ -33,6 +33,10 @@ NS_IMPL_QUERY_INTERFACE3_CI(nsCertificatePrincipal,
                             nsICertificatePrincipal,
                             nsIPrincipal,
                             nsISerializable)
+NS_IMPL_CI_INTERFACE_GETTER3(nsCertificatePrincipal,
+                             nsICertificatePrincipal,
+                             nsIPrincipal,
+                             nsISerializable)
 
 NSBASEPRINCIPALS_ADDREF(nsCertificatePrincipal);
 NSBASEPRINCIPALS_RELEASE(nsCertificatePrincipal);
