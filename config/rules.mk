@@ -973,7 +973,8 @@ MDDEPEND_FILES := $(foreach obj, $(OBJS), \
 MDDEPEND_FILES := $(wildcard $(MDDEPEND_FILES))
 ifdef MDDEPEND_FILES
 # Get the list of objects to force.
-MDDEPEND_FORCE := $(shell $(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES))
+MDDEPEND_FORCE := $(shell $(PERL) $(topsrcdir)/config/mddepend.pl $(MDDEPEND_FILES) > $(OBJDIR)/.deps/.all.pp)
+-include $(OBJDIR)/.deps/.all.pp
 # (MDDEPEND_FORCE gets added to the PHONY target).
 endif
 #endif
@@ -1021,7 +1022,10 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean run_viewer run_apprunner $(OBJDIR) $(DIRS) $(MDDEPEND_FORCE)
+.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean run_viewer run_apprunner $(OBJDIR) $(DIRS) FORCE
+
+# Used as a dependency to force targets to rebuild
+FORCE:
 
 envirocheck::
 	@echo -----------------------------------
