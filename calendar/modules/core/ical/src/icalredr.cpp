@@ -69,3 +69,39 @@ t_int8 ICalReader::convertHex(char fToken,
 }
 
 //---------------------------------------------------------------------
+
+UnicodeString & 
+ICalReader::convertQuotedPrintableString(UnicodeString & stringToConvert)
+{
+  t_int32 iEqual = -1;
+  t_int32 iCurrentPos = 0;
+  t_bool done = FALSE;
+  while (!done)
+  {
+    iEqual = stringToConvert.indexOf('=', iCurrentPos);
+    if (iEqual < 0)
+      done = TRUE;
+    else
+    {
+      if (stringToConvert.size() >= iEqual + 3)
+      {
+        if (ICalReader::isHex((char) stringToConvert[(TextOffset)(iEqual + 1)]) &&
+          ICalReader::isHex((char) stringToConvert[(TextOffset)(iEqual + 2)]))
+        {
+          t_int8 c;
+          c = ICalReader::convertHex((char) stringToConvert[(TextOffset)(iEqual+1)],
+            (char) stringToConvert[(TextOffset)(iEqual+2)]);
+          UnicodeString u;
+          u+=c;
+          stringToConvert.replace(iEqual, 3, u);
+          iCurrentPos = iEqual + 1;
+        }
+      }
+      else
+      {
+        done = TRUE;
+      }
+    }
+  }
+  return stringToConvert;
+}

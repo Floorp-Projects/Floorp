@@ -27,7 +27,7 @@
 #include "jdefines.h"
 
 #include "icalfrdr.h"
-
+#include "icalredr.h"
 //---------------------------------------------------------------------
 
 ICalFileReader::ICalFileReader() {}
@@ -100,7 +100,8 @@ ICalFileReader::readFullLine(UnicodeString & aLine, ErrorCode & status, t_int32 
 {
     status = ZERO_ERROR;
     t_int8 i;
-
+    t_bool qp = FALSE;
+    
     readLine(aLine, status);
     //if (FALSE) TRACE("rfl(1) %s\r\n", aLine.toCString(""));
 
@@ -108,14 +109,51 @@ ICalFileReader::readFullLine(UnicodeString & aLine, ErrorCode & status, t_int32 
     {
         return aLine;
     }
+
+    if (aLine.indexOf("QUOTED-PRINTABLE") >= 0 || aLine.indexOf("quoted-printable") >= 0)
+      qp = TRUE;
+    if (qp)
+    {
+      // convert string after ':'
+      t_int32 i;
+      i = aLine.indexOf(':');
+      if (i >= 0)
+      {
+        UnicodeString u;
+        u = aLine.extractBetween(i + 1, aLine.size(), u);
+        u = ICalReader::convertQuotedPrintableString(u);
+        aLine.replaceBetween(i + 1, aLine.size(), u);
+      }
+      if (aLine[(TextOffset) aLine.size() - 1] == '=')
+        aLine.remove((TextOffset) aLine.size() - 1, 1);
+      else
+        qp = FALSE;
+    }
+
     UnicodeString aSubLine;
     while (TRUE)
     {
         i = read(status);
-        if (i != -1 && i == ' ')
+        if (i != -1 && i == ' ' || (qp && i != -1))
         {
-            aLine += readLine(aSubLine, status);
-            //if (FALSE) TRACE("rfl(2) %s\r\n", aLine.toCString(""));
+            if (!qp)
+            {
+              aLine += readLine(aSubLine, status);
+            }
+            else 
+            {
+              aLine += i;
+              aSubLine = readLine(aSubLine, status);
+              // convert aSubLine;
+              aSubLine = ICalReader::convertQuotedPrintableString(aSubLine);
+              // remove last '=' if it exists, if it doesn't we're done.
+              if (aSubLine[(TextOffset) aSubLine.size() - 1] == '=')
+                aSubLine.remove((TextOffset) aSubLine.size() - 1, 1);
+              else
+                qp = FALSE;
+
+              aLine += aSubLine;
+            }
         }
         else if (i == -1)
         {

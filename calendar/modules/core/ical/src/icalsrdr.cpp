@@ -34,7 +34,7 @@ all const char * passed in will be us-ascii 8-bit chars
 #include <string.h>
 #include "ptypes.h"
 #include "icalsrdr.h"
-
+#include "icalredr.h"
 //---------------------------------------------------------------------
 
 ICalStringReader::ICalStringReader() {}
@@ -173,6 +173,7 @@ UnicodeString & ICalStringReader::readFullLine(UnicodeString & aLine,
 {
     status = ZERO_ERROR;
     t_int32 i;
+    t_bool qp = FALSE;
     
     readLine(aLine, status);
     //if (FALSE) TRACE("rfl(1) %s\r\n", aLine.toCString(""));
@@ -182,17 +183,52 @@ UnicodeString & ICalStringReader::readFullLine(UnicodeString & aLine,
         //aLine = "";
         return aLine;
     }
-    
-    UnicodeString aSubLine;
 
+    if (aLine.indexOf("QUOTED-PRINTABLE") >= 0 || aLine.indexOf("quoted-printable") >=0 )
+      qp = TRUE;
+    if (qp)
+    {
+      // convert string after ':'
+      t_int32 i;
+      i = aLine.indexOf(':');
+      if (i >= 0)
+      {
+        UnicodeString u;
+        u = aLine.extractBetween(i + 1, aLine.size(), u);
+        u = ICalReader::convertQuotedPrintableString(u);
+        aLine.replaceBetween(i + 1, aLine.size(), u);
+      }
+      if (aLine[(TextOffset) aLine.size() - 1] == '=')
+        aLine.remove((TextOffset) aLine.size() - 1, 1);
+      else
+        qp = FALSE;
+    }
+
+    UnicodeString aSubLine;
     while (TRUE)
     {
         mark();
         i = read(status);
-        if (i == ' ')
+        if (i == ' ' || (qp && i != -1))
         {
-            aLine += readLine(aSubLine, status);
-            //if (FALSE) TRACE("rfl(2) %s\r\n", aLine.toCString(""));
+            if (!qp)
+            {
+              aLine += readLine(aSubLine, status);
+            }
+            else 
+            {
+              aLine += i;
+              aSubLine = readLine(aSubLine, status);
+              // convert aSubLine;
+              aSubLine = ICalReader::convertQuotedPrintableString(aSubLine);
+              // remove last '=' if it exists, if it doesn't we're done.
+              if (aSubLine[(TextOffset) aSubLine.size() - 1] == '=')
+                aSubLine.remove((TextOffset) aSubLine.size() - 1, 1);
+              else
+                qp = FALSE;
+
+              aLine += aSubLine;
+            }           
         }
         else if (FAILURE(status))
         {

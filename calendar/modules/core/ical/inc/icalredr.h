@@ -110,6 +110,7 @@ public:
 
     static t_bool isHex(t_int8 aToken);
     static t_int8 convertHex(char fToken, char sToken);
+    static UnicodeString & convertQuotedPrintableString(UnicodeString & stringToConvert);
 };
 
 #endif /* __ICALREADER_H_ */
