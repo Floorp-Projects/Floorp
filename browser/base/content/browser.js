@@ -358,6 +358,12 @@ function prepareForStartup()
 
   // initialize observers and listeners
   window.XULBrowserWindow = new nsBrowserStatusHandler();
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIWebNavigation)
+        .QueryInterface(Components.interfaces.nsIDocShellTreeItem).treeOwner
+        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIXULWindow)
+        .XULBrowserWindow = window.XULBrowserWindow;
   window.browserContentListener =
     new nsBrowserContentListener(window, gBrowser);
 
@@ -621,6 +627,12 @@ function Shutdown()
 
   window.XULBrowserWindow.destroy();
   window.XULBrowserWindow = null;
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIWebNavigation)
+        .QueryInterface(Components.interfaces.nsIDocShellTreeItem).treeOwner
+        .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIXULWindow)
+        .XULBrowserWindow = null;
 
   window.browserContentListener.close();
   // Close the app core.

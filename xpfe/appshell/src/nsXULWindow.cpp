@@ -2063,6 +2063,18 @@ void nsXULWindow::PersistentAttributesDirty(PRUint32 aDirtyFlags) {
   mPersistentAttributesDirty |= aDirtyFlags & mPersistentAttributesMask;
 }
 
+NS_IMETHODIMP nsXULWindow::GetXULBrowserWindow(nsIXULBrowserWindow * *aXULBrowserWindow)
+{
+  NS_IF_ADDREF(*aXULBrowserWindow = mXULBrowserWindow);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::SetXULBrowserWindow(nsIXULBrowserWindow * aXULBrowserWindow)
+{
+  mXULBrowserWindow = aXULBrowserWindow;
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsXULWindow: Accessors
 //*****************************************************************************
