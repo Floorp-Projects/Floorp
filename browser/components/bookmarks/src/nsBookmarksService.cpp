@@ -1610,7 +1610,7 @@ nsBookmarksService::nsBookmarksService() :
     mBookmarksAvailable(PR_FALSE),
     mDirty(PR_FALSE)
 
-#ifdef  XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
     ,mIEFavoritesAvailable(PR_FALSE)
 #endif
 { }
@@ -3381,7 +3381,7 @@ nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
 {
     gImportedSystemBookmarks = PR_TRUE;
 
-#ifdef XP_WIN
+#if defined(XP_WIN)
     nsresult rv;
 
     nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1", &rv));
@@ -3397,13 +3397,16 @@ nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
     // read Favorites folder if it exists on the machine. 
     if (favoritesDirectory) 
         return ParseFavoritesFolder(favoritesDirectory, aParentFolder);
-#elif XP_MAC
-    nsSpecialSystemDirectory ieFavoritesFile(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
-    ieFavoritesFile += "Explorer";
-    ieFavoritesFile += "Favorites.html";
+#elif defined(XP_MAC) || defined(XP_MACOSX)
+    nsCOMPtr<nsIFile> ieFavoritesFile;
+    nsresult rv = NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(ieFavoritesFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    ieFavoritesFile->Append(NS_LITERAL_STRING("Explorer"));
+    ieFavoritesFile->Append(NS_LITERAL_STRING("Favorites.html"));
 
     BookmarkParser parser;
-    parser.Init(&ieFavoritesFile, mInner);
+    parser.Init(ieFavoritesFile, mInner);
     BeginUpdateBatch(this);
     parser.Parse(aParentFolder, kNC_Bookmark);
     EndUpdateBatch(this);
@@ -3412,7 +3415,7 @@ nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
     return NS_OK;
 }
 
-#if defined(XP_WIN) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
 void
 nsBookmarksService::HandleSystemBookmarks(nsIRDFNode* aNode) 
 {
@@ -3429,7 +3432,7 @@ nsBookmarksService::HandleSystemBookmarks(nsIRDFNode* aNode)
             ImportSystemBookmarks(kNC_SystemBookmarksStaticRoot);
         }
     }
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
     // on the Mac, IE favorites are stored in an HTML file.
     // Defer importing the contents of this file until necessary.
     else if ((aNode == kNC_IEFavoritesRoot) && (mIEFavoritesAvailable == PR_FALSE))
@@ -3785,7 +3788,7 @@ nsBookmarksService::HasAssertion(nsIRDFResource* source,
                 PRBool tv,
                 PRBool* hasAssertion)
 {
-#if defined(XP_WIN) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
     HandleSystemBookmarks(source);
 #endif
 
@@ -3819,7 +3822,7 @@ nsBookmarksService::RemoveObserver(nsIRDFObserver* aObserver)
 NS_IMETHODIMP
 nsBookmarksService::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval)
 {
-#if defined(XP_WIN) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
     HandleSystemBookmarks(aNode);
 #endif
 
@@ -3829,7 +3832,7 @@ nsBookmarksService::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_r
 NS_IMETHODIMP
 nsBookmarksService::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval)
 {
-#if defined(XP_WIN) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
     HandleSystemBookmarks(aSource);
 #endif
   
@@ -3840,7 +3843,7 @@ NS_IMETHODIMP
 nsBookmarksService::ArcLabelsOut(nsIRDFResource* source,
                 nsISimpleEnumerator** labels)
 {
-#if defined(XP_WIN) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
     HandleSystemBookmarks(source);
 #endif
 
@@ -3850,7 +3853,7 @@ nsBookmarksService::ArcLabelsOut(nsIRDFResource* source,
 NS_IMETHODIMP
 nsBookmarksService::GetAllResources(nsISimpleEnumerator** aResult)
 {
-#if defined(XP_WIN) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
     HandleSystemBookmarks(kNC_SystemBookmarksStaticRoot);
 #endif
   
@@ -4524,7 +4527,7 @@ nsBookmarksService::GetBookmarksFile(nsIFile* *aResult)
 }
 
 
-#ifdef  XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
 
 nsresult
 nsBookmarksService::ReadFavorites()
@@ -4532,9 +4535,13 @@ nsBookmarksService::ReadFavorites()
     mIEFavoritesAvailable = PR_TRUE;
     nsresult rv;
             
-#ifdef  DEBUG
+#ifdef DEBUG_varga
     PRTime      now;
+#if defined(XP_MAC)
     Microseconds((UnsignedWide *)&now);
+#else
+    now = PR_Now();
+#endif
     printf("Start reading in IE Favorites.html\n");
 #endif
 
@@ -4546,10 +4553,9 @@ nsBookmarksService::ReadFavorites()
     rv = NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(ieFavoritesFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    ieFavoritesFile->Append(NS_LITERAL_CSTRING("Explorer"));
-    ieFavoritesFile->Append(NS_LITERAL_CSTRING("Favorites.html"));
+    ieFavoritesFile->Append(NS_LITERAL_STRING("Explorer"));
+    ieFavoritesFile->Append(NS_LITERAL_STRING("Favorites.html"));
 
-    nsresult    rv;
     if (NS_SUCCEEDED(rv = gRDFC->MakeSeq(mInner, kNC_IEFavoritesRoot, nsnull)))
     {
         BookmarkParser parser;
@@ -4565,9 +4571,13 @@ nsBookmarksService::ReadFavorites()
             rv = mInner->Assert(kNC_IEFavoritesRoot, kNC_Name, ieTitleLiteral, PR_TRUE);
         }
     }
-#ifdef  DEBUG
+#ifdef DEBUG_varga
     PRTime      now2;
+#if defined(XP_MAC)
     Microseconds((UnsignedWide *)&now2);
+#else
+    now = PR_Now();
+#endif
     PRUint64    loadTime64;
     LL_SUB(loadTime64, now2, now);
     PRUint32    loadTime32;
@@ -4653,9 +4663,9 @@ nsBookmarksService::LoadBookmarks()
     if (prefSvc)
         prefSvc->GetBranch("browser.bookmarks.", getter_AddRefs(bookmarksPrefs));
 
-#ifdef  DEBUG
+#ifdef DEBUG_varga
     PRTime now;
-#ifdef  XP_MAC
+#if defined(XP_MAC)
     Microseconds((UnsignedWide *)&now);
 #else
     now = PR_Now();
@@ -4719,12 +4729,11 @@ nsBookmarksService::LoadBookmarks()
         parser.Init(bookmarksFile, mInner);
         if (useDynamicSystemBookmarks)
         {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
             parser.SetIEFavoritesRoot(nsCString(kURINC_IEFavoritesRoot));
 #elif defined(XP_WIN) || defined(XP_BEOS)
             parser.SetIEFavoritesRoot(bookmarksURICString);
 #endif
-
             parser.ParserFoundIEFavoritesRoot(&foundIERoot);
         }
 
@@ -4797,7 +4806,7 @@ nsBookmarksService::LoadBookmarks()
     // When the user opens this folder for the first time, system bookmarks are 
     // imported into this folder. A pref is used to keep track of whether or 
     // not to perform this operation. 
-#if defined(XP_MAC) || defined(XP_WIN)
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
     PRBool addedStaticRoot = PR_FALSE;
     if (bookmarksPrefs) 
         bookmarksPrefs->GetBoolPref("added_static_root", 
@@ -4844,7 +4853,7 @@ nsBookmarksService::LoadBookmarks()
 #if defined(XP_WIN)
             rv = gRDF->GetResource(bookmarksURICString,
                                    getter_AddRefs(systemFolderResource));
-#elif defined(XP_MAC)
+#elif defined(XP_MAC) || defined(XP_MACOSX)
             rv = gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_IEFavoritesRoot),
                                    getter_AddRefs(systemFolderResource));
 #endif
@@ -4861,7 +4870,7 @@ nsBookmarksService::LoadBookmarks()
     // by setting the pref. 
     if (useDynamicSystemBookmarks)
     {
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
         // if the IE Favorites root isn't somewhere in bookmarks.html, add it
         if (!foundIERoot)
         {
@@ -4914,9 +4923,9 @@ nsBookmarksService::LoadBookmarks()
 #endif
     }
 
-#ifdef  DEBUG
+#ifdef DEBUG_varga
     PRTime      now2;
-#ifdef  XP_MAC
+#if defined(XP_MAC)
     Microseconds((UnsignedWide *)&now2);
 #else
     now2 = PR_Now();
@@ -4956,15 +4965,24 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     rv = tempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, /*octal*/ 0600);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIFileOutputStream> strm =
-        do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
+    nsCOMPtr<nsIOutputStream> out;
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(out),
+                                     tempFile,
+                                     PR_WRONLY,
+                                     /*octal*/ 0600,
+                                     0);
     if (NS_FAILED(rv))
     {
         tempFile->Remove(PR_FALSE);
         return rv;
     }
 
-    rv = strm->Init(tempFile, PR_WRONLY, /*octal*/ 0600, 0);
+    // We need a buffered output stream for performance.
+    // See bug 202477.
+    nsCOMPtr<nsIOutputStream> strm;
+    rv = NS_NewBufferedOutputStream(getter_AddRefs(strm),
+                                    out,
+                                    4096);
     if (NS_FAILED(rv))
     {
         tempFile->Remove(PR_FALSE);
@@ -4978,6 +4996,7 @@ nsBookmarksService::WriteBookmarks(nsIFile* aBookmarksFile,
     rv |= WriteBookmarksContainer(aDataSource, strm, aRoot, 0, parentArray);
 
     strm->Close();
+    out->Close();
 
     if (NS_FAILED(rv))
     {
