@@ -407,6 +407,7 @@ Rights Reserved.
 <!ENTITY markAsUnreadCmd.accesskey "U">
 <!ENTITY markThreadAsReadCmd.label "Thread As Read">
 <!ENTITY markThreadAsReadCmd.accesskey "T">
+<!ENTITY markThreadAsReadCmd.key "r">
 <!ENTITY markByDateCmd.label "by Date...">
 <!ENTITY markByDateCmd.accesskey "D">
 <!ENTITY markAllReadCmd.label "All Read">
