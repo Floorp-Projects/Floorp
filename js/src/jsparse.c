@@ -142,8 +142,10 @@ NewParseNode(JSContext *cx, JSToken *tok, JSParseNodeArity arity,
         tc->nodeList = pn->pn_next;
     } else {
         JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
-        if (!pn)
+        if (!pn) {
+            JS_ReportOutOfMemory(cx);
             return NULL;
+        }
     }
     pn->pn_type = tok->type;
     pn->pn_pos = tok->pos;
@@ -172,8 +174,10 @@ NewBinary(JSContext *cx, JSTokenType tt,
         tc->nodeList = pn->pn_next;
     } else {
         JS_ARENA_ALLOCATE_TYPE(pn, JSParseNode, &cx->tempPool);
-        if (!pn)
+        if (!pn) {
+            JS_ReportOutOfMemory(cx);
             return NULL;
+        }
     }
     pn->pn_type = tt;
     pn->pn_pos.begin = left->pn_pos.begin;
@@ -3079,7 +3083,15 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
         break;
 
       case PN_NAME:
+        /*
+         * Skip pn1 down along a chain of dotted member expressions to avoid
+         * excessive recursion.  Our only goal here is to fold constants (if
+         * any) in the primary expression operand to the left of the first
+         * dot in the chain.
+         */
         pn1 = pn->pn_expr;
+        while (pn1 && pn1->pn_arity == PN_NAME)
+            pn1 = pn1->pn_expr;
         if (pn1 && !js_FoldConstants(cx, pn1, tc))
             return JS_FALSE;
         break;
@@ -3151,7 +3163,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             RecycleTree(pn2, tc);
             break;
         }
-        /* FALL THROUGH */
+        goto do_binary;
 
       case TOK_STAR:
         /* The * in 'import *;' parses as a nullary star node. */
@@ -3162,6 +3174,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
       case TOK_SHOP:
       case TOK_MINUS:
       case TOK_DIVOP:
+      do_binary:
         if (pn1->pn_type == TOK_NUMBER && pn2->pn_type == TOK_NUMBER) {
             jsdouble d, d2;
             int32 i, j;
