@@ -11,6 +11,7 @@ AXISCLASSPATH=$AXIS_LIB/axis.jar:$AXIS_LIB/commons-discovery.jar:$AXIS_LIB/commo
 CLASSPATH=$AXIS_HOME:$CATALINA_HOME/webapps/axis/WEB-INF/classes:$AXISCLASSPATH:$CLASSPATH
 JAVA_ENDORSED_DIRS=$CATALINA_HOME/bin
 JAVA_HOME=/usr/java/j2sdk1.4.2_04
+java=$JAVA_HOME/bin/java
 
 name=$1
 if [ "x$name" = "x" ]; then
