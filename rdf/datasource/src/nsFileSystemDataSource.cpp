@@ -295,18 +295,19 @@ FileSystemDataSource::FileSystemDataSource(void)
 #ifdef  XP_WIN
         nsCOMPtr<nsIFile> file;
         NS_GetSpecialDirectory(NS_WIN_FAVORITES_DIR, getter_AddRefs(file));
+        if (file)
+        {
+            nsCOMPtr<nsIURI> furi;
+            NS_NewFileURI(getter_AddRefs(furi), file); 
+            nsCAutoString favoritesDir;
+            file->GetNativePath(favoritesDir);
+            ieFavoritesDir = ToNewCString(favoritesDir);
 
-        nsCOMPtr<nsIURI> furi;
-        NS_NewFileURI(getter_AddRefs(furi), file); 
-        nsCAutoString favoritesDir;
-        file->GetNativePath(favoritesDir);
-        ieFavoritesDir = ToNewCString(favoritesDir);
-
-        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavorite"),
-                                 &kNC_IEFavoriteObject);
-        gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavoriteFolder"),
-                                 &kNC_IEFavoriteFolder);
-
+            gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavorite"),
+                                     &kNC_IEFavoriteObject);
+            gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "IEFavoriteFolder"),
+                                     &kNC_IEFavoriteFolder);
+        }
 
 #endif
 
@@ -386,8 +387,8 @@ FileSystemDataSource::~FileSystemDataSource (void)
         NS_RELEASE(kRDF_type);
 
 #ifdef  XP_WIN
-        NS_RELEASE(kNC_IEFavoriteObject);
-        NS_RELEASE(kNC_IEFavoriteFolder);
+        NS_IF_RELEASE(kNC_IEFavoriteObject);
+        NS_IF_RELEASE(kNC_IEFavoriteFolder);
 
         if (ieFavoritesDir)
         {
