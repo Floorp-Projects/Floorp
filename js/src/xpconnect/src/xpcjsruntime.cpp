@@ -53,7 +53,7 @@ const char* XPCJSRuntime::mStrings[] = {
     "prototype",            // IDX_PROTOTYPE
     "createInstance"        // IDX_CREATE_INSTANCE
 #ifdef XPC_IDISPATCH_SUPPORT
-    , "NSActiveXObject"     // IDX_ACTIVEX_OBJECT
+    , "GeckoActiveXObject"  // IDX_ACTIVEX_OBJECT
     , "COMObject"           // IDX_COMOBJECT
 #endif
 };
