@@ -648,7 +648,8 @@ NS_IMETHODIMP
 nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
 #ifdef DEBUG_tree
-    printf("PositionChanged from %d to %d\n", aOldIndex, aNewIndex);
+    printf("PositionChanged from %d to %d (mCurrentIndex is %d)\n",
+           aOldIndex, aNewIndex, mCurrentIndex);
 #endif
   if (aNewIndex < 0)
     return NS_OK;
@@ -1376,12 +1377,60 @@ void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFra
 }
 
 void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext, 
-                                           nsIFrame* aChildFrame)
+                                           nsIFrame* aChildFrame,
+                                           PRInt32 aIndex)
 {
-  
+
+  nsIFrame* oldTopFrame = mTopFrame;
   // if we're removing the top row, the new top row is the next row
-  if (mTopFrame == aChildFrame)
+  if (mTopFrame && mTopFrame == aChildFrame)
     mTopFrame->GetNextSibling(&mTopFrame);
+
+  // if we're removing the last frame in this rowgroup, we have
+  // to yank in some rows from above
+  if (!mTopFrame) {
+    nsCOMPtr<nsIContent> oldTopContent;
+    oldTopFrame->GetContent(getter_AddRefs(oldTopContent));
+
+    nsCOMPtr<nsIContent> oldTopContentParent;
+    oldTopContent->GetParent(*getter_AddRefs(oldTopContentParent));
+
+    nsCOMPtr<nsIContent> newTopContent;
+    
+    if (aIndex == 0) {
+      // this must be the last content in this row, so get the previous
+      // row from the parent
+      PRInt32 onerow = 1;
+      FindPreviousRowContent(onerow, nsnull, oldTopContentParent,
+                             getter_AddRefs(newTopContent));
+    } else {
+      // the parent still has some content, so scroll up to the content
+      // at aIndex -1;
+      PRInt32 newIndex = aIndex-1;
+      FindRowContentAtIndex(newIndex, oldTopContentParent,
+                            getter_AddRefs(newTopContent));
+    }
+
+    // now make a content chain so that we can rebuild frames correctly
+    if (newTopContent) {
+      ConstructContentChain(newTopContent);
+      
+      // sync up the scrollbar, now that we've scrolled one row
+      if (mScrollbar) {
+        mCurrentIndex--;
+        nsAutoString indexStr;
+        indexStr.Append(mCurrentIndex);
+        
+        nsCOMPtr<nsIContent> scrollbarContent;
+        mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+        // this will actually be a no-op, but we need to do
+        // notification so the thumb adjusts itself
+        scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos,
+                                       indexStr, /* notify */ PR_TRUE);
+      }
+    }
+      
+  }
   
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);

@@ -6480,7 +6480,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         childFrame->GetParent(&parentFrame);
         nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
         if (treeRowGroup && treeRowGroup->IsLazy()) {
-          treeRowGroup->OnContentRemoved(aPresContext, childFrame);
+          treeRowGroup->OnContentRemoved(aPresContext, childFrame, aIndexInContainer);
           return NS_OK;
         }
       }
@@ -6507,7 +6507,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
           // Convert to a tree row group frame.
           nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
           if (treeRowGroup && treeRowGroup->IsLazy()) {
-            treeRowGroup->OnContentRemoved(aPresContext, nsnull);
+            treeRowGroup->OnContentRemoved(aPresContext, nsnull, aIndexInContainer);
             return NS_OK;
           }
         }
