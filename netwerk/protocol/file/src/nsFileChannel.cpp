@@ -37,6 +37,7 @@
 
 #include "nsFileChannel.h"
 #include "nsIFileChannel.h"
+#include "nsIStreamConverterService.h"
 #include "nsIFileURL.h"
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
@@ -53,6 +54,7 @@
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -75,13 +77,15 @@ nsFileChannel::nsFileChannel()
 nsresult
 nsFileChannel::Init(PRInt32 ioFlags,
                     PRInt32 perm,
-                    nsIURI* uri)
+                    nsIURI* uri,
+                    PRBool generateHTMLDirs)
 {
     nsresult rv;
 
     mIOFlags = ioFlags;
     mPerm = perm;
     mURI = uri;
+    mGenerateHTMLDirs = generateHTMLDirs;
 
     // if we support the nsIURL interface then use it to get just
     // the file path with no other garbage!
@@ -103,6 +107,26 @@ nsFileChannel::Init(PRInt32 ioFlags,
 
 nsFileChannel::~nsFileChannel()
 {
+}
+
+nsresult
+nsFileChannel::SetStreamConverter()
+{
+    nsresult rv;
+    nsCOMPtr<nsIStreamListener> converterListener = mRealListener;
+
+    nsCOMPtr<nsIStreamConverterService> scs = do_GetService(kStreamConverterServiceCID, &rv);
+
+    if (NS_FAILED(rv)) 
+        return rv;
+
+    rv = scs->AsyncConvertData(NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(), 
+                               NS_LITERAL_STRING(TEXT_HTML).get(),
+                               converterListener, 
+                               mURI, 
+                               getter_AddRefs(mRealListener));
+    
+    return rv;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsFileChannel,
@@ -321,8 +345,12 @@ nsFileChannel::GetContentType(nsACString &aContentType)
     if (mContentType.IsEmpty()) {
         PRBool directory;
 		mFile->IsDirectory(&directory);
-		if (directory)
-            mContentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
+        if (directory) {
+            if (mGenerateHTMLDirs)
+                mContentType = NS_LITERAL_CSTRING(TEXT_HTML);
+            else
+                mContentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
+        }
         else {
             nsresult rv;
             nsCOMPtr<nsIMIMEService> MIMEService(do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
@@ -459,6 +487,17 @@ nsFileChannel::OnStartRequest(nsIRequest* request, nsISupports* context)
     NS_ASSERTION(mRealListener, "No listener...");
     nsresult rv = NS_OK;
     if (mRealListener) {
+        if (mGenerateHTMLDirs)
+        {
+            PRBool directory;
+            mFile->IsDirectory(&directory);  // this stat should be cached and will not hit disk.
+            if (directory) {
+                rv = SetStreamConverter();
+                if (NS_FAILED(rv)) 
+                    return rv;
+            }
+        }
+
         rv = mRealListener->OnStartRequest(this, context);
     }
     return rv;

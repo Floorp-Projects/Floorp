@@ -25,6 +25,7 @@ REQUIRES	= xpcom \
 		  string \
 		  exthandler \
 		  mimetype \
+		  pref \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 

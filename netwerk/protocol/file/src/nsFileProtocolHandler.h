@@ -71,6 +71,9 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init();
+
+protected:
+    PRBool mGenerateHTMLContent;
 };
 
 #endif /* nsFileProtocolHandler_h___ */
