@@ -835,13 +835,6 @@ UINT nsWindow::gCurrentKeyboardCP = 0;
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-#ifdef ACCESSIBILITY
-  if (mRootAccessible) {
-    mRootAccessible->Release();
-    mRootAccessible = nsnull;
-  }
-#endif
-
   mIsDestroying = PR_TRUE;
   if (gCurrentWindow == this) {
     gCurrentWindow = nsnull;
@@ -1600,6 +1593,10 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Destroy()
 {
+#ifdef ACCESSIBILITY
+  ClearRootAccessible();
+#endif
+
   // Switch to the "main gui thread" if necessary... This method must
   // be executed on the "gui thread"...
   nsToolkit* toolkit = (nsToolkit *)mToolkit;
@@ -4109,8 +4106,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           result = DispatchFocus(NS_ACTIVATE, isMozWindowTakingFocus);
         }
 #ifdef ACCESSIBILITY
-        if (nsWindow::gIsAccessibilityOn)
+        if (nsWindow::gIsAccessibilityOn) {
           CreateRootAccessible();
+        }
 #endif
         break;
 
@@ -4358,7 +4356,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #ifdef ACCESSIBILITY
       case WM_GETOBJECT: 
       {
-        nsWindow::gIsAccessibilityOn = TRUE;
         LRESULT lAcc = 0;
         CreateRootAccessible();
         if (mRootAccessible) {
@@ -7006,11 +7003,52 @@ VOID CALLBACK nsWindow::HookTimerForPopups( HWND hwnd, UINT uMsg, UINT idEvent, 
 #ifdef ACCESSIBILITY
 void nsWindow::CreateRootAccessible()
 {
+  nsWindow::gIsAccessibilityOn = TRUE;
+
+  if (mIsDestroying || mOnDestroyCalled || mWindowType == eWindowType_invisible) {
+    if (mRootAccessible) {
+      ClearRootAccessible();
+    }
+    return;
+  }
+
   // Create this as early as possible in new window, if accessibility is turned on
   // We need it to be created early so it can generate accessibility events right away
 
   if (!mRootAccessible) {
-    DispatchAccessibleEvent(NS_GETACCESSIBLE, &mRootAccessible);
+    nsWindow* accessibleWindow = nsnull;
+    if (mContentType != eContentTypeInherit) {
+      // Windows that wrap content or UI client areas should use their child client's
+      // accessibility info
+      if (mWnd) {
+        HWND firstChild = ::FindWindowEx(mWnd, NULL, kClassNameGeneral, NULL);
+        if (firstChild) {
+          accessibleWindow = GetNSWindowPtr(firstChild);
+        }
+      }
+    }
+    else {
+      accessibleWindow = this;
+    }
+    if (accessibleWindow) {
+      accessibleWindow->DispatchAccessibleEvent(NS_GETACCESSIBLE, &mRootAccessible);
+    }
+  }
+}
+
+void nsWindow::ClearRootAccessible()
+{
+  if (mRootAccessible) {
+    NS_RELEASE(mRootAccessible);
+    mRootAccessible = nsnull;
+  }
+  // Recursively clear out all the windows holding this same root accessible
+  if (mWnd && mContentType == eContentTypeInherit) {
+    HWND parent = ::GetParent(mWnd);
+    nsWindow *parentWidget = GetNSWindowPtr(parent);
+    if (parentWidget) {
+      parentWidget->ClearRootAccessible();
+    }
   }
 }
 
