@@ -111,6 +111,29 @@
     }
   }
 
+  function BrowserOpenWindow()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+	    dump("Opening New Window\n");
+      appCore.openWindow();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+	function BrowserCopy()
+  {
+    appCore = XPAppCoresManager.Find("BrowserAppCore");  
+    if (appCore != null) {
+	    dump("Copying\n");
+      appCore.copy();
+    } else {
+      dump("BrowserAppCore has not been created!\n");
+    }
+  }
+
+
   function BrowserAddBookmark(url,title)
   {
     // get RDF Core service
@@ -334,7 +357,7 @@
 		      <menuitem name="Page Using Template..." onclick="BrowserNewWindow();"/>
 		      <menuitem name="Page Using Draft..." onclick="BrowserNewWindow();"/>
     		</menu>
-      <menuitem name="Open" onclick="BrowserNewWindow();"/>
+      <menuitem name="Open" onclick="BrowserOpenWindow();"/>
       <separator />
       <menuitem name="Send Page" onclick="BrowserReload();"/>
 	   <menuitem name="Edit Page" onclick="BrowserReload();" />
@@ -357,7 +380,7 @@
       <menuitem name="Redo" onclick="BrowserReload();"/> 
       <separator /> 
       <menuitem name="Cut" onclick="BrowserReload();"/> 
-      <menuitem name="Copy" onclick="BrowserReload();"/> 
+      <menuitem name="Copy" onclick="BrowserCopy();"/> 
       <menuitem name="Paste" onclick="BrowserReload();"/> 
       <menuitem name="Delete" onclick="BrowserReload();"/> 
       <separator /> 
@@ -722,7 +745,7 @@
 
 		<spring flex="100%"/>
 
-		<titledbutton align="right" value="Build ID: 99032911" style="font-family:sans-serif;font-size:2.5mm">
+Build ID: 1999040108
 		</titledbutton>
 
 		<titledbutton id="security-button" class="insecure" value="Secure Conn" align="right" onclick="securityOff();"/>
