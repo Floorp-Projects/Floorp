@@ -8,6 +8,7 @@
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <!-- script language="JavaScript" src="chrome://global/content/strres.js"/ -->
+<script language="javascript" src="chrome://global/content/builtinURLs.js" />
 <script language="JavaScript" src="chrome://global/content/globalOverlay.js"/>
 
 	<!-- File Menu -->
@@ -119,20 +120,6 @@
 	<!-- Help Menu -->
 	<menu id="menu_Help" value="&helpMenu.label;">
 		<menupopup id="helpPopup" oncreate="helpMenuCreate()">
-	        <!-- Help Menu disabled
-			<menu value="&helpContentCmd.label;">
-				<menupopup>
-				  <menuitem value="&webBrowsingCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/local/browserhelp/navtop.html');"/>
-				  <menuitem value="&emailCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/local/mailhelp/mailtop.html');"/>
-				  <menuitem value="&internetShopCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/served/shophelp/shoptop.html');"/>
-				  <menuitem value="&customCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/served/custhelp/custtop.html');"/>
-				  <menuseparator/>
-				  <menuitem value="&softUpdatesCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/served/updatehelp/updatetop.html');"/>
-				  <menuitem value="&connProbCmd.label;" oncommand="openTopWin('http://www.mozilla.org/projects/user-docs/local/troubleshoot/troubletop.html');"/>
-				  <menuitem value="&secPrivCmd.label;" oncommand="openTopWin('http://home.netscape.com/security/basics/index.html');"/>
-				 </menupopup>
-			</menu>
-			-->
 			<menuitem value="&releaseCommCmd.label;" id="releaseUrl"  />
 			<menuitem value="&aboutCommCmd.label;" name="&aboutCommCmd.label;" id="releaseName" oncommand="goAboutDialog();"/>
 		</menupopup>

@@ -46,6 +46,7 @@ install::
 	$(MAKE_INSTALL) commonDialog.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) commonDialog.js $(DISTBROWSER)
 	$(MAKE_INSTALL) strres.js $(DISTBROWSER)
+	$(MAKE_INSTALL) builtinURLs.js $(DISTBROWSER)
 	$(MAKE_INSTALL) about.html $(DISTBROWSER)
 	$(MAKE_INSTALL) logo.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) about.xul $(DISTBROWSER)
