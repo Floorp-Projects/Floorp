@@ -204,28 +204,59 @@ nsCacheManager::Init()
 nsresult nsCacheManager::GetCacheAndReplacementPolicy( PRUint32 aFlags, nsINetDataCache*& cache, nsReplacementPolicy *&spaceManager )
 {
 	PRBool diskCacheEnabled = PR_FALSE;
-	if ( mDiskCache.get() )
+	PRBool memCacheEnabled  = PR_FALSE;
+
+    // Initialize the out parameters...
+    cache = nsnull;
+    spaceManager = nsnull;
+
+    // Determine if the Disk cache is available...
+	if ( mDiskCache.get() ) {
 		mDiskCache->GetEnabled( &diskCacheEnabled );
+        // Ensure that the cache is initialized
+        if ((mDiskCacheCapacity == (PRUint32)-1) || (mDiskCacheCapacity == 0))
+            diskCacheEnabled = PR_FALSE;
+    }
 
+    // Determine if the Memory cache is available...
+    if (mMemCache) {
+        mMemCache->GetEnabled(&memCacheEnabled);
+        // Ensure that the cache is initialized
+        if ((mMemCacheCapacity == (PRUint32)-1) || (mMemCacheCapacity == 0))
+            memCacheEnabled = PR_FALSE;
+    }
+
+    // The CACHE_AS_FILE flag requires the Disk cache...
     if (aFlags & CACHE_AS_FILE) {
-        if ( diskCacheEnabled )
-            cache = mDiskCache;
-     	else
-     		return NS_ERROR_NOT_AVAILABLE;
-        spaceManager = mDiskSpaceManager;
-
-        // Ensure that cache is initialized
-        if (mDiskCacheCapacity == (PRUint32)-1)
+        if (!diskCacheEnabled) 
             return NS_ERROR_NOT_AVAILABLE;
 
-    } else if ((aFlags & BYPASS_PERSISTENT_CACHE) ||
-               ( !mDiskCache && !mFlatCache) || !mDiskCacheCapacity  || !diskCacheEnabled) {
+        cache = mDiskCache;
+        spaceManager = mDiskSpaceManager;
+    } 
+    // The BYPASS_PERSISTANT_CACHE flag requires the Memory cache
+    else if (aFlags & BYPASS_PERSISTENT_CACHE) {
+        if (!memCacheEnabled)
+            return NS_ERROR_NOT_AVAILABLE;
+
         cache = mMemCache;
         spaceManager = mMemSpaceManager;
-    } else {
-        cache = mFlatCache ? mFlatCache : mDiskCache;
+    } 
+    // Use the Disk cache if it is available...
+    else if (diskCacheEnabled) {
+        cache = mDiskCache;
         spaceManager = mDiskSpaceManager;
     }
+    // Otherwise use the memory cache if it is available...
+    else if (memCacheEnabled) {
+        cache = mMemCache;
+        spaceManager = mMemSpaceManager;
+    }
+    // No caches are available, so fail !!!
+    else {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+
 	return NS_OK;
 }
  
