@@ -608,8 +608,7 @@ void CTests::GetCountTest(nsISHistory *theSessionHistory, PRInt32 *numEntries)
 	if (!(*numEntries))
 		CQaUtils::QAOutput("numEntries for GetCount() invalid. Test failed.", 1);
 	else {
-		strMsg.Format("numEntries = %d", *numEntries); 
-		AfxMessageBox(strMsg);
+		CQaUtils::FormatAndPrintOutput("number of entries = ", *numEntries, 2);
 		CQaUtils::RvTestResult(rv, "GetCount() (count attribute) test", 2);
 	}
 }
@@ -635,8 +634,7 @@ void CTests::GetMaxLengthTest(nsISHistory *theSessionHistory, PRInt32 *theMaxLen
 	if (!(*theMaxLength))
 		CQaUtils::QAOutput("theMaxLength for GetMaxLength() invalid. Test failed.", 1);
 	else {
-		strMsg.Format("theMaxLength = %d", *theMaxLength); 
-		AfxMessageBox(strMsg); 
+		CQaUtils::FormatAndPrintOutput("theMaxLength = ", *theMaxLength, 2); 
 		CQaUtils::RvTestResult(rv, "GetMaxLength() (MaxLength attribute) test", 2);
 	}
 }
@@ -977,26 +975,65 @@ void CTests::GetSHTest()
 
 void CTests::OnInterfacesNsirequest() 
 {
-	CUrlDialog myDialog;
-	nsCString stringMsg;
 
-	CQaUtils::QAOutput("Begin nsIRequest tests.", 2);
+	// note: individual nsIRequest tests are called in:
+	// 1) BrowserImplWebProgLstner.cpp, nsIWebProgressListener::OnStateChange().
+	// 2) BrowserImpl.cpp, nsIStreamListener::OnDataAvailable()
 
-	if (myDialog.DoModal() == IDOK)
+	nsCString theSpec;
+	nsCOMPtr<nsIURI> theURI;
+	nsCOMPtr<nsIChannel> theChannel;
+	nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
+	nsCOMPtr<nsIRequest> theDefaultRequest;
+
+    CQaUtils::QAOutput("Start nsIRequest tests.", 2);	
+
+	theSpec = "http://www.netscape.com";
+    CQaUtils::FormatAndPrintOutput("the uri spec = ", theSpec, 2);
+
+	rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
+	if (!theURI)
 	{
-		// add web prog listener to track requests & invoke nsIRequest methods
-		nsWeakPtr weakling(
-        dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl))));
-		qaWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
-
-		// invoke a request. request picked up in OnStateChange().
-		strcpy(theUrl, myDialog.m_urlfield);
-		qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).GetUnicode(), 
-						  nsIWebNavigation::LOAD_FLAGS_NONE);
+       CQaUtils::QAOutput("We didn't get the URI. Test failed.", 1);
+	   return;
 	}
+	else
+	   CQaUtils::RvTestResult(rv, "NS_NewURI", 1);
 
-	// note: individual nsIRequest tests are called in BrowserImplWebProgLstner.cpp, OnStateChange().
-	
+    rv = NS_OpenURI(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
+	if (!theChannel)
+	{
+       CQaUtils::QAOutput("We didn't get the Channel. Test failed.", 1);
+	   return;
+	}
+	else if (!theLoadGroup)
+	{
+       CQaUtils::QAOutput("We didn't get the Load Group. Test failed.", 2);
+	   return;
+	}
+	else
+	   CQaUtils::RvTestResult(rv, "NS_OpenURI", 1);
+/*
+	IsPendingReqTest(theChannel);
+	GetStatusReqTest(theChannel);
+
+	SuspendReqTest(theChannel);	
+	CQaUtils::QAOutput("nsIRequest: Between Suspend and Resume.");
+	ResumeReqTest(theChannel);	
+
+//	CancelReqTest(theChannel);	
+
+	SetLoadGroupTest(theChannel, theLoadGroup);	
+	GetLoadGroupTest(theChannel);
+*/
+
+	nsCOMPtr<nsIStreamListener> sListener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
+    nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(sListener)));
+	qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
+
+	rv = theChannel->AsyncOpen(sListener, nsnull);
+	CQaUtils::RvTestResult(rv, "AsyncOpen()", 1);
+
 }
 
 void CTests::IsPendingReqTest(nsIRequest *request)
@@ -1073,101 +1110,225 @@ void CTests::GetLoadGroupTest(nsIRequest *request)
     CQaUtils::RvTestResult(rv, "nsIRequest:: LoadGroups' GetRequests() rv test", 1);
 }
 
+// *********** 2nd set of implementations for nsIRequest methods *********
+// ******************* Using nsIChannel as the impl object ***************
+
+void CTests::IsPendingReqTest(nsIChannel *channel)
+{
+	PRBool	  reqPending;
+	nsresult rv;
+
+	rv = channel->IsPending(&reqPending);
+    CQaUtils::RvTestResult(rv, "nsIRequest::IsPending() rv test", 1);
+
+	if (!reqPending)
+		CQaUtils::QAOutput("Pending request = false.", 1);
+	else
+		CQaUtils::QAOutput("Pending request = true.", 1);
+}
+
+void CTests::GetStatusReqTest(nsIChannel *channel)
+{
+	nsresult	theStatusError;
+	nsresult	rv;
+
+	rv = channel->GetStatus(&theStatusError);
+    CQaUtils::RvTestResult(rv, "nsIRequest::GetStatus() test", 1);
+    CQaUtils::RvTestResult(rv, "the returned status error test", 1);
+
+} 
+
+void CTests::SuspendReqTest(nsIChannel *channel)
+{
+	nsresult	rv;
+
+	rv = channel->Suspend();
+    CQaUtils::RvTestResult(rv, "nsIRequest::Suspend() test", 1);
+}
+
+void CTests::ResumeReqTest(nsIChannel *channel)
+{
+	nsresult	rv;
+
+	rv = channel->Resume();
+    CQaUtils::RvTestResult(rv, "nsIRequest::Resume() test", 1);
+}
+
+void CTests::CancelReqTest(nsIChannel *channel)
+{
+	nsresult	rv;
+	nsresult	status = NS_BINDING_ABORTED;
+
+	rv = channel->Cancel(status);
+    CQaUtils::RvTestResult(rv, "nsIRequest::Cancel() rv test", 1);
+    CQaUtils::RvTestResult(status, "nsIRequest::Cancel() status test", 1);
+}
+
+void CTests::SetLoadGroupTest(nsIChannel *channel,
+							  nsILoadGroup *theLoadGroup)
+{
+	nsresult	rv;
+	nsCOMPtr<nsISimpleEnumerator> theSimpEnum;
+
+	rv = channel->SetLoadGroup(theLoadGroup);
+    CQaUtils::RvTestResult(rv, "nsIRequest::SetLoadGroup() rv test", 1);
+}
+
+void CTests::GetLoadGroupTest(nsIChannel *channel)
+{
+	nsCOMPtr<nsILoadGroup> theLoadGroup;
+	nsresult	rv;
+	nsCOMPtr<nsISimpleEnumerator> theSimpEnum;
+
+	rv = channel->GetLoadGroup(getter_AddRefs(theLoadGroup));
+    CQaUtils::RvTestResult(rv, "nsIRequest::GetLoadGroup() rv test", 1);
+
+	rv = theLoadGroup->GetRequests(getter_AddRefs(theSimpEnum));
+    CQaUtils::RvTestResult(rv, "nsIRequest:: LoadGroups' GetRequests() rv test", 1);
+}
+
 // ***********************************************************************
 //DHARMA	- nsIClipboardCommands
 // Checking the paste() method.
 void CTests::OnPasteTest()
 {
- //   AfxMessageBox("testing paste command");
+    CQaUtils::QAOutput("testing paste command", 1);
     nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-        if (clipCmds)
-                clipCmds->Paste();
+    if (clipCmds)
+	{
+        rv = clipCmds->Paste();
+		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::Paste()' rv test", 1);
+
+	}
+	else
+		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the copySelection() method.
 void CTests::OnCopyTest()
 {
-//       AfxMessageBox("testing copyselection command");
-         nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-         if (clipCmds)
-                clipCmds->CopySelection();
+    CQaUtils::QAOutput("testing copyselection command");
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
+    if (clipCmds)
+	{
+        rv = clipCmds->CopySelection();
+		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CopySelection()' rv test", 1);
+	}
+	else
+		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the selectAll() method.
 void CTests::OnSelectAllTest()
 {
-         AfxMessageBox("testing selectall method");
-         nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-         if (clipCmds)
-                clipCmds->SelectAll();
+    CQaUtils::QAOutput("testing selectall method");
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
+    if (clipCmds)
+	{
+        rv = clipCmds->SelectAll();
+		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::SelectAll()' rv test", 1);
+	}
+	else
+		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the selectNone() method.
 void CTests::OnSelectNoneTest()
 {
-         AfxMessageBox("testing selectnone method");
-         nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-         if (clipCmds)
-                clipCmds->SelectNone();
+    CQaUtils::QAOutput("testing selectnone method");
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
+    if (clipCmds)
+	{
+        rv = clipCmds->SelectNone();
+		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::SelectNone()' rv test", 1);
+	}
+	else
+		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the cutSelection() method.
 void CTests::OnCutSelectionTest()
 {
-//       AfxMessageBox("testing cutselection method");
-         nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-         if (clipCmds)
-                clipCmds->CutSelection();
+    CQaUtils::QAOutput("testing cutselection method");
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
+    if (clipCmds)
+	{
+        rv = clipCmds->CutSelection();
+		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CutSelection()' rv test", 1);
+	}
+	else
+		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
 }
+
 // Checking the copyLinkLocation() method.
 void CTests::copyLinkLocationTest()
 {
-//       AfxMessageBox("testing cutselection method");
-         nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-         if (clipCmds)
-                clipCmds->CopyLinkLocation();
+    CQaUtils::QAOutput("testing CopyLinkLocation method", 2);
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
+    if (clipCmds)
+	{
+        rv = clipCmds->CopyLinkLocation();
+		CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CopyLinkLocation()' rv test", 1);
+	}
+	else
+		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the canCopySelection() method.
 void CTests::canCopySelectionTest()
 {
-        PRBool canCopySelection = PR_FALSE;
-        nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-        if (clipCmds)
-                clipCmds->CanCopySelection(&canCopySelection);
+    PRBool canCopySelection = PR_FALSE;
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
+    if (clipCmds)
+	{
+       rv = clipCmds->CanCopySelection(&canCopySelection);
+	   CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CanCopySelection()' rv test", 1);
 
-    if(canCopySelection)
-                AfxMessageBox("The selection you made Can be copied");
-        else
-                AfxMessageBox("Either you did not make a selection or The selection you made Cannot be copied");
+       if(canCopySelection)
+          CQaUtils::QAOutput("The selection you made Can be copied", 2);
+       else
+          CQaUtils::QAOutput("Either you did not make a selection or The selection you made Cannot be copied", 2);
+	}
+	else
+		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the canCutSelection() method.
 void CTests::canCutSelectionTest()
 {
-        PRBool canCutSelection = PR_FALSE;
-        nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-        if (clipCmds)
-                clipCmds->CanCutSelection(&canCutSelection);
+    PRBool canCutSelection = PR_FALSE;
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
+    if (clipCmds)
+	{
+       rv = clipCmds->CanCutSelection(&canCutSelection);
+	   CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CanCutSelection()' rv test", 1);
 
-    if(canCutSelection)
-                AfxMessageBox("The selection you made Can be cut");
-        else
-                AfxMessageBox("Either you did not make a selection or The selection you made Cannot be cut");
+	   if(canCutSelection)
+          CQaUtils::QAOutput("The selection you made Can be cut", 2);
+       else
+          CQaUtils::QAOutput("Either you did not make a selection or The selection you made Cannot be cut", 2);
+	}
+	else
+		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
 }
 
 // Checking the canPaste() method.
 void CTests::canPasteTest()
 {
-        PRBool canPaste = PR_FALSE;
-        nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
-        if (clipCmds)
-                clipCmds->CanPaste(&canPaste);
+    PRBool canPaste = PR_FALSE;
+    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(qaWebBrowser);
+    if (clipCmds)
+	{
+        rv = clipCmds->CanPaste(&canPaste);
+	    CQaUtils::RvTestResult(rv, "nsIClipboardCommands::CanPaste()' rv test", 1);
 
-    if(canPaste)
-                AfxMessageBox("The clipboard contents can be pasted here");
-        else
-                AfxMessageBox("The clipboard contents cannot be pasted here");
+		if(canPaste)
+			CQaUtils::QAOutput("The clipboard contents can be pasted here", 2);
+		else
+			CQaUtils::QAOutput("The clipboard contents cannot be pasted here", 2);
+	}
+	else
+		CQaUtils::QAOutput("We didn't get the clipboard object.", 1);
 }
 
 //DHARMA

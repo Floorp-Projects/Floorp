@@ -136,10 +136,6 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 			strcpy(theStateType, "STATE_STOP");
 			displayMode = 2;
 
-			CTests::SuspendReqTest(request);	// nsIRequest::Suspend() test
-			CQaUtils::QAOutput("Between Suspend and Resume.");
-			CTests::ResumeReqTest(request);		// nsIRequest::Resume() test
-
 			m_pBrowserFrameGlue->UpdateBusyState(PR_FALSE);
 			m_pBrowserFrameGlue->UpdateProgress(0, 100);       // Clear the prog bar
 			m_pBrowserFrameGlue->UpdateStatusBarText(nsnull);  // Clear the status bar
@@ -157,20 +153,13 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 		{
 			strcpy(theStateType, "STATE_START");
 
-			// nsIRequest tests
+			// a few nsIRequest tests
 			CTests::IsPendingReqTest(request);
 			CTests::GetStatusReqTest(request);
 
 			CTests::SuspendReqTest(request);	
 			CQaUtils::QAOutput("Between Suspend and Resume.");
 			CTests::ResumeReqTest(request);	
-/*
-//			CTests::CancelReqTest(request);	
-
-			nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
-//			CTests::SetLoadGroupTest(request, theLoadGroup);	// getting a crash. investigate!
-//			CTests::GetLoadGroupTest(request);
-*/
 		}
 		else if (progressStateFlags & STATE_REDIRECTING)
 			strcpy(theStateType, "STATE_REDIRECTING");
@@ -296,7 +285,7 @@ CBrowserImpl::OnStatusChange(nsIWebProgress* aWebProgress,
 	CQaUtils::RequestName(aRequest, stringMsg);
 
 			// status result test
-//	CQaUtils::RvTestResult(aStatus, "OnStatusChange(): status result test", 2);
+	CQaUtils::RvTestResult(aStatus, "OnStatusChange(): status result test", 2);
 
 			// web progress DOMWindow test
 	CQaUtils::WebProgDOMWindowTest(aWebProgress, "OnStatusChange()", 1);

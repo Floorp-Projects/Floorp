@@ -159,6 +159,14 @@ public:
 	void static CancelReqTest(nsIRequest *);
 	void static SetLoadGroupTest(nsIRequest *, nsILoadGroup *);
 	void static GetLoadGroupTest(nsIRequest *);
+
+	void static IsPendingReqTest(nsIChannel *);
+	void static GetStatusReqTest(nsIChannel *);
+	void static SuspendReqTest(nsIChannel *);
+	void static ResumeReqTest(nsIChannel *);
+	void static CancelReqTest(nsIChannel *);
+	void static SetLoadGroupTest(nsIChannel *, nsILoadGroup *);
+	void static GetLoadGroupTest(nsIChannel *);
 };
 
 #endif //_TESTS_H
