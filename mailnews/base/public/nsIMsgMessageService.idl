@@ -7,6 +7,8 @@
  *
  * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+
+
  * for the specific language governing rights and limitations under the
  * NPL.
  *
@@ -21,33 +23,45 @@ interface nsIUrlListener;
 interface nsIURL;
 interface nsIStreamListener;
 
-[object, uuid(F11009C1-F697-11d2-807F-006008128C4E)]
+[uuid(F11009C1-F697-11d2-807F-006008128C4E)]
 interface nsIMsgMessageService : nsISupports {
-	/////////////////////////////////////////////////////////////////////////////////////////////
-	// If you want a handle on the running task, pass in a valid nsIURL ptr. You can later 
-	// interrupt this action by asking the netlib service manager to interrupt the url you are given 
-	// back. Remember to release aURL when you are done with it. Pass nsnull in for aURL if you don't 
-	// care about the returned URL.
-	/////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/////////////////////////////////////////////////////////////////////////////////////////////
-	// CopyMessage: Pass in the URI for the message you want to have copied. 
-	// aCopyListener already knows about the destination folder. Set aMoveMessage to PR_TRUE 
-	// if you want the message to be moved. PR_FALSE leaves it as just a copy.
-	/////////////////////////////////////////////////////////////////////////////////////////////
 
-	void CopyMessage(in string aSrcURI, in nsIStreamListener aCopyListener, in bool aMoveMessage,
+%{ C++
+     
+     /////////////////////////////////////////////////////////////////
+     // If you want a handle on the running task, pass in a valid nsIURL 
+     // ptr. You can later interrupt this action by asking the netlib 
+     // service manager to interrupt the url you are given back. 
+     // Remember to release aURL when you are done with it. Pass nsnull
+     // in for aURL if you don't  care about the returned URL.
+     /////////////////////////////////////////////////////////////////
+
+
+     /////////////////////////////////////////////////////////////////
+     // CopyMessage: Pass in the URI for the message you want to have 
+     // copied.
+     // aCopyListener already knows about the destination folder. 
+     // Set aMoveMessage to PR_TRUE if you want the message to be moved.
+     // PR_FALSE leaves it as just a copy.
+     ///////////////////////////////////////////////////////////////
+  
+%}
+
+	void CopyMessage(in string aSrcURI, in nsIStreamListener aCopyListener, in boolean aMoveMessage,
 						   in nsIUrlListener aUrlListener, out nsIURL aURL);
-	//	NS_IMETHOD CopyMessages(PRUnichar * aSrcMailboxURI[], PRBool moveMessage);
 
-	/////////////////////////////////////////////////////////////////////////////////////////////
-	// DisplayMessage: When you want a message displayed....
-	// aMessageURI is a uri representing the message to display.
-	// aDisplayConsumer is (for now) a nsIWebshell which we'll use to load the message into. 
-	// It would be nice if we can figure this out for ourselves in the protocol but we can't do 
-	// that right now. 
-	//////////////////////////////////////////////////////////////////////////////////////////////
+%{ C++
+
+     /////////////////////////////////////////////////////////////////////
+     //  DisplayMessage: When you want a message displayed....
+     //  aMessageURI is a uri representing the message to display.
+     //  aDisplayConsumer is (for now) a nsIWebshell which we'll use to load 
+     // the message into. 
+     // It would be nice if we can figure this out for ourselves in the 
+     // protocol but we can't do that right now. 
+     ///////////////////////////////////////////////////////////////////
+%}
 	void DisplayMessage(in string aMessageURI, in nsISupports aDisplayConsumer, 
-							  in nsIUrlListener aUrlListener, out nsIURL ** aURL);
+							  in nsIUrlListener aUrlListener, out nsIURL aURL);
 
 };
