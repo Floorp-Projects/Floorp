@@ -1359,12 +1359,6 @@ function applyTheme(themeName)
 
   chromeRegistry.selectSkin(name, true);                                        
   chromeRegistry.refreshSkins(); 
- 
-}
-
-function getNewThemes()
-{
-  loadURI(gBrandRegionBundle.getString("getNewThemesURL"));
 }
 
 function URLBarFocusHandler(aEvent)
