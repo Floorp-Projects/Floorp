@@ -57,6 +57,27 @@ nsContainerFrame::~nsContainerFrame()
 }
 
 NS_IMETHODIMP
+nsContainerFrame::Init(nsIPresContext*  aPresContext,
+                       nsIContent*      aContent,
+                       nsIFrame*        aParent,
+                       nsIStyleContext* aContext,
+                       nsIFrame*        aPrevInFlow)
+{
+  nsresult rv;
+  rv = nsSplittableFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  if (aPrevInFlow) {
+    // Make sure we copy bits from our prev-in-flow that will affect
+    // us. A continuation for a container frame needs to know if it
+    // has a child with a view so that we'll properly reposition it.
+    nsFrameState state;
+    aPrevInFlow->GetFrameState(&state);
+    if (state & NS_FRAME_HAS_CHILD_WITH_VIEW)
+      mState |= NS_FRAME_HAS_CHILD_WITH_VIEW;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
 nsContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
