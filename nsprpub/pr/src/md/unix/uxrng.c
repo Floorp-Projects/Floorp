@@ -65,10 +65,15 @@ GetHighResClock(void *buf, size_t maxbytes)
 #elif defined(HPUX)
 
 #ifdef __ia64
+#include <ia64/sys/inline.h>
+
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
 {
-    return 0;
+    PRUint64 t;
+
+    t = _Asm_mov_from_ar(_AREG44);
+    return _pr_CopyLowBits(buf, maxbytes, &t, sizeof(t));
 }
 #else
 static size_t
