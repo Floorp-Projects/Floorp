@@ -190,15 +190,17 @@ nsresult RDFFactoryImpl::LockFactory(PRBool aLock)
 
 // return the proper factory to the caller
 extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+NSGetFactory(const nsCID &aClass, nsISupports* aServiceManager, nsIFactory **aFactory)
 {
     if (! aFactory)
         return NS_ERROR_NULL_POINTER;
 
-    *aFactory = new RDFFactoryImpl(aClass);
-    if (aFactory == nsnull)
+    RDFFactoryImpl* factory = new RDFFactoryImpl(aClass);
+    if (factory == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+    NS_ADDREF(factory);
+    *aFactory = factory;
+    return NS_OK;
 }
 
