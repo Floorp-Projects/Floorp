@@ -296,11 +296,17 @@ process_list(TreeState *state)
 static gboolean 
 xpcom_to_java_type (TreeState *state) 
 {
+    IDL_tree real_type;
+
     if (!state->tree) {
         fputs("Object", FILENAME(state));
         return TRUE;
     }
 
+    /* Could be a typedef; try to map it to the real type */
+
+    real_type = find_underlying_type(state->tree);
+    state->tree = real_type ? real_type : state->tree;
 
     switch(IDL_NODE_TYPE(state->tree)) {
 
@@ -421,7 +427,6 @@ xpcom_to_java_type (TreeState *state)
 
                 if (real_type) {
                     IDL_tree orig_tree = state->tree;
-
                     state->tree = real_type;
                     xpcom_to_java_type(state);
 
@@ -499,7 +504,8 @@ type_declaration(TreeState *state)
      */
     IDL_tree type = IDL_TYPE_DCL(state->tree).type_spec;
     IDL_tree dcls = IDL_TYPE_DCL(state->tree).dcls;
-
+ 
+    
     /* XXX: check for illegal types */
 
     g_hash_table_insert(TYPEDEFS(state),
@@ -660,10 +666,16 @@ constant_declaration(TreeState *state)
     struct _IDL_CONST_DCL *declaration = &IDL_CONST_DCL(state->tree);
     const char *name = IDL_IDENT(declaration->ident).str;
 
+    IDL_tree real_type;
+
     gboolean success;
     gboolean isshort = FALSE;
     GSList *doc_comments = IDL_IDENT(declaration->ident).comments;
 
+    /* Could be a typedef; try to map it to the real type. */
+    real_type = find_underlying_type(declaration->const_type);
+    real_type = real_type ? real_type : declaration->const_type;
+    
     /*
      * Consts must be in an interface
      */
@@ -683,7 +695,7 @@ constant_declaration(TreeState *state)
      * Make sure this is a numeric short or long constant.
      */
 
-    success = (IDLN_TYPE_INTEGER == IDL_NODE_TYPE(declaration->const_type));
+    success = (IDLN_TYPE_INTEGER == IDL_NODE_TYPE(real_type));
 
     if (success) {
         /*
@@ -691,7 +703,7 @@ constant_declaration(TreeState *state)
          * of integer?
          */
 
-        switch(IDL_TYPE_INTEGER(declaration->const_type).f_type) {
+        switch(IDL_TYPE_INTEGER(real_type).f_type) {
 
         case IDL_INTEGER_TYPE_SHORT:
             /*

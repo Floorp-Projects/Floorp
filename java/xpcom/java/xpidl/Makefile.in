@@ -32,8 +32,8 @@ PROGRAM		= xpidl$(BIN_SUFFIX)
 INTERNAL_TOOLS	= 1
 
 CSRCS		= \
-		xpidl.c \
-		xpidl_idl.c \
+		$(XPIDLDIR)/xpidl.c \
+		$(XPIDLDIR)/xpidl_idl.c \
 		$(XPIDLDIR)/xpidl_util.c \
 		$(XPIDLDIR)/xpidl_header.c \
 		$(XPIDLDIR)/xpidl_typelib.c \
