@@ -1994,12 +1994,6 @@ function cli_ijoin (e)
 
         e.channel = e.server.addChannel (name);
         e.channel.join(key);
-        if (!("messages" in e.channel))
-        {
-            e.channel.display (getMsg("cli_ijoinMsg3", e.channel.unicodeName),
-                               "INFO");
-        }
-        setCurrentObject(e.channel);
     }
 
     return true;
@@ -3276,6 +3270,11 @@ function my_cjoin (e)
 
     if (userIsMe (e.user))
     {
+        if (!("messages" in this))
+        {
+            this.display (getMsg("cli_ijoinMsg3", this.unicodeName),
+                          "INFO");
+        }
         this.display (getMsg("my_cjoinMsg", e.channel.unicodeName), "JOIN",
                       e.server.me, this);
         setCurrentObject(this);
