@@ -59,6 +59,10 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
+		nsPrintEngine.cpp \
+		nsPrintData.cpp \
+		nsPrintObject.cpp \
+		nsPagePrintTimer.cpp \
 		nsPrintPreviewListener.cpp \
 		nsCommentNode.cpp \
 		nsContentIterator.cpp \

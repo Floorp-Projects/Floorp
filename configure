@@ -14244,6 +14244,10 @@ cat >> confdefs.h <<\EOF
 #define NS_PRINT_PREVIEW 1
 EOF
 
+cat >> confdefs.h <<\EOF
+#define NS_PRINTING 1
+EOF
+
 
 if test "$MOZ_DEBUG"; then
     cat >> confdefs.h <<\EOF
