@@ -29,12 +29,19 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= absyncsvc
 LIBRARY_NAME	= absyncsvc
 IS_COMPONENT	= 1
+SHORT_LIBNAME	= absync
+
+ifeq ($(USE_SHORT_LIBNAME),1)
+EXTRA_DSO_LIBS	= msgbutil
+else
+EXTRA_DSO_LIBS	= msgbaseutil
+endif
 
 CPPSRCS		= nsAbSyncFactory.cpp
 EXPORTS		= nsAbSyncCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libabsync_s.a \
+		$(DIST)/lib/libabsync_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -42,7 +49,7 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
-		-lmsgbaseutil \
+		$(EXTRA_DSO_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
