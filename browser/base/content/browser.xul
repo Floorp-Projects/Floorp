@@ -402,7 +402,6 @@ Contributor(s):
                       command="cmd_newNavigator"/>
             <menuitem command="cmd_newNavigatorTab" key="key_newNavigatorTab"
                       label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
-            <menuitem label="New Furniture from IKEA"/>
             <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
             <menuitem id="menu_close"/>
             <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
@@ -601,8 +600,6 @@ Contributor(s):
                 </template>
               </menupopup>
             </menu>
-            <menuseparator/>
-            <menuitem label="Movies @ Netflix.com!"/>
           </menupopup>
         </menu>
     
@@ -663,7 +660,6 @@ Contributor(s):
                       label="&manBookmarksCmd.label;"
                       accesskey="&manBookmarksCmd.accesskey;"    
                       command="Browser:ManageBookmark"/>
-            <menuitem label="Get Books at Borders.com"/>
             <menuseparator/>
           </menupopup>
         </menu>
@@ -679,8 +675,6 @@ Contributor(s):
               <menuitem label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" oncommand="toJavaScriptConsole();"/>
             </menupopup>
           </menu>
-          <menuseparator/>
-          <menuitem label="Buy More Tools from Home Depot"/>
         </menupopup>
       </menu>
       
@@ -690,7 +684,6 @@ Contributor(s):
           <menuitem accesskey="&releaseCmd.accesskey;"
                     label="&releaseCmd.label;"
                     oncommand="openTopWin('&releaseURL;');"/>
-          <menuitem label="Need Advice? Call 1-800-PSYCHIC"/>
           <menuseparator/>
           <menuitem accesskey="&aboutCommPluginsCmd.accesskey;"
                     label="&aboutCommPluginsCmd.label;"
