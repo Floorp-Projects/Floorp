@@ -10093,7 +10093,7 @@ GetAlternateTextFor(nsIContent* aContent,
       // for "Submit" as the alternate text.
       if (NS_CONTENT_ATTR_NOT_THERE == rv) {
         nsFormControlHelper::GetLocalizedString(nsFormControlHelper::GetHTMLPropertiesFileName(),
-                                                "Submit", aAltText);      
+                                                NS_LITERAL_STRING("Submit").get(), aAltText);      
       }
     }
   }
