@@ -103,8 +103,8 @@ NET_ScanForURLs(
 #ifndef MOZILLA_30
 				MSG_Pane* pane,
 #endif /* !MOZILLA_30 */
-				const char *input, PRInt32 input_size,
-				char *output, int output_size, PRBool urls_only)
+				const char *input, int32 input_size,
+				char *output, int output_size, XP_Bool urls_only)
 {
   int col = 0;
   const char *cp;
