@@ -247,6 +247,9 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
       [mTabBrowser setFrame:NSMakeRect([mTabBrowser frame].origin.x, [mTabBrowser frame].origin.y,
                                [mTabBrowser frame].size.width, [mTabBrowser frame].size.height + height)];
     }
+    else if (![self shouldShowBookmarkToolbar]) {
+      [mPersonalToolbar showBookmarksToolbar:NO];
+    }
     
 }
 
@@ -1032,6 +1035,15 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
     zoom = 0.01;
 
   markupViewer->SetTextZoom(zoom);
+}
+
+- (BOOL)shouldShowBookmarkToolbar
+{
+  NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
+  if ([defaults integerForKey:@"Personal TB Is Shown"] == 0)
+     return NO;
+
+  return YES;
 }
 
 -(id)getAddBookmarkSheetWindow

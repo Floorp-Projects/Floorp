@@ -182,6 +182,8 @@ class nsIDOMNode;
 -(void) biggerTextSize;
 -(void) smallerTextSize;
 
+- (BOOL)shouldShowBookmarkToolbar;
+
 - (void)addBookmarkExtended: (BOOL)aIsFromMenu isFolder:(BOOL)aIsFolder;
 - (IBAction)manageBookmarks: (id)aSender;
 - (void)importBookmarks: (NSString*)aURLSpec;

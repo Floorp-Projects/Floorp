@@ -19,6 +19,7 @@
 *
 * Contributor(s):
 *   David Hyatt <hyatt@netscape.com> (Original Author)
+*   Kathy Brade <brade@netscape.com>
 */
 
 #import "CHBookmarksButton.h"
@@ -36,6 +37,7 @@
     mDragInsertionButton = nil;
     mDragInsertionPosition = BookmarksService::CHInsertNone;
     [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", nil]];
+    mIsShowing = YES;
   }
   return self;
 }
@@ -100,6 +102,7 @@
     temp->GetNextSibling(getter_AddRefs(child));
   }
 
+  if ([self isShown])
   [self reflowButtons];
 }
 
@@ -109,7 +112,8 @@
   [button setElement: aElt];
   [self addSubview: button];
   [mButtons insertObject: button atIndex: aIndex];
-  [self reflowButtonsStartingAtIndex: aIndex];
+  if ([self isShown])
+    [self reflowButtonsStartingAtIndex: aIndex];
 }
 
 -(void)removeButton: (nsIDOMElement*)aElt
@@ -120,13 +124,13 @@
     if ([button element] == aElt) {
       [mButtons removeObjectAtIndex: i];
       [button removeFromSuperview];
-      if (count > i)
+      if (count > i && [self isShown])
         [self reflowButtonsStartingAtIndex: i];
       break;
     }
   }
 
-  [self setNeedsDisplay: YES];
+  [self setNeedsDisplay: [self isShown]];
 }
 
 -(void)reflowButtons
@@ -177,7 +181,7 @@
   if (computedHeight != oldHeight) {
     [self setFrame: NSMakeRect([self frame].origin.x, [self frame].origin.y + (oldHeight - computedHeight),
                                [self frame].size.width, computedHeight)];
-    [self setNeedsDisplay: YES];
+    [self setNeedsDisplay: [self isShown]];
     
     // adjust the content area.
     float sizeChange = computedHeight - oldHeight;
@@ -228,6 +232,11 @@
   }
 }
 
+-(BOOL)isShown
+{
+  return mIsShowing;
+}
+
 -(void)showBookmarksToolbar: (BOOL)aShow
 {
   if (!aShow) {
@@ -239,9 +248,11 @@
     [view setFrame: NSMakeRect([view frame].origin.x, [view frame].origin.y,
                                [view frame].size.width, [view frame].size.height + height)];
   }
-  //else
+  else
     // Reflowing the buttons will do the right thing.
-  //  [self reflowButtons];
+    [self reflowButtons];
+    
+  mIsShowing = aShow;
 }
 
 - (void)setButtonInsertionPoint:(NSPoint)aPoint
@@ -385,7 +396,7 @@
 
   mDragInsertionButton = nil;
   mDragInsertionPosition = BookmarksService::CHInsertNone;
-  [self setNeedsDisplay:YES];
+  [self setNeedsDisplay: [self isShown]];
 
   return YES;    
 }
