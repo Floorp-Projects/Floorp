@@ -278,7 +278,7 @@ nsContextMenu.prototype = {
     },
     // Save URL of clicked-on image.
     saveImage : function () {
-        this.savePage( this.imageURL() );
+        this.savePage( this.imageURL );
     },
     // Save URL of background image.
     saveBGImage : function () {
@@ -290,7 +290,7 @@ nsContextMenu.prototype = {
     },
     // Generate image URL and put it on the clipboard.
     copyImage : function () {
-        this.copyToClipboard( this.imageURL() );
+        this.copyToClipboard( this.imageURL );
     },
     // Utilities
     // Show/hide one item (specified via name or the item element itself).
@@ -366,10 +366,6 @@ nsContextMenu.prototype = {
     // Generate fully-qualified URL for clicked-on link.
     linkURL : function () {
         return this.link.href;
-    },
-    // Generate fully-qualified URL for clicked-on image.
-    imageURL : function () {
-        return this.target.src;
     },
     // Returns "true" if there's no text selected, null otherwise.
     isNoTextSelected : function ( event ) {
