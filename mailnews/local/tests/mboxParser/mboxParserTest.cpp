@@ -39,7 +39,7 @@
 #include "nsITransport.h"
 #include "nsIURL.h"
 #include "nsINetService.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsString.h"
 
 #include "nsParseMailbox.h"

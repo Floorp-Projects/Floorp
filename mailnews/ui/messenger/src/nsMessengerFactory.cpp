@@ -20,11 +20,11 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsMsgAppCore.h"
-
-#include "nsRepository.h"
-
+#include "nsIComponentManager.h"
 #include "pratom.h"
+#include "nsIServiceManager.h"
 
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCMsgAppCoreCID, NS_MSGAPPCORE_CID);
 
 static PRInt32 g_InstanceCount = 0;
@@ -126,13 +126,13 @@ nsresult nsMessengerFactory::LockFactory(PRBool aLock)
 // begin DLL exports
 //
 nsresult
-NSGetFactory(nsISupports* serviceMgr,
+NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
              const char *aClassName,
              const char *aProgID,
              nsIFactory **aFactory)
 {
-#ifdef DEBUG
+#ifdef NS_DEBUG
     printf("messenger: NSGetFactory()\n");
 #endif
 	if (nsnull == aFactory)
@@ -149,32 +149,40 @@ NSGetFactory(nsISupports* serviceMgr,
 
 
 PRBool
-NSCanUnload(nsISupports* serviceMgr)
+NSCanUnload(nsISupports* aServMgr)
 {
-#ifdef DEBUG
+#ifdef NS_DEBUG
     printf("messenger: NSCanUnload()\n");
 #endif
     return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
 nsresult
-NSRegisterSelf(nsISupports* serviceMgr, const char *fullpath)
+NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
 {
-#ifdef DEBUG
+    nsresult rv;
+    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef NS_DEBUG
     printf("messenger: NSRegisterSelf()\n");
 #endif
-    return nsRepository::RegisterComponent(kCMsgAppCoreCID,
-                                           "Messenger AppCore",
-                                           "component://netscape/appcores/messenger",
-                                           fullpath,
-                                           PR_TRUE, PR_TRUE);
+    return compMgr->RegisterComponent(kCMsgAppCoreCID,
+                                      "Messenger AppCore",
+                                      "component://netscape/appcores/messenger",
+                                      fullpath,
+                                      PR_TRUE, PR_TRUE);
 }
     
 nsresult
-NSUnregisterSelf(nsISupports* serviceMgr, const char *fullpath)
+NSUnregisterSelf(nsISupports* aServMgr, const char *fullpath)
 {
-#ifdef DEBUG
+    nsresult rv;
+    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef NS_DEBUG
     printf("messenger: NSUnregisterSelf()\n");
 #endif
-    return nsRepository::UnregisterComponent(kCMsgAppCoreCID, fullpath);
+    return compMgr->UnregisterComponent(kCMsgAppCoreCID, fullpath);
 }

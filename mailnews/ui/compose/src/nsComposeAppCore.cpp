@@ -285,14 +285,11 @@ nsComposeAppCore::NewMessage(const nsString& aUrl)
 {
 	static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
-	nsIAppShellService* appShell;
 	char *  urlstr=nsnull;
 	nsresult rv;
 	nsString controllerCID;
 
-	rv = nsServiceManager::GetService(kAppShellServiceCID,
-									  nsIAppShellService::GetIID(),
-									  (nsISupports**)&appShell);
+	nsService<nsIAppShellService> appShell(kAppShellServiceCID, &rv);
 	nsIURL* url;
 	nsIWidget* newWindow;
   
@@ -312,9 +309,6 @@ nsComposeAppCore::NewMessage(const nsString& aUrl)
                                    650);        // height
 done:
 	NS_RELEASE(url);
-	if (nsnull != appShell) {
-		nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-	}
 	return NS_OK;
 }
 
@@ -342,23 +336,23 @@ nsComposeAppCore::SendMessage(const nsString& aAddrFrom, const nsString& aSmtp, 
 
 	// register our dll
     const char* compose_dll = "msgcompose.dll";
-	nsRepository::RegisterComponent(kMsgComposeCID,
+	nsComponentManager::RegisterComponent(kMsgComposeCID,
                                   "Netscape Mail Composer AppCore",
 				  NULL,
                                   compose_dll,
                                   PR_FALSE, PR_FALSE);
-	nsRepository::RegisterComponent(kMsgCompFieldsCID,
+	nsComponentManager::RegisterComponent(kMsgCompFieldsCID,
                                   "Netscape Mail Composer Fields",
   				  NULL,
                                   compose_dll,
                                   PR_FALSE, PR_FALSE);
-	nsRepository::RegisterComponent(kMsgSendCID,
+	nsComponentManager::RegisterComponent(kMsgSendCID,
                                   "Netscape Mail Sender",
 				  NULL,
                                   compose_dll,
                                   PR_FALSE, PR_FALSE);
 
-	res = nsRepository::CreateInstance(kMsgSendCID, 
+	res = nsComponentManager::CreateInstance(kMsgSendCID, 
                                                NULL, 
                                                kIMsgSendIID, 
                                                (void **) &pMsgSend); 
@@ -367,7 +361,7 @@ nsComposeAppCore::SendMessage(const nsString& aAddrFrom, const nsString& aSmtp, 
 		printf("We succesfully obtained a nsIMsgSend interface....\n");
 /* 		pMsgSend->Test(); */
 
-		res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
+		res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, 
 													NULL, 
 													kIMsgCompFieldsIID, 
 													(void **) &pMsgCompFields); 

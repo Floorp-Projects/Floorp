@@ -29,7 +29,9 @@
 #include "nsMsgComposeFact.h"
 #include "nsMsgCompFieldsFact.h"
 #include "nsMsgSendFact.h"
+#include "nsIServiceManager.h"
 
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_CID(kCMsgComposeCID, NS_MSGCOMPOSE_CID);
@@ -175,7 +177,7 @@ nsresult nsMsgComposeFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
                                            const char *aProgID,
@@ -194,32 +196,40 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 		return NS_ERROR_OUT_OF_MEMORY;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr) 
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
 {
     return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char* path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
-	nsresult ret;
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-	ret = nsRepository::RegisterComponent(kCMsgComposeCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-	ret = nsRepository::RegisterComponent(kCSmtpServiceCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-	ret = nsRepository::RegisterComponent(kCMsgCompFieldsCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-	ret = nsRepository::RegisterComponent(kCMsgSendCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
-
-	return ret;
+	rv = compMgr->RegisterComponent(kCMsgComposeCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+	rv = compMgr->RegisterComponent(kCSmtpServiceCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+	rv = compMgr->RegisterComponent(kCMsgCompFieldsCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+	rv = compMgr->RegisterComponent(kCMsgSendCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+	return rv;
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
+NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
-	nsresult ret;
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
-	ret = nsRepository::UnregisterComponent(kCMsgComposeCID, path);
-	ret = nsRepository::UnregisterComponent(kCSmtpServiceCID, path);
-    ret = nsRepository::UnregisterComponent(kCMsgCompFieldsCID, path);
-	ret = nsRepository::UnregisterComponent(kCMsgSendCID, path);
-
-	return ret;
+	rv = compMgr->UnregisterComponent(kCMsgComposeCID, path);
+  if (NS_FAILED(rv)) return rv;
+	rv = compMgr->UnregisterComponent(kCSmtpServiceCID, path);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->UnregisterComponent(kCMsgCompFieldsCID, path);
+  if (NS_FAILED(rv)) return rv;
+	rv = compMgr->UnregisterComponent(kCMsgSendCID, path);
+	return rv;
 }

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "nsRepository.h" 
+#include "nsIComponentManager.h" 
 #include "nsMsgBaseCID.h"
 #include "nsIMsgRFC822Parser.h"
 
@@ -17,9 +17,9 @@ static NS_DEFINE_CID(kMsgRFC822ParserCID, NS_MSGRFC822PARSER_CID);
    nsIMsgRFC822Parser *sample; 
 
    // register our dll
-   nsRepository::RegisterComponent(kMsgRFC822ParserCID, NULL, NULL, "mailnews.dll", PR_FALSE, PR_FALSE);
+   nsComponentManager::RegisterComponent(kMsgRFC822ParserCID, NULL, NULL, "mailnews.dll", PR_FALSE, PR_FALSE);
    
-   nsresult res = nsRepository::CreateInstance(kMsgRFC822ParserCID, 
+   nsresult res = nsComponentManager::CreateInstance(kMsgRFC822ParserCID, 
                                                NULL, 
                                                nsIMsgRFC822Parser::GetIID(), 
                                                (void **) &sample); 

@@ -19,6 +19,9 @@
 /* Include files we are going to want available to all files....these files include
    NSPR, memory, and string header files among others */
 
+#ifndef msgCore_h__
+#define msgCore_h__
+
 #include "nscore.h"
 #include "xp_core.h"
 #include "nsCRT.h"
@@ -31,10 +34,11 @@
 
 #include "nsCRT.h"
 #include "nsEscape.h"
+#include "nsFileSpec.h"
 
 // include common interfaces such as the service manager and the repository....
 #include "nsIServiceManager.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 /* NS_ERROR_MODULE_MAILNEWS is defined in mozilla/xpcom/public/nsError.h */
 
@@ -99,3 +103,28 @@ NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_MAILNEWS, value)
 #    endif /* XP_UNIX */
 #  endif /* XP_WIN */
 #endif /* XP_MAC */
+
+////////////////////////////////////////////////////////////////////////////////
+// URI Utilities for RDF
+
+static const char kMailboxRootURI[] = "mailbox:/";
+static const char kMessageRootURI[] = "mailbox_message:/";
+
+extern nsresult
+nsGetMailboxRoot(nsFileSpec &result);
+
+extern nsresult
+nsGetMailFolderSeparator(nsString& result);
+
+extern nsresult
+nsURI2Path(const char* rootURI, char* uriStr, nsFileSpec& pathResult);
+
+extern nsresult
+nsPath2URI(const char* rootURI, nsFileSpec& path, char* *uri);
+
+extern nsresult
+nsURI2Name(const char* rootURI, char* uriStr, nsString& name);
+
+////////////////////////////////////////////////////////////////////////////////
+
+#endif

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "nsRepository.h" 
+#include "nsIComponentManager.h" 
 #include "nsMsgCompCID.h"
 #include "nsIMsgCompose.h"
 #include "nsIMsgCompFields.h"
@@ -29,11 +29,11 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 	nsresult res;
 
 	// register our dll
-	nsRepository::RegisterComponent(kMsgComposeCID, NULL, NULL, "msgcompose.dll", PR_FALSE, PR_FALSE);
-	nsRepository::RegisterComponent(kMsgCompFieldsCID, NULL, NULL, "msgcompose.dll", PR_FALSE, PR_FALSE);
-	nsRepository::RegisterComponent(kMsgSendCID, NULL, NULL, "msgcompose.dll", PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kMsgComposeCID, NULL, NULL, "msgcompose.dll", PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kMsgCompFieldsCID, NULL, NULL, "msgcompose.dll", PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kMsgSendCID, NULL, NULL, "msgcompose.dll", PR_FALSE, PR_FALSE);
 
-	res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
+	res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, 
                                            NULL, 
                                            nsIMsgCompFields::GetIID(), 
                                            (void **) &pMsgCompFields); 
@@ -71,7 +71,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 		pMsgCompFields->SetAttachVCard(PR_TRUE, NULL);
 
 		nsIMsgCompFields * pCopyFields;
-		res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
+		res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, 
 												NULL, 
 												nsIMsgCompFields::GetIID(), 
 												(void **) &pCopyFields); 
@@ -96,7 +96,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
      pMsgCompFields->Release(); 
    } 
 
-    res = nsRepository::CreateInstance(kMsgComposeCID, 
+    res = nsComponentManager::CreateInstance(kMsgComposeCID, 
                                                NULL, 
                                                nsIMsgCompose::GetIID(), 
                                                (void **) &pMsgCompose); 
@@ -109,7 +109,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
      pMsgCompose->Release(); 
    } 
  
-	res = nsRepository::CreateInstance(kMsgSendCID, 
+	res = nsComponentManager::CreateInstance(kMsgSendCID, 
                                                NULL, 
                                                kIMsgSendIID, 
                                                (void **) &pMsgSend); 
@@ -118,7 +118,7 @@ static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 		printf("We succesfully obtained a nsIMsgSend interface....\n");
 /*		pMsgSend->Test(); */
 
-		res = nsRepository::CreateInstance(kMsgCompFieldsCID, 
+		res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, 
 													NULL, 
 													kIMsgCompFieldsIID, 
 													(void **) &pMsgCompFields); 

@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #define NS_MSGCOMPOSE_CID						  \
 { /* EB5BDAF8-BBC6-11d2-A6EC-0060B0EB39B5 */      \

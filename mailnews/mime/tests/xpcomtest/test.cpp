@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "nsRepository.h" 
+#include "nsIComponentManager.h" 
 #include "nsRFC822toHTMLStreamConverter.h"
 #include "nsMimeObjectClassAccess.h"
 
@@ -16,12 +16,12 @@ int main(int argc, char *argv[])
   nsMimeObjectClassAccess	*objAccess;
   
   // register our dll
-  nsRepository::RegisterComponent(kRFC822toHTMLStreamConverterCID, NULL, NULL,
+  nsComponentManager::RegisterComponent(kRFC822toHTMLStreamConverterCID, NULL, NULL,
                                 "mime.dll", PR_FALSE, PR_FALSE);
-  nsRepository::RegisterComponent(kMimeObjectClassAccessCID, NULL, NULL,
+  nsComponentManager::RegisterComponent(kMimeObjectClassAccessCID, NULL, NULL,
                                 "mime.dll", PR_FALSE, PR_FALSE);
   
-  nsresult res = nsRepository::CreateInstance(kRFC822toHTMLStreamConverterCID, 
+  nsresult res = nsComponentManager::CreateInstance(kRFC822toHTMLStreamConverterCID, 
                     NULL, nsIStreamConverter::GetIID(), (void **) &sample); 
   if (res == NS_OK && sample) 
   { 
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
   } 
 
   printf("Time for try the nsMimeObjectClassAccess class...\n");
-  res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
+  res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
                     NULL, nsIMimeObjectClassAccess::GetIID(), 
                     (void **) &objAccess); 
   if (res == NS_OK && objAccess) 

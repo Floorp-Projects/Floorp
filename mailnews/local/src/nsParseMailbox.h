@@ -26,10 +26,10 @@
 #include "nsMsgLineBuffer.h"
 #include "nsMsgRFC822Parser.h"
 
-class nsFilePath;
+class nsFileSpec;
 class nsByteArray;
 class nsMailDatabase;
-class nsMsgHdr;
+class nsIMessage;
 class nsOutputFileStream;
 class nsInputFileStream;
 class MSG_Filter;
@@ -90,7 +90,7 @@ public:
 	nsIMsgRFC822Parser* m_rfc822AddressParser;
 
 	nsMailDatabase	*GetMailDB() {return m_mailDB;}
-	nsMsgHdr		*m_newMsgHdr;		/* current message header we're building */
+	nsIMessage		*m_newMsgHdr;		/* current message header we're building */
 	nsMailDatabase	*m_mailDB;
 
 	MBOX_PARSE_STATE m_state;
@@ -187,7 +187,7 @@ public:
 
 	void			SetIncrementalUpdate(PRBool update) {m_updateAsWeGo = update;}
 	void			SetIgnoreNonMailFolder(PRBool ignoreNonMailFolder) {m_ignoreNonMailFolder = ignoreNonMailFolder;}
-	nsMsgHdr *GetCurrentMsg() {return m_newMsgHdr;}
+	nsIMessage *GetCurrentMsg() {return m_newMsgHdr;}
 	PRBool			GetIsRealMailFolder() {return m_isRealMailFolder;}
 
 	// message socket libnet callbacks, which come through folder pane
@@ -207,7 +207,7 @@ public:
 protected:
 
 	virtual PRInt32			PublishMsgHeader();
-	virtual void			FolderTypeSpecificTweakMsgHeader(nsMsgHdr *tweakMe);
+	virtual void			FolderTypeSpecificTweakMsgHeader(nsIMessage *tweakMe);
 	void					FreeBuffers();
 
 	// data
@@ -235,8 +235,11 @@ private:
 class nsParseNewMailState : public nsMsgMailboxParser 
 {
 public:
-	nsParseNewMailState(MSG_Master *master, nsFilePath &folder);
+	nsParseNewMailState();
 	virtual ~nsParseNewMailState();
+
+    nsresult Init(MSG_Master *master, nsFileSpec &folder);
+
 	virtual void	DoneParsingFolder();
 	virtual void	SetUsingTempDB(PRBool usingTempDB, char *tmpDBName);
 
@@ -245,7 +248,7 @@ public:
 #ifdef DOING_FILTERS
 	// from jsmsg.cpp
 	friend void JSMailFilter_MoveMessage(ParseNewMailState *state, 
-										 nsMsgHdr *msgHdr, 
+										 nsIMessage *msgHdr, 
 										 nsMailDatabase *mailDB, 
 										 const char *folder, 
 										 MSG_Filter *filter,
@@ -257,12 +260,12 @@ protected:
 #ifdef DOING_FILTERS
 	virtual void	ApplyFilters(PRBool *pMoved);
 	virtual MSG_FolderInfoMail *GetTrashFolder();
-	virtual int		MoveIncorporatedMessage(nsMsgHdr *mailHdr, 
+	virtual int		MoveIncorporatedMessage(nsIMessage *mailHdr, 
 											   nsMailDatabase *sourceDB, 
 											   char *destFolder,
 											   MSG_Filter *filter);
-	virtual	int			MarkFilteredMessageRead(nsMsgHdr *msgHdr);
-			void		LogRuleHit(MSG_Filter *filter, nsMsgHdr *msgHdr);
+	virtual	int			MarkFilteredMessageRead(nsIMessage *msgHdr);
+			void		LogRuleHit(MSG_Filter *filter, nsIMessage *msgHdr);
 	MSG_FilterList		*m_filterList;
 	nsOutputFileStream	*m_logFile;
 #endif // DOING_FILTERS
@@ -291,15 +294,15 @@ public:
 	MSG_UrlQueue	*GetFilterUrlQueue() {return fUrlQueue;}
 protected:
 	virtual PRInt32			PublishMsgHeader();
-	virtual void			FolderTypeSpecificTweakMsgHeader(nsMsgHdr *tweakMe);
+	virtual void			FolderTypeSpecificTweakMsgHeader(nsIMessage *tweakMe);
 	virtual void			ApplyFilters(PRBool *pMoved);
 	
 	virtual MSG_FolderInfoMail *GetTrashFolder();
-	virtual int		MoveIncorporatedMessage(nsMsgHdr *mailHdr, 
+	virtual int		MoveIncorporatedMessage(nsIMessage *mailHdr, 
 											   nsMailDatabase *sourceDB, 
 											   char *destFolder,
 											   MSG_Filter *filter);
-	virtual	int				MarkFilteredMessageRead(nsMsgHdr *msgHdr);
+	virtual	int				MarkFilteredMessageRead(nsIMessage *msgHdr);
 private:
 	PRBool fParsingInbox;
 	PRBool	fB2HaveWarnedUserOfOfflineFiltertarget;

@@ -18,7 +18,7 @@
 
 #include "msgCore.h"
 #include "nsParseMailbox.h"
-#include "nsMsgHdr.h"
+#include "nsIMessage.h"
 #include "nsMailDatabase.h"
 #include "nsDBFolderInfo.h"
 #include "nsIByteBuffer.h"
@@ -58,7 +58,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 		runningUrl->GetFile(&fileName);
 		if (fileName)
 		{	
-			nsFilePath dbName(fileName);
+			nsFileSpec dbName(fileName);
 
 			(void)nsMailDatabase::Open(dbName, PR_TRUE, &m_mailDB, PR_FALSE);
 			printf("url file = %s\n", fileName);
@@ -90,10 +90,10 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 
 		m_mailDB->PrePopulate();
 		m_mailDB->ListAllKeys(keys);
-		for (PRInt32 index = 0; index < keys.GetSize(); index++)
+		for (PRUint32 index = 0; index < keys.GetSize(); index++)
 		{
 			nsMsgHdr *msgHdr = NULL;
-			nsresult ret = m_mailDB->GetMsgHdrForKey(keys[index], &msgHdr);
+			nsresult ret = m_mailDB->GetMsgHdrForKey(keys[index], (nsIMessage**)&msgHdr);
 			if (ret == NS_OK && msgHdr)
 			{
 				nsMsgKey key;
@@ -237,7 +237,7 @@ void nsMsgMailboxParser::UpdateDBFolderInfo(nsMailDatabase *mailDB, const char *
 }
 
 // By default, do nothing
-void nsMsgMailboxParser::FolderTypeSpecificTweakMsgHeader(nsMsgHdr * /* tweakMe */)
+void nsMsgMailboxParser::FolderTypeSpecificTweakMsgHeader(nsIMessage * /* tweakMe */)
 {
 }
 
@@ -927,7 +927,7 @@ nsresult nsParseMailMessageState::InternRfc822 (struct message_header *header,
 }
 
 // we've reached the end of the envelope, and need to turn all our accumulated message_headers
-// into a single nsMsgHdr to store in a database.
+// into a single nsIMessage to store in a database.
 int nsParseMailMessageState::FinalizeHeaders()
 {
 	int status = 0;
@@ -1265,14 +1265,25 @@ int nsParseMailMessageState::FinalizeHeaders()
 
 
 
-nsParseNewMailState::nsParseNewMailState(MSG_Master *master, nsFilePath &folder)
+nsParseNewMailState::nsParseNewMailState()
+    : m_tmpdbName(nsnull), m_usingTempDB(PR_FALSE), m_disableFilters(PR_FALSE)
+#ifdef DOING_FILTERS
+    , m_filterList(nsnull), m_logFile(nsnull)
+#endif
 {
+}
+
+nsresult
+nsParseNewMailState::Init(MSG_Master *master, nsFileSpec &folder)
+{
+    nsresult rv;
 //	SetMaster(master);
 	m_mailboxName = PL_strdup(folder);
 
 	// the new mail parser isn't going to get the stream input, it seems, so we can't use
 	// the OnStartBinding mechanism the mailbox parser uses. So, let's open the db right now.
-	nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
+	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
 
 #ifdef DOING_FILTERS
 	if (MSG_FilterList::Open(master, filterInbox, NULL, folder, &m_filterList)
@@ -1334,6 +1345,8 @@ nsParseNewMailState::nsParseNewMailState(MSG_Master *master, nsFilePath &folder)
 	m_usingTempDB = FALSE;
 	m_tmpdbName = NULL;
 	m_disableFilters = FALSE;
+
+    return NS_OK; 
 }
 
 nsParseNewMailState::~nsParseNewMailState()
@@ -1345,7 +1358,7 @@ nsParseNewMailState::~nsParseNewMailState()
 		XP_FileClose(m_logFile);
 #endif
 	if (m_mailDB)
-		m_mailDB->Close();
+		m_mailDB->Close(PR_TRUE);
 //	if (m_usingTempDB)
 //	{
 //		XP_FileRemove(m_tmpdbName, xpMailFolderSummary);
@@ -1439,7 +1452,7 @@ XP_File nsParseNewMailState::GetLogFile ()
 	return m_logFile;
 }
 
-void nsParseNewMailState::LogRuleHit(MSG_Filter *filter, nsMsgHdr *msgHdr)
+void nsParseNewMailState::LogRuleHit(MSG_Filter *filter, nsIMessage *msgHdr)
 {
 	char	*filterName = "";
 	time_t	date;
@@ -1494,7 +1507,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 	PRBool		msgMoved = FALSE;
 	MsgERR		err = eSUCCESS;
 
-	nsMsgHdr	*msgHdr = GetCurrentMsg();
+	nsIMessage	*msgHdr = GetCurrentMsg();
 	if (m_filterList != NULL)
 		m_filterList->GetFilterCount(&filterCount);
 
@@ -1650,7 +1663,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 		*pMoved = msgMoved;
 }
 
-int nsParseNewMailState::MarkFilteredMessageRead(nsMsgHdr *msgHdr)
+int nsParseNewMailState::MarkFilteredMessageRead(nsIMessage *msgHdr)
 {
 	if (m_mailDB)
 		m_mailDB->MarkHdrRead(msgHdr, TRUE, NULL);
@@ -1659,7 +1672,7 @@ int nsParseNewMailState::MarkFilteredMessageRead(nsMsgHdr *msgHdr)
 	return 0;
 }
 
-int nsParseNewMailState::MoveIncorporatedMessage(nsMsgHdr *mailHdr, 
+int nsParseNewMailState::MoveIncorporatedMessage(nsIMessage *mailHdr, 
 											   nsMailDatabase *sourceDB, 
 											   char *destFolder,
 											   MSG_Filter *filter)
@@ -1769,7 +1782,7 @@ int nsParseNewMailState::MoveIncorporatedMessage(nsMsgHdr *mailHdr,
 	// now add the header to the mailDb.
 	if (eSUCCESS == msgErr)
 	{
-		nsMsgHdr *newHdr = new nsMsgHdr();	
+		nsIMessage *newHdr = new nsIMessage();	
 		if (newHdr)
 		{
 			newHdr->CopyFromMsgHdr (mailHdr, sourceDB->GetDB(), mailDb->GetDB());
@@ -1865,7 +1878,7 @@ void ParseIMAPMailboxState::DoneParsingFolder()
 		if (m_mailDB->m_dbFolderInfo->GetNumVisibleMessages())
 		{
 			ListContext *listContext;
-			NsMsgHdr *currentHdr;
+			nsIMessage *currentHdr;
 			if ((m_mailDB->ListLast(&listContext, &currentHdr) == NS_OK) &&
 				currentHdr)
 			{
@@ -1884,7 +1897,7 @@ void ParseIMAPMailboxState::DoneParsingFolder()
 	}
 }
 
-int ParseIMAPMailboxState::MarkFilteredMessageRead(nsMsgHdr *msgHdr)
+int ParseIMAPMailboxState::MarkFilteredMessageRead(nsIMessage *msgHdr)
 {
 	msgHdr->OrFlags(kIsRead);
 	nsMsgKeyArray	keysToFlag;
@@ -1898,7 +1911,7 @@ int ParseIMAPMailboxState::MarkFilteredMessageRead(nsMsgHdr *msgHdr)
 }
 
 
-int ParseIMAPMailboxState::MoveIncorporatedMessage(nsMsgHdr *mailHdr, 
+int ParseIMAPMailboxState::MoveIncorporatedMessage(nsIMessage *mailHdr, 
 											   nsMailDatabase *sourceDB, 
 											   char *destFolder,
 											   MSG_Filter *filter)
@@ -1986,7 +1999,7 @@ void ParseIMAPMailboxState::ApplyFilters(PRBool *pMoved)
 
 // For IMAP, the message key is the IMAP UID
 // This is where I will add code to fix the message length as well - km
-void ParseIMAPMailboxState::FolderTypeSpecificTweakMsgHeader(nsMsgHdr *tweakMe)
+void ParseIMAPMailboxState::FolderTypeSpecificTweakMsgHeader(nsIMessage *tweakMe)
 {
 	if (m_mailDB && tweakMe)
 	{

@@ -35,7 +35,7 @@ public:
 	nsMsgLocalMailFolder(void);
 	virtual ~nsMsgLocalMailFolder(void);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 #if 0
   static nsresult GetRoot(nsIMsgFolder* *result);
 #endif
@@ -101,14 +101,11 @@ public:
 
     virtual nsresult GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo, nsMsgDatabase **db);
 
-	//nsIMsgMailFolder
+	// nsIMsgMailFolder
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
-  nsresult GetPathAsParentFolder(nsNativeFileSpec& aPathName);
 
 protected:
   nsresult CreateSubFolders(void);
-  nsresult Initialize(void);
-	nsresult InitializeMessages(void);
 
 protected:
   nsNativeFileSpec mPath;
@@ -116,9 +113,7 @@ protected:
 	PRBool		mHaveReadNameFromDB;
 	PRBool		mGettingMail;
 	PRBool		mInitialized;
-	PRBool		mMessagesInitialized;
-	nsISupportsArray *mMessages;
-
+  nsMailDatabase* mMailDatabase;
 
 };
 

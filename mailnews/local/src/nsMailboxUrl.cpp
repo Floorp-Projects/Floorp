@@ -175,19 +175,19 @@ nsresult nsMailboxUrl::GetMailboxParser(nsIStreamListener ** aConsumer)
 	return  NS_OK;
 }
 
-nsresult nsMailboxUrl::GetFilePath(const nsFilePath ** aFilePath)
+nsresult nsMailboxUrl::GetFilePath(const nsFileSpec ** aFilePath)
 {
 	if (aFilePath)
 		*aFilePath = m_filePath;
 	return NS_OK;
 }
 
-nsresult nsMailboxUrl::SetFilePath(const nsFilePath& aFilePath)
+nsresult nsMailboxUrl::SetFilePath(const nsFileSpec& aFilePath)
 {
 	NS_LOCK_INSTANCE();
 	if (m_filePath)
 		delete m_filePath;
-	m_filePath = new nsFilePath(aFilePath);
+	m_filePath = new nsFileSpec(aFilePath);
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;	
@@ -492,7 +492,7 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 	if (m_filePath)
 		delete m_filePath;
 	ParseSearchPart();
-	m_filePath = new nsFilePath(m_file);
+	m_filePath = new nsFileSpec(m_file);
 
 	// we need to set the mailbox action type that this url represented....
 	// if we had a search field then we parsed it and it set the mailbox state...
@@ -584,7 +584,7 @@ nsresult nsMailboxUrl::SetFile(const char *aNewFile)
     ReconstructSpec();
 	if (m_filePath)
 		delete m_filePath;
-	m_filePath = new nsFilePath(m_file);
+	m_filePath = new nsFileSpec(m_file);
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;

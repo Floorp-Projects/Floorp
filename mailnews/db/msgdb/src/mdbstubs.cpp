@@ -1,3 +1,21 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
 #include "mdb.h"
 #include "stdio.h"
 // for LINEBREAK
@@ -55,20 +73,19 @@ mdb_err nsIMdbStore::SmallCommit( // save minor changes if convenient and uncost
 {
    return 0;
 }
+
 mdb_err nsIMdbStore::LargeCommit( // save important changes if at all possible
 nsIMdbEnv* ev, // context
 nsIMdbThumb** acqThumb) 
 {
-   WriteAll(ev, acqThumb);
-   return 0;
+    return WriteAll(ev, acqThumb);
 }
 
 mdb_err nsIMdbStore::SessionCommit( // save all changes if large commits delayed
 nsIMdbEnv* ev, // context
 nsIMdbThumb** acqThumb)
 {
-   WriteAll(ev, acqThumb);
-   return 0;
+    return WriteAll(ev, acqThumb);
 }
 
 mdb_err
@@ -76,8 +93,7 @@ nsIMdbStore::CompressCommit( // commit and make db physically smaller if possibl
 nsIMdbEnv* ev, // context
 nsIMdbThumb** acqThumb)
 {
-   WriteAll(ev, acqThumb);
-   return 0;
+    return WriteAll(ev, acqThumb);
 }
 
 mdb_err
@@ -87,11 +103,13 @@ nsIMdbThumb** acqThumb)
 	*acqThumb = new nsIMdbThumb;
 
 	m_fileStream = new nsIOFileStream(nsFileSpec(m_backingFile));
+        if (m_fileStream == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
 	WriteTokenList();
 	WriteTableList();
 	delete m_fileStream;  // delete closes the stream.
 	m_fileStream = NULL;
-	return 0;
+	return NS_OK;
 }
 
 mdb_err
@@ -99,7 +117,7 @@ mdb_err
 {
 	ReadTokenList();
 	ReadTableList();
-	return 0;
+	return NS_OK;
 }
 
 const char *kStartTokenList = "token list";
@@ -210,10 +228,12 @@ mdb_err nsIMdbStore::NewTable( // make one new table of specific type
 
 {
   *acqTable = new nsIMdbTable(this, inTableKind);
+  if (*acqTable == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
   (*acqTable)->m_Oid.mOid_Id  = 1;
   (*acqTable)->m_Oid.mOid_Scope = inRowScope;
-  m_tables.AppendElement(*acqTable);
-  return 0;
+  PRBool inserted = m_tables.AppendElement(*acqTable);
+  return inserted ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsIMdbPort::nsIMdbPort() : m_backingFile("")
@@ -321,16 +341,18 @@ mdb_err nsIMdbTable::HasOid( // test for the table position of a row member
 	return 0;
 }
 
-  mdb_err nsIMdbTable::GetTableRowCursor( // make a cursor, starting iteration at inRowPos
+mdb_err nsIMdbTable::GetTableRowCursor( // make a cursor, starting iteration at inRowPos
     nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     nsIMdbTableRowCursor** acqCursor)
-  {
-	  *acqCursor = new nsIMdbTableRowCursor;
-	  (*acqCursor)->SetTable(ev, this);
-	  (*acqCursor)->m_pos = inRowPos;
-	  return 0;
-  }
+{
+    *acqCursor = new nsIMdbTableRowCursor;
+	if (*acqCursor == nsnull)
+		return NS_ERROR_OUT_OF_MEMORY;
+    (*acqCursor)->SetTable(ev, this);
+    (*acqCursor)->m_pos = inRowPos;
+    return NS_OK;
+}
 
 mdb_err nsIMdbTable::Write()
 
@@ -408,7 +430,7 @@ mdb_err nsIMdbTable::Read()
 		}
 	}
 
-	return 0;
+	return NS_OK;
 }
 
  mdb_err nsIMdbTableRowCursor::SetTable(nsIMdbEnv* ev, nsIMdbTable* ioTable) 
@@ -428,7 +450,7 @@ mdb_err  nsIMdbTableRowCursor::NextRow( // get row cells from table for cells al
 
 	*outRowPos = m_pos;
 	*acqRow = (nsIMdbRow *) m_table->m_rows.ElementAt(m_pos++);
-	return 0;
+	return *acqRow != nsnull ? NS_OK : NS_ERROR_FAILURE;
 }
 
 mdb_err nsIMdbTable::CutRow  ( // make sure the row with inOid is not a member 
@@ -439,7 +461,7 @@ mdb_err nsIMdbTable::CutRow  ( // make sure the row with inOid is not a member
 	if (found)
 		ioRow->Release();	// is this right? Who deletes the row?
 
-	return 0;
+	return found ? NS_OK : NS_ERROR_FAILURE;
 }
 
 mdb_err nsIMdbStore::NewRowWithOid (nsIMdbEnv* ev, // new row w/ caller assigned oid
@@ -455,9 +477,9 @@ mdb_err nsIMdbTable::AddRow ( // make sure the row with inOid is a table member
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow) 
 {
-	m_rows.AppendElement(ioRow);
+	PRBool inserted = m_rows.AppendElement(ioRow);
 	ioRow->m_owningTable = this;
-	return 0;
+	return inserted ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsIMdbRow::nsIMdbRow(nsIMdbTable *owningTable, nsIMdbPort *owningPort)

@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #define NS_MAILNEWSDATASOURCE_CID                    \
 { /* ddd9d2b2-cd67-11d2-8cca-0060b0fc14a3 */         \

@@ -198,7 +198,9 @@ nsMsgAppCore::SetScriptObject(void* aScriptObject)
 nsresult
 nsMsgAppCore::Init(const nsString& aId)
 {
-	printf("Init\n");
+#ifdef NS_DEBUG
+  printf("Init\n");
+#endif
   mId = aId;
   return NS_OK;
 }
@@ -207,7 +209,9 @@ nsMsgAppCore::Init(const nsString& aId)
 nsresult
 nsMsgAppCore::GetId(nsString& aId)
 {
-	printf("GetID\n");
+#ifdef NS_DEBUG
+  printf("GetID\n");
+#endif
   aId = mId;
   return NS_OK;
 }
@@ -220,22 +224,18 @@ nsMsgAppCore::Open3PaneWindow()
 {
 	static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
-	nsIAppShellService* appShell;
-	char *  urlstr=nsnull;
+    char *  urlstr=nsnull;
 	nsresult rv;
 	nsString controllerCID;
 
 	urlstr = "resource:/res/samples/messenger.html";
-	rv = nsServiceManager::GetService(kAppShellServiceCID,
-									  nsIAppShellService::GetIID(),
-									  (nsISupports**)&appShell);
+    nsService<nsIAppShellService> appShell(kAppShellServiceCID, &rv);
+    if (NS_FAILED(rv)) goto done;
 	nsIURL* url;
 	nsIWidget* newWindow;
   
 	rv = NS_NewURL(&url, urlstr);
-	if (NS_FAILED(rv)) {
-	  goto done;
-	}
+	if (NS_FAILED(rv)) goto done;
 
 	controllerCID = "6B75BB61-BD41-11d2-9D31-00805F8ADDDE";
 	appShell->CreateTopLevelWindow(nsnull,      // parent
@@ -248,16 +248,15 @@ nsMsgAppCore::Open3PaneWindow()
                                    200);        // height
 	done:
 	NS_RELEASE(url);
-	if (nsnull != appShell) {
-		nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-	}
 	return NS_OK;
 }
 
 nsresult
 nsMsgAppCore::GetNewMail()
 {
+#ifdef NS_DEBUG
   printf("nsMsgAppCore::GetNewMail()\n");
+#endif
   return NS_OK;
 }
                               
@@ -285,12 +284,14 @@ nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
   NS_ADDREF(aWin);
 
   /* rhp - Needed to access the webshell to drive message display */
+#ifdef NS_DEBUG
   printf("nsMsgAppCore::SetWindow(): Getting the webShell of interest...\n");
+#endif
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
-  if (!globalObj) 
-  {
-    return NS_ERROR_FAILURE;
+  nsresult rv;
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin, &rv) );
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   nsIWebShell *webShell = nsnull;

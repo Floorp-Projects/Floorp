@@ -66,8 +66,8 @@ public:
 	// from nsIMailboxUrl:
 	NS_IMETHOD SetMailboxParser(nsIStreamListener * aConsumer);
 	NS_IMETHOD GetMailboxParser(nsIStreamListener ** aConsumer);
-	NS_IMETHOD SetFilePath(const nsFilePath& aFilePath);
-	NS_IMETHOD GetFilePath(const nsFilePath ** aFilePath);
+	NS_IMETHOD SetFilePath(const nsFileSpec& aFilePath);
+	NS_IMETHOD GetFilePath(const nsFileSpec ** aFilePath);
 	NS_IMETHOD GetMessageKey(nsMsgKey& aMessageKey);
 	NS_IMETHOD SetMessageSize(PRUint32 aMessageSize);
 	NS_IMPL_CLASS_GETSET(MailboxAction, nsMailboxAction, m_mailboxAction);
@@ -116,7 +116,7 @@ protected:
     nsISupports	*m_container;
 
 	nsMailboxAction m_mailboxAction; // the action this url represents...parse mailbox, display messages, etc.
-	nsFilePath	*m_filePath; 
+	nsFileSpec	*m_filePath; 
 	char		*m_messageID;
 	PRUint32	m_messageSize;
 	nsMsgKey	m_messageKey;

@@ -29,7 +29,9 @@
 #include "nsMailboxService.h"
 #include "nsLocalMailFolder.h"
 #include "nsParseMailbox.h"
+#include "nsIServiceManager.h"
 
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCMailboxParser, NS_MAILBOXPARSER_CID);
 static NS_DEFINE_CID(kCMailboxService, NS_MAILBOXSERVICE_CID);
@@ -151,7 +153,7 @@ nsresult nsMsgLocalFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
                                            const char *aProgID,
@@ -170,64 +172,67 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 		return NS_ERROR_OUT_OF_MEMORY;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr) 
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
 {
     return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* serviceMgr, const char* path)
+NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
-
-  rv = nsRepository::RegisterComponent(kCMailboxUrl, nsnull, nsnull,
-                                       path, PR_TRUE, PR_TRUE);
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsRepository::RegisterComponent(kCMailboxService, nsnull, nsnull, 
-                                       path, PR_TRUE, PR_TRUE);
-
+  rv = compMgr->RegisterComponent(kCMailboxUrl, nsnull, nsnull,
+                                  path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsRepository::RegisterComponent(kCMailboxParser, nsnull, nsnull,
-										path, PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kCMailboxService, nsnull, nsnull, 
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = compMgr->RegisterComponent(kCMailboxParser, nsnull, nsnull,
+                                  path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
   // register our RDF datasources:
-  rv = nsRepository::RegisterComponent(kMailNewsDatasourceCID, 
-                                       "Mail/News Data Source",
-                                       NS_RDF_DATASOURCE_PROGID_PREFIX "mailnews",
-                                       path, PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kMailNewsDatasourceCID, 
+                                  "Mail/News Data Source",
+                                  NS_RDF_DATASOURCE_PROGID_PREFIX "mailnews",
+                                  path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
   // register our RDF resource factories:
-  rv = nsRepository::RegisterComponent(kMailNewsResourceCID,
-                                       "Mail/News Resource Factory",
-                                       NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox",
-                                       path, PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kMailNewsResourceCID,
+                                  "Mail/News Resource Factory",
+                                  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox",
+                                  path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
 
   return rv;
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
+NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
-
-  rv = nsRepository::UnregisterFactory(kCMailboxUrl, path);
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsRepository::UnregisterFactory(kCMailboxService, path);
+  rv = compMgr->UnregisterFactory(kCMailboxUrl, path);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsRepository::UnregisterFactory(kCMailboxParser, path);
+  rv = compMgr->UnregisterFactory(kCMailboxService, path);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsRepository::UnregisterComponent(kMailNewsDatasourceCID, path);
+  rv = compMgr->UnregisterFactory(kCMailboxParser, path);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsRepository::UnregisterComponent(kMailNewsResourceCID, path);
+  rv = compMgr->UnregisterComponent(kMailNewsDatasourceCID, path);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = compMgr->UnregisterComponent(kMailNewsResourceCID, path);
   if (NS_FAILED(rv)) return rv;
 
   return rv;

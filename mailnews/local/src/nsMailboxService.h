@@ -48,13 +48,13 @@ public:
 	// we suppport the nsIMailboxService Interface 
 	////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD ParseMailbox(const nsFilePath& aMailboxPath, nsIStreamListener * aMailboxParser, 
+	NS_IMETHOD ParseMailbox(const nsFileSpec& aMailboxPath, nsIStreamListener * aMailboxParser, 
 							nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
-	NS_IMETHOD DisplayMessage(const nsFilePath& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
+	NS_IMETHOD DisplayMessage(const nsFileSpec& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
 							  nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
-	NS_IMETHOD DisplayMessageNumber(const nsFilePath& aMailboxPath, PRUint32 aMessageNumber, nsISupports * aDisplayConsumer,
+	NS_IMETHOD DisplayMessageNumber(const nsFileSpec& aMailboxPath, PRUint32 aMessageNumber, nsISupports * aDisplayConsumer,
 									nsIUrlListener * aUrlListener, nsIURL ** aURL);
 
 	////////////////////////////////////////////////////////////////////////////////////////

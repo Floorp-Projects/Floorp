@@ -26,7 +26,6 @@
 #include "nsDBFolderInfo.h"
 #include "nsISupportsArray.h"
 
-
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -39,7 +38,7 @@ nsMsgFolder::nsMsgFolder(void)
     mDepth(0), 
     mPrefFlags(0)
 {
-	NS_INIT_REFCNT();
+//  NS_INIT_REFCNT(); done by superclass
 
 #ifdef HAVE_MASTER
   mMaster = NULL;
@@ -72,24 +71,7 @@ nsMsgFolder::~nsMsgFolder(void)
 	}
 }
 
-NS_IMPL_ADDREF(nsMsgFolder)
-NS_IMPL_RELEASE(nsMsgFolder)
-
-NS_IMETHODIMP
-nsMsgFolder::QueryInterface(REFNSIID iid, void** result)
-{
-	if (! result)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = nsnull;
-  if(iid.Equals(nsIMsgFolder::GetIID()) ||
-     iid.Equals(kISupportsIID)) {
-		*result = NS_STATIC_CAST(nsIMsgFolder*, this);
-		AddRef();
-		return NS_OK;
-	}
-	return nsRDFResource::QueryInterface(iid, result);
-}
+NS_IMPL_ISUPPORTS_INHERITED(nsMsgFolder, nsRDFResource, nsIMsgFolder)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1341,4 +1323,184 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// URI Utilities for RDF
 
+#include "prprf.h"
+#include "prsystem.h"
+
+static const char kMsgRootFolderPref[] = "mailnews.rootFolder";
+
+const char* gMailboxRoot = nsnull;
+
+nsresult
+nsGetMailboxRoot(nsFileSpec &result)
+{
+  nsresult rv = NS_OK;
+  if (gMailboxRoot == nsnull) {
+    // get mailbox root preference and cache it permanently - this
+    // is extremely temporary...I'm waiting for hubie to check in the 
+    // new preferences service stuff.
+#if 0
+    nsService<nsIPref> prefs(kPrefCID, &rv);
+    if (NS_FAILED(rv)) return rv; 
+
+    if (prefs && NS_SUCCEEDED(rv)) {
+      rv = prefs->Startup("prefs.js");
+      if (NS_FAILED(rv)) return rv; 
+
+      rv = prefs->CopyPathPref(kMsgRootFolderPref, &gMailboxRoot);
+      if (NS_FAILED(rv)) return rv;
+    }
+#else
+    gMailboxRoot = nsCRT::strdup("d:\\program files\\netscape\\users\\warren\\mail");
+#endif
+  }
+  result = gMailboxRoot;
+  // XXX free gMailboxRoot somewhere (on shutdown?)
+  return rv; 
+}
+
+nsresult
+nsGetMailFolderSeparator(nsString& result)
+{
+  static char* gMailFolderSep = nsnull;         // never freed
+
+  if (gMailFolderSep == nsnull) {
+    gMailFolderSep = PR_smprintf(".sbd%c", PR_GetDirectorySeparator());
+    if (gMailFolderSep == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+  result = gMailFolderSep;
+  return NS_OK;
+}
+
+nsresult
+nsURI2Path(const char* rootURI, char* uriStr, nsFileSpec& pathResult)
+{
+  nsresult rv;
+
+  nsAutoString sep;
+  sep += PR_GetDirectorySeparator();
+
+  nsAutoString sbdSep;
+  rv = nsGetMailFolderSeparator(sbdSep);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString uri = uriStr;
+  if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
+    return NS_ERROR_FAILURE;
+
+  nsFileSpec root;
+  rv = nsGetMailboxRoot(root);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsAutoString path(root);
+  uri.Cut(0, nsCRT::strlen(rootURI));
+
+  PRInt32 uriLen = uri.Length();
+
+  PRInt32 pos;
+  while(uriLen > 0) {
+    nsAutoString folderName;
+
+    PRInt32 leadingPos;
+    // if it's the first character then remove it.
+    while ((leadingPos = uri.Find('/')) == 0) {
+      uri.Cut(0, 1);
+      uriLen--;
+    }
+    if (uriLen == 0)
+      break;
+
+    pos = uri.Find('/');
+    if (pos < 0)
+      pos = uriLen;
+
+    PRInt32 cnt = uri.Left(folderName, pos);
+    NS_ASSERTION(cnt == pos, "something wrong with nsString");
+
+    path += sep;
+
+    // the first time around the separator is special because
+    // the root mail folder doesn't end with .sbd
+    sep = sbdSep;
+
+    path += folderName;
+    uri.Cut(0, pos);
+    uriLen -= pos;
+  }
+  pathResult = path;
+  return NS_OK;
+}
+
+nsresult
+nsPath2URI(const char* rootURI, nsFileSpec& spec, char* *uri)
+{
+  nsresult rv;
+
+  nsAutoString sep;
+  rv = nsGetMailFolderSeparator(sep);
+  if (NS_FAILED(rv)) return rv;
+
+  PRUint32 sepLen = sep.Length();
+
+  nsFileSpec root;
+  rv = nsGetMailboxRoot(root);
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString pathStr = spec;
+  nsAutoString rootStr = root;
+  PRInt32 pos = pathStr.Find(rootStr);
+  if (pos != 0)     // if doesn't start with root path
+    return NS_ERROR_FAILURE;
+
+  nsAutoString uriStr(rootURI);
+
+  PRUint32 rootStrLen = rootStr.Length();
+  pathStr.Cut(0, rootStrLen);
+  PRInt32 pathStrLen = pathStr.Length();
+
+  char dirSep = PR_GetDirectorySeparator();
+  
+  while (pathStrLen > 0) {
+    nsAutoString folderName;
+    
+    PRInt32 leadingPos;
+    // if it's the first character then remove it.
+    while ((leadingPos = pathStr.Find(dirSep)) == 0) {
+      pathStr.Cut(0, 1);
+      pathStrLen--;
+    }
+    if (pathStrLen == 0)
+      break;
+
+    pos = pathStr.Find(sep);
+    if (pos < 0) 
+      pos = pathStrLen;
+
+    PRInt32 cnt = pathStr.Left(folderName, pos);
+    NS_ASSERTION(cnt == pos, "something wrong with nsString");
+
+    pathStr.Cut(0, pos + sepLen);
+    pathStrLen -= pos + sepLen;
+
+    uriStr += '/';
+    uriStr += folderName;
+  }
+  *uri = uriStr.ToNewCString();
+  return NS_OK;
+}
+
+nsresult
+nsURI2Name(const char* rootURI, char* uriStr, nsString& name)
+{
+  nsAutoString uri = uriStr;
+  if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
+    return NS_ERROR_FAILURE;
+  PRInt32 pos = uri.RFind("/");
+  PRInt32 length = uri.Length();
+  PRInt32 count = length - (pos + 1);
+  return uri.Right(name, count);
+}
+
+////////////////////////////////////////////////////////////////////////////////

@@ -82,7 +82,7 @@ public:
 
     virtual		~nsMsgHdr();
 
-    NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS_INHERITED
 
     void		SetCSID(PRUint16 csid) {m_csID = csid;}
     PRInt16		GetCSID();

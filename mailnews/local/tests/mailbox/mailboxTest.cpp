@@ -64,7 +64,7 @@
 #include "nsITransport.h"
 #include "nsIURL.h"
 #include "nsINetService.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsString.h"
 
 #include "nsIMailboxUrl.h"
@@ -519,8 +519,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 	PR_FREEIF(fullFolderPath);
 
 	// now ask the mailbox service to parse this mailbox...
-	nsIMailboxService * mailboxService = nsnull;
-	rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::GetIID(), (nsISupports **) &mailboxService);
+    nsService<nsIMailboxService> mailboxService(kCMailboxServiceCID, &rv);
 	if (NS_SUCCEEDED(rv) && mailboxService)
 	{
 		nsIURL * url = nsnull;
@@ -528,8 +527,6 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 		if (url)
 			url->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &m_url);
 		NS_IF_RELEASE(url);
-
-		nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService);
 	}
 	else
 		NS_ASSERTION(PR_FALSE, "unable to acquire a mailbox service...registration problem?");
@@ -547,17 +544,14 @@ int main()
     PLEventQueue *queue;
     nsresult result;
 
-    nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-	nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
-	nsRepository::RegisterComponent(kRDFServiceCID, nsnull, nsnull, RDF_DLL, PR_TRUE, PR_TRUE);
-	nsRepository::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
-	nsRepository::RegisterComponent(kCMailboxServiceCID, nsnull, nsnull, LOCAL_DLL, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kRDFServiceCID, nsnull, nsnull, RDF_DLL, PR_TRUE, PR_TRUE);
+	nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
+	nsComponentManager::RegisterComponent(kCMailboxServiceCID, nsnull, nsnull, LOCAL_DLL, PR_TRUE, PR_TRUE);
 
 	// Create the Event Queue for this thread...
-    nsIEventQueueService *pEventQService = nsnull;
-    result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          kIEventQueueServiceIID,
-                                          (nsISupports **)&pEventQService);
+    nsService<nsIEventQueueService> pEventQService(kEventQueueServiceCID, &result);
 	if (NS_SUCCEEDED(result)) {
       // XXX: What if this fails?
       result = pEventQService->CreateThreadEventQueue();
@@ -581,7 +575,7 @@ int main()
 	// that gets passed into the mailbox test driver and it binds your parser to the mailbox url you run
 	// through the driver.
 	nsIStreamListener * mailboxParser = nsnull;
-	nsRepository::CreateInstance(kCMailboxParser, nsnull, nsIStreamListener::GetIID(), (void **) &mailboxParser);
+	nsComponentManager::CreateInstance(kCMailboxParser, nsnull, nsIStreamListener::GetIID(), (void **) &mailboxParser);
 	// NS_NewMsgParser(&mailboxParser);
     
 	// okay, everything is set up, now we just need to create a test driver and run it...

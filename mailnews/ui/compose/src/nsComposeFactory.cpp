@@ -20,11 +20,11 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsComposeAppCore.h"
-
-#include "nsRepository.h"
-
+#include "nsIComponentManager.h"
 #include "pratom.h"
+#include "nsIServiceManager.h"
 
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCComposeAppCoreCID, NS_COMPOSEAPPCORE_CID);
 
 static PRInt32 g_InstanceCount = 0;
@@ -126,13 +126,13 @@ nsresult nsComposeFactory::LockFactory(PRBool aLock)
 // begin DLL exports
 //
 nsresult
-NSGetFactory(nsISupports* serviceMgr,
+NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
              const char *aClassName,
              const char *aProgID,
              nsIFactory **aFactory)
 {
-#ifdef DEBUG
+#ifdef NS_DEBUG
     printf("compose: NSGetFactory()\n");
 #endif
 	if (nsnull == aFactory)
@@ -149,33 +149,41 @@ NSGetFactory(nsISupports* serviceMgr,
 
 
 PRBool
-NSCanUnload(nsISupports* serviceMgr)
+NSCanUnload(nsISupports* aServMgr)
 {
-#ifdef DEBUG
+#ifdef NS_DEBUG
     printf("compose: NSCanUnload()\n");
 #endif
     return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
 nsresult
-NSRegisterSelf(nsISupports* serviceMgr, const char *fullpath)
+NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
 {
-#ifdef DEBUG
+    nsresult rv;
+    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef NS_DEBUG
     printf("compose: NSRegisterSelf()\n");
 #endif
-    return nsRepository::RegisterComponent(kCComposeAppCoreCID,
-                                           "Netscape Mail Composer",
-                                           "component://netscape/appcores/composer",
-                                           
-                                           fullpath,
-                                           PR_TRUE, PR_TRUE);
+
+    return compMgr->RegisterComponent(kCComposeAppCoreCID,
+                                      "Netscape Mail Composer",
+                                      "component://netscape/appcores/composer",
+                                      fullpath,
+                                      PR_TRUE, PR_TRUE);
 }
     
 nsresult
-NSUnregisterSelf(nsISupports* serviceMgr, const char *fullpath)
+NSUnregisterSelf(nsISupports* aServMgr, const char *fullpath)
 {
-#ifdef DEBUG
+    nsresult rv;
+    nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef NS_DEBUG
     printf("compose: NSUnregisterSelf()\n");
 #endif
-    return nsRepository::UnregisterComponent(kCComposeAppCoreCID, fullpath);
+    return compMgr->UnregisterComponent(kCComposeAppCoreCID, fullpath);
 }

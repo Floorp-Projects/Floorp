@@ -20,7 +20,7 @@ public:
                             nsIDBChangeListener * aInstigator) = 0;
     NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
                           nsIDBChangeListener * aInstigator) = 0;
-    NS_IMETHOD OnAnnouncerGoingAway(nsDBChangeAnnouncer * instigator) ;
+    NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator) ;
 };
 
 #endif

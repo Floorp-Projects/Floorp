@@ -73,8 +73,8 @@ public:
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the mailbox url state
 	///////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD GetFilePath(const nsFilePath ** aFilePath) = 0;
-	NS_IMETHOD SetFilePath(const nsFilePath& aFilePath) = 0;
+	NS_IMETHOD GetFilePath(const nsFileSpec ** aFilePath) = 0;
+	NS_IMETHOD SetFilePath(const nsFileSpec& aFilePath) = 0;
 
 	// Some mailbox urls include a message key for the message in question. 
 	NS_IMETHOD GetMessageKey(nsMsgKey& aMessageID) = 0;

@@ -24,7 +24,7 @@ nsLocalFolderSummarySpec::nsLocalFolderSummarySpec()
 }
 
 nsLocalFolderSummarySpec::nsLocalFolderSummarySpec(const char *folderPath)
-: nsFileSpec(folderPath)
+  : nsFileSpec(folderPath)
 {
 	CreateSummaryFileName();
 }

@@ -21,7 +21,8 @@
 #include "msgCore.h"
 #include "nsMsgBaseCID.h"
 #include "pratom.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "rdf.h"
 #include "nsCRT.h"
 
@@ -37,8 +38,9 @@
 
 #include "nsIUrlListenerManager.h"
 #include "nsUrlListenerManager.h"
-
 #include "nsMsgMailSession.h"
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
@@ -86,7 +88,7 @@ protected:
 nsMsgFactory::nsMsgFactory(const nsCID &aClass,
                            const char* aClassName,
                            const char* aProgID,
-                           nsISupports *serviceMgrSupports)
+                           nsISupports *compMgrSupports)
   : mClassID(aClass),
     mClassName(nsCRT::strdup(aClassName)),
     mProgID(nsCRT::strdup(aProgID))
@@ -94,8 +96,8 @@ nsMsgFactory::nsMsgFactory(const nsCID &aClass,
 	NS_INIT_REFCNT();
 
   // store a copy of the 
-  serviceMgrSupports->QueryInterface(nsIServiceManager::GetIID(),
-                                     (void **)&mServiceManager);
+  compMgrSupports->QueryInterface(nsIServiceManager::GetIID(),
+                                  (void **)&mServiceManager);
 }   
 
 nsMsgFactory::~nsMsgFactory()   
@@ -183,14 +185,14 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 	{
 		nsUrlListenerManager * listener = nsnull;
 		listener = new nsUrlListenerManager();
-		if (listener) // we need to pick up a ref cnt...
-			listener->QueryInterface(nsIUrlListenerManager::GetIID(), (void **) &inst);
+    if (listener == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
 	}
 	else if (mClassID.Equals(kCMsgMailSessionCID))
 	{
 		nsMsgMailSession * session = new nsMsgMailSession();
-		if (session)
-			session->QueryInterface(nsIMsgMailSession::GetIID(), (void **) &inst);
+    if (session == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
 	}
 
 	// End of checking the interface ID code....
@@ -199,7 +201,6 @@ nsMsgFactory::CreateInstance(nsISupports *aOuter,
 		// so we now have the class that supports the desired interface...we need to turn around and
 		// query for our desired interface.....
 		res = inst->QueryInterface(aIID, aResult);
-		NS_RELEASE(inst);
 		if (res != NS_OK)  // if the query interface failed for some reason, then the object did not get ref counted...delete it.
 			delete inst; 
 	}
@@ -223,7 +224,7 @@ nsMsgFactory::LockFactory(PRBool aLock)
 ////////////////////////////////////////////////////////////////////////////////
 
 // return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
                                            const char *aProgID,
@@ -232,7 +233,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 
-  *aFactory = new nsMsgFactory(aClass, aClassName, aProgID, serviceMgr);
+  *aFactory = new nsMsgFactory(aClass, aClassName, aProgID, aServMgr);
   if (aFactory)
     return (*aFactory)->QueryInterface(nsIFactory::GetIID(),
                                        (void**)aFactory);
@@ -240,7 +241,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
     return NS_ERROR_OUT_OF_MEMORY;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr) 
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
 {
 	return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
@@ -248,67 +249,84 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(nsISupports* serviceMgr, const char* path)
+NSRegisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
 
   // register the message folder factory
-  rv = nsRepository::RegisterComponent(kCMsgFolderEventCID, 
+  rv = compMgr->RegisterComponent(kCMsgFolderEventCID, 
                                        "Folder Event",
                                        nsnull,
                                        path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 
-  rv = nsRepository::RegisterComponent(kCUrlListenerManagerCID,
+  rv = compMgr->RegisterComponent(kCUrlListenerManagerCID,
                                        "UrlListenerManager",
                                        nsnull,
                                        path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 
-  rv = nsRepository::RegisterComponent(kCMsgRFC822ParserCID,
+  rv = compMgr->RegisterComponent(kCMsgRFC822ParserCID,
                                        "RFC822 Parser",
                                        nsnull,
                                        path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 
-  rv = nsRepository::RegisterComponent(kCMessengerCID,
+  rv = compMgr->RegisterComponent(kCMessengerCID,
                                        "Netscape Messenger",
                                        "component://netscape/messenger/application",
                                        path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
   
-  rv = nsRepository::RegisterComponent(kCMessengerBootstrapCID,
+  rv = compMgr->RegisterComponent(kCMessengerBootstrapCID,
                                        "Netscape Messenger Bootstrapper",
                                        "component://netscape/messenger",
                                        path,
                                        PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 #if 0
-  rv = nsRepository::RegisterComponent(kCMsgGroupRecordCID,
+  rv = compMgr->RegisterComponent(kCMsgGroupRecordCID,
                                        nsnull,
                                        nsnull,
                                        path,
                                        PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 #endif
-  rv = nsRepository::RegisterComponent(kCMsgMailSessionCID,
-									   "Mail Session",
-									   nsnull,
-									   path,
-									   PR_TRUE, PR_TRUE);
-
+  rv = compMgr->RegisterComponent(kCMsgMailSessionCID,
+                                  "Mail Session",
+                                  nsnull,
+                                  path,
+                                  PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+#ifdef NS_DEBUG
   printf("mailnews registering from %s\n",path);
+#endif
   return rv;
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
+NSUnregisterSelf(nsISupports* aServMgr, const char* path)
 {
   nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
 
-  rv = nsRepository::UnregisterComponent(kCUrlListenerManagerCID, path);
-  rv = nsRepository::UnregisterComponent(kCMsgRFC822ParserCID, path);
-  rv = nsRepository::UnregisterComponent(kCMessengerCID, path);
-  rv = nsRepository::UnregisterComponent(kCMessengerBootstrapCID, path);
+  rv = compMgr->UnregisterComponent(kCUrlListenerManagerCID, path);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->UnregisterComponent(kCMsgRFC822ParserCID, path);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->UnregisterComponent(kCMessengerCID, path);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->UnregisterComponent(kCMessengerBootstrapCID, path);
+  if (NS_FAILED(rv)) return rv;
 #if 0
-  rv = nsRepository::UnregisterComponent(kCMsgGroupRecordCID, path);
+  rv = compMgr->UnregisterComponent(kCMsgGroupRecordCID, path);
+  if (NS_FAILED(rv)) return rv;
 #endif
-  rv = nsRepository::UnregisterComponent(kCMsgFolderEventCID, path);
-  rv = nsRepository::UnregisterComponent(kCMsgMailSessionCID, path);
+  rv = compMgr->UnregisterComponent(kCMsgFolderEventCID, path);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->UnregisterComponent(kCMsgMailSessionCID, path);
   return rv;
 }
 

@@ -19,12 +19,16 @@
 #include "pratom.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
 #include "nsINetPlugin.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "plugin_inst.h"
 #include "net.h"
+
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 /* 
  * Include all of the headers/defines for interfaces the libmime factory can 
@@ -181,7 +185,7 @@ nsresult nsMimeFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
                                            const char *aProgID,
@@ -201,40 +205,67 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 }
 
 
-extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 {
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
+// 
+// rhp - when the new interface is in place...this GOES AWAY!
+//       External includes necessary for test application
+//
+#include "net.h"
+extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
+											  URL_Struct *url, MWContext *context);
+
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+#ifdef NS_DEBUG
   printf("*** Mime being registered\n");
-  nsRepository::RegisterComponent(kCMimeMimeObjectClassAccessCID, NULL, NULL, path, 
-                                PR_TRUE, PR_TRUE);
-  nsRepository::RegisterComponent(kCMimeRFC822HTMLConverterCID, NULL, NULL, path, 
-                                PR_TRUE, PR_TRUE);
-  nsRepository::RegisterComponent(kCMimeHeaderConverterCID, NULL, NULL, path, 
-                                PR_TRUE, PR_TRUE);
-                                
-  nsRepository::RegisterComponent(kINetPluginMIMECID, NULL, PROGRAM_ID, path, 
+#endif
+  rv = compMgr->RegisterComponent(kCMimeMimeObjectClassAccessCID, NULL, NULL, path, 
                                   PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->RegisterComponent(kCMimeRFC822HTMLConverterCID, NULL, NULL, path, 
+                                  PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->RegisterComponent(kCMimeHeaderConverterCID, NULL, NULL, path, 
+                                  PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->RegisterComponent(kINetPluginMIMECID, NULL, PROGRAM_ID, path, 
+                                  PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
   return NS_OK;
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
 {
+  nsresult rv;
+  nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+#ifdef NS_DEBUG
   printf("*** Mime being unregistered\n");
-  nsRepository::UnregisterComponent(kCMimeMimeObjectClassAccessCID, path);
-  nsRepository::UnregisterComponent(kCMimeRFC822HTMLConverterCID, path);
-  nsRepository::UnregisterComponent(kCMimeHeaderConverterCID, path);
-  
-	return nsRepository::UnregisterComponent(kINetPluginMIMECID, path);
-  return NS_OK;
+#endif
+  rv = compMgr->UnregisterComponent(kCMimeMimeObjectClassAccessCID, path);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->UnregisterComponent(kCMimeRFC822HTMLConverterCID, path);
+  if (NS_FAILED(rv)) return rv;
+  rv = compMgr->UnregisterComponent(kCMimeHeaderConverterCID, path);
+  if (NS_FAILED(rv)) return rv;
+	rv = compMgr->UnregisterComponent(kINetPluginMIMECID, path);
+  if (NS_FAILED(rv)) return rv;
+  return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 // nsINetPlugin methods
 ////////////////////////////////////////////////////////////////////////////
+
 NS_METHOD
 nsMimeFactory::Initialize(void)
 {
@@ -252,4 +283,3 @@ nsMimeFactory::GetMIMEDescription(const char* *result)
 {
     return NS_OK;
 }
-

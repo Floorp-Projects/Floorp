@@ -40,7 +40,7 @@ nsMailboxService::~nsMailboxService()
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsMailboxService, nsIMailboxService::GetIID());
 
-nsresult nsMailboxService::ParseMailbox(const nsFilePath& aMailboxPath, nsIStreamListener *aMailboxParser, 
+nsresult nsMailboxService::ParseMailbox(const nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
 										nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
 	nsMailboxUrl * mailboxUrl = nsnull;
@@ -78,7 +78,7 @@ nsresult nsMailboxService::ParseMailbox(const nsFilePath& aMailboxPath, nsIStrea
 	return rv;
 }
 
-nsresult nsMailboxService::DisplayMessage(const nsFilePath& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
+nsresult nsMailboxService::DisplayMessage(const nsFileSpec& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
 										  nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
 	nsMailboxUrl * mailboxUrl = nsnull;
@@ -121,14 +121,14 @@ nsresult nsMailboxService::DisplayMessage(const nsFilePath& aMailboxPath, nsMsgK
 	return rv;
 }
 
-nsresult nsMailboxService::DisplayMessageNumber(const nsFilePath& aMailboxPath, PRUint32 aMessageNumber, nsISupports * aDisplayConsumer,
-									nsIUrlListener * aUrlListener, nsIURL ** aURL)
+nsresult nsMailboxService::DisplayMessageNumber(const nsFileSpec& aMailboxPath, PRUint32 aMessageNumber, nsISupports * aDisplayConsumer,
+                                                nsIUrlListener * aUrlListener, nsIURL ** aURL)
 {
 	nsMsgKeyArray msgKeys;
 	nsresult rv = NS_OK;
 	// extract the message key for this message number and turn around and call the other displayMessage method on it...
 	nsMailDatabase * mailDb = nsnull;
-	rv = nsMailDatabase::Open((nsFilePath&) aMailboxPath, PR_FALSE, &mailDb);
+	rv = nsMailDatabase::Open((nsFileSpec&) aMailboxPath, PR_FALSE, &mailDb);
 
 	if (NS_SUCCEEDED(rv) && mailDb)
 	{
@@ -138,7 +138,7 @@ nsresult nsMailboxService::DisplayMessageNumber(const nsFilePath& aMailboxPath, 
 		{
 			nsMsgKey msgKey = msgKeys[aMessageNumber];
 			// okay, we have the msgKey so let's get rid of our db state...
-			mailDb->Close();
+			mailDb->Close(PR_TRUE);
 			mailDb = nsnull;
 			rv = DisplayMessage(aMailboxPath, msgKey, nsnull, aDisplayConsumer, aUrlListener, aURL);
 		}
@@ -147,7 +147,7 @@ nsresult nsMailboxService::DisplayMessageNumber(const nsFilePath& aMailboxPath, 
 	}
 
 	if (mailDb) // in case we slipped through the cracks without releasing the db...
-		mailDb->Close();
+		mailDb->Close(PR_TRUE);
 
 	return rv;
 }

@@ -1618,7 +1618,7 @@ static char * mime_fix_header_1 (const char *string, PRBool addr_p, PRBool news_
 
 	if (addr_p) {
 		nsIMsgRFC822Parser * pRfc822;
-		nsresult rv = nsRepository::CreateInstance(kMsgRFC822ParserCID, 
+		nsresult rv = nsComponentManager::CreateInstance(kMsgRFC822ParserCID, 
                                                NULL, 
                                                nsIMsgRFC822Parser::GetIID(), 
                                                (void **) &pRfc822);
@@ -3154,7 +3154,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	}
 
 	nsINetService * pNetService;
-	nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, "netlib.dll", PR_FALSE, PR_FALSE); /*JFD - Should go away when netlib will register itself! */
+	nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, "netlib.dll", PR_FALSE, PR_FALSE); /*JFD - Should go away when netlib will register itself! */
 	nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
 	if (NS_SUCCEEDED(rv) && pNetService)
 	{
@@ -5474,8 +5474,9 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	  if (status >= 0)
 		{
 		  XP_FileClose (out);
-		  if (summaryIsValid)
+		  if (summaryIsValid) {
 			msg_SetSummaryValid(output_file_name, 0, 0);
+                  }
 		}
 	  else if (! file_existed_p)
 		{

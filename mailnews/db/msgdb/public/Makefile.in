@@ -24,6 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORTS= \
 		nsMsgHdr.h \
+		nsIMsgDatabase.h \
 		nsMsgDatabase.h \
 		nsMailDatabase.h				\
 		nsImapMailDatabase.h				\

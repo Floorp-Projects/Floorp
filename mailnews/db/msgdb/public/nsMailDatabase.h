@@ -28,7 +28,7 @@ class nsMsgKeyArray;
 class MSG_Master;
 class MSG_FolderInfo;
 class nsIOFileStream;
-class nsFilePath;
+class nsFileSpec;
 
 // this is the version number for the mail db. If the file format changes, we 
 // just reparse the mail folder. 
@@ -37,18 +37,18 @@ const int kMailDBVersion = 1;
 class nsMailDatabase : public nsMsgDatabase
 {
 public:
-			nsMailDatabase(nsFilePath& folder);
+			nsMailDatabase(nsFileSpec& folder);
 	virtual ~nsMailDatabase();
-	static nsresult			Open(nsFilePath &folderName, PRBool create, nsMailDatabase** pMessageDB,
-									PRBool upgrading = PR_FALSE);
+	static nsresult			Open(nsFileSpec &folderName, PRBool create, nsMailDatabase** pMessageDB,
+                                 PRBool upgrading = PR_FALSE);
 
-	static  nsresult		CloneInvalidDBInfoIntoNewDB(nsFilePath &pathName, nsMailDatabase** pMailDB);
+	static  nsresult		CloneInvalidDBInfoIntoNewDB(nsFileSpec &pathName, nsMailDatabase** pMailDB);
 
-	virtual nsresult		OnNewPath (nsFilePath &newPath);
+	NS_IMETHOD OnNewPath(nsFileSpec &newPath);
 
-	virtual nsresult		DeleteMessages(nsMsgKeyArray &nsMsgKeys, nsIDBChangeListener *instigator);
+	NS_IMETHOD DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
 
-	static  nsresult		SetFolderInfoValid(nsFilePath &pathname, int num, int numunread);
+	static  nsresult		SetFolderInfoValid(nsFileSpec &pathname, int num, int numunread);
 	nsresult				GetFolderName(nsString &folderName);
 	virtual nsMailDatabase	*GetMailDB() {return this;}
 	MSG_Master		*GetMaster() {return m_master;}
@@ -67,7 +67,7 @@ public:
 	nsresult				DeleteOfflineOp(nsMsgKey opKey);
 	nsresult				SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, nsMsgKey key);
 	
-	virtual nsresult		SetSummaryValid(PRBool valid = PR_TRUE);
+    NS_IMETHOD SetSummaryValid(PRBool valid);
 	
 	nsresult 				GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds);
 #ifdef DEBUG	// strictly for testing purposes
@@ -81,7 +81,7 @@ protected:
 
 	MSG_Master				*m_master;
 	PRBool					m_reparse;
-	nsFilePath				m_folderName;
+	nsFileSpec				m_folderName;
 	nsIOFileStream			*m_folderStream; 	/* this is a cache for loops which want file left open */
 };
 

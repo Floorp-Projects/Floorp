@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -97,18 +97,14 @@ nsMessengerBootstrap::~nsMessengerBootstrap()
 nsresult
 nsMessengerBootstrap::Initialize()
 {
-  nsIScriptNameSetRegistry *registry;
-  nsresult rv =
-    nsServiceManager::GetService(kCScriptNameSetRegistryCID,
-                                 nsIScriptNameSetRegistry::GetIID(),
-                                 (nsISupports **)&registry);
-  if (NS_SUCCEEDED(rv)) {
-    nsMessengerNameSet* nameSet = new nsMessengerNameSet();
-    rv = registry->AddExternalNameSet(nameSet);
-    /* todo - when to release this service? */
-  }
-
-  return rv;
+  nsresult rv;
+  nsService<nsIScriptNameSetRegistry> registry(kCScriptNameSetRegistryCID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  nsMessengerNameSet* nameSet = new nsMessengerNameSet();
+  if (nameSet == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return registry->AddExternalNameSet(nameSet);
 }
 
 
@@ -149,6 +145,6 @@ NS_NewMessenger(nsIMessenger **msg)
     new nsMessenger();
   if (!messenger) return NS_ERROR_OUT_OF_MEMORY;
   return messenger->QueryInterface(nsIMessenger::GetIID(),
-			           (void**)&msg);
+                                   (void**)&msg);
 }
 

@@ -43,7 +43,7 @@
 #include "nsITransport.h"
 #include "nsIURL.h"
 #include "nsINetService.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsNNTPNewsgroupPost.h"
 
@@ -653,14 +653,11 @@ int main()
     PLEventQueue *queue;
     nsresult result;
 
-    nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 
 	// Create the Event Queue for this thread...
-    nsIEventQueueService *pEventQService = nsnull;
-    result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::GetIID(),
-                                          (nsISupports **)&pEventQService);
+    nsService<nsIEventQueueService> pEventQService(kEventQueueServiceCID, &result);
 	if (NS_SUCCEEDED(result)) {
       // XXX: What if this fails?
       result = pEventQService->CreateThreadEventQueue();

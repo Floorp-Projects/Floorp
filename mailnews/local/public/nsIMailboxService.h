@@ -64,7 +64,7 @@ public:
 	// the url.
 	//////////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD ParseMailbox(const nsFilePath& aMailboxPath, nsIStreamListener * aMailboxParser, 
+	NS_IMETHOD ParseMailbox(const nsFileSpec& aMailboxPath, nsIStreamListener * aMailboxParser, 
 							nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ public:
 	// It would be nice if we can figure this out for ourselves in the protocol but we can't do 
 	// that right now. 
 	//////////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD DisplayMessage(const nsFilePath& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
+	NS_IMETHOD DisplayMessage(const nsFileSpec& aMailboxPath, nsMsgKey aMessageKey, const char * aMessageID,
 		nsISupports * aDisplayConsumer, nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
 	/////////////////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +82,7 @@ public:
 	// message number 'n' in this mailbox without having to go out and get the key for message number 
 	// 'n'. this function simply makes that possible. 
 	/////////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD DisplayMessageNumber(const nsFilePath& aMailboxPath, PRUint32 aMessageNumber, 
+	NS_IMETHOD DisplayMessageNumber(const nsFileSpec& aMailboxPath, PRUint32 aMessageNumber, 
 		nsISupports * aDisplayConsumer,	nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 
 };

@@ -69,6 +69,12 @@ nsDBFolderInfo::QueryInterface(REFNSIID iid, void** result)
 
 
 nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
+  : m_expiredMarkColumnToken(0),
+    m_expiredMark(0),
+    m_viewType(0),
+    m_numVisibleMessagesColumnToken(0),
+    m_flags(0),
+    m_lastMessageLoaded(0)
 {
     NS_INIT_REFCNT();
 	m_mdbTable = NULL;
@@ -323,6 +329,7 @@ void nsDBFolderInfo::GetMailboxName(nsString &boxName)
 
 void nsDBFolderInfo::SetViewType(PRInt32 viewType)
 {
+  m_viewType = viewType;
 }
 
 PRInt32	nsDBFolderInfo::GetViewType() 

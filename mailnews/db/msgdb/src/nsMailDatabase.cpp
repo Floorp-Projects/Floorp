@@ -24,7 +24,7 @@
 #include "nsLocalFolderSummarySpec.h"
 #include "nsFileSpec.h"
 
-nsMailDatabase::nsMailDatabase(nsFilePath& folder)
+nsMailDatabase::nsMailDatabase(nsFileSpec& folder)
     : m_master(nsnull), m_reparse(PR_FALSE), m_folderName(folder), m_folderStream(nsnull)
 {
 }
@@ -35,7 +35,7 @@ nsMailDatabase::~nsMailDatabase()
 
 
 
-/* static */ nsresult	nsMailDatabase::Open(nsFilePath &folderName, PRBool create, nsMailDatabase** pMessageDB,
+/* static */ nsresult	nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsMailDatabase** pMessageDB,
                                              PRBool upgrading /*=PR_FALSE*/)
 {
 	nsMailDatabase	*mailDB;
@@ -48,7 +48,7 @@ nsMailDatabase::~nsMailDatabase()
 
 	*pMessageDB = NULL;
 
-	nsFilePath dbPath(summarySpec);
+	nsFileSpec dbPath(summarySpec);
 
 	mailDB = (nsMailDatabase *) FindInCache(dbPath);
 	if (mailDB)
@@ -110,7 +110,7 @@ nsMailDatabase::~nsMailDatabase()
 		}
 		if (err != NS_OK)
 		{
-			mailDB->Close();
+			mailDB->Close(PR_TRUE);
 			mailDB = NULL;
 		}
 	}
@@ -141,19 +141,19 @@ nsMailDatabase::~nsMailDatabase()
 	return err;
 }
 
-/* static */ nsresult nsMailDatabase::CloneInvalidDBInfoIntoNewDB(nsFilePath &pathName, nsMailDatabase** pMailDB)
+/* static */ nsresult nsMailDatabase::CloneInvalidDBInfoIntoNewDB(nsFileSpec &pathName, nsMailDatabase** pMailDB)
 {
 	nsresult ret = NS_OK;
 	return ret;
 }
 
-nsresult nsMailDatabase::OnNewPath (nsFilePath &newPath)
+nsresult nsMailDatabase::OnNewPath (nsFileSpec &newPath)
 {
 	nsresult ret = NS_OK;
 	return ret;
 }
 
-nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray &nsMsgKeys, nsIDBChangeListener *instigator)
+nsresult nsMailDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator)
 {
 	nsresult ret = NS_OK;
 	m_folderStream = new nsIOFileStream(nsFileSpec(m_dbName));
@@ -412,11 +412,11 @@ nsresult nsMailDatabase::GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds)
 }
 
 /* static */
-nsresult nsMailDatabase::SetFolderInfoValid(nsFilePath &folderName, int num, int numunread)
+nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec &folderName, int num, int numunread)
 {
 	struct stat st;
 	nsLocalFolderSummarySpec	summarySpec(folderName);
-	nsFilePath					summaryPath(summarySpec);
+	nsFileSpec					summaryPath(summarySpec);
 	nsresult		err;
 
 	if (stat((const char*) folderName, &st)) 
@@ -452,7 +452,7 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFilePath &folderName, int num, int
 		pMessageDB->m_dbFolderInfo->ChangeNumNewMessages(numunread);
 		pMessageDB->m_dbFolderInfo->ChangeNumMessages(num);
 	}
-	pMessageDB->Close();
+	pMessageDB->Close(PR_TRUE);
 	return NS_OK;
 }
 
@@ -468,6 +468,7 @@ void nsMailDatabase::SetReparse(PRBool reparse)
 #ifdef DEBUG	// strictly for testing purposes
 nsresult nsMailDatabase::PrePopulate()
 {
+	nsIMessage	*msg;
 	nsMsgHdr	*newHdr = NULL;
 	PRTime resultTime, intermediateResult, microSecondsPerSecond;
 	resultTime = PR_Now();
@@ -477,44 +478,43 @@ nsresult nsMailDatabase::PrePopulate()
 	LL_DIV(intermediateResult, resultTime, microSecondsPerSecond);
 	LL_L2I(resDate, intermediateResult);
 
-	nsresult	res = CreateNewHdr(1, &newHdr);
-	if (res == NS_OK && newHdr)
-	{
-		newHdr->SetAuthor("bird@celtics.com (Larry Bird)");
-		newHdr->SetSubject("Why the Lakers suck");
-		newHdr->SetDate(resDate);
-		newHdr->SetRecipients("riley@heat.com (Pat Riley)", FALSE);
-		AddNewHdrToDB (newHdr, PR_TRUE);
-		newHdr->Release();
-	}
-	res = CreateNewHdr(2, &newHdr);
-	if (res == NS_OK && newHdr)
-	{
-		newHdr->SetAuthor("shaq@brick.com (Shaquille O'Neal)");
-		newHdr->SetSubject("Anyone here know how to shoot free throws?");
-		newHdr->SetDate(resDate);
-		AddNewHdrToDB (newHdr, PR_TRUE);
-		newHdr->Release();
-	}
-	res = CreateNewHdr(3, &newHdr);
-	if (res == NS_OK && newHdr)
-	{
-		newHdr->SetAuthor("dj@celtics.com (Dennis Johnson)");
-		newHdr->SetSubject("Has anyone seen my jump shot?");
-		newHdr->SetDate(resDate);
-		AddNewHdrToDB (newHdr, PR_TRUE);
-		newHdr->Release();
-	}
-	res = CreateNewHdr(4, &newHdr);
-	if (res == NS_OK && newHdr)
-	{
-		newHdr->SetAuthor("sichting@celtics.com (Jerry Sichting)");
-		newHdr->SetSubject("Tips for fighting 7' 4\" guys");
-		newHdr->SetDate(resDate);
-		AddNewHdrToDB (newHdr, PR_TRUE);
-		newHdr->Release();
-	}
-	return res;
+	nsresult rv = CreateNewHdr(1, &msg);
+    if (NS_FAILED(rv)) return rv;
+    newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
+	newHdr->SetAuthor("bird@celtics.com (Larry Bird)");
+	newHdr->SetSubject("Why the Lakers suck");
+	newHdr->SetDate(resDate);
+	newHdr->SetRecipients("riley@heat.com (Pat Riley)", FALSE);
+	AddNewHdrToDB (newHdr, PR_TRUE);
+	newHdr->Release();
+
+	rv = CreateNewHdr(2, &msg);
+    if (NS_FAILED(rv)) return rv;
+    newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
+	newHdr->SetAuthor("shaq@brick.com (Shaquille O'Neal)");
+	newHdr->SetSubject("Anyone here know how to shoot free throws?");
+	newHdr->SetDate(resDate);
+	AddNewHdrToDB (newHdr, PR_TRUE);
+	newHdr->Release();
+
+	rv = CreateNewHdr(3, &msg);
+    if (NS_FAILED(rv)) return rv;
+    newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
+	newHdr->SetAuthor("dj@celtics.com (Dennis Johnson)");
+	newHdr->SetSubject("Has anyone seen my jump shot?");
+	newHdr->SetDate(resDate);
+	AddNewHdrToDB (newHdr, PR_TRUE);
+	newHdr->Release();
+
+	rv = CreateNewHdr(4, &msg);
+    if (NS_FAILED(rv)) return rv;
+    newHdr = NS_STATIC_CAST(nsMsgHdr*, msg);          // closed system, cast ok
+	newHdr->SetAuthor("sichting@celtics.com (Jerry Sichting)");
+	newHdr->SetSubject("Tips for fighting 7' 4\" guys");
+	newHdr->SetDate(resDate);
+	AddNewHdrToDB (newHdr, PR_TRUE);
+	newHdr->Release();
+	return NS_OK;
 }
 
 #endif

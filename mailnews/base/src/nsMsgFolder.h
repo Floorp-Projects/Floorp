@@ -42,7 +42,7 @@ public:
   nsMsgFolder(void);
   virtual ~nsMsgFolder(void);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsICollection methods:
   NS_IMETHOD_(PRUint32) Count(void) const;

@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsRepository.h" 
+#include "nsIComponentManager.h" 
 #include "nsMimeObjectClassAccess.h"
 
 static NS_DEFINE_CID(kMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCESS_CID); 
@@ -30,7 +30,7 @@ COM_GetmimeInlineTextClass(void)
   nsMimeObjectClassAccess	*objAccess;
   void                    *ptr = NULL;
 
-  int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
+  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
                                       NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
@@ -48,7 +48,7 @@ COM_GetmimeLeafClass(void)
   nsMimeObjectClassAccess	*objAccess;
   void                    *ptr = NULL;
 
-  int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
+  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
                                       NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
@@ -66,7 +66,7 @@ COM_GetmimeObjectClass(void)
   nsMimeObjectClassAccess	*objAccess;
   void                    *ptr = NULL;
 
-  int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
+  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
                                       NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
@@ -84,7 +84,7 @@ COM_GetmimeContainerClass(void)
   nsMimeObjectClassAccess	*objAccess;
   void                    *ptr = NULL;
 
-  int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
+  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
                                       NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
@@ -102,7 +102,7 @@ COM_GetmimeMultipartClass(void)
   nsMimeObjectClassAccess	*objAccess;
   void                    *ptr = NULL;
 
-  int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
+  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
                                       NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
@@ -120,7 +120,7 @@ COM_GetmimeMultipartSignedClass(void)
   nsMimeObjectClassAccess	*objAccess;
   void                    *ptr = NULL;
 
-  int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
+  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
                                       NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
@@ -139,7 +139,7 @@ COM_MimeObject_write(void *mimeObject, char *data, PRInt32 length,
   nsMimeObjectClassAccess	*objAccess;
   int                     rc = -1;
 
-  int res = nsRepository::CreateInstance(kMimeObjectClassAccessCID, 
+  int res = nsComponentManager::CreateInstance(kMimeObjectClassAccessCID, 
                                       NULL, nsIMimeObjectClassAccess::GetIID(), 
                                       (void **) &objAccess); 
   if (res == NS_OK && objAccess) 
@@ -163,9 +163,9 @@ COM_MimeObject_write(void *mimeObject, char *data, PRInt32 length,
 /**  
   // NOTE: Need to do these in the global registry
   // register our dll
-  nsRepository::RegisterFactory(kRFC822toHTMLStreamConverterCID, 
+  nsComponentManager::RegisterFactory(kRFC822toHTMLStreamConverterCID, 
                                 "mime.dll", PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kMimeObjectClassAccessCID,
+  nsComponentManager::RegisterFactory(kMimeObjectClassAccessCID,
                                 "mime.dll", PR_FALSE, PR_FALSE);
   
 

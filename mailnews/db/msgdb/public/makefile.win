@@ -23,6 +23,7 @@ IDLSRCS =							\
 			$(NULL)
 
 EXPORTS =	 						\
+			nsIMsgDatabase.h    \
 			nsMsgDatabase.h    \
 			nsMailDatabase.h				\
 			nsImapMailDatabase.h				\

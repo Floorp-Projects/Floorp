@@ -34,7 +34,7 @@
 #include "nsITransport.h"
 #include "nsIURL.h"
 #include "nsINetService.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 #include "nsString.h"
 
 #include "nsISmtpService.h"
@@ -211,14 +211,15 @@ nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
 	InitializeTestDriver(); // prompts user for initialization information...
 
 	m_smtpService = nsnull;
-	nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::GetIID(), (nsISupports **)&m_smtpService);
+	nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::GetIID(),
+                                 (nsISupports **)&m_smtpService); // XXX probably need shutdown listener here
 }
 
 
 nsSmtpTestDriver::~nsSmtpTestDriver()
 {
 	NS_IF_RELEASE(m_netService); 
-	nsServiceManager::ReleaseService(kSmtpServiceCID, m_smtpService);
+	nsServiceManager::ReleaseService(kSmtpServiceCID, m_smtpService); // XXX probably need shutdown listener here
 }
 
 NS_IMPL_ISUPPORTS(nsSmtpTestDriver, nsIUrlListener::GetIID())
@@ -419,18 +420,15 @@ int main()
     PLEventQueue *queue;
     nsresult result;
 
-    nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-	nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
 
 	// Create the Event Queue for this thread...
-    nsIEventQueueService *pEventQService = nsnull;
-    result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          nsIEventQueueService::GetIID(),
-                                          (nsISupports **)&pEventQService);
-	if (NS_SUCCEEDED(result)) {
-      // XXX: What if this fails?
-      result = pEventQService->CreateThreadEventQueue();
-    }
+    nsService<nsIEventQueueService> pEventQService(kEventQueueServiceCID, &result);
+	if (NS_FAILED(result)) return result;
+
+    result = pEventQService->CreateThreadEventQueue();
+	if (NS_FAILED(result)) return result;
 
 	// ask the net lib service for a nsINetStream:
 	result = NS_NewINetService(&pNetService, NULL);
@@ -440,8 +438,7 @@ int main()
 		return 1;
 	}
 
-    result =
-        pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
+    result = pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
     if (NS_FAILED(result) || !queue) {
         printf("unable to get event queue.\n");
         return 1;
@@ -460,9 +457,5 @@ int main()
 		// when it kicks out...it is done....so delete it...
 		NS_RELEASE(driver);
 	}
-
-	// shut down:
-	nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
-    
-    return 0;
+    return NS_OK;
 }

@@ -21,7 +21,7 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsRepository.h"
+#include "nsIComponentManager.h"
 
 #define NS_MSGRFC822PARSER_CID                    \
 { /* 26D71620-7421-11d2-804A-006008128C4E */      \

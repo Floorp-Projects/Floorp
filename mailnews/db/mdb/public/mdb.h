@@ -1235,8 +1235,8 @@ public:
    mdb_err DropActivity( // tell collection usage no longer expected
     nsIMdbEnv* ev) ;
   // } ----- end activity dropping methods -----
-	mdbOid m_Oid;
-	nsIMdbCollection() {m_Oid.mOid_Id = 0;}
+   mdbOid m_Oid;
+   nsIMdbCollection() { m_Oid.mOid_Scope = 0; m_Oid.mOid_Id = 0; }
 // } ===== end nsIMdbCollection methods =====
 };
 

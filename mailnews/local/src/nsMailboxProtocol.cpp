@@ -100,14 +100,11 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 		{
 			// extract the file name and create a file transport...
 			const char * fileName = nsnull;
-			nsINetService * pNetService = nsnull;
-
-			rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
+            nsService<nsINetService> pNetService(kNetServiceCID, &rv);
 			if (NS_SUCCEEDED(rv) && pNetService)
 			{
 				m_runningUrl->GetFile(&fileName);
 				rv = pNetService->CreateFileSocketTransport(&m_transport, fileName);
-				nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
 			}
 		}
 	}
@@ -303,14 +300,14 @@ PRInt32 nsMailboxProtocol::SetupReadMessage()
 
 	nsMsgKey messageKey;
 	PRUint32 messageSize = 0;
-	const nsFilePath * dbFilePath = nsnull;
-	m_runningUrl->GetFilePath(&dbFilePath);
+	const nsFileSpec * dbFileSpec = nsnull;
+	m_runningUrl->GetFilePath(&dbFileSpec);
 	m_runningUrl->GetMessageKey(messageKey);
-	if (dbFilePath)
+	if (dbFileSpec)
 	{
 		nsMailDatabase * mailDb = nsnull;
-		nsMsgHdr * msgHdr = nsnull;
-		nsMailDatabase::Open((const nsFilePath) *dbFilePath, PR_FALSE, &mailDb);
+		nsIMessage * msgHdr = nsnull;
+		nsMailDatabase::Open((const nsFileSpec) *dbFileSpec, PR_FALSE, &mailDb);
 		if (mailDb) // did we get a db back?
 		{
 			mailDb->GetMsgHdrForKey(messageKey, &msgHdr);
@@ -319,7 +316,7 @@ PRInt32 nsMailboxProtocol::SetupReadMessage()
 				msgHdr->GetMessageSize(&messageSize);
 				msgHdr->Release();
 			}
-			mailDb->Close();
+			NS_RELEASE(mailDb);
 		}
 	}
 	m_runningUrl->SetMessageSize(messageSize);

@@ -16,195 +16,44 @@
  * Reserved.
  */
 
+#define NS_IMPL_IDS
+#include "nsIPref.h"
+
 #include "msgCore.h"    // precompiled header...
 
 #include "nsLocalMailFolder.h"	 
 #include "nsMsgFolderFlags.h"
 #include "prprf.h"
 #include "nsISupportsArray.h"
-#include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "nsIRDFService.h"
-#include "nsRDFCID.h"
 #include "nsIEnumerator.h"
 #include "nsMailDatabase.h"
+#include "nsCOMPtr.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
-
-////////////////////////////////////////////////////////////////////////////////
-
-static nsString*
-nsGetNameFromPath(const nsFileSpec* path)
-{
-  const char* pathStr = (const char*)path;
-  char* ptr = PL_strrchr(pathStr, '/');
-  if (ptr)
-    return new nsString(ptr + 1);
-  else
-    return new nsString(pathStr);
-}
-
-static const char kRootPrefix[] = "mailbox:/";
-static const char kMsgRootFolderPref[] = "mailnews.rootFolder";
-
-#define NS_IMPL_IDS
-extern "C" const nsID kIPrefIID = {0xa22ad7b0, 0xca86, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4};
-//NS_DECLARE_ID(kIPrefIID, 
-//  0xa22ad7b0, 0xca86, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4);
-
-// {DC26E0E0-CA94-11d1-A9A4-00805F8A7AC4}
-extern "C" const nsID kPrefCID = {0xdc26e0e0, 0xca94, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4};
-//NS_DECLARE_ID(kPrefCID, 
-//  0xdc26e0e0, 0xca94, 0x11d1, 0xa9, 0xa4, 0x0, 0x80, 0x5f, 0x8a, 0x7a, 0xc4);
-
-
-static nsresult
-nsURI2Path(char* uriStr, nsFileSpec& pathResult, PRBool asParentFolder)
-{
-  nsAutoString path;
-  nsAutoString uri = uriStr;
-  if (uri.Find(kRootPrefix) != 0)     // if doesn't start with kRootPrefix
-    return NS_ERROR_FAILURE;
-
-  // get mailbox root preference and cache it permanently - this
-  // is extremely temporary...I'm waiting for hubie to check in the 
-  // new preferences service stuff.
-#if 1
-  #define ROOT_PATH_LENGTH 128 
-  static char rootPath[ROOT_PATH_LENGTH];
-  int rootLen = ROOT_PATH_LENGTH;
-  static PRBool gGotMailboxRoot = PR_FALSE;
-  if (!gGotMailboxRoot)
-  {
-	  nsIPref* prefs;
-	  nsresult rv;
-	  rv = nsServiceManager::GetService(kPrefCID, kIPrefIID,
-										(nsISupports**)&prefs);
-	  if (NS_FAILED(rv)) return rv; 
-
-	  if (prefs && NS_SUCCEEDED(rv))
-	  {
-		prefs->Startup("prefs.js");
-
-		rv = prefs->GetCharPref(kMsgRootFolderPref, rootPath, &rootLen);
-		nsServiceManager::ReleaseService(kPrefCID, prefs);
-		gGotMailboxRoot = PR_TRUE;
-	  }
-	  if (NS_FAILED(rv))
-		return rv; 
-  }
-#else
-  char rootPath[] = "c:\\program files\\netscape\\users\\bienvenu\\mail";
-#endif
-  path.Append(rootPath);
-  uri.Cut(0, nsCRT::strlen(kRootPrefix));
-
-  PRInt32 uriLen = uri.Length();
-  PRInt32 trailPos = uri.RFind('/');
-  if (trailPos != -1 && (trailPos == uriLen - 1)) {
-    // delete trailing slash
-    uri.Left(uri, uriLen - 1);
-    uriLen--;
-  }
-
-
-  PRInt32 pos;
-  while(uriLen > 0) {
-    nsAutoString folderName;
-
-   	PRInt32 leadingPos = uri.Find('/');
-	//if it's the first character then remove it.
-	if(leadingPos == 0)
-	{
-		uri.Cut(0, 1);
-		uriLen--;
-	}
-
-	pos = uri.Find('/');
-    if (pos < 0)
-      pos = uriLen;
-
-    PRInt32 cnt = uri.Left(folderName, pos);
-    NS_ASSERTION(cnt == pos, "something wrong with nsString");
-    path.Append("\\");
-    path.Append(folderName);
-    uri.Cut(0, pos);
-    uriLen = uri.Length();
-	if(uriLen != 0 || asParentFolder)
-	    path.Append(".sbd");
-  }
-  // XXX bogus, nsFileSpec should take an nsString
-  char* str = path.ToNewCString();
-  pathResult = *new nsFileSpec(str, PR_FALSE);
-  delete[] str;
-  return NS_OK;
-}
-
-static nsresult
-nsPath2URI(nsFileSpec& path, const char* *uri)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-static nsresult
-nsURI2Name(char* uriStr, nsString& name)
-{
-  nsAutoString uri = uriStr;
-  if (uri.Find(kRootPrefix) != 0)     // if doesn't start with kRootPrefix
-    return NS_ERROR_FAILURE;
-  PRInt32 pos = uri.RFind("/");
-  PRInt32 length = uri.Length();
-  PRInt32 count = length - (pos + 1);
-  return uri.Right(name, count);
-}
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
   : nsMsgFolder(), mPath(nsnull), mExpungedBytes(0), 
     mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
-    mInitialized(PR_FALSE), mMessagesInitialized(PR_FALSE),
-		mMessages(nsnull)
+    mInitialized(PR_FALSE), mMailDatabase(nsnull)
 {
-  NS_INIT_REFCNT();
+//  NS_INIT_REFCNT(); done by superclass
 }
 
 nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 {
-	if(mMessages)
-	{
-		PRUint32 count = mMessages->Count();
-
-		for (int i = count - 1; i >= 0; i--)
-			mMessages->RemoveElementAt(i);
-
-		NS_RELEASE(mMessages);
-	}
+  NS_IF_RELEASE(mMailDatabase);
 }
 
-NS_IMPL_ADDREF(nsMsgLocalMailFolder)
-NS_IMPL_RELEASE(nsMsgLocalMailFolder)
-
-NS_IMETHODIMP
-nsMsgLocalMailFolder::QueryInterface(REFNSIID iid, void** result)
-{
-  if (! result)
-    return NS_ERROR_NULL_POINTER;
-
-  *result = nsnull;
-  if (iid.Equals(nsIMsgLocalMailFolder::GetIID()) ||
-      iid.Equals(kISupportsIID))
-  {
-    *result = NS_STATIC_CAST(nsIMsgLocalMailFolder*, this);
-    AddRef();
-    return NS_OK;
-  }
-  return nsMsgFolder::QueryInterface(iid, result);
-}
+NS_IMPL_ISUPPORTS_INHERITED(nsMsgLocalMailFolder, nsMsgFolder, nsIMsgLocalMailFolder)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -242,8 +91,12 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
   nsresult rv = NS_OK;
   nsAutoString currentFolderName;
   nsFileSpec path;
-  rv = GetPathAsParentFolder(path);
+  rv = GetPath(path);
   if (NS_FAILED(rv)) return rv;
+
+  nsService<nsIRDFService> rdf(kRDFServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
   for (nsDirectoryIterator dir(path); dir.Exists(); dir++) {
     nsFileSpec currentFolderPath = (nsFileSpec&)dir;
 
@@ -257,105 +110,21 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
 
     uri.Append(currentFolderName);
     char* uriStr = uri.ToNewCString();
-    if (uriStr == nsnull) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      goto done;
-    }
+    if (uriStr == nsnull) 
+      return NS_ERROR_OUT_OF_MEMORY;
 	
-	nsIRDFService* rdfService = nsnull;
-    nsMsgLocalMailFolder* folder = nsnull;
-
-	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                             nsIRDFService::GetIID(),
-                                             (nsISupports**) &rdfService);
-	if(NS_SUCCEEDED(rv))
-	{
-		if(NS_SUCCEEDED(rv = rdfService->GetResource(uriStr, (nsIRDFResource**)&folder)))
-		{
-		    mSubFolders->AppendElement(NS_STATIC_CAST(nsIMsgFolder*, folder));
-		}
-		nsServiceManager::ReleaseService(kRDFServiceCID, rdfService);
-	}
+    // XXX trim off .sbd from uriStr
+    nsIRDFResource* res;
+    rv = rdf->GetResource(uriStr, &res);
+    if (NS_FAILED(rv))
+      return rv;
+    nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+    if (NS_FAILED(rv))
+      return rv;        // continue?
     delete[] uriStr;
+    mSubFolders->AppendElement(folder);
   }
-  done:
   return rv;
-}
-
-
-nsresult
-nsMsgLocalMailFolder::Initialize(void)
-{
-  nsFileSpec path;
-  nsresult rv = GetPathAsParentFolder(path);
-  if (NS_FAILED(rv)) return rv;
-  PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
-  if (path.IsDirectory()) {
-      newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
-      SetFlag(newFlags);
-      return CreateSubFolders();
-  }
-  else {
-    UpdateSummaryTotals();
-    // Look for a directory for this mail folder, and recurse into it.
-    // e.g. if the folder is "inbox", look for "inbox.sbd". 
-#if 0
-    char *folderName = path->GetLeafName();
-    char *newLeafName = (char*)malloc(PL_strlen(folderName) + PL_strlen(kDirExt) + 2);
-    PL_strcpy(newLeafName, folderName);
-    PL_strcat(newLeafName, kDirExt);
-    path->SetLeafName(newLeafName);
-    if(folderName)
-      delete[] folderName;
-    if(newLeafName)
-      delete[] newLeafName;
-#endif
-  }
-  return NS_OK;
-}
-
-
-nsresult
-nsMsgLocalMailFolder::InitializeMessages(void)
-{
-	nsNativeFileSpec path;
-	nsresult rv = GetPath(path);
-	if (NS_FAILED(rv)) return rv;
-	
-	nsFilePath filePath(path);
-	nsMailDatabase *pMailDatabase;
-
-	rv = NS_NewISupportsArray(&mMessages);
-	if (NS_FAILED(rv))
-		return rv;
-	NS_ADDREF(mMessages);
-
-	nsMailDatabase::Open(filePath, PR_TRUE, &pMailDatabase, PR_FALSE);
-	if(pMailDatabase)
-	{
-#ifdef DEBUG
-		pMailDatabase->PrePopulate();
-#endif
-		ListContext *pContext;
-		nsMsgHdr *pHdr;
-		char ch ='a';
-
-		pMailDatabase->ListFirst(&pContext, &pHdr);
-		while(pHdr)
-		{
-			nsISupports *supports;
-		  if(NS_SUCCEEDED(rv = pHdr->QueryInterface(kISupportsIID, (void**)&supports)))
-			{
-				mMessages->AppendElement(supports);
-				NS_RELEASE(supports);
-				pMailDatabase->ListNext(pContext, &pHdr);
-			}
-			else
-				return rv;
-		}
-		pMailDatabase->ListDone(pContext);
-	}
-	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -378,7 +147,52 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
 {
   if (!mInitialized) {
-    nsresult rv = Initialize();
+    nsFileSpec path;
+    nsresult rv = GetPath(path);
+    if (NS_FAILED(rv)) return rv;
+
+    // we have to treat the root folder specially, because it's name
+    // doesn't end with .sbd
+    if (nsCRT::strcmp(mURI, kMailboxRootURI) == 0) {
+      // don't concat the full separator with .sbd
+    }
+    else {
+      nsAutoString sep;
+      rv = nsGetMailFolderSeparator(sep);
+      if (NS_FAILED(rv)) return rv;
+
+      // see if there's a dir with the same name ending with .sbd
+      // unfortunately we can't just say:
+      //          path += sep;
+      // here because of the way nsFileSpec concatenates
+      nsAutoString str = path;
+      str += sep;
+      path = str;
+    }
+
+    PRInt32 newFlags = MSG_FOLDER_FLAG_MAIL;
+    if (path.IsDirectory()) {
+      newFlags |= (MSG_FOLDER_FLAG_DIRECTORY | MSG_FOLDER_FLAG_ELIDED);
+      SetFlag(newFlags);
+      rv = CreateSubFolders();
+    }
+    else {
+      UpdateSummaryTotals();
+      // Look for a directory for this mail folder, and recurse into it.
+      // e.g. if the folder is "inbox", look for "inbox.sbd". 
+#if 0
+      char *folderName = path->GetLeafName();
+      char *newLeafName = (char*)malloc(PL_strlen(folderName) + PL_strlen(kDirExt) + 2);
+      PL_strcpy(newLeafName, folderName);
+      PL_strcat(newLeafName, kDirExt);
+      path->SetLeafName(newLeafName);
+      if(folderName)
+        delete[] folderName;
+      if(newLeafName)
+        delete[] newLeafName;
+#endif
+    }
+
     if (NS_FAILED(rv)) return rv;
     mInitialized = PR_TRUE;      // XXX do this on failure too?
   }
@@ -402,12 +216,23 @@ nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newEleme
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 {
-  if (!mMessagesInitialized) {
-    nsresult rv = InitializeMessages();
+  if (mMailDatabase == nsnull) {
+    nsNativeFileSpec path;
+    nsresult rv = GetPath(path);
     if (NS_FAILED(rv)) return rv;
-    mMessagesInitialized = PR_TRUE;      // XXX do this on failure too?
+	
+    PRBool upgrading = PR_FALSE;
+#ifdef DEBUG_warren
+    upgrading = PR_TRUE;
+#endif
+    rv = nsMailDatabase::Open(path, PR_TRUE, &mMailDatabase, upgrading);
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef DEBUG
+    mMailDatabase->PrePopulate();
+#endif
   }
-  return mMessages->Enumerate(result);
+  return mMailDatabase->EnumerateMessages(result);
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
@@ -576,7 +401,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::Rename (char *newName)
+NS_IMETHODIMP nsMsgLocalMailFolder::Rename(char *newName)
 {
 #ifdef HAVE_PORT
   // change the leaf name (stored separately)
@@ -743,8 +568,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetName(char **name)
     {
       SetName("Local Mail");
       mHaveReadNameFromDB = TRUE;
-	  *name = mName.ToNewCString();
-	  return NS_OK;
+      *name = mName.ToNewCString();
+      return NS_OK;
     }
     else
     {
@@ -752,7 +577,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetName(char **name)
     }
   }
 	nsAutoString folderName;
-	nsURI2Name(mURI, folderName);
+	nsURI2Name(kMailboxRootURI, mURI, folderName);
 	*name = folderName.ToNewCString();
 
   return NS_OK;
@@ -785,8 +610,7 @@ nsresult  nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo
     if(!db || !folderInfo)
 		return NS_ERROR_NULL_POINTER;
 
-	nsFilePath filePath(mPath);
-    openErr = nsMailDatabase::Open (filePath, FALSE, &mailDB, FALSE);
+    openErr = nsMailDatabase::Open(mPath, FALSE, &mailDB, FALSE);
 
     *db = mailDB;
     if (NS_SUCCEEDED(openErr)&& *db)
@@ -1003,20 +827,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetRememberedPassword(char ** password)
   return NS_OK;
 }
 
-nsresult nsMsgLocalMailFolder::GetPathAsParentFolder(nsNativeFileSpec& aPathName)
-{
-	nsNativeFileSpec path;
-
-	nsresult rv = nsURI2Path(mURI, path, PR_TRUE);
-	if (NS_FAILED(rv)) return rv;
-	aPathName = path;
-	return NS_OK;
-}
-
 NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
 {
   if (mPath == nsnull) {
-    nsresult rv = nsURI2Path(mURI, mPath, PR_FALSE);
+    nsresult rv = nsURI2Path(kMailboxRootURI, mURI, mPath);
     if (NS_FAILED(rv)) return rv;
   }
   aPathName = mPath;

@@ -25,24 +25,7 @@
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-NS_IMPL_ADDREF(nsMsgHdr)
-NS_IMPL_RELEASE(nsMsgHdr)
-
-NS_IMETHODIMP
-nsMsgHdr::QueryInterface(REFNSIID iid, void** result)
-{
-	if (! result)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = nsnull;
-    if(iid.Equals(nsIMessage::GetIID()) ||
-       iid.Equals(kISupportsIID)) {
-		*result = NS_STATIC_CAST(nsIMessage*, this);
-		AddRef();
-		return NS_OK;
-	}
-	return nsRDFResource::QueryInterface(iid, result);
-}
+NS_IMPL_ISUPPORTS_INHERITED(nsMsgHdr, nsRDFResource, nsIMessage)
 
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
     : nsRDFResource()
