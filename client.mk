@@ -107,6 +107,11 @@ include $(TOPSRCDIR)/.client-defs.mk
 ####################################
 # Options that may come from mozconfig
 
+# Change CVS flags if anonymous root is requested
+ifdef MOZ_CO_USE_MIRROR
+  CVS_FLAGS := -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+endif
+
 # MOZ_CVS_FLAGS - Basic CVS flags
 ifeq "$(origin MOZ_CVS_FLAGS)" "undefined"
   CVS_FLAGS := $(CVS_FLAGS) -q -z 3
@@ -169,7 +174,7 @@ pull_all:     checkout
 build_all:    build
 clobber:      clean
 clobber_all:  realclean
-pull_and_build_all: checkout build
+pull_and_build_all: checkout depend build
 
 # Do everything from scratch
 everything: checkout clobber_all build
