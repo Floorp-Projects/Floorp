@@ -252,7 +252,7 @@
 		if (rdfCore)
 		{
 			rdfCore.Init("RDFCore");
-			XPAppCoresManager.Add(rdfCore);
+			//XPAppCoresManager.Add(rdfCore);
 			rdfCoreFound = true;
 		}
 	}
