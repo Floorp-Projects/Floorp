@@ -58,13 +58,15 @@ function escape_string($value)
 
 
 
-//Attempt to fix Bug 246743 (strip_tags) and Bug 248242 (htmlentities)
+//Remove HTML tags and escape enities from GET/POST vars.
 foreach ($_GET as $key => $val) {
-$_GET["$key"] = htmlentities(str_replace("\\","",strip_tags($_GET["$key"])));
+    $_GET["$key"] = htmlentities(str_replace("\\","",strip_tags($_GET["$key"])));
 }
 
 foreach ($_POST as $key => $val) {
-$_POST["$key"] = htmlentities(str_replace("\\","",strip_tags($_POST["$key"])));
+    if (!is_array($_POST["$key"])) {
+        $_POST["$key"] = htmlentities(str_replace("\\","",strip_tags($_POST["$key"])));
+    }
 }
 
 // Bug 250596 Fixes for incoming $_GET variables.

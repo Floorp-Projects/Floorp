@@ -267,6 +267,7 @@ ORDER  BY  `Type` , `Name`  ASC ";
     $authors[$v] = $row["UserEmail"];
  }
  unset($v);
+    if (!$guid) { $guid = "None"; }
 
 //Make Authors E-Mail Array into a Nice String
 $num_authors = count($authors);
@@ -298,11 +299,11 @@ ORDER  BY  `CatName`  ASC ";
    $categories[$n] = $catid;
   }
 unset($n);
+if (!$categories) {$categories = array(); }
 
 //Get the Category Table Data for the Select Box
  $sql = "SELECT  `CategoryID`, `CatName` FROM  `categories` WHERE `CatType` = '$type' ORDER  BY  `CatName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-//  $sqlnum = mysql_num_rows($sql_result);
 ?>
 <TD ROWSPAN=8 VALIGN=TOP><SPAN class="global">Categories:</SPAN><BR>&nbsp;&nbsp;&nbsp;&nbsp;<SELECT NAME="categories[]" MULTIPLE="YES" SIZE="10">
 <?php
