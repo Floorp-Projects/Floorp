@@ -41,7 +41,7 @@ function mailViewOnLoad()
       dialog.okCallback =  window.arguments[0].onOkCallback;
   }
 
-  dialog.OKButton = document.getElementById("ok");
+  dialog.OKButton = document.documentElement.getButton("accept");
   dialog.nameField = document.getElementById("name");
   dialog.nameField.focus();
 
@@ -59,7 +59,6 @@ function mailViewOnLoad()
     onMore(null);
  
   doEnabling();
-  doSetOKCancel(onOK, onCancel);
 }
 
 function mailViewOnUnLoad()
@@ -96,13 +95,6 @@ function onOK()
 
   return true;
 }
-
-function onCancel()
-{
-  // close the window
-  return true;
-}
-
 
 function initializeMailViewOverrides()
 {

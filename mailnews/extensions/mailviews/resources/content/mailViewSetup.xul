@@ -21,20 +21,23 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/searchDialog.css" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/mailViewSetup.dtd" >
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog id="mailViewSetupDialog"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="mailViewOnLoad();"
         onunload="mailViewOnUnLoad();"
+        ondialogaccept="return onOK();"
+        ondialoghelp="doHelpButton();"
+        buttons="accept,cancel,help"
+        buttonalign="right"
         windowtype="mailnews:mailview"
         title="&mailViewSetupTitle.label;"
-        width="560" height="300"
+        style="width: 52em; height: 19em;"
         persist="screenX screenY width height">
 
   <stringbundleset id="stringbundleset">
@@ -48,7 +51,6 @@ Rights Reserved.
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <dummy class="usesMailWidgets"/>
-  <keyset id="dialogKeys"/>
     
   <vbox flex="1">
     <separator class="thin"/>
@@ -64,11 +66,6 @@ Rights Reserved.
     <hbox flex="1">
       <vbox id="searchTermListBox" flex="1"/>
     </hbox>
-
-    <separator class="thin"/>
-
-    <hbox id="okCancelHelpButtonsRight"/>
-
   </vbox>
 
-</window>
+</dialog>

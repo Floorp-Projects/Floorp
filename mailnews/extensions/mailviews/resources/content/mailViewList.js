@@ -75,7 +75,7 @@ function refreshListView(aSelectedMailView)
 
 function onNewMailView()
 {
-   window.openDialog('chrome://messenger/content/mailViewSetup.xul', "", 'centerscreen,resizeable,modal,titlebar,chrome', {onOkCallback: refreshListView});
+   window.openDialog('chrome://messenger/content/mailViewSetup.xul', "", 'centerscreen,resizable,modal,titlebar,chrome', {onOkCallback: refreshListView});
 }
 
 function onDeleteMailView()
@@ -121,7 +121,7 @@ function onEditMailView()
 
     var args = {mailView: selMailView, onOkCallback: refreshListView};
 
-    window.openDialog('chrome://messenger/content/mailViewSetup.xul', "", 'centerscreen,modal,resizeable,titlebar,chrome', args);
+    window.openDialog('chrome://messenger/content/mailViewSetup.xul', "", 'centerscreen,modal,resizable,titlebar,chrome', args);
   }
 }
 
