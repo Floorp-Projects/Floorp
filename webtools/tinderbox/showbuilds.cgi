@@ -471,7 +471,7 @@ sub who_menu {
   $qr = "${rel_path}../registry/who.cgi?email=$who"
       . "&d=$td->{cvs_module}|$td->{cvs_branch}|$td->{cvs_root}|$mindate|$maxdate";
 
-  return "<a href='$qr' onclick=\"who(event); return false;\">";
+  return "<a href='$qr' onclick=\"return who(event);\">";
 }
 
 # Check to see if anyone checked in during time slot.
