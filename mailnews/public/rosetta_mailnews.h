@@ -141,4 +141,4 @@
 #define HJ73151	--- unused #100, take it! ---
 
 
-#endif _ROSETTA_MAILNEWS_H_
+#endif
