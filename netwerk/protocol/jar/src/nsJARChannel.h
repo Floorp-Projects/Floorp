@@ -40,6 +40,10 @@
 #include "nsIDownloader.h"
 #include "nsIInputStream.h"
 
+#ifdef DEBUG
+#include "prthread.h"
+#endif
+
 class nsIFileChannel;
 class nsJARChannel;
 
@@ -103,10 +107,11 @@ protected:
     PRBool                              mSynchronousRead;
     nsCOMPtr<nsIInputStream>            mSynchronousInputStream;
 
-    PRMonitor*                          mMonitor;
     nsCOMPtr<nsIDownloader>             mDownloader;
     nsCOMPtr<nsIRequest>                mJarExtractionTransport;
-
+#ifdef DEBUG
+    PRThread*                           mInitiator;
+#endif
 };
 
 #endif // nsJARChannel_h__

@@ -34,6 +34,7 @@
 #include "nsIProgressEventSink.h"
 #include "nsXPIDLString.h"
 #include "nsIJAR.h"
+#include "prthread.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
@@ -61,12 +62,14 @@ PRLogModuleInfo* gJarProtocolLog = nsnull;
 #define NS_DEFAULT_JAR_BUFFER_MAX_SIZE          (256*1024)
 
 nsJARChannel::nsJARChannel()
-    : mLoadFlags(LOAD_NORMAL),
-      mContentType(nsnull),
-      mContentLength(-1),
-      mJAREntry(nsnull),
-      mStatus(NS_OK),
-      mMonitor(nsnull)
+    : mLoadFlags(LOAD_NORMAL)
+    , mContentType(nsnull)
+    , mContentLength(-1)
+    , mJAREntry(nsnull)
+    , mStatus(NS_OK)
+#ifdef DEBUG
+    , mInitiator(nsnull)
+#endif
 {
     NS_INIT_REFCNT();
 
@@ -87,8 +90,6 @@ nsJARChannel::~nsJARChannel()
         nsCRT::free(mContentType);
     if (mJAREntry)
         nsCRT::free(mJAREntry);
-    if (mMonitor)
-        PR_DestroyMonitor(mMonitor);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsJARChannel,
@@ -124,10 +125,6 @@ nsJARChannel::Init(nsIJARProtocolHandler* aHandler, nsIURI* uri)
     nsresult rv;
     mURI = do_QueryInterface(uri, &rv);
     if (NS_FAILED(rv)) return rv;
-
-    mMonitor = PR_NewMonitor();
-    if (mMonitor == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     mJARProtocolHandler = aHandler;
     return NS_OK;
@@ -166,9 +163,11 @@ nsJARChannel::GetStatus(nsresult *status)
 NS_IMETHODIMP
 nsJARChannel::Cancel(nsresult status)
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+#endif
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsresult rv = NS_OK;
-    nsAutoMonitor monitor(mMonitor);
 
     if (mJarExtractionTransport) {
         rv = mJarExtractionTransport->Cancel(status);
@@ -182,8 +181,10 @@ nsJARChannel::Cancel(nsresult status)
 NS_IMETHODIMP
 nsJARChannel::Suspend()
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+#endif
     nsresult rv = NS_OK;
-    nsAutoMonitor monitor(mMonitor);
 
     if (mJarExtractionTransport) {
         rv = mJarExtractionTransport->Suspend();
@@ -195,8 +196,10 @@ nsJARChannel::Suspend()
 NS_IMETHODIMP
 nsJARChannel::Resume()
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+#endif
     nsresult rv = NS_OK;
-    nsAutoMonitor monitor(mMonitor);
 
     if (mJarExtractionTransport) {
         rv = mJarExtractionTransport->Resume();
@@ -271,6 +274,10 @@ nsJARChannel::AsyncOpen(nsIStreamListener* listener, nsISupports* ctxt)
 {
     nsresult rv;
 
+#ifdef DEBUG
+    mInitiator = PR_CurrentThread();
+#endif
+
     mUserContext = ctxt;
     mUserListener = listener;
     mSynchronousRead = PR_FALSE;
@@ -338,8 +345,6 @@ nsJARChannel::AsyncReadJARElement()
 {
     nsresult rv;
 
-    nsAutoMonitor monitor(mMonitor);
-
     nsCOMPtr<nsIFileTransportService> fts = 
              do_GetService(kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -367,7 +372,6 @@ nsJARChannel::AsyncReadJARElement()
 
     rv = jarTransport->AsyncRead(this, nsnull, 0, PRUint32(-1), 0,
                                  getter_AddRefs(mJarExtractionTransport));
-    mJarExtractionTransport = 0;
     jarTransport = 0;
     return rv;
 }
@@ -576,6 +580,9 @@ NS_IMETHODIMP
 nsJARChannel::OnStartRequest(nsIRequest* jarExtractionTransport,
                              nsISupports* context)
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+#endif
     return mUserListener->OnStartRequest(this, mUserContext);
 }
 
@@ -584,6 +591,9 @@ nsJARChannel::OnStopRequest(nsIRequest* jarExtractionTransport, nsISupports* con
                             nsresult aStatus)
 {
     nsresult rv;
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+#endif
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gJarProtocolLog, PR_LOG_DEBUG)) {
         nsCOMPtr<nsIURI> jarURI;
@@ -619,6 +629,9 @@ nsJARChannel::OnDataAvailable(nsIRequest* jarCacheTransport,
                               PRUint32 sourceOffset, 
                               PRUint32 count)
 {
+#ifdef DEBUG
+    NS_ASSERTION(mInitiator == PR_CurrentThread(), "wrong thread");
+#endif
     return mUserListener->OnDataAvailable(this, mUserContext, 
                                           inStr, sourceOffset, count);
 }
