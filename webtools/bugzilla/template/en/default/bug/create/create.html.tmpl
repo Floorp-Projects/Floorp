@@ -23,7 +23,7 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS global/header.html.tmpl
-  title = "Enter Bug"
+  title = "Enter $terms.Bug"
   h2 = "This page lets you enter a new $terms.bug into ${terms.Bugzilla}."
   onload="set_assign_to();"
 %]
