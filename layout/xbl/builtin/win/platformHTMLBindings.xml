@@ -89,7 +89,7 @@
 
   <binding id="editor">
     <handlers>
-      <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_cut"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cut"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_copy"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="shift" command="cmd_paste"/>

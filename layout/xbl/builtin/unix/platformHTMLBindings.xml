@@ -147,7 +147,7 @@
       <handler event="keypress" key="v" modifiers="control" command="cmd_paste"/>
       <handler event="keypress" key="z" modifiers="control" command="cmd_undo"/>
       <handler event="keypress" key="r" modifiers="control" command="cmd_redo"/>
-      <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cut"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_deleteCharForward"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_copy"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="shift" command="cmd_paste"/>
