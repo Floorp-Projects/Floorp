@@ -127,22 +127,17 @@ nsSVGDefsFrame::Init(nsPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGDefsFrame::AppendFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aFrameList)
+nsSVGDefsFrame::AppendFrames(nsIAtom*  aListName,
+                             nsIFrame* aFrameList)
 {
   // append == insert at end:
-  return InsertFrames(aPresContext, aPresShell, aListName,
-                      mFrames.LastChild(), aFrameList);  
+  return InsertFrames(aListName, mFrames.LastChild(), aFrameList);  
 }
 
 NS_IMETHODIMP
-nsSVGDefsFrame::InsertFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList)
+nsSVGDefsFrame::InsertFrames(nsIAtom*  aListName,
+                             nsIFrame* aPrevFrame,
+                             nsIFrame* aFrameList)
 {
   // memorize last new frame
   nsIFrame* lastNewFrame = nsnull;
@@ -172,10 +167,8 @@ nsSVGDefsFrame::InsertFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGDefsFrame::RemoveFrame(nsPresContext* aPresContext,
-                     nsIPresShell&   aPresShell,
-                     nsIAtom*        aListName,
-                     nsIFrame*       aOldFrame)
+nsSVGDefsFrame::RemoveFrame(nsIAtom*  aListName,
+                            nsIFrame* aOldFrame)
 {
   nsCOMPtr<nsISVGRendererRegion> dirty_region;
   
@@ -185,7 +178,7 @@ nsSVGDefsFrame::RemoveFrame(nsPresContext* aPresContext,
   if (SVGFrame)
     dirty_region = SVGFrame->GetCoveredRegion();
 
-  PRBool result = mFrames.DestroyFrame(aPresContext, aOldFrame);
+  PRBool result = mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
   nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
   NS_ASSERTION(outerSVGFrame, "no outer svg frame");
@@ -197,11 +190,9 @@ nsSVGDefsFrame::RemoveFrame(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGDefsFrame::ReplaceFrame(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aOldFrame,
-                          nsIFrame*       aNewFrame)
+nsSVGDefsFrame::ReplaceFrame(nsIAtom*  aListName,
+                             nsIFrame* aOldFrame,
+                             nsIFrame* aNewFrame)
 {
   NS_NOTYETIMPLEMENTED("write me!");
   return NS_ERROR_UNEXPECTED;

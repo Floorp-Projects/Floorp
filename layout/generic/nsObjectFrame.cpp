@@ -1680,7 +1680,7 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
       break;
 
     nsHTMLContainerFrame::CreateViewForFrame(imgFrame, divFrame, PR_FALSE);
-    divFrame->AppendFrames(aPresContext, *shell, nsnull, imgFrame);
+    divFrame->AppendFrames(nsnull, imgFrame);
 
     rv = NS_NewTextFrame(shell, &textFrame);
     if (NS_FAILED(rv))
@@ -1693,7 +1693,7 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
 
     textFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
 
-    divFrame->AppendFrames(aPresContext, *shell, nsnull, textFrame);
+    divFrame->AppendFrames(nsnull, textFrame);
   } while (0);
 
   if (NS_FAILED(rv)) {

@@ -97,18 +97,12 @@ public:
               nsIFrame*        aPrevInFlow);
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
-  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIAtom*        aListName,
+  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
@@ -271,9 +265,7 @@ CanvasFrame::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX,
 }
 
 NS_IMETHODIMP
-CanvasFrame::AppendFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+CanvasFrame::AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList)
 {
   nsresult  rv;
@@ -299,7 +291,7 @@ CanvasFrame::AppendFrames(nsPresContext* aPresContext,
     nsHTMLReflowCommand* reflowCmd;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
     if (NS_SUCCEEDED(rv)) {
-      aPresShell.AppendReflowCommand(reflowCmd);
+      GetPresContext()->PresShell()->AppendReflowCommand(reflowCmd);
     }
   }
 
@@ -307,9 +299,7 @@ CanvasFrame::AppendFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-CanvasFrame::InsertFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+CanvasFrame::InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList)
 {
@@ -321,16 +311,14 @@ CanvasFrame::InsertFrames(nsPresContext* aPresContext,
   if (aPrevFrame) {
     rv = NS_ERROR_UNEXPECTED;
   } else {
-    rv = AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+    rv = AppendFrames(aListName, aFrameList);
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-CanvasFrame::RemoveFrame(nsPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIAtom*        aListName,
+CanvasFrame::RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame)
 {
   nsresult  rv;
@@ -348,13 +336,13 @@ CanvasFrame::RemoveFrame(nsPresContext* aPresContext,
     Invalidate(aOldFrame->GetOverflowRect() + aOldFrame->GetPosition(), PR_FALSE);
 
     // Remove the frame and destroy it
-    mFrames.DestroyFrame(aPresContext, aOldFrame);
+    mFrames.DestroyFrame(GetPresContext(), aOldFrame);
 
     // Generate a reflow command so we get reflowed
     nsHTMLReflowCommand* reflowCmd;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
     if (NS_SUCCEEDED(rv)) {
-      aPresShell.AppendReflowCommand(reflowCmd);
+      GetPresContext()->PresShell()->AppendReflowCommand(reflowCmd);
     }
 
   } else {

@@ -4900,17 +4900,14 @@ nsBlockFrame::LastChild()
 }
 
 NS_IMETHODIMP
-nsBlockFrame::AppendFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+nsBlockFrame::AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
 {
   if (nsnull == aFrameList) {
     return NS_OK;
   }
   if (mAbsoluteContainer.GetChildListName() == aListName) {
-    return mAbsoluteContainer.AppendFrames(this, aPresContext, aPresShell, aListName,
-                                           aFrameList);
+    return mAbsoluteContainer.AppendFrames(this, aListName, aFrameList);
   }
   else if (nsLayoutAtoms::floatList == aListName) {
     // XXX we don't *really* care about this right now because we are
@@ -4940,24 +4937,22 @@ nsBlockFrame::AppendFrames(nsPresContext* aPresContext,
   }
   printf("\n");
 #endif
-  nsresult rv = AddFrames(aPresContext, aFrameList, lastKid);
+  nsresult rv = AddFrames(aFrameList, lastKid);
   if (NS_SUCCEEDED(rv)) {
     // Ask the parent frame to reflow me.
-    ReflowDirtyChild(&aPresShell, nsnull);
+    ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
   }
   return rv;
 }
 
 NS_IMETHODIMP
-nsBlockFrame::InsertFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+nsBlockFrame::InsertFrames(nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList)
 {
   if (mAbsoluteContainer.GetChildListName() == aListName) {
-    return mAbsoluteContainer.InsertFrames(this, aPresContext, aPresShell, aListName,
-                                           aPrevFrame, aFrameList);
+    return mAbsoluteContainer.InsertFrames(this, aListName, aPrevFrame,
+                                           aFrameList);
   }
   else if (nsLayoutAtoms::floatList == aListName) {
     // XXX we don't *really* care about this right now because we are
@@ -4982,20 +4977,19 @@ nsBlockFrame::InsertFrames(nsPresContext* aPresContext,
   }
   printf("\n");
 #endif
-  nsresult rv = AddFrames(aPresContext, aFrameList, aPrevFrame);
+  nsresult rv = AddFrames(aFrameList, aPrevFrame);
 #ifdef IBMBIDI
   if (aListName != nsLayoutAtoms::nextBidi)
 #endif // IBMBIDI
   if (NS_SUCCEEDED(rv)) {
     // Ask the parent frame to reflow me.
-    ReflowDirtyChild(&aPresShell, nsnull);
+    ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
   }
   return rv;
 }
 
 nsresult
-nsBlockFrame::AddFrames(nsPresContext* aPresContext,
-                        nsIFrame* aFrameList,
+nsBlockFrame::AddFrames(nsIFrame* aFrameList,
                         nsIFrame* aPrevSibling)
 {
   // Clear our line cursor, since our lines may change.
@@ -5005,7 +4999,7 @@ nsBlockFrame::AddFrames(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsIPresShell *presShell = aPresContext->PresShell();
+  nsIPresShell *presShell = GetPresContext()->PresShell();
 
   // Attempt to find the line that contains the previous sibling
   nsLineList::iterator prevSibLine = end_lines();
@@ -5116,9 +5110,7 @@ nsBlockFrame::RemoveFloat(nsIFrame* aFloat) {
 }
 
 NS_IMETHODIMP
-nsBlockFrame::RemoveFrame(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+nsBlockFrame::RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame)
 {
   nsresult rv = NS_OK;
@@ -5131,11 +5123,10 @@ nsBlockFrame::RemoveFrame(nsPresContext* aPresContext,
 #endif
 
   if (nsnull == aListName) {
-    rv = DoRemoveFrame(aPresContext, aOldFrame);
+    rv = DoRemoveFrame(aOldFrame);
   }
   else if (mAbsoluteContainer.GetChildListName() == aListName) {
-    return mAbsoluteContainer.RemoveFrame(this, aPresContext, aPresShell,
-                                          aListName, aOldFrame);
+    return mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
   }
   else if (nsLayoutAtoms::floatList == aListName) {
     line_iterator line = RemoveFloat(aOldFrame);
@@ -5150,7 +5141,7 @@ nsBlockFrame::RemoveFrame(nsPresContext* aPresContext,
 #ifdef IBMBIDI
   else if (nsLayoutAtoms::nextBidi == aListName) {
     // Skip the call to |ReflowDirtyChild| below by returning now.
-    return DoRemoveFrame(aPresContext, aOldFrame);
+    return DoRemoveFrame(aOldFrame);
   }
 #endif // IBMBIDI
   else {
@@ -5159,19 +5150,18 @@ nsBlockFrame::RemoveFrame(nsPresContext* aPresContext,
 
   if (NS_SUCCEEDED(rv)) {
     // Ask the parent frame to reflow me.
-    ReflowDirtyChild(&aPresShell, nsnull);  
+    ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
   }
   return rv;
 }
 
 void
-nsBlockFrame::DoRemoveOutOfFlowFrame(nsPresContext* aPresContext,
-                                     nsIFrame*       aFrame)
+nsBlockFrame::DoRemoveOutOfFlowFrame(nsIFrame* aFrame)
 {
   // First remove aFrame's next in flow
   nsIFrame* nextInFlow = aFrame->GetNextInFlow();
   if (nextInFlow) {
-    nsBlockFrame::DoRemoveOutOfFlowFrame(aPresContext, nextInFlow);
+    nsBlockFrame::DoRemoveOutOfFlowFrame(nextInFlow);
   }
   // Now remove aFrame
   const nsStyleDisplay* display = aFrame->GetStyleDisplay();
@@ -5188,10 +5178,10 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsPresContext* aPresContext,
   nsBlockFrame* block = (nsBlockFrame*)parent;
   // Remove aFrame from the appropriate list. 
   if (display->IsAbsolutelyPositioned()) {
-    block->mAbsoluteContainer.RemoveFrame(block, aPresContext,
-                                          *(aPresContext->PresShell()),
-                                          block->mAbsoluteContainer.GetChildListName(), aFrame);
-    aFrame->Destroy(aPresContext);
+    block->mAbsoluteContainer.RemoveFrame(block,
+                                          block->mAbsoluteContainer.GetChildListName(),
+                                          aFrame);
+    aFrame->Destroy(aFrame->GetPresContext());
   }
   else {
     // This also destroys the frame.
@@ -5225,19 +5215,19 @@ nsBlockFrame::TryAllLines(nsLineList::iterator* aIterator,
 // start by locating aDeletedFrame and then scanning from that point
 // on looking for continuations.
 nsresult
-nsBlockFrame::DoRemoveFrame(nsPresContext* aPresContext,
-                            nsIFrame* aDeletedFrame)
+nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame)
 {
   // Clear our line cursor, since our lines may change.
   ClearLineCursor();
         
   if (aDeletedFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-    DoRemoveOutOfFlowFrame(aPresContext, aDeletedFrame);
+    DoRemoveOutOfFlowFrame(aDeletedFrame);
     return NS_OK;
   }
-
-  nsIPresShell *presShell = aPresContext->PresShell();
   
+  nsPresContext* presContext = GetPresContext();
+  nsIPresShell* presShell = presContext->PresShell();
+
   // Find the line and the previous sibling that contains
   // deletedFrame; we also find the pointer to the line.
   nsLineList::iterator line = mLines.begin(),
@@ -5325,7 +5315,7 @@ found_frame:;
     nsFrame::ListTag(stdout, aDeletedFrame);
     printf(" prevSibling=%p deletedNextInFlow=%p\n", prevSibling, deletedNextInFlow);
 #endif
-    aDeletedFrame->Destroy(aPresContext);
+    aDeletedFrame->Destroy(presContext);
     aDeletedFrame = deletedNextInFlow;
 
     // If line is empty, remove it now.
@@ -5399,7 +5389,7 @@ found_frame:;
     nsBlockFrame* nextBlock = NS_STATIC_CAST(nsBlockFrame*, aDeletedFrame->GetParent());
     NS_ASSERTION(nextBlock->GetType() == nsLayoutAtoms::blockFrame,
                  "Our child's continuation's parent is not a block?");
-    return nextBlock->DoRemoveFrame(aPresContext, aDeletedFrame);
+    return nextBlock->DoRemoveFrame(aDeletedFrame);
   }
 
   return NS_OK;
@@ -5419,7 +5409,7 @@ nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
                       aPresContext->PropertyTable()->GetProperty(prevInFlow, nsLayoutAtoms::nextBidi)) !=
        aNextInFlow))
 #endif // IBMBIDI
-    DoRemoveFrame(aPresContext, aNextInFlow);
+    DoRemoveFrame(aNextInFlow);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -6757,7 +6747,7 @@ nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
       }
     }
 
-    rv = AddFrames(aPresContext, aChildList, nsnull);
+    rv = AddFrames(aChildList, nsnull);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -6800,7 +6790,7 @@ nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
       // it to the flow now.
       if (NS_STYLE_LIST_STYLE_POSITION_INSIDE ==
           styleList->mListStylePosition) {
-        AddFrames(aPresContext, mBullet, nsnull);
+        AddFrames(mBullet, nsnull);
         mState &= ~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
       }
       else {

@@ -130,8 +130,7 @@ CreateBidiContinuation(nsPresContext* aPresContext,
   (*aNewFrame)->SetNextSibling(nsnull);
 
   // The list name nsLayoutAtoms::nextBidi would indicate we don't want reflow
-  parent->InsertFrames(aPresContext, *presShell, nsLayoutAtoms::nextBidi,
-                       aFrame, *aNewFrame);
+  parent->InsertFrames(nsLayoutAtoms::nextBidi, aFrame, *aNewFrame);
 
   return NS_OK;
 }
@@ -768,8 +767,6 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
   PRInt32           index;
   nsIFrame*         parent = aFrame->GetParent();
       
-  nsIPresShell *presShell = aPresContext->PresShell();
-
   aOffset = 0;
 
   for (index = aLastIndex; index > aFirstIndex; index--) {
@@ -782,8 +779,7 @@ nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
       if (frame->GetStateBits() & NS_FRAME_IS_BIDI) {
         // only delete Bidi frames
         if (parent) {
-          parent->RemoveFrame(aPresContext, *presShell,
-                              nsLayoutAtoms::nextBidi, frame);
+          parent->RemoveFrame(nsLayoutAtoms::nextBidi, frame);
         }
         else {
           frame->Destroy(aPresContext);

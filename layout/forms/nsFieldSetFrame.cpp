@@ -86,26 +86,15 @@ public:
                    PRUint32             aFlags);
 
   virtual PRBool CanPaintBackground();
-  
-  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
-                          nsIPresShell&  aPresShell,
-                          nsIAtom*       aListName,
-                          nsIFrame*      aFrameList);
 
-  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
-                          nsIPresShell&  aPresShell,
-                          nsIAtom*       aListName,
+  NS_IMETHOD AppendFrames(nsIAtom*       aListName,
+                          nsIFrame*      aFrameList);
+  NS_IMETHOD InsertFrames(nsIAtom*       aListName,
                           nsIFrame*      aPrevFrame,
                           nsIFrame*      aFrameList);
-
-  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
-                         nsIPresShell&  aPresShell,
-                         nsIAtom*       aListName,
+  NS_IMETHOD RemoveFrame(nsIAtom*       aListName,
                          nsIFrame*      aOldFrame);
-
-  NS_IMETHOD ReplaceFrame(nsPresContext* aPresContext,
-                          nsIPresShell&  aPresShell,
-                          nsIAtom*       aListName,
+  NS_IMETHOD ReplaceFrame(nsIAtom*       aListName,
                           nsIFrame*      aOldFrame,
                           nsIFrame*      aNewFrame);
 
@@ -613,39 +602,32 @@ nsFieldSetFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::AppendFrames(nsPresContext* aPresContext,
-                              nsIPresShell&  aPresShell,
-                              nsIAtom*       aListName,
+nsFieldSetFrame::AppendFrames(nsIAtom*       aListName,
                               nsIFrame*      aFrameList)
 {
   aFrameList = MaybeSetLegend(aFrameList, aListName);
   if (aFrameList) {
     ReParentFrameList(aFrameList);
-    return mContentFrame->AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+    return mContentFrame->AppendFrames(aListName, aFrameList);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::InsertFrames(nsPresContext* aPresContext,
-                              nsIPresShell&  aPresShell,
-                              nsIAtom*       aListName,
+nsFieldSetFrame::InsertFrames(nsIAtom*       aListName,
                               nsIFrame*      aPrevFrame,
                               nsIFrame*      aFrameList)
 {
   aFrameList = MaybeSetLegend(aFrameList, aListName);
   if (aFrameList) {
     ReParentFrameList(aFrameList);
-    return mContentFrame->InsertFrames(aPresContext, aPresShell, aListName,
-                                       aPrevFrame, aFrameList);
+    return mContentFrame->InsertFrames(aListName, aPrevFrame, aFrameList);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::RemoveFrame(nsPresContext* aPresContext,
-                             nsIPresShell&  aPresShell,
-                             nsIAtom*       aListName,
+nsFieldSetFrame::RemoveFrame(nsIAtom*       aListName,
                              nsIFrame*      aOldFrame)
 {
   // For reference, see bug 70648, bug 276104 and bug 236071.
@@ -653,31 +635,28 @@ nsFieldSetFrame::RemoveFrame(nsPresContext* aPresContext,
     NS_ASSERTION(!aListName, "Unexpected frame list when removing legend frame");
     NS_ASSERTION(mLegendFrame->GetParent() == this, "Legend Parent has wrong parent");
     NS_ASSERTION(mLegendFrame->GetNextSibling() == mContentFrame, "mContentFrame is not next sibling");
-    mFrames.DestroyFrame(aPresContext, mLegendFrame);
+    nsPresContext* presContext = GetPresContext();
+    mFrames.DestroyFrame(presContext, mLegendFrame);
     mLegendFrame = nsnull;
     AddStateBits(NS_FRAME_IS_DIRTY);
     if (GetParent()) {
-      GetParent()->ReflowDirtyChild(aPresContext->GetPresShell(), this);
+      GetParent()->ReflowDirtyChild(presContext->GetPresShell(), this);
     }
     return NS_OK;
   }
-  return mContentFrame->RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  return mContentFrame->RemoveFrame(aListName, aOldFrame);
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::ReplaceFrame(nsPresContext* aPresContext,
-                              nsIPresShell&  aPresShell,
-                              nsIAtom*       aListName,
+nsFieldSetFrame::ReplaceFrame(nsIAtom*       aListName,
                               nsIFrame*      aOldFrame,
                               nsIFrame*      aNewFrame)
 {
   if (aOldFrame == mLegendFrame) {
     mLegendFrame = aNewFrame;
-    return nsContainerFrame::ReplaceFrame(aPresContext, aPresShell, aListName,
-                                          aOldFrame, aNewFrame);
+    return nsContainerFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
   }
-  return mContentFrame->ReplaceFrame(aPresContext, aPresShell, aListName,
-                                     aOldFrame, aNewFrame);
+  return mContentFrame->ReplaceFrame(aListName, aOldFrame, aNewFrame);
 }
 
 NS_IMETHODIMP

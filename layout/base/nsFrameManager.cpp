@@ -700,12 +700,10 @@ nsFrameManager::InsertFrames(nsIFrame*       aParentFrame,
                              nsIFrame*       aPrevFrame,
                              nsIFrame*       aFrameList)
 {
-  nsIPresShell *presShell = GetPresShell();
-  nsPresContext *presContext = presShell->GetPresContext();
 #ifdef IBMBIDI
   if (aPrevFrame) {
     // Insert aFrameList after the last bidi continuation of aPrevFrame.
-    nsPropertyTable *propTable = presContext->PropertyTable();
+    nsPropertyTable *propTable = GetPresContext()->PropertyTable();
     nsIFrame* nextBidi;
     for (; ;) {
       nextBidi = NS_STATIC_CAST(nsIFrame*,
@@ -718,8 +716,7 @@ nsFrameManager::InsertFrames(nsIFrame*       aParentFrame,
   }
 #endif // IBMBIDI
 
-  return aParentFrame->InsertFrames(GetPresContext(), *presShell,
-                                    aListName, aPrevFrame, aFrameList);
+  return aParentFrame->InsertFrames(aListName, aPrevFrame, aFrameList);
 }
 
 nsresult
@@ -736,8 +733,7 @@ nsFrameManager::RemoveFrame(nsIFrame*       aParentFrame,
   }
 #endif // IBMBIDI
 
-  return aParentFrame->RemoveFrame(GetPresContext(), *GetPresShell(),
-                                   aListName, aOldFrame);
+  return aParentFrame->RemoveFrame(aListName, aOldFrame);
 }
 
 //----------------------------------------------------------------------

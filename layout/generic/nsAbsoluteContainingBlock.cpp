@@ -74,11 +74,9 @@ nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
 }
 
 nsresult
-nsAbsoluteContainingBlock::AppendFrames(nsIFrame*       aDelegatingFrame,
-                                        nsPresContext* aPresContext,
-                                        nsIPresShell&   aPresShell,
-                                        nsIAtom*        aListName,
-                                        nsIFrame*       aFrameList)
+nsAbsoluteContainingBlock::AppendFrames(nsIFrame*      aDelegatingFrame,
+                                        nsIAtom*       aListName,
+                                        nsIFrame*      aFrameList)
 {
   nsresult  rv = NS_OK;
 
@@ -93,19 +91,18 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*       aDelegatingFrame,
   rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, eReflowType_ReflowDirty);
   if (NS_SUCCEEDED(rv)) {
     reflowCmd->SetChildListName(GetChildListName());
-    aPresShell.AppendReflowCommand(reflowCmd);
+    aDelegatingFrame->GetPresContext()->PresShell()->
+                                        AppendReflowCommand(reflowCmd);
   }
 
   return rv;
 }
 
 nsresult
-nsAbsoluteContainingBlock::InsertFrames(nsIFrame*       aDelegatingFrame,
-                                        nsPresContext* aPresContext,
-                                        nsIPresShell&   aPresShell,
-                                        nsIAtom*        aListName,
-                                        nsIFrame*       aPrevFrame,
-                                        nsIFrame*       aFrameList)
+nsAbsoluteContainingBlock::InsertFrames(nsIFrame*      aDelegatingFrame,
+                                        nsIAtom*       aListName,
+                                        nsIFrame*      aPrevFrame,
+                                        nsIFrame*      aFrameList)
 {
   nsresult  rv = NS_OK;
 
@@ -120,7 +117,8 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*       aDelegatingFrame,
   rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, eReflowType_ReflowDirty);
   if (NS_SUCCEEDED(rv)) {
     reflowCmd->SetChildListName(GetChildListName());
-    aPresShell.AppendReflowCommand(reflowCmd);
+    aDelegatingFrame->GetPresContext()->PresShell()->
+                                        AppendReflowCommand(reflowCmd);
   }
 
   return rv;
@@ -128,12 +126,11 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
-                                       nsPresContext* aPresContext,
-                                       nsIPresShell&   aPresShell,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aOldFrame)
 {
-  PRBool result = mAbsoluteFrames.DestroyFrame(aPresContext, aOldFrame);
+  PRBool result = mAbsoluteFrames.DestroyFrame(aDelegatingFrame->
+                                               GetPresContext(), aOldFrame);
   NS_ASSERTION(result, "didn't find frame to delete");
   // Because positioned frames aren't part of a flow, there's no additional
   // work to do, e.g. reflowing sibling frames. And because positioned frames
@@ -142,14 +139,12 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
 }
 
 nsresult
-nsAbsoluteContainingBlock::ReplaceFrame(nsIFrame*       aDelegatingFrame,
-                                        nsPresContext* aPresContext,
-                                        nsIPresShell&   aPresShell,
-                                        nsIAtom*        aListName,
-                                        nsIFrame*       aOldFrame,
-                                        nsIFrame*       aNewFrame)
+nsAbsoluteContainingBlock::ReplaceFrame(nsIFrame*      aDelegatingFrame,
+                                        nsIAtom*       aListName,
+                                        nsIFrame*      aOldFrame,
+                                        nsIFrame*      aNewFrame)
 {
-  PRBool result = mAbsoluteFrames.ReplaceFrame(aPresContext, aDelegatingFrame,
+  PRBool result = mAbsoluteFrames.ReplaceFrame(aDelegatingFrame,
                                                aOldFrame, aNewFrame, PR_TRUE);
   NS_ASSERTION(result, "Problems replacing a frame");
   return result ? NS_OK : NS_ERROR_FAILURE;

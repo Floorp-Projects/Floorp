@@ -61,18 +61,12 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
                                
-  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
-  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
   virtual nsIFrame* GetContentInsertionFrame() {
@@ -860,31 +854,25 @@ nsColumnSetFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsColumnSetFrame::AppendFrames(nsPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aFrameList)
+nsColumnSetFrame::AppendFrames(nsIAtom*        aListName,
+                               nsIFrame*       aFrameList)
 {
   NS_NOTREACHED("AppendFrames not supported");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsColumnSetFrame::InsertFrames(nsPresContext* aPresContext,
-                      nsIPresShell&   aPresShell,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aPrevFrame,
-                      nsIFrame*       aFrameList)
+nsColumnSetFrame::InsertFrames(nsIAtom*        aListName,
+                               nsIFrame*       aPrevFrame,
+                               nsIFrame*       aFrameList)
 {
   NS_NOTREACHED("InsertFrames not supported");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsColumnSetFrame::RemoveFrame(nsPresContext* aPresContext,
-                     nsIPresShell&   aPresShell,
-                     nsIAtom*        aListName,
-                     nsIFrame*       aOldFrame)
+nsColumnSetFrame::RemoveFrame(nsIAtom*        aListName,
+                              nsIFrame*       aOldFrame)
 {
   NS_NOTREACHED("RemoveFrame not supported");
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -99,16 +99,13 @@ ViewportFrame::GetFrameForPoint(const nsPoint& aPoint,
 }
 
 NS_IMETHODIMP
-ViewportFrame::AppendFrames(nsPresContext* aPresContext,
-                            nsIPresShell&   aPresShell,
-                            nsIAtom*        aListName,
+ViewportFrame::AppendFrames(nsIAtom*        aListName,
                             nsIFrame*       aFrameList)
 {
   nsresult rv = NS_OK;
 
   if (mFixedContainer.GetChildListName() == aListName) {
-    rv = mFixedContainer.AppendFrames(this, aPresContext, aPresShell, 
-                                      aListName, aFrameList);
+    rv = mFixedContainer.AppendFrames(this, aListName, aFrameList);
   }
   else {
     // We only expect incremental changes for our fixed frames
@@ -120,17 +117,14 @@ ViewportFrame::AppendFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-ViewportFrame::InsertFrames(nsPresContext* aPresContext,
-                            nsIPresShell&   aPresShell,
-                            nsIAtom*        aListName,
+ViewportFrame::InsertFrames(nsIAtom*        aListName,
                             nsIFrame*       aPrevFrame,
                             nsIFrame*       aFrameList)
 {
   nsresult rv = NS_OK;
 
   if (mFixedContainer.GetChildListName() == aListName) {
-    rv = mFixedContainer.InsertFrames(this, aPresContext, aPresShell, aListName, 
-                                      aPrevFrame, aFrameList);
+    rv = mFixedContainer.InsertFrames(this, aListName, aPrevFrame, aFrameList);
   }
   else {
     // We only expect incremental changes for our fixed frames
@@ -142,15 +136,13 @@ ViewportFrame::InsertFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-ViewportFrame::RemoveFrame(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+ViewportFrame::RemoveFrame(nsIAtom*        aListName,
                            nsIFrame*       aOldFrame)
 {
   nsresult rv = NS_OK;
 
   if (mFixedContainer.GetChildListName() == aListName) {
-    rv = mFixedContainer.RemoveFrame(this, aPresContext, aPresShell, aListName, aOldFrame);
+    rv = mFixedContainer.RemoveFrame(this, aListName, aOldFrame);
   }
   else {
     // We only expect incremental changes for our fixed frames

@@ -189,10 +189,8 @@ nsInlineFrame::IsEmpty()
 }
 
 NS_IMETHODIMP
-nsInlineFrame::AppendFrames(nsPresContext* aPresContext,
-                            nsIPresShell& aPresShell,
-                            nsIAtom* aListName,
-                            nsIFrame* aFrameList)
+nsInlineFrame::AppendFrames(nsIAtom*        aListName,
+                            nsIFrame*       aFrameList)
 {
   if (nsnull != aListName) {
     return NS_ERROR_INVALID_ARG;
@@ -201,17 +199,15 @@ nsInlineFrame::AppendFrames(nsPresContext* aPresContext,
     mFrames.AppendFrames(this, aFrameList);
 
     // Ask the parent frame to reflow me.
-    ReflowDirtyChild(&aPresShell, nsnull);
+    ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInlineFrame::InsertFrames(nsPresContext* aPresContext,
-                            nsIPresShell& aPresShell,
-                            nsIAtom* aListName,
-                            nsIFrame* aPrevFrame,
-                            nsIFrame* aFrameList)
+nsInlineFrame::InsertFrames(nsIAtom*        aListName,
+                            nsIFrame*       aPrevFrame,
+                            nsIFrame*       aFrameList)
 {
   if (nsnull != aListName) {
 #ifdef IBMBIDI
@@ -227,16 +223,14 @@ nsInlineFrame::InsertFrames(nsPresContext* aPresContext,
     if (nsnull == aListName)
 #endif
     // Ask the parent frame to reflow me.
-    ReflowDirtyChild(&aPresShell, nsnull);
+    ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsInlineFrame::RemoveFrame(nsPresContext* aPresContext,
-                           nsIPresShell& aPresShell,
-                           nsIAtom* aListName,
-                           nsIFrame* aOldFrame)
+nsInlineFrame::RemoveFrame(nsIAtom*        aListName,
+                           nsIFrame*       aOldFrame)
 {
   if (nsnull != aListName) {
 #ifdef IBMBIDI
@@ -272,7 +266,7 @@ nsInlineFrame::RemoveFrame(nsPresContext* aPresContext,
       // remove the frame from its parents list and generate a reflow
       // command.
       nsIFrame* oldFrameNextInFlow = aOldFrame->GetNextInFlow();
-      parent->mFrames.DestroyFrame(aPresContext, aOldFrame);
+      parent->mFrames.DestroyFrame(GetPresContext(), aOldFrame);
       aOldFrame = oldFrameNextInFlow;
       if (aOldFrame) {
         parent = NS_STATIC_CAST(nsInlineFrame*, aOldFrame->GetParent());
@@ -281,7 +275,7 @@ nsInlineFrame::RemoveFrame(nsPresContext* aPresContext,
 
     if (generateReflowCommand) {
       // Ask the parent frame to reflow me.
-      ReflowDirtyChild(&aPresShell, nsnull);
+      ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
     }
   }
 
@@ -289,11 +283,9 @@ nsInlineFrame::RemoveFrame(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsInlineFrame::ReplaceFrame(nsPresContext* aPresContext,
-                            nsIPresShell& aPresShell,
-                            nsIAtom* aListName,
-                            nsIFrame* aOldFrame,
-                            nsIFrame* aNewFrame)
+nsInlineFrame::ReplaceFrame(nsIAtom*        aListName,
+                            nsIFrame*       aOldFrame,
+                            nsIFrame*       aNewFrame)
 {
   if (aListName) {
     NS_ERROR("Don't have any special lists on inline frames!");
@@ -305,10 +297,10 @@ nsInlineFrame::ReplaceFrame(nsPresContext* aPresContext,
   }
 
   PRBool retval =
-    mFrames.ReplaceFrame(aPresContext, this, aOldFrame, aNewFrame, PR_TRUE);
+    mFrames.ReplaceFrame(this, aOldFrame, aNewFrame, PR_TRUE);
   
   // Ask the parent frame to reflow me.
-  ReflowDirtyChild(&aPresShell, nsnull);
+  ReflowDirtyChild(GetPresContext()->PresShell(), nsnull);
 
   return retval ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -1124,74 +1116,62 @@ nsPositionedInlineFrame::SetInitialChildList(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::AppendFrames(nsPresContext* aPresContext,
-                                      nsIPresShell&   aPresShell,
-                                      nsIAtom*        aListName,
+nsPositionedInlineFrame::AppendFrames(nsIAtom*        aListName,
                                       nsIFrame*       aFrameList)
 {
   nsresult  rv;
   
   if (mAbsoluteContainer.GetChildListName() == aListName) {
-    rv = mAbsoluteContainer.AppendFrames(this, aPresContext, aPresShell, aListName,
-                                         aFrameList);
+    rv = mAbsoluteContainer.AppendFrames(this, aListName, aFrameList);
   } else {
-    rv = nsInlineFrame::AppendFrames(aPresContext, aPresShell, aListName,
-                                     aFrameList);
+    rv = nsInlineFrame::AppendFrames(aListName, aFrameList);
   }
 
   return rv;
 }
   
 NS_IMETHODIMP
-nsPositionedInlineFrame::InsertFrames(nsPresContext* aPresContext,
-                                      nsIPresShell&   aPresShell,
-                                      nsIAtom*        aListName,
+nsPositionedInlineFrame::InsertFrames(nsIAtom*        aListName,
                                       nsIFrame*       aPrevFrame,
                                       nsIFrame*       aFrameList)
 {
   nsresult  rv;
 
   if (mAbsoluteContainer.GetChildListName() == aListName) {
-    rv = mAbsoluteContainer.InsertFrames(this, aPresContext, aPresShell, aListName,
-                                         aPrevFrame, aFrameList);
+    rv = mAbsoluteContainer.InsertFrames(this, aListName, aPrevFrame,
+                                         aFrameList);
   } else {
-    rv = nsInlineFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame,
-                                     aFrameList);
+    rv = nsInlineFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
   }
 
   return rv;
 }
   
 NS_IMETHODIMP
-nsPositionedInlineFrame::RemoveFrame(nsPresContext* aPresContext,
-                                     nsIPresShell&   aPresShell,
-                                     nsIAtom*        aListName,
+nsPositionedInlineFrame::RemoveFrame(nsIAtom*        aListName,
                                      nsIFrame*       aOldFrame)
 {
   nsresult  rv;
 
   if (mAbsoluteContainer.GetChildListName() == aListName) {
-    rv = mAbsoluteContainer.RemoveFrame(this, aPresContext, aPresShell, aListName, aOldFrame);
+    rv = mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
   } else {
-    rv = nsInlineFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+    rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::ReplaceFrame(nsPresContext* aPresContext,
-                                      nsIPresShell&   aPresShell,
-                                      nsIAtom*        aListName,
+nsPositionedInlineFrame::ReplaceFrame(nsIAtom*        aListName,
                                       nsIFrame*       aOldFrame,
                                       nsIFrame*       aNewFrame)
 {
   if (mAbsoluteContainer.GetChildListName() == aListName) {
-    return mAbsoluteContainer.ReplaceFrame(this, aPresContext, aPresShell,
-                                           aListName, aOldFrame, aNewFrame);
+    return mAbsoluteContainer.ReplaceFrame(this, aListName, aOldFrame,
+                                           aNewFrame);
   } else {
-    return nsInlineFrame::ReplaceFrame(aPresContext, aPresShell, aListName,
-                                       aOldFrame, aNewFrame);
+    return nsInlineFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
   }
 }
 

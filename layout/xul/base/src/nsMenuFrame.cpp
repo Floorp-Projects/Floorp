@@ -1806,31 +1806,28 @@ nsMenuFrame::OnDestroyed()
 }
 
 NS_IMETHODIMP
-nsMenuFrame::RemoveFrame(nsPresContext* aPresContext,
-                           nsIPresShell& aPresShell,
-                           nsIAtom* aListName,
-                           nsIFrame* aOldFrame)
+nsMenuFrame::RemoveFrame(nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame)
 {
   nsresult  rv;
 
   if (mPopupFrames.ContainsFrame(aOldFrame)) {
     // Go ahead and remove this frame.
-    mPopupFrames.DestroyFrame(aPresContext, aOldFrame);
-    nsBoxLayoutState state(aPresContext);
+    nsPresContext* presContext = GetPresContext();
+    mPopupFrames.DestroyFrame(presContext, aOldFrame);
+    nsBoxLayoutState state(presContext);
     rv = MarkDirtyChildren(state);
   } else {
-    rv = nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+    rv = nsBoxFrame::RemoveFrame(aListName, aOldFrame);
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsMenuFrame::InsertFrames(nsPresContext* aPresContext,
-                            nsIPresShell& aPresShell,
-                            nsIAtom* aListName,
-                            nsIFrame* aPrevFrame,
-                            nsIFrame* aFrameList)
+nsMenuFrame::InsertFrames(nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList)
 {
   nsresult          rv;
 
@@ -1839,23 +1836,21 @@ nsMenuFrame::InsertFrames(nsPresContext* aPresContext,
     NS_ASSERTION(aFrameList->IsBoxFrame(),"Popup is not a box!!!");
     mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
 
-    nsBoxLayoutState state(aPresContext);
+    nsBoxLayoutState state(GetPresContext());
 #ifdef DEBUG_LAYOUT
     SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
 #endif
     rv = MarkDirtyChildren(state);
   } else {
-    rv = nsBoxFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);  
+    rv = nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);  
   }
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsMenuFrame::AppendFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aFrameList)
+nsMenuFrame::AppendFrames(nsIAtom*        aListName,
+                          nsIFrame*       aFrameList)
 {
   if (!aFrameList)
     return NS_OK;
@@ -1867,13 +1862,13 @@ nsMenuFrame::AppendFrames(nsPresContext* aPresContext,
     NS_ASSERTION(aFrameList->IsBoxFrame(),"Popup is not a box!!!");
 
     mPopupFrames.AppendFrames(nsnull, aFrameList);
-    nsBoxLayoutState state(aPresContext);
+    nsBoxLayoutState state(GetPresContext());
 #ifdef DEBUG_LAYOUT
     SetDebug(state, aFrameList, mState & NS_STATE_CURRENTLY_IN_DEBUG);
 #endif
     rv = MarkDirtyChildren(state);
   } else {
-    rv = nsBoxFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList); 
+    rv = nsBoxFrame::AppendFrames(aListName, aFrameList); 
   }
 
   return rv;

@@ -97,8 +97,7 @@ void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
 
 
 nsresult
-nsTableColGroupFrame::AddColsToTable(nsPresContext&  aPresContext,
-                                     PRInt32          aFirstColIndex,
+nsTableColGroupFrame::AddColsToTable(PRInt32          aFirstColIndex,
                                      PRBool           aResetSubsequentColIndices,
                                      nsIFrame*        aFirstFrame,
                                      nsIFrame*        aLastFrame)
@@ -117,7 +116,7 @@ nsTableColGroupFrame::AddColsToTable(nsPresContext&  aPresContext,
       ((nsTableColFrame*)kidFrame)->SetColIndex(colIndex);
       if (!foundLastFrame) {
         mColCount++;
-        tableFrame->InsertCol(aPresContext, (nsTableColFrame &)*kidFrame, colIndex);
+        tableFrame->InsertCol((nsTableColFrame &)*kidFrame, colIndex);
       }
       colIndex++;
     }
@@ -184,7 +183,7 @@ nsTableColGroupFrame::SetInitialChildList(nsPresContext* aPresContext,
 
   if (!aChildList) {
     nsIFrame* firstChild;
-    tableFrame->CreateAnonymousColFrames(*aPresContext, this, GetSpan(), eColAnonymousColGroup, 
+    tableFrame->CreateAnonymousColFrames(this, GetSpan(), eColAnonymousColGroup, 
                                          PR_FALSE, nsnull, &firstChild);
     if (firstChild) {
       SetInitialChildList(aPresContext, aListName, firstChild);
@@ -197,20 +196,16 @@ nsTableColGroupFrame::SetInitialChildList(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::AppendFrames(nsPresContext* aPresContext,
-                                   nsIPresShell&   aPresShell,
-                                   nsIAtom*        aListName,
+nsTableColGroupFrame::AppendFrames(nsIAtom*        aListName,
                                    nsIFrame*       aFrameList)
 {
   mFrames.AppendFrames(this, aFrameList);
-  InsertColsReflow(*aPresContext, aPresShell, mColCount, aFrameList);
+  InsertColsReflow(mColCount, aFrameList);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::InsertFrames(nsPresContext* aPresContext,
-                                   nsIPresShell&   aPresShell,
-                                   nsIAtom*        aListName,
+nsTableColGroupFrame::InsertFrames(nsIAtom*        aListName,
                                    nsIFrame*       aPrevFrameIn,
                                    nsIFrame*       aFrameList)
 {
@@ -222,19 +217,17 @@ nsTableColGroupFrame::InsertFrames(nsPresContext* aPresContext,
                                                          nsLayoutAtoms::tableColFrame);
 
   PRInt32 colIndex = (prevFrame) ? ((nsTableColFrame*)prevFrame)->GetColIndex() + 1 : 0;
-  InsertColsReflow(*aPresContext, aPresShell, colIndex, aFrameList, lastFrame);
+  InsertColsReflow(colIndex, aFrameList, lastFrame);
 
   return NS_OK;
 }
 
 void
-nsTableColGroupFrame::InsertColsReflow(nsPresContext& aPresContext,
-                                       nsIPresShell&   aPresShell,
-                                       PRInt32         aColIndex,
+nsTableColGroupFrame::InsertColsReflow(PRInt32         aColIndex,
                                        nsIFrame*       aFirstFrame,
                                        nsIFrame*       aLastFrame)
 {
-  AddColsToTable(aPresContext, aColIndex, PR_TRUE, aFirstFrame, aLastFrame);
+  AddColsToTable(aColIndex, PR_TRUE, aFirstFrame, aLastFrame);
 
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
@@ -244,12 +237,11 @@ nsTableColGroupFrame::InsertColsReflow(nsPresContext& aPresContext,
   tableFrame->SetNeedStrategyInit(PR_TRUE);
 
   // Generate a reflow command so we reflow the table
-  nsTableFrame::AppendDirtyReflowCommand(&aPresShell, tableFrame);
+  nsTableFrame::AppendDirtyReflowCommand(tableFrame);
 }
 
 void
-nsTableColGroupFrame::RemoveChild(nsPresContext&  aPresContext,
-                                  nsTableColFrame& aChild,
+nsTableColGroupFrame::RemoveChild(nsTableColFrame& aChild,
                                   PRBool           aResetSubsequentColIndices)
 {
   PRInt32 colIndex = 0;
@@ -258,7 +250,7 @@ nsTableColGroupFrame::RemoveChild(nsPresContext&  aPresContext,
     colIndex = aChild.GetColIndex();
     nextChild = aChild.GetNextSibling();
   }
-  if (mFrames.DestroyFrame(&aPresContext, (nsIFrame*)&aChild)) {
+  if (mFrames.DestroyFrame(GetPresContext(), (nsIFrame*)&aChild)) {
     mColCount--;
     if (aResetSubsequentColIndices) {
       if (nextChild) { // reset inside this and all following colgroups
@@ -278,13 +270,11 @@ nsTableColGroupFrame::RemoveChild(nsPresContext&  aPresContext,
   // XXX this could be optimized with much effort
   tableFrame->SetNeedStrategyInit(PR_TRUE);
   // Generate a reflow command so we reflow the table
-  nsTableFrame::AppendDirtyReflowCommand(aPresContext.PresShell(), tableFrame);
+  nsTableFrame::AppendDirtyReflowCommand(tableFrame);
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::RemoveFrame(nsPresContext* aPresContext,
-                                  nsIPresShell&   aPresShell,
-                                  nsIAtom*        aListName,
+nsTableColGroupFrame::RemoveFrame(nsIAtom*        aListName,
                                   nsIFrame*       aOldFrame)
 {
   if (!aOldFrame) return NS_OK;
@@ -292,21 +282,21 @@ nsTableColGroupFrame::RemoveFrame(nsPresContext* aPresContext,
   if (nsLayoutAtoms::tableColFrame == aOldFrame->GetType()) {
     nsTableColFrame* colFrame = (nsTableColFrame*)aOldFrame;
     PRInt32 colIndex = colFrame->GetColIndex();
-    RemoveChild(*aPresContext, *colFrame, PR_TRUE);
+    RemoveChild(*colFrame, PR_TRUE);
     
     nsTableFrame* tableFrame;
     nsTableFrame::GetTableFrame(this, tableFrame);
     if (!tableFrame) return NS_ERROR_NULL_POINTER;
 
-    tableFrame->RemoveCol(*aPresContext, this, colIndex, PR_TRUE, PR_TRUE);
+    tableFrame->RemoveCol(this, colIndex, PR_TRUE, PR_TRUE);
 
     // XXX This could probably be optimized with much effort
     tableFrame->SetNeedStrategyInit(PR_TRUE);
     // Generate a reflow command so we reflow the table
-    nsTableFrame::AppendDirtyReflowCommand(&aPresShell, tableFrame);
+    nsTableFrame::AppendDirtyReflowCommand(tableFrame);
   }
   else {
-    mFrames.DestroyFrame(aPresContext, aOldFrame);
+    mFrames.DestroyFrame(GetPresContext(), aOldFrame);
   }
 
   return NS_OK;
@@ -375,7 +365,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   
   
   if (eReflowReason_Incremental == aReflowState.reason) {
-    rv = IncrementalReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+    rv = IncrementalReflow(aDesiredSize, aReflowState, aStatus);
   }
 
   for (kidFrame = mFrames.FirstChild(); kidFrame;
@@ -404,8 +394,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,
   return rv;
 }
 
-NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsPresContext*          aPresContext,
-                                                  nsHTMLReflowMetrics&     aDesiredSize,
+NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsHTMLReflowMetrics&     aDesiredSize,
                                                   const nsHTMLReflowState& aReflowState,
                                                   nsReflowStatus&          aStatus)
 {
@@ -413,19 +402,18 @@ NS_METHOD nsTableColGroupFrame::IncrementalReflow(nsPresContext*          aPresC
   // the col group is a target if its path has a reflow command
   nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
   if (command)
-    IR_TargetIsMe(aPresContext, aDesiredSize, aReflowState, aStatus);
+    IR_TargetIsMe(aDesiredSize, aReflowState, aStatus);
 
   // see if the chidren are targets as well
   nsReflowPath::iterator iter = aReflowState.path->FirstChild();
   nsReflowPath::iterator end  = aReflowState.path->EndChildren();
   for (; iter != end; ++iter)
-    IR_TargetIsChild(aPresContext, aDesiredSize, aReflowState, aStatus, *iter);
+    IR_TargetIsChild(aDesiredSize, aReflowState, aStatus, *iter);
 
   return NS_OK;
 }
 
-NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsPresContext*          aPresContext,
-                                              nsHTMLReflowMetrics&     aDesiredSize,
+NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsHTMLReflowMetrics&     aDesiredSize,
                                               const nsHTMLReflowState& aReflowState,
                                               nsReflowStatus&          aStatus)
 {
@@ -438,7 +426,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsPresContext*          aPresConte
   switch (type)
   {
   case eReflowType_StyleChanged :
-    rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
+    rv = IR_StyleChanged(aDesiredSize, aReflowState, aStatus);
     break;
 
   case eReflowType_ContentChanged :
@@ -455,8 +443,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsPresContext*          aPresConte
   return rv;
 }
 
-NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsPresContext*          aPresContext,
-                                                nsHTMLReflowMetrics&     aDesiredSize,
+NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsHTMLReflowMetrics&     aDesiredSize,
                                                 const nsHTMLReflowState& aReflowState,
                                                 nsReflowStatus&          aStatus)
 {
@@ -471,8 +458,7 @@ NS_METHOD nsTableColGroupFrame::IR_StyleChanged(nsPresContext*          aPresCon
   return rv;
 }
 
-NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
-                                                 nsHTMLReflowMetrics&     aDesiredSize,
+NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsHTMLReflowMetrics&     aDesiredSize,
                                                  const nsHTMLReflowState& aReflowState,
                                                  nsReflowStatus&          aStatus,
                                                  nsIFrame *               aNextFrame)
@@ -481,11 +467,12 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsChild(nsPresContext*          aPresCo
  
   // Pass along the reflow command
   nsHTMLReflowMetrics desiredSize(nsnull);
-  nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aNextFrame,
+  nsPresContext* presContext = GetPresContext();
+  nsHTMLReflowState kidReflowState(presContext, aReflowState, aNextFrame,
                                    nsSize(aReflowState.availableWidth,
                                           aReflowState.availableHeight));
-  rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, 0, 0, 0, aStatus);
-  aNextFrame->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
+  rv = ReflowChild(aNextFrame, presContext, desiredSize, kidReflowState, 0, 0, 0, aStatus);
+  aNextFrame->DidReflow(presContext, nsnull, NS_FRAME_REFLOW_FINISHED);
   if (NS_FAILED(rv))
     return rv;
 

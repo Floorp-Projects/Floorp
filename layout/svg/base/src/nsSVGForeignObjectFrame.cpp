@@ -96,25 +96,17 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD  AppendFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  AppendFrames(nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
   
-  NS_IMETHOD  InsertFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  InsertFrames(nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
   
-  NS_IMETHOD  RemoveFrame(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   
-  NS_IMETHOD  ReplaceFrame(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
+  NS_IMETHOD  ReplaceFrame(nsIAtom*        aListName,
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
 
@@ -371,55 +363,45 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::AppendFrames(nsPresContext* aPresContext,
-                                      nsIPresShell&   aPresShell,
-                                      nsIAtom*        aListName,
+nsSVGForeignObjectFrame::AppendFrames(nsIAtom*        aListName,
                                       nsIFrame*       aFrameList)
 {
 #ifdef DEBUG
   printf("**nsSVGForeignObjectFrame::AppendFrames()\n");
 #endif
 	nsresult rv;
-	rv = nsSVGForeignObjectFrameBase::AppendFrames(aPresContext, aPresShell,
-                                                 aListName, aFrameList);
+	rv = nsSVGForeignObjectFrameBase::AppendFrames(aListName, aFrameList);
 	Update();
 	return rv;
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::InsertFrames(nsPresContext* aPresContext,
-                                     nsIPresShell&   aPresShell,
-                                     nsIAtom*        aListName,
-                                     nsIFrame*       aPrevFrame,
-                                     nsIFrame*       aFrameList)
+nsSVGForeignObjectFrame::InsertFrames(nsIAtom*        aListName,
+                                      nsIFrame*       aPrevFrame,
+                                      nsIFrame*       aFrameList)
 {
 #ifdef DEBUG
   printf("**nsSVGForeignObjectFrame::InsertFrames()\n");
 #endif
 	nsresult rv;
-	rv = nsSVGForeignObjectFrameBase::InsertFrames(aPresContext, aPresShell,
-                                                 aListName, aPrevFrame, aFrameList);
+	rv = nsSVGForeignObjectFrameBase::InsertFrames(aListName, aPrevFrame,
+                                                   aFrameList);
 	Update();
 	return rv;
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::RemoveFrame(nsPresContext* aPresContext,
-                                     nsIPresShell&   aPresShell,
-                                     nsIAtom*        aListName,
+nsSVGForeignObjectFrame::RemoveFrame(nsIAtom*        aListName,
                                      nsIFrame*       aOldFrame)
 {
 	nsresult rv;
-	rv = nsSVGForeignObjectFrameBase::RemoveFrame(aPresContext, aPresShell,
-                                                aListName, aOldFrame);
+	rv = nsSVGForeignObjectFrameBase::RemoveFrame(aListName, aOldFrame);
 	Update();
 	return rv;
 }
 
 NS_IMETHODIMP
-nsSVGForeignObjectFrame::ReplaceFrame(nsPresContext* aPresContext,
-                                      nsIPresShell&   aPresShell,
-                                      nsIAtom*        aListName,
+nsSVGForeignObjectFrame::ReplaceFrame(nsIAtom*        aListName,
                                       nsIFrame*       aOldFrame,
                                       nsIFrame*       aNewFrame)
 {
@@ -427,8 +409,8 @@ nsSVGForeignObjectFrame::ReplaceFrame(nsPresContext* aPresContext,
   printf("**nsSVGForeignObjectFrame::ReplaceFrame()\n");
 #endif
 	nsresult rv;
-	rv = nsSVGForeignObjectFrameBase::ReplaceFrame(aPresContext, aPresShell,
-                                                 aListName, aOldFrame, aNewFrame);
+	rv = nsSVGForeignObjectFrameBase::ReplaceFrame(aListName, aOldFrame,
+                                                   aNewFrame);
 	Update();
 	return rv;
 }

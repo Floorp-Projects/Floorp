@@ -106,8 +106,7 @@ public:
     aFrameList.mFirstChild = nsnull;
   }
 
-  PRBool ReplaceFrame(nsPresContext* aPresContext,
-                      nsIFrame* aParent,
+  PRBool ReplaceFrame(nsIFrame* aParent,
                       nsIFrame* aOldFrame,
                       nsIFrame* aNewFrame,
                       PRBool aDestroy);

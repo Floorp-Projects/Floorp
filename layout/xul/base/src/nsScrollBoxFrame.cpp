@@ -130,7 +130,7 @@ nsScrollBoxFrame::Init(nsPresContext*  aPresContext,
                                             aPrevInFlow);
 
   // Create the scrolling view
-  CreateScrollingView(aPresContext);
+  CreateScrollingView();
   return rv;
 }
   
@@ -142,13 +142,13 @@ nsScrollBoxFrame::SetInitialChildList(nsPresContext* aPresContext,
   nsresult  rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName,
                                                            aChildList);
 
-  SetUpScrolledFrame(aPresContext);
+  SetUpScrolledFrame();
 
   return rv;
 }
 
 void
-nsScrollBoxFrame::SetUpScrolledFrame(nsPresContext* aPresContext)
+nsScrollBoxFrame::SetUpScrolledFrame()
 {
   NS_ASSERTION(mFrames.GetLength() <= 1, "ScrollBoxes can only have 1 child!");
 
@@ -163,47 +163,41 @@ nsScrollBoxFrame::SetUpScrolledFrame(nsPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsScrollBoxFrame::AppendFrames(nsPresContext* aPresContext,
-                            nsIPresShell&   aPresShell,
-                            nsIAtom*        aListName,
-                            nsIFrame*       aFrameList)
+nsScrollBoxFrame::AppendFrames(nsIAtom*        aListName,
+                               nsIFrame*       aFrameList)
 {
-  nsresult rv = nsBoxFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+  nsresult rv = nsBoxFrame::AppendFrames(aListName, aFrameList);
 
   // make sure we only have 1 child.
   NS_ASSERTION(!mFrames.FirstChild()->GetNextSibling(), "Error ScrollBoxes can only have 1 child");
 
-  SetUpScrolledFrame(aPresContext);
+  SetUpScrolledFrame();
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsScrollBoxFrame::InsertFrames(nsPresContext* aPresContext,
-                            nsIPresShell&   aPresShell,
-                            nsIAtom*        aListName,
-                            nsIFrame*       aPrevFrame,
-                            nsIFrame*       aFrameList)
+nsScrollBoxFrame::InsertFrames(nsIAtom*        aListName,
+                               nsIFrame*       aPrevFrame,
+                               nsIFrame*       aFrameList)
 {
-  nsresult rv = nsBoxFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+  nsresult rv = nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
 
   // make sure we only have 1 child.
   NS_ASSERTION(!mFrames.FirstChild()->GetNextSibling(), "Error ScrollBoxes can only have 1 child");
 
-  SetUpScrolledFrame(aPresContext);
+  SetUpScrolledFrame();
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsScrollBoxFrame::RemoveFrame(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aOldFrame)
+nsScrollBoxFrame::RemoveFrame(nsIAtom*        aListName,
+                              nsIFrame*       aOldFrame)
 {
-  nsresult rv = nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  nsresult rv = nsBoxFrame::RemoveFrame(aListName, aOldFrame);
 
-  SetUpScrolledFrame(aPresContext);
+  SetUpScrolledFrame();
 
   return rv;
 }
@@ -221,9 +215,8 @@ nsScrollBoxFrame::CreateScrollingViewWidget(nsIView* aView, const nsStyleDisplay
 }
 
 nsresult
-nsScrollBoxFrame::GetScrollingParentView(nsPresContext* aPresContext,
-                                          nsIFrame* aParent,
-                                          nsIView** aParentView)
+nsScrollBoxFrame::GetScrollingParentView(nsIFrame* aParent,
+                                         nsIView** aParentView)
 {
   *aParentView = aParent->GetView();
   NS_ASSERTION(*aParentView, "GetParentWithView failed");
@@ -243,7 +236,7 @@ nsScrollBoxFrame::GetMouseCapturer() const
 }
 
 nsresult
-nsScrollBoxFrame::CreateScrollingView(nsPresContext* aPresContext)
+nsScrollBoxFrame::CreateScrollingView()
 {
    //Get parent frame
   nsIFrame* parent = GetAncestorWithView();
@@ -251,7 +244,7 @@ nsScrollBoxFrame::CreateScrollingView(nsPresContext* aPresContext)
 
   // Get parent view
   nsIView* parentView = nsnull;
-  GetScrollingParentView(aPresContext, parent, &parentView);
+  GetScrollingParentView(parent, &parentView);
  
   // Get the view manager
   nsIViewManager* viewManager = parentView->GetViewManager();
@@ -263,7 +256,7 @@ nsScrollBoxFrame::CreateScrollingView(nsPresContext* aPresContext)
     // Initialize the scrolling view
     nsIView* view = scrollingView->View();
 
-    SyncFrameViewProperties(aPresContext, this, mStyleContext, view);
+    SyncFrameViewProperties(GetPresContext(), this, mStyleContext, view);
 
     // Insert the view into the view hierarchy
     // XXX Put view last in document order until we know how to do better
@@ -422,8 +415,6 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
     horizChanged = PR_TRUE;
   }
 
-  nsCOMPtr<nsIPresShell> shell = aState.PresShell();
-
   // if either changed
   if (vertChanged || horizChanged) 
   {
@@ -432,23 +423,23 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
       if (mVerticalOverflow == mHorizontalOverflow)
       {
         // both either overflowed or underflowed. 1 event
-        PostScrollPortEvent(shell, mVerticalOverflow, nsScrollPortEvent::both);
+        PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::both);
       } else {
         // one overflowed and one underflowed
-        PostScrollPortEvent(shell, mVerticalOverflow, nsScrollPortEvent::vertical);
-        PostScrollPortEvent(shell, mHorizontalOverflow, nsScrollPortEvent::horizontal);
+        PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::vertical);
+        PostScrollPortEvent(mHorizontalOverflow, nsScrollPortEvent::horizontal);
       }
     } else if (vertChanged) // only one changed either vert or horiz
-       PostScrollPortEvent(shell, mVerticalOverflow, nsScrollPortEvent::vertical);
+       PostScrollPortEvent(mVerticalOverflow, nsScrollPortEvent::vertical);
     else
-       PostScrollPortEvent(shell, mHorizontalOverflow, nsScrollPortEvent::horizontal);
+       PostScrollPortEvent(mHorizontalOverflow, nsScrollPortEvent::horizontal);
   }
 
   return NS_OK;
 }
 
 void
-nsScrollBoxFrame::PostScrollPortEvent(nsIPresShell* aShell, PRBool aOverflow, nsScrollPortEvent::orientType aType)
+nsScrollBoxFrame::PostScrollPortEvent(PRBool aOverflow, nsScrollPortEvent::orientType aType)
 {
   if (!mContent)
     return;
@@ -457,7 +448,7 @@ nsScrollBoxFrame::PostScrollPortEvent(nsIPresShell* aShell, PRBool aOverflow, ns
                                                    NS_SCROLLPORT_OVERFLOW :
                                                    NS_SCROLLPORT_UNDERFLOW);
   event->orient = aType;
-  aShell->PostDOMEvent(mContent, event);
+  GetPresContext()->PresShell()->PostDOMEvent(mContent, event);
 }
 
 

@@ -144,12 +144,10 @@ nsSliderFrame::Init(nsPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::RemoveFrame(nsPresContext* aPresContext,
-                           nsIPresShell& aPresShell,
-                           nsIAtom* aListName,
-                           nsIFrame* aOldFrame)
+nsSliderFrame::RemoveFrame(nsIAtom*        aListName,
+                           nsIFrame*       aOldFrame)
 {
-  nsresult rv = nsBoxFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
+  nsresult rv = nsBoxFrame::RemoveFrame(aListName, aOldFrame);
   PRInt32 start = GetChildCount();
   if (start == 0)
     RemoveListener();
@@ -158,14 +156,12 @@ nsSliderFrame::RemoveFrame(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::InsertFrames(nsPresContext* aPresContext,
-                            nsIPresShell& aPresShell,
-                            nsIAtom* aListName,
-                            nsIFrame* aPrevFrame,
-                            nsIFrame* aFrameList)
+nsSliderFrame::InsertFrames(nsIAtom*        aListName,
+                            nsIFrame*       aPrevFrame,
+                            nsIFrame*       aFrameList)
 {
   PRInt32 start = GetChildCount();
-  nsresult rv = nsBoxFrame::InsertFrames(aPresContext, aPresShell, aListName, aPrevFrame, aFrameList);
+  nsresult rv = nsBoxFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
   if (start == 0)
     AddListener();
 
@@ -173,15 +169,13 @@ nsSliderFrame::InsertFrames(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSliderFrame::AppendFrames(nsPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aFrameList)
+nsSliderFrame::AppendFrames(nsIAtom*        aListName,
+                            nsIFrame*       aFrameList)
 {
   // if we have no children and on was added then make sure we add the
   // listener
   PRInt32 start = GetChildCount();
-  nsresult rv = nsBoxFrame::AppendFrames(aPresContext, aPresShell, aListName, aFrameList);
+  nsresult rv = nsBoxFrame::AppendFrames(aListName, aFrameList);
   if (start == 0)
     AddListener();
 

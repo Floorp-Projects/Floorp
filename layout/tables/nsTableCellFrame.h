@@ -100,18 +100,12 @@ public:
   // table cells contain an area frame which does most of the work, and
   // so these functions should never be called. They assert and return
   // NS_ERROR_NOT_IMPLEMENTED
-  NS_IMETHOD AppendFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
+  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIAtom*        aListName,
+  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
   virtual nsIFrame* GetContentInsertionFrame() {
@@ -161,8 +155,7 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  virtual void VerticallyAlignChild(nsPresContext*          aPresContext,
-                                    const nsHTMLReflowState& aReflowState,
+  virtual void VerticallyAlignChild(const nsHTMLReflowState& aReflowState,
                                     nscoord                  aMaxAscent);
 
   PRBool HasVerticalAlignBaseline();
@@ -263,9 +256,9 @@ public:
   void    SetLastBlockHeight(nscoord aValue);
 
   // The collapse offset is (0,0) except for cells originating in a row/col which is collapsed
-  void    SetCollapseOffsetX(nsPresContext* aPresContext, nscoord aXOffset);
-  void    SetCollapseOffsetY(nsPresContext* aPresContext, nscoord aYOffset);
-  void    GetCollapseOffset(nsPresContext* aPresContext, nsPoint& aOffset);
+  void    SetCollapseOffsetX(nscoord aXOffset);
+  void    SetCollapseOffsetY(nscoord aYOffset);
+  void    GetCollapseOffset(nsPoint& aOffset);
 
   nsTableCellFrame* GetNextCell() const;
 
