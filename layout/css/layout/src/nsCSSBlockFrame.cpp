@@ -581,6 +581,7 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
     mMaxElementSize.width = 0;
     mMaxElementSize.height = 0;
   }
+  mHaveBlockMaxWidth = PR_FALSE;
 
   // Set mNoWrap flag
   const nsStyleText* blockText = (const nsStyleText*)
@@ -1770,7 +1771,20 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   nsSize availSize;
   if (aState.mUnconstrainedWidth) {
     // Never give a block an unconstrained width
-    availSize.width = aState.maxSize.width;
+    if (!aState.mHaveBlockMaxWidth) {
+      const nsReflowState* rsp = aState.parentReflowState;
+      aState.mBlockMaxWidth = 0;
+      while (nsnull != rsp) {
+        if (NS_UNCONSTRAINEDSIZE != rsp->maxSize.width) {
+          aState.mBlockMaxWidth = rsp->maxSize.width;
+          break;
+        }
+        rsp = rsp->parentReflowState;
+      }
+      NS_ASSERTION(0 != aState.mBlockMaxWidth, "no width for block found");
+      aState.mHaveBlockMaxWidth = PR_TRUE;
+    }
+    availSize.width = aState.mBlockMaxWidth;
   }
   else {
     availSize.width = aState.mInnerSize.width -
