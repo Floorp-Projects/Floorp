@@ -380,6 +380,7 @@ function EditorSaveDocument(doSaveAs, doSaveCopy)
 function EditorCanClose()
 {
   // Returns FALSE only if user cancels save action
+  dump("Calling EditorCanClose\n");
   return editorShell.CheckAndSaveDocument(GetString("BeforeClosing"));
 }
 
@@ -434,65 +435,94 @@ function EditorSetTextProperty(property, attribute, value)
   gContentWindow.focus();
 }
 
-function onParagraphFormatChange(commandID)
+function onParagraphFormatChange(paraMenuList, commandID)
 {
-  var commandNode = document.getElementById(commmandID);
+  var commandNode = document.getElementById(commandID);
   var state = commandNode.getAttribute("state");
-// dump(" ==== onParagraphFormatChange was called. state="+state+"|\n");
 
-  return; //TODO: REWRITE THIS
+  dump("Updating font face with " + state + "\n");
+  
+  // force match with "normal"
+  if (state == "body")
+    state = "";
+  
+  if (state == "mixed")
+  {
+    //Selection is the "mixed" ( > 1 style) state
+    paraMenuList.selectedItem = null;
+    paraMenuList.setAttribute("value",GetString('MixedFormats'));
+  }
+  else
+  {
+    var menuPopup = document.getElementById("ParagraphPopup");
+    var menuItems = menuPopup.childNodes;
+    for (i=0; i < menuItems.length; i++)
+    {
+      var menuItem = menuItems.item(i);
+      if (menuItem.data == state)
+      {
+        paraMenuList.selectedItem = menuItem;
+        break;
+      }
+    }
+  }
 }
 
 function EditorSetParagraphFormat(commandID, paraFormat)
 {
-  // editorShell.SetParagraphFormat(paraFormat);
   var commandNode = document.getElementById(commandID);
-  dump("Saving para format state " + paraFormat + "\n");
   commandNode.setAttribute("state", paraFormat);
   window.content.focus();   // needed for command dispatch to work
   goDoCommand(commandID);
 }
 
 
-function onFontFaceChange()
+function onFontFaceChange(fontFaceMenuList, commandID)
 {
-  return; //TODO: REWRITE THIS
-  var select = document.getElementById("FontFaceSelect");
-  if (select)
-  { 
-    // Default selects "Variable Width"
-    var newIndex = 0;
-  	var face = select.getAttribute("face");
-//dump("onFontFaceChange: face="+face+"\n");
-    if ( face == "mixed")
+  var commandNode = document.getElementById(commandID);
+  var state = commandNode.getAttribute("state");
+
+  dump("Updating font face with " + state + "\n");
+  
+  if (state == "mixed")
+  {
+    //Selection is the "mixed" ( > 1 style) state
+    fontFaceMenuList.selectedItem = null;
+    fontFaceMenuList.setAttribute("value",GetString('MixedFormats'));
+  }
+  else
+  {
+    var menuPopup = document.getElementById("FontFacePopup");
+    var menuItems = menuPopup.childNodes;
+    for (i=0; i < menuItems.length; i++)
     {
-      // No single type selected
-      newIndex = -1;
-    }
-    else 
-    {
-      for( var i = 0; i < gFontFaceNames.length; i++)
+      var menuItem = menuItems.item(i);
+      if (menuItem.getAttribute("value") && (menuItem.data.toLowerCase() == state.toLowerCase()))
       {
-        if( gFontFaceNames[i] == face )
-        {
-          newIndex = i;
-          break;
-        }
+        fontFaceMenuList.selectedItem = menuItem;
+        break;
       }
     }
-    if (select.selectedIndex != newIndex)
-      select.selectedIndex = newIndex;
   }
 }
 
-function EditorSetFontFace(fontFace)
+function EditorSetFontFace(commandID, fontFace)
 {
-  if (fontFace == "tt") {
+  dump("Setting font face to " + fontFace + "\n");
+  var commandNode = document.getElementById(commandID);
+  commandNode.setAttribute("state", fontFace);
+  window.content.focus();   // needed for command dispatch to work
+  goDoCommand(commandID);
+/*
+  if (fontFace == "tt")
+  {
     // The old "teletype" attribute
     editorShell.SetTextProperty("tt", "", "");  
     // Clear existing font face
     editorShell.RemoveTextProperty("font", "face");
-  } else {
+  }
+  else
+  {
     // Remove any existing TT nodes
     editorShell.RemoveTextProperty("tt", "", "");  
 
@@ -502,8 +532,8 @@ function EditorSetFontFace(fontFace)
       editorShell.SetTextProperty("font", "face", fontFace);
     }
   }        
-//dump("Setting focus to content window...\n");
-  gContentWindow.focus();
+  window.content.focus();
+*/
 }
 
 function EditorSelectFontSize()
@@ -519,33 +549,29 @@ function EditorSelectFontSize()
   }
 }
 
-function onFontSizeChange()
+function onFontSizeChange(fontSizeMenulist, commandID)
 {
-  var select = document.getElementById("FontFaceSelect");
-  if (select)
-  { 
-    // If we don't match anything, set to "0 (normal)"
-    var newIndex = 2;
-  	var size = select.getAttribute("size");
-    if ( size == "mixed")
+  // If we don't match anything, set to "0 (normal)"
+  var newIndex = 2;
+	var size = fontSizeMenulist.getAttribute("size");
+  if ( size == "mixed")
+  {
+    // No single type selected
+    newIndex = -1;
+  }
+  else 
+  {
+    for( var i = 0; i < gFontSizeNames.length; i++)
     {
-      // No single type selected
-      newIndex = -1;
-    }
-    else 
-    {
-      for( var i = 0; i < gFontSizeNames.length; i++)
+      if( gFontSizeNames[i] == size )
       {
-        if( gFontSizeNames[i] == size )
-        {
-          newIndex = i;
-          break;
-        }
+        newIndex = i;
+        break;
       }
     }
-    if (select.selectedIndex != newIndex)
-      select.selectedIndex = newIndex;
   }
+  if (fontSizeMenulist.selectedIndex != newIndex)
+    fontSizeMenulist.selectedIndex = newIndex;
 }
 
 function EditorSetFontSize(size)
@@ -553,7 +579,7 @@ function EditorSetFontSize(size)
   if( size == "0" || size == "normal" || 
       size == "medium" )
   {
-    editorShell.RemoveTextProperty("font", size);
+    editorShell.RemoveTextProperty("font", "size");
     dump("Removing font size\n");
   } else {
     dump("Setting font size\n");
@@ -641,7 +667,7 @@ dump("EditorSelectBackColor: "+color+"\n");
   if (menupopup) menupopup.closePopup();
 
   EditorSetBackgroundColor(color);
-  gContentWindow.focus();
+  window.content.focus();
 }
 
 function EditorRemoveBackColor(ColorWellID)
@@ -653,7 +679,7 @@ function EditorRemoveBackColor(ColorWellID)
   }
   //TODO: Set colorwell to browser's default color
   editorShell.SetBackgroundColor("");
-  gContentWindow.focus();
+  window.content.focus();
 }
 
 
@@ -668,26 +694,25 @@ function SetManualTextColor()
 function EditorSetFontColor(color)
 {
   editorShell.SetTextProperty("font", "color", color);
-  gContentWindow.focus();
+  window.content.focus();
 }
 
 function EditorSetBackgroundColor(color)
 {
   editorShell.SetBackgroundColor(color);
-  gContentWindow.focus();
+  window.content.focus();
 }
 
 function EditorApplyStyle(tagName)
 {
-  dump("applying style\n");
   editorShell.SetTextProperty(tagName, "", "");
-  gContentWindow.focus();
+  window.content.focus();
 }
 
 function EditorRemoveLinks()
 {
   editorShell.RemoveTextProperty("href", "");
-  gContentWindow.focus();
+  window.content.focus();
 }
 
 /*TODO: We need an oncreate hook to do enabling/disabling for the 
@@ -771,8 +796,9 @@ function SetEditMode(mode)
       if (bodyNode)
         editorShell.editorSelection.collapse(bodyNode, 0);
 
-      gContentWindow.focus();
-      setTimeout("gContentWindow.focus()", 10);
+      window.content.focus();
+      // yuck. what is this?
+      setTimeout("window.content.focus()", 10);
     }
   }
 }
@@ -828,7 +854,7 @@ function SetDisplayMode(mode)
       // TODO: WE MUST ENABLE APPROPRIATE COMMANDS
       // and change UI back to "normal"
 
-      gContentWindow.focus();
+      window.content.focus();
     }
     return true;
   }
@@ -919,6 +945,9 @@ function EditorInitEditMenu()
 {
   var DelStr = GetString(gIsMac ? "Clear" : "Delete");
 
+  // Yuck. We should be doing this at build time, using
+  // platform-specific overlays or dtd files.
+  
   // Change menu text to "Clear" for Mac 
   // TODO: Should this be in globalOverlay.j?
   document.getElementById("menu_delete").setAttribute("value",DelStr);

@@ -55,6 +55,7 @@ public:
   // nsIHTMLEditRules methods
   NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL);
   NS_IMETHOD GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent);
+  NS_IMETHOD GetParagraphState(PRBool &aMixed, nsString &outFormat);
 
   // nsIEditActionListener methods
   
@@ -97,11 +98,12 @@ protected:
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aAction, 
                                PRBool *aCancel, PRBool *aHandled);
-  nsresult WillMakeList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillMakeList(nsIDOMSelection *aSelection, const nsString *aListType, PRBool *aCancel, PRBool *aHandled, const nsString *aItemType=nsnull);
   nsresult WillRemoveList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel, PRBool *aHandled);
   nsresult WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel, PRBool *aHandled);
+  nsresult WillMakeDefListItem(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel, PRBool *aHandled);
   nsresult WillMakeBasicBlock(nsIDOMSelection *aSelection, const nsString *aBlockType, PRBool *aCancel, PRBool *aHandled);
   nsresult DidMakeBasicBlock(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
 
@@ -115,17 +117,13 @@ protected:
   nsresult ReturnInParagraph(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel, PRBool *aHandled);
   nsresult ReturnInListItem(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   
+  nsresult AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection);
+  nsresult ConvertListType(nsIDOMNode *aList, nsCOMPtr<nsIDOMNode> *outList, const nsString& aListType, const nsString& aItemType);
   nsresult CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDocument *aDoc);
   nsresult IsEmptyBlock(nsIDOMNode *aNode, 
                         PRBool *outIsEmptyBlock, 
                         PRBool aMozBRDoesntCount = PR_FALSE,
                         PRBool aListItemsNotEmpty = PR_FALSE);
-#if 0
-  nsresult IsEmptyNode(nsIDOMNode *aNode, 
-                       PRBool *outIsEmptyBlock, 
-                       PRBool aMozBRDoesntCount = PR_FALSE,
-                       PRBool aListItemsNotEmpty = PR_FALSE);
-#endif
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
   PRBool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
@@ -138,11 +136,13 @@ protected:
                              PRInt32 inOperationType);
   nsresult PromoteRange(nsIDOMRange *inRange, PRInt32 inOperationType);
   nsresult GetNodesForOperation(nsISupportsArray *inArrayOfRanges, 
-                                   nsCOMPtr<nsISupportsArray> *outArrayOfNodes, 
-                                   PRInt32 inOperationType);
+                                nsCOMPtr<nsISupportsArray> *outArrayOfNodes, 
+                                PRInt32 inOperationType,
+                                PRBool aDontTouchContent=PR_FALSE);
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
-                                   nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
-  nsresult GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
+                                     nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
+  nsresult GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aDontTouchContent=PR_FALSE);
+  nsresult GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aDontTouchContent=PR_FALSE);
   nsresult BustUpInlinesAtBRs(nsIDOMNode *inNode, 
                                    nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
   nsresult MakeTransitionList(nsISupportsArray *inArrayOfNodes, 
@@ -185,7 +185,6 @@ protected:
   nsCOMPtr<nsIDOMRange> mDocChangeRange;
   PRBool                mListenerEnabled;
   nsCOMPtr<nsIDOMRange> mUtilRange;
-  nsCOMPtr<nsIDOMNode>  mBody;
   PRUint32              mJoinOffset;  // need to remember an int across willJoin/didJoin...
   
 };

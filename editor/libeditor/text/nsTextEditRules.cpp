@@ -70,6 +70,9 @@ NS_NewTextEditRules(nsIEditRules** aInstancePtrResult)
 nsTextEditRules::nsTextEditRules()
 : mEditor(nsnull)
 , mFlags(0) // initialized to 0 ("no flags set").  Real initial value is given in Init()
+, mPasswordText()
+, mBogusNode(nsnull)
+, mBody(nsnull)
 , mActionNesting(0)
 , mLockRulesSniffing(PR_FALSE)
 , mTheAction(0)
@@ -106,29 +109,33 @@ nsTextEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   nsCOMPtr<nsIDOMSelection> selection;
   mEditor->GetSelection(getter_AddRefs(selection));
   NS_ASSERTION(selection, "editor cannot get selection");
-  nsresult res = CreateBogusNodeIfNeeded(selection);   // this method handles null selection, which should never happen anyway
 
-  // create a range that is the entire body contents
-  if (NS_FAILED(res)) return res;
+  // remember our root node
   nsCOMPtr<nsIDOMElement> bodyElement;
-  res = mEditor->GetRootElement(getter_AddRefs(bodyElement));
+  nsresult res = mEditor->GetRootElement(getter_AddRefs(bodyElement));
   if (NS_FAILED(res)) return res;
   if (!bodyElement) return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
-  if (!bodyNode) return NS_ERROR_FAILURE;
+  mBody = do_QueryInterface(bodyElement);
+  if (!mBody) return NS_ERROR_FAILURE;
+
+  // put in a magic br if needed
+  res = CreateBogusNodeIfNeeded(selection);   // this method handles null selection, which should never happen anyway
+  if (NS_FAILED(res)) return res;
+
+  // create a range that is the entire body contents
   nsCOMPtr<nsIDOMRange> wholeDoc;
   res = nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange), 
                                            getter_AddRefs(wholeDoc));
   if (NS_FAILED(res)) return res;
-  wholeDoc->SetStart(bodyNode,0);
+  wholeDoc->SetStart(mBody,0);
   nsCOMPtr<nsIDOMNodeList> list;
-  res = bodyNode->GetChildNodes(getter_AddRefs(list));
+  res = mBody->GetChildNodes(getter_AddRefs(list));
   if (NS_FAILED(res) || !list) return res?res:NS_ERROR_FAILURE;
   PRUint32 listCount;
   res = list->GetLength(&listCount);
   if (NS_FAILED(res)) return res;
 
-  res = wholeDoc->SetEnd(bodyNode,listCount);
+  res = wholeDoc->SetEnd(mBody,listCount);
   if (NS_FAILED(res)) return res;
 
   // replace newlines in that range with breaks
@@ -1188,19 +1195,14 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   // tell rules system to not do any post-processing
   nsAutoRules beginRulesSniffing(mEditor, nsEditor::kOpIgnore, nsIEditor::eNone);
   
-  nsCOMPtr<nsIDOMElement> bodyElement;
-  
-  nsresult res = mEditor->GetRootElement(getter_AddRefs(bodyElement));  
-  if (NS_FAILED(res)) return res;
-  if (!bodyElement) return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
+  if (!mBody) return NS_ERROR_NULL_POINTER;
 
   // now we've got the body tag.
   // iterate the body tag, looking for editable content
   // if no editable content is found, insert the bogus node
   PRBool needsBogusContent=PR_TRUE;
   nsCOMPtr<nsIDOMNode>bodyChild;
-  res = bodyNode->GetFirstChild(getter_AddRefs(bodyChild));        
+  nsresult res = mBody->GetFirstChild(getter_AddRefs(bodyChild));        
   while ((NS_SUCCEEDED(res)) && bodyChild)
   { 
     if (mEditor->IsMozEditorBogusNode(bodyChild) || mEditor->IsEditable(bodyChild))
@@ -1214,25 +1216,27 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   }
   if (needsBogusContent)
   {
-    // set mBogusNode to be the newly created <br>
-    res = mEditor->CreateNode(NS_ConvertASCIItoUCS2("br"), bodyNode, 0, 
-                                 getter_AddRefs(mBogusNode));
+    // create a br
+    nsCOMPtr<nsIDOMDocument>  domDoc;
+    res = mEditor->GetDocument(getter_AddRefs(domDoc));
+    nsCOMPtr<nsIDOMElement>brElement;
+    res = domDoc->CreateElement(NS_ConvertASCIItoUCS2("br"),getter_AddRefs(brElement));
     if (NS_FAILED(res)) return res;
+    
+    // set mBogusNode to be the newly created <br>
+    mBogusNode = do_QueryInterface(brElement);
     if (!mBogusNode) return NS_ERROR_NULL_POINTER;
 
     // give it a special attribute
-    nsCOMPtr<nsIDOMElement>newPElement;
-    newPElement = do_QueryInterface(mBogusNode);
-    if (newPElement)
-    {
-      newPElement->SetAttribute(
-        NS_ConvertASCIItoUCS2(nsEditor::kMOZEditorBogusNodeAttr),
-        NS_ConvertASCIItoUCS2(nsEditor::kMOZEditorBogusNodeValue)
-      );
-    }
+    brElement->SetAttribute( NS_ConvertASCIItoUCS2(nsEditor::kMOZEditorBogusNodeAttr),
+                             NS_ConvertASCIItoUCS2(nsEditor::kMOZEditorBogusNodeValue) );
     
+    // put the node in the document
+    res = mEditor->InsertNode(mBogusNode,mBody,0);
+    if (NS_FAILED(res)) return res;
+
     // set selection
-    aSelection->Collapse(bodyNode,0);
+    aSelection->Collapse(mBody,0);
   }
   return res;
 }

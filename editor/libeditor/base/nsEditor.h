@@ -598,6 +598,7 @@ public:
 
   /** returns PR_TRUE if aNode is of the type implied by aTag */
   static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag);
+  static PRBool NodeIsType(nsIDOMNode *aNode, const nsString &aTag);
 
   /** returns PR_TRUE if aParent can contain a child of type aTag */
   PRBool CanContainTag(nsIDOMNode* aParent, const nsString &aTag);

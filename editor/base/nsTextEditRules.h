@@ -81,6 +81,7 @@ public:
     kAlign               = 3004,
     kMakeBasicBlock      = 3005,
     kRemoveList          = 3006,
+    kMakeDefListItem     = 3007,
     kInsertElement       = 3008
   };
   
@@ -173,6 +174,7 @@ protected:
   nsHTMLEditor *mEditor;  // note that we do not refcount the editor
   nsString      mPasswordText;  // a buffer we use to store the real value of password editors
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
+  nsCOMPtr<nsIDOMNode> mBody;    // cached root node
   PRUint32 mFlags;
   PRUint32 mActionNesting;
   PRBool   mLockRulesSniffing;
@@ -195,7 +197,6 @@ class nsTextRulesInfo : public nsRulesInfo
     outputFormat(0),
     maxLength(-1),
     collapsedAction(nsIEditor::eNext),
-    bOrdered(PR_FALSE),
     alignType(0),
     blockType(0),
     insertElement(0)

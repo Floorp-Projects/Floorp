@@ -79,7 +79,6 @@ nsHTMLEditRules::nsHTMLEditRules() :
 mDocChangeRange(nsnull)
 ,mListenerEnabled(PR_TRUE)
 ,mUtilRange(nsnull)
-,mBody(nsnull)
 ,mJoinOffset(0)
 {
 }
@@ -192,79 +191,87 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   nsresult res = NS_OK;
   if (!--mActionNesting)
   {
-    ConfirmSelectionInBody();
-    if (action == nsEditor::kOpIgnore) return NS_OK;
-    
-    nsCOMPtr<nsIDOMSelection>selection;
-    res = mEditor->GetSelection(getter_AddRefs(selection));
-    if (NS_FAILED(res)) return res;
-    
-    if (mDocChangeRange && !((action == nsEditor::kOpUndo) || (action == nsEditor::kOpRedo)))
-    {
-      // dont let any txns in here move the selection around behind our back.
-      // Note that this won't prevent explicit selection setting from working.
-      nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
-     
-      // expand the "changed doc range" as needed
-      res = PromoteRange(mDocChangeRange, action);
-      if (NS_FAILED(res)) return res;
-      
-      // add in any needed <br>s, and remove any unneeded ones.
-      res = AdjustSpecialBreaks();
-      if (NS_FAILED(res)) return res;
-      
-      // merge any adjacent text nodes
-      if ( (action != nsEditor::kOpInsertText &&
-           action != nsEditor::kOpInsertIMEText) )
-      {
-        res = mEditor->CollapseAdjacentTextNodes(mDocChangeRange);
-        if (NS_FAILED(res)) return res;
-      }
-      
-      // adjust whitespace for insert text and delete actions
-      if ((action == nsEditor::kOpInsertText) || 
-          (action == nsEditor::kOpInsertIMEText) ||
-          (action == nsEditor::kOpDeleteSelection))
-      {
-        res = AdjustWhitespace(selection);
-        if (NS_FAILED(res)) return res;
-      }
-      
-      // replace newlines that are preformatted
-      // MOOSE:  This is buttUgly.  A better way to 
-      // organize the action enum is in order.
-      if ((action == nsEditor::kOpInsertText) || 
-          (action == nsEditor::kOpInsertIMEText) ||
-          (action == nsHTMLEditor::kOpInsertElement) ||
-          (action == nsHTMLEditor::kOpInsertQuotation) ||
-          (action == nsEditor::kOpInsertNode))
-      {
-        res = ReplaceNewlines(mDocChangeRange);
-      }
-      
-      // clean up any empty nodes in the selection
-      res = RemoveEmptyNodes();
-      if (NS_FAILED(res)) return res;
-      
-      // adjust selection for insert text and delete actions
-      if ((action == nsEditor::kOpInsertText) || 
-          (action == nsEditor::kOpInsertIMEText) ||
-          (action == nsEditor::kOpDeleteSelection))
-      {
-        res = AdjustSelection(selection, aDirection);
-        if (NS_FAILED(res)) return res;
-      }
-    }
-
-    // detect empty doc
-    res = CreateBogusNodeIfNeeded(selection);
-
+    // do all the tricky stuff
+    res = AfterEditInner(action, aDirection);
     // turn on caret
     nsCOMPtr<nsISelectionController> selCon;
     mEditor->GetSelectionController(getter_AddRefs(selCon));
     if (selCon) selCon->SetCaretEnabled(PR_TRUE);
   }
 
+  return res;
+}
+
+
+nsresult
+nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection)
+{
+  ConfirmSelectionInBody();
+  if (action == nsEditor::kOpIgnore) return NS_OK;
+  
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  
+  if (mDocChangeRange && !((action == nsEditor::kOpUndo) || (action == nsEditor::kOpRedo)))
+  {
+    // dont let any txns in here move the selection around behind our back.
+    // Note that this won't prevent explicit selection setting from working.
+    nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
+   
+    // expand the "changed doc range" as needed
+    res = PromoteRange(mDocChangeRange, action);
+    if (NS_FAILED(res)) return res;
+    
+    // add in any needed <br>s, and remove any unneeded ones.
+    res = AdjustSpecialBreaks();
+    if (NS_FAILED(res)) return res;
+    
+    // merge any adjacent text nodes
+    if ( (action != nsEditor::kOpInsertText &&
+         action != nsEditor::kOpInsertIMEText) )
+    {
+      res = mEditor->CollapseAdjacentTextNodes(mDocChangeRange);
+      if (NS_FAILED(res)) return res;
+    }
+    
+    // adjust whitespace for insert text and delete actions
+    if ((action == nsEditor::kOpInsertText) || 
+        (action == nsEditor::kOpInsertIMEText) ||
+        (action == nsEditor::kOpDeleteSelection))
+    {
+      res = AdjustWhitespace(selection);
+      if (NS_FAILED(res)) return res;
+    }
+    
+    // replace newlines that are preformatted
+    // MOOSE:  This is buttUgly.  A better way to 
+    // organize the action enum is in order.
+    if ((action == nsEditor::kOpInsertText) || 
+        (action == nsEditor::kOpInsertIMEText) ||
+        (action == nsHTMLEditor::kOpInsertElement) ||
+        (action == nsHTMLEditor::kOpInsertQuotation) ||
+        (action == nsEditor::kOpInsertNode))
+    {
+      res = ReplaceNewlines(mDocChangeRange);
+    }
+    
+    // clean up any empty nodes in the selection
+    res = RemoveEmptyNodes();
+    if (NS_FAILED(res)) return res;
+    
+    // adjust selection for insert text and delete actions
+    if ((action == nsEditor::kOpInsertText) || 
+        (action == nsEditor::kOpInsertIMEText) ||
+        (action == nsEditor::kOpDeleteSelection))
+    {
+      res = AdjustSelection(selection, aDirection);
+      if (NS_FAILED(res)) return res;
+    }
+  }
+
+  // detect empty doc
+  res = CreateBogusNodeIfNeeded(selection);
   return res;
 }
 
@@ -303,7 +310,7 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
     case kDeleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction, aCancel, aHandled);
     case kMakeList:
-      return WillMakeList(aSelection, info->bOrdered, aCancel, aHandled);
+      return WillMakeList(aSelection, info->blockType, aCancel, aHandled);
     case kIndent:
       return WillIndent(aSelection, aCancel, aHandled);
     case kOutdent:
@@ -314,6 +321,8 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
       return WillMakeBasicBlock(aSelection, info->blockType, aCancel, aHandled);
     case kRemoveList:
       return WillRemoveList(aSelection, info->bOrdered, aCancel, aHandled);
+    case kMakeDefListItem:
+      return WillMakeDefListItem(aSelection, info->blockType, aCancel, aHandled);
     case kInsertElement:
       return WillInsert(aSelection, aCancel);
   }
@@ -349,10 +358,10 @@ nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)
   PRBool bNonList = PR_FALSE;
   
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  nsresult res = GetListActionNodes(&arrayOfNodes);
+  nsresult res = GetListActionNodes(&arrayOfNodes, PR_TRUE);
   if (NS_FAILED(res)) return res;
 
-  // yummy yummy yummy i've got nodes in my tummy
+  // examine list type for nodes in selection
   PRUint32 listCount;
   PRInt32 i;
   arrayOfNodes->Count(&listCount);
@@ -389,7 +398,102 @@ nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)
 NS_IMETHODIMP 
 nsHTMLEditRules::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)
 {
-  return NS_ERROR_FAILURE;
+  aCanIndent = PR_TRUE;    
+  aCanOutdent = PR_FALSE;
+  
+  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  nsresult res = GetListActionNodes(&arrayOfNodes, PR_TRUE);
+  if (NS_FAILED(res)) return res;
+
+  // examine nodes in selection for blockquotes or list elements;
+  // these we can outdent.  Note that we return true for canOutdent
+  // if *any* of the selection is outdentable, rather than all of it.
+  PRUint32 listCount;
+  PRInt32 i;
+  arrayOfNodes->Count(&listCount);
+  for (i=(PRInt32)listCount-1; i>=0; i--)
+  {
+    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
+    
+    if (nsHTMLEditUtils::IsList(curNode)     || 
+        nsHTMLEditUtils::IsListItem(curNode) ||
+        nsHTMLEditUtils::IsBlockquote(curNode))
+    {
+      aCanOutdent = PR_TRUE;
+      break;
+    }
+  }  
+  
+  return res;
+}
+
+
+NS_IMETHODIMP 
+nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
+{
+  // This routine is *heavily* tied to our ui choices in the paragraph
+  // style popup.  I cant see a way around that.
+  aMixed = PR_TRUE;
+  outFormat.AssignWithConversion("");
+  
+  PRBool bMixed = PR_FALSE;
+  nsAutoString formatStr; 
+  // using "x" as anuninitialized value, since "" is meaningful
+  formatStr.AssignWithConversion("x");
+  
+  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  nsresult res = GetParagraphFormatNodes(&arrayOfNodes, PR_TRUE);
+  if (NS_FAILED(res)) return res;
+
+  // loop through the nodes in selection and examine their paragraph format
+  PRUint32 listCount;
+  PRInt32 i;
+  arrayOfNodes->Count(&listCount);
+  for (i=(PRInt32)listCount-1; i>=0; i--)
+  {
+    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
+
+    nsAutoString format;
+    nsCOMPtr<nsIAtom> atom = mEditor->GetTag(curNode);
+    
+    if (mEditor->IsInlineNode(curNode))
+      format.AssignWithConversion("");
+    else if (nsIEditProperty::p == atom)
+      format.AssignWithConversion("P");
+    else if (nsHTMLEditUtils::IsHeader(curNode))
+    {
+      nsAutoString tag;
+      nsEditor::GetTagString(curNode,tag);
+      tag.ToUpperCase();
+      format = tag;
+    }
+    else if (nsIEditProperty::blockquote == atom)
+      format.AssignWithConversion("BLOCKQUOTE");
+    else if (nsIEditProperty::address == atom)
+      format.AssignWithConversion("ADDRESS");
+    else if (nsIEditProperty::pre == atom)
+      format.AssignWithConversion("PRE");
+    else if (nsIEditProperty::dt == atom)
+      format.AssignWithConversion("DT");
+    else if (nsIEditProperty::dd == atom)
+      format.AssignWithConversion("DD");
+    
+    // if this is the first node, we've found, remember it as the format
+    if (formatStr.EqualsWithConversion("x"))
+      formatStr = format;
+    // else make sure it matches previously found format
+    else if (format != formatStr) 
+    {
+      bMixed = PR_TRUE;
+      break; 
+    }
+  }  
+  
+  aMixed = bMixed;
+  outFormat = formatStr;
+  return res;
 }
 
 
@@ -825,19 +929,30 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
               }
             }
           }
-          // is prior node inline and same type?  (This shouldn't happen)
-          if ( mEditor->HasSameBlockNodeParent(node, priorNode) && 
-                 ( mEditor->IsInlineNode(node) || mEditor->IsTextNode(node) ) &&
-                 mEditor->NodesSameType(node, priorNode) )
+          // is prior node a text node?
+          else if ( mEditor->IsTextNode(priorNode) )
           {
-            // if so, join them!
-            nsCOMPtr<nsIDOMNode> topParent;
-            priorNode->GetParentNode(getter_AddRefs(topParent));
-            *aHandled = PR_TRUE;
-            res = JoinNodesSmart(priorNode,node,&selNode,&selOffset);
+            // delete last character
+            nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+            nodeAsText = do_QueryInterface(priorNode);
+            nodeAsText->GetLength((PRUint32*)&offset);
+            res = aSelection->Collapse(priorNode,offset);
+            // just return without setting handled to true.
+            // default code will take care of actual deletion
+            return res;
+          }
+          else if ( mEditor->IsInlineNode(priorNode) )
+          {
+            // remember where we are
+            res = mEditor->GetNodeLocation(priorNode, &node, &offset);
             if (NS_FAILED(res)) return res;
+            // delete it
+            res = mEditor->DeleteNode(priorNode);
+            if (NS_FAILED(res)) return res;
+            // we did something, so lets say so.
+            *aHandled = PR_TRUE;
             // fix up selection
-            res = aSelection->Collapse(selNode,selOffset);
+            res = aSelection->Collapse(node,offset);
             return res;
           }
           else return NS_OK; // punt to default
@@ -924,19 +1039,30 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
               }
             }
           }
-          // is next node inline and same type?  (This shouldn't happen)
-          if ( mEditor->HasSameBlockNodeParent(node, nextNode) && 
-                 ( mEditor->IsInlineNode(node) || mEditor->IsTextNode(node) ) &&
-                 mEditor->NodesSameType(node, nextNode) )
+          // is next node a text node?
+          else if ( mEditor->IsTextNode(nextNode) )
           {
-            // if so, join them!
-            nsCOMPtr<nsIDOMNode> topParent;
-            nextNode->GetParentNode(getter_AddRefs(topParent));
-            *aHandled = PR_TRUE;
-            res = JoinNodesSmart(node,nextNode,&selNode,&selOffset);
+            // delete last character
+            nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+            nodeAsText = do_QueryInterface(nextNode);
+            nodeAsText->GetLength((PRUint32*)&offset);
+            res = aSelection->Collapse(nextNode,offset);
+            // just return without setting handled to true.
+            // default code will take care of actual deletion
+            return res;
+          }
+          else if ( mEditor->IsInlineNode(nextNode) )
+          {
+            // remember where we are
+            res = mEditor->GetNodeLocation(nextNode, &node, &offset);
             if (NS_FAILED(res)) return res;
+            // delete it
+            res = mEditor->DeleteNode(nextNode);
+            if (NS_FAILED(res)) return res;
+            // we did something, so lets say so.
+            *aHandled = PR_TRUE;
             // fix up selection
-            res = aSelection->Collapse(selNode,selOffset);
+            res = aSelection->Collapse(node,offset);
             return res;
           }
           else return NS_OK; // punt to default
@@ -1001,6 +1127,11 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
         
       if (NS_FAILED(res)) return res;
       if (!nodeToDelete) return NS_ERROR_NULL_POINTER;
+      if (mBody == nodeToDelete) 
+      {
+        *aCancel = PR_TRUE;
+        return res;
+      }
         
       // if this node is text node, adjust selection
       if (nsEditor::IsTextNode(nodeToDelete))
@@ -1153,28 +1284,32 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
 
 nsresult
 nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, 
-                              PRBool aOrdered, 
+                              const nsString *aListType, 
                               PRBool *aCancel,
-                              PRBool *aHandled)
+                              PRBool *aHandled,
+                              const nsString *aItemType)
 {
-  if (!aSelection || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
+  if (!aSelection || !aListType || !aCancel || !aHandled) { return NS_ERROR_NULL_POINTER; }
 
   nsresult res = WillInsert(aSelection, aCancel);
   if (NS_FAILED(res)) return res;
 
-  nsAutoString listType;
-  listType.AssignWithConversion( aOrdered ? "ol" : "ul" );
-  
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;
 
-  nsAutoString blockType;
-  blockType.AssignWithConversion( aOrdered ? "ol" : "ul");
+  // deduce what tag to use for list items
+  nsAutoString itemType;
+  if (aItemType) 
+    itemType = *aItemType;
+  else if (aListType->EqualsWithConversion("dl"))
+    itemType.AssignWithConversion("dd");
+  else
+    itemType.AssignWithConversion("li");
     
   PRBool outMakeEmpty;
-  res = ShouldMakeEmptyBlock(aSelection, &blockType, &outMakeEmpty);
+  res = ShouldMakeEmptyBlock(aSelection, aListType, &outMakeEmpty);
   if (NS_FAILED(res)) return res;
   if (outMakeEmpty) 
   {
@@ -1186,11 +1321,11 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
     if (NS_FAILED(res)) return res;
     
     // make sure we can put a list here
-    res = SplitAsNeeded(&listType, &parent, &offset);
+    res = SplitAsNeeded(aListType, &parent, &offset);
     if (NS_FAILED(res)) return res;
-    res = mEditor->CreateNode(listType, parent, offset, getter_AddRefs(theList));
+    res = mEditor->CreateNode(*aListType, parent, offset, getter_AddRefs(theList));
     if (NS_FAILED(res)) return res;
-    res = mEditor->CreateNode(NS_ConvertASCIItoUCS2("li"), theList, 0, getter_AddRefs(theListItem));
+    res = mEditor->CreateNode(itemType, theList, 0, getter_AddRefs(theListItem));
     if (NS_FAILED(res)) return res;
     // put selection in new list item
     res = aSelection->Collapse(theListItem,0);
@@ -1224,8 +1359,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
     
     while (nsHTMLEditUtils::IsDiv(curNode)
-           || nsHTMLEditUtils::IsOrderedList(curNode)
-           || nsHTMLEditUtils::IsUnorderedList(curNode)
+           || nsHTMLEditUtils::IsList(curNode)
            || nsHTMLEditUtils::IsBlockquote(curNode))
     {
       // dive as long as there is only one child, and it is a list, div, blockquote
@@ -1238,8 +1372,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
         // keep diving
         nsCOMPtr <nsIDOMNode> tmpNode = nsEditor::GetChildAt(curNode, 0);
         if (nsHTMLEditUtils::IsDiv(tmpNode)
-            || nsHTMLEditUtils::IsOrderedList(tmpNode)
-            || nsHTMLEditUtils::IsUnorderedList(tmpNode)
+            || nsHTMLEditUtils::IsList(tmpNode)
             || nsHTMLEditUtils::IsBlockquote(tmpNode))
         {
           // check editablility XXX floppy moose
@@ -1305,37 +1438,38 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
     
     if (nsHTMLEditUtils::IsList(curNode))
     {
+      nsAutoString existingListStr;
+      res = mEditor->GetTagString(curNode, existingListStr);
       // do we have a curList already?
       if (curList && !nsHTMLEditUtils::IsDescendantOf(curNode, curList))
       {
-        // move all of our dachildren into curList.
+        // move all of our children into curList.
         // cheezy way to do it: move whole list and then
-        // RemoveContainer() on the list
+        // RemoveContainer() on the list.
+        // ConvertListType first: that routine
+        // handles converting the list item types, if needed
         res = mEditor->MoveNode(curNode, curList, -1);
         if (NS_FAILED(res)) return res;
-        res = mEditor->RemoveContainer(curNode);
+        res = ConvertListType(curNode, &newBlock, *aListType, itemType);
         if (NS_FAILED(res)) return res;
-      }
-      else if ( (nsHTMLEditUtils::IsUnorderedList(curNode) && aOrdered) ||
-                (nsHTMLEditUtils::IsOrderedList(curNode) && !aOrdered) )
-
-      {
-        // replace list with new list type
-        res = mEditor->ReplaceContainer(curNode,&newBlock,blockType);
+        res = mEditor->RemoveContainer(newBlock);
         if (NS_FAILED(res)) return res;
-        curList = newBlock;
       }
       else
       {
-        curList = curNode;
+        // replace list with new list type
+        res = ConvertListType(curNode, &newBlock, *aListType, itemType);
+        if (NS_FAILED(res)) return res;
+        curList = newBlock;
       }
       continue;
     }
 
     if (nsHTMLEditUtils::IsListItem(curNode))
     {
-      if ( (nsHTMLEditUtils::IsUnorderedList(curParent) && aOrdered) ||
-           (nsHTMLEditUtils::IsOrderedList(curParent) && !aOrdered) )
+      nsAutoString existingListStr;
+      res = mEditor->GetTagString(curParent, existingListStr);
+      if ( existingListStr != *aListType )
       {
         // list item is in wrong type of list.  
         // if we dont have a curList, split the old list
@@ -1348,16 +1482,23 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
           PRInt32 o;
           res = nsEditor::GetNodeLocation(curParent, &p, &o);
           if (NS_FAILED(res)) return res;
-          res = mEditor->CreateNode(listType, p, o, getter_AddRefs(curList));
+          res = mEditor->CreateNode(*aListType, p, o, getter_AddRefs(curList));
           if (NS_FAILED(res)) return res;
         }
         // move list item to new list
         res = mEditor->MoveNode(curNode, curList, -1);
         if (NS_FAILED(res)) return res;
+        // convert list item type if needed
+        if (!mEditor->NodeIsType(curNode,itemType))
+        {
+          res = mEditor->ReplaceContainer(curNode, &newBlock, itemType);
+          if (NS_FAILED(res)) return res;
+        }
       }
       else
       {
         // item is in right type of list.  But we might still have to move it.
+        // and we might need to convert list item types.
         if (!curList)
           curList = curParent;
         else
@@ -1369,6 +1510,11 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
             if (NS_FAILED(res)) return res;
           }
         }
+        if (!mEditor->NodeIsType(curNode,itemType))
+        {
+          res = mEditor->ReplaceContainer(curNode, &newBlock, itemType);
+          if (NS_FAILED(res)) return res;
+        }
       }
       continue;
     }
@@ -1377,9 +1523,9 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
     // or if this node doesn't go in list we used earlier.
     if (!curList) // || transitionList[i])
     {
-      res = SplitAsNeeded(&listType, &curParent, &offset);
+      res = SplitAsNeeded(aListType, &curParent, &offset);
       if (NS_FAILED(res)) return res;
-      res = mEditor->CreateNode(listType, curParent, offset, getter_AddRefs(curList));
+      res = mEditor->CreateNode(*aListType, curParent, offset, getter_AddRefs(curList));
       if (NS_FAILED(res)) return res;
       // curList is now the correct thing to put curNode in
       prevListItem = 0;
@@ -1404,11 +1550,11 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
         // don't wrap li around a paragraph.  instead replace paragraph with li
         if (nsHTMLEditUtils::IsParagraph(curNode))
         {
-          res = mEditor->ReplaceContainer(curNode, &listItem, NS_ConvertASCIItoUCS2("li"));
+          res = mEditor->ReplaceContainer(curNode, &listItem, itemType);
         }
         else
         {
-          res = mEditor->InsertContainerAbove(curNode, &listItem, NS_ConvertASCIItoUCS2("li"));
+          res = mEditor->InsertContainerAbove(curNode, &listItem, itemType);
         }
         if (NS_FAILED(res)) return res;
         if (nsEditor::IsInlineNode(curNode)) 
@@ -1524,6 +1670,18 @@ nsHTMLEditRules::WillRemoveList(nsIDOMSelection *aSelection,
   return res;
 }
 
+
+nsresult
+nsHTMLEditRules::WillMakeDefListItem(nsIDOMSelection *aSelection, 
+                                     const nsString *aItemType, 
+                                     PRBool *aCancel,
+                                     PRBool *aHandled)
+{
+  // for now we let WillMakeList handle this
+  nsAutoString listType; 
+  listType.AssignWithConversion("dl");
+  return WillMakeList(aSelection, &listType, aCancel, aHandled, aItemType);
+}
 
 nsresult
 nsHTMLEditRules::WillMakeBasicBlock(nsIDOMSelection *aSelection, 
@@ -1809,6 +1967,40 @@ nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBoo
 
 
 ///////////////////////////////////////////////////////////////////////////
+// ConvertListType:  convert list type and list item type.
+//                
+//                  
+nsresult 
+nsHTMLEditRules::ConvertListType(nsIDOMNode *aList, 
+                                 nsCOMPtr<nsIDOMNode> *outList,
+                                 const nsString& aListType, 
+                                 const nsString& aItemType) 
+{
+  if (!aList || !outList) return NS_ERROR_NULL_POINTER;
+  *outList = aList;  // we migvht not need to change the list
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> child, temp;
+  aList->GetFirstChild(getter_AddRefs(child));
+  while (child)
+  {
+    if (!mEditor->NodeIsType(child, aItemType))
+    {
+      res = mEditor->ReplaceContainer(child, &temp, aItemType);
+      if (NS_FAILED(res)) return res;
+      child = temp;
+    }
+    child->GetNextSibling(getter_AddRefs(temp));
+    child = temp;
+  }
+  if (!mEditor->NodeIsType(aList, aListType))
+  {
+    res = mEditor->ReplaceContainer(aList, outList, aListType);
+  }
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // CreateStyleForInsertText:  take care of clearing and setting appropriate
 //                            style nodes for text insertion.
 //                
@@ -1839,10 +2031,15 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
   }
   
   // then process setting any styles
-  mEditor->mTypeInState->TakeSetProperty(&item);
+  PRInt32 relFontSize;
   
-  if (item) // we have at least one style to add; make a
-  {         // new text node to insert style nodes above.
+  res = mEditor->mTypeInState->TakeRelativeFontSize(&relFontSize);
+  if (NS_FAILED(res)) return res;
+  res = mEditor->mTypeInState->TakeSetProperty(&item);
+  if (NS_FAILED(res)) return res;
+  
+  if (item || relFontSize) // we have at least one style to add; make a
+  {                        // new text node to insert style nodes above.
     if (mEditor->IsTextNode(node))
     {
       // if we are in a text node, split it
@@ -1863,17 +2060,29 @@ nsHTMLEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, nsIDOMDoc
     node = newNode;
     offset = 0;
     weDidSometing = PR_TRUE;
+
+    if (relFontSize)
+    {
+      PRInt32 j, dir;
+      // dir indicated bigger versus smaller.  1 = bigger, -1 = smaller
+      if (relFontSize > 0) dir=1;
+      else dir = -1;
+      for (j=0; j<abs(relFontSize); j++)
+      {
+        res = mEditor->RelativeFontChangeOnTextNode(dir, nodeAsText, 0, -1);
+        if (NS_FAILED(res)) return res;
+      }
+    }
+    
+    while (item)
+    {
+      res = mEditor->SetInlinePropertyOnNode(node, item->tag, &item->attr, &item->value);
+      if (NS_FAILED(res)) return res;
+      // we own item now (TakeSetProperty hands ownership to us)
+      delete item;
+      mEditor->mTypeInState->TakeSetProperty(&item);
+    }
   }
-  
-  while (item)
-  {
-    res = mEditor->SetInlinePropertyOnNode(node, item->tag, &item->attr, &item->value);
-    if (NS_FAILED(res)) return res;
-    // we own item now (TakeSetProperty hands ownership to us)
-    delete item;
-    mEditor->mTypeInState->TakeSetProperty(&item);
-  }
-  
   if (weDidSometing)
     return aSelection->Collapse(node, offset);
     
@@ -2616,7 +2825,8 @@ nsHTMLEditRules::PromoteRange(nsIDOMRange *inRange,
 nsresult 
 nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges, 
                                    nsCOMPtr<nsISupportsArray> *outArrayOfNodes, 
-                                   PRInt32 inOperationType)
+                                   PRInt32 inOperationType,
+                                   PRBool aDontTouchContent)
 {
   if (!inArrayOfRanges || !outArrayOfNodes) return NS_ERROR_NULL_POINTER;
 
@@ -2669,7 +2879,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     {
       nsCOMPtr<nsISupports> isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
       nsCOMPtr<nsIDOMNode> node( do_QueryInterface(isupports) );
-      if (mEditor->IsInlineNode(node) && mEditor->IsContainer(node))
+      if (!aDontTouchContent && mEditor->IsInlineNode(node) && mEditor->IsContainer(node))
       {
         nsCOMPtr<nsISupportsArray> arrayOfInlines;
         res = BustUpInlinesAtBRs(node, &arrayOfInlines);
@@ -2735,7 +2945,8 @@ nsHTMLEditRules::GetChildNodesForOperation(nsIDOMNode *inNode,
 // GetListActionNodes: 
 //                       
 nsresult 
-nsHTMLEditRules::GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes)
+nsHTMLEditRules::GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, 
+                                    PRBool aDontTouchContent)
 {
   if (!outArrayOfNodes) return NS_ERROR_NULL_POINTER;
   
@@ -2748,7 +2959,58 @@ nsHTMLEditRules::GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes)
   if (NS_FAILED(res)) return res;
   
   // use these ranges to contruct a list of nodes to act on.
-  res = GetNodesForOperation(arrayOfRanges, outArrayOfNodes, kMakeList);
+  res = GetNodesForOperation(arrayOfRanges, outArrayOfNodes, kMakeList, aDontTouchContent);
+  if (NS_FAILED(res)) return res;                                 
+               
+  // pre process our list of nodes...                      
+  PRUint32 listCount;
+  PRInt32 i;
+  (*outArrayOfNodes)->Count(&listCount);
+  for (i=(PRInt32)listCount-1; i>=0; i--)
+  {
+    nsCOMPtr<nsISupports> isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(isupports ) );
+
+    // Remove all non-editable nodes.  Leave them be.
+    if (!mEditor->IsEditable(testNode))
+    {
+      (*outArrayOfNodes)->RemoveElementAt(i);
+    }
+    
+    // scan for table elements.  If we find table elements other than table,
+    // replace it with a list of any editable non-table content.
+    if (mEditor->IsTableElement(testNode) && !mEditor->IsTable(testNode))
+    {
+      (*outArrayOfNodes)->RemoveElementAt(i);
+      nsCOMPtr<nsISupportsArray> arrayOfTableContent;
+      res = GetTableContent(testNode, &arrayOfTableContent);
+      if (NS_FAILED(res)) return res;
+      (*outArrayOfNodes)->AppendElements(arrayOfTableContent);
+    }
+  }
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetParagraphFormatNodes: 
+//                       
+nsresult 
+nsHTMLEditRules::GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes,
+                                         PRBool aDontTouchContent)
+{
+  if (!outArrayOfNodes) return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult res = mEditor->GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsISupportsArray> arrayOfRanges;
+  res = GetPromotedRanges(selection, &arrayOfRanges, kMakeList);
+  if (NS_FAILED(res)) return res;
+  
+  // use these ranges to contruct a list of nodes to act on.
+  res = GetNodesForOperation(arrayOfRanges, outArrayOfNodes, kMakeBasicBlock, aDontTouchContent);
   if (NS_FAILED(res)) return res;                                 
                
   // pre process our list of nodes...                      
@@ -3285,7 +3547,7 @@ nsHTMLEditRules::ShouldMakeEmptyBlock(nsIDOMSelection *aSelection,
   // Note that if _nothing_ should happen, ie, the selection is
   // already entireyl inside a block (or blocks) or the correct type,
   // then you don't want to return true in outMakeEmpty, since the
-  // defualt code will insert a new empty block anyway, rather than
+  // default code will insert a new empty block anyway, rather than
   // doing nothing.  So we have to detect that case and return false.
   
   if (!aSelection || !outMakeEmpty) return NS_ERROR_NULL_POINTER;
@@ -3342,18 +3604,7 @@ nsHTMLEditRules::ShouldMakeEmptyBlock(nsIDOMSelection *aSelection,
       *outMakeEmpty = PR_FALSE;
       return res;
     }
-    
-    // in an empty block?
-    PRBool bIsEmptyNode;
-    // the PR_TRUE param tell IsEmptyNode to not count moz-BRs as content
-    res = IsEmptyNode(block, &bIsEmptyNode, PR_TRUE, PR_FALSE);
-    if (bIsEmptyNode)
-    {
-      // we must be in a text or inline node - convert existing block
-      *outMakeEmpty = PR_TRUE;
-      return res;
-    }    
-    
+        
     // is it after a <br> with no inline nodes after it, or a <br> after it??
     if (offset)
     {
@@ -3383,7 +3634,7 @@ nsHTMLEditRules::ShouldMakeEmptyBlock(nsIDOMSelection *aSelection,
           // we are after a <br> and not before inline content,
           // or we are between <br>s.
           // make an empty block
-          *outMakeEmpty = PR_FALSE;
+          *outMakeEmpty = PR_TRUE;
           return res;
         }
       }

@@ -69,6 +69,11 @@ public:
   //                     caller assumes ownership of PropItem and must delete it.
   nsresult TakeSetProperty(PropItem **outPropItem);
 
+  //**************************************************************************
+  //    TakeRelativeFontSize: hands back relative font value, which is then
+  //                          cleared out.
+  nsresult TakeRelativeFontSize(PRInt32 *outRelSize);
+
   nsresult GetTypingState(PRBool &isSet, PRBool &theSetting, nsIAtom *aProp);
   nsresult GetTypingState(PRBool &isSet, PRBool &theSetting, nsIAtom *aProp, 
                           const nsString &aAttr);
@@ -87,6 +92,7 @@ protected:
 
   nsVoidArray mSetArray;
   nsVoidArray mClearedArray;
+  PRInt32 mRelativeFontSize;
 };
 
 

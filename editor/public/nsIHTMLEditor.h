@@ -121,6 +121,12 @@ public:
                              const nsString *aValue,
                              PRBool &aFirst, PRBool &aAny, PRBool &aAll)=0;
 
+  NS_IMETHOD GetInlinePropertyWithAttrValue(nsIAtom *aProperty, 
+                             const nsString *aAttribute,
+                             const nsString *aValue,
+                             PRBool &aFirst, PRBool &aAny, PRBool &aAll,
+                             nsString *outValue)=0;
+                             
   /**
    * RemoveAllInlineProperties() deletes all the inline properties from all 
    * text in the current selection.
@@ -237,16 +243,6 @@ public:
    */
   NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode)=0;
 
-  /** 
-   * GetListState returns what list type is in the selection.
-   * @param aMixed    True if there is more than one type of list, or
-   *                  if there is some list and non-list
-   * @param aOL       The company that employs me.  No, really, it's 
-   *                  true if an "ol" list is selected.
-   * @param aUL       true if an "ul" list is selected.
-   */
-  NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)=0;
-  
   /* ------------ Selection manipulation -------------- */
   /* Should these be moved to nsIDOMSelection? */
   
@@ -281,19 +277,34 @@ public:
   NS_IMETHOD SetParagraphFormat(const nsString& aParagraphFormat)=0;
 
   /**
-   * Get a list of tagnames of all paragraph tags
-   *  (the closest block parent tags) of all
-   *  elements in the current selection
+   * Document me!
    * 
    */
-  NS_IMETHOD GetParagraphTags(nsStringArray *aTagList)=0;
+  NS_IMETHOD GetParagraphState(PRBool &aMixed, nsString &outFace)=0;
 
-  /**
-   * Get a list of tagnames of all list tags
-   *  (the closest parent tags that are UL, OL, or DL) of all
-   *  elements in the current selection
+  /** 
+   * GetFontFaceState returns what font face is in the selection.
+   * @param aMixed    True if there is more than one font face
+   * @param outFace   name of face.  Note: "tt" is returned for
+   *                  tt tag.  "" is returned for none.
    */
-  NS_IMETHOD GetListTags(nsStringArray *aTagList)=0;
+  NS_IMETHOD GetFontFaceState(PRBool &aMixed, nsString &outFont)=0;
+  
+  /** 
+   * GetListState returns what list type is in the selection.
+   * @param aMixed    True if there is more than one type of list, or
+   *                  if there is some list and non-list
+   * @param aOL       The company that employs me.  No, really, it's 
+   *                  true if an "ol" list is selected.
+   * @param aUL       true if an "ul" list is selected.
+   */
+  NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)=0;
+  
+  /**
+   * Document me!
+   * 
+   */
+  NS_IMETHOD GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)=0;
 
   /**
    * Document me!

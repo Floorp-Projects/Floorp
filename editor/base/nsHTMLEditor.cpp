@@ -1001,6 +1001,10 @@ NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
 
   if (!outBRNode) return NS_ERROR_NULL_POINTER;
   *outBRNode = nsnull;
+
+  // calling it text insertion to trigger moz br treatment by rules
+  nsAutoRules beginRulesSniffing(this, kOpInsertText, nsIEditor::eNext);
+
   nsresult res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   res = selection->GetIsCollapsed(&bCollapsed);
@@ -1019,6 +1023,8 @@ NS_IMETHODIMP nsHTMLEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
   if (NS_FAILED(res)) return res;
     
   // position selection after br
+  res = GetNodeLocation(*outBRNode, &selNode, &selOffset);
+  if (NS_FAILED(res)) return res;
   selection->SetHint(PR_TRUE);
   res = selection->Collapse(selNode, selOffset+1);
   
@@ -1127,22 +1133,28 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         if (NS_FAILED(res)) return res;
         
         // iterate range and build up array
-        iter->Init(range);
-        while (NS_ENUMERATOR_FALSE == iter->IsDone())
+        res = iter->Init(range);
+        // init returns an error if no nodes in range.
+        // this can easily happen with the subtree 
+        // iterator if the selection doesn't contain
+        // any *whole* nodes.
+        if (NS_SUCCEEDED(res))
         {
-          res = iter->CurrentNode(getter_AddRefs(content));
-          if (NS_FAILED(res)) return res;
-          node = do_QueryInterface(content);
-          if (!node) return NS_ERROR_FAILURE;
-          if (IsEditable(node))
-          { 
-            isupports = do_QueryInterface(node);
-            arrayOfNodes->AppendElement(isupports);
+          while (NS_ENUMERATOR_FALSE == iter->IsDone())
+          {
+            res = iter->CurrentNode(getter_AddRefs(content));
+            if (NS_FAILED(res)) return res;
+            node = do_QueryInterface(content);
+            if (!node) return NS_ERROR_FAILURE;
+            if (IsEditable(node))
+            { 
+              isupports = do_QueryInterface(node);
+              arrayOfNodes->AppendElement(isupports);
+            }
+            res = iter->Next();
+            if (NS_FAILED(res)) return res;
           }
-          res = iter->Next();
-          if (NS_FAILED(res)) return res;
         }
-        
         // MOOSE: workaround for selection bug:
         //selection->ClearSelection();
         
@@ -1713,7 +1725,20 @@ PRBool nsHTMLEditor::IsAtEndOfNode(nsIDOMNode *aNode, PRInt32 aOffset)
 NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty, 
                                               const nsString *aAttribute, 
                                               const nsString *aValue,
-                                              PRBool &aFirst, PRBool &aAny, PRBool &aAll)
+                                              PRBool &aFirst, 
+                                              PRBool &aAny, 
+                                              PRBool &aAll)
+{
+  return GetInlinePropertyWithAttrValue( aProperty, aAttribute, aValue, aFirst, aAny, aAll, nsnull);
+}
+
+NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty, 
+                                              const nsString *aAttribute, 
+                                              const nsString *aValue,
+                                              PRBool &aFirst, 
+                                              PRBool &aAny, 
+                                              PRBool &aAll,
+                                              nsString *outValue)
 {
   if (!aProperty)
     return NS_ERROR_NULL_POINTER;
@@ -1805,11 +1830,6 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
         }
         return NS_OK;
       }
-      else if (aProperty == mFontAtom.get())
-      {
-// MOOSE!          
-        return NS_OK;
-      }
     }
 
     // either non-collapsed selection or no cached value: do it the hard way
@@ -1822,6 +1842,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
 
     iter->Init(range);
     nsCOMPtr<nsIContent> content;
+    nsAutoString firstValue, theValue;
     iter->CurrentNode(getter_AddRefs(content));
     while (NS_ENUMERATOR_FALSE == iter->IsDone())
     {
@@ -1866,12 +1887,20 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
         {
           PRBool isSet;
           nsCOMPtr<nsIDOMNode>resultNode;
-          IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet, getter_AddRefs(resultNode));
           if (first)
           {
+            IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet, getter_AddRefs(resultNode), &firstValue);
             aFirst = isSet;
             first = PR_FALSE;
+            if (outValue) *outValue = firstValue;
           }
+          else
+          {
+            IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet, getter_AddRefs(resultNode), &theValue);
+            if (firstValue != theValue)
+              aAll = PR_FALSE;
+          }
+          
           if (isSet) {
             aAny = PR_TRUE;
           }
@@ -2790,7 +2819,10 @@ nsHTMLEditor::SetParagraphFormat(const nsString& aParagraphFormat)
 {
   nsAutoString tag; tag.Assign(aParagraphFormat);
   tag.ToLowerCase();
-  return InsertBasicBlock(tag);
+  if (tag.EqualsWithConversion("dd") || tag.EqualsWithConversion("dt"))
+    return MakeDefinitionItem(tag);
+  else
+    return InsertBasicBlock(tag);
 }
 
 // XXX: ERROR_HANDLING -- this method needs a little work to ensure all error codes are 
@@ -2907,20 +2939,52 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
 }
 
 
-// get the paragraph style(s) for the selection
 NS_IMETHODIMP 
-nsHTMLEditor::GetParagraphTags(nsStringArray *aTagList)
+nsHTMLEditor::GetParagraphState(PRBool &aMixed, nsString &outFormat)
 {
-#if 0
-  if (gNoisy) { printf("---------- nsHTMLEditor::GetPargraphTags ----------\n"); }
-#endif
-  return GetParentBlockTags(aTagList, PR_FALSE);
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
+  if (!htmlRules) return NS_ERROR_FAILURE;
+  
+  return htmlRules->GetParagraphState(aMixed, outFormat);
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::GetListTags(nsStringArray *aTagList)
+nsHTMLEditor::GetFontFaceState(PRBool &aMixed, nsString &outFace)
 {
-  return GetParentBlockTags(aTagList, PR_TRUE);
+  aMixed = PR_TRUE;
+  outFace.AssignWithConversion("");
+  
+  nsresult res;
+  nsAutoString faceStr; faceStr.AssignWithConversion("face");
+  PRBool first, any, all;
+  
+  res = GetInlinePropertyWithAttrValue(nsIEditProperty::font, &faceStr, nsnull, first, any, all, &outFace);
+  if (NS_FAILED(res)) return res;
+  if (any && !all) return res; // mixed
+  if (all)
+  {
+    aMixed = PR_FALSE;
+    return res;
+  }
+  
+  res = GetInlineProperty(nsIEditProperty::tt, nsnull, nsnull, first, any, all);
+  if (NS_FAILED(res)) return res;
+  if (any && !all) return res; // mixed
+  if (all)
+  {
+    aMixed = PR_FALSE;
+    nsIEditProperty::tt->ToString(outFace);
+  }
+  
+  if (!any)
+  {
+    // there was no font face attrs of any kind.  We are in normal font.
+    outFace.AssignWithConversion("");
+    aMixed = PR_FALSE;
+  }
+  return res;
 }
 
 NS_IMETHODIMP 
@@ -2932,6 +2996,17 @@ nsHTMLEditor::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)
   if (!htmlRules) return NS_ERROR_FAILURE;
   
   return htmlRules->GetListState(aMixed, aOL, aUL);
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)
+{
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
+  if (!htmlRules) return NS_ERROR_FAILURE;
+  
+  return htmlRules->GetIndentState(aCanIndent, aCanOutdent);
 }
 
 NS_IMETHODIMP
@@ -2952,8 +3027,7 @@ nsHTMLEditor::MakeOrChangeList(const nsString& aListType)
   if (!selection) return NS_ERROR_NULL_POINTER;
 
   nsTextRulesInfo ruleInfo(nsTextEditRules::kMakeList);
-  if (aListType.EqualsWithConversion("ol")) ruleInfo.bOrdered = PR_TRUE;
-  else  ruleInfo.bOrdered = PR_FALSE;
+  ruleInfo.blockType = &aListType;
   res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || (NS_FAILED(res))) return res;
 
@@ -3041,8 +3115,37 @@ nsHTMLEditor::RemoveList(const nsString& aListType)
   return res;
 }
 
+nsresult
+nsHTMLEditor::MakeDefinitionItem(const nsString& aItemType)
+{
+  nsresult res;
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
-NS_IMETHODIMP
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel, handled;
+
+  nsAutoEditBatch beginBatching(this);
+  nsAutoRules beginRulesSniffing(this, kOpMakeDefListItem, nsIEditor::eNext);
+  
+  // pre-process
+  res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kMakeDefListItem);
+  ruleInfo.blockType = &aItemType;
+  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+  if (cancel || (NS_FAILED(res))) return res;
+
+  if (!handled)
+  {
+    // todo: no default for now.  we count on rules to handle it.
+  }
+
+  res = mRules->DidDoAction(selection, &ruleInfo, res);
+  return res;
+}
+
+nsresult
 nsHTMLEditor::InsertBasicBlock(const nsString& aBlockType)
 {
   nsresult res;
@@ -5534,7 +5637,8 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode     *aNode,
                                               const nsString *aAttribute, 
                                               const nsString *aValue, 
                                               PRBool         &aIsSet,
-                                              nsIDOMNode    **aStyleNode) const
+                                              nsIDOMNode    **aStyleNode,
+                                              nsString       *outValue) const
 {
   nsresult result;
   aIsSet = PR_FALSE;  // must be initialized to false for code below to work
@@ -5548,15 +5652,15 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode     *aNode,
     element = do_QueryInterface(node);
     if (element)
     {
-      nsAutoString tag;
+      nsAutoString tag, value;
       element->GetTagName(tag);
       if (propName.EqualsIgnoreCase(tag))
       {
         PRBool found = PR_FALSE;
         if (aAttribute && 0!=aAttribute->Length())
         {
-          nsAutoString value;
           element->GetAttribute(*aAttribute, value);
+          if (outValue) *outValue = value;
           if (value.Length())
           {
             if (!aValue) {
@@ -6182,12 +6286,14 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
   res = selection->GetIsCollapsed(&bCollapsed);
   if (NS_FAILED(res)) return res;
   
-  // if it's collapsed dont do anything.  
-  // MOOSE: We should probably have typing state for this like
-  // we do for other things.
+  // if it's collapsed set typing state
   if (bCollapsed)
   {
-    return NS_OK;
+    nsCOMPtr<nsIAtom> atom;
+    if (aSizeChange==1) atom = nsIEditProperty::big;
+    else                atom = nsIEditProperty::small;
+    // manipulating text attributes on a collapsed selection only sets state for the next text insertion
+    return mTypeInState->SetProp(atom, nsnull, nsnull);
   }
   
   // wrap with txn batching, rules sniffing, and selection preservation code
@@ -6345,6 +6451,9 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
   // do we need to split the text node?
   PRUint32 textLen;
   aTextNode->GetLength(&textLen);
+  
+  // -1 is a magic value meaning to the end of node
+  if (aEndOffset == -1) aEndOffset = textLen;
   
   if ( (PRUint32)aEndOffset != textLen )
   {

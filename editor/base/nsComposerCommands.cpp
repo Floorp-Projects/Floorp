@@ -169,40 +169,6 @@ nsBaseStateUpdatingCommand::UpdateCommandState(const PRUnichar *aCommandName, ns
 #pragma mark -
 #endif
 
-
-NS_IMETHODIMP
-nsAlwaysEnabledCommands::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
-{
-  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
-  *outCmdEnabled = (editorShell.get() != nsnull);   // enabled if we have an editorShell  
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsAlwaysEnabledCommands::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
-{
-  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
-  if (!editorShell) return NS_ERROR_NULL_POINTER;
-  
-  nsresult rv = NS_OK;
-  
-  nsAutoString cmdString(aCommand);
-  
-  /*
-  if (cmdString.EqualsWithConversion("cmd_scrollTop"))
-    return selCont->CompleteScroll(PR_FALSE);
-  else if (cmdString.EqualsWithConversion("cmd_scrollBottom"))
-    return selCont->CompleteScroll(PR_TRUE);
-  */
-
-  return rv;  
-}
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
 NS_IMETHODIMP
 nsCloseCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
 {
@@ -522,13 +488,13 @@ nsOutdentCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refC
   {
     nsCOMPtr<nsIEditor> editor;
     editorShell->GetEditor(getter_AddRefs(editor));
-    if (editor)
+    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+    if (htmlEditor)
     {
-      // XXX fix me. You can't outdent if you're already at the top level.
-      //PRBool canOutdent;
-      //editor->CanIndent("outdent", &canOutdent);
+      PRBool canIndent, canOutdent;
+      htmlEditor->GetIndentState(canIndent, canOutdent);
       
-      *outCmdEnabled = PR_TRUE;
+      *outCmdEnabled = canOutdent;
     }
   }
   
@@ -555,8 +521,21 @@ nsOutdentCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
 #pragma mark -
 #endif
 
+
+nsMultiStateCommand::nsMultiStateCommand()
+: nsBaseComposerCommand()
+, mGotState(PR_FALSE)
+{
+}
+
+nsMultiStateCommand::~nsMultiStateCommand()
+{
+}
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsMultiStateCommand, nsBaseComposerCommand, nsIStateUpdatingControllerCommand);
+
 NS_IMETHODIMP
-nsParagraphStateCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
+nsMultiStateCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
   *outCmdEnabled = PR_FALSE;
@@ -566,33 +545,165 @@ nsParagraphStateCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports
     editorShell->GetEditor(getter_AddRefs(editor));
     if (editor)
     {
+      // should be disabled sometimes, like if the current selection is an image
       *outCmdEnabled = PR_TRUE;
     }
   }
-  
-  return NS_OK;
+    
+  return UpdateCommandState(aCommand, refCon);
 }
 
 
 NS_IMETHODIMP
-nsParagraphStateCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
+nsMultiStateCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
 {
   nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
 
   nsresult rv = NS_OK;
   if (editorShell)
   {
-    // we have to grab the state attribute on our command node to find out
-    // what format to set the paragraph to
-    nsAutoString stateAttribute;    
-    rv = GetCommandNodeState(aCommand, editorShell, stateAttribute);
-    if (NS_FAILED(rv)) return rv;
-    rv = editorShell->SetParagraphFormat(stateAttribute.GetUnicode());
+      // we have to grab the state attribute on our command node to find out
+      // what format to set the paragraph to
+      nsAutoString stateAttribute;    
+      rv = GetCommandNodeState(aCommand, editorShell, stateAttribute);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = SetState(editorShell, stateAttribute);
   }
   
   return rv;  
 }
 
+
+NS_IMETHODIMP
+nsMultiStateCommand::UpdateCommandState(const PRUnichar *aCommandName, nsISupports * refCon)
+{
+  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
+  nsresult rv = NS_OK;
+  if (editorShell)
+  {
+      nsString  curFormat;
+      PRBool    isMixed;
+     
+      rv = GetCurrentState(editorShell, curFormat, isMixed);
+      if (NS_FAILED(rv)) return rv;
+      
+      if (isMixed)
+        curFormat.AssignWithConversion("mixed");
+        
+      if (!mGotState || (curFormat != mStateString))
+      {
+        // poke the UI
+        SetCommandNodeState(aCommandName, editorShell, curFormat);
+
+        mGotState = PR_TRUE;
+        mStateString = curFormat;
+      }
+  }
+  return rv;
+}
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+nsParagraphStateCommand::nsParagraphStateCommand()
+: nsMultiStateCommand()
+{
+}
+
+nsresult
+nsParagraphStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed)
+{
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
+  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+
+  return htmlEditor->GetParagraphState(outMixed, outStateString);
+}
+
+
+nsresult
+nsParagraphStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newState)
+{
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
+  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+
+  return htmlEditor->SetParagraphFormat(newState);
+}
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+nsFontFaceStateCommand::nsFontFaceStateCommand()
+: nsMultiStateCommand()
+{
+}
+
+nsresult
+nsFontFaceStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed)
+{
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
+  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+
+  return htmlEditor->GetFontFaceState(outMixed, outStateString);
+}
+
+
+nsresult
+nsFontFaceStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newState)
+{
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
+  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+  
+  nsresult rv;
+  
+  NS_ConvertASCIItoUCS2 emptyString("");
+  NS_ConvertASCIItoUCS2 fontString("font");
+  NS_ConvertASCIItoUCS2 faceString("face");
+  
+  nsCOMPtr<nsIAtom> ttAtom = getter_AddRefs(NS_NewAtom("tt"));
+  nsCOMPtr<nsIAtom> fontAtom = getter_AddRefs(NS_NewAtom("font"));
+
+  if (newState.EqualsWithConversion("tt"))
+  {
+    // The old "teletype" attribute  
+    rv = htmlEditor->SetInlineProperty(ttAtom, &emptyString, &emptyString);  
+    // Clear existing font face
+    rv = htmlEditor->RemoveInlineProperty(fontAtom, &faceString);
+  }
+  else
+  {
+    // Remove any existing TT nodes
+    rv = htmlEditor->RemoveInlineProperty(ttAtom, &emptyString);  
+
+    if (newState == emptyString || newState.EqualsWithConversion("normal")) {
+      rv = htmlEditor->RemoveInlineProperty(fontAtom, &faceString);
+    } else {
+      rv = htmlEditor->SetInlineProperty(fontAtom, &faceString, &newState);
+    }
+  }
+  
+  return rv;
+}
 
 #ifdef XP_MAC
 #pragma mark -
