@@ -66,6 +66,8 @@ public:
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode);
   NS_IMETHOD GetWidgetRenderingMode(nsWidgetRendering* aModeResult);
   NS_IMETHOD SetWidgetRenderingMode(nsWidgetRendering aMode);
+  NS_IMETHOD GetImageAnimationMode(nsImageAnimation* aModeResult);
+  NS_IMETHOD SetImageAnimationMode(nsImageAnimation aMode);
   NS_IMETHOD GetLookAndFeel(nsILookAndFeel** aLookAndFeel);
   NS_IMETHOD GetBaseURL(nsIURI** aURLResult);
   NS_IMETHOD GetMedium(nsIAtom** aMediumResult) = 0;
@@ -172,11 +174,13 @@ protected:
   PRUint8               mDefaultBackgroundImageAttachment;
   nsVoidArray           mImageLoaders;
   nsCOMPtr<nsIEventStateManager> mEventManager;
-  nsCompatibility       mCompatibilityMode;
-  PRBool                mCompatibilityLocked;
-  nsWidgetRendering     mWidgetRenderingMode;
   nsCOMPtr<nsIURI>      mBaseURL;
-  PRBool                mStopped;
+  nsCompatibility       mCompatibilityMode;
+  PRPackedBool          mCompatibilityLocked;
+  nsWidgetRendering     mWidgetRenderingMode;
+  nsImageAnimation      mImageAnimationMode;
+  PRPackedBool          mImageAnimationStopped;   // image animation stopped
+  PRPackedBool          mStopped;                 // loading stopped
   PRUint8               mDefaultDirection;
 
 #ifdef DEBUG

@@ -37,6 +37,12 @@ struct nsSize;
 #define NS_IFRAME_IMAGE_LOADER_IID \
  { 0xa6cf90ec, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
+enum nsImageAnimation {
+    eImageAnimation_Normal      = 0,            // looping controlled by image
+    eImageAnimation_None        = 1,            // don't loop; just show first frame
+    eImageAnimation_LoopOnce    = 2             // loop just once
+};
+
 // Type of callback function used during image loading. The frame
 // image loader will invoke this callback as notifications occur from
 // the image library.
@@ -63,6 +69,7 @@ public:
                   const nscolor* aBackgroundColor,
                   const nsSize* aDesiredSize,
                   nsIFrame* aFrame,
+                  nsImageAnimation aAnimationMode,
                   nsIFrameImageLoaderCB aCallBack,
                   void* aClosure) = 0;
 
