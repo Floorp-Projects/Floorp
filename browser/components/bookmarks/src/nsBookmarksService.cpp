@@ -4438,13 +4438,13 @@ nsBookmarksService::InitDataSource()
         nsXPIDLString lmloadingName;
         rv = mBundle->GetStringFromName(NS_LITERAL_STRING("BookmarksLivemarkLoading").get(), getter_Copies(lmloadingName));
         if (NS_FAILED(rv)) {
-            lmloadingName.Assign(NS_LITERAL_STRING("Livemark loading..."));
+            lmloadingName.Assign(NS_LITERAL_STRING("Live Bookmark loading..."));
         }
 
         nsXPIDLString lmfailedName;
         rv = mBundle->GetStringFromName(NS_LITERAL_STRING("BookmarksLivemarkFailed").get(), getter_Copies(lmfailedName));
         if (NS_FAILED(rv)) {
-            lmfailedName.Assign(NS_LITERAL_STRING("Livemark feed failed to load."));
+            lmfailedName.Assign(NS_LITERAL_STRING("Live Bookmark feed failed to load."));
         }
 
         CreateBookmark(lmloadingName.get(),
