@@ -25,7 +25,12 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-offline.dtd" >
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % offlineDTD SYSTEM "chrome://communicator/locale/pref/pref-offline.dtd" >
+%offlineDTD;
+]>
 
 <window debug="false" xmlns:html="http://www.w3.org/1999/xhtml" id="offlineWindow"
 		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -24,7 +24,13 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-proxy-manual.dtd" >
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % proxyDTD SYSTEM "chrome://communicator/locale/pref/pref-proxy-manual.dtd" >
+%proxyDTD;
+]>
+
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     		title="&window.title;"
