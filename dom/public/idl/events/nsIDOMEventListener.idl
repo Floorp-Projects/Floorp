@@ -53,5 +53,14 @@
 [scriptable, function, uuid(df31c120-ded6-11d1-bd85-00805f8ae3f4)]
 interface nsIDOMEventListener : nsISupports
 {
+  /**
+   * This method is called whenever an event occurs of the type for which 
+   * the EventListener interface was registered.
+   *
+   * @param   evt The Event contains contextual information about the 
+   *              event. It also contains the stopPropagation and 
+   *              preventDefault methods which are used in determining the 
+   *              event's flow and default action.
+   */
   void                      handleEvent(in nsIDOMEvent event);
 };
