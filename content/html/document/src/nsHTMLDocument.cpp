@@ -3559,5 +3559,22 @@ nsHTMLDocument::GetForms(nsIDOMHTMLCollection** aForms)
   return NS_OK;
 }
 
+PRBool
+nsHTMLDocument::IsInSelection(nsIDOMSelection* aSelection,
+                              const nsIContent* aContent) const
+{
+  // HTML document has to include body in the selection,
+  // so that output can see style nodes on the body.
+  nsIAtom* tag;
+  nsresult rv = aContent->GetTag(tag);
+  PRBool retval = (NS_SUCCEEDED(rv) && tag == nsHTMLAtoms::body);
+  NS_IF_RELEASE(tag);
+  if (retval)
+    return retval;
+
+  return nsDocument::IsInSelection(aSelection, aContent);
+}
+
+
 
 
