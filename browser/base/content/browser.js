@@ -100,6 +100,8 @@ var gFormFillPrefListener = null;
 var gFormHistory = null;
 var gFormFillEnabled = true;
 
+var gURLBarAutoFillPrefListener = null;
+
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
 * one listener that calls all real handlers.
@@ -472,6 +474,11 @@ function delayedStartup()
   var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
   pbi.addObserver(gFormFillPrefListener.domain, gFormFillPrefListener, false);
 
+  // Enable/Disable URL Bar Auto Fill
+  gURLBarAutoFillPrefListener = new URLBarAutoFillPrefListener();
+  pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
+  pbi.addObserver(gURLBarAutoFillPrefListener.domain, gURLBarAutoFillPrefListener, false);
+
   pbi.addObserver(gHomeButton.prefDomain, gHomeButton, false);
   gHomeButton.updateTooltip();
   
@@ -585,6 +592,7 @@ function Shutdown()
   try {
     var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
     pbi.removeObserver(gFormFillPrefListener.domain, gFormFillPrefListener);
+    pbi.removeObserver(gURLBarAutoFillPrefListener.domain, gURLBarAutoFillPrefListener);
     pbi.removeObserver(gHomeButton.prefDomain, gHomeButton);
   } catch (ex) {
   }
@@ -646,6 +654,38 @@ FormFillPrefListener.prototype =
   }
 }
  
+function URLBarAutoFillPrefListener()
+{
+  this.toggleAutoFillInURLBar();
+}
+
+URLBarAutoFillPrefListener.prototype =
+{
+  domain: "browser.urlbar.autoFill",
+  observe: function (aSubject, aTopic, aPrefName)
+  {
+    if (aTopic != "nsPref:changed" || aPrefName != this.domain)
+      return;
+      
+    this.toggleAutoFillInURLBar();
+  },
+  
+  toggleAutoFillInURLBar: function ()
+  {
+    var prefValue = false;
+    try {
+      prefValue = gPrefService.getBoolPref(this.domain);
+    }
+    catch (e) {
+    }
+
+    if (prefValue)
+      gURLBar.setAttribute("completedefaultindex", "true");
+    else
+      gURLBar.removeAttribute("completedefaultindex");
+  }
+}
+
 function ctrlNumberTabSelection(event)
 {
   if (event.altKey && event.keyCode == KeyEvent.DOM_VK_RETURN) {
