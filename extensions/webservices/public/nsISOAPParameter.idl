@@ -96,6 +96,7 @@ interface nsISOAPParameter : nsISupports {
    * The name of the parameter. If the parameter is left unnamed, it
    * will be encoded using the element types defined in the SOAP-ENC
    * schema. For example, <code>&lt;SOAP-ENC:int&gt;45&lt;/SOAP-ENC:int&gt;
+   * </code>
    */
   attribute wstring name;
 
@@ -140,10 +141,11 @@ interface nsISOAPParameter : nsISupports {
    * <code>type</code> attribute as detailed in the description of the
    * type constants. For script callers, the value returned is either
    * a string, boolean, double, integer, Array or object.</p> 
-   * <p>The setter is for script callers only. Native callers should
+   * <p>The setter is for script callers only (again despite the
+   * [noscript] qualification). Native callers should
    * use the <code>setValueAndType</code> method). For script callers,
    * the value can be either a string, boolean, double, integer, Array
-   * or object.  
+   * or object.</p>
    */
   [noscript] attribute nsISupports value;
 

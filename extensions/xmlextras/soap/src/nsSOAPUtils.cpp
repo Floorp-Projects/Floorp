@@ -209,7 +209,7 @@ nsSOAPUtils::ConvertValueToJSVal(JSContext* aContext,
       
       if (data) {
         JSString* jsstr = JS_NewUCStringCopyZ(aContext,
-                                             (const jschar*)data);
+                                             NS_REINTERPRET_CAST(const jschar*, (const PRUnichar*)data));
         if (jsstr) {
           *vp = STRING_TO_JSVAL(jsstr);
         }
