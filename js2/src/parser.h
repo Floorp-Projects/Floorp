@@ -21,23 +21,29 @@
 #define parser_h
 
 #include "utilities.h"
-#include "world.h"
 
 namespace JavaScript {
+
+	class StringAtom;
+	class World;
 
 //
 // Reader
 //
 
 	// A Reader reads Unicode characters from some source -- either a file or a string.
-	// get() returns all of the characters followed by a ueof.
+	// get() returns all of the characters followed by a char16eof.
 	class Reader {
 		const char16 *begin;			// Beginning of current buffer
 		const char16 *p;				// Position in current buffer
 		const char16 *end;				// End of current buffer
-		const char16 *markPos;			// Pointer to mark in current buffer or null if no mark
-		uint32 nGetsPastEnd;			// Number of times ueof has been returned
+		const char16 *lineStart;		// Pointer to start of current line
+		uint32 nGetsPastEnd;			// Number of times char16eof has been returned
 
+		String *recordString;			// String, if any, into which recordChar() records characters
+		const char16 *recordBase;		// Position of last beginRecording() call
+		const char16 *recordPos;		// Position of last recordChar() call; nil if a discrepancy occurred
+		
 	  protected:
 		Reader(): nGetsPastEnd(0) {}
 	  public:
@@ -46,54 +52,70 @@ namespace JavaScript {
 	    Reader(const Reader&);			// No copy constructor
 	    void operator=(const Reader&);	// No assignment operator
 	  public:
-	#ifdef DEBUG
-		~Reader() {ASSERT(!markPos);}
-	#endif
 
-		wint_t get();
-		wint_t peek();
-		void unget();
+		char16orEOF get();
+		char16orEOF peek();
+		void unget(uint32 n = 1);
 		
-		void mark();
-		void unmark();
-		void unmark(String &s);
-		bool marked() const {return markPos;}
-	
+		void beginLine();
+		uint32 charPos() const;
+		void backUpTo(uint32 pos);
+
+		String extract(uint32 begin, uint32 end) const;
+		void beginRecording(String &recordString);
+		void recordChar(char16 ch);
+		String &endRecording();
+		
+		virtual String sourceFile() const = 0; // A description of the source code that caused the error
+
 	  protected:
 		void setBuffer(const char16 *begin, const char16 *p, const char16 *end);
-		virtual wint_t underflow();
-		wint_t peekUnderflow();
+		virtual char16orEOF underflow();
+		char16orEOF peekUnderflow();
 	};
 
 
-	// Get and return the next character or ueof if at end of input.
-	inline wint_t Reader::get()
+	// Get and return the next character or char16eof if at end of input.
+	inline char16orEOF Reader::get()
 	{
 		if (p != end)
 			return *p++;
 		return underflow();
 	}
 
-	// Return the next character without consuming it.  Return ueof if at end of input.
-	inline wint_t Reader::peek()
+	// Return the next character without consuming it.  Return char16eof if at end of input.
+	inline char16orEOF Reader::peek()
 	{
 		if (p != end)
 			return *p;
 		return peekUnderflow();
 	}
 
-	// Mark the current position in the Reader.
-	inline void Reader::mark()
+
+	// Set the beginning of the current line.  unget cannot be subsequently called past this point.
+	inline void Reader::beginLine()
 	{
-		ASSERT(!markPos);
-		markPos = p;
+		lineStart = p;
+	  #ifdef DEBUG
+		recordString = 0;
+	  #endif
 	}
 
-	// Delete the Reader mark.
-	inline void Reader::unmark()
+	// Return the character offset relative to the current line.  This cannot be called
+	// if the current position is past the end of the input.
+	inline uint32 Reader::charPos() const
 	{
-		ASSERT(markPos);
-		markPos = 0;
+		ASSERT(!nGetsPastEnd);
+		return static_cast<uint32>(p - lineStart);
+	}
+
+
+	// Back up to the given character offset relative to the current line.
+	inline void Reader::backUpTo(uint32 pos)
+	{
+		ASSERT(pos <= charPos());
+		p = lineStart + pos;
+		nGetsPastEnd = 0;
 	}
 
 
@@ -103,14 +125,21 @@ namespace JavaScript {
 		Reader::begin = begin;
 		Reader::p = p;
 		Reader::end = end;
+		lineStart = begin;
+	  #ifdef DEBUG
+		recordString = 0;
+	  #endif
 	}
 
 
 	// A Reader that reads from a String.
 	class StringReader: public Reader {
 		const String str;
+		const String source;
+
 	  public:
-		StringReader(const String &s);
+		StringReader(const String &s, const String &source);
+		String sourceFile() const;
 	};
 
 
@@ -122,7 +151,6 @@ namespace JavaScript {
 	  public:
 		enum Kind {
 			End,						// End of token stream
-			Error,						// Lexer error
 
 			Id,							// Non-keyword identifier (may be same as a keyword if it contains an escape code)
 			Num,						// Numeral
@@ -165,12 +193,12 @@ namespace JavaScript {
 			LogicalAnd,					// &&
 			LogicalXor,					// ^^
 			LogicalOr,					// ||
-			And,						// &
+			And,						// &	// These must be at constant offsets from LogicalAnd ... LogicalOr
 			Xor,						// ^
 			Or,							// |
 
 			Assignment,					// =
-			TimesEquals,				// *=
+			TimesEquals,				// *=	// These must be at constant offsets from Times ... Or
 			DivideEquals,				// /=
 			ModuloEquals,				// %=
 			PlusEquals,					// +=
@@ -189,7 +217,7 @@ namespace JavaScript {
 			NotEqual,					// !=
 			LessThan,					// <
 			LessThanOrEqual,			// <=
-			GreaterThan,				// >
+			GreaterThan,				// >	// >, >= must be at constant offsets from <, <=
 			GreaterThanOrEqual,			// >=
 			Identical,					// ===
 			NotIdentical,				// !==
@@ -268,13 +296,19 @@ namespace JavaScript {
 		StringAtom *identifier;			// The token's characters (identifiers, keywords, and regular expressions only)
 		auto_ptr<String> chars;			// The token's characters (strings, numbers, and regular expression flags only)
 		float64 value;					// The token's value (numbers only)
+		
+		void setChars(const String &s);
 	};
 
+
+	void initKeywords(World &world);
+	
 
 	class Lexer {
 		static const int tokenBufferSize = 3;	// Token lookahead buffer size
 	  public:
 		Reader &reader;
+		World &world;
 	  private:
 		Token tokens[tokenBufferSize];	// Circular buffer of recently read or lookahead tokens
 		Token *nextToken;				// Address of next Token in the circular buffer to be returned by get()
@@ -283,16 +317,31 @@ namespace JavaScript {
 		int nTokensBack;				// Number of Tokens on which unget() can be called; these Tokens are beind nextToken
 		bool savedPreferRegExp[tokenBufferSize]; // Circular buffer of saved values of preferRegExp to get() calls
 	  #endif
+		uint32 lineNum;					// Current line number
+		bool lexingUnit;				// True if lexing a unit identifier immediately following a number
 
 	  public:
-		Lexer(Reader &reader);
+		Lexer(Reader &reader, World &world);
 		
 		Token &get(bool preferRegExp);
 		const Token &peek(bool preferRegExp);
 		void unget();
 
 	  private:
+		void syntaxError(const char *message, uint backUp = 1);
+		char16orEOF getChar();
+		char16orEOF internalGetChar(char16orEOF ch);
+		char16orEOF peekChar();
+		char16orEOF internalPeekChar(char16orEOF ch);
+		bool testChar(char16 ch);
+
+		char16 lexEscape(bool unicodeOnly);
+		bool lexIdentifier(String &s, bool allowLeadingDigit);
+		bool lexNumeral();
+		String lexString(char16 separator);
+		void lexRegExp();
 		void lexToken(bool preferRegExp);
+	  public:
 	};
 }
 #endif
