@@ -345,7 +345,7 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 		{
 			// note: lie and say there is no URL
 //			rv = GetURL(source, &array);
-			nsAutoString	url("");
+			nsAutoString	url;
 			nsIRDFLiteral	*literal;
 			gRDFService->GetLiteral(url.GetUnicode(), &literal);
 			*target = literal;
@@ -357,7 +357,7 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 			rv = kNC_FindObject->GetValueConst(&uri);
 			if (NS_FAILED(rv)) return rv;
 
-			nsAutoString	url(uri);
+			nsAutoString	url; url.AssignWithConversion(uri);
 			nsIRDFLiteral	*literal;
 			gRDFService->GetLiteral(url.GetUnicode(), &literal);
 
@@ -366,7 +366,7 @@ LocalSearchDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else if (property == kNC_pulse)
 		{
-			nsAutoString	pulse("15");
+			nsAutoString	pulse; pulse.AssignWithConversion("15");
 			nsIRDFLiteral	*pulseLiteral;
 			rv = gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
 			if (NS_FAILED(rv)) return rv;
@@ -660,7 +660,7 @@ LocalSearchDataSource::GetTargets(nsIRDFResource *source,
 			rv = kNC_FindObject->GetValueConst( &uri );
 			if (NS_FAILED(rv)) return rv;
 
-			nsAutoString	url(uri);
+			nsAutoString	url; url.AssignWithConversion(uri);
 			nsIRDFLiteral	*literal;
 			rv = gRDFService->GetLiteral(url.GetUnicode(), &literal);
 			if (NS_FAILED(rv)) return rv;
@@ -678,7 +678,7 @@ LocalSearchDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (property == kNC_pulse)
 		{
-			nsAutoString	pulse("15");
+			nsAutoString	pulse; pulse.AssignWithConversion("15");
 			nsIRDFLiteral	*pulseLiteral;
 			rv = gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
 			if (NS_FAILED(rv)) return rv;

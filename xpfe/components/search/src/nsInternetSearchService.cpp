@@ -212,7 +212,7 @@ InternetSearchContext::GetParent(nsIRDFResource **node)
 NS_IMETHODIMP
 InternetSearchContext::AppendBytes(const char *buffer, PRInt32 numBytes)
 {
-	mBuffer.Append(buffer, numBytes);
+	mBuffer.AppendWithConversion(buffer, numBytes);
 	return(NS_OK);
 }
 
@@ -708,7 +708,7 @@ InternetSearchDataSource::resolveSearchCategoryEngineURI(nsIRDFResource *engine,
 	if (NS_FAILED(rv = engine->GetValueConst(&uriUni)))	return(rv);
 	if (!uriUni)	return(NS_ERROR_NULL_POINTER);
 
-	nsAutoString		uri(uriUni);
+	nsAutoString		uri; uri.AssignWithConversion(uriUni);
 	if (uri.Find(kURINC_SearchCategoryEngineBasenamePrefix) !=0)	return(NS_ERROR_UNEXPECTED);
 
 	nsCOMPtr<nsIRDFLiteral>	basenameLiteral;
@@ -900,7 +900,7 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 		const char	*uri = nsnull;
 		source->GetValueConst(&uri);
 		if (!uri)	return(NS_ERROR_UNEXPECTED);
-		nsAutoString	catURI(uri);
+		nsAutoString	catURI; catURI.AssignWithConversion(uri);
 
 		nsCOMPtr<nsIRDFResource>	category;
 		if (NS_FAILED(rv = gRDFService->GetResource(nsCAutoString(catURI),
@@ -933,13 +933,13 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 		// XXX localize: put static strings into a string bundle
 		nsAutoString	name;
 		if (source == kNC_SearchCommand_AddToBookmarks)
-			name = "Add to bookmarks";
+			name.AssignWithConversion("Add to bookmarks");
 		else if (source == kNC_SearchCommand_FilterResult)
-			name = "Filter out this URL from all search results";
+			name.AssignWithConversion("Filter out this URL from all search results");
 		else if (source == kNC_SearchCommand_FilterSite)
-			name = "Filter out this web site from all search results";
+			name.AssignWithConversion("Filter out this web site from all search results");
 		else if (source == kNC_SearchCommand_ClearFilters)
-			name = "Clear all search filters";
+			name.AssignWithConversion("Clear all search filters");
 
 		if (name.Length() > 0)
 		{
@@ -999,7 +999,7 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 		const char	*uri = nsnull;
 		source->GetValueConst(&uri);
 		if (!uri)	return(NS_ERROR_UNEXPECTED);
-		nsAutoString	catURI(uri);
+		nsAutoString	catURI; catURI.AssignWithConversion(uri);
 
 		nsCOMPtr<nsIRDFResource>	category;
 		if (NS_FAILED(rv = gRDFService->GetResource(nsCAutoString(catURI),
@@ -1255,7 +1255,7 @@ InternetSearchDataSource::ArcLabelsOut(nsIRDFResource *source,
 		const char	*uri = nsnull;
 		source->GetValueConst(&uri);
 		if (!uri)	return(NS_ERROR_UNEXPECTED);
-		nsAutoString	catURI(uri);
+		nsAutoString	catURI; catURI.AssignWithConversion(uri);
 
 		nsCOMPtr<nsIRDFResource>	category;
 		if (NS_FAILED(rv = gRDFService->GetResource(nsCAutoString(catURI),
@@ -1539,7 +1539,7 @@ InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
 	// remove all anonymous resources which have this as a #URL
 	char	*uri = getSearchURI(aResource);
 	if (!uri)	return(NS_ERROR_UNEXPECTED);
-	nsAutoString	url(uri);
+	nsAutoString	url; url.AssignWithConversion(uri);
 	Recycle(uri);
 
 	nsresult			rv;
@@ -1612,7 +1612,7 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 
 	char	*uri = getSearchURI(aResource);
 	if (!uri)	return(NS_ERROR_UNEXPECTED);
-	nsAutoString	host(uri);
+	nsAutoString	host; host.AssignWithConversion(uri);
 	Recycle(uri);
 
 	// determine site (host name)
@@ -1708,7 +1708,7 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 
 				uri = getSearchURI(aRes);
 				if (!uri)	return(NS_ERROR_UNEXPECTED);
-				nsAutoString	site(uri);
+				nsAutoString	site; site.AssignWithConversion(uri);
 				Recycle(uri);
 
 				// determine site (host name)
@@ -2012,7 +2012,7 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 		return(NS_ERROR_NULL_POINTER);
 
 	// get base name
-	nsAutoString		baseName(spec);
+	nsAutoString		baseName; baseName.AssignWithConversion(spec);
 	Recycle(spec);
 
 	PRInt32			slashOffset = baseName.RFindChar(PRUnichar('/'));
@@ -2068,10 +2068,10 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 			if ((extensionOffset = searchURL.RFindChar(PRUnichar('.'))) > 0)
 			{
 				searchURL.Truncate(extensionOffset);
-				searchURL.Append(".src");
+				searchURL.AppendWithConversion(".src");
 			}
 		}
-		searchURL.Insert(kURINC_SearchCategoryEngineBasenamePrefix, 0);
+		searchURL.InsertWithConversion(kURINC_SearchCategoryEngineBasenamePrefix, 0);
 
 		if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT)
 		{
@@ -2085,15 +2085,15 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 			rv = context->GetHintConst(&hintUni);
 
 			// update graph with various required info
-			SaveEngineInfoIntoGraph(searchURL, hintUni, nsAutoString(""),
+			SaveEngineInfoIntoGraph(searchURL, hintUni, nsAutoString(),
 				nsAutoString(dataBuf), PR_FALSE);
 		}
 		else if (contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT)
 		{
 			// update graph with icon info
 			nsFileURL	jpgIconFileURL(fileSpec);
-			nsAutoString	iconURL = jpgIconFileURL.GetURLString();
-			SaveEngineInfoIntoGraph(searchURL, nsnull, iconURL, nsAutoString(""), PR_FALSE);
+			nsAutoString	iconURL; iconURL.AssignWithConversion(jpgIconFileURL.GetURLString());
+			SaveEngineInfoIntoGraph(searchURL, nsnull, iconURL, nsAutoString(), PR_FALSE);
 		}
 	}
 
@@ -2157,7 +2157,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 					char	*charsetData = nsnull;
 					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(nsCAutoString(queryEncodingStr), uni, &charsetData)) && (charsetData))
 					{
-						text = charsetData;
+						text.AssignWithConversion(charsetData);
 						Recycle(charsetData);
 					}
 					Recycle(uni);
@@ -2176,7 +2176,7 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	// we can only handle HTTP GET
 	if (!method.EqualsIgnoreCase("get"))	return(NS_ERROR_UNEXPECTED);
 	// HTTP Get method support
-	action += "?";
+	action.AppendWithConversion("?");
 	action += input;
 
 	// return a copy of the resulting search URL
@@ -2218,7 +2218,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 
 	// if the url doesn't look like a HTTP GET query, just return,
 	// otherwise strip off the query data
-	nsAutoString		shortURL(url);
+	nsAutoString		shortURL; shortURL.AssignWithConversion(url);
 	PRInt32			optionsOffset;
 	if ((optionsOffset = shortURL.FindChar(PRUnichar('?'))) < 0)	return(NS_OK);
 	shortURL.Truncate(optionsOffset);
@@ -2254,7 +2254,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 			engine->GetValueConst(&uri);
 			if (uri)
 			{
-				engineURI = uri;
+				engineURI.AssignWithConversion(uri);
 			}
 
 			if (NS_FAILED(rv = FindData(engine, data)))	continue;
@@ -2279,23 +2279,23 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 	}
 	if (foundEngine == PR_TRUE)
 	{
-		nsAutoString	searchURL(url);
+		nsAutoString	searchURL; searchURL.AssignWithConversion(url);
 
 		// look for query option which is the string the user is searching for
 		nsAutoString	userVar, inputUnused;
-		if (NS_FAILED(rv = GetInputs(data, userVar, "", inputUnused)))	return(rv);
+		if (NS_FAILED(rv = GetInputs(data, userVar, nsAutoString(), inputUnused)))	return(rv);
 		if (userVar.Length() < 1)	return(NS_RDF_NO_VALUE);
 
-		nsAutoString	queryStr("?");
+		nsAutoString	queryStr; queryStr.AssignWithConversion("?");
 		queryStr += userVar;
-		queryStr += "=";
+		queryStr.AppendWithConversion("=");
 
 		PRInt32		queryOffset;
 		if ((queryOffset = searchURL.Find(queryStr, PR_TRUE )) < 0)
 		{
-			queryStr = "&";
+			queryStr.AssignWithConversion("&");
 			queryStr += userVar;
-			queryStr += "=";
+			queryStr.AppendWithConversion("=");
 			if ((queryOffset = searchURL.Find(queryStr, PR_TRUE )) < 0)
 				return(NS_RDF_NO_VALUE);
 		}
@@ -2317,8 +2317,8 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 		RememberLastSearchText(searchText.GetUnicode());
 
 		// construct the search query uri
-		engineURI.Insert("internetsearch:engine=", 0);
-		engineURI += "&text=";
+		engineURI.InsertWithConversion("internetsearch:engine=", 0);
+		engineURI.AppendWithConversion("&text=");
 		engineURI += searchText;
 
 		// remember the last search query
@@ -2340,7 +2340,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 #endif
 
 		// do the search
-		DoSearch(nsnull, engine, searchURL, nsAutoString(""));
+		DoSearch(nsnull, engine, searchURL, nsAutoString());
 
 		*searchInProgress = PR_TRUE;
 	}
@@ -2477,7 +2477,7 @@ InternetSearchDataSource::Stop()
 
 	// remove any loading icons
 	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(),
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),
 		getter_AddRefs(trueLiteral))))
 	{
 		nsCOMPtr<nsISimpleEnumerator>	arcs;
@@ -2514,7 +2514,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 
 	if (NS_FAILED(rv = source->GetValueConst(&sourceURI)))
 		return(rv);
-	nsAutoString		uri(sourceURI);
+	nsAutoString		uri; uri.AssignWithConversion(sourceURI);
 	if (uri.Find("internetsearch:") != 0)
 		return(NS_ERROR_FAILURE);
 
@@ -2538,13 +2538,13 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 	if (!engineArray)
 		return(NS_ERROR_FAILURE);
 
-	nsAutoString	text("");
+	nsAutoString	text;
 
 	// parse up attributes
 
 	while(uri.Length() > 0)
 	{
-		nsAutoString	item("");
+		nsAutoString	item;
 
 		PRInt32 andOffset = uri.Find("&");
 		if (andOffset >= 0)
@@ -2561,7 +2561,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		PRInt32 equalOffset = item.Find("=");
 		if (equalOffset < 0)	break;
 		
-		nsAutoString	attrib(""), value("");
+		nsAutoString	attrib, value;
 		item.Left(attrib, equalOffset);
 		value = item;
 		value.Cut(0, equalOffset + 1);
@@ -2588,7 +2588,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 	}
 
 	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(),
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),
 		getter_AddRefs(trueLiteral))))
 	{
 		mInner->Assert(source, kNC_loading, trueLiteral, PR_TRUE);
@@ -2633,7 +2633,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 
 		if (doNetworkRequest == PR_TRUE)
 		{
-			DoSearch(source, engine, nsAutoString(""), text);
+			DoSearch(source, engine, nsAutoString(), text);
 			requestInitiated = PR_TRUE;
 		}
 	}
@@ -2678,7 +2678,7 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsString &data)
 		const char	*engineURI = nsnull;
 		if (NS_FAILED(rv = engine->GetValueConst(&engineURI)))
 			return(rv);
-		nsAutoString	engineStr(engineURI);
+		nsAutoString	engineStr; engineStr.AssignWithConversion(engineURI);
 		if (engineStr.Find(kEngineProtocol) != 0)
 			return(rv);
 		engineStr.Cut(0, sizeof(kEngineProtocol) - 1);
@@ -2768,14 +2768,14 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
 		{	nsnull, nsnull		}
 	};
 
-	stringEncoding = "UTF-8"; // make "UTF-8" as the default
+	stringEncoding.AssignWithConversion("UTF-8"); // make "UTF-8" as the default
 
 	PRUint32	loop = 0;
 	while (encodingList[loop].numericEncoding != nsnull)
 	{
-		if (numericEncoding.Equals(encodingList[loop].numericEncoding))
+		if (numericEncoding.EqualsWithConversion(encodingList[loop].numericEncoding))
 		{
-			stringEncoding = encodingList[loop].stringEncoding;
+			stringEncoding.AssignWithConversion(encodingList[loop].stringEncoding);
 			break;
 		}
 		++loop;
@@ -2806,8 +2806,8 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 
 	if (fullURL.Length() > 0)
 	{
-		action = fullURL;
-		method = "get";
+		action.Assign(fullURL);
+		method.AssignWithConversion("get");
 	}
 	else
 	{
@@ -2852,7 +2852,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 					char	*charsetData = nsnull;
 					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(nsCAutoString(queryEncodingStr), uni, &charsetData)) && (charsetData))
 					{
-						textTemp = charsetData;
+						textTemp.AssignWithConversion(charsetData);
 						Recycle(charsetData);
 					}
 					Recycle(uni);
@@ -2871,7 +2871,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
 
 		// HTTP Get method support
-		action += "?";
+		action.AppendWithConversion("?");
 		action += input;
 	}
 
@@ -2910,9 +2910,9 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 					httpChannel->SetRequestMethod(HM_POST);
 
 			        	// construct post data to send
-			        	nsAutoString	postStr(POSTHEADER_PREFIX);
-			        	postStr.Append(input.Length(), 10);
-			        	postStr += POSTHEADER_SUFFIX;
+			        	nsAutoString	postStr; postStr.AssignWithConversion(POSTHEADER_PREFIX);
+			        	postStr.AppendInt(input.Length(), 10);
+			        	postStr.AppendWithConversion(POSTHEADER_SUFFIX);
 			        	postStr += input;
 			        	
 					nsCOMPtr<nsIInputStream>	postDataStream;
@@ -2953,7 +2953,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		}
 
 		nsCOMPtr<nsIRDFLiteral>	literal;
-		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(), getter_AddRefs(literal))))
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), getter_AddRefs(literal))))
 		{
 			mInner->Assert(engine, kNC_loading, literal, PR_TRUE);
 		}
@@ -3072,8 +3072,8 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsString &searchURL, con
 			nsCOMPtr<nsIRDFResource>	catRes;
 			if (catURI)
 			{
-				nsAutoString	catList(kURINC_SearchCategoryPrefix);
-				catList.Append(catURI);
+				nsAutoString	catList; catList.AssignWithConversion(kURINC_SearchCategoryPrefix);
+				catList.AppendWithConversion(catURI);
 				gRDFService->GetUnicodeResource(catList.GetUnicode(), getter_AddRefs(catRes));
 			}
 
@@ -3119,7 +3119,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(const nsString &searchURL, con
 		searchRes->GetValueConst(&searchURI);
 		if (searchURI)
 		{
-			nsAutoString		searchStr(searchURI);
+			nsAutoString		searchStr; searchStr.AssignWithConversion(searchURI);
 			nsCOMPtr<nsIRDFLiteral>	searchLiteral;
 			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(searchStr.GetUnicode(),
 					getter_AddRefs(searchLiteral))))
@@ -3179,7 +3179,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 			continue;
 		}
 
-		nsAutoString	uri(childURL);
+		nsAutoString	uri; uri.AssignWithConversion(childURL);
 		PRInt32		len = uri.Length();
 		if (len < 5)
 		{
@@ -3195,36 +3195,36 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 			nsAutoString	temp;
 
 			uri.Left(temp, uri.Length()-4);
-			temp += ".gif";
+			temp.AppendWithConversion(".gif");
 			const	nsFileSpec	gifIconFile(temp);
 			if (gifIconFile.IsFile())
 			{
 				nsFileURL	gifIconFileURL(gifIconFile);
-				iconURL = gifIconFileURL.GetURLString();
+				iconURL.AssignWithConversion(gifIconFileURL.GetURLString());
 			}
 			uri.Left(temp, uri.Length()-4);
-			temp += ".jpg";
+			temp.AppendWithConversion(".jpg");
 			const	nsFileSpec	jpgIconFile(temp);
 			if (jpgIconFile.IsFile())
 			{
 				nsFileURL	jpgIconFileURL(jpgIconFile);
-				iconURL = jpgIconFileURL.GetURLString();
+				iconURL.AssignWithConversion(jpgIconFileURL.GetURLString());
 			}
 			uri.Left(temp, uri.Length()-4);
-			temp += ".jpeg";
+			temp.AppendWithConversion(".jpeg");
 			const	nsFileSpec	jpegIconFile(temp);
 			if (jpegIconFile.IsFile())
 			{
 				nsFileURL	jpegIconFileURL(jpegIconFile);
-				iconURL = jpegIconFileURL.GetURLString();
+				iconURL.AssignWithConversion(jpegIconFileURL.GetURLString());
 			}
 			uri.Left(temp, uri.Length()-4);
-			temp += ".png";
+			temp.AppendWithConversion(".png");
 			const	nsFileSpec	pngIconFile(temp);
 			if (pngIconFile.IsFile())
 			{
 				nsFileURL	pngIconFileURL(pngIconFile);
-				iconURL = pngIconFileURL.GetURLString();
+				iconURL.AssignWithConversion(pngIconFileURL.GetURLString());
 			}
 		}
 
@@ -3250,7 +3250,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 			continue;
 		}
 
-		nsAutoString	searchURL(kEngineProtocol);
+		nsAutoString	searchURL; searchURL.AssignWithConversion(kEngineProtocol);
 
 		char		*uriC = uri.ToNewCString();
 		if (!uriC)
@@ -3263,7 +3263,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 		{
 			continue;
 		}
-		searchURL += uriCescaped;
+		searchURL.AppendWithConversion(uriCescaped);
 		nsCRT::free(uriCescaped);
 
 		nsCOMPtr<nsIRDFResource>	searchRes;
@@ -3288,7 +3288,7 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 		nsNativeFileSpec	native(fileSpec);
 		nsAutoString		basename;
 		native.GetLeafName(basename);
-		basename.Insert(kURINC_SearchCategoryEngineBasenamePrefix, 0);
+		basename.InsertWithConversion(kURINC_SearchCategoryEngineBasenamePrefix, 0);
 		nsCOMPtr<nsIRDFLiteral>	basenameLiteral;
 		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(basename.GetUnicode(),
 				getter_AddRefs(basenameLiteral))))
@@ -3324,7 +3324,7 @@ InternetSearchDataSource::ReadFileContents(nsFileSpec fileSpec, nsString& source
 		        if (PRUint32(howMany) == contentsLen)
 		        {
 				contents[contentsLen] = '\0';
-				sourceContents = contents;
+				sourceContents.AssignWithConversion(contents);
 				rv = NS_OK;
 		        }
 	        	delete [] contents;
@@ -3341,7 +3341,7 @@ InternetSearchDataSource::GetNumInterpretSections(const nsString &data, PRUint32
 {
 	numInterpretSections = 0;
 
-	nsAutoString	section("<interpret");
+	nsAutoString	section; section.AssignWithConversion("<interpret");
 	nsAutoString	buffer(data);	
 	PRBool		inSection = PR_FALSE;
 
@@ -3349,7 +3349,7 @@ InternetSearchDataSource::GetNumInterpretSections(const nsString &data, PRUint32
 	{
 		PRInt32 eol = buffer.FindCharInSet("\r\n", 0);
 		if (eol < 0)	break;
-		nsAutoString	line("");
+		nsAutoString	line;
 		if (eol > 0)
 		{
 			buffer.Left(line, eol);
@@ -3357,7 +3357,7 @@ InternetSearchDataSource::GetNumInterpretSections(const nsString &data, PRUint32
 		buffer.Cut(0, eol+1);
 		if (line.Length() < 1)	continue;		// skip empty lines
 		if (line[0] == PRUnichar('#'))	continue;	// skip comments
-		line = line.Trim(" \t");
+		line.Trim(" \t");
 		if (inSection == PR_FALSE)
 		{
 			PRInt32	sectionOffset = line.Find(section, PR_TRUE);
@@ -3366,7 +3366,7 @@ InternetSearchDataSource::GetNumInterpretSections(const nsString &data, PRUint32
 			inSection = PR_TRUE;
 			++numInterpretSections;			// increment # of sections
 		}
-		line = line.Trim(" \t");
+		line.Trim(" \t");
 		PRInt32	len = line.Length();
 		if (len > 0)
 		{
@@ -3389,14 +3389,14 @@ InternetSearchDataSource::GetData(const nsString &data, const char *sectionToFin
 	nsresult	rv = NS_RDF_NO_VALUE;
 	PRBool		inSection = PR_FALSE;
 
-	nsAutoString	section("<");
-	section += sectionToFind;
+	nsAutoString	section; section.AssignWithConversion("<");
+	section.AppendWithConversion(sectionToFind);
 
 	while(buffer.Length() > 0)
 	{
 		PRInt32 eol = buffer.FindCharInSet("\r\n", 0);
 		if (eol < 0)	break;
-		nsAutoString	line("");
+		nsAutoString	line;
 		if (eol > 0)
 		{
 			buffer.Left(line, eol);
@@ -3404,7 +3404,7 @@ InternetSearchDataSource::GetData(const nsString &data, const char *sectionToFin
 		buffer.Cut(0, eol+1);
 		if (line.Length() < 1)	continue;		// skip empty lines
 		if (line[0] == PRUnichar('#'))	continue;	// skip comments
-		line = line.Trim(" \t");
+		line.Trim(" \t");
 		if (inSection == PR_FALSE)
 		{
 			PRInt32	sectionOffset = line.Find(section, PR_TRUE);
@@ -3417,7 +3417,7 @@ InternetSearchDataSource::GetData(const nsString &data, const char *sectionToFin
 			line.Cut(0, sectionOffset + section.Length() + 1);
 			inSection = PR_TRUE;
 		}
-		line = line.Trim(" \t");
+		line.Trim(" \t");
 		PRInt32	len = line.Length();
 		if (len > 0)
 		{
@@ -3430,12 +3430,12 @@ InternetSearchDataSource::GetData(const nsString &data, const char *sectionToFin
 		PRInt32 equal = line.FindChar(PRUnichar('='));
 		if (equal < 0)	continue;			// skip lines with no equality
 		
-		nsAutoString	attrib("");
+		nsAutoString	attrib;
 		if (equal > 0)
 		{
 			line.Left(attrib, equal /* - 1 */);
 		}
-		attrib = attrib.Trim(" \t");
+		attrib.Trim(" \t");
 		if (attrib.EqualsIgnoreCase(attribToFind))
 		{
 			line.Cut(0, equal+1);
@@ -3490,7 +3490,7 @@ InternetSearchDataSource::GetInputs(const nsString &data, nsString &userVar,
 	{
 		PRInt32 eol = buffer.FindCharInSet("\r\n", 0);
 		if (eol < 0)	break;
-		nsAutoString	line("");
+		nsAutoString	line;
 		if (eol > 0)
 		{
 			buffer.Left(line, eol);
@@ -3498,7 +3498,7 @@ InternetSearchDataSource::GetInputs(const nsString &data, nsString &userVar,
 		buffer.Cut(0, eol+1);
 		if (line.Length() < 1)	continue;		// skip empty lines
 		if (line[0] == PRUnichar('#'))	continue;	// skip comments
-		line = line.Trim(" \t");
+	  line.Trim(" \t");
 		if (inSection == PR_FALSE)
 		{
 			if (line[0] != PRUnichar('<'))	continue;
@@ -3520,10 +3520,10 @@ InternetSearchDataSource::GetInputs(const nsString &data, nsString &userVar,
 		if (line.Find("input", PR_TRUE) == 0)
 		{
 			line.Cut(0, 6);
-			line = line.Trim(" \t");
+			line.Trim(" \t");
 			
 			// first look for name attribute
-			nsAutoString	nameAttrib("");
+			nsAutoString	nameAttrib;
 
 			PRInt32	nameOffset = line.Find("name", PR_TRUE);
 			if (nameOffset >= 0)
@@ -3544,7 +3544,7 @@ InternetSearchDataSource::GetInputs(const nsString &data, nsString &userVar,
 					{
 						nameAttrib = line;
 						nameAttrib.Cut(0, equal+1);
-						nameAttrib = nameAttrib.Trim(" \t");
+						nameAttrib.Trim(" \t");
 						PRInt32 space = nameAttrib.FindCharInSet(" \t", 0);
 						if (space > 0)
 						{
@@ -3556,7 +3556,7 @@ InternetSearchDataSource::GetInputs(const nsString &data, nsString &userVar,
 			if (nameAttrib.Length() <= 0)	continue;
 
 			// first look for value attribute
-			nsAutoString	valueAttrib("");
+			nsAutoString	valueAttrib;
 
 			PRInt32	valueOffset = line.Find("value", PR_TRUE);
 			if (valueOffset >= 0)
@@ -3578,7 +3578,7 @@ InternetSearchDataSource::GetInputs(const nsString &data, nsString &userVar,
 						// if value attribute's "value" isn't quoted, get the first word... ?
 						valueAttrib = line;
 						valueAttrib.Cut(0, equal+1);
-						valueAttrib = valueAttrib.Trim(" \t");
+						valueAttrib.Trim(" \t");
 						PRInt32 space = valueAttrib.FindCharInSet(" \t>", 0);
 						if (space > 0)
 						{
@@ -3590,7 +3590,7 @@ InternetSearchDataSource::GetInputs(const nsString &data, nsString &userVar,
 			else if (line.Find("user", PR_TRUE) >= 0)
 			{
 				userVar = nameAttrib;
-				valueAttrib = text;
+				valueAttrib.Assign(text);
 			}
 			
 			// XXX should ignore if  mode=browser  is specified
@@ -3602,10 +3602,10 @@ InternetSearchDataSource::GetInputs(const nsString &data, nsString &userVar,
 			{
 				if (input.Length() > 0)
 				{
-					input += "&";
+					input.AppendWithConversion("&");
 				}
 				input += nameAttrib;
-				input += "=";
+				input.AppendWithConversion("=");
 				input += valueAttrib;
 			}
 		}
@@ -3620,7 +3620,7 @@ InternetSearchDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult
 {
         const char	*uri = nsnull;
 	source->GetValueConst( &uri );
-	nsAutoString	url(uri);
+	nsAutoString	url; url.AssignWithConversion(uri);
 	nsIRDFLiteral	*literal;
 	gRDFService->GetLiteral(url.GetUnicode(), &literal);
         *aResult = literal;
@@ -3808,7 +3808,7 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 
 	// (do this last) potentially remove the loading attribute
 	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(), getter_AddRefs(trueLiteral))))
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), getter_AddRefs(trueLiteral))))
 	{
 		mInner->Unassert(mEngine, kNC_loading, trueLiteral);
 	}
@@ -3864,7 +3864,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 	aURL->GetHost(&hostName);
 	if (hostName)
 	{
-		hostStr = hostName;
+		hostStr.AssignWithConversion(hostName);
 		nsCRT::free(hostName);
 		hostName = nsnull;
 	}
@@ -3875,7 +3875,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 	aURL->GetPath(&serverPath);
 	if (serverPath)
 	{
-		serverPathStr = serverPath;
+		serverPathStr.AssignWithConversion(serverPath);
 		nsCRT::free(serverPath);
 		serverPath = nsnull;
 
@@ -3908,7 +3908,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		nsAutoString	dateStartStr, dateEndStr;
 		nsAutoString	nameStartStr, nameEndStr;
 		nsAutoString	emailStartStr, emailEndStr;
-		nsAutoString	browserResultTypeStr="result";		// default to "result"
+		nsAutoString	browserResultTypeStr; browserResultTypeStr.AssignWithConversion("result");		// default to "result"
 
 		// need an original copy of the HTML every time through the loop
 		nsAutoString	htmlResults(htmlPage);
@@ -3946,7 +3946,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			GetData(data, "interpret", interpretSectionNum, "browserResultType", browserResultTypeStr);
 			if (browserResultTypeStr.Length() < 1)
 			{
-				browserResultTypeStr = "result";	// default to "result"
+				browserResultTypeStr.AssignWithConversion("result");	// default to "result"
 			}
 		}
 
@@ -3998,7 +3998,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 		// if resultItemStartStr is not specified, try making it just be "HREF="
 		if (resultItemStartStr.Length() < 1)
 		{
-			resultItemStartStr = "HREF=";
+			resultItemStartStr.AssignWithConversion("HREF=");
 			trimItemStart = PR_FALSE;
 		}
 
@@ -4102,7 +4102,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			if (NS_SUCCEEDED(rv = NS_MakeAbsoluteURI(&absURIStr, nsCAutoString(hrefStr), aURL))
 			    && (absURIStr))
 			{
-				hrefStr = absURIStr;
+				hrefStr.AssignWithConversion(absURIStr);
 
 				nsCOMPtr<nsIURI>	absURI;
 				rv = NS_NewURI(getter_AddRefs(absURI), absURIStr);
@@ -4115,7 +4115,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 					absURI->GetPath(&absPath);
 					if (absPath)
 					{
-						nsAutoString	absPathStr(absPath);
+						nsAutoString	absPathStr; absPathStr.AssignWithConversion(absPath);
 						nsCRT::free(absPath);
 						PRInt32 pathOptionsOffset = absPathStr.FindChar(PRUnichar('?'));
 						if (pathOptionsOffset >= 0)
@@ -4298,7 +4298,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				}
 
 				// strip out whitespace and any CR/LFs
-				dateItem = dateItem.Trim("\n\r\t ");
+				dateItem.Trim("\n\r\t ");
 
 				if (dateItem.Length() > 0)
 				{
@@ -4454,7 +4454,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				}
 				if (relItem.Length() < 1)
 				{
-					relItem = "-";
+					relItem.AssignWithConversion("-");
 				}
 
 				const PRUnichar *relItemUni = relItem.GetUnicode();
@@ -4467,7 +4467,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 					}
 				}
 
-				if ((relItem.Length() > 0) && (!relItem.Equals("-")))
+				if ((relItem.Length() > 0) && (!relItem.EqualsWithConversion("-")))
 				{
 					// If its a percentage, remove "%"
 					if (relItem[relItem.Length()-1] == PRUnichar('%'))
@@ -4476,15 +4476,15 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 					}
 
 					// left-pad with "0"s and set special sorting value
-					nsAutoString	zero("000");
+					nsAutoString	zero; zero.AssignWithConversion("000");
 					if (relItem.Length() < 3)
 					{
-						relItem.Insert(zero, 0, zero.Length() - relItem.Length()); 
+						relItem.Insert(zero.GetUnicode(), 0, zero.Length() - relItem.Length()); 
 					}
 				}
 				else
 				{
-					relItem = "000";
+					relItem.AssignWithConversion("000");
 				}
 
 				const PRUnichar	*relSortUni = relItem.GetUnicode();
@@ -4530,9 +4530,9 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			nsAutoString	iconChromeDefault;
 
 			if (browserResultTypeStr.EqualsIgnoreCase("category"))
-				iconChromeDefault = "chrome://search/skin/category.gif";
+				iconChromeDefault.AssignWithConversion("chrome://search/skin/category.gif");
 			else if ((browserResultTypeStr.EqualsIgnoreCase("result")) && (!engineIconNode))
-				iconChromeDefault = "chrome://search/skin/result.gif";
+				iconChromeDefault.AssignWithConversion("chrome://search/skin/result.gif");
 
 			if (iconChromeDefault.Length() > 0)
 			{
@@ -4623,7 +4623,7 @@ InternetSearchDataSource::SetHint(nsIRDFResource *mParent, nsIRDFResource *hintR
 
 	nsresult		rv;
 	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(), getter_AddRefs(trueLiteral))))
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), getter_AddRefs(trueLiteral))))
 	{
 		PRBool		hasAssertionFlag = PR_FALSE;
 		if (NS_SUCCEEDED(rv = mInner->HasAssertion(mParent, hintRes, trueLiteral, PR_TRUE, &hasAssertionFlag))
