@@ -124,7 +124,7 @@ function PrefNavSelectFile() {
     try {
         var url = fileSpec.chooseFile( "" );
         var field = document.getElementById( "pref:string:browser.startup.homepage" );
-        field.setAttribute( "value", url );
+        field.setAttribute( "value", fileSpec.nativePath );
     }
     catch( exception ) {
         // Just a cancel, probably.
@@ -137,7 +137,7 @@ function PrefCacheSelectFolder() {
     try {
         var url = fileSpec.chooseDirectory( "" );
         var field = document.getElementById( "pref:string:browser.cache.directory" );
-        field.setAttribute( "value", url );
+        field.setAttribute( "value", fileSpec.nativePath );
     }
     catch( exception ) {
         // Just a cancel, probably.
