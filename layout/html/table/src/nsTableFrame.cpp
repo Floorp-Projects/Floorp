@@ -3163,7 +3163,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     }
     else
     {
-      rv = RemoveAFrame(objectFrame);
+      rv = mFrames.RemoveFrame(objectFrame);
     }
     break;
 
@@ -3453,7 +3453,7 @@ NS_METHOD nsTableFrame::IR_RowGroupRemoved(nsIPresContext&        aPresContext,
                                            nsTableRowGroupFrame * aDeletedFrame)
 {
   if (PR_TRUE==gsDebugIR) printf("TIF IR: IR_RowGroupRemoved for frame %p\n", aDeletedFrame);
-  nsresult rv = RemoveAFrame(aDeletedFrame);
+  nsresult rv = mFrames.RemoveFrame(aDeletedFrame);
   InvalidateCellMap();
   InvalidateColumnCache();
 
@@ -3784,10 +3784,8 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
     if (nsnull == kidFrame) {
       // No. Any frames on its overflow list?
       if (nextInFlow->mOverflowFrames.NotEmpty()) {
-        // XXX use nsFrameList::Join
         // Move the overflow list to become the child list
-        nextInFlow->AppendChildren(nextInFlow->mOverflowFrames.FirstChild(), PR_TRUE);
-        nextInFlow->mOverflowFrames.SetFrames(nsnull);
+        nextInFlow->mFrames.AppendFrames(nsnull, nextInFlow->mOverflowFrames);
         kidFrame = nextInFlow->mFrames.FirstChild();
       } else {
         // We've pulled up all the children, so move to the next-in-flow.

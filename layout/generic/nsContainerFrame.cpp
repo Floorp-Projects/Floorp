@@ -432,7 +432,7 @@ void
 nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
                                          nsIFrame* aChild)
 {
-  NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
+  NS_PRECONDITION(mFrames.ContainsFrame(aChild), "bad geometric parent");
 
   nsIFrame*         nextInFlow;
   nsContainerFrame* parent;
@@ -568,14 +568,6 @@ nsContainerFrame::AddFrame(const nsHTMLReflowState& aReflowState,
     rv = NS_ERROR_UNEXPECTED;
   }
   return rv;
-}
-
-nsresult
-nsContainerFrame::RemoveAFrame(nsIFrame* aRemovedFrame)
-{
-  PRBool zap = mFrames.RemoveFrame(aRemovedFrame);
-  NS_ASSERTION(zap, "failure to remove a frame");
-  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -59,13 +59,6 @@ public:
     return tmp.GetLength();
   }
 
-#if XXX
-  static nsIFrame* FrameAt(nsIFrame* aFrameList, PRInt32 aIndex) {
-    nsFrameList tmp(aFrameList);
-    return tmp.FrameAt(aIndex);
-  }
-#endif
-
 protected:
   nsContainerFrame();
   ~nsContainerFrame();
@@ -125,30 +118,9 @@ protected:
   void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
 
   /**
-   * Append child list starting at aChild to this frame's child list.
-   *
-   * @param   aChild the beginning of the child list
-   * @param   aSetParent if true each child's parent is set to this frame.
-   */
-  void AppendChildren(nsIFrame* aChild, PRBool aSetParent) {
-    mFrames.AppendFrames(aSetParent ? this : nsnull, aChild);
-  }
-
-  /**
    */
   nsresult AddFrame(const nsHTMLReflowState& aReflowState,
                     nsIFrame *               aAddedFrame);
-
-  /**
-   */
-  nsresult RemoveAFrame(nsIFrame* aRemovedFrame);
-
-  /**
-   * Returns PR_TRUE if aChild is a child of this frame.
-   */
-  PRBool IsChild(const nsIFrame* aChild) const {
-    return mFrames.ContainsFrame(aChild);
-  }
 
   nsFrameList mFrames;
   nsFrameList mOverflowFrames;

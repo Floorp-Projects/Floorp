@@ -1044,7 +1044,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     }
     else
     {
-      rv = RemoveAFrame(objectFrame);
+      rv = mFrames.RemoveFrame(objectFrame);
     }
     break;
 
@@ -1198,7 +1198,7 @@ NS_METHOD nsTableRowFrame::IR_CellRemoved(nsIPresContext&      aPresContext,
                                           nsTableCellFrame *   aDeletedFrame)
 {
   if (PR_TRUE==gsDebugIR) printf("\nRow IR: IR_RowRemoved\n");
-  nsresult rv = RemoveAFrame((nsIFrame*)aDeletedFrame);
+  nsresult rv = mFrames.RemoveFrame((nsIFrame*)aDeletedFrame);
   if (NS_SUCCEEDED(rv))
   {
     ResetMaxChildHeight();
