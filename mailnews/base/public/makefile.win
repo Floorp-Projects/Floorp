@@ -40,6 +40,8 @@ EXPORTS =                                       \
 			nsIMsgFolder.h          \
 			nsIMsgRDFFolder.h       \
 			nsIMsgMailNewsUrl.h		\
+			nsIUrlListenerManager.h \
+			nsIUrlListener.h		\
 			$(NULL)
 
 MODULE=mailnews
