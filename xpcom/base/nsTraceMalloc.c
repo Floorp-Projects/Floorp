@@ -36,6 +36,7 @@
 
 /*
  * TODO:
+ * - Fix rusty's SMP realloc oldsize corruption bug
  * - #ifdef __linux__/x86 and port to other platforms
  * - unify calltree with gc/boehm somehow (common utility libs)
  * - provide NS_TraceMallocTimestamp() or do it internally
@@ -834,7 +835,7 @@ __ptr_t malloc(size_t size)
     } else if (suppress_tracing == 0) {
         if (tmmon)
             PR_EnterMonitor(tmmon);
-        site = backtrace(2);
+        site = backtrace(1);
         if (site)
             log_event2(logfp, 'M', site->serial, size);
         if (get_allocations()) {
@@ -866,7 +867,7 @@ __ptr_t calloc(size_t count, size_t size)
     } else if (suppress_tracing == 0) {
         if (tmmon)
             PR_EnterMonitor(tmmon);
-        site = backtrace(2);
+        site = backtrace(1);
         size *= count;
         if (site)
             log_event2(logfp, 'C', site->serial, size);
@@ -917,7 +918,7 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
     } else if (suppress_tracing == 0) {
         if (tmmon)
             PR_EnterMonitor(tmmon);
-        site = backtrace(2);
+        site = backtrace(1);
         if (site)
             log_event3(logfp, 'R', site->serial, oldsize, size);
         if (ptr && allocations) {
