@@ -577,6 +577,8 @@
         <menuitem name="Demo #11" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test11.html'"/>
         <menuitem name="Demo #12" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test12.html'"/>
         <menuitem name="Demo #13" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test13.html'"/>
+	<menuitem name="Demo #14" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test14.html'"/>
+	<menuitem name="Demo #15" onclick="window.frames[0].frames[1].location.href='resource:/res/samples/test15.html'"/>
       </menu>
 
       <menu name="XPToolkit"> // XPToolkit tests.
