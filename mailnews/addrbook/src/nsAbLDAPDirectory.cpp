@@ -325,7 +325,8 @@ NS_IMETHODIMP nsAbLDAPDirectory::StartSearch ()
     // turn moz-abldapdirectory://ldap_2.servers.nscpphonebook into -> "ldap_2.servers.nscpphonebook.maxHits"
     PRInt32 maxHits;
     rv = prefs->GetIntPref(prefName.get(), &maxHits);
-    NS_ENSURE_SUCCESS(rv,rv);
+    if (NS_FAILED(rv))
+      maxHits = 100;
 
     // Perform the query
     rv = DoQuery(arguments, queryListener, maxHits, 0, &mContext);
