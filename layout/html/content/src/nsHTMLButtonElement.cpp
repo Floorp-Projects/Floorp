@@ -276,7 +276,7 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
 {
   nsIEventStateManager* esm;
   if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
-    esm->SetFocusedContent(this);
+    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
     NS_RELEASE(esm);
   }
 
@@ -372,7 +372,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
       {
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-          //stateManager->SetActiveLink(this);
+          stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
           NS_RELEASE(stateManager);
         }
         aEventStatus = nsEventStatus_eConsumeNoDefault; 
@@ -413,28 +413,25 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
       break;
 
     case NS_MOUSE_ENTER:
-      //mouse enter doesn't work yet.  Use move until then.
       {
-        nsAutoString href, target;
-        nsIURL* baseURL = nsnull;
-        GetBaseURL(baseURL);
-        GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
-        GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, target);
-        if (target.Length() == 0) {
-          GetBaseTarget(target);
+        nsIEventStateManager *stateManager;
+        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+          stateManager->SetContentState(this, NS_EVENT_STATE_HOVER);
+          NS_RELEASE(stateManager);
         }
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_FALSE);
-        NS_IF_RELEASE(baseURL);
-        aEventStatus = nsEventStatus_eConsumeDoDefault; 
+        aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
 
       // XXX this doesn't seem to do anything yet
     case NS_MOUSE_EXIT:
       {
-        nsAutoString empty;
-        mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);
-        aEventStatus = nsEventStatus_eConsumeDoDefault; 
+        nsIEventStateManager *stateManager;
+        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+          stateManager->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
+          NS_RELEASE(stateManager);
+        }
+        aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
 

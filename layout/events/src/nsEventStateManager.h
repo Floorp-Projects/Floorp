@@ -51,9 +51,7 @@ public:
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame);
 
   NS_IMETHOD GetContentState(nsIContent *aContent, PRInt32& aState);
-  NS_IMETHOD SetActiveContent(nsIContent *aActive);
-  NS_IMETHOD SetHoverContent(nsIContent *aHover);
-  NS_IMETHOD SetFocusedContent(nsIContent *aContent);
+  NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState);
 
 protected:
   void UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, nsEventStatus& aStatus);
@@ -64,6 +62,7 @@ protected:
   void ShiftFocus(PRBool foward);
   nsIContent* GetNextTabbableContent(nsIContent* aParent, nsIContent* aChild, nsIContent* aTop, PRBool foward);
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
+  NS_IMETHOD SendFocusBlur(nsIContent *aContent);
 
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;

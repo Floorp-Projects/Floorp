@@ -425,7 +425,7 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
 {
   nsIEventStateManager* esm;
   if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
-    esm->SetFocusedContent(this);
+    esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
     NS_RELEASE(esm);
   }
   

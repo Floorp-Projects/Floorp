@@ -895,7 +895,6 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
                           nsEventStatus& aEventStatus)
 {
   nsImageMap* map;
-  aEventStatus = nsEventStatus_eIgnore; 
 
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_UP:
@@ -947,7 +946,7 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
           // We hit a clickable area. Time to go somewhere...
           PRBool clicked = PR_FALSE;
           if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-            aEventStatus = nsEventStatus_eConsumeNoDefault; 
+            aEventStatus = nsEventStatus_eConsumeDoDefault; 
             clicked = PR_TRUE;
           }
           TriggerLink(aPresContext, absURL, target, clicked);
@@ -983,20 +982,18 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
         absURL.Append(cbuf);
         PRBool clicked = PR_FALSE;
         if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-          aEventStatus = nsEventStatus_eConsumeNoDefault; 
+          aEventStatus = nsEventStatus_eConsumeDoDefault; 
           clicked = PR_TRUE;
         }
         TriggerLink(aPresContext, absURL, target, clicked);
       }
       break;
     }
-    // FALL THROUGH
-
-  default:
-    // Let default event handler deal with it
-    return nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+    default:
+      break;
   }
-  return NS_OK;
+
+  return nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 NS_METHOD

@@ -731,10 +731,12 @@ nsFrame::HandleEvent(nsIPresContext& aPresContext,
 
   if(nsEventStatus_eConsumeNoDefault != aEventStatus) {
     if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
-    } else if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
+    } 
+    else if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
                aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
       // no-op
-    } else {
+    } 
+    else {
       return NS_OK;
     }
     if (SELECTION_DEBUG) printf("Message: %d-------------------------------------------------------------\n",aEvent->message);
@@ -765,7 +767,6 @@ nsFrame::HandlePress(nsIPresContext& aPresContext,
                      nsEventStatus&  aEventStatus)
 {
   if (!DisplaySelection(aPresContext, PR_TRUE)) {
-    aEventStatus = nsEventStatus_eIgnore;
     return NS_OK;
   }
 
@@ -810,7 +811,6 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
                               nsEventStatus&  aEventStatus)
 {
   if (!DisplaySelection(aPresContext, PR_TRUE)) {
-    aEventStatus = nsEventStatus_eIgnore;
     return NS_OK;
   }
 
@@ -852,7 +852,6 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsIPresContext& aPresContext,
                                  nsEventStatus&  aEventStatus)
 {
   mDoingSelection = PR_FALSE;
-  aEventStatus = nsEventStatus_eIgnore;
   NS_IF_RELEASE(gDoc);
   return NS_OK;
 }

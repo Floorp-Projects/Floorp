@@ -56,15 +56,12 @@ public:
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame) = 0;
 
   NS_IMETHOD GetContentState(nsIContent *aContent, PRInt32& aState) = 0;
-
-  NS_IMETHOD SetActiveContent(nsIContent *aActive) = 0;
-  NS_IMETHOD SetHoverContent(nsIContent *aHover) = 0;
-  NS_IMETHOD SetFocusedContent(nsIContent *aContent) = 0;
+  NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState) = 0;
 };
 
-#define NS_EVENT_STATE_UNSPECIFIED  0000
-#define NS_EVENT_STATE_ACTIVE       0001 // mouse is down on content
-#define NS_EVENT_STATE_FOCUS        0002 // content has focus
-#define NS_EVENT_STATE_HOVER        0003 // mouse is hovering over content
+#define NS_EVENT_STATE_UNSPECIFIED  0x0000
+#define NS_EVENT_STATE_ACTIVE       0x0001 // mouse is down on content
+#define NS_EVENT_STATE_FOCUS        0x0002 // content has focus
+#define NS_EVENT_STATE_HOVER        0x0004 // mouse is hovering over content
 
 #endif // nsIEventStateManager_h__

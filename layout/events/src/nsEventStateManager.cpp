@@ -130,24 +130,30 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
   case NS_MOUSE_RIGHT_BUTTON_DOWN: 
     {
       ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
-  
-      nsIContent* newFocus;
-      mCurrentTarget->GetContent(&newFocus);
-      if (newFocus) {
-        if (!ChangeFocus(newFocus, PR_TRUE)) {
-          if (nsnull != aEvent->widget) {
-            aEvent->widget->SetFocus();
+
+      if (nsEventStatus_eConsumeNoDefault != aStatus) {
+        nsIContent* newFocus;
+        mCurrentTarget->GetContent(&newFocus);
+        if (newFocus) {
+          if (!ChangeFocus(newFocus, PR_TRUE)) {
+            if (nsnull != aEvent->widget) {
+              aEvent->widget->SetFocus();
+            }
           }
         }
-        NS_RELEASE(newFocus);
+
+        SetContentState(newFocus, NS_EVENT_STATE_ACTIVE);
+
+        NS_IF_RELEASE(newFocus);
       }
+
     }
     break;
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_MIDDLE_BUTTON_UP:
   case NS_MOUSE_RIGHT_BUTTON_UP:
     ret = CheckForAndDispatchClick(aPresContext, (nsMouseEvent*)aEvent, aStatus);
-    SetActiveContent(nsnull);
+    SetContentState(nsnull, NS_EVENT_STATE_ACTIVE);
     break;
   case NS_KEY_DOWN:
     ret = DispatchKeyPressEvent(aPresContext, (nsKeyEvent*)aEvent, aStatus);
@@ -274,6 +280,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
             }
           }
 
+          if (nsEventStatus_eConsumeNoDefault != status) {
+            SetContentState(nsnull, NS_EVENT_STATE_HOVER);
+          }
+
           //Now dispatch to the frame
           if (nsnull != mLastMouseOverFrame) {
             //XXX Get the new frame
@@ -293,6 +303,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
           //XXX This event should still go somewhere!!
           if (nsnull != targetContent) {
             targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+          }
+
+          if (nsEventStatus_eConsumeNoDefault != status) {
+            SetContentState(targetContent, NS_EVENT_STATE_HOVER);
           }
         }
 
@@ -455,6 +469,8 @@ nsEventStateManager::ChangeFocus(nsIContent* aFocus, PRBool aSetFocus)
 void
 nsEventStateManager::ShiftFocus(PRBool forward)
 {
+  PRBool topOfDoc = PR_FALSE;
+
   if (nsnull == mPresContext) {
     return;
   }
@@ -475,11 +491,14 @@ nsEventStateManager::ShiftFocus(PRBool forward)
       return;
     }
     mCurrentTabIndex = forward ? 1 : 0;
+    topOfDoc = PR_TRUE;
   }
 
   nsIContent* next = GetNextTabbableContent(mCurrentFocus, nsnull, mCurrentFocus, forward);
 
   if (nsnull == next) {
+    PRBool focusTaken = PR_FALSE;
+
     NS_IF_RELEASE(mCurrentFocus);
 
     //Pass focus up to nsIWebShellContainer FocusAvailable
@@ -491,12 +510,15 @@ nsEventStateManager::ShiftFocus(PRBool forward)
         nsIWebShellContainer* webShellContainer;
         webShell->GetContainer(webShellContainer);
         if (nsnull != webShellContainer) {
-          webShellContainer->FocusAvailable(webShell);
+          webShellContainer->FocusAvailable(webShell, focusTaken);
           NS_RELEASE(webShellContainer);
         }
         NS_RELEASE(webShell);
       }
       NS_RELEASE(container);
+    }
+    if (!focusTaken && !topOfDoc) {
+      ShiftFocus(forward);
     }
     return;
   }
@@ -693,59 +715,70 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
 }
 
 NS_IMETHODIMP
-nsEventStateManager::SetActiveContent(nsIContent *aActive)
+nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 {
-  nsIDocument *mDocument;
+  nsIDocument *document;
 
-  if (nsnull != mActiveContent) {
+  if (aState & NS_EVENT_STATE_ACTIVE && nsnull != mActiveContent) {
     //transferring ref to lastActive from mActiveContent
     nsIContent *lastActive = mActiveContent;
+    mActiveContent = nsnull;
 
-    if (NS_OK == mActiveContent->GetDocument(mDocument)) {
-      mActiveContent = nsnull;
-      mDocument->ContentStateChanged(lastActive);
-      NS_RELEASE(mDocument);
+    lastActive->GetDocument(document);
+    if (document) {
+      document->ContentStateChanged(lastActive);
+      NS_RELEASE(document);
     }
     NS_RELEASE(lastActive);
   }
 
-  mActiveContent = aActive;
-  NS_IF_ADDREF(mActiveContent);
-
-  if (nsnull != mActiveContent) {
-    if (NS_OK == mActiveContent->GetDocument(mDocument)) {
-      mDocument->ContentStateChanged(mActiveContent);
-      NS_RELEASE(mDocument);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsEventStateManager::SetHoverContent(nsIContent *aHover)
-{
-  nsIDocument *mDocument;
-
-  if (nsnull != mHoverContent) {
-    //transferring ref to lastHover from mActiveContent
+  if (aState & NS_EVENT_STATE_HOVER && nsnull != mHoverContent) {
+    //transferring ref to lastHover from mHoverContent
     nsIContent *lastHover = mHoverContent;
+    mHoverContent = nsnull;
 
-    if (NS_OK == mHoverContent->GetDocument(mDocument)) {
-      mHoverContent = nsnull;
-      mDocument->ContentStateChanged(lastHover);
-      NS_RELEASE(mDocument);
+    lastHover->GetDocument(document);
+    if (document) {
+      document->ContentStateChanged(lastHover);
+      NS_RELEASE(document);
     }
     NS_RELEASE(lastHover);
   }
 
-  mHoverContent = aHover;
+  if (aState & NS_EVENT_STATE_FOCUS) {
+    SendFocusBlur(aContent);
 
-  NS_IF_ADDREF(mHoverContent);
-  if (nsnull != mHoverContent) {
-    if (NS_OK == mHoverContent->GetDocument(mDocument)) {
-      mDocument->ContentStateChanged(mHoverContent);
-      NS_RELEASE(mDocument);
+    if (nsnull != mCurrentFocus) {
+      //transferring ref to lastFocus from mCurrentFocus
+      nsIContent *lastFocus = mCurrentFocus;
+      mCurrentFocus = nsnull;
+
+      lastFocus->GetDocument(document);
+      if (document) {
+        document->ContentStateChanged(lastFocus);
+        NS_RELEASE(document);
+      }
+      NS_RELEASE(lastFocus);
+    }
+  }
+
+  if (nsnull != aContent) {
+    if (aState & NS_EVENT_STATE_ACTIVE) {
+      mActiveContent = aContent;
+      NS_IF_ADDREF(mActiveContent);
+    }
+    if (aState & NS_EVENT_STATE_HOVER) {
+      mHoverContent = aContent;
+      NS_IF_ADDREF(mHoverContent);
+    }
+    if (aState & NS_EVENT_STATE_FOCUS) {
+      mCurrentFocus = aContent;
+      NS_IF_ADDREF(mCurrentFocus);
+    }
+    aContent->GetDocument(document);
+    if (document) {
+      document->ContentStateChanged(aContent);
+      NS_RELEASE(document);
     }
   }
 
@@ -753,11 +786,13 @@ nsEventStateManager::SetHoverContent(nsIContent *aHover)
 }
 
 NS_IMETHODIMP
-nsEventStateManager::SetFocusedContent(nsIContent *aContent)
+nsEventStateManager::SendFocusBlur(nsIContent *aContent)
 {
   if (mCurrentFocus == aContent) {
     return NS_OK;
   }
+
+  nsIDocument *document;
 
   if (mCurrentFocus) {
     ChangeFocus(mCurrentFocus, PR_FALSE);
@@ -771,28 +806,26 @@ nsEventStateManager::SetFocusedContent(nsIContent *aContent)
     if (nsnull != mPresContext) {
       mCurrentFocus->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
     }
-    NS_RELEASE(mCurrentFocus);
   }
 
-  //fire focus
-  nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_FOCUS_CONTENT;
+  if (nsnull != aContent) {
+    //fire focus
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_FOCUS_CONTENT;
 
-  if (nsnull != mPresContext) {
-    aContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+    if (nsnull != mPresContext) {
+      aContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+    }
+
+    nsAutoString tabIndex;
+    aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndex);
+    PRInt32 ec, val = tabIndex.ToInteger(&ec);
+    if (NS_OK == ec) {
+      mCurrentTabIndex = val;
+    }
   }
-
-  nsAutoString tabIndex;
-  aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndex);
-  PRInt32 ec, val = tabIndex.ToInteger(&ec);
-  if (NS_OK == ec) {
-    mCurrentTabIndex = val;
-  }
-
-  mCurrentFocus = aContent;
-  NS_IF_ADDREF(mCurrentFocus);
 
   return NS_OK;
 }
