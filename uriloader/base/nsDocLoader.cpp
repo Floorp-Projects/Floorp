@@ -1413,8 +1413,6 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
      * Pass the OnStartBinding(...) notification out to the document 
      * IStreamListener.
      */
-    NS_ASSERTION((nsnull != m_NextStream), "No stream was created!");
-
     if (nsnull != m_NextStream) {
         rv = m_NextStream->OnStartBinding(aURL, aContentType);
     }
@@ -1447,7 +1445,6 @@ NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURL* aURL,
         goto done;
     }
 
-    NS_PRECONDITION(nsnull !=m_NextStream, "DocLoader: No stream for document");
     if (nsnull != m_NextStream) {
        /*
         * Bump the refcount in case the stream gets destroyed while the data
@@ -1462,6 +1459,8 @@ NS_METHOD nsDocumentBindInfo::OnDataAvailable(nsIURL* aURL,
         NS_ADDREF(listener);
         rv = listener->OnDataAvailable(aURL, aStream, aLength);
         NS_RELEASE(listener);
+    } else {
+      rv = NS_BINDING_FAILED;
     }
 
 done:
