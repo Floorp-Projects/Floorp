@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Blake Kaplan <mrbkap@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -849,7 +850,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kExtensions, kNone, kNone,	
+      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -858,7 +859,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
-      /*parent,incl,exclgroups*/          kInlineEntity, (kFlowEntity), kNone,	
+      /*parent,incl,exclgroups*/          kExtensions, kFlowEntity, kNone,	
       /*special props, prop-range*/       0,kDefaultPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
@@ -2076,22 +2077,27 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
           continue; // We can close this.
         }
 
-          //fixes a derivative of bug 22842...
-        if(CanContainType(kBlock)) { //INS/DEL can contain blocks.
-          if(gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kBlockEntity) || gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kFlowEntity)) {
+        // Fixes a derivative of bug 22842...
+        if(CanContainType(kBlock)) { // INS/DEL can contain blocks.
+          if(gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kBlockEntity) || 
+             gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kFlowEntity)) {
             if(HasOptionalEndTag(theTag)) {
-              continue; //then I can close it.
+              continue; // Then I can close it.
             }
           }
         }
 
-        //phrasal elements can close other phrasals, along with fontstyle and special tags...
-        if(!gHTMLElements[theTag].IsMemberOf(kSpecial|kFontStyle|kPhrase)) {  //fix bug 56665
-          break; //it's not something I can close
+        // Phrasal elements can close other phrasals, along with fontstyle,
+        // extensions, and special tags...
+        if(!gHTMLElements[theTag].IsMemberOf(kSpecial | 
+                                             kFontStyle |
+                                             kPhrase |
+                                             kExtensions)) {  //fix bug 56665
+          break; // It's not something I can close
         }
       }
       else {
-        result=theTag; //stop because you just found yourself on the stack
+        result=theTag; // Stop because you just found yourself on the stack
         break;
       }
     }
@@ -2102,29 +2108,33 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
     while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
       eHTMLTags theTag=aContext.TagAt(theIndex);
       if(theTag!=mTagID) {
-        //phrasal elements can close other phrasals, along with fontstyle and special tags...
+        // Special elements can close other specials, along with fontstyle 
+        // extensions, and phrasal tags...
 
+        // Added Phrasal to fix bug 26347
         if((eHTMLTag_userdefined==theTag) ||
             gHTMLElements[theTag].IsSpecialEntity()  || 
             gHTMLElements[theTag].IsFontStyleEntity()||
-            gHTMLElements[theTag].IsPhraseEntity()) { // Added Phrasel to fix bug 26347
+            gHTMLElements[theTag].IsPhraseEntity()   ||
+            gHTMLElements[theTag].IsMemberOf(kExtensions)) {
           continue;
         }
         else {
 
-            //fixes bug 22842...
+          // Fixes bug 22842...
           if(CanContainType(kBlock)) {
-            if(gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kBlockEntity) || gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kFlowEntity)) {
+            if(gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kBlockEntity) || 
+               gHTMLElements[eHTMLTags(theTag)].IsMemberOf(kFlowEntity)) {
               if(HasOptionalEndTag(theTag)) {
-                continue; //then I can close it.
+                continue; // Then I can close it.
               }
             }
           }
-          break; //it's not something I can close
+          break; // It's not something I can close
         }
       }
       else {
-        result=theTag; //stop because you just found yourself on the stack
+        result=theTag; // Stop because you just found yourself on the stack
         break;
       }
     }
