@@ -1644,11 +1644,17 @@ else
 		[MISSING_X="$MISSING_X -lX11"], $XLIBS)
 	AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
 		[MISSING_X="$MISSING_X -lXext"], $XLIBS)
-	AC_CHECK_LIB(ICE, IceFlush, [XICE_LIBS="-lICE"],, $XLIBS)
-	AC_CHECK_LIB(SM, SmcCloseConnection, [XSM_LIBS="-lSM"],, $XLIBS)
-	AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"],
-		[MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XLIBS)
+   
+     
+	AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"], [
+        unset ac_cv_lib_Xt_XtFree
+	    AC_CHECK_LIB(ICE, IceFlush, [XT_LIBS="-lICE $XT_LIBS"],, $XT_LIBS $XLIBS)
+	    AC_CHECK_LIB(SM, SmcCloseConnection, [XT_LIBS="-lSM $XT_LIBS"],, $XT_LIBS $XLIBS) 
+        AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt $XT_LIBS"],
+		    [MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XT_LIBS $XLIBS)
+        ])
 
+    AC_SUBST(XT_LIBS)
     dnl ========================================================
     dnl = Check for Xinerama
     dnl ========================================================
