@@ -65,8 +65,6 @@ CSRCS	= \
 	ISimpleDOMNode_i.c \
 	ISimpleDOMDocument_p.c \
 	ISimpleDOMDocument_i.c \
-	ISimpleDOMText_p.c \
-	ISimpleDOMText_i.c \
 	$(NULL)
 
 MIDL_GENERATED_FILES = \
@@ -76,9 +74,6 @@ MIDL_GENERATED_FILES = \
 	ISimpleDOMDocument.h \
 	ISimpleDOMDocument_p.c \
 	ISimpleDOMDocument_i.c \
-	ISimpleDOMText.h \
-	ISimpleDOMText_p.c \
-	ISimpleDOMText_i.c \
 	$(NULL)
 
 SRCDIR_CSRCS	= $(addprefix $(srcdir)/,$(CSRCS))
@@ -93,10 +88,9 @@ OS_LIBS = \
 
 $(MIDL_GENERATED_FILES): done_gen
 
-done_gen: ISimpleDOMNode.idl ISimpleDOMDocument.idl ISimpleDOMText.idl
+done_gen: ISimpleDOMNode.idl ISimpleDOMDocument.idl
 	"$(MIDL)" $(srcdir)/ISimpleDOMNode.idl
 	"$(MIDL)" $(srcdir)/ISimpleDOMDocument.idl
-	"$(MIDL)" $(srcdir)/ISimpleDOMText.idl
 	touch $@
 
 EXPORTS = \
@@ -104,8 +98,6 @@ EXPORTS = \
 	ISimpleDOMNode_i.c \
 	ISimpleDOMDocument.h \
 	ISimpleDOMDocument_i.c \
-	ISimpleDOMText.h \
-	ISimpleDOMText_i.c \
 	$(NULL)
 
 export:: done_gen

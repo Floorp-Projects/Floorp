@@ -46,7 +46,7 @@
 #include "nsISelectionController.h"
 
 nsHTMLTextAccessible::nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsTextAccessibleWrap(aDomNode, aShell)
+nsTextAccessible(aDomNode, aShell)
 { 
 }
 

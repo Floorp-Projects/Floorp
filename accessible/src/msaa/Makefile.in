@@ -67,7 +67,6 @@ REQUIRES	= content \
 CPPSRCS = \
   nsAccessNodeWrap.cpp \
   nsAccessibleWrap.cpp \
-  nsTextAccessibleWrap.cpp \
   nsDocAccessibleWrap.cpp \
   nsRootAccessibleWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
@@ -76,7 +75,6 @@ CPPSRCS = \
 EXPORTS = \
   nsAccessNodeWrap.h \
   nsAccessibleWrap.h \
-  nsTextAccessibleWrap.h \
   nsDocAccessibleWrap.h \
   nsRootAccessibleWrap.h \
   nsHTMLWin32ObjectAccessible.h \

@@ -57,8 +57,6 @@ class nsOuterDocAccessible : public nsBlockAccessible
     NS_IMETHOD GetAccValue(nsAString& AccValue);
     NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
     NS_IMETHOD GetAccState(PRUint32 *aAccState);
-    NS_IMETHOD AccGetBounds(PRInt32 *x, PRInt32 *y, 
-                            PRInt32 *width, PRInt32 *height);
 };
 
 #endif  

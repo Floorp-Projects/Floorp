@@ -98,16 +98,15 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
     nsCOMPtr<nsIViewManager> vm;
     shell->GetViewManager(getter_AddRefs(vm));
     nsCOMPtr<nsIWidget> widget;
-    if (vm) {
-      vm->GetWidget(getter_AddRefs(widget));
-      if (widget) {
-        mWnd = widget->GetNativeData(NS_NATIVE_WINDOW);
-      }
-    }
+    vm->GetWidget(getter_AddRefs(widget));
+    mWnd = widget->GetNativeData(NS_NATIVE_WINDOW);
   }
   
   NS_ASSERTION(gGlobalDocAccessibleCache, "No global doc accessible cache");
   PutCacheEntry(gGlobalDocAccessibleCache, mWeakShell, this);
+#ifdef DEBUG
+  printf("\nATTENTION: New doc accessible for weak shell %x\n", mWeakShell.get());
+#endif
 
   // XXX aaronl should we use an algorithm for the initial cache size?
 #ifdef OLD_HASH
@@ -409,51 +408,9 @@ nsIFrame* nsDocAccessible::GetFrame()
 void nsDocAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame)
 {
   *aRelativeFrame = GetFrame();
-
-  nsCOMPtr<nsIDocument> document(mDocument);
-  nsRect viewBounds;
-  nsCOMPtr<nsIViewManager> vm;
-  nsCOMPtr<nsIDocument> parentDoc;
-
-  while (document) {
-    nsCOMPtr<nsIPresShell> presShell;
-    document->GetShellAt(0, getter_AddRefs(presShell));
-    if (!presShell) {
-      return;
-    }
-    presShell->GetViewManager(getter_AddRefs(vm));
-
-    nsIScrollableView* scrollableView = nsnull;
-    if (vm)
-      vm->GetRootScrollableView(&scrollableView);
-
-    if (scrollableView) {
-      const nsIView *view = nsnull;
-      scrollableView->GetClipView(&view);
-      if (view) {
-        view->GetBounds(viewBounds);
-      }
-    }
-    else {
-      nsIView *view;
-      vm->GetRootView(view);
-      if (view) {
-        view->GetBounds(viewBounds);
-      }
-    }
-
-    if (parentDoc) {  // After first time thru loop
-      aBounds.IntersectRect(viewBounds, aBounds);
-    }
-    else {  // First time through loop
-      aBounds = viewBounds;
-    }
-
-    document->GetParentDocument(getter_AddRefs(parentDoc));
-    document = parentDoc;
-  }
+  if (*aRelativeFrame)
+    (*aRelativeFrame)->GetRect(aBounds);
 }
-
 
 void nsDocAccessible::AddContentDocListeners()
 {
