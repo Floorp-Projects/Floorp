@@ -321,6 +321,7 @@ protected:
     PRPackedBool               mHasFocus;
     PRPackedBool               mCreatingDocument; // (should be) debugging only
     PRPackedBool               mUseErrorPages;
+    PRPackedBool               mAllowAuth;
 
     PRUint32                   mAppType;
     PRInt32                    mChildOffset;  // Offset in the parent's child list.

@@ -132,15 +132,20 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
   if (!aContentLoc || !aContext) return rv;
 
   if (aContentType == nsIContentPolicy::IMAGE) {
-    // First, let be sure we are processing an HTTP or HTTPS images.
-    // We should not waste time with chrome url...
-    PRBool httpType;
-    rv = aContentLoc->SchemeIs("http", &httpType);
-    if (NS_FAILED(rv) || !httpType) {
-      // check HTTPS as well
-      rv = aContentLoc->SchemeIs("https", &httpType);
-      if (NS_FAILED(rv) || !httpType) return rv;
-    }
+    // We should not waste time with chrome or resource urls
+    // we want to check http, https, ftp, etc.
+    PRBool canSkip;
+    rv = aContentLoc->SchemeIs("chrome", &canSkip);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (canSkip)
+      return NS_OK;
+
+    rv = aContentLoc->SchemeIs("resource", &canSkip);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (canSkip)
+      return NS_OK;
 
     nsCOMPtr<nsIURI> baseURI;
     nsCOMPtr<nsIDocument> doc;
@@ -160,21 +165,26 @@ NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType,
       rv = doc->GetBaseURL(*getter_AddRefs(baseURI));
       if (NS_FAILED(rv) || !baseURI) return rv;
 
-      // Let check if we are running a mail window, doesn't matter if mail images are allowed
-      if (mBlockInMailNewsPref) {
-        nsCOMPtr<nsIDocShell> docshell;
-        rv = GetRootDocShell(aWindow, getter_AddRefs(docshell));
-        if (docshell) {
-          PRUint32 appType;
-          rv = docshell->GetAppType(&appType);
-          if (NS_SUCCEEDED(rv) && appType == nsIDocShell::APP_TYPE_MAIL) {
-            //we are dealing with an mail or newsgroup window, let's block the image
+      nsCOMPtr<nsIDocShell> docshell;
+      rv = GetRootDocShell(aWindow, getter_AddRefs(docshell));
+      if (docshell) {
+        PRUint32 appType;
+        rv = docshell->GetAppType(&appType);
+        if (NS_SUCCEEDED(rv) && appType == nsIDocShell::APP_TYPE_MAIL) {
+          // never allow ftp for mail messages, 
+          // because we don't want to send the users email address
+          // as the anonymous password
+          PRBool isFtp;
+          rv = aContentLoc->SchemeIs("ftp", &isFtp);
+          NS_ENSURE_SUCCESS(rv,rv);
+
+          if (mBlockInMailNewsPref || isFtp) {
             *aShouldLoad = PR_FALSE;
             return NS_OK;
           }
         }
       }
-
+      
       rv =  TestPermission(aContentLoc, baseURI, aShouldLoad);
       if (NS_FAILED(rv)) return rv;
     }

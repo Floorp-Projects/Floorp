@@ -200,6 +200,7 @@ function InitMsgWindow()
   mailSession.AddMsgWindow(msgWindow);
 
   var messagepane = document.getElementById("messagepane");
+  messagepane.docShell.allowAuth = false;
   messagepane.addEventListener("click",messagePaneOnClick,true);
 }
 

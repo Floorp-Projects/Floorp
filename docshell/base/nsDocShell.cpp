@@ -232,6 +232,7 @@ nsDocShell::nsDocShell():
     mFocusDocFirst(PR_FALSE),
     mCreatingDocument(PR_FALSE),
     mUseErrorPages(PR_FALSE),
+    mAllowAuth(PR_TRUE),
     mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
     mBusyFlags(BUSY_FLAGS_NONE),
     mFiredUnloadEvent(PR_FALSE),
@@ -364,6 +365,10 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
             return NS_NOINTERFACE;
     }
     else if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
+        // if auth is not allowed, bail out
+        if (!mAllowAuth)
+          return NS_NOINTERFACE;
+
         nsCOMPtr<nsIAuthPrompt> authPrompter(do_GetInterface(mTreeOwner));
         if (authPrompter) {
             *aSink = authPrompter;
@@ -1513,6 +1518,21 @@ NS_IMETHODIMP
 nsDocShell::SetAppType(PRUint32 aAppType)
 {
     mAppType = aAppType;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsDocShell::GetAllowAuth(PRBool * aAllowAuth)
+{
+    *aAllowAuth = mAllowAuth;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetAllowAuth(PRBool aAllowAuth)
+{
+    mAllowAuth = aAllowAuth;
     return NS_OK;
 }
 
