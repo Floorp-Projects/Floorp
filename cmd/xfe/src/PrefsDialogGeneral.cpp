@@ -205,27 +205,45 @@ void XFE_PrefsPageGeneralAppearance::create()
 	XtSetArg (av [ac], XmNchildType, XmFRAME_TITLE_CHILD); ac++;
 	label1 = XmCreateLabelGadget (frame1, "launchBoxLabel", av, ac);
 
+// we have the following possible toggle buttons:
+//      widget         define's required      fe_* calls may say not installed?
+//      ------         -----------------      ---------------------------------
+//      navigator      <none>                 no
+//      composer       EDITOR                 no
+//      netcaster      <none>                 yes
+//      messenger      MOZ_MAIL_NEWS          no
+//      collabra       MOZ_MAIL_NEWS          no
+//      conference     MOZ_MAIL_NEWS          yes
+//      calendar       MOZ_MAIL_NEWS          yes
+
 	Widget     navigator_toggle;
+#ifdef EDITOR
+	Widget     composer_toggle;
+#endif
+	Widget     netcaster_toggle = 0;
 #ifdef MOZ_MAIL_NEWS
 	Widget     messenger_toggle;
 	Widget     collabra_toggle;
-	Widget     composer_toggle;
 	Widget     conference_toggle = 0;
-#endif // MOZ_MAIL_NEWS
-	Widget     netcaster_toggle = 0;
-#ifdef MOZ_MAIL_NEWS
 	Widget     calendar_toggle = 0;
-#endif
-#ifdef MOZ_NETCAST
-	Widget     netcaster_top_widget;
-#endif
-	Widget     calendar_top_widget;
+#endif // MOZ_MAIL_NEWS
+    Widget     widget_above;
 
 	ac = 0;
 	i = 0;
 
 	kids[i++] = navigator_toggle = 
 		XmCreateToggleButtonGadget (form1, "navigator", av, ac);
+
+#ifdef EDITOR
+	kids[i++] = composer_toggle = 
+		XmCreateToggleButtonGadget (form1, "composer", av, ac);
+#endif
+
+	if (fe_IsNetcasterInstalled()) {
+		kids[i++] = netcaster_toggle = 
+			XmCreateToggleButtonGadget (form1, "netcaster", av, ac);
+	}
 
 #ifdef MOZ_MAIL_NEWS
 	kids[i++] = messenger_toggle = 
@@ -234,26 +252,11 @@ void XFE_PrefsPageGeneralAppearance::create()
 	kids[i++] = collabra_toggle = 
 		XmCreateToggleButtonGadget (form1, "collabra", av, ac);
 
-	kids[i++] = composer_toggle = 
-		XmCreateToggleButtonGadget (form1, "composer", av, ac);
-	calendar_top_widget = composer_toggle;
-	netcaster_top_widget = composer_toggle;
-
 	if (fe_IsConferenceInstalled()) {
 		kids[i++] = conference_toggle = 
 			XmCreateToggleButtonGadget (form1, "conference", av, ac);
-		calendar_top_widget = conference_toggle;
-		netcaster_top_widget = conference_toggle;
-	}
-#endif // MOZ_MAIL_NEWS
-
-	if (fe_IsNetcasterInstalled()) {
-		kids[i++] = netcaster_toggle = 
-			XmCreateToggleButtonGadget (form1, "netcaster", av, ac);
-		calendar_top_widget = netcaster_toggle;
 	}
 
-#ifdef MOZ_MAIL_NEWS
 	if (fe_IsCalendarInstalled()) {
 		kids[i++] = calendar_toggle = 
 			XmCreateToggleButtonGadget (form1, "calendar", av, ac);
@@ -261,17 +264,26 @@ void XFE_PrefsPageGeneralAppearance::create()
 #endif // MOZ_MAIL_NEWS
 
 	fep->navigator_toggle = navigator_toggle;
+#ifdef EDITOR
+	fep->composer_toggle = composer_toggle;
+#endif
+	fep->netcaster_toggle = netcaster_toggle;
+
 #ifdef MOZ_MAIL_NEWS
 	fep->messenger_toggle = messenger_toggle;
 	fep->collabra_toggle = collabra_toggle;
-	fep->composer_toggle = composer_toggle;
 	fep->conference_toggle = conference_toggle;
-#endif // MOZ_MAIL_NEWS
-	fep->netcaster_toggle = netcaster_toggle;
-#ifdef MOZ_MAIL_NEWS
 	fep->calendar_toggle = calendar_toggle;
 #endif // MOZ_MAIL_NEWS
 
+
+// attempt a layout like this:
+//       Navigator          Messenger
+//       Composer           Collabra
+//       Netcaster          Conference
+//                          Calendar
+// with things shifting appropriately if various components 
+// are missing.
 	XtVaSetValues (navigator_toggle,
 				   XmNindicatorType, XmN_OF_MANY,
 				   XmNtopAttachment, XmATTACH_FORM,
@@ -279,73 +291,84 @@ void XFE_PrefsPageGeneralAppearance::create()
 				   XmNbottomAttachment, XmATTACH_NONE,
 				   XmNrightAttachment, XmATTACH_NONE,
 				   0);
-#ifdef MOZ_MAIL_NEWS
-	XtVaSetValues (messenger_toggle,
-				   XmNindicatorType, XmN_OF_MANY,
-				   XmNtopAttachment, XmATTACH_WIDGET,
-				   XmNtopWidget, navigator_toggle,
-				   XmNbottomAttachment, XmATTACH_NONE,
-				   XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				   XmNleftWidget, navigator_toggle,
-				   XmNrightAttachment, XmATTACH_NONE,
-				   0);
-	XtVaSetValues (collabra_toggle,
-				   XmNindicatorType, XmN_OF_MANY,
-				   XmNtopAttachment, XmATTACH_WIDGET,
-				   XmNtopWidget, messenger_toggle,
-				   XmNbottomAttachment, XmATTACH_NONE,
-				   XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-				   XmNleftWidget, navigator_toggle,
-				   XmNrightAttachment, XmATTACH_NONE,
-				   0);
+    widget_above = navigator_toggle;
+
+#ifdef EDITOR
 	XtVaSetValues (composer_toggle,
 				   XmNindicatorType, XmN_OF_MANY,
 				   XmNtopAttachment, XmATTACH_WIDGET,
-				   XmNtopWidget, collabra_toggle,
+				   XmNtopWidget, widget_above,
+				   XmNbottomAttachment, XmATTACH_NONE,
+				   XmNleftAttachment, XmATTACH_FORM,
+				   XmNrightAttachment, XmATTACH_NONE,
+				   0);
+    widget_above = composer_toggle;
+#endif
+
+	if (netcaster_toggle) {
+        XtVaSetValues (netcaster_toggle,
+					   XmNindicatorType, XmN_OF_MANY,
+					   XmNtopAttachment, XmATTACH_WIDGET,
+					   XmNtopWidget, widget_above,
+					   XmNbottomAttachment, XmATTACH_NONE,
+					   XmNleftAttachment, XmATTACH_FORM,
+					   XmNrightAttachment, XmATTACH_NONE,
+					   0);
+	}
+
+#ifdef MOZ_MAIL_NEWS
+	XtVaSetValues (messenger_toggle,
+				   XmNindicatorType, XmN_OF_MANY,
+				   XmNtopAttachment, XmATTACH_FORM,
 				   XmNbottomAttachment, XmATTACH_NONE,
 				   XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
 				   XmNleftWidget, navigator_toggle,
 				   XmNrightAttachment, XmATTACH_NONE,
 				   0);
+    widget_above = messenger_toggle;
+
+	XtVaSetValues (collabra_toggle,
+				   XmNindicatorType, XmN_OF_MANY,
+				   XmNtopAttachment, XmATTACH_WIDGET,
+				   XmNtopWidget, widget_above,
+				   XmNbottomAttachment, XmATTACH_NONE,
+				   XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
+				   XmNleftWidget, navigator_toggle,
+				   XmNrightAttachment, XmATTACH_NONE,
+				   0);
+    widget_above = collabra_toggle;
+
 	if (conference_toggle) {
 		XtVaSetValues (conference_toggle,
 					   XmNindicatorType, XmN_OF_MANY,
 					   XmNtopAttachment, XmATTACH_WIDGET,
-					   XmNtopWidget, composer_toggle,
+					   XmNtopWidget, widget_above,
 					   XmNbottomAttachment, XmATTACH_NONE,
 					   XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
 					   XmNleftWidget, navigator_toggle,
 					   XmNrightAttachment, XmATTACH_NONE,
 					   0);
+        widget_above = conference_toggle;
 	}
+
 	if (netcaster_toggle) {
 		XtVaSetValues (netcaster_toggle,
 					   XmNindicatorType, XmN_OF_MANY,
 					   XmNtopAttachment, XmATTACH_WIDGET,
-					   XmNtopWidget, netcaster_top_widget,
+					   XmNtopWidget, widget_above,
 					   XmNbottomAttachment, XmATTACH_NONE,
 					   XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
 					   XmNleftWidget, navigator_toggle,
 					   XmNrightAttachment, XmATTACH_NONE,
 					   0);
+        widget_above = netcaster_toggle;
 	}
+
 	if (calendar_toggle) {
 		XtVaSetValues (calendar_toggle,
 					   XmNindicatorType, XmN_OF_MANY,
 					   XmNtopAttachment, XmATTACH_WIDGET,
-					   XmNtopWidget, calendar_top_widget,
-					   XmNbottomAttachment, XmATTACH_NONE,
-					   XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
-					   XmNleftWidget, navigator_toggle,
-					   XmNrightAttachment, XmATTACH_NONE,
-					   0);
-	}
-#else 
-	if (netcaster_toggle) {
-		XtVaSetValues (netcaster_toggle,
-					   XmNindicatorType, XmN_OF_MANY,
-					   XmNtopAttachment, XmATTACH_WIDGET,
-					   XmNtopWidget, navigator_toggle,
+					   XmNtopWidget, widget_above,
 					   XmNbottomAttachment, XmATTACH_NONE,
 					   XmNleftAttachment, XmATTACH_OPPOSITE_WIDGET,
 					   XmNleftWidget, navigator_toggle,
@@ -470,48 +493,46 @@ void XFE_PrefsPageGeneralAppearance::init()
 	// Launch on startup
 	
 	XtVaSetValues(fep->navigator_toggle, XmNset, prefs->startup_browser_p, 0);
-#ifdef MOZ_MAIL_NEWS
-	XtVaSetValues(fep->messenger_toggle, XmNset, prefs->startup_mail_p, 0);
-	XtVaSetValues(fep->collabra_toggle,  XmNset, prefs->startup_news_p, 0);
+#ifdef EDITOR
 	XtVaSetValues(fep->composer_toggle,  XmNset, prefs->startup_editor_p, 0);
-	if (fep->conference_toggle) {
-		XtVaSetValues(fep->conference_toggle,
-					  XmNset, prefs->startup_conference_p, 0);
-	}
-#endif // MOZ_MAIL_NEWS
+#endif
 	if (fep->netcaster_toggle) {
 		XtVaSetValues(fep->netcaster_toggle,
 					  XmNset, prefs->startup_netcaster_p, 0);
 	}
+
 #ifdef MOZ_MAIL_NEWS
+	XtVaSetValues(fep->messenger_toggle, XmNset, prefs->startup_mail_p, 0);
+	XtVaSetValues(fep->collabra_toggle,  XmNset, prefs->startup_news_p, 0);
+	if (fep->conference_toggle) {
+		XtVaSetValues(fep->conference_toggle,
+					  XmNset, prefs->startup_conference_p, 0);
+	}
 	if (fep->calendar_toggle) {
 		XtVaSetValues(fep->calendar_toggle,
 					  XmNset, prefs->startup_calendar_p, 0);
 	}
 #endif // MOZ_MAIL_NEWS
+
     sensitive = !PREF_PrefIsLocked("general.startup.browser");
 	XtSetSensitive(fep->navigator_toggle, sensitive);
-#ifdef MOZ_MAIL_NEWS
-    sensitive = !PREF_PrefIsLocked("general.startup.mail");
-	XtSetSensitive(fep->messenger_toggle, sensitive);
-    sensitive = !PREF_PrefIsLocked("general.startup.news");
-	XtSetSensitive(fep->collabra_toggle, sensitive);
-#endif
 #ifdef EDITOR
     sensitive = !PREF_PrefIsLocked("general.startup.editor");
-#endif
-#ifdef MOZ_MAIL_NEWS
 	XtSetSensitive(fep->composer_toggle, sensitive);
-	if (fep->conference_toggle) {
-		sensitive = !PREF_PrefIsLocked("general.startup.conference");
-		XtSetSensitive(fep->conference_toggle, sensitive);
-	}
-#endif // MOZ_MAIL_NEWS
+#endif
 	if (fep->netcaster_toggle) {
 		sensitive = !PREF_PrefIsLocked("general.startup.netcaster");
 		XtSetSensitive(fep->netcaster_toggle, sensitive);
 	}
 #ifdef MOZ_MAIL_NEWS
+    sensitive = !PREF_PrefIsLocked("general.startup.mail");
+	XtSetSensitive(fep->messenger_toggle, sensitive);
+    sensitive = !PREF_PrefIsLocked("general.startup.news");
+	XtSetSensitive(fep->collabra_toggle, sensitive);
+	if (fep->conference_toggle) {
+		sensitive = !PREF_PrefIsLocked("general.startup.conference");
+		XtSetSensitive(fep->conference_toggle, sensitive);
+	}
 	if (fep->calendar_toggle) {
 		sensitive = !PREF_PrefIsLocked("general.startup.calendar");
 		XtSetSensitive(fep->calendar_toggle, sensitive);
@@ -575,27 +596,24 @@ void XFE_PrefsPageGeneralAppearance::save()
 
 	XtVaGetValues(fep->navigator_toggle, XmNset, &b, 0);
 	fe_globalPrefs.startup_browser_p = b;
+#ifdef EDITOR
+	XtVaGetValues(fep->composer_toggle, XmNset, &b, 0);
+	fe_globalPrefs.startup_editor_p = b;
+#endif
+	if (fep->netcaster_toggle) {
+		XtVaGetValues(fep->netcaster_toggle, XmNset, &b, 0);
+		fe_globalPrefs.startup_netcaster_p = b;
+	}
+
 #ifdef MOZ_MAIL_NEWS
 	XtVaGetValues(fep->messenger_toggle, XmNset, &b, 0);
 	fe_globalPrefs.startup_mail_p = b;
 	XtVaGetValues(fep->collabra_toggle, XmNset, &b, 0);
 	fe_globalPrefs.startup_news_p = b;
-	XtVaGetValues(fep->composer_toggle, XmNset, &b, 0);
-#endif
-#ifdef EDITOR
-	fe_globalPrefs.startup_editor_p = b;
-#endif
-#ifdef MOZ_MAIL_NEWS
 	if (fep->conference_toggle) {
 		XtVaGetValues(fep->conference_toggle, XmNset, &b, 0);
 		fe_globalPrefs.startup_conference_p = b;
 	}
-#endif // MOZ_MAIL_NEWS
-	if (fep->netcaster_toggle) {
-		XtVaGetValues(fep->netcaster_toggle, XmNset, &b, 0);
-		fe_globalPrefs.startup_netcaster_p = b;
-	}
-#ifdef MOZ_MAIL_NEWS
 	if (fep->calendar_toggle) {
 		XtVaGetValues(fep->calendar_toggle, XmNset, &b, 0);
 		fe_globalPrefs.startup_calendar_p = b;
