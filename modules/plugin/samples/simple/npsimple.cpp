@@ -322,6 +322,7 @@ public:
     NS_IMETHOD
     OnDataAvailable(nsIPluginStreamInfo* pluginInfo, 
                                             nsIInputStream* input, 
+                                            PRUint32 sourceOffset, 
                                             PRUint32 length);
 
     NS_IMETHOD
@@ -827,6 +828,7 @@ SimplePluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 NS_METHOD
 SimplePluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, 
                                             nsIInputStream* input, 
+                                            PRUint32 sourceOffset, 
                                             PRUint32 length)
 {
 #ifdef NS_DEBUG
