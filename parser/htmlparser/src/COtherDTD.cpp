@@ -260,10 +260,10 @@ COtherDTD::CanParse(CParserContext& aParserContext, const nsString& aBuffer,
 
   if(mEnableStrict) {
     if(aParserContext.mParserCommand != eViewSource) {
-      if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
+      if(PR_TRUE==aParserContext.mMimeType.Equals(kPlainTextContentType)) {
         result=eValidDetect;
       }
-      else if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
+      else if(PR_TRUE==aParserContext.mMimeType.Equals(kHTMLTextContentType)) {
         switch(aParserContext.mDTDMode) {
           case eDTDMode_full_standards:
           case eDTDMode_almost_standards:
