@@ -17,7 +17,7 @@
 P<font size=-1>ERL</font>C<font size=-1>ONNECT&nbsp; AND&nbsp; </font>JS<font size=+0>.PM</font></h3></center>
 
 <center>U<font size=-1>SER-LEVEL </font><font size=+1>D</font><font size=-1>OCUMENTATION</font>
-<br><a href="mailto:val4@cornell.edu">Vladimir Livshits</a>
+<br><a href="mailto:livshits@cs.stanford.edu">Vladimir Livshits</a>
 <br>
 <hr SIZE=1 NOSHADE WIDTH="100%"></center>
 
@@ -38,7 +38,7 @@ P<font size=-1>ERL</font>C<font size=-1>ONNECT&nbsp; AND&nbsp; </font>JS<font si
 <a href="#Installation">Installation</a></li>
 
 <li>
-<a href="#Limitations">Current Limitations and Futher Work</a></li>
+<a href="#Limitations">Current Limitations and Further Work</a></li>
 </ol>
 
 <h4>
@@ -58,14 +58,14 @@ PerlConnect provides glue for the developer between JavaScript and Perl.
 It currently consists of two parts, PerlConnect implemented in C and JS.pm,
 a Perl module written using XSUBs. PerlConnect and JS.pm allow calling
 Perl from JS and JS from Perl, respectively. Whenever possible, it is attempted
-to archieve the maximum level of transparency for calling one language
+to achieve the maximum level of transparency for calling one language
 from the other. This is done by converting values between the two languages,
 creating wrappers around objects, and emulating the standard language syntax.
 <h4>
 <a NAME="Features"></a>PerlConnect Features</h4>
 PerlConnect allows running a Perl interpreter concurrently with your JavaScript
 embedding and executing Perl commands from JavaScript. You usually need
-to create a Perl interpreter by saysing something like this:
+to create a Perl interpreter by doing something like this:
 <blockquote><tt>p = new Perl('Sys::Hostname', 'Test::Harness')</tt></blockquote>
 In addition to creating an interpreter, this will also include the libraries
 you pass to the Perl constructor, which is equivalent to <tt>use Sys::Hostname;
@@ -76,7 +76,7 @@ As you can see, TMTOWTDI.
 <p><b>Note: </b>If the statements above fail on you saying something about
 libraries not found in the search path, you need to make sure the modules
 PerlConnect uses, JS.pm and PerlConnect.pm live in some directory accessible
-from the search path. Seach path can be set by adjusting the value of PERLLIB
+from the search path. Search path can be set by adjusting the value of PERLLIB
 and PERL5LIB environment variables. See&nbsp; <a href="#Installation">installation</a>
 for more details.
 <p><b>Note: </b>Despite the illusion p = new Perl(...) syntax might create,
@@ -96,10 +96,10 @@ similar things with non-scalar data types:
 <br><tt>t = p.eval('Time::gmtime::gmtime')&nbsp;&nbsp;&nbsp; // returns
 [49,0,4,24,6,98,5,204,0]</tt></blockquote>
 assigns a Perl array to <tt>t</tt>. You can print <tt>t</tt>, use the <tt>for/in</tt>
-syntax to walk through it, compute its lenght, etc. You can read and assign
+syntax to walk through it, compute its length, etc. You can read and assign
 to individual elements using the standard syntax. However, PerlValues,
 that is, the value we get from Perl, don't support all the standard operations,
-for isntance, don't expect <tt>t.reverse()</tt> to work. Hashes can also
+for instance, don't expect <tt>t.reverse()</tt> to work. Hashes can also
 be returned from Perl:
 <blockquote><tt>info=p.eval("{ver=>$], pid=>$$}")</tt></blockquote>
 Now you can look at individual hash keys like this:
@@ -124,11 +124,11 @@ than<tt> main. </tt>The example with<tt> gmtime </tt>can be rewritten like
 this:
 <blockquote><tt>p.use('Time::gmtime');</tt>
 <br><tt>t = p.Time.gmtime.gmtime()&nbsp;&nbsp;&nbsp; // returns [49,0,4,24,6,98,5,204,0]</tt></blockquote>
-&nbsp;You can reference variables exported by modules others than <tt>main</tt>
+&nbsp;You can reference variables exported by modules other than <tt>main</tt>
 like this:
 <blockquote><tt>a=p.Foo.$bar </tt>or<tt> a=p.Foo["$bar"] </tt>or
 <br><tt>a=p.Foo["@bar"]</tt>or<tt> a=p.Foo["%bar"]</tt></blockquote>
-Each of the stetements above returns a either an immediate JS value, for
+Each of the above statements return either an immediate JS value, for
 scalar types, or a PerlValue for compound types. <tt>a.type </tt>contains
 the type of the PerlValue in <tt>a</tt>. <i>This may change because we
 may end up separating Perl hashes and arrays into separate classes.</i>
@@ -164,7 +164,7 @@ are implemented by PerlConnect:
 <tr ALIGN=CENTER VALIGN=CENTER>
 <td WIDTH="30"><tt>Perl</tt></td>
 
-<td ALIGN=LEFT VALIGN=TOP>Perl Interpreter Object. It's prototype type
+<td ALIGN=LEFT VALIGN=TOP>Perl Interpreter Object. Its prototype type
 is PerlModule, it corresponds to <tt>main::</tt>. Supports <tt>eval</tt>,
 <tt>call</tt>,
 <tt>use</tt>.</td>
@@ -174,7 +174,7 @@ is PerlModule, it corresponds to <tt>main::</tt>. Supports <tt>eval</tt>,
 <td><tt>PerlModule</tt></td>
 
 <td ALIGN=LEFT VALIGN=TOP>Implements JS-like syntax for Perl modules. Doesn't
-export provide any methods. <tt>path</tt> property shown the name of the
+export provide any methods. <tt>path</tt> property shows the name of the
 Perl module the object represents.</td>
 </tr>
 
@@ -190,18 +190,18 @@ Perl type is stored in the <tt>type</tt> property.</td>
 
 <p>See comments in the code, <tt>jsperl.c</tt> and <tt>JS.pm</tt> for more
 info.
-<br><b>Note:&nbsp;</b> PerlConnecte heavily relies on PerlConnect.pm, which
+<br><b>Note:&nbsp;</b> PerlConnect heavily relies on PerlConnect.pm, which
 does some background magic for it. PerlConnect.pm should <i>not</i> be
-used. Use JS.pm instead.
+<tt>use</tt>d. Use JS.pm instead.
 <h4>
 JS.pm Design</h4>
-JSConnect is written using XSUBs, the language in which Perl extentions
-are implemented. See the output of <tt>man perlxs/perlguts/perlemberd/perlxsstut</tt>&nbsp;
-for more detais. The source files are <tt>JS.xs</tt> and <tt>typemap</tt>.
+JSConnect is written using XSUBs, the language in which Perl extensions
+are implemented. See the output of <tt>man perlxs/perlguts/perlembed/perlxstut</tt>&nbsp;
+for more details. The source files are <tt>JS.xs</tt> and <tt>typemap</tt>.
 After processing them using the XSUBs compiler, <tt>xsubpp</tt>, the resulting
 C file should be compiled into a DLL. See <tt>JS.xs</tt> for more details
 on how to to run the XSUBS compiler. You will need a sufficiently recent
-version of Perl to run JS.pm sucessfuly. <tt>JS.pm</tt> provides bootstraping
+version of Perl to run JS.pm successfully. <tt>JS.pm</tt> provides bootstrapping
 mechanism to load this DLL.
 <p>The following Perl packages (objects) are implemented:
 <br>&nbsp;
@@ -215,8 +215,8 @@ mechanism to load this DLL.
 <tr ALIGN=CENTER VALIGN=CENTER>
 <td><tt>JS</tt></td>
 
-<td ALIGN=LEFT VALIGN=TOP>Doesn't not do anything in particular at this
-point except defining a constuctor. So one can say <tt>$js = <b>new</b>
+<td ALIGN=LEFT VALIGN=TOP>Doesn't do anything in particular at this
+point except defining a constructor. So one can say <tt>$js = <b>new</b>
 JS()</tt>, which will create a new runtime, add a context to it and return
 that Context. JS also defines a bunch of private functions called from
 C by PerlConnect. They are not exposed by default, but pushed onto <tt>@EXPORT_OK</tt>
@@ -251,8 +251,8 @@ by default.</td>
 <td ALIGN=CENTER><tt>JS::Object</tt></td>
 
 <td>Corresponds to <tt>JSObject*</tt> struct. There is not that much here
-yet. This object is intended as a wrapper around the <tt>JSObject* stuct</tt>.
-Support for tying hashes and possibly arrays with <tt>JS::Objects</tt>
+yet. This object is intended as a wrapper around the <tt>JSObject* struct</tt>.
+Support for tying hashes and possibly arrays with <tt>JS::Object</tt>s
 is coming.</td>
 </tr>
 
@@ -274,7 +274,7 @@ API function that require contexts get it.</i>
 PerlConnect requires <tt>js/src</tt> and the Perl libraries and headers.
 The only <tt>js/src</tt> file that must be included in <tt>jsapi.h </tt>in
 the top level directory. You need to compile it together with Perl libraries.
-Referer to the <tt>perlembed</tt> man page for more details.
+Refer to the <tt>perlembed</tt> man page for more details.
 <br><b>On WINNT:</b>
 <br>There are MSDEV Workspace and project files in the main PerlConnect
 directory. There are three projects included in the PerlConnect workspace:
@@ -289,17 +289,17 @@ project produces <tt>PerlConnect.dll</tt>, you should make sure it and
 <p>JS also builds a DLL, <tt>JS.dll</tt> which is supposed to reside where
 Perl's DynaLoader can find it. On my machine I put it under <tt>c:\perl\lib\auto\JS\JS.dll</tt>.
 You can also put it in <tt>c:\perl\lib\</tt>. You can probably adjust PERLLIB
-to archieve the desired result. See Perl's DynaLoader documentation for
+to achieve the desired result. See Perl's DynaLoader documentation for
 more info on how dynamic libraries are found.
 <p><b>On UNIX:</b>
-<br>We are currently working on a UNIX makefile. Please <a href="mailto:val4@cornell.edu">contact
+<br>We are currently working on a UNIX makefile. Please <a href="mailto:livshits@cs.stanford.edu">contact
 me</a> for more details.
 <h4>
 On the MAC:</h4>
 We never really thought of supporting the Mac. If anyone is really interested
-in seeing Mac support, <a href="mailto:val4@cornell.edu">drop me a line</a>.
+in seeing Mac support, <a href="mailto:livshits@cs.stanford.edu">drop me a line</a>.
 <h4>
-<a NAME="Limitations"></a>Current Limitations and Futher Work</h4>
+<a NAME="Limitations"></a>Current Limitations and Further Work</h4>
 
 <ol>
 <li>
@@ -313,7 +313,7 @@ same namespace. We can probably use <tt>Safe.pm</tt> to implement independent
 namespaces.</li>
 
 <li>
-Module names resolution reports an error only when you try to evaluate
+Module name resolution reports an error only when you try to evaluate
 the last element of the resolution chain. Here is what I mean: if you reference
 <tt>p.Foo.Bar.Var</tt> and <tt>For</tt> or <tt>Bar</tt> don't exist, it
 will only complain that p.Foo.Bar.Var is not a valid variable. Perl 5.005
