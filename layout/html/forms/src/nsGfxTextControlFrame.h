@@ -657,7 +657,12 @@ protected:
   
   nsresult   SelectAllContents();
   
-  // internal method. Pass -1 in start or end to indicate "don't set"
+  enum {
+    eIgnoreSelect = -2,
+    eSelectToEnd  = -1  
+  };
+  
+  // internal method. Pass eIgnoreSelect or eSelectToEnd for special behaviour
   nsresult   SetSelectionEndPoints(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
 
   PRBool     IsSingleLineInput() { return mIsInput; } 
