@@ -493,6 +493,13 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
       result=mSink->CloseContainer(theNode); 
       break;
 
+    case eToken_error:
+      {
+        // Propagate the error onto the content sink.
+        CErrorToken *errTok = (CErrorToken *)aToken;
+        result = mSink->NotifyError(errTok->GetError());
+      }
+      break;
     case eToken_style:
     case eToken_skippedcontent:
     default:

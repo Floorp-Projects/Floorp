@@ -41,6 +41,7 @@
 
 #include "nsToken.h"
 #include "nsHTMLTags.h"
+#include "nsParserError.h"
 #include <iostream.h>
 
 class nsScanner;
@@ -51,10 +52,10 @@ class nsScanner;
 
 enum eHTMLTokenTypes {
   eToken_unknown=0,
-  eToken_start=1,     eToken_end,     eToken_comment,         eToken_entity,
-  eToken_whitespace,  eToken_newline, eToken_text,            eToken_attribute,
-  eToken_script,      eToken_style,   eToken_skippedcontent,  eToken_instruction,
-  eToken_cdatasection,
+  eToken_start=1,      eToken_end,     eToken_comment,         eToken_entity,
+  eToken_whitespace,   eToken_newline, eToken_text,            eToken_attribute,
+  eToken_script,       eToken_style,   eToken_skippedcontent,  eToken_instruction,
+  eToken_cdatasection, eToken_error,
   eToken_last //make sure this stays the last token...
 };
 
@@ -359,6 +360,23 @@ class CInstructionToken: public CHTMLToken {
     virtual PRInt32     GetTokenType(void);
 };
 
+class CErrorToken : public CHTMLToken {
+public:
+  CErrorToken(nsParserError* aError=0);
+  ~CErrorToken();
+  virtual const char* GetClassName(void);
+  virtual PRInt32     GetTokenType(void);
+  
+  void SetError(nsParserError* aError);  // CErrorToken takes ownership of aError
+
+  // The nsParserError object returned by GetError is still owned by CErrorToken.
+  // DO NOT use the delete operator on it.  Should we change this so that a copy
+  // of nsParserError is returned which needs to be destroyed by the consumer?
+  const nsParserError* GetError(void);   
+
+protected:
+  nsParserError* mError;
+};
 
 #endif
 
