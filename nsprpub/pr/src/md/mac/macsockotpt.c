@@ -471,9 +471,9 @@ static pascal void  NotifierRoutine(void * contextPtr, OTEventCode code, OTResul
 
 	if (pollThread)
 		WakeUpNotifiedThread(pollThread, kOTNoError);
-	else
-	WakeUpNotifiedThread(thread, result);
-	
+
+	if (thread && (thread != pollThread))
+		WakeUpNotifiedThread(thread, result);
 }
 
 
