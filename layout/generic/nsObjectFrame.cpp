@@ -558,9 +558,6 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
   // XXX deal with border and padding the usual way...wrap it up!
 
-  //~~~
-  nsresult rv = NS_OK;
-
   nsIAtom* atom;
   mContent->GetTag(atom);
   if ((nsnull != atom) && (nsnull == mInstanceOwner)) {
@@ -570,6 +567,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
     nsISupports               *container;
     nsIPluginHost             *pm;
     nsIContentViewerContainer *cv;
+    nsresult rv = NS_OK;
 
     mInstanceOwner = new nsPluginInstanceOwner();
 
@@ -709,12 +707,12 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
       }
     }
     NS_RELEASE(atom);
-  }
 
-  if(rv == NS_OK)//~~~
-  {
-    aStatus = NS_FRAME_COMPLETE;
-    return NS_OK;
+    if(rv == NS_OK)//~~~
+    {
+      aStatus = NS_FRAME_COMPLETE;
+      return NS_OK;
+    }
   }
 
   //~~~
@@ -774,6 +772,19 @@ nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
                             nsISupports*    aSubContent)
 {
   // Generate a reflow command with this frame as the target frame
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell) {
+    nsIReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                 nsIReflowCommand::ContentChanged);
+    if (NS_SUCCEEDED(rv)) {
+      shell->AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
+  }
+  return rv;
+/*
   nsIReflowCommand* cmd;
   nsresult          result;
                                                 
@@ -787,6 +798,7 @@ nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
   }
 
   return result;
+*/
 }
 
 NS_IMETHODIMP
