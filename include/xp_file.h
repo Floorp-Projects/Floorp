@@ -161,7 +161,7 @@
 
 -----------------------------------------------------------------------------*/
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 # include <dirent.h>
 # include <sys/stat.h>
 #endif /* XP_UNIX */
@@ -303,7 +303,7 @@ typedef char          * XP_FilePerm;
  typedef struct stat    XP_StatStruct;
 #endif
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
  typedef struct stat    XP_StatStruct;
 #endif
 
@@ -311,7 +311,7 @@ typedef char          * XP_FilePerm;
  typedef struct stat	XP_StatStruct;
 #endif
 
-#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
  typedef DIR          * XP_Dir;
  typedef struct dirent  XP_DirEntryStruct;
 #endif
@@ -480,7 +480,7 @@ XP_END_PROTOS
 
 
 
-#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
 
 /* Unix and Windows preferences communicate with the netlib through these
    global variables.  Netlib does "something sensible" if they are NULL.
@@ -504,12 +504,12 @@ extern char *FE_GlobalHist;
    the prototypes above.
  */
 
-#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
 # define XP_FileReadLine(destBuffer, bufferSize, file) \
 	fgets(destBuffer, bufferSize, file)
 #endif /* XP_UNIX || XP_WIN */
 
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
 # define XP_ReadDir(DirPtr) readdir((DirPtr))
 # define XP_CloseDir(DirPtr) closedir((DirPtr))
 #endif /* XP_UNIX */
