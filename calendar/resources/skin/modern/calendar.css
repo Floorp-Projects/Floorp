@@ -353,7 +353,7 @@
 
 /*Previous/Next Buttons*/
 .updownbuttons{
-    list-style-image: url("chrome://calendar/skin/pageupdown.gif");
+    list-style-image: url("chrome://calendar/skin/pageupdown.png");
 }
 #multiweek-next-button{
     -moz-box-align:end;
