@@ -35,6 +35,7 @@ CHROME_CONTENT = \
 	.\EditorContextMenuOverlay.xul \
 	.\EditorInitPage.html \
 	.\EditorInitPagePlain.html \
+	.\EditorExtra.css \
 	.\EditorContent.css \
 	.\EditorAllTags.css \
 	.\EditorOverride.css \
@@ -153,6 +154,13 @@ CHROME_MISC = \
 	.\images\tag-ul.gif \
 	.\images\tag-var.gif \
 	.\images\tag-userdefined.gif \
+        .\images\smile.gif            \
+        .\images\smile_active.gif     \
+        .\images\smile_disabled.gif   \
+        .\images\smile_hover.gif      \
+        .\images\frown.gif            \
+        .\images\wink.gif             \
+        .\images\sick.gif             \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
