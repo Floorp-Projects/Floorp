@@ -2707,15 +2707,24 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   }
   else
   {
+    PRBool useDefaultFCC = PR_TRUE;
     const char *fieldsFCC = fields->GetFcc();
     if (fieldsFCC && *fieldsFCC)
     {
       if (PL_strcasecmp(fieldsFCC, "nocopy://") == 0)
+      {
+        useDefaultFCC = PR_FALSE;
         mCompFields->SetFcc("");
-      else
+      }
+      else if (IsValidFolderURI(fieldsFCC))
+      {
+        useDefaultFCC = PR_FALSE;
         SetMimeHeader(nsMsgCompFields::MSG_FCC_HEADER_ID, fieldsFCC); 
+      }
     }
-    else
+    
+    // We use default FCC setting if it's not set or was set to an invalid folder.
+    if (useDefaultFCC)
     {
       char *uri = GetFolderURIFromUserPrefs(nsMsgDeliverNow, mUserIdentity);
       if ( (uri) && (*uri) )
