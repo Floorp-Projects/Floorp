@@ -24,11 +24,10 @@
 #include "nsUserInfo.h"
 #include "nsCRT.h"
 
-#ifdef XP_UNIX
 #include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
-#endif /* XP_UNIX */
+#include "nsString.h"
 
 nsUserInfo::nsUserInfo()
 {
@@ -42,7 +41,7 @@ nsUserInfo::~nsUserInfo()
 NS_IMPL_ISUPPORTS1(nsUserInfo,nsIUserInfo);
 
 NS_IMETHODIMP
-nsUserInfo::GetFullname(char **aFullname)
+nsUserInfo::GetFullname(PRUnichar **aFullname)
 {
     struct passwd *pw = nsnull;
 
@@ -54,6 +53,9 @@ nsUserInfo::GetFullname(char **aFullname)
     printf("name = %s\n", pw->pw_gecos);
 #endif
 
-    *aFullname = nsCRT::strdup(pw->pw_gecos);
+    nsAutoString fullname(pw->pw_gecos);
+
+    *aFullname = fullname.ToNewUnicode();
+
     return NS_OK;
 }
