@@ -5034,7 +5034,7 @@ char *
 fe_expand_working_dir(char *cwdfile)
 {
    char *dirfile = 0;
-   char *string;
+   char *string = NULL;
 #if defined(SUNOS4)||defined(AIX)
    char path [MAXPATHLEN];
 #endif
@@ -5044,6 +5044,10 @@ fe_expand_working_dir(char *cwdfile)
 #else
    string = getcwd(NULL, MAXPATHLEN);
 #endif
+
+   if(!string) {
+     XP_ASSERT(0);
+   }
 
    dirfile = (char *)malloc((strlen(string)+strlen("/")+strlen(cwdfile)+1) 
 			*sizeof(char));
