@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.230 $ ';
+$::UtilsVersion = '$Revision: 1.231 $ ';
 
 package TinderUtils;
 
@@ -1973,6 +1973,8 @@ sub LayoutPerformanceTest {
 sub CodesizeTest {
   my ($test_name, $build_dir, $isEmbedTest) = @_;
 
+  my $topsrcdir = "$build_dir/mozilla";
+
   # test needs this set
   $ENV{MOZ_MAPINFO} = "1";
   $ENV{TINDERBOX_OUTPUT} = "1";
@@ -2013,14 +2015,16 @@ sub CodesizeTest {
   unlink("$build_dir/$diff_log");
   unlink("$build_dir/$test_log");
   
-  my $bash_cmd;
-  if ($Settings::OS =~ /^WIN/) {
-    $bash_cmd = $type . "summary.win.bash";
+  my $bash_cmd = "bash $topsrcdir/tools/codesighs/";
+  if ($Settings::OS =~ /^WIN/ && $Settings::Compiler ne "gcc") {
+    $bash_cmd .= $type . "summary.win.bash";
   } else {
     # Assume Linux for non-windows for now.
-    $bash_cmd = $type . "summary.unix.bash";
+    $bash_cmd .= $type . "summary.unix.bash";
   }
-  
+ 
+  $bash_cmd .= " -o $Settings::ObjDir" if ($Settings::ObjDir ne "");
+ 
   my $test_result =
     FileBasedTest($test_name, 
                   "$build_dir", 
