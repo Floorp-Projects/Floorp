@@ -20,7 +20,6 @@
  *
  * Contributor(s):
  *  Ben Goodger <ben@bengoodger.com>
- *  Benjamin Smedberg <bsmedberg@covad.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +35,54 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsILocalFile.h"
-#include "nsIProfileMigrator.h"
-#include "nsIMailProfileMigrator.h"
-#include "nsIServiceManager.h"
-#include "nsIToolkitProfile.h"
-#include "nsIToolkitProfileService.h"
+#ifndef mailprofilemigratorutils___h___
+#define mailprofilemigratorutils___h___
 
-#include "nsDirectoryServiceDefs.h"
+#define MIGRATION_ITEMBEFOREMIGRATE "Migration:ItemBeforeMigrate"
+#define MIGRATION_ITEMAFTERMIGRATE  "Migration:ItemAfterMigrate"
+#define MIGRATION_STARTED           "Migration:Started"
+#define MIGRATION_ENDED             "Migration:Ended"
+#define MIGRATION_PROGRESS          "Migration:Progress"
 
-#include "NSReg.h"
-#include "nsReadableUtils.h"
+#define NOTIFY_OBSERVERS(message, item) \
+  mObserverService->NotifyObservers(nsnull, message, item)
+
+#define COPY_DATA(func, replace, itemIndex) \
+  if (NS_SUCCEEDED(rv) && (aItems & itemIndex || !aItems)) { \
+    nsAutoString index; \
+    index.AppendInt(itemIndex); \
+    NOTIFY_OBSERVERS(MIGRATION_ITEMBEFOREMIGRATE, index.get()); \
+    rv = func(replace); \
+    NOTIFY_OBSERVERS(MIGRATION_ITEMAFTERMIGRATE, index.get()); \
+  }
+
+#include "nsIPrefBranch.h"
+#include "nsIFile.h"
 #include "nsString.h"
+class nsIProfileStartup;
 
-#define NS_THUNDERBIRD_PROFILEIMPORT_CID \
-{ 0xb3c78baf, 0x3a52, 0x41d2, { 0x97, 0x18, 0xc3, 0x19, 0xbe, 0xf9, 0xaf, 0xfc } }
+// Proxy utilities shared by the Opera and IE migrators
+void ParseOverrideServers(const char* aServers, nsIPrefBranch* aBranch);
+void SetProxyPref(const nsACString& aHostPort, const char* aPref, 
+                  const char* aPortPref, nsIPrefBranch* aPrefs);
 
-class nsProfileMigrator : public nsIProfileMigrator
-{
-public:
-  NS_DECL_NSIPROFILEMIGRATOR
-  NS_DECL_ISUPPORTS
-
-  nsProfileMigrator() { };
-
-protected:
-  ~nsProfileMigrator() { };
-
-  nsresult GetDefaultMailMigratorKey(nsACString& key, nsCOMPtr<nsIMailProfileMigrator>& bpm);
-
-  /**
-   * Import profiles from ~/.firefox/ or ~/.phoenix/
-   * @return PR_TRUE if any profiles imported.
-   */
-  PRBool ImportRegistryProfiles(const nsACString& aAppName);
+struct MigrationData { 
+  PRUnichar* fileName; 
+  PRUint32 sourceFlag;
+  PRBool replaceOnly;
 };
+
+class nsILocalFile;
+void GetMigrateDataFromArray(MigrationData* aDataArray, 
+                             PRInt32 aDataArrayLength,
+                             PRBool aReplace,
+                             nsIFile* aSourceProfile, 
+                             PRUint16* aResult);
+
+
+// get the base directory of the *target* profile
+// this is already cloned, modify it to your heart's content
+void GetProfilePath(nsIProfileStartup* aStartup, nsCOMPtr<nsIFile>& aProfileDir);
+
+#endif
+

@@ -1,0 +1,31 @@
+
+<!ENTITY migrationWizard.title          "Import Wizard">
+
+<!ENTITY importFrom.label               "Import Options, Account Settings, Addressbook and other data from:">
+<!ENTITY importFromUnix.label           "Import Preferences, Account Settings, Addressbook and other data from:">
+
+<!ENTITY importFromNothing.label        "Don't import anything">
+<!ENTITY importFromNothing.accesskey    "D">
+<!ENTITY importFromSeamonkey.label      "Netscape 6, 7 or Mozilla 1.x">
+<!ENTITY importFromSeamonkey.accesskey  "N">
+<!ENTITY importFromNetscape4.label      "Netscape 4.x">
+<!ENTITY importFromNetscape4.accesskey  "4">
+<!ENTITY importFromOExpress.label       "Outlook Express">
+<!ENTITY importFromOExpress.accesskey   "u">
+<!ENTITY importFromOutlook.label        "Outlook">
+<!ENTITY importFromOutlook.accesskey    "O">
+<!ENTITY importFromEudora.label         "Eudora">
+<!ENTITY importFromEudora.accesskey     "E">
+
+<!ENTITY importSource.title             "Import Settings and Mail Folders From">
+<!ENTITY importItems.title              "Items to Import">
+<!ENTITY importItems.label              "Select which items to import:">
+
+<!ENTITY migrating.title                "Importing...">
+<!ENTITY migrating.label                "The following items are currently being imported...">
+
+<!ENTITY selectProfile.title            "Select Profile">
+<!ENTITY selectProfile.label            "The following profiles are available to import from:">
+
+<!ENTITY done.title                     "Import Complete">
+<!ENTITY done.label                     "The following items were successfully imported:">

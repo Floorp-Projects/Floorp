@@ -11,14 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is The Browser Profile Migrator.
+# The Original Code is The Mail Profile Migrator.
 #
 # The Initial Developer of the Original Code is Ben Goodger.
 # Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Ben Goodger <ben@bengoodger.com>
+#    Scott MacGregor <mscott@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,15 +34,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public src
+MODULE		= mailprofilemigration
+XPIDL_MODULE	= mailprofilemigration
+
+XPIDLSRCS	= nsIMailProfileMigrator.idl
 
 include $(topsrcdir)/config/rules.mk
-
 

@@ -1,0 +1,9 @@
+messenger.jar:
+*  content/messenger/migration/migration.xul                 (content/migration.xul)
+*  content/messenger/migration/migration.js                  (content/migration.js)
+*  content/messenger/migration/migration.css                 (content/migration.css)
+  
+en-US.jar:
+   locale/en-US/messenger/migration/migration.dtd               (locale/migration.dtd)
+   locale/en-US/messenger/migration/migration.properties        (locale/migration.properties)
+

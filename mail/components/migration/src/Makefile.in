@@ -14,12 +14,48 @@ MODULE_NAME = nsMailProfileMigratorModule
 REQUIRES = \
 	string \
 	xpcom \
+	xpcom_obsolete \
 	xulapp \
 	libreg \
 	toolkitcomps \
+	windowwatcher \
+	dom \
+	pref \
+	rdf \
+	libreg \
+	necko \
+	intl \
+	uconv \
+	import \
+	msgbase \
+	mailnews \
 	$(NULL)
 
-CPPSRCS = nsProfileMigrator.cpp
+EXPORTS = nsMailMigrationCID.h
+
+CPPSRCS = \
+	nsProfileMigrator.cpp \
+	nsMailProfileMigratorUtils.cpp \
+	nsNetscapeProfileMigratorBase.cpp \
+	nsSeamonkeyProfileMigrator.cpp \
+	nsDogbertProfileMigrator.cpp \
+	$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+CPPSRCS += \
+	nsProfileMigratorBase.cpp \
+	nsOEProfileMigrator.cpp \
+	nsOutlookProfileMigrator.cpp \
+	nsEudoraProfileMigrator.cpp \
+	$(NULL)
+endif
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+CPPSRCS += \
+	nsProfileMigratorBase.cpp \
+	nsEudoraProfileMigrator.cpp \
+        $(NULL)
+endif
 
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_XPCOM_OBSOLETE_LIBS) \

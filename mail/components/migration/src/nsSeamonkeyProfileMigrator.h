@@ -20,7 +20,6 @@
  *
  * Contributor(s):
  *  Ben Goodger <ben@bengoodger.com>
- *  Benjamin Smedberg <bsmedberg@covad.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,39 +35,61 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIGenericFactory.h"
-#include "nsILocalFile.h"
-#include "nsIProfileMigrator.h"
+#ifndef seamonkeyprofilemigrator___h___
+#define seamonkeyprofilemigrator___h___
+
 #include "nsIMailProfileMigrator.h"
-#include "nsIServiceManager.h"
-#include "nsIToolkitProfile.h"
-#include "nsIToolkitProfileService.h"
-
-#include "nsDirectoryServiceDefs.h"
-
-#include "NSReg.h"
-#include "nsReadableUtils.h"
+#include "nsILocalFile.h"
+#include "nsIObserverService.h"
+#include "nsISupportsArray.h"
+#include "nsNetscapeProfileMigratorBase.h"
 #include "nsString.h"
+#include "nsITimer.h"
 
-#define NS_THUNDERBIRD_PROFILEIMPORT_CID \
-{ 0xb3c78baf, 0x3a52, 0x41d2, { 0x97, 0x18, 0xc3, 0x19, 0xbe, 0xf9, 0xaf, 0xfc } }
+class nsIFile;
+class nsIPrefBranch;
+class nsIPrefService;
 
-class nsProfileMigrator : public nsIProfileMigrator
+class nsSeamonkeyProfileMigrator : public nsNetscapeProfileMigratorBase, 
+                                   public nsIMailProfileMigrator,
+                                   public nsITimerCallback
 {
 public:
-  NS_DECL_NSIPROFILEMIGRATOR
+  NS_DECL_NSIMAILPROFILEMIGRATOR
   NS_DECL_ISUPPORTS
+  NS_DECL_NSITIMERCALLBACK
 
-  nsProfileMigrator() { };
+  nsSeamonkeyProfileMigrator();
+  virtual ~nsSeamonkeyProfileMigrator();
 
 protected:
-  ~nsProfileMigrator() { };
+  nsresult FillProfileDataFromSeamonkeyRegistry();
+  nsresult GetSourceProfile(const PRUnichar* aProfile);
 
-  nsresult GetDefaultMailMigratorKey(nsACString& key, nsCOMPtr<nsIMailProfileMigrator>& bpm);
+  nsresult CopyPreferences(PRBool aReplace);
+  nsresult TransformPreferences(const nsAString& aSourcePrefFileName,
+                                const nsAString& aTargetPrefFileName);
 
-  /**
-   * Import profiles from ~/.firefox/ or ~/.phoenix/
-   * @return PR_TRUE if any profiles imported.
-   */
-  PRBool ImportRegistryProfiles(const nsACString& aAppName);
+  nsresult DummyCopyRoutine(PRBool aReplace);
+  nsresult CopyJunkTraining(PRBool aReplace);  
+  nsresult CopyPasswords(PRBool aReplace);
+  nsresult CopyMailFolders(nsVoidArray* aMailServers, nsIPrefService* aPrefBranch);
+  nsresult CopyAddressBookDirectories(nsVoidArray* aLdapServers, nsIPrefService* aPrefService);
+
+  void ReadBranch(const char * branchName,  nsIPrefService* aPrefService, nsVoidArray* aPrefs);
+  void WriteBranch(const char * branchName, nsIPrefService* aPrefService, nsVoidArray* aPrefs);
+
+  void CopyNextFolder();
+  void EndCopyFolders();
+
+private:
+  nsCOMPtr<nsISupportsArray> mProfileNames;
+  nsCOMPtr<nsISupportsArray> mProfileLocations;
+  nsCOMPtr<nsIObserverService> mObserverService;
+  nsCOMPtr<nsITimer> mFileIOTimer;
+
+  PRInt64 mMaxProgress;
+  PRInt64 mCurrentProgress;
 };
+ 
+#endif

@@ -1,0 +1,95 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is The Browser Profile Migrator.
+ *
+ * The Initial Developer of the Original Code is Ben Goodger.
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsISupportsArray;
+interface nsIProfileStartup;
+
+[scriptable, uuid(C3CB4343-2E8B-40fd-A639-A65731BED3AE)]
+interface nsIMailProfileMigrator : nsISupports 
+{
+  /**
+   * profile items to migrate. use with migrate().
+   */
+  const unsigned short ALL              = 0x0000;
+  const unsigned short SETTINGS         = 0x0001;
+  const unsigned short ACCOUNT_SETTINGS = 0x0002;
+  const unsigned short ADDRESSBOOK_DATA = 0x0004;
+  const unsigned short JUNKTRAINING     = 0x0008;
+  const unsigned short PASSWORDS        = 0x0010;
+  const unsigned short OTHERDATA        = 0x0020;
+  const unsigned short NEWSDATA         = 0x0040;
+  const unsigned short MAILDATA         = 0x0080;
+
+  /**
+   * Copy user profile information to the current active profile.
+   * @param aItems   list of data items to migrate. see above for values.
+   * @param aReplace replace or append current data where applicable. 
+   * @param aProfile profile to migrate from, if there is more than one.
+   */
+  void migrate(in unsigned short aItems, in nsIProfileStartup aStartup, in wstring aProfile);
+
+  /**
+   * A bit field containing profile items that this migrator
+   * offers for import. 
+   * @param   aProfile the profile that we are looking for available data
+   *          to import
+   * @param   aStarting "true" if the profile is not currently being used.
+   * @returns bit field containing profile items (see above)
+   */
+  unsigned short getMigrateData(in wstring aProfile, in boolean aDoingStartup);
+
+  /** 
+   * Whether or not there is any data that can be imported from this 
+   * browser (i.e. whether or not it is installed, and there exists
+   * a user profile)
+   */
+  readonly attribute boolean          sourceExists;
+
+  /** 
+   * Whether or not the import source implementing this interface
+   * has multiple user profiles configured.
+   */
+  readonly attribute boolean sourceHasMultipleProfiles;
+
+  /** 
+   * An enumeration of available profiles. If the import source does 
+   * not support profiles, this attribute is null.
+   */
+  readonly attribute nsISupportsArray sourceProfiles;
+};  
+

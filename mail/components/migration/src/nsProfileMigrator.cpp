@@ -38,14 +38,20 @@
 
 #include "nsIGenericFactory.h"
 #include "nsILocalFile.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIProfileMigrator.h"
 #include "nsIServiceManager.h"
 #include "nsIToolkitProfile.h"
 #include "nsIToolkitProfileService.h"
+#include "nsIWindowWatcher.h"
+#include "nsISupportsPrimitives.h"
+#include "nsISupportsArray.h"
 
 #include "nsDirectoryServiceDefs.h"
 #include "nsProfileMigrator.h"
+#include "nsMailMigrationCID.h"
 
+#include "nsCRT.h"
 #include "NSReg.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -65,12 +71,111 @@
 
 NS_IMPL_ISUPPORTS1(nsProfileMigrator, nsIProfileMigrator)
 
+#define MIGRATION_WIZARD_FE_URL "chrome://messenger/content/migration/migration.xul"
+#define MIGRATION_WIZARD_FE_FEATURES "chrome,dialog,modal,centerscreen"
+
 NS_IMETHODIMP
 nsProfileMigrator::Migrate(nsIProfileStartup* aStartup)
 {
-  // we don't do migration, only import
+  nsresult rv;
 
-  return NS_OK;
+  nsCAutoString key;
+  nsCOMPtr<nsIMailProfileMigrator> mailMigrator;
+
+  rv = GetDefaultMailMigratorKey(key, mailMigrator);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mailMigrator) 
+  {
+    nsCAutoString contractID = NS_LITERAL_CSTRING(NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX) + key;
+    mailMigrator = do_CreateInstance(contractID.get());
+    NS_ENSURE_TRUE(mailMigrator, NS_ERROR_FAILURE);
+  }
+
+  PRBool sourceExists;
+  rv = mailMigrator->GetSourceExists(&sourceExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!sourceExists) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISupportsCString> cstr (do_CreateInstance("@mozilla.org/supports-cstring;1"));
+  NS_ENSURE_TRUE(cstr, NS_ERROR_OUT_OF_MEMORY);
+  cstr->SetData(key);
+
+  // By opening the Migration FE with a supplied mailMigrator, it will automatically
+  // migrate from it. 
+  nsCOMPtr<nsIWindowWatcher> ww (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  nsCOMPtr<nsISupportsArray> params;
+  NS_NewISupportsArray(getter_AddRefs(params));
+  if (!ww || !params) return NS_ERROR_FAILURE;
+
+  params->AppendElement(cstr);
+  params->AppendElement(mailMigrator);
+  params->AppendElement(aStartup);
+
+  nsCOMPtr<nsIDOMWindow> migrateWizard;
+  return ww->OpenWindow(nsnull, 
+                        MIGRATION_WIZARD_FE_URL,
+                        "_blank",
+                        MIGRATION_WIZARD_FE_FEATURES,
+                        params,
+                        getter_AddRefs(migrateWizard));
+}
+
+#ifdef XP_WIN
+typedef struct {
+  WORD wLanguage;
+  WORD wCodePage;
+} LANGANDCODEPAGE;
+
+#define INTERNAL_NAME_THUNDERBIRD     "Thunderbird"
+#define INTERNAL_NAME_SEAMONKEY       "Mozilla"
+#define INTERNAL_NAME_DOGBERT         "Netscape Messenger"
+#endif
+
+nsresult
+nsProfileMigrator::GetDefaultMailMigratorKey(nsACString& aKey,
+                                             nsCOMPtr<nsIMailProfileMigrator>& aMailMigrator)
+{
+#if 0
+  HKEY hkey;
+
+  const char* kCommandKey = "SOFTWARE\\Clients\\Mail";
+  if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, kCommandKey, 0, KEY_READ, &hkey) == ERROR_SUCCESS) 
+  {
+    DWORD type;
+    DWORD length = MAX_PATH;
+    unsigned char value[MAX_PATH];
+    if (::RegQueryValueEx(hkey, NULL, 0, &type, value, &length) == ERROR_SUCCESS) 
+    {
+      nsCAutoString str; str.Assign((char*)value);
+
+      if (!nsCRT::strcasecmp((char*)value, INTERNAL_NAME_SEAMONKEY)) 
+      {
+        aKey = "seamonkey";
+        return NS_OK;
+      }
+      
+      if (!nsCRT::strcasecmp((char*)value, INTERNAL_NAME_DOGBERT)) 
+      {
+        aKey = "dogbert";
+        return NS_OK;
+      }
+    }
+  }
+#else
+  // XXXben - until we figure out what to do here with default browsers on MacOS and
+  // GNOME, simply copy data from a previous Seamonkey install. 
+  PRBool exists = PR_FALSE;
+  aMailMigrator = do_CreateInstance(NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
+  if (aMailMigrator)
+    aMailMigrator->GetSourceExists(&exists);
+  if (exists) {
+    aKey = "seamonkey";
+    return NS_OK;
+  }
+#endif
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -189,7 +294,28 @@ cleanup:
 
 // Make this into a component
 
+#include "nsSeamonkeyProfileMigrator.h"
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileMigrator)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSeamonkeyProfileMigrator)
+
+#include "nsDogbertProfileMigrator.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDogbertProfileMigrator)
+
+#ifdef XP_WIN32
+
+#include "nsOEProfileMigrator.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsOEProfileMigrator)
+
+#include "nsOutlookProfileMigrator.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsOutlookProfileMigrator)
+
+#endif
+
+#if defined (XP_WIN32) || defined (XP_MACOSX)
+#include "nsEudoraProfileMigrator.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsEudoraProfileMigrator)
+#endif
 
 static const nsModuleComponentInfo components[] =
 {
@@ -197,6 +323,30 @@ static const nsModuleComponentInfo components[] =
     NS_THUNDERBIRD_PROFILEIMPORT_CID,
     NS_PROFILEMIGRATOR_CONTRACTID,
     nsProfileMigratorConstructor },
+  { "Seamonkey Profile Migrator",
+    NS_SEAMONKEYPROFILEMIGRATOR_CID,
+    NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey",
+    nsSeamonkeyProfileMigratorConstructor },
+  { "Netscape Communicator 4.x",
+    NS_DOGBERTPROFILEMIGRATOR_CID,
+    NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "dogbert",
+    nsDogbertProfileMigratorConstructor },
+#ifdef XP_WIN32
+  { "Outlook Express Profile Migrator",
+    NS_OEXPRESSPROFILEMIGRATOR_CID,
+    NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "oexpress",
+    nsOEProfileMigratorConstructor },
+  { "Outlook Profile Migrator",
+    NS_OUTLOOKPROFILEMIGRATOR_CID,
+    NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "outlook",
+    nsOutlookProfileMigratorConstructor },
+#endif
+#if defined (XP_WIN32) || defined (XP_MACOSX)
+  { "Eudora Profile Migrator",
+    NS_EUDORAPROFILEMIGRATOR_CID,
+    NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "eudora",
+    nsEudoraProfileMigratorConstructor },
+#endif
 };
 
 NS_IMPL_NSGETMODULE(nsMailProfileMigratorModule, components)
