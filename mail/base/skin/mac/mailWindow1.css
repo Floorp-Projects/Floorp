@@ -270,10 +270,19 @@ treechildren::-moz-tree-image(unreadButtonColHeader, unread, selected, focus) {
 }
 
 treechildren::-moz-tree-image(subjectCol, replied) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-replied.png");
+  list-style-image: url("chrome://messenger/skin/icons/symbol-replied.png") !important;
 }
+
+treechildren::-moz-tree-image(subjectCol, replied, selected) {
+  list-style-image: url("chrome://messenger/skin/icons/symbol-replied-selected.png") !important;
+}
+
 treechildren::-moz-tree-image(subjectCol, forwarded) {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-forwarded.png");
+  list-style-image: url("chrome://messenger/skin/icons/symbol-forwarded.png") !important;
+}
+
+treechildren::-moz-tree-image(subjectCol, forwarded, selected) {
+  list-style-image: url("chrome://messenger/skin/icons/symbol-forwarded-selected.png") !important;
 }
 
 /* ..... attachment column ..... */
@@ -334,21 +343,19 @@ treechildren::-moz-tree-image(junkStatusCol, notjunk) {
 /* ..... subject column ..... */
 
 treechildren::-moz-tree-image(subjectCol) {
-  margin-right: 2px;
-  list-style-image: none;
-}
-
-treechildren::-moz-tree-image(subjectCol, new) {
-  list-style-image: none;
-}
-
-treechildren::-moz-tree-image(subjectCol, attach) {
-  list-style-image: none;
+  list-style-image: url("chrome://messenger/skin/icons/symbol-null.png");
+  margin: 0;
+  padding: 0;
 }
 
 treechildren::-moz-tree-image(subjectCol, imapdeleted) {
-  list-style-image: none;
+  list-style-image: url("chrome://messenger/skin/icons/symbol-imapdeleted.png") !important;
 }
+
+treechildren::-moz-tree-image(subjectCol, imapdeleted, selected) {
+  list-style-image: url("chrome://messenger/skin/icons/symbol-imapdeleted-selected.png") !important;
+}
+
 
 treechildren::-moz-tree-image(subjectCol, news) {
   list-style-image: none;
