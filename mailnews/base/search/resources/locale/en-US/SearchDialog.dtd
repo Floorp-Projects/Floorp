@@ -26,7 +26,7 @@
 <!ENTITY goToFolderButton.accesskey  "r">
 
 <!-- for ABSearchDialog.xul -->
-<!ENTITY abSearchHeading.label       "Search for names in:">
+<!ENTITY abSearchHeading.label       "Search in:">
 <!ENTITY abSearchHeading.accesskey   "S">
 <!ENTITY propertiesButton.label      "Properties">
 <!ENTITY propertiesButton.accesskey  "P">
