@@ -475,6 +475,22 @@ interface nsIEditorShell : nsISupports
   void SetBodyAttribute(in wstring attr, in wstring value);
   void SetBackgroundColor(in wstring color);
 
+  /** Get block state information:
+    * Returns the tagname if part selection is within a 
+    *   paragraph or list block tag,
+    *   or empty string if none of selection isn't within the block
+    *
+    *   mixed    true if only part of selection has the state
+    */
+
+  /* Returns "p","blockquote", "address", "pre", "dt", "dd" 
+     or "h1" through "h6" */
+  wstring GetParagraphState(out boolean mixed);
+  /* Returns "ol", "ul", or "dl" */
+  wstring GetListState(out boolean mixed);
+  /* Returns "li", "dt", or "dd" */
+  wstring GetListItemState(out boolean mixed);
+
   void ApplyStyleSheet(in wstring url);
 
   /** Set the display mode for editing
