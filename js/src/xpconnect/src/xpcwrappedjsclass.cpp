@@ -651,11 +651,19 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
         if(NS_FAILED(mInfo->IsFunction(&isFunction)))
             goto pre_call_clean_up;
 
-        // later we will check to see if fval might really be callable
+        // In the xpidl [function] case we are making sure now that the 
+        // JSObject is callable. If it is *not* callable then we silently 
+        // fallback to looking up the named property...
+        // (because jst says he thinks this fallback is 'The Right Thing'.)
+        //
+        // In the normal (non-function) case we just lookup the property by 
+        // name and as long as the object has such a named property we go ahead
+        // and try to make the call. If it turns out the named property is not
+        // a callable object then the JS engine will throw an error and we'll
+        // pass this along to the caller as an exception/result code.
 
-
-
-        if(isFunction)
+        if(isFunction && 
+           JS_TypeOfValue(ccx, OBJECT_TO_JSVAL(obj)) == JSTYPE_FUNCTION)
         {
             fval = OBJECT_TO_JSVAL(obj);
 
