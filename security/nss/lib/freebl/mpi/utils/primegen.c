@@ -42,7 +42,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- * $Id: primegen.c,v 1.4 2000/07/26 05:41:59 nelsonb%netscape.com Exp $
+ * $Id: primegen.c,v 1.5 2001/01/18 01:39:17 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -172,8 +172,7 @@ int main(int argc, char *argv[])
       break;
     }
     FPUTC('\n', stderr);
-    printf("After %d tests, the following value is still probably prime:\n",
-	   NUM_TESTS);
+    puts("The following value is probably prime:");
     outlen = mp_radix_size(&testval, 10);
     out = calloc(outlen, sizeof(unsigned char));
     mp_toradix(&testval, (char *)out, 10);
