@@ -25,10 +25,11 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = txmgr
 
-CPPSRCS =                       \
-	nsTransactionItem.cpp		\
-	nsTransactionManager.cpp	\
-	nsTransactionStack.cpp		\
+CPPSRCS =                           \
+    nsTransactionItem.cpp           \
+    nsTransactionManager.cpp        \
+    nsTransactionManagerFactory.cpp \
+    nsTransactionStack.cpp          \
     $(NULL)
 
 MODULE = txmgr

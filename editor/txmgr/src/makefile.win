@@ -23,6 +23,7 @@ LIBRARY_NAME=txmgr
 CPPSRCS =				\
 	nsTransactionItem.cpp	\
 	nsTransactionManager.cpp	\
+	nsTransactionManagerFactory.cpp	\
 	nsTransactionStack.cpp	\
 	$(NULL)
 
