@@ -327,7 +327,7 @@ protected:
     nsCOMPtr<nsIRDFDataSource>		mCache;
     nsCOMPtr<nsITimer>			mTimer;
 
-	sortState			sortState;
+	sortStateClass			sortState;
 
     // pseudo-constants
     static nsrefcnt gRefCnt;
