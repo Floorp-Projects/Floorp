@@ -46,12 +46,6 @@ else{
 	die("Couldn't locate files neccessary for building JS.c");
 }
 
-sub failed{
-	my $message = shift;
-	print STDERR $message, "\n";
-	exit(1);
-}
-
 sub find_ExtUtils{
 	if($notfound){
 		if($File::Find::dir =~ /ExtUtils/){	
