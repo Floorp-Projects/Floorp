@@ -2445,7 +2445,7 @@ static const int doubleToAsciiModes[] = {
 // The result is held somewhere in buffer, but not necessarily at the beginning.  The size of
 // buffer is given in bufferSize, and must be at least as large as given by dtosStandardBufferSize
 // or dtosVariableBufferSize, whichever is appropriate.
-char *JS::doubleToStr(char *buffer, size_t bufferSize, double value, DToStrMode mode, int precision)
+char *JS::doubleToStr(char *buffer, size_t DEBUG_ONLY(bufferSize), double value, DToStrMode mode, int precision)
 {
     int decPt;                  // Position of decimal point relative to first digit returned by doubleToAscii
     bool negative;              // True if the sign bit was set in value
