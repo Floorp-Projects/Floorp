@@ -573,6 +573,8 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
     prntdlg.Flags = PD_ALLPAGES | PD_RETURNDEFAULT | PD_RETURNIC | PD_USEDEVMODECOPIESANDCOLLATE;
   }
 
+  rv = NS_ERROR_FAILURE; // reset
+
   BOOL result = ::PrintDlg(&prntdlg);
 
   if (TRUE == result){
@@ -670,6 +672,9 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
       ::GlobalUnlock(prntdlg.hDevNames);
       ::GlobalFree(prntdlg.hDevNames);
     }
+  } else {
+    // print dialog aborted
+    rv = NS_ERROR_ABORT;
   }
 
   return rv;
