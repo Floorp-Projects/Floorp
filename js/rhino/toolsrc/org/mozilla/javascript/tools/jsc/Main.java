@@ -178,12 +178,20 @@ public class Main {
             if (arg.equals("-implements") && ++i < args.length) {
                 // TODO: allow for multiple comma-separated interfaces.
                 String targetImplements = args[i];
-                try {
-                    Class[] implementsClasses = { Class.forName(targetImplements) };
-                    cx.setTargetImplements(implementsClasses);
-                } catch (ClassNotFoundException e) {
-                    throw new Error(e.toString()); // TODO: better error
+                StringTokenizer st = new StringTokenizer(targetImplements,
+                                                         ",");
+                Vector v = new Vector();
+                while (st.hasMoreTokens()) {
+                    String className = st.nextToken();
+                    try {
+                        v.addElement(Class.forName(className));
+                    } catch (ClassNotFoundException e) {
+                        throw new Error(e.toString()); // TODO: better error
+                    }
                 }
+                Class[] implementsClasses = new Class[v.size()];
+                v.copyInto(implementsClasses);
+                cx.setTargetImplements(implementsClasses);
                 continue;
             }
             usage(arg);
