@@ -100,7 +100,6 @@ CMozillaBrowser::CMozillaBrowser()
 	m_bWndLess = FALSE;
 
 	// Initialize layout interfaces
-	mRootDocShell = nsnull;
 	mWebBrowserAsWin = nsnull;
 	mPrefs = nsnull;
 	mValidBrowserFlag = FALSE;
@@ -409,7 +408,8 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 
 	// Print the contents
 	nsIContentViewer *pContentViewer = nsnull;
-	nsresult res = mRootDocShell->GetContentViewer(&pContentViewer);
+    nsCOMPtr<nsIDocShell> rootDocShell = do_GetInterface(mWebBrowser);
+	nsresult res = rootDocShell->GetContentViewer(&pContentViewer);
 	if (NS_SUCCEEDED(res))
 	{
         nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer);
@@ -837,7 +837,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
 {	
 	NG_TRACE_METHOD(CMozillaBrowser::CreateBrowser);
     
-	if (mRootDocShell != nsnull)
+	if (mWebBrowser != nsnull)
 	{
 		NG_ASSERT(0);
         NG_TRACE_ALWAYS(_T("CreateBrowser() called more than once!"));
@@ -893,18 +893,10 @@ HRESULT CMozillaBrowser::CreateBrowser()
 	rv = mWebBrowserAsWin->Create();
 
     // Configure what the web browser can and cannot do
-//    nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(mWebBrowser));
-//    webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, aAllowPlugins);
+    nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(mWebBrowser));
+    webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, aAllowPlugins);
 
     // XXX delete when docshell becomes inaccessible
-    mRootDocShell = do_GetInterface(mWebBrowser);
-    if (mRootDocShell == nsnull)
-    {
-		NG_ASSERT(0);
-		NG_TRACE_ALWAYS(_T("Could not get root docshell object rv=%08x\n"), (int) rv);
-        SetStartupErrorMessage(IDS_CANNOTCREATEPREFS);
-        return rv;
-    }
 
 	nsCOMPtr<nsIDocumentLoader> docLoader;
 
@@ -923,8 +915,15 @@ HRESULT CMozillaBrowser::CreateBrowser()
 
 	browserAsItem->SetTreeOwner(NS_STATIC_CAST(nsIDocShellTreeOwner *, mWebBrowserContainer));
 
-
-	mRootDocShell->SetDocLoaderObserver(NS_STATIC_CAST(nsIDocumentLoaderObserver*, mWebBrowserContainer));
+    nsCOMPtr<nsIDocShell> rootDocShell = do_GetInterface(mWebBrowser);
+    if (rootDocShell == nsnull)
+    {
+		NG_ASSERT(0);
+		NG_TRACE_ALWAYS(_T("Could not get root docshell object rv=%08x\n"), (int) rv);
+        SetStartupErrorMessage(IDS_CANNOTCREATEPREFS);
+        return rv;
+    }
+	rootDocShell->SetDocLoaderObserver(NS_STATIC_CAST(nsIDocumentLoaderObserver*, mWebBrowserContainer));
 	mWebBrowserAsWin->SetVisibility(PR_TRUE);
 
 	mValidBrowserFlag = TRUE;
@@ -951,11 +950,6 @@ HRESULT CMozillaBrowser::DestroyBrowser()
 	{
 		mWebBrowserAsWin->Destroy();
         mWebBrowserAsWin = nsnull;
-	}
-
-	if (mRootDocShell != nsnull)
-	{
-        mRootDocShell = nsnull;
 	}
 
 	if (mWebBrowserContainer)
@@ -2040,10 +2034,11 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::get_LocationURL(BSTR __RPC_FAR *Locat
 
     nsCOMPtr<nsIURI> uri;
 
-	// Get the url from the web shell
-	if (mRootDocShell)
+	// Get the current url from the browser
+    nsCOMPtr<nsIDocShell> rootDocShell = do_GetInterface(mWebBrowser);
+	if (rootDocShell)
 	{
-        mRootDocShell->GetCurrentURI(getter_AddRefs(uri));
+        rootDocShell->GetCurrentURI(getter_AddRefs(uri));
     }
 
     if (uri)
