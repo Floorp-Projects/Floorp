@@ -237,25 +237,25 @@ nsresult nsMsgPurgeService::PerformPurge()
         if (!junkFolder)
           continue;  
     
-        nsTime lastPurgeTime=0;
-        nsXPIDLCString lastPurgeTimeString;
-        rv = junkFolder->GetStringProperty("lastPurgeTime", getter_Copies(lastPurgeTimeString));
+        nsTime curJunkFolderLastPurgeTime=0;
+        nsXPIDLCString curJunkFolderLastPurgeTimeString;
+        rv = junkFolder->GetStringProperty("curJunkFolderLastPurgeTime", getter_Copies(curJunkFolderLastPurgeTimeString));
         if (NS_FAILED(rv))  
           continue; // it is ok to fail, junk folder may not exist
                 
-        if (!lastPurgeTimeString.IsEmpty())
+        if (!curJunkFolderLastPurgeTimeString.IsEmpty())
         {
           PRInt64 theTime;
-          PR_ParseTimeString(lastPurgeTimeString.get(), PR_FALSE, &theTime);
-          lastPurgeTime = theTime;
+          PR_ParseTimeString(curJunkFolderLastPurgeTimeString.get(), PR_FALSE, &theTime);
+          curJunkFolderLastPurgeTime = theTime;
         }
   
-        PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] %s lastPurgeTime=%s (if blank, then never)", serverIndex, junkFolderURI.get(), lastPurgeTimeString.get()));
+        PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] %s curJunkFolderLastPurgeTime=%s (if blank, then never)", serverIndex, junkFolderURI.get(), curJunkFolderLastPurgeTimeString.get()));
 
         // check if this account is due to purge
         // has to have been purged at least mMinDelayBetweenPurges minutes ago
         // we don't want to purge the folders all the time
-        nsTime nextPurgeTime = lastPurgeTime + nsInt64(mMinDelayBetweenPurges * 60000000 /* convert mMinDelayBetweenPurges to into microseconds */);
+        nsTime nextPurgeTime = curJunkFolderLastPurgeTime + nsInt64(mMinDelayBetweenPurges * 60000000 /* convert mMinDelayBetweenPurges to into microseconds */);
         nsTime currentTime;
         if (nextPurgeTime < currentTime) 
         {
@@ -284,13 +284,16 @@ nsresult nsMsgPurgeService::PerformPurge()
           {
             PRInt32 purgeInterval;
             spamSettings->GetPurgeInterval(&purgeInterval);
-            PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] purging! searching for messages older than %d days", serverIndex, purgeInterval));
 
-            if ((oldestPurgeTime == nsInt64(0)) || (oldestPurgeTime > lastPurgeTime))
+            if ((oldestPurgeTime == nsInt64(0)) || (curJunkFolderLastPurgeTime < oldestPurgeTime))
             {
-              oldestPurgeTime = lastPurgeTime;
+              PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] purging! searching for messages older than %d days", serverIndex, purgeInterval));
+              oldestPurgeTime = curJunkFolderLastPurgeTime;
               purgeIntervalToUse = purgeInterval;
               folderToPurge = junkFolder;
+              // if we've never purged this folder, do it...
+              if (curJunkFolderLastPurgeTime == nsInt64(0))
+                break;
             }
           }
           else {
@@ -325,8 +328,8 @@ nsresult nsMsgPurgeService::SearchFolderToPurge(nsIMsgFolder *folder, PRInt32 pu
   PRExplodedTime exploded;
   PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &exploded);
   PR_FormatTimeUSEnglish(dateBuf, sizeof(dateBuf), "%a %b %d %H:%M:%S %Y", &exploded);
-  folder->SetStringProperty("lastPurgeTime", dateBuf);
-  PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("lastPurgeTime is now %s", dateBuf));
+  folder->SetStringProperty("curJunkFolderLastPurgeTime", dateBuf);
+  PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("curJunkFolderLastPurgeTime is now %s", dateBuf));
 
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = folder->GetServer(getter_AddRefs(server)); //we need to get the folder's server scope because imap can have local junk folder
