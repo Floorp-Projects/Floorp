@@ -80,6 +80,7 @@ struct _MaiUtilClass
 
 MaiAppRoot *mai_get_root(void);
 MaiCache *mai_get_cache(void);
+gboolean mai_init(void);
 
 G_BEGIN_DECLS
 int gtk_module_init(gint *argc, char** argv[]);
