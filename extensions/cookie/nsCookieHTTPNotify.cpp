@@ -122,8 +122,10 @@ nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> pChannel;
-    rv = pLoadGroup->GetDefaultLoadChannel(getter_AddRefs(pChannel));
-    if (NS_FAILED(rv)) return rv;
+    if (pLoadGroup) {
+      rv = pLoadGroup->GetDefaultLoadChannel(getter_AddRefs(pChannel));
+      if (NS_FAILED(rv)) return rv;
+    }
 
     nsCOMPtr<nsIURI> pFirstURL;
     if (pChannel) {
@@ -181,8 +183,10 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> pChannel;
-    rv = pLoadGroup->GetDefaultLoadChannel(getter_AddRefs(pChannel));
-    if (NS_FAILED(rv)) return rv;
+    if (pLoadGroup) {
+      rv = pLoadGroup->GetDefaultLoadChannel(getter_AddRefs(pChannel));
+      if (NS_FAILED(rv)) return rv;
+    }
 
     nsCOMPtr<nsIURI> pFirstURL;
     if (pChannel) {
