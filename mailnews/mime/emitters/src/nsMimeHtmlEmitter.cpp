@@ -220,7 +220,7 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
       else
       {
         // Convert UTF-8 to UCS2
-        unicodeHeaderValue.Adopt(ToNewUnicode(nsDependentCString(headerValue)));
+        unicodeHeaderValue.Adopt(NS_ConvertUTF8toUCS2(headerValue).ToNewUnicode());
 
         if (NS_SUCCEEDED(rv))
           headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue, bFromNewsgroups);
@@ -336,7 +336,7 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
 
     if (NS_FAILED(rv))
     {
-      unicodeHeaderValue.Adopt(ToNewUnicode(nsDependentCString(name)));
+      unicodeHeaderValue.Adopt(NS_ConvertUTF8toUCS2(name).ToNewUnicode());
 
         // but it's not really a failure if we didn't have a converter in the first place
       if ( !mUnicodeConverter )
