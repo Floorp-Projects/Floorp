@@ -444,7 +444,7 @@ nsTridentPreferencesWin::CopyCookies() {
   // IE cookies are stored in files named <username>@domain[n].txt
   // (in <username>'s Cookies folder. isn't the naming redundant?)
 
-  PRBool rv = NS_ERROR_FAILURE;
+  PRBool rv = NS_OK;
 
   nsCOMPtr<nsIFile> cookiesDir;
   nsCOMPtr<nsISimpleEnumerator> cookieFiles;
@@ -483,8 +483,10 @@ nsTridentPreferencesWin::CopyCookies() {
     nsCOMPtr<nsISupports> supFile;
     cookieFiles->GetNext(getter_AddRefs(supFile));
     nsCOMPtr<nsIFile> cookieFile(do_QueryInterface(supFile));
-    if (!cookieFile)
+    if (!cookieFile) {
+      rv = NS_ERROR_FAILURE;
       break; // unexpected! punt!
+    }
 
     // is it a cookie file for the current user?
     nsCAutoString fileName;
@@ -504,8 +506,10 @@ nsTridentPreferencesWin::CopyCookies() {
     if (fileSize >= fileContentsSize) {
       PR_Free(fileContents);
       fileContents = (char *) PR_Malloc(fileSize+1);
-      if (!fileContents)
+      if (!fileContents) {
+        rv = NS_ERROR_FAILURE;
         break; // fatal error
+      }
       fileContentsSize = fileSize;
     }
 
@@ -521,8 +525,8 @@ nsTridentPreferencesWin::CopyCookies() {
       if (fileSize == readSize) { // translate this file's cookies
         nsresult onerv;
         onerv = CopyCookiesFromBuffer(fileContents, readSize, cookieManager);
-        if (NS_SUCCEEDED(onerv))
-          rv = NS_OK;
+        if (NS_FAILED(onerv))
+          rv = onerv;
       }
     }
   } while(1);
@@ -540,7 +544,7 @@ nsTridentPreferencesWin::CopyCookiesFromBuffer(
                            PRUint32 aBufferLength,
                            nsICookieManager2 *aCookieManager) {
 
-  nsresult  rv = NS_ERROR_FAILURE;
+  nsresult  rv = NS_OK;
 
   const char *bufferEnd = aBuffer + aBufferLength;
   // cookie fields:
@@ -598,8 +602,10 @@ nsTridentPreferencesWin::CopyCookiesFromBuffer(
                                 nsDependentCString(name),
                                 nsDependentCString(value),
                                 flagsValue & 0x1, expirationDate);
-    if (NS_SUCCEEDED(onerv))
-      rv = NS_OK;
+    if (NS_FAILED(onerv)) {
+      rv = onerv;
+      break;
+    }
 
   } while(aBuffer < bufferEnd);
 
@@ -662,7 +668,7 @@ nsTridentPreferencesWin::FileTimeToTimeT(const char *aLowDateIntString,
 nsresult
 nsTridentPreferencesWin::CopyStyleSheet() {
 
-  nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_OK; // return failure only if filecopy fails
   HKEY     regKey;
   DWORD    regType,
            regLength,
@@ -673,7 +679,7 @@ nsTridentPreferencesWin::CopyStyleSheet() {
   if (::RegOpenKeyEx(HKEY_CURRENT_USER,
                  "Software\\Microsoft\\Internet Explorer\\Styles", 0,
                  KEY_READ, &regKey) != ERROR_SUCCESS)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   
   regLength = sizeof(DWORD);
   if (::RegQueryValueEx(regKey, "Use My Stylesheet", 0, &regType,
