@@ -42,8 +42,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtocolProxyService, nsIProtocolProxyService);
 
 
 nsProtocolProxyService::nsProtocolProxyService():
-    mUseProxy(0),
-    mArrayLock(PR_NewLock())
+    mArrayLock(PR_NewLock()),
+    mUseProxy(0)
 {
     NS_INIT_REFCNT();
 }
