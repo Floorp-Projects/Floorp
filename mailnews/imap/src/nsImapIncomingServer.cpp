@@ -62,7 +62,8 @@
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
 #include "nsImapStringBundle.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsMsgFolderFlags.h"
 #include "prmem.h"
 #include "plstr.h"
@@ -1455,14 +1456,14 @@ NS_IMETHODIMP nsImapIncomingServer::GetTrashFolderByRedirectorType(char **specia
   if (NS_FAILED(rv)) 
     return NS_OK; // return if no redirector type
 
-  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = prefs->GetCharPref(prefName.get(), specialTrashName);
+  rv = prefBranch->GetCharPref(prefName.get(), specialTrashName);
   if (NS_SUCCEEDED(rv) && ((!*specialTrashName) || (!**specialTrashName)))
     return NS_ERROR_FAILURE;
-  else
-    return rv;
+
+  return rv;
 }
 
 NS_IMETHODIMP nsImapIncomingServer::AllowFolderConversion(PRBool *allowConversion)
@@ -1480,11 +1481,11 @@ NS_IMETHODIMP nsImapIncomingServer::AllowFolderConversion(PRBool *allowConversio
   if (NS_FAILED(rv)) 
     return NS_OK; // return if no redirector type
 
-  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // In case this pref is not set we need to return NS_OK.
-  rv = prefs->GetBoolPref(prefName.get(), allowConversion);
+  prefBranch->GetBoolPref(prefName.get(), allowConversion);
   return NS_OK;
 }
 
@@ -1494,9 +1495,6 @@ NS_IMETHODIMP nsImapIncomingServer::ConvertFolderName(const char *originalName, 
 
   nsresult rv = NS_OK;
   *convertedName = nsnull;
-
-  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
 
   // See if the redirector type allows folder name conversion.
   PRBool allowConversion;
@@ -1544,12 +1542,12 @@ NS_IMETHODIMP nsImapIncomingServer::HideFolderName(const char *folderName, PRBoo
   if (NS_FAILED(rv)) 
     return NS_OK; // return if no redirector type
 
-  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   prefName.Append(folderName);
   // In case this pref is not set we need to return NS_OK.
-  prefs->GetBoolPref(prefName.get(), hideFolder);
+  prefBranch->GetBoolPref(prefName.get(), hideFolder);
   return NS_OK;
 }
 
@@ -1876,13 +1874,14 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 
 nsresult nsImapIncomingServer::DeleteNonVerifiedFolders(nsIFolder *curFolder)
 {
-	PRBool autoUnsubscribeFromNoSelectFolders = PR_TRUE;
-	nsresult rv;
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-	if(NS_SUCCEEDED(rv))
-	{
-		rv = prefs->GetBoolPref("mail.imap.auto_unsubscribe_from_noselect_folders", &autoUnsubscribeFromNoSelectFolders);
-	}
+    PRBool autoUnsubscribeFromNoSelectFolders = PR_TRUE;
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        prefBranch->GetBoolPref("mail.imap.auto_unsubscribe_from_noselect_folders", &autoUnsubscribeFromNoSelectFolders);
+    }
+
 //	return rv;
 	nsCOMPtr<nsIEnumerator> subFolders;
 
@@ -2448,11 +2447,7 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
     nsresult rv = CreatePrefNameWithRedirectorType(".hide_hostname_for_password", prefName);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr <nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr<nsIPrefBranch> prefBranch; 
-    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch)); 
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
     PRBool hideHostnameForPassword = PR_FALSE;
@@ -3332,9 +3327,9 @@ nsImapIncomingServer::GetSupportsDiskSpace(PRBool *aSupportsDiskSpace)
   nsresult rv = CreateHostSpecificPrefName("default_supports_diskspace", prefName);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-  if(NS_SUCCEEDED(rv)) {
-     rv = prefs->GetBoolPref(prefName.get(), aSupportsDiskSpace);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && prefBranch) {
+     rv = prefBranch->GetBoolPref(prefName.get(), aSupportsDiskSpace);
   }
 
   // Couldn't get the default value with the hostname.
@@ -3416,9 +3411,9 @@ nsImapIncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
     rv = CreateHostSpecificPrefName("default_offline_support_level", prefName);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-    if(NS_SUCCEEDED(rv)) {
-      rv = prefs->GetIntPref(prefName.get(), aSupportLevel);
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && prefBranch) {
+      rv = prefBranch->GetIntPref(prefName.get(), aSupportLevel);
     } 
 
     // Couldn't get the pref value with the hostname. 
@@ -3551,7 +3546,7 @@ nsImapIncomingServer::GetPrefForServerAttribute(const char *prefSuffix, PRBool *
   NS_ENSURE_ARG_POINTER(prefSuffix);
   nsresult rv;
   nsCAutoString prefName;
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
 
   nsXPIDLCString serverKey;
   rv = GetKey(getter_Copies(serverKey));
@@ -3561,7 +3556,7 @@ nsImapIncomingServer::GetPrefForServerAttribute(const char *prefSuffix, PRBool *
   nsMsgIncomingServer::getPrefName(serverKey, 
                                    prefSuffix, 
                                    prefName);
-  rv = prefs->GetBoolPref(prefName.get(), prefValue);
+  rv = prefBranch->GetBoolPref(prefName.get(), prefValue);
 
   // If the server pref is not set in then look at the 
   // pref set with redirector type
@@ -3573,8 +3568,8 @@ nsImapIncomingServer::GetPrefForServerAttribute(const char *prefSuffix, PRBool *
 
     rv = CreatePrefNameWithRedirectorType(redirectorType.get(), prefName);
 
-    if(NS_SUCCEEDED(rv)) 
-      rv = prefs->GetBoolPref(prefName.get(), prefValue);
+    if (NS_SUCCEEDED(rv)) 
+      rv = prefBranch->GetBoolPref(prefName.get(), prefValue);
   }
 
   return rv;
@@ -3703,10 +3698,10 @@ nsImapIncomingServer::GetShowAttachmentsInline(PRBool *aResult)
   *aResult = PR_TRUE; // true per default
  
   nsresult rv; 
-  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
   
-  rv = prefs->GetBoolPref("mail.inline_attachments", aResult);
+  prefBranch->GetBoolPref("mail.inline_attachments", aResult);
   return NS_OK; // In case this pref is not set we need to return NS_OK.
 }
 

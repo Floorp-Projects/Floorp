@@ -67,7 +67,8 @@
 #include "nsImapStringBundle.h"
 #include "nsIMsgFolderCacheElement.h"
 #include "nsTextFormatter.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsMsgUtf7Utils.h"
 #include "nsICacheSession.h"
 #include "nsEscape.h"
@@ -2125,9 +2126,9 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
          if (!canHaveSubFoldersOfTrash)
            deleteNoTrash = PR_TRUE;
 
-         nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+         nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
          if (NS_SUCCEEDED(rv))
-           prefs->GetBoolPref("mailnews.confirm.moveFoldersToTrash", &confirmDeletion);
+           prefBranch->GetBoolPref("mailnews.confirm.moveFoldersToTrash", &confirmDeletion);
       }
       if (confirmDeletion || deleteNoTrash) //let us alert the user if we are deleting folder immediately
       {
@@ -2215,17 +2216,12 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
 
     // Check preferences to see if we should check all folders for new 
     // messages, or just the inbox and marked ones
-  	PRBool checkAllFolders = PR_FALSE;
+    PRBool checkAllFolders = PR_FALSE;
 
-    nsCOMPtr <nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv) && prefs)
-    {
-      nsCOMPtr<nsIPrefBranch> prefBranch; 
-      rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch)); 
-
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && prefBranch) {
       // This pref might not exist, which is OK. We'll only check inbox and marked ones
-      if (NS_SUCCEEDED(rv) && prefBranch)
-	      rv = prefBranch->GetBoolPref("mail.check_all_imap_folders_for_new", &checkAllFolders); 
+      rv = prefBranch->GetBoolPref("mail.check_all_imap_folders_for_new", &checkAllFolders); 
     }
     m_urlListener = aListener;                                                  
 

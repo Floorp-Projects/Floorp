@@ -97,7 +97,9 @@ PRLogModuleInfo *IMAP;
 #include "nsIStreamListener.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIImapIncomingServer.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsImapUtils.h"
 #include "nsIProxyObjectManager.h"
 #include "nsIStreamConverterService.h"
@@ -315,27 +317,33 @@ static PRBool gUseEnvelopeCmd = PR_FALSE;
 
 nsresult nsImapProtocol::GlobalInitialization()
 {
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-  if (NS_SUCCEEDED(rv) && prefs) 
-  {
-    prefs->GetIntPref("mail.imap.chunk_fast", &gTooFastTime);   // secs we read too little too fast
-    prefs->GetIntPref("mail.imap.chunk_ideal", &gIdealTime);    // secs we read enough in good time
-    prefs->GetIntPref("mail.imap.chunk_add", &gChunkAddSize);   // buffer size to add when wasting time
-    prefs->GetIntPref("mail.imap.chunk_size", &gChunkSize);
-    prefs->GetIntPref("mail.imap.min_chunk_size_threshold", &gChunkThreshold);
-    prefs->GetIntPref("mail.imap.max_chunk_size", &gMaxChunkSize);
-    prefs->GetBoolPref("mail.imap.hide_other_users",
-                       &gHideOtherUsersFromList);
-    prefs->GetBoolPref("mail.imap.hide_unused_namespaces",
-                       &gHideUnusedNamespaces);
-    prefs->GetIntPref("mail.imap.noop_check_count", &gPromoteNoopToCheckCount);
-    prefs->GetBoolPref("mail.imap.use_envelope_cmd",
-                       &gUseEnvelopeCmd);
-    prefs->GetLocalizedUnicharPref("intl.accept_languages", getter_Copies(mAcceptLanguages));
-  }
-  gInitialized = PR_TRUE;
-  return rv;
+    gInitialized = PR_TRUE;
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    prefBranch->GetIntPref("mail.imap.chunk_fast", &gTooFastTime);   // secs we read too little too fast
+    prefBranch->GetIntPref("mail.imap.chunk_ideal", &gIdealTime);    // secs we read enough in good time
+    prefBranch->GetIntPref("mail.imap.chunk_add", &gChunkAddSize);   // buffer size to add when wasting time
+    prefBranch->GetIntPref("mail.imap.chunk_size", &gChunkSize);
+    prefBranch->GetIntPref("mail.imap.min_chunk_size_threshold", &gChunkThreshold);
+    prefBranch->GetIntPref("mail.imap.max_chunk_size", &gMaxChunkSize);
+    prefBranch->GetBoolPref("mail.imap.hide_other_users",
+                            &gHideOtherUsersFromList);
+    prefBranch->GetBoolPref("mail.imap.hide_unused_namespaces",
+                            &gHideUnusedNamespaces);
+    prefBranch->GetIntPref("mail.imap.noop_check_count", &gPromoteNoopToCheckCount);
+    prefBranch->GetBoolPref("mail.imap.use_envelope_cmd",
+                            &gUseEnvelopeCmd);
+    nsCOMPtr<nsIPrefLocalizedString> prefString;
+    prefBranch->GetComplexValue("intl.accept_languages",
+                                NS_GET_IID(nsIPrefLocalizedString),
+                                getter_AddRefs(prefString));
+    if (prefString) {
+      prefString->ToString(getter_Copies(mAcceptLanguages));
+    }
+
+    return NS_OK;
 }
 
 nsImapProtocol::nsImapProtocol() : 
@@ -7103,9 +7111,9 @@ PRBool nsImapProtocol::TryToLogon()
 
       PRBool lastReportingErrors = GetServerStateParser().GetReportingErrors();
       GetServerStateParser().SetReportingErrors(PR_FALSE);  // turn off errors - we'll put up our own.
-        nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv)); 
-        if (NS_SUCCEEDED(rv) && prefs) 
-        prefs->GetBoolPref("mail.auth_login", &prefBool);
+      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
+      if (NS_SUCCEEDED(rv) && prefBranch) 
+        prefBranch->GetBoolPref("mail.auth_login", &prefBool);
 
       if (prefBool) 
       {

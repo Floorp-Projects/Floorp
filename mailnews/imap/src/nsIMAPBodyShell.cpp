@@ -42,10 +42,9 @@
 
 #include "nsHashtable.h"
 #include "nsMimeTypes.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsITransport.h"
-
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 // need to talk to Rich about this...
 #define	IMAP_EXTERNAL_CONTENT_HEADER "X-Mozilla-IMAP-Part"
@@ -78,14 +77,14 @@ static PRInt32 gMaxDepth = 0;	// Maximum depth that we will descend before marki
 
 nsIMAPBodyShell::nsIMAPBodyShell(nsImapProtocol *protocolConnection, const char *buf, PRUint32 UID, const char *folderName)
 {
-	if (gMaxDepth == 0)
-	{
-    nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-    if (NS_SUCCEEDED(rv) && prefs) 
-		// one-time initialization
-      prefs->GetIntPref("mail.imap.mime_parts_on_demand_max_depth", &gMaxDepth);   
-	}
+    if (gMaxDepth == 0)
+    {
+        nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+        if (prefBranch) {
+          // one-time initialization
+          prefBranch->GetIntPref("mail.imap.mime_parts_on_demand_max_depth", &gMaxDepth);
+        }
+    }
 
 	m_isValid = PR_FALSE;
 	m_isBeingGenerated = PR_FALSE;

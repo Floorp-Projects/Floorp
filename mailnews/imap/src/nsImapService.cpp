@@ -63,7 +63,8 @@
 #include "nsRDFCID.h"
 #include "nsEscape.h"
 #include "nsIMsgStatusFeedback.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsILoadGroup.h"
 #include "nsIMsgAccountManager.h"
 #include "nsMsgBaseCID.h"
@@ -102,7 +103,6 @@
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
@@ -133,11 +133,11 @@ nsImapService::nsImapService()
   if (!gInitialized)
   {
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
-    if (NS_SUCCEEDED(rv) && prefs) 
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv)); 
+    if (NS_SUCCEEDED(rv) && prefBranch) 
     {
-	    prefs->GetBoolPref("mail.imap.mime_parts_on_demand", &gMIMEOnDemand);
-	    prefs->GetIntPref("mail.imap.mime_parts_on_demand_threshold", &gMIMEOnDemandThreshold);
+      prefBranch->GetBoolPref("mail.imap.mime_parts_on_demand", &gMIMEOnDemand);
+      prefBranch->GetIntPref("mail.imap.mime_parts_on_demand_threshold", &gMIMEOnDemandThreshold);
     }
     gInitialized = PR_TRUE;
   }
@@ -3462,11 +3462,10 @@ NS_IMETHODIMP
 nsImapService::SetDefaultLocalPath(nsIFileSpec *aPath)
 {
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    rv = prefs->SetFilePref(PREF_MAIL_ROOT_IMAP, aPath, PR_FALSE /* set default */);
-    return rv;
+    return prefBranch->SetComplexValue(PREF_MAIL_ROOT_IMAP, NS_GET_IID(nsIFileSpec), aPath);
 }       
 
 NS_IMETHODIMP
@@ -3476,13 +3475,14 @@ nsImapService::GetDefaultLocalPath(nsIFileSpec ** aResult)
     *aResult = nsnull;
     
     nsresult rv;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+    nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
     
     PRBool havePref = PR_FALSE;
     nsCOMPtr<nsILocalFile> prefLocal;
     nsCOMPtr<nsIFile> localFile;
-    rv = prefs->GetFileXPref(PREF_MAIL_ROOT_IMAP, getter_AddRefs(prefLocal));
+    rv = prefBranch->GetComplexValue(PREF_MAIL_ROOT_IMAP, NS_GET_IID(nsILocalFile),
+                                     getter_AddRefs(prefLocal));
     if (NS_SUCCEEDED(rv)) {
         localFile = prefLocal;
         havePref = PR_TRUE;
