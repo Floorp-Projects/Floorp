@@ -2202,6 +2202,8 @@ nsBrowserWindow::DoCopy()
 #endif
 #endif
 
+#if defined(USE_STRINGSTREAM) || defined(USE_STRSTREAM) || defined(USE_OSTREAM)
+
 #if defined(USE_STRINGSTREAM)
 	stringstream  data;
 #else
@@ -2275,6 +2277,7 @@ nsBrowserWindow::DoCopy()
 #endif
 
 	}
+#endif /* USE_STRINGSTREAM || USE_STRSTREAM || USE_OSTREAM */
 	NS_RELEASE(parser);
       }
       NS_RELEASE(doc);
