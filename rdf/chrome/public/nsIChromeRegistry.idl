@@ -26,6 +26,7 @@
 #include "nsIURL.idl"
 #include "nsIEnumerator.idl"
 #include "nsISupportsArray.idl"
+#include "nsIDocShell.idl"
 
 [scriptable, uuid(D8C7D8A1-E84C-11d2-BF87-00105A1B0627)]
 interface nsIChromeRegistry : nsISupports
@@ -96,7 +97,7 @@ interface nsIChromeRegistry : nsISupports
   void installPackage(in string baseURL, in boolean useProfile);
   void uninstallPackage(in wstring packageName, in boolean useProfile);
 
-  void getBackstopSheets(out nsISupportsArray styleSheets);
+  void getBackstopSheets(in nsIDocShell docShell, out nsISupportsArray styleSheets);
   void getUserSheets(in boolean useChromeSheets, out nsISupportsArray styleSheets);
 
   boolean allowScriptsForSkin(in nsIURI url);
