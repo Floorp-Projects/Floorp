@@ -254,8 +254,6 @@ nsXFontAAScaledBitmap::DrawText8or16(GdkDrawable *aDrawable, GdkGC *aGC,
         char_width = XTextWidth(mUnscaledFontInfo, &string8[i], 1);
       else
         char_width = XTextWidth16(mUnscaledFontInfo, &string16[i], 1);
-      AADrawBox(sub_image, x_pos, 0,
-                SCALED_SIZE(char_width)-1, mScaledMax.ascent, color, 255);
       x_pos += SCALED_SIZE(char_width);
       continue;
     }
