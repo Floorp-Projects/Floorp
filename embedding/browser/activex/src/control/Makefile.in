@@ -110,7 +110,7 @@ $(DEFFILE): mkctldef.bat
 	$(srcdir)/mkctldef.bat $@
 
 MozillaControl_i.c MozillaControl.h: MozillaControl.idl
-	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c MozillaControl.idl
+	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c $(srcdir)/MozillaControl.idl
 
 PropertyDlg.cpp: StdAfx.h resource.h
 
