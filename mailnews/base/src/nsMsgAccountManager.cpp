@@ -895,7 +895,6 @@ nsMsgAccountManager::hashUnloadServer(nsHashKey *aKey, void *aData,
     if (NS_FAILED(rv)) return PR_TRUE;
     
 	nsMsgAccountManager *accountManager = (nsMsgAccountManager*)closure;
-
 	accountManager->NotifyServerUnloaded(server);
 
 	nsCOMPtr<nsIFolder> rootFolder;
@@ -1658,6 +1657,7 @@ NS_IMETHODIMP nsMsgAccountManager::NotifyServerUnloaded(nsIMsgIncomingServer *se
 {
 	nsresult rv;
 	PRUint32 count;
+  server->SetFilterList(nsnull); // clear this to cut shutdown leaks. we are always passing valid non-null server here. 
 	rv = m_incomingServerListeners->Count(&count);
 	if (NS_FAILED(rv)) return rv;
 

@@ -989,9 +989,7 @@ nsImapIncomingServer::CloseCachedConnections()
     if (connection)
       connection->TellThreadToDie(PR_TRUE);
   }
-  
   PR_CExitMonitor(this);
-  mFilterList = nsnull; // clear this to cut shutdown leaks.
   return rv;
 }
 
