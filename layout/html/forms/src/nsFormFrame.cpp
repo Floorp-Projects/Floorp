@@ -744,12 +744,17 @@ nsresult nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFor
       aData += "; charset=";
       aData += charset;
 #endif
+      aData += CRLF;
       aData += "Content-Length: ";
       aData += size;
       aData += CRLF;
       aData += CRLF;
     } 
   aData += buf;
+  // Need to append CRLF to end of stream for compatability with Nav and IE
+  if (isPost) {
+    aData += CRLF;
+  }
   NS_IF_RELEASE(encoder);
   return rv;
 }
