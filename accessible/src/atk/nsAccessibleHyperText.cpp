@@ -409,9 +409,18 @@ NS_IMETHODIMP nsAccessibleHyperText::GetLink(PRInt32 aIndex, nsIAccessibleHyperL
   for (index = 0; index < count; index++) {
     nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mTextChildren->ElementAt(index)));
     nsCOMPtr<nsIDOMNode> parentNode;
-    // text node maybe a child of a link node
+
+    // text node maybe a child (or grandchild, ...) of a link node
+    nsCOMPtr<nsILink> link;
     domNode->GetParentNode(getter_AddRefs(parentNode));
-    nsCOMPtr<nsILink> link(do_QueryInterface(parentNode));
+    while (parentNode) {
+      link = do_QueryInterface(parentNode);
+      if (link)
+        break; 
+      nsCOMPtr<nsIDOMNode> tmpNode = parentNode;
+      tmpNode->GetParentNode(getter_AddRefs(parentNode));
+    }
+
     if (link) {
       if (linkCount++ == NS_STATIC_CAST(PRUint32, aIndex)) {
         nsCOMPtr<nsIWeakReference> weakShell;
