@@ -97,7 +97,7 @@ function loadCalendarPublishDialog()
    
    gOnOkFunction = args.onOk;
    
-   var firstFocus = document.getElementById( "server-name-textbox" );
+   var firstFocus = document.getElementById( "publish-url-textbox" );
    firstFocus.focus();
 }
 
