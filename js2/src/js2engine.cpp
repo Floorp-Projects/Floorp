@@ -44,6 +44,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <list>
+#include <stack>
 
 #include "world.h"
 #include "utilities.h"
@@ -97,27 +98,26 @@ namespace MetaData {
             }
         }
         catch (Exception &jsx) {
-#if 0
             if (mTryStack.size() > 0) {
                 HandlerData *hndlr = (HandlerData *)mTryStack.top();
-                Activation *curAct = (mActivationStack.size() > 0) ? mActivationStack.top() : NULL;
+                ActivationFrame *curAct = (activationStackEmpty()) ? NULL : (activationStackTop - 1);
                 
                 js2val x;
                 if (curAct != hndlr->mActivation) {
-                    ASSERT(mActivationStack.size() > 0);
-                    Activation *prev;// = mActivationStack.top();
+                    ASSERT(!activationStackEmpty());
+                    ActivationFrame *prev;
                     do {
                         prev = curAct;
-                        if (prev->mPC == NULL) {
+                        if (prev->pc == NULL) {
                             // Yikes! the exception is getting thrown across a re-invocation
                             // of the interpreter loop.
                             throw jsx;
                         }
-                        mActivationStack.pop();
-                        curAct = mActivationStack.top();                            
+                        curAct = --activationStackTop;
                     } while (hndlr->mActivation != curAct);
                     if (jsx.hasKind(Exception::userException))  // snatch the exception before the stack gets clobbered
-                        x = popValue();
+                        x = pop();
+/*
                     mNamespaceList = prev->mNamespaceList;
                     mCurModule = prev->mModule;
                     endPC = mCurModule->mCodeBase + mCurModule->mLength;
@@ -126,12 +126,13 @@ namespace MetaData {
                     mStackMax = mCurModule->mStackDepth;
                     mArgumentBase = prev->mArgumentBase;
                     mThis = prev->mThis;
+*/
                 }
                 else {
                     if (jsx.hasKind(Exception::userException))
-                        x = popValue();
+                        x = pop();
                 }
-
+#if 0
                 // make sure there's a JS object for the catch clause to work with
                 if (!jsx.hasKind(Exception::userException)) {
                     js2val argv[1];
@@ -154,14 +155,13 @@ namespace MetaData {
                         break;
                     }
                 }
-                
-                resizeStack(hndlr->mStackSize);
+#endif                
+                sp = hndlr->mStackTop;
                 pc = hndlr->mPC;
-                pushValue(x);
+                push(x);
             }
             else
                 throw jsx; //reportError(Exception::uncaughtError, "No handler for throw");
-#endif
         }
 
         return retval;
@@ -409,6 +409,15 @@ namespace MetaData {
         case eLogicalNot:
             return 0;
 
+        case eIs:           // pop expr, pop type, bush boolean
+            return 1;
+
+        case eTry:          // no exec. stack impact
+        case eHandler:
+        case eCallFinally:
+        case eReturnFinally:
+            return 0;
+
         case eString:
         case eTrue:
         case eFalse:
@@ -600,6 +609,20 @@ namespace MetaData {
         JS2Object::mark(Dollar_StringAtom);
         JS2Object::mark(length_StringAtom);
     }
+
+    void JS2Engine::pushHandler(uint8 *pc)
+    { 
+        ActivationFrame *curAct = (activationStackEmpty()) ? NULL : (activationStackTop - 1);
+        mTryStack.push(new HandlerData(pc, sp, curAct)); 
+    }
+
+    void JS2Engine::popHandler()
+    {
+        HandlerData *hndlr = mTryStack.top();
+        mTryStack.pop();
+        delete hndlr;
+    }
+
 
     //
     // XXX Only scanning dynamic properties

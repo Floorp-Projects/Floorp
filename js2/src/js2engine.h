@@ -118,6 +118,7 @@ enum JS2Op {
     eNew,               // <argCount:u16>
     eCall,              // <argCount:u16>
     eTypeof,
+    eIs,
 
     ePopv,
     ePop,
@@ -264,9 +265,20 @@ public:
     // insert 'x' before the top 'count' stack items
     void insert(js2val x, int count);
 
+    struct HandlerData {
+        HandlerData(uint8 *pc, js2val *stackTop, ActivationFrame *curAct) 
+            : mPC(pc), mStackTop(stackTop), mActivation(curAct) { }
 
-    void pushHandler(uint8 *pc) { }
-    void popHandler()           { }
+        uint8 *mPC;
+        js2val *mStackTop;
+        ActivationFrame *mActivation;
+    };
+
+    std::stack<HandlerData *> mTryStack;
+    std::stack<uint8 *> mSubStack;
+
+    void pushHandler(uint8 *pc);
+    void popHandler();
 
     void mark();
 

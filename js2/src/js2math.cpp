@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <list>
 #include <map>
+#include <stack>
 
 #include "world.h"
 #include "utilities.h"

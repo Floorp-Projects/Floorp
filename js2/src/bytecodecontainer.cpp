@@ -43,6 +43,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <list>
+#include <stack>
 
 #include "world.h"
 #include "utilities.h"

@@ -189,6 +189,13 @@
         }
         break;
 
+    case eIs:
+        {
+            a = pop();
+            b = pop();
+        }
+        break;
+
     case eTypeof:
         {
             a = pop();

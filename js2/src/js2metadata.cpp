@@ -44,6 +44,7 @@
 #include <assert.h>
 #include <map>
 #include <list>
+#include <stack>
 
 #include "world.h"
 #include "utilities.h"
@@ -851,29 +852,29 @@ namespace MetaData {
             break;
         case StmtNode::Try:
 /*
-            try {   //  [catch,finally] handler labels are pushed on try stack [eTry]
+            try {   //  [catchLabel,finallyInvoker] handler labels are pushed on handler stack [eTry]
                     <tryblock>
-                }   //  catch handler label is popped off try stack [eHandler]
+                }   //  catch handler label is popped off handler stack [eHandler]
                 jsr finally
                 jump-->finished                 
 
-            finally:        // finally handler label popped off
-                {           // a throw from in here goes to the 'next' handler
+            finally:        // finally handler label popped off here.
+                {           // A throw from in here goes to the next handler on the
+                            // handler stack
                 }
                 rts
 
-            finallyInvoker:              <---
-                push exception              |
-                jsr finally                 |--- the handler labels 
-                throw exception             | 
-                                            |
-            catchLabel:                  <---
+            finallyInvoker:         // invoked when an exception is caught in the try block
+                push exception      // it arranges to call the finally block and then re-throw
+                jsr finally         // the exception - reaching the catch block
+                throw exception
+            catchLabel:
 
                     the incoming exception is on the top of the stack at this point
 
-                catch (exception) { // catch handler label popped off
-                        // any throw from in here must jump to the finallyInvoker
-                        // (i.e. not the catch handler!)
+                catch (exception) { // catch handler label popped off   [eHandler]
+                        // any throw from in here must jump to the next handler
+                        // (i.e. not the this same catch handler!)
 
                     Of the many catch clauses specified, only the one whose exception variable type
                     matches the type of the incoming exception is executed...
@@ -941,19 +942,43 @@ namespace MetaData {
                     bCon->emitBranch(eBranch, finishedLabel, p->pos);
                 }
 
-
-/*
-                ValidateStmt(cxt, env, t->stmt);
-                if (t->finally)
-                    ValidateStmt(cxt, env, t->finally);
-                CatchClause *c = t->catches;
-                while (c) {                    
-                    ValidateStmt(cxt, env, c->stmt);
-                    if (c->type)
-                        ValidateExpression(cxt, env, c->type);
-                    c = c->next;
+                if (t->catches) {
+                    bCon->setLabel(catchClauseLabel);
+                    bCon->emitOp(eHandler, p->pos);
+                    CatchClause *c = t->catches;
+                    // the exception object will be the only thing on the stack
+                    ASSERT(bCon->mStackTop == 0);
+                    bCon->mStackTop = 1;
+                    if (bCon->mStackMax < 1) bCon->mStackMax = 1;
+                    BytecodeContainer::LabelID nextCatch = NotALabel;
+                    while (c) {                    
+                        if (c->next && c->type) {
+                            nextCatch = bCon->getLabel();
+                            bCon->emitOp(eDup, p->pos);
+                            Reference *r = EvalExprNode(env, phase, c->type);
+                            if (r) r->emitReadBytecode(bCon, p->pos);
+                            bCon->emitOp(eIs, p->pos);
+                            bCon->emitBranch(eBranchFalse, nextCatch, p->pos);
+                        }
+                        // write the exception object (on stack top) into the named
+                        // local variable
+                        Reference *r = new LexicalReference(&c->name, false);
+                        r->emitWriteBytecode(bCon, p->pos);
+                        bCon->emitOp(ePop, p->pos);
+                        EvalStmt(env, phase, c->stmt);
+                        if (t->finally) {
+                            bCon->emitBranch(eCallFinally, t_finallyLabel, p->pos);
+                        }
+                        c = c->next;
+                        if (c) {
+                            bCon->emitBranch(eBranch, finishedLabel, p->pos);
+                            bCon->mStackTop = 1;
+                            if (nextCatch != NotALabel)
+                                bCon->setLabel(nextCatch);
+                        }
+                    }
                 }
-*/
+                bCon->setLabel(finishedLabel);
             }
             break;
         case StmtNode::Return:

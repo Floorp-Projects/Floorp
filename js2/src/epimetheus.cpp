@@ -38,6 +38,7 @@
 #include <map>
 #include <algorithm>
 #include <list>
+#include <stack>
 
 #include "reader.h"
 #include "parser.h"
