@@ -238,7 +238,7 @@ done:
 extern "C" {
   static void ThreadDestruct (void *data);
   static PRStatus TimelineInit(void);
-};
+}
 
 void ThreadDestruct( void *data )
 {
