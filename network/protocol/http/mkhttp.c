@@ -313,7 +313,7 @@ NET_getInternetKeyword(const URL_Struct *inURL, char *outKeyword, int16 inMaxLen
 
     key = outKeyword;
     for (ctr = 0; ctr < inURL->all_headers.empty_index; ctr++)
-        if (strcasecomp(inURL->all_headers.key[ctr], INTERNET_KEYWORD_METATAG) == 0) {
+        if (PL_strcasecmp(inURL->all_headers.key[ctr], INTERNET_KEYWORD_METATAG) == 0) {
             /* add a separator, if appropriate */
             if (key > outKeyword)
                 if (key < keyEnd-1) {
