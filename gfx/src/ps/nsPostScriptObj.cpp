@@ -173,26 +173,34 @@ nsPostScriptObj::nsPostScriptObj()
  */
 nsPostScriptObj::~nsPostScriptObj()
 {
-  // end the document
-  end_document();
-  finalize_translation();
-  if ( mPrintSetup->filename != (char *) NULL )
-	fclose( mPrintSetup->out );
-  else
+  // The mPrintContext can be null
+  // if  opening the PostScript document
+  // fails.  Giving an invalid path, relative path
+  // or a directory which the user does not have
+  // write permissions for will fail to open a document
+  // see bug 85535 
+  if (mPrintContext) {
+    // end the document
+    end_document();
+    finalize_translation();
+    if ( mPrintSetup->filename != (char *) NULL )
+      fclose( mPrintSetup->out );
+    else
 #ifdef XP_OS2_VACPP
         // pclose not defined OS2TODO
 #else
 	pclose( mPrintSetup->out );
 #endif
 #ifdef VMS
-  if ( mPrintSetup->print_cmd != (char *) NULL ) {
-    char VMSPrintCommand[1024];
-    sprintf (VMSPrintCommand, "%s /delete %s.",
-      mPrintSetup->print_cmd, mPrintSetup->filename);
-    system(VMSPrintCommand);
-    free(mPrintSetup->filename);
-  }
+    if ( mPrintSetup->print_cmd != (char *) NULL ) {
+      char VMSPrintCommand[1024];
+      sprintf (VMSPrintCommand, "%s /delete %s.",
+        mPrintSetup->print_cmd, mPrintSetup->filename);
+      system(VMSPrintCommand);
+      free(mPrintSetup->filename);
+    }
 #endif
+  }
   // Cleanup things allocated along the way
   if (nsnull != mTitle){
     nsMemory::Free(mTitle);
