@@ -637,6 +637,9 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
 [  --enable-xterm-updates  Update XTERM titles with current command.],
   MOZ_UPDATE_XTERM=1)
 
+MOZ_ARG_ENABLE_BOOL(js-stubs,
+[  --enable-js-stubs       Use XPIDL JavaScript Stubs.],
+  AC_DEFINE(XPIDL_JS_STUBS))
 
 MOZ_ARG_HEADER(Untested or Broken Options)
 
