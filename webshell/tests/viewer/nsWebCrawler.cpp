@@ -164,12 +164,12 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mDelay = 0;
   mMaxPages = -1;
   mRecord = nsnull;
-  mLinkTag = NS_NewAtom("a");
-  mFrameTag = NS_NewAtom("frame");
-  mIFrameTag = NS_NewAtom("iframe");
-  mHrefAttr = NS_NewAtom("href");
-  mSrcAttr = NS_NewAtom("src");
-  mBaseHrefAttr = NS_NewAtom("_base_href");
+  mLinkTag = getter_AddRefs(NS_NewAtom("a"));
+  mFrameTag = getter_AddRefs(NS_NewAtom("frame"));
+  mIFrameTag = getter_AddRefs(NS_NewAtom("iframe"));
+  mHrefAttr = getter_AddRefs(NS_NewAtom("href"));
+  mSrcAttr = getter_AddRefs(NS_NewAtom("src"));
+  mBaseHrefAttr = getter_AddRefs(NS_NewAtom("_base_href"));
   mVisited = new AtomHashTable();
   mVerbose = nsnull;
   mRegressing = PR_FALSE;
@@ -191,12 +191,6 @@ nsWebCrawler::~nsWebCrawler()
   FreeStrings(mAvoidDomains);
   NS_IF_RELEASE(mBrowser);
   NS_IF_RELEASE(mTimer);
-  NS_IF_RELEASE(mLinkTag);
-  NS_IF_RELEASE(mFrameTag);
-  NS_IF_RELEASE(mIFrameTag);
-  NS_IF_RELEASE(mHrefAttr);
-  NS_IF_RELEASE(mSrcAttr);
-  NS_IF_RELEASE(mBaseHrefAttr);
   delete mVisited;
 }
 
@@ -648,8 +642,8 @@ nsWebCrawler::RecordLoadedURL(const nsString& aURL)
 void
 nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
 {
-  nsIAtom* atom;
-  aNode->GetTag(atom);
+  nsCOMPtr<nsIAtom> atom;
+  aNode->GetTag(*getter_AddRefs(atom));
   if ((atom == mLinkTag) || (atom == mFrameTag) || (atom == mIFrameTag)) {
     // Get absolute url that tag targets
     nsAutoString base, src, absURLSpec;
@@ -668,7 +662,7 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     rv = NS_MakeAbsoluteURI(src, docURL, absURLSpec);
 #endif // NECKO
     if (NS_OK == rv) {
-      nsIAtom* urlAtom = NS_NewAtom(absURLSpec);
+      nsCOMPtr<nsIAtom> urlAtom = getter_AddRefs(NS_NewAtom(absURLSpec));
       if (0 == mVisited->Get(urlAtom)) {
         // Remember the URL as visited so that we don't go there again
         mVisited->Put(urlAtom, "visited");
@@ -695,11 +689,10 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
           printf("'\n");
         }
       }
-      NS_RELEASE(urlAtom);
     }
     NS_RELEASE(docURL);
   }
-  NS_IF_RELEASE(atom);
+
   PRBool canHaveKids;
   aNode->CanContainChildren(canHaveKids);
   if (canHaveKids) {

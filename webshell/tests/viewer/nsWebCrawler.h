@@ -19,12 +19,13 @@
 #ifndef nsWebCrawler_h___
 #define nsWebCrawler_h___
 
+#include "nsCOMPtr.h"
 #include "nsIBrowserWindow.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
+#include "nsIAtom.h"
 
-class nsIAtom;
 class nsIContent;
 class nsIDocument;
 class nsITimer;
@@ -151,12 +152,12 @@ protected:
   nsViewerApp* mViewer;
   nsITimer* mTimer;
   FILE* mRecord;
-  nsIAtom* mLinkTag;
-  nsIAtom* mFrameTag;
-  nsIAtom* mIFrameTag;
-  nsIAtom* mHrefAttr;
-  nsIAtom* mSrcAttr;
-  nsIAtom* mBaseHrefAttr;
+  nsCOMPtr<nsIAtom> mLinkTag;
+  nsCOMPtr<nsIAtom> mFrameTag;
+  nsCOMPtr<nsIAtom> mIFrameTag;
+  nsCOMPtr<nsIAtom> mHrefAttr;
+  nsCOMPtr<nsIAtom> mSrcAttr;
+  nsCOMPtr<nsIAtom> mBaseHrefAttr;
   AtomHashTable* mVisited;
   nsString mOutputDir;
 

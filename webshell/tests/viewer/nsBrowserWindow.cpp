@@ -1668,6 +1668,19 @@ nsBrowserWindow::Hide()
   return NS_OK;
 }
 
+static void DestroyWidget(nsISupports* aWidget)
+{
+  if (aWidget) {
+    nsIWidget* w;
+    nsresult rv = aWidget->QueryInterface(kIWidgetIID, (void**) &w);
+    if (NS_SUCCEEDED(rv)) {
+      w->Destroy();
+      NS_RELEASE(w);
+    }
+    NS_RELEASE(aWidget);
+  }
+}
+
 NS_IMETHODIMP
 nsBrowserWindow::Close()
 {
@@ -1678,18 +1691,18 @@ nsBrowserWindow::Close()
     NS_RELEASE(mWebShell);
   }
 
-  NS_IF_RELEASE(mBack);
-  NS_IF_RELEASE(mForward);
-  NS_IF_RELEASE(mLocation);
-  NS_IF_RELEASE(mThrobber);
-  NS_IF_RELEASE(mStatus);
+  DestroyWidget(mBack);         mBack = nsnull;
+  DestroyWidget(mForward);      mForward = nsnull;
+  DestroyWidget(mLocation);     mLocation = nsnull;
+  DestroyWidget(mStatus);       mStatus = nsnull;
 
-//  NS_IF_RELEASE(mWindow);
-  if (nsnull != mWindow) {
-    nsIWidget* w = mWindow;
-    w->Destroy();
-    NS_RELEASE(w);
+  if (mThrobber) {
+    mThrobber->Destroy();
+    NS_RELEASE(mThrobber);
+    mThrobber = nsnull;
   }
+
+  DestroyWidget(mWindow);       mWindow = nsnull;
 
   return NS_OK;
 }

@@ -175,11 +175,14 @@ nsThrobber::HandleThrobberEvent(nsGUIEvent *aEvent)
 
 //----------------------------------------------------------------------
 
+MOZ_DECL_CTOR(nsThrobber);
+
 PRInt32 nsThrobber::gNumThrobbers;
 
 // Note: operator new zeros our memory
 nsThrobber::nsThrobber()
 {
+  MOZ_CTOR(nsThrobber);
   NS_INIT_REFCNT();
   if (0 == gNumThrobbers++) {
     gThrobbers = new nsVoidArray;
@@ -189,7 +192,17 @@ nsThrobber::nsThrobber()
 
 nsThrobber::~nsThrobber()
 {
-  NS_IF_RELEASE(mWidget);
+  MOZ_DTOR(nsThrobber);
+  Destroy();
+}
+
+void
+nsThrobber::Destroy()
+{
+  if (mWidget) {
+    mWidget->Destroy();
+    NS_RELEASE(mWidget);
+  }
   RemoveThrobber(this);
   DestroyThrobberImages();
 
@@ -200,7 +213,34 @@ nsThrobber::~nsThrobber()
   }
 }
 
+#ifdef LOG_REFCNTS
+extern "C" {
+  void __log_addref(void* p, int oldrc, int newrc);
+  void __log_release(void* p, int oldrc, int newrc);
+}
+
+nsrefcnt nsThrobber::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  __log_addref((void*) this, mRefCnt, mRefCnt + 1);
+  return ++mRefCnt;
+}
+
+nsrefcnt nsThrobber::Release(void)
+{
+  __log_release((void*) this, mRefCnt, mRefCnt - 1);
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  if (--mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
+
+NS_IMPL_QUERY_INTERFACE(nsThrobber, kIImageObserverIID)
+#else
 NS_IMPL_ISUPPORTS(nsThrobber, kIImageObserverIID)
+#endif
 
 nsresult
 nsThrobber::Init(nsIWidget* aParent, const nsRect& aBounds, const nsString& aFileNameMask, PRInt32 aNumImages)
@@ -373,5 +413,6 @@ nsThrobber::DestroyThrobberImages()
 
   if (mImages) {
     delete mImages;
+    mImages = nsnull;
   }
 }
