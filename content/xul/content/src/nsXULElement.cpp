@@ -3641,8 +3641,14 @@ nsXULElement::EnsureContentsGenerated(void) const
             if (xulele) {
                 nsCOMPtr<nsIXULTemplateBuilder> builder;
                 xulele->GetBuilder(getter_AddRefs(builder));
-                if (builder)
+                if (builder) {
+                    if (HasAttr(kNameSpaceID_None, nsXULAtoms::xulcontentsgenerated)) {
+                        unconstThis->ClearLazyState(nsIXULContent::eChildrenMustBeRebuilt);
+                        return NS_OK;
+                    }
+
                     return builder->CreateContents(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
+                }
             }
 
             nsCOMPtr<nsIContent> parent;

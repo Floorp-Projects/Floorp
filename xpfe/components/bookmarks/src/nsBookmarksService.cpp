@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Robert John Churchill    <rjc@netscape.com>
  *   Chris Waterson           <waterson@netscape.com>
+ *   David Hyatt              <hyatt@netscape.com>
  *   Ben Goodger              <ben@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -114,6 +115,7 @@ nsIRDFResource		*kNC_BookmarksRoot;
 nsIRDFResource		*kNC_Description;
 nsIRDFResource		*kNC_Folder;
 nsIRDFResource		*kNC_FolderType;
+nsIRDFResource    *kNC_FolderGroup;
 nsIRDFResource		*kNC_IEFavorite;
 nsIRDFResource		*kNC_IEFavoriteFolder;
 nsIRDFResource		*kNC_Name;
@@ -228,6 +230,7 @@ bm_AddRefGlobals()
 		gRDF->GetResource(NC_NAMESPACE_URI "Description",         &kNC_Description);
 		gRDF->GetResource(NC_NAMESPACE_URI "Folder",              &kNC_Folder);
 		gRDF->GetResource(NC_NAMESPACE_URI "FolderType",          &kNC_FolderType);
+    gRDF->GetResource(NC_NAMESPACE_URI "FolderGroup",         &kNC_FolderGroup);
 		gRDF->GetResource(NC_NAMESPACE_URI "IEFavorite",          &kNC_IEFavorite);
 		gRDF->GetResource(NC_NAMESPACE_URI "IEFavoriteFolder",    &kNC_IEFavoriteFolder);
 		gRDF->GetResource(NC_NAMESPACE_URI "Name",                &kNC_Name);
@@ -300,6 +303,7 @@ bm_ReleaseGlobals()
 		NS_IF_RELEASE(kNC_Description);
 		NS_IF_RELEASE(kNC_Folder);
 		NS_IF_RELEASE(kNC_FolderType);
+    NS_IF_RELEASE(kNC_FolderGroup);
 		NS_IF_RELEASE(kNC_IEFavorite);
 		NS_IF_RELEASE(kNC_IEFavoriteFolder);
 		NS_IF_RELEASE(kNC_IEFavoritesRoot);
@@ -547,6 +551,7 @@ static const char kPersonalToolbarFolderEquals[]  = "PERSONAL_TOOLBAR_FOLDER=\""
 static const char kHREFEquals[]            = "HREF=\"";
 static const char kTargetEquals[]          = "TARGET=\"";
 static const char kAddDateEquals[]         = "ADD_DATE=\"";
+static const char kFolderGroupEquals[]     = "FOLDER_GROUP=\"";
 static const char kLastVisitEquals[]       = "LAST_VISIT=\"";
 static const char kLastModifiedEquals[]    = "LAST_MODIFIED=\"";
 static const char kLastCharsetEquals[]     = "LAST_CHARSET=\"";
@@ -1086,6 +1091,7 @@ BookmarkParser::gBookmarkHeaderFieldTable[] =
   { kIDEquals,                    NC_NAMESPACE_URI  "URL",               nsnull,  BookmarkParser::ParseResource,  nsnull },
   { kAddDateEquals,               NC_NAMESPACE_URI  "BookmarkAddDate",   nsnull,  BookmarkParser::ParseDate,      nsnull },
   { kLastModifiedEquals,          WEB_NAMESPACE_URI "LastModifiedDate",  nsnull,  BookmarkParser::ParseDate,      nsnull },
+  { kFolderGroupEquals,           NC_NAMESPACE_URI  "FolderGroup",       nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   // Note: these last three are specially handled
   { kNewBookmarkFolderEquals,     kURINC_NewBookmarkFolder,              nsnull,  BookmarkParser::ParseLiteral,   nsnull },
   { kNewSearchFolderEquals,       kURINC_NewSearchFolder,                nsnull,  BookmarkParser::ParseLiteral,   nsnull },
@@ -5104,6 +5110,12 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 						PR_TRUE, &hasType)) && (hasType == PR_TRUE))
 					{
 						strm << " " << kPersonalToolbarFolderEquals << "true\"";
+					}
+
+          if (NS_SUCCEEDED(rv = mInner->HasArcOut(child, kNC_FolderGroup, &hasType)) && 
+              (hasType == PR_TRUE))
+					{
+						strm << " " << kFolderGroupEquals << "true\"";
 					}
 
 					// output ID

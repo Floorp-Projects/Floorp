@@ -661,7 +661,7 @@
             this.mOuter.selectAll();
             break;
           case "cmd_bm_open":
-            this.mOuter.openItem(null, false);
+            this.mOuter.openItem(null, false, false);
             break;
           case "cmd_bm_openfolder":
             this.mOuter.outlinerBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
@@ -671,7 +671,7 @@
             if (type == this.mOuter.NC_NS + "Folder")
               this.mOuter.openFolderInNewWindow();
             else
-              this.mOuter.openItem(null, true);
+              this.mOuter.openItem(null, true, false);
             break;
           case "cmd_bm_newbookmark":
             this.mOuter.addBookmark();
@@ -1801,8 +1801,16 @@
       <method name="openItem">
       <parameter name="aEvent"/>
       <parameter name="aInNewWindow"/>
+      <parameter name="aOpenGroups"/>
         <body><![CDATA[
-          if (this.outlinerBoxObject.view.isContainer(this.outlinerBoxObject.selection.currentIndex)) {
+          var groupRes = this.rdf.GetResource(this.NC_NS + "FolderGroup");  
+          var groupTarget = this.db.GetTarget(this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex), 
+                                              groupRes, true);
+
+          if (groupTarget && !aOpenGroups)
+            return;
+          
+          if (!groupTarget && this.outlinerBoxObject.view.isContainer(this.outlinerBoxObject.selection.currentIndex)) {
             if (this.clickCount == 1) {
               var row = { };
               var col = { };
@@ -1825,20 +1833,39 @@
               var rangeMax = { };
               seln.getRangeAt(i, rangeMin, rangeMax);
               for (var k = rangeMax.value; k >= rangeMin.value; --k) {
-                urlRes = this.rdf.GetResource(this.NC_NS + "URL");
-                urlValue = this.db.GetTarget(this.outlinerBuilder.getResourceAtIndex(k), urlRes, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-                // Ignore "NC:" and empty urls
-                if (!urlValue || urlValue.substring(0,3) == "NC:") return;
-                openDialog (this._browserURL, "_blank", "chrome,all,dialog=no", urlValue);
+                groupTarget = this.db.GetTarget(this.outlinerBuilder.getResourceAtIndex(k), 
+                                                groupRes, true);
+          
+                if (!groupTarget) {
+                  urlRes = this.rdf.GetResource(this.NC_NS + "URL");
+                  urlValue = this.db.GetTarget(this.outlinerBuilder.getResourceAtIndex(k), urlRes, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+                  // Ignore "NC:" and empty urls
+                  if (!urlValue || urlValue.substring(0,3) == "NC:") return;
+                }
+                else 
+                  urlValue = "about:blank";
+                
+                var w = openDialog (this._browserURL, "_blank", "chrome,all,dialog=no", urlValue);
+                if (groupTarget)
+                  w.OpenBookmarkGroupFromResource(this.outlinerBuilder.getResourceAtIndex(k),
+                                                  this.db, this.rdf);
               }
             }
           }
           else {
-            urlRes = this.rdf.GetResource(this.NC_NS + "URL");
-            urlValue = this.db.GetTarget(this.currentRes, urlRes, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-            // Ignore "NC:" and empty urls
-            if (!urlValue || urlValue.substring(0,3) == "NC:") return;
-            openTopWin(urlValue);
+            groupTarget = this.db.GetTarget(this.currentRes, groupRes, true);
+            if (!groupTarget) {
+              urlRes = this.rdf.GetResource(this.NC_NS + "URL");
+              urlValue = this.db.GetTarget(this.currentRes, urlRes, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+              // Ignore "NC:" and empty urls
+              if (!urlValue || urlValue.substring(0,3) == "NC:") return;
+            }
+            else 
+              urlValue = "about:blank";
+              
+            var w = openTopWin(urlValue);
+            if (groupTarget)
+              w.OpenBookmarkGroupFromResource(this.currentRes, this.db, this.rdf);
           }
           if (aEvent) 
             aEvent.preventBubble();
@@ -1863,15 +1890,30 @@
       <vbox flex="1">
         <outliner anonid="bookmarks-outliner" flex="1" class="plain" enableColumnDrag="true"
                   datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
-                  onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItem(event, false);"
-                  ondblclick="if (this.parentNode.parentNode.validOpenClickConditions(event)) this.parentNode.parentNode.openItem(event, false);"
+                  onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItem(event, false, false);"
+                  ondblclick="if (this.parentNode.parentNode.validOpenClickConditions(event)) this.parentNode.parentNode.openItem(event, false, false);"
                   ondraggesture="if (event.originalTarget.localName == 'outlinerchildren') nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
                   onselect="this.outlinerBoxObject.view.selectionChanged();">
-          <template>
+          <template xmlns:nc="http://home.netscape.com/NC-rdf#">
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
               <outlinerchildren>
                 <outlineritem uri="rdf:*">
                   <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator"/>
+                </outlineritem>
+              </outlinerchildren>
+            </rule>
+            <rule nc:FolderGroup="true">
+              <outlinerchildren>
+                <outlineritem uri="rdf:*">
+                  <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                    <outlinercell properties="group" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#URL" />
+                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
+                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Description" />
+                    <outlinercell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
+                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
+                  </outlinerrow>
                 </outlineritem>
               </outlinerchildren>
             </rule>
@@ -1946,15 +1988,30 @@
                  onpopupshowing="this.parentNode.createContextMenu(event);"/>
       <outliner anonid="bookmarks-outliner" flex="1" hidecolumnpicker="true" class="plain"
                 datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
-                onkeypress="if (event.keyCode == 13) this.parentNode.openItem(event, false);"
+                onkeypress="if (event.keyCode == 13) this.parentNode.openItem(event, false, true);"
                 ondraggesture="if (event.originalTarget.localName == 'outlinerchildren') nsDragAndDrop.startDrag(event, this.parentNode.DNDObserver);"
-                onclick="if (this.parentNode.validOpenClickConditions(event)) this.parentNode.openItem(event, false);"
+                onclick="if (this.parentNode.validOpenClickConditions(event)) this.parentNode.openItem(event, false, true);"
                 onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();">
-        <template>
+        <template xmlns:nc="http://home.netscape.com/NC-rdf#">
           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
             <outlinerchildren>
               <outlineritem uri="rdf:*">
                 <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator" />
+              </outlineritem>
+            </outlinerchildren>
+          </rule>
+          <rule nc:FolderGroup="true">
+            <outlinerchildren>
+              <outlineritem uri="rdf:*">
+                <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                  <outlinercell properties="group hidetwisty" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#URL" />
+                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
+                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Description" />
+                  <outlinercell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
+                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
+                </outlinerrow>
               </outlineritem>
             </outlinerchildren>
           </rule>
