@@ -61,12 +61,13 @@ pass_1(TreeState *state)
             fputc('\n', state->file);
             g_hash_table_foreach(state->includes, write_header, state);
         }
-
-        fputs("\n"
-              "#ifdef XPIDL_JS_STUBS\n"
-              "#include \"jsapi.h\"\n"
-              "#endif\n",
-              state->file);
+        if (emit_js_stub_decls) {
+            fputs("\n"
+                  "#ifdef XPIDL_JS_STUBS\n"
+                  "#include \"jsapi.h\"\n"
+                  "#endif\n",
+                  state->file);
+        }
     } else {
         fprintf(state->file, "\n#endif /* __gen_%s_h__ */\n", define);
     }
@@ -149,12 +150,19 @@ interface(TreeState *state)
     fputs(" {\n"
           " public: \n", state->file);
     if (iid) {
+        fputs("  NS_DEFINE_STATIC_IID_ACCESSOR(", state->file);
+        if (!write_classname_iid_define(state->file, className))
+            return FALSE;
+        fputs(")\n", state->file);
+/* XX remove this old code... emitting the macro instead */
+/*
         fputs("  static const nsIID& GetIID() {\n"
               "    static nsIID iid = ",
               state->file);
         if (!write_classname_iid_define(state->file, className))
             return FALSE;
         fputs(";\n    return iid;\n  }\n", state->file);
+*/
     }
 
     state->tree = IDL_INTERFACE(iface).body;
@@ -170,14 +178,15 @@ interface(TreeState *state)
      * #ifdef), or you lose the vtable invariance upon which so much
      * of (XP)COM is based.
      */
-    fprintf(state->file,
+    if (emit_js_stub_decls) {
+        fprintf(state->file,
             "\n"
             "#ifdef XPIDL_JS_STUBS\n"
             "  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);\n"
             "  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, %s *priv);\n"
             "#endif\n",
             className);
-
+    }
     fputs("};\n", state->file);
 
     return TRUE;
@@ -372,7 +381,7 @@ do_const_dcl(TreeState *state)
     }
 
     if(success) {
-        fprintf(state->file, "  enum { %s = %d };\n",
+        fprintf(state->file, "\n  enum { %s = %d };\n",
                              name, (int) IDL_INTEGER(dcl->const_exp).value);
     } else {
         IDL_tree_warning(state->tree, IDL_WARNING1,
