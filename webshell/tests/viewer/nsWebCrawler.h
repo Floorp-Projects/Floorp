@@ -81,6 +81,8 @@ public:
     mDelay = aSeconds;
   }
 
+  void SetPrintTest(PRInt32 aTestType) { mPrinterTestType = aTestType; }
+
   void EnableJiggleLayout() {
     mJiggleLayout = PR_TRUE;
   }
@@ -179,6 +181,7 @@ protected:
   PRTime mStartLoad;
   PRBool mVerbose;
   PRBool mRegressing;
+  PRInt32 mPrinterTestType;
   nsString mRegressionDir;
 
   nsVoidArray mPendingURLs;

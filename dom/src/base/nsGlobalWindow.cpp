@@ -1653,7 +1653,7 @@ GlobalWindowImpl::Print()
     if (nsnull != viewer) {
       nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
       if (viewerFile) {
-        result = viewerFile->Print();
+        result = viewerFile->Print(PR_FALSE,nsnull);
       }
     }
   }

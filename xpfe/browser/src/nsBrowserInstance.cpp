@@ -1990,7 +1990,7 @@ nsBrowserAppCore::Print()
     if (nsnull != viewer) {
       nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
       if (viewerFile) {
-        NS_ENSURE_SUCCESS(viewerFile->Print(), NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(viewerFile->Print(PR_FALSE,nsnull), NS_ERROR_FAILURE);
       }
     }
   }

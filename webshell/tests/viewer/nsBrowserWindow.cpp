@@ -2421,7 +2421,7 @@ void nsBrowserWindow::DoPrint(void)
   {
     nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
     if (viewerFile) {
-      viewerFile->Print();
+      viewerFile->Print(PR_FALSE,0);
     }
   }
 }

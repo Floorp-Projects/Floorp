@@ -49,6 +49,9 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "prprf.h"
+#include "nsIContentViewer.h"
+#include "nsIContentViewerFile.h"
+
 
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -183,6 +186,7 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mVerbose = nsnull;
   LL_I2L(mStartLoad, 0);
   mRegressing = PR_FALSE;
+  mPrinterTestType = 0;
 }
 
 static void FreeStrings(nsVoidArray& aArray)
@@ -297,41 +301,75 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 #ifdef NS_DEBUG
     if (mOutputDir.Length() > 0) {
-      nsIFrame* root;
-      shell->GetRootFrame(&root);
-      if (nsnull != root) {
-        nsCOMPtr<nsIPresContext> presContext;
-        shell->GetPresContext(getter_AddRefs(presContext));
-        
-        if (mOutputDir.Length() > 0)
-        {
-          nsAutoString regressionFileName;
-          FILE *fp = GetOutputFile(aURL, regressionFileName);
-          if (fp) {
-            nsIFrameDebug* fdbg;
-            if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
-              fdbg->DumpRegressionData(presContext, fp, 0);
+      if ( mPrinterTestType > 0 ) {
+        nsCOMPtr <nsIContentViewer> viewer;
+        nsIWebShell* webshell = nsnull;
+        mBrowser->GetWebShell(webshell);
+
+        webshell->GetContentViewer(getter_AddRefs(viewer));
+
+        if (viewer){
+          nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
+          if (viewerFile) {
+            nsAutoString regressionFileName;
+            FILE *fp = GetOutputFile(aURL, regressionFileName);
+            
+            switch (mPrinterTestType) {
+              case 1:
+                // dump print data to a file for regression testing
+                viewerFile->Print(PR_TRUE,fp);
+                break;
+              case 2:
+                // visual printing tests, all go to the printer, no printer dialog
+                viewerFile->Print(PR_TRUE,0);
+                break;
+              case 3:
+                // visual printing tests, all go to the printer, with a printer dialog
+                viewerFile->Print(PR_FALSE,0);
+                break;
+              default:
+                break;
             }
-            fclose(fp);
-            if (mRegressing) {
-              PerformRegressionTest(regressionFileName);
+          fclose(fp);
+          }
+        }
+      } else {
+        nsIFrame* root;
+        shell->GetRootFrame(&root);
+        if (nsnull != root) {
+          nsCOMPtr<nsIPresContext> presContext;
+          shell->GetPresContext(getter_AddRefs(presContext));
+        
+          if (mOutputDir.Length() > 0)
+          {
+            nsAutoString regressionFileName;
+            FILE *fp = GetOutputFile(aURL, regressionFileName);
+            if (fp) {
+              nsIFrameDebug* fdbg;
+              if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
+                fdbg->DumpRegressionData(presContext, fp, 0);
+              }
+              fclose(fp);
+              if (mRegressing) {
+                PerformRegressionTest(regressionFileName);
+              }
+              else {
+                fputs(regressionFileName, stdout);
+                printf(" - being written\n");
+              }
             }
             else {
-              fputs(regressionFileName, stdout);
-              printf(" - being written\n");
+              char* file;
+              (void)aURL->GetPath(&file);
+              printf("could not open output file for %s\n", file);
+              nsCRT::free(file);
             }
           }
           else {
-            char* file;
-            (void)aURL->GetPath(&file);
-            printf("could not open output file for %s\n", file);
-            nsCRT::free(file);
-          }
-        }
-        else {
-          nsIFrameDebug* fdbg;
-          if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
-            fdbg->DumpRegressionData(presContext, stdout, 0);
+            nsIFrameDebug* fdbg;
+            if (NS_SUCCEEDED(root->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**) &fdbg))) {
+              fdbg->DumpRegressionData(presContext, stdout, 0);
+            }
           }
         }
       }
@@ -363,6 +401,10 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
   }
   else {
     fputs("null pres shell\n", stdout);
+  }
+
+  if (mPostExit && (0 == mQueuedLoadURLs)) {
+    QueueExit();
   }
 
   return NS_OK;
@@ -809,9 +851,6 @@ nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
     mRecord = nsnull;
   }
 
-  if (mPostExit && (0 == mQueuedLoadURLs)) {
-    QueueExit();
-  }
 } 
 
 nsIPresShell*
@@ -1033,9 +1072,7 @@ nsWebCrawler::GoToQueuedURL(const nsString& aURL)
     NS_RELEASE(webShell);
   }
   mQueuedLoadURLs--;
-  if ((0 == mQueuedLoadURLs) && (0 == mPendingURLs.Count())) {
-    QueueExit();
-  }
+
 }
 
 nsresult
