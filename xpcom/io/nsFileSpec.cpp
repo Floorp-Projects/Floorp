@@ -329,6 +329,14 @@ nsBasicOutStream& operator << (nsBasicOutStream& s, const nsFileURL& url)
 //                                nsFilePath implementation
 //========================================================================================
 
+nsFilePath::nsFilePath(const nsFilePath& inPath)
+    : mPath(nsFileSpecHelpers::StringDup(inPath.mPath))
+#ifdef XP_MAC
+    , mNativeFileSpec(inPath.mNativeFileSpec)
+#endif
+{
+}
+
 #ifndef XP_MAC
 //----------------------------------------------------------------------------------------
 nsFilePath::nsFilePath(const char* inString, bool inCreateDirs)
