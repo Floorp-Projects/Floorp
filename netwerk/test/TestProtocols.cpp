@@ -96,7 +96,7 @@ URLLoadInfo::~URLLoadInfo()
 }
 
 
-NS_IMPL_ISUPPORTS(URLLoadInfo,NS_GET_IID(nsISupports));
+NS_IMPL_THREADSAFE_ISUPPORTS(URLLoadInfo,NS_GET_IID(nsISupports));
 
 
 class TestHTTPEventSink : public nsIHTTPEventSink
