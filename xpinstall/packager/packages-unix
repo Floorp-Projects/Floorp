@@ -412,6 +412,9 @@ bin/chrome/icons/default/venkman-window*.xpm
 ;       developers to create an installer.  Release builds contain 
 ;       a legitimate, working talkback.xpi.
 bin/components/nsSample.js
+bin/components/libqfaservices.so
+bin/components/qfaservices.xpt
+bin/components/talkback/*
 
 [psm]
 bin/libnssckbi.so
