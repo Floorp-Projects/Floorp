@@ -25,7 +25,6 @@ MODULE=downloadmanager
 
 XPIDLSRCS =                   \
     .\nsIDownloadManager.idl  \
-    .\nsIDownload.idl     \
     .\nsIDownloadProgressListener.idl \
     $(NULL)
 
