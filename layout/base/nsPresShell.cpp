@@ -826,7 +826,7 @@ public:
                                          GeneratedContentType aType,
                                          nsIContentIterator** aIterator) const;
  
-  NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, nsEventStatus* aStatus);
+  NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, PRUint32 aFlags, nsEventStatus* aStatus);
   NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame);
 
   NS_IMETHOD IsReflowLocked(PRBool* aIsLocked);  
@@ -1046,7 +1046,7 @@ private:
   nsIFrame* GetCurrentEventFrame();
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
   void PopCurrentEventInfo();
-  nsresult HandleEventInternal(nsEvent* aEvent, nsIView* aView, nsEventStatus *aStatus);
+  nsresult HandleEventInternal(nsEvent* aEvent, nsIView* aView, PRUint32 aFlags, nsEventStatus *aStatus);
 };
 
 #ifdef NS_DEBUG
@@ -4163,7 +4163,7 @@ PresShell::HandleEvent(nsIView         *aView,
         }
       }
       if (GetCurrentEventFrame()) {
-        rv = HandleEventInternal(aEvent, aView, aEventStatus);
+        rv = HandleEventInternal(aEvent, aView, NS_EVENT_FLAG_INIT, aEventStatus);
       }
       NS_RELEASE(manager);
     }
@@ -4204,18 +4204,18 @@ PresShell::HandleEvent(nsIView         *aView,
 }
 
 NS_IMETHODIMP
-PresShell::HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, nsEventStatus* aStatus)
+PresShell::HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, PRUint32 aFlags, nsEventStatus* aStatus)
 {
   nsresult ret;
 
   PushCurrentEventInfo(aFrame, aContent);
-  ret = HandleEventInternal(aEvent, nsnull, aStatus);
+  ret = HandleEventInternal(aEvent, nsnull, aFlags, aStatus);
   PopCurrentEventInfo();
   return NS_OK;
 }
 
 nsresult
-PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, nsEventStatus* aStatus)
+PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, PRUint32 aFlags, nsEventStatus* aStatus)
 {
   nsresult rv = NS_OK;
 
@@ -4228,13 +4228,13 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, nsEventStatus* a
     if ((GetCurrentEventFrame()) && NS_OK == rv) {
       if (mCurrentEventContent) {
         rv = mCurrentEventContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
-                                           NS_EVENT_FLAG_INIT, aStatus);
+                                           aFlags, aStatus);
       }
       else {
         nsIContent* targetContent;
         if (NS_OK == mCurrentEventFrame->GetContentForEvent(mPresContext, aEvent, &targetContent) && nsnull != targetContent) {
           rv = targetContent->HandleDOMEvent(mPresContext, aEvent, nsnull, 
-                                             NS_EVENT_FLAG_INIT, aStatus);
+                                             aFlags, aStatus);
           NS_RELEASE(targetContent);
         }
       }

@@ -585,6 +585,7 @@ nsHTMLImageElement::HandleDOMEvent(nsIPresContext* aPresContext,
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
     }
   }
+
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
