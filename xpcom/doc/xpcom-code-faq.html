@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.51 [en] (X11; U; Linux 2.0.36 i686) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.51 [en] (WinNT; U) [Netscape]">
    <meta name="Author" content="Suresh Duddi">
    <title>XPCOM Code FAQ</title>
 </head>
@@ -85,22 +85,22 @@ is the order of creation of the ServiceManager, ComponentManager and Registry</h
 <blockquote>Init_XPCOM()
 <blockquote>
 <li>
-create the global component manager</li>
+create the global service manager</li>
 
 <li>
 create the global component manager and register as service with the global
 service manager</li>
 
 <li>
-RegisterFactory(...RegistryFactory...)&nbsp; Register the RegistryFactory()
+RegisterFactory(...RegistryFactory...)&nbsp; Register the RegistryFactory
 with the component manager so that new registry objects can be created.</li>
 </blockquote>
 Now the hard problem is when to trigger Init_XPCOM() There are two static
 objects nsComponentManager and nsServiceManager. Any function in either
 of them can be called first. Today nsServiceManager::GetService() is the
 first one that gets called. All the members of the static nsServiceManager
-use the nsGetGlobalServiceManager() to get to the global service manager.
-All members of the static nsComponentManager use the nsGetGlobalComponentManager()
+use the NS_GetGlobalServiceManager() to get to the global service manager.
+All members of the static nsComponentManager use the NS_GetGlobalComponentManager()
 to get to the global component manager. Hence if we trigger Init_XPCOM()
 from both NS_GetGlobalComponentManager() and NS_GetGlobalServiceManager()
 we will be safe.</blockquote>
@@ -144,38 +144,26 @@ of Shutting down a service.</font>
 <i><font color="#000000">When does a client use the service manager vs
 component manager</font></i></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<p><font color="#000000">When a client knows that the component that they
+<br><font color="#000000">When a client knows that the component that they
 are trying to instantiate is a singleton, they need to call service manager
 instead of component manager. Clients dont have to worry about calling
 the ComponentManager at all in this case. The ServiceManager will take
 care of creating the instance if the first one doesn't exist already.</font>
-<br><font color="#000000">-</font>
+<br>&nbsp;
 <li>
 <i><font color="#000000">When does a client use the Component Manager as
 opposed to Service Manager</font></i></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<p><font color="#000000">When a client wants a private instance of a component,
+<br><font color="#000000">When a client wants a private instance of a component,
 they call the Component Manager. From the Clients point of view, a new
 xpcom object creation happens everytime they call CreateInstance() Anything
 else is an implementation detail that the Client need not worry about.</font>
-<br><font color="#000000">-</font>
+<br>&nbsp;
 <li>
 <i><font color="#000000">How does a Client know that they have to instantiate
 a singleton</font></i></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<p><font color="#000000">For now, the Client just has to know. There is
+<br><font color="#000000">For now, the Client just has to know. There is
 no way of telling which component is a Service and which isn't. In fact,
 in todays xpcom (Mar 1999) any component can be accessed as a Service.
 Use your judgement until there is a proper method or service manager is
@@ -184,17 +172,13 @@ Instances.</font>
 <p><b><font color="#CC0000">Need a solution for this. Email suggestion
 to <a href="mailto:warren@netscape.com,dp@netscape.com">warren@netscape.com,
 dp@netscape.com</a></font></b>
-<br><font color="#000000">-</font></ul>
+<br>&nbsp;</ul>
 <b><i><font color="#000000">Component</font></i></b>
 <ul>
 <li>
 <i><font color="#000000">Can a component enforce use only as a Service</font></i></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<p><font color="#000000">No. The notion of the ServiceManager is available
+<br><font color="#000000">No. The notion of the ServiceManager is available
 only to Clients.</font>
 <p><font color="#000000">Note that at some points when a component wants
 another component, it actually behaves as a client and hence follows the
@@ -215,28 +199,20 @@ nsPrefFactory::CreateInstance()</a> and&nbsp; <a href="http://lxr.mozilla.org/se
 nsPref::GetInstance()</a> With this implementation, whether Clients get
 to it by calling nsIServiceManager::GetService() or nsIComponentManager::CreateInstance(),
 the same object will be returned hence guaranteeing singletonism.</ul>
-<font color="#000000">-</font>
+
 <li>
 <i><font color="#000000">Should a component do anything at creation to
 become a Service</font></i></li>
 
+<br><font color="#000000">No. Again, the notion of a ServiceManager is
+available only to Clients.</font>
 <br>&nbsp;
-<p>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<p><font color="#000000">No. Again, the notion of a ServiceManager is available
-only to Clients.</font>
-<br><font color="#000000">-</font>
 <li>
 <i><font color="#000000">Can a component advertise that it is a service
 so clients can use it as one</font></i></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<br>&nbsp;
-<br>&nbsp;
-<p>No. There isn't a way other than a comment in the interface of the header
-file.</ul>
+<br>No. There isn't a way other than a comment in the interface of the
+header file.</ul>
 </blockquote>
 
 <h4>
@@ -257,27 +233,28 @@ ProgIDs (not implemented yet).
 <li>
 <i>Should CreateInstance() calls use ProgID or CLSID</i></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<p>ProgID is what Clients should use to CreateInstances. Clients should
+<br>ProgID is what Clients should use to CreateInstances. Clients should
 not even know about the CLSID unless they are hell bent on creating a particular
 implementation of a component.
-<br>-</ul>
+<br>&nbsp;</ul>
 <b><i>Component</i></b>
 <ul>
 <li>
 <i>Should Components register with both a CID and ProgID</i></li>
 
-<br>&nbsp;
-<p>&nbsp;
-<p>Absolutely.</ul>
+<br>Absolutely.</ul>
 </blockquote>
 
 <h4>
 <a NAME="How to debug components ?"></a>How to debug components ?</h4>
 
-<blockquote>Since components are dynamically loaded only on demand, debugging
-them could be a hard. Here are some tips to debugging components.
+<blockquote>XPCOM provides log output. To enable the logging:
+<blockquote><tt>setenv NSPR_LOG_MODULES nsComponentManager:5</tt>
+<br><tt>setenv NSPR_LOG_FILE xpcom.log</tt></blockquote>
+Start your application after setting the above environment variables. Debug
+log from xpcom would be in the file <tt>xpcom.log</tt>
+<p>Since components are dynamically loaded only on demand, debugging them
+could be a hard. Here are some tips to debugging components.
 <p><b><i>Windows: VC5.0 VC6.0</i></b>
 <ul>Include your component library in the Project->Settings, Additional
 Dll. drop down. After that breakpoints can be enabled.</ul>
