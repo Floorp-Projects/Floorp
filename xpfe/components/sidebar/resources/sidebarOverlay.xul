@@ -110,7 +110,7 @@
           </action>
         </rule>
       </template>
-      <box id="sidebar-iframe-no-panels" orient="vertical" flex="1"
+      <box id="sidebar-iframe-no-panels" class="iframe-panel" orient="vertical" flex="1"
         hidden="true">
         <html>&sidebar.no-panels.state;</html>
         <html>&sidebar.no-panels.add;</html>

@@ -89,10 +89,15 @@
       background-repeat     : repeat-y;
     }
     
-  .box-texttab:hover > .panelheader-grippy-box
+  .box-texttab:hover > .panelheader-box-1
     {
       background-color      : #CCCCFF;
     }
+    
+  .box-texttab[selected="true"]:hover > .panelheader-box-1
+    {
+      background-color      : threedface;
+    } 
     
   .box-texttab[last-panel="true"], .box-texttab[selected="true"]
     {
@@ -157,4 +162,7 @@
     {
       border-left           : 1px solid threedhighlight;
       border-bottom         : 1px solid threedshadow;
+      border-right          : 1px solid threedshadow;
     }  
+
+    
