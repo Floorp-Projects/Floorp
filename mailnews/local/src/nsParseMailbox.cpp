@@ -246,7 +246,11 @@ NS_IMETHODIMP nsMsgMailboxParser::OnParentChanged(nsMsgKey aKeyChanged, nsMsgKey
 /* void OnAnnouncerGoingAway (in nsIDBChangeAnnouncer instigator); */
 NS_IMETHODIMP nsMsgMailboxParser::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator)
 {
-    m_mailDB = nsnull; // what else do we need to do here?
+  if (m_mailDB)
+    m_mailDB->RemoveListener(this);
+
+  m_newMsgHdr = nsnull;
+  m_mailDB = nsnull;
     return NS_OK;
 }
 
@@ -479,6 +483,8 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 	// otherwise, the message parser can handle it completely.
 	else if (m_mailDB != nsnull)	// if no DB, do we need to parse at all?
 		return ParseFolderLine(line, lineLength);
+        else
+          return NS_ERROR_NULL_POINTER; // need to error out if we don't have a db.
 
 	return 0;
 

@@ -1264,11 +1264,17 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 	NotifyStoreClosedAllHeaders();
 	ForceDBClosed();
 
-    oldPathSpec->Rename(newNameStr.get());
-
+    rv = oldPathSpec->Rename(newNameStr.get());
+    if (NS_SUCCEEDED(rv))
+    {
 	newNameStr += ".msf";
 	oldSummarySpec.Rename(newNameStr.get());
-
+    }
+    else
+    {
+      ThrowAlertMsg("folderRenameFailed", msgWindow);
+      return rv;
+    }
 	
 	if (NS_SUCCEEDED(rv) && cnt > 0) {
 		// rename "*.sbd" directory
@@ -1362,11 +1368,19 @@ nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgD
     return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
 
   nsresult rv;
-  nsCOMPtr<nsIMsgDatabase> mailDBFactory( do_CreateInstance(kCMailDB, &rv) );
 	nsCOMPtr<nsIMsgDatabase> mailDB;
+  if (mDatabase)
+  {
+    mailDB = mDatabase;
+    openErr = NS_OK;
+  }
+  else
+  {
+    nsCOMPtr<nsIMsgDatabase> mailDBFactory( do_CreateInstance(kCMailDB, &rv) );
   if (NS_SUCCEEDED(rv) && mailDBFactory)
   {
     openErr = mailDBFactory->OpenFolderDB(this, PR_FALSE, PR_FALSE, getter_AddRefs(mailDB));
+  }
   }
 
   *db = mailDB;
