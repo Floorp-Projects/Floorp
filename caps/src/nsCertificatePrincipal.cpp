@@ -21,6 +21,7 @@
  */
 /*describes principals for use in signed scripts*/
 #include "nsCertificatePrincipal.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kICertificatePrincipalIID, NS_ICERTIFICATEPRINCIPAL_IID);
 
@@ -33,94 +34,128 @@ NS_IMETHODIMP
 nsCertificatePrincipal::CanEnableCapability(const char *capability,
                                             PRInt16 *result)
 {
-    // XXX: query database as to whether this principal has this capability enabled
-    *result = nsIPrincipal::ENABLE_DENIED;
+    if(NS_FAILED(nsBasePrincipal::CanEnableCapability(capability, result)))
+        return NS_ERROR_FAILURE;
+    if (*result == nsIPrincipal::ENABLE_UNKNOWN)
+        *result = ENABLE_WITH_USER_PERMISSION;
     return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsCertificatePrincipal::SetCanEnableCapability(const char *capability, 
-                                               PRInt16 canEnable)
-{
-    // XXX: modify database as to whether this principal has this capability enabled
-    return NS_ERROR_FAILURE;
-}
-
-
-// Unclear if we need any of these methods, and if so, where they should live.
 NS_IMETHODIMP
-nsCertificatePrincipal::GetPublicKey(char ** publicKey)
+nsCertificatePrincipal::GetIssuerName(char ** issuerName)
 {
-	* publicKey = (char *)this->itsKey;
-	return (itsKey == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+    *issuerName = (char*)mIssuerName;
+	return NS_OK;
 }
 
 NS_IMETHODIMP
-nsCertificatePrincipal::GetCompanyName(char * * companyName)
+nsCertificatePrincipal::GetSerialNumber(char ** serialNumber)
 {
-	companyName = & this->itsCompanyName;
-	return (itsCompanyName == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+    *serialNumber = (char*)mSerialNumber;
+	return NS_OK;
 }
-
-NS_IMETHODIMP
-nsCertificatePrincipal::GetCertificateAuthority(char * * certificateAuthority)
-{
-	certificateAuthority = & this->itsCertificateAuthority;
-	return (itsCertificateAuthority == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
-}
-
-NS_IMETHODIMP
-nsCertificatePrincipal::GetSerialNumber(char * * serialNumber)
-{
-	serialNumber = & this->itsSerialNumber;
-	return (itsSerialNumber == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
-}
-
-NS_IMETHODIMP
-nsCertificatePrincipal::GetExpirationDate(char * * expirationDate)
-{
-	expirationDate = & this->itsExpirationDate;
-	return (itsExpirationDate == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
-}
-
-NS_IMETHODIMP
-nsCertificatePrincipal::GetFingerPrint(char * * fingerPrint)
-{
-	fingerPrint = & this->itsFingerPrint;
-	return (itsFingerPrint == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
-}
-
 
 NS_IMETHODIMP 
 nsCertificatePrincipal::ToString(char **result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsAutoString str;
+    str += "[Certificate ";
+    str += mIssuerName;
+    str += ' ';
+    str += mSerialNumber;
+    str += ']';
+    *result = str.ToNewCString();
+    return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
 nsCertificatePrincipal::Equals(nsIPrincipal * other, PRBool * result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (this == other) {
+        *result = PR_TRUE;
+        return NS_OK;
+    }
+    nsresult rv;
+    nsCOMPtr<nsICertificatePrincipal> otherCertificate = 
+        do_QueryInterface(other, &rv);
+    if (NS_FAILED(rv))
+    {
+        *result = PR_FALSE;
+        return NS_OK;
+    }
+    char* otherIssuer;
+    otherCertificate->GetIssuerName(&otherIssuer);
+    char* otherSerial;
+    otherCertificate->GetSerialNumber(&otherSerial);
+    *result = ( (PL_strcmp(mIssuerName, otherIssuer) == 0) &&
+                (PL_strcmp(mSerialNumber, otherSerial) == 0) );
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCertificatePrincipal::HashValue(PRUint32 *result)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    char* str;
+    if (NS_FAILED(ToString(&str)) || !str) return NS_ERROR_FAILURE;
+    *result = nsCRT::HashValue(str);
+    nsCRT::free(str);
+    return NS_OK;
 }
 
-nsCertificatePrincipal::nsCertificatePrincipal(PRInt16 type, const char * key)
+nsresult
+nsCertificatePrincipal::Init(const char* data)
 {
-	this->itsType = type;
-	this->itsKey = key;
+    // Parses preference strings of the form 
+    // "[Certificate Issuer Serial#] capabilities string"
+    // ie. "[Certificate CertCo 12:34:AB:CD] UniversalBrowserRead=1"
+
+    if (!data)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    data = PL_strchr(data, ' '); // Jump to issuer
+    NS_ASSERTION(data, "Malformed security.principal preference");
+    data += 1;
+
+    char* wordEnd = PL_strchr(data, ' '); // Find end of issuer
+    NS_ASSERTION(wordEnd, "Malformed security.principal preference");
+    *wordEnd = '\0';
+    const char* issuer = data;
+
+    data = wordEnd+1; // Jump to serial#
+    wordEnd = PL_strchr(data, ']'); // Find end of serial#
+    NS_ASSERTION(wordEnd, "Malformed security.principal preference");
+    *wordEnd = '\0';
+    const char* serial = data;
+
+    if(NS_FAILED(Init(issuer, serial))) return NS_ERROR_FAILURE;
+
+    if (wordEnd[1] != '\0')
+    {
+        data = wordEnd+2; // Jump to beginning of caps data
+        return nsBasePrincipal::Init(data);
+    }
+    else
+        return NS_OK;
+ }
+
+NS_IMETHODIMP
+nsCertificatePrincipal::Init(const char* aIssuerName, const char* aSerialNumber)
+{
+    mIssuerName = nsCRT::strdup(aIssuerName);
+    mSerialNumber = nsCRT::strdup(aSerialNumber);
+    if (!mIssuerName || !mSerialNumber) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
 }
 
-nsCertificatePrincipal::nsCertificatePrincipal(PRInt16 type, const unsigned char **certChain, 
-								PRUint32 *certChainLengths, PRUint32 noOfCerts)
+nsCertificatePrincipal::nsCertificatePrincipal()
 {
-	this->itsType = type;
+    NS_INIT_ISUPPORTS();
 }
 
 nsCertificatePrincipal::~nsCertificatePrincipal(void)
 {
+    if (mIssuerName)
+        nsCRT::free((char*)mIssuerName);
+    if (mSerialNumber)
+        nsCRT::free((char*)mSerialNumber);
 }

@@ -29,10 +29,9 @@
 
 [uuid(ebfefcd0-25e1-11d2-8160-006008119d7a)]
 interface nsICertificatePrincipal : nsISupports {
-	void GetPublicKey(out string publicKey);
-	void GetCompanyName(out string ppCompanyName);
-	void GetCertificateAuthority(out string ppCertAuthority);
-	void GetSerialNumber(out string ppSerialNumber);
-	void GetExpirationDate(out string ppExpDate);
-	void GetFingerPrint(out string ppFingerPrint);
+
+    //-- The Get functions for these attributes DO NOT COPY.
+    readonly attribute string issuerName;
+    readonly attribute string serialNumber;
+
 };

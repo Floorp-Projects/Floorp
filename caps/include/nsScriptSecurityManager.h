@@ -28,6 +28,7 @@
 #include "nsIXPCSecurityManager.h"
 #include "nsHashtable.h"
 #include "nsDOMPropEnums.h"
+#include "nsCOMPtr.h"
 
 #define NS_SCRIPTSECURITYMANAGER_CID \
 { 0x7ee2a4c0, 0x4b93, 0x17d3, \
@@ -52,6 +53,9 @@ public:
     nsObjectHashtable *mOriginToPolicyMap;
 
 private:
+    void
+    LookupPrincipal(nsCOMPtr<nsIPrincipal>* aPrincipal);
+
     NS_IMETHOD
     GetSubjectPrincipal(JSContext *aCx, nsIPrincipal **result);
 
@@ -76,6 +80,9 @@ private:
 
     static void
     enumeratePolicyCallback(const char *prefName, void *data);
+
+    static void
+    enumeratePrincipalsCallback(const char *prefName, void *data);
 
     static int
     JSEnabledPrefChanged(const char *pref, void *data);

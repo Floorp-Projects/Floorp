@@ -52,8 +52,11 @@ public:
 
     nsCodebasePrincipal();
     
-    NS_IMETHOD
+    nsresult
     Init(nsIURI *uri);
+
+    nsresult
+    Init(const char* data);
 
     virtual ~nsCodebasePrincipal(void);
     

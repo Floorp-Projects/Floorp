@@ -30,6 +30,7 @@
 #include "nsJSPrincipals.h"
 #include "nsSystemPrincipal.h"
 #include "nsCodebasePrincipal.h"
+#include "nsCertificatePrincipal.h"
 #include "nsCRT.h"
 #include "nsXPIDLString.h"
 #include "nsIJSContextStack.h"
@@ -521,21 +522,53 @@ nsScriptSecurityManager::GetSystemPrincipal(nsIPrincipal **result)
 }
 
 NS_IMETHODIMP
+nsScriptSecurityManager::GetCertificatePrincipal(const char* aIssuerName,
+                                                 const char* aSerialNumber,
+                                                 nsIPrincipal **result)
+{
+    nsresult rv;
+    nsCertificatePrincipal *certificate = new nsCertificatePrincipal();
+    if (!certificate)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(certificate);
+    if (NS_FAILED(certificate->Init(aIssuerName, aSerialNumber))) 
+    {
+        NS_RELEASE(certificate);
+        return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIPrincipal> principal = 
+      do_QueryInterface((nsBasePrincipal*)certificate, &rv);
+    NS_RELEASE(certificate);
+    if (NS_FAILED(rv))
+        return rv;
+
+    if (mPrincipals) {
+        // Check to see if we already have this principal.
+        nsIPrincipalKey key(principal);
+        nsCOMPtr<nsIPrincipal> p2 = (nsIPrincipal *) mPrincipals->Get(&key);
+        if (p2) 
+            principal = p2;
+    }
+    *result = principal;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI, 
                                               nsIPrincipal **result)
 {
     nsresult rv;
     nsCodebasePrincipal *codebase = new nsCodebasePrincipal();
-    NS_ADDREF(codebase);
     if (!codebase)
         return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(codebase);
     if (NS_FAILED(codebase->Init(aURI))) {
         NS_RELEASE(codebase);
         return NS_ERROR_FAILURE;
     }
-    nsCOMPtr<nsIPrincipal> principal;
-    rv = codebase->QueryInterface(NS_GET_IID(nsIPrincipal), 
-                                  (void **) getter_AddRefs(principal));
+    nsCOMPtr<nsIPrincipal> principal = 
+      do_QueryInterface((nsBasePrincipal*)codebase, &rv);
     NS_RELEASE(codebase);
     if (NS_FAILED(rv))
         return rv;
@@ -1220,6 +1253,48 @@ nsScriptSecurityManager::enumeratePolicyCallback(const char *prefName,
     NS_ASSERTION(PR_FALSE, "DOM property name invalid or not found");
 }
 
+void
+nsScriptSecurityManager::enumeratePrincipalsCallback(const char *prefName, 
+                                                     void *aPrincipals)
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_FAILED(rv)) return;
+
+  char* data;
+  if (NS_FAILED(prefs->CopyCharPref(prefName, &data))) return;
+  
+  static char codebaseName[] = "[Codebase ";
+  static char certificateName[] = "[Certificate ";
+  nsCOMPtr<nsIPrincipal> principal;
+  if (PL_strncasecmp(data, codebaseName, sizeof(codebaseName)-1) == 0)
+  {
+    nsCodebasePrincipal *codebase = new nsCodebasePrincipal();
+    NS_ADDREF(codebase);
+    if (!codebase) return;
+    rv = codebase->Init(data);
+    if (NS_FAILED(rv)) return;
+    principal = do_QueryInterface((nsBasePrincipal*)codebase);
+    NS_RELEASE(codebase);
+  }
+  else if (PL_strncasecmp(data, certificateName, sizeof(certificateName)-1) == 0)
+  {
+    nsCertificatePrincipal *certificate = new nsCertificatePrincipal();
+    NS_ADDREF(certificate);
+    if (!certificate) return;
+    rv = certificate->Init(data);
+    if (NS_FAILED(rv)) return;
+    principal = do_QueryInterface((nsBasePrincipal*)certificate);
+    NS_RELEASE(certificate);
+  }
+  else
+    return;
+  nsCRT::free(data);
+  nsSupportsHashtable* principals = (nsSupportsHashtable*)aPrincipals;
+  nsIPrincipalKey key(principal);
+  principals->Put(&key, principal);
+}
+
 static const char jsEnabledPrefName[] = "javascript.enabled";
 static const char jsMailEnabledPrefName[] = "javascript.allow.mailnews";
 
@@ -1276,5 +1351,16 @@ nsScriptSecurityManager::InitFromPrefs()
     prefs->EnumerateChildren("security.policy", 
                              nsScriptSecurityManager::enumeratePolicyCallback,
                              (void *) &info);
+    if (!mPrincipals) 
+    {
+      mPrincipals = new nsSupportsHashtable(31);
+      if (!mPrincipals)
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    prefs->EnumerateChildren("security.principal", 
+                             nsScriptSecurityManager::enumeratePrincipalsCallback,
+                             (void *)mPrincipals);
+
     return NS_OK;
 }

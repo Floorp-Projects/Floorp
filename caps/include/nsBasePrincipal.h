@@ -34,14 +34,17 @@ public:
     virtual ~nsBasePrincipal(void);
 
     NS_IMETHOD
+    CapabilitiesToString(char** aCapString);
+
+    NS_IMETHOD
     GetJSPrincipals(JSPrincipals **jsprin);
 
     NS_IMETHOD 
     CanEnableCapability(const char *capability, PRInt16 *result);
-
+    
     NS_IMETHOD 
     SetCanEnableCapability(const char *capability, PRInt16 canEnable);
-
+    
     NS_IMETHOD 
     IsCapabilityEnabled(const char *capability, void *annotation, 
                         PRBool *result);
@@ -54,6 +57,9 @@ public:
 
     NS_IMETHOD 
     DisableCapability(const char *capability, void **annotation);
+
+    nsresult
+    Init(const char* data);
     
 protected:
     enum AnnotationValue { AnnotationEnabled=1, AnnotationDisabled };
