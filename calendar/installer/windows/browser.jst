@@ -396,6 +396,25 @@ if(verifyDiskSpace(fProgram, srDest))
     registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/en-US/calendar/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "classic.jar"), "skin/classic/calendar/");
 
+/*    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/ca-AD/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/cs-CZ/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/cy-GB/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/de-AT/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/es-ES/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/fr-FR/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/hu-HU/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/it-IT/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/ja-JP/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/lt-LT/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/nl-NL/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/pl-PL/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/pt-BR/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/sk-SK/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/sl-SI/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/sv-SE/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/tr-TR/calendar/");
+    registerChrome(LOCALE | DELAYED_CHROME, getFolder("Chrome", "calendar.jar"), "locale/wen-DE/calendar/");
+*/
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "toolkit.jar"), "content/passwordmgr/");
     registerChrome(CONTENT | DELAYED_CHROME, getFolder("Chrome", "toolkit.jar"), "content/mozapps/");
     registerChrome(SKIN | DELAYED_CHROME, getFolder("Chrome", "classic.jar"), "skin/classic/mozapps/");
@@ -483,7 +502,7 @@ if(verifyDiskSpace(fProgram, srDest))
       logComment("performInstall() returned: " + err);
       if (! ('buildID' in Install))
       {
-        logComment("Running Pre-Mozilla 0.2b");
+        logComment("Running Pre-Mozilla 0.2+");
         initInstall("Post-install Cleanup Utility", "Calendar/xpicleanup", "$Version$");
         cleanupUtility = getFolder(fProgram, "xpicleanup.exe");
         err = File.execute(cleanupUtility);

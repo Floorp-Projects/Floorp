@@ -251,13 +251,13 @@ Description Long=You may choose individual options to be installed. Recommended 
 ; this Setup Type is selected.
 C0=Component XPCOM
 C1=Component Browser
-C2=Component ABE
-C3=Component ADT
-C4=Component Uninstaller
-C5=Component US English Profile Defaults
-C6=Component En US lang pack
-C7=Component US region pack
-C8=Component Help
+;C2=Component ABE
+;C3=Component ADT
+C2=Component Uninstaller
+C3=Component US English Profile Defaults
+C4=Component En US lang pack
+C5=Component US region pack
+C6=Component Help
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
 ; C9=Component QFA
@@ -269,7 +269,7 @@ Title=Select Components
 ;*** LOCALIZE ME BABY ***
 Sub Title=Additional components that enhance $ProductShortName$.
 ;*** LOCALIZE ME BABY ***
-Message0=Choose additional components you want to install, then click Next.
+Message0=No additional components available.
 
 [Dialog Select Install Path]
 Show Dialog=TRUE
