@@ -94,7 +94,6 @@ static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
-
 ////////////////////////////////////////////////////
 // Manager for Registering and unregistering OLE
 // This is needed for drag & drop & Clipboard support
@@ -143,6 +142,17 @@ nsWindow* nsWindow::gCurrentWindow = nsnull;
 static nsIRollupListener * gRollupListener           = nsnull;
 static nsIWidget         * gRollupWidget             = nsnull;
 static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
+
+// Hook Data Memebers for Dropdowns
+//
+// gProcessHook Tells the hook methods whether they should be 
+//              processing the hook messages
+//
+static HHOOK        gMsgFilterHook = NULL;
+static HHOOK        gCallProcHook  = NULL;
+static HHOOK        gCallMouseHook = NULL;
+static PRPackedBool gProcessHook   = PR_FALSE;
+
 ////////////////////////////////////////////////////
 
 
@@ -762,10 +772,18 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     NS_ADDREF(aListener);
     gRollupWidget = this;
     NS_ADDREF(this);
+
+    if (!gMsgFilterHook && !gCallProcHook && !gCallMouseHook) {
+      RegisterSpecialDropdownHooks();
+    }
+    gProcessHook = PR_TRUE;
+
   } else {
     NS_IF_RELEASE(gRollupListener);
-    //gRollupListener = nsnull;
     NS_IF_RELEASE(gRollupWidget);
+
+    gProcessHook = PR_FALSE;
+    UnregisterSpecialDropdownHooks();
   }
 
   return NS_OK;
@@ -794,10 +812,10 @@ static LPCTSTR GetNSWindowPropName() {
   static ATOM atom = 0;
 
   // this is threadsafe, even without locking;
-  // even if there's a race, GlobalAddAtom("nsWindowPtr")
+  // even if there's a race, GlobalAddAtom("MozillaWindowPtr")
   // will just return the same value
   if (!atom) {
-    atom = ::GlobalAddAtom("nsWindowPtr");
+    atom = ::GlobalAddAtom("MozillansIWidgetPtr");
   }
   return MAKEINTATOM(atom);
 }
@@ -828,7 +846,8 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
     if (inMsg == WM_ACTIVATE || inMsg == WM_NCLBUTTONDOWN || inMsg == WM_LBUTTONDOWN ||
       inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN || 
       inMsg == WM_NCMBUTTONDOWN || inMsg == WM_NCRBUTTONDOWN || inMsg == WM_MOUSEACTIVATE ||
-      inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL || inMsg == WM_ACTIVATEAPP)
+      inMsg == WM_MOUSEWHEEL || inMsg == uMSH_MOUSEWHEEL || inMsg == WM_ACTIVATEAPP ||
+      inMsg == WM_MENUSELECT || inMsg == WM_MOVING || inMsg == WM_SIZING || inMsg == WM_GETMINMAXINFO)
     {
       // Rollup if the event is outside the popup.
       PRBool rollup = !nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)gRollupWidget);
@@ -897,6 +916,9 @@ nsWindow :: DealWithPopups ( UINT inMsg, WPARAM inWParam, LPARAM inLParam, LRESU
       // if we've still determined that we should still rollup everything, do it.
       else if ( rollup ) {
         gRollupListener->Rollup();
+
+        // Tell hook to stop processing messages
+        gProcessHook = PR_FALSE;
 
         // return TRUE tells Windows that the event is consumed, 
         // false allows the event to be dispatched
@@ -2613,6 +2635,44 @@ EventMsgInfo gAllEvents[] = {
     {"WM_NCMBUTTONDOWN  ", 0x00A7},
     {"WM_NCMBUTTONUP    ", 0x00A8},
     {"WM_NCMBUTTONDBLCLK", 0x00A9},
+    {"EM_GETSEL             ", 0x00B0},
+    {"EM_SETSEL             ", 0x00B1},
+    {"EM_GETRECT            ", 0x00B2},
+    {"EM_SETRECT            ", 0x00B3},
+    {"EM_SETRECTNP          ", 0x00B4},
+    {"EM_SCROLL             ", 0x00B5},
+    {"EM_LINESCROLL         ", 0x00B6},
+    {"EM_SCROLLCARET        ", 0x00B7},
+    {"EM_GETMODIFY          ", 0x00B8},
+    {"EM_SETMODIFY          ", 0x00B9},
+    {"EM_GETLINECOUNT       ", 0x00BA},
+    {"EM_LINEINDEX          ", 0x00BB},
+    {"EM_SETHANDLE          ", 0x00BC},
+    {"EM_GETHANDLE          ", 0x00BD},
+    {"EM_GETTHUMB           ", 0x00BE},
+    {"EM_LINELENGTH         ", 0x00C1},
+    {"EM_REPLACESEL         ", 0x00C2},
+    {"EM_GETLINE            ", 0x00C4},
+    {"EM_LIMITTEXT          ", 0x00C5},
+    {"EM_CANUNDO            ", 0x00C6},
+    {"EM_UNDO               ", 0x00C7},
+    {"EM_FMTLINES           ", 0x00C8},
+    {"EM_LINEFROMCHAR       ", 0x00C9},
+    {"EM_SETTABSTOPS        ", 0x00CB},
+    {"EM_SETPASSWORDCHAR    ", 0x00CC},
+    {"EM_EMPTYUNDOBUFFER    ", 0x00CD},
+    {"EM_GETFIRSTVISIBLELINE", 0x00CE},
+    {"EM_SETREADONLY        ", 0x00CF},
+    {"EM_SETWORDBREAKPROC   ", 0x00D0},
+    {"EM_GETWORDBREAKPROC   ", 0x00D1},
+    {"EM_GETPASSWORDCHAR    ", 0x00D2},
+    {"EM_SETMARGINS         ", 0x00D3},
+    {"EM_GETMARGINS         ", 0x00D4},
+    {"EM_GETLIMITTEXT       ", 0x00D5},
+    {"EM_POSFROMCHAR        ", 0x00D6},
+    {"EM_CHARFROMPOS        ", 0x00D7},
+    {"EM_SETIMESTATUS       ", 0x00D8},
+    {"EM_GETIMESTATUS       ", 0x00D9},
     {"SBM_SETPOS        ", 0x00E0},
     {"SBM_GETPOS        ", 0x00E1},
     {"SBM_SETRANGE      ", 0x00E2},
@@ -2656,6 +2716,82 @@ EventMsgInfo gAllEvents[] = {
     {"WM_CTLCOLORDLG    ", 0x0136},
     {"WM_CTLCOLORSCROLLBAR", 0x0137},
     {"WM_CTLCOLORSTATIC ", 0x0138},
+    {"CB_GETEDITSEL           ", 0x0140},
+    {"CB_LIMITTEXT            ", 0x0141},
+    {"CB_SETEDITSEL           ", 0x0142},
+    {"CB_ADDSTRING            ", 0x0143},
+    {"CB_DELETESTRING         ", 0x0144},
+    {"CB_DIR                  ", 0x0145},
+    {"CB_GETCOUNT             ", 0x0146},
+    {"CB_GETCURSEL            ", 0x0147},
+    {"CB_GETLBTEXT            ", 0x0148},
+    {"CB_GETLBTEXTLEN         ", 0x0149},
+    {"CB_INSERTSTRING         ", 0x014A},
+    {"CB_RESETCONTENT         ", 0x014B},
+    {"CB_FINDSTRING           ", 0x014C},
+    {"CB_SELECTSTRING         ", 0x014D},
+    {"CB_SETCURSEL            ", 0x014E},
+    {"CB_SHOWDROPDOWN         ", 0x014F},
+    {"CB_GETITEMDATA          ", 0x0150},
+    {"CB_SETITEMDATA          ", 0x0151},
+    {"CB_GETDROPPEDCONTROLRECT", 0x0152},
+    {"CB_SETITEMHEIGHT        ", 0x0153},
+    {"CB_GETITEMHEIGHT        ", 0x0154},
+    {"CB_SETEXTENDEDUI        ", 0x0155},
+    {"CB_GETEXTENDEDUI        ", 0x0156},
+    {"CB_GETDROPPEDSTATE      ", 0x0157},
+    {"CB_FINDSTRINGEXACT      ", 0x0158},
+    {"CB_SETLOCALE            ", 0x0159},
+    {"CB_GETLOCALE            ", 0x015A},
+    {"CB_GETTOPINDEX          ", 0x015b},
+    {"CB_SETTOPINDEX          ", 0x015c},
+    {"CB_GETHORIZONTALEXTENT  ", 0x015d},
+    {"CB_SETHORIZONTALEXTENT  ", 0x015e},
+    {"CB_GETDROPPEDWIDTH      ", 0x015f},
+    {"CB_SETDROPPEDWIDTH      ", 0x0160},
+    {"CB_INITSTORAGE          ", 0x0161},
+    {"CB_MSGMAX               ", 0x0162},
+    {"LB_ADDSTRING          ", 0x0180},
+    {"LB_INSERTSTRING       ", 0x0181},
+    {"LB_DELETESTRING       ", 0x0182},
+    {"LB_SELITEMRANGEEX     ", 0x0183},
+    {"LB_RESETCONTENT       ", 0x0184},
+    {"LB_SETSEL             ", 0x0185},
+    {"LB_SETCURSEL          ", 0x0186},
+    {"LB_GETSEL             ", 0x0187},
+    {"LB_GETCURSEL          ", 0x0188},
+    {"LB_GETTEXT            ", 0x0189},
+    {"LB_GETTEXTLEN         ", 0x018A},
+    {"LB_GETCOUNT           ", 0x018B},
+    {"LB_SELECTSTRING       ", 0x018C},
+    {"LB_DIR                ", 0x018D},
+    {"LB_GETTOPINDEX        ", 0x018E},
+    {"LB_FINDSTRING         ", 0x018F},
+    {"LB_GETSELCOUNT        ", 0x0190},
+    {"LB_GETSELITEMS        ", 0x0191},
+    {"LB_SETTABSTOPS        ", 0x0192},
+    {"LB_GETHORIZONTALEXTENT", 0x0193},
+    {"LB_SETHORIZONTALEXTENT", 0x0194},
+    {"LB_SETCOLUMNWIDTH     ", 0x0195},
+    {"LB_ADDFILE            ", 0x0196},
+    {"LB_SETTOPINDEX        ", 0x0197},
+    {"LB_GETITEMRECT        ", 0x0198},
+    {"LB_GETITEMDATA        ", 0x0199},
+    {"LB_SETITEMDATA        ", 0x019A},
+    {"LB_SELITEMRANGE       ", 0x019B},
+    {"LB_SETANCHORINDEX     ", 0x019C},
+    {"LB_GETANCHORINDEX     ", 0x019D},
+    {"LB_SETCARETINDEX      ", 0x019E},
+    {"LB_GETCARETINDEX      ", 0x019F},
+    {"LB_SETITEMHEIGHT      ", 0x01A0},
+    {"LB_GETITEMHEIGHT      ", 0x01A1},
+    {"LB_FINDSTRINGEXACT    ", 0x01A2},
+    {"LB_SETLOCALE          ", 0x01A5},
+    {"LB_GETLOCALE          ", 0x01A6},
+    {"LB_SETCOUNT           ", 0x01A7},
+    {"LB_INITSTORAGE        ", 0x01A8},
+    {"LB_ITEMFROMPOINT      ", 0x01A9},
+    {"LB_MSGMAX             ", 0x01B0},
     {"WM_MOUSEFIRST     ", 0x0200},
     {"WM_MOUSEMOVE      ", 0x0200},
     {"WM_LBUTTONDOWN    ", 0x0201},
@@ -2735,6 +2871,7 @@ EventMsgInfo gAllEvents[] = {
     {"WM_APP              ", 0x8000},
     {NULL, 0x0}
     };
+
 
 static long gEventCounter = 0;
 static long gLastEventMsg = 0;
@@ -3948,13 +4085,12 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
 
   //Dblclicks are used to set the click count, then changed to mousedowns
   LONG curMsgTime = ::GetMessageTime();
-  const short kDoubleClickMoveThreshold  = 5;
   POINT mp;
   DWORD pos = ::GetMessagePos();
   mp.x      = (short)LOWORD(pos);
   mp.y      = (short)HIWORD(pos);
-  PRBool insideMovementThreshold = (abs(gLastMousePoint.x - mp.x) < kDoubleClickMoveThreshold) &&
-                                   (abs(gLastMousePoint.y - mp.y) < kDoubleClickMoveThreshold);
+  PRBool insideMovementThreshold = (abs(gLastMousePoint.x - mp.x) < (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
+                                   (abs(gLastMousePoint.y - mp.y) < (short)::GetSystemMetrics(SM_CYDOUBLECLK));
 
   // we're going to time double-clicks from mouse *up* to next mouse *down*
   if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) {
@@ -5351,3 +5487,194 @@ nsWindow::GetAttention() {
 
     return NS_OK;
 }
+
+
+//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+//-- NOTE!!! These hook functions can be removed when we migrate to 
+//-- XBL-Form Controls
+//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+//#define DISPLAY_NOISY_MSGF_MSG
+
+#ifdef DISPLAY_NOISY_MSGF_MSG
+typedef struct {
+  char * mStr;
+  int    mId;
+} MSGFEventMsgInfo;
+
+MSGFEventMsgInfo gMSGFEvents[] = {
+  "MSGF_DIALOGBOX",      0,
+  "MSGF_MESSAGEBOX",     1,
+  "MSGF_MENU",           2,
+  "MSGF_SCROLLBAR",      5,
+  "MSGF_NEXTWINDOW",     6,
+  "MSGF_MAX",            8,
+  "MSGF_USER",          4096,
+  NULL, 0};
+
+  void PrintEvent(UINT msg, PRBool aShowAllEvents, PRBool aShowMouseMoves);
+  int gLastMsgCode = 0;
+
+#define DISPLAY_NMM_PRT(_arg) printf((_arg));
+#else
+#define DISPLAY_NMM_PRT(_arg) 
+#endif
+
+
+//-------------------------------------------------------------------------
+// Process Menu messages 
+// Rollup when when is clicked
+LRESULT CALLBACK nsWindow::MozSpecialMsgFilter(int code, WPARAM wParam, LPARAM lParam)
+{
+#ifdef DISPLAY_NOISY_MSGF_MSG
+  if (gProcessHook) {
+    MSG* pMsg = (MSG*)lParam;
+
+    int inx = 0;
+    while (gMSGFEvents[inx].mId != code && gMSGFEvents[inx].mStr != NULL) {
+      inx++;
+    }
+    if (code != gLastMsgCode) {
+      if (gMSGFEvents[inx].mId == code) {
+        printf("MozSpecialMessageProc - code: 0x%X  - %s  hw: %p\n", code, gMSGFEvents[inx].mStr, pMsg->hwnd);
+      } else {
+        printf("MozSpecialMessageProc - code: 0x%X  - %d  hw: %p\n", code, gMSGFEvents[inx].mId, pMsg->hwnd);
+      }
+      gLastMsgCode = code;
+    }
+    PrintEvent(pMsg->message, FALSE, FALSE);
+  }
+#endif
+
+  if (gProcessHook && code == MSGF_MENU) {
+    MSG* pMsg = (MSG*)lParam;
+    LRESULT result;
+    DealWithPopups (pMsg->message, pMsg->wParam, pMsg->lParam, &result) ;
+  }
+
+  return ::CallNextHookEx(gMsgFilterHook, code, wParam, lParam);
+}
+
+//-------------------------------------------------------------------------
+// Process all mouse messages
+// Roll up when a click is in a native window that doesn't have an nsIWidget
+LRESULT CALLBACK nsWindow::MozSpecialMouseProc(int code, WPARAM wParam, LPARAM lParam)
+{
+  if (gProcessHook) {
+    MOUSEHOOKSTRUCT* ms = (MOUSEHOOKSTRUCT*)lParam;
+    if (wParam == WM_LBUTTONDOWN) {
+      nsIWidget* mozWin = (nsIWidget*)GetNSWindowPtr(ms->hwnd);
+      if (mozWin == NULL) {
+        nsIWidget* rollupWidget = gRollupWidget;
+        LRESULT result;
+        DealWithPopups (wParam, NULL, NULL, &result);
+      }
+    }
+  }
+  return ::CallNextHookEx(gCallMouseHook, code, wParam, lParam);
+}
+
+//-------------------------------------------------------------------------
+// Process all messages
+// Roll up when the window is moving, or is resizing or when maximized or mininized
+LRESULT CALLBACK nsWindow::MozSpecialWndProc(int code, WPARAM wParam, LPARAM lParam)
+{
+#ifdef DISPLAY_NOISY_MSGF_MSG
+    if (gProcessHook) {
+    CWPSTRUCT* cwpt = (CWPSTRUCT*)lParam;
+    PrintEvent(cwpt->message, FALSE, FALSE);
+  }
+#endif
+
+  if (gProcessHook) {
+    CWPSTRUCT* cwpt = (CWPSTRUCT*)lParam;
+    if (cwpt->message == WM_MOVING || 
+        cwpt->message == WM_SIZING || 
+        cwpt->message == WM_GETMINMAXINFO) {
+      LRESULT result;
+      DealWithPopups (cwpt->message, cwpt->wParam, cwpt->lParam, &result);
+    }
+  }
+
+  return ::CallNextHookEx(gCallProcHook, code, wParam, lParam);
+
+}
+
+//-------------------------------------------------------------------------
+// Register the special "hooks" for dropdown processing
+void nsWindow::RegisterSpecialDropdownHooks()
+{
+  NS_ASSERTION(!gMsgFilterHook, "gMsgFilterHook must be NULL!");
+  NS_ASSERTION(!gCallProcHook,  "gCallProcHook must be NULL!");
+
+  DISPLAY_NMM_PRT("***************** Installing Msg Hooks ***************\n");
+
+  //HMODULE hMod = GetModuleHandle("gkwidget.dll");
+
+  // Install msg hook for moving the window and resizing
+  if (!gMsgFilterHook) {
+    DISPLAY_NMM_PRT("***** Hooking gMsgFilterHook!\n");
+    gMsgFilterHook = SetWindowsHookEx(WH_MSGFILTER, MozSpecialMsgFilter, NULL, GetCurrentThreadId());
+#ifdef DISPLAY_NOISY_MSGF_MSG
+    if (!gMsgFilterHook) {
+      printf("***** SetWindowsHookEx is NOT installed for WH_MSGFILTER!\n");
+    }
+#endif
+  }
+
+  // Install msg hook for menus
+  if (!gCallProcHook) {
+    DISPLAY_NMM_PRT("***** Hooking gCallProcHook!\n");
+    gCallProcHook  = SetWindowsHookEx(WH_CALLWNDPROC, MozSpecialWndProc, NULL, GetCurrentThreadId());
+#ifdef DISPLAY_NOISY_MSGF_MSG
+    if (!gCallProcHook) {
+      printf("***** SetWindowsHookEx is NOT installed for WH_CALLWNDPROC!\n");
+    }
+#endif
+  }
+
+  // Install msg hook for the mouse
+  if (!gCallMouseHook) {
+    DISPLAY_NMM_PRT("***** Hooking gCallMouseHook!\n");
+    gCallMouseHook  = SetWindowsHookEx(WH_MOUSE, MozSpecialMouseProc, NULL, GetCurrentThreadId());
+#ifdef DISPLAY_NOISY_MSGF_MSG
+    if (!gCallMouseHook) {
+      printf("***** SetWindowsHookEx is NOT installed for WH_MOUSE!\n");
+    }
+#endif
+  }
+}
+
+//-------------------------------------------------------------------------
+// Unhook special message hooks for dropdowns
+void nsWindow::UnregisterSpecialDropdownHooks()
+{
+
+  DISPLAY_NMM_PRT("***************** De-installing Msg Hooks ***************\n");
+
+  if (gCallProcHook) {
+    DISPLAY_NMM_PRT("***** Unhooking gCallProcHook!\n");
+    if (!::UnhookWindowsHookEx(gCallProcHook)) {
+      DISPLAY_NMM_PRT("***** UnhookWindowsHookEx failed for gCallProcHook!\n");
+    }
+    gCallProcHook = NULL;
+  }
+
+  if (gMsgFilterHook) {
+    DISPLAY_NMM_PRT("***** Unhooking gMsgFilterHook!\n");
+    if (!::UnhookWindowsHookEx(gMsgFilterHook)) {
+      DISPLAY_NMM_PRT("***** UnhookWindowsHookEx failed for gMsgFilterHook!\n");
+    }
+    gMsgFilterHook = NULL;
+  }
+
+  if (gCallMouseHook) {
+    DISPLAY_NMM_PRT("***** Unhooking gCallMouseHook!\n");
+    if (!::UnhookWindowsHookEx(gCallMouseHook)) {
+      DISPLAY_NMM_PRT("***** UnhookWindowsHookEx failed for gCallMouseHook!\n");
+    }
+    gCallMouseHook = NULL;
+  }
+}
+
