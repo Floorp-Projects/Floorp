@@ -15,7 +15,7 @@ bin/libnspr4.so
 bin/libplc4.so
 bin/libplds4.so
 bin/libxpcom.so
-bin/components/libxpistub.so
+bin/libxpistub.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
 bin/component.reg
@@ -83,8 +83,8 @@ bin/components/libnsgif.so
 bin/components/libnsjpg.so
 bin/components/libnslocale.so
 bin/components/libnspng.so
+bin/components/liboji.so
 bin/components/libpref.so
-bin/components/libprefwindow.so
 bin/components/libprofile.so
 bin/components/libraptorhtml.so
 bin/components/libraptorhtmlpars.so
@@ -124,7 +124,6 @@ bin/components/necko_about.xpt
 bin/components/necko_base.xpt
 bin/components/necko_data.xpt
 bin/components/necko_dns.xpt
-bin/components/necko_file.xpt
 bin/components/necko_ftp.xpt
 bin/components/necko_http.xpt
 bin/components/necko_socket.xpt
@@ -134,7 +133,6 @@ bin/components/nsSidebar.js
 bin/components/xpinstall.xpt
 bin/components/oji.xpt
 bin/components/pref.xpt
-bin/components/prefwindow.xpt
 bin/components/proxyObjInst.xpt
 bin/components/rdf.xpt
 bin/components/related.xpt
