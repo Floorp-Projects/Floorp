@@ -36,10 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-interface nsIWriteablePropertyBag;
+#include "nsISupports.idl"
+
+interface nsISupportsArray;
+interface nsIWritablePropertyBag;
 
 interface calICalendar;
-interface calIDisplayItem;
+interface calIDateTime;
+interface calIItemOccurence;
 
 //
 // calIItemBase
@@ -117,11 +121,11 @@ interface calIItemBase
 
   // return the next display item for this event,
   // where the start time is >= aStartTime
-  calIDisplayItem getNextOccurrence (in calIDateTime aStartTime);
+  calIItemOccurence getNextOccurrence (in calIDateTime aStartTime);
 
   // return the previous display item for this event,
   // where the start time is < aStartTime
-  calIDisplayItem getPreviousOccurrence (in calIDateTime aStartTime);
+  calIItemOccurence getPreviousOccurrence (in calIDateTime aStartTime);
 
   // return array of calIDisplayItems, representing all
   // occurances of this event between start and end.
