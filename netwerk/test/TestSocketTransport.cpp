@@ -38,16 +38,11 @@
 
 #include "nsCRT.h"
 
-// Forward declarations...
+// forward declarations...
 class TestConnection;
-class InputConsumer;
-class OutputObserver;
-
-
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 static PRTime gElapsedTime;
 static int gKeepRunning = 1;
@@ -59,7 +54,42 @@ static TestConnection* gConnections[NUM_TEST_THREADS];
 static nsIThread*      gThreads[NUM_TEST_THREADS];
 static nsITimer*       gPeriodicTimer;
 
-class TestConnection : public nsIRunnable
+
+void Pump_PLEvents(void)
+{
+  while ( gKeepRunning ) {
+#ifdef WIN32
+    MSG msg;
+
+    if (GetMessage(&msg, NULL, 0, 0)) {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    } else {
+      gKeepRunning = FALSE;
+    }
+#else
+#ifdef XP_MAC
+    /* Mac stuff is missing here! */
+#else
+    PLEvent *gEvent;
+    rv = gEventQ->GetEvent(&gEvent);
+    rv = gEventQ->HandleEvent(gEvent);
+#endif /* XP_UNIX */
+#endif /* !WIN32 */
+  }
+
+}
+
+
+
+// -----
+//
+// TestConnection class...
+//
+// -----
+
+class TestConnection : public nsIRunnable, 
+                       public nsIStreamListener
 {
 public:
   TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsyncFlag);
@@ -70,56 +100,6 @@ public:
 
   // nsIRunnable interface...
   NS_IMETHOD Run(void);
-
-
-  nsresult WriteBuffer(void);
-  nsresult ReadBuffer(void);
-
-  nsresult Process(void);
-
-  nsresult Suspend(void);
-  nsresult Resume(void);
-
-  void Lock(void)   { PR_EnterMonitor(mMonitor); }
-  void Notify(void) { PR_Notify(mMonitor); }
-  void Wait(void)   { PR_Wait(mMonitor, PR_INTERVAL_NO_TIMEOUT); }
-  void Unlock(void) { PR_ExitMonitor(mMonitor); }
-
-  PRInt32 GetBufferLength(void) { return mBufferLength; }
-  char    GetBufferChar(void)   { return mBufferChar; }
-
-protected:
-  nsIBufferInputStream* mStream;
-
-  nsIInputStream*  mInStream;
-  nsIOutputStream* mOutStream;
-
-  InputConsumer*  mInputConsumer;
-  OutputObserver* mOutputObserver;
-
-  nsIChannel*   mTransport;
-
-  PRBool  mIsAsync;
-  PRInt32 mBufferLength;
-  char    mBufferChar;
-
-  PRMonitor* mMonitor;
-};
-
-
-// -----
-//
-// InputConsumer class...
-//
-// -----
-class InputConsumer : public nsIStreamListener
-{
-public:
-           InputConsumer(TestConnection* aConnection);
-  virtual ~InputConsumer();
-
-  // ISupports interface...
-  NS_DECL_ISUPPORTS
 
   // IStreamListener interface...
   NS_IMETHOD OnStartRequest(nsISupports* context);
@@ -133,49 +113,51 @@ public:
                            nsresult aStatus,
                            const PRUnichar* aMsg);
 
-  TestConnection* mConnection;
+  // TestConnection methods...
+  nsresult WriteBuffer(void);
+  nsresult ReadBuffer(void);
+
+  nsresult Process(void);
+
+  nsresult Suspend(void);
+  nsresult Resume(void);
+
+protected:
+  nsIBufferInputStream* mStream;
+
+  nsIInputStream*  mInStream;
+  nsIOutputStream* mOutStream;
+
+  nsIChannel*   mTransport;
+
+  PRBool  mIsAsync;
+  PRInt32 mBufferLength;
+  char    mBufferChar;
+
   PRInt32 mBytesRead;
 };
 
-InputConsumer::InputConsumer(TestConnection* aConnection)
-{
-  NS_INIT_REFCNT();
-
-  mBytesRead = 0;
-
-  mConnection = aConnection;
-  NS_IF_ADDREF(mConnection);
-}
-
-InputConsumer::~InputConsumer()
-{
-  NS_IF_RELEASE(mConnection);
-}
-
-
-
-NS_IMPL_ISUPPORTS(InputConsumer,nsCOMTypeInfo<nsIStreamListener>::GetIID());
-
 
 NS_IMETHODIMP
-InputConsumer::OnStartRequest(nsISupports* context)
+TestConnection::OnStartRequest(nsISupports* context)
 {
-  printf("\n+++ InputConsumer::OnStartRequest +++. Context = %p\n", context);
+  printf("\n+++ TestConnection::OnStartRequest +++. Context = %p\n", context);
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-InputConsumer::OnDataAvailable(nsISupports* context,
-                               nsIInputStream *aIStream, 
-                               PRUint32 aSourceOffset,
-                               PRUint32 aLength)
+TestConnection::OnDataAvailable(nsISupports* context,
+                                nsIInputStream *aIStream, 
+                                PRUint32 aSourceOffset,
+                                PRUint32 aLength)
 {
   char buf[1025];
   PRUint32 amt;
 
-  printf("\n+++ InputConsumer::OnDavaAvailable +++.  Context = %p length = %d\n", context, aLength);
-  mConnection->Lock();
+  printf("\n+++ TestConnection::OnDavaAvailable +++."
+         "\tContext = %p length = %d\n", 
+         context, aLength);
   do {
     nsresult rv = aIStream->Read(buf, 1024, &amt);
     mBytesRead += amt;
@@ -183,104 +165,26 @@ InputConsumer::OnDataAvailable(nsISupports* context,
     puts(buf);
   } while (amt != 0);
 
-  if (mConnection->GetBufferLength() == mBytesRead) {
+  if (mBufferLength == mBytesRead) {
     mBytesRead = 0;
-    mConnection->Notify();
+    WriteBuffer();
   }
-  mConnection->Unlock();
 
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-InputConsumer::OnStopRequest(nsISupports* context,
-                             nsresult aStatus,
-                             const PRUnichar* aMsg)
+TestConnection::OnStopRequest(nsISupports* context,
+                              nsresult aStatus,
+                              const PRUnichar* aMsg)
 {
-  printf("\n+++ InputConsumer::OnStopRequest (status = %x) +++.  Context = %p\n", aStatus, context);
-  mConnection->Lock();
-  mConnection->Notify();
-  mConnection->Unlock();
+  printf("\n+++ TestConnection::OnStopRequest (status = %x) +++."
+         "\tContext = %p\n", 
+         aStatus, context);
   return NS_OK;
 }
 
-
-
-// -----
-//
-// OutputObserver class...
-//
-// -----
-class OutputObserver : public nsIStreamObserver
-{
-public:
-
-  OutputObserver(TestConnection* aConnection);
-  virtual ~OutputObserver();
-
-  // ISupports interface...
-  NS_DECL_ISUPPORTS
-
-  // IStreamObserver interface...
-  NS_IMETHOD OnStartRequest(nsISupports* context);
-
-  NS_IMETHOD OnStopRequest(nsISupports* context,
-                           nsresult aStatus,
-                           const PRUnichar* aMsg);
-
-protected:
-  TestConnection* mConnection;
-};
-
-
-OutputObserver::OutputObserver(TestConnection* aConnection)
-{
-  NS_INIT_REFCNT();
-
-  mConnection = aConnection;
-  NS_IF_ADDREF(mConnection);
-}
-
-OutputObserver::~OutputObserver()
-{
-  NS_IF_RELEASE(mConnection);
-}
-
-
-NS_IMPL_ISUPPORTS(OutputObserver,nsCOMTypeInfo<nsIStreamObserver>::GetIID());
-
-
-NS_IMETHODIMP
-OutputObserver::OnStartRequest(nsISupports* context)
-{
-  printf("\n+++ OutputObserver::OnStartRequest +++. Context = %p\n", context);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-OutputObserver::OnStopRequest(nsISupports* context,
-                                 nsresult aStatus,
-                                 const PRUnichar* aMsg)
-{
-///  mConnection->Lock();
-
-  printf("\n+++ OutputObserver::OnStopRequest (status = %x) +++.  Context = %p\n", aStatus, context);
-///  mConnection->Notify();
-
-///  mConnection->Unlock();
-
-  return NS_OK;
-}
-
-
-
-// -----
-//
-// TestConnection class...
-//
-// -----
 
 TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsyncFlag)
 {
@@ -289,20 +193,16 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsy
   NS_INIT_REFCNT();
 
   mIsAsync      = aAsyncFlag;
+
   mBufferLength = 255;
   mBufferChar   = 'a';
+  mBytesRead    = 0;
 
   mTransport = nsnull;
   mStream    = nsnull;
 
   mInStream  = nsnull;
   mOutStream = nsnull;
-
-  mInputConsumer  = nsnull;
-  mOutputObserver = nsnull;
-
-  // Create the monitor used for synchronization...
-  mMonitor = PR_NewMonitor();
 
   // Create a socket transport...
   NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
@@ -312,13 +212,6 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort, PRBool aAsy
 
   if (NS_SUCCEEDED(rv)) {
     if (mIsAsync) {
-      // Create the input and output stream observers...
-      mInputConsumer  = new InputConsumer(this);
-      mOutputObserver = new OutputObserver(this);
-
-      NS_IF_ADDREF(mInputConsumer);
-      NS_IF_ADDREF(mOutputObserver);
-
       // Create a stream for the data being written to the server...
       if (NS_SUCCEEDED(rv)) {
         nsIBuffer* buf;
@@ -339,33 +232,57 @@ TestConnection::~TestConnection()
 {
   NS_IF_RELEASE(mTransport);
   // Async resources...
-  NS_IF_RELEASE(mInputConsumer);
-  NS_IF_RELEASE(mOutputObserver);
   NS_IF_RELEASE(mStream);
 
   // Sync resources...
   NS_IF_RELEASE(mInStream);
   NS_IF_RELEASE(mOutStream);
-
-  if (mMonitor) {
-    PR_DestroyMonitor(mMonitor);
-  }
 }
 
-NS_IMPL_ISUPPORTS(TestConnection,nsCOMTypeInfo<nsIRunnable>::GetIID());
+NS_IMPL_THREADSAFE_ADDREF(TestConnection);
+NS_IMPL_THREADSAFE_RELEASE(TestConnection);
+
+NS_IMETHODIMP
+TestConnection::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
+{
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER; 
+  } 
+  if (aIID.Equals(nsCOMTypeInfo<nsIRunnable>::GetIID()) ||
+      aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+    *aInstancePtr = NS_STATIC_CAST(nsIRunnable*, this); 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  } 
+  if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID())) {
+    *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this); 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  } 
+  if (aIID.Equals(nsCOMTypeInfo<nsIStreamObserver>::GetIID())) {
+    *aInstancePtr = NS_STATIC_CAST(nsIStreamObserver*, this); 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  } 
+  return NS_NOINTERFACE; 
+}
 
 NS_IMETHODIMP
 TestConnection::Run(void)
 {
   nsresult rv = NS_OK;
 
+  // Create the Event Queue for this thread...
+  NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = eventQService->CreateThreadEventQueue();
+  if (NS_FAILED(rv)) return rv;
+
   //
   // Make sure that all resources were allocated in the constructor...
   //
   if (!mTransport) {
-    rv = NS_ERROR_FAILURE;
-  }
-  if (mIsAsync && (!mInputConsumer || !mOutputObserver)) {
     rv = NS_ERROR_FAILURE;
   }
 
@@ -374,14 +291,16 @@ TestConnection::Run(void)
       //
       // Initiate an async read...
       //
-      rv = mTransport->AsyncRead(0, -1, mTransport, mInputConsumer);
+      rv = mTransport->AsyncRead(0, -1, mTransport, this);
 
       if (NS_FAILED(rv)) {
         printf("Error: AsyncRead failed...");
+      } else {
+        rv = WriteBuffer();
       }
+      Pump_PLEvents();    
     }
-
-    Lock();
+/*
     while (NS_SUCCEEDED(rv)) {
       rv = WriteBuffer();
 
@@ -395,7 +314,7 @@ TestConnection::Run(void)
         mBufferChar++;
       }
     }
-    Unlock();
+*/
   }
 
   printf("Transport thread exiting...\n");
@@ -409,6 +328,12 @@ nsresult TestConnection::WriteBuffer(void)
   char *buffer;
   PRInt32 size;
   PRUint32 bytesWritten;
+
+  if (mBufferChar == 'z') {
+    mBufferChar = 'a';
+  } else {
+    mBufferChar++;
+  }
 
   printf("\n+++ Request is: %c.  Context = %p\n", mBufferChar, mTransport);
 
@@ -434,9 +359,7 @@ nsresult TestConnection::WriteBuffer(void)
         rv = mTransport->AsyncWrite(mStream, 0, bytesWritten, mTransport, /* mOutputObserver */ nsnull);
       } 
       // Wait for the write to complete...
-      if (NS_SUCCEEDED(rv)) {
-        Wait();
-      } else {
+      if (NS_FAILED(rv)) {
         printf("Error: AsyncWrite failed...");
       }
     } 
@@ -573,10 +496,16 @@ main(int argc, char* argv[])
 ///      return -1;
 ///  }
 
-  char* hostName = argv[1];
-  char* fileName = argv[2];
+  char* hostName;
   int port = 80;
- 
+
+  if (argc < 2) {
+    hostName = "chainsaw";
+  } else {
+    hostName = argv[1];
+  }
+  printf("Using %s as echo server...\n", hostName);
+   
   // -----
   //
   // Initialize XPCom...
@@ -601,7 +530,7 @@ main(int argc, char* argv[])
   // Create the connections and threads...
   //
   for (i=0; i<NUM_TEST_THREADS; i++) {
-    gConnections[i] = new TestConnection("chainsaw", 7, PR_TRUE);
+    gConnections[i] = new TestConnection(hostName, 7, PR_TRUE);
     rv = NS_NewThread(&gThreads[i], gConnections[i]);
   }
 
@@ -616,27 +545,7 @@ main(int argc, char* argv[])
   
 
   // Enter the message pump to allow the URL load to proceed.
-  while ( gKeepRunning ) {
-#ifdef WIN32
-    MSG msg;
-
-    if (GetMessage(&msg, NULL, 0, 0)) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    } else {
-      gKeepRunning = FALSE;
-    }
-#else
-#ifdef XP_MAC
-    /* Mac stuff is missing here! */
-#else
-    PLEvent *gEvent;
-    rv = gEventQ->GetEvent(&gEvent);
-    rv = gEventQ->HandleEvent(gEvent);
-#endif /* XP_UNIX */
-#endif /* !WIN32 */
-  }
-
+  Pump_PLEvents();
 
   PRTime endTime;
   endTime = PR_Now();
