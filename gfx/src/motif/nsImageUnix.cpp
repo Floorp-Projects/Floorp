@@ -107,6 +107,7 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
   mColorMap = new nsColorMap;
 
   if (mColorMap != nsnull) {
+printf("NUM PALETTE COLORS %d\n", mNumPalleteColors);
     mColorMap->NumColors = mNumPalleteColors;
     mColorMap->Index = new PRUint8[3 * mNumPalleteColors];
     memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
@@ -392,19 +393,23 @@ void nsImageUnix::CreateImage(nsDrawingSurface aSurface)
   nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
   
   if(mImageBits) {
+    format = ZPixmap;
+
+#if 0
     /* Need to support monochrome too */
     if (unixdrawing->visual->c_class == TrueColor || 
-        unixdrawing->visual->c_class == DirectColor) 
-      {
+        unixdrawing->visual->c_class == DirectColor) {
       format = ZPixmap;
-      } 
-    else 
-      {
-      format = XYPixmap;
-      }
-/*printf("Width %d  Height %d Visual Depth %d  Image Depth %d\n", 
+    } 
+    else {
+printf("Format XYPixmap\n");
+     format = XYPixmap;
+    }
+#endif
+
+/* printf("Width %d  Height %d Visual Depth %d  Image Depth %d\n", 
                   mWidth, mHeight,  
-                  unixdrawing->depth, mDepth);*/
+                  unixdrawing->depth, mDepth); */
 
     mImage = ::XCreateImage(unixdrawing->display,
 			    unixdrawing->visual,

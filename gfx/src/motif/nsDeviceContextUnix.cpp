@@ -303,7 +303,13 @@ void nsDeviceContextUnix :: InstallColormap(Display* aDisplay, Drawable aDrawabl
   if (mVisual->c_class != TrueColor)
     mPaletteInfo.isPaletteDevice = PR_TRUE;
   else
+  {
     mPaletteInfo.isPaletteDevice = PR_FALSE;
+    if (mDepth == 8) {
+      mPaletteInfo.numReserved = 10;
+      mPaletteInfo.sizePalette = (PRUint32) pow(2, mDepth);
+    }
+  }
 
   if (mVisual->c_class == GrayScale || mVisual->c_class == PseudoColor || mVisual->c_class == DirectColor)
   {
@@ -313,6 +319,7 @@ void nsDeviceContextUnix :: InstallColormap(Display* aDisplay, Drawable aDrawabl
     mWriteable = PR_FALSE;
 
   mNumCells = (PRUint32) pow(2, mDepth);
+  mPaletteInfo.sizePalette = mNumCells;
 
   mColormap = wa.colormap;
 
@@ -423,9 +430,9 @@ NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const nsString& aFontNam
 
 NS_IMETHODIMP nsDeviceContextUnix::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
 {
-  aPaletteInfo.isPaletteDevice = PR_FALSE;
-  aPaletteInfo.sizePalette = 0;
-  aPaletteInfo.numReserved = 0;
+  aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
+  aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
+  aPaletteInfo.numReserved = mPaletteInfo.numReserved;
   aPaletteInfo.palette = nsnull;
   return NS_OK;
 }
