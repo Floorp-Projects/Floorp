@@ -303,11 +303,19 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
              NS_LITERAL_CSTRING("text/plain; charset=ISO-8859-1")) ||
         contentType.Equals(
              NS_LITERAL_CSTRING("text/plain; charset=iso-8859-1"))) {
-      // OK, this is initial dispatch of an HTTP response and its Content-Type
-      // header is exactly "text/plain".  We need to check whether this is
-      // really text....
-      LOG(("  Possibly bogus text/plain; resetting type to " APPLICATION_MAYBE_TEXT));
-      httpChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_MAYBE_TEXT));
+      // Check whether we have content-encoding.  If we do, don't try to detect
+      // the type, since that will lead to the content being automatically
+      // decompressed....
+      nsCAutoString contentEncoding;
+      httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
+                                     contentEncoding);
+      if (contentEncoding.IsEmpty()) {
+        // OK, this is initial dispatch of an HTTP response and its Content-Type
+        // header is exactly "text/plain".  We need to check whether this is
+        // really text....
+        LOG(("  Possibly bogus text/plain; resetting type to " APPLICATION_MAYBE_TEXT));
+        httpChannel->SetContentType(NS_LITERAL_CSTRING(APPLICATION_MAYBE_TEXT));
+      }
     }
   }
   
