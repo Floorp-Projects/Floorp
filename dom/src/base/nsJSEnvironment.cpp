@@ -55,6 +55,7 @@
 #include "nsGUIEvent.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIThread.h"
+#include "nsDOMClassInfo.h"
 
 #ifdef MOZ_LOGGING
 // Force PR_LOGGING so we can get JS strict warnings even in release builds
@@ -371,6 +372,8 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   mScriptsEnabled = PR_TRUE;
   mBranchCallbackCount = 0;
   mProcessingScriptTag=PR_FALSE;
+
+  InvalidateContextAndWrapperCache();
 }
 
 const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRACTID;
@@ -1051,6 +1054,8 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 {
   if (!mContext)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  InvalidateContextAndWrapperCache();
 
   nsresult rv;
 

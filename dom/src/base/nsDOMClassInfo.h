@@ -33,7 +33,6 @@ class nsIDOMNSHTMLOptionCollection;
 class nsIPluginInstance;
 class nsIForm;
 
-typedef void (*GetDOMClassIIDsFnc)(nsVoidArray& aArray);
 
 class nsDOMClassInfo : public nsIXPCScriptable,
                        public nsIClassInfo
@@ -201,9 +200,9 @@ protected:
                                           JSString *str);
 
   nsresult doCheckReadAccess(JSContext *cx, JSObject *obj, jsval id,
-                             nsISupports *native);
+                             nsIXPConnectWrappedNative *wrapper);
   nsresult doCheckWriteAccess(JSContext *cx, JSObject *obj, jsval id,
-                              nsISupports *native, PRBool aForceCheck);
+                              nsIXPConnectWrappedNative *wrapper);
 
 public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
@@ -905,6 +904,9 @@ public:
   // nsIXPCFunctionThisTranslator
   NS_DECL_NSIXPCFUNCTIONTHISTRANSLATOR
 };
+
+
+void InvalidateContextAndWrapperCache();
 
 
 /**
