@@ -1105,6 +1105,10 @@ NPP_SetWindow(NPP instance, NPWindow* window)
             {
                 pSite->SetPosition(rcPos);
             }
+
+            // Ensure clipping on parent to keep child controls happy
+            ::SetWindowLong(hwndParent, GWL_STYLE,
+                ::GetWindowLong(hwndParent, GWL_STYLE) | WS_CLIPCHILDREN);
         }
     }
 
