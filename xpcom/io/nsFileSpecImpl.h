@@ -128,6 +128,14 @@ class NS_COM nsFileSpecImpl
 	/* boolean isOpen (); */
 	NS_IMETHOD isStreamOpen(PRBool *_retval);
 
+	NS_IMETHOD GetInputStream(nsIInputStream**);
+	NS_IMETHOD GetOutputStream(nsIOutputStream**);
+
+	NS_IMETHOD GetFileContents(char**);
+	NS_IMETHOD SetFileContents(char*);
+
+	NS_IMETHOD GetFileSpec(nsFileSpec *aFileSpec);
+
 	/* boolean eof (); */
 	NS_IMETHOD eof(PRBool *_retval);
 
@@ -177,5 +185,37 @@ class NS_COM nsFileSpecImpl
 		nsIOutputStream*					mOutputStream;
 
 }; // class nsFileSpecImpl
+
+//========================================================================================
+class nsDirectoryIteratorImpl
+//========================================================================================
+	: public nsIDirectoryIterator
+{
+
+public:
+
+	nsDirectoryIteratorImpl();
+	virtual ~nsDirectoryIteratorImpl();
+
+	NS_DECL_ISUPPORTS
+
+	NS_IMETHOD Init(nsIFileSpec *parent);
+
+	NS_IMETHOD exists(PRBool *_retval);
+
+	NS_IMETHOD next();
+
+	NS_IMETHOD GetCurrentSpec(nsIFileSpec * *aCurrentSpec);
+
+	//----------------------
+	// COM Cruft
+	//----------------------
+
+    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec);
+
+protected:
+
+	nsDirectoryIterator*					mDirectoryIterator;
+}; // class nsDirectoryIteratorImpl
 
 #endif // _FILESPECIMPL_H_

@@ -411,6 +411,71 @@ NS_IMETHODIMP nsFileSpecImpl::isStreamOpen(PRBool *_retval)
 }
 
 //----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::GetInputStream(nsIInputStream** _retval)
+//----------------------------------------------------------------------------------------
+{
+	TEST_OUT_PTR(_retval)
+	if (!mInputStream)
+		openStreamForReading();
+	*_retval = mInputStream;
+	NS_IF_ADDREF(mInputStream);
+	return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::GetOutputStream(nsIOutputStream** _retval)
+//----------------------------------------------------------------------------------------
+{
+	TEST_OUT_PTR(_retval)
+	if (!mOutputStream)
+		openStreamForWriting();
+	*_retval = mOutputStream;
+	NS_IF_ADDREF(mOutputStream);
+	return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::SetFileContents(char* inString)
+//----------------------------------------------------------------------------------------
+{
+	nsresult rv = openStreamForWriting();
+	if (NS_FAILED(rv))
+		return rv;
+	PRInt32 count;
+	rv = write(inString, PL_strlen(inString), &count);
+	nsresult rv2 = closeStream();
+	return NS_FAILED(rv) ? rv : rv2;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::GetFileContents(char** _retval)
+//----------------------------------------------------------------------------------------
+{
+	TEST_OUT_PTR(_retval)
+	*_retval = nsnull;
+	nsresult rv = openStreamForReading();
+	if (NS_FAILED(rv))
+		return rv;
+	PRInt32 theSize;
+	rv = GetFileSize((PRUint32*)&theSize);
+	if (NS_SUCCEEDED(rv))
+		rv = read(_retval, theSize, &theSize);
+	if (NS_SUCCEEDED(rv))
+		(*_retval)[theSize] = 0;
+	nsresult rv2 = closeStream();
+	return NS_FAILED(rv) ? rv : rv2;
+}
+
+//----------------------------------------------------------------------------------------
+NS_IMETHODIMP nsFileSpecImpl::GetFileSpec(nsFileSpec *aFileSpec)
+//----------------------------------------------------------------------------------------
+{
+	TEST_OUT_PTR(aFileSpec)
+	*aFileSpec = mFileSpec;
+	return NS_OK;
+}
+
+//----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecImpl::eof(PRBool *_retval)
 //----------------------------------------------------------------------------------------
 {
@@ -428,6 +493,8 @@ NS_IMETHODIMP nsFileSpecImpl::read(char** buffer, PRInt32 requestedCount, PRInt3
 {
 	TEST_OUT_PTR(_retval)
 	TEST_OUT_PTR(buffer)
+	if (!mInputStream)
+		openStreamForReading();
 	if (!*buffer)
 		*buffer = (char*)PR_Malloc(requestedCount + 1);
 	if (!mInputStream)
@@ -443,6 +510,8 @@ NS_IMETHODIMP nsFileSpecImpl::readLine(char** line, PRInt32 bufferSize, PRBool *
 {
 	TEST_OUT_PTR(wasTruncated)
 	TEST_OUT_PTR(line)
+	if (!mInputStream)
+		openStreamForReading();
 	if (!*line)
 		*line = (char*)PR_Malloc(bufferSize + 1);
 	if (!mInputStream)
@@ -459,6 +528,8 @@ NS_IMETHODIMP nsFileSpecImpl::write(const char * data, PRInt32 requestedCount, P
 	TEST_OUT_PTR(_retval)
 	if (!mOutputStream)
 		return NS_ERROR_NULL_POINTER;
+	if (!mOutputStream)
+		openStreamForWriting();
 	nsOutputFileStream s(mOutputStream);
 	*_retval = s.write(data, requestedCount);
 	return s.error();
@@ -516,34 +587,7 @@ NS_IMETHODIMP nsFileSpecImpl::endline()
 	return s.error();
 }
 
-//========================================================================================
-class nsDirectoryIteratorImpl
-//========================================================================================
-	: public nsIDirectoryIterator
-{
-
-public:
-
-	nsDirectoryIteratorImpl();
-	virtual ~nsDirectoryIteratorImpl();
-
-	NS_DECL_ISUPPORTS
-
-	NS_IMETHOD Init(nsIFileSpec *parent);
-
-	NS_IMETHOD exists(PRBool *_retval);
-
-	NS_IMETHOD next();
-
-	NS_IMETHOD GetCurrentSpec(nsIFileSpec * *aCurrentSpec);
-
-protected:
-
-	nsDirectoryIterator*					mDirectoryIterator;
-}; // class nsDirectoryIteratorImpl
-
-static NS_DEFINE_IID(kIDirectoryIteratorIID, NS_IDIRECTORYITERATOR_IID);
-NS_IMPL_ISUPPORTS(nsDirectoryIteratorImpl, kIDirectoryIteratorIID)
+NS_IMPL_ISUPPORTS(nsDirectoryIteratorImpl, nsIDirectoryIterator::GetIID())
 
 //----------------------------------------------------------------------------------------
 nsDirectoryIteratorImpl::nsDirectoryIteratorImpl()
@@ -602,6 +646,26 @@ NS_IMETHODIMP nsDirectoryIteratorImpl::GetCurrentSpec(nsIFileSpec * *aCurrentSpe
 }
 
 //----------------------------------------------------------------------------------------
+NS_METHOD nsDirectoryIteratorImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec)
+//----------------------------------------------------------------------------------------
+{
+  if (aIFileSpec == NULL)
+    return NS_ERROR_NULL_POINTER;
+
+	nsDirectoryIteratorImpl* it = new nsDirectoryIteratorImpl;
+  if (!it)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = it->QueryInterface(aIID, aIFileSpec);
+  if (NS_FAILED(rv))
+  {
+    delete it;
+    return rv;
+  }
+  return rv;
+}
+
+//----------------------------------------------------------------------------------------
 NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aIFileSpec)
 //----------------------------------------------------------------------------------------
 {
@@ -613,7 +677,8 @@ NS_METHOD nsFileSpecImpl::Create(nsISupports* outer, const nsIID& aIID, void* *a
 		return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv = it->QueryInterface(aIID, aIFileSpec);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv))
+  {
     delete it;
     return rv;
   }
@@ -634,22 +699,12 @@ nsresult NS_NewFileSpecWithSpec(nsFileSpec aSrcFileSpec, nsIFileSpec **result)
 nsresult NS_NewFileSpec(nsIFileSpec** result)
 //----------------------------------------------------------------------------------------
 {
-	if (!result)
-		return NS_ERROR_NULL_POINTER;
-	nsFileSpecImpl* it = new nsFileSpecImpl;
-	if (!it)
-		return NS_ERROR_OUT_OF_MEMORY;
-	return it->QueryInterface(nsIFileSpec::GetIID(), (void **) result);
+	return nsFileSpecImpl::Create(nsnull, nsIFileSpec::GetIID(), result);
 }
 
 //----------------------------------------------------------------------------------------
 nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result)
 //----------------------------------------------------------------------------------------
 {
-	if (!result)
-		return NS_ERROR_NULL_POINTER;
-	nsDirectoryIteratorImpl* it = new nsDirectoryIteratorImpl();
-	if (!it)
-		return NS_ERROR_OUT_OF_MEMORY;
-	return it->QueryInterface(kIDirectoryIteratorIID, (void **) result);
+	return nsDirectoryIteratorImpl::Create(nsnull, nsIDirectoryIterator::GetIID(), result);
 }
