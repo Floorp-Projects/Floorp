@@ -24,6 +24,7 @@
 #include "prmem.h"
 #include "prlog.h"
 #include "plstr.h"
+#include "comi18n.h"
 
 #define NS_IMPL_IDS
 #include "nsIServiceManager.h"
@@ -51,7 +52,6 @@
 #define TAB '\t'
 #define CR '\015'
 #define LF '\012'
-#define MAX_CSNAME      64
 
 extern "C"  char * MIME_StripContinuations(char *original);
 /* RICHIE - These are needed by other libmime functions */
@@ -423,7 +423,7 @@ the src */
            do another memory allocation which is expensive
          */
 
-        retbufsize = PL_strlen(srcbuf) * 3 + MAX_CSNAME + 8;
+        retbufsize = PL_strlen(srcbuf) * 3 + kMAX_CSNAME + 8;
         retbuf =  (char *) PR_Malloc(retbufsize);
         if (retbuf == NULL)  /* Give up if not enough memory */
         {
@@ -1261,6 +1261,136 @@ wincsid));
 wincsid, dontConvert, NULL));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+static PRUint32 INTL_ConvertCharset(const char* from_charset, const char* to_charset,
+                                    const char* inBuffer, const PRInt32 inLength,
+                                    char** outBuffer)
+{
+  char *dstPtr = nsnull;
+  PRInt32 dstLength = 0;
+  nsICharsetConverterManager * ccm = nsnull;
+  nsresult res;
+
+  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                                     kICharsetConverterManagerIID, 
+                                     (nsISupports**)&ccm);
+
+  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsString aCharset(from_charset);
+    nsIUnicodeDecoder* decoder = nsnull;
+    PRUnichar *unichars;
+    PRInt32 unicharLength;
+
+    // convert to unicode
+    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
+      PRInt32 srcLen = inLength;
+      res = decoder->Length(inBuffer, 0, srcLen, &unicharLength);
+      // temporary buffer to hold unicode string
+      unichars = new PRUnichar[unicharLength];
+      if (unichars != nsnull) {
+        res = decoder->Convert(unichars, 0, &unicharLength, inBuffer, 0, &srcLen);
+
+        // convert from unicode
+        nsIUnicodeEncoder* encoder = nsnull;
+        aCharset.SetString(to_charset);
+        res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
+        if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
+          res = encoder->Length(unichars, 0, unicharLength, &dstLength);
+          // allocale an output buffer
+          dstPtr = (char *) PR_Malloc(dstLength + 1);
+          if (dstPtr != nsnull) {
+           res = encoder->Convert(unichars, 0, &unicharLength, dstPtr, 0, &dstLength);
+           dstPtr[dstLength] = '\0';
+          }
+          NS_IF_RELEASE(encoder);
+        }
+        delete [] unichars;
+      }
+      NS_IF_RELEASE(decoder);
+    }
+    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+  }
+
+  // set the results
+  *outBuffer = dstPtr;
+
+  return res;
+}
+
+static PRUint32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuffer, const PRInt32 aLength,
+                                      void** uniBuffer, PRInt32* uniLength)
+{
+  nsICharsetConverterManager * ccm = nsnull;
+  nsresult res;
+
+  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                                     kICharsetConverterManagerIID, 
+                                     (nsISupports**)&ccm);
+  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsString aCharset(from_charset);
+    nsIUnicodeDecoder* decoder = nsnull;
+    PRUnichar *unichars;
+    PRInt32 unicharLength;
+
+    // convert to unicode
+    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
+      PRInt32 srcLen = aLength;
+      res = decoder->Length(aBuffer, 0, srcLen, &unicharLength);
+      // allocale an output buffer
+      unichars = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
+      if (unichars != nsnull) {
+        res = decoder->Convert(unichars, 0, &unicharLength, aBuffer, 0, &srcLen);
+        *uniBuffer = (void *) unichars;
+        *uniLength = unicharLength;
+      }
+      else {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      }
+      NS_IF_RELEASE(decoder);
+    }    
+    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+  }  
+  return res;
+}
+
+static PRUint32 INTL_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
+                                        char** aBuffer)
+{
+  nsICharsetConverterManager * ccm = nsnull;
+  nsresult res;
+
+  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                                     kICharsetConverterManagerIID, 
+                                     (nsISupports**)&ccm);
+  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsString aCharset(to_charset);
+    nsIUnicodeEncoder* encoder = nsnull;
+
+    // convert from unicode
+    res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
+    if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
+      const PRUnichar *unichars = (const PRUnichar *) uniBuffer;
+      PRInt32 unicharLength = uniLength;
+      PRInt32 dstLength;
+      res = encoder->Length(unichars, 0, unicharLength, &dstLength);
+      // allocale an output buffer
+      *aBuffer = (char *) PR_Malloc(dstLength + 1);
+      if (*aBuffer != nsnull) {
+        res = encoder->Convert(unichars, 0, &unicharLength, *aBuffer, 0, &dstLength);
+        (*aBuffer)[dstLength] = '\0';
+      }
+      else {
+        res = NS_ERROR_OUT_OF_MEMORY;
+      }
+      NS_IF_RELEASE(encoder);
+    }    
+    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+  }
+  return res;
+}
+////////////////////////////////////////////////////////////////////////////////
 
 // BEGIN PUBLIC INTERFACE
 extern "C" {
@@ -1290,62 +1420,25 @@ PRBool bUseMime, int encodedWordSize)
 encodedWordSize);
 }
 
-// Replacement for INTL_ConvertLineWithoutAutoDetect
-// Allocated buffer should be freed by PR_FREE.
-unsigned char *MIME_ConvertCharset(const char* from_charset, const char* to_charset,
-                                   const char *aBuffer, const PRInt32 aLength)
+PRUint32 MIME_ConvertCharset(const char* from_charset, const char* to_charset,
+                             const char* inBuffer, const PRInt32 inLength,
+                             char** outBuffer)
 {
-  char *dstPtr = nsnull;
-  nsICharsetConverterManager * ccm = nsnull;
-  nsresult res;
-
-  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                                     kICharsetConverterManagerIID, 
-                                     (nsISupports**)&ccm);
-
-  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
-    nsString aCharset(from_charset);
-    nsIUnicodeDecoder* decoder = nsnull;
-    PRUnichar *unichars;
-    PRInt32 unicharLength;
-
-    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
-    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
-      PRInt32 srcLen = aLength;
-      res = decoder->Length(aBuffer, 0, srcLen, &unicharLength);
-      unichars = new PRUnichar[unicharLength];
-      if (unichars != nsnull) {
-        res = decoder->Convert(unichars, 0, &unicharLength, aBuffer, 0, &srcLen);
-
-        nsIUnicodeEncoder* encoder = nsnull;
-        res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
-        if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
-          PRInt32 dstLength;
-          res = encoder->Length(unichars, 0, unicharLength, &dstLength);
-          dstPtr = (char *) PR_Malloc(dstLength + 1);
-          if (dstPtr != nsnull) {
-           res = encoder->Convert(unichars, 0, &unicharLength, dstPtr, 0, &dstLength);
-           dstPtr[dstLength] = '\0';
-          }
-          NS_IF_RELEASE(encoder);
-        }
-        delete [] unichars;
-      }
-      NS_IF_RELEASE(decoder);
-    }
-    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
-  }
-
-  return (unsigned char *) dstPtr;
+  return INTL_ConvertCharset(from_charset, to_charset, inBuffer, inLength, outBuffer);
 }
 
-// This is a replacement for INTL_DecodeMimePartIIStr
-// Unlike INTL_DecodeMimePartIIStr, this does not apply any charset conversion.
-// Use MIME_ConvertCharset if the decoded string needs a conversion.
+PRUint32 MIME_ConvertToUnicode(const char* from_charset, const char* aBuffer, const PRInt32 aLength,
+                               void** uniBuffer, PRInt32* uniLength)
+{
+  return INTL_ConvertToUnicode(from_charset, aBuffer, aLength, uniBuffer, uniLength);
+}
 
-// If a header is MIME encoded then decode a header and sets a charset name.
-// Return NULL if the header is not MIME encoded.
-// Caller should allocate at least 65 bytes for a charset name.
+PRUint32 MIME_ConvertFromUnicode(const char* to_charset, const void* uniBuffer, const PRInt32 uniLength,
+                                 char** aBuffer)
+{
+  return INTL_ConvertFromUnicode(to_charset, uniBuffer, uniLength, aBuffer);
+}
+
 char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
 {
   if (header == 0 || *header == '\0')
@@ -1357,6 +1450,16 @@ char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
   }
 
   return NULL;
+}
+
+char *MIME_EncodeMimePartIIStr(const void* inHeaderUni, const PRInt32 inCharLen, 
+                               const char* mailCharset, const PRInt32 encodedWordSize)
+{
+  char *aBuffer = nsnull;
+  // TODO: do the encoding in addition to the conversion.
+  nsresult res = MIME_ConvertFromUnicode(mailCharset, inHeaderUni, inCharLen, &aBuffer);
+
+  return NS_FAILED(res) ? NULL : aBuffer;
 }
 
 } /* end of extern "C" */
