@@ -54,20 +54,19 @@ public:
 
   //nsIScrollableView interface
   virtual void ComputeContainerSize();
-  virtual PRInt32 GetContainerSize();
-
-  virtual void SetVisibleOffset(PRInt32 aOffset);
-  virtual PRInt32 GetVisibleOffset();
-
+  virtual void GetContainerSize(nscoord *aWidth, nscoord *aHeight);
+  virtual void SetVisibleOffset(nscoord aOffsetX, nscoord aOffsetY);
+  virtual void GetVisibleOffset(nscoord *aOffsetX, nscoord *aOffsetY);
   virtual nsIView * GetScrolledView(void);
 
   //private
   void ComputeScrollArea(nsIView *aView, nsRect &aRect, nscoord aOffX, nscoord aOffY);
 
 protected:
-  PRInt32 mSize;
-  PRInt32 mOffset;
-  nsIView *mScrollBarView;
+  nscoord mSizeX, mSizeY;
+  nscoord mOffsetX, mOffsetY;
+  nsIView *mVScrollBarView;
+  nsIView *mHScrollBarView;
 };
 
 #endif
