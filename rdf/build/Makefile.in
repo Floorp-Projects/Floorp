@@ -29,7 +29,6 @@ IS_COMPONENT	= 1
 REQUIRES	= dom js netlib rdf raptor xpcom
 
 CPPSRCS		= \
-		dlldeps.cpp \
 		nsRDFModule.cpp \
 		$(NULL)
 
