@@ -56,7 +56,7 @@ mozilla.org.  Currently, your account has been disabled, and will stay
 disabled until you change your password.
 
 To change your password, please visit
-http://cvs-mirror.mozilla.org/webtools/despot/despot.cgi.
+http://despot.mozilla.org/despot.cgi.
 If you can't get that to work, send mail to staff@mozilla.org.  If it's
 an emergency, try paging terry at page-terry@netscape.com.
 
