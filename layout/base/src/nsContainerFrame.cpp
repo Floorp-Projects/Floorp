@@ -232,7 +232,7 @@ void nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
-                                  PR_TRUE);
+                                  nsClipCombine_kIntersect);
     hidden = PR_TRUE;
   }
 

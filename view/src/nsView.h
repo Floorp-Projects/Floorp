@@ -56,7 +56,8 @@ public:
   virtual void Destroy();
   virtual nsIViewManager * GetViewManager();
   virtual nsIWidget * GetWidget();
-  virtual void Paint(nsIRenderingContext& rc, const nsRect& rect, PRUint32 aPaintFlags);
+  virtual void Paint(nsIRenderingContext& rc, const nsRect& rect,
+                     PRUint32 aPaintFlags, nsIView *aBackstop = nsnull);
   virtual void Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 aPaintFlags);
   virtual nsEventStatus HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags);
   virtual void SetPosition(nscoord x, nscoord y);

@@ -62,6 +62,7 @@ nsInputFrame::nsInputFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsInputFrameSuper(aContent, aParentFrame)
 {
   mLastMouseState = eMouseNone;
+  mDidInit = PR_FALSE;
 }
 
 nsInputFrame::~nsInputFrame()
@@ -138,16 +139,21 @@ nsInputFrame::Paint(nsIPresContext& aPresContext,
     nsIView* view = nsnull;
     GetView(view);
     if (nsnull != view) {
-      SetViewVisiblity(&aPresContext, PR_TRUE);
+      if (PR_FALSE == mDidInit) {
+        ((nsInput*)mContent)->GetFormManager()->Init(PR_FALSE);
+        PostCreateWidget(&aPresContext, view);
+        mDidInit = PR_TRUE;
+      }
+//      SetViewVisiblity(&aPresContext, PR_TRUE);
       NS_RELEASE(view);
     }
-
     // Point borders/padding if any
     return nsInputFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
   }
   return NS_OK;
 }
 
+//don't call this. MMP
 void
 nsInputFrame::SetViewVisiblity(nsIPresContext* aPresContext, PRBool aShow)
 {
@@ -261,7 +267,7 @@ nsInputFrame::Reflow(nsIPresContext*      aPresContext,
 	  // initialize the view as hidden since we don't know the (x,y) until Paint
     result = view->Init(viewMan, boundBox, parView, &id, initData,
                         nsnull, 0, nsnull,
-                        1.0f, nsViewVisibility_kHide);
+                        1.0f, nsViewVisibility_kShow);
     if (nsnull != initData) {
       delete(initData);
     }
@@ -297,7 +303,7 @@ nsInputFrame::Reflow(nsIPresContext*      aPresContext,
     // If we are being reflowed and have a view, hide the view until
     // we are told to paint (which is when our location will have
     // stabilized).
-    SetViewVisiblity(aPresContext, PR_FALSE);
+//    SetViewVisiblity(aPresContext, PR_FALSE);
   }
 
   aDesiredSize.ascent = aDesiredSize.height;

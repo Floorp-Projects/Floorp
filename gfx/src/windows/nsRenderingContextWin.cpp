@@ -19,6 +19,9 @@
 #include "nsRenderingContextWin.h"
 #include <math.h>
 
+#define FLAG_CLIP_VALID   0x0001
+#define FLAG_CLIP_CHANGED 0x0002
+
 class GraphicsState
 {
 public:
@@ -29,7 +32,6 @@ public:
   GraphicsState   *mNext;
   nsTransform2D   mMatrix;
   nsRect          mLocalClip;
-  nsRect          mGlobalClip;
   HRGN            mClipRegion;
   nscolor         mBrushColor;
   HBRUSH          mSolidBrush;
@@ -37,6 +39,7 @@ public:
   HFONT           mFont;
   nscolor         mPenColor;
   HPEN            mSolidPen;
+  PRUint32        mFlags;
 };
 
 GraphicsState :: GraphicsState()
@@ -44,7 +47,6 @@ GraphicsState :: GraphicsState()
   mNext = nsnull;
   mMatrix.SetToIdentity();  
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
-  mGlobalClip = mLocalClip;
   mClipRegion = NULL;
   mBrushColor = NS_RGB(0, 0, 0);
   mSolidBrush = NULL;
@@ -52,12 +54,12 @@ GraphicsState :: GraphicsState()
   mFont = NULL;
   mPenColor = NS_RGB(0, 0, 0);
   mSolidPen = NULL;
+  mFlags = 0;
 }
 
 GraphicsState :: GraphicsState(GraphicsState &aState) :
                                mMatrix(&aState.mMatrix),
-                               mLocalClip(aState.mLocalClip),
-                               mGlobalClip(aState.mGlobalClip)
+                               mLocalClip(aState.mLocalClip)
 {
   mNext = &aState;
   mClipRegion = NULL;
@@ -67,6 +69,7 @@ GraphicsState :: GraphicsState(GraphicsState &aState) :
   mFont = NULL;
   mPenColor = aState.mPenColor;
   mSolidPen = NULL;
+  mFlags = 0;
 }
 
 GraphicsState :: ~GraphicsState()
@@ -309,7 +312,7 @@ nsIDeviceContext * nsRenderingContextWin :: GetDeviceContext(void)
   return mContext;
 }
 
-void nsRenderingContextWin :: PushState()
+void nsRenderingContextWin :: PushState(void)
 {
   PRInt32 cnt = mStateCache->Count();
 
@@ -331,14 +334,14 @@ void nsRenderingContextWin :: PushState()
 
     state->mMatrix = mStates->mMatrix;
     state->mLocalClip = mStates->mLocalClip;
-    state->mGlobalClip = mStates->mGlobalClip;
-    state->mClipRegion = nsnull;
+    state->mClipRegion = NULL;
     state->mBrushColor = mStates->mBrushColor;
-    state->mSolidBrush = nsnull;
+    state->mSolidBrush = NULL;
     state->mFontMetrics = mStates->mFontMetrics;
-    state->mFont = nsnull;
+    state->mFont = NULL;
     state->mPenColor = mStates->mPenColor;
-    state->mSolidPen = nsnull;
+    state->mSolidPen = NULL;
+    state->mFlags = 0;
 
     mStates = state;
   }
@@ -346,7 +349,7 @@ void nsRenderingContextWin :: PushState()
   mTMatrix = &mStates->mMatrix;
 }
 
-void nsRenderingContextWin :: PopState()
+void nsRenderingContextWin :: PopState(void)
 {
   if (nsnull == mStates)
   {
@@ -366,27 +369,21 @@ void nsRenderingContextWin :: PopState()
 
       GraphicsState *pstate;
 
-      if (NULL != oldstate->mClipRegion)
+      if (oldstate->mFlags & FLAG_CLIP_CHANGED)
       {
         pstate = mStates;
 
         //the clip rect has changed from state to state, so
         //install the previous clip rect
 
-        while ((nsnull != pstate) && (NULL == pstate->mClipRegion))
+        while ((nsnull != pstate) && !(pstate->mFlags & FLAG_CLIP_VALID))
           pstate = pstate->mNext;
 
-        if ((nsnull != pstate) && (pstate->mGlobalClip != oldstate->mGlobalClip))
+        if (nsnull != pstate)
           ::SelectClipRgn(mDC, pstate->mClipRegion);
-        else
-          ::SelectClipRgn(mDC, NULL);
-
-        //kill the clip region we are popping off the stack
-
-        ::DeleteObject(oldstate->mClipRegion);
-        oldstate->mClipRegion = NULL;
       }
 
+      oldstate->mFlags &= ~(FLAG_CLIP_VALID | FLAG_CLIP_CHANGED);
       oldstate->mSolidBrush = NULL;
       oldstate->mFont = NULL;
       oldstate->mSolidPen = NULL;
@@ -401,7 +398,7 @@ PRBool nsRenderingContextWin :: IsVisibleRect(const nsRect& aRect)
   return PR_TRUE;
 }
 
-void nsRenderingContextWin :: SetClipRect(const nsRect& aRect, PRBool aIntersect)
+void nsRenderingContextWin :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
   nsRect  trect = aRect;
 
@@ -410,26 +407,51 @@ void nsRenderingContextWin :: SetClipRect(const nsRect& aRect, PRBool aIntersect
 	mTMatrix->TransformCoord(&trect.x, &trect.y,
                            &trect.width, &trect.height);
 
-  //should we combine the new rect with the previous?
+  //how we combine the new rect with the previous?
 
-  if (aIntersect == PR_TRUE)
+  if (aCombine == nsClipCombine_kIntersect)
   {
-    if (PR_FALSE == mStates->mGlobalClip.IntersectRect(mStates->mGlobalClip, trect))
-    {
-      mStates->mGlobalClip.x = mStates->mGlobalClip.y = mStates->mGlobalClip.width = mStates->mGlobalClip.height = 0;
-    }  
+    PushClipState();
+
+    ::IntersectClipRect(mDC, trect.x,
+                             trect.y,
+                             trect.XMost(),
+                             trect.YMost());
+  }
+  else if (aCombine == nsClipCombine_kUnion)
+  {
+    PushClipState();
+
+    HRGN  tregion = ::CreateRectRgn(trect.x,
+                                    trect.y,
+                                    trect.XMost(),
+                                    trect.YMost());
+
+    ::ExtSelectClipRgn(mDC, tregion, RGN_OR);
+    ::DeleteObject(tregion);
+  }
+  else if (aCombine == nsClipCombine_kSubtract)
+  {
+    PushClipState();
+
+    ::ExcludeClipRect(mDC, trect.x,
+                           trect.y,
+                           trect.XMost(),
+                           trect.YMost());
+  }
+  else if (aCombine == nsClipCombine_kReplace)
+  {
+    PushClipState();
+
+    HRGN  tregion = ::CreateRectRgn(trect.x,
+                                    trect.y,
+                                    trect.XMost(),
+                                    trect.YMost());
+    ::SelectClipRgn(mDC, tregion);
+    ::DeleteObject(tregion);
   }
   else
-    mStates->mGlobalClip = trect;
-
-  if (NULL != mStates->mClipRegion)
-    ::DeleteObject(mStates->mClipRegion);
-
-  mStates->mClipRegion = ::CreateRectRgn(mStates->mGlobalClip.x,
-                                         mStates->mGlobalClip.y,
-                                         mStates->mGlobalClip.XMost(),
-                                         mStates->mGlobalClip.YMost());
-  ::SelectClipRgn(mDC, mStates->mClipRegion);
+    NS_ASSERTION(FALSE, "illegal clip combination");
 }
 
 PRBool nsRenderingContextWin :: GetClipRect(nsRect &aRect)
@@ -439,7 +461,12 @@ PRBool nsRenderingContextWin :: GetClipRect(nsRect &aRect)
   return PR_TRUE;
 }
 
-void nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, PRBool aIntersect)
+void nsRenderingContextWin :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
+{
+  //XXX wow, needs to do something.
+}
+
+void nsRenderingContextWin :: GetClipRegion(nsIRegion **aRegion)
 {
   //XXX wow, needs to do something.
 }
@@ -877,17 +904,28 @@ nsresult nsRenderingContextWin :: CopyOffScreenBits(nsRect &aBounds)
 {
   if ((nsnull != mDC) && (nsnull != mMainDC))
   {
+    HRGN  tregion = ::CreateRectRgn(0, 0, 0, 0);
+
+    if (::GetClipRgn(mDC, tregion) == 1)
+      ::SelectClipRgn(mMainDC, tregion);
+//    else
+//      ::SelectClipRgn(mMainDC, NULL);
+
+    ::DeleteObject(tregion);
+
+#if 0
     GraphicsState *pstate = mStates;
 
     //look for a cliprect somewhere in the stack...
 
-    while ((nsnull != pstate) && (NULL == pstate->mClipRegion))
+    while ((nsnull != pstate) && !(pstate->mFlags & FLAG_CLIP_VALID))
       pstate = pstate->mNext;
 
     if (nsnull != pstate)
       ::SelectClipRgn(mMainDC, pstate->mClipRegion);
     else
       ::SelectClipRgn(mMainDC, NULL);
+#endif
 
     ::BitBlt(mMainDC, 0, 0, aBounds.width, aBounds.height, mDC, 0, 0, SRCCOPY);
   }
@@ -951,4 +989,30 @@ HPEN nsRenderingContextWin :: SetupSolidPen(void)
   }
 
   return mCurrPen;
+}
+
+void nsRenderingContextWin :: PushClipState(void)
+{
+  if (!(mStates->mFlags & FLAG_CLIP_CHANGED))
+  {
+    GraphicsState *tstate = mStates->mNext;
+
+    //we have never set a clip on this state before, so
+    //remember the current clip state in the next state on the
+    //stack. kind of wacky, but avoids selecting stuff in the DC
+    //all the damned time.
+
+    if (nsnull != tstate)
+    {
+      if (NULL == tstate->mClipRegion)
+        tstate->mClipRegion = ::CreateRectRgn(0, 0, 0, 0);
+
+      if (::GetClipRgn(mDC, tstate->mClipRegion) == 1)
+        tstate->mFlags |= FLAG_CLIP_VALID;
+      else
+        tstate->mFlags &= ~FLAG_CLIP_VALID;
+    }
+  
+    mStates->mFlags |= FLAG_CLIP_CHANGED;
+  }
 }

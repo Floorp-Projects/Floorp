@@ -212,6 +212,7 @@ protected:
 
   nsMouseState mLastMouseState;
   nsSize mWidgetSize;
+  PRBool mDidInit;
 };
 
 #endif

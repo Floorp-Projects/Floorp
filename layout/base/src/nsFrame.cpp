@@ -372,17 +372,17 @@ NS_METHOD nsFrame::MoveTo(nscoord aX, nscoord aY)
   if ((aX != mRect.x) || (aY != mRect.y)) {
     mRect.x = aX;
     mRect.y = aY;
+  }
 
-    // Let the view know
-    if (nsnull != mView) {
-      // Position view relative to it's parent, not relative to our
-      // parent frame (our parent frame may not have a view).
-      nsIView* parentWithView;
-      nsPoint origin;
-      GetOffsetFromView(origin, parentWithView);
-      mView->SetPosition(origin.x, origin.y);
-      NS_IF_RELEASE(parentWithView);
-    }
+  // Let the view know
+  if (nsnull != mView) {
+    // Position view relative to it's parent, not relative to our
+    // parent frame (our parent frame may not have a view).
+    nsIView* parentWithView;
+    nsPoint origin;
+    GetOffsetFromView(origin, parentWithView);
+    mView->SetPosition(origin.x, origin.y);
+    NS_IF_RELEASE(parentWithView);
   }
 
   return NS_OK;
@@ -998,6 +998,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
 {
   NS_FRAME_TRACE_MSG(("nsFrame::DidReflow: aStatus=%d", aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+//    MoveTo(mRect.x, mRect.y); //added and killed per kipp's instructions... MMP
     mState &= ~NS_FRAME_IN_REFLOW;
   }
   return NS_OK;

@@ -851,7 +851,7 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     PRIntn yPos = aColor.mBackgroundXPosition;
 #endif
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(aDirtyRect, PR_TRUE);
+    aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect);
     PRIntn x, y;
     for (y = 0;  y <= ycount;  ++y, ypos += tileHeight) {
       for (x = 0, xpos = xpos0;  x <= xcount;  ++x, xpos += tileWidth) {

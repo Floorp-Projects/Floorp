@@ -37,6 +37,16 @@ struct nsFont;
 struct nsPoint;
 struct nsRect;
 
+//cliprect/region combination methods
+
+typedef enum
+{
+  nsClipCombine_kIntersect = 0,
+  nsClipCombine_kUnion = 1,
+  nsClipCombine_kSubtract = 2,
+  nsClipCombine_kReplace = 3
+} nsClipCombine;
+
 // IID for the nsIRenderingContext interface
 #define NS_IRENDERING_CONTEXT_IID    \
 { 0x7fd8c0f0, 0xa265, 0x11d1, \
@@ -90,12 +100,12 @@ public:
   /**
    * Save a graphical state onto a stack.
    */
-  virtual void PushState() = 0;
+  virtual void PushState(void) = 0;
 
   /**
    * Get and and set RenderingContext to this graphical state
    */
-  virtual void PopState() = 0;
+  virtual void PopState(void) = 0;
 
   /**
    * Tells if a given rectangle is visible within the rendering context
@@ -107,26 +117,35 @@ public:
   /**
    * Sets the clipping for the RenderingContext to the passed in rectangle
    * @param aRect The rectangle to set the clipping rectangle to
-   * @param aIntersect A boolean, if true will cause aRect to be
-   *        intersected with existing clip area
+   * @param aCombine how to combine this rect with the current clip region.
+   *        see the bottom of nsIRenderingContext.h
    */
-  virtual void SetClipRect(const nsRect& aRect, PRBool aIntersect) = 0;
+  virtual void SetClipRect(const nsRect& aRect, nsClipCombine aCombine) = 0;
 
   /**
-   * Gets the clipping rectangle of the RenderingContext
-   * @param aRect out parameter to containt the clipping rectangle
+   * Gets the bounds of the clip region of the RenderingContext
+   * @param aRect out parameter to contain the clip region bounds
    *        for the RenderingContext
    * @return PR_TRUE if the rendering context has a cliprect set
+   *         (i.e. this is the exact clip rect, not a clip region bounds)
    */
   virtual PRBool GetClipRect(nsRect &aRect) = 0;
 
   /**
    * Sets the clipping for the RenderingContext to the passed in region
    * @param aRegion The region to set the clipping area to
-   * @param aIntersect A boolean, if true will cause aRegion to be
-   *        intersected with existing clip area
+   * @param aCombine how to combine this region with the current clip region.
+   *        see the bottom of nsIRenderingContext.h
    */
-  virtual void SetClipRegion(const nsIRegion& aRegion, PRBool aIntersect) = 0;
+  virtual void SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine) = 0;
+
+  /**
+   * Gets the current clipping region for the RenderingContext
+   * @param aRegion out parameter representing the clip region.
+   *        if SetClipRegion() is called, do not assume that GetClipRegion()
+   *        will return the same object.
+   */
+  virtual void GetClipRegion(nsIRegion **aRegion) = 0;
 
   /**
    * Sets the forground color for the RenderingContext
