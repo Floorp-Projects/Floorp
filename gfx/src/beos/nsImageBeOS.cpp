@@ -494,7 +494,7 @@ NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord
 			}
 			
 			RectStretch(mWidth, mHeight, aDWidth, aDHeight,
-                  aDWidth-1, aDHeight-1,
+                  0, 0, aDWidth-1, aDHeight-1,
                   mAlphaBits, mAlphaRowBytes, scaledAlpha, alphaStride, mAlphaDepth);
 		}
 		rgbPtr = scaledImage;
