@@ -943,7 +943,8 @@ void
 nsFrame::PaintSelf(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
-                   PRIntn               aSkipSides)
+                   PRIntn               aSkipSides,
+                   PRBool               aUsePrintBackgroundSettings)
 {
   // The visibility check belongs here since child elements have the
   // opportunity to override the visibility property and display even if
@@ -968,7 +969,7 @@ nsFrame::PaintSelf(nsIPresContext*      aPresContext,
   nsRect rect(0, 0, mRect.width, mRect.height);
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *border, *padding,
-                                  0, 0, PR_TRUE);
+                                  aUsePrintBackgroundSettings);
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                               aDirtyRect, rect, *border, mStyleContext,
                               aSkipSides);

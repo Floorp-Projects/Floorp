@@ -140,8 +140,6 @@ public:
                               const nsRect& aBorderArea,
                               const nsStyleBorder& aBorder,
                               const nsStylePadding& aPadding,
-                              nscoord aDX,
-                              nscoord aDY,
                               PRBool aUsePrintSettings);
 
   /**
@@ -157,8 +155,6 @@ public:
                                     const nsStyleBackground& aColor,
                                     const nsStyleBorder& aBorder,
                                     const nsStylePadding& aPadding,
-                                    nscoord aDX,
-                                    nscoord aDY,
                                     PRBool aUsePrintSettings=PR_FALSE);
   /**
    * Called by the presShell when painting is finished, so we can clear our
@@ -249,8 +245,7 @@ protected:
                                    const nsStyleBackground& aColor,
                                    const nsStyleBorder& aBorder,
                                    const nsStylePadding& aPadding,
-                                   nscoord aDX,
-                                   nscoord aDY);
+                                   PRBool aCanPaintNonWhite);
 
   static void PaintRoundedBackground(nsIPresContext* aPresContext,
                                      nsIRenderingContext& aRenderingContext,
@@ -258,9 +253,8 @@ protected:
                                      const nsRect& aBorderArea,
                                      const nsStyleBackground& aColor,
                                      const nsStyleBorder& aBorder,
-                                     nscoord aDX,
-                                     nscoord aDY,
-                                     PRInt16 aTheRadius[4]);
+                                     PRInt16 aTheRadius[4],
+                                     PRBool aCanPaintNonWhite);
 
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                                 nscolor aBackgroundColor,

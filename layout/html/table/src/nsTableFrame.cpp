@@ -1470,7 +1470,7 @@ nsTableFrame::Paint(nsIPresContext*      aPresContext,
 
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                       aDirtyRect, rect, *border, *padding,
-                                      0, 0, PR_TRUE);
+                                      PR_TRUE);
       
       // paint the border here only for separate borders
       if (!IsBorderCollapse()) {

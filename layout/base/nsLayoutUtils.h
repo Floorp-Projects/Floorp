@@ -72,6 +72,11 @@ public:
    */
   static nsIFrame* GetAfterFrame(nsIFrame* aFrame, nsIPresContext* aPresContext);
 
+  /** ---------------------------------------------------
+   *  Giving a child frame it searches "up" the tree until it
+   *  finds a "Page" frame.
+   */
+  static nsIFrame* GetPageFrame(nsIFrame* aFrame);
 };
 
 #endif // nsLayoutUtils_h__

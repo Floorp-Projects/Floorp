@@ -63,6 +63,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsLayoutUtils.h"
 
 #define BORDER_FULL    0        //entire side
 #define BORDER_INSIDE  1        //inside half
@@ -2749,8 +2750,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
                                 const nsRect& aBorderArea,
                                 const nsStyleBorder& aBorder,
                                 const nsStylePadding& aPadding,
-                                nscoord aDX,
-                                nscoord aDY,PRBool aUsePrintSettings)
+                                PRBool aUsePrintSettings)
 {
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
@@ -2786,7 +2786,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
   if (!isCanvas) {
     PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                           aDirtyRect, aBorderArea, *color, aBorder,
-                          aPadding, aDX, aDY, aUsePrintSettings);
+                          aPadding, aUsePrintSettings);
     return;
   }
 
@@ -2827,7 +2827,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 
   PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                         aDirtyRect, aBorderArea, canvasColor,
-                        aBorder, aPadding, aDX, aDY, aUsePrintSettings);
+                        aBorder, aPadding, aUsePrintSettings);
 }
 
 void
@@ -2839,24 +2839,19 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
                                       const nsStyleBackground& aColor,
                                       const nsStyleBorder& aBorder,
                                       const nsStylePadding& aPadding,
-                                      nscoord aDX,
-                                      nscoord aDY,
                                       PRBool aUsePrintSettings)
 {
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
 
-  // if we are printing, bail for now
-  PRBool canDrawBackgroundImage=PR_TRUE,canDrawBackgroundColor=PR_TRUE;
-  if(aUsePrintSettings){
+  PRBool canDrawBackgroundImage = PR_TRUE;
+  PRBool canDrawBackgroundColor = PR_TRUE;
+
+  if (aUsePrintSettings) {
     aPresContext->GetBackgroundImageDraw(canDrawBackgroundImage); 
     aPresContext->GetBackgroundColorDraw(canDrawBackgroundColor); 
-
-    // only turn off background printing if we are currently printing.
-    if(!canDrawBackgroundImage && !canDrawBackgroundColor){
-      return;
-    }
   }
+
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the background and bail out.
   const nsStyleDisplay* displayData;
@@ -2890,9 +2885,9 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   }
 
   // if there is no background image or background images are turned off, try a color.
-  if (aColor.mBackgroundImage.IsEmpty() || (canDrawBackgroundColor && !canDrawBackgroundImage)) {
+  if (aColor.mBackgroundImage.IsEmpty() || !canDrawBackgroundImage) {
     PaintBackgroundColor(aPresContext, aRenderingContext, aForFrame, bgClipArea,
-                         aColor, aBorder, aPadding, aDX, aDY);
+                         aColor, aBorder, aPadding, canDrawBackgroundColor);
     return;
   }
 
@@ -2915,7 +2910,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 
   if (NS_FAILED(rv) || !req || !(status & imgIRequest::STATUS_FRAME_COMPLETE) || !(status & imgIRequest::STATUS_SIZE_AVAILABLE)) {
     PaintBackgroundColor(aPresContext, aRenderingContext, aForFrame, bgClipArea,
-                         aColor, aBorder, aPadding, aDX, aDY);
+                         aColor, aBorder, aPadding, canDrawBackgroundColor);
     return;
   }
 
@@ -3011,7 +3006,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   // The background color is rendered over the 'background-clip' area
   if (needBackgroundColor) {
     PaintBackgroundColor(aPresContext, aRenderingContext, aForFrame, bgClipArea,
-                         aColor, aBorder, aPadding, aDX, aDY);
+                         aColor, aBorder, aPadding, canDrawBackgroundColor);
   }
 
   if ((tileWidth == 0) || (tileHeight == 0) || dirtyRect.IsEmpty()) {
@@ -3056,6 +3051,14 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
       nsIFrame* rootFrame;
       presShell->GetRootFrame(&rootFrame);
       NS_ASSERTION(rootFrame, "no root frame");
+
+      PRBool isPaginated = PR_FALSE;
+      aPresContext->IsPaginated(&isPaginated);
+      if (isPaginated) {
+        nsIFrame* page = nsLayoutUtils::GetPageFrame(aForFrame);
+        NS_ASSERTION(page, "no page");
+        rootFrame = page;
+      }
 
       rootFrame->GetView(aPresContext, &viewportView);
       NS_ASSERTION(viewportView, "no viewport view");
@@ -3321,8 +3324,7 @@ nsCSSRendering::PaintBackgroundColor(nsIPresContext* aPresContext,
                                      const nsStyleBackground& aColor,
                                      const nsStyleBorder& aBorder,
                                      const nsStylePadding& aPadding,
-                                     nscoord aDX,
-                                     nscoord aDY)
+                                     PRBool aCanPaintNonWhite)
 {
   if (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) {
     // nothing to paint
@@ -3364,7 +3366,8 @@ nsCSSRendering::PaintBackgroundColor(nsIPresContext* aPresContext,
     for (side = 0; side < 4; ++side) {
       if (borderRadii[side] > 0) {
         PaintRoundedBackground(aPresContext, aRenderingContext, aForFrame,
-                               bgClipArea, aColor, aBorder, aDX, aDY, borderRadii);
+                               bgClipArea, aColor, aBorder, borderRadii,
+                               aCanPaintNonWhite);
         return;
       }
     }
@@ -3379,7 +3382,11 @@ nsCSSRendering::PaintBackgroundColor(nsIPresContext* aPresContext,
     bgClipArea.Deflate(border);
   }
 
-  aRenderingContext.SetColor(aColor.mBackgroundColor);
+  nscolor color = aColor.mBackgroundColor;
+  if (!aCanPaintNonWhite) {
+    color = NS_RGB(255, 255, 255);
+  }
+  aRenderingContext.SetColor(color);
   aRenderingContext.FillRect(bgClipArea);
 }
 
@@ -3394,9 +3401,8 @@ nsCSSRendering::PaintRoundedBackground(nsIPresContext* aPresContext,
                                        const nsRect& aBgClipArea,
                                        const nsStyleBackground& aColor,
                                        const nsStyleBorder& aBorder,
-                                       nscoord aDX,
-                                       nscoord aDY,
-                                       PRInt16 aTheRadius[4])
+                                       PRInt16 aTheRadius[4],
+                                       PRBool aCanPaintNonWhite)
 {
   RoundedRect   outerPath;
   QBCurve       cr1,cr2,cr3,cr4;
@@ -3412,7 +3418,11 @@ nsCSSRendering::PaintRoundedBackground(nsIPresContext* aPresContext,
   aPresContext->GetPixelsToTwips(&p2t);
   twipsPerPixel = NSToCoordRound(p2t);
 
-  aRenderingContext.SetColor(aColor.mBackgroundColor);
+  nscolor color = aColor.mBackgroundColor;
+  if (!aCanPaintNonWhite) {
+    color = NS_RGB(255, 255, 255);
+  }
+  aRenderingContext.SetColor(color);
 
   // Adjust for background-clip, if necessary
   if (aColor.mBackgroundClip != NS_STYLE_BG_CLIP_BORDER) {

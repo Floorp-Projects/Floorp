@@ -478,7 +478,8 @@ protected:
   void PaintSelf(nsIPresContext*      aPresContext,
                  nsIRenderingContext& aRenderingContext,
                  const nsRect&        aDirtyRect,
-                 PRIntn               aSkipSides = 0);
+                 PRIntn               aSkipSides = 0,
+                 PRBool               aUsePrintBackgroundSettings = PR_TRUE);
 
   PRInt16 DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
   

@@ -1908,11 +1908,11 @@ nsMathMLChar::Paint(nsIPresContext*      aPresContext,
           0 == (backg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
         nsCSSRendering::PaintBackgroundWithSC(aPresContext, aRenderingContext, aForFrame,
                                               aDirtyRect, rect, *backg, *border, *padding,
-                                              0, 0);
+                                              PR_TRUE);
       //else
       //  our container frame will take care of painting its background
       //  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, aForFrame,
-      //                                  aDirtyRect, rect, *border, *padding, 0, 0);
+      //                                  aDirtyRect, rect, *border, *padding, PR_TRUE);
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
       // for visual debug
       PRIntn skipSides = 0; //aForFrame->GetSkipSides();

@@ -40,6 +40,7 @@
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsFrameList.h"
+#include "nsLayoutAtoms.h"
 
 /**
  * A namespace class for static layout utilities.
@@ -159,5 +160,20 @@ nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame, nsIPresContext* aPresContext)
     return lastFrame;
   }
 
+  return nsnull;
+}
+
+nsIFrame*
+nsLayoutUtils::GetPageFrame(nsIFrame* aFrame)
+{
+  nsIFrame* frame = aFrame;
+  while (frame) {
+    nsCOMPtr<nsIAtom> type;
+    frame->GetFrameType(getter_AddRefs(type));
+    if (type.get() == nsLayoutAtoms::pageFrame) {
+      return frame;
+    }
+    frame->GetParent(&frame);
+  }
   return nsnull;
 }
