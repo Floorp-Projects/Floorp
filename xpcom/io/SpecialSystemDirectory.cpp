@@ -135,45 +135,6 @@ NS_COM void ShutdownSpecialSystemDirectory()
 
 #if defined (XP_WIN)
 
-static PRBool gGlobalOSInitialized = PR_FALSE;
-static PRBool gGlobalDBCSEnabledOS = PR_FALSE;
-
-//----------------------------------------------------------------------------------------
-static char* MakeUpperCase(char* aPath)
-//----------------------------------------------------------------------------------------
-{
-  // check if the Windows is DBCSEnabled once.
-  if (PR_FALSE == gGlobalOSInitialized) {
-    if (GetSystemMetrics(SM_DBCSENABLED))
-      gGlobalDBCSEnabledOS = PR_TRUE;
-    gGlobalOSInitialized = PR_TRUE;
-  }
-
-  // windows does not care about case.  pu sh to uppercase:
-  int length = strlen(aPath);
-  int i = 0; /* C++ portability guide #20 */
-  if (!gGlobalDBCSEnabledOS)  {
-    // for non-DBCS windows
-    for (i = 0; i < length; i++)
-        if (islower(aPath[i]))
-          aPath[i] = _toupper(aPath[i]);
-  }
-  else {
-    // for DBCS windows
-    for (i = 0; i < length; i++)  {
-      if (IsDBCSLeadByte(aPath[i])) {
-        // begining of the double bye char
-        i++;
-      }
-      else  {
-        if ( islower(aPath[i]))
-          aPath[i] = _toupper(aPath[i]);
-      }
-    } //end of for loop
-  }
-  return aPath;
-}
-
 //----------------------------------------------------------------------------------------
 static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
 //----------------------------------------------------------------------------------------
@@ -193,7 +154,7 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
             path[len + 1] = '\0';
         }
 
-        return NS_NewNativeLocalFile(nsDependentCString(MakeUpperCase(path)), 
+        return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
                                      PR_TRUE, 
                                      aFile);
     }
@@ -226,7 +187,7 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
     pBuffer[len + 1] = '\0';
 
     // Assign the directory
-    rv = NS_NewNativeLocalFile(nsDependentCString(MakeUpperCase(pBuffer)), 
+    rv = NS_NewNativeLocalFile(nsDependentCString(CharUpper(pBuffer)), 
                                PR_TRUE, 
                                aFile);
 
@@ -270,7 +231,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                     path[3] = 0;
             }
 
-            return NS_NewNativeLocalFile(nsDependentCString(MakeUpperCase(path)), 
+            return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
                                          PR_TRUE, 
                                          aFile);
         }
@@ -302,7 +263,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         {
             char path[_MAX_PATH];
             DWORD len = GetTempPath(_MAX_PATH, path);
-            return NS_NewNativeLocalFile(nsDependentCString(MakeUpperCase(path)), 
+            return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
                                          PR_TRUE, 
                                          aFile);
         }
@@ -438,7 +399,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             path[len]   = '\\';
             path[len+1] = '\0';
 
-            return NS_NewNativeLocalFile(nsDependentCString(MakeUpperCase(path)), 
+            return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
                                          PR_TRUE, 
                                          aFile);
         }
@@ -455,7 +416,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             path[len]   = '\\';
             path[len+1] = '\0';
 
-            return NS_NewNativeLocalFile(nsDependentCString(MakeUpperCase(path)), 
+            return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
                                          PR_TRUE, 
                                          aFile);
         }
@@ -473,7 +434,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                 path[len]   = '\\';
                 path[len+1] = '\0';
 
-                return NS_NewNativeLocalFile(nsDependentCString(MakeUpperCase(path)), 
+                return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
                                              PR_TRUE, 
                                              aFile);
             }
@@ -493,7 +454,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                 path[len]   = '\\';
                 path[len+1] = '\0';
                 
-                return NS_NewNativeLocalFile(nsDependentCString(MakeUpperCase(path)), 
+                return NS_NewNativeLocalFile(nsDependentCString(CharUpper(path)), 
                                              PR_TRUE, 
                                              aFile);
             }
