@@ -29,7 +29,7 @@
 body {
 
     margin: 0px 0px 0px 0px;
-    background: url(xtal.jpg);
+    background: url(chrome://chatzilla/skin/images/xtal.jpg);
 
 }
 
@@ -80,7 +80,7 @@ body {
 /* output from a chat session (contains msgs) */
 .chat-view {
 
-	vertical-align: text-bottom;
+    vertical-align: text-bottom;
 
 }
 
@@ -88,53 +88,52 @@ body {
  * (contains msg-*s) */
 .msg {
 
-    font-size: 10pt;
-	font-family: sans-serif;
+    font-family: sans-serif;
 
 }
 
 .msg[user="!ME"] {
 
-	background: lightgrey;
+    background: lightgrey;
 
 }
 
 /* message data in output window */
 .msg-data {
 
-	font-weight: bold;
+    font-weight: bold;
 
 }
 
 .msg-data[msgtype="JOIN"],
 .msg-data[msgtype="PART"] {
 
-	font-variant: small-caps;
-	color: darkslategrey;
+    font-variant: small-caps;
+    color: darkslategrey;
 
 }
 
 .msg-data[msgtype="ACTION"] {
 
-	color: darkred;
+    color: darkred;
 
 }
 
 .msg-data[msgtype="NOTICE"] {
 
-	color: green;
+    color: green;
 
 }
 
 .msg-data[msgtype="KICK"] {
 
-	color: slategrey;
+    color: slategrey;
 
 }
 
 .msg-data[msgtype="QUIT"] {
 
-	color: brown;
+    color: brown;
 
 }
 
@@ -144,20 +143,20 @@ body {
     text-align: center;
     vertical-align: middle;
     color: blue;
-	font-weight: bold;
+    font-weight: bold;
     background: grey;
 
 }
 
 .msg-user[user="!ME"] {
 
-	color: green;
+    color: green;
 
 }
 
 .msg-user[msgtype="ACTION"] {
 
-	font-style: italic;
+    font-style: italic;
 
 }
 
@@ -166,34 +165,8 @@ body {
 
     text-align: center;
     vertical-align: middle;
-	color: brown;
-	font-weight: bold;
+    color: brown;
+    font-weight: bold;
     background: lightgrey;
 
-}
-
-/* Listbox on left of UI (aka QuickList) */
-.quick-list {
-
-	border: thin silver inset;
-	overflow: auto;
-	background: white;
-
-}
-
-/* common container for individual quicklist items */
-.list-option {
-
-    margin: 2px;
-
-}
-
-/* text in the quicklist */
-.option-text {
-    font-weight: bold;
-    align: right;
-}
-
-/* graphic in the quicklist */
-.option-graphic {
 }

@@ -164,12 +164,10 @@ function matchMyNick (text, containerTag, eventDetails)
 {
     if (eventDetails && eventDetails.server)
     {
-        if ((stringTrim(text.toLowerCase()).indexOf
-            (eventDetails.server.me.nick) == 0) &&
-            text[eventDetails.server.me.nick.length + 1].match(/[\W\s]/))
-        {
+        var re = new RegExp("(^|[\\W\\s])" + eventDetails.server.me.nick + 
+                            "([\\W\\s]|$)", "i");
+        if (text.search(re) != -1)
             containerTag.setAttribute ("directedToMe", "true");
-        }
     }
 
     return false;
@@ -285,16 +283,29 @@ function getObjectDetails (obj, rv)
     
 }
 
-function setOutputStyle (style)
+function setOutputStyle (styleSheet)
 {
     var oc = top.frames[0].document;
 
     oc.close();
     oc.open();
-    oc.write ("<html><head>" +
-              "<LINK REL=StyleSheet " +
-              "HREF='" + client.CSSDIR + "output-" + style + ".css' " +
-              "TYPE='text/css' MEDIA='screen'></head> " +
+    oc.write ("<html><head>");
+    
+    if (client.USER_CSS_PRE)
+        oc.write("<LINK REL=StyleSheet " +
+                 "HREF='" + client.USER_CSS_PRE + "' " +
+                 "TYPE='text/css' MEDIA='screen'>");
+
+    oc.write("<LINK REL=StyleSheet " +
+             "HREF='" + client.CSSDIR + styleSheet + "' " +
+             "TYPE='text/css' MEDIA='screen'>");
+
+    if (client.USER_CSS_POST)
+        oc.write("<LINK REL=StyleSheet " +
+                 "HREF='" + client.USER_CSS_POST + "' " +
+                 "TYPE='text/css' MEDIA='screen'>");
+
+    oc.write ("</head>" +
               "<body><div id='output' class='output-window'></div></body>" +
               "</html>");
     client.output = oc.getElementById ("output");
@@ -334,7 +345,7 @@ function updateNetwork(obj)
     document.getElementById ("server-nick").firstChild.data = nick;
     document.getElementById ("server-lag").firstChild.data = lag;
     document.getElementById ("last-ping").firstChild.data = ping;
-    
+
 }
 
 function updateChannel (obj)
@@ -368,7 +379,59 @@ function updateChannel (obj)
     document.getElementById ("channel-users").firstChild.data = users;
     document.getElementById ("channel-topic").firstChild.data = topic;
     document.getElementById ("channel-topicby").firstChild.data = topicBy;
+
+}
+
+function updateTitle (obj)
+{
+    if (obj && obj != client.currentObject)
+        return;
+
+    var tstring = "";
+    var o = new Object();
     
+    getObjectDetails (client.currentObject, o);
+
+    var net = o.network ? o.network.name : "";
+    var serv = "", nick = "";
+
+    if (o.server)
+    {
+        serv  = o.server.connection.host;
+        if (o.server.me)
+            nick = o.server.me.properNick;
+    }
+
+    if (o.channel)
+    {
+        var chan = "(none)", mode = "", topic = "";
+
+        chan = o.channel.name;
+        mode = o.channel.mode.getModeStr();
+        topic = o.channel.topic ? o.channel.topic : "--no topic--";
+        if (!mode)
+            mode = "no mode";
+        tstring = chan + " (" + mode + ") " + topic;
+    }
+    else
+    {
+        if (nick)
+            tstring += "user '" + nick + "' ";
+        
+        if (net)
+            if (serv)
+                tstring += "attached to '" + net + "' via " + serv;
+            else
+                tstring += "attaching to '" + net + "'";
+        
+        if (tstring)
+            tstring = "ChatZilla: " + tstring;
+        else
+            tstring = "ChatZilla!";
+    }
+
+    document.title = tstring;
+
 }
 
 function newInlineText (data, className, tagName)
@@ -449,6 +512,7 @@ function setCurrentObject (obj)
 
     updateNetwork();
     updateChannel();
+    updateTitle ();
 
     if (client.PRINT_DIRECTION == 1)
         window.frames[0].scrollTo(0, 100000);

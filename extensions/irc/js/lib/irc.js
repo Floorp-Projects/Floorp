@@ -116,7 +116,8 @@ function net_quit (reason)
 {
 
     this.stayingPower = false;
-    this.primServ.logout (reason);
+    if (this.isConnected())
+        this.primServ.logout (reason);
 
 }
 
@@ -126,7 +127,8 @@ function net_quit (reason)
 CIRCNetwork.prototype.onDoConnect =
 function net_doconnect(e)
 {
-
+    var c;
+    
     if ((this.primServ) && (this.primServ.connection.isConnected))
         return true;
 
@@ -136,7 +138,19 @@ function net_doconnect(e)
     if (attempt > this.MAX_CONNECT_ATTEMPTS)
         return false;	
 
-    var c = new CBSConnection();
+    try
+    {
+        c = new CBSConnection();
+    }
+    catch (ex)
+    {
+        dd ("cant make socket.");
+        
+        var ev = new CEvent ("network", "error", this, "onError");
+        ev.meat = "Unable to create socket: " + ex;
+        this.eventPump.addEvent (ev);
+        return false;
+    }
 
     if (host >= this.serverList.length)
         host = 0;
@@ -170,13 +184,6 @@ function net_connect (e)
     this.primServ = e.server;
     this.primServ.login (this.INITIAL_NICK, this.INITIAL_NAME,
                          this.INITIAL_DESC);
-
-    if (this.INITIAL_CHANNEL)
-    {
-        this.primChan = this.primServ.addChannel (this.INITIAL_CHANNEL);
-        this.primChan.join();
-    }
-
     return true;
 
 }
@@ -431,7 +438,12 @@ function serv_poll(e)
     {
         dd ("*** Caught exception " + ex + " reading from server " +
             this.connection.host);
-        if (typeof ex != "undefined")
+        if (jsenv.HAS_RHINO && (ex instanceof java.lang.ThreadDeath))
+        {
+            dd("### catching a ThreadDeath");
+            throw(ex);
+        }
+        else if (typeof ex != "undefined")
         {
              var ev = new CEvent ("server", "disconnect", this,
                                   "onDisconnect");
@@ -582,6 +594,21 @@ function serv_topic (e)
     return true;
     
 }
+
+/* Successful login */
+CIRCServer.prototype.on001 =
+function serv_001 (e)
+{
+    if (this.parent.INITIAL_CHANNEL)
+    {
+        this.parent.primChan = this.addChannel (this.parent.INITIAL_CHANNEL);
+        this.parent.primChan.join();
+    }
+
+    e.destObject = this.parent;
+    e.set = "network";
+}
+
 
 /* TOPIC reply */
 CIRCServer.prototype.on332 =
@@ -909,12 +936,14 @@ function serv_chanmode (e)
 CIRCServer.prototype.onNick = 
 function serv_nick (e)
 {
-    var newKey = e.meat.toLowerCase();
+    /* Some irc networks send the new nick in the meat, some send it in param[1]
+     * Handle both cases. */
+    var newKey = (e.meat) ? e.meat.toLowerCase() : e.params[1].toLowerCase();
     var oldKey = e.user.nick;
     
     renameProperty (e.server.users, oldKey, newKey);
     e.oldNick = e.user.properNick;
-    e.user.changeNick(e.meat);
+    e.user.changeNick(newKey);
     
     for (var c in e.server.channels)
     {

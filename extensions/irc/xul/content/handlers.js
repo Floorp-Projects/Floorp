@@ -28,9 +28,9 @@ function onLoad()
 {
     
     initHost(client);
-    setOutputStyle ("default");
-    initStatic();
     readIRCPrefs();
+    setOutputStyle (client.DEFAULT_STYLE);
+    initStatic();
     mainStep();
     
 }
@@ -73,7 +73,8 @@ function onDoStyleChange (newStyle)
 {
 
     if (newStyle == "other")
-        newStyle = window.prompt ("Enter style name");
+        newStyle = window.prompt ("Enter stylesheet filename " +
+                                  "(relative to chrome://chatzilla/skin/)");
 
     if (newStyle)
     {
@@ -770,17 +771,17 @@ function my_showtonet (e)
 
     switch (e.code)
     {
-        case 004:
+        case "004":
             str = e.params.slice(1).join (" ");
             break;
 
-        case "NOTICE":
+        case "001":
+            updateTitle(e.network);
             updateNetwork (e.network);
-            /* no break */
             
-        case 372:
-        case 375:
-        case 376:
+        case "372":
+        case "375":
+        case "376":
             if (this.IGNORE_MOTD)
                 return;
             /* no break */
@@ -940,6 +941,7 @@ function my_topic (e)
                            e.channel.topic + "'", "TOPIC");
     
     updateChannel (e.channel);
+    updateTitle (e.channel);
     
 }
 
@@ -1037,6 +1039,7 @@ function my_cmode (e)
         e.usersAffected[u].updateDecoratedNick();
 
     updateChannel (e.channel);
+    updateTitle (e.channel);
     
 }
 
@@ -1093,7 +1096,10 @@ function my_unick (e)
 {
 
     if (userIsMe(e.user))
+    {
         updateNetwork();
+        updateTitle (e.channel);
+    }
     
 }
 

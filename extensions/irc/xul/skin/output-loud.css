@@ -85,14 +85,13 @@ body {
  * (contains msg-*s) */
 .msg {
 
-    font-size: 10pt;
-	font-family: sans-serif;
+    font-family: sans-serif;
 
 }
 
 .msg[user="!ME"] {
 
-	background: lightgrey;
+    background: lightgrey;
 
 }
 

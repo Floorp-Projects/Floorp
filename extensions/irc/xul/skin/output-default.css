@@ -94,7 +94,6 @@ a {
  * (contains msg-*s) */
 .msg {
 
-    font-size: 10pt;
     font-family: sans-serif;
 
 }
@@ -147,15 +146,15 @@ a {
 
 }
 
-.msg-data[directedToMe="true"] {
-
-    color: orange;
-
-}
-
 .msg-data[mark="odd"]{
 
     color: lightgrey;
+
+}
+
+.msg-data[directedToMe="true"] {
+
+    color: orange;
 
 }
 

@@ -32,6 +32,10 @@ window {
 
     font-size: 12px;
     background: url(chrome://chatzilla/skin/images/xtal.jpg);
+/*
+    width: 640px;
+    height: 480px;
+*/
 
 }
 
@@ -155,7 +159,6 @@ toolbar {
 /*	border: thin silver inset;*/
 	background: #dddddd;
 	overflow: auto;
-
 
 }
 

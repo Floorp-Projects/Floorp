@@ -24,6 +24,29 @@
  *  Robert Ginda, rginda@ndcico.com, original author
  */
 
+/*
+ * currently recognized prefs:
+ * + extensions.irc.
+ *   +- nickname (String) initial nickname
+ *   +- username (String) initial username (ie: username@host.tld)
+ *   +- desc     (String) initial description (used in whois info)
+ *   +- channel  (String) channel to join after connecting
+ *   +- style   
+ *   |  +- default (String) default style (relative to chrome://chatzilla/skin)
+ *   |  +- user
+ *   |     +- pre  (String) full path to user css, loaded before system style
+ *   |     +- post (String) full path to user css, loaded after system style
+ *   +- views
+ *   |  +- client
+ *   |  |  +- maxlines (Number) max lines to keep in *client* view
+ *   |  +- channel
+ *   |  |  +- maxlines (Number) max lines to keep in channel views
+ *   |  +- chanuser
+ *   |     +- maxlines (Number) max lines to keep in /msg views
+ *   +- debug
+ *      +- tracer (Boolean) enable/disable debug message tracing
+ */
+
 function readIRCPrefs (rootNode)
 {
     var pref =
@@ -52,6 +75,16 @@ function readIRCPrefs (rootNode)
         getCharPref (pref, rootNode + "channel",
                      CIRCNetwork.prototype.INITIAL_CHANNEL);
 
+    client.DEFAULT_STYLE =
+        getCharPref (pref, rootNode + "style.default", "output-default.css");
+
+    client.USER_CSS_PRE =
+        getCharPref (pref, rootNode + "style.user.pre", "");
+
+    client.USER_CSS_POST =
+
+        getCharPref (pref, rootNode + "style.user.post", "");
+
     client.MAX_MESSAGES = 
         getIntPref (pref, rootNode + "views.client.maxlines",
                     client.MAX_MESSAGES);
@@ -72,16 +105,20 @@ function readIRCPrefs (rootNode)
 
 function getCharPref (prefObj, prefName, defaultValue)
 {
-    var e;
+    var e, rv;
     
     try
     {
-        return prefObj.CopyCharPref (prefName);
+        rv = prefObj.CopyCharPref (prefName);
     }
     catch (e)
     {
-        return defaultValue;
+        rv = defaultValue;
     }
+
+    dd ("getCharPref: returning '" + rv + "' for " + prefName);
+    return rv;
+    
 }
 
 function getIntPref (prefObj, prefName, defaultValue)

@@ -64,12 +64,15 @@ function CEventPump (eventsPerStep)
 }
 
 CEventPump.prototype.onHook = 
-function ep_hook(e)
+function ep_hook(e, hooks)
 {
-    var hooks = this.hooks;
+    var h;
+    
+    if (typeof hooks == "undefined")
+        hooks = this.hooks;
     
   hook_loop:
-    for (var h in hooks)
+    for (h = hooks.length - 1; h >= 0; h--)
     {
         if (!hooks[h].enabled ||
             !matchObject (e, hooks[h].pattern, hooks[h].neg))
@@ -80,7 +83,7 @@ function ep_hook(e)
         if ((typeof rv == "boolean") &&
             (rv == false))
         {
-            dd ("hook #" + h + "'" + 
+            dd ("hook #" + h + " '" + 
                 ((typeof hooks[h].name != "undefined") ? hooks[h].name :
                  "") + "' stopped hook processing.");
             return true;
@@ -90,8 +93,10 @@ function ep_hook(e)
 }
 
 CEventPump.prototype.addHook = 
-function ep_addhook(pattern, f, name, neg, enabled)
+function ep_addhook(pattern, f, name, neg, enabled, hooks)
 {
+    if (typeof hooks == "undefined")
+        hooks = this.hooks;
     
     if (typeof f != "function")
         return false;
@@ -103,31 +108,35 @@ function ep_addhook(pattern, f, name, neg, enabled)
 
     neg = Boolean(neg);
 
-    return (this.hooks.push({pattern: pattern, f: f, name: name,
-                             neg: neg, enabled: enabled}) - 1);
+    return (hooks.push({pattern: pattern, f: f, name: name,
+                       neg: neg, enabled: enabled}) - 1);
 
 }
 
 CEventPump.prototype.getHook = 
-function ep_gethook(name)
+function ep_gethook(name, hooks)
 {
+    if (typeof hooks == "undefined")
+        hooks = this.hooks;
 
-    for (var h in this.hooks)
-        if (this.hooks[h].name.toLowerCase() == name.toLowerCase())
-            return this.hooks[h];
+    for (var h in hooks)
+        if (hooks[h].name.toLowerCase() == name.toLowerCase())
+            return hooks[h];
 
     return null;
 
 }
 
 CEventPump.prototype.removeHookByName = 
-function ep_remhookname(name)
+function ep_remhookname(name, hooks)
 {
+    if (typeof hooks == "undefined")
+        hooks = this.hooks;
 
-    for (var h in this.hooks)
-        if (this.hooks[h].name.toLowerCase() == name.toLowerCase())
+    for (var h in hooks)
+        if (hooks[h].name.toLowerCase() == name.toLowerCase())
         {
-            arrayRemoveAt (this.hooks, h);
+            arrayRemoveAt (hooks, h);
             return true;
         }
 
@@ -136,10 +145,12 @@ function ep_remhookname(name)
 }
 
 CEventPump.prototype.removeHookByIndex = 
-function ep_remhooki(idx)
+function ep_remhooki(idx, hooks)
 {
+    if (typeof hooks == "undefined")
+        hooks = this.hooks;
 
-    return arrayRemoveAt (this.hooks, idx);
+    return arrayRemoveAt (hooks, idx);
 
 }
 

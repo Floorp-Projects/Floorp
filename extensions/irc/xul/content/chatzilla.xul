@@ -28,6 +28,7 @@
 <!DOCTYPE window>
 
 <?xml-stylesheet href="chrome://chatzilla/skin" type="text/css"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -58,19 +59,21 @@
         <menuitem id="menu-viewicons" value="Icons in View Buttons" 
                   checked="true" oncommand="onNotImplemented();"/>
         <menuseparator/>
+        <!--
         <menu value="Style">
           <menupopup>
            <menuitem value="Default"
-                     oncommand="onDoStyleChange('default')"/>
+                     oncommand="onDoStyleChange('output-default.css')"/>
            <menuitem value="Marble"
-                     oncommand="onDoStyleChange('marble')"/>
+                     oncommand="onDoStyleChange('output-marble.css')"/>
            <menuitem value="Loud"
-                     oncommand="onDoStyleChange('loud')"/>
+                     oncommand="onDoStyleChange('output-loud.css')"/>
            <menuseparator/>
            <menuitem value="Other..."
                      oncommand="onDoStyleChange('other')"/>
           </menupopup>
         </menu>
+        -->
       </menupopup>
     </menu>
     <menu value="Views">

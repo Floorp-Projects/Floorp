@@ -36,6 +36,9 @@ if (typeof document == "undefined") /* in xpcshell */
 else
     if (typeof dump == "function")
         dumpln = function (str) {dump (str + "\n");}
+    else if (jsenv.HAS_RHINO)
+        dumpln = function (str) {var out = java.lang.System.out;
+                                 out.println(str); out.flush(); }
     else
         dumpln = function () {} /* no suitable function */
 
@@ -184,29 +187,34 @@ function matchObject (o, pattern, negate)
     
     function _match (o, pattern)
     {
-
+        if (pattern instanceof Function)
+            return pattern(o);
+        
         for (p in pattern)
         {
             var val;
-            /* nice to have, but slow as molases, allows you to match
-             * properties of objects with obj$prop: "foo" syntax      */
-            /*
-            if (p[0] == "$")
-                val = eval ("o." + 
-                            p.substr(1,p.length).replace (/\$/g, "."));
-            else
-            */
-                val = o[p];
-
-            if (typeof pattern[p] == "function")
+                /* nice to have, but slow as molases, allows you to match
+                 * properties of objects with obj$prop: "foo" syntax      */
+                /*
+                  if (p[0] == "$")
+                  val = eval ("o." + 
+                  p.substr(1,p.length).replace (/\$/g, "."));
+                  else
+                */
+            val = o[p];
+            
+            if (pattern[p] instanceof Function)
             {
                 if (!pattern[p](val))
                     return false;
             }
             else
             {
-                if ((new String(val)).search(pattern[p]) == -1)
+                var ary = (new String(val)).match(pattern[p]);
+                if (ary == null)
                     return false;
+                else
+                    o.matchresult = ary;
             }
         }
 

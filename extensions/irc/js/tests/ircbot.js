@@ -28,10 +28,9 @@
 var LIB_PATH = "../lib/";
 
 bot = new Object();
+bot.personality = new Object();
+bot.personality.hooks = new Array();
 bot.prefix = "!js ";
-
-if (typeof print == "function")
-    print ("Type 'go();' to start the bot.");
 
 function loadDeps()
 {
@@ -54,17 +53,20 @@ function loadDeps()
 function initStatic()
 {
     
+    if (jsenv.HAS_RHINO)
+        gc = java.lang.System.gc;
+
     CIRCNetwork.prototype.INITIAL_NICK = "jsbot";
     CIRCNetwork.prototype.INITIAL_NAME = "XPJSBot";
     CIRCNetwork.prototype.INITIAL_DESC = "XPCOM Javascript bot";
     CIRCNetwork.prototype.INITIAL_CHANNEL = "#jsbot";
 
     CIRCNetwork.prototype.stayingPower = true; 
-
+    CIRCNetwork.prototype.on433 = my_433;
     CIRCChannel.prototype.onPrivmsg = my_chan_privmsg;
     CIRCUser.prototype.onDCCChat = my_user_dccchat;
     CDCCChat.prototype.onRawData = my_dccchat_rawdata;
-    
+
 }
 
 /*
@@ -73,9 +75,9 @@ function initStatic()
 function init(obj)
 {
     
-    obj.networks = new Object();
     obj.eventPump = new CEventPump (100);
 
+    obj.networks = new Object();
     obj.networks["hybridnet"] =
 	new CIRCNetwork ("hybridnet", [{name: "irc.ssc.net", port: 6667}],
                          obj.eventPump);
@@ -85,11 +87,14 @@ function init(obj)
                          obj.eventPump);
 
     obj.networks["efnet"] =
-	new CIRCNetwork ("efnet", [{name: "irc.primenet.com", port: 6667},
+        new CIRCNetwork ("efnet", [
+                         {name: "irc-w.frontiernet.net", port: 6667},
+                         {name: "irc.primenet.com", port: 6667},
                          {name: "irc.cs.cmu.edu",   port: 6667}],
                          obj.eventPump);
 
     obj.primNet = obj.networks["moznet"];
+    
 
 }
 
@@ -110,6 +115,9 @@ function go()
                                 {type: "event-end"}], event_tracer,
                                "event-tracer", true /* negate */);
 
+    if (typeof initPersonality == "function")
+        initPersonality();
+    
     bot.primNet.connect();
     rego();
     
@@ -129,7 +137,15 @@ function rego()
     while (bot.eventPump.queue.length > 0)
     {
         bot.eventPump.stepEvents();
-        gc();
+        if (typeof gc == "function")
+        {
+            if ((typeof bot.lastGc == "undefined") ||
+                (Number(new Date()) - bot.lastGc > 60000))
+            {
+                gc();
+                bot.lastGc = Number(new Date());
+            }
+        }
     }
     dd ("No events to process.");
 
@@ -137,15 +153,88 @@ function rego()
 
 }
 
-function loadHooks (max, obj)
+function userIsOwner (user)
+{
+    /*XXX implement this*/
+    return true;
+}
+
+function psn_isAddressedToMe (e)
+{
+    if (!e.server)
+        return false;
+
+    if ((e.type.search(/privmsg|ctcp-action/)) || (e.set != "channel") ||
+        (e.meat.indexOf(bot.prefix) == 0))
+        return false;
+
+    /*
+    dd ("-*- checking to see if message '" + e.meat + "' is addressed to me.");
+    */
+    
+    var regex = new RegExp ("^\\s*" + e.server.me.nick + "\\W+(.*)", "i");
+    var ary = e.meat.match(regex);
+
+    //dd ("address match: "  + ary);
+    
+    if (ary != null)
+    {
+        e.statement = ary[1];
+        return true;
+    }
+
+    bot.personality.dp.addPhrase (e.meat);
+    return false;
+    
+}
+
+function psn_onAddressedMsg (e)
 {
 
-    if (typeof obj == "undefined")
-	obj = {type:"phoney-type", set:"phoney-set"};
+    bot.eventPump.onHook (e, bot.personality.hooks);
+    return false;
     
-    for (i = 0; i < max; i++)
-	bot.eventPump.addEvent (obj, (void 0), "load-hook");
+}
 
+bot.personality.addHook =
+function psn_addhook (pattern, f, name, neg, enabled)
+{
+    if (pattern instanceof RegExp)
+        pattern = {statement: pattern};
+    
+    return bot.eventPump.addHook (pattern, f, name, neg, enabled,
+                                  bot.personality.hooks);
+
+}
+
+function bot_eval(e, script)
+{
+    try
+    {
+        var v = eval(script);
+    }
+    catch (ex)
+    {
+        e.replyTo.say(e.user.nick + ": " + String(ex));
+        return false;
+    }
+    
+    if (typeof (v) != "undefined")
+    {						
+        if (v != null)                
+            v = String(v);
+        else
+            v = "null";
+        
+        var rsp = e.user.nick + ", your result is,";
+        
+        if (v.indexOf ("\n") != -1)
+            rsp += "\n";
+        else
+            rsp += " ";
+        
+        e.replyTo.say (rsp + v);
+    }
 }
 
 /*
@@ -160,37 +249,38 @@ function loadHooks (max, obj)
  */
 function my_chan_privmsg (e)
 {
-    
-    if (e.meat.indexOf (bot.prefix) == 0)
+    var user = e.user;
+    var meat = e.meat;
+    if (meat.indexOf(bot.prefix) == 0)
     {
-        try
+        /* if last char is a continuation character, then... */
+    	if (meat[meat.length - 1] == '\\') {
+            user.accumulatedScript = meat.substring(bot.prefix.length,
+                                                    meat.length - 1);
+            return false; // prevent other hooks from processing this... 
+    	}
+        else
         {
-            var v = eval(e.meat.substring (bot.prefix.length, e.meat.length));
-        }
-        catch (ex)
-        {
-            this.say (e.user.nick + ": " + String(ex));
-            return false;
-        }
-        
-        if (typeof (v) != "undefined")
-        {						
-            if (v != null)                
-                v = String(v);
-            else
-                v = "null";
-            
-            var rsp = e.user.nick + ", your result is,";
-            
-            if (v.indexOf ("\n") != -1)
-                rsp += "\n";
-            else
-                rsp += " ";
-            
-            this.say (rsp + v);
+            return bot_eval(e, meat.substring(bot.prefix.length, meat.length));
         }
     }
-    
+    else
+    {
+        /* if we were accumulating a message, add here,
+         * and finish if not ends with '\'. */
+    	if (typeof(user.accumulatedScript) != "undefined")
+        {
+            var lastLine = (meat[meat.length - 1] != '\\');
+            var line = meat.substring(0, meat.length - (lastLine ?  0 : 1));
+            user.accumulatedScript += line;
+            if (lastLine)
+            {
+                var script = user.accumulatedScript;
+                delete user.accumulatedScript;
+                return bot_eval(e, script);
+            }
+    	}
+    }
 }
 
 /*
@@ -214,6 +304,24 @@ function my_user_dccchat (e)
     }
     
     return true;
+    
+}
+
+/*
+ * What to do when our requested nickname is in use
+ */
+function my_433 (e)
+{
+
+    if (e.params[2] != CIRCNetwork.prototype.INITIAL_NICK)
+    {
+        /* server didn't like the last nick we tried, probably too long.
+         * not much more we can do, bail out. */
+        e.server.disconnect();
+    }
+
+    CIRCNetwork.prototype.INITIAL_NICK += "_";
+    e.server.sendData ("nick " + CIRCNetwork.prototype.INITIAL_NICK + "\n");
     
 }
 
@@ -258,3 +366,4 @@ function loadHTTP (host, path, onComplete)
     return htdoc;
     
 }
+

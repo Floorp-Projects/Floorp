@@ -49,9 +49,8 @@ CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
     this.tcp_flag = tcp_flag;
     
     this._socket = new java.net.Socket(host, port);
-    this._inputStream =
-        new java.io.DataInputStream(this._socket.getInputStream());
-    this._outputStream = this._socket.getOutputStream();
+    this._inputStream = this._socket.getInputStream();
+    this._outputStream = new java.io.PrintStream(this._socket.getOutputStream());
     
     // create a 512 byte buffer for reading into.
     this._buffer = java.lang.reflect.Array.newInstance(java.lang.Byte.TYPE, 512);
@@ -75,18 +74,27 @@ CBSConnection.prototype.disconnect = function()
 
 CBSConnection.prototype.sendData = function(str)
 {
+    // dd ("sendData: str=" + str);
+
     if (!this.isConnected)
         throw "Not Connected.";
 
     var rv = false;
 
+        
     try
     {
-        this._outputStream.write(str.getBytes());
+        /* var s = new java.lang.String (str);
+        b = s.getBytes();
+        
+        this._outputStream.write(b, 0, b.length); */
+        this._outputStream.print(str);
         rv = true;
     }
     catch (ex)
     {
+        dd ("write caught exception " + ex + ".");
+        
         if (typeof ex != "undefined")
         {
             this.isConnected = false;
@@ -106,27 +114,31 @@ CBSConnection.prototype.readData = function(timeout)
 
     var rv;
 
-    dd ("readData: timeout " + timeout);
+    // dd ("readData: timeout " + timeout);
     
     try {
         this._socket.setSoTimeout(Number(timeout));
         var len = this._inputStream.read(this._buffer);
+        // dd ("read done, len = " + len + ", buffer = " + this._buffer);
+
         rv = new java.lang.String(this._buffer, 0, 0, len);
     } catch (ex) {
+        // dd ("read caught exception " + ex + ".");
         
         if ((typeof ex != "undefined") &&
-            (ex.indexOf("java.io.InterruptedIOException") != -1))
+            (!(ex instanceof java.io.InterruptedIOException)))
         {
-            dd ("throwing " + ex);
+            dd ("@@@ throwing " + ex);
             
             this.isConnected = false;
             throw (ex);
         } else {
+            // dd ("int");
             rv = "";
         }
     }
 
-    dd ("readData: rv = '" + rv + "'");
+    // dd ("readData: rv = '" + rv + "'");
     
     return rv;
 }
