@@ -939,8 +939,8 @@ CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
  *  @return  error result
  */
 PRInt32 CEntityToken::Consume(PRUnichar aChar, CScanner& aScanner) {
-
-  mTextValue=aChar;
+  if(aChar)
+    mTextValue=aChar;
   PRInt32 result=ConsumeEntity(aChar,mTextValue,aScanner);
   return result;
 };
@@ -1013,17 +1013,27 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner& 
  *  @return  
  */
 PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
-  char* cp = mTextValue.ToNewCString();
-  PRInt32 index=FindEntityIndex(cp);
-  if(kNotFound!=index) {
-    PRUnichar ch=gStrToUnicodeTable[index].fValue;
-    aString=ch;
-  } else {
-#ifdef GESS_MACHINE
-    index=TranslateExtendedEntity(cp,aString);
-#endif
+  PRInt32 index=0;
+  if(aString.IsDigit(mTextValue[0])) {
+    PRInt32 err=0;
+    index=mTextValue.ToInteger(&err);
+    if(0==err)
+      aString.Append(PRUnichar(index));
   }
-  delete cp;
+  else {
+    char* cp = mTextValue.ToNewCString();
+    index=FindEntityIndex(cp);
+    if(kNotFound!=index) {
+      PRUnichar ch=gStrToUnicodeTable[index].fValue;
+      aString=ch;
+    } 
+    else {
+#ifdef GESS_MACHINE
+      index=TranslateExtendedEntity(cp,aString);
+#endif
+    }
+    delete cp;
+  }
   return index;
 }
  

@@ -237,7 +237,7 @@ PRInt32 CNavDelegate::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& 
    }
    else if(kHashsign==ch) {
      aToken = new CEntityToken(nsAutoString(""));
-     result=aToken->Consume(ch,aScanner);
+     result=aToken->Consume(0,aScanner);
    }
    else {
      //oops, we're actually looking at plain text...
