@@ -17,7 +17,7 @@
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
- *   Conrad Carlen <conrad@ingress.com>
+ *   Conrad Carlen <ccarlen@netscape.com>
  */
 
 #include "CBrowserApp.h"
@@ -48,13 +48,14 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIPref.h"
 #include "nsRepeater.h"
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
 #include "nsIFileSpec.h"
-#include "nsIProfile.h"
 #include "nsEmbedAPI.h"
+#include "nsMPFileLocProvider.h"
 #include "nsXPIDLString.h"
 #include "macstdlibextras.h"
 #include "SIOUX.h"
@@ -64,10 +65,6 @@
 extern "C" void NS_SetupRegistry();
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
-static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
-
-static nsresult StartWithProfile(const char* inProfileName, PRBool& outProfileExisted);
 
 // ===========================================================================
 //		¥ Main Program
@@ -158,23 +155,27 @@ CBrowserApp::CBrowserApp()
    }
 
    rv = NS_InitEmbedding(appDir, nsnull);
+
+   nsMPFileLocProvider *locationProvider = new nsMPFileLocProvider;
+   ThrowIfNil_(locationProvider);
+   nsCOMPtr<nsIFile> rootDir;
+   rv = NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(rootDir));
+   ThrowIfError_(rv);
+   rv = locationProvider->Initialize(rootDir, "PP Browser");   
+   ThrowIfError_(rv);
    
-   // Start up the profile service   
-   PRBool profExisted;
-   rv = StartWithProfile("PPBrowser", profExisted);
-      
-   if (!profExisted) {
-       NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-       if (NS_SUCCEEDED(rv)) {	  
-    		
-    		// HACK ALERT: Since we don't have prefs UI, reduce the font size here by hand
-            prefs->SetIntPref("font.size.variable.x-western", 12);
-            prefs->SetIntPref("font.size.fixed.x-western", 12);
-            prefs->SavePrefFile();
-    	}
-    	else
-    		NS_ASSERTION(PR_FALSE, "Could not get preferences service");
-	}				
+   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+   if (NS_SUCCEEDED(rv)) {	  
+		
+        prefs->ResetPrefs();    // Needed because things read default prefs during startup
+        prefs->ReadUserPrefs();
+        
+		// HACK ALERT: Since we don't have prefs UI, reduce the font size here by hand
+        prefs->SetIntPref("font.size.variable.x-western", 12);
+        prefs->SetIntPref("font.size.fixed.x-western", 12);
+	}
+	else
+		NS_ASSERTION(PR_FALSE, "Could not get preferences service");
 }
 
 
@@ -356,58 +357,4 @@ Boolean CBrowserApp::AttemptQuitSelf(SInt32 inSaveOption)
  	}
     
    return true;
-}
-
-static nsresult StartWithProfile(const char* inProfileName, PRBool& outProfileExisted)
-{
-   // Warning: inProfileName must not contain spaces!!
-   
-   nsresult rv;
-   PRBool exists;
-   
-   NS_WITH_SERVICE(nsIProfile, profileMgr, kProfileCID, &rv);
-   NS_ENSURE_TRUE(profileMgr, rv);
-
-   NS_WITH_SERVICE(nsICmdLineService, cmdLineService, kCmdLineServiceCID, &rv);
-   NS_ENSURE_TRUE(profileMgr, rv);
-   
-   // Now that we have the profile service, check whether the profile exists.
-   // This is needed because using the "-P" option with nsIProfile::StartupWithArgs
-   // when the profile does not exist will put up XUL UI in order to create a new profile.
-   // This will cause a crash because of profile mgr's assumptions about the
-   // AppShell service which are not true when embedding.
-      
-   nsString profileName; profileName.AssignWithConversion(inProfileName);
-   
-   char *nonConstProfileName = nsCRT::strdup(inProfileName);
-   NS_ENSURE_TRUE(nonConstProfileName, NS_ERROR_OUT_OF_MEMORY);
-   
-   rv = profileMgr->ProfileExists(profileName.GetUnicode(), &exists);
-   NS_ENSURE_SUCCESS(rv, rv);
-   
-   int argc = 0;
-   char* argv[3] = { nsnull, nsnull, nsnull };
-   
-   argv[argc++] = "progName"; // Don't think this matters but it's needed in order to parse correctly
-   
-   if (!exists)
-   {
-      // progName -CreateProfile profileName
-      argv[argc++] = "-CreateProfile";
-      argv[argc++] = nonConstProfileName;
-   }
-   else
-   {
-      // progName -P profileName
-      argv[argc++] = "-P";
-      argv[argc++] = nonConstProfileName;
-   }
-   rv = cmdLineService->Initialize(argc, argv);
-   NS_ENSURE_SUCCESS(rv, rv);
-   rv = profileMgr->StartupWithArgs(cmdLineService);   
-      
-   Recycle(nonConstProfileName);
-   outProfileExisted = exists;
-   
-   return rv;
 }
