@@ -1236,11 +1236,45 @@ nsDOMClassInfo::RegisterExternalClasses()
 nsresult
 nsDOMClassInfo::Init()
 {
-  NS_ENSURE_TRUE(!sIsInitialized, NS_ERROR_ALREADY_INITIALIZED);
-
+  /* Errors that can trigger early returns are done first,
+     otherwise nsDOMClassInfo is left in a half inited state. */
   NS_ASSERTION(sizeof(PtrBits) == sizeof(void*),
                "BAD! You'll need to adjust the size of PtrBits to the size "
                "of a pointer on your platform.");
+
+  NS_ENSURE_TRUE(!sIsInitialized, NS_ERROR_ALREADY_INITIALIZED);
+
+  extern nsScriptNameSpaceManager *gNameSpaceManager;
+  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
+
+  nsresult rv = nsServiceManager::GetService(nsIXPConnect::GetCID(),
+                                             nsIXPConnect::GetIID(),
+                                             (nsISupports **)&sXPConnect);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIXPCFunctionThisTranslator> old;
+
+  nsCOMPtr<nsIXPCFunctionThisTranslator> elt = new nsEventListenerThisTranslator();
+  NS_ENSURE_TRUE(elt, NS_ERROR_OUT_OF_MEMORY);
+
+  sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener),
+                                        elt, getter_AddRefs(old));
+
+  nsCOMPtr<nsIScriptSecurityManager> sm =
+    do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  sSecMan = sm;
+  NS_ADDREF(sSecMan);
+
+  nsCOMPtr<nsIThreadJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSContext *cx = nsnull;
+
+  rv = stack->GetSafeJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIComponentRegistrar> cr;
   NS_GetComponentRegistrar(getter_AddRefs(cr));
@@ -2193,38 +2227,8 @@ nsDOMClassInfo::Init()
   }
 #endif
 
-  nsresult rv = nsServiceManager::GetService(nsIXPConnect::GetCID(),
-                                             nsIXPConnect::GetIID(),
-                                             (nsISupports **)&sXPConnect);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIXPCFunctionThisTranslator> old;
-
-  nsEventListenerThisTranslator *elt = new nsEventListenerThisTranslator();
-
-  sXPConnect->SetFunctionThisTranslator(NS_GET_IID(nsIDOMEventListener),
-                                        elt, getter_AddRefs(old));
-
-  nsCOMPtr<nsIScriptSecurityManager> sm =
-    do_GetService("@mozilla.org/scriptsecuritymanager;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  sSecMan = sm;
-  NS_ADDREF(sSecMan);
-
-  nsCOMPtr<nsIThreadJSContextStack> stack =
-    do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSContext *cx = nsnull;
-
-  rv = stack->GetSafeJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Initialize static JSString's
   DefineStaticJSVals(cx);
-
-  extern nsScriptNameSpaceManager *gNameSpaceManager;
-  NS_ENSURE_TRUE(gNameSpaceManager, NS_ERROR_NOT_INITIALIZED);
 
   PRInt32 i;
 
