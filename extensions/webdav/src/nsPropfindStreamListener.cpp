@@ -42,7 +42,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDOMParser.h"
 #include "nsIDOMRange.h"
 
 #include "nsIDocument.h"
@@ -281,31 +280,13 @@ PropfindStreamListener::OnStopRequest(nsIRequest *aRequest,
     // ZZZ Check content-length against mBody.Length()
 
     // Now we parse!
-
-    nsCOMPtr<nsIDOMParser> 
-        parser(do_CreateInstance("@mozilla.org/xmlextras/domparser;1", &rv));
-    NS_ENSURE_SUCCESS(rv, SignalCompletion(rv));
-
-    nsCOMPtr<nsIDOMDocument> xmldoc;
-    rv = parser->ParseFromBuffer(NS_REINTERPRET_CAST(const PRUint8 *,
-                                                     mBody.get()),
-                                 mBody.Length(), "text/xml",
-                                 getter_AddRefs(mXMLDoc));
-    NS_ENSURE_SUCCESS(rv, SignalCompletion(rv));
-
     nsCOMPtr<nsIDOMNodeList> responseList;
-    rv = mXMLDoc->GetElementsByTagNameNS(NS_LITERAL_STRING("DAV:"),
-                                         NS_LITERAL_STRING("response"),
-                                         getter_AddRefs(responseList));
-    NS_ENSURE_SUCCESS(rv, SignalCompletion(rv));
-
     PRUint32 length;
-    rv = responseList->GetLength(&length);
-    NS_ENSURE_SUCCESS(rv, SignalCompletion(rv));
+    rv = NS_WD_GetDocAndResponseListFromBuffer(mBody, getter_AddRefs(mXMLDoc),
+                                               getter_AddRefs(responseList),
+                                               &length);
 
     LOG(("found %d responses", length));
-
-    NS_ENSURE_TRUE(length, SignalCompletion(NS_ERROR_UNEXPECTED));
     
     for (PRUint32 i = 0; i < length; i++) {
         nsCOMPtr<nsIDOMNode> responseNode;

@@ -36,11 +36,14 @@
 
 #include "nsWebDAVInternal.h"
 
+#include "nsComponentManagerUtils.h"
+
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMParser.h"
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gDAVLog = nsnull;
@@ -99,3 +102,38 @@ NS_WD_AppendElementWithNS(nsIDOMDocument *doc, nsIDOMNode *parent,
     return NS_OK;
 }
                           
+nsresult
+NS_WD_GetDocAndResponseListFromBuffer(const nsACString &buffer,
+                                      nsIDOMDocument **xmldoc,
+                                      nsIDOMNodeList **responseList,
+                                      PRUint32 *length)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIDOMParser>
+        parser(do_CreateInstance("@mozilla.org/xmlextras/domparser;1", &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsPromiseFlatCString flat(buffer);
+    nsCOMPtr<nsIDOMDocument> doc;
+    rv = parser->ParseFromBuffer(NS_REINTERPRET_CAST(const PRUint8 *,
+                                                     flat.get()),
+                                 flat.Length(), "text/xml",
+                                 getter_AddRefs(doc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMNodeList> list;
+    rv = doc->GetElementsByTagNameNS(NS_LITERAL_STRING("DAV:"),
+                                     NS_LITERAL_STRING("response"),
+                                     getter_AddRefs(list));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = list->GetLength(length);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(length, NS_ERROR_UNEXPECTED);
+
+    NS_ADDREF(*xmldoc = doc.get());
+    NS_ADDREF(*responseList = list.get());
+    return NS_OK;
+}
+                                      

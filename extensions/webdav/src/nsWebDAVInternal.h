@@ -44,8 +44,11 @@
 class nsIStreamListener;
 class nsIRequestObserver;
 class nsIOutputStream;
+class nsIDOMNode;
+class nsIDOMElement;
+class nsIDOMDocument;
+class nsIDOMNodeList;
 
-#include "nsIDOMElement.h"
 #include "nsIWebDAVListener.h"
 #include "nsIWebDAVResource.h"
 
@@ -92,5 +95,11 @@ nsresult
 NS_WD_AppendElementWithNS(nsIDOMDocument *doc, nsIDOMNode *parent,
                           const nsAString& ns, const nsAString& tagName,
                           nsIDOMElement **child);
+
+nsresult
+NS_WD_GetDocAndResponseListFromBuffer(const nsACString &buffer,
+                                      nsIDOMDocument **xmldoc,
+                                      nsIDOMNodeList **responseList,
+                                      PRUint32 *length);
 
 #endif /* nsWebDAVInternal_h__ */
