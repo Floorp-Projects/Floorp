@@ -2121,7 +2121,11 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct,
         // size, we can't cache in the rule tree.)
         inherited = PR_TRUE;
         const nsStyleFont *font = aContext->GetStyleFont();
-        lh = float(lh) * float(font->mFont.size) / float(font->mSize);
+        if (font->mSize != 0) {
+          lh = float(lh) * float(font->mFont.size) / float(font->mSize);
+        } else {
+          lh = minimumFontSize;
+        }
       }
       text->mLineHeight.SetCoordValue(lh);
     }
