@@ -4648,6 +4648,14 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         if (wasAnchor) {
             mLoadType = aLoadType;
             mURIResultedInDocument = PR_TRUE;
+
+            /* we need to assign mLSHE to aSHEntry right here, so that on History loads, 
+             * SetCurrentURI() called from OnNewURI() will send proper 
+             * onLocationChange() notifications to the browser to update
+             * back/forward buttons. 
+             */
+            mLSHE = aSHEntry;
+
             /* This is a anchor traversal with in the same page.
              * call OnNewURI() so that, this traversal will be 
              * recorded in session and global history.
@@ -4658,14 +4666,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             if (mOSHE)
                 mOSHE->SetScrollPosition(cx, cy);
             
-            /* If this is a history load, OnNewURI() will not create
-             * a mLSHE. In that case, we want to assign mOSHE to aSHEntry 
-             * passed by SH, otherwise, mLSHE created by OnNewURI() should
-             * be assigned to mOSHE.
+            /* Assign mOSHE to mLSHE. This will either be a new entry created
+             * by OnNewURI() for normal loads or aSHEntry for history loads.
              */
-            if (aSHEntry && !mLSHE)
-                mOSHE = aSHEntry;            
-            else if (mLSHE)
+            if (mLSHE)
                 mOSHE = mLSHE;
 
             /* restore previous position of scroller(s), if we're moving
@@ -5626,7 +5630,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     }
     if (cacheToken) {
         // Check if the page has expired from cache 
-        nsCOMPtr<nsICacheEntryInfo> cacheEntryInfo(do_QueryInterface(cacheToken));
+        nsCOMPtr<nsICacheEntryDescriptor> cacheEntryInfo(do_QueryInterface(cacheToken));
         if (cacheEntryInfo) {        
             PRUint32 expTime;         
             cacheEntryInfo->GetExpirationTime(&expTime);         
