@@ -25,9 +25,12 @@ use strict;
 use lib qw(.);
 
 require "CGI.pl";
-require "bug_form.pl";
 
 ConnectToDatabase();
+
+use vars qw($template $vars $userid);
+
+use Bug;
 
 if ($::FORM{'GoAheadAndLogIn'}) {
     confirm_login();
@@ -39,11 +42,20 @@ if ($::FORM{'GoAheadAndLogIn'}) {
 # Begin Data/Security Validation
 ######################################################################
 
+unless (defined ($::FORM{'id'})) {
+    my $format = GetFormat("bug/choose", $::FORM{'format'}, $::FORM{'ctype'});
+
+    print "Content-type: $format->{'contenttype'}\n\n";
+    $template->process("$format->{'template'}", $vars) ||
+      ThrowTemplateError($template->error());
+    exit;
+}
+
+my $format = GetFormat("bug/show", $::FORM{'format'}, $::FORM{'ctype'});
+
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.
-if (defined ($::FORM{'id'})) {
-    ValidateBugID($::FORM{'id'});
-}
+ValidateBugID($::FORM{'id'});
 
 ######################################################################
 # End Data/Security Validation
@@ -51,6 +63,20 @@ if (defined ($::FORM{'id'})) {
 
 GetVersionTable();
 
-print "Content-type: text/html\n\n";
+my $bug = new Bug($::FORM{'id'}, $userid);
 
-show_bug();
+$vars->{'bug'} = $bug;
+
+ThrowCodeError("bug_error") if $bug->error;
+
+# Next bug in list (if there is one)
+my @bug_list;
+if ($::COOKIE{"BUGLIST"}) {
+    @bug_list = split(/:/, $::COOKIE{"BUGLIST"});
+}
+$vars->{'bug_list'} = \@bug_list;
+
+print "Content-type: $format->{'ctype'}\n\n";
+$template->process("$format->{'template'}", $vars)
+  || ThrowTemplateError($template->error());
+

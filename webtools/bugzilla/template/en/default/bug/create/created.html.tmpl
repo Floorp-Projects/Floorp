@@ -23,8 +23,24 @@
   title = "Bug $id Submitted"
 %]
 
-[% PROCESS bug/process/results.html.tmpl %]
+[% FOREACH item = sentmail %]
+  [% PROCESS bug/process/results.html.tmpl
+     type = item.type
+     id = item.id
+     mail = item.mail
+   %]
+[% END %]
 
 <br>
 
-[%# post_bug.cgi will add a copy of the filed bug below here %]
+<hr>
+
+[% PROCESS bug/edit.html.tmpl %]
+
+<hr>
+
+[% PROCESS bug/navigate.html.tmpl %]
+
+<br>
+
+[% PROCESS global/footer.html.tmpl %]

@@ -48,6 +48,10 @@
     Attachment #[% attachid FILTER html %] ([% description FILTER html %]) 
     is already obsolete.
 
+  [% ELSIF error == "bug_error" %]
+    Trying to retrieve bug [% bug.bug_id %] returned the error
+    [% bug.error FILTER html %]
+
   [% ELSIF error == "cgi_error" %]
     [% title = "CGI Error" %]
     Bugzilla has had trouble interpreting your CGI request;

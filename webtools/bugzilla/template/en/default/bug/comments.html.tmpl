@@ -68,7 +68,7 @@
   # generated HTML
   #%]
 <pre>
-  [%- quoteUrls(comment.body) -%]
+  [%- comment.body FILTER quoteUrls -%]
 </pre>
     </div>
   [% END %]

@@ -28,7 +28,8 @@ use lib qw(.);
 
 use Bugzilla::Constants;
 require "CGI.pl";
-require "bug_form.pl";
+
+use Bug;
 
 use Bugzilla::User;
 
@@ -491,28 +492,38 @@ close(PMAIL);
 
 # Tell the user all about it
 $vars->{'id'} = $id;
-$vars->{'mail'} = $mailresults;
-$vars->{'type'} = "created";
+my $bug = new Bug($id, $::userid);
+$vars->{'bug'} = $bug;
+
+ThrowCodeError("bug_error") if $bug->error;
+
+$vars->{'sentmail'} = [];
+
+push (@{$vars->{'sentmail'}}, { type => 'created',
+                                id => $id,
+                                mail => $mailresults
+                              });
+
+foreach my $i (@all_deps) {
+    my $mail = "";
+    open(PMAIL, "-|") or exec('./processmail', $i, $::COOKIE{'Bugzilla_login'});
+    $mail .= $_ while <PMAIL>;
+    close(PMAIL);
+
+    push (@{$vars->{'sentmail'}}, { type => 'dep',
+                                    id => $i,
+                                    mail => $mail
+                                  });
+}
+
+my @bug_list;
+if ($::COOKIE{"BUGLIST"}) {
+    @bug_list = split(/:/, $::COOKIE{"BUGLIST"});
+}
+$vars->{'bug_list'} = \@bug_list;
 
 print "Content-type: text/html\n\n";
 $template->process("bug/create/created.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
 
-foreach my $i (@all_deps) {
-    $vars->{'mail'} = "";
-    open(PMAIL, "-|") or exec('./processmail', $i, $::COOKIE{'Bugzilla_login'});    $vars->{'mail'} .= $_ while <PMAIL>;
-    close(PMAIL);
 
-    $vars->{'id'} = $i;
-    $vars->{'type'} = "dep";
-
-    # Let the user know we checked to see if we should email notice
-    # of this new bug to users with a relationship to the depenedant
-    # bug and who did and didn't receive email about it
-    $template->process("bug/process/results.html.tmpl", $vars) 
-      || ThrowTemplateError($template->error());
-}
-
-$::FORM{'id'} = $id;
-
-show_bug("header is already done");

@@ -81,6 +81,8 @@ my $provider = Template::Provider->new(
         js        => sub { return $_ } ,
         strike    => sub { return $_ } ,
         url_quote => sub { return $_ } ,
+        quoteUrls => sub { return $_ } ,
+        bug_link => [ sub { return sub { return $_; } }, 1] ,
         csv       => sub { return $_ } ,
         time      => sub { return $_ } ,
     },

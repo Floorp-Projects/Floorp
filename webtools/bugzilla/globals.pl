@@ -1781,8 +1781,20 @@ $::template ||= Template->new(
         # characters NOT in the regex set: [a-zA-Z0-9_\-.].  The 'uri'
         # filter should be used for a full URL that may have
         # characters that need encoding.
-        url_quote => \&Bugzilla::Util::url_quote,
-        
+        url_quote => \&Bugzilla::Util::url_quote ,
+
+        quoteUrls => \&quoteUrls ,
+
+        bug_link => [ sub {
+                          my ($context, $bug) = @_;
+                          return sub {
+                              my $text = shift;
+                              return GetBugLink($text, $bug);
+                          };
+                      },
+                      1
+                    ],
+
         # In CSV, quotes are doubled, and we enclose the whole value in quotes
         csv => sub
         {
@@ -1892,9 +1904,6 @@ $::vars =
     # Generic linear search function
     'lsearch' => \&Bugzilla::Util::lsearch ,
 
-    # quoteUrls - autolinkifies text
-    'quoteUrls' => \&quoteUrls ,
-    
     # UserInGroup - you probably want to cache this
     'UserInGroup' => \&UserInGroup ,
 

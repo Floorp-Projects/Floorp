@@ -30,7 +30,7 @@
 
 <p>
 <pre>
-[%- quoteUrls(form.text) FILTER html -%]
+[%- form.text FILTER quoteUrls FILTER html -%]
 </pre>
 </p>
 
@@ -45,7 +45,7 @@
 
 <p>
 <pre>
-[%- quoteUrls(form.text) -%]
+[%- form.text FILTER quoteUrls -%]
 </pre>
 </p>
 

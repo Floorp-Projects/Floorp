@@ -21,26 +21,41 @@
 #                 Terry Weissman <terry@mozilla.org>
 #                 Chris Yeh      <cyeh@bluemartini.com>
 
+package Bug;
+
 use strict;
 
-use DBI;
 use RelationSet;
-use vars qw($unconfirmedstate $legal_keywords);
+use vars qw($unconfirmedstate $legal_keywords @legal_platform
+            @legal_priority @legal_severity @legal_opsys @legal_bugs_status
+            @settable_resolution %components %versions %target_milestone
+            @enterable_products %milestoneurl %prodmaxvotes);
 
-package Bug;
 use CGI::Carp qw(fatalsToBrowser);
 my %ok_field;
 
+use Attachment;
 use Bugzilla::Config;
+use Bugzilla::Constants;
+use Bugzilla::Flag;
+use Bugzilla::FlagType;
+use Bugzilla::User;
 use Bugzilla::Util;
 
 for my $key (qw (bug_id alias product version rep_platform op_sys bug_status 
-                resolution priority bug_severity component assigned_to
-                reporter bug_file_loc short_desc target_milestone 
-                qa_contact status_whiteboard creation_ts 
-                delta_ts votes whoid comment query error) ){
+                 resolution priority bug_severity component assigned_to
+                 reporter bug_file_loc short_desc target_milestone 
+                 qa_contact status_whiteboard creation_ts keywords
+                 delta_ts votes whoid usergroupset comment query error
+                 longdescs cc milestoneurl attachments dependson blocked
+                 cclist_accessible reporter_accessible
+                 isopened isunconfirmed assigned_to_name assigned_to_email
+                 qa_contact_name qa_contact_email reporter_name
+                 reporter_email flag_types num_attachment_flag_types
+                 show_attachment_flags use_keywords any_flags_requesteeble
+                 estimated_time remaining_time actual_time) ) {
     $ok_field{$key}++;
-    }
+}
 
 # create a new empty bug
 #
@@ -95,16 +110,20 @@ sub initBug  {
         $user_id = &::DBname_to_id($user_id); 
      }
   }
-     
+
   $self->{'whoid'} = $user_id;
 
   my $query = "
-    select
-      bugs.bug_id, alias, products.name, version, rep_platform, op_sys, bug_status,
-      resolution, priority, bug_severity, components.name, assigned_to, reporter,
-      bug_file_loc, short_desc, target_milestone, qa_contact,
-      status_whiteboard, date_format(creation_ts,'%Y-%m-%d %H:%i'),
-      delta_ts, sum(votes.count)
+    SELECT
+      bugs.bug_id, alias, bugs.product_id, products.name, version,
+      rep_platform, op_sys, bug_status, resolution, priority,
+      bug_severity, bugs.component_id, components.name, assigned_to,
+      reporter, bug_file_loc, short_desc, target_milestone,
+      qa_contact, status_whiteboard,
+      DATE_FORMAT(creation_ts,'%Y.%m.%d %H:%i'),
+      delta_ts, sum(votes.count),
+      reporter_accessible, cclist_accessible,
+      estimated_time, remaining_time
     from bugs left join votes using(bug_id),
       products, components
     where bugs.bug_id = $bug_id
@@ -118,14 +137,17 @@ sub initBug  {
   if ((@row = &::FetchSQLData()) && &::CanSeeBug($bug_id, $self->{'whoid'})) {
     my $count = 0;
     my %fields;
-    foreach my $field ("bug_id", "alias", "product", "version", "rep_platform",
-                       "op_sys", "bug_status", "resolution", "priority",
-                       "bug_severity", "component", "assigned_to", "reporter",
-                       "bug_file_loc", "short_desc", "target_milestone",
-                       "qa_contact", "status_whiteboard", "creation_ts",
-                       "delta_ts", "votes") {
+    foreach my $field ("bug_id", "alias", "product_id", "product", "version", 
+                       "rep_platform", "op_sys", "bug_status", "resolution", 
+                       "priority", "bug_severity", "component_id", "component",
+                       "assigned_to", "reporter", "bug_file_loc", "short_desc",
+                       "target_milestone", "qa_contact", "status_whiteboard", 
+                       "creation_ts", "delta_ts", "votes",
+                       "reporter_accessible", "cclist_accessible".
+                       "estimated_time", "remaining_time")
+      {
         $fields{$field} = shift @row;
-        if ($fields{$field}) {
+        if (defined $fields{$field}) {
             $self->{$field} = $fields{$field};
         }
         $count++;
@@ -140,21 +162,18 @@ sub initBug  {
       return $self;
   }
 
-  $self->{'assigned_to'} = &::DBID_to_name($self->{'assigned_to'});
-  $self->{'reporter'} = &::DBID_to_name($self->{'reporter'});
+  $self->{'assigned_to'} = new Bugzilla::User($self->{'assigned_to'});
+  $self->{'reporter'} = new Bugzilla::User($self->{'reporter'});
+
+  if (Param('useqacontact') && $self->{'qa_contact'} > 0) {
+      $self->{'qa_contact'} = new Bugzilla::User($self->{'qa_contact'});
+  }
 
   my $ccSet = new RelationSet;
   $ccSet->mergeFromDB("select who from cc where bug_id=$bug_id");
   my @cc = $ccSet->toArrayOfStrings();
   if (@cc) {
     $self->{'cc'} = \@cc;
-  }
-
-  if (Param("useqacontact") && (defined $self->{'qa_contact'}) ) {
-    my $name = $self->{'qa_contact'} > 0 ? &::DBID_to_name($self->{'qa_contact'}) :"";
-    if ($name) {
-      $self->{'qa_contact'} = $name;
-    }
   }
 
   if (@::legal_keywords) {
@@ -172,39 +191,43 @@ sub initBug  {
     }
   }
 
-    &::SendSQL("select attach_id, creation_ts, isprivate, description 
-             from attachments 
-             where bug_id = $bug_id");
-    my @attachments;
-    while (&::MoreSQLData()) {
-        my ($attachid, $date, $isprivate, $desc) = (&::FetchSQLData());
-        my %attach;
-        $attach{'attachid'} = $attachid;
-        $attach{'isprivate'} = $isprivate;
-        $attach{'date'} = $date;
-        $attach{'desc'} = $desc;
-        push @attachments, \%attach;
-    }
-    if (@attachments) {
-        $self->{'attachments'} = \@attachments;
-    }
+  $self->{'attachments'} = Attachment::query($self->{bug_id});
 
-    &::SendSQL("select bug_id, who, bug_when, isprivate, thetext 
-           from longdescs 
-           where bug_id = $bug_id");
-    my @longdescs;
-    while (&::MoreSQLData()) {
-        my ($bug_id, $who, $bug_when, $isprivate, $thetext) = (&::FetchSQLData());
-        my %longdesc;
-        $longdesc{'who'} = $who;
-        $longdesc{'bug_when'} = $bug_when;
-        $longdesc{'isprivate'} = $isprivate;
-        $longdesc{'thetext'} = $thetext;
-        push @longdescs, \%longdesc;
-    }
-    if (@longdescs) {
-        $self->{'longdescs'} = \@longdescs;
-    }
+  # The types of flags that can be set on this bug.
+  # If none, no UI for setting flags will be displayed.
+  my $flag_types = 
+    Bugzilla::FlagType::match({ 'target_type'  => 'bug', 
+                                'product_id'   => $self->{'product_id'}, 
+                                'component_id' => $self->{'component_id'} });
+  foreach my $flag_type (@$flag_types) {
+      $flag_type->{'flags'} = 
+        Bugzilla::Flag::match({ 'bug_id'      => $self->{bug_id},
+                                'type_id'     => $flag_type->{'id'},
+                                'target_type' => 'bug' });
+  }
+  $self->{'flag_types'} = $flag_types;
+  $self->{'any_flags_requesteeable'} = grep($_->{'is_requesteeble'}, @$flag_types);
+
+  # The number of types of flags that can be set on attachments to this bug
+  # and the number of flags on those attachments.  One of these counts must be
+  # greater than zero in order for the "flags" column to appear in the table
+  # of attachments.
+  my $num_attachment_flag_types =
+    Bugzilla::FlagType::count({ 'target_type'  => 'attachment',
+                                'product_id'   => $self->{'product_id'},
+                                'component_id' => $self->{'component_id'},
+                                'is_active'    => 1 });
+  my $num_attachment_flags =
+    Bugzilla::Flag::count({ 'target_type'  => 'attachment',
+                            'bug_id'       => $self->{bug_id} });
+
+  $self->{'show_attachment_flags'}
+    = $num_attachment_flag_types || $num_attachment_flags;
+
+  $self->{'milestoneurl'} = $::milestoneurl{$self->{product}};
+
+  $self->{'isunconfirmed'} = ($self->{bug_status} eq $::unconfirmedstate);
+  $self->{'isopened'} = &::IsOpenedState($self->{bug_status});
   
   my @depends = EmitDependList("blocked", "dependson", $bug_id);
   if (@depends) {
@@ -218,7 +241,191 @@ sub initBug  {
   return $self;
 }
 
+sub actual_time {
+    my ($self) = @_;
 
+    return $self->{'actual_time'} if exists $self->{'actual_time'};
+
+    if (&::UserInGroup(Param("timetrackinggroup"))) {
+        &::SendSQL("SELECT SUM(work_time)
+               FROM longdescs WHERE longdescs.bug_id=$self->{bug_id}");
+        $self->{'actual_time'} = &::FetchSQLData();
+    }
+
+    return $self->{'actual_time'};
+}
+
+sub longdescs {
+    my ($self) = @_;
+
+    return $self->{'longdescs'} if exists $self->{'longdescs'};
+
+    $self->{'longdescs'} = &::GetComments($self->{bug_id});
+
+    return $self->{'longdescs'};
+}
+
+sub use_keywords {
+    return @::legal_keywords;
+}
+
+sub use_votes {
+    my ($self) = @_;
+
+    return Param('usevotes')
+      && $::prodmaxvotes{$self->{product}} > 0;
+}
+
+sub groups {
+    my $self = shift;
+
+    return $self->{'groups'} if exists $self->{'groups'};
+
+    my @groups;
+
+    # Some of this stuff needs to go into Bugzilla::User
+
+    # For every group, we need to know if there is ANY bug_group_map
+    # record putting the current bug in that group and if there is ANY
+    # user_group_map record putting the user in that group.
+    # The LEFT JOINs are checking for record existence.
+    #
+    &::SendSQL("SELECT DISTINCT groups.id, name, description," .
+             " bug_group_map.group_id IS NOT NULL," .
+             " user_group_map.group_id IS NOT NULL," .
+             " isactive, membercontrol, othercontrol" .
+             " FROM groups" . 
+             " LEFT JOIN bug_group_map" .
+             " ON bug_group_map.group_id = groups.id" .
+             " AND bug_id = $self->{'bug_id'}" .
+             " LEFT JOIN user_group_map" .
+             " ON user_group_map.group_id = groups.id" .
+             " AND user_id = $::userid" .
+             " AND NOT isbless" .
+             " LEFT JOIN group_control_map" .
+             " ON group_control_map.group_id = groups.id" .
+             " AND group_control_map.product_id = " . $self->{'product_id'} .
+             " WHERE isbuggroup");
+
+    while (&::MoreSQLData()) {
+        my ($groupid, $name, $description, $ison, $ingroup, $isactive,
+            $membercontrol, $othercontrol) = &::FetchSQLData();
+
+        $membercontrol ||= 0;
+
+        # For product groups, we only want to use the group if either
+        # (1) The bit is set and not required, or
+        # (2) The group is Shown or Default for members and
+        #     the user is a member of the group.
+        if ($ison ||
+            ($isactive && $ingroup
+                       && (($membercontrol == CONTROLMAPDEFAULT)
+                           || ($membercontrol == CONTROLMAPSHOWN))
+            ))
+        {
+            my $ismandatory = $isactive
+              && ($membercontrol == CONTROLMAPMANDATORY);
+
+            push (@groups, { "bit" => $groupid,
+                             "ison" => $ison,
+                             "ingroup" => $ingroup,
+                             "mandatory" => $ismandatory,
+                             "description" => $description });
+        }
+    }
+
+    $self->{'groups'} = \@groups;
+
+    return $self->{'groups'};
+}
+
+sub user {
+    my $self = shift;
+    return $self->{'user'} if exists $self->{'user'};
+
+    $self->{'user'} = {};
+
+    my $movers = Param("movers");
+    $self->{'user'}->{'canmove'} = Param("move-enabled") 
+      && (defined $::COOKIE{"Bugzilla_login"}) 
+        && ($::COOKIE{"Bugzilla_login"} =~ /$movers/);
+
+    # In the below, if the person hasn't logged in ($::userid == 0), then
+    # we treat them as if they can do anything.  That's because we don't
+    # know why they haven't logged in; it may just be because they don't
+    # use cookies.  Display everything as if they have all the permissions
+    # in the world; their permissions will get checked when they log in
+    # and actually try to make the change.
+    $self->{'user'}->{'canedit'} = $::userid == 0
+                                   || $::userid == $self->{'reporter'}
+                                   || $::userid == $self->{'qa_contact'}
+                                   || $::userid == $self->{'assigned_to'}
+                                   || &::UserInGroup("editbugs");
+    $self->{'user'}->{'canconfirm'} = ($::userid == 0)
+                                   || &::UserInGroup("canconfirm")
+                                   || &::UserInGroup("editbugs");
+
+    return $self->{'user'};
+}
+
+sub choices {
+    my $self = shift;
+    return $self->{'choices'} if exists $self->{'choices'};
+
+    &::GetVersionTable();
+
+    $self->{'choices'} = {};
+
+    # Fiddle the product list.
+    my $seen_curr_prod;
+    my @prodlist;
+
+    foreach my $product (@::enterable_products) {
+        if ($product eq $self->{'product'}) {
+            # if it's the product the bug is already in, it's ALWAYS in
+            # the popup, period, whether the user can see it or not, and
+            # regardless of the disallownew setting.
+            $seen_curr_prod = 1;
+            push(@prodlist, $product);
+            next;
+        }
+
+        if (!&::CanEnterProduct($product)) {
+            # If we're using bug groups to restrict entry on products, and
+            # this product has an entry group, and the user is not in that
+            # group, we don't want to include that product in this list.
+            next;
+        }
+
+        push(@prodlist, $product);
+    }
+
+    # The current product is part of the popup, even if new bugs are no longer
+    # allowed for that product
+    if (!$seen_curr_prod) {
+        push (@prodlist, $self->{'product'});
+        @prodlist = sort @prodlist;
+    }
+
+    # Hack - this array contains "". See bug 106589.
+    my @res = grep ($_, @::settable_resolution);
+
+    $self->{'choices'} =
+      {
+       'product' => \@prodlist,
+       'rep_platform' => \@::legal_platform,
+       'priority' => \@::legal_priority,
+       'bug_severity' => \@::legal_severity,
+       'op_sys' => \@::legal_opsys,
+       'bug_status' => \@::legal_bugs_status,
+       'resolution' => \@res,
+       'component' => $::components{$self->{product}},
+       'version' => $::versions{$self->{product}},
+       'target_milestone' => $::target_milestone{$self->{product}},
+      };
+
+    return $self->{'choices'};
+}
 
 # given a bug hash, emit xml for it. with file header provided by caller
 #
@@ -261,11 +468,11 @@ sub emitXML {
                      && Param("insidergroup")
                      && !&::UserInGroup(Param("insidergroup")));
             $xml .= "  <long_desc>\n"; 
-            $xml .= "   <who>" . &::DBID_to_name($self->{'longdescs'}[$i]->{'who'}) 
+            $xml .= "   <who>" . $self->{'longdescs'}[$i]->{'email'} 
                                . "</who>\n"; 
-            $xml .= "   <bug_when>" . $self->{'longdescs'}[$i]->{'bug_when'} 
+            $xml .= "   <bug_when>" . $self->{'longdescs'}[$i]->{'time'} 
                                     . "</bug_when>\n"; 
-            $xml .= "   <thetext>" . QuoteXMLChars($self->{'longdescs'}[$i]->{'thetext'})
+            $xml .= "   <thetext>" . QuoteXMLChars($self->{'longdescs'}[$i]->{'body'})
                                    . "</thetext>\n"; 
             $xml .= "  </long_desc>\n"; 
         }
@@ -280,7 +487,7 @@ sub emitXML {
             $xml .= "    <attachid>" . $self->{'attachments'}[$i]->{'attachid'}
                                     . "</attachid>\n"; 
             $xml .= "    <date>" . $self->{'attachments'}[$i]->{'date'} . "</date>\n"; 
-            $xml .= "    <desc>" . QuoteXMLChars($self->{'attachments'}[$i]->{'desc'}) . "</desc>\n"; 
+            $xml .= "    <desc>" . QuoteXMLChars($self->{'attachments'}[$i]->{'description'}) . "</desc>\n"; 
           # $xml .= "    <type>" . $self->{'attachments'}[$i]->{'type'} . "</type>\n"; 
           # $xml .= "    <data>" . $self->{'attachments'}[$i]->{'data'} . "</data>\n"; 
             $xml .= "  </attachment>\n"; 
@@ -310,8 +517,8 @@ sub QuoteXMLChars {
   $_[0] =~ s/&/&amp;/g;
   $_[0] =~ s/</&lt;/g;
   $_[0] =~ s/>/&gt;/g;
-  $_[0] =~ s/'/&apos;/g;
-  $_[0] =~ s/"/&quot;/g;
+  $_[0] =~ s/\'/&apos;/g;
+  $_[0] =~ s/\"/&quot;/g;
 # $_[0] =~ s/([\x80-\xFF])/&XmlUtf8Encode(ord($1))/ge;
   return($_[0]);
 }
@@ -341,156 +548,25 @@ sub XML_Footer {
   return ("</bugzilla>\n");
 }
 
-sub CanChangeField {
-   my $self = shift();
-   my ($f, $oldvalue, $newvalue) = (@_);
-   my $UserInEditGroupSet = -1;
-   my $UserInCanConfirmGroupSet = -1;
-   my $ownerid;
-   my $reporterid;
-   my $qacontactid;
-
-    if ($f eq "assigned_to" || $f eq "reporter" || $f eq "qa_contact") {
-        if ($oldvalue =~ /^\d+$/) {
-            if ($oldvalue == 0) {
-                $oldvalue = "";
-            } else {
-                $oldvalue = &::DBID_to_name($oldvalue);
-            }
-        }
-    }
-    if ($oldvalue eq $newvalue) {
-        return 1;
-    }
-    if (trim($oldvalue) eq trim($newvalue)) {
-        return 1;
-    }
-    if ($f =~ /^longdesc/) {
-        return 1;
-    }
-    if ($UserInEditGroupSet < 0) {
-        $UserInEditGroupSet = UserInGroup($self, "editbugs");
-    }
-    if ($UserInEditGroupSet) {
-        return 1;
-    }
-    &::SendSQL("SELECT reporter, assigned_to, qa_contact FROM bugs " .
-                "WHERE bug_id = $self->{'bug_id'}");
-    ($reporterid, $ownerid, $qacontactid) = (&::FetchSQLData());
-
-    # Let reporter change bug status, even if they can't edit bugs.
-    # If reporter can't re-open their bug they will just file a duplicate.
-    # While we're at it, let them close their own bugs as well.
-    if ( ($f eq "bug_status") && ($self->{'whoid'} eq $reporterid) ) {
-        return 1;
-    }
-    if ($f eq "bug_status" && $newvalue ne $::unconfirmedstate &&
-        &::IsOpenedState($newvalue)) {
-
-        # Hmm.  They are trying to set this bug to some opened state
-        # that isn't the UNCONFIRMED state.  Are they in the right
-        # group?  Or, has it ever been confirmed?  If not, then this
-        # isn't legal.
-
-        if ($UserInCanConfirmGroupSet < 0) {
-            $UserInCanConfirmGroupSet = &::UserInGroup("canconfirm");
-        }
-        if ($UserInCanConfirmGroupSet) {
-            return 1;
-        }
-        &::SendSQL("SELECT everconfirmed FROM bugs WHERE bug_id = $self->{'bug_id'}");
-        my $everconfirmed = FetchOneColumn();
-        if ($everconfirmed) {
-            return 1;
-        }
-    } elsif ($reporterid eq $self->{'whoid'} || $ownerid eq $self->{'whoid'} ||
-             $qacontactid eq $self->{'whoid'}) {
-        return 1;
-    }
-    $self->{'error'} = "
-Only the owner or submitter of the bug, or a sufficiently
-empowered user, may make that change to the $f field."
-}
-
-sub Collision {
-    my $self = shift();
-    my $write = "WRITE";        # Might want to make a param to control
-                                # whether we do LOW_PRIORITY ...
-    &::SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
-               "cc AS selectVisible_cc $write, " .
-            "profiles $write, dependencies $write, votes $write, " .
-            "keywords $write, longdescs $write, fielddefs $write, " .
-            "keyworddefs READ, groups READ, attachments READ, products READ");
-    &::SendSQL("SELECT delta_ts FROM bugs where bug_id=$self->{'bug_id'}");
-    my $delta_ts = &::FetchOneColumn();
-    &::SendSQL("unlock tables");
-    if ($self->{'delta_ts'} ne $delta_ts) {
-       return 1;
-    }
-    else {
-       return 0;
-    }
-}
-
-sub AppendComment  {
-    my $self = shift();
-    my ($comment) = (@_);
-    $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
-    $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
-    if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
-        return;
-    }
-
-    &::SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) " .
-            "VALUES($self->{'bug_id'}, $self->{'whoid'}, now(), " . &::SqlQuote($comment) . ")");
-
-    &::SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $self->{'bug_id'}");
-}
-
-
-#from o'reilley's Programming Perl
-sub display {
-    my $self = shift;
-    my @keys;
-    if (@_ == 0) {                  # no further arguments
-        @keys = sort keys(%$self);
-    }  else {
-        @keys = @_;                 # use the ones given
-    }
-    foreach my $key (@keys) {
-        print "\t$key => $self->{$key}\n";
-    }
-}
-
-sub CommitChanges {
-
-#snapshot bug
-#snapshot dependencies
-#check can change fields
-#check collision
-#lock and change fields
-#notify through mail
-
-}
-
 sub AUTOLOAD {
   use vars qw($AUTOLOAD);
-  my $self = shift;
-  my $type = ref($self) || $self;
   my $attr = $AUTOLOAD;
 
   $attr =~ s/.*:://;
   return unless $attr=~ /[^A-Z]/;
-  if (@_) {
-    $self->{$attr} = shift;
-    return;
-  }
   confess ("invalid bug attribute $attr") unless $ok_field{$attr};
-  if (defined $self->{$attr}) {
-    return $self->{$attr};
-  } else {
-    return '';
-  }
+
+  no strict 'refs';
+  *$AUTOLOAD = sub {
+      my $self = shift;
+      if (defined $self->{$attr}) {
+          return $self->{$attr};
+      } else {
+          return '';
+      }
+  };
+
+  goto &$AUTOLOAD;
 }
 
 1;

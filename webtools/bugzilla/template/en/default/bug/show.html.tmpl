@@ -16,21 +16,26 @@
   # Copyright (C) 1998 Netscape Communications Corporation. All
   # Rights Reserved.
   #
-  # Contributor(s): Myk Melez <myk@mozilla.org>
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Vaskin Kissoyan <vkissoyan@yahoo.com>
+  #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
   #%]
 
-[%# INTERFACE:
-  # bug : Bug object; the next bug to show
-  #%]
+[% filtered_desc = bug.short_desc FILTER html %]
+[% filtered_timestamp = bug.delta_ts FILTER time %]
+[% PROCESS global/header.html.tmpl 
+  title = "Bug $bug.bug_id - $bug.short_desc"
+  h1 = "Bugzilla Bug $bug.bug_id"
+  h2 = filtered_desc
+  h3 = "Last modified: $filtered_timestamp"
+  style_urls = [ "css/edit_bug.css" ]
+%]
+
+[% PROCESS bug/navigate.html.tmpl %]
 
 <hr>
 
-<p>
-  The next bug in your list is bug
-  <a href="show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>:
-</p>
-
-[% PROCESS "bug/edit.html.tmpl" %]
+[% PROCESS bug/edit.html.tmpl %]
 
 <hr>
 

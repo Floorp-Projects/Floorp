@@ -33,8 +33,8 @@ use lib qw(.);
 
 use Bugzilla::Constants;
 require "CGI.pl";
-require "bug_form.pl";
 
+use Bug;
 use Bugzilla::User;
 
 use RelationSet;
@@ -53,7 +53,7 @@ use vars qw(%versions
           %settable_resolution
           %target_milestone
           %legal_severity
-          $next_bug);
+           );
 
 ConnectToDatabase();
 my $whoid = confirm_login();
@@ -148,6 +148,23 @@ if (defined($::FORM{'id'})) {
         $::FORM{'delta_ts'} ne $delta_ts) 
     {
         $vars->{'title_tag'} = "mid_air";
+    }
+}
+
+# Set up the vars for nagiavtional <link> elements
+my $next_bug;
+if ($::COOKIE{"BUGLIST"} && $::FORM{'id'}) {
+    my @bug_list = split(/:/, $::COOKIE{"BUGLIST"});
+    $vars->{'bug_list'} = \@bug_list;
+    my $cur = lsearch(\@bug_list, $::FORM{"id"});
+    if ($cur >= 0 && $cur < $#bug_list) {
+        $next_bug = $bug_list[$cur + 1];
+
+        # Note that we only bother with the bug_id here, and get
+        # the full bug object at the end, before showing the edit
+        # page. If you change this, remember that we have not
+        # done the security checks on the next bug yet
+        $vars->{'bug'} = { bug_id => $next_bug };
     }
 }
 
@@ -1725,26 +1742,17 @@ foreach my $id (@idlist) {
     }
 }
 
-# Show next bug, if it exists.
-if ($::COOKIE{"BUGLIST"} && $::FORM{'id'}) {
-    my @bugs = split(/:/, $::COOKIE{"BUGLIST"});
-    $vars->{'bug_list'} = \@bugs;
-    my $cur = lsearch(\@bugs, $::FORM{"id"});
-    if ($cur >= 0 && $cur < $#bugs) {
-        my $next_bug = $bugs[$cur + 1];
-        if (detaint_natural($next_bug) && CanSeeBug($next_bug, $::userid)) {
-            $::FORM{'id'} = $next_bug;
-            
-            $vars->{'next_id'} = $next_bug;
-            
-            # Let the user know we are about to display the next bug in their list.
-            $template->process("bug/process/next.html.tmpl", $vars)
-              || ThrowTemplateError($template->error());
+# now show the next bug
+if ($next_bug) {
+    if (detaint_natural($next_bug) && CanSeeBug($next_bug, $::userid)) {
+        my $bug = new Bug($next_bug, $::userid);
+        $vars->{'bug'} = $bug;
+        ThrowCodeError("bug_error") if $bug->error;
 
-            show_bug("header is already done");
+        $template->process("bug/process/next.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
 
-            exit;
-        }
+        exit;
     }
 }
 

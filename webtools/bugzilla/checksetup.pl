@@ -921,14 +921,6 @@ END
 }
 
 {
-    eval("use Date::Parse");
-    # Templates will be recompiled if the source changes, but not if the
-    # settings in globals.pl change, so we need to be able to force a rebuild
-    # if that happens
-
-    # The last time the global template params were changed. Keep in UTC,
-    # YYYY-MM-DD
-    my $lastTemplateParamChange = str2time("2002-04-27", "UTC");
     if (-e 'data/template') {
         print "Removing existing compiled templates ...\n" unless $silent;
 
@@ -967,6 +959,8 @@ END
          js => sub { return $_; },
          html_linebreak => sub { return $_; },
          url_quote => sub { return $_; },
+         quoteUrls => sub { return $_; },
+         bug_link => [ sub { return sub { return $_; } }, 1],
          csv => sub { return $_; },
          time => sub { return $_; },
         },

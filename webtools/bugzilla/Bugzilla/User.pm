@@ -59,7 +59,7 @@ sub new {
     }
     
     $self->{'name'} = $name;
-    $self->{'email'} = $email;
+    $self->{'email'} = $email || "__UNKNOWN__";
     $self->{'exists'} = $exists;
         
     # Generate a string to identify the user by name + email if the user
