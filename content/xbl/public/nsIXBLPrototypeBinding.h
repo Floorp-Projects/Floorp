@@ -75,6 +75,7 @@ public:
   NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aReceiver)=0;
 
   NS_IMETHOD LoadResources(PRBool* aLoaded)=0;
+  NS_IMETHOD AddResource(nsIAtom* aResourceType, const nsAReadableString& aSrc)=0;
 
   NS_IMETHOD InheritsStyle(PRBool* aResult)=0;
 

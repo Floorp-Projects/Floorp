@@ -99,6 +99,7 @@ protected:
   // Our own helpers for constructing XBL prototype objects.
   void ConstructBinding();
   void ConstructHandler(const nsIParserNode& aNode);
+  void ConstructResource(const nsIParserNode& aNode, nsIAtom* aResourceType);
   nsresult AddAttributesToXULPrototype(const nsIParserNode& aNode, nsXULPrototypeElement* aElement);
 
 protected:

@@ -53,6 +53,8 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 CPPSRCS=					\
   nsXBLBinding.cpp \
   nsXBLPrototypeBinding.cpp \
+  nsXBLPrototypeResources.cpp \
+  nsXBLResourceLoader.cpp \
   nsXBLDocumentInfo.cpp \
   nsXBLContentSink.cpp \
   nsXBLService.cpp \
@@ -80,6 +82,8 @@ CPPSRCS=					\
 CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLBinding.obj \
   .\$(OBJDIR)\nsXBLPrototypeBinding.obj \
+  .\$(OBJDIR)\nsXBLPrototypeResources.obj \
+  .\$(OBJDIR)\nsXBLResourceLoader.obj \
   .\$(OBJDIR)\nsXBLDocumentInfo.obj \
   .\$(OBJDIR)\nsXBLContentSink.obj \
   .\$(OBJDIR)\nsXBLEventHandler.obj \

@@ -134,8 +134,12 @@ nsXBLContentSink::OnOpenContainer(const nsIParserNode& aNode, PRInt32 aNameSpace
       ret = PR_FALSE;
     }
     else if (aTagName == nsXBLAtoms::resources) {
-     // mState = eXBL_InResources;
-     // ret = PR_FALSE; // The XML content sink should ignore all <resources>.
+      mState = eXBL_InResources;
+      ret = PR_FALSE; // The XML content sink should ignore all <resources>.
+    }
+    else if (mState == eXBL_InResources && (aTagName == nsXBLAtoms::stylesheet || aTagName == nsXBLAtoms::image)) {
+      ConstructResource(aNode, aTagName);
+      ret = PR_FALSE; // The XML content sink should ignore all <resources>.
     }
     else if (aTagName == nsXBLAtoms::implementation) {
      // mState = eXBL_InImplementation;
@@ -179,14 +183,17 @@ nsXBLContentSink::CloseContainer(const nsIParserNode& aNode)
           mSecondaryState = eXBL_None;
         return NS_OK;
       }
+      else if (mState == eXBL_InResources) {
+        if (tagAtom == nsXBLAtoms::resources)
+          mState = eXBL_InBinding;
+        return NS_OK;
+      }
 
       nsresult rv = nsXMLContentSink::CloseContainer(aNode);
       if (NS_FAILED(rv))
         return rv;
 
       if (mState == eXBL_InImplementation && tagAtom == nsXBLAtoms::implementation)
-        mState = eXBL_InBinding;
-      else if (mState == eXBL_InResources && tagAtom == nsXBLAtoms::resources)
         mState = eXBL_InBinding;
       else if (mState == eXBL_InBinding && tagAtom == nsXBLAtoms::binding) {
         mState = eXBL_InDocument;
@@ -428,7 +435,6 @@ nsXBLContentSink::ConstructHandler(const nsIParserNode& aNode)
       continue;
 
     // Is this attribute one of the ones we care about?
-    nsAReadableString* ref = nsnull;
     if (key.Equals(NS_LITERAL_STRING("event")))
       event = &(aNode.GetValueAt(i));
     else if (key.Equals(NS_LITERAL_STRING("modifiers")))
@@ -470,5 +476,31 @@ nsXBLContentSink::ConstructHandler(const nsIParserNode& aNode)
       mBinding->SetPrototypeHandlers(newHandler); // We're the first handler in the chain.
 
     mHandler = newHandler; // Adjust our mHandler pointer to point to the new last handler in the chain.
+  }
+}
+
+void
+nsXBLContentSink::ConstructResource(const nsIParserNode& aNode, nsIAtom* aResourceType)
+{
+  if (!mBinding)
+    return;
+
+  nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
+  PRInt32 ac = aNode.GetAttributeCount();
+  for (PRInt32 i = 0; i < ac; i++) {
+    // Get upper-cased key
+    const nsAReadableString& key = aNode.GetKeyAt(i);
+
+    SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
+                 getter_AddRefs(nameAtom));
+
+    if (nameSpacePrefix || nameAtom == nsLayoutAtoms::xmlnsNameSpace)
+      continue;
+
+    // Is this attribute one of the ones we care about?
+    if (key.Equals(NS_LITERAL_STRING("src"))) {
+      mBinding->AddResource(aResourceType, aNode.GetValueAt(i));
+      break;
+    }
   }
 }
