@@ -24,12 +24,13 @@ static void report_leak(p, sz)
 ptr_t p;
 word sz;
 {
-    if (HDR(p) -> hb_obj_kind == PTRFREE) {
-        GC_err_printf0("Leaked atomic object at:\n");
-    } else {
-        GC_err_printf0("Leaked composite object at:\n");
-    }
     if (GC_debugging_started && GC_has_debug_info(p)) {
+        /* only print if object has some debugging info attached. */
+        if (HDR(p) -> hb_obj_kind == PTRFREE) {
+            GC_err_printf0("Leaked atomic object at:\n");
+        } else {
+            GC_err_printf0("Leaked composite object at:\n");
+        }
         GC_print_obj(p);
     } else {
 #ifdef MACOS
