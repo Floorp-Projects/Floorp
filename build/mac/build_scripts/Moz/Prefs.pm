@@ -1,5 +1,5 @@
 
-package MozPrefs;
+package Moz::Prefs;
 
 require 5.004;
 require Exporter;

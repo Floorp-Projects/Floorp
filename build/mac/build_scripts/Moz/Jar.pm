@@ -1,5 +1,5 @@
 #!perl -w
-package MozJar;
+package Moz::Jar;
 
 #
 # Module for creating jar files, either using a jar manifest, or
@@ -15,7 +15,7 @@ use File::Path;
 
 use Mac::Files;
 
-use Moz;
+use Moz::Moz;
 
 use vars qw( @ISA @EXPORT );
 
