@@ -963,15 +963,22 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
   // to unload...
   nsEventStatus status = nsEventStatus_eIgnore;
   nsBeforePageUnloadEvent event(NS_BEFORE_PAGE_UNLOAD);
+  nsresult rv = NS_OK;
 
-  // In evil cases we might be destroyed while handling the
-  // onbeforeunload event, don't let that happen.
-  nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
+  {
+    // Never permit popups from the beforeunload handler, no matter
+    // how we get here.
+    nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
 
-  mInPermitUnload = PR_TRUE;
-  nsresult rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
-                                       NS_EVENT_FLAG_INIT, &status);
-  mInPermitUnload = PR_FALSE;
+    // In evil cases we might be destroyed while handling the
+    // onbeforeunload event, don't let that happen.
+    nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
+
+    mInPermitUnload = PR_TRUE;
+    rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
+                                NS_EVENT_FLAG_INIT, &status);
+    mInPermitUnload = PR_FALSE;
+  }
 
   if (NS_SUCCEEDED(rv) && event.flags & NS_EVENT_FLAG_NO_DEFAULT) {
     // Ask the user if it's ok to unload the current page
@@ -1060,6 +1067,10 @@ DocumentViewerImpl::Unload()
   // Now, fire an Unload event to the document...
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event(NS_PAGE_UNLOAD);
+
+  // Never permit popups from the unload handler, no matter how we get
+  // here.
+  nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
 
   return global->HandleDOMEvent(mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &status);
