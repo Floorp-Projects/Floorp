@@ -47,10 +47,6 @@
 #include "nsSocketTransportService.h"
 #include "nsSocketProviderService.h"
 #include "nscore.h"
-#include "nsStdURLParser.h"
-#include "nsAuthURLParser.h"
-#include "nsNoAuthURLParser.h"
-#include "nsStdURL.h"
 #include "nsSimpleURI.h"
 #include "nsDnsService.h"
 #include "nsLoadGroup.h"
@@ -58,7 +54,6 @@
 #include "nsStreamLoader.h"
 #include "nsDownloader.h"
 #include "nsAsyncStreamListener.h"
-//#include "nsSyncStreamListener.h"
 #include "nsFileStreams.h"
 #include "nsBufferedStreams.h"
 #include "nsProtocolProxyService.h"
@@ -130,6 +125,16 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsURIChecker)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "nsURLParsers.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoAuthURLParser)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAuthURLParser)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStdURLParser)
+
+#include "nsStandardURL.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStandardURL)
+
+///////////////////////////////////////////////////////////////////////////////
+
 static NS_METHOD
 RegisterBuiltInURLParsers(nsIComponentManager *aCompMgr, 
                           nsIFile *aPath,
@@ -146,21 +151,28 @@ RegisterBuiltInURLParsers(nsIComponentManager *aCompMgr,
 
     catman->AddCategoryEntry(NS_IURLPARSER_KEY, 
                              "file", 
-                             NS_NOAUTHORITYURLPARSER_CONTRACT_ID,
+                             NS_NOAUTHURLPARSER_CONTRACTID,
                              PR_TRUE, 
                              PR_TRUE, 
                              getter_Copies(previous));
 
     catman->AddCategoryEntry(NS_IURLPARSER_KEY, 
                              "ftp", 
-                             NS_AUTHORITYURLPARSER_CONTRACT_ID,
+                             NS_AUTHURLPARSER_CONTRACTID,
                              PR_TRUE, 
                              PR_TRUE, 
                              getter_Copies(previous));
 
     catman->AddCategoryEntry(NS_IURLPARSER_KEY, 
                              "http", 
-                             NS_AUTHORITYURLPARSER_CONTRACT_ID,
+                             NS_AUTHURLPARSER_CONTRACTID,
+                             PR_TRUE, 
+                             PR_TRUE, 
+                             getter_Copies(previous));
+
+    catman->AddCategoryEntry(NS_IURLPARSER_KEY, 
+                             "https", 
+                             NS_AUTHURLPARSER_CONTRACTID,
                              PR_TRUE, 
                              PR_TRUE, 
                              getter_Copies(previous));
@@ -181,6 +193,7 @@ UnregisterBuiltInURLParsers(nsIComponentManager *aCompMgr,
     catman->DeleteCategoryEntry(NS_IURLPARSER_KEY, "file", PR_TRUE);
     catman->DeleteCategoryEntry(NS_IURLPARSER_KEY, "ftp", PR_TRUE);
     catman->DeleteCategoryEntry(NS_IURLPARSER_KEY, "http", PR_TRUE);
+    catman->DeleteCategoryEntry(NS_IURLPARSER_KEY, "https", PR_TRUE);
 
     return NS_OK;
 }
@@ -564,7 +577,7 @@ CreateNewNSTXTToHTMLConvFactory(nsISupports *aOuter, REFNSIID aIID, void **aResu
 static void PR_CALLBACK nsNeckoShutdown(nsIModule *neckoModule)
 {
     // Release the url parser that the stdurl is holding.
-    nsStdURL::ShutdownGlobalObjects();
+    nsStandardURL::ShutdownGlobalObjects();
 }
 
 static nsModuleComponentInfo gNetModuleInfo[] = {
@@ -588,10 +601,6 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_DNSSERVICE_CID,
       "@mozilla.org/network/dns-service;1",
       nsDNSService::Create },
-    { NS_STANDARDURL_CLASSNAME,
-      NS_STANDARDURL_CID,
-      NS_STANDARDURL_CONTRACTID,
-      nsStdURL::Create },
     { NS_SIMPLEURI_CLASSNAME,
       NS_SIMPLEURI_CID,
       NS_SIMPLEURI_CONTRACTID,
@@ -673,21 +682,25 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
 
     // The register functions for the build in 
     // parsers just need to be called once.
-    { "StdURLParser", 
-      NS_STANDARDURLPARSER_CID,
-      NS_STANDARDURLPARSER_CONTRACT_ID,
-      nsStdURLParser::Create,
+    { NS_STDURLPARSER_CLASSNAME,
+      NS_STDURLPARSER_CID,
+      NS_STDURLPARSER_CONTRACTID,
+      nsStdURLParserConstructor,
       RegisterBuiltInURLParsers,  
-      UnregisterBuiltInURLParsers 
-    },
-    { "AuthURLParser", 
-      NS_AUTHORITYURLPARSER_CID,
-      NS_AUTHORITYURLPARSER_CONTRACT_ID,
-      nsAuthURLParser::Create },
-    { "NoAuthURLParser", 
-      NS_NOAUTHORITYURLPARSER_CID,
-      NS_NOAUTHORITYURLPARSER_CONTRACT_ID,
-      nsNoAuthURLParser::Create },
+      UnregisterBuiltInURLParsers}, 
+    { NS_NOAUTHURLPARSER_CLASSNAME,
+      NS_NOAUTHURLPARSER_CID,
+      NS_NOAUTHURLPARSER_CONTRACTID,
+      nsNoAuthURLParserConstructor },
+    { NS_AUTHURLPARSER_CLASSNAME,
+      NS_AUTHURLPARSER_CID,
+      NS_AUTHURLPARSER_CONTRACTID,
+      nsAuthURLParserConstructor },
+
+    { NS_STANDARDURL_CLASSNAME,
+      NS_STANDARDURL_CID,
+      NS_STANDARDURL_CONTRACTID,
+      nsStandardURLConstructor },
 
     { NS_BUFFEREDINPUTSTREAM_CLASSNAME, 
       NS_BUFFEREDINPUTSTREAM_CID,

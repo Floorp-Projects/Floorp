@@ -15,116 +15,100 @@
  * The Initial Developer of the Original Code is Andreas Otte
  *
  * Contributor(s): 
+ *   Darin Fisher <darin@netscape.com>
  */
 
 #include "nsISupports.idl"
 
 /**
- * nsIURLParser is the abstract base class for parsing URLs
+ * nsIURLParser specifies the interface to an URL parser that attempts to
+ * follow the definitions of RFC 2396.
  */
-
-[scriptable, uuid(4b4975f9-f128-47fd-b11e-88402233cbdf)]
+[scriptable, uuid(7281076d-cf37-464a-815e-698235802604)]
 interface nsIURLParser : nsISupports
 {
+    /**
+     * The string to parse in the following methods may be given as a null
+     * terminated string, in which case the length argument should be -1.
+     *
+     * Out parameters of the following methods are all optional (ie. the caller
+     * may pass-in a NULL value if the corresponding results are not needed).
+     * Signed out parameters may hold a value of -1 if the corresponding result
+     * is not part of the string being parsed.
+     *
+     * The parsing routines attempt to be as forgiving as possible.
+     */
 
     /**
-     * Parses a URL and thinks it is parsing the scheme
+     * ParseSpec breaks the URL string up into its 3 major components: a scheme,
+     * an authority section (hostname, etc.), and a path.
+     *
+     * spec = <scheme>://<authority><path>
      */
-    void ParseAtScheme(in  string i_Spec, 
-                       out string o_Scheme, 
-                       out string o_Username,
-                       out string o_Password,
-                       out string o_Host, 
-                       out long o_Port, 
-                       out string o_Path);
+    void parseURL        (in string spec,                  in long specLen,
+                          out unsigned long schemePos,    out long schemeLen,
+                          out unsigned long authorityPos, out long authorityLen,
+                          out unsigned long pathPos,      out long pathLen);
 
     /**
-     * Parses a URL and thinks it is parsing the prehost
+     * ParseAuthority breaks the authority string up into its 4 components:
+     * username, password, hostname, and hostport.
+     *
+     * auth = <username>:<password>@<hostname>:<port>
      */
-    void ParseAtPreHost(in  string i_Spec, 
-                        out string o_Username,
-                        out string o_Password,
-                        out string o_Host,
-                        out long o_Port, 
-                        out string o_Path);
+    void parseAuthority  (in string authority,             in long authorityLen,
+                          out unsigned long usernamePos,  out long usernameLen,
+                          out unsigned long passwordPos,  out long passwordLen,
+                          out unsigned long hostnamePos,  out long hostnameLen,
+                          out long port);
 
     /**
-     * Parses a URL and thinks it is parsing the host
+     * userinfo = <username>:<password>
      */
-    void ParseAtHost(in  string i_Spec, 
-                     out string o_Host,
-                     out long o_Port, 
-                     out string o_Path);
+    void parseUserInfo   (in string userinfo,              in long userinfoLen,
+                          out unsigned long usernamePos,  out long usernameLen,
+                          out unsigned long passwordPos,  out long passwordLen);
 
     /**
-     * Parses a URL and thinks it is parsing the port
+     * serverinfo = <hostname>:<port>
      */
-    void ParseAtPort(in  string i_Spec, 
-                     out long o_Port, 
-                     out string o_Path);
+    void parseServerInfo (in string serverinfo,            in long serverinfoLen,
+                          out unsigned long hostnamePos,  out long hostnameLen,
+                          out long port);
 
     /**
-     * Parses a URL and thinks it is parsing the path
+     * ParsePath breaks the path string up into its 4 major components: a file path,
+     * a param string, a query string, and a reference string.
+     *
+     * path = <filepath>;<param>?<query>#<ref>
      */
-    void ParseAtPath(in  string i_Spec, 
-                     out string o_Path);
+    void parsePath       (in string path,                  in long pathLen,
+                          out unsigned long filepathPos,  out long filepathLen,
+                          out unsigned long paramPos,     out long paramLen,
+                          out unsigned long queryPos,     out long queryLen,
+                          out unsigned long refPos,       out long refLen);
 
     /**
-     * Parses a URL-path and thinks it is parsing the directory
+     * ParseFilePath breaks the file path string up into: the directory portion,
+     * file base name, and file extension.
+     *
+     * filepath = <directory><basename>.<extension>
      */
-    void ParseAtDirectory(in  string i_Path, 
-                          out string o_Directory, 
-                          out string o_FileBaseName,
-                          out string o_FileExtension,
-                          out string o_Param, 
-                          out string o_Query, 
-                          out string o_Ref);
+    void parseFilePath   (in string filepath,              in long filepathLen,
+                          out unsigned long directoryPos, out long directoryLen,
+                          out unsigned long basenamePos,  out long basenameLen,
+                          out unsigned long extensionPos, out long extensionLen);
 
     /**
-     * Parses the URL-PreHost into its components
+     * filename = <basename>.<extension>
      */
-    void ParsePreHost(in  string i_PreHost, 
-                      out string o_Username, 
-                      out string o_Password);
-
-    /**
-     * Parses the URL-Filename into its components
-     */
-    void ParseFileName(in  string i_FileName, 
-                       out string o_FileBaseName, 
-                       out string o_FileExtension);
-
+    void parseFileName   (in string filename,              in long filenameLen,
+                          out unsigned long basenamePos,  out long basenameLen,
+                          out unsigned long extensionPos, out long extensionLen);
 };
 
 %{C++
-
-#define NS_STANDARDURLPARSER_CONTRACT_ID "@mozilla.org/network/standard-urlparser;1"
-#define NS_STANDARDURLPARSER_CID                     \
-{ /* dbf72351-4fd8-46f0-9dbc-fa5ba60a30c5 */         \
-    0xdbf72351,                                      \
-    0x4fd8,                                          \
-    0x46f0,                                          \
-    {0x9d, 0xbc, 0xfa, 0x5b, 0xa6, 0x0a, 0x30, 0x5c} \
-}
-
-#define NS_AUTHORITYURLPARSER_CONTRACT_ID "@mozilla.org/network/authority-urlparser;1"
-#define NS_AUTHORITYURLPARSER_CID                    \
-{ /* 90012125-1616-4fa1-ae14-4e7fa5766eb6 */         \
-    0x90012125,                                      \
-    0x1616,                                          \
-    0x4fa1,                                          \
-    {0xae, 0x14, 0x4e, 0x7f, 0xa5, 0x76, 0x6e, 0xb6} \
-}
-
-#define NS_NOAUTHORITYURLPARSER_CONTRACT_ID "@mozilla.org/network/noauthority-urlparser;1"
-#define NS_NOAUTHORITYURLPARSER_CID                  \
-{ /* 9eeb1b89-c87e-4404-9de6-dbd41aeaf3d7 */         \
-    0x9eeb1b89,                                      \
-    0xc87e,                                          \
-    0x4404,                                          \
-    {0x9d, 0xe6, 0xdb, 0xd4, 0x1a, 0xea, 0xf3, 0xd7} \
-}
-
-#define NS_IURLPARSER_KEY  "@mozilla.org/urlparser;1"
-
+// url parser key for use with the category manager
+// mapping from scheme to url parser.
+#define NS_IURLPARSER_KEY "@mozilla.org/urlparser;1"
 %}

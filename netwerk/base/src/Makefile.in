@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		nsAsyncStreamListener.cpp \
-		nsAuthURLParser.cpp \
 		nsBufferedStreams.cpp \
 		nsDirectoryIndexStream.cpp \
 		nsDownloader.cpp \
@@ -52,17 +51,15 @@ CPPSRCS		= \
 		nsLoadGroup.cpp \
 		nsNetModRegEntry.cpp \
 		nsNetModuleMgr.cpp \
-		nsNoAuthURLParser.cpp \
 		nsProtocolProxyService.cpp \
 		nsProxyAutoConfigUtils.cpp \
 		nsRequestObserverProxy.cpp \
 		nsSimpleStreamListener.cpp \
 		nsSimpleStreamProvider.cpp \
 		nsSimpleURI.cpp \
+		nsStandardURL.cpp \
 		nsSocketTransport.cpp \
 		nsSocketTransportService.cpp \
-		nsStdURL.cpp \
-		nsStdURLParser.cpp \
 		nsStorageTransport.cpp \
 		nsStreamListenerProxy.cpp \
 		nsStreamListenerTee.cpp \
@@ -70,6 +67,7 @@ CPPSRCS		= \
 		nsStreamProviderProxy.cpp \
 		nsURIChecker.cpp \
 		nsURLHelper.cpp \
+		nsURLParsers.cpp \
 		$(NULL)
 
 JSFILES		= \
@@ -89,4 +87,3 @@ endif
 
 install::
 	$(INSTALL) $(JSFILES) $(DIST)/bin/components
-

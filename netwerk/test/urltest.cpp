@@ -62,7 +62,12 @@ static NS_DEFINE_CID(kStdURLCID,                 NS_STANDARDURL_CID);
 
 char* gFileIO = 0;
 
-nsresult writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRUE)
+enum {
+    URL_FACTORY_DEFAULT,
+    URL_FACTORY_STDURL
+};
+
+nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
 {
     if (!o_Result || !i_pURL)
         return NS_ERROR_FAILURE;
@@ -70,31 +75,32 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRU
     nsCOMPtr<nsIURI> pURL;
     nsresult result = NS_OK;
 
-    if (bUseStd) 
-    {
-        nsIURI* url;
-        result = nsComponentManager::CreateInstance(kStdURLCID, nsnull, 
-                NS_GET_IID(nsIURI), (void**)&url);
-        if (NS_FAILED(result))
-        {
-            cout << "CreateInstance failed" << endl;
-            return NS_ERROR_FAILURE;
+    switch (urlFactory) {
+        case URL_FACTORY_STDURL: {
+            nsIURI* url;
+            result = nsComponentManager::CreateInstance(kStdURLCID, nsnull, 
+                    NS_GET_IID(nsIURI), (void**)&url);
+            if (NS_FAILED(result))
+            {
+                cout << "CreateInstance failed" << endl;
+                return NS_ERROR_FAILURE;
+            }
+            pURL = url;
+            pURL->SetSpec((char*)i_pURL);
+            break;
         }
-        pURL = url;
-        pURL->SetSpec((char*)i_pURL);
+        case URL_FACTORY_DEFAULT: {
+            nsCOMPtr<nsIIOService> pService = 
+                     do_GetService(kIOServiceCID, &result);
+            if (NS_FAILED(result)) 
+            {
+                cout << "Service failed!" << endl;
+                return NS_ERROR_FAILURE;
+            }   
+            result = pService->NewURI(i_pURL, nsnull, getter_AddRefs(pURL));
+        }
     }
-    else 
-    {
-        nsCOMPtr<nsIIOService> pService = 
-                 do_GetService(kIOServiceCID, &result);
-        if (NS_FAILED(result)) 
-        {
-            cout << "Service failed!" << endl;
-            return NS_ERROR_FAILURE;
-        }   
 
-        result = pService->NewURI(i_pURL, nsnull, getter_AddRefs(pURL));
-    }
     nsCString output;
     if (NS_SUCCEEDED(result))
     {
@@ -145,11 +151,11 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRBool bUseStd = PR_TRU
     return NS_OK;
 }
 
-nsresult writeout(const char* i_pURL, PRBool bUseStd =PR_TRUE)
+nsresult writeout(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
 {
     char* temp = 0;
     if (!i_pURL) return NS_ERROR_FAILURE;
-    int rv = writeoutto(i_pURL, &temp, bUseStd);
+    int rv = writeoutto(i_pURL, &temp, urlFactory);
     cout << i_pURL << endl << temp << endl;
     delete[] temp;
     return rv;
@@ -157,11 +163,11 @@ nsresult writeout(const char* i_pURL, PRBool bUseStd =PR_TRUE)
 
 /* construct a url and print out its elements separated by commas and
    the whole spec */
-nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
+nsresult testURL(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
 {
 
     if (i_pURL)
-        return writeout(i_pURL, bUseStd);
+        return writeout(i_pURL, urlFactory);
 
     if (!gFileIO)
         return NS_ERROR_FAILURE;
@@ -188,7 +194,7 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
         {
             if (prevResult) delete[] prevResult;
             cout << "Testing:  " << temp << endl;
-            writeoutto(temp, &prevResult, bUseStd);
+            writeoutto(temp, &prevResult, urlFactory);
         }
         else if (1 == count%3) {
             if (tempurl) delete[] tempurl;
@@ -200,7 +206,7 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
             {
                 PRInt32 res;
                 cout << "Result:   " << prevResult << endl;
-                if (bUseStd) {
+                if (urlFactory != URL_FACTORY_DEFAULT) {
                     cout << "Expected: " << tempurl << endl;
                     res = PL_strcmp(tempurl, prevResult);
                 } else {
@@ -422,14 +428,14 @@ int main(int argc, char **argv)
     // end of all messages from register components...
     cout << "------------------" << endl << endl; 
 
-    PRBool bStdTest= PR_FALSE;
+    PRInt32 urlFactory = URL_FACTORY_DEFAULT;
     PRBool bMakeAbs= PR_FALSE;
     char* relativePath = 0;
     char* url = 0;
     for (int i=1; i<argc; i++) {
         if (PL_strcasecmp(argv[i], "-std") == 0) 
         {
-            bStdTest = PR_TRUE;
+            urlFactory = URL_FACTORY_STDURL;
             if (i+1 >= argc)
             {
                 printusage();
@@ -468,7 +474,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        rv = gFileIO ? testURL(0, bStdTest) : testURL(url, bStdTest);
+        rv = gFileIO ? testURL(0, urlFactory) : testURL(url, urlFactory);
     }
     if (gFileIO)
     {

@@ -80,10 +80,9 @@
      {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-// DO NOT USE THIS INTERFACE DIRECTLY UNLESS YOU KNOW
-// WHAT YOU ARE DOING! - dougt@netscape.com
+// class implementing nsIFileURL, nsIStandardURL, and nsISerializable.
 #define NS_STANDARDURL_CLASSNAME \
-    "Standard URL"
+    "nsStandardURL"
 #define NS_STANDARDURL_CONTRACTID \
     "@mozilla.org/network/standard-url;1"
 #define NS_STANDARDURL_CID                           \
@@ -92,6 +91,48 @@
     0x8034,                                          \
     0x11d3,                                          \
     {0x93, 0x99, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+}
+
+// service implementing nsIURLParser2 that assumes the URL will NOT contain an
+// authority section.
+#define NS_NOAUTHURLPARSER_CLASSNAME \
+    "nsNoAuthURLParser"
+#define NS_NOAUTHURLPARSER_CONTRACTID \
+    "@mozilla.org/network/url-parser;1?auth=no"
+#define NS_NOAUTHURLPARSER_CID                       \
+{ /* 78804a84-8173-42b6-bb94-789f0816a810 */         \
+    0x78804a84,                                      \
+    0x8173,                                          \
+    0x42b6,                                          \
+    {0xbb, 0x94, 0x78, 0x9f, 0x08, 0x16, 0xa8, 0x10} \
+}
+
+// service implementing nsIURLParser2 that assumes the URL will contain an
+// authority section.
+#define NS_AUTHURLPARSER_CLASSNAME \
+    "nsAuthURLParser"
+#define NS_AUTHURLPARSER_CONTRACTID \
+    "@mozilla.org/network/url-parser;1?auth=yes"
+#define NS_AUTHURLPARSER_CID                         \
+{ /* 275d800e-3f60-4896-adb7-d7f390ce0e42 */         \
+    0x275d800e,                                      \
+    0x3f60,                                          \
+    0x4896,                                          \
+    {0xad, 0xb7, 0xd7, 0xf3, 0x90, 0xce, 0x0e, 0x42} \
+}
+
+// service implementing nsIURLParser2 that does not make any assumptions about
+// whether or not the URL contains an authority section.
+#define NS_STDURLPARSER_CLASSNAME \
+    "nsStdURLParser"
+#define NS_STDURLPARSER_CONTRACTID \
+    "@mozilla.org/network/url-parser;1?auth=maybe"
+#define NS_STDURLPARSER_CID                          \
+{ /* ff41913b-546a-4bff-9201-dc9b2c032eba */         \
+    0xff41913b,                                      \
+    0x546a,                                          \
+    0x4bff,                                          \
+    {0x92, 0x01, 0xdc, 0x9b, 0x2c, 0x03, 0x2e, 0xba} \
 }
 
 #define NS_REQUESTOBSERVERPROXY_CLASSNAME \

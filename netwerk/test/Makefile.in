@@ -54,6 +54,8 @@ CPPSRCS		= \
 		TestMCTransport.cpp \
 		TestPageLoad.cpp \
 		TestIDN.cpp \
+        TestURLParser.cpp \
+        TestStandardURL.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))

@@ -160,9 +160,23 @@ NS_COM PRInt32 nsUnescapeCount(char * str)
 {
     register char *src = str;
     register char *dst = str;
+    static const char hexChars[] = "0123456789ABCDEFabcdef";
+
+    char c1[] = " ";
+    char c2[] = " ";
+    char* const pc1 = c1;
+    char* const pc2 = c2;
 
     while (*src)
-        if (*src != HEX_ESCAPE)
+    {
+        c1[0] = *(src+1);
+        if (*(src+1) == '\0') 
+            c2[0] = '\0';
+        else
+            c2[0] = *(src+2);
+
+        if (*src != HEX_ESCAPE || PL_strpbrk(pc1, hexChars) == 0 || 
+                                  PL_strpbrk(pc2, hexChars) == 0 )
         	*dst++ = *src++;
         else 	
 		{
@@ -179,6 +193,7 @@ NS_COM PRInt32 nsUnescapeCount(char * str)
             }
         	dst++;
         }
+    }
 
     *dst = 0;
     return (int)(dst - str);
@@ -335,13 +350,35 @@ const int EscapeChars[256] =
 NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result)
 {
     result.Truncate(0);
+    nsresult rv = NS_EscapeURL(str, -1, mask, result);
+    if (NS_SUCCEEDED(rv) && result.IsEmpty())
+        result = str;
+    return rv;
+}
+
+NS_COM nsresult nsStdUnescape(char *str, char **result)
+{
+    *result = nsCRT::strdup(str);
+    if (!*result)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_UnescapeURL(*result);
+    return NS_OK;
+}
+
+NS_COM nsresult NS_EscapeURL(const char *str,
+                             PRInt32 len,
+                             PRInt16 mask,
+                             nsACString &result)
+{
     if (!str)
         return NS_OK;
 
     int i = 0;
     static const char hexChars[] = "0123456789ABCDEF";
-    int len = PL_strlen(str);
+    if (len < 0)
+        len = strlen(str);
     PRBool forced = PR_FALSE;
+    PRBool writing = PR_FALSE;
 
     if (mask & esc_Forced)
         forced = PR_TRUE;
@@ -357,85 +394,40 @@ NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result)
 
       /* if the char has not to be escaped or whatever follows % is 
          a valid escaped string, just copy the char */
- 
+
       /* Also the % will not be escaped until forced */
       /* See bugzilla bug 61269 for details why we changed this */
 
-      if (NO_NEED_ESC(c) || (c == HEX_ESCAPE && !(forced))) {
-		  tempBuffer[tempBufferPos++]=c;
-      }
-      else 
-          /* do the escape magic */
+      if (NO_NEED_ESC(c) || (c == HEX_ESCAPE && !(forced)))
       {
-          tempBuffer[tempBufferPos++] = HEX_ESCAPE;
-          tempBuffer[tempBufferPos++] = hexChars[c >> 4];	/* high nibble */
-          tempBuffer[tempBufferPos++] = hexChars[c & 0x0f]; /* low nibble */
+        if (writing)
+          tempBuffer[tempBufferPos++] = c;
+      }
+      else /* do the escape magic */
+      {
+        if (!writing)
+        {
+          result.Truncate(0);
+          result.Append(str, i);
+          writing = PR_TRUE;
+        }
+        tempBuffer[tempBufferPos++] = HEX_ESCAPE;
+        tempBuffer[tempBufferPos++] = hexChars[c >> 4];	/* high nibble */
+        tempBuffer[tempBufferPos++] = hexChars[c & 0x0f]; /* low nibble */
       }
  	  
-      if(tempBufferPos >= sizeof(tempBuffer) - 4)
+      if (tempBufferPos >= sizeof(tempBuffer) - 4)
  	  {
-          tempBuffer[tempBufferPos] = '\0';
-          result += tempBuffer;
-          tempBufferPos = 0;
+        NS_ASSERTION(writing, "should be writing");
+        tempBuffer[tempBufferPos] = '\0';
+        result += tempBuffer;
+        tempBufferPos = 0;
  	  }
 	}
- 	
-    tempBuffer[tempBufferPos] = '\0';
-    result += tempBuffer;
-    return NS_OK;
-}
-
-
-NS_COM nsresult nsStdUnescape(char* str, char **result)
-{
-    if (!str) {
-        *result = nsnull;
-        return NS_OK;
+    if (writing) {
+      tempBuffer[tempBufferPos] = '\0';
+      result += tempBuffer;
     }
-    register char *src = str;
-    static const char hexChars[] = "0123456789ABCDEFabcdef";
-    int len = PL_strlen(str);
-
-    *result = (char *)nsMemory::Alloc(len + 1);
-    if (!*result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    register unsigned char* dst = (unsigned char *) *result;
-
-    char c1[] = " ";
-    char c2[] = " ";
-    char* const pc1 = c1;
-    char* const pc2 = c2;
-
-    while (*src) {
-
-        c1[0] = *(src+1);
-        if (*(src+1) == '\0') 
-            c2[0] = '\0';
-        else
-            c2[0] = *(src+2);
-
-        /* check for valid escaped sequence */
-        if (*src != HEX_ESCAPE || PL_strpbrk(pc1, hexChars) == 0 || 
-                                  PL_strpbrk(pc2, hexChars) == 0 )
-            *dst++ = *src++;
-        else 	
-		{
-            src++; /* walk over escape */
-            if (*src)
-            {
-                *dst = UNHEX(*src) << 4;
-                src++;
-            }
-            if (*src)
-            {
-                *dst = (*dst + UNHEX(*src));
-                src++;
-            }
-            dst++;
-        }
-    }
-    *dst = '\0';
     return NS_OK;
 }
 

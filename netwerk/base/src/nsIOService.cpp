@@ -62,6 +62,7 @@
 #include "nsIProxyInfo.h"
 #include "nsITimelineService.h"
 #include "nsEscape.h"
+#include "nsNetCID.h"
 
 #define PORT_PREF_PREFIX     "network.security.ports."
 #define PORT_PREF(x)         PORT_PREF_PREFIX x
@@ -72,7 +73,7 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
 static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
-static NS_DEFINE_CID(kStdURLParserCID, NS_STANDARDURLPARSER_CID);
+static NS_DEFINE_CID(kStdURLParserCID, NS_STDURLPARSER_CID);
 
 // A general port blacklist.  Connections to these ports will not be avoided unless 
 // the protocol overrides.
@@ -510,15 +511,26 @@ nsIOService::GetParserForScheme(const char *scheme, nsIURLParser **_retval)
     return NS_OK;
 }
 
-static void CalculateStartEndPos(const char*string, const char* substring, PRUint32 *startPos, PRUint32 *endPos)
+static void
+ExtractUrlPart_Helper(const char *src, PRUint32 pos, PRInt32 len,
+                      PRUint32 *startPos, PRUint32 *endPos, char **urlPart)
 {
-    // we will only get the first appearance of a substring...
-    char* inst = PL_strstr(string, substring);    
-
-    if (startPos)
-        *startPos = (PRUint32)(inst - string);
-    if (endPos)
-        *endPos   = NS_PTR_TO_INT32(inst) + PL_strlen(substring);
+    if (len < 0) {
+        if (startPos)
+            *startPos = 0;
+        if (endPos)
+            *endPos = 0;
+        if (urlPart)
+            *urlPart = nsnull;
+    }
+    else {
+        if (startPos)
+            *startPos = pos;
+        if (endPos)
+            *endPos = pos + len;
+        if (urlPart)
+            *urlPart = PL_strndup(src + pos, len);
+    }
 }
 
 // Crap.  How do I ensure that startPos and endPos are correct.
@@ -531,10 +543,8 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     ExtractScheme(urlString, startPos, endPos, getter_Copies(scheme));
 
     if (flag == url_Scheme) {
-        CalculateStartEndPos(urlString, scheme, startPos, endPos);
-
         if (urlPart)
-            *urlPart = nsCRT::strdup(scheme.get());
+            *urlPart = nsCRT::strdup(scheme);
         return NS_OK;
     }
 
@@ -542,129 +552,128 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     rv = GetParserForScheme(scheme, getter_AddRefs(parser));
     if (NS_FAILED(rv)) return rv;
     
-    PRInt32 port = -1;
-    nsXPIDLCString dummyScheme, username, password, host, path;
-    char* portstr = nsnull;
+    PRUint32 authPos, pathPos;
+    PRInt32 authLen, pathLen;
 
-    rv = parser->ParseAtScheme(urlString, 
-                               getter_Copies(dummyScheme), 
-                               getter_Copies(username),
-                               getter_Copies(password),
-                               getter_Copies(host), 
-                               &port, 
-                               getter_Copies(path));
-    
+    rv = parser->ParseURL(urlString, -1,
+                          nsnull, nsnull,
+                          &authPos, &authLen,
+                          &pathPos, &pathLen);
     if (NS_FAILED(rv)) return rv;
-    
-    if (flag == url_Username) {
-        CalculateStartEndPos(urlString, username, startPos, endPos);
-        if (urlPart)
-            *urlPart = nsCRT::strdup(username.get());
-        return NS_OK;
-    }
-
-    if (flag == url_Password) {
-        CalculateStartEndPos(urlString, password, startPos, endPos);
-        if (urlPart)
-            *urlPart = nsCRT::strdup(password.get());
-        return NS_OK;
-    }
-
-    if (flag == url_Host) {
-        CalculateStartEndPos(urlString, host, startPos, endPos);
-        if (urlPart)
-            *urlPart = nsCRT::strdup(host.get());
-        return NS_OK;
-    }
-
-    if (flag == url_Port) {
-        if (port != -1) {
-            portstr = PR_smprintf("%d", port);
-            CalculateStartEndPos(urlString, portstr, startPos, endPos);
-        } else {
-            startPos = 0;
-            endPos = 0;
-        }
-        if (urlPart)
-            *urlPart = nsCRT::strdup(portstr);
-        PR_smprintf_free(portstr);
-        return NS_OK;
-    }
-
-    if (flag == (url_Host | url_Port)) {
-        nsCAutoString hostport(host);
-        if (port != -1) {
-            portstr = PR_smprintf(":%d", port);
-            hostport += portstr;
-        }
-        if (urlPart)
-            *urlPart = ToNewCString(hostport);
-        CalculateStartEndPos(urlString, *urlPart, startPos, endPos);
-        PR_smprintf_free(portstr);
-        return NS_OK;
-    }
 
     if (flag == url_Path) {
-        CalculateStartEndPos(urlString, path, startPos, endPos);
-        if (urlPart)
-            *urlPart = nsCRT::strdup(path.get());
-        return NS_OK;
+        ExtractUrlPart_Helper(urlString, pathPos, pathLen, startPos, endPos, urlPart);
     }
+    else if (flag < url_Directory || flag & url_Port) {
+        PRUint32 usernamePos, passwordPos, hostnamePos;
+        PRInt32 usernameLen, passwordLen, hostnameLen;
+        PRInt32 port;
 
-    nsXPIDLCString directory, fileBaseName, fileExtension, param, query, ref;
+        rv = parser->ParseAuthority(urlString + authPos, authLen,
+                                    &usernamePos, &usernameLen,
+                                    &passwordPos, &passwordLen,
+                                    &hostnamePos, &hostnameLen,
+                                    &port);
+        if (NS_FAILED(rv)) return rv;
 
-    rv = parser->ParseAtDirectory(path, 
-                                  getter_Copies(directory), 
-                                  getter_Copies(fileBaseName),
-                                  getter_Copies(fileExtension),
-                                  getter_Copies(param), 
-                                  getter_Copies(query), 
-                                  getter_Copies(ref));
+        usernamePos += authPos;
+        passwordPos += authPos;
+        hostnamePos += authPos;
 
-    if (NS_FAILED(rv)) return rv;
-    
-    if (flag == url_Directory) {
-        CalculateStartEndPos(urlString, directory, startPos, endPos);
-        if (urlPart)
-            *urlPart = nsCRT::strdup(directory.get());
-        return NS_OK;
+        switch (flag) {
+        case url_Username:
+            ExtractUrlPart_Helper(urlString, usernamePos, usernameLen, startPos, endPos, urlPart);
+            break;
+        case url_Password:
+            ExtractUrlPart_Helper(urlString, passwordPos, passwordLen, startPos, endPos, urlPart);
+            break;
+        case url_Host:
+            ExtractUrlPart_Helper(urlString, hostnamePos, hostnameLen, startPos, endPos, urlPart);
+            break;
+        case url_Port:
+            if (port != -1) {
+                PRInt32 pos = hostnamePos + hostnameLen + 1;
+                ExtractUrlPart_Helper(urlString, pos, pathPos - pos, startPos, endPos, urlPart);
+            }
+            else
+                ExtractUrlPart_Helper(nsnull, 0, -1, startPos, endPos, urlPart);
+            break;
+        case url_Host | url_Port:
+            if (port != -1 && hostnameLen > 0) {
+                nsCAutoString buf(urlString + hostnamePos, hostnameLen);
+                buf.Append(':');
+                buf.AppendInt(port);
+                ExtractUrlPart_Helper(buf.get(), 0, buf.Length(), startPos, endPos, urlPart);
+            }
+            else
+                ExtractUrlPart_Helper(urlString, hostnamePos, hostnameLen, startPos, endPos, urlPart);
+            break;
+        default:
+            NS_NOTREACHED("unexpected flag");
+            return NS_ERROR_UNEXPECTED;
+        }
     }
+    else {
+        PRUint32 filepathPos, paramPos, queryPos, refPos;
+        PRInt32 filepathLen, paramLen, queryLen, refLen;
 
-    if (flag == url_FileBaseName) {
-        CalculateStartEndPos(urlString, fileBaseName, startPos, endPos);
-        if (urlPart)
-            *urlPart = nsCRT::strdup(fileBaseName.get());
-        return NS_OK;
-    }
-    
-    if (flag == url_FileExtension) {
-        CalculateStartEndPos(urlString, fileExtension, startPos, endPos);
-        if (urlPart)
-            *urlPart = nsCRT::strdup(fileExtension.get());
-        return NS_OK;
-    }
-    
-    if (flag == url_Param) {
-        CalculateStartEndPos(urlString, param, startPos, endPos);
-        if (urlPart)
-            *urlPart = nsCRT::strdup(param.get());
-        return NS_OK;
-    }
-    
-    if (flag == url_Query) {
-        CalculateStartEndPos(urlString, query, startPos, endPos);
-        if (urlPart)
-            *urlPart = nsCRT::strdup(query.get());
-        return NS_OK;
-    }
+        rv = parser->ParsePath(urlString + pathPos, pathLen,
+                               &filepathPos, &filepathLen,
+                               &paramPos, &paramLen,
+                               &queryPos, &queryLen,
+                               &refPos, &refLen);
+        if (NS_FAILED(rv)) return rv;
 
-    if (flag == url_Ref) {
-        CalculateStartEndPos(urlString, ref, startPos, endPos);
-        if (urlPart)
-            *urlPart = nsCRT::strdup(ref.get());
-        return NS_OK;
+        filepathPos += pathPos;
+        paramPos += pathPos;
+        queryPos += pathPos;
+        refPos += pathPos;
+
+        if (flag < url_Param) {
+            PRUint32 directoryPos, basenamePos, extensionPos;
+            PRInt32 directoryLen, basenameLen, extensionLen;
+
+            rv = parser->ParseFilePath(urlString + filepathPos, filepathLen,
+                                       &directoryPos, &directoryLen,
+                                       &basenamePos, &basenameLen,
+                                       &extensionPos, &extensionLen);
+
+            directoryPos += filepathPos;
+            basenamePos += filepathPos;
+            extensionPos += filepathPos;
+
+            switch (flag) {
+            case url_Directory:
+                ExtractUrlPart_Helper(urlString, directoryPos, directoryLen, startPos, endPos, urlPart);
+                break;
+            case url_FileBaseName:
+                ExtractUrlPart_Helper(urlString, basenamePos, basenameLen, startPos, endPos, urlPart);
+                break;
+            case url_FileExtension:
+                ExtractUrlPart_Helper(urlString, extensionPos, extensionLen, startPos, endPos, urlPart);
+                break;
+            default:
+                NS_NOTREACHED("unexpected flag");
+                return NS_ERROR_UNEXPECTED;
+            }
+        }
+        else {
+            switch (flag) {
+            case url_Param:
+                ExtractUrlPart_Helper(urlString, paramPos, paramLen, startPos, endPos, urlPart);
+                break;
+            case url_Query:
+                ExtractUrlPart_Helper(urlString, queryPos, queryLen, startPos, endPos, urlPart);
+                break;
+            case url_Ref:
+                ExtractUrlPart_Helper(urlString, refPos, refLen, startPos, endPos, urlPart);
+                break;
+            default:
+                NS_NOTREACHED("unexpected flag");
+                return NS_ERROR_UNEXPECTED;
+            }
+        }
     }
-    
     return NS_OK;
 }
 

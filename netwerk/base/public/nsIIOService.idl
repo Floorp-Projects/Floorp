@@ -171,6 +171,8 @@ interface nsIIOService : nsISupports
 
     /**
      * Constants for the mask in the call to extractUrlPart
+     *
+     * XXX these should really be enumerated in left-to-right order!
      */
     const short url_Scheme        = (1<<0);
     const short url_Username      = (1<<1);

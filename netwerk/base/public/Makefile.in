@@ -73,7 +73,7 @@ XPIDLSRCS	= \
 		nsISecureBrowserUI.idl \
 		nsISecurityManagerComponent.idl \
 		nsICachingChannel.idl \
-	        nsIByteRangeRequest.idl \
+		nsIByteRangeRequest.idl \
 		$(NULL)
 
 EXPORTS		= \

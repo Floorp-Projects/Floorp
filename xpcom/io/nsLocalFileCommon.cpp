@@ -43,6 +43,7 @@
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIURLParser.h"
+#include "nsNetCID.h"
 #endif /* XPCOM_STANDALONE */
 
 #include "nsFileSpec.h"  // evil ftang hack
@@ -54,7 +55,7 @@
 #include "nsXPIDLString.h"
 
 #ifndef XPCOM_STANDALONE
-static NS_DEFINE_CID(kStdURLParserCID, NS_STANDARDURLPARSER_CID);
+static NS_DEFINE_CID(kURLParserCID, NS_NOAUTHURLPARSER_CID);
 #endif
 
 
@@ -417,73 +418,47 @@ nsresult nsLocalFile::ParseURL(const char* inURL, char **outHost, char **outDire
     *outFileBaseName = nsnull;
     NS_ENSURE_ARG_POINTER(outFileExtension);
     *outFileExtension = nsnull;
+
+    nsCOMPtr<nsIURLParser> parser(do_GetService(kURLParserCID, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    PRUint32 pathPos, filepathPos, directoryPos, basenamePos, extensionPos;
+    PRInt32 pathLen, filepathLen, directoryLen, basenameLen, extensionLen;
+
+    // invoke the parser to extract the URL path
+    rv = parser->ParseURL(inURL, -1,
+                          nsnull, nsnull, // dont care about scheme
+                          nsnull, nsnull, // dont care about authority
+                          &pathPos, &pathLen);
+    if (NS_FAILED(rv)) return rv;
+
+    // invoke the parser to extract filepath from the path
+    rv = parser->ParsePath(inURL + pathPos, pathLen,
+                           &filepathPos, &filepathLen,
+                           nsnull, nsnull,  // dont care about param
+                           nsnull, nsnull,  // dont care about query
+                           nsnull, nsnull); // dont care about ref
+    if (NS_FAILED(rv)) return rv;
+
+    filepathPos += pathPos;
+
+    // invoke the parser to extract the directory and filename from filepath
+    rv = parser->ParseFilePath(inURL + filepathPos, filepathLen,
+                           &directoryPos, &directoryLen,
+                           &basenamePos, &basenameLen,
+                           &extensionPos, &extensionLen);
+    if (NS_FAILED(rv)) return rv;
+
+    if (directoryLen > 0)
+        *outDirectory = PL_strndup(inURL + filepathPos + directoryPos, directoryLen);
+    if (basenameLen > 0)
+        *outFileBaseName = PL_strndup(inURL + filepathPos + basenamePos, basenameLen);
+    if (extensionLen > 0)
+        *outFileExtension = PL_strndup(inURL + filepathPos + extensionPos, extensionLen);
+    // since we are using a no-auth url parser, there will never be a host
     
-    rv = NS_OK;    
-    char* eSpec = nsCRT::strdup(inURL);
-    if (!eSpec)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // Skip leading spaces and control-characters
-    char* fwdPtr = eSpec;
-    while (fwdPtr && (*fwdPtr > '\0') && (*fwdPtr <= ' '))
-        fwdPtr++;
-    // Remove trailing spaces and control-characters
-    if (fwdPtr) {
-        char* bckPtr= (char*)fwdPtr + PL_strlen(fwdPtr) -1;
-        if (*bckPtr > '\0' && *bckPtr <= ' ') {
-            while ((bckPtr-fwdPtr) >= 0 && (*bckPtr <= ' ')) {
-                bckPtr--;
-            }
-            *(bckPtr+1) = '\0';
-        }
-    }
-
-    nsCOMPtr<nsIURLParser> parser(do_GetService(kStdURLParserCID, &rv));
-    if (NS_FAILED(rv)) {
-        nsCRT::free(eSpec);
-        return rv;
-    }
-
-    nsXPIDLCString ePath;
-    nsXPIDLCString scheme, username, password, host;
-    PRInt32 mPort;
-    
-    // Parse the spec
-    rv = parser->ParseAtScheme(eSpec, getter_Copies(scheme),
-                               getter_Copies(username), 
-                               getter_Copies(password), outHost, &mPort,
-                               getter_Copies(ePath));
-    nsCRT::free(eSpec);
-
-    // if this isn't a file: URL, then we can't deal                                            
-    if (NS_FAILED(rv) || nsCRT::strcasecmp(scheme, "file") != 0) {
-        CRTFREEIF(*outHost);
-        return NS_ERROR_FAILURE;
-    }
-    
-    nsXPIDLCString param, query, ref;
-
-    // Now parse the path
-    rv = parser->ParseAtDirectory(ePath, outDirectory, outFileBaseName, outFileExtension,
-                                  getter_Copies(param), getter_Copies(query), getter_Copies(ref));
-    if (NS_FAILED(rv)) {
-        CRTFREEIF(*outDirectory);
-        CRTFREEIF(*outFileBaseName);
-        CRTFREEIF(*outFileExtension);
-        return rv;
-    }
-
-    // If any of the components are non-NULL but empty, free them
-    if (*outHost && !nsCRT::strlen(*outHost))
-        CRTFREEIF(*outHost);  
-    if (*outDirectory && !nsCRT::strlen(*outDirectory))
-        CRTFREEIF(*outDirectory);  
-    if (*outFileBaseName && !nsCRT::strlen(*outFileBaseName))
-        CRTFREEIF(*outFileBaseName);  
-    if (*outFileExtension && !nsCRT::strlen(*outFileExtension))
-        CRTFREEIF(*outFileExtension);  
 #endif /* XPCOM_STANDALONE */
-                                      
+
     return NS_OK;
 }
  

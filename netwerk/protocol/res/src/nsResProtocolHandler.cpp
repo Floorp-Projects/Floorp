@@ -73,9 +73,9 @@ static PRLogModuleInfo *gResLog;
 // nsResURL : overrides nsStdURL::GetFile to provide nsIFile resolution
 //----------------------------------------------------------------------------
 
-#include "nsStdURL.h"
+#include "nsStandardURL.h"
 
-class nsResURL : public nsStdURL
+class nsResURL : public nsStandardURL
 {
 public:
     NS_IMETHOD GetFile(nsIFile **);
