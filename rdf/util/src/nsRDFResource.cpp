@@ -195,7 +195,7 @@ nsRDFResource::GetDelegate(const char* aKey, REFNSIID aIID, void** aResult)
     }
 
     // Construct a ProgID of the form "component:/rdf/delegate/[key]/[scheme]
-    nsCAutoString progID("component://rdf/delegate-factory/");
+    nsCAutoString progID("component:/rdf/delegate-factory/");
     progID.Append(aKey);
     progID.Append("/");
 
