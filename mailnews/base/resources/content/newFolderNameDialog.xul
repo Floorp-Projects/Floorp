@@ -25,6 +25,7 @@ Rights Reserved.
 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
         class="dialog"
@@ -32,7 +33,6 @@ Rights Reserved.
         style="padding:10px"> 
         
 <html:script language="JavaScript" src="chrome://messenger/content/newFolderNameDialog.js"/>
-
 	<box align="vertical" style="width:36em; min-height:12em">
 		
 		<spring flex="100%"/>
@@ -40,7 +40,16 @@ Rights Reserved.
 		<html:div style="margin-bottom:.3em">&name.label;</html:div>
 		
 		<html:input tabindex="0" type="text" id="name" style="width:100%"/>
-		
+
+		<html:select
+          datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
+          ref="msgaccounts:/">
+          <template>
+              <html:option uri="..." value="...">
+                <text value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              </html:option>
+          </template>
+        </html:select>
 		<spring flex="100%"/>
 		
 		<box id="okCancelButtons"/>

@@ -275,7 +275,7 @@ function MsgSubscribe()
 
 function MsgAccountWizard()
 {
-    window.openDialog("chrome://messenger/content/AccountWizard.xul", "wizard", "chrome, modal,height=190,width=390");
+    window.openDialog("chrome://messenger/content/AccountWizard.xul", "wizard", "chrome, modal,height=300,width=400");
 }
 
 function MsgOpenAttachment() {}
