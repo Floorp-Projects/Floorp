@@ -363,8 +363,6 @@ public:
 
 protected:
   nsresult GetMainWidget(nsIWidget** aMainWidget);
-
-  nsString mTitle;
 };
 
 /*
