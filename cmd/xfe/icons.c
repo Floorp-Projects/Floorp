@@ -1177,6 +1177,18 @@ fe_init_document_icons (MWContext *c)
 		  Desk_Navigator.mono_bits, Desk_Navigator.color_bits,
 		  Desk_Navigator.mask_bits,
 		  True);
+  fe_make_icon_1 (c, white, IL_ICON_DESKTOP_BOOKMARK,	/* Bookmark */
+		  NULL,
+		  Desk_Bookmark.width, Desk_Bookmark.height,
+		  Desk_Bookmark.mono_bits, Desk_Bookmark.color_bits,
+		  Desk_Bookmark.mask_bits, True);
+  fe_make_icon_1 (c, white, IL_ICON_DESKTOP_HISTORY,	/* History */
+		  NULL,
+		  Desk_History.width, Desk_History.height,
+		  Desk_History.mono_bits, Desk_History.color_bits,
+		  Desk_History.mask_bits,
+		  True);
+#ifdef MOZ_MAIL_NEWS
   fe_make_icon_1 (c, white, IL_ICON_DESKTOP_MSGCENTER,	/* Message Center */
 		  NULL,
 		  Desk_MsgCenter.width, Desk_MsgCenter.height,
@@ -1188,11 +1200,6 @@ fe_init_document_icons (MWContext *c)
 		  Desk_Address.width, Desk_Address.height,
 		  Desk_Address.mono_bits, Desk_Address.color_bits,
 		  Desk_Address.mask_bits, True);
-  fe_make_icon_1 (c, white, IL_ICON_DESKTOP_BOOKMARK,	/* Bookmark */
-		  NULL,
-		  Desk_Bookmark.width, Desk_Bookmark.height,
-		  Desk_Bookmark.mono_bits, Desk_Bookmark.color_bits,
-		  Desk_Bookmark.mask_bits, True);
   fe_make_icon_1 (c, white, IL_ICON_DESKTOP_NOMAIL,	/* No new mail */
 		  NULL,
 		  Desk_Messenger.width, Desk_Messenger.height,
@@ -1208,11 +1215,14 @@ fe_init_document_icons (MWContext *c)
 		  Desk_Collabra.width, Desk_Collabra.height,
 		  Desk_Collabra.mono_bits, Desk_Collabra.color_bits, 
           Desk_Collabra.mask_bits, True);
+#endif
+#ifdef MOZ_MAIL_COMPOSE
   fe_make_icon_1 (c, white, IL_ICON_DESKTOP_MSGCOMPOSE,	/* Message Compose */
 		  NULL,
 		  Desk_MsgCompose.width, Desk_MsgCompose.height,
 		  Desk_MsgCompose.mono_bits, Desk_MsgCompose.color_bits,
 		  Desk_MsgCompose.mask_bits, True);
+#endif
 #ifdef EDITOR
   fe_make_icon_1 (c, white, IL_ICON_DESKTOP_EDITOR,	/* Editor */
 		  NULL,
@@ -1225,12 +1235,6 @@ fe_init_document_icons (MWContext *c)
 		  Desk_Communicator.width, Desk_Communicator.height,
 		  Desk_Communicator.mono_bits, Desk_Communicator.color_bits,
 		  Desk_Communicator.mask_bits,
-		  True);
-  fe_make_icon_1 (c, white, IL_ICON_DESKTOP_HISTORY,	/* History */
-		  NULL,
-		  Desk_History.width, Desk_History.height,
-		  Desk_History.mono_bits, Desk_History.color_bits,
-		  Desk_History.mask_bits,
 		  True);
   fe_make_icon_1 (c, white, IL_ICON_DESKTOP_SEARCH,	/* Search */
 		  NULL,
@@ -1417,6 +1421,7 @@ static int gold_editor_map[] = {
 
 #endif /* EDITOR */
 
+#ifdef MOZ_MAIL_NEWS
 static void
 fe_init_sa_icons (MWContext *c)
 {
@@ -1483,7 +1488,9 @@ fe_init_sa_icons (MWContext *c)
 		M_SgnEncypBad.mono_bits, M_SgnEncypBad.color_bits,
 		M_SgnEncypBad.mask_bits);
 }
+#endif /*MOZ_MAIL_NEWS*/
 
+#if MOZ_MAIL_NEWS
 static void
 fe_init_msg_icons (MWContext *c)
 {
@@ -1497,6 +1504,7 @@ fe_init_msg_icons (MWContext *c)
 		M_ToggleAttach.width, M_ToggleAttach.height,
 		M_ToggleAttach.mono_bits, M_ToggleAttach.color_bits, M_ToggleAttach.mask_bits);
 }
+#endif /*MOZ_MAIL_NEWS*/
 
 void
 fe_InitIcons (MWContext *c, MSG_BIFF_STATE biffstate)
@@ -2256,10 +2264,12 @@ _IMGCB_GetIconDimensions(IMGCB* img_cb, jint op, void* dpy_cx, int* width,
     /* Initialize the icon, if necessary. */
     if (icon_number >= IL_GOPHER_FIRST && icon_number <= IL_GOPHER_LAST)
         fe_init_gopher_icons (context);
+#ifdef MOZ_MAIL_NEWS
     else if (icon_number >= IL_SA_FIRST && icon_number <= IL_SA_LAST)
         fe_init_sa_icons (context);
     else if (icon_number >= IL_MSG_FIRST && icon_number <= IL_MSG_LAST)
         fe_init_msg_icons (context);
+#endif
 #ifdef EDITOR
     else if (icon_number >= IL_EDIT_FIRST && icon_number <= IL_EDIT_LAST)
         fe_init_editor_icons(context);
@@ -2441,9 +2451,11 @@ fe_get_icon_data(int icon_number)
         
      HG78261
 
+#ifdef MOZ_MAIL_NEW
         /* Message attachment icon. */
     case IL_MSG_ATTACH:
         return &M_ToggleAttach;
+#endif
 
         /* Return NULL if the icon number is not recognized. */
     default:
