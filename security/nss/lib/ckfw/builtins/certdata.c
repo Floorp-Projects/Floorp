@@ -32,7 +32,7 @@
  * GPL.
  */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.15 $ $Date: 2002/06/06 00:12:54 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.15 $ $Date: 2002/06/06 00:12:54 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.16 $ $Date: 2002/06/11 23:16:23 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.16 $ $Date: 2002/06/11 23:16:23 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
@@ -448,7 +448,7 @@ static const NSSItem nss_builtins_items_0 [] = {
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)"CVS ID", (PRUint32)7 },
   { (void *)"NSS", (PRUint32)4 },
-  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.15 $ $Date: 2002/06/06 00:12:54 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.15 $ $Date: 2002/06/06 00:12:54 $ $Name:  $", (PRUint32)179 }
+  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.16 $ $Date: 2002/06/11 23:16:23 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.16 $ $Date: 2002/06/11 23:16:23 $ $Name:  $", (PRUint32)184 }
 };
 #endif /* DEBUG */
 static const NSSItem nss_builtins_items_1 [] = {
@@ -5441,7 +5441,7 @@ static const NSSItem nss_builtins_items_88 [] = {
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
-  { (void *)"AddTrust Non-Validated Services Root", (PRUint32)37 },
+  { (void *)"AddTrust Low-Value Services Root", (PRUint32)33 },
   { (void *)&ckc_x_509, (PRUint32)sizeof(CK_CERTIFICATE_TYPE) },
   { (void *)"\060\145\061\013\060\011\006\003\125\004\006\023\002\123\105\061"
 "\024\060\022\006\003\125\004\012\023\013\101\144\144\124\162\165"
@@ -5535,7 +5535,7 @@ static const NSSItem nss_builtins_items_89 [] = {
   { (void *)&ck_true, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
-  { (void *)"AddTrust Non-Validated Services Root", (PRUint32)37 },
+  { (void *)"AddTrust Low-Value Services Root", (PRUint32)33 },
   { (void *)"\314\253\016\240\114\043\001\326\151\173\335\067\237\315\022\353"
 "\044\343\224\235"
 , (PRUint32)20 },
