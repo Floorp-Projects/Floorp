@@ -35,9 +35,46 @@ IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 DEPTH = ..
 
+!ifdef BUILD_DOM_ONLY
+DIRS = 	external \
+	util \
+	dom 
+!else
+!ifdef BUILD_PLUGLETS_ONLY
+DIRS =	external \
+	util \
+	dom \
+	plugins
+!else
+!ifdef BUILD_WEBCLIENT_ONLY
+DIRS = 	external \
+	util \
+	dom \
+	webclient
+!else
+!ifdef BUILD_BLACKCONNECT_ONLY
+DIRS =	external \
+	util \
+	xpcom
+!else
+!ifdef BUILD_BLACKWOOD
 DIRS  = external \
 	util \
 	dom \
-	webclient 
+	webclient \
+	plugins \
+	xpcom
+!endif
+!endif
+!endif
+!endif
+!endif
+
+!ifdef PACKAGE_BUILD
+DIRS += build
+!endif
 
 include <$(DEPTH)\config\rules.mak>
+
+edburns:
+	echo $(DIRS)

@@ -1,0 +1,220 @@
+#!nmake
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Sun Microsystems,
+# Inc. Portions created by Sun are
+# Copyright (C) 1999 Sun Microsystems, Inc. All
+# Rights Reserved.
+#
+# Contributor(s): 
+
+DEPTH=..
+IGNORE_MANIFEST=1
+
+PACKAGE_DIR = $(DIST)\javadev
+PACKAGE_LIB = $(PACKAGE_DIR)\lib
+PACKAGE_EXAMPLE = $(PACKAGE_DIR)\example
+
+!ifndef PACKAGE_VER
+PACKAGE_VER = 1.0
+!endif
+
+
+buildRunems:
+-mkdir $(PACKAGE_DIR)
+-mkdir $(PACKAGE_LIB)
+-mkdir $(PACKAGE_EXAMPLE)
+!ifdef BUILD_DOM_ONLY
+-mkdir $(DIST)\..\..\java\build\org
+-mkdir $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\mozilla\dom $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\mozilla\util $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\w3c $(DIST)\..\..\java\build\org
+cd $(DIST)\..\..\java\build
+jar -cvfM0 JavaDOM_$(PACKAGE_VER)_win32.jar org 
+cp JavaDOM_$(PACKAGE_VER)_win32.jar $(PACKAGE_LIB)\JavaDOM_$(PACKAGE_VER)_win32.jar
+rm -R $(DIST)\..\..\java\build\org
+rm -f $(DIST)\..\..\java\build\JavaDOM_$(PACKAGE_VER)_win32.jar
+cp $(DIST)\bin\javadomjni.dll $(PACKAGE_LIB)\javadomjni.dll
+cp $(DIST)\bin\components\javadom.dll $(PACKAGE_LIB)\javadom.dll
+chmod 775 $(PACKAGE_LIB)\javadomjni.dll
+chmod 775 $(PACKAGE_LIB)\javadom.dll
+cp $(DIST)\..\..\java\build\install_dom_win32.js $(DIST)\install.js
+cp $(DIST)\..\..\java\build\README.DOM $(PACKAGE_DIR)\README.DOM
+cd $(DIST)
+zip -r JavaDOM_$(PACKAGE_VER)_win32.xpi install.js javadev
+!else
+!ifdef BUILD_PLUGLETS_ONLY
+-mkdir $(DIST)\..\..\java\build\org
+-mkdir $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\mozilla\util $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\mozilla\dom $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\mozilla\plugins $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\w3c $(DIST)\..\..\java\build\org
+cd $(DIST)\..\..\java\build
+jar -cvfM0 Pluglet_$(PACKAGE_VER)_win32.jar org 
+cp Pluglet_$(PACKAGE_VER)_win32.jar $(PACKAGE_LIB)\Pluglet_$(PACKAGE_VER)_win32.jar
+rm -R $(DIST)\..\..\java\build\org
+rm -f $(DIST)\..\..\java\build\Pluglet_$(PACKAGE_VER)_win32.jar
+cp $(DIST)\bin\javadomjni.dll $(PACKAGE_LIB)\javadomjni.dll
+cp $(DIST)\bin\components\javadom.dll $(PACKAGE_LIB)\javadom.dll
+cp $(DIST)\bin\plugletjni.dll $(PACKAGE_LIB)\plugletjni.dll
+cp $(DIST)\bin\components\pluglet.dll $(PACKAGE_LIB)\pluglet.dll
+chmod 775 $(PACKAGE_LIB)\javadomjni.dll
+chmod 775 $(PACKAGE_LIB)\javadom.dll
+chmod 775 $(PACKAGE_LIB)\plugletjni.dll
+chmod 775 $(PACKAGE_LIB)\pluglet.dll
+cp $(DIST)\..\..\java\build\install_pluglet_win32.js $(DIST)\install.js
+cp $(DIST)\..\..\java\build\README.PLUGLET $(PACKAGE_DIR)\README.PLUGLET
+cd $(DIST)
+zip -r Pluglet_$(PACKAGE_VER)_win32.xpi install.js javadev
+!else
+!ifdef BUILD_WEBCLIENT_ONLY
+-mkdir $(DIST)\..\..\java\build\org
+-mkdir $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\mozilla\util $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\mozilla\dom $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\mozilla\webclient $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\w3c $(DIST)\..\..\java\build\org
+cd $(DIST)\..\..\java\build
+jar -cvfM0 Webclient_$(PACKAGE_VER)_win32.jar org 
+cp Webclient_$(PACKAGE_VER)_win32.jar $(PACKAGE_LIB)\Webclient_$(PACKAGE_VER)_win32.jar
+rm -R $(DIST)\..\..\java\build\org
+rm -f $(DIST)\..\..\java\build\Webclient_$(PACKAGE_VER)_win32.jar
+cp $(DIST)\bin\javadomjni.dll $(PACKAGE_LIB)\javadomjni.dll
+cp $(DIST)\bin\components\javadom.dll $(PACKAGE_LIB)\javadom.dll
+cp $(DIST)\bin\webclient.dll $(PACKAGE_LIB)\webclient.dll
+cp $(DIST)\lib\wc_share.lib $(PACKAGE_LIB)\wc_share.lib
+chmod 775 $(PACKAGE_LIB)\javadomjni.dll
+chmod 775 $(PACKAGE_LIB)\javadom.dll
+chmod 775 $(PACKAGE_LIB)\webclient.dll
+chmod 775 $(PACKAGE_LIB)\wc_share.lib
+@echo +++ Creating Commercial Package. Use runem.bat to run the test browser.
+rm -f runem_win_commercial.bat
+@echo copy ..\lib\webclient.dll ..\.. >> runem_win_commercial.bat
+@echo copy ..\lib\javadom.dll ..\..\components >> runem_win_commercial.bat
+@echo copy ..\lib\javadomjni.dll ..\.. >> runem_win_commercial.bat
+@echo set CLASSPATH=..\lib\Webclient_$(PACKAGE_VER)_win32.jar>> runem_win_commercial.bat
+@echo $(PERL) .\runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem_win_commercial.bat
+cp -f $runem_win_commercial.bat $(PACKAGE_EXAMPLE)\runem.bat
+cp -f $(DIST)\..\..\java\webclient\src_share\runem.pl $(PACKAGE_EXAMPLE)\runem.pl
+chmod 775 $(PACKAGE_EXAMPLE)\runem.bat
+chmod 775 $(PACKAGE_EXAMPLE)\runem.pl
+cp $(DIST)\..\..\java\build\install_webclient_win32.js $(DIST)\install.js
+cp $(DIST)\..\..\java\build\README.WEBCLIENT $(PACKAGE_DIR)\README.WEBCLIENT
+cd $(DIST)
+zip -r Webclient_$(PACKAGE_VER)_win32.xpi install.js javadev
+!else
+!ifdef BUILD_BLACKCONNECT_ONLY
+-mkdir $(DIST)\..\..\java\build\org
+-mkdir $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\mozilla\util $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\mozilla\xpcom $(DIST)\..\..\java\build\org\mozilla
+cd $(DIST)\..\..\java\build
+jar -cvfM0 Blackconnect_$(PACKAGE_VER)_win32.jar org 
+cp Blackconnect_$(PACKAGE_VER)_win32.jar $(PACKAGE_LIB)\Blackconnect_$(PACKAGE_VER)_win32.jar
+rm -R $(DIST)\..\..\java\build\org
+rm -f $(DIST)\..\..\java\build\Blackconnect_$(PACKAGE_VER)_win32.jar
+cp $(DIST)\bin\components\bcorb.dll $(PACKAGE_LIB)\bcorb.dll
+cp $(DIST)\bin\components\bcjavastubs.dll $(PACKAGE_LIB)\bcjavastubs.dll
+cp $(DIST)\bin\components\javaloader.dll $(PACKAGE_LIB)\javaloader.dll
+cp $(DIST)\bin\components\javaSample.dll $(PACKAGE_LIB)\javaSample.dll
+cp $(DIST)\bin\components\bcTest.dll $(PACKAGE_LIB)\bcTest.dll
+cp $(DIST)\bin\components\bcxpcomstubs.dll $(PACKAGE_LIB)\bcxpcomstubs.dll
+cp $(DIST)\bin\regxpcom.exe $(PACKAGE_LIB)\regxpcom.exe
+chmod 775 $(PACKAGE_LIB)\bcorb.dll
+chmod 775 $(PACKAGE_LIB)\bcjavastubs.dll
+chmod 775 $(PACKAGE_LIB)\javaloader.dll
+chmod 775 $(PACKAGE_LIB)\javaSample.dll
+chmod 775 $(PACKAGE_LIB)\bcTest.dll
+chmod 775 $(PACKAGE_LIB)\bcxpcomstubs.dll
+chmod 775 $(PACKAGE_LIB)\regxpcom.exe
+cp $(DIST)\..\..\java\build\install_blackconnect_win32.js $(DIST)\install.js
+cp $(DIST)\..\..\java\build\README.BLACKCONNECT $(PACKAGE_DIR)\README.BLACKCONNECT
+cd $(DIST)
+zip -r Blackconnect_$(PACKAGE_VER)_win32.xpi install.js javadev
+!else
+!ifdef BUILD_BLACKWOOD
+-mkdir $(DIST)\..\..\java\build\org
+-mkdir $(DIST)\..\..\java\build\org\mozilla
+cp -R $(DIST)\..\classes\org\mozilla $(DIST)\..\..\java\build\org
+cp -R $(DIST)\..\classes\org\w3c $(DIST)\..\..\java\build\org
+cd $(DIST)\..\..\java\build
+jar -cvfM0 Blackwood_$(PACKAGE_VER)_win32.jar org 
+cp Blackwood_$(PACKAGE_VER)_win32.jar $(PACKAGE_LIB)\Blackwood_$(PACKAGE_VER)_win32.jar
+rm -R $(DIST)\..\..\java\build\org
+rm -f $(DIST)\..\..\java\build\Blackwood_$(PACKAGE_VER)_win32.jar
+cp $(DIST)\bin\javadomjni.dll $(PACKAGE_LIB)\javadomjni.dll
+cp $(DIST)\bin\components\javadom.dll $(PACKAGE_LIB)\javadom.dll
+cp $(DIST)\bin\plugletjni.dll $(PACKAGE_LIB)\plugletjni.dll
+cp $(DIST)\bin\components\pluglet.dll $(PACKAGE_LIB)\pluglet.dll
+cp $(DIST)\bin\webclient.dll $(PACKAGE_LIB)\webclient.dll
+cp $(DIST)\lib\wc_share.lib $(PACKAGE_LIB)\wc_share.lib
+cp $(DIST)\bin\components\bcorb.dll $(PACKAGE_LIB)\bcorb.dll
+cp $(DIST)\bin\components\bcjavastubs.dll $(PACKAGE_LIB)\bcjavastubs.dll
+cp $(DIST)\bin\components\javaloader.dll $(PACKAGE_LIB)\javaloader.dll
+cp $(DIST)\bin\components\javaSample.dll $(PACKAGE_LIB)\javaSample.dll
+cp $(DIST)\bin\components\bcTest.dll $(PACKAGE_LIB)\bcTest.dll
+cp $(DIST)\bin\components\bcxpcomstubs.dll $(PACKAGE_LIB)\bcxpcomstubs.dll
+cp $(DIST)\bin\regxpcom.exe $(PACKAGE_LIB)\regxpcom.exe
+chmod 775 $(PACKAGE_LIB)\javadomjni.dll
+chmod 775 $(PACKAGE_LIB)\javadom.dll
+chmod 775 $(PACKAGE_LIB)\plugletjni.dll
+chmod 775 $(PACKAGE_LIB)\pluglet.dll
+chmod 775 $(PACKAGE_LIB)\webclient.dll
+chmod 775 $(PACKAGE_LIB)\wc_share.lib
+chmod 775 $(PACKAGE_LIB)\bcorb.dll
+chmod 775 $(PACKAGE_LIB)\bcjavastubs.dll
+chmod 775 $(PACKAGE_LIB)\javaloader.dll
+chmod 775 $(PACKAGE_LIB)\javaSample.dll
+chmod 775 $(PACKAGE_LIB)\bcTest.dll
+chmod 775 $(PACKAGE_LIB)\bcxpcomstubs.dll
+chmod 775 $(PACKAGE_LIB)\regxpcom.exe
+@echo +++ Creating Commercial Package. Use runem.bat to run the test browser.
+rm -f runem_win_commercial.bat
+@echo copy ..\lib\webclient.dll ..\.. >> runem_win_commercial.bat
+@echo copy ..\lib\javadom.dll ..\..\components >> runem_win_commercial.bat
+@echo copy ..\lib\javadomjni.dll ..\.. >> runem_win_commercial.bat
+@echo copy ..\lib\plugletjni.dll ..\.. >> runem_win_commercial.bat
+@echo copy ..\lib\pluglet.dll ..\..\components >> runem_win_commercial.bat
+@echo set CLASSPATH=..\lib\Blackwood_$(PACKAGE_VER)_win32.jar>> runem_win_commercial.bat
+@echo $(PERL) .\runem.pl org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) %1% >> runem_win_commercial.bat
+cp -f $runem_win_commercial.bat $(PACKAGE_EXAMPLE)\runem.bat
+cp -f $(DIST)\..\..\java\webclient\src_share\runem.pl $(PACKAGE_EXAMPLE)\runem.pl
+chmod 775 $(PACKAGE_EXAMPLE)\runem.bat
+chmod 775 $(PACKAGE_EXAMPLE)\runem.pl
+cp $(DIST)\..\..\java\build\install_blackwood_win32.js $(DIST)\install.js
+cp $(DIST)\..\..\java\build\README.BLACKWOOD $(PACKAGE_DIR)\README.BLACKWOOD
+cd $(DIST)
+zip -r Blackwood_$(PACKAGE_VER)_win32.xpi install.js javadev
+!endif #BLACKWOOD
+!endif #BLACKCONNECT
+!endif #WEBCLIENT
+!endif #PLUGLETS
+!endif #DOM
+
+
+install::buildRunems 
+
+
+clobber::
+rm -f $(DIST)\*.zip
+rm -f $(DIST)\*.js
+rm -rf $(DIST)\javadev
+
+
+clobber_all::clobber
+
+
+clean::clobber

@@ -25,16 +25,46 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=   util		\
-	external	\
-	dom		
-
-ifeq ($(BUILD_WEBCLIENT_ONLY),)
-DIRS += xpcom \
-        plugins
+ifneq ($(BUILD_DOM_ONLY),)
+DIRS =	external \
+	util \
+	dom 
+else
+ifneq ($(BUILD_PLUGLETS_ONLY),)
+DIRS =	external \
+	util \
+	dom \
+	plugins 
+else
+ifneq ($(BUILD_WEBCLIENT_ONLY),)
+DIRS = 	external \
+	util \
+	dom \
+	webclient
+else
+ifneq ($(BUILD_BLACKCONNECT_ONLY),)
+DIRS = 	external \
+	util \
+	xpcom
+else
+ifneq ($(BUILD_BLACKWOOD),)
+DIRS =	external \
+	util \
+	dom \
+	webclient \
+	plugins \
+	xpcom
+endif
+endif
+endif
+endif
 endif
 
-DIRS += webclient
+
+ifneq ($(PACKAGE_BUILD),)
+DIRS += build
+endif
+
 
 include $(topsrcdir)/config/rules.mk
 
