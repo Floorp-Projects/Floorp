@@ -25,11 +25,12 @@
 #define DBG 0
 
 
-//-------------------------------------------------------------------------
-//
-// nsTextWidget constructor
-//
-//-------------------------------------------------------------------------
+//=================================================================
+/*  Constructor
+ *  @update  dc 09/10/98
+ *  @param   aOuter -- nsISupports object
+ *  @return  NONE
+ */
 nsTextWidget::nsTextWidget(nsISupports *aOuter): nsWindow(aOuter)
 {
   mIsPasswordCallBacksInstalled = PR_FALSE;
@@ -39,25 +40,32 @@ nsTextWidget::nsTextWidget(nsISupports *aOuter): nsWindow(aOuter)
   //mBackground = NS_RGB(124, 124, 124);
 }
 
-//-------------------------------------------------------------------------
-//
-// nsTextWidget destructor
-//
-//-------------------------------------------------------------------------
+//=================================================================
+/*  Destructor
+ *  @update  dc 09/10/98
+ *  @param   NONE
+ *  @return  NONE
+ */
 nsTextWidget::~nsTextWidget()
 {
 	if(mTE_Data!=nsnull)
 		WEDispose(mTE_Data);
 }
 
-//-------------------------------------------------------------------------
-void nsTextWidget::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData) 
+//=================================================================
+/*  Function to create the TextWidget and all its neccisary data
+ *  @update  dc 09/10/98
+ *  @param   aParent --
+ *  @param   aRect --
+ *  @param   aHandleEventFunction --
+ *  @param   aContext --
+ *  @param   aAppShell --
+ *  @param   aToolKit -- 
+ *  @param   aInitData --  
+ *  @return  NONE
+ */
+void nsTextWidget::Create(nsIWidget *aParent,const nsRect &aRect,EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,nsIAppShell *aAppShell,nsIToolkit *aToolkit, nsWidgetInitData *aInitData) 
 {
 LongRect		destRect,viewRect;
 PRUint32		teFlags=0;
@@ -98,12 +106,7 @@ GrafPtr			curport;
 
 	  // save the event callback function
 	  mEventCallback = aHandleEventFunction;
-	  
-	  //mMouseDownInButton = PR_FALSE;
-	  //mWidgetArmed = PR_FALSE;
-
-	  //InitCallbacks("nsButton");
-	  
+	  	  
 	  // Initialize the TE record
 	  viewRect.left = aRect.x;
 	  viewRect.top = aRect.y;
@@ -120,7 +123,18 @@ GrafPtr			curport;
 
 }
 
-//-------------------------------------------------------------------------
+//=================================================================
+/*  Function to create the TextWidget and all its neccisary data
+ *  @update  dc 09/10/98
+ *  @param   aParent --
+ *  @param   aRect --
+ *  @param   aHandleEventFunction --
+ *  @param   aContext --
+ *  @param   aAppShell --
+ *  @param   aToolKit -- 
+ *  @param   aInitData --  
+ *  @return  NONE
+ */
 void nsTextWidget::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
@@ -163,7 +177,7 @@ GrafPtr							theport;
 RGBColor						blackcolor = {0,0,0};
 RgnHandle						thergn;
 	
-		GetPort(&theport);
+	::GetPort(&theport);
 	::SetPort(mWindowPtr);
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
@@ -187,21 +201,47 @@ RgnHandle						thergn;
 void nsTextWidget::PrimitiveKeyDown(PRInt16	aKey,PRInt16 aModifiers)
 {
 PRBool 	result=PR_TRUE;
+GrafPtr				theport;
+RgnHandle			thergn;
+nsRect				therect;
+Rect					macrect;
 
+	::GetPort(&theport);
+	::SetPort(mWindowPtr);
+	GetBounds(therect);
+	nsRectToMacRect(therect,macrect);
+	thergn = ::NewRgn();
+	::GetClip(thergn);
+	::ClipRect(&macrect);
 	WEKey(aKey,aModifiers,mTE_Data);
+	::SetClip(thergn);
+	::SetPort(theport);
+	
 }
 
 //--------------------------------------------------------------
 
-/*
+
 PRBool 
 nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
 PRBool 	result=PR_TRUE;
+Point		mouseLoc;
+PRInt16 modifiers=0;
+nsRect	therect;
+Rect		macrect;
 	
 	switch (aEvent.message)
 		{
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
+			::SetPort(mWindowPtr);
+			GetBounds(therect);
+			nsRectToMacRect(therect,macrect);
+			::ClipRect(&macrect);
+			mouseLoc.h = aEvent.point.x;
+			mouseLoc.v = aEvent.point.y;
+			WEClick(mouseLoc,modifiers,aEvent.time,mTE_Data);
+			result = PR_FALSE;
 			break;
 		case NS_MOUSE_LEFT_BUTTON_UP:
 			break;
@@ -212,7 +252,7 @@ PRBool 	result=PR_TRUE;
 		}
 	return result;
 }
-*/
+
 //--------------------------------------------------------------
 PRBool nsTextWidget::OnResize(nsSizeEvent &aEvent)
 {

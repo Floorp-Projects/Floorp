@@ -487,12 +487,20 @@ void nsWindow::Enable(PRBool bState)
 
     
 //-------------------------------------------------------------------------
-//
-// Give the focus to this component
-//
-//-------------------------------------------------------------------------
+/*  Set this widgets port, clipping, etc, it is in focus
+ *  @update  dc 09/11/98
+ *  @param   NONE
+ *  @return  NONE
+ */
 void nsWindow::SetFocus(void)
 {
+nsRect							therect;
+Rect								macrect;
+
+	::SetPort(mWindowPtr);
+	GetBounds(therect);
+	nsRectToMacRect(therect,macrect);
+	::ClipRect(&macrect);
 }
 
     
