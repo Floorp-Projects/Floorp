@@ -1393,10 +1393,14 @@ nsMsgAccountManager::UpgradePrefs()
       return NS_ERROR_UNEXPECTED;
     }
 
-	rv = MigrateNewsAccounts(identity);
+    rv = MigrateNewsAccounts(identity);
     if (NS_FAILED(rv)) return rv;
 
-    // remove dummy migration identity
+    // we're done migrating, let's save the prefs
+    rv = m_prefs->SavePrefFile();
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX TODO: remove dummy migration identity
     return NS_OK;
 }
 
