@@ -176,7 +176,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                                      Object[] args, Function funObj)
     {
         NativeRegExp thisObj = (NativeRegExp) thisVal; // XXX check cast
-        if (args[0] instanceof NativeRegExp) {
+        if (args.length > 0 && args[0] instanceof NativeRegExp) {
             if (args.length > 1) {
                 // report error
                 throw NativeGlobal.constructError(
