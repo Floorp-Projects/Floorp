@@ -573,7 +573,6 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 							oldPt = newPt;
 							::SizeWindow(whichWindow, width, height, true);
-							::DrawGrowIcon(whichWindow);
 
                             // simulate a click in the grow icon
 							anEvent.where.h = width - 8;    // on Aqua, clicking at (width, height) misses the grow icon. inset a bit.
@@ -607,7 +606,6 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 			    nsWatchTask::GetTask().Resume();			  
 					if (newSize != 0)
 						::SizeWindow(whichWindow, newSize & 0x0FFFF, (newSize >> 16) & 0x0FFFF, true);
-					::DrawGrowIcon(whichWindow);
 					Rect portRect;
 					Point newPt = botRight(*::GetWindowPortBounds(whichWindow, &portRect));
 					::LocalToGlobal(&newPt);
