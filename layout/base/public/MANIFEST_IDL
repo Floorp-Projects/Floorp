@@ -6,4 +6,5 @@ nsIChromeEventHandler.idl
 nsISelectionController.idl
 nsISelection.idl
 nsISelectionPrivate.idl
+nsISelectionListner.idl
 nsIContentPolicy.idl
