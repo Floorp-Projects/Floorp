@@ -22,7 +22,6 @@
  *     Daniel Veditz <dveditz@netscape.com>
  *     Douglas Turner <dougt@netscape.com>
  *     Pierre Phaneuf <pp@ludusdesign.com>
- *     Sean Su <ssu@netscape.com>
  */
 
 
@@ -1814,75 +1813,10 @@ nsInstall::FileOpFileExists(nsInstallFolder& aTarget, PRBool* aReturn)
   return NS_OK;
 }
 
-#ifdef XP_WIN
-#include <winver.h>
-#endif
-
 PRInt32
 nsInstall::FileOpFileGetNativeVersion(nsInstallFolder& aTarget, nsString* aReturn)
 {
-  PRInt32           rv = NS_OK;
-
-#ifdef XP_WIN
-  PRBool            flagExists;
-  nsCOMPtr<nsIFile> localTarget(aTarget.GetFileSpec());
-  UINT              uLen;
-  UINT              dwLen;
-  DWORD             dwHandle;
-  LPVOID            lpData;
-  LPVOID            lpBuffer;
-  VS_FIXEDFILEINFO  *lpBuffer2;
-  DWORD             dwMajor   = 0;
-  DWORD             dwMinor   = 0;
-  DWORD             dwRelease = 0;
-  DWORD             dwBuild   = 0;
-  nsXPIDLCString    nativeTargetPath;
-  char              *nativeVersionString = nsnull;
-
-  if(localTarget == nsnull)
-    return(rv);
-
-  flagExists = PR_FALSE;
-  localTarget->Exists(&flagExists);
-  if(flagExists)
-  {
-    localTarget->GetPath(getter_Copies(nativeTargetPath));
-    uLen   = 0;
-    /* GetFileVersionInfoSize() requires a char *, but the api doesn't
-     * indicate that it will modify it */
-    dwLen  = GetFileVersionInfoSize((char *)nativeTargetPath.get(), &dwHandle);
-    lpData = (LPVOID)PR_Malloc(sizeof(long)*dwLen);
-    if(!lpData)
-      return(nsInstall::OUT_OF_MEMORY);
-
-    /* GetFileVersionInfo() requires a char *, but the api doesn't
-     * indicate that it will modify it */
-    if(GetFileVersionInfo((char *)nativeTargetPath.get(), dwHandle, dwLen, lpData) != 0)
-    {
-      if(VerQueryValue(lpData, "\\", &lpBuffer, &uLen) != 0)
-      {
-        lpBuffer2 = (VS_FIXEDFILEINFO *)lpBuffer;
-        dwMajor   = HIWORD(lpBuffer2->dwFileVersionMS);
-        dwMinor   = LOWORD(lpBuffer2->dwFileVersionMS);
-        dwRelease = HIWORD(lpBuffer2->dwFileVersionLS);
-        dwBuild   = LOWORD(lpBuffer2->dwFileVersionLS);
-      }
-    }
-
-    nativeVersionString = PR_smprintf("%d.%d.%d.%d", dwMajor, dwMinor, dwRelease, dwBuild);
-    if(!nativeVersionString)
-      rv = nsInstall::OUT_OF_MEMORY;
-    else
-    {
-      aReturn->Assign(NS_ConvertASCIItoUCS2(nativeVersionString));
-      PR_smprintf_free(nativeVersionString);
-    }
-
-    PR_FREEIF(lpData);
-  }
-#endif
-
-  return(rv);
+  return NS_OK;
 }
 
 PRInt32
