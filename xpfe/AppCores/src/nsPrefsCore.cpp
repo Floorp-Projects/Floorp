@@ -669,7 +669,7 @@ NS_IMETHODIMP nsPrefsCore::ChangePanel(const nsString& aURL)
     globalScript->GetWebShell(getter_AddRefs(webshell));
     if (!webshell)
         return NS_ERROR_FAILURE;
-    webshell->LoadURL(aURL);
+    webshell->LoadURL(aURL.GetUnicode());
     return NS_OK;
 }
 
