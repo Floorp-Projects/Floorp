@@ -217,7 +217,7 @@ function DisableLatinL(disable)
 
 function UpdateLatinL()
 {
-  ClearMenulist(LatinL);
+  LatinL.removeAllItems();
   if (category == "AccentUpper" || category == "AccentLower")
   {
     DisableLatinL(false);
@@ -238,7 +238,7 @@ function UpdateLatinL()
 
 function UpdateLatinM()
 {
-  ClearMenulist(LatinM);
+  LatinM.removeAllItems();
   var i, accent;
   switch(category)
   {

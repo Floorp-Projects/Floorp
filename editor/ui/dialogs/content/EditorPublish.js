@@ -193,7 +193,7 @@ function Startup()
 
 function FillSiteList()
 {
-  ClearMenulist(gDialog.SiteList);
+  gDialog.SiteList.removeAllItems();
   gDefaultSiteIndex = -1;
 
   // Fill the site lists
@@ -240,8 +240,8 @@ function SelectSiteList()
   var savePassword = false;
   var publishOtherFiles = true;
 
-  ClearMenulist(gDialog.DocDirList);
-  ClearMenulist(gDialog.OtherDirList);
+  gDialog.DocDirList.removeAllItems();
+  gDialog.OtherDirList.removeAllItems();
 
   if (gPublishSiteData && selectedSiteIndex != -1)
   {

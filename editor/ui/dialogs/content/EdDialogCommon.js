@@ -238,49 +238,6 @@ function GetAppropriatePercentString(elementForAtt, elementInDoc)
   } catch (e) { return "";}
 }
 
-function AppendStringToMenulistById(menulist, stringID)
-{
-  return AppendStringToMenulist(menulist, GetString(stringID));
-}
-
-function AppendStringToMenulist(menulist, string)
-{
-  if (menulist)
-  {
-    var menupopup = menulist.firstChild;
-    // May not have any popup yet -- so create one
-    if (!menupopup)
-    {
-      menupopup = document.createElementNS(XUL_NS, "menupopup");
-      if (menupopup)
-        menulist.appendChild(menupopup);
-      else
-        return null;
-    }
-    var menuItem = document.createElementNS(XUL_NS, "menuitem");
-    if (menuItem)
-    {
-      menuItem.setAttribute("label", string);
-      menupopup.appendChild(menuItem);
-      return menuItem;
-    }
-  }
-  return null;
-}
-
-function ClearMenulist(menulist)
-{
-  // Always use "AppendStringToMenulist" so we know there's 
-  //  just one <menupopup> as 1st child of <menulist>
-  if (menulist) {
-    menulist.selectedItem = null;
-    var popup = menulist.firstChild;
-    if (popup)
-      while (popup.firstChild)
-        popup.removeChild(popup.firstChild);
-  }
-}
-
 function ClearListbox(listbox)
 {
   if (listbox)
@@ -337,12 +294,12 @@ function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menu
     return size;
   }
 
-  ClearMenulist(menulist);
-  pixelItem = AppendStringToMenulist(menulist, GetString("Pixels"));
+  menulist.removeAllItems();
+  pixelItem = menulist.appendItem(GetString("Pixels"));
 
   if (!pixelItem) return 0;
 
-  percentItem = AppendStringToMenulist(menulist, GetAppropriatePercentString(elementForAtt, elementInDoc));
+  percentItem = menulist.appendItem(GetAppropriatePercentString(elementForAtt, elementInDoc));
   if (size && size.length > 0)
   {
     // Search for a "%" or "px"
