@@ -85,11 +85,10 @@ interface nsIURILoader : nsISupports
 
   */ 
 
-  void openURI(in nsIURI aURI, 
+  void openURI(in nsIChannel aChannel, 
 			   in nsURILoadCommand aCommand,
 			   in string aWindowTarget,
 			   in nsISupports aWindowContext,
-			   in nsIURI aReferringURI,
 			   in nsISupports aOpenContext,
 			   out nsISupports aCurrentOpenContext);
 
@@ -97,11 +96,10 @@ interface nsIURILoader : nsISupports
   /* same call as OpenURI except this one takes an IP address to use as well...
      adapterBinding -> the local IP address to bind to*/			   
 
-  void openURIVia(in nsIURI aURI,
+  void openURIVia(in nsIChannel aChannel,
 				  in nsURILoadCommand aCommand,
 				  in string aWindowTarget,
 				  in nsISupports aWindowContext,
-			      in nsIURI aReferringURI,
 			      in nsISupports aOpenContext,
 			      out nsISupports aCurrentOpenContext,
 				  in unsigned long adapterBinding); 
@@ -130,34 +128,3 @@ interface nsIURILoader : nsISupports
   void getStringForCommand (in nsURILoadCommand aCommand, out string aStringVersion);
 };
 
-/* This is a private interface used by layout in order to invoke the uri loader
-   while passing through a post data stream. I'm using a private interface instead of 
-   bloating the generic nsIURILoader's openURI
-*/
-
-[scriptable, uuid(1A7CACA5-A1D8-11d3-98A4-001083010E9B)]
-interface nsPIURILoaderWithPostData : nsISupports
-{
-  void openURIWithPostData(in nsIURI aURI, 
-			   in nsURILoadCommand aCommand,
-			   in string aWindowTarget,
-			   in nsISupports aWindowContext,
-			   in nsIURI aReferringURI,
-			   in nsIInputStream aPostDataStream,
-			   in nsISupports aOpenContext,
-			   out nsISupports aCurrentOpenContext);
-
-
-  /* same call as OpenURI except this one takes an IP address to use as well...
-     adapterBinding -> the local IP address to bind to*/			   
-
-  void openURIWithPostDataVia(in nsIURI aURI,
-				  in nsURILoadCommand aCommand,
-				  in string aWindowTarget,
-				  in nsISupports aWindowContext,
-			      in nsIURI aReferringURI,
-				  in nsIInputStream aPostDataStream,
-			      in nsISupports aOpenContext,
-			      out nsISupports aCurrentOpenContext,
-				  in unsigned long adapterBinding); 	
-};
