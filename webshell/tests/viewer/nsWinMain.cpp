@@ -39,6 +39,9 @@ nsNativeViewerApp::~nsNativeViewerApp()
 int
 nsNativeViewerApp::Run() 
 {
+  if (mJustShutdown)
+    return 0;
+
   OpenWindow();
  
   // Process messages
@@ -47,7 +50,7 @@ nsNativeViewerApp::Run()
 
   // Pump all messages
   do {
-    BOOL  havePriorityMessage;
+//    BOOL  havePriorityMessage;
 
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
@@ -125,12 +128,13 @@ int main(int argc, char **argv)
 {
   nsresult rv;
   nsIServiceManager* servMgr;
-  rv = NS_InitXPCOM(&servMgr, NULL, NULL);
+  rv = NS_InitXPCOM(&servMgr);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
   nsViewerApp* app = new nsNativeViewerApp();
   NS_ADDREF(app);
   app->Initialize(argc, argv);
   int result = app->Run();
+  app->Exit();  // this exit is needed for the -x case where the close box is never clicked
   NS_RELEASE(app);
   rv = NS_ShutdownXPCOM(servMgr);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
