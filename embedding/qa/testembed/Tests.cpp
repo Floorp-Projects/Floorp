@@ -541,6 +541,7 @@ void CTests::OnTestsAddUriContentListenerByOpenUri()
 		theStr = myDialog.m_urlfield;
 		rv = NS_NewURI(getter_AddRefs(theURI), theStr);
 		RvTestResult(rv, "For OpenURI(): NS_NewURI() test", 1);
+		FormatAndPrintOutput("theStr = ", theStr, 1);
 		GetTheUri(theURI, 1);
 		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
 		RvTestResult(rv, "For OpenURI(): NS_NewChannel() test", 1);
@@ -573,11 +574,18 @@ void CTests::OnTestsNSNewChannelAndAsyncOpen()
 		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, nsnull);
 		RvTestResult(rv, "NS_NewChannel() test", 2);
 
+		if (!theChannel)
+		{
+		   QAOutput("We didn't get the Channel for AsyncOpen(). Test failed.", 1);
+		   return;
+		}
 		QAOutput("AynchOpen() test.", 2);
 		nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
 		nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
 		qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
 
+		if (!listener)
+			QAOutput("listener object is null for AsyncOpen().", 1);
 		// this calls nsIStreamListener::OnDataAvailable()
 		rv = theChannel->AsyncOpen(listener, nsnull);
 		RvTestResult(rv, "AsyncOpen()", 2);
@@ -720,6 +728,11 @@ void CTests::OnToolsRemoveAllGH()
 void CTests::OnToolsTestYourMethod()
 {
 	// place your test code here
+	if (myDialog.DoModal() == IDOK)
+	{
+		rv = qaWebNav->GetCurrentURI(getter_AddRefs(theURI));
+		GetTheUri(theURI, 1);		
+	}		
 }
 
 // ***********************************************************************
