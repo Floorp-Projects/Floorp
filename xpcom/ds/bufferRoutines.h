@@ -536,14 +536,12 @@ nsresult HandleCaseConversionShutdown3::OnShutdown(const nsCID& cid, nsISupports
 class CCaseConversionServiceInitializer {
 public:
   CCaseConversionServiceInitializer(){
-    mListener = new HandleCaseConversionShutdown3();
-    if(mListener){
-      mListener->AddRef();
-      nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion),(nsISupports**) &gCaseConv, mListener);
+    HandleCaseConversionShutdown3* listener = 
+      new HandleCaseConversionShutdown3();
+    if(listener){
+      nsServiceManager::GetService(kUnicharUtilCID, NS_GET_IID(nsICaseConversion),(nsISupports**) &gCaseConv, listener);
     }
   }
-protected:
-  HandleCaseConversionShutdown3* mListener;
 };
 
 #endif
