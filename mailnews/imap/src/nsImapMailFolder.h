@@ -47,7 +47,7 @@
 class nsImapMoveCoalescer;
 
 
-#define FOUR_K 4096
+#define COPY_BUFFER_SIZE 16384
 
 /* b64534f0-3d53-11d3-ac2a-00805f8ac968 */
 

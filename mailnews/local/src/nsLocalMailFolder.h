@@ -41,7 +41,7 @@
 #include "nsIMsgLocalMailFolder.h"
 #include "nsIMsgStringService.h"
 
-#define FOUR_K 4096
+#define COPY_BUFFER_SIZE 16384
 
 struct nsLocalMailCopyState
 {
@@ -69,7 +69,7 @@ struct nsLocalMailCopyState
   PRBool m_isMove;
   PRBool m_isFolder;   // isFolder move/copy
   PRBool m_dummyEnvelopeNeeded;
-  char m_dataBuffer[FOUR_K+1];
+  char m_dataBuffer[COPY_BUFFER_SIZE+1];
   PRUint32 m_leftOver;
   PRBool m_copyingMultipleMessages;
   PRBool m_fromLineSeen;

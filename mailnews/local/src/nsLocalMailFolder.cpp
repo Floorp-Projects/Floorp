@@ -2214,7 +2214,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
   
 	if (!mCopyState) return NS_ERROR_OUT_OF_MEMORY;
 
-	PRUint32 readCount, maxReadCount = FOUR_K - mCopyState->m_leftOver;
+	PRUint32 readCount, maxReadCount = COPY_BUFFER_SIZE - mCopyState->m_leftOver;
 	mCopyState->m_fileStream->seek(PR_SEEK_END, 0);
   char *start, *end;
   PRUint32 linebreak_len = 0;
@@ -2240,7 +2240,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
         linebreak_len = 1;
 
     aLength -= readCount;
-    maxReadCount = FOUR_K - mCopyState->m_leftOver;
+    maxReadCount = COPY_BUFFER_SIZE - mCopyState->m_leftOver;
 
     if (!end && aLength > (PRInt32) maxReadCount)
     // this must be a gigantic line with no linefeed; sorry pal cannot handle
@@ -2286,7 +2286,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
         if (start >=
             &mCopyState->m_dataBuffer[mCopyState->m_leftOver])
         {
-            maxReadCount = FOUR_K;
+            maxReadCount = COPY_BUFFER_SIZE;
             mCopyState->m_leftOver = 0;
             break;
         }
@@ -2312,7 +2312,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 a
             mCopyState->m_leftOver -= (start - mCopyState->m_dataBuffer);
             nsCRT::memcpy (mCopyState->m_dataBuffer, start,
                            mCopyState->m_leftOver+1);
-            maxReadCount = FOUR_K - mCopyState->m_leftOver;
+            maxReadCount = COPY_BUFFER_SIZE - mCopyState->m_leftOver;
         }
     }
   }

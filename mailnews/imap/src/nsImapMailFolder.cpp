@@ -2538,7 +2538,7 @@ NS_IMETHODIMP nsImapMailFolder::BeginCopy(nsIMsgDBHdr *message)
         rv = m_copyState->m_tmpFileSpec->OpenStreamForWriting();
     if (!m_copyState->m_dataBuffer)
     {
-        m_copyState->m_dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
+        m_copyState->m_dataBuffer = (char*) PR_CALLOC(COPY_BUFFER_SIZE+1);
         if (!m_copyState->m_dataBuffer)
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2554,7 +2554,7 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
     if (!m_copyState || !m_copyState->m_dataBuffer ||
         !m_copyState->m_tmpFileSpec) return rv;
 
-    PRUint32 readCount, maxReadCount = FOUR_K - m_copyState->m_leftOver;
+    PRUint32 readCount, maxReadCount = COPY_BUFFER_SIZE - m_copyState->m_leftOver;
     PRInt32 writeCount;
     char *start, *end;
     PRUint32 linebreak_len = 0;
@@ -2582,7 +2582,7 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
             linebreak_len = 1;
 
         aLength -= readCount;
-        maxReadCount = FOUR_K - m_copyState->m_leftOver;
+        maxReadCount = COPY_BUFFER_SIZE - m_copyState->m_leftOver;
 
         if (!end && aLength > (PRInt32) maxReadCount)
             // must be a very very long line; sorry cannot handle it
@@ -2603,7 +2603,7 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
             if (start >=
                 m_copyState->m_dataBuffer+m_copyState->m_leftOver)
             {
-                maxReadCount = FOUR_K;
+                maxReadCount = COPY_BUFFER_SIZE;
                 m_copyState->m_leftOver = 0;
                 break;
             }
@@ -2615,7 +2615,7 @@ NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
                 m_copyState->m_leftOver -= (start - m_copyState->m_dataBuffer);
                 nsCRT::memcpy(m_copyState->m_dataBuffer, start,
                               m_copyState->m_leftOver+1); // including null
-                maxReadCount = FOUR_K - m_copyState->m_leftOver;
+                maxReadCount = COPY_BUFFER_SIZE - m_copyState->m_leftOver;
             }
         }
         if (NS_FAILED(rv)) return rv;

@@ -4733,7 +4733,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
     command.Append(flagString);
     command.Append(") {");
     
-    dataBuffer = (char*) PR_CALLOC(FOUR_K+1);
+    dataBuffer = (char*) PR_CALLOC(COPY_BUFFER_SIZE+1);
     if (!dataBuffer) goto done;
     rv = fileSpec->GetFileSize(&fileSize);
     if (NS_FAILED(rv)) goto done;
@@ -4755,7 +4755,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
     readCount = 0;
     while(NS_SUCCEEDED(rv) && !eof && totalSize > 0)
     {
-      rv = fileInputStream->Read(dataBuffer, FOUR_K, &readCount);
+      rv = fileInputStream->Read(dataBuffer, COPY_BUFFER_SIZE, &readCount);
       if (NS_SUCCEEDED(rv))
       {
         dataBuffer[readCount] = 0;

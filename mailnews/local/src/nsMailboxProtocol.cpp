@@ -260,40 +260,39 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports 
       if (window)
         window->GetStopped(&stopped);
     }
-  }
 
-  if (!stopped && NS_SUCCEEDED(aStatus) && (m_mailboxAction == nsIMailboxUrl::ActionCopyMessage || m_mailboxAction == nsIMailboxUrl::ActionMoveMessage))
-  {
-    PRUint32 numMoveCopyMsgs;
-    PRUint32 curMoveCopyMsgIndex;
-    rv = m_runningUrl->GetNumMoveCopyMsgs(&numMoveCopyMsgs);
-    if (NS_SUCCEEDED(rv) && numMoveCopyMsgs > 0)
+    if (!stopped && NS_SUCCEEDED(aStatus) && (m_mailboxAction == nsIMailboxUrl::ActionCopyMessage || m_mailboxAction == nsIMailboxUrl::ActionMoveMessage))
     {
-      m_runningUrl->GetCurMoveCopyMsgIndex(&curMoveCopyMsgIndex);
-      if (++curMoveCopyMsgIndex < numMoveCopyMsgs)
+      PRUint32 numMoveCopyMsgs;
+      PRUint32 curMoveCopyMsgIndex;
+      rv = m_runningUrl->GetNumMoveCopyMsgs(&numMoveCopyMsgs);
+      if (NS_SUCCEEDED(rv) && numMoveCopyMsgs > 0)
       {
+        m_runningUrl->GetCurMoveCopyMsgIndex(&curMoveCopyMsgIndex);
+        if (++curMoveCopyMsgIndex < numMoveCopyMsgs)
+        {
 	      if (!mSuppressListenerNotifications && m_channelListener)
-        {
-       	  nsCOMPtr<nsICopyMessageStreamListener> listener = do_QueryInterface(m_channelListener, &rv);
-          if (listener)
           {
-            listener->EndCopy(ctxt, aStatus);
-            listener->StartMessage(); // start next message.
+       	    nsCOMPtr<nsICopyMessageStreamListener> listener = do_QueryInterface(m_channelListener, &rv);
+            if (listener)
+            {
+              listener->EndCopy(ctxt, aStatus);
+              listener->StartMessage(); // start next message.
+            }
           }
-        }
-        m_runningUrl->SetCurMoveCopyMsgIndex(curMoveCopyMsgIndex);
-        nsCOMPtr <nsIMsgDBHdr> nextMsg;
-        rv = m_runningUrl->GetMoveCopyMsgHdrForIndex(curMoveCopyMsgIndex, getter_AddRefs(nextMsg));
-        if (NS_SUCCEEDED(rv) && nextMsg)
-        {
-          PRUint32 msgSize = 0;
-          nsMsgKey msgKey;
+          m_runningUrl->SetCurMoveCopyMsgIndex(curMoveCopyMsgIndex);
+          nsCOMPtr <nsIMsgDBHdr> nextMsg;
+          rv = m_runningUrl->GetMoveCopyMsgHdrForIndex(curMoveCopyMsgIndex, getter_AddRefs(nextMsg));
+          if (NS_SUCCEEDED(rv) && nextMsg)
+          {
+            PRUint32 msgSize = 0;
+            nsMsgKey msgKey;
 
-          nextMsg->GetMessageKey(&msgKey);
-          nextMsg->GetMessageSize(&msgSize);
-        // now we have to seek to the right position in the file and
-        // basically re-initialize the transport with the correct message size.
-          // then, we have to make sure the url keeps running somehow.
+            nextMsg->GetMessageKey(&msgKey);
+            nextMsg->GetMessageSize(&msgSize);
+            // now we have to seek to the right position in the file and
+            // basically re-initialize the transport with the correct message size.
+            // then, we have to make sure the url keeps running somehow.
 			    nsCOMPtr<nsISupports> urlSupports = do_QueryInterface(m_runningUrl);
             // put us in a state where we are always notified of incoming data
             PR_Sleep(PR_MicrosecondsToInterval(500UL));
@@ -310,7 +309,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIRequest *request, nsISupports 
         }
       }
     }
-
+  }
 	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
 	// available for another url if there is one.
 	
