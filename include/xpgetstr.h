@@ -47,6 +47,8 @@ XP_BEGIN_PROTOS
  */
 PUBLIC char *XP_GetString(int id);
 
+PUBLIC char *XP_CopyStringInUTF8(int id);
+PUBLIC char *XP_CopyString(int id);
 /**
  * Get a cross platform HTML string resource by ID.
  *
