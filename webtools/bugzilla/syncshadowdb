@@ -51,6 +51,9 @@ foreach my $opt (@ARGV) {
     } elsif ($opt eq '-syncall') {
         $syncall = 1;
         $verbose = 1;
+    } elsif ($opt eq '--') {
+        # do nothing - null parameter so we can use
+        # multi-param system() call in globals.pl
     } else {
         Usage();
     }
