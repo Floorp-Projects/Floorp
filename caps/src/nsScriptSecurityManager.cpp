@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
+ * Steve Morse
  */
 #include "nsScriptSecurityManager.h"
 #include "nsIServiceManager.h"
@@ -43,7 +45,16 @@
 #include "nsDOMPropNames.h"
 #include "nsIXPConnect.h"
 #include "nsIXPCSecurityManager.h"
+#include "nsTextFormatter.h"
+#include "nsIIOService.h"
+#include "nsIStringBundle.h"
+#include "nsINetSupportDialogService.h"
 
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
+static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
+static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCScriptNameSetRegistryCID, 
                      NS_SCRIPT_NAMESET_REGISTRY_CID);
@@ -700,6 +711,126 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
     return NS_OK;
 }
 
+#define PROPERTIES_URL "chrome://security/locale/security.properties"
+
+nsresult
+Localize(char *genericString, nsString &result) 
+{
+    nsresult ret;
+    
+    /* create a URL for the string resource file */
+    nsIIOService *pNetService = nsnull;
+    ret = nsServiceManager::GetService(kIOServiceCID, kIIOServiceIID,
+                                       (nsISupports**) &pNetService);
+    if (NS_FAILED(ret)) {
+        NS_WARNING("cannot get net service\n");
+        return ret;
+    }
+    nsIURI *uri = nsnull;
+    ret = pNetService->NewURI(PROPERTIES_URL, nsnull, &uri);
+    if (NS_FAILED(ret)) {
+        NS_WARNING("cannot create URI\n");
+        nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
+        return ret;
+    }
+    
+    nsIURI *url = nsnull;
+    ret = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
+    nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
+    
+    if (NS_FAILED(ret)) {
+        NS_WARNING("cannot create URL\n");
+        return ret;
+    }
+    
+    /* create a bundle for the localization */
+    nsIStringBundleService *pStringService = nsnull;
+    ret = nsServiceManager::GetService(kStringBundleServiceCID,
+        kIStringBundleServiceIID, (nsISupports**) &pStringService);
+    if (NS_FAILED(ret)) {
+        NS_WARNING("cannot get string service\n");
+        return ret;
+    }
+    char *spec = nsnull;
+    ret = url->GetSpec(&spec);
+    if (NS_FAILED(ret)) {
+        NS_WARNING("cannot get url spec\n");
+        nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
+        nsCRT::free(spec);
+        return ret;
+    }
+    nsILocale *locale = nsnull;
+    nsIStringBundle *bundle = nsnull;
+    ret = pStringService->CreateBundle(spec, locale, &bundle);
+    nsCRT::free(spec);
+    nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
+    if (NS_FAILED(ret)) {
+        NS_WARNING("cannot create instance\n");
+        return ret;
+    }
+    
+    /* localize the given string */
+    nsAutoString strtmp(genericString);
+    PRUnichar *ptrv = nsnull;
+    ret = bundle->GetStringFromName(strtmp.GetUnicode(), &ptrv);
+    NS_RELEASE(bundle);
+    if (NS_FAILED(ret)) {
+        NS_WARNING("cannot get string from name\n");
+    }
+    result = ptrv;
+    nsCRT::free(ptrv);
+    return ret;
+}
+
+static PRBool
+CheckConfirmDialog(const PRUnichar *szMessage, const PRUnichar *szCheckMessage,
+                   PRBool *checkValue) 
+{
+    nsresult res;  
+    NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+    if (NS_FAILED(res)) {
+        *checkValue = 0;
+        return PR_FALSE;
+    }
+    
+    PRInt32 buttonPressed = 1; /* in case user exits dialog by clicking X */
+    nsAutoString yes, no, titleline;
+    if (NS_FAILED(res = Localize("Yes", yes)))
+        return PR_FALSE;
+    if (NS_FAILED(res = Localize("No", no)))
+        return PR_FALSE;
+    if (NS_FAILED(res = Localize("Titleline", titleline)))
+        return PR_FALSE;
+    
+    res = dialog->UniversalDialog(
+        nsnull, /* title message */
+        titleline.GetUnicode(), /* title text in top line of window */
+        szMessage, /* this is the main message */
+        szCheckMessage, /* This is the checkbox message */
+        yes.GetUnicode(), /* first button text */
+        no.GetUnicode(), /* second button text */
+        nsnull, /* third button text */
+        nsnull, /* fourth button text */
+        nsnull, /* first edit field label */
+        nsnull, /* second edit field label */
+        nsnull, /* first edit field initial and final value */
+        nsnull, /* second edit field initial and final value */
+        nsnull,  /* icon: question mark by default */
+        checkValue, /* initial and final value of checkbox */
+        2, /* number of buttons */
+        0, /* number of edit fields */
+        0, /* is first edit field a password field */
+        &buttonPressed);
+    
+    if (NS_FAILED(res)) {
+        *checkValue = 0;
+    }
+    if (*checkValue != 0 && *checkValue != 1) {
+        *checkValue = 0; /* this should never happen but it is happening!!! */
+    }
+    return (buttonPressed == 0);
+}
+
 static nsresult
 GetPrincipalAndFrame(JSContext *cx, nsIPrincipal **result, 
                      JSStackFrame **frameResult) 
@@ -751,20 +882,45 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
     if (NS_FAILED(principal->CanEnableCapability(capability, &canEnable)))
         return NS_ERROR_FAILURE;
     if (canEnable == nsIPrincipal::ENABLE_WITH_USER_PERMISSION) {
-        // XXX ask user!
-        canEnable = nsIPrincipal::ENABLE_GRANTED;
-        if (NS_FAILED(principal->SetCanEnableCapability(capability, canEnable)))
+        // Prompt user for permission to enable capability.
+        static PRBool remember = PR_TRUE;
+        nsAutoString query, check;
+        if (NS_FAILED(Localize("EnableCapabilityQuery", query)))
             return NS_ERROR_FAILURE;
-        nsIPrincipalKey key(principal);
-        if (!mPrincipals) {
-            mPrincipals = new nsSupportsHashtable(31);
-            if (!mPrincipals)
-                return NS_ERROR_OUT_OF_MEMORY;
+        if (NS_FAILED(Localize("CheckMessage", check)))
+            return NS_ERROR_FAILURE;
+        char *source;
+        if (NS_FAILED(principal->ToUserVisibleString(&source)))
+            return NS_ERROR_FAILURE;
+        PRUnichar *message = nsTextFormatter::smprintf(query.GetUnicode(), 
+                                                       source);
+        Recycle(source);
+        canEnable = CheckConfirmDialog(message, check.GetUnicode(), &remember)
+                    ? nsIPrincipal::ENABLE_GRANTED
+                    : nsIPrincipal::ENABLE_DENIED;
+        PR_FREEIF(message);
+        if (remember) {
+            if (NS_FAILED(principal->SetCanEnableCapability(capability, canEnable)))
+                return NS_ERROR_FAILURE;
+            mIsWritingPrefs = PR_TRUE;
+            if (NS_FAILED(principal->WriteToPrefs(mPrefs))) {
+                mIsWritingPrefs = PR_FALSE;
+                return NS_ERROR_FAILURE;
+            }
+            mIsWritingPrefs = PR_FALSE;
+            if (NS_FAILED(mPrefs->SavePrefFile()))
+                return NS_ERROR_FAILURE;
+            nsIPrincipalKey key(principal);
+            if (!mPrincipals) {
+                mPrincipals = new nsSupportsHashtable(31);
+                if (!mPrincipals)
+                    return NS_ERROR_OUT_OF_MEMORY;
+            }
+            // This is a little sneaky. "supports" below is a void *, which won't 
+            // be refcounted, but is matched with a key that is the same object,
+            // which will be refcounted.
+            mPrincipals->Put(&key, principal);
         }
-        // This is a little sneaky. "supports" below is a void *, which won't 
-        // be refcounted, but is matched with a key that is the same object,
-        // which will be refcounted.
-        mPrincipals->Put(&key, principal);
     }
     if (canEnable != nsIPrincipal::ENABLE_GRANTED) {
 		static const char msg[] = "enablePrivilege not granted";
@@ -881,7 +1037,8 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
     : mOriginToPolicyMap(nsnull), mPrefs(nsnull), 
       mSystemPrincipal(nsnull), mPrincipals(nsnull), 
       mIsJavaScriptEnabled(PR_FALSE),
-      mIsMailJavaScriptEnabled(PR_FALSE)
+      mIsMailJavaScriptEnabled(PR_FALSE),
+      mIsWritingPrefs(PR_FALSE)
 {
     NS_INIT_REFCNT();
     memset(hasPolicyVector, 0, sizeof(hasPolicyVector));
@@ -1031,7 +1188,7 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     ** Access tests failed, so now report error.
     */
     char *str;
-    if (NS_FAILED(subject->ToString(&str)))
+    if (NS_FAILED(subject->ToUserVisibleString(&str)))
         return NS_ERROR_FAILURE;
     JS_ReportError(aCx, "access disallowed from scripts at %s to documents "
                         "at another domain", str);
@@ -1223,7 +1380,7 @@ DeleteEntry(nsHashKey *aKey, void *aData, void* closure)
 }
 
 void 
-nsScriptSecurityManager::enumeratePolicyCallback(const char *prefName, 
+nsScriptSecurityManager::EnumeratePolicyCallback(const char *prefName, 
                                                  void *data)
 {
     if (!prefName || !*prefName)
@@ -1330,7 +1487,7 @@ struct EnumeratePrincipalsInfo {
 };
 
 void
-nsScriptSecurityManager::enumeratePrincipalsCallback(const char *prefName, 
+nsScriptSecurityManager::EnumeratePrincipalsCallback(const char *prefName, 
                                                      void *voidParam)
 {
     EnumeratePrincipalsInfo *info = (EnumeratePrincipalsInfo *) voidParam;
@@ -1346,17 +1503,17 @@ nsScriptSecurityManager::enumeratePrincipalsCallback(const char *prefName,
         nsCodebasePrincipal *codebase = new nsCodebasePrincipal();
         if (codebase) {
             NS_ADDREF(codebase);
-            if (NS_SUCCEEDED(codebase->Init(data))) 
+            if (NS_SUCCEEDED(codebase->InitFromPersistent(prefName, data))) 
                 principal = do_QueryInterface((nsBasePrincipal*)codebase);
             NS_RELEASE(codebase);
         }
     } else if (PL_strncasecmp(data, certificateName, 
-        sizeof(certificateName)-1) == 0)
+                              sizeof(certificateName)-1) == 0)
     {
         nsCertificatePrincipal *certificate = new nsCertificatePrincipal();
         if (certificate) {
             NS_ADDREF(certificate);
-            if (NS_SUCCEEDED(certificate->Init(data))) 
+            if (NS_SUCCEEDED(certificate->InitFromPersistent(prefName, data))) 
                 principal = do_QueryInterface((nsBasePrincipal*)certificate);
             NS_RELEASE(certificate);
         }
@@ -1393,6 +1550,19 @@ nsScriptSecurityManager::JSEnabledPrefChanged(const char *pref, void *data)
     return 0;
 }
 
+int
+nsScriptSecurityManager::PrincipalPrefChanged(const char *pref, void *data)
+{
+    nsScriptSecurityManager *secMgr = (nsScriptSecurityManager *) data;
+    if (secMgr->mIsWritingPrefs)
+        return 0;
+    EnumeratePrincipalsInfo info;
+    info.ht = secMgr->mPrincipals;
+    info.prefs = secMgr->mPrefs;
+    EnumeratePrincipalsCallback(pref, &info);
+    return 0;
+}
+
 
 NS_IMETHODIMP
 nsScriptSecurityManager::InitFromPrefs()
@@ -1416,7 +1586,7 @@ nsScriptSecurityManager::InitFromPrefs()
     prefs->RegisterCallback(jsEnabledPrefName, JSEnabledPrefChanged, this);
     prefs->RegisterCallback(jsMailEnabledPrefName, JSEnabledPrefChanged, this);
     prefs->EnumerateChildren("security.policy", 
-                             nsScriptSecurityManager::enumeratePolicyCallback,
+                             nsScriptSecurityManager::EnumeratePolicyCallback,
                              (void *) this);
 
     if (!mPrincipals) {
@@ -1428,8 +1598,10 @@ nsScriptSecurityManager::InitFromPrefs()
     info.ht = mPrincipals;
     info.prefs = mPrefs;
     prefs->EnumerateChildren("security.principal", 
-                             nsScriptSecurityManager::enumeratePrincipalsCallback,
+                             nsScriptSecurityManager::EnumeratePrincipalsCallback,
                              (void *) &info);
+
+    prefs->RegisterCallback("security.principal", PrincipalPrefChanged, this);
 
     return NS_OK;
 }

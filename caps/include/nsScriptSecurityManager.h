@@ -14,11 +14,13 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
  */
+
 #ifndef _NS_SCRIPT_SECURITY_MANAGER_H_
 #define _NS_SCRIPT_SECURITY_MANAGER_H_
 
@@ -80,13 +82,16 @@ private:
     InitFromPrefs();
 
     static void
-    enumeratePolicyCallback(const char *prefName, void *data);
+    EnumeratePolicyCallback(const char *prefName, void *data);
 
     static void
-    enumeratePrincipalsCallback(const char *prefName, void *data);
+    EnumeratePrincipalsCallback(const char *prefName, void *data);
 
     static int
     JSEnabledPrefChanged(const char *pref, void *data);
+
+    static int
+    PrincipalPrefChanged(const char *pref, void *data);
 
     nsObjectHashtable *mOriginToPolicyMap;
     nsIPref *mPrefs;
@@ -94,6 +99,7 @@ private:
     nsSupportsHashtable *mPrincipals;
     PRBool mIsJavaScriptEnabled;
     PRBool mIsMailJavaScriptEnabled;
+    PRBool mIsWritingPrefs;
     unsigned char hasPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
     unsigned char hasDomainPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
 };

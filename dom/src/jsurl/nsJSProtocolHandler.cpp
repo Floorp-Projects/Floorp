@@ -204,7 +204,7 @@ nsJSProtocolHandler::NewChannel(const char* verb,
     // The event sink must be a script global Object Owner or we fail.
     nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner;
     notificationCallbacks->GetInterface(NS_GET_IID(nsIScriptGlobalObjectOwner),
-                                             getter_AddRefs(globalOwner));
+                                        getter_AddRefs(globalOwner));
     NS_ENSURE_TRUE(globalOwner, NS_ERROR_FAILURE);
 
     // So far so good: get the script context from its owner.
@@ -223,30 +223,27 @@ nsJSProtocolHandler::NewChannel(const char* verb,
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
 
+    // Get principal
     nsCOMPtr<nsIPrincipal> principal;
-    // script is currently executing; get principal from that script
-    if (NS_FAILED(securityManager->GetSubjectPrincipal(getter_AddRefs(principal))))
+    nsCOMPtr<nsIURI> referringUri;
+    if (originalURI) {
+      referringUri = originalURI;
+    } else {
+      nsCOMPtr<nsIWebShell> webShell;
+      webShell = do_QueryInterface(globalOwner);
+      if (!webShell)
         return NS_ERROR_FAILURE;
-    if (!principal) {
-      // No scripts currently executing; get principal from referrer of link
-      nsCOMPtr<nsIURI> referringUri;
-      if (originalURI) {
-        referringUri = originalURI;
-      } else {
-        nsCOMPtr<nsIWebShell> webShell;
-        webShell = do_QueryInterface(globalOwner);
-        if (!webShell)
-          return NS_ERROR_FAILURE;
-        const PRUnichar* url;
-        if (NS_FAILED(webShell->GetURL(&url)))
-          return NS_ERROR_FAILURE;
-        nsString urlStr(url);
-        
-        if (NS_FAILED(NS_NewURI(getter_AddRefs(referringUri), urlStr, nsnull)))
-          return NS_ERROR_FAILURE;
-      }
-      if (NS_FAILED(securityManager->GetCodebasePrincipal(referringUri, getter_AddRefs(principal))))
+      const PRUnichar* url;
+      if (NS_FAILED(webShell->GetURL(&url)))
         return NS_ERROR_FAILURE;
+      nsString urlStr(url);
+      if (NS_FAILED(NS_NewURI(getter_AddRefs(referringUri), urlStr, nsnull)))
+        return NS_ERROR_FAILURE;
+    }
+    if (NS_FAILED(securityManager->GetCodebasePrincipal(referringUri, 
+                                                        getter_AddRefs(principal))))
+    {
+      return NS_ERROR_FAILURE;
     }
 
 

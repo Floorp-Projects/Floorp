@@ -14,11 +14,13 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
  */
+
 /*describes principals for use in signed scripts*/
 #include "nsCertificatePrincipal.h"
 #include "nsCOMPtr.h"
@@ -68,6 +70,13 @@ nsCertificatePrincipal::ToString(char **result)
     return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
+NS_IMETHODIMP 
+nsCertificatePrincipal::ToUserVisibleString(char **result)
+{
+    // XXX TODO: need company name rather than issuer and serial number here.
+    return ToString(result);
+}
+
 NS_IMETHODIMP
 nsCertificatePrincipal::Equals(nsIPrincipal * other, PRBool * result)
 {
@@ -107,7 +116,7 @@ nsCertificatePrincipal::HashValue(PRUint32 *result)
 }
 
 NS_IMETHODIMP
-nsCertificatePrincipal::Init(const char* data)
+nsCertificatePrincipal::InitFromPersistent(const char *name, const char* data)
 {
     // Parses preference strings of the form 
     // "[Certificate Issuer Serial#] capabilities string"
@@ -131,16 +140,15 @@ nsCertificatePrincipal::Init(const char* data)
     *wordEnd = '\0';
     const char* serial = data;
 
-    if(NS_FAILED(Init(issuer, serial))) return NS_ERROR_FAILURE;
+    if (NS_FAILED(Init(issuer, serial))) 
+        return NS_ERROR_FAILURE;
 
-    if (wordEnd[1] != '\0')
-    {
+    if (wordEnd[1] != '\0') {
         data = wordEnd+2; // Jump to beginning of caps data
-        return nsBasePrincipal::Init(data);
+        return nsBasePrincipal::InitFromPersistent(name, data);
     }
-    else
-        return NS_OK;
- }
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsCertificatePrincipal::Init(const char* aIssuerName, const char* aSerialNumber)

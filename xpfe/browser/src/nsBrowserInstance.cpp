@@ -1798,7 +1798,7 @@ nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::Add(const char * aURL, nsIWebShell * aWebShell)
+nsBrowserAppCore::Add(const char * aURL, const char * aReferrer, nsIWebShell * aWebShell)
 {
  return NS_OK;
 }

@@ -12,19 +12,23 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999-2000 Netscape Communications Corporation.  All Rights
  * Reserved.
+ * 
+ * Contributor(s):
+ * Norris Boyd
  */
 
 #include "nsBasePrincipal.h"
 #include "nsString.h"
 #include "plstr.h"
+#include "nsIPref.h"
 
 //////////////////////////
 
 
 nsBasePrincipal::nsBasePrincipal()
-    : mCapabilities(nsnull)
+    : mCapabilities(nsnull), mPrefName(nsnull)
 {
 }
 
@@ -40,6 +44,8 @@ nsBasePrincipal::~nsBasePrincipal(void)
 {
     mAnnotations.EnumerateForwards(deleteElement, nsnull);
     delete mCapabilities;
+    if (mPrefName)
+        Recycle(mPrefName);
 }
 
 NS_IMETHODIMP
@@ -136,8 +142,10 @@ nsBasePrincipal::SetCapability(const char *capability, void **annotation,
     return NS_OK;
 }
 
+int nsBasePrincipal::mCapabilitiesOrdinal = 0;
+
 nsresult
-nsBasePrincipal::Init(const char* data)
+nsBasePrincipal::InitFromPersistent(const char *name, const char* data)
 {
     // Parses capabilities strings of the form 
     // "Capability=value ..."
@@ -145,6 +153,17 @@ nsBasePrincipal::Init(const char* data)
     // where value is from 0 to 3 as defined in nsIPrincipal.idl
     if (mCapabilities)
         mCapabilities->Reset();
+
+    nsCAutoString nameString(name);
+    mPrefName = nameString.ToNewCString();
+
+    static const char *prefix = ".X";
+    const char *p = PL_strstr(name, prefix);
+    if (p) {
+        int n = atoi(p + sizeof(prefix)-1);
+        if (mCapabilitiesOrdinal <= n)
+            mCapabilitiesOrdinal = n+1;
+    }
     
     for (;;)
     {
@@ -166,32 +185,46 @@ nsBasePrincipal::Init(const char* data)
 }
 
 PR_STATIC_CALLBACK(PRBool)
-AppendCapability(nsHashKey *aKey, void* aData, void* aStr)
+AppendCapability(nsHashKey *aKey, void *aData, void *aStr)
 {
-    nsAutoString name( ((nsStringKey*)aKey)->GetString() );
     char value = (char)((unsigned int)aData) + '0';
-    nsString* capStr = (nsString*)aStr;
-    
+    nsCString *capStr = (nsCString*) aStr;    
     capStr->Append(' ');
-    capStr->Append(name);
+    capStr->Append(((nsStringKey *) aKey)->GetString());
     capStr->Append('=');
     capStr->Append(value);
-    return (capStr != nsnull);
+    return PR_TRUE;
 }   
         
+
 NS_IMETHODIMP
-nsBasePrincipal::CapabilitiesToString(char** aStr)
+nsBasePrincipal::WriteToPrefs(nsIPref *aPref)
 {
-    if (!mCapabilities || !aStr)
-        return NS_OK;
-
-    nsAutoString capStr;
-    // The following line is a guess at how long the capabilities string
-    // will be (~15 chars per capability). This will minimize copying.
-    capStr.SetCapacity(mCapabilities->Count() * 15);
-    mCapabilities->Enumerate(AppendCapability, (void*)&capStr);
-    *aStr = capStr.ToNewCString();
-    if (!(*aStr)) return NS_ERROR_OUT_OF_MEMORY;
-
-    return NS_OK;
+    char *streamableForm;
+    if (NS_FAILED(ToStreamableForm(&streamableForm))) 
+        return NS_ERROR_FAILURE;
+    if (!mPrefName) {
+        nsCAutoString s("security.principal.X");
+        s += mCapabilitiesOrdinal++;
+        mPrefName = s.ToNewCString();
+    }
+    nsresult rv = aPref->SetCharPref(mPrefName, streamableForm);
+    Recycle(streamableForm);
+    return rv;
 }
+
+NS_IMETHODIMP
+nsBasePrincipal::ToStreamableForm(char **aResult)
+{
+    if (NS_FAILED(ToString(aResult)))
+        return NS_ERROR_FAILURE;
+    if (mCapabilities) {
+        nsCAutoString result(*aResult);
+        mCapabilities->Enumerate(AppendCapability, (void*)&result);
+        Recycle(*aResult);
+        *aResult = result.ToNewCString();
+    }
+    return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+

@@ -42,8 +42,8 @@ static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
 
 
 
-
-static nsHistoryEntry *  GenerateTree(const char * aStickyURL, nsIWebShell * aStickyContainer, nsIWebShell * aContainer,nsHistoryEntry *aParent, nsISessionHistory * aSHist);
+static nsHistoryEntry *  GenerateTree(const char * aStickyURL, nsIWebShell * aStickyContainer, nsIWebShell * aContainer,
+                                      nsHistoryEntry *aParent, nsISessionHistory * aSHist, const char * aReferrer);
 
 #define APP_DEBUG 0
 
@@ -63,7 +63,8 @@ public:
    * Create the History data structures for the current URL. This method
    * will also generate the history tree for the URL if it contains frames
    */
-  nsresult Create(const char * aURL, nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistory * aSHist);
+  nsresult Create(const char * aURL, nsIWebShell * aWebShell, const char * referrer, 
+                  nsHistoryEntry * aParent, nsISessionHistory * aSHist);
 
   /**
    * Load the entry in the content Area
@@ -99,6 +100,16 @@ public:
    * Set the URL  of the page 
    */
   nsresult SetURL(const char * aURL);
+
+  /**
+   * Get the referrer  of the page 
+   */
+  nsresult GetReferrer(char ** aReferrer);
+
+  /**
+   * Set the referrer  of the page 
+   */
+  nsresult SetReferrer(const char * aReferrer);
 
   /**
    * Get the webshell  of the page 
@@ -166,6 +177,7 @@ public:
   
   nsIWebShell *       mWS;    //Webshell corresponding to this history entry
   nsString *          mURL;   // URL for this history entry
+  char *              mReferrer;
   nsString *          mTitle;  // Name of the document
   nsVoidArray         mChildren;  //  children list
   PRInt32             mChildCount; // # of children
@@ -187,6 +199,7 @@ nsHistoryEntry::nsHistoryEntry()
    mHistoryList = nsnull;
    mParent = nsnull;
    mURL = nsnull;
+   mReferrer = nsnull;
    mTitle = nsnull;
    mHistoryState = nsnull; 
 //  NS_INIT_REFCNT();
@@ -195,10 +208,10 @@ nsHistoryEntry::nsHistoryEntry()
 nsHistoryEntry::~nsHistoryEntry()
 {
   MOZ_COUNT_DTOR(nsHistoryEntry);
-   if (mTitle)
-     delete mTitle;
-   if (mURL)
-	 delete mURL;
+   delete mTitle;
+   delete mURL;
+   if (mReferrer)
+     nsCRT::free(mReferrer);
    NS_IF_RELEASE(mWS);
    // mHistoryList is a weak reference. Hence no release.
    mHistoryList = nsnull;
@@ -243,8 +256,24 @@ nsHistoryEntry::SetURL(const char* aURL)
 
   if (mURL)
     delete mURL;
-  mURL =  new nsString(aURL);
+  mURL = new nsString(aURL);
   return NS_OK;
+}
+
+nsresult
+nsHistoryEntry::GetReferrer(char** aReferrer)
+{
+  *aReferrer = mReferrer ? nsCRT::strdup(mReferrer) : nsnull;
+  return NS_OK;
+}
+
+nsresult
+nsHistoryEntry::SetReferrer(const char* aReferrer)
+{
+
+  delete mReferrer;
+  mReferrer = nsCRT::strdup(aReferrer);
+  return aReferrer ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult
@@ -374,21 +403,19 @@ nsHistoryEntry::AddChild(nsHistoryEntry* aChild)
  */
 
 nsresult 
-nsHistoryEntry::Create(const char * aURL, nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistory * aSHist) {
+nsHistoryEntry::Create(const char * aURL, nsIWebShell * aWebShell, const char * aReferrer, 
+                       nsHistoryEntry * aParent, nsISessionHistory * aSHist) 
+{
 
-   // Get the  webshell's url.
- //  aWebShell->GetURL(&url);
-   nsAutoString urlstr(aURL);
-
-   // save the webshell's URL in the history entry
-   char * urlcstr = urlstr.ToNewCString();
-   SetURL(urlcstr);
-   Recycle(urlcstr);
+   // save the webshell's URL and referrer in the history entry
+   SetURL(aURL);
+   if (aReferrer)
+     SetReferrer(aReferrer);
 
    //Save the webshell id
    SetWebShell(aWebShell);
    
-   if (APP_DEBUG) printf("SessionHistory::Create Creating Historyentry %x  for webshell %x, url = %s parent entry = %x\n", (unsigned int)this, (unsigned int)aWebShell, urlstr.ToNewCString(), (unsigned int) aParent);
+   if (APP_DEBUG) printf("SessionHistory::Create Creating Historyentry %x  for webshell %x, url = %s parent entry = %x\n", (unsigned int)this, (unsigned int)aWebShell, aURL, (unsigned int) aParent);
 
    if (aParent)
      aParent->AddChild(this);
@@ -400,7 +427,9 @@ nsHistoryEntry::Create(const char * aURL, nsIWebShell * aWebShell, nsHistoryEntr
 }
 
 static nsHistoryEntry *  
-GenerateTree(const char * aStickyUrl, nsIWebShell * aStickyContainer, nsIWebShell * aContainer, nsHistoryEntry * aParent, nsISessionHistory * aSHist) {
+GenerateTree(const char * aStickyUrl, nsIWebShell * aStickyContainer, nsIWebShell * aContainer, 
+             nsHistoryEntry * aParent, nsISessionHistory * aSHist, const char * aReferrer) 
+{
 
    nsHistoryEntry * hEntry = nsnull;
    const PRUnichar * url = nsnull;
@@ -415,14 +444,14 @@ GenerateTree(const char * aStickyUrl, nsIWebShell * aStickyContainer, nsIWebShel
    }
 
    if (aStickyContainer == aContainer) {
-	   hEntry->Create(aStickyUrl, aContainer, aParent, aSHist);
+	   hEntry->Create(aStickyUrl, aContainer, aReferrer, aParent, aSHist);
    }
    else {
       // Get the  webshell's url.
       aContainer->GetURL(&url);
       urlAStr = (url);
 	  aCStr = urlAStr.ToNewCString();      
-	  hEntry->Create(aCStr, aContainer, aParent, aSHist);
+	  hEntry->Create(aCStr, aContainer, aReferrer, aParent, aSHist);
 	  Recycle((char *) aCStr);
    }
    
@@ -437,7 +466,7 @@ GenerateTree(const char * aStickyUrl, nsIWebShell * aStickyContainer, nsIWebShel
       //nsHistoryEntry * hChild = nsnull;
       aContainer->ChildAt(i, (*getter_AddRefs(childWS))); 
       if (childWS) {
-        GenerateTree(aStickyUrl, aStickyContainer, childWS, hEntry, aSHist);
+        GenerateTree(aStickyUrl, aStickyContainer, childWS, hEntry, aSHist, aReferrer);
       }
     }
   }
@@ -544,7 +573,9 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
 
 			PRUnichar * uniURL = cSURL.ToNewUnicode();
 			prev->SetURL(uniURL);
-	    	prev->LoadURL(uniURL, nsnull, PR_FALSE,  loadType, 0, historyObject);
+            nsAutoString referrer(mReferrer);
+	    	prev->LoadURL(uniURL, nsnull, PR_FALSE,  loadType, 0, historyObject, 
+                          mReferrer ? referrer.GetUnicode() : nsnull);
 			Recycle(uniURL);
 
             if (aIsReload && (pcount > 0)) {
@@ -755,7 +786,7 @@ NS_IMPL_ISUPPORTS1(nsSessionHistory, nsISessionHistory);
   * by typing in the urlbar.
   */
 NS_IMETHODIMP
-nsSessionHistory::Add(const char * aURL, nsIWebShell * aWebShell)
+nsSessionHistory::Add(const char * aURL, const char * aReferrer, nsIWebShell * aWebShell)
 {
   //nsresult  rv = NS_OK;
    nsHistoryEntry * hEntry = nsnull;
@@ -791,7 +822,8 @@ nsSessionHistory::Add(const char * aURL, nsIWebShell * aWebShell)
          NS_ASSERTION(PR_FALSE, "nsSessionHistory::add Low memory");
          return NS_ERROR_OUT_OF_MEMORY;
       }
-      hEntry->Create(aURL, aWebShell, nsnull, this);
+
+      hEntry->Create(aURL, aWebShell, aReferrer, nsnull, this);
 
       /* Set the flag in webshell that indicates that it has been
        * added to session History 
@@ -855,7 +887,7 @@ nsSessionHistory::Add(const char * aURL, nsIWebShell * aWebShell)
              NS_ASSERTION(PR_FALSE, "nsSessionHistory::add Low memory");
              return NS_ERROR_OUT_OF_MEMORY;
            }
-           newEntry->Create(aURL, aWebShell, parentEntry, this);
+           newEntry->Create(aURL, aWebShell, aReferrer, parentEntry, this);
            aWebShell->SetIsInSHist(PR_TRUE);
 
 		       if (parentWS)
@@ -900,7 +932,7 @@ nsSessionHistory::Add(const char * aURL, nsIWebShell * aWebShell)
              aWebShell->GetRootWebShell(root);
   
              if (root)   
-                newEntry = GenerateTree(aURL, aWebShell, root, nsnull, this);
+                newEntry = GenerateTree(aURL, aWebShell, root, nsnull, this, aReferrer);
              if (newEntry) {
                 if ((mHistoryLength - (mHistoryCurrentIndex+1)) > 0) {
                 /* We are somewhere in the middle of the history and a

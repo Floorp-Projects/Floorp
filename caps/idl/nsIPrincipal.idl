@@ -14,10 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Copyright (C) 1999-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
  */
 
 /* Defines the abstract interface for a principal. */
@@ -27,6 +28,8 @@
 %{C++
 struct JSPrincipals;
 %}
+
+interface nsIPref;
 
 [ptr] native JSPrincipals(JSPrincipals);
 
@@ -38,13 +41,15 @@ interface nsIPrincipal : nsISupports {
 	const short ENABLE_DENIED				 = 2;
 	const short ENABLE_WITH_USER_PERMISSION  = 3;
 
-	void ToString(out string result);
+	string ToString();
 
-	void Equals(in nsIPrincipal other, out boolean result);
+	string ToUserVisibleString();
+
+	boolean Equals(in nsIPrincipal other);
 
 	unsigned long HashValue();
 
-	void GetJSPrincipals(out JSPrincipals jsprin);
+	JSPrincipals GetJSPrincipals();
 
     short CanEnableCapability(in string capability);
 
@@ -58,7 +63,9 @@ interface nsIPrincipal : nsISupports {
 
     void DisableCapability(in string capability, inout voidStar annotation);
 
-    void CapabilitiesToString(out string result);
+	string ToStreamableForm();
+
+	void WriteToPrefs(in nsIPref prefs);
 };
 
 

@@ -12,8 +12,11 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999-2000 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * Contributors:
+ * Norris Boyd
  */
 
 /* Shared implementation code for principals. */
@@ -32,9 +35,6 @@ public:
     nsBasePrincipal();
     
     virtual ~nsBasePrincipal(void);
-
-    NS_IMETHOD
-    CapabilitiesToString(char** aCapString);
 
     NS_IMETHOD
     GetJSPrincipals(JSPrincipals **jsprin);
@@ -59,8 +59,14 @@ public:
     DisableCapability(const char *capability, void **annotation);
 
     nsresult
-    Init(const char* data);
-    
+    InitFromPersistent(const char *name, const char *data);
+
+    NS_IMETHOD
+    WriteToPrefs(nsIPref *prefs);
+
+    NS_IMETHOD 
+    ToStreamableForm(char **result);
+
 protected:
     enum AnnotationValue { AnnotationEnabled=1, AnnotationDisabled };
 
@@ -71,6 +77,8 @@ protected:
     nsJSPrincipals mJSPrincipals;
     nsVoidArray mAnnotations;
     nsHashtable *mCapabilities;
+    char *mPrefName;
+    static int mCapabilitiesOrdinal;
 };
 
 // special AddRef/Release to unify reference counts between XPCOM 

@@ -14,10 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Copyright (C) 1999-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
  */
 
 /* The privileged system principal. */
@@ -39,6 +40,8 @@ public:
     
     NS_IMETHOD ToString(char **result);
 
+    NS_IMETHOD ToUserVisibleString(char **result);
+
     NS_IMETHOD Equals(nsIPrincipal *other, PRBool *result);
 
     NS_IMETHOD HashValue(PRUint32 *result);
@@ -57,6 +60,8 @@ public:
 
     NS_IMETHOD DisableCapability(const char *capability, void * *annotation);
 
+    NS_IMETHOD ToStreamableForm(char **result);
+    
     nsSystemPrincipal();
     
     NS_IMETHOD Init();

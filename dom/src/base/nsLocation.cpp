@@ -35,10 +35,12 @@
 #include "nsCOMPtr.h"
 #include "nsJSUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsICodebasePrincipal.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIJSContextStack.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -98,7 +100,7 @@ NS_IMETHODIMP_(void) LocationImpl::SetDocShell(nsIDocShell *aDocShell)
 }
 
 nsresult 
-LocationImpl::CheckURL(nsIURI* aURL)
+LocationImpl::CheckURL(nsIURI* aURL, nsString &aReferrerResult)
 {
   nsresult result;
   // Get JSContext from stack.
@@ -120,6 +122,21 @@ LocationImpl::CheckURL(nsIURI* aURL)
   if (NS_FAILED(result = secMan->CheckLoadURIFromScript(cx, aURL))) 
     return result;
 
+  // Now get the referrer to use when loading the URI
+  nsCOMPtr<nsIPrincipal> principal;
+  if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+  if (codebase) {
+    nsCOMPtr<nsIURI> codebaseURI;
+    if (NS_FAILED(result = codebase->GetURI(getter_AddRefs(codebaseURI))))
+      return result;
+    nsXPIDLCString spec;
+    if (NS_FAILED(result = codebaseURI->GetSpec(getter_Copies(spec))))
+      return result;
+    aReferrerResult = spec;
+  }
+
   return NS_OK;
 }
 
@@ -133,11 +150,16 @@ LocationImpl::SetURL(nsIURI* aURL)
     nsAutoString s = spec;
     nsCRT::free(spec);
 
-    if (NS_FAILED(CheckURL(aURL)))
+    nsAutoString referrer;
+    if (NS_FAILED(CheckURL(aURL, referrer)))
       return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-    return webShell->LoadURL(s.GetUnicode(), nsnull, PR_TRUE);
+    return webShell->LoadURL(s.GetUnicode(), nsnull, PR_TRUE, 
+                             nsIChannel::LOAD_NORMAL, 0, nsnull, 
+                             referrer.Length() > 0
+                             ? referrer.GetUnicode()
+                             : nsnull);
   }
   else {
     return NS_OK;
@@ -358,12 +380,17 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
 
   if ((NS_OK == result) && (mDocShell)) {
 
-    if (NS_FAILED(CheckURL(newUrl)))
+    nsAutoString referrer;
+    if (NS_FAILED(CheckURL(newUrl, referrer)))
       return NS_ERROR_FAILURE;
 
     // Load new URI.
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-    result = webShell->LoadURL(newHref.GetUnicode(), nsnull, aReplace);
+    result = webShell->LoadURL(newHref.GetUnicode(), nsnull, aReplace, 
+                               nsIChannel::LOAD_NORMAL, 0, nsnull, 
+                               referrer.Length() > 0
+                               ? referrer.GetUnicode()
+                               : nsnull);
   }
   
   return result;

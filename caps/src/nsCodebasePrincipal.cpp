@@ -14,10 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Copyright (C) 1999-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
  */
 
 /* Describes principals by their orginating uris */
@@ -52,6 +53,12 @@ nsCodebasePrincipal::ToString(char **result)
     buf += ']';
     *result = buf.ToNewCString();
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsCodebasePrincipal::ToUserVisibleString(char **result)
+{
+    return GetOrigin(result);
 }
 
 NS_IMETHODIMP
@@ -251,9 +258,9 @@ nsCodebasePrincipal::Init(nsIURI *uri)
     return NS_OK;
 }
 
-// This one overrides nsBasePrincipal::Init
+// This method overrides nsBasePrincipal::InitFromPersistent
 nsresult
-nsCodebasePrincipal::Init(const char* data)
+nsCodebasePrincipal::InitFromPersistent(const char *name, const char* data)
 {
     // Parses preference strings of the form 
     // "[Codebase URL] capabilities string"
@@ -268,22 +275,19 @@ nsCodebasePrincipal::Init(const char* data)
 
     char* urlEnd = PL_strchr(data, ']'); // Find end of URL
     NS_ASSERTION(urlEnd, "Malformed security.principal preference.");
-    *urlEnd = '\0';
+    *urlEnd = '\0'; // XXX modification of const char *
 
-    if (NS_FAILED(NS_NewURI(&mURI, data, nsnull)))
-    {
+    if (NS_FAILED(NS_NewURI(&mURI, data, nsnull))) {
         NS_ASSERTION(PR_FALSE, "Malformed URI in security.principal preference.");
         return NS_ERROR_FAILURE;
     }
 
-    if (urlEnd[1] != 0)
-    {
+    if (urlEnd[1] != '\0') {
         data = urlEnd+2; // Jump to beginning of caps data
-        return nsBasePrincipal::Init(data);
+        return nsBasePrincipal::InitFromPersistent(name, data);
     }
-    else
-        return NS_OK;
- }
+    return NS_OK;
+}
 
 nsCodebasePrincipal::~nsCodebasePrincipal(void)
 {

@@ -14,10 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
  */
 
 /* describes principals by their orginating URIs */
@@ -44,6 +45,8 @@ public:
     
     NS_IMETHOD ToString(char **result);
 
+    NS_IMETHOD ToUserVisibleString(char **result);
+
     NS_IMETHOD Equals(nsIPrincipal *other, PRBool *result);
 
     NS_IMETHOD HashValue(PRUint32 *result);
@@ -56,7 +59,7 @@ public:
     Init(nsIURI *uri);
 
     nsresult
-    Init(const char* data);
+    InitFromPersistent(const char *name, const char* data);
 
     virtual ~nsCodebasePrincipal(void);
     
