@@ -136,6 +136,7 @@ nsFtpConnectionThread::nsFtpConnectionThread(nsIEventQueue* aEventQ, nsIStreamLi
 
     mKeepRunning = PR_TRUE;
     mUseDefaultPath = PR_TRUE;
+    mContinueRead = PR_FALSE;
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
@@ -159,7 +160,6 @@ nsFtpConnectionThread::~nsFtpConnectionThread() {
 nsresult
 nsFtpConnectionThread::Process() {
     nsresult rv;
-    PRBool continueRead = PR_FALSE;
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() started for %x (spec =%s)\n", mUrl, mURLSpec));
     
@@ -183,13 +183,13 @@ nsFtpConnectionThread::Process() {
                 PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - READ_BUF - read \"%s\" (%d bytes)\n", mUrl, buffer, read));
 
                 // get the response code out.
-                if (!continueRead) {
+                if (!mContinueRead) {
                     PR_sscanf(buffer, "%d", &mResponseCode);
                     mResponseCode = mResponseCode / 100; // truncate it
                 }
 
                 // see if we're handling a multi-line response.
-                if (continueRead || (buffer[3] == '-')) {
+                if (mContinueRead || (buffer[3] == '-')) {
                     // yup, multi-line response, start appending
                     char *tmpBuffer = buffer, *crlf = nsnull;
                     PRBool lastLine = PR_FALSE;
@@ -216,10 +216,10 @@ nsFtpConnectionThread::Process() {
                         } else {
                             mState = mNextState;
                         }
-                        continueRead = PR_FALSE;
+                        mContinueRead = PR_FALSE;
                     } else {
                         // don't increment state, we need to read more.
-                        continueRead = PR_TRUE;
+                        mContinueRead = PR_TRUE;
                     }
                     break;
                 }
@@ -1693,9 +1693,19 @@ nsFtpConnectionThread::Run() {
         // look for a response code
         switch (greetBuf[0]) {
         case '2':
+            mResponseMsg = greetBuf;
+
+            PR_sscanf(greetBuf, "%d", &mResponseCode);
+            mResponseCode = mResponseCode / 100; // truncate it
+
             // we're receiving some data
-            mNextState = mState;
-            mState = FTP_READ_BUF;
+            // see if it's multiline
+            if (greetBuf[3] == '-') {
+                // yup, multi-line. be sure to digest the rest of it later.
+                mContinueRead = PR_TRUE;
+                mNextState = mState;
+                mState = FTP_READ_BUF;
+            }
             break;
         default:
             break;
