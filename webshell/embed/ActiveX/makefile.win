@@ -85,6 +85,6 @@ WebShellContainer.cpp \
 StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h
 
 clobber::
-	regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
+	-regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
 
 !endif
