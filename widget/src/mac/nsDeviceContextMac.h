@@ -38,7 +38,7 @@ public:
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
 	void SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
-  virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
+  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
 
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);

@@ -27,23 +27,23 @@ class nsDeviceContextWin : public DeviceContextImpl
 public:
   nsDeviceContextWin();
 
-  NS_IMETHOD    Init(nsNativeWidget aWidget);
+  NS_IMETHOD  Init(nsNativeWidget aWidget);
 
-  NS_IMETHOD    GetScrollBarDimensions(float &aWidth, float &aHeight) const;
+  NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
   //get a low level drawing surface for rendering. the rendering context
   //that is passed in is used to create the drawing surface if there isn't
   //already one in the device context. the drawing surface is then cached
   //in the device context for re-use.
-  virtual nsDrawingSurface GetDrawingSurface(nsIRenderingContext &aContext);
+  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
-  NS_IMETHOD CheckFontExistence(const nsString& aFontName);
+  NS_IMETHOD  CheckFontExistence(const nsString& aFontName);
 
-  NS_IMETHOD GetDepth(PRUint32& aDepth);
+  NS_IMETHOD  GetDepth(PRUint32& aDepth);
 
-  NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD  GetILColorSpace(IL_ColorSpace*& aColorSpace);
 
-  NS_IMETHOD GetPaletteInfo(nsPaletteInfo&);
+  NS_IMETHOD  GetPaletteInfo(nsPaletteInfo&);
 
 protected:
   virtual ~nsDeviceContextWin();

@@ -74,12 +74,14 @@ NS_IMETHODIMP nsDeviceContextWin :: GetScrollBarDimensions(float &aWidth, float 
   return NS_OK;
 }
 
-nsDrawingSurface nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aContext)
+NS_IMETHODIMP nsDeviceContextWin :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
-  if (NULL == mSurface)
+  if (NULL == mSurface) {
     mSurface = aContext.CreateDrawingSurface(nsnull);
+  }
 
-  return mSurface;
+  aSurface = mSurface;
+  return NS_OK;
 }
 
 int CALLBACK fontcallback(ENUMLOGFONT FAR *lpelf, NEWTEXTMETRIC FAR *lpntm,
@@ -94,8 +96,7 @@ int CALLBACK fontcallback(ENUMLOGFONT FAR *lpelf, NEWTEXTMETRIC FAR *lpntm,
 NS_IMETHODIMP nsDeviceContextWin :: CheckFontExistence(const nsString& aFontName)
 {
   nsNativeWidget  widget;
-  GetNativeWidget(widget);
-  HWND    hwnd = (HWND)widget;
+  HWND    hwnd = (HWND)mWidget;
   HDC     hdc = ::GetDC(hwnd);
   PRBool  isthere = PR_FALSE;
 
