@@ -133,8 +133,7 @@ class TimerPeriodical  : public Repeater
 // TimerImpl implementation
 //========================================================================================
 
-static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
-NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
+NS_IMPL_ISUPPORTS(TimerImpl, nsITimer::GetIID())
 
 //----------------------------------------------------------------------------------------
 TimerImpl::TimerImpl()
@@ -361,5 +360,5 @@ NS_BASE nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+    return timer->QueryInterface(nsITimer::GetIID(), (void **) aInstancePtrResult);
 }
