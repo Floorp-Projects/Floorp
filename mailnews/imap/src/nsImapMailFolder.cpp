@@ -1854,7 +1854,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 					}
 
 				}
-				delete [] folderName;
+				nsAllocator::Free(folderName);
 			}
 				break;
 			case nsMsgFilterAction::MarkRead:
@@ -2812,6 +2812,7 @@ nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
 						nsString formattedString(printfString);
 						PR_FREEIF(progressMsg);
 						progressMsg = nsCRT::strdup(formattedString.GetUnicode());	
+						PR_smprintf_free(printfString);
 
 					}
 				}

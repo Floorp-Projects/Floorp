@@ -87,6 +87,8 @@ nsImapUrl::~nsImapUrl()
 {
 	PR_FREEIF(m_listOfMessageIds);
 	PR_FREEIF(m_userName);
+	PR_FREEIF(m_destinationCanonicalFolderPathSubString);
+	PR_FREEIF(m_sourceCanonicalFolderPathSubString);
 }
   
 NS_IMPL_ADDREF_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
@@ -1009,12 +1011,14 @@ void nsImapUrl::ParseFolderPath(char **resultingCanonicalPath)
 		m_validUrl = PR_FALSE;
 		return;
 	}
+	NS_ASSERTION(*resultingCanonicalPath == nsnull, "whoops, mem leak");
 
-	*resultingCanonicalPath = PL_strdup(resultPath);
+	char dirSeparator = *resultPath;
+
+	*resultingCanonicalPath = PL_strdup(resultPath + 1);
 	// The delimiter will be set for a given URL, but will not be statically available
 	// from an arbitrary URL.  It is the creator's responsibility to fill in the correct
 	// delimiter from the folder's namespace when creating the URL.
-	char dirSeparator = *(*resultingCanonicalPath)++;
 	if (dirSeparator != kOnlineHierarchySeparatorUnknown)
 		SetOnlineSubDirSeparator( dirSeparator);
 	

@@ -790,6 +790,7 @@ void nsImapServerResponseParser::mailbox_list(PRBool discoveredFromLsub)
 	}
 
 	nsCRT::free(boxSpec->hostName);
+	PR_FREEIF(boxSpec->allocatedPathName);
 	PR_FREEIF(boxSpec); // mscott - do we have any fields we need to release?
 }
 
@@ -848,8 +849,8 @@ void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
 
     	char *convertedName =
             fServerConnection.CreateUtf7ConvertedString(boxname, PR_FALSE);
-		PRUnichar *unicharName;
-        unicharName = fServerConnection.CreatePRUnicharStringFromUTF7(boxname);
+//		PRUnichar *unicharName;
+//        unicharName = fServerConnection.CreatePRUnicharStringFromUTF7(boxname);
     	PL_strfree(boxname);
     	boxname = convertedName;
     }
