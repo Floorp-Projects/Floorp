@@ -363,8 +363,7 @@
 
   <RDF:Description about='urn:sidebar:panel:tinderbox'>
     <NC:title>&sidebar.panel.tinderbox;</NC:title>
-    <NC:content>http://dunk/test.xul</NC:content>
-    <NC:xcontent>http://tinderbox.mozilla.org/seamonkey/panel.html</NC:xcontent>
+    <NC:content>http://tinderbox.mozilla.org/seamonkey/panel.html</NC:content>
   </RDF:Description>
 
   <RDF:Description about='urn:sidebar:nc-panel:travel'>
