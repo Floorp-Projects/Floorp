@@ -50,6 +50,21 @@ nsTextHelper::~nsTextHelper()
 }
 
 //-------------------------------------------------------------------------
+//
+// Set initial parameters
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsTextHelper::PreCreateWidget(nsWidgetInitData *aInitData)
+{
+  if (nsnull != aInitData) {
+    nsTextWidgetInitData* data = (nsTextWidgetInitData *) aInitData;
+    mIsPassword = data->mIsPassword;
+    mIsReadOnly = data->mIsReadOnly;
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsTextHelper::SetMaxTextLength(PRUint32 aChars)
 {
   // This is a normal entry only thing, not a text box
