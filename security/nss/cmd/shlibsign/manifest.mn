@@ -42,6 +42,8 @@ CSRCS = \
 	shlibsign.c \
 	$(NULL)
 
+CHECKFILES = softokn3.chk
+
 # headers for the MODULE (defined above) are implicitly required.
 REQUIRES = dbm seccmd
 
