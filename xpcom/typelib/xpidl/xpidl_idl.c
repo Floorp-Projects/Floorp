@@ -46,9 +46,12 @@ node_is_error(TreeState *state)
 void
 xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
 {
+    IDL_tree_func_data tfd;
+
     while (p) {
         struct _IDL_LIST *list = &IDL_LIST(p);
-        if (!foreach(list->data, IDL_tree_get_scope(list->data), user_data))
+        tfd.tree = list->data;
+        if (!foreach(&tfd, user_data))
             return;
         p = list->next;
     }
@@ -141,19 +144,25 @@ fopen_from_includes(const char *filename, const char *mode,
     if (!strcmp(filename, "-"))
         return stdin;
 
-    while (include_path) {
-        pathname = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s",
-                                   include_path->directory, filename);
-        if (!pathname)
-            return NULL;
+    if (filename[0] != '/') {
+        while (include_path) {
+            pathname = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s",
+                                       include_path->directory, filename);
+            if (!pathname)
+                return NULL;
 #ifdef DEBUG_shaver_bufmgmt
-        fprintf(stderr, "looking for %s as %s\n", filename, pathname);
+            fprintf(stderr, "looking for %s as %s\n", filename, pathname);
 #endif
-        file = fopen(pathname, mode);
-        free(pathname);
+            file = fopen(pathname, mode);
+            free(pathname);
+            if (file)
+                return file;
+            include_path = include_path->next;
+        }
+    } else {
+        file = fopen(filename, mode);
         if (file)
             return file;
-        include_path = include_path->next;
     }
     fprintf(stderr, "can't open %s for reading\n", filename);
     return NULL;
@@ -453,7 +462,8 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
     rv = IDL_parse_filename_with_input(filename, input_callback, &stack,
                                        msg_callback, &top,
                                        &state.ns, IDLF_XPIDL,
-                                       enable_warnings ? IDL_WARNING1 : 0);
+                                       enable_warnings ? IDL_WARNING1 :
+                                       IDL_ERROR);
     if (rv != IDL_SUCCESS) {
         if (rv == -1) {
             g_warning("Parse of %s failed: %s", filename, g_strerror(errno));

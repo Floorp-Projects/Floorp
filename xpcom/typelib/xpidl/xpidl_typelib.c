@@ -31,42 +31,43 @@ struct priv_data {
     GHashTable *interface_map;
     XPTInterfaceDescriptor *current;
     uint16 next_method;
+    uint16 next_const;
 };
 
-#define HEADER(state)    (((struct priv_data *)state->priv)->header)
-#define IFACES(state)    (((struct priv_data *)state->priv)->ifaces)
-#define IFACE_MAP(state) (((struct priv_data *)state->priv)->interface_map)
-#define CURRENT(state)   (((struct priv_data *)state->priv)->current)
-#define NEXT_METH(state) (((struct priv_data *)state->priv)->next_method)
+#define HEADER(state)     (((struct priv_data *)state->priv)->header)
+#define IFACES(state)     (((struct priv_data *)state->priv)->ifaces)
+#define IFACE_MAP(state)  (((struct priv_data *)state->priv)->interface_map)
+#define CURRENT(state)    (((struct priv_data *)state->priv)->current)
+#define NEXT_METH(state)  (((struct priv_data *)state->priv)->next_method)
+#define NEXT_CONST(state) (((struct priv_data *)state->priv)->next_const)
 
 /*
  * If p is an ident for an interface, and we don't have an entry in the
  * interface map yet, add one.
  */
 static gboolean
-add_interface_maybe(IDL_tree p, IDL_tree scope, gpointer user_data)
+add_interface_maybe(IDL_tree_func_data *tfd, gpointer user_data)
 {
     TreeState *state = user_data;
     IDL_tree up;
-    if (IDL_NODE_TYPE(p) == IDLN_IDENT) {
-        if ((IDL_NODE_TYPE((up = IDL_NODE_UP(p))) == IDLN_INTERFACE)) {
-            char *iface = IDL_IDENT(p).str;
+    if (IDL_NODE_TYPE(tfd->tree) == IDLN_IDENT) {
+        if ((IDL_NODE_TYPE((up = IDL_NODE_UP(tfd->tree))) == IDLN_INTERFACE)) {
+            char *iface = IDL_IDENT(tfd->tree).str;
             if (!g_hash_table_lookup(IFACE_MAP(state), iface)) {
                 /* XXX should we parse here and store a struct nsID *? */
-                char *iid = (char *)IDL_tree_property_get(up, "uuid");
-                if (iid)
-                    iid = strdup(iid);
+                char *iid = (char *)IDL_tree_property_get(tfd->tree, "uuid");
+                iid = strdup(iid ? iid : "");
                 g_hash_table_insert(IFACE_MAP(state), iface, iid);
                 IFACES(state)++;
 #ifdef DEBUG_shaver
                 fprintf(stderr, "adding interface #%d: %s/%s\n", IFACES(state),
-                        iface, iid ? iid : "<unresolved>");
+                        iface, iid[0] ? iid : "<unresolved>");
 #endif
             }
         } else {
 #ifdef DEBUG_shaver
             fprintf(stderr, "ident %s isn't an interface (%s)\n",
-                    IDL_IDENT(p).str, IDL_NODE_TYPE_NAME(up));
+                    IDL_IDENT(tfd->tree).str, IDL_NODE_TYPE_NAME(up));
 #endif
         }
     }
@@ -76,45 +77,96 @@ add_interface_maybe(IDL_tree p, IDL_tree scope, gpointer user_data)
 
 /* Find all the interfaces referenced in the tree (uses add_interface_maybe) */
 static gboolean
-find_interfaces(IDL_tree p, IDL_tree scope, gpointer user_data)
+find_interfaces(IDL_tree_func_data *tfd, gpointer user_data)
 {
     IDL_tree node = NULL;
 
-    switch (IDL_NODE_TYPE(p)) {
+    switch (IDL_NODE_TYPE(tfd->tree)) {
       case IDLN_ATTR_DCL:
-        node = IDL_ATTR_DCL(p).param_type_spec;
+        node = IDL_ATTR_DCL(tfd->tree).param_type_spec;
         break;
       case IDLN_OP_DCL:
-        IDL_tree_walk_in_order(IDL_OP_DCL(p).parameter_dcls, find_interfaces,
+        IDL_tree_walk_in_order(IDL_OP_DCL(tfd->tree).parameter_dcls, find_interfaces,
                                user_data);
-        node = IDL_OP_DCL(p).op_type_spec;
+        node = IDL_OP_DCL(tfd->tree).op_type_spec;
         break;
       case IDLN_PARAM_DCL:
-        node = IDL_PARAM_DCL(p).param_type_spec;
+        node = IDL_PARAM_DCL(tfd->tree).param_type_spec;
         break;
       case IDLN_INTERFACE:
-        node = IDL_INTERFACE(p).inheritance_spec;
+        node = IDL_INTERFACE(tfd->tree).inheritance_spec;
         if (node)
             xpidl_list_foreach(node, add_interface_maybe, user_data);
-        node = IDL_INTERFACE(p).ident;
+        node = IDL_INTERFACE(tfd->tree).ident;
         break;
       default:
         node = NULL;
     }
 
-    if (node && IDL_NODE_TYPE(node) == IDLN_IDENT)
-        add_interface_maybe(node, scope, user_data);
+    if (node && IDL_NODE_TYPE(node) == IDLN_IDENT) {
+        IDL_tree_func_data tfd;
+        tfd.tree = node;
+        add_interface_maybe(&tfd, user_data);
+    }
 
     return TRUE;
 }
 
 /* parse str and fill id */
+
+static const char nsIDFmt1[] = 
+  "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
+
+static const char nsIDFmt2[] = 
+  "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x";
+
+#ifdef DEBUG_shaver
+/* for calling from gdb */
+static void
+print_IID(struct nsID *iid, FILE *file)
+{
+    fprintf(file, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+            (PRUint32) iid->m0, (PRUint32) iid->m1,(PRUint32) iid->m2,
+            (PRUint32) iid->m3[0], (PRUint32) iid->m3[1],
+            (PRUint32) iid->m3[2], (PRUint32) iid->m3[3],
+            (PRUint32) iid->m3[4], (PRUint32) iid->m3[5],
+            (PRUint32) iid->m3[6], (PRUint32) iid->m3[7]);
+            
+}
+#endif
+
+/* we cannot link against libxpcom, so we re-implement nsID::Parse here. */
 static gboolean
 fill_iid(struct nsID *id, char *str)
 {
-    /* XXX parse! */
-    memset(id, 0, sizeof(struct nsID));
-    return TRUE;
+    PRInt32 count = 0;
+    PRInt32 n1, n2, n3[8];
+    PRInt32 n0, i;
+
+#ifdef DEBUG_shaver
+    fprintf(stderr, "parsing iid   %s\n", str);
+#endif
+
+    count = PR_sscanf(str, (str[0] == '{' ? nsIDFmt1 : nsIDFmt2),
+                      &n0, &n1, &n2, 
+                      &n3[0],&n3[1],&n3[2],&n3[3],
+                      &n3[4],&n3[5],&n3[6],&n3[7]);
+
+    id->m0 = (PRInt32) n0;
+    id->m1 = (PRInt16) n1;
+    id->m2 = (PRInt16) n2;
+    for (i = 0; i < 8; i++) {
+      id->m3[i] = (PRInt8) n3[i];
+    }
+
+#ifdef DEBUG_shaver
+    if (count == 11) {
+        fprintf(stderr, "IID parsed to ");
+        print_IID(id, stderr);
+        fputs("\n", stderr);
+    }
+#endif
+    return (gboolean)(count == 11);
 }
 
 /* fill the interface_directory IDE table from the interface_map */
@@ -123,30 +175,38 @@ fill_ide_table(gpointer key, gpointer value, gpointer user_data)
 {
     TreeState *state = user_data;
     char *interface = key, *iid = value;
+#if 1
     struct nsID id = {
         0x00112233,
         0x4455,
         0x6677,
         {0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff}
     };
+#else
+    struct nsID id;
+#endif
     XPTInterfaceDirectoryEntry *ide;
 
-#if 0    
-    if (!fill_iid(&id, iid)) {
-        /* XXX report error */
+    PR_ASSERT(iid);
+#ifdef DEBUG_shaver
+    fprintf(stderr, "filling %s\n", interface);
+#endif
+#if 1
+    if (iid[0] && !fill_iid(&id, iid)) {
+        IDL_tree_error(state->tree, "cannot parse IID %s\n", iid);
         return FALSE;
     }
 #endif
 
     ide = &(HEADER(state)->interface_directory[IFACES(state)]);
     if (!XPT_FillInterfaceDirectoryEntry(ide, &id, interface, NULL, NULL)) {
-        /* XXX report error */
+        IDL_tree_error(state->tree, "INTERNAL: XPT_FillIDE failed for %s\n",
+                       interface);
         return FALSE;;
     }
 
     IFACES(state)++;
-    if (iid)
-        free(iid);
+    free(iid);
     return TRUE;
 }
 
@@ -286,25 +346,26 @@ typelib_interface(TreeState *state)
     ide = FindInterfaceByName(HEADER(state)->interface_directory,
                               HEADER(state)->num_interfaces, name);
     if (!ide) {
-        fprintf(stderr,
-                "ERROR: didn't find interface %s in IDE block. Giving up.\n",
-                name);
+        IDL_tree_error(iface, "ERROR: didn't find interface %s in "
+                       "IDE block. Giving up.\n", name);
         return FALSE;
     }
 
     if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
         char *parent;
         if (IDL_LIST(iter).next) {
-            fprintf(stderr, "ERROR: more than one parent interface for %s\n",
-                    name);
+            IDL_tree_error(iface, 
+                           "ERROR: more than one parent interface for %s\n",
+                           name);
             return FALSE;
         }
         parent = IDL_IDENT(IDL_LIST(iter).data).str;
         parent_id = (uint16)(uint32)g_hash_table_lookup(IFACE_MAP(state),
                                                         parent);
         if (!parent_id) {
-            fprintf(stderr, "ERROR: no index found for %s. Giving up.\n",
-                    parent);
+            IDL_tree_error(iface,
+                           "ERROR: no index found for %s. Giving up.\n",
+                           parent);
             return FALSE;
         }
     }
@@ -314,11 +375,146 @@ typelib_interface(TreeState *state)
         return FALSE;
     
     CURRENT(state) = ide->interface_descriptor = id;
+#ifdef DEBUG_shaver
+    fprintf(stderr, "DBG: starting interface %s @ %p\n", name, id);
+#endif
     NEXT_METH(state) = 0;
+    NEXT_CONST(state) = 0;
 
     state->tree = IDL_INTERFACE(iface).body;
     if (state->tree && !xpidl_process_node(state))
         return FALSE;
+#ifdef DEBUG_shaver
+    fprintf(stderr, "DBG: ending interface %s\n", name);
+#endif
+    return TRUE;
+}
+
+static gboolean
+fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
+{
+    IDL_tree up;
+
+    if (type) {
+        switch (IDL_NODE_TYPE(type)) {
+          case IDLN_TYPE_INTEGER: {
+              gboolean sign = IDL_TYPE_INTEGER(type).f_signed;
+              switch(IDL_TYPE_INTEGER(type).f_type) {
+                case IDL_INTEGER_TYPE_SHORT:
+                  td->prefix.flags = sign ? TD_INT16 : TD_UINT16;
+                  break;
+                case IDL_INTEGER_TYPE_LONG:
+                  td->prefix.flags = sign ? TD_INT32 : TD_UINT32;
+                  break;
+                case IDL_INTEGER_TYPE_LONGLONG:
+                  td->prefix.flags = sign ? TD_INT64 : TD_UINT64;
+                  break;
+              }
+              break;
+          }
+          case IDLN_TYPE_CHAR:
+            td->prefix.flags = TD_CHAR;
+            break;
+          case IDLN_TYPE_WIDE_CHAR:
+            td->prefix.flags = TD_WCHAR;
+            break;
+          case IDLN_TYPE_STRING:
+            /* XXXshaver string-type? */
+            td->prefix.flags = TD_PBSTR | XPT_TDP_POINTER;
+            break;
+          case IDLN_TYPE_WIDE_STRING:
+            td->prefix.flags = TD_PWSTRING | XPT_TDP_POINTER;
+            break;
+          case IDLN_TYPE_BOOLEAN:
+            td->prefix.flags = TD_BOOL;
+            break;
+          case IDLN_TYPE_FLOAT:
+            td->prefix.flags = TD_FLOAT;
+            break;
+          case IDLN_IDENT:
+            if (!(up = IDL_NODE_UP(type))) {
+                IDL_tree_error(type, 
+                               "ERROR: orphan ident %s in param list\n",
+                               IDL_IDENT(type).str);
+                return FALSE;
+            }
+            switch (IDL_NODE_TYPE(up)) {
+                /* This whole section is abominably ugly */
+              case IDLN_INTERFACE: {
+                XPTInterfaceDirectoryEntry *ide,
+                    *ides = HEADER(state)->interface_directory;
+                uint16 num_ifaces = HEADER(state)->num_interfaces;
+                char *className = IDL_IDENT(IDL_INTERFACE(up).ident).str;
+                const char *iid_is = NULL;
+
+                if (IDL_NODE_TYPE(state->tree) == IDLN_PARAM_DCL) {
+                    iid_is =
+                        IDL_tree_property_get(IDL_PARAM_DCL(state->tree).simple_declarator,
+                                              "iid_is");
+                }                      
+                if (iid_is) {
+                    int16 argnum = -1, count;
+                    IDL_tree params = IDL_OP_DCL(IDL_NODE_UP(IDL_NODE_UP(state->tree))).parameter_dcls;
+                    for (count = 0; IDL_LIST(params).data;
+                         params = IDL_LIST(params).next, count++) {
+                        char *name;
+                        name = IDL_IDENT(IDL_PARAM_DCL(IDL_LIST(params).data).simple_declarator).str;
+                        if (!strcmp(name, iid_is)) {
+                            argnum = count;
+                            break;
+                        }
+                    }
+                    if (argnum < 0) {
+                        IDL_tree_error(type, "can't find matching arg for "
+                                       "[iid_is(%s)]\n", iid_is);
+                        return FALSE;
+                      }
+                    td->prefix.flags = TD_INTERFACE_IS_TYPE;
+                    td->type.argnum = argnum;
+                } else {
+                    td->prefix.flags = TD_INTERFACE_TYPE;
+                    ide = FindInterfaceByName(ides, num_ifaces, className);
+                    if (!ide || ide < ides || ide > ides + num_ifaces) {
+                        IDL_tree_error(type, "unknown iface %s in param\n",
+                                       className);
+                        return FALSE;
+                    }
+                    td->type.interface = ide - ides + 1;
+#ifdef DEBUG_shaver
+                    fprintf(stderr, "DBG: index %d for %s\n",
+                            td->type.interface, className);
+#endif
+                }
+                break;
+              }
+              case IDLN_NATIVE:
+                td->prefix.flags = TD_VOID | XPT_TDP_POINTER;
+                break;
+              default:
+                IDL_tree_error(type, "can't handle %s ident in param list\n",
+#ifdef DEBUG_shaver
+                        IDL_NODE_TYPE_NAME(IDL_NODE_UP(type))
+#else
+                        "that type of"
+#endif
+                        );
+                return FALSE;
+            }
+            break;
+          default:
+            IDL_tree_error(type, "can't handle %s in param list\n",
+#ifdef DEBUG_shaver
+                        IDL_NODE_TYPE_NAME(IDL_NODE_UP(type))
+#else
+                        "that type"
+#endif
+            );
+            return FALSE;
+        }
+    } else {
+        td->prefix.flags = TD_VOID;
+    }
+
     return TRUE;
 }
 
@@ -326,87 +522,8 @@ static gboolean
 fill_pd_from_type(TreeState *state, XPTParamDescriptor *pd, uint8 flags,
                   IDL_tree type)
 {
-    IDL_tree up;
-
     pd->flags = flags;
-    if (type) {
-        switch (IDL_NODE_TYPE(type)) {
-          case IDLN_TYPE_INTEGER: {
-              gboolean sign = IDL_TYPE_INTEGER(type).f_type;
-              switch(IDL_TYPE_INTEGER(type).f_type) {
-                case IDL_INTEGER_TYPE_SHORT:
-                  pd->type.prefix.flags = sign ? TD_INT16 : TD_UINT16;
-                  break;
-                case IDL_INTEGER_TYPE_LONG:
-                  pd->type.prefix.flags = sign ? TD_INT32 : TD_UINT32;
-                  break;
-                case IDL_INTEGER_TYPE_LONGLONG:
-                  pd->type.prefix.flags = sign ? TD_INT64 : TD_UINT64;
-                  break;
-              }
-              break;
-          }
-          case IDLN_TYPE_CHAR:
-            pd->type.prefix.flags = TD_CHAR;
-            break;
-          case IDLN_TYPE_WIDE_CHAR:
-            pd->type.prefix.flags = TD_WCHAR;
-            break;
-          case IDLN_TYPE_STRING:
-            pd->type.prefix.flags = TD_PSTRING; /* XXXshaver string-type? */
-            break;
-          case IDLN_TYPE_WIDE_STRING:
-            pd->type.prefix.flags = TD_PWSTRING;
-            break;
-          case IDLN_TYPE_BOOLEAN:
-            pd->type.prefix.flags = TD_BOOL;
-            break;
-          case IDLN_NATIVE:
-            pd->type.prefix.flags = TD_VOID | XPT_TDP_POINTER;
-            break;
-          case IDLN_IDENT:
-            if (!(up = IDL_NODE_UP(type))) {
-                fprintf(stderr, "FATAL: orphan ident %s in param list\n",
-                        IDL_IDENT(type).str);
-                return FALSE;
-            }
-            switch (IDL_NODE_TYPE(up)) {
-              case IDLN_INTERFACE: {
-                  XPTInterfaceDirectoryEntry *ide,
-                      *ides = HEADER(state)->interface_directory;
-                  uint16 num_ifaces = HEADER(state)->num_interfaces;
-                  char *className = IDL_IDENT(IDL_INTERFACE(up).ident).str;
-                  
-                  pd->type.prefix.flags = TD_INTERFACE_TYPE;
-                  ide = FindInterfaceByName(ides, num_ifaces, className);
-                  if (!ide || ide < ides || ide > ides + num_ifaces) {
-                      fprintf(stderr, "FATAL: unknown iface %s in params\n",
-                              className);
-                      return FALSE;
-                  }
-                  pd->type.type.interface = ide - ides + 1;
-#ifdef DEBUG_shaver
-                  fprintf(stderr, "DBG: index %d for %s\n",
-                          pd->type.type.interface, className);
-#endif
-                  break;
-              }
-              default:
-                fprintf(stderr, "Can't yet handle %s ident in param list\n",
-                        /*IDL_NODE_TYPE_NAME(up)*/"that type");
-                return FALSE;
-            }
-            break;
-          default:
-            fprintf(stderr, "Can't yet handle %s in param list\n",
-                    /*IDL_NODE_TYPE_NAME(up)*/"that type");
-            return FALSE;
-        }
-    } else {
-        pd->type.prefix.flags = TD_VOID;
-    }
-
-    return TRUE;
+    return fill_td_from_type(state, &pd->type, type);
 }
 
 static gboolean
@@ -425,10 +542,70 @@ fill_pd_from_param(TreeState *state, XPTParamDescriptor *pd, IDL_tree tree)
         flags = XPT_PD_IN | XPT_PD_OUT;
         break;
     }
-    /* XXXshaver retval */
 
+    if (IDL_tree_property_get(IDL_PARAM_DCL(tree).simple_declarator,
+                              "retval")) {
+        if (flags != XPT_PD_OUT) {
+            IDL_tree_error(tree, "can't have [retval] with in%s param "
+                           "(only out)\n",
+                           flags & XPT_PD_OUT ? "out" : "");
+            return FALSE;
+        }
+        flags |= XPT_PD_RETVAL;
+    }
+
+    /* stick param where we can see it later */
+    state->tree = tree;
     return fill_pd_from_type(state, pd, flags,
                              IDL_PARAM_DCL(tree).param_type_spec);
+}
+
+/* XXXshaver common with xpidl_header.c */
+#define ATTR_IDENT(tree) (IDL_IDENT(IDL_LIST(IDL_ATTR_DCL(tree).simple_declarations).data))
+#define ATTR_TYPE_DECL(tree) (IDL_ATTR_DCL(tree).param_type_spec)
+#define ATTR_TYPE(tree) (IDL_NODE_TYPE(ATTR_TYPE_DECL(tree)))
+
+static gboolean
+fill_pd_as_nsresult(XPTParamDescriptor *pd)
+{
+    pd->type.prefix.flags = TD_UINT32; /* TD_NSRESULT */
+    return PR_TRUE;
+}
+
+static gboolean
+typelib_attr_accessor(TreeState *state, XPTMethodDescriptor *meth,
+                      gboolean getter)
+{
+#ifdef DEBUG_shaver
+    fprintf(stdout, "DBG: adding %cetter for %s\n",
+            getter ? 'g' : 's', ATTR_IDENT(state->tree).str);
+#endif
+    if (!XPT_FillMethodDescriptor(meth, getter ? XPT_MD_GETTER : XPT_MD_SETTER,
+                                  ATTR_IDENT(state->tree).str, 1) ||
+        !fill_pd_from_type(state, meth->params,
+                           getter ? XPT_PD_OUT : XPT_PD_IN,
+                          ATTR_TYPE_DECL(state->tree)))
+        return FALSE;
+
+    fill_pd_as_nsresult(meth->result);
+    NEXT_METH(state)++;
+    return TRUE;
+}
+
+static gboolean
+typelib_attr_dcl(TreeState *state)
+{
+    XPTInterfaceDescriptor *id = CURRENT(state);
+    XPTMethodDescriptor *meth;
+    gboolean ro = IDL_ATTR_DCL(state->tree).f_readonly;
+
+    if (!XPT_InterfaceDescriptorAddMethods(id, ro ? 1 : 2))
+        return FALSE;
+    
+    meth = &id->method_descriptors[NEXT_METH(state)];
+    
+    return typelib_attr_accessor(state, meth, TRUE) &&
+        (ro || typelib_attr_accessor(state, meth + 1, FALSE));
 }
 
 static gboolean
@@ -442,12 +619,14 @@ typelib_op_dcl(TreeState *state)
     uint8 op_flags = 0;
 
     if (!XPT_InterfaceDescriptorAddMethods(id, 1))
-        return PR_FALSE;
+        return FALSE;
 
     meth = &id->method_descriptors[NEXT_METH(state)];
 
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next)
-        num_args++;                       /* count params */
+        num_args++;             /* count params */
+    if (op->op_type_spec)
+        num_args++;             /* fake param for _retval */
     if (op->f_noscript)
         op_flags |= XPT_MD_HIDDEN;
     if (op->f_varargs)
@@ -460,21 +639,116 @@ typelib_op_dcl(TreeState *state)
 #endif
     if (!XPT_FillMethodDescriptor(meth, op_flags, IDL_IDENT(op->ident).str,
                                   num_args))
-        return PR_FALSE;
+        return FALSE;
 
     for (num_args = 0, iter = op->parameter_dcls; iter;
          iter = IDL_LIST(iter).next, num_args++) {
         if (!fill_pd_from_param(state, &meth->params[num_args],
                                 IDL_LIST(iter).data))
-            return PR_FALSE;
+            return FALSE;
     }
 
-    if (!fill_pd_from_type(state, meth->result, XPT_PD_RETVAL,
-                           op->op_type_spec))
-        return PR_FALSE;
+    /* XXX unless [nonxpcom] */
+    if (op->op_type_spec) {
+        if (!fill_pd_from_type(state, &meth->params[num_args],
+                               XPT_PD_RETVAL | XPT_PD_OUT,
+                               op->op_type_spec))
+        return FALSE;
+    }
+    
+    if (!fill_pd_as_nsresult(meth->result))
+        return FALSE;
 
     NEXT_METH(state)++;
-    return PR_TRUE;
+    return TRUE;
+}
+
+static gboolean
+typelib_const_dcl(TreeState *state)
+{
+    XPTInterfaceDescriptor *id;
+    XPTConstDescriptor *cd;
+    struct _IDL_CONST_DCL *dcl = &IDL_CONST_DCL(state->tree);
+    
+    /* const -> list -> interface */
+    if (IDL_NODE_TYPE(IDL_NODE_UP(IDL_NODE_UP(state->tree)))
+        != IDLN_INTERFACE) {
+        IDL_tree_warning(state->tree, IDL_WARNING1,
+                         "const decl not inside interface!\n");
+        return TRUE;
+    }
+
+    id = CURRENT(state);
+    if (!XPT_InterfaceDescriptorAddConsts(id, 1))
+        return FALSE;
+    cd = &id->const_descriptors[NEXT_CONST(state)];
+    
+    cd->name = IDL_IDENT(dcl->ident).str;
+#ifdef DEBUG_shaver
+    fprintf(stderr, "DBG: adding const %s\n", cd->name);
+#endif
+
+    if (!fill_td_from_type(state, &cd->type, dcl->const_type))
+        return FALSE;
+    
+    switch (IDL_NODE_TYPE(dcl->const_type)) {
+      case IDLN_TYPE_INTEGER: {
+          IDL_longlong_t value = IDL_INTEGER(dcl->const_exp).value;
+          gboolean sign = IDL_TYPE_INTEGER(dcl->const_type).f_signed;
+          switch(IDL_TYPE_INTEGER(dcl->const_type).f_type) {
+            case IDL_INTEGER_TYPE_SHORT:
+              sign ? cd->value.i16 : cd->value.ui16 = value;
+              break;
+            case IDL_INTEGER_TYPE_LONG:
+              sign ? cd->value.i32 : cd->value.ui32 = value;
+              break;
+            case IDL_INTEGER_TYPE_LONGLONG:
+              /* XXXshaver value -> PRInt64 not legal conversion? */
+              if (sign)
+                  LL_I2L(cd->value.i64, value);
+              else
+                  LL_UI2L(cd->value.ui64, value);
+              break;
+          }
+          break;
+      }
+      case IDLN_TYPE_CHAR:
+        cd->value.ch = IDL_CHAR(dcl->const_exp).value[0];
+        PR_ASSERT(cd->value.ch);
+        break;
+      case IDLN_TYPE_WIDE_CHAR:
+        cd->value.wch = IDL_WIDE_CHAR(dcl->const_exp).value[0];
+        PR_ASSERT(cd->value.wch);
+        break;
+      case IDLN_TYPE_STRING:
+        cd->value.string = XPT_NewStringZ(IDL_STRING(dcl->const_exp).value);
+        if (!cd->value.string)
+            return FALSE;
+        break;
+      case IDLN_TYPE_WIDE_STRING:
+        PR_ASSERT(0);
+        break;
+      case IDLN_TYPE_BOOLEAN:
+        cd->value.bul = IDL_BOOLEAN(dcl->const_exp).value;
+        break;
+      case IDLN_TYPE_FLOAT:
+        cd->value.flt = (float)IDL_FLOAT(dcl->const_exp).value;
+        break;
+#if 0 /* IDL doesn't have double */
+      case IDLN_TYPE_DOUBLE:
+        cd->value.dbl = IDL_FLOAT(dcl->const_exp).value;
+#endif
+        break;
+      case IDLN_IDENT:
+        /* XXX check for nsID? */
+        break;
+      default:
+        IDL_tree_error(state->tree, "illegal type for const\n");
+        return FALSE;
+    }
+    
+    NEXT_CONST(state)++;
+    return TRUE;
 }
 
 nodeHandler *
@@ -487,8 +761,10 @@ xpidl_typelib_dispatch(void)
       /* Initialize non-NULL elements */
       table[IDLN_NONE] = pass_1;
       table[IDLN_LIST] = typelib_list;
-      table[IDLN_INTERFACE] = typelib_interface;
+      table[IDLN_ATTR_DCL] = typelib_attr_dcl;
       table[IDLN_OP_DCL] = typelib_op_dcl;
+      table[IDLN_INTERFACE] = typelib_interface;
+      table[IDLN_CONST_DCL] = typelib_const_dcl;
       initialized = TRUE;
   }
   

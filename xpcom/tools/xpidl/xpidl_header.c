@@ -262,18 +262,18 @@ static gboolean
 attr_accessor(TreeState *state, gboolean getter)
 {
     char *attrname = ATTR_IDENT(state->tree).str;
-        IDL_tree orig = state->tree;
-        fprintf(state->file, "  NS_IMETHOD %cet%c%s(",
-                getter ? 'G' : 'S',
-                toupper(attrname[0]), attrname + 1);
-        state->tree = ATTR_TYPE_DECL(state->tree);
-        if (!xpcom_type(state))
-            return FALSE;
-        state->tree = orig;
-        fprintf(state->file, "%s%sa%c%s) = 0;\n",
-                (STARRED_TYPE(orig) ? "" : " "),
-                getter ? "*" : "",
-                toupper(attrname[0]), attrname + 1);
+    IDL_tree orig = state->tree;
+    fprintf(state->file, "  NS_IMETHOD %cet%c%s(",
+            getter ? 'G' : 'S',
+            toupper(attrname[0]), attrname + 1);
+    state->tree = ATTR_TYPE_DECL(state->tree);
+    if (!xpcom_type(state))
+        return FALSE;
+    state->tree = orig;
+    fprintf(state->file, "%s%sa%c%s) = 0;\n",
+            (STARRED_TYPE(orig) ? "" : " "),
+            getter ? "*" : "",
+            toupper(attrname[0]), attrname + 1);
     return TRUE;
 }
 
