@@ -144,7 +144,7 @@ Usage(const char *progName)
     fprintf(stderr, 
 
 "Usage: %s -n rsa_nickname -p port [-3RTmrvx] [-w password]\n"
-"                   [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
+"         [-i pid_file] [-c ciphers] [-d dbdir] [-f fortezza_nickname] \n"
 "-3 means disable SSL v3\n"
 "-T means disable TLS\n"
 "-R means disable detection of rollback from TLS to SSL3\n"
@@ -156,6 +156,7 @@ Usage(const char *progName)
 "    4 -r's mean request  and require, cert on second handshake.\n"
 "-v means verbose output\n"
 "-x means use export policy.\n"
+"-i pid_file file to write the process id of selfserve\n"
 "-c ciphers   Letter(s) chosen from the following list\n"
 "A    SSL2 RC4 128 WITH MD5\n"
 "B    SSL2 RC4 128 EXPORT40 WITH MD5\n"
@@ -1162,6 +1163,7 @@ main(int argc, char **argv)
     char *               cipherString= NULL;
     char *               dir         = ".";
     char *               passwd      = NULL;
+    char *		 pidFile    = NULL;
     char *               tmp;
     CERTCertificate *    cert   [kt_kea_size] = { NULL };
     SECKEYPrivateKey *   privKey[kt_kea_size] = { NULL };
@@ -1176,7 +1178,7 @@ main(int argc, char **argv)
     progName = strrchr(tmp, '\\');
     progName = progName ? progName + 1 : tmp;
 
-    optstate = PL_CreateOptState(argc, argv, "RT2:3c:d:p:mn:f:rvw:x");
+    optstate = PL_CreateOptState(argc, argv, "RT2:3c:d:p:mn:i:f:rvw:x");
     while (PL_GetNextOpt(optstate) == PL_OPT_OK) {
 	switch(optstate->option) {
 	default:
@@ -1200,6 +1202,8 @@ main(int argc, char **argv)
 
         case 'n': nickName = optstate->value; 	break;
 
+        case 'i': pidFile = optstate->value; 	break;
+
 	case 'p': port = PORT_Atoi(optstate->value); break;
 
 	case 'r': ++requestCert; 		break;
@@ -1217,6 +1221,16 @@ main(int argc, char **argv)
 
     if (port == 0)
 	Usage(progName);
+
+    if (pidFile) {
+	FILE *tmpfile=fopen(pidFile,"w+");
+
+	if (tmpfile) {
+	    fprintf(tmpfile,"%d",getpid());
+	    fclose(tmpfile);
+        }
+    }
+	
 
     /* Call the NSPR initialization routines */
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
