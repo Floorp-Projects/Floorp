@@ -15,11 +15,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# IBM Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2004
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#  Brian Ryner <bryner@brianryner.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,31 +36,29 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =						\
-	base					\
-	core					\
-	html					\
-	events					\
-	stylesheets				\
-	views					\
-	css					\
-	traversal				\
-	range					\
-	xbl					\
-	xpath					\
-	xul					\
-	webforms
+MODULE		= dom
+XPIDL_MODULE	= dom_webforms
+GRE_MODULE	= 1
 
-ifdef MOZ_SVG
-DIRS += svg
-endif
+XPIDLSRCS =					\
+	nsIWebFormsButtonElement.idl		\
+	nsIWebFormsFieldSetElement.idl		\
+	nsIWebFormsFormElement.idl		\
+	nsIWebFormsFormImplementation.idl	\
+	nsIWebFormsInputElement.idl		\
+	nsIWebFormsLabelElement.idl		\
+	nsIWebFormsOutputElement.idl		\
+	nsIWebFormsRepetitionElement.idl	\
+	nsIWebFormsRepetitionEvent.idl		\
+	nsIWebFormsSelectElement.idl		\
+	nsIWebFormsTextAreaElement.idl		\
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
-

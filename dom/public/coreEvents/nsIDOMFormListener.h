@@ -90,6 +90,9 @@ public:
    */
   NS_IMETHOD Input(nsIDOMEvent* aEvent) = 0;
 
+  NS_IMETHOD FormChange(nsIDOMEvent* aEvent) = 0;
+
+  NS_IMETHOD FormInput(nsIDOMEvent* aEvent) = 0;
 };
 
 #endif // nsIDOMFormListener_h__

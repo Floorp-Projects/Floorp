@@ -338,6 +338,9 @@
 
 #include "nsIImageDocument.h"
 
+#include "nsIWebFormsOutputElement.h"
+
+
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -880,6 +883,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(SVGStyleElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)  
 #endif  
+
+  NS_DEFINE_CLASSINFO_DATA(HTMLOutputElement, nsHTMLElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -928,6 +934,9 @@ jsval nsDOMClassInfo::sOnblur_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnsubmit_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnreset_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnchange_id        = JSVAL_VOID;
+jsval nsDOMClassInfo::sOninput_id         = JSVAL_VOID;
+jsval nsDOMClassInfo::sOnformchange_id    = JSVAL_VOID;
+jsval nsDOMClassInfo::sOnforminput_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnselect_id        = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnload_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnbeforeunload_id  = JSVAL_VOID;
@@ -1033,6 +1042,9 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOnsubmit_id,        cx, "onsubmit");
   SET_JSVAL_TO_STRING(sOnreset_id,         cx, "onreset");
   SET_JSVAL_TO_STRING(sOnchange_id,        cx, "onchange");
+  SET_JSVAL_TO_STRING(sOninput_id,         cx, "oninput");
+  SET_JSVAL_TO_STRING(sOnformchange_id,    cx, "onformchange");
+  SET_JSVAL_TO_STRING(sOnforminput_id,     cx, "onforminput");
   SET_JSVAL_TO_STRING(sOnselect_id,        cx, "onselect");
   SET_JSVAL_TO_STRING(sOnload_id,          cx, "onload");
   SET_JSVAL_TO_STRING(sOnbeforeunload_id,  cx, "onbeforeunload");
@@ -2354,6 +2366,11 @@ nsDOMClassInfo::Init()
     
 #endif //MOZ_SVG
 
+  DOM_CLASSINFO_MAP_BEGIN(HTMLOutputElement, nsIWebFormsOutputElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWebFormsOutputElement)
+    DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
 #ifdef NS_DEBUG
   {
     PRUint32 i = sizeof(sClassInfoData) / sizeof(sClassInfoData[0]);
@@ -2933,6 +2950,9 @@ nsDOMClassInfo::ShutDown()
   sOnsubmit_id        = JSVAL_VOID;
   sOnreset_id         = JSVAL_VOID;
   sOnchange_id        = JSVAL_VOID;
+  sOninput_id         = JSVAL_VOID;
+  sOnformchange_id    = JSVAL_VOID;
+  sOnforminput_id     = JSVAL_VOID;
   sOnselect_id        = JSVAL_VOID;
   sOnload_id          = JSVAL_VOID;
   sOnbeforeunload_id  = JSVAL_VOID;
@@ -4624,7 +4644,9 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
   case 'e' :
     return id == sOnerror_id;
   case 'f' :
-    return id == sOnfocus_id;
+    return (id == sOnfocus_id        ||
+            id == sOnformchange_id   ||
+            id == sOnforminput_id);
   case 'c' :
     return (id == sOnchange_id       ||
             id == sOnclick_id        ||

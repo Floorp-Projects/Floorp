@@ -81,6 +81,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     NS_IMETHOD Change(nsIDOMEvent* aEvent);
     NS_IMETHOD Select(nsIDOMEvent* aEvent);
     NS_IMETHOD Input(nsIDOMEvent* aEvent);
+    NS_IMETHOD FormChange(nsIDOMEvent* aEvent);
+    NS_IMETHOD FormInput(nsIDOMEvent* aEvent);
 
     // ----- nsIDOMXULListener ---------------------------
     NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent);

@@ -291,7 +291,10 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGImageElement_id,
   eDOMClassInfo_SVGStyleElement_id,
 #endif //MOZ_SVG
-  
+
+  // WebForms 2.0 classes
+  eDOMClassInfo_HTMLOutputElement_id,
+ 
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

@@ -141,6 +141,8 @@ public:
   NS_IMETHOD FlushPendingSubmission();
   NS_IMETHOD ForgetPendingSubmission();
   NS_IMETHOD GetActionURL(nsIURI** aActionURL);
+  virtual void FireFormChangeEvent();
+  virtual void FireFormInputEvent();
 
   // nsIRadioGroupContainer
   NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
@@ -249,6 +251,9 @@ protected:
    *        submit should be cancelled.
    */
   nsresult NotifySubmitObservers(nsIURI* aActionURL, PRBool* aCancelSubmit);
+
+  // Helper to fire events on all form controls in this form
+  void FireEventOnControls(PRInt32 aEventType);
 
   //
   // Data members
@@ -379,6 +384,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   case NS_FORM_TEXTAREA :
   case NS_FORM_FIELDSET :
   case NS_FORM_OBJECT :
+  case NS_FORM_OUTPUT :
     return PR_TRUE;
   }
 
@@ -1295,6 +1301,43 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   NS_ADDREF(*aActionURL);
 
   return rv;
+}
+
+void
+nsHTMLFormElement::FireEventOnControls(PRInt32 aEventType)
+{
+  if (!mDocument) {
+    return;
+  }
+
+  nsIPresShell *shell = mDocument->GetShellAt(0);
+
+  if (!shell) {
+    return;
+  }
+
+  for (PRInt32 i = mControls->mElements.Count()-1; i >= 0; i--) {
+    nsCOMPtr<nsIContent> f =
+      do_QueryInterface(NS_STATIC_CAST(nsIFormControl *,
+                                       mControls->mElements.ElementAt(i)));
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsGUIEvent event(aEventType);
+
+    shell->HandleEventWithTarget(&event, nsnull, f, NS_EVENT_FLAG_INIT,
+                                 &status); 
+  }
+}
+
+void
+nsHTMLFormElement::FireFormChangeEvent()
+{
+  FireEventOnControls(NS_FORM_FORMCHANGE);
+}
+
+void
+nsHTMLFormElement::FireFormInputEvent()
+{
+  FireEventOnControls(NS_FORM_FORMINPUT);
 }
 
 NS_IMETHODIMP

@@ -67,6 +67,8 @@ class nsIFormSubmission;
 #define NS_FORM_SELECT         19
 #define NS_FORM_TEXTAREA       20
 #define NS_FORM_OBJECT         21
+#define NS_FORM_OUTPUT         22
+
 
 #define NS_IFORMCONTROL_IID   \
 { 0x282ff440, 0xcd7e, 0x11d1, \

@@ -2827,14 +2827,7 @@ nsTextControlFrame::FireOnInput()
     return;
   }
 
-  nsCOMPtr<nsIPresContext> context;
-  presShell->GetPresContext(getter_AddRefs(context));
-  NS_ASSERTION(context, "No pres context");
-  if (!context) {
-    return;
-  }
-
-  presShell->HandleEventWithTarget(&event, nsnull, mContent,
+  presShell->HandleEventWithTarget(&event, this, mContent,
                                    NS_EVENT_FLAG_INIT, &status); 
 }
 
@@ -2871,9 +2864,9 @@ nsTextControlFrame::FireOnChange()
     nsWeakPtr &shell = mTextSelImpl->GetPresShell();
     nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(shell);
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIPresContext> context;
-    if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
-      return presShell->HandleEventWithTarget(&event, nsnull, mContent, NS_EVENT_FLAG_INIT, &status); 
+
+    return presShell->HandleEventWithTarget(&event, this, mContent,
+                                            NS_EVENT_FLAG_INIT, &status); 
   }
   return NS_OK;
 }
