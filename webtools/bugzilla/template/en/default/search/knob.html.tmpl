@@ -17,7 +17,16 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Tobias Burnus <burnus@net-b.de>
   #%]
+
+[%# This is not necessary for English templates, but useful for localisers. %]
+[% ordersdesc = {
+   "Reuse same sort as last time" => "Reuse same sort as last time",
+   "Bug Number"   => "Bug Number",
+   "Importance"   => "Importance",
+   "Assignee"     => "Assignee",
+   "Last Changed" => "Last Changed" } %]
   
 <table>
   <tr>
@@ -78,7 +87,7 @@
       <select name="order">
       [% FOREACH order = orders %]
         <option value="[% order FILTER html %]"
-          [% " selected" IF default.order.0 == order %]>[% order FILTER html %]</option> 
+          [% " selected" IF default.order.0 == order %]>[% ordersdesc.$order FILTER html %]</option> 
       [% END %]
       </select>
 
