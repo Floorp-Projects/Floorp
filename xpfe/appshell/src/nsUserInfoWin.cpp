@@ -18,16 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Seth Spitzer <sspitzer@netscape.com>
+ *   Doug Turner <dougt@netscape.com>
  */
 
 #include "nsUserInfo.h"
-#include "nsCRT.h"
-
-#include <pwd.h>
-#include <sys/types.h>
-#include <unistd.h>
 #include "nsString.h"
+#include "windows.h"
 
 nsUserInfo::nsUserInfo()
 {
@@ -43,22 +39,22 @@ NS_IMPL_ISUPPORTS1(nsUserInfo,nsIUserInfo);
 NS_IMETHODIMP
 nsUserInfo::GetFullname(PRUnichar **aFullname)
 {
-    struct passwd *pw = nsnull;
+    *aFullname = nsnull;
 
-    pw = getpwuid (geteuid ());
+    TCHAR username[256];
+    DWORD size = 256;
 
-    if (!pw || !pw->pw_gecos) return NS_ERROR_FAILURE;
-
-#ifdef DEBUG_sspitzer
-    printf("name = %s\n", pw->pw_gecos);
-#endif
-
-    nsAutoString fullname(pw->pw_gecos);
-
+    if (!GetUserName(username, &size))
+        return NS_ERROR_FAILURE;
+    
+    nsAutoString fullname(username);
     *aFullname = fullname.ToNewUnicode();
-
+    
     if (*aFullname)
         return NS_OK;
 
     return NS_ERROR_FAILURE;
 }
+
+
+ 

@@ -57,5 +57,8 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
 
     *aFullname = fullname.ToNewUnicode();
 
-    return NS_OK;
+    if (*aFullname)
+        return NS_OK;
+
+    return NS_ERROR_FAILURE;
 }
