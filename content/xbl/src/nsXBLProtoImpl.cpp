@@ -190,7 +190,7 @@ NS_NewXBLProtoImpl(nsXBLPrototypeBinding* aBinding,
   if (aClassName)
     impl->mClassName.AssignWithConversion(aClassName);
   else
-    aBinding->GetBindingURI(impl->mClassName);
+    aBinding->BindingURI()->GetSpec(impl->mClassName);
   aBinding->SetImplementation(impl);
   *aResult = impl;
 

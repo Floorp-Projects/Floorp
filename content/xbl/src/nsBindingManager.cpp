@@ -41,10 +41,11 @@
 #include "nsCOMPtr.h"
 #include "nsIXBLService.h"
 #include "nsIInputStream.h"
-#include "nsHashtable.h"
 #include "nsDoubleHashtable.h"
+#include "nsInterfaceHashtable.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
+#include "nsURIHashKey.h"
 #include "nsIChannel.h"
 #include "nsXPIDLString.h"
 #include "nsIParser.h"
@@ -174,28 +175,6 @@ nsAnonymousContentList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 
   return NS_ERROR_FAILURE;
 }
-
-// nsDoubleHashtable stuff to create a generic string -> nsISupports
-// table
-
-class StringToObjectEntry : public PLDHashCStringEntry {
-public:
-  StringToObjectEntry(const void* aKey) : PLDHashCStringEntry(aKey) {
-    MOZ_COUNT_CTOR(StringToObjectEntry);
-  }
-  ~StringToObjectEntry() {
-    MOZ_COUNT_DTOR(StringToObjectEntry);
-  }
-
-  nsISupports* GetValue() { return mValue; }
-  void SetValue(nsISupports* aValue) { mValue = aValue; }
-
-private:
-  nsCOMPtr<nsISupports> mValue;
-};
-
-DECL_DHASH_WRAPPER(StringToObjectTable, StringToObjectEntry, nsACString&)
-DHASH_WRAPPER(StringToObjectTable, StringToObjectEntry, nsACString&)
 
 //
 // Generic pldhash table stuff for mapping one nsISupports to another
@@ -354,7 +333,7 @@ public:
 
   NS_IMETHOD AddLayeredBinding(nsIContent* aContent, nsIURI* aURL);
   NS_IMETHOD RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL);
-  NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, const nsAString& aURL,
+  NS_IMETHOD LoadBindingDocument(nsIDocument* aBoundDoc, nsIURI* aURL,
                                  nsIDocument** aResult);
 
   NS_IMETHOD AddToAttachedQueue(nsIXBLBinding* aBinding);
@@ -364,12 +343,12 @@ public:
   NS_IMETHOD ExecuteDetachedHandlers();
 
   NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
-  NS_IMETHOD GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult);
+  NS_IMETHOD GetXBLDocumentInfo(nsIURI* aURI, nsIXBLDocumentInfo** aResult);
   NS_IMETHOD RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
 
-  NS_IMETHOD PutLoadingDocListener(const nsCString& aURL, nsIStreamListener* aListener);
-  NS_IMETHOD GetLoadingDocListener(const nsCString& aURL, nsIStreamListener** aResult);
-  NS_IMETHOD RemoveLoadingDocListener(const nsCString& aURL);
+  NS_IMETHOD PutLoadingDocListener(nsIURI* aURL, nsIStreamListener* aListener);
+  NS_IMETHOD GetLoadingDocListener(nsIURI* aURL, nsIStreamListener** aResult);
+  NS_IMETHOD RemoveLoadingDocListener(nsIURI* aURL);
 
   NS_IMETHOD InheritsStyle(nsIContent* aContent, PRBool* aResult);
   NS_IMETHOD FlushSkinBindings();
@@ -443,12 +422,12 @@ protected:
   // A mapping from a URL (a string) to nsIXBLDocumentInfo*.  This table
   // is the cache of all binding documents that have been loaded by a
   // given bound document.
-  StringToObjectTable mDocumentTable;
+  nsInterfaceHashtable<nsURIHashKey,nsIXBLDocumentInfo> mDocumentTable;
 
   // A mapping from a URL (a string) to a nsIStreamListener. This
   // table is the currently loading binding docs.  If they're in this
   // table, they have not yet finished loading.
-  StringToObjectTable mLoadingDocTable;
+  nsInterfaceHashtable<nsURIHashKey,nsIStreamListener> mLoadingDocTable;
 
   // A queue of binding attached event handlers that are awaiting
   // execution.
@@ -835,14 +814,10 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
   NS_ENSURE_FALSE(nextBinding, NS_ERROR_FAILURE);
 
   // Make sure that the binding has the URI that is requested to be removed
-  nsCAutoString bindingUriStr;
-  binding->GetBindingURI(bindingUriStr);
-  nsCOMPtr<nsIURI> bindingUri;
-  nsresult rv = NS_NewURI(getter_AddRefs(bindingUri), bindingUriStr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsIURI* bindingUri = binding->BindingURI();
   
   PRBool equalUri;
-  rv = aURL->Equals(bindingUri, &equalUri);
+  nsresult rv = aURL->Equals(bindingUri, &equalUri);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!equalUri) {
     return NS_OK;
@@ -881,16 +856,14 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 
 NS_IMETHODIMP
 nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
-                                      const nsAString& aURL,
+                                      nsIURI* aURL,
                                       nsIDocument** aResult)
 {
-  NS_ConvertUCS2toUTF8 url(aURL);
+  NS_PRECONDITION(aURL, "Must have a URI to load!");
   
   nsCAutoString otherScheme;
-  nsCOMPtr<nsIIOService> ioService = do_GetIOService();
-  if (!ioService) return NS_ERROR_FAILURE;
-  ioService->ExtractScheme(url, otherScheme);
-
+  aURL->GetScheme(otherScheme);
+  
   nsCAutoString scheme;
   aBoundDoc->GetDocumentURL()->GetScheme(scheme);
 
@@ -904,11 +877,14 @@ nsBindingManager::LoadBindingDocument(nsIDocument* aBoundDoc,
 
   // Load the binding doc.
   nsCOMPtr<nsIXBLDocumentInfo> info;
-  xblService->LoadBindingDocumentInfo(nsnull, aBoundDoc, url, nsCAutoString(), PR_TRUE, getter_AddRefs(info));
+  xblService->LoadBindingDocumentInfo(nsnull, aBoundDoc, aURL,
+                                      PR_TRUE, getter_AddRefs(info));
   if (!info)
     return NS_ERROR_FAILURE;
 
-  if (!strcmp(scheme.get(), otherScheme.get()))
+  // XXXbz Why is this based on a scheme comparison?  Shouldn't this
+  // be a real security check???
+    if (!strcmp(scheme.get(), otherScheme.get()))
     info->GetDocument(aResult); // Addref happens here.
     
   return NS_OK;
@@ -977,85 +953,68 @@ nsBindingManager::ExecuteDetachedHandlers()
 NS_IMETHODIMP
 nsBindingManager::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 {
-  if (!mDocumentTable.mHashTable.ops)
-    mDocumentTable.Init(16);
+  NS_PRECONDITION(aDocumentInfo, "Must have a non-null documentinfo!");
+  
+  NS_ENSURE_TRUE(mDocumentTable.IsInitialized() || mDocumentTable.Init(16),
+                 NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<nsIDocument> doc;
-  aDocumentInfo->GetDocument(getter_AddRefs(doc));
+  NS_ENSURE_TRUE(mDocumentTable.Put(aDocumentInfo->DocumentURI(),
+                                    aDocumentInfo),
+                 NS_ERROR_OUT_OF_MEMORY);
 
-  nsCAutoString str;
-  doc->GetDocumentURL()->GetSpec(str);
-
-  StringToObjectEntry* entry = mDocumentTable.AddEntry(str);
-  if (!entry) return NS_ERROR_OUT_OF_MEMORY;
-
-  entry->SetValue(aDocumentInfo);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsBindingManager::RemoveXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 {
-  if (!mDocumentTable.mHashTable.ops)
+  if (!mDocumentTable.IsInitialized())
     return NS_OK;
 
-  nsCOMPtr<nsIDocument> doc;
-  aDocumentInfo->GetDocument(getter_AddRefs(doc));
-
-  nsCAutoString str;
-  doc->GetDocumentURL()->GetSpec(str);
-
-  mDocumentTable.Remove(str);
+  mDocumentTable.Remove(aDocumentInfo->DocumentURI());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBindingManager::GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult)
+nsBindingManager::GetXBLDocumentInfo(nsIURI* aURL, nsIXBLDocumentInfo** aResult)
 {
   *aResult = nsnull;
-  if (!mDocumentTable.mHashTable.ops)
+  if (!mDocumentTable.IsInitialized())
     return NS_OK;
 
-  StringToObjectEntry *entry = mDocumentTable.GetEntry(aURL);
-  if (entry) {
-    *aResult = NS_STATIC_CAST(nsIXBLDocumentInfo*, entry->GetValue());
-    NS_IF_ADDREF(*aResult);
-  }
+  mDocumentTable.Get(aURL, aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBindingManager::PutLoadingDocListener(const nsCString& aURL, nsIStreamListener* aListener)
+nsBindingManager::PutLoadingDocListener(nsIURI* aURL, nsIStreamListener* aListener)
 {
-  if (!mLoadingDocTable.mHashTable.ops)
-    mLoadingDocTable.Init(16);
-
-  StringToObjectEntry* entry = mLoadingDocTable.AddEntry(aURL);
-  if (!entry) return NS_ERROR_OUT_OF_MEMORY;
-  entry->SetValue(aListener);
+  NS_PRECONDITION(aListener, "Must have a non-null listener!");
+  
+  NS_ENSURE_TRUE(mLoadingDocTable.IsInitialized() || mLoadingDocTable.Init(16),
+                 NS_ERROR_OUT_OF_MEMORY);
+  
+  NS_ENSURE_TRUE(mLoadingDocTable.Put(aURL, aListener),
+                 NS_ERROR_OUT_OF_MEMORY);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBindingManager::GetLoadingDocListener(const nsCString& aURL, nsIStreamListener** aResult)
+nsBindingManager::GetLoadingDocListener(nsIURI* aURL, nsIStreamListener** aResult)
 {
   *aResult = nsnull;
-  if (!mLoadingDocTable.mHashTable.ops)
+  if (!mLoadingDocTable.IsInitialized())
     return NS_OK;
 
-  StringToObjectEntry* entry = mLoadingDocTable.GetEntry(aURL);
-  if (entry) {
-    *aResult = NS_STATIC_CAST(nsIStreamListener*, entry->GetValue());
-    NS_IF_ADDREF(*aResult);
-  }
+  mLoadingDocTable.Get(aURL, aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBindingManager::RemoveLoadingDocListener(const nsCString& aURL)
+nsBindingManager::RemoveLoadingDocListener(nsIURI* aURL)
 {
-  if (!mLoadingDocTable.mHashTable.ops)
+  if (!mLoadingDocTable.IsInitialized())
     return NS_OK;
 
   mLoadingDocTable.Remove(aURL);
@@ -1074,16 +1033,12 @@ MarkForDeath(PLDHashTable* aTable, PLDHashEntryHdr* aHdr, PRUint32 aNumber, void
   if (marked)
     return PL_DHASH_NEXT; // Already marked for death.
 
-  nsCAutoString uriStr;
-  binding->GetDocURI(uriStr);
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), uriStr);
-  if (uri) {
-    nsCAutoString path;
-    uri->GetPath(path);
-    if (!strncmp(path.get(), "/skin", 5))
-      binding->MarkForDeath();
-  }
+  nsCAutoString path;
+  nsIURI* uri = binding->DocURI()->GetPath(path);
+
+  if (!strncmp(path.get(), "/skin", 5))
+    binding->MarkForDeath();
+  
   return PL_DHASH_NEXT;
 }
 

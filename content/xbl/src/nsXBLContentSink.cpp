@@ -237,9 +237,15 @@ nsXBLContentSink::HandleStartElement(const PRUnichar *aName,
   if (NS_FAILED(rv))
     return rv;
 
-  if (mState == eXBL_InBinding && !mBinding)
+  if (mState == eXBL_InBinding && !mBinding) {
+    // XXX need to return nsresult here.  Need error-handling in this
+    // file in general.
     ConstructBinding();
-  
+    if (!mBinding) {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
   return rv;
 }
 
@@ -449,9 +455,16 @@ nsXBLContentSink::ConstructBinding()
   nsCAutoString cid; cid.AssignWithConversion(id);
 
   if (!cid.IsEmpty()) {
-    mBinding = new nsXBLPrototypeBinding(cid, mDocInfo, binding);
-    mDocInfo->SetPrototypeBinding(cid, mBinding);
-    binding->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::id, PR_FALSE);
+    mBinding = new nsXBLPrototypeBinding();
+    if (mBinding) {
+      if (NS_SUCCEEDED(mBinding->Init(cid, mDocInfo, binding))) {
+        mDocInfo->SetPrototypeBinding(cid, mBinding);
+        binding->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::id, PR_FALSE);
+      } else {
+        delete mBinding;
+        mBinding = nsnull;
+      }
+    }
   }
 }
 

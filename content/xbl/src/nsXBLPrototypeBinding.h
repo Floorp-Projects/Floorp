@@ -50,6 +50,7 @@
 #include "nsHashtable.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsCOMArray.h"
+#include "nsIURL.h"
 
 class nsIAtom;
 class nsIDocument;
@@ -74,9 +75,9 @@ public:
   already_AddRefed<nsIContent> GetBindingElement();
   void SetBindingElement(nsIContent* aElement);
 
-  nsresult GetBindingURI(nsCString& aResult);
-  nsresult GetDocURI(nsCString& aResult);
-  nsresult GetID(nsCString& aResult) { aResult = mID; return NS_OK; }
+  nsIURI* BindingURI() const { return mBindingURI; }
+  nsIURI* DocURI() const;
+  nsresult GetID(nsACString& aResult) const { return mBindingURI->GetRef(aResult); }
 
   nsresult GetAllowScripts(PRBool* aResult);
 
@@ -111,7 +112,7 @@ public:
   nsXBLPrototypeBinding* GetBasePrototype() { return mBaseBinding; }
 
   already_AddRefed<nsIXBLDocumentInfo>
-  GetXBLDocumentInfo(nsIContent* aBoundElement);
+  GetXBLDocumentInfo(nsIContent* aBoundElement) const;
   
   PRBool HasBasePrototype() { return mHasBaseProto; }
   void SetHasBasePrototype(PRBool aHasBase) { mHasBaseProto = aHasBase; }
@@ -160,9 +161,17 @@ public:
   }
 
 public:
-  nsXBLPrototypeBinding(const nsACString& aRef, nsIXBLDocumentInfo* aInfo, nsIContent* aElement);
+  nsXBLPrototypeBinding();
   ~nsXBLPrototypeBinding();
 
+  // Init must be called after construction to initialize the prototype
+  // binding.  It may well throw errors (eg on out-of-memory).  Do not confuse
+  // this with the Initialize() method, which must be called after the
+  // binding's handlers, properties, etc are all set.
+  nsresult Init(const nsACString& aRef,
+                nsIXBLDocumentInfo* aInfo,
+                nsIContent* aElement);
+  
   nsrefcnt AddRef() {
     ++mRefCnt;
     NS_LOG_ADDREF(this, mRefCnt, "nsXBLPrototypeBinding", sizeof(nsXBLPrototypeBinding));
@@ -226,8 +235,7 @@ protected:
 
 // MEMBER VARIABLES
 protected:
-  char* mID;
-
+  nsCOMPtr<nsIURL> mBindingURI;
   nsCOMPtr<nsIContent> mBinding; // Strong. We own a ref to our content element in the binding doc.
   nsAutoPtr<nsXBLPrototypeHandler> mPrototypeHandler; // Strong. DocInfo owns us, and we own the handlers.
   

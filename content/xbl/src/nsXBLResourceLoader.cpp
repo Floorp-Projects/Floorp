@@ -249,8 +249,7 @@ void
 nsXBLResourceLoader::NotifyBoundElements()
 {
   nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
-  nsCAutoString bindingURI;
-  mBinding->GetBindingURI(bindingURI);
+  nsIURI* bindingURI = mBinding->BindingURI();
 
   PRUint32 eltCount;
   mBoundElements->Count(&eltCount);

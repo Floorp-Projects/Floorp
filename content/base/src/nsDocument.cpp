@@ -2361,13 +2361,19 @@ nsDocument::LoadBindingDocument(const nsAString& aURL,
     return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL,
+                          mCharacterSet.get(), GetBaseURL());
+
+  NS_ENSURE_SUCCESS(rv, rv);
+  
   nsCOMPtr<nsIDocument> doc;
-  mBindingManager->LoadBindingDocument(this, aURL, getter_AddRefs(doc));
+  mBindingManager->LoadBindingDocument(this, uri, getter_AddRefs(doc));
 
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
-  *aResult = domDoc;
-  NS_IF_ADDREF(*aResult);
-
+  if (doc) {
+    CallQueryInterface(doc, aResult);
+  }
+  
   return NS_OK;
 }
 

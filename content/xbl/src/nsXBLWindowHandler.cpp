@@ -66,6 +66,8 @@
 #include "nsIDOMDocument.h"
 #include "nsISelectionController.h"
 #include "nsXULAtoms.h"
+#include "nsIURI.h"
+#include "nsNetUtil.h"
 
 class nsXBLSpecialDocInfo
 {
@@ -73,10 +75,6 @@ public:
   nsCOMPtr<nsIXBLDocumentInfo> mHTMLBindings;
   nsCOMPtr<nsIXBLDocumentInfo> mPlatformHTMLBindings;
   nsCOMPtr<nsIXBLDocumentInfo> mUserHTMLBindings;
-
-  nsCString mHTMLBindingStr;
-  nsCString mPlatformHTMLBindingStr;
-  nsCString mUserHTMLBindingStr;
 
   static const char sHTMLBindingStr[];
   static const char sPlatformHTMLBindingStr[];
@@ -109,13 +107,6 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
     return;
   mInitialized = PR_TRUE;
 
-  mHTMLBindingStr = sHTMLBindingStr;
-  mPlatformHTMLBindingStr = sPlatformHTMLBindingStr;
-  mUserHTMLBindingStr = sUserHTMLBindingStr;
-
-  if (mHTMLBindings && mPlatformHTMLBindings && mUserHTMLBindings)
-    return;
-
   nsresult rv;
   nsCOMPtr<nsIXBLService> xblService = 
            do_GetService("@mozilla.org/xbl;1", &rv);
@@ -123,17 +114,36 @@ void nsXBLSpecialDocInfo::LoadDocInfo()
     return;
 
   // Obtain the XP and platform doc infos
+  nsCOMPtr<nsIURI> bindingURI;
+  NS_NewURI(getter_AddRefs(bindingURI), sHTMLBindingStr);
+  if (!bindingURI) {
+    return;
+  }
   xblService->LoadBindingDocumentInfo(nsnull, nsnull, 
-                                      mHTMLBindingStr,
-                                      nsCAutoString(""), PR_TRUE, 
+                                      bindingURI,
+                                      PR_TRUE, 
                                       getter_AddRefs(mHTMLBindings));
+  
+  rv = bindingURI->SetSpec(NS_LITERAL_CSTRING(sPlatformHTMLBindingStr));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Shouldn't fail to set spec here");
+    return;
+  }
+  
   xblService->LoadBindingDocumentInfo(nsnull, nsnull,
-                                      mPlatformHTMLBindingStr,
-                                      nsCAutoString(""), PR_TRUE, 
+                                      bindingURI,
+                                      PR_TRUE, 
                                       getter_AddRefs(mPlatformHTMLBindings));
+
+  rv = bindingURI->SetSpec(NS_LITERAL_CSTRING(sUserHTMLBindingStr));
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Shouldn't fail to set spec here");
+    return;
+  }
+  
   xblService->LoadBindingDocumentInfo(nsnull, nsnull,
-                                      mUserHTMLBindingStr,
-                                      nsCAutoString(""), PR_TRUE, 
+                                      bindingURI,
+                                      PR_TRUE, 
                                       getter_AddRefs(mUserHTMLBindings));
 }
 

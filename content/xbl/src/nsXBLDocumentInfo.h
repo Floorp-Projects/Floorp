@@ -48,15 +48,15 @@ class nsXBLDocumentInfo : public nsIXBLDocumentInfo, public nsIScriptGlobalObjec
 public:
   NS_DECL_ISUPPORTS
   
-  nsXBLDocumentInfo(const char* aDocURI, nsIDocument* aDocument);
+  nsXBLDocumentInfo(nsIDocument* aDocument);
   virtual ~nsXBLDocumentInfo();
   
-  NS_IMETHOD GetDocument(nsIDocument** aResult) { *aResult = mDocument; NS_IF_ADDREF(*aResult); return NS_OK; };
+  NS_IMETHOD GetDocument(nsIDocument** aResult) { NS_ADDREF(*aResult = mDocument); return NS_OK; };
   
   NS_IMETHOD GetScriptAccess(PRBool* aResult) { *aResult = mScriptAccess; return NS_OK; };
   NS_IMETHOD SetScriptAccess(PRBool aAccess) { mScriptAccess = aAccess; return NS_OK; };
 
-  NS_IMETHOD GetDocumentURI(nsCString& aDocURI) { aDocURI = mDocURI; return NS_OK; };
+  NS_IMETHOD_(nsIURI*) DocumentURI() { return mDocument->GetDocumentURL(); };
 
   NS_IMETHOD GetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding** aResult);
   NS_IMETHOD SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding);
@@ -68,7 +68,6 @@ public:
 
 private:
   nsCOMPtr<nsIDocument> mDocument;
-  nsCString mDocURI;
   PRBool mScriptAccess;
   // the binding table owns each nsXBLPrototypeBinding
   nsObjectHashtable* mBindingTable;

@@ -522,7 +522,7 @@ nsXBLBinding::GenerateAnonymousContent()
     message += id;
     message += " and found in the file ";
     nsCAutoString uri;
-    mPrototypeBinding->GetDocURI(uri);
+    mPrototypeBinding->DocURI()->GetSpec(uri);
     message += uri;
     message += " is still using the deprecated\n<content includes=\"\"> syntax! Use <children> instead!\n"; 
     NS_WARNING(message.get());
@@ -1019,20 +1019,20 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsXBLBinding::GetBindingURI(nsCString& aResult)
+NS_IMETHODIMP_(nsIURI*)
+nsXBLBinding::BindingURI() const
 {
-  return mPrototypeBinding->GetBindingURI(aResult);
+  return mPrototypeBinding->BindingURI();
+}
+
+NS_IMETHODIMP_(nsIURI*) 
+nsXBLBinding::DocURI() const
+{
+  return mPrototypeBinding->DocURI();
 }
 
 NS_IMETHODIMP 
-nsXBLBinding::GetDocURI(nsCString& aResult)
-{
-  return mPrototypeBinding->GetDocURI(aResult);
-}
-
-NS_IMETHODIMP 
-nsXBLBinding::GetID(nsCString& aResult)
+nsXBLBinding::GetID(nsACString& aResult) const
 {
   return mPrototypeBinding->GetID(aResult);
 }

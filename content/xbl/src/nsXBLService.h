@@ -55,6 +55,7 @@ class nsIDocument;
 class nsIAtom;
 class nsString;
 class nsIURI;
+class nsIURL;
 class nsSupportsHashtable;
 class nsHashtable;
 class nsIXULPrototypeCache;
@@ -71,14 +72,14 @@ class nsXBLService : public nsIXBLService,
                           nsIXBLBinding** aBinding, PRBool* aResolveStyle);
 
   // Indicates whether or not a binding is fully loaded.
-  NS_IMETHOD BindingReady(nsIContent* aBoundElement, const nsCString& aURLStr, PRBool* aIsReady);
+  NS_IMETHOD BindingReady(nsIContent* aBoundElement, nsIURI* aURI, PRBool* aIsReady);
 
   // Gets the object's base class type.
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   // This method checks the hashtable and then calls FetchBindingDocument on a miss.
   NS_IMETHOD LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
-                                     const nsCString& aURI, const nsCString& aRef,
+                                     nsIURI* aBindingURI,
                                      PRBool aForceSyncLoad, nsIXBLDocumentInfo** aResult);
 
   // Used by XUL key bindings and for window XBL.
@@ -95,21 +96,21 @@ public:
   nsresult FlushStyleBindings(nsIContent* aContent);
 
   // This method loads a binding doc and then builds the specific binding required.
-  nsresult GetBinding(nsIContent* aBoundElement, const nsCString& aURLStr, nsIXBLBinding** aResult);
+  nsresult GetBinding(nsIContent* aBoundElement, nsIURI* aURI, nsIXBLBinding** aResult);
 
   // Release any memory that we can
   nsresult FlushMemory();
   
   // This method synchronously loads and parses an XBL file.
   nsresult FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
-                                nsIURI* aURI, const nsCString& aRef, 
+                                nsIURI* aDocumentURI, nsIURL* aBindingURL, 
                                 PRBool aForceSyncLoad, nsIDocument** aResult);
 
-  nsresult GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult);
+  nsresult GetXBLDocumentInfo(nsIURI* aURI, nsIContent* aBoundElement, nsIXBLDocumentInfo** aResult);
 
   // This method loads a binding doc and then builds the specific binding required.  It
   // can also peek without building.
-  NS_IMETHOD GetBindingInternal(nsIContent* aBoundElement, const nsCString& aURLStr, 
+  NS_IMETHOD GetBindingInternal(nsIContent* aBoundElement, nsIURI* aURI, 
                                 PRBool aPeekFlag, PRBool* aIsReady, nsIXBLBinding** aResult);
 
 // MEMBER VARIABLES

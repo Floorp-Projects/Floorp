@@ -89,7 +89,7 @@ public:
     NS_IMETHOD PutScript(nsIURI* aURI, void* aScriptObject);
     NS_IMETHOD FlushScripts();
 
-    NS_IMETHOD GetXBLDocumentInfo(const nsCString& aString, nsIXBLDocumentInfo** _result);
+    NS_IMETHOD GetXBLDocumentInfo(nsIURI* aURL, nsIXBLDocumentInfo** _result);
     NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
     NS_IMETHOD FlushXBLInformation();
     NS_IMETHOD FlushSkinFiles();
@@ -115,7 +115,7 @@ protected:
     nsInterfaceHashtable<nsURIHashKey,nsIXULPrototypeDocument> mPrototypeTable;
     nsInterfaceHashtable<nsURIHashKey,nsICSSStyleSheet>        mStyleSheetTable;
     nsDataHashtable<nsURIHashKey,void*>                        mScriptTable;
-    nsInterfaceHashtable<nsCStringHashKey,nsIXBLDocumentInfo>  mXBLDocTable;
+    nsInterfaceHashtable<nsURIHashKey,nsIXBLDocumentInfo>      mXBLDocTable;
 
     JSRuntime*          mJSRuntime;
 
@@ -364,7 +364,7 @@ nsXULPrototypeCache::FlushScripts()
 
 
 NS_IMETHODIMP
-nsXULPrototypeCache::GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult)
+nsXULPrototypeCache::GetXBLDocumentInfo(nsIURI* aURL, nsIXBLDocumentInfo** aResult)
 {
     mXBLDocTable.Get(aURL, aResult);
     return NS_OK;
@@ -374,16 +374,12 @@ nsXULPrototypeCache::GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInf
 NS_IMETHODIMP
 nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
 {
-    nsCOMPtr<nsIDocument> doc;
-    aDocumentInfo->GetDocument(getter_AddRefs(doc));
-
-    nsCAutoString str;
-    doc->GetDocumentURL()->GetSpec(str);
+    nsIURI* uri = aDocumentInfo->DocumentURI();
 
     nsCOMPtr<nsIXBLDocumentInfo> info;
-    mXBLDocTable.Get(str, getter_AddRefs(info));
+    mXBLDocTable.Get(uri, getter_AddRefs(info));
     if (!info)
-        mXBLDocTable.Put(str, aDocumentInfo);
+        mXBLDocTable.Put(uri, aDocumentInfo);
 
     return NS_OK;
 }
@@ -397,12 +393,10 @@ nsXULPrototypeCache::FlushXBLInformation()
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
-FlushSkinXBL(const nsACString& key, nsCOMPtr<nsIXBLDocumentInfo>& aDocInfo, void* aClosure)
+FlushSkinXBL(nsIURI* aKey, nsCOMPtr<nsIXBLDocumentInfo>& aDocInfo, void* aClosure)
 {
-  nsCOMPtr<nsIDocument> doc;
-  aDocInfo->GetDocument(getter_AddRefs(doc));
   nsCAutoString str;
-  doc->GetDocumentURL()->GetPath(str);
+  aKey->GetPath(str);
 
   PLDHashOperator ret = PL_DHASH_NEXT;
 
@@ -431,7 +425,7 @@ FlushSkinSheets(nsIURI* aKey, nsCOMPtr<nsICSSStyleSheet>& aSheet, void* aClosure
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
-FlushScopedSkinStylesheets(const nsACString& aKey, nsCOMPtr<nsIXBLDocumentInfo> &aDocInfo, void* aClosure)
+FlushScopedSkinStylesheets(nsIURI* aKey, nsCOMPtr<nsIXBLDocumentInfo> &aDocInfo, void* aClosure)
 {
   aDocInfo->FlushSkinStylesheets();
   return PL_DHASH_NEXT;
