@@ -81,7 +81,7 @@ static bool promptLine(LineReader &inReader, string &s,
 
 
 JavaScript::World world;
-JavaScript::Debugger::Shell jsd(world, cin, JavaScript::stdOut,
+JavaScript::Debugger::Shell jsd(world, stdin, JavaScript::stdOut,
                                 JavaScript::stdOut);
 const bool showTokens = true;
 
