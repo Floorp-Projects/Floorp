@@ -1685,7 +1685,7 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
           mTempContext->Push((nsCParserNode*)mBodyContext->Pop(theChildStyleStack));
         }
      
-        PRInt32 theIndex;
+        PRInt32 theIndex=kNotFound;
         // Now flush out all the bad contents.
         while(theBadTokenCount > 0){
           theToken=(CToken*)mMisplacedContent.PopFront();
