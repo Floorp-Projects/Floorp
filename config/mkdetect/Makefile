@@ -18,23 +18,25 @@
 
 DEPTH		= ../..
 
-# This is needed for $(OS_CONFIG) $(OS_VERSION) $(PROCESSOR_ARCHITECTURE)
-include $(DEPTH)/config/config.mk
+# A uniq identifier that describes this host
+DETECT_UNIQ_IDENT = $(shell $(DETECT_DIR)/detect_hostident.sh)
 
-# I stared of with this as a distinguishing string for a given host...
-#MKDETECT_CONFIG	= $(OS_CONFIG)$(OS_VERSION)$(PROCESSOR_ARCHITECTURE)
+# Where we live
+DETECT_DIR	= $(DEPTH)/config/mkdetect
 
-# ...and then I realized that the most unique thing about any host is the
-# host name.  DDDDDUUUUUUHHHHHH
-MKDETECT_CONFIG	= $(MOZILLA_HOSTNAME)
+# Name of genereated makefile
+DETECT_NAME	= detect_$(DETECT_UNIQ_IDENT)_gen.mk
 
-MKDETECT_GLIBC	= $(MOZILLA_DETECT_DIR)/detect_glibc.sh -o $(MKDETECT_CONFIG)
+# The glibc detection script
+DETECT_GLIBC	= $(DETECT_DIR)/detect_glibc.sh -o $(DETECT_UNIQ_IDENT)
 
-MKDETECT_MOTIF	=\
-				$(MOZILLA_DETECT_DIR)/detect_motif.sh -o $(MKDETECT_CONFIG) \
+# The motif detection script
+DETECT_MOTIF	=\
+				$(DETECT_DIR)/detect_motif.sh -o $(DETECT_UNIQ_IDENT) \
 				-xif $(X11_INCLUDE_FLAGS)
 
-MKDETECT_X11	= $(MOZILLA_DETECT_DIR)/detect_x11.sh -o $(MKDETECT_CONFIG)
+# The X11 detection script
+DETECT_X11	= $(DETECT_DIR)/detect_x11.sh -o $(DETECT_UNIQ_IDENT)
 
 # The following macros are generated:
 #
@@ -58,23 +60,24 @@ MKDETECT_X11	= $(MOZILLA_DETECT_DIR)/detect_x11.sh -o $(MKDETECT_CONFIG)
 # go to ramiro@netscape.com.
 #
 
-all:: export
+all: export
 
-export:: $(MOZILLA_DETECT_NAME)
+export: $(DETECT_NAME)
+detect: $(DETECT_NAME)
 
-clean::
-	@rm -f $(MOZILLA_DETECT_NAME)
-	@$(MKDETECT_X11) --cleanup 
-	@$(MKDETECT_MOTIF) --cleanup 
-	@$(MKDETECT_GLIBC) --cleanup
+clean:
+	@rm -f $(DETECT_NAME)
+	@$(DETECT_X11) --cleanup 
+	@$(DETECT_MOTIF) --cleanup 
+	@$(DETECT_GLIBC) --cleanup
 
 clobber: clean
 
-# This is needed for MKDETECT_MOTIF to work
-X11_INCLUDE_FLAGS=$(shell $(MKDETECT_X11) -if)
+# This is needed for DETECT_MOTIF to work
+X11_INCLUDE_FLAGS=$(shell $(DETECT_X11) -if)
 
-$(MOZILLA_DETECT_NAME):
-	@echo "Generating $(MOZILLA_DETECT_NAME)."
+$(DETECT_NAME):
+	@echo "Generating $(DETECT_NAME)."
 	@rm -f $@
 	@touch $@
 	@echo "#" >> $@
@@ -95,7 +98,7 @@ $(MOZILLA_DETECT_NAME):
 ## Test whether -lBrokenLocale is needed.  Locale support is broken
 ## when using motif (any version) with gnu libc2.  
 ##
-ifeq ($(shell $(MKDETECT_GLIBC)),2)
+ifeq ($(shell $(DETECT_GLIBC)),2)
 	@echo "# GLIBC2" >> $@
 	@echo "MOZILLA_XFE_USING_GLIBC2 = 1" >> $@
 	@echo >> $@
@@ -112,30 +115,30 @@ endif
 ##
 	@echo >> $@
 	@echo "# X11" >> $@
-	@echo "MOZILLA_XFE_X11_INCLUDE_FLAGS = `$(MKDETECT_X11) -if`" >> $@
+	@echo "MOZILLA_XFE_X11_INCLUDE_FLAGS = `$(DETECT_X11) -if`" >> $@
 
 ##
 ## Determine if we have static x11 libs and set static flags.
 ##
-ifneq ($(shell $(MKDETECT_X11) -sl),unknown)
+ifneq ($(shell $(DETECT_X11) -sl),unknown)
 	@echo "MOZILLA_XFE_X11_HAVE_STATIC_LIB = 1" >> $@
-	@echo "MOZILLA_XFE_X11_STATIC_FLAGS = `$(MKDETECT_X11) -sf`" >> $@
+	@echo "MOZILLA_XFE_X11_STATIC_FLAGS = `$(DETECT_X11) -sf`" >> $@
 endif
 
 ##
 ## Determine if we have dynamic x11 libs and set dynamic flags.
 ##
-ifneq ($(shell $(MKDETECT_X11) -dl),unknown)
+ifneq ($(shell $(DETECT_X11) -dl),unknown)
 	@echo "MOZILLA_XFE_X11_HAVE_DYNAMIC_LIB = 1" >> $@
-	@echo "MOZILLA_XFE_X11_DYNAMIC_PATHS = `$(MKDETECT_X11) -dp`" >> $@
-	@echo "MOZILLA_XFE_X11_DYNAMIC_FLAGS = `$(MKDETECT_X11) -df`" >> $@
+	@echo "MOZILLA_XFE_X11_DYNAMIC_PATHS = `$(DETECT_X11) -dp`" >> $@
+	@echo "MOZILLA_XFE_X11_DYNAMIC_FLAGS = `$(DETECT_X11) -df`" >> $@
 endif
 
 ##
 ## Test whether -lSM -lICE are needed.   These libs are need for session
 ## management in X11R6.
 ##
-ifeq ($(shell $(MKDETECT_X11)),6)
+ifeq ($(shell $(DETECT_X11)),6)
 	@echo "MOZILLA_XFE_X11_SM_FLAGS = -lSM -lICE" >> $@
 endif
 
@@ -148,30 +151,30 @@ endif
 ##
 	@echo >> $@
 	@echo "# Motif" >> $@
-	@echo "MOZILLA_XFE_MOTIF_INCLUDE_FLAGS = `$(MKDETECT_MOTIF) -if`" >> $@
+	@echo "MOZILLA_XFE_MOTIF_INCLUDE_FLAGS = `$(DETECT_MOTIF) -if`" >> $@
 
 ##
 ## Determine if we have static motif libs and set static flags.
 ##
-ifneq ($(shell $(MKDETECT_MOTIF) -sl),unknown)
+ifneq ($(shell $(DETECT_MOTIF) -sl),unknown)
 	@echo "MOZILLA_XFE_MOTIF_HAVE_STATIC_LIB = 1" >> $@
-	@echo "MOZILLA_XFE_MOTIF_STATIC_FLAGS = `$(MKDETECT_MOTIF) -sf`" >> $@
+	@echo "MOZILLA_XFE_MOTIF_STATIC_FLAGS = `$(DETECT_MOTIF) -sf`" >> $@
 endif
 
 ##
 ## Determine if we have dynamic motif libs and set dynamic flags.
 ##
-ifneq ($(shell $(MKDETECT_MOTIF) -dl),unknown)
+ifneq ($(shell $(DETECT_MOTIF) -dl),unknown)
 	@echo "MOZILLA_XFE_MOTIF_HAVE_DYNAMIC_LIB = 1" >> $@
-	@echo "MOZILLA_XFE_MOTIF_DYNAMIC_PATHS = `$(MKDETECT_MOTIF) -dp`" >> $@
-	@echo "MOZILLA_XFE_MOTIF_DYNAMIC_FLAGS = `$(MKDETECT_MOTIF) -df`" >> $@
+	@echo "MOZILLA_XFE_MOTIF_DYNAMIC_PATHS = `$(DETECT_MOTIF) -dp`" >> $@
+	@echo "MOZILLA_XFE_MOTIF_DYNAMIC_FLAGS = `$(DETECT_MOTIF) -df`" >> $@
 endif
 
 ##
 ## Test whether -lXp is needed.   The -lXp (Print Shell Extensions)
 ## are needed only with motif 2.1.
 ##
-ifeq ($(shell $(MKDETECT_MOTIF)),2.1)
+ifeq ($(shell $(DETECT_MOTIF)),2.1)
 	@echo "MOZILLA_XFE_MOTIF_PRINT_SHELL_FLAGS = -lXp" >> $@
 endif
 
@@ -180,7 +183,7 @@ endif
 ## by some versions of motif.  Some vendors try to do their customers
 ## favours by hacking the stock motif libs to include Xpm support.
 ##
-ifeq ($(shell $(MKDETECT_MOTIF) -xpm),True)
+ifeq ($(shell $(DETECT_MOTIF) -xpm),True)
 	@echo "MOZILLA_XFE_MOTIF_XPM_FLAGS = -lXpm" >> $@
 endif
 
@@ -189,7 +192,7 @@ endif
 ## we can turn on the file selection hack which only works with motif
 ## (not lesstif)
 ##
-ifneq ($(shell $(MKDETECT_MOTIF) -l),True)
+ifneq ($(shell $(DETECT_MOTIF) -l),True)
 	@echo >> $@
 	@echo "# Winning File Selection" >> $@
 	@echo "MOZILLA_XFE_USE_WINNING_FILE_SELECTION = 1" >> $@
