@@ -110,13 +110,6 @@ endif
 # is mistaken as a command-line option.  If that is the case,
 # we use a relative pathname as NSPR's prefix on Windows.
 
-ifeq ($(OS_ARCH),SunOS)
-solarispkg:
-	@echo Making Solaris packages.
-	$(MAKE) -C pkg/solaris publish
-endif
-#
-
 USEABSPATH="YES"
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 ifeq (,$(findstring :,$(shell pwd)))
@@ -169,3 +162,9 @@ endif
 endif
 
 nss_RelEng_bld: build_coreconf import all
+
+ifeq ($(OS_ARCH),SunOS)
+solarispkg:
+	@echo Making Solaris packages.
+	$(MAKE) -C pkg/solaris publish
+endif
