@@ -228,6 +228,6 @@ protected:
 };
 
 #define NS_FILE_TRANSPORT_SEGMENT_SIZE   (4*1024)
-#define NS_FILE_TRANSPORT_BUFFER_SIZE    (1024*1024)//(32*1024)
+#define NS_FILE_TRANSPORT_BUFFER_SIZE    (32*1024)
 
 #endif // nsFileChannel_h__

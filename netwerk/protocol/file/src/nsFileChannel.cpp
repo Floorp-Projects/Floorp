@@ -39,6 +39,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsEscape.h"
 #include "nsIMIMEService.h"
+#include "prlog.h"
 
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
@@ -49,6 +50,22 @@ NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIAllocator.h"
 static NS_DEFINE_CID(kStreamConverterCID,    NS_STREAM_CONVERTER_CID);
 #endif
+
+#if defined(PR_LOGGING)
+//
+// Log module for SocketTransport logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=nsFileTransport:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_DEBUG level information and places all output in
+// the file nspr.log
+//
+PRLogModuleInfo* gFileTransportLog = nsnull;
+
+#endif /* PR_LOGGING */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,6 +79,15 @@ nsFileChannel::nsFileChannel()
 	  mReadFixedAmount(PR_FALSE), mLoadGroup(nsnull)
 {
     NS_INIT_REFCNT();
+#if defined(PR_LOGGING)
+    //
+    // Initialize the global PRLogModule for socket transport logging 
+    // if necessary...
+    //
+    if (nsnull == gFileTransportLog) {
+        gFileTransportLog = PR_NewLogModule("nsFileTransport");
+    }
+#endif /* PR_LOGGING */
 }
 
 nsresult
@@ -202,6 +228,9 @@ nsFileChannel::Cancel()
         Resume();
     }
     mState = ENDING;
+    PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+           ("nsFileTransport: Cancel [this=%x %s]", 
+            this, (const char*)mSpec));
     return rv;
 }
 
@@ -215,6 +244,9 @@ nsFileChannel::Suspend()
         // XXX close the stream here?
         mStatus = mHandler->Suspend(this);
         mSuspended = PR_TRUE;
+        PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+               ("nsFileTransport: Suspend [this=%x %s]", 
+                this, (const char*)mSpec));
     }
     return rv;
 }
@@ -225,130 +257,17 @@ nsFileChannel::Resume()
     nsAutoMonitor mon(mMonitor);
 
     nsresult rv = NS_OK;
-    if (!mSuspended) {
+    if (mSuspended) {
         // XXX re-open the stream and seek here?
+        mSuspended = PR_FALSE;  // set this first before resuming!
         mStatus = mHandler->Resume(this);
-        mSuspended = PR_FALSE;
+        PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+               ("nsFileTransport: Resume [this=%x %s] status=%x", 
+                this, (const char*)mSpec, mStatus));
     }
     return rv;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-#if 0
-class nsAsyncOutputStream : public nsIBufferOutputStream {
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsIBaseStream methods:
-
-    NS_IMETHOD Close() {
-        return mOutputStream->Close();
-    }
-
-    // nsIOutputStream methods:
-
-    NS_IMETHOD Write(const char *buf, PRUint32 count, PRUint32 *writeCount) {
-        nsresult rv;
-        rv = mOutputStream->Write(buf, count, writeCount);
-        if (NS_FAILED(rv)) return rv;
-        rv = mListener->OnDataAvailable(mChannel, mContext, mInputStream, mOffset, *writeCount);
-        mOffset += *writeCount;
-        return rv;
-    }
-
-    NS_IMETHOD Flush() {
-        nsresult rv;
-        rv = mOutputStream->Flush();
-        if (NS_FAILED(rv)) return rv;
-        rv = mListener->OnStopRequest(mChannel, mContext, /*mStatus*/rv, nsnull);
-        return rv;
-    }
-
-    // nsIBufferOutputStream methods:
-
-    NS_IMETHOD GetBuffer(nsIBuffer * *aBuffer) {
-        return mOutputStream->GetBuffer(aBuffer);
-    }
-
-    NS_IMETHOD WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *writeCount) {
-        nsresult rv;
-        rv = mOutputStream->WriteFrom(inStr, count, writeCount);
-        if (NS_FAILED(rv)) return rv;
-        rv = mListener->OnDataAvailable(mChannel, mContext, mInputStream, mOffset, *writeCount);
-        mOffset += *writeCount;
-        return rv;
-    }
-
-    NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking) {
-        return mOutputStream->GetNonBlocking(aNonBlocking);
-    }
-
-    NS_IMETHOD SetNonBlocking(PRBool aNonBlocking) {
-        return mOutputStream->SetNonBlocking(aNonBlocking);
-    }
-
-    nsAsyncOutputStream()
-        : mContext(nsnull), mListener(nsnull), mInputStream(nsnull),
-          mOutputStream(nsnull), mOffset(0)
-    {
-        NS_INIT_REFCNT();
-    }
-
-    nsresult Init(nsIChannel* channel, nsISupports* context, nsIStreamListener* listener,
-                  PRUint32 growBySize, PRUint32 maxSize) {
-        nsresult rv;
-        rv = NS_NewPipe(&mInputStream, &mOutputStream,
-                        growBySize, maxSize, PR_TRUE, nsnull);
-        if (NS_FAILED(rv)) return rv;
-
-        mChannel = channel;
-        NS_ADDREF(mChannel);
-        mContext = context;
-        NS_IF_ADDREF(mContext);
-        mListener = listener;
-        NS_ADDREF(mListener);
-        return rv;
-    }
-
-    virtual ~nsAsyncOutputStream() {
-        NS_IF_RELEASE(mChannel);
-        NS_IF_RELEASE(mContext);
-        NS_IF_RELEASE(mListener);
-        NS_IF_RELEASE(mInputStream);
-        NS_IF_RELEASE(mOutputStream);
-    }
-
-    static NS_METHOD Create(nsIBufferInputStream* *inStr,
-                            nsIBufferOutputStream* *outStr,
-                            nsIChannel* channel, nsISupports* context,
-                            nsIStreamListener* listener,
-                            PRUint32 growBySize, PRUint32 maxSize) {
-        nsAsyncOutputStream* str = new nsAsyncOutputStream();
-        if (str == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(str);
-        nsresult rv = str->Init(channel, context, listener, growBySize, maxSize);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(str);
-            return rv;
-        }
-        *inStr = str->mInputStream;
-        NS_ADDREF(*inStr);
-        *outStr = str;
-        return NS_OK;
-    }
-
-protected:
-    nsIChannel*                 mChannel;
-    nsISupports*                mContext;
-    nsIStreamListener*          mListener;
-    nsIBufferInputStream*       mInputStream;
-    nsIBufferOutputStream*      mOutputStream;
-    PRUint32                    mOffset;
-};
-
-NS_IMPL_ISUPPORTS(nsAsyncOutputStream, nsCOMTypeInfo<nsIBufferOutputStream>::GetIID());
-#endif
 ////////////////////////////////////////////////////////////////////////////////
 // From nsIChannel
 ////////////////////////////////////////////////////////////////////////////////
@@ -403,6 +322,9 @@ nsFileChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 
     *result = mBufferInputStream;
     NS_ADDREF(*result);
+    PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+           ("nsFileTransport: OpenInputStream [this=%x %s]", 
+            this, (const char*)mSpec));
     return NS_OK;
 }
 
@@ -416,40 +338,16 @@ nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result
     if (mState != QUIESCENT)
         return NS_ERROR_IN_PROGRESS;
 
-#if 0
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsIStreamListener* syncListener;
-    nsIBufferInputStream* inStr;
-    nsIBufferOutputStream* outStr;
-    rv = serv->NewSyncStreamListener(&inStr, &outStr, &syncListener);
-    if (NS_FAILED(rv)) return rv;
-
-    mListener = syncListener;
-    mOutputStream = outStr;
-    mState = START_READ;
-    mSourceOffset = startPosition;
-    mAmount = readCount;
-
-    rv = mHandler->DispatchRequest(this);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(inStr);
-        return rv;
-    }
-
-    *result = inStr;
-#else
     NS_ASSERTION(startPosition == 0, "implement startPosition");
     nsISupports* str;
     rv = NS_NewTypicalOutputFileStream(&str, mSpec);
     if (NS_FAILED(rv)) return rv;
     rv = str->QueryInterface(nsCOMTypeInfo<nsIOutputStream>::GetIID(), (void**)result);
     NS_RELEASE(str);
+    PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+           ("nsFileTransport: OpenOutputStream [this=%x %s]", 
+            this, (const char*)mSpec));
     return rv;
-
-#endif
-    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -523,19 +421,10 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 #endif
     if (NS_FAILED(rv)) return rv;
 
-#if 0
-    rv = nsAsyncOutputStream::Create(&mBufferInputStream,
-                                     &mBufferOutputStream,
-                                     this, ctxt, mListener, 
-                                     NS_FILE_TRANSPORT_SEGMENT_SIZE,
-                                     NS_FILE_TRANSPORT_BUFFER_SIZE);
-    if (NS_FAILED(rv)) return rv;
-#else
     rv = NS_NewPipe(&mBufferInputStream, &mBufferOutputStream,
                     NS_FILE_TRANSPORT_SEGMENT_SIZE,
                     NS_FILE_TRANSPORT_BUFFER_SIZE, PR_TRUE, this);
     if (NS_FAILED(rv)) return rv;
-#endif
 
     rv = mBufferOutputStream->SetNonBlocking(PR_TRUE);
     if (NS_FAILED(rv)) return rv;
@@ -557,6 +446,9 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 	else
 		mAmount = 0; // don't worry we'll ignore this parameter from here on out because mReadFixedAmount is false
 
+    PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+           ("nsFileTransport: AsyncRead [this=%x %s]", 
+            this, (const char*)mSpec));
     rv = mHandler->DispatchRequest(this);
     if (NS_FAILED(rv)) return rv;
 
@@ -571,6 +463,9 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
 {
     nsAutoMonitor mon(mMonitor);
 
+    PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+           ("nsFileTransport: AsyncWrite [this=%x %s]", 
+            this, (const char*)mSpec));
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -694,6 +589,9 @@ nsFileChannel::Process(void)
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 
+          PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+                 ("nsFileTransport: START_READ [this=%x %s]", 
+                  this, (const char*)mSpec));
           mState = READING;
           break;
       }
@@ -713,6 +611,9 @@ nsFileChannel::Process(void)
 
           PRUint32 amt;
           mStatus = mBufferOutputStream->WriteFrom(fileStr, inLen, &amt);
+          PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+                 ("nsFileTransport: READING [this=%x %s] amt=%d status=%x", 
+                  this, (const char*)mSpec, amt, mStatus));
 		  if (mReadFixedAmount)
 			  mAmount -= amt;   // subtract off the amount we just read from mAmount.
           if (NS_FAILED(mStatus)) goto error;
@@ -756,6 +657,9 @@ nsFileChannel::Process(void)
           NS_RELEASE(fs);
           if (NS_FAILED(mStatus)) goto error;
 
+          PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+                 ("nsFileTransport: START_WRITE [this=%x %s]", 
+                  this, (const char*)mSpec));
           mState = WRITING;
           break;
       }
@@ -772,10 +676,16 @@ nsFileChannel::Process(void)
 
           mSourceOffset += amt;
 #endif
+          PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+                 ("nsFileTransport: WRITING [this=%x %s]", 
+                  this, (const char*)mSpec));
           // stay in the WRITING state
           break;
       }
       case ENDING: {
+          PR_LOG(gFileTransportLog, PR_LOG_DEBUG, 
+                 ("nsFileTransport: ENDING [this=%x %s] status=%x", 
+                  this, (const char*)mSpec, mStatus));
           mBufferOutputStream->Flush();
           if (mListener) {
               // XXX where do we get the error message?

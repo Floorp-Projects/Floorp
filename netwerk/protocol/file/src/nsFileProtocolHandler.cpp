@@ -27,6 +27,7 @@
 #include "nsIThread.h"
 #include "nsISupportsArray.h"
 #include "nsFileSpec.h"
+#include "nsAutoLock.h"
 
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 
@@ -212,6 +213,7 @@ nsresult
 nsFileProtocolHandler::Suspend(nsFileChannel* request)
 {
     nsresult rv;
+    nsAutoCMonitor mon(this);   // protect mSuspended
     if (mSuspended == nsnull) {
         rv = NS_NewISupportsArray(&mSuspended);
         if (NS_FAILED(rv)) return rv;
@@ -223,6 +225,7 @@ nsresult
 nsFileProtocolHandler::Resume(nsFileChannel* request)
 {
     nsresult rv;
+    nsAutoCMonitor mon(this);   // protect mSuspended
     if (mSuspended == nsnull)
         return NS_ERROR_FAILURE;
     // XXX RemoveElement returns a bool instead of nsresult!
