@@ -150,15 +150,6 @@ nsWindowRoot::GetListenerManager(nsIEventListenerManager** aResult)
 }
 
 NS_IMETHODIMP
-nsWindowRoot::GetNewListenerManager(nsIEventListenerManager **aResult)
-{
-  return nsComponentManager::CreateInstance(kEventListenerManagerCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIEventListenerManager),
-                                            (void**) aResult);
-}
-
-NS_IMETHODIMP
 nsWindowRoot::HandleEvent(nsIDOMEvent *aEvent)
 {
   return DispatchEvent(aEvent);

@@ -4171,15 +4171,6 @@ nsXULDocument::GetListenerManager(nsIEventListenerManager** aResult)
 }
 
 NS_IMETHODIMP
-nsXULDocument::GetNewListenerManager(nsIEventListenerManager **aResult)
-{
-    return nsComponentManager::CreateInstance(kEventListenerManagerCID,
-                                        nsnull,
-                                        NS_GET_IID(nsIEventListenerManager),
-                                        (void**) aResult);
-}
-
-NS_IMETHODIMP
 nsXULDocument::HandleEvent(nsIDOMEvent *aEvent)
 {
   return DispatchEvent(aEvent);

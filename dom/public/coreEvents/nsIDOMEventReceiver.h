@@ -49,10 +49,11 @@ class nsIDOMEventReceiver : public nsIDOMEventTarget {
 public:
    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMEVENTRECEIVER_IID)
 
-  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
-  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID) = 0;
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult) = 0;
-  NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult) = 0;
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
+                                   const nsIID& aIID) = 0;
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,
+                                      const nsIID& aIID) = 0;
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) = 0;
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) = 0;
 
 };

@@ -340,7 +340,6 @@ public:
     NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
     NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
     NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
-    NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
     NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
 
     // nsIDOMEventTarget interface

@@ -2793,7 +2793,7 @@ nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrRe
   if (nsnull != mListenerManager) {
     return mListenerManager->QueryInterface(NS_GET_IID(nsIEventListenerManager), (void**) aInstancePtrResult);
   }
-  if (NS_OK == GetNewListenerManager(aInstancePtrResult)) {
+  if (NS_OK == NS_NewEventListenerManager(aInstancePtrResult)) {
     mListenerManager = *aInstancePtrResult;
     NS_ADDREF(mListenerManager);
     mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIDocument*,this));
@@ -2801,11 +2801,6 @@ nsresult nsDocument::GetListenerManager(nsIEventListenerManager **aInstancePtrRe
   }
   return NS_ERROR_FAILURE;
 }
-
-nsresult nsDocument::GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult)
-{
-  return NS_NewEventListenerManager(aInstancePtrResult);
-} 
 
 nsresult nsDocument::HandleEvent(nsIDOMEvent *aEvent)
 {
