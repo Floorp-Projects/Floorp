@@ -188,7 +188,6 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
     {
       const PRUnichar *charset = valueArray[numOfAttributes-3];
       const PRUnichar *source =  valueArray[numOfAttributes-2];
-      const PRUnichar *command = valueArray[numOfAttributes-1];
       PRInt32 err;
       nsAutoString srcStr(source);
       nsCharsetSource  src = (nsCharsetSource) srcStr.ToInteger(&err);
@@ -250,28 +249,20 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                  if(NS_SUCCEEDED(res) && (! same))
                  {
                      nsAutoString preferred;
-                     nsAutoString commandString(command);
                      res = mAlias->GetPreferred(newCharset, preferred);
                      if(NS_SUCCEEDED(res))
                      {
                         const char* newCharsetStr = preferred.ToNewCString();
-                        const char* newCommandStr = commandString.ToNewCString();
                         NS_ASSERTION(newCharsetStr, "out of memory");
-                        NS_ASSERTION(newCommandStr, "out of memory");
-                        if((nsnull != newCommandStr) &&
-                           (nsnull != newCharsetStr)) 
+                        if(nsnull != newCharsetStr) 
                         {
                            res = NotifyWebShell(aDocumentID, newCharsetStr, 
-                                      kCharsetFromMetaTag , 
-                                      newCommandStr);
+                                      kCharsetFromMetaTag);
                            delete [] (char*)newCharsetStr;
-                           delete [] (char*)newCommandStr;
                            return res;
                         } // if(nsnull...)
                         if(newCharsetStr)
                            delete [] (char*)newCharsetStr;
-                        if(newCommandStr)
-                           delete [] (char*)newCommandStr;
                      } // if(NS_SUCCEEDED(res)
                  }
              } // if EqualIgnoreCase 
