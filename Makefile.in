@@ -199,6 +199,12 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 tier_9_dirs	+= xpfe/bootstrap/appleevents
 endif
 
+ifdef THUNDERBIRD
+ifdef MOZ_USE_OFFICIAL_BRANDING
+tier_9_dirs  += other-licenses/branding/thunderbird
+endif
+endif
+
 ifdef MOZ_PHOENIX
 ifdef MOZ_USE_OFFICIAL_BRANDING
 tier_9_dirs  += other-licenses/branding/firefox
