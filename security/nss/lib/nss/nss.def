@@ -574,10 +574,12 @@ CERT_AddOKDomainName;
 CERT_CopyName;
 CERT_DecodeAVAValue;
 ;+#CERT_DecodeCertFromPackage;
+cert_DecodeGeneralName;
 CERT_DecodeTrustString;
 CERT_DerNameToAscii;
 CERT_FilterCertListByCANames;
 CERT_FilterCertListByUsage;
+CERT_FindCertExtension;
 CERT_FindUserCertByUsage;
 CERT_FindUserCertsByUsage;
 CERT_GetCertChainFromCert;
@@ -629,9 +631,6 @@ NSS_Get_SEC_UTF8StringTemplate;
 PK11_ImportDERPrivateKeyInfoAndReturnKey;
 PK11_ImportPrivateKeyInfoAndReturnKey;
 SECKEY_DecodeDERSubjectPublicKeyInfo;
-;+# FIXME: for Mozilla static build (bug 122712)
-CERT_FindCertExtension;
-cert_DecodeGeneralName;
 ;+    local:
 ;+       *;
 ;+};
