@@ -67,7 +67,6 @@ LOCAL_INCLUDES = \
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)calbase_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)mozical.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)mozicalss.$(LIB_SUFFIX) \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS += \
