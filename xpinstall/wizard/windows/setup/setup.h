@@ -334,6 +334,7 @@ typedef struct dlgStartInstall
   LPSTR szMessageInstall;
   LPSTR szMessageDownload;
   BOOL  bTurboMode;
+  BOOL  bTurboModeEnabled;
 } diSI;
 
 typedef struct dlgDownload
@@ -438,6 +439,11 @@ struct ssInfo
 
 typedef struct dlgInstall
 {
+	HFONT systemFont;
+	HFONT definedFont;
+    char szFontName[MAX_BUF];
+    char szFontSize[MAX_BUF];
+    char szCharSet[MAX_BUF];
     char szOk_[MAX_BUF];
     char szOk[MAX_BUF];
     char szCancel_[MAX_BUF];

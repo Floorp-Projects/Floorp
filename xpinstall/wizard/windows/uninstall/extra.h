@@ -88,7 +88,6 @@ void              ParseCommandLine(LPSTR lpszCmdLine);
 void              SetUninstallRunMode(LPSTR szMode);
 void              Delay(DWORD dwSeconds);
 HRESULT           GetUninstallLogPath();
-HFONT             myGetSysFont();
 
 #endif
 

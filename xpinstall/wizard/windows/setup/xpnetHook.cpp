@@ -1203,17 +1203,17 @@ DownloadDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
       SetDlgItemText(hWndDlg, IDCANCEL, sgInstallGui.szCancel_);
       SetDlgItemText(hWndDlg, IDPAUSE, sgInstallGui.szPause_);
       SetDlgItemText(hWndDlg, IDRESUME, sgInstallGui.szResume_);
-      SendDlgItemMessage (hWndDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hWndDlg, IDCANCEL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hWndDlg, IDPAUSE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hWndDlg, IDRESUME, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hWndDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATUS_STATUS, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATUS_FILE, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATUS_URL, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
-      SendDlgItemMessage (hWndDlg, IDC_STATUS_TO, WM_SETFONT, (WPARAM)myGetSysFont(), 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDPAUSE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDRESUME, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_STATUS, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_FILE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_URL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
+      SendDlgItemMessage (hWndDlg, IDC_STATUS_TO, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
 
       return FALSE;
 

@@ -439,7 +439,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ERROR_FILE_NOT_FOUND "File not found: %s"
     IDS_MSG_RETRIEVE_INSTALLINI 
-                            "Please wait while Setup is attempting to retrieve Installer.ini, required by Setup, from the Web..."
+                            "Please wait while Setup is attempting to retrieve install.ini, required by Setup, from the Web..."
 END
 
 #endif    // English (U.S.) resources
