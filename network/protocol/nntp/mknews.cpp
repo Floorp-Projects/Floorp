@@ -29,7 +29,7 @@
 #include "mime.h"
 #include "shist.h"
 #include "glhist.h"
-/*#include "xp_reg.h"*/
+
 #include "mknews.h"
 #include "mktcp.h"
 #include "mkparse.h"
@@ -3292,7 +3292,7 @@ net_NewsRCProcessPost(ActiveEntry *ce)
 }
 
 
-
+#ifdef USE_LIBMSG
 static void
 net_cancel_done_cb (MWContext *context, void *data, int status,
 					const char *file_name)
@@ -3303,6 +3303,7 @@ net_cancel_done_cb (MWContext *context, void *data, int status,
   PR_ASSERT(status < 0 || file_name);
   cd->cancel_msg_file = (status < 0 ? 0 : PL_strdup(file_name));
 }
+#endif 
 
 
 static int
@@ -3329,7 +3330,9 @@ net_do_cancel (ActiveEntry *ce)
   char *id, *subject, *newsgroups, *distribution, *other_random_headers, *body;
   char *from, *old_from, *news_url;
   int L;
+#ifdef USE_LIBMSG
   MSG_CompositionFields *fields = NULL;
+#endif 
 
 
   /* #### Should we do a more real check than this?  If the POST command
@@ -3439,9 +3442,11 @@ net_do_cancel (ActiveEntry *ce)
   PL_strcat (body, XP_AppCodeName);
   PL_strcat (body, "." CRLF);
 
+#ifdef USE_LIBMSG
   fields = MSG_CreateCompositionFields(from, 0, 0, 0, 0, 0, newsgroups,
 									   0, 0, subject, id, other_random_headers,
 									   0, 0, news_url);
+#endif 
   
 /* so that this would compile - will probably change later */
 #if 0
@@ -3450,14 +3455,18 @@ net_do_cancel (ActiveEntry *ce)
 									   );
 #endif
 
+#ifdef USE_LIBMSG
   if (!fields)
   {
 	  status = MK_OUT_OF_MEMORY;
 	  goto FAIL;
   }
   HG38712
+#endif 
 
   cd->cancel_status = 0;
+
+#ifdef USE_LIBMSG
   MSG_StartMessageDelivery (cd->pane, (void *) ce,
 							fields,
 							FALSE, /* digest_p */
@@ -3525,6 +3534,38 @@ net_do_cancel (ActiveEntry *ce)
 	cd->next_state = NNTP_RESPONSE;
 	cd->next_state_after_response = NNTP_SEND_POST_DATA_RESPONSE;
   }
+#else
+
+  {
+    /* NET_BlockingWrite() should go away soon? I think. */
+    /* The following are what we really need to cancel a posted message */
+    char *data;
+    data = PR_smprintf("From: %s" CRLF
+                       "Newsgroups: %s" CRLF
+                       "Subject: %s" CRLF
+                       "References: %s" CRLF
+                       "%s" CRLF /* other_random_headers */
+                       "%s"     /* body */
+                       CRLF "." CRLF CRLF, /* trailing SMTP "." */
+                       from, newsgroups, subject, id,
+                       other_random_headers, body);
+    
+    status = NET_BlockingWrite(ce->socket, data, PL_strlen(data));
+    NNTP_LOG_WRITE(data);
+    PR_Free (data);
+    if (status < 0)
+	  {
+		ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_WRITE_ERROR,
+													  status);
+		goto FAIL;
+	  }
+
+    cd->pause_for_read = TRUE;
+	cd->next_state = NNTP_RESPONSE;
+	cd->next_state_after_response = NNTP_SEND_POST_DATA_RESPONSE;
+  }
+
+#endif 
 
  FAIL:
   FREEIF (id);
@@ -3536,8 +3577,11 @@ net_do_cancel (ActiveEntry *ce)
   FREEIF (other_random_headers);
   FREEIF (body);
   FREEIF (cd->cancel_msg_file);
+
+#ifdef USE_LIBMSG
   if (fields)
 	  MSG_DestroyCompositionFields(fields);
+#endif 
 
   return status;
 }
