@@ -38,7 +38,7 @@ FULL_NSPR_CFLAGS=-I$(includedir)/nspr
 FULL_NSPR_LIBS=$(subst -L$(libdir),-L$(mozappdir),$(shell $(DEPTH)/nsprpub/config/nspr-config --libs))
 endif
 
-_DEFS = $(subst \",\\\\\",$(ACDEFINES))
+_DEFS = $(subst \,\\\\\,$(ACDEFINES))
 
 pkg_config_files=mozilla-nspr.pc mozilla-xpcom.pc mozilla-js.pc \
 	mozilla-gtkmozembed.pc mozilla-nss.pc
