@@ -2650,7 +2650,9 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
                              mLastMouseOverElement, mLastMouseOverFrame,
                              targetElement);
           // frame may have changed during the call; make sure bit is set
-          SetFrameExternalReference(mLastMouseOverFrame);
+          if (mLastMouseOverFrame) {
+            SetFrameExternalReference(mLastMouseOverFrame);
+          }
 
           // Turn off recursion protection
           mFirstMouseOutEventElement = nsnull;
@@ -2682,7 +2684,9 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIE
         mLastMouseOverFrame = targetFrame;
         // This may be a different frame than the one we started with, so we
         // need to ensure it has its external reference bit set.
-        SetFrameExternalReference(mLastMouseOverFrame);
+        if (mLastMouseOverFrame) {
+          SetFrameExternalReference(mLastMouseOverFrame);
+        }
         mLastMouseOverElement = targetElement;
 
         // Turn recursion protection back off
