@@ -48,47 +48,47 @@ interface nsIFileSpec;
 [scriptable, uuid(02b0625a-e7f3-11d2-9f5a-006008a6efe9)]
 interface nsIProfile : nsISupports {
     [noscript] void startupWithArgs(in nsICmdLineService cmdLine);
-    void startup(in string filename);
+    void startup(in wstring filename);
 
-    [noscript] void getProfileDir(in string profileName,
+    [noscript] void getProfileDir(in wstring profileName,
                                   in nsFileSpec profileDir);
     readonly attribute long profileCount;
-    readonly attribute string currentProfile;
-    readonly attribute string firstProfile;
+    readonly attribute wstring currentProfile;
+    readonly attribute wstring firstProfile;
 
     // eventually we need to depricate getCurrentProfileDir
     [noscript] void getCurrentProfileDir(in nsFileSpec profileDir);
 
-    [noscript] void setProfileDir(in string profileName,
+    [noscript] void setProfileDir(in wstring profileName,
                                   in nsFileSpecRef profileDir);
 
-    boolean profileExists(in string profileName);
+    boolean profileExists(in wstring profileName);
     
     void migrateProfileInfo();
 
-    void createNewProfile(in string profileName, in string nativeProfileDir);
-    void renameProfile(in string oldName, in string newName);
+    void createNewProfile(in wstring profileName, in wstring nativeProfileDir);
+    void renameProfile(in wstring oldName, in wstring newName);
 
-    void deleteProfile(in string name, in boolean canDeleteFiles);
+    void deleteProfile(in wstring name, in boolean canDeleteFiles);
 
-    string getProfileList();
+    wstring getProfileList();
 
-    void startApprunner(in string profileName);
+    void startApprunner(in wstring profileName);
 
-    void migrateProfile(in string profileName, in boolean showProgressAsModalWindow);
+    void migrateProfile(in wstring profileName, in boolean showProgressAsModalWindow);
 
     string getCookie();
 
     void ProcessPRegCookie();
 
-    string isPregCookieSet(in string profileName);
+    string isPregCookieSet(in wstring profileName);
 
     void processPREGInfo(in string data);
 
     long get4xProfileCount();
 
     void migrateAllProfiles();
-    void cloneProfile(in string profileName);
+    void cloneProfile(in wstring profileName);
     void forgetCurrentProfile();
     void loadNewProfilePrefs();
     boolean isCurrentProfileAvailable();
