@@ -1236,10 +1236,9 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
     }
   }
 
-  if (aSizeMode && persistString.Find("sizemode") >= 0) {
-    if (sizeMode == nsSizeMode_Minimized)
-      sizeString.Assign(SIZEMODE_MINIMIZED);
-    else if (sizeMode == nsSizeMode_Maximized)
+  if (aSizeMode && sizeMode != nsSizeMode_Minimized &&
+      persistString.Find("sizemode") >= 0) {
+    if (sizeMode == nsSizeMode_Maximized)
       sizeString.Assign(SIZEMODE_MAXIMIZED);
     else
       sizeString.Assign(SIZEMODE_NORMAL);
