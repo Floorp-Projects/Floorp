@@ -402,6 +402,11 @@ input[type="submit"] {
   -moz-binding: none;
 }
 
+button {
+  /* Buttons should lay out like "normal" html, mostly */
+  white-space: normal;  
+}
+
 *|*:-moz-button-content {
   display: block;
   text-align: center;
