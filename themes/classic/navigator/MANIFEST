@@ -1,10 +1,8 @@
 #!dest navigator:skin
-alertl.gif
 back.gif
 back-disabled.gif
 back-hover.gif
 back-hover-active.gif
-errorl.gif
 forward.gif
 forward-disabled.gif
 forward-hover.gif
@@ -12,9 +10,7 @@ forward-hover-active.gif
 home.gif
 location-hover.gif
 location.gif
-messagel.gif
 print.gif
-questionl.gif
 reload.gif
 reload-disabled.gif
 reload-hover.gif

@@ -31,12 +31,10 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
 
 EXPORT_RESOURCE_SAMPLES = \
-	alertl.gif \
 	back.gif \
 	back-disabled.gif \
 	back-hover.gif \
 	back-hover-active.gif \
-	errorl.gif \
 	forward.gif \
 	forward-hover.gif \
 	forward-hover-active.gif \
@@ -44,9 +42,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	home.gif \
 	location-hover.gif \
 	location.gif \
-	messagel.gif \
 	print.gif \
-	questionl.gif \
 	reload.gif \
 	reload-disabled.gif \
 	reload-hover.gif \

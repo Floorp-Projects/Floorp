@@ -31,12 +31,10 @@ clobber::
 	rm -f $(DIST)\chrome\skins\$(THEME)\navigator\skin\*.*
 
 install:: 
-	$(MAKE_INSTALL) alertl.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) back.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) back-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) back-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) back-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) errorl.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) forward.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) forward-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) forward-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
@@ -44,9 +42,7 @@ install::
 	$(MAKE_INSTALL) home.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) location-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) location.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) messagel.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) print.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
-	$(MAKE_INSTALL) questionl.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) reload.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) reload-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
 	$(MAKE_INSTALL) reload-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\navigator\skin
