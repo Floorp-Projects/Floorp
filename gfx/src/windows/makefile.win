@@ -46,6 +46,8 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsGfxFactoryWin.obj          \
 	$(NULL)
 
+EXPORTS=nsIRenderingContextWin.h
+
 LINCS= \
 		-I..\
         -I$(PUBLIC)\raptor \

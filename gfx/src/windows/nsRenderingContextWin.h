@@ -35,6 +35,7 @@
 #include "nsVoidArray.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMRenderingContext.h"
+#include "nsIRenderingContextWin.h"
 
 class GraphicsState;
 class nsDrawingSurfaceWin;
@@ -44,6 +45,7 @@ class nsDrawingSurfaceWin;
 #endif
 
 class nsRenderingContextWin : public nsIRenderingContext,
+                              nsIRenderingContextWin,
                               nsIDOMRenderingContext,
                               nsIScriptObjectOwner
 {
@@ -157,6 +159,9 @@ public:
 
   // nsIDOMRenderingContext
   NS_DECL_IDOMRENDERINGCONTEXT
+
+  // nsIRenderingContextWin
+  NS_IMETHOD CreateDrawingSurface(HDC aDC, nsDrawingSurface &aSurface);
 
   // locals
 #ifdef NGLAYOUT_DDRAW
