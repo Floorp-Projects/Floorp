@@ -311,6 +311,8 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
 				    nsnull);
 #endif
 
+  frame = gtk_layout_new(0,0);
+
   mWidget = frame;
 
   if (mainWindow) {
