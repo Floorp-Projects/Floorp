@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
         printf("decoded = ");
         NS_ConvertUTF8toUCS2 u(buf);
         for (int i = 0; u[i]; i++) {
-          printf("U+%0.4X ", u[i]);
+          printf("U+%.4X ", u[i]);
         }
         printf("\n");
 
