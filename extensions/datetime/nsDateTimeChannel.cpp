@@ -125,7 +125,7 @@ NS_IMETHODIMP
 nsDateTimeChannel::Suspend()
 {
     if (mPump)
-        mPump->Suspend();
+        return mPump->Suspend();
     return NS_ERROR_UNEXPECTED;
 }
 
@@ -133,7 +133,7 @@ NS_IMETHODIMP
 nsDateTimeChannel::Resume()
 {
     if (mPump)
-        mPump->Resume();
+        return mPump->Resume();
     return NS_ERROR_UNEXPECTED;
 }
 
