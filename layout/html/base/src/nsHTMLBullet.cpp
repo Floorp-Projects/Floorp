@@ -29,6 +29,8 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLImage.h"
 #include "prprf.h"
+#include "nsHTMLFrame.h"
+#include "nsIView.h"
 
 class Bullet : public nsHTMLTagContent {
 public:
@@ -171,6 +173,13 @@ BulletFrame::List(FILE* out, PRInt32 aIndent) const
   GetContentIndex(contentIndex);
   fprintf(out, "Bullet(%d)@%p ", 
           contentIndex, this);
+  nsIView* view;
+  GetView(view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
+    NS_RELEASE(view);
+  }
+
   out << mRect;
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
@@ -188,66 +197,70 @@ BulletFrame::Paint(nsIPresContext&      aCX,
     (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
 
   if (disp->mVisible) {
-    nsStyleFont* myFont =
-      (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
-    nsStyleColor* myColor =
-      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
     nsStyleList* myList =
       (nsStyleList*)mStyleContext->GetData(eStyleStruct_List);
 
     if (myList->mListStyleImage.Length() > 0) {
       nsIImage* image = mImageLoader.GetImage();
       if (nsnull == image) {
-        // No image yet
+        if (!mImageLoader.GetLoadImageFailed()) {
+          // No image yet
+          return NS_OK;
+        }
+      }
+      else {
+        nsRect innerArea(mPadding.left, mPadding.top,
+                         mRect.width - (mPadding.left + mPadding.right),
+                         mRect.height - (mPadding.top + mPadding.bottom));
+        aRenderingContext.DrawImage(image, innerArea);
         return NS_OK;
       }
-      nsRect innerArea(mPadding.left, mPadding.top,
-                       mRect.width - (mPadding.left + mPadding.right),
-                       mRect.height - (mPadding.top + mPadding.bottom));
-      aRenderingContext.DrawImage(image, innerArea);
     }
-    else {
-      nsIFontMetrics* fm;
-      aRenderingContext.SetColor(myColor->mColor);
 
-      nsAutoString text;
-      switch (myList->mListStyleType) {
-      case NS_STYLE_LIST_STYLE_NONE:
-        break;
+    nsStyleFont* myFont =
+      (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
+    nsStyleColor* myColor =
+      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
+    nsIFontMetrics* fm;
+    aRenderingContext.SetColor(myColor->mColor);
 
-      default:
-      case NS_STYLE_LIST_STYLE_BASIC:
-      case NS_STYLE_LIST_STYLE_DISC:
-        aRenderingContext.FillEllipse(mPadding.left, mPadding.top,
-                                      mRect.width - (mPadding.left + mPadding.right),
-                                      mRect.height - (mPadding.top + mPadding.bottom));
-        break;
+    nsAutoString text;
+    switch (myList->mListStyleType) {
+    case NS_STYLE_LIST_STYLE_NONE:
+      break;
 
-      case NS_STYLE_LIST_STYLE_CIRCLE:
-        aRenderingContext.DrawEllipse(mPadding.left, mPadding.top,
-                                      mRect.width - (mPadding.left + mPadding.right),
-                                      mRect.height - (mPadding.top + mPadding.bottom));
-        break;
+    default:
+    case NS_STYLE_LIST_STYLE_BASIC:
+    case NS_STYLE_LIST_STYLE_DISC:
+      aRenderingContext.FillEllipse(mPadding.left, mPadding.top,
+                                    mRect.width - (mPadding.left + mPadding.right),
+                                    mRect.height - (mPadding.top + mPadding.bottom));
+      break;
 
-      case NS_STYLE_LIST_STYLE_SQUARE:
-        aRenderingContext.FillRect(mPadding.left, mPadding.top,
-                                   mRect.width - (mPadding.left + mPadding.right),
-                                   mRect.height - (mPadding.top + mPadding.bottom));
-        break;
+    case NS_STYLE_LIST_STYLE_CIRCLE:
+      aRenderingContext.DrawEllipse(mPadding.left, mPadding.top,
+                                    mRect.width - (mPadding.left + mPadding.right),
+                                    mRect.height - (mPadding.top + mPadding.bottom));
+      break;
 
-      case NS_STYLE_LIST_STYLE_DECIMAL:
-      case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-      case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-      case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-      case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-        fm = aCX.GetMetricsFor(myFont->mFont);
-        GetListItemText(&aCX, text, *myList);
-        aRenderingContext.SetFont(myFont->mFont);
-        aRenderingContext.DrawString(text, mPadding.left, mPadding.top,
-                                     fm->GetWidth(text));
-        NS_RELEASE(fm);
-        break;
-      }
+    case NS_STYLE_LIST_STYLE_SQUARE:
+      aRenderingContext.FillRect(mPadding.left, mPadding.top,
+                                 mRect.width - (mPadding.left + mPadding.right),
+                                 mRect.height - (mPadding.top + mPadding.bottom));
+      break;
+
+    case NS_STYLE_LIST_STYLE_DECIMAL:
+    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+      fm = aCX.GetMetricsFor(myFont->mFont);
+      GetListItemText(&aCX, text, *myList);
+      aRenderingContext.SetFont(myFont->mFont);
+      aRenderingContext.DrawString(text, mPadding.left, mPadding.top,
+                                   fm->GetWidth(text));
+      NS_RELEASE(fm);
+      break;
     }
   }
   return NS_OK;
@@ -509,69 +522,71 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
 {
   nsStyleList* myList =
     (nsStyleList*)mStyleContext->GetData(eStyleStruct_List);
-  nsStyleFont* myFont =
-    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
-
-  nsIFontMetrics* fm = aCX->GetMetricsFor(myFont->mFont);
   if (myList->mListStyleImage.Length() > 0) {
     mImageLoader.SetURL(myList->mListStyleImage);
     mImageLoader.GetDesiredSize(aCX, aReflowState, aDesiredSize);
-    aDesiredSize.ascent = aDesiredSize.height;
-    aDesiredSize.descent = 0;
-  }
-  else {
-    nscoord bulletSize;
-    float p2t;
-    float t2p;
-
-    nsAutoString text;
-    switch (myList->mListStyleType) {
-    case NS_STYLE_LIST_STYLE_NONE:
-      aDesiredSize.width = 0;
-      aDesiredSize.height = 0;
-      aDesiredSize.ascent = 0;
+    if (!mImageLoader.GetLoadImageFailed()) {
+      nsHTMLFrame::CreateViewForFrame(aCX, this, mStyleContext, PR_FALSE);
+      aDesiredSize.ascent = aDesiredSize.height;
       aDesiredSize.descent = 0;
-      break;
-
-    default:
-    case NS_STYLE_LIST_STYLE_DISC:
-    case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_BASIC:
-    case NS_STYLE_LIST_STYLE_SQUARE:
-      t2p = aCX->GetTwipsToPixels();
-      bulletSize = nscoord(t2p * fm->GetMaxAscent() / 2);
-      if (bulletSize < 1) {
-        bulletSize = MIN_BULLET_SIZE;
-      }
-      p2t = aCX->GetPixelsToTwips();
-      bulletSize = nscoord(p2t * bulletSize);
-      mPadding.bottom = (fm->GetMaxAscent() / 8);
-      if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
-        mPadding.right = bulletSize / 2;
-      }
-      aDesiredSize.width = mPadding.right + bulletSize;
-      aDesiredSize.height = mPadding.bottom + bulletSize;
-      aDesiredSize.ascent = mPadding.bottom + bulletSize;
-      aDesiredSize.descent = 0;
-      break;
-
-    case NS_STYLE_LIST_STYLE_DECIMAL:
-    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-      GetListItemText(aCX, text, *myList);
-      if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
-        // Inside bullets need some extra width to get the padding
-        // between the list item and the content that follows.
-        mPadding.right = fm->GetHeight() / 2;          // From old layout engine
-      }
-      aDesiredSize.width = mPadding.right + fm->GetWidth(text);
-      aDesiredSize.height = fm->GetHeight();
-      aDesiredSize.ascent = fm->GetMaxAscent();
-      aDesiredSize.descent = fm->GetMaxDescent();
-      break;
+      return;
     }
+  }
+
+  nsStyleFont* myFont =
+    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
+  nsIFontMetrics* fm = aCX->GetMetricsFor(myFont->mFont);
+  nscoord bulletSize;
+  float p2t;
+  float t2p;
+
+  nsAutoString text;
+  switch (myList->mListStyleType) {
+  case NS_STYLE_LIST_STYLE_NONE:
+    aDesiredSize.width = 0;
+    aDesiredSize.height = 0;
+    aDesiredSize.ascent = 0;
+    aDesiredSize.descent = 0;
+    break;
+
+  default:
+  case NS_STYLE_LIST_STYLE_DISC:
+  case NS_STYLE_LIST_STYLE_CIRCLE:
+  case NS_STYLE_LIST_STYLE_BASIC:
+  case NS_STYLE_LIST_STYLE_SQUARE:
+    t2p = aCX->GetTwipsToPixels();
+    bulletSize = nscoord(t2p * fm->GetMaxAscent() / 2);
+    if (bulletSize < 1) {
+      bulletSize = MIN_BULLET_SIZE;
+    }
+    p2t = aCX->GetPixelsToTwips();
+    bulletSize = nscoord(p2t * bulletSize);
+    mPadding.bottom = (fm->GetMaxAscent() / 8);
+    if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
+      mPadding.right = bulletSize / 2;
+    }
+    aDesiredSize.width = mPadding.right + bulletSize;
+    aDesiredSize.height = mPadding.bottom + bulletSize;
+    aDesiredSize.ascent = mPadding.bottom + bulletSize;
+    aDesiredSize.descent = 0;
+    break;
+
+  case NS_STYLE_LIST_STYLE_DECIMAL:
+  case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+  case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+  case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+  case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+    GetListItemText(aCX, text, *myList);
+    if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == myList->mListStylePosition) {
+      // Inside bullets need some extra width to get the padding
+      // between the list item and the content that follows.
+      mPadding.right = fm->GetHeight() / 2;          // From old layout engine
+    }
+    aDesiredSize.width = mPadding.right + fm->GetWidth(text);
+    aDesiredSize.height = fm->GetHeight();
+    aDesiredSize.ascent = fm->GetMaxAscent();
+    aDesiredSize.descent = fm->GetMaxDescent();
+    break;
   }
   NS_RELEASE(fm);
 }
