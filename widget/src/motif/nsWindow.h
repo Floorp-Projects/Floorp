@@ -137,6 +137,7 @@ protected:
   nscolor     mForeground;
   nsCursor    mCursor;
   nsBorderStyle mBorderStyle;
+  nsRect      mBounds;
 
 };
 
