@@ -3,7 +3,7 @@
 #  . $topsrcdir/browser/config/mozconfig
 # to the top of your mozconfig file.
 
-set MOZ_PHOENIX=1
+MOZ_PHOENIX=1
 export MOZ_PHOENIX
 mk_add_options MOZ_PHOENIX=1
 
