@@ -55,7 +55,8 @@ nsresult nsMailboxService::ParseMailbox(const nsFileSpec& aMailboxPath, nsIStrea
 		if (NS_SUCCEEDED(rv) && url)
 		{
 			// okay now generate the url string
-			char * urlSpec = PR_smprintf("mailbox://%s", (const char *) aMailboxPath);
+			nsFilePath path(aMailboxPath);
+			char * urlSpec = PR_smprintf("mailbox://%s", (const char *) path);
 			url->SetSpec(urlSpec);
 			PR_FREEIF(urlSpec);
 			url->SetMailboxParser(aMailboxParser);
