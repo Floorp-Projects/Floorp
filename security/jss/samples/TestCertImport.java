@@ -76,7 +76,7 @@ public class TestCertImport {
         if(cert instanceof TokenCertificate) {
             System.out.println("Imported user cert!");
         } else {
-            Assert.assert( cert instanceof InternalCertificate );
+            Assert._assert( cert instanceof InternalCertificate );
             System.out.println("Imported CA cert chain. Setting trust bits.");
             ((InternalCertificate)cert).setSSLTrust(
                 InternalCertificate.VALID_CA |
