@@ -2459,9 +2459,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_LBUTTONDBLCLK:
-            result = DispatchMouseEvent(NS_MOUSE_LEFT_BUTTON_DOWN);
-            if (result == PR_FALSE)
-              result = DispatchMouseEvent(NS_MOUSE_LEFT_DOUBLECLICK);
+            result = DispatchMouseEvent(NS_MOUSE_LEFT_DOUBLECLICK);
             break;
 
         case WM_MBUTTONDOWN:
@@ -2485,9 +2483,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
 
         case WM_RBUTTONDBLCLK:
-            result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN);
-            if (result == PR_FALSE)
-              result = DispatchMouseEvent(NS_MOUSE_RIGHT_DOUBLECLICK);                      
+            result = DispatchMouseEvent(NS_MOUSE_RIGHT_DOUBLECLICK);                      
             break;
 
         case WM_HSCROLL:
@@ -3168,10 +3164,18 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   event.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
   event.isControl = IS_VK_DOWN(NS_VK_CONTROL);
   event.isAlt     = IS_VK_DOWN(NS_VK_ALT);
-  event.clickCount = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
-                      aEventType == NS_MOUSE_LEFT_DOUBLECLICK)? 2:1;
   event.eventStructType = NS_MOUSE_EVENT;
 
+  //Dblclicks are used to set the click count, then changed to mousedowns
+  if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
+      aEventType == NS_MOUSE_RIGHT_DOUBLECLICK) {
+    event.message = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) ? 
+                     NS_MOUSE_LEFT_BUTTON_DOWN : NS_MOUSE_RIGHT_BUTTON_DOWN;
+    event.clickCount = 2;
+  }
+  else {
+    event.clickCount = 1;
+  }
 
   nsPluginEvent pluginEvent;
 

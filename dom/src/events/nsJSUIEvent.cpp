@@ -299,7 +299,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         PRUint16 prop;
         nsresult result = NS_OK;
-        result = a->GetClickcount(&prop);
+        result = a->GetClickCount(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
@@ -649,7 +649,7 @@ static JSPropertySpec UIEventProperties[] =
   {"charCode",    UIEVENT_CHARCODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"keyCode",    UIEVENT_KEYCODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"button",    UIEVENT_BUTTON,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"clickcount",    UIEVENT_CLICKCOUNT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"clickCount",    UIEVENT_CLICKCOUNT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"layerX",    NSUIEVENT_LAYERX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"layerY",    NSUIEVENT_LAYERY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"pageX",    NSUIEVENT_PAGEX,    JSPROP_ENUMERATE | JSPROP_READONLY},
