@@ -198,14 +198,11 @@ nsHTMLSharedElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsHTMLSharedElement* it = new nsHTMLSharedElement();
+  nsRefPtr<nsHTMLSharedElement> it = new nsHTMLSharedElement();
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  nsCOMPtr<nsISupports> kungFuDeathGrip =
-    NS_STATIC_CAST(nsIDOMHTMLEmbedElement *, it);
 
   nsresult rv = it->Init(mNodeInfo);
 
