@@ -37,6 +37,7 @@
 #include "nsIContentDelegate.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
+#include "nsHTMLFrame.h"
 
 NS_DEF_PTR(nsIStyleContext);
 
@@ -88,7 +89,8 @@ void nsHTMLContainerFrame::TriggerLink(nsIPresContext& aPresContext,
   if (NS_OK == aPresContext.GetLinkHandler(&handler)) {
     // Resolve url to an absolute url
     nsIURL* docURL = nsnull;
-    nsIDocument* doc = mContent->GetDocument();
+    nsIDocument* doc = nsnull;
+    mContent->GetDocument(doc);
     if (nsnull != doc) {
       docURL = doc->GetDocumentURL();
       NS_RELEASE(doc);
@@ -315,6 +317,11 @@ nsHTMLContainerFrame::CreateFrameFor(nsIPresContext*  aPresContext,
                                aStyleContext, frame);
     NS_RELEASE(delegate);
   }
+  if (NS_OK == rv) {
+    // Wrap the frame in a view if necessary
+    rv = nsHTMLFrame::CreateViewForFrame(aPresContext, frame, aStyleContext,
+                                         PR_FALSE);
+  }
   aResult = frame;
   return rv;
 }
@@ -435,10 +442,9 @@ nsHTMLContainerFrame::ProcessInitialReflow(nsIPresContext* aPresContext)
       return rv;
     }
 
-    // XXX
-    // Note: this will generate a content-inserted reflow operation
-    // which we need to discard.
-    mContent->InsertChildAt(bullet, 0);
+    // Insert the bullet. Do not allow an incremental reflow operation
+    // to occur.
+    mContent->InsertChildAt(bullet, 0, PR_FALSE);
   }
 
   return NS_OK;
