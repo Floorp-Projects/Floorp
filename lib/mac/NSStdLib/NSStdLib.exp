@@ -13,6 +13,8 @@ FSpLocationFromFullPath
 FSpGetFullPath
 GetFullPath
 FSpMoveRenameCompat
+DTOpen
+DetermineVRefNum
 
 # Mem allocator
 free
