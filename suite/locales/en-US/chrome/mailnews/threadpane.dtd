@@ -22,7 +22,11 @@ Rights Reserved.
 <!ENTITY senderColumn.label "Sender">
 <!ENTITY subjectColumn.label "Subject">
 <!ENTITY dateColumn.label "Date">
+<!ENTITY priorityColumn.label "Priority">
 <!ENTITY statusColumn.label "Status">
+<!ENTITY sizeColumn.label "Size">
 <!ENTITY unreadColumn.label "Unread">
 <!ENTITY totalColumn.label "Total">
 <!ENTITY readcol.img "chrome://messenger/skin/readcol.gif">
+<!ENTITY flagcol.img "chrome://messenger/skin/flagcol.gif">
+<!ENTITY threadcol.img "chrome://messenger/skin/unthreadcol.gif">
