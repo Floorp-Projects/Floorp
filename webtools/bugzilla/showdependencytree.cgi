@@ -28,8 +28,6 @@ use strict;
 use lib qw(.);
 require "CGI.pl";
 
-# Shut up misguided -w warnings about "used only once":
-
 use vars %::FORM;
 
 ConnectToDatabase();
@@ -63,6 +61,9 @@ if ($hide_resolved !~ /^\d+$/ || $hide_resolved != 1) { $hide_resolved = 0 };
 # A hash to count visited bugs, and also to avoid processing repeated bugs
 my %seen;
 
+# A hash to keep track of the bugs we print for the 'as buglist' links.
+my %printed;
+
 # HTML output generated in the parse of the dependency tree. This is a
 # global only to avoid excessive complication in the recursion invocation
 my $html;
@@ -92,6 +93,7 @@ my $scriptname = $::ENV{'SCRIPT_NAME'}; # showdependencytree.cgi
 #   html: Bug descriptions are appended here
 #   realdepth: We set the maximum depth of recursion reached
 #   seen: We store the bugs analyzed so far
+#   printed: We store those bugs we actually print, for the "buglist" link
 # Globals Referenced
 #   maxdepth
 #   hide_resolved
@@ -161,6 +163,8 @@ sub DumpKids {
                         $short_desc.</a>\n|; 
                 }
                 if (! $opened) { $html .= "</span></strike>"; }
+                
+                $printed{$kid} = 1;
             } # End hideable output
 
             # Store the maximum depth so far
@@ -197,6 +201,7 @@ sub makeTreeHTML {
     # Clean up globals for this run
     $html = "";
     %seen = ();
+    %printed = ();
 
     DumpKids($i, $target);
     my $tmphtml = $html;
@@ -205,6 +210,11 @@ sub makeTreeHTML {
     $html = "<h3>Bugs that bug $linked_id ".($target eq "blocked" ? 
         "blocks" : "depends on");
 
+    if ((scalar keys %printed) > 0) {
+        $html .= ' (<a href="buglist.cgi?bug_id=' . join(',', keys %printed) . 
+                 '">view as bug list</a>)';        
+    }
+    
     # Provide feedback for omitted bugs
     if ($maxdepth || $hide_resolved) {
         $html .= " <small><b>(Only ";
@@ -218,7 +228,7 @@ sub makeTreeHTML {
     $html .= $tmphtml;
 
     # If no bugs were found, say so
-    if ((scalar keys %seen) < 2) {
+    if ((scalar keys %printed) == 0) {
         $html .= "&nbsp;&nbsp;&nbsp;&nbsp;None<p>\n";
     }
 
@@ -296,7 +306,7 @@ sub drawDepForm {
     <form method="get" action="$scriptname" 
         style="display: inline; margin: 0px;">
 
-    <!-- Limit entry form: the button can't do anything when total depth
+    <!-- Limit entry form: the button can not do anything when total depth
          is less than two, so disable it -->
     <input name="maxdepth" size="4" maxlength="4" value="| 
         . ( $maxdepth > 0 ? $maxdepth : "" ) . qq|">
