@@ -23,7 +23,47 @@
 #include "nsISelection.h"
 #include "nsSelectionRange.h"
 #include "nsSelectionPoint.h"
+#include "prlog.h"
 
+/**
+ * nsFrame logging constants. We redefine the nspr
+ * PRLogModuleInfo.level field to be a bitfield.  Each bit controls a
+ * specific type of logging. Each logging operation has associated
+ * inline methods defined below.
+ */
+#define NS_FRAME_TRACE_CALLS        0x1
+#define NS_FRAME_TRACE_PUSH_PULL    0x2
+#define NS_FRAME_TRACE_CHILD_REFLOW 0x4
+
+#define NS_FRAME_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
+
+#ifdef NS_DEBUG
+#define NS_FRAME_LOG(_bit,_args)                                \
+  PR_BEGIN_MACRO                                                \
+    if (NS_FRAME_LOG_TEST(nsIFrame::GetLogModuleInfo(),_bit)) { \
+      PR_LogPrint _args;                                        \
+    }                                                           \
+  PR_END_MACRO
+#else
+#define NS_FRAME_LOG(_bit,_args)
+#endif
+
+#ifdef NS_DEBUG
+#define NS_FRAME_TRACE_IN(_method) Trace(_method, PR_TRUE)
+#define NS_FRAME_TRACE_OUT(_method) Trace(_method, PR_FALSE)
+#define NS_FRAME_TRACE_MSG(_args) TraceMsg _args
+#define NS_FRAME_TRACE_REFLOW_IN(_method) Trace(_method, PR_TRUE)
+#define NS_FRAME_TRACE_REFLOW_OUT(_method, _status) \
+  Trace(_method, PR_FALSE, _status)
+#else
+#define NS_FRAME_TRACE_IN(_method)
+#define NS_FRAME_TRACE_OUT(_method)
+#define NS_FRAME_TRACE_MSG(_args)
+#define NS_FRAME_TRACE_REFLOW_IN(_method)
+#define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
+#endif
+
+//----------------------------------------------------------------------
 
 // Implementation of a simple frame with no children and that isn't splittable
 class nsFrame : public nsIFrame
@@ -178,6 +218,18 @@ public:
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
   NS_IMETHOD  VerifyTree() const;
+
+#ifdef NS_DEBUG
+  /**
+   * Tracing method that writes a method enter/exit routine to the
+   * nspr log using the nsIFrame log module. The tracing is only
+   * done when the NS_FRAME_TRACE_CALLS bit is set in the log module's
+   * level field.
+   */
+  void Trace(const char* aMethod, PRBool aEnter);
+  void Trace(const char* aMethod, PRBool aEnter, nsReflowStatus aStatus);
+  void TraceMsg(const char* fmt, ...);
+#endif
 
 protected:
     // Selection Methods
