@@ -51,6 +51,7 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsIObserver.h"
 #include "nsIProgressDialog.h"
+#include "nsIWebBrowserPersist.h"
 #include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
 
@@ -662,25 +663,26 @@ nsDownloadManager::OpenProgressDialogFor(const char* aPersistentDescriptor, nsID
   nsCOMPtr<nsIProgressDialog> dialog(do_CreateInstance("@mozilla.org/progressdialog;1", &rv));
   if (NS_FAILED(rv)) return rv;
   
+  nsCOMPtr<nsIDownload> dl = do_QueryInterface(dialog);
+
   // now give the dialog the necessary context
   
   // start time...
   PRInt64 startTime = 0;
   download->GetStartTime(&startTime);
   if (startTime) // possible not to have a start time yet if the dialog was requested immediately
-    dialog->SetStartTime(startTime);
+    dl->SetStartTime(startTime);
   
   // source...
-  nsCOMPtr<nsIURI> uri;
-  download->GetSource(getter_AddRefs(uri));
-  dialog->SetSource(uri);
+  nsCOMPtr<nsIURI> source;
+  download->GetSource(getter_AddRefs(source));
   
   // target...
   nsCOMPtr<nsILocalFile> target;
   download->GetTarget(getter_AddRefs(target));
-  dialog->SetTarget(target);
 
-  dialog->SetObserver(this);
+  dl->Init(source, target, nsnull, nsnull); 
+  dl->SetObserver(this);
 
   // now set the listener so we forward notifications to the dialog
   nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(dialog);
@@ -688,7 +690,7 @@ nsDownloadManager::OpenProgressDialogFor(const char* aPersistentDescriptor, nsID
   
   internalDownload->SetDialog(dialog);
   
-  return dialog->Open(aParent, nsnull);
+  return dialog->Open(aParent);
 }
 
 NS_IMETHODIMP
@@ -1020,6 +1022,16 @@ nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
 // nsIDownload
 
 NS_IMETHODIMP
+nsDownload::Init(nsIURI* aSource,
+                 nsILocalFile* aTarget,
+                 const PRUnichar* aDisplayName,
+                 nsIWebBrowserPersist* aPersist)
+{
+  NS_WARNING("Huh...how did we get here?!");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDownload::SetDisplayName(const PRUnichar* aDisplayName)
 {
   mDisplayName = aDisplayName;
@@ -1071,16 +1083,16 @@ nsDownload::GetPersist(nsIWebBrowserPersist** aPersist)
 }
 
 NS_IMETHODIMP
-nsDownload::GetStartTime(PRInt64* aStartTime)
+nsDownload::SetStartTime(PRInt64 aStartTime)
 {
-  *aStartTime = mStartTime;
+  mStartTime = aStartTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDownload::SetStartTime(PRInt64 aStartTime)
+nsDownload::GetStartTime(PRInt64* aStartTime)
 {
-  mStartTime = aStartTime;
+  *aStartTime = mStartTime;
   return NS_OK;
 }
 
@@ -1118,5 +1130,19 @@ nsDownload::GetObserver(nsIObserver** aObserver)
 {
   *aObserver = mObserver;
   NS_IF_ADDREF(*aObserver);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownload::SetOpeningWith(const PRUnichar* aOpeningWith)
+{
+  mOpeningWith = aOpeningWith;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownload::GetOpeningWith(PRUnichar** aOpeningWith)
+{
+  *aOpeningWith = ToNewUnicode(mOpeningWith);
   return NS_OK;
 }

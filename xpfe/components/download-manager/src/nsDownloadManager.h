@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Blake Ross <blakeross@telocity.com>
+ *   Blake Ross <blaker@netscape.com>
  *   Ben Goodger <ben@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -51,9 +51,9 @@
 #include "nsIRDFContainerUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIURI.h"
+#include "nsIWebBrowserPersist.h"
 #include "nsILocalFile.h"
 #include "nsHashtable.h"
-#include "nsIWebBrowserPersist.h"
 #include "nsIRequest.h"
 #include "nsIObserver.h"
 #include "nsIStringBundle.h"
@@ -124,6 +124,8 @@ private:
   nsDownloadManager* mDownloadManager;
 
   nsString mDisplayName;
+  nsString mOpeningWith;
+
   nsCOMPtr<nsILocalFile> mTarget;
   nsCOMPtr<nsIURI> mSource;
   nsCOMPtr<nsIWebProgressListener> mListener;
