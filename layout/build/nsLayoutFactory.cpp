@@ -79,6 +79,7 @@ static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_
 static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID, NS_HTML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kHTMLEncoderCID, NS_HTML_ENCODER_CID);
+static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 
 extern nsresult NS_NewRangeList(nsIDOMSelection** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
@@ -90,6 +91,7 @@ extern nsresult NS_NewLayoutDocumentLoaderFactory(nsIDocumentLoaderFactory** aRe
 extern nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 extern nsresult NS_NewHTMLElementFactory(nsIHTMLElementFactory** aResult);
 extern nsresult NS_NewHTMLEncoder(nsIDocumentEncoder** aResult);
+extern nsresult NS_NewTextEncoder(nsIDocumentEncoder** aResult);
 
 ////////////////////////////////////////////////////////////
 
@@ -382,6 +384,14 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
     res = NS_NewHTMLEncoder((nsIDocumentEncoder**) &inst);
     if (NS_FAILED(res)) {
       LOG_NEW_FAILURE("NS_NewHTMLEncoder", res);
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kTextEncoderCID)) {
+    res = NS_NewTextEncoder((nsIDocumentEncoder**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewTextEncoder", res);
       return res;
     }
     refCounted = PR_TRUE;
@@ -705,6 +715,13 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
       LOG_REGISTER_FAILURE("kHTMLEncoderCID", rv);
       break;
     }
+ 
+    rv = cm->RegisterComponent(kTextEncoderCID, NULL, NULL, aPath,
+                               PR_TRUE, PR_TRUE);
+   if (NS_FAILED(rv)) {
+      LOG_REGISTER_FAILURE("kTextEncoderCID", rv);
+      break;
+    }    
     break;
   } while (PR_FALSE);
 
@@ -751,6 +768,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
   rv = cm->UnregisterComponent(kFrameUtilCID, aPath);
   rv = cm->UnregisterComponent(kLayoutDebuggerCID, aPath);
   rv = cm->UnregisterComponent(kHTMLEncoderCID, aPath);
+  rv = cm->UnregisterComponent(kTextEncoderCID, aPath);
 
 // XXX why the heck are these exported???? bad bad bad bad
 #if 1

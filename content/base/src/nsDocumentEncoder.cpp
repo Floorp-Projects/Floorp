@@ -24,12 +24,20 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIDocument.h"
+#include "nsIDOMSelection.h"
+#include "nsIPresShell.h"
+#include "nsXIFDTD.h"
+#include "nsParserCIID.h"
+#include "nsIParser.h"
+#include "nsHTMLContentSinkStream.h"
+#include "nsHTMLToTxtSinkStream.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 static NS_DEFINE_CID(kCHTMLEncoderCID, NS_HTML_ENCODER_CID);
+static NS_DEFINE_CID(kCTextEncoderCID, NS_TEXT_ENCODER_CID);
 
 class nsHTMLEncoder : public nsIHTMLEncoder
 {
@@ -39,7 +47,7 @@ public:
   nsHTMLEncoder();
   virtual ~nsHTMLEncoder();
 
-  NS_IMETHOD Init(nsIDocument* aDocument, nsString& aMimeType);
+  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIDocument* aDocument, nsString& aMimeType);
 
   /* Interfaces for addref and release and queryinterface */
   NS_DECL_ISUPPORTS
@@ -58,31 +66,51 @@ public:
   NS_IMETHOD PrettyPrint(PRBool aYesNO);
 
 private:
-  nsIDocument* mDocument;
-  nsString mMimeType;
+  nsIDocument*      mDocument;
+  nsIDOMSelection*  mSelection;
+  nsIPresShell*     mPresShell;
+  nsString          mMimeType;
+  nsString          mCharset;
 };
 
-NS_IMPL_ADDREF(nsHTMLEncoder)
-NS_IMPL_RELEASE(nsHTMLEncoder)
 
+
+NS_IMPL_ADDREF(nsHTMLEncoder)
+// NS_IMPL_RELEASE(nsHTMLEncoder)
+NS_IMETHODIMP_(nsrefcnt) nsHTMLEncoder::Release(void)                         
+{                                                      
+  NS_PRECONDITION(0 != mRefCnt, "dup release");        
+  if (--mRefCnt == 0) {                                
+    NS_DELETEXPCOM(this);                              
+    return 0;                                          
+  }                                                    
+  return mRefCnt;                                      
+}
 nsHTMLEncoder::nsHTMLEncoder() : mMimeType("text/html")
 {
   mDocument = 0;
+  mSelection = 0;
+  mPresShell = 0;
+  NS_INIT_REFCNT();
 }
 
 nsHTMLEncoder::~nsHTMLEncoder()
 {
-  NS_IF_RELEASE(mDocument);
+  NS_IF_RELEASE(mDocument); 
+  NS_IF_RELEASE(mSelection);
+  NS_IF_RELEASE(mPresShell);
 }
 
 NS_IMETHODIMP
-nsHTMLEncoder::Init(nsIDocument* aDocument, nsString& aMimeType)
+nsHTMLEncoder::Init(nsIPresShell* aPresShell, nsIDocument* aDocument, nsString& aMimeType)
 {
   if (!aDocument)
     return NS_ERROR_INVALID_ARG;
 
   mDocument = aDocument;
   NS_ADDREF(mDocument);
+  mPresShell = aPresShell;
+  NS_ADDREF(aPresShell);
   mMimeType = aMimeType;
   return NS_OK;
 }
@@ -112,43 +140,131 @@ nsresult nsHTMLEncoder::QueryInterface(REFNSIID aIID,
 NS_IMETHODIMP
 nsHTMLEncoder::SetSelection(nsIDOMSelection* aSelection)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mSelection = aSelection;
+  return NS_OK;   
 }
 
 NS_IMETHODIMP
 nsHTMLEncoder::SetCharset(const nsString& aCharset)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  mCharset = aCharset;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLEncoder::EncodeToString(nsString& aOutputString)
 {
+  nsresult rv;
+
   if (!mDocument)
     return NS_ERROR_NOT_INITIALIZED;
+  if (!mPresShell)
+    return NS_ERROR_NOT_INITIALIZED;
 
-  // Also make sure mString is a mime type "text/html" or "text/plain"
+  // xxx Also make sure mString is a mime type "text/html" or "text/plain"
+  
+  if (mPresShell) {
+    if (mDocument) {
+      nsString buffer;
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+      mDocument->CreateXIF(buffer,mSelection);
+      nsIParser* parser;
+
+      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+      rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                                 nsnull, 
+                                                 kCParserIID, 
+                                                 (void **)&parser);
+
+      if (NS_OK == rv) {
+        nsIHTMLContentSink* sink = nsnull;
+
+        rv = NS_New_HTML_ContentSinkStream(&sink,&aOutputString);
+  
+      	if (sink && NS_SUCCEEDED(rv)) {
+
+	        if (NS_OK == rv) {
+	          parser->SetContentSink(sink);
+	   
+	          nsIDTD* dtd = nsnull;
+	          rv = NS_NewXIFDTD(&dtd);
+	          if (NS_OK == rv) {
+	            parser->RegisterDTD(dtd);
+	            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
+	          }
+	          NS_IF_RELEASE(dtd);
+	          NS_IF_RELEASE(sink);
+	        }
+        }
+        NS_RELEASE(parser);
+      }
+  	}
+	}
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLEncoder::EncodeToStream(nsIOutputStream* aStream)
 {
-#if 0
-  nsString str;
-  nsresult rv = Encode(str);
-  if (NS_FAILED(rv))
-    return rv;
+  nsresult rv;
 
-  PRUint32 len = str.Length();
-  // Doesn't work -- how do we get a stream to take input from an nsString?
-  // nsIOutputStream is expecting ascii, I assume,
-  // while nsString's buffer is likely (but not definitely) unicode.
-  return aStream->Write(str, len, &len);
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
+  if (!mDocument)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!mPresShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // xxx Also make sure mString is a mime type "text/html" or "text/plain"
+  
+  if (mPresShell) {
+    if (mDocument) {
+      nsString buffer;
+
+      mDocument->CreateXIF(buffer,mSelection);
+      
+      nsString*     charset = nsnull;
+      nsAutoString  defaultCharset("ISO-8859-1");
+      if (!mCharset.Equals("null") && !mCharset.Equals(""))
+        charset = &mCharset; 
+
+      nsIParser* parser;
+
+      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+      rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                                 nsnull, 
+                                                 kCParserIID, 
+                                                 (void **)&parser);
+
+      if (NS_OK == rv) {
+        nsIHTMLContentSink* sink = nsnull;
+
+        rv = NS_New_HTML_ContentSinkStream(&sink,aStream,charset);
+  
+      	if (sink && NS_SUCCEEDED(rv)) {
+
+	        if (NS_OK == rv) {
+	          parser->SetContentSink(sink);
+	    
+	          nsIDTD* dtd = nsnull;
+	          rv = NS_NewXIFDTD(&dtd);
+	          if (NS_OK == rv) {
+	            parser->RegisterDTD(dtd);
+	            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
+	          }
+	          NS_IF_RELEASE(dtd);
+	          NS_IF_RELEASE(sink);
+	        }
+        }
+        NS_RELEASE(parser);
+      }
+  	}
+	}
+  return rv;
+
+
 }
 
 NS_IMETHODIMP
@@ -168,15 +284,253 @@ nsHTMLEncoder::PrettyPrint(PRBool aYes)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-
+  
 nsresult
 NS_NewHTMLEncoder(nsIDocumentEncoder** aResult)
 {
   *aResult = new nsHTMLEncoder;
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
+
+
+class nsTextEncoder : public nsITextEncoder
+{
+public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }
+
+  nsTextEncoder();
+  virtual ~nsTextEncoder();
+
+  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIDocument* aDocument, nsString& aMimeType);
+
+  /* Interfaces for addref and release and queryinterface */
+  NS_DECL_ISUPPORTS
+
+  // Inherited methods from nsIDocument 
+  NS_IMETHOD SetSelection(nsIDOMSelection* aSelection);
+  NS_IMETHOD SetCharset(const nsString& aCharset);
+  NS_IMETHOD EncodeToStream(nsIOutputStream* aStream);
+  NS_IMETHOD EncodeToString(nsString& aOutputString);
+
+  NS_IMETHOD PrettyPrint(PRBool aYesNO);
+
+private:
+  nsIDocument*      mDocument;
+  nsIDOMSelection*  mSelection;
+  nsIPresShell*     mPresShell;
+  nsString          mMimeType;
+  nsString          mCharset;
+};
+
+
+NS_IMPL_ADDREF(nsTextEncoder)
+NS_IMPL_RELEASE(nsTextEncoder)
+
+nsTextEncoder::nsTextEncoder() : mMimeType("text/plain")
+{
+  NS_INIT_REFCNT();
+  mDocument = 0;
+  mSelection = 0;
+}
+
+nsTextEncoder::~nsTextEncoder()
+{
+  NS_IF_RELEASE(mDocument);
+  NS_IF_RELEASE(mSelection);
+  NS_IF_RELEASE(mPresShell);
+}
+
+NS_IMETHODIMP
+nsTextEncoder::Init(nsIPresShell* aPresShell, nsIDocument* aDocument, nsString& aMimeType)
+{
+  if (!aDocument)
+    return NS_ERROR_INVALID_ARG;
+
+  if (!aPresShell)
+    return NS_ERROR_INVALID_ARG;
+
+  mDocument = aDocument;
+  NS_ADDREF(mDocument);
+  mPresShell = aPresShell;
+  NS_ADDREF(aPresShell);
+  mMimeType = aMimeType;
+  return NS_OK;
+}
+
+nsresult nsTextEncoder::QueryInterface(REFNSIID aIID,   
+                                               void **aInstancePtr)
+{
+  if (nsnull == aInstancePtr)
+    return NS_ERROR_NULL_POINTER;   
+
+  *aInstancePtr = 0;   
+
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void *)(nsISupports*)this;   
+  } else if (aIID.Equals(nsIDocumentEncoder::GetIID())) {
+    *aInstancePtr = (void *)(nsIDocumentEncoder*)this;   
+  }
+
+  if (nsnull == *aInstancePtr)
+    return NS_NOINTERFACE;   
+
+  NS_ADDREF_THIS();
+
+  return NS_OK;   
+}
+
+NS_IMETHODIMP
+nsTextEncoder::SetSelection(nsIDOMSelection* aSelection)
+{
+  mSelection = aSelection;
+  return NS_OK;   
+}
+
+NS_IMETHODIMP
+nsTextEncoder::SetCharset(const nsString& aCharset)
+{
+  mCharset = aCharset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextEncoder::EncodeToString(nsString& aOutputString)
+{
+ nsresult rv;
+
+  if (!mDocument)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!mPresShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // xxx Also make sure mString is a mime type "text/html" or "text/plain"
+  
+  if (mPresShell) {
+    if (mDocument) {
+      nsString buffer;
+
+      mDocument->CreateXIF(buffer,mSelection);
+      nsIParser* parser;
+
+      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+      rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                                 nsnull, 
+                                                 kCParserIID, 
+                                                 (void **)&parser);
+
+      if (NS_OK == rv) {
+        nsIHTMLContentSink* sink = nsnull;
+
+        rv = NS_New_HTMLToTXT_SinkStream(&sink,&aOutputString);
+  
+      	if (sink && NS_SUCCEEDED(rv)) {
+
+	        if (NS_OK == rv) {
+	          parser->SetContentSink(sink);
+	   
+	          nsIDTD* dtd = nsnull;
+	          rv = NS_NewXIFDTD(&dtd);
+	          if (NS_OK == rv) {
+	            parser->RegisterDTD(dtd);
+	            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
+	          }
+	          NS_IF_RELEASE(dtd);
+	          NS_IF_RELEASE(sink);
+	        }
+        }
+        NS_RELEASE(parser);
+      }
+  	}
+	}
+  return rv;
+}
+
+NS_IMETHODIMP
+nsTextEncoder::EncodeToStream(nsIOutputStream* aStream)
+{
+  nsresult rv;
+
+  if (!mDocument)
+    return NS_ERROR_NOT_INITIALIZED;
+  if (!mPresShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // xxx Also make sure mString is a mime type "text/html" or "text/plain"
+  
+  if (mPresShell) {
+    if (mDocument) {
+      nsString buffer;
+
+      mDocument->CreateXIF(buffer,mSelection);
+      
+      nsString*     charset = nsnull;
+      nsAutoString  defaultCharset("ISO-8859-1");
+      if (!mCharset.Equals("null") && !mCharset.Equals(""))
+        charset = &mCharset; 
+
+      nsIParser* parser;
+
+      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+      rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                                 nsnull, 
+                                                 kCParserIID, 
+                                                 (void **)&parser);
+
+      if (NS_OK == rv) {
+        nsIHTMLContentSink* sink = nsnull;
+
+        rv = NS_New_HTMLToTXT_SinkStream(&sink,aStream,charset);
+  
+      	if (sink && NS_SUCCEEDED(rv)) {
+
+	        if (NS_OK == rv) {
+	          parser->SetContentSink(sink);
+
+            nsIDTD* dtd = nsnull;
+	          rv = NS_NewXIFDTD(&dtd);
+	          if (NS_OK == rv) {
+	            parser->RegisterDTD(dtd);
+	            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
+	          }
+	          NS_IF_RELEASE(dtd);
+	          NS_IF_RELEASE(sink);
+	        }
+        }
+        NS_RELEASE(parser);
+      }
+  	}
+	}
+  return rv;
+}
+
+              
+NS_IMETHODIMP
+nsTextEncoder::PrettyPrint(PRBool aYes)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+NS_NewTextEncoder(nsIDocumentEncoder** aResult)
+{
+  *aResult = new nsTextEncoder;
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+ NS_ADDREF(*aResult);
+ return NS_OK;
+}
+
+
+
+
+
 
 class nsDocumentEncoderFactory : public nsIFactory
 {
@@ -239,6 +593,8 @@ nsDocumentEncoderFactory::CreateInstance(nsISupports *aOuter,
 
   if (aIID.Equals(kCHTMLEncoderCID))
     *aResult = new nsHTMLEncoder;
+  else if (aIID.Equals(kCTextEncoderCID))
+    *aResult = new nsTextEncoder;
   else
     return NS_NOINTERFACE;
 

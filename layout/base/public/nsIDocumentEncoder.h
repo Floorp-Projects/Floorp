@@ -27,6 +27,7 @@ class nsIDocument;
 class nsIDOMSelection;
 class nsIOutputStream;
 class nsISupportsArray;
+class nsIPresShell;
 
 #define NS_IDOCUMENT_ENCODER_IID                     \
 { /* a6cf9103-15b3-11d2-932e-00805f8add32 */         \
@@ -44,6 +45,15 @@ class nsISupportsArray;
     {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} \
   }
 
+#define NS_TEXT_ENCODER_CID                          \
+{ /* e7ba1480-1dea-11d3-830f-00104bed045e */         \
+    0xe7ba1480,                                      \
+    0x1dea,                                          \
+    0x11d3,                                          \
+    {0x83, 0x0f, 0x00, 0x10, 0x4b, 0xed, 0x04, 0x5e} \
+}
+
+
 class nsIDocumentEncoder : public nsISupports
 {
 public:
@@ -54,7 +64,7 @@ public:
    *  Initialize with a pointer to the document and the mime type.
    *  
    */
-  NS_IMETHOD Init(nsIDocument* aDocument, nsString& aMimeType) = 0;
+  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIDocument* aDocument, nsString& aMimeType) = 0;
 
   /**
    *  If the selection is set to a non-null value, then the
@@ -92,7 +102,7 @@ public:
 class nsIHTMLEncoder : public nsIDocumentEncoder
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENT_ENCODER_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_HTML_ENCODER_CID; return iid; }
 
   // Get embedded objects -- images, links, etc.
   // NOTE: we may want to use an enumerator
@@ -101,6 +111,20 @@ public:
                            const nsString& aReplacement) = 0;
   NS_IMETHOD PrettyPrint(PRBool aYes) = 0;
 };
+
+
+
+// Example of a output service for a particular encoder
+class nsITextEncoder : public nsIDocumentEncoder
+{
+public:
+  static const nsIID& GetIID() { static nsIID iid = NS_TEXT_ENCODER_CID; return iid; }
+
+  // Get embedded objects -- images, links, etc.
+  // NOTE: we may want to use an enumerator
+  NS_IMETHOD PrettyPrint(PRBool aYes) = 0;
+};
+
 
 #endif /* nsIDocumentEncoder_h__ */
 
