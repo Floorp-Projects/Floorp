@@ -49,7 +49,7 @@ public:
   //end nsIAutoCopyService
 
   //nsIDOMSelectionListener interfaces
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel);
+  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason);
   //end nsIDOMSelectionListener 
 protected:
   nsCOMPtr<nsIClipboard> mClipboard;
@@ -109,8 +109,11 @@ nsAutoCopyService::Listen(nsIDOMSelection *aDomSelection)
  * - maybe we should just never clear the X clipboard?  That would make this 
  *   problem just go away, which is very tempting.
  */
+
+#define DRAGGING 1
+
 NS_IMETHODIMP
-nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel)
+nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason)
 {
   nsresult rv;
 
@@ -120,7 +123,8 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection 
     if (NS_FAILED(rv))
       return rv;
   }
-
+  if (DRAGGING == aReason)
+    return NS_OK;//dont care if we are still dragging.
   PRBool collapsed;
   if (!aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed) {
 #ifdef DEBUG_CLIPBOARD

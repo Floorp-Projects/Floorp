@@ -57,7 +57,7 @@ class nsCaret : public nsICaret,
 		NS_IMETHOD 		ClearFrameRefs(nsIFrame* aFrame);
 	
 	  //nsIDOMSelectionListener interface
-	  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel);
+	  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason);
 	  		               				
 		static void		CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
 	
