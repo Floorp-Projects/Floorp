@@ -44,7 +44,6 @@
       margin                : 0px;
     }
 
-  button.bookmarkfolder.button-toolbar:hover,
   button.bookmarkitem.button-toolbar:hover
     {
       text-decoration     : underline;
@@ -231,9 +230,10 @@
   button.button-toolbar-3 
     {
 	  -moz-binding			: url("chrome://global/skin/globalBindings.xml#three-slice-button");
-      background-color      : transparent;
+      background-color : transparent;
       border				: 0px;
       margin				: 3px 7px 2px 0px;
+      font-family   : Arial, sans-serif;
     }
 
   .button-toolbar-3 > box > box > .button-text-box {
