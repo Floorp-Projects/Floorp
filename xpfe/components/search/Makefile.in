@@ -22,7 +22,7 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = datasets resources
+DIRS = datasets resources public src
 
 include $(topsrcdir)/config/config.mk
 
