@@ -252,7 +252,21 @@ do
 	pwd
 	echo "tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam}"
 	tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} < ${REQUEST_FILE}
-	if [ $? $value 0 ]; then
+	ret=$?
+
+#
+# for some reason the NT client does not return the same error code as Unix
+# (sigh).
+#
+	if [ ${OS_ARCH} = "WINNT" ]; then
+	    if [ $value -ne 0 ]; then
+		if [ $ret -ne 0]; then
+			value=$ret
+		fi
+	    fi
+	fi
+
+	if [ $ret -ne $value ]; then
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
 	else
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
