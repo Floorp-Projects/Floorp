@@ -36,6 +36,10 @@
 #include "nsLayoutAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
+#include "nsIMutableAccessible.h"
+#include "nsIAccessibilityService.h"
+#include "nsIServiceManager.h"
+#include "nsIDOMNode.h"
 #include "nsIPrintContext.h"
 
 /* ----------- nsTableCaptionFrame ---------- */
@@ -114,10 +118,24 @@ nsresult nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePt
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
+
   if (aIID.Equals(NS_GET_IID(nsITableLayout))) 
   { // note there is no addref here, frames are not addref'd
     *aInstancePtr = (void*)(nsITableLayout*)this;
     return NS_OK;
+  } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
+    if (accService) {
+     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
+     nsIMutableAccessible* acc = nsnull;
+     accService->CreateMutableAccessible(node,&acc);
+     acc->SetName(NS_LITERAL_STRING("Table").get()); 
+     acc->SetRole(NS_LITERAL_STRING("table").get());
+     *aInstancePtr = acc;
+     return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
   } else {
     return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
   }

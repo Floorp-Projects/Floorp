@@ -301,6 +301,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
                                     nsEventStatus* aStatus, PRBool aForceHandle, PRBool& aHandled)
 {
   NS_ENSURE_ARG_POINTER(aStatus);
+
 //printf(" %d %d %d %d (%d,%d) \n", this, event->widget, event->widgetSupports, 
 //       event->message, event->point.x, event->point.y);
 
@@ -310,6 +311,12 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
   nsIViewObserver *obs;
   if (NS_FAILED(mViewManager->GetViewObserver(obs)))
     obs = nsnull;
+
+  // if accessible event pass directly to the view observer
+  if (event->eventStructType == NS_ACCESSIBLE_EVENT) {
+    if (obs)
+       obs->HandleEvent((nsIView *)this, event, aStatus, aForceHandle, aHandled);
+  }
 
   *aStatus = nsEventStatus_eIgnore;
 

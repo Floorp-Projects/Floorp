@@ -46,6 +46,11 @@
 #include "nsCOMPtr.h"
 #include "nsIHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
+#include "nsIMutableAccessible.h"
+#include "nsIAccessibilityService.h"
+#include "nsIServiceManager.h"
+#include "nsIDOMNode.h"
+
 
 //TABLECELL SELECTION
 #include "nsIFrameSelection.h"
@@ -417,6 +422,7 @@ PRBool nsTableCellFrame::ParentDisablesSelection() const //override default beha
 
 
 // Align the cell's child frame within the cell
+
 void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContext,
                                             const nsHTMLReflowState& aReflowState,
                                             nscoord                  aMaxAscent)
@@ -1038,9 +1044,24 @@ nsresult nsTableCellFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
+
   if (aIID.Equals(NS_GET_IID(nsITableCellLayout))) {
     *aInstancePtr = (void*) (nsITableCellLayout *)this;
     return NS_OK;
+  } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
+    if (accService) {
+     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
+     nsIMutableAccessible* acc = nsnull;
+     accService->CreateMutableAccessible(node,&acc);
+     nsAutoString name;
+     acc->SetName(NS_LITERAL_STRING("Cell").get());
+     acc->SetRole(NS_LITERAL_STRING("cell").get());
+     *aInstancePtr = acc;
+     return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
   } else {
     return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
   }
@@ -1126,7 +1147,6 @@ NS_NewTableCellFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 
 /* ----- methods from CellLayoutData ----- */
-
 
 void 
 nsTableCellFrame::GetCellBorder(nsMargin&     aBorder, 

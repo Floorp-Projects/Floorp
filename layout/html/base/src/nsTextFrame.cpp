@@ -65,6 +65,10 @@
 
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsIAccessible.h"
+#include "nsINameSpaceManager.h"
+#include "nsIAccessibilityService.h"
+#include "nsIMutableAccessible.h"
 
 #ifndef PR_ABS
 #define PR_ABS(x) ((x) < 0 ? -(x) : (x))
@@ -344,6 +348,9 @@ public:
   nsTextFrame();
 
   // nsIFrame
+  NS_IMETHOD QueryInterface(const nsIID& aIID,
+                            void** aInstancePtrResult);
+
   NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
@@ -730,6 +737,53 @@ protected:
   nsresult GetContentAndOffsetsForSelection(nsIPresContext*  aPresContext,nsIContent **aContent, PRInt32 *aOffset, PRInt32 *aLength);
 
 };
+
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP nsTextFrame::QueryInterface(const nsIID& aIID,
+                                     void** aInstancePtrResult)
+{
+
+  NS_PRECONDITION(aInstancePtrResult, "null pointer");
+  if (!aInstancePtrResult)
+  return NS_ERROR_NULL_POINTER;
+
+  // create a new accessible only if we have a size.
+  if (aIID.Equals(NS_GET_IID(nsIAccessible)) && (mRect.width > 0 || mRect.height > 0)) {
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
+    if (accService) {
+     nsIMutableAccessible* acc = nsnull;
+     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent); 
+
+     accService->CreateMutableAccessible(mContent,&acc);
+
+     if (node) 
+         acc->SetNameAsNodeValue();
+     else {
+          // see if it is text content
+          nsCOMPtr<nsITextContent> text = do_QueryInterface(mContent);
+          if (text) {
+            const nsTextFragment* frag = nsnull;
+            text->GetText(&frag);
+            if (frag->Is2b()) {
+              acc->SetName(frag->Get2b());
+            } else {
+              nsAutoString name;
+              name.AssignWithConversion(frag->Get1b());
+              acc->SetName(name.get());
+            }
+          }
+     }  
+    
+     acc->SetRole(NS_LITERAL_STRING("text").get());
+     acc->SetIsLeaf(PR_TRUE);
+     *aInstancePtrResult = acc;
+     return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  } else
+    return nsFrame::QueryInterface(aIID, aInstancePtrResult);
+}
 
 class nsContinuingTextFrame : public nsTextFrame {
 public:

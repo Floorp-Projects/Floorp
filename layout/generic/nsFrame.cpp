@@ -43,6 +43,8 @@
 #include "nsIPtr.h"
 #include "nsISizeOfHandler.h"
 #include "nsIFrameManager.h"
+#include "nsIAccessibilityService.h"
+#include "nsIAccessible.h"
 
 #include "nsIDOMText.h"
 #include "nsIDeviceContext.h"
@@ -792,6 +794,22 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
     {
       if (NS_SUCCEEDED(rv))
         HandleRelease(aPresContext, aEvent, aEventStatus);
+    } break;
+  case NS_GETACCESSIBLE:
+    {
+      // get the accessible
+     // if(content) {
+         //nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
+         nsresult rv = NS_OK;
+         NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
+         if (accService) {
+           // get an accessible for the dom node
+           nsISupports* f = (nsISupports*)(nsIFrame*)this;
+           nsIAccessible* acc;
+           accService->CreateRootAccessible(aPresContext,mParent ? f : nsnull,&acc);
+           ((nsAccessibleEvent*)aEvent)->accessible = acc;
+         }
+      //}
     }
     break;
   default:

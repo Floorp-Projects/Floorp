@@ -28,6 +28,11 @@
 #include "nsISupportsArray.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentCID.h"
+#include "nsIMutableAccessible.h"
+#include "nsIAccessibilityService.h"
+#include "nsIServiceManager.h"
+#include "nsIDOMNode.h"
+
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 
 // Saving PresState
@@ -468,7 +473,22 @@ nsGfxButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsIAnonymousContentCreator*, this);
   } else if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
     *aInstancePtr = NS_STATIC_CAST(nsIStatefulFrame*, this);
-  } else {
+  } else if (aIID.Equals(NS_GET_IID(nsIAccessible))) {
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
+    if (accService) {
+     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
+     nsIMutableAccessible* acc = nsnull;
+     accService->CreateMutableAccessible(node,&acc);
+     acc->SetName(NS_LITERAL_STRING("Push Button").get());
+     acc->SetRole(NS_LITERAL_STRING("push button").get());
+     acc->SetIsLeaf(PR_TRUE);
+     *aInstancePtr = acc;
+     return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  } 
+else {
     return nsHTMLButtonControlFrame::QueryInterface(aIID, aInstancePtr);
   }
 
