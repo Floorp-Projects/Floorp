@@ -139,7 +139,7 @@
 <!ENTITY newtodo.completed.label "Completato">
 <!ENTITY newtodo.duedate.label "Data richiesta">
 <!ENTITY newtodo.startdate.label "Data Inizio">
-<!ENTITY newtodo.priority.label "Priorit\u00E1 ">
+<!ENTITY newtodo.priority.label "PrioritÃ ">
 <!ENTITY newtodo.percentcomplete.label "&#037; completato">
 <!ENTITY newtodo.categories.label "Categorie">
 <!ENTITY newtodo.starttime.warning "La data di inizio e' posteriore alla data richiesta.">
@@ -227,7 +227,7 @@
 <!ENTITY calendar.events.filter.thisCalendarMonth.label "Eventi in questo Mese Calendario">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Fatto">
-<!ENTITY calendar.unifinder.tree.priority.label      "Priorit\u00E1 ">
+<!ENTITY calendar.unifinder.tree.priority.label      "PrioritÃ ">
 <!ENTITY calendar.unifinder.tree.title.label         "Titolo">
 <!ENTITY calendar.unifinder.tree.percentcomplete.label "&#037; Completato">
 <!ENTITY calendar.unifinder.tree.startdate.label     "Inizio">
@@ -379,7 +379,7 @@
 <!-- Task Context Menu -->
 <!ENTITY calendar.context.progress.label              "Progresso ">
 <!ENTITY calendar.context.progress.accesskey          "P">
-<!ENTITY calendar.context.priority.label              "Priorit\u00E1  ">
+<!ENTITY calendar.context.priority.label              "PrioritÃ ">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
 <!ENTITY percnt "&#037;" ><!--=percent sign-->
