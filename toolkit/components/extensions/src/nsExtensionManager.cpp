@@ -163,6 +163,7 @@ nsExtensionManager::InitResources()
   if (gInstallLocationArc && gInstallProfile && gInstallGlobal)
     return;
 
+  // XXXben - this grammar is temporary and subject to formalization
   gRDFService->GetResource(NS_LITERAL_CSTRING("http://www.mozilla.org/rdf/chrome#installLocation"), 
                            &gInstallLocationArc);
   gRDFService->GetLiteral(NS_LITERAL_STRING("profile").get(), &gInstallProfile);
