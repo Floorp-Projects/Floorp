@@ -51,6 +51,9 @@
 #include "nsComboBox.h"
 #include "nsLookAndFeel.h"
 
+#include "nsIComponentManager.h"
+
+// NOTE the following does not match MAC_STATIC actually used below in this file!
 #define MACSTATIC
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
