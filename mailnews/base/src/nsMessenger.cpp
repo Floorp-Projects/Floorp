@@ -369,8 +369,8 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
   nsCOMPtr<nsIDocShellTreeItem> rootDocShellAsItem;
   docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootDocShellAsItem));
   
-  nsCOMPtr<nsIDocShellTreeNode> 
-    rootDocShellAsNode(do_QueryInterface(rootDocShellAsItem));
+  nsCOMPtr<nsIDocShellTreeNode> rootDocShellAsNode(do_QueryInterface(rootDocShellAsItem));
+
   if (rootDocShellAsNode) 
   {
     nsCOMPtr<nsIDocShellTreeItem> childAsItem;
@@ -380,6 +380,8 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
     mDocShell = do_QueryInterface(childAsItem);
     
     if (NS_SUCCEEDED(rv) && mDocShell) {
+      
+      mCurrentDisplayCharset = ""; // Important! Clear out mCurrentDisplayCharset so we reset a default charset on mDocshell the next time we try to load something into it.
       
       if (aMsgWindow) 
       {
