@@ -197,10 +197,10 @@ protected:
                            nsCString& folderName);
 	nsresult CreateStartOfImapUrl(nsIImapUrl  * &imapUrl,
                                   nsIMsgFolder* &aImapFolder,
+                                  nsIUrlListener * aUrlListener, 
                                   nsCString &urlSpec);
     nsresult GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue, 
                                          nsIImapUrl* aImapUrl,
-                                         nsIUrlListener* aUrlListener,
                                          nsISupports* aConsumer,
                                          nsIURI** aURL);
     nsresult SetImapUrlSink(nsIMsgFolder* aMsgFolder,

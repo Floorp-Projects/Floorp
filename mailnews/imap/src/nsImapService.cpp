@@ -29,9 +29,9 @@
 #include "nsIMsgFolder.h"
 #include "nsIImapIncomingServer.h"
 #include "nsIImapServerSink.h"
-
+#include "nsIImapMockChannel.h"
 #include "nsImapUtils.h"
-
+#include "nsIWebShell.h"
 #include "nsIRDFService.h"
 #include "nsIEventQueueService.h"
 #include "nsRDFCID.h"
@@ -46,6 +46,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
+static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 
 static const char *sequenceString = "SEQUENCE";
 static const char *uidString = "UID";
@@ -141,7 +142,7 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 	nsIImapUrl * imapUrl = nsnull;
 	nsCString urlSpec;
     nsresult rv;
-	rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, urlSpec);
+	rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, aUrlListener, urlSpec);
 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -170,7 +171,6 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
                                                  imapUrl,
-                                                 aUrlListener,
                                                  nsnull,
                                                  aURL);
 		}
@@ -201,7 +201,7 @@ nsImapService::LiteSelectFolder(nsIEventQueue * aClientEventQueue,
 
 	nsresult rv;
     
-    rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, urlSpec);
+    rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, aUrlListener, urlSpec);
 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -224,7 +224,7 @@ nsImapService::LiteSelectFolder(nsIEventQueue * aClientEventQueue,
 				rv = url->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                                 aUrlListener, nsnull, aURL);
+                                                 nsnull, aURL);
 		}
         NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	} // if we have a url to run....
@@ -384,7 +384,7 @@ nsImapService::FetchMessage(nsIEventQueue * aClientEventQueue,
 	nsCString urlSpec;
 
     nsresult rv;
-    rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, urlSpec);
+    rv = CreateStartOfImapUrl(imapUrl, aImapMailFolder, aUrlListener, urlSpec);
 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -408,14 +408,21 @@ nsImapService::FetchMessage(nsIEventQueue * aClientEventQueue,
 			urlSpec.Append(">");
 			urlSpec.Append(messageIdentifierList);
 			nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
-			if (NS_SUCCEEDED(rv) && url)
-				// mscott - this cast to a char * is okay...there's a bug in the XPIDL
-				// compiler that is preventing in string parameters from showing up as
-				// const char *. hopefully they will fix it soon.
-				rv = url->SetSpec((char *) urlSpec.GetBuffer());
-            if (NS_SUCCEEDED(rv))
+            if (NS_FAILED(rv)) return rv; 
+
+			// mscott - this cast to a char * is okay...there's a bug in the XPIDL
+			// compiler that is preventing in string parameters from showing up as
+			// const char *. hopefully they will fix it soon.
+			rv = url->SetSpec((char *) urlSpec.GetBuffer());
+
+            // if the display consumer is a webshell, then we should run the url in the webshell.
+            // otherwise, we'll run it normally....
+
+            nsCOMPtr<nsIWebShell> webShell = do_QueryInterface(aDisplayConsumer, &rv);
+            if (NS_SUCCEEDED(rv) && webShell)
+                rv = webShell->LoadURI(url, "view", nsnull, PR_TRUE);
+            else
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                                 aUrlListener,
                                                  aDisplayConsumer, aURL);
 		}
         NS_RELEASE(imapUrl); // release our ref count from the create instance call...
@@ -426,6 +433,7 @@ nsImapService::FetchMessage(nsIEventQueue * aClientEventQueue,
 nsresult 
 nsImapService::CreateStartOfImapUrl(nsIImapUrl * &imapUrl,
                                     nsIMsgFolder* &aImapMailFolder,
+                                    nsIUrlListener * aUrlListener,
                                     nsCString &urlSpec)
 {
 	nsresult rv = NS_OK;
@@ -447,6 +455,10 @@ nsImapService::CreateStartOfImapUrl(nsIImapUrl * &imapUrl,
                                             &imapUrl);
 	if (NS_SUCCEEDED(rv) && imapUrl)
     {
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl, &rv);
+        if (NS_SUCCEEDED(rv) && mailnewsUrl && aUrlListener)
+            mailnewsUrl->RegisterListener(aUrlListener);
+
 		imapUrl->Initialize(username);
 
         // *** jefft -- let's only do hostname now. I'll do username later
@@ -500,9 +512,7 @@ nsImapService::GetHeaders(nsIEventQueue * aClientEventQueue,
 	nsIImapUrl * imapUrl = nsnull;
 	nsCString urlSpec;
 
-	nsresult rv = CreateStartOfImapUrl(imapUrl, 
-                                          aImapMailFolder,
-                                          urlSpec);
+	nsresult rv = CreateStartOfImapUrl(imapUrl,aImapMailFolder, aUrlListener, urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
 
@@ -533,7 +543,7 @@ nsImapService::GetHeaders(nsIEventQueue * aClientEventQueue,
 
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                                 aUrlListener, nsnull, aURL);
+                                                 nsnull, aURL);
 
 		}
         NS_RELEASE(imapUrl); // release our ref count from the
@@ -560,6 +570,7 @@ nsImapService::Noop(nsIEventQueue * aClientEventQueue,
 
 	nsresult rv = CreateStartOfImapUrl(imapUrl,
                                           aImapMailFolder,
+                                          aUrlListener,
                                           urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -586,7 +597,7 @@ nsImapService::Noop(nsIEventQueue * aClientEventQueue,
 				rv = url->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                                 aUrlListener, nsnull, aURL);
+                                                 nsnull, aURL);
         }
         NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	}
@@ -610,6 +621,7 @@ nsImapService::Expunge(nsIEventQueue * aClientEventQueue,
 
 	nsresult rv = CreateStartOfImapUrl(imapUrl,
                                           aImapMailFolder,
+                                          aUrlListener, 
                                           urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -636,7 +648,7 @@ nsImapService::Expunge(nsIEventQueue * aClientEventQueue,
 				rv = url->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                                 aUrlListener, nsnull, aURL);
+                                                 nsnull, aURL);
 		}
         NS_IF_RELEASE(imapUrl);
 	}
@@ -663,6 +675,7 @@ nsImapService::Biff(nsIEventQueue * aClientEventQueue,
 
 	nsresult rv = CreateStartOfImapUrl(imapUrl,
                                           aImapMailFolder,
+                                          aUrlListener,
                                           urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -690,7 +703,7 @@ nsImapService::Biff(nsIEventQueue * aClientEventQueue,
 				rv = url->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                                 aUrlListener, nsnull, aURL);
+                                                 nsnull, aURL);
 		}
         NS_IF_RELEASE(imapUrl);
 	}
@@ -712,7 +725,7 @@ nsImapService::DeleteFolder(nsIEventQueue* eventQueue,
     nsIImapUrl* imapUrl = nsnull;
     nsCString urlSpec;
 
-    rv = CreateStartOfImapUrl(imapUrl, folder, urlSpec);
+    rv = CreateStartOfImapUrl(imapUrl, folder, urlListener, urlSpec);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
         rv = SetImapUrlSink(folder, imapUrl);
@@ -733,7 +746,7 @@ nsImapService::DeleteFolder(nsIEventQueue* eventQueue,
                     rv = uri->SetSpec((char*) urlSpec.GetBuffer());
                     if (NS_SUCCEEDED(rv))
                         rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
-                                                         urlListener, nsnull,
+                                                         nsnull,
                                                          url);
                 }
             }
@@ -764,6 +777,7 @@ nsImapService::DeleteMessages(nsIEventQueue * aClientEventQueue,
 
 	nsresult rv = CreateStartOfImapUrl(imapUrl,
                                           aImapMailFolder,
+                                          aUrlListener,
                                           urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -794,7 +808,7 @@ nsImapService::DeleteMessages(nsIEventQueue * aClientEventQueue,
 				rv = url->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                                 aUrlListener, nsnull, aURL);
+                                                 nsnull, aURL);
 
         }
         NS_IF_RELEASE(imapUrl);
@@ -819,6 +833,7 @@ nsImapService::DeleteAllMessages(nsIEventQueue * aClientEventQueue,
 
 	nsresult rv = CreateStartOfImapUrl(imapUrl,
                                           aImapMailFolder,
+                                          aUrlListener,
                                           urlSpec);
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -843,7 +858,7 @@ nsImapService::DeleteAllMessages(nsIEventQueue * aClientEventQueue,
 				rv = url->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                                 aUrlListener, nsnull, aURL);
+                                                 nsnull, aURL);
 		}
         NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	}
@@ -915,6 +930,7 @@ nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue,
 
 	nsresult rv = CreateStartOfImapUrl(imapUrl,
                                           aImapMailFolder,
+                                          aUrlListener,
                                           urlSpec); 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
@@ -947,7 +963,7 @@ nsresult nsImapService::DiddleFlags(nsIEventQueue * aClientEventQueue,
 				rv = url->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                                 aUrlListener, nsnull, aURL);
+                                                  nsnull, aURL);
 		}
         NS_RELEASE(imapUrl); // release our ref count from the create instance call...
 	}
@@ -1027,6 +1043,7 @@ nsImapService::DiscoverAllFolders(nsIEventQueue* aClientEventQueue,
 
     nsresult rv = CreateStartOfImapUrl(aImapUrl,
                                           aImapMailFolder,
+                                          aUrlListener,
                                           urlSpec);
     if (NS_SUCCEEDED (rv) && aImapUrl)
     {
@@ -1043,7 +1060,7 @@ nsImapService::DiscoverAllFolders(nsIEventQueue* aClientEventQueue,
 				rv = url->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, aImapUrl,
-                                                 aUrlListener, nsnull, aURL);
+                                                 nsnull, aURL);
         }
         NS_RELEASE(aImapUrl);
     }
@@ -1066,6 +1083,7 @@ nsImapService::DiscoverAllAndSubscribedFolders(nsIEventQueue* aClientEventQueue,
 
     nsresult rv = CreateStartOfImapUrl(aImapUrl,
                                           aImapMailFolder,
+                                          aUrlListener,
                                           urlSpec);
     if (NS_SUCCEEDED (rv) && aImapUrl)
     {
@@ -1082,7 +1100,7 @@ nsImapService::DiscoverAllAndSubscribedFolders(nsIEventQueue* aClientEventQueue,
 				rv = url->SetSpec((char *) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(aClientEventQueue, aImapUrl,
-                                                 aUrlListener, nsnull, aURL);
+                                                 nsnull, aURL);
         }
         NS_RELEASE(aImapUrl);
     }
@@ -1105,6 +1123,7 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
 
     nsresult rv = CreateStartOfImapUrl(aImapUrl,
                                           aImapMailFolder,
+                                          aUrlListener,
                                           urlSpec);
     if (NS_SUCCEEDED (rv) && aImapUrl)
     {
@@ -1128,7 +1147,6 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
                 if (NS_SUCCEEDED(rv))
                     rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
                                                      aImapUrl,
-                                                     aUrlListener,
                                                      nsnull, aURL);
             }
             else
@@ -1157,7 +1175,7 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
     nsCString urlSpec;
 
     nsresult rv = CreateStartOfImapUrl(aImapUrl,
-                                          aImapMailFolder, urlSpec);
+                                          aImapMailFolder,aUrlListener,  urlSpec);
     if (NS_SUCCEEDED (rv) && aImapUrl)
     {
         rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
@@ -1182,7 +1200,6 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
                 if (NS_SUCCEEDED(rv))
                     rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
                                                      aImapUrl,
-                                                     aUrlListener,
                                                      nsnull, aURL);
             }
             else
@@ -1252,7 +1269,7 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
     nsIImapUrl* imapUrl = nsnull;
     nsCString urlSpec;
 
-    rv = CreateStartOfImapUrl(imapUrl, aSrcFolder,
+    rv = CreateStartOfImapUrl(imapUrl, aSrcFolder, aUrlListener,
                                  urlSpec);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
@@ -1291,7 +1308,7 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
 			rv = url->SetSpec((char *) urlSpec.GetBuffer());
         if (NS_SUCCEEDED(rv))
             rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                             aUrlListener, nsnull, aURL);
+                                             nsnull, aURL);
         NS_RELEASE(imapUrl);
     }
     PR_FREEIF(srcHostname);
@@ -1321,7 +1338,7 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
     nsIImapUrl* imapUrl = nsnull;
     nsCString urlSpec;
 
-    rv = CreateStartOfImapUrl(imapUrl, aDstFolder, urlSpec);
+    rv = CreateStartOfImapUrl(imapUrl, aDstFolder, aListener, urlSpec);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
         // **** fix me with real host hierarchy separator
@@ -1359,7 +1376,7 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
             rv = url->SetSpec((char *) urlSpec.GetBuffer());
         if (NS_SUCCEEDED(rv))
             rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
-                                             aListener, nsnull, aURL);
+                                             nsnull, aURL);
     }
     return rv;
 }
@@ -1367,7 +1384,6 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
 nsresult
 nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
                                            nsIImapUrl* aImapUrl,
-                                           nsIUrlListener* aUrlListener,
                                            nsISupports* aConsumer,
                                            nsIURI** aURL)
 {
@@ -1375,6 +1391,13 @@ nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
     nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
 	nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(aImapUrl);
     rv = msgUrl->GetServer(getter_AddRefs(aMsgIncomingServer));
+    
+    if (aURL)
+    {
+        *aURL = msgUrl;
+        NS_IF_ADDREF(*aURL);
+    }
+
     if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
     {
         nsCOMPtr<nsIImapIncomingServer>
@@ -1382,9 +1405,7 @@ nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
         if (NS_SUCCEEDED(rv) && aImapServer)
             rv = aImapServer->GetImapConnectionAndLoadUrl(aClientEventQueue,
                                                           aImapUrl,
-                                                          aUrlListener,
-                                                          aConsumer,
-                                                          aURL);
+                                                          aConsumer);
     }
     return rv;
 }
@@ -1403,7 +1424,7 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
     nsCString urlSpec;
     nsresult rv;
 
-    rv = CreateStartOfImapUrl(imapUrl, dstFolder, urlSpec);
+    rv = CreateStartOfImapUrl(imapUrl, dstFolder, urlListener, urlSpec);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
         rv = SetImapUrlSink(dstFolder, imapUrl);
@@ -1427,7 +1448,7 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
                 rv = uri->SetSpec((char*) urlSpec.GetBuffer());
                 if (NS_SUCCEEDED(rv))
                     rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
-                                                     urlListener, nsnull,
+                                                     nsnull,
                                                      url);
             }
         }
@@ -1450,7 +1471,7 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
     nsCString urlSpec;
     nsresult rv;
 
-    rv = CreateStartOfImapUrl(imapUrl, srcFolder, urlSpec);
+    rv = CreateStartOfImapUrl(imapUrl, srcFolder, urlListener, urlSpec);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
         rv = SetImapUrlSink(srcFolder, imapUrl);
@@ -1478,7 +1499,7 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
                 rv = uri->SetSpec((char*) urlSpec.GetBuffer());
                 if (NS_SUCCEEDED(rv))
                     rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
-                                                     urlListener, nsnull,
+                                                     nsnull,
                                                      url);
             } // if (NS_SUCCEEDED(rv) && uri)
         } // if (NS_SUCCEEDED(rv))
@@ -1501,7 +1522,7 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
     nsCString urlSpec;
     nsresult rv;
 
-    rv = CreateStartOfImapUrl(imapUrl, parent, urlSpec);
+    rv = CreateStartOfImapUrl(imapUrl, parent, urlListener, urlSpec);
     if (NS_SUCCEEDED(rv) && imapUrl)
     {
         rv = SetImapUrlSink(parent, imapUrl);
@@ -1524,7 +1545,7 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
                 rv = uri->SetSpec((char*) urlSpec.GetBuffer());
                 if (NS_SUCCEEDED(rv))
                     rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
-                                                     urlListener, nsnull,
+                                                     nsnull,
                                                      url);
             } // if (NS_SUCCEEDED(rv) && uri)
         } // if (NS_SUCCEEDED(rv))
@@ -2128,7 +2149,7 @@ NS_IMETHODIMP nsImapService::GetScheme(char * *aScheme)
 {
 	nsresult rv = NS_OK;
 	if (aScheme)
-		*aScheme = PL_strdup("imap");
+        *aScheme = nsCRT::strdup("imap");
 	else
 		rv = NS_ERROR_NULL_POINTER;
 	return rv; 
@@ -2158,8 +2179,26 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 
 NS_IMETHODIMP nsImapService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval)
 {
-	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
-	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
-	// the necko team in more detail later on.
-	return NS_ERROR_NOT_IMPLEMENTED;
+    // imap can't open and return a channel right away...the url needs to go in the imap url queue 
+    // until we find a connection which can run the url..in order to satisfy necko, we're going to return
+    // a mock imap channel....
+
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIImapMockChannel> mockChannel;
+    nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aURI);
+
+    rv = nsComponentManager::CreateInstance(kCImapMockChannel, nsnull, NS_GET_IID(nsIImapMockChannel), getter_AddRefs(mockChannel));
+    if (mockChannel)
+    {
+        mockChannel->SetLoadGroup(aGroup);
+        mockChannel->SetURI(aURI);
+        if (imapUrl)
+            imapUrl->SetMockChannel(mockChannel);
+        *_retval = mockChannel;
+        NS_IF_ADDREF(*_retval);
+    }
+    else
+        rv = NS_ERROR_FAILURE;
+
+    return rv;
 }
