@@ -100,7 +100,7 @@ if [ ! -d ${CADIR} ]; then
 fi
 cd ${CADIR}
 echo nss > ${PWFILE}
-echo "   certutil -N -d . -f ${PWFILE}  2>&1"
+echo "   certutil -N -d . -f ${PWFILE} 2>&1"
 certutil -N -d . -f ${PWFILE} 2>&1
 
 echo initialized
@@ -279,9 +279,7 @@ do
 	#sleep 20
 	pwd
 	echo "tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} redir from ${REQUEST_FILE}"
-	TSTCLNT_FAILED=FALSE
-	TSTCLNT_FAILED=`tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} \
-			< ${REQUEST_FILE} || echo "TRUE"`
+	tstclnt -p ${PORT} -h ${HOST} -f -d ${CLIENTDIR} ${cparam} < ${REQUEST_FILE} 
 	ret=$?
 
 #
@@ -297,15 +295,8 @@ do
 	fi
 
 	if [ $ret -ne $value ]; then
-		if [ "$TSTCLNT_FAILED" = "TRUE" -a  $value -ne 0 -a "$O_CRON" = "ON" ]
-		then
-	    	echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
-			echo "test $testname produced an unexpected returncode of $ret but cron and failurereturn - Fix this..." 
-			
-		else
-	    	echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
-			echo "FAILURE: test $testname produced a returncode of $ret, expected is $value O_CRON = $O_CRON TSTCLNT_FAILED =  $TSTCLNT_FAILED" 
-		fi
+	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+		echo "FAILURE: test $testname produced a returncode of $ret, expected is $value O_CRON = $O_CRON" 
 	else
 	    echo "<TR><TD>"${testname}"</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 		echo "test $testname produced a returncode of $ret as expected "
