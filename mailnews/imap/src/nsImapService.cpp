@@ -2316,7 +2316,7 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     // extract the user name and host name information...
     rv = mailnewsUrl->GetHost(getter_Copies(hostName));
     if (NS_FAILED(rv)) return rv;
-    rv = mailnewsUrl->GetUsername(getter_Copies(userName));
+    rv = mailnewsUrl->GetPreHost(getter_Copies(userName));
     if (NS_FAILED(rv)) return rv;
     // if we can't get a folder name out of the url then I think this is an error
     aImapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(folderName));

@@ -271,7 +271,7 @@ nsresult nsImapUrl::ParseUrl()
 	NS_LOCK_INSTANCE();
 
     // extract the user name
-    GetUsername(getter_Copies(m_userName));
+    GetPreHost(getter_Copies(m_userName));
 
 	char * imapPartOfUrl = nsnull;
 	rv = GetPath(&imapPartOfUrl);

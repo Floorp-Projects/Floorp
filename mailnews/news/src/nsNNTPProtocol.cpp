@@ -448,7 +448,7 @@ nsresult nsNNTPProtocol::Initialize(void)
 
 	rv = m_url->GetHost(getter_Copies(m_hostName));
 	if (NS_FAILED(rv)) return rv;
-	rv = m_url->GetUsername(getter_Copies(m_userName));
+	rv = m_url->GetPreHost(getter_Copies(m_userName));
 	if (NS_FAILED(rv)) return rv;
 
     // retrieve the AccountManager
@@ -551,7 +551,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   {
 	  rv = aURL->GetHost(getter_Copies(m_hostName));
       if (NS_FAILED(rv)) return rv;
-      rv = aURL->GetUsername(getter_Copies(m_userName));
+      rv = aURL->GetPreHost(getter_Copies(m_userName));
       if (NS_FAILED(rv)) return rv;
       
 	  m_runningURL = do_QueryInterface(aURL, &rv);

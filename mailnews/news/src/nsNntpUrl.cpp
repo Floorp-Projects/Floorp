@@ -327,7 +327,7 @@ NS_IMETHODIMP nsNntpUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString userName;
-    rv = GetUsername(getter_Copies(userName));
+    rv = GetPreHost(getter_Copies(userName));
     if (NS_FAILED(rv)) return rv; 
 
     nsCString newsgroupURI(kNewsMessageRootURI);
