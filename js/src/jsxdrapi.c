@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -417,7 +417,7 @@ JS_XDRDouble(JSXDRState *xdr, jsdouble **dp)
     }
     return JS_TRUE;
 }
-    
+
 JS_PUBLIC_API(JSBool)
 JS_XDRValue(JSXDRState *xdr, jsval *vp)
 {
@@ -455,13 +455,13 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 	break;
       }
       case JSVAL_BOOLEAN: {
-        uint32 bool;
+        uint32 b;
 	if (xdr->mode == JSXDR_ENCODE)
-	    bool = (uint32)JSVAL_TO_BOOLEAN(*vp);
-	if (!JS_XDRUint32(xdr, &bool))
+	    b = (uint32)JSVAL_TO_BOOLEAN(*vp);
+	if (!JS_XDRUint32(xdr, &b))
 	    return JS_FALSE;
 	if (xdr->mode == JSXDR_DECODE)
-	    *vp = BOOLEAN_TO_JSVAL((JSBool)bool);
+	    *vp = BOOLEAN_TO_JSVAL((JSBool)b);
 	break;
       }
       case JSVAL_VOID:
@@ -469,6 +469,16 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 	    return JS_FALSE;
 	break;
       default:
+	if (type & JSVAL_INT) {
+	    uint32 i;
+	    if (xdr->mode == JSXDR_ENCODE)
+		i = JSVAL_TO_INT(*vp);
+	    if (!JS_XDRUint32(xdr, &i))
+		return JS_FALSE;
+	    if (xdr->mode == JSXDR_DECODE)
+		*vp = INT_TO_JSVAL(i);
+	    break;
+	}
 	JS_ReportError(xdr->cx, "unknown jsval type %#lx for XDR", type);
 	return JS_FALSE;
     }

@@ -282,10 +282,14 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent,
 
     /* Splice callobj into the scope chain. */
     if (!withobj) {
-	for (obj = fp->scopeChain; obj; obj = OBJ_GET_PARENT(cx, obj)) {
+	for (obj = fp->scopeChain; obj; obj = parent) {
 	    if (OBJ_GET_CLASS(cx, obj) != &js_WithClass)
 	    	break;
-	    withobj = obj;
+	    parent = OBJ_GET_PARENT(cx, obj);
+	    if (parent == funobj) {
+		withobj = obj;
+		break;
+	    }
 	}
     }
     if (withobj)
@@ -432,8 +436,8 @@ call_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-call_getVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+JSBool
+js_GetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSStackFrame *fp;
 
@@ -447,8 +451,8 @@ call_getVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-call_setVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+JSBool
+js_SetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSStackFrame *fp;
 
@@ -542,8 +546,8 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 	} else if (getter == js_GetLocalVariable) {
 	    vp = fp->vars;
 	    nslots = fp->nvars;
-	    getter = call_getVariable;
-	    setter = call_setVariable;
+	    getter = js_GetCallVariable;
+	    setter = js_SetCallVariable;
 	}
 	if (vp) {
 	    slot = (uintN)JSVAL_TO_INT(propid);
@@ -765,7 +769,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
       case ARGS_LENGTH:
 	if (!JSVERSION_IS_ECMA(cx->version))
-	    *vp = INT_TO_JSVAL((jsint)(fp->fun ? fp->argc : fun->nargs));
+	    *vp = INT_TO_JSVAL((jsint)(fp && fp->fun ? fp->argc : fun->nargs));
 	else
       case FUN_ARITY:
 	    *vp = INT_TO_JSVAL((jsint)fun->nargs);
@@ -806,6 +810,39 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	break;
     }
 
+    return JS_TRUE;
+}
+
+
+static JSBool
+fun_enumProperty(JSContext *cx, JSObject *obj)
+{
+    JSScope *scope;
+    JSScopeProperty *sprop;
+
+    /* Because properties of function objects such as "length" are
+     * not defined in function_props to avoid interfering with
+     * unqualified lookups in local scopes (which pass through the
+     * function object as a stand-in for the call object), we
+     * must twiddle any of the special properties not to be enumer-
+     * ated in this callback, rather than simply predefining the
+     * properties without JSPROP_ENUMERATE.
+     */
+
+    JS_LOCK_OBJ(cx, obj);
+    scope = (JSScope *) obj->map;
+    for (sprop = scope->props; sprop; sprop = sprop->next) {
+        jsval id = sprop->id;
+        if (!JSVAL_IS_INT(id)) {
+	    if (id == ATOM_KEY(cx->runtime->atomState.arityAtom) ||
+	        id == ATOM_KEY(cx->runtime->atomState.lengthAtom) ||
+	        id == ATOM_KEY(cx->runtime->atomState.callerAtom) ||
+	        id == ATOM_KEY(cx->runtime->atomState.nameAtom))
+            {
+	        sprop->attrs &= ~JSPROP_ENUMERATE;
+	    }
+        }
+    }
     return JS_TRUE;
 }
 
@@ -1002,10 +1039,10 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     }
 
     if (!JS_XDRStringOrNull(xdr, &atomstr) ||
-	!JS_XDRUint8(xdr, &fun->nargs) ||
-	!JS_XDRUint8(xdr, &fun->flags) ||
+	!JS_XDRUint16(xdr, &fun->nargs) ||
 	!JS_XDRUint16(xdr, &fun->extra) ||
-	!JS_XDRUint16(xdr, &fun->nvars))
+	!JS_XDRUint16(xdr, &fun->nvars) ||
+	!JS_XDRUint8(xdr, &fun->flags))
 	return JS_FALSE;
 
     /* do arguments and local vars */
@@ -1121,7 +1158,7 @@ JSClass js_FunctionClass = {
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  fun_delProperty,
     fun_getProperty,  fun_setProperty,
-    JS_EnumerateStub, (JSResolveOp)fun_resolve,
+    fun_enumProperty, (JSResolveOp)fun_resolve,
     fun_convert,      fun_finalize,
     NULL,             NULL,
     NULL,             NULL,
@@ -1400,7 +1437,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JS_free(cx, collected_args);
             return JS_FALSE;
         }
-        
+
         tt = js_GetToken(cx, ts);
         /* The argument string may be empty or contain no tokens. */
         if (tt != TOK_EOF) {
@@ -1456,7 +1493,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 PR_ASSERT(sprop);
                 sprop->id = INT_TO_JSVAL(fun->nargs++);
                 OBJ_DROP_PROPERTY(cx, obj, (JSProperty *)sprop);
-        
+
                 /* Done with the NAME; get the next token. */
                 tt = js_GetToken(cx, ts);
                 /* Stop if we've reached the end of the string. */
@@ -1469,7 +1506,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (tt == TOK_COMMA)
                     tt = js_GetToken(cx, ts);
             }
-        }        
+        }
         /* Clean up. */
         JS_free(cx, collected_args);
         if (!js_CloseTokenStream(cx, ts))

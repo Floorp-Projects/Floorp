@@ -305,9 +305,9 @@ static jsdouble LocalTZA;
 static jsdouble
 DaylightSavingTA(jsdouble t)
 {
-    PRInt64 PR_t;
-    PRInt64 ms2us;
-    PRInt64 offset;
+    int64 PR_t;
+    int64 ms2us;
+    int64 offset;
     jsdouble result;
 
     /* abort if NaN */
@@ -1694,7 +1694,7 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Date called as function */
     if (!cx->fp->constructing) {
-        PRInt64 us, ms, us2ms;
+        int64 us, ms, us2ms;
         jsdouble time;
 
         /* NSPR 2.0 docs say 'We do not support PRMJ_NowMS and PRMJ_NowS',
@@ -1710,7 +1710,7 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Date called as constructor */
     if (argc == 0) {
-        PRInt64 us, ms, us2ms;
+        int64 us, ms, us2ms;
         jsdouble time;
 
         date = date_constructor(cx, obj);
@@ -2020,3 +2020,4 @@ js_DateSetSeconds(JSContext *cx, JSObject *obj, int seconds)
                               msFromTime(local));
     *date = UTC(local);
 }
+          

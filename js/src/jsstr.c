@@ -73,7 +73,7 @@
 
 static const unsigned char netCharType[256] =
 /*	Bit 0		xalpha		-- the alphas
-**	Bit 1		xpalpha		-- as xalpha but 
+**	Bit 1		xpalpha		-- as xalpha but
 **                             converts spaces to plus and plus to %20
 **	Bit 2 ...	path		-- as xalphas but doesn't escape '/'
 */
@@ -110,7 +110,7 @@ str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!js_ValueToNumber(cx, argv[1], &d))
             return JS_FALSE;
         if (!JSDOUBLE_IS_FINITE(d) ||
-            (mask = (jsint)d) != d || 
+            (mask = (jsint)d) != d ||
             mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH))
         {
             JS_ReportError(cx, "invalid string escape mask %x", mask);
@@ -313,10 +313,10 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id)
 
     if (!JSVAL_IS_INT(id))
 	return JS_TRUE;
+    slot = JSVAL_TO_INT(id);
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
     if (!str)
 	return JS_FALSE;
-    slot = JSVAL_TO_INT(id);
     if ((size_t)slot >= str->length)
 	return JS_TRUE;
     return str_resolve1(cx, obj, str, slot);
@@ -2242,6 +2242,15 @@ js_strchr(const jschar *s, jschar c)
     return NULL;
 }
 
+const jschar *
+js_SkipWhiteSpace(const jschar *s)
+{
+    /* JS_ISSPACE is false on a null. */
+    while (JS_ISSPACE(*s))
+        s++;
+    return s;
+}
+
 jschar *
 js_strncpy(jschar *t, const jschar *s, size_t n)
 {
@@ -2262,7 +2271,7 @@ js_InflateString(JSContext *cx, const char *bytes, size_t length)
     if (!chars)
 	return NULL;
     for (i = 0; i < length; i++)
-	chars[i] = (jschar) (unsigned char) bytes[i];
+	chars[i] = (unsigned char) bytes[i];
     chars[i] = 0;
     return chars;
 }

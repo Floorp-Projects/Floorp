@@ -69,6 +69,9 @@
 
 typedef JSParseNode *
 JSParser(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc);
+typedef JSParseNode *
+JSMemberParser(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+	       JSBool allowCallSyntax);
 
 static JSParser FunctionStmt;
 #if JS_HAS_LEXICAL_CLOSURE
@@ -91,7 +94,7 @@ static JSParser ShiftExpr;
 static JSParser AddExpr;
 static JSParser MulExpr;
 static JSParser UnaryExpr;
-static JSParseNode *MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool allowCallSyntax);
+static JSMemberParser MemberExpr;
 static JSParser PrimaryExpr;
 
 /*
@@ -160,7 +163,7 @@ WellTerminated(JSContext *cx, JSTokenStream *ts, JSTokenType lastExprType)
     if (tt != TOK_EOF && tt != TOK_EOL && tt != TOK_SEMI && tt != TOK_RC) {
 #if JS_HAS_LEXICAL_CLOSURE
 	if ((tt == TOK_FUNCTION || lastExprType == TOK_FUNCTION) &&
-	    cx->version < JSVERSION_1_2) {
+	    (cx->version < JSVERSION_1_2) && (cx->version >= JSVERSION_1_0)) {
 	    return JS_TRUE;
 	}
 #endif
@@ -244,6 +247,8 @@ out:
     return ok;
 }
 
+#ifdef CHECK_RETURN_EXPR
+
 /*
  * Insist on a final return before control flows out of pn, but don't be too
  * smart about loops (do {...; return e2;} while(0) at the end of a function
@@ -285,6 +290,8 @@ CheckFinalReturn(JSParseNode *pn)
 }
 
 static char badreturn_str[] = "function does not always return a value";
+
+#endif /* CHECK_RETURN_EXPR */
 
 static JSParseNode *
 FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
@@ -373,10 +380,10 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     JSAtom *funAtom, *argAtom;
     JSObject *parent;
     JSFunction *fun, *outerFun;
-    JSStmtInfo *topStmt;
     JSBool ok, named;
     JSObject *pobj;
     JSScopeProperty *sprop;
+    JSTreeContext funtc;
     jsval junk;
 
     /* Make a TOK_FUNCTION node. */
@@ -394,10 +401,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     parent = js_FindVariableScope(cx, &outerFun);
     if (!parent)
 	return NULL;
-
-    /* Clear tc->topStmt for semantic checking (restore at label out:). */
-    topStmt = tc->topStmt;
-    tc->topStmt = NULL;
 
 #if JS_HAS_LEXICAL_CLOSURE
     if (!funAtom || cx->fp->scopeChain != parent || InWithStatement(tc)) {
@@ -485,7 +488,8 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 			   ok = JS_FALSE; goto out);
     pn->pn_pos.begin = ts->token.pos.begin;
 
-    pn2 = FunctionBody(cx, ts, fun, tc);
+    INIT_TREE_CONTEXT(&funtc);
+    pn2 = FunctionBody(cx, ts, fun, &funtc);
     if (!pn2) {
     	ok = JS_FALSE;
     	goto out;
@@ -497,7 +501,7 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     pn->pn_fun = fun;
     pn->pn_body = pn2;
-    pn->pn_tryCount = tc->tryCount;
+    pn->pn_tryCount = funtc.tryCount;
 
 #if JS_HAS_LEXICAL_CLOSURE
     if (outerFun || cx->fp->scopeChain != parent || InWithStatement(tc))
@@ -510,7 +514,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
     ok = JS_TRUE;
 out:
-    tc->topStmt = topStmt;
     if (!ok) {
 	if (named)
 	    (void) OBJ_DELETE_PROPERTY(cx, parent, (jsid)funAtom, &junk);
@@ -986,58 +989,40 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    pn1 = NULL;
 	} else {
 	    /* Set pn1 to a var list or an initializing expression. */
+#if JS_HAS_IN_OPERATOR
+            /* 
+             * Set the TCF_IN_FOR_INIT flag during parsing of the first clause
+             * of the for statement.  This flag will will be used by the
+             * RelExpr production; if it flag is set, then the 'in' keyword
+             * will not be recognized as an operator, leaving it available to
+             * be parsed as part of a for/in loop.  A side effect of this
+             * restriction is that (unparenthesized) expressions involving an
+             * 'in' operator are illegal in the init clause of an ordinary for
+             * loop.
+             */
+            tc->flags |= TCF_IN_FOR_INIT;
+#endif /* JS_HAS_IN_OPERATOR */
 	    if (tt == TOK_VAR) {
 		(void) js_GetToken(cx, ts);
 		pn1 = Variables(cx, ts, tc);
 	    } else {
 		pn1 = Expr(cx, ts, tc);
 	    }
+#if JS_HAS_IN_OPERATOR
+            tc->flags &= ~TCF_IN_FOR_INIT;
+#endif /* JS_HAS_IN_OPERATOR */
 	    if (!pn1)
 		return NULL;
 	}
 
 	/*
-	 * There are three kinds of for/in syntax (see ECMA 12.6.3):
-	 *  1. for (i in o) ...
-	 *  2. for (var i in o) ...
-	 *  3. for (var i = e in o) ...
-	 * The 'var i = e in o' in 3 will be parsed as a variable declaration
-	 * with an 'in' expression as its initializer, leaving ts->pushback at
-	 * the right parenthesis.  This condition tests 1, then 3, then 2:
-	 */
-	if (pn1 && 
-	    (pn1->pn_type == TOK_IN ||
-	     (pn1->pn_type == TOK_VAR && ts->pushback.type == TOK_RP) ||
-	     js_MatchToken(cx, ts, TOK_IN))) {
+         * We can be sure that if it's a for/in loop, there's still an 'in'
+         * keyword here, even if Javascript recognizes it as an operator,
+         * because we've excluded it from parsing by setting the
+         * TCF_IN_FOR_INIT flag on the JSTreeContext argument.
+         */
+	if (pn1 && js_MatchToken(cx, ts, TOK_IN)) {
 	    stmtInfo.type = STMT_FOR_IN_LOOP;
-
-	    switch (pn1->pn_type) {
-	      case TOK_IN:
-		pn2 = pn1;
-		pn1 = pn1->pn_left;
-		break;
-	      case TOK_VAR:
-		if (pn1->pn_count != 1) {
-		    js_ReportCompileError(cx, ts, "invalid for/in variables");
-		    return NULL;
-		}
-		pn2 = pn1->pn_head->pn_expr;
-		if (pn2) {
-		    /* pn1 is 'var i = e' -- must pop e before loop. */
-		    pn1->pn_op = JSOP_POP;
-		    if (pn2->pn_type == TOK_IN) {
-			/* Found 'var i = e in o' -- make 'in' be the root. */
-			PR_ASSERT(ts->pushback.type == TOK_RP);
-			pn1->pn_head->pn_expr = pn2->pn_left;
-			pn2->pn_left = pn1;
-			break;
-		    }
-		}
-		/* FALL THROUGH */
-	      default:
-		pn2 = NULL;
-		break;
-	    }
 
 	    /* Check that the left side of the 'in' is valid. */
 	    if (pn1->pn_type != TOK_VAR &&
@@ -1049,11 +1034,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    }
 
 	    /* Parse the object expression as the right operand of 'in'. */
-	    if (!pn2) {
-		pn2 = NewBinary(cx, TOK_IN, JSOP_NOP, pn1, Expr(cx, ts, tc));
-		if (!pn2)
-	    	    return NULL;
-	    }
+            pn2 = NewBinary(cx, TOK_IN, JSOP_NOP, pn1, Expr(cx, ts, tc));
+            if (!pn2)
+                return NULL;
 	    pn->pn_left = pn2;
 	} else {
 	    /* Parse the loop condition or null into pn2. */
@@ -1102,114 +1085,108 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	return pn;
 
 #if JS_HAS_EXCEPTIONS
-      case TOK_TRY:
+      case TOK_TRY: {
+	JSParseNode *catchtail = NULL;
 	/*
 	 * try nodes are ternary.
 	 * kid1 is the try Statement
 	 * kid2 is the catch node
 	 * kid3 is the finally Statement
+	 *
+	 * catch nodes are ternary.
+	 * kid1 is the discriminant
+	 * kid2 is the next catch node, or NULL
+	 * kid3 is the catch block (on kid3 so that we can always append a
+	 *                          new catch pn on catchtail->kid2)
+	 *
+	 * catch discriminant nodes are binary
+	 * atom is the receptacle
+	 * expr is the discriminant code
+	 *
+	 * finally nodes are unary (just the finally expression)
 	 */
 	pn = NewParseNode(cx, &ts->token, PN_TERNARY);
-	pn1 = Statement(cx, ts, tc);
-	if (!pn1)
+	pn->pn_op = JSOP_NOP;
+
+	MUST_MATCH_TOKEN(TOK_LC, "missing { after before try block");
+	/* } balance */
+	pn->pn_kid1 = Statements(cx, ts, tc);
+	if (!pn->pn_kid1)
 	    return NULL;
-	if (js_PeekToken(cx, ts) == TOK_CATCH) {
-	    pn2 = NewParseNode(cx, &ts->token, PN_BINARY);
-	    if (!pn2)
+	/* { balance */
+	MUST_MATCH_TOKEN(TOK_RC, "missing } after try block");
+
+	pn->pn_kid2 = NULL;
+	catchtail = pn;
+	while(js_PeekToken(cx, ts) == TOK_CATCH) {
+	    /*
+	     * legal catch forms are:
+	     * catch (v)
+	     * catch (v if <boolean_expression>)
+	     */
+	    
+	    if (!catchtail->pn_kid1->pn_expr) {
+		js_ReportCompileError(cx, ts,
+				      "catch clause after general catch");
 		return NULL;
-	    (void)js_GetToken(cx, ts);
-	    MUST_MATCH_TOKEN(TOK_LP, "missing ( after catch"); /* balance) */
-	    tt = js_PeekToken(cx, ts);
-	    if (tt == TOK_VAR) {
-		(void)js_GetToken(cx, ts);
-		pn4 = Variables(cx, ts, tc);
-		if (!pn4)
-		    return NULL;
-		if (pn4->pn_count != 1) {
-		    js_ReportCompileError(cx, ts,
-	       "only one variable declaration permitted in catch declaration");
-		    return NULL;
-		}
-	    } else {
-		pn4 = Expr(cx, ts, tc);
-		if (!pn4)
-		    return NULL;
-		/* restrict the expression to instanceof */
-		if (pn4->pn_op != JSOP_INSTANCEOF &&
-		    pn4->pn_op != JSOP_NAME &&
-		    pn4->pn_op != JSOP_GETARG &&
-		    pn4->pn_op != JSOP_GETVAR) {
-		    js_ReportCompileError(cx, ts,
-	       "catch conditional must be instanceof or variable declaration");
-		    PR_ASSERT(0);
-		    return NULL;
-		}
 	    }
 
-	    /* rewrite the declaration/conditional expr as appropriate */
-	    switch(pn4->pn_type) {
-	      case TOK_NAME:
-		switch(pn4->pn_op) {
-		  case JSOP_NAME:
-		    pn4->pn_op = JSOP_SETNAME;
-		    break;
-		  case JSOP_GETARG:
-		    pn4->pn_op = JSOP_SETARG;
-		    break;
-		default:
-		    PR_ASSERT(0);
-		}
-		break;
-	      case TOK_VAR: 
-		PR_ASSERT(pn4->pn_head->pn_type == TOK_NAME);
-		switch(pn4->pn_head->pn_op) {
-		  case JSOP_GETVAR:
-		    pn4->pn_head->pn_op = JSOP_SETVAR;
-		    break;
-		  case JSOP_GETARG:
-		    pn4->pn_head->pn_op = JSOP_SETARG;
-		    break;
-		  case JSOP_NAME:
-		    pn4->pn_head->pn_op = JSOP_SETNAME;
-		  case JSOP_NOP:
-		    break;
-		  default:
-		    PR_ASSERT(0);
-		}
-		break;
-	    case TOK_INSTANCEOF:
-		PR_ASSERT(0);
-	    default:
-		PR_ASSERT(0);
+	    /* catch node */
+	    pn2 = NewParseNode(cx, &ts->token, PN_TERNARY);
+	    pn2->pn_op = JSOP_NOP;
+	    /*
+	     * We use a PN_NAME for the discriminant (catchguard) node
+	     * with the actual discriminant code in the initializer spot
+	     */
+	    pn3 = NewParseNode(cx, &ts->token, PN_NAME);
+	    if (!pn2 || !pn3)
+		return NULL;
+
+	    (void)js_GetToken(cx, ts); /* eat `catch' */
+
+	    MUST_MATCH_TOKEN(TOK_LP, "missing ( after catch"); /* balance) */
+	    MUST_MATCH_TOKEN(TOK_NAME, "missing identifier in catch");
+	    pn3->pn_atom = ts->token.t_atom;
+	    if (js_PeekToken(cx, ts) == TOK_COLON) {
+		(void)js_GetToken(cx, ts); /* eat `:' */
+		pn3->pn_expr = Expr(cx, ts, tc);
+		if (!pn3->pn_expr)
+		    return NULL;
+	    } else {
+		pn3->pn_expr = NULL;
 	    }
-	    pn2->pn_left = pn4;
-	    
-	    /* (balance: */
-	    MUST_MATCH_TOKEN(TOK_RP, "missing ) after catch declaration");
-	    pn2->pn_right = Statement(cx, ts, tc);
-	    if (!pn2->pn_right)
+	    pn2->pn_kid1 = pn3;
+
+	    /* ( balance: */
+	    MUST_MATCH_TOKEN(TOK_RP, "missing ) after catch");
+
+	    MUST_MATCH_TOKEN(TOK_LC, "missing { before catch block");
+	    pn2->pn_kid3 = Statements(cx, ts, tc);
+	    if (!pn2->pn_kid3)
 		return NULL;
-	} else {
-	    pn2 = NULL;
+	    MUST_MATCH_TOKEN(TOK_RC, "missing } after catch block");
+
+	    catchtail = catchtail->pn_kid2 = pn2;
 	}
+	catchtail->pn_kid2 = NULL;
+
 	if (js_MatchToken(cx, ts, TOK_FINALLY)) {
-	    pn3 = Statement(cx, ts, tc);
-	    if (!pn3)
+	    MUST_MATCH_TOKEN(TOK_LC, "missing { before finally block");
+	    pn->pn_kid3 = Statements(cx, ts, tc);
+	    if (!pn->pn_kid3)
 		return NULL;
+	    MUST_MATCH_TOKEN(TOK_RC, "missing } after finally block");
 	} else {
-	    pn3 = NULL;
+	    pn->pn_kid3 = NULL;
 	}
-	if (!pn2 && !pn3) {
+	if (!pn->pn_kid2 && !pn->pn_kid3) {
 	    js_ReportCompileError(cx, ts,
 				  "missing catch or finally after try");
 	    return NULL;
 	}
 	tc->tryCount++;
-	pn->pn_kid1 = pn1;
-	pn->pn_kid2 = pn2;
-	pn->pn_kid3 = pn3;
 	return pn;
-
+      }
       case TOK_THROW:
 	pn = NewParseNode(cx, &ts->token, PN_UNARY);
 	if (!pn)
@@ -1225,6 +1202,16 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn->pn_op = JSOP_THROW;
 	pn->pn_kid = pn2;
         break;
+
+      /* TOK_CATCH and TOK_FINALLY are both handled in the TOK_TRY case */
+      case TOK_CATCH:
+	js_ReportCompileError(cx, ts, "catch without try");
+	return NULL;
+	
+      case TOK_FINALLY:
+	js_ReportCompileError(cx, ts, "finally without try");
+	return NULL;
+
 #endif /* JS_HAS_EXCEPTIONS */
 
       case TOK_BREAK:
@@ -1365,11 +1352,13 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    pn->pn_kid = NULL;
 	}
 
+#ifdef CHECK_RETURN_EXPR
 	if ((tc->flags & (TCF_RETURN_EXPR | TCF_RETURN_VOID)) ==
 	    (TCF_RETURN_EXPR | TCF_RETURN_VOID)) {
 	    js_ReportCompileError(cx, ts, badreturn_str);
 	    return NULL;
 	}
+#endif
 	break;
 
       case TOK_LC:
@@ -1391,6 +1380,17 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn->pn_type = TOK_SEMI;
 	pn->pn_kid = NULL;
 	return pn;
+
+#if JS_HAS_DEBUGGER_KEYWORD
+      case TOK_DEBUGGER:
+        if(!WellTerminated(cx, ts, TOK_ERROR))
+	    return NULL;
+	pn = NewParseNode(cx, &ts->token, PN_NULLARY);
+	if (!pn)
+	    return NULL;
+	pn->pn_type = TOK_DEBUGGER;
+	return pn;
+#endif /* JS_HAS_DEBUGGER_KEYWORD */
 
       case TOK_ERROR:
 	return NULL;
@@ -1463,6 +1463,17 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSScopeProperty *sprop;
     JSBool ok;
 
+    /*
+     * The tricky part of this code is to create special
+     * parsenode opcodes for getting and setting variables
+     * (which will be stored as special slots in the frame).
+     * The complex special case is an eval() inside a
+     * function. If the evaluated string references variables in
+     * the enclosing function, then we need to generate
+     * the special variable opcodes.
+     * We determine this by looking up the variable id in the
+     * current variable scope.
+     */
     PR_ASSERT(ts->token.type == TOK_VAR);
     pn = NewParseNode(cx, &ts->token, PN_LIST);
     if (!pn)
@@ -1475,8 +1486,13 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	return NULL;
     clasp = OBJ_GET_CLASS(cx, obj);
     if (fun && clasp == &js_FunctionClass) {
+        /* We are compiling code inside a function */
 	getter = js_GetLocalVariable;
 	setter = js_SetLocalVariable;
+    } else if (fun && clasp == &js_CallClass) {
+        /* We are compiling code from an eval inside a function */
+	getter = js_GetCallVariable;
+	setter = js_SetCallVariable;
     } else {
 	getter = clasp->getProperty;
 	setter = clasp->setProperty;
@@ -1517,7 +1533,25 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 			PR_ASSERT(sprop->getter == js_GetLocalVariable);
 			PR_ASSERT(JSVAL_IS_INT(sprop->id) &&
 				  JSVAL_TO_INT(sprop->id) < fun->nvars);
-		    }
+                    } else if (clasp == &js_CallClass) {
+                        if (sprop->getter == js_GetCallVariable) {
+                            /*
+                             * Referencing a variable introduced by a var
+                             * statement in the enclosing function. Check
+                             * that the slot number we have is in range.
+                             */
+			    PR_ASSERT(JSVAL_IS_INT(sprop->id) &&
+				      JSVAL_TO_INT(sprop->id) < fun->nvars);
+                        } else {
+                            /*
+                             * A variable introduced through another eval:
+                             * don't use the special getters and setters
+                             * since we can't allocate a slot in the frame.
+                             */
+                            getter = sprop->getter;
+                            setter = sprop->setter;
+                        }
+                    }
 		} else {
 		    /* Global var: (re-)set id a la js_DefineProperty. */
 		    sprop->id = ATOM_KEY(atom);
@@ -1528,11 +1562,22 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		sprop->attrs &= ~JSPROP_READONLY;
 	    }
 	} else {
+            /*
+             * Property not found in current variable scope: we have not
+             * seen this variable before.
+             * Define a new variable by adding a property to the current
+             * scope, or by allocating more slots in the function's frame.
+             */
 	    sprop = NULL;
 	    if (prop) {
 		OBJ_DROP_PROPERTY(cx, pobj, prop);
 		prop = NULL;
 	    }
+            if (getter == js_GetCallVariable) {
+                /* Can't increase fun->nvars in an active frame! */
+	        getter = clasp->getProperty;
+	        setter = clasp->setProperty;
+            }
 	    ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
 				     getter, setter,
 				     JSPROP_ENUMERATE | JSPROP_PERMANENT,
@@ -1540,9 +1585,14 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    if (ok && prop) {
 		pobj = obj;
 		if (getter == js_GetLocalVariable) {
+                    /*
+                     * Allocate more room for variables in the
+                     * function's frame. We can do this only
+                     * before the function is called.
+                     */
 		    sprop = (JSScopeProperty *)prop;
 		    sprop->id = INT_TO_JSVAL(fun->nvars++);
-		}
+                }
 	    }
 	}
 
@@ -1560,21 +1610,28 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    }
 	}
 
-	if (ok && fun && clasp == &js_FunctionClass && !InWithStatement(tc)) {
-	    PR_ASSERT(sprop);
+	if (ok && fun && (clasp == &js_FunctionClass ||
+                          clasp == &js_CallClass) &&
+            !InWithStatement(tc))
+        {
+            /* Depending on the value of the getter, change the
+             * opcodes to the forms for arguments and variables.
+             */
 	    if (getter == js_GetArgument) {
 		PR_ASSERT(sprop && JSVAL_IS_INT(sprop->id));
 		pn2->pn_op = (pn2->pn_op == JSOP_NAME)
 			     ? JSOP_GETARG
 			     : JSOP_SETARG;
 		pn2->pn_slot = JSVAL_TO_INT(sprop->id);
-	    } else if (getter == js_GetLocalVariable) {
+	    } else if (getter == js_GetLocalVariable ||
+                       getter == js_GetCallVariable)
+            {
 		PR_ASSERT(sprop && JSVAL_IS_INT(sprop->id));
 		pn2->pn_op = (pn2->pn_op == JSOP_NAME)
 			     ? JSOP_GETVAR
 			     : JSOP_SETVAR;
 		pn2->pn_slot = JSVAL_TO_INT(sprop->id);
-	    }
+            }
 	}
 
 	if (prop)
@@ -1611,16 +1668,20 @@ Expr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     return pn;
 }
 
-/* ZZZbe don't create functions till codegen? or at least don't bind fn name */
+/* ZZZbe don't create functions till codegen? or at least don't bind
+ * fn name */
 static JSBool
 LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
 	       JSOp *opp, jsint *slotp)
 {
     JSObject *obj, *pobj;
+    JSClass *clasp;
+    JSFunction *fun;
     JSScopeProperty *sprop;
 
-    obj = cx->fp->scopeChain;
-    if (OBJ_GET_CLASS(cx, obj) != &js_FunctionClass)
+    obj = js_FindVariableScope(cx, &fun);
+    clasp = OBJ_GET_CLASS(cx, obj);
+    if (clasp != &js_FunctionClass && clasp != &js_CallClass)
     	return JS_TRUE;
     if (InWithStatement(tc))
     	return JS_TRUE;
@@ -1632,7 +1693,9 @@ LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
 	if (sprop->getter == js_GetArgument) {
 	    *opp = JSOP_GETARG;
 	    *slotp = JSVAL_TO_INT(sprop->id);
-	} else if (sprop->getter == js_GetLocalVariable) {
+	} else if (sprop->getter == js_GetLocalVariable ||
+                   sprop->getter == js_GetCallVariable)
+        {
 	    *opp = JSOP_GETVAR;
 	    *slotp = JSVAL_TO_INT(sprop->id);
 	}
@@ -1683,6 +1746,9 @@ static JSParseNode *
 CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSParseNode *pn, *pn1, *pn2, *pn3;
+#if JS_HAS_IN_OPERATOR
+    uintN oldflags;
+#endif /* JS_HAS_IN_OPERATOR */
 
     pn = OrExpr(cx, ts, tc);
     if (pn && js_MatchToken(cx, ts, TOK_HOOK)) {
@@ -1690,7 +1756,20 @@ CondExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn = NewParseNode(cx, &ts->token, PN_TERNARY);
 	if (!pn)
 	    return NULL;
+#if JS_HAS_IN_OPERATOR
+        /*
+         * Always accept the 'in' operator in the middle clause of a ternary,
+         * where it's unambiguous, even if we might be parsing the init of a
+         * for statement.
+         */
+        oldflags = tc->flags;
+        tc->flags &= ~TCF_IN_FOR_INIT;
+#endif /* JS_HAS_IN_OPERATOR */
 	pn2 = AssignExpr(cx, ts, tc);
+#if JS_HAS_IN_OPERATOR
+        tc->flags = oldflags;
+#endif /* JS_HAS_IN_OPERATOR */
+
 	if (!pn2)
 	    return NULL;
 	MUST_MATCH_TOKEN(TOK_COLON, "missing : in conditional expression");
@@ -1781,21 +1860,40 @@ RelExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSParseNode *pn;
     JSTokenType tt;
     JSOp op;
+#if JS_HAS_IN_OPERATOR
+    uintN inForInitFlag;
+
+    inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
+    /*
+     * Uses of the in operator in ShiftExprs are always unambiguous, 
+     * so unset the flag that prohibits recognizing it.
+     */
+    tc->flags &= ~TCF_IN_FOR_INIT;
+#endif /* JS_HAS_IN_OPERATOR */
 
     pn = ShiftExpr(cx, ts, tc);
     while (pn &&
 	   (js_MatchToken(cx, ts, TOK_RELOP)
 #if JS_HAS_IN_OPERATOR
-	    || js_MatchToken(cx, ts, TOK_IN)
-#endif
+            /*
+             * Only recognize the 'in' token as an operator if we're not
+             * currently in the init expr of a for loop.
+             */
+	    || (inForInitFlag == 0 && js_MatchToken(cx, ts, TOK_IN))
+#endif /* JS_HAS_IN_OPERATOR */
 #if JS_HAS_INSTANCEOF
 	    || js_MatchToken(cx, ts, TOK_INSTANCEOF)
-#endif
+#endif /* JS_HAS_INSTANCEOF */
 	    )) {
 	tt = ts->token.type;
 	op = ts->token.t_op;
 	pn = NewBinary(cx, tt, op, pn, ShiftExpr(cx, ts, tc));
     }
+#if JS_HAS_IN_OPERATOR
+    /* Restore previous state of inForInit flag. */
+    tc->flags |= inForInitFlag;
+#endif /* JS_HAS_IN_OPERATOR */
+     
     return pn;
 }
 
@@ -1998,7 +2096,8 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 }
 
 static JSParseNode *
-ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSParseNode *listNode)
+ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+	     JSParseNode *listNode)
 {
     JSBool matched;
 
@@ -2020,17 +2119,18 @@ ArgumentList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSParseNode *l
 }
 
 static JSParseNode *
-MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool allowCallSyntax)
+MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+	   JSBool allowCallSyntax)
 {
     JSParseNode *pn, *pn2, *pn3;
     JSTokenType tt;
 
-    /* Check for new expressions */
+    /* Check for new expression first. */
     ts->flags |= TSF_REGEXP;
     tt = js_PeekToken(cx, ts);
     ts->flags &= ~TSF_REGEXP;
     if (tt == TOK_NEW) {
-	(void)js_GetToken(cx, ts);
+	(void) js_GetToken(cx, ts);
 
 	pn = NewParseNode(cx, &ts->token, PN_LIST);
 	if (!pn)
@@ -2050,7 +2150,6 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc, JSBool allowCall
 	    return NULL;
 	}
 	pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
-
     } else {
 	pn = PrimaryExpr(cx, ts, tc);
 	if (!pn)
@@ -2279,10 +2378,26 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #endif /* JS_HAS_INITIALIZERS */
 
       case TOK_LP:
+      {
+#if JS_HAS_IN_OPERATOR
+        uintN oldflags;
+#endif
 	pn = NewParseNode(cx, &ts->token, PN_UNARY);
 	if (!pn)
 	    return NULL;
+#if JS_HAS_IN_OPERATOR
+        /*
+         * Always accept the 'in' operator in a parenthesized expression,
+         * where it's unambiguous, even if we might be parsing the init of a
+         * for statement.
+         */
+        oldflags = tc->flags;
+        tc->flags &= ~TCF_IN_FOR_INIT;
+#endif /* JS_HAS_IN_OPERATOR */
 	pn2 = Expr(cx, ts, tc);
+#if JS_HAS_IN_OPERATOR
+        tc->flags = oldflags;
+#endif /* JS_HAS_IN_OPERATOR */
 	if (!pn2)
 	    return NULL;
 
@@ -2292,9 +2407,12 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	pn->pn_pos.end = ts->token.pos.end;
 	pn->pn_kid = pn2;
 	break;
+      }
 
       case TOK_STRING:
+#if JS_HAS_SHARP_VARS
 	notsharp = JS_TRUE;
+#endif /* JS_HAS_SHARP_VARS */
 	/* FALL THROUGH */
       case TOK_NAME:
       case TOK_OBJECT:
@@ -2317,7 +2435,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	if (!pn)
 	    return NULL;
 	pn->pn_dval = ts->token.t_dval;
+#if JS_HAS_SHARP_VARS
 	notsharp = JS_TRUE;
+#endif /* JS_HAS_SHARP_VARS */
 	break;
 
       case TOK_PRIMARY:
@@ -2325,7 +2445,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	if (!pn)
 	    return NULL;
 	pn->pn_op = ts->token.t_op;
+#if JS_HAS_SHARP_VARS
 	notsharp = JS_TRUE;
+#endif /* JS_HAS_SHARP_VARS */
 	break;
 
 #if !JS_HAS_EXPORT_IMPORT
@@ -2358,7 +2480,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	defsharp->pn_kid = pn;
 	return defsharp;
     }
-#endif
+#endif /* JS_HAS_SHARP_VARS */
     return pn;
 }
 
