@@ -77,8 +77,8 @@ CPPSRCS  = nsProfileMigrator.cpp \
 ifeq ($(OS_ARCH),WINNT)
 DEFINES += -DPSTOREC_DLL=\"$(WINDIR)\\system32\\pstorec.dll\"
 
-CPPSRCS += nsIEProfileMigrator.cpp \
-           $(NULL)
+# CPPSRCS += nsIEProfileMigrator.cpp \
+#           $(NULL)
 endif
             
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

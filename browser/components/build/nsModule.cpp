@@ -49,7 +49,9 @@
 #include "nsPhoenixProfileMigrator.h"
 #include "nsSeamonkeyProfileMigrator.h"
 #ifdef XP_WIN
+#if 0
 #include "nsIEProfileMigrator.h"
+#endif
 #elif defined(XP_MACOSX)
 #if 0
 #include "nsSafariProfileMigrator.h"
@@ -105,10 +107,12 @@ static const nsModuleComponentInfo components[] =
     nsProfileMigratorConstructor },
 
 #ifdef XP_WIN
+#if 0
   { "Internet Explorer (Windows) Profile Migrator",
     NS_WINIEPROFILEMIGRATOR_CID,
     NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "ie",
     nsIEProfileMigratorConstructor },
+#endif
 
 #elif defined(XP_MACOSX)
 #if 0
