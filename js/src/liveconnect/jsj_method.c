@@ -30,6 +30,44 @@
 
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsjava.h"             /* LiveConnect external API */
+#include "jsclist.h"            /* Circular linked lists */
+
+/* A list of Java methods */
+typedef JSCList MethodList;
+
+/* An element in a list of Java methods */
+typedef struct MethodListElement {
+    JSCList linkage;
+    JavaMethodSpec *method;
+} MethodListElement;
+
+/*
+ * This is the return value of functions which compare either two types or two
+ * method signatures to see if either is "preferred" when converting from
+ * specified JavaScript value(s).
+ */
+typedef enum JSJTypePreference {
+    JSJPREF_FIRST_ARG  = 1,       /* First argument preferred */
+    JSJPREF_SECOND_ARG = 2,       /* Second argument preferred */
+    JSJPREF_AMBIGUOUS  = 3        /* Neither preferred over the other */
+} JSJTypePreference;
+
+/*
+ * Classification of JS types with slightly different granularity than JSType.
+ * This is used to resolve among overloaded Java methods.
+ */
+typedef enum JSJType {
+    JSJTYPE_VOID,                /* undefined */
+    JSJTYPE_BOOLEAN,             /* boolean */
+    JSJTYPE_NUMBER,              /* number */
+    JSJTYPE_STRING,              /* string */
+    JSJTYPE_NULL,                /* null */
+    JSJTYPE_JAVACLASS,           /* JavaClass */
+    JSJTYPE_JAVAOBJECT,          /* JavaObject */
+    JSJTYPE_JAVAARRAY,		 /* JavaArray */
+    JSJTYPE_OBJECT,              /* Any other JS Object, including functions */
+    JSJTYPE_LIMIT
+} JSJType;
 
 /*
  * A helper function for jsj_ConvertJavaMethodSignatureToString():
@@ -66,7 +104,7 @@ convert_java_method_arg_signatures_to_string(JSContext *cx,
 
     /* Concatenate the signature string of this argument with the signature
        strings of all the remaining arguments. */
-    sig = PR_smprintf("%s%s", first_arg_signature, rest_arg_signatures);
+    sig = JS_smprintf("%s%s", first_arg_signature, rest_arg_signatures);
     free((void*)first_arg_signature);
     free((void*)rest_arg_signatures);
     if (!sig) {
@@ -75,58 +113,6 @@ convert_java_method_arg_signatures_to_string(JSContext *cx,
     }
 
     return sig;
-}
-
-/*
- * Compute a JNI-style (string) signature for the given method, e.g. the method
- * "String MyFunc(int, byte)" is translated to "(IB)Ljava/lang/String;".
- *
- * If an error is encountered, NULL is returned and the error reporter is called.
- */
-const char *
-jsj_ConvertJavaMethodSignatureToString(JSContext *cx,
-                                       JavaMethodSignature *method_signature)
-{
-    JavaSignature **arg_signatures, *return_val_signature;
-    const char *arg_sigs_cstr;
-    const char *return_val_sig_cstr;
-    const char *sig_cstr;
-
-    arg_signatures = method_signature->arg_signatures;
-    return_val_signature = method_signature->return_val_signature;
-
-    /* Convert the method argument signatures to a C-string */
-    arg_sigs_cstr = NULL;
-    if (arg_signatures) {
-        arg_sigs_cstr =
-            convert_java_method_arg_signatures_to_string(cx, arg_signatures,
-                                                         method_signature->num_args);
-        if (!arg_sigs_cstr)
-            return NULL;
-    }
-
-    /* Convert the method return value signature to a C-string */
-    return_val_sig_cstr = jsj_ConvertJavaSignatureToString(cx, return_val_signature);
-    if (!return_val_sig_cstr) {
-        free((void*)arg_sigs_cstr);
-        return NULL;
-    }
-
-    /* Compose method arg signatures string and return val signature string */
-    if (arg_sigs_cstr) {
-        sig_cstr = PR_smprintf("(%s)%s", arg_sigs_cstr, return_val_sig_cstr);
-        free((void*)arg_sigs_cstr);
-    } else {
-        sig_cstr = PR_smprintf("()%s", return_val_sig_cstr);
-    }
-
-    free((void*)return_val_sig_cstr);
-
-    if (!sig_cstr) {
-        JS_ReportOutOfMemory(cx);
-        return NULL;
-    }
-    return sig_cstr;
 }
 
 /*
@@ -139,10 +125,14 @@ jsj_ConvertJavaMethodSignatureToString(JSContext *cx,
 static const char *
 convert_java_method_arg_signatures_to_hr_string(JSContext *cx,
                                                 JavaSignature **arg_signatures,
-                                                int num_args)
+                                                int num_args,
+						JSBool whitespace)
 {
-    const char *first_arg_signature, *rest_arg_signatures, *sig;
+    const char *first_arg_signature, *rest_arg_signatures, *sig, *separator;
     JavaSignature **rest_args;
+
+    if (num_args == 0)
+        return strdup("");
 
     /* Convert the first method argument in the array to a string */
     first_arg_signature = jsj_ConvertJavaSignatureToHRString(cx, arg_signatures[0]);
@@ -156,7 +146,7 @@ convert_java_method_arg_signatures_to_hr_string(JSContext *cx,
     /* Convert the remaining method arguments to a string */
     rest_args = &arg_signatures[1];
     rest_arg_signatures =
-        convert_java_method_arg_signatures_to_hr_string(cx, rest_args, num_args - 1);
+        convert_java_method_arg_signatures_to_hr_string(cx, rest_args, num_args - 1, whitespace);
     if (!rest_arg_signatures) {
         free((void*)first_arg_signature);
         return NULL;
@@ -164,7 +154,8 @@ convert_java_method_arg_signatures_to_hr_string(JSContext *cx,
 
     /* Concatenate the signature string of this argument with the signature
        strings of all the remaining arguments. */
-    sig = PR_smprintf("%s, %s", first_arg_signature, rest_arg_signatures);
+    separator = whitespace ? " " : "";
+    sig = JS_smprintf("%s,%s%s", first_arg_signature, separator, rest_arg_signatures);
     free((void*)first_arg_signature);
     free((void*)rest_arg_signatures);
     if (!sig) {
@@ -196,14 +187,12 @@ jsj_ConvertJavaMethodSignatureToHRString(JSContext *cx,
     return_val_signature = method_signature->return_val_signature;
 
     /* Convert the method argument signatures to a C-string */
-    arg_sigs_cstr = NULL;
-    if (arg_signatures) {
-        arg_sigs_cstr =
+    arg_sigs_cstr =
             convert_java_method_arg_signatures_to_hr_string(cx, arg_signatures,
-                                                            method_signature->num_args);
-        if (!arg_sigs_cstr)
-            return NULL;
-    }
+                                                            method_signature->num_args,
+							    JS_TRUE);
+    if (!arg_sigs_cstr)
+        return NULL;
 
     /* Convert the method return value signature to a C-string */
     return_val_sig_cstr = jsj_ConvertJavaSignatureToHRString(cx, return_val_signature);
@@ -213,13 +202,8 @@ jsj_ConvertJavaMethodSignatureToHRString(JSContext *cx,
     }
 
     /* Compose method arg signatures string and return val signature string */
-    if (arg_sigs_cstr) {
-        sig_cstr = PR_smprintf("%s %s(%s)", return_val_sig_cstr, method_name, arg_sigs_cstr);
-        free((void*)arg_sigs_cstr);
-    } else {
-        sig_cstr = PR_smprintf("%s %s()", return_val_sig_cstr, method_name);
-    }
-
+    sig_cstr = JS_smprintf("%s %s(%s)", return_val_sig_cstr, method_name, arg_sigs_cstr);
+    free((void*)arg_sigs_cstr);
     free((void*)return_val_sig_cstr);
 
     if (!sig_cstr) {
@@ -316,6 +300,7 @@ jsj_InitJavaMethodSignature(JSContext *cx, JNIEnv *jEnv,
             jclass arg_class = (*jEnv)->GetObjectArrayElement(jEnv, arg_classes, i);
             
             a = arg_signatures[i] = jsj_GetJavaClassDescriptor(cx, jEnv, arg_class);
+            (*jEnv)->DeleteLocalRef(jEnv, arg_class);
             if (!a) {
                 jsj_UnexpectedJavaError(cx, jEnv, "Could not determine Java class "
                                                   "signature using java.lang.reflect");
@@ -327,7 +312,7 @@ jsj_InitJavaMethodSignature(JSContext *cx, JNIEnv *jEnv,
     /* Get the Java class of the method's return value */
     if (is_constructor) {
         /* Constructors always have a "void" return type */
-        return_val_class = jlVoid_TYPE;
+        return_val_signature = jsj_GetJavaClassDescriptor(cx, jEnv, jlVoid_TYPE);
     } else {
         return_val_class =
             (*jEnv)->CallObjectMethod(jEnv, method, jlrMethod_getReturnType);
@@ -337,20 +322,77 @@ jsj_InitJavaMethodSignature(JSContext *cx, JNIEnv *jEnv,
                                     "using java.lang.reflect.Method.getReturnType()");
             goto error;
         }
+
+        /* Build a JavaSignature object corresponding to the method's return value */
+        return_val_signature = jsj_GetJavaClassDescriptor(cx, jEnv, return_val_class);
+        (*jEnv)->DeleteLocalRef(jEnv, return_val_class);
     }
 
-    /* Build a JavaSignature object corresponding to the method's return value */
-    return_val_signature = jsj_GetJavaClassDescriptor(cx, jEnv, return_val_class);
     if (!return_val_signature)
         goto error;
     method_signature->return_val_signature = return_val_signature;
 
+    (*jEnv)->DeleteLocalRef(jEnv, arg_classes);
     return method_signature;
 
 error:
 
+    if (arg_classes)
+        (*jEnv)->DeleteLocalRef(jEnv, arg_classes);
     jsj_PurgeJavaMethodSignature(cx, jEnv, method_signature);
     return NULL;
+}
+
+/*
+ * Compute a JNI-style (string) signature for the given method, e.g. the method
+ * "String MyFunc(int, byte)" is translated to "(IB)Ljava/lang/String;".
+ *
+ * If an error is encountered, NULL is returned and the error reporter is called.
+ */
+const char *
+jsj_ConvertJavaMethodSignatureToString(JSContext *cx,
+                                       JavaMethodSignature *method_signature)
+{
+    JavaSignature **arg_signatures, *return_val_signature;
+    const char *arg_sigs_cstr;
+    const char *return_val_sig_cstr;
+    const char *sig_cstr;
+
+    arg_signatures = method_signature->arg_signatures;
+    return_val_signature = method_signature->return_val_signature;
+
+    /* Convert the method argument signatures to a C-string */
+    arg_sigs_cstr = NULL;
+    if (arg_signatures) {
+        arg_sigs_cstr =
+            convert_java_method_arg_signatures_to_string(cx, arg_signatures,
+                                                         method_signature->num_args);
+        if (!arg_sigs_cstr)
+            return NULL;
+    }
+
+    /* Convert the method return value signature to a C-string */
+    return_val_sig_cstr = jsj_ConvertJavaSignatureToString(cx, return_val_signature);
+    if (!return_val_sig_cstr) {
+        free((void*)arg_sigs_cstr);
+        return NULL;
+    }
+
+    /* Compose method arg signatures string and return val signature string */
+    if (arg_sigs_cstr) {
+        sig_cstr = JS_smprintf("(%s)%s", arg_sigs_cstr, return_val_sig_cstr);
+        free((void*)arg_sigs_cstr);
+    } else {
+        sig_cstr = JS_smprintf("()%s", return_val_sig_cstr);
+    }
+
+    free((void*)return_val_sig_cstr);
+
+    if (!sig_cstr) {
+        JS_ReportOutOfMemory(cx);
+        return NULL;
+    }
+    return sig_cstr;
 }
 
 static JSBool
@@ -378,11 +420,11 @@ add_java_method_to_class_descriptor(JSContext *cx, JNIEnv *jEnv,
             member_descriptor = jsj_GetJavaStaticMemberDescriptor(cx, jEnv, class_descriptor, method_name_jstr);
         } else {
             member_descriptor = jsj_GetJavaMemberDescriptor(cx, jEnv, class_descriptor, method_name_jstr);
-            fun = JS_NewFunction(cx, jsj_JavaInstanceMethodWrapper, 0,
-                                 JSFUN_BOUND_METHOD, NULL, member_descriptor->name);
-            member_descriptor->invoke_func_obj = JS_GetFunctionObject(fun);
-            JS_AddRoot(cx, &member_descriptor->invoke_func_obj);
-        }
+	}
+        fun = JS_NewFunction(cx, jsj_JavaInstanceMethodWrapper, 0,
+	                     JSFUN_BOUND_METHOD, NULL, member_descriptor->name);
+	member_descriptor->invoke_func_obj = JS_GetFunctionObject(fun);
+	JS_AddRoot(cx, &member_descriptor->invoke_func_obj);
     }
     if (!member_descriptor)
         return JS_FALSE;
@@ -476,30 +518,32 @@ jsj_ReflectJavaMethods(JSContext *cx, JNIEnv *jEnv,
 
         /* Don't allow access to private or protected Java methods. */
         if (!(modifiers & ACC_PUBLIC))
-            continue;
+            goto dont_reflect_method;
 
         /* Abstract methods can't be invoked */
         if (modifiers & ACC_ABSTRACT)
-            continue;
+            goto dont_reflect_method;
 
         /* Reflect all instance methods or all static methods, but not both */
         if (reflect_only_static_methods != ((modifiers & ACC_STATIC) != 0))
-            continue;
-
+            goto dont_reflect_method;
         
         /* Add a JavaMethodSpec object to the JavaClassDescriptor */
         method_name_jstr = (*jEnv)->CallObjectMethod(jEnv, java_method, jlrMethod_getName);
         ok = add_java_method_to_class_descriptor(cx, jEnv, class_descriptor, method_name_jstr, java_method,
                                                  reflect_only_static_methods, JS_FALSE);
-        /*
-        ** Try to prevent overflow of local ref table via proxy JNI.
-        */
         (*jEnv)->DeleteLocalRef(jEnv, method_name_jstr);
-        (*jEnv)->DeleteLocalRef(jEnv, java_method);
-        if (!ok)
+        if (!ok) {
+            (*jEnv)->DeleteLocalRef(jEnv, java_method);
+            (*jEnv)->DeleteLocalRef(jEnv, joMethodArray);
             return JS_FALSE;
+        }
+
+dont_reflect_method:
+        (*jEnv)->DeleteLocalRef(jEnv, java_method);
     }
 
+    (*jEnv)->DeleteLocalRef(jEnv, joMethodArray);
     if (reflect_only_instance_methods)
         return JS_TRUE;
         
@@ -524,15 +568,23 @@ jsj_ReflectJavaMethods(JSContext *cx, JNIEnv *jEnv,
 
         /* Don't allow access to private or protected Java methods. */
         if (!(modifiers & ACC_PUBLIC))
-            continue;
+            goto dont_reflect_constructor;
         
         /* Add a JavaMethodSpec object to the JavaClassDescriptor */
         ok = add_java_method_to_class_descriptor(cx, jEnv, class_descriptor, NULL,
                                                  java_constructor,
                                                  JS_FALSE, JS_TRUE);
-        if (!ok)
+        if (!ok) {
+            (*jEnv)->DeleteLocalRef(jEnv, joConstructorArray);
+            (*jEnv)->DeleteLocalRef(jEnv, java_constructor);
             return JS_FALSE;
+        }
+
+dont_reflect_constructor:
+        (*jEnv)->DeleteLocalRef(jEnv, java_constructor);
     }
+
+    (*jEnv)->DeleteLocalRef(jEnv, joConstructorArray);
     return JS_TRUE;
 }
 
@@ -542,29 +594,152 @@ jsj_ReflectJavaMethods(JSContext *cx, JNIEnv *jEnv,
 void
 jsj_DestroyMethodSpec(JSContext *cx, JNIEnv *jEnv, JavaMethodSpec *method_spec)
 {
-    JS_FREE_IF(cx, (char*)method_spec->name);
-    jsj_PurgeJavaMethodSignature(cx, jEnv, &method_spec->signature);
+    if (!method_spec->is_alias) {
+	JS_FREE_IF(cx, (char*)method_spec->name);
+	jsj_PurgeJavaMethodSignature(cx, jEnv, &method_spec->signature);
+    }
     JS_free(cx, method_spec);
 }
 
-static JSBool
-method_signature_matches_JS_args(JSContext *cx, JNIEnv *jEnv, uintN argc, jsval *argv,
-                                 JavaMethodSignature *method_signature, int *cost)
+static JavaMethodSpec *
+copy_java_method_descriptor(JSContext *cx, JavaMethodSpec *method)
 {
-    uintN i;
-    JavaSignature *arg_signature;
-    JSBool dummy_bool;
+    JavaMethodSpec *copy;
 
-    if (argc != (uintN)method_signature->num_args)
-        return JS_FALSE;
+    copy = (JavaMethodSpec*)JS_malloc(cx, sizeof(JavaMethodSpec));
+    if (!copy)
+        return NULL;
+    memcpy(copy, method, sizeof(JavaMethodSpec));
+    copy->next = NULL;
+    copy->is_alias = JS_TRUE;
+    return copy;
+}
 
-    for (i = 0; i < argc; i++) {
-        arg_signature = method_signature->arg_signatures[i];
-        if (!jsj_ConvertJSValueToJavaValue(cx, jEnv, argv[i], arg_signature, cost,
-                                           NULL, &dummy_bool))
-            return JS_FALSE;
+/*
+ * See if a reference to a JavaObject/JavaClass's property looks like the
+ * explicit resolution of an overloaded method, e.g. 
+ * java.lang.String["max(double,double)"].  If so, add a new member
+ * (JavaMemberDescriptor) to the object that is an alias for the resolved
+ * method.
+ */
+JavaMemberDescriptor *
+jsj_ResolveExplicitMethod(JSContext *cx, JNIEnv *jEnv,
+			  JavaClassDescriptor *class_descriptor, 
+			  jsid method_name_id,
+			  JSBool is_static)
+{
+    JavaMethodSpec *method;
+    JavaMemberDescriptor *member_descriptor;
+    JavaMethodSignature *ms;
+    JSString *simple_name_jsstr;
+    JSFunction *fun;
+    JSBool is_constructor;
+    int left_paren;
+    const char *sig_cstr, *method_name;
+    char *arg_start;
+    jsid id;
+    jsval method_name_jsval;
+      
+    /*
+     * Get the simple name of the explicit method, i.e. get "cos" from
+     * "cos(double)", and use it to create a new JS string.
+     */
+    JS_IdToValue(cx, method_name_id, &method_name_jsval);
+    method_name = JS_GetStringBytes(JSVAL_TO_STRING(method_name_jsval));
+    arg_start = strchr(method_name, '(');	/* Skip until '(' */
+    /* If no left-paren, then this is not a case of explicit method resolution */
+    if (!arg_start)
+	return NULL;
+    /* Left-paren must be first character for constructors */
+    is_constructor = (is_static && (arg_start == method_name));
+        
+    left_paren = arg_start - method_name;
+    simple_name_jsstr = JS_NewStringCopyN(cx, method_name, left_paren);
+    if (!simple_name_jsstr)
+	return NULL;
+
+    /* Find all the methods in the same class with the same simple name */
+    JS_ValueToId(cx, STRING_TO_JSVAL(simple_name_jsstr), &id);
+    if (is_constructor)
+        member_descriptor = jsj_LookupJavaClassConstructors(cx, jEnv, class_descriptor);
+    else if (is_static)
+	member_descriptor = jsj_LookupJavaStaticMemberDescriptorById(cx, jEnv, class_descriptor, id);
+    else
+	member_descriptor = jsj_LookupJavaMemberDescriptorById(cx, jEnv, class_descriptor, id);
+    if (!member_descriptor)	/* No member with matching simple name ? */
+	return NULL;
+    
+    /*
+     * Do a UTF8 comparison of method signatures with all methods of the same name,
+     * so as to discover a method which exactly matches the specified argument types.
+     */
+    if (!strlen(arg_start + 1))
+	return NULL;
+    arg_start = JS_strdup(cx, arg_start + 1);
+    if (!arg_start)
+	return NULL;
+    arg_start[strlen(arg_start) - 1] = '\0';	/* Get rid of ')' */
+    sig_cstr = NULL;	/* Quiet gcc warning about uninitialized variable */
+    for (method = member_descriptor->methods; method; method = method->next) {
+	ms = &method->signature;
+	sig_cstr = convert_java_method_arg_signatures_to_hr_string(cx, ms->arg_signatures,
+								   ms->num_args, JS_FALSE);
+	if (!sig_cstr)
+	    return NULL;
+
+	if (!strcmp(sig_cstr, arg_start))
+	    break;
+	JS_free(cx, (void*)sig_cstr);
     }
-    return JS_TRUE;
+    JS_free(cx, arg_start);
+    if (!method)
+	return NULL;
+    JS_free(cx, (void*)sig_cstr);
+    
+    /* Don't bother doing anything if the method isn't overloaded */
+    if (!member_descriptor->methods->next)
+	return member_descriptor;
+
+    /*
+     * To speed up performance for future accesses, create a new member descriptor
+     * with a name equal to the explicit method name, i.e. "cos(double)".
+     */
+    member_descriptor = JS_malloc(cx, sizeof(JavaMemberDescriptor));
+    if (!member_descriptor)
+        return NULL;
+    memset(member_descriptor, 0, sizeof(JavaMemberDescriptor));
+
+    member_descriptor->id = method_name_id;
+    member_descriptor->name =
+        JS_strdup(cx, is_constructor ? "<init>" : JS_GetStringBytes(simple_name_jsstr));
+    if (!member_descriptor->name) {
+        JS_free(cx, member_descriptor);
+        return NULL;
+    }
+
+    member_descriptor->methods = copy_java_method_descriptor(cx, method);
+    if (!member_descriptor->methods) {
+	JS_free(cx, (void*)member_descriptor->name);
+        JS_free(cx, member_descriptor);
+        return NULL;
+    }
+ 
+    fun = JS_NewFunction(cx, jsj_JavaInstanceMethodWrapper, 0,
+			 JSFUN_BOUND_METHOD, NULL, method_name);
+    member_descriptor->invoke_func_obj = JS_GetFunctionObject(fun);
+    JS_AddRoot(cx, &member_descriptor->invoke_func_obj);
+
+    /* THREADSAFETY */
+    /* Add the new aliased member to the list of all members for the class */
+    if (is_static) {
+	member_descriptor->next = class_descriptor->static_members;
+	class_descriptor->static_members = member_descriptor;
+    } else {
+	member_descriptor->next = class_descriptor->instance_members;
+	class_descriptor->instance_members = member_descriptor;
+    }
+
+    return member_descriptor;
 }
 
 /*
@@ -588,7 +763,7 @@ get_js_arg_types_as_string(JSContext *cx, uintN argc, jsval *argv)
         goto out_of_memory;
     for (i = 0; i < argc; i++) {
         arg_type = JS_GetTypeName(cx, JS_TypeOfValue(cx, argv[i]));
-        tmp = PR_smprintf("%s%s%s%s", arg_string,  i ? ", " : "", arg_type,
+        tmp = JS_smprintf("%s%s%s%s", arg_string,  i ? ", " : "", arg_type,
                          (i == argc-1) ? ")" : "");
         free((char*)arg_string);
         if (!tmp)
@@ -603,7 +778,11 @@ out_of_memory:
     return NULL;
 }
 
-  
+/*
+ * This is an error reporting routine used when a method of the correct name
+ * and class exists but either the number of arguments is incorrect or the
+ * arguments are of the wrong type.
+ */
 static void
 report_method_match_failure(JSContext *cx,
                             JavaMemberDescriptor *member_descriptor,
@@ -623,12 +802,12 @@ report_method_match_failure(JSContext *cx,
         goto out_of_memory;
 
     if (is_constructor) {
-        err =  PR_smprintf("There is no Java constructor for class %s that matches "
+        err =  JS_smprintf("There is no Java constructor for class %s that matches "
                            "JavaScript argument types %s.\n", class_descriptor->name,
                            js_arg_string);
         method_name = class_descriptor->name;
     } else {
-        err =  PR_smprintf("There is no %sJava method %s.%s that matches "
+        err =  JS_smprintf("There is no %sJava method %s.%s that matches "
                            "JavaScript argument types %s.\n",
                            is_static_method ? "static ": "",
                            class_descriptor->name, member_descriptor->name, js_arg_string);
@@ -637,7 +816,7 @@ report_method_match_failure(JSContext *cx,
     if (!err)
         goto out_of_memory;
 
-    tmp = PR_smprintf("%sCandidate methods with the same name are:\n", err);
+    tmp = JS_smprintf("%sCandidate methods with the same name are:\n", err);
     if (!tmp)
         goto out_of_memory;
     err = tmp;
@@ -648,7 +827,7 @@ report_method_match_failure(JSContext *cx,
             jsj_ConvertJavaMethodSignatureToHRString(cx, method_name, &method->signature);
         if (!method_str)
             goto out_of_memory;
-        tmp = PR_smprintf("%s   %s\n", err, method_str);
+        tmp = JS_smprintf("%s   %s\n", err, method_str);
         free((char*)method_str);
         if (!tmp)
             goto out_of_memory;
@@ -666,6 +845,190 @@ out_of_memory:
     if (err)
         free((char*)err);
 }
+
+/*
+ * This is an error reporting routine used when a method of the correct name
+ * and class exists but more than one Java method in a set of overloaded
+ * methods are compatible with the JavaScript argument types and none of them
+ * match any better than all the others.
+ */
+static void
+report_ambiguous_method_match(JSContext *cx,
+                              JavaMemberDescriptor *member_descriptor,
+                              JavaClassDescriptor *class_descriptor,
+                              MethodList *ambiguous_methods,
+                              JSBool is_static_method,
+                              uintN argc, jsval *argv)
+{
+    const char *err, *js_arg_string, *tmp, *method_str, *method_name;
+    JSBool is_constructor;
+    JavaMethodSpec *method;
+    MethodListElement *method_list_element;
+
+    err = NULL;
+    is_constructor = (!strcmp(member_descriptor->name, "<init>"));
+
+    js_arg_string = get_js_arg_types_as_string(cx, argc, argv);
+    if (!js_arg_string)
+        goto out_of_memory;
+
+    if (is_constructor) {
+        err =  JS_smprintf("The choice of Java constructor for class %s with "
+                           "JavaScript argument types %s is ambiguous.\n",
+                           class_descriptor->name,
+                           js_arg_string);
+        method_name = class_descriptor->name;
+    } else {
+        err =  JS_smprintf("The choice of %sJava method %s.%s matching "
+                           "JavaScript argument types %s is ambiguous.\n",
+                           is_static_method ? "static ": "",
+                           class_descriptor->name, member_descriptor->name,
+                           js_arg_string);
+        method_name = member_descriptor->name;
+    }
+    if (!err)
+        goto out_of_memory;
+
+    tmp = JS_smprintf("%sCandidate methods are:\n", err);
+    if (!tmp)
+        goto out_of_memory;
+    err = tmp;
+
+    method_list_element = (MethodListElement*)JS_LIST_HEAD(ambiguous_methods);
+    while ((MethodList*)method_list_element != ambiguous_methods) {
+        method = method_list_element->method;
+        method_str =
+            jsj_ConvertJavaMethodSignatureToHRString(cx, method_name, &method->signature);
+        if (!method_str)
+            goto out_of_memory;
+        tmp = JS_smprintf("%s   %s\n", err, method_str);
+        free((char*)method_str);
+        if (!tmp)
+            goto out_of_memory;
+        err = tmp;
+
+        method_list_element = (MethodListElement*)method_list_element->linkage.next;
+    }
+    
+    JS_ReportError(cx, err);
+    return;
+
+out_of_memory:
+    if (js_arg_string)
+        free((char*)js_arg_string);
+    if (err)
+        free((char*)err);
+}
+
+/*
+ * Compute classification of JS types with slightly different granularity
+ * than JSType.  This is used to resolve among overloaded Java methods.
+ */
+static JSJType
+compute_jsj_type(JSContext *cx, jsval v)
+{
+    JSObject *js_obj;
+
+    if (JSVAL_IS_OBJECT(v)) {
+        if (JSVAL_IS_NULL(v))
+            return JSJTYPE_NULL;
+        js_obj = JSVAL_TO_OBJECT(v);
+        if (JS_InstanceOf(cx, js_obj, &JavaObject_class, 0))
+	    return JSJTYPE_JAVAOBJECT;
+        if (JS_InstanceOf(cx, js_obj, &JavaArray_class, 0))
+            return JSJTYPE_JAVAARRAY;
+        if (JS_InstanceOf(cx, js_obj, &JavaClass_class, 0))
+            return JSJTYPE_JAVACLASS;
+        return JSJTYPE_OBJECT;
+    } else if (JSVAL_IS_NUMBER(v)) {
+	return JSJTYPE_NUMBER;
+    } else if (JSVAL_IS_STRING(v)) {
+	return JSJTYPE_STRING;
+    } else if (JSVAL_IS_BOOLEAN(v)) {
+	return JSJTYPE_BOOLEAN;
+    } else if (JSVAL_IS_VOID(v)) {
+	return JSJTYPE_VOID;
+    }
+    JS_ASSERT(0);   /* Unknown JS type ! */
+    return JSJTYPE_VOID;
+}
+
+/* 
+ * Ranking table used to establish preferences among Java types when converting
+ * from JavaScript types.  Each row represents a different JavaScript source
+ * type and each column represents a different target Java type.  Lower values
+ * in the table indicate conversions that are ranked higher.  The special
+ * value 99 indicates a disallowed JS->Java conversion.  The special value of
+ * 0 indicates special handling is required to determine ranking.
+ */
+static int rank_table[JSJTYPE_LIMIT][JAVA_SIGNATURE_LIMIT] = {
+/*    boolean             long
+      |   char            |   float           java.lang.Boolean
+      |   |   byte        |   |   double      |   java.lang.Class
+      |   |   |   short   |   |   |   array   |   |   java.lang.Double
+      |   |   |   |   int |   |   |   |   object  |   |   netscape.javascript.JSObject
+      |   |   |   |   |   |   |   |   |   |   |   |   |   |   java.lang.Object
+      |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   java.lang.String */
+
+    {99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,  1,  1}, /* undefined */
+    { 1, 99, 99, 99, 99, 99, 99, 99, 99, 99,  2, 99, 99, 99,  3,  4}, /* boolean */
+    {99,  7,  8,  6,  5,  4,  3,  1, 99, 99, 99, 99,  2, 99, 11,  9}, /* number */
+    {99,  3,  4,  4,  4,  4,  4,  4, 99, 99, 99, 99, 99, 99,  2,  1}, /* string */
+    {99, 99, 99, 99, 99, 99, 99, 99,  1,  1,  1,  1,  1,  1,  1,  1}, /* null */
+    {99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,  1, 99,  2,  3,  4}, /* JavaClass */
+    {99,  7,  8,  6,  5,  4,  3,  2,  0,  0,  0,  0,  0,  0,  0,  1}, /* JavaObject */
+    {99, 99, 99, 99, 99, 99, 99, 99,  0,  0, 99, 99, 99, 99,  0,  1}, /* JavaArray */
+    {99,  9, 10,  8,  7,  6,  5,  4, 99, 99, 99, 99, 99,  1,  2,  3}, /* other JS object */
+};
+
+/*
+ * Returns JS_TRUE if JavaScript arguments are compatible with the specified
+ * Java method signature.
+ */
+static JSBool
+method_signature_matches_JS_args(JSContext *cx, JNIEnv *jEnv, uintN argc, jsval *argv,
+                                 JavaMethodSignature *method_signature)
+{
+    uintN i;
+    JavaClassDescriptor *descriptor;
+    JavaObjectWrapper *java_wrapper;
+    jclass java_class;
+    jobject java_obj;
+    JSObject *js_obj;
+    JSJType js_type;
+    jsval js_val;
+    int rank;
+
+    if (argc != (uintN)method_signature->num_args)
+        return JS_FALSE;
+
+    for (i = 0; i < argc; i++) {
+        js_val = argv[i];
+        js_type = compute_jsj_type(cx, js_val);
+        descriptor = method_signature->arg_signatures[i];
+        rank = rank_table[js_type][(int)descriptor->type - 2];
+
+        /* Check for disallowed JS->Java conversion */
+        if (rank == 99)
+            return JS_FALSE;
+
+        /* Check for special handling required by conversion from JavaObject */
+        if (rank == 0) {
+            java_class = descriptor->java_class;
+        
+            js_obj = JSVAL_TO_OBJECT(js_val);
+            java_wrapper = JS_GetPrivate(cx, js_obj);
+            java_obj = java_wrapper->java_obj;
+        
+            if (!(*jEnv)->IsInstanceOf(jEnv, java_obj, java_class))
+                return JS_FALSE;
+        }
+    }
+
+    return JS_TRUE;
+}
+
+#ifdef HAS_OLD_STYLE_METHOD_RESOLUTION
 
 static JavaMethodSpec *
 resolve_overloaded_method(JSContext *cx, JNIEnv *jEnv, JavaMemberDescriptor *member_descriptor,
@@ -685,33 +1048,246 @@ resolve_overloaded_method(JSContext *cx, JNIEnv *jEnv, JavaMemberDescriptor *mem
         if (!method_signature_matches_JS_args(cx, jEnv, argc, argv, &method->signature, &cost))
             continue;
 
-#if 1
         if (cost < lowest_cost) {
             lowest_cost = cost;
             best_method_match = method;
             num_method_matches++;
         }
-#else
-        best_method_match = method;
-        break;
-#endif
     }
 
     if (!best_method_match)
         report_method_match_failure(cx, member_descriptor, class_descriptor,
                                     is_static_method, argc, argv);
 
-    /*
-#ifdef LIVECONNECT_IMPROVEMENTS
-    if (num_method_matches > 1)
-        return NULL;
-#else
     if (lowest_cost != 0)
         return NULL;
-#endif
-*/
+
     return best_method_match;
 }
+
+#else   /* !OLD_STYLE_METHOD_RESOLUTION */
+
+/*
+ * Determine the more natural (preferred) JavaScript->Java conversion
+ * given one JavaScript value and two Java types.
+ * See http://www.mozilla.org/js/liveconnect/lc3_method_overloading.html
+ * for details.
+ */
+static JSJTypePreference
+preferred_conversion(JSContext *cx, JNIEnv *jEnv, jsval js_val,
+                     JavaClassDescriptor *descriptor1,
+                     JavaClassDescriptor *descriptor2)
+{
+    JSJType js_type;
+    int rank1, rank2;
+    jclass java_class1, java_class2;
+    JavaObjectWrapper *java_wrapper;
+    jobject java_obj;
+    JSObject *js_obj;
+    
+    js_type = compute_jsj_type(cx, js_val);
+    rank1 = rank_table[js_type][(int)descriptor1->type - 2];
+    rank2 = rank_table[js_type][(int)descriptor2->type - 2];
+
+    /*
+     * Special logic is required for matching the classes of wrapped
+     * Java objects.
+     */
+    if (((js_type == JSJTYPE_JAVAOBJECT) || (js_type == JSJTYPE_JAVAARRAY)) &&
+	IS_REFERENCE_TYPE(descriptor2->type)) {
+        java_class1 = descriptor1->java_class;
+        java_class2 = descriptor2->java_class;
+        
+        js_obj = JSVAL_TO_OBJECT(js_val);
+        java_wrapper = JS_GetPrivate(cx, js_obj);
+        java_obj = java_wrapper->java_obj;
+        
+        /* Unwrapped JavaObject must be compatible with Java arg type */
+        if (!(*jEnv)->IsInstanceOf(jEnv, java_obj, java_class2))
+            return JSJPREF_FIRST_ARG;
+
+        /*
+         * For JavaObject arguments, any compatible reference type is preferable
+         * to any primitive Java type or to java.lang.String.
+         */
+        if (rank2 < rank1)
+            return JSJPREF_SECOND_ARG;
+        
+        /*
+         * If argument of type descriptor1 is subclass of type descriptor 2, then
+         * descriptor1 is preferred and vice-versa.
+         */
+        if ((*jEnv)->IsAssignableFrom(jEnv, java_class1, java_class2))
+            return JSJPREF_FIRST_ARG;
+        
+        if ((*jEnv)->IsAssignableFrom(jEnv, java_class2, java_class1))
+            return JSJPREF_SECOND_ARG;
+
+        /* This can happen in unusual situations involving interface types. */
+        return JSJPREF_AMBIGUOUS;
+    }
+    
+    /* Fast path for conversion from most JS types */  
+    if (rank1 < rank2)
+        return JSJPREF_FIRST_ARG;
+    
+    if (rank1 > rank2)
+        return JSJPREF_SECOND_ARG;
+    
+    return JSJPREF_AMBIGUOUS;
+}
+              
+static JSJTypePreference
+method_preferred(JSContext *cx, JNIEnv *jEnv, jsval *argv,
+                 JavaMethodSignature *method_signature1,
+                 JavaMethodSignature *method_signature2)
+{
+    int arg_index, argc, preference;
+    jsval val;
+    JavaSignature* *arg_signatures1;
+    JavaSignature* *arg_signatures2;
+    JavaSignature *arg_type1, *arg_type2;
+
+    arg_signatures1 = method_signature1->arg_signatures;
+    arg_signatures2 = method_signature2->arg_signatures;
+    argc = method_signature1->num_args;
+    JS_ASSERT(argc == method_signature2->num_args);
+
+    preference = 0;
+    for (arg_index = 0; arg_index < argc; arg_index++) {
+        val = argv[arg_index];
+        arg_type1 = *arg_signatures1++;
+        arg_type2 = *arg_signatures2++;
+
+        if (arg_type1 == arg_type2)
+            continue;
+
+        preference |= preferred_conversion(cx, jEnv, val, arg_type1, arg_type2);
+
+        if ((JSJTypePreference)preference == JSJPREF_AMBIGUOUS)
+            return JSJPREF_AMBIGUOUS;
+    }
+    return (JSJTypePreference)preference;
+}
+
+/*
+ * This routine applies heuristics to guess the intended Java method given the
+ * runtime JavaScript argument types and the type signatures of the candidate
+ * methods.  Informally, the method with Java parameter types that most closely
+ * match the JavaScript types is chosen.  A more precise specification is
+ * provided in the lc3_method_resolution.html file.  The code uses a very
+ * brute-force approach.
+ */
+static JavaMethodSpec *
+resolve_overloaded_method(JSContext *cx, JNIEnv *jEnv,
+                          JavaMemberDescriptor *member_descriptor,
+                          JavaClassDescriptor *class_descriptor,
+                          JSBool is_static_method,
+                          uintN argc, jsval *argv)
+{
+    JSJTypePreference preference;
+    JavaMethodSpec *method, *best_method_match;
+    MethodList ambiguous_methods;
+    MethodListElement *method_list_element, *next_element;
+
+    /*
+     * Determine the first Java method among the overloaded methods of the same name
+     * that matches all the JS arguments.
+     */
+    for (method = member_descriptor->methods; method; method = method->next) {
+        if (method_signature_matches_JS_args(cx, jEnv, argc, argv, &method->signature))
+            break;
+    }
+
+    /* Report an error if no method matched the JS arguments */
+    if (!method) {
+        report_method_match_failure(cx, member_descriptor, class_descriptor,
+                                    is_static_method, argc, argv);
+        return NULL;
+    }
+
+    /* Shortcut a common case */
+    if (!method->next)
+        return method;
+
+    /*
+     * Form a list of all methods that are neither more or less preferred than the
+     * best matching method discovered so far.
+     */
+    JS_INIT_CLIST(&ambiguous_methods);
+
+    best_method_match = method;
+
+    /* See if there are any Java methods that are a better fit for the JS args */
+    for (method = method->next; method; method = method->next) {
+        if (method->signature.num_args != (int)argc)
+            continue;
+        preference = method_preferred(cx, jEnv, argv, &best_method_match->signature,
+                                      &method->signature);
+        if (preference == JSJPREF_SECOND_ARG) {
+            best_method_match = method;
+        } else  if (preference == JSJPREF_AMBIGUOUS) {
+            /* Add this method to the list of ambiguous methods */
+            method_list_element =
+                (MethodListElement*)JS_malloc(cx, sizeof(MethodListElement));
+            if (!method_list_element)
+                goto error;
+            method_list_element->method = method;
+            JS_APPEND_LINK(&method_list_element->linkage, &ambiguous_methods);
+        }
+    }
+    
+    /*
+     * Ensure that best_method_match is preferred to all methods on the
+     * ambiguous_methods list.
+     */
+    
+    for (method_list_element = (MethodListElement*)JS_LIST_HEAD(&ambiguous_methods);
+        (MethodList*)method_list_element != &ambiguous_methods;
+         method_list_element = next_element) {
+        next_element = (MethodListElement*)method_list_element->linkage.next;
+        method = method_list_element->method;
+        preference = method_preferred(cx, jEnv, argv, &best_method_match->signature,
+                                      &method->signature);
+        if (preference != JSJPREF_FIRST_ARG)
+            continue;
+        JS_REMOVE_LINK(&method_list_element->linkage);
+        JS_free(cx, method_list_element);
+    }
+    
+    /*
+     * The chosen method must be maximally preferred, i.e. there can be no other
+     * method that is just as preferred.
+     */
+    if (!JS_CLIST_IS_EMPTY(&ambiguous_methods)) {
+        /* Add the best_method_match to the list of ambiguous methods */
+	method_list_element =
+	    (MethodListElement*)JS_malloc(cx, sizeof(MethodListElement));
+	if (!method_list_element)
+	    goto error;
+	method_list_element->method = best_method_match;
+	JS_APPEND_LINK(&method_list_element->linkage, &ambiguous_methods);
+
+	/* Report the problem */
+        report_ambiguous_method_match(cx, member_descriptor, class_descriptor,
+                                      &ambiguous_methods, is_static_method, argc, argv);
+        goto error;
+    }
+
+    return best_method_match;
+
+error:
+    /* Delete the storage for the ambiguous_method list */
+    while (!JS_CLIST_IS_EMPTY(&ambiguous_methods)) {
+        method_list_element = (MethodListElement*)JS_LIST_HEAD(&ambiguous_methods);
+        JS_REMOVE_LINK(&method_list_element->linkage);
+        JS_free(cx, method_list_element);
+    }
+
+    return NULL;
+}
+
+#endif  /* !HAS_OLD_STYLE_METHOD_RESOLUTION */
 
 static jvalue *
 convert_JS_method_args_to_java_argv(JSContext *cx, JNIEnv *jEnv, jsval *argv,
@@ -726,7 +1302,7 @@ convert_JS_method_args_to_java_argv(JSContext *cx, JNIEnv *jEnv, jsval *argv,
     
     signature = &method->signature;
     argc = signature->num_args;
-    PR_ASSERT(argc != 0);
+    JS_ASSERT(argc != 0);
     arg_signatures = signature->arg_signatures;
     
     jargv = (jvalue *)JS_malloc(cx, sizeof(jvalue) * argc);
@@ -752,7 +1328,6 @@ convert_JS_method_args_to_java_argv(JSContext *cx, JNIEnv *jEnv, jsval *argv,
         ok = jsj_ConvertJSValueToJavaValue(cx, jEnv, argv[i], arg_signatures[i],
                                            &dummy_cost, &jargv[i], &localv[i]);
         if (!ok) {
-            JS_ReportError(cx, "Internal error: can't convert JS value to Java value");
             JS_free(cx, jargv);
             JS_free(cx, localv);
             *localvp = NULL;
@@ -781,9 +1356,10 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
     JavaSignature *return_val_signature;
     JSContext *old_cx;
     JNIEnv *jEnv;
-    JSBool *localv, error_occurred;
+    JSBool *localv, error_occurred, success;
 
-    error_occurred = JS_FALSE;
+    success = error_occurred = JS_FALSE;
+    return_val_signature = NULL;    /* Quiet gcc uninitialized variable warning */
 
     methodID = method->methodID;
     signature = &method->signature;
@@ -803,8 +1379,8 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
 
 #ifdef DEBUG
     if (old_cx && (old_cx != cx)) {
-        JS_ReportError(cx, "Java thread in simultaneous use by more than "
-                           "one JSContext ?");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                        JSJMSG_MULTIPLE_JTHREADS);
     }
 #endif
 
@@ -819,7 +1395,7 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
     }
 
 #define CALL_JAVA_METHOD(type, member)                                       \
-    PR_BEGIN_MACRO                                                           \
+    JS_BEGIN_MACRO                                                           \
     if (is_static_method) {                                                  \
         java_value.member = (*jEnv)->CallStatic##type##MethodA(jEnv, java_class, methodID, jargv);\
     } else {                                                                 \
@@ -831,7 +1407,7 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
         error_occurred = JS_TRUE;                                            \
         goto out;                                                            \
     }                                                                        \
-    PR_END_MACRO
+    JS_END_MACRO
 
     return_val_signature = signature->return_val_signature;
     switch(return_val_signature->type) {
@@ -867,11 +1443,6 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
         CALL_JAVA_METHOD(Boolean, z);
         break;
     
-    case JAVA_SIGNATURE_ARRAY:
-    case JAVA_SIGNATURE_CLASS:
-        CALL_JAVA_METHOD(Object, l);
-        break;
-    
     case JAVA_SIGNATURE_VOID:
         if (is_static_method)
             (*jEnv)->CallStaticVoidMethodA(jEnv, java_class, methodID, jargv);
@@ -885,9 +1456,15 @@ invoke_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
         }
         break;
         
-    default:
-        PR_ASSERT(0);
+    case JAVA_SIGNATURE_UNKNOWN:
+        JS_ASSERT(0);
         return JS_FALSE;
+            
+    /* Non-primitive (reference) type */
+    default:
+        JS_ASSERT(IS_REFERENCE_TYPE(return_val_signature->type));
+        CALL_JAVA_METHOD(Object, l);
+        break;
     }
 
 out:
@@ -903,10 +1480,12 @@ out:
     if (jargv)
        JS_free(cx, jargv);
 
-    if (error_occurred)
-        return JS_FALSE;
-    else
-        return jsj_ConvertJavaValueToJSValue(cx, jEnv, return_val_signature, &java_value, vp);
+    if (!error_occurred) {
+        success = jsj_ConvertJavaValueToJSValue(cx, jEnv, return_val_signature, &java_value, vp);
+        if (IS_REFERENCE_TYPE(return_val_signature->type))
+            (*jEnv)->DeleteLocalRef(jEnv, java_value.l);
+    }
+    return success;
 }
 
 static JSBool
@@ -932,92 +1511,6 @@ invoke_overloaded_java_method(JSContext *cx, JSJavaThreadState *jsj_env,
                               method, is_static_method, argv, vp);
 }
 
-PR_CALLBACK JSBool
-jsj_JavaStaticMethodWrapper(JSContext *cx, JSObject *obj,
-                            uintN argc, jsval *argv, jsval *vp)
-{
-    JSFunction *function;
-    JavaMemberDescriptor *member_descriptor;
-    JavaClassDescriptor *class_descriptor;
-    jsid id;
-    jsval idval;
-    JNIEnv *jEnv;
-    JSJavaThreadState *jsj_env;
-    jobject java_class;
-
-    /* Get the Java per-thread environment pointer for this JSContext */
-    jsj_env = jsj_MapJSContextToJSJThread(cx, &jEnv);
-    if (!jEnv)
-        return JS_FALSE;
-    
-    class_descriptor = JS_GetPrivate(cx, obj);
-    if (!class_descriptor)
-        return JS_FALSE;
-    java_class = class_descriptor->java_class;
-    
-    PR_ASSERT(JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION);
-    function = JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[-2]));
-    idval = STRING_TO_JSVAL(JS_InternString(cx, JS_GetFunctionName(function)));
-    JS_ValueToId(cx, idval, &id);
-    
-    member_descriptor = jsj_LookupJavaStaticMemberDescriptorById(cx, jEnv, class_descriptor, id);
-    if (!member_descriptor) {
-        PR_ASSERT(0);
-        return JS_FALSE;
-    }
-
-    return invoke_overloaded_java_method(cx, jsj_env, member_descriptor, JS_TRUE, 
-                                         java_class, class_descriptor, argc, argv, vp);
-}
-
-PR_CALLBACK JSBool
-jsj_JavaInstanceMethodWrapper(JSContext *cx, JSObject *obj,
-                              uintN argc, jsval *argv, jsval *vp)
-{
-    JSFunction *function;
-    JavaMemberDescriptor *member_descriptor;
-    JavaObjectWrapper *java_wrapper;
-    JavaClassDescriptor *class_descriptor;
-    jsint id;
-    jsval idval;
-    JSJavaThreadState *jsj_env;
-    JNIEnv *jEnv;
-    jobject java_obj, java_class;
-
-    /* Get the Java per-thread environment pointer for this JSContext */
-    jsj_env = jsj_MapJSContextToJSJThread(cx, &jEnv);
-    if (!jEnv)
-        return JS_FALSE;
-    
-    java_wrapper = JS_GetPrivate(cx, obj);
-    if (!java_wrapper)
-        return JS_FALSE;
-    java_obj = java_wrapper->java_obj;
-    
-    PR_ASSERT(JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION);
-    function = JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[-2]));
-    idval = STRING_TO_JSVAL(JS_InternString(cx, JS_GetFunctionName(function)));
-    JS_ValueToId(cx, idval, &id);
-    class_descriptor = java_wrapper->class_descriptor;
-    member_descriptor = jsj_LookupJavaMemberDescriptorById(cx, jEnv, class_descriptor, id);
-
-    /* If no instance method was found, try for a static method */
-    if (!member_descriptor) {
-        member_descriptor = jsj_LookupJavaStaticMemberDescriptorById(cx, jEnv, class_descriptor, id);
-        if (!member_descriptor) {
-            PR_ASSERT(0);
-            return JS_FALSE;
-        }
-        java_class = class_descriptor->java_class;
-        return invoke_overloaded_java_method(cx, jsj_env, member_descriptor, JS_TRUE, 
-                                             java_class, class_descriptor, argc, argv, vp);
-    }
-    jsj_init_js_obj_reflections_table();    
-    return invoke_overloaded_java_method(cx, jsj_env, member_descriptor,
-                                         JS_FALSE, java_obj, 
-                                         class_descriptor, argc, argv, vp);
-}
-
 static JSBool
 invoke_java_constructor(JSContext *cx,
                         JSJavaThreadState *jsj_env,
@@ -1033,7 +1526,10 @@ invoke_java_constructor(JSContext *cx,
     JSContext *old_cx;
     JNIEnv *jEnv;
     JSBool *localv;
-    JSBool error_occurred = JS_FALSE;
+    JSBool success, error_occurred;
+    java_object = NULL;	    /* Stifle gcc uninitialized variable warning */
+
+    success = error_occurred = JS_FALSE;
     
     methodID = method->methodID;
     signature = &method->signature;
@@ -1055,8 +1551,8 @@ invoke_java_constructor(JSContext *cx,
 
 #ifdef DEBUG
     if (old_cx && (old_cx != cx)) {
-        JS_ReportError(cx, "Java thread in simultaneous use by more than "
-                           "one JSContext ?");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                                        JSJMSG_MULTIPLE_JTHREADS);
     }
 #endif
 
@@ -1083,31 +1579,25 @@ out:
     if (jargv)
        JS_free(cx, jargv);
         
-    if (error_occurred)
-        return JS_FALSE;
-    else
-        return jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_object, vp);
+    if (!error_occurred)
+        success = jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_object, vp);
+    (*jEnv)->DeleteLocalRef(jEnv, java_object);
+    return success;
 }
 
 static JSBool
 invoke_overloaded_java_constructor(JSContext *cx,
                                    JSJavaThreadState *jsj_env,
                                    JavaMemberDescriptor *member,
-                                   JSObject *obj, uintN argc, jsval *argv,
+                                   JavaClassDescriptor *class_descriptor,
+                                   uintN argc, jsval *argv,
                                    jsval *vp)
 {
     jclass java_class;
     JavaMethodSpec *method;
-    JavaClassDescriptor *class_descriptor;
     JNIEnv *jEnv;
 
     jEnv = jsj_env->jEnv;
-
-    class_descriptor = JS_GetPrivate(cx, obj);
-    PR_ASSERT(class_descriptor);
-    if (!class_descriptor)
-        return JS_FALSE;
-
 
     method = resolve_overloaded_method(cx, jEnv, member, class_descriptor, JS_TRUE, 
                                        argc, argv);
@@ -1118,14 +1608,51 @@ invoke_overloaded_java_constructor(JSContext *cx,
     return invoke_java_constructor(cx, jsj_env, java_class, method, argv, vp);
 }
 
+static JSBool
+java_constructor_wrapper(JSContext *cx, JSJavaThreadState *jsj_env,
+                         JavaMemberDescriptor *member_descriptor,
+                         JavaClassDescriptor *class_descriptor,
+                         uintN argc, jsval *argv, jsval *vp)
+{
+    jint modifiers;
+    JNIEnv *jEnv;
 
-PR_CALLBACK JSBool
+    jEnv = jsj_env->jEnv;
+    
+    /* Get class/interface flags and check them */
+    modifiers = class_descriptor->modifiers;
+    if (modifiers & ACC_ABSTRACT) {
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                            JSJMSG_ABSTRACT_JCLASS, class_descriptor->name);
+        return JS_FALSE;
+    }
+    if (modifiers & ACC_INTERFACE) {
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                            JSJMSG_IS_INTERFACE, class_descriptor->name);
+        return JS_FALSE;
+    }
+    if ( !(modifiers & ACC_PUBLIC) ) {
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                            JSJMSG_NOT_PUBLIC, class_descriptor->name);
+        return JS_FALSE;
+    }
+    
+    if (!member_descriptor) {
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                            JSJMSG_NO_CONSTRUCTORS, class_descriptor->name);
+        return JS_FALSE;
+    }
+
+    return invoke_overloaded_java_constructor(cx, jsj_env, member_descriptor,
+                                              class_descriptor, argc, argv, vp);
+}
+
+JS_DLL_CALLBACK JSBool
 jsj_JavaConstructorWrapper(JSContext *cx, JSObject *obj,
                            uintN argc, jsval *argv, jsval *vp)
 {
-    jint modifiers;
-    JavaMemberDescriptor *member_descriptor;
     JavaClassDescriptor *class_descriptor;
+    JavaMemberDescriptor *member_descriptor;
     JSJavaThreadState *jsj_env;
     JNIEnv *jEnv;
 
@@ -1133,37 +1660,111 @@ jsj_JavaConstructorWrapper(JSContext *cx, JSObject *obj,
     jsj_env = jsj_MapJSContextToJSJThread(cx, &jEnv);
     if (!jEnv)
         return JS_FALSE;
-    
     obj = JSVAL_TO_OBJECT(argv[-2]);
+    class_descriptor = JS_GetPrivate(cx, obj);
+    JS_ASSERT(class_descriptor);
+    if (!class_descriptor)
+        return JS_FALSE;
+    member_descriptor = jsj_LookupJavaClassConstructors(cx, jEnv, class_descriptor);
+    return java_constructor_wrapper(cx, jsj_env, member_descriptor, 
+                                    class_descriptor, argc, argv, vp);
+}
+
+
+static JSBool
+static_method_wrapper(JSContext *cx, JSJavaThreadState *jsj_env,
+                      JavaClassDescriptor *class_descriptor,
+                      jsid id,
+                      uintN argc, jsval *argv, jsval *vp)
+{
+    JNIEnv *jEnv;
+    JavaMemberDescriptor *member_descriptor;
+
+    jEnv = jsj_env->jEnv;
+    member_descriptor = jsj_LookupJavaStaticMemberDescriptorById(cx, jEnv, class_descriptor, id);
+    
+    /* Is it a static method that is not a constructor ? */
+    if (member_descriptor && strcmp(member_descriptor->name, "<init>")) {
+        return invoke_overloaded_java_method(cx, jsj_env, member_descriptor, JS_TRUE, 
+                                             class_descriptor->java_class,
+                                             class_descriptor, argc, argv, vp);
+    }
+
+    JS_ASSERT(member_descriptor);
+    if (!member_descriptor)
+        return JS_FALSE;
+    
+    /* Must be an explicitly resolved overloaded constructor */
+    return java_constructor_wrapper(cx, jsj_env, member_descriptor,
+                                    class_descriptor, argc, argv, vp);
+}
+
+JS_DLL_CALLBACK JSBool
+jsj_JavaStaticMethodWrapper(JSContext *cx, JSObject *obj,
+                            uintN argc, jsval *argv, jsval *vp)
+{
+    JSFunction *function;
+    JavaClassDescriptor *class_descriptor;
+    jsid id;
+    jsval idval;
+    JNIEnv *jEnv;
+    JSJavaThreadState *jsj_env;
+
+    /* Get the Java per-thread environment pointer for this JSContext */
+    jsj_env = jsj_MapJSContextToJSJThread(cx, &jEnv);
+    if (!jEnv)
+        return JS_FALSE;
+    
     class_descriptor = JS_GetPrivate(cx, obj);
     if (!class_descriptor)
         return JS_FALSE;
-
-    /* Get class/interface flags and check them */
-    modifiers = class_descriptor->modifiers;
-    if (modifiers & ACC_ABSTRACT) {
-        JS_ReportError(cx, "Java class %s is abstract and therefore may not "
-                           "be instantiated", class_descriptor->name);
-        return JS_FALSE;
-    }
-    if (modifiers & ACC_INTERFACE) {
-        JS_ReportError(cx, "%s is a Java interface and therefore may not "
-                           "be instantiated", class_descriptor->name);
-        return JS_FALSE;
-    }
-    if ( !(modifiers & ACC_PUBLIC) ) {
-        JS_ReportError(cx, "Java class %s is not public and therefore may not "
-                           "be instantiated", class_descriptor->name);
-        return JS_FALSE;
-    }
     
-    member_descriptor = jsj_LookupJavaClassConstructors(cx, jEnv, class_descriptor);
-    if (!member_descriptor) {
-        JS_ReportError(cx, "No public constructors defined for Java class %s",
-                       class_descriptor->name);
-        return JS_FALSE;
-    }
+    JS_ASSERT(JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION);
+    function = JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[-2]));
+    idval = STRING_TO_JSVAL(JS_InternString(cx, JS_GetFunctionName(function)));
+    JS_ValueToId(cx, idval, &id);
 
-    return invoke_overloaded_java_constructor(cx, jsj_env, member_descriptor, obj, argc, argv, vp);
+    return static_method_wrapper(cx, jsj_env, class_descriptor, id, argc, argv, vp);
+}
+
+JS_DLL_CALLBACK JSBool
+jsj_JavaInstanceMethodWrapper(JSContext *cx, JSObject *obj,
+                              uintN argc, jsval *argv, jsval *vp)
+{
+    JSFunction *function;
+    JavaMemberDescriptor *member_descriptor;
+    JavaObjectWrapper *java_wrapper;
+    JavaClassDescriptor *class_descriptor;
+    jsid id;
+    jsval idval;
+    JSJavaThreadState *jsj_env;
+    JNIEnv *jEnv;
+    jobject java_obj;
+
+    /* Get the Java per-thread environment pointer for this JSContext */
+    jsj_env = jsj_MapJSContextToJSJThread(cx, &jEnv);
+    if (!jEnv)
+        return JS_FALSE;
+    
+    java_wrapper = JS_GetPrivate(cx, obj);
+    if (!java_wrapper)
+        return JS_FALSE;
+    java_obj = java_wrapper->java_obj;
+    
+    JS_ASSERT(JS_TypeOfValue(cx, argv[-2]) == JSTYPE_FUNCTION);
+    function = JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[-2]));
+    idval = STRING_TO_JSVAL(JS_InternString(cx, JS_GetFunctionName(function)));
+    JS_ValueToId(cx, idval, &id);
+    class_descriptor = java_wrapper->class_descriptor;
+    
+    /* Try to find an instance method with the given name first */
+    member_descriptor = jsj_LookupJavaMemberDescriptorById(cx, jEnv, class_descriptor, id);
+    if (member_descriptor)
+        return invoke_overloaded_java_method(cx, jsj_env, member_descriptor,
+                                             JS_FALSE, java_obj, 
+                                             class_descriptor, argc, argv, vp);
+
+    /* If no instance method was found, try for a static method or constructor */
+    return static_method_wrapper(cx, jsj_env, class_descriptor, id, argc, argv, vp);
 }
 

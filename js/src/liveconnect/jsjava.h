@@ -27,11 +27,11 @@
 #ifndef _JSJAVA_H
 #define _JSJAVA_H
 
-#ifndef prtypes_h___
-#include "prtypes.h"
+#ifndef jstypes_h___
+#include "jstypes.h"
 #endif
 
-PR_BEGIN_EXTERN_C
+JS_BEGIN_EXTERN_C
 
 #include "jni.h"             /* Java Native Interface */
 #include "jsapi.h"           /* JavaScript engine API */
@@ -51,7 +51,11 @@ typedef struct JSJavaThreadState JSJavaThreadState;
  * it is a reference to a JVM plugin. A set of callbacks in the JSJCallbacks
  * struct allow it to be manipulated.
  */
+#ifdef OJI
 typedef struct SystemJavaVM SystemJavaVM;
+#else
+typedef JavaVM SystemJavaVM;
+#endif
 
 /*
  * This callback table provides hooks to external functions that implement
@@ -122,10 +126,10 @@ typedef struct JSJCallbacks {
     jobject             (*get_java_wrapper)(JNIEnv *jEnv, jint jsobject);
 
     /* The following set of methods abstract over the JavaVM object. */
-    PRBool              (*create_java_vm)(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs);
-    PRBool              (*destroy_java_vm)(SystemJavaVM* jvm, JNIEnv* initialEnv);
+    JSBool              (*create_java_vm)(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs);
+    JSBool              (*destroy_java_vm)(SystemJavaVM* jvm, JNIEnv* initialEnv);
     JNIEnv*             (*attach_current_thread)(SystemJavaVM* jvm);
-    PRBool              (*detach_current_thread)(SystemJavaVM* jvm, JNIEnv* env);
+    JSBool              (*detach_current_thread)(SystemJavaVM* jvm, JNIEnv* env);
     SystemJavaVM*       (*get_java_vm)(JNIEnv* env);
 
     /* Reserved for future use */
@@ -170,13 +174,13 @@ typedef struct JavaPackageDef {
    as properties of global_obj.  If java_vm is NULL, a new Java VM is
    created, using the provided classpath in addition to any default classpath.
    The classpath argument is ignored, however, if java_vm is non-NULL. */
-PR_IMPLEMENT(JSBool)
+JS_EXPORT_API(JSBool)
 JSJ_SimpleInit(JSContext *cx, JSObject *global_obj,
                SystemJavaVM *java_vm, const char *classpath);
 
 /* Free up all resources.  Destroy the Java VM if it was created by LiveConnect */
-PR_IMPLEMENT(void)
-JSJ_SimpleShutdown();
+JS_EXPORT_API(void)
+JSJ_SimpleShutdown(void);
 
 /*===========================================================================*/
 
@@ -197,7 +201,7 @@ JSJ_SimpleShutdown();
  */
 
 /* Called once for all instances of LiveConnect to set up callbacks */
-PR_IMPLEMENT(void)
+JS_EXPORT_API(void)
 JSJ_Init(JSJCallbacks *callbacks);
 
 /* Called once per Java VM, this function initializes the classes, fields, and
@@ -205,7 +209,7 @@ JSJ_Init(JSJCallbacks *callbacks);
    created according to the create_java_vm callback in the JSJCallbacks,
    using the provided classpath in addition to any default initargs.
    The initargs argument is ignored, however, if java_vm is non-NULL. */
-PR_IMPLEMENT(JSJavaVM *)
+JS_EXPORT_API(JSJavaVM *)
 JSJ_ConnectToJavaVM(SystemJavaVM *java_vm, void* initargs);
 
 /* Initialize the provided JSContext by setting up the JS classes necessary for
@@ -215,7 +219,7 @@ JSJ_ConnectToJavaVM(SystemJavaVM *java_vm, void* initargs);
    initialization time is not necessary, but it will make package lookup faster
    and, more importantly, will avoid unnecessary network accesses if classes
    are being loaded over the network.) */
-PR_IMPLEMENT(JSBool)
+JS_EXPORT_API(JSBool)
 JSJ_InitJSContext(JSContext *cx, JSObject *global_obj,
                   JavaPackageDef *predefined_packages);
    
@@ -226,12 +230,12 @@ JSJ_InitJSContext(JSContext *cx, JSObject *global_obj,
    used for debugging purposes and can be set to NULL.  The Java JNI
    environment associated with this thread is returned through the java_envp
    argument if java_envp is non-NULL.  */
-PR_IMPLEMENT(JSJavaThreadState *)
+JS_EXPORT_API(JSJavaThreadState *)
 JSJ_AttachCurrentThreadToJava(JSJavaVM *jsjava_vm, const char *thread_name,
                               JNIEnv **java_envp);
 
 /* Destructor routine for per-thread JSJavaThreadState structure */
-PR_IMPLEMENT(JSBool)
+JS_EXPORT_API(JSBool)
 JSJ_DetachCurrentThreadFromJava(JSJavaThreadState *jsj_env);
 
 /* This function is used to specify a particular JSContext as *the* JavaScript
@@ -247,21 +251,23 @@ JSJ_DetachCurrentThreadFromJava(JSJavaThreadState *jsj_env);
    be invoked to determine the JSContext for the thread.  The purpose of the 
    function is to improve performance by avoiding the expense of the callback.
 */
-PR_IMPLEMENT(JSContext *)
+JS_EXPORT_API(JSContext *)
 JSJ_SetDefaultJSContextForJavaThread(JSContext *cx, JSJavaThreadState *jsj_env);
 
 /* This routine severs the connection to a Java VM, freeing all related resources.
    It shouldn't be called until the global scope has been cleared in all related
    JSContexts (so that all LiveConnect objects are finalized) and a JavaScript
    GC is performed.  Otherwise, accessed to free'ed memory could result. */
-PR_IMPLEMENT(void)
+JS_EXPORT_API(void)
 JSJ_DisconnectFromJavaVM(JSJavaVM *);
 
 /*
  * Reflect a Java object into a JS value.  The source object, java_obj, must
  * be of type java.lang.Object or a subclass and may, therefore, be an array.
  */
-PR_IMPLEMENT(JSBool)
+JS_EXPORT_API(JSBool)
 JSJ_ConvertJavaObjectToJSValue(JSContext *cx, jobject java_obj, jsval *vp);
-PR_END_EXTERN_C
+
+JS_END_EXTERN_C
+
 #endif  /* _JSJAVA_H */

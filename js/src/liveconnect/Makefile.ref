@@ -1,0 +1,113 @@
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+#
+# JSRef GNUmake makefile.
+#
+
+DEPTH = ..
+
+#
+# XCFLAGS may be set in the environment or on the gmake command line
+#
+CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) \
+                  -DJSFILE $(XCFLAGS)
+LDFLAGS		+= -lm $(XLDFLAGS)
+
+# For purify
+PURE_CFLAGS     = -DXP_UNIX $(OPTIMIZER) $(PURE_OS_CFLAGS) $(DEFINES) \
+                  $(INCLUDES) $(XCFLAGS)
+
+#
+# LC file lists
+#
+LC_HFILES =		\
+	jsj_hash.h      \
+	jsj_private.h   \
+	jsjava.h        \
+	netscape_javascript_JSObject.h \
+	$(NULL)
+
+HFILES = $(LC_HFILES)
+
+LC_CFILES =	\
+	jsj.c \
+	jsj_JSObject.c \
+	jsj_JavaArray.c \
+	jsj_JavaClass.c \
+	jsj_JavaMember.c \
+	jsj_JavaObject.c \
+	jsj_JavaPackage.c \
+	jsj_array.c \
+	jsj_class.c \
+	jsj_convert.c \
+	jsj_field.c \
+	jsj_hash.c \
+	jsj_method.c \
+	jsj_utils.c \
+	$(NULL)
+
+LIB_CFILES  = $(LC_CFILES)
+
+PROG_FILE = js
+
+include $(DEPTH)/config.mk
+include config/$(OS_CONFIG).mk
+
+INCLUDES   += -I. -I.. -I../$(OBJDIR)
+
+ifdef USE_MSVC
+OTHER_LIBS += $(DEPTH)/fdlibm/$(OBJDIR)/fdlibm.lib
+else
+OTHER_LIBS += -L$(DEPTH)/fdlibm/$(OBJDIR) -lfdm
+endif
+
+ifdef JS_THREADSAFE
+ifdef USE_MSVC
+OTHER_LIBS += $(DEPTH)/../../dist/$(OBJDIR)/lib/libnspr21.lib
+else
+OTHER_LIBS += -L$(DEPTH)/../../dist/$(OBJDIR)/lib -lnspr21
+endif
+endif
+
+ifdef USE_MSVC
+LIBRARY = $(OBJDIR)/jsj.lib
+SHARED_LIBRARY = $(OBJDIR)/jsj.dll
+PROGRAM = $(OBJDIR)/jsj.exe
+else
+LIBRARY = $(OBJDIR)/jsj.a
+SHARED_LIBRARY = $(OBJDIR)/jsj.so
+PROGRAM = $(OBJDIR)/jsj
+endif
+
+include $(DEPTH)/rules.mk
+
+ifdef USE_MSVC
+$(OBJDIR)/$(PROG_FILE)_lc.obj: ../$(PROG_FILE).c
+	@$(MAKE_OBJDIR)
+	$(CC) -Fo$@ -c $(CFLAGS) -DLIVECONNECT ../$(PROG_FILE).c
+
+$(PROGRAM): $(OBJDIR)/$(PROG_FILE)_lc.obj $(LIBRARY)
+	link.exe -out:"$@" /pdb:"$(OBJDIR)/$(@F:.exe=.pdb)" $(EXE_LINK_FLAGS) ../$(OBJDIR)/js32.lib $?
+else
+$(OBJDIR)/$(PROG_FILE).o: ../$(PROG_FILE).c
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ -c $(CFLAGS) -DLIVECONNECT ../$(PROG_FILE).c
+
+$(PROGRAM): $(OBJDIR)/$(PROG_FILE).o
+	@$(MAKE_OBJDIR)
+	$(CC) -o $@ $(CFLAGS) $+ $(LIBRARY) ../$(OBJDIR)/libjs.a $(LDFLAGS) $(OTHER_LIBS)
+endif

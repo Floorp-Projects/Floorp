@@ -20,13 +20,17 @@
 #include "nsIFactory.h"
 #include "nsISupports.h"
 
-#include "nsPluginsCID.h"
+//#include "nsPluginsCID.h"
 #include "nsPluginHostImpl.h"
+#include "nsIServiceManager.h"
+#include "nsIPluginManager.h"
 
-static NS_DEFINE_IID(kCPluginHost, NS_PLUGIN_HOST_CID);
+//static NS_DEFINE_IID(kCPluginHost, NS_PLUGIN_HOST_CID);
+static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_IID(kIServiceManagerIID, NS_ISERVICEMANAGER_IID);
 
 class nsPluginFactory : public nsIFactory
 {   
@@ -44,7 +48,7 @@ class nsPluginFactory : public nsIFactory
 
     NS_IMETHOD LockFactory(PRBool aLock);   
 
-    nsPluginFactory(const nsCID &aClass);   
+    nsPluginFactory(const nsCID &aClass, nsIServiceManager* serviceMgr);   
 
   protected:
     virtual ~nsPluginFactory();   
@@ -52,12 +56,14 @@ class nsPluginFactory : public nsIFactory
   private:   
     nsrefcnt  mRefCnt;   
     nsCID     mClassID;
+    nsIServiceManager *mserviceMgr;
 };   
 
-nsPluginFactory :: nsPluginFactory(const nsCID &aClass)   
+nsPluginFactory :: nsPluginFactory(const nsCID &aClass, nsIServiceManager* serviceMgr)   
 {   
   mRefCnt = 0;
   mClassID = aClass;
+  mserviceMgr = serviceMgr;
 }   
 
 nsPluginFactory :: ~nsPluginFactory()   
@@ -115,8 +121,9 @@ nsresult nsPluginFactory :: CreateInstance(nsISupports *aOuter,
   
   nsISupports *inst = nsnull;
 
-  if (mClassID.Equals(kCPluginHost)) {
-    inst = (nsISupports *)(nsIPluginManager *)new nsPluginHostImpl();
+  //if (mClassID.Equals(kCPluginHost) || mClassID.Equals(kCPluginManagerCID) ){
+  if (mClassID.Equals(kCPluginManagerCID) ){
+    inst = (nsISupports *)(nsIPluginManager *)new nsPluginHostImpl(mserviceMgr);
   }
 
   if (inst == NULL) {  
@@ -140,13 +147,18 @@ nsresult nsPluginFactory :: LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
-extern "C" NS_PLUGIN nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+extern "C" NS_PLUGIN nsresult NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory )
 {
   if (nsnull == aFactory) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aFactory = new nsPluginFactory(aClass);
+  nsIServiceManager  *pnsIServiceManager = NULL;
+  if (NS_FAILED(serviceMgr->QueryInterface(kIServiceManagerIID, (void**) &pnsIServiceManager)))
+    return NS_ERROR_FAILURE;
+
+  *aFactory = new nsPluginFactory(aClass, pnsIServiceManager);
+  serviceMgr->Release();
 
   if (nsnull == aFactory) {
     return NS_ERROR_OUT_OF_MEMORY;

@@ -27,8 +27,42 @@
 
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,     NS_IFACTORY_IID);
+static NS_DEFINE_IID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
 
 nsIFactory  *nsCCapsManagerFactory::m_pNSIFactory = NULL;
+
+
+
+
+/*+++++++++++++++++++++++++++++++++++++++++++++++++
+ * NSGetFactory:
+ * Provides entry point to liveconnect dll.
+ +++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+extern "C" NS_EXPORT nsresult
+NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
+{
+    
+    if (!aClass.Equals(kCCapsManagerCID)) {
+        return NS_ERROR_FACTORY_NOT_LOADED;     // XXX right error?
+    }
+    nsCCapsManagerFactory* pCCapsManagerFactory = new nsCCapsManagerFactory();
+    if (pCCapsManagerFactory == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    pCCapsManagerFactory->AddRef();
+    *aFactory = pCCapsManagerFactory;
+    return NS_OK;
+}
+
+extern "C" NS_EXPORT PRBool
+NSCanUnload(void)
+{
+    return PR_FALSE;
+}
+
+
+
+
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsISupports 

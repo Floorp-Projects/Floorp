@@ -29,26 +29,15 @@
 #ifndef nsIJVMConsole_h___
 #define nsIJVMConsole_h___
 
-#include "nsISupports.h"
+#include "nsIJVMWindow.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // JVM Console Interface
 // This interface defines the API the browser needs to show and hide the JVM's
 // Java console, and to send text to it.
 
-class nsIJVMConsole : public nsISupports {
+class nsIJVMConsole : public nsIJVMWindow {
 public:
-    
-    // QueryInterface on nsIJVMPlugin to get this.
-
-    NS_IMETHOD
-    ShowConsole(void) = 0;
-
-    NS_IMETHOD
-    HideConsole(void) = 0;
-
-    NS_IMETHOD
-    IsConsoleVisible(PRBool *result) = 0;
 
     // Prints a message to the Java console. The encodingName specifies the
     // encoding of the message, and if NULL, specifies the default platform
@@ -59,11 +48,11 @@ public:
 };
 
 #define NS_IJVMCONSOLE_IID                           \
-{ /* 85344580-01c1-11d2-815b-006008119d7a */         \
-    0x85344580,                                      \
-    0x01c1,                                          \
+{ /* fefaf860-6220-11d2-8164-006008119d7a */         \
+    0xfefaf860,                                      \
+    0x6220,                                          \
     0x11d2,                                          \
-    {0x81, 0x5b, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -33,43 +33,20 @@
 #include "nsIPrincipal.h"
 #include "jni.h"
 
+class nsISecureJNI2;
+
+/**
+ * This MIME type is what should be used to signify a Java VM plugin. 
+ */
+#define NS_JVM_MIME_TYPE        "application/x-java-vm" // XXX "application/java" ?
+
 ////////////////////////////////////////////////////////////////////////////////
 // Java VM Plugin Interface
 // This interface defines additional entry points that a plugin developer needs
 // to implement in order to implement a Java virtual machine plugin. 
 
-struct nsJVMInitArgs {
-    PRUint32    version;
-    const char* classpathAdditions;     // appended to the JVM's classpath
-    // other fields may be added here for version numbers beyond 0x00010000
-};
-
-/**
- * nsJVMInitArgs_Version is the current version number for the nsJVMInitArgs
- * struct specified above. The nsVersionOk macro should be used when comparing
- * a supplied nsJVMInitArgs struct against this version.
- */
-#define nsJVMInitArgs_Version   0x00010000L
-
-class nsISecureJNI2;
-
 class nsIJVMPlugin : public nsIPlugin {
 public:
-
-    // This method us used to start the Java virtual machine.
-    // It sets up any global state necessary to host Java programs.
-    // Note that calling this method is distinctly separate from 
-    // initializing the nsIJVMPlugin object (done by the Initialize
-    // method).
-    NS_IMETHOD
-    StartupJVM(nsJVMInitArgs* initargs) = 0;
-
-    // This method us used to stop the Java virtual machine.
-    // It tears down any global state necessary to host Java programs.
-    // The fullShutdown flag specifies whether the browser is quitting
-    // (PR_TRUE) or simply whether the JVM is being shut down (PR_FALSE).
-    NS_IMETHOD
-    ShutdownJVM(PRBool fullShutdown = PR_FALSE) = 0;
 
     // Causes the JVM to append a new directory to its classpath.
     // If the JVM doesn't support this operation, an error is returned.
@@ -88,13 +65,6 @@ public:
     NS_IMETHOD
     GetJavaWrapper(JNIEnv* jenv, jint obj, jobject *jobj) = 0;
 
-#if 0    // still trying to decide on this
-    // nsIPrincipals is a array of pointers to principals associated with this
-    // java object trying to run a JS script.
-    NS_IMETHOD
-    GetPrincipalArray(JNIEnv *pJNIEnv, PRInt32 frameIndex, nsIPrincipal ***principalArray, PRInt32 *length) = 0;
-#endif
-
     // Find or create a JNIEnv for the current thread.
     // Returns NULL if an error occurs.
     NS_IMETHOD_(nsrefcnt)
@@ -105,23 +75,23 @@ public:
     NS_IMETHOD_(nsrefcnt)
     ReleaseJNIEnv(JNIEnv* env) = 0;
 
-	/**
-	 * This creates a new secure communication channel with Java. The second parameter,
-	 * nativeEnv, if non-NULL, will be the actual thread for Java communication.
-	 * Otherwise, a new thread should be created.
-	 * @param	proxyEnv		the env to be used by all clients on the browser side
-	 * @return	outSecureEnv	the secure environment used by the proxyEnv
-	 */
-	NS_IMETHOD
-	CreateSecureEnv(JNIEnv* proxyEnv, nsISecureJNI2* *outSecureEnv) = 0;
+	   /**
+	    * This creates a new secure communication channel with Java. The second parameter,
+	    * nativeEnv, if non-NULL, will be the actual thread for Java communication.
+	    * Otherwise, a new thread should be created.
+	    * @param	proxyEnv		the env to be used by all clients on the browser side
+	    * @return	outSecureEnv	the secure environment used by the proxyEnv
+	    */
+	   NS_IMETHOD
+	   CreateSecureEnv(JNIEnv* proxyEnv, nsISecureJNI2* *outSecureEnv) = 0;
 
-	/**
-	 * Gives time to the JVM from the main event loop of the browser. This is
-	 * necessary when there aren't any plugin instances around, but Java threads exist.
-	 */
+	   /**
+	    * Gives time to the JVM from the main event loop of the browser. This is
+	    * necessary when there aren't any plugin instances around, but Java threads exist.
+	    */
 #ifdef XP_MAC
-	NS_IMETHOD
-	SpendTime(PRUint32 timeMillis) = 0;
+	   NS_IMETHOD
+	   SpendTime(PRUint32 timeMillis) = 0;
 #endif
 };
 

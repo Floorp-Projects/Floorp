@@ -50,6 +50,7 @@
 #include "nsToolbarManager.h"
 #include "nsToolbarItemHolder.h"
 #include "nsAppShell.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -271,7 +272,7 @@ nsresult nsWidgetFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
-extern "C" NS_WIDGET nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+extern "C" NS_WIDGET nsresult NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
 {
     if (nsnull == aFactory) {
         return NS_ERROR_NULL_POINTER;

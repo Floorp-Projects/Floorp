@@ -21,14 +21,18 @@ include <$(DEPTH)/config/config.mak>
 !ifndef MAKE_OBJ_TYPE
 MAKE_OBJ_TYPE=EXE
 !endif
+MAKE_OBJ_TYPE=DLL
+
+DLLNAME=oji
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-LIBNAME=oji$(MOZ_BITS)
-PDBFILE=$(LIBNAME).pdb
+#LIBNAME=oji$(MOZ_BITS)
+#PDBFILE=$(LIBNAME).pdb
 
 #//------------------------------------------------------------------------
 #// 
@@ -37,9 +41,13 @@ PDBFILE=$(LIBNAME).pdb
 #//------------------------------------------------------------------------
 
 OBJS = .\$(OBJDIR)\jvmmgr.obj \
-       .\$(OBJDIR)\scd.obj \
+       .\$(OBJDIR)\nsJVMManager.obj \
+       .\$(OBJDIR)\nsJVMPluginTagInfo.obj \
        .\$(OBJDIR)\ProxyJNI.obj \
-       .\$(OBJDIR)\nsCSecurityContext.obj
+       .\$(OBJDIR)\lcglue.obj \
+       .\$(OBJDIR)\nsCSecurityContext.obj \
+       .\$(OBJDIR)\nsCJVMManagerFactory.obj \
+       .\$(OBJDIR)\scd.obj
 
 #//------------------------------------------------------------------------
 #//
@@ -48,7 +56,7 @@ OBJS = .\$(OBJDIR)\jvmmgr.obj \
 #//
 #//------------------------------------------------------------------------
 
-LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
+#LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
 
 #//------------------------------------------------------------------------
 #//
@@ -76,6 +84,7 @@ LINCS= $(LINCS) -I_jri \
 		-I$(PUBLIC)/plugin   \
 		-I$(PUBLIC)/oji      \
 		-I$(PUBLIC)/plugimpl \
+		-I$(PUBLIC)/netlib \
 !endif
 		-I$(DIST)/include/private \
 		-I$(DEPTH)/lib/layout   \
@@ -83,14 +92,24 @@ LINCS= $(LINCS) -I_jri \
 		-I$(DEPTH)/lib/libjar   \
 		$(NULL)
 
-CSRCS = jvmmgr.cpp \
-        scd.cpp 
 
 !endif # MOZ_OJI
 
 MODULE = ojiimpl
 
-EXPORTS = jvmmgr.h
+EXPORTS = jvmmgr.h \
+          nsJVMManager.h \
+          nsJVMPluginTagInfo.h
+
+LLIBS = \
+	$(LIBNSPR)			\
+	$(DIST)\lib\libplc21.lib	\
+	$(DIST)\lib\xpcom32.lib         \
+	$(DIST)\lib\xplib.lib           \
+	$(DIST)\lib\js3250.lib          \
+	$(DIST)\lib\jsj3250.lib         \
+	$(NULL)
+
 
 #//------------------------------------------------------------------------
 #//
@@ -108,12 +127,13 @@ PUBLIC_HEADER_DIR=$(PUBLIC)\ojiimpl
 PUBLIC_HEADER_DIR=$(PUBLIC)\win16
 !endif
 
-export::
-    $(MAKE_INSTALL) jvmmgr.h $(PUBLIC_HEADER_DIR)
+#export::
+#    $(MAKE_INSTALL) $(EXPORTS) $(PUBLIC_HEADER_DIR)
 
 !ifdef MOZ_OJI
-install:: $(LIBRARY)
-    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+install::  $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber::
     $(RM_R) _jri

@@ -32,18 +32,6 @@
 #include "nsISupports.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-#define NPJVM_MIME_TYPE         "application/x-java-vm" // XXX application/java
-
-enum {
-    NS_JVM_ERROR_BASE           = NS_ERROR_BASE + 0x10000,
-    NS_JVM_ERROR_NO_CLASSES,
-    NS_JVM_ERROR_WRONG_CLASSES,
-    NS_JVM_ERROR_JAVA_ERROR,
-    NS_JVM_ERROR_NO_DEBUGGER
-};
-
-////////////////////////////////////////////////////////////////////////////////
 // Java VM Plugin Manager
 // This interface defines additional entry points that are available
 // to JVM plugins for browsers that support JVM plugins.
@@ -54,10 +42,21 @@ class nsISecureJNI2;
 class nsIJVMManager : public nsISupports {
 public:
     /**
-     * Creates a proxy JNI for a given secure environment.
+     * Creates a proxy JNI with an optional secure environment (which can be NULL).
+     * There is a one-to-one correspondence between proxy JNIs and threads, so
+     * calling this method multiple times from the same thread will return
+     * the same proxy JNI.
      */
-	NS_IMETHOD
-	CreateProxyJNI(nsISecureJNI2* inSecureEnv, JNIEnv** outProxyEnv) = 0;
+	   NS_IMETHOD
+	   CreateProxyJNI(nsISecureJNI2* inSecureEnv, JNIEnv** outProxyEnv) = 0;
+	   
+	   /**
+	    * Returns the proxy JNI associated with the current thread, or NULL if no
+	    * such association exists.
+	    */
+	   NS_IMETHOD
+	   GetProxyJNI(JNIEnv** outProxyEnv) = 0;
+
 };
 
 #define NS_IJVMMANAGER_IID                           \
@@ -67,6 +66,15 @@ public:
     0x11d1,                                          \
     {0x85, 0xb2, 0x00, 0x80, 0x5f, 0x0e, 0x4d, 0xfe} \
 }
+
+#define NS_JVMMANAGER_CID                            \
+{ /* 38e7ef10-58df-11d2-8164-006008119d7a */         \
+    0x38e7ef10,                                      \
+    0x58df,                                          \
+    0x11d2,                                          \
+    {0x81, 0x64, 0x00, 0x60, 0x08, 0x11, 0x9d, 0x7a} \
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

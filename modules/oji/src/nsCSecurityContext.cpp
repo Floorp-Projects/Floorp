@@ -30,6 +30,7 @@
 #include "jsdbgapi.h"
 #include "libmocha.h"
 #include "nsCSecurityContext.h"
+#include "jvmmgr.h"
 
 static NS_DEFINE_IID(kISecurityContextIID, NS_ISECURITYCONTEXT_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -59,29 +60,30 @@ nsCSecurityContext::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_NOINTERFACE; 
 }
 
-extern PRUintn tlsIndex2_g;
-
-
 ////////////////////////////////////////////////////////////////////////////
 // from nsISecurityContext:
 
 NS_METHOD 
 nsCSecurityContext::Implies(const char* target, const char* action, PRBool *bAllowedAccess)
 {
-    //TODO: for test purpose only. Remove this stuff.
+    //NOTE: Test purpose only. Turn this on if you do not want security stack walking code.
     //*bAllowedAccess = PR_TRUE;
     //if(1)
-      // return NS_OK;
+     //return NS_OK;
 
     if(m_pJStoJavaFrame == NULL)
     {
       *bAllowedAccess = PR_FALSE;
        return NS_OK;
     }
-    JSContext *pJSContext = LM_GetCrippledContext();
-    PR_SetThreadPrivate(tlsIndex2_g, (void *)m_pJStoJavaFrame);
-    *bAllowedAccess = LM_CanAccessTargetStr(pJSContext, target);
-    PR_SetThreadPrivate(tlsIndex2_g, (void *)NULL);
+    JSStackFrame** startFrame = JVM_GetStartJSFrameFromParallelStack();
+    *startFrame = m_pJStoJavaFrame; // This updates the TLS start frame for a brief period
+                                    // until the following code runs.
+    /*
+    ** TODO: Get a new API from Tom. 
+    ** bAllowedAccess = LM_CanAccessTargetStr(m_pJSCX, target);
+    */
+    *startFrame = NULL;
     return NS_OK;
 }
 
@@ -89,17 +91,13 @@ nsCSecurityContext::Implies(const char* target, const char* action, PRBool *bAll
 ////////////////////////////////////////////////////////////////////////////
 // from nsCSecurityContext:
 extern PRUintn tlsIndex3_g;
-nsCSecurityContext::nsCSecurityContext()
-                   : m_pJStoJavaFrame(NULL)
+nsCSecurityContext::nsCSecurityContext(JSContext* cx)
+                   : m_pJStoJavaFrame(NULL), m_pJSCX(NULL)
 {
     NS_INIT_REFCNT();
-    JSContext *pJSCX = (JSContext *)PR_GetThreadPrivate(tlsIndex3_g);
-    if (pJSCX == NULL)
-    {
-       pJSCX = LM_GetCrippledContext();
-    }
     JSStackFrame *fp = NULL;
-    m_pJStoJavaFrame = JS_FrameIterator(pJSCX, &fp);
+    m_pJStoJavaFrame = JS_FrameIterator(cx, &fp);
+    m_pJSCX          = cx;
 }
 
 nsCSecurityContext::~nsCSecurityContext()

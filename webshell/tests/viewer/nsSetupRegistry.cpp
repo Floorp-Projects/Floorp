@@ -35,6 +35,10 @@
 #include "nsDOMCID.h"
 #include "nsLayoutCID.h"
 #include "nsINetService.h"
+#include "nsICapsManager.h"
+#include "nsILiveconnect.h"
+#include "nsIPluginManager.h"
+#include "nsIJVMManager.h"
 
 #include "nsIEditor.h"
 
@@ -52,6 +56,9 @@
 #define NETLIB_DLL "netlib.dll"
 #define EDITOR_DLL "ender.dll"
 #define RDF_DLL    "rdf.dll"
+#define CAPS_DLL   "caps.dll"
+#define LIVECONNECT_DLL    "jsj3250.dll"
+#define OJI_DLL    "oji.dll"
 #else
 #ifdef XP_MAC
 #define XPCOM_DLL   "XPCOM_DLL"
@@ -127,7 +134,7 @@ static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kCDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
-static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
+//static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 static NS_DEFINE_CID(kWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -159,6 +166,11 @@ static NS_DEFINE_CID(kSelectionCID,             NS_SELECTION_CID);
 static NS_DEFINE_CID(kRangeCID,                 NS_RANGE_CID);
 static NS_DEFINE_CID(kRangeListCID,				NS_RANGELIST_CID);
 static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
+
+static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
+static NS_DEFINE_CID(kCapsManagerCID,             NS_CCAPSMANAGER_CID);
+static NS_DEFINE_CID(kLiveconnectCID,             NS_CLIVECONNECT_CID);
+static NS_DEFINE_CID(kJVMManagerCID,              NS_JVMMANAGER_CID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -198,7 +210,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCDocLoaderServiceCID, WEB_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kThrobberCID, WEB_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
+ // nsRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kWellFormedDTDCID, PARSER_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCDOMScriptObjectFactory, DOM_DLL, PR_FALSE, PR_FALSE);
@@ -229,4 +241,10 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kRangeCID,		    LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRangeListCID,		LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kFrameUtilCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kCPluginManagerCID, PLUGIN_DLL,      PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCapsManagerCID, CAPS_DLL,          PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kLiveconnectCID, LIVECONNECT_DLL,   PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kJVMManagerCID,  OJI_DLL,           PR_FALSE, PR_FALSE);
+
 }

@@ -167,9 +167,9 @@ nsresult nsParserFactory::LockFactory(PRBool aLock)
 
 // return the proper factory to the caller
 #if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_EXPORT nsresult NSGetFactory_PARSER_DLL(const nsCID &aClass, nsIFactory **aFactory)
+extern "C" NS_EXPORT nsresult NSGetFactory_PARSER_DLL(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
 #else
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsISupports* servMgr, nsIFactory **aFactory)
 #endif
 {
   if (nsnull == aFactory) {

@@ -26,9 +26,11 @@
 #ifndef nsCSecurityContext_h___
 #define nsCSecurityContext_h___
 
+#include "jscntxt.h"
 #include "jsdbgapi.h"
 #include "nsISecurityContext.h"
 
+struct JSContext;
 
 /**
  * nsCSecurityContext implements nsISecurityContext interface for navigator.
@@ -58,11 +60,12 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // from nsCSecurityContext:
 
-    nsCSecurityContext(void);
+    nsCSecurityContext(JSContext* cx);
     virtual ~nsCSecurityContext(void);
 
 protected:
     JSStackFrame *m_pJStoJavaFrame;
+    JSContext    *m_pJSCX;
 };
 
 #endif // nsCSecurityContext_h___

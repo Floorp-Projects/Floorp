@@ -39,6 +39,7 @@ jsj_GetJavaArrayElement(JSContext *cx, JNIEnv *jEnv, jarray java_array, jsize in
 {
     jvalue java_value;
     JavaSignatureChar component_type;
+    JSBool success;
 
 #define GET_ELEMENT_FROM_PRIMITIVE_JAVA_ARRAY(Type,member)                   \
     (*jEnv)->Get##Type##ArrayRegion(jEnv, java_array, index, 1,              \
@@ -83,18 +84,22 @@ jsj_GetJavaArrayElement(JSContext *cx, JNIEnv *jEnv, jarray java_array, jsize in
         GET_ELEMENT_FROM_PRIMITIVE_JAVA_ARRAY(Double,d);
         break;
 
-    case JAVA_SIGNATURE_CLASS:
-    case JAVA_SIGNATURE_ARRAY:
+    /* Non-primitive (reference) type */
+    default:
+        JS_ASSERT(component_type >= JAVA_SIGNATURE_ARRAY);
         java_value.l = (*jEnv)->GetObjectArrayElement(jEnv, java_array, index);
         if ((*jEnv)->ExceptionOccurred(jEnv)) {
             jsj_ReportJavaError(cx, jEnv, "Error reading Java object array");
             return JS_FALSE;
         }
-        break;
+        success = jsj_ConvertJavaObjectToJSValue(cx, jEnv, java_value.l, vp);
+        (*jEnv)->DeleteLocalRef(jEnv, java_value.l);
+        return success;
 
 #undef GET_ELEMENT_FROM_PRIMITIVE_JAVA_ARRAY
-    default:
-        PR_ASSERT(0);        /* Unknown java type signature */
+    case JAVA_SIGNATURE_UNKNOWN:
+    case JAVA_SIGNATURE_VOID:
+        JS_ASSERT(0);        /* Unknown java type signature */
         return JS_FALSE;
     }
 
@@ -158,8 +163,9 @@ jsj_SetJavaArrayElement(JSContext *cx, JNIEnv *jEnv, jarray java_array, jsize in
         SET_ELEMENT_FROM_PRIMITIVE_JAVA_ARRAY(Double,d);
         break;
 
-    case JAVA_SIGNATURE_CLASS:
-    case JAVA_SIGNATURE_ARRAY:
+    /* Non-primitive (reference) type */
+    default:
+        JS_ASSERT(IS_REFERENCE_TYPE(component_type));
         (*jEnv)->SetObjectArrayElement(jEnv, java_array, index, java_value.l);
         if (is_local_ref)                                                           \
             (*jEnv)->DeleteLocalRef(jEnv, java_value.l);
@@ -170,8 +176,9 @@ jsj_SetJavaArrayElement(JSContext *cx, JNIEnv *jEnv, jarray java_array, jsize in
         break;
 
 #undef SET_ELEMENT_FROM_PRIMITIVE_JAVA_ARRAY
-    default:
-        PR_ASSERT(0);        /* Unknown java type signature */
+    case JAVA_SIGNATURE_UNKNOWN:
+    case JAVA_SIGNATURE_VOID:
+        JS_ASSERT(0);        /* Unknown java type signature */
         return JS_FALSE;
     }
 

@@ -32,6 +32,8 @@ EXPORTS	=			  \
 	nsIJVMPlugin.h		  \
 	nsIJVMPluginInstance.h	  \
 	nsIJVMPluginTagInfo.h	  \
+	nsIJVMPrefsWindow.h  	  \
+	nsIJVMWindow.h  	  \
 	nsISymantecDebugManager.h \
 	nsISymantecDebugger.h  \
  nsISecureJNI2.h \

@@ -45,7 +45,6 @@ DIRS = classes
 DLLNAME=jsj$(MOZ_BITS)$(VERSION_NUMBER)
 PDBFILE=$(DLLNAME).pdb
 MAPFILE		= $(DLLNAME).map
-RESFILE		= jsj1640.res
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 MAKE_OBJ_TYPE	= DLL
 
@@ -124,7 +123,6 @@ JNI_GEN=                            \
 MODULE = java
 EXPORTS =				       \
  	$(JNI_GEN_DIR)\netscape_javascript_JSObject.h    \
- 	$(JNI_GEN_DIR)\netscape_javascript_JSException.h \
 	$(NULL)
 
 

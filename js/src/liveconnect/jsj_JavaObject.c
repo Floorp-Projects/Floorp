@@ -32,7 +32,7 @@
 #include "jsj_private.h"      /* LiveConnect internals */
 #include "jsj_hash.h"         /* Hash table with Java object as key */
 
-#ifdef JS_THREADSAFE
+#ifdef JSJ_THREADSAFE
 #include "prmon.h"
 #endif
 
@@ -52,24 +52,26 @@
  */
 static JSJHashTable *java_obj_reflections = NULL;
 
-#ifdef JS_THREADSAFE
+#ifdef JSJ_THREADSAFE
 static PRMonitor *java_obj_reflections_monitor = NULL;
 #endif
 
-static JSBool
-init_java_obj_reflections_table()
+JSBool
+jsj_InitJavaObjReflectionsTable(void)
 {
+    JS_ASSERT(!java_obj_reflections);
+
     java_obj_reflections =
         JSJ_NewHashTable(512, jsj_HashJavaObject, jsj_JavaObjectComparator,
                          NULL, NULL, NULL);
     if (!java_obj_reflections)
         return JS_FALSE;
 
-#ifdef JS_THREADSAFE
+#ifdef JSJ_THREADSAFE
     java_obj_reflections_monitor = 
 	(struct PRMonitor *) PR_NewNamedMonitor("java_obj_reflections");
     if (!java_obj_reflections_monitor) {
-        PR_HashTableDestroy((struct PRHashTable *) java_obj_reflections);
+        JS_HashTableDestroy(java_obj_reflections);
         return JS_FALSE;
     }
 #endif
@@ -94,7 +96,7 @@ jsj_WrapJavaObject(JSContext *cx,
 
     hash_code = jsj_HashJavaObject((void*)java_obj, (void*)jEnv);
 
-#ifdef JS_THREADSAFE
+#ifdef JSJ_THREADSAFE
     PR_EnterMonitor(java_obj_reflections_monitor);
 #endif
     
@@ -114,7 +116,7 @@ jsj_WrapJavaObject(JSContext *cx,
     if (class_descriptor->type == JAVA_SIGNATURE_ARRAY) {
         js_class = &JavaArray_class;
     } else {
-        PR_ASSERT(class_descriptor->type == JAVA_SIGNATURE_CLASS);
+        JS_ASSERT(IS_OBJECT_TYPE(class_descriptor->type));
         js_class = &JavaObject_class;
     }
     
@@ -147,7 +149,7 @@ jsj_WrapJavaObject(JSContext *cx,
     } 
 
 done:
-#ifdef JS_THREADSAFE
+#ifdef JSJ_THREADSAFE
         PR_ExitMonitor(java_obj_reflections_monitor);
 #endif
         
@@ -168,7 +170,7 @@ remove_java_obj_reflection_from_hashtable(jobject java_obj, JNIEnv *jEnv)
 
     hash_code = jsj_HashJavaObject((void*)java_obj, (void*)jEnv);
 
-#ifdef JS_THREADSAFE
+#ifdef JSJ_THREADSAFE
     PR_EnterMonitor(java_obj_reflections_monitor);
 #endif
 
@@ -176,11 +178,11 @@ remove_java_obj_reflection_from_hashtable(jobject java_obj, JNIEnv *jEnv)
                                  java_obj, (void*)jEnv);
     he = *hep;
 
-    PR_ASSERT(he);
+    JS_ASSERT(he);
     if (he)
         JSJ_HashTableRawRemove(java_obj_reflections, hep, he, (void*)jEnv);
 
-#ifdef JS_THREADSAFE
+#ifdef JSJ_THREADSAFE
     PR_ExitMonitor(java_obj_reflections_monitor);
 #endif
 }
@@ -192,14 +194,14 @@ JavaObject_finalize(JSContext *cx, JSObject *obj)
     jobject java_obj;
     JNIEnv *jEnv;
 
-    jsj_MapJSContextToJSJThread(cx, &jEnv);
-    if (!jEnv)
-        return;
-
     java_wrapper = JS_GetPrivate(cx, obj);
     if (!java_wrapper)
         return;
     java_obj = java_wrapper->java_obj;
+
+    jsj_MapJSContextToJSJThread(cx, &jEnv);
+    if (!jEnv)
+        return;
 
     if (java_obj) {
         remove_java_obj_reflection_from_hashtable(java_obj, jEnv);
@@ -210,8 +212,8 @@ JavaObject_finalize(JSContext *cx, JSObject *obj)
 }
 
 /* Trivial helper for jsj_DiscardJavaObjReflections(), below */
-static PRIntn
-enumerate_remove_java_obj(JSJHashEntry *he, PRIntn i, void *arg)
+static JSIntn
+enumerate_remove_java_obj(JSJHashEntry *he, JSIntn i, void *arg)
 {
     JNIEnv *jEnv = (JNIEnv*)arg;
     jobject java_obj;
@@ -241,7 +243,7 @@ jsj_DiscardJavaObjReflections(JNIEnv *jEnv)
     }
 }
 
-PR_CALLBACK JSBool
+JS_DLL_CALLBACK JSBool
 JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     JavaObjectWrapper *java_wrapper;
@@ -261,7 +263,8 @@ JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
             return JS_TRUE;
         }
         
-        JS_ReportError(cx, "illegal operation on JavaObject prototype object");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_BAD_OP_JOBJECT);
         return JS_FALSE;
     }
 
@@ -274,7 +277,8 @@ JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         return JS_TRUE;
 
     case JSTYPE_FUNCTION:
-        JS_ReportError(cx, "can't convert Java object to function");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_CONVERT_TO_FUNC);
         return JS_FALSE;
 
     case JSTYPE_VOID:
@@ -292,58 +296,147 @@ JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         return jsj_ConvertJavaObjectToJSBoolean(cx, jEnv, class_descriptor, java_obj, vp);
 
     default:
-        PR_ASSERT(0);
+        JS_ASSERT(0);
         return JS_FALSE;
     }
+}
+
+/*
+ * Get a property from the prototype object of a native ECMA object, i.e.
+ * return <js_constructor_name>.prototype.<member_name>
+ * This is used to allow Java objects to inherit methods from Array.prototype
+ * and String.prototype.
+ */
+static JSBool
+inherit_props_from_JS_natives(JSContext *cx, const char *js_constructor_name,
+                              const char *member_name, jsval *vp)
+{
+    JSObject *global_obj, *constructor_obj, *prototype_obj;
+    jsval constructor_val, prototype_val;
+    
+    global_obj = JS_GetGlobalObject(cx);
+    JS_ASSERT(global_obj);
+    if (!global_obj)
+        return JS_FALSE;
+
+    JS_GetProperty(cx, global_obj, js_constructor_name, &constructor_val);
+    JS_ASSERT(JSVAL_IS_OBJECT(constructor_val));
+    constructor_obj = JSVAL_TO_OBJECT(constructor_val);
+
+    JS_GetProperty(cx, constructor_obj, "prototype", &prototype_val);
+    JS_ASSERT(JSVAL_IS_OBJECT(prototype_val));
+    prototype_obj = JSVAL_TO_OBJECT(prototype_val);
+
+    return JS_GetProperty(cx, prototype_obj, member_name, vp) && *vp != JSVAL_VOID;
 }
 
 static JSBool
 lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
                     JavaObjectWrapper **java_wrapperp,
                     jsid id,
-                    JavaMemberDescriptor **member_descriptorp)
+                    JavaMemberDescriptor **member_descriptorp,
+                    jsval *vp)
 {
     jsval idval;
     JavaObjectWrapper *java_wrapper;
     JavaMemberDescriptor *member_descriptor;
-    const char *member_name, *property_name;
+    const char *member_name;
     JavaClassDescriptor *class_descriptor;
-
+    JSObject *proto_chain;
+    
+    member_descriptor = NULL;
     java_wrapper = JS_GetPrivate(cx, obj);
+
+    /* Handle accesses to prototype object */
     if (!java_wrapper) {
         if (JS_IdToValue(cx, id, &idval) && JSVAL_IS_STRING(idval) &&
-            (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != NULL) {
-            if (!strcmp(property_name, "constructor")) {
-                *java_wrapperp = NULL;
-                *member_descriptorp = NULL;
-                return JS_TRUE;
-            }
+            (member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != NULL) {
+            if (!strcmp(member_name, "constructor"))
+                goto done;
         }
-        JS_ReportError(cx, "illegal operation on JavaObject prototype object");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, JSJMSG_BAD_OP_JOBJECT);
         return JS_FALSE;
     }
-
+    
     class_descriptor = java_wrapper->class_descriptor;
-    PR_ASSERT(class_descriptor->type == JAVA_SIGNATURE_CLASS ||
-              class_descriptor->type == JAVA_SIGNATURE_ARRAY);
-
+    JS_ASSERT(IS_REFERENCE_TYPE(class_descriptor->type));
+    
     member_descriptor = jsj_LookupJavaMemberDescriptorById(cx, jEnv, class_descriptor, id);
-    if (!member_descriptor) {
-        JS_IdToValue(cx, id, &idval);
-        if (!JSVAL_IS_STRING(idval)) {
-            JS_ReportError(cx, "invalid JavaObject property expression. "
-                "(methods and field properties of a JavaObject object can only be strings)");
-            return JS_FALSE;
-        }
+    if (member_descriptor)
+        goto done;
+    
+    /* Instances can reference static methods and fields */
+    member_descriptor = jsj_LookupJavaStaticMemberDescriptorById(cx, jEnv, class_descriptor, id);
+    if (member_descriptor)
+        goto done;
 
-        member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
-
-        JS_ReportError(cx, "Java class %s has no public instance field or "
-                           "method named \"%s\"",
-                       class_descriptor->name, member_name);
+    /* Ensure that the property we're searching for is string-valued. */
+    JS_IdToValue(cx, id, &idval);
+    if (!JSVAL_IS_STRING(idval)) {
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, JSJMSG_BAD_JOBJECT_EXPR);
         return JS_FALSE;
     }
+    member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
 
+    /*
+     * A little LC3 feature magic:
+     *   + Instances of java.lang.String "inherit" the standard ECMA string methods
+     *     of String.prototype.  All of the ECMA string methods convert the Java
+     *     string to a JS string before performing the string operation.  For example,
+     *         s = new java.lang.String("foobar");
+     *         return s.slice(2);
+     *   + Similarly, instances of Java arrays "inherit" the standard ECMA array
+     *     methods of Array.prototype.  (Not all of these methods work properly
+     *     on JavaArray objects, however, since the 'length' property is read-only.)
+     */
+    if (vp) {
+        if ((class_descriptor->type == JAVA_SIGNATURE_JAVA_LANG_STRING) &&
+            inherit_props_from_JS_natives(cx, "String", member_name, vp))
+            goto done;
+        if ((class_descriptor->type == JAVA_SIGNATURE_ARRAY) &&
+            inherit_props_from_JS_natives(cx, "Array", member_name, vp))
+            goto done;
+    }
+
+    /* Check for access to magic prototype chain property */
+    if (!strcmp(member_name, "__proto__")) {
+        proto_chain = JS_GetPrototype(cx, obj);
+        if (vp)
+            *vp = OBJECT_TO_JSVAL(proto_chain);
+        goto done;
+    }
+    
+    /*
+     * See if the property looks like the explicit resolution of an
+     * overloaded method, e.g. "max(double,double)", first as an instance method,
+     * then as a static method.  If we find such a method, it will be cached
+     * so future accesses won't run this code.
+     */
+    member_descriptor = jsj_ResolveExplicitMethod(cx, jEnv, class_descriptor, id, JS_FALSE);
+    if (member_descriptor)
+        goto done;
+    member_descriptor = jsj_ResolveExplicitMethod(cx, jEnv, class_descriptor, id, JS_TRUE);
+    if (member_descriptor)
+        goto done;
+    
+    /* Is this lookup on behalf of a GetProperty or a LookupProperty ? */
+    if (vp) {
+        /* If so, follow __proto__ link to search prototype chain */
+        proto_chain = JS_GetPrototype(cx, obj);
+
+        /* TODO: No way to tell if the property doesn't exist in proto_chain
+           or if it exists, but has an undefined value.  We assume the former. */
+        if (proto_chain && JS_LookupProperty(cx, proto_chain, member_name, vp) &&
+            (*vp != JSVAL_VOID))
+            goto done;
+    }
+
+    /* Report lack of Java member with the given property name */
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, JSJMSG_NO_INSTANCE_NAME,
+                         class_descriptor->name, member_name);
+    return JS_FALSE;
+
+done:
     /* Success.  Handle the multiple return values */
     if (java_wrapperp)
         *java_wrapperp = java_wrapper;
@@ -352,7 +445,7 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
     return JS_TRUE;
 }
 
-PR_CALLBACK JSBool
+JS_DLL_CALLBACK JSBool
 JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     jobject java_obj;
@@ -370,15 +463,15 @@ JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!jEnv)
         return JS_FALSE;
         
-    if (!lookup_member_by_id(cx, jEnv, obj, &java_wrapper, id, &member_descriptor))
+    if (vp)
+	*vp = JSVAL_VOID;
+    if (!lookup_member_by_id(cx, jEnv, obj, &java_wrapper, id, &member_descriptor, vp))
         return JS_FALSE;
 
-    /* Handle access to "constructor" property of prototype object with
-       silent failure. */
-    if (!member_descriptor) {
-        *vp = JSVAL_VOID;
+    /* Handle access to special, non-Java properties of JavaObjects, e.g. the 
+       "constructor" property of the prototype object */
+    if (!member_descriptor)
         return JS_TRUE;
-    }
 
     java_obj = java_wrapper->java_obj;
     field_val = method_val = JSVAL_VOID;
@@ -433,7 +526,7 @@ JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(JSBool)
+JS_STATIC_DLL_CALLBACK(JSBool)
 JavaObject_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     jobject java_obj;
@@ -451,10 +544,27 @@ JavaObject_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!jEnv)
         return JS_FALSE;
     
-    if (!lookup_member_by_id(cx, jEnv, obj, &java_wrapper, id, &member_descriptor))
+    if (!lookup_member_by_id(cx, jEnv, obj, &java_wrapper, id, &member_descriptor, NULL))
         return JS_FALSE;
 
-    /* Check for the case where there is a method with the give name, but no field
+    /* Could be assignment to magic JS __proto__ property rather than a Java field */
+    if (!member_descriptor) {
+        JS_IdToValue(cx, id, &idval);
+        if (!JSVAL_IS_STRING(idval))
+            goto no_such_field;
+        member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
+        if (strcmp(member_name, "__proto__"))
+            goto no_such_field;
+        if (!JSVAL_IS_OBJECT(*vp)) {
+            JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                 JSJMSG_BAD_PROTO_ASSIGNMENT);
+            return JS_FALSE;
+        }
+        JS_SetPrototype(cx, obj, JSVAL_TO_OBJECT(*vp));
+        return JS_TRUE;
+    }
+
+    /* Check for the case where there is a method with the given name, but no field
        with that name */
     if (!member_descriptor->field)
         goto no_such_field;
@@ -470,7 +580,8 @@ no_such_field:
         JS_IdToValue(cx, id, &idval);
         member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
         class_descriptor = java_wrapper->class_descriptor;
-        JS_ReportError(cx, "No instance field named \"%s\" in Java class %s",
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                       JSJMSG_NO_NAME_IN_CLASS,
                        member_name, class_descriptor->name);
         return JS_FALSE;
 }
@@ -485,6 +596,7 @@ JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
 {
     JNIEnv *jEnv;
     JSErrorReporter old_reporter;
+    jsval dummy_val;
 
     /* printf("In JavaObject_lookupProperty()\n"); */
     
@@ -494,7 +606,11 @@ JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
         return JS_FALSE;
 
     old_reporter = JS_SetErrorReporter(cx, NULL);
-    if (lookup_member_by_id(cx, jEnv, obj, NULL, id, NULL)) {
+    if (lookup_member_by_id(cx, jEnv, obj, NULL, id, NULL, &dummy_val)) {
+        /* TODO - objp may not be set correctly if a property is found, not in
+           obj, but somewhere in obj's proto chain.  However, there is
+           no exported JS API to discover which object a property is defined
+           in. */
         *objp = obj;
         *propp = (JSProperty*)1;
     } else {
@@ -511,7 +627,8 @@ JavaObject_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
 {
-    JS_ReportError(cx, "Cannot define a new property in a JavaObject");
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                    JSJMSG_JOBJECT_PROP_DEFINE);
     return JS_FALSE;
 }
 
@@ -530,7 +647,7 @@ JavaObject_setAttributes(JSContext *cx, JSObject *obj, jsid id,
 {
     /* We don't maintain JS property attributes for Java class members */
     if (*attrsp != (JSPROP_PERMANENT|JSPROP_ENUMERATE)) {
-        PR_ASSERT(0);
+        JS_ASSERT(0);
         return JS_FALSE;
     }
 
@@ -546,7 +663,8 @@ JavaObject_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     *vp = JSVAL_FALSE;
 
     if (!JSVERSION_IS_ECMA(version)) {
-        JS_ReportError(cx, "Properties of JavaObject objects may not be deleted");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                        JSJMSG_JOBJECT_PROP_DELETE);
         return JS_FALSE;
     } else {
         /* Attempts to delete permanent properties are silently ignored
@@ -599,6 +717,17 @@ JavaObject_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     case JSENUMERATE_NEXT:
         member_descriptor = JSVAL_TO_PRIVATE(*statep);
         if (member_descriptor) {
+
+            /* Don't enumerate explicit-signature methods, i.e. enumerate toValue,
+               but not toValue(int), toValue(double), etc. */
+            while (member_descriptor->methods && member_descriptor->methods->is_alias) {
+                member_descriptor = member_descriptor->next;
+                if (!member_descriptor) {
+                    *statep = JSVAL_NULL;
+                    return JS_TRUE;
+                }
+            }
+            
             *idp = member_descriptor->id;
             *statep = PRIVATE_TO_JSVAL(member_descriptor->next);
             return JS_TRUE;
@@ -611,7 +740,7 @@ JavaObject_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         return JS_TRUE;
 
     default:
-        PR_ASSERT(0);
+        JS_ASSERT(0);
         return JS_FALSE;
     }
 }
@@ -622,11 +751,13 @@ JavaObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 {
     switch (mode) {
     case JSACC_WATCH:
-        JS_ReportError(cx, "Cannot place watchpoints on JavaObject object properties");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_JOBJECT_PROP_WATCH);
         return JS_FALSE;
 
     case JSACC_IMPORT:
-        JS_ReportError(cx, "Cannot export a JavaObject object's properties");
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                                                JSJMSG_JOBJECT_PROP_EXPORT);
         return JS_FALSE;
 
     default:
@@ -686,5 +817,5 @@ jsj_init_JavaObject(JSContext *cx, JSObject *global_obj)
         0, 0))
         return JS_FALSE;
 
-    return init_java_obj_reflections_table();
+    return JS_TRUE;
 }

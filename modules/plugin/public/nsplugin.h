@@ -79,6 +79,8 @@
 #ifndef nsplugins_h___
 #define nsplugins_h___
 
+#define NEW_PLUGIN_STREAM_API
+
 #include "nsRepository.h"       // for NSGetFactory
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,6 +98,7 @@
  */
 // (Declared in nsRepository.h)
 //extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
+//                                           nsISupports* serviceMgr, 
 //                                           nsIFactory **aFactory);
 
 /**                                                               
@@ -134,7 +137,7 @@
  * Note that this interface is part of a new JNI-based LiveConnect
  * implementation and superceeds that provided prior to Communicator 5.0.
  */
-#include "nsILiveConnectPlugin.h"
+//#include "nsILiveConnectPlugin.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -229,7 +232,7 @@
  *
  * To obtain: QueryInterface on nsIPluginInstancePeer
  */
-#include "nsILiveConnectPlugInstPeer.h"
+//#include "nsILiveConnectPlugInstPeer.h"
 
 #ifdef NEW_PLUGIN_STREAM_API
 

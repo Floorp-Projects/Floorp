@@ -28,9 +28,9 @@ nsresult NS_NewEventQueueServiceFactory(nsIFactory** aResult);
  * Define the global NSGetFactory(...) entry point for the xpcom DLL...
  */
 #if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_EXPORT nsresult NSGetFactory_XPCOM_DLL(const nsCID& aClass, nsIFactory** aFactory)
+extern "C" NS_EXPORT nsresult NSGetFactory_XPCOM_DLL(const nsCID& aClass, nsISupports* servMgr, nsIFactory** aFactory)
 #else
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID& aClass, nsIFactory** aFactory)
+extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID& aClass, nsISupports* servMgr, nsIFactory** aFactory)
 #endif
 {
   nsresult rv = NS_OK;
