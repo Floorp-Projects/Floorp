@@ -837,16 +837,16 @@ int
 IL_StreamWriteReady(il_container *ic)
 {
     nsresult rv= NS_ERROR_FAILURE;
-    PRUint8 max_read = 0;
+    PRUint32 max_read = 0;
 
     if (ic->imgdec)
           rv = ic->imgdec->ImgDWriteReady(&max_read);
+ 
+    if(NS_FAILED(rv))
+          return IL_OFFSCREEN_CHUNK; 
 
     if(max_read == 0)
         return 0; //send no more data please
-
-     if(NS_FAILED(rv))
-          return 0; //IL_OFFSCREEN_CHUNK; 
 
 	/*
      * It could be that layout aborted image loading by calling IL_FreeImage

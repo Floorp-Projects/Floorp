@@ -262,8 +262,8 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
     if(NS_FAILED(err))   //note length tells how much we already have.
         break;
 
-    if(max_read <= 0){
-            max_read =128;
+    if(max_read < 0){
+            max_read = 128;
     }
 
     if (max_read > IMAGE_BUF_SIZE) {
@@ -276,7 +276,7 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
       break;
 
     err = pIStream->Read(mBuffer,
-                         IMAGE_BUF_SIZE, &nb);
+                         max_read, &nb);
     if (err == NS_BASE_STREAM_WOULD_BLOCK) {
       err = NS_OK;
       break;
