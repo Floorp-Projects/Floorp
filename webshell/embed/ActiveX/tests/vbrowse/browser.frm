@@ -6,19 +6,19 @@ Begin VB.Form Form1
    ClientHeight    =   5880
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   7485
+   ClientWidth     =   7710
    LinkTopic       =   "Form1"
    ScaleHeight     =   392
    ScaleMode       =   3  'Pixel
-   ScaleWidth      =   499
+   ScaleWidth      =   514
    Begin ComctlLib.Toolbar Toolbar1 
       Align           =   1  'Align Top
       Height          =   660
       Left            =   0
       TabIndex        =   0
       Top             =   0
-      Width           =   7485
-      _ExtentX        =   13203
+      Width           =   7710
+      _ExtentX        =   13600
       _ExtentY        =   1164
       ButtonWidth     =   1032
       ButtonHeight    =   1005
@@ -27,37 +27,54 @@ Begin VB.Form Form1
       ImageList       =   "ImageList1"
       _Version        =   327682
       BeginProperty Buttons {0713E452-850A-101B-AFC0-4210102A8DA7} 
-         NumButtons      =   9
+         NumButtons      =   10
          BeginProperty Button1 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Caption         =   ""
             Key             =   "goback"
+            Description     =   ""
             Object.ToolTipText     =   "Go Back"
             Object.Tag             =   ""
             ImageIndex      =   1
          EndProperty
          BeginProperty Button2 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Caption         =   ""
             Key             =   "goforward"
+            Description     =   ""
             Object.ToolTipText     =   "Go Forward"
             Object.Tag             =   ""
             ImageIndex      =   5
          EndProperty
          BeginProperty Button3 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Caption         =   ""
             Key             =   "reload"
+            Description     =   ""
             Object.ToolTipText     =   "Reload Page"
             Object.Tag             =   ""
             ImageIndex      =   6
          EndProperty
          BeginProperty Button4 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Key             =   ""
             Object.Tag             =   ""
             Style           =   3
             MixedState      =   -1  'True
          EndProperty
          BeginProperty Button5 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Caption         =   ""
             Key             =   "gohome"
+            Description     =   ""
             Object.ToolTipText     =   "Go Home"
             Object.Tag             =   ""
             ImageIndex      =   3
          EndProperty
          BeginProperty Button6 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Caption         =   ""
+            Key             =   "gosearch"
+            Description     =   ""
+            Object.ToolTipText     =   "Search Web"
+            Object.Tag             =   ""
+            ImageIndex      =   8
+         EndProperty
+         BeginProperty Button7 {0713F354-850A-101B-AFC0-4210102A8DA7} 
             Enabled         =   0   'False
             Key             =   "ph"
             Object.Tag             =   ""
@@ -65,19 +82,24 @@ Begin VB.Form Form1
             Object.Width           =   220
             MixedState      =   -1  'True
          EndProperty
-         BeginProperty Button7 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+         BeginProperty Button8 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Caption         =   ""
             Key             =   "loadpage"
+            Description     =   ""
             Object.ToolTipText     =   "Load this URL"
             Object.Tag             =   ""
             ImageIndex      =   4
          EndProperty
-         BeginProperty Button8 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+         BeginProperty Button9 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Key             =   ""
             Object.Tag             =   ""
             Style           =   3
             MixedState      =   -1  'True
          EndProperty
-         BeginProperty Button9 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+         BeginProperty Button10 {0713F354-850A-101B-AFC0-4210102A8DA7} 
+            Caption         =   ""
             Key             =   "stop"
+            Description     =   ""
             Object.ToolTipText     =   "Stop Loading"
             Object.Tag             =   ""
             ImageIndex      =   2
@@ -95,7 +117,7 @@ Begin VB.Form Form1
          EndProperty
          Height          =   420
          ItemData        =   "browser.frx":0000
-         Left            =   2640
+         Left            =   3120
          List            =   "browser.frx":0016
          TabIndex        =   3
          Text            =   "http://www.mozilla.com"
@@ -117,8 +139,8 @@ Begin VB.Form Form1
       Left            =   0
       TabIndex        =   1
       Top             =   5625
-      Width           =   7485
-      _ExtentX        =   13203
+      Width           =   7710
+      _ExtentX        =   13600
       _ExtentY        =   450
       SimpleText      =   ""
       _Version        =   327682
@@ -126,14 +148,18 @@ Begin VB.Form Form1
          NumPanels       =   2
          BeginProperty Panel1 {0713E89F-850A-101B-AFC0-4210102A8DA7} 
             AutoSize        =   1
-            Object.Width           =   10557
+            Object.Width           =   10954
             MinWidth        =   2646
+            TextSave        =   ""
+            Key             =   ""
             Object.Tag             =   ""
          EndProperty
          BeginProperty Panel2 {0713E89F-850A-101B-AFC0-4210102A8DA7} 
             Alignment       =   2
             Object.Width           =   2117
             MinWidth        =   2117
+            TextSave        =   ""
+            Key             =   ""
             Object.Tag             =   ""
          EndProperty
       EndProperty
@@ -149,7 +175,7 @@ Begin VB.Form Form1
       MaskColor       =   12632256
       _Version        =   327682
       BeginProperty Images {0713E8C2-850A-101B-AFC0-4210102A8DA7} 
-         NumListImages   =   7
+         NumListImages   =   8
          BeginProperty ListImage1 {0713E8C3-850A-101B-AFC0-4210102A8DA7} 
             Picture         =   "browser.frx":00C8
             Key             =   "back"
@@ -177,6 +203,10 @@ Begin VB.Form Form1
          BeginProperty ListImage7 {0713E8C3-850A-101B-AFC0-4210102A8DA7} 
             Picture         =   "browser.frx":1364
             Key             =   "go"
+         EndProperty
+         BeginProperty ListImage8 {0713E8C3-850A-101B-AFC0-4210102A8DA7} 
+            Picture         =   "browser.frx":167E
+            Key             =   "gofind"
          EndProperty
       EndProperty
    End
