@@ -29,6 +29,8 @@
 #include "nsCRT.h"
 #include "plhash.h"
 #include "prlog.h"
+#include "prthread.h"
+#include "prinrval.h"
 #include "nsVoidArray.h"
 #include "nsIPref.h"
 #include "nsIViewObserver.h"
@@ -824,9 +826,22 @@ PresShell::ProcessReflowCommands()
       mRootFrame->VerifyTree();
     }
     if (GetVerifyReflowEnable()) {
+      // First synchronously render what we have so far so that we can
+      // see it.
+      if (gVerifyReflowAll) {
+        printf("Before verify-reflow\n");
+        nsIView* rootView;
+        mViewManager->GetRootView(rootView);
+        mViewManager->UpdateView(rootView, nsnull, NS_VMREFRESH_IMMEDIATE);
+        PR_Sleep(PR_SecondsToInterval(3));
+      }
+
       mInVerifyReflow = PR_TRUE;
       VerifyIncrementalReflow();
       mInVerifyReflow = PR_FALSE;
+      if (gVerifyReflowAll) {
+        printf("After verify-reflow\n");
+      }
 
       if (0 != mReflowCommands.Count()) {
         printf("XXX yikes!\n");
@@ -1303,6 +1318,10 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
   stdout << r2;
 
   printf(" %s\n", aMsg);
+  if (gVerifyReflowAll) {
+    k1->List(stdout, 1, nsnull);
+    k2->List(stdout, 1, nsnull);
+  }
 }
 
 static void
