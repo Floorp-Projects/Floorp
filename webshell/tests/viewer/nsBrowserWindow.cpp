@@ -1269,9 +1269,11 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   nsIDeviceContext* dc = mWindow->GetDeviceContext();
   float t2d;
   dc->GetTwipsToDevUnits(t2d);
+  float d2a;
+  dc->GetDevUnitsToAppUnits(d2a);
   nsFont font(TOOL_BAR_FONT, NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
 	      NS_FONT_WEIGHT_NORMAL, 0,
-	      nscoord(t2d * NSIntPointsToTwips(TOOL_BAR_FONT_SIZE)));
+	      nscoord(NSIntPointsToTwips(TOOL_BAR_FONT_SIZE) * t2d * d2a));
   NS_RELEASE(dc);
 
   // Create and place back button
