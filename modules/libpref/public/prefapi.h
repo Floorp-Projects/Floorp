@@ -444,7 +444,7 @@ PR_EXTERN(PRBool) PREF_IsAutoAdminEnabled(void);
 struct fe_icon_data;
 typedef void* XmStringPtr;
 typedef void* KeySymPtr;
-PR_EXTERN(void) PREF_AlterSplashIcon(struct fe_icon_data*);
+/* PR_EXTERN(void) PREF_AlterSplashIcon(struct fe_icon_data*); */
 PR_EXTERN(PRBool) PREF_GetLabelAndMnemonic(char*, char**, XmStringPtr xmstring, KeySymPtr keysym);
 PR_EXTERN(PRBool) PREF_GetUrl(char*, char**);
 PR_EXTERN(void) PREF_SetCallbacksStatus(PRBool status);
