@@ -154,7 +154,7 @@ sub GenerateEmailInput {
 <table cellspacing=0 cellpadding=0>
 <tr>
 <td rowspan=2 valign=top><a href="helpemailquery.html">Email:</a>
-<input name="email$id" size="30" value="">&nbsp;matching as
+<input name="email$id" size="30" value="$defstr">&nbsp;matching as
 <SELECT NAME=emailtype$id>
 <OPTION VALUE="regexp">regexp
 <OPTION VALUE="notregexp">not regexp
