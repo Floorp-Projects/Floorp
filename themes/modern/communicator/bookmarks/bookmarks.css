@@ -22,6 +22,7 @@
  *   Ben Goodger <ben@netscape.com>
  *   Josh Soref  <timeless@mac.com>
  *   Joe Hewitt <hewitt@netscape.com>
+ *   Dan Cannon  <dc2@myrealbox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -62,6 +63,21 @@ treechildren::-moz-tree-image(Name, container) {
 .bookmark-item[open="true"],
 treechildren::-moz-tree-image(Name, open) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
+}
+
+.bookmark-item[container="true"][open="true"][loading="true"] {
+  list-style-image: url("chrome://global/skin/loading.gif") !important;
+}
+
+.bookmark-item[status="new"],
+treechildren::-moz-tree-image(Name, new) {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item-updated.gif");
+}
+
+.bookmark-item > .toolbarbutton-box > .toolbarbutton-icon {
+  list-style-image: inherit;
+  width: 16px;
+  height: 16px;
 }
 
 treechildren::-moz-tree-twisty(group, hidetwisty) {

@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Ben Goodger <ben@netscape.com>
  *   Josh Soref  <timeless@mac.com>
+ *   Dan Cannon  <dc2@myrealbox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,20 +43,23 @@
 /** 
  * Style rules for generic bookmarks items. 
  */    
- 
+
 treechildren::-moz-tree-image(Name) {
   margin-right: 2px;
 }
- 
-.bookmark-item, treechildren::-moz-tree-image(Name) {
+
+.bookmark-item,
+treechildren::-moz-tree-image(Name) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
 }
 
-.bookmark-item[container="true"], treechildren::-moz-tree-image(Name, container) {
+.bookmark-item[container="true"],
+treechildren::-moz-tree-image(Name, container) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
 }
 
-.bookmark-item[container="true"][open="true"], treechildren::-moz-tree-image(Name, open) {
+.bookmark-item[open="true"],
+treechildren::-moz-tree-image(Name, open) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
 }
 
@@ -63,8 +67,9 @@ treechildren::-moz-tree-image(Name) {
   list-style-image: url("chrome://global/skin/loading.gif") !important;
 }
 
-.bookmark-item[status="new"] {
-  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item-updated.gif") !important;
+.bookmark-item[status="new"],
+treechildren::-moz-tree-image(Name, new) {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item-updated.gif");
 }
 
 .bookmark-item > .toolbarbutton-box > .toolbarbutton-icon {
@@ -73,14 +78,7 @@ treechildren::-moz-tree-image(Name) {
   height: 16px;
 }
 
-.tree-cell-icon, .tree-cell-primary-icon {
-  list-style-image: inherit;
-  height: 16px;
-  max-width: 32px;   /* 32 pixel hack to get too-large favicons to show; fix when tree becomes tree */
-  max-height: 16px;
-}
-
-treechildren::-moz-tree-twisty(group,hidetwisty) {
+treechildren::-moz-tree-twisty(group, hidetwisty) {
   list-style-image: none;
 }
 

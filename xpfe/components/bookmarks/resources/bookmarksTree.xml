@@ -27,6 +27,7 @@
    Ben Goodger <ben@netscape.com> (Original Author)
    Blake Ross <blakeross@telocity.com>
    Pierre Chanial <chanial@noos.fr> (v2.0)
+   Dan Cannon     <dc2@myrealbox.com>
 
  Alternatively, the contents of this file may be used under the terms of
  either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -758,6 +759,7 @@
                 <treeitem uri="rdf:*">
                   <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
                     <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                              properties="rdf:http://home.netscape.com/WEB-rdf#status"
                               label="rdf:http://home.netscape.com/NC-rdf#Name"/>
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
@@ -862,6 +864,7 @@
               <treeitem uri="rdf:*">
                 <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
                   <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                            properties="rdf:http://home.netscape.com/WEB-rdf#status"
                             label="rdf:http://home.netscape.com/NC-rdf#Name"/>
                 </treerow>
               </treeitem>
