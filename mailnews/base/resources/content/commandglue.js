@@ -652,22 +652,38 @@ function GetSelectedFolderResource()
     return GetFolderResource(folderTree, startIndex.value);
 }
 
+function NotifyChangedMessagePaneVisibility(now_hidden)
+{
+  var event = document.createEvent('Events');
+  if (now_hidden) {
+    event.initEvent('messagepane-hide', false, true);
+  }
+  else {
+    event.initEvent('messagepane-unhide', false, true);
+  }
+  document.getElementById("messengerWindow").dispatchEvent(event);
+}
+
 function OnMouseUpThreadAndMessagePaneSplitter()
-  {
+{
+  // the collapsed state is the state after we released the mouse 
+  // so we take it as it is
+  var now_hidden = IsThreadAndMessagePaneSplitterCollapsed();
   if (gDBView) {
-    // the collapsed state is the state after we released the mouse 
-    // so we take it as it is
-    gDBView.suppressMsgDisplay = IsThreadAndMessagePaneSplitterCollapsed();
+    gDBView.suppressMsgDisplay = now_hidden;
   }
-  }
+  NotifyChangedMessagePaneVisibility(now_hidden);
+}
 
 function OnClickThreadAndMessagePaneSplitterGrippy()
-  {
+{
+  // the collapsed state is the state when we clicked on the grippy
+  // not when afterwards, so we need to reverse this value
+  var now_hidden = !IsThreadAndMessagePaneSplitterCollapsed();
   if (gDBView) {
-    // the collapsed state is the state when we clicked on the grippy
-    // not when afterwards, so we need to reverse this value
-    gDBView.suppressMsgDisplay = !IsThreadAndMessagePaneSplitterCollapsed();
-   }
+    gDBView.suppressMsgDisplay = now_hidden;
+  }
+  NotifyChangedMessagePaneVisibility(now_hidden);
 }
 
 function FolderPaneSelectionChange()

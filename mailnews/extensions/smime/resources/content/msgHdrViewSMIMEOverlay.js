@@ -176,5 +176,36 @@ function msgHdrViewSMIMEOnUnload(event)
   forgetEncryptedURI();
 }
 
+function msgHdrViewSMIMEOnMessagePaneHide()
+{
+  gSMIMEContainer.collapsed = true;
+  gSignedUINode.collapsed = true;
+  gSignedStatusPanel.collapsed = true;
+  gEncryptedUINode.collapsed = true;
+  gEncryptedStatusPanel.collapsed = true; 
+}
+
+function msgHdrViewSMIMEOnMessagePaneUnhide()
+{
+  if (gEncryptionStatus != -1 || gSignatureStatus != -1)
+  {
+    gSMIMEContainer.collapsed = false;
+
+    if (gSignatureStatus != -1)
+    {
+      gSignedUINode.collapsed = false;
+      gSignedStatusPanel.collapsed = false;
+    }
+
+    if (gEncryptionStatus != -1)
+    {
+      gEncryptedUINode.collapsed = false;
+      gEncryptedStatusPanel.collapsed = false;
+    }
+  }
+}
+
 addEventListener('messagepane-loaded', msgHdrViewSMIMEOnLoad, true);
 addEventListener('messagepane-unloaded', msgHdrViewSMIMEOnUnload, true);
+addEventListener('messagepane-hide', msgHdrViewSMIMEOnMessagePaneHide, true);
+addEventListener('messagepane-unhide', msgHdrViewSMIMEOnMessagePaneUnhide, true);
