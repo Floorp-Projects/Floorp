@@ -143,17 +143,6 @@ MaiTopLevel::Create(nsIAccessible *aAcc)
     return maiTopLevel;
 }
 
-PRUint32
-MaiTopLevel::GetRole(void)
-{
-    AtkObject *atkObject = (AtkObject*)mMaiAtkObject;
-
-    if (!atkObject->role)
-        atk_object_set_role(atkObject, ATK_ROLE_FRAME);
-
-    return atkObject->role;
-}
-
 //////////////////////////////////////////////////////////////////////
 // See the comments in
 // MaiWidget::CreateAndCache(nsIAccessible *aAcc);
