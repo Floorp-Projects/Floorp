@@ -125,8 +125,8 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
             // Truncate the nsame so the spec is just to the app directory
             appFSSpec.name[0] = 0;
 
-        	nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface(localFile);
-			    if (localFileMac) 
+        	nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface((nsIFile*)localFile);
+		    if (localFileMac) 
           {
 				    localFileMac->InitWithFSSpec(&appFSSpec);
             *aFile = localFile;
