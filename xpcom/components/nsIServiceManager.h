@@ -103,11 +103,11 @@ public:
     NS_IMETHOD
     GetService(const nsCID& aClass, const nsIID& aIID,
                nsISupports* *result,
-               nsIShutdownListener* shutdownListener = NULL) = 0;
+               nsIShutdownListener* shutdownListener = nsnull) = 0;
 
     NS_IMETHOD
     ReleaseService(const nsCID& aClass, nsISupports* service,
-                   nsIShutdownListener* shutdownListener = NULL) = 0;
+                   nsIShutdownListener* shutdownListener = nsnull) = 0;
 
     ////////////////////////////////////////////////////////////////////////////
     // let's do it again, this time with ProgIDs...
@@ -121,11 +121,11 @@ public:
     NS_IMETHOD
     GetService(const char* aProgID, const nsIID& aIID,
                nsISupports* *result,
-               nsIShutdownListener* shutdownListener = NULL) = 0;
+               nsIShutdownListener* shutdownListener = nsnull) = 0;
 
     NS_IMETHOD
     ReleaseService(const char* aProgID, nsISupports* service,
-                   nsIShutdownListener* shutdownListener = NULL) = 0;
+                   nsIShutdownListener* shutdownListener = nsnull) = 0;
 
 };
 
@@ -167,11 +167,11 @@ public:
     static nsresult
     GetService(const nsCID& aClass, const nsIID& aIID,
                nsISupports* *result,
-               nsIShutdownListener* shutdownListener = NULL);
+               nsIShutdownListener* shutdownListener = nsnull);
 
     static nsresult
     ReleaseService(const nsCID& aClass, nsISupports* service,
-                   nsIShutdownListener* shutdownListener = NULL);
+                   nsIShutdownListener* shutdownListener = nsnull);
 
     ////////////////////////////////////////////////////////////////////////////
     // let's do it again, this time with ProgIDs...
@@ -185,11 +185,11 @@ public:
     static nsresult
     GetService(const char* aProgID, const nsIID& aIID,
                nsISupports* *result,
-               nsIShutdownListener* shutdownListener = NULL);
+               nsIShutdownListener* shutdownListener = nsnull);
 
     static nsresult
     ReleaseService(const char* aProgID, nsISupports* service,
-                   nsIShutdownListener* shutdownListener = NULL);
+                   nsIShutdownListener* shutdownListener = nsnull);
 
     ////////////////////////////////////////////////////////////////////////////
 
