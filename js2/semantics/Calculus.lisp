@@ -40,6 +40,29 @@
 (defvar *trace-variables* nil)
 
 
+; Different Common Lisp implementations map their floating-point types to Common Lisp types differently.
+; Change the code below to encode which ones correspond to IEEE single (float32) and double (float64) values.
+
+(defconstant *float32-type* #+mcl 'short-float #-mcl 'single-float)
+(deftype float32 ()
+         '(or
+           #+mcl (and short-float (not (eql 0.0s0)) (not (eql -0.0s0)))
+           #-mcl (and single-float (not (eql 0.0f0)) (not (eql -0.0f0)))
+           (member :+zero32 :-zero32 :+infinity32 :-infinity32 :nan32)))
+; The exponent character emitted by (with-standard-io-syntax (format "~E" x)) when printing an IEEE single value
+(defconstant *float32-exponent-char* #+mcl #\S #-mcl #\f)
+
+
+(defconstant *float64-type* 'double-float)
+(deftype float64 ()
+         '(or
+           (and double-float (not (eql 0.0)) (not (eql -0.0)))
+           (member :+zero64 :-zero64 :+infinity64 :-infinity64 :nan64)))
+; The exponent character emitted by (with-standard-io-syntax (format "~E" x)) when printing an IEEE double value
+(defconstant *float64-exponent-char* #+mcl #\E #-mcl #\d)
+
+
+
 #+mcl (dolist (indent-spec '((? . 1) (apply . 1) (funcall . 1) (declare-action . 5) (production . 3) (rule . 2) (function . 2)
                              (define . 2) (deftag . 1) (defrecord . 1) (deftype . 1) (tag . 1) (%text . 1)
                              (var . 2) (const . 2) (rwhen . 1) (while . 1) (for-each . 2)
@@ -101,12 +124,9 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; DOUBLE-PRECISION FLOATING-POINT NUMBERS
 
-(deftype float64 ()
-         '(or (and double-float (not (eql 0.0)) (not (eql -0.0))) (member :+zero64 :-zero64 :+infinity64 :-infinity64 :nan64)))
-
 (declaim (inline finite64?))
 (defun finite64? (n)
-  (and (typep n 'double-float) (not (zerop n))))
+  (and (typep n *float64-type*) (not (zerop n))))
 
 (defun float64? (n)
   (or (finite64? n) (member n '(:+zero64 :-zero64 :+infinity64 :-infinity64 :nan64))))
@@ -123,7 +143,7 @@
 
 
 (defun rational-to-float64 (r)
-  (let ((f (handle-overflow64 (coerce r 'double-float)
+  (let ((f (handle-overflow64 (coerce r *float64-type*)
              r)))
     (if (eq f :+zero64)
       (if (minusp r) :-zero64 :+zero64)
@@ -137,7 +157,7 @@
     (:+infinity32 :+infinity64)
     (:-infinity32 :-infinity64)
     (:nan32 :nan64)
-    (t (coerce x 'double-float))))
+    (t (coerce x *float64-type*))))
 
 
 ; Return true if n is +0 or -0 and false otherwise.
@@ -349,7 +369,8 @@
       (setq x (- x)))
     (let* ((str (format nil "~E" x))
            (p (position exponent-char str)))
-      (assert (and p (eql (char str 1) #\.)))
+      (unless (and p (eql (char str 1) #\.))
+        (error "Internal problem in decompose-float.  Check the settings of *float32-exponent-char* and *float64-exponent-char* for your platform."))
       (let ((s-first (subseq str 0 1))
             (s-rest (subseq str 2 p)))
         (values
@@ -398,7 +419,7 @@
     ((:+zero64 :-zero64) "0")
     (t (assert (finite64? x))
        (with-standard-io-syntax
-         (multiple-value-bind (sign s e) (float-to-string-components x #\E nil)
+         (multiple-value-bind (sign s e) (float-to-string-components x *float64-exponent-char* nil)
            (when sign
              (setq s (concatenate 'string "-" s)))
            (when e
@@ -409,12 +430,9 @@
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; SINGLE-PRECISION FLOATING-POINT NUMBERS
 
-(deftype float32 ()
-         '(or (and short-float (not (eql 0.0)) (not (eql -0.0))) (member :+zero32 :-zero32 :+infinity32 :-infinity32 :nan32)))
-
 (declaim (inline finite32?))
 (defun finite32? (n)
-  (and (typep n 'short-float) (not (zerop n))))
+  (and (typep n *float32-type*) (not (zerop n))))
 
 (defun float32? (n)
   (or (finite32? n) (member n '(:+zero32 :-zero32 :+infinity32 :-infinity32 :nan32))))
@@ -431,7 +449,7 @@
 
 
 (defun rational-to-float32 (r)
-  (let ((f (handle-overflow32 (coerce r 'short-float)
+  (let ((f (handle-overflow32 (coerce r *float32-type*)
              r)))
     (if (eq f :+zero32)
       (if (minusp r) :-zero32 :+zero32)
@@ -470,9 +488,9 @@
 ;   :unordered if either n or m is :nan32.
 (defun float32-compare (n m)
   (when (float32-is-zero n)
-    (setq n 0.0))
+    (setq n (coerce 0.0 *float32-type*)))
   (when (float32-is-zero m)
-    (setq m 0.0))
+    (setq m (coerce 0.0 *float32-type*)))
   (cond
    ((or (float32-is-nan n) (float32-is-nan m)) :unordered)
    ((eql n m) :equal)
@@ -623,7 +641,7 @@
     ((:+zero32 :-zero32) "0")
     (t (assert (finite32? x))
        (with-standard-io-syntax
-         (multiple-value-bind (sign s e) (float-to-string-components x #\S nil)
+         (multiple-value-bind (sign s e) (float-to-string-components x *float32-exponent-char* nil)
            (when sign
              (setq s (concatenate 'string "-" s)))
            (when e
@@ -2827,8 +2845,8 @@
 ;;;   A boolean (nil for false; non-nil for true)
 ;;;   An integer
 ;;;   A rational number
-;;;   A short-float (or :+zero32, :-zero32, :+infinity32, :-infinity32, or :nan32)
-;;;   A double-float (or :+zero64, :-zero64, :+infinity64, :-infinity64, or :nan64)
+;;;   A *float32-type* (or :+zero32, :-zero32, :+infinity32, :-infinity32, or :nan32)
+;;;   A *float64-type* (or :+zero64, :-zero64, :+infinity64, :-infinity64, or :nan64)
 ;;;   A character
 ;;;   A function (represented by a lisp function)
 ;;;   A string
@@ -3190,11 +3208,11 @@
       ((consp value-expr) (scan-cons (first value-expr) (rest value-expr)))
       ((identifier? value-expr) (scan-identifier (world-intern world value-expr)))
       ((integerp value-expr) (scan-constant value-expr (world-integer-type world)))
-      ((typep value-expr 'short-float)
+      ((typep value-expr *float32-type*)
        (if (zerop value-expr)
-         (error "Use +zero32 or -zero32 instead of 0.0s0")
+         (error "Use +zero32 or -zero32 instead of 0.0s0 or 0.0f0")
          (scan-constant value-expr (world-finite32-type world))))
-      ((typep value-expr 'double-float)
+      ((typep value-expr *float64-type*)
        (if (zerop value-expr)
          (error "Use +zero64 or -zero64 instead of 0.0")
          (scan-constant value-expr (world-finite64-type world))))
