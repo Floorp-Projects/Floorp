@@ -298,9 +298,6 @@ nsXULElement::nsXULElement()
       mParent(nsnull),
       mChildren(nsnull),
       mScriptObject(nsnull),
-#ifdef DEBUG
-      mHaveRootedScriptObject(PR_FALSE),
-#endif
       mLazyState(0),
       mSlots(nsnull)
 {
@@ -366,7 +363,6 @@ nsXULElement::Init()
 
 nsXULElement::~nsXULElement()
 {
-    NS_ASSERTION(! mHaveRootedScriptObject, "script object still rooted!");
     delete mSlots;
 
     //NS_IF_RELEASE(mDocument); // not refcounted
