@@ -242,6 +242,7 @@
 <!ENTITY textZoomReduceCmd.label        "Decrease Text Size">
 <!ENTITY textZoomReduceCmd.accesskey    "D">
 <!ENTITY textZoomReduceCmd.commandkey   "-">
+<!ENTITY textZoomResetCmd.commandkey    "0">
 
 <!ENTITY downloadsButton.label          "Downloads">
 <!ENTITY downloadsButton.tooltip        "Displays the progress of ongoing downloads">
