@@ -55,7 +55,7 @@ public:
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(1, 1, PR_FALSE);
+    UpdatePresentationDataFromChildAt(1, 1, PR_FALSE, PR_FALSE);
     // switch the style of the superscript
     InsertScriptLevelStyleContext(aPresContext);
     // check whether or not this is an embellished operator

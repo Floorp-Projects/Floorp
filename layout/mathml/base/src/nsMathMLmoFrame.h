@@ -18,6 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  */
 
 #ifndef nsMathMLmoFrame_h___
@@ -33,7 +34,14 @@
 class nsMathMLmoFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmoFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-  
+
+  NS_IMETHOD
+  SetAdditionalStyleContext(PRInt32          aIndex, 
+                            nsIStyleContext* aStyleContext);
+  NS_IMETHOD
+  GetAdditionalStyleContext(PRInt32           aIndex, 
+                            nsIStyleContext** aStyleContext) const;
+
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
@@ -70,8 +78,8 @@ public:
   Stretch(nsIPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
-          nsStretchMetrics&    aContainerSize,
-          nsStretchMetrics&    aDesiredStretchSize);
+          nsBoundingMetrics&   aContainerSize,
+          nsHTMLReflowMetrics& aDesiredStretchSize);
 
   // helper method to lookup the operator dictionary and initialize our member data
   void 
@@ -83,12 +91,13 @@ protected:
   
   virtual PRIntn GetSkipSides() const { return 0; }
 
-  nsMathMLChar    mMathMLChar; // Here is the MathMLChar that will deal with the operator.
-  nsOperatorFlags mFlags;
-  float           mLeftSpace;
-  float           mRightSpace;
-  float           mMinSize;
-  float           mMaxSize;
+  nsMathMLChar     mMathMLChar; // Here is the MathMLChar that will deal with the operator.
+
+  nsOperatorFlags  mFlags;
+  float            mLeftSpace;
+  float            mRightSpace;
+  float            mMinSize;
+  float            mMaxSize;
 };
 
 #endif /* nsMathMLmoFrame_h___ */

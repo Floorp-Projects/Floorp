@@ -19,6 +19,7 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Vilya Harvey <vilya@nag.co.uk>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  */
 
 #ifndef nsMathMLmsqrtFrame_h___
@@ -59,6 +60,13 @@ public:
   friend nsresult NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
+  SetAdditionalStyleContext(PRInt32          aIndex, 
+                            nsIStyleContext* aStyleContext);
+  NS_IMETHOD
+  GetAdditionalStyleContext(PRInt32           aIndex, 
+                            nsIStyleContext** aStyleContext) const;
+
+  NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
@@ -83,7 +91,8 @@ protected:
   
   virtual PRIntn GetSkipSides() const { return 0; }
 
-  nsMathMLChar mSqrChar, mBarChar;
+  nsMathMLChar mSqrChar;
+  nsRect       mBarRect;
 };
 
 #endif /* nsMathMLmsqrtFrame_h___ */

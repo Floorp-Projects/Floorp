@@ -17,6 +17,7 @@
  *
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  */
 
 #ifndef nsMathMLChar_h___
@@ -25,52 +26,63 @@
 #include "nsMathMLOperators.h"
 #include "nsIMathMLFrame.h"
 
-// enum of chars that we know something about
+typedef PRUnichar nsGlyphCode;
+class nsGlyphTable;
+
+// List of enums of all known chars
 enum nsMathMLCharEnum {
   eMathMLChar_DONT_STRETCH = -1,
-#define MATHML_CHAR(_name, _value, _direction) eMathMLChar_##_name,
-#include "nsMathMLCharList.h"
-#undef MATHML_CHAR
+#define WANT_CHAR_ENUM	
+  #include "nsMathMLCharList.h"
+#undef WANT_CHAR_ENUM
   eMathMLChar_COUNT
 };
 
+// Hints for Stretch() to indicate criteria for stretching
+#define NS_STRETCH_SMALLER -1 // don't stretch more than requested size
+#define NS_STRETCH_NORMAL   0 // try to stretch to requested size - DEFAULT
+#define NS_STRETCH_LARGER   1 // try to stretch more than requested size
 
-// class used to handle stretchy symbols (accent and boundary symbol)
+// class used to handle stretchy symbols (accent, delimiter and boundary symbols)
 class nsMathMLChar
 {
 public:
   // constructor and destructor
   nsMathMLChar()
   {
+    mStyleContext = nsnull;
   }
 
-  virtual ~nsMathMLChar()
+  ~nsMathMLChar() // not a virtual destructor: this class is not intended to be subclassed
   {
   }
  
-  NS_IMETHOD
+  nsresult
   Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
-        nsIStyleContext*     aStyleContext);
+        const nsRect&        aDirtyRect,
+        nsFramePaintLayer    aWhichLayer,
+        nsIFrame*            aForFrame);
 
   // This is the method called to ask the char to stretch itself.
   // aDesiredStretchSize is an IN/OUT parameter.
-  // On input  - it contains our current size.
+  // On input  - it contains our current size, or zero if current size is unknown
   // On output - the same size or the new size that the char wants.
-  NS_IMETHOD
+  nsresult
   Stretch(nsIPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
-          nsIStyleContext*     aStyleContext,
           nsStretchDirection   aStretchDirection,
-          nsStretchMetrics&    aContainerSize,
-          nsStretchMetrics&    aDesiredStretchSize);
+          nsBoundingMetrics&   aContainerSize,
+          nsBoundingMetrics&   aDesiredStretchSize,
+          PRInt32              aStretchHint = NS_STRETCH_NORMAL);
 
   // If you call SetData(), it will lookup the enum of the data
   // and set mEnum for you. If the data is an arbitrary string for 
   // which no enum is defined, mEnum is set to eMathMLChar_DONT_STRETCH
   // and the data is interpreted as a normal string.
   void
-  SetData(nsString& aData);
+  SetData(nsIPresContext* aPresContext,
+          nsString&       aData);
 
   void
   GetData(nsString& aData) {
@@ -80,10 +92,11 @@ public:
   // If you call SetEnum(), it will lookup the actual value of the data and
   // set it for you. All the enums listed above have their corresponding data.
   void
-  SetEnum(nsMathMLCharEnum aEnum);
+  SetEnum(nsIPresContext*  aPresContext,
+          nsMathMLCharEnum aEnum);
 
   nsMathMLCharEnum
-  Enum() {
+  GetEnum() {
     return mEnum;
   }
 
@@ -114,43 +127,52 @@ public:
     mRect = aRect;
   }
 
+  // Metrics that _exactly_ enclose the char. The char *must* have *already* 
+  // being stretched before you can call the GetBoundingMetrics() method.
+  // IMPORTANT: since chars have their own style contexts, and may be rendered
+  // with glyphs that are not in the parent font, just calling the default
+  // aRenderingContext.GetBoundingMetrics(aChar) can give incorrect results.
   void
   GetBoundingMetrics(nsBoundingMetrics& aBoundingMetrics) {
     aBoundingMetrics = mBoundingMetrics;
   }
 
+  // Hooks to access the extra leaf style contexts given to the MathMLChars.
+  // They provide an interface to make them acessible to the Style System via
+  // the Get/Set AdditionalStyleContext() APIs. Owners of MathMLChars
+  // should honor these APIs.
+  nsresult
+  GetStyleContext(nsIStyleContext** aStyleContext) const;
+
+  nsresult
+  SetStyleContext(nsIStyleContext* aStyleContext);
+
 private:
   nsString           mData;
-  PRUnichar          mGlyph;
-  nsRect             mRect;
-  nsStretchDirection mDirection;
   nsMathMLCharEnum   mEnum;
+  nsStretchDirection mDirection;
+  nsRect             mRect;
   nsBoundingMetrics  mBoundingMetrics;
+  nsIStyleContext*   mStyleContext;
+  nsGlyphTable*      mGlyphTable;
+  nsGlyphCode        mGlyph;
 
   // helper methods
-
-  static void
-  DrawGlyph(nsIRenderingContext& aRenderingContext, 
-            PRUnichar            aChar, 
-            nscoord              aX,
-            nscoord              aY,
-            nsRect&              aClipRect);
-
   static nsresult
   PaintVertically(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
+                  nscoord              aFontAscent,
                   nsIStyleContext*     aStyleContext,
-                  nscoord              fontAscent,
-                  nscoord              fontDescent,
+                  nsGlyphTable*        aGlyphTable,
                   nsMathMLCharEnum     aCharEnum,
                   nsRect               aRect);
 
   static nsresult
   PaintHorizontally(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
+                    nscoord              aFontAscent,
                     nsIStyleContext*     aStyleContext,
-                    nscoord              fontAscent,
-                    nscoord              fontDescent,
+                    nsGlyphTable*        aGlyphTable,
                     nsMathMLCharEnum     aCharEnum,
                     nsRect               aRect);
 };

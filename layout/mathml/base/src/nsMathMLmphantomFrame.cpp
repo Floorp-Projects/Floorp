@@ -66,6 +66,19 @@ nsMathMLmphantomFrame::~nsMathMLmphantomFrame()
 {
 }
 
+NS_IMETHODIMP
+nsMathMLmphantomFrame::Init(nsIPresContext*  aPresContext,
+                            nsIContent*      aContent,
+                            nsIFrame*        aParent,
+                            nsIStyleContext* aContext,
+                            nsIFrame*        aPrevInFlow)
+{
+  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+  return rv;
+}
+
 NS_METHOD
 nsMathMLmphantomFrame::Paint(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,

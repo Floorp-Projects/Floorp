@@ -75,8 +75,10 @@ nsMathMLmrowFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
+  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
-  // XXX Attributes?
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
   return rv;
 }

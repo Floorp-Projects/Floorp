@@ -76,6 +76,8 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
+  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+
   mPresentationData.mstyle = this;
 
   mInnerScriptLevelIncrement = 0;
@@ -120,7 +122,8 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
 
 NS_IMETHODIMP
 nsMathMLmstyleFrame::UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
-                                            PRBool  aDisplayStyle)
+                                            PRBool  aDisplayStyle,
+                                            PRBool  aCompressed)
 {
   // mstyle is special...
   // Since UpdatePresentationData() can be called by a parent frame, the
@@ -136,6 +139,10 @@ nsMathMLmstyleFrame::UpdatePresentationData(PRInt32 aScriptLevelIncrement,
   if (!NS_MATHML_IS_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL(mPresentationData.flags)) {
     mPresentationData.scriptLevel += aScriptLevelIncrement;
   }
+  if (aCompressed)
+    mPresentationData.flags |= NS_MATHML_COMPRESSED;
+  else
+    mPresentationData.flags &= ~NS_MATHML_COMPRESSED;
   
   return NS_OK;
 }
@@ -143,12 +150,14 @@ nsMathMLmstyleFrame::UpdatePresentationData(PRInt32 aScriptLevelIncrement,
 NS_IMETHODIMP
 nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex, 
                                                        PRInt32 aScriptLevelIncrement,
-                                                       PRBool  aDisplayStyle)
+                                                       PRBool  aDisplayStyle,
+                                                       PRBool  aCompressed)
 {
   // mstyle is special...
   // Since UpdatePresentationDataFromChildAt() can be called by a parent frame,
   // wee need to ensure that the attributes of mstyle take precedence
 
+  PRBool compressed = NS_MATHML_IS_COMPRESSED(mPresentationData.flags);
   PRBool displayStyle = NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags);
   if (NS_MATHML_IS_MSTYLE_WITH_DISPLAYSTYLE(mPresentationData.flags)) {
     aDisplayStyle = displayStyle;
@@ -156,10 +165,12 @@ nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex,
   if (NS_MATHML_IS_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL(mPresentationData.flags)) {
     aScriptLevelIncrement = 0;
   }
-  if (0 == aScriptLevelIncrement && aDisplayStyle == displayStyle)
-    return NS_OK;
-    
+  if (0 == aScriptLevelIncrement &&
+      aDisplayStyle == displayStyle && 
+      aCompressed == compressed)
+    return NS_OK;  // quick return, there is nothing to change
+ 
   // let the base class worry about the update
   return nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(aIndex,
-                                         aScriptLevelIncrement, aDisplayStyle);
+                                 aScriptLevelIncrement, aDisplayStyle, aCompressed);
 }

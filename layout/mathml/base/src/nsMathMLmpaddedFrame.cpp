@@ -89,7 +89,7 @@ nsMathMLmpaddedFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
+  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
   /*
   parse the attributes
@@ -139,6 +139,9 @@ nsMathMLmpaddedFrame::Init(nsIPresContext*  aPresContext,
     ParseAttribute(value, mLeftSpaceSign, mLeftSpace, mLeftSpacePseudoUnit);
   }
 
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
   return rv;
 }
 
@@ -172,11 +175,9 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
   else
     aSign = NS_MATHML_SIGN_UNSPECIFIED;
 
-/*
-  // skip any space in-between
+  // skip any space after the sign
   while (i < stringLength && XP_IS_SPACE(aString[i]))
     i++;
-*/
 
   ///////////////////////
   // get the string that represents the numeric value
@@ -226,15 +227,18 @@ nsMathMLmpaddedFrame::ParseAttribute(nsString&   aString,
       return PR_FALSE;
     }
 
+    // else the only other valid possibility here is a percentage value,
+    // otherwise ParseNumericValue() would have failed
+   
     aPseudoUnit = NS_MATHML_PSEUDO_UNIT_ITSELF;
     return PR_TRUE;
   }
 
   aString.Right(value, stringLength - i);
-  if      (value == "width")  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
-  else if (value == "height") aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
-  else if (value == "depth")  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
-  else if (value == "lspace") aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
+  if      (value.Equals("width"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_WIDTH;
+  else if (value.Equals("height")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_HEIGHT;
+  else if (value.Equals("depth"))  aPseudoUnit = NS_MATHML_PSEUDO_UNIT_DEPTH;
+  else if (value.Equals("lspace")) aPseudoUnit = NS_MATHML_PSEUDO_UNIT_LSPACE;
   else // unexpected pseudo-unit
   {
     aCSSValue.Reset();
@@ -265,7 +269,7 @@ nsMathMLmpaddedFrame::UpdateValue(nsIPresContext*      aPresContext,
                                   PRInt32              aPseudoUnit,
                                   nsCSSValue&          aCSSValue,
                                   nscoord              aLeftSpace,
-                                  nsHTMLReflowMetrics& aReflowMetrics,
+                                  nsBoundingMetrics&   aBoundingMetrics,
                                   nscoord&             aValueToUpdate)
 {
   nsCSSUnit unit = aCSSValue.GetUnit();
@@ -278,15 +282,15 @@ nsMathMLmpaddedFrame::UpdateValue(nsIPresContext*      aPresContext,
       switch(aPseudoUnit)
       {
         case NS_MATHML_PSEUDO_UNIT_WIDTH:
-             scaler = aReflowMetrics.width;
+             scaler = aBoundingMetrics.width;
              break;
 
         case NS_MATHML_PSEUDO_UNIT_HEIGHT:
-             scaler = aReflowMetrics.ascent;
+             scaler = aBoundingMetrics.ascent;
              break;
 
         case NS_MATHML_PSEUDO_UNIT_DEPTH:
-             scaler = aReflowMetrics.descent;
+             scaler = aBoundingMetrics.descent;
              break;
 
         case NS_MATHML_PSEUDO_UNIT_LSPACE:
@@ -295,16 +299,16 @@ nsMathMLmpaddedFrame::UpdateValue(nsIPresContext*      aPresContext,
 
         default:
           // if we ever reach here, it would mean something is wrong 
-          // somwehere with the setup and/or the caller
+          // somewhere with the setup and/or the caller
           NS_ASSERTION(0, "Unexpected Pseudo Unit");
           return;
       }
     }
 
     if (eCSSUnit_Number == unit)
-      amount = nscoord(float(scaler) * aCSSValue.GetFloatValue());
+      amount = NSToCoordRound(float(scaler) * aCSSValue.GetFloatValue());
     else if (eCSSUnit_Percent == unit)
-      amount = nscoord(float(scaler) * aCSSValue.GetPercentValue());
+      amount = NSToCoordRound(float(scaler) * aCSSValue.GetPercentValue());
     else
       amount = CalcLength(aPresContext, aStyleContext, aCSSValue);
 
@@ -322,7 +326,7 @@ nsMathMLmpaddedFrame::UpdateValue(nsIPresContext*      aPresContext,
     to 0 if it would otherwise become negative. Dimensions which are 
     initially 0 can be made negative
     */
-    if (0 <= oldValue && 0 > aValueToUpdate) aValueToUpdate = 0;
+    if (0 < oldValue && 0 > aValueToUpdate) aValueToUpdate = 0;
 
   }
 }
@@ -344,9 +348,9 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
     return rv;
   }
 
-  nscoord height = aDesiredSize.ascent;
-  nscoord depth  = aDesiredSize.descent;
-  nscoord width  = aDesiredSize.width;
+  nscoord height = mBoundingMetrics.ascent;
+  nscoord depth  = mBoundingMetrics.descent;
+  nscoord width  = mBoundingMetrics.width;
   nscoord lspace = 0; // it is unclear from the REC what is the default here 
 
   PRInt32 pseudoUnit;
@@ -356,33 +360,51 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
              ? NS_MATHML_PSEUDO_UNIT_WIDTH : mWidthPseudoUnit;
   UpdateValue(aPresContext, mStyleContext,
               mWidthSign, pseudoUnit, mWidth,
-              lspace, aDesiredSize, width);
+              lspace, mBoundingMetrics, width);
 
   // update height
   pseudoUnit = (mHeightPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_HEIGHT : mHeightPseudoUnit;
   UpdateValue(aPresContext, mStyleContext,
               mHeightSign, pseudoUnit, mHeight,
-              lspace, aDesiredSize, height);
+              lspace, mBoundingMetrics, height);
 
   // update depth
   pseudoUnit = (mDepthPseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_DEPTH : mDepthPseudoUnit;
   UpdateValue(aPresContext, mStyleContext,
               mDepthSign, pseudoUnit, mDepth,
-              lspace, aDesiredSize, depth);
+              lspace, mBoundingMetrics, depth);
 
   // update lspace -- should be *last* because lspace is overwritten!!
   pseudoUnit = (mLeftSpacePseudoUnit == NS_MATHML_PSEUDO_UNIT_ITSELF)
              ? NS_MATHML_PSEUDO_UNIT_LSPACE : mLeftSpacePseudoUnit;
   UpdateValue(aPresContext, mStyleContext,
               mLeftSpaceSign, pseudoUnit, mLeftSpace,
-              lspace, aDesiredSize, lspace);
+              lspace, mBoundingMetrics, lspace);
 
   // do the padding now that we have everything
 
-  nscoord dy = height - aDesiredSize.ascent;
+  if (lspace != 0) { // there was padding on the left
+    mBoundingMetrics.leftBearing = 0;
+  }
+
+  if (width != mBoundingMetrics.width) { // there was padding on the right
+    mBoundingMetrics.rightBearing = lspace + width;
+  }
+
+  nscoord dy = height - mBoundingMetrics.ascent;
   nscoord dx = lspace;
+
+  mBoundingMetrics.ascent = height;
+  mBoundingMetrics.descent = depth;
+  mBoundingMetrics.width = lspace + width;
+
+  aDesiredSize.ascent += dy;
+  aDesiredSize.descent += depth - mBoundingMetrics.descent;
+  aDesiredSize.width = mBoundingMetrics.width;
+  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+
   if (0 != dx || 0 != dy) {
     nsRect rect;
     nsIFrame* childFrame = mFrames.FirstChild();
@@ -393,12 +415,8 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  aDesiredSize.ascent =  height;
-  aDesiredSize.descent = depth;
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  aDesiredSize.width =  width;
-
-  // XXX need to tweak mBoundingMetrics/mReference as well ...
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent;
 
   return NS_OK;
 }

@@ -18,6 +18,7 @@
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  */
 
 
@@ -43,6 +44,17 @@
 // <mfrac> -- form a fraction from two subexpressions - implementation
 //
 
+// various fraction line thicknesses (multiplicative values of the default rule thickness)
+
+#define THIN_FRACTION_LINE                   0.5f
+#define THIN_FRACTION_LINE_MINIMUM_PIXELS    1  // minimum of 1 pixel
+
+#define MEDIUM_FRACTION_LINE                 1.5f
+#define MEDIUM_FRACTION_LINE_MINIMUM_PIXELS  2  // minimum of 2 pixels
+
+#define THICK_FRACTION_LINE                  2.0f
+#define THICK_FRACTION_LINE_MINIMUM_PIXELS   4  // minimum of 4 pixels
+
 nsresult
 NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -58,7 +70,8 @@ NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-nsMathMLmfracFrame::nsMathMLmfracFrame()
+nsMathMLmfracFrame::nsMathMLmfracFrame() : 
+  mLineRect()
 {
 }
 
@@ -80,52 +93,71 @@ nsMathMLmfracFrame::Init(nsIPresContext*  aPresContext,
     return rv;
   }
 
-  nsAutoString value;
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
+  return rv;
+}
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+nscoord 
+nsMathMLmfracFrame::CalcLineThickness(nsIPresContext*  aPresContext,
+                                      nsIStyleContext* aStyleContext,
+                                      nsString&        aThicknessAttribute,
+                                      nscoord          onePixel,
+                                      nscoord          aDefaultRuleThickness)
+{
+  nscoord defaultThickness = aDefaultRuleThickness;
+  nscoord lineThickness = aDefaultRuleThickness;
+  nscoord minimumThickness = onePixel;
 
-  nscoord defaultThickness = onePixel * DEFAULT_FRACTION_LINE_THICKNESS;
-
-  mLineThickness = defaultThickness;
-
-  // see if the linethickness attribute is there
-  if (NS_CONTENT_ATTR_HAS_VALUE == 
-      GetAttribute(mContent, mPresentationData.mstyle, 
-                   nsMathMLAtoms::linethickness_, value))
-  {
-    if (value == "thin")
-      mLineThickness = onePixel * THIN_FRACTION_LINE_THICKNESS;
-    else if (value == "medium")
-      mLineThickness = onePixel * MEDIUM_FRACTION_LINE_THICKNESS;
-    else if (value == "thick")
-      mLineThickness = onePixel * THICK_FRACTION_LINE_THICKNESS;
+  if (0 < aThicknessAttribute.Length()) {
+    if (aThicknessAttribute.Equals("thin")) {
+      lineThickness = NSToCoordFloor(defaultThickness * THIN_FRACTION_LINE);
+      minimumThickness = onePixel * THIN_FRACTION_LINE_MINIMUM_PIXELS;
+      // should visually decrease by at least one pixel, if default is not a pixel
+      if (defaultThickness > onePixel && lineThickness > defaultThickness - onePixel)
+        lineThickness = defaultThickness - onePixel;
+    }
+    else if (aThicknessAttribute.Equals("medium")) {
+      lineThickness = NSToCoordRound(defaultThickness * MEDIUM_FRACTION_LINE);
+      minimumThickness = onePixel * MEDIUM_FRACTION_LINE_MINIMUM_PIXELS;
+      // should visually increase by at least one pixel
+      if (lineThickness < defaultThickness + onePixel)
+        lineThickness = defaultThickness + onePixel;
+    }
+    else if (aThicknessAttribute.Equals("thick")) {
+      lineThickness = NSToCoordCeil(defaultThickness * THICK_FRACTION_LINE);
+      minimumThickness = onePixel * THICK_FRACTION_LINE_MINIMUM_PIXELS;
+      // should visually increase by at least two pixels
+      if (lineThickness < defaultThickness + 2*onePixel)
+        lineThickness = defaultThickness + 2*onePixel;
+    }
     else { // see if it is a plain number, or a percentage, or a h/v-unit like 1ex, 2px, 1em
       nsCSSValue cssValue;
-      if (ParseNumericValue(value, cssValue)) {
+      if (ParseNumericValue(aThicknessAttribute, cssValue)) {
         nsCSSUnit unit = cssValue.GetUnit();
         if (eCSSUnit_Number == unit)
-          mLineThickness = nscoord(float(defaultThickness) * cssValue.GetFloatValue());
+          lineThickness = nscoord(float(defaultThickness) * cssValue.GetFloatValue());
         else if (eCSSUnit_Percent == unit)
-          mLineThickness = nscoord(float(defaultThickness) * cssValue.GetPercentValue());
+          lineThickness = nscoord(float(defaultThickness) * cssValue.GetPercentValue());
         else if (eCSSUnit_Null != unit)
-          mLineThickness = CalcLength(aPresContext, mStyleContext, cssValue);
+          lineThickness = CalcLength(aPresContext, aStyleContext, cssValue);
       }
-#ifdef NS_DEBUG
+#if 0
       else {
         char str[50];
-        value.ToCString(str, 50);
+        aThicknessAttribute.ToCString(str, 50);
         printf("Invalid attribute linethickness=%s\n", str);
       }
 #endif
     }
   }
 
-  mLineOrigin.x = 0;
-  mLineOrigin.y = 0;
+  // use minimum if the lineThickness is a non-zero value less than minimun
+  if (0 != lineThickness && lineThickness < minimumThickness) 
+    lineThickness = minimumThickness;
 
-  return rv;
+  return lineThickness;
 }
 
 NS_IMETHODIMP
@@ -134,21 +166,11 @@ nsMathMLmfracFrame::Paint(nsIPresContext*      aPresContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer)
 {
-  nsresult rv = NS_OK;
-
-  /////////////
-  // paint the numerator and denominator
-  rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext,
-                                     aDirtyRect, aWhichLayer);
-
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
-    return rv;
-  }
-
   ////////////
   // paint the fraction line
-  if (NS_SUCCEEDED(rv) && 0 < mLineThickness) {
-
+  if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) &&
+      !NS_MATHML_HAS_ERROR(mPresentationData.flags) &&
+      !mLineRect.IsEmpty()) {
 /*
 //  line looking like <hr noshade>
     const nsStyleColor* color;
@@ -158,115 +180,250 @@ nsMathMLmfracFrame::Paint(nsIPresContext*      aPresContext,
     aRenderingContext.SetColor(colors[0]);
 */
 //  solid line with the current text color
-    const nsStyleColor* color =
-      (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    aRenderingContext.SetColor(color->mColor);
+    nsStyleColor color;
+    mStyleContext->GetStyle(eStyleStruct_Color, color);
+    aRenderingContext.SetColor(color.mColor);
 
-//  draw the line
-    aRenderingContext.FillRect(mLineOrigin.x, mLineOrigin.y, mRect.width, mLineThickness);
+//  draw the line, there is 1 pixel padding at either end
+    aRenderingContext.FillRect(mLineRect.x, mLineRect.y, 
+                               mLineRect.width, mLineRect.height);
   }
 
-  return rv;
+  /////////////
+  // paint the numerator and denominator
+  return nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext,
+                                       aDirtyRect, aWhichLayer);
+}
+
+// over-ride the default method to update presentation parameters
+// Rule 15a, App. G, TeXbook
+NS_IMETHODIMP
+nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex,
+                                                      PRInt32 aScriptLevelIncrement,
+                                                      PRBool  aDisplayStyle,
+                                                      PRBool  aCompressed)
+{
+  PRBool displayStyle = NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags);
+  PRBool compressed = NS_MATHML_IS_COMPRESSED(mPresentationData.flags);
+
+  nsIFrame* childFrame = mFrames.FirstChild();
+  while (nsnull != childFrame) {
+    if (!IsOnlyWhitespace(childFrame)) {
+      nsIMathMLFrame* aMathMLFrame = nsnull;
+      nsresult rv = childFrame->QueryInterface
+        (NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
+      if (NS_SUCCEEDED(rv) && nsnull != aMathMLFrame) {
+        if (0 == aIndex++) {
+          // update numerator
+          if (displayStyle) {
+            // switch to text with current compression
+            aMathMLFrame->UpdatePresentationData(0, PR_FALSE, compressed);
+          }
+          else {
+            // apply the default rule
+            aMathMLFrame->UpdatePresentationData
+              (aScriptLevelIncrement, aDisplayStyle, aCompressed);
+          }
+        }
+        else {
+          // update denominator
+          if (displayStyle) {
+            // switch to text with compression
+            aMathMLFrame->UpdatePresentationData(0, PR_FALSE, PR_TRUE);
+          }
+          else {
+            // apply the default rule
+            aMathMLFrame->UpdatePresentationData
+              (aScriptLevelIncrement, aDisplayStyle, aCompressed);
+          }
+        }
+
+        // propagate down the subtrees
+        aMathMLFrame->UpdatePresentationDataFromChildAt
+          (0, aScriptLevelIncrement, aDisplayStyle, aCompressed);
+      }
+    }
+    childFrame->GetNextSibling(&childFrame);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Reflow(nsIPresContext*          aPresContext,
-                           nsHTMLReflowMetrics&     aDesiredSize,
-                           const nsHTMLReflowState& aReflowState,
-                           nsReflowStatus&          aStatus)
+nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
+			  nsIRenderingContext& aRenderingContext,
+			  PRBool               aPlaceOrigin,
+			  nsHTMLReflowMetrics& aDesiredSize)
 {
   nsresult rv = NS_OK;
-  nsReflowStatus childStatus;
-  // ask our children to compute their bounding metrics
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize,
-                      aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
-  nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
 
-  //////////////////
-  // Reflow Children
+  ////////////////////////////////////
+  // Get the children's desired sizes
 
-  nscoord count = 0;
-  nsRect rect[2];
-  nsIFrame* child[2];
+  PRInt32 count = 0;
+  nsBoundingMetrics bmNum, bmDen;
+  nsHTMLReflowMetrics sizeNum (nsnull);
+  nsHTMLReflowMetrics sizeDen (nsnull);
+  nsIFrame* frameNum = nsnull;
+  nsIFrame* frameDen = nsnull;
+
   nsIFrame* childFrame = mFrames.FirstChild();
-  while (nsnull != childFrame)
-  {
-    //////////////
-    // WHITESPACE: don't forget that whitespace doesn't count in MathML!
-    if (IsOnlyWhitespace(childFrame)) {
-      ReflowEmptyChild(aPresContext, childFrame);
-    }
-    else if (2 > count)  {
-
-      nsHTMLReflowState childReflowState(aPresContext, aReflowState, childFrame, availSize);
-      rv = ReflowChild(childFrame, aPresContext, childDesiredSize, childReflowState, childStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
-      if (NS_FAILED(rv)) {
-        return rv;
+  while (nsnull != childFrame) {
+    if (!IsOnlyWhitespace(childFrame)) {
+      if (0 == count) {
+      	// numerator
+	frameNum = childFrame;
+        GetReflowAndBoundingMetricsFor(frameNum, sizeNum, bmNum);
       }
-
-      child[count] = childFrame;
-      rect[count].width = childDesiredSize.width;
-      rect[count].height = childDesiredSize.height;
+      else if (1 == count) {
+      	// denominator
+	frameDen = childFrame;
+        GetReflowAndBoundingMetricsFor(frameDen, sizeDen, bmDen);
+      }
       count++;
     }
-//  else { invalid markup... }
-
     rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+  }
+#ifdef NS_DEBUG
+  if (2 != count) printf("mfrac: invalid markup");
+#endif
+  if ((2 != count) || !frameNum || !frameDen) {
+    // report an error, encourage people to get their markups in order
+    return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
+  }
+
+  //////////////////
+  // Get shifts
+
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+  nsStyleFont font;
+  mStyleContext->GetStyle(eStyleStruct_Font, font);
+  aRenderingContext.SetFont(font.mFont);
+  nsCOMPtr<nsIFontMetrics> fm;
+  aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
+
+  nscoord defaultRuleThickness;
+  GetRuleThickness(aRenderingContext, fm, defaultRuleThickness);
+
+  // see if the linethickness attribute is there 
+  nsAutoString value;
+  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::linethickness_, value);
+  mLineRect.height = CalcLineThickness(aPresContext, mStyleContext, 
+                                       value, onePixel, defaultRuleThickness);
+  nscoord numShift = 0;
+  nscoord denShift = 0;
+
+  // Rule 15b, App. G, TeXbook
+  nscoord numShift1, numShift2, numShift3;
+  nscoord denShift1, denShift2;
+
+  GetNumeratorShifts(fm, numShift1, numShift2, numShift3);
+  GetDenominatorShifts(fm, denShift1, denShift2);
+  if (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
+    // C > T
+    numShift = numShift1;
+    denShift = denShift1;
+  }
+  else {
+    numShift = (0 < mLineRect.height) ? numShift2 : numShift3;
+    denShift = denShift2;
+  }
+
+  nscoord minClearance = 0;
+  nscoord actualClearance = 0;
+  nscoord axisHeight = 0;
+
+  nscoord actualRuleThickness =  (0 < mLineRect.height) ? mLineRect.height : 0;
+
+  if (0 == actualRuleThickness) {
+    // Rule 15c, App. G, TeXbook
+
+    // min clearance between numerator and denominator
+    minClearance = (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) ?
+      7 * defaultRuleThickness : 3 * defaultRuleThickness;
+    actualClearance =
+      (numShift - bmNum.descent) - (bmDen.ascent - denShift);
+    // actualClearance should be >= minClearance
+    if (actualClearance < minClearance) {
+      nscoord halfGap = (minClearance - actualClearance)/2;
+      numShift += halfGap;
+      denShift += halfGap;
+    }
+  }
+  else {
+    // Rule 15d, App. G, TeXbook
+    GetAxisHeight (fm, axisHeight);
+
+    // min clearance between numerator or denominator and middle of bar
+
+    // TeX has a different interpretation of the thickeness.
+    // Try $a \above10pt b$ to see. Here is what TeX does:
+    // minClearance = (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) ?
+    //  3 * actualRuleThickness : actualRuleThickness;
+ 
+    // we don't follow TeX here, we use a modified version of Rule 15c in which
+    // one defaultRuleThickness is replaced by one actualRuleThickness
+    minClearance = actualRuleThickness +
+      (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) ?
+          6 * defaultRuleThickness : 2 * defaultRuleThickness;
+
+    // adjust numShift to maintain minClearance if needed
+    actualClearance =
+      (numShift - bmNum.descent) - (axisHeight + actualRuleThickness/2);
+    if (actualClearance < minClearance) {
+      numShift += (minClearance - actualClearance);
+    }
+    // adjust denShift to maintain minClearance if needed
+    actualClearance =
+      (axisHeight - actualRuleThickness/2) - (bmDen.ascent - denShift);
+    if (actualClearance < minClearance) {
+      denShift += (minClearance - actualClearance);
+    }
   }
 
   //////////////////
   // Place Children
 
-  // Get the <strike> line and center the fraction bar with the <strike> line.
-  nscoord strikeOffset, strikeThickness;
-  nsCOMPtr<nsIFontMetrics> fm;
-  const nsStyleFont* aFont =
-    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  aPresContext->GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
-  fm->GetStrikeout(strikeOffset, strikeThickness);
+  // there is 1 pixel padding at either end of the fraction
+  nscoord width = 2*onePixel + PR_MAX(bmNum.width, bmDen.width);
+  nscoord dxNum = (width - sizeNum.width)/2;
+  nscoord dxDen = (width - sizeDen.width)/2;
 
-  // Take care of mLineThickness
-  float p2t;
-  nscoord halfThickspace;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  mBoundingMetrics.rightBearing =
+    PR_MAX(dxNum + bmNum.rightBearing, dxDen + bmDen.rightBearing);
+  if (mBoundingMetrics.rightBearing < width - onePixel)
+    mBoundingMetrics.rightBearing = width - onePixel;
+  mBoundingMetrics.leftBearing =
+    PR_MIN(dxNum + bmNum.leftBearing, dxDen + bmDen.leftBearing);
+  if (mBoundingMetrics.leftBearing > onePixel)
+    mBoundingMetrics.leftBearing = onePixel;
+  mBoundingMetrics.ascent = bmNum.ascent + numShift;
+  mBoundingMetrics.descent = bmDen.descent + denShift;
+  mBoundingMetrics.width = width;
 
-  // distance from the middle of the axis
-  halfThickspace = (mLineThickness > onePixel)? mLineThickness/2 : 0;
-
-  aDesiredSize.width = PR_MAX(rect[0].width, rect[1].width);
-  aDesiredSize.ascent = rect[0].height + strikeOffset + halfThickspace;
-  aDesiredSize.descent = rect[1].height - strikeOffset + halfThickspace;
+  aDesiredSize.ascent = sizeNum.ascent + numShift;
+  aDesiredSize.descent = sizeDen.descent + denShift;
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.width = mBoundingMetrics.width;
 
-  rect[0].x = (aDesiredSize.width - rect[0].width) / 2; // center w.r.t largest width
-  rect[1].x = (aDesiredSize.width - rect[1].width) / 2;
-  rect[0].y = 0;
-  rect[1].y = aDesiredSize.height - rect[1].height;
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent;
 
-  // child[0]->SetRect(aPresContext, rect[0]);
-  // child[1]->SetRect(aPresContext, rect[1]);
-  nsHTMLReflowMetrics childSize(nsnull);
-  for (PRInt32 i=0; i<count; i++) {
-    childSize.width = rect[i].width;
-    childSize.height = rect[i].height;
-    FinishReflowChild(child[i], aPresContext, childSize, rect[i].x, rect[i].y, 0);
+  if (aPlaceOrigin) {
+    nscoord dy;
+    // place numerator
+    dy = 0;
+    FinishReflowChild(frameNum, aPresContext, sizeNum, dxNum, dy, 0);
+    // place denominator
+    dy = aDesiredSize.height - sizeDen.height;
+    FinishReflowChild(frameDen, aPresContext, sizeDen, dxDen, dy, 0);
+    // place the fraction bar - dy is top of bar
+    dy = aDesiredSize.ascent - (axisHeight + actualRuleThickness/2);
+    mLineRect.SetRect(onePixel, dy, width - 2*onePixel, actualRuleThickness);
   }
-  SetLineOrigin(nsPoint(0,rect[0].height)); // position the fraction bar
-
-  if (nsnull != aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-    aDesiredSize.maxElementSize->height = aDesiredSize.height;
-  }
-  aStatus = NS_FRAME_COMPLETE;
-
-  // XXX Fix me!
-  mBoundingMetrics.ascent  = aDesiredSize.ascent;
-  mBoundingMetrics.descent = aDesiredSize.descent;
-  mBoundingMetrics.width   = aDesiredSize.width;
 
   return NS_OK;
 }
-

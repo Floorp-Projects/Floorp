@@ -19,6 +19,7 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
  *   Vilya Harvey <vilya@nag.co.uk>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  */
 
 
@@ -44,6 +45,15 @@
 // <msqrt> and <mroot> -- form a radical - implementation
 //
 
+//TODO:
+//  The code assumes that TeX fonts are picked! Another separate version of
+//  Reflow() is needed as a fall-back for cases where TeX fonts (CMSY/CMEX)
+//  are not installed on the system, e.g., the fall-back could explicitly
+//  draw the branches of the radical using th default rule thickness.
+
+// additional style context to be used by our MathMLChar.
+#define NS_SQR_CHAR_STYLE_CONTEXT_INDEX   0
+
 nsresult
 NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
@@ -61,10 +71,8 @@ NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 nsMathMLmsqrtFrame::nsMathMLmsqrtFrame() :
   mSqrChar(),
-  mBarChar()
+  mBarRect()
 {
-  mSqrChar.SetEnum(eMathMLChar_Sqrt);
-  mBarChar.SetEnum(eMathMLChar_OverBar);
 }
 
 nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame()
@@ -82,9 +90,14 @@ nsMathMLmsqrtFrame::Init(nsIPresContext*  aPresContext,
   rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent,
                                     aContext, aPrevInFlow);
 
-  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
+  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
-  // TODO: other attributes...
+  mSqrChar.SetEnum(aPresContext, eMathMLChar_Sqrt);
+  ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mSqrChar);
+
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
   return rv;
 }
 
@@ -95,19 +108,46 @@ nsMathMLmsqrtFrame::Paint(nsIPresContext*      aPresContext,
                           nsFramePaintLayer    aWhichLayer)
 {
   nsresult rv = NS_OK;
+
   
+  /////////////
+  // paint the sqrt symbol
+  if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) &&
+      !NS_MATHML_HAS_ERROR(mPresentationData.flags))
+  {
+    mSqrChar.Paint(aPresContext, aRenderingContext,
+                   aDirtyRect, aWhichLayer, this);
+    // paint the overline bar
+    nsStyleColor color;
+    mStyleContext->GetStyle(eStyleStruct_Color, color);
+    aRenderingContext.SetColor(color.mColor);
+    aRenderingContext.FillRect(mBarRect.x, mBarRect.y, 
+                               mBarRect.width, mBarRect.height);
+
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+    // for visual debug
+    if (NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags))
+    {
+      nsRect rect;
+      mSqrChar.GetRect(rect);
+
+      nsBoundingMetrics bm;
+      mSqrChar.GetBoundingMetrics(bm);
+
+      aRenderingContext.SetColor(NS_RGB(255,0,0));
+      nscoord x = rect.x + bm.leftBearing;
+      nscoord y = rect.y;
+      nscoord w = bm.rightBearing - bm.leftBearing;
+      nscoord h = bm.ascent + bm.descent;
+      aRenderingContext.DrawRect(x,y,w,h);
+    }
+#endif
+  }
+
   /////////////
   // paint the content we are square-rooting
   rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext, 
                                      aDirtyRect, aWhichLayer);
-
-  if (NS_SUCCEEDED(rv) && NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-    // paint the sqrt symbol
-    rv = mSqrChar.Paint(aPresContext, aRenderingContext, mStyleContext);
-    // paint the overline bar
-    rv = mBarChar.Paint(aPresContext, aRenderingContext, mStyleContext);
-  }
-
   return rv;
 }
 
@@ -119,96 +159,111 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
 {
   nsresult rv = NS_OK;
 
+  nsBoundingMetrics bmSqr, bmBase;
+
   ///////////////
   // Let the base class format our content like an inferred mrow
-  rv = nsMathMLContainerFrame::Reflow(aPresContext, aDesiredSize,
+  nsHTMLReflowMetrics baseSize(aDesiredSize);
+  rv = nsMathMLContainerFrame::Reflow(aPresContext, baseSize,
                                       aReflowState, aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   if (NS_FAILED(rv)) {
     return rv;
   }
-  nscoord oldAscent = aDesiredSize.ascent;
+
+  bmBase = baseSize.mBoundingMetrics;
 
   ////////////
   // Prepare the radical symbol and the overline bar
+
   nsIRenderingContext& renderingContext = *aReflowState.rendContext;
   nsStyleFont font;
   mStyleContext->GetStyle(eStyleStruct_Font, font);
   renderingContext.SetFont(font.mFont);
-
-  // grab some metrics that will help to adjust the placements
   nsCOMPtr<nsIFontMetrics> fm;
-  nscoord fontAscent, fontDescent; 
   renderingContext.GetFontMetrics(*getter_AddRefs(fm));
-  fm->GetMaxAscent(fontAscent);
-  fm->GetMaxDescent(fontDescent);
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
+  nscoord ruleThickness;
+  GetRuleThickness(renderingContext, fm, ruleThickness);
 
-  nsBoundingMetrics bmSqr, bmBar;
-  nscoord dx, dy;
+  // Rule 11, App. G, TeXbook
+  // psi = clearance between rule and content
+  nscoord phi = 0, psi = 0;
+  if (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags))
+    fm->GetXHeight(phi);
+  else
+    phi = ruleThickness;
+  psi = ruleThickness + phi/4;
+  
+  // Stretch the radical symbol to the appropriate height if it is not big enough.
+  nsBoundingMetrics contSize = bmBase;
+  contSize.ascent = ruleThickness;
+  contSize.descent = bmBase.ascent + bmBase.descent + psi;
 
-  // radical symbol  
-  renderingContext.GetBoundingMetrics(mSqrChar.GetUnicode(), PRUint32(1), bmSqr);
-  nscoord charWidth = bmSqr.width; // width of the radical symbol
+  nsBoundingMetrics radicalSize;
+  radicalSize.Clear(); // this tells Stretch() that we don't know the current size
 
-  // overline bar
-  renderingContext.GetBoundingMetrics(mBarChar.GetUnicode(), PRUint32(1), bmBar);
-  nscoord thickspace = bmBar.ascent + bmBar.descent; // height of the overline bar
+  // height(radical) should be >= height(base) + psi + ruleThickness
+  // however, nsMathMLChar will only try to meet this condition
+  // with no guarantee.
+  mSqrChar.Stretch(aPresContext, renderingContext,
+                   NS_STRETCH_DIRECTION_VERTICAL, 
+                   contSize, radicalSize,
+                   NS_STRETCH_LARGER);
+  // radicalSize have changed at this point, and should match with
+  // the bounding metrics of the char
+  mSqrChar.GetBoundingMetrics(bmSqr);
 
-  // Stretch the sqrt symbol to the appropriate height if it is not big enough.
-  nsStretchMetrics contSize(aDesiredSize);
-  nsStretchMetrics desSize(fontDescent, fontAscent, charWidth, fontAscent + fontDescent);
-  mSqrChar.Stretch(aPresContext, renderingContext, mStyleContext,
-                   NS_STRETCH_DIRECTION_VERTICAL, contSize, desSize);
-  charWidth = desSize.width;
-  if (aDesiredSize.ascent < desSize.ascent) {
-    aDesiredSize.ascent = desSize.ascent;
-  }
-  if (aDesiredSize.descent < desSize.descent) {
-    aDesiredSize.descent = desSize.descent;
-  }
+  // According to TeX, the ascent of the returned radical should be
+  // the thickness of the overline
+  ruleThickness = bmSqr.ascent;
+
+  // adjust clearance psi to absorb any excess difference if any
+  // in height between radical and content
+
+  if (bmSqr.descent > (bmBase.ascent + bmBase.descent) + psi)
+    psi = (psi + bmSqr.descent - (bmBase.ascent + bmBase.descent))/2;
+
+  nscoord dx = 0, dy = 0;
+  // place the radical symbol
+  dy = ruleThickness; // leave a kern=ruleThickness at the top
+  mSqrChar.SetRect(nsRect(dx, dy, bmSqr.width, bmSqr.ascent + bmSqr.descent));
+
+  // place the radical bar
+  dx = bmSqr.width;
+  dy = ruleThickness; // leave a kern=ruleThickness at the top
+  mBarRect.SetRect(dx, dy, bmBase.width, ruleThickness);
+
+  // Update the desired size for the container.
+  // the baseline will be that of the base.
+  mBoundingMetrics.ascent = bmBase.ascent + psi + ruleThickness;
+  mBoundingMetrics.descent = 
+    PR_MAX(bmBase.descent, (bmSqr.descent - (bmBase.ascent + psi)));
+  mBoundingMetrics.width = bmSqr.width + bmBase.width;
+  mBoundingMetrics.leftBearing = bmSqr.leftBearing;
+  mBoundingMetrics.rightBearing = bmSqr.width + 
+    PR_MAX(bmBase.width, bmBase.rightBearing); // take also care of the rule
+
+  aDesiredSize.ascent = bmBase.ascent + psi + 2*ruleThickness;
+  aDesiredSize.descent =
+    PR_MAX(baseSize.descent, (mBoundingMetrics.descent + ruleThickness));
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  aDesiredSize.width = mBoundingMetrics.width;
 
-  dx = 0;
-  dy =  2*onePixel + (bmSqr.ascent - fontAscent);
-  mSqrChar.SetRect(nsRect(dx, dy, desSize.width, aDesiredSize.height));
-  dx = bmSqr.rightBearing;
-
-  // Stretch the overline bar to the appropriate width if it is not big enough.
-
-  contSize = nsStretchMetrics(aDesiredSize);
-  desSize = nsStretchMetrics(fontDescent, fontAscent, bmBar.rightBearing-bmBar.leftBearing, fontAscent + fontDescent);
-  nsStretchMetrics oldSize = desSize;
-  mBarChar.Stretch(aPresContext, renderingContext, mStyleContext,
-                   NS_STRETCH_DIRECTION_HORIZONTAL, contSize, desSize);
-
-  dy = 2*onePixel + (bmBar.ascent - fontAscent);
-  if (oldSize == desSize) { // hasn't changed size! Char will be painted as a normal char
-    dx -= bmBar.leftBearing; // adjust so that it coincides with the sqrt char
-    // XXX need also to check when a single glyph wil be used
-  }
-  mBarChar.SetRect(nsRect(dx, dy, desSize.width, 2*onePixel + thickspace));
-
-  // Update the size of the container
-  aDesiredSize.width += charWidth;
-  aDesiredSize.ascent += 2*onePixel + thickspace;
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent;
 
   //////////////////
   // Adjust the origins to leave room for the sqrt char and the overline bar
 
-  nsRect rect;
-  dx = charWidth;
-  dy = aDesiredSize.ascent - oldAscent;
+  nsPoint origin;
+  dx = radicalSize.width;
+  dy = aDesiredSize.ascent - baseSize.ascent;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (nsnull != childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
-      childFrame->GetRect(rect);
-      childFrame->MoveTo(aPresContext, dx, rect.y + dy);
-      dx += rect.width;
+      childFrame->GetOrigin(origin);
+      childFrame->MoveTo(aPresContext, origin.x + dx, origin.y + dy);
     }
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
@@ -218,7 +273,43 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
+  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
 
+// ----------------------
+// the Style System will use these to pass the proper style context to our MathMLChar
+NS_IMETHODIMP
+nsMathMLmsqrtFrame::GetAdditionalStyleContext(PRInt32           aIndex, 
+                                              nsIStyleContext** aStyleContext) const
+{
+  NS_PRECONDITION(aStyleContext, "null OUT ptr");
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aStyleContext = nsnull;
+  switch (aIndex) {
+  case NS_SQR_CHAR_STYLE_CONTEXT_INDEX:
+    mSqrChar.GetStyleContext(aStyleContext);
+    break;
+  default:
+    return NS_ERROR_INVALID_ARG;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLmsqrtFrame::SetAdditionalStyleContext(PRInt32          aIndex, 
+                                              nsIStyleContext* aStyleContext)
+{
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  switch (aIndex) {
+  case NS_SQR_CHAR_STYLE_CONTEXT_INDEX:
+    mSqrChar.SetStyleContext(aStyleContext);
+    break;
+  }
+  return NS_OK;
+}

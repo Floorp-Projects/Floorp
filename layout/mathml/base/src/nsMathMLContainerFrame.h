@@ -68,10 +68,8 @@ class nsMathMLContainerFrame : public nsHTMLContainerFrame, public nsIMathMLFram
 public:
 
   // nsIMathMLFrame methods  -- see documentation in nsIMathMLFrame.h
-  
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
+
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD
   GetBoundingMetrics(nsBoundingMetrics& aBoundingMetrics);
@@ -89,8 +87,8 @@ public:
   Stretch(nsIPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
-          nsStretchMetrics&    aContainerSize,
-          nsStretchMetrics&    aDesiredStretchSize);
+          nsBoundingMetrics&   aContainerSize,
+          nsHTMLReflowMetrics& aDesiredStretchSize);
 #if 0
   NS_IMETHOD
   GetDesiredStretchSize(nsIPresContext*      aPresContext,
@@ -120,12 +118,14 @@ public:
 
   NS_IMETHOD
   UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
-                         PRBool  aDisplayStyle);
+                         PRBool  aDisplayStyle,
+                         PRBool  aCompressed);
 
   NS_IMETHOD
   UpdatePresentationDataFromChildAt(PRInt32 aIndex, 
                                     PRInt32 aScriptLevelIncrement,
-                                    PRBool  aDisplayStyle);
+                                    PRBool  aDisplayStyle,
+                                    PRBool  aCompressed);
 
   // nsHTMLContainerFrame methods
  
@@ -164,6 +164,20 @@ public:
         nsFramePaintLayer    aWhichLayer);
 #endif
 
+  // error handlers to report than an error (typically invalid markup)
+  // was encountered during reflow. By default the user will see the
+  // Unicode REPLACEMENT CHAR U+FFFD at the spot where the error was
+  // encountered.
+  virtual nsresult
+  ReflowError(nsIPresContext*      aPresContext,
+              nsIRenderingContext& aRenderingContext,
+              nsHTMLReflowMetrics& aDesiredSize);
+  virtual nsresult
+  PaintError(nsIPresContext*      aPresContext,
+             nsIRenderingContext& aRenderingContext,
+             const nsRect&        aDirtyRect,
+             nsFramePaintLayer    aWhichLayer);
+
   // helper function to reflow token elements
   static nsresult
   ReflowTokenFor(nsIFrame*                aFrame,
@@ -194,44 +208,27 @@ public:
                                              0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
   }
 
-  // helper function to reflow all children before placing them.
-  // With MathML, we have to reflow all children and use their desired size
-  // information in order to figure out how to lay them. 
-  // aDirection = 0 means children will later be laid horizontally
-  // aDirection = 1 means children will later be laid vertically
-  NS_IMETHOD
-  ReflowChildren(PRInt32                  aDirection,
-                 nsIPresContext*          aPresContext,
-                 nsHTMLReflowMetrics&     aDesiredSize,
-                 const nsHTMLReflowState& aReflowState,
-                 nsReflowStatus&          aStatus);
-
-  // helper function to fire a Stretch command on all children,
-  // Note that if the container is embellished, the stretch is not fired
-  // on its embellished child. It is the responsibility of the parent
-  // of the embellished container to fire a stretch that is then passed
-  // onto the embellished child.
-  // If an embellished container doesn't have a parent that will fire
-  // a stretch, it will do it itself (see FinalizeReflow).
-  NS_IMETHOD
-  StretchChildren(nsIPresContext*      aPresContext,
-                  nsIRenderingContext& aRenderingContext,
-                  nsStretchDirection   aStretchDirection,
-                  nsStretchMetrics&    aContainerSize);
-
   // helper method to complete the post-reflow hook and ensure that embellished
   // operators don't terminate their Reflow without receiving a Stretch command.
-  NS_IMETHOD
-  FinalizeReflow(PRInt32              aDirection,
-                 nsIPresContext*      aPresContext,
+  virtual nsresult
+  FinalizeReflow(nsIPresContext*      aPresContext,
                  nsIRenderingContext& aRenderingContext,
                  nsHTMLReflowMetrics& aDesiredSize);
 
   // helper method to alter the style contexts of subscript/superscript elements
   // XXX this is pretty much a hack until the content model caters for MathML and
   // the style system has some provisions for MathML
-  NS_IMETHOD
+  virtual nsresult
   InsertScriptLevelStyleContext(nsIPresContext* aPresContext);
+
+  // helper to give a style context suitable for doing the stretching to the
+  // MathMLChar. Frame classes that use this should make the extra style contexts
+  // accessible to the Style System via Get/Set AdditionalStyleContext
+  static void
+  ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
+                         nsIContent*      aContent,
+                         nsIStyleContext* aParenStyleContext,
+                         nsMathMLChar*    aMathMLChar);
 
   // helper to find the smallest font-size on a tree so that we don't insert
   // scriptlevel fonts that lead to unreadable results on deeper nodes below us.
@@ -245,12 +242,11 @@ public:
   IsEmbellishOperator(nsIFrame* aFrame);
 
   // helper methods for processing empty MathML frames (with whitespace only)
-  static PRBool
-  IsOnlyWhitespace(nsIFrame* aFrame);
-
   static void
   ReflowEmptyChild(nsIPresContext* aPresContext,
                    nsIFrame*       aFrame);
+  static PRBool
+  IsOnlyWhitespace(nsIFrame* aFrame);
 
   // helper method to facilitate getting the reflow and bounding metrics
   // IMPORTANT: This function is only meant to be called in Place() methods 
@@ -263,8 +259,9 @@ public:
 
   // helper to check if a content has an attribute. If content is nsnull or if
   // the attribute is not there, check if the attribute is on the mstyle frame.
-  // @return NS_CONTENT_ATTR_HAS_VALUE  --if attribute is there
-  //         NS_CONTENT_ATTR_NOT_THERE  --if attribute is not there
+  // @return NS_CONTENT_ATTR_HAS_VALUE --if attribute has non-empty value, attr="value"
+  //         NS_CONTENT_ATTR_NO_VALUE  --if attribute has empty value, attr=""
+  //         NS_CONTENT_ATTR_NOT_THERE --if attribute is not there
   static nsresult
   GetAttribute(nsIContent* aContent,
                nsIFrame*   aMathMLmstyleFrame,          
@@ -307,6 +304,16 @@ public:
       aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
 
       GetSupDrop (fm, aSupDrop);
+    }
+
+  static void 
+  GetSkewCorrectionFromChild (nsIPresContext* aPresContext,
+                              nsIFrame*       aChild, 
+                              nscoord&        aSkewCorrection) 
+    {
+      // default is 0
+      // individual classes should over-ride this method if necessary
+      aSkewCorrection = 0;
     }
 
   // 2 levels of subscript shifts
@@ -354,8 +361,8 @@ public:
 
   static void
   GetSubShifts (nsIFontMetrics *fm, 
-		      nscoord& aSubShift1, 
-		      nscoord& aSubShift2)
+                nscoord& aSubShift1, 
+                nscoord& aSubShift2)
     {
       nscoord xHeight = 0;
       fm->GetXHeight (xHeight);
@@ -365,9 +372,9 @@ public:
 
   static void
   GetSupShifts (nsIFontMetrics *fm, 
-		      nscoord& aSupShift1, 
-		      nscoord& aSupShift2, 
-		      nscoord& aSupShift3)
+                nscoord& aSupShift1, 
+                nscoord& aSupShift2, 
+                nscoord& aSupShift3)
     {
       nscoord xHeight = 0;
       fm->GetXHeight (xHeight);
@@ -377,10 +384,10 @@ public:
     }
 
   static void
-  GetNumShifts (nsIFontMetrics *fm, 
-		nscoord& numShift1, 
-		nscoord& numShift2, 
-		nscoord& numShift3)
+  GetNumeratorShifts (nsIFontMetrics *fm, 
+                      nscoord& numShift1, 
+                      nscoord& numShift2, 
+                      nscoord& numShift3)
     {
       nscoord xHeight = 0;
       fm->GetXHeight (xHeight);
@@ -390,9 +397,9 @@ public:
     }
 
   static void
-  GetDenShifts (nsIFontMetrics *fm, 
-		nscoord& denShift1, 
-		nscoord& denShift2)
+  GetDenominatorShifts (nsIFontMetrics *fm, 
+                        nscoord& denShift1, 
+                        nscoord& denShift2)
     {
       nscoord xHeight = 0;
       fm->GetXHeight (xHeight);
@@ -402,7 +409,7 @@ public:
 
   static void
   GetAxisHeight (nsIFontMetrics *fm,
-		 nscoord& axisHeight)
+                 nscoord& axisHeight)
     {
       fm->GetXHeight (axisHeight);
       axisHeight = NSToCoordRound (250.000f/430.556f * axisHeight);
@@ -410,11 +417,11 @@ public:
 
   static void
   GetBigOpSpacings (nsIFontMetrics *fm, 
-		    nscoord& bigOpSpacing1,
-		    nscoord& bigOpSpacing2,
-		    nscoord& bigOpSpacing3,
-		    nscoord& bigOpSpacing4,
-		    nscoord& bigOpSpacing5)
+                    nscoord& bigOpSpacing1,
+                    nscoord& bigOpSpacing2,
+                    nscoord& bigOpSpacing3,
+                    nscoord& bigOpSpacing4,
+                    nscoord& bigOpSpacing5)
     {
       nscoord xHeight = 0;
       fm->GetXHeight (xHeight);
@@ -425,33 +432,22 @@ public:
       bigOpSpacing5 = NSToCoordRound (100.000f/430.556f * xHeight);
     }
 
-#if 0
-  NS_IMETHOD
-  GetItalicCorrection (nscoord& italicCorrection)
-    {
-      italicCorrection = mItalicCorrection;
-      
-      return NS_OK;
-    }
-  
-  NS_IMETHOD
-  SetItalicCorrection (nscoord italicCorrection)
-    {
-      mItalicCorrection = italicCorrection;
-      
-      return NS_OK;
-    }
-#endif
-
-  NS_IMETHOD
-  GetRuleThickness (nsIFontMetrics *fm, nscoord& ruleThickness)
+  static void
+  GetRuleThickness(nsIFontMetrics* fm,
+                   nscoord& ruleThickness)
     {
       nscoord xHeight;
       fm->GetXHeight (xHeight);
       ruleThickness = NSToCoordRound (40.000f/430.556f * xHeight);
-      
-      return NS_OK;
     }
+
+  // the rule thickness is not accurately obtained using the x-height.
+  // Here is a slow GetRuleThickness() which obtains the rule
+  // thickness by actually measuring the overbar char U+00AF
+  static void
+  GetRuleThickness(nsIRenderingContext& aRenderingContext, 
+                   nsIFontMetrics*      aFontMetrics,
+                   nscoord&             aRuleThickness);
 
 protected:
 
@@ -487,6 +483,14 @@ public:
         nsIRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
+
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  NS_IMETHOD 
+  Paint(nsIPresContext*      aPresContext,
+        nsIRenderingContext& aRenderingContext,
+        const nsRect&        aDirtyRect,
+        nsFramePaintLayer    aWhichLayer);
+#endif
 
 protected:
   nsMathMLWrapperFrame();

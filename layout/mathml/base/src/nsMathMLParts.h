@@ -28,7 +28,7 @@
 // Factory methods for creating MathML objects
 extern nsresult NS_NewMathMLmrowFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmiFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-extern nsresult NS_NewMathMLmnFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+extern nsresult NS_NewMathMLmtextFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmoFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmphantomFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmpaddedFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
@@ -44,6 +44,7 @@ extern nsresult NS_NewMathMLmoverFrame ( nsIPresShell* aPresShell, nsIFrame** aN
 extern nsresult NS_NewMathMLmunderoverFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmmultiscriptsFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmstyleFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+extern nsresult NS_NewMathMLmtableOuterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmtdFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmsqrtFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmrootFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame );

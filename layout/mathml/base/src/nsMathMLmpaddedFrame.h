@@ -83,7 +83,7 @@ private:
               PRInt32              aPseudoUnit,
               nsCSSValue&          aCSSValue,
               nscoord              aLeftSpace,
-              nsHTMLReflowMetrics& aReflowMetrics,
+              nsBoundingMetrics&   aBoundingMetrics,
               nscoord&             aValueToUpdate);
 };
 

@@ -18,6 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu>
  */
 
 #ifndef nsMathMLmfracFrame_h___
@@ -66,14 +67,6 @@ environment, but can be set explicitly only on the <mstyle>
 element. 
 */
 
-
-// default fraction line thickness in pixels
-#define DEFAULT_FRACTION_LINE_THICKNESS 1
-
-#define THIN_FRACTION_LINE_THICKNESS    1
-#define MEDIUM_FRACTION_LINE_THICKNESS  2
-#define THICK_FRACTION_LINE_THICKNESS   4
-
 class nsMathMLmfracFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
@@ -86,10 +79,17 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
+  Place(nsIPresContext*      aPresContext,
+        nsIRenderingContext& aRenderingContext,
+        PRBool               aPlaceOrigin,
+        nsHTMLReflowMetrics& aDesiredSize);
+#if 0
+  NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
+#endif
 
   NS_IMETHOD 
   Paint(nsIPresContext*      aPresContext,
@@ -98,26 +98,30 @@ public:
         nsFramePaintLayer    aWhichLayer);
 
   NS_IMETHOD
+  UpdatePresentationDataFromChildAt(PRInt32 aIndex, 
+                                    PRInt32 aScriptLevelIncrement,
+                                    PRBool  aDisplayStyle,
+				    PRBool  aCompressed);
+
+  NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(0, 1, PR_FALSE);
+    UpdatePresentationDataFromChildAt(0, 1, PR_FALSE, PR_TRUE);
     InsertScriptLevelStyleContext(aPresContext);
     return rv;
   }
 
-  void
-  SetLineThickness(const nscoord aLineThickness) {
-     mLineThickness = aLineThickness;
-  }
-
-  void 
-  SetLineOrigin(const nsPoint& aOrigin) {
-     mLineOrigin = aOrigin;
-  }
+  // helper to translate the thickness attribute into a usable form
+  static nscoord 
+  CalcLineThickness(nsIPresContext*  aPresContext,
+                    nsIStyleContext* aStyleContext,
+                    nsString&        aThicknessAttribute,
+                    nscoord          onePixel,
+                    nscoord          aDefaultRuleThickness);
 
 protected:
   nsMathMLmfracFrame();
@@ -125,8 +129,7 @@ protected:
   
   virtual PRIntn GetSkipSides() const { return 0; }
   
-  nsPoint mLineOrigin;  
-  nscoord mLineThickness;
+  nsRect  mLineRect;
 };
 
 #endif /* nsMathMLmfracFrame_h___ */
