@@ -512,13 +512,14 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
   if ( action == @selector(goBack:) || action == @selector(goForward:) ) {
     if ([self isMainWindowABrowserWindow]) {
+      CHBrowserView* browserView = [[[[mApplication mainWindow] windowController] getBrowserWrapper] getBrowserView];
       if (action == @selector(goBack:))
-        return [[[[[mApplication mainWindow] windowController] getBrowserWrapper] getBrowserView] canGoBack];
+        return [browserView canGoBack];
       if (action == @selector(goForward:))
-        return [[[[[mApplication mainWindow] windowController] getBrowserWrapper] getBrowserView] canGoForward];
+        return [browserView canGoForward];
     }
     else
-      return NO;
+        return NO;
   }
   
   // default return

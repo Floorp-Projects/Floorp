@@ -88,10 +88,13 @@
 typedef unsigned int DragReference;
 #include "nsIDragHelperService.h"
 
-
 // Cut/copy/paste
 #include "nsIClipboardCommands.h"
 #include "nsIInterfaceRequestorUtils.h"
+
+// Undo/redo
+#include "nsICommandManager.h"
+#include "nsICommandParams.h"
 
 const char* persistContractID = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
 const char* dirServiceContractID = "@mozilla.org/file/directory_service;1";
@@ -1321,7 +1324,7 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
     return @"";
   nsAutoString urlStr;
   location->GetHref(urlStr);
-  return [NSString stringWithCharacters: urlStr.get() length: nsCRT::strlen(urlStr.get())];
+  return [NSString stringWithCharacters: urlStr.get() length: urlStr.Length()];
 }
 
 - (void)saveDocument: (NSView*)aFilterView filterList: (NSPopUpButton*)aFilterList
@@ -1361,10 +1364,54 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
           filterList: aFilterList];
 }
 
+-(void)doCommand:(const char*)commandName
+{
+  nsCOMPtr<nsICommandManager> commandMgr(do_GetInterface(_webBrowser));
+  if (commandMgr) {
+    nsCOMPtr<nsICommandParams> commandParams = do_CreateInstance("@mozilla.org/embedcomp/command-params;1");
+    if (commandParams) {
+      nsresult rv;
+      
+      nsAutoString commandNameStr;
+      commandNameStr.AssignWithConversion(commandName);
+      
+      rv = commandParams->SetStringValue(NS_LITERAL_STRING("cmd_name"), commandNameStr);
+      rv = commandMgr->DoCommand(commandParams);
+      if (NS_FAILED(rv))
+        NSLog(@"DoCommand failed");
+    }
+    else {
+      NSLog(@"Failed to make command params");
+    }
+  }
+  else {
+    NSLog(@"No command manager");
+  }
+}
+
+-(BOOL)isCommandEnabled:(const char*)commandName
+{
+  PRBool	isEnabled = PR_FALSE;
+  nsCOMPtr<nsICommandManager> commandMgr(do_GetInterface(_webBrowser));
+  if (commandMgr) {
+    nsAutoString commandNameStr;
+    commandNameStr.AssignWithConversion(commandName);
+    nsresult rv = commandMgr->IsCommandEnabled(commandNameStr, &isEnabled);
+    if (NS_FAILED(rv))
+      NSLog(@"IsCommandEnabled failed");
+  }
+  else {
+    NSLog(@"No command manager");
+  }
+  
+  return (isEnabled) ? YES : NO;
+}
+
+
 -(IBAction)cut:(id)aSender
 {
-    nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-    clipboard->CutSelection();
+  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
+  clipboard->CutSelection();
 }
 
 -(BOOL)canCut
@@ -1377,8 +1424,8 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
 
 -(IBAction)copy:(id)aSender
 {
-    nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-    clipboard->CopySelection();
+  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
+  clipboard->CopySelection();
 }
 
 -(BOOL)canCopy
@@ -1391,8 +1438,8 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
 
 -(IBAction)paste:(id)aSender
 {
-    nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-    clipboard->Paste();
+  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
+  clipboard->Paste();
 }
 
 -(BOOL)canPaste
@@ -1405,20 +1452,38 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
 
 -(IBAction)delete:(id)aSender
 {
-//    nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-//    clipboard->SelectNone();
-  NSLog(@"delete not implemented\n");
+  [self doCommand: "cmd_delete"];
+}
+
+-(BOOL)canDelete
+{
+  return [self isCommandEnabled: "cmd_delete"];
 }
 
 -(IBAction)selectAll:(id)aSender
 {
-    nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
-    clipboard->SelectAll();
+  nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
+  clipboard->SelectAll();
 }
 
 -(IBAction)undo:(id)aSender
 {
-  NSLog(@"Undo not yet implemented");
+  [self doCommand: "cmd_undo"];
+}
+
+-(IBAction)redo:(id)aSender
+{
+  [self doCommand: "cmd_redo"];
+}
+
+- (BOOL)canUndo
+{
+  return [self isCommandEnabled: "cmd_undo"];
+}
+
+- (BOOL)canRedo
+{
+  return [self isCommandEnabled: "cmd_redo"];
 }
 
 -(NSString*)getCurrentURLSpec
@@ -1580,9 +1645,11 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
   else if (action == @selector(paste:))
     return [self canPaste];
   else if (action == @selector(delete:))
-    return NO;
+    return [self canDelete];
   else if (action == @selector(undo:))
-    return YES;
+    return [self canUndo];
+  else if (action == @selector(redo:))
+    return [self canRedo];
   else if (action == @selector(selectAll:))
     return YES;
   
