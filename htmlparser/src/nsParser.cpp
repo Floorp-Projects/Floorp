@@ -2476,7 +2476,7 @@ nsParser::DetectMetaTag(const char* aBytes,
         const char* attrEnd;
         
         // Find the end of the tag
-        FindInReadable(NS_LITERAL_CSTRING(">"), tagEnd, end);
+        FindCharInReadable('>', tagEnd, end);
         attrEnd = tagEnd.get();
         
         CWordTokenizer<char> tokenizer(attrStart, 0, attrEnd-attrStart);
@@ -2517,7 +2517,7 @@ nsParser::DetectMetaTag(const char* aBytes,
                     (nsCRT::strncasecmp(contentStart+offset,
                                         kCharsetStr, kCharsetStrLen) == 0)) {
                   // The next word is the charset
-                  if ((offset = contentTokenizer.GetNextWord()) != kNotFound) {
+                  if ((offset = contentTokenizer.GetNextWord(PR_TRUE)) != kNotFound) {
                     aCharset.Assign(NS_ConvertASCIItoUCS2(contentStart+offset, 
                                                           contentTokenizer.GetLength()));
                   }

@@ -874,43 +874,36 @@ nsresult nsScanner::ReadIdentifier(nsReadingIterator<PRUnichar>& aStart,
 }
 
 /**
- *  Consume characters until you find the terminal char
+ *  Consume digits 
  *  
- *  @update  gess 3/25/98
- *  @param   aString receives new data from stream
- *  @param   addTerminal tells us whether to append terminal to aString
+ *  @param   aString - should contain digits
  *  @return  error code
  */
-nsresult nsScanner::ReadNumber(nsString& aString) {
+nsresult nsScanner::ReadNumber(nsString& aString,PRInt32 aBase) {
 
   if (!mSlidingBuffer) {
     return kEOF;
   }
 
+  NS_ASSERTION(aBase == 10 || aBase == 16,"base value not supported");
+
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
   nsReadingIterator<PRUnichar> origin, current, end;
-  PRBool            found=PR_FALSE;  
 
   origin = mCurrentPosition;
   current = origin;
   end = mEndPosition;
 
+  PRBool done = PR_FALSE;
   while(current != end) {
- 
     theChar=*current;
     if(theChar) {
-      found=PR_FALSE;
-      if(('a'<=theChar) && (theChar<='f'))
-        found=PR_TRUE;
-      else if(('A'<=theChar) && (theChar<='F'))
-        found=PR_TRUE;
-      else if(('0'<=theChar) && (theChar<='9'))
-        found=PR_TRUE;
-      else if('#'==theChar)
-        found=PR_TRUE;
-
-      if(!found) {
+      done = (theChar < '0' || theChar > '9') && 
+             ((aBase == 16)? (theChar < 'A' || theChar > 'F') &&
+                             (theChar < 'a' || theChar > 'f')
+                             :PR_TRUE);
+      if(done) {
         AppendUnicodeTo(origin, current, aString);
         break;
       }
@@ -930,36 +923,32 @@ nsresult nsScanner::ReadNumber(nsString& aString) {
 }
 
 nsresult nsScanner::ReadNumber(nsReadingIterator<PRUnichar>& aStart,
-                               nsReadingIterator<PRUnichar>& aEnd) {
+                               nsReadingIterator<PRUnichar>& aEnd,
+                               PRInt32 aBase) {
 
   if (!mSlidingBuffer) {
     return kEOF;
   }
 
+  NS_ASSERTION(aBase == 10 || aBase == 16,"base value not supported");
+
   PRUnichar         theChar=0;
   nsresult          result=Peek(theChar);
   nsReadingIterator<PRUnichar> origin, current, end;
-  PRBool            found=PR_FALSE;  
 
   origin = mCurrentPosition;
   current = origin;
   end = mEndPosition;
 
+  PRBool done = PR_FALSE;
   while(current != end) {
- 
     theChar=*current;
     if(theChar) {
-      found=PR_FALSE;
-      if(('a'<=theChar) && (theChar<='f'))
-        found=PR_TRUE;
-      else if(('A'<=theChar) && (theChar<='F'))
-        found=PR_TRUE;
-      else if(('0'<=theChar) && (theChar<='9'))
-        found=PR_TRUE;
-      else if('#'==theChar)
-        found=PR_TRUE;
-
-      if(!found) {
+      done = (theChar < '0' || theChar > '9') && 
+             ((aBase == 16)? (theChar < 'A' || theChar > 'F') &&
+                             (theChar < 'a' || theChar > 'f')
+                             :PR_TRUE);
+      if(done) {
         aStart = origin;
         aEnd = current;
         break;

@@ -217,14 +217,18 @@ class CopyNormalizeNewlines
     typedef typename OutputIterator::value_type value_type;
 
   public:
-    CopyNormalizeNewlines(OutputIterator* aDestination) : 
-      mLastCharCR(PR_FALSE),
+    CopyNormalizeNewlines(OutputIterator* aDestination,PRBool aLastCharCR=PR_FALSE) : 
+      mLastCharCR(aLastCharCR),
       mDestination(aDestination),
       mWritten(0) 
     { }
     
     PRUint32 GetCharsWritten() { 
       return mWritten; 
+    }
+
+    PRBool IsLastCharCR() {
+      return mLastCharCR;
     }
 
     PRUint32 write(const typename OutputIterator::value_type* aSource, PRUint32 aSourceLength) {
@@ -274,14 +278,21 @@ class CopyNormalizeNewlines
 
 // static
 PRUint32 
-nsContentUtils::CopyNewlineNormalizedUnicodeTo(const nsAReadableString& aSource, PRUint32 aSrcOffset, PRUnichar* aDest, PRUint32 aLength)
+nsContentUtils::CopyNewlineNormalizedUnicodeTo(const nsAReadableString& aSource, 
+                                               PRUint32 aSrcOffset, 
+                                               PRUnichar* aDest, 
+                                               PRUint32 aLength, 
+                                               PRBool& aLastCharCR)
 {
   typedef NormalizeNewlinesCharTraits<PRUnichar*> sink_traits;
 
   sink_traits dest_traits(aDest);
-  CopyNormalizeNewlines<sink_traits> normalizer(&dest_traits);
+  CopyNormalizeNewlines<sink_traits> normalizer(&dest_traits,aLastCharCR);
   nsReadingIterator<PRUnichar> fromBegin, fromEnd;
-  copy_string(aSource.BeginReading(fromBegin).advance( PRInt32(aSrcOffset) ), aSource.BeginReading(fromEnd).advance( PRInt32(aSrcOffset+aLength) ), normalizer);
+  copy_string(aSource.BeginReading(fromBegin).advance( PRInt32(aSrcOffset) ), 
+              aSource.BeginReading(fromEnd).advance( PRInt32(aSrcOffset+aLength) ), 
+              normalizer);
+  aLastCharCR = normalizer.IsLastCharCR();
   return normalizer.GetCharsWritten();
 }
 

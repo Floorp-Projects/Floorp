@@ -762,6 +762,7 @@ nsHTMLFragmentContentSink::AddText(const nsAReadableString& aString)
 
   // Copy data from string into our buffer; flush buffer when it fills up
   PRInt32 offset = 0;
+  PRBool  isLastCharCR = PR_FALSE;
   while (0 != addLen) {
     PRInt32 amount = mTextSize - mTextLength;
     if (amount > addLen) {
@@ -774,9 +775,11 @@ nsHTMLFragmentContentSink::AddText(const nsAReadableString& aString)
       }
     }
     mTextLength +=
-      nsContentUtils::CopyNewlineNormalizedUnicodeTo(aString, offset,
+      nsContentUtils::CopyNewlineNormalizedUnicodeTo(aString, 
+                                                     offset,
                                                      &mText[mTextLength], 
-                                                     amount);
+                                                     amount,
+                                                     isLastCharCR);
     offset += amount;
     addLen -= amount;
   }

@@ -599,12 +599,11 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
  *  @return  error result
  */
 nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,
-                                  nsString& aTerminalString,PRInt32 aFlag,PRBool& aFlushTokens){
+                                  nsString& aEndTagName,PRInt32 aFlag,PRBool& aFlushTokens){
   nsresult      result=NS_OK;
   nsReadingIterator<PRUnichar> theStartOffset, theCurrOffset, theTermStrPos, theStartCommentPos, theAltTermStrPos, endPos;
   PRBool        done=PR_FALSE;
   PRBool        theLastIteration=PR_FALSE;
-  PRInt32       termStrLen=aTerminalString.Length();
 
   aScanner.CurrentPosition(theStartOffset);
   theCurrOffset = theStartOffset;
@@ -627,95 +626,82 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
   // 5. If the end of the document is reached and if we still don't have the condition in step 4. then
   //    assume that the prematured terminal string is the actual terminal string and goto step 1. This
   //    will be our last iteration.
+  nsAutoString theTerminalString(aEndTagName);
+  theTerminalString.InsertWithConversion("</",0,2);
 
-
-  // When is the disaster enabled?
-  // a) when the buffer runs out ot data.
-  // b) when the terminal string is not found.
-  PRBool disaster = PR_FALSE; 
+  PRUint32 termStrLen=theTerminalString.Length();
   while((result == NS_OK) && !done) {
-    if (FindCharInReadable(PRUnichar(kLessThan), theCurrOffset, endPos)) {
-      nsReadingIterator<PRUnichar> tempOffset = theCurrOffset;
-      while(1) {
-        if (FindCharInReadable(PRUnichar(kGreaterThan), tempOffset, endPos)) {
-          
-          // Make a copy of the (presumed) end tag and 
-          // do a case-insensitive comparision
-          nsAutoString str;
+    PRBool found = PR_FALSE;
+    nsReadingIterator<PRUnichar> gtOffset,ltOffset = theCurrOffset;
+    while (FindCharInReadable(PRUnichar(kLessThan), ltOffset, endPos) &&
+           Distance(ltOffset, endPos) >= termStrLen) {
+      // Make a copy of the (presumed) end tag and
+      // do a case-insensitive comparision
 
-          nsReadingIterator<PRUnichar> start(tempOffset), end(tempOffset);
-          start.advance(-termStrLen);
+      nsReadingIterator<PRUnichar> start(ltOffset), end(ltOffset);
+      end.advance(termStrLen);
 
-          CopyUnicodeTo(start, end, str);
-
-          if (str.EqualsIgnoreCase(aTerminalString)) {
-            theTermStrPos = tempOffset;
-            theTermStrPos.advance(-termStrLen);
-            break;
-          }
-          tempOffset.advance(1);
+      if (CaseInsensitiveFindInReadable(theTerminalString,start,end) && 
+          end != endPos && (*end == '>'  || *end == ' '  || 
+                            *end == '\t' || *end == '\n' || 
+                            *end == '\r' || *end == '\b')) {
+        gtOffset = end;
+        if (FindCharInReadable(PRUnichar(kGreaterThan), gtOffset, endPos)) {
+          found = PR_TRUE;
+          theTermStrPos = start;
         }
-        else {
-          // Ran out of data and haven't found the terminal string yet.
-          // Note: If a bogus terminal string is found it would have 
-          // been stored in theAltTermStrPos;   Bug: 64576
-          theTermStrPos=endPos; 
-          break; // we have reached the end of the document
+        break;
+      }
+      ltOffset.advance(1);
+    }
+     
+    if (found && theTermStrPos != endPos) {
+      if(!(aFlag & NS_IPARSER_FLAG_STRICT_MODE) &&
+         !(aFlag & NS_IPARSER_FLAG_TRANSITIONAL_MODE) &&
+         !theLastIteration && !aIgnoreComments) {
+        nsReadingIterator<PRUnichar> endComment(ltOffset);
+        endComment.advance(5);
+         
+        if ((theStartCommentPos == endPos) &&
+            FindInReadable(NS_LITERAL_STRING("<!--"), theCurrOffset, endComment)) {
+          theStartCommentPos = theCurrOffset;
+        }
+         
+        if (theStartCommentPos != endPos) {
+          // Search for --> between <!-- and </TERMINALSTRING>.
+          theCurrOffset = theStartCommentPos;
+          nsReadingIterator<PRUnichar> terminal(theTermStrPos);
+          if (!RFindInReadable(NS_LITERAL_STRING("-->"),
+                               theCurrOffset, terminal)) {
+            // If you're here it means that we have a bogus terminal string.
+            // Even though it is bogus, the position of the terminal string
+            // could be helpful in case we hit the rock bottom.
+            theAltTermStrPos = theTermStrPos;
+    
+            // We did not find '-->' so keep searching for terminal string.
+            theCurrOffset = theTermStrPos;
+            theCurrOffset.advance(termStrLen);
+            continue;
+          }
         }
       }
 
-      if (theTermStrPos != endPos) {
-        if(!(aFlag & NS_IPARSER_FLAG_STRICT_MODE) && 
-           !(aFlag & NS_IPARSER_FLAG_TRANSITIONAL_MODE) && 
-           !theLastIteration && !aIgnoreComments) {
-          nsReadingIterator<PRUnichar> endComment(theCurrOffset);
-          endComment.advance(5);
-          if ((theStartCommentPos == endPos) && 
-              FindInReadable(NS_LITERAL_STRING("<!--"), theCurrOffset, endComment)) {
-            theStartCommentPos = theCurrOffset;
-          }
-            
-          if (theStartCommentPos != endPos) {
-            // Search for --> between <!-- and </TERMINALSTRING>.
-            theCurrOffset = theStartCommentPos;
-            nsReadingIterator<PRUnichar> terminal(theTermStrPos);
-            if (!RFindInReadable(NS_LITERAL_STRING("-->"), 
-                                 theCurrOffset, terminal)) {
-              // If you're here it means that we have a bogus terminal string.
-              
-              // Even though it is bogus, the position of the terminal string
-              // could be helpful in case we hit the rock bottom.
-              theAltTermStrPos = theTermStrPos;
-              
-              // We did not find '-->' so keep searching for terminal string.
-              theCurrOffset = theTermStrPos;
-              theCurrOffset.advance(termStrLen);
-              continue;
-            }
-          }
-        }
-
-        disaster=PR_FALSE;
-
-        aScanner.BindSubstring(mTextValue, theStartOffset, theTermStrPos);
-
-        theTermStrPos.advance(termStrLen+1);
-        aScanner.SetPosition(theTermStrPos);   
-
-        // We found </SCRIPT>...permit flushing -> Ref: Bug 22485
-        aFlushTokens=PR_TRUE; 
-        done = PR_TRUE;
+      // Make sure to preserve the end tag's representation in viewsource
+      if(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
+        CopyUnicodeTo(ltOffset.advance(2),gtOffset,aEndTagName);
       }
-      else {
-        disaster = PR_TRUE;
-      }
+
+      aScanner.BindSubstring(mTextValue, theStartOffset, theTermStrPos);
+      aScanner.SetPosition(gtOffset.advance(1));
+      
+      // We found </SCRIPT>...permit flushing -> Ref: Bug 22485
+      aFlushTokens=PR_TRUE;
+      done = PR_TRUE;
     }
     else {
-      disaster = PR_TRUE;
-    }
-
-
-    if(disaster) {
+      // We end up here if:
+      // a) when the buffer runs out ot data.
+      // b) when the terminal string is not found.
       if(!aScanner.IsIncremental()) {
         if(theAltTermStrPos != endPos) {
           // If you're here it means..we hit the rock bottom and therefore switch to plan B.
@@ -723,15 +709,15 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
           theLastIteration = PR_TRUE;
         }
         else {
-          aTerminalString.Cut(0,2); 
           done = PR_TRUE; // Do this to fix Bug. 35456
         }
       }
-      else
+      else {
        result=kEOF;
+      }
     }
   }
-  return result; 
+  return result;
 }
 
 void CTextToken::CopyTo(nsAWritableString& aStr)
@@ -1496,7 +1482,6 @@ nsresult ConsumeAttributeEntity(nsString& aString,
     nsAutoString entity;
 
     if (nsCRT::IsAsciiAlpha(ch) && !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-      aScanner.GetChar(amp); // Get '&'
       result=CEntityToken::ConsumeEntity(ch,entity,aScanner);
       if (NS_SUCCEEDED(result)) {
         theNCRValue = nsHTMLEntities::EntityToUnicode(entity);
@@ -1507,7 +1492,7 @@ nsresult ConsumeAttributeEntity(nsString& aString,
         // Resembling IE!!
         if(theNCRValue < 0 || (theNCRValue > 255 && theTermChar != ';')) {
           // Looks like we're not dealing with an entity
-          aString.Append(amp);
+          aString.Append(kAmpersand);
           aString.Append(entity);
         }
         else {
@@ -1517,12 +1502,19 @@ nsresult ConsumeAttributeEntity(nsString& aString,
       }
     }
     else if (ch==kHashsign && !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-      aScanner.GetChar(amp); // Discard '&'
-      PRInt32 err;
       result=CEntityToken::ConsumeEntity(ch,entity,aScanner);
       if (NS_SUCCEEDED(result)) {
-        theNCRValue=entity.ToInteger(&err,kAutoDetect);
-        aString.Append(PRUnichar(theNCRValue));
+        if (result == NS_HTMLTOKENS_NOT_AN_ENTITY) {
+          // Looked like an entity but it's not
+          aScanner.GetChar(amp);
+          aString.Append(amp);
+          result = NS_OK; // just being safe..
+        }
+        else {
+          PRInt32 err;
+          theNCRValue=entity.ToInteger(&err,kAutoDetect);
+          aString.Append(PRUnichar(theNCRValue));
+        }
       }
     }
     else {
@@ -1580,7 +1572,7 @@ nsresult ConsumeAttributeValueText(nsString& aString,
  *  @return  error result
  */
 static
-nsresult ConsumeQuottedString(PRUnichar aChar,
+nsresult ConsumeQuotedString(PRUnichar aChar,
                               nsString& aString,
                               nsScanner& aScanner,
                               PRInt32 aFlag)
@@ -1639,128 +1631,107 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
     result = aScanner.SkipWhitespace();
   }
 
-  if(NS_OK==result) {
-    result=aScanner.Peek(aChar);
-    if(NS_OK==result) {
-      
-      nsReadingIterator<PRUnichar> start, end;
-      if((kHashsign==aChar) || (nsCRT::IsAsciiDigit(aChar))){
-        result=aScanner.ReadNumber(start, end);
+  if (NS_OK==result) {
+    static const PRUnichar theTerminalsChars[] = 
+    { PRUnichar(' '), PRUnichar('"'), 
+      PRUnichar('='), PRUnichar('\n'), 
+      PRUnichar('\r'), PRUnichar('\t'), 
+      PRUnichar('>'), PRUnichar('\b'),
+      PRUnichar(0) };
+
+    nsReadingIterator<PRUnichar> start, end;
+    const nsDependentString theTerminals(theTerminalsChars,
+    sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
+    result=aScanner.ReadUntil(start,end,theTerminals,PR_FALSE);
+
+    if (!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+      aScanner.BindSubstring(mTextKey, start, end);
+    }
+
+    //now it's time to Consume the (optional) value...
+    if (NS_OK==result) {
+      if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
+        result = aScanner.ReadWhitespace(start, wsend);
+        aScanner.BindSubstring(mTextKey, wsstart, wsend);
       }
       else {
-          //If you're here, handle an unquoted key.
-        static const PRUnichar theTerminalsChars[] = 
-          { PRUnichar('\b'), PRUnichar('\t'), PRUnichar('\n'), PRUnichar('\r'),
-            PRUnichar(' '), PRUnichar('"'), PRUnichar('='), PRUnichar('>'),
-            PRUnichar(0) };
-        const nsDependentString theTerminals(theTerminalsChars,
-          sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
-        result=aScanner.ReadUntil(start,end,theTerminals,PR_FALSE);
-      }
-      if (!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-        aScanner.BindSubstring(mTextKey, start, end);
+        result = aScanner.SkipWhitespace();
       }
 
-        //now it's time to Consume the (optional) value...
-      if(NS_OK==result) {
+      if (NS_OK==result) { 
+        result=aScanner.Peek(aChar);       //Skip ahead until you find an equal sign or a '>'...
+        if (NS_OK==result) {  
+          if (kEqual==aChar){
+            result=aScanner.GetChar(aChar);  //skip the equal sign...
+            if (NS_OK==result) {
+              if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
+                result = aScanner.ReadWhitespace(mTextValue);
+              }
+              else {
+                result = aScanner.SkipWhitespace();
+              }
 
-        if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
-          result = aScanner.ReadWhitespace(start, wsend);
-          aScanner.BindSubstring(mTextKey, wsstart, wsend);
-        }
-        else {
-          result = aScanner.SkipWhitespace();
-        }
-
-        if(NS_OK==result) { 
-          result=aScanner.Peek(aChar);       //Skip ahead until you find an equal sign or a '>'...
-          if(NS_OK==result) {  
-            if(kEqual==aChar){
-              result=aScanner.GetChar(aChar);  //skip the equal sign...
-              if(NS_OK==result) {
-
-                if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
-                  result = aScanner.ReadWhitespace(mTextValue);
-                }
-                else {
-                  result = aScanner.SkipWhitespace();
-                }
-
-                if(NS_OK==result) {
-                  result=aScanner.Peek(aChar);  //and grab the next char.    
-                  if(NS_OK==result) {
-                    if((kQuote==aChar) || (kApostrophe==aChar)) {
-                      aScanner.GetChar(aChar);
-                      result=ConsumeQuottedString(aChar,mTextValue,aScanner,aFlag);
-                      if (NS_SUCCEEDED(result) && (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-                        mTextValue.Insert(aChar,0);
-                        mTextValue.Append(aChar);
-                      }
-                      // According to spec. we ( who? ) should ignore linefeeds. But look,
-                      // even the carriage return was getting stripped ( wonder why! ) -
-                      // Ref. to bug 15204.  Okay, so the spec. told us to ignore linefeeds,
-                      // bug then what about bug 47535 ? Should we preserve everything then?
-                      // Well, let's make it so! Commenting out the next two lines..
-                      /*if(!aRetain)
-                        mTextValue.StripChars("\r\n"); //per the HTML spec, ignore linefeeds...
-                      */
-                    }
-                    else if(kGreaterThan==aChar){      
-                      mHasEqualWithoutValue=PR_TRUE;
-                    }
-                    else if(kAmpersand==aChar) {
-                      // XXX - Discard script entity for now....except in
-                      // view-source
-                      aScanner.GetChar(aChar);
-                      PRBool discard=!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE); 
+              if (NS_OK==result) {
+                result=aScanner.Peek(aChar);  //and grab the next char.    
+                if (NS_OK==result) {
+                  if ((kQuote==aChar) || (kApostrophe==aChar)) {
+                    aScanner.GetChar(aChar);
+                    result=ConsumeQuotedString(aChar,mTextValue,aScanner,aFlag);
+                    if (NS_SUCCEEDED(result) && (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+                      mTextValue.Insert(aChar,0);
                       mTextValue.Append(aChar);
-                      result=aScanner.GetChar(aChar);
-                      if(NS_OK==result) {
-                        mTextValue.Append(aChar);
-                        result=CEntityToken::ConsumeEntity(aChar,mTextValue,aScanner);
-                      }
-                      if(discard) mTextValue.Truncate();
                     }
-                    else {
-                      aScanner.GetChar(aChar);
-                      mTextValue.Append(aChar);       //it's an alphanum attribute...
-                      result=ConsumeAttributeValueText(mTextValue,aScanner,kAttributeTerminalChars,aFlag);
-                    } 
-                  }//if
-                  if(NS_OK==result) {
-                    if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
-                      result = aScanner.ReadWhitespace(mTextValue);
-                    }
-                    else {
-                      result = aScanner.SkipWhitespace();
-                    }
+                    // According to spec. we ( who? ) should ignore linefeeds. But look,
+                    // even the carriage return was getting stripped ( wonder why! ) -
+                    // Ref. to bug 15204.  Okay, so the spec. told us to ignore linefeeds,
+                    // bug then what about bug 47535 ? Should we preserve everything then?
+                    // Well, let's make it so! Commenting out the next two lines..
+                    /*if(!aRetain)
+                      mTextValue.StripChars("\r\n"); //per the HTML spec, ignore linefeeds...
+                    */
                   }
+                  else if (kGreaterThan==aChar){      
+                    mHasEqualWithoutValue=PR_TRUE;
+                  }
+                  else {
+                    result=ConsumeAttributeValueText(mTextValue,
+                                                     aScanner,
+                                                     kAttributeTerminalChars,
+                                                     aFlag);
+                  } 
                 }//if
+                if (NS_OK==result) {
+                  if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
+                    result = aScanner.ReadWhitespace(mTextValue);
+                  }
+                  else {
+                    result = aScanner.SkipWhitespace();
+                  }
+                }
               }//if
             }//if
-            else {
-              //This is where we have to handle fairly busted content.
-              //If you're here, it means we saw an attribute name, but couldn't find 
-              //the following equal sign.  <tag NAME=....
-          
-              //Doing this right in all cases is <i>REALLY</i> ugly. 
-              //My best guess is to grab the next non-ws char. We know it's not '=',
-              //so let's see what it is. If it's a '"', then assume we're reading
-              //from the middle of the value. Try stripping the quote and continuing...
-
-              if(kQuote==aChar){
-                result=aScanner.SkipOver(aChar); //strip quote.
-              }
-            }
           }//if
-        } //if
-      }//if (consume optional value)
+          else {
+            //This is where we have to handle fairly busted content.
+            //If you're here, it means we saw an attribute name, but couldn't find 
+            //the following equal sign.  <tag NAME=....
+        
+            //Doing this right in all cases is <i>REALLY</i> ugly. 
+            //My best guess is to grab the next non-ws char. We know it's not '=',
+            //so let's see what it is. If it's a '"', then assume we're reading
+            //from the middle of the value. Try stripping the quote and continuing...
+            if (kQuote==aChar){
+              result=aScanner.SkipOver(aChar); //strip quote.
+            }
+          }
+        }//if
+      } //if
+    }//if (consume optional value)
 
-      if(NS_OK==result) {
-        result=aScanner.Peek(aChar);
-        mLastAttribute= PRBool((kGreaterThan==aChar) || (kEOF==result));
-      }
-    } //if
+    if (NS_OK==result) {
+      result=aScanner.Peek(aChar);
+      mLastAttribute= PRBool((kGreaterThan==aChar) || (kEOF==result));
+    }
   }//if
   return result;
 }
@@ -1900,8 +1871,6 @@ CEntityToken::CEntityToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag
  *  @return  error result
  */
 nsresult CEntityToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag) {
-  if(aChar)
-    mTextValue.Assign(aChar);
   nsresult result=ConsumeEntity(aChar,mTextValue,aScanner);
   return result;
 }
@@ -1939,52 +1908,80 @@ PRInt32 CEntityToken::GetTokenType(void) {
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
-PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner& aScanner){
-  PRUnichar theChar=0;
-  PRInt32 result=aScanner.Peek(theChar);
-  if(NS_OK==result) {
-    if(kLeftBrace==aChar) {
-      //you're consuming a script entity...
-      PRInt32 rightBraceCount = 0;
-      PRInt32 leftBraceCount  = 1;
-      while(leftBraceCount!=rightBraceCount) {
-        result=aScanner.GetChar(aChar);
-        if(NS_OK!=result) return result;
-        aString += aChar;
-        if(aChar==kRightBrace)
-          rightBraceCount++;
-        else if(aChar==kLeftBrace)
-          leftBraceCount++;
-      }
-      result=aScanner.ReadUntil(aString,kSemicolon,PR_FALSE);
-      if(NS_OK==result) {
-        result=aScanner.GetChar(aChar); // This character should be a semicolon
-        if(NS_OK==result) aString += aChar;
-      }
-    } //if
-    else {
-      if(kHashsign==aChar) {
-        if('X'==(toupper((char)theChar))) {
-          result=aScanner.GetChar(theChar);
-          aString+=theChar;
-        }
-        if(NS_OK==result){
-          result=aScanner.ReadNumber(aString);
-        }
-      }
-      else result=aScanner.ReadIdentifier(aString,PR_TRUE); // Ref. Bug# 23791 - For setting aIgnore to PR_TRUE.
-      if(NS_OK==result) {
-        result=aScanner.Peek(theChar);
-        if(NS_OK==result) {
-          if (kSemicolon == theChar) {
-            // consume semicolon that stopped the scan
-            aString+=theChar;
-            result=aScanner.GetChar(theChar);
-          }
-        }
-      }//if
-    } //else
+nsresult
+CEntityToken::ConsumeEntity(PRUnichar aChar,
+                            nsString& aString,
+                            nsScanner& aScanner) {
+  nsresult result=NS_OK;
+  if(kLeftBrace==aChar) {
+    //you're consuming a script entity...
+    aScanner.GetChar(aChar); // Consume &
+
+    PRInt32 rightBraceCount = 0;
+    PRInt32 leftBraceCount  = 0;
+
+    do {
+      result=aScanner.GetChar(aChar);
+      NS_ENSURE_SUCCESS(result,result);
+
+      aString.Append(aChar);
+      if(aChar==kRightBrace)
+        rightBraceCount++;
+      else if(aChar==kLeftBrace)
+        leftBraceCount++;
+    } while(leftBraceCount!=rightBraceCount);
   } //if
+  else {
+    PRUnichar theChar=0;
+    if (kHashsign==aChar) {
+      result = aScanner.Peek(theChar,2);
+      NS_ENSURE_SUCCESS(result,result);
+
+      if (nsCRT::IsAsciiDigit(theChar)) {
+        aScanner.GetChar(aChar); // Consume &
+        aScanner.GetChar(aChar); // Consume #
+        aString.Assign(aChar);
+        result=aScanner.ReadNumber(aString,10);
+      }
+      else if (theChar == 'x' || theChar == 'X') {
+        aScanner.GetChar(aChar);   // Consume &
+        aScanner.GetChar(aChar);   // Consume #
+        aScanner.GetChar(theChar); // Consume x
+        aString.Assign(aChar);
+        aString.Append(theChar); 
+        result=aScanner.ReadNumber(aString,16);
+      }
+      else {
+        return NS_HTMLTOKENS_NOT_AN_ENTITY; 
+      }
+    }
+    else {
+      result = aScanner.Peek(theChar,1);
+      NS_ENSURE_SUCCESS(result,result);
+
+      if(nsCRT::IsAsciiAlpha(theChar) || 
+        theChar == '_' ||
+        theChar == ':') {
+        aScanner.GetChar(aChar); // Consume &
+        result=aScanner.ReadIdentifier(aString,PR_TRUE); // Ref. Bug# 23791 - For setting aIgnore to PR_TRUE.
+      }
+      else {
+        return NS_HTMLTOKENS_NOT_AN_ENTITY;
+      }
+    }
+  }
+    
+  NS_ENSURE_SUCCESS(result,result);
+    
+  result=aScanner.Peek(aChar);
+  NS_ENSURE_SUCCESS(result,result);
+
+  if (aChar == kSemicolon) {
+    // consume semicolon that stopped the scan
+    aString.Append(aChar);
+    result=aScanner.GetChar(aChar);
+  }
+  
   return result;
 }
 
