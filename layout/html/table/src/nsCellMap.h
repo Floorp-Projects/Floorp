@@ -252,13 +252,30 @@ public:
                                  CellData& aData,
                                  PRBool    aUseRowSpanIfOverlap) const;
 
-  /** append the cellFrame at the end of the row at aRowIndex and return the col index
+  /** append the cellFrame at an empty or dead cell or finally at the end of 
+    * the row at aRowIndex and return a pointer to the celldata entry in the 
+    * cellmap
+    *
+    * @param aMap               - reference to the table cell map
+    * @param aCellFrame         - a pointer to the cellframe which will be appended 
+    *                             to the row
+    * @param aRowIndex          - to this row the celldata entry will be added
+    * @param aRebuildIfNecessay - if a cell spans into a row below it might be 
+    *                             necesserary to rebuild the cellmap as this rowspan 
+    *                             might overlap another cell.
+    * @param aDamageArea        - area in cellmap coordinates which have been updated.
+    * @param aColToBeginSearch  - if not null contains the column number where 
+    *                             the search for a empty or dead cell in the 
+    *                             row should start
+    * @return                   - a pointer to the celldata entry inserted into 
+    *                             the cellmap
     */
   CellData* AppendCell(nsTableCellMap&   aMap,
                        nsTableCellFrame* aCellFrame, 
                        PRInt32           aRowIndex,
                        PRBool            aRebuildIfNecessary,
-                       nsRect&           aDamageArea);
+                       nsRect&           aDamageArea,
+                       PRInt32*          aBeginSearchAtCol = nsnull);
 
   void InsertCells(nsTableCellMap& aMap,
                    nsVoidArray&    aCellFrames,

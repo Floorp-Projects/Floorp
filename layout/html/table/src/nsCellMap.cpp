@@ -42,6 +42,7 @@
 #include "nsTableCellFrame.h"
 #include "nsTableRowGroupFrame.h"
 
+
 // colspan=0 gets a minimum number of cols initially to make computations easier
 #define MIN_NUM_COLS_FOR_ZERO_COLSPAN 2
 
@@ -996,7 +997,7 @@ nsCellMap::nsCellMap(nsTableRowGroupFrame& aRowGroup)
 nsCellMap::~nsCellMap()
 {
   MOZ_COUNT_DTOR(nsCellMap);
-
+  
   PRInt32 mapRowCount = mRows.Count();
   for (PRInt32 rowX = 0; rowX < mapRowCount; rowX++) {
     nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(rowX));
@@ -1165,7 +1166,8 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
                       nsTableCellFrame* aCellFrame, 
                       PRInt32           aRowIndex,
                       PRBool            aRebuildIfNecessary,
-                      nsRect&           aDamageArea)
+                      nsRect&           aDamageArea,
+                      PRInt32*          aColToBeginSearch)
 {
   PRInt32 origNumMapRows = mRows.Count();
   PRInt32 origNumCols = aMap.GetColCount();
@@ -1179,18 +1181,23 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
 
   // get the first null or dead CellData in the desired row. It will equal origNumCols if there are none
   CellData* origData = nsnull;
-  PRInt32 startColIndex;
-  for (startColIndex = 0; startColIndex < origNumCols; startColIndex++) {
+  PRInt32 startColIndex = 0;
+  if (aColToBeginSearch)
+    startColIndex = *aColToBeginSearch;
+  for (; startColIndex < origNumCols; startColIndex++) {
     CellData* data = GetDataAt(aMap, aRowIndex, startColIndex, PR_TRUE);
-    if (!data) {
+    if (!data) 
       break;
-    }
-    else if (data->IsDead()) {
+    if (data->IsDead()) {
       origData = data;
       break; 
     }
   }
-
+  // We found the place to append the cell, when the next cell is appended 
+  // the next search does not need to duplicate the search but can start 
+  // just at the next cell.
+  if (aColToBeginSearch)
+    *aColToBeginSearch =  startColIndex + 1; 
   
   PRBool  zeroColSpan;
   PRInt32 colSpan = (aCellFrame) ? GetColSpanForNewCell(*aCellFrame, startColIndex, origNumCols, zeroColSpan) : 1;
@@ -1446,11 +1453,12 @@ nsCellMap::ExpandWithRows(nsIPresContext* aPresContext,
     // append cells 
     nsIFrame* cFrame = nsnull;
     rFrame->FirstChild(aPresContext, nsnull, &cFrame);
+    PRInt32 colIndex = 0;
     while (cFrame) {
       nsIAtom* cFrameType;
       cFrame->GetFrameType(&cFrameType);
       if (IS_TABLE_CELL(cFrameType)) {
-        AppendCell(aMap, (nsTableCellFrame *)cFrame, rowX, PR_FALSE, aDamageArea);
+        AppendCell(aMap, (nsTableCellFrame *)cFrame, rowX, PR_FALSE, aDamageArea, &colIndex);
       }
       NS_IF_RELEASE(cFrameType);
       cFrame->GetNextSibling(&cFrame);
@@ -2241,7 +2249,7 @@ nsCellMap::GetDataAt(nsTableCellMap& aMap,
     // if zero span adjustments were made the data may be available now
     if (!data && didZeroExpand) {
       data = GetDataAt(aMap, aMapRowIndex, aColIndex, PR_FALSE);
-    }                     
+    }
   }
   return data;
 }
@@ -2323,15 +2331,15 @@ PRBool nsCellMap::RowIsSpannedInto(nsTableCellMap& aMap,
   if ((0 > aRowIndex) || (aRowIndex >= mRowCount)) {
     return PR_FALSE;
   }
-	for (PRInt32 colIndex = 0; colIndex < numColsInTable; colIndex++) {
-		CellData* cd = GetDataAt(aMap, aRowIndex, colIndex, PR_TRUE);
-		if (cd) { // there's really a cell at (aRowIndex, colIndex)
-			if (cd->IsSpan()) { // the cell at (aRowIndex, colIndex) is the result of a span
+  for (PRInt32 colIndex = 0; colIndex < numColsInTable; colIndex++) {
+    CellData* cd = GetDataAt(aMap, aRowIndex, colIndex, PR_TRUE);
+    if (cd) { // there's really a cell at (aRowIndex, colIndex)
+      if (cd->IsSpan()) { // the cell at (aRowIndex, colIndex) is the result of a span
         if (cd->IsRowSpan() && GetCellFrame(aRowIndex, colIndex, *cd, PR_TRUE)) { // XXX why the last check
           return PR_TRUE;
         }
-			}
-		}
+      }
+    }
   }
   return PR_FALSE;
 }
