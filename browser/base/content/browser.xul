@@ -213,7 +213,8 @@
                  onmousedown="URLBarMouseDownHandler(event, this);"
                  onclick="URLBarClickHandler(event, this);"
                  persist="searchengine,autocompletesearchparam">
-          <image id="search-proxy-button" popup="SearchBarPopup" persist="src"/>
+          <button id="search-proxy-button" type="menu"
+                  popup="SearchBarPopup" persist="src"/>
         </textbox>
       </toolbaritem>
       
