@@ -27,6 +27,9 @@
 #include "nsRDFCID.h"
 #include "nsXULTreeElement.h"
 #include "nsIContent.h"
+#include "nsIDocument.h"
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
 #include "nsINameSpaceManager.h"
 
 nsIAtom*             nsXULTreeElement::kSelectedAtom;
@@ -100,10 +103,12 @@ nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
   }
 
   // First clear our selection.
-  ClearItemSelection();
+  ClearItemSelectionInternal();
 
   // Now add ourselves to the selection by setting our selected attribute.
-  AddItemToSelection(aTreeItem);
+  AddItemToSelectionInternal(aTreeItem);
+
+  FireOnSelectHandler();
 
   return NS_OK;
 }
@@ -124,16 +129,26 @@ nsXULTreeElement::SelectCell(nsIDOMXULElement* aTreeCell)
   }
 
   // First clear our selection.
-  ClearCellSelection();
+  ClearCellSelectionInternal();
 
   // Now add ourselves to the selection by setting our selected attribute.
-  AddCellToSelection(aTreeCell);
+  AddCellToSelectionInternal(aTreeCell);
+
+  FireOnSelectHandler();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP    
 nsXULTreeElement::ClearItemSelection()
+{
+  ClearItemSelectionInternal();
+  FireOnSelectHandler();
+  return NS_OK;
+}
+
+void
+nsXULTreeElement::ClearItemSelectionInternal()
 {
   // Enumerate the elements and remove them from the selection.
   PRUint32 length;
@@ -144,12 +159,12 @@ nsXULTreeElement::ClearItemSelection()
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
     content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP    
-nsXULTreeElement::ClearCellSelection()
+void
+nsXULTreeElement::ClearCellSelectionInternal()
 {
+  // Enumerate the elements and remove them from the selection.
   PRUint32 length;
   mSelectedCells->GetLength(&length);
   for (PRUint32 i = 0; i < length; i++) {
@@ -158,44 +173,77 @@ nsXULTreeElement::ClearCellSelection()
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
     content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
   }
+}
 
+NS_IMETHODIMP    
+nsXULTreeElement::ClearCellSelection()
+{
+  ClearCellSelectionInternal();
+  FireOnSelectHandler();
   return NS_OK;
+}
+
+void
+nsXULTreeElement::AddItemToSelectionInternal(nsIDOMXULElement* aTreeItem)
+{
+  // Without clearing the selection, perform the add.
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
+  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsXULTreeElement::AddItemToSelection(nsIDOMXULElement* aTreeItem)
 {
   // Without clearing the selection, perform the add.
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
-  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", PR_TRUE);
-
+  AddItemToSelectionInternal(aTreeItem);
+  FireOnSelectHandler();
   return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsXULTreeElement::RemoveItemFromSelection(nsIDOMXULElement* aTreeItem)
+void
+nsXULTreeElement::RemoveItemFromSelectionInternal(nsIDOMXULElement* aTreeItem)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeItem);
   content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::RemoveItemFromSelection(nsIDOMXULElement* aTreeItem)
+{
+  RemoveItemFromSelectionInternal(aTreeItem);
+  FireOnSelectHandler();
   return NS_OK;
+}
+
+void
+nsXULTreeElement::AddCellToSelectionInternal(nsIDOMXULElement* aTreeCell)
+{
+  // Without clearing the selection, perform the add.
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeCell);
+  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsXULTreeElement::AddCellToSelection(nsIDOMXULElement* aTreeCell)
 {
-  // Without clearing the selection, perform the add.
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeCell);
-  content->SetAttribute(kNameSpaceID_None, kSelectedAtom, "true", PR_TRUE);
-
+  AddCellToSelectionInternal(aTreeCell);
+  FireOnSelectHandler();
   return NS_OK;
+}
+
+void
+nsXULTreeElement::RemoveCellFromSelectionInternal(nsIDOMXULElement* aTreeCell)
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeCell);
+  content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
 }
 
 NS_IMETHODIMP
 nsXULTreeElement::RemoveCellFromSelection(nsIDOMXULElement* aTreeCell)
 {
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aTreeCell);
-  content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_TRUE);
+  RemoveCellFromSelectionInternal(aTreeCell);
+  FireOnSelectHandler();
   return NS_OK;
 }
 
@@ -205,9 +253,10 @@ nsXULTreeElement::ToggleItemSelection(nsIDOMXULElement* aTreeItem)
   nsAutoString isSelected;
   aTreeItem->GetAttribute("selected", isSelected);
   if (isSelected == "true")
-    RemoveItemFromSelection(aTreeItem);
-  else AddItemToSelection(aTreeItem);
+    RemoveItemFromSelectionInternal(aTreeItem);
+  else AddItemToSelectionInternal(aTreeItem);
 
+  FireOnSelectHandler();
   return NS_OK;
 }
 
@@ -217,8 +266,10 @@ nsXULTreeElement::ToggleCellSelection(nsIDOMXULElement* aTreeCell)
   nsAutoString isSelected;
   aTreeCell->GetAttribute("selected", isSelected);
   if (isSelected == "true")
-    RemoveCellFromSelection(aTreeCell);
-  else AddCellToSelection(aTreeCell);
+    RemoveCellFromSelectionInternal(aTreeCell);
+  else AddCellToSelectionInternal(aTreeCell);
+
+  FireOnSelectHandler();
 
   return NS_OK;
 }
@@ -241,13 +292,8 @@ nsXULTreeElement::SelectCellRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
 NS_IMETHODIMP
 nsXULTreeElement::SelectAll()
 {
-  // Do a clear.
-  ClearItemSelection();
-  ClearCellSelection();
-
-  // Now do an invert. That will select everything.
-  InvertSelection();
-
+  // XXX Select anything that isn't selected.
+  // Write later.
   return NS_OK;
 }
 
@@ -257,4 +303,31 @@ nsXULTreeElement::InvertSelection()
   // XXX Woo hoo. Write this later.
   // Yikes. Involves an enumeration of the whole tree.
   return NS_OK;
+}
+
+void
+nsXULTreeElement::FireOnSelectHandler()
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
+  nsCOMPtr<nsIDocument> document;
+  content->GetDocument(*getter_AddRefs(document));
+
+  PRInt32 count = document->GetNumberOfShells();
+	for (PRInt32 i = 0; i < count; i++) {
+		nsIPresShell* shell = document->GetShellAt(i);
+		if (nsnull == shell)
+				continue;
+
+		// Retrieve the context in which our DOM event will fire.
+		nsCOMPtr<nsIPresContext> aPresContext;
+		shell->GetPresContext(getter_AddRefs(aPresContext));
+
+		NS_RELEASE(shell);
+				
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+    event.message = NS_FORM_SELECTED;
+    content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  }
 }

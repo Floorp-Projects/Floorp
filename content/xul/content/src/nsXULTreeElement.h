@@ -53,7 +53,18 @@ public:
    
     static nsIAtom*             kSelectedAtom;
     static int gRefCnt;
-    
+
+protected:
+    // Helpers
+    void ClearItemSelectionInternal();
+    void ClearCellSelectionInternal();
+    void AddItemToSelectionInternal(nsIDOMXULElement* aTreeItem);
+    void RemoveItemFromSelectionInternal(nsIDOMXULElement* aTreeItem);
+    void AddCellToSelectionInternal(nsIDOMXULElement* aTreeCell);
+    void RemoveCellFromSelectionInternal(nsIDOMXULElement* aTreeCell);
+
+    void FireOnSelectHandler();
+
 protected:
     nsRDFDOMNodeList* mSelectedItems;
     nsRDFDOMNodeList* mSelectedCells;
