@@ -9,6 +9,8 @@ nsIDocumentObserver.h
 nsIFrame.h
 nsIFrameUtil.h
 nsIFrameImageLoader.h
+nsINameSpace.h
+nsINameSpaceManager.h
 nsIPageSequenceFrame.h
 nsIPresContext.h
 nsIPresShell.h
