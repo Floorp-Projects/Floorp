@@ -45,6 +45,26 @@ function OpenURL(url)
   messenger.OpenURL(url);
 }
 
+function FindIncomingServer(uri)
+{
+	//dump("FindIncomingServer("+uri+")\n");
+	var server=null;
+
+	if (!uri) return server;
+	
+	try {
+		var resource = RDF.GetResource(uri);
+  		var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+		server = msgfolder.server;
+
+		//dump("server = " + server + "\n");
+		return server;
+	}
+	catch (ex) {
+		return null;
+	}
+}
+
 function ComposeMessage(type, format)
 //type: 0=new message, 1=reply, 2=reply all,
 //      3=forward inline, 4=forward as attachment
@@ -63,8 +83,8 @@ function ComposeMessage(type, format)
 			var uri = selectedFolder.getAttribute('id');
 			// dump("selectedFolder uri = " + uri + "\n");
 
-			// get the server associated with this uri
-			var server = accountManager.FindServerUsingURI(uri);
+			// get the incoming server associated with this uri
+			var server = FindIncomingServer(uri);
 			// dump("server = " + server + "\n");
 			// get the identity associated with this server
 			var identities = accountManager.GetIdentitiesForServer(server);
@@ -92,6 +112,7 @@ function ComposeMessage(type, format)
 	
 	if (type == 0) //new message
 	{
+		//dump("OpenComposeWindow with " + identity + "\n");
 		msgComposeService.OpenComposeWindow(null, null, 0, format, null, identity);
 		return;
 	}
