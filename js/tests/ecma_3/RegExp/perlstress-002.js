@@ -44,8 +44,8 @@
 * Each of the examples below is a negative test; that is, each produces a
 * null match in Perl. Therefore we set expectedmatch = |null| in each section.
 *
-* NOTE: ECMA/JS and Perl do differ on certain points.
-*       We have commented such sections out.
+* NOTE: ECMA/JS and Perl do differ on certain points. We have either commented
+* out such sections altogether, or modified them to fit what we expect from JS.
 *
 * EXAMPLES:
 *
@@ -346,18 +346,22 @@ actualmatch = string.match(pattern);
 expectedmatch = null;
 addThis();
 
+// MODIFIED - ECMA has different rules for paren contents.
 status = inSection(40);
 pattern = /(a)|\1/;
 string = 'x';
 actualmatch = string.match(pattern);
-expectedmatch = null;
+//expectedmatch = null;
+expectedmatch = Array("", undefined);
 addThis();
 
+// MODIFIED - ECMA has different rules for paren contents.
 status = inSection(41);
 pattern = /((\3|b)\2(a)x)+/;
 string = 'aaxabxbaxbbx';
 actualmatch = string.match(pattern);
-expectedmatch = null;
+//expectedmatch = null;
+expectedmatch = Array("ax", "ax", "", "a");
 addThis();
 
 status = inSection(42);
