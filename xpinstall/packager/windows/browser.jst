@@ -235,6 +235,14 @@ if(verifyDiskSpace(fCommunicator, srDest) == true)
     updateWinReg();
     createShortcuts();
 
+    /* Log the .dat files that are created post install so it can be uninstalled.
+     * Since the components folder gets created (and therefore logged) during finalize
+     * we need to log its creation here before the xpti files so it will get removed
+     * if the xpti files were the last files in the folder */
+    logComment("Create Folder: " + fCommunicator + "components");
+    logComment("Installing: "    + fCommunicator + "components\\xpti.dat");
+    logComment("Installing: "    + fCommunicator + "components\\xptitemp.dat");
+
     err = finalizeInstall(); 
     logComment("finalizeInstall() returned: " + err);
   }
