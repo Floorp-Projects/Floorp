@@ -22,7 +22,7 @@ DEPTH		= ../../..
 MODULE		= mariner
 LIBRARY_NAME	= mariner
 
-CSRCS		= xpform.c xphist.c
+CSRCS		= xpform.c
 
 # These aren't used yet.
 #	xploele.c
