@@ -1276,7 +1276,7 @@ nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *si
   {
     nsFileSpec fileOrDirName = (nsFileSpec&)dir;
     folderName = fileOrDirName.GetLeafName();
-    fileOrDirNameStr = folderName;
+    fileOrDirNameStr.AssignWithConversion(folderName);
     if (nsStringEndsWith(fileOrDirNameStr, MAIL_SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, NEWS_SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
       continue;
     else
@@ -1467,7 +1467,7 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newP
   {
     nsFileSpec fileOrDirName = (nsFileSpec&)dir; //set first file or dir to a nsFileSpec
     folderName = fileOrDirName.GetLeafName();    //get the filename without the full path
-    fileOrDirNameStr = folderName;
+    fileOrDirNameStr.AssignWithConversion(folderName);
 
     if (nsStringEndsWith(fileOrDirNameStr, MAIL_SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, NEWS_SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
       continue;
@@ -1495,7 +1495,7 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newP
 
         if (needToRenameFiles) {
           // rename the file, if it matches
-          if (fileOrDirNameStr.Equals(oldName)) {
+          if (fileOrDirNameStr.EqualsWithConversion(oldName)) {
             nsFileSpec newFile = newPath;
             newFile += fileOrDirNameStr;
             newFile.Rename(newName);
@@ -1635,9 +1635,9 @@ Fix4xCookies(nsIFileSpec * profilePath) {
 
     /* generate the output buffer and write it to file */
     outBuffer = prefix;
-    outBuffer.Append('\t');
-    outBuffer.Append(dateString);
-    outBuffer.Append('\t');
+    outBuffer.AppendWithConversion('\t');
+    outBuffer.AppendWithConversion(dateString);
+    outBuffer.AppendWithConversion('\t');
     outBuffer.Append(suffix);
     PutCookieLine(outStream, outBuffer);
   }
@@ -2168,7 +2168,7 @@ nsPrefConverter::GetPlatformCharset(nsAutoString& aCharset)
    rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
   }
   if (NS_FAILED(rv)) {
-   aCharset.Assign("ISO-8859-1");  // use ISO-8859-1 in case of any error
+   aCharset.AssignWithConversion("ISO-8859-1");  // use ISO-8859-1 in case of any error
   }
  
   return rv;
