@@ -42,3 +42,4 @@ protected:
 };
 
 #endif //nsNewsMessage_h__
+

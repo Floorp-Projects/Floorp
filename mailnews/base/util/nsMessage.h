@@ -106,3 +106,4 @@ protected:
 };
 
 #endif //nsMessage_h__
+
