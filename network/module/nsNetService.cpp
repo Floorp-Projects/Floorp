@@ -44,9 +44,15 @@ extern "C" {
 #if defined(XP_WIN) || defined(XP_OS2)
 extern char *XP_AppCodeName;
 extern char *XP_AppVersion;
+extern char *XP_AppName;
+extern char *XP_AppLanguage;
+extern char *XP_AppPlatform;
 #else
 extern const char *XP_AppCodeName;
 extern const char *XP_AppVersion;
+extern const char *XP_AppName;
+extern const char *XP_AppLanguage;
+extern const char *XP_AppPlatform;
 #endif
 };
 
@@ -67,7 +73,6 @@ extern "C" void NET_ClientProtocolInitialize()
 
 static NS_DEFINE_IID(kIProtocolConnectionIID,  NS_IPROTOCOLCONNECTION_IID);
 static NS_DEFINE_IID(kINetContainerApplicationIID,  NS_INETCONTAINERAPPLICATION_IID);
-
 
 nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
 {
