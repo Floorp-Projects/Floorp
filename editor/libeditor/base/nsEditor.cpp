@@ -88,6 +88,7 @@
 #include "JoinElementTxn.h"
 #include "nsStyleSheetTxns.h"
 #include "IMETextTxn.h"
+#include "nsIHTMLEditor.h"
 
 // #define HACK_FORCE_REDRAW 1
 
@@ -1697,6 +1698,11 @@ nsEditor::ForceCompositionEnd()
 #if defined(XP_MAC) || defined(XP_WIN)
   if(! mInIMEMode)
     return NS_OK;
+#endif
+
+#ifdef XP_UNIX
+  if(mFlags & nsIHTMLEditor::eEditorPasswordMask)
+	return NS_OK;
 #endif
 
   nsresult res = NS_OK;
