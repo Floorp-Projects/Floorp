@@ -42,7 +42,8 @@ NS_DEFINE_IID(kIWordBreakerFactory, NS_IWORDBREAKERFACTORY_IID);
 static char teng1[] = 
 //          1         2         3         4         5         6         7
 //01234567890123456789012345678901234567890123456789012345678901234567890123456789
- "This is a test to test(reasonable) line    break. This 0.01123 = 45 x 48.";
+ //"This is a test to test(reasonable) line    break. This 0.01123 = 45 x 48.";
+ "This's";
 
 static PRUint32 exp1[] = {
   4,5,7,8,9,10,14,15,17,18,22,34,35,39,40,41,42,43,49,50,54,55,62,63,64,65,
