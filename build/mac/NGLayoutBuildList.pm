@@ -302,6 +302,9 @@ sub BuildDist()
     InstallFromManifest(":mozilla:base:src:MANIFEST",								"$distdirectory:base:");
     InstallFromManifest(":mozilla:base:public:MANIFEST",							"$distdirectory:base:");
 
+	#WALLET
+    InstallFromManifest(":mozilla:extensions:wallet:public:MANIFEST",				"$distdirectory:wallet:");
+
 	#WEBSHELL
     InstallFromManifest(":mozilla:webshell:public:MANIFEST",						"$distdirectory:webshell:");
     InstallFromManifest(":mozilla:webshell:tests:viewer:public:MANIFEST",  			"$distdirectory:webshell:");
@@ -508,6 +511,8 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:modules:libpref:macbuild:libpref.mcp",			"libpref$D.shlb", "libpref.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:base:macbuild:base.mcp",							"base$D.shlb", "base.toc", 1, $main::ALIAS_SYM_FILES, 0);
+
+	BuildOneProject(":mozilla:extensions:wallet:macbuild:wallet.mcp",							"wallet$D.shlb", "wallet.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	# International projects
 	BuildOneProject(":mozilla:intl:uconv:macbuild:uconv.mcp",					"uconv$D.shlb", "uconv.toc", 1, $main::ALIAS_SYM_FILES, 1);
