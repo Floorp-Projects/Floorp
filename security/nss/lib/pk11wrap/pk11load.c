@@ -40,7 +40,7 @@
 #include "prlink.h"
 #include "pk11func.h"
 #include "secmodi.h"
-#include "prlock.h"
+#include "nssilock.h"
 
 extern void FC_GetFunctionList(void);
 extern void NSC_GetFunctionList(void);
@@ -48,23 +48,23 @@ extern void NSC_GetFunctionList(void);
 
 /* build the PKCS #11 2.01 lock files */
 CK_RV PR_CALLBACK secmodCreateMutext(CK_VOID_PTR_PTR pmutex) {
-    *pmutex = (CK_VOID_PTR) PR_NewLock();
+    *pmutex = (CK_VOID_PTR) PZ_NewLock(nssILockOther);
     if ( *pmutex ) return CKR_OK;
     return CKR_HOST_MEMORY;
 }
 
 CK_RV PR_CALLBACK secmodDestroyMutext(CK_VOID_PTR mutext) {
-    PR_DestroyLock((PRLock *)mutext);
+    PZ_DestroyLock((PZLock *)mutext);
     return CKR_OK;
 }
 
 CK_RV PR_CALLBACK secmodLockMutext(CK_VOID_PTR mutext) {
-    PR_Lock((PRLock *)mutext);
+    PZ_Lock((PZLock *)mutext);
     return CKR_OK;
 }
 
 CK_RV PR_CALLBACK secmodUnlockMutext(CK_VOID_PTR mutext) {
-    PR_Unlock((PRLock *)mutext);
+    PZ_Unlock((PZLock *)mutext);
     return CKR_OK;
 }
 

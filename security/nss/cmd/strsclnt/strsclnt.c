@@ -351,7 +351,7 @@ printSecurityInfo(PRFileDesc *fd)
 ** Begin thread management routines and data.
 **************************************************************************/
 
-#define MAX_THREADS 32
+#define MAX_THREADS 128
 
 typedef int startFn(void *a, void *b, int c);
 

@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.5 2000/12/08 03:35:29 nelsonb%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.6 2001/01/03 19:49:10 larryh%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -48,7 +48,7 @@
 
 #include "secasn1.h"
 #include "secerr.h"
-#include "prlock.h"
+#include "nssilock.h"
 #include "prmon.h"
 #include "nsslocks.h"
 #include "base64.h"
@@ -65,13 +65,13 @@ CERT_FindCertByDERCertNoLocking(CERTCertDBHandle *handle, SECItem *derCert);
  * the following functions are wrappers for the db library that implement
  * a global lock to make the database thread safe.
  */
-static PRLock *dbLock = NULL;
+static PZLock *dbLock = NULL;
 
 void
 certdb_InitDBLock(void)
 {
     if (dbLock == NULL) {
-	nss_InitLock(&dbLock);
+	nss_InitLock(&dbLock, nssILockCertDB);
 	PORT_Assert(dbLock != NULL);
     }
 
@@ -85,11 +85,11 @@ certdb_Get(DB *db, DBT *key, DBT *data, unsigned int flags)
     int ret;
     
     PORT_Assert(dbLock != NULL);
-    PR_Lock(dbLock);
+    PZ_Lock(dbLock);
     
     ret = (* db->get)(db, key, data, flags);
 
-    prstat = PR_Unlock(dbLock);
+    prstat = PZ_Unlock(dbLock);
 
     return(ret);
 }
@@ -101,11 +101,11 @@ certdb_Put(DB *db, DBT *key, DBT *data, unsigned int flags)
     int ret;
 
     PORT_Assert(dbLock != NULL);
-    PR_Lock(dbLock);
+    PZ_Lock(dbLock);
 
     ret = (* db->put)(db, key, data, flags);
     
-    prstat = PR_Unlock(dbLock);
+    prstat = PZ_Unlock(dbLock);
 
     return(ret);
 }
@@ -117,11 +117,11 @@ certdb_Sync(DB *db, unsigned int flags)
     int ret;
 
     PORT_Assert(dbLock != NULL);
-    PR_Lock(dbLock);
+    PZ_Lock(dbLock);
 
     ret = (* db->sync)(db, flags);
     
-    prstat = PR_Unlock(dbLock);
+    prstat = PZ_Unlock(dbLock);
 
     return(ret);
 }
@@ -133,11 +133,11 @@ certdb_Del(DB *db, DBT *key, unsigned int flags)
     int ret;
 
     PORT_Assert(dbLock != NULL);
-    PR_Lock(dbLock);
+    PZ_Lock(dbLock);
 
     ret = (* db->del)(db, key, flags);
     
-    prstat = PR_Unlock(dbLock);
+    prstat = PZ_Unlock(dbLock);
 
     return(ret);
 }
@@ -149,11 +149,11 @@ certdb_Seq(DB *db, DBT *key, DBT *data, unsigned int flags)
     int ret;
     
     PORT_Assert(dbLock != NULL);
-    PR_Lock(dbLock);
+    PZ_Lock(dbLock);
     
     ret = (* db->seq)(db, key, data, flags);
 
-    prstat = PR_Unlock(dbLock);
+    prstat = PZ_Unlock(dbLock);
 
     return(ret);
 }
@@ -164,11 +164,11 @@ certdb_Close(DB *db)
     PRStatus prstat;
 
     PORT_Assert(dbLock != NULL);
-    PR_Lock(dbLock);
+    PZ_Lock(dbLock);
 
     (* db->close)(db);
     
-    prstat = PR_Unlock(dbLock);
+    prstat = PZ_Unlock(dbLock);
 
     return;
 }
@@ -3949,12 +3949,12 @@ UpdateV5DB(CERTCertDBHandle *handle, DB *updatedb)
     SECStatus rv;
     
     updatehandle.permCertDB = updatedb;
-    updatehandle.dbMon = PR_NewMonitor();
+    updatehandle.dbMon = PZ_NewMonitor(nssILockCertDB);
     
     rv = SEC_TraversePermCerts(&updatehandle, updateV5Callback,
 			       (void *)handle);
     
-    PR_DestroyMonitor(updatehandle.dbMon);
+    PZ_DestroyMonitor(updatehandle.dbMon);
     
     return(rv);
 }
@@ -4785,7 +4785,7 @@ CERT_OpenCertDB(CERTCertDBHandle *handle, PRBool readOnly,
 
     certdb_InitDBLock();
     
-    handle->dbMon = PR_NewMonitor();
+    handle->dbMon = PZ_NewMonitor(nssILockCertDB);
     PORT_Assert(handle->dbMon != NULL);
 
     handle->spkDigestInfo = NULL;

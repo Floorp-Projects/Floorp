@@ -34,7 +34,7 @@
  * cdbhdl.h - certificate database handle
  *   private to the certdb module
  *
- * $Id: cdbhdl.h,v 1.1 2000/03/31 19:42:30 relyea%netscape.com Exp $
+ * $Id: cdbhdl.h,v 1.2 2001/01/03 19:48:52 larryh%netscape.com Exp $
  */
 #ifndef _CDBHDL_H_
 #define _CDBHDL_H_
@@ -51,7 +51,7 @@ struct CERTCertDBHandleStr {
     DB *tempCertDB;
     void *spkDigestInfo;
     CERTStatusConfig *statusConfig;
-    PRMonitor *dbMon;
+    PZMonitor *dbMon;
 };
 
 #endif

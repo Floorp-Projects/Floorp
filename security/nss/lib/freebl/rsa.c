@@ -35,13 +35,13 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.19 2000/11/17 17:58:35 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.20 2001/01/03 19:49:37 larryh%netscape.com Exp $
  */
 
 #include "secerr.h"
 
 #include "prclist.h"
-#include "prlock.h"
+#include "nssilock.h"
 #include "prinit.h"
 #include "blapi.h"
 #include "mpi.h"
@@ -76,7 +76,7 @@ struct RSABlindingParamsStr
 */
 struct RSABlindingParamsListStr
 {
-    PRLock  *lock;   /* Lock for the list   */
+    PZLock  *lock;   /* Lock for the list   */
     PRCList  head;   /* Pointer to the list */
 };
 
@@ -417,7 +417,7 @@ static PRCallOnceType coBPInit = { 0, 0, 0 };
 static PRStatus 
 init_blinding_params_list(void)
 {
-    blindingParamsList.lock = PR_NewLock();
+    blindingParamsList.lock = PZ_NewLock(nssILockOther);
     if (!blindingParamsList.lock) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
 	return PR_FAILURE;
@@ -509,7 +509,7 @@ get_blinding_params(RSAPrivateKey *key, mp_int *n, unsigned int modLen,
 	}
     }
     /* Acquire the list lock */
-    PR_Lock(blindingParamsList.lock);
+    PZ_Lock(blindingParamsList.lock);
     /* Walk the list looking for the private key */
     for (el = PR_NEXT_LINK(&blindingParamsList.head);
          el != &blindingParamsList.head;
@@ -526,7 +526,7 @@ get_blinding_params(RSAPrivateKey *key, mp_int *n, unsigned int modLen,
 	    CHECK_MPI_OK( mp_copy(&rsabp->f, f) );
 	    CHECK_MPI_OK( mp_copy(&rsabp->g, g) );
 	    /* Now that the params are located, release the list lock. */
-	    PR_Unlock(blindingParamsList.lock); /* XXX when fails? */
+	    PZ_Unlock(blindingParamsList.lock); /* XXX when fails? */
 	    return SECSuccess;
 	} else if (cmp > 0) {
 	    /* The key is not in the list.  Break to param creation. */
@@ -568,13 +568,13 @@ get_blinding_params(RSAPrivateKey *key, mp_int *n, unsigned int modLen,
     CHECK_MPI_OK( mp_copy(&rsabp->f, f) );
     CHECK_MPI_OK( mp_copy(&rsabp->g, g) );
     /* Release the list lock */
-    PR_Unlock(blindingParamsList.lock); /* XXX when fails? */
+    PZ_Unlock(blindingParamsList.lock); /* XXX when fails? */
     return SECSuccess;
 cleanup:
     /* It is possible to reach this after the lock is already released.
     ** Ignore the error in that case.
     */
-    PR_Unlock(blindingParamsList.lock);
+    PZ_Unlock(blindingParamsList.lock);
     if (err) {
 	MP_TO_SEC_ERROR(err);
 	rv = SECFailure;

@@ -43,8 +43,8 @@
 /* structure to allow us to implement the read/write locks for our
  * module lists  */
 struct SECMODListLockStr {
-    PRLock	*mutex;	    /*general mutex to protect this data structure*/
-    PRMonitor	*monitor;   /* monitor to allow us to signal */
+    PZLock	*mutex;	    /*general mutex to protect this data structure*/
+    PZMonitor	*monitor;   /* monitor to allow us to signal */
     int		state;	    /* read/write/waiting state */
     int		count;	    /* how many waiters on this lock */
 };
@@ -74,7 +74,7 @@ struct PK11SlotInfoStr {
     CK_FLAGS flags;      /* flags from PKCS #11 token Info */
     /* a default session handle to do quick and dirty functions */
     CK_SESSION_HANDLE session; 
-    PRLock *sessionLock; /* lock for this session */
+    PZLock *sessionLock; /* lock for this session */
     /* our ID */
     CK_SLOT_ID slotID;
     /* persistant flags saved from startup to startup */
@@ -82,8 +82,8 @@ struct PK11SlotInfoStr {
     /* keep track of who is using us so we don't accidently get freed while
      * still in use */
     int refCount;
-    PRLock *refLock;
-    PRLock *freeListLock;
+    PZLock *refLock;
+    PZLock *freeListLock;
     PK11SymKey *freeSymKeysHead;
     int keyCount;
     int maxKeyCount;
@@ -145,7 +145,7 @@ struct PK11SymKeyStr {
     CK_SESSION_HANDLE session;
     PRBool	sessionOwner;
     int		refCount;	/* number of references to this key */
-    PRLock	*refLock;
+    PZLock	*refLock;
     int		size;		/* key size in bytes */
     PK11Origin	origin;		/* where this key came from 
 						(see def in secmodt.h) */
@@ -166,7 +166,7 @@ struct PK11ContextStr {
     PK11SymKey  	*key;	   /* symetric key used in this context */
     PK11SlotInfo	*slot;	   /* slot this context is operationing on */
     CK_SESSION_HANDLE	session;   /* session this context is using */
-    PRLock		*sessionLock; /* lock before accessing a PKCS #11 
+    PZLock		*sessionLock; /* lock before accessing a PKCS #11 
 				       * session */
     PRBool		ownSession;/* do we own the session? */
     void 		*cx;	   /* window context in case we need to loggin*/

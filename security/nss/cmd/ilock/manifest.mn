@@ -32,71 +32,13 @@
 #
 CORE_DEPTH = ../../..
 
-EXPORTS = \
-	base64.h \
-	ciferfam.h \
-	nssb64.h \
-	nssb64t.h \
-	nsslocks.h \
-	nssilock.h \
-	nssrwlk.h \
-	nssrwlkt.h \
-	portreg.h \
-	pqgutil.h \
-	secasn1.h \
-	secasn1t.h \
-	seccomon.h \
-	secder.h \
-	secdert.h \
-	secdig.h \
-	secdigt.h \
-	secitem.h \
-	secoid.h \
-	secoidt.h \
-	secport.h \
-	secrng.h \
-	secrngt.h \
-	secerr.h \
-	watcomfx.h \
-	$(NULL)
+DEFINES += -DNSPR20
 
+# MODULE public and private header  directories are implicitly REQUIRED.
 MODULE = security
 
-CSRCS = \
-	secdig.c \
-	derdec.c \
-	derenc.c \
-	dersubr.c \
-	dertime.c \
-	nssb64d.c \
-	nssb64e.c \
-	nssrwlk.c \
-	nssilock.c \
-	nsslocks.c \
-	portreg.c \
-	pqgutil.c \
-	secalgid.c \
-	secasn1d.c \
-	secasn1e.c \
-	secasn1u.c \
-	secitem.c \
-	secoid.c \
-	sectime.c \
-	secport.c \
-	secinit.c \
-	sysrand.c \
-	utf8.c \
-	$(NULL)
+CSRCS = ilock.c
 
-ifeq ($(subst /,,$(shell uname -s)),OS2)
-	CSRCS += os2_rand.c
-endif
+PROGRAM = ilock 
+# PROGRAM = ./$(OBJDIR)/ilock.exe
 
-#	mac_rand.c
-#	unix_rand.c
-#	win_rand.c
-#	prelib.c
-
-REQUIRES = security dbm
-
-LIBRARY_NAME = secutil

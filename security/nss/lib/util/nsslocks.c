@@ -36,7 +36,7 @@
  *
  * NOTE - These are not public interfaces
  *
- * $Id: nsslocks.c,v 1.1 2000/03/31 19:38:22 relyea%netscape.com Exp $
+ * $Id: nsslocks.c,v 1.2 2001/01/03 19:51:02 larryh%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -44,13 +44,13 @@
 #include "pratom.h"
 #include "prthread.h"
 
-/* Given the address of a (global) pointer to a PRLock, 
+/* Given the address of a (global) pointer to a PZLock, 
  * atomicly create the lock and initialize the (global) pointer, 
  * if it is not already created/initialized.
  */
 
 SECStatus 
-nss_InitLock(   PRLock    **ppLock)
+nss_InitLock(   PZLock    **ppLock, nssILockType ltype )
 {
     static PRInt32  initializers;
 
@@ -60,7 +60,7 @@ nss_InitLock(   PRLock    **ppLock)
     while (!*ppLock) {
         PRInt32 myAttempt = PR_AtomicIncrement(&initializers);
         if (myAttempt == 1) {
-	    *ppLock = PR_NewLock();
+	    *ppLock = PZ_NewLock(ltype);
             (void) PR_AtomicDecrement(&initializers);
             break;
         }
@@ -71,13 +71,13 @@ nss_InitLock(   PRLock    **ppLock)
     return (*ppLock != NULL) ? SECSuccess : SECFailure;
 }
 
-/* Given the address of a (global) pointer to a PRMonitor, 
+/* Given the address of a (global) pointer to a PZMonitor, 
  * atomicly create the monitor and initialize the (global) pointer, 
  * if it is not already created/initialized.
  */
 
 SECStatus 
-nss_InitMonitor(PRMonitor **ppMonitor)
+nss_InitMonitor(PZMonitor **ppMonitor, nssILockType ltype )
 {
     static PRInt32  initializers;
 
@@ -87,7 +87,7 @@ nss_InitMonitor(PRMonitor **ppMonitor)
     while (!*ppMonitor) {
         PRInt32 myAttempt = PR_AtomicIncrement(&initializers);
         if (myAttempt == 1) {
-	    *ppMonitor = PR_NewMonitor();
+	    *ppMonitor = PZ_NewMonitor(ltype);
             (void) PR_AtomicDecrement(&initializers);
             break;
         }

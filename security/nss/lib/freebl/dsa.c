@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: dsa.c,v 1.4 2000/09/29 02:10:22 mcgreer%netscape.com Exp $
+ * $Id: dsa.c,v 1.5 2001/01/03 19:49:26 larryh%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -39,7 +39,7 @@
 #include "prtypes.h"
 #include "prinit.h"
 #include "blapi.h"
-#include "prlock.h"
+#include "nssilock.h"
 #include "secitem.h"
 #include "blapi.h"
 #include "mpi.h"

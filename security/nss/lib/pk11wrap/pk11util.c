@@ -35,7 +35,7 @@
  */
 #include "seccomon.h"
 #include "secmod.h"
-#include "prlock.h"
+#include "nssilock.h"
 #include "secmodi.h"
 #include "pk11func.h"
 

@@ -34,10 +34,10 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.3 2000/09/06 22:10:06 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.4 2001/01/03 19:48:57 larryh%netscape.com Exp $
  */
 
-#include "prlock.h"
+#include "nssilock.h"
 #include "prmon.h"
 #include "prtime.h"
 #include "cert.h"
@@ -1175,7 +1175,7 @@ CERT_OpenVolatileCertDB(CERTCertDBHandle *handle)
 	goto loser;
     }
 
-    handle->dbMon = PR_NewMonitor();
+    handle->dbMon = PZ_NewMonitor(nssILockCertDB);
     PORT_Assert(handle->dbMon != NULL);
 
     handle->spkDigestInfo = NULL;
@@ -2212,7 +2212,7 @@ loser:
 void
 CERT_LockDB(CERTCertDBHandle *handle)
 {
-    PR_EnterMonitor(handle->dbMon);
+    PZ_EnterMonitor(handle->dbMon);
     return;
 }
 
@@ -2224,14 +2224,14 @@ CERT_UnlockDB(CERTCertDBHandle *handle)
 {
     PRStatus prstat;
     
-    prstat = PR_ExitMonitor(handle->dbMon);
+    prstat = PZ_ExitMonitor(handle->dbMon);
     
     PORT_Assert(prstat == PR_SUCCESS);
     
     return;
 }
 
-static PRLock *certRefCountLock = NULL;
+static PZLock *certRefCountLock = NULL;
 
 /*
  * Acquire the cert reference count lock
@@ -2243,11 +2243,11 @@ void
 CERT_LockCertRefCount(CERTCertificate *cert)
 {
     if ( certRefCountLock == NULL ) {
-	nss_InitLock(&certRefCountLock);
+	nss_InitLock(&certRefCountLock, nssILockRefLock);
 	PORT_Assert(certRefCountLock != NULL);
     }
     
-    PR_Lock(certRefCountLock);
+    PZ_Lock(certRefCountLock);
     return;
 }
 
@@ -2261,14 +2261,14 @@ CERT_UnlockCertRefCount(CERTCertificate *cert)
 
     PORT_Assert(certRefCountLock != NULL);
     
-    prstat = PR_Unlock(certRefCountLock);
+    prstat = PZ_Unlock(certRefCountLock);
     
     PORT_Assert(prstat == PR_SUCCESS);
 
     return;
 }
 
-static PRLock *certTrustLock = NULL;
+static PZLock *certTrustLock = NULL;
 
 /*
  * Acquire the cert trust lock
@@ -2280,11 +2280,11 @@ void
 CERT_LockCertTrust(CERTCertificate *cert)
 {
     if ( certTrustLock == NULL ) {
-	nss_InitLock(&certTrustLock);
+	nss_InitLock(&certTrustLock, nssILockCertDB);
 	PORT_Assert(certTrustLock != NULL);
     }
     
-    PR_Lock(certTrustLock);
+    PZ_Lock(certTrustLock);
     return;
 }
 
@@ -2298,7 +2298,7 @@ CERT_UnlockCertTrust(CERTCertificate *cert)
 
     PORT_Assert(certTrustLock != NULL);
     
-    prstat = PR_Unlock(certTrustLock);
+    prstat = PZ_Unlock(certTrustLock);
     
     PORT_Assert(prstat == PR_SUCCESS);
 

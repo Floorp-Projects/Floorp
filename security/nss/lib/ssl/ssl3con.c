@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.10 2000/11/10 01:36:26 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.11 2001/01/03 19:50:36 larryh%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -2816,7 +2816,7 @@ getWrappingKey( sslSocket *       ss,
     SECItem                  wrappedKey;
     SSLWrappedSymWrappingKey wswk;
 
-    static PRLock *          symWrapKeysLock;
+    static PZLock *          symWrapKeysLock;
     static ssl3SymWrapKey    symWrapKeys[SSL_NUM_WRAP_MECHS];
 
     svrPrivKey  = ss->serverKey[exchKeyType];
@@ -2834,9 +2834,9 @@ getWrappingKey( sslSocket *       ss,
 
     /* atomically initialize the lock */
     if (!symWrapKeysLock)
-	nss_InitLock(&symWrapKeysLock);
+	nss_InitLock(&symWrapKeysLock, nssILockOther);
 
-    PR_Lock(symWrapKeysLock);
+    PZ_Lock(symWrapKeysLock);
 
     unwrappedWrappingKey = *pSymWrapKey;
     if (unwrappedWrappingKey != NULL) {
@@ -2979,7 +2979,7 @@ done:
     	SECKEY_DestroyPublicKey(svrPubKey);
 	svrPubKey = NULL;
     }
-    PR_Unlock(symWrapKeysLock);
+    PZ_Unlock(symWrapKeysLock);
     return unwrappedWrappingKey;
 }
 

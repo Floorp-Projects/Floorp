@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.1 2000/03/31 19:42:35 relyea%netscape.com Exp $
+ * $Id: certt.h,v 1.2 2001/01/03 19:49:02 larryh%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -45,7 +45,7 @@
 #include "secoidt.h"
 #include "plarena.h"
 #include "prcvar.h"
-#include "prlock.h"
+#include "nssilock.h"
 #include "prio.h"
 #include "prmon.h"
 
@@ -605,7 +605,7 @@ struct CERTGeneralNameListStr {
     CERTGeneralName *name;
     int refCount;
     int len;
-    PRLock *lock;
+    PZLock *lock;
 };
 
 struct CERTNameConstraintStr {
