@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: psoftsync.pl,v 1.1 1998/08/03 07:53:31 leif Exp $
+# $Id: psoftsync.pl,v 1.2 1998/08/04 03:50:56 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -110,7 +110,7 @@ $SENDMAIL = "/usr/lib/sendmail";
 $SEARCH = "(&(uid=*)(!(objectclass=pseudoAccount)))";
 $MAILTO = "leif\@netscape.com";
 
-$LDAP_DEBUG = 1;
+#$LDAP_DEBUG = 1;
 
 
 #############################################################################
