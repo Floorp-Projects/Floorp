@@ -7,67 +7,51 @@
     <rdf:li><rdf:Description 
       ins:uid="dom"
       ins:description="DOM Nodes"
-      ins:icon="chrome://inspector/content/viewers/dom/dom-icon.gif">
-        <ins:filter><![CDATA[
-          return doesQI(object, 'nsIDOMDocument');
-        ]]></ins:filter>
-     </rdf:Description></rdf:li>
+      ins:icon="chrome://inspector/content/viewers/dom/dom-icon.gif"
+      ins:filter="return doesQI(object, 'nsIDOMDocument');"/>
+    </rdf:li>
 
     <rdf:li><rdf:Description 
       ins:uid="stylesheets"
-      ins:description="Stylesheets">
-        <ins:filter><![CDATA[
-          return doesQI(object, 'nsIDOMDocument');
-        ]]></ins:filter>
-     </rdf:Description></rdf:li>
+      ins:description="Stylesheets"
+      ins:filter="return doesQI(object, 'nsIDOMDocument');"/>
+    </rdf:li>
 
     <rdf:li><rdf:Description 
       ins:uid="domNode"
-      ins:description="DOM Node">
-        <ins:filter><![CDATA[
-          return doesQI(object, 'nsIDOMNode') && object.nodeType != 9;
-        ]]></ins:filter>
-     </rdf:Description></rdf:li>
+      ins:description="DOM Node"
+      ins:filter="return doesQI(object, 'nsIDOMNode') &amp;&amp; object.nodeType != 9;"/>
+    </rdf:li>
 
     <rdf:li><rdf:Description 
       ins:uid="boxModel"
-      ins:description="Box Model">
-        <ins:filter><![CDATA[
-          return doesQI(object, 'nsIDOMElement');
-        ]]></ins:filter>
-     </rdf:Description></rdf:li>
+      ins:description="Box Model"
+      ins:filter="return doesQI(object, 'nsIDOMElement');"/>
+    </rdf:li>
 
     <rdf:li><rdf:Description 
       ins:uid="xblBindings"
-      ins:description="XBL Bindings">
-        <ins:filter><![CDATA[
-          return doesQI(object, 'nsIDOMElement');
-        ]]></ins:filter>
-     </rdf:Description></rdf:li>
+      ins:description="XBL Bindings"
+      ins:filter="return doesQI(object, 'nsIDOMElement');"/>
+    </rdf:li>
 
     <rdf:li><rdf:Description
       ins:uid="styleRules"
-      ins:description="CSS Style Rules">
-        <ins:filter><![CDATA[
-          return doesQI(object, 'nsIDOMElement') || doesQI(object, 'nsIDOMCSSStyleSheet');
-        ]]></ins:filter>
-     </rdf:Description></rdf:li>
+      ins:description="CSS Style Rules"
+      ins:filter="return doesQI(object, 'nsIDOMElement') || doesQI(object, 'nsIDOMCSSStyleSheet');"/>
+    </rdf:li>
 
     <rdf:li><rdf:Description 
       ins:uid="computedStyle"
-      ins:description="Computed Style">
-        <ins:filter><![CDATA[
-          return doesQI(object, 'nsIDOMElement');
-        ]]></ins:filter>
-     </rdf:Description></rdf:li>
+      ins:description="Computed Style"
+      ins:filter="return doesQI(object, 'nsIDOMElement');"/>
+    </rdf:li>
 
     <rdf:li><rdf:Description 
       ins:uid="jsObject"
-      ins:description="Javascript Object">
-        <ins:filter><![CDATA[
-          return true;
-        ]]></ins:filter>
-     </rdf:Description></rdf:li>
+      ins:description="Javascript Object"
+      ins:filter="return true;"/>
+    </rdf:li>
 
   </rdf:Seq>
 
