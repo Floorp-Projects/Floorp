@@ -23,6 +23,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMSelection.h"
+#include "nsIHighLevelHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 
 #define LOCK_DOC(doc)
@@ -1849,7 +1850,7 @@ nsTextServicesDocument::DeleteSelection()
 
   // Now delete the actual content!
 
-  result = mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
+  result = mEditor->DeleteSelection(nsIEditor::eDeletePrevious);
 
   if (NS_FAILED(result))
   {
@@ -1953,7 +1954,9 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     return result;
   }
 
-  result = mEditor->InsertText(*aText);
+  nsCOMPtr<nsIHighLevelHTMLEditor> htmlEditor = do_QueryInterface(mEditor, &result);
+  if (htmlEditor)
+    result = htmlEditor->InsertText(*aText);
 
   if (NS_FAILED(result))
   {

@@ -22,14 +22,17 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS =		\
-    nsIEditActionListener.h	\
-    nsIEditor.h	\
-    nsIHTMLEditor.h	\
-    nsITextEditor.h	\
-    nsIEditRules.h \
-    nsEditorCID.h	\
-    nsICiter.h \
+EXPORTS =		                         \
+    nsIEditActionListener.h	         \
+    nsIEditor.h	                     \
+    nsEditorCID.h	                   \
+    nsICiter.h	                     \
+    nsIEditorIMESupport.h            \
+    nsIEditorLogging.h               \
+    nsIEditorMailSupport.h           \
+    nsIEditorStyleSheets.h           \
+    nsIHTMLEditor.h                  \
+    nsITableEditor.h                 \
     $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

@@ -30,7 +30,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
-static NS_DEFINE_IID(kEditorShellCID,         NS_EDITORAPPCORE_CID);
+static NS_DEFINE_IID(kEditorShellCID,      NS_EDITORSHELL_CID);
 
 /////////////////////////////////////////////////////////////////////////
 // nsEditorShellFactoryImpl

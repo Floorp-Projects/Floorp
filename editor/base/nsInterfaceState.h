@@ -25,6 +25,8 @@
 #include "nsIDocumentStateListener.h"
 #include "nsIWebShell.h"
 
+class nsIHTMLEditor;
+
 // class responsible for communicating changes in local state back to the UI.
 // This is currently somewhat tied to a given XUL UI implementation
 
@@ -38,7 +40,7 @@ public:
   
   NS_DECL_ISUPPORTS
   
-  NS_IMETHOD    Init(nsISupports* aEditor, nsIWebShell *aChromeWebShell);
+  NS_IMETHOD    Init(nsIHTMLEditor* aEditor, nsIWebShell *aChromeWebShell);
 
   // nsIDOMSelectionListener interface
   NS_IMETHOD    NotifySelectionChanged();
@@ -67,7 +69,7 @@ protected:
   // this class should not hold references to the editor or editorShell. Doing
   // so would result in cirular reference chains.
   
-  nsISupports*  mEditor;		// the text or HTML editor
+  nsIHTMLEditor*  mEditor;		// the HTML editor
   nsIWebShell*  mWebShell;  // web shell for the chrome area
 
   // current state
@@ -83,6 +85,6 @@ protected:
   
 };
 
-extern "C" nsresult NS_NewInterfaceState(nsISupports* aEditor, nsIWebShell* aWebShell, nsIDOMSelectionListener** aInstancePtrResult);
+extern "C" nsresult NS_NewInterfaceState(nsIHTMLEditor* aEditor, nsIWebShell* aWebShell, nsIDOMSelectionListener** aInstancePtrResult);
 
 #endif // nsInterfaceState_h__

@@ -19,6 +19,9 @@
 #ifndef editorInterfaces_h__
 #define editorInterfaces_h__
 
+#include "nsCOMPtr.h"
+
+
 #include "nsIDOMEvent.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseListener.h"
@@ -26,8 +29,9 @@
 #include "nsIDOMDragListener.h"
 #include "nsIDOMCompositionListener.h"
 #include "nsIDOMFocusListener.h"
-#include "nsITextEditor.h"
-#include "nsCOMPtr.h"
+
+#include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
 
 /** The nsTextEditorKeyListener public nsIDOMKeyListener
  *  This class will delegate events to its editor according to the translation
@@ -45,7 +49,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
+  void SetEditor(nsIEditor *aEditor){mEditor = aEditor;}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -63,7 +67,7 @@ protected:
   virtual nsresult ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed);
 
 protected:
-  nsITextEditor*  mEditor;		// weak reference
+  nsIEditor*     mEditor;		// weak reference
 };
 
 
@@ -82,7 +86,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
+  void SetEditor(nsIEditor *aEditor){mEditor = aEditor;}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -94,10 +98,13 @@ public:
 /*END implementations of textevent handler interface*/
 
 protected:
-  nsITextEditor*  mEditor;		// weak reference
+  nsIEditor*      mEditor;		// weak reference
 	PRBool					mCommitText;
 	PRBool					mInTransaction;
 };
+
+
+class nsIEditorIMESupport;
 
 class nsTextEditorCompositionListener : public nsIDOMCompositionListener
 {
@@ -112,7 +119,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
+  void SetEditor(nsIEditor *aEditor);
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -125,7 +132,7 @@ public:
 /*END implementations of textevent handler interface*/
 
 protected:
-  nsITextEditor*  mEditor;		// weak reference
+  nsIEditorIMESupport*     mEditor;		// weak reference
 };
 
 
@@ -144,7 +151,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
+  void SetEditor(nsIEditor *aEditor){mEditor = aEditor;}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -161,7 +168,7 @@ public:
 /*END implementations of mouseevent handler interface*/
 
 protected:
-  nsITextEditor*  mEditor;		// weak reference
+  nsIEditor*     mEditor;		// weak reference
 
 };
 
@@ -181,7 +188,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
+  void SetEditor(nsIEditor *aEditor){mEditor = aEditor;}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -196,7 +203,7 @@ public:
 /*END implementations of dragevent handler interface*/
 
 protected:
-  nsITextEditor* mEditor;
+  nsIEditor*    mEditor;
 
 };
 
@@ -215,7 +222,7 @@ public:
   /** SetEditor gives an address to the editor that will be accessed
    *  @param aEditor the editor this listener calls for editing operations
    */
-  void SetEditor(nsITextEditor *aEditor){mEditor = aEditor;}
+  void SetEditor(nsIEditor *aEditor){mEditor = aEditor;}
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -228,34 +235,34 @@ public:
 /*END implementations of focus event handler interface*/
 
 protected:
-  nsITextEditor*  mEditor;		// weak reference
+  nsIEditor*     mEditor;		// weak reference
 };
 
 
 
 /** factory for the editor key listener
  */
-extern nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, nsITextEditor *aEditor);
+extern nsresult NS_NewEditorKeyListener(nsIDOMEventListener ** aInstancePtrResult, nsIEditor *aEditor);
 
 /** factory for the editor mouse listener
  */
-extern nsresult NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsITextEditor *aEditor);
+extern nsresult NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsIEditor *aEditor);
 
 /** factory for the editor text listener
  */
-extern nsresult NS_NewEditorTextListener(nsIDOMEventListener** aInstancePtrResult, nsITextEditor *aEditor);
+extern nsresult NS_NewEditorTextListener(nsIDOMEventListener** aInstancePtrResult, nsIEditor *aEditor);
 
 /** factory for the editor drag listener
  */
-extern nsresult NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult, nsITextEditor *aEditor);
+extern nsresult NS_NewEditorDragListener(nsIDOMEventListener ** aInstancePtrResult, nsIEditor *aEditor);
 
 /** factory for the editor composition listener 
  */
-extern nsresult NS_NewEditorCompositionListener(nsIDOMEventListener** aInstancePtrResult, nsITextEditor *aEditor);
+extern nsresult NS_NewEditorCompositionListener(nsIDOMEventListener** aInstancePtrResult, nsIEditor *aEditor);
 
 /** factory for the editor composition listener 
  */
-extern nsresult NS_NewEditorFocusListener(nsIDOMEventListener** aInstancePtrResult, nsITextEditor *aEditor);
+extern nsresult NS_NewEditorFocusListener(nsIDOMEventListener** aInstancePtrResult, nsIEditor *aEditor);
 
 #endif //editorInterfaces_h__
 

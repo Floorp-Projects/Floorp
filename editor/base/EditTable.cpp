@@ -36,6 +36,8 @@
 #include "nsITableLayout.h"     //  data owned by the table and cell frames
 #include "nsHTMLEditor.h"
 
+#include "nsEditorUtils.h"
+
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 
 // Table Editing methods
@@ -244,7 +246,7 @@ nsHTMLEditor::GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aColIndex, PRInt32 &
   res = NS_ERROR_FAILURE;        // we return an error unless we get the index
   nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr
 
-  res = nsEditor::GetLayoutObject(aCell, &layoutObject);
+  res = nsHTMLEditor::GetLayoutObject(aCell, &layoutObject);
 
   if ((NS_SUCCEEDED(res)) && (nsnull!=layoutObject))
   { // get the table cell interface from the frame
@@ -268,7 +270,7 @@ nsHTMLEditor::GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **table
   
   // frames are not ref counted, so don't use an nsCOMPtr
   nsISupports *layoutObject=nsnull;
-  nsresult res = nsEditor::GetLayoutObject(aTable, &layoutObject); 
+  nsresult res = nsHTMLEditor::GetLayoutObject(aTable, &layoutObject); 
   if ((NS_SUCCEEDED(res)) && (nsnull!=layoutObject)) 
   { // get the table interface from the frame 
     

@@ -21,65 +21,38 @@
 #include "nsISupports.h"
 #include "nscore.h"
 
-class nsIAtom;
-class nsIDOMElement;
-class nsIDOMNode;
-class nsITransaction;
-class nsIEditActionListener;
-class nsIFileSpec;
-class nsIPrivateTextRangeList;
-class nsICSSStyleSheet;
-class nsIOutputStream;
-class nsIDocumentStateListener;
-class nsIDOMDocument;
-class nsIDOMSelection;
-class nsIPresShell;
-class nsString;
-struct nsTextEventReply;
-/*
-Editor interface to outside world
-*/
 
 #define NS_IEDITOR_IID \
 {/* A3C5EE71-742E-11d2-8F2C-006008310194*/ \
 0xa3c5ee71, 0x742e, 0x11d2, \
 {0x8f, 0x2c, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94} }
 
-#define NS_IEDITORFACTORY_IID \
-{ /* {E2F4C7F1-864A-11d2-8F38-006008310194}*/ \
-0xe2f4c7f1, 0x864a, 0x11d2, \
-{ 0x8f, 0x38, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94 } }
 
-#define NS_ITEXTEDITORFACTORY_IID \
-{ /* {4a1f5ce0-c1f9-11d2-8f4c-006008159b0c}*/ \
-0x4a1f5ce0, 0xc1f9, 0x11d2, \
-{ 0x8f, 0x4c, 0x0, 0x60, 0x8, 0x15, 0x9b, 0xc } }
+class nsString;
 
-#define NS_IHTMLEDITORFACTORY_IID \
-{ /* BD62F312-CB8A-11d2-983A-00805F8AA8B8 */    \
-0xbd62f312, 0xcb8a, 0x11d2,  \
-{ 0x98, 0x3a, 0x0, 0x80, 0x5f, 0x8a, 0xa8, 0xb8 } }
+class nsIPresShell;
+class nsIDOMNode;
+class nsIDOMElement;
+class nsIDOMDocument;
+class nsIDOMSelection;
+class nsITransaction;
+class nsIOutputStream;
+class nsIEditActionListener;
+class nsIDocumentStateListener;
 
-
-/**
- * A generic editor interface. 
- * <P>
- * nsIEditor is the base interface used by applications to communicate with the editor.  
- * It makes no assumptions about the kind of content it is editing, 
- * other than the content being a DOM tree. 
- */
-class nsIEditor  : public nsISupports{
+class nsIEditor  : public nsISupports
+{
 public:
+  static const nsIID& GetIID() { static nsIID iid = NS_IEDITOR_IID; return iid; }
 
+
+  /* An enum used to describe how to collpase a non-collapsed selection */
   typedef enum {
     eDoNothing,
-    eDeleteRight,
-    eDeleteLeft
-  } ECollapsedSelectionAction;
+    eDeleteNext,
+    eDeletePrevious
+  } ESelectionCollapseDirection;
 
-  static nsString& GetTextNodeTag();
-
-  static const nsIID& GetIID() { static nsIID iid = NS_IEDITOR_IID; return iid; }
 
   /**
    * Init is to tell the implementation of nsIEditor to begin its services
@@ -88,14 +61,21 @@ public:
    *                        once events can tell us from what pres shell they originated, 
    *                        this will no longer be necessary and the editor will no longer be
    *                        linked to a single pres shell.
+   * @param aFlags          A bitmask of flags for specifying the behavior of the editor.
    */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell )=0;
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell, PRUint32 aFlags)=0;
 
   /**
    * PostCreate should be called after Init, and is the time that the editor tells
    * its documentStateObservers that the document has been created.
    */
   NS_IMETHOD PostCreate()=0;
+
+  /** return the edit flags for this editor */
+  NS_IMETHOD GetFlags(PRUint32 *aFlags)=0;
+
+  /** set the edit flags for this editor.  May be called at any time. */
+  NS_IMETHOD SetFlags(PRUint32 aFlags)=0;
 
   /**
    * return the DOM Document this editor is associated with
@@ -117,6 +97,137 @@ public:
    * @param aSelection [OUT] the dom interface for the selection
    */
   NS_IMETHOD GetSelection(nsIDOMSelection **aSelection)=0;
+
+  /* ------------ Selected content removal -------------- */
+
+  /** 
+   * DeleteSelection removes all nodes in the current selection.
+   * @param aDir  if eLTR, delete to the right (for example, the DEL key)
+   *              if eRTL, delete to the left (for example, the BACKSPACE key)
+   */
+  NS_IMETHOD DeleteSelection(ESelectionCollapseDirection aAction)=0;
+
+
+  /* ------------ Document info methods -------------- */
+
+  /** Respond to the menu 'Save' command; this may put up save UI if the document
+    * hasn't been saved yet.
+   */
+  NS_IMETHOD Save()=0;
+  
+  /** Respond to the menu 'Save As' command; this will put up save UI
+   * @param aSavingCopy        true if we are saving off a copy of the document
+   *                           without changing the disk file associated with the doc.
+   *                           This would correspond to a 'Save Copy As' menu command.
+   */  
+  NS_IMETHOD SaveAs(PRBool aSavingCopy)=0;
+
+  /** Returns true if the document is modifed and needs saving */
+  NS_IMETHOD GetDocumentModified(PRBool *outDocModified)=0;
+
+
+
+  /* ------------ Transaction methods -------------- */
+
+  /** Do() fires a transaction.  It is provided here so clients can create their own transactions.
+    * If a transaction manager is present, it is used.  
+    * Otherwise, the transaction is just executed directly.
+    *
+    * @param aTxn the transaction to execute
+    */
+  NS_IMETHOD Do(nsITransaction *aTxn)=0;
+
+
+  /** turn the undo system on or off
+    * @param aEnable  if PR_TRUE, the undo system is turned on if it is available
+    *                 if PR_FALSE the undo system is turned off if it was previously on
+    * @return         if aEnable is PR_TRUE, returns NS_OK if the undo system could be initialized properly
+    *                 if aEnable is PR_FALSE, returns NS_OK.
+    */
+  NS_IMETHOD EnableUndo(PRBool aEnable)=0;
+
+  /** Undo reverses the effects of the last Do operation, if Undo is enabled in the editor.
+    * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
+    * If a transaction manager is present, it is told to undo and the result of
+    * that undo is returned.  
+    * Otherwise, the Undo request is ignored and an error NS_ERROR_NOT_AVAILABLE is returned.
+    *
+    */
+  NS_IMETHOD Undo(PRUint32 aCount)=0;
+
+  /** returns state information about the undo system.
+    * @param aIsEnabled [OUT] PR_TRUE if undo is enabled
+    * @param aCanUndo   [OUT] PR_TRUE if at least one transaction is currently ready to be undone.
+    */
+  NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)=0;
+
+  /** Redo reverses the effects of the last Undo operation
+    * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
+    * If a transaction manager is present, it is told to redo and the result of the previously undone
+    * transaction is reapplied to the document.
+    * If no transaction is available for Redo, or if the document has no transaction manager,
+    * the Redo request is ignored and an error NS_ERROR_NOT_AVAILABLE is returned.
+    *
+    */
+  NS_IMETHOD Redo(PRUint32 aCount)=0;
+
+  /** returns state information about the redo system.
+    * @param aIsEnabled [OUT] PR_TRUE if redo is enabled
+    * @param aCanRedo   [OUT] PR_TRUE if at least one transaction is currently ready to be redone.
+    */
+  NS_IMETHOD CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)=0;
+
+  /** BeginTransaction is a signal from the caller to the editor that the caller will execute multiple updates
+    * to the content tree that should be treated as a single logical operation,
+    * in the most efficient way possible.<br>
+    * All transactions executed between a call to BeginTransaction and EndTransaction will be undoable as
+    * an atomic action.<br>
+    * EndTransaction must be called after BeginTransaction.<br>
+    * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginUpdate.
+    */
+  NS_IMETHOD BeginTransaction()=0;
+
+  /** EndTransaction is a signal to the editor that the caller is finished updating the content model.<br>
+    * BeginUpdate must be called before EndTransaction is called.<br>
+    * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginTransaction.
+    */
+  NS_IMETHOD EndTransaction()=0;
+
+
+  /* ------------ Clipboard methods -------------- */
+
+  /** cut the currently selected text, putting it into the OS clipboard
+    * What if no text is selected?
+    * What about mixed selections?
+    * What are the clipboard formats?
+    */
+  NS_IMETHOD Cut()=0;
+
+  /** copy the currently selected text, putting it into the OS clipboard
+    * What if no text is selected?
+    * What about mixed selections?
+    * What are the clipboard formats?
+    */
+  NS_IMETHOD Copy()=0;
+  
+  /** paste the text in the OS clipboard at the cursor position, replacing
+    * the selected text (if any)
+    */
+  NS_IMETHOD Paste()=0;
+
+  /* ------------ Selection methods -------------- */
+
+  /** sets the document selection to the entire contents of the document */
+  NS_IMETHOD SelectAll()=0;
+
+  /** sets the document selection to the beginning of the document */
+  NS_IMETHOD BeginningOfDocument()=0;
+
+  /** sets the document selection to the end of the document */
+  NS_IMETHOD EndOfDocument()=0;
+
+
+  /* ------------ Node manipulation methods -------------- */
 
   /**
    * SetAttribute() sets the attribute of aElement.
@@ -181,83 +292,6 @@ public:
                         PRInt32      aPosition)=0;
 
 
-  /**
-   * InsertText() Inserts a string at the current location, given by the selection.
-   * If the selection is not collapsed, the selection is deleted and the insertion
-   * takes place at the resulting collapsed selection.
-   *
-   * NOTE: what happens if the string contains a CR?
-   *
-   * @param aString   the string to be inserted
-   */
-  NS_IMETHOD InsertText(const nsString& aStringToInsert)=0;
-
-  /**
-   * BeginComposition() Handles the start of inline input composition.
-   */
-
-  NS_IMETHOD BeginComposition(void) = 0;
-
-  /**
-   * SetCompositionString() Sets the inline input composition string.
-   * BeginComposition must be called prior to this.
-   */
-
-  NS_IMETHOD SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList, nsTextEventReply* aReply) = 0;
-
-  /**
-   * BeginComposition() Handles the end of inline input composition.
-   */
-
-  NS_IMETHOD EndComposition(void) = 0;
-
-  /**
-   * Output methods flags:
-   */
-  enum {
-    EditorOutputSelectionOnly = 1,
-    EditorOutputFormatted     = 2,
-    EditorOutputNoDoctype     = 4
-  };
-
-  /**
-   * Output methods:
-   * aFormatType is a mime type, like text/plain.
-   */
-  NS_IMETHOD OutputToString(nsString& aOutputString,
-                            const nsString& aFormatType,
-                            PRUint32 aFlags) = 0;
-  NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
-                            const nsString& aFormatType,
-                            const nsString* aCharsetOverride,
-                            PRUint32 aFlags) = 0;
-  /**
-   * And a debug method -- show us what the tree looks like right now
-   */
-  NS_IMETHOD DumpContentTree() = 0;
-
-  /** 
-   * DeleteNode removes aChild from aParent.
-   * @param aChild    The node to delete
-   */
-  NS_IMETHOD DeleteNode(nsIDOMNode * aChild)=0;
-
-  /** 
-   * DeleteSelection removes all nodes in the current selection.
-   * @param aAction: direction to delete if selection is collapsed:
-   *    if eDeleteRight, delete to the right (for example, the DEL key)
-   *    if DeleteLeft, delete to the left (for example, the BACKSPACE key)
-   */
-  NS_IMETHOD DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)=0;
-
-  /** 
-   * DeleteSelectionAndCreateNode combines DeleteSelection and CreateNode
-   * It deletes only if there is something selected (doesn't do DEL, BACKSPACE action)   
-   * @param aTag      The type of object to create
-   * @param aNewNode  [OUT] The node created.  Caller must release aNewNode.
-   */
-  NS_IMETHOD DeleteSelectionAndCreateNode(const nsString& aTag, nsIDOMNode ** aNewNode)=0;
-
   /** 
    * SplitNode() creates a new node identical to an existing node, and split the contents between the two nodes
    * @param aExistingRightNode   the node to split.  It will become the new node's next sibling.
@@ -280,153 +314,40 @@ public:
   NS_IMETHOD JoinNodes(nsIDOMNode  *aLeftNode,
                        nsIDOMNode  *aRightNode,
                        nsIDOMNode  *aParent)=0;
+
+
+  /** 
+   * DeleteNode removes aChild from aParent.
+   * @param aChild    The node to delete
+   */
+  NS_IMETHOD DeleteNode(nsIDOMNode * aChild)=0;
+
+  /* ------------ Output methods -------------- */
+
+  /**
+   * Output methods flags:
+   */
+  enum {
+    EditorOutputSelectionOnly = 1,
+    EditorOutputFormatted     = 2,
+    EditorOutputNoDoctype     = 4
+  };
   
   /**
-   * Insert a break into the content model.<br>
-   * The interpretation of a break is up to the rule system:
-   * it may enter a character, split a node in the tree, etc.
+   * Output methods:
+   * aFormatType is a mime type, like text/plain.
    */
-  NS_IMETHOD InsertBreak()=0;
+  NS_IMETHOD OutputToString(nsString& aOutputString,
+                            const nsString& aFormatType,
+                            PRUint32 aFlags) = 0;
+  NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
+                            const nsString& aFormatType,
+                            const nsString* aCharsetOverride,
+                            PRUint32 aFlags) = 0;
 
-  /** turn the undo system on or off
-    * @param aEnable  if PR_TRUE, the undo system is turned on if it is available
-    *                 if PR_FALSE the undo system is turned off if it was previously on
-    * @return         if aEnable is PR_TRUE, returns NS_OK if the undo system could be initialized properly
-    *                 if aEnable is PR_FALSE, returns NS_OK.
-    */
-  NS_IMETHOD EnableUndo(PRBool aEnable)=0;
 
-  /** Do() fires a transaction.  It is provided here so clients can create their own transactions.
-    * If a transaction manager is present, it is used.  
-    * Otherwise, the transaction is just executed directly.
-    *
-    * @param aTxn the transaction to execute
-    */
-  NS_IMETHOD Do(nsITransaction *aTxn)=0;
 
-  /** Undo reverses the effects of the last Do operation, if Undo is enabled in the editor.
-    * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
-    * If a transaction manager is present, it is told to undo and the result of
-    * that undo is returned.  
-    * Otherwise, the Undo request is ignored and an error NS_ERROR_NOT_AVAILABLE is returned.
-    *
-    */
-  NS_IMETHOD Undo(PRUint32 aCount)=0;
-
-  /** returns state information about the undo system.
-    * @param aIsEnabled [OUT] PR_TRUE if undo is enabled
-    * @param aCanUndo   [OUT] PR_TRUE if at least one transaction is currently ready to be undone.
-    */
-  NS_IMETHOD CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)=0;
-
-  /** Redo reverses the effects of the last Undo operation
-    * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
-    * If a transaction manager is present, it is told to redo and the result of the previously undone
-    * transaction is reapplied to the document.
-    * If no transaction is available for Redo, or if the document has no transaction manager,
-    * the Redo request is ignored and an error NS_ERROR_NOT_AVAILABLE is returned.
-    *
-    */
-  NS_IMETHOD Redo(PRUint32 aCount)=0;
-
-  /** returns state information about the redo system.
-    * @param aIsEnabled [OUT] PR_TRUE if redo is enabled
-    * @param aCanRedo   [OUT] PR_TRUE if at least one transaction is currently ready to be redone.
-    */
-  NS_IMETHOD CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)=0;
-
-  /** BeginTransaction is a signal from the caller to the editor that the caller will execute multiple updates
-    * to the content tree that should be treated as a single logical operation,
-    * in the most efficient way possible.<br>
-    * All transactions executed between a call to BeginTransaction and EndTransaction will be undoable as
-    * an atomic action.<br>
-    * EndTransaction must be called after BeginTransaction.<br>
-    * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginUpdate.
-    */
-  NS_IMETHOD BeginTransaction()=0;
-
-  /** EndTransaction is a signal to the editor that the caller is finished updating the content model.<br>
-    * BeginUpdate must be called before EndTransaction is called.<br>
-    * Calls to BeginTransaction can be nested, as long as EndTransaction is called once per BeginTransaction.
-    */
-  NS_IMETHOD EndTransaction()=0;
-
-  /** Get the layout's frame object associated with the node
-    * Needed when we must get geometric layout info, such as what column a table cell is in.
-    * @param aNode           The DOM node we need the frame for
-    * @param aLayoutObject   The pointer where the resulting object is placed
-    */
-  NS_IMETHOD GetLayoutObject(nsIDOMNode *aNode, nsISupports **aLayoutObject)=0;
-
-  /** scroll the viewport so the selection is in view.
-    * @param aScrollToBegin  PR_TRUE if the beginning of the selection is to be scrolled into view.
-    *                        PR_FALSE if the end of the selection is to be scrolled into view
-    */
-  NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
-
-  /** sets the document selection to the entire contents of the document */
-  NS_IMETHOD SelectAll()=0;
-
-  /** sets the document selection to the beginning of the document */
-  NS_IMETHOD BeginningOfDocument()=0;
-
-  /** sets the document selection to the end of the document */
-  NS_IMETHOD EndOfDocument()=0;
-
-  /** cut the currently selected text, putting it into the OS clipboard
-    * What if no text is selected?
-    * What about mixed selections?
-    * What are the clipboard formats?
-    */
-  NS_IMETHOD Cut()=0;
-
-  /** copy the currently selected text, putting it into the OS clipboard
-    * What if no text is selected?
-    * What about mixed selections?
-    * What are the clipboard formats?
-    */
-  NS_IMETHOD Copy()=0;
-  
-  /** paste the text in the OS clipboard at the cursor position, replacing
-    * the selected text (if any)
-    */
-  NS_IMETHOD Paste()=0;
-
-  /** paste the text in the OS clipboard at the cursor position,
-    * replacing the selected text (if any).
-    * Method of quotation will depend on what type of editor we are,
-    * and also on preference settings.
-    * @param aCitation    The "mid" URL of the source message
-    */
-  NS_IMETHOD PasteAsQuotation()=0;
-
-  /** insert a string as quoted text,
-    * replacing the selected text (if any).
-    * Method of quotation will depend on what type of editor we are,
-    * and also on preference settings.
-    * @param aQuotedText  The actual text to be quoted
-    * @param aCitation    The "mid" URL of the source message
-    */
-  NS_IMETHOD InsertAsQuotation(const nsString& aQuotedText)=0;
-
-  /** load and apply the style sheet, specified by aURL, to
-    * the editor's document. This can involve asynchronous
-    * network I/O
-    * @param aURL  The style sheet to be loaded and applied.
-    */
-  NS_IMETHOD ApplyStyleSheet(const nsString& aURL)=0;
-
-  /** Add the given Style Sheet to the editor's document
-    * This is always synchronous
-    * @param aSheet  The style sheet to be  applied.
-    */
-  NS_IMETHOD AddStyleSheet(nsICSSStyleSheet* aSheet)=0;
-
-  /** Remove the given Style Sheet from the editor's document
-    * This is always synchronous
-    * @param aSheet  The style sheet to be  applied.
-    */
-  NS_IMETHOD RemoveStyleSheet(nsICSSStyleSheet* aSheet)=0;
+  /* ------------ Various listeners methods -------------- */
 
   /** add an EditActionListener to the editors list of listeners. */
   NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener)=0;
@@ -439,22 +360,24 @@ public:
 
   /** Remove a DocumentStateListener to the editors list of doc state listeners. */
   NS_IMETHOD RemoveDocumentStateListener(nsIDocumentStateListener *aListener)=0;
-  
-  /** Returns true if the document is modifed and needs saving */
-  NS_IMETHOD GetDocumentModified(PRBool *outDocModified)=0;
-  
+
+
+  /* ------------ Debug methods -------------- */
+
+  /**
+   * And a debug method -- show us what the tree looks like right now
+   */
+  NS_IMETHOD DumpContentTree() = 0;
+
   /** Dumps a text representation of the content tree to standard out */
   NS_IMETHOD DebugDumpContent() const =0;
 
   /* Run unit tests. Noop in optimized builds */
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)=0;
 
-  /* Start logging */
-  NS_IMETHOD StartLogging(nsIFileSpec *aLogFile)=0;
 
-  /* Stop logging */
-  NS_IMETHOD StopLogging()=0;
 };
+
 
 #endif //nsIEditor_h__
 

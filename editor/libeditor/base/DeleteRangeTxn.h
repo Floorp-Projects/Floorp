@@ -32,6 +32,9 @@ class nsIDOMDocument;
 0x5ec6b260, 0xac49, 0x11d2, \
 {0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
+class nsIDOMRange;
+class nsIEditor;
+
 /**
  * A transaction that deletes an entire range in the content tree
  */
@@ -78,7 +81,7 @@ protected:
 
   NS_IMETHOD CreateTxnsToDeleteContent(nsIDOMNode *aParent, 
                                              PRUint32 aOffset, 
-                                             nsIEditor::ECollapsedSelectionAction aAction);
+                                             nsIEditor::ESelectionCollapseDirection aAction);
   
 protected:
   
