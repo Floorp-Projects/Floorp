@@ -418,24 +418,7 @@ nsDOMImplementation::HasFeature(const nsString& aFeature,
                                 const nsString& aVersion, 
                                 PRBool* aReturn)
 {
-  // XXX Currently this is hardcoded. In the future, we should
-  // probably figure out some of this by querying the registry??
-  PRInt32 result;
-  float ver = aVersion.ToFloat(&result);
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
-  if ((aFeature.EqualsIgnoreCase("HTML") ||
-      aFeature.EqualsIgnoreCase("XML")) &&
-      ((ver == 1.0) || (ver == 2.0) || (0 ==aVersion.Length()))) {
-    *aReturn = PR_TRUE;
-  }
-  else {
-    *aReturn = PR_FALSE;
-  }
-
-  return NS_OK;
+  return nsGenericElement::InternalSupports(aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2602,8 +2585,7 @@ NS_IMETHODIMP
 nsDocument::Supports(const nsString& aFeature, const nsString& aVersion,
                      PRBool* aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsGenericElement::InternalSupports(aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP    

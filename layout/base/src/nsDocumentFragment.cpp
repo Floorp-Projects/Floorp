@@ -429,8 +429,7 @@ NS_IMETHODIMP
 nsDocumentFragment::Supports(const nsString& aFeature, const nsString& aVersion,
                              PRBool* aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsGenericElement::InternalSupports(aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP 
