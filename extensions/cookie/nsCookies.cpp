@@ -915,7 +915,6 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
   rv = ioService->ExtractUrlPart(curURL, nsIIOService::url_Path, 
                                  &start, &end, &cur_path);
   char *semi_colon, *ptr, *equal;
-  char *setCookieHeaderInternal = (char *) setCookieHeader;
   PRBool isSecure=PR_FALSE, isDomain=PR_FALSE;
   PRBool bCookieAdded;
   PRBool pref_scd = PR_FALSE;
@@ -949,6 +948,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 //HG87358 -- @@??
 
   /* terminate at any carriage return or linefeed */
+  char *setCookieHeaderInternal = nsCRT::strdup(setCookieHeader);
   for(ptr=setCookieHeaderInternal; *ptr; ptr++) {
     if(*ptr == nsCRT::LF || *ptr == nsCRT::CR) {
       *ptr = '\0';
@@ -963,12 +963,17 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
     *semi_colon++ = '\0';
 
     /* there must be some attributes. (hopefully) */
-    if ((ptr=PL_strcasestr(semi_colon, "secure"))) {
-      char cPre=*(ptr-1), cPost=*(ptr+6);
-      if (((cPre==' ') || (cPre==';')) && (!cPost || (cPost==' ') || (cPost==';'))) {
+    char * localString = nsCRT::strdup(semi_colon); // needed because strtok modifies it arg
+    char * ptr;
+    char * token = nsCRT::strtok(localString, " ;", &ptr);
+    while (token) {
+      if (PL_strcasecmp(token, "secure") == 0) {
         isSecure = PR_TRUE;
-      } 
+        break;
+      }
+      token = nsCRT::strtok(ptr, " ;", &ptr);
     }
+    nsCRT::free(localString);
 
     /* look for the path attribute */
     ptr = PL_strcasestr(semi_colon, "path=");
@@ -1030,6 +1035,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
         PR_Free(cur_path);
         PR_Free(cur_host);
         // TRACEMSG(("DOMAIN failed two dot test"));
+        nsCRT::free(setCookieHeaderInternal);
         return;
       }
 
@@ -1049,6 +1055,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
         PR_Free(domain_from_header);
         PR_Free(cur_path);
         PR_Free(cur_host);
+        nsCRT::free(setCookieHeaderInternal);
         return;
       }
 
@@ -1083,6 +1090,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
           PR_Free(domain_from_header);
           PR_Free(cur_path);
           PR_Free(cur_host);
+          nsCRT::free(setCookieHeaderInternal);
           return;
         }
       }
@@ -1173,6 +1181,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
     PR_FREEIF(host_from_header);
     PR_FREEIF(name_from_header);
     PR_FREEIF(cookie_from_header);
+    nsCRT::free(setCookieHeaderInternal);
     return;
   }
 
@@ -1209,6 +1218,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
       PR_FREEIF(host_from_header);
       PR_FREEIF(name_from_header);
       PR_FREEIF(cookie_from_header);
+      nsCRT::free(setCookieHeaderInternal);
       return;
     }
     
@@ -1229,6 +1239,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
         PR_FREEIF(host_from_header);
         PR_FREEIF(cookie_from_header);
         PR_Free(prev_cookie);
+        nsCRT::free(setCookieHeaderInternal);
         return;
       }
     }
@@ -1254,6 +1265,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 
   /* At this point we know a cookie has changed. Make a note to write the cookies to file. */
   cookie_changed = PR_TRUE;
+  nsCRT::free(setCookieHeaderInternal);
   return;
 }
 
