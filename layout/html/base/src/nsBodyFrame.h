@@ -93,7 +93,7 @@ protected:
 
   virtual PRIntn GetSkipSides() const;
 
-  void ReflowAbsoluteItems(nsIPresContext*      aPresContext,
+  void ReflowAbsoluteItems(nsIPresContext& aPresContext,
                            const nsHTMLReflowState& aReflowState);
 
   nsIView* CreateAbsoluteView(const nsStylePosition* aPosition,

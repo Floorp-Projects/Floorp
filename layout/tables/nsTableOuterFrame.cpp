@@ -329,7 +329,8 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
   if (PR_TRUE==gsDebugIR) printf("TOF IR: passing down incremental reflow command to caption.\n");
   nsSize captionMES(0,0);
   nsHTMLReflowMetrics captionSize(&captionMES);
-  nsHTMLReflowState   captionReflowState(mCaptionFrame, aReflowState.reflowState,
+  nsHTMLReflowState   captionReflowState(aPresContext, mCaptionFrame,
+                                         aReflowState.reflowState,
                                          nsSize(mRect.width, 
                                                 aReflowState.reflowState.maxSize.height));
   rv = ReflowChild(mCaptionFrame, aPresContext, captionSize, captionReflowState, aStatus);
@@ -368,7 +369,8 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
       tableWidth = mMinCaptionWidth;
     }
     nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
-    nsHTMLReflowState   innerReflowState(mInnerTableFrame, aReflowState.reflowState,
+    nsHTMLReflowState   innerReflowState(aPresContext, mInnerTableFrame,
+                                         aReflowState.reflowState,
                                          nsSize(tableWidth, aReflowState.reflowState.maxSize.height),
                                          eReflowReason_Resize);
     rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
@@ -510,7 +512,8 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
   nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize);
   nscoord tableMaxWidth = PR_MAX(aReflowState.reflowState.maxSize.width, mMinCaptionWidth);
   if (PR_TRUE==gsDebugIR) printf("TOF IR: mincaptionWidth=%d, tableMaxWidth=%d.\n", mMinCaptionWidth, tableMaxWidth);
-  nsHTMLReflowState innerReflowState(mInnerTableFrame, aReflowState.reflowState,
+  nsHTMLReflowState innerReflowState(aPresContext, mInnerTableFrame,
+                                     aReflowState.reflowState,
                                      nsSize(tableMaxWidth, aReflowState.reflowState.maxSize.height));
   rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
   if (PR_TRUE==gsDebugIR) printf("TOF IR: inner table reflow returned %d with width=%d height=%d\n",
@@ -528,7 +531,8 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
     PRBool captionWasReflowed=PR_FALSE;
     if (priorInnerTableRect.width!=innerSize.width)
     { // the table width changed, so reflow the caption
-      nsHTMLReflowState   captionReflowState(mCaptionFrame, aReflowState.reflowState,
+      nsHTMLReflowState   captionReflowState(aPresContext, mCaptionFrame,
+                                             aReflowState.reflowState,
                                              nsSize(innerSize.width, 
                                                     aReflowState.reflowState.maxSize.height),
                                              eReflowReason_Resize);
@@ -648,7 +652,8 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
   if (PR_TRUE==gsDebugIR) printf("TOF IR: initial-reflowing caption\n");
   nsSize              maxElementSize;
   nsHTMLReflowMetrics captionSize(&maxElementSize);
-  nsHTMLReflowState   captionReflowState(mCaptionFrame, aReflowState.reflowState,
+  nsHTMLReflowState   captionReflowState(aPresContext, mCaptionFrame,
+                                         aReflowState.reflowState,
                                          nsSize(mRect.width, aReflowState.reflowState.maxSize.height),
                                          eReflowReason_Initial);
   nsIHTMLReflow*      htmlReflow;
@@ -677,7 +682,8 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
       if ((oldCaptionMES != mMinCaptionWidth) && (mMinCaptionWidth > mRect.width))
       {
         if (PR_TRUE==gsDebugIR) printf("TOF IR: resize-reflowing inner table\n");
-        nsHTMLReflowState   innerReflowState(mInnerTableFrame, aReflowState.reflowState,
+        nsHTMLReflowState   innerReflowState(aPresContext, mInnerTableFrame,
+                                             aReflowState.reflowState,
                                              nsSize(mMinCaptionWidth, aReflowState.reflowState.maxSize.height),
                                              eReflowReason_Resize);
         rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
@@ -730,7 +736,8 @@ nsresult nsTableOuterFrame::IR_CaptionRemoved(nsIPresContext&        aPresContex
     if (oldMinCaptionWidth > mRect.width)
     { // the old caption width had an effect on the inner table width, so reflow the inner table
       if (PR_TRUE==gsDebugIR) printf("TOF IR: reflowing inner table\n");
-      nsHTMLReflowState   innerReflowState(mInnerTableFrame, aReflowState.reflowState,
+      nsHTMLReflowState   innerReflowState(aPresContext, mInnerTableFrame,
+                                           aReflowState.reflowState,
                                    nsSize(aReflowState.reflowState.maxSize.width, 
                                           aReflowState.reflowState.maxSize.height));
       // ReflowChild sets MES
@@ -932,7 +939,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
       if (nsnull != mCaptionFrame) {
         nsSize              maxElementSize;
         nsHTMLReflowMetrics captionSize(&maxElementSize);
-        nsHTMLReflowState   captionReflowState(mCaptionFrame, aReflowState,
+        nsHTMLReflowState   captionReflowState(aPresContext, mCaptionFrame,
+                                               aReflowState,
                                                nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
                                                eReflowReason_Initial);
         nsIHTMLReflow*      htmlReflow;
@@ -960,7 +968,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
     }
 
     // First reflow the inner table
-    nsHTMLReflowState   innerReflowState(mInnerTableFrame, aReflowState,
+    nsHTMLReflowState   innerReflowState(aPresContext, mInnerTableFrame,
+                                         aReflowState,
                                          nsSize(tableWidth, aReflowState.maxSize.height));
     nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
 
@@ -995,7 +1004,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
       }
 
       // Reflow the caption. Let it be as high as it wants
-      nsHTMLReflowState   captionReflowState(mCaptionFrame, state.reflowState,
+      nsHTMLReflowState   captionReflowState(aPresContext, mCaptionFrame,
+                                             state.reflowState,
                                              nsSize(innerSize.width, NS_UNCONSTRAINEDSIZE),
                                              eReflowReason_Resize);
       nsHTMLReflowMetrics captionSize(nsnull);

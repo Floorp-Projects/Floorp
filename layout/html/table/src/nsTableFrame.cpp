@@ -1623,7 +1623,8 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext& aPresContext,
         continue;
       }
       nsSize maxKidElementSize(0,0);
-      nsHTMLReflowState kidReflowState(kidFrame, aReflowState, availSize);
+      nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
+                                       availSize);
 
       PRInt32 yCoord = y;
       if (NS_UNCONSTRAINEDSIZE!=yCoord)
@@ -2027,7 +2028,9 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
   // Pass along the reflow command
   nsHTMLReflowMetrics desiredSize(nsnull);
   // XXX Correctly compute the available space...
-  nsHTMLReflowState kidReflowState(aNextFrame, aReflowState.reflowState, aReflowState.reflowState.maxSize);
+  nsHTMLReflowState kidReflowState(aPresContext, aNextFrame,
+                                   aReflowState.reflowState,
+                                   aReflowState.reflowState.maxSize);
 
   ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
 
@@ -2232,7 +2235,8 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext&        aPresContext,
       }
       
       // Reflow the child into the available space
-      nsHTMLReflowState  kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
+      nsHTMLReflowState  kidReflowState(aPresContext, kidFrame,
+                                        aState.reflowState, kidAvailSize,
                                         reason);
 
       nscoord x = aState.leftInset + kidMargin.left;
@@ -2371,7 +2375,8 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext&      aPresContext,
       result = PR_FALSE;
       break;
     }
-    nsHTMLReflowState  kidReflowState(kidFrame, aState.reflowState, aState.availSize,
+    nsHTMLReflowState  kidReflowState(aPresContext, kidFrame,
+                                      aState.reflowState, aState.availSize,
                                       eReflowReason_Resize);
 
     ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, status);

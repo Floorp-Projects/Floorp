@@ -127,6 +127,7 @@ public:
   static nsIAtom* headers;
   static nsIAtom* height;
   static nsIAtom* hidden;
+  static nsIAtom* horizontalFramesetBorderPseudo;
   static nsIAtom* hover;
   static nsIAtom* hr;
   static nsIAtom* href;
@@ -254,6 +255,7 @@ public:
   static nsIAtom* valuetype;
   static nsIAtom* variable;
   static nsIAtom* version;
+  static nsIAtom* verticalFramesetBorderPseudo;
   static nsIAtom* visibility;
   static nsIAtom* visited;
   static nsIAtom* vlink;

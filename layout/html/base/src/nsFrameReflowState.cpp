@@ -22,6 +22,204 @@
 #include "nsIFrame.h"
 #include "nsIHTMLReflow.h"
 #include "nsIContent.h"
+#include "nsHTMLAtoms.h"
+
+// XXX there is no CLEAN way to detect the "replaced" attribute (yet)
+void
+nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
+{
+  nsIAtom* tag = nsnull;
+  nsIContent* content;
+  if ((NS_OK == frame->GetContent(content)) && (nsnull != content)) {
+    content->GetTag(tag);
+    NS_RELEASE(content);
+  }
+
+  // Section 9.7 indicates that absolute position takes precedence
+  // over float which takes precedence over display.
+  const nsStyleDisplay* display;
+  frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+  const nsStylePosition* pos;
+  frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
+  if ((nsnull != pos) && (NS_STYLE_POSITION_ABSOLUTE == pos->mPosition)) {
+    // XXX replaced?
+    frameType = eCSSFrameType_Absolute;
+  }
+  else if (NS_STYLE_FLOAT_NONE != display->mFloats) {
+    // XXX replaced?
+    frameType = eCSSFrameType_Floating;
+  }
+  else {
+    switch (display->mDisplay) {
+    case NS_STYLE_DISPLAY_BLOCK:
+    case NS_STYLE_DISPLAY_LIST_ITEM:
+    case NS_STYLE_DISPLAY_TABLE:
+    case NS_STYLE_DISPLAY_TABLE_CELL:
+    case NS_STYLE_DISPLAY_TABLE_CAPTION:
+      frameType = eCSSFrameType_Block;
+      break;
+
+    case NS_STYLE_DISPLAY_INLINE:
+    case NS_STYLE_DISPLAY_MARKER:
+    case NS_STYLE_DISPLAY_INLINE_TABLE:
+      if ((nsHTMLAtoms::img == tag) ||
+          (nsHTMLAtoms::applet == tag) ||
+          (nsHTMLAtoms::object == tag)) {
+        frameType = eCSSFrameType_InlineReplaced;
+      }
+      frameType = eCSSFrameType_Inline;
+      break;
+
+    case NS_STYLE_DISPLAY_RUN_IN:
+    case NS_STYLE_DISPLAY_COMPACT:
+      // XXX need to look ahead at the frame's sibling
+      frameType = eCSSFrameType_Block;
+      break;
+
+    case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
+    case NS_STYLE_DISPLAY_TABLE_COLUMN:
+    case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
+    case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
+    case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
+    case NS_STYLE_DISPLAY_TABLE_ROW:
+      // XXX I don't know what to do about these yet...later
+      frameType = eCSSFrameType_Inline;
+      break;
+
+    case NS_STYLE_DISPLAY_NONE:
+    default:
+      frameType = eCSSFrameType_Unknown;
+      break;
+    }
+    NS_IF_RELEASE(tag);
+  }
+}
+
+void
+nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
+{
+  // Assume that the values are unconstrained
+  widthConstraint = eHTMLFrameConstraint_Unconstrained;
+  heightConstraint = eHTMLFrameConstraint_Unconstrained;
+
+  // Some frame types are not constrained by width/height style
+  // attributes. Return if the frame is one of those types.
+  switch (frameType) {
+  case eCSSFrameType_Unknown:
+  case eCSSFrameType_Inline:
+    return;
+
+  default:
+    break;
+  }
+
+  // Look for stylistic constraints on the width/height
+  const nsStylePosition* pos;
+  nsresult result = frame->GetStyleData(eStyleStruct_Position,
+                                        (const nsStyleStruct*&)pos);
+  if (NS_OK == result) {
+    nscoord containingBlockWidth, containingBlockHeight;
+    nscoord width = -1, height = -1;
+    PRIntn widthUnit = pos->mWidth.GetUnit();
+    PRIntn heightUnit = pos->mHeight.GetUnit();
+
+    // When a percentage is specified we need to find the containing
+    // block to use as the basis for the percentage computation.
+    if ((eStyleUnit_Percent == widthUnit) ||
+        (eStyleUnit_Percent == heightUnit)) {
+      // Find the containing block for this frame
+      nsIFrame* containingBlock = nsnull;
+      const nsReflowState* rs = parentReflowState;
+      while (nsnull != rs) {
+        if (nsnull != rs->frame) {
+          PRBool isContainingBlock;
+          if (NS_OK == rs->frame->IsPercentageBase(isContainingBlock)) {
+            if (isContainingBlock) {
+              containingBlock = rs->frame;
+              break;
+            }
+          }
+        }
+        rs = rs->parentReflowState;
+      }
+
+      // If there is no containing block then pretend the width or
+      // height units are auto.
+      if (nsnull == containingBlock) {
+        if (eStyleUnit_Percent == widthUnit) {
+          widthUnit = eStyleUnit_Auto;
+        }
+        if (eStyleUnit_Percent == heightUnit) {
+          heightUnit = eStyleUnit_Auto;
+        }
+      }
+      else {
+        if (eStyleUnit_Percent == widthUnit) {
+          if (NS_UNCONSTRAINEDSIZE == rs->maxSize.width) {
+            // When we don't know the width (yet) of the containing
+            // block we use a dummy value, assuming that the frame
+            // depending on the percentage value will be reflowed a
+            // second time.
+            containingBlockWidth = 1;
+          }
+          else {
+            containingBlockWidth = rs->maxSize.width;
+          }
+        }
+        if (eStyleUnit_Percent == heightUnit) {
+          if (NS_UNCONSTRAINEDSIZE == rs->maxSize.height) {
+            // CSS2 spec, 10.5: if the height of the containing block
+            // is not specified explicitly then the value is
+            // interpreted like auto.
+            heightUnit = eStyleUnit_Auto;
+          }
+          else {
+            containingBlockHeight = rs->maxSize.height;
+          }
+        }
+      }
+    }
+
+    switch (widthUnit) {
+    case eStyleUnit_Coord:
+      width = pos->mWidth.GetCoordValue();
+      break;
+    case eStyleUnit_Percent:
+      width = nscoord(pos->mWidth.GetPercentValue() * containingBlockWidth);
+      break;
+    case eStyleUnit_Auto:
+      // XXX See section 10.3 of the css2 spec and then write this code!
+      break;
+    }
+    switch (heightUnit) {
+    case eStyleUnit_Coord:
+      height = pos->mHeight.GetCoordValue();
+      break;
+    case eStyleUnit_Percent:
+      height = nscoord(pos->mHeight.GetPercentValue() * containingBlockHeight);
+      break;
+    case eStyleUnit_Auto:
+      // XXX See section 10.6 of the css2 spec and then write this code!
+      break;
+    }
+
+    if (width > 0) {
+      minWidth = width;
+      maxWidth = width;
+      widthConstraint = eHTMLFrameConstraint_Constrained;
+    }
+    if (height > 0) {
+      minHeight = height;
+      maxHeight = height;
+      heightConstraint = eHTMLFrameConstraint_Constrained;
+    }
+  }
+
+  // XXX this is probably a good place to calculate auto margins too
+  // (section 10.3/10.6 of the spec)
+}
+
+//----------------------------------------------------------------------
 
 nsFrameReflowState::nsFrameReflowState(nsIPresContext& aPresContext,
                                        const nsHTMLReflowState& aReflowState,

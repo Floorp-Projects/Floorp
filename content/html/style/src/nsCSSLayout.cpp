@@ -122,6 +122,7 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
   }
 }
 
+#if XXX
 // XXX if this can handle proportional widths then do so
 // XXX check against other possible values and update
 static PRBool
@@ -182,30 +183,129 @@ GetStyleDimension(nsIPresContext* aPresContext,
   }
   return rv;
 }
+#endif
 
+  // XXX if display == row || rowspan ignore width
+  // XXX if display == col || colspan ignore height
 PRIntn
 nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
                           const nsHTMLReflowState& aReflowState,
                           nsSize& aStyleSize)
 {
-  // XXX if display == row || rowspan ignore width
-  // XXX if display == col || colspan ignore height
-
   PRIntn rv = NS_SIZE_HAS_NONE;
+
   const nsStylePosition* pos;
-  nsresult  result = aReflowState.frame->GetStyleData(eStyleStruct_Position,
-                                                      (const nsStyleStruct*&)pos);
+  nsresult result =
+    aReflowState.frame->GetStyleData(eStyleStruct_Position,
+                                     (const nsStyleStruct*&)pos);
   if (NS_OK == result) {
-    if (GetStyleDimension(aPresContext, aReflowState, pos, pos->mWidth,
-                          aStyleSize.width)) {
-NS_ASSERTION(aStyleSize.width < 100000, "bad % result");
+    nscoord containingBlockWidth, containingBlockHeight;
+    nscoord width = -1, height = -1;
+    PRIntn widthUnit = pos->mWidth.GetUnit();
+    PRIntn heightUnit = pos->mHeight.GetUnit();
+
+    // When a percentage is specified we need to find the containing
+    // block to use as the basis for the percentage computation.
+    if ((eStyleUnit_Percent == widthUnit) ||
+        (eStyleUnit_Percent == heightUnit)) {
+      // Find the containing block for this frame
+      nsIFrame* containingBlock = nsnull;
+      // XXX this cast is just plain wrong
+      const nsHTMLReflowState* rs = (const nsHTMLReflowState*)
+        aReflowState.parentReflowState;
+      while (nsnull != rs) {
+        if (nsnull != rs->frame) {
+          PRBool isContainingBlock;
+          if (NS_OK == rs->frame->IsPercentageBase(isContainingBlock)) {
+            if (isContainingBlock) {
+              containingBlock = rs->frame;
+              break;
+            }
+          }
+        }
+        // XXX this cast is just plain wrong
+        rs = (const nsHTMLReflowState*) rs->parentReflowState;
+      }
+
+      // If there is no containing block then pretend the width or
+      // height units are auto.
+      if (nsnull == containingBlock) {
+        if (eStyleUnit_Percent == widthUnit) {
+          widthUnit = eStyleUnit_Auto;
+        }
+        if (eStyleUnit_Percent == heightUnit) {
+          heightUnit = eStyleUnit_Auto;
+        }
+      }
+      else {
+        if (eStyleUnit_Percent == widthUnit) {
+          if (eHTMLFrameConstraint_Unconstrained == rs->widthConstraint) {
+            if (NS_UNCONSTRAINEDSIZE == rs->maxSize.width) {
+              // When we don't know the width (yet) of the containing
+              // block we use a dummy value, assuming that the frame
+              // depending on the percentage value will be reflowed a
+              // second time.
+              containingBlockWidth = 1;
+            }
+            else {
+              containingBlockWidth = rs->maxSize.width;
+            }
+          }
+          else {
+            containingBlockWidth = rs->minWidth;
+          }
+        }
+        if (eStyleUnit_Percent == heightUnit) {
+          if (eHTMLFrameConstraint_Unconstrained == rs->heightConstraint) {
+            if (NS_UNCONSTRAINEDSIZE == rs->maxSize.height) {
+              // CSS2 spec, 10.5: if the height of the containing block
+              // is not specified explicitly then the value is
+              // interpreted like auto.
+              heightUnit = eStyleUnit_Auto;
+            }
+            else {
+              containingBlockHeight = rs->maxSize.height;
+            }
+          }
+          else {
+            containingBlockHeight = rs->minHeight;
+          }
+        }
+      }
+    }
+
+    switch (widthUnit) {
+    case eStyleUnit_Coord:
+      width = pos->mWidth.GetCoordValue();
+      break;
+    case eStyleUnit_Percent:
+      width = nscoord(pos->mWidth.GetPercentValue() * containingBlockWidth);
+      break;
+    case eStyleUnit_Auto:
+      // XXX See section 10.3 of the css2 spec and then write this code!
+      break;
+    }
+    switch (heightUnit) {
+    case eStyleUnit_Coord:
+      height = pos->mHeight.GetCoordValue();
+      break;
+    case eStyleUnit_Percent:
+      height = nscoord(pos->mHeight.GetPercentValue() * containingBlockHeight);
+      break;
+    case eStyleUnit_Auto:
+      // XXX See section 10.6 of the css2 spec and then write this code!
+      break;
+    }
+
+    if (width > 0) {
+      aStyleSize.width = width;
       rv |= NS_SIZE_HAS_WIDTH;
     }
-    if (GetStyleDimension(aPresContext, aReflowState, pos, pos->mHeight,
-                          aStyleSize.height)) {
-NS_ASSERTION(aStyleSize.height < 100000, "bad % result");
+    if (height > 0) {
+      aStyleSize.height = height;
       rv |= NS_SIZE_HAS_HEIGHT;
     }
   }
+
   return rv;
 }

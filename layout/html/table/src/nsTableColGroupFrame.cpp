@@ -207,7 +207,8 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
     // Give the child frame a chance to reflow, even though we know it'll have 0 size
     nsHTMLReflowMetrics kidSize(nsnull);
     // XXX Use a valid reason...
-    nsHTMLReflowState kidReflowState(kidFrame, aReflowState, nsSize(0,0), eReflowReason_Initial);
+    nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
+                                     nsSize(0,0), eReflowReason_Initial);
 
     nsReflowStatus status;
     ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, status);

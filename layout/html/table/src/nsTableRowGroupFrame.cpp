@@ -300,7 +300,8 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
     }
 
     // Reflow the child into the available space
-    nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize);
+    nsHTMLReflowState kidReflowState(*aPresContext, kidFrame,
+                                     aState.reflowState, kidAvailSize);
 
     if (gsDebug) printf("%p RG reflowing child %d (frame=%p) with avail width = %d\n",
                         this, debugCounter, kidFrame, kidAvailSize.width);
@@ -447,7 +448,8 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
       result = PR_FALSE;
       break;
     }
-    nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize,
+    nsHTMLReflowState kidReflowState(*aPresContext, kidFrame,
+                                     aState.reflowState, aState.availSize,
                                      eReflowReason_Resize);
 
     ReflowChild(kidFrame, *aPresContext, kidSize, kidReflowState, status);
@@ -770,7 +772,8 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
 
     // Pass along the reflow command
     // XXX Correctly compute the available space...
-    nsHTMLReflowState   kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
+    nsHTMLReflowState   kidReflowState(aPresContext, kidFrame,
+                                       aReflowState, aReflowState.maxSize);
     nsHTMLReflowMetrics desiredSize(nsnull);
 
     ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
