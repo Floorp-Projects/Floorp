@@ -717,7 +717,7 @@ NS_IMETHODIMP nsExtensibleStringBundle::SetLoaded(PRBool aLoaded)
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#define MAX_CACHED_BUNDLES 10
+#define MAX_CACHED_BUNDLES 16
 
 struct bundleCacheEntry_t {
   PRCList list;
