@@ -508,8 +508,6 @@ protected:
 
     nsresult ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsString& attrName);
 
-    PRBool ElementIsInDocument();
-
     static nsresult
     ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent);
 

@@ -3900,6 +3900,7 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
       // We have to make a box to hold everything.
       nsdoc->CreateElementWithNameSpace(nsAutoString("box"), xulNamespace, getter_AddRefs(node));
       content = do_QueryInterface(node);
+      content->SetDocument(doc, PR_FALSE);
       anonymousItems->AppendElement(content);
       content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, nsAutoString("tree-icon"), PR_FALSE);
       content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, nsAutoString("1"), PR_FALSE);
@@ -3908,6 +3909,8 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
 
       // Make the indentation.
       nsdoc->CreateElementWithNameSpace(nsAutoString("treeindentation"), xulNamespace, getter_AddRefs(node));
+      content = do_QueryInterface(node);
+      content->SetDocument(doc, PR_FALSE);
       boxElement->AppendChild(node, getter_AddRefs(dummy));
       
       nsCOMPtr<nsIContent> treeRow;
@@ -3922,6 +3925,7 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
       // Always make a twisty but disable it for non-containers.
       nsdoc->CreateElementWithNameSpace(nsAutoString("titledbutton"), xulNamespace, getter_AddRefs(node));
       content = do_QueryInterface(node);
+      content->SetDocument(doc, PR_FALSE);
       content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, nsAutoString("twisty"), PR_FALSE);
       if (container != "true")
         content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, nsAutoString("true"), PR_FALSE);
@@ -3934,6 +3938,7 @@ nsCSSFrameConstructor::CreateAnonymousTreeCellFrames(nsIPresShell*        aPresS
     
     nsdoc->CreateElementWithNameSpace(nsAutoString("titledbutton"), xulNamespace, getter_AddRefs(node));
     buttonContent = do_QueryInterface(node);
+    buttonContent->SetDocument(doc, PR_FALSE);
     buttonContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, classDesc, PR_FALSE);
 
     nsAutoString value;

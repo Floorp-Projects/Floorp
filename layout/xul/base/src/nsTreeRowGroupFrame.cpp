@@ -1653,6 +1653,7 @@ void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext* aPresContext)
     document->CreateElement("scrollbar",getter_AddRefs(node));
 
     nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+    content->SetDocument(idocument, PR_FALSE);
     content->SetParent(mContent);
 
     nsCOMPtr<nsIXULContent> xulContent = do_QueryInterface(content);
