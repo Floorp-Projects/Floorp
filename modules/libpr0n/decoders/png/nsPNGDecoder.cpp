@@ -253,7 +253,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
 
   if (decoder->mObserver)
-    decoder->mObserver->OnStartDecode(nsnull, nsnull);
+    decoder->mObserver->OnStartDecode(nsnull);
 
   decoder->mImage = do_CreateInstance("@mozilla.org/image/container;1");
   if (!decoder->mImage)
@@ -265,7 +265,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   decoder->mImage->Init(width, height, decoder->mObserver);
 
   if (decoder->mObserver)
-    decoder->mObserver->OnStartContainer(nsnull, nsnull, decoder->mImage);
+    decoder->mObserver->OnStartContainer(nsnull, decoder->mImage);
 
   decoder->mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
   if (!decoder->mFrame)
@@ -296,7 +296,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   decoder->mImage->AppendFrame(decoder->mFrame);
 
   if (decoder->mObserver)
-    decoder->mObserver->OnStartFrame(nsnull, nsnull, decoder->mFrame);
+    decoder->mObserver->OnStartFrame(nsnull, decoder->mFrame);
 
   PRUint32 bpr, abpr;
   decoder->mFrame->GetImageBytesPerRow(&bpr);
@@ -467,7 +467,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     }
 
     nsRect r(0, row_num, width, 1);
-    decoder->mObserver->OnDataAvailable(nsnull, nsnull, decoder->mFrame, &r);
+    decoder->mObserver->OnDataAvailable(nsnull, decoder->mFrame, &r);
   }
 }
 
@@ -491,9 +491,9 @@ end_callback(png_structp png_ptr, png_infop info_ptr)
   nsPNGDecoder *decoder = NS_STATIC_CAST(nsPNGDecoder*, png_get_progressive_ptr(png_ptr));
 
   if (decoder->mObserver) {
-    decoder->mObserver->OnStopFrame(nsnull, nsnull, decoder->mFrame);
-    decoder->mObserver->OnStopContainer(nsnull, nsnull, decoder->mImage);
-    decoder->mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+    decoder->mObserver->OnStopFrame(nsnull, decoder->mFrame);
+    decoder->mObserver->OnStopContainer(nsnull, decoder->mImage);
+    decoder->mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
   }
 
   // We are never going to change the data of this frame again.  Let the OS

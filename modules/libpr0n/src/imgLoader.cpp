@@ -376,7 +376,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     // gets a 304 or figures out that this needs to be a new request
 
     if (request->mValidator) {
-      rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX,
+      rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                     requestFlags, aRequest, _retval);
 
       if (*_retval)
@@ -408,7 +408,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
             newChannel->SetLoadFlags(loadFlags | nsICachingChannel::LOAD_ONLY_IF_MODIFIED);
 
       }
-      rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX,
+      rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                     requestFlags, aRequest, _retval);
 
       imgCacheValidator *hvc = new imgCacheValidator(request, aCX);
@@ -484,7 +484,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
       LOG_MSG(gImgLog, "imgLoader::LoadImage", "async open failed.");
 
       rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
-                                    aCX, requestFlags, aRequest, _retval);
+                                    requestFlags, aRequest, _retval);
       request->NotifyProxyListener(NS_STATIC_CAST(imgRequestProxy*, *_retval));
 
       if (NS_SUCCEEDED(rv)) {
@@ -509,7 +509,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
   LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
 
-  rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX,
+  rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                 requestFlags, aRequest, _retval);
 
   if (!bValidateRequest) // if we have to validate the request, then we will send the notifications later.
@@ -618,7 +618,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   requestFlags &= 0xFFFF;
 
   rv = CreateNewProxyForRequest(request, loadGroup, aObserver,
-                                aCX, requestFlags, nsnull, _retval);
+                                requestFlags, nsnull, _retval);
   request->NotifyProxyListener(NS_STATIC_CAST(imgRequestProxy*, *_retval));
 
   NS_RELEASE(request);
@@ -629,7 +629,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
 nsresult
 imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
-                                    imgIDecoderObserver *aObserver, nsISupports *cx,
+                                    imgIDecoderObserver *aObserver,
                                     nsLoadFlags aLoadFlags, imgIRequest *aProxyRequest,
                                     imgIRequest **_retval)
 {
@@ -655,7 +655,7 @@ imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGro
   proxyRequest->SetLoadFlags(aLoadFlags);
 
   // init adds itself to imgRequest's list of observers
-  nsresult rv = proxyRequest->Init(aRequest, aLoadGroup, aObserver, cx);
+  nsresult rv = proxyRequest->Init(aRequest, aLoadGroup, aObserver);
   if (NS_FAILED(rv)) {
     NS_RELEASE(proxyRequest);
     return rv;

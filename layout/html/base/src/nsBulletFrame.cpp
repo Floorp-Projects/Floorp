@@ -85,12 +85,14 @@ private:
 
 
 
-nsBulletFrame::nsBulletFrame()
+nsBulletFrame::nsBulletFrame() :
+  mPresContext(nsnull)
 {
 }
 
 nsBulletFrame::~nsBulletFrame()
 {
+  NS_PRECONDITION(!mPresContext, "Never got destroyed properly!");
 }
 
 NS_IMETHODIMP
@@ -105,6 +107,8 @@ nsBulletFrame::Destroy(nsIPresContext* aPresContext)
   if (mListener)
     NS_REINTERPRET_CAST(nsBulletListener*, mListener.get())->SetFrame(nsnull);
 
+  mPresContext = nsnull;
+  
   // Let base class do the rest
   return nsFrame::Destroy(aPresContext);
 }
@@ -116,6 +120,8 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
                     nsStyleContext*  aContext,
                     nsIFrame*        aPrevInFlow)
 {
+  mPresContext = aPresContext;
+  
   nsresult  rv = nsFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   const nsStyleList* myList = (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
@@ -1640,7 +1646,9 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
 
 
         // XXX: initialDocumentURI is NULL !
-        il->LoadImage(newURI, nsnull, documentURI, loadGroup, mListener, aPresContext, nsIRequest::LOAD_NORMAL, nsnull, nsnull, getter_AddRefs(mImageRequest));
+        il->LoadImage(newURI, nsnull, documentURI, loadGroup, mListener, doc,
+                      nsIRequest::LOAD_NORMAL, nsnull, nsnull,
+                      getter_AddRefs(mImageRequest));
       }
     }
   }
@@ -1665,10 +1673,12 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest, nsIPresContext *aPresContext, imgIContainer *aImage)
+NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
+                                              imgIContainer *aImage)
 {
   if (!aImage) return NS_ERROR_INVALID_ARG;
   if (!aRequest) return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED); // Why are we bothering?
 
   PRUint32 status;
   aRequest->GetImageStatus(&status);
@@ -1681,7 +1691,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest, nsIPresCont
   aImage->GetHeight(&h);
 
   float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
+  mPresContext->GetPixelsToTwips(&p2t);
 
   nsSize newsize(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
 
@@ -1691,7 +1701,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest, nsIPresCont
     // Now that the size is available (or an error occurred), trigger
     // a reflow of the bullet frame.
     nsCOMPtr<nsIPresShell> shell;
-    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+    nsresult rv = mPresContext->GetShell(getter_AddRefs(shell));
     if (NS_SUCCEEDED(rv) && shell) {
       NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
       if (mParent) {
@@ -1700,7 +1710,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest, nsIPresCont
         // has no effect. The reflowing of the bullet frame is done 
         // indirectly.
         nsIFrame* frame = nsnull;
-        mParent->FirstChild(aPresContext, nsnull, &frame);
+        mParent->FirstChild(mPresContext, nsnull, &frame);
         NS_ASSERTION(frame, "No frame to mark dirty for bullet frame.");
         if (frame) {
           nsFrameState state;
@@ -1716,9 +1726,13 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest, nsIPresCont
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBulletFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContext *aPresContext, gfxIImageFrame *aFrame, const nsRect *aRect)
+NS_IMETHODIMP nsBulletFrame::OnDataAvailable(imgIRequest *aRequest,
+                                             gfxIImageFrame *aFrame,
+                                             const nsRect *aRect)
 {
   if (!aRect) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED); // Why are we bothering?
+  
 
   // XXX Should we do anything here if an error occured in the decode?
   
@@ -1734,25 +1748,29 @@ NS_IMETHODIMP nsBulletFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresConte
   r.y -= 1;
 
   float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
+  mPresContext->GetPixelsToTwips(&p2t);
   r.x = NSIntPixelsToTwips(r.x, p2t);
   r.y = NSIntPixelsToTwips(r.y, p2t);
   r.width = NSIntPixelsToTwips(r.width, p2t);
   r.height = NSIntPixelsToTwips(r.height, p2t);
 
-  Invalidate(aPresContext, r, PR_FALSE);
+  Invalidate(mPresContext, r, PR_FALSE);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *aPresContext, nsresult aStatus, const PRUnichar *aStatusArg)
+NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest,
+                                          nsresult aStatus,
+                                          const PRUnichar *aStatusArg)
 {
   // XXX should the bulletframe do anything if the image failed to load?
   //     it didn't in the old code...
 
 #if 0
+  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED); // Why are we bothering?
+  
   nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  mPresContext->GetShell(getter_AddRefs(presShell));
 
 
   if (NS_FAILED(aStatus)) {
@@ -1766,18 +1784,22 @@ NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIContainer *aContainer, nsIPresContext *aPresContext, gfxIImageFrame *aNewFrame, nsRect *aDirtyRect)
+NS_IMETHODIMP nsBulletFrame::FrameChanged(imgIContainer *aContainer,
+                                          gfxIImageFrame *aNewFrame,
+                                          nsRect *aDirtyRect)
 {
+  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED); // Why are we bothering?
+
   nsRect r(*aDirtyRect);
 
   float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
+  mPresContext->GetPixelsToTwips(&p2t);
   r.x = NSIntPixelsToTwips(r.x, p2t);
   r.y = NSIntPixelsToTwips(r.y, p2t);
   r.width = NSIntPixelsToTwips(r.width, p2t);
   r.height = NSIntPixelsToTwips(r.height, p2t);
 
-  Invalidate(aPresContext, r, PR_FALSE);
+  Invalidate(mPresContext, r, PR_FALSE);
 
   return NS_OK;
 }
@@ -1846,70 +1868,64 @@ nsBulletListener::~nsBulletListener()
 {
 }
 
-NS_IMETHODIMP nsBulletListener::OnStartDecode(imgIRequest *aRequest, nsISupports *aContext)
+NS_IMETHODIMP nsBulletListener::OnStartDecode(imgIRequest *aRequest)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBulletListener::OnStartContainer(imgIRequest *aRequest, nsISupports *aContext, imgIContainer *aImage)
+NS_IMETHODIMP nsBulletListener::OnStartContainer(imgIRequest *aRequest,
+                                                 imgIContainer *aImage)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->OnStartContainer(aRequest, pc, aImage);
+  return mFrame->OnStartContainer(aRequest, aImage);
 }
 
-NS_IMETHODIMP nsBulletListener::OnStartFrame(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame)
+NS_IMETHODIMP nsBulletListener::OnStartFrame(imgIRequest *aRequest,
+                                             gfxIImageFrame *aFrame)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBulletListener::OnDataAvailable(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame, const nsRect *aRect)
+NS_IMETHODIMP nsBulletListener::OnDataAvailable(imgIRequest *aRequest,
+                                                gfxIImageFrame *aFrame,
+                                                const nsRect *aRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->OnDataAvailable(aRequest, pc, aFrame, aRect);
+  return mFrame->OnDataAvailable(aRequest, aFrame, aRect);
 }
 
-NS_IMETHODIMP nsBulletListener::OnStopFrame(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame)
+NS_IMETHODIMP nsBulletListener::OnStopFrame(imgIRequest *aRequest,
+                                            gfxIImageFrame *aFrame)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBulletListener::OnStopContainer(imgIRequest *aRequest, nsISupports *aContext, imgIContainer *aImage)
+NS_IMETHODIMP nsBulletListener::OnStopContainer(imgIRequest *aRequest,
+                                                imgIContainer *aImage)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest, nsISupports *aContext, nsresult status, const PRUnichar *statusArg)
+NS_IMETHODIMP nsBulletListener::OnStopDecode(imgIRequest *aRequest,
+                                             nsresult status,
+                                             const PRUnichar *statusArg)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->OnStopDecode(aRequest, pc, status, statusArg);
+  
+  return mFrame->OnStopDecode(aRequest, status, statusArg);
 }
 
-NS_IMETHODIMP nsBulletListener::FrameChanged(imgIContainer *aContainer, nsISupports *aContext, gfxIImageFrame *newframe, nsRect * dirtyRect)
+NS_IMETHODIMP nsBulletListener::FrameChanged(imgIContainer *aContainer,
+                                             gfxIImageFrame *newframe,
+                                             nsRect * dirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->FrameChanged(aContainer, pc, newframe, dirtyRect);
+  return mFrame->FrameChanged(aContainer, newframe, dirtyRect);
 }

@@ -97,8 +97,8 @@ NS_IMETHODIMP nsXBMDecoder::Init(imgILoad *aLoad)
 
 NS_IMETHODIMP nsXBMDecoder::Close()
 {
-    mObserver->OnStopContainer(nsnull, nsnull, mImage);
-    mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+    mObserver->OnStopContainer(nsnull, mImage);
+    mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
     mObserver = nsnull;
     mImage = nsnull;
     mFrame = nsnull;
@@ -159,14 +159,14 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             return NS_OK;
 
         mImage->Init(mWidth, mHeight, mObserver);
-        mObserver->OnStartContainer(nsnull, nsnull, mImage);
+        mObserver->OnStartContainer(nsnull, mImage);
 
         nsresult rv = mFrame->Init(0, 0, mWidth, mHeight, GFXFORMAT, 24);
         if (NS_FAILED(rv))
           return rv;
 
         mImage->AppendFrame(mFrame);
-        mObserver->OnStartFrame(nsnull, nsnull, mFrame);
+        mObserver->OnStartFrame(nsnull, mFrame);
 
         PRUint32 bpr;
         mFrame->GetImageBytesPerRow(&bpr);
@@ -226,11 +226,11 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
                     mFrame->SetAlphaData(mAlphaRow, abpr, mCurRow * abpr);
                     mFrame->SetImageData(mRow, bpr, mCurRow * bpr);
                     nsRect r(0, (mCurRow + 1), mWidth, 1);
-                    mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+                    mObserver->OnDataAvailable(nsnull, mFrame, &r);
 
                     if ((mCurRow + 1) == mHeight) {
                         mState = RECV_DONE;
-                        return mObserver->OnStopFrame(nsnull, nsnull, mFrame);
+                        return mObserver->OnStopFrame(nsnull, mFrame);
                     }
                     mCurRow++;
                     mCurCol = 0;

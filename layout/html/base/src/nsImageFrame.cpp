@@ -189,7 +189,8 @@ nsImageFrame::GetImageLoad(imgIRequest *aRequest)
 }
 
 nsImageFrame::nsImageFrame() :
-  mIntrinsicSize(0, 0)
+  mIntrinsicSize(0, 0),
+  mPresContext(nsnull)
 {
   // Size is constrained if we have a width and height. 
   // - Set in reflow in case the attributes are changed
@@ -198,6 +199,7 @@ nsImageFrame::nsImageFrame() :
 
 nsImageFrame::~nsImageFrame()
 {
+  NS_PRECONDITION(!mPresContext, "Never got destroyed properly!");
 }
 
 NS_IMETHODIMP
@@ -276,20 +278,21 @@ nsImageFrame::Destroy(nsIPresContext* aPresContext)
 
   mListener = nsnull;
 
-   // check / cleanup the IconLoads singleton
-   if (mIconLoad) {
+  // check / cleanup the IconLoads singleton
+  if (mIconLoad) {
 #ifdef NOISY_ICON_LOADING
-     printf( "Releasing IconLoad (%p)\n", this);
+    printf( "Releasing IconLoad (%p)\n", this);
 #endif
-     if (mIconLoad->Release()) {
+    if (mIconLoad->Release()) {
 #ifdef NOISY_ICON_LOADING
-       printf( "Deleting IconLoad (%p)\n", this);
+      printf( "Deleting IconLoad (%p)\n", this);
 #endif
-       delete mIconLoad;
-       mIconLoad = nsnull;
-     }
-   }
- 
+      delete mIconLoad;
+      mIconLoad = nsnull;
+    }
+  }
+
+  mPresContext = nsnull;
 
   return nsSplittableFrame::Destroy(aPresContext);
 }
@@ -303,8 +306,11 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
                    nsStyleContext*  aContext,
                    nsIFrame*        aPrevInFlow)
 {
+  mPresContext = aPresContext;
+  
   nsresult  rv = nsSplittableFrame::Init(aPresContext, aContent, aParent,
                                          aContext, aPrevInFlow);
+
   // See if we have a SRC attribute
   nsAutoString src;
   nsresult ca;
@@ -335,14 +341,16 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
 }
 
 
-NS_IMETHODIMP nsImageFrame::OnStartDecode(imgIRequest *aRequest, nsIPresContext *aPresContext)
+NS_IMETHODIMP nsImageFrame::OnStartDecode(imgIRequest *aRequest)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresContext *aPresContext, imgIContainer *aImage)
+NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest,
+                                             imgIContainer *aImage)
 {
   if (!aImage) return NS_ERROR_INVALID_ARG;
+  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED);  // why are we bothering?
 
   mState |= IMAGE_INITIALLOADCOMPLETED;
 
@@ -363,7 +371,7 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
      *   one loop = 2
      */
     PRUint16 animateMode = imgIContainer::kNormalAnimMode; //default value
-    nsresult rv = aPresContext->GetImageAnimationMode(&animateMode);
+    nsresult rv = mPresContext->GetImageAnimationMode(&animateMode);
     if (NS_SUCCEEDED(rv))
       aImage->SetAnimationMode(animateMode);
   }
@@ -373,7 +381,7 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
   aImage->GetHeight(&h);
 
   float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
+  mPresContext->GetPixelsToTwips(&p2t);
 
   nsSize newsize(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
 
@@ -386,7 +394,7 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
 
     if (!(mState & IMAGE_SIZECONSTRAINED)) {
       nsCOMPtr<nsIPresShell> presShell;
-      aPresContext->GetShell(getter_AddRefs(presShell));
+      mPresContext->GetShell(getter_AddRefs(presShell));
       NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
       NS_ASSERTION(presShell, "No PresShell.");
       if (mParent && presShell && (mState & IMAGE_GOTINITIALREFLOW) && whichLoad == 0) { // don't reflow if we havn't gotten the inital reflow yet
@@ -399,12 +407,15 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageFrame::OnStartFrame(imgIRequest *aRequest, nsIPresContext *aPresContext, gfxIImageFrame *aFrame)
+NS_IMETHODIMP nsImageFrame::OnStartFrame(imgIRequest *aRequest,
+                                         gfxIImageFrame *aFrame)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContext *aPresContext, gfxIImageFrame *aFrame, const nsRect *aRect)
+NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
+                                            gfxIImageFrame *aFrame,
+                                            const nsRect *aRect)
 {
   // XXX do we need to make sure that the reflow from the OnStartContainer has been
   // processed before we start calling invalidate
@@ -412,10 +423,12 @@ NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContex
   if (!aRect)
     return NS_ERROR_NULL_POINTER;
 
+  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED);  // why are we bothering?
+
   // handle iconLoads first...
   if (HandleIconLoads(aRequest, PR_FALSE)) {
     if (!aRect->IsEmpty()) {
-      Invalidate(aPresContext, *aRect, PR_FALSE);
+      Invalidate(mPresContext, *aRect, PR_FALSE);
     }
     return NS_OK;
   }
@@ -429,7 +442,7 @@ NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContex
   nsRect r(aRect->x, aRect->y, aRect->width, aRect->height);
 
   float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
+  mPresContext->GetPixelsToTwips(&p2t);
   r.x = NSIntPixelsToTwips(r.x, p2t);
   r.y = NSIntPixelsToTwips(r.y, p2t);
   r.width = NSIntPixelsToTwips(r.width, p2t);
@@ -441,17 +454,19 @@ NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContex
   r.y += mBorderPadding.top;
 
   if (whichLoad == 0 && !r.IsEmpty())
-    Invalidate(aPresContext, r, PR_FALSE);
+    Invalidate(mPresContext, r, PR_FALSE);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageFrame::OnStopFrame(imgIRequest *aRequest, nsIPresContext *aPresContext, gfxIImageFrame *aFrame)
+NS_IMETHODIMP nsImageFrame::OnStopFrame(imgIRequest *aRequest,
+                                        gfxIImageFrame *aFrame)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageFrame::OnStopContainer(imgIRequest *aRequest, nsIPresContext *aPresContext, imgIContainer *aImage)
+NS_IMETHODIMP nsImageFrame::OnStopContainer(imgIRequest *aRequest,
+                                            imgIContainer *aImage)
 {
   return NS_OK;
 }
@@ -595,10 +610,15 @@ nsImageFrame::FireDOMEvent(PRUint32 aMessage)
 }
 
 
-NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *aPresContext, nsresult aStatus, const PRUnichar *aStatusArg)
+NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest,
+                                         nsresult aStatus,
+                                         const PRUnichar *aStatusArg)
 {
+  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED);  // why are we bothering?
+
   nsCOMPtr<nsIPresShell> presShell;
-  aPresContext->GetShell(getter_AddRefs(presShell));
+  mPresContext->GetShell(getter_AddRefs(presShell));
+  NS_ASSERTION(presShell, "No PresShell.");
 
   // check to see if an image error occurred
   PRBool imageFailedToLoad = PR_FALSE;
@@ -635,7 +655,7 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
 
     if (!(mState & IMAGE_SIZECONSTRAINED) && (mLoads[0].mIntrinsicSize != mIntrinsicSize)) {
       nsCOMPtr<nsIPresShell> presShell;
-      aPresContext->GetShell(getter_AddRefs(presShell));
+      mPresContext->GetShell(getter_AddRefs(presShell));
       NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
       NS_ASSERTION(presShell, "No PresShell.");
       if (mParent && presShell && (mState & IMAGE_GOTINITIALREFLOW)) { // don't reflow if we havn't gotten the inital reflow yet
@@ -647,7 +667,7 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
       GetSize(s);
       nsRect r(0,0, s.width, s.height);
       if (!r.IsEmpty()) {
-        Invalidate(aPresContext, r, PR_FALSE);
+        Invalidate(mPresContext, r, PR_FALSE);
       }
     }
 
@@ -680,7 +700,7 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
         
         // check for quirks mode
         nsCompatibility mode;
-        aPresContext->GetCompatibilityMode(&mode);
+        mPresContext->GetCompatibilityMode(&mode);
         
         // check for being in Composer: if we are, we always show the size-box
         PRBool forceIcon = PR_FALSE;
@@ -703,11 +723,11 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
 
         if (!useSizedBox) {
           // let the presShell handle converting this into the inline alt text frame
-          presShell->CantRenderReplacedElement(aPresContext, this);
+          presShell->CantRenderReplacedElement(mPresContext, this);
         } else {
           // we are handling it
           // invalidate the icon area (it may change states)   
-          InvalidateIcon(aPresContext);
+          InvalidateIcon(mPresContext);
         }
       }
     }
@@ -731,7 +751,9 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageFrame::FrameChanged(imgIContainer *aContainer, nsIPresContext *aPresContext, gfxIImageFrame *aNewFrame, nsRect *aDirtyRect)
+NS_IMETHODIMP nsImageFrame::FrameChanged(imgIContainer *aContainer,
+                                         gfxIImageFrame *aNewFrame,
+                                         nsRect *aDirtyRect)
 {
   if (!mLoads[0].mRequest)
     return NS_OK; // if mLoads[0].mRequest is null, this isn't for the first one, so we don't care about it.
@@ -748,7 +770,7 @@ NS_IMETHODIMP nsImageFrame::FrameChanged(imgIContainer *aContainer, nsIPresConte
     nsRect r(*aDirtyRect);
 
     float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
+    mPresContext->GetPixelsToTwips(&p2t);
     r.x = NSIntPixelsToTwips(r.x, p2t);
     r.y = NSIntPixelsToTwips(r.y, p2t);
     r.width = NSIntPixelsToTwips(r.width, p2t);
@@ -758,7 +780,7 @@ NS_IMETHODIMP nsImageFrame::FrameChanged(imgIContainer *aContainer, nsIPresConte
     if (!r.IsEmpty()) {
       r.x += mBorderPadding.left;
       r.y += mBorderPadding.top;
-      Invalidate(aPresContext, r, PR_FALSE);
+      Invalidate(mPresContext, r, PR_FALSE);
     }
   }
   return NS_OK;
@@ -1827,7 +1849,7 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));
     mState |= NS_FRAME_IS_DIRTY;
-	  mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
+    mParent->ReflowDirtyChild(presShell, (nsIFrame*) this);
     // NOTE: mSizeFixed will be updated in Reflow...
   }
 
@@ -2011,7 +2033,8 @@ nsImageFrame::RealLoadImage(const nsAString& aSpec, nsIPresContext *aPresContext
   }
 
   nsCOMPtr<imgIRequest> tempRequest;
-  return il->LoadImage(uri, baseURI, documentURI, loadGroup, mListener, aPresContext, loadFlags, nsnull, aRequest, getter_AddRefs(tempRequest));
+  return il->LoadImage(uri, baseURI, documentURI, loadGroup, mListener, doc,
+                       loadFlags, nsnull, aRequest, getter_AddRefs(tempRequest));
 }
 
 #define INTERNAL_GOPHER_LENGTH 16 /* "internal-gopher-" length */
@@ -2289,99 +2312,77 @@ nsImageListener::~nsImageListener()
 {
 }
 
-NS_IMETHODIMP nsImageListener::OnStartDecode(imgIRequest *aRequest, nsISupports *aContext)
+NS_IMETHODIMP nsImageListener::OnStartDecode(imgIRequest *aRequest)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->OnStartDecode(aRequest, pc);
+  return mFrame->OnStartDecode(aRequest);
 }
 
-NS_IMETHODIMP nsImageListener::OnStartContainer(imgIRequest *aRequest, nsISupports *aContext, imgIContainer *aImage)
+NS_IMETHODIMP nsImageListener::OnStartContainer(imgIRequest *aRequest,
+                                                imgIContainer *aImage)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->OnStartContainer(aRequest, pc, aImage);
+  return mFrame->OnStartContainer(aRequest, aImage);
 }
 
-NS_IMETHODIMP nsImageListener::OnStartFrame(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame)
+NS_IMETHODIMP nsImageListener::OnStartFrame(imgIRequest *aRequest,
+                                            gfxIImageFrame *aFrame)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->OnStartFrame(aRequest, pc, aFrame);
+  return mFrame->OnStartFrame(aRequest, aFrame);
 }
 
-NS_IMETHODIMP nsImageListener::OnDataAvailable(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame, const nsRect *aRect)
+NS_IMETHODIMP nsImageListener::OnDataAvailable(imgIRequest *aRequest,
+                                               gfxIImageFrame *aFrame,
+                                               const nsRect *aRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->OnDataAvailable(aRequest, pc, aFrame, aRect);
+  return mFrame->OnDataAvailable(aRequest, aFrame, aRect);
 }
 
-NS_IMETHODIMP nsImageListener::OnStopFrame(imgIRequest *aRequest, nsISupports *aContext, gfxIImageFrame *aFrame)
+NS_IMETHODIMP nsImageListener::OnStopFrame(imgIRequest *aRequest,
+                                           gfxIImageFrame *aFrame)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->OnStopFrame(aRequest, pc, aFrame);
+  return mFrame->OnStopFrame(aRequest, aFrame);
 }
 
-NS_IMETHODIMP nsImageListener::OnStopContainer(imgIRequest *aRequest, nsISupports *aContext, imgIContainer *aImage)
+NS_IMETHODIMP nsImageListener::OnStopContainer(imgIRequest *aRequest,
+                                               imgIContainer *aImage)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->OnStopContainer(aRequest, pc, aImage);
+  return mFrame->OnStopContainer(aRequest, aImage);
 }
 
-NS_IMETHODIMP nsImageListener::OnStopDecode(imgIRequest *aRequest, nsISupports *aContext, nsresult status, const PRUnichar *statusArg)
+NS_IMETHODIMP nsImageListener::OnStopDecode(imgIRequest *aRequest,
+                                            nsresult status,
+                                            const PRUnichar *statusArg)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->OnStopDecode(aRequest, pc, status, statusArg);
+  return mFrame->OnStopDecode(aRequest, status, statusArg);
 }
 
-NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer, nsISupports *aContext, gfxIImageFrame *newframe, nsRect * dirtyRect)
+NS_IMETHODIMP nsImageListener::FrameChanged(imgIContainer *aContainer,
+                                            gfxIImageFrame *newframe,
+                                            nsRect * dirtyRect)
 {
   if (!mFrame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(aContext));
-
-  NS_ASSERTION(pc, "not a pres context!");
-
-  return mFrame->FrameChanged(aContainer, pc, newframe, dirtyRect);
+  return mFrame->FrameChanged(aContainer, newframe, dirtyRect);
 }
 

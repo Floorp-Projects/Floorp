@@ -108,14 +108,20 @@ public:
                     nsFramePaintLayer    aWhichLayer,
                     PRUint32             aFlags = 0);
 
-  NS_IMETHOD OnStartDecode(imgIRequest *request, nsIPresContext *cx);
-  NS_IMETHOD OnStartContainer(imgIRequest *request, nsIPresContext *cx, imgIContainer *image);
-  NS_IMETHOD OnStartFrame(imgIRequest *request, nsIPresContext *cx, gfxIImageFrame *frame);
-  NS_IMETHOD OnDataAvailable(imgIRequest *request, nsIPresContext *cx, gfxIImageFrame *frame, const nsRect * rect);
-  NS_IMETHOD OnStopFrame(imgIRequest *request, nsIPresContext *cx, gfxIImageFrame *frame);
-  NS_IMETHOD OnStopContainer(imgIRequest *request, nsIPresContext *cx, imgIContainer *image);
-  NS_IMETHOD OnStopDecode(imgIRequest *request, nsIPresContext *cx, nsresult status, const PRUnichar *statusArg);
-  NS_IMETHOD FrameChanged(imgIContainer *container, nsIPresContext *cx, gfxIImageFrame *newframe, nsRect * dirtyRect);
+  NS_IMETHOD OnStartDecode(imgIRequest *request);
+  NS_IMETHOD OnStartContainer(imgIRequest *request, imgIContainer *image);
+  NS_IMETHOD OnStartFrame(imgIRequest *request, gfxIImageFrame *frame);
+  NS_IMETHOD OnDataAvailable(imgIRequest *request,
+                             gfxIImageFrame *frame,
+                             const nsRect * rect);
+  NS_IMETHOD OnStopFrame(imgIRequest *request, gfxIImageFrame *frame);
+  NS_IMETHOD OnStopContainer(imgIRequest *request, imgIContainer *image);
+  NS_IMETHOD OnStopDecode(imgIRequest *request,
+                          nsresult status,
+                          const PRUnichar *statusArg);
+  NS_IMETHOD FrameChanged(imgIContainer *container,
+                          gfxIImageFrame *newframe,
+                          nsRect * dirtyRect);
 
   virtual ~nsImageBoxFrame();
 protected:
@@ -148,6 +154,7 @@ private:
   PRPackedBool mUseSrcAttr; // Whether or not the image src comes from an attribute.
   PRPackedBool mSizeFrozen;
   PRPackedBool mHasImage;
+  PRPackedBool mSuppressStyleCheck;
   
   nsRect mSubRect; // If set, indicates that only the portion of the image specified by the rect should be used.
 
@@ -155,7 +162,8 @@ private:
   PRInt32 mLoadFlags;
 
   nsSize mImageSize;
-  PRBool mSuppressStyleCheck;
+
+  nsIPresContext* mPresContext; // weak ptr
 }; // class nsImageBoxFrame
 
 #endif /* nsImageBoxFrame_h___ */

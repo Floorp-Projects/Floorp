@@ -656,22 +656,20 @@ nsHTMLImageElement::GetSrc(nsAString& aSrc)
 
 
 NS_IMETHODIMP
-nsHTMLImageElement::OnStartDecode(imgIRequest *request, nsISupports *cx)
+nsHTMLImageElement::OnStartDecode(imgIRequest *request)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::OnStartContainer(imgIRequest *request, nsISupports *cx,
+nsHTMLImageElement::OnStartContainer(imgIRequest *request,
                                      imgIContainer *image)
 {
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(cx));
-
-  NS_ASSERTION(pc, "not a prescontext!");
-
-  float t2p;
-  pc->GetTwipsToPixels(&t2p);
-
+  // XXX Hack.  This code only runs when Image() objects are created
+  // via script; we set the attributes to allow scripts to access
+  // .width/.height.  Once image loading is moved to content so that
+  // we have direct access to the imgIRequest and imgIContainer from
+  // GetHeight and GetWidth, this code can all go away.
   nsSize size;
   image->GetWidth(&size.width);
   image->GetHeight(&size.height);
@@ -688,60 +686,84 @@ nsHTMLImageElement::OnStartContainer(imgIRequest *request, nsISupports *cx,
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::OnStartFrame(imgIRequest *request, nsISupports *cx,
+nsHTMLImageElement::OnStartFrame(imgIRequest *request,
                                  gfxIImageFrame *frame)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::OnDataAvailable(imgIRequest *request, nsISupports *cx,
-                                    gfxIImageFrame *frame, const nsRect * rect)
+nsHTMLImageElement::OnDataAvailable(imgIRequest *request,
+                                    gfxIImageFrame *frame,
+                                    const nsRect * rect)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::OnStopFrame(imgIRequest *request, nsISupports *cx,
+nsHTMLImageElement::OnStopFrame(imgIRequest *request,
                                 gfxIImageFrame *frame)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::OnStopContainer(imgIRequest *request, nsISupports *cx,
+nsHTMLImageElement::OnStopContainer(imgIRequest *request,
                                     imgIContainer *image)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::OnStopDecode(imgIRequest *request, nsISupports *cx,
-                                 nsresult status, const PRUnichar *statusArg)
+nsHTMLImageElement::OnStopDecode(imgIRequest *request,
+                                 nsresult status,
+                                 const PRUnichar *statusArg)
 {
-  nsCOMPtr<nsIPresContext> pc(do_QueryInterface(cx));
-
-  NS_ASSERTION(pc, "not a prescontext!");
-
   // We set mRequest = nsnull to indicate that we're complete.
   mRequest = nsnull;
 
-  // Fire the onload event.
-  nsEventStatus estatus = nsEventStatus_eIgnore;
-  nsEvent event;
-  event.eventStructType = NS_EVENT;
+  // XXX This code only runs when Image() objects are created from
+  // script.  So we can get away with this GetShellAt(0) business.
 
-  if (NS_SUCCEEDED(status))
-    event.message = NS_IMAGE_LOAD;
-  else
-    event.message = NS_IMAGE_ERROR;
+  // XXX Why are we doing this rigmarole anyway instead of targeting
+  // an honest-to-god "load" or "error" event at the image node using
+  // the standard DOM apis?
 
-  HandleDOMEvent(pc, &event, nsnull, NS_EVENT_FLAG_INIT, &estatus);
+  nsCOMPtr<nsIDocument> doc = mDocument;
+  if (!doc) {
+    mNodeInfo->GetDocument(*getter_AddRefs(doc));
+  }
+  
+  if (doc) {
+    nsCOMPtr<nsIPresShell> shell;
+    doc->GetShellAt(0, getter_AddRefs(shell));
+    if (shell) {
+      nsCOMPtr<nsIPresContext> context;
+      shell->GetPresContext(getter_AddRefs(context));
+
+      if (context) {
+
+        // Fire the onload event.
+        nsEventStatus estatus = nsEventStatus_eIgnore;
+        nsEvent event;
+        event.eventStructType = NS_EVENT;
+
+        if (NS_SUCCEEDED(status))
+          event.message = NS_IMAGE_LOAD;
+        else
+          event.message = NS_IMAGE_ERROR;
+
+        HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &estatus);
+      }
+    }
+  }
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLImageElement::FrameChanged(imgIContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
+NS_IMETHODIMP nsHTMLImageElement::FrameChanged(imgIContainer *container,
+                                               gfxIImageFrame *newframe,
+                                               nsRect * dirtyRect)
 {
   return NS_OK;
 }
@@ -758,77 +780,62 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
     nsCOMPtr<nsIDocument> doc;
     mNodeInfo->GetDocument(*getter_AddRefs(doc));
 
-    nsCOMPtr<nsIPresShell> shell;
-
-    doc->GetShellAt(0, getter_AddRefs(shell));
-    if (shell) {
-      nsCOMPtr<nsIPresContext> context;
-
-      result = shell->GetPresContext(getter_AddRefs(context));
-      if (context) {
-        nsAutoString url;
-        if (aBaseURL) {
-          result = NS_MakeAbsoluteURI(url, aSrc, aBaseURL);
-          if (NS_FAILED(result)) {
-            url.Assign(aSrc);
-          }
-        }
-        else {
+    if (doc) {
+      nsAutoString url;
+      if (aBaseURL) {
+        result = NS_MakeAbsoluteURI(url, aSrc, aBaseURL);
+        if (NS_FAILED(result)) {
           url.Assign(aSrc);
         }
-
-        nsCOMPtr<nsIURI> uri;
-        result = NS_NewURI(getter_AddRefs(uri), aSrc, nsnull, aBaseURL);
-        if (NS_FAILED(result)) return result;
-
-        nsCOMPtr<nsIDocument> document;
-        result = shell->GetDocument(getter_AddRefs(document));
-        if (NS_FAILED(result)) return result;
-
-        nsCOMPtr<nsIScriptGlobalObject> globalObject;
-        result = document->GetScriptGlobalObject(getter_AddRefs(globalObject));
-        if (NS_FAILED(result)) return result;
-
-        nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalObject));
-
-        PRBool shouldLoad = PR_TRUE;
-        result =
-          NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
-                                    uri,
-                                    NS_STATIC_CAST(nsIDOMHTMLImageElement *,
-                                                   this),
-                                    domWin, &shouldLoad);
-        if (NS_SUCCEEDED(result) && !shouldLoad) {
-          return NS_OK;
-        }
-
-        // If we have a loader we're in the middle of loading a image,
-        // we'll cancel that load and start a new one.
-
-        // if (mRequest) {
-        //   mRequest->Cancel() ?? cancel the load?
-        // }
-
-        nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
-        if (!il) {
-          return NS_ERROR_FAILURE;
-        }
-
-        nsCOMPtr<nsIDocument> doc;
-        nsCOMPtr<nsILoadGroup> loadGroup;
-        nsCOMPtr<nsIURI> documentURI;
-        shell->GetDocument(getter_AddRefs(doc));
-        if (doc) {
-          doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-
-          // Get the documment URI for the referrer.
-          doc->GetDocumentURL(getter_AddRefs(documentURI));
-        }
-
-        // XXX: initialDocumentURI is NULL!
-        il->LoadImage(uri, nsnull, documentURI, loadGroup, this, context, nsIRequest::LOAD_NORMAL,
-                      nsnull, nsnull, getter_AddRefs(mRequest));
       }
+      else {
+        url.Assign(aSrc);
+      }
+
+      nsCOMPtr<nsIURI> uri;
+      result = NS_NewURI(getter_AddRefs(uri), aSrc, nsnull, aBaseURL);
+      if (NS_FAILED(result)) return result;
+
+      nsCOMPtr<nsIScriptGlobalObject> globalObject;
+      result = doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+      if (NS_FAILED(result)) return result;
+
+      nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalObject));
+
+      PRBool shouldLoad = PR_TRUE;
+      result =
+        NS_CheckContentLoadPolicy(nsIContentPolicy::IMAGE,
+                                  uri,
+                                  NS_STATIC_CAST(nsIDOMHTMLImageElement *,
+                                                 this),
+                                  domWin, &shouldLoad);
+      if (NS_SUCCEEDED(result) && !shouldLoad) {
+        return NS_OK;
+      }
+
+      // If we have a loader we're in the middle of loading a image,
+      // we'll cancel that load and start a new one.
+
+      // if (mRequest) {
+      //   mRequest->Cancel() ?? cancel the load?
+      // }
+
+      nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
+      if (!il) {
+        return NS_ERROR_FAILURE;
+      }
+
+      nsCOMPtr<nsILoadGroup> loadGroup;
+      nsCOMPtr<nsIURI> documentURI;
+      doc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+
+      // Get the documment URI for the referrer.
+      doc->GetDocumentURL(getter_AddRefs(documentURI));
+
+      // XXX: initialDocumentURI is NULL!
+      il->LoadImage(uri, nsnull, documentURI, loadGroup, this, doc,
+                    nsIRequest::LOAD_NORMAL,
+                    nsnull, nsnull, getter_AddRefs(mRequest));
     }
   } else {
     nsIImageFrame* imageFrame;

@@ -159,14 +159,20 @@ public:
 
   NS_IMETHOD IsImageComplete(PRBool* aComplete);
 
-  NS_IMETHOD OnStartDecode(imgIRequest *aRequest, nsIPresContext *aCX);
-  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, nsIPresContext *aCX, imgIContainer *aImage);
-  NS_IMETHOD OnStartFrame(imgIRequest *aRequest, nsIPresContext *aCX, gfxIImageFrame *aFrame);
-  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest, nsIPresContext *aCX, gfxIImageFrame *aFrame, const nsRect * rect);
-  NS_IMETHOD OnStopFrame(imgIRequest *aRequest, nsIPresContext *aCX, gfxIImageFrame *aFrame);
-  NS_IMETHOD OnStopContainer(imgIRequest *aRequest, nsIPresContext *aCX, imgIContainer *aImage);
-  NS_IMETHOD OnStopDecode(imgIRequest *aRequest, nsIPresContext *aCX, nsresult aStatus, const PRUnichar *aStatusArg);
-  NS_IMETHOD FrameChanged(imgIContainer *aContainer, nsIPresContext *aCX, gfxIImageFrame *aNewframe, nsRect *aDirtyRect);
+  NS_IMETHOD OnStartDecode(imgIRequest *aRequest);
+  NS_IMETHOD OnStartContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  NS_IMETHOD OnStartFrame(imgIRequest *aRequest, gfxIImageFrame *aFrame);
+  NS_IMETHOD OnDataAvailable(imgIRequest *aRequest,
+                             gfxIImageFrame *aFrame,
+                             const nsRect * rect);
+  NS_IMETHOD OnStopFrame(imgIRequest *aRequest, gfxIImageFrame *aFrame);
+  NS_IMETHOD OnStopContainer(imgIRequest *aRequest, imgIContainer *aImage);
+  NS_IMETHOD OnStopDecode(imgIRequest *aRequest,
+                          nsresult aStatus,
+                          const PRUnichar *aStatusArg);
+  NS_IMETHOD FrameChanged(imgIContainer *aContainer,
+                          gfxIImageFrame *aNewframe,
+                          nsRect *aDirtyRect);
 
 protected:
   // nsISupports
@@ -247,8 +253,10 @@ private:
   nsSize mIntrinsicSize;
 
   nsMargin            mBorderPadding;
-  PRUint32            mNaturalImageWidth, 
-                      mNaturalImageHeight;
+  PRUint32            mNaturalImageWidth;
+  PRUint32            mNaturalImageHeight;
+
+  nsIPresContext*     mPresContext;  // weak ref
 
   /* loading / broken image icon support */
 

@@ -68,9 +68,9 @@ NS_IMETHODIMP inBitmapDecoder::Close()
 {
   if (mObserver) 
   {
-    mObserver->OnStopFrame(nsnull, nsnull, mFrame);
-    mObserver->OnStopContainer(nsnull, nsnull, mImage);
-    mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+    mObserver->OnStopFrame(nsnull, mFrame);
+    mObserver->OnStopContainer(nsnull, mImage);
+    mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
   }
   
   return NS_OK;
@@ -96,7 +96,7 @@ NS_IMETHODIMP inBitmapDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, 
 
   if (NS_FAILED(rv)) return rv;
 
-  mObserver->OnStartDecode(nsnull, nsnull);
+  mObserver->OnStartDecode(nsnull);
   
   PRUint32* wbuf = (PRUint32*) data;
   PRInt32 w, h;
@@ -107,12 +107,12 @@ NS_IMETHODIMP inBitmapDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, 
 
   mImage->Init(w, h, mObserver);
   if (mObserver)
-    mObserver->OnStartContainer(nsnull, nsnull, mImage);
+    mObserver->OnStartContainer(nsnull, mImage);
 
   mFrame->Init(0, 0, w, h, gfxIFormats::RGB, 24);
   mImage->AppendFrame(mFrame);
   if (mObserver)
-    mObserver->OnStartFrame(nsnull, nsnull, mFrame);
+    mObserver->OnStartFrame(nsnull, mFrame);
   
   PRUint32 bpr;
   nscoord width, height;
@@ -130,7 +130,7 @@ NS_IMETHODIMP inBitmapDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, 
     mFrame->SetImageData(line, realBpr, (rownum++)*bpr);
 
     nsRect r(0, rownum, width, 1);
-    mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+    mObserver->OnDataAvailable(nsnull, mFrame, &r);
     ++i;
   } while(rownum < height);
 

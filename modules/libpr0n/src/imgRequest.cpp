@@ -322,8 +322,10 @@ NS_IMETHODIMP imgRequest::GetIsMultiPartChannel(PRBool *aIsMultiPartChannel)
 
 /** imgIContainerObserver methods **/
 
-/* [noscript] void frameChanged (in imgIContainer container, in nsISupports cx, in gfxIImageFrame newframe, in nsRect dirtyRect); */
-NS_IMETHODIMP imgRequest::FrameChanged(imgIContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
+/* [noscript] void frameChanged (in imgIContainer container, in gfxIImageFrame newframe, in nsRect dirtyRect); */
+NS_IMETHODIMP imgRequest::FrameChanged(imgIContainer *container,
+                                       gfxIImageFrame *newframe,
+                                       nsRect * dirtyRect)
 {
   LOG_SCOPE(gImgLog, "imgRequest::FrameChanged");
 
@@ -343,8 +345,8 @@ NS_IMETHODIMP imgRequest::FrameChanged(imgIContainer *container, nsISupports *cx
 
 /** imgIDecoderObserver methods **/
 
-/* void onStartDecode (in imgIRequest request, in nsISupports cx); */
-NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
+/* void onStartDecode (in imgIRequest request); */
+NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStartDecode");
 
@@ -372,8 +374,8 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
   return NS_OK;
 }
 
-/* void onStartContainer (in imgIRequest request, in nsISupports cx, in imgIContainer image); */
-NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, nsISupports *cx, imgIContainer *image)
+/* void onStartContainer (in imgIRequest request, in imgIContainer image); */
+NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, imgIContainer *image)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStartContainer");
 
@@ -399,8 +401,9 @@ NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, nsISupports *cx
   return NS_OK;
 }
 
-/* void onStartFrame (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame); */
-NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
+/* void onStartFrame (in imgIRequest request, in gfxIImageFrame frame); */
+NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request,
+                                       gfxIImageFrame *frame)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStartFrame");
 
@@ -418,8 +421,10 @@ NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request, nsISupports *cx, gf
   return NS_OK;
 }
 
-/* [noscript] void onDataAvailable (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame, [const] in nsRect rect); */
-NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame, const nsRect * rect)
+/* [noscript] void onDataAvailable (in imgIRequest request, in gfxIImageFrame frame, [const] in nsRect rect); */
+NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request,
+                                          gfxIImageFrame *frame,
+                                          const nsRect * rect)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable");
 
@@ -437,8 +442,9 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx,
   return NS_OK;
 }
 
-/* void onStopFrame (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame); */
-NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
+/* void onStopFrame (in imgIRequest request, in gfxIImageFrame frame); */
+NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request,
+                                      gfxIImageFrame *frame)
 {
   NS_ASSERTION(frame, "imgRequest::OnStopFrame called with NULL frame");
   if (!frame) return NS_ERROR_UNEXPECTED;
@@ -475,8 +481,9 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
   return NS_OK;
 }
 
-/* void onStopContainer (in imgIRequest request, in nsISupports cx, in imgIContainer image); */
-NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request, nsISupports *cx, imgIContainer *image)
+/* void onStopContainer (in imgIRequest request, in imgIContainer image); */
+NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request,
+                                          imgIContainer *image)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStopContainer");
 
@@ -496,8 +503,10 @@ NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request, nsISupports *cx,
   return NS_OK;
 }
 
-/* void onStopDecode (in imgIRequest request, in nsISupports cx, in nsresult status, in wstring statusArg); */
-NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest, nsISupports *aCX, nsresult aStatus, const PRUnichar *aStatusArg)
+/* void onStopDecode (in imgIRequest request, in nsresult status, in wstring statusArg); */
+NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *aRequest,
+                                       nsresult aStatus,
+                                       const PRUnichar *aStatusArg)
 {
   LOG_SCOPE(gImgLog, "imgRequest::OnStopDecode");
 
@@ -671,7 +680,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   // if there was an error loading the image, (mState & onStopDecode) won't be true.
   // Send an onStopDecode message
   if (!(mState & onStopDecode)) {
-    this->OnStopDecode(nsnull, nsnull, status, nsnull);
+    this->OnStopDecode(nsnull, status, nsnull);
   }
 
   /* notify the kids */

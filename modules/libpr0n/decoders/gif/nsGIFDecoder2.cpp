@@ -158,23 +158,23 @@ nsGIFDecoder2::FlushImageData()
       if (remainingRows) {
         nsRect r(0, frameRect.y + mLastFlushedRow + 1,
                  imgWidth, remainingRows);
-        mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
+        mObserver->OnDataAvailable(nsnull, mImageFrame, &r);
       }    
     }
     break;
   
     case 1: {  // one pass on - need to handle bottom & top rects
       nsRect r(0, frameRect.y, imgWidth, mCurrentRow + 1);
-      mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
+      mObserver->OnDataAvailable(nsnull, mImageFrame, &r);
       nsRect r2(0, frameRect.y + mLastFlushedRow + 1,
                 imgWidth, frameRect.height - mLastFlushedRow - 1);
-      mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r2);
+      mObserver->OnDataAvailable(nsnull, mImageFrame, &r2);
     }
     break;
 
     default: {  // more than one pass on - push the whole frame
       nsRect r(0, frameRect.y, imgWidth, frameRect.height);
-      mObserver->OnDataAvailable(nsnull, nsnull, mImageFrame, &r);
+      mObserver->OnDataAvailable(nsnull, mImageFrame, &r);
     }
   }
 
@@ -236,12 +236,12 @@ int nsGIFDecoder2::BeginGIF(
   decoder->mBackgroundRGBIndex = aBackgroundRGBIndex;
 
   if (decoder->mObserver)
-    decoder->mObserver->OnStartDecode(nsnull, nsnull);
+    decoder->mObserver->OnStartDecode(nsnull);
 
   decoder->mImageContainer->Init(aLogicalScreenWidth, aLogicalScreenHeight, decoder->mObserver);
 
   if (decoder->mObserver)
-    decoder->mObserver->OnStartContainer(nsnull, nsnull, decoder->mImageContainer);
+    decoder->mObserver->OnStartContainer(nsnull, decoder->mImageContainer);
 
   return 0;
 }
@@ -253,8 +253,8 @@ int nsGIFDecoder2::EndGIF(
 {
   nsGIFDecoder2 *decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
   if (decoder->mObserver) {
-    decoder->mObserver->OnStopContainer(nsnull, nsnull, decoder->mImageContainer);
-    decoder->mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+    decoder->mObserver->OnStopContainer(nsnull, decoder->mImageContainer);
+    decoder->mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
   }
   
   decoder->mImageContainer->SetLoopCount(aAnimationLoopCount);
@@ -287,7 +287,7 @@ int nsGIFDecoder2::BeginImageFrame(
     decoder->mImageContainer->GetWidth(&imgWidth);
     if (aFrameYOffset > 0) {
       nsRect r(0, 0, imgWidth, aFrameYOffset);
-      decoder->mObserver->OnDataAvailable(nsnull, nsnull, decoder->mImageFrame, &r);
+      decoder->mObserver->OnDataAvailable(nsnull, decoder->mImageFrame, &r);
     }
   }
 
@@ -335,14 +335,14 @@ int nsGIFDecoder2::EndImageFrame(
         decoder->mImageContainer->GetWidth(&imgWidth);
 
         nsRect r(0, realFrameHeight, imgWidth, imgHeight - realFrameHeight);
-        decoder->mObserver->OnDataAvailable(nsnull, nsnull, decoder->mImageFrame, &r);
+        decoder->mObserver->OnDataAvailable(nsnull, decoder->mImageFrame, &r);
       }
     }
 
     decoder->mCurrentRow = decoder->mLastFlushedRow = -1;
     decoder->mCurrentPass = decoder->mLastFlushedPass = 0;
 
-    decoder->mObserver->OnStopFrame(nsnull, nsnull, decoder->mImageFrame);
+    decoder->mObserver->OnStopFrame(nsnull, decoder->mImageFrame);
   }
 
   decoder->mImageFrame = nsnull;
@@ -391,7 +391,7 @@ int nsGIFDecoder2::HaveDecodedRow(
     decoder->mImageContainer->AppendFrame(decoder->mImageFrame);
 
     if (decoder->mObserver)
-      decoder->mObserver->OnStartFrame(nsnull, nsnull, decoder->mImageFrame);
+      decoder->mObserver->OnStartFrame(nsnull, decoder->mImageFrame);
 
     decoder->mImageFrame->GetImageBytesPerRow(&bpr);
     decoder->mImageFrame->GetAlphaBytesPerRow(&abpr);

@@ -326,7 +326,7 @@ il_mng_processheader(mng_handle handle, mng_uint32 width, mng_uint32 height)
   nsMNGDecoder* decoder = container->mDecoder;
 
   if (decoder->mObserver)
-    decoder->mObserver->OnStartDecode(nsnull, nsnull);
+    decoder->mObserver->OnStartDecode(nsnull);
 
   if(decoder->mImageContainer)
     decoder->mImageContainer->Init(width, 
@@ -335,7 +335,6 @@ il_mng_processheader(mng_handle handle, mng_uint32 width, mng_uint32 height)
 
   if (decoder->mObserver)
     decoder->mObserver->OnStartContainer(nsnull, 
-                                         nsnull, 
                                          decoder->mImageContainer);
 
   // initalize the frame and append it to the container
@@ -349,7 +348,7 @@ il_mng_processheader(mng_handle handle, mng_uint32 width, mng_uint32 height)
   decoder->mImageContainer->AppendFrame(decoder->mImageFrame);
     
   if (decoder->mObserver)
-    decoder->mObserver->OnStartFrame(nsnull, nsnull, decoder->mImageFrame);
+    decoder->mObserver->OnStartFrame(nsnull, decoder->mImageFrame);
 
   container->mFrame->GetImageBytesPerRow(&container->mByteWidth);
   container->mFrame->GetAlphaBytesPerRow(&container->mByteWidthAlpha);
@@ -444,7 +443,7 @@ il_mng_refresh(mng_handle handle,
   nsCOMPtr<imgIDecoderObserver>
     ob(do_QueryReferent(container->mObserver));
   if (ob)
-    ob->OnDataAvailable(nsnull, nsnull, container->mFrame, &r);
+    ob->OnDataAvailable(nsnull, container->mFrame, &r);
 
   nsCOMPtr<imgIContainerObserver> 
     observer(do_QueryReferent(container->mObserver));
@@ -454,7 +453,7 @@ il_mng_refresh(mng_handle handle,
     container->mFrame->GetRect(dirtyRect);
 
     // do notification to FE to draw this frame
-    observer->FrameChanged(container, nsnull, container->mFrame, &dirtyRect);
+    observer->FrameChanged(container, container->mFrame, &dirtyRect);
   }
 
   return MNG_TRUE;

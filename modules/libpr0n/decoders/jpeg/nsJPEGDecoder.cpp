@@ -247,7 +247,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     /* Used to set up image size so arrays can be allocated */
     jpeg_calc_output_dimensions(&mInfo);
 
-    mObserver->OnStartDecode(nsnull, nsnull);
+    mObserver->OnStartDecode(nsnull);
 
     /* we only support jpegs with 1 or 3 components currently. */
     if (mInfo.output_components != 1 &&
@@ -281,7 +281,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
       mImage->Init(mInfo.image_width, mInfo.image_height, mObserver);
     }
 
-    mObserver->OnStartContainer(nsnull, nsnull, mImage);
+    mObserver->OnStartContainer(nsnull, mImage);
 
     mImage->GetFrameAt(0, getter_AddRefs(mFrame));
 
@@ -320,7 +320,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
       mImage->AppendFrame(mFrame);
     }      
 
-    mObserver->OnStartFrame(nsnull, nsnull, mFrame);
+    mObserver->OnStartFrame(nsnull, mFrame);
 
     /*
      * Make a one-row-high sample array that will go away
@@ -577,7 +577,7 @@ nsJPEGDecoder::OutputScanlines()
 
   if (top != mInfo.output_scanline) {
       nsRect r(0, top, mInfo.output_width, mInfo.output_scanline-top);
-      mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+      mObserver->OnDataAvailable(nsnull, mFrame, &r);
   }
 
   return rv;
@@ -822,9 +822,9 @@ term_source (j_decompress_ptr jd)
   decoder_source_mgr *src = (decoder_source_mgr *)jd->src;
 
   if (src->decoder->mObserver) {
-    src->decoder->mObserver->OnStopFrame(nsnull, nsnull, src->decoder->mFrame);
-    src->decoder->mObserver->OnStopContainer(nsnull, nsnull, src->decoder->mImage);
-    src->decoder->mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+    src->decoder->mObserver->OnStopFrame(nsnull, src->decoder->mFrame);
+    src->decoder->mObserver->OnStopContainer(nsnull, src->decoder->mImage);
+    src->decoder->mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
   }
 
   PRBool isMutable = PR_FALSE;

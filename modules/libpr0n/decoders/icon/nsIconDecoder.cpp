@@ -67,9 +67,9 @@ NS_IMETHODIMP nsIconDecoder::Close()
 {
   if (mObserver) 
   {
-    mObserver->OnStopFrame(nsnull, nsnull, mFrame);
-    mObserver->OnStopContainer(nsnull, nsnull, mImage);
-    mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+    mObserver->OnStopFrame(nsnull, mFrame);
+    mObserver->OnStopContainer(nsnull, mImage);
+    mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
   }
   
   return NS_OK;
@@ -97,7 +97,7 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
   // since WriteFrom is only called once, go ahead and fire the on start notifications..
 
-  mObserver->OnStartDecode(nsnull, nsnull);
+  mObserver->OnStartDecode(nsnull);
   PRUint32 i = 0;
   // Read size
   PRInt32 w, h;
@@ -110,7 +110,7 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
   mImage->Init(w, h, mObserver);
   if (mObserver)
-    mObserver->OnStartContainer(nsnull, nsnull, mImage);
+    mObserver->OnStartContainer(nsnull, mImage);
 
   rv = mFrame->Init(0, 0, w, h, gfxIFormats::RGB_A1, 24);
   if (NS_FAILED(rv))
@@ -118,7 +118,7 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
 
   mImage->AppendFrame(mFrame);
   if (mObserver)
-    mObserver->OnStartFrame(nsnull, nsnull, mFrame);
+    mObserver->OnStartFrame(nsnull, mFrame);
   
   PRUint32 bpr, abpr;
   nscoord width, height;
@@ -138,7 +138,7 @@ NS_IMETHODIMP nsIconDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     mFrame->SetImageData(line, bpr, (rownum++)*bpr);
 
     nsRect r(0, rownum, width, 1);
-    mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+    mObserver->OnDataAvailable(nsnull, mFrame, &r);
 
     wroteLen += bpr ;
     i++;
