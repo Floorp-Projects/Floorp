@@ -212,30 +212,32 @@ nsCSSLayout::HorizontallyPlaceChildren(nsIPresContext* aCX,
                                        nscoord aLineWidth,
                                        nscoord aMaxWidth)
 {
-  PRIntn textAlign = aContainerStyle->mTextAlign;
-  nscoord dx = 0;
-  switch (textAlign) {
-  case NS_STYLE_TEXT_ALIGN_LEFT:
-  case NS_STYLE_TEXT_ALIGN_JUSTIFY:
-    // Default layout has everything aligned left
-    return;
+  if (aLineWidth < aMaxWidth) {
+    PRIntn textAlign = aContainerStyle->mTextAlign;
+    nscoord dx = 0;
+    switch (textAlign) {
+    case NS_STYLE_TEXT_ALIGN_LEFT:
+    case NS_STYLE_TEXT_ALIGN_JUSTIFY:
+      // Default layout has everything aligned left
+      return;
 
-  case NS_STYLE_TEXT_ALIGN_RIGHT:
-    dx = aMaxWidth - aLineWidth;
-    break;
+    case NS_STYLE_TEXT_ALIGN_RIGHT:
+      dx = aMaxWidth - aLineWidth;
+      break;
 
-  case NS_STYLE_TEXT_ALIGN_CENTER:
-    dx = (aMaxWidth - aLineWidth) / 2;
-    break;
-  }
+    case NS_STYLE_TEXT_ALIGN_CENTER:
+      dx = (aMaxWidth - aLineWidth) / 2;
+      break;
+    }
 
-  // Position children
-  nsPoint origin;
-  nsIFrame* kid = aFirstChild;
-  while (--aChildCount >= 0) {
-    kid->GetOrigin(origin);
-    kid->MoveTo(origin.x + dx, origin.y);
-    kid->GetNextSibling(kid);
+    // Position children
+    nsPoint origin;
+    nsIFrame* kid = aFirstChild;
+    while (--aChildCount >= 0) {
+      kid->GetOrigin(origin);
+      kid->MoveTo(origin.x + dx, origin.y);
+      kid->GetNextSibling(kid);
+    }
   }
 }
 
