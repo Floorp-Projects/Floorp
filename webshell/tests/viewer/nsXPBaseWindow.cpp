@@ -59,6 +59,8 @@
 #include <strstream.h>
 #endif
 
+#include <ctype.h> // tolower
+
 // XXX For font setting below
 #include "nsFont.h"
 //#include "nsUnitConversion.h"
@@ -618,6 +620,7 @@ NS_IMETHODIMP_(PRBool) nsXPBaseWindow::Confirm(const nsString &aText)
       return PR_FALSE;
     }
   }
+  return PR_FALSE;
 }
 
 //----------------------------------------

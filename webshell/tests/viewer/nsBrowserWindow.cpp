@@ -80,6 +80,8 @@
 #include <windows.h>
 #endif
 
+#include <ctype.h> // tolower
+
 // For Copy
 #include "nsIDOMSelection.h"
 #include "nsISelectionMgr.h"
