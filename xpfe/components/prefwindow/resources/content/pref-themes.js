@@ -182,7 +182,6 @@ function themeSelect()
     var descText = document.createTextNode(selectedItem.getAttribute("description"));
     var description = document.getElementById("description");
     var uninstallButton = document.getElementById("uninstallSkin");
-    var uninstallLabel = prefbundle.getString("uninstallThemePrefix");
 
     while (description.hasChildNodes())
       description.removeChild(description.firstChild);
@@ -204,15 +203,9 @@ function themeSelect()
 
       var locType = selectedItem.getAttribute("loctype");
       uninstallButton.disabled = (selectedSkin == skinName) || (locType == "install");
-      
-      uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
-      uninstallButton.label = uninstallLabel;
     }
     else {
       var brandbundle = document.getElementById("bundle_brand");
-
-      uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
-      uninstallButton.label = uninstallLabel;
 
       uninstallButton.disabled = selectedSkin == skinName;
 
