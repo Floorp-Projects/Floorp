@@ -305,7 +305,7 @@ function InLeapYear( t ) {
     if ( DaysInYear(YearFromTime(t)) == 366 ) {
         return 1;
     } else {
-        return "ERROR:  DayFromYear("+y+") case not covered";
+        return "ERROR:  InLeapYear("+t+") case not covered";
     }
 }
 function YearFromTime( t ) {
