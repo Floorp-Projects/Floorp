@@ -1277,6 +1277,9 @@ nsBoxFrame::GetInset(nsMargin& margin)
 #define GET_WIDTH(size) (IsHorizontal() ? size.width : size.height)
 #define GET_HEIGHT(size) (IsHorizontal() ? size.height : size.width)
 
+#define SET_WIDTH(size, coord)  if (IsHorizontal()) { (size).width  = (coord); } else { (size).height = (coord); }
+#define SET_HEIGHT(size, coord) if (IsHorizontal()) { (size).height = (coord); } else { (size).width  = (coord); }
+
 void
 nsBoxFrame::InvalidateChildren()
 {
@@ -1318,11 +1321,11 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
           // nscoord& max  = GET_WIDTH(spring.maxSize); // Not used.
           nscoord min  = GET_WIDTH(info->minSize);
          
-          GET_HEIGHT(info->calculatedSize) = GET_HEIGHT(size);
+          SET_HEIGHT(info->calculatedSize, GET_HEIGHT(size));
         
           if (pref < min) {
               pref = min;
-              GET_WIDTH(info->prefSize) = min;
+              SET_WIDTH(info->prefSize, min);
           }
 
           if (info->sizeValid) { 
@@ -1331,7 +1334,7 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
             if (info->flex == 0)
             {
               info->sizeValid = PR_TRUE;
-              GET_WIDTH(info->calculatedSize) = pref;
+              SET_WIDTH(info->calculatedSize, pref);
             }
             sizeRemaining -= pref;
             springConstantsRemaining += info->flex;
@@ -1357,7 +1360,7 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
               if (!info->sizeValid) 
               {
                 // set the calculated size to be the preferred size
-                GET_WIDTH(info->calculatedSize) = pref;
+                SET_WIDTH(info->calculatedSize, pref);
                 info->sizeValid = PR_TRUE;
               }
 
@@ -1389,7 +1392,7 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
               if (info->sizeValid==PR_FALSE) {
                   PRInt32 newSize = pref + (sizeRemaining*info->flex/springConstantsRemaining);
                   if (newSize<=min) {
-                      GET_WIDTH(info->calculatedSize) = min;
+                      SET_WIDTH(info->calculatedSize, min);
                       springConstantsRemaining -= info->flex;
                       sizeRemaining += pref;
                       sizeRemaining -= calculated;
@@ -1398,7 +1401,7 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
                       limit = PR_TRUE;
                   }
                   else if (newSize>=max) {
-                      GET_WIDTH(info->calculatedSize) = max;
+                      SET_WIDTH(info->calculatedSize, max);
                       springConstantsRemaining -= info->flex;
                       sizeRemaining += pref;
                       sizeRemaining -= calculated;
@@ -1426,10 +1429,12 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
              nscoord pref = GET_WIDTH(info->prefSize);
   
             if (info->sizeValid==PR_FALSE) {
-                if (springConstantsRemaining == 0) 
-                    GET_WIDTH(info->calculatedSize) = pref;
-                else
-                    GET_WIDTH(info->calculatedSize) = pref + info->flex*sizeRemaining/springConstantsRemaining;
+                if (springConstantsRemaining == 0) { 
+                    SET_WIDTH(info->calculatedSize, pref);
+                }
+                else {
+                    SET_WIDTH(info->calculatedSize, pref + info->flex*sizeRemaining/springConstantsRemaining);
+                }
 
                 info->sizeValid = PR_TRUE;
             }
