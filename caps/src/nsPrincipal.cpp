@@ -399,6 +399,22 @@ PRBool nsPrincipal::isSecurePrincipal(void)
   return PR_FALSE;
 }
 
+/* 
+ * This method is introduced to check the whether a given url base 
+ * is a file based or any other type. Returns TRUE if the key is a
+ * file based url. Returns FALSE otherwise.
+ */
+PRBool nsPrincipal::isFileCodeBase(void)
+{
+
+  if (itsKey == NULL)
+	return PR_FALSE;
+
+  if ((memcmp("file:", itsKey, strlen("file:"))) == 0)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
 
 PRBool nsPrincipal::isCert(void)
 {
