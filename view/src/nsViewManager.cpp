@@ -1774,9 +1774,6 @@ NS_IMETHODIMP nsViewManager :: MoveViewTo(nsIView *aView, nscoord aX, nscoord aY
   return NS_OK;
 }
 
-inline min(nscoord x, nscoord y) { return (x < y ? x : y); }
-inline max(nscoord x, nscoord y) { return (x > y ? x : y); }
-
 NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, nscoord width, nscoord height)
 {
 	nscoord oldWidth, oldHeight;
