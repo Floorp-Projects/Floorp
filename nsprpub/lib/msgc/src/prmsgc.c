@@ -424,7 +424,8 @@ static GCSeg* DoGrowHeap(PRInt32 requestedSize, PRBool exactly)
 #ifdef DEBUG
     {
     char str[256];
-    sprintf(str, "[1] Allocated %d bytes at %p\n", sizeof(GCSegInfo), segInfo);
+    sprintf(str, "[1] Allocated %ld bytes at %p\n",
+        (long) sizeof(GCSegInfo), segInfo);
     OutputDebugString(str);
     }
 #endif
@@ -489,8 +490,8 @@ static GCSeg* DoGrowHeap(PRInt32 requestedSize, PRBool exactly)
 
 #ifdef GCMETER
     if (_pr_gcMeter & _GC_METER_GROWTH) {
-        fprintf(stderr, "[GC: new segment base=%p size=%d]\n",
-                sp->base, allocSize);
+        fprintf(stderr, "[GC: new segment base=%p size=%ld]\n",
+                sp->base, (long) allocSize);
     }
 #endif    
 
@@ -641,8 +642,8 @@ static void ShrinkGCHeap(GCSeg *sp)
 {
 #ifdef GCMETER
     if (_pr_gcMeter & _GC_METER_GROWTH) {
-        fprintf(stderr, "[GC: free segment base=%p size=%d]\n",
-                sp->base, sp->limit - sp->base);
+        fprintf(stderr, "[GC: free segment base=%p size=%ld]\n",
+                sp->base, (long) (sp->limit - sp->base));
     }
 #endif    
 
@@ -1646,11 +1647,13 @@ static void dogc(void)
     /* Reset meter info */
     if (_pr_gcMeter & _GC_METER_STATS) {
         fprintf(stderr,
-                "[GCSTATS: busy:%d skipped:%d, alloced:%d+wasted:%d+free:%d = total:%d]\n",
-                _pr_gcData.busyMemory,
-        meter.skippedFreeChunks,
-                meter.allocBytes, meter.wastedBytes, _pr_gcData.freeMemory,
-                _pr_gcData.allocMemory);
+                "[GCSTATS: busy:%ld skipped:%ld, alloced:%ld+wasted:%ld+free:%ld = total:%ld]\n",
+                (long) _pr_gcData.busyMemory,
+                (long) meter.skippedFreeChunks,
+                (long) meter.allocBytes,
+                (long) meter.wastedBytes,
+                (long) _pr_gcData.freeMemory,
+                (long) _pr_gcData.allocMemory);
     }        
     memset(&meter, 0, sizeof(meter));
 #endif
@@ -1751,12 +1754,13 @@ static void dogc(void)
 	    _pr_gcData.busyMemory, _pr_gcData.freeMemory,
 	    meter.numFreeChunks, _pr_gcData.allocMemory, diff));
     if (_pr_gcMeter & _GC_METER_FREE_LIST) {
-        PRInt32 bin;
+        PRIntn bin;
         fprintf(stderr, "Freelist bins:\n");
         for (bin = 0; bin < NUM_BINS; bin++) {
             GCFreeChunk *cp = bins[bin];
             while (cp != NULL) {
-                fprintf(stderr, "%3d: %p %8d\n", bin, cp, cp->chunkSize);
+                fprintf(stderr, "%3d: %p %8ld\n",
+                        bin, cp, (long) cp->chunkSize);
                 cp = cp->next;
             }
         }
@@ -1981,7 +1985,7 @@ PR_DumpHexWords(FILE *out, PRWord *p, int nWords,
     nWords -= i;
     while (i--)
     {
-        fprintf(out, "0x%.8X", *p++);
+        fprintf(out, "0x%.8lX", (long) *p++);
         if (i)
         fputc(' ', out);
     }
@@ -1994,7 +1998,8 @@ pr_DumpObject(FILE *out, GCType* tp, PRWord *p,
           size_t bytes, PRBool detailed)
 {
     char kindChar = tp->kindChar;
-    fprintf(out, "0x%p: 0x%.6X %c  ", p, bytes, kindChar ? kindChar : '?');
+    fprintf(out, "0x%p: 0x%.6lX %c  ",
+            p, (long) bytes, kindChar ? kindChar : '?');
     if (tp->dump)
     (*tp->dump)(out, (void*) (p + 1), detailed, 0);
     if (detailed)
@@ -2006,8 +2011,9 @@ pr_DumpUnknown(FILE *out, GCType* tp, PRWord tix, PRWord *p,
            size_t bytes, PRBool detailed)
 {
     char kindChar = tp->kindChar;
-    fprintf(out, "0x%p: 0x%.6X %c  ", p, bytes, kindChar ? kindChar : '?');
-    fprintf(out, "UNKNOWN KIND %d\n", tix);
+    fprintf(out, "0x%p: 0x%.6lX %c  ",
+            p, (long) bytes, kindChar ? kindChar : '?');
+    fprintf(out, "UNKNOWN KIND %ld\n", (long) tix);
     if (detailed)
     PR_DumpHexWords(out, p, bytes>>2, 22, 4);
 }
@@ -2019,7 +2025,7 @@ pr_DumpFree(FILE *out, PRWord *p, size_t size, PRBool detailed)
 # pragma unused( detailed )
 #endif
 
-    fprintf(out, "0x%p: 0x%.6X -  FREE\n", p, size);
+    fprintf(out, "0x%p: 0x%.6lX -  FREE\n", p, (long) size);
 }
 
 static void PR_CALLBACK
@@ -2175,13 +2181,6 @@ PR_DumpGCSummary(FILE *out, PRBool detailed)
     pr_WalkSegments(out, pr_DumpSummary, detailed);
     summaryPrinter(out, summaryPrinterClosure);
     }
-#ifdef xxx_WIN32
-    {
-    extern PRInt32 totalVirtual;
-    fprintf(out, "Virtual memory reserve: %ld, in use: %ld (%ld%%)\n",
-        GC_VMLIMIT, totalVirtual, (totalVirtual * 100 / GC_VMLIMIT));
-    }
-#endif
 #if 0
     fprintf(out, "\nFinalizable objects:\n");
     {
@@ -2301,7 +2300,8 @@ pr_ConservativeTraceRootBlock(void **base, PRInt32 count)
     status = pr_ConservativeWalkBlock(base, count, pr_TraceRootPointer, NULL);
     if (status) {
 	FILE* out = _pr_gcData.dumpOutput;
-	fprintf(out, "### from root in range 0x%p + 0x%x\n\n", base, count);
+	fprintf(out, "### from root in range 0x%p + 0x%lx\n\n",
+                base, (long) count);
     }
 }
 
@@ -2410,19 +2410,19 @@ static void DumpApplicationHeaps(FILE *out)
 {
     HANDLE mainHeap;
     HANDLE heaps[100];
-    PRInt32 nHeaps;
+    DWORD nHeaps;
     PRInt32 i;
 
     mainHeap = GetProcessHeap();
     nHeaps = GetProcessHeaps(100, heaps);
     if (nHeaps > 100)
     nHeaps = 0;
-    fprintf(out, "%d heaps:\n", nHeaps);
+    fprintf(out, "%ld heaps:\n", (long) nHeaps);
     for (i = 0; i<nHeaps; i++)
     {
     HANDLE heap = heaps[i];
 
-    fprintf(out, "Heap at 0x%.8X", heap);
+    fprintf(out, "Heap at 0x%.8lX", (long) heap);
     if (heap == mainHeap)
         fprintf(out, " (main)");
     fprintf(out, ":\n");
@@ -2715,7 +2715,7 @@ static void CheckHeap(void) {
 /******************************************************************************/
 
 #ifdef DEBUG
-int gc_thrash = -1;
+long gc_thrash = -1L;
 #endif
 
 /*
@@ -2831,7 +2831,7 @@ PR_IMPLEMENT(PRWord GCPTR *)PR_AllocMemory(
     if (bytes >= MAX_ALLOC_SIZE) return NULL;
 
 #ifdef DEBUG
-    if (gc_thrash == -1 ? (gc_thrash = (int)PR_GetEnv("GC_THRASH")):gc_thrash) PR_GC();
+    if (gc_thrash == -1L ? (gc_thrash = (long)PR_GetEnv("GC_THRASH")):gc_thrash) PR_GC();
 #endif
 
     ct = &_pr_collectorTypes[tix];
@@ -3085,8 +3085,8 @@ PR_AllocSimpleMemory(PRWord requestedBytes, PRInt32 tix)
         return NULL;
     }
 #ifdef DEBUG
-    if (gc_thrash == -1
-	? (gc_thrash = (int)PR_GetEnv("GC_THRASH"))
+    if (gc_thrash == -1L
+	? (gc_thrash = (long)PR_GetEnv("GC_THRASH"))
 	: gc_thrash) {
 	PR_GC();
     }
