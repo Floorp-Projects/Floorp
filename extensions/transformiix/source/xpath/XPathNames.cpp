@@ -24,13 +24,13 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- added LANG_FN
  *
- * $Id: XPathNames.cpp,v 1.2 2000/05/23 08:32:42 kvisco%ziplink.net Exp $
+ * $Id: XPathNames.cpp,v 1.3 2000/06/11 12:31:28 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * XPath names
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2000/05/23 08:32:42 $
+ * @version $Revision: 1.3 $ $Date: 2000/06/11 12:31:28 $
 **/
 
 #include "FunctionLib.h"
@@ -62,7 +62,7 @@ const String XPathNames::CEILING_FN              = "ceiling";
 const String XPathNames::FLOOR_FN                = "floor";
 // OG-
 //Marina M. boolean function lang
-const String XPathNames::LANG_FN				 = "lang";
+const String XPathNames::LANG_FN                 = "lang";
 
 //-- internal XSL processor functions
 const String XPathNames::ERROR_FN                = "error";
