@@ -70,7 +70,7 @@ nsSVGValue::NotifyObservers(SVGObserverNotifyFunction f)
     nsIWeakReference* wr = NS_STATIC_CAST(nsIWeakReference*,mObservers.ElementAt(i));
     nsCOMPtr<nsISVGValueObserver> observer = do_QueryReferent(wr);
     if(observer)
-       (observer.get()->*f)(this);
+       (NS_STATIC_CAST(nsISVGValueObserver*,observer)->*f)(this);
   }
 }
 
