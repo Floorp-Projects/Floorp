@@ -47,6 +47,9 @@ CPPSRCS = \
 	RDFTreeNode.cpp \
 	WindowControlImpl.cpp \
 	WrapperFactoryImpl.cpp \
+	nsSetupRegistry.cpp \
+	motif/MotifBrowserControlCanvas.cpp \
+	motif/gtkmozilla.cpp \
 	$(NULL)
 
 ifneq ($(BAL_INTERFACE),)
@@ -67,7 +70,10 @@ EXTRA_DSO_LDOPTS += -lgtkxtbin -lgtksuperwin -L/usr/X11R6/lib -lXt
 endif
 endif
 
-INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES)
+EXTRA_DSO_LDOPTS += -L$(DEPTH)/dist/bin/components -lwidget_gtk
+
+INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES) \
+	-I$(DEPTH)/widget/src/gtk
 
 JAVAH_CLS= \
 	"-o BookmarksImpl.h org.mozilla.webclient.wrapper_native.BookmarksImpl" \
@@ -98,7 +104,10 @@ JAVAH_FILES=\
 JAVAH_PROG=$(JDKHOME)/bin/javah
 JAVAH_FLAGS=-jni -classpath $(CLASSPATH):$(JAVA_DESTPATH)
 
-export:: $(JAVAH_FILES)
+export:: $(JAVAH_FILES) linkSetupRegistry
+
+linkSetupRegistry:
+	ln -s $(DEPTH)/xpfe/bootstrap/nsSetupRegistry.cpp .
 
 $(JAVAH_FILES): 
 	@for c in $(JAVAH_CLS); do \
