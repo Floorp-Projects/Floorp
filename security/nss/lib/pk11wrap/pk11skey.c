@@ -380,7 +380,7 @@ pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
 		  unsigned int templateCount, SECItem *key, void *wincx)
 {
     PK11SymKey *    symKey;
-    CK_RV           crv;
+    SECStatus       status;
 
     symKey = PK11_CreateSymKey(slot,type,wincx);
     if (symKey == NULL) {
@@ -397,12 +397,11 @@ pk11_ImportSymKeyWithTempl(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
     symKey->origin = origin;
 
     /* import the keys */
-    crv = PK11_CreateNewObject(slot, symKey->session, keyTemplate,
-		 	templateCount, PR_FALSE, &symKey->objectID);
-    if ( crv != CKR_OK) {
+    status = PK11_CreateNewObject(slot, symKey->session, keyTemplate,
+		 	          templateCount, PR_FALSE, &symKey->objectID);
+    if (status != SECSuccess) {
 	PK11_FreeSymKey(symKey);
-	PORT_SetError( PK11_MapError(crv));
-	return NULL;
+	return NULL;	/* PK11_CreateNewObject has set the error code. */
     }
 
     return symKey;
@@ -668,8 +667,7 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot,KeyType keyType,CK_OBJECT_HANDLE id)
 
         pk11KeyType = PK11_ReadULongAttribute(slot,id,CKA_KEY_TYPE);
 	if (pk11KeyType ==  CK_UNAVAILABLE_INFORMATION) {
-	    PORT_SetError( PK11_MapError(crv) );
-	    return NULL;
+	    return NULL;  /* PK11_ReadULongAttribute has set error code */
 	}
 	switch (pk11KeyType) {
 	case CKK_RSA:
@@ -2666,6 +2664,12 @@ pk11_HandUnwrap(PK11SlotInfo *slot, CK_OBJECT_HANDLE wrappingKey,
     }
 
     outKey.len = (key_size == 0) ? len : key_size;
+    if (outKey.len > 0 &&
+          !pk11_FindAttrInTemplate(keyTemplate, templateCount, CKA_VALUE)) {
+        CK_ATTRIBUTE *attrs = keyTemplate + templateCount;
+        PK11_SETATTRS(attrs, CKA_VALUE, outKey.data, outKey.len); 
+        templateCount++;
+    }
 
     if (PK11_DoesMechanism(slot,target)) {
 	symKey = pk11_ImportSymKeyWithTempl(slot, target, PK11_OriginUnwrap, 
