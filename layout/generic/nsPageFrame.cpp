@@ -93,6 +93,7 @@ NS_METHOD PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
   // XXX Pay attention to the page's border and padding...
   if (nsnull != mFirstChild) {
     // Get the child's desired size
+    mFirstChild->WillReflow(*aPresContext);
     aStatus = ReflowChild(mFirstChild, aPresContext, aDesiredSize, aMaxSize,
                           aMaxElementSize);
     mLastContentIsComplete = NS_FRAME_IS_COMPLETE(aStatus);
@@ -105,6 +106,7 @@ NS_METHOD PageFrame::ResizeReflow(nsIPresContext*  aPresContext,
     // Place and size the child
     nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
     mFirstChild->SetRect(rect);
+    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
 
     // Is the frame complete?
     if (NS_FRAME_IS_COMPLETE(aStatus)) {

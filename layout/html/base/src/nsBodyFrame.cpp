@@ -137,6 +137,8 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
                                     nsSize*          aMaxElementSize,
                                     nsReflowStatus&  aStatus)
 {
+  NS_FRAME_TRACE_REFLOW_IN("nsBodyFrame::ResizeReflow");
+
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   // Do we have any children?
@@ -172,6 +174,7 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
     nsRect        desiredRect;
     nsIRunaround* reflowRunaround;
 
+    mFirstChild->WillReflow(*aPresContext);
     mSpaceManager->Translate(leftInset, topInset);
     mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
     reflowRunaround->ResizeReflow(aPresContext, mSpaceManager, columnMaxSize,
@@ -194,6 +197,7 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
     desiredRect.x += leftInset;
     desiredRect.y += topInset;
     mFirstChild->SetRect(desiredRect);
+    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
 
     // Set our last content offset and whether the last content is complete
     // based on the state of the pseudo frame
@@ -204,6 +208,7 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
                        isPseudoFrame, aDesiredSize);
   }
 
+  NS_FRAME_TRACE_REFLOW_OUT("nsBodyFrame::ResizeReflow", aStatus);
   return NS_OK;
 }
 
@@ -254,6 +259,8 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                                          nsReflowCommand& aReflowCommand,
                                          nsReflowStatus&  aStatus)
 {
+  NS_FRAME_TRACE_REFLOW_IN("nsBodyFrame::IncrementalReflow");
+
   // Get our border/padding info
   nsStyleSpacing* mySpacing =
     (nsStyleSpacing*)mStyleContext->GetData(kStyleSpacingSID);
@@ -282,6 +289,7 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   nsIFrame*   nextFrame;
 
   NS_ASSERTION(nsnull != mFirstChild, "no first child");
+  mFirstChild->WillReflow(*aPresContext);
   aStatus = aReflowCommand.Next(mSpaceManager, desiredRect, columnMaxSize,
                                 nextFrame);
 
@@ -289,6 +297,7 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   desiredRect.x += leftInset;
   desiredRect.y += topInset;
   mFirstChild->SetRect(desiredRect);
+  mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
 
   // Set our last content offset and whether the last content is complete
   // based on the state of the pseudo frame
@@ -299,6 +308,8 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
                      isPseudoFrame, aDesiredSize);
 
   mSpaceManager->Translate(-leftInset, -topInset);
+
+  NS_FRAME_TRACE_REFLOW_OUT("nsBodyFrame::IncrementalReflow", aStatus);
   return NS_OK;
 }
 
