@@ -93,6 +93,13 @@ function setHomePageToCurrentPage(folderFieldId)
   return true;
 }
 
+function prefClearGlobalHistory()
+{
+  var globalHistory = nsJSComponentManager.getService("@mozilla.org/browser/global-history;1", "nsIGlobalHistory");
+  if (globalHistory)
+    globalHistory.RemoveAllPages();
+}
+
 function prefClearUrlbarHistory()
 {
   var button = document.getElementById("ClearUrlBarHistoryButton");

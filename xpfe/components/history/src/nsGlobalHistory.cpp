@@ -531,6 +531,92 @@ nsGlobalHistory::RemovePage(const char *aURL)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsGlobalHistory::RemoveAllPages()
+{
+  // Iterate through all the rows in the table, notifying observers
+  // that they're going away and cutting each out of the database.
+  // Start with a cursor across the entire table.
+  mdb_err err;
+  mdb_count count;
+  err = mTable->GetCount(mEnv, &count);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  // Begin the batch.
+  int marker;
+  err = mTable->StartBatchChangeHint(mEnv, &marker);
+  NS_ASSERTION(err == 0, "unable to start batch");
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  // XXX from here until end batch, no early returns!
+  for (mdb_pos pos = count - 1; pos >= 0; --pos) {
+    nsMdbPtr<nsIMdbRow> row(mEnv);
+    err = mTable->PosToRow(mEnv, pos, getter_Acquires(row));
+    NS_ASSERTION(err == 0, "unable to get row");
+    if (err != 0)
+      break;
+
+    NS_ASSERTION(row != nsnull, "no row");
+    if (! row)
+      continue;
+
+    // What's the URL? We need to know to properly notify our RDF
+    // observers.
+    mdbYarn yarn;
+    err = row->AliasCellYarn(mEnv, kToken_URLColumn, &yarn);
+    if (err != 0)
+      continue;
+
+    nsLiteralCString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
+
+#ifdef DEBUG_waterson
+    printf("nsGlobalHistory::RemoveAllPages() - removing %s\n",
+           nsPromiseFlatCString(uri).get());
+#endif
+
+    nsresult rv;
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = gRDFService->GetResource(nsPromiseFlatCString(uri).get(), getter_AddRefs(resource));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
+    if (NS_FAILED(rv))
+      continue;
+
+    // Officially cut the row *now*, before notifying any observers:
+    // that way, any re-entrant calls won't find the row.
+    err = mTable->CutRow(mEnv, row);
+    NS_ASSERTION(err == 0, "couldn't cut row");
+    if (err != 0)
+      continue;
+
+    // Notify observers that the row is, er, history.
+    NotifyUnassert(kNC_HistoryRoot, kNC_child, resource);
+  }
+
+  // Finish the batch.
+  err = mTable->EndBatchChangeHint(mEnv, &marker);
+  NS_ASSERTION(err == 0, "error ending batch");
+
+  // Do a "large commit" to flush the (almost empty) table to disk.
+  {
+    nsMdbPtr<nsIMdbThumb> thumb(mEnv);
+    err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
+    if (err != 0) return NS_ERROR_FAILURE;
+
+    mdb_count total;
+    mdb_count current;
+    mdb_bool done;
+    mdb_bool broken;
+
+    do {
+      err = thumb->DoMore(mEnv, &total, &current, &done, &broken);
+    } while ((err == 0) && !broken && !done);
+
+    if ((err != 0) || !done) return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
@@ -1599,6 +1685,35 @@ nsGlobalHistory::NotifyAssert(nsIRDFResource* aSource,
 
   return NS_OK;
 }
+
+
+nsresult
+nsGlobalHistory::NotifyUnassert(nsIRDFResource* aSource,
+                                nsIRDFResource* aProperty,
+                                nsIRDFNode* aValue)
+{
+  nsresult rv;
+
+  if (mObservers) {
+    PRUint32 count;
+    rv = mObservers->Count(&count);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+
+      NS_ASSERTION(observer != nsnull, "null ptr");
+      if (! observer)
+        continue;
+
+      rv = observer->OnUnassert(this, aSource, aProperty, aValue);
+      NS_RELEASE(observer);
+    }
+  }
+
+  return NS_OK;
+}
+
 
 
 nsresult
