@@ -609,18 +609,34 @@ endif
 # HP Machines
 ifeq ($(OS_ARCH),HP-UX)
 
+ifeq ($(OS_RELEASE),A.09)
+HPUX_XLIBS      = -L/usr/lib/X11R5 -L/usr/contrib/X11R5/lib -L/usr/lib/Motif1.2
+endif
 ifeq ($(OS_RELEASE),B.10)
-INCLUDES	+= -I.
+INCLUDES      += -I.
+HPUX_XLIBS      = -L/usr/lib/X11R6 -L/usr/contrib/X11R6/lib -L/usr/lib/Motif1.2_R6 -L/usr/lib/Motif1.2
+endif
+ifeq ($(OS_RELEASE),B.11)
+HPUX_XLIBS      = -L/usr/lib/X11R6 -L/usr/contrib/X11R6/lib -L/usr/lib/Motif2.1
 endif
 
 HPUX_RESOURCE_HACK	= -Wp,-H16384
 
-OTHER_LIBS	= -L/usr/lib/X11R5 -L/usr/lib/Motif1.2 -lXm -L$(DIST)/lib -lXmu -lXt -lX11 -lXext $(OS_LIBS)
+OTHER_LIBS	= $(HPUX_XLIBS) -lXm -L$(DIST)/lib -lXmu -lXt -lX11 -lXext $(OS_LIBS)
+
+ifdef NS_USE_GCC
+EXPORT_LDFLAGS        = $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB) $(OTHER_LIBS)
+endif
 
 ifndef NO_EDITOR
+
+ifdef NS_USE_GCC
+CCLD          = $(CCC)
+else
 EXPORT_DEPLIBS	+= cxxlink-filter
 US_DEPLIBS	+= cxxlink-filter
 CCLD		= CC -tl,./cxxlink-filter
+endif
 
 ifndef NO_WEBFONTS
 EXTRA_REL_FILES	+= $(WEBFONT_DSO)

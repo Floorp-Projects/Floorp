@@ -81,7 +81,8 @@
  static const char *expected_mozilla_version = "1.1";
 #else  /* !STANDALONE */
  extern const char *progname;
- extern const char *expected_mozilla_version;
+ /* Next line not needed - defined in remote-s.c */
+ /* extern const char *expected_mozilla_version; */
 #endif /* !STANDALONE */
 
 #define MOZILLA_VERSION_PROP   "_MOZILLA_VERSION"
