@@ -817,16 +817,24 @@ public class Interpreter extends LabelTable {
                         exception object.
                     */
                     while (child != null) {
-                        if (lastChild == catchTarget) {                            
+                        if (lastChild == catchTarget) {
                             itsStackDepth = 1;
                             if (itsStackDepth > itsData.itsMaxStack)
                                 itsData.itsMaxStack = itsStackDepth;
                         }
+                        /*
+                            When the following child is the catchTarget,
+                            the current child is the goto at the end of
+                            the try statemets, we need to emit the endtry
+                            before that goto.
+                        */
+                        if (child.getNextSibling() == catchTarget)
+                            iCodeTop = addByte((byte) TokenStream.ENDTRY,
+                                                                iCodeTop);
                         iCodeTop = generateICode(child, iCodeTop);
                         lastChild = child;
                         child = child.getNextSibling();
                     }
-                    iCodeTop = addByte((byte) TokenStream.ENDTRY, iCodeTop);
                     itsStackDepth = 0;
                     if (finallyTarget != null) {
                         // normal flow goes around the finally handler stublet
@@ -1851,14 +1859,13 @@ public class Interpreter extends LabelTable {
                 stackTop = 0;
                 cx.interpreterSecurityDomain = null;
                 if (tryStackTop > 0) {
-                    pc = catchStack[tryStackTop - 1];
-                    scope = scopeStack[tryStackTop - 1];
+                    pc = catchStack[--tryStackTop];
+                    scope = scopeStack[tryStackTop];
                     if (pc == 0) {
-                        pc = finallyStack[tryStackTop - 1];
+                        pc = finallyStack[tryStackTop];
                         if (pc == 0) 
                             throw ee;
                         stack[0] = ee.getErrorObject();
-                        tryStackTop--;
                     }
                     else
                         stack[0] = ee.getErrorObject();
@@ -1873,14 +1880,13 @@ public class Interpreter extends LabelTable {
                 stackTop = 0;
                 cx.interpreterSecurityDomain = null;
                 if (tryStackTop > 0) {
-                    pc = catchStack[tryStackTop - 1];
-                    scope = scopeStack[tryStackTop - 1];
+                    pc = catchStack[--tryStackTop];
+                    scope = scopeStack[tryStackTop];
                     if (pc == 0) {
-                        pc = finallyStack[tryStackTop - 1];
+                        pc = finallyStack[tryStackTop];
                         if (pc == 0) 
                             throw jsx;
                         stack[0] = jsx;
-                        tryStackTop--;
                     }
                     else
                         stack[0] = ScriptRuntime.unwrapJavaScriptException(jsx);
@@ -1896,10 +1902,9 @@ public class Interpreter extends LabelTable {
                 if (tryStackTop > 0) {
                     stackTop = 0;
                     stack[0] = jx;
-                    pc = finallyStack[tryStackTop - 1];
-                    scope = scopeStack[tryStackTop - 1];
+                    pc = finallyStack[--tryStackTop];
+                    scope = scopeStack[tryStackTop];
                     if (pc == 0) throw jx;
-                    tryStackTop--;
                 }
                 else
                     throw jx;
