@@ -157,7 +157,8 @@ nsTableColGroupFrame::FindParentForAppendedCol(nsTableFrame*  aTableFrame,
   nsIFrame* lastColGroup = lastCol->GetParent();
   if (!lastColGroup) return nsnull; // shouldn't happen
  
-  nsTableColGroupFrame* relevantColGroup = (nsTableColGroupFrame *)lastCol;
+  nsTableColGroupFrame* relevantColGroup =
+    NS_STATIC_CAST(nsTableColGroupFrame *, lastColGroup);
   nsTableColGroupType relevantColGroupType = relevantColGroup->GetType();
   if (eColGroupAnonymousCell == relevantColGroupType) {
     if (eColAnonymousCell == aColType) {
