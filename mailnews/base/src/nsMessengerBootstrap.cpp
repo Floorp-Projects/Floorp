@@ -102,10 +102,8 @@ NS_IMETHODIMP nsMessengerBootstrap::GetChromeUrlForTask(char **aChromeUrlForTask
 
 NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windowType, const char * aFolderURI, nsMsgKey aMessageKey)
 {
-	nsresult rv = NS_OK;
-
 	nsXPIDLCString chromeurl;
-	rv = GetChromeUrlForTask(getter_Copies(chromeurl));
+	nsresult rv = GetChromeUrlForTask(getter_Copies(chromeurl));
 	if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsISupportsArray> argsArray;
