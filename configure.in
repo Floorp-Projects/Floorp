@@ -647,6 +647,7 @@ case "$target" in
     AC_DEFINE(_POSIX_SOURCE)
     AC_DEFINE(_SVID_SOURCE)
     TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
+    USE_ELF_DYNSTR_GC=1
 
     case "${host_cpu}" in
     alpha*)
@@ -3058,11 +3059,10 @@ dnl =
 dnl = --enable-elf-dynstr-gc
 dnl = 
 dnl ========================================================
-USE_ELF_DYNSTR_GC=
-
 MOZ_ARG_ENABLE_BOOL(elf-dynstr-gc,
 [  --enable-elf-dynstr-gc  Enable elf dynstr garbage collector (opt builds only)],
-  USE_ELF_DYNSTR_GC=1)
+    USE_ELF_DYNSTR_GC=1,
+    USE_ELF_DYNSTR_GC= )
 
 AC_SUBST(USE_ELF_DYNSTR_GC)
 
