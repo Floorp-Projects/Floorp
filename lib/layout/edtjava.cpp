@@ -148,6 +148,9 @@ void EDT_RegisterPlugin(char* csFileSpec){
 #ifdef EDITOR_JAVA
     CEditorPluginInterface::Register(csFileSpec);
 #else
+#ifdef XP_MAC
+#pragma unused(csFileSpec)
+#endif
     XP_TRACE(("EDT_RegisterPlugin(\"%s\")"));
 #endif
 }
@@ -166,6 +169,10 @@ int32 EDT_NumberOfPlugins(int32 category){
     if ( EditorPluginManager_PluginsExist() ) {
         return CEditorPluginInterface::GetNumberOfPlugins(category);
     }
+#else
+#ifdef XP_MAC
+#pragma unused(category)
+#endif
 #endif
     return 0;
 }
@@ -175,6 +182,10 @@ char* EDT_GetPluginCategoryName(int32 pluginIndex){
     if ( EditorPluginManager_PluginsExist() ) {
         return CEditorPluginInterface::GetCategoryName(pluginIndex);
     }
+#else
+#ifdef XP_MAC
+#pragma unused(pluginIndex)
+#endif
 #endif
     return 0;
 }
@@ -184,6 +195,10 @@ char* EDT_GetPluginName(int32 category, int32 index){
     if ( EditorPluginManager_PluginsExist() ) {
         return CEditorPluginInterface::GetPluginName(category, index);
     }
+#else
+#ifdef XP_MAC
+#pragma unused(category, index)
+#endif
 #endif
     return 0;
 }
@@ -193,11 +208,21 @@ char* EDT_GetPluginMenuHelp(int32 category, int32 index){
     if ( EditorPluginManager_PluginsExist() ) {
         return CEditorPluginInterface::GetPluginHint(category, index);
     }
+#else
+#ifdef XP_MAC
+#pragma unused(category, index)
+#endif
 #endif
     return 0;
 }
 
 XP_Bool EDT_PerformPlugin(MWContext *pContext, int32 category, int32 index, EDT_ImageEncoderCallbackFn doneFunction, void* hook){
+#ifndef EDITOR_JAVA
+#ifdef XP_MAC
+#pragma unused(category, index, doneFunction, hook)
+#endif
+#endif
+
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) FALSE;
 #ifdef EDITOR_JAVA
     if ( EditorPluginManager_PluginsExist() ) {
@@ -213,6 +238,12 @@ XP_Bool EDT_PerformPlugin(MWContext *pContext, int32 category, int32 index, EDT_
 }
 
 XP_Bool EDT_PerformPluginByClassName(MWContext *pContext, char* pClassName, EDT_ImageEncoderCallbackFn doneFunction, void* hook){
+#ifndef EDITOR_JAVA
+#ifdef XP_MAC
+#pragma unused(pClassName, doneFunction, hook)
+#endif
+#endif
+
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer) FALSE;
 #ifdef EDITOR_JAVA
     if ( EditorPluginManager_PluginsExist() ) {
@@ -229,6 +260,12 @@ XP_Bool EDT_PerformPluginByClassName(MWContext *pContext, char* pClassName, EDT_
 
 void EDT_PerformEvent(MWContext *pContext, char* pEvent, char* pDocURL, XP_Bool bCanChangeDocument, XP_Bool bCanCancel,
                       EDT_ImageEncoderCallbackFn doneFunction, void* hook){
+#ifndef EDITOR_JAVA
+#ifdef XP_MAC
+#pragma unused(pEvent, pDocURL, bCanChangeDocument, bCanCancel)
+#endif
+#endif
+
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
 #ifdef EDITOR_JAVA
     if ( EditorPluginManager_PluginsExist() ) {
@@ -296,6 +333,10 @@ char* EDT_GetEncoderName(int32 index){
     if ( EditorPluginManager_PluginsExist() ) {
         return CEditorPluginInterface::GetEncoderName(index);
     }
+#else
+#ifdef XP_MAC
+#pragma unused(index)
+#endif
 #endif
     return 0;
 }
@@ -305,6 +346,10 @@ char* EDT_GetEncoderFileExtension(int32 index){
     if ( EditorPluginManager_PluginsExist() ) {
         return CEditorPluginInterface::GetEncoderFileExtension(index);
     }
+#else
+#ifdef XP_MAC
+#pragma unused(index)
+#endif
 #endif
     return 0;
 }
@@ -314,6 +359,10 @@ char* EDT_GetEncoderFileType(int32 index){
     if ( EditorPluginManager_PluginsExist() ) {
         return CEditorPluginInterface::GetEncoderFileType(index);
     }
+#else
+#ifdef XP_MAC
+#pragma unused(index)
+#endif
 #endif
     return 0;
 }
@@ -323,6 +372,10 @@ char* EDT_GetEncoderMenuHelp(int32 index){
     if ( EditorPluginManager_PluginsExist() ) {
         return CEditorPluginInterface::GetEncoderHint(index);
     }
+#else
+#ifdef XP_MAC
+#pragma unused(index)
+#endif
 #endif
     return 0;
 }
@@ -332,6 +385,10 @@ XP_Bool EDT_GetEncoderNeedsQuantizedSource(int32 index){
     if ( EditorPluginManager_PluginsExist() ) {
         return CEditorPluginInterface::GetEncoderNeedsQuantizedSource(index);
     }
+#else
+#ifdef XP_MAC
+#pragma unused(index)
+#endif
 #endif
     return FALSE;
 }
@@ -346,6 +403,10 @@ XP_Bool EDT_StartEncoder(MWContext* pContext, int32 index, int32 width, int32 he
         return ((CEditorPluginInterface*) pEditBuffer->GetPlugins())->StartEncoder(index, width, height, pixels,
             csFileName, doneFunction, doneArgument);
     }
+#else
+#ifdef XP_MAC
+#pragma unused(pContext, index, width, height, pixels, csFileName, doneFunction, doneArgument)
+#endif
 #endif
     return FALSE;
 }
@@ -355,6 +416,10 @@ void EDT_StopEncoder(MWContext* pContext){
     if ( EditorPluginManager_PluginsExist() ) {
         EDT_StopPlugin(pContext);
     }
+#else
+#ifdef XP_MAC
+#pragma unused(pContext)
+#endif
 #endif
 }
 
