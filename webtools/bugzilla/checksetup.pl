@@ -1554,7 +1554,7 @@ AddField('namedqueries', 'linkinfooter', 'tinyint not null');
 # into.
 
 my @resolutions = ("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND",
-                  "DUPLICATE", "WORKSFORME", "MOVED", "BLAH");
+                  "DUPLICATE", "WORKSFORME", "MOVED");
 CheckEnumField('bugs', 'resolution', @resolutions);
 
 my @states = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED",
