@@ -472,7 +472,7 @@
 #define HG26545
 #define HG12421
 #define HG17231
-#define HG26576
+#define HG26576 int idx = -1;
 #define HG26522
 #define HG87236 return;
 #define HG17236 return;
