@@ -1927,7 +1927,11 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (IsImage()) {
+  else {
+    // We have to call |ParseImageAttribute| unconditionally since we
+    // don't know if we're going to have a type="image" attribute yet,
+    // (or could have it set dynamically in the future).  See bug
+    // 214077.
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
@@ -1967,8 +1971,7 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
     aResult.Assign(NS_LITERAL_STRING("checked"));
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
-  else if (IsImage() && ImageAttributeToString(aAttribute, aValue,
-                                               aResult)) {
+  else if (ImageAttributeToString(aAttribute, aValue, aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
