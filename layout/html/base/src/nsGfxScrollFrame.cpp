@@ -510,14 +510,20 @@ nsHTMLScrollFrame::Reflow(nsPresContext*      aPresContext,
 
   nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
-  // if it was set then cache it. Otherwise set it.
   if (aDesiredSize.mComputeMEW)
   {
-    // if not set then use the cached size. If set then set it.
-    if (aDesiredSize.mMaxElementWidth == -1)
-      aDesiredSize.mMaxElementWidth = mInner.mMaxElementWidth;
-    else 
+    nsStyleUnit widthUnit = GetStylePosition()->mWidth.GetUnit();
+    if (widthUnit == eStyleUnit_Percent || widthUnit == eStyleUnit_Auto) {
+      nsMargin border = aReflowState.mComputedBorderPadding;
+      aDesiredSize.mMaxElementWidth = border.right + border.left;
       mInner.mMaxElementWidth = aDesiredSize.mMaxElementWidth;
+    } else {
+      // if not set then use the cached size. If set then set it.
+      if (aDesiredSize.mMaxElementWidth == -1)
+        aDesiredSize.mMaxElementWidth = mInner.mMaxElementWidth;
+      else 
+        mInner.mMaxElementWidth = aDesiredSize.mMaxElementWidth;
+    }
   }
   
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -1032,14 +1038,20 @@ nsXULScrollFrame::Reflow(nsPresContext*      aPresContext,
 
   nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 
-  // if it was set then cache it. Otherwise set it.
   if (aDesiredSize.mComputeMEW)
   {
-    // if not set then use the cached size. If set then set it.
-    if (aDesiredSize.mMaxElementWidth == -1)
-      aDesiredSize.mMaxElementWidth = mInner.mMaxElementWidth;
-    else 
+    nsStyleUnit widthUnit = GetStylePosition()->mWidth.GetUnit();
+    if (widthUnit == eStyleUnit_Percent || widthUnit == eStyleUnit_Auto) {
+      nsMargin border = aReflowState.mComputedBorderPadding;
+      aDesiredSize.mMaxElementWidth = border.right + border.left;
       mInner.mMaxElementWidth = aDesiredSize.mMaxElementWidth;
+    } else {
+      // if not set then use the cached size. If set then set it.
+      if (aDesiredSize.mMaxElementWidth == -1)
+        aDesiredSize.mMaxElementWidth = mInner.mMaxElementWidth;
+      else 
+        mInner.mMaxElementWidth = aDesiredSize.mMaxElementWidth;
+    }
   }
   
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
