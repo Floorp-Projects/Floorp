@@ -685,6 +685,7 @@ nsMsgMessageDataSource::createPriorityString(nsMsgPriority priority, nsCAutoStri
 	{
 		case nsMsgPriorityNotSet:
 		case nsMsgPriorityNone:
+		case nsMsgPriorityNormal:
 			priorityStr = " ";
 			break;
 		case nsMsgPriorityLowest:
@@ -692,9 +693,6 @@ nsMsgMessageDataSource::createPriorityString(nsMsgPriority priority, nsCAutoStri
 			break;
 		case nsMsgPriorityLow:
 			priorityStr = "Low";
-			break;
-		case nsMsgPriorityNormal:
-			priorityStr = "Normal";
 			break;
 		case nsMsgPriorityHigh:
 			priorityStr = "High";
