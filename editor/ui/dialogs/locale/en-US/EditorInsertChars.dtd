@@ -20,16 +20,15 @@
    - Contributor(s): 
   -->
 
-<!-- Window title -->
-<!ENTITY windowTitle.label "Insert Table">
 
-<!ENTITY numRowsEditField.label "Number of rows:">
-<!ENTITY numColumnsEditField.label "Number of columns:">
-<!ENTITY widthEditField.label "Table width:">
-<!ENTITY heightEditField.label "Table height:">
-<!ENTITY borderEditField.label "Border:">
-<!ENTITY pixels.label "pixels">
-<!ENTITY alignmentBox.label "Alignment:">
-<!ENTITY leftPopup.value "Left">
-<!ENTITY centerPopup.value "Center">
-<!ENTITY rightPopup.value "Right">
+<!-- Window title -->
+<!ENTITY windowTitle.label "Insert Characters">
+<!ENTITY insertHangul.label "Korean Hangul">
+<!ENTITY insertLatin.label "Latin">
+<!ENTITY insert.label "Insert">
+<!ENTITY accentUpper.label "Accent Uppercase">
+<!ENTITY accentLower.label "Accent Lowercase">
+<!ENTITY otherUpper.label "Other Uppercase">
+<!ENTITY otherLower.label "Other Lowercase">
+<!ENTITY commonSymbols.label "Common Symbols">
+<!ENTITY nonModalMsg.label "You may leave this dialog open and return to editing the page.">

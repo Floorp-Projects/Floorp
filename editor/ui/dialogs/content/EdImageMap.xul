@@ -53,7 +53,7 @@
     xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
     onunload="//finishMap();"
-    align="vertical"
+    orient="vertical"
    >
 <!--
     width="640" height="480"
@@ -152,7 +152,7 @@
 </menubar>
 
 
-<toolbar id="toolbar" class="standard" persist="collapsed" align="vertical">
+<toolbar id="toolbar" class="standard" persist="collapsed" orient="vertical">
   <titledbutton id="cutButton" class="button28" observes="Map:Cut"/>
   <titledbutton id="copyButton" class="button28" observes="Map:Copy"/>
   <titledbutton id="pasteButton" class="button28" observes="Map:Paste"/>
@@ -166,7 +166,7 @@
 <box align="horizontal" flex="100">
 
   <toolbar id="toolbox">
-  <box align="vertical" flex="100">
+  <box orient="vertical" flex="100">
     <titledbutton id="pointerButton" class="tool" toggled="1" oncommand="changeTool(event, 'pointer')"/>
     <titledbutton id="rectButton" class="tool" oncommand="changeTool(event, 'rect')"/>
     <titledbutton id="cirButton" class="tool" oncommand="changeTool(event, 'cir')"/>

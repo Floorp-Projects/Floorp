@@ -42,7 +42,7 @@
         titlemodifier="&editorWindow.titlemodifier;"
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
         windowtype="composer:html"
-        align="vertical"
+        orient="vertical"
         width="640" height="480"
         screenX="10" screenY="10"
         persist="screenX screenY width height"
@@ -147,7 +147,7 @@
     <button id="namedAnchorButton"/>
     <spring flex="100%"/>
 
-		<box id="toolbar_throbber_box" align="vertical">
+		<box id="toolbar_throbber_box" orient="vertical">
 			<titledbutton id="Throbber" oncommand='goClickThrobber("editor.throbber.url")'>
 				<observes element="Editor:Throbber" attribute="busy"/>
 			</titledbutton>
@@ -188,12 +188,12 @@
   <box id="sidebar-box" chromeclass="extrachrome"/>
   <splitter id="sidebar-splitter" chromeclass="extrachrome"/>
   
-  <box id="appcontent" align="vertical" flex="100%">
+  <box id="appcontent" orient="vertical" flex="100%">
     <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
     <box align="horizontal" id="EditModeToolbar">
       <spring class="spacer5"/>
-      <box align="vertical">
+      <box orient="vertical">
         <spring style="height: 1px;"/>
         <html:div>&displayMode.label;</html:div>
       </box>

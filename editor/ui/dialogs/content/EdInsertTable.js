@@ -46,19 +46,14 @@ function Startup()
     dump("Failed to create a new table!\n");
     window.close();
   }
-  dump("Rows editbox:"+document.getElementById("rows")+"\n");
-  dump("Columns editbox:"+document.getElementById("columns")+"\n");
-  dump("width editbox:"+document.getElementById("width")+"\n");
-  dump("pixelOrPercentMenulist:"+document.getElementById("pixelOrPercentMenulist")+"\n");
-  dump("borderInput editbox:"+document.getElementById("borderInput")+"\n");
-
   // Create dialog object to store controls for easy access
   dialog = new Object;
-  dialog.rowsInput = document.getElementById("rows");
-  dialog.columnsInput = document.getElementById("columns");
-  dialog.widthInput = document.getElementById("width");
+  dialog.rowsInput = document.getElementById("rowsInput");
+  dialog.columnsInput = document.getElementById("columnsInput");
+  dialog.widthInput = document.getElementById("widthInput");
   dialog.borderInput = document.getElementById("borderInput");
-  dialog.pixelOrPercentMenulist = document.getElementById("pixelOrPercentMenulist");
+  dialog.widthPixelOrPercentMenulist = document.getElementById("widthPixelOrPercentMenulist");
+  dialog.heightPixelOrPercentMenulist = document.getElementById("heightPixelOrPercentMenulist");
 
   // Make a copy to use for AdvancedEdit
   globalElement = tableElement.cloneNode(false);
@@ -88,7 +83,8 @@ function InitDialog()
   // Get default attributes set on the created table:
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of select combobox list
-  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "width","pixelOrPercentMenulist");
+  dialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "widthInput","widthPixelOrPercentMenulist");
+  dialog.heightInput.value = InitPixelOrPercentMenulist(globalElement, tableElement, "heightInput","heightPixelOrPercentMenulist");
   dialog.borderInput.value = globalElement.getAttribute("border");
 }
 
@@ -118,10 +114,10 @@ function ValidateData()
       globalElement.setAttribute("border", borderText);
   }
 
-  var isPercent = (dialog.pixelOrPercentMenulist.selectedIndex == 1);
+  var maxLimit;
+  var isPercent = (dialog.widthPixelOrPercentMenulist.selectedIndex == 1);
   widthText = TrimString(dialog.widthInput.value);
-  if (widthText) {
-    var maxLimit;
+  if (widthText.length > 0) {
     if (isPercent) {
       maxLimit = 100;
     } else {
@@ -130,11 +126,30 @@ function ValidateData()
     }
 
     widthText = ValidateNumberString(dialog.widthInput.value, 1, maxLimit);
-    if (widthText) {
-      if (isPercent)
-        widthText += "%";
-      globalElement.setAttribute("width", widthText);
+    if (widthText.length == 0) return false;
+
+    if (isPercent)
+      widthText += "%";
+    globalElement.setAttribute("width", widthText);
+  }
+
+  isPercent = (dialog.heightPixelOrPercentMenulist.selectedIndex == 1);
+  heightText = TrimString(dialog.widthInput.value);
+  if (heightText.length > 0) {
+    if (isPercent) {
+      maxLimit = 100;
+    } else {
+      // Upper limit when using pixels
+      maxLimit = maxPixels;
     }
+
+    heightText = ValidateNumberString(dialog.heightInput.value, 1, maxLimit);
+    if (heightText.length == 0) return false;
+
+    if (isPercent)
+      heightText += "%";
+
+    globalElement.setAttribute("height", heightText);
   }
   return true;
 }

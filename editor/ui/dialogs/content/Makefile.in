@@ -40,6 +40,8 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/EdImageProps.js \
 		$(srcdir)/EdInsSrc.xul \
 		$(srcdir)/EdInsSrc.js \
+    $(srcdir)/EdInsertChars.xul \
+    $(srcdir)/EdInsertChars.js \
 		$(srcdir)/EdHLineProps.xul \
 		$(srcdir)/EdHLineProps.js \
 		$(srcdir)/EdSpellCheck.xul \

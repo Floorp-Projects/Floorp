@@ -971,6 +971,12 @@ function EditorInsertOrEditHLine()
   contentWindow.focus();
 }
 
+function EditorInsertChars()
+{
+  window.openDialog("chrome://editor/content/EdInsertChars.xul", "_blank", "chrome,close,titlebar", "");
+  contentWindow.focus();
+}
+
 function EditorInsertOrEditNamedAnchor()
 {
   window.openDialog("chrome://editor/content/EdNamedAnchorProps.xul", "_blank", "chrome,close,titlebar,modal", "");

@@ -163,26 +163,27 @@ function CheckWord()
 
 function SelectSuggestedWord()
 {
-  dump("SpellCheck: SelectSuggestedWord\n");
   if (allowSelectWord)
-    dialog.ReplaceWordInput.value = dialog.SuggestedList.options[dialog.SuggestedList.selectedIndex].value;
+  {
+    var selValue = GetSelectedTreelistValue(dialog.SuggestedList);
+dump(selValue+"=Selected word in suggested list\n");
+    dialog.ReplaceWordInput.value = selValue;
+  }
 }
 
 function ChangeReplaceWord()
 {
   // Unselect the word in the suggested list when user edits the replacement word
-  dialog.SuggestedList.selectedIndex = -1;
+  dialog.SuggestedList.clearItemSelection();
 }
 
 function Ignore()
 {
-  dump("SpellCheck: Ignore\n");
   NextWord();
 }
 
 function IgnoreAll()
 {
-  dump("SpellCheck: IgnoreAll\n");
   if (MisspelledWord != "") {
     spellChecker.IgnoreWordAllOccurrences(MisspelledWord);
   }
@@ -191,7 +192,6 @@ function IgnoreAll()
 
 function Replace()
 {
-  dump("SpellCheck: Replace\n");
   newWord = dialog.ReplaceWordInput.value;
   //dump("New = "+newWord+" Misspelled = "+MisspelledWord+"\n");
   if (MisspelledWord != "" && MisspelledWord != newWord) {
@@ -251,19 +251,24 @@ function FillSuggestedList()
   // Clear the current contents of the list
   ClearTreelist(list);
 
-dump(MisspelledWord+"=misspelledword\n");
   if (MisspelledWord.length > 0)
   {
     // Get suggested words until an empty string is returned
+    var count = 0;
     do {
       word = spellChecker.GetSuggestedWord();
       dump("Suggested Word="+word+"|\n");
       if (word.length > 0) {
         AppendStringToTreelist(list, word);
+        count++;
       }
     } while (word.length > 0);
+    
+    var len = list.getAttribute("length");
 
-    if (list.getAttribute("length") == 0) {
+dump(len+"=number of words in list\n");
+
+    if (count == 0) {
       // No suggestions - show a message but don't let user select it
       var item = AppendStringToTreelistById(list, "NoSuggestedWords");
       if (item) item.setAttribute("disabled", "true");

@@ -42,7 +42,7 @@
   <keyset id="keyset"/>
   <broadcaster id="args" value=""/>
 
-  <text class="dialog" value="&ListType.label;"/>
+  <text class="label" value="&ListType.label;"/>
   <menulist flex="1" id="ListType" oncommand="SelectListType()">
     <menupopup>
       <menuitem value="&none.value;"/>
@@ -56,11 +56,11 @@
   <!-- message text and list items are set in JS 
        text value should be identical to string with id=BulletStyle in editor.properties 
   -->
-  <text class="dialog" id="BulletStyleLabel" value="&bulletStyle.label;"/>
+  <text class="label" id="BulletStyleLabel" value="&bulletStyle.label;"/>
   <menulist flex="1" class="MinWidth10em" id="BulletStyle" oncommand="SelectBulletStyle()"/>
   <spring class="spacer"/>
   <box>
-    <text class="dialog" id="StartingNumberLabel" value="&startingNumber.label;"/>
+    <text class="label" id="StartingNumberLabel" value="&startingNumber.label;"/>
     <spring class="spacer"/>
     <textfield class="narrow" id="StartingNumber" onkeyup="forceInteger('StartingNumber')"/>
     <spring/>

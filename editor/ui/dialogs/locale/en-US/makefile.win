@@ -27,6 +27,7 @@ install::
 	$(MAKE_INSTALL) EditorHLineProperties.dtd        $(DIST)\bin\chrome\editor\locale
 	$(MAKE_INSTALL) EditorImageProperties.dtd        $(DIST)\bin\chrome\editor\locale
 	$(MAKE_INSTALL) EditorInsertSource.dtd           $(DIST)\bin\chrome\editor\locale
+  $(MAKE_INSTALL) EditorInsertChars.dtd            $(DIST)\bin\chrome\editor\locale
 	$(MAKE_INSTALL) EditorInsertTable.dtd            $(DIST)\bin\chrome\editor\locale
 	$(MAKE_INSTALL) EditorLinkProperties.dtd         $(DIST)\bin\chrome\editor\locale
 	$(MAKE_INSTALL) EditorListProperties.dtd         $(DIST)\bin\chrome\editor\locale
@@ -44,6 +45,7 @@ install::
 clobber::
   rm -f $(DIST)\bin\chrome\editor\locale\EditorHLineProperties.dtd 
   rm -f $(DIST)\bin\chrome\editor\locale\EditorImageProperties.dtd
+  rm -f $(DIST)\bin\chrome\editor\locale\EditorInsertChars.dtd
   rm -f $(DIST)\bin\chrome\editor\locale\EditorInsertSource.dtd 
   rm -f $(DIST)\bin\chrome\editor\locale\EditorInsertTable.dtd 
   rm -f $(DIST)\bin\chrome\editor\locale\EditorLinkProperties.dtd 

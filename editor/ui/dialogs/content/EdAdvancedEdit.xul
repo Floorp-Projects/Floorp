@@ -39,7 +39,7 @@
     xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    align="vertical">
+    orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -67,7 +67,7 @@
     <html:div flex="100%" id="tagLabel"/>
   </box>
   <spring class="spacer"/>
-  <tabcontrol align="vertical" flex="100%">
+  <tabcontrol orient="vertical" flex="100%">
     <tabbox>
       <tab selected="true" value="&tabHTML.label;"/>
       <tab value="&tabCSS.label;"/>
@@ -78,7 +78,7 @@
       <!-- ============================================================== -->
       <!--                        HTML Attributes                         -->
       <!-- ============================================================== -->
-        <box class="tabpanel" flex="100%" align="vertical">
+        <box class="tabpanel" flex="100%" orient="vertical">
           <tree id="HTMLATree" 
             class="AttributesTree inset" 
             flex="100%" 
@@ -93,7 +93,7 @@
             </treehead>
             <treechildren id="HTMLAList"/>
           </tree>
-          <box align="vertical">
+          <box orient="vertical">
             <spring class="spacer"/>
             <titledbox orient="vertical">
               <title><text value="&AddHTMLAttributeLabel.label;"/></title>
@@ -111,7 +111,7 @@
       <!-- ============================================================== -->
       <!--                         CSS Attributes                         -->
       <!-- ============================================================== -->
-        <box class="tabpanel" flex="100%" align="vertical">
+        <box class="tabpanel" flex="100%" orient="vertical">
           <tree id="CSSATree" class="AttributesTree inset" flex="100%" context="attlistPopup">
             <treecol width="35%"/>
             <treecol width="65%" style="min-width: 30%"/>
@@ -123,7 +123,7 @@
             </treehead>
             <treechildren id="CSSAList"/>
           </tree>
-          <box align="vertical">
+          <box orient="vertical">
             <spring class="spacer"/>
             <titledbox orient="vertical">
               <title><text value="&AddCSSAttributeLabel.label;"/></title>
@@ -141,7 +141,7 @@
       <!-- ============================================================== -->
       <!--                    JavaScript Event Handlers                   -->
       <!-- ============================================================== -->
-        <box class="tabpanel" flex="100%" align="vertical">
+        <box class="tabpanel" flex="100%" orient="vertical">
           <tree id="JSEATree" class="AttributesTree inset" flex="100%" context="attlistPopup">
             <treecol width="35%"/>
             <treecol width="65%" style="min-width: 30%"/>
@@ -153,7 +153,7 @@
             </treehead>
             <treechildren id="JSEAList"/>
           </tree>
-          <box align="vertical">
+          <box orient="vertical">
             <spring class="spacer"/>
             <titledbox orient="vertical">
               <title><text value="&AddJSEAttributeLabel.label;"/></title>

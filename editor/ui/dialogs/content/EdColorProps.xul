@@ -34,7 +34,7 @@
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
-    align="vertical">
+    orient="vertical">
 
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script language="JavaScript" src="chrome://editor/content/EdColorProps.js"/>
@@ -42,9 +42,9 @@
 
   <broadcaster id="args" value=""/>
 
-  <text class="dialog bold" value="&pageColors.label;"/>
+  <text class="label bold" value="&pageColors.label;"/>
   <box orient="vertical">
-    <radiogroup orient="vertical">
+    <radiogroup orient="vertical" autostretch="never">
       <radio id="DefaultColorsRadio" value="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"/>
       <radio id="CustomColorsRadio" value="&customColorsRadio.label;" oncommand="UseCustomColors()"/>
     </radiogroup>
@@ -55,7 +55,7 @@
       <columns><column/><column/></columns>
       <rows>
         <row>
-          <text class="dialog" value="&normalText.label;"/>
+          <text class="label" value="&normalText.label;"/>
           <menu class="colorpicker">
     	      <box>
               <spring id="textCW" class="color-well"/>
@@ -67,7 +67,7 @@
           </menu>
         </row>
         <row>
-        <text class="dialog" value="&linkText.label;"/>
+        <text class="label" value="&linkText.label;"/>
           <menu class="colorpicker">
     	      <box>
               <spring id="linkCW" class="color-well"/>
@@ -79,7 +79,7 @@
           </menu>
         </row>
         <row>
-          <text class="dialog" value="&activeLinkText.label;"/>
+          <text class="label" value="&activeLinkText.label;"/>
           <menu class="colorpicker">
     	      <box>
               <spring id="activeCW" class="color-well"/>
@@ -91,7 +91,7 @@
           </menu>
         </row>
         <row>
-          <text class="dialog" value ="&visitedLinkText.label;"/>
+          <text class="label" value ="&visitedLinkText.label;"/>
           <menu class="colorpicker">
     	      <box>
               <spring id="visitedCW" class="color-well"/>
@@ -103,7 +103,7 @@
           </menu>
         </row>
         <row>
-          <text class="dialog" value="&background.label;"/>
+          <text class="label" value="&background.label;"/>
           <menu class="colorpicker">
     	      <box>
               <spring id="backgroundCW" class="color-well"/>
@@ -117,10 +117,10 @@
       </rows>
     </grid>
     <box orient="vertical" id="ColorPreview">
-      <text class="dialog" id="NormalText" value="&normalText.label;"/>
-      <text class="dialog" id="LinkText" value="&linkText.label;"/>
-      <text class="dialog" id="ActiveLinkText" value="&activeLinkText.label;"/>
-      <text class="dialog" id="VisitedLinkText" value="&visitedLinkText.label;"/>
+      <text class="label" id="NormalText" value="&normalText.label;"/>
+      <text class="label" id="LinkText" value="&linkText.label;"/>
+      <text class="label" id="ActiveLinkText" value="&activeLinkText.label;"/>
+      <text class="label" id="VisitedLinkText" value="&visitedLinkText.label;"/>
     </box>
   </box>
   <separator class="groove"/>
@@ -134,7 +134,7 @@
     <html id="SaveImageMsg" value="&saveImageMsg.label;"/>
     <spring class="bigspacer"/>
     <spring flex="1"/>
-    <box align="vertical">
+    <box orient="vertical">
       <spring class="bigspacer"/>
       <button class="dialog" id="AdvancedEditButton2"/>
     </box>

@@ -245,12 +245,12 @@ function FillListboxes()
   if (NamedAnchorCount > 0)
   {
     for (var i = 0; i < NamedAnchorCount; i++)
-    {
-      var item = AppendStringToTreelist(dialog.NamedAnchorList, NamedAnchorNodeList.item(i).name);
+      AppendStringToTreelist(dialog.NamedAnchorList, NamedAnchorNodeList.item(i).name);
 
-    }
     haveNamedAnchors = true;
-  } else {
+  } 
+  else 
+  {
     // Message to tell user there are none
     var item = AppendStringToTreelistById(dialog.NamedAnchorList, "NoNamedAnchors");
     if (item) item.setAttribute("disabled", "true");
@@ -318,15 +318,16 @@ function GetExistingHeadingIndex(text)
 
 function SelectNamedAnchor()
 {
-dump("SelectNamedAnchor\n");
+dump("SelectNamedAnchor. haveNamedAnchors="+haveNamedAnchors+"|\n");
   if (haveNamedAnchors)
-    dialog.hrefInput.value = "#"+dialog.NamedAnchorList.value;
+    dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.NamedAnchorList);
 }
 
 function SelectHeading()
 {
+dump("SelectHeading. haveHeadings="+haveHeadings+"|\n");
   if (haveHeadings)
-    dialog.hrefInput.value = "#"+dialog.HeadingsList.value;
+    dialog.hrefInput.value = "#"+GetSelectedTreelistValue(dialog.HeadingsList);
 }
 
 // Get and validate data from widgets.

@@ -33,10 +33,10 @@
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init('chrome://editor/content/sidebar-editor.rdf',
-               'NC:EditorSidebarRoot');" align="vertical">
+               'NC:EditorSidebarRoot');" orient="vertical">
 
 <script src="chrome://communicator/content/sidebar/sidebar.js" />
-<box id="sidebox" align="vertical" flex="100%">
+<box id="sidebox" orient="vertical" flex="100%">
  <box class="sidebartitle">
   <spring flex="100%"/>
   <titledbutton class="dialog borderless paneltitle" 

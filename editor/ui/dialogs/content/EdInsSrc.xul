@@ -34,7 +34,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    align="vertical" flex="100%">
+    orient="vertical" flex="100%">
 
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -44,7 +44,7 @@
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
 
-  <text class="dialog" id="srcMessage" value="&sourceEditField.label;"/>
+  <text class="label" id="srcMessage" value="&sourceEditField.label;"/>
   <textfield id="srcInput" multiline="true" rows="6" flex="1"/>
   <!-- Will this accept the embedded HTML tags? -->
   <box>
