@@ -292,7 +292,9 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
                                              PRBool&                  aWasHandled)
 {
   // Initialize the OUT parameters
-  aWasHandled = PR_FALSE;
+  // Assume we handled the incremental reflow
+  // until we find something that requires a full block reflow
+  aWasHandled = PR_TRUE;
 
   // See if the reflow command is targeted at us.
   nsReflowPath *path = aReflowState.path;
@@ -331,15 +333,11 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
                               reason, status);
         }
       }
-
-      // Indicate we handled the reflow command.
-      aWasHandled = PR_TRUE;
     } else {
-      // Reflow command is targeted directly at this block.
-      // We cannot handle this incrementally, we have to go to full reflow.
-      // Full reflow of nsBlockFrame reflows all absolutely positioned children,
-      // so skip the incremental update below.
-      return NS_OK;
+      // A reflow command is targeted directly at this block.
+      // The block will have to do a proper reflow.
+      // But keep going to make sure that we process any dirty absolute frames, below.
+      aWasHandled = PR_FALSE;
     }
   }
 
@@ -347,10 +345,6 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
   nsReflowPath::iterator end = path->EndChildren();
 
   if (iter != end && mAbsoluteFrames.NotEmpty()) {
-    // One of our children has been targeted for reflow. By default,
-    // assume we've handled it.
-    aWasHandled = PR_TRUE;
-
     for ( ; iter != end; ++iter) {
       // See if it's one of our absolutely positioned child frames
       if (mAbsoluteFrames.ContainsFrame(*iter)) {
