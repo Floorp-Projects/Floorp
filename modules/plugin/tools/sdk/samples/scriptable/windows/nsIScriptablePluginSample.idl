@@ -23,7 +23,7 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(d2d536a0-b6fc-11d5-9d10-0060b0fbd8ac)]
-interface nsIScriptablePlugin : nsISupports {
+interface nsIScriptablePluginSample : nsISupports {
   void showVersion();
   void clear();
 };

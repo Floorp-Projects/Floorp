@@ -330,7 +330,7 @@ NPError	nsPluginInstance::GetValue(NPPVariable aVariable, void *aValue)
   switch (aVariable) {
     case NPPVpluginScriptableInstance: {
       // addref happens in getter, so we don't addref here
-      nsIScriptablePlugin * scriptablePeer = getScriptablePeer();
+      nsIScriptablePluginSample * scriptablePeer = getScriptablePeer();
       if (scriptablePeer) {
         *(nsISupports **)aValue = scriptablePeer;
       } else
@@ -339,7 +339,7 @@ NPError	nsPluginInstance::GetValue(NPPVariable aVariable, void *aValue)
     break;
 
     case NPPVpluginScriptableIID: {
-      static nsIID scriptableIID = NS_ISCRIPTABLEPLUGIN_IID;
+      static nsIID scriptableIID = NS_ISCRIPTABLEPLUGINSAMPLE_IID;
       nsIID* ptr = (nsIID *)NPN_MemAlloc(sizeof(nsIID));
       if (ptr) {
           *ptr = scriptableIID;
