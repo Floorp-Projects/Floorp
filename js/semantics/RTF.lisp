@@ -372,8 +372,9 @@
 
 ; Indicate that this is a potential place for a line break in the stream provided
 ; by write-limited-lines.  If subdivide is true, also indicate that line breaks can
-; be inserted anywhere between this point and the last such point indicated by break-line
-; (or the beginning of write-limited-lines, whichever came last).
+; be inserted anywhere between the previous such point indicated by break-line
+; (or the beginning of write-limited-lines if this is the first call to break-line)
+; and this point.
 (defun break-line (limited-stream &optional subdivide)
   (let* ((new-chars (get-output-stream-string limited-stream))
          (length (length new-chars)))
@@ -549,6 +550,25 @@
       string)))
 
 
+; Write the string with characters in *rtf-special* preceded by backslashes and not allowing
+; linebreaks between a backslash and the character it is escaping.  Start with the character
+; at offset start in the given string.
+(defun write-escaped-rtf (stream string start)
+  (let ((end (position-if #'(lambda (char) (member char *rtf-special*)) string :start start)))
+    (if end
+      (progn
+        (unless (= start end)
+          (write-string string stream :start start :end end)
+          (break-line stream t))
+        (write-char #\\ stream)
+        (write-char (char string end) stream)
+        (break-line stream)
+        (write-escaped-rtf stream string (1+ end)))
+      (unless (= start (length string))
+        (write-string string stream :start start)
+        (break-line stream t)))))
+
+
 ; Write RTF to the character stream.  See read-rtf for a description
 ; of the layout of the rtf list.
 (defun write-rtf (rtf &optional (stream t))
@@ -560,8 +580,7 @@
           ((listp first-rtf)
            (write-group first-rtf stream t))
           ((stringp first-rtf)
-           (write-string (escape-rtf first-rtf) stream)
-           (break-line stream t))
+           (write-escaped-rtf stream first-rtf 0))
           ((symbolp first-rtf)
            (write-char #\\ stream)
            (write first-rtf :stream stream)
