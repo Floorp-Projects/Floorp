@@ -43,7 +43,8 @@
 
 [% BLOCK a_comment %]
   [% IF NOT comment.isprivate || isinsider %]
-    <div [% "class=\"bz_private\"" IF comment.isprivate %]>
+    <div [% "class=\"bz_private\" " IF comment.isprivate %]
+         [% "class=\"bz_comment_hilite\" " IF marks.$count %]>
       [% IF count > 0 %]
         <br>
         <span class="bz_comment">

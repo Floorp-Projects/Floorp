@@ -171,5 +171,11 @@
 .bz_disabled { color: #a0a0a0 ; }
 
 .bz_comment { background-color: #e0e0e0; }
+.bz_comment_hilite pre
+{
+    background-color: lightgreen;
+    margin: 0;
+    padding: 1em 0;
+}
 
 table#flags th, table#flags td { vertical-align: baseline; text-align: left; }
