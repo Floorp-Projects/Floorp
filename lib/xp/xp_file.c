@@ -392,6 +392,7 @@ int XP_RemoveDirectory (const char *name, XP_FileType type)
   return ret;
 }
 
+#if 0
 /*
 ** This function deletes a directory and everything under it.
 ** Deleting directories with "non-file" files, such as links,
@@ -458,7 +459,7 @@ int XP_RemoveDirectoryRecursive(const char *name, XP_FileType type)
 
 	return ret;
 }
-
+#endif
 
 int XP_FileTruncate(const char* name, XP_FileType type, int32 length)
 {
@@ -551,7 +552,7 @@ xp_unix_sprintf_stat( char * buf,
 /* returns a unmalloced static string 
  * that is only available for temporary use.
  */
-PUBLIC char *
+static char *
 xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 {
   const char *conf_dir = xp_unix_config_directory(configBuf);
@@ -1255,7 +1256,7 @@ XP_TempDirName(void)
 	return XP_STRDUP(tmp);
 }
 
-char *
+static char *
 xp_TempName (XP_FileType type, const char * prefix, char* buf, char* buf2, unsigned int *count)
 {
 #define NS_BUFFER_SIZE	1024
