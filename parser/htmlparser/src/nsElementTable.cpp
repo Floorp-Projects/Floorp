@@ -1921,6 +1921,7 @@ PRBool nsHTMLElement::IsResidualStyleTag(eHTMLTags aChild) {
     case eHTMLTag_tt:
     case eHTMLTag_u:       
       result=PR_TRUE;
+      break;
 
     case eHTMLTag_abbr:
     case eHTMLTag_acronym:   
