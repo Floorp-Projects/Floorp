@@ -59,6 +59,7 @@ namespace ICG {
     {
 #ifdef DEBUG
         ASSERT(stitcher.empty());
+        ASSERT(statementLabels.empty());
         for (LabelList::iterator i = labels.begin();
              i != labels.end(); i++) {
             ASSERT((*i)->mBase == iCode);
@@ -207,6 +208,26 @@ namespace ICG {
         iCode->push_back(instr);
     }
 
+    void ICodeGenerator::branchNotConditional(Label *label, Register condition)
+    {
+        ICodeOp branchOp = getBranchOp();
+        if (branchOp == NOP) {
+            // XXXX emit convert to boolean / Test / ...
+            branchOp = BRANCH_NE;
+        }
+        switch (branchOp) {
+            case BRANCH_EQ : branchOp = BRANCH_NE; break;
+            case BRANCH_GE : branchOp = BRANCH_LT; break;
+            case BRANCH_GT : branchOp = BRANCH_LE; break;
+            case BRANCH_LE : branchOp = BRANCH_GT; break;
+            case BRANCH_LT : branchOp = BRANCH_GE; break;
+            case BRANCH_NE : branchOp = BRANCH_EQ; break;
+            default : NOT_REACHED("Expected a branch op"); break;
+        }
+        GenericBranch *instr = new GenericBranch(branchOp, label, condition);
+        iCode->push_back(instr);
+    }
+
     /********************************************************************/
 
     Label *ICodeGenerator::getLabel()
@@ -262,7 +283,7 @@ namespace ICG {
         branch(whileConditionTop);
     
         // save off the current stream while we gen code for the condition
-        stitcher.push_back(new WhileCodeState(whileConditionTop, 
+        addStitcher(new WhileCodeState(whileConditionTop, 
                                               whileBlockStart, this));
 
         iCode = new InstructionStream();
@@ -314,7 +335,7 @@ namespace ICG {
 
         branch(forCondition);
 
-        stitcher.push_back(ics);
+        addStitcher(ics);
 
         // begin the stream for collecting the condition expression
         iCode = new InstructionStream();
@@ -383,7 +404,7 @@ namespace ICG {
         Label *doCondition = getLabel();
         setLabel(doBlock);
     
-        stitcher.push_back(new DoCodeState(doBlock, doCondition, this));
+        addStitcher(new DoCodeState(doBlock, doCondition, this));
 
         iCode = new InstructionStream();
     }
@@ -430,7 +451,7 @@ namespace ICG {
         InstructionStream *x = new InstructionStream();
         SwitchCodeState *ics = new SwitchCodeState(control, this);
         ics->swapStream(x);
-        stitcher.push_back(ics);
+        addStitcher(ics);
     }
 
     void ICodeGenerator::endCaseCondition(Register expression)
@@ -448,7 +469,7 @@ namespace ICG {
         resetTopRegister();
     }
 
-    void ICodeGenerator::beginCaseStatement()
+    void ICodeGenerator::beginCaseStatement(uint32 pos)
     {
         SwitchCodeState *ics = 
             static_cast<SwitchCodeState *>(stitcher.back());
@@ -468,7 +489,7 @@ namespace ICG {
         resetTopRegister();
     }
 
-    void ICodeGenerator::beginDefaultStatement()
+    void ICodeGenerator::beginDefaultStatement(uint32 pos)
     {
         SwitchCodeState *ics = 
             static_cast<SwitchCodeState *>(stitcher.back());
@@ -525,10 +546,9 @@ namespace ICG {
     {
         Label *elseLabel = getLabel();
     
-        stitcher.push_back(new IfCodeState(elseLabel, NULL, this));
+        addStitcher(new IfCodeState(elseLabel, NULL, this));
 
-        Register notCond = op(NOT, condition);
-        branchConditional(elseLabel, notCond);
+        branchNotConditional(elseLabel, condition);
 
         resetTopRegister();
     }
@@ -563,7 +583,7 @@ namespace ICG {
 
     /************************************************************************/
 
-    void ICodeGenerator::breakStatement()
+    void ICodeGenerator::breakStatement(uint32 pos)
     {
         for (std::vector<ICodeState *>::reverse_iterator p =
                  stitcher.rbegin(); p != stitcher.rend(); p++) {
@@ -583,7 +603,30 @@ namespace ICG {
         NOT_REACHED("no break target available");
     }
 
-    void ICodeGenerator::continueStatement()
+    void ICodeGenerator::breakStatement(uint32 pos, const StringAtom &label)
+    {
+        uint32 statementLabelCeiling = statementLabels.size();
+        
+        for (std::vector<ICodeState *>::reverse_iterator p =
+                    stitcher.rbegin(); p != stitcher.rend(); p++) {
+
+            for (std::vector<const StringAtom *>::iterator lbl =
+                    statementLabels.begin() + (*p)->statementLabelBase;
+                    lbl != statementLabels.begin() + statementLabelCeiling;
+                    lbl++) {
+                if ((*lbl) == &label) {
+		    if ((*p)->breakLabel == NULL)
+			(*p)->breakLabel = getLabel();
+                    branch((*p)->breakLabel);
+                    return;
+                }
+            }
+            statementLabelCeiling = (*p)->statementLabelBase;
+        }
+        NOT_REACHED("no break target available");
+    }
+
+    void ICodeGenerator::continueStatement(uint32 pos)
     {
         for (std::vector<ICodeState *>::reverse_iterator p =
                  stitcher.rbegin(); p != stitcher.rend(); p++) {
@@ -602,7 +645,32 @@ namespace ICG {
         NOT_REACHED("no continue target available");
     }    
 
-    Formatter& ICodeGenerator::print(Formatter& f)
+    void ICodeGenerator::continueStatement(uint32 pos, const StringAtom &label)
+    {
+        uint32 statementLabelCeiling = statementLabels.size();
+        
+        for (std::vector<ICodeState *>::reverse_iterator p =
+                    stitcher.rbegin(); p != stitcher.rend(); p++) {
+
+            for (std::vector<const StringAtom *>::iterator lbl =
+                    statementLabels.begin() + (*p)->statementLabelBase;
+                    lbl != statementLabels.begin() + statementLabelCeiling;
+                    lbl++) {
+                if ((*lbl) == &label) {
+		    if ((*p)->continueLabel == NULL)
+			(*p)->continueLabel = getLabel();
+                    branch((*p)->continueLabel);
+                    return;
+                }
+            }
+            statementLabelCeiling = (*p)->statementLabelBase;
+        }
+        NOT_REACHED("no continue target available");
+    }
+
+     /************************************************************************/
+
+   Formatter& ICodeGenerator::print(Formatter& f)
     {
         f << "ICG! " << (uint32)iCode->size() << "\n";
         for (InstructionIterator i = iCode->begin(); 
