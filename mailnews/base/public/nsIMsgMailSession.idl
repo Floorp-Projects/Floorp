@@ -69,6 +69,9 @@ interface nsIMsgMailSession : nsISupports {
 
   void NotifyFolderItemAdded(in nsISupports parentItem, in nsISupports item, in string viewString);
   void NotifyFolderItemDeleted(in nsISupports parentItem, in nsISupports item, in string viewString);
+
+  void NotifyFolderEvent(in nsIFolder folder, in nsIAtom event);
+  
   void NotifyFolderLoaded(in nsIFolder folder);
   void NotifyDeleteOrMoveMessagesCompleted(in nsIFolder folder);
 

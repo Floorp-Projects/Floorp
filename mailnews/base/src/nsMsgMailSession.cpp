@@ -262,8 +262,23 @@ NS_IMETHODIMP  nsMsgMailSession::NotifyDeleteOrMoveMessagesCompleted(nsIFolder *
 		listener->OnDeleteOrMoveMessagesCompleted(folder);
 	}
 	return NS_OK;
+}
 
+NS_IMETHODIMP nsMsgMailSession::NotifyFolderEvent(nsIFolder *aFolder,
+                                                  nsIAtom *aEvent)
+{
+	nsresult rv;
+	PRUint32 count;
+	rv = mListeners->Count(&count);
+	if (NS_FAILED(rv)) return rv;
 
+	
+	for(PRUint32 i = 0; i < count; i++)
+	{
+		nsCOMPtr<nsIFolderListener> listener = getter_AddRefs((nsIFolderListener*)mListeners->ElementAt(i));
+		listener->OnItemEvent(aFolder, aEvent);
+	}
+	return NS_OK;
 }
 
 nsresult nsMsgMailSession::GetTopmostMsgWindow(nsIMsgWindow* *aMsgWindow)
