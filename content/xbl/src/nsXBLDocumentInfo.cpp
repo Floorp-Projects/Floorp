@@ -120,7 +120,8 @@ XBL_ProtoErrorReporter(JSContext *cx,
     PRUint32 column = report->uctokenptr - report->uclinebuf;
 
     errorObject->Init
-         (report->ucmessage, NS_ConvertUTF8toUCS2(report->filename).get(),
+         (NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage),
+          NS_ConvertUTF8toUCS2(report->filename).get(),
           NS_REINTERPRET_CAST(const PRUnichar*, report->uclinebuf),
           report->lineno, column, report->flags,
           "xbl javascript"
