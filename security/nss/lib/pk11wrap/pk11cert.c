@@ -3286,10 +3286,11 @@ PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, SECItem *name,
 	{ CKA_CLASS, NULL, 0 },
 	{ CKA_NETSCAPE_KRL, NULL, 0 },
 	{ CKA_NETSCAPE_URL, NULL, 0 },
-	{ CKA_VALUE, NULL, 0 }
+	{ CKA_VALUE, NULL, 0 },
+	{ CKA_TOKEN, NULL, 0 }
     };
     /* if you change the array, change the variable below as well */
-    int tsize = sizeof(theTemplate)/sizeof(theTemplate[0]);
+    int tsize;
     CK_BBOOL ck_true = CK_TRUE;
     CK_BBOOL ck_false = CK_FALSE;
     CK_OBJECT_HANDLE crlh = CK_INVALID_HANDLE;
@@ -3303,6 +3304,10 @@ PK11_PutCrl(PK11SlotInfo *slot, SECItem *crl, SECItem *name,
 			&ck_false : &ck_true, sizeof (CK_BBOOL)); attrs++;
     PK11_SETATTRS(attrs, CKA_NETSCAPE_URL, url, PORT_Strlen(url)+1); attrs++;
     PK11_SETATTRS(attrs, CKA_VALUE,crl->data,crl->len); attrs++;
+    PK11_SETATTRS(attrs, CKA_TOKEN, &ck_true,sizeof(CK_BBOOL)); attrs++;
+
+    tsize = attrs - &theTemplate[0];
+    PORT_Assert(tsize >= sizeof(theTemplate)/sizeof(theTemplate[0]));
 
     rwsession = PK11_GetRWSession(slot);
     if (rwsession == CK_INVALID_SESSION) {
