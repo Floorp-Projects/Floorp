@@ -169,7 +169,9 @@ protected:
   
 
 	static nsIRDFResource* kNC_Subject;
+	static nsIRDFResource* kNC_SubjectCollation;
 	static nsIRDFResource* kNC_Sender;
+	static nsIRDFResource* kNC_SenderCollation;
 	static nsIRDFResource* kNC_Date;
 	static nsIRDFResource* kNC_Status;
 	static nsIRDFResource* kNC_Flagged;

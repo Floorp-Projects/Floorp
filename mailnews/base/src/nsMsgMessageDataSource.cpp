@@ -42,7 +42,9 @@ static NS_DEFINE_CID(kLocaleFactoryCID,			NS_LOCALEFACTORY_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID,		NS_DATETIMEFORMAT_CID);
 
 nsIRDFResource* nsMsgMessageDataSource::kNC_Subject = nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_SubjectCollation = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Sender= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_SenderCollation = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Date= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Status= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Flagged= nsnull;
@@ -81,8 +83,12 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 
 	if (kNC_Subject)
 		NS_RELEASE2(kNC_Subject, refcnt);
+	if (kNC_SubjectCollation)
+		NS_RELEASE2(kNC_SubjectCollation, refcnt);
 	if (kNC_Sender)
 		NS_RELEASE2(kNC_Sender, refcnt);
+	if (kNC_SenderCollation)
+		NS_RELEASE2(kNC_SenderCollation, refcnt);
 	if (kNC_Date)
 		NS_RELEASE2(kNC_Date, refcnt);
 	if (kNC_Status)
@@ -138,7 +144,9 @@ nsresult nsMsgMessageDataSource::Init()
 	if (! kNC_Subject) {
     
 		mRDFService->GetResource(NC_RDF_SUBJECT, &kNC_Subject);
+		mRDFService->GetResource(NC_RDF_SUBJECT_COLLATION_SORT, &kNC_SubjectCollation);
 		mRDFService->GetResource(NC_RDF_SENDER, &kNC_Sender);
+		mRDFService->GetResource(NC_RDF_SENDER_COLLATION_SORT, &kNC_SenderCollation);
 		mRDFService->GetResource(NC_RDF_DATE, &kNC_Date);
 		mRDFService->GetResource(NC_RDF_STATUS, &kNC_Status);
 		mRDFService->GetResource(NC_RDF_FLAGGED, &kNC_Flagged);
@@ -512,11 +520,11 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
                                          nsIRDFResource *property,
                                          nsIRDFNode **target)
 {
-    if (peqCollationSort(kNC_Subject, property))
+    if (kNC_SubjectCollation == property)
       return createMessageNameNode(message, PR_TRUE, target);
     else if (kNC_Subject == property)
       return createMessageNameNode(message, PR_FALSE, target);
-    else if (peqCollationSort(kNC_Sender, property))
+    else if (kNC_SenderCollation == property)
       return createMessageSenderNode(message, PR_TRUE, target);
     else if (kNC_Sender == property)
       return createMessageSenderNode(message, PR_FALSE, target);

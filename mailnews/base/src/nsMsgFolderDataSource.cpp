@@ -47,6 +47,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_Child = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_MessageChild = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Folder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Name= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_NameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_ServerType = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_IsServer = nsnull;
@@ -88,6 +89,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
   NS_RELEASE2(kNC_MessageChild, refcnt);
   NS_RELEASE2(kNC_Folder, refcnt);
   NS_RELEASE2(kNC_Name, refcnt);
+  NS_RELEASE2(kNC_NameSort, refcnt);
   NS_RELEASE2(kNC_SpecialFolder, refcnt);
   NS_RELEASE2(kNC_ServerType, refcnt);
   NS_RELEASE2(kNC_IsServer, refcnt);
@@ -133,6 +135,7 @@ nsresult nsMsgFolderDataSource::Init()
     mRDFService->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
     mRDFService->GetResource(NC_RDF_FOLDER,  &kNC_Folder);
     mRDFService->GetResource(NC_RDF_NAME,    &kNC_Name);
+    mRDFService->GetResource(NC_RDF_NAME_SORT,    &kNC_NameSort);
     mRDFService->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
     mRDFService->GetResource(NC_RDF_SERVERTYPE, &kNC_ServerType);
     mRDFService->GetResource(NC_RDF_ISSERVER, &kNC_IsServer);
@@ -737,7 +740,7 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 {
   nsresult rv = NS_RDF_NO_VALUE;
 
-  if (peqSort(kNC_Name, property))
+  if (kNC_NameSort == property)
 		rv = createFolderNameNode(folder, target, PR_TRUE);
   else if (kNC_Name == property)
 		rv = createFolderNameNode(folder, target, PR_FALSE);

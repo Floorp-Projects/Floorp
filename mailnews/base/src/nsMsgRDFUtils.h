@@ -53,6 +53,12 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_CHARSET				NC_NAMESPACE_URI "Charset"
 #define NC_RDF_BIFFSTATE			NC_NAMESPACE_URI "BiffState"
 
+//Sort Properties
+#define NC_RDF_SUBJECT_COLLATION_SORT	NC_NAMESPACE_URI "Subject?collation=true"
+#define NC_RDF_SENDER_COLLATION_SORT	NC_NAMESPACE_URI "Sender?collation=true"
+
+#define NC_RDF_NAME_SORT				NC_NAMESPACE_URI "Name?sort=true"
+
 //Folder Commands
 #define NC_RDF_DELETE				NC_NAMESPACE_URI "Delete"
 #define NC_RDF_NEWFOLDER			NC_NAMESPACE_URI "NewFolder"
@@ -70,6 +76,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_TOGGLEREAD			NC_NAMESPACE_URI "ToggleRead"
 #define NC_RDF_MARKFLAGGED			NC_NAMESPACE_URI "MarkFlagged"
 #define NC_RDF_MARKUNFLAGGED		NC_NAMESPACE_URI "MarkUnflagged"
+
 
 //Returns PR_TRUE if r1 is equal to r2 and r2 is the sort property.
 PRBool
