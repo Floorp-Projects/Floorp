@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.42 $ 
-# $Date: 2002/05/03 04:40:05 $ 
+# $Revision: 1.43 $ 
+# $Date: 2002/05/03 19:50:43 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -166,6 +166,12 @@ $EMPTY_TABLE_CELL = $HTMLPopUp::EMPTY_TABLE_CELL ||
 
 $DISPLAY_BUILD_ERRORS = $TinderConfig::DISPLAY_BUILD_ERRORS  ||
     1;
+
+
+# The number of most recent builds used in computing the averages
+# which estimate the build times.
+
+$NUM_OF_AVERAGE = 10;
 
 # Find the name of each build and the proper order to display them.
 # No part of the code should peek at keys %{ $DATABASE{$tree} } directly.
@@ -435,12 +441,19 @@ sub trim_db_history {
       
       my ($rec) = $recs->[$db_index];
 
-      if ( ($rec->{'status'} eq 'success') && 
-           ($rec->{'runtime'}) ) {
+      if ( 
+           ($rec->{'runtime'}) &&
+           ($rec->{'status'} eq 'success') && 
+           ($#run_times < $NUM_OF_AVERAGE) &&
+           1) {
         push @run_times, $rec->{'runtime'};
       }
       
-      if ( $rec->{'deadtime'} ) {
+      if ( 
+           ($rec->{'deadtime'}) &&
+           ($rec->{'status'} eq 'success') && 
+           ($#dead_times < $NUM_OF_AVERAGE) &&
+           1) {
         push @dead_times, $rec->{'deadtime'};
       }
       
@@ -450,6 +463,12 @@ sub trim_db_history {
       }
       
     }
+
+    # We do not use the very first datapoint as it is probably
+    # incomplete.
+
+    pop @run_times;
+    pop @dead_times;
 
     # medians are a more robust statistical estimator then the mean.
     # They will give us better answers then a typical "average"
@@ -498,10 +517,14 @@ sub event_times_vec {
   @times = sort {$b <=> $a} @times;
 
   my @out;
+  my $old_time = 0;
   foreach $time (@times) {
-    ($time <= $start_time) || next;
-    ($time <= $end_time) && last;
-    push @out, $time;
+      ($time == $old_time) && next;
+      ($time <= $start_time) || next;
+      ($time <= $end_time) && last;
+
+      $old_time = $time;
+      push @out, $time;
   }
 
   return @out;
@@ -509,13 +532,43 @@ sub event_times_vec {
 
 
 
+# Print out the Database in a visually useful form so that I can
+# debug timing problems.  This is not called by any code. I use this
+# in the debugger.
+
+sub debug_database {
+  my ($self, $tree) = (@_);
+
+  my @build_names = build_names($tree);
+  foreach $buildname (@build_names) {
+      print "$buildname\n";
+      my ($num_recs) = $#{ $DATABASE{$tree}{$buildname}{'recs'} };
+      foreach $i (0 .. $num_recs) {
+
+          my $rec = $DATABASE{$tree}{$buildname}{'recs'}[$i];
+
+          my $starttime = localtime($rec->{'starttime'});
+          my $endtime = localtime($rec->{'endtime'});
+          my $runtime = main::round($rec->{'runtime'}/$main::SECONDS_PER_MINUTE);
+          my $deadtime = main::round($rec->{'deadtime'}/$main::SECONDS_PER_MINUTE);
+          my $status = $rec->{'status'};
+
+          print "\tendtime: $endtime\n";
+          print "\tstarttime: $starttime\n";
+          print "\t\t\t\truntime: $runtime deadtime: $deadtime status: $status\n";
+      }
+  }
+
+  return ;
+}
+
+
+
 sub status_table_legend {
   my ($out)='';
 
+  # print all the possible links which can be included in a build.
   my $print_legend = BuildStatus::TinderboxPrintLegend();
-
-# print all the possible links which can be included in a build
-# Much of this is Mozilla.org specific.
 
 $out .=<<EOF;
         <td align=right valign=top>
@@ -665,15 +718,13 @@ sub status_table_header {
     $num_lines++;
 
     if ($avg_buildtime) {
-      my $min = sprintf ("%.0f",         # round
-                         $avg_buildtime/60);
+        my $min = main::round($avg_buildtime/$main::SECONDS_PER_MINUTE);
       $txt .= "avg_buildtime (minutes): &nbsp;$min<br>";
       $num_lines++;
     }
     
     if ($avg_deadtime) {
-      my $min = sprintf ("%.0f",         # round
-                         $avg_deadtime/60);
+        my $min =  main::round($avg_deadtime/$main::SECONDS_PER_MINUTE);
       $txt .= "avg_deadtime (minutes): &nbsp;$min<br>";
       $num_lines++;
     }
@@ -683,8 +734,10 @@ sub status_table_header {
     my $estimated_remaining = undef;
 
     if ($current_finnished) {
-      my ($min) =  sprintf ("%.0f",         # round
-                            ($main::TIME - $current_endtime)/60);
+      my ($min) =  main::round(
+                               ($main::TIME - $current_endtime)/
+                               $main::SECONDS_PER_MINUTE
+                               );
       $txt .= "current dead_time (minutes): &nbsp;$min<br>";
       $num_lines += 2;
 
@@ -704,23 +757,25 @@ sub status_table_header {
       }
 
     } elsif ($current_starttime) {
-      my ($min) =  sprintf ("%.0f",         # round
-                            ($main::TIME  - $current_starttime)/60);
-      $txt .= "current start_time: &nbsp;";
-      $txt .= &HTMLPopUp::timeHTML($current_starttime)."<br>";
-      $txt .= "current build_time (minutes): &nbsp;$min<br>";
-      $num_lines += 2;
+        my ($min) = main::round(
+                                ($main::TIME  - $current_starttime)/
+                                $main::SECONDS_PER_MINUTE
+                                );
+        $txt .= "current start_time: &nbsp;";
+        $txt .= &HTMLPopUp::timeHTML($current_starttime)."<br>";
+        $txt .= "current build_time (minutes): &nbsp;$min<br>";
+        $num_lines += 2;
 
-      if ($avg_buildtime) {
-        $estimated_remaining = ($avg_buildtime) - 
-          ($main::TIME - $current_starttime);
-      }
+        if ($avg_buildtime) {
+            $estimated_remaining = ($avg_buildtime) - 
+                ($main::TIME - $current_starttime);
+        }
 
     }
 
     if ($estimated_remaining) {
-      my $min =  sprintf ("%.0f",         # round
-                          ($estimated_remaining/60) );
+        my $min = main::round($estimated_remaining/
+                                $main::SECONDS_PER_MINUTE);
       my $estimate_end_time = $main::TIME + $estimated_remaining;
       $txt .= "time_remaining (estimate): &nbsp;$min<br>";
       $num_lines++;
@@ -834,12 +889,6 @@ sub apply_db_updates {
 
    }  
 
-    # Keep the spacing between builds greater then our HTML grid
-    # spacing.  There can be very frequent updates for any build
-    # but different builds must be spaced apart.
-      
-    # If updates start too fast, remove older build from database.
-
     if ( defined($DATABASE{$tree}{$build}{'recs'}) ) {
       
       my ($safe_separation) = ($TinderDB::TABLE_SPACING * 
@@ -854,6 +903,12 @@ sub apply_db_updates {
       my ($different_builds) = ($record->{'starttime'} !=
                                 $previous_rec->{'starttime'});
          
+      # Keep the spacing between builds greater then our HTML grid
+      # spacing.  There can be very frequent updates for any build
+      # but different builds must be spaced apart.
+      
+      # If updates start too fast, remove older build from database.
+
       if (
           ($different_builds) && 
           ($separation < $safe_separation) 
@@ -868,6 +923,13 @@ sub apply_db_updates {
           shift @{ $DATABASE{$tree}{$build}{'recs'} };          
       }
 
+      # Some build machines are buggy and new builds appear to start
+      # before old builds finish. Fix the incoming data here so that
+      # builds do not overlap.
+
+      if ($record->{'starttime'} < $previous_rec->{'endtime'}) {
+          $record->{'starttime'} = $previous_rec->{'endtime'}
+      }
 
     } 
     # Is this report for the same build as the [0] entry? If so we do not
@@ -876,19 +938,19 @@ sub apply_db_updates {
 
     if ( defined($DATABASE{$tree}{$build}{'recs'}) &&
          ($record->{'starttime'} == $previous_rec->{'starttime'})
-       ) {
+         ) {
+        
+        if (BuildStatus::is_status_final($previous_rec->{'status'})) {
+            # Ignore the new entry if old entry was final.
+            next;
+        }
+        
+        # Remove old entry if it is not final.
 
-      if (BuildStatus::is_status_final($previous_rec->{'status'})) {
-        # Ignore the new entry if old entry was final.
-        next;
-      }
+        shift @{ $DATABASE{$tree}{$build}{'recs'} };
+        $previous_rec = $DATABASE{$tree}{$build}{'recs'}[0];
+    } 
 
-      # Remove old entry if it is not final.
-      shift @{ $DATABASE{$tree}{$build}{'recs'} };
-      $previous_rec = $DATABASE{$tree}{$build}{'recs'}[0];
-
-    }
-    
     # Add the record to the datastructure.
     
     if ( defined( $DATABASE{$tree}{$build}{'recs'} ) ) {
@@ -900,8 +962,6 @@ sub apply_db_updates {
     # If there is a final disposition then we need to add a bunch of
     # other data which depends on what is already available.
     
-    if ($buildstatus ne 'not_running') {
-
       if ($previous_rec->{'starttime'}) {
 
         # show what has new has made it into this build, it is also what
@@ -911,11 +971,15 @@ sub apply_db_updates {
 
       }
 
-      $record->{'runtime'} = ( $record->{'timenow'} - 
-                               $record->{'starttime'} );
+      $record->{'runtime'} = (
+                              $record->{'timenow'} - 
+                              $record->{'starttime'} 
+                              );
 
-      $record->{'deadtime'} = ( $record->{'starttime'} - 
-                                $previous_rec->{'endtime'} );
+      $record->{'deadtime'} = ( 
+                                $record->{'starttime'} - 
+                                $previous_rec->{'endtime'} 
+                                );
 
       # fix for mozilla.org issues
 
@@ -936,12 +1000,12 @@ sub apply_db_updates {
       # round the division
 
       $info .= ("runtime: ".
-                sprintf("%.2f", ($record->{'runtime'}/60)).
+              main::round($record->{'runtime'}/$main::SECONDS_PER_MINUTE).
                 " (minutes)<br>");
       if ($record->{'deadtime'}) {
-        $info .= ("deadtime: ".
-                  sprintf("%.2f", ($record->{'deadtime'}/60)).
-                  " (minutes)<br>");
+          $info .= ("deadtime: ".
+                  main::round($record->{'deadtime'}/$main::SECONDS_PER_MINUTE).
+                    " (minutes)<br>");
       }
       $info .= "buildstatus: $record->{'status'}<br>";
       $info .= "buildname: $record->{'buildname'}<br>";
@@ -954,8 +1018,6 @@ sub apply_db_updates {
 
       $record = '';
 
-    }
-    
   } # $update_file 
 
   $METADATA{$tree}{'updates_since_trim'}+=   
