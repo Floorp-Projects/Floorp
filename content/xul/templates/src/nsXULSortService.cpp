@@ -494,9 +494,13 @@ XULSortServiceImpl::GetSortColumnIndex(nsIContent *tree, const nsString& sortRes
 					}
 					else
 					{
+/*
 						nsString	falseStr("false");
 						child->SetAttribute(kNameSpaceID_None, kSortAtom, falseStr, PR_TRUE);
 						child->SetAttribute(kNameSpaceID_None, kSortDirectionAtom, sortDirection, PR_TRUE);
+*/
+						child->UnsetAttribute(kNameSpaceID_None, kSortAtom, PR_TRUE);
+						child->UnsetAttribute(kNameSpaceID_None, kSortDirectionAtom, PR_TRUE);
 					}
 				}
 				++colIndex;
