@@ -192,7 +192,7 @@ morkEnv::morkEnv(morkEnv* ev, /*i*/
     ev->NilPointerError();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(morkEnv, morkObject, nsIMdbEnv);
+NS_IMPL_ISUPPORTS_INHERITED1(morkEnv, morkObject, nsIMdbEnv)
 /*public non-poly*/ void
 morkEnv::CloseEnv(morkEnv* ev) /*i*/ // called by CloseMorkNode();
 {

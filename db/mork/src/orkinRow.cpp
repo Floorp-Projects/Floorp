@@ -205,7 +205,7 @@ orkinRow::CanUseRowStore(morkEnv* ev) const
 
 
 // { ===== begin nsISupports methods =====
-NS_IMPL_QUERY_INTERFACE1(orkinRow, nsIMdbRow);
+NS_IMPL_QUERY_INTERFACE1(orkinRow, nsIMdbRow)
 
 /*virtual*/ nsrefcnt
 orkinRow::AddRef() // add strong ref with no

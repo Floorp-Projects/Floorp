@@ -97,7 +97,7 @@ RemoveJSGCRoot(void* aScriptObjectRef)
   return NS_OK;
 }
 
-MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplProperty);
+MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplProperty)
 
 nsXBLProtoImplProperty::nsXBLProtoImplProperty(const PRUnichar* aName,
                                                const PRUnichar* aGetter, 

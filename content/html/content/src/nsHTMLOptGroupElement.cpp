@@ -132,8 +132,8 @@ nsHTMLOptGroupElement::~nsHTMLOptGroupElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLOptGroupElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLOptGroupElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLOptGroupElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLOptGroupElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLOptGroupElement

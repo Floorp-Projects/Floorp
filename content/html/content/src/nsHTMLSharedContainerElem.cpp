@@ -135,8 +135,8 @@ nsHTMLSharedContainerElement::~nsHTMLSharedContainerElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLSharedContainerElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLSharedContainerElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLSharedContainerElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLSharedContainerElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLSharedContainerElement

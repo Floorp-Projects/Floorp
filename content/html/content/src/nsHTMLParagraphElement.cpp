@@ -116,8 +116,8 @@ nsHTMLParagraphElement::~nsHTMLParagraphElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLParagraphElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLParagraphElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLParagraphElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLParagraphElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLParagraphElement

@@ -1203,7 +1203,7 @@ inline nsBorderEdge::nsBorderEdge()
   mColor=0;
   mSide=NS_SIDE_LEFT;
   mInsideNeighbor = nsnull;
-};
+}
 
 /** an encapsulation of a border defined by its edges 
   * owner of this struct is responsible for freeing any data stored in mEdges
@@ -1221,6 +1221,6 @@ inline nsBorderEdges::nsBorderEdges()
 {
   mMaxBorderWidth.SizeTo(0,0,0,0);
   mOutsideEdge = PR_TRUE;
-};
+}
 
 #endif /* nsStyleStruct_h___ */

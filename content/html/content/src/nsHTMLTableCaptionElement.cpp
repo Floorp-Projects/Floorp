@@ -113,8 +113,8 @@ nsHTMLTableCaptionElement::~nsHTMLTableCaptionElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLTableCaptionElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLTableCaptionElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLTableCaptionElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLTableCaptionElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLTableCaptionElement

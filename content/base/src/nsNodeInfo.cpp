@@ -91,7 +91,7 @@ nsNodeInfo::Init(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS1(nsNodeInfo, nsINodeInfo);
+NS_IMPL_ISUPPORTS1(nsNodeInfo, nsINodeInfo)
 
 
 // nsINodeInfo

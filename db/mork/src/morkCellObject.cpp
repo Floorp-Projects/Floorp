@@ -144,7 +144,7 @@ morkCellObject::morkCellObject(morkEnv* ev, const morkUsage& inUsage,
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(morkCellObject, morkObject, nsIMdbCell);
+NS_IMPL_ISUPPORTS_INHERITED1(morkCellObject, morkObject, nsIMdbCell)
 
 /*public non-poly*/ void
 morkCellObject::CloseCellObject(morkEnv* ev) // called by CloseMorkNode();

@@ -209,7 +209,7 @@ morkEnv* orkinFactory::GetInternalFactoryEnv(mdb_err* outErr)
 }
 
 // { ===== begin nsIMdbISupports methods =====
-NS_IMPL_QUERY_INTERFACE0(orkinFactory);
+NS_IMPL_QUERY_INTERFACE0(orkinFactory)
 
 /*virtual*/ nsrefcnt
 orkinFactory::AddRef() // add strong ref with no

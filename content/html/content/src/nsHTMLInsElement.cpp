@@ -103,8 +103,8 @@ nsHTMLInsElement::~nsHTMLInsElement()
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLInsElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLInsElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLInsElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLInsElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLInsElement

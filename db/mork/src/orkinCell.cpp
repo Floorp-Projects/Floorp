@@ -214,7 +214,7 @@ orkinCell::CanUseCell(nsIMdbEnv* mev, mork_bool inMutable,
 }
 
 // { ===== begin nsIMdbISupports methods =====
-NS_IMPL_QUERY_INTERFACE0(orkinCell);
+NS_IMPL_QUERY_INTERFACE0(orkinCell)
 
 /*virtual*/ nsrefcnt
 orkinCell::AddRef() // add strong ref with no

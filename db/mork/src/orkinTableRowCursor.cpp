@@ -151,7 +151,7 @@ orkinTableRowCursor::CanUseTableRowCursor(nsIMdbEnv* mev,
 }
 
 // { ===== begin nsIMdbISupports methods =====
-NS_IMPL_QUERY_INTERFACE1(orkinTableRowCursor, nsIMdbTableRowCursor);
+NS_IMPL_QUERY_INTERFACE1(orkinTableRowCursor, nsIMdbTableRowCursor)
 
 /*virtual*/ nsrefcnt
 orkinTableRowCursor::AddRef() // add strong ref with no

@@ -42,7 +42,7 @@ nsWyciwygProtocolHandler::~nsWyciwygProtocolHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsWyciwygProtocolHandler, nsIProtocolHandler);
+NS_IMPL_ISUPPORTS1(nsWyciwygProtocolHandler, nsIProtocolHandler)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIProtocolHandler methods:

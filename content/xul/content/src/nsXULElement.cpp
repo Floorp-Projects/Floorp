@@ -568,8 +568,8 @@ nsXULElement::Create(nsINodeInfo *aNodeInfo, nsIContent** aResult)
 //----------------------------------------------------------------------
 // nsISupports interface
 
-NS_IMPL_ADDREF(nsXULElement);
-NS_IMPL_RELEASE(nsXULElement);
+NS_IMPL_ADDREF(nsXULElement)
+NS_IMPL_RELEASE(nsXULElement)
 
 NS_IMETHODIMP
 nsXULElement::QueryInterface(REFNSIID iid, void** result)

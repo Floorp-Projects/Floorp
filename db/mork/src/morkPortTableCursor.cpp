@@ -119,7 +119,7 @@ morkPortTableCursor::morkPortTableCursor(morkEnv* ev,
   }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(morkPortTableCursor, morkCursor, nsIMdbPortTableCursor);
+NS_IMPL_ISUPPORTS_INHERITED1(morkPortTableCursor, morkCursor, nsIMdbPortTableCursor)
 
 morkEnv*
 morkPortTableCursor::CanUsePortTableCursor(nsIMdbEnv* mev,

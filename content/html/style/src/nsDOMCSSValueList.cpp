@@ -50,8 +50,8 @@ nsDOMCSSValueList::~nsDOMCSSValueList()
 {
 }
 
-NS_IMPL_ADDREF(nsDOMCSSValueList);
-NS_IMPL_RELEASE(nsDOMCSSValueList);
+NS_IMPL_ADDREF(nsDOMCSSValueList)
+NS_IMPL_RELEASE(nsDOMCSSValueList)
 
 // QueryInterface implementation for nsDOMCSSValueList
 NS_INTERFACE_MAP_BEGIN(nsDOMCSSValueList)

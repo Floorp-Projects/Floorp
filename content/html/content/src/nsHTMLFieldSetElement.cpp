@@ -115,8 +115,8 @@ nsHTMLFieldSetElement::~nsHTMLFieldSetElement()
 
 // nsISupports
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLFieldSetElement, nsGenericElement);
-NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement);
+NS_IMPL_ADDREF_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFieldSetElement

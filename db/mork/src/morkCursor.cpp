@@ -93,7 +93,7 @@ morkCursor::morkCursor(morkEnv* ev,
     mNode_Derived = morkDerived_kCursor;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(morkCursor, morkObject, nsIMdbCursor);
+NS_IMPL_ISUPPORTS_INHERITED1(morkCursor, morkObject, nsIMdbCursor)
 
 /*public non-poly*/ void
 morkCursor::CloseCursor(morkEnv* ev) // called by CloseMorkNode();

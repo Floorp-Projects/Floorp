@@ -91,8 +91,8 @@ nsROCSSPrimitiveValue::GetEscapedURI(PRUnichar *aURI, PRUnichar **aReturn)
 }
 
 
-NS_IMPL_ADDREF(nsROCSSPrimitiveValue);
-NS_IMPL_RELEASE(nsROCSSPrimitiveValue);
+NS_IMPL_ADDREF(nsROCSSPrimitiveValue)
+NS_IMPL_RELEASE(nsROCSSPrimitiveValue)
 
 
 // QueryInterface implementation for nsROCSSPrimitiveValue

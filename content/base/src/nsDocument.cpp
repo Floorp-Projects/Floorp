@@ -321,8 +321,8 @@ NS_INTERFACE_MAP_BEGIN(nsDOMImplementation)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_ADDREF(nsDOMImplementation);
-NS_IMPL_RELEASE(nsDOMImplementation);
+NS_IMPL_ADDREF(nsDOMImplementation)
+NS_IMPL_RELEASE(nsDOMImplementation)
 
 
 NS_IMETHODIMP

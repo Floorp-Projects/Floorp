@@ -142,7 +142,7 @@ nsNodeInfoManager::~nsNodeInfoManager()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsNodeInfoManager, nsINodeInfoManager);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNodeInfoManager, nsINodeInfoManager)
 
 
 // nsINodeInfoManager

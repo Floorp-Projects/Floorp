@@ -168,7 +168,7 @@ nsDOMMutationEvent::InitMutationEvent(const nsAString& aTypeArg, PRBool aCanBubb
   }
     
   return NS_OK;
-};
+}
 
 nsresult NS_NewDOMMutationEvent(nsIDOMEvent** aInstancePtrResult,
                                 nsIPresContext* aPresContext,
