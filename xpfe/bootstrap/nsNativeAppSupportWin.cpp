@@ -68,6 +68,7 @@
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
+#include "nsXPCOM.h"
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -2009,10 +2010,14 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
 
     // OK, now create nsICmdLineService object from argc/argv.
     static NS_DEFINE_CID( kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID );
-    rv = nsComponentManager::CreateInstance( kCmdLineServiceCID,
-                                             0,
-                                             NS_GET_IID( nsICmdLineService ),
-                                             (void**)aResult );
+
+    nsCOMPtr<nsIComponentManager> compMgr;
+    NS_GetComponentManager(getter_AddRefs(compMgr));
+    rv = compMgr->CreateInstance( kCmdLineServiceCID,
+                                  0,
+                                  NS_GET_IID( nsICmdLineService ),
+                                  (void**)aResult );
+
     if ( NS_FAILED( rv ) || NS_FAILED( ( rv = (*aResult)->Initialize( argc, argv ) ) ) ) {
 #if MOZ_DEBUG_DDE
         printf( "Error creating command line service = 0x%08X (argc=%d, argv=0x%08X)\n", (int)rv, (int)argc, (void*)argv );
@@ -2491,8 +2496,7 @@ nsNativeAppSupportWin::StartServerMode() {
     }
 
     // Create the array for the arguments.
-    nsCOMPtr<nsISupportsArray>   argArray;
-    NS_NewISupportsArray( getter_AddRefs( argArray ) );
+    nsCOMPtr<nsISupportsArray> argArray = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
     if ( !argArray ) {
         return NS_OK;
     }

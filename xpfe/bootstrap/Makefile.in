@@ -36,6 +36,8 @@ MOZ_WINCONSOLE=0
 endif
 endif
 
+DEFINES		+= -DXPCOM_GLUE
+
 MODULE		= apprunner
 REQUIRES	= xpcom \
 		  xpconnect \
@@ -91,25 +93,24 @@ CPPSRCS		= \
 		showOSAlert.cpp \
 		$(NULL)
 
-ifneq ($(OS_ARCH),WINNT)
-CPPSRCS		+= nsSigHandlers.cpp
-endif
 
-XP_LIBS		= \
-		$(EXTRA_DSO_LDOPTS) \
-		$(EXTRA_DSO_LIBS) \
+ifneq ($(OS_ARCH),WINNT)
+STACKWALK_SRC_LCSRCS =               \
+		nsStackFrameUnix.cpp \
+		nsStackFrameUnix.h   \
 		$(NULL)
 
-ifndef BUILD_STATIC_LIBS
+STACKWALK_CPPSRCS := $(addprefix $(topsrcdir)/xpcom/base/, $(STACKWALK_SRC_LCSRCS))
 
-EXTRA_DSO_LIBS += gkgfx
-ifdef MOZ_OJI
-ifeq ($(OS_ARCH),WINNT)
-EXTRA_DSO_LIBS += jsj$(MOZ_BITS)$(VERSION_NUMBER)
-else
-EXTRA_DSO_LIBS += jsj
+CPPSRCS		+= nsSigHandlers.cpp nsStackFrameUnix.cpp
 endif
-endif
+
+LIBS	= $(EXTRA_DSO_LDOPTS) \
+	  $(EXTRA_DSO_LIBS) \
+	  $(NULL)
+
+
+ifndef BUILD_STATIC_LIBS
 
 ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS	+= tracemalloc
@@ -128,24 +129,30 @@ EXTRA_DSO_LDOPTS+= -L$(DEPTH)/dist/lib/components
 endif # !WINNT
 EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
 REQUIRES	+= $(STATIC_REQUIRES)
-XP_LIBS		+= $(STATIC_EXTRA_LIBS)
+LIBS		+= $(STATIC_EXTRA_LIBS)
 
 endif
 
-XP_LIBS		+= \
+# If you change anything that mozilla links to, please talk to dougt@netscape.com
+LIBS		+= \
 		$(MOZ_JS_LIBS) \
-		$(XPCOM_LIBS) \
+		$(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)embedstring.$(LIB_SUFFIX) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
 ifdef MOZ_JPROF
-XP_LIBS         += -ljprof
+LIBS         += -ljprof
 endif
-
-LIBS		= $(XP_LIBS)
 
 ifdef GC_LEAK_DETECTOR
 LIBS += -lboehm
+endif
+
+ifdef MOZ_DEMANGLE_SYMBOLS
+LIBS += -liberty
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
@@ -251,7 +258,18 @@ endif
 endif
 endif
 
+SRCS_IN_OBJDIR=1 
+
+ifneq ($(OS_ARCH),WINNT)
+GARBAGE         += $(STACKWALK_SRC_LCSRCS) $(wildcard *.$(OBJ_SUFFIX))
+endif
+
 include $(topsrcdir)/config/rules.mk
+
+ifneq ($(OS_ARCH),WINNT)
+export:: $(STACKWALK_CPPSRCS)
+	$(INSTALL) $^ .
+endif
 
 ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
@@ -382,3 +400,4 @@ README_FILE = $(topsrcdir)/README.txt
 libs::
 	$(INSTALL) $(README_FILE) $(DIST)/bin
 	$(INSTALL) $(topsrcdir)/LICENSE $(DIST)/bin
+

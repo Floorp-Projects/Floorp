@@ -36,10 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsXPCOMGlue.h"
 
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIGenericFactory.h"
+#include "nsIComponentRegistrar.h"
 
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -406,7 +408,6 @@ static nsresult GetNativeAppSupport(nsINativeAppSupport** aNativeApp)
 
     return *aNativeApp ? NS_OK : NS_ERROR_FAILURE;
 }
-
 
 /*
  * This routine translates the nsresult into a platform specific return
@@ -930,6 +931,14 @@ static nsresult ConvertToUnicode(nsString& aCharset, const char* inString, nsASt
 
   return rv;
 }
+static PRBool IsAscii(const char *aString) {
+  while(*aString) {
+     if( 0x80 & *aString)
+        return PR_FALSE;
+     aString++;
+  }
+  return PR_TRUE;
+}
  
 static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 {
@@ -955,7 +964,7 @@ static nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width)
 #endif /* DEBUG_CMD_LINE */
 
       nsAutoString url; 
-      if (nsCRT::IsAscii(urlToLoad))  {
+      if (IsAscii(urlToLoad))  {
         url.AssignWithConversion(urlToLoad);
       }
       else {
@@ -1358,10 +1367,11 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // _Always_ autoreg if we're in a debug build, under the assumption
   // that people are busily modifying components and will be angry if
   // their changes aren't noticed.
-    nsComponentManager::AutoRegister(nsIComponentManagerObsolete::NS_Startup,
-                                     nsnull /* default */);
+  nsCOMPtr<nsIComponentRegistrar> registrar;
+  NS_GetComponentRegistrar(getter_AddRefs(registrar));
+  registrar->AutoRegister(nsnull);
+  registrar = nsnull;
 #endif
-
 
   NS_TIMELINE_ENTER("startupNotifier");
 
@@ -1841,12 +1851,22 @@ int main(int argc, char* argv[])
 #ifdef MOZ_JPROF
   setupProfilingStuff();
 #endif
+    
+  NS_TIMELINE_MARK("GRE_Startup...");
+  nsresult rv = GRE_Startup();
+  NS_TIMELINE_MARK("...GRE_Startup done");
+
+  if (NS_FAILED(rv)) {
+       // We should be displaying a dialog here with the reason why we failed.
+    NS_WARNING("GRE_Startup failed");
+    return 1;
+  }
 
   // Try to allocate "native app support."
   // Note: this object is not released here.  It is passed to main1 which
   //       has responsibility to release it.
   nsINativeAppSupport *nativeApp = 0;
-  nsresult rv = NS_CreateNativeAppSupport(&nativeApp);
+  rv = NS_CreateNativeAppSupport(&nativeApp);
 
   // See if we can run.
   if (nativeApp)
@@ -1880,13 +1900,6 @@ int main(int argc, char* argv[])
     splash->Show();
   }
 
-  NS_TIMELINE_MARK("InitXPCom...");
-
-  rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
-
-  NS_TIMELINE_MARK("...InitXPCOM done");
-
 #ifdef MOZ_ENABLE_XREMOTE
   // handle -remote now that xpcom is fired up
   int remoterv;
@@ -1894,10 +1907,9 @@ int main(int argc, char* argv[])
   // argused will be true if someone tried to use a -remote flag.  We
   // always exit in that case.
   remoterv = HandleRemoteArguments(argc, argv, &argused);
+
   if (argused) {
-    if (NS_SUCCEEDED(rv)) // only call NS_ShutdownXPCOM if Init succeeded.
-      NS_ShutdownXPCOM(nsnull);
-    return remoterv;
+    GRE_Shutdown();
   }
 #endif
 
@@ -1909,10 +1921,8 @@ int main(int argc, char* argv[])
     NS_ASSERTION(NS_SUCCEEDED(rv), "DoOnShutdown failed");
   }
 
-  if (NS_SUCCEEDED(rv)) { // only call NS_ShutdownXPCOM if Init succeeded.
-      rv = NS_ShutdownXPCOM(nsnull);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-  }
+  rv = GRE_Shutdown();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "GRE_Shutdown failed");
 
   return TranslateReturnValue(mainResult);
 }
