@@ -100,6 +100,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_Widget3DBorder:
         aMetric = ::GetSystemMetrics(SM_CXEDGE);
         break;
+    case eMetric_TextFieldBorder:
+        aMetric = 3;
+        break;
     case eMetric_TextFieldHeight:
         aMetric = 24;
         break;
