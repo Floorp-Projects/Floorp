@@ -36,6 +36,9 @@ $CLOBBER_DIST_ALL = 0;      # turn on to clobber all aliases/files inside dist (
 $CLOBBER_DIST_LIBS = 0;     # turn on to clobber only aliases/files for libraries/sym files in dist
 $USE_XPIDL = 0;             # turn on to use the XPIDL plugin to generate files.
 
+$CodeWarriorLib::CLOSE_PROJECTS_FIRST = 0;
+							#1 = close then make (for development), 0 = make then close (for tinderbox).
+
 $MOZ_FULLCIRCLE = 0;
 
 $pull{all} = 0;
@@ -76,16 +79,16 @@ if ($build{all})
 if ($build{most})
 {
 ### Just uncomment/comment to get the ones you want (if "most" is selected).
-	$build{dist} = 1;
-    $build{stubs} = 1;
-	$build{common} = 1; # Requires intl
+#	$build{dist} = 1;
+#    $build{stubs} = 1;
+#	$build{common} = 1; # Requires intl
 #   $build{intl} = 1; 
-	$build{nglayout} = 1;
-	$build{resources} = 1;
+#	$build{nglayout} = 1;
+#	$build{resources} = 1;
 #	$build{editor} = 1;
-#	$build{mailnews} = 1;
+	$build{mailnews} = 1;
 #	$build{viewer} = 1;
-	$build{xpapp} = 1;
+#	$build{xpapp} = 1;
 }
 
 # do the work
