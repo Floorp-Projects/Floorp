@@ -176,15 +176,20 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mBounds.width = 0;
   mBounds.height = 0;
   mResized = PR_FALSE;
+
+   // Setup for possible aggregation
   if (aOuter)
     mOuter = aOuter;
   else
     mOuter = &mInner;
+  mRefCnt = 1; 
+
   mGC = nsnull ;
   mShown = PR_FALSE;
   mVisible = PR_FALSE;
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
+
 }
 
 
@@ -195,6 +200,7 @@ nsWindow::nsWindow(nsISupports *aOuter):
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
+  XtDestroyWidget(mWidget);
   if (nsnull != mGC) {
     ::XFreeGC((Display *)GetNativeData(NS_NATIVE_DISPLAY),mGC);
     mGC = nsnull;
