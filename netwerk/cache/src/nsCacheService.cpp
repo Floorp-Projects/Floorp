@@ -490,6 +490,7 @@ nsresult
 nsCacheService::CreateRequest(nsCacheSession *   session,
                               const char *       clientKey,
                               nsCacheAccessMode  accessRequested,
+                              PRBool             blockingMode,
                               nsICacheListener * listener,
                               nsCacheRequest **  request)
 {
@@ -504,7 +505,7 @@ nsCacheService::CreateRequest(nsCacheSession *   session,
     if (mMaxKeyLength < key->Length()) mMaxKeyLength = key->Length();
 
     // create request
-    *request = new  nsCacheRequest(key, listener, accessRequested, session);    
+    *request = new  nsCacheRequest(key, listener, accessRequested, blockingMode, session);    
     if (!*request) {
         delete key;
         return NS_ERROR_OUT_OF_MEMORY;
@@ -514,19 +515,13 @@ nsCacheService::CreateRequest(nsCacheSession *   session,
 
     // get the nsIEventQueue for the request's thread
     nsresult  rv;
-#if 0
-    // XXX can we just keep a reference so we don't have to do this everytime?
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv))  goto error;
-#endif
-    
     rv = mEventQService->ResolveEventQueue(NS_CURRENT_EVENTQ,
                                           getter_AddRefs((*request)->mEventQ));
     if (NS_FAILED(rv))  goto error;
     
     
     if (!(*request)->mEventQ) {
-        rv = NS_ERROR_UNEXPECTED; // XXX what is the right error?
+        rv = NS_ERROR_NOT_AVAILABLE;
         goto error;
     }
 
@@ -547,12 +542,6 @@ nsCacheService::NotifyListener(nsCacheRequest *          request,
 {
     nsresult rv;
 
-#if 0
-    // XXX can we hold onto the proxy object manager?
-    NS_WITH_SERVICE(nsIProxyObjectManager, proxyObjMgr, kProxyObjectManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-#endif
-
     nsCOMPtr<nsICacheListener> listenerProxy;
     NS_ASSERTION(request->mEventQ, "no event queue for async request!");
     rv = mProxyObjectManager->GetProxyForObject(request->mEventQ,
@@ -567,7 +556,8 @@ nsCacheService::NotifyListener(nsCacheRequest *          request,
 
 
 nsresult
-nsCacheService::ProcessRequest(nsCacheRequest * request,
+nsCacheService::ProcessRequest(nsCacheRequest *           request,
+                               PRBool                     calledFromOpenCacheEntry,
                                nsICacheEntryDescriptor ** result)
 {
     // !!! must be called with mCacheServiceLock held !!!
@@ -587,15 +577,16 @@ nsCacheService::ProcessRequest(nsCacheRequest * request,
             if (rv != NS_ERROR_CACHE_WAIT_FOR_VALIDATION) break;
             
             if (request->mListener) // async exits - validate, doom, or close will resume
-                return rv; 
+                return rv;
             
-            // XXX allocate condvar for request if necessary
-            PR_Unlock(mCacheServiceLock);
-            rv = request->WaitForValidation();
-            PR_Lock(mCacheServiceLock);
+            if (request->IsBlocking()) {
+                PR_Unlock(mCacheServiceLock);
+                rv = request->WaitForValidation();
+                PR_Lock(mCacheServiceLock);
+            }
 
             PR_REMOVE_AND_INIT_LINK(request);
-            if (NS_FAILED(rv)) break;
+            if (NS_FAILED(rv)) break;   // non-blocking mode returns WAIT_FOR_VALIDATION error
             // okay, we're ready to process this request, request access again
         }
         if (rv != NS_ERROR_CACHE_ENTRY_DOOMED)  break;
@@ -613,6 +604,10 @@ nsCacheService::ProcessRequest(nsCacheRequest * request,
         rv = entry->CreateDescriptor(request, accessGranted, getter_AddRefs(descriptor));
 
     if (request->mListener) {  // Asynchronous
+    
+        if (NS_FAILED(rv) && calledFromOpenCacheEntry)
+            return rv;  // skip notifying listener, just return rv to caller
+            
         // call listener to report error or descriptor
         nsresult rv2 = NotifyListener(request, descriptor, accessGranted, rv);
         if (NS_FAILED(rv2) && NS_SUCCEEDED(rv)) {
@@ -629,6 +624,7 @@ nsresult
 nsCacheService::OpenCacheEntry(nsCacheSession *           session,
                                 const char *               key,
                                 nsCacheAccessMode          accessRequested,
+                                PRBool                     blockingMode,
                                 nsICacheListener *         listener,
                                 nsICacheEntryDescriptor ** result)
 {
@@ -638,11 +634,16 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
 
     nsCacheRequest * request = nsnull;
 
-    nsresult rv = CreateRequest(session, key, accessRequested, listener, &request);
+    nsAutoLock lock(mCacheServiceLock);
+    nsresult rv = CreateRequest(session,
+                                key,
+                                accessRequested,
+                                blockingMode,
+                                listener,
+                                &request);
     if (NS_FAILED(rv))  return rv;
 
-    nsAutoLock lock(mCacheServiceLock);
-    rv = ProcessRequest(request, result);
+    rv = ProcessRequest(request, PR_TRUE, result);
 
     // delete requests that have completed
     if (!(listener && (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)))
@@ -1019,7 +1020,7 @@ nsCacheService::ProcessPendingRequests(nsCacheEntry * entry)
             PR_REMOVE_AND_INIT_LINK(request);
 
             if (entry->IsDoomed()) {
-                rv = ProcessRequest(request, nsnull);
+                rv = ProcessRequest(request, PR_FALSE, nsnull);
                 if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION)
                     rv = NS_OK;
                 else

@@ -97,8 +97,9 @@ nsCacheEntry::~nsCacheEntry()
     }
     
     nsISupports * data = mData;
-    NS_ADDREF(data);
-    
+    NS_ADDREF(data);    // this reference will be owned by the event
+    mData = nsnull;     // release our reference before switching threads
+
     PL_InitEvent(event,
                  data,
                  CacheElementReleaseEventHandler,

@@ -66,6 +66,7 @@ public:
     nsresult         OpenCacheEntry(nsCacheSession *           session,
                                     const char *               key,
                                     nsCacheAccessMode          accessRequested,
+                                    PRBool                     blockingMode,
                                     nsICacheListener *         listener,
                                     nsICacheEntryDescriptor ** result);
 
@@ -120,6 +121,7 @@ private:
     nsresult         CreateRequest(nsCacheSession *   session,
                                    const char *       clientKey,
                                    nsCacheAccessMode  accessRequested,
+                                   PRBool             blockingMode,
                                    nsICacheListener * listener,
                                    nsCacheRequest **  request);
 
@@ -136,7 +138,8 @@ private:
 
     void             DeactivateEntry(nsCacheEntry * entry);
 
-    nsresult         ProcessRequest(nsCacheRequest * request,
+    nsresult         ProcessRequest(nsCacheRequest *           request,
+                                    PRBool                     calledFromOpenCacheEntry,
                                     nsICacheEntryDescriptor ** result);
 
     nsresult         ProcessPendingRequests(nsCacheEntry * entry);
