@@ -39,9 +39,9 @@
   <popup id="downloadHistoryPopup" onpopupshowing="return buildContextMenu();">
     <menuitem id="menuitem_launch" label="&cmd.openfile.label;" default="true"
               accesskey="&cmd.openfile.accesskey;" command="cmd_openfile"/>
-    <menuseparator id="menuseparator_launch"/>
     <menuitem id="menuitem_show" label="&cmd.show.label;" accesskey="&cmd.show.accesskey;"
               command="cmd_showinshell"/>
+    <menuseparator id="menuseparator_launch"/>
     <menuitem id="menuitem_remove" label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
               command="cmd_remove"/>
   </popup>
