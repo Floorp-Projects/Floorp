@@ -3750,6 +3750,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   m_downloadingFolderForOfflineUse = PR_FALSE;
   SetNotifyDownloadedLines(PR_FALSE);
   NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
+  nsCOMPtr <nsIMsgCopyServiceListener> listener;
   if (aUrl)
   {
     nsCOMPtr<nsIMsgWindow> aWindow;
@@ -3826,6 +3827,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
               if (m_transactionManager)
                 m_transactionManager->DoTransaction(m_copyState->m_undoMsgTxn);
             }
+            if (m_copyState->m_listener)
+              listener = do_QueryInterface(m_copyState->m_listener);
             ClearCopyState(aExitCode);
             sendEndCopyNotification = PR_TRUE;
           }
@@ -3902,6 +3905,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
               {
                 if (m_transactionManager && m_copyState->m_undoMsgTxn)
                     m_transactionManager->DoTransaction(m_copyState->m_undoMsgTxn);
+                if (m_copyState->m_listener)
+                  listener = do_QueryInterface(m_copyState->m_listener);
                 ClearCopyState(aExitCode);
                 sendEndCopyNotification = PR_TRUE;
               }
@@ -3938,8 +3943,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   // Only send the OnStopCopy notification if we have no copy state (which means we're doing an online
   // move/copy, and have cleared the copy state above) or if we've finished the move/copy
   // of multiple imap messages, one msg at a time (i.e., moving to a local folder).
-  if (mCopyListener && sendEndCopyNotification)
-    mCopyListener->OnStopCopy(aExitCode);
+  if (listener && sendEndCopyNotification)
+    listener->OnStopCopy(aExitCode);
   return rv;
 }
 
@@ -5069,8 +5074,6 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   nsCOMPtr<nsIUrlListener> urlListener;
   nsCOMPtr<nsISupports> srcSupport;
   nsCOMPtr<nsISupports> copySupport;
-
-  mCopyListener = listener;
 
   if (msgWindow && allowUndo)
   {

@@ -378,7 +378,6 @@ protected:
   PRBool m_folderNeedsACLListed;
 
   nsCOMPtr<nsIMsgMailNewsUrl> mUrlToRelease;
-  nsCOMPtr<nsIMsgCopyServiceListener> mCopyListener;
 
   // offline imap support
   PRBool m_downloadMessageForOfflineUse;
