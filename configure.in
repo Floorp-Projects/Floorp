@@ -3395,7 +3395,6 @@ AC_SUBST(MOZ_PHOENIX)
 dnl ========================================================
 dnl = XUL Runner
 dnl ========================================================
-MOZ_XUL_APP=
 if test "$MOZ_XULRUNNER"; then
    AC_DEFINE(MOZ_XULRUNNER)
    MOZ_XUL_APP=1
