@@ -749,10 +749,10 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetPosition(PRInt32 x, PRInt32 y)
 NS_IMETHODIMP GtkMozEmbedChrome::GetPosition(PRInt32 *x, PRInt32 *y)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetPosition\n"));
-  NS_ENSURE_ARG_POINTER(x);
-  NS_ENSURE_ARG_POINTER(y);
-  *x = mBounds.x;
-  *y = mBounds.y;
+  if (x)
+    *x = mBounds.x;
+  if (y)
+    *y = mBounds.y;
   return NS_OK;
 }
 
@@ -767,10 +767,10 @@ NS_IMETHODIMP GtkMozEmbedChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint
 NS_IMETHODIMP GtkMozEmbedChrome::GetSize(PRInt32 *cx, PRInt32 *cy)
 {
   PR_LOG(mozEmbedLm, PR_LOG_DEBUG, ("GtkMozEmbedChrome::GetSize\n"));
-  NS_ENSURE_ARG_POINTER(cx);
-  NS_ENSURE_ARG_POINTER(cy);
-  *cx = mBounds.width;
-  *cy = mBounds.height;
+  if (cx)
+    *cx = mBounds.width;
+  if (cy)
+    *cy = mBounds.height;
   return NS_OK;
 }
 
