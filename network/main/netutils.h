@@ -23,6 +23,10 @@
 #define MAXHOSTNAMELEN 64
 #endif
 
+#ifndef CONST 
+#define CONST const
+#endif
+
 XP_BEGIN_PROTOS
 
 /*

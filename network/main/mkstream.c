@@ -732,6 +732,9 @@ NET_RegisterContentTypeConverter (char          * format_in,
 #ifdef MOZILLA_CLIENT
 #ifdef XP_UNIX
 
+#include "cvview.h"
+#include "cvextcon.h"
+
 /* register a mime type and a command to be executed
  *
  * if stream_block_size is zero then the data will be completely

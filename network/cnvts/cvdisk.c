@@ -51,9 +51,9 @@ PRIVATE void net_SaveToDiskComplete (NET_StreamClass *stream)
 	DataObject *obj=stream->data_object;	
     fclose(obj->fp);
 
-    FREEIF(obj->filename);
+    XP_FREEIF(obj->filename);
 
-    FREE(obj);
+    XP_FREE(obj);
     return;
 }
 
@@ -65,7 +65,7 @@ PRIVATE void net_SaveToDiskAbort (NET_StreamClass *stream, int status)
     if(obj->filename)
       {
         remove(obj->filename);
-        FREE(obj->filename);
+        XP_FREE(obj->filename);
       }
 
     return;

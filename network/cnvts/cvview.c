@@ -214,16 +214,16 @@ PRIVATE void net_ExtViewComplete (NET_StreamClass *stream)
 		TRACEMSG(("Invoking: %s", command));
 
         system(command);
-	    FREEIF(obj->command);
+	    XP_FREEIF(obj->command);
       }
 	else
       {
         pclose(obj->fp);
       }
 
-    FREEIF(obj->filename);
-	FREEIF(obj->url);
-    FREE(obj);
+    XP_FREEIF(obj->filename);
+	XP_FREEIF(obj->url);
+    XP_FREE(obj);
     return;
 }
 
@@ -237,13 +237,13 @@ PRIVATE void net_ExtViewAbort (NET_StreamClass *stream, int status)
     if(obj->filename)
       {
 	    remove(obj->filename);
-        FREE(obj->filename);
+        XP_FREE(obj->filename);
       }
 
-	FREEIF(obj->url);
-    FREEIF(obj->command);
+	XP_FREEIF(obj->url);
+    XP_FREEIF(obj->command);
 
-    FREE(obj);
+    XP_FREE(obj);
     
     return;
 }
@@ -418,14 +418,14 @@ NET_ExtViewerConverter   (int         format_out,
 				   );
 		  if (!FE_Confirm (window_id, msg))
 			{
-			  FREE (stream);
-			  FREE (obj);
-			  FREE (path);
-			  FREE (prog);
+			  XP_FREE (stream);
+			  XP_FREE (obj);
+			  XP_FREE (path);
+			  XP_FREE (prog);
 			  return(NULL);
 			}
 		}
-	  FREE (prog);
+	  XP_FREE (prog);
 	}
 #endif /* XP_UNIX */
 
@@ -445,9 +445,9 @@ NET_ExtViewerConverter   (int         format_out,
 
 		if(yes_stream == -1)
 		  {
-			FREE(stream);
-			FREE(obj);
-        	FREE(path);
+			XP_FREE(stream);
+			XP_FREE(obj);
+        	XP_FREE(path);
 			return(NULL);
 		  }
 	  }
@@ -497,8 +497,8 @@ NET_ExtViewerConverter   (int         format_out,
 
 		tmp_filename = WH_TempName(xpTemporary, "MO");
 		if (!tmp_filename) {
-			FREEIF(stream);
-			FREEIF(obj);
+			XP_FREEIF(stream);
+			XP_FREEIF(obj);
 			return NULL;
 		}
 		if (dot)
@@ -535,7 +535,7 @@ NET_ExtViewerConverter   (int         format_out,
 			  StrAllocCopy(obj->filename, tmp_filename);
 		  }
 		
-        FREE(path);
+        XP_FREE(path);
 		XP_FREE(tmp_filename);
 
 		obj->fp = XP_FileOpen(obj->filename, xpTemporary, XP_FILE_WRITE);
