@@ -2028,7 +2028,7 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
     if (!prompter)
     {
         //-- Couldn't get prompter from the current window, so get the prompt service.
-        nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+        nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
         if (wwatch)
           wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
         if (!prompter)
