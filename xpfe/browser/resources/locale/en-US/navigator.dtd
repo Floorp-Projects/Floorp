@@ -272,7 +272,7 @@
 <!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; QA --> 
 <!ENTITY QA.label "QA">
 <!ENTITY PrecheckinTests.label "Precheckin Tests">
-<!ENTITY QABugCmd.label "Bug Writing">
+<!ENTITY QABugCmd.label "Bug Writing Guidelines">
 <!ENTITY QATempCmd.label "Bug Template">
 <!ENTITY QASmokeCmd.label "Smoke Tests">
 <!ENTITY QAKnownBugCmd.label "Known Bugs">
