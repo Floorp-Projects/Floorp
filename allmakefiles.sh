@@ -187,6 +187,7 @@ modules/libimg/classes/netscape/libimg/Makefile
 modules/libimg/png/Makefile
 modules/libimg/public/Makefile
 modules/libimg/src/Makefile
+modules/libjar/Makefile
 modules/libpref/Makefile
 modules/libpref/admin/Makefile
 modules/libpref/l10n/Makefile
@@ -315,6 +316,9 @@ xpcom/libxpt/xptinfo/src/Makefile
 xpcom/libxpt/xptinfo/tests/Makefile
 xpcom/idl/Makefile
 silentdl/Makefile
+xpinstall/Makefile
+xpinstall/public/Makefile
+xpinstall/src/Makefile
 xpfe/Makefile
 xpfe/AppCores/Makefile
 xpfe/AppCores/public/Makefile

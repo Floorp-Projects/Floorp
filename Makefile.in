@@ -62,6 +62,7 @@ DIRS +=				\
   modules/libimg		\
   modules/oji			\
   modules/plugin		\
+  modules/libjar		\
   caps				\
   lib/xp			\
   lib/libpwcac			\
@@ -77,6 +78,7 @@ DIRS +=				\
   webshell			\
   editor			\
   silentdl			\
+  xpinstall			\
   sun-java			\
   $(NULL)
 
