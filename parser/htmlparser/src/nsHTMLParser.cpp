@@ -31,6 +31,7 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_IHTML_PARSER_IID); 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
+static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTMLCONTENTSINK_IID);
 
 
 /**-------------------------------------------------------
@@ -107,6 +108,7 @@ nsHTMLParser::~nsHTMLParser() {
   if(mDTD)
     delete mDTD;
   mDTD=0;
+  NS_IF_RELEASE(mSink);
 }
 
 
@@ -270,13 +272,20 @@ CDefaultTokenHandler* nsHTMLParser::AddTokenHandler(CDefaultTokenHandler* aHandl
  *  @param   nsIContentSink interface for node receiver
  *  @return  
  *------------------------------------------------------*/
-nsIContentSink* nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
+void nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
   NS_PRECONDITION(0!=aSink,"sink cannot be null!");
-  nsIContentSink* old=mSink;
   if(aSink) {
-    mSink=(nsHTMLContentSink*)(aSink);
+    nsIHTMLContentSink* htmlSink;
+    if (NS_OK == aSink->QueryInterface(kIHTMLContentSinkIID, (void**)&htmlSink)) {
+      if ((nsHTMLContentSink*)(htmlSink) != mSink) {
+        NS_IF_RELEASE(mSink);
+        mSink = (nsHTMLContentSink*)(htmlSink);
+      }
+      else {
+        NS_RELEASE(htmlSink);
+      }
+    }
   }
-  return old;
 }
 
 /**-------------------------------------------------------
@@ -301,7 +310,7 @@ PRBool nsHTMLParser::Parse(nsIURL* aURL){
     mTokenizer=new CTokenizer(aURL, delegate);
     mTokenizer->Tokenize();
 
-#define VERBOSE_DEBUG
+//#define VERBOSE_DEBUG
 #ifdef VERBOSE_DEBUG
     mTokenizer->DebugDumpTokens(cout);
 #endif
