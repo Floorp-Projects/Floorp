@@ -42,6 +42,13 @@ public:
   nsColorPickerFrame();
   virtual ~nsColorPickerFrame();
 
+  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
+
+
   // nsIFrame overrides
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("ColorPickerFrame", aResult);
@@ -60,7 +67,6 @@ public:
                    nsFramePaintLayer aWhichLayer);
   
 protected:
-  
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredSize) ;

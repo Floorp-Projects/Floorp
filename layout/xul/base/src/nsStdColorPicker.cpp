@@ -42,8 +42,7 @@ static char* StandardPalette[] = {
   "#999999","#CC0000","#FF6600","#FFCC33","#FFCC00","#33CC00","#00CCCC","#3366FF","#6633FF","#CC33CC",
   "#666666","#990000","#CC6600","#CC9933","#999900","#009900","#339999","#3333FF","#6600CC","#993399",
   "#333333","#660000","#993300","#996633","#666600","#006600","#336666","#000099","#333399","#663366",
-  "#000000","#330000","#663300","#663333","#333300","#003300","#003333","#000066","#330099","#330033",
-  NULL
+  "#000000","#330000","#663300","#663333","#333300","#003300","#003333","#000066","#330099","#330033"
 };
 static int nColors = sizeof(StandardPalette) / sizeof(char *);
 
@@ -78,13 +77,8 @@ NS_IMETHODIMP nsStdColorPicker::Paint(nsIPresContext * aPresContext, nsIRenderin
   width = NSToIntRound(mBlockWidth * p2t);
   height = NSToIntRound(mBlockHeight * p2t);
 
-  printf("number of columns: %i\n", mNumCols);
-
-  aRenderingContext->SetColor(0);
-  aRenderingContext->FillRect(0, 0, (mNumCols+1)*width, mNumRows*height);
-
-  mFrameWidth = (mNumCols+1) * width;
-  mFrameHeight = mNumRows * height;
+  //  aRenderingContext->SetColor(0);
+  //  aRenderingContext->FillRect(0, 0, (mNumCols)*width, mNumRows*height);
 
   for (i=0;i<nColors;i++)
   {
@@ -93,7 +87,7 @@ NS_IMETHODIMP nsStdColorPicker::Paint(nsIPresContext * aPresContext, nsIRenderin
     aRenderingContext->SetColor(color);
     aRenderingContext->FillRect(col*width, row*height, width, height);
 
-    if (col == mNumCols)
+    if (col+1 == mNumCols)
     {
       col = 0;
       row++;
@@ -108,24 +102,27 @@ NS_IMETHODIMP nsStdColorPicker::Paint(nsIPresContext * aPresContext, nsIRenderin
 
 NS_IMETHODIMP nsStdColorPicker::GetColor(PRInt32 aX, PRInt32 aY, char **aColor)
 {
-  int i;
+  int cur_col = aX / mBlockWidth;
+  int cur_row = aY / mBlockHeight;
 
-  i = (mNumCols*(aY/mBlockHeight))+(aX/mBlockWidth);
+  int f = mNumCols * cur_row + cur_col;
 
-  if (i > nColors)
-    *aColor = nsnull;
+  if (f >= nColors)
+  {
+    return NS_ERROR_FAILURE;
+  }
 
-  *aColor = nsCRT::strdup(StandardPalette[i]);
+  *aColor = nsCRT::strdup(StandardPalette[(int)f]);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsStdColorPicker::GetSize(PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  mNumCols = 9; // NSToIntRound(sqrt(nColors));
+  mNumCols = 10; // NSToIntRound(sqrt(nColors));
   mNumRows = NSToIntRound(nColors/mNumCols);
-  mFrameWidth = NSToIntRound((mNumCols+1) * mBlockWidth);
-  mFrameHeight = NSToIntRound(mNumRows * mBlockHeight);
+  mFrameWidth = NSToIntRound((mNumCols) * mBlockWidth);
+  mFrameHeight = NSToIntRound((mNumRows) * mBlockHeight);
 
   *aWidth = mFrameWidth;
   *aHeight = mFrameHeight;

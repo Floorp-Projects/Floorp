@@ -67,6 +67,42 @@ nsColorPickerFrame::~nsColorPickerFrame()
 
 
 NS_IMETHODIMP
+nsColorPickerFrame::Init(nsIPresContext&  aPresContext,
+                         nsIContent*      aContent,
+                         nsIFrame*        aParent,
+                         nsIStyleContext* aContext,
+                         nsIFrame*        aPrevInFlow)
+{
+ 
+  nsresult rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext,
+                                  aPrevInFlow);
+
+#if 0
+  // get the value
+  nsAutoString value;
+  if ((NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value)) &&
+      (value.Length() > 0)) {
+	  setProgress(value);
+  }
+
+
+   // get the alignment
+  nsAutoString align;
+  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, align);
+  setAlignment(align);
+
+  // get the mode
+  nsAutoString mode;
+  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::mode, mode);
+  setMode(mode); 
+#endif
+
+  return rv;
+}
+
+
+
+NS_IMETHODIMP
 nsColorPickerFrame::HandleEvent(nsIPresContext& aPresContext, 
                                 nsGUIEvent*     aEvent,
                                 nsEventStatus&  aEventStatus)
@@ -86,17 +122,17 @@ nsColorPickerFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
   int x,y;
   char *color;
   // figure out what color we just picked
-
+#ifdef DEBUG_pavlov
   printf("got mouse down.. x = %i, y = %i\n", aEvent->refPoint.x, aEvent->refPoint.y);
-
+#endif
   x = aEvent->refPoint.x;
   y = aEvent->refPoint.y;
 
   nsCOMPtr<nsIDOMElement> node( do_QueryInterface(mContent) );
 
-  mColorPicker->GetColor(x, y, &color);
+  nsresult rv = mColorPicker->GetColor(x, y, &color);
 
-  if (!color)
+  if (NS_FAILED(rv))
     node->RemoveAttribute("color");
   else
     node->SetAttribute("color", color);
@@ -114,6 +150,9 @@ nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
+  float p2t;
+
+  aPresContext.GetScaledPixelsToTwips(&p2t);
 
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
   mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -124,7 +163,7 @@ nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
 
   // if we are visible then tell our superclass to paint
   nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                       aWhichLayer);
+                     aWhichLayer);
 
   // get our border
 	const nsStyleSpacing* spacing =
@@ -137,7 +176,24 @@ nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
 
   nscolor color = colorStyle->mColor;
 
+  aRenderingContext.PushState();
+
+  PRInt32 width, height;
+
+  mColorPicker->GetSize(&width, &height);
+  nsRect rect(0, 0, width*p2t, height*p2t);
+
+  PRBool clipState;
+
+  // Clip so we don't render outside the inner rect
+  aRenderingContext.PushState();
+	aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipState);
+
+  // call the color picker's paint method
   mColorPicker->Paint(&aPresContext, &aRenderingContext);
+
+
+  aRenderingContext.PopState(clipState);
 
   return NS_OK;
 }
