@@ -117,7 +117,7 @@ int main ()
 
 // put up at lease on browser window ....
 /////////////////////////////////////////////////////////////
-    OpenWebPage("http://people.netscape.com/dougt");
+    OpenWebPage("http://www.mozilla.org/projects/embedding");
 /////////////////////////////////////////////////////////////
 
 
