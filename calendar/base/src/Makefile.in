@@ -49,16 +49,26 @@ MODULE_NAME      = calBaseModule
 FORCE_STATIC_LIB = 1
 GRE_MODULE       = 1
 
-REQUIRES = xpcom \
-           string \
-	   storage \
-	   sqlite3 \
-           $(NULL)
+#REQUIRES = xpcom \
+#           string \
+#	   storage \
+#	   sqlite3 \
+#           $(NULL)
 
-CPPSRCS = \
-	calItemBase.cpp \
-	calEvent.cpp \
-	calTodo.cpp \
+#CPPSRCS = \
+#	calItemBase.cpp \
+#	calEvent.cpp \
+#	calTodo.cpp \
+#	$(NULL)
+
+
+EXTRA_COMPONENTS = \
+	calItemBase.js \
+	calEvent.js \
+	calItemModule.js \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+%.js: %.js.pre
+	cpp -P -undef $(DEFINES) $(ACDEFINES) $^ > $@
