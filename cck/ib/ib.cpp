@@ -202,7 +202,7 @@ int interpret(char *cmd)
 			DWORD e = GetLastError();
 		if (strcmp(key, "Program Folder Name") == 0)
 		{
-			strcpy(temp, "Netscape by ");
+			strcpy(temp, "Netscape Communicator by ");
 			strcat(temp, newvalue);
 			newvalue = temp;
 		}
