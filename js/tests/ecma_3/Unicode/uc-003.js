@@ -43,9 +43,9 @@ function test()
                    "Escaped non-ASCII Identifier test");
     reportCompare (16, eval("++A\u03B2"),
                    "Escaped non-ASCII Identifier test");
-    reportCompare (25, eval("c\u0061se"),
+    reportCompare (25, eval("c\\u00" + "61se"),
                    "Escaped keyword Identifier test");
-    reportCompare (26, eval("++c\u0061se"),
+    reportCompare (26, eval("++c\\u00" + "61se"),
                    "Escaped keyword Identifier test");
     
     exitFunc ("test");
