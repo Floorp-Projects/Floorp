@@ -140,6 +140,9 @@ _class::Internal::Release(void)                                             \
 
 // for use with QI macros in nsISupportsUtils.h:
 
+#define NS_INTERFACE_MAP_BEGIN_AGGREGATED(_class)                           \
+  NS_IMPL_AGGREGATED_QUERY_HEAD(_class)
+
 #define NS_IMPL_AGGREGATED_QUERY_HEAD(_class)                               \
 NS_IMETHODIMP                                                               \
 _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)        \

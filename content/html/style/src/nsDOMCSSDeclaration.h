@@ -42,12 +42,14 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSS2Properties.h"
 
+#include "nsAgg.h"
+#include "nsCOMPtr.h"
+
 class nsCSSDeclaration;
 class nsICSSParser;
 class nsIURI;
 
-class nsDOMCSSDeclaration : public nsIDOMCSSStyleDeclaration,
-                            public nsIDOMNSCSS2Properties
+class nsDOMCSSDeclaration : public nsIDOMCSSStyleDeclaration
 {
 public:
   nsDOMCSSDeclaration();
@@ -73,9 +75,6 @@ public:
   NS_IMETHOD    Item(PRUint32 aIndex, nsAString& aReturn);
 
 
-  NS_DECL_NSIDOMCSS2PROPERTIES
-  NS_DECL_NSIDOMNSCSS2PROPERTIES
-
   virtual void DropReference() = 0;
   virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate) = 0;
@@ -91,6 +90,23 @@ public:
   
 protected:
   virtual ~nsDOMCSSDeclaration();
+
+private:
+  nsCOMPtr<nsISupports> mInner; // CSS2Properties
 };
+
+
+class CSS2PropertiesTearoff : public nsIDOMNSCSS2Properties
+{
+public:
+  NS_DECL_AGGREGATED
+
+  NS_DECL_NSIDOMCSS2PROPERTIES
+  NS_DECL_NSIDOMNSCSS2PROPERTIES
+
+  CSS2PropertiesTearoff(nsISupports *aOuter);
+  virtual ~CSS2PropertiesTearoff();
+};
+
 
 #endif // nsDOMCSSDeclaration_h___
