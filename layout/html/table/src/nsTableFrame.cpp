@@ -4034,9 +4034,11 @@ void nsTableFrame::GetTableBorderForRowGroup(nsTableRowGroupFrame* aRowGroupFram
 
 PRUint8 nsTableFrame::GetBorderCollapseStyle()
 {
+  /* the following has been commented out to turn off collapsing borders
   const nsStyleTable* tableStyle;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  return tableStyle->mBorderCollapse;
+  return tableStyle->mBorderCollapse;*/
+  return NS_STYLE_BORDER_SEPARATE;
 }
 
 

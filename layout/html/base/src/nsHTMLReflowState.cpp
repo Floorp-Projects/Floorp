@@ -1708,10 +1708,12 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     } else if (NS_CSS_FRAME_TYPE_INTERNAL_TABLE == mFrameType) {
       // Internal table elements. The rules vary depending on the type.
       // Calculate the computed width
+      PRBool rowOrRowGroup = PR_FALSE;
       if ((NS_STYLE_DISPLAY_TABLE_ROW == mStyleDisplay->mDisplay) ||
           (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == mStyleDisplay->mDisplay)) {
         // 'width' property doesn't apply to table rows and row groups
         widthUnit = eStyleUnit_Auto;
+        rowOrRowGroup = PR_TRUE;
       }
 
       if (eStyleUnit_Inherit == widthUnit) {
@@ -1719,9 +1721,9 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
       } else if (eStyleUnit_Auto == widthUnit) {
         mComputedWidth = availableWidth;
 
-        if (mComputedWidth != NS_UNCONSTRAINEDSIZE) {
-          // Internal table elements don't have margins, but they have border
-          // and padding
+        if ((mComputedWidth != NS_UNCONSTRAINEDSIZE) && !rowOrRowGroup){
+          // Internal table elements don't have margins. Only tables and
+          // cells have border and padding
           mComputedWidth -= mComputedBorderPadding.left +
             mComputedBorderPadding.right;
         }

@@ -937,6 +937,10 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
                                           nsTableFrame*   aTableFrame)
 {
   //adjust the border style based on the table rules attribute
+
+  /* The RULES code below has been disabled because collapsing borders have been disabled 
+     and RULES depend on collapsing borders
+
   const nsStyleTable* tableStyle;
   aTableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
 
@@ -964,6 +968,7 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
     // "GROUPS" will be handled in nsTableFrame::ProcessGroupRules
     break;
   }
+  */
 }
 
 
