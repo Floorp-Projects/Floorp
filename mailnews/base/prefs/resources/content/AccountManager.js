@@ -324,7 +324,8 @@ function onSave() {
     var account = getAccountFromServerId(accountid);
     var accountValues = accountArray[accountid];
 
-    saveAccount(accountValues, account);
+    if (accountValues)
+      saveAccount(accountValues, account);
   }
 }
 
