@@ -814,40 +814,6 @@ void nsContainerFrame::DumpTree() const
   root->List();
 }
 
-void nsContainerFrame::PreReflowCheck()
-{
-  // XXX CONSTRUCTION
-#if 0
-  PRInt32 len = LengthOf(mFirstChild);
-  NS_ASSERTION(len == mChildCount, "bad child count");
-
-  if (0 == mChildCount) {
-    NS_ASSERTION(nsnull == mFirstChild, "bad child-count/first-child");
-  } else {
-    NS_ASSERTION(nsnull != mFirstChild, "bad child-count/first-child");
-    CheckContentOffsets();
-  }
-  VerifyLastIsComplete();
-#endif
-}
-
-void nsContainerFrame::PostReflowCheck(nsReflowStatus aStatus)
-{
-  // XXX CONSTRUCTION
-#if 0
-  PRInt32 len = LengthOf(mFirstChild) ;
-  NS_ASSERTION(len == mChildCount, "bad child count");
-
-  if (0 == mChildCount) {
-    NS_ASSERTION(nsnull == mFirstChild, "bad child-count/first-child");
-  } else {
-    NS_ASSERTION(nsnull != mFirstChild, "bad child-count/first-child");
-    CheckContentOffsets();
-  }
-  VerifyLastIsComplete();
-#endif
-}
-
 /**
  * A container is empty if it has no children, or it has exactly one
  * child and that child is a pseudo-frame and it's empty (recursively

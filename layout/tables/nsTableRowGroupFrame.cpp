@@ -745,9 +745,6 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&      aPresContext,
   if (gsDebug==PR_TRUE)
     printf("nsTableRowGroupFrame::Reflow - aMaxSize = %d, %d\n",
             aReflowState.maxSize.width, aReflowState.maxSize.height);
-#ifdef NS_DEBUG
-  PreReflowCheck();
-#endif
 
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -843,10 +840,6 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&      aPresContext,
     // shrink wrap rows to height of tallest cell in that row
     ShrinkWrapChildren(&aPresContext, aDesiredSize);
   }
-
-#ifdef NS_DEBUG
-  PostReflowCheck(aStatus);
-#endif
 
   if (gsDebug==PR_TRUE) 
   {

@@ -68,9 +68,6 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
-#ifdef NS_DEBUG
-  PreReflowCheck();
-#endif
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
   // XXX Do something sensible in page mode...
@@ -158,9 +155,6 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
     aDesiredSize.height = aReflowState.maxSize.height;
   }
 
-#ifdef NS_DEBUG
-  PostReflowCheck(aStatus);
-#endif
   return NS_OK;
 }
 

@@ -119,10 +119,6 @@ RootFrame::Reflow(nsIPresContext&      aPresContext,
 {
   NS_FRAME_TRACE_REFLOW_IN("RootFrame::Reflow");
 
-#ifdef NS_DEBUG
-  PreReflowCheck();
-#endif
-
   aStatus = NS_FRAME_COMPLETE;
 
   if (eReflowReason_Incremental == aReflowState.reason) {
@@ -162,9 +158,6 @@ RootFrame::Reflow(nsIPresContext&      aPresContext,
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
-#ifdef NS_DEBUG
-  PostReflowCheck(aStatus);
-#endif
   NS_FRAME_TRACE_REFLOW_OUT("RootFrame::Reflow", aStatus);
   return NS_OK;
 }
@@ -272,9 +265,6 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
                          nsReflowStatus&      aStatus)
 {
   NS_FRAME_TRACE_REFLOW_IN("RootContentFrame::Reflow");
-#ifdef NS_DEBUG
-  PreReflowCheck();
-#endif
 
   aStatus = NS_FRAME_COMPLETE;
 
@@ -445,9 +435,6 @@ RootContentFrame::Reflow(nsIPresContext&      aPresContext,
   // properly pushed upwards
   nsContainerFrame* parent = (nsContainerFrame*) mGeometricParent;
 
-#ifdef NS_DEBUG
-  PostReflowCheck(aStatus);
-#endif
   NS_FRAME_TRACE_REFLOW_OUT("RootContentFrame::Reflow", aStatus);
   return NS_OK;
 }

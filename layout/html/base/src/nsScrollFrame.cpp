@@ -104,9 +104,6 @@ nsScrollBodyFrame::Reflow(nsIPresContext&      aPresContext,
                       aReflowState.maxSize.width,
                       aReflowState.maxSize.height));
 
-#ifdef NS_DEBUG
-  PreReflowCheck();
-#endif
   aStatus = NS_FRAME_COMPLETE;
 
   // XXX Incremental reflow code doesn't handle page mode at all...
@@ -256,10 +253,6 @@ nsScrollBodyFrame::Reflow(nsIPresContext&      aPresContext,
       }
     }
   }
-
-#ifdef NS_DEBUG
-  PostReflowCheck(aStatus);
-#endif
 
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
      ("exit nsScrollBodyFrame::Reflow: status=%d width=%d height=%d",

@@ -139,6 +139,7 @@ public:
   NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const;
 
   // Returns true if this frame is being used a pseudo frame
+  // XXX deprecated
   PRBool      IsPseudoFrame() const;
 
   // Debugging
@@ -212,16 +213,6 @@ protected:
   */
   PRBool MoveOverflowToChildList();
 
-  /**
-   * Remove and delete aChild's next-in-flow(s). Updates the sibling and flow
-   * pointers.
-   *
-   * Updates the child count and content offsets of all containers that are
-   * affected.
-   *
-   * @param   aChild child this child's next-in-flow
-   */
-
  /**
   * Push aFromChild and its next siblings to the next-in-flow. Change the
   * geometric parent of each frame that's pushed. If there is no next-in-flow
@@ -255,6 +246,7 @@ protected:
   void AppendChildren(nsIFrame* aChild, PRBool aSetParent = PR_TRUE);
 
   // Returns true if aChild is being used as a pseudo frame
+  // XXX deprecated
   PRBool ChildIsPseudoFrame(const nsIFrame* aChild) const;
 
   virtual void WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow);
@@ -271,22 +263,6 @@ protected:
   PRBool IsLastChild(const nsIFrame* aChild) const;
 
   void DumpTree() const;
-
-  /**
-   * Before reflow for this container has started we check that all
-   * is well.
-   */
-  void PreReflowCheck();
-
-  /**
-   * After reflow for this container has finished we check that all
-   * is well.
-   *
-   * @param aStatus status to be returned from the resize reflow. If the status
-   *          is frNotComplete then the next-in-flow content offsets are
-   *          validated as well
-   */
-  void PostReflowCheck(nsReflowStatus aStatus);
 
   PRBool IsEmpty();
 #endif
