@@ -226,7 +226,7 @@ enum
 
 - (HistoryItem*)childAtIndex:(int)inIndex
 {
-  if (inIndex >= 0 && inIndex < [mChildren count])
+  if (inIndex >= 0 && inIndex < (int)[mChildren count])
     return [mChildren objectAtIndex:inIndex];
     
   return nil;
