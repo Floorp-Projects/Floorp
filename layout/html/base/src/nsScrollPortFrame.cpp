@@ -174,39 +174,6 @@ nsScrollPortFrame::DidReflow(nsIPresContext*   aPresContext,
     // and size and position our view
     rv = nsFrame::DidReflow(aPresContext, aStatus);
     
-// XXX TROY
-#if 0
-    // Send the DidReflow notification to the scrolled frame's view
-    nsIFrame* frame = mFrames.FirstChild();
-
-    // Size the scrolled frame's view. Leave its position alone
-    nsSize          size;
-    nsRect          bounds;
-    nsIViewManager* vm;
-    nsIView*        scrolledView;
-
-    frame->GetSize(size);
-    frame->GetView(aPresContext, &scrolledView);
-    scrolledView->GetBounds(bounds);
-
-    // only resize the view if things changed.
-    if (bounds.width != size.width || bounds.height != size.height) {
-      scrolledView->GetViewManager(vm);
-      vm->ResizeView(scrolledView, size.width, size.height);
-      NS_RELEASE(vm);
-
-     
-      // Have the scrolling view layout
-      nsIScrollableView* scrollingView;
-      nsIView*           view;
-      GetView(aPresContext, &view);
-      if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
-        scrollingView->ComputeScrollOffsets(PR_TRUE);
-      }
-    }
-
-    frame->DidReflow(aPresContext, aStatus);
-#else
     // Have the scrolling view layout
     nsIScrollableView* scrollingView;
     nsIView*           view;
@@ -214,7 +181,6 @@ nsScrollPortFrame::DidReflow(nsIPresContext*   aPresContext,
     if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
       scrollingView->ComputeScrollOffsets(PR_TRUE);
     }
-#endif
   }
 
   return rv;

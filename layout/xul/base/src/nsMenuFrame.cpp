@@ -655,10 +655,6 @@ nsMenuFrame::DidReflow(nsIPresContext* aPresContext,
       mMenuParent->IsMenuBar(onMenuBar);
 
     menuPopup->SyncViewWithFrame(aPresContext, onMenuBar, this, -1, -1);
-// XXX TROY
-#if 0
-    menuPopup->DidReflow(aPresContext, aStatus);
-#endif
   }
 
   return rv;
