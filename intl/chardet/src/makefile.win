@@ -34,6 +34,7 @@ CPPSRCS= \
          nsXMLEncodingObserver.cpp \
          nsObserverBase.cpp \
          nsDetectionAdaptor.cpp \
+         nsDebugDetector.cpp \
 	$(NULL)
 
 CPP_OBJS= \
@@ -42,6 +43,7 @@ CPP_OBJS= \
         .\$(OBJDIR)\nsXMLEncodingObserver.obj \
         .\$(OBJDIR)\nsObserverBase.obj \
         .\$(OBJDIR)\nsDetectionAdaptor.obj \
+        .\$(OBJDIR)\nsDebugDetector.obj \
 	$(NULL)
 
 MODULE=chardet
