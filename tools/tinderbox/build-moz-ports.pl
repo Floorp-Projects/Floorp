@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.24 $';
+$Version = '$Revision: 1.25 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -72,7 +72,7 @@ sub SetupPath {
 
     if ( $OS eq 'AIX' ) {
 	$ENV{'PATH'} = '/builds/local/bin:' . $ENV{'PATH'} . ':/usr/lpp/xlC/bin';
-	$ConfigureArgs .= '--x-includes=/usr/include/X11 --x-libraries=/usr/lib --disable-shared';
+	$ConfigureArgs .= '--x-includes=/usr/include/X11 --x-libraries=/usr/lib';
 	$ConfigureEnvArgs = 'CC=xlC_r CXX=xlC_r';
 	$Compiler = 'xlC_r';
 	$NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
@@ -80,7 +80,7 @@ sub SetupPath {
 
     if ( $OS eq 'BSD_OS' ) {
 	$ENV{'PATH'} = '/usr/contrib/bin:/bin:/usr/bin:' . $ENV{'PATH'};
-	$ConfigureArgs .= '--disable-shared';
+	$ConfigureArgs .= '--disable-shared --disable-debug --enable-optimize';
 	$ConfigureEnvArgs = 'CC=shlicc2 CXX=shlicc2';
 	$Compiler = 'shlicc2';
 	$mail = '/usr/ucb/mail';
@@ -139,8 +139,9 @@ sub SetupPath {
 	$ENV{'PATH'} = '/usr/local/bin:' . $ENV{'PATH'};
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/X11/lib';
 	$ConfigureArgs .= '--disable-shared --x-includes=/usr/X11/include --x-libraries=/usr/X11/lib';
-	$ConfigureEnvArgs = 'CC="cc -DQNX" CXX="cc -DQNX" LIBS="-lunix -lc"';
+	$ConfigureEnvArgs = 'CC="cc -DQNX" CXX="cc -DQNX" LIBS="-lunix" CONFIG_SHELL="/usr/local/bin/bash"';
 	$Compiler = 'cc';
+	$ShellOverride = '/usr/local/bin/bash';
 	$mail = '/usr/bin/sendmail';
     }
 
