@@ -575,6 +575,7 @@ done:
 #include <Aliases.h>
 #include <TextUtils.h>
 #include <Memory.h>
+#include <Folders.h>
 #include "FullPath.h"
 
 /* returns an alias as a malloc'd pointer.
