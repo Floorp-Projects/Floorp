@@ -1124,35 +1124,6 @@ NS_IMETHODIMP nsDocument::GetSelection(nsISelection *& aSelection) {
 }
 
 
-static void TraverseBlockContent(nsIContent * aContent, nsString & aStr) 
-{
-  nsIContent * parent = aContent;
-  PRInt32 i, n;
-  parent->ChildCount(n);
-  for (i=0;i<n;i++) {
-    nsIContent * child;
-    parent->ChildAt(i, child);
-    nsIAtom * atom;
-    child->GetTag(atom);
-    if (atom == nsnull) {
-      static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-      nsIDOMText* textContent;
-      nsresult rv = child->QueryInterface(kIDOMTextIID,(void **)&textContent);
-      if (NS_OK == rv) {
-        nsString stringBuf;
-        PRInt32 len;
-        textContent->GetData(stringBuf);
-        len = stringBuf.Length();
-        aStr.Append(stringBuf);
-        NS_RELEASE(textContent);
-      }
-    }
-    NS_RELEASE(child);
-  }
-
-}
-
-
 /**
   * Selects all the Content
  */
