@@ -1838,7 +1838,10 @@ nsEditor::ReplaceContainer(nsIDOMNode *inNode,
 
   // create new container
   nsCOMPtr<nsIDOMElement> elem;
-  res = doc->CreateElement(aNodeType, getter_AddRefs(elem));
+  nsString qualifiedTag;
+  qualifiedTag.AssignWithConversion("html:");
+  qualifiedTag+=aNodeType;
+  res = doc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/TR/REC-html40"), qualifiedTag, getter_AddRefs(elem));
   if (NS_FAILED(res)) return res;
   *outNode = do_QueryInterface(elem);
   
@@ -1949,7 +1952,10 @@ nsEditor::InsertContainerAbove( nsIDOMNode *inNode,
 
   // create new container
   nsCOMPtr<nsIDOMElement> elem;
-  res = doc->CreateElement(aNodeType, getter_AddRefs(elem));
+  nsString qualifiedTag;
+  qualifiedTag.AssignWithConversion("html:");
+  qualifiedTag+=aNodeType;
+  res = doc->CreateElementNS(NS_ConvertASCIItoUCS2("http://www.w3.org/TR/REC-html40"), qualifiedTag, getter_AddRefs(elem));
   if (NS_FAILED(res)) return res;
   *outNode = do_QueryInterface(elem);
   
