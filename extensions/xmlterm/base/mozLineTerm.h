@@ -67,6 +67,8 @@ public:
                      const PRUnichar *initInput,
                      const PRUnichar *promptRegexp,
                      PRInt32 options, PRInt32 processType,
+                     PRInt32 nRows, PRInt32 nCols,
+                     PRInt32 xPixels, PRInt32 yPixels,
                      nsIDOMDocument *domDoc,
                      nsIObserver* anObserver,
                      nsString& aCookie);

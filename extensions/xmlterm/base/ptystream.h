@@ -60,6 +60,9 @@ struct ptys {                 /* PTY structure */
 /* creates a new pseudo-TTY (PTY) and also a new process attached to
  * it to execute the command line contained in array ARGV.
  * The PTY details are stored in the PTY structure PTYP.
+ * ROWS, COLS contain the initial no. of rows/columns.
+ * X_PIXELS, Y_PIXELS contain the initial screen size in pixels
+ * (may be set to zero if screen size is unknown).
  * ERRFD is the file descriptor to which the STDERR output of the
  * child process is directed.
  * If ERRFD == -1, then the STDERR output is redirected to STDOUT.
@@ -73,6 +76,7 @@ struct ptys {                 /* PTY structure */
  * Returns 0 on success and -1 on error.
  */
 int pty_create(struct ptys *ptyp, char *const argv[],
+               int rows, int cols, int x_pixels, int y_pixels,
                int errfd, int noblock, int noecho, int noexport, int debug);
 
 /* resizes a PTY; if ptyp is null, resizes file desciptor 0,

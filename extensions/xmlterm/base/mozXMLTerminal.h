@@ -87,6 +87,9 @@ class mozXMLTerminal : public mozIXMLTerminal,
 
   NS_IMETHOD ShowCaret(void);
 
+  NS_IMETHOD ScreenSize(PRInt32& rows, PRInt32& cols,
+                        PRInt32& xPixels, PRInt32& yPixels);
+
   // nsIDocumentLoaderObserver interface
   NS_DECL_NSIDOCUMENTLOADEROBSERVER
 

@@ -134,6 +134,10 @@ int lterm_new();
  * If it is set to LTERM_DETERMINE_PROCESS, the process type is determined
  * from the path name.
  *
+ * ROWS, COLS contain the initial no. of rows/columns.
+ * X_PIXELS, Y_PIXELS contain the initial screen size in pixels
+ * (may be set to zero if screen size is unknown).
+ *
  * CALLBACK_FUNC is a pointer to a GTK-style callback function,
  * or NULL for no callback.
  * The function is called whenever there is data available for
@@ -160,6 +164,7 @@ int lterm_new();
 int lterm_open(int lterm, char *const argv[],
                const char* cookie, const char* init_command,
                const UNICHAR* prompt_regexp, int options, int process_type,
+               int rows, int cols, int x_pixels, int y_pixels,
                lterm_callback_func_t callback_func, void *callback_data);
 
 

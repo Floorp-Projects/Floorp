@@ -149,6 +149,15 @@ public:
   /** Shows the caret and make it editable.
    */
   NS_IMETHOD ShowCaret(void) = 0;
+
+  /** Returns current screen size in rows/cols and in pixels
+   * @param (output) rows
+   * @param (output) cols
+   * @param (output) xPixels
+   * @param (output) yPixels
+   */
+  NS_IMETHOD ScreenSize(PRInt32& rows, PRInt32& cols,
+                        PRInt32& xPixels, PRInt32& yPixels) = 0;
 };
 
 #define MOZXMLTERMINAL_CID                       \

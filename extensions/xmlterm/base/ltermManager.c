@@ -235,6 +235,7 @@ int lterm_new()
 int lterm_open(int lterm, char *const argv[],
                const char* cookie, const char* init_command,
                const UNICHAR* prompt_regexp, int options, int process_type,
+               int rows, int cols, int x_pixels, int y_pixels,
                lterm_callback_func_t callback_func, void *callback_data)
 {
   int nostderr, noPTY, j;
@@ -316,9 +317,11 @@ int lterm_open(int lterm, char *const argv[],
   lto->decodedChars = 0;
   lto->incompleteEscapeSequence = 0;
 
-  /* Set default screen size (VT100) */
-  lts->nRows = 24;
-  lts->nCols = 80;
+  /* Set initial screen size */
+  lts->nRows = rows;
+  lts->nCols = cols;
+  lts->xPixels = y_pixels;
+  lts->yPixels = x_pixels;
 
   /* Clear screen buffer */
   lto->screenChar  = NULL;
@@ -433,14 +436,12 @@ int lterm_open(int lterm, char *const argv[],
               ("errfd=%d, noecho=%d, noblock=%d, noexport=%d, debugPTY=%d\n",
                errfd, lts->noTTYEcho, noblock, noexport, debugPTY));
 #ifndef NO_PTY
-    if (pty_create(&ptyStruc, cargv, errfd,
-                   noblock, lts->noTTYEcho, noexport, debugPTY) == -1) {
+    if (pty_create(&ptyStruc, cargv,
+                   lts->nRows, lts->nCols, lts->xPixels, lts->yPixels,
+                   errfd, noblock, lts->noTTYEcho, noexport, debugPTY) == -1) {
       LTERM_OPEN_ERROR_RETURN(lterm,lts,
             "lterm_open: Error - PTY creation failed\n")
     }
-
-    /* Resize TTY (fails on BSD?) */
-    pty_resize(&ptyStruc, lts->nRows, lts->nCols, 0, 0);
 #endif  /* !NO_PTY */
 
     /* Copy PTY structure */

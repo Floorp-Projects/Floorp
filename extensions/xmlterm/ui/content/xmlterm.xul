@@ -28,7 +28,7 @@
 <window id="xmlterm-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="StartupXMLTerm();"
-        title="xmlterm" align="vertical" width="740" height="484">
+        title="xmlterm" align="vertical" width="586" height="444">
   
   <html:script src="chrome://xmlterm/content/XMLTermChrome.js"></html:script>
 

@@ -52,10 +52,13 @@ class mozXMLTermSession
    * @param aXMLTerminal containing XMLTerminal object
    * @param aPresShell presentation shell associated with XMLterm
    * @param aDOMDocument DOM document associated with XMLterm
+   * @param nRows initial number of rows
+   * @param nCols initial number of columns
    */
   NS_IMETHOD Init(mozIXMLTerminal* aXMLTerminal,
                   nsIPresShell* aPresShell,
-                  nsIDOMDocument* aDOMDocument);
+                  nsIDOMDocument* aDOMDocument,
+                  PRInt32 nRows, PRInt32 nCols);
 
   /** Finalizes (closes) session
    */
@@ -64,6 +67,11 @@ class mozXMLTermSession
   /** Sets XMLTerm flag to indicate XMLTerm needs to be resized
    */
   NS_IMETHOD NeedsResizing(void);
+
+  /** Resizes XMLterm to match a resized window.
+   * @param lineTermAux LineTermAux object to be resized (may be null)
+   */
+  NS_IMETHOD Resize(mozILineTermAux* lineTermAux);
 
   /** Preprocesses user input before it is transmitted to LineTerm
    * @param aString (inout) input data to be preprocessed
@@ -77,6 +85,13 @@ class mozXMLTermSession
    * @param processedData (output) true if any data was processed
    */
   NS_IMETHOD ReadAll(mozILineTermAux* lineTermAux, PRBool& processedData);
+
+  /** Aborts session by closing LineTerm and displays an error message
+   * @param lineTermAux LineTermAux object to be closed
+   * @param abortCode abort code string to be displayed
+   */
+  NS_IMETHOD Abort(mozILineTermAux* lineTermAux,
+                   nsString& abortCode);
 
   /** Gets current entry (command) number
    * @param aNumber (output) current entry number
@@ -211,11 +226,6 @@ protected:
     TREE_PRINT_HTML   = 6,
     TREE_ACTION_CODES = 7
   };
-
-  /** Resizes XMLterm to match a resized window.
-   * @param lineTermAux LineTermAux object to be resized (may be null)
-   */
-  NS_IMETHOD Resize(mozILineTermAux* lineTermAux);
 
   /** Displays ("echoes") input text string with style and positions cursor
    * @param aString string to be displayed

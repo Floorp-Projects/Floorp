@@ -306,7 +306,9 @@ int main(int argc, char *argv[]) {
 
   ltermNumber = lterm_new();
   retValue = lterm_open(ltermNumber, commandArgs, NULL, NULL, uregexp,
-                        options, processType, NULL, NULL);
+                        options, processType,
+                        24, 80, 0, 0,
+                        NULL, NULL);
   if (retValue < 0) {
     fprintf(stderr, "lterm: Error %d in opening LTERM\n", retValue);
     exit(1);
