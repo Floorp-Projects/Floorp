@@ -333,17 +333,16 @@ nsCacheProfilePrefObserver::ReadPrefs()
         rv = NS_GetSpecialDirectory(NS_APP_CACHE_PARENT_DIR,
                                     getter_AddRefs(directory));
         if (NS_FAILED(rv)) {
-
-        // try to get the profile directory (there may not be a profile yet)
-        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                    getter_AddRefs(directory));
+            // try to get the profile directory (there may not be a profile yet)
+            rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                        getter_AddRefs(directory));
 #if DEBUG
         } else if (NS_FAILED(rv)) {
             // use current process directory during development
             rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
                                         getter_AddRefs(directory));
-        }
 #endif
+        }
         if (directory)
             mDiskCacheParentDirectory = do_QueryInterface(directory, &rv);
     }
