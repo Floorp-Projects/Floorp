@@ -211,7 +211,7 @@ NS_IMETHODIMP nsDragService::SetIDataObject (IDataObject * aDataObj)
   // the IDataObject that is being dragged
   NS_IF_RELEASE(mDataObject);
   mDataObject = aDataObj;
-  NS_ADDREF(mDataObject);
+  NS_IF_ADDREF(mDataObject);
 
   return NS_OK;
 }
@@ -281,7 +281,6 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
 
 //
 // IsCollectionObject
@@ -310,3 +309,20 @@ nsDragService :: IsCollectionObject ( IDataObject* inDataObj )
   return isCollection;
 
 } // IsCollectionObject
+
+
+//
+// EndDragSession
+//
+// Override the default to make sure that we release the data object when the drag ends. It
+// seems that OLE doesn't like to let apps quit w/out crashing when we're still holding onto 
+// their data
+//
+NS_IMETHODIMP
+nsDragService::EndDragSession ()
+{
+  nsBaseDragService::EndDragSession();
+  NS_IF_RELEASE(mDataObject);
+
+  return NS_OK;
+}

@@ -77,23 +77,19 @@ class nsNativeDragTarget : public IDropTarget
 									    POINTL point, DWORD* pEffect);
 
   protected:
-    // methods
-    void GetGeckoDragAction(DWORD grfKeyState, LPDWORD pdwEffect, PRUint32 * aGeckoAction);
-    void ProcessDrag(PRUint32     aEventType, 
-                     DWORD        grfKeyState,
-							       POINTL       pt, 
-                     DWORD*       pdwEffect);
+
+    void GetGeckoDragAction ( LPDATAOBJECT pData, DWORD grfKeyState, LPDWORD pdwEffect, PRUint32 * aGeckoAction );
+    void ProcessDrag ( LPDATAOBJECT pData, PRUint32 aEventType, DWORD grfKeyState,
+							          POINTL pt, DWORD* pdwEffect );
     void DispatchDragDropEvent(PRUint32 aType, POINTL pt);
 
     // Native Stuff
     ULONG            m_cRef;      // reference count
     HWND             mHWnd;
-    IDataObject *    mDataObj;
 
     // Gecko Stuff
     nsIWidget      * mWindow;
     nsIDragService * mDragService;
-    nsCOMPtr<nsIDragSession> mDragSession;
 };
 
 #endif // _nsNativeDragTarget_h_

@@ -47,6 +47,7 @@ public:
   NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 anItem);
   NS_IMETHOD GetNumDropItems (PRUint32 * aNumItems);
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
+  NS_IMETHOD EndDragSession ( ) ;
 
   // native impl.
   NS_IMETHOD SetIDataObject (IDataObject * aDataObj);
