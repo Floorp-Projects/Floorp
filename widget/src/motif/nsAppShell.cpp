@@ -59,7 +59,6 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
   return NS_OK;
 }
 
-//#define DR_EVIL 1
 
 //-------------------------------------------------------------------------
 //
@@ -67,12 +66,18 @@ NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 //
 //-------------------------------------------------------------------------
 
+//#define DR_EVIL 1
+
 #ifdef DR_EVIL
 extern Display *  gDisplay;
 extern Screen *   gScreen;
 extern Visual *   gVisual;
 extern int        gDepth;
-extern XVisualInfo     *gVisualInfo;
+
+extern "C" void xlib_rgb_init (Display *display, Screen *screen);
+extern "C" Visual * xlib_rgb_get_visual (void);
+extern "C" XVisualInfo * xlib_rgb_get_visual_info (void);
+
 #endif
 
 NS_METHOD nsAppShell::Create(int* bac, char ** bav)
@@ -99,40 +104,43 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 
   XtSetLanguageProc(NULL, NULL, NULL);
 							
-  mTopLevel = XtAppInitialize(&mAppContext,          // app_context_return
-							  "nsAppShell", 		 //	application_class
-							  NULL, 				 //	options
-							  0, 			         //	num_options
-                              &argc,
-							  argv,
-							  NULL, 				 //	fallback_resources
-							  NULL,                  // args 
-							  0);		             //	num_args
+  mTopLevel = XtAppInitialize(&mAppContext,   // app_context_return
+                              "nsAppShell",   // application_class
+                              NULL, 				  // options
+                              0, 			        // num_options
+                              &argc,          // argc_in_out
+                              argv,           // argv_in_out
+                              NULL, 				  //	fallback_resources
+                              NULL,           // args 
+                              0);		          //	num_args
 
   // XXX This is BAD -- needs to be fixed
   gAppContext = mAppContext;
+
 
 #ifdef DR_EVIL
   gDisplay = XtDisplay(mTopLevel);
   gScreen = XtScreen(mTopLevel);
 
-  int          numVisuals;
-  XVisualInfo  visualInfo;
-
   xlib_rgb_init(gDisplay, gScreen);
 
   gVisual = xlib_rgb_get_visual();
 
-  visualInfo.visualid = XVisualIDFromVisual(gVisual);
+  XVisualInfo * x_visual_info = xlib_rgb_get_visual_info();
 
-  gVisualInfo = XGetVisualInfo(gDisplay, 
-                               VisualIDMask,
-                               &visualInfo, 
-                               &numVisuals);
-  
-  gDepth = gVisualInfo->depth;
+  NS_ASSERTION(nsnull != x_visual_info,"Visual info from xlibrgb is null.");
+
+  if (nsnull != x_visual_info)
+  {
+    gDepth = x_visual_info->depth;
+  }
+
+  printf("nsAppShell::Create(dpy=%p  screen=%p  visual=%p  depth=%d)\n",
+         gDisplay,
+         gScreen,
+         gVisual,
+         gDepth);
 #endif
-
 
   return NS_OK;
 }
