@@ -430,7 +430,7 @@ nsJAR::CreateInputStream(const char* aFilename, nsIInputStream **is)
 }
 
 nsresult 
-nsJAR::LoadEntry(const char* aFilename, const char** aBuf, PRUint32* aBufLen)
+nsJAR::LoadEntry(const char* aFilename, char** aBuf, PRUint32* aBufLen)
 {
   //-- Get a stream for reading the manifest file
   nsresult rv;
