@@ -55,13 +55,14 @@
 #include "nsCP857ToUnicode.h"
 #include "nsCP862ToUnicode.h"
 #include "nsCP864ToUnicode.h"
+#include "nsCP864iToUnicode.h"
 #include "nsUnicodeToCP850.h"
 #include "nsUnicodeToCP852.h"
 #include "nsUnicodeToCP855.h"
 #include "nsUnicodeToCP857.h"
 #include "nsUnicodeToCP862.h"
 #include "nsUnicodeToCP864.h"
-
+#include "nsUnicodeToCP864i.h"
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
 
@@ -81,12 +82,14 @@ NS_UCONV_REG_UNREG(nsCP855ToUnicode, "IBM855", "Unicode" , NS_CP855TOUNICODE_CID
 NS_UCONV_REG_UNREG(nsCP857ToUnicode, "IBM857", "Unicode" , NS_CP857TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsCP862ToUnicode, "IBM862", "Unicode" , NS_CP862TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsCP864ToUnicode, "IBM864", "Unicode" , NS_CP864TOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsCP864iToUnicode,"IBM864i", "Unicode", NS_CP864ITOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP850, "Unicode", "IBM850",  NS_UNICODETOCP850_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP852, "Unicode", "IBM852",  NS_UNICODETOCP852_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP855, "Unicode", "IBM855",  NS_UNICODETOCP855_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP857, "Unicode", "IBM857",  NS_UNICODETOCP857_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP862, "Unicode", "IBM862",  NS_UNICODETOCP862_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToCP864, "Unicode", "IBM864",  NS_UNICODETOCP864_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToCP864i,"Unicode", "IBM864i", NS_UNICODETOCP864I_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP850ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP852ToUnicode);
@@ -94,12 +97,14 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP855ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP857ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP862ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP864ToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCP864iToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP850);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP852);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP855);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP857);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP862);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP864);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToCP864i);
 
 static nsModuleComponentInfo components[] = 
 {
@@ -140,6 +145,12 @@ static nsModuleComponentInfo components[] =
     nsCP864ToUnicodeRegSelf , nsCP864ToUnicodeUnRegSelf 
   },
   { 
+    DECODER_NAME_BASE "IBM864i" , NS_CP864ITOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "IBM864i",
+    nsCP864iToUnicodeConstructor ,
+    nsCP864iToUnicodeRegSelf , nsCP864iToUnicodeUnRegSelf 
+  },
+  { 
     ENCODER_NAME_BASE "IBM850" , NS_UNICODETOCP850_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "IBM850",
     nsUnicodeToCP850Constructor, 
@@ -174,6 +185,12 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "IBM864",
     nsUnicodeToCP864Constructor, 
     nsUnicodeToCP864RegSelf, nsUnicodeToCP864UnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "IBM864i" , NS_UNICODETOCP864I_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "IBM864i",
+    nsUnicodeToCP864iConstructor, 
+    nsUnicodeToCP864iRegSelf, nsUnicodeToCP864iUnRegSelf
   }
 };
 
