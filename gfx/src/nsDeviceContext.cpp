@@ -563,6 +563,14 @@ NS_IMETHODIMP DeviceContextImpl::GetLocalFontName(const nsString& aFaceName, nsS
   return result;
 }
 
+NS_IMETHODIMP DeviceContextImpl :: FlushFontCache(void)
+{
+  if (nsnull != mFontCache)
+    mFontCache->Flush();
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP DeviceContextImpl::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
   if (nsnull == mColorSpace) {
