@@ -46,6 +46,10 @@ FILES=\
 		pm.css							\
 		pm.xul							\
 		pmrename.xul					\
+	 	cpwPreg.xul						\
+		navStartPreg.xul				\
+		navFinishPreg.xul				\
+		preg.html						\
         $(NULL)
 
 

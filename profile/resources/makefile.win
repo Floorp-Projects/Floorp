@@ -40,6 +40,10 @@ FILES=\
 		pm.xul							\
 		pm.css							\
 		pmrename.xul					\
+	 	cpwPreg.xul						\
+		navStartPreg.xul				\
+		navFinishPreg.xul				\
+		preg.html						\
         $(NULL)
 
 install::
