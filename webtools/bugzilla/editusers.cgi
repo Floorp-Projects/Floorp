@@ -844,7 +844,7 @@ if ($action eq 'update') {
     if ($editall && $user ne $userold) {
         unless ($user) {
             print "Sorry, I can't delete the user's name.";
-            $userold = value_quote($userold);
+            $userold = url_quote($userold);
             $localtrailer =~ s/XXX/$userold/;
             push @localtrailers, $localtrailer;
             PutTrailer(@localtrailers);
@@ -852,7 +852,7 @@ if ($action eq 'update') {
         }
         if (TestUser($user)) {
             print "Sorry, user name '$user' is already in use.";
-            $userold = value_quote($userold);
+            $userold = url_quote($userold);
             $localtrailer =~ s/XXX/$userold/;
             push @localtrailers, $localtrailer;
             PutTrailer($localtrailer);
@@ -864,12 +864,12 @@ if ($action eq 'update') {
                  WHERE login_name=" . SqlQuote($userold));
 
         print q|Updated user's name to <a href="mailto:| .
-              value_quote($user) . '">' . html_quote($user) . "</a>.<BR>\n";
+              url_quote($user) . '">' . html_quote($user) . "</a>.<BR>\n";
     }
     my $changeduser = new Bugzilla::User($thisuserid);
     $changeduser->derive_groups();
 
-    $user = value_quote($user);
+    $user = url_quote($user);
     $localtrailer =~ s/XXX/$user/;
     push @localtrailers, $localtrailer;
     PutTrailer(@localtrailers);
