@@ -82,6 +82,12 @@ hidelist:	A list of regexps that define filenames that we don't want
 		to let people see via the bonsai pages.  A common use is to
 		just have one line that says "CVSROOT".
 
+legaldirs:	A list of directories to traverse when rebuilding the
+		history of the repository.  This file is required to exist
+		for each module before you can start populating that module
+		with existing cvs data.
+		
+
 	=================================
 	What's What in the Bonsai sources:
 	=================================
@@ -189,7 +195,7 @@ countcheckins.cgi	TCL.  Draws a graph of checkins for the various
 			Called by: toplevel.cgi
 			Calls: nobody
 
-createlegaldirs.tcl	???
+createlegaldirs.pl	Use this to create the 'legaldirs' file for a module.
 
 cvsblame.cgi		Runs through a CVS file and tells you who changed what.
 			Calls:
