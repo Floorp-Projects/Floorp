@@ -1246,11 +1246,13 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
             if (ptr)
             {
               ptr += nsCRT::strlen("charset=");
+              if (*ptr == '"')
+                ptr++;
 
               char *ptr2 = ptr;
               while (*ptr2)
               {
-                if ( (*ptr2 == ' ') || (*ptr2 == ';') )
+                if ( (*ptr2 == ' ') || (*ptr2 == ';') || (*ptr2 == '"'))
                 {
                   *ptr2 = '\0';
                   break;

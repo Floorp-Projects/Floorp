@@ -1275,8 +1275,8 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     if (NS_SUCCEEDED(rv)) {
       PR_FREEIF(attachment1_body);
       attachment1_body = outCString;
+      Recycle(bodyText);
     }
-    Recycle(bodyText);
   }
   else
   {

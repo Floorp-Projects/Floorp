@@ -1662,11 +1662,16 @@ ResetChannelCharset(MimeObject *obj)
         if ( (msd) && (msd->format_out == nsMimeOutput::nsMimeMessageSaveAs) )
         {
           // Extract the charset alone
-          char  *cSet = nsCRT::strdup(ptr+8);
+          char  *cSet = nsnull;
+          if (*(ptr+8) == '"')
+            cSet = nsCRT::strdup(ptr+9);
+          else
+            cSet = nsCRT::strdup(ptr+8);
           if (cSet)
           {
             char *ptr2 = cSet;
-            while ( (*cSet) && (*cSet != ' ') && (*cSet != ';') && (*cSet != CR) && (*cSet != LF) )
+            while ( (*cSet) && (*cSet != ' ') && (*cSet != ';') && 
+                    (*cSet != CR) && (*cSet != LF) && (*cSet != '"') )
               ptr2++;
             
             if (*cSet)
