@@ -102,11 +102,11 @@
   </groupbox>
   
   <label value="&autocompletePreview.label;"/>
-  <vbox id="bxExample" class="box-smallheader">
+  <dialogheader>
     <vbox height="159">
       <image id="imgAutoFill"/>
       <image id="imgShowPopup" src="chrome://communicator/content/pref/autocomplete-showpopup.gif"/>
       <image id="imgShowSearch" src="chrome://communicator/content/pref/autocomplete-showsearch.gif"/>
     </vbox>
-  </vbox>
+  </dialogheader>
 </dialog>

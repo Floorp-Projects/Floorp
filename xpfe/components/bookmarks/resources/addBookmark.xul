@@ -86,7 +86,7 @@
     <hbox flex="1">
       <label id="createinlabel" value="&createin.label;"/>
       <hbox flex="1">
-        <bookmarks-outliner id="bookmarks-view" flex="1" type="folders" class="inset"/>
+        <bookmarks-outliner id="bookmarks-view" flex="1" type="folders"/>
         <vbox>
           <button label="&button.newfolder.label;" accesskey="&button.newfolder.accesskey;"
                   oncommand="createNewFolder();"/>
@@ -97,5 +97,7 @@
       </hbox>
     </hbox>
   </vbox>
+
+  <separator/>
 
 </dialog>

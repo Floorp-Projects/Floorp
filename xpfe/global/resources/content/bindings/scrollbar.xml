@@ -7,11 +7,14 @@
   <binding id="scrollbar">
     <content>
       <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" inherits="sborient=orient"/>
-      <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" collapsed="true" inherits="sborient=orient"/>
-      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment,orient">
-        <xul:thumb sbattr="scrollbar-thumb" inherits="orient,src" flex="1"/>
+      <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" hidden="true" inherits="sborient=orient"/>
+      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment,orient,sborient=orient">
+        <xul:thumb sbattr="scrollbar-thumb" inherits="orient,sborient=orient" 
+                   align="center" pack="center" flex="1">
+          <xul:gripper/>
+        </xul:thumb>
       </xul:slider>
-      <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" collapsed="true" inherits="sborient=orient"/>
+      <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" hidden="true" inherits="sborient=orient"/>
       <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" inherits="sborient=orient"/>
     </content>
     
@@ -59,33 +62,11 @@
           ]]>
         </body>
       </method>
-      
     </implementation>
+    
     <handlers>                                                                      
       <handler event="contextmenu" action="event.preventDefault();"/>           
     </handlers>  
-  </binding>
-
-  <binding id="slider">
-    <content>
-      <xul:thumb inherits="orient,src" flex="1"/>
-    </content>
-  </binding>
-
-  <binding id="thumb">
-    <content>
-      <xul:spacer flex="1"/>
-      <xul:image inherits="src"/>
-      <xul:spacer flex="1"/>
-    </content>
-  </binding>
-
-  <binding id="scrollbarbutton">
-    <content>
-      <xul:hbox class="scrollbarbutton-box" flex="1">
-        <xul:image class="scrollbarbutton-icon" inherits="src"/>
-      </xul:hbox>
-    </content>
   </binding>
 </bindings>
 

@@ -12,8 +12,6 @@
 
   <binding id="tabbox" display="xul:box"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
-    <content orient="vertical"/>
-
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
         <getter>
@@ -140,6 +138,12 @@
 
   <binding id="tabs" display="xul:box"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
+    <content>
+      <xul:spacer class="tabs-left"/>
+      <children/>
+      <xul:spacer class="tabs-right" flex="1"/>
+    </content>
+    
     <implementation implements="nsIDOMXULSelectControlElement, nsIAccessibleProvider">
       <constructor>
       <![CDATA[
@@ -319,6 +323,20 @@
     </implementation>
   </binding>
   
+  <binding id="tabs-closebutton" 
+           extends="chrome://global/content/bindings/tabbox.xml#tabs">
+    <content>
+      <xul:spacer class="tabs-left"/>
+      <children/>
+      <xul:stack flex="1">
+        <xul:spacer class="tabs-right"/>
+        <xul:hbox class="tabs-closebutton-box" align="center" pack="end">
+          <xul:toolbarbutton class="tabs-closebutton close-button" inherits="oncommand=onclosetab"/>
+        </xul:hbox>
+      </xul:stack>
+    </content>
+  </binding>
+  
   <binding id="tabpanels"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <implementation implements="nsIAccessibleProvider">
@@ -376,10 +394,8 @@
   <binding id="tab" display="xul:button"
            extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <content>
-      <xul:hbox class="tab-box" flex="1" align="center">
-        <xul:image class="tab-image" inherits="validate,src=image"/>
-        <xul:label flex="1" class="tab-text" inherits="value=label,accesskey,crop,disabled"/>
-      </xul:hbox>
+      <xul:image class="tab-icon" inherits="validate,src=image"/>
+      <xul:label class="tab-text" inherits="value=label,accesskey,crop,disabled" flex="1"/>
     </content>
     
     <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
@@ -412,11 +428,19 @@
           return this.getAttribute("selected") == "true" ? true : false;
         </getter>
         <setter>
-          this.setAttribute("selected",val);
-          if (this.previousSibling) 
-            this.previousSibling.setAttribute("beforeselected",val);
-          if (this.nextSibling)
-            this.nextSibling.setAttribute("afterselected",val);
+          this.setAttribute("selected", val);
+          if (this.previousSibling) {
+            if (val)
+              this.previousSibling.setAttribute("beforeselected", val);
+            else
+              this.previousSibling.removeAttribute("beforeselected");
+          }
+          if (this.nextSibling) {
+            if (val)
+              this.nextSibling.setAttribute("afterselected", val);
+            else
+              this.nextSibling.removeAttribute("afterselected");
+          }
           return val;
         </setter>
       </property>

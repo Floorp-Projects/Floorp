@@ -54,7 +54,6 @@ toolkit.jar:
         content/global/bindings/menu.xml            (resources/content/bindings/menu.xml)
         content/global/bindings/menulist.xml        (resources/content/bindings/menulist.xml)
         content/global/bindings/outliner.xml        (resources/content/bindings/outliner.xml)
-        content/global/bindings/outliner.css        (resources/content/bindings/outliner.css)
         content/global/bindings/popup.xml           (resources/content/bindings/popup.xml)
         content/global/bindings/progressmeter.xml   (resources/content/bindings/progressmeter.xml)
         content/global/bindings/radio.xml           (resources/content/bindings/radio.xml)

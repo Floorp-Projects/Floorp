@@ -56,11 +56,16 @@ domi-panel[disabled="true"] > .viewer-pane-box-1 {
   list-style-image: url("chrome://inspector/skin/iconViewerMenu-dis.gif");
 }
 
-.viewer-menu > .toolbarbutton-box > .toolbarbutton-dropmarker {
+.viewer-menu > .toolbarbutton-menu-dropmarker {
   display: none;   
 }
 
 .viewer-pane-header > toolbargrippy {
   display: none;
+}
+
+.viewer-pane-toolbox {
+  border-top: none;
+  border-bottom: none;
 }
 

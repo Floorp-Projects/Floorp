@@ -1,7 +1,6 @@
 /* ::::: Hide the link toolbar if it is set to autohide and has no items. ::::: */
 
-#linktoolbar[hidden="maybe"][hasitems="false"]
-{
+#linktoolbar[hidden="maybe"][hasitems="false"] {
   display: none;
 }
 

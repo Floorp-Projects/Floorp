@@ -19,9 +19,11 @@
       <xul:hbox class="dialog-button-box" pack="end"
                 inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
         <xul:button dlgtype="accept" class="dialog-button"/>
+        <xul:button dlgtype="extra1" class="dialog-button" hidden="true" label=""/>
+        <xul:button dlgtype="extra2" class="dialog-button" hidden="true" label=""/>
         <xul:button dlgtype="cancel" class="dialog-button"/>
-        <xul:button dlgtype="help" class="dialog-button"/>
-        <xul:button dlgtype="disclosure" class="dialog-button"/>
+        <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
       </xul:hbox>
     </content>
 
@@ -66,28 +68,32 @@
       <![CDATA[
         this._useAnonButton = {};
         
-        this._initDialogButton("accept");
-        this._initDialogButton("cancel");
-        this._initDialogButton("help");
-        this._initDialogButton("disclosure");
-        
-        // hide/show the appropriate buttons
-        this._configureButtons(this.getAttribute("buttons"));
-
         // listen for when window is closed via native close buttons
         window.addEventListener("close", this._closeHandler, false);
 
-        // give focus to the first focusable element in the dialog
-        window.addEventListener("load", this.setInitialFocus, false);
+        window.addEventListener("load", this.initialize, false);
       ]]>
       </constructor>
 
-      <method name="setInitialFocus">
+      <method name="initialize">
         <parameter name="event"/>
         <body>
         <![CDATA[
+          var dialog = document.documentElement;
+
+          dialog._initDialogButton("accept");
+          dialog._initDialogButton("cancel");
+          dialog._initDialogButton("help");
+          dialog._initDialogButton("disclosure");
+          dialog._initDialogButton("extra1");
+          dialog._initDialogButton("extra2");
+          
+          // hide/show the appropriate buttons
+          dialog._configureButtons(dialog.getAttribute("buttons"));
+  
+          // give focus to the first focusable element in the dialog
           if (!document.commandDispatcher.focusedElement)
-            document.commandDispatcher.advanceFocusIntoSubtree(document.documentElement);
+            document.commandDispatcher.advanceFocusIntoSubtree(dialog);
         ]]>
         </body>
       </method>                
@@ -128,7 +134,6 @@
             // don't override custom labels with pre-defined labels on explicit buttons
             if (!btn.hasAttribute("label"))
               btn.setAttribute("label", this.mStrBundle.GetStringFromName("button-"+aDlgType));
-            btn._dialog = this;
           }
           return btn;
         ]]></body>
@@ -138,19 +143,21 @@
         <parameter name="aButtons"/>
         <body>
         <![CDATA[
-          if (!aButtons)
-            aButtons = "accept,cancel";
+          var shown;
+          if (!aButtons) {
+            shown = { accept: true, cancel: true, help: false, 
+                      disclosure: false, extra1: false, extra2: false };
+          } else {
+            // expect a comma or space delimitd list of dlgtype values to be shown
+            var list = aButtons.split(",");
 
-          // expect a comma or space delimitd list of dlgtype values to be shown
-          var list = aButtons.split(",");
-          if (list.length == 1)
-            list = aButtons.split(" ");
+            // mark shown dlgtypes as true
+            shown = { accept: false, cancel: false, help: false,
+                      disclosure: false, extra1: false, extra2: false };
+            for (var i = 0; i < list.length; ++i)
+              shown[list[i].replace(/ /g, "")] = true;
+          }
           
-          // mark shown dlgtypes as true
-          var shown = { accept: false, cancel: false, help: false, disclosure: false};
-          for (var i = 0; i < list.length; ++i)
-            shown[list[i].replace(/ /g, "")] = true;
-
           // hide anonymous buttons that aren't mentioned in the buttons attribute, and are not
           // supplied via explicit content
           for (var dlgtype in shown) {
@@ -175,8 +182,8 @@
         <parameter name="aEvent"/>
         <body>
         <![CDATA[
-          var dialog = aEvent.target._dialog;
-          return dialog._doButtonCommand(aEvent.target.getAttribute("dlgtype"));
+          return document.documentElement._doButtonCommand(
+                                        aEvent.target.getAttribute("dlgtype"));
         ]]>
         </body>
       </method>
@@ -185,16 +192,28 @@
         <parameter name="aDlgType"/>
         <body>
         <![CDATA[
+          // calling window.close() while an oncommand event
+          // call is on the stack fails to close the window, 
+          // so we need to do this ugly setTimeout hack
+          window.setTimeout(
+            function(aDlgType) {
+              document.documentElement._reallyDoButtonCommand(aDlgType);
+            },
+            0, aDlgType);
+        ]]>
+        </body>
+      </method>
+      
+      <method name="_reallyDoButtonCommand">
+        <parameter name="aDlgType"/>
+        <body>
+        <![CDATA[
           var button = this.getButton(aDlgType);
           if (!button.disabled) {
             var noCancel = this._fireButtonEvent(aDlgType);
             if (noCancel) {
-              if (aDlgType == "accept" || aDlgType == "cancel") {
-                // calling window.close() while an oncommand event
-                // call is on the stack fails to close the window, 
-                // so we need to do this ugly setTimeout hack
-                window.setTimeout(function() {window.close();}, 1);
-              }
+              if (aDlgType == "accept" || aDlgType == "cancel")
+                window.close();
             }
             return noCancel;
           }
@@ -252,6 +271,14 @@
       <handler event="keypress" keycode="VK_ESCAPE" action="this.cancelDialog();"/>
     </handlers>
 
+  </binding>
+
+  <binding id="dialogheader" extends="chrome://global/content/bindings/dialog.xml#dialog-base">
+    <content>
+      <xul:label class="dialogheader-title" inherits="value=title"/>
+      <xul:spacer flex="1"/>
+      <xul:label class="dialogheader-description" inherits="value=description"/>
+    </content>
   </binding>
 
 </bindings>

@@ -18,9 +18,8 @@
 
 <?xml-stylesheet href="chrome://inspector/skin/inspectorWindow.css"?>
 
-<window id="winInspectorMain" class="color-dialog" 
-        title="&Inspector.title;"
-        width="1024" height="768" orient="vertical"
+<window id="winInspectorMain" title="&Inspector.title;"
+        width="640" height="480"
         persist="screenX screenY width height maximized"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   

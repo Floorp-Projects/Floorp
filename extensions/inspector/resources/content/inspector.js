@@ -480,7 +480,10 @@ InspectorApp.prototype =
         }
       } 
       if (fn) {
-        item.setAttribute("disabled", item.isDisabled());
+        if (item.isDisabled())
+          item.setAttribute("disabled", "true");
+        else
+          item.removeAttribute("disabled");
       }
 
       fn = null;

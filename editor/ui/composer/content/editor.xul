@@ -74,8 +74,6 @@
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
-  <resourcebundle id="resource_bundle_editor" />
-
   <popupset id="editorContentContextSet"/>
   <popup id="sidebarPopup"/>
 
@@ -257,9 +255,9 @@
 
     <!-- Some of this is from globarOverlay.xul -->
     <statusbar class="chromeclass-status" id="status-bar">
-      <hbox id="component-bar"/>
+      <statusbarpanel id="component-bar"/>
       <statusbarpanel id="statusText" label="&statusText.label;" flex="1"/>
-      <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
+      <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
     </statusbar>
     
 

@@ -43,7 +43,7 @@
 
   <!--============================= CONTENT ============================== -->
 
-  <outliner id="olStyleRules" flex="1" persist="height"
+  <outliner id="olStyleRules" class="plain" flex="1" persist="height"
             onselect="viewer.onRuleSelect()">
     <outlinercols>
       <outlinercol id="olcRule" label="Rule" flex="1"/>
@@ -61,7 +61,8 @@
     <grippy/>
   </splitter>
 
-  <outliner id="olStyleProps" flex="1"  persist="height" context="ppStylePropsContext">
+  <outliner id="olStyleProps" class="plain" flex="1" persist="height"
+            context="ppStylePropsContext">
     <outlinercols>
       <outlinercol id="olcPropPriority" label="Priority" class="outlinercol-image"/>
       <splitter class="tree-splitter"/>

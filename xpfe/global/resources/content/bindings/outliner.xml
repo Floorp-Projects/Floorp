@@ -6,13 +6,12 @@
   
   <binding id="outliner-base">
     <resources>
-      <stylesheet src="chrome://global/content/bindings/outliner.css"/>
       <stylesheet src="chrome://global/skin/outliner.css"/>
     </resources>
   </binding>
 
   <binding id="outliner" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
-    <content orient="vertical">
+    <content>
       <children includes="outlinercols"/>
       <xul:outlinerrows class="outliner-rows" flex="1">
         <children/>
@@ -567,10 +566,8 @@
 
   <binding id="outlinercols" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content>
-      <xul:hbox flex="1" class="outliner-columns">
-        <children includes="outlinercol|splitter"/>
-        <xul:outlinercol class="outliner-columnpicker" fixed="true" ordinal="2147483647"/>
-      </xul:hbox>
+      <children includes="outlinercol|splitter"/>
+      <xul:outlinercol class="outliner-columnpicker outlinercol-image" fixed="true" ordinal="2147483647"/>
     </content>
   </binding>
 
@@ -860,12 +857,10 @@
 
   <binding id="outlinercol" extends="chrome://global/content/bindings/outliner.xml#outlinercol-base">
     <content>
-      <xul:hbox class="outlinercol-box" flex="1" align="center">
-        <xul:image class="outliner-image" inherits="src"/>
-        <xul:label class="outlinercol-text" inherits="crop,value=label" flex="1" crop="right"/>
-        <xul:image class="outlinercol-sortdirection"/>
-      </xul:hbox>
+      <xul:label class="outlinercol-text" inherits="crop,value=label" flex="1" crop="right"/>
+      <xul:image class="outlinercol-sortdirection"/>
     </content>
+
     <handlers>
       <handler event="click" button="0" action="if (event.originalTarget == this) { this.parentNode.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this); }"/>
     </handlers>
@@ -873,22 +868,18 @@
 
   <binding id="outlinercol-image" extends="chrome://global/content/bindings/outliner.xml#outlinercol-base">
     <content>
-      <xul:hbox class="outlinercol-image-box" flex="1" align="center">
-        <xul:image class="outlinercol-icon" inherits="src"/>
-      </xul:hbox>
+      <xul:image class="outlinercol-icon" inherits="src"/>
     </content>
     <handlers>
       <handler event="click" button="0" action="this.parentNode.parentNode.outlinerBoxObject.view.cycleHeader(this.id, this)"/>
     </handlers>
   </binding>
 
-  <binding id="columnpicker" extends="chrome://global/content/bindings/outliner.xml#outliner-base">
+  <binding id="columnpicker"
+           extends="chrome://global/content/bindings/outliner.xml#outliner-base">
     <content>
-      <xul:menu class="outliner-colpicker-menu" align="center" allowevents="true">
-        <xul:image class="outliner-colpicker-icon"/>
-        <xul:menupopup popupanchor="bottomright" popupalign="topright"
-                  onpopupshowing="this.parentNode.parentNode.buildPopup(this);"/>
-      </xul:menu>
+      <xul:image class="outliner-columnpicker-icon"/>
+      <xul:menupopup anonid="popup"/>
     </content>
     
     <implementation>
@@ -896,14 +887,12 @@
          <parameter name="aPopup"/>
          <body>
            <![CDATA[
-             var currCol = this.parentNode.parentNode.firstChild;
+             var currCol = this.parentNode.firstChild;
 
              // we no longer cache the picker content.  
              // remove the old content
-             while (aPopup.childNodes.length) {
+             while (aPopup.childNodes.length)
                aPopup.removeChild(aPopup.childNodes[0]);
-             }
-
 
              while (currCol) {
                while (currCol && currCol.localName != "outlinercol")
@@ -925,7 +914,7 @@
                      }
                      popupChild.setAttribute("colid", currCol.id);
                      popupChild.setAttribute("oncommand",
-                                             "this.parentNode.parentNode.parentNode.toggleColumnState(this);");
+                                             "this.parentNode.parentNode.toggleColumnState(this);");
                      if (currCol.getAttribute("hidden") != "true")
                        popupChild.setAttribute("checked", "true");
                      if (currCol.getAttribute("primary") == "true")
@@ -941,6 +930,7 @@
            ]]>
         </body>
        </method>
+       
        <method name="toggleColumnState">
          <parameter name="aPopup"/>
          <body>
@@ -956,8 +946,16 @@
              }
            ]]>
          </body>
-       </method>         
-     </implementation>    
+       </method>
+     </implementation>
+     
+     <handlers>
+      <handler event="mousedown"><![CDATA[
+        var popup = document.getAnonymousElementByAttribute(this, "anonid", "popup");
+        this.buildPopup(popup);
+        popup.showPopup(this, -1, -1, "popup", "bottomright", "topright");
+      ]]></handler>
+     </handlers>
    </binding>
 </bindings>
 

@@ -1631,7 +1631,8 @@
         <menupopup id="bmContext" 
                    onpopupshowing="this.parentNode.createContextMenu(event);"/>
       <vbox flex="1">
-        <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" enableColumnDrag="true"
+        <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner"
+                           class="plain" enableColumnDrag="true"
                            onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItem(event, true);">
           <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
                         ondblclick="this.parentNode.parentNode.parentNode.openItem(event, false);"
@@ -1655,20 +1656,20 @@
             </template>
           </outlinerbody>
           <outlinercols>
-            <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" class="outlinercol-inset-header sortDirectionIndicator" persist="width hidden sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#Name"
+            <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" class="sortDirectionIndicator" persist="width hidden sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#Name"
                          sortActive="true" sortDirection="descending"/>
             <splitter class="tree-splitter" />
-            <outlinercol id="URL" label="&outlinercol.url.label;" flex="1" class="outlinercol-inset-header sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#URL" persist="width hidden sortActive sortDirection ordinal" />
+            <outlinercol id="URL" label="&outlinercol.url.label;" flex="1" class="sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#URL" persist="width hidden sortActive sortDirection ordinal" />
             <splitter class="tree-splitter" />
-            <outlinercol id="ShortcutURL" label="&outlinercol.shortcut.label;" hidden="true" flex="1" class="outlinercol-inset-header sortDirectionIndicator" persist="hidden width sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
+            <outlinercol id="ShortcutURL" label="&outlinercol.shortcut.label;" hidden="true" flex="1" class="sortDirectionIndicator" persist="hidden width sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
             <splitter class="tree-splitter"/>
-            <outlinercol id="Description" label="&outlinercol.description.label;" hidden="true" flex="1" class="outlinercol-inset-header sortDirectionIndicator" persist="hidden width sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
+            <outlinercol id="Description" label="&outlinercol.description.label;" hidden="true" flex="1" class="sortDirectionIndicator" persist="hidden width sortActive sortDirection ordinal" sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
             <splitter class="tree-splitter"/>
-            <outlinercol id="AddDate" label="&outlinercol.addedon.label;" hidden="true" flex="1" class="outlinercol-inset-header sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" persist="width hidden sortActive sortDirection ordinal" />
+            <outlinercol id="AddDate" label="&outlinercol.addedon.label;" hidden="true" flex="1" class="sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" persist="width hidden sortActive sortDirection ordinal" />
             <splitter class="tree-splitter" />
-            <outlinercol id="LastModDate" label="&outlinercol.lastmod.label;" hidden="true" flex="1" class="outlinercol-inset-header sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" persist="width hidden sortActive sortDirection ordinal" />
+            <outlinercol id="LastModDate" label="&outlinercol.lastmod.label;" hidden="true" flex="1" class="sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" persist="width hidden sortActive sortDirection ordinal" />
             <splitter class="tree-splitter" />
-            <outlinercol id="LastVisitDate" label="&outlinercol.lastvisit.label;" hidden="true" flex="1" class="outlinercol-inset-header sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#LastVisitDate" persist="width hidden sortActive sortDirection ordinal" />
+            <outlinercol id="LastVisitDate" label="&outlinercol.lastvisit.label;" hidden="true" flex="1" class="sortDirectionIndicator" sort="rdf:http://home.netscape.com/NC-rdf#LastVisitDate" persist="width hidden sortActive sortDirection ordinal" />
           </outlinercols>
         </outliner>
         <statusbar class="chromeclass-status" inherits="hidden=hidestatusbar" hidden="false">
@@ -1683,7 +1684,7 @@
                  contextmenu="_child">
       <menupopup id="bmContext" 
                  onpopupshowing="this.parentNode.createContextMenu(event);"/>
-      <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" inherits="class" enableColumnDrag="true"
+      <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" enableColumnDrag="true"
                          onkeypress="if (event.keyCode == 13) this.parentNode.openItem(event, false);">
         <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
                       ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
@@ -1701,7 +1702,7 @@
           </template>
         </outlinerbody>
         <outlinercols>
-          <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="width hidden sortActive sortDirection" sort="rdf:http://home.netscape.com/NC-rdf#Name"
+          <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" class="sortDirectionIndicator" persist="width hidden sortActive sortDirection" sort="rdf:http://home.netscape.com/NC-rdf#Name"
                        sortActive="true" sortDirection="descending"/>
         </outlinercols>
       </outliner>
@@ -1710,7 +1711,7 @@
   <!-- Outliner with folders only -->
   <binding id="bookmarks-outliner-folders" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl">
-      <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" inherits="class">
+      <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner">
         <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
                       onselect="this.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
           <template>
@@ -1722,7 +1723,9 @@
           </template>
         </outlinerbody>
         <outlinercols>
-          <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="width hidden sortActive sortDirection" sort="rdf:http://home.netscape.com/NC-rdf#Name"
+          <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true"
+                       class="sortDirectionIndicator" persist="width hidden sortActive sortDirection"
+                       sort="rdf:http://home.netscape.com/NC-rdf#Name"
                        sortActive="true" sortDirection="descending"/>
         </outlinercols>
       </outliner>

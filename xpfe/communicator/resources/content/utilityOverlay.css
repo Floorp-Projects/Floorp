@@ -1,8 +1,0 @@
-/** 
- * Essential behaviour styles for Communicator package
- **/
-
-#offline-status > .statusbar-panel-box > .statusbar-panel-text
-  {
-    display: none;
-  }

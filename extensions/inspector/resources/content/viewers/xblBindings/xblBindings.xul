@@ -24,7 +24,7 @@
   
   <multipanelset id="mpsBinding" flex="1">
     <multipanel id="bxContent" label="Content" open="true" persist="open" onopen="if (viewer) {viewer.initContent();} else {gInitContent = true;}">
-      <outliner id="olContent" flex="1">
+      <outliner id="olContent" flex="1" class="plain">
         <outlinercols>
           <outlinercol id="colNodeName" primary="true" label="nodeName" flex="1"/>
           <splitter class="tree-splitter"/>
@@ -35,7 +35,7 @@
     </multipanel>
 
     <multipanel id="bxMethods" label="Methods" open="true" persist="open">
-      <outliner id="olMethods" class="outliner-list" flex="1"
+      <outliner id="olMethods" class="outliner-list plain" flex="1"
                 onselect="viewer.onMethodSelected()">
         <outlinercols>
           <outlinercol id="olcMethodName" flex="1"/>
@@ -50,7 +50,7 @@
           <radio id="raPropGetter" label="getter" checked="true" oncommand="viewer.onPropSelected()"/>
           <radio id="raPropSetter" label="setter" oncommand="viewer.onPropSelected()"/>
         </radiogroup>
-        <outliner id="olProps" class="outliner-list" flex="1"
+        <outliner id="olProps" class="outliner-list plain" flex="1"
                   onselect="viewer.onPropSelected()">
           <outlinercols>
             <outlinercol id="olcPropName" label="Property" flex="1"/>
@@ -61,7 +61,7 @@
     </multipanel>
 
     <multipanel id="bxHandlers" label="Handlers" persist="open">
-      <outliner id="olHandlers" class="outliner-list" flex="1"
+      <outliner id="olHandlers" class="outliner-list plain" flex="1"
                 onselect="viewer.onHandlerSelected()">
         <outlinercols>
           <outlinercol id="olcHandlerEvent" flex="1"/>
@@ -72,7 +72,7 @@
     </multipanel>
   
     <multipanel id="bxResources" label="Resources" persist="open">
-      <outliner id="olResources" class="outliner-list" flex="1">
+      <outliner id="olResources" class="outliner-list plain" flex="1">
         <outlinercols>
           <outlinercol id="olcResourceType" flex="1"/>
           <outlinercol id="olcResourceSrc" flex="2"/>

@@ -42,9 +42,11 @@ bindings, binding, content, member, triple {
 
 /********** focus rules **********/
 
+button,
 checkbox,
 colorpicker[type="button"],
 menulist,
+radiogroup,
 outliner,
 browser,
 editor,
@@ -52,21 +54,15 @@ iframe {
   -moz-user-focus: normal;
 }
 
-menulist[editable],
-popup, menupopup, tooltip, 
-scrollbar, scrollbarbutton, slider, thumb, autorepeater,
-splitter, statusbar, statusbarpanel,
-toolbox, menubar, toolbar, spinbuttons {
+menulist[editable] {
   -moz-user-focus: ignore;
 }
 
-outlinercol, outlinerrows, outlinerbody,
+outlinercol,
+outlinerrows,
+outlinerbody,
 radio {
   -moz-user-focus: none;
-}
-
-radiogroup {
-  -moz-user-focus: normal;
 }
 
 /******** window & page ******/
@@ -101,7 +97,6 @@ button[type="menu-button"] {
 
 toolbarbutton {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton");
-  -moz-user-focus: ignore;
 }
 
 toolbarbutton[type="menu"] {
@@ -112,8 +107,8 @@ toolbarbutton[type="menu-button"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-button");
 }
 
-.toolbarbutton-text {
-  text-align: center;
+dropmarker[type="menu-button"] {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#dropmarker");
 }
 
 /******** browser, editor, iframe ********/
@@ -129,7 +124,6 @@ browser {
 }
 
 tabbrowser {
-  display: -moz-inline-stack;
   -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser");
 }
 
@@ -198,10 +192,6 @@ toolbargrippy {
 
 toolbarseparator {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbarseparator");
-}
-
-.toolbar-holder[collapsed="true"] {
-  visibility: collapse;
 }
 
 /********* menubar ***********/
@@ -281,12 +271,9 @@ tooltip {
   display: -moz-popup;
 }
 
-.titletip {
-  -moz-binding: url("chrome://global/content/bindings/outliner.xml#titletip");
-}
-
 /********** floating popups **********/
-  
+
+/*
 titlebar {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#titlebar");  
 }  
@@ -317,7 +304,7 @@ floatingwindow[docked="left"] {
 button.popupClose {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#close-button") !important;
 }  
-
+*/
 /******** grid **********/
 
 grid {
@@ -408,6 +395,10 @@ outliner {
  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outliner");
 }
 
+outlinercols {
+ -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercols");
+}
+
 outlinercol {
  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercol");
 }
@@ -418,6 +409,7 @@ outlinercol.outlinercol-image {
 
 outlinerbody {
  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinerbody");
+  -moz-user-select: none;
 }
 
 outlinerrows {
@@ -428,13 +420,22 @@ outlinercol.outliner-columnpicker {
   -moz-binding: url("chrome://global/content/bindings/outliner.xml#columnpicker");
 }
 
+outliner {
+  -moz-box-orient: vertical;
+  -moz-user-select: none;
+  min-width: 0px;
+  min-height: 0px;
+  width: 10px;
+  height: 10px;
+}
+
+outlinercol {
+  min-width: 16px;
+}
+
 outlinercol[hidden="true"] {
   visibility: collapse;
   display: -moz-box;
-}
-
-outlinercols {
- -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercols");
 }
 
 /********** deck & stack *********/
@@ -464,8 +465,14 @@ tabs {
   -moz-box-orient: horizontal;
 }
 
+tabs[closebutton="true"] {
+  -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabs-closebutton");
+}
+
 tab {
   -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tab");
+  -moz-box-align: center;
+  -moz-box-pack: center;
 }
 
 tabpanels {
@@ -522,14 +529,14 @@ textbox[multiline="true"] {
   -moz-binding: url("chrome://global/content/bindings/textbox.xml#textarea");
 }
 
+.textbox-input-box {
+  -moz-binding: url("chrome://global/content/bindings/textbox.xml#input-box");
+}
+
 /********** autocomplete textbox **********/
 
 textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete");
-}
-
-.autocomplete-internal-box {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-internal-box");
 }
 
 .autocomplete-result-popup {
@@ -552,8 +559,8 @@ textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinerrows");
 }
 
-.autocomplete-outlinercol {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinercol");
+.autocomplete-history-dropmarker {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#history-dropmarker");
 }
 
 /********** colorpicker **********/
@@ -581,7 +588,11 @@ menulist[editable] {
 }
 
 menulist > menupopup > menuitem {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic") !important;
+  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
+}
+
+dropmarker[type="menu"] {
+  -moz-binding: url("chrome://global/content/bindings/general.xml#dropmarker");
 }
 
 /********** splitter **********/
@@ -622,26 +633,20 @@ scrollbox {
 
 arrowscrollbox {
   -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#arrowscrollbox");
-  display: -moz-stack;
 }
 
-autorepeatbutton.up {
-  -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#autorepeatbutton-up");  
-}
-
-autorepeatbutton.down {
-  -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#autorepeatbutton-down");  
-}
-
-.scrollbox-innerbox {
-  -moz-box-pack: inherit;
-  -moz-box-align: inherit;
+autorepeatbutton {
+  -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#autorepeatbutton");
 }
 
 /********** statusbar **********/
 
 statusbarpanel {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbar-panel");
+  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbarpanel");
+}
+
+.statusbarpanel-iconic {
+  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbarpanel-iconic");
 }
 
 /********** spinbuttons ***********/
@@ -662,17 +667,15 @@ stringbundle {
   visibility: collapse;
 }
 
-/********** resourcebundle **********/
-
-resourcebundle {
-  visibility: collapse;
-}  
-
 /********** dialog **********/
 
 dialog {
   -moz-binding: url("chrome://global/content/bindings/dialog.xml#dialog");
   -moz-box-orient: vertical;
+}
+
+dialogheader {
+  -moz-binding: url("chrome://global/content/bindings/dialog.xml#dialogheader");
 }
 
 /********* page ************/
@@ -702,32 +705,16 @@ wizardpage {
   -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard-buttons");
 }
 
-
 /* ::::::::::
    :: Rules for 'hiding' portions of the chrome for special
    :: kinds of browser windows.
    ::::: */
  
-window[chromehidden~="menubar"] .chromeclass-menubar {
-  display: none;
-}
-
-window[chromehidden~="toolbar"] .chromeclass-toolbar {
-  display: none;
-}
-
-window[chromehidden~="location"] .chromeclass-location {
-  display: none;
-}
-
-window[chromehidden~="directories"] .chromeclass-directories {
-  display: none;
-}
-
-window[chromehidden~="status"] .chromeclass-status {
-  display: none;
-}
-
+window[chromehidden~="menubar"] .chromeclass-menubar,
+window[chromehidden~="toolbar"] .chromeclass-toolbar,
+window[chromehidden~="location"] .chromeclass-location,
+window[chromehidden~="directories"] .chromeclass-directories,
+window[chromehidden~="status"] .chromeclass-status,
 window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   display: none;
 }

@@ -143,7 +143,7 @@
   <binding id="tooltip" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
       <children>
-        <xul:label class="tooltip-label" inherits="value=label" flex="1"/>
+        <xul:label class="tooltip-label" inherits="value=label,crop" crop="right" flex="1"/>
       </children>
     </content>
     
@@ -593,6 +593,14 @@
       ]]>
       </handler>
     </handlers>
+  </binding>
+
+  <binding id="popup-scrollbars" extends="chrome://global/content/bindings/popup.xml#popup">
+    <content>
+      <xul:hbox class="popup-internal-box" flex="1" orient="vertical" style="overflow: auto;">
+        <children/>
+      </xul:hbox>
+    </content>
   </binding>
 
   <binding id="floater-normal" extends="chrome://global/content/bindings/popup.xml#floater-base">

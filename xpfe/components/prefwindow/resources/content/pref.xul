@@ -1,6 +1,5 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <?xul-overlay href="chrome://communicator/content/pref/preftree.xul"?>
 
@@ -57,11 +56,11 @@
     <vbox>
       <label value="&categoryHeader;"/>
       <!-- tree sidebar -->
-      <tree id="prefsTree" style="width: 14em !important;" flex="1"/>
+      <tree id="prefsTree" style="width: 13em;" flex="1"/>
     </vbox>
     <vbox flex="1">
-      <hbox id="header" class="box-smallheader"/>
-      <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="1"/>
+      <dialogheader id="header"/>
+      <iframe id="panelFrame" name="panelFrame" style="width: 0px" flex="1"/>
    </vbox>
   </hbox>
 
@@ -77,5 +76,7 @@
       }
     ]]>
     </script>
-   
+
+  <separator/>
+     
 </dialog>
