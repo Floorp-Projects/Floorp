@@ -102,9 +102,11 @@ protected:
 	virtual void SetCellExpansion( const STableCell& inCell, Boolean inExpand);
 	virtual Boolean	CellHasDropFlag(const STableCell& inCell, Boolean& outIsExpanded) const;
 	virtual Boolean TableSupportsNaturalOrderSort ( ) const ;
+#ifdef USE_SELECTION_PROP
 	virtual Boolean CellWantsClick( const STableCell & /*inCell*/ ) const ;
-	virtual void ClickCell ( const STableCell & inCell, const SMouseDownEvent & inMouse ) ;
-		
+	virtual void ClickCell ( const STableCell & inCell, const SMouseDownEvent & inMouse ) ;		
+#endif
+
 		// Stuff related to hiliting
 	virtual TableIndexT	GetHiliteColumn() const { return FindTitleColumnID(); } ;
 	virtual Boolean GetHiliteTextRect ( TableIndexT inRow, Boolean inOkIfRowHidden, Rect& outRect) const ;

@@ -199,10 +199,14 @@ CHyperTreeFlexTable :: FindTitleColumnID ( ) const
 Boolean
 CHyperTreeFlexTable :: CellInitiatesDrag ( const STableCell& inCell ) const
 {
+#ifdef USE_SELECTION_PROP
 	return inCell.col == FindTitleColumnID() &&	
 			URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSelection, true) == true
 		? true : false;
-	
+#else
+	return inCell.col == FindTitleColumnID();
+#endif
+
 } // CellInitiatesDrag
 
 
@@ -216,12 +220,23 @@ CHyperTreeFlexTable :: CellInitiatesDrag ( const STableCell& inCell ) const
 Boolean
 CHyperTreeFlexTable :: CellSelects ( const STableCell& inCell ) const
 {
+#ifdef USE_SELECTION_PROP
 	return inCell.col == FindTitleColumnID() &&
 			URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSelection, true) == true
 		? true : false;
-	
+#else
+	return inCell.col == FindTitleColumnID();
+#endif
+
 } // CellSelects
 
+
+#ifdef USE_SELECTION_PROP
+// (pinkerton)
+// This stuff is not needed if we allow the table to always select things. CStdFlexTable
+// will try to open the selection automatically if the click count is set correctly, which
+// we know it is. Just leaving in this code until we make up our collective minds on if
+// selection should always be enabled on tree views.
 
 //
 // CellWantsClick
@@ -254,6 +269,8 @@ CHyperTreeFlexTable :: ClickCell ( const STableCell & inCell, const SMouseDownEv
 		CStandardFlexTable::ClickCell ( inCell, inMouse );
 
 } // ClickCell
+
+#endif
 
 
 //
@@ -1375,8 +1392,12 @@ CHyperTreeFlexTable :: CanDoInlineEditing ( ) const
 Boolean
 CHyperTreeFlexTable :: TableDesiresSelectionTracking( ) const
 {
+#ifdef USE_SELECTION_PROP
 	return URDFUtilities::PropertyValueBool(TopNode(), gNavCenter->useSelection, true) == true;
-		
+#else
+	return true;
+#endif
+	
 } // TableDesiresSelectionTracking
 
 
