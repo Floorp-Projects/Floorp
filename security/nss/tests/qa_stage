@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/sh 
 ########################################################################
 #
 # /u/sonmi/bin/qa_stage - /u/svbld/bin/init/nss/qa_stage
@@ -69,11 +69,18 @@ qa_stage_init()
 
     export IPLANET_TBX_URL IPLANET_DQA_URL MOZ_TBX_URL MOZ_DQA_URL
     STAGE_1=/u/sonmi/tmp/ftp_stage
-    cd $STAGE_1
+    
+    if [ ! -d  $STAGE_1 ] ; then
+        Echo "Staging area daily QA (DQA): $DQA_STAGE does not exist, exit"
+        exit 1
+    fi
+    cd $STAGE_1 || (Echo "Cant cd to $STAGE_1 , exit"; exit)
     rm all.tar* 2>/dev/null
     TBX_STAGE=$STAGE_1/tinderbox
     DQA_STAGE=$STAGE_1/daily_qa/${DAYBUILD}
-
+    Echo "Staging area tbx: $TBX_STAGE"
+    Echo "Staging area daily QA (DQA): $DQA_STAGE"
+    Echo "Resultdir (sourcedir) for daily QA (RESULTDIR): $RESULTDIR"
 }
 
 ################################### qa_stage_dqa ##########################
@@ -82,7 +89,13 @@ qa_stage_init()
 qa_stage_dqa()
 {
     Echo "DQA:..."
-    cd $RESULTDIR
+    Echo "Resultdir (sourcedir) for daily QA (RESULTDIR): $RESULTDIR"
+#set -x
+    if [ ! -d  $RESULTDIR ] ; then
+        Echo "Resultdir $RESULTDIR does not exist, can't push daily QA"
+        return
+    fi
+    cd $RESULTDIR || return
     #for w in `find . -name "result*html"`
     for w in `find . -name "result.html"`
     do
@@ -109,7 +122,11 @@ qa_stage_dqa()
 qa_stage_tbx()
 {
     Echo "tbx: "
-    cd $TBX_RESULTDIR
+    if [ ! -d  $TBX_RESULTDIR ] ; then
+        Echo "TBX_RESULTDIR $TBX_RESULTDIR does not exist"
+        return
+    fi
+    cd $TBX_RESULTDIR || return
     Echo "find from $TBX_FIND_FROM"
     for w in `find $TBX_FIND_FROM  -name "result.html"`
     do
@@ -245,19 +262,31 @@ qa_stage_init $*
 
 if [ "$DO_CLEAN" = "ON" ] ; then
     Echo "Cleaning old stuff"
-    cd $STAGE_1
-    rm -rf $TBX_STAGE/*
+    if [ ! -d  $STAGE_1 ] ; then
+        Echo "Staging area daily QA (DQA): $DQA_STAGE does not exist, exit"
+        exit 1
+    fi
+    cd $STAGE_1 || (Echo "Cant cd to $STAGE_1 , exit"; exit)
+    if [ -n "$TBX_STAGE" -a -d "$TBX_STAGE" ] ; then
+        rm -rf $TBX_STAGE/*
+    else
+        Echo "nothing here to clean..."
+    fi
 fi
 if [ "$DO_DQA" = "ON" ] ; then
     qa_stage_dqa 
-    if [ "$O_MAIL" = "ON" ] ; then
+    if [ "$O_MAIL" = "ON" -a -f "$DQA_STAGE/result.html" ] ; then
          cat $DQA_STAGE/result.html | /usr/sbin/sendmail $MAILINGLIST 
     fi
 fi
 if [ "$DO_TBX" = "ON" ] ; then
     qa_stage_tbx
 fi
-cd $STAGE_1
+if [ ! -d  $STAGE_1 ] ; then
+    Echo "Staging area daily QA (DQA): $DQA_STAGE does not exist, exit"
+    exit 1
+fi
+cd $STAGE_1 || (Echo "Cant cd to $STAGE_1 , exit"; exit)
 Echo "tar..."
 if [ "$O_SILENT" = "ON" ] ; then
     tar cf all.tar daily_qa        tinderbox
