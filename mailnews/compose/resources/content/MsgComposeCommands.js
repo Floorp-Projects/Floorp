@@ -127,3 +127,12 @@ function SendMessage()
 	else
 		dump("###SendMessage Error: composeAppCore is null!\n");
 }
+
+function SelectAddress() 
+{
+	var dialog = window.openDialog("chrome://addressbook/content/selectaddress.xul",
+								   "selectAddress",
+								   "chrome");
+	return dialog;
+}
+

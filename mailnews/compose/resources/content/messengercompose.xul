@@ -25,7 +25,7 @@
 <!ENTITY sendNowCmd.label ".Send Now">
 <!ENTITY sendLaterCmd.label ".Send Later">
 <!ENTITY quoteOrigCmd.label ".Quote Original Message">
-<!ENTITY selectAddressCmd.label ".Select Addresses...">
+<!ENTITY selectAddressCmd.label "Select Addresses...">
 <!ENTITY printSetupCmd.label ".Print Setup">
 <!ENTITY printPreviewCmd.label ".Print Preview">
 <!ENTITY printCmd.label ".Print">
@@ -88,7 +88,6 @@
 
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
 <html:script language="JavaScript" src="MsgComposeCommands.js"/>
-<html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
 
 <broadcaster id="args" value="editorType=default"/>
 
@@ -113,7 +112,7 @@
 		<menuitem name="&sendNowCmd.label;" cmd="nsCmd:ComposeSend"/>
 		<menuitem name="&sendLaterCmd.label;" cmd="nsCmd:ComposeSendLater"/>
 		<menuitem name="&quoteOrigCmd.label;" cmd="nsCmd:ComposeQuote"/>
-		<menuitem name="&selectAddressCmd.label;" cmd="nsCmd:ComposeAddress"/>
+		<menuitem name="&selectAddressCmd.label;" onclick="SelectAddress()"/>
 		<separator/>
 		<menuitem name="&printSetupCmd.label;" cmd="nsCmd:BrowserPrintSetup"/>
 		<menuitem name="&printPreviewCmd.label;" cmd="nsCmd:BrowserPrintPreview"/>
