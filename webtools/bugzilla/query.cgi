@@ -666,6 +666,7 @@ print "
 
 my @fields;
 push(@fields, ["noop", "---"]);
+ConnectToDatabase();
 SendSQL("SELECT name, description FROM fielddefs ORDER BY sortkey");
 while (MoreSQLData()) {
     my ($name, $description) = (FetchSQLData());
