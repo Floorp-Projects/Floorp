@@ -20,7 +20,7 @@ nsIStreamListener.idl
 nsITransport.idl
 nsIStreamLoader.idl
 nsIDownloader.idl
-nsIStreamObserver.idl
+nsIRequestObserver.idl
 nsIStreamProvider.idl
 nsIURI.idl
 nsIURL.idl
