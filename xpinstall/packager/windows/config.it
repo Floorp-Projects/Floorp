@@ -325,7 +325,7 @@ Message=Preparing SmartUpdate, please wait...
 [RunApp0]
 Timing=post launchapp
 Wait=FALSE
-Target=[SETUP PATH]\apprunner.exe
+Target=[SETUP PATH]\mozilla.exe
 Parameters=-installer
 WorkingDir=[SETUP PATH]
 
@@ -360,11 +360,11 @@ Show Folder=SHOW
 Program Folder=[Default Folder]
 
 [Program Folder0-Shortcut0]
-File=[SETUP PATH]\apprunner.exe
+File=[SETUP PATH]\mozilla.exe
 Arguments=
 Working Dir=[SETUP PATH]
-Description=Netscape AppRunner
-Icon Path=[SETUP PATH]\apprunner.exe
+Description=Netscape Mozilla
+Icon Path=[SETUP PATH]\mozilla.exe
 Icon Id=0
 
 ;[Program Folder0-Shortcut1]
