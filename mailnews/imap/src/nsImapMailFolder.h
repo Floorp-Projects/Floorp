@@ -142,6 +142,8 @@ public:
 
 	NS_IMETHOD MarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 	NS_IMETHOD MarkAllMessagesRead(void);
+
+    NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders);
     
     virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo,
                                           nsIMsgDatabase **db);
@@ -338,6 +340,7 @@ protected:
 	virtual PRBool DeleteIsMoveToTrash();
 	void ParseUidString(char *uidString, nsMsgKeyArray &keys);
 	nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
+    PRBool InTrash(nsIMsgFolder* folder);
 
     nsresult AddDirectorySeparator(nsFileSpec &path);
     nsresult CreateDirectoryForFolder(nsFileSpec &path);

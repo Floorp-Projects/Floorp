@@ -593,11 +593,13 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash()
         }
         
         rv = trashFolder->GetMsgDatabase(getter_AddRefs(trashDB));
+        nsCOMPtr<nsIUrlListener> urlListener =
+            do_QueryInterface(trashFolder);
 
         NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
         if (NS_SUCCEEDED(rv))
             rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
-                                                nsnull, nsnull);
+                                                urlListener, nsnull);
     }
     return rv;
 }
@@ -1077,6 +1079,78 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
         }
     }
     return rv;
+}
+
+PRBool
+nsImapMailFolder::InTrash(nsIMsgFolder* folder)
+{
+    nsCOMPtr<nsIMsgFolder> parent;
+    nsCOMPtr<nsIFolder> iFolder;
+    nsCOMPtr<nsIMsgFolder> curFolder;
+    nsresult rv;
+    PRUint32 flags = 0;
+
+    if (!folder) return PR_FALSE;
+    curFolder = do_QueryInterface(folder, &rv);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    do 
+    {
+        rv = curFolder->GetParent(getter_AddRefs(iFolder));
+        if (NS_FAILED(rv)) return PR_FALSE;
+        parent = do_QueryInterface(iFolder, &rv);
+        if (NS_FAILED(rv)) return PR_FALSE;
+        rv = parent->GetFlags(&flags);
+        if (NS_FAILED(rv)) return PR_FALSE;
+        if (flags & MSG_FOLDER_FLAG_TRASH)
+            return PR_TRUE;
+        curFolder = do_QueryInterface(parent, &rv);
+    } while (NS_SUCCEEDED(rv) && curFolder);
+
+    return PR_FALSE;
+}
+NS_IMETHODIMP
+nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders)
+{
+    PRBool inTrash = PR_FALSE;
+    nsCOMPtr<nsIMsgFolder> curFolder;
+    nsCOMPtr<nsISupports> folderSupport;
+    nsCOMPtr<nsIUrlListener> urlListener;
+    nsCOMPtr<nsIMsgFolder> trashFolder;
+    PRUint32 i, folderCount = 0;
+    nsresult rv;
+
+    NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+        rv = folders->Count(&folderCount);
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = GetTrashFolder(getter_AddRefs(trashFolder));
+            for (i = 0; i < folderCount; i++)
+            {
+                folderSupport = getter_AddRefs(folders->ElementAt(i));
+                curFolder = do_QueryInterface(folderSupport, &rv);
+                if (NS_SUCCEEDED(rv))
+                {
+                    urlListener = do_QueryInterface(curFolder);
+                    if (InTrash(curFolder))
+                        rv = imapService->DeleteFolder(m_eventQueue,
+                                                       curFolder,
+                                                       urlListener,
+                                                       nsnull);
+                    else
+                        rv = imapService->MoveFolder(m_eventQueue,
+                                                     curFolder,
+                                                     trashFolder,
+                                                     urlListener,
+                                                     nsnull);
+                }
+            }
+        }
+    }
+        
+    return nsMsgFolder::DeleteSubFolders(folders);
 }
 
 NS_IMETHODIMP nsImapMailFolder::GetNewMessages()
