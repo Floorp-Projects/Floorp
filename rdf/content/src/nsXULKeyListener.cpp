@@ -1540,10 +1540,11 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
                 eventListener->HandleEvent(aKeyEvent);
 
                 masterContext->BindCompiledEventHandler(scriptObject, eventName, nsnull);
-               
-                aKeyEvent->PreventBubble();
-                aKeyEvent->PreventCapture();
-                aKeyEvent->PreventDefault();
+
+                // Next three lines cause bug 28396
+                //aKeyEvent->PreventBubble();
+                //aKeyEvent->PreventCapture();
+                //aKeyEvent->PreventDefault();
         
                 return NS_OK;
               } else {
