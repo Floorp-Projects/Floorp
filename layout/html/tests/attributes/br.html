@@ -1,21 +1,21 @@
 <HTML>
 <BODY>
 <IMG src="resource:/res/samples/raptor.jpg" STYLE="float: left;">
-<IMG src="mynet.gif" STYLE="float: right;">
-This text should appear between a left justified and right justified image of a raptor.<BR>
+<IMG src="resource:/res/samples/raptor.jpg" STYLE="float: right; height: 100px;">
+This text should appear between a left justified and right justified image of a raptor.<BR clear="all">
 Resize the window such that this paragraph is located between the two images.  Then 
-use the form below to change the "clear" attribute of the BR tag that adds a linebreak
+use the form below to change the "clear" attribute of the BR tag that adds a line break
 between this para and the previous one.  Clearing to left should position this para below
-the raptor.  Clearing to the right or clearing all should position this para below the My
-Netscape ad.
+the big raptor.  Clearing to the right or clearing all should position this para below the 
+smaller raptor image.
 <FORM>
 <P>
 Set <I>clear</I> to
 <SELECT SIZE="1" NAME="clear">
-<OPTION SELECTED VALUE="none">None</OPTION>
+<OPTION VALUE="none">None</OPTION>
 <OPTION VALUE="left">Left</OPTION>
 <OPTION VALUE="right">Right</OPTION>
-<OPTION VALUE="all">All</OPTION>
+<OPTION SELECTED VALUE="all">All</OPTION>
 </SELECT>
 <INPUT TYPE="button" VALUE="Change Clear" onClick="changeClear(); return true;">
 </P>
@@ -27,7 +27,7 @@ function changeClear() {
       br.clear = "none";
    else if (document.forms[0].clear.selectedIndex == 1)
       br.clear = "left";
-   else if (document.forms[0].clear.selectedIndex == 1)
+   else if (document.forms[0].clear.selectedIndex == 2)
       br.clear = "right";
    else
       br.clear = "all";

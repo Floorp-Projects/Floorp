@@ -36,6 +36,7 @@
 
 @namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
 
+
 /* Quirk: input images have a blue border (b=28010) */ 
 
 /* default border */
@@ -79,6 +80,7 @@ menu ul, menu ol, menu dir, menu menu, menu li {
  * node in an LI is another UL or OL. This is an ugly way to
  * fix the problem, because it extends the LI up into what
  * would otherwise appear to be the ULs space. (b=38832) */
+
 /* Note: this fix will fail once we implement marker box 
  * alignment correctly. */
 li > ul:first-node,
@@ -86,14 +88,18 @@ li > ol:first-node {
   padding-top: 1em;
 }
 
+
 /* Quirk: prevent bullet from resizing with the list item
  *   see bug 97351
  */
+
 li::-moz-list-bullet {
   font-size: -moz-initial;
 }
 
+
 /* Quirk: cut off all font inheritance in tables and captions except for family. */
+
 table, caption {
   font-size: -moz-initial;
   font-weight: -moz-initial;
@@ -118,7 +124,6 @@ table {
  * selectors will be hashed in the RuleHash and things will be much more
  * efficient.
  */
-
 body > form:first-node, td > form:first-node, th > form:first-node,
 body > p:first-node, td > p:first-node, th > p:first-node,
 body > dl:first-node, td > dl:first-node, th > dl:first-node,
@@ -211,30 +216,13 @@ td > ol:empty:last-node, th > ol:empty:last-node {
   margin-top: 0;
 }
 
+
 /* Quirk: support the ways of making PRE have wrapping */
+
 pre[wrap], pre[cols], pre[width] {
   white-space: -moz-pre-wrap;
 }
 
-
-/* Quirk: HRs avoid floats (b=18754) */
-
-hr {
-  display: inline;
-  -moz-box-sizing: border-box;
-  margin: 0 0.1% 0 0.1%; /* Mmm! Hack-on-a-hack for bug 81776 */
-  font-size: -moz-initial !important;
-}
-
-hr:before {
-  white-space: pre;
-  content: "\A";
-}
-
-hr:after {
-  white-space: pre;
-  content: "\A";
-}
 
 /* Quirk: DD not in DL has text-indent instead of margin (b=5119) */
 
@@ -252,18 +240,24 @@ hr:after {
   margin-right: 40px;
 }
 
+
 /* quirk to indent nested DL elements (b=8749) */
+
 dl > dl {
   display: block;
   margin-left: 40px;
 }
 
+
 /* Quirk: MAP acts like an inline, not a block */
+
 map {
   display: inline;
 }
 
+
 /* Quirk: Make floated images have a margin  (b=58899) */
+
 img[align=left] {
   margin-right: 3px;
 }
@@ -272,27 +266,28 @@ img[align=right] {
   margin-left: 3px;
 }
 
-/*
- * XXX This is a potential performance problem.  This should not be
- * using an attribute!
- */
 
 /* Quirk: Make sure that the residual style tags' size info. 
  * does not take precedence over heading tags' size. (b=77352)
  * Note: This special attribute is set only for a residual 
  * style tag within a heading tag.
  */
+
+/* XXX This is a potential performance problem.  This should not be
+ * using an attribute!
+ */
 *[_moz-rs-heading] { 
   font-size: inherit !important; 
 }
+
 
 /*
  * Quirk: Use border-box box sizing for text inputs, password inputs, and
  * textareas.  (b=184478 on why we use content-box sizing in standards mode)
  */
+
+/* Note that all other <input>s already use border-box
+   sizing, so we're ok with this selector */
 input:not([type=image]), textarea {
-  /* Note that all other <input>s already use border-box
-     sizing, so we're ok with this selector */
   -moz-box-sizing: border-box;
 }
-

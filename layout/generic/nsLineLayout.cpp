@@ -852,15 +852,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       // Make up a width to use for reflowing into.  XXX what value to
       // use? for tables, we want to limit it; for other elements
       // (e.g. text) it can be unlimited...
-      // especially we won't use the unlimited size for <hr> (bug 60992), 
-      // the following code is a consequence of setting 
-      // hr  display:inline in quirks.css (bug 18754)
-      nsCOMPtr<nsIAtom> frameType;
-      if (InStrictMode() ||
-          (aFrame->GetFrameType(getter_AddRefs(frameType)),
-           nsLayoutAtoms::hrFrame != frameType)) {
-        availSize.width = psd->mReflowState->availableWidth;
-      }
+      availSize.width = psd->mReflowState->availableWidth;
     }
   }
   if (NS_UNCONSTRAINEDSIZE == mBottomEdge) {
@@ -1319,19 +1311,6 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
   // XXXwaterson probably not the right way to get this; e.g., embeddings, etc.
   PRBool ltr = (NS_STYLE_DIRECTION_LTR == aReflowState.mStyleVisibility->mDirection);
 
-  PRBool reducedBothMargins = PR_FALSE;
-  // An HR needs to reduce the avail width by both margins, because it effectively fits
-  // on one line. If it gets continued then only the continuation has any width. XXX - Are 
-  // there other elements with these characterstics and if so, is there a bit indicating that?
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) {
-    nsCOMPtr<nsIAtom> frameType;
-    pfd->mFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::hrFrame == frameType.get()) {
-      aReflowState.availableWidth -= pfd->mMargin.left + pfd->mMargin.right;
-      reducedBothMargins = PR_TRUE;
-    }
-  }
-
   // Only apply start-margin on the first-in flow for inline frames
   if (HasPrevInFlow(pfd->mFrame)) {
     // Zero this out so that when we compute the max-element-width of
@@ -1342,7 +1321,7 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
       pfd->mMargin.right = 0;
   }
 
-  if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) && !reducedBothMargins){
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth){
     // Adjust available width to account for the left margin. The
     // right margin will be accounted for when we finish flowing the
     // frame.
@@ -2923,58 +2902,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
 #endif
   {
     nscoord dx = 0;
-    PRUint32 textAlign = mTextAlign;
-    // here is where we do special adjustments for HR's 
-    // see bug 18754
-    // This code is not sufficient because it doesn't handle HRs that
-    // are within inline elements.  (We check the content node rather
-    // than the frame type due to the changes for bug 141054.)
-    if (!InStrictMode()) {
-      if (psd->mFirstFrame && psd->mFirstFrame->mFrame) {
-        nsIContent* content = psd->mFirstFrame->mFrame->GetContent();
-        if (content) {
-          nsCOMPtr<nsIAtom> tag;
-          content->GetTag(getter_AddRefs(tag));
-          if (tag == nsHTMLAtoms::hr) {
-            // get the alignment from the HR frame
-
-            // hack to get the HRFrame due to the wrapper frame for the
-            // quirks mode anonymous content
-            nsIFrame *hrFrame = psd->mFirstFrame->mFrame;
-            nsCOMPtr<nsIAtom> frameType;
-            hrFrame->GetFrameType(getter_AddRefs(frameType));
-            if (frameType != nsLayoutAtoms::hrFrame) {
-              // |hrFrame| is a wrapper frame, so the real frame is one
-              // of its children.
-              nsIFrame *child;
-              for (hrFrame->FirstChild(mPresContext, nsnull, &child);
-                   child; child = child->GetNextSibling()) {
-                child->GetFrameType(getter_AddRefs(frameType));
-                if (frameType == nsLayoutAtoms::hrFrame) {
-                  hrFrame = child;
-                  break;
-                }
-              }
-            }
-
-            const nsStyleMargin* margin = hrFrame->GetStyleMargin();
-            textAlign = NS_STYLE_TEXT_ALIGN_CENTER;
-            nsStyleCoord zero(nscoord(0));
-            nsStyleCoord temp;
-            if ((eStyleUnit_Coord==margin->mMargin.GetLeftUnit()) &&
-                 (zero==margin->mMargin.GetLeft(temp)))
-            {
-              textAlign = NS_STYLE_TEXT_ALIGN_LEFT;
-            }
-            else if ((eStyleUnit_Coord==margin->mMargin.GetRightUnit()) &&
-                     (zero==margin->mMargin.GetRight(temp))) {
-              textAlign = NS_STYLE_TEXT_ALIGN_RIGHT;
-            }
-          }
-        }
-      }
-    }
-    switch (textAlign) {
+    switch (mTextAlign) {
       case NS_STYLE_TEXT_ALIGN_DEFAULT:
         if (NS_STYLE_DIRECTION_LTR == psd->mDirection) {
           // default alignment for left-to-right is left so do nothing
