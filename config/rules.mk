@@ -1135,7 +1135,7 @@ endif
 JAR_MANIFEST := $(srcdir)/jar.mn
 
 chrome::
-	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/config/make-jars.pl -c -d $(DIST)/bin/chrome < $(JAR_MANIFEST); fi
+	@if test -f $(JAR_MANIFEST); then $(PERL) $(topsrcdir)/config/make-jars.pl -c -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
 
 install:: chrome
 
