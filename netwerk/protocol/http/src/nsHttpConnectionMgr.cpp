@@ -753,9 +753,7 @@ nsHttpConnectionMgr::OnMsgPruneDeadConnections()
 {
     LOG(("nsHttpConnectionMgr::OnMsgPruneDeadConnections\n"));
 
-#ifndef DEBUG
     if (mNumIdleConns > 0) 
-#endif
         mCT.Enumerate(PruneDeadConnectionsCB, this);
 }
 
