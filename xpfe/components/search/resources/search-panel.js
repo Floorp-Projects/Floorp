@@ -44,6 +44,8 @@ var textArc;
 var modeArc;
 var searchBundle;
 
+var sidebarInitiatedSearch = false;
+
 var RDF_observer =
 {
   onAssert : function(ds, src, prop, target)
@@ -85,12 +87,26 @@ var RDF_observer =
 
 function rememberSearchText(target)
 {
+  if (sidebarInitiatedSearch) {
+    // this avoids updating the sidebar textfield twice
+    return;
+  }
   if (target) {
     target = target.QueryInterface(nsIRDFLiteral).Value;
     if (target) {
       // convert plusses (+) back to spaces
-      target = target.replace(/+/i, " ");
+      target = target.replace(/+/g, " ");
       var textNode = document.getElementById("sidebar-search-text");
+
+      if (target != textNode.value) {
+        // category is unknown, therefore use "All Engines"
+        var categoryPopup = document.getElementById( "categoryPopup" );
+        var categoryList = document.getElementById( "categoryList" );
+        if (categoryPopup && categoryList) {
+          categoryList.selectedItem = categoryPopup.childNodes[0];
+        }
+      }
+
       textNode.value = unescape(target);
       doEnabling();
     }
@@ -203,7 +219,7 @@ function haveSearchResults()
     target = target.QueryInterface(nsIRDFLiteral).Value;
     if (target) {
       // convert plusses (+) back to spaces
-      target = target.replace(/+/i, " ");
+      target = target.replace(/+/g, " ");
       var textNode = document.getElementById("sidebar-search-text");
       textNode.value = unescape(target);
       return true;
@@ -570,7 +586,9 @@ function OpenSearch(aSearchStr, engineURIs)
   var searchDS = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
 
   var escapedSearchStr = escape(aSearchStr);
+  sidebarInitiatedSearch = true;
   searchDS.RememberLastSearchText(escapedSearchStr);
+  sidebarInitiatedSearch = false;
 
   var gURL;
   try {
@@ -674,7 +692,7 @@ function saveSearch()
     target = target.QueryInterface(nsIRDFLiteral).Value;
     if (target) {
       // convert plusses (+) back to spaces
-      target = target.replace(/+/i, " ");
+      target = target.replace(/+/g, " ");
       lastSearchText = unescape(target);
     }
   }
