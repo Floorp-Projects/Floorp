@@ -147,9 +147,10 @@ class tokenPair {
 public:
   tokenPair(const char *aName, PRUint32 aNameLen,
             const char *aValue, PRUint32 aValueLen) :
-    tokenName(aName, aName+aNameLen),
+    tokenName(aName), tokenNameLength(aNameLen),
     tokenValue(aValue), tokenValueLength(aValueLen) {}
-  nsDependentSingleFragmentCSubstring tokenName;
+  const char* tokenName;
+  PRUint32 tokenNameLength;
   const char* tokenValue;
   PRUint32 tokenValueLength;
 };
@@ -1052,9 +1053,8 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
         continue;
       
       const char* startPtr = (const char*) yarn.mYarn_Buf;
-      rv = gRDFService->GetResource(
-            nsCAutoString(Substring(startPtr, startPtr+yarn.mYarn_Fill)).get(),
-            getter_AddRefs(resource));
+      nsCAutoString uri(Substring(startPtr, startPtr+yarn.mYarn_Fill));
+      rv = gRDFService->GetResource(uri.get(), getter_AddRefs(resource));
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
       if (NS_FAILED(rv))
         continue;
@@ -2846,29 +2846,31 @@ nsGlobalHistory::TokenListToSearchQuery(const nsVoidArray& aTokens,
     tokenPair *token = (tokenPair *)aTokens[i];
 
     // per-term tokens
-    if (token->tokenName.Equals("datasource")) {
+    const nsASingleFragmentCString& tokenName =
+        Substring(token->tokenName, token->tokenName + token->tokenNameLength);
+    if (tokenName.Equals(NS_LITERAL_CSTRING("datasource"))) {
       datasource = token->tokenValue;
       datasourceLen = token->tokenValueLength;
     }
-    else if (token->tokenName.Equals("match")) {
+    else if (tokenName.Equals(NS_LITERAL_CSTRING("match"))) {
       if (Substring(token->tokenValue, token->tokenValue+token->tokenValueLength).Equals("AgeInDays"))
         matchCallback = matchAgeInDaysCallback;
       
       property = token->tokenValue;
       propertyLen = token->tokenValueLength;
     }
-    else if (token->tokenName.Equals("method")) {
+    else if (tokenName.Equals(NS_LITERAL_CSTRING("method"))) {
       method = token->tokenValue;
       methodLen = token->tokenValueLength;
     }    
-    else if (token->tokenName.Equals("text")) {
+    else if (tokenName.Equals(NS_LITERAL_CSTRING("text"))) {
       text = token->tokenValue;
       textLen = token->tokenValueLength;
     }
     
     // really, we should be storing the group-by as a column number or
     // rdf resource
-    else if (token->tokenName.Equals("groupby")) {
+    else if (tokenName.Equals(NS_LITERAL_CSTRING("groupby"))) {
       mdb_err err;
       err = mStore->QueryToken(mEnv,
                                nsCAutoString(token->tokenValue).get(),
