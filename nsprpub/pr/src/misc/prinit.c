@@ -417,6 +417,7 @@ PR_IMPLEMENT(PRStatus) PR_Cleanup()
     	PR_ASSERT((_PR_IS_NATIVE_THREAD(me)) || (me->cpu->id == 0));
 #endif
 
+        _PR_CleanupCallOnce();
 		_PR_ShutdownLinker();
         /* Release the primordial thread's private data, etc. */
         _PR_CleanupThread(me);
@@ -782,6 +783,13 @@ static void _PR_InitCallOnce() {
     PR_ASSERT(NULL != mod_init.cv);
 }
 
+void _PR_CleanupCallOnce()
+{
+    PR_DestroyLock(mod_init.ml);
+    mod_init.ml = NULL;
+    PR_DestroyCondVar(mod_init.cv);
+    mod_init.cv = NULL;
+}
 
 PR_IMPLEMENT(PRStatus) PR_CallOnce(
     PRCallOnceType *once,
