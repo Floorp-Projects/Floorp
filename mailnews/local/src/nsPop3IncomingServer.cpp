@@ -223,13 +223,12 @@ nsPop3IncomingServer::SetFlagsOnDefaultMailboxes()
         do_QueryInterface(rootFolder, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // pop3 gets all flags
+    // pop3 gets an inbox, but no queue (unsent messages)
     localFolder->SetFlagsOnDefaultMailboxes(MSG_FOLDER_FLAG_INBOX |
                                             MSG_FOLDER_FLAG_SENTMAIL |
                                             MSG_FOLDER_FLAG_DRAFTS |
                                             MSG_FOLDER_FLAG_TEMPLATES |
-                                            MSG_FOLDER_FLAG_TRASH |
-                                            MSG_FOLDER_FLAG_QUEUE);
+                                            MSG_FOLDER_FLAG_TRASH);
     return NS_OK;
 }
     
@@ -285,15 +284,7 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 		if (NS_FAILED(rv)) return rv;
 	}
 	
-	rv = path->SetLeafName("Unsent Messages");
-	if (NS_FAILED(rv)) return rv;
-	rv = path->Exists(&exists);
-	if (NS_FAILED(rv)) return rv;
-	if (!exists) {
-		rv = path->Touch();
-		if (NS_FAILED(rv)) return rv;
-	}
-        return rv;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aResult)

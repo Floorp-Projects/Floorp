@@ -27,6 +27,7 @@
 #include "nsINoIncomingServer.h"
 #include "nsILocalMailIncomingServer.h"
 #include "nsMsgIncomingServer.h"
+#include "nsIFileSpec.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsNoIncomingServer : public nsMsgIncomingServer,
@@ -43,6 +44,10 @@ public:
     virtual ~nsNoIncomingServer();
     
     NS_IMETHOD GetLocalStoreType(char * *type);
+private:
+	// copies messages from bin/defaults/messenger/<defaultFolderName> into <path>
+	nsresult CopyDefaultMessages(const char *defaultFolderName, nsIFileSpec *path);
+
 };
 
 

@@ -2701,8 +2701,6 @@ nsMsgLocalMailFolder::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::SetFlagsOnDefaultMailboxes(PRUint32 flags)
 {
-	nsresult rv = NS_OK;
-
   if (flags & MSG_FOLDER_FLAG_INBOX)
     setSubfolderFlag(kInboxName, MSG_FOLDER_FLAG_INBOX);
 

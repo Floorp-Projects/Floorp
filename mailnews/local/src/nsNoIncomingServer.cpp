@@ -35,6 +35,10 @@
 #include "nsMsgLocalCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgLocalMailFolder.h"
+#include "nsFileLocations.h"
+#include "nsIFileLocator.h"
+
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsNoIncomingServer,
                             nsMsgIncomingServer,
@@ -73,7 +77,7 @@ nsNoIncomingServer::SetFlagsOnDefaultMailboxes()
         do_QueryInterface(rootFolder, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // pop3 gets all flags
+    // "none" doesn't have an inbox, but it does have a queue (unsent messages)
     localFolder->SetFlagsOnDefaultMailboxes(MSG_FOLDER_FLAG_SENTMAIL |
                                             MSG_FOLDER_FLAG_DRAFTS |
                                             MSG_FOLDER_FLAG_TEMPLATES |
@@ -81,6 +85,46 @@ nsNoIncomingServer::SetFlagsOnDefaultMailboxes()
                                             MSG_FOLDER_FLAG_QUEUE);
     return NS_OK;
 }	
+
+nsresult nsNoIncomingServer::CopyDefaultMessages(const char *defaultFolderName, nsIFileSpec *path)
+{
+	nsresult rv;
+    PRBool exists;
+	if (!defaultFolderName || !path) return NS_ERROR_NULL_POINTER;
+
+	nsCOMPtr<nsIFileLocator> locator = do_GetService(kFileLocatorCID, &rv);
+	if (NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsIFileSpec> defaultMessagesFile;
+	rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultsFolder50, getter_AddRefs(defaultMessagesFile));
+	if (NS_FAILED(rv)) return rv;
+
+	// bin/defaults better exist
+    rv = defaultMessagesFile->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+	if (!exists) return NS_ERROR_FAILURE;
+
+	// bin/defaults/messenger doesn't have to exist
+	rv = defaultMessagesFile->AppendRelativeUnixPath("messenger");
+	if (NS_FAILED(rv)) return rv;
+    rv = defaultMessagesFile->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+	if (!exists) return NS_OK;
+
+	// bin/defaults/messenger/<defaultFolderName> doesn't have to exist
+	rv = defaultMessagesFile->AppendRelativeUnixPath(defaultFolderName);
+	if (NS_FAILED(rv)) return rv;
+    rv = defaultMessagesFile->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+	if (!exists) return NS_OK;
+
+	nsCOMPtr<nsIFileSpec> parentDir;
+	rv = path->GetParent(getter_AddRefs(parentDir));
+	if (NS_FAILED(rv)) return rv;
+
+	rv = defaultMessagesFile->CopyToDir(parentDir);
+	return NS_OK;
+}
 
 NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
@@ -120,6 +164,11 @@ NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 
         rv = path->SetLeafName("Templates");
         if (NS_FAILED(rv)) return rv;
+
+		// if they exist, use the default templates
+		rv = CopyDefaultMessages("Templates",path);
+        if (NS_FAILED(rv)) return rv;
+
         rv = path->Exists(&exists);
         if (NS_FAILED(rv)) return rv;
         if (!exists) {
@@ -135,7 +184,8 @@ NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
                 rv = path->Touch();
                 if (NS_FAILED(rv)) return rv;
         }
-        return rv;
+
+        return NS_OK;
 }
 
 NS_IMETHODIMP nsNoIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aResult)
