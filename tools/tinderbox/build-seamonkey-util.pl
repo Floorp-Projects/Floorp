@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.110 $ ';
+$::UtilsVersion = '$Revision: 1.111 $ ';
 
 package TinderUtils;
 
@@ -872,7 +872,7 @@ sub run_all_tests {
 
     # Bloat test (based on nsTraceRefcnt)
     if ($Settings::BloatTest and $test_result eq 'success') {
-	  $test_result = BloatTest($binary, $build_dir, " -f bloaturls.txt", "browser",
+	  $test_result = BloatTest($binary, $build_dir, " -f bloaturls.txt", "",
 							   $Settings::BloatTestTimeout);
     }
     
@@ -939,7 +939,7 @@ sub run_all_tests {
 	  # unlink("Inbox.msf");
 
 	  $test_result = BloatTest($binary, $build_dir, " -mail", "mail",
-							   $Settings::MailBloatTestTimeout);
+				   $Settings::MailBloatTestTimeout);
 
 	  # back to build_dir
 	  chdir($build_dir);
@@ -1627,7 +1627,7 @@ sub BloatTest {
     }
 
     print_log "<a href=#bloat>\n######################## BLOAT STATISTICS\n";
-    open DIFF, "perl $build_dir/../bloatdiff.pl $build_dir/bloat-prev.log $binary_log|"
+    open DIFF, "perl $build_dir/../bloatdiff.pl $build_dir/bloat-prev.log $binary_log $bloatdiff_label|"
       or die "Unable to run bloatdiff.pl";
     print_log $_ while <DIFF>;
     close DIFF;
