@@ -56,13 +56,15 @@ class nsJARInputStream : public nsIInputStream
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
     nsresult 
-    Init(nsJAR* aParser, nsZipArchive* aZip, const char* aFilename);
+    Init(nsJAR* jar, const char* aFilename);
   
-  private:
- 
-    char*         mEntryName;
-    nsZipArchive* mZip;
-    nsZipRead*    mReadInfo;
+  protected:
+    nsZipArchive* Zip() { return &mJAR->mZip; }
+
+  protected:
+    nsJAR*      mJAR;
+    char*       mEntryName;
+    nsZipRead*  mReadInfo;
 };
 
 #endif /* nsJAR_h__ */
