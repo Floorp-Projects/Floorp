@@ -971,7 +971,6 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
       GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
       gdk_gc_copy(mGC, gc);
       gdk_gc_unref(gc); // unref the one we got
-      gdk_gc_ref(mGC); // we're holding on to this one
       copyGC = gdk_gc_ref(mGC);
     }
     
