@@ -49,6 +49,12 @@ import java.util.Hashtable;
 
 class Optimizer {
 
+    static final int NoType = 0;
+    static final int NumberType = 1;
+    static final int AnyType = 3;
+
+    // It is assumed that (NumberType | AnyType) == AnyType
+
     Optimizer(IRFactory irFactory) {
         this.irFactory = irFactory;
     }
@@ -155,7 +161,7 @@ class Optimizer {
             OptLocalVariable lVar = fn.getVar(i);
             if (!lVar.isParameter()) {
                 int theType = lVar.getTypeUnion();
-                if (theType == TypeEvent.NumberType) {
+                if (theType == NumberType) {
                     lVar.setIsNumber();
                 }
             }
@@ -356,13 +362,13 @@ class Optimizer {
             case Token.POP : {
                     Node child = n.getFirstChild();
                     int type = rewriteForNumberVariables(child);
-                    if (type == TypeEvent.NumberType)
+                    if (type == NumberType)
                         n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
-                     return TypeEvent.NoType;
+                     return NoType;
                 }
             case Token.NUMBER :
                 n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
-                return TypeEvent.NumberType;
+                return NumberType;
 
             case Token.GETVAR : {
                     OptLocalVariable theVar
@@ -370,15 +376,15 @@ class Optimizer {
                     if (theVar != null) {
                         if (inDirectCallFunction && theVar.isParameter()) {
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
-                            return TypeEvent.NumberType;
+                            return NumberType;
                         }
                         else
                             if (theVar.isNumber()) {
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
-                                return TypeEvent.NumberType;
+                                return NumberType;
                             }
                     }
-                    return TypeEvent.NoType;
+                    return NoType;
                 }
 
             case Token.INC :
@@ -390,13 +396,13 @@ class Optimizer {
                         if ((theVar != null) && theVar.isNumber()) {
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             markDCPNumberContext(child);
-                            return TypeEvent.NumberType;
+                            return NumberType;
                         }
                         else
-                            return TypeEvent.NoType;
+                            return NoType;
                     }
                     else
-                        return TypeEvent.NoType;
+                        return NoType;
                 }
             case Token.SETVAR : {
                     Node lChild = n.getFirstChild();
@@ -405,20 +411,20 @@ class Optimizer {
                     OptLocalVariable theVar
                          = (OptLocalVariable)(n.getProp(Node.VARIABLE_PROP));
                     if (inDirectCallFunction && theVar.isParameter()) {
-                        if (rType == TypeEvent.NumberType) {
+                        if (rType == NumberType) {
                             if (!convertParameter(rChild)) {
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
-                                return TypeEvent.NumberType;
+                                return NumberType;
                             }
                             markDCPNumberContext(rChild);
-                            return TypeEvent.NoType;
+                            return NoType;
                         }
                         else
                             return rType;
                     }
                     else {
                         if ((theVar != null) && theVar.isNumber()) {
-                            if (rType != TypeEvent.NumberType) {
+                            if (rType != NumberType) {
                                 n.removeChild(rChild);
                                 Node newRChild = new Node(Token.CONVERT,
                                                           rChild);
@@ -428,10 +434,10 @@ class Optimizer {
                             }
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             markDCPNumberContext(rChild);
-                            return TypeEvent.NumberType;
+                            return NumberType;
                         }
                         else {
-                            if (rType == TypeEvent.NumberType) {
+                            if (rType == NumberType) {
                                 if (!convertParameter(rChild)) {
                                     n.removeChild(rChild);
                                     Node newRChild = new Node(Token.CONVERT, rChild);
@@ -440,7 +446,7 @@ class Optimizer {
                                     n.addChildToBack(newRChild);
                                 }
                             }
-                            return TypeEvent.NoType;
+                            return NoType;
                         }
                     }
                 }
@@ -454,7 +460,7 @@ class Optimizer {
 
                     int op = n.getOperation();
                     if (op == Token.INSTANCEOF || op == Token.IN) {
-                        if (lType == TypeEvent.NumberType) {
+                        if (lType == NumberType) {
                             if (!convertParameter(lChild)) {
                                 n.removeChild(lChild);
                                 Node nuChild = new Node(Token.CONVERT, lChild);
@@ -463,7 +469,7 @@ class Optimizer {
                                 n.addChildToFront(nuChild);
                             }
                         }
-                        if (rType == TypeEvent.NumberType) {
+                        if (rType == NumberType) {
                             if (!convertParameter(rChild)) {
                                 n.removeChild(rChild);
                                 Node nuChild = new Node(Token.CONVERT, rChild);
@@ -476,10 +482,10 @@ class Optimizer {
                     else {
                         if (convertParameter(lChild)) {
                             if (convertParameter(rChild)) {
-                                return TypeEvent.NoType;
+                                return NoType;
                             }
                             else {
-                                if (rType == TypeEvent.NumberType) {
+                                if (rType == NumberType) {
                                     n.putIntProp(Node.ISNUMBER_PROP,
                                                  Node.RIGHT);
                                 }
@@ -487,14 +493,14 @@ class Optimizer {
                         }
                         else {
                             if (convertParameter(rChild)) {
-                                if (lType == TypeEvent.NumberType) {
+                                if (lType == NumberType) {
                                     n.putIntProp(Node.ISNUMBER_PROP,
                                                  Node.LEFT);
                                 }
                             }
                             else {
-                                if (lType == TypeEvent.NumberType) {
-                                    if (rType == TypeEvent.NumberType) {
+                                if (lType == NumberType) {
+                                    if (rType == NumberType) {
                                         n.putIntProp(Node.ISNUMBER_PROP,
                                                      Node.BOTH);
                                     }
@@ -504,7 +510,7 @@ class Optimizer {
                                     }
                                 }
                                 else {
-                                    if (rType == TypeEvent.NumberType) {
+                                    if (rType == NumberType) {
                                         n.putIntProp(Node.ISNUMBER_PROP,
                                                      Node.RIGHT);
                                     }
@@ -513,7 +519,7 @@ class Optimizer {
                         }
                      }
                      // we actually build a boolean value
-                    return TypeEvent.NoType;
+                    return NoType;
                 }
 
             case Token.ADD : {
@@ -525,39 +531,39 @@ class Optimizer {
 
                     if (convertParameter(lChild)) {
                         if (convertParameter(rChild)) {
-                            return TypeEvent.NoType;
+                            return NoType;
                         }
                         else {
-                            if (rType == TypeEvent.NumberType) {
+                            if (rType == NumberType) {
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.RIGHT);
                             }
                         }
                     }
                     else {
                         if (convertParameter(rChild)) {
-                            if (lType == TypeEvent.NumberType) {
+                            if (lType == NumberType) {
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.LEFT);
                             }
                         }
                         else {
-                            if (lType == TypeEvent.NumberType) {
-                                if (rType == TypeEvent.NumberType) {
+                            if (lType == NumberType) {
+                                if (rType == NumberType) {
                                     n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
-                                    return TypeEvent.NumberType;
+                                    return NumberType;
                                 }
                                 else {
                                     n.putIntProp(Node.ISNUMBER_PROP, Node.LEFT);
                                 }
                             }
                             else {
-                                if (rType == TypeEvent.NumberType) {
+                                if (rType == NumberType) {
                                     n.putIntProp(Node.ISNUMBER_PROP,
                                                  Node.RIGHT);
                                 }
                             }
                         }
                     }
-                    return TypeEvent.NoType;
+                    return NoType;
                 }
 
             case Token.BITXOR :
@@ -575,10 +581,10 @@ class Optimizer {
                     int rType = rewriteForNumberVariables(rChild);
                     markDCPNumberContext(lChild);
                     markDCPNumberContext(rChild);
-                    if (lType == TypeEvent.NumberType) {
-                        if (rType == TypeEvent.NumberType) {
+                    if (lType == NumberType) {
+                        if (rType == NumberType) {
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
-                            return TypeEvent.NumberType;
+                            return NumberType;
                         }
                         else {
                             if (!convertParameter(rChild)) {
@@ -589,11 +595,11 @@ class Optimizer {
                                 n.addChildToBack(newRChild);
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             }
-                            return TypeEvent.NumberType;
+                            return NumberType;
                         }
                     }
                     else {
-                        if (rType == TypeEvent.NumberType) {
+                        if (rType == NumberType) {
                             if (!convertParameter(lChild)) {
                                 n.removeChild(lChild);
                                 Node newLChild = new Node(Token.CONVERT, lChild);
@@ -602,7 +608,7 @@ class Optimizer {
                                 n.addChildToFront(newLChild);
                                 n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             }
-                            return TypeEvent.NumberType;
+                            return NumberType;
                         }
                         else {
                             if (!convertParameter(lChild)) {
@@ -620,7 +626,7 @@ class Optimizer {
                                 n.addChildToBack(newRChild);
                             }
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
-                            return TypeEvent.NumberType;
+                            return NumberType;
                         }
                     }
                 }
@@ -629,7 +635,7 @@ class Optimizer {
                     Node arrayIndex = arrayBase.getNext();
                     Node rValue = arrayIndex.getNext();
                     int baseType = rewriteForNumberVariables(arrayBase);
-                    if (baseType == TypeEvent.NumberType) {// can never happen ???
+                    if (baseType == NumberType) {// can never happen ???
                         if (!convertParameter(arrayBase)) {
                             n.removeChild(arrayBase);
                             Node nuChild = new Node(Token.CONVERT, arrayBase);
@@ -639,7 +645,7 @@ class Optimizer {
                         }
                     }
                     int indexType = rewriteForNumberVariables(arrayIndex);
-                    if (indexType == TypeEvent.NumberType) {
+                    if (indexType == NumberType) {
                         // setting the ISNUMBER_PROP signals the codegen
                         // to use the scriptRuntime.setElem that takes
                         // a double index
@@ -647,7 +653,7 @@ class Optimizer {
                         markDCPNumberContext(arrayIndex);
                     }
                     int rValueType = rewriteForNumberVariables(rValue);
-                    if (rValueType == TypeEvent.NumberType) {
+                    if (rValueType == NumberType) {
                         if (!convertParameter(rValue)) {
                             n.removeChild(rValue);
                             Node nuChild = new Node(Token.CONVERT, rValue);
@@ -656,13 +662,13 @@ class Optimizer {
                             n.addChildToBack(nuChild);
                         }
                     }
-                    return TypeEvent.NoType;
+                    return NoType;
                 }
             case Token.GETELEM : {
                     Node arrayBase = n.getFirstChild();
                     Node arrayIndex = arrayBase.getNext();
                     int baseType = rewriteForNumberVariables(arrayBase);
-                    if (baseType == TypeEvent.NumberType) {// can never happen ???
+                    if (baseType == NumberType) {// can never happen ???
                         if (!convertParameter(arrayBase)) {
                             n.removeChild(arrayBase);
                             Node nuChild = new Node(Token.CONVERT, arrayBase);
@@ -672,7 +678,7 @@ class Optimizer {
                         }
                     }
                     int indexType = rewriteForNumberVariables(arrayIndex);
-                    if (indexType == TypeEvent.NumberType) {
+                    if (indexType == NumberType) {
                         if (!convertParameter(arrayIndex)) {
                             // setting the ISNUMBER_PROP signals the codegen
                             // to use the scriptRuntime.getElem that takes
@@ -680,7 +686,7 @@ class Optimizer {
                             n.putIntProp(Node.ISNUMBER_PROP, Node.RIGHT);
                         }
                     }
-                    return TypeEvent.NoType;
+                    return NoType;
                 }
             case Token.CALL :
                 {
@@ -698,12 +704,12 @@ class Optimizer {
                         child = child.getNext(); // the first arg
                         while (child != null) {
                             int type = rewriteForNumberVariables(child);
-                            if (type == TypeEvent.NumberType) {
+                            if (type == NumberType) {
                                 markDCPNumberContext(child);
                             }
                             child = child.getNext();
                         }
-                        return TypeEvent.NoType;
+                        return NoType;
                     }
                     // else fall thru...
                 }
@@ -712,7 +718,7 @@ class Optimizer {
                     while (child != null) {
                         Node nextChild = child.getNext();
                         int type = rewriteForNumberVariables(child);
-                        if (type == TypeEvent.NumberType) {
+                        if (type == NumberType) {
                             if (!convertParameter(child)) {
                                 n.removeChild(child);
                                 Node nuChild = new Node(Token.CONVERT, child);
@@ -726,7 +732,7 @@ class Optimizer {
                         }
                         child = nextChild;
                     }
-                    return TypeEvent.NoType;
+                    return NoType;
                 }
         }
     }

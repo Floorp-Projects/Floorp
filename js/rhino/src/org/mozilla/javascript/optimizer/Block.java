@@ -251,7 +251,7 @@ public class Block {
     {
         for (int i = 0; i < fn.getVarCount(); i++)
             if (itsLiveOnEntrySet.test(i))
-                fn.getVar(i).assignType(TypeEvent.AnyType);
+                fn.getVar(i).assignType(Optimizer.AnyType);
 
     }
 
@@ -387,14 +387,14 @@ public class Block {
                     else {
                     }
 */
-                    return TypeEvent.NumberType;
+                    return Optimizer.NumberType;
                 }
             case Token.NEW :
             case Token.CALL :
-                return TypeEvent.NoType;
+                return Optimizer.NoType;
 
             case Token.GETELEM :
-               return TypeEvent.AnyType;
+               return Optimizer.AnyType;
 
             case Token.GETVAR : {
                     OptLocalVariable theVar = (OptLocalVariable)
@@ -414,7 +414,7 @@ public class Block {
             case Token.RSH:
             case Token.URSH:
             case Token.SUB : {
-                    return TypeEvent.NumberType;
+                    return Optimizer.NumberType;
                 }
             case Token.ADD : {
                     // if the lhs & rhs are known to be numbers, we can be sure that's
@@ -427,9 +427,9 @@ public class Block {
             default : {
                     Node child = n.getFirstChild();
                     if (child == null)
-                        return TypeEvent.AnyType;
+                        return Optimizer.AnyType;
                     else {
-                        int result = TypeEvent.NoType;
+                        int result = Optimizer.NoType;
                         while (child != null) {
                             result |= findExpressionType(child);
                             child = child.getNext();
@@ -459,7 +459,7 @@ public class Block {
                                       (firstChild.getProp(Node.VARIABLE_PROP));
                     if (theVar != null) {
                         // theVar is a Number now
-                        result |= theVar.assignType(TypeEvent.NumberType);
+                        result |= theVar.assignType(Optimizer.NumberType);
                     }
                 }
                 break;
@@ -473,7 +473,7 @@ public class Block {
                             OptLocalVariable theVar = (OptLocalVariable)
                                               (baseChild.getProp(Node.VARIABLE_PROP));
                             if (theVar != null)
-                                theVar.assignType(TypeEvent.AnyType);
+                                theVar.assignType(Optimizer.AnyType);
                         }
                         result |= findDefPoints(baseChild);
                     }

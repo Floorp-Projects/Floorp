@@ -47,8 +47,7 @@ final class OptLocalVariable implements JavaVariable {
         // If the variable is a parameter, it could have any type.
         // If it is from a "var" statement, its typeEvent will be set
         // when we see the setVar node.
-        int typeEvent = isParameter ? TypeEvent.AnyType : TypeEvent.NoType;
-        itsTypeUnion = new TypeEvent(typeEvent);
+        itsTypeUnion = isParameter ? Optimizer.AnyType : Optimizer.NoType;
     }
 
     public String toString() {
@@ -110,11 +109,12 @@ final class OptLocalVariable implements JavaVariable {
     boolean isLiveAcrossCall()    { return itsLiveAcrossCall; }
 
     boolean assignType(int aType) {
-        return itsTypeUnion.add(aType);
+        itsTypeUnion |= aType;
+        return itsTypeUnion != aType;
     }
 
     int getTypeUnion() {
-        return itsTypeUnion.getEvent();
+        return itsTypeUnion;
     }
 
     private String itsName;
@@ -126,7 +126,7 @@ final class OptLocalVariable implements JavaVariable {
     private boolean itsLiveAcrossCall;
     private boolean itsIsNumber;
 
-    private TypeEvent itsTypeUnion;        // the union of all assigned types
+    private int itsTypeUnion;        // the union of all assigned types
 
     private int initPC;
 }
