@@ -249,7 +249,8 @@ public:
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
                      const PRUint32 localIP = 0,
                      nsISupports * aHistoryState=nsnull,
-                     const PRUnichar* aReferrer=nsnull);
+                     const PRUnichar* aReferrer=nsnull,
+                     const char * aWindowTarget = nsnull);
 
   NS_IMETHOD LoadURI(nsIURI * aUri,
                      const char * aCommand,
@@ -257,8 +258,9 @@ public:
                      PRBool aModifyHistory=PR_TRUE,
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
                      const PRUint32 aLocalIP=0,
-					           nsISupports * aHistoryState=nsnull,
-                     const PRUnichar* aReferrer=nsnull);
+                     nsISupports * aHistoryState=nsnull,
+                     const PRUnichar* aReferrer=nsnull,
+                     const char * aWindowTarget = nsnull);
 
   NS_IMETHOD Stop(void);
   NS_IMETHOD StopBeforeRequestingURL();
@@ -420,6 +422,7 @@ protected:
                      nsLoadFlags aType,
                      const PRUint32 aLocalIP,
                      const PRUnichar* aReferrer,
+                     const char * aWindowTarget,
                      PRBool aKickOffLoad = PR_TRUE);
 
   nsresult PrepareToLoadURI(nsIURI * aUri, 
@@ -1424,7 +1427,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   // Initialize margnwidth, marginheight. Put scrolling back the way it was
   // before the last document was loaded.
 
-	InitFrameData(PR_FALSE);
+  InitFrameData(PR_FALSE);
 
   const char *cmd = mViewSource ? "view-source" : "view" ;
   mViewSource = PR_FALSE; // reset it
@@ -1469,6 +1472,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                       nsLoadFlags aType,
                       const PRUint32 aLocalIP,
                       const PRUnichar* aReferrer,
+                      const char * aWindowTarget,
                       PRBool aKickOffLoad)
 {
   if (!aUri)
@@ -1545,12 +1549,12 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                   mURL = urlSpec;
                   mReferrer = aReferrer;
               }
-		          // Pass on status of scrolling/anchor visit to docloaderobserver
+              // Pass on status of scrolling/anchor visit to docloaderobserver
               if (!mProcessedEndDocumentLoad)
               {
                 rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
               }
-		          return rv;		   
+              return rv;       
            }
            else if (aType == nsISessionHistory::LOAD_HISTORY)
            {
@@ -1563,23 +1567,23 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
               if (NS_SUCCEEDED(rv) && viewMgr) {
                 nsIScrollableView* view;
                 rv = viewMgr->GetRootScrollableView(&view);
-				        if (NS_SUCCEEDED(rv) && view)
+                if (NS_SUCCEEDED(rv) && view)
                 rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
                 if (NS_SUCCEEDED(rv)) {
                      mURL = urlSpec;
                      mReferrer = aReferrer;
                 }
                 mProcessedEndDocumentLoad = PR_FALSE;
-		            // Pass on status of scrolling/anchor visit to docloaderobserver
+                // Pass on status of scrolling/anchor visit to docloaderobserver
                 rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
-		            return rv;		   
+                return rv;       
               }
            }
-#if 0        		   
-		   mProcessedEndDocumentLoad = PR_FALSE;
-		   // Pass on status of scrolling/anchor visit to docloaderobserver
+#if 0              
+       mProcessedEndDocumentLoad = PR_FALSE;
+       // Pass on status of scrolling/anchor visit to docloaderobserver
            rv = OnEndDocumentLoad(mDocLoader, dummyChannel, rv);
-		   return rv;		   
+       return rv;      
 #endif /* 0 */
         }  // NS_SUCCEEDED(rv) && presShell
       } // EqualBaseURLs(docURL, url)
@@ -1651,11 +1655,11 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                                           aType, referrer /* referring uri */, 0, 0,
                                           getter_AddRefs(pChannel));
       if (NS_FAILED(rv)) {
-		  if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) // if causing the channel changed the 
-			  return NS_OK;                        // dom and there is nothing else to do
-		  else
-		      return rv; // uhoh we were unable to get a channel to handle the url!!!
-	  }
+      if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) // if causing the channel changed the 
+        return NS_OK;                        // dom and there is nothing else to do
+      else
+          return rv; // uhoh we were unable to get a channel to handle the url!!!
+    }
       // Mark the channel as being a document URI...
       nsLoadFlags loadAttribs = 0;
       pChannel->GetLoadAttributes(&loadAttribs);
@@ -1679,7 +1683,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
       else if (nsCRT::strcasecmp(aCommand, "view-source") == 0)
         loadCmd = nsIURILoader::viewSource;
 
-      rv = pURILoader->OpenURI(pChannel, loadCmd, nsnull /* window target */, 
+      rv = pURILoader->OpenURI(pChannel, loadCmd, aWindowTarget /* window target */, 
                                NS_STATIC_CAST(nsIContentViewerContainer*, (nsIWebShell*)this));
     }
   }
@@ -1763,7 +1767,7 @@ nsWebShell::DoContent(const char * aContentType,
     // however since we can't retarget yet, we were basically canceling our very
     // own load group!!! So the request would get canceled out from under us...
     // after retargeting we may be able to safely call DoLoadURL. 
-    DoLoadURL(aUri, strCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, PR_FALSE);
+    DoLoadURL(aUri, strCommand, nsnull, nsIChannel::LOAD_NORMAL, 0, nsnull, nsnull, PR_FALSE);
     SetFocus(); // force focus to get set on the retargeted window...
   }
 
@@ -1924,7 +1928,7 @@ nsresult nsWebShell::PrepareToLoadURI(nsIURI * aUri,
     mHistoryIndex++;
   }
   else {
-	  
+    
     // Replace the current history index with this URL
     nsString* u = (nsString*) mHistory.ElementAt(mHistoryIndex);
     if (nsnull != u) {
@@ -1954,14 +1958,15 @@ nsWebShell::LoadURI(nsIURI * aUri,
                     PRBool aModifyHistory,
                     nsLoadFlags aType,
                     const PRUint32 aLocalIP,
-					          nsISupports * aHistoryState,
-                    const PRUnichar* aReferrer)
+                    nsISupports * aHistoryState,
+                    const PRUnichar* aReferrer,
+                    const char * aWindowTarget)
 {
   nsresult rv = PrepareToLoadURI(aUri, aCommand, aPostDataStream,
                                  aModifyHistory, aType, aLocalIP,
                                  aHistoryState, aReferrer);
   if (NS_SUCCEEDED(rv))
-    rv =  DoLoadURL(aUri, aCommand, aPostDataStream, aType, aLocalIP, aReferrer);
+    rv =  DoLoadURL(aUri, aCommand, aPostDataStream, aType, aLocalIP, aReferrer, aWindowTarget);
   return rv;
 }
 
@@ -1973,7 +1978,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsLoadFlags aType,
                     const PRUint32 aLocalIP,
                     nsISupports * aHistoryState,
-                    const PRUnichar* aReferrer)
+                    const PRUnichar* aReferrer,
+                    const char * aWindowTarget)
 {
   nsresult rv = NS_OK;
   PRBool isMail= PR_FALSE; // XXX mailto: hack
@@ -2122,7 +2128,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     root->GetSessionHistory(*getter_AddRefs(shist));
   }
   if (shist)
-	  shist->GetLoadingFlag(&isLoadingHistory);
+    shist->GetLoadingFlag(&isLoadingHistory);
 
 
   /* 
@@ -2131,14 +2137,14 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
    * be false and nsSessionHistory.cpp takes of this.
    */
   if (shist) {
-	 PRInt32  indix;
+   PRInt32  indix;
      shist->GetCurrentIndex(&indix);
      if (indix >= 0 && (aModifyHistory)) {
        nsCOMPtr<nsISupports>  historyState;
        rv = GetHistoryState(getter_AddRefs(historyState));
-	   if (NS_SUCCEEDED(rv) && historyState)
+     if (NS_SUCCEEDED(rv) && historyState)
           shist->SetHistoryObjectForIndex(indix, historyState);
-	 }
+   }
   }
   /* Set the History state object for the current page in the
    * presentation shell. If it is a new page being visited,
@@ -2160,19 +2166,19 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   nsAutoString urlstr;
 
   if ((isLoadingHistory)) {
-	/* if LoadURL() got called from SH, AND If we are going "Back/Forward" 
-	 * to a frame page,SH  will change the mURL to the right value
+  /* if LoadURL() got called from SH, AND If we are going "Back/Forward" 
+   * to a frame page,SH  will change the mURL to the right value
      * for smoother redraw. So, create a new nsIURI based on mURL,
      * so that it will work right in such situations.
-	 */
+   */
      urlstr = mURL;
   }
   else{
-	/* If the call is not from SH, use the url passed by the caller
-	 * so that things like JS will work right. This is for bug # 1646.
-	 * May regress in other situations.
-	 * What a hack
-	 */
+  /* If the call is not from SH, use the url passed by the caller
+   * so that things like JS will work right. This is for bug # 1646.
+   * May regress in other situations.
+   * What a hack
+   */
      urlstr=spec;
   }
   
@@ -2181,7 +2187,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
   if (NS_SUCCEEDED(res)) {
     // now that we have a uri, call the REAL LoadURI method which requires a nsIURI.
-    return LoadURI(newURI, aCommand, aPostDataStream, aModifyHistory, aType, aLocalIP, aHistoryState, aReferrer);
+    return LoadURI(newURI, aCommand, aPostDataStream, aModifyHistory, aType, aLocalIP, aHistoryState, aReferrer, aWindowTarget);
   }
   return rv;
 
@@ -2334,9 +2340,9 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     rv = DoLoadURL(uri,       // URL string
                    "view",        // Command
                    nsnull,        // Post Data
-				           nsISessionHistory::LOAD_HISTORY,  // the reload type
+                   nsISessionHistory::LOAD_HISTORY,  // the reload type
                    0,            // load attributes
-                   nsnull);      // referrer
+                   nsnull,nsnull);      // referrer
   }
   return rv;
 
@@ -2709,7 +2715,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         // set the correct uri loader command
         LoadURL(aURLSpec, "view-link-click", aPostDataStream,
                             PR_TRUE, nsIChannel::LOAD_NORMAL, 
-                            0, nsnull, mURL.GetUnicode());
+                            0, nsnull, mURL.GetUnicode(), nsCAutoString(aTargetSpec));
       }
       break;
     case eLinkVerb_Embed:
@@ -3558,27 +3564,27 @@ nsWebShell::OnStatus(nsIChannel* channel, nsISupports* ctxt,
 
 nsresult nsWebShell::GetViewManager(nsIViewManager* *viewManager)
 {
-	nsresult rv = NS_ERROR_FAILURE;
-	*viewManager = nsnull;
-	do {
-		if (nsnull == mContentViewer) break;
-	
-		nsCOMPtr<nsIDocumentViewer> docViewer;
-		rv = mContentViewer->QueryInterface(kIDocumentViewerIID,
-											getter_AddRefs(docViewer));
-		if (NS_FAILED(rv)) break;
-		
-		nsCOMPtr<nsIPresContext> context;
-		rv = docViewer->GetPresContext(*getter_AddRefs(context));
-		if (NS_FAILED(rv)) break;
-		
-		nsCOMPtr<nsIPresShell> shell;
-		rv = context->GetShell(getter_AddRefs(shell));
-		if (NS_FAILED(rv)) break;
-		
-		rv = shell->GetViewManager(viewManager);
-	} while (0);
-	return rv;
+  nsresult rv = NS_ERROR_FAILURE;
+  *viewManager = nsnull;
+  do {
+    if (nsnull == mContentViewer) break;
+  
+    nsCOMPtr<nsIDocumentViewer> docViewer;
+    rv = mContentViewer->QueryInterface(kIDocumentViewerIID,
+                      getter_AddRefs(docViewer));
+    if (NS_FAILED(rv)) break;
+    
+    nsCOMPtr<nsIPresContext> context;
+    rv = docViewer->GetPresContext(*getter_AddRefs(context));
+    if (NS_FAILED(rv)) break;
+    
+    nsCOMPtr<nsIPresShell> shell;
+    rv = context->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(rv)) break;
+    
+    rv = shell->GetViewManager(viewManager);
+  } while (0);
+  return rv;
 }
 
 
@@ -3754,18 +3760,18 @@ NS_IMETHODIMP nsWebShell::Repaint(PRBool aForce)
   }
 
 #if 0
-	if (nsnull != mWindow) {
-		mWindow->Invalidate(aForce);
-	}
-	return NS_OK;
+  if (nsnull != mWindow) {
+    mWindow->Invalidate(aForce);
+  }
+  return NS_OK;
 #else
-	nsresult rv;
-	nsCOMPtr<nsIViewManager> viewManager;
-	rv = GetViewManager(getter_AddRefs(viewManager));
-	if (NS_SUCCEEDED(rv) && viewManager) {
-		rv = viewManager->UpdateAllViews(0);
-	}
-	return rv;
+  nsresult rv;
+  nsCOMPtr<nsIViewManager> viewManager;
+  rv = GetViewManager(getter_AddRefs(viewManager));
+  if (NS_SUCCEEDED(rv) && viewManager) {
+    rv = viewManager->UpdateAllViews(0);
+  }
+  return rv;
 #endif
 }
 
@@ -3970,7 +3976,7 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   }
 
   // (7) fire end document load notification
-	mProcessedEndDocumentLoad = PR_FALSE;
+  mProcessedEndDocumentLoad = PR_FALSE;
   nsresult rv = NS_OK;
   NS_ENSURE_SUCCESS(OnEndDocumentLoad(mDocLoader, dummyChannel, rv), NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);  // test the resulting out-param separately
