@@ -867,6 +867,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   //   if the canvas is scrolled so that part is off screen.
   nsIView* containingView = nsnull;
   nsPoint offset;
+  nsMargin margin;
   aFrame->GetOffsetFromView(aPresContext, offset, &containingView);
   if (!containingView)
     return NS_OK;
@@ -982,7 +983,6 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     // Add in the top and left margins
     const nsStyleMargin* smargin = 
       (const nsStyleMargin*)mStyleContext->GetStyleData(eStyleStruct_Margin);
-    nsMargin margin;
     smargin->GetMargin(margin);
     
     xpos += margin.left;
@@ -1234,7 +1234,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
       xpos -= mRect.width;      
     }
     if ( (screenViewLocY + mRect.height) > screenBottomTwips )
-      ypos -= (screenViewLocY + mRect.height) - screenBottomTwips;
+      ypos -= (mRect.height + margin.top + margin.bottom);
       
   }  
 
