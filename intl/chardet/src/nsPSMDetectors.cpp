@@ -423,15 +423,16 @@ PRBool nsPSMDetector::HandleData(const char* aBuf, PRUint32 aLen)
 
 void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
 {
-     PRInt32 nonUCS2Num=0;
+     PRInt32 possibleCandidateNum=0;
      PRInt32 j;
      PRInt32 eucNum=0;
      for(j = 0; j < mItems; j++) {
         if(nsnull != mStatisticsData[mItemIdx[j]]) 
              eucNum++;
         if(((&nsUCS2BEVerifier) != mVerifier[mItemIdx[j]]) &&
-                ((&nsUCS2LEVerifier) != mVerifier[mItemIdx[j]])) {
-                  nonUCS2Num++;
+                ((&nsUCS2LEVerifier) != mVerifier[mItemIdx[j]]) &&
+                ((&nsGB18030Verifier) != mVerifier[mItemIdx[j]]) ) {
+                  possibleCandidateNum++;
         }
      }
      mRunSampler = (eucNum > 1);
@@ -439,7 +440,7 @@ void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
         mRunSampler = mSampler.Sample(aBuf, aLen);
         if(((aLastChance && mSampler.GetSomeData()) || 
             mSampler.EnoughData())
-           && (eucNum == nonUCS2Num)) {
+           && (eucNum == possibleCandidateNum)) {
           mSampler.CalFreq();
 #ifdef DETECTOR_DEBUG
           printf("We cannot figure out charset from the encoding, "
@@ -483,7 +484,7 @@ void nsPSMDetector::Sample(const char* aBuf, PRUint32 aLen, PRBool aLastChance)
            Report( mVerifier[mItemIdx[bestIdx]]->charset);
            mDone = PR_TRUE;
          }
-       } // if (eucNum == nonUCS2Num)
+       } // if (eucNum == possibleCandidateNum)
      } // if(mRunSampler)
 }
 //----------------------------------------------------------
