@@ -503,12 +503,30 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
     nsrefcnt cnt;
 
+    // Notify observers of xpcom shutting down
+    nsresult rv = NS_OK;
+    {
+        // Block it so that the COMPtr will get deleted before we hit
+        // servicemanager shutdown
+        NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsIServiceManager *mgr;		// NO COMPtr as we dont release the service manager
+            rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+            if (NS_SUCCEEDED(rv))
+            {
+                nsAutoString topic = NS_XPCOM_SHUTDOWN_OBSERVER_ID;
+                (void) observerService->Notify(mgr, topic.GetUnicode(), nsnull);
+            }
+        }
+    }
+
     // Release our own singletons...
     XPTI_FreeInterfaceInfoManager();
 
     // We may have AddRef'd for the caller of NS_InitXPCOM, so release it
     // here again:
-                                                             
+    
     NS_IF_RELEASE(servMgr);
     NS_RELEASE2(nsServiceManager::mGlobalServiceManager, cnt);
     NS_ASSERTION(cnt == 0, "Service Manager being held past XPCOM shutdown.");
@@ -521,7 +539,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     // Shutdown xpcom. This will release all loaders and cause others holding
     // a refcount to the component manager to release it.
-    nsresult rv = (nsComponentManagerImpl::gComponentManager)->Shutdown();
+    rv = (nsComponentManagerImpl::gComponentManager)->Shutdown();
     NS_ASSERTION(NS_SUCCEEDED(rv), "Component Manager shutdown failed.");
 #endif
 

@@ -352,5 +352,9 @@ extern NS_COM nsresult
 NS_ShutdownXPCOM(nsIServiceManager* servMgr);
 
 ////////////////////////////////////////////////////////////////////////////////
+// Observing xpcom shutdown
+
+#define NS_XPCOM_SHUTDOWN_OBSERVER_ID "xpcom-shutdown"
+
 
 #endif /* nsIServiceManager_h___ */
