@@ -150,6 +150,9 @@ public:
                                    nsIDOMHTMLInputElement* aRadio);
   NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
                                    nsIDOMHTMLInputElement** aRadio);
+  NS_IMETHOD GetPositionInGroup(nsIDOMHTMLInputElement *aRadio,
+                                PRInt32 *aPositionIndex,
+                                PRInt32 *aItemsInGroup);
   NS_IMETHOD GetNextRadioButton(const nsAString& aName,
                                 const PRBool aPrevious,
                                 nsIDOMHTMLInputElement*  aFocusedRadio,
@@ -1473,7 +1476,48 @@ nsHTMLFormElement::GetCurrentRadioButton(const nsAString& aName,
   mSelectedRadioButtons.Get(aName, aRadio);
 
   return NS_OK;
-}NS_IMETHODIMP
+}
+
+NS_IMETHODIMP
+nsHTMLFormElement::GetPositionInGroup(nsIDOMHTMLInputElement *aRadio,
+                                      PRInt32 *aPositionIndex,
+                                      PRInt32 *aItemsInGroup)
+{
+  *aPositionIndex = 0;
+  *aItemsInGroup = 1;
+
+  nsAutoString name;
+  aRadio->GetName(name);
+  if (name.IsEmpty()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISupports> itemWithName;
+  nsresult rv = ResolveName(name, getter_AddRefs(itemWithName));
+  NS_ENSURE_TRUE(rv, rv);
+  nsCOMPtr<nsIDOMNodeList> radioNodeList(do_QueryInterface(itemWithName));
+
+  // XXX If ResolveName could return an nsContentList instead then we 
+  //     could get an nsContentList instead of using this hacky upcast
+  nsBaseContentList *radioGroup =
+    NS_STATIC_CAST(nsBaseContentList *, (nsIDOMNodeList *)radioNodeList);
+  NS_ASSERTION(radioGroup, "No such radio group in this container");
+  if (!radioGroup) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIContent> currentRadioNode(do_QueryInterface(aRadio));
+  NS_ASSERTION(currentRadioNode, "No nsIContent for current radio button");
+  *aPositionIndex = radioGroup->IndexOf(currentRadioNode, PR_TRUE);
+  NS_ASSERTION(*aPositionIndex >= 0, "Radio button not found in its own group");
+  PRUint32 itemsInGroup;
+  radioGroup->GetLength(&itemsInGroup);
+  *aItemsInGroup = itemsInGroup;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
                                       const PRBool aPrevious,
                                       nsIDOMHTMLInputElement*  aFocusedRadio,

@@ -43,6 +43,8 @@
 #include "nsHTMLFormControlAccessible.h"
 #include "nsAccessibleText.h"
 
+typedef class nsHTMLRadioButtonAccessible nsHTMLRadioButtonAccessibleWrap;
+
 class nsHTMLTextFieldAccessibleWrap : public nsHTMLTextFieldAccessible,
                                       public nsAccessibleEditableText
 {

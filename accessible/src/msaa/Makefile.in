@@ -72,6 +72,7 @@ CPPSRCS = \
   nsTextAccessibleWrap.cpp \
   nsDocAccessibleWrap.cpp \
   nsRootAccessibleWrap.cpp \
+  nsHTMLFormControlAccessibleWrap.cpp \
   nsHTMLWin32ObjectAccessible.cpp \
   nsXULMenuAccessibleWrap.cpp \
   nsXULTreeAccessibleWrap.cpp \
@@ -83,6 +84,7 @@ EXPORTS = \
   nsTextAccessibleWrap.h \
   nsDocAccessibleWrap.h \
   nsRootAccessibleWrap.h \
+  nsHTMLFormControlAccessibleWrap.h \
   nsHTMLWin32ObjectAccessible.h \
   nsXULMenuAccessibleWrap.h \
   nsXULTreeAccessibleWrap.h \

@@ -40,6 +40,7 @@
 #define nsIRadioControlElement_h___
 
 #include "nsISupports.h"
+#include "nsIRadioGroupContainer.h"
 class nsAString;
 class nsIForm;
 
@@ -106,6 +107,12 @@ public:
    * yet).
    */
   NS_IMETHOD WillRemoveFromRadioGroup() = 0;
+
+  /**
+   * Get the radio group container for this radio button
+   * @return the radio group container (or null if no container)
+   */
+  virtual already_AddRefed<nsIRadioGroupContainer> GetRadioGroupContainer() = 0;
 };
 
 #endif // nsIRadioControlElement_h___

@@ -315,7 +315,8 @@ NS_IMETHODIMP nsAccessibleWrap::GetDescription(nsAString& aDescription)
   
   // Don't localize the string "of" -- that's just the format of this string.
   // The AT will parse the relevant numbers out and add its own localization.
-  nsTextFormatter::ssprintf(aDescription, L"%d of %d", indexInParent, numSiblings);
+  nsTextFormatter::ssprintf(aDescription, NS_LITERAL_STRING("%d of %d").get(),
+                            indexInParent, numSiblings);
 
   return NS_OK;
 }

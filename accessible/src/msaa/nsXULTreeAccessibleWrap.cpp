@@ -166,7 +166,8 @@ NS_IMETHODIMP nsXULTreeitemAccessibleWrap::GetDescription(nsAString& aDescriptio
     }
   }
 
-  nsTextFormatter::ssprintf(aDescription, L"L%d, %d of %d", level + 1, indexInParent, numSiblings);
+  nsTextFormatter::ssprintf(aDescription, NS_LITERAL_STRING("L%d, %d of %d").get(),
+                            level + 1, indexInParent, numSiblings);
 
   return NS_OK;
 }
