@@ -1431,25 +1431,75 @@ nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex,
 
 //---------------------------------------------------------
 PRBool
-nsListControlFrame::SingleSelection(PRInt32 aSelectedIndex, PRBool aDoToggle)
+nsListControlFrame::SingleSelection(PRInt32 aClickedIndex, PRBool aDoToggle)
 {
   PRBool wasChanged = PR_FALSE;
   // Get Current selection
   if (aDoToggle) {
-    wasChanged = ToggleOptionSelectedFromFrame(aSelectedIndex);
+    wasChanged = ToggleOptionSelectedFromFrame(aClickedIndex);
   } else {
-    wasChanged = SetOptionsSelectedFromFrame(aSelectedIndex, aSelectedIndex,
+    wasChanged = SetOptionsSelectedFromFrame(aClickedIndex, aClickedIndex,
                                 PR_TRUE, PR_TRUE);
   }
-  ScrollToIndex(aSelectedIndex);
-  mStartSelectionIndex = aSelectedIndex;
-  mEndSelectionIndex = aSelectedIndex;
+  ScrollToIndex(aClickedIndex);
+  mStartSelectionIndex = aClickedIndex;
+  mEndSelectionIndex = aClickedIndex;
   return wasChanged;
+}
+
+void
+nsListControlFrame::InitSelectionRange(PRInt32 aClickedIndex)
+{
+  //
+  // If nothing is selected, set the start selection depending on where
+  // the user clicked and what the initial selection is:
+  // - if the user clicked *before* selectedIndex, set the start index to
+  //   the end of the first contiguous selection.
+  // - if the user clicked *after* the end of the first contiguous
+  //   selection, set the start index to selectedIndex.
+  // - if the user clicked *within* the first contiguous selection, set the
+  //   start index to selectedIndex.
+  // The last two rules, of course, boil down to the same thing: if the user
+  // clicked >= selectedIndex, return selectedIndex.
+  //
+  // This makes it so that shift click works properly when you first click
+  // in a multiple select.
+  //
+  PRInt32 selectedIndex;
+  GetSelectedIndex(&selectedIndex);
+  if (selectedIndex >= 0) {
+    // Get the end of the contiguous selection
+    nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
+    NS_ASSERTION(options, "Collection of options is null!");
+    PRUint32 numOptions;
+    options->GetLength(&numOptions);
+    PRUint32 i;
+    // Push i to one past the last selected index in the group
+    for (i=selectedIndex+1; i < numOptions; i++) {
+      PRBool selected;
+      GetOption(*options, i)->GetSelected(&selected);
+      if (!selected) {
+        break;
+      }
+    }
+
+    if (aClickedIndex < selectedIndex) {
+      // User clicked before selection, so start selection at end of
+      // contiguous selection
+      mStartSelectionIndex = i-1;
+      mEndSelectionIndex = selectedIndex;
+    } else {
+      // User clicked after selection, so start selection at start of
+      // contiguous selection
+      mStartSelectionIndex = selectedIndex;
+      mEndSelectionIndex = i-1;
+    }
+  }
 }
 
 //---------------------------------------------------------
 PRBool
-nsListControlFrame::PerformSelection(PRInt32 aSelectedIndex,
+nsListControlFrame::PerformSelection(PRInt32 aClickedIndex,
                                      PRBool aIsShift,
                                      PRBool aIsControl)
 {
@@ -1458,48 +1508,47 @@ nsListControlFrame::PerformSelection(PRInt32 aSelectedIndex,
   PRBool isMultiple;
   GetMultiple(&isMultiple);
 
-  if (kNothingSelected == aSelectedIndex) {
+  if (aClickedIndex == kNothingSelected) {
   } else if (isMultiple) {
     if (aIsShift) {
+      // Make sure shift+click actually does something expected when
+      // the user has never clicked on the select
+      if (mStartSelectionIndex == kNothingSelected) {
+        InitSelectionRange(aClickedIndex);
+      }
+
       // Get the range from beginning (low) to end (high)
       // Shift *always* works, even if the current option is disabled
       PRInt32 startIndex;
       PRInt32 endIndex;
       if (mStartSelectionIndex == kNothingSelected) {
-        startIndex = aSelectedIndex;
-        endIndex   = aSelectedIndex;
-      } else if (mStartSelectionIndex <= aSelectedIndex) {
+        startIndex = aClickedIndex;
+        endIndex   = aClickedIndex;
+      } else if (mStartSelectionIndex <= aClickedIndex) {
         startIndex = mStartSelectionIndex;
-        endIndex   = aSelectedIndex;
+        endIndex   = aClickedIndex;
       } else {
-        startIndex = aSelectedIndex;
+        startIndex = aClickedIndex;
         endIndex   = mStartSelectionIndex;
       }
 
       wasChanged = ExtendedSelection(startIndex, endIndex, PR_TRUE);
-      ScrollToIndex(aSelectedIndex);
+      ScrollToIndex(aClickedIndex);
 
       if (mStartSelectionIndex == kNothingSelected) {
-        mStartSelectionIndex = aSelectedIndex;
-        mEndSelectionIndex = aSelectedIndex;
+        mStartSelectionIndex = aClickedIndex;
+        mEndSelectionIndex = aClickedIndex;
       } else {
-        mEndSelectionIndex = aSelectedIndex;
+        mEndSelectionIndex = aClickedIndex;
       }
     } else if (aIsControl) {
-      wasChanged = SingleSelection(aSelectedIndex, PR_TRUE);
+      wasChanged = SingleSelection(aClickedIndex, PR_TRUE);
     } else {
-      wasChanged = SingleSelection(aSelectedIndex, PR_FALSE);
+      wasChanged = SingleSelection(aClickedIndex, PR_FALSE);
     }
   } else {
-    wasChanged = SingleSelection(aSelectedIndex, PR_FALSE);
+    wasChanged = SingleSelection(aClickedIndex, PR_FALSE);
   }
-
-#ifdef DEBUG_rodsX
-  printf("aSelectedIndex:      %d\n", aSelectedIndex);
-  printf("mStartSelectionIndex:  %d\n", mStartSelectionIndex);
-  printf("mLastStartIndex:     %d\n", mLastStartIndex);
-  printf("mLastEndIndex:       %d\n", mLastEndIndex);
-#endif
 
 #ifdef ACCESSIBILITY
   FireMenuItemActiveEvent(); // Inform assistive tech what got focus
@@ -1511,7 +1560,7 @@ nsListControlFrame::PerformSelection(PRInt32 aSelectedIndex,
 //---------------------------------------------------------
 PRBool
 nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent,
-                                        PRInt32 aSelectedIndex)
+                                        PRInt32 aClickedIndex)
 {
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
   PRBool isShift;
@@ -1522,7 +1571,7 @@ nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent,
   mouseEvent->GetCtrlKey(&isControl);
 #endif
   mouseEvent->GetShiftKey(&isShift);
-  return PerformSelection(aSelectedIndex, isShift, isControl);
+  return PerformSelection(aClickedIndex, isShift, isControl);
 }
 
 //---------------------------------------------------------
