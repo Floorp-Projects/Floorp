@@ -1055,12 +1055,64 @@ nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoo
 
 }
 
+/** --------------------------------------------------- */
+
+NS_IMETHODIMP
+nsRenderingContextPS :: GetTextDimensions(const char* aString, PRUint32 aLength,
+                                          nsTextDimensions& aDimensions)
+{
+  if (nsnull != mFontMetrics){
+    ((nsFontMetricsPS*)mFontMetrics)->GetStringWidth(aString,aDimensions.width,aLength);
+     mFontMetrics->GetMaxAscent(aDimensions.ascent);
+     mFontMetrics->GetMaxDescent(aDimensions.descent);
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+}
+
+NS_IMETHODIMP
+nsRenderingContextPS :: GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
+                                          nsTextDimensions& aDimensions, PRInt32* aFontID)
+{
+  if (nsnull != mFontMetrics){
+    ((nsFontMetricsPS*)mFontMetrics)->GetStringWidth(aString,aDimensions.width,aLength);
+     //XXX temporary - bug 96609
+     mFontMetrics->GetMaxAscent(aDimensions.ascent);
+     mFontMetrics->GetMaxDescent(aDimensions.descent);
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+}
+
+NS_IMETHODIMP
+nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
+                                   nscoord aX, nscoord aY,
+                                   const nscoord* aSpacing)
+{
+  nscoord y;
+  mFontMetrics->GetMaxAscent(y);
+  return DrawString2(aString, aLength, aX, aY + y, aSpacing);
+}
+
+NS_IMETHODIMP
+nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
+                                   nscoord aX, nscoord aY,
+                                   PRInt32 aFontID,
+                                   const nscoord* aSpacing)
+{
+  nscoord y;
+  mFontMetrics->GetMaxAscent(y);
+  return DrawString2(aString, aLength, aX, aY + y, aFontID, aSpacing);
+}
+
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
+nsRenderingContextPS :: DrawString2(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         const nscoord* aSpacing)
 {
@@ -1079,11 +1131,6 @@ PRInt32       y = aY;
     }
     mTranMatrix->ScaleXCoords(aSpacing, aLength, dx0);
   }
-
-	// substract ascent since drawing specifies baseline
-	nscoord ascent = 0;
-	mFontMetrics->GetMaxAscent(ascent);
-	y += ascent;
 
 	mTranMatrix->TransformCoord(&x, &y);
   PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, (const nscoord*) (aSpacing ? dx0 : NULL), PR_FALSE);
@@ -1118,7 +1165,7 @@ PRInt32       y = aY;
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
+nsRenderingContextPS :: DrawString2(const PRUnichar *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY, PRInt32 aFontID,
                                     const nscoord* aSpacing)
 {
@@ -1141,20 +1188,12 @@ nsIFontMetrics  *fMetrics;
     while (aString < end){
       x = aX;
       y = aY;
-	    // substract ascent since drawing specifies baseline
-	    nscoord ascent = 0;
-	    mFontMetrics->GetMaxAscent(ascent);
-	    y += ascent;
       mTranMatrix->TransformCoord(&x, &y);
 	    PostscriptTextOut((PRUnichar *)aString, 1, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
       aX += *aSpacing++;
       aString++;
     }
   } else {
-	  // substract ascent since drawing specifies baseline
-	  nscoord ascent = 0;
-	  mFontMetrics->GetMaxAscent(ascent);
-	  y += ascent;
     mTranMatrix->TransformCoord(&x, &y);
 	  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
   }
@@ -1376,7 +1415,7 @@ nsRenderingContextPS::GetBoundingMetrics(const char*        aString,
                                          nsBoundingMetrics& aBoundingMetrics)
 {
   // Fill me up 
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
   /**
@@ -1389,7 +1428,7 @@ nsRenderingContextPS::GetBoundingMetrics(const PRUnichar*   aString,
                                          PRInt32*           aFontID)
 {
   // Fill me up 
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif /* MOZ_MATHML */
 
