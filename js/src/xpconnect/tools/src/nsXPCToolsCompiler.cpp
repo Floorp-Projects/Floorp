@@ -64,7 +64,7 @@ NS_IMETHODIMP nsXPCToolsCompiler::GetBinDir(nsILocalFile * *aBinDir)
     return NS_OK;
 }
 
-static void ErrorReporter(JSContext *cx, const char *message,
+JS_STATIC_DLL_CALLBACK(void) ErrorReporter(JSContext *cx, const char *message,
                           JSErrorReport *report)
 {
     printf("compile error!\n");
