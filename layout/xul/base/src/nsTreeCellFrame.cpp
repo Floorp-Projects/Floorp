@@ -338,6 +338,6 @@ nsTreeCellFrame::AttributeChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsTreeCellFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  mTreeFrame->RemoveFromSelection(this);
+  mTreeFrame->RemoveFromSelection(aPresContext, this);
   return nsTableCellFrame::DeleteFrame(aPresContext);
 }
