@@ -474,7 +474,7 @@ sub genericSort {
     my $self = shift;
     my($order, @list) = @_;
     # sort the list (in reverse order!)
-    if (defined($order) and scalar(@list)) {
+    if (defined($order) and $order and scalar(@list)) {
         if ($order eq 'lexical') {
             return sort { $b cmp $a } @list;
         } elsif ($order eq 'reverse lexical') {
