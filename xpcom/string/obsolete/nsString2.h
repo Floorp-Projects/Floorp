@@ -325,7 +325,7 @@ public:
    *  @return  offset in string, or -1 (kNotFound)
    */
   PRInt32 Find(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
-  PRInt32 Find(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
+  PRInt32 Find(const nsCString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
   PRInt32 Find(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
   PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=0,PRInt32 aCount=-1) const;
 
@@ -351,7 +351,8 @@ public:
    */
   PRInt32 FindCharInSet(const char* aString,PRInt32 anOffset=0) const;
   PRInt32 FindCharInSet(const PRUnichar* aString,PRInt32 anOffset=0) const;
-  PRInt32 FindCharInSet(const nsStr& aString,PRInt32 anOffset=0) const;
+  PRInt32 FindCharInSet(const nsString& aString,PRInt32 anOffset=0) const;
+  PRInt32 FindCharInSet(const nsCString& aString,PRInt32 anOffset=0) const;
 
 
   /**
@@ -364,7 +365,7 @@ public:
    */
   PRInt32 RFind(const char* aCString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
   PRInt32 RFind(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
-  PRInt32 RFind(const nsStr& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
+  PRInt32 RFind(const nsCString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
   PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1,PRInt32 aCount=-1) const;
 
 
@@ -389,7 +390,8 @@ public:
    */
   PRInt32 RFindCharInSet(const char* aString,PRInt32 anOffset=-1) const;
   PRInt32 RFindCharInSet(const PRUnichar* aString,PRInt32 anOffset=-1) const;
-  PRInt32 RFindCharInSet(const nsStr& aString,PRInt32 anOffset=-1) const;
+  PRInt32 RFindCharInSet(const nsString& aString,PRInt32 anOffset=-1) const;
+  PRInt32 RFindCharInSet(const nsCString& aString,PRInt32 anOffset=-1) const;
 
 
   /**********************************************************************

@@ -409,7 +409,7 @@ nsString::ReplaceSubstring(const nsString& aTarget,const nsString& aNewValue){
     }
     else {
       PRInt32 theIndex=0;
-      while(kNotFound!=(theIndex=nsStr::FindSubstr(*this,aTarget,PR_FALSE,theIndex,mLength))) {
+      while(kNotFound!=(theIndex=nsStr::FindSubstr2in2(*this,aTarget,PR_FALSE,theIndex,mLength))) {
         if(aNewValue.mLength<aTarget.mLength) {
           //Since target is longer than newValue, we should delete a few chars first, then overwrite.
           PRInt32 theDelLen=aTarget.mLength-aNewValue.mLength;
@@ -728,7 +728,7 @@ void nsString::AppendWithConversion(const char* aCString,PRInt32 aCount) {
       //   the passed-in string.  File a bug on the caller.
 
 #ifdef NS_DEBUG
-      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0,temp.mLength);
+      PRInt32 len=nsStr::FindChar1(temp,0,PR_FALSE,0,temp.mLength);
       if(kNotFound<len) {
         NS_WARNING(kPossibleNull);
       }
@@ -837,7 +837,7 @@ void nsString::InsertWithConversion(const char* aCString,PRUint32 anOffset,PRInt
       // If this assertion fires, the caller is probably lying about the length of
       //   the passed-in string.  File a bug on the caller.
 #ifdef NS_DEBUG
-      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0,temp.mLength);
+      PRInt32 len=nsStr::FindChar1(temp,0,PR_FALSE,0,temp.mLength);
       if(kNotFound<len) {
         NS_WARNING(kPossibleNull);
       }
@@ -886,7 +886,7 @@ PRInt32 nsString::Find(const char* aCString,PRBool aIgnoreCase,PRInt32 anOffset,
     nsStr::Initialize(temp,eOneByte);
     temp.mLength=nsCRT::strlen(aCString);
     temp.mStr=(char*)aCString;
-    result=nsStr::FindSubstr(*this,temp,aIgnoreCase,anOffset,aCount);
+    result=nsStr::FindSubstr1in2(*this,temp,aIgnoreCase,anOffset,aCount);
   }
   return result;
 }
@@ -910,7 +910,7 @@ PRInt32 nsString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOff
     nsStr::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aString);
     temp.mUStr=(PRUnichar*)aString;
-    result=nsStr::FindSubstr(*this,temp,aIgnoreCase,anOffset,aCount);
+    result=nsStr::FindSubstr2in2(*this,temp,aIgnoreCase,anOffset,aCount);
   }
   return result;
 }
@@ -925,8 +925,8 @@ PRInt32 nsString::Find(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 anOff
  *  @param   aCount tells us how many iterations to make starting at the given offset
  *  @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 nsString::Find(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::FindSubstr(*this,aString,aIgnoreCase,anOffset,aCount);
+PRInt32 nsString::Find(const nsCString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
+  PRInt32 result=nsStr::FindSubstr1in2(*this,aString,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
@@ -941,23 +941,10 @@ PRInt32 nsString::Find(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset,
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::Find(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::FindSubstr(*this,aString,aIgnoreCase,anOffset,aCount);
+  PRInt32 result=nsStr::FindSubstr2in2(*this,aString,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
-/**
- *  Search for a given char, starting at given offset
- *  
- *  @update  gess 3/25/98
- *  @param   aChar
- *  @return  offset of found char, or -1 (kNotFound)
- */
-#if 0
-PRInt32 nsString::Find(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) const{
-  PRInt32 result=nsStr::FindChar(*this,aChar,aIgnoreCase,anOffset);
-  return result;
-}
-#endif
 
 /**
  *  Search for a given char, starting at given offset
@@ -970,7 +957,7 @@ PRInt32 nsString::Find(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) cons
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::FindChar(PRUnichar aChar,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::FindChar(*this,aChar,aIgnoreCase,anOffset,aCount);
+  PRInt32 result=nsStr::FindChar2(*this,aChar,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
@@ -992,7 +979,7 @@ PRInt32 nsString::FindCharInSet(const char* aCStringSet,PRInt32 anOffset) const{
     nsStr::Initialize(temp,eOneByte);
     temp.mLength=nsCRT::strlen(aCStringSet);
     temp.mStr=(char*)aCStringSet;
-    result=nsStr::FindCharInSet(*this,temp,PR_FALSE,anOffset);
+    result=nsStr::FindCharInSet1(*this,temp,PR_FALSE,anOffset);
   }
   return result;
 }
@@ -1015,7 +1002,7 @@ PRInt32 nsString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) co
     nsStr::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aStringSet);
     temp.mStr=(char*)aStringSet;
-    result=nsStr::FindCharInSet(*this,temp,PR_FALSE,anOffset);
+    result=nsStr::FindCharInSet2(*this,temp,PR_FALSE,anOffset);
   }
   return result;
 }
@@ -1029,8 +1016,13 @@ PRInt32 nsString::FindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) co
  *  @param   anOffset -- where in this string to start searching
  *  @return  
  */
-PRInt32 nsString::FindCharInSet(const nsStr& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::FindCharInSet(*this,aSet,PR_FALSE,anOffset);
+PRInt32 nsString::FindCharInSet(const nsString& aSet,PRInt32 anOffset) const{
+  PRInt32 result=nsStr::FindCharInSet2(*this,aSet,PR_FALSE,anOffset);
+  return result;
+}
+
+PRInt32 nsString::FindCharInSet(const nsCString& aSet,PRInt32 anOffset) const{
+  PRInt32 result=nsStr::FindCharInSet1(*this,aSet,PR_FALSE,anOffset);
   return result;
 }
 
@@ -1045,8 +1037,8 @@ PRInt32 nsString::FindCharInSet(const nsStr& aSet,PRInt32 anOffset) const{
  *  @param   aCount tells us how many iterations to make starting at the given offset
  *  @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 nsString::RFind(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::RFindSubstr(*this,aString,aIgnoreCase,anOffset,aCount);
+PRInt32 nsString::RFind(const nsCString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
+  PRInt32 result=nsStr::RFindSubstr1in2(*this,aString,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
@@ -1061,7 +1053,7 @@ PRInt32 nsString::RFind(const nsStr& aString,PRBool aIgnoreCase,PRInt32 anOffset
  *  @return  offset in string, or -1 (kNotFound)
  */
 PRInt32 nsString::RFind(const nsString& aString,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) const{
-  PRInt32 result=nsStr::RFindSubstr(*this,aString,aIgnoreCase,anOffset,aCount);
+  PRInt32 result=nsStr::RFindSubstr2in2(*this,aString,aIgnoreCase,anOffset,aCount);
   return result;
 }
 
@@ -1084,28 +1076,11 @@ PRInt32 nsString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset,
     nsStr::Initialize(temp,eOneByte);
     temp.mLength=nsCRT::strlen(aString);
     temp.mStr=(char*)aString;
-    result=nsStr::RFindSubstr(*this,temp,aIgnoreCase,anOffset,aCount);
+    result=nsStr::RFindSubstr1in2(*this,temp,aIgnoreCase,anOffset,aCount);
   }
   return result;
 }
 
-
-/**
- *  Reverse search for char
- *  
- *  @update  gess 3/25/98
- *  @param   achar
- *  @param   aIgnoreCase
- *  @param   anOffset - tells us where to begin the search
- *  @return  offset of substring or -1
- */
-#if 0
-PRInt32 nsString::RFind(PRUnichar aChar,PRInt32 anOffset,PRBool aIgnoreCase) const{
-  PRInt32 result=nsStr::RFindChar2(*this,aChar,aIgnoreCase,anOffset);
-  return result;
-}
-#endif
- 
 /**
  *  Reverse search for a given char, starting at given offset
  *  
@@ -1137,7 +1112,7 @@ PRInt32 nsString::RFindCharInSet(const char* aCStringSet,PRInt32 anOffset) const
     nsStr::Initialize(temp,eOneByte);
     temp.mLength=nsCRT::strlen(aCStringSet);
     temp.mStr=(char*)aCStringSet;
-    result=nsStr::RFindCharInSet(*this,temp,PR_FALSE,anOffset);
+    result=nsStr::RFindCharInSet1(*this,temp,PR_FALSE,anOffset);
   }
   return result;
 }
@@ -1152,8 +1127,13 @@ PRInt32 nsString::RFindCharInSet(const char* aCStringSet,PRInt32 anOffset) const
  *  @param   anOffset
  *  @return  offset of found char, or -1 (kNotFound)
  */
-PRInt32 nsString::RFindCharInSet(const nsStr& aSet,PRInt32 anOffset) const{
-  PRInt32 result=nsStr::RFindCharInSet(*this,aSet,PR_FALSE,anOffset);
+PRInt32 nsString::RFindCharInSet(const nsString& aSet,PRInt32 anOffset) const{
+  PRInt32 result=nsStr::RFindCharInSet2(*this,aSet,PR_FALSE,anOffset);
+  return result;
+}
+
+PRInt32 nsString::RFindCharInSet(const nsCString& aSet,PRInt32 anOffset) const{
+  PRInt32 result=nsStr::RFindCharInSet1(*this,aSet,PR_FALSE,anOffset);
   return result;
 }
 
@@ -1176,7 +1156,7 @@ PRInt32 nsString::RFindCharInSet(const PRUnichar* aStringSet,PRInt32 anOffset) c
     nsStr::Initialize(temp,eTwoByte);
     temp.mLength=nsCRT::strlen(aStringSet);
     temp.mUStr=(PRUnichar*)aStringSet;
-    result=nsStr::RFindCharInSet(*this,temp,PR_FALSE,anOffset);
+    result=nsStr::RFindCharInSet2(*this,temp,PR_FALSE,anOffset);
   }
   return result;
 }
@@ -1298,7 +1278,7 @@ PRBool nsString::EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCas
   return result;
 }
 
-PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
+PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
 /**
  * Compare this to given atom; note that we compare full strings here.
  * The optional length argument just lets us know how long the given string is.
@@ -1318,7 +1298,7 @@ PRBool nsString::EqualsAtom(/*FIX: const */nsIAtom* aAtom,PRBool aIgnoreCase) co
     const PRUnichar* unicode;
     if (aAtom->GetUnicode(&unicode) != NS_OK || unicode == nsnull)
         return PR_FALSE;
-    cmp=Compare2To2((const char*)mUStr,(const char*)unicode, nsCRT::strlen(mUStr), aIgnoreCase);
+    cmp=Compare2To2(mUStr,unicode, nsCRT::strlen(mUStr), aIgnoreCase);
     result=PRBool(0==cmp);
   }
 
@@ -1694,29 +1674,6 @@ NS_ConvertUTF8toUCS2::Init( const nsACString& aCString )
 
   NS_ASSERTION(count == mLength, "calculator calculated incorrect length");
 }
-
-#if 0
-/**
- * Copy construct from ascii c-string
- * @param   aCString is a ptr to a 1-byte cstr
- * @param   aLength tells us how many chars to copy from aCString
- */
-nsAutoString::nsAutoString(const char* aCString,PRInt32 aLength) : nsString() {
-  Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
-  AddNullTerminator(*this);
-  Append(aCString,aLength);
-}
-
-/**
- * Copy construct from an nsStr
- * @param   
- */
-nsAutoString::nsAutoString(const nsStr& aString) : nsString() {
-  Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
-  AddNullTerminator(*this);
-  Append(aString);
-}
-#endif
 
 /**
  * Default copy constructor

@@ -528,7 +528,7 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
  *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 FindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
+inline PRInt32 FindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
 #ifndef XPCOM_STANDALONE
 
   if(anOffset<0)
@@ -541,7 +541,7 @@ inline PRInt32 FindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
  
     if(0<aCount) {
 
-      const PRUnichar* root = (PRUnichar*)aDest;
+      const PRUnichar* root = aDest;
       const PRUnichar* left = root+anOffset;
       const PRUnichar* last = left+aCount;
       const PRUnichar* max  = root+aDestLength;
@@ -647,7 +647,7 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
  *  @param   aCount tells us how many characters to iterate through (which may be different than aLength); -1 means use full length.
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
+inline PRInt32 RFindChar2(const PRUnichar* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount) {
 #ifndef XPCOM_STANDALONE
 
   if(anOffset<0)
@@ -660,7 +660,7 @@ inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
  
     if(0<aCount) {
 
-      const PRUnichar* root      = (PRUnichar*)aDest;
+      const PRUnichar* root      = aDest;
       const PRUnichar* rightmost = root+anOffset;  
       const PRUnichar* min       = rightmost-aCount+1;
       const PRUnichar* leftmost  = (min<root) ? root: min;
@@ -696,9 +696,6 @@ inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
   return kNotFound;
 }
 
-typedef PRInt32 (*FindChars)(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase,PRInt32 aCount);
-FindChars gFindChars[]={&FindChar1,&FindChar2};
-
 //----------------------------------------------------------------------------------------
 //
 //  This set of methods is used to compare one buffer onto another.
@@ -717,7 +714,7 @@ FindChars gFindChars[]={&FindChar1,&FindChar2};
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
+static inline PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
 PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
   PRInt32 result=0;
   if(aIgnoreCase)
@@ -735,13 +732,13 @@ PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
-PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
+PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
+PRInt32 Compare2To2(const PRUnichar* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
   PRInt32 result=0;
 #ifndef XPCOM_STANDALONE
   if(aIgnoreCase && NS_SUCCEEDED(NS_InitCaseConversion()))
-    gCaseConv->CaseInsensitiveCompare((PRUnichar*)aStr1, (PRUnichar*)aStr2, aCount, &result);
-  else result=nsCRT::strncmp((PRUnichar*)aStr1,(PRUnichar*)aStr2,aCount);
+    gCaseConv->CaseInsensitiveCompare(aStr1, aStr2, aCount, &result);
+  else result=nsCRT::strncmp(aStr1,aStr2,aCount);
 #else
   NS_ERROR("call not supported in XPCOM_STANDALONE");
 #endif
@@ -758,10 +755,10 @@ PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
-PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
+static PRInt32 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
+PRInt32 Compare2To1(const PRUnichar* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
 #ifndef XPCOM_STANDALONE
-  PRUnichar* s1 = (PRUnichar*)aStr1;
+  const PRUnichar* s1 = aStr1;
   const char *s2 = aStr2;
   
   if (aIgnoreCase && NS_FAILED(NS_InitCaseConversion()))
@@ -804,17 +801,10 @@ PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
-PRInt32 Compare1To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
-PRInt32 Compare1To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
+static inline PRInt32 Compare1To2(const char* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
+PRInt32 Compare1To2(const char* aStr1,const PRUnichar* aStr2,PRUint32 aCount,PRBool aIgnoreCase){
   return Compare2To1(aStr2, aStr1, aCount, aIgnoreCase) * -1;
 }
-
-
-typedef PRInt32 (*CompareChars)(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
-CompareChars gCompare[2][2]={
-  {&Compare1To1,&Compare1To2},
-  {&Compare2To1,&Compare2To2},
-};
 
 
 //----------------------------------------------------------------------------------------

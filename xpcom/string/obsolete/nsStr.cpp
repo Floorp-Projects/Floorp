@@ -502,7 +502,7 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
     if(aEliminateLeading) {
       while(++theIndex<=theMax) {
         PRUnichar theChar=GetCharAt(aDest,theIndex);
-        PRInt32 thePos=FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
+        PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
         if(kNotFound==thePos)
           break;
       }
@@ -523,7 +523,7 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
       PRInt32 theNewLen=theIndex;
       while(--theIndex>=0) {
         PRUnichar theChar=GetCharAt(aDest,theIndex);  //read at end now...
-        PRInt32 thePos=FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
+        PRInt32 thePos=::FindChar1(aSet,theSetLen,0,theChar,PR_FALSE,theSetLen);
         if(kNotFound<thePos) 
           theNewLen=theIndex;
         else break;
@@ -604,39 +604,161 @@ void nsStr::StripChars2(nsStr& aDest,const char* aSet){
  *  @param   aCount tells us how many iterations to make from offset; -1 means the full length of the string
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+
+PRInt32 nsStr::FindSubstr1in1(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aTarget.mCharSize == eOneByte, "Must be 1 byte");
+  
   PRInt32 theMaxPos = aDest.mLength-aTarget.mLength;  //this is the last pos that is feasible for starting the search, with given lengths...
 
-  if(0<=theMaxPos) {
+  if (theMaxPos<0) return kNotFound;
 
-    if(anOffset<0)
-      anOffset=0;
+  if(anOffset<0)
+    anOffset=0;
 
-    if((0<aDest.mLength) && (anOffset<=theMaxPos) && (aTarget.mLength)) {
+  if((aDest.mLength<=0) || (anOffset>theMaxPos) || (aTarget.mLength==0))
+    return kNotFound;
+  
+  if(aCount<0)
+    aCount = MaxInt(theMaxPos,1);
 
-      if(aCount<0)
-        aCount = MaxInt(theMaxPos,1);
-      
-      if(0<aCount) {
+  if (aCount <= 0)
+    return kNotFound;
 
-        PRInt32     aDelta= (aDest.mCharSize == eOneByte) ? 1 : 2;
-        const char* root  = aDest.mStr; 
-        const char* left  = root+(anOffset*aDelta);
-        const char* last  = left+((aCount)*aDelta);
-        const char* max   = root+(theMaxPos*aDelta);
-        const char* right = (last<max) ? last : max;
+  const char* root  = aDest.mStr; 
+  const char* left  = root + anOffset;
+  const char* last  = left + aCount;
+  const char* max   = root + theMaxPos;
+  
+  const char* right = (last<max) ? last : max;
 
-        while(left<=right){
-          PRInt32 cmp=(*gCompare[aDest.mCharSize][aTarget.mCharSize])(left,aTarget.mStr,aTarget.mLength,aIgnoreCase);
-          if(0==cmp) {
-            return (left-root)/aDelta;
-          }
-          left+=aDelta;
-        } //while
-
-      } //if 
+  
+  while(left<=right){
+    PRInt32 cmp=Compare1To1(left,aTarget.mStr,aTarget.mLength,aIgnoreCase);
+    if(0==cmp) {
+      return (left-root);
     }
-  } //if
+    left++;
+  } //while
+
+  return kNotFound;
+}
+
+PRInt32 nsStr::FindSubstr2in1(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+  
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aTarget.mCharSize == eTwoByte, "Must be 2 byte");
+  
+  PRInt32 theMaxPos = aDest.mLength-aTarget.mLength;  //this is the last pos that is feasible for starting the search, with given lengths...
+
+  if (theMaxPos<0) return kNotFound;
+
+  if(anOffset<0)
+    anOffset=0;
+
+  if((aDest.mLength<=0) || (anOffset>theMaxPos) || (aTarget.mLength==0))
+    return kNotFound;
+  
+  if(aCount<0)
+    aCount = MaxInt(theMaxPos,1);
+
+  if (aCount <= 0)
+    return kNotFound;
+
+  const char* root  = aDest.mStr; 
+  const char* left  = root+anOffset;
+  const char* last  = left+aCount;
+  const char* max   = root+theMaxPos;
+  const char* right = (last<max) ? last : max;
+
+  while(left<=right){
+    PRInt32 cmp=Compare1To2(left,aTarget.mUStr,aTarget.mLength,aIgnoreCase);
+    if(0==cmp) {
+      return (left-root);
+    }
+    left++;
+  } //while
+
+
+  return kNotFound;
+}
+
+PRInt32 nsStr::FindSubstr1in2(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+  
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aTarget.mCharSize == eOneByte, "Must be 1 byte");
+  
+  PRInt32 theMaxPos = aDest.mLength-aTarget.mLength;  //this is the last pos that is feasible for starting the search, with given lengths...
+
+  if (theMaxPos<0) return kNotFound;
+
+  if(anOffset<0)
+    anOffset=0;
+
+  if((aDest.mLength<=0) || (anOffset>theMaxPos) || (aTarget.mLength==0))
+    return kNotFound;
+  
+  if(aCount<0)
+    aCount = MaxInt(theMaxPos,1);
+
+  if (aCount <= 0)
+    return kNotFound;
+
+  const PRUnichar* root  = aDest.mUStr; 
+  const PRUnichar* left  = root+anOffset;
+  const PRUnichar* last  = left+aCount;
+  const PRUnichar* max   = root+theMaxPos;
+  const PRUnichar* right = (last<max) ? last : max;
+
+  
+  while(left<=right){
+    PRInt32 cmp=Compare2To1(left,aTarget.mStr,aTarget.mLength,aIgnoreCase);
+    if(0==cmp) {
+      return (left-root);
+    }
+    left++;
+  } //while
+
+
+  return kNotFound;
+}
+
+PRInt32 nsStr::FindSubstr2in2(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+  
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aTarget.mCharSize == eTwoByte, "Must be 2 byte");
+  
+  PRInt32 theMaxPos = aDest.mLength-aTarget.mLength;  //this is the last pos that is feasible for starting the search, with given lengths...
+
+  if (theMaxPos<0) return kNotFound;
+
+  if(anOffset<0)
+    anOffset=0;
+
+  if((aDest.mLength<=0) || (anOffset>theMaxPos) || (aTarget.mLength==0))
+    return kNotFound;
+  
+  if(aCount<0)
+    aCount = MaxInt(theMaxPos,1);
+
+  if (aCount <= 0)
+    return kNotFound;
+
+  const PRUnichar* root  = aDest.mUStr; 
+  const PRUnichar* left  = root+anOffset;
+  const PRUnichar* last  = left+aCount;
+  const PRUnichar* max   = root+theMaxPos;
+  const PRUnichar* right = (last<max) ? last : max;
+  
+  while(left<=right){
+    PRInt32 cmp=Compare2To2(left,aTarget.mUStr,aTarget.mLength,aIgnoreCase);
+    if(0==cmp) {
+      return (left-root);
+    }
+    left++;
+  } //while
+
 
   return kNotFound;
 }
@@ -653,8 +775,15 @@ PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnor
  *  @param   aCount tell us how many chars to search from offset
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsStr::FindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
-  return gFindChars[aDest.mCharSize](aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
+
+PRInt32 nsStr::FindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  return ::FindChar1(aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
+}
+
+PRInt32 nsStr::FindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  return ::FindChar2(aDest.mUStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
 }
 
 
@@ -668,18 +797,40 @@ PRInt32 nsStr::FindChar(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,P
  *  @param   anOffset tells us where to start the search
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsStr::FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
-  //NS_PRECONDITION(aSet.mLength!=1,kCallFindChar);
+PRInt32 nsStr::FindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
+
+  NS_ASSERTION(aSet.mCharSize == eOneByte, "Must be 1 byte");
 
   PRInt32 index=(0<=anOffset) ? anOffset-1 : -1;
   PRInt32 thePos;
 
-    //Note that the search is inverted here. We're scanning aDest, one char at a time
-    //but doing the search against the given set. That's why we use 0 as the offset below.
+    // Note that the search is inverted here. We're scanning aDest,
+    // one char at a time but doing the search against the given
+    // set. That's why we use 0 as the offset below.
   if((0<aDest.mLength) && (0<aSet.mLength)){
     while(++index<(PRInt32)aDest.mLength) {
       PRUnichar theChar=GetCharAt(aDest,index);
-      thePos=gFindChars[aSet.mCharSize](aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
+      thePos=::FindChar1(aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
+      if(kNotFound!=thePos)
+        return index;
+    } //while
+  }
+  return kNotFound;
+}
+PRInt32 nsStr::FindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
+
+  NS_ASSERTION(aSet.mCharSize == eTwoByte, "Must be 2 byte");
+  
+  PRInt32 index=(0<=anOffset) ? anOffset-1 : -1;
+  PRInt32 thePos;
+
+    // Note that the search is inverted here. We're scanning aDest,
+    // one char at a time but doing the search against the given
+    // set. That's why we use 0 as the offset below.
+  if((0<aDest.mLength) && (0<aSet.mLength)){
+    while(++index<(PRInt32)aDest.mLength) {
+      PRUnichar theChar=GetCharAt(aDest,index);
+      thePos=::FindChar2(aSet.mUStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
       if(kNotFound!=thePos)
         return index;
     } //while
@@ -703,41 +854,162 @@ PRInt32 nsStr::FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnore
  *  @param   aCount tell us how many iterations to perform from offset
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+PRInt32 nsStr::RFindSubstr1in1(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aTarget.mCharSize == eOneByte, "Must be 1 byte");
+  
   if(anOffset<0)
     anOffset=(PRInt32)aDest.mLength-1;
 
   if(aCount<0)
     aCount = aDest.mLength;
 
-  if((0<aDest.mLength) &&
-     ((PRUint32)anOffset<aDest.mLength) &&
-     (aTarget.mLength)) {
+  if ((aDest.mLength <= 0) || (PRUint32(anOffset)>=aDest.mLength) || (aTarget.mLength==0))
+    return kNotFound;
+  
+  if (aCount<=0)
+    return kNotFound;
+  
+  const char* root      = aDest.mStr;
+  const char* destLast  = root+aDest.mLength; //pts to last char in aDest (likely null)
+  
+  const char* rightmost = root+anOffset;
+  const char* min       = rightmost-aCount + 1;
+  
+  const char* leftmost  = (min<root) ? root: min;
 
-    if(0<aCount) {
+  while(leftmost<=rightmost) {
+    //don't forget to divide by delta in next text (bug found by rhp)...
+    if(aTarget.mLength<=PRUint32(destLast-rightmost)) {
+      PRInt32 result=Compare1To1(rightmost,aTarget.mStr,aTarget.mLength,aIgnoreCase);
+      
+      if(0==result) {
+        return (rightmost-root);
+      }
+    } //if
+    rightmost--;
+  } //while
 
-      PRInt32     aDelta    = (aDest.mCharSize == eOneByte) ? 1 : 2;
-      const char* root      = aDest.mStr;
-      const char* destLast  = root+(aDest.mLength*aDelta); //pts to last char in aDest (likely null)
+  return kNotFound;
+}
 
-      const char* rightmost = root+(anOffset*aDelta);
-      const char* min       = rightmost-((aCount-1)*aDelta);
+PRInt32 nsStr::RFindSubstr2in1(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
 
-      const char* leftmost  = (min<root) ? root: min;
+  NS_ASSERTION(aDest.mCharSize == eOneByte, "Must be 1 byte");
+  NS_ASSERTION(aTarget.mCharSize == eTwoByte, "Must be 2 byte");
+  
+  if(anOffset<0)
+    anOffset=(PRInt32)aDest.mLength-1;
 
-      while(leftmost<=rightmost) {
-          //don't forget to divide by delta in next text (bug found by rhp)...
-        if(aTarget.mLength<=PRUint32((destLast-rightmost)/aDelta)) {
-          PRInt32 result=(*gCompare[aDest.mCharSize][aTarget.mCharSize])(rightmost,aTarget.mStr,aTarget.mLength,aIgnoreCase);
+  if(aCount<0)
+    aCount = aDest.mLength;
 
-          if(0==result) {
-            return (rightmost-root)/aDelta;
-          }
-        } //if
-        rightmost-=aDelta;
-      } //while
-    }
-  }
+  if ((aDest.mLength <= 0) || (PRUint32(anOffset)>=aDest.mLength) || (aTarget.mLength==0))
+    return kNotFound;
+  
+  if (aCount<=0)
+    return kNotFound;
+  
+  const char* root      = aDest.mStr;
+  const char* destLast  = root+aDest.mLength; //pts to last char in aDest (likely null)
+  
+  const char* rightmost = root+anOffset;
+  const char* min       = rightmost-aCount+1;
+  
+  const char* leftmost  = (min<root) ? root: min;
+
+  while(leftmost<=rightmost) {
+    //don't forget to divide by delta in next text (bug found by rhp)...
+    if(aTarget.mLength<=PRUint32(destLast-rightmost)) {
+      PRInt32 result=Compare1To2(rightmost,aTarget.mUStr,aTarget.mLength,aIgnoreCase);
+      
+      if(0==result) {
+        return (rightmost-root);
+      }
+    } //if
+    rightmost--;
+  } //while
+
+  return kNotFound;
+}
+
+PRInt32 nsStr::RFindSubstr1in2(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aTarget.mCharSize == eOneByte, "Must be 1 byte");
+  
+  if(anOffset<0)
+    anOffset=(PRInt32)aDest.mLength-1;
+
+  if(aCount<0)
+    aCount = aDest.mLength;
+
+  if ((aDest.mLength <= 0) || (PRUint32(anOffset)>=aDest.mLength) || (aTarget.mLength==0))
+    return kNotFound;
+  
+  if (aCount<=0)
+    return kNotFound;
+  
+  const PRUnichar* root      = aDest.mUStr;
+  const PRUnichar* destLast  = root+aDest.mLength; //pts to last char in aDest (likely null)
+  
+  const PRUnichar* rightmost = root+anOffset;
+  const PRUnichar* min       = rightmost-aCount+1;
+  
+  const PRUnichar* leftmost  = (min<root) ? root: min;
+
+  while(leftmost<=rightmost) {
+    //don't forget to divide by delta in next text (bug found by rhp)...
+    if(aTarget.mLength<=PRUint32(destLast-rightmost)) {
+      PRInt32 result = Compare2To1(rightmost,aTarget.mStr,aTarget.mLength,aIgnoreCase);
+      
+      if(0==result) {
+        return rightmost-root;
+      }
+    } //if
+    rightmost--;
+  } //while
+
+  return kNotFound;
+}
+
+PRInt32 nsStr::RFindSubstr2in2(const nsStr& aDest,const nsStr& aTarget,PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
+
+  NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 byte");
+  NS_ASSERTION(aTarget.mCharSize == eTwoByte, "Must be 2 byte");
+  
+  if(anOffset<0)
+    anOffset=(PRInt32)aDest.mLength-1;
+
+  if(aCount<0)
+    aCount = aDest.mLength;
+
+  if ((aDest.mLength <= 0) || (PRUint32(anOffset)>=aDest.mLength) || (aTarget.mLength==0))
+    return kNotFound;
+  
+  if (aCount<=0)
+    return kNotFound;
+  
+  const PRUnichar* root      = aDest.mUStr;
+  const PRUnichar* destLast  = root+aDest.mLength; //pts to last char in aDest (likely null)
+  
+  const PRUnichar* rightmost = root+anOffset;
+  const PRUnichar* min       = rightmost-aCount+1;
+  
+  const PRUnichar* leftmost  = (min<root) ? root: min;
+
+  while(leftmost<=rightmost) {
+    //don't forget to divide by delta in next text (bug found by rhp)...
+    if(aTarget.mLength<=PRUint32(destLast-rightmost)) {
+      PRInt32 result = Compare2To2(rightmost,aTarget.mUStr,aTarget.mLength,aIgnoreCase);
+      
+      if(0==result) {
+        return (rightmost-root);
+      }
+    } //if
+    rightmost--;
+  } //while
 
   return kNotFound;
 }
@@ -761,7 +1033,7 @@ PRInt32 nsStr::RFindChar1(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase
 }
 PRInt32 nsStr::RFindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase,PRInt32 anOffset,PRInt32 aCount) {
   NS_ASSERTION(aDest.mCharSize == eTwoByte, "Must be 2 bytes");
-  return ::RFindChar2(aDest.mStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
+  return ::RFindChar2(aDest.mUStr,aDest.mLength,anOffset,aChar,aIgnoreCase,aCount);
 }
 
 
@@ -775,8 +1047,9 @@ PRInt32 nsStr::RFindChar2(const nsStr& aDest,PRUnichar aChar, PRBool aIgnoreCase
  *  @param   anOffset tells us where to start the search
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
-PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
-  //NS_PRECONDITION(aSet.mLength!=1,kCallRFindChar);
+PRInt32 nsStr::RFindCharInSet1(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
+
+  NS_ASSERTION(aSet.mCharSize == eOneByte, "Must be 1 byte");
 
   PRInt32 index=(0<=anOffset) ? anOffset : aDest.mLength;
   PRInt32 thePos;
@@ -786,7 +1059,27 @@ PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
   if(0<aDest.mLength) {
     while(--index>=0) {
       PRUnichar theChar=GetCharAt(aDest,index);
-      thePos=gFindChars[aSet.mCharSize](aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
+      thePos=::FindChar1(aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
+      if(kNotFound!=thePos)
+        return index;
+    } //while
+  }
+  return kNotFound;
+}
+
+PRInt32 nsStr::RFindCharInSet2(const nsStr& aDest,const nsStr& aSet,PRBool aIgnoreCase,PRInt32 anOffset) {
+
+  NS_ASSERTION(aSet.mCharSize == eTwoByte, "Must be 2 byte");
+  
+  PRInt32 index=(0<=anOffset) ? anOffset : aDest.mLength;
+  PRInt32 thePos;
+
+    //note that the search is inverted here. We're scanning aDest, one char at a time
+    //but doing the search against the given set. That's why we use 0 as the offset below.
+  if(0<aDest.mLength) {
+    while(--index>=0) {
+      PRUnichar theChar=GetCharAt(aDest,index);
+      thePos=::FindChar2(aSet.mUStr,aSet.mLength,0,theChar,aIgnoreCase,aSet.mLength);
       if(kNotFound!=thePos)
         return index;
     } //while
@@ -795,7 +1088,7 @@ PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
 }
 
 // from the start of the old nsStr::StrCompare - now used as helper
-// routines for nsStr::Compare1to1 and so forth
+// routines for nsStr::Compare1To1 and so forth
 static inline PRInt32
 GetCompareCount(const PRInt32 aDestLength, const PRInt32 aSourceLength,
                 PRInt32 aCount)
@@ -860,7 +1153,7 @@ PRInt32 nsStr::StrCompare1To2(const nsStr& aDest,const nsStr& aSource,PRInt32 aC
   NS_ASSERTION(aSource.mCharSize == eTwoByte, "Must be 2 byte");
   if (aCount) {
     PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
-    PRInt32 result = Compare1To2(aDest.mStr, aSource.mStr, theCount, aIgnoreCase);
+    PRInt32 result = Compare1To2(aDest.mStr, aSource.mUStr, theCount, aIgnoreCase);
     result = TranslateCompareResult(aDest.mLength, aSource.mLength, result, aCount);
     return result;
   }
@@ -874,7 +1167,7 @@ PRInt32 nsStr::StrCompare2To1(const nsStr& aDest,const nsStr& aSource,PRInt32 aC
   
   if (aCount) {
     PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
-    PRInt32 result = Compare2To1(aDest.mStr, aSource.mStr, theCount, aIgnoreCase);
+    PRInt32 result = Compare2To1(aDest.mUStr, aSource.mStr, theCount, aIgnoreCase);
     result = TranslateCompareResult(aDest.mLength, aSource.mLength, result, aCount);
     return result;
   }
@@ -888,7 +1181,7 @@ PRInt32 nsStr::StrCompare2To2(const nsStr& aDest,const nsStr& aSource,PRInt32 aC
   
   if (aCount) {
     PRInt32 theCount = GetCompareCount(aDest.mLength, aSource.mLength, aCount);
-    PRInt32 result = Compare2To2(aDest.mStr, aSource.mStr, theCount, aIgnoreCase);
+    PRInt32 result = Compare2To2(aDest.mUStr, aSource.mUStr, theCount, aIgnoreCase);
     result = TranslateCompareResult(aDest.mLength, aSource.mLength, result, aCount);
     return result;
   }
