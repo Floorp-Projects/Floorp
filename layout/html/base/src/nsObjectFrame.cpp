@@ -2904,6 +2904,23 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
   return NS_OK;
 }
 
+// Little helper function to resolve relative URL in
+// |value| for certain inputs of |name|
+void nsObjectFrame::FixUpURLS(const nsString &name, nsString &value)
+{
+  if (name.EqualsIgnoreCase("PLUGINURL") ||
+      name.EqualsIgnoreCase("PLUGINSPAGE")) {        
+    
+    nsCOMPtr<nsIURI> baseURL;
+    GetBaseURL(*getter_AddRefs(baseURL));
+    if (baseURL) {
+      nsAutoString newURL;
+      NS_MakeAbsoluteURI(newURL, value, baseURL);
+      if (!newURL.IsEmpty())
+        value = newURL;
+    }
+  }
+}
 
 // Cache the attributes and/or parameters of our tag into a single set
 // of arrays to be compatible with 4.x. The attributes go first,
@@ -3072,6 +3089,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
     if (NS_CONTENT_ATTR_NOT_THERE != content->GetAttr(nameSpaceID, atom, value)) {
       nsAutoString name;
       atom->ToString(name);
+      
+      mOwner->FixUpURLS(name, value);
+
       mCachedAttrParamNames [c] = ToNewUTF8String(name);
       mCachedAttrParamValues[c] = ToNewUTF8String(value);
       c++;
@@ -3097,6 +3117,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
      nsAutoString value;
      param->GetAttribute(NS_LITERAL_STRING("name"), name); // check for empty done above
      param->GetAttribute(NS_LITERAL_STRING("value"), value);
+
+     mOwner->FixUpURLS(name, value);
+
      /*
       * According to the HTML 4.01 spec, at
       * http://www.w3.org/TR/html4/types.html#type-cdata
