@@ -16,52 +16,38 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  *
  */
 
-#ifndef _resid_h
-#define _resid_h
+#define IDC_BASE                        4100
 
-// Resource IDs for the widget DLL.
+#define IDC_SELECTANCHOR                4100
+#define IDC_ARROWSOUTH                  4101
+#define IDC_ARROWNORTH                  4102
+#define IDC_ARROWEAST                   4103
+#define IDC_ARROWWEST                   4104
+#define IDC_ARROWSOUTHPLUS              4105
+#define IDC_ARROWNORTHPLUS              4106
+#define IDC_ARROWEASTPLUS               4107
+#define IDC_ARROWWESTPLUS               4108
+#define IDC_GRAB                        4109
+#define IDC_GRABBING                    4110
+#define IDC_CELL                        4111
+#define IDC_COPY                        4112
+#define IDC_ALIAS                       4113
 
-// Directory-picker dialog
-#define DID_DIRPICKER  100
-
-#define IDD_TREECNR    101
-#define IDD_CBDRIVES   102
-#define IDD_EFPATH     103
-#define IDD_HELPBUTTON 104
+#define IDC_ARROWWAIT                   4114
+#define IDC_CROSS                       4115
+#define IDC_HELP                        4116
 
 // Icons
 #define ID_ICO_FRAME         500
 #define ID_ICO_FOLDER        501
 #define ID_ICO_DRAGITEM      502
 
-#define ID_PTR_SELECTURL    2000
-#define ID_PTR_ARROWNORTH   2001
-#define ID_PTR_ARROWNORTHP  2002
-#define ID_PTR_ARROWSOUTH   2003
-#define ID_PTR_ARROWSOUTHP  2004
-#define ID_PTR_ARROWWEST    2005
-#define ID_PTR_ARROWWESTP   2006
-#define ID_PTR_ARROWEAST    2007
-#define ID_PTR_ARROWEASTP   2008
-#define ID_PTR_COPY         2009
-#define ID_PTR_ALIAS        2010
-#define ID_PTR_CELL         2011
-#define ID_PTR_GRAB         2012
-#define ID_PTR_GRABBING     2013
-#define ID_PTR_ARROWWAIT    2014
-
-#define ID_STR_FONT        10000
-#define ID_STR_HMMDIR      10001
-#define ID_STR_NOCDIR      10002
-
 // OS2TODO HCT temporary bug fix
+
 #ifndef FCF_CLOSEBUTTON // defined in the Merlin toolkit
 #define FCF_CLOSEBUTTON 0x04000000L
-#endif
-
-
-
 #endif

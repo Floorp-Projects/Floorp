@@ -55,6 +55,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "resource.h"
+
 #ifdef DEBUG_sobotka
 static int WINDOWCOUNT = 0;
 #endif
@@ -1372,7 +1374,6 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
    return NS_OK;
 }
 
-
 //-------------------------------------------------------------------------
 //
 // Set this component cursor
@@ -1381,61 +1382,126 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 
 NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 {
-  // Only change cursor if it's changing
+  HPOINTER newPointer = NULLHANDLE;
+ 
+  switch(aCursor) {
+  case eCursor_select:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_TEXT, FALSE);
+    break;
+    
+  case eCursor_wait:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_WAIT, FALSE);
+    break;
 
-  //XXX mCursor isn't always right.  Scrollbars and others change it, too.
-  //XXX If we want this optimization we need a better way to do it.
-  //if (aCursor != mCursor) {
-    ULONG sptr = 0;
-    switch(aCursor) {
-       // builtins
-       case eCursor_standard: sptr = SPTR_ARROW;    break;
-       case eCursor_wait:     sptr = SPTR_WAIT;     break;
-       case eCursor_select:   sptr = SPTR_TEXT;     break;
-       case eCursor_sizeWE:   sptr = SPTR_SIZEWE;   break;
-       case eCursor_sizeNS:   sptr = SPTR_SIZENS;   break;
-       case eCursor_sizeNW:   sptr = SPTR_SIZENWSE; break;
-       case eCursor_sizeSE:   sptr = SPTR_SIZENWSE; break;
-       case eCursor_sizeNE:   sptr = SPTR_SIZENESW; break;
-       case eCursor_sizeSW:   sptr = SPTR_SIZENESW; break;
-       case eCursor_move:     sptr = SPTR_MOVE;     break;
-       // custom
-       case eCursor_hyperlink:
-       case eCursor_arrow_north:
-       case eCursor_arrow_north_plus:
-       case eCursor_arrow_south:
-       case eCursor_arrow_south_plus:
-       case eCursor_arrow_west:
-       case eCursor_arrow_west_plus:
-       case eCursor_arrow_east:
-       case eCursor_arrow_east_plus:
-       case eCursor_crosshair:
-       case eCursor_help:
-       case eCursor_copy:
-       case eCursor_alias:
-       case eCursor_context_menu:
-       case eCursor_cell:
-       case eCursor_grab:
-       case eCursor_grabbing:
-       case eCursor_spinning:
-       case eCursor_count_up:
-       case eCursor_count_down:
-       case eCursor_count_up_down:
-          break;
- 
-       default:
-          NS_ASSERTION(0, "Invalid cursor type");
-          break;
-    }
- 
-    if( sptr)
-       mPointer = WinQuerySysPointer( HWND_DESKTOP, sptr, FALSE);
-    else
-       mPointer = gWidgetModuleData->GetPointer( aCursor);
- 
-    WinSetPointer( HWND_DESKTOP, mPointer);
-    mCursor = aCursor;
-  //}
+  case eCursor_hyperlink:
+    newPointer = gWidgetModuleData->hptrArray[IDC_SELECTANCHOR-IDC_BASE];
+    break;
+
+  case eCursor_standard:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_ARROW, FALSE);
+    break;
+
+  case eCursor_sizeWE:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZEWE, FALSE);
+    break;
+
+  case eCursor_sizeNS:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENS, FALSE);
+    break;
+
+  case eCursor_sizeNW:
+  case eCursor_sizeSE:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENWSE, FALSE);
+    break;
+
+  case eCursor_sizeNE:
+  case eCursor_sizeSW:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_SIZENESW, FALSE);
+    break;
+
+  case eCursor_arrow_north:
+    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWNORTH-IDC_BASE];
+    break;
+
+  case eCursor_arrow_north_plus:
+    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWNORTHPLUS-IDC_BASE];
+    break;
+
+  case eCursor_arrow_south:
+    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWSOUTH-IDC_BASE];
+    break;
+
+  case eCursor_arrow_south_plus:
+    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWSOUTHPLUS-IDC_BASE];
+    break;
+
+  case eCursor_arrow_east:
+    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWEAST-IDC_BASE];
+    break;
+
+  case eCursor_arrow_east_plus:
+    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWEASTPLUS-IDC_BASE];
+    break;
+
+  case eCursor_arrow_west:
+    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWWEST-IDC_BASE];
+    break;
+
+  case eCursor_arrow_west_plus:
+    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWWESTPLUS-IDC_BASE];
+    break;
+
+  case eCursor_crosshair:
+    newPointer = gWidgetModuleData->hptrArray[IDC_CROSS-IDC_BASE];
+    break;
+             
+  case eCursor_move:
+    newPointer = ::WinQuerySysPointer(HWND_DESKTOP, SPTR_MOVE, FALSE);
+    break;
+
+  case eCursor_help:
+    newPointer = gWidgetModuleData->hptrArray[IDC_HELP-IDC_BASE];
+    break;
+
+  case eCursor_copy: // CSS3
+    newPointer = gWidgetModuleData->hptrArray[IDC_COPY-IDC_BASE];
+    break;
+
+  case eCursor_alias:
+    newPointer = gWidgetModuleData->hptrArray[IDC_ALIAS-IDC_BASE];
+    break;
+
+  case eCursor_cell:
+    newPointer = gWidgetModuleData->hptrArray[IDC_CELL-IDC_BASE];
+    break;
+
+  case eCursor_grab:
+    newPointer = gWidgetModuleData->hptrArray[IDC_GRAB-IDC_BASE];
+    break;
+
+  case eCursor_grabbing:
+    newPointer = gWidgetModuleData->hptrArray[IDC_GRABBING-IDC_BASE];
+    break;
+
+  case eCursor_spinning:
+    newPointer = gWidgetModuleData->hptrArray[IDC_ARROWWAIT-IDC_BASE];
+    break;
+
+  case eCursor_context_menu:
+  case eCursor_count_up:
+  case eCursor_count_down:
+  case eCursor_count_up_down:
+    break;
+
+  default:
+    NS_ASSERTION(0, "Invalid cursor type");
+    break;
+  }
+
+  if (newPointer) {
+    WinSetPointer(HWND_DESKTOP, newPointer);
+  }
+
   return NS_OK;
 }
 
@@ -1876,12 +1942,17 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       gWidgetModuleData->ConvertToUcs( (char *)inbuf, (PRUnichar *)outbuf, 4);
 
       event.charCode = outbuf[0];
-
-      if( event.isControl && !event.isShift && event.charCode >= 'A' && event.charCode <= 'Z' )
-      {
-         event.charCode = tolower(event.charCode);
-      }
-      else if( !event.isControl && !event.isAlt && event.charCode != 0)
+      if (event.isControl && !(fsFlags & (KC_VIRTUALKEY | KC_DEADKEY))) {
+        if (!event.isShift && (event.charCode >= 'A' && event.charCode <= 'Z'))
+        {
+          event.charCode = tolower(event.charCode);
+        }
+        if (event.isShift && (event.charCode >= 'a' && event.charCode <= 'z'))
+        {
+          event.charCode = toupper(event.charCode);
+        }
+        event.keyCode = 0;
+      } else if( !event.isControl && !event.isAlt && event.charCode != 0)
       {
          if ( !(fsFlags & KC_VIRTUALKEY) || 
               ((fsFlags & KC_CHAR) && (event.keyCode == 0)) )
@@ -2169,7 +2240,9 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
     
         case DM_DRAGOVER:
-          result = OnDragOver( mp1, mp2, rc);
+          rc = MRFROM2SHORT(DOR_DROP, DO_COPY);
+          result = PR_TRUE;
+//          result = OnDragOver( mp1, mp2, rc);
           break;
     
         case DM_DRAGLEAVE:
@@ -2967,7 +3040,7 @@ PRBool nsWindow::OnDragLeave( MPARAM mp1, MPARAM mp2)
 PRBool nsWindow::OnDrop( MPARAM mp1, MPARAM mp2)
 {
   //   gWidgetModuleData->dragService->InitDrop( (PDRAGINFO) mp1);
-  //   DispatchDragDropEvent( NS_DRAGDROP_DROP);
+     DispatchDragDropEvent( NS_DRAGDROP_DROP);
   //   gWidgetModuleData->dragService->TermDrop();
 
    mDragInside = FALSE;

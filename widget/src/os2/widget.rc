@@ -28,20 +28,21 @@ ICON ID_ICO_FOLDER        res\folder.ico
 ICON ID_ICO_DRAGITEM      res\dragitem.ico
 
 /* pointers */
-POINTER ID_PTR_SELECTURL   res\select.ptr
-POINTER ID_PTR_ARROWNORTH  res\arrow_north.ptr
-POINTER ID_PTR_ARROWNORTHP res\arrow_north_plus.ptr
-POINTER ID_PTR_ARROWSOUTH  res\arrow_south.ptr
-POINTER ID_PTR_ARROWSOUTHP res\arrow_south_plus.ptr
-POINTER ID_PTR_ARROWWEST   res\arrow_west.ptr
-POINTER ID_PTR_ARROWWESTP  res\arrow_west_plus.ptr
-POINTER ID_PTR_ARROWEAST   res\arrow_east.ptr
-POINTER ID_PTR_ARROWEASTP  res\arrow_east_plus.ptr
-POINTER ID_PTR_COPY        res\copy.ptr
-POINTER ID_PTR_ALIAS       res\aliasb.ptr
-POINTER ID_PTR_CELL        res\cell.ptr
-POINTER ID_PTR_GRAB        res\grab.ptr
-POINTER ID_PTR_GRABBING    res\grabbing.ptr
-POINTER ID_PTR_ARROWWAIT   res\arrow_wait.ptr
-
+POINTER IDC_SELECTANCHOR   res\select.ptr
+POINTER IDC_ARROWNORTH     res\arrow_north.ptr
+POINTER IDC_ARROWNORTHPLUS res\arrow_north_plus.ptr
+POINTER IDC_ARROWSOUTH     res\arrow_south.ptr
+POINTER IDC_ARROWSOUTHPLUS res\arrow_south_plus.ptr
+POINTER IDC_ARROWWEST      res\arrow_west.ptr
+POINTER IDC_ARROWWESTPLUS  res\arrow_west_plus.ptr
+POINTER IDC_ARROWEAST      res\arrow_east.ptr
+POINTER IDC_ARROWEASTPLUS  res\arrow_east_plus.ptr
+POINTER IDC_COPY           res\copy.ptr
+POINTER IDC_ALIAS          res\aliasb.ptr
+POINTER IDC_CELL           res\cell.ptr
+POINTER IDC_GRAB           res\grab.ptr
+POINTER IDC_GRABBING       res\grabbing.ptr
+POINTER IDC_ARROWWAIT      res\arrow_wait.ptr
+POINTER IDC_CROSS          res\crosshair.ptr
+POINTER IDC_HELP           res\help.ptr
 
