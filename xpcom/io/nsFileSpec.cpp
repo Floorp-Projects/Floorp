@@ -41,6 +41,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef	XP_PC
+#include <mbstring.h>
+#endif
+
 #ifdef XP_MAC
 #include <Aliases.h>
 #include <TextUtils.h>
@@ -353,8 +357,11 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
         return nsnull;
 
     char* chars = mData->mString;
+#ifdef	XP_PC
+    const char* lastSeparator = (const char*) _mbsrchr((const unsigned char *) chars, inSeparator);
+#else
     const char* lastSeparator = strrchr(chars, inSeparator);
-    
+#endif    
     // If there was no separator, then return a copy of our path.
     if (!lastSeparator)
         return nsCRT::strdup(*this);
@@ -367,7 +374,11 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
 
     // So now, separator was the last character. Poke in a null instead.
     *(char*)lastSeparator = '\0'; // Should use const_cast, but Unix has old compiler.
+#ifdef XP_PC
+    leafPointer = (const char*) _mbsrchr((const unsigned char *) chars, inSeparator);
+#else
     leafPointer = strrchr(chars, inSeparator);
+#endif
     char* result = leafPointer ? nsCRT::strdup(++leafPointer) : nsCRT::strdup(chars);
     // Restore the poked null before returning.
     *(char*)lastSeparator = inSeparator;
@@ -1195,7 +1206,29 @@ void nsFileSpec::GetNativePathString(nsString &nativePathString)
   }
 }
  
- 
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::GetLeafName(nsString &nativePathString)
+//----------------------------------------------------------------------------------------
+{
+  char * path = GetLeafName();
+  if (nsnull == path) {
+    nativePathString.SetString("");
+    return;
+  } else {
+    PRUnichar *converted = ConvertFromFileSystemCharset(path);
+    if (nsnull != converted) {
+      nativePathString.SetString(converted);
+      delete [] converted;
+    }
+    else
+      nativePathString.SetString(path);
+
+    nsCRT::free(path);
+  }
+}
+
+
 #ifdef XP_MAC
 #pragma mark -
 #endif
