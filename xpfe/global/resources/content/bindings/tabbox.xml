@@ -331,7 +331,7 @@
       <xul:stack flex="1">
         <xul:spacer class="tabs-right"/>
         <xul:hbox class="tabs-closebutton-box" align="center" pack="end">
-          <xul:toolbarbutton class="tabs-closebutton close-button" inherits="oncommand=onclosetab"/>
+          <xul:toolbarbutton class="tabs-closebutton close-button" inherits="disabled=disableclose,oncommand=onclosetab"/>
         </xul:hbox>
       </xul:stack>
     </content>
