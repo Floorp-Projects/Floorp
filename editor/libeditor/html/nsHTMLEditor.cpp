@@ -3262,6 +3262,73 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 #pragma mark -
 #endif
 
+//
+// Figure out what formatting needs to go with this node, and insert it.
+//
+NS_IMETHODIMP
+nsHTMLEditor::InsertFormattingForNode(nsIDOMNode* aNode)
+{
+  nsresult res;
+
+  // Don't insert any formatting unless it's an element node
+  PRUint16 nodeType;
+  res = aNode->GetNodeType(&nodeType);
+  if (NS_FAILED(res))
+    return res;
+  if (nodeType != nsIDOMNode::ELEMENT_NODE)
+    return NS_OK;
+
+  // Insert formatting only for block nodes
+  // (would it be better to insert for any non-inline node?)
+  PRBool block;
+  res = IsNodeBlock(aNode, block);
+  if (NS_FAILED(res))
+    return res;
+  if (!block)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> parent;
+  res = aNode->GetParentNode(getter_AddRefs(parent));
+  if (NS_FAILED(res))
+    return res;
+  PRInt32 offset = GetIndexOf(parent, aNode);
+
+  nsString namestr;
+  aNode->GetNodeName(namestr);
+
+  // Don't insert formatting for pre or br if we're a plaintext editor.
+  // The newlines get considered to be part of the text, yet the
+  // edit rules also insert breaks, so we end up with too much
+  // vertical whitespace any time the user hits return.
+  // This, of course, makes the html look lousy, but we're
+  // expecting that no one will look at the html from a plaintext editor.
+  if ((mFlags & nsHTMLEditor::eEditorPlaintextMask)
+      && (namestr.Equals("pre", PR_TRUE) || namestr.Equals("br", PR_TRUE)))
+    return NS_OK;
+
+#ifdef DEBUG_akkana
+  //DumpContentTree();
+  char* nodename = namestr.ToNewCString();
+  printf("Inserting formatting for node <%s> at offset %d\n",
+         nodename, offset);
+  Recycle(nodename);
+#endif /* DEBUG_akkana */
+
+  //
+  // XXX We don't yet have a real formatter. As a cheap stopgap,
+  // XXX just insert a newline before and after each newly inserted tag.
+  //
+
+  nsAutoString str ("\n");
+
+  // After the close tag
+  //res = InsertNoneditableTextNode(parent, offset+1, str);
+
+  // Before the open tag
+  res = InsertNoneditableTextNode(parent, offset, str);
+
+  return res;
+}
 
 NS_IMETHODIMP 
 nsHTMLEditor::Undo(PRUint32 aCount)
@@ -3648,6 +3715,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
 
     if (aCitation.Length() > 0)
       newElement->SetAttribute(cite, aCitation);
+
+    // Set the selection inside the blockquote so aQuotedText will go there:
+    nsCOMPtr<nsIDOMSelection> selection;
+    res = GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(res) && selection)
+      selection->Collapse(newNode, 0);
   }
 
   res = InsertHTML(aQuotedText);
