@@ -695,6 +695,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeClearAllSelections
 (JNIEnv *env, jobject obj, jint webShellPtr) {
     (* nativeClearAllSelections) (env, obj, webShellPtr);
+}
 
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
