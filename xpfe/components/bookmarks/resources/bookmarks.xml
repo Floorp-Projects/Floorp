@@ -937,6 +937,10 @@
         isEditable: function BMOLBuilderObserver_isEditable(aItemIndex, aColumnID)
         {
         },
+
+        getImageSource: function BMOLBuilderObserver_getImageSource(aItemIndex, aColumnID)
+        {
+        },
         
         onSetCellText: function BMOLBuilderObserver_onSetCellText(aItemIndex, aColumnID, aValue)
         {
