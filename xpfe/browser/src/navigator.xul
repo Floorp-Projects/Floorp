@@ -630,7 +630,7 @@
     <toolbar class="main-bar" chromeclass="toolbar" datasources="rdf:bookmarks" id="NC:PersonalToolbarFolder">
 	<template>
 		<rule iscontainer="true">
-			<titledbutton uri="..." src="resource:/res/toolbar/TB_Location.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+			<titledbutton uri="..." src="resource:/res/rdf/folder-closed.gif" value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
 		</rule>
 		
 		<rule>
@@ -642,10 +642,6 @@
 			onclick="BrowserHome()"/>
 		<titledbutton id="netscape-button" align="right" value="&netscapeButton.label;" 
 			onclick="window.frames[0].frames[1].location.href='http://home.netscape.com'"/>
-		<titledbutton id="bugzilla-button" align="right" value="&bugzillaButton.label;" 
-			onclick="window.frames[0].frames[1].location.href='http://bugzilla.mozilla.org'"/>
-		<titledbutton id="tinderbox-button" align="right" value="&tinderboxButton.label;" 
-			onclick="window.frames[0].frames[1].location.href='http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi?tree=SeaMonkey&amp;hours=12&amp;nocrap=1'"/>
 		<spring flex="100%"/>
 	</toolbar>
   </toolbox>
