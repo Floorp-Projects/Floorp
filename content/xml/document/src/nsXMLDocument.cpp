@@ -413,7 +413,6 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
           charset = preferred;
           charsetSource = kCharsetFromHTTPHeader;
         }
-        nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
       }
     }
   } //end of checking http channel
