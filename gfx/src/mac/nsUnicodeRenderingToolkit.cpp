@@ -411,7 +411,7 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackGetWidth(
   			GetScriptTextWidth(conv+2, l-3,oWidth);   
      		::TextSize(aSize);
    		} 
-   		else if((l>1) && ('0' <= conv[0]) && ( conv[0] <= '9') && ('\/' == conv[1])) // fract
+   		else if((l>1) && ('0' <= conv[0]) && ( conv[0] <= '9') && ('/' == conv[1])) // fract
     	{
     		short small = aSize * 2 / 3;
     		short tmpw=0;
@@ -471,7 +471,7 @@ PRBool nsUnicodeRenderingToolkit :: TransliterateFallbackDrawChar(
     		DrawScriptText(conv+2, l-3, x, y+small/2, oWidth);
      		::TextSize(aSize);
    		} 
-   		else if((l>1) && ('0' <= conv[0]) && ( conv[0] <= '9') && ('\/' == conv[1])) // fract
+   		else if((l>1) && ('0' <= conv[0]) && ( conv[0] <= '9') && ('/' == conv[1])) // fract
     	{
     		short small = aSize * 2 / 3;
     		short tmpw=0;
@@ -708,7 +708,7 @@ static void CCodeToMacRoman(char aIn, char& aOut,short aWidth, short aHeight, sh
 		case 'u' : aOut = '\xac'; oYadj= aHeight * 5 / 6;  break ;// # u - diaeresis below
 		case 'H' : aOut = ',';    oYadj= - aHeight * 5 / 6;  break ;// # H - Hook Above 
 		case 'n' : aOut = ',';    oYadj= - aHeight * 5 / 6;  oXadj = aWidth /4; break ;// # N - Horn Above
-		defalt: NS_ASSERTION(0, "unknown ccode");
+		default: NS_ASSERTION(0, "unknown ccode");
 		        break;	
 	}
 }
