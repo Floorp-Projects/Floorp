@@ -683,13 +683,15 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 {
     NS_INIT_AGGREGATED(aOuter);
 
-    static size_t kSizes[] = {
+    static const size_t kBucketSizes[] = {
         sizeof(Assertion),
         sizeof(PLHashEntry),
         sizeof(InMemoryArcsEnumeratorImpl),
         sizeof(InMemoryAssertionEnumeratorImpl) };
 
-    mAllocator.Init("nsInMemoryDataSource", kSizes, sizeof(kSizes) / sizeof(PRInt32),
+    static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
+
+    mAllocator.Init("nsInMemoryDataSource", kBucketSizes, kNumBuckets,
                     NS_SIZE_IN_HEAP(sizeof(Assertion) * 64)
                     + NS_SIZE_IN_HEAP(sizeof(PLHashEntry) * 64)
                     + NS_SIZE_IN_HEAP(sizeof(InMemoryAssertionEnumeratorImpl))
