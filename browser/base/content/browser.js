@@ -480,9 +480,10 @@ function Shutdown()
     document.persist("sidebar-title", "value");
   }
 
-  const service = Components.classes["@mozilla.org/observer-service;1"]
+  var service = Components.classes["@mozilla.org/observer-service;1"]
                             .getService(Components.interfaces.nsIObserverService);
   service.removeObserver(dlObserver, "dl-start");
+  service = null;
 
   window.XULBrowserWindow.destroy();
   window.XULBrowserWindow = null;
