@@ -237,6 +237,8 @@ public class JavaAdapter extends ScriptableObject {
             Object securityDomain = cx.getSecurityDomainForStackDepth(-1);
             return ss.defineClass(adapterName, bytes, securityDomain);
         } else {
+            if (classLoader == null)
+                classLoader = new MyClassLoader();
             classLoader.defineClass(adapterName, bytes);
             return classLoader.loadClass(adapterName, true);
         }
@@ -840,7 +842,7 @@ public class JavaAdapter extends ScriptableObject {
 	    }
 	}
     
-    private static int serial = 0;
-    private static MyClassLoader classLoader = new MyClassLoader();
+    private static int serial;
+    private static MyClassLoader classLoader;
     private static Hashtable generatedClasses = new Hashtable(7);
 }
