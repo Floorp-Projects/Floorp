@@ -31,11 +31,14 @@
 #include "nsCRT.h"
 #include "prenv.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptContextOwner.h"
 
 // Debug Robot options
 static int gDebugRobotLoads = 5000;
 static char gVerifyDir[_MAX_PATH];
 static BOOL gVisualDebug = TRUE;
+
+static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 
 // DebugRobot call
 extern "C" NS_EXPORT int DebugRobot(
@@ -197,22 +200,26 @@ void nsWin32Viewer::ShowConsole(WindowData* aWinData)
         JSConsole::sAccelTable = LoadAccelerators(gInstance,
                                                   MAKEINTRESOURCE(ACCELERATOR_TABLE));
       }
-
+      
+      nsIScriptContextOwner *owner = nsnull;
       nsIScriptContext *context = nsnull;        
-      if (NS_OK == aWinData->ww->GetScriptContext(&context)) {
+      if (NS_OK == aWinData->ww->QueryInterface(kIScriptContextOwnerIID, (void **)&owner)) {
+        if (NS_OK == owner->GetScriptContext(&context)) {
 
-        // create the console
-        gConsole = JSConsole::CreateConsole();
-        gConsole->SetContext(context);
-        // lifetime of the context is still unclear at this point.
-        // Anyway, as long as the web widget is alive the context is alive.
-        // Maybe the context shouldn't even be RefCounted
-        context->Release();
-        gConsole->SetNotification(DestroyConsole);
+          // create the console
+          gConsole = JSConsole::CreateConsole();
+          gConsole->SetContext(context);
+          // lifetime of the context is still unclear at this point.
+          // Anyway, as long as the web widget is alive the context is alive.
+          // Maybe the context shouldn't even be RefCounted
+          context->Release();
+          gConsole->SetNotification(DestroyConsole);
+        }
+        
+        NS_RELEASE(owner);
       }
       else {
         MessageBox(hWnd, "Unable to load JavaScript", "Viewer Error", MB_ICONSTOP);
-
       }
     }
 }

@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 DIRS=coreDom coreEvents events
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS=nsIScriptContext.h nsIJSScriptObject.h nsIScriptObjectOwner.h \
-        nsIScriptGlobalObject.h nsIDOMWindow.h
+        nsIScriptGlobalObject.h nsIDOMWindow.h nsIScriptContextOwner.h
 
 MODULE=dom 
 
