@@ -1,3 +1,3 @@
-<!ENTITY aboutDialog.title      "About &brandShortName;">
+<!ENTITY aboutDialog.title      "About &brandFullName;">
 <!ENTITY copyright              "Copyright and contributor information">
 <!ENTITY copyrightLink          "about:">
