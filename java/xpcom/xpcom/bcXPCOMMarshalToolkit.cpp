@@ -277,7 +277,7 @@ nsresult bcXPCOMMarshalToolkit::MarshalElement(bcIMarshaler *m, void *data, nsXP
                 }
                 //printf("--[c++]XPCOMMarshallToolkit INTERFACE iid=%s\n",iid->ToString());
                 bcOID oid = 0;
-                if (data != NULL) {
+                if (*(char**)data != NULL) {
                     NS_WITH_SERVICE(bcORB, _orb, kORBCIID, &r);
                     if (NS_FAILED(r)) {
                         return r; //nb am I sure about that?
@@ -365,7 +365,7 @@ bcXPCOMMarshalToolkit::UnMarshalElement(void *data, bcIUnMarshaler *um, nsXPTPar
                     printf("--[c++] we have an interface\n");
                     bcOID oid;
                     um->ReadSimple(&oid,XPTType2bcXPType(type));
-                    printf("%d oid",(int) oid);
+                    printf("%d oid\n",(int) oid);
                     nsIID iid;
                     um->ReadSimple(&iid,bc_T_IID);
                     nsISupports *proxy = NULL;
