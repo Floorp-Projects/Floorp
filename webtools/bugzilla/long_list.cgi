@@ -38,7 +38,6 @@ select
   assign.login_name,
   report.login_name,
   bugs.component,
-  bugs.target_fix_version,
   bugs.bug_file_loc,
   bugs.short_desc
 from bugs,profiles assign,profiles report
@@ -67,9 +66,8 @@ foreach bug [split $FORM(buglist) :] {
     puts "<TD><B>Assigned To:</B> [lindex $result 9]"
     puts "<TD><B>Reported By:</B> [lindex $result 10]"
     puts "<TR><TD><B>Component:</B> [lindex $result 11]"
-    puts "<TD><B>Target Fix Version:</B> [lindex $result 12]"
-    puts "<TR><TD COLSPAN=6><B>URL:</B> [html_quote [lindex $result 13]]"
-    puts "<TR><TD COLSPAN=6><B>Summary&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</B> [html_quote [lindex $result 14]]"
+    puts "<TR><TD COLSPAN=6><B>URL:</B> [html_quote [lindex $result 12]]"
+    puts "<TR><TD COLSPAN=6><B>Summary&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</B> [html_quote [lindex $result 13]]"
     puts "<TR><TD><B>Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</B>\n</TABLE>"
     puts "<PRE>[html_quote [GetLongDescription $bug]]</PRE>"
     puts "<HR>"

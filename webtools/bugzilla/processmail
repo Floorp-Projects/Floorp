@@ -48,11 +48,6 @@ proc DescCC {cclist} {
     return "Cc: [join $cclist ", "]\n"
 }
 
-proc DescFixVersion {v} {
-    if {[cequal $v ""]} return ""
-    return "Fix-Version: $v\n"
-}
-
 
 proc GetBugText {id} {
     global bug
@@ -72,7 +67,6 @@ select
         assigned_to,
         reporter,
         bug_file_loc,
-        target_fix_version,
         short_desc,
         component
 from bugs
@@ -88,7 +82,7 @@ where bug_id = $id";
     set count 0
     foreach field { bug_id product version rep_platform op_sys bug_status
                   resolution priority bug_severity area assigned_to
-                  reporter bug_file_loc target_fix_version short_desc
+                  reporter bug_file_loc short_desc
                   component } {
       set bug($field) [lindex $ret $count]
       incr count
@@ -116,7 +110,7 @@ Area: $bug(area)
 AssignedTo: $bug(assigned_to)                            
 ReportedBy: $bug(reporter)               
 URL: $bug(bug_file_loc)
-[DescCC $bug(cclist)][DescFixVersion $bug(target_fix_version)]Summary: $bug(short_desc)
+[DescCC $bug(cclist)]Summary: $bug(short_desc)
 
 $bug(long_desc)"
 
