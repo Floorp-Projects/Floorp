@@ -251,20 +251,26 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         aFrame = aFrame->GetParent();
       // For XUL checkboxes and radio buttons, the state of the parent
       // determines our state.
-      if (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO) {
+      if (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO ||
+          aWidgetType == NS_THEME_CHECKBOX_LABEL ||
+          aWidgetType == NS_THEME_RADIO_LABEL) {
         if (aWidgetFlags) {
           nsIAtom* atom = nsnull;
 
           if (aFrame) {
             nsIContent* content = aFrame->GetContent();
-            if (content->IsContentOfType(nsIContent::eXUL))
+            if (content->IsContentOfType(nsIContent::eXUL)) {
               aFrame = aFrame->GetParent();
+              if (aWidgetType == NS_THEME_CHECKBOX_LABEL ||
+                  aWidgetType == NS_THEME_RADIO_LABEL)
+                aFrame = aFrame->GetParent();
+            }
             else if (content->Tag() == mInputAtom)
               atom = mInputCheckedAtom;
           }
 
           if (!atom)
-            atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
+            atom = (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_CHECKBOX_LABEL) ? mCheckedAtom : mSelectedAtom;
           *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
         }
       }
@@ -278,9 +284,14 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       aState->isDefault = FALSE; // XXX fix me
       aState->canDefault = FALSE; // XXX fix me
 
+      // For these widget types, some element (either a child or parent)
+      // actually has element focus, so we check the focused attribute
+      // to see whether to draw in the focused state.
       if (aWidgetType == NS_THEME_TEXTFIELD ||
           aWidgetType == NS_THEME_DROPDOWN_TEXTFIELD ||
-          aWidgetType == NS_THEME_RADIO_CONTAINER) {
+          aWidgetType == NS_THEME_RADIO_CONTAINER ||
+          aWidgetType == NS_THEME_RADIO_LABEL ||
+          aWidgetType == NS_THEME_RADIO) {
         aState->focused = CheckBooleanAttr(aFrame, mFocusedAtom);
       }
 
@@ -370,6 +381,12 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_RADIO_CONTAINER:
     aGtkWidgetType = MOZ_GTK_RADIOBUTTON_CONTAINER;
+    break;
+  case NS_THEME_CHECKBOX_LABEL:
+    aGtkWidgetType = MOZ_GTK_CHECKBUTTON_LABEL;
+    break;
+  case NS_THEME_RADIO_LABEL:
+    aGtkWidgetType = MOZ_GTK_RADIOBUTTON_LABEL;
     break;
   case NS_THEME_TOOLBAR:
     aGtkWidgetType = MOZ_GTK_TOOLBAR;
@@ -512,10 +529,9 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
   case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
   case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     {
-      gint trough_border;
-      moz_gtk_get_scrollbar_metrics(nsnull, &trough_border,
-                                    nsnull, nsnull, nsnull);
-      aResult->top = aResult->left = trough_border;
+      MozGtkScrollbarMetrics metrics;
+      moz_gtk_get_scrollbar_metrics(&metrics);
+      aResult->top = aResult->left = metrics.trough_border;
     }
     break;
   case NS_THEME_TOOLBOX:
@@ -535,6 +551,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
 
   aResult->right = aResult->left;
   aResult->bottom = aResult->top;
+
   return NS_OK;
 }
 
@@ -552,28 +569,26 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
     case NS_THEME_SCROLLBAR_BUTTON_LEFT:
     case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
       {
-        gint slider_width, stepper_size;
-        moz_gtk_get_scrollbar_metrics(&slider_width, nsnull, &stepper_size,
-                                      nsnull, nsnull);
+        MozGtkScrollbarMetrics metrics;
+        moz_gtk_get_scrollbar_metrics(&metrics);
 
-        aResult->width = slider_width;
-        aResult->height = stepper_size;
+        aResult->width = metrics.slider_width;
+        aResult->height = metrics.stepper_size;
         *aIsOverridable = PR_FALSE;
       }
       break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
       {
-        gint slider_width, min_slider_size;
-        moz_gtk_get_scrollbar_metrics(&slider_width, nsnull, nsnull, nsnull,
-                                      &min_slider_size);
+        MozGtkScrollbarMetrics metrics;
+        moz_gtk_get_scrollbar_metrics(&metrics);
 
         if (aWidgetType == NS_THEME_SCROLLBAR_THUMB_VERTICAL) {
-          aResult->width = slider_width;
-          aResult->height = min_slider_size;
+          aResult->width = metrics.slider_width;
+          aResult->height = metrics.min_slider_size;
         } else {
-          aResult->width = min_slider_size;
-          aResult->height = slider_width;
+          aResult->width = metrics.min_slider_size;
+          aResult->height = metrics.slider_width;
         }
 
         *aIsOverridable = PR_FALSE;
@@ -581,29 +596,42 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
       break;
   case NS_THEME_DROPDOWN_BUTTON:
     {
-      // First, get the minimum size for the button itself.
       moz_gtk_get_dropdown_arrow_size(&aResult->width, &aResult->height);
       *aIsOverridable = PR_FALSE;
     }
     break;
   case NS_THEME_CHECKBOX:
   case NS_THEME_RADIO:
-  case NS_THEME_CHECKBOX_CONTAINER:
-  case NS_THEME_RADIO_CONTAINER:
     {
       gint indicator_size, indicator_spacing;
-      if (aWidgetType == NS_THEME_CHECKBOX ||
-          aWidgetType == NS_THEME_CHECKBOX_CONTAINER)
+
+      if (aWidgetType == NS_THEME_CHECKBOX) {
         moz_gtk_checkbox_get_metrics(&indicator_size, &indicator_spacing);
-      else
+      } else {
         moz_gtk_radio_get_metrics(&indicator_size, &indicator_spacing);
+      }
 
-      // Hack alert: several themes have indicators larger than the default
-      // 10px size, but don't set the indicator size property.  So, leave
-      // a little slop room by making the minimum size 14px.
-
-      aResult->width = aResult->height = MAX(indicator_size, 14);
+      // Include space for the indicator and the padding around it.
+      aResult->width = indicator_size + 3 * indicator_spacing;
+      aResult->height = indicator_size + 2 * indicator_spacing;
       *aIsOverridable = PR_FALSE;
+    }
+    break;
+
+  case NS_THEME_CHECKBOX_CONTAINER:
+  case NS_THEME_RADIO_CONTAINER:
+  case NS_THEME_CHECKBOX_LABEL:
+  case NS_THEME_RADIO_LABEL:
+    {
+      // Just include our border, and let the box code augment the size.
+
+      nsCOMPtr<nsIDeviceContext> dc;
+      aContext->GetDeviceContext(*getter_AddRefs(dc));
+
+      nsMargin border;
+      nsNativeThemeGTK::GetWidgetBorder(dc, aFrame, aWidgetType, &border);
+      aResult->width = border.left + border.right;
+      aResult->height = border.top + border.bottom;
     }
     break;
   }
@@ -737,6 +765,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsIPresContext* aPresContext,
     // case NS_THEME_SLIDER_TICK:
   case NS_THEME_CHECKBOX_CONTAINER:
   case NS_THEME_RADIO_CONTAINER:
+  case NS_THEME_CHECKBOX_LABEL:
+  case NS_THEME_RADIO_LABEL:
 #ifdef MOZ_WIDGET_GTK2
   case NS_THEME_MENUBAR:
   case NS_THEME_MENUPOPUP:

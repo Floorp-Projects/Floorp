@@ -67,6 +67,14 @@ typedef struct {
   gint32 maxpos;
 } GtkWidgetState;
 
+typedef struct {
+  gint slider_width;
+  gint trough_border;
+  gint stepper_size;
+  gint stepper_spacing;
+  gint min_slider_size;
+} MozGtkScrollbarMetrics;
+
 /** flags for tab state **/
 typedef enum {
   /* the first tab in the group */
@@ -114,6 +122,10 @@ typedef enum {
   MOZ_GTK_CHECKBUTTON_CONTAINER,
   /* Paints the container part of a GtkRadioButton. */
   MOZ_GTK_RADIOBUTTON_CONTAINER,
+  /* Paints the label of a GtkCheckButton (focus outline) */
+  MOZ_GTK_CHECKBUTTON_LABEL,
+  /* Paints the label of a GtkRadioButton (focus outline) */
+  MOZ_GTK_RADIOBUTTON_LABEL,
   /* Paints the background of a GtkHandleBox. */
   MOZ_GTK_TOOLBAR,
   /* Paints a GtkToolTip */
@@ -211,22 +223,32 @@ moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing);
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
-#define moz_gtk_radio_get_metrics(x, y) moz_gtk_checkbox_get_metrics(x, y)
+gint
+moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
 
-/**
- * Get the desired metrics for a GtkScrollbar
- * slider_width:     [OUT] the width of the slider (thumb)
- * trough_border:    [OUT] the border of the trough (outside the thumb)
- * stepper_size:     [OUT] the size of an arrow button
- * stepper_spacing:  [OUT] the minimum space between the thumb and the arrow
- * min_slider_size:  [OUT] the minimum thumb size
+/** Get the focus metrics for a checkbox or radio button
+ * interior_focus:     [OUT] whether the focus is drawn around the
+ *                           label (TRUE) or around the whole container (FALSE)
+ * focus_width:        [OUT] the width of the focus line
+ * focus_pad:          [OUT] the padding between the focus line and children
  *
  * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
  */
 gint
-moz_gtk_get_scrollbar_metrics(gint* slider_width, gint* trough_border,
-                              gint* stepper_size, gint* stepper_spacing,
-                              gint* min_slider_size);
+moz_gtk_checkbox_get_focus(gboolean* interior_focus,
+                           gint* focus_width, gint* focus_pad);
+gint
+moz_gtk_radio_get_focus(gboolean* interior_focus,
+                        gint* focus_width, gint* focus_pad);
+
+/**
+ * Get the desired metrics for a GtkScrollbar
+ * metrics:          [IN]  struct which will contain the metrics
+ *
+ * returns:    MOZ_GTK_SUCCESS if there was no error, an error code otherwise
+ */
+gint
+moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics* metrics);
 
 /**
  * Get the desired size of a dropdown arrow button

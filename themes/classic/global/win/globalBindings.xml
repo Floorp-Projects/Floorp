@@ -20,4 +20,24 @@
     </content>
   </binding>
 
+  <binding id="radio-with-spacing"
+           extends="chrome://global/skin/globalBindings.xml#radio">
+
+    <content>
+      <xul:hbox class="radio-spacer-box">
+        <xul:hbox class="radio-check-box1" xbl:inherits="selected,checked,disabled">
+          <xul:hbox class="radio-check-box2" flex="1">
+            <xul:image class="radio-check" xbl:inherits="selected,checked,disabled"/>
+          </xul:hbox>
+        </xul:hbox>
+      </xul:hbox>
+      <xul:hbox class="radio-label-center-box" flex="1">
+        <xul:hbox class="radio-label-box" flex="1">
+          <xul:image class="radio-icon" xbl:inherits="src"/>
+          <xul:label class="radio-label" xbl:inherits="xbl:text=label,accesskey,crop" flex="1"/>
+        </xul:hbox>
+      </xul:hbox>
+    </content>
+  </binding>
+
 </bindings>

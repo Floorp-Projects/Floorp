@@ -351,22 +351,42 @@ moz_gtk_checkbox_get_metrics(gint* indicator_size, gint* indicator_spacing)
 
     GtkStyle* style = gCheckboxWidget->style;
 
-    if (indicator_size)
-      *indicator_size = style_prop_func(style,
-                                        "GtkCheckButton::indicator_size",
-                                        klass->indicator_size);
-    if (indicator_spacing)
-      *indicator_spacing = style_prop_func(style,
-                                           "GtkCheckButton::indicator_spacing",
-                                           klass->indicator_spacing);
+    *indicator_size = style_prop_func(style,
+                                      "GtkCheckButton::indicator_size",
+                                      klass->indicator_size);
+    *indicator_spacing = style_prop_func(style,
+                                         "GtkCheckButton::indicator_spacing",
+                                         klass->indicator_spacing);
   } else {
-    if (indicator_size)
-      *indicator_size = klass->indicator_size;
-    if (indicator_spacing)
-      *indicator_spacing = klass->indicator_spacing;
+    *indicator_size = klass->indicator_size;
+    *indicator_spacing = klass->indicator_spacing;
   }
 
   return MOZ_GTK_SUCCESS;
+}
+
+gint
+moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing)
+{
+  return moz_gtk_checkbox_get_metrics(indicator_size, indicator_spacing);
+}
+
+gint
+moz_gtk_checkbox_get_focus(gboolean* interior_focus,
+                           gint* focus_width, gint* focus_pad)
+{
+  /* These values are hardcoded in gtk1. */
+  *interior_focus = FALSE;
+  *focus_width = 1;
+  *focus_pad = 0;
+  return MOZ_GTK_SUCCESS;
+}
+
+gint
+moz_gtk_radio_get_focus(gboolean* interior_focus,
+                        gint* focus_width, gint* focus_pad)
+{
+  return moz_gtk_checkbox_get_focus(interior_focus, focus_width, focus_pad);
 }
 
 static gint
@@ -376,15 +396,15 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
 {
   GtkStateType state_type;
   GtkShadowType shadow_type;
-  gint indicator_size;
+  gint indicator_size, indicator_spacing;
   gint x, y, width, height;
   GtkStyle* style;
 
-  moz_gtk_checkbox_get_metrics(&indicator_size, NULL);
+  moz_gtk_checkbox_get_metrics(&indicator_size, &indicator_spacing);
   style = gCheckboxWidget->style;
 
-  /* centered within the rect */
-  x = rect->x + (rect->width - indicator_size) / 2;
+  /* offset by indicator_spacing, and centered vertically within the rect */
+  x = rect->x + indicator_spacing;
   y = rect->y + (rect->height - indicator_size) / 2;
   width = indicator_size;
   height = indicator_size;
@@ -833,13 +853,17 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
     break;
   case MOZ_GTK_CHECKBUTTON_CONTAINER:
   case MOZ_GTK_RADIOBUTTON_CONTAINER:
-    /* This is a hardcoded value. */
-    if (xthickness)
-      *xthickness = 1;
-    if (ythickness)
-      *ythickness = 1;
+    ensure_checkbox_widget();
+    *xthickness = *ythickness =
+      GTK_CONTAINER(gCheckboxWidget)->border_width + 1;
+
     return MOZ_GTK_SUCCESS;
-    break;
+
+  case MOZ_GTK_CHECKBUTTON_LABEL:
+  case MOZ_GTK_RADIOBUTTON_LABEL:
+    *xthickness = *ythickness = 0;
+    return MOZ_GTK_SUCCESS;
+
   case MOZ_GTK_CHECKBUTTON:
   case MOZ_GTK_RADIOBUTTON:
   case MOZ_GTK_SCROLLBAR_BUTTON:
@@ -852,20 +876,16 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
   case MOZ_GTK_PROGRESS_CHUNK:
   case MOZ_GTK_TAB:
     /* These widgets have no borders, since they are not containers. */
-    if (xthickness)
-      *xthickness = 0;
-    if (ythickness)
-      *ythickness = 0;
+    *xthickness = 0;
+    *ythickness = 0;
     return MOZ_GTK_SUCCESS;
   default:
     g_warning("Unsupported widget type: %d", widget);
     return MOZ_GTK_UNKNOWN_WIDGET;
   }
 
-  if (xthickness)
-    *xthickness = w->style->klass->xthickness;
-  if (ythickness)
-    *ythickness = w->style->klass->ythickness;
+  *xthickness = w->style->klass->xthickness;
+  *ythickness = w->style->klass->ythickness;
 
   return MOZ_GTK_SUCCESS;
 }
@@ -881,22 +901,17 @@ moz_gtk_get_dropdown_arrow_size(gint* width, gint* height)
    * 11 pixels.
    */
 
-  if (width) {
-    *width = 2 * (1 + gDropdownButtonWidget->style->klass->xthickness);
-    *width += 11 + GTK_MISC(gArrowWidget)->xpad * 2;
-  }
-  if (height) {
-    *height = 2 * (1 + gDropdownButtonWidget->style->klass->ythickness);
-    *height += 11 + GTK_MISC(gArrowWidget)->ypad * 2;
-  }
+  *width = 2 * (1 + gDropdownButtonWidget->style->klass->xthickness);
+  *width += 11 + GTK_MISC(gArrowWidget)->xpad * 2;
+
+  *height = 2 * (1 + gDropdownButtonWidget->style->klass->ythickness);
+  *height += 11 + GTK_MISC(gArrowWidget)->ypad * 2;
 
   return MOZ_GTK_SUCCESS;
 }
 
 gint
-moz_gtk_get_scrollbar_metrics(gint* slider_width, gint* trough_border,
-                              gint* stepper_size, gint* stepper_spacing,
-                              gint* min_slider_size)
+moz_gtk_get_scrollbar_metrics(MozGtkScrollbarMetrics *metrics)
 {
   GtkRangeClass* klass;
   GtkStyle* style;
@@ -910,41 +925,30 @@ moz_gtk_get_scrollbar_metrics(gint* slider_width, gint* trough_border,
      * This API is supported only in GTK+ >= 1.2.9, and gives per-theme values.
      */
 
-    if (slider_width)
-      *slider_width = style_prop_func(style, "GtkRange::slider_width",
-                                      klass->slider_width);
+    metrics->slider_width = style_prop_func(style, "GtkRange::slider_width",
+                                            klass->slider_width);
 
-    if (trough_border)
-      *trough_border = style_prop_func(style, "GtkRange::trough_border",
-                                       style->klass->xthickness);
+    metrics->trough_border = style_prop_func(style, "GtkRange::trough_border",
+                                             style->klass->xthickness);
 
-    if (stepper_size)
-      *stepper_size = style_prop_func(style, "GtkRange::stepper_size",
-                                      klass->stepper_size);
+    metrics->stepper_size = style_prop_func(style, "GtkRange::stepper_size",
+                                            klass->stepper_size);
 
-    if (stepper_spacing)
-      *stepper_spacing = style_prop_func(style, "GtkRange::stepper_spacing",
-                                         klass->stepper_slider_spacing);
+    metrics->stepper_spacing = style_prop_func(style,
+                                               "GtkRange::stepper_spacing",
+                                               klass->stepper_slider_spacing);
   } else {
     /*
      * This is the older method, which gives per-engine values.
      */
 
-    if (slider_width)
-      *slider_width = klass->slider_width;
-
-    if (trough_border)
-      *trough_border = style->klass->xthickness;
-
-    if (stepper_size)
-      *stepper_size = klass->stepper_size;
-
-    if (stepper_spacing)
-      *stepper_spacing = klass->stepper_slider_spacing;
+    metrics->slider_width = klass->slider_width;
+    metrics->trough_border = style->klass->xthickness;
+    metrics->stepper_size = klass->stepper_size;
+    metrics->stepper_spacing = klass->stepper_slider_spacing;
   }
 
-  if (min_slider_size)
-    *min_slider_size = klass->min_slider_size;
+  metrics->min_slider_size = klass->min_slider_size;
 
   return MOZ_GTK_SUCCESS;
 }
@@ -1013,6 +1017,11 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
   case MOZ_GTK_TABPANELS:
     return moz_gtk_tabpanels_paint(drawable, rect, cliprect);
     break;
+  case MOZ_GTK_CHECKBUTTON_LABEL:
+  case MOZ_GTK_RADIOBUTTON_LABEL:
+    /* We only support these so that we can prevent the CSS border
+       from being drawn. */
+    return MOZ_GTK_SUCCESS;
   default:
     g_warning("Unknown widget type: %d", widget);
   }
