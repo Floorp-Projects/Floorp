@@ -60,10 +60,15 @@ Rights Reserved.
 	<keyset id="keyset"/>
 
 	<popupset>
-		<popup id="emailAddressPopup"  oncreate="return fillEmailAddressMenu(document.popupNode);" popupanchor="bottomleft">
+		<popup id="emailAddressPopup" popupanchor="bottomleft">
 			<menuitem value="&AddToAddressBook.label;" oncommand="AddNodeToAddressBook(document.popupNode)"/>
 			<menuitem value="&SendMailTo.label;" oncommand="SendMailToNode(document.popupNode)"/>
 		</popup>
+    
+    <popup id="allHeadersPopup"  oncreate="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">
+		  <box id="allHeadersPopupContainer"/>
+	  </popup>
+
 		<popup id="messagePaneContext"/>
 	</popupset>
 	<popupset id="aTooltipSet"/>
