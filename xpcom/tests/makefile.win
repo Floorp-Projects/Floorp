@@ -33,7 +33,7 @@ LCFLAGS=-DUSE_NSREG -GX
 
 REQUIRES=libreg
 
-LINCS=-I..\public -Iservices
+LINCS=-I$(PUBLIC)\xpcom -Iservices
 
 LLIBS=					\
  $(DIST)\lib\xpcom32.lib		\
@@ -72,4 +72,3 @@ $(PROG2): $(OBJDIR) RegFactory.cpp
 $(PROG3): $(OBJDIR) TestArray.cpp
 $(PROG4): $(OBJDIR) TestID.cpp
 $(PROG5): $(OBJDIR) TestServMgr.cpp
-

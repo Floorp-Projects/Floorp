@@ -32,7 +32,6 @@ EXPORTS		= \
 		  nsError.h \
 		  nsHashtable.h \
 		  nsIAllocator.h \
-		  nsICollection.h \
 		  nsID.h \
 		  nsIID.h \
 		  nsISimpleEnumerator.h \
