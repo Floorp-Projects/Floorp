@@ -136,13 +136,12 @@ static const CATID CATID_SafeForScripting =
 
 // Create the specified control, optionally providing properties to initialise
 // it with and a name.
-HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl, const tstring szName)
+HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl)
 {
-    NG_TRACE_METHOD_ARGS(CControlSite::Create, "...,...,\"%s\"", szName.c_str());
+    NG_TRACE_METHOD(CControlSite::Create);
 
     m_clsid = clsid;
     m_ParameterList = pl;
-    m_szName = szName;
 
     // See if object is script safe
     if (m_bSafeForScriptingObjectsOnly &&

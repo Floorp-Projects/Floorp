@@ -128,8 +128,6 @@ protected:
     CComQIPtr<IOleInPlaceObjectWindowless, &IID_IOleInPlaceObjectWindowless> m_spIOleInPlaceObjectWindowless;
     // Pointer to an externally registered service provider
     CComPtr<IServiceProvider> m_spServiceProvider;
-    // Name of this control
-    tstring m_szName;
     // CLSID of the control
     CLSID m_clsid;
     // Parameter list
@@ -197,7 +195,7 @@ END_OLECOMMAND_TABLE()
 
 // Object creation and management functions
     // Creates and initialises an object
-    virtual HRESULT Create(REFCLSID clsid, PropertyList &pl = PropertyList(), const tstring szName = _T(""));
+    virtual HRESULT Create(REFCLSID clsid, PropertyList &pl = PropertyList());
     // Attaches the object to the site
     virtual HRESULT Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInitStream = NULL);
     // Detaches the object from the site
@@ -228,11 +226,6 @@ END_OLECOMMAND_TABLE()
     virtual const CLSID &GetObjectCLSID() const
     {
         return m_clsid;
-    }
-    // Returns the name of the object
-    virtual const tstring &GetObjectName() const
-    {
-        return m_szName;
     }
     // Tests if the object is valid or not
     virtual BOOL IsObjectValid() const
