@@ -37,6 +37,13 @@ my(%options);
 my(%filepaths);
 my(%optiondefines);
 
+# hash of input files for this build
+# eventually, there will be input files for manifests,
+# and projects too.
+my(%inputfiles) = (
+  "buildflags",     "MozillaBuildFlags.txt",
+  "checkoutdata",   "MozillaCheckoutList.txt"
+);
 
 my($cur_dir) = cwd();
 $cur_dir =~ s/:mozilla:build:mac:build_scripts$//;
@@ -46,4 +53,4 @@ $MOZ_SRC = cwd();
 my($do_checkout)    = 1;
 my($do_build)       = 0;
 
-RunBuild($do_checkout, $do_build, "MozillaBuildFlags.txt", "Mozilla Pull prefs");
+RunBuild($do_checkout, $do_build, \%inputfiles, "Mozilla Pull prefs");
