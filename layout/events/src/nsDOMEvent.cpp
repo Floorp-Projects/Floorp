@@ -44,8 +44,8 @@ static char* mEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "unload", "abort", "error",
-  "submit", "reset", "change", "select", "paint" ,"text",
-  "create", "destroy", "command", "dragenter", "dragover", "dragexit",
+  "submit", "reset", "change", "select", "input", "paint" ,"text",
+  "create", "destroy", "command", "broadcast", "commandupdate", "dragenter", "dragover", "dragexit",
   "dragdrop", "draggesture"
 }; 
 
@@ -695,6 +695,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_change];
   case NS_FORM_SELECTED:
     return mEventNames[eDOMEvents_select];
+  case NS_FORM_INPUT:
+    return mEventNames[eDOMEvents_input];
   case NS_PAINT:
     return mEventNames[eDOMEvents_paint];
   case NS_TEXT_EVENT:
@@ -704,7 +706,11 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_MENU_DESTROY:
     return mEventNames[eDOMEvents_destroy];
   case NS_MENU_ACTION:
-    return mEventNames[eDOMEvents_action];
+    return mEventNames[eDOMEvents_command];
+  case NS_XUL_BROADCAST:
+    return mEventNames[eDOMEvents_broadcast];
+  case NS_XUL_COMMAND_UPDATE:
+    return mEventNames[eDOMEvents_commandupdate];
   case NS_DRAGDROP_ENTER:
     return mEventNames[eDOMEvents_dragenter];
   case NS_DRAGDROP_OVER:

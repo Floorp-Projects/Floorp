@@ -335,6 +335,10 @@ nsresult nsEventListenerManager::GetIdentifiersForType(const nsString& aType, ns
     aIID = kIDOMFormListenerIID;
     *aFlags = NS_EVENT_BITS_FORM_SELECT;
   }
+  else if (aType == "input") {
+    aIID = kIDOMFormListenerIID;
+    *aFlags = NS_EVENT_BITS_FORM_INPUT;
+  }
   else if (aType == "load") {
     aIID = kIDOMLoadListenerIID;
     *aFlags = NS_EVENT_BITS_LOAD_LOAD;
@@ -366,6 +370,14 @@ nsresult nsEventListenerManager::GetIdentifiersForType(const nsString& aType, ns
   else if (aType == "command") {
     aIID = kIDOMMenuListenerIID; 
     *aFlags = NS_EVENT_BITS_MENU_ACTION;
+  }
+  else if (aType == "broadcast") {
+    aIID = kIDOMMenuListenerIID;
+    *aFlags = NS_EVENT_BITS_XUL_BROADCAST;
+  }
+  else if (aType == "commandupdate") {
+    aIID = kIDOMMenuListenerIID;
+    *aFlags = NS_EVENT_BITS_XUL_COMMAND_UPDATE;
   }
   else if (aType == "dragenter") {
     aIID = NS_GET_IID(nsIDOMDragListener);
@@ -876,6 +888,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_FORM_RESET:
     case NS_FORM_CHANGE:
     case NS_FORM_SELECTED:
+    case NS_FORM_INPUT:
       if (nsnull != mFormListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
@@ -902,6 +915,9 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                   case NS_FORM_SELECTED:
                     ret = mFormListener->Select(*aDOMEvent);
                     break;
+                  case NS_FORM_INPUT:
+                    ret = mFormListener->Input(*aDOMEvent);
+                    break;
                   default:
                     break;
                 }
@@ -927,6 +943,11 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                     break;
                   case NS_FORM_SELECTED:
                     if (ls->mSubType & NS_EVENT_BITS_FORM_SELECT) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_FORM_INPUT:
+                    if (ls->mSubType & NS_EVENT_BITS_FORM_INPUT) {
                       correctSubType = PR_TRUE;
                     }
                     break;
@@ -1105,6 +1126,8 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
     case NS_MENU_CREATE:
     case NS_MENU_DESTROY:
     case NS_MENU_ACTION:
+    case NS_XUL_BROADCAST:
+    case NS_XUL_COMMAND_UPDATE:
       if (nsnull != mMenuListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
@@ -1128,6 +1151,12 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                   case NS_MENU_ACTION:
                     ret = mMenuListener->Action(*aDOMEvent);
                     break;
+                  case NS_XUL_BROADCAST:
+                    ret = mMenuListener->Broadcast(*aDOMEvent);
+                    break;
+                  case NS_XUL_COMMAND_UPDATE:
+                    ret = mMenuListener->CommandUpdate(*aDOMEvent);
+                    break;
                   default:
                     break;
                 }
@@ -1148,6 +1177,16 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
                     break;
                   case NS_MENU_ACTION:
                     if (ls->mSubType & NS_EVENT_BITS_MENU_ACTION) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_XUL_BROADCAST:
+                    if (ls->mSubType & NS_EVENT_BITS_XUL_BROADCAST) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_XUL_COMMAND_UPDATE:
+                    if (ls->mSubType & NS_EVENT_BITS_XUL_COMMAND_UPDATE) {
                       correctSubType = PR_TRUE;
                     }
                     break;

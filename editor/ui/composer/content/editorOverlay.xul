@@ -621,7 +621,7 @@
 
     <!-- Formatting toolbar items -->
     <titledbutton style="width:68pt" id="ParagraphPopupButton" value="&paragraphToolbarMenu.label;" class="popup" align="left" popupanchor="bottomleft">
-       <observes element="Editor:Paragraph:Format" attribute="format" onchange="onParagraphFormatChange()"/>
+       <observes element="Editor:Paragraph:Format" attribute="format" onbroadcast="onParagraphFormatChange()"/>
     </titledbutton>
     <titledbutton id="FontFacePopupButton" value="&fontToolbarMenu.label;" class="popup" align="right" popupanchor="bottomleft"/>
     <titledbutton id="FontSizePopupButton" value="&sizeToolbarMenu.label;" class="popup" align="right" popupanchor="bottomleft"/>
@@ -630,21 +630,21 @@
 
     <!-- can't just use observes here because we don't want the value from the broadcaster -->
     <titledbutton id="boldButton" value="&formatToolbar.boldChar;" onclick="EditorToggleStyle('bold')">
-      <observes element="Editor:Bold" attribute="bold" onchange="onStyleChange('bold')"/>
+      <observes element="Editor:Bold" attribute="bold" onbroadcast="onStyleChange('bold')"/>
     </titledbutton>
     <titledbutton id="italicButton" value="&formatToolbar.italicChar;" onclick="EditorToggleStyle('italic')">
-      <observes element="Editor:Italic" attribute="italic" onchange="onStyleChange('italic')"/>
+      <observes element="Editor:Italic" attribute="italic" onbroadcast="onStyleChange('italic')"/>
     </titledbutton>
     <titledbutton id="underlineButton" value="&formatToolbar.underlineChar;" onclick="EditorToggleStyle('underline')">
-      <observes element="Editor:Underline" attribute="underline" onchange="onStyleChange('underline')"/>
+      <observes element="Editor:Underline" attribute="underline" onbroadcast="onStyleChange('underline')"/>
     </titledbutton>
 
     <titledbutton id="ulButton" src="&bulletListIcon.url;" align="bottom" onclick="EditorInsertList('ul')">
-        <observes element="Editor:Paragraph:ListType" attribute="format" onchange="onListFormatChange('ul')"/>
+        <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ul')"/>
     </titledbutton>
 
     <titledbutton id="olButton" src="&numberListIcon.url;" align="bottom" onclick="EditorInsertList('ol')">
-        <observes element="Editor:Paragraph:ListType" attribute="format" onchange="onListFormatChange('ol')"/>
+        <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ol')"/>
     </titledbutton>
 
     <titledbutton id="outdentButton" src="&outdentIcon.url;" align="bottom" onclick="EditorIndent('outdent')"/>

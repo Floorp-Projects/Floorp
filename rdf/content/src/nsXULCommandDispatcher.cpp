@@ -322,7 +322,7 @@ XULCommandDispatcherImpl::UpdateCommands(const nsString& aEventName)
             nsEventStatus status = nsEventStatus_eIgnore;
             nsEvent event;
             event.eventStructType = NS_EVENT;
-            event.message = NS_FORM_CHANGE; // XXX: I feel dirty and evil for subverting this.
+            event.message = NS_XUL_COMMAND_UPDATE; 
             content->HandleDOMEvent(*context, &event, nsnull, NS_EVENT_FLAG_INIT, status);
         }
     }

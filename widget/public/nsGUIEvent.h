@@ -300,6 +300,7 @@ enum nsDragDropEventStatus {
 #define NS_FORM_RESET                   (NS_FORM_EVENT_START + 1)
 #define NS_FORM_CHANGE                  (NS_FORM_EVENT_START + 2)
 #define NS_FORM_SELECTED                (NS_FORM_EVENT_START + 3)
+#define NS_FORM_INPUT                   (NS_FORM_EVENT_START + 4)
 
 //Need separate focus/blur notifications for non-native widgets
 #define NS_FOCUS_EVENT_START            1300
@@ -319,7 +320,8 @@ enum nsDragDropEventStatus {
 #define NS_MENU_CREATE                (NS_MENU_EVENT_START)
 #define NS_MENU_DESTROY               (NS_MENU_EVENT_START+1)
 #define NS_MENU_ACTION                (NS_MENU_EVENT_START+2)
-
+#define NS_XUL_BROADCAST              (NS_MENU_EVENT_START+3)
+#define NS_XUL_COMMAND_UPDATE         (NS_MENU_EVENT_START+4)
 //@}
 
 

@@ -34,27 +34,22 @@
 
 	<commandset id="globalEditMenuItems"
 					commandupdater="true"
-					onchange="goUpdateGlobalEditMenuItems()"/>
+					oncommandupdate="goUpdateGlobalEditMenuItems()"/>
 					
 	<broadcaster id="cmd_undo" 
 				 oncommand="goDoCommand('cmd_undo')"
-				 onchange="goUpdateCommand('cmd_undo')"
 				 disabled="true"/>
 	<broadcaster id="cmd_redo" 
 				 oncommand="goDoCommand('cmd_redo')"
-				 onchange="goUpdateCommand('cmd_redo')"
 				 disabled="true"/>
 	<broadcaster id="cmd_cut" 
 				 oncommand="goDoCommand('cmd_cut')"
-				 onchange="goUpdateCommand('cmd_cut')"
 				 disabled="true"/>
 	<broadcaster id="cmd_copy" 
 				 oncommand="goDoCommand('cmd_copy')"
-				 onchange="goUpdateCommand('cmd_copy')"
 				 disabled="true"/>
 	<broadcaster id="cmd_paste" 
 				 oncommand="goDoCommand('cmd_paste')"
-				 onchange="goUpdateCommand('cmd_paste')"
 				 disabled="true"/>
 	<broadcaster id="cmd_delete"
 				 oncommand="goDoCommand('cmd_delete')"

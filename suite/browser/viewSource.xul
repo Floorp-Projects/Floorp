@@ -26,7 +26,7 @@
   
   <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
   <broadcaster id="dialog.start" ready="false"/>
-  <observes element="dialog.start" attribute="ready" onchange="StartupViewSource()"/>
+  <observes element="dialog.start" attribute="ready" onbroadcast="StartupViewSource()"/>
     
   <menubar>
     <menu value="&fileMenu.label;">
@@ -191,13 +191,13 @@
 			<spring flex="100%"/>
 			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
 				<observes element="Browser:LoadingProgress" attribute="mode"/>
-				<observes element="Browser:Throbber" attribute="busy" onchange="onProgress()"/>
+				<observes element="Browser:Throbber" attribute="busy" onbroadcast="onProgress()"/>
 			</progressmeter>
 			<spring flex="100%"/>
 		</box>
 
 		<titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
-					   <observes element="Browser:Status" attribute="value" onchange="onStatus()"/>			
+					   <observes element="Browser:Status" attribute="value" onbroadcast="onStatus()"/>			
 		</titledbutton>
 
 		<spring flex="100%"/>		

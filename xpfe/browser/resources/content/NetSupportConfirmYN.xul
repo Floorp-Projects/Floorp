@@ -8,7 +8,7 @@
        	<broadcaster id="NetDialog:Message"/>
        </data>
         <dialog>
-      		<observes element="NetDialog:Message"   attribute="text" onchange="onUpdate()"/>
+      		<observes element="NetDialog:Message"   attribute="text" onbroadcast="onUpdate()"/>
     	</dialog>
   <html:script>
 	function onUpdate()

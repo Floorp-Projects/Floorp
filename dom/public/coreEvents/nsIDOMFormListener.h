@@ -63,6 +63,13 @@ public:
    * @returns whether the event was consumed or ignored. @see nsresult
    */
   virtual nsresult Select(nsIDOMEvent* aEvent) = 0;
+  
+  /**
+   * Processes a form input event
+   * @param aEvent @see nsIDOMEvent.h 
+   * @returns whether the event was consumed or ignored. @see nsresult
+   */
+  virtual nsresult Input(nsIDOMEvent* aEvent) = 0;
 
 };
 
