@@ -30,7 +30,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public res src notifier
+DIRS		= public res src notifier stub
 
 include $(topsrcdir)/config/rules.mk
 
