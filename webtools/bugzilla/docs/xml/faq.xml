@@ -49,6 +49,11 @@
 	  </para>
 	</question>
 	<answer>
+          <para>
+            <ulink url="http://bugzilla.org/consulting.html">http://bugzilla.org/consulting.html</ulink>
+            is a list of people and companies who have asked us to list them
+            as consultants for Bugzilla.
+          </para>
 	  <para>
 	    <ulink url="http://www.collab.net/">www.collab.net</ulink> offers
 	    Bugzilla as part of their standard offering to large projects.
@@ -73,13 +78,12 @@
 	</question>
 	<answer>
 	  <para>
-	    There are <emphasis>dozens</emphasis> of major comapanies with public
+	    There are <emphasis>dozens</emphasis> of major companies with public
 	    Bugzilla sites to track bugs in their products.  A few include:
 	    <simplelist>
 	      <member>Netscape/AOL</member>
 	      <member>Mozilla.org</member>
 	      <member>NASA</member>
-	      <member>AtHome Corporation</member>
 	      <member>Red Hat Software</member>
 	      <member>SuSe Corp</member>
 	      <member>The Horde Project</member>
@@ -112,7 +116,7 @@
 	  <para>
 	    A 
       <ulink url="http://www.bugzilla.org/who_we_are.html">core team</ulink>,
-      led by Dave Miller (justdave@syndicomm.com).      
+      led by Dave Miller (justdave@netscape.com).      
 	  </para>
 	</answer>
       </qandaentry>
@@ -147,7 +151,7 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Why doesn't Bugzilla offer this or that feature or compatability
+	    Why doesn't Bugzilla offer this or that feature or compatibility
 	    with this other tracking software?
 	  </para>
 	</question>
@@ -178,9 +182,22 @@
 	</question>
 	<answer>
 	  <para>
-      There is DB-independence work afoot. PostgreSQL support is planned
-      for 2.18, and full DB-independence can't be far further on.
+            MySQL was originally chosen because it is free, easy to install,
+            and was available for the hardware Netscape intended to run it on.
 	  </para>
+          <para>
+            There is currently work in progress to make Bugzilla work on
+            PostgreSQL and Sybase in the default distribution.  You can track
+            the progress of these initiatives in bugs <ulink
+            url="http://bugzilla.mozilla.org/show_bug.cgi?id=98304">98304</ulink>
+            and <ulink
+            url="http://bugzilla.mozilla.org/show_bug.cgi?id=173130">173130</ulink>
+            respectively.
+          </para>
+          <para>
+            Once both of these are done, adding support for additional
+            database servers should be trivial.
+          </para>
 	</answer>
       </qandaentry>
 
@@ -270,10 +287,8 @@
 	</question>
 	<answer>
 	  <para>
-	    Absolutely!  You can track any number of Products (although you
-      are limited to about 55 or so if
-      you are using Product-Based Groups), that can each be composed of any
-      number of Components.
+	    Absolutely!  You can track any number of Products that can each be
+            composed of any number of Components.
 	  </para>
 	</answer>
       </qandaentry>
@@ -303,9 +318,9 @@
 	  <para>
 	    Yes - any sort of attachment is allowed, although administrators can
       configure a maximum size.  
-      There are many specific MIME-types that are pre-defined by Bugzilla,
-	    but you may specify any arbitrary MIME-type you need when you
-	    upload the file. 
+            Bugzilla gives the user the option of either using the MIME-type
+            supplied by the browser, choosing from a pre-defined list or
+            manually typing any arbitrary MIME-type. 
 	  </para>
 	</answer>
       </qandaentry>
@@ -343,16 +358,16 @@
 	<answer>
 	  <para>
 	    Yes.  Look at <ulink url="http://bugzilla.mozilla.org/reports.cgi">
-	    http://bugzilla.mozilla.org/reports.cgi</ulink> for basic reporting
-	    and graphing facilities.
+	    http://bugzilla.mozilla.org/reports.cgi</ulink> for samples of what
+            Bugzilla can do in reporting and graphing.
 	  </para>
 	  <para>
-	    For more advanced reporting, I recommend hooking up a professional
-	    reporting package, such as Crystal Reports, and use ODBC to access
-	    the MySQL database.  You can do a lot through the Query page of
-	    Bugzilla as well, but right now Advanced Reporting is much
-	    better accomplished through third-party utilities that can
-	    interface with the database directly.
+            If you can not get the reports you want from the included reporting
+            scripts, it is possible to hook up a professional reporting package
+            such as Crystal Reports using ODBC. If you choose to do this,
+            beware that giving direct access to the database does contain some
+            security implications. Even if you give read-only access to the
+            bugs database it will bypass the secure bugs features of Bugzilla.
 	  </para>
 	</answer>
       </qandaentry>
@@ -422,26 +437,32 @@
 	  </para>
 	</question>
 	<answer>
-	  <para>
-	    Mozilla allows data export through a custom DTD in XML format.
-	    It does not, however, export to specific formats other than the
-	    XML Mozilla DTD.  Importing the data into Excel or any other application
-	    is left as an exercise for the reader.
-	  </para>
-	  <para>
-	    If you create import filters to other applications from Mozilla's XML,
-	    please submit your modifications for inclusion in future Bugzilla
-	    distributions.
-	  </para>
-	  <para>
-	    As for data import, any application can send data to Bugzilla through
-	    the HTTP protocol, or through Mozilla's XML API.  However, it seems
-	    kind of silly to put another front-end in front of Bugzilla;
-	    it makes more sense to create a simplified bug submission form in
-	    HTML.  You can find an excellent example at
-	    <ulink url="http://www.mozilla.org/quality/help/bugzilla-helper.html">
-	    http://www.mozilla.org/quality/help/bugzilla-helper.html</ulink>
-	  </para>
+          <para>
+            Bugzilla can output buglists as HTML (the default), CSV or RDF.
+            The link for CSV can be found at the bottom of the buglist in HTML
+            format.  This CSV format can easily be imported into MS Excel or
+            other spread-sheet applications.
+          </para>
+          <para>
+            To use the RDF format of the buglist it is necessary to append a
+            <computeroutput>&amp;ctype=rdf</computeroutput> to the URL.  RDF
+            is meant to be machine readable and thus it is assumed that the
+            URL would be generated progmatically so there is no user visible
+            link to this format.
+          </para>
+          <para>
+            Currently the only script included with Bugzilla that can import
+            data is <filename>importxml.pl</filename> which is intended to be
+            used for importing the data generated by <filename>xml.cgi</filename>
+            in association with bug moving. Any other use is left as an
+            exercise for the user.
+          </para>
+          <para>
+            There are also scripts included in the <filename>contrib/</filename>
+            directory for using e-mail to import information into Bugzilla,
+            but these scripts are not currently supported and included for
+            educational purposes.
+          </para>
 	</answer>
       </qandaentry>
 
@@ -454,10 +475,14 @@
 	</question>
 	<answer>
 	  <para>
-	    To a certain extent, yes. 2.16's templates mean that you can localise
-      the user-facing UI (and several projects are doing exactly that.) However,
-      error messages and the admin interface are currently not localisable.
-      This should be achieved by 2.18.
+            Yes.  For more information including available translated templates,
+            see <ulink
+            url="http://www.bugzilla.org/download.html">http://www.bugzilla.org/download.html</ulink>.
+            The admin interfaces are still not included in these translated
+            templates and is therefore still English only.  Also, there may be
+            issues with the charset not being declared.  See <ulink
+            url="http://bugzilla.mozilla.org/show_bug.cgi?id=126266">bug 126226</ulink>
+            for more information.
 	  </para>
 	</answer>
       </qandaentry>
@@ -471,7 +496,7 @@
 	</question>
 	<answer>
 	  <para>
-	    Yes.  No.  No.
+	    Yes.  No.  Yes (using the CSV format).
 	  </para>
 	</answer>
       </qandaentry>
@@ -668,7 +693,8 @@
 	<answer>
 	  <para>
 	    The user should be able to set
-	    this in user email preferences (uncheck all boxes.)
+	    this in user email preferences (uncheck all boxes) or you can add
+            their email address to the <filename>data/nomail</filename> file.
 	  </para>
 	</answer>
       </qandaentry>
@@ -682,7 +708,7 @@
 	</question>
 	<answer>
 	  <para>
-	    Edit the "changedmail" Param. Replace "To:" with "X-Real-To:",
+	    Edit the "newchangedmail" Param. Replace "To:" with "X-Real-To:",
 	    replace "Cc:" with "X-Real-CC:", and add a "To: &lt;youremailaddress&gt;".
 	  </para>
 	</answer>
@@ -797,10 +823,11 @@
 	</question>
 	<answer>
 	  <para>
-	    Red Hat Bugzilla works with Oracle.  The current version
-	    from Mozilla.org does not have this capability.  Unfortunately, though
-	    you will sacrifice a lot of the really great features available in
-	    Bugzilla 2.14 and 2.16 if you go with the 2.8-based Redhat version.
+            Red Hat's old version of Bugzilla (based on 2.8) worked on Oracle.
+            Red Hat's newer version (based on 2.17.1 and soon to be merged into
+            the main distribution) runs on PostgreSQL.  At this time we know of
+            no recent ports of Bugzilla to Oracle but do intend to support it
+            in the future (possibly the 2.20 time-frame).
 	  </para>
 	</answer>
       </qandaentry>
@@ -843,25 +870,13 @@
 	  <para>
 	     There is no facility in Bugzilla itself to do this. It's also generally
 	    not a smart thing to do if you don't know exactly what you're doing.
-	    However, if you understand SQL you can use the mysqladmin utility to
-	    manually insert, delete, and modify table information. Personally, I
-	    use "phpMyAdmin". You have to compile a PHP module with MySQL
-	    support to make it work, but it's very clean and easy to use.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question>
-	  <para>
-	    I try to add myself as a user, but Bugzilla always tells me my password is wrong.
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Certain version of MySQL (notably, 3.23.29 and 3.23.30) accidentally disabled
-	    the "crypt()" function.  This prevented MySQL from storing encrypted passwords.
-	    Upgrade to the "3.23 stable" version of MySQL and you should be good to go.
+	    However, if you understand SQL you can use the <command>mysql</command>
+            command line utility to manually insert, delete and modify table
+            information.  There are also more intuitive GUI clients available.
+            Personal favorites of the Bugzilla team are <ulink
+            url="http://www.phpmyadmin.net/">phpMyAdmin</ulink> and <ulink
+            url="http://www.mysql.com/downloads/gui-mycc.html">MySQL Control
+            Center</ulink>.
 	  </para>
 	</answer>
       </qandaentry>
@@ -877,10 +892,17 @@
 	  <para>
 	    Try running MySQL from its binary: "mysqld --skip-grant-tables". This
 	    will allow you to completely rule out grant tables as the cause of your
-	    frustration. However, I do not recommend you run it this way on a regular
-	    basis, unless you really want your web site defaced and your machine
-	    cracked.
-	  </para>
+            frustration. If this Bugzilla is able to connect at this point then
+            you need to check that you have granted proper permission to the user
+            password combo defined in <filename>localconfig</filename>.
+          </para>
+          <warning>
+            <para>
+              Running MySQL with this command line option is very insecure and
+              should only be done when not connected to the external network
+              as a troubleshooting step.
+            </para>
+          </warning>
 	</answer>
       </qandaentry>
 
@@ -1098,22 +1120,6 @@
       <qandaentry>
 	<question>
 	  <para>
-	    Email submissions to Bugzilla that have attachments end up asking me to
-	    save it as a "cgi" file.
-	  </para>
-	</question>
-	<answer>
-	  <para>
-	    Yup.  Just rename it once you download it, or save it under a different
-	    filename.  This will not be fixed anytime soon, because it would
-	    cripple some other functionality.
-	  </para>
-	</answer>
-      </qandaentry>
-
-      <qandaentry>
-	<question>
-	  <para>
 	    How do I change a keyword in Bugzilla, once some bugs are using it?
 	  </para>
 	</question>
@@ -1139,7 +1145,7 @@
 	</question>
 	<answer>
 	  <para>
-	    Gerv and Myk suggest a 2-space endent, with embedded code sections on
+	    Gerv and Myk suggest a 2-space indent, with embedded code sections on
 	    their own line, in line with outer tags.  Like this:</para>
 	    <programlisting><![CDATA[
 <fred>
