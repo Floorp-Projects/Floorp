@@ -393,10 +393,6 @@ sub BuildClientDist()
     _InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",					"$distdirectory:sun-java:");
     _InstallFromManifest(":mozilla:sun-java:stubs:macjri:MANIFEST",					"$distdirectory:sun-java:");
 
-	#NAV_JAVA
-    _InstallFromManifest(":mozilla:nav-java:stubs:include:MANIFEST",					"$distdirectory:nav-java:");
-    _InstallFromManifest(":mozilla:nav-java:stubs:macjri:MANIFEST",					"$distdirectory:nav-java:");
-
 	#JS
     _InstallFromManifest(":mozilla:js:src:MANIFEST",									"$distdirectory:js:");
 
