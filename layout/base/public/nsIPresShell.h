@@ -269,9 +269,10 @@ public:
   NS_IMETHOD GetCaret(nsICaret **outCaret) = 0;
   
   /**
-   * Refresh the caret. Called by frames when they redraw
+   * Set the caret as enabled or disabled. An enabled caret will
+   * draw orblink when made visible. A disabled caret will never show up.
    */
-  NS_IMETHOD RefreshCaret() = 0;
+  NS_IMETHOD SetCaretEnabled(PRBool inEnable) = 0;
 
   // XXX events
   // XXX selection
