@@ -30,6 +30,7 @@
 
 #include "nsMacMessageSink.h"
 #include "nsMacMessagePump.h"
+#include "nsSelectionMgr.h"
 #include "nsToolKit.h"
 #include <Quickdraw.h>
 #include <Fonts.h>
@@ -69,6 +70,11 @@ NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListe
 NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 {
 	mToolKit = auto_ptr<nsToolkit>( new nsToolkit() );
+
+  // Create the selection manager
+  if (!mSelectionMgr)
+      NS_NewSelectionMgr(&mSelectionMgr);
+
 	return NS_OK;
 }
 
@@ -132,6 +138,7 @@ nsAppShell::nsAppShell()
   }
   mRefCnt = 0;
   mExitCalled = PR_FALSE;
+  mSelectionMgr = 0;
 }
 
 //-------------------------------------------------------------------------
@@ -141,6 +148,7 @@ nsAppShell::nsAppShell()
 //-------------------------------------------------------------------------
 nsAppShell::~nsAppShell()
 {
+  NS_IF_RELEASE(mSelectionMgr);
 }
 
 //-------------------------------------------------------------------------
@@ -171,3 +179,14 @@ nsresult nsAppShell::DispatchNativeEvent(void * aEvent)
 {
   return NS_ERROR_FAILURE;
 }
+
+NS_METHOD
+nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
+{
+  *aSelectionMgr = mSelectionMgr;
+  NS_IF_ADDREF(mSelectionMgr);
+  if (!mSelectionMgr)
+    return NS_ERROR_NOT_INITIALIZED;
+  return NS_OK;
+}
+

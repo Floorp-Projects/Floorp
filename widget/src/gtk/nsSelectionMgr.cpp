@@ -24,9 +24,6 @@
 
 #include <stdio.h>
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kISelectionMgrIID, NS_ISELECTIONMGR_IID);
-
 NS_IMPL_ADDREF(nsSelectionMgr)
 
 NS_IMPL_RELEASE(nsSelectionMgr)
@@ -41,14 +38,13 @@ nsresult nsSelectionMgr::QueryInterface(const nsIID& aIID,
   {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kISupportsIID)) 
+  if (aIID.Equals(nsISupports::IID())) 
   {
     *aInstancePtrResult = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(nsISelectionMgr::IID())) 
-  //if (aIID.Equals(kISelectionMgrIID)) 
   {
     *aInstancePtrResult = (void*)(nsISelectionMgr*)this;
     NS_ADDREF_THIS();
