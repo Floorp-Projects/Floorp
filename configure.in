@@ -2146,12 +2146,6 @@ MOZ_ARG_DISABLE_BOOL(build-xpfe,
 [  --disable-build-xpfe    Disable building of mozilla/xpfe (BROKEN)],
   MOZ_BUILD_XPFE= )
 
-dnl build editor by default
-MOZ_EDITOR=1
-MOZ_ARG_DISABLE_BOOL(editor,
-[  --disable-editor        Disable building of editor component],
-  MOZ_EDITOR= )
-
 dnl build Mail & News by default
 MOZ_MAIL_NEWS=1
 MOZ_ARG_DISABLE_BOOL(mailnews,
@@ -2785,7 +2779,6 @@ AC_SUBST(MOZ_INSURE_EXCLUDE_DIRS)
 AC_SUBST(MOZ_INSURIFYING)
 AC_SUBST(MOZ_BUILD_XPFE)
 dnl AC_SUBST(MOZ_LDAP)
-AC_SUBST(MOZ_EDITOR)
 AC_SUBST(MOZ_BRPROF)
 
 AC_SUBST(UNIX_CRASH_ON_ASSERT)
@@ -3115,10 +3108,6 @@ fi
 
 AC_DEFINE(JS_THREADSAFE)
 AC_DEFINE(LAYERS)
-
-if test "$MOZ_EDITOR"; then
-  AC_DEFINE(NGEDITOR)
-fi
 
 # Used for LD_LIBRARY_PATH of run_viewer target
 LIBS_PATH=

@@ -92,6 +92,7 @@ dom/src/html/Makefile
 dom/src/jsurl/Makefile
 dom/tools/Makefile
 editor/Makefile
+editor/base/Makefile
 editor/public/Makefile
 editor/idl/Makefile
 editor/txmgr/Makefile
@@ -102,6 +103,17 @@ editor/txmgr/tests/Makefile
 editor/txtsvc/Makefile
 editor/txtsvc/public/Makefile
 editor/txtsvc/src/Makefile
+editor/ui/Makefile
+editor/ui/composer/Makefile
+editor/ui/composer/content/Makefile
+editor/ui/composer/skin/Makefile
+editor/ui/composer/locale/Makefile
+editor/ui/composer/locale/en-US/Makefile
+editor/ui/dialogs/Makefile
+editor/ui/dialogs/content/Makefile
+editor/ui/dialogs/skin/Makefile
+editor/ui/dialogs/locale/Makefile
+editor/ui/dialogs/locale/en-US/Makefile
 expat/Makefile
 expat/xmlparse/Makefile
 expat/xmltok/Makefile
@@ -595,23 +607,6 @@ xpfe/global/resources/locale/unix/Makefile
 
 # xpfe/browser/public/Makefile
 END_NGMAKEFILES
-
-if [ "$MOZ_EDITOR" ]; then
-  add_makefiles <<END_EDITOR_MAKEFILES
-editor/base/Makefile
-editor/ui/Makefile
-editor/ui/composer/Makefile
-editor/ui/composer/content/Makefile
-editor/ui/composer/skin/Makefile
-editor/ui/composer/locale/Makefile
-editor/ui/composer/locale/en-US/Makefile
-editor/ui/dialogs/Makefile
-editor/ui/dialogs/content/Makefile
-editor/ui/dialogs/skin/Makefile
-editor/ui/dialogs/locale/Makefile
-editor/ui/dialogs/locale/en-US/Makefile
-END_EDITOR_MAKEFILES
-fi
 
 if [ "$MOZ_MAIL_NEWS" ]; then
   add_makefiles < ${srcdir}/mailnews/makefiles
