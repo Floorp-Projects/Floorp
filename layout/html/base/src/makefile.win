@@ -41,6 +41,7 @@ CPPSRCS=			\
  nsHTMLTagContent.cpp		\
  nsImageMap.cpp			\
  nsLeafFrame.cpp		\
+ nsObjectFrame.cpp		\
  nsPageFrame.cpp		\
  nsPlaceholderFrame.cpp		\
  nsRootPart.cpp			\
@@ -71,6 +72,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsHTMLTagContent.obj	\
  .\$(OBJDIR)\nsImageMap.obj		\
  .\$(OBJDIR)\nsLeafFrame.obj		\
+ .\$(OBJDIR)\nsObjectFrame.obj		\
  .\$(OBJDIR)\nsPageFrame.obj		\
  .\$(OBJDIR)\nsPlaceholderFrame.obj	\
  .\$(OBJDIR)\nsRootPart.obj		\
