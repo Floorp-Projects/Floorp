@@ -25,6 +25,8 @@ Open Issues
  the following pref panels (and the prefs they expose) should go totally: appearance, smart browsing, mouse wheel
  the following pref panels should be merged in with others: software installation, internet search, advanced
  the following prefs should go: view source syntax highlighting, sidebar search tab preference, open search tab
+ CRASH: hit history, bookmarks, search, history, bookmarks, search
+ search sidebar doesn't ever list results in the sidebar
 
 
 See Also
