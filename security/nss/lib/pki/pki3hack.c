@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.50 $ $Date: 2002/04/18 17:50:40 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.51 $ $Date: 2002/04/22 14:14:43 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -506,6 +506,9 @@ static PRBool is_user_cert(NSSCertificate *c, CERTCertificate *cc)
     PRBool isUser = PR_FALSE;
     nssCryptokiObject **ip;
     nssCryptokiObject **instances = nssPKIObject_GetInstances(&c->object);
+    if (!instances) {
+	return PR_FALSE;
+    }
     for (ip = instances; *ip; ip++) {
 	nssCryptokiObject *instance = *ip;
 	if (PK11_IsUserCert(instance->token->pk11slot, cc, instance->handle)) {

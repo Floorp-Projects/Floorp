@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.31 $ $Date: 2002/04/19 23:06:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.32 $ $Date: 2002/04/22 14:14:44 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -823,7 +823,7 @@ add_cert_to_cache
 	}
 #endif
     }
-    nssCertificate_AddRef(cert);
+    rvCert = nssCertificate_AddRef(cert);
     PZ_Unlock(td->cache->lock);
     return rvCert;
 loser:
