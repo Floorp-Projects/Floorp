@@ -1,0 +1,50 @@
+#aboutDialog {
+  padding: 0px 0px 10px 0px;
+}
+
+#clientBox {
+  background-color: #FFFFFF;
+  background-image: url("chrome://messenger/content/about-thunderbird.png");
+  background-repeat: no-repeat;
+  padding-top: 203px;
+  color: #000000;
+}
+
+#brandName {
+  font-weight: bold; font-size: larger;
+} 
+
+#detailsBox {
+  padding: 8px 10px 10px 8px;
+}
+
+#versionField {
+  background-color: #FFFFFF;
+  -moz-appearance: none;
+  border: none;
+  font-weight: bold;
+}
+
+#copyrightLink {
+  text-decoration: underline;
+  font-weight: bold;
+  color: #909090;
+}
+
+#groove {
+  margin-top: 0px;
+}
+
+#creditsIframe {
+   cursor: default;
+   -moz-user-select: none;
+}
+
+button[dlgtype="extra2"] {
+  margin-left: 13px;
+}
+ 
+button[dlgtype="accept"] {
+  margin-right: 13px;
+}
+

@@ -37,7 +37,7 @@
 # ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://messenger/skin/aboutDialog.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/content/aboutDialog.css" type="text/css"?> 
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -49,10 +49,10 @@
 <dialog xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="aboutDialog"
-        buttons="accept"
+        buttons="accept,extra2"
         onload="onLoad();"
-        title="&aboutDialog.title;"
-        style="width: 300px; height: 16.3em;"> 
+        title="&aboutDialog.title;" creditslabel="&credits;" aboutlabel="&aboutLink;" 
+        style="width: 299px; height: 330px;"> 
 
     <script type="application/x-javascript">
       <![CDATA[
@@ -63,6 +63,20 @@
           hidversionField.value = brandShortNameEl.firstChild.nodeValue + ' ' + navigator.vendorSub + ' (' + navigator.productSub + ')';
           versionField.value = hidversionField.value;
           versionField.width = hidversionField.width;
+
+          var button = document.documentElement.getButton("extra2");
+          button.setAttribute("label", document.documentElement.getAttribute("creditslabel"));
+          gSelectedPage = 0;
+          button.addEventListener("command", switchPage, false);
+        }
+
+        
+        function uninit(aEvent)
+        {
+          if (aEvent.target != document)
+            return;
+          var iframe = document.getElementById("creditsIframe");
+          iframe.setAttribute("src", "");
         }
 
         function loadExternalLink() {
@@ -75,28 +89,52 @@
           // return false, so we don't load the href in the about dialog
           return false;
         }
+
+        function switchPage(aEvent)
+        {
+          var button = aEvent.target;
+          if (button.localName != "button")
+            return;
+
+          var iframe = document.getElementById("creditsIframe");
+          if (gSelectedPage == 0) { 
+            iframe.setAttribute("src", "chrome://messenger/locale/credits.html");
+            button.setAttribute("label", document.documentElement.getAttribute("aboutlabel"));
+            gSelectedPage = 1;
+          }
+          else {
+            iframe.setAttribute("src", ""); 
+            button.setAttribute("label", document.documentElement.getAttribute("creditslabel"));
+            gSelectedPage = 0;
+          }
+          var modes = document.getElementById("modes");
+          modes.setAttribute("selectedIndex", gSelectedPage);
+        }
       ]]>
     </script>
 
-    <vbox flex="1" id="clientBox">
-      <image src="chrome://messenger/content/about-thunderbird.png"/>
+    <deck id="modes" flex="1">
+      <vbox flex="1" id="clientBox">
+        <vbox id="detailsBox" align="center" flex="1">
+          <separator class="thin"/>
 
-      <vbox id="detailsBox" align="center" flex="1">
-        <separator class="thin"/>
+          <hbox>
+            <vbox>
+              <label id="hidversionField" style="padding: 0px; visibility: hidden; font-weight: bold;"/>
+              <textbox id="versionField" readonly="true" class="plain" style="padding-left: 6px !important;" tabindex="2"/>
+            </vbox>
+          </hbox>
 
-        <hbox>
-          <vbox>
-            <label id="hidversionField" style="padding: 0px; visibility: hidden; font-weight: bold;"/>
-            <textbox id="versionField" readonly="true" class="plain" style="padding-left: 6px !important;" tabindex="2"/>
-          </vbox>
-        </hbox>
+          <separator class="thin"/>
 
-        <separator class="thin"/>
-
-        <html:a id="copyrightLink" onclick="return loadExternalLink();" href="&copyrightLink;" style="display: block; color: blue; text-decoration: underline;" tabindex="3">&copyright;</html:a>
+          <html:a id="copyrightLink" onclick="return loadExternalLink();" href="&copyrightLink;" style="display: block;" tabindex="3">&copyrightText;</html:a>
+        </vbox>
       </vbox>
-    </vbox>
-    
+
+      <vbox flex="1" id="creditsBox">
+        <html:iframe style="border: 0px;" id="creditsIframe" src="chrome://messenger/locale/credits.html" flex="1"/>
+      </vbox> 
+    </deck>   
     <separator class="groove" id="groove"/>
     
     <!-- Localizable strings (from .dtd) -->

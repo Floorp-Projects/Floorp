@@ -1,3 +1,5 @@
 <!ENTITY aboutDialog.title      "About &brandShortName;">
-<!ENTITY copyright              "Copyright and contributor information">
-<!ENTITY copyrightLink          "http://www.mozilla.org/projects/thunderbird/">
+<!ENTITY credits                "Credits">
+<!ENTITY aboutLink              "&lt; About &brandShortName;">
+<!ENTITY copyrightText          "&#169;1998-2004 Contributors. All Rights Reserved.">
+<!ENTITY copyrightLink          "http://www.mozilla.org/products/thunderbird/">

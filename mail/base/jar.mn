@@ -29,9 +29,11 @@ messenger.jar:
 *+  content/messenger/msgSelectOffline.xul          (content/msgSelectOffline.xul)
 *+  content/messenger-views/contents.rdf            (content/messenger-views.rdf)
     content/messenger/about-thunderbird.png         (content/about-thunderbird.png)
+    content/messenger/about-credits.png             (content/about-credits.png)
+    content/messenger/about-footer.png              (content/about-footer.png)
+    content/messenger/aboutDialog.css               (content/aboutDialog.css)
     
 classic.jar:
-    skin/classic/messenger/aboutDialog.css          (skin/aboutDialog.css)
 +   skin/classic/global/tree.css                    (skin/tree.css)
 +   skin/classic/global/Preview.png                 (skin/Preview.png) 
 *+  skin/classic/global/contents.rdf                (skin/contents.rdf)
@@ -129,6 +131,7 @@ toolkit.jar:
 
 en-US.jar:
 +   locale/en-US/messenger/start.html               (locale/start.html)
+*   locale/en-US/messenger/credits.html             (locale/credits.html)
     locale/en-US/messenger/bird.png                 (locale/bird.png)
     locale/en-US/messenger/h1.png                   (locale/h1.png)
     locale/en-US/messenger/h2.png                   (locale/h2.png)
