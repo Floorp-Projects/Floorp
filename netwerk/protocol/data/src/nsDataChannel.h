@@ -84,6 +84,7 @@ protected:
     PRInt32                             mContentLength;
     nsCOMPtr<nsISupports>               mOwner; 
     nsCOMPtr<nsIStreamListener>         mListener;
+    PRBool                              mOpened;
 };
 
-#endif /* nsFTPChannel_h___ */
+#endif /* nsDataChannel_h___ */

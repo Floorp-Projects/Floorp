@@ -76,6 +76,7 @@ protected:
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCString                           mContentType;
     nsCString                           mContentCharset;
+    nsCString                           mContentTypeHint;
     PRInt32                             mContentLength;
     nsCOMPtr<nsISupports>               mOwner; 
     PRUint32                            mListFormat;

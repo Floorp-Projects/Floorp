@@ -240,6 +240,9 @@ nsInputStreamChannel::GetContentType(nsACString &aContentType)
 NS_IMETHODIMP
 nsInputStreamChannel::SetContentType(const nsACString &aContentType)
 {
+    // If someone gives us a type hint we should just use that type.
+    // So we don't care when this is being called.
+
     // mContentCharset is unchanged if not parsed
     NS_ParseContentType(aContentType, mContentType, mContentCharset);
     return NS_OK;
@@ -255,6 +258,8 @@ nsInputStreamChannel::GetContentCharset(nsACString &aContentCharset)
 NS_IMETHODIMP
 nsInputStreamChannel::SetContentCharset(const nsACString &aContentCharset)
 {
+    // If someone gives us a charset hint we should just use that charset.
+    // So we don't care when this is being called.
     mContentCharset = aContentCharset;
     return NS_OK;
 }

@@ -1,4 +1,4 @@
- /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -32,7 +32,9 @@
 #include "nsNetUtil.h"
 
 // nsViewSourceChannel methods
-nsViewSourceChannel::nsViewSourceChannel() : mIsDocument(PR_FALSE)
+nsViewSourceChannel::nsViewSourceChannel() :
+    mIsDocument(PR_FALSE),
+    mOpened(PR_FALSE)
 {
 }
 
@@ -50,15 +52,15 @@ NS_IMPL_THREADSAFE_RELEASE(nsViewSourceChannel)
   This seems like a better approach than writing out the whole QI by hand.
 */
 NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIViewSourceChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannel, mHttpChannel)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICachingChannel, mCachingChannel)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIUploadChannel, mUploadChannel)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequest, nsIViewSourceChannel)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIChannel, nsIViewSourceChannel)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIViewSourceChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIViewSourceChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannel, mHttpChannel)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICachingChannel, mCachingChannel)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIUploadChannel, mUploadChannel)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIRequest, nsIViewSourceChannel)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIChannel, nsIViewSourceChannel)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIViewSourceChannel)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsresult
@@ -194,7 +196,12 @@ nsViewSourceChannel::Open(nsIInputStream **_retval)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
-    return mChannel->Open(_retval);
+    nsresult rv = mChannel->Open(_retval);
+    if (NS_SUCCEEDED(rv)) {
+        mOpened = PR_TRUE;
+    }
+    
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -223,6 +230,10 @@ nsViewSourceChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
                                                 this),
                                  nsnull, rv);
 
+    if (NS_SUCCEEDED(rv)) {
+        mOpened = PR_TRUE;
+    }
+    
     return rv;
 }
 
@@ -330,6 +341,11 @@ nsViewSourceChannel::SetContentType(const nsACString &aContentType)
     // content type, such as, text/html and everything is kosher from
     // then on.
 
+    if (!mOpened) {
+        // We do not take hints
+        return NS_ERROR_NOT_AVAILABLE;
+    }
+    
     mContentType = aContentType;
     return NS_OK;
 }
@@ -434,12 +450,12 @@ nsViewSourceChannel::GetOriginalContentType(nsACString &aContentType)
 NS_IMETHODIMP
 nsViewSourceChannel::SetOriginalContentType(const nsACString &aContentType)
 {
-  NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
-  // clear our cached content-type value
-  mContentType.Truncate();
+    // clear our cached content-type value
+    mContentType.Truncate();
 
-  return mChannel->SetContentType(aContentType);
+    return mChannel->SetContentType(aContentType);
 }
 
 // nsIRequestObserver methods

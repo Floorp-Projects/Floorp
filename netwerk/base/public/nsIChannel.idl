@@ -107,7 +107,17 @@ interface nsIChannel : nsIRequest
      * 
      * NOTE: the content type can often be wrongly specified (e.g., wrong file
      * extension, wrong MIME type, wrong document type stored on a server, etc.),
-     * and the caller most likely wants to verify with the actual data. 
+     * and the caller most likely wants to verify with the actual data.
+     *
+     * Setting contentType before the channel has been opened provides a hint
+     * to the channel as to what the MIME type is.  The channel may ignore this
+     * hint in deciding on the actual MIME type that it will report.
+     *
+     * Setting contentType after onStartRequest has been fired or after open()
+     * is called will override the type determined by the channel.
+     *
+     * Setting contentType between the time that asyncOpen() is called and the
+     * time when onStartRequest is fired has undefined behavior at this time.
      */
     attribute ACString contentType;
 

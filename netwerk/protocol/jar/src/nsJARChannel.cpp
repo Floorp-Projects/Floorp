@@ -507,6 +507,9 @@ nsJARChannel::GetContentType(nsACString &result)
 NS_IMETHODIMP
 nsJARChannel::SetContentType(const nsACString &aContentType)
 {
+    // If someone gives us a type hint we should just use that type instead of
+    // doing our guessing.  So we don't care when this is being called.
+
     // mContentCharset is unchanged if not parsed
     NS_ParseContentType(aContentType, mContentType, mContentCharset);
     return NS_OK;
@@ -515,6 +518,8 @@ nsJARChannel::SetContentType(const nsACString &aContentType)
 NS_IMETHODIMP
 nsJARChannel::GetContentCharset(nsACString &aContentCharset)
 {
+    // If someone gives us a charset hint we should just use that charset.
+    // So we don't care when this is being called.
     aContentCharset = mContentCharset;
     return NS_OK;
 }

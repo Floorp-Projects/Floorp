@@ -389,8 +389,13 @@ nsGopherChannel::GetContentType(nsACString &aContentType)
         aContentType = NS_LITERAL_CSTRING(TEXT_PLAIN);
         break;
     default:
-        NS_WARNING("Unknown gopher type");
-        aContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+        if (!mContentTypeHint.IsEmpty()) {
+            aContentType = mContentTypeHint;
+        } else {
+            NS_WARNING("Unknown gopher type");
+            aContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+        }
+        break;
     }
 
     PR_LOG(gGopherLog,PR_LOG_DEBUG,
@@ -403,8 +408,17 @@ nsGopherChannel::GetContentType(nsACString &aContentType)
 NS_IMETHODIMP
 nsGopherChannel::SetContentType(const nsACString &aContentType)
 {
-    // only changes mContentCharset if a charset is parsed
-    NS_ParseContentType(aContentType, mContentType, mContentCharset);
+    if (mIsPending) {
+        // only changes mContentCharset if a charset is parsed
+        NS_ParseContentType(aContentType, mContentType, mContentCharset);
+    } else {
+        // We are being given a content-type hint.  Since we have no ways of
+        // determining a charset on our own, just set mContentCharset from the
+        // charset part of this.        
+        nsCAutoString charsetBuf;
+        NS_ParseContentType(aContentType, mContentTypeHint, mContentCharset);
+    }
+    
     return NS_OK;
 }
 
@@ -418,6 +432,8 @@ nsGopherChannel::GetContentCharset(nsACString &aContentCharset)
 NS_IMETHODIMP
 nsGopherChannel::SetContentCharset(const nsACString &aContentCharset)
 {
+    // If someone gives us a charset hint we should just use that charset.
+    // So we don't care when this is being called.
     mContentCharset = aContentCharset;
     return NS_OK;
 }
