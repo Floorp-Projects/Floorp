@@ -24,7 +24,7 @@
 
 
 // {8B5314BD-DB01-11d2-96CE-0060B0FB9956}
-#define NS_IDATAFLAVOR_IID      \
+#define NS_IDATAFLAVOR_IID \
 { 0x8b5314bd, 0xdb01, 0x11d2, { 0x96, 0xce, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } }
 
 //const char * kTextMime    = "text/text";
@@ -45,6 +45,8 @@
 class nsIDataFlavor : public nsISupports {
 
   public:
+
+    static const nsIID& GetIID() { static nsIID iid = NS_IDATAFLAVOR_IID; return iid; }
 
   /**
     * Initializes the data flavor 
