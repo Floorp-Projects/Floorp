@@ -53,6 +53,9 @@
 //  used to change string class
 //#define USE_STRING2	1
 
+// External DTD support for XML
+#define XML_DTD
+
 // ———————————————————————————————————————————————————————————————————————————
 //	•	You typically will not need to change things below here
 // ———————————————————————————————————————————————————————————————————————————
