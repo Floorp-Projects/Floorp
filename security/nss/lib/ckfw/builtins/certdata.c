@@ -32,22 +32,23 @@
  * GPL.
  */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.13 $ $Date: 2002/02/08 00:10:05 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.13 $ $Date: 2002/02/08 00:10:05 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdata.c,v $ $Revision: 1.14 $ $Date: 2002/02/28 19:41:50 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.14 $ $Date: 2002/02/28 19:41:50 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BUILTINS_H
 #include "builtins.h"
 #endif /* BUILTINS_H */
 
-static const CK_OBJECT_CLASS cko_netscape_trust = CKO_NETSCAPE_TRUST;
-static const CK_TRUST ckt_netscape_valid = CKT_NETSCAPE_VALID;
-static const CK_OBJECT_CLASS cko_netscape_builtin_root_list = CKO_NETSCAPE_BUILTIN_ROOT_LIST;
-static const CK_TRUST ckt_netscape_trusted_delegator = CKT_NETSCAPE_TRUSTED_DELEGATOR;
-static const CK_CERTIFICATE_TYPE ckc_x_509 = CKC_X_509;
-static const CK_OBJECT_CLASS cko_data = CKO_DATA;
-static const CK_BBOOL ck_false = CK_FALSE;
-static const CK_BBOOL ck_true = CK_TRUE;
 static const CK_OBJECT_CLASS cko_certificate = CKO_CERTIFICATE;
+static const CK_CERTIFICATE_TYPE ckc_x_509 = CKC_X_509;
+static const CK_BBOOL ck_false = CK_FALSE;
+static const CK_TRUST ckt_netscape_valid = CKT_NETSCAPE_VALID;
+static const CK_TRUST ckt_netscape_trusted_delegator = CKT_NETSCAPE_TRUSTED_DELEGATOR;
+static const CK_OBJECT_CLASS cko_data = CKO_DATA;
+static const CK_BBOOL ck_true = CK_TRUE;
+static const CK_OBJECT_CLASS cko_netscape_builtin_root_list = CKO_NETSCAPE_BUILTIN_ROOT_LIST;
+static const CK_OBJECT_CLASS cko_netscape_trust = CKO_NETSCAPE_TRUST;
+static const CK_TRUST ckt_netscape_valid_delegator = CKT_NETSCAPE_VALID_DELEGATOR;
 #ifdef DEBUG
 static const CK_ATTRIBUTE_TYPE nss_builtins_types_0 [] = {
  CKA_CLASS,  CKA_TOKEN,  CKA_PRIVATE,  CKA_MODIFIABLE,  CKA_LABEL,  CKA_APPLICATION,  CKA_VALUE
@@ -604,7 +605,7 @@ static const NSSItem nss_builtins_items_0 [] = {
   { (void *)&ck_false, (PRUint32)sizeof(CK_BBOOL) },
   { (void *)"CVS ID", (PRUint32)7 },
   { (void *)"NSS", (PRUint32)4 },
-  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.13 $ $Date: 2002/02/08 00:10:05 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.13 $ $Date: 2002/02/08 00:10:05 $ $Name:  $", (PRUint32)179 }
+  { (void *)"@(#) $RCSfile: certdata.c,v $ $Revision: 1.14 $ $Date: 2002/02/28 19:41:50 $ $Name:  $""; @(#) $RCSfile: certdata.c,v $ $Revision: 1.14 $ $Date: 2002/02/28 19:41:50 $ $Name:  $", (PRUint32)179 }
 };
 #endif /* DEBUG */
 static const NSSItem nss_builtins_items_1 [] = {
@@ -9557,9 +9558,9 @@ static const NSSItem nss_builtins_items_153 [] = {
 , (PRUint32)104 },
   { (void *)"\047\205"
 , (PRUint32)2 },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) },
-  { (void *)&ckt_netscape_valid, (PRUint32)sizeof(CK_TRUST) }
+  { (void *)&ckt_netscape_valid_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_netscape_valid_delegator, (PRUint32)sizeof(CK_TRUST) },
+  { (void *)&ckt_netscape_valid_delegator, (PRUint32)sizeof(CK_TRUST) }
 };
 static const NSSItem nss_builtins_items_154 [] = {
   { (void *)&cko_certificate, (PRUint32)sizeof(CK_OBJECT_CLASS) },
