@@ -228,8 +228,8 @@ do_plugin_discovery(void)
   PRDirEntry        *dirEntry;
   PRInt32           count = 0;
   PRDir             *dir;
-  char              path[1024];
-  char              full_name[1024];
+  char              path[1024] = "";
+  char              full_name[1024] = "";
 
   if (!find_plugin_directory(path, sizeof(path)))
     return 0;
