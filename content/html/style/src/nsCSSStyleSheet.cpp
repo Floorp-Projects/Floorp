@@ -201,9 +201,8 @@ PRBool AtomKey_base::Equals(const nsHashKey* aKey) const
   const PRUnichar *theirStr = nsnull;
   theirAtom->GetUnicode(&theirStr);
 
-  return Compare(nsDependentString(myStr),
-                 nsDependentString(theirStr),
-                 nsCaseInsensitiveStringComparator()) == 0;
+  return nsDependentString(myStr).Equals(nsDependentString(theirStr),
+                                         nsCaseInsensitiveStringComparator());
 }
 
 
@@ -3352,9 +3351,8 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
         }
       }
       else {
-        if (!Compare(nsDependentString(value),
-                     nsDependentString(start),
-                     nsCaseInsensitiveStringComparator())) {
+        if (nsDependentString(value).Equals(nsDependentString(start),
+                                            nsCaseInsensitiveStringComparator())) {
           return PR_TRUE;
         }
       }
@@ -3648,9 +3646,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                     break;
                   }
                   if (isCaseSensitive)
-                    result = PRBool(localTrue == !Compare(Substring(value, 0, selLen), attr->mValue, nsDefaultStringComparator()));
+                    result = PRBool(localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsDefaultStringComparator()));
                   else
-                    result = PRBool(localTrue == !Compare(Substring(value, 0, selLen), attr->mValue, nsCaseInsensitiveStringComparator()));
+                    result = PRBool(localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsCaseInsensitiveStringComparator()));
                 }
               }
               break;
@@ -3662,9 +3660,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                   result = localFalse;
                 } else {
                   if (isCaseSensitive)
-                    result = PRBool(localTrue == !Compare(Substring(value, valLen - selLen, selLen), attr->mValue, nsDefaultStringComparator()));
+                    result = PRBool(localTrue == Substring(value, valLen - selLen, selLen).Equals(attr->mValue, nsDefaultStringComparator()));
                   else
-                    result = PRBool(localTrue == !Compare(Substring(value, valLen - selLen, selLen), attr->mValue, nsCaseInsensitiveStringComparator()));
+                    result = PRBool(localTrue == Substring(value, valLen - selLen, selLen).Equals(attr->mValue, nsCaseInsensitiveStringComparator()));
                 }
               }
               break;
@@ -3676,9 +3674,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                   result = localFalse;
                 } else {
                   if (isCaseSensitive)
-                    result = PRBool(localTrue == !Compare(Substring(value, 0, selLen), attr->mValue, nsDefaultStringComparator()));
+                    result = PRBool(localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsDefaultStringComparator()));
                   else
-                    result = PRBool(localTrue == !Compare(Substring(value, 0, selLen), attr->mValue, nsCaseInsensitiveStringComparator()));
+                    result = PRBool(localTrue == Substring(value, 0, selLen).Equals(attr->mValue, nsCaseInsensitiveStringComparator()));
                 }
               }
               break;
@@ -3718,8 +3716,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             const PRUnichar* id2Str;
             IDList->mAtom->GetUnicode(&id2Str);
             nsDependentString id2(id2Str);
-            if (localTrue ==
-                (Compare(id1, id2, nsCaseInsensitiveStringComparator()) != 0)) {
+            if (localTrue !=
+                id1.Equals(id2, nsCaseInsensitiveStringComparator())) {
               result = PR_FALSE;
               break;
             }

@@ -1203,7 +1203,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         nsAutoString theStr;
         theStr.Assign(aToken->GetStringValue());
-        if(Compare(theStr, NS_LITERAL_STRING("XI"), nsCaseInsensitiveStringComparator()) != 0) {
+        if(!theStr.Equals(NS_LITERAL_STRING("XI"), nsCaseInsensitiveStringComparator())) {
           PRUnichar theChar=theStr.CharAt(0);
           if((nsCRT::IsAsciiDigit(theChar)) || ('X'==theChar) || ('x'==theChar)){
             theStr.Assign(NS_LITERAL_STRING("#") + theStr);

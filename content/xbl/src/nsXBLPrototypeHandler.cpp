@@ -852,16 +852,17 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   mEventName = getter_AddRefs(NS_NewAtom(event));
 
   if (aPhase) {
-    if (Compare(nsDependentString(aPhase), NS_LITERAL_STRING("capturing")) == 0)
+    const nsDependentString phase(aPhase);
+    if (phase.Equals(NS_LITERAL_STRING("capturing")))
       mPhase = NS_PHASE_CAPTURING;
-    else if (Compare(nsDependentString(aPhase), NS_LITERAL_STRING("target")) == 0)
+    else if (phase.Equals(NS_LITERAL_STRING("target")))
       mPhase = NS_PHASE_TARGET;
   }
 
   // Button and clickcount apply only to XBL handlers and don't apply to XUL key
   // handlers.  
-  nsAutoString button(aButton);
-  nsAutoString clickcount(aClickCount);
+  const nsDependentString button(aButton);
+  const nsDependentString clickcount(aClickCount);
   if (!button.IsEmpty())
     mDetail = button.First() - '0';
   if (!clickcount.IsEmpty())

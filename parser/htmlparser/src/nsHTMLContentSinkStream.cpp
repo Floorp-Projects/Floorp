@@ -413,7 +413,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
   if(theCount) {
     int i=0;
     for(i=0;i<theCount;i++){
-      nsAutoString key(aNode.GetKeyAt(i));
+      const nsAString& key = aNode.GetKeyAt(i);
       
       // See if there's an attribute:
       // note that we copy here, because we're going to have to trim quotes.
@@ -423,7 +423,7 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
       value.Trim("\"", PR_TRUE, PR_TRUE);
 
       // Filter out any attribute starting with _moz
-      if (!Compare(key, NS_LITERAL_STRING("_moz"), nsCaseInsensitiveStringComparator())
+      if (key.Equals(NS_LITERAL_STRING("_moz"), nsCaseInsensitiveStringComparator()))
         continue;
 
       // 
@@ -437,8 +437,8 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
       // used by the editor.  Bug 16988.  Yuck.
       //
       if ((eHTMLTags)aNode.GetNodeType() == eHTMLTag_br
-          && (!Compare((key, NS_LITERAL_STRING("type"), nsCaseInsensitiveStringComparator())
-               && value.Equals(NS_LITERAL_STRING("_moz")))))
+          && key.Equals(NS_LITERAL_STRING("type"), nsCaseInsensitiveStringComparator())
+               && value.Equals(NS_LITERAL_STRING("_moz")))
         continue;
 
       if (mLowerCaseTags == PR_TRUE)
@@ -456,8 +456,8 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
 
       // Make all links absolute when converting only the selection:
       if ((mFlags & nsIDocumentEncoder::OutputAbsoluteLinks)
-          && (!Compare(key, NS_LITERAL_STRING("href"), nsCaseInsensitiveStringComparator())
-              || !Compare(key, NS_LITERAL_STRING("src"), nsCaseInsensitiveStringComparator())
+          && (key.Equals(NS_LITERAL_STRING("href"), nsCaseInsensitiveStringComparator())
+              || key.Equals(NS_LITERAL_STRING("src"), nsCaseInsensitiveStringComparator())
               // Would be nice to handle OBJECT and APPLET tags,
               // but that gets more complicated since we have to
               // search the tag list for CODEBASE as well.

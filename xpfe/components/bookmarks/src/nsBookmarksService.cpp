@@ -931,27 +931,22 @@ BookmarkParser::Unescape(nsString &text)
 
 	while((offset = text.FindChar((PRUnichar('&')), offset)) >= 0)
 	{
-		// XXX get max of 6 chars; change the value below if
-		// we ever start looking for longer HTML-escaped values
-		nsAutoString	temp;
-		text.Mid(temp, offset, 6);
-
-		if (Compare(Substring(temp, 0, 4), NS_LITERAL_STRING("&lt;"), nsCaseInsensitiveStringComparator()) == 0)
+		if (Substring(text, offset, 4).Equals(NS_LITERAL_STRING("&lt;"), nsCaseInsensitiveStringComparator()))
 		{
 			text.Cut(offset, 4);
 			text.Insert(PRUnichar('<'), offset);
 		}
-		if (Compare(Substring(temp, 0, 4), NS_LITERAL_STRING("&gt;"), nsCaseInsensitiveStringComparator()) == 0)
+		else if (Substring(text, offset, 4).Equals(NS_LITERAL_STRING("&gt;"), nsCaseInsensitiveStringComparator()))
 		{
 			text.Cut(offset, 4);
 			text.Insert(PRUnichar('>'), offset);
 		}
-		if (Compare(Substring(temp, 0, 5), NS_LITERAL_STRING("&amp;"), nsCaseInsensitiveStringComparator()) == 0)
+		else if (Substring(text, offset, 5).Equals(NS_LITERAL_STRING("&amp;"), nsCaseInsensitiveStringComparator()))
 		{
 			text.Cut(offset, 5);
 			text.Insert(PRUnichar('&'), offset);
 		}
-		if (Compare(Substring(temp, 0, 6), NS_LITERAL_STRING("&quot;"), nsCaseInsensitiveStringComparator()) == 0)
+		else if (Substring(text, offset, 6).Equals(NS_LITERAL_STRING("&quot;"), nsCaseInsensitiveStringComparator()))
 		{
 			text.Cut(offset, 6);
 			text.Insert(PRUnichar('\"'), offset);

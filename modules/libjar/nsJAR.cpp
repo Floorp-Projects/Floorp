@@ -723,7 +723,8 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
 
     //-- Lines to look for:
     // (1) Digest:
-    if (Compare(lineName, NS_LITERAL_CSTRING("SHA1-Digest"), nsCaseInsensitiveCStringComparator()) == 0) 
+    if (lineName.Equals(NS_LITERAL_CSTRING("SHA1-Digest"),
+                        nsCaseInsensitiveCStringComparator()))
     //-- This is a digest line, save the data in the appropriate place 
     {
       if(aFileType == JAR_MF)
@@ -739,7 +740,8 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
     }
     
     // (2) Name: associates this manifest section with a file in the jar.
-    if (!foundName && Compare(lineName, NS_LITERAL_CSTRING("Name"), nsCaseInsensitiveCStringComparator()) == 0) 
+    if (!foundName && lineName.Equals(NS_LITERAL_CSTRING("Name"),
+                                      nsCaseInsensitiveCStringComparator())) 
     {
       curItemName = lineData;
       foundName = PR_TRUE;
@@ -749,9 +751,11 @@ nsJAR::ParseOneFile(nsISignatureVerifier* verifier,
     // (3) Magic: this may be an inline Javascript. 
     //     We can't do any other kind of magic.
     if ( aFileType == JAR_MF &&
-         Compare(lineName, NS_LITERAL_CSTRING("Magic"), nsCaseInsensitiveCStringComparator()) == 0) 
+         lineName.Equals(NS_LITERAL_CSTRING("Magic"),
+                         nsCaseInsensitiveCStringComparator()))
     {
-      if(Compare(lineData, NS_LITERAL_CSTRING("javascript"), nsCaseInsensitiveCStringComparator()) == 0)
+      if(lineData.Equals(NS_LITERAL_CSTRING("javascript"),
+                         nsCaseInsensitiveCStringComparator()))
         curItemMF->mType = JAR_EXTERNAL;
       else
         curItemMF->mType = JAR_INVALID;

@@ -398,8 +398,8 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::suppress) {
-    if (Compare(aValue,NS_LITERAL_STRING("true"),
-                nsCaseInsensitiveStringComparator())) {
+    if (!aValue.Equals(NS_LITERAL_STRING("true"),
+                       nsCaseInsensitiveStringComparator())) {
       aResult.SetEmptyValue();  // XXX? shouldn't just leave "true"
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
