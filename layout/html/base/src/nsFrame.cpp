@@ -3587,32 +3587,22 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
           PRInt32 newOffset = newContent->IndexOf(mContent);
 
-          if (aPos->mStartOffset < 0)//start at "end"
-            aPos->mStartOffset = newOffset + 1;
-
-          if ((aPos->mDirection == eDirNext && newOffset < aPos->mStartOffset) || //need to go to next one
-              (aPos->mDirection == eDirPrevious && newOffset >= aPos->mStartOffset))
-          {
-            result = GetFrameFromDirection(aPresContext, aPos);
-            if (NS_FAILED(result))
-              return result;
-					  PRBool selectable = PR_FALSE;
-					  if (aPos->mResultFrame)
-  					  aPos->mResultFrame->IsSelectable(&selectable, nsnull);
-            if (NS_FAILED(result) || !aPos->mResultFrame || !selectable)
-            {
-              return result?result:NS_ERROR_FAILURE;
-            }
-            return aPos->mResultFrame->PeekOffset(aPresContext, aPos);
-          }
+          if (aPos->mDirection == eDirNext)
+            aPos->mContentOffset = newOffset + 1;
           else
+            aPos->mContentOffset = newOffset;//to beginning of frame
+
+          result = GetFrameFromDirection(aPresContext, aPos);
+          if (NS_FAILED(result))
+            return result;
+          PRBool selectable = PR_FALSE;
+          if (aPos->mResultFrame)
+            aPos->mResultFrame->IsSelectable(&selectable, nsnull);
+          if (NS_FAILED(result) || !aPos->mResultFrame || !selectable)
           {
-            if (aPos->mDirection == eDirNext)
-              aPos->mContentOffset = newOffset +1;
-            else
-              aPos->mContentOffset = newOffset;//to beginning of frame
-            return NS_OK;
+            return result?result:NS_ERROR_FAILURE;
           }
+          return aPos->mResultFrame->PeekOffset(aPresContext, aPos);
         }
       }
       break;
@@ -3992,7 +3982,6 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
       if (aPos->mDirection == eDirNext)
       {
         aPos->mPreferLeft = (PRBool)!(aPos->mPreferLeft);//drift to other side
-        aPos->mAmount = eSelectNoAmount;
       }
     }
 
