@@ -345,6 +345,8 @@ nsMimeHtmlDisplayEmitter::EndHeader()
       {
         PRInt32 bufLen = strlen(subject) + 16;
         char *buf = new char[bufLen];
+        if (!buf)
+          return NS_ERROR_OUT_OF_MEMORY;
         PR_snprintf(buf, bufLen, "<title>%s</title>", subject);
         UtilityWriteCRLF(buf);
         delete [] buf;
