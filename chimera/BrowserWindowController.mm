@@ -1449,6 +1449,11 @@ static NSArray* sToolbarDefaults = nil;
     [[mBrowserView getBrowserView] setActive:newResponderIsGecko];
 }
 
+- (NSDrawer *)sidebarDrawer
+{
+    return mSidebarDrawer;
+}
+
 @end
 
 

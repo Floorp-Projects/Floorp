@@ -49,34 +49,35 @@ class BookmarksService;
     IBOutlet NSApplication* mApplication;
     
     // The following two items are used by the filter list when saving files.
-    IBOutlet NSView*				mFilterView;
-    IBOutlet NSPopUpButton*	mFilterList;
+    IBOutlet NSView*        mFilterView;
+    IBOutlet NSPopUpButton* mFilterList;
     
-    IBOutlet NSMenuItem* 		mOfflineMenuItem;
-    IBOutlet NSMenuItem*		mCloseWindowMenuItem;
-    IBOutlet NSMenuItem*		mCloseTabMenuItem;
+    // IBOutlet NSMenuItem*    mOfflineMenuItem;
+    IBOutlet NSMenuItem*    mCloseWindowMenuItem;
+    IBOutlet NSMenuItem*    mCloseTabMenuItem;
+    IBOutlet NSMenuItem*    mToggleSidebarMenuItem;
 
     // The bookmarks menu.
-    IBOutlet NSMenu* 				mBookmarksMenu;
+    IBOutlet NSMenu*        mBookmarksMenu;
 
-    IBOutlet NSMenuItem* 		mBookmarksToolbarMenuItem;
+    IBOutlet NSMenuItem*    mBookmarksToolbarMenuItem;
     IBOutlet NSMenuItem*    mAddBookmarkMenuItem;
-    IBOutlet NSMenuItem*		mCreateBookmarksFolderMenuItem;
-    IBOutlet NSMenuItem*		mCreateBookmarksSeparatorMenuItem;
+    IBOutlet NSMenuItem*    mCreateBookmarksFolderMenuItem;
+    IBOutlet NSMenuItem*    mCreateBookmarksSeparatorMenuItem;
     
-    BOOL 										mOffline;
+    BOOL                    mOffline;
 
-    CHSplashScreenWindow*		mSplashScreen;
+    CHSplashScreenWindow*   mSplashScreen;
     
-    CHPreferenceManager* 		mPreferenceManager;
+    CHPreferenceManager*    mPreferenceManager;
 
-    BookmarksService*				mMenuBookmarks;
+    BookmarksService*       mMenuBookmarks;
     
-    FindDlgController* 			mFindDialog;
+    FindDlgController*      mFindDialog;
 
     MVPreferencesController* preferencesController;
 
-    NSString* 							mStartURL;
+    NSString*               mStartURL;
 }
 
 -(void)dealloc;
@@ -103,6 +104,7 @@ class BookmarksService;
 -(IBAction) nextTab:(id)aSender;
 
 // View menu actions.
+-(IBAction) toggleSidebar:(id)sender;
 -(IBAction) toggleBookmarksToolbar:(id)aSender;
 -(IBAction) doReload:(id)aSender;
 -(IBAction) doStop:(id)aSender;
