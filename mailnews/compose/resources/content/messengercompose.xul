@@ -404,7 +404,7 @@
           <tree id="addressingWidgetTree" flex="1"/>
           <hbox autostretch="never">
             <text class="label" value="&subject.label;" accesskey="&subject.accesskey;"/>
-            <textbox id="msgSubject" flex="1" class="toolbar" onkeyup="SetComposeWindowTitle(event.which);"
+            <textbox id="msgSubject" flex="1" class="toolbar" onkeyup="SetComposeWindowTitle(event.which);" disableonsend="true"
                        onkeypress="subjectKeyPress(event);" onchange="contentChanged=true;"/>
           </hbox>
         </vbox>

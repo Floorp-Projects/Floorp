@@ -90,7 +90,6 @@ if (prefs) {
 function disableEditableFields()
 {
   editorShell.editor.SetFlags(plaintextEditor.eEditorReadonlyMask);
-  document.getElementById("msgSubject").setAttribute('disabled', 'true');
   var disableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<disableElements.length;i++)
   {
@@ -101,7 +100,6 @@ function disableEditableFields()
 function enableEditableFields()
 {
   editorShell.editor.SetFlags(plaintextEditor.eEditorMailMask);
-  document.getElementById("msgSubject").removeAttribute("disabled");
   var enableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<enableElements.length;i++)
   {
