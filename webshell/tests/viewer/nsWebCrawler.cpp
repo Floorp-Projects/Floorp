@@ -66,11 +66,17 @@ AtomHashTable::AtomHashTable()
                            nsnull, nsnull);
 }
 
+static PR_CALLBACK PRIntn
+DestroyEntry(PLHashEntry *he, PRIntn i, void *arg)
+{
+  ((nsIAtom*)he->key)->Release();
+  return HT_ENUMERATE_NEXT;
+}
+
 AtomHashTable::~AtomHashTable()
 {
-  // XXX if debugging then we should assert that the table is empty
+  PL_HashTableEnumerateEntries(mTable, DestroyEntry, 0);
   PL_HashTableDestroy(mTable);
-  // XXX need code to NS_Release the atom's
 }
 
 /**
@@ -166,6 +172,9 @@ nsWebCrawler::~nsWebCrawler()
   NS_IF_RELEASE(mBrowser);
   NS_IF_RELEASE(mViewer);
   NS_IF_RELEASE(mTimer);
+  NS_IF_RELEASE(mLinkTag);
+  NS_IF_RELEASE(mFrameTag);
+  NS_IF_RELEASE(mIFrameTag);
 }
 
 NS_IMPL_ISUPPORTS(nsWebCrawler, kISupportsIID)
