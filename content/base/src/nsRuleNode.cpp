@@ -1841,7 +1841,7 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     }
 
     // NavQuirks uses sans-serif instead of whatever the native font is
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
     if (eCompatibility_NavQuirks == mode) {
       switch (sysID) {
         case eSystemFont_Field:
@@ -1908,7 +1908,7 @@ SetFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     }
 #endif
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     if (eCompatibility_NavQuirks == mode) {
       switch (sysID) {
         case eSystemFont_Field:

@@ -132,7 +132,7 @@ nsTransform2D       *theTransform;
       theTransform->SetToIdentity();  
 	    theTransform->AddScale(app2dev, app2dev);
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
       srcRect.SetRect(0,0,tvrect.width,tvrect.height);
       SetClipRect(srcRect, nsClipCombine_kReplace, clip);
 #endif
