@@ -57,6 +57,7 @@ CPPSRCS = \
 		nsImageMac.cpp \
 		nsRegionMac.cpp \
 		nsRenderingContextMac.cpp \
+		nsMacUnicodeFontInfo.cpp \
 		nsUnicodeFontMappingMac.cpp \
 		nsUnicodeMappingUtil.cpp \
 		nsUnicodeRenderingToolkit.cpp \
