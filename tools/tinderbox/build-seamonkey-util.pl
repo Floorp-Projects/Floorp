@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.124 $ ';
+$::UtilsVersion = '$Revision: 1.125 $ ';
 
 package TinderUtils;
 
@@ -1686,21 +1686,29 @@ sub BloatTest {
       $testname_prefix = "$bloatdiff_label" . "_";
     }
 
-    # Figure out testname prefix
+    # Figure out testnames to send to server
     my $leaks_testname = "refcnt_leaks";
     my $bloat_testname = "refcnt_bloat";
     unless($bloatdiff_label eq "") {
-      $leaks_testname = "$bloatdiff_label" . "_" . "refcnt_leaks";
-      $bloat_testname = "$bloatdiff_label" . "_" . "refcnt_bloat";
+      $leaks_testname = $testname_prefix . "refcnt_leaks";
+      $bloat_testname = $testname_prefix . "refcnt_bloat";
+    }
+
+    # Figure out testname labels
+    my $leaks_testname_label = "refcnt_leaks";
+    my $bloat_testname_label = "refcnt_bloat";
+    unless($bloatdiff_label eq "") {
+      $leaks_testname_label = $label_prefix . "refcnt_leaks";
+      $bloat_testname_label = $label_prefix . "refcnt_bloat";
     }
 
 
     if($Settings::TestsPhoneHome) {
       # Generate and print tbox output strings for leak, bloat.
-      my $leaks_string = "\n\nTinderboxPrint:<a title=\"refcnt Leaks\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Lk:" . PrintSize($leaks) . "B</a>\n\n";
+      my $leaks_string = "\n\nTinderboxPrint:<a title=\"" . $leaks_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $leaks_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Lk:" . PrintSize($leaks) . "B</a>\n\n";
       print_log $leaks_string;
       
-      my $bloat_string = "\n\nTinderboxPrint:<a title=\"refcnt Bloat\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $bloat_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Bl:" . PrintSize($bloat) . "B</a>\n\n";
+      my $bloat_string = "\n\nTinderboxPrint:<a title=\"" . $bloat_testname_label . "\"href=\"http://$Settings::results_server/graph/query.cgi?testname=" . $bloat_testname . "&units=bytes&tbox=" . ::hostname() . "&autoscale=1&days=7\">" . $label_prefix . "Bl:" . PrintSize($bloat) . "B</a>\n\n";
       print_log $bloat_string;
       
       # Report numbers to server.
@@ -1708,8 +1716,8 @@ sub BloatTest {
       send_results_to_server($bloat, "--", $bloat_testname, ::hostname() );
 
     } else {
-      print_log "TinderboxPrint:Lk:<a title=\"" . $leaks_testname . "\">" . PrintSize($leaks) . "B</a>\n\n";
-      print_log "TinderboxPrint:Bl:<a title=\"" . $bloat_testname . "\">" . PrintSize($bloat) . "B</a>\n\n";
+      print_log "TinderboxPrint:Lk:<a title=\"" . $leaks_testname_label . "\">" . PrintSize($leaks) . "B</a>\n\n";
+      print_log "TinderboxPrint:Bl:<a title=\"" . $bloat_testname_label . "\">" . PrintSize($bloat) . "B</a>\n\n";
     }
 
     return 'success';
