@@ -1905,3 +1905,29 @@ nsFormFrame::StyleChangeReflow(nsIPresContext* aPresContext,
     NS_RELEASE(reflowCmd);
   }
 }
+
+// Bug 99920 - Finds the first submit button and how many text inputs there
+// if there is only one text input or password then submission can take place
+// or it can take place if it finds at least one submit button
+nsIFrame* 
+nsFormFrame::GetFirstSubmitButtonAndTxtCnt(PRInt32& aInputTxtCnt)
+{
+  nsIFrame* submitFrame = nsnull;
+  aInputTxtCnt          = 0;
+
+  PRInt32 numControls = mFormControls.Count();
+  for (int i = 0; i < numControls; i++) {
+    nsIFormControlFrame* fcFrame = (nsIFormControlFrame*) mFormControls.ElementAt(i);
+    PRInt32 type;
+    fcFrame->GetType(&type);
+    if ((type == NS_FORM_INPUT_SUBMIT || type == NS_FORM_BUTTON_SUBMIT) && 
+        submitFrame == nsnull) {
+      NS_ASSERTION(fcFrame->QueryInterface(NS_GET_IID(nsIFrame), (void**)&submitFrame) == NS_OK,
+                   "This has to be a frame!");
+    } else if (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD) {
+      aInputTxtCnt++;
+    }
+  }
+  return submitFrame;
+}
+

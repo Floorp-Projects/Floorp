@@ -3146,9 +3146,24 @@ nsGfxTextControlFrame2::SubmitAttempt()
       nsCOMPtr<nsIPresContext> context;
       if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
       {
-        // do Submit & Frame processing of event
-        nsFormControlHelper::DoManualSubmitOrReset(context, presShell, mFormFrame, 
-                                                   this, PR_TRUE, PR_FALSE); 
+        // We got here because somebody press <return> instead a text input
+        // Bug 99920 - Finds the first submit button and how many text inputs there
+        // if there is only one text input or password then submission can take place
+        // or it can take place if it finds at least one submit button
+        //
+        // Here we change the submitter frame to the submit button it found (if it found one)
+        // so the button gets included as part of the "post data"
+        nsIFrame* originFrame = this;
+        PRInt32 inputTxtCnt;
+        nsIFrame* submitBtn = mFormFrame->GetFirstSubmitButtonAndTxtCnt(inputTxtCnt);
+        if (submitBtn != nsnull) {
+          originFrame = submitBtn;
+        }
+        if (inputTxtCnt == 1 || submitBtn != nsnull) {
+          // do Submit & Frame processing of event
+          nsFormControlHelper::DoManualSubmitOrReset(context, presShell, mFormFrame, 
+                                                     originFrame, PR_TRUE, PR_FALSE); 
+        }
       }
     }
   }
