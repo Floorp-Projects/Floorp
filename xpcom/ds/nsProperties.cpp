@@ -142,7 +142,7 @@ nsProperties::Has(const char* prop, const nsIID & uuid,
     nsCOMPtr<nsISupports> value;
     nsresult rv = Get(prop, uuid, getter_AddRefs(value));
     if (NS_SUCCEEDED(rv)) {
-        if (value == expectedValue) {
+        if (value.get() == expectedValue) {
             *result = PR_TRUE;
             return NS_OK;
         }
