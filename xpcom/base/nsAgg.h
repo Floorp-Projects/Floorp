@@ -32,7 +32,7 @@
 #define NS_DECL_AGGREGATED                                                  \
     NS_DECL_ISUPPORTS                                                       \
                                                                             \
-public:                                                                  \
+public:                                                                     \
                                                                             \
     /* You must implement this operation instead of the nsISupports */      \
     /* methods if you inherit from nsAggregated. */                         \
@@ -122,5 +122,15 @@ _class::Internal::Release(void)                                             \
     }                                                                       \
     return agg->mRefCnt;                                                    \
 }                                                                           \
+
+// for use with QI macros in nsISupportsUtils.h:
+
+#define NS_IMPL_AGGREGATED_QUERY_HEAD(_class)                                              \
+NS_IMETHODIMP _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)         \
+{                                                                                          \
+  NS_ASSERTION(aInstancePtr, "AggregatedQueryInterface requires a non-NULL destination!"); \
+  if ( !aInstancePtr )                                                                     \
+    return NS_ERROR_NULL_POINTER;                                                          \
+  nsISupports* foundInterface;
 
 #endif /* nsAgg_h___ */
