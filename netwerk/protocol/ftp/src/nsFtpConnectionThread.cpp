@@ -482,7 +482,7 @@ nsFtpState::OnDataAvailable(nsIRequest *request,
 
     const char* currLine = lines.get();
     while (*currLine) {
-        char* eol = strstr(currLine, CRLF);
+        const char* eol = strstr(currLine, CRLF);
         if (!eol) {
             mControlReadCarryOverBuf.Assign(currLine);
             break;
