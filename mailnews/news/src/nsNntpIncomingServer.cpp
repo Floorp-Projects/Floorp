@@ -24,7 +24,7 @@
 
 #include "prmem.h"
 #include "plstr.h"
-
+#include "prprf.h"
 
 /* get some implementation from nsMsgIncomingServer */
 class nsNntpIncomingServer : public nsMsgIncomingServer,
@@ -75,8 +75,6 @@ nsNntpIncomingServer::GetServerURI(char **uri)
     
     rv = GetHostName(&hostname);
     if (NS_FAILED(rv)) return rv;
-
-    const char* urischema ="news://";
 
     *uri = PR_smprintf("news://%s", hostname);
 
