@@ -29,6 +29,9 @@
 [scriptable, uuid(0e5f5cb6-6d29-11d3-aef7-00108300ff91)]
 interface nsITimeRecorder : nsISupports
 {
+  void EnableTimer( in PRUint32 aTimerID );
+  void DisableTimer( in PRUint32 aTimerID );
+  void IsTimerEnabled(out PRBool aEnabled, in PRUint32 aTimerID);
   void ResetTimer(in PRUint32 aTimerID);
   void StartTimer(in PRUint32 aTimerID);
   void StopTimer(in PRUint32 aTimerID);
