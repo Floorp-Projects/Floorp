@@ -176,7 +176,7 @@ public class JavaAdapter extends ScriptableObject {
     }
 
     public static Class createAdapterClass(Context cx, Scriptable jsObj,
-                                           String adapterName, Class superClass, 
+                                           String adapterName, Class superClass,
                                            Class[] interfaces, 
                                            String scriptClassName,
                                            ClassNameHelper nameHelper)
@@ -285,7 +285,7 @@ public class JavaAdapter extends ScriptableObject {
         
         // Generate Java methods, fields for remaining properties that
         // are not overrides.
-        for (Scriptable o = jsObj; o != null; o = (Scriptable)o.getPrototype()) {
+        for (Scriptable o=jsObj; o != null; o = (Scriptable)o.getPrototype()) {
             Object[] ids = jsObj.getIds();
             for (int j=0; j < ids.length; j++) {
                 if (!(ids[j] instanceof String)) 
@@ -341,8 +341,7 @@ public class JavaAdapter extends ScriptableObject {
             if (result != null)
                 return result;
         } 
-        if (classLoader == null)
-            classLoader = new DefiningClassLoader();
+        DefiningClassLoader classLoader = new DefiningClassLoader();
         classLoader.defineClass(adapterName, bytes);
         return classLoader.loadClass(adapterName, true);
     }
@@ -929,6 +928,5 @@ public class JavaAdapter extends ScriptableObject {
     }
     
     private static int serial;
-    private static DefiningClassLoader classLoader;
     private static Hashtable generatedClasses = new Hashtable(7);
 }
