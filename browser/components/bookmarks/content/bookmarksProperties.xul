@@ -70,6 +70,7 @@
                 <label value="&bookmarks.description.label;" control="description"/>
                 <textbox multiline="true" wrap="virtual" id="description" flex="1"/>
               </row>
+              <checkbox id="webpanel" label="&bookmarks.webpanels.label;"/>
             </rows>
           </grid>
           <separator/>

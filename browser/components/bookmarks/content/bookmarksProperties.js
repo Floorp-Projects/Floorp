@@ -78,14 +78,15 @@ function showDescription()
 function Init()
 {
   // This is the set of fields that are visible in the window.
-  gFields     = ["name", "url", "shortcut", "description"];
+  gFields     = ["name", "url", "shortcut", "description", "webpanel"];
 
   // ...and this is a parallel array that contains the RDF properties
   // that they are associated with.
   gProperties = [NC_NS + "Name",
                  NC_NS + "URL",
                  NC_NS + "ShortcutURL",
-                 NC_NS + "Description"];
+                 NC_NS + "Description",
+                 NC_NS + "WebPanel"];
 
   Bookmarks = RDF.GetDataSource("rdf:bookmarks");
 
@@ -96,13 +97,14 @@ function Init()
 
   for (var i = 0; i < gFields.length; ++i) {
     var field = document.getElementById(gFields[i]);
-
     var value = Bookmarks.GetTarget(resource, RDF.GetResource(gProperties[i]), true);
-
+    
     if (value)
       value = value.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
 
-    if (value) //make sure were aren't stuffing null into any fields
+    if (gFields[i] == "webpanel")
+      field.checked = (value != undefined);
+    else if (value) //make sure were aren't stuffing null into any fields
       field.value = value;
   }
 
@@ -246,7 +248,9 @@ function Commit()
     if (field) {
       // Get the new value as a literal, using 'null' if the value is empty.
       var newvalue = field.value;
-
+      if (gFields[i] == "webpanel")
+        newvalue = field.checked ? "true" : undefined;
+              
       var oldvalue = Bookmarks.GetTarget(RDF.GetResource(gBookmarkID),
                                          RDF.GetResource(gProperties[i]),
                                          true);
@@ -346,7 +350,6 @@ function updateAttribute(prop, oldvalue, newvalue)
   var changed = false;
 
   if (prop && (oldvalue || newvalue) && oldvalue != newvalue) {
-
     if (oldvalue && !newvalue) {
       Bookmarks.Unassert(RDF.GetResource(gBookmarkID),
                          RDF.GetResource(prop),
