@@ -360,7 +360,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ElementImpl_setAttribute
 
   jboolean iscopy2 = JNI_FALSE;
   const char* value = env->GetStringUTFChars(jvalue, &iscopy2);
-  if (!name) {
+  if (!value) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Element.setAttribute: GetStringUTFChars value failed\n"));
     return;
