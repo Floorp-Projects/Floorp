@@ -135,6 +135,8 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
     // Automatic miss. Build the table
     mTransitionTable =
       new nsObjectHashtable(nsnull, nsnull, DeleteDFAState, nsnull);
+    if (!mTransitionTable)
+      return nsnull;
   }
 
   // The first transition is always made off the supplied pseudo-element.
@@ -144,6 +146,8 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   if (!currState) {
     // We had a miss. Make a new state and add it to our hash.
     currState = new nsDFAState(mNextState);
+    if (!currState)
+      return nsnull;
     mNextState++;
     mTransitionTable->Put(&key, currState);
   }
@@ -157,6 +161,9 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
     if (!currState) {
       // We had a miss. Make a new state and add it to our hash.
       currState = new nsDFAState(mNextState);
+      if (!currState)
+        return nsnull;
+
       mNextState++;
       mTransitionTable->Put(&key, currState);
     }
@@ -174,9 +181,12 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
                                                             aContext,
                                                             aComparator).get();
 
-    // Put it in our table, transferring the owning reference to the table.
-    if (!mCache)
+    // Put the style context in our table, transferring the owning reference to the table.
+    if (!mCache) {
       mCache = new nsObjectHashtable(nsnull, nsnull, ReleaseStyleContext, nsnull);
+      if (!mCache)
+        return nsnull;
+    }
     mCache->Put(currState, result);
   }
 
@@ -3460,16 +3470,25 @@ nsTreeBodyFrame::EnsureColumns()
       if (ni && ni->Equals(nsXULAtoms::treecol, kNameSpaceID_XUL)) {
         // Create a new column structure.
         nsTreeColumn* col = new nsTreeColumn(content, frame);
-        if (normalDirection) {
-          if (currCol)
-            currCol->SetNext(col);
-          else
+        if (!col) {
+          /* XXX What should happen if we can't make a tree column?
+           * We could destroy the tree and mark it dirty, but that
+           * risks an infinite loop. For now we'll just finish trying
+           * to build the tree and hope nothing else misbehaves when
+           * it isn't given enough memory.
+           */
+        } else {
+          if (normalDirection) {
+            if (currCol)
+              currCol->SetNext(col);
+            else
+              mColumns = col;
+             currCol = col;
+          }
+          else {
+            col->SetNext(mColumns);
             mColumns = col;
-          currCol = col;
-        }
-        else {
-          col->SetNext(mColumns);
-          mColumns = col;
+          }
         }
       }
 
