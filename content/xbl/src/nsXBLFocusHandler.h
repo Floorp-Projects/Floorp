@@ -68,11 +68,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 protected:
-  static PRUint32 gRefCnt;
-  static nsIAtom* kFocusAtom;
-  static nsIAtom* kBlurAtom;
-
-protected:
   // Members
 };
 

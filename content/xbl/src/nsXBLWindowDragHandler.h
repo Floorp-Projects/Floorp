@@ -72,16 +72,6 @@ protected:
   PRBool EventMatched(nsXBLPrototypeHandler* inHandler, nsIAtom* inEventType,
                       nsIDOMEvent* inEvent);
   
-    // We need our own refcount (even though our base class has one) because
-    // we have our own statics that need to be initialized and the creation of
-    // other subclasses would cause us to miss things if we shared the counter.  
-  static PRUint32 gRefCnt;
-  static nsIAtom* kDragGestureAtom;
-  static nsIAtom* kDragOverAtom;
-  static nsIAtom* kDragEnterAtom;
-  static nsIAtom* kDragExitAtom;
-  static nsIAtom* kDragDropAtom;
-
 };
 
 nsresult

@@ -75,17 +75,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 protected:
-  static PRUint32 gRefCnt;
-  static nsIAtom* kPopupShowingAtom;
-  static nsIAtom* kPopupShownAtom;
-  static nsIAtom* kPopupHidingAtom;
-  static nsIAtom* kPopupHiddenAtom;
-  static nsIAtom* kCloseAtom;
-  static nsIAtom* kDestroyAtom;
-  static nsIAtom* kCommandUpdateAtom;
-  static nsIAtom* kBroadcastAtom;
-
-protected:
   // Members
 };
 

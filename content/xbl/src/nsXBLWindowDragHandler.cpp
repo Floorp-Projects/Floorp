@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLWindowDragHandler.h"
+#include "nsXBLAtoms.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsIDOMNSUIEvent.h"
@@ -52,37 +53,13 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMElement.h"
 
-PRUint32 nsXBLWindowDragHandler::gRefCnt = 0;
-nsIAtom* nsXBLWindowDragHandler::kDragGestureAtom = nsnull;
-nsIAtom* nsXBLWindowDragHandler::kDragOverAtom = nsnull;
-nsIAtom* nsXBLWindowDragHandler::kDragEnterAtom = nsnull;
-nsIAtom* nsXBLWindowDragHandler::kDragExitAtom = nsnull;
-nsIAtom* nsXBLWindowDragHandler::kDragDropAtom = nsnull;
-
 nsXBLWindowDragHandler::nsXBLWindowDragHandler(nsIDOMEventReceiver* aReceiver)
   : nsXBLWindowHandler(nsnull, aReceiver)
 {
-
-  gRefCnt++;
-  if (gRefCnt == 1) {
-    kDragEnterAtom = NS_NewAtom("dragenter");
-    kDragOverAtom = NS_NewAtom("dragover");
-    kDragExitAtom = NS_NewAtom("dragexit");
-    kDragDropAtom = NS_NewAtom("dragdrop");
-    kDragGestureAtom = NS_NewAtom("draggesture");
-  }
 }
 
 nsXBLWindowDragHandler::~nsXBLWindowDragHandler()
 {
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_RELEASE(kDragEnterAtom);
-    NS_RELEASE(kDragOverAtom);
-    NS_RELEASE(kDragExitAtom);
-    NS_RELEASE(kDragDropAtom);
-    NS_RELEASE(kDragGestureAtom);
-  }
 }
 
 NS_IMPL_ISUPPORTS1(nsXBLWindowDragHandler, nsIDOMDragListener)
@@ -130,31 +107,31 @@ nsXBLWindowDragHandler::WalkHandlers(nsIDOMEvent* aDragEvent, nsIAtom* aEventTyp
 nsresult 
 nsXBLWindowDragHandler::DragGesture(nsIDOMEvent* aDragEvent)
 {
-  return WalkHandlers(aDragEvent, kDragGestureAtom);
+  return WalkHandlers(aDragEvent, nsXBLAtoms::draggesture);
 }
 
 nsresult 
 nsXBLWindowDragHandler::DragEnter(nsIDOMEvent* aDragEvent)
 {
-  return WalkHandlers(aDragEvent, kDragEnterAtom);
+  return WalkHandlers(aDragEvent, nsXBLAtoms::dragenter);
 }
 
 nsresult 
 nsXBLWindowDragHandler::DragExit(nsIDOMEvent* aDragEvent)
 {
-  return WalkHandlers(aDragEvent, kDragExitAtom);
+  return WalkHandlers(aDragEvent, nsXBLAtoms::dragexit);
 }
 
 nsresult 
 nsXBLWindowDragHandler::DragOver(nsIDOMEvent* aDragEvent)
 {
-  return WalkHandlers(aDragEvent, kDragOverAtom);
+  return WalkHandlers(aDragEvent, nsXBLAtoms::dragevent);
 }
 
 nsresult 
 nsXBLWindowDragHandler::DragDrop(nsIDOMEvent* aDragEvent)
 {
-  return WalkHandlers(aDragEvent, kDragDropAtom);
+  return WalkHandlers(aDragEvent, nsXBLAtoms::dragdrop);
 }
 
 

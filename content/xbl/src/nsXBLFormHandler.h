@@ -71,14 +71,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 protected:
-  static PRUint32 gRefCnt;
-  static nsIAtom* kSubmitAtom;
-  static nsIAtom* kResetAtom;
-  static nsIAtom* kChangeAtom;
-  static nsIAtom* kSelectAtom;
-  static nsIAtom* kInputAtom;
-
-protected:
   // Members
 };
 

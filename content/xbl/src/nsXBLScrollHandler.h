@@ -69,12 +69,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 protected:
-  static PRUint32 gRefCnt;
-  static nsIAtom* kOverflowAtom;
-  static nsIAtom* kUnderflowAtom;
-  static nsIAtom* kOverflowChangedAtom;
-
-protected:
   // Members
 };
 

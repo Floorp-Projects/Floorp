@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLLoadHandler.h"
+#include "nsXBLAtoms.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -54,56 +55,36 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
-PRUint32 nsXBLLoadHandler::gRefCnt = 0;
-nsIAtom* nsXBLLoadHandler::kLoadAtom = nsnull;
-nsIAtom* nsXBLLoadHandler::kUnloadAtom = nsnull;
-nsIAtom* nsXBLLoadHandler::kAbortAtom = nsnull;
-nsIAtom* nsXBLLoadHandler::kErrorAtom = nsnull;
-
 nsXBLLoadHandler::nsXBLLoadHandler(nsIDOMEventReceiver* aReceiver,
                                    nsXBLPrototypeHandler* aHandler)
   : nsXBLEventHandler(aReceiver, aHandler)
 {
-  gRefCnt++;
-  if (gRefCnt == 1) {
-    kAbortAtom = NS_NewAtom("abort");
-    kErrorAtom = NS_NewAtom("error");
-    kLoadAtom = NS_NewAtom("load");
-    kUnloadAtom = NS_NewAtom("unload");
-  }
 }
 
 nsXBLLoadHandler::~nsXBLLoadHandler()
 {
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_RELEASE(kAbortAtom);
-    NS_RELEASE(kLoadAtom);
-    NS_RELEASE(kUnloadAtom);
-    NS_RELEASE(kErrorAtom);
-  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLLoadHandler, nsXBLEventHandler, nsIDOMLoadListener)
 
 nsresult nsXBLLoadHandler::Load(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kLoadAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::load, aEvent);
 }
 
 nsresult nsXBLLoadHandler::Unload(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kUnloadAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::unload, aEvent);
 }
 
 nsresult nsXBLLoadHandler::Error(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kErrorAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::error, aEvent);
 }
 
 nsresult nsXBLLoadHandler::Abort(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kAbortAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::abort, aEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

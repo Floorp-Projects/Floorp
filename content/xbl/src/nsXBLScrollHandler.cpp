@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLScrollHandler.h"
+#include "nsXBLAtoms.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -55,48 +56,31 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
-PRUint32 nsXBLScrollHandler::gRefCnt = 0;
-nsIAtom* nsXBLScrollHandler::kOverflowAtom = nsnull;
-nsIAtom* nsXBLScrollHandler::kUnderflowAtom = nsnull;
-nsIAtom* nsXBLScrollHandler::kOverflowChangedAtom = nsnull;
-
 nsXBLScrollHandler::nsXBLScrollHandler(nsIDOMEventReceiver* aReceiver,
                                        nsXBLPrototypeHandler* aHandler)
   : nsXBLEventHandler(aReceiver, aHandler)
 {
-  gRefCnt++;
-  if (gRefCnt == 1) {
-    kOverflowAtom = NS_NewAtom("overflow");
-    kUnderflowAtom = NS_NewAtom("underflow");
-    kOverflowChangedAtom = NS_NewAtom("overflowchanged");
-  }
 }
 
 nsXBLScrollHandler::~nsXBLScrollHandler()
 {
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_RELEASE(kOverflowAtom);
-    NS_RELEASE(kUnderflowAtom);
-    NS_RELEASE(kOverflowChangedAtom);
-  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLScrollHandler, nsXBLEventHandler, nsIDOMScrollListener)
 
 nsresult nsXBLScrollHandler::Overflow(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kOverflowAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::overflow, aEvent);
 }
 
 nsresult nsXBLScrollHandler::Underflow(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kUnderflowAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::underflow, aEvent);
 }
 
 nsresult nsXBLScrollHandler::OverflowChanged(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kOverflowChangedAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::overflowchanged, aEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

@@ -40,6 +40,7 @@
 #include "nsCOMPtr.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLFormHandler.h"
+#include "nsXBLAtoms.h"
 #include "nsIContent.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -54,64 +55,41 @@
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
 
-PRUint32 nsXBLFormHandler::gRefCnt = 0;
-nsIAtom* nsXBLFormHandler::kSubmitAtom = nsnull;
-nsIAtom* nsXBLFormHandler::kResetAtom = nsnull;
-nsIAtom* nsXBLFormHandler::kInputAtom = nsnull;
-nsIAtom* nsXBLFormHandler::kSelectAtom = nsnull;
-nsIAtom* nsXBLFormHandler::kChangeAtom = nsnull;
-
 nsXBLFormHandler::nsXBLFormHandler(nsIDOMEventReceiver* aReceiver,
                                    nsXBLPrototypeHandler* aHandler)
   : nsXBLEventHandler(aReceiver, aHandler)
 {
-  gRefCnt++;
-  if (gRefCnt == 1) {
-    kInputAtom = NS_NewAtom("input");
-    kSelectAtom = NS_NewAtom("select");
-    kChangeAtom = NS_NewAtom("change");
-    kSubmitAtom = NS_NewAtom("submit");
-    kResetAtom = NS_NewAtom("reset");
-  }
 }
 
 nsXBLFormHandler::~nsXBLFormHandler()
 {
-  gRefCnt--;
-  if (gRefCnt == 0) {
-    NS_RELEASE(kInputAtom);
-    NS_RELEASE(kSubmitAtom);
-    NS_RELEASE(kResetAtom);
-    NS_RELEASE(kSelectAtom);
-    NS_RELEASE(kChangeAtom);
-  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLFormHandler, nsXBLEventHandler, nsIDOMFormListener)
 
 nsresult nsXBLFormHandler::Submit(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kSubmitAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::submit, aEvent);
 }
 
 nsresult nsXBLFormHandler::Reset(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kResetAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::reset, aEvent);
 }
 
 nsresult nsXBLFormHandler::Select(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kSelectAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::select, aEvent);
 }
 
 nsresult nsXBLFormHandler::Change(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kChangeAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::change, aEvent);
 }
 
 nsresult nsXBLFormHandler::Input(nsIDOMEvent* aEvent)
 {
-  return DoGeneric(kInputAtom, aEvent);
+  return DoGeneric(nsXBLAtoms::input, aEvent);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

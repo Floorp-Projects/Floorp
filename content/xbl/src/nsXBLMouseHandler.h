@@ -73,15 +73,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
 protected:
-  static PRUint32 gRefCnt;
-  static nsIAtom* kMouseDownAtom;
-  static nsIAtom* kMouseUpAtom;
-  static nsIAtom* kMouseClickAtom;
-  static nsIAtom* kMouseDblClickAtom;
-  static nsIAtom* kMouseOverAtom;
-  static nsIAtom* kMouseOutAtom;
-
-protected:
   // Members
 };
 
