@@ -29,6 +29,7 @@
 #include "nsString.h"
 #include "nsIStringStream.h"
 #include "nsIDOMUIEvent.h"
+#include "nsIDOMNSUIEvent.h"
 
 // for testing only
 #include "nsIHTMLEditor.h"
@@ -892,18 +893,21 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   if (!editor)
     return NS_ERROR_FAILURE;
 
-  // There's currently no way to set the selection to the mouse position
-  // outside of liblayout -- nsIDOMEvent has an API to get the node under
-  // the mouse, but not to get the offset within the node.
-#ifdef PASTE_TO_MOUSE_POSITION
-  nsCOMPtr<nsIDOMNode> target;
-  if (!NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(target))))
+  // Set the selection to the point under the mouse cursor:
+  nsCOMPtr<nsIDOMNSUIEvent> mouseEvent (do_QueryInterface(aMouseEvent));
+
+  if (!mouseEvent)
+    return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+  nsCOMPtr<nsIDOMNode> parent;
+  if (!NS_SUCCEEDED(mouseEvent->GetRangeParent(getter_AddRefs(parent))))
+    return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
+  PRInt32 offset = 0;
+  if (!NS_SUCCEEDED(mouseEvent->GetRangeOffset(&offset)))
     return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
 
   nsCOMPtr<nsIDOMSelection> selection;
   if (NS_SUCCEEDED(editor->GetSelection(getter_AddRefs(selection))))
-    (void)selection->Collapse(target, 0);
-#endif /* PASTE_TO_MOUSE_POSITION */
+    (void)selection->Collapse(parent, offset);
 
   // If the ctrl key is pressed, we'll do paste as quotation.
   // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
@@ -1352,7 +1356,6 @@ NS_NewEditorFocusListener(nsIDOMEventListener ** aInstancePtrResult,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   it->SetEditor(aEditor);
-  static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 	return it->QueryInterface(nsIDOMEventListener::GetIID(), (void **) aInstancePtrResult);
 }
 
