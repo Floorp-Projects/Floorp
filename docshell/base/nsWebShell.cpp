@@ -24,17 +24,11 @@
 #include "nsIDeviceContext.h"
 #include "nsILinkHandler.h"
 #include "nsIStreamListener.h"
-#ifdef NECKO
 #include "nsIPrompt.h"
 #include "nsNeckoUtil.h"
 #include "nsIProtocolHandler.h"
 #include "nsIDNSService.h"
 #include "nsIRefreshURI.h"
-#else
-#include "nsINetSupport.h"
-#include "nsIRefreshUrl.h"
-#include "jsurl.h"
-#endif
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIDocumentLoaderObserver.h"
@@ -88,10 +82,8 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 //XXX used for nsIStreamObserver implementation.  This sould be replaced by DocLoader
 //    notifications...
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
-#endif // NECKO
 
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
 #include "nsIDocument.h"
@@ -142,9 +134,7 @@ void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue)
 
 
 static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
-#ifdef NECKO
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#endif // NECKO
 
 static nsAutoString LinkCommand("linkclick");
 //----------------------------------------------------------------------
@@ -155,13 +145,8 @@ class nsWebShell : public nsIWebShell,
                    public nsILinkHandler,
                    public nsIScriptContextOwner,
                    public nsIDocumentLoaderObserver,
-#ifdef NECKO
                    public nsIPrompt,
                    public nsIRefreshURI,
-#else
-                   public nsIRefreshUrl,
-                   public nsINetSupport,
-#endif
 //                   public nsIStreamObserver,
                    public nsIClipboardCommands
 {
@@ -326,7 +311,6 @@ public:
                                PRInt32     aLineNo,
                                const char* aLineBuf);
 
-#ifdef NECKO
   // nsIDocumentLoaderObserver
   NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader,
                                  nsIURI* aURL,
@@ -349,69 +333,16 @@ public:
                                       nsIChannel* channel,
                                       const char *aContentType,
                                       const char *aCommand );
-#else
-  // nsIDocumentLoaderObserver
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader,
-                                 nsIURI* aURL,
-                                 const char* aCommand);
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader,
-                               nsIURI* aURL,
-                               PRInt32 aStatus,
-                               nsIDocumentLoaderObserver * );
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader,
-                            nsIURI* aURL, const char* aContentType,
-                            nsIContentViewer* aViewer);
-  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
-                               nsIURI* aURL, PRUint32 aProgress,
-                               PRUint32 aProgressMax);
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader,
-                             nsIURI* aURL, nsString& aMsg);
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader,
-                          nsIURI* aURL, PRInt32 aStatus);
-  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
-                                      nsIURI* aURL,
-                                      const char *aContentType,
-                                      const char *aCommand );
-#endif
-//  NS_IMETHOD OnConnectionsComplete();
 
 
   NS_IMETHOD RefreshURL(const char* aURL, PRInt32 millis, PRBool repeat);
 
   // nsIRefreshURL interface methods...
-#ifndef NECKO
-  NS_IMETHOD RefreshURL(nsIURI* aURL, PRInt32 aMillis, PRBool aRepeat);
-  NS_IMETHOD CancelRefreshURLTimers(void);
-#else
   NS_IMETHOD RefreshURI(nsIURI* aURI, PRInt32 aMillis, PRBool aRepeat);
   NS_IMETHOD CancelRefreshURITimers(void);
-#endif // NECKO
 
-#if 0
-  // nsIStreamObserver
-  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType);
-  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
-  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg);
-#endif  /* 0 */
-
-#ifdef NECKO
   // nsIPrompt
   NS_DECL_NSIPROMPT
-#else
-  // nsINetSupport interface methods
-  NS_IMETHOD_(void) Alert(const nsString &aText);
-  NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
-  NS_IMETHOD_(PRBool) ConfirmYN(const nsString &aText);
-  NS_IMETHOD_(PRBool) Prompt(const nsString &aText,
-                             const nsString &aDefault,
-                             nsString &aResult);
-  NS_IMETHOD_(PRBool) PromptUserAndPassword(const nsString &aText,
-                                            nsString &aUser,
-                                            nsString &aPassword);
-  NS_IMETHOD_(PRBool) PromptPassword(const nsString &aText,
-                                     nsString &aPassword);
-#endif
 
   // nsIClipboardCommands
   NS_IMETHOD CanCutSelection  (PRBool* aResult);
@@ -485,11 +416,7 @@ protected:
   nsIDocumentLoader* mDocLoader;
   nsIDocumentLoaderObserver* mDocLoaderObserver;
   nsIUrlDispatcher *  mUrlDispatcher;
-#ifdef NECKO
   nsIPrompt* mPrompter;
-#else
-  nsINetSupport* mNetSupport;
-#endif
 
   nsIWebShell* mParent;
   nsVoidArray mChildren;
@@ -530,11 +457,7 @@ protected:
   nsresult DoLoadURL(nsIURI * aUri, 
                      const char* aCommand,
                      nsIInputStream* aPostDataStream,
-#ifdef NECKO
                      nsLoadFlags aType,
-#else
-                     nsURLReloadType aType,
-#endif
                      const PRUint32 aLocalIP);
 
   float mZoom;
@@ -594,19 +517,13 @@ static NS_DEFINE_IID(kIFactoryIID,            NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID,     NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-#ifndef NECKO
-static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
-static NS_DEFINE_IID(kRefreshURLIID,          NS_IREFRESHURL_IID);
-#else
 static NS_DEFINE_IID(kRefreshURIIID,          NS_IREFRESHURI_IID);
-#endif
 
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellServicesIID,   NS_IWEB_SHELL_SERVICES_IID);
 static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIPluginManagerIID,      NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginHostIID,         NS_IPLUGINHOST_IID);
-//static NS_DEFINE_IID(kCPluginHostCID,         NS_PLUGIN_HOST_CID);
 static NS_DEFINE_IID(kCPluginManagerCID,      NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kITimerCallbackIID,      NS_ITIMERCALLBACK_IID);
@@ -704,11 +621,7 @@ nsWebShell::nsWebShell()
   mHintCharsetSource = kCharsetUninitialized;
   mForceCharacterSet = "";
   mHistoryService = nsnull;
-#ifdef NECKO
   mPrompter = nsnull;
-#else
-  mNetSupport = nsnull;
-#endif
   mHistoryState = nsnull;
 }
 
@@ -727,11 +640,7 @@ nsWebShell::~nsWebShell()
     NS_RELEASE(mDocLoader);
   }
   // Cancel any timers that were set for this loader.
-#ifndef NECKO
-  CancelRefreshURLTimers();
-#else
   CancelRefreshURITimers();
-#endif // NECKO
 
   ++mRefCnt; // following releases can cause this destructor to be called
              // recursively if the refcount is allowed to remain 0
@@ -743,11 +652,7 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mObserver);
-#ifdef NECKO
   NS_IF_RELEASE(mPrompter);
-#else
-  NS_IF_RELEASE(mNetSupport);
-#endif
 
   if (nsnull != mScriptGlobal) {
     mScriptGlobal->SetWebShell(nsnull);
@@ -875,7 +780,6 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#ifdef NECKO
   if (aIID.Equals(nsIPrompt::GetIID())) {
     *aInstancePtr = (void*) ((nsIPrompt*)this);
     NS_ADDREF_THIS();
@@ -886,18 +790,6 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-#else
-  if (aIID.Equals(kINetSupportIID)) {
-    *aInstancePtr = (void*) ((nsINetSupport*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kRefreshURLIID)) {
-    *aInstancePtr = (void*)((nsIRefreshUrl*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-#endif // NECKO
   if (aIID.Equals(kIClipboardCommandsIID)) {
     *aInstancePtr = (void*) ((nsIClipboardCommands*)this);
     NS_ADDREF_THIS();
@@ -1019,19 +911,11 @@ nsWebShell::GetContentViewer(nsIContentViewer** aResult)
 
 NS_IMETHODIMP
 nsWebShell::HandleUnknownContentType(nsIDocumentLoader* loader,
-#ifdef NECKO
                                      nsIChannel* channel,
-#else
-                                     nsIURI* aURL,
-#endif
                                      const char *aContentType,
                                      const char *aCommand ) {
     // If we have a doc loader observer, let it respond to this.
-#ifdef NECKO
     return mDocLoaderObserver ? mDocLoaderObserver->HandleUnknownContentType( mDocLoader, channel, aContentType, aCommand )
-#else
-    return mDocLoaderObserver ? mDocLoaderObserver->HandleUnknownContentType( mDocLoader, aURL, aContentType, aCommand )
-#endif
                               : NS_ERROR_FAILURE;
 }
 
@@ -1595,19 +1479,11 @@ NS_IMETHODIMP
 nsWebShell::SetObserver(nsIStreamObserver* anObserver)
 {
   NS_IF_RELEASE(mObserver);
-#ifdef NECKO
   NS_IF_RELEASE(mPrompter);
-#else
-  NS_IF_RELEASE(mNetSupport);
-#endif
 
   mObserver = anObserver;
   if (nsnull != mObserver) {
-#ifdef NECKO
     mObserver->QueryInterface(nsIPrompt::GetIID(), (void**)&mPrompter);
-#else
-    mObserver->QueryInterface(kINetSupportIID, (void **) &mNetSupport);
-#endif
     NS_ADDREF(mObserver);
   }
   return NS_OK;
@@ -2102,21 +1978,11 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
 
   if (url1 && url2) {
     // XXX We need to make these strcmps case insensitive.
-#ifdef NECKO
     url1->GetHost(getter_Copies(host1));
     url2->GetHost(getter_Copies(host2));
-#else
-    url1->GetHost(getter_Shares(host1));
-    url2->GetHost(getter_Shares(host2));
-#endif
     if (0 == PL_strcmp(host1, host2)) {
-#ifdef NECKO
       url1->GetPath(getter_Copies(file1));
       url2->GetPath(getter_Copies(file2));
-#else
-      url1->GetFile(getter_Shares(file1));
-      url2->GetFile(getter_Shares(file2));
-#endif
 
       anchor1 = PL_strrchr(file1, '#');
       if (anchor1) {
@@ -2503,11 +2369,7 @@ NS_IMETHODIMP nsWebShell::Stop(void)
   }
 
   // Cancel any timers that were set for this loader.
-#ifndef NECKO
-  CancelRefreshURLTimers();
-#else
   CancelRefreshURITimers();
-#endif // NECKO
 
   if (mDocLoader) {
     // Stop any documents that are currently being loaded...
@@ -2555,11 +2417,7 @@ nsWebShell::StopAfterURLAvailable()
   }
 
   // Cancel any timers that were set for this loader.
-#ifndef NECKO
-  CancelRefreshURLTimers();
-#else
   CancelRefreshURITimers();
-#endif // NECKO
 
   // Recurse down the webshell hierarchy.
   PRInt32 i, n = mChildren.Count();
@@ -2576,11 +2434,7 @@ nsWebShell::StopAfterURLAvailable()
 /* The generic session History code here is now obsolete.
  * Use nsISessionHistory instead
  */
-#ifdef NECKO
 NS_IMETHODIMP nsWebShell::Reload(nsLoadFlags aType)
-#else
-NS_IMETHODIMP nsWebShell::Reload(nsURLReloadType aType)
-#endif
 {
 #ifdef OLD_HISTORY
   nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
@@ -3483,25 +3337,18 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
-#ifdef NECKO
                               nsIChannel* channel,
-#else
-                              nsIURI* aURL,
-#endif
-#ifdef NECKO
                               nsresult aStatus,
-#else
-                              PRInt32  aStatus,
-#endif
                               nsIDocumentLoaderObserver * aWebShell)
 {
   nsresult rv = NS_ERROR_FAILURE;
+  if (!channel) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-#ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
-#endif
 
 //if (!mProcessedEndDocumentLoad) {
   if (loader == mDocLoader) {
@@ -3528,20 +3375,14 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
     // Fire the EndLoadURL of the web shell container
     if (nsnull != aURL) {
        nsAutoString urlString;
-#ifdef NECKO
        char* spec;
-#else
-       const char* spec;
-#endif
        rv = aURL->GetSpec(&spec);
        if (NS_SUCCEEDED(rv)) {
          urlString = spec;
          if (nsnull != mContainer) {
             rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), 0);
          }
-#ifdef NECKO
          nsCRT::free(spec);
-#endif
        }
     }
 
@@ -3570,14 +3411,9 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
      * Fire the OnEndDocumentLoad of the DocLoaderobserver
      */
     if (dlObserver && (nsnull != aURL)) {
-#ifdef NECKO
        dlObserver->OnEndDocumentLoad(mDocLoader, channel, aStatus, aWebShell);
-#else
-       dlObserver->OnEndDocumentLoad(mDocLoader, aURL, aStatus, aWebShell);
-#endif
     }
 
-#ifdef NECKO
     if ( (mDocLoader == loader) && (aStatus == NS_ERROR_UNKNOWN_HOST) ) {
         // We need to check for a dns failure in aStatus, but dns failure codes
         // aren't proliferated yet. This checks for failure for a host lacking
@@ -3625,7 +3461,6 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
             }
         } // retry
     } // unknown host
-#endif //NECKO
 
   } //!mProcessedEndDocumentLoad
   else {
@@ -3637,30 +3472,19 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
-#ifdef NECKO
                            nsIChannel* channel,
-#else
-                           nsIURI* aURL,
-                           const char* aContentType,
-#endif
                            nsIContentViewer* aViewer)
 {
   nsresult rv;
-#ifdef NECKO
+
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
-#endif
-
 
   // Stop loading of the earlier document completely when the document url
   // load starts.  Now we know that this url is valid and available.
   nsXPIDLCString url;
-#ifdef NECKO
   aURL->GetSpec(getter_Copies(url));
-#else
-  aURL->GetSpec(getter_Shares(url));
-#endif
   if (0 == PL_strcmp(url, mURL.GetBuffer()))
     StopAfterURLAvailable();
 
@@ -3681,22 +3505,14 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
-#ifdef NECKO
     mDocLoaderObserver->OnStartURLLoad(mDocLoader, channel, aViewer);
-#else
-    mDocLoaderObserver->OnStartURLLoad(mDocLoader, aURL, aContentType, aViewer);
-#endif
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShell::OnProgressURLLoad(nsIDocumentLoader* loader,
-#ifdef NECKO
                               nsIChannel* channel,
-#else
-                              nsIURI* aURL,
-#endif
                               PRUint32 aProgress,
                               PRUint32 aProgressMax)
 {
@@ -3705,11 +3521,7 @@ nsWebShell::OnProgressURLLoad(nsIDocumentLoader* loader,
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
-#ifdef NECKO
      mDocLoaderObserver->OnProgressURLLoad(mDocLoader, channel, aProgress, aProgressMax);
-#else
-     mDocLoaderObserver->OnProgressURLLoad(mDocLoader, aURL, aProgress, aProgressMax);
-#endif
   }
 
   return NS_OK;
@@ -3717,11 +3529,7 @@ nsWebShell::OnProgressURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShell::OnStatusURLLoad(nsIDocumentLoader* loader,
-#ifdef NECKO
                             nsIChannel* channel,
-#else
-                            nsIURI* aURL,
-#endif
                             nsString& aMsg)
 {
   /*
@@ -3729,11 +3537,7 @@ nsWebShell::OnStatusURLLoad(nsIDocumentLoader* loader,
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
-#ifdef NECKO
      mDocLoaderObserver->OnStatusURLLoad(mDocLoader, channel, aMsg);
-#else
-     mDocLoaderObserver->OnStatusURLLoad(mDocLoader, aURL, aMsg);
-#endif
   }
 
   return NS_OK;
@@ -3741,13 +3545,8 @@ nsWebShell::OnStatusURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
-#ifdef NECKO
                          nsIChannel* channel,
                          nsresult aStatus)
-#else
-                         nsIURI* aURL,
-                         PRInt32 aStatus)
-#endif // NECKO
 {
 #if 0
   const char* spec;
@@ -3759,11 +3558,7 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
-#ifdef NECKO
       mDocLoaderObserver->OnEndURLLoad(mDocLoader, channel, aStatus);
-#else
-      mDocLoaderObserver->OnEndURLLoad(mDocLoader, aURL, aStatus);
-#endif
   }
 
   return NS_OK;
@@ -3808,11 +3603,7 @@ void refreshData::Notify(nsITimer *aTimer)
 {
   NS_PRECONDITION((nsnull != mShell), "Null pointer...");
   if (nsnull != mShell) {
-#ifdef NECKO
     mShell->LoadURL(mUrlSpec.GetUnicode(), nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL);
-#else
-    mShell->LoadURL(mUrlSpec.GetUnicode(), nsnull, PR_TRUE, nsURLReload);
-#endif
   }
   /*
    * LoadURL(...) will cancel all refresh timers... This causes the Timer and
@@ -3822,11 +3613,7 @@ void refreshData::Notify(nsITimer *aTimer)
 
 
 NS_IMETHODIMP
-#ifndef NECKO
-nsWebShell::RefreshURL(nsIURI* aURI, PRInt32 millis, PRBool repeat)
-#else
 nsWebShell::RefreshURI(nsIURI* aURI, PRInt32 millis, PRBool repeat)
-#endif // NECKO
 {
 
   nsresult rv = NS_OK;
@@ -3836,16 +3623,11 @@ nsWebShell::RefreshURI(nsIURI* aURI, PRInt32 millis, PRBool repeat)
     goto done;
   }
 
-#ifdef NECKO
   char* spec;
-#else
-  const char* spec;
-#endif
   aURI->GetSpec(&spec);
   rv = RefreshURL(spec, millis, repeat);
-#ifdef NECKO
   nsCRT::free(spec);
-#endif
+
 done:
   return rv;
 }
@@ -3895,11 +3677,7 @@ done:
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebShell::CancelRefreshURITimers(void)
-#else
-nsWebShell::CancelRefreshURLTimers(void)
-#endif // NECKO
 {
   PRInt32 i;
   nsITimer* timer;
@@ -3954,16 +3732,10 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
   }
 
   /* Get the url that netlib passed us */
-#ifdef NECKO
   char* spec;
-#else
-  const char* spec;
-#endif
   aURL->GetSpec(&spec);
   newURL = (nsString*) new nsString(spec);
-#ifdef NECKO
   nsCRT::free(spec);
-#endif
 
   if (newURL && historyURL && newURL->Last() == '/' && !historyURL->Equals(*newURL)) {
   }
@@ -4056,72 +3828,32 @@ nsWebShell::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
 
 //----------------------------------------------------------------------
 
-#ifdef NECKO
 NS_IMETHODIMP
 nsWebShell::Alert(const PRUnichar *text)
-#else
-NS_IMETHODIMP_(void)
-nsWebShell::Alert(const nsString &aText)
-#endif
 {
-#ifdef NECKO
   if (mPrompter == nsnull)
     return NS_OK;
   return mPrompter->Alert(text);
-#else
-  if (nsnull != mNetSupport) {
-    mNetSupport->Alert(aText);
-  }
-#endif
 }
 
-#ifdef NECKO
 NS_IMETHODIMP
 nsWebShell::Confirm(const PRUnichar *text,
                     PRBool *result)
-#else
-NS_IMETHODIMP_(PRBool)
-nsWebShell::Confirm(const nsString &aText)
-#endif
 {
-#ifdef NECKO
   if (mPrompter == nsnull)
     return NS_OK;
   return mPrompter->Confirm(text, result);
-#else
-  PRBool bResult = PR_FALSE;
-
-  if (nsnull != mNetSupport) {
-    bResult = mNetSupport->Confirm(aText);
-  }
-  return bResult;
-#endif
 }
 
-#ifdef NECKO
 NS_IMETHODIMP
 nsWebShell::ConfirmYN(const PRUnichar *text,
                     PRBool *result)
-#else
-NS_IMETHODIMP_(PRBool)
-nsWebShell::ConfirmYN(const nsString &aText)
-#endif
 {
-#ifdef NECKO
   if (mPrompter == nsnull)
     return NS_OK;
   return mPrompter->ConfirmYN(text, result);
-#else
-  PRBool bResult = PR_FALSE;
-
-  if (nsnull != mNetSupport) {
-    bResult = mNetSupport->ConfirmYN(aText);
-  }
-  return bResult;
-#endif
 }
 
-#ifdef NECKO
 NS_IMETHODIMP
 nsWebShell::ConfirmCheck(const PRUnichar *text,
                          const PRUnichar *checkMsg,
@@ -4132,9 +3864,7 @@ nsWebShell::ConfirmCheck(const PRUnichar *text,
     return NS_OK;
   return mPrompter->ConfirmCheck(text, checkMsg, checkValue, result);
 }
-#endif
 
-#ifdef NECKO
 NS_IMETHODIMP
 nsWebShell::ConfirmCheckYN(const PRUnichar *text,
                          const PRUnichar *checkMsg,
@@ -4145,83 +3875,37 @@ nsWebShell::ConfirmCheckYN(const PRUnichar *text,
     return NS_OK;
   return mPrompter->ConfirmCheckYN(text, checkMsg, checkValue, result);
 }
-#endif
 
-#ifdef NECKO
 NS_IMETHODIMP
 nsWebShell::Prompt(const PRUnichar *text,
                    const PRUnichar *defaultText,
                    PRUnichar **result,
                    PRBool *_retval)
-#else
-NS_IMETHODIMP_(PRBool)
-nsWebShell::Prompt(const nsString &aText,
-                   const nsString &aDefault,
-                   nsString &aResult)
-#endif
 {
-#ifdef NECKO
   if (mPrompter == nsnull)
     return NS_OK;
   return mPrompter->Prompt(text, defaultText, result, _retval);
-#else
-  PRBool bResult = PR_FALSE;
-  if (nsnull != mNetSupport) {
-    bResult = mNetSupport->Prompt(aText, aDefault, aResult);
-  }
-  return bResult;
-#endif
 }
 
-#ifdef NECKO
 NS_IMETHODIMP
 nsWebShell::PromptUsernameAndPassword(const PRUnichar *text,
                                       PRUnichar **user,
                                       PRUnichar **pwd,
                                       PRBool *_retval)
-#else
-NS_IMETHODIMP_(PRBool)
-nsWebShell::PromptUserAndPassword(const nsString &aText,
-                                  nsString &aUser,
-                                  nsString &aPassword)
-#endif
 {
-#ifdef NECKO
   if (mPrompter == nsnull)
     return NS_OK;
   return mPrompter->PromptUsernameAndPassword(text, user, pwd, _retval);
-#else
-  PRBool bResult = PR_FALSE;
-  if (nsnull != mNetSupport) {
-    bResult = mNetSupport->PromptUserAndPassword(aText, aUser, aPassword);
-  }
-  return bResult;
-#endif
 }
 
-#ifdef NECKO
 NS_IMETHODIMP
 nsWebShell::PromptPassword(const PRUnichar *text,
                            PRUnichar **pwd,
                            PRBool *_retval)
-#else
-NS_IMETHODIMP_(PRBool)
-nsWebShell::PromptPassword(const nsString &aText,
-                           nsString &aPassword)
-#endif
 {
-#ifdef NECKO
   if (mPrompter == nsnull)
     return NS_OK;
   return mPrompter->PromptPassword(text, pwd, _retval);
-#else
-  PRBool bResult = PR_FALSE;
-
-  if (nsnull != mNetSupport) {
-    bResult = mNetSupport->PromptPassword(aText, aPassword);
-  }
-  return bResult;
-#endif
 }
 
 //----------------------------------------------------
@@ -4467,10 +4151,6 @@ PRBool nsWebShellFactory::mStartedServices = PR_FALSE;
 void
 nsWebShellFactory::StartServices()
 {
-#ifndef NECKO
-  // XXX TEMPORARY Till we have real pluggable protocol handlers
-  NET_InitJavaScriptProtocol();
-#endif // NECKO
   mStartedServices = PR_TRUE;
 }
 
