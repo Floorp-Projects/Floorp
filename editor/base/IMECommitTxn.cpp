@@ -23,6 +23,7 @@
 #include "IMECommitTxn.h"
 #include "nsEditor.h"
 
+// #define DEBUG_IME
 nsIAtom *IMECommitTxn::gIMECommitTxnName = nsnull;
 
 nsresult IMECommitTxn::ClassInit()
@@ -56,7 +57,7 @@ NS_IMETHODIMP IMECommitTxn::Init(void)
 
 NS_IMETHODIMP IMECommitTxn::Do(void)
 {
-#if  defined(DEBUG_tague) || defined(DEBUG_ftang)
+#ifdef DEBUG_IME
 	printf("Do IME Commit");
 #endif
 
@@ -65,7 +66,7 @@ NS_IMETHODIMP IMECommitTxn::Do(void)
 
 NS_IMETHODIMP IMECommitTxn::Undo(void)
 {
-#if  defined(DEBUG_TAGUE) || defined(DEBUG_ftang)
+#ifdef DEBUG_IME
 	printf("Undo IME Commit");
 #endif
 	
@@ -74,7 +75,7 @@ NS_IMETHODIMP IMECommitTxn::Undo(void)
 
 NS_IMETHODIMP IMECommitTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
-#if  defined(DEBUG_TAGUE) || defined(DEBUG_ftang)
+#ifdef DEBUG_IME
 	printf("Merge IME Commit");
 #endif
 
