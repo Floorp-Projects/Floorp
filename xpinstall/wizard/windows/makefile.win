@@ -22,8 +22,10 @@
 
 DEPTH=..\..\..
 
+include <$(DEPTH)\config\config.mak>
+
 DIRS=$(DIRS) nsinstall \
-!if "$(OS_TARGET)"=="WINNT" || "$(WINOS)"=="WINNT"
+!if "$(WINOS)"=="WINNT"
              nsztool   \
 !endif
              setup     \
