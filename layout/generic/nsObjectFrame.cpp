@@ -59,6 +59,7 @@
 #include "prmem.h"
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
+#include "nsIHTMLDocument.h"
 #include "nsINodeInfo.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -1537,12 +1538,19 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
   nsIPresShell *shell = aPresContext->GetPresShell();
   nsStyleSet *styleSet = shell->StyleSet();
 
+  nsCOMPtr<nsIHTMLDocument> htmldoc(do_QueryInterface(doc));
+  PRInt32 id;
+  if (htmldoc && !doc->IsCaseSensitive())
+    id = kNameSpaceID_None;
+  else
+    id = kNameSpaceID_XHTML;
+
   nsCOMPtr<nsIContent> anchor;
-  nsresult rv = doc->CreateElem(nsHTMLAtoms::a, nsnull, kNameSpaceID_XHTML,
+  nsresult rv = doc->CreateElem(nsHTMLAtoms::a, nsnull, id,
                                 PR_TRUE, getter_AddRefs(anchor));
 
   nsCOMPtr<nsIContent> img;
-  rv |= doc->CreateElem(nsHTMLAtoms::img, nsnull, kNameSpaceID_XHTML, PR_TRUE,
+  rv |= doc->CreateElem(nsHTMLAtoms::img, nsnull, id, PR_TRUE,
                         getter_AddRefs(img));
 
   nsCOMPtr<nsITextContent> text;
