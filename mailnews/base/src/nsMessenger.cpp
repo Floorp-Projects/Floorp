@@ -137,6 +137,7 @@ nsMessenger::nsMessenger() : m_folderPath("")
 	mWebShell = nsnull; 
 	mWindow = nsnull;
   mMsgWindow = nsnull;
+  mCharsetInitialized = PR_FALSE;
 
 	InitializeFolderRoot();
 }
@@ -251,21 +252,6 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
 
   NS_RELEASE(webShell);
 
-  // libmime always converts to UTF-8 (both HTML and XML)
-  if (nsnull != mWebShell) 
-  {
-	  nsAutoString aForceCharacterSet("UTF-8");
-    nsCOMPtr<nsIContentViewer> cv;
-    mWebShell->GetContentViewer(getter_AddRefs(cv));
-    if (cv) 
-    {
-      nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
-      if (muDV) {
-        muDV->SetForceCharacterSet(aForceCharacterSet.GetUnicode());
-      }
-    }
-  }
-
   return NS_OK;
 }
 
@@ -298,44 +284,73 @@ void nsMessenger::InitializeFolderRoot()
     } // if we have a folder root for the current server
 }
 
+
+void
+nsMessenger::InitializeDisplayCharset()
+{
+  if (mCharsetInitialized)
+    return;
+  
+  // libmime always converts to UTF-8 (both HTML and XML)
+  if (nsnull != mWebShell) 
+  {
+    nsAutoString aForceCharacterSet("UTF-8");
+    nsCOMPtr<nsIContentViewer> cv;
+    mWebShell->GetContentViewer(getter_AddRefs(cv));
+    if (cv) 
+    {
+      nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
+      if (muDV) {
+        muDV->SetForceCharacterSet(aForceCharacterSet.GetUnicode());
+      }
+    }
+    
+    mCharsetInitialized = PR_TRUE;
+  }
+}
+
 NS_IMETHODIMP
 nsMessenger::OpenURL(const char * url)
 {
-	if (url)
-	{
+  if (url)
+  {
 #ifdef DEBUG_MESSENGER
-		printf("nsMessenger::OpenURL(%s)\n",url);
+    printf("nsMessenger::OpenURL(%s)\n",url);
 #endif    
-        char* unescapedUrl = PL_strdup(url);
-        if (unescapedUrl)
-        {
-          nsUnescape(unescapedUrl);
-          
-          nsIMsgMessageService * messageService = nsnull;
-          nsresult rv = GetMessageServiceFromURI(unescapedUrl,
-                                                 &messageService);
-          
-          if (NS_SUCCEEDED(rv) && messageService)
-          {
-			      messageService->DisplayMessage(unescapedUrl, mWebShell, mMsgWindow, nsnull, nsnull);
-			      ReleaseMessageServiceFromURI(unescapedUrl, messageService);
-          }
-		      //If it's not something we know about, then just load the url.
-          else
-          {
-			      nsAutoString urlStr(unescapedUrl);
-			      if (mWebShell) {
-				    mWebShell->LoadURL(urlStr.GetUnicode());
-			    }
-          }
-          PL_strfree(unescapedUrl);
+
+    // This is to setup the display WebShell as UTF-8 capable...
+    InitializeDisplayCharset();
+    
+    char* unescapedUrl = PL_strdup(url);
+    if (unescapedUrl)
+    {
+      nsUnescape(unescapedUrl);
+      
+      nsIMsgMessageService * messageService = nsnull;
+      nsresult rv = GetMessageServiceFromURI(unescapedUrl,
+        &messageService);
+      
+      if (NS_SUCCEEDED(rv) && messageService)
+      {
+        messageService->DisplayMessage(unescapedUrl, mWebShell, mMsgWindow, nsnull, nsnull);
+        ReleaseMessageServiceFromURI(unescapedUrl, messageService);
+      }
+      //If it's not something we know about, then just load the url.
+      else
+      {
+        nsAutoString urlStr(unescapedUrl);
+        if (mWebShell) {
+          mWebShell->LoadURL(urlStr.GetUnicode());
         }
-        else
-        {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-	}
-	return NS_OK;
+      }
+      PL_strfree(unescapedUrl);
+    }
+    else
+    {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  return NS_OK;
 }
 
 
