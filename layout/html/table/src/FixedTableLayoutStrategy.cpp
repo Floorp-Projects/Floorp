@@ -54,10 +54,10 @@ PRBool FixedTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aP
  *  as determined by the table width attribute.  If no table width attribute, it gets 0 width
  */
 PRBool 
-FixedTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext*          aPresContext,
-                                                        nscoord                  aComputedWidth,
-                                                        const nsHTMLReflowState& aReflowState,
-                                                        float                    aPixelToTwips)
+FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPresContext,
+                                                   nscoord                  aComputedWidth,
+                                                   const nsHTMLReflowState& aReflowState,
+                                                   float                    aPixelToTwips)
 {
   // NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
   const nsStylePosition* tablePosition;

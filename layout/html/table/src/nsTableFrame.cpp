@@ -165,11 +165,12 @@ nsTableFrame::nsTableFrame()
     mPercentBasisForRows(0),
     mPreferredWidth(0)
 {
-  mBits.mColumnWidthsSet = PR_FALSE;
+  mBits.mColumnWidthsSet   = PR_FALSE;
   mBits.mColumnWidthsValid = PR_FALSE;
-  mBits.mFirstPassValid = PR_FALSE;
-  mBits.mIsInvariantWidth = PR_FALSE;
+  mBits.mFirstPassValid    = PR_FALSE;
+  mBits.mIsInvariantWidth  = PR_FALSE;
   mBits.mMaximumWidthValid = PR_FALSE;
+  mBits.mCellSpansPctCol   = PR_FALSE;
   // XXX We really shouldn't do this, but if we don't then we'll have a
   // problem with the tree control...
 #if 0

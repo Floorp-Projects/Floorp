@@ -416,8 +416,8 @@ public:
 
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
 
-  PRBool HasNonPercentSpanningPercent() const;
-  void SetHasNonPercentSpanningPercent(PRBool aValue);
+  PRBool HasCellSpanningPctCol() const;
+  void SetHasCellSpanningPctCol(PRBool aValue);
 
   static void DebugReflow(char*                      aMessage,
                           const nsIFrame*            aFrame,
@@ -863,7 +863,7 @@ protected:
     unsigned mColumnWidthsValid:1;     // PR_TRUE if column width data is still legit, PR_FALSE if it needs to be recalculated
     unsigned mFirstPassValid:1;        // PR_TRUE if first pass data is still legit, PR_FALSE if it needs to be recalculated
     unsigned mIsInvariantWidth:1;      // PR_TRUE if table width cannot change
-    unsigned mNonPercentSpansPercent:1;
+    unsigned mCellSpansPctCol:1;
     unsigned mMaximumWidthValid:1;
     int : 26;                          // unused
   } mBits;
@@ -891,14 +891,14 @@ inline nscoord nsTableFrame::GetPercentBasisForRows()
   return mPercentBasisForRows;
 }
 
-inline PRBool nsTableFrame::HasNonPercentSpanningPercent() const
+inline PRBool nsTableFrame::HasCellSpanningPctCol() const
 {
-  return (PRBool)mBits.mNonPercentSpansPercent;
+  return (PRBool)mBits.mCellSpansPctCol;
 }
 
-inline void nsTableFrame::SetHasNonPercentSpanningPercent(PRBool aValue)
+inline void nsTableFrame::SetHasCellSpanningPctCol(PRBool aValue)
 {
-  mBits.mNonPercentSpansPercent = (unsigned)aValue;
+  mBits.mCellSpansPctCol = (unsigned)aValue;
 }
 
 inline nsFrameList& nsTableFrame::GetColGroups()
