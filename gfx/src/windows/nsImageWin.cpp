@@ -386,9 +386,8 @@ PRInt32 canRaster;
   if (mBHead == nsnull) 
     return NS_ERROR_FAILURE;
 
-  // if DC is not for a printer, and the image can be optimized, 
-  ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
-  canRaster = ::GetDeviceCaps(TheHDC, TECHNOLOGY);
+  // find out if the surface is a printer.
+  ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
   if(canRaster != DT_RASPRINTER){
     if (mCanOptimize && (nsnull == mHBitmap)) {
       CreateDDB(aSurface);
@@ -477,14 +476,25 @@ NS_IMETHODIMP nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface
 				 PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
 HDC     TheHDC;
-PRInt32 canRaster;
+PRInt32 canRaster,srcHeight,srcy;
 
   if (mBHead == nsnull) 
     return NS_ERROR_FAILURE;
 
+  // limit the size of the blit to the amount of the image read in
+  srcHeight = mBHead->biHeight;
+  srcy = 0;
+  if((mDecodedY2 < srcHeight)) {
+    aHeight = PRInt32 (float(mDecodedY2/float(srcHeight))*aHeight);
+    srcHeight = mDecodedY2;
+    srcy = mBHead->biHeight-mDecodedY2;
+  }
+
   // if DC is not for a printer, and the image can be optimized, 
   ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
-  canRaster = ::GetDeviceCaps(TheHDC, TECHNOLOGY);
+
+  // find out if the surface is a printer.
+  ((nsDrawingSurfaceWin *)aSurface)->GetTECHNOLOGY(&canRaster);
   if(canRaster != DT_RASPRINTER){
     if (mCanOptimize && (nsnull == mHBitmap))
       CreateDDB(aSurface);
@@ -515,7 +525,7 @@ PRInt32 canRaster;
       }
 
       ::StretchDIBits(TheHDC, aX, aY, aWidth, aHeight,
-		      0, 0, mBHead->biWidth, mBHead->biHeight, mImageBits,
+		      0, srcy, mBHead->biWidth, srcHeight, mImageBits,
 		      (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
 		      DIB_RGB_COLORS, rop);
 
@@ -540,7 +550,6 @@ PRInt32 canRaster;
           }
 
           if (nsnull == mAlphaHBitmap){
-            canRaster = ::GetDeviceCaps(TheHDC, TECHNOLOGY);
             if(canRaster == DT_RASPRINTER){
               if(!(GetDeviceCaps(TheHDC,RASTERCAPS) &(RC_BITBLT | RC_STRETCHBLT))) {
                   // we have an error with the printer not supporting a raster device
@@ -548,15 +557,15 @@ PRInt32 canRaster;
                 // if we did not convert to a DDB already
                 if (nsnull == mHBitmap) {
                   oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
-                  ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
-		               mBHead->biWidth, mBHead->biHeight, SRCCOPY);
+                  ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, srcy,
+		               mBHead->biWidth, srcHeight, SRCCOPY);
                 }else{
                   PrintDDB(aSurface,aX,aY,aWidth,aHeight);
                 }
               }
             } else {
               oldBits = (HBITMAP)::SelectObject(srcDC, mHBitmap);
-              ::StretchBlt(TheHDC,aX,aY,aWidth,aHeight,srcDC,0,0,mBHead->biWidth,mBHead->biHeight,SRCCOPY);
+              ::StretchBlt(TheHDC,aX,aY,aWidth,aHeight,srcDC,0,srcy,mBHead->biWidth,srcHeight,SRCCOPY);
             }
           }else{  
             if( 1==mAlphaDepth ){
@@ -574,8 +583,8 @@ PRInt32 canRaster;
 	                ::SetBkColor(TheHDC, oldBkColor);
 
 	                ::SelectObject(srcDC, mHBitmap);
-	                ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, 0,
-			             mBHead->biWidth, mBHead->biHeight, SRCPAINT);
+	                ::StretchBlt(TheHDC, aX, aY, aWidth, aHeight, srcDC, 0, srcy,
+			             mBHead->biWidth, srcHeight, SRCPAINT);
 	              }
             }else{
               if(8==mAlphaDepth){            
