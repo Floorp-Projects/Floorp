@@ -83,8 +83,10 @@ function selectLocale(langcode)
     if ( chromeRegistry ) {
       chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
     }
-    var old_lang = chromeRegistry.getSelectedLocale("navigator");
-    chromeRegistry.selectLocale(langcode, false);
+    //var old_lang = chromeRegistry.getSelectedLocale("navigator");
+    //dump("\n --> createPrifleWizard.j sold_lang=" + old_lang + "--\n");	
+    chromeRegistry.selectLocale(langcode, true);
+    dump("\n --> createPrifleWizard.js langcode=" + langcode + "--\n");	
   }
   catch(e) {
     dump("\n--> createPrifleWizard.js: selectLocale() failed!\n");
@@ -107,15 +109,12 @@ function onFinish()
   var profDir = wizardManager.WSM.PageData["newProfile1_2"].ProfileDir.value;
   var profLocale = wizardManager.WSM.PageData["newProfile1_2"].ProfileLocale.value;
 
-  // Get langcode
+  // Get & select langcode
   proceed = processCreateProfileData(profName, profDir, profLocale); 
   if( proceed ) {
     if( window.opener ) {
       window.opener.CreateProfile(profName, profDir);
       window.close();
-
-      // select locale
-      selectLocale(profLocale);
     }
     else {
       profile.startApprunner(profName);

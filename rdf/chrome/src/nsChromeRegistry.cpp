@@ -703,7 +703,7 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL, PRBool 
     overlayFile += "content/overlays.rdf";
   else overlayFile += "skin/stylesheets.rdf";
   
-  return LoadDataSource(overlayFile, aResult, aUseProfile);
+  return LoadDataSource(overlayFile, aResult, aUseProfile, nsnull);
 }
 
 NS_IMETHODIMP nsChromeRegistry::GetStyleSheets(nsIURI *aChromeURL, nsISupportsArray **aResult)
@@ -799,7 +799,8 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOve
 
 NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCString &aFileName, 
                                                nsIRDFDataSource **aResult, 
-                                               PRBool aUseProfileDir)
+                                               PRBool aUseProfileDir, 
+                                               const char *aProfilePath)
 {
   // Init the data source to null.
   *aResult = nsnull;
@@ -808,7 +809,14 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCString &aFileName,
 
   // Try the profile root first.
   if (aUseProfileDir) {
-    key = mProfileRoot;
+    // use given profile path if non-null
+    if (aProfilePath) {
+      key = aProfilePath;
+      key += "chrome/";
+    }
+    else
+      key = mProfileRoot;
+
     key += aFileName;
   }
   else {
@@ -1283,13 +1291,20 @@ NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSources(nsIRDFDataSource *aData
 NS_IMETHODIMP nsChromeRegistry::SelectSkin(const PRUnichar* aSkin,
                                         PRBool aUseProfile)
 {
-  return SetProvider("skin", mSelectedSkin, aSkin, aUseProfile, PR_TRUE);
+  return SetProvider("skin", mSelectedSkin, aSkin, aUseProfile, nsnull, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::SelectLocale(const PRUnichar* aLocale,
                                           PRBool aUseProfile)
 {
-  return SetProvider("locale", mSelectedLocale, aLocale, aUseProfile, PR_TRUE);
+  return SetProvider("locale", mSelectedLocale, aLocale, aUseProfile, nsnull, PR_TRUE);
+}
+
+NS_IMETHODIMP nsChromeRegistry::SelectLocaleForProfile(const PRUnichar *aLocale, 
+                                                       const PRUnichar *aProfilePath)
+{
+  // to be changed to use given path
+  return SetProvider("locale", mSelectedLocale, aLocale, PR_TRUE, NS_ConvertUCS2toUTF8(aProfilePath), PR_TRUE);
 }
 
 /* wstring getSelectedLocale (); */
@@ -1370,19 +1385,19 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
 NS_IMETHODIMP nsChromeRegistry::DeselectSkin(const PRUnichar* aSkin,
                                         PRBool aUseProfile)
 {
-  return SetProvider("skin", mSelectedSkin, aSkin, aUseProfile, PR_FALSE);
+  return SetProvider("skin", mSelectedSkin, aSkin, aUseProfile, nsnull, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::DeselectLocale(const PRUnichar* aLocale,
                                           PRBool aUseProfile)
 {
-  return SetProvider("locale", mSelectedLocale, aLocale, aUseProfile, PR_FALSE);
+  return SetProvider("locale", mSelectedLocale, aLocale, aUseProfile, nsnull, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCString& aProvider,
                                             nsIRDFResource* aSelectionArc,
                                             const PRUnichar* aProviderName,
-                                            PRBool aUseProfile,
+                                            PRBool aUseProfile, const char *aProfilePath,
                                             PRBool aIsAdding)
 {
   // Build the provider resource str.
@@ -1454,7 +1469,7 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCString& aProvider,
          // Select the skin for this package resource.
          nsCOMPtr<nsIRDFResource> packageResource(do_QueryInterface(packageNode));
          if (packageResource) {
-           SetProviderForPackage(aProvider, packageResource, entry, aSelectionArc, aUseProfile, aIsAdding);
+           SetProviderForPackage(aProvider, packageResource, entry, aSelectionArc, aUseProfile, aProfilePath, aIsAdding);
          }
       }
     }
@@ -1472,7 +1487,8 @@ nsChromeRegistry::SetProviderForPackage(const nsCString& aProvider,
                                         nsIRDFResource* aPackageResource, 
                                         nsIRDFResource* aProviderPackageResource, 
                                         nsIRDFResource* aSelectionArc, 
-                                        PRBool aUseProfile, PRBool aIsAdding)
+                                        PRBool aUseProfile, const char *aProfilePath,
+                                        PRBool aIsAdding)
 {
   // Figure out which file we're needing to modify, e.g., is it the install
   // dir or the profile dir, and get the right datasource.
@@ -1481,7 +1497,7 @@ nsChromeRegistry::SetProviderForPackage(const nsCString& aProvider,
   dataSourceStr += "s.rdf";
   
   nsCOMPtr<nsIRDFDataSource> dataSource;
-  LoadDataSource(dataSourceStr, getter_AddRefs(dataSource), aUseProfile);
+  LoadDataSource(dataSourceStr, getter_AddRefs(dataSource), aUseProfile, aProfilePath);
   if (!dataSource)
     return NS_ERROR_FAILURE;
 
@@ -1567,7 +1583,8 @@ NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const nsCString& aProvi
   if (!providerResource)
     return NS_ERROR_FAILURE;
 
-  return SetProviderForPackage(aProviderType, packageResource, providerResource, aSelectionArc, aUseProfile, aIsAdding);;
+  return SetProviderForPackage(aProviderType, packageResource, providerResource, aSelectionArc, 
+                               aUseProfile, nsnull, aIsAdding);;
 }
    
 NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
@@ -1607,7 +1624,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
   nsCAutoString installStr = "all-";
   installStr += aProviderType;
   installStr += "s.rdf";
-  LoadDataSource(installStr, getter_AddRefs(installSource), aUseProfile);
+  LoadDataSource(installStr, getter_AddRefs(installSource), aUseProfile, nsnull);
     
   if (!installSource)
     return NS_ERROR_FAILURE;
@@ -1983,46 +2000,46 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
     // Profiles take precedence.  Load them first.
     nsCOMPtr<nsIRDFDataSource> dataSource;
     nsCAutoString name("user-skins.rdf");
-    LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE);
+    LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE, nsnull);
     mChromeDataSource->AddDataSource(dataSource);
 
     name = "all-skins.rdf";
-    LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE);
+    LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE, nsnull);
     mChromeDataSource->AddDataSource(dataSource);
 
     name = "user-locales.rdf";
-    LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE);
+    LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE, nsnull);
     mChromeDataSource->AddDataSource(dataSource);
 
     name = "all-locales.rdf";
-    LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE);
+    LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE, nsnull);
     mChromeDataSource->AddDataSource(dataSource);
 
     name = "all-packages.rdf";
-    LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE);
+    LoadDataSource(name, getter_AddRefs(dataSource), PR_TRUE, nsnull);
     mChromeDataSource->AddDataSource(dataSource);
   }
 
   // Always load the install dir datasources
   nsCOMPtr<nsIRDFDataSource> dataSource;
   nsCAutoString name = "user-skins.rdf";
-  LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE);
+  LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE, nsnull);
   mChromeDataSource->AddDataSource(dataSource);
 
   name = "all-skins.rdf";
-  LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE);
+  LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE, nsnull);
   mChromeDataSource->AddDataSource(dataSource);
 
   name = "user-locales.rdf";
-  LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE);
+  LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE, nsnull);
   mChromeDataSource->AddDataSource(dataSource);
 
   name = "all-locales.rdf";
-  LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE);
+  LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE, nsnull);
   mChromeDataSource->AddDataSource(dataSource);
 
   name = "all-packages.rdf";
-  LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE);
+  LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE, nsnull);
   mChromeDataSource->AddDataSource(dataSource);
   return NS_OK;
 }
