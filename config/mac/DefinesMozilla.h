@@ -41,6 +41,8 @@
 // 98-08-10 joe -- temporary item to turn on ENDER (html textareas) before it fully lands
 #define ENDER 1
 
+// 98-09-25 mlm - turn on javascript thread safety
+#define JS_THREADSAFE 1
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	You typically will not need to change things below here
