@@ -263,7 +263,7 @@ nsAttrValue::HashValue() const
 }
 
 PRBool
-nsAttrValue::EqualsIgnoreCase(const nsAttrValue& aOther) const
+nsAttrValue::Equals(const nsAttrValue& aOther) const
 {
   if (GetType() != aOther.GetType()) {
     return PR_FALSE;
@@ -272,8 +272,7 @@ nsAttrValue::EqualsIgnoreCase(const nsAttrValue& aOther) const
   switch(GetType()) {
     case eString:
     {
-      return GetStringValue().Equals(aOther.GetStringValue(),
-                                     nsCaseInsensitiveStringComparator());
+      return GetStringValue().Equals(aOther.GetStringValue());
     }
     case eHTMLValue:
     {
@@ -281,11 +280,7 @@ nsAttrValue::EqualsIgnoreCase(const nsAttrValue& aOther) const
     }
     case eAtom:
     {
-      const char *class1, *class2;
-      GetAtomValue()->GetUTF8String(&class1);
-      aOther.GetAtomValue()->GetUTF8String(&class2);
-
-      return nsCRT::strcasecmp(class1, class2) == 0;
+      return GetAtomValue() == aOther.GetAtomValue();
     }
   }
 

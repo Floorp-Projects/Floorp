@@ -133,8 +133,7 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
 
     case HTMLUNIT_STRING:
       if (mValue.mString && aOther.mValue.mString) {
-        return GetDependentString().Equals(aOther.GetDependentString(),
-                                           nsCaseInsensitiveStringComparator());
+        return GetDependentString().Equals(aOther.GetDependentString());
       }
       // One of them is null.  An == check will see if they are both null.
       return mValue.mString == aOther.mValue.mString;
@@ -154,9 +153,8 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
 
     case HTMLUNIT_ATOMARRAY:
     {
-      // Currently this isn't called (since atomarrays are never the value of
-      // a mapped attribute) so it doesn't matter that it's slow.
-      // It would be a lot simpler/faster if it was case sensitive though
+      // For classlists we could be insensitive to order, however
+      // classlists are never mapped attributes so they are never compared.
 
       PRInt32 count = mValue.mAtomArray->Count();
       if (count != aOther.mValue.mAtomArray->Count()) {
@@ -165,17 +163,8 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
 
       PRInt32 i;
       for (i = 0; i < count; ++i) {
-        const char *class1;
-        mValue.mAtomArray->ObjectAt(i)->GetUTF8String(&class1);
-        PRInt32 j;
-        for (j = 0; j < count; ++j) {
-          const char* class2;
-          aOther.mValue.mAtomArray->ObjectAt(j)->GetUTF8String(&class2);
-          if (nsCRT::strcasecmp(class1, class2) == 0) {
-            break;
-          }
-        }
-        if (j == count) {
+        if (mValue.mAtomArray->ObjectAt(i) !=
+            aOther.mValue.mAtomArray->ObjectAt(i)) {
           return PR_FALSE;
         }
       }

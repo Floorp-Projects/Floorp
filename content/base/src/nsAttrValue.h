@@ -76,7 +76,7 @@ public:
   nsIAtom* GetAtomValue() const;
 
   PRUint32 HashValue() const;
-  PRBool EqualsIgnoreCase(const nsAttrValue& aOther) const;
+  PRBool Equals(const nsAttrValue& aOther) const;
 
   enum Type {
     eString = 0,
