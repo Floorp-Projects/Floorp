@@ -190,6 +190,71 @@ private:
   float mT2P; // For unit conversions
 };
 
+static const nsCSSProperty queryableProperties[] = {
+  eCSSProperty_width,
+  eCSSProperty_height,
+  eCSSProperty_left,
+  eCSSProperty_top,
+  eCSSProperty_right,
+  eCSSProperty_bottom,
+
+  eCSSProperty_color,
+  eCSSProperty_font_family,
+  eCSSProperty_font_style,
+  eCSSProperty_font_size,
+  eCSSProperty_font_weight,
+  eCSSProperty_font_variant,
+
+  eCSSProperty_background_color,
+  eCSSProperty_background_image,
+
+  eCSSProperty_display,
+
+  eCSSProperty_padding,
+  eCSSProperty_padding_top,
+  eCSSProperty_padding_bottom,
+  eCSSProperty_padding_left,
+  eCSSProperty_padding_right,
+
+  eCSSProperty_border_style,
+  eCSSProperty_border_width,
+  eCSSProperty_border_collapse,
+  eCSSProperty_border_spacing,
+  eCSSProperty_border_top_style,
+  eCSSProperty_border_bottom_style,
+  eCSSProperty_border_left_style,
+  eCSSProperty_border_right_style,
+  eCSSProperty_border_top_width,
+  eCSSProperty_border_bottom_width,
+  eCSSProperty_border_left_width,
+  eCSSProperty_border_right_width,
+  eCSSProperty_border_top_color,
+  eCSSProperty_border_bottom_color,
+  eCSSProperty_border_left_color,
+  eCSSProperty_border_right_color,
+
+  eCSSProperty_margin,
+  eCSSProperty_margin_top,
+  eCSSProperty_margin_bottom,
+  eCSSProperty_margin_left,
+  eCSSProperty_margin_right,
+
+  eCSSProperty_outline,
+  eCSSProperty_outline_width,
+  eCSSProperty_outline_style,
+  eCSSProperty_outline_color,
+  
+  eCSSProperty_marker_offset,
+  
+  eCSSProperty_z_index,
+  
+  eCSSProperty_list_style_image,
+  
+  eCSSProperty_text_align,
+  eCSSProperty_text_decoration,
+  
+  eCSSProperty_behavior,
+};
 
 nsresult
 NS_NewComputedDOMStyle(nsIComputedDOMStyle** aComputedStyle)
@@ -287,7 +352,7 @@ NS_IMETHODIMP
 nsComputedDOMStyle::GetLength(PRUint32* aLength)
 {
   NS_ENSURE_ARG_POINTER(aLength);
-  *aLength = 0;
+  *aLength = sizeof(queryableProperties) / sizeof(nsCSSProperty);
   return NS_OK;
 }
 
@@ -499,7 +564,12 @@ nsComputedDOMStyle::SetProperty(const nsAReadableString& aPropertyName,
 NS_IMETHODIMP
 nsComputedDOMStyle::Item(PRUint32 aIndex, nsAWritableString& aReturn)
 {
+  PRUint32 length;
+  GetLength(&length);
   aReturn.Truncate();
+  if (aIndex >= 0 && aIndex < length) {
+    CopyASCIItoUCS2(nsLiteralCString(nsCSSProps::GetStringValue(queryableProperties[aIndex])), aReturn);
+  }
   return NS_OK;
 }
 
