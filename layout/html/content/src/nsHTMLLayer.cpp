@@ -26,6 +26,10 @@
 #include "nsIPresContext.h"
 #include <limits.h>
 
+#if !defined(_I32_MIN)
+#define _I32_MIN    (-2147483647i32 - 1) /* minimum signed 32 bit value */
+#endif
+
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 
 class LayerPart : public nsHTMLContainer {
