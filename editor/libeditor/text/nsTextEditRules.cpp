@@ -1247,6 +1247,9 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
       nsAutoString val(nsEditor::kMOZEditorBogusNodeValue);
       newPElement->SetAttribute(att, val);
     }
+    
+    // set selection
+    aSelection->Collapse(bodyNode,0);
   }
   return res;
 }
