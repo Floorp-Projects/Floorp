@@ -87,6 +87,7 @@ GTK_VERSION=1.2.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.004
 LIBART_VERSION=2.3.4
+CAIRO_VERSION=0.1.17
 GTK2_VERSION=1.3.7
 MAKE_VERSION=3.78
 WINDRES_VERSION=2.14.90
@@ -3804,6 +3805,15 @@ if test -n "$MOZ_SVG_RENDERER_LIBART"; then
   AC_DEFINE(MOZ_SVG_RENDERER_LIBART)
 fi
 
+MOZ_ARG_ENABLE_BOOL(svg-renderer-cairo,
+[  --enable-svg-renderer-cairo Enable SVG cairo renderer ],
+    MOZ_SVG_RENDERER_CAIRO=1,
+    MOZ_SVG_RENDERER_CAIRO= )
+if test -n "$MOZ_SVG_RENDERER_CAIRO"; then
+  AC_DEFINE(MOZ_SVG_RENDERER_CAIRO)
+fi
+AC_SUBST(MOZ_SVG_RENDERER_CAIRO)
+
 dnl To build transformiix standalone, set TX_EXE while configuring
 if test "$TX_EXE"; then
   AC_DEFINE(TX_EXE)
@@ -4904,6 +4914,21 @@ fi
 AC_SUBST(MOZ_LIBART_CFLAGS)
 AC_SUBST(MOZ_LIBART_LIBS)
 AC_SUBST(MOZ_INTERNAL_LIBART_LGPL)
+
+dnl ========================================================
+dnl Check for cairo
+dnl ========================================================
+MOZ_CAIRO_CFLAGS=
+MOZ_CAIRO_LIBS=
+
+if test "$MOZ_SVG_RENDERER_CAIRO"; then
+   PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION)
+   MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
+   MOZ_CAIRO_LIBS=$CAIRO_LIBS
+fi
+
+AC_SUBST(MOZ_CAIRO_CFLAGS)
+AC_SUBST(MOZ_CAIRO_LIBS)
 
 dnl ========================================================
 dnl disable xul

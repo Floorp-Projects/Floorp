@@ -191,6 +191,10 @@ void NS_FreeSVGRendererLibartGlobals();
 void NS_InitSVGRendererGDIPlusGlobals();
 void NS_FreeSVGRendererGDIPlusGlobals();
 #endif
+#ifdef MOZ_SVG_RENDERER_CAIRO
+void NS_InitSVGRendererCairoGlobals();
+void NS_FreeSVGRendererCairoGlobals();
+#endif
 #endif
 
 // jst says, ``we need this to avoid holding on to XPConnect past its
@@ -281,6 +285,9 @@ Initialize(nsIModule* aSelf)
 #ifdef MOZ_SVG_RENDERER_GDIPLUS
   NS_InitSVGRendererGDIPlusGlobals();
 #endif
+#ifdef MOZ_SVG_RENDERER_CAIRO
+  NS_InitSVGRendererCairoGlobals();
+#endif
 #endif
 
 #ifdef DEBUG
@@ -368,6 +375,9 @@ Shutdown(nsIModule* aSelf)
 #ifdef MOZ_SVG_RENDERER_GDIPLUS
   NS_FreeSVGRendererGDIPlusGlobals();
 #endif
+#ifdef MOZ_SVG_RENDERER_CAIRO
+  NS_FreeSVGRendererCairoGlobals();
+#endif
 #endif
 
   nsCSSFrameConstructor::ReleaseGlobals();
@@ -445,6 +455,9 @@ nsresult NS_NewSVGRendererGDIPlus(nsISVGRenderer** aResult);
 #ifdef MOZ_SVG_RENDERER_LIBART
 nsresult NS_NewSVGRendererLibart(nsISVGRenderer** aResult);
 #endif // MOZ_SVG_RENDERER_LIBART
+#ifdef MOZ_SVG_RENDERER_CAIRO
+nsresult NS_NewSVGRendererCairo(nsISVGRenderer** aResult);
+#endif // MOZ_SVG_RENDERER_CAIRO
 
 nsresult NS_NewSVGElementFactory(nsIElementFactory** aResult);
 #endif
@@ -497,6 +510,9 @@ MAKE_CTOR(CreateNewSVGRendererGDIPlus,  nsISVGRenderer,         NS_NewSVGRendere
 #ifdef MOZ_SVG_RENDERER_LIBART
 MAKE_CTOR(CreateNewSVGRendererLibart,   nsISVGRenderer,         NS_NewSVGRendererLibart)
 #endif // MOZ_SVG_RENDERER_LIBART
+#ifdef MOZ_SVG_RENDERER_CAIRO
+MAKE_CTOR(CreateNewSVGRendererCairo,    nsISVGRenderer,         NS_NewSVGRendererCairo)
+#endif // MOZ_SVG_RENDERER_CAIRO
 #endif
 MAKE_CTOR(CreateCaret,                  nsICaret,               NS_NewCaret)
 
@@ -719,6 +735,12 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_SVG_RENDERER_LIBART_CONTRACTID,
     CreateNewSVGRendererLibart },
 #endif // MOZ_SVG_RENDERER_LIBART
+#ifdef MOZ_SVG_RENDERER_CAIRO
+  { "SVG Cairo Renderer",
+    NS_SVG_RENDERER_CAIRO_CID,
+    NS_SVG_RENDERER_CAIRO_CONTRACTID,
+    CreateNewSVGRendererCairo },
+#endif // MOZ_SVG_RENDERER_CAIRO
 #endif // MOZ_SVG
 
 #ifdef DEBUG
