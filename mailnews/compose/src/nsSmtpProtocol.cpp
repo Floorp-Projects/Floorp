@@ -1172,11 +1172,13 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 	{
 		/* more senders to RCPT to 
 		 */
+        // fake to 250 because SendMailResponse() can't handle 251
+        m_responseCode = 250;
         m_nextState = SMTP_SEND_MAIL_RESPONSE; 
 		return(0);
 	}
 
-    /* else send the RCPT TO: command */
+    /* else send the DATA command */
 	buffer = "DATA";
 	buffer += CRLF;
     nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);  
