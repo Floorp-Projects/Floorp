@@ -435,16 +435,22 @@ nsFileTransport::Process(void)
       }
 
       case READING: {
+        // Use a temporary status variable here so that we don't whack mStatus with 
+        // NS_BASE_STREAM_WOULD_BLOCK. This could cause the async stream listener to
+        // decide an error was happening, and not deliver necessary events.
+        nsresult status;
+
         PRUint32 writeAmt;
         // and feed the buffer to the application via the buffer stream:
-        mStatus = mOutputStream->WriteFrom(mSource, mTransferAmount, &writeAmt);
+        status = mOutputStream->WriteFrom(mSource, mTransferAmount, &writeAmt);
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: READING [this=%x %s] amt=%d status=%x",
-                this, mStreamName.GetBuffer(), writeAmt, mStatus));
-        if (mStatus == NS_BASE_STREAM_WOULD_BLOCK) {
+                this, mStreamName.GetBuffer(), writeAmt, status));
+        if (status == NS_BASE_STREAM_WOULD_BLOCK) {
             mStatus = NS_OK;
             return;
         }
+        mStatus = status;
         if (NS_FAILED(mStatus) || writeAmt == 0) {
             PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                    ("nsFileTransport: READING [this=%x %s] %s writing to buffered output stream",
@@ -597,34 +603,41 @@ nsFileTransport::Process(void)
       }
 
       case WRITING: {
+        // Use a temporary status variable here so that we don't whack mStatus with 
+        // NS_BASE_STREAM_WOULD_BLOCK. This could cause the async stream listener to
+        // decide an error was happening, and not deliver necessary events.
+        nsresult status;
+
         PRUint32 transferAmt = mBufferSegmentSize;
         if (mTransferAmount >= 0)
             transferAmt = PR_MIN(mBufferSegmentSize, (PRUint32)mTransferAmount);
         PRUint32 writeAmt;
         if (mInputStream) {
-            mStatus = mInputStream->ReadSegments(nsWriteToFile, mSink,
-                                                 transferAmt, &writeAmt);
+            status = mInputStream->ReadSegments(nsWriteToFile, mSink,
+                                                transferAmt, &writeAmt);
         }
         else {
             PRUint32 readAmt;
-            mStatus = mSource->Read(mBuffer, transferAmt, &readAmt);
-            if (mStatus == NS_BASE_STREAM_WOULD_BLOCK) {
+            status = mSource->Read(mBuffer, transferAmt, &readAmt);
+            if (status == NS_BASE_STREAM_WOULD_BLOCK) {
                 mStatus = NS_OK;
                 return;
             }
+            mStatus = status;
             if (NS_FAILED(mStatus) || readAmt == 0) {
                 mXferState = END_WRITE;
                 return;
             }
-            mStatus = mSink->Write(mBuffer, readAmt, &writeAmt);
+            status = mSink->Write(mBuffer, readAmt, &writeAmt);
         }
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: WRITING [this=%x %s] amt=%d status=%x",
-                this, mStreamName.GetBuffer(), writeAmt, mStatus));
-        if (mStatus == NS_BASE_STREAM_WOULD_BLOCK) {
+                this, mStreamName.GetBuffer(), writeAmt, status));
+        if (status == NS_BASE_STREAM_WOULD_BLOCK) {
             mStatus = NS_OK;
             return;
         }
+        mStatus = status;
         if (NS_FAILED(mStatus) || writeAmt == 0) {
             mXferState = END_WRITE;
             return;
