@@ -912,9 +912,6 @@ browser/components/bookmarks/public/Makefile
 browser/components/bookmarks/src/Makefile
 browser/components/build/Makefile
 browser/components/cookieviewer/Makefile
-browser/components/downloads/Makefile
-browser/components/downloads/public/Makefile
-browser/components/downloads/src/Makefile
 browser/components/history/Makefile
 browser/components/prefwindow/Makefile
 browser/components/prefwindow/content/Makefile
