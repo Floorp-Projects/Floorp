@@ -888,6 +888,8 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromDS(const char * 
       rv = FillContentHandlerProperties(contentTypeStr.get(), contentTypeNodeResource, rdf, aMIMEInfo);
     }
   }  // if we have a node in the graph for this extension
+  else if (!contentTypeNodeResource)
+    rv = NS_ERROR_NOT_AVAILABLE;
   return rv;
 }
 
@@ -2442,6 +2444,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForExtensionFromExtras(const cha
                                             nsCaseInsensitiveCStringComparator()))
           {
               // Set attributes appropriately.
+              aMIMEInfo->SetMIMEType(extraMimeEntries[index].mMimeType);
               aMIMEInfo->SetFileExtensions(extraMimeEntries[index].mFileExtensions);
               aMIMEInfo->SetDescription(NS_ConvertASCIItoUCS2(extraMimeEntries[index].mDescription).get());
               aMIMEInfo->SetMacType(extraMimeEntries[index].mMactype);
