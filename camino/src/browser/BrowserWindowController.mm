@@ -982,11 +982,17 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)previousTab
 {
+  if ([mTabBrowser indexOfTabViewItem:[mTabBrowser selectedTabViewItem]] == 0)
+    [mTabBrowser selectLastTabViewItem:self];
+  else
     [mTabBrowser selectPreviousTabViewItem:self];
 }
 
 - (void)nextTab
 {
+  if ([mTabBrowser indexOfTabViewItem:[mTabBrowser selectedTabViewItem]] == [mTabBrowser numberOfTabViewItems] - 1)
+    [mTabBrowser selectFirstTabViewItem:self];
+  else
     [mTabBrowser selectNextTabViewItem:self];
 }
 
