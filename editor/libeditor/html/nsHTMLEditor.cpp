@@ -2543,24 +2543,35 @@ nsHTMLEditor::GetDocumentLength(PRInt32 *aCount)
     return NS_OK;
   }
   
-  nsCOMPtr<nsIDOMSelection> sel;
-  result = GetSelection(getter_AddRefs(sel));
-  if (NS_FAILED(result)) return result;
-  if (!sel) return NS_ERROR_NULL_POINTER;
+  // get the body node
+  nsCOMPtr<nsIDOMElement> bodyElement;
+  result = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
+  if (NS_FAILED(result)) { return result; }
+  if (!bodyElement) { return NS_ERROR_NULL_POINTER; }
 
-  nsAutoSelectionReset selectionResetter(sel);
-  result = SelectAll();
+  // get the offsets of the first and last children of the body node
+  nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
+  if (!bodyNode) { return NS_ERROR_NULL_POINTER; }
+  PRInt32 numBodyChildren=0;
+  nsCOMPtr<nsIDOMNode>lastChild;
+  result = bodyNode->GetLastChild(getter_AddRefs(lastChild));
+  if (NS_FAILED(result)) { return result; }
+  if (!lastChild) { return NS_ERROR_NULL_POINTER; }
+  result = GetChildOffset(lastChild, bodyNode, numBodyChildren);
+  if (NS_FAILED(result)) { return result; }
+
+  // count
+  PRInt32 start, end;
+  result = GetAbsoluteOffsetsForPoints(bodyNode, 0, 
+                                       bodyNode, numBodyChildren, 
+                                       bodyNode, start, end);
   if (NS_SUCCEEDED(result))
   {
-    PRInt32 start, end;
-    result = GetTextSelectionOffsets(sel, start, end);
-    if (NS_SUCCEEDED(result))
-    {
-      NS_ASSERTION(0==start, "GetTextSelectionOffsets failed to set start correctly.");
-      NS_ASSERTION(0<=end, "GetTextSelectionOffsets failed to set end correctly.");
-      if (0<=end) {
-        *aCount = end;
-      }
+    NS_ASSERTION(0==start, "GetAbsoluteOffsetsForPoints failed to set start correctly.");
+    NS_ASSERTION(0<=end, "GetAbsoluteOffsetsForPoints failed to set end correctly.");
+    if (0<=end) {
+      *aCount = end;
+      printf ("count = %d\n", *aCount);
     }
   }
   return result;
@@ -3628,17 +3639,15 @@ void nsHTMLEditor::IsTextStyleSet(nsIStyleContext *aSC,
 }
 
 
-// this is a complete ripoff from nsTextEditor::GetTextSelectionOffsetsForRange
-// the two should use common code, or even just be one method
 nsresult nsHTMLEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
-                                               PRInt32 &aStartOffset, 
-                                               PRInt32 &aEndOffset)
+                                               PRInt32 &aOutStartOffset, 
+                                               PRInt32 &aOutEndOffset)
 {
 	if(!aSelection) { return NS_ERROR_NULL_POINTER; }
   nsresult result;
   // initialize out params
-  aStartOffset = 0; // default to first char in selection
-  aEndOffset = -1;  // default to total length of text in selection
+  aOutStartOffset = 0; // default to first char in selection
+  aOutEndOffset = -1;  // default to total length of text in selection
 
   nsCOMPtr<nsIDOMNode> startNode, endNode, parentNode;
   PRInt32 startOffset, endOffset;
@@ -3667,6 +3676,29 @@ nsresult nsHTMLEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
   }
 
 
+  return GetAbsoluteOffsetsForPoints(startNode, startOffset, 
+                                     endNode, endOffset, 
+                                     parentNode,
+                                     aOutStartOffset, aOutEndOffset);
+}
+
+// this is a complete ripoff from nsTextEditor::GetTextSelectionOffsetsForRange
+// the two should use common code, or even just be one method
+nsresult nsHTMLEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
+                                                   PRInt32 aInStartOffset,
+                                                   nsIDOMNode *aInEndNode,
+                                                   PRInt32 aInEndOffset,
+                                                   nsIDOMNode *aInCommonParentNode,
+                                                   PRInt32 &aOutStartOffset, 
+                                                   PRInt32 &aOutEndOffset)
+{
+	if(!aInStartNode || !aInEndNode || !aInCommonParentNode) { return NS_ERROR_NULL_POINTER; }
+
+  nsresult result;
+  // initialize out params
+  aOutStartOffset = 0; // default to first char in selection
+  aOutEndOffset = -1;  // default to total length of text in selection
+
   nsCOMPtr<nsIContentIterator> iter;
   result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
                                               nsIContentIterator::GetIID(), 
@@ -3676,7 +3708,7 @@ nsresult nsHTMLEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
     
   PRUint32 totalLength=0;
   nsCOMPtr<nsIDOMCharacterData>textNode;
-  nsCOMPtr<nsIContent>blockParentContent = do_QueryInterface(parentNode);
+  nsCOMPtr<nsIContent>blockParentContent = do_QueryInterface(aInCommonParentNode);
   iter->Init(blockParentContent);
   // loop through the content iterator for each content node
   nsCOMPtr<nsIContent> content;
@@ -3690,13 +3722,13 @@ nsresult nsHTMLEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
       if (!currentNode) {return NS_ERROR_NO_INTERFACE;}
       if (PR_TRUE==IsEditable(currentNode))
       {
-        if (currentNode.get() == startNode.get())
+        if (currentNode.get() == aInStartNode)
         {
-          aStartOffset = totalLength + startOffset;
+          aOutStartOffset = totalLength + aInStartOffset;
         }
-        if (currentNode.get() == endNode.get())
+        if (currentNode.get() == aInEndNode)
         {
-          aEndOffset = totalLength + endOffset;
+          aOutEndOffset = totalLength + aInEndOffset;
           break;
         }
         PRUint32 length;
@@ -3707,8 +3739,8 @@ nsresult nsHTMLEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
     iter->Next();
     iter->CurrentNode(getter_AddRefs(content));
   }
-  if (-1==aEndOffset) {
-    aEndOffset = totalLength;
+  if (-1==aOutEndOffset) {
+    aOutEndOffset = totalLength;
   }
   return result;
 }
@@ -3717,11 +3749,11 @@ nsresult nsHTMLEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
 NS_IMETHODIMP
 nsHTMLEditor::GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection,
                                               nsIDOMNode **aParent,
-                                              PRInt32     &aStartOffset, 
+                                              PRInt32     &aOutStartOffset, 
                                               PRInt32     &aEndOffset)
 {
 	if (!aSelection) { return NS_ERROR_NULL_POINTER; }
-	aStartOffset = aEndOffset = 0;
+	aOutStartOffset = aEndOffset = 0;
   nsresult result;
 
   nsCOMPtr<nsIDOMNode> startNode, endNode;
@@ -3766,7 +3798,7 @@ nsHTMLEditor::GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection,
       nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(textNode);
       if (currentNode.get() == startNode.get())
       {
-        aStartOffset = totalLength + startOffset;
+        aOutStartOffset = totalLength + startOffset;
       }
       if (currentNode.get() == endNode.get())
       {
@@ -3784,7 +3816,7 @@ nsHTMLEditor::GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection,
 }
 
 void nsHTMLEditor::ResetTextSelectionForRange(nsIDOMNode *aParent,
-                                              PRInt32     aStartOffset,
+                                              PRInt32     aOutStartOffset,
                                               PRInt32     aEndOffset,
                                               nsIDOMSelection *aSelection)
 {
@@ -3814,11 +3846,11 @@ void nsHTMLEditor::ResetTextSelectionForRange(nsIDOMNode *aParent,
     {
       PRUint32 length;
       textNode->GetLength(&length);
-      if ((PR_FALSE==setStart) && aStartOffset<=(PRInt32)(totalLength+length))
+      if ((PR_FALSE==setStart) && aOutStartOffset<=(PRInt32)(totalLength+length))
       {
         setStart = PR_TRUE;
         startNode = do_QueryInterface(textNode);
-        startOffset = aStartOffset-totalLength;
+        startOffset = aOutStartOffset-totalLength;
       }
       if (aEndOffset<=(PRInt32)(totalLength+length))
       {
