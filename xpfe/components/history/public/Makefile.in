@@ -29,7 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= appcomps
 XPIDL_MODULE	= history
 
-XPIDLSRCS	= nsIGlobalHistory.idl  \
+XPIDLSRCS	= 	nsIGlobalHistory.idl  \
+				nsIBrowserHistory.idl \
                   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
