@@ -14,6 +14,7 @@
 #include "DlgFind.h"
 #include "DlgAdd.h"
 #include "Encoding.h"
+#include "globals.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -402,6 +403,8 @@ BOOL CPrefEditView::LoadTreeControl()
 
   XML_ParserFree(parser);
 
+  CheckForRemoteAdmins();
+
   free(buffer);
   return TRUE;
   
@@ -788,7 +791,9 @@ void CPrefEditView::EditSelectedPrefsItem()
       imageIndexSel = imageIndex = bm_lockedPad;
 
     treeCtrl.SetItemImage(hTreeCtrlItem, imageIndex, imageIndexSel);
-   
+
+    CheckForRemoteAdmins();
+
   }
 }
 
@@ -868,4 +873,51 @@ void CPrefEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
   {
 	  CTreeView::OnKeyDown(nChar, nRepCnt, nFlags);
   }
+}
+
+// Check to see if any of the prefs were marked for remote admin
+// if any have, set the global RemoteAdminFound to true
+
+void CPrefEditView::CheckForRemoteAdmins()
+{
+  CTreeCtrl &treeCtrl = GetTreeCtrl();
+  HTREEITEM hRoot = treeCtrl.GetRootItem();
+
+  if (IsRemoteAdministered(hRoot))
+	  SetGlobal("RemoteAdminPrefFound","1");
+  else
+	  SetGlobal("RemoteAdminPrefFound","0");
+}
+
+
+// Given a tree item, returns TRUE if it or any children are remote
+// administered 
+bool CPrefEditView::IsRemoteAdministered(HTREEITEM hItem)
+{
+
+	if(!hItem)
+		return FALSE;
+
+    // Get the pref name associated with this tree ctrl item.
+    CTreeCtrl &treeCtrl = GetTreeCtrl();
+    CPrefElement* pe = (CPrefElement*)treeCtrl.GetItemData(hItem);
+
+    if (pe && pe->IsRemoteAdmin())
+		return TRUE;
+
+	bool bRemoted = FALSE;
+	HTREEITEM hChild = treeCtrl.GetChildItem(hItem);
+	
+	if(hChild)
+		bRemoted = IsRemoteAdministered(hChild);
+
+	if(bRemoted == FALSE)
+	{
+		HTREEITEM hSibling = treeCtrl.GetNextSiblingItem(hItem);
+		if(hSibling)
+			bRemoted = IsRemoteAdministered(hSibling);
+	}
+
+	return bRemoted;
+  
 }

@@ -34,6 +34,7 @@ public:
   void DoFindFirst();   // open the Find Pref dialog
   void DoFindNext();    // find next item
   void DoAdd();         // open the Add Pref dialog
+  void CheckForRemoteAdmins(); // see if any prefs were marked remote admin
 
   // These are only for the XML parser to call.
   void startElement(const char *name, const char **atts);
@@ -95,6 +96,7 @@ private:
   HTREEITEM FindTreeItemFromPrefname(HTREEITEM hItem, CString& rstrPrefName);
   HTREEITEM InsertPrefElement(CPrefElement* pe, HTREEITEM group);
   HTREEITEM AddPref(CString& rstrPrefName, CString& rstrPrefDesc, CString& rstrPrefType);
+  bool IsRemoteAdministered(HTREEITEM hItem);
 
   BOOL LoadTreeControl();
   void WriteXMLItem(FILE* fp, int iLevel, HTREEITEM hItem);
