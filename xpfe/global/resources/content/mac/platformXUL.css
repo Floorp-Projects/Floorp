@@ -17,3 +17,6 @@ statusbar {
   padding-right: 14px;
 }
 
+.statusbar-resizerpanel {
+  display: none;
+}
