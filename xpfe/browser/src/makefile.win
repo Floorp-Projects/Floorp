@@ -74,6 +74,7 @@ install:: $(DLL)
 	$(MAKE_INSTALL) navigator.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) navigator.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) saveToDisk.xul $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) NetSupportUserPassword.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) downloadProgress.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) downloadProgress.css $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) navigator-mozillazine0.css $(DIST)\bin\res\samples
@@ -102,4 +103,5 @@ clobber::
 	rm -f $(DIST)\res\samples\navigator-goofy.css
 	rm -f $(DIST)\res\samples\navigator-shiny.css
 	rm -f $(DIST)\res\samples\raindrops_light.gif
+	rm -f $(DIST)\bin\res\samples\NetSupportUserPassword.xul
 
