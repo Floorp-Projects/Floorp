@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Entry.pm,v 1.10 1999/01/21 23:52:42 leif%netscape.com Exp $
+# $Id: Entry.pm,v 1.11 1999/03/22 04:04:56 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -34,25 +34,46 @@ require Tie::Hash;
 
 
 #############################################################################
+# Constructor, for convenience.
+#
+sub new
+{
+  my $class = shift;
+  my (%entry, $obj);
+
+  tie %entry, $class;
+  $obj = bless \%entry, $class;
+  $obj->{"_self_obj_"} = $obj;
+
+  return $obj;
+}
+
+
+#############################################################################
 # Creator, make a new tie hash instance, which will keep track of all
 # changes made to the hash array. This is needed so we only update modified
 # attributes.
 #
 sub TIEHASH
 {
-  my $class = shift;
-  my $self = {};
+  my ($class, $self) = (shift, {});
 
   return bless $self, $class;
 }
 
 
 #############################################################################
-# Destructor.
+# Destructor, free a bunch of memory. This makes a lot more sense now,
+# since apparently Perl does not handle self references properly within an
+# object(??).
 #
-#sub DESTROY
-#{
-#}
+sub DESTROY
+{
+  my $self = shift;
+
+  undef %{$self};
+  undef $self;
+}
 
 
 #############################################################################
@@ -68,10 +89,14 @@ sub STORE
   if (defined($self->{$attr}))
     {
       @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
-        unless $self->{"_${attr}_save_"};
+        unless defined($self->{"_${attr}_save_"});
     }
   $self->{$attr} = $val;
+  return if ($attr =~ /^_.+_$/);        # Don't track "internal" values
+
   $self->{"_${attr}_modified_"} = 1;
+  delete $self->{"_self_obj_"}->{"_${attr}_deleted_"}
+    if defined($self->{"_${attr}_deleted_"});
 
   # Potentially add the attribute to the OC order list.
   if (($attr ne "dn") && !grep(/^$attr$/i, @{$self->{"_oc_order_"}}))
@@ -90,7 +115,7 @@ sub FETCH
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
   return unless defined($self->{$attr});
-  return if $self->{"_${attr}_deleted_"};
+  return if defined($self->{"_${attr}_deleted_"});
 
   return $self->{$attr};
 }
@@ -107,7 +132,14 @@ sub DELETE
   return unless (defined($attr) && ($attr ne ""));
   return unless defined($self->{$attr});
 
-  $self->{"_${attr}_deleted_"} = 1;
+  if ($attr =~ /^_.+_$/)
+    {
+      delete $self->{$attr};
+    }
+  else
+    {
+      $self->{"_self_obj_"}->{"_${attr}_deleted_"} = 1;
+    }
 }
 
 
@@ -119,7 +151,7 @@ sub EXISTS
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
   return 0 unless (defined($attr) && ($attr ne ""));
-  return 0 if $self->{"_${attr}_deleted_"};
+  return 0 if defined($self->{"_${attr}_deleted_"});
 
   return exists $self->{$attr};
 }
@@ -139,7 +171,7 @@ sub FIRSTKEY
     {
       $key = $attrs[$idx++];
       next if ($key =~ /^_.+_$/);
-      next if $self->{"_${key}_deleted_"};
+      next if defined($self->{"_${key}_deleted_"});
       last;
     }
   $self->{"_oc_keyidx_"} = $idx;
@@ -162,13 +194,13 @@ sub NEXTKEY
     {
       $key = $attrs[$idx++];
       next if ($key =~ /^_.+_$/);
-      next if $self->{"_${key}_deleted_"};
+      next if defined($self->{"_${key}_deleted_"});
       last;
     }
   $self->{"_oc_keyidx_"} = $idx;
 
   return if ($key =~ /^_.+_$/);
-  return if $self->{"_${key}_deleted_"};
+  return if defined($self->{"_${key}_deleted_"});
   return $key;
 }
 
@@ -183,15 +215,43 @@ sub attrModified
 
   return 0 unless (defined($attr) && ($attr ne ""));
   return 0 unless defined($self->{$attr});
-  return 0 if $self->{"_${attr}_deleted_"};
+  return 0 if defined($self->{"_${attr}_deleted_"});
 
-  @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
-    unless $self->{"_${attr}_save_"};
+  @{$self->{"_self_obj_"}->{"_${attr}_save_"}} = @{$self->{$attr}}
+    unless defined($self->{"_${attr}_save_"});
   $self->{"_self_obj_"}->{"_${attr}_modified_"} = 1;
+  delete $self->{"_self_obj_"}->{"_${attr}_deleted_"}
+    if defined($self->{"_${attr}_deleted_"});
+
 
   return 1;
 }
 *markModified = \*attrModified;
+
+
+#############################################################################
+# Mark an attribute as "clean", meaning nothing has been changed in it.
+# You should probably not use this method, unless you really know what
+# you are doing... It is however used heavily by the Conn.pm package.
+#
+sub attrClean
+{
+  my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
+
+  return 0 unless (defined($attr) && ($attr ne ""));
+
+  delete $self->{"_self_obj_"}->{"_${attr}_modified_"}
+    if defined($self->{"_${attr}_modified_"});
+
+  delete $self->{"_self_obj_"}->{"_${attr}_deleted_"}
+    if defined($self->{"_${attr}_deleted_"});
+
+  if (defined($self->{"_${attr}_save_"}))
+    {
+      undef @{$self->{"_self_obj_"}->{"_${attr}_save_"}};
+      delete $self->{"_self_obj_"}->{"_${attr}_save_"}; 
+    }
+}
 
 
 #############################################################################
@@ -204,7 +264,9 @@ sub isModified
 
   return 0 unless (defined($attr) && ($attr ne ""));
   return 0 unless defined($self->{$attr});
-  return $self->{"_self_obj_"}->{"_${attr}_modified_"};
+  return 0 unless defined($self->{"_${attr}_modified_"});
+
+  return 1;
 }
 
 
@@ -218,8 +280,9 @@ sub isDeleted
 
   return 0 unless (defined($attr) && ($attr ne ""));
   return 0 unless defined($self->{$attr});
+  return 0 unless defined($self->{"_${attr}_deleted_"});
 
-  return $self->{"_self_obj_"}->{"_${attr}_deleted_"};
+  return 1;
 }
 
 
@@ -233,7 +296,7 @@ sub isAttr
 
   return 0 unless (defined($attr) && ($attr ne ""));
   return 0 unless defined($self->{$attr});
-  return 0 if $self->{"_${attr}_deleted_"};
+  return 0 if defined($self->{"_${attr}_deleted_"});
 
   return ($attr !~ /^_.+_$/);
 }
@@ -269,11 +332,15 @@ sub unRemove
   return 0 unless (defined($attr) && ($attr ne ""));
   return 0 unless defined($self->{$attr});
 
-  undef $self->{"_self_obj_"}->{"_${attr}_deleted_"};
-  if (defined $self->{"_${attr}_save_"})
+  # ToDo: We need to verify that this sucker works...
+  delete $self->{"_self_obj_"}->{"_${attr}_deleted_"};
+  if (defined($self->{"_${attr}_save_"}))
     {
-      @{$self->{$attr}} = @{$self->{"_${attr}_save_"}};
-      undef @{$selfl->{"_${key}_save_"}};
+      undef @{$self->{"_self_obj_"}->{$attr}};
+      delete $self->{"_self_obj_"}->{$attr};
+      @{$self->{"_self_obj_"}->{$attr}} = @{$self->{"_${attr}_save_"}};
+      undef @{$self->{"_self_obj_"}->{"_${attr}_save_"}};
+      delete $self->{"_self_obj_"}->{"_${attr}_save_"};
     }
 
   return 1;
@@ -298,8 +365,8 @@ sub removeValue
   return 0 unless defined($self->{$attr});
 
   $val = normalizeDN($val) if (defined($norm) && $norm);
-  @{$self->{"_${attr}_save_"}} = @{$self->{$attr}} unless
-    defined $self->{"_${attr}_save_"};
+  @{$self->{"_self_obj_"}->{"_${attr}_save_"}} = @{$self->{$attr}} unless
+    defined($self->{"_${attr}_save_"});
 
   foreach (@{$self->{$attr}})
     {
@@ -353,7 +420,7 @@ sub addValue
   return 0 unless (defined($val) && ($val ne ""));
   return 0 unless (defined($attr) && ($attr ne ""));
 
-  if (!defined($force) || !$force)
+  if (defined($self->{$attr}) && (!defined($force) || !$force))
     {
       my $nval = $val;
 
@@ -367,12 +434,25 @@ sub addValue
 
   if (defined($self->{$attr}))
     {
-      @{$self->{"_${attr}_save_"}} = @{$self->{$attr}}
-        unless $self->{"_${attr}_save_"};
+      @{$self->{"_self_obj_"}->{"_${attr}_save_"}} = @{$self->{$attr}}
+        unless defined($self->{"_${attr}_save_"});
+    }
+  else
+    {
+      @{$self->{"_self_obj_"}->{"_${attr}_save_"}} = ()
+        unless defined($self->{"_${attr}_save_"});
     }
 
   $self->{"_self_obj_"}->{"_${attr}_modified_"} = 1;
-  push(@{$self->{$attr}}, $val);
+  if (defined($self->{"_${attr}_deleted_"}))
+    {
+      delete $self->{"_self_obj_"}->{"_${attr}_deleted_"};
+      $self->{$attr} = [$val];
+    }
+  else
+    {
+      push(@{$self->{$attr}}, $val);
+    }
 
   # Potentially add the attribute to the OC order list.
   if (($attr ne "dn") && !grep(/^$attr$/i, @{$self->{"_oc_order_"}}))
@@ -409,13 +489,15 @@ sub addDNValue
 sub setValue
 {
   my ($self, $attr) = (shift, lc shift);
-  my (@vals) = @_;
+  my @vals = @_;
   local $_;
 
   return 0 unless (defined(@vals) && ($#vals >= $[));
   return 0 unless (defined($attr) && ($attr ne ""));
 
-  $self->{$attr} = [@vals];
+  $self->{"_self_obj_"}->{$attr} = [ @vals ];
+  $self->{"_self_obj_"}->{"_${attr}_modified_"} = 1;
+
   return 1;
 }
 
@@ -426,7 +508,7 @@ sub setValue
 #
 sub hasValue
 {
-  my($self, $attr, $val, $nocase, $norm) = @_;
+  my ($self, $attr, $val, $nocase, $norm) = @_;
 
   return 0 unless (defined($val) && ($val ne ""));
   return 0 unless (defined($attr) && ($attr ne ""));
@@ -459,7 +541,7 @@ sub hasValue
 #
 sub hasDNValue
 {
-  my($self, $attr, $val, $nocase) = @_;
+  my ($self, $attr, $val, $nocase) = @_;
 
   return $self->hasValue($attr, $val, $nocase, 1);
 }
@@ -467,11 +549,12 @@ sub hasDNValue
 
 #############################################################################
 # Return TRUE or FALSE, if the attribute matches the specified regexp. The
-# optional third argument says we should do case insensitive search.
+# optional third argument says we should do case insensitive search, and the
+# optional fourth argument indicates we should normalize for DN matches.
 #
 sub matchValue
 {
-  my($self, $attr, $reg, $nocase) = @_;
+  my ($self, $attr, $reg, $nocase, $norm) = @_;
 
   return 0 unless (defined($reg) && ($reg ne ""));
   return 0 unless (defined($attr) && ($attr ne ""));
@@ -489,7 +572,7 @@ sub matchValue
     {
       foreach (@{$self->{$attr}})
 	{
-	  $_ = normalizeDN($_);
+	  $_ = normalizeDN($_) if (defined($norm) && $norm);
 	  return 1 if /$reg/;
 	}
     }
@@ -503,7 +586,7 @@ sub matchValue
 #
 sub matchDNValue
 {
-  my($self, $attr, $reg, $nocase) = @_;
+  my ($self, $attr, $reg, $nocase) = @_;
 
   return $self->matchValue($attr, $reg, $nocase, 1);
 }
@@ -519,7 +602,7 @@ sub setDN
   return 0 unless (defined($val) && ($val ne ""));
 
   $val = normalizeDN($val) if (defined($norm) && $norm);
-  $self->{"dn"} = $val;
+  $self->{"_self_obj_"}->{"dn"} = $val;
 
   return 1;
 }
@@ -544,11 +627,12 @@ sub getDN
 sub size
 {
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
-  my @val;
+  my (@val);
 
   return 0 unless (defined($attr) && ($attr ne ""));
   return 0 unless defined($self->{$attr});
 
+  # This is ugly, can't we optimize this?
   @val = @{$self->{$attr}};
   return $#val + 1;
 }
@@ -563,8 +647,9 @@ sub exists
   my ($self, $attr) = ($_[$[], lc $_[$[ + 1]);
 
   return 0 unless (defined($attr) && ($attr ne ""));
+  return 0 unless defined($self->{$attr});
 
-  return defined($self->{$attr});
+  return 1;
 }
 
 
@@ -582,7 +667,7 @@ sub printLDIF
   foreach $attr (@{$self->{"_oc_order_"}})
     {
       next if ($attr =~ /^_.+_$/);
-      next if $self->{"_${attr}_deleted_"};
+      next if defined($self->{"_${attr}_deleted_"});
       grep((print "$attr: $_\n"), @{$self->{$attr}});
     }
 
@@ -816,8 +901,9 @@ usage is to see if an entry is of a certain object class, e.g.
     if ($entry->hasValue("objectclass", "person", 1)) { # do something }
 
 The (optional) third argument indicates if the string comparison should be
-case insensitive or not. The first two arguments are the name and value of
-the attribute, as usual.
+case insensitive or not, and the (optional) fourth argument indicats
+wheter we should normalize the string as if it was a DN. The first two
+arguments are the name and value of the attribute, respectively.
 
 =item B<hasDNValue>
 
