@@ -282,8 +282,9 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindowInternal *aWin)
   NS_ENSURE_TRUE(rootAsNode, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeItem> childItem;
-  rootAsNode->FindChildWithName(NS_LITERAL_STRING("content").get(), PR_TRUE, PR_FALSE, nsnull,
-    getter_AddRefs(childItem));
+  rootAsNode->FindChildWithName(NS_LITERAL_STRING("content").get(), PR_TRUE,
+				PR_FALSE, nsnull, nsnull,
+				getter_AddRefs(childItem));
 
   mDocShell = do_QueryInterface(childItem);
 

@@ -123,9 +123,11 @@ protected:
     NS_IMETHOD RemoveChromeListeners();
 
     nsresult   FindChildWithName(const PRUnichar *aName, 
-                 PRBool aRecurse, nsIDocShellTreeItem* aRequestor, 
+                 PRBool aRecurse, nsIDocShellTreeItem* aRequestor,
+                 nsIDocShellTreeItem* aOriginalRequestor,
                  nsIDocShellTreeItem **aFoundItem);
     nsresult   FindItemWithNameAcrossWindows(const PRUnichar* aName,
+                 nsIDocShellTreeItem* aOriginalRequestor,
                  nsIDocShellTreeItem **aFoundItem);
 
     void       EnsurePrompter();

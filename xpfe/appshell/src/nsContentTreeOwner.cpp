@@ -167,19 +167,21 @@ NS_IMETHODIMP nsContentTreeOwner::GetInterface(const nsIID& aIID, void** aSink)
 //*****************************************************************************   
 
 NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
-   nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem)
+   nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem* aOriginalRequestor,
+   nsIDocShellTreeItem** aFoundItem)
 {
    NS_ENSURE_ARG_POINTER(aFoundItem);
 
    *aFoundItem = nsnull;
 
-   nsAutoString   name(aName);
-
    PRBool fIs_Content = PR_FALSE;
 
    /* Special Cases */
-   if(name.IsEmpty())
+   if(!aName || !*aName)
       return NS_OK;
+
+   nsDependentString name(aName);
+
    if(name.LowerCaseEqualsLiteral("_blank"))
       return NS_OK;
    // _main is an IE target which should be case-insensitive but isn't
@@ -227,7 +229,8 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
             shellAsTreeItem->GetTreeOwner(getter_AddRefs(shellOwner));
             nsCOMPtr<nsISupports> shellOwnerSupports(do_QueryInterface(shellOwner));
 
-            shellAsTreeItem->FindItemWithName(aName, shellOwnerSupports, aFoundItem);
+            shellAsTreeItem->FindItemWithName(aName, shellOwnerSupports,
+                                              aOriginalRequestor, aFoundItem);
             }
          if(*aFoundItem)
             return NS_OK;

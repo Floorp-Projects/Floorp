@@ -91,6 +91,15 @@ nsWWJSUtils::GetDynamicScriptContext(JSContext *aContext)
   return GetScriptContextFromJSContext(aContext);
 }
 
+nsIScriptGlobalObject *
+nsWWJSUtils::GetDynamicScriptGlobal(JSContext* aContext)
+{
+  nsIScriptContext *scriptCX = GetDynamicScriptContext(aContext);
+  if (!scriptCX)
+    return nsnull;
+  return scriptCX->GetGlobalObject();
+}
+
 nsIScriptContext *
 nsWWJSUtils::GetStaticScriptContext(JSContext* aContext,
                                     JSObject* aObj)

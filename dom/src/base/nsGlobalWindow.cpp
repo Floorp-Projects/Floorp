@@ -2109,6 +2109,71 @@ nsGlobalWindow::DispatchCustomEvent(const char *aEventName)
   return preventDefault;
 }
 
+static already_AddRefed<nsIDocShellTreeItem>
+GetCallerDocShellTreeItem()
+{
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService(sJSStackContractID);
+
+  JSContext *cx = nsnull;
+
+  if (stack) {
+    stack->Peek(&cx);
+  }
+
+  nsIDocShellTreeItem *callerItem = nsnull;
+
+  if (cx) {
+    nsCOMPtr<nsIWebNavigation> callerWebNav =
+      do_GetInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
+
+    if (callerWebNav) {
+      CallQueryInterface(callerWebNav, &callerItem);
+    }
+  }
+
+  return callerItem;
+}
+
+PRBool
+nsGlobalWindow::WindowExists(const nsAString& aName)
+{
+  nsCOMPtr<nsIDocShellTreeItem> caller = GetCallerDocShellTreeItem();
+  PRBool foundWindow = PR_FALSE;
+
+  if (!caller) {
+    // If we can't reach a caller, try to use our own docshell
+    caller = do_QueryInterface(mDocShell);
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mDocShell));
+
+  if (docShell) {
+    nsCOMPtr<nsIDocShellTreeItem> namedItem;
+
+    docShell->FindItemWithName(PromiseFlatString(aName).get(), nsnull, caller,
+                               getter_AddRefs(namedItem));
+
+    foundWindow = !!namedItem;
+  } else {
+    // No caller reachable and we don't have a docshell any more. Fall
+    // back to using the windowwatcher service to find any window by
+    // name.
+
+    nsCOMPtr<nsIWindowWatcher> wwatch =
+      do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+    if (wwatch) {
+      nsCOMPtr<nsIDOMWindow> namedWindow;
+      wwatch->GetWindowByName(PromiseFlatString(aName).get(), nsnull,
+                              getter_AddRefs(namedWindow));
+
+      foundWindow = !!namedWindow;
+    }
+  }
+
+  return foundWindow;
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
 {
@@ -2431,11 +2496,11 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   // Test whether title needs to prefixed with [script]
   nsAutoString title;
   if (!IsCallerChrome()) {
-      MakeScriptDialogTitle(aTitle, title);
+    MakeScriptDialogTitle(aTitle, title);
   } else {
-      NS_WARNING("chrome shouldn't be calling prompt(), use the prompt "
-                 "service");
-      title.Assign(aTitle);
+    NS_WARNING("chrome shouldn't be calling prompt(), use the prompt "
+               "service");
+    title.Assign(aTitle);
   }
 
   nsresult rv = prompter->Prompt(title.get(),
@@ -3116,24 +3181,17 @@ nsGlobalWindow::CheckOpenAllow(PopupControlState aAbuseLevel,
       allowWindow = allowWhitelisted;
     else {
       // Special case items that don't actually open new windows.
-      nsAutoString name(aName);
-      if (!name.IsEmpty()) {
+      if (!aName.IsEmpty()) {
         // _main is an IE target which should be case-insensitive but isn't
         // see bug 217886 for details
-        if (name.LowerCaseEqualsLiteral("_top") ||
-            name.LowerCaseEqualsLiteral("_self") ||
-            name.LowerCaseEqualsLiteral("_content") ||
-            name.EqualsLiteral("_main"))
+        if (aName.LowerCaseEqualsLiteral("_top") ||
+            aName.LowerCaseEqualsLiteral("_self") ||
+            aName.LowerCaseEqualsLiteral("_content") ||
+            aName.EqualsLiteral("_main"))
           allowWindow = allowSelf;
         else {
-          nsCOMPtr<nsIWindowWatcher> wwatch =
-              do_GetService(NS_WINDOWWATCHER_CONTRACTID);
-          if (wwatch) {
-            nsCOMPtr<nsIDOMWindow> namedWindow;
-            wwatch->GetWindowByName(PromiseFlatString(aName).get(), this,
-                                    getter_AddRefs(namedWindow));
-            if (namedWindow)
-              allowWindow = allowExtant;
+          if (WindowExists(aName)) {
+            allowWindow = allowExtant;
           }
         }
       }
@@ -4627,33 +4685,12 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   if (NS_FAILED(rv))
     return rv;
 
-  nsAutoString nameString(aName);
-
   // determine whether we must divert the open window to a new tab.
 
-  PRBool divertOpen = PR_TRUE; // at first, assume we will divert
+  PRBool divertOpen = !WindowExists(aName);
 
-  // first, does the named window already exist? (see nsWindowWatcher)
-
-  if (nameString.EqualsIgnoreCase("_top") ||
-      nameString.EqualsIgnoreCase("_self") ||
-      nameString.EqualsIgnoreCase("_content") ||
-      nameString.EqualsIgnoreCase("_parent") ||
-      nameString.Equals(NS_LITERAL_STRING("_main")))
-    divertOpen = PR_FALSE;
-  else {
-    nsCOMPtr<nsIDocShellTreeOwner> docOwner;
-    GetTreeOwner(getter_AddRefs(docOwner));
-    if (docOwner) {
-      nsCOMPtr<nsIDocShellTreeItem> namedWindow;
-      docOwner->FindItemWithName(nameString.get(), 0,
-                                 getter_AddRefs(namedWindow));
-      if (namedWindow)
-        divertOpen = PR_FALSE;
-    }
-  }
-
-  // second, what do the prefs prescribe?
+  // also check what the prefs prescribe?
+  // XXXbz this duplicates docshell code.  Need to consolidate.
 
   PRInt32 containerPref = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
 
@@ -4671,8 +4708,8 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
       PRBool chromeTab = PR_FALSE;
       if (tabURI)
         tabURI->SchemeIs("chrome", &chromeTab);
-      if (!thisChrome && !chromeTab) {
 
+      if (!thisChrome && !chromeTab) {
         containerPref=nsContentUtils::GetIntPref("browser.link.open_newwindow",
                                 nsIBrowserDOMWindow::OPEN_NEWWINDOW);
         PRInt32 restrictionPref = nsContentUtils::GetIntPref(
@@ -4738,8 +4775,8 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
       GetTop(getter_AddRefs(domReturn));
     }
 
-    if (domReturn && !nameString.EqualsIgnoreCase("_blank") &&
-                     !nameString.EqualsIgnoreCase("_new"))
+    if (domReturn && !aName.LowerCaseEqualsLiteral("_blank") &&
+        !aName.LowerCaseEqualsLiteral("_new"))
       domReturn->SetName(aName);
   }
 

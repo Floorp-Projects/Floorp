@@ -174,38 +174,6 @@ NS_IMETHODIMP nsWebBrowserChrome::DestroyBrowserWindow()
    return mBrowserWindow->Destroy();
 }
 
-#if 0
-/* Just commenting out for now because it looks like somebody went to
-   a lot of work here. This method has been removed from nsIWebBrowserChrome
-   per the 5 Feb 01 API review, to be handled one level further down
-   in nsDocShellTreeOwner.
-*/
-NS_IMETHODIMP nsWebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
-   nsIDocShellTreeItem** aBrowserItem)
-{
-   NS_ENSURE_ARG_POINTER(aBrowserItem);
-   *aBrowserItem = nsnull;
-
-   PRInt32 i = 0;
-   PRInt32 n = mBrowserWindow->gBrowsers.Count();
-
-   nsString aNameStr(aName);
-
-   for (i = 0; i < n; i++)
-      {
-      nsBrowserWindow* bw = (nsBrowserWindow*)mBrowserWindow->gBrowsers.ElementAt(i);
-      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(bw->mWebBrowser));
-      NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
-      docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome*, this), aBrowserItem);
-
-      if(!*aBrowserItem)
-         return NS_OK;
-      }
-   return NS_OK;
-}
-#endif
-
 NS_IMETHODIMP nsWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
    mSizeSet = PR_TRUE;

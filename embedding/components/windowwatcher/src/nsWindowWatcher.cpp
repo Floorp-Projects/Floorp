@@ -480,7 +480,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
                                   uriToLoadIsChrome = PR_FALSE;
   PRUint32                        chromeFlags;
   nsAutoString                    name;             // string version of aName
-  nsCString                       features;         // string version of aFeatures
+  nsCAutoString                   features;         // string version of aFeatures
   nsCOMPtr<nsIURI>                uriToLoad;        // from aUrl, if any
   nsCOMPtr<nsIDocShellTreeOwner>  parentTreeOwner;  // from the parent window, if any
   nsCOMPtr<nsIDocShellTreeItem>   newDocShellItem;  // from the new window
@@ -522,41 +522,37 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
 
   // try to find an extant window with the given name
   if (nameSpecified) {
-    /* Oh good. special target names are now handled in multiple places:
-       Here and within FindItemWithName, just below. I put _top here because
-       here it's able to do what it should: get the topmost shell of the same
-       (content/chrome) type as the docshell. treeOwner is always chrome, so
-       this scheme doesn't work there, where a lot of other special case
-       targets are handled. (treeOwner is, however, a good place to look
-       for browser windows by name, as it does.)
-     */
-    if (aParent) {
-      if (name.LowerCaseEqualsLiteral("_self")) {
-        GetWindowTreeItem(aParent, getter_AddRefs(newDocShellItem));
-      } else if (name.LowerCaseEqualsLiteral("_top")) {
-        nsCOMPtr<nsIDocShellTreeItem> shelltree;
-        GetWindowTreeItem(aParent, getter_AddRefs(shelltree));
-        if (shelltree)
-          shelltree->GetSameTypeRootTreeItem(getter_AddRefs(newDocShellItem));
-      } else if (name.LowerCaseEqualsLiteral("_parent")) {
-        nsCOMPtr<nsIDocShellTreeItem> shelltree;
-        GetWindowTreeItem(aParent, getter_AddRefs(shelltree));
-        if (shelltree)
-          shelltree->GetSameTypeParent(getter_AddRefs(newDocShellItem));
-        // If there is no real parent then _self acts as _parent
-        if (!newDocShellItem)
-          newDocShellItem = shelltree;
-      } else {
-        /* parent is being simultaneously torn down (probably because of
-           the code that keeps an old docshell alive but disconnected while
-           we load a new one). not much to do but open the new window
-           without a parent. */
-        if (parentTreeOwner)
-          parentTreeOwner->FindItemWithName(name.get(), nsnull,
-                                            getter_AddRefs(newDocShellItem));
-      }
+    nsCOMPtr<nsIJSContextStack> stack =
+      do_GetService(sJSStackContractID);
+
+    JSContext *cx = nsnull;
+
+    if (stack) {
+      stack->Peek(&cx);
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> callerItem;
+
+    if (cx) {
+      nsCOMPtr<nsIWebNavigation> callerWebNav =
+        do_GetInterface(nsWWJSUtils::GetDynamicScriptGlobal(cx));
+
+      callerItem = do_QueryInterface(callerWebNav);
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    GetWindowTreeItem(aParent, getter_AddRefs(parentItem));
+
+    if (!callerItem) {
+      callerItem = parentItem;
+    }
+
+    if (parentItem) {
+      parentItem->FindItemWithName(name.get(), nsnull, callerItem,
+                                   getter_AddRefs(newDocShellItem));
     } else
-      FindItemWithName(name.get(), getter_AddRefs(newDocShellItem));
+      FindItemWithName(name.get(), callerItem,
+                       getter_AddRefs(newDocShellItem));
   }
 
   // no extant window? make a new one.
@@ -1055,14 +1051,15 @@ nsWindowWatcher::GetWindowByName(const PRUnichar *aTargetName,
 
     docShellTreeItem = do_QueryInterface(webNav);
     if (docShellTreeItem) {
-      docShellTreeItem->FindItemWithName(aTargetName, nsnull,
+      // XXXbz sort out original requestor?
+      docShellTreeItem->FindItemWithName(aTargetName, nsnull, nsnull,
                                          getter_AddRefs(treeItem));
     }
   }
 
   // Next, see if the TargetName exists in any window hierarchy
   if (!treeItem) {
-    FindItemWithName(aTargetName, getter_AddRefs(treeItem));
+    FindItemWithName(aTargetName, nsnull, getter_AddRefs(treeItem));
   }
 
   if (treeItem) {
@@ -1382,19 +1379,18 @@ nsWindowWatcher::WinHasOption(const char *aOptions, const char *aName,
    necessarily return a failure method value. check aFoundItem.
 */
 nsresult
-nsWindowWatcher::FindItemWithName(
-                    const PRUnichar* aName,
-                    nsIDocShellTreeItem** aFoundItem)
+nsWindowWatcher::FindItemWithName(const PRUnichar* aName,
+                                  nsIDocShellTreeItem* aOriginalRequestor,
+                                  nsIDocShellTreeItem** aFoundItem)
 {
-  PRBool   more;
-  nsresult rv;
-  nsAutoString name(aName);
-
   *aFoundItem = 0;
 
   /* special cases */
-  if(name.IsEmpty())
+  if(!aName || !*aName)
     return NS_OK;
+
+  nsDependentString name(aName);
+  
   if(name.LowerCaseEqualsLiteral("_blank") || name.LowerCaseEqualsLiteral("_new"))
     return NS_OK;
   // _content will be handled by individual windows, below
@@ -1404,7 +1400,9 @@ nsWindowWatcher::FindItemWithName(
   if (!windows)
     return NS_ERROR_FAILURE;
 
-  rv = NS_OK;
+  PRBool   more;
+  nsresult rv = NS_OK;
+
   do {
     windows->HasMoreElements(&more);
     if (!more)
@@ -1417,7 +1415,8 @@ nsWindowWatcher::FindItemWithName(
         nsCOMPtr<nsIDocShellTreeItem> treeItem;
         GetWindowTreeItem(nextWindow, getter_AddRefs(treeItem));
         if (treeItem) {
-          rv = treeItem->FindItemWithName(aName, treeItem, aFoundItem);
+          rv = treeItem->FindItemWithName(aName, treeItem, aOriginalRequestor,
+                                          aFoundItem);
           if (NS_FAILED(rv) || *aFoundItem)
             break;
         }
