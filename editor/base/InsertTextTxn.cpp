@@ -64,7 +64,7 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   if ((nsnull!=aDidMerge) && (nsnull!=aTransaction))
   {
     // if aTransaction isa InsertTextTxn, absorb it
-    nsCOMPtr<InsertTextTxn> otherTxn = aTransaction;
+    nsCOMPtr<InsertTextTxn> otherTxn(aTransaction);
     nsresult result=NS_OK;// = aTransaction->QueryInterface(kInsertTextTxnIID, getter_AddRefs(otherTxn));
     if (NS_SUCCEEDED(result) && (otherTxn))
     {
