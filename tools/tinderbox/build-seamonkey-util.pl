@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.191 $ ';
+$::UtilsVersion = '$Revision: 1.192 $ ';
 
 package TinderUtils;
 
@@ -1617,7 +1617,7 @@ sub run_all_tests {
         my $z_data_string = PrintSize($z_data,4);
         print_log "TinderboxPrint:" .
         "<a title=\"Code + data size of all shared libs & executables\" href=\"http://$Settings::results_server/graph/query.cgi?testname=codesize&tbox=" .
-          ::hostname() . "&autoscale=1&units=bytes&days=7&avg=1&showpoint=$time,$z_data\">Z:$z_data_string" . "B</a>\n";
+          ::hostname() . "&autoscale=1&units=bytes&days=7&avg=0&showpoint=$time,$z_data\">Z:$z_data_string" . "B</a>\n";
 
         if($Settings::TestsPhoneHome) {
           send_results_to_server($z_data, "--", "codesize", ::hostname());
@@ -1629,7 +1629,8 @@ sub run_all_tests {
         # Print out Zdiff if not zero.  Testing "zero" by looking for "+0 ".
         my $zdiff_sample = substr($zdiff_data,0,3);
         if (not ($zdiff_sample eq "+0 ")) {
-          print_log "<a title=\"Change from last Z value (+added/-subtracted)\" TinderboxPrint:Zdiff:$zdiff_data</a>\n";
+          my $zdiff_data_string = PrintSize($zdiff_data, 4);
+          print_log "<a title=\"Change from last Z value (+added/-subtracted)\" TinderboxPrint:Zdiff:$zdiff_data_string</a>\n";
         }
 
         # Get ready for next cycle.
