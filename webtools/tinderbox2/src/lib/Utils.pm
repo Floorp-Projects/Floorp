@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.35 $ 
-# $Date: 2003/04/20 19:35:28 $ 
+# $Revision: 1.36 $ 
+# $Date: 2003/05/26 13:30:43 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -136,14 +136,6 @@ sub set_static_vars {
 
   @ORIG_ARGV = @ARGV;
 
-  # set a minimal path.  All the commands we run should have explicit
-  # paths for security reasons.
-
-  $ENV{'PATH'}=  (
-                  '/bin'.
-                  ':/usr/bin'.
-                   '');
-  
   # taint perl requires we clean up these bad environmental variables.
   
   delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV', 'LD_PRELOAD'};
@@ -382,9 +374,9 @@ sub mkdir_R {
 sub cache_cmd {
   my @cmd = @_;
 
-  # good choices for this are '#', ',', '\', '"', '|', ';'
+  # good choices for this are '#', '\', '"', '|', ';'
 
-  my ($join_char) = ',';
+  my ($join_char) = '#';
 
   ("@cmd" =~ m/$join_char/) &&
     die("cmd '@cmd' can not contain character '$join_char'\n");
