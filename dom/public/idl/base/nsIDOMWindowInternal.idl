@@ -37,14 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMWindow.idl"
+#include "nsIDOMWindow2.idl"
 
 interface nsIPrompt;
 interface nsIControllers;
 interface nsIDOMLocation;
 
 [scriptable, uuid(9c911860-7dd9-11d4-9a83-000064657374)]
-interface nsIDOMWindowInternal : nsIDOMWindow
+interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
 
