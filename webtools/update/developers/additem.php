@@ -313,9 +313,8 @@ if (!$categories) {$categories = array(); }
 
 <?php
 //Get the Category Table Data for the Select Box
- $sql = "SELECT  `CategoryID`, `CatName` FROM  `categories` WHERE `CatType` = '$type' ORDER  BY  `CatName` ASC";
+ $sql = "SELECT  `CategoryID`, `CatName` FROM  `categories` WHERE `CatType` = '$type' GROUP BY `Catname` ORDER  BY  `CatName` ASC";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-//  $sqlnum = mysql_num_rows($sql_result);
 ?>
 <TD ROWSPAN=8 VALIGN=TOP><SPAN class="global">Categories:</SPAN><BR>&nbsp;&nbsp;&nbsp;&nbsp;<SELECT NAME="categories[]" MULTIPLE="YES" SIZE="10">
 <?php
@@ -323,7 +322,7 @@ if (!$categories) {$categories = array(); }
     $catid = $row["CategoryID"];
     $catname = $row["CatName"];
 
-    echo"<OPTION value=\"$catid\"";
+    echo"<OPTION value=\"$catname\"";
     foreach ($categories as $validcat) {
     if ($validcat==$catid) { echo" SELECTED"; }
     }
@@ -568,9 +567,17 @@ if (!$_POST["categories"]) {
    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
  //Add New Categories from $_POST["categories"]
-   foreach ($_POST["categories"] as $categoryid) {
-   	$sql = "INSERT INTO `categoryxref` (`ID`, `CategoryID`) VALUES ('$id', '$categoryid');";
-    $result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+   foreach ($_POST["categories"] as $categoryname) {
+
+    $sql2 = "SELECT `CategoryID` FROM `categories` WHERE `CatType` = '$type' AND `CatName` = '$categoryname' ORDER BY `CategoryID` ASC";
+    $sql_result2 = mysql_query($sql2, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    while ($row2 = mysql_fetch_array($sql_result2)) {
+        $categoryid = $row2["CategoryID"];
+
+   	    $sql = "INSERT INTO `categoryxref` (`ID`, `CategoryID`) VALUES ('$id', '$categoryid');";
+        $result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+    }
+
   }
    if ($result) {echo"Categories added...<br>\n"; }
 

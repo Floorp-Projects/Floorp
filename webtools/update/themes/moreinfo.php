@@ -449,7 +449,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 		<ul>
         <?php
         //Categories
-        $sql = "SELECT `CatName` from `categoryxref` TCX INNER JOIN `categories` TC ON TCX.CategoryID=TC.CategoryID  WHERE `ID`='$id' ORDER BY `CatName` ASC";
+        $sql = "SELECT `CatName` from `categoryxref` TCX INNER JOIN `categories` TC ON TCX.CategoryID=TC.CategoryID  WHERE `ID`='$id' GROUP BY `CatName` ORDER BY `CatName` ASC";
         $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
             $num_results = mysql_num_rows($sql_result); $i=0;
 
