@@ -204,7 +204,6 @@ nsHTMLContainerFrame::ReparentFrameView(nsIFrame* aChildFrame,
   nsIView*  childView;
   nsIView*  oldParentView;
   nsIView*  newParentView;
-  nsIFrame* commonParent = nsnull;
   
   // This code is called often and we need it to be as fast as possible, so
   // see if we can trivially detect that no work needs to be done
