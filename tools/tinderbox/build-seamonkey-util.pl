@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.141 $ ';
+$::UtilsVersion = '$Revision: 1.142 $ ';
 
 package TinderUtils;
 
@@ -1695,7 +1695,7 @@ sub BloatTest {
 						 $timeout_secs);
     delete $ENV{XPCOM_MEM_BLOAT_LOG};
 
-    print_logfile($binary_log, "bloat test");
+    print_logfile($binary_log, "$bloatdiff_label bloat test");
     
     if ($result->{timed_out}) {
       print_log "Error: bloat test timed out after"
@@ -1885,7 +1885,7 @@ sub BloatTest2 {
     my $result = run_cmd($build_dir, $binary_dir, $cmd, $binary_log,
 						 $timeout_secs);
 
-    print_logfile($binary_log, "bloat test");
+    print_logfile($binary_log, "trace-malloc bloat test");
     
     if ($result->{timed_out}) {
       print_log "Error: bloat test timed out after"
@@ -1901,7 +1901,7 @@ sub BloatTest2 {
     $cmd = "run-mozilla.sh ./leakstats $malloc_log";
     $result = run_cmd($build_dir, $binary_dir, $cmd, $leakstats_log,
                       $timeout_secs);
-    print_logfile($leakstats_log, "bloat test leakstats");
+    print_logfile($leakstats_log, "trace-malloc bloat test: leakstats");
 
     my $newstats = ReadLeakstatsLog($leakstats_log);
     my $oldstats;
@@ -1943,11 +1943,11 @@ sub BloatTest2 {
     }
 
     if (-e $old_sdleak_log && -e $sdleak_log) {
-      print_logfile($old_leakstats_log, "previous run of bloat test leakstats");
+      print_logfile($old_leakstats_log, "previous run of trace-malloc bloat test leakstats");
       $cmd = "$build_dir/mozilla/tools/trace-malloc/diffbloatdump.pl --depth=15 $old_sdleak_log $sdleak_log";
       $result = run_cmd($build_dir, $binary_dir, $cmd, $sdleak_diff_log,
                         $timeout_secs);
-      print_logfile($sdleak_diff_log, "leak stats differences");
+      print_logfile($sdleak_diff_log, "trace-malloc leak stats differences");
     }
     
     return 'success';
