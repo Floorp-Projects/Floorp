@@ -539,25 +539,31 @@ DOMViewer.prototype =
 
   doFindElementById: function(aWalker)
   {
+    var re = new RegExp(this.mFindParams[0], "i");
+
     return aWalker.currentNode
            && "id" in aWalker.currentNode
-           && aWalker.currentNode.id == this.mFindParams[0];
+           && re.test(aWalker.currentNode.id);
   },
 
   doFindElementsByTagName: function(aWalker)
   {
+    var re = new RegExp(this.mFindParams[0], "i");
+
     return aWalker.currentNode
            && aWalker.currentNode.nodeType == Node.ELEMENT_NODE
-           && aWalker.currentNode.localName.toLowerCase() == this.mFindParams[0].toLowerCase();
+           && re.test(aWalker.currentNode.localName);
   },
 
   doFindElementsByAttr: function(aWalker)
   {
-    return aWalker.currentNode 
+    var re = new RegExp(this.mFindParams[1], "i");
+
+    return aWalker.currentNode
            && aWalker.currentNode.nodeType == Node.ELEMENT_NODE
-           && this.mFindParams[1] == ""
+           && (this.mFindParams[1] == ""
               ? aWalker.currentNode.hasAttribute(this.mFindParams[0])
-              : aWalker.currentNode.getAttribute(this.mFindParams[0]) == this.mFindParams[1];
+              : re.test(aWalker.currentNode.getAttribute(this.mFindParams[0])));
   },
   
   ///////////////////////////////////////////////////////////////////////////
