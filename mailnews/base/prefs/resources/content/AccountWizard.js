@@ -269,7 +269,7 @@ function createAccount(hash) {
     } catch (ex) {
         // return false (meaning we did not create the account)
         // on any error
-        dump("Error creating account: ex\n");
+        dump("Error creating account:\n" + ex);
         return false;
     }
 }
