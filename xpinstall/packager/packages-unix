@@ -81,6 +81,8 @@ bin/res/cmessage.txt
 bin/libgtkembedmoz.so
 ; this is used by Xprint and Xlib gfx
 bin/libxlibrgb.so
+; This is used by libgfxps and libgfx_gtk
+bin/libgfxpsshar.so
 bin/components/libaccessibility.so
 bin/components/accessibility.xpt
 bin/components/accessibility-atk.xpt
