@@ -1145,7 +1145,7 @@
             // JS properties set on them, the browser element won't be
             // destroyed until the document goes away.  So we force a
             // cleanup ourselves.
-            // This has to hapen before we remove the child so that the
+            // This has to happen before we remove the child so that the
             // XBL implementation of nsIObserver still works.  But
             // clearing focusedWindow happens below because it gets
             // reset by updateCurrentBrowser.
