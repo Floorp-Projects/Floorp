@@ -64,6 +64,7 @@ static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
   IN_RANGE(c, 0x03c3, 0x03c9) || \
   (0x2111 == (c))   || \
   (0x2118 == (c))   || \
+  (0x211c == (c))   || \
   IN_RANGE(c, 0x2190, 0x2193) || \
   IN_RANGE(c, 0x21d0, 0x21d3) || \
   IN_RANGE(c, 0x21ed, 0x21ee) || \
