@@ -200,3 +200,18 @@ nsImapMoveCopyMsgTxn::SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
 	}
 	return NS_OK;
 }
+
+nsresult
+nsImapMoveCopyMsgTxn::GetSrcKeyArray(nsMsgKeyArray& srcKeyArray)
+{
+    srcKeyArray.CopyArray(&m_srcKeyArray);
+    return NS_OK;
+}
+
+nsresult
+nsImapMoveCopyMsgTxn::GetDstKeyArray(nsMsgKeyArray& dstKeyArray)
+{
+    dstKeyArray.CopyArray(&m_dstKeyArray);
+    return NS_OK;
+}
+

@@ -58,6 +58,8 @@ public:
     nsresult SetRedoString(nsString *aString);
     nsresult SetCopyResponseUid(nsMsgKeyArray* keyArray,
                                 const char *msgIdString);
+    nsresult GetSrcKeyArray(nsMsgKeyArray& srcKeyArray);
+    nsresult GetDstKeyArray(nsMsgKeyArray& dstKeyArray);
 
 private:
 
