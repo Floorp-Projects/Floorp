@@ -216,10 +216,15 @@ endif
 tier_9_dirs	+= \
 		xpfe/appshell \
 		xpfe/browser/public \
-		xpfe/components/history/public \
 		xpfe/components/sidebar/public \
 		xpfe/components/xremote/public \
 		$(NULL)
+
+ifdef MOZ_XUL_APP
+tier_9_dirs	+= toolkit/components/history/public
+else
+tier_9_dirs	+= xpfe/components/history/public
+endif
 
 ifdef ACCESSIBILITY
 tier_9_dirs    += accessible
@@ -256,12 +261,21 @@ ifdef MOZ_XUL_APP
 tier_50_dirs	+= toolkit
 endif
 
+ifdef MOZ_PHOENIX
+# xpfe/components/search depends on nsIBookmarksService.idl
+tier_50_dirs    += browser/components/bookmarks/public
+endif
+
 #
 # tier 9x - application features
 #
 
 ifdef MOZ_XPINSTALL
+ifdef MOZ_XUL_APP
+tier_50_dirs     +=  xpinstall
+else
 tier_90_dirs     +=  xpinstall
+endif
 endif
 
 ifdef MOZ_JSDEBUGGER
