@@ -935,6 +935,8 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
            iter != done_reading; 
            iter.advance(PRInt32(advanceLength))) {
         PRUint32 fragmentLength = iter.size_forward();
+        PRUint32 lengthReplaced = 0; // the number of UTF-16 codepoints
+                                     //  replaced by a particular entity
         const PRUnichar* c = iter.get();
         const PRUnichar* fragmentStart = c;
         const PRUnichar* fragmentEnd = c + fragmentLength;
@@ -962,15 +964,32 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
 
             if (!entityReplacement.IsEmpty()) {
               entityText = entityReplacement.get();
+              lengthReplaced = 1;
               break;
             }
           }
           else if (val > 127 && 
                    mFlags & nsIDocumentEncoder::OutputEncodeW3CEntities &&
-                   mEntityConverter &&
-                   NS_SUCCEEDED(mEntityConverter->ConvertToEntity(val,
-                                nsIEntityConverter::entityW3C, &fullEntityText))) {
-            break;
+                   mEntityConverter) {
+            if (IS_HIGH_SURROGATE(val) &&
+                c + 1 < fragmentEnd &&
+                IS_LOW_SURROGATE(*(c + 1))) {
+              PRUint32 valUTF32 = SURROGATE_TO_UCS4(val, *(++c));
+              if (NS_SUCCEEDED(mEntityConverter->ConvertUTF32ToEntity(valUTF32,
+                               nsIEntityConverter::entityW3C, &fullEntityText))) {
+                lengthReplaced = 2;
+                break;
+              }
+              else {
+                advanceLength++;
+              }
+            }
+            else if (NS_SUCCEEDED(mEntityConverter->ConvertToEntity(val,
+                                  nsIEntityConverter::entityW3C, 
+                                  &fullEntityText))) {
+              lengthReplaced = 1;
+              break;
+            }
           }
         }
 
@@ -979,13 +998,13 @@ nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
           aOutputStr.Append(PRUnichar('&'));
           AppendASCIItoUTF16(entityText, aOutputStr);
           aOutputStr.Append(PRUnichar(';'));
-          advanceLength++;
+          advanceLength += lengthReplaced;
         }
         // if it comes from nsIEntityConverter, it already has '&' and ';'
         else if (fullEntityText) {
           AppendASCIItoUTF16(fullEntityText, aOutputStr);
           nsMemory::Free(fullEntityText);
-          advanceLength++;
+          advanceLength += lengthReplaced;
         }
       }
     } else {
