@@ -227,6 +227,9 @@ xpcom_type(TreeState *state)
       case IDLN_TYPE_BOOLEAN:
         fputs("PRBool", state->file);
         break;
+      case IDLN_TYPE_OCTET:
+        fputs("PRUint8", state->file);
+        break;
       case IDLN_TYPE_FLOAT:
         switch (IDL_TYPE_FLOAT(state->tree).f_type) {
           case IDL_FLOAT_TYPE_FLOAT: 
