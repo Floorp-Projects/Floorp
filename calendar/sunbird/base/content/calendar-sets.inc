@@ -82,7 +82,7 @@
   <command id="import_command" oncommand="startImport()"/>
   <command id="export_command" oncommand="saveEventsToFile()" disabled="true" disabledwhennoeventsselected="true"/>
 
-  <command id="refresh_remote_calendars" oncommand="gCalendarWindow.calendarManager.refreshAllRemoteCalendars()"/>
+  <command id="reload_remote_calendars" oncommand="gCalendarWindow.calendarManager.refreshAllRemoteCalendars()"/>
   <command id="publish_calendar" oncommand="publishEntireCalendar()"/>
   <command id="publish_events_command" oncommand="publishCalendarData()" disabled="true" disabledwhennoeventsselected="true"/>
 

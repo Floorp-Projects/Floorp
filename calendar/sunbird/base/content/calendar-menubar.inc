@@ -81,10 +81,10 @@
                      label="&calendar.subscribe.label;"
                      accesskey="&calendar.subscribe.accesskey;"
                      observes="new_server_command"/>
-           <menuitem id="calendar-refreshserver-menu"
-                     label="&calendar.context.refreshserver.label;"
-                     accesskey="&calendar.context.refreshserver.accesskey;"
-                     observes="refresh_remote_calendars"/>
+           <menuitem id="calendar-reloadserver-menu"
+                     label="&calendar.context.reloadserver.label;"
+                     accesskey="&calendar.context.reloadserver.accesskey;"
+                     observes="reload_remote_calendars"/>
            <menuseparator/>
 
            <!-- import: pulling data into existing files -->

@@ -57,7 +57,7 @@ function hiddenWindowStartup()
                        'new_server_command', 'publish_events_command', 'modify_todo_command', 
                        'edit_local_calendar_command', 'edit_server_command', 
                        'delete_server_command', 'find_new_calendar_command', 
-                       'refresh_remote_calendars', 'publish_calendar'];
+                       'reload_remote_calendars', 'publish_calendar'];
   for (var id in disabledItems) 
   {
     var broadcaster = document.getElementById(disabledItems[id]);

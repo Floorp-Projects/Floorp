@@ -247,9 +247,9 @@
   <menuitem label="&calendar.context.deleteserver.label;"
             accesskey="&calendar.context.deleteserver.accesskey;"
             observes="delete_server_command"/>
-  <menuitem label="&calendar.context.refreshserver.label;"
-            accesskey="&calendar.context.refreshserver.accesskey;"
-            observes="refresh_remote_calendars"/>
+  <menuitem label="&calendar.context.reloadserver.label;"
+            accesskey="&calendar.context.reloadserver.accesskey;"
+            observes="reload_remote_calendars"/>
   <menuitem label="&calendar.context.publish.label;"
             accesskey="&calendar.context.publish.accesskey;"
             observes="publish_calendar"/>
@@ -377,6 +377,18 @@
                    label="&calendar.choosedate.button.label;"
                    tooltiptext="&calendar.choosedate.button.tooltip;"
                    observes="go_date_command"/>
+                   
+<!--    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-local-reload-button"
+                   label="&calendar.localreload.button.label;"
+                   tooltiptext="&calendar.localreload.button.tooltip;"
+                   observes="reload_local_calendars"/> -->
+                   
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-remote-reload-button"
+                   label="&calendar.remotereload.button.label;"
+                   tooltiptext="&calendar.remotereload.button.tooltip;"
+                   observes="reload_remote_calendars"/>
 
     <toolbaritem id="throbber-box" align="center" pack="center">
       <button id="navigator-throbber"
