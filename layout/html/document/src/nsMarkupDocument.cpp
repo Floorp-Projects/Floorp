@@ -85,42 +85,16 @@ nsresult nsMarkupDocument::CreateShell(nsIPresContext* aContext,
  *  @param   aConverter -- the XIFConverter where all output is being written
  *  @param   aSelector -- the Object to be converted to XIF
  */
-void nsMarkupDocument::CSSSelectorToXIF(nsXIFConverter& aConverter, nsCSSSelector& aSelector)
+void nsMarkupDocument::CSSSelectorsToXIF(nsXIFConverter& aConverter, nsICSSStyleRule& aRule)
 {
-  nsString s;
+  nsAutoString selectors;
 
-  nsCSSSelector* next = aSelector.mNext;
-
-  if (nsnull != next)
-    CSSSelectorToXIF(aConverter,*next);
-
-  aConverter.BeginCSSSelector();
+  aRule.GetSourceSelectorText(selectors);
+  aConverter.BeginCSSSelectors();
  
-  if (aSelector.mTag != nsnull)
-  {
-    aSelector.mTag->ToString(s);
-    aConverter.AddCSSTag(s);
-  }
+  aConverter.AddCSSSelectors(selectors);
 
-  if (aSelector.mID != nsnull)
-  {
-    aSelector.mID->ToString(s);
-    aConverter.AddCSSID(s);
-  }
-  
-  if (aSelector.mClass != nsnull)
-  {
-    aSelector.mClass->ToString(s);
-    aConverter.AddCSSClass(s);
-  }
-  
-  if (aSelector.mPseudoClass != nsnull)
-  {
-    aSelector.mPseudoClass->ToString(s);
-    aConverter.AddCSSPsuedoClass(s);
-  }
-  aConverter.EndCSSSelector();
-
+  aConverter.EndCSSSelectors();
 }
 
 
@@ -220,10 +194,7 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
 
               if (nsnull != rule)
               {
-                nsCSSSelector* selector = rule->FirstSelector();
-          
-                if (nsnull != selector)
-                  CSSSelectorToXIF(aConverter,*selector);
+                CSSSelectorsToXIF(aConverter,*rule);
   
                 nsICSSDeclaration* declaration = rule->GetDeclaration();
                 if (nsnull != declaration)

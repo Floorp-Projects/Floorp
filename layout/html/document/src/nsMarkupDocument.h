@@ -22,7 +22,7 @@
 #include "nsIHTMLDocument.h"
 
 class nsICSSDeclaration;
-struct nsCSSSelector;
+class nsICSSStyleRule;
 
 /**
   * MODULE NOTES:
@@ -60,7 +60,7 @@ public:
                                nsIPresShell** aInstancePtrResult);
 
 protected:
-  virtual void CSSSelectorToXIF(nsXIFConverter& aConverter, nsCSSSelector& aSelector);
+  virtual void CSSSelectorsToXIF(nsXIFConverter& aConverter, nsICSSStyleRule& aRule);
   virtual void CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDeclaration& aDeclaration);
   virtual void StyleSheetsToXIF(nsXIFConverter& aConverter);
 
