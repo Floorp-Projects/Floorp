@@ -187,6 +187,7 @@
 #include "nsIAllocator.h"
 #include <string.h>
 #include <stdio.h>
+#include "plhash.h"
 
 //----------------------------------------------------------------------------------------
 
@@ -483,8 +484,6 @@ inline PRUnichar GetCharAt(const nsStr& aDest,PRUint32 anIndex){
 }
 
 #ifdef DEBUG
-
-#include "plhash.h"
 
 class nsStringInfo {
 public:
