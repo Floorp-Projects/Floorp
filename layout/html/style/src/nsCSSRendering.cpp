@@ -308,12 +308,12 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
     if (borderPart == BORDER_FULL) {
       thickness = inside.y - outside.y;
 
+      aPoints[np++].MoveTo(outside.x, outside.y);
       aPoints[np++].MoveTo(outside.XMost(), outside.y);
       if (thickness >= twipsPerPixel) {
         aPoints[np++].MoveTo(inside.XMost(), inside.y);
         aPoints[np++].MoveTo(inside.x, inside.y);
       }
-      aPoints[np++].MoveTo(outside.x, outside.y);
     } else if (borderPart == BORDER_INSIDE) {
       aPoints[np++].MoveTo(nscoord(outside.x * borderFrac +
                                    inside.x * borderRest),
@@ -378,12 +378,16 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
     if (borderPart == BORDER_FULL) {
       thickness = outside.YMost() - inside.YMost();
 
-      aPoints[np++].MoveTo(outside.x, outside.YMost());
       if (thickness >= twipsPerPixel) {
+        aPoints[np++].MoveTo(outside.x, outside.YMost());
         aPoints[np++].MoveTo(inside.x, inside.YMost());
         aPoints[np++].MoveTo(inside.XMost(), inside.YMost());
+        aPoints[np++].MoveTo(outside.XMost(), outside.YMost());
+      } else {
+        aPoints[np++].MoveTo(outside.x, inside.YMost());
+        aPoints[np++].MoveTo(outside.XMost(), inside.YMost());
       }
-      aPoints[np++].MoveTo(outside.XMost(), outside.YMost());
+
     } else if (borderPart == BORDER_INSIDE) {
       aPoints[np++].MoveTo(nscoord(outside.x * borderFrac +
                                    inside.x * borderRest),
@@ -413,12 +417,12 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
     if (borderPart == BORDER_FULL) {
       thickness = outside.XMost() - inside.XMost();
 
-      aPoints[np++].MoveTo(outside.XMost(), outside.YMost());
-      aPoints[np++].MoveTo(outside.XMost(), outside.y);
       if (thickness >= twipsPerPixel) {
-        aPoints[np++].MoveTo(inside.XMost(), inside.y);
-        aPoints[np++].MoveTo(inside.XMost(), inside.YMost());
+        aPoints[np++].MoveTo(outside.XMost(), outside.YMost());
+        aPoints[np++].MoveTo(outside.XMost(), outside.y);
       }
+      aPoints[np++].MoveTo(inside.XMost(), inside.y);
+      aPoints[np++].MoveTo(inside.XMost(), inside.YMost());
     } else if (borderPart == BORDER_INSIDE) {
       aPoints[np++].MoveTo(inside.XMost(), inside.y);
       aPoints[np++].MoveTo(nscoord(outside.XMost() * borderFrac +
