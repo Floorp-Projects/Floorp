@@ -469,7 +469,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 //				fAtEndOfLine = PR_TRUE;
 			AdvanceTokenizerStartingPoint ((fNextToken - fLineOfTokens) + nsCRT::strlen(returnString) + 2);
 			if (!nsCRT::strcmp(fLineOfTokens, CRLF))
-				fAtEndOfLine = TRUE;
+				fAtEndOfLine = PR_TRUE;
 		}
 		else
 		{
