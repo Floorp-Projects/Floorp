@@ -6,7 +6,6 @@
     locale/browser/credits.dtd                     (%chrome/browser/credits.dtd)
 *   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
-    locale/browser/contentAreaCommands.properties  (%chrome/browser/contentAreaCommands.properties)
     locale/browser/metaData.dtd                    (%chrome/browser/metaData.dtd)
     locale/browser/metaData.properties             (%chrome/browser/metaData.properties)
     locale/browser/openLocation.dtd                (%chrome/browser/openLocation.dtd)

@@ -79,11 +79,13 @@
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
 #ifdef MOZ_PHOENIX
   <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
-  <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <stringbundle id="bundle_findBar" src="chrome://browser/locale/browser.properties"/>
 #else
   <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+  <!-- XPCNativeWrapper.js is needed by xpfe's contentAreaUtils.js (introduced by bug 220215) -->
+  <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
 #endif
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
