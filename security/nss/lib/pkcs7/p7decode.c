@@ -34,7 +34,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.7 2001/12/07 01:36:06 relyea%netscape.com Exp $
+ * $Id: p7decode.c,v 1.8 2002/07/30 22:51:13 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -796,6 +796,7 @@ sec_pkcs7_decoder_finish_decrypt (SEC_PKCS7DecoderContext *p7dcx,
      * All done, destroy it.
      */
     sec_PKCS7DestroyDecryptObject (worker->decryptobj);
+    worker->decryptobj = NULL;
 
     return SECSuccess;
 }
@@ -1244,6 +1245,10 @@ SEC_PKCS7DecoderFinish(SEC_PKCS7DecoderContext *p7dcx)
 	    SEC_PKCS7DestroyContentInfo (cinfo);
 	    cinfo = NULL;
 	}
+    }
+    /* free any NSS data structures */
+    if (p7dcx->worker.decryptobj) {
+        sec_PKCS7DestroyDecryptObject (p7dcx->worker.decryptobj);
     }
     PORT_FreeArena (p7dcx->tmp_poolp, PR_FALSE);
     PORT_Free (p7dcx);
@@ -1816,8 +1821,8 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
 
 	    rv = sec_PKCS7Decrypt (decryptobj, holder.data, &holder.len, buflen,
 				   sig->data, sig->len, PR_TRUE);
+	    sec_PKCS7DestroyDecryptObject (decryptobj);
 	    if (rv != SECSuccess) {
-		sec_PKCS7DestroyDecryptObject (decryptobj);
 		goto done;
 	    }
 
