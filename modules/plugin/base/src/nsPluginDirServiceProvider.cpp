@@ -40,7 +40,8 @@
 
 #include "nsCRT.h"
 #include "nsILocalFile.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsDependentString.h"
 #include "nsXPIDLString.h"
 #include "prmem.h"
@@ -214,7 +215,7 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
   *persistant = PR_TRUE;
 
 #if defined(XP_WIN)    
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID))
   if (!prefs) return rv;
 
   if (nsCRT::strcmp(prop, NS_WIN_4DOTX_SCAN_KEY) == 0) {
