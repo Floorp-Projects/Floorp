@@ -130,7 +130,14 @@ protected:
 
 class GeckoContainerUI
 {
+protected:
+    PRBool mBusy;
+
 public:
+    GeckoContainerUI() :
+        mBusy(PR_FALSE)
+    {
+    }
     // Called by the window creator when a new browser window is requested
     virtual nsresult CreateBrowserWindow(PRUint32 aChromeFlags,
          nsIWebBrowserChrome *aParent, nsIWebBrowserChrome **aNewWindow);

@@ -51,6 +51,9 @@ public :
     void OnBrowserReload(wxCommandEvent &event);
     void OnBrowserStop(wxCommandEvent &event);
     void OnBrowserHome(wxCommandEvent &event);
+    void OnUpdateBrowserBack(wxUpdateUIEvent &event);
+    void OnUpdateBrowserForward(wxUpdateUIEvent &event);
+    void OnUpdateBrowserStop(wxUpdateUIEvent &event);
 
     GeckoWindow            *mGeckoWnd;
     nsCOMPtr<nsIWebBrowser> mWebbrowser;

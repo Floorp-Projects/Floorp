@@ -36,13 +36,16 @@
 #include "nsIURI.h"
 
 BEGIN_EVENT_TABLE(BrowserFrame, wxFrame)
-    EVT_MENU(XRCID("browse_back"),   BrowserFrame::OnBrowserBack)
-    EVT_MENU(XRCID("browse_fwd"),    BrowserFrame::OnBrowserForward)
-    EVT_MENU(XRCID("browse_reload"), BrowserFrame::OnBrowserReload)
-    EVT_MENU(XRCID("browse_stop"),   BrowserFrame::OnBrowserStop)
-    EVT_MENU(XRCID("browse_home"),   BrowserFrame::OnBrowserHome)
-    EVT_BUTTON(XRCID("browser_go"),  BrowserFrame::OnBrowserGo)
-    EVT_TEXT_ENTER(XRCID("url"),     BrowserFrame::OnBrowserUrl)
+    EVT_MENU(XRCID("browse_back"),      BrowserFrame::OnBrowserBack)
+    EVT_UPDATE_UI(XRCID("browse_back"), BrowserFrame::OnUpdateBrowserBack)
+    EVT_MENU(XRCID("browse_fwd"),       BrowserFrame::OnBrowserForward)
+    EVT_UPDATE_UI(XRCID("browse_fwd"),  BrowserFrame::OnUpdateBrowserForward)
+    EVT_MENU(XRCID("browse_reload"),    BrowserFrame::OnBrowserReload)
+    EVT_MENU(XRCID("browse_stop"),      BrowserFrame::OnBrowserStop)
+    EVT_UPDATE_UI(XRCID("browse_stop"), BrowserFrame::OnUpdateBrowserStop)
+    EVT_MENU(XRCID("browse_home"),      BrowserFrame::OnBrowserHome)
+    EVT_BUTTON(XRCID("browser_go"),     BrowserFrame::OnBrowserGo)
+    EVT_TEXT_ENTER(XRCID("url"),        BrowserFrame::OnBrowserUrl)
 END_EVENT_TABLE()
 
 BrowserFrame::BrowserFrame(wxWindow* aParent) :
@@ -118,6 +121,17 @@ void BrowserFrame::OnBrowserBack(wxCommandEvent & WXUNUSED(event))
     }
 }
 
+void BrowserFrame::OnUpdateBrowserBack(wxUpdateUIEvent &event)
+{
+    PRBool canGoBack = PR_FALSE;
+    if (mWebbrowser)
+    {
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+        webNav->GetCanGoBack(&canGoBack);
+    }
+    event.Enable(canGoBack);
+}
+
 void BrowserFrame::OnBrowserForward(wxCommandEvent & WXUNUSED(event))
 {
     if (mWebbrowser)
@@ -125,6 +139,17 @@ void BrowserFrame::OnBrowserForward(wxCommandEvent & WXUNUSED(event))
         nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
         webNav->GoForward();
     }
+}
+
+void BrowserFrame::OnUpdateBrowserForward(wxUpdateUIEvent &event)
+{
+    PRBool canGoForward = PR_FALSE;
+    if (mWebbrowser)
+    {
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+        webNav->GetCanGoForward(&canGoForward);
+    }
+    event.Enable(canGoForward);
 }
 
 void BrowserFrame::OnBrowserReload(wxCommandEvent & WXUNUSED(event))
@@ -145,12 +170,17 @@ void BrowserFrame::OnBrowserStop(wxCommandEvent & WXUNUSED(event))
     }
 }
 
+void BrowserFrame::OnUpdateBrowserStop(wxUpdateUIEvent &event)
+{
+    event.Enable(mBusy);
+}
+
 void BrowserFrame::OnBrowserHome(wxCommandEvent & WXUNUSED(event))
 {
     if (mWebbrowser)
     {
         nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
-        webNav->LoadURI(NS_ConvertASCIItoUCS2("www.cnn.com").get(),
+        webNav->LoadURI(NS_ConvertASCIItoUCS2("http://www.mozilla.org/projects/embedding/").get(),
                                nsIWebNavigation::LOAD_FLAGS_NONE,
                                nsnull,
                                nsnull,

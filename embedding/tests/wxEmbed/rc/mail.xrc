@@ -12,16 +12,15 @@
     <object class="wxMenuBar" name="mainmenu">
       <style>wxMB_DOCKABLE</style>
       <object_ref ref="menu_file"/>
-    
     </object>
 
     <object class="wxFlexGridSizer">
       <cols>1</cols>
-      <rows>2</rows>
+      <rows>3</rows>
       <vgap>0</vgap>
       <hgap>0</hgap>
       <growablecols>0</growablecols>
-      <growablerows>1</growablerows>
+      <growablerows>2</growablerows>
 
       <object class="sizeritem">
         <flag>wxALL|wxGROW</flag>
@@ -29,6 +28,56 @@
           <style>wxLC_REPORT</style>
           <size>500,150</size>
           <!-- Must set columns etc. programatically -->
+        </object>
+      </object>
+
+      <object class="sizeritem">
+        <flag>wxALL|wxGROW</flag>
+        <object class="wxPanel" name="mail_header_panel">
+          <object class="wxFlexGridSizer">
+            <cols>2</cols>
+            <rows>3</rows>
+            <vgap>0</vgap>
+            <hgap>0</hgap>
+            <growablecols>1</growablecols>
+            <growablerows></growablerows>
+            <object class="sizeritem">
+              <flag>wxALL|wxGROW|wxALIGN_RIGHT</flag>
+              <object class="wxStaticText">
+                <label>Subject:</label>
+              </object>
+            </object>
+            <object class="sizeritem">
+              <flag>wxALL|wxGROW|wxALIGN_LEFT</flag>
+              <object class="wxStaticText" name="mail_subject">
+                <label>The Subject</label>
+              </object>
+            </object>
+            <object class="sizeritem">
+              <flag>wxALL|wxGROW|wxALIGN_RIGHT</flag>
+              <object class="wxStaticText">
+                <label>From:</label>
+              </object>
+            </object>
+            <object class="sizeritem">
+              <flag>wxALL|wxGROW|wxALIGN_LEFT</flag>
+              <object class="wxStaticText" name="mail_from">
+                <label>from</label>
+              </object>
+            </object>
+            <object class="sizeritem">
+              <flag>wxALL|wxGROW|wxALIGN_RIGHT</flag>
+              <object class="wxStaticText">
+                <label>Date:</label>
+              </object>
+            </object>
+            <object class="sizeritem">
+             <flag>wxALL|wxGROW|wxALIGN_LEFT</flag>
+              <object class="wxStaticText" name="mail_date">
+                <label>01 January 2003</label>
+              </object>
+            </object>
+          </object>
         </object>
       </object>
 
