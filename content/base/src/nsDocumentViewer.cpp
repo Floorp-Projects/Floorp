@@ -1824,6 +1824,7 @@ DocumentViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 NS_IMETHODIMP
 DocumentViewerImpl::SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet)
 {
+  NS_ASSERTION(aUAStyleSheet, "unexpected null pointer");
   if (aUAStyleSheet) {
     nsCOMPtr<nsICSSStyleSheet> sheet(do_QueryInterface(aUAStyleSheet));
     nsCOMPtr<nsICSSStyleSheet> newSheet;
@@ -3838,14 +3839,15 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
   }
 #endif // NS_PRINT_PREVIEW
 
+  nsCompatibility mode;
+  mPresContext->GetCompatibilityMode(&mode);
+
   // Setup hierarchical relationship in view manager
   aPO->mViewManager->SetRootView(aPO->mRootView);
   aPO->mPresShell->Init(document, aPO->mPresContext,
-                        aPO->mViewManager, aPO->mStyleSet);
+                        aPO->mViewManager, aPO->mStyleSet,
+                        mode != eCompatibility_Standard);
 
-  nsCompatibility mode;
-  mPresContext->GetCompatibilityMode(&mode);
-  aPO->mPresContext->SetCompatibilityMode(mode);
   if (!containerIsSet) {
     nsCOMPtr<nsISupports> supps(do_QueryInterface(aPO->mWebShell));
     aPO->mPresContext->SetContainer(supps);

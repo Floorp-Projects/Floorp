@@ -62,10 +62,21 @@ nsMarkupDocument::CreateShell(nsIPresContext* aContext,
                               nsIStyleSet* aStyleSet,
                               nsIPresShell** aInstancePtrResult)
 {
+  // Don't add anything here.  Add it to |doCreateShell| instead.  This
+  // exists so nsHTMLDocument can pass PR_TRUE for the 4th parameter
+  // some of the time.
+  return doCreateShell(aContext, aViewManager, aStyleSet, PR_FALSE,
+                       aInstancePtrResult);
+}
+
+nsresult
+nsMarkupDocument::doCreateShell(nsIPresContext* aContext,
+                                nsIViewManager* aViewManager,
+                                nsIStyleSet* aStyleSet,
+                                PRBool aIsQuirksMode,
+                                nsIPresShell** aInstancePtrResult)
+{
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
 
   nsresult rv;
   nsCOMPtr<nsIPresShell> shell(do_CreateInstance(kPresShellCID,&rv));
@@ -73,7 +84,7 @@ nsMarkupDocument::CreateShell(nsIPresContext* aContext,
     return rv;
   }
 
-  rv = shell->Init(this, aContext, aViewManager, aStyleSet);
+  rv = shell->Init(this, aContext, aViewManager, aStyleSet, aIsQuirksMode);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -82,11 +93,6 @@ nsMarkupDocument::CreateShell(nsIPresContext* aContext,
   mPresShells.AppendElement(shell);
   *aInstancePtrResult = shell.get();
   NS_ADDREF(*aInstancePtrResult);
-
-  // tell the context the mode we want (always standard, which
-  // should be correct for everything except HTML)
-  // nsHTMLDocument overrides this method and sets it differently
-  aContext->SetCompatibilityMode(eCompatibility_Standard);
 
   return NS_OK;
 }
