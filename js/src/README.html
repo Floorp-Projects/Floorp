@@ -389,7 +389,7 @@ Defining classes</h4>
 &nbsp;&nbsp;&nbsp;&nbsp; * prototype object ('MyClass.prototype') for authors to extend with new
 &nbsp;&nbsp;&nbsp;&nbsp; * properties at run-time.
 &nbsp;&nbsp;&nbsp;&nbsp; */
-&nbsp;&nbsp;&nbsp; protoObj = JS_InitClass(cx, globalObj, &amp;my_class,
+&nbsp;&nbsp;&nbsp; protoObj = JS_InitClass(cx, globalObj, NULL, &amp;my_class,
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /* native constructor function and min arg count */
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MyClass, 0,
