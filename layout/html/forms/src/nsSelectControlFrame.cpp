@@ -1118,26 +1118,45 @@ void nsSelectControlFrame::GetOptionSelected(PRUint32 index, PRBool* aValue)
 // Get the selected state from the widget
 void nsSelectControlFrame::GetOptionSelectedFromWidget(PRInt32 index, PRBool* aValue)
 {
-  nsIListBox* listBox;
   *aValue = PR_FALSE;
-  nsresult result = mWidget->QueryInterface(kListBoxIID, (void **) &listBox);
-  if ((NS_OK == result) && (nsnull != listBox)) {
-    PRUint32 numSelected = listBox->GetSelectedCount();
-    PRInt32* selOptions = nsnull;
-    if (numSelected > 0) {
-      // Could we set numSelected to 1 here? (memory, speed optimization)
-      selOptions = new PRInt32[numSelected];
-      listBox->GetSelectedIndices(selOptions, numSelected);
-      PRUint32 i;
-      for (i = 0; i < numSelected; i++) {
-        if (selOptions[i] == index) {
-          *aValue = PR_TRUE;
-          break;
-        }
+  nsresult result;
+  PRBool multiple;
+
+  GetMultiple(&multiple);
+  if (!multiple) {
+    nsIListWidget* listWidget;
+    result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
+    
+    if ((NS_OK == result) && (nsnull != listWidget)) {
+      PRInt32 selIndex = listWidget->GetSelectedIndex();
+      NS_RELEASE(listWidget);
+
+      if (selIndex == index) {
+        *aValue = PR_TRUE;
       }
-      delete[] selOptions;
     }
-    NS_RELEASE(listBox);
+  }
+  else {
+    nsIListBox* listBox;
+    result = mWidget->QueryInterface(kListBoxIID, (void **) &listBox);
+    if ((NS_OK == result) && (nsnull != listBox)) {
+      PRUint32 numSelected = listBox->GetSelectedCount();
+      PRInt32* selOptions = nsnull;
+      if (numSelected > 0) {
+        // Could we set numSelected to 1 here? (memory, speed optimization)
+        selOptions = new PRInt32[numSelected];
+        listBox->GetSelectedIndices(selOptions, numSelected);
+        PRUint32 i;
+        for (i = 0; i < numSelected; i++) {
+          if (selOptions[i] == index) {
+            *aValue = PR_TRUE;
+            break;
+          }
+        }
+        delete[] selOptions;
+      }
+      NS_RELEASE(listBox);
+    }
   }
 }
 
