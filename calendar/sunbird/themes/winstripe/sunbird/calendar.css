@@ -1797,6 +1797,7 @@ treechildren::-moz-tree-cell-text(inprogress)
 {
    color                 : green;
 }
+
 treechildren::-moz-tree-row(inprogress,selected)
 {
    background-color                 : green;
@@ -1806,15 +1807,22 @@ treechildren::-moz-tree-cell-text(overdue)
 {
    color                  : red;
 }
+
 treechildren::-moz-tree-row(overdue,selected)
 {
    background-color                  : red;
+}
+
+treechildren::-moz-tree-row 
+{ 
+   border-top             : 1px dotted #AAA; 
 }
 
 treechildren::-moz-tree-cell-text(duetoday)
 {
    color                  : blue;
 }
+
 treechildren::-moz-tree-row(duetoday,selected)
 {
    background-color                  : blue;
@@ -1824,6 +1832,7 @@ treechildren::-moz-tree-cell-text(future)
 {
    color                  : gray;
 }
+
 treechildren::-moz-tree-row(future,selected)
 {
    background-color                  : gray;
