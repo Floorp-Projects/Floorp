@@ -201,7 +201,7 @@ sub RegIt
     mozUnlock($lockfile) if (!$nofilelocks);
     
     my $dir = $installedChromeFile;
-    if ("$dir" =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
+    if ("$dir" =~ /([\w\d.\-\\\/\+]+)[\\\/]([\w\d.\-]+)/) {
 	$dir = $1;
     }
     mkpath($dir, 0, 0755);
@@ -241,7 +241,7 @@ sub EnsureFileInDir
             #else check for just the file name in the dest dir
             my $dir = "";
             my $file;
-            if ($destFile =~ /([\w\d.\-\_\\\/]+)[\\\/]([\w\d.\-\_]+)/) {
+            if ($destFile =~ /([\w\d.\-\_\\\/\+]+)[\\\/]([\w\d.\-\_]+)/) {
                 $dir = $1;
                 $file = $2;
             }
@@ -269,7 +269,7 @@ sub EnsureFileInDir
         #print "copying $destPath, from $srcPath\n";
         my $dir = "";
         my $file;
-        if ($destPath =~ /([\w\d.\-\_\\\/]+)[\\\/]([\w\d.\-\_]+)/) {
+        if ($destPath =~ /([\w\d.\-\_\\\/\+]+)[\\\/]([\w\d.\-\_]+)/) {
             $dir = $1;
             $file = $2;
         }
@@ -311,23 +311,23 @@ while (<STDIN>) {
 	my $cwd = cwd();
 	print "+++ making chrome $cwd  => $chromeDir/$jarfile.jar\n";
         while (<STDIN>) {
-            if (/^\s+([\w\d.\-\_\\\/]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
+            if (/^\s+([\w\d.\-\_\\\/\+]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
 		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 0);
                 $args = "$args$dest ";
-		if ($autoreg && $dest =~ /([\w\d.\-\_]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
+		if ($autoreg && $dest =~ /([\w\d.\-\_\+]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
 		{
 		    my $chrome_type = $1;
 		    my $pkg_name = $2;
 		    RegIt($chromeDir, $jarfile, $chrome_type, $pkg_name);
 		}
-            } elsif (/^\+\s+([\w\d.\-\_\\\/]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
+            } elsif (/^\+\s+([\w\d.\-\_\\\/\+]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
                 EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 1);
                 $overrides = "$overrides$dest ";
-		if ($autoreg && $dest =~ /([\w\d.\-\_]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
+		if ($autoreg && $dest =~ /([\w\d.\-\_\+]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
 		{
 		    my $chrome_type = $1;
 		    my $pkg_name = $2;
