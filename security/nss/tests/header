@@ -25,6 +25,8 @@
 #	-h, -? - you guessed right - displays this text
 #	-d debug
 #	-f <filename> - write the (error)output to filename
+#	-fcronfile produces the resultfiles in the same locations
+#		as would have been produced with -cron
 #	-m <mailinglist> - send filename to mailinglist (csl) only useful
 #		with -f
 #	-l <mozroot> run on a local build O_LOCAL
@@ -77,6 +79,7 @@ O_SILENT=OFF		# turned on by -s silent (only usefull with -y)
 O_DEBUG=OFF			# turned on by -d - calls to Debug produce output when ON
 O_FILE=OFF			# turned on by -f echo all output to a file $FILENAME
 O_CRON=OFF			# turned on by -cron cron use only
+O_CRONFILE=OFF		# turned on by -cron cron and -fcron
 O_LOCAL=OFF			# turned on by -l run on a local build in $MOZROOT
 O_MAIL=OFF			# turned on by -m - sends email
 
@@ -288,7 +291,7 @@ set_dirs()
 ########################################################################
 set_files()
 {
-	if [ $O_CRON = "ON" -o $O_WIN = "ON" ]
+	if [ $O_CRONFILE = "ON" ]
 	then
 		Debug "attempting to create resultfiles"
 		NEWFILENAME=$RESULTDIR/$HOST.`basename $0`
@@ -315,6 +318,7 @@ set_files()
 ########################################################################
 write_to_tmpfile()
 {
+	O_CRONFILE=ON
 	Debug "Writing to the TMPFILE"
 	O_FILE=ON
 	FILENAME=${TMP}/nsstmp.$$	# for now write to the temporary file
@@ -374,7 +378,10 @@ do
 			fi
 			Debug "Sending result to $MAILINGLIST"
 			;;
-		-f*|-F*)
+		-fcron*|-F[Cc][Rr][Oo][Nn]*)
+			write_to_tmpfile
+			;;
+		-f|-F)
 			O_FILE=ON
 			shift
 			FILENAME=$1
@@ -462,7 +469,7 @@ win_set_dirs()
 
 	while [ ! -w $D1 ]
 	do
-		if [ "$O_CRON" = "ON" ] 
+		if [ "$O_CRONFILE" = "ON" ] 
 		then
 			Exit "cant write in $D1" 
 		fi
@@ -855,6 +862,8 @@ opt_usage()
 		Echo "	-h, -? - you guessed right - displays this text"
 		Echo "	-d debug"
 		Echo "	-f <filename> - write the (error)output to filename"
+		Echo "	-fcronfile produces the resultfiles in the same locations"
+		Echo "		as would have been produced with -cron"
 		Echo "	-m <mailinglist> - send filename to mailinglist (csl "
 		Echo "		 example sonmi,nelsonb,wtc) only useful with -f"
 		Echo "	-cron equivalient to -y -s -d -f \$RESULTDIR/\$HOST.nssqa"

@@ -43,40 +43,51 @@ find_qa_systems()
 {
 for w in `ls $RESULTDIR | grep \. | sed -e "s/\..*//" | sort -u`
 do
+	NO_RSH="FALSE"
 	QA_OS=""
 	QA_RHVER=""
 	IS_64=""
 	IS_WIN=""
 
-	grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa >>$TMP_PLATFORMLIST_FILE	#FIXME - if windows don't attempt an rsh
-	#w=`echo $d | sed -e "s/\..*//"`
-    QA_SYS=`rsh $w uname -sr`
-	echo $QA_SYS | grep Linux && QA_RHVER=`rsh $w cat /etc/redhat-release`
-	if [ -n "$QA_RHVER" ]
+	grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa && NO_RSH=TRUE
+
+	if [ $NO_RSH = "TRUE" ]
 	then
-		QA_OS=`echo $w $QA_RHVER | sed -e "s/Red Hat /RH /" -e "s/ release//"`
+		grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa | sed -e "s/ /_/g" \
+			 -e "s/WINDOWS-OS-LINE:_Windows/${w}/g" >>$TMP_PLATFORMLIST_FILE
+		grep WINDOWS-OS-LINE ${RESULTDIR}/${w}.nssqa | sed -e "s/ /_/g" \
+			 -e "s/WINDOWS-OS-LINE:_Windows/${w}/g" 
 	else
-		case $QA_SYS in
-			*SunOS*5.8*)
-				IS_64=`rsh $w isainfo -v | grep 64 >/dev/null && echo 64 bit`
-				if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
-				;;
-			*HP*)
-				IS_64=`rsh $w getconf KERNEL_BITS | grep 64 >/dev/null && \
-					echo 64 bit`
-				if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
-				;;
-			*AIX*)
-				IS_64=`rsh $w lslpp -l | grep "bos.64bit"> /dev/null && \
-					echo 64 bit`
-				if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
-				;;
-		esac
-		QA_OS=`echo "$w $QA_SYS $IS_64"`
-	fi
-	echo $QA_OS
-	echo $QA_OS | sed -e "s/ /_/g" >>$TMP_PLATFORMLIST_FILE	# use later for 
+    	QA_SYS=`rsh $w uname -sr`
+		echo $QA_SYS | grep Linux && QA_RHVER=`rsh $w cat /etc/redhat-release`
+		if [ -n "$QA_RHVER" ]
+		then
+			QA_OS=`echo $w $QA_RHVER | sed -e "s/Red Hat /RH /" \
+						-e "s/ release//"`
+		else
+			case $QA_SYS in
+				*SunOS*5.8*)
+					IS_64=`rsh $w isainfo -v | grep 64 >/dev/null && \
+						echo 64 bit`
+					if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+					;;
+				*HP*)
+					IS_64=`rsh $w getconf KERNEL_BITS | grep 64 >/dev/null && \
+						echo 64 bit`
+					if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+					;;
+				*AIX*)
+					IS_64=`rsh $w lslpp -l | grep "bos.64bit"> /dev/null && \
+						echo 64 bit`
+					if [ -z "$IS_64" ] ; then IS_64="32 bit"; fi;
+					;;
+			esac
+			QA_OS=`echo "$w $QA_SYS $IS_64"`
+		fi
+		echo $QA_OS
+		echo $QA_OS | sed -e "s/ /_/g" >>$TMP_PLATFORMLIST_FILE	# use later for 
 															# missing list
+	fi
 done
 
 }
@@ -114,14 +125,15 @@ set_files()
 	fi
 	TMP_E_FILE=${RFILE}.E$$
 	TMP_P_FILE=${RFILE}.P$$
-	TMP_A_FILE=${RFILE}.A$$
 	TMP_PLATFORMLIST_FILE=${RFILE}.platform.$$
+	rm $TMP_PLATFORMLIST_FILE 2>/dev/null
 	TMP_PERF_FILE=${RFILE}.perf.$$
 	HTML_FILE=${RFILE}.html
 	TMPFILES="$TMPFILES  $TMP_E_FILE $TMP_P_FILE" 
+#FIXME rm the rest too - add them to the TMPFILES
 	FILENAME=$RFILE		#we might want to mail it...later switch to html file
 	O_FILE="ON"
-	rm $HTML_FILE $RFILE $TMP_A_FILE $TMP_E_FILE $TMP_P_FILE 2>/dev/null
+	rm $HTML_FILE $RFILE $TMP_E_FILE $TMP_P_FILE 2>/dev/null
 	cp $DOCDIR/QAheader.html $HTML_FILE
 }
 
@@ -155,11 +167,8 @@ setQAsysvars()
 		TESTNUMBER=`echo $MACHINE | sed -e 's/.*\.//'`
 		SYSNAME=`echo $MACHINE | sed -e 's/\..*//'`
 		Debug "SYSNAME= $SYSNAME"
-		#QA_SYS_OS=`rsh $SYSNAME uname -sr` #rsh never returns???
-		echo $SYSNAME >>/tmp/qasys
-		QA_SYS_OS=`grep $SYSNAME $TMP_A_FILE | sed -e "s/$SYSNAME //"`
+		QA_SYS_OS=`grep $SYSNAME $TMP_PLATFORMLIST_FILE | sed -e "s/${SYSNAME}_//"`
 		Debug "QA_SYS_OS= $QA_SYS_OS"
-		#QA_SYS_OS="SunOS 5.8"
 	fi
 	BUILD_SYS=`echo $BUILDPLATFORM | sed -e 's/\.OBJ//' -e 's/_DBG/ Debug/' \
 			-e 's/_OPT/ Optimized/'  -e 's/_64/ 64bit/' -e 's/_glibc_PTH//' \
@@ -311,9 +320,9 @@ platformlist()
 ########################################################################
 check_platforms()
 {
-	lline
-	echo "	M i s s i n g  P l a t f o r m s"
-	lline
+	#lline
+	#echo "	M i s s i n g  P l a t f o r m s"
+	#lline
 	QA_MISSING="QA report missing"
 	MACHINE="0"
 
@@ -396,7 +405,7 @@ rsaperf()
 
 set_files
 
-find_qa_systems >$TMP_A_FILE 2>/dev/null
+find_qa_systems 2>/dev/null
 
 #header > $RFILE
 
