@@ -343,12 +343,18 @@ function MsgSortDescending()
 function UpdateSortIndicators(sortType, sortOrder)
 {
   // show the twisties if the view is threaded
+  var threadCol = document.getElementById("threadCol");
   var currCol = document.getElementById("subjectCol");
-  var primary = (gDBView.viewFlags & nsMsgViewFlagsType.kThreadedDisplay) && gDBView.supportsThreading;
-  currCol.setAttribute("primary", primary);
+  if (GetDBView().viewFlags & nsMsgViewFlagsType.kThreadedDisplay) {
+    threadCol.setAttribute("sortDirection", "ascending");
+    currCol.setAttribute("primary", "true");
+  }
+  else {
+    threadCol.removeAttribute("sortDirection");
+    currCol.removeAttribute("primary");
+  }
 
   // remove the sort indicator from all the columns
-  currCol = document.getElementById("threadCol");
   while (currCol) {
     currCol.removeAttribute("sortDirection");
     currCol = currCol.nextSibling;
@@ -365,17 +371,6 @@ function UpdateSortIndicators(sortType, sortOrder)
       else {
         sortedColumn.setAttribute("sortDirection","descending");
       }
-			if (sortedColumn != "threadCol")
-			{
-			  currCol = document.getElementById("threadCol");
-				if (currCol)
-				{
-					if (gDBView.viewFlags & nsMsgViewFlagsType.kThreadedDisplay)
-						currCol.setAttribute("sortDirection", "ascending");
-					else
-						currCol.removeAttribute("sortDirection");
-				}
-			}
     }
   }
 }
