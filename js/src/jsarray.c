@@ -633,6 +633,9 @@ typedef struct HSortArgs {
 static int
 sort_compare(const void *a, const void *b, void *arg);
 
+static int
+sort_compare_strings(const void *a, const void *b, void *arg);
+
 static void
 HeapSortHelper(HSortArgs *qa, int lo, int hi)
 {
@@ -649,7 +652,7 @@ HeapSortHelper(HSortArgs *qa, int lo, int hi)
     cmp = qa->cmp;
     arg = qa->arg;
 
-    fastmove = (cmp == sort_compare);
+    fastmove = (cmp == sort_compare || cmp == sort_compare_strings);
 #define MEMMOVE(p,q,n) \
     (fastmove ? (void)(*(jsval*)(p) = *(jsval*)(q)) : (void)memmove(p, q, n))
 
@@ -774,6 +777,14 @@ sort_compare(const void *a, const void *b, void *arg)
     return (int)cmp;
 }
 
+static int
+sort_compare_strings(const void *a, const void *b, void *arg)
+{
+    jsval av = *(const jsval *)a, bv = *(const jsval *)b;
+
+    return (int) js_CompareStrings(JSVAL_TO_STRING(av), JSVAL_TO_STRING(bv));
+}
+
 /* XXXmccabe do the sort helper functions need to take int?  (Or can we claim
  * that 2^32 * 32 is too large to worry about?)  Something dumps when I change
  * to unsigned int; is qsort using -1 as a fencepost?
@@ -787,6 +798,12 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval *vec;
     jsid id;
 
+    /*
+     * Optimize the default compare function case if all of obj's elements
+     * have values of type string.
+     */
+    JSBool all_strings;
+
     if (argc > 0) {
 	if (JSVAL_IS_PRIMITIVE(argv[0])) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -794,8 +811,10 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    return JS_FALSE;
 	}
 	fval = argv[0];
+        all_strings = JS_FALSE; /* non-default compare function */
     } else {
 	fval = JSVAL_NULL;
+        all_strings = JS_TRUE;  /* check for all string values */
     }
 
     if (!js_GetLengthProperty(cx, obj, &len))
@@ -834,12 +853,17 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	ca.status = OBJ_GET_PROPERTY(cx, obj, id, &vec[i]);
 	if (!ca.status)
 	    goto out;
+
+        /* We know JSVAL_IS_STRING yields 0 or 1, so avoid a branch via &=. */
+        all_strings &= JSVAL_IS_STRING(vec[i]); 
     }
 
     ca.context = cx;
     ca.fval = fval;
     ca.status = JS_TRUE;
-    if (!js_HeapSort(vec, (size_t) len, sizeof(jsval), sort_compare, &ca)) {
+    if (!js_HeapSort(vec, (size_t) len, sizeof(jsval),
+                     all_strings ? sort_compare_strings : sort_compare,
+                     &ca)) {
 	JS_ReportOutOfMemory(cx);
 	ca.status = JS_FALSE;
     }
