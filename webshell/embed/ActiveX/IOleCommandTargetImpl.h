@@ -18,18 +18,6 @@
 #ifndef IOLECOMMANDIMPL_H
 #define IOLECOMMANDIMPL_H
 
-typedef HRESULT (_stdcall *OleCommandProc)(IOleCommandTarget *pCmdTarget, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
-
-struct OleCommandInfo
-{
-	ULONG			nCmdID;
-	const GUID		*pCmdGUID;
-	ULONG			nWindowsCmdID;
-	OleCommandProc	pfnCommandProc;
-	wchar_t			*szVerbText;
-	wchar_t			*szStatusText;
-};
-
 // Macros to be placed in any class derived from the IOleCommandTargetImpl
 // class. These define what commands are exposed from the object.
 
@@ -68,6 +56,17 @@ class IOleCommandTargetImpl : public IOleCommandTarget
 	};
 
 public:
+	typedef HRESULT (_stdcall *OleCommandProc)(T *pT, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut);
+
+	struct OleCommandInfo
+	{
+		ULONG			nCmdID;
+		const GUID		*pCmdGUID;
+		ULONG			nWindowsCmdID;
+		OleCommandProc	pfnCommandProc;
+		wchar_t			*szVerbText;
+		wchar_t			*szStatusText;
+	};
 
 	// Query the status of the specified commands (test if is it supported etc.)
 	virtual HRESULT STDMETHODCALLTYPE QueryStatus(const GUID __RPC_FAR *pguidCmdGroup, ULONG cCmds, OLECMD __RPC_FAR prgCmds[], OLECMDTEXT __RPC_FAR *pCmdText)
@@ -185,12 +184,6 @@ public:
 				continue;
 			}
 
-			// Command is supported but not implemented
-			if (pCI->nWindowsCmdID == 0)
-			{
-				continue;
-			}
-
 			// Send ourselves a WM_COMMAND windows message with the associated
 			// identifier and exec data
 			OleExecData cData;
@@ -200,18 +193,22 @@ public:
 			cData.pvaIn = pvaIn;
 			cData.pvaOut = pvaOut;
 
-
 			if (pCI->pfnCommandProc)
 			{
-				pCI->pfnCommandProc(this, pCI->pCmdGUID, pCI->nCmdID, nCmdexecopt, pvaIn, pvaOut);
+				pCI->pfnCommandProc(pT, pCI->pCmdGUID, pCI->nCmdID, nCmdexecopt, pvaIn, pvaOut);
 			}
-			else
+			else if (pCI->nWindowsCmdID != 0)
 			{
 				HWND hwndTarget = pT->GetCommandTargetWindow();
 				if (hwndTarget)
 				{
 					::SendMessage(hwndTarget, WM_COMMAND, LOWORD(pCI->nWindowsCmdID), (LPARAM) &cData);
 				}
+			}
+			else
+			{
+				// Command supported but not implemented
+				continue;
 			}
 
 			return S_OK;
