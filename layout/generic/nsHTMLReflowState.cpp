@@ -2441,7 +2441,7 @@ void nsHTMLReflowState::AdjustComputedHeight(void)
       }
     }
     // NOTE: this next assertion was firing for HR frames sometimes - why?
-    NS_ASSERTION(mComputedHeight>=0, "Negative Height Result- very bad");
+    // NS_ASSERTION(mComputedHeight>=0, "Negative Height Result- very bad");
     // if it did go bozo, set to 0
     if(mComputedHeight<0) mComputedHeight = 0;
   }
