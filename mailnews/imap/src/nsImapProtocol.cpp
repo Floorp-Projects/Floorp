@@ -22,8 +22,11 @@
  */
 #define DOING_PSEUDO_MAILBOXES
 
+#ifdef MOZ_LOGGING
 // sorry, this has to be before the pre-compiled header
 #define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+
 // as does this
 #define NS_IMPL_IDS
 #include "msgCore.h"  // for pre-compiled headers

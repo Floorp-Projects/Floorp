@@ -21,8 +21,10 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+#ifdef MOZ_LOGGING
 // sorry, this has to be before the pre-compiled header
 #define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
 
 #include "msgCore.h"  // for pre-compiled headers
 #include "nsMimeTypes.h"

@@ -151,7 +151,11 @@ CFLAGS = $(CFLAGS) -DDEVELOPER_DEBUG
 CFLAGS = $(CFLAGS) -FR
 !endif
 
-
+!ifdef NO_LOGGING
+CFLAGS=$(CFLAGS) -DNS_DISABLE_LOGGING
+!else
+CFLAGS=$(CFLAGS) -DMOZ_LOGGING
+!endif
 
 #//-----------------------------------------------------------------------
 #//

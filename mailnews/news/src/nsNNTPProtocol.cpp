@@ -26,7 +26,10 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+#ifdef MOZ_LOGGING
 #define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
+#endif
+
 #include "msgCore.h"    // precompiled header...
 #include "MailNewsTypes.h"
 #include "nntpCore.h"

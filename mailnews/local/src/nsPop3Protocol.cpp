@@ -29,7 +29,7 @@
  * 06/07/2000       Jason Eager    Added check for out of disk space
  */
 
-#ifndef FORCE_PR_LOG
+#ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
 #endif 
 

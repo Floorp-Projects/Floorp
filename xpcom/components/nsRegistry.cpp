@@ -20,6 +20,10 @@
  * Contributor(s): 
  */
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#endif
+
 #include "nsRegistry.h"
 #include "nsIEnumerator.h"
 #include "nsDirectoryService.h"
@@ -53,7 +57,6 @@
 #endif
 
 // Logging of debug output
-#define FORCE_PR_LOG /* Allow logging in the release build */
 extern PRLogModuleInfo *nsComponentManagerLog;
 
 PRUnichar widestrFormat[] = { PRUnichar('%'),PRUnichar('s'),PRUnichar(0)};

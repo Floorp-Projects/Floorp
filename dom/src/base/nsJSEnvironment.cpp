@@ -55,8 +55,10 @@
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
 
+#ifdef MOZ_LOGGING
 // Force PR_LOGGING so we can get JS strict warnings even in release builds
 #define FORCE_PR_LOG 1
+#endif
 #include "prlog.h"
 #include "prthread.h"
 

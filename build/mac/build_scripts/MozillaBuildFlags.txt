@@ -61,6 +61,7 @@ accessible      1
 bidi            0
 p3p             0
 jsdebugger      0
+moz_logging     1
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"
