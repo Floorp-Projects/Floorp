@@ -28,6 +28,8 @@
 
 #define DBG 0
 
+extern XtAppContext gAppContext;
+
 
 //==============================================================
 void nsXtWidget_InitNSEvent(XEvent   * anXEv,
@@ -143,7 +145,9 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
   pevent.rect = (nsRect *)&rect;
   XEvent xev;
 
-#if 0
+  if (widgetWindow->GetResized())
+   return;
+
   int count = 0;
   while (XPeekEvent(XtDisplay(w), &xev))
   {
@@ -156,7 +160,6 @@ void nsXtWidget_ExposureMask_EventHandler(Widget w, XtPointer p, XEvent * event,
        break;
      }
   }
-#endif
 
   widgetWindow->OnPaint(pevent);
 
@@ -515,15 +518,14 @@ void nsXtWidget_Resize_Callback(Widget w, XtPointer p, XtPointer call_data)
 
         // NOTE: THIS May not be needed when embedded in chrome
 
-extern XtAppContext gAppContext;
 
       if (! widgetWindow->GetResized()) {
         printf("Adding timeout for %d\n", widgetWindow);
-        XSync(XtDisplay(w), 0);
-        XtAppAddTimeOut(gAppContext, 500, (XtTimerCallbackProc)nsXtWidget_Refresh_Callback, widgetWindow);
+        XtAppAddTimeOut(gAppContext, 250, (XtTimerCallbackProc)nsXtWidget_Refresh_Callback, widgetWindow);
       }
 
       widgetWindow->SetResizeRect(rect);
+      widgetWindow->SetBounds(rect);
       widgetWindow->SetResized(PR_TRUE);
 
 #if 0
@@ -599,6 +601,12 @@ void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data)
   }
 }
 
+void nsXtWidget_ResetResize_Callback(XtPointer call_data)
+{
+    nsWindow* widgetWindow = (nsWindow*)call_data;
+    widgetWindow->SetResized(PR_FALSE);
+}
+
 void nsXtWidget_Refresh_Callback(XtPointer call_data)
 {
     printf("In timer\n");
@@ -614,7 +622,7 @@ void nsXtWidget_Refresh_Callback(XtPointer call_data)
 
     widgetWindow->SetBounds(bounds); 
     widgetWindow->OnResize(event);
-    widgetWindow->SetResized(PR_FALSE);
+//    widgetWindow->SetResized(PR_FALSE);
 
 
     nsPaintEvent pevent;
@@ -623,4 +631,6 @@ void nsXtWidget_Refresh_Callback(XtPointer call_data)
     pevent.time = 0;
     pevent.rect = (nsRect *)&bounds;
     widgetWindow->OnPaint(pevent);
+
+    XtAppAddTimeOut(gAppContext, 50, (XtTimerCallbackProc)nsXtWidget_ResetResize_Callback, widgetWindow);
 }

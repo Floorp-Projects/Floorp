@@ -45,6 +45,8 @@ void nsXtWidget_Expose_Callback(Widget w, XtPointer p, XtPointer call_data);
 
 void nsXtWidget_Refresh_Callback(XtPointer call_data);
 
+void nsXtWidget_ResetResize_Callback(XtPointer call_data);
+
 
 #endif  // __nsXtEventHandler.h
 
