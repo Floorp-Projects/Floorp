@@ -64,7 +64,8 @@ public:
     * and initializes an ns4xPlugin object, and returns it in
     * <b>result</b>.
     */
-    NS_IMETHOD CreatePlugin(nsIServiceManagerObsolete* aServiceMgr, const char* aFileName,
+    NS_IMETHOD CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
+                            const char* aFileName, const char* aFullPath,
                             PRLibrary* aLibrary, nsIPlugin** aResult) = 0;
 };
 

@@ -48,7 +48,8 @@ public:
     
     static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
-    NS_IMETHOD CreatePlugin(nsIServiceManagerObsolete* aServiceMgr, const char* aFileName,
+    NS_IMETHOD CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
+                            const char* aFileName, const char* aFullPath,
                             PRLibrary* aLibrary, nsIPlugin** aResult);
 };
 
@@ -72,10 +73,11 @@ nsresult nsClassicPluginFactory::Create(nsISupports* aOuter, REFNSIID aIID, void
     return factory->QueryInterface(aIID, aResult);
 }
 
-NS_METHOD nsClassicPluginFactory::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr, const char* aFileName,
+NS_METHOD nsClassicPluginFactory::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
+                                               const char* aFileName, const char* aFullPath,
                                                PRLibrary* aLibrary, nsIPlugin** aResult)
 {
-    return ns4xPlugin::CreatePlugin(aServiceMgr, aFileName, aLibrary, aResult);
+    return ns4xPlugin::CreatePlugin(aServiceMgr, aFileName, aFullPath, aLibrary, aResult);
 }
 
 static nsModuleComponentInfo gComponentInfo[] = {
