@@ -91,9 +91,21 @@ class SocketBase {
 
     native void socketClose() throws IOException;
 
-    native void setNeedClientAuth(boolean b) throws SocketException;
+    private boolean requestingClientAuth = false;
 
-    native void setNeedClientAuthNoExpiryCheck(boolean b)
+    void requestClientAuth(boolean b) throws SocketException {
+        requestingClientAuth = b;
+        setSSLOption(SSL_REQUEST_CERTIFICATE, b);
+    }
+
+    public void requestClientAuthNoExpiryCheck(boolean b)
+        throws SocketException
+    {
+        requestingClientAuth = b;
+        requestClientAuthNoExpiryCheckNative(b);
+    }
+
+    private native void requestClientAuthNoExpiryCheckNative(boolean b)
         throws SocketException;
 
     void enableSSL2(boolean enable) throws SocketException {
@@ -152,6 +164,9 @@ class SocketBase {
     void requireClientAuth(boolean require, boolean onRedo)
             throws SocketException
     {
+        if( require && !requestingClientAuth ) {
+            requestClientAuth(true);
+        }
         setSSLOption(SSL_REQUIRE_CERTIFICATE, require ? (onRedo ? 1 : 2) : 0);
     }
 

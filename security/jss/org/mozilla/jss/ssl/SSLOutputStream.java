@@ -35,7 +35,7 @@ package org.mozilla.jss.ssl;
 
 import java.io.IOException;
 
-public class SSLOutputStream extends java.io.OutputStream {
+class SSLOutputStream extends java.io.OutputStream {
 
     SSLOutputStream(SSLSocket sock) {
         this.sock = sock;

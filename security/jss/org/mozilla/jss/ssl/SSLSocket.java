@@ -38,7 +38,12 @@ import java.net.SocketException;
 import java.io.*;
 import java.io.IOException;
 import java.util.Vector;
+import java.net.SocketPermission;
+import java.security.AccessController;
 
+/**
+ * SSL client socket.
+ */
 public class SSLSocket extends java.net.Socket {
 
     /**
@@ -56,30 +61,82 @@ public class SSLSocket extends java.net.Socket {
         base.setProxy(sp);
     }
 
+    /**
+     * Creates an SSL client socket and connects to the specified host and
+     *  port.
+     *
+     * @param host The hostname to connect to.
+     * @param port The port to connect to.
+     */
     public SSLSocket(String host, int port)
         throws UnknownHostException, IOException
     {
         this(InetAddress.getByName(host), port, null, 0);
     }
 
+    /**
+     * Creates an SSL client socket and connects to the specified address and
+     *  port.
+     *
+     * @param address The IP address to connect to.
+     * @param port The port to connect to.
+     */
     public SSLSocket(InetAddress address, int port)
         throws IOException
     {
         this(address, port, null, 0);
     }
 
+    /**
+     * Creates an SSL client socket and connects to the specified host and
+     *  port. Binds to the given local address and port.
+     *
+     * @param host The hostname to connect to.
+     * @param port The port to connect to.
+     * @param localAddr The local address to bind to. It can be null, in which
+     *      case an unspecified local address will be chosen.
+     * @param localPort The local port to bind to. If 0, a random port will be
+     *      assigned to the socket.
+     */
     public SSLSocket(String host, int port, InetAddress localAddr,
         int localPort) throws IOException
     {
         this(InetAddress.getByName(host), port, localAddr, localPort);
     }
 
+    /**
+     * Creates an SSL client socket and connects to the specified address and
+     *  port. Binds to the given local address and port.
+     *
+     * @param address The IP address to connect to.
+     * @param port The port to connect to.
+     * @param localAddr The local address to bind to. It can be null, in which
+     *      case an unspecified local address will be chosen.
+     * @param localPort The local port to bind to. If 0, a random port will be
+     *      assigned to the socket.
+     */
     public SSLSocket(InetAddress address, int port, InetAddress localAddr,
         int localPort) throws IOException
     {
         this(address, port, localAddr, localPort, null, null);
     }
 
+    /**
+     * Creates an SSL client socket and connects to the specified host and
+     *  port. Binds to the given local address and port. Installs the given
+     *  callbacks for certificate approval and client certificate selection.
+     *
+     * @param host The hostname to connect to.
+     * @param port The port to connect to.
+     * @param localAddr The local address to bind to. It can be null, in which
+     *      case an unspecified local address will be chosen.
+     * @param localPort The local port to bind to. If 0, a random port will be
+     *      assigned to the socket.
+     * @param certApprovalCallback A callback that can be used to override
+     *      approval of the peer's certificate.
+     * @param clientCertSelectionCallback A callback to select the client
+     *      certificate to present to the peer.
+     */
     public SSLSocket(String host, int port, InetAddress localAddr,
         int localPort, SSLCertificateApprovalCallback certApprovalCallback,
         SSLClientCertificateSelectionCallback clientCertSelectionCallback)
@@ -89,8 +146,25 @@ public class SSLSocket extends java.net.Socket {
                 certApprovalCallback, clientCertSelectionCallback);
     }
 
-    /*
-     * @param stream Ignored.
+    /**
+     * Creates an SSL client socket and connects to the specified host and
+     *  port. Binds to the given local address and port. Installs the given
+     *  callbacks for certificate approval and client certificate selection.
+     *
+     * @param host The hostname to connect to.
+     * @param port The port to connect to.
+     * @param localAddr The local address to bind to. It can be null, in which
+     *      case an unspecified local address will be chosen.
+     * @param localPort The local port to bind to. If 0, a random port will be
+     *      assigned to the socket.
+     * @param stream This parameter is ignored. All SSLSockets are stream
+     *      sockets.
+     * @param certApprovalCallback A callback that can be used to override
+     *      approval of the peer's certificate.
+     * @param clientCertSelectionCallback A callback to select the client
+     *      certificate to present to the peer.
+     * @deprecated As of JSS 3.0. The stream parameter is ignored, because
+     *      only stream sockets are supported.
      */
     public SSLSocket(InetAddress address, int port, InetAddress localAddr,
         int localPort, boolean stream,
@@ -102,6 +176,22 @@ public class SSLSocket extends java.net.Socket {
             certApprovalCallback, clientCertSelectionCallback);
     }
 
+    /**
+     * Creates an SSL client socket and connects to the specified address and
+     *  port. Binds to the given local address and port. Installs the given
+     *  callbacks for certificate approval and client certificate selection.
+     *
+     * @param address The IP address to connect to.
+     * @param port The port to connect to.
+     * @param localAddr The local address to bind to. It can be null, in which
+     *      case an unspecified local address will be chosen.
+     * @param localPort The local port to bind to. If 0, a random port will be
+     *      assigned to the socket.
+     * @param certApprovalCallback A callback that can be used to override
+     *      approval of the peer's certificate.
+     * @param clientCertSelectionCallback A callback to select the client
+     *      certificate to present to the peer.
+     */
     public SSLSocket(InetAddress address, int port,
         InetAddress localAddr,
         int localPort, SSLCertificateApprovalCallback certApprovalCallback,
@@ -118,7 +208,7 @@ public class SSLSocket extends java.net.Socket {
         SSLClientCertificateSelectionCallback clientCertSelectionCallback)
             throws IOException
     {
-        /* create the socket */
+        // create the socket
         sockProxy =
             new SocketProxy(
                 base.socketCreate(
@@ -126,7 +216,7 @@ public class SSLSocket extends java.net.Socket {
 
         base.setProxy(sockProxy);
 
-        /* bind it to local address and port */
+        // bind it to local address and port
         if( localAddr != null || localPort > 0 ) {
             // bind because they specified a local address
             byte[] addrBA = null;
@@ -140,11 +230,16 @@ public class SSLSocket extends java.net.Socket {
         socketConnect(address.getAddress(), hostname, port);
     }
 
-
+    /**
+     * @return The remote peer's IP address.
+     */
     public InetAddress getInetAddress() {
         return base.getInetAddress();
     }
 
+    /**
+     * @return The local IP address.
+     */
     public InetAddress getLocalAddress() {
         try {
             int intAddr = getLocalAddressNative();
@@ -168,32 +263,63 @@ public class SSLSocket extends java.net.Socket {
     }
     private native int getLocalAddressNative() throws SocketException;
 
+    /**
+     * @return The local port.
+     */
     public int getLocalPort() {
         return base.getLocalPort();
     }
 
+    /**
+     * @return The remote port.
+     */
     public native int getPort();
 
+    /**
+     * Returns the input stream for reading from this socket.
+     */
     public InputStream getInputStream() throws IOException {
         return new SSLInputStream(this);
     }
 
+    /**
+     * Returns the output stream for writing to this socket.
+     */
     public OutputStream getOutputStream() throws IOException {
         return new SSLOutputStream(this);
     }
 
+    /**
+     * Enables or disables the TCP_NO_DELAY socket option. Enabling this
+     * option will <i>disable</i> the Nagle algorithm.
+     */
     public native void setTcpNoDelay(boolean on) throws SocketException;
 
+    /**
+     * Returns the current setting of the TCP_NO_DELAY socket option.
+     */
     public native boolean getTcpNoDelay() throws SocketException;
 
+    /**
+     * Enables or disables the SO_KEEPALIVE socket option.
+     */
     public native void setKeepAlive(boolean on) throws SocketException;
 
+    /**
+     * Returns the current setting of the SO_KEEPALIVE socket option.
+     */
     public native boolean getKeepAlive() throws SocketException;
 
+    /**
+     * Shuts down the input side of the socket.
+     */
     public void shutdownInput() throws IOException {
         shutdownNative(SocketBase.PR_SHUTDOWN_RCV);
     }
 
+    /**
+     * Shuts down the output side of the socket.
+     */
     public void shutdownOutput() throws IOException {
         shutdownNative(SocketBase.PR_SHUTDOWN_SEND);
     }
@@ -201,29 +327,54 @@ public class SSLSocket extends java.net.Socket {
     private native void shutdownNative(int how) throws IOException;
 
     /**
+     * Sets the SO_LINGER socket option.
      * param linger The time (in hundredths of a second) to linger for.
      */
     public native void setSoLinger(boolean on, int linger)
         throws SocketException;
 
+    /**
+     * Returns the current value of the SO_LINGER socket option.
+     */
     public native int getSoLinger() throws SocketException;
 
+    /**
+     * Sets the SO_TIMEOUT socket option.
+     */
     public void setSoTimeout(int timeout) throws SocketException {
         base.setTimeout(timeout);
     }
 
+    /**
+     * Returns the current value of the SO_TIMEOUT socket option.
+     */
     public int getSoTimeout() throws SocketException {
         return base.getTimeout();
     }
 
-    //
-    // XXX These aren't implemented by native code. Perhaps they could be.
-    //
+    /**
+     * Sets the size (in bytes) of the send buffer.
+     */
     public native void setSendBufferSize(int size) throws SocketException;
+
+    /**
+     * Returns the size (in bytes) of the send buffer.
+     */
     public native int getSendBufferSize() throws SocketException;
+
+    /**
+     * Sets the size (in bytes) of the receive buffer.
+     */
     public native void setReceiveBufferSize(int size) throws SocketException;
+
+    /** 
+     * Returnst he size (in bytes) of the receive buffer.
+     */
     public native int getReceiveBufferSize() throws SocketException;
 
+    /** 
+     * Closes this socket.
+     */
     public void close() throws IOException {
         if( sockProxy != null ) {
             base.close();
@@ -239,10 +390,16 @@ public class SSLSocket extends java.net.Socket {
     ////////////////////////////////////////////////////////////////////
     private Vector handshakeCompletedListeners = new Vector();
 
+    /**
+     * Adds a listener to be notified when an SSL handshake completes.
+     */
     public void addHandshakeCompletedListener(SSLHandshakeCompletedListener l) {
         handshakeCompletedListeners.addElement(l);
     }
 
+    /**
+     * Removes a previously registered listener for handshake completion.
+     */
     public void removeHandshakeCompletedListener(
             SSLHandshakeCompletedListener l) {
         handshakeCompletedListeners.removeElement(l);
@@ -263,28 +420,52 @@ public class SSLSocket extends java.net.Socket {
     }
                
 
+    /**
+     * Enables SSL v2 on this socket. It is enabled  by default, unless the
+     * default has been changed with <code>enableSSL2Default</code>.
+     */
     public void enableSSL2(boolean enable) throws SocketException {
         base.enableSSL2(enable);
     }
 
+    /**
+     * Sets the default for SSL v2 for all new sockets.
+     */
     static public void enableSSL2Default(boolean enable) throws SocketException{
         setSSLDefaultOption(SocketBase.SSL_ENABLE_SSL2, enable);
     }
 
+    /**
+     * Enables SSL v3 on this socket. It is enabled by default, unless the
+     *  default has been changed with <code>enableSSL3Default</code>.
+     */
     public void enableSSL3(boolean enable) throws SocketException {
         base.enableSSL3(enable);
     }
 
+    /**
+     * Sets the default for SSL v2 for all new sockets.
+     */
     static public void enableSSL3Default(boolean enable) throws SocketException{
         setSSLDefaultOption(SocketBase.SSL_ENABLE_SSL3, enable);
     }
 
+    /**
+     * Sets whether the socket requires client authentication from the remote
+     *  peer. If requestClientAuth() has not already been called, this
+     *  method will tell the socket to request client auth as well as requiring
+     *  it.
+     */
     public void requireClientAuth(boolean require, boolean onRedo)
             throws SocketException
     {
         base.requireClientAuth(require, onRedo);
     }
 
+    /**
+     * Sets the default setting for requiring client authorization.
+     *  All subsequently created sockets will use this default setting.
+     */
     public void requireClientAuthDefault(boolean require, boolean onRedo)
             throws SocketException
     {
@@ -292,16 +473,33 @@ public class SSLSocket extends java.net.Socket {
                             require ? (onRedo ? 1 : 2) : 0);
     }
 
+    /**
+     * Force an already started SSL handshake to complete.
+     * This method should block until the handshake has completed.
+     */
     public native void forceHandshake() throws SocketException;
 
+    /** 
+     * Determines whether this end of the socket is the client or the server
+     *  for purposes of the SSL protocol. By default, it is the client.
+     * @param b true if this end of the socket is the SSL slient, false
+     *      if it is the SSL server.
+     */
     public void setUseClientMode(boolean b) {
         handshakeAsClient = b;
     }
 
+    /**
+     * @return true if this end of the socket is the SSL client, false
+     *  if it is the SSL server.
+     */
     public boolean getUseClientMode() {
         return handshakeAsClient;
     }
 
+    /**
+     * Resets the handshake state.
+     */
     public void resetHandshake() throws SocketException {
         resetHandshakeNative(handshakeAsClient);
     }
@@ -309,23 +507,70 @@ public class SSLSocket extends java.net.Socket {
     private native void resetHandshakeNative(boolean asClient)
         throws SocketException;
 
+    /**
+     * Returns the security status of this socket.
+     */
     public native SSLSecurityStatus getStatus() throws SocketException;
 
+    /**
+     * Sets the nickname of the certificate to use for client authentication.
+     */
     public void setClientCertNickname(String nick) throws SocketException {
         base.setClientCertNickname(nick);
     }
 
-    public void setNeedClientAuth(boolean b) throws SocketException {
-        base.setNeedClientAuth(b);
+    /**
+     * Enables/disables the request of client authentication. This is only
+     *  meaningful for the server end of the SSL connection. During the next
+     *  handshake, the remote peer will be asked to authenticate itself.
+     * @see org.mozilla.jss.ssl.SSLSocket#requireClientAuth
+     */
+    public void requestClientAuth(boolean b) throws SocketException {
+        base.requestClientAuth(b);
     }
 
-    public native void setNeedClientAuthNoExpiryCheck(boolean b)
-        throws SocketException;
+    /**
+     * @deprecated As of JSS 3.0. This method is misnamed. Use
+     *  <code>requestClientAuth</code> instead.
+     */
+    public void setNeedClientAuth(boolean b) throws SocketException {
+        base.requestClientAuth(b);
+    }
 
+    /**
+     * Enables/disables the request of client authentication. This is only
+     *  meaningful for the server end of the SSL connection. During the next
+     *  handshake, the remote peer will be asked to authenticate itself.
+     *  <p>In addition, the client certificate's expiration will not
+     *  prevent it from being accepted.
+     * @see org.mozilla.jss.ssl.SSLSocket#requireClientAuth
+    public void requestClientAuthNoExpiryCheck(boolean b)
+        throws SocketException
+    {
+        base.requestClientAuthNoExpiryCheck(b);
+    }
+
+    /**
+     * @deprecated As of JSS 3.0. This method is misnamed. Use
+     *  <code>requestClientAuthNoExpiryCheck</code> instead.
+     */
+    public void setNeedClientAuthNoExpiryCheck(boolean b)
+        throws SocketException
+    {
+        base.requestClientAuthNoExpiryCheck(b);
+    }
+
+    /**
+     * Enables/disables the session cache. By default, the session cache
+     * is enabled.
+     */
     public void useCache(boolean b) throws SocketException {
         base.useCache(b);
     }
 
+    /** 
+     * Sets the default setting for use of the session cache.
+     */
     public void useCacheDefault(boolean b) throws SocketException {
         setSSLDefaultOption(SocketBase.SSL_NO_CACHE, !b);
     }
@@ -345,6 +590,9 @@ public class SSLSocket extends java.net.Socket {
     private static native void setSSLDefaultOption(int option, int on)
         throws SocketException;
 
+    /**
+     * Enables/disables the given cipher on this socket.
+     */
     public static native void setCipherPreference( int cipher,
         boolean enable);
 
@@ -365,12 +613,29 @@ public class SSLSocket extends java.net.Socket {
     private native void socketWrite(byte[] b, int off, int len, int timeout)
         throws IOException;
 
+    /**
+     * Removes the current session from the session cache.
+     */
     public native void invalidateSession() throws SocketException;
 
+    /**
+     * Causes SSL to begin a full, new SSL 3.0 handshake from scratch
+     * on a connection that has already completed one handshake.
+     * <p>Does not flush the SSL3 cache entry first, so a full handshake
+     *  will not take place. Instead only the symmetric session keys will
+     *  be regenerated.
+     */
     public void redoHandshake() throws SocketException {
         redoHandshake(false);
     }
 
+    /**
+     * Causes SSL to begin a full, new SSL 3.0 handshake from scratch
+     * on a connection that has already completed one handshake.
+     * @param flushCache If true, this session will be flushed from the cache.
+     *  This will force a complete SSL handshake with a private key operation.
+     *  If false, only the session key will be regenerated.
+     */
     public native void redoHandshake(boolean flushCache) throws SocketException;
 
     protected void finalize() throws Throwable {
@@ -392,6 +657,10 @@ public class SSLSocket extends java.net.Socket {
 
     }
 
+    /**
+     * Sets the SSL cipher policy. This must be called before creating any
+     *  SSL sockets.
+     */
     public static void setCipherPolicy(CipherPolicy cp) throws SocketException {
         setCipherPolicyNative(cp.getEnum());
     }

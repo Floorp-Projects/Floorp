@@ -42,11 +42,6 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-/*
- * this will eventually be obsoleted by
- * javax.net.ssl.HandshakeCompletedListener
- */
-
 /**
  * This interface is used when you want to know that a security
  * handshake is complete.

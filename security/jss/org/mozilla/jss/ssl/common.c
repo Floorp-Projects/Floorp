@@ -251,14 +251,18 @@ Java_org_mozilla_jss_ssl_SocketBase_socketBind
      */
     addr.inet.family = AF_INET;
     addr.inet.port = htons(port);
-    PR_ASSERT(sizeof(addr.inet.ip) == 4);
-    PR_ASSERT( (*env)->GetArrayLength(env, addrBA) == 4);
-    addrBAelems = (*env)->GetByteArrayElements(env, addrBA, NULL);
-    if( addrBAelems == NULL ) {
-        ASSERT_OUTOFMEM(env);
-        goto finish;
+    if( addrBA != NULL ) {
+        PR_ASSERT(sizeof(addr.inet.ip) == 4);
+        PR_ASSERT( (*env)->GetArrayLength(env, addrBA) == 4);
+        addrBAelems = (*env)->GetByteArrayElements(env, addrBA, NULL);
+        if( addrBAelems == NULL ) {
+            ASSERT_OUTOFMEM(env);
+            goto finish;
+        }
+        memcpy(&addr.inet.ip, addrBAelems, 4);
+    } else {
+        addr.inet.ip = PR_htonl(INADDR_ANY);
     }
-    memcpy(&addr.inet.ip, addrBAelems, 4);
 
     /* do the bind() call */
     status = PR_Bind(sock->fd, &addr);
@@ -306,7 +310,7 @@ finish:
 }
 
 JNIEXPORT void JNICALL
-Java_org_mozilla_jss_ssl_SocketBase_setNeedClientAuthNoExpiryCheck
+Java_org_mozilla_jss_ssl_SocketBase_requestClientAuthNoExpiryCheck
     (JNIEnv *env, jobject self, jboolean b)
 {
     JSSL_SocketData *sock;
@@ -357,25 +361,6 @@ Java_org_mozilla_jss_ssl_SocketBase_setSSLOption
     status = SSL_OptionSet(sock->fd, JSSL_enums[option], on);
     if( status != SECSuccess ) {
         JSS_throwMsg(env, SOCKET_EXCEPTION, "SSL_OptionSet failed");
-        goto finish;
-    }
-
-finish:
-    return;
-}
-
-JNIEXPORT void JNICALL
-Java_org_mozilla_jss_ssl_SocketBase_setNeedClientAuth(
-    JNIEnv *env, jobject self, jboolean b)
-{
-    JSSL_SocketData *sock;
-    SECStatus status;
-
-    if( JSSL_getSockData(env, self, &sock) != PR_SUCCESS) goto finish;
-
-    status = SSL_OptionSet(sock->fd, SSL_REQUEST_CERTIFICATE, b);
-    if( status != SECSuccess ) {
-        JSS_throwMsg(env, SOCKET_EXCEPTION, "Failed to set socket option");
         goto finish;
     }
 
