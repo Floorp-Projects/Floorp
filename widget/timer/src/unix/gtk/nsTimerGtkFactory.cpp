@@ -41,4 +41,10 @@ static nsModuleComponentInfo components[] =
     nsTimerGtkConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsGtkTimerModule", components)
+PR_STATIC_CALLBACK(void)
+nsGtkTimerModuleDtor(nsIModule *self)
+{
+    nsTimerGtk::Shutdown();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsGtkTimerModule", components, nsGtkTimerModuleDtor)

@@ -382,6 +382,27 @@ nsresult nsTimerGtk::Init(nsITimerCallback *aCallback,
   return NS_OK;
 }
 
+void nsTimerGtk::Shutdown()
+{
+    delete nsTimerGtk::gHighestList;
+    nsTimerGtk::gHighestList = nsnull;
+
+    delete nsTimerGtk::gHighList;
+    nsTimerGtk::gHighList = nsnull;
+
+    delete nsTimerGtk::gNormalList;
+    nsTimerGtk::gNormalList = nsnull;
+
+    delete nsTimerGtk::gLowList;
+    nsTimerGtk::gLowList = nsnull;
+
+    delete nsTimerGtk::gLowestList;
+    nsTimerGtk::gLowestList = nsnull;
+
+    nsTimerGtk::gTimeoutAdded = PR_FALSE;
+    nsTimerGtk::gProcessingTimer = PR_FALSE;
+}
+
 NS_IMPL_ISUPPORTS1(nsTimerGtk, nsITimer)
 
 void nsTimerGtk::Cancel()

@@ -91,6 +91,9 @@ public:
                 PRUint32 aType = NS_TYPE_ONE_SHOT
                 );
 
+  // clean up statics
+  static void Shutdown();
+
   NS_DECL_ISUPPORTS
 
   virtual void Cancel();
