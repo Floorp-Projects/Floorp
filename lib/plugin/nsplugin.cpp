@@ -371,6 +371,12 @@ nsPluginInstancePeer::UnregisterWindow(void* window)
 	npn_unregisterwindow(npp, window);
 }
 
+NS_METHOD_(PRInt16)
+nsPluginInstancePeer::AllocateMenuID(PRBool isSubmenu)
+{
+	return npn_allocateMenuID(npp, isSubmenu);
+}
+
 NS_METHOD_(jref)
 nsPluginInstancePeer::GetJavaPeer(void)
 {
