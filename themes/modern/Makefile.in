@@ -31,7 +31,7 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)
 
 EXPORT_RESOURCE_SAMPLES = \
-	manifest.rdf \
+	$(srcdir)/manifest.rdf \
 	$(NULL)
 
 DIRS  = communicator global navigator editor messenger 

@@ -38,6 +38,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/splitter.css \
 		$(srcdir)/toolbar.css \
 		$(srcdir)/navbar-endbox.gif \
+		$(srcdir)/manifest.rdf \
 		$(NULL)
 
 DIRS = search xpinstall pref sidebar bookmarks directory profile regviewer related wallet 
