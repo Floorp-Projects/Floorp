@@ -79,6 +79,22 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
 
+static NS_METHOD
+RegisterWindowDS(nsIComponentManager *aCompMgr,
+                 nsIFile *aPath,
+                 const char *registryLocation,
+                 const char *componentType,
+                 const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return catman->AddCategoryEntry("app-startup", "Window Data Source",
+                                    "service," NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
+                                    PR_TRUE, PR_TRUE, nsnull);
+}
+
 static const nsModuleComponentInfo components[] = {
 
     { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID,
@@ -110,7 +126,7 @@ static const nsModuleComponentInfo components[] = {
     { "nsWindowDataSource",
       NS_WINDOWDATASOURCE_CID,
       NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator",
-      nsWindowDataSourceConstructor },
+      nsWindowDataSourceConstructor, RegisterWindowDS },
 };
 
 NS_IMPL_NSGETMODULE(application, components)
