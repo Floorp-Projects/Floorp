@@ -521,7 +521,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     // fire off another URL request for this local disk file and that will
     // take care of the conversion...
     //
-    mHTMLFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
+    mHTMLFileSpec = nsMsgCreateTempFileSpec("nsmail.html");
 		if (!mHTMLFileSpec)
 			goto FAILMEM;
 
