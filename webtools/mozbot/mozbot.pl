@@ -776,7 +776,7 @@ sub logdate
   my ($sec,$min,$hour,$mday,$mon,$year) = localtime ($t);
 
   return sprintf ("%02d/%02d/%02d %02d:%02d",
-    $mon + 1, $mday, $year, $hour, $min);
+    $mon + 1, $mday, $year + 1900, $hour, $min);
   }
 
 # days: how long ago was that? 
