@@ -19,6 +19,7 @@ DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
 EXPORTS = \
+	nsIBreakState.h \
 	nsIBinarySearchIterator.h \
 	nsILineBreaker.h \
 	nsILineBreakerFactory.h \
