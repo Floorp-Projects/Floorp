@@ -32,6 +32,11 @@ EXPORT_RESOURCE_SAMPLES := \
 	$(wildcard $(srcdir)/samples/treeTest*.xul) \
 	$(wildcard $(srcdir)/samples/treeTest*.css) \
 	$(wildcard $(srcdir)/samples/xulTest.css) \
+	$(wildcard $(srcdir)/samples/aform.css) \
+	$(wildcard $(srcdir)/samples/bform.css) \
+	$(wildcard $(srcdir)/samples/cform.css) \
+	$(wildcard $(srcdir)/samples/mozform.css) \
+	$(wildcard $(srcdir)/samples/demoform.css) \
 	$(srcdir)/resources/find.html \
 	$(srcdir)/resources/printsetup.html \
 	$(srcdir)/resources/image_props.html \
