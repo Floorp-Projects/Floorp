@@ -177,14 +177,6 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
         text->mVerticalAlign.SetIntValue(align, eStyleUnit_Enumerated);
         break;
-      // XXX: this is not right, it sets the content's h-align
-      //      what it should do is actually move the caption to the left or right of the table!
-      /*
-      case NS_STYLE_TEXT_ALIGN_LEFT:
-      case NS_STYLE_TEXT_ALIGN_RIGHT:
-        text->mTextAlign = align;
-        break;
-        */
       default:
         // illegal value -- ignore it.
         break;
