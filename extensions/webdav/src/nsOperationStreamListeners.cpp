@@ -92,7 +92,7 @@ protected:
         return NS_OK;
     }
 
-    virtual void SignalDetail(PRUint32 statusCode, nsACString &resource,
+    virtual void SignalDetail(PRUint32 statusCode, const nsACString &resource,
                               nsISupports *detail);
 
     virtual nsresult ProcessResponse(nsIDOMElement *responseElt);
@@ -214,18 +214,24 @@ OperationStreamListener::OnDataAvailable(nsIRequest *aRequest,
 
 void
 OperationStreamListener::SignalDetail(PRUint32 statusCode,
-                                      nsACString &resource,
+                                      const nsACString &resource,
                                       nsISupports *detail)
 {
     nsCOMPtr<nsIURL> resourceURL, detailURL;
     nsCOMPtr<nsIURI> detailURI;
-    if (NS_SUCCEEDED(mResource->GetResourceURL(getter_AddRefs(resourceURL))) &&
-        NS_SUCCEEDED(resourceURL->Clone(getter_AddRefs(detailURI))) &&
-        (detailURL = do_QueryInterface(detailURI)) &&
-        NS_SUCCEEDED(detailURI->SetSpec(resource))) {
-        mListener->OnOperationDetail(statusCode, detailURL, mOperation, detail,
-                                     mClosure);
+    if (NS_FAILED(mResource->GetResourceURL(getter_AddRefs(resourceURL))))
+        return;
+    if (resource.IsEmpty()) {
+        detailURL = resourceURL;
+    } else {
+        if (NS_FAILED(resourceURL->Clone(getter_AddRefs(detailURI))) ||
+            !(detailURL = do_QueryInterface(detailURI)) ||
+            NS_FAILED(detailURI->SetSpec(resource))) {
+            return;
+        }
     }
+    mListener->OnOperationDetail(statusCode, detailURL, mOperation, detail,
+                                 mClosure);
 }
 
 nsresult
@@ -425,6 +431,56 @@ PropfindStreamListener::ProcessResponse(nsIDOMElement *responseElt)
     return NS_OK;
 }
 
+class GetToStringStreamListener : public OperationStreamListener
+{
+public:
+    NS_DECL_ISUPPORTS_INHERITED
+
+    GetToStringStreamListener(nsIWebDAVResource *resource,
+                              nsIWebDAVOperationListener *listener,
+                              nsISupports *closure) :
+        OperationStreamListener(resource, listener, closure, nsnull,
+                                nsIWebDAVOperationListener::GET_TO_STRING)
+    { }
+
+    virtual ~GetToStringStreamListener() { }
+protected:
+    virtual nsresult OnStopRequest(nsIRequest *aRequest,
+                                   nsISupports *aContext,
+                                   nsresult aStatusCode);
+};
+
+NS_IMPL_ISUPPORTS_INHERITED0(GetToStringStreamListener, OperationStreamListener)
+
+NS_IMETHODIMP
+GetToStringStreamListener::OnStopRequest(nsIRequest *aRequest,
+                                         nsISupports *aContext,
+                                         nsresult aStatusCode)
+{
+    PRUint32 status, rv;
+    nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aContext);
+
+    LOG(("OperationStreamListener::OnStopRequest() entered"));
+
+    rv = channel ? channel->GetResponseStatus(&status) : NS_ERROR_UNEXPECTED;
+
+    if (NS_FAILED(rv))
+        return SignalCompletion(rv);
+
+    if (status != 200)
+        return SignalCompletion(status);
+
+    nsCOMPtr<nsISupportsCString>
+        suppString(do_CreateInstance("@mozilla.org/supports-cstring;1",
+                                     &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    suppString->SetData(mBody);
+
+    SignalDetail(status, nsCAutoString(""), suppString);
+    SignalCompletion(status);
+    return NS_OK;
+}
+
 nsIStreamListener *
 NS_WD_NewPropfindStreamListener(nsIWebDAVResource *resource,
                                 nsIWebDAVOperationListener *listener,
@@ -463,3 +519,17 @@ NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
         return NS_ERROR_OUT_OF_MEMORY;
     return CallQueryInterface(osl, observer);
 }
+
+nsresult
+NS_WD_NewGetToStringOperationRequestObserver(nsIWebDAVResource *resource,
+                                             nsIWebDAVOperationListener *listener,
+                                             nsISupports *closure,
+                                             nsIStreamListener **streamListener)
+{
+    nsCOMPtr<nsIRequestObserver> osl = 
+        new GetToStringStreamListener(resource, listener, closure);
+    if (!osl)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return CallQueryInterface(osl, streamListener);
+}
+

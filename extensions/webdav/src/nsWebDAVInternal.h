@@ -81,6 +81,12 @@ NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
                                      nsIRequestObserver **observer);
 
 nsresult
+NS_WD_NewGetToStringOperationRequestObserver(nsIWebDAVResource *resource,
+                                             nsIWebDAVOperationListener *listener,
+                                             nsISupports *closure,
+                                             nsIStreamListener **streamListener);
+
+nsresult
 NS_WD_GetElementByTagName(nsIDOMElement *parentElt, const nsAString &tagName,
                           nsIDOMElement **elt);
 

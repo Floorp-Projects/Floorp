@@ -462,6 +462,26 @@ nsWebDAVService::GetToOutputStream(nsIWebDAVResource *resource,
 }
 
 NS_IMETHODIMP
+nsWebDAVService::GetToString(nsIWebDAVResource *resource,
+                             nsIWebDAVOperationListener *listener,
+                             nsISupports *closure)
+{
+    nsCOMPtr<nsIStreamListener> getListener;
+    nsresult rv;
+
+    rv = NS_WD_NewGetToStringOperationRequestObserver(resource, listener,
+                                                      closure,
+                                                      getter_AddRefs(getListener));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIHttpChannel> channel;
+    rv = ChannelFromResource(resource, getter_AddRefs(channel));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return channel->AsyncOpen(getListener, channel);
+}
+
+NS_IMETHODIMP
 nsWebDAVService::Put(nsIWebDAVResource *resource,
                      const nsACString& contentType, nsIInputStream *data,
                      nsIWebDAVOperationListener *listener,

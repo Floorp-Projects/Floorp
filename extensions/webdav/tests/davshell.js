@@ -131,7 +131,7 @@ OperationListener.opToName = { };
 OperationListener.opNames =
     ["PUT", "GET", "MOVE", "COPY", "REMOVE",
      "MAKE_COLLECTION", "LOCK", "UNLOCK", "GET_PROPERTIES",
-     "GET_PROPERTY_NAMES"];
+     "GET_PROPERTY_NAMES", "GET_TO_STRING"];
 for (var i in OperationListener.opNames) {
     var opName = OperationListener.opNames[i];
     OperationListener.opToName[CI.nsIWebDAVOperationListener[opName]] = opName;
@@ -165,6 +165,9 @@ OperationListener.prototype =
             for (var i in propObj)
                 dump("  " + i + " = " + propObj[i] + "\n");
 
+            break;
+          case CI.nsIWebDAVOperationListener.GET_TO_STRING:
+            this.mGetToStringResult = detail.QueryInterface(CI.nsISupportsCString).data;
             break;
         }
     }
@@ -246,25 +249,10 @@ function GET(url, filename)
 
 function GET_string(url)
 {
-    var storageStream = createInstance("@mozilla.org/storagestream;1",
-				       "nsIStorageStream");
-    storageStream.init(4096, 0xFFFFFFFF /* PR_UINT32_MAX */, null);
-    
-    var buffered = 
-      createInstance("@mozilla.org/network/buffered-output-stream;1",
-                     "nsIBufferedOutputStream");
-
-    buffered.init(storageStream.getOutputStream(0), 64 * 1024);
-
-    davSvc.getToOutputStream(new Resource(url), buffered,
-			     new OperationListener());
+    var listener = new OperationListener();
+    davSvc.getToString(new Resource(url), listener, null);
     runEventPump();
-    var scriptable = createInstance("@mozilla.org/scriptableinputstream;1",
-				    "nsIScriptableInputStream");
-    scriptable.init(storageStream.newInputStream(0));
-    
-    var str = scriptable.read(scriptable.available());
-    return str;
+    return listener.mGetToStringResult;
 }
 
 function COPY(url, target, recursive, overwrite)
