@@ -249,14 +249,16 @@ function useDefaultFolder ()
 {
   const kBMDS = kRDF.GetDataSource("rdf:bookmarks");
   var bookmarkView = document.getElementById("bookmarks-view");
-  // XXX Only the personal toolbar folder has a special folder URI
-  // This needs to look for the resource with the NC_NC + "FolderType" of "NC:NewBookmarkFolder"
-  var newBookmarkFolder = bookmarkView.rdf.GetResource("NC:NewBookmarkFolder");
-  var ind = bookmarkView.outlinerBuilder.getIndexOfResource(newBookmarkFolder);
+  var sources = kBMDS.GetSources(bookmarkView.rdf.GetResource(NC_NS + "FolderType"), bookmarkView.rdf.GetResource("NC:NewBookmarkFolder"), true);
+  var folder = null;
+  if (sources.hasMoreElements()) {
+    folder = sources.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+  }
+  var ind = bookmarkView.outlinerBuilder.getIndexOfResource(folder);
   if (ind != -1) {
     bookmarkView.outliner.focus();
     bookmarkView.outlinerBoxObject.selection.select(ind);
-    gCreateInFolder = "NC:NewBookmarkFolder";
+    gCreateInFolder = folder.Value;
   }
   else {
     bookmarkView.outlinerBoxObject.selection.clearSelection();
