@@ -23,7 +23,7 @@ sub RegisterConfig {
     $self->SUPER::RegisterConfig(@_);
     $self->registerVariables(
       # [ name, save?, settable? ]
-      ['prefix', 1, 1, '!8'], # the 
+      ['prefix', 1, 1, '!8'], # the prefix to put before the 'ball' command
       ['responses-positive', 1, 1, ['It is possible.', 'Yes!', 'Of course.', 'Naturally.', 'Obviously.',
                                     'One would be wise to think so.', 'The outlook is good.', 'It shall be.',
                                     'The answer is certainly yes.', 'It is so.']],
