@@ -470,7 +470,7 @@ static NSArray* sToolbarDefaults = nil;
     } else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] ) {
         [toolbarItem setLabel:@""];
         [toolbarItem setPaletteLabel:@"Progress"];
-        [toolbarItem setToolTip:@"http://www.mozilla.org"];
+        [toolbarItem setToolTip:NSLocalizedStringFromTable(@"ThrobberPageDefault", @"WebsiteDefaults", nil)];
         [toolbarItem setImage:[NSImage imageNamed:@"throbber-01"]];
         [toolbarItem setTarget:self];
         [toolbarItem setTag:'Thrb'];
@@ -662,7 +662,7 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)performSearch
 {
-  NSString *searchEngine = NSLocalizedStringFromTable( @"SearchPageDefault", @"WebsiteDefaults", nil );
+  NSString *searchEngine = NSLocalizedStringFromTable(@"SearchPageDefault", @"WebsiteDefaults", nil);
 
   // Get the users preferred search engine from IC
   if (!searchEngine || [searchEngine isEqualToString:@"SearchPageDefault"]) {
@@ -711,7 +711,7 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)clickThrobber:(id)aSender
 {
-  NSString *pageToLoad = NSLocalizedStringFromTable( @"ThrobberPageDefault", @"WebsiteDefaults", nil );
+  NSString *pageToLoad = NSLocalizedStringFromTable(@"ThrobberPageDefault", @"WebsiteDefaults", nil);
   [self loadURL:pageToLoad];
 }
 
