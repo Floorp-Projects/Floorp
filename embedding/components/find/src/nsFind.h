@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
-#include "nsDeque.h"
 #include "nsIContentIterator.h"
 #include "nsIParserService.h"
 #include "nsIWordBreaker.h"
@@ -91,10 +90,6 @@ protected:
   PRInt32 mIterOffset;
   nsCOMPtr<nsIDOMNode> mIterNode;
 
-  // FIFO to hold the nsITextContents:
-  nsDeque mNodeQ;
-  PRInt32 mLengthInQ;
-
   // Last block parent, so that we will notice crossing block boundaries:
   nsCOMPtr<nsIDOMNode> mLastBlockParent;
   nsresult GetBlockParent(nsIDOMNode* aNode, nsIDOMNode** aParent);
@@ -103,23 +98,18 @@ protected:
   PRBool IsTextNode(nsIDOMNode* aNode);
   PRBool IsBlockNode(nsIContent* aNode);
   PRBool SkipNode(nsIContent* aNode);
-  void AddIterNode(PRInt32 aPatLen);
-
-  PRBool FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
-                 nsIDOMRange* aSearchRange,
-                 nsIDOMRange* aStartPoint, nsIDOMRange* aEndPoint,
-                 nsIDOMRange** aRangeRet);
 
   // Move in the right direction for our search:
   nsresult NextNode(nsIDOMRange* aSearchRange,
                     nsIDOMRange* aStartPoint, nsIDOMRange* aEndPoint,
                     PRBool aContinueOk);
 
+  // Reset variables before returning -- don't hold any references.
+  void ResetAll();
+
   // The iterator we use to move through the document:
   nsresult InitIterator(nsIDOMRange* aSearchRange);
   nsCOMPtr<nsIContentIterator> mIterator;
-
-  void ClearQ();
 };
 
 #endif // nsFind_h__

@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is Akkana Peck.
  *
- * Portions created by the Initial Developer are Copyright (C) 2___
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -80,8 +80,6 @@ nsFind::nsFind()
   : mFindBackward(PR_FALSE)
   , mCaseSensitive(PR_FALSE)
   , mIterOffset(0)
-  , mNodeQ(0)
-  , mLengthInQ(0)
 {
   NS_INIT_ISUPPORTS();
 
@@ -101,8 +99,6 @@ nsFind::nsFind()
 
 nsFind::~nsFind()
 {
-  ClearQ();
-
   if (sInstanceCount <= 1)
   {
     NS_IF_RELEASE(sTextAtom);
@@ -244,11 +240,9 @@ nsFind::SetWordBreaker(nsIWordBreaker* aWordBreaker)
 // Find needs to be able to compare across inline (but not block) nodes,
 // e.g. find for "abc" should match a<b>b</b>c.
 // So after we've searched a node, we're not done with it;
-// in the case of a partial match we may need to go back and
-// look at the node's string again, so we save the last few
-// nodes visited in a deque (a double-ended queue).
-// When we're comparing, we look through the queue first, then
-// start pulling new nodes from the tree, queueing them as necessary.
+// in the case of a partial match we may need to reset the
+// iterator to go back to a previously visited node,
+// so we always save the "match anchor" node and offset.
 //
 // Text nodes store their text in an nsTextFragment, which is 
 // effectively a union of a one-byte string or a two-byte string.
@@ -256,129 +250,6 @@ nsFind::SetWordBreaker(nsIWordBreaker* aWordBreaker)
 // We don't have string classes which can deal with intermixed strings,
 // so all the handling is done explicitly here.
 //
-
-/* boolean Find (in wstring aFindText); */
-NS_IMETHODIMP
-nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
-             nsIDOMRange* aStartPoint, nsIDOMRange* aEndPoint,
-             nsIDOMRange** aFoundRange)
-{
-#ifdef DEBUG_FIND
-  printf("============== nsFind::Find('%s', %p, %p, %p)\n",
-         NS_LossyConvertUCS2toASCII(aPatText).get(),
-         (void*)aSearchRange, (void*)aStartPoint, (void*)aEndPoint);
-#endif
-
-  if (!aPatText)
-    return NS_ERROR_NULL_POINTER;
-
-  mIterator = 0;
-
-  nsAutoString patStr(aPatText);
-  if (!mCaseSensitive)
-    ToLowerCase(patStr);
-  aPatText = patStr.get();
-  PRInt32 patLen = patStr.Length();
-
-  nsCOMPtr<nsIDOMRange> range;
-  FindInQ(aPatText, patLen-1, aSearchRange, aStartPoint, aEndPoint,
-          aFoundRange);
-
-  // Clear queue and range; we want to be stateless.
-  // Caller should reset our range before calling us again.
-  ClearQ();
-  mIterator = 0;
-  mLastBlockParent = 0;
-
-  return NS_OK;
-}
-
-// Add this node to the deque, popping the top node off if needed.
-void
-nsFind::AddIterNode(PRInt32 aPatLen)
-{
-#ifdef DEBUG_FIND
-  printf("AddIterNode\n");
-#endif
-  nsCOMPtr<nsITextContent> textContent (do_QueryInterface(mIterNode));
-  if (!textContent) return;
-
-  // If it's only whitespace, don't waste our time.
-  // This is probably worthwhile even though it has to loop over the string,
-  // since it may save us several loops in future iterations.
-  PRBool onlyWhite = PR_FALSE;
-  nsresult rv = textContent->IsOnlyWhitespace(&onlyWhite);
-  if (onlyWhite) return;
-
-  PRInt32 newLen;
-  rv = textContent->GetTextLength(&newLen);
-  if (NS_FAILED(rv)) return;
-
-  // Now look through the queue and see if we can pop the oldest node off:
-  // We know mLengthInQ and aPatLen, can get length of the oldest item:
-  while (mNodeQ.GetSize() > 0)
-  {
-    nsITextContent* oldestItem =
-      mFindBackward ? NS_STATIC_CAST(nsITextContent*, mNodeQ.PeekFront())
-                    : NS_STATIC_CAST(nsITextContent*, mNodeQ.Peek());
-    NS_ASSERTION(oldestItem, "Queue nonzero but can't peek!");
-    if (!oldestItem)
-      break;
-
-    PRInt32 oldestLength;
-    rv = oldestItem->GetTextLength(&oldestLength);
-    if (NS_SUCCEEDED(rv))   // If we can't get text length, pop it anyway
-    {
-      if (mLengthInQ - oldestLength - mIterOffset < aPatLen)
-        break;
-
-      // still long enough, we're going to pop one:
-      mLengthInQ -= oldestLength;
-    }
-    // Pop-and-release whether or not it had a length:
-    nsITextContent* tc = (mFindBackward
-                          ? NS_STATIC_CAST(nsITextContent*, mNodeQ.Pop())
-                          : NS_STATIC_CAST(nsITextContent*, mNodeQ.PopFront())
-                         );
-    NS_IF_RELEASE(tc);
-    // If we popped, then mIterOffset no longer matters:
-    mIterOffset = 0;
-#ifdef DEBUG_FIND
-    printf("Popping something of length %d, queue now %d in %d nodes\n",
-           oldestLength, mLengthInQ, mNodeQ.GetSize());
-#endif
-  }
-
-  // Push the new node onto the queue:
-  // nsDeque doesn't addref, so we have to do it explicitly:
-  mLengthInQ += newLen;
-#ifdef DEBUG_FIND
-  printf("Adding %d chars to make %d\n", newLen, mLengthInQ);
-#endif
-  // Windows compiler won't let us addref the results of a nsCOMPtr::get
-  nsITextContent* rawtxt = textContent;
-  NS_ADDREF(rawtxt);
-  if (mFindBackward)
-    mNodeQ.PushFront(rawtxt);
-  else
-    mNodeQ.Push(rawtxt);
-}
-
-// Unfortunately, we can't use Erase(), because that doesn't release
-// the nodes in the queue.  So we have to pop and release each one.
-void nsFind::ClearQ()
-{
-#ifdef DEBUG_FIND
-  printf("Clear the deque!\n");
-#endif
-  nsITextContent* tc;
-  while ((tc = NS_STATIC_CAST(nsITextContent*, mNodeQ.PopFront())))
-    NS_RELEASE(tc);
-  mLengthInQ = 0;
-
-  // If we have no queue, then mIterOffset is no longer useful:
-  mIterOffset = 0;
-}
 
 nsresult
 nsFind::NextNode(nsIDOMRange* aSearchRange,
@@ -500,13 +371,13 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
     if (NS_FAILED(rv) || !content)
       break;
 
-    // If we ever cross a block node, flush the queue --
+    // If we ever cross a block node, we might want to reset
+    // the match anchor:
     // we don't match patterns extending across block boundaries.
     // But we can't depend on this test here now, because the iterator
     // doesn't give us the parent going in and going out, and we
     // need it both times to depend on this.
     //if (IsBlockNode(content))
-    //  ClearQ();
 
     // Now see if we need to skip this node --
     // e.g. is it part of a script or other invisible node?
@@ -668,35 +539,54 @@ nsresult nsFind::GetBlockParent(nsIDOMNode* aNode, nsIDOMNode** aParent)
   return NS_ERROR_FAILURE;
 }
 
+// Call ResetAll before returning,
+// to remove all references to external objects.
+void nsFind::ResetAll()
+{
+  mIterator = nsnull;
+  mLastBlockParent = nsnull;
+}
+
 #define NBSP_CHARCODE (CHAR_TO_UNICHAR(160))
 #define IsSpace(c) (nsCRT::IsAsciiSpace(c) || (c) == NBSP_CHARCODE)
-#define OVERFLOW_PINDEX (mFindBackward ? pindex < 0 : pindex > aPatLen)
-#define DONE_WITH_PINDEX (mFindBackward ? pindex <= 0 : pindex >= aPatLen)
-#define ALMOST_DONE_WITH_PINDEX (mFindBackward ? pindex <= 0 : pindex >= aPatLen-1)
+#define OVERFLOW_PINDEX (mFindBackward ? pindex < 0 : pindex > patLen)
+#define DONE_WITH_PINDEX (mFindBackward ? pindex <= 0 : pindex >= patLen)
+#define ALMOST_DONE_WITH_PINDEX (mFindBackward ? pindex <= 0 : pindex >= patLen-1)
 
 //
-// FindInQ:
-// If we have nodes in the queue, search them first.
-// Then take nodes out of the tree with NextNode,
+// Find:
+// Take nodes out of the tree with NextNode,
 // until null (NextNode will return 0 at the end of our range).
-// Save intermediates in the deque.
 //
-PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
-                       nsIDOMRange* aSearchRange,
-                       nsIDOMRange* aStartPoint, nsIDOMRange* aEndPoint,
-                       nsIDOMRange** aRangeRet)
+NS_IMETHODIMP
+nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
+             nsIDOMRange* aStartPoint, nsIDOMRange* aEndPoint,
+             nsIDOMRange** aRangeRet)
 {
 #ifdef DEBUG_FIND
-  printf("FindInQ for '%s'%s\n",
-         NS_LossyConvertUCS2toASCII(aPatStr).get(),
-         mFindBackward ? " (backward)" : " (forward)");
+  printf("============== nsFind::Find('%s'%s, %p, %p, %p)\n",
+         NS_LossyConvertUCS2toASCII(aPatText).get(),
+         mFindBackward ? " (backward)" : " (forward)",
+         (void*)aSearchRange, (void*)aStartPoint, (void*)aEndPoint);
 #endif
-  // The offset only matters for the first node in the queue,
+
+  if (!aPatText)
+    return NS_ERROR_NULL_POINTER;
+
+  ResetAll();
+
+  nsAutoString patAutoStr(aPatText);
+  if (!mCaseSensitive)
+    ToLowerCase(patAutoStr);
+  const PRUnichar* patStr = patAutoStr.get();
+  PRInt32 patLen = patAutoStr.Length() - 1;
+
+  // The offset only matters for the first node,
   // so make a local copy so that we can zero it when we loop:
   PRInt32 offset = mIterOffset;
 
   // current offset into the pattern -- reset to beginning/end:
-  PRInt32 pindex = (mFindBackward ? aPatLen : 0);
+  PRInt32 pindex = (mFindBackward ? patLen : 0);
 
   // Current offset into the fragment
   PRInt32 findex = 0;
@@ -707,12 +597,8 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
   // Direction to move pindex and ptr*
   int incr = (mFindBackward ? -1 : 1);
 
-  // Loop over nodes in our queue:
-  nsDequeIterator iter (mFindBackward ? mNodeQ.End() : mNodeQ.Begin());
-  nsDequeIterator iterEnd (mFindBackward ? mNodeQ.Begin() : mNodeQ.End());
-  nsITextContent* tc;
+  nsCOMPtr<nsITextContent> tc;
   const nsTextFragment *frag = nsnull;
-  PRBool fromQ = PR_TRUE;
 
   // Pointers into the current fragment:
   const PRUnichar *t2b = nsnull;
@@ -726,7 +612,7 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
   PRBool continuing = PR_FALSE;
 
   // Place to save the range start point in case we find a match:
-  nsITextContent* matchAnchorTC = nsnull;
+  nsCOMPtr<nsIDOMNode> matchAnchorNode;
   PRInt32 matchAnchorOffset = 0;
 
   while (1)
@@ -738,69 +624,53 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
     // If this is our first time on a new node, reset the pointers:
     if (!frag)
     {
-#ifdef DEBUG_FIND
-      printf("New node -- Resetting pointers. Deque size is %d\n",
-             mNodeQ.GetSize());
-#endif
 
-      // Get the current node, either from the deque or the tree.
-      if (fromQ && mNodeQ.GetSize() > 0 && (iter != iterEnd))
-        tc = NS_STATIC_CAST(nsITextContent*, iter.GetCurrent());
-      else
-        tc = nsnull;
-      if (tc == nsnull)  // no more deque
+      tc = nsnull;
+      NextNode(aSearchRange, aStartPoint, aEndPoint, PR_FALSE);
+      if (!mIterNode)    // Out of nodes
+      {
+        // Are we in the middle of a match?
+        // If so, try again with continuation.
+        if (matchAnchorNode && !continuing)
+          NextNode(aSearchRange, aStartPoint, aEndPoint, PR_TRUE);
+
+        // Reset the iterator, so this nsFind will be usable if
+        // the user wants to search again (from beginning/end).
+        ResetAll();
+        return PR_FALSE;
+      }
+
+      offset = mIterOffset;
+
+      // We have a new text content.  If its block parent is different
+      // from the block parent of the last text content, then we
+      // need to clear the match since we don't want to find
+      // across block boundaries.
+      nsCOMPtr<nsIDOMNode> blockParent;
+      GetBlockParent(mIterNode, getter_AddRefs(blockParent));
+#ifdef DEBUG_FIND
+      printf("New node: old blockparent = %p, new = %p\n",
+             (void*)mLastBlockParent.get(), (void*)blockParent.get());
+#endif
+      if (blockParent != mLastBlockParent)
       {
 #ifdef DEBUG_FIND
-        printf("No more deque, looking in tree\n");
+        printf("Different block parent!\n");
 #endif
-        fromQ = PR_FALSE;
-        NextNode(aSearchRange, aStartPoint, aEndPoint, PR_FALSE);
-        if (!mIterNode)    // Out of nodes
-        {
-          // Are we in the middle of a match?
-          // If so, try again with continuation.
-          if (matchAnchorTC && !continuing)
-            NextNode(aSearchRange, aStartPoint, aEndPoint, PR_TRUE);
-
-          if (!mIterNode)
-          {
-            // Reset the iterator, so this nsFind will be usable if
-            // the user wants to search again (from beginning/end).
-            mIterator = nsnull;
-          }
-          return PR_FALSE;
-        }
-
-        offset = mIterOffset;
-
-        // We have a new text content.  If its block parent is different
-        // from the block parent of the last text content, then we
-        // need to clear the queue since we don't want to find
-        // across block boundaries.
-        nsCOMPtr<nsIDOMNode> blockParent;
-        GetBlockParent(mIterNode, getter_AddRefs(blockParent));
-#ifdef DEBUG_FIND
-        printf("New node: old blockparent = %p, new = %p\n",
-               (void*)mLastBlockParent.get(), (void*)blockParent.get());
-#endif
-        if (blockParent != mLastBlockParent)
-        {
-#ifdef DEBUG_FIND
-          printf("Different block parent!\n");
-#endif
-          ClearQ();
-          mLastBlockParent = blockParent;
-          // End any pending match:
-          matchAnchorTC = nsnull;
-          pindex = (mFindBackward ? aPatLen : 0);
-        }
-
-        // Push mIterNode onto the queue:
-        mIterNode->QueryInterface(nsITextContent::GetIID(), (void**)&tc);
-        AddIterNode(aPatLen);
+        mLastBlockParent = blockParent;
+        // End any pending match:
+        matchAnchorNode = nsnull;
+        pindex = (mFindBackward ? patLen : 0);
       }
-      if (tc == nsnull)         // Out of nodes
+ 
+     // Get the text content:
+      tc = do_QueryInterface(mIterNode);
+      if (!tc)         // Out of nodes
+      {
+        mIterator = nsnull;
+        mLastBlockParent = 0;
         return PR_FALSE;
+      }
 
       nsresult rv = tc->GetText(&frag);
       if (NS_FAILED(rv)) continue;
@@ -833,7 +703,8 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
         t2b = frag->Get2b();
         t1b = nsnull;
 #ifdef DEBUG_FIND
-        printf("2 byte, '%s'\n", NS_LossyConvertUCS2toASCII(t2b).get());
+        nsAutoString str2(t2b, frag->GetLength());
+        printf("2 byte, '%s'\n", NS_LossyConvertUCS2toASCII(str2).get());
 #endif
       }
       else
@@ -841,16 +712,15 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
         t1b = frag->Get1b();
         t2b = nsnull;
 #ifdef DEBUG_FIND
-        // t1b isn't null terminated, so we may print garbage after the string.
-        // If we want to be accurate, would be better to make a new nsCString.
-        printf("1 byte, '%s'\n", t1b);
+        nsCAutoString str1(t1b, frag->GetLength());
+        printf("1 byte, '%s'\n", str1.get());
 #endif
       }
     }
     else // still on the old node
     {
       // Still on the old node.  Advance the pointers,
-      // then see if we need to pull a new node from the queue.
+      // then see if we need to pull a new node.
       findex += incr;
 #ifdef DEBUG_FIND
       printf("Same node -- (%d, %d)\n", pindex, findex);
@@ -862,19 +732,6 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
                restart, frag->GetLength());
 #endif
         // Done with this node.  Pull a new one.
-        // If restart is the first/last char,
-        // then it's safe to pop this because we aren't using the
-        // contents of the node any more.
-        mLengthInQ -= frag->GetLength();
-        if (mFindBackward) {
-          --iter;
-          if (restart <= 0)
-            mNodeQ.Pop();
-        } else {
-          if (restart >= frag->GetLength())
-            mNodeQ.PopFront();
-        }
-
         frag = nsnull;
         // Offset can only apply to the first node:
         offset = -1;
@@ -884,10 +741,10 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
 
     // The two characters we'll be comparing:
     PRUnichar c = (t2b ? t2b[findex] : CHAR_TO_UNICHAR(t1b[findex]));
-    PRUnichar patc = aPatStr[pindex];
+    PRUnichar patc = patStr[pindex];
 #ifdef DEBUG_FIND
     printf("Comparing '%c'=%x to '%c' (%d of %d), findex=%d%s\n",
-           (char)c, (int)c, patc, pindex, aPatLen, findex,
+           (char)c, (int)c, patc, pindex, patLen, findex,
            inWhitespace ? " (inWhitespace)" : "");
 #endif
 
@@ -905,7 +762,7 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
       if (OVERFLOW_PINDEX)
         NS_ASSERTION(PR_FALSE, "Missed a whitespace match\n");
 #endif
-      patc = aPatStr[pindex];
+      patc = patStr[pindex];
     }
     if (!inWhitespace && IsSpace(patc))
       inWhitespace = PR_TRUE;
@@ -919,14 +776,14 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
     {
 #ifdef DEBUG_FIND
       if (inWhitespace)
-        printf("YES (whitespace)(%d of %d)\n", pindex, aPatLen);
+        printf("YES (whitespace)(%d of %d)\n", pindex, patLen);
       else
-        printf("YES! '%c' == '%c' (%d of %d)\n", c, patc, pindex, aPatLen);
+        printf("YES! '%c' == '%c' (%d of %d)\n", c, patc, pindex, patLen);
 #endif
 
       // Save the range anchors if we haven't already:
-      if (!matchAnchorTC) {
-        matchAnchorTC = tc;
+      if (!matchAnchorNode) {
+        matchAnchorNode = mIterNode;
         matchAnchorOffset = findex + (mFindBackward ? 1 : 0);
       }
 
@@ -952,13 +809,13 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
               if (mFindBackward)
               {
                 startParent = do_QueryInterface(tc);
-                endParent = do_QueryInterface(matchAnchorTC);
+                endParent = matchAnchorNode;
                 matchStartOffset = findex;
                 matchEndOffset = matchAnchorOffset;
               }
               else
               {
-                startParent = do_QueryInterface(matchAnchorTC);
+                startParent = matchAnchorNode;
                 endParent = do_QueryInterface(tc);
                 matchStartOffset = matchAnchorOffset;
                 matchEndOffset = findex+1;
@@ -974,11 +831,6 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
           }
         }
 
-        // Pop all but the last node off the queue
-        ClearQ();
-        NS_ADDREF(tc);
-        mNodeQ.Push(tc);
-        mLengthInQ = frag->GetLength();
         // Reset the offset to the other end of the found string:
         mIterOffset = findex + (mFindBackward ? 1 : 0);
 #ifdef DEBUG_FIND
@@ -986,6 +838,7 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
         DumpNode(mIterNode);
 #endif
 
+        ResetAll();
         return PR_TRUE;
       }
 
@@ -993,7 +846,7 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
 
       // Advance and loop around for the next characters.
       // But don't advance from a space to a non-space:
-      if (!inWhitespace || DONE_WITH_PINDEX || IsSpace(aPatStr[pindex+incr]))
+      if (!inWhitespace || DONE_WITH_PINDEX || IsSpace(patStr[pindex+incr]))
       {
         pindex += incr;
         inWhitespace = PR_FALSE;
@@ -1010,19 +863,37 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
 #endif
     // If we were continuing, then this ends our search.
     if (continuing) {
-      mIterator = nsnull;
+      ResetAll();
       return PR_FALSE;
     }
 
     // If we didn't match, go back to the beginning of patStr,
     // and set findex back to the next char after
     // we started the current match.
-    matchAnchorTC = nsnull;
-    pindex = (mFindBackward ? aPatLen : 0);
-    //findex = restart;  // +incr will be added when we continue
+    if (matchAnchorNode)    // we're ending a partial match
+    {
+      findex = restart;   // +incr will be added to findex when we continue
+      nsCOMPtr<nsIContent> content (do_QueryInterface(matchAnchorNode));
+      nsresult rv = NS_ERROR_UNEXPECTED;
+      NS_ASSERTION(content, "Text content isn't nsIContent!");
+      if (content)
+        rv = mIterator->PositionAt(content);
+      // Should check return value -- but what would we do if it failed??
+      // We're in big trouble if that happens.
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Text content wasn't nsIContent!");
+    }
+    restart = findex + incr;
+    matchAnchorNode = nsnull;
+    inWhitespace = PR_FALSE;
+    pindex = (mFindBackward ? patLen : 0);
+#ifdef DEBUG_FIND
+    printf("Setting restart back to %d, findex back to %d, pindex to %d\n",
+           restart, findex, pindex);
+#endif
   } // end while loop
 
   // Out of nodes, and didn't match.
+  ResetAll();
   return PR_FALSE;
 }
 

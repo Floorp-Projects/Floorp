@@ -24,6 +24,8 @@
 
 #include "nsWebBrowserFind.h"
 
+// Only need this for NS_FIND_CONTRACTID,
+// else we could use nsIDOMRange.h and nsIFind.h.
 #include "nsFind.h"
 
 #include "nsIComponentManager.h"
