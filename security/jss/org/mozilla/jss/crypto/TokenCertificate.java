@@ -46,6 +46,10 @@ public interface TokenCertificate extends X509Certificate {
      * certificates to keys.
      *
      * @see org.mozilla.jss.crypto.PrivateKey#getUniqueID
+     * @deprecated This ID is based on an implementation that might change.
+     *      If this functionality is required, it should be provided in
+     *      another way, such as a function that directly matches a cert and
+     *      key.
      */
     public abstract byte[] getUniqueID();
 
