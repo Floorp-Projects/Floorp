@@ -127,5 +127,6 @@ NS_END_EXTERN_C
 #define IMAP_UNKNOWN_USER                           5083
 
 #define IMAP_SERVER_DISCONNECTED                    5090
+#define IMAP_REDIRECT_LOGIN_FAILED                  5091
 
 #endif /* _nsImapStringBundle_H__ */

@@ -2450,7 +2450,7 @@ NS_IMETHODIMP nsImapIncomingServer::OnLogonRedirectionError(const PRUnichar *pEr
 	nsresult rv = NS_OK;
 
 	nsXPIDLString progressString;
-	GetImapStringByID(IMAP_LOGIN_FAILED, getter_Copies(progressString));
+	GetImapStringByID(IMAP_REDIRECT_LOGIN_FAILED, getter_Copies(progressString));
 	
   nsCOMPtr<nsIMsgWindow> msgWindow;
   PRUint32 urlQueueCnt = 0;
