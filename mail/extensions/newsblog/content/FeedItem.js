@@ -246,7 +246,7 @@ FeedItem.prototype.markValid = function() {
 FeedItem.prototype.markStored = function() {
     var ds = getItemsDS(this.feed.server);
     var resource = rdf.GetResource(this.url || ("urn:" + this.id));
-    
+   
     if (!ds.HasAssertion(resource, FZ_FEED, rdf.GetResource(this.feed.url), true))
       ds.Assert(resource, FZ_FEED, rdf.GetResource(this.feed.url), true);
     
@@ -257,7 +257,7 @@ FeedItem.prototype.markStored = function() {
     }
     else 
       ds.Assert(resource, FZ_STORED, RDF_LITERAL_TRUE, true);
-    }
+}
 
 FeedItem.prototype.download = function() {
   this.request = new XMLHttpRequest();
@@ -302,13 +302,8 @@ FeedItem.unicodeConverter =
   Components
     .classes["@mozilla.org/intl/scriptableunicodeconverter"]
       .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-FeedItem.unicodeConverter.charset = "UTF-8";
 
-FeedItem.prototype.toUtf8 = function(str) {
-  return FeedItem.unicodeConverter.ConvertFromUnicode(str);
-}
-
-function mimeEncodeSubject(aSubject, charset)
+FeedItem.prototype.mimeEncodeSubject = function(aSubject, charset)
 {  
   // get the mime header encoder service
   var mimeEncoder = Components
@@ -320,7 +315,7 @@ function mimeEncodeSubject(aSubject, charset)
   var newSubject;
 
   try {
-    newSubject = mimeEncoder.encodeMimePartIIStr(aSubject, false, charset, 9, 72);
+    newSubject = mimeEncoder.encodeMimePartIIStr(FeedItem.unicodeConverter.ConvertFromUnicode(aSubject), false, charset, 9, 72);
   }
   catch (ex) { 
     newSubject = aSubject; 
@@ -333,6 +328,7 @@ FeedItem.prototype.writeToFolder = function() {
   debug(this.identity + " writing to message folder" + this.feed.name + "\n");
   
   var server = this.feed.server;
+  FeedItem.unicodeConverter.charset = this.characterSet;
 
   // XXX Should we really be modifying the original data here instead of making
   // a copy of it?  Currently we never use the item object again after writing it
@@ -356,7 +352,7 @@ FeedItem.prototype.writeToFolder = function() {
   // Compress white space in the subject to make it look better.
   title = title.replace(/[\t\r\n]+/g, " ");
 
-  this.title = mimeEncodeSubject(title, this.characterSet);
+  this.title = this.mimeEncodeSubject(title, this.characterSet);
 
   // If the date looks like it's in W3C-DTF format, convert it into
   // an IETF standard date.  Otherwise assume it's in IETF format.
@@ -395,7 +391,9 @@ FeedItem.prototype.writeToFolder = function() {
   // Get the folder and database storing the feed's messages and headers.
   var folder = this.feed.folder ? this.feed.folder : server.rootMsgFolder.getChildNamed(this.feed.name);
   folder = folder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
-  folder.addMessage(source);
+
+  // source is a unicode string, we want to save a char * string in the original charset. So convert back
+  folder.addMessage(FeedItem.unicodeConverter.ConvertFromUnicode(source));
   this.markStored();
 }
 

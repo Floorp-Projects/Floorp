@@ -1,4 +1,3 @@
-// -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 var rdfcontainer =
   Components
     .classes["@mozilla.org/rdf/container-utils;1"]
@@ -173,7 +172,7 @@ Feed.prototype.quickMode getter = function() {
         quickMode = quickMode.QueryInterface(Components.interfaces.nsIRDFLiteral);
         quickMode = quickMode.Value;
         quickMode = eval(quickMode);
-    }
+    }    
     return quickMode;
 }
 
@@ -292,15 +291,11 @@ Feed.prototype.parseAsRSS2 = function() {
 
     var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
     if (content)
-      item.content = content;
-
-    var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
-    if (content)
       item.content = converter.ConvertFromUnicode(content);
 
     this.itemsToStore[i] = item;
   }
-  
+
   this.storeNextItem();
 }
 
@@ -372,8 +367,9 @@ Feed.prototype.parseAsRSS1 = function() {
 
     this.itemsToStore[index++] = item;
   }
-  
-  this.storeNextItem();
+
+  if (index) // at least one item to store?
+    this.storeNextItem();
 }
 
 Feed.prototype.parseAsAtom = function() {
@@ -551,40 +547,40 @@ Feed.prototype.storeNextItem = function()
       this.storeItemsTimer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
     this.storeItemsTimer.initWithCallback(this, 50, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
   }
-  else   
+  else
     this.cleanupParsingState(item.feed);   
 }
 
 Feed.prototype.cleanupParsingState = function(feed) {
-  // now that we are done parsing the feed, remove the feed from our feed cache
+    // now that we are done parsing the feed, remove the feed from our feed cache
   gFzFeedCache[feed.url] = "";
 
   feed.removeInvalidItems();
 
-  // let's be sure to flush any feed item changes back to disk
+    // let's be sure to flush any feed item changes back to disk
   var ds = getItemsDS(feed.server);
-  ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
+    ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
 
   if (feed.downloadCallback)
     feed.downloadCallback.downloaded(feed, kNewsBlogSuccess);
 
   feed.request = null; // force the xml http request to go away. This helps reduce some
-                       // nasty assertions on shut down of all things.
+                              // nasty assertions on shut down of all things.
 
-  this.itemsToStore = "";
-  this.itemsToStoreIndex = 0;
-  this.storeItemsTimer = null;
-}
+    this.itemsToStore = "";
+    this.itemsToStoreIndex = 0;
+    this.storeItemsTimer = null;
+  }   
 
 Feed.prototype.notify = function(aTimer) {
   this.storeNextItem();
 }
-  
+
 Feed.prototype.QueryInterface = function(aIID) {
-    if (aIID.equals(Components.interfaces.nsITimerCallback) || aIID.equals(Components.interfaces.nsISupports))
-      return this;
-    
-    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
-    return null;           
-  }
+  if (aIID.equals(Components.interfaces.nsITimerCallback) || aIID.equals(Components.interfaces.nsISupports))
+    return this;
+
+  Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+  return null;    
+}
 

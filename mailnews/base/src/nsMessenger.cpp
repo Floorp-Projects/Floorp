@@ -413,9 +413,6 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
 
 NS_IMETHODIMP nsMessenger::SetDisplayCharset(const char * aCharset)
 {
-  if (mCurrentDisplayCharset.Equals(aCharset))
-    return NS_OK;
-
   // libmime always converts to UTF-8 (both HTML and XML)
   if (mDocShell) 
   {
@@ -425,7 +422,10 @@ NS_IMETHODIMP nsMessenger::SetDisplayCharset(const char * aCharset)
     {
       nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
       if (muDV) 
-        muDV->SetForceCharacterSet(nsDependentCString(aCharset));
+      {
+        muDV->SetHintCharacterSet(nsDependentCString(aCharset));
+        muDV->SetHintCharacterSetSource(9);
+      }
 
       mCurrentDisplayCharset = aCharset;
     }
@@ -1511,6 +1511,8 @@ NS_IMETHODIMP nsMessenger::SetDocumentCharset(const char *characterSet)
   // redisplay to use characterSet
   if (!mLastDisplayURI.IsEmpty())
   {
+    SetDisplayCharset("UTF-8");
+
     nsCOMPtr <nsIMsgMessageService> messageService;
     nsresult rv = GetMessageServiceFromURI(mLastDisplayURI.get(), getter_AddRefs(messageService));
     
