@@ -10,6 +10,8 @@ function MultiplexHandler(event)
     charset = node.getAttribute('id');
     charset = charset.substring('charset.'.length, charset.length)
     SetDefaultCharacterSet(charset);
+  } else if (name == 'charsetCustomize') {
+    //do nothing - please remove this else statement, once the charset prefs moves to the pref window
   } else {
     SetDefaultCharacterSet(node.getAttribute('id'));
   }
