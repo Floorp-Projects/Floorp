@@ -54,10 +54,17 @@ locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/messenger-mapi/
 locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/communicator-platform/
 locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/navigator-platform/
 #else
+#ifdef XP_OS2
+locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/global-platform/
+locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/messenger-mapi/
+locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/communicator-platform/
+locale,install,url,jar:resource:/chrome/en-win.jar!/locale/en-US/navigator-platform/
+#else
 locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/global-platform/
 locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/messenger-mapi/
 locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/communicator-platform/
 locale,install,url,jar:resource:/chrome/en-unix.jar!/locale/en-US/navigator-platform/
+#endif
 #endif
 skin,install,select,classic/1.0
 
