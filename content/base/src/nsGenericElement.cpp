@@ -1177,7 +1177,8 @@ nsGenericElement::InternalIsSupported(const nsAString& aFeature,
              // Non-standard!
              PL_strcasecmp(f, "MouseScrollEvents") == 0 ||
              PL_strcasecmp(f, "HTMLEvents") == 0 ||
-             PL_strcasecmp(f, "Range") == 0) {
+             PL_strcasecmp(f, "Range") == 0 ||
+             PL_strcasecmp(f, "XHTML") == 0) {
     if (aVersion.IsEmpty() ||
         PL_strcmp(v, "2.0") == 0) {
       *aReturn = PR_TRUE;
