@@ -722,11 +722,11 @@ nsMsgDatabase::~nsMsgDatabase()
 
 	if (m_mdbStore)
 	{
-		m_mdbStore->CloseMdbObject(m_mdbEnv);
+		m_mdbStore->Release();
 	}
 	if (m_mdbEnv)
 	{
-		m_mdbEnv->CloseMdbObject(m_mdbEnv); //??? is this right?
+		m_mdbEnv->Release(); //??? is this right?
 		m_mdbEnv = nsnull;
 	}
     if (m_ChangeListeners) 
@@ -935,7 +935,7 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 						else
 							ret = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 					}
-					oldFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
+					NS_RELEASE(oldFile); // always release our file ref, store has own
 				}
 			}
 			if (NS_SUCCEEDED(ret) && thumb)
@@ -985,13 +985,10 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 						if (ret == NS_OK)
 							ret = InitNewDB();
 					}
-					newFile->CutStrongRef(m_mdbEnv); // always release our file ref, store has own
+					NS_RELEASE(newFile); // always release our file ref, store has own
 				}
 			}
-			if(thumb)
-			{
-				thumb->CutStrongRef(m_mdbEnv);
-			}
+			NS_IF_RELEASE(thumb);
 			nsCRT::free(nativeFileName);
 		}
 	}
@@ -1026,7 +1023,7 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
 #ifdef DEBUG_bienvenu
   if (m_headersInUse && m_headersInUse->entryCount > 0)
   {
-    //    NS_ASSERTION(PR_FALSE, "leaking headers");
+        NS_ASSERTION(PR_FALSE, "leaking headers");
     printf("leaking %d headers in %s\n", m_headersInUse->entryCount, (const char *) m_dbName);
   }
 #endif
@@ -1038,7 +1035,7 @@ NS_IMETHODIMP nsMsgDatabase::ForceClosed()
   }
   if (m_mdbStore)
   {
-    m_mdbStore->CloseMdbObject(m_mdbEnv);
+    m_mdbStore->Release();
     m_mdbStore = nsnull;
   }
   Release();
@@ -1110,8 +1107,8 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
 		{
 			err = commitThumb->DoMore(GetEnv(), &outTotal, &outCurrent, &outDone, &outBroken);
 		}
-		if(commitThumb)
-			commitThumb->CutStrongRef(m_mdbEnv);
+
+		NS_IF_RELEASE(commitThumb);
 	}
 	// ### do something with error, but clear it now because mork errors out on commits.
 	if (GetEnv())
@@ -1448,51 +1445,50 @@ nsresult nsMsgDatabase::AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr)
 
 NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener *instigator, PRBool commit, PRBool notify)
 {
-    nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, msg);  // closed system, so this is ok
-	nsMsgKey key;
-    (void)msg->GetMessageKey(&key);
-	// only need to do this for mail - will this speed up news expiration? 
-//	if (GetMailDB())
-		SetHdrFlag(msg, PR_TRUE, MSG_FLAG_EXPUNGED);	// tell mailbox (mail)
-
-	if (m_newSet)	// if it's in the new set, better get rid of it.
-		m_newSet->Remove(key);
-
-	if (m_dbFolderInfo != NULL)
-	{
-		PRBool isRead;
-		m_dbFolderInfo->ChangeNumMessages(-1);
-		m_dbFolderInfo->ChangeNumVisibleMessages(-1);
-		IsRead(key, &isRead);
-		if (!isRead)
-			m_dbFolderInfo->ChangeNumNewMessages(-1);
-        AdjustExpungedBytesOnDelete(msg);
-	}	
-
-    PRUint32 flags;
-	nsMsgKey threadParent;
-
-	//Save off flags and threadparent since they will no longer exist after we remove the header from the db.
-	if (notify)
-	{
-
-        (void)msg->GetFlags(&flags);
-		msg->GetThreadParent(&threadParent);
-	}
-
+  nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, msg);  // closed system, so this is ok
+  nsMsgKey key;
+  (void)msg->GetMessageKey(&key);
+  // only need to do this for mail - will this speed up news expiration? 
+  SetHdrFlag(msg, PR_TRUE, MSG_FLAG_EXPUNGED);	// tell mailbox (mail)
+  
+  if (m_newSet)	// if it's in the new set, better get rid of it.
+    m_newSet->Remove(key);
+  
+  if (m_dbFolderInfo != NULL)
+  {
+    PRBool isRead;
+    m_dbFolderInfo->ChangeNumMessages(-1);
+    m_dbFolderInfo->ChangeNumVisibleMessages(-1);
+    IsRead(key, &isRead);
+    if (!isRead)
+      m_dbFolderInfo->ChangeNumNewMessages(-1);
+    AdjustExpungedBytesOnDelete(msg);
+  }	
+  
+  PRUint32 flags;
+  nsMsgKey threadParent;
+  
+  //Save off flags and threadparent since they will no longer exist after we remove the header from the db.
+  if (notify)
+  {
+    
+    (void)msg->GetFlags(&flags);
+    msg->GetThreadParent(&threadParent);
+  }
+  
   RemoveHeaderFromThread(msgHdr);
-	if (notify /* && NS_SUCCEEDED(ret)*/)
-	{
-
-		NotifyKeyDeletedAll(key, threadParent, flags, instigator); // tell listeners
-    }
-//	if (!onlyRemoveFromThread)	// to speed up expiration, try this. But really need to do this in RemoveHeaderFromDB
-	nsresult ret = RemoveHeaderFromDB(msgHdr);
-	
-
-	if (commit)
-		Commit(nsMsgDBCommitType::kLargeCommit);			// ### dmb is this a good time to commit?
-	return ret;
+  if (notify /* && NS_SUCCEEDED(ret)*/)
+  {
+    
+    NotifyKeyDeletedAll(key, threadParent, flags, instigator); // tell listeners
+  }
+  //	if (!onlyRemoveFromThread)	// to speed up expiration, try this. But really need to do this in RemoveHeaderFromDB
+  nsresult ret = RemoveHeaderFromDB(msgHdr);
+  
+  
+  if (commit)
+    Commit(nsMsgDBCommitType::kLargeCommit);			// ### dmb is this a good time to commit?
+  return ret;
 }
 
 NS_IMETHODIMP
@@ -2240,7 +2236,7 @@ nsMsgDBEnumerator::nsMsgDBEnumerator(nsMsgDatabase* db,
 nsMsgDBEnumerator::~nsMsgDBEnumerator()
 {
 	if (mRowCursor)
-		mRowCursor->CutStrongRef(mDB->GetEnv());
+		mRowCursor->Release();
     NS_RELEASE(mDB);
 	NS_IF_RELEASE(mResultHdr);
 }
@@ -2422,7 +2418,7 @@ nsMsgDBThreadEnumerator::nsMsgDBThreadEnumerator(nsMsgDatabase* db,
 
 nsMsgDBThreadEnumerator::~nsMsgDBThreadEnumerator()
 {
-  mTableCursor->CloseMdbObject(mDB->GetEnv());
+  mTableCursor->Release();
 	NS_IF_RELEASE(mResultThread);
     NS_RELEASE(mDB);
 }
@@ -2722,18 +2718,20 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token col
 	return err;
 }
 
-nsresult nsMsgDatabase::RowCellColumnTonsCString(nsIMdbRow *hdrRow, mdb_token columnToken, nsCString &resultStr)
+// as long as the row still exists, and isn't changed, the returned const char ** will be valid.
+// But be very careful using this data - the caller should never return it in turn to another caller.
+nsresult nsMsgDatabase::RowCellColumnToConstCharPtr(nsIMdbRow *hdrRow, mdb_token columnToken, const char **ptr)
 {
-	nsresult	err = NS_OK;
-
-	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
-	{
-		struct mdbYarn yarn;
-		err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
-		if (err == NS_OK)
-			YarnTonsCString(&yarn, &resultStr);
-	}
-	return err;
+  nsresult	err = NS_OK;
+  
+  if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
+  {
+    struct mdbYarn yarn;
+    err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
+    if (err == NS_OK)
+      *ptr = (const char*)yarn.mYarn_Buf;
+  }
+  return err;
 }
 
 nsIMimeConverter *nsMsgDatabase::GetMimeConverter()
@@ -2750,21 +2748,20 @@ nsIMimeConverter *nsMsgDatabase::GetMimeConverter()
 nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, PRUnichar* *resultStr)
 {
     nsresult err = NS_OK;
-    nsCAutoString nakedString;
-    err = RowCellColumnTonsCString(row, columnToken, nakedString);
-    if (NS_SUCCEEDED(err) && nakedString.Length() > 0)
+    const char *nakedString;
+    err = RowCellColumnToConstCharPtr(row, columnToken, &nakedString);
+    if (NS_SUCCEEDED(err) && nsCRT::strlen(nakedString))
     {
         GetMimeConverter();
         if (m_mimeConverter) 
         {
-            char *charset;
             nsAutoString decodedStr;
+            const char *charSet;
             PRBool characterSetOverride;
-            m_dbFolderInfo->GetCharPtrCharacterSet(&charset);
+            m_dbFolderInfo->GetConstCharPtrCharacterSet(&charSet);
             m_dbFolderInfo->GetCharacterSetOverride(&characterSetOverride);
 
-            err = m_mimeConverter->DecodeMimeHeader(nakedString.get(), resultStr, charset, characterSetOverride);
-            PR_FREEIF(charset);
+            err = m_mimeConverter->DecodeMimeHeader(nakedString, resultStr, charSet, characterSetOverride);
         }
     }
     return err;
@@ -2772,10 +2769,10 @@ nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_to
 
 nsresult nsMsgDatabase::RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_token colToken, PRUint8 **result, PRUint32 *len)
 {
-    nsCAutoString cSender;
+    const char *cSender;
     nsXPIDLCString name;
 
-    nsresult ret = RowCellColumnTonsCString(row, colToken, cSender);
+    nsresult ret = RowCellColumnToConstCharPtr(row, colToken, &cSender);
     if (NS_SUCCEEDED(ret))
     {
         nsIMsgHeaderParser *headerParser = GetHeaderParser();
@@ -2792,14 +2789,14 @@ nsresult nsMsgDatabase::RowCellColumnToAddressCollationKey(nsIMdbRow *row, mdb_t
                 m_dbFolderInfo->GetCharPtrCharacterSet(&charset);
                 m_dbFolderInfo->GetCharacterSetOverride(&characterSetOverride);
 
-                ret = converter->DecodeMimeHeader(cSender.get(), &resultStr,
+                ret = converter->DecodeMimeHeader(cSender, &resultStr,
                                                   charset, characterSetOverride);
                 if (NS_SUCCEEDED(ret) && resultStr)
                 {
                     ret = headerParser->ExtractHeaderAddressName ("UTF-8", resultStr, getter_Copies(name));
                 }
                 else {
-                  ret = headerParser->ExtractHeaderAddressName ("UTF-8", cSender.get(), getter_Copies(name));
+                  ret = headerParser->ExtractHeaderAddressName ("UTF-8", cSender, getter_Copies(name));
                 }
                 PR_FREEIF(resultStr);
                 PR_FREEIF(charset);
@@ -2958,30 +2955,30 @@ nsresult nsMsgDatabase::CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnT
 // caller must PR_FREEIF result
 nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result)
 {
-	nsresult	err = NS_ERROR_NULL_POINTER;
-
-	if (row && result)
-	{
-		struct mdbYarn yarn;
-		err = row->AliasCellYarn(GetEnv(), columnToken, &yarn);
-		if (err == NS_OK)
-		{
-			*result = (char *) PR_CALLOC(yarn.mYarn_Fill + 1);
-			if (*result)
-			{
-				if (yarn.mYarn_Fill > 0)
-					nsCRT::memcpy(*result, yarn.mYarn_Buf, yarn.mYarn_Fill);
-				else
-					**result = 0;
-			}
-			else
-				err = NS_ERROR_OUT_OF_MEMORY;
-
-		}
-		else if (err == NS_OK)	// guarantee a non-null result
-			*result = nsCRT::strdup("");
-	}
-	return err;
+  nsresult	err = NS_ERROR_NULL_POINTER;
+  
+  if (row && result)
+  {
+    struct mdbYarn yarn;
+    err = row->AliasCellYarn(GetEnv(), columnToken, &yarn);
+    if (err == NS_OK)
+    {
+      *result = (char *) PR_CALLOC(yarn.mYarn_Fill + 1);
+      if (*result)
+      {
+        if (yarn.mYarn_Fill > 0)
+          nsCRT::memcpy(*result, yarn.mYarn_Buf, yarn.mYarn_Fill);
+        else
+          **result = 0;
+      }
+      else
+        err = NS_ERROR_OUT_OF_MEMORY;
+      
+    }
+    else if (err == NS_OK)	// guarantee a non-null result
+      *result = nsCRT::strdup("");
+  }
+  return err;
 }
 
 
@@ -3254,12 +3251,12 @@ nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsCString &subject)
   subjectYarn.mYarn_Form = 0;
   subjectYarn.mYarn_Size = subjectYarn.mYarn_Fill;
   
-  nsIMdbRow	*threadRow;
+  nsCOMPtr <nsIMdbRow>	threadRow;
   mdbOid		outRowId;
   if (m_mdbStore)
   {
     mdb_err result = m_mdbStore->FindRow(GetEnv(), m_threadRowScopeToken,
-      m_threadSubjectColumnToken, &subjectYarn,  &outRowId, &threadRow);
+      m_threadSubjectColumnToken, &subjectYarn,  &outRowId, getter_AddRefs(threadRow));
     if (NS_SUCCEEDED(result) && threadRow)
     {
       //Get key from row

@@ -78,7 +78,7 @@ static const char * kLocaleColumnName = "locale";
 
 #define kMAILNEWS_VIEW_DEFAULT_CHARSET        "mailnews.view_default_charset"
 #define kMAILNEWS_DEFAULT_CHARSET_OVERRIDE    "mailnews.force_charset_override"
-static nsString   gDefaultCharacterSet;
+static nsCString   gDefaultCharacterSet;
 static PRBool     gDefaultCharacterOverride;
 static nsIObserver *gFolderCharsetObserver = nsnull;
 static PRBool     gInitializeObserver = PR_FALSE;
@@ -121,7 +121,7 @@ NS_IMETHODIMP nsFolderCharsetObserver::Observe(nsISupports *aSubject, const char
         nsXPIDLString ucsval;
         pls->ToString(getter_Copies(ucsval));
         if (ucsval)
-          gDefaultCharacterSet.Assign(ucsval.get());
+          gDefaultCharacterSet.AssignWithConversion(ucsval.get());
       }
     }
     else if (prefName.Equals(NS_LITERAL_STRING(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE)))
@@ -174,7 +174,6 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
 	m_mdbTable = NULL;
 	m_mdbRow = NULL;
 	m_version = 1;			// for upgrading...
-	m_csid = 0;				// default csid for these messages
 	m_IMAPHierarchySeparator = 0;	// imap path separator
 	// mail only (for now)
 	m_folderSize = 0;
@@ -211,7 +210,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
         nsXPIDLString ucsval;
         pls->ToString(getter_Copies(ucsval));
         if (ucsval)
-          gDefaultCharacterSet.Assign(ucsval.get());
+          gDefaultCharacterSet.AssignWithConversion(ucsval.get());
       }
       rv = prefBranch->GetBoolPref(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, &gDefaultCharacterOverride);
 
@@ -277,12 +276,12 @@ void nsDBFolderInfo::ReleaseExternalReferences()
   {
     if (m_mdbTable)
     {
-      m_mdbTable->CutStrongRef(m_mdb->GetEnv());
+      NS_RELEASE(m_mdbTable);
       m_mdbTable = nsnull;
     }
     if (m_mdbRow)
     {
-      m_mdbRow->CutStrongRef(m_mdb->GetEnv());
+      NS_RELEASE(m_mdbRow);
       m_mdbRow = nsnull;
     }
     m_mdb = nsnull;
@@ -350,7 +349,7 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
 					if (ret == NS_OK)
 					{
 						ret = rowCursor->NextRow(m_mdb->GetEnv(), &m_mdbRow, &rowPos);
-						rowCursor->CutStrongRef(m_mdb->GetEnv());
+						NS_RELEASE(rowCursor);
 						if (ret == NS_OK && m_mdbRow)
 						{
 							LoadMemberVariables();
@@ -395,23 +394,28 @@ nsresult nsDBFolderInfo::InitMDBInfo()
 
 nsresult nsDBFolderInfo::LoadMemberVariables()
 {
-	nsresult ret = NS_OK;
-	// it's really not an error for these properties to not exist...
-	GetInt32PropertyWithToken(m_numVisibleMessagesColumnToken, m_numVisibleMessages);
-	GetInt32PropertyWithToken(m_numMessagesColumnToken, m_numMessages);
-	GetInt32PropertyWithToken(m_numNewMessagesColumnToken, m_numNewMessages);
-	GetInt32PropertyWithToken(m_flagsColumnToken, m_flags);
-	GetInt32PropertyWithToken(m_folderSizeColumnToken, m_folderSize);
-	GetInt32PropertyWithToken(m_folderDateColumnToken, (PRInt32 &) m_folderDate);
-	GetInt32PropertyWithToken(m_imapUidValidityColumnToken, m_ImapUidValidity);
-	GetInt32PropertyWithToken(m_expiredMarkColumnToken, (PRInt32 &) m_expiredMark);
-	GetInt32PropertyWithToken(m_expungedBytesColumnToken, (PRInt32 &) m_expungedBytes);
+  nsresult ret = NS_OK;
+  // it's really not an error for these properties to not exist...
+  GetInt32PropertyWithToken(m_numVisibleMessagesColumnToken, m_numVisibleMessages);
+  GetInt32PropertyWithToken(m_numMessagesColumnToken, m_numMessages);
+  GetInt32PropertyWithToken(m_numNewMessagesColumnToken, m_numNewMessages);
+  GetInt32PropertyWithToken(m_flagsColumnToken, m_flags);
+  GetInt32PropertyWithToken(m_folderSizeColumnToken, m_folderSize);
+  GetInt32PropertyWithToken(m_folderDateColumnToken, (PRInt32 &) m_folderDate);
+  GetInt32PropertyWithToken(m_imapUidValidityColumnToken, m_ImapUidValidity);
+  GetInt32PropertyWithToken(m_expiredMarkColumnToken, (PRInt32 &) m_expiredMark);
+  GetInt32PropertyWithToken(m_expungedBytesColumnToken, (PRInt32 &) m_expungedBytes);
   GetInt32PropertyWithToken(m_highWaterMessageKeyColumnToken, (PRInt32 &) m_highWaterMessageKey);
-	PRInt32 version;
-
-	GetInt32PropertyWithToken(m_versionColumnToken, version);
-	m_version = (PRUint16) version;
-	return ret;
+  PRInt32 version;
+  
+  GetInt32PropertyWithToken(m_versionColumnToken, version);
+  m_version = (PRUint16) version;
+  m_charSetOverride = gDefaultCharacterOverride;
+  PRUint32 propertyValue;
+  nsresult rv = GetUint32Property(kCharacterSetOverrideColumnName, &propertyValue, gDefaultCharacterOverride);
+  if (NS_SUCCEEDED(rv))
+    m_charSetOverride = propertyValue;
+  return ret;
 }
 
 NS_IMETHODIMP nsDBFolderInfo::SetVersion(PRUint32 version)
@@ -695,44 +699,51 @@ nsDBFolderInfo::GetCharacterSet(nsString *result, PRBool *usedDefault)
 
 	if (NS_SUCCEEDED(rv) && result->IsEmpty())
 	{
-		result->Assign(gDefaultCharacterSet.get());
+		result->AssignWithConversion(gDefaultCharacterSet.get());
 		*usedDefault = PR_TRUE;
 	}
 
 	return rv;
 }
 
+nsresult nsDBFolderInfo::GetConstCharPtrCharacterSet(const char**result)
+{
+  if (!m_charSet.IsEmpty())
+    *result = m_charSet.get();
+  else
+    *result = gDefaultCharacterSet.get();
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDBFolderInfo::GetCharPtrCharacterSet(char **result)
 {
-    nsresult rv = GetCharPtrProperty(kCharacterSetColumnName, result);
+  *result = ToNewCString(m_charSet);
 
-    if (NS_SUCCEEDED(rv) && (*result == nsnull || **result == '\0'))
+  if ((*result == nsnull || **result == '\0'))
     {
       PR_FREEIF(*result);
-        *result = ToNewCString(gDefaultCharacterSet);
+      *result = ToNewCString(gDefaultCharacterSet);
     }
 
-    return rv;
+  return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP nsDBFolderInfo::SetCharacterSet(nsString *charSet) 
+NS_IMETHODIMP nsDBFolderInfo::SetCharacterSet(const PRUnichar *charSet) 
 {
-	return SetProperty(kCharacterSetColumnName, charSet);
+  m_charSet.AssignWithConversion(charSet);
+  return m_mdb->SetProperty(m_mdbRow, kCharacterSetColumnName, m_charSet.get());
 }
 
 NS_IMETHODIMP nsDBFolderInfo::GetCharacterSetOverride(PRBool *characterSetOverride) 
 {
-  *characterSetOverride = gDefaultCharacterOverride;
-  PRUint32 propertyValue;
-  nsresult rv = GetUint32Property(kCharacterSetOverrideColumnName, &propertyValue, gDefaultCharacterOverride);
-  if (NS_SUCCEEDED(rv))
-    *characterSetOverride = propertyValue;
-  return rv;
+  *characterSetOverride = m_charSetOverride;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDBFolderInfo::SetCharacterSetOverride(PRBool characterSetOverride) 
 {
+  m_charSetOverride = characterSetOverride;
   return SetUint32Property(kCharacterSetOverrideColumnName, characterSetOverride);
 }
 

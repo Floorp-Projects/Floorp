@@ -194,6 +194,16 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
   return err;
 }
 
+NS_IMETHODIMP nsMailDatabase::ForceClosed()
+{
+  if (m_mdbAllOfflineOpsTable)
+  {
+    m_mdbAllOfflineOpsTable->Release();
+    m_mdbAllOfflineOpsTable = nsnull;
+  }
+  return nsMsgDatabase::ForceClosed();
+}
+
 // get this on demand so that only db's that have offline ops will
 // create the table.	
 nsresult nsMailDatabase::GetAllOfflineOpsTable()
@@ -796,8 +806,7 @@ nsMsgOfflineOpEnumerator::nsMsgOfflineOpEnumerator(nsMailDatabase* db)
 
 nsMsgOfflineOpEnumerator::~nsMsgOfflineOpEnumerator()
 {
-  if (mRowCursor)
-    mRowCursor->CutStrongRef(mDB->GetEnv());
+  NS_IF_RELEASE(mRowCursor);
   NS_RELEASE(mDB);
 }
 

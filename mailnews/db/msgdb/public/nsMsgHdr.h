@@ -63,8 +63,8 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    nsIMdbRow		*GetMDBRow() {return m_mdbRow;}
-	PRBool			IsParentOf(nsIMsgDBHdr *possibleChild);
+    nsIMdbRow   *GetMDBRow() {return m_mdbRow;}
+    PRBool      IsParentOf(nsIMsgDBHdr *possibleChild);
 protected:
     nsresult	SetStringColumn(const char *str, mdb_token token);
     nsresult	SetUInt32Column(PRUint32 value, mdb_token token);
@@ -78,24 +78,21 @@ protected:
 
     nsMsgKey	m_threadId; 
     nsMsgKey	m_messageKey; 	//news: article number, mail mbox offset, imap uid...
-	nsMsgKey	m_threadParent;	// message this is a reply to, in thread.
+    nsMsgKey	m_threadParent;	// message this is a reply to, in thread.
     PRTime  		m_date;                         
     PRUint32		m_messageSize;	// lines for news articles, bytes for mail messages
     PRUint32		m_statusOffset;	// offset in a local mail message of the mozilla status hdr
     PRUint32		m_flags;
     PRUint16		m_numReferences;	// x-ref header for threading
-    PRInt16			m_csID;			// cs id of message
-	nsCString		m_charSet;		// OK, charset of headers, since cs id's aren't supported.
-	nsCStringArray		m_references;  // avoid parsing references every time we want one
+    nsCStringArray		m_references;  // avoid parsing references every time we want one
     nsMsgPriorityValue	m_priority;
 
-    PRBool m_recipientsIsNewsgroup;
     // nsMsgHdrs will have to know what db and row they belong to, since they are really
     // just a wrapper around the msg row in the mdb. This could cause problems,
     // though I hope not.
     nsMsgDatabase	*m_mdb;
     nsIMdbRow		*m_mdbRow;
-	PRUint32		m_initedValues;
+    PRUint32		m_initedValues;
 };
 
 #endif

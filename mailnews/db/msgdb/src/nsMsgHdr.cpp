@@ -80,7 +80,6 @@ void nsMsgHdr::Init()
 	m_messageKey = nsMsgKey_None;
 	m_messageSize = 0;
 	m_date = LL_ZERO;
-	m_csID = 0;
 	m_flags = 0;
 	m_mdbRow = NULL;
 	m_numReferences = 0;
@@ -141,15 +140,15 @@ nsresult nsMsgHdr::InitFlags()
 
 nsMsgHdr::~nsMsgHdr()
 {
-	if (m_mdbRow)
-	{
-		if (m_mdb)
-		{	// presumably, acquiring a row increments strong ref count
-			m_mdbRow->CutStrongRef(m_mdb->GetEnv());
-			m_mdb->RemoveHdrFromUseCache((nsIMsgDBHdr *) this, m_messageKey);
-			m_mdb->Release();
-		}
-	}
+  if (m_mdbRow)
+  {
+    if (m_mdb)
+    {	
+      NS_RELEASE(m_mdbRow);
+      m_mdb->RemoveHdrFromUseCache((nsIMsgDBHdr *) this, m_messageKey);
+      m_mdb->Release();
+    }
+  }
 }
 
 NS_IMETHODIMP nsMsgHdr::GetMessageKey(nsMsgKey *result)
@@ -326,12 +325,12 @@ NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsCString &resultRefe
 
 	if(!(m_initedValues & REFERENCES_INITED))
 	{
-		nsCAutoString references;
-		err = m_mdb->RowCellColumnTonsCString(GetMDBRow(), m_mdb->m_referencesColumnToken, references);
+		const char *references;
+		err = m_mdb->RowCellColumnToConstCharPtr(GetMDBRow(), m_mdb->m_referencesColumnToken, &references);
 		
 		if(NS_SUCCEEDED(err))
 		{
-			ParseReferences(references.get());
+			ParseReferences(references);
 			m_initedValues |= REFERENCES_INITED;
 		}
 	}
@@ -386,19 +385,6 @@ NS_IMETHODIMP nsMsgHdr::SetRecipients(const char *recipients)
 	return SetStringColumn(recipients, m_mdb->m_recipientsColumnToken);
 }
 
-NS_IMETHODIMP nsMsgHdr::SetRecipientsIsNewsgroup(PRBool rfc822)
-{
-    m_recipientsIsNewsgroup = rfc822; // ???
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgHdr::GetRecipientsIsNewsgroup(PRBool *rfc822)
-{
-    NS_ENSURE_ARG_POINTER(rfc822);
-    (*rfc822) = m_recipientsIsNewsgroup;
-    return NS_OK;
-}
-
 nsresult nsMsgHdr::BuildRecipientsFromArray(const char *names, const char *addresses, PRUint32 numAddresses, nsCAutoString& allRecipients)
 {
 	nsresult ret = NS_OK;
@@ -451,7 +437,6 @@ NS_IMETHODIMP nsMsgHdr::SetRecipientsArray(const char *names, const char *addres
         return ret;
 
 	ret = SetRecipients(allRecipients.get());
-    SetRecipientsIsNewsgroup(PR_TRUE);
 	return ret;
 }
 

@@ -91,6 +91,7 @@ public:
 	nsresult	GetPropertyWithToken(mdb_token aProperty, nsString *resultProperty);
 	nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue, PRUint32 defaultValue = 0);
 	nsresult	GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue, PRInt32 defaultValue = 0);
+        nsresult        GetConstCharPtrCharacterSet(const char**result);
 
 
 	nsMsgKeyArray m_lateredKeys;		// list of latered messages
@@ -118,7 +119,6 @@ protected:
 	nsMsgKey	m_lastMessageLoaded; // set by the FE's to remember the last loaded message
 
 	PRUint16	m_version;			// for upgrading...
-	PRInt16		m_csid;				// default csid for these messages
 	PRInt16		m_IMAPHierarchySeparator;	// imap path separator
 
 	// mail only (for now)
@@ -132,11 +132,13 @@ protected:
 	nsMsgKey	m_expiredMark;		// Highest invalid article number in group - for expiring
 // the db folder info will have to know what db and row it belongs to, since it is really
 // just a wrapper around the singleton folder info row in the mdb. 
-	nsMsgDatabase		*m_mdb;
-	nsIMdbTable			*m_mdbTable;	// singleton table in db
-	nsIMdbRow			*m_mdbRow;	// singleton row in table;
+	nsMsgDatabase         *m_mdb;
+	nsIMdbTable           *m_mdbTable;	// singleton table in db
+	nsIMdbRow             *m_mdbRow;	// singleton row in table;
 
-	PRBool				m_mdbTokensInitialized;
+        nsCString             m_charSet;
+        PRBool                m_charSetOverride;
+	PRBool                m_mdbTokensInitialized;
 
 	mdb_token			m_rowScopeToken;
 	mdb_token			m_tableKindToken;
