@@ -24,8 +24,10 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_EXTENSIONS
 # hack to make Solaris sh happy, until we can find a better solution
-DIRS=$(MOZ_EXTENSIONS) dummy
+DIRS=$(MOZ_EXTENSIONS)
 endif
+
+DIRS += cookie wallet
 
 include $(topsrcdir)/config/config.mk
 
