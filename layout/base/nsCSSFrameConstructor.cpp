@@ -9068,52 +9068,40 @@ nsCSSFrameConstructor::InsertFirstLineFrames(
 // Determine how many characters in the text fragment apply to the
 // first letter
 static PRInt32
-FirstLetterCount(nsTextFragment* aFragments, PRInt32 aNumFragments)
+FirstLetterCount(const nsTextFragment* aFragment)
 {
   PRInt32 count = 0;
   PRInt32 firstLetterLength = 0;
   PRBool done = PR_FALSE;
-  while (aNumFragments && !done) {
-    PRInt32 i, n = aFragments->GetLength();
-    for (i = 0; i < n; i++) {
-      PRUnichar ch = aFragments->CharAt(i);
-      if (XP_IS_SPACE(ch)) {
-        if (firstLetterLength) {
-          done = PR_TRUE;
-          break;
-        }
-        count++;
-        continue;
-      }
-      // XXX I18n
-      if ((ch == '\'') || (ch == '\"')) {
-        if (firstLetterLength) {
-          done = PR_TRUE;
-          break;
-        }
-        // keep looping
-        firstLetterLength = 1;
-      }
-      else {
-        count++;
+
+  PRInt32 i, n = aFragment->GetLength();
+  for (i = 0; i < n; i++) {
+    PRUnichar ch = aFragment->CharAt(i);
+    if (XP_IS_SPACE(ch)) {
+      if (firstLetterLength) {
         done = PR_TRUE;
         break;
       }
+      count++;
+      continue;
     }
-    aFragments++;
-    aNumFragments--;
+    // XXX I18n
+    if ((ch == '\'') || (ch == '\"')) {
+      if (firstLetterLength) {
+        done = PR_TRUE;
+        break;
+      }
+      // keep looping
+      firstLetterLength = 1;
+    }
+    else {
+      count++;
+      done = PR_TRUE;
+      break;
+    }
   }
-  return count;
-}
 
-static PRInt32
-TotalLength(nsTextFragment* aFragments, PRInt32 aNumFragments)
-{
-  PRInt32 sum = 0;
-  while (--aNumFragments >= 0) {
-    sum += aFragments->GetLength();
-  }
-  return sum;
+  return count;
 }
 
 static PRBool
@@ -9125,11 +9113,10 @@ NeedFirstLetterContinuation(nsIContent* aContent)
   if (aContent) {
     nsCOMPtr<nsITextContent> tc(do_QueryInterface(aContent));
     if (tc) {
-      nsTextFragment* frags = nsnull;
-      PRInt32 numFrags = 0;
-      tc->GetText((const nsTextFragment*&)frags, numFrags);
-      PRInt32 flc = FirstLetterCount(frags, numFrags);
-      PRInt32 tl = TotalLength(frags, numFrags);
+      const nsTextFragment* frag = nsnull;
+      tc->GetText(&frag);
+      PRInt32 flc = FirstLetterCount(frag);
+      PRInt32 tl = frag->GetLength();
       if (flc < tl) {
         result = PR_TRUE;
       }

@@ -182,9 +182,8 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,
-                     PRInt32& aNumFragmentsResult)
-    { return mInner.GetText(aFragmentsResult, aNumFragmentsResult); }
+  NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult)
+    { return mInner.GetText(aFragmentsResult); }
   NS_IMETHOD GetTextLength(PRInt32* aLengthResult) {
     return mInner.GetTextLength(aLengthResult);
   }
@@ -364,11 +363,11 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
     return res;
 
   const nsTextFragment* textFrag;
-  PRInt32 numFragments;
+
   // XXX This method is const, but GetText() isn't,
   // XXX so cast away the constness of mInner:
   nsGenericDOMDataNode* inner = (nsGenericDOMDataNode*)&mInner;
-  res = inner->GetText(textFrag, numFragments);
+  res = inner->GetText(&textFrag);
   if (!NS_SUCCEEDED(res))
     return res;
 #ifdef DEBUG_akkana

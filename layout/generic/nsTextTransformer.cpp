@@ -82,37 +82,16 @@ nsTextTransformer::Init(nsIFrame* aFrame,
   if (NS_OK != aContent->QueryInterface(kITextContentIID, (void**) &tc)) {
     return NS_OK;
   }
-  tc->GetText(mFrags, mNumFrags);
+  tc->GetText(&mFrag);
   NS_RELEASE(tc);
   mStartingOffset = aStartingOffset;
   mOffset = mStartingOffset;
 
   // Compute the total length of the text content.
-  PRInt32 sum = 0;
-  PRInt32 n = mNumFrags;
-  const nsTextFragment* frag = mFrags;
-  for (; --n >= 0; frag++) {
-    sum += frag->GetLength();
-  }
-  mContentLength = sum;
+  mContentLength = mFrag->GetLength();
 
-  // Set current fragment and current fragment offset
-  mCurrentFrag = mFrags;
-  mCurrentFragOffset = 0;
-  PRInt32 offset = 0;
-  n = mNumFrags;
-  for (frag = mFrags; --n >= 0; frag++) {
-    if (aStartingOffset < offset + frag->GetLength()) {
-      mCurrentFrag = frag;
-      mCurrentFragOffset = aStartingOffset - offset;
-      break;
-    }
-    offset += frag->GetLength();
-  }
-  if (mNumFrags && aStartingOffset == mContentLength){
-    mCurrentFrag = mFrags + (mNumFrags -1);
-    mCurrentFragOffset = mCurrentFrag->GetLength();
-  }
+  // Set current fragment offset
+  mCurrentFragOffset = aStartingOffset;
 
   // Get the frames style and choose a transform proc
   const nsStyleText* styleText;
@@ -167,10 +146,11 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
     return nsnull;
   }
 
+  PRInt32 numChars;
+  PRInt32 fragLen;
   PRUnichar* bp = mBuffer;
   PRUnichar* bufEnd = mBuffer + mBufferLength;
-  const nsTextFragment* frag = mCurrentFrag;
-  const nsTextFragment* lastFrag = mFrags + mNumFrags;
+  const nsTextFragment* frag = mFrag;
   PRInt32 wordLen = 1;
   PRInt32 contentLen = 1;
 
@@ -211,154 +191,141 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   }
   if (firstChar > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
   *bp++ = firstChar;
-  if (offset == frag->GetLength()) {
-    mCurrentFrag = ++frag;
-    offset = 0;
-  }
   mCurrentFragOffset = offset;
   if (isWhitespace && mPreformatted) {
     goto really_done;
   }
 
-  PRInt32 numChars;
-  while (frag < lastFrag) {
-    PRInt32 fragLen = frag->GetLength();
+  fragLen = frag->GetLength();
 
-    // Scan characters in this fragment that are the same kind as the
-    // isWhitespace flag indicates.
-    if (frag->Is2b()) {
-      const PRUnichar* cp0 = frag->Get2b();
-      const PRUnichar* end = cp0 + fragLen;
-      const PRUnichar* cp = cp0 + offset;
-      if (isWhitespace) {
-        while (cp < end) {
-          PRUnichar ch = *cp;
-          if (XP_IS_SPACE(ch)) {
-            cp++;
-            continue;
-          }
-          numChars = (cp - offset) - cp0;
-          contentLen += numChars;
-          mCurrentFragOffset += numChars;
-          goto done;
+  // Scan characters in this fragment that are the same kind as the
+  // isWhitespace flag indicates.
+  if (frag->Is2b()) {
+    const PRUnichar* cp0 = frag->Get2b();
+    const PRUnichar* end = cp0 + fragLen;
+    const PRUnichar* cp = cp0 + offset;
+    if (isWhitespace) {
+      while (cp < end) {
+        PRUnichar ch = *cp;
+        if (XP_IS_SPACE(ch)) {
+          cp++;
+          continue;
         }
         numChars = (cp - offset) - cp0;
         contentLen += numChars;
+        mCurrentFragOffset += numChars;
+        goto done;
       }
-      else {
-		if(wordLen > 0) {
-			nsresult res = NS_OK;
-			PRBool breakBetween = PR_FALSE;
-			if(aForLineBreak)
-			   res = mLineBreaker->BreakInBetween(mBuffer, wordLen, 
-				                         cp, (fragLen-offset), &breakBetween);
-			else 
-			   res = mWordBreaker->BreakInBetween(mBuffer, wordLen, 
-				                         cp, (fragLen-offset), &breakBetween);
-			if ( breakBetween )
-				goto done;
-
-			PRBool tryNextFrag = PR_FALSE;
-			PRUint32 next;
-
-			// Find next position
-                        
-			if(aForLineBreak)
-			   res = mLineBreaker->Next(cp0, fragLen, offset, &next, &tryNextFrag);
-      else
-			   res = mWordBreaker->Next(cp0, fragLen, offset, &next, &tryNextFrag);
-       
-			
-			numChars = (next - offset);
-			// check buffer size before copy
-			while((bp + numChars ) > bufEnd) {
-				PRInt32 delta = bp - mBuffer;
-				if(!GrowBuffer()) {
-					goto done;
-				}
-				bp = mBuffer + delta;
-				bufEnd = mBuffer + mBufferLength;
-			}
-
-			wordLen += numChars;
-			mCurrentFragOffset += numChars;
-			contentLen += numChars;
-			end = cp + numChars;
-
-			// 1. convert nbsp into space
-			// 2. check mHasMultibyte flag
-			// 3. copy buffer
-
-			while(cp < end) {
-		        PRUnichar ch = *cp++;
-				if (CH_NBSP == ch) ch = ' ';
-				if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
-				*bp++ = ch;
-			}
-			if(! tryNextFrag) {
-				// can decide break position inside this TextFrag
-				goto done;
-			}
-		}
-      }
+      numChars = (cp - offset) - cp0;
+      contentLen += numChars;
     }
     else {
-      const unsigned char* cp0 = (const unsigned char*) frag->Get1b();
-      const unsigned char* end = cp0 + fragLen;
-      const unsigned char* cp = cp0 + offset;
-      if (isWhitespace) {
-        while (cp < end) {
-          PRUnichar ch = PRUnichar(*cp);
-          if (XP_IS_SPACE(ch)) {
-            cp++;
-            continue;
-          }
-          numChars = (cp - offset) - cp0;
-          contentLen += numChars;
-          mCurrentFragOffset += numChars;
+      if(wordLen > 0) {
+        nsresult res = NS_OK;
+        PRBool breakBetween = PR_FALSE;
+        if(aForLineBreak)
+          res = mLineBreaker->BreakInBetween(mBuffer, wordLen, 
+                                             cp, (fragLen-offset), &breakBetween);
+        else 
+          res = mWordBreaker->BreakInBetween(mBuffer, wordLen, 
+                                             cp, (fragLen-offset), &breakBetween);
+        if ( breakBetween )
           goto done;
+
+        PRBool tryNextFrag = PR_FALSE;
+        PRUint32 next;
+
+        // Find next position
+                        
+        if(aForLineBreak)
+          res = mLineBreaker->Next(cp0, fragLen, offset, &next, &tryNextFrag);
+        else
+          res = mWordBreaker->Next(cp0, fragLen, offset, &next, &tryNextFrag);
+       
+			
+        numChars = (next - offset);
+        // check buffer size before copy
+        while((bp + numChars ) > bufEnd) {
+          PRInt32 delta = bp - mBuffer;
+          if(!GrowBuffer()) {
+            goto done;
+          }
+          bp = mBuffer + delta;
+          bufEnd = mBuffer + mBufferLength;
+        }
+
+        wordLen += numChars;
+        mCurrentFragOffset += numChars;
+        contentLen += numChars;
+        end = cp + numChars;
+
+        // 1. convert nbsp into space
+        // 2. check mHasMultibyte flag
+        // 3. copy buffer
+
+        while(cp < end) {
+          PRUnichar ch = *cp++;
+          if (CH_NBSP == ch) ch = ' ';
+          if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+          *bp++ = ch;
+        }
+        if(! tryNextFrag) {
+          // can decide break position inside this TextFrag
+          goto done;
+        }
+      }
+    }
+  }
+  else {
+    const unsigned char* cp0 = (const unsigned char*) frag->Get1b();
+    const unsigned char* end = cp0 + fragLen;
+    const unsigned char* cp = cp0 + offset;
+    if (isWhitespace) {
+      while (cp < end) {
+        PRUnichar ch = PRUnichar(*cp);
+        if (XP_IS_SPACE(ch)) {
+          cp++;
+          continue;
         }
         numChars = (cp - offset) - cp0;
         contentLen += numChars;
+        mCurrentFragOffset += numChars;
+        goto done;
       }
-      else {
-        while (cp < end) {
-          PRUnichar ch = PRUnichar(*cp);
-          if (!XP_IS_SPACE(ch)) {
-            if (CH_NBSP == ch) ch = ' ';
-            if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
-            cp++;
+      numChars = (cp - offset) - cp0;
+      contentLen += numChars;
+    }
+    else {
+      while (cp < end) {
+        PRUnichar ch = PRUnichar(*cp);
+        if (!XP_IS_SPACE(ch)) {
+          if (CH_NBSP == ch) ch = ' ';
+          if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+          cp++;
 
-            // Store character in buffer; grow buffer if we have to
-            NS_ASSERTION(bp < bufEnd, "whoops");
-            *bp++ = ch;
-            if (bp == bufEnd) {
-              PRInt32 delta = bp - mBuffer;
-              if (!GrowBuffer()) {
-                goto done;
-              }
-              bp = mBuffer + delta;
-              bufEnd = mBuffer + mBufferLength;
+          // Store character in buffer; grow buffer if we have to
+          NS_ASSERTION(bp < bufEnd, "whoops");
+          *bp++ = ch;
+          if (bp == bufEnd) {
+            PRInt32 delta = bp - mBuffer;
+            if (!GrowBuffer()) {
+              goto done;
             }
-            continue;
+            bp = mBuffer + delta;
+            bufEnd = mBuffer + mBufferLength;
           }
-          numChars = (cp - offset) - cp0;
-          wordLen += numChars;
-          contentLen += numChars;
-          mCurrentFragOffset += numChars;
-          goto done;
+          continue;
         }
         numChars = (cp - offset) - cp0;
         wordLen += numChars;
         contentLen += numChars;
+        mCurrentFragOffset += numChars;
+        goto done;
       }
+      numChars = (cp - offset) - cp0;
+      wordLen += numChars;
+      contentLen += numChars;
     }
-
-    // Advance to next text fragment
-    frag++;
-    mCurrentFrag = frag;
-    mCurrentFragOffset = 0;
-    offset = 0;
   }
 
  done:;
@@ -411,8 +378,7 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
 
   PRUnichar* bp = mBuffer+mBufferLength-1;
   PRUnichar* bufEnd = mBuffer ;
-  const nsTextFragment* frag = mCurrentFrag;
-  const nsTextFragment* lastFrag = mFrags;//1st is the last
+  const nsTextFragment* frag = mFrag;
   PRInt32 wordLen = 1;
   PRInt32 contentLen = 1;
 
@@ -461,164 +427,147 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
   *bp-- = firstChar;
   mCurrentFragOffset = offset +1;
   if (offset < 0) {
-    if (mCurrentFrag == mFrags){
-      goto really_done;
-    }
-    mCurrentFrag = --frag;
-    offset = mCurrentFrag->GetLength()-1;
+    goto really_done;
   }
   if (isWhitespace && mPreformatted) {
     goto really_done;
   }
 
   PRInt32 numChars;
-  do {
-    // Scan characters in this fragment that are the same kind as the
-    // isWhitespace flag indicates.
-    if (frag->Is2b()) {
-      const PRUnichar* cp0 = frag->Get2b();
-      const PRUnichar* end = cp0;
-      const PRUnichar* cp = cp0 + offset;
-      if (isWhitespace) {
-        while (cp > end) {
-          PRUnichar ch = *cp;
-          if (XP_IS_SPACE(ch)) {
-            cp--;
-            continue;
-          }
-          numChars = (cp0 + offset) - cp;
-          contentLen += numChars;
-          mCurrentFragOffset -= numChars;
-          goto done;
+
+  // Scan characters in this fragment that are the same kind as the
+  // isWhitespace flag indicates.
+  if (frag->Is2b()) {
+    const PRUnichar* cp0 = frag->Get2b();
+    const PRUnichar* end = cp0;
+    const PRUnichar* cp = cp0 + offset;
+    if (isWhitespace) {
+      while (cp > end) {
+        PRUnichar ch = *cp;
+        if (XP_IS_SPACE(ch)) {
+          cp--;
+          continue;
         }
         numChars = (cp0 + offset) - cp;
         contentLen += numChars;
+        mCurrentFragOffset -= numChars;
+        goto done;
       }
-      else {
-         if(wordLen > 0) {
-            nsresult res = NS_OK;
-            PRBool breakBetween = PR_FALSE;
-            if(aForLineBreak)
-                res = mLineBreaker->BreakInBetween(
-                              cp0, offset+1, 
-                              &(mBuffer[mBufferLength-wordLen]), wordLen,
-                              &breakBetween);
-            else
-                res = mWordBreaker->BreakInBetween(
-                              cp0, offset+1, 
-                              &(mBuffer[mBufferLength-wordLen]), wordLen,
-                              &breakBetween);
-            if ( breakBetween )
-              goto done;
+      numChars = (cp0 + offset) - cp;
+      contentLen += numChars;
+    }
+    else {
+      if(wordLen > 0) {
+        nsresult res = NS_OK;
+        PRBool breakBetween = PR_FALSE;
+        if(aForLineBreak)
+          res = mLineBreaker->BreakInBetween(
+            cp0, offset+1, 
+            &(mBuffer[mBufferLength-wordLen]), wordLen,
+            &breakBetween);
+        else
+          res = mWordBreaker->BreakInBetween(
+            cp0, offset+1, 
+            &(mBuffer[mBufferLength-wordLen]), wordLen,
+            &breakBetween);
+        if ( breakBetween )
+          goto done;
 
-            PRBool tryPrevFrag = PR_FALSE;
-            PRUint32 prev;
+        PRBool tryPrevFrag = PR_FALSE;
+        PRUint32 prev;
 
-            // Find prev position
+        // Find prev position
 
-            if(aForLineBreak)
-                res = mLineBreaker->Prev(cp0, offset, offset, &prev, &tryPrevFrag);
-            else
-                res = mWordBreaker->Prev(cp0, offset, offset, &prev, &tryPrevFrag);
+        if(aForLineBreak)
+          res = mLineBreaker->Prev(cp0, offset, offset, &prev, &tryPrevFrag);
+        else
+          res = mWordBreaker->Prev(cp0, offset, offset, &prev, &tryPrevFrag);
 
 
-            numChars = (offset - prev)+1;
-            // check buffer size before copy
-            while((bp - numChars ) < bufEnd) {
-              PRInt32 delta = (&(mBuffer[mBufferLength])) - bp -1 ;
-              if(!GrowBuffer()) {
-                 goto done;
-              }
-              bp = (&(mBuffer[mBufferLength])) - delta - 1;
-              bufEnd = mBuffer;
-            }
+        numChars = (offset - prev)+1;
+        // check buffer size before copy
+        while((bp - numChars ) < bufEnd) {
+          PRInt32 delta = (&(mBuffer[mBufferLength])) - bp -1 ;
+          if(!GrowBuffer()) {
+            goto done;
+          }
+          bp = (&(mBuffer[mBufferLength])) - delta - 1;
+          bufEnd = mBuffer;
+        }
 
-            wordLen += numChars;
-            mCurrentFragOffset -= numChars;
-            contentLen += numChars;
-            end = cp - numChars;
+        wordLen += numChars;
+        mCurrentFragOffset -= numChars;
+        contentLen += numChars;
+        end = cp - numChars;
 
-            // 1. convert nbsp into space
-            // 2. check mHasMultibyte flag
-            // 3. copy buffer
+        // 1. convert nbsp into space
+        // 2. check mHasMultibyte flag
+        // 3. copy buffer
 
-            while(cp > end) {
-                    PRUnichar ch = *cp--;
-              if (CH_NBSP == ch) ch = ' ';
-              if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
-              *bp-- = ch;
-            }
-            if(! tryPrevFrag) {
-              // can decide break position inside this TextFrag
-              goto done;
-            }
+        while(cp > end) {
+          PRUnichar ch = *cp--;
+          if (CH_NBSP == ch) ch = ' ';
+          if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+          *bp-- = ch;
+        }
+        if(! tryPrevFrag) {
+          // can decide break position inside this TextFrag
+          goto done;
         }
       }
     }
-    else {
-      const unsigned char* cp0 = (const unsigned char*) frag->Get1b();
-      const unsigned char* end = cp0;
-      const unsigned char* cp = cp0 + offset;
-      if (isWhitespace) {
-        while (cp > end) {
-          PRUnichar ch = PRUnichar(*cp);
-          if (XP_IS_SPACE(ch)) {
-            cp--;
-            continue;
-          }
-          numChars = (cp0 + offset) - cp;
-          contentLen += numChars;
-          mCurrentFragOffset -= numChars;
-          goto done;
+  }
+  else {
+    const unsigned char* cp0 = (const unsigned char*) frag->Get1b();
+    const unsigned char* end = cp0;
+    const unsigned char* cp = cp0 + offset;
+    if (isWhitespace) {
+      while (cp > end) {
+        PRUnichar ch = PRUnichar(*cp);
+        if (XP_IS_SPACE(ch)) {
+          cp--;
+          continue;
         }
         numChars = (cp0 + offset) - cp;
         contentLen += numChars;
+        mCurrentFragOffset -= numChars;
+        goto done;
       }
-      else {
-        while (cp >= end) {
-          PRUnichar ch = PRUnichar(*cp);
-          if (!XP_IS_SPACE(ch)) {
-            if (CH_NBSP == ch) ch = ' ';
-            if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
-            cp--;
+      numChars = (cp0 + offset) - cp;
+      contentLen += numChars;
+    }
+    else {
+      while (cp >= end) {
+        PRUnichar ch = PRUnichar(*cp);
+        if (!XP_IS_SPACE(ch)) {
+          if (CH_NBSP == ch) ch = ' ';
+          if (ch > MAX_UNIBYTE) mHasMultibyte = PR_TRUE;
+          cp--;
 
-            // Store character in buffer; grow buffer if we have to
-            NS_ASSERTION(bp > bufEnd, "whoops");
-            *bp-- = ch;
-            if (bp == bufEnd) {
-              PRInt32 delta = (&(mBuffer[mBufferLength])) - bp - 1;
-              if (!GrowBuffer(PR_FALSE)) {
-                goto done;
-              }
-              bp = (&(mBuffer[mBufferLength])) - delta - 1;
-              bufEnd = mBuffer;
+          // Store character in buffer; grow buffer if we have to
+          NS_ASSERTION(bp > bufEnd, "whoops");
+          *bp-- = ch;
+          if (bp == bufEnd) {
+            PRInt32 delta = (&(mBuffer[mBufferLength])) - bp - 1;
+            if (!GrowBuffer(PR_FALSE)) {
+              goto done;
             }
-            continue;
+            bp = (&(mBuffer[mBufferLength])) - delta - 1;
+            bufEnd = mBuffer;
           }
-          numChars = (cp0 + offset) - cp;
-          wordLen += numChars;
-          contentLen += numChars;
-          mCurrentFragOffset -= numChars;
-          goto done;
+          continue;
         }
         numChars = (cp0 + offset) - cp;
         wordLen += numChars;
         contentLen += numChars;
+        mCurrentFragOffset -= numChars;
+        goto done;
       }
+      numChars = (cp0 + offset) - cp;
+      wordLen += numChars;
+      contentLen += numChars;
     }
-
-    // Advance to next text fragment
-    if (frag != lastFrag)
-    {
-      frag--;
-      mCurrentFrag = frag;
-      mCurrentFragOffset = mCurrentFrag->GetLength()-1;
-      offset = mCurrentFragOffset;
-    }
-    else
-      mCurrentFragOffset = 0;
   }
-  while (frag > lastFrag);
 
  done:;
 

@@ -102,9 +102,7 @@ protected:
   PRInt32 mStartingOffset;
   PRInt32 mOffset;
 
-  const nsTextFragment* mFrags;
-  PRInt32 mNumFrags;
-  const nsTextFragment* mCurrentFrag;
+  const nsTextFragment* mFrag;
   PRInt32 mCurrentFragOffset;
 
   PRUint8 mTextTransform;

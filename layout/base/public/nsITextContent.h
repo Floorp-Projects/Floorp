@@ -36,10 +36,9 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_ITEXT_CONTENT_IID; return iid; }
 
   /**
-   * Get direct access to the text in the text content.
+   * Get direct access (but read only) to the text in the text content.
    */
-  NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,
-                     PRInt32& aNumFragmentsResult) = 0;
+  NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult) = 0;
 
   /**
    * Get the length of the text content.
