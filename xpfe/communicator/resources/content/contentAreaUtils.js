@@ -273,7 +273,7 @@ function foundHeaderInfo(aSniffer, aData)
     source      : source,
     contentType : (isDocument && fp.filterIndex == 2) ? "text/plain" : contentType,
     target      : fp.file,
-    postData    : isDocument ? getPostData() : null,
+    postData    : aData.document ? getPostData() : null,
     bypassCache : aData.bypassCache
   };
   
@@ -737,10 +737,11 @@ function isDocumentType(aContentType)
 {
   switch (aContentType) {
   case "text/html":
+    return true;
   case "text/xml":
   case "application/xhtml+xml":
-    return true;
+  case "application/xml":
+    return false; // XXX Disables Save As Complete until it works for XML
   }
   return false;
 }
-
