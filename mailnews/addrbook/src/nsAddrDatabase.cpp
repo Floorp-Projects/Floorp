@@ -255,7 +255,6 @@ NS_IMETHODIMP_(nsrefcnt) nsAddrDatabase::Release(void)
 		NS_DELETEXPCOM(this);                              
 		return 0;                                          
 	}
-	NS_LOG_RELEASE(this, mRefCnt,"nsAddrDatabase"); 
 	return count;                                      
 }
 
