@@ -35,21 +35,21 @@
 interface nsIWebBrowserSetup : nsISupports
 {
     /**
-     * Enables/disables plugin support for this browser.
+     * Boolean. Enables/disables plugin support for this browser.
      *
      * @see setProperty
      */
     const unsigned long SETUP_ALLOW_PLUGINS         = 1;
 
     /**
-     * Enables/disables Javascript support for this browser.
+     * Boolean. Enables/disables Javascript support for this browser.
      *
      * @see setProperty
      */
     const unsigned long SETUP_ALLOW_JAVASCRIPT      = 2;
 
     /**
-     * Enables/disables meta redirect support for this browser.
+     * Boolean. Enables/disables meta redirect support for this browser.
      * Meta redirect timers will be ignored if this option is disabled.
      *
      * @see setProperty
@@ -57,14 +57,14 @@ interface nsIWebBrowserSetup : nsISupports
     const unsigned long SETUP_ALLOW_META_REDIRECTS  = 3;
 
     /**
-     * Enables/disables subframes within the browser
+     * Boolean. Enables/disables subframes within the browser
      *
      * @see setProperty
      */
     const unsigned long SETUP_ALLOW_SUBFRAMES       = 4;
 
     /**
-     * Enables/disables image loading for this browser
+     * Boolean. Enables/disables image loading for this browser
      * window. If you disable the images, load a page, then enable the images,
      * the page will *not* automatically load the images for the previously
      * loaded page. This flag controls the state of a webBrowser at load time 
@@ -77,7 +77,7 @@ interface nsIWebBrowserSetup : nsISupports
     const unsigned long SETUP_ALLOW_IMAGES          = 5;
 
     /**
-     * Enables/disables whether the document as a whole gets focus before
+     * Boolean. Enables/disables whether the document as a whole gets focus before
      * traversing the document's content, or after traversing its content.
      *
      * NOTE: this property is obsolete and now has no effect
@@ -87,7 +87,7 @@ interface nsIWebBrowserSetup : nsISupports
     const unsigned long SETUP_FOCUS_DOC_BEFORE_CONTENT = 6;
 
     /**
-     * Enables/disables the use of global history in the browser. Visited
+     * Boolean. Enables/disables the use of global history in the browser. Visited
      * URLs will not be recorded in the global history when it is disabled.
      *
      * @see setProperty
@@ -95,7 +95,7 @@ interface nsIWebBrowserSetup : nsISupports
     const unsigned long SETUP_USE_GLOBAL_HISTORY    = 256;
 
     /**
-     * A value of PR_TRUE makes the browser a chrome wrapper.
+     * Boolean. A value of PR_TRUE makes the browser a chrome wrapper.
      * Default is PR_FALSE.
      *
      * @since mozilla1.0
@@ -105,7 +105,8 @@ interface nsIWebBrowserSetup : nsISupports
     const unsigned long SETUP_IS_CHROME_WRAPPER     = 7;
 
     /**
-     * Sets a property on the new web browser object.
+     * Sets an integer or boolean property on the new web browser object.
+     * Only PR_TRUE and PR_FALSE are legal boolean values.
      *
      * @param aId The identifier of the property to be set.
      * @param aValue The value of the property.
