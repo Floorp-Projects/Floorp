@@ -290,10 +290,18 @@ static nsModuleComponentInfo components[] =
       NS_ISTREAMCONVERTER_KEY "?from=deflate?to=uncompressed",
       CreateNewHTTPCompressConvFactory
     },
+#if 0
+	/* backed out.  see bug #34401 */
     { "NSTXTToHTMLConverter",
       NS_NSTXTTOHTMLCONVERTER_CID,
       NS_ISTREAMCONVERTER_KEY "?from=text/plain?to=text/html",
       CreateNewNSTXTToHTMLConvFactory
+	}
+#endif
+	{ "TXTToHTMLConverter", 
+  	  MOZITXTTOHTMLCONV_CID,
+	  NS_ISTREAMCONVERTER_KEY "?from=text/plain?to=text/html", 
+	  CreateNewTXTToHTMLConvFactory
     }
 };
 
