@@ -1,4 +1,14 @@
 <?xml version="1.0"?>
+
+<!DOCTYPE RDF 
+ [
+  <!ENTITY aol.wizardLongName         "AOL account (For example, jsmith@aol.com)">
+  <!ENTITY aol.emailIDFieldTitle      "Screen Name:">
+  <!ENTITY aol.emailIDDescription     "screen name">
+  <!ENTITY aol.prettyName     "AOL Mail">
+ ]
+>
+
 <RDF:RDF
     xmlns:NC="http://home.netscape.com/NC-rdf#"
     xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
@@ -10,26 +20,35 @@
         <!-- server info -->
         <NC:incomingServer>
           <NC:nsIMsgIncomingServer>
-            <NC:prettyName>AOL account</NC:prettyName>
+            <NC:prettyName>&aol.prettyName;</NC:prettyName>
             <NC:hostName>imap.mail.aol.com</NC:hostName>
-            <NC:type>imap</NC:type>
+            <NC:type>imap
+            <NC:ServerType-imap>                                                
+              <NC:nsIImapIncomingServer>                                        
+                <NC:deleteModel>2</NC:deleteModel>                              
+              </NC:nsIImapIncomingServer>                                       
+            </NC:ServerType-imap>                                               
+            </NC:type>
             <NC:rememberPassword>false</NC:rememberPassword>
             <NC:redirectorType>aol</NC:redirectorType>
+            <NC:offlineSupportLevel>0</NC:offlineSupportLevel>
             <NC:defaultCopiesAndFoldersPrefsToServer>false</NC:defaultCopiesAndFoldersPrefsToServer>
             <NC:canCreateFoldersOnServer>false</NC:canCreateFoldersOnServer>
+            <NC:canCompactFoldersOnServer>false</NC:canCompactFoldersOnServer>
+            <NC:canUndoDeleteOnServer>false</NC:canUndoDeleteOnServer>
+            <NC:canSearchMessages>false</NC:canSearchMessages>
             <NC:canFileMessagesOnServer>false</NC:canFileMessagesOnServer>
-            <NC:ServerType-imap>
-              <NC:nsIImapIncomingServer>
-                <NC:deleteModel>2</NC:deleteModel>
-              </NC:nsIImapIncomingServer>
-            </NC:ServerType-imap>
+            <NC:canEmptyTrashOnExit>false</NC:canEmptyTrashOnExit>
+            <NC:isSecureServer>false</NC:isSecureServer>
+            <NC:canSearchMessages>false</NC:canSearchMessages>
           </NC:nsIMsgIncomingServer>
         </NC:incomingServer>
 
         <!-- identity defaults -->
         <NC:identity>
           <NC:nsIMsgIdentity>
-            <NC:composeHtml>false</NC:composeHtml>
+            <NC:composeHtml>true</NC:composeHtml>
+            <NC:doFcc>false</NC:doFcc>
           </NC:nsIMsgIdentity>
         </NC:identity>
 
@@ -49,9 +68,15 @@
 
         <NC:wizardSkipPanels>true</NC:wizardSkipPanels>
         <NC:wizardShortName>AOL</NC:wizardShortName>
-        <NC:wizardLongName>America Online</NC:wizardLongName>
+        <NC:wizardLongName>&aol.wizardLongName;</NC:wizardLongName>
         <NC:wizardShow>true</NC:wizardShow>
         <NC:wizardPromote>true</NC:wizardPromote>
+        <NC:emailProviderName>AOL</NC:emailProviderName>
+        <NC:sampleEmail>screenname@aol.com</NC:sampleEmail>
+        <NC:sampleUserName>screenname</NC:sampleUserName>
+        <NC:emailIDDescription>&aol.emailIDDescription;</NC:emailIDDescription>
+        <NC:emailIDFieldTitle>&aol.emailIDFieldTitle;</NC:emailIDFieldTitle>
+        <NC:showServerDetailsOnWizardSummary>false</NC:showServerDetailsOnWizardSummary>
       </NC:nsIMsgAccount>
     </NC:providers>
   </RDF:Description>
