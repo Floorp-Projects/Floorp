@@ -35,6 +35,7 @@
 #include "nsIMimeHeaders.h"
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
+#include "nsIAbDirectory.h"
 
 // Forward declares
 class QuotingOutputStreamListener;
@@ -92,7 +93,9 @@ class nsMsgCompose : public nsIMsgCompose
 	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity);
 	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields* compFields);
 	void CleanUpRecipients(nsString& recipients);
-  nsresult GetABDirectories(nsString& filePath, nsStringArray* directoriesArray, PRBool searchSubDirectory);
+  nsresult GetABDirectories(char * dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory);
+  nsresult BuildMailListArray(nsIAddrDatabase* database, nsIAbDirectory* parentDir, nsISupportsArray* array);
+  nsresult GetMailListAddresses(nsString& name, nsISupportsArray* mailListArray, nsISupportsArray** addresses);
 
 	typedef enum {
     	eComposeFieldsReady,
@@ -229,5 +232,40 @@ public:
   nsMsgCompose    *mComposeObj;
 };
 
+/******************************************************************************
+ * nsMsgRecipient
+ ******************************************************************************/
+class nsMsgRecipient : public nsISupports
+{
+public:
+  nsMsgRecipient();
+  nsMsgRecipient(nsString& address, nsString& email, PRBool acceptHtml = PR_FALSE, PRBool processed = PR_FALSE);
+	virtual ~nsMsgRecipient();
+
+  NS_DECL_ISUPPORTS
+  
+public:
+  nsString mAddress;  /* full email address (name + email) */
+  nsString mEmail;    /* email address only */
+  PRBool mAcceptHtml;
+  PRBool mProcessed;
+};
+
+/******************************************************************************
+ * nsMsgMailList
+ ******************************************************************************/
+class nsMsgMailList : public nsISupports
+{
+public:
+  nsMsgMailList();
+  nsMsgMailList(nsString& name, nsString& description, nsIAbDirectory* directory);
+	virtual ~nsMsgMailList();
+
+  NS_DECL_ISUPPORTS
+  
+public:
+  nsString mFullName;  /* full email address (name + email) */
+  nsCOMPtr<nsIAbDirectory> mDirectory;
+};
 
 #endif /* _nsMsgCompose_H_ */

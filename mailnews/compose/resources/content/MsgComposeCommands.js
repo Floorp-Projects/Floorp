@@ -1101,7 +1101,12 @@ function AttachVCard()
 function DetermineHTMLAction()
 {
     if (! msgCompose.composeHTML)
+    {
+        try {
+            msgCompose.CheckAndPopulateRecipients(true, false);
+        } catch(ex) {}
         return msgCompSendFormat.PlainText;
+    }
 
     if (sendFormat == msgCompSendFormat.AskUser)
     {
@@ -1112,7 +1117,7 @@ function DetermineHTMLAction()
 
         //Check the address book for the HTML property for each recipient
         try {
-            noHtmlRecipients = msgCompose.GetNoHtmlRecipients(null);
+            noHtmlRecipients = msgCompose.CheckAndPopulateRecipients(true, true);
         } catch(ex)
         {
             var msgCompFields = msgCompose.compFields;
@@ -1154,6 +1159,12 @@ function DetermineHTMLAction()
         else
             return msgCompSendFormat.HTML;
     }
+	  else
+	  {
+		  try {
+			  msgCompose.CheckAndPopulateRecipients(true, false);
+		  } catch(ex) {}
+	  }
 
     return sendFormat;
 }

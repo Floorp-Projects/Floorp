@@ -136,11 +136,11 @@ interface nsIMsgCompose : nsISupports {
     */
     wstring AttachmentPrettyName(in wstring url);
     
-    /* GetNoHtmlRecipients: if null is passed as recipient, the function will automatically
-        looks for all the recipients (to, cc, bcc) stored in the compose fields
-    */
-    wstring GetNoHtmlRecipients(in wstring recipients);
-    
+	/*
+		...
+	*/
+	wstring CheckAndPopulateRecipients(in boolean populateMailList, in boolean returnNoHTMLRecipients);
+
     /* GetNoHtmlNewsgroups: if null is passed as recipient, the function will automatically
         looks for newsgroups stored in compose fields 
     */

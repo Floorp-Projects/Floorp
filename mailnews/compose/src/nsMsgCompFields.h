@@ -208,6 +208,7 @@ public:
 	nsresult AppendBody(char*);
 	
 	NS_IMETHOD SplitRecipients(const PRUnichar *recipients, PRBool emailAddressOnly, nsIMsgRecipientArray **_retval); 
+	NS_IMETHOD SplitRecipientsEx(const PRUnichar *recipients, nsIMsgRecipientArray ** fullAddrsArray, nsIMsgRecipientArray ** emailsArray); 
 	NS_IMETHOD ConvertBodyToPlainText(void); 
 
 

@@ -754,6 +754,110 @@ nsresult nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBool em
 	return rv;
 }
 
+nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgRecipientArray ** fullAddrsArray, nsIMsgRecipientArray ** emailsArray)
+{
+	nsresult rv = NS_OK;
+
+  nsMsgRecipientArray* pAddrsArray = nsnull;
+	if (fullAddrsArray)
+  {
+	  *fullAddrsArray = nsnull;
+	  pAddrsArray = new nsMsgRecipientArray;
+	  if (! pAddrsArray)
+		  return NS_ERROR_OUT_OF_MEMORY;
+	  rv = pAddrsArray->QueryInterface(NS_GET_IID(nsIMsgRecipientArray), (void **)fullAddrsArray);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+	
+  nsMsgRecipientArray* pEmailsArray = nsnull;
+	if (emailsArray)
+  {
+	  *emailsArray = nsnull;
+	  pEmailsArray = new nsMsgRecipientArray;
+	  if (! pEmailsArray)
+		  return NS_ERROR_OUT_OF_MEMORY;
+	  rv = pEmailsArray->QueryInterface(NS_GET_IID(nsIMsgRecipientArray), (void **)emailsArray);
+	  if (NS_FAILED(rv))
+      return rv;
+  }
+	
+	if (pAddrsArray || pEmailsArray)
+	{
+		nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);;
+		if (parser)
+		{
+			char * recipientsStr;
+			char * names;
+			char * addresses;
+			PRUint32 numAddresses;
+
+			if (NS_FAILED(ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), recipients, &recipientsStr)))
+			{
+			  nsCAutoString temp; temp.AssignWithConversion(recipients);
+				recipientsStr = PL_strdup(temp);
+			}
+			
+			if (! recipientsStr)
+				return NS_ERROR_OUT_OF_MEMORY;
+
+			rv= parser->ParseHeaderAddresses(msgCompHeaderInternalCharset(), recipientsStr, &names, &addresses, &numAddresses);
+			if (NS_SUCCEEDED(rv))
+			{
+				PRUint32 i=0;
+				char * pNames = names;
+				char * pAddresses = addresses;
+				char * fullAddress;
+				nsString aRecipient;
+				PRBool aBool;
+				
+        for (i = 0; i < numAddresses; i ++)
+				{
+          if (pAddrsArray)
+          {
+            rv = parser->MakeFullAddress(msgCompHeaderInternalCharset(), pNames, pAddresses, &fullAddress);
+            if (NS_SUCCEEDED(rv))
+					  {
+						  rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), fullAddress, aRecipient);
+						  PR_FREEIF(fullAddress);
+            }
+					  else
+						  rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), pAddresses, aRecipient);
+            if (NS_FAILED(rv))
+              return rv;
+              
+					  rv = pAddrsArray->AppendString(aRecipient.GetUnicode(), &aBool);
+					  if (NS_FAILED(rv))
+						  return rv;
+					}
+
+          if (pEmailsArray)
+          {
+            rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), pAddresses, aRecipient);
+            if (NS_FAILED(rv))
+              return rv;
+					  rv = pEmailsArray->AppendString(aRecipient.GetUnicode(), &aBool);
+					  if (NS_FAILED(rv))
+						  return rv;
+          }
+
+					pNames += PL_strlen(pNames) + 1;
+					pAddresses += PL_strlen(pAddresses) + 1;
+        }
+			
+				PR_FREEIF(names);
+				PR_FREEIF(addresses);
+			}
+			
+			PR_Free(recipientsStr);
+		}
+		else
+			rv = NS_ERROR_FAILURE;
+  }
+		
+	return rv;
+}
+
 nsresult nsMsgCompFields::ConvertBodyToPlainText()
 {
 	nsresult rv = NS_OK;

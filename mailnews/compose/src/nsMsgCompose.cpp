@@ -64,6 +64,7 @@
 #include "nsIMIMEService.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsISupportsArray.h"
 #include "nsIIOService.h"
 
 // Defines....
@@ -1567,7 +1568,6 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
 //CleanUpRecipient will remove un-necesary "<>" when a recipient as an address without name
 void nsMsgCompose::CleanUpRecipients(nsString& recipients)
 {
-//	TODO...
 	PRUint16 i;
 	PRBool startANewRecipient = PR_TRUE;
 	PRBool removeBracket = PR_FALSE;
@@ -2259,16 +2259,18 @@ static nsresult OpenAddressBook(const char * dbUri, nsIAddrDatabase** aDatabase,
 }
 
 
-nsresult nsMsgCompose::GetABDirectories(nsString& filePath, nsStringArray* directoriesArray, PRBool searchSubDirectory)
+nsresult nsMsgCompose::GetABDirectories(char * dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory)
 {
+  static PRBool collectedAddressbookFound;
+  if (nsCRT::strcmp(dirUri, kDirectoryRoot) == 0)
+    collectedAddressbookFound = PR_FALSE;
+
   nsresult rv = NS_OK;
   NS_WITH_SERVICE(nsIRDFService, rdfService, kRDFServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr <nsIRDFResource> resource;
-  char * strFileName = filePath.ToNewCString();
-  rv = rdfService->GetResource(strFileName, getter_AddRefs(resource));
-  Recycle(strFileName);
+  rv = rdfService->GetResource(dirUri, getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
 
   // query interface 
@@ -2291,28 +2293,90 @@ nsresult nsMsgCompose::GetABDirectories(nsString& filePath, nsStringArray* direc
           directory = do_QueryInterface(item, &rv);
           if (NS_SUCCEEDED(rv))
           {
-            DIR_Server *server = nsnull;
-            if (NS_SUCCEEDED(directory->GetServer(&server)) && server)
-            {
-              nsAutoString subFileName(filePath);
-              if (subFileName.Last() != '/')
-                  subFileName.AppendWithConversion("/");
-              subFileName.AppendWithConversion(server->fileName);
+            PRBool bIsMailList;
 
-              PRInt32 pos;
-              if (subFileName.CompareWithConversion(kPersonalAddressbookUri) == 0)
-                 pos = 0;
+            if (NS_SUCCEEDED(directory->GetIsMailList(&bIsMailList)) && bIsMailList)
+              continue;
+
+            char* uri;
+            rv = directory->GetDirUri(&uri);
+            if (NS_FAILED(rv))
+              return rv;
+
+            PRInt32 pos;
+            if (nsCRT::strcmp(uri, kPersonalAddressbookUri) == 0)
+              pos = 0;
+            else
+            {
+              PRUint32 count = 0;
+              directoriesArray->Count(&count);
+
+              if (PL_strcmp(uri, kCollectedAddressbookUri) == 0)
+              {
+                collectedAddressbookFound = PR_TRUE;
+                pos = count;
+              }
               else
-                if (subFileName.CompareWithConversion(kCollectedAddressbookUri) == 0)
-                  pos = directoriesArray->Count();
+              {
+                if (collectedAddressbookFound && count > 1)
+                  pos = count - 1;
                 else
-                {
-                  pos = directoriesArray->Count() - 1;
-                  if (pos < 0)
-                      pos = 0;
-                }
-              directoriesArray->InsertStringAt(subFileName, pos);
-              rv = GetABDirectories(subFileName, directoriesArray, PR_TRUE);
+                  pos = count;
+              }
+            }
+
+            directoriesArray->InsertElementAt(directory, pos);
+            rv = GetABDirectories(uri, directoriesArray, PR_TRUE);
+
+            PR_Free(uri);
+          }
+        }
+      } while (NS_SUCCEEDED(subDirectories->Next()));
+    }
+  }
+  return rv;
+}
+
+nsresult nsMsgCompose::BuildMailListArray(nsIAddrDatabase* database, nsIAbDirectory* parentDir, nsISupportsArray* array)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIAbDirectory> directory;
+  nsCOMPtr<nsIEnumerator> subDirectories;
+
+ 	if (NS_SUCCEEDED(parentDir->GetChildNodes(getter_AddRefs(subDirectories))) && subDirectories)
+	{
+		nsCOMPtr<nsISupports> item;
+		if (NS_SUCCEEDED(subDirectories->First()))
+		{
+		  do
+		  {
+        if (NS_SUCCEEDED(subDirectories->CurrentItem(getter_AddRefs(item))))
+        {
+          directory = do_QueryInterface(item, &rv);
+          if (NS_SUCCEEDED(rv))
+          {
+            PRBool bIsMailList;
+
+            if (NS_SUCCEEDED(directory->GetIsMailList(&bIsMailList)) && bIsMailList)
+            {
+              nsXPIDLString listName;
+              nsXPIDLString description;
+
+              directory->GetListName(getter_Copies(listName));
+              directory->GetDescription(getter_Copies(description));
+
+              nsMsgMailList* mailList = new nsMsgMailList(nsAutoString((const PRUnichar*)listName),
+                    nsAutoString((const PRUnichar*)description), directory);
+              if (!mailList)
+                return NS_ERROR_OUT_OF_MEMORY;
+              NS_ADDREF(mailList);
+
+              rv = array->AppendElement(mailList);
+              if (NS_FAILED(rv))
+                return rv;
+
+              NS_RELEASE(mailList);
             }
           }
         }
@@ -2323,121 +2387,337 @@ nsresult nsMsgCompose::GetABDirectories(nsString& filePath, nsStringArray* direc
 }
 
 
-nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnichar **_retval)
+nsresult nsMsgCompose::GetMailListAddresses(nsString& name, nsISupportsArray* mailListArray, nsISupportsArray** addressesArray)
 {
-    nsresult rv = NS_OK;
-    *_retval = nsnull;
-    PRInt32 j;
-    PRInt32 i;
-    PRInt32 nbrRecipients;
-    nsXPIDLString emailAddr;
-    
-    nsAutoString recipientStr;
-    if (recipients != nsnull)
-        recipientStr = recipients;
-    else
-    {
-        recipientStr.AppendWithConversion(m_compFields->GetTo());
-        recipientStr.AppendWithConversion(',');
-        recipientStr.AppendWithConversion(m_compFields->GetCc());
-        recipientStr.AppendWithConversion(',');
-        recipientStr.AppendWithConversion(m_compFields->GetBcc());
-    }
-    
-    /*ducarroz: for now, I've hardcoded the addressbook DBs we are looking in it, will do much better later! */
+  nsresult rv;
+  nsCOMPtr<nsIEnumerator> enumerator;
 
-    nsCOMPtr<nsIMsgRecipientArray> array;
-    nsCOMPtr<nsIMsgRecipientArray> noHTMLArray;
-    rv = nsComponentManager::CreateInstance(kMsgRecipientArrayCID, 
-                                          NULL, NS_GET_IID(nsIMsgRecipientArray), 
-                                          (void **) getter_AddRefs(noHTMLArray));
-    if (NS_FAILED(rv))
+  rv = mailListArray->Enumerate(getter_AddRefs(enumerator));
+  if (NS_SUCCEEDED(rv))
+  {
+    for (rv = enumerator->First(); NS_SUCCEEDED(rv); rv = enumerator->Next())
+    {
+      nsMsgMailList* mailList;
+      rv = enumerator->CurrentItem((nsISupports**)&mailList);
+      if (NS_SUCCEEDED(rv) && mailList)
+      {
+        if (name.EqualsIgnoreCase(mailList->mFullName))
+        {
+          if (!mailList->mDirectory)
+            return NS_ERROR_FAILURE;
+
+          mailList->mDirectory->GetAddressLists(addressesArray);
+          NS_RELEASE(mailList);
+          return NS_OK;
+        }
+        NS_RELEASE(mailList);
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+
+nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBool returnNoHTMLRecipients, PRUnichar **_retval)
+{
+	#define MAX_OF_RECIPIENT_ARRAY		3
+
+  if (!populateMailList && (!returnNoHTMLRecipients || !_retval))
+    return NS_ERROR_INVALID_ARG;
+
+  nsresult rv = NS_OK;
+  if (_retval)
+    *_retval = nsnull;
+  PRInt32 i;
+  PRInt32 j;
+  PRInt32 k;
+
+  /* First, build an array with original recipients */
+  nsCOMPtr<nsISupportsArray> recipientsList[MAX_OF_RECIPIENT_ARRAY];
+
+	PRUnichar* originalRecipients[MAX_OF_RECIPIENT_ARRAY];
+	m_compFields->GetTo(&originalRecipients[0]);
+	m_compFields->GetCc(&originalRecipients[1]);
+	m_compFields->GetBcc(&originalRecipients[2]);
+
+  nsCOMPtr<nsIMsgRecipientArray> addressArray;
+  nsCOMPtr<nsIMsgRecipientArray> emailArray;
+	for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
+	{
+		rv = m_compFields->SplitRecipientsEx(originalRecipients[i], getter_AddRefs(addressArray), getter_AddRefs(emailArray));
+		if (NS_SUCCEEDED(rv))
+		{
+      PRInt32 nbrRecipients;
+      nsXPIDLString emailAddr;
+      nsXPIDLString addr;
+			addressArray->GetCount(&nbrRecipients);
+
+      rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_PROGID, nsnull, 
+                  NS_GET_IID(nsISupportsArray), getter_AddRefs(recipientsList[i]));
+      if (NS_FAILED(rv))
         return rv;
 
-    rv = m_compFields->SplitRecipients(recipientStr.GetUnicode(), PR_TRUE, getter_AddRefs(array));
-    if (NS_SUCCEEDED(rv))
-    {
-    	nsCOMPtr<nsIAddrDatabase> abDataBase;
-        nsCOMPtr<nsIAbDirectory> abDirectory;   
-    	nsCOMPtr <nsIAbCard> existingCard;
-
-      nsStringArray* addrbookDirArray = (nsStringArray*) new nsStringArray;
-      if (addrbookDirArray)
+      for (j = 0; j < nbrRecipients; j ++)
       {
-        nsString dirPath;
-        nsAutoString root; root.AssignWithConversion(kDirectoryRoot);
-        GetABDirectories(root, addrbookDirArray, TRUE);
+        rv = addressArray->StringAt(j, getter_Copies(addr));
+        if (NS_FAILED(rv))
+          return rv;
 
-       for (j = 0; j < addrbookDirArray->Count(); j++)
+        rv = emailArray->StringAt(j, getter_Copies(emailAddr));
+        if (NS_FAILED(rv))
+          return rv;
+
+        nsMsgRecipient* recipient = new nsMsgRecipient(nsAutoString(addr), nsAutoString(emailAddr));
+        if (!recipient)
+           return  NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(recipient);
+
+        rv = recipientsList[i]->AppendElement(recipient);
+        NS_RELEASE(recipient);
+        if (NS_FAILED(rv))
+          return rv;
+       }
+		}
+    else
+      return rv;
+	}
+
+  /* Then look them up in the Addressbooks*/
+
+  PRBool stillNeedToSearch = PR_TRUE;
+  nsCOMPtr<nsIAddrDatabase> abDataBase;
+  nsCOMPtr<nsIAbDirectory> abDirectory;   
+  nsCOMPtr <nsIAbCard> existingCard;
+  nsCOMPtr <nsISupportsArray> mailListAddresses;
+  nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
+  nsCOMPtr<nsISupportsArray> mailListArray;
+  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_PROGID, nsnull, 
+              NS_GET_IID(nsISupportsArray), getter_AddRefs(mailListArray));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsISupportsArray> addrbookDirArray;
+  rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_PROGID, nsnull, 
+                NS_GET_IID(nsISupportsArray), getter_AddRefs(addrbookDirArray));
+  if (NS_SUCCEEDED(rv) && addrbookDirArray)
+  {
+    nsString dirPath;
+    GetABDirectories(kDirectoryRoot, addrbookDirArray, PR_TRUE);
+    PRUint32 nbrRecipients;
+
+    PRUint32 nbrAddressbook;
+    addrbookDirArray->Count(&nbrAddressbook);
+    for (k = 0; k < (PRInt32)nbrAddressbook && stillNeedToSearch; k ++)
+    {
+      nsCOMPtr<nsISupports> item;
+      addrbookDirArray->GetElementAt(k, getter_AddRefs(item));
+      abDirectory = do_QueryInterface(item, &rv);
+      if (NS_FAILED(rv))
+        return rv;
+
+      char* uri;
+      rv = abDirectory->GetDirUri(&uri);
+      if (NS_FAILED(rv))
+        return rv;
+
+      rv = OpenAddressBook(uri, getter_AddRefs(abDataBase), getter_AddRefs(abDirectory));
+      if (NS_FAILED(rv) || !abDataBase || !abDirectory)
+        continue;
+
+      /* Collect all mailing list defined in this AddresBook */
+      rv = BuildMailListArray(abDataBase, abDirectory, mailListArray);
+      if (NS_FAILED(rv))
+        return rv;
+
+      stillNeedToSearch = PR_FALSE;
+      for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
+      {
+        recipientsList[i]->Count(&nbrRecipients);
+        for (j = 0; j < (PRInt32)nbrRecipients; j ++, recipientsList[i]->Count(&nbrRecipients))
         {
-            array->GetCount(&nbrRecipients);
-            if (nbrRecipients == 0)
-                break;
-
-            addrbookDirArray->StringAt(j, dirPath);
-            char * dirPathC = dirPath.ToNewCString();
-            rv = OpenAddressBook(dirPathC, getter_AddRefs(abDataBase), getter_AddRefs(abDirectory));
-            Recycle(dirPathC);
-            if (NS_FAILED(rv) || !abDataBase || !abDirectory)
-                continue;
-            
-            for (i = 0; i < nbrRecipients; i ++)
+          nsMsgRecipient* recipient = NS_STATIC_CAST(nsMsgRecipient*, recipientsList[i]->ElementAt(j));
+          if (recipient && !recipient->mProcessed)
+          {
+            /* First check if it's a mailing list */
+            if (NS_SUCCEEDED(GetMailListAddresses(recipient->mAddress, mailListArray, getter_AddRefs(mailListAddresses))))
             {
-                rv = array->StringAt(i, getter_Copies(emailAddr));
-                if (NS_FAILED(rv))
-                    continue;
-                nsCAutoString emailStr; emailStr.AssignWithConversion(emailAddr);
+              if (populateMailList)
+              {
+                  PRUint32 nbrAddresses = 0;
+                  for (mailListAddresses->Count(&nbrAddresses); nbrAddresses > 0; nbrAddresses --)
+                  {
+			              item = mailListAddresses->ElementAt(nbrAddresses - 1);
+			              existingCard = do_QueryInterface(item, &rv);
+			              if (NS_FAILED(rv))
+				              return rv;
 
-    			      rv = abDataBase->GetCardForEmailAddress(abDirectory, emailStr, getter_AddRefs(existingCard));
-    			      if (NS_SUCCEEDED(rv) && existingCard)
-    			      {
-    			        PRBool bPlainText;
-    			        rv = existingCard->GetSendPlainText(&bPlainText);
-    			        if (NS_SUCCEEDED(rv))
-    			        {
-                        PRBool aBool;
-    			          if (bPlainText)
-    			          {
-    			            //this guy doesn't want/support HTML message, move it in the noHTML array.
-    			            noHTMLArray->AppendString(emailAddr, &aBool);
-    			          }
-    			          array->RemoveStringAt(i, &aBool);
-            			  if (aBool)
-            			  {
-            			    nbrRecipients --;
-            			    i --;
-            			  }
-    			        }
-    			      }
+			              nsXPIDLString pDisplayName;
+			              nsXPIDLString pEmail;
+                    nsAutoString fullNameStr;
+
+                    PRBool bIsMailList;
+			              rv = existingCard->GetIsMailList(&bIsMailList);
+			              if (NS_FAILED(rv))
+				              return rv;
+
+			              rv = existingCard->GetDisplayName(getter_Copies(pDisplayName));
+			              if (NS_FAILED(rv))
+				              return rv;
+
+                    if (bIsMailList)
+                      rv = existingCard->GetNotes(getter_Copies(pEmail));
+                    else
+                      rv = existingCard->GetPrimaryEmail(getter_Copies(pEmail));
+			              if (NS_FAILED(rv))
+				              return rv;
+
+                    if (parser)
+                    {
+                      char * fullAddress = nsnull;
+                      char * utf8Name = nsAutoString((const PRUnichar*)pDisplayName).ToNewUTF8String();
+                      char * utf8Email = nsAutoString((const PRUnichar*)pEmail).ToNewUTF8String();
+
+                      parser->MakeFullAddress(nsnull, utf8Name, utf8Email, &fullAddress);
+                      if (fullAddress && *fullAddress)
+                      {
+                        /* We need to convert back the result from UTF-8 to Unicode */
+		                    (void)ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), fullAddress, fullNameStr);
+                        PR_Free(fullAddress);
+                      }
+                      Recycle(utf8Name);
+                      Recycle(utf8Email);
+                    }
+                    if (fullNameStr.IsEmpty())
+                    {
+                      //oops, parser problem! I will try to do my best...
+                      fullNameStr = pDisplayName;
+                      fullNameStr.AppendWithConversion(" <");
+                      if (bIsMailList)
+                      {
+                        if (pEmail && pEmail[0] != 0)
+                          fullNameStr += pEmail;
+                        else
+                          fullNameStr += pDisplayName;
+                      }
+                      else
+                        fullNameStr += pEmail;
+                      fullNameStr.AppendWithConversion(">");
+                    }
+
+                    if (fullNameStr.IsEmpty())
+                      continue;
+
+                    /* Now we need to insert the new address into the list of recipient */
+                    nsMsgRecipient* newRecipient = new nsMsgRecipient(fullNameStr, nsAutoString(pEmail));
+                    if (!recipient)
+                       return  NS_ERROR_OUT_OF_MEMORY;
+                    NS_ADDREF(newRecipient);
+
+                    if (bIsMailList)
+                    {
+                      //TODO: we must to something to avoid recursivity
+                      stillNeedToSearch = PR_TRUE;
+                    }
+                    else
+                    {
+    			            PRBool bPlainText;
+    			            rv = existingCard->GetSendPlainText(&bPlainText);
+    			            if (NS_SUCCEEDED(rv))
+    			            {
+                        newRecipient->mAcceptHtml = ! bPlainText;
+                        newRecipient->mProcessed = PR_TRUE;
+                      }
+                    }
+                    rv = recipientsList[i]->InsertElementAt(newRecipient, j + 1);
+                    NS_RELEASE(newRecipient);
+                    if (NS_FAILED(rv))
+                      return rv;
+                  }
+                  rv = recipientsList[i]->RemoveElementAt(j);
+                 j --;
+              }
+              else
+                recipient->mProcessed = PR_TRUE;
+
+              NS_RELEASE(recipient);
+              continue;
             }
-            if (abDataBase)
-                abDataBase->Close(PR_FALSE);            
+
+            /* Then if we have a card for this email address */
+            nsCAutoString emailStr; emailStr.AssignWithConversion(recipient->mEmail);
+   			    rv = abDataBase->GetCardForEmailAddress(abDirectory, emailStr, getter_AddRefs(existingCard));
+    			  if (NS_SUCCEEDED(rv) && existingCard)
+            {
+    			    PRBool bPlainText;
+    			    rv = existingCard->GetSendPlainText(&bPlainText);
+    			    if (NS_SUCCEEDED(rv))
+    			    {
+                recipient->mAcceptHtml = ! bPlainText;
+                recipient->mProcessed = PR_TRUE;
+              }
+            }
+            else
+              stillNeedToSearch = PR_TRUE;
+            NS_RELEASE(recipient);
+          }
         }
-        delete addrbookDirArray;
-     }
+      }
+
+      if (abDataBase)
+        abDataBase->Close(PR_FALSE);
     }
-    //now, build the result
-    recipientStr.SetLength(0);
-    noHTMLArray->GetCount(&nbrRecipients);
-    for (i = 0; i < nbrRecipients; i ++)
+  }
+
+  /* Finally return the list of non HTML recipient if requested and/or rebuilt the recipient field*/
+    nsAutoString recipientsStr;
+    nsAutoString nonHtmlRecipientsStr;
+
+    for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
     {
-        if (! recipientStr.IsEmpty())
-            recipientStr.AppendWithConversion(',');
-        noHTMLArray->StringAt(i, getter_Copies(emailAddr));
-        recipientStr.Append(emailAddr);
-    }
-    //Remaining recipients which do not have an entry in the AB are considered as non HTML compliant
-    array->GetCount(&nbrRecipients);
-    for (i = 0; i < nbrRecipients; i ++)
-    {
-        if (! recipientStr.IsEmpty())
-            recipientStr.AppendWithConversion(',');
-        array->StringAt(i, getter_Copies(emailAddr));
-        recipientStr.Append(emailAddr);
-    }
-    *_retval = recipientStr.ToNewUnicode();
-    
-    return NS_OK;
+      recipientsStr.SetLength(0);
+      PRUint32 nbrRecipients;
+      recipientsList[i]->Count(&nbrRecipients);
+      for (j = 0; j < (PRInt32)nbrRecipients; j ++)
+      {
+        nsMsgRecipient* recipient = NS_STATIC_CAST(nsMsgRecipient*, recipientsList[i]->ElementAt(j));
+        if (recipient)
+        {
+          if (populateMailList)
+          {
+            if (! recipientsStr.IsEmpty())
+              recipientsStr.AppendWithConversion(',');
+            recipientsStr.Append(recipient->mAddress);
+          }
+
+          if (returnNoHTMLRecipients && !recipient->mAcceptHtml)
+          {
+            if (! nonHtmlRecipientsStr.IsEmpty())
+              nonHtmlRecipientsStr.AppendWithConversion(',');
+            nonHtmlRecipientsStr.Append(recipient->mEmail);
+          }
+
+          NS_RELEASE(recipient);
+        }
+      }
+
+      if (populateMailList)
+      {
+        PRUnichar * str = recipientsStr.ToNewUnicode();
+        switch (i)
+        {
+          case 0 : m_compFields->SetTo(str);  break;
+          case 1 : m_compFields->SetCc(str);  break;
+          case 2 : m_compFields->SetBcc(str); break;
+        }
+        Recycle(str);
+      }
+  }
+
+  if (returnNoHTMLRecipients)
+    *_retval = nonHtmlRecipientsStr.ToNewUnicode();
+
+	return rv;
 }
 
 nsresult nsMsgCompose::GetNoHtmlNewsgroups(const PRUnichar *newsgroups, PRUnichar **_retval)
@@ -2645,3 +2925,90 @@ nsresult nsMsgCompose::ResetNodeEventHandlers(nsIDOMNode *node)
     return rv;
 }
 
+NS_IMPL_ADDREF(nsMsgRecipient)
+NS_IMPL_RELEASE(nsMsgRecipient)
+
+NS_INTERFACE_MAP_BEGIN(nsMsgRecipient)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISupports)
+NS_INTERFACE_MAP_END
+
+nsMsgRecipient::nsMsgRecipient() :
+  mAcceptHtml(PR_FALSE),
+  mProcessed(PR_FALSE)
+{
+    NS_INIT_ISUPPORTS();
+}
+ 
+nsMsgRecipient::nsMsgRecipient(nsString& address, nsString& email, PRBool acceptHtml, PRBool processed) :
+  mAddress(address),
+  mEmail(email),
+  mAcceptHtml(acceptHtml),
+  mProcessed(processed)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsMsgRecipient::~nsMsgRecipient()
+{
+}
+
+
+NS_IMPL_ADDREF(nsMsgMailList)
+NS_IMPL_RELEASE(nsMsgMailList)
+
+NS_INTERFACE_MAP_BEGIN(nsMsgMailList)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISupports)
+NS_INTERFACE_MAP_END
+
+
+nsMsgMailList::nsMsgMailList()
+{
+    NS_INIT_ISUPPORTS();
+}
+ 
+nsMsgMailList::nsMsgMailList(nsString& name, nsString& description, nsIAbDirectory* directory) :
+  mDirectory(directory)
+{
+  NS_INIT_ISUPPORTS();
+ 
+  nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(kHeaderParserCID);
+
+  if (parser)
+  {
+    char * fullAddress = nsnull;
+    char * utf8Name = name.ToNewUTF8String();
+    char * utf8Email;
+    if (description.IsEmpty())
+      utf8Email = name.ToNewUTF8String();   
+    else
+      utf8Email = description.ToNewUTF8String();   
+
+    parser->MakeFullAddress(nsnull, utf8Name, utf8Email, &fullAddress);
+    if (fullAddress && *fullAddress)
+    {
+      /* We need to convert back the result from UTF-8 to Unicode */
+		  (void)ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), fullAddress, mFullName);
+      PR_Free(fullAddress);
+    }
+    Recycle(utf8Name);
+    Recycle(utf8Email);
+  }
+
+  if (mFullName.IsEmpty())
+  {
+      //oops, parser problem! I will try to do my best...
+      mFullName = name;
+      mFullName.AppendWithConversion(" <");
+      if (description.IsEmpty())
+        mFullName += name;
+      else
+        mFullName += description;
+      mFullName.AppendWithConversion(">");
+  }
+
+  mDirectory = directory;
+}
+
+nsMsgMailList::~nsMsgMailList()
+{
+}
