@@ -4741,10 +4741,16 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
      *  frameset pages is to add new methods to nsIDocShellTreeItem.
      * Hopefully I don't have to do that. 
      */
-    if (NS_SUCCEEDED(aURI->Equals(mCurrentURI, &equalUri))
-       && equalUri && !inputStream &&
-       (mLoadType == LOAD_NORMAL || mLoadType == LOAD_LINK || mLoadType == LOAD_REFRESH))
+    if ((mLoadType == LOAD_NORMAL ||
+         mLoadType == LOAD_LINK ||
+         mLoadType == LOAD_REFRESH) &&
+        !inputStream && 
+        mCurrentURI &&
+        NS_SUCCEEDED(aURI->Equals(mCurrentURI, &equalUri)) &&
+        equalUri)
+    {
         mLoadType = LOAD_NORMAL_REPLACE;
+    }
 
     /* If the user pressed shift-reload, cache will create a new cache key
      * for the page. Save the new cacheKey in Session History. 
