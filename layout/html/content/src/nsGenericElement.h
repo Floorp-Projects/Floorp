@@ -96,7 +96,7 @@ private:
 
 // Another helper class that implements the nsIDOMNamedNodeMap interface.
 class nsDOMAttributeMap : public nsIDOMNamedNodeMap,
-			  public nsIScriptObjectOwner
+                          public nsIScriptObjectOwner
 {
 public:
   nsDOMAttributeMap(nsIContent* aContent);

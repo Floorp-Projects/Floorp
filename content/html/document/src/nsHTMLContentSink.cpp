@@ -247,6 +247,7 @@ public:
   nsresult GrowStack();
   nsresult AddText(const nsString& aText);
   nsresult FlushText(PRBool* aDidFlush = nsnull);
+  nsresult FlushTags();
 
   void MaybeMarkSinkDirty();
 
@@ -1145,6 +1146,29 @@ SinkContext::AddText(const nsString& aText)
     mTextLength += amount;
     offset += amount;
     addLen -= amount;
+  }
+
+  return NS_OK;
+}
+
+/**
+ * Flush all elements that have been seen so far such that
+ * they are visible in the tree. Specifically, make sure
+ * that they are all added to their respective parents.
+ */
+nsresult
+SinkContext::FlushTags()
+{
+  FlushText();
+  
+  PRInt32 stackPos = mStackPos-1;
+  while ((stackPos > 0) && (0 == (mStack[stackPos].mFlags & APPENDED))) {
+    nsIHTMLContent* content = mStack[stackPos].mContent;
+    nsIHTMLContent* parent = mStack[stackPos-1].mContent;
+    
+    parent->AppendChildTo(content, PR_FALSE);
+    mStack[stackPos].mFlags |= APPENDED;
+    stackPos--;
   }
 
   return NS_OK;
@@ -2280,7 +2304,9 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       // Otherwise, get the text content of the script tag
       script = aNode.GetSkippedContent();
     }
-  
+
+    mCurrentContext->FlushTags();
+
     if (script != "") {
       nsIScriptContextOwner *owner;
       nsIScriptContext *context;

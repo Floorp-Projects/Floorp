@@ -29,6 +29,7 @@ DEFINES += -D_IMPL_NS_LAYOUT
 CPPSRCS =				\
 	nsContentList.cpp		\
 	nsDocument.cpp			\
+	nsDocumentFragment.cpp		\
 	nsFrameImageLoader.cpp		\
 	nsGalleyContext.cpp		\
 	nsPresContext.cpp		\
@@ -53,7 +54,7 @@ EXPORTS = \
 	nsXIFConverter.h \
 	$(NULL)
 
-INCLUDES +=  -I../../html/base/src
+INCLUDES +=  -I../../html/base/src -I../../html/content/src
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
