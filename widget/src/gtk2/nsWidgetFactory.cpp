@@ -119,6 +119,8 @@ static const nsModuleComponentInfo components[] =
 PR_STATIC_CALLBACK(void)
 nsWidgetGtk2ModuleDtor(nsIModule *aSelf)
 {
+  nsWindow::ReleaseGlobals();
+  nsAppShell::ReleaseGlobals();
 }
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsWidgetGtk2Module,

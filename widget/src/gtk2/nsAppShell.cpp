@@ -96,6 +96,19 @@ nsAppShell::~nsAppShell(void)
 {
 }
 
+/* static */ void
+nsAppShell::ReleaseGlobals()
+{
+  if (sQueueHashTable) {
+    PL_HashTableDestroy(sQueueHashTable);
+    sQueueHashTable = nsnull;
+  }
+  if (sCountHashTable) {
+    PL_HashTableDestroy(sCountHashTable);
+    sCountHashTable = nsnull;
+  }
+}
+
 NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 
 NS_IMETHODIMP

@@ -218,6 +218,8 @@ static GtkIMContext *IM_get_input_context(MozDrawingarea *aArea);
 // cursor cache
 GdkCursor *gCursorCache[eCursorCount];
 
+#define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
+
 nsWindow::nsWindow()
 {
     mContainer           = nsnull;
@@ -271,6 +273,17 @@ nsWindow::~nsWindow()
         mLastDragMotionWindow = NULL;
     }
     Destroy();
+}
+
+/* static */ void
+nsWindow::ReleaseGlobals()
+{
+  for (PRUint32 i = 0; i < ARRAY_LENGTH(gCursorCache); ++i) {
+    if (gCursorCache[i]) {
+      gdk_cursor_unref(gCursorCache[i]);
+      gCursorCache[i] = nsnull;
+    }
+  }
 }
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsWindow, nsCommonWidget,
