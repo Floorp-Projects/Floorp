@@ -523,7 +523,7 @@ void nsHTMLContentSinkStream::EnsureBufferSize(PRInt32 aNewSize)
 void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
 {
   
-  NS_ASSERTION(mUnicodeEncoder != nsnull,"The unicode encoder needs to be initialized");
+  NS_VERIFY(mUnicodeEncoder != nsnull,"The unicode encoder needs to be initialized");
   if (mUnicodeEncoder == nsnull)
     return;
 
