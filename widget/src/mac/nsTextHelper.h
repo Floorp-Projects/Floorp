@@ -18,6 +18,8 @@
 #ifndef nsTextHelper_h__
 #define nsTextHelper_h__
 
+#error "This file is obsolete: nsTextAreaWidget is WASTE-based / nsTextWidget is a control"
+
 #include "nsITextWidget.h"
 #include "nsWindow.h"
 #include "WASTE.h"
