@@ -828,6 +828,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   if (nsnull != root) {
+    RAPTOR_STOPWATCH_DEBUGTRACE(("Reset and start: Frame Creation: PresShell::InitialReflow(), this=%p\n", this));
     NS_RESET_AND_START_STOPWATCH(mFrameCreationWatch)
     if (nsnull == mRootFrame) {
       // Have style sheet processor construct a frame for the
@@ -840,10 +841,12 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     mStyleSet->ContentInserted(mPresContext, nsnull, root, 0);
     NS_RELEASE(root);
     VERIFY_STYLE_TREE;
+    RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Frame Creation: PresShell::InitialReflow(), this=%p\n", this));
     NS_STOP_STOPWATCH(mFrameCreationWatch)
   }
 
   if (nsnull != mRootFrame) {
+    RAPTOR_STOPWATCH_DEBUGTRACE(("Reset and start: Reflow: PresShell::InitialReflow(), this=%p\n", this));
     NS_RESET_AND_START_STOPWATCH(mReflowWatch)
     // Kick off a top-down reflow
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
@@ -883,6 +886,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     }
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::InitialReflow"));
+    RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Reflow: PresShell::InitialReflow(), this=%p\n", this));
     NS_STOP_STOPWATCH(mReflowWatch)
   }
 
@@ -1158,6 +1162,7 @@ PresShell::BeginLoad(nsIDocument *aDocument)
   nsresult rv = NS_OK;
   nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(mStyleSet, &rv);
   if (NS_SUCCEEDED(rv) && watch) {
+    RAPTOR_STOPWATCH_DEBUGTRACE(("Reset: Style Resolution: PresShell::BeginLoad(), this=%p\n", this));
     watch->ResetTimer(NS_TIMER_STYLE_RESOLUTION);
   }
 #endif
@@ -1169,12 +1174,15 @@ PresShell::EndLoad(nsIDocument *aDocument)
 {
 #ifdef RAPTOR_PERF_METRICS
   // Dump reflow, style resolution and frame construction times here.
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Reflow: PresShell::EndLoad(), this=%p\n", this));
   NS_STOP_STOPWATCH(mReflowWatch)
-  RAPTOR_STOPWATCH_TRACE(("Reflow time: "));
+  RAPTOR_STOPWATCH_TRACE(("Reflow time (this=%p): ", this));
   mReflowWatch.Print();
   RAPTOR_STOPWATCH_TRACE(("\n"));
+
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Frame Creation: PresShell::EndLoad(), this=%p\n", this));
   NS_STOP_STOPWATCH(mFrameCreationWatch)
-  RAPTOR_STOPWATCH_TRACE(("Frame construction plus style resolution time: "));
+  RAPTOR_STOPWATCH_TRACE(("Frame construction plus style resolution time (this=%p): ", this));
   mFrameCreationWatch.Print();
   RAPTOR_STOPWATCH_TRACE(("\n"));
 
@@ -1182,8 +1190,9 @@ PresShell::EndLoad(nsIDocument *aDocument)
   nsresult rv = NS_OK;
   nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(mStyleSet, &rv);
   if (NS_SUCCEEDED(rv) && watch) {
+    RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Style Resolution: PresShell::EndLoad(), this=%p\n", this));
     watch->StopTimer(NS_TIMER_STYLE_RESOLUTION);
-    RAPTOR_STOPWATCH_TRACE(("Style resolution time: "));
+    RAPTOR_STOPWATCH_TRACE(("Style resolution time (this=%p): ", this));
     watch->PrintTimer(NS_TIMER_STYLE_RESOLUTION);
     RAPTOR_STOPWATCH_TRACE(("\n"));
   }
@@ -1253,6 +1262,7 @@ PresShell::CancelReflowCommand(nsIFrame* aTargetFrame)
 NS_IMETHODIMP
 PresShell::ProcessReflowCommands()
 {
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
   NS_START_STOPWATCH(mReflowWatch)
   if (0 != mReflowCommands.Count()) {
     nsHTMLReflowMetrics   desiredSize(nsnull);
@@ -1316,6 +1326,7 @@ PresShell::ProcessReflowCommands()
 #endif
   }
 
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
   NS_STOP_STOPWATCH(mReflowWatch)
   return NS_OK;
 }
@@ -1704,6 +1715,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
                            PRInt32     aNewIndexInContainer)
 {
   EnterReflowLock();
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   NS_START_STOPWATCH(mFrameCreationWatch)
   nsresult  rv = mStyleSet->ContentAppended(mPresContext, aContainer, aNewIndexInContainer);
   VERIFY_STYLE_TREE;
@@ -1718,6 +1730,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
       mFrameManager->RestoreFrameState(frame, mHistoryState);
   }
 
+  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   NS_STOP_STOPWATCH(mFrameCreationWatch)
   ExitReflowLock();
   return rv;
