@@ -808,7 +808,7 @@ private:
   void InsertWithConversion( char, PRUint32 );
 };
 
-#ifdef NEW_STRING_APIS
+#if 0 // #ifdef NEW_STRING_APIS
 inline
 nsPromiseConcatenation<char>
 operator+( const nsPromiseConcatenation<char>& lhs, const nsCString& rhs )
@@ -819,7 +819,7 @@ operator+( const nsPromiseConcatenation<char>& lhs, const nsCString& rhs )
 
 #ifdef NEW_STRING_APIS
 NS_DEF_STRING_COMPARISON_OPERATORS(nsCString, char)
-NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCString, char);
+// NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCString, char);
 #endif
 
 extern NS_COM int fputs(const nsCString& aString, FILE* out);

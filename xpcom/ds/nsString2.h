@@ -896,10 +896,10 @@ private:
 
 #ifdef NEW_STRING_APIS
 NS_DEF_STRING_COMPARISON_OPERATORS(nsString, PRUnichar)
-NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsString, PRUnichar)
+// NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsString, PRUnichar)
 #endif
 
-#ifdef NEW_STRING_APIS
+#if 0 // #ifdef NEW_STRING_APIS
 inline
 nsPromiseConcatenation<PRUnichar>
 operator+( const nsPromiseConcatenation<PRUnichar>& lhs, const nsString& rhs )
