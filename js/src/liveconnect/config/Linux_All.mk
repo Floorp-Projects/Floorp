@@ -17,9 +17,9 @@
 # JDK_DIR should be the directory you put the JDK in, and should have
 # the appropriate lib/ and include/ dirs on it.
 # If you're not using the `Blackdown' JDK, try changing the following line:
-JDK_DIR=/usr/lib/jdk-1.1.5
+JDK=/usr/lib/jdk-1.1.5
 
-INCLUDES   += -I$(JDK_DIR)/include -I$(JDK_DIR)/include/md \
-	      -I$(JDK_DIR)/include/genunix
+INCLUDES   += -I$(JDK)/include -I$(JDK)/include/md \
+	      -I$(JDK)/include/genunix
 
-OTHER_LIBS += -L$(JDK_DIR)/lib/i386/green_threads -ljava
+OTHER_LIBS += -L$(JDK)/lib/i386/green_threads -ljava
