@@ -80,7 +80,6 @@ typedef float float32;
 #ifdef __i386__
  #define IS_LITTLE_ENDIAN
 #endif
-#endif
 
 
 // basicAlignment is the maximum alignment required by any native type.  An object aligned to
@@ -90,3 +89,5 @@ typedef float float32;
 // may be customized for individual platforms.
 const uint lgBasicAlignment = 3;
 const uint basicAlignment = 1u<<lgBasicAlignment;
+
+#endif /* systemtypes_h */
