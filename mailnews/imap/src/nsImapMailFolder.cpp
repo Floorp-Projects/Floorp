@@ -67,9 +67,10 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 #endif
 
 nsImapMailFolder::nsImapMailFolder() :
-    m_initialized(PR_FALSE), m_haveReadNameFromDB(PR_FALSE),
-    m_msgParser(nsnull), m_curMsgUid(0), m_nextMessageByteLength(0),
-    m_urlRunning(PR_FALSE), m_haveDiscoverAllFolders(PR_FALSE)
+    m_initialized(PR_FALSE),m_haveDiscoverAllFolders(PR_FALSE),
+    m_haveReadNameFromDB(PR_FALSE), m_msgParser(nsnull), 
+    m_curMsgUid(0), m_nextMessageByteLength(0),
+    m_urlRunning(PR_FALSE)
 {
 	m_pathName = nsnull;
 
@@ -1837,9 +1838,9 @@ nsImapMailFolder::OnStopRunningUrl(nsIURL *aUrl, nsresult aExitCode)
 		// query it for a mailnews interface for now....
 		nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
 		if (mailUrl)
-			mailUrl->UnRegisterListener(this);
+			rv = mailUrl->UnRegisterListener(this);
 	}
-	return NS_OK;
+	return rv;
 }
 
     // nsIImapExtensionSink methods
