@@ -454,7 +454,7 @@ nsresult nsMapiRegistryUtils::setMailtoProtocolHandler()
     // make sure mailto urls go through our application if we are the default
     // mail application...
     nsCAutoString appName;
-    NS_CopyUnicodeToNative(vendorName(), appName);
+    NS_CopyUnicodeToNative(nsDependentString(vendorName()), appName);
 
     nsCAutoString mailAppPath(thisApplication());
     mailAppPath += " -compose %1";
@@ -472,7 +472,7 @@ nsresult nsMapiRegistryUtils::setNewsProtocolHandler()
     // make sure news and snews urls go through our application if we are the default
     // mail application...
     nsCAutoString appName;
-    NS_CopyUnicodeToNative(vendorName(), appName);
+    NS_CopyUnicodeToNative(nsDependentString(vendorName()), appName);
 
     nsCAutoString mailAppPath(thisApplication());
     mailAppPath += " -mail %1";
@@ -506,7 +506,7 @@ nsresult nsMapiRegistryUtils::setDefaultMailClient()
     nsCAutoString keyName("Software\\Clients\\Mail\\");
 
     nsCAutoString appName;
-    NS_CopyUnicodeToNative(vendorName(), appName);
+    NS_CopyUnicodeToNative(nsDependentString(vendorName()), appName);
     if (!appName.IsEmpty()) {
         keyName.Append(appName.get());
 
@@ -638,7 +638,7 @@ nsresult nsMapiRegistryUtils::unsetDefaultMailClient() {
     // Use vendorName instead of brandname since brandName is product name
     // and has more than just the name of the application
     nsCAutoString appName;
-    NS_CopyUnicodeToNative(vendorName(), appName);
+    NS_CopyUnicodeToNative(nsDependentString(vendorName()), appName);
 
     if (!name.IsEmpty() && !appName.IsEmpty() && name.Equals(appName)) {
         nsCAutoString keyName("HKEY_LOCAL_MACHINE\\Software\\Clients\\Mail\\");
