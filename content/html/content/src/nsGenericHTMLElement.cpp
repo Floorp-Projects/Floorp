@@ -1503,7 +1503,8 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
 
     // set as string value to avoid another string copy
     PRBool  impact = NS_STYLE_HINT_NONE;
-    PRInt32 modHint = modification ? nsIDOMMutationEvent::MODIFICATION : nsIDOMMutationEvent::ADDITION;
+    PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
+                                   : PRInt32(nsIDOMMutationEvent::ADDITION);
     GetMappedAttributeImpact(aAttribute, modHint, impact);
 
     nsCOMPtr<nsIHTMLStyleSheet> sheet(dont_AddRef(GetAttrStyleSheet(mDocument)));
@@ -1562,7 +1563,8 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
     }
 
     if (aNotify) {
-      PRInt32 modHint = modification ? nsIDOMMutationEvent::MODIFICATION : nsIDOMMutationEvent::ADDITION;
+      PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
+                                     : PRInt32(nsIDOMMutationEvent::ADDITION);
       mDocument->AttributeChanged(this, aNameSpaceID, aAttribute, modHint, 
                                   NS_STYLE_HINT_UNKNOWN);
       mDocument->EndUpdate();
