@@ -4859,19 +4859,20 @@ LPCWSTR nsWindow::WindowClassW()
       nsWindow::sIsRegistered = FALSE;
     }
 
-    wc.lpszClassName = kWClassNameGeneral;
-    if (!nsToolkit::mRegisterClass(&wc)) {
-      nsWindow::sIsRegistered = FALSE;
-    }
-
     wc.lpszClassName = kWClassNameUI;
     if (!nsToolkit::mRegisterClass(&wc)) {
       nsWindow::sIsRegistered = FALSE;
     }
 
+    wc.lpszClassName = kWClassNameGeneral;
+    ATOM generalClassAtom = nsToolkit::mRegisterClass(&wc);
+    if (!generalClassAtom) {
+      nsWindow::sIsRegistered = FALSE;
+    }
+
     // Call FilterClientWindows method since it enables ActiveIME on CJK Windows
-    if (nsToolkit::gAIMMApp)
-      nsToolkit::gAIMMApp->FilterClientWindows((ATOM*)&nsWindow::sIsRegistered,1);
+    if (nsToolkit::gAIMMApp && generalClassAtom)
+      nsToolkit::gAIMMApp->FilterClientWindows(&generalClassAtom, 1);
   }
 
   if (mWindowType == eWindowType_invisible) {
@@ -6277,7 +6278,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
   //
   if (aGCS & GCS_RESULTSTR) {
 #ifdef DEBUG_IME
-    fprintf(stderr, "Handling GCS_RESULTSTR\n");
+    printf("Handling GCS_RESULTSTR\n");
 #endif
     if (!sIMEIsComposing) 
       HandleStartComposition(hIMEContext);
@@ -6285,7 +6286,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     nsCAutoString strIMECompAnsi;
     GetCompositionString(hIMEContext, GCS_RESULTSTR, sIMECompUnicode, &strIMECompAnsi);
 #ifdef DEBUG_IME
-    fprintf(stderr, "GCS_RESULTSTR compStrLen = %d\n", sIMECompUnicode->Length());
+    printf("GCS_RESULTSTR compStrLen = %d\n", sIMECompUnicode->Length());
 #endif
     result = PR_TRUE;
     HandleTextEvent(hIMEContext, PR_FALSE);
@@ -6299,7 +6300,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
   if (aGCS & (GCS_COMPSTR | GCS_COMPATTR | GCS_COMPCLAUSE | GCS_CURSORPOS))
   {
 #ifdef DEBUG_IME
-    fprintf(stderr, "Handling GCS_COMPSTR\n");
+    printf("Handling GCS_COMPSTR\n");
 #endif
 
     if (!sIMEIsComposing) 
@@ -6312,7 +6313,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     GetCompositionString(hIMEContext, GCS_COMPSTR, sIMECompUnicode, &strIMECompAnsi);
 
 #ifdef DEBUG_IME
-    fprintf(stderr, "GCS_COMPSTR compStrLen = %d\n", sIMECompUnicode->Length());
+    printf("GCS_COMPSTR compStrLen = %d\n", sIMECompUnicode->Length());
 #endif
 
     //--------------------------------------------------------
@@ -6320,6 +6321,9 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     //--------------------------------------------------------
     long compClauseLen, compClauseLen2;
     NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_COMPCLAUSE, NULL, 0, compClauseLen);
+#ifdef DEBUG_IME
+    printf("GCS_COMPCLAUSE compClauseLen = %d\n", compClauseLen);
+#endif
     compClauseLen = compClauseLen / sizeof(PRUint32);
 
     if (compClauseLen > sIMECompClauseArraySize) {
@@ -6340,7 +6344,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     sIMECompClauseArrayLength = compClauseLen;
 
     // if using "A" API, we need to convert A's array of "CLAUSE" to W's that.
-    if (!nsToolkit::mUseImeApiW) {
+    if (!nsToolkit::mUseImeApiW && sIMECompClauseArrayLength > 0) {
       PRUint32 maxlen = strIMECompAnsi.Length();
       // sIMECompClauseArray[0] is always 0. So, converting start from 1.
       for (int i = 1; i < sIMECompClauseArrayLength; i++) {
@@ -6368,6 +6372,9 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     // for doing hiliting
     long attrStrLen;
     NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_COMPATTR, NULL, 0, attrStrLen);
+#ifdef DEBUG_IME
+    printf("GCS_COMPATTR attrStrLen = %d\n", attrStrLen);
+#endif
     if (attrStrLen > sIMEAttributeArraySize) {
       if (sIMEAttributeArray) 
         delete [] sIMEAttributeArray;
@@ -6380,7 +6387,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     sIMEAttributeArrayLength = attrStrLen;
 
     // if using "A" API, we need to convert A's array of "ATTR" to W's that.
-    if (!nsToolkit::mUseImeApiW) {
+    if (!nsToolkit::mUseImeApiW && sIMEAttributeArrayLength > 0) {
       int offset = 0;
       long compUnicodeLength = sIMECompUnicode->Length();
       for (int i = 0; i < compUnicodeLength; i++) {
@@ -6411,7 +6418,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM aGCS)
     NS_IMM_GETCOMPOSITIONSTRING(hIMEContext, GCS_CURSORPOS, NULL, 0, sIMECursorPosition);
 
     // if using "A" API, we need to convert A's "CURSORPOS" to W's that.
-    if (!nsToolkit::mUseImeApiW) {
+    if (!nsToolkit::mUseImeApiW && sIMECursorPosition > 0) {
       sIMECursorPosition = ::MultiByteToWideChar(gCurrentKeyboardCP, MB_PRECOMPOSED, 
                             strIMECompAnsi.get(), sIMECursorPosition, NULL, 0);
     }
