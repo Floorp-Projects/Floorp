@@ -326,14 +326,17 @@ class CachedPresentationObj
 public:
   CachedPresentationObj(nsIPresShell* aShell, nsIPresContext* aPC,
                         nsIViewManager* aVM, nsIWidget* aW):
-    mPresShell(aShell), mPresContext(aPC), mViewManager(aVM), mWindow(aW)
+    mWindow(aW), mViewManager(aVM), mPresShell(aShell), mPresContext(aPC)
   {
   }
 
+  // The order here is important because the order of destruction is the
+  // reverse of the order listed here, and the view manager must outlive
+  // the pres shell.
+  nsCOMPtr<nsIWidget>      mWindow;
+  nsCOMPtr<nsIViewManager> mViewManager;
   nsCOMPtr<nsIPresShell>   mPresShell;
   nsCOMPtr<nsIPresContext> mPresContext;
-  nsCOMPtr<nsIViewManager> mViewManager;
-  nsCOMPtr<nsIWidget>      mWindow;
 };
 
 //---------------------------------------------------
