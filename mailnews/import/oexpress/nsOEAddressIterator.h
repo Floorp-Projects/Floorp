@@ -25,7 +25,7 @@
 
 #include "WabObject.h"
 #include "nsIAddrDatabase.h"
-
+#include "nsString.h"
 
 class nsOEAddressIterator : public CWabIterator {
 public:
@@ -38,6 +38,7 @@ public:
 private:
 	PRBool		BuildCard( LPCTSTR pName, nsIMdbRow *card, LPMAILUSER pUser);
 	void		SanitizeValue( nsString& val);
+	void		SplitString( nsString& val1, nsString& val2);
 
 	CWAB *				m_pWab;
 	nsIAddrDatabase	*	m_database;

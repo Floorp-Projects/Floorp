@@ -82,6 +82,8 @@ AddrImportField		extraUserFields[kExtraUserFields] = {
 	{PR_FALSE, PR_POSTAL_CODE, "postalcode:"}
 };
 
+#define	kWhitespace	" \t\b\r\n"
+
 #define TR_OUTPUT_EOL	"\r\n"
 
 #define	kLDIFPerson		"objectclass: top" TR_OUTPUT_EOL "objectclass: person" TR_OUTPUT_EOL
@@ -471,6 +473,8 @@ void CWAB::GetValueString( LPSPropValue pVal, nsString& val)
 		default:
         break;
     }
+
+	val.Trim( kWhitespace, PR_TRUE, PR_TRUE);
 }
 
 

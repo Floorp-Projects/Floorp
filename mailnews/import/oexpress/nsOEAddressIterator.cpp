@@ -33,7 +33,8 @@
 #include "nsString.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-
+#include "nsIImportService.h"
+#include "nsIImportFieldMap.h"
 #include "nsABBaseCID.h"
 #include "nsIAbCard.h"
 
@@ -43,7 +44,52 @@
 
 static NS_DEFINE_CID(kAbCardCID,			NS_ABCARD_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
+static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
+typedef struct {
+	PRInt32		mozField;
+	PRInt32		multiLine;
+	ULONG		mapiTag;
+} MAPIFields;
+
+/*
+	Fields in MAPI, not in Mozilla
+	PR_OFFICE_LOCATION
+	FIX - PR_BIRTHDAY - stored as PT_SYSTIME - FIX to extract for moz address book birthday
+	PR_DISPLAY_NAME_PREFIX - Mr., Mrs. Dr., etc.
+	PR_SPOUSE_NAME
+	PR_GENDER - integer, not text
+	FIX - PR_CONTACT_EMAIL_ADDRESSES - multiuline strings for email addresses, needs
+		parsing to get secondary email address for mozilla
+*/
+
+#define kIsMultiLine	-2
+#define	kNoMultiLine	-1
+
+MAPIFields	gMapiFields[] = {
+	{ 35, kIsMultiLine, PR_COMMENT},
+	{ 6, kNoMultiLine, PR_BUSINESS_TELEPHONE_NUMBER},
+	{ 7, kNoMultiLine, PR_HOME_TELEPHONE_NUMBER},
+	{ 25, kNoMultiLine, PR_COMPANY_NAME},
+	{ 23, kNoMultiLine, PR_TITLE},
+	{ 10, kNoMultiLine, PR_CELLULAR_TELEPHONE_NUMBER},
+	{ 9, kNoMultiLine, PR_PAGER_TELEPHONE_NUMBER},
+	{ 8, kNoMultiLine, PR_BUSINESS_FAX_NUMBER},
+	{ 8, kNoMultiLine, PR_HOME_FAX_NUMBER},
+	{ 22, kNoMultiLine, PR_COUNTRY},
+	{ 19, kNoMultiLine, PR_LOCALITY},
+	{ 20, kNoMultiLine, PR_STATE_OR_PROVINCE},
+	{ 17, 18, PR_STREET_ADDRESS},
+	{ 21, kNoMultiLine, PR_POSTAL_CODE},
+	{ 26, kNoMultiLine, PR_PERSONAL_HOME_PAGE},
+	{ 27, kNoMultiLine, PR_BUSINESS_HOME_PAGE},
+	{ 13, kNoMultiLine, PR_HOME_ADDRESS_CITY},
+	{ 16, kNoMultiLine, PR_HOME_ADDRESS_COUNTRY},
+	{ 15, kNoMultiLine, PR_HOME_ADDRESS_POSTAL_CODE},
+	{ 14, kNoMultiLine, PR_HOME_ADDRESS_STATE_OR_PROVINCE},
+	{ 11, 12, PR_HOME_ADDRESS_STREET},
+	{ 24, kNoMultiLine, PR_DEPARTMENT_NAME}
+};
 
 nsOEAddressIterator::nsOEAddressIterator( CWAB *pWab, nsIAddrDatabase *database)
 {
@@ -93,15 +139,30 @@ PRBool nsOEAddressIterator::EnumList( LPCTSTR pName, LPENTRYID pEid, ULONG cbEid
 
 void nsOEAddressIterator::SanitizeValue( nsString& val)
 {
-	/*
-	val.TrimLeft();
-	val.TrimRight();
-	int idx = val.FindOneOf( "\x0D\x0A");
-	while (idx != -1) {
-		val = val.Left( idx) + ", " + val.Right( val.GetLength() - idx - 1);
-		idx = val.FindOneOf( "\x0D\x0A");
+	val.ReplaceSubstring( "\x0D\x0A", ", ");
+	val.ReplaceChar( 13, ',');
+	val.ReplaceChar( 10, ',');
+}
+
+void nsOEAddressIterator::SplitString( nsString& val1, nsString& val2)
+{
+	nsString	temp;
+
+	// Find the last line if there is more than one!
+	PRInt32 idx = val1.RFind( "\x0D\x0A");
+	PRInt32	cnt = 2;
+	if (idx == -1) {
+		cnt = 1;
+		idx = val1.RFindChar( 13);
 	}
-	*/
+	if (idx == -1)
+		idx= val1.RFindChar( 10);
+	if (idx != -1) {
+		val1.Right( val2, val1.Length() - idx - cnt);
+		val1.Left( temp, idx);
+		val1 = temp;
+		SanitizeValue( val1);
+	}
 }
 
 PRBool nsOEAddressIterator::BuildCard( LPCTSTR pName, nsIMdbRow *newRow, LPMAILUSER pUser)
@@ -157,25 +218,35 @@ PRBool nsOEAddressIterator::BuildCard( LPCTSTR pName, nsIMdbRow *newRow, LPMAILU
 		eMail = nickName;
 
 	nsString	displayName;
-	if (firstName.IsEmpty())
-		displayName = nickName;
-	else {
-		displayName = firstName;
-		if (!middleName.IsEmpty()) {
-			displayName.Append( ' ');
-			displayName.Append( middleName);
-		}
-		if (!lastName.IsEmpty()) {
-			displayName.Append( ' ');
-			displayName.Append( lastName);
+	pProp = m_pWab->GetUserProperty( pUser, PR_DISPLAY_NAME);
+	if (pProp) {
+		m_pWab->GetValueString( pProp, displayName);
+		SanitizeValue( displayName);
+		m_pWab->FreeProperty( pProp);
+	}
+	if (displayName.IsEmpty()) {
+		if (firstName.IsEmpty())
+			displayName = nickName;
+		else {
+			displayName = firstName;
+			if (!middleName.IsEmpty()) {
+				displayName.Append( ' ');
+				displayName.Append( middleName);
+			}
+			if (!lastName.IsEmpty()) {
+				displayName.Append( ' ');
+				displayName.Append( lastName);
+			}
 		}
 	}
 	
 	char *pCStr;
 	// We now have the required fields
 	// write them out followed by any optional fields!
-	m_database->AddDisplayName( newRow, pCStr = displayName.ToNewCString());
-	nsCRT::free( pCStr);
+	if (!displayName.IsEmpty()) {
+		m_database->AddDisplayName( newRow, pCStr = displayName.ToNewCString());
+		nsCRT::free( pCStr);
+	}
 	if (!firstName.IsEmpty()) {
 		m_database->AddFirstName( newRow, pCStr = firstName.ToNewCString());
 		nsCRT::free( pCStr);
@@ -184,44 +255,58 @@ PRBool nsOEAddressIterator::BuildCard( LPCTSTR pName, nsIMdbRow *newRow, LPMAILU
 		m_database->AddLastName( newRow, pCStr = lastName.ToNewCString());
 		nsCRT::free( pCStr);
 	}
-	m_database->AddNickName( newRow, pCStr = nickName.ToNewCString());
-	nsCRT::free( pCStr);
-	
-	m_database->AddPrimaryEmail( newRow, pCStr = eMail.ToNewCString());
-	nsCRT::free( pCStr);
-
-
+	if (!nickName.IsEmpty()) {
+		m_database->AddNickName( newRow, pCStr = nickName.ToNewCString());
+		nsCRT::free( pCStr);
+	}
+	if (!eMail.IsEmpty()) {
+		m_database->AddPrimaryEmail( newRow, pCStr = eMail.ToNewCString());
+		nsCRT::free( pCStr);
+	}
 
 	// Do all of the extra fields!
-/*
-	CString	value;
-	BOOL	encoded = FALSE;
-	for (int i = 0; i < kExtraUserFields; i++) {
-		value.Empty();
-		pProp = m_pWab->GetUserProperty( pUser, extraUserFields[i].tag);
-		if (pProp) {
-			m_pWab->GetValueString( pProp, value);
-			m_pWab->FreeProperty( pProp);
-		}
-		if (extraUserFields[i].multiLine) {
-			encoded = SanitizeMultiLine( value);
-		}
-		else
-			SanitizeValue( value);
-		if (!value.IsEmpty()) {
-			line = extraUserFields[i].pLDIF;
-			if (encoded) {
-				line += ": ";
-				encoded = FALSE;
+
+	nsString	value;
+	nsString	line2;
+	nsresult	rv;
+	// Create a field map
+
+	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
+	if (NS_SUCCEEDED( rv)) {
+		nsIImportFieldMap *		pFieldMap = nsnull;
+		rv = impSvc->CreateNewFieldMap( &pFieldMap);
+		if (NS_SUCCEEDED( rv) && pFieldMap) {
+			int max = sizeof( gMapiFields) / sizeof( MAPIFields);
+			for (int i = 0; i < max; i++) {
+				pProp = m_pWab->GetUserProperty( pUser, gMapiFields[i].mapiTag);
+				if (pProp) {
+					m_pWab->GetValueString( pProp, value);
+					m_pWab->FreeProperty( pProp);
+					if (!value.IsEmpty()) {
+						if (gMapiFields[i].multiLine == kNoMultiLine) {
+							SanitizeValue( value);
+							pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.GetUnicode());
+						}
+						else if (gMapiFields[i].multiLine == kIsMultiLine) {
+							pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.GetUnicode());
+						}
+						else {
+							line2.Truncate();
+							SplitString( value, line2);
+							if (!value.IsEmpty())
+								pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].mozField, value.GetUnicode());
+							if (!line2.IsEmpty())
+								pFieldMap->SetFieldValue( m_database, newRow, gMapiFields[i].multiLine, line2.GetUnicode());
+						}
+					}
+				}
 			}
-			else
-				line += ' ';
-			line += value;
-			result = result && m_out.WriteStr( line);
-			result = result && m_out.WriteEol();
+			// call fieldMap SetFieldValue based on the table of fields
+
+			NS_RELEASE( pFieldMap);
 		}
 	}
-*/
+
 
 	return( PR_TRUE);
 }
