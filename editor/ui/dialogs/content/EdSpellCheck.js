@@ -24,6 +24,7 @@ var MisspelledWord;
 var spellChecker;
 var allowSelectWord = true;
 var PreviousReplaceWord = "";
+var firstTime = true;
 
 // dialog initialization code
 function Startup()
@@ -35,6 +36,19 @@ function Startup()
   spellChecker = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
   if (!spellChecker) {
     dump("SpellChecker not found!!!\n");
+    window.close();
+  }
+
+  // Start the spell checker module.
+  try {
+   spellChecker.InitSpellChecker();
+
+   // XXX: We need to read in a pref here so we can set the
+   //      default language for the spellchecker!
+   // spellChecker.SetCurrentDictionary();
+  }
+  catch(ex) {
+   dump("*** Exception error: InitSpellChecker\n");
     window.close();
   }
 
@@ -61,20 +75,6 @@ function Startup()
   {
     return;
   }
-  // NOTE: We shouldn't have been created if there was no misspelled word
-  
-  // The first misspelled word is passed as the 2nd extra parameter in window.openDialog()
-  MisspelledWord = window.arguments[1];
-  // Initial replace word is the misspelled word;
-  dialog.ReplaceWordInput.value = MisspelledWord;
-  PreviousReplaceWord = MisspelledWord;
-  
-  if (MisspelledWord.length > 0) {
-    // Put word in the borderless button used to show the misspelled word
-    dialog.MisspelledWord.setAttribute("value", MisspelledWord);
-    // Get the list of suggested replacements
-    FillSuggestedList();
-  }
 
   if (dialog.LanguageMenulist)
   {
@@ -92,11 +92,15 @@ function Startup()
     InitLanguageMenu(curLang);
   }
 
-  DoEnabling();
-
-  SetTextfieldFocus(dialog.ReplaceWordInput);
-
   SetWindowLocation();
+
+  // Get the first misspelled word and setup all UI
+  NextWord();
+  
+  // Clear flag that determines message when
+  //  no misspelled word is found
+  //  (different message when used for the first time)
+  firstTime = false;
 }
 
 function InitLanguageMenu(curLang)
@@ -109,7 +113,12 @@ function InitLanguageMenu(curLang)
   // Get the list of dictionaries from
   // the spellchecker.
 
-  spellChecker.GetDictionaryList(o1, o2);
+  try {
+    spellChecker.GetDictionaryList(o1, o2);
+  } catch(ex) {
+    dump("Failed to get DictionaryList!\n");
+    return;
+  }
 
   var dictList = o1.value;
   var count    = o2.value;
@@ -182,10 +191,10 @@ function InitLanguageMenu(curLang)
 
 function DoEnabling()
 {
-  if (MisspelledWord.length == 0)
+  if (!MisspelledWord)
   {
     // No more misspelled words
-    dialog.MisspelledWord.setAttribute("value",GetString("CheckSpellingDone"));
+    dialog.MisspelledWord.setAttribute("value",GetString( firstTime ? "NoMisspelledWord" : "CheckSpellingDone"));
     
     dialog.ReplaceButton.removeAttribute("default");
     dialog.IgnoreButton.removeAttribute("default");
@@ -245,7 +254,7 @@ function SetWidgetsForMisspelledWord()
 function CheckWord()
 {
   word = dialog.ReplaceWordInput.value;
-  if (word != "") {
+  if (!word) {
     isMisspelled = spellChecker.CheckCurrentWord(word);
     if (isMisspelled) {
       MisspelledWord = word;
@@ -305,7 +314,7 @@ function Ignore()
 
 function IgnoreAll()
 {
-  if (MisspelledWord != "") {
+  if (MisspelledWord) {
     spellChecker.IgnoreWordAllOccurrences(MisspelledWord);
   }
   NextWord();
@@ -314,7 +323,7 @@ function IgnoreAll()
 function Replace()
 {
   newWord = dialog.ReplaceWordInput.value;
-  if (MisspelledWord != "" && MisspelledWord != newWord)
+  if (MisspelledWord && MisspelledWord != newWord)
   {
     editorShell.BeginBatchChanges();
     isMisspelled = spellChecker.ReplaceWord(MisspelledWord, newWord, false);
@@ -326,7 +335,7 @@ function Replace()
 function ReplaceAll()
 {
   newWord = dialog.ReplaceWordInput.value;
-  if (MisspelledWord != "" && MisspelledWord != newWord)
+  if (MisspelledWord && MisspelledWord != newWord)
   {
     editorShell.BeginBatchChanges();
     isMisspelled = spellChecker.ReplaceWord(MisspelledWord, newWord, true);
@@ -337,7 +346,7 @@ function ReplaceAll()
 
 function AddToDictionary()
 {
-  if (MisspelledWord != "") {
+  if (MisspelledWord) {
     spellChecker.AddWordToDictionary(MisspelledWord);
   }
   NextWord();
