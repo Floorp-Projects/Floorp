@@ -23,6 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 #include "nsEditor.h"
+#include "nsIEditRules.h"
 
 class nsIStyleContext;
 class nsIDOMRange;
@@ -58,7 +59,7 @@ public:
   NS_IMETHOD RemoveTextProperty(nsIAtom *aProperty);
   NS_IMETHOD DeleteSelection(nsIEditor::Direction aDir);
   NS_IMETHOD InsertText(const nsString& aStringToInsert);
-  NS_IMETHOD InsertBreak(PRBool aCtrlKey);
+  NS_IMETHOD InsertBreak();
 
 // Transaction control
   NS_IMETHOD EnableUndo(PRBool aEnable);
@@ -76,6 +77,7 @@ public:
   NS_IMETHOD MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
   NS_IMETHOD SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection); 
   NS_IMETHOD SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection);
+  NS_IMETHOD SelectAll();
   NS_IMETHOD ScrollUp(nsIAtom *aIncrement);
   NS_IMETHOD ScrollDown(nsIAtom *aIncrement);
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
@@ -118,6 +120,7 @@ protected:
 
 // Data members
 protected:
+  nsCOMPtr<nsIEditRules> mRules;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
 

@@ -69,6 +69,10 @@ class nsIFrame;
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 
+// until there is a rules factory...
+#include "nsTextEditRules.h"
+
+
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
 static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
@@ -174,6 +178,13 @@ NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
     //cmanske: Shouldn't we check result from this?
     erP->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
     //erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+
+    // instantiate the rules for this text editor
+    // XXX: we should get the rules from a factory
+    // XXX: we should be told which set of rules to instantiate
+    nsIEditRules *rules = (nsIEditRules *) new nsTextEditRules();
+    rules->Init((nsIEditor *)this, nsnull);
+    mRules = do_QueryInterface(rules);
 
     result = NS_OK;
 
@@ -295,7 +306,6 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PR
         if ((NS_SUCCEEDED(result)) && iter)
         {
           iter->Init(range);
-          return 0;
           // loop through the content iterator for each content node
           // for each text node:
           // get the frame for the content, and from it the style context
@@ -380,23 +390,53 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
   return Inherited::InsertText(aStringToInsert);
 }
 
-NS_IMETHODIMP nsTextEditor::InsertBreak(PRBool aCtrlKey)
+NS_IMETHODIMP nsTextEditor::InsertBreak()
 {
-  // Note: Code that does most of the deletion work was 
-  // moved to nsEditor::DeleteSelectionAndCreateNode
-  // Only difference is we now do BeginTransaction()/EndTransaction()
-  //  even if we fail to get a selection
-  nsresult result = Inherited::BeginTransaction();
+  nsresult result;
+  if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsCOMPtr<nsIDOMNode> newNode;
-  nsAutoString tag("BR");
-  Inherited::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+  nsCOMPtr<nsIDOMSelection> selection;
+  PRBool cancel= PR_FALSE;
 
-  // Are we supposed to release newNode?
-  result = Inherited::EndTransaction();
+  result = Inherited::BeginTransaction();
+  if (NS_FAILED(result)) { return result; }
 
+  // pre-process
+  Inherited::GetSelection(getter_AddRefs(selection));
+  result = mRules->WillInsertBreak(selection, &cancel);
+  if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
+  {
+    // create the new BR node
+    nsCOMPtr<nsIDOMNode> newNode;
+    nsAutoString tag("BR");
+    result = Inherited::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+    if (NS_SUCCEEDED(result) && newNode)
+    {
+      // set the selection to the new node
+      nsCOMPtr<nsIDOMNode>parent;
+      result = newNode->GetParentNode(getter_AddRefs(parent));
+      if (NS_SUCCEEDED(result) && parent)
+      {
+        PRInt32 offsetInParent;
+        result = nsIEditorSupport::GetChildOffset(newNode, parent, offsetInParent);
+        if (NS_SUCCEEDED(result))
+        {
+          result = Inherited::GetSelection(getter_AddRefs(selection));
+          if (NS_SUCCEEDED(result))
+          {
+            selection->Collapse(parent, offsetInParent);
+            // post-process 
+            result = mRules->DidInsertBreak(selection, result);
+          }
+        }
+      }
+    }
+  }
+  nsresult endTxnResult = Inherited::EndTransaction();  // don't return this result!
+  NS_ASSERTION ((NS_SUCCEEDED(result)), "bad end transaction result");
   return result;
 }
+
 
 NS_IMETHODIMP nsTextEditor::EnableUndo(PRBool aEnable)
 {
@@ -461,6 +501,11 @@ NS_IMETHODIMP nsTextEditor::SelectNext(nsIAtom *aIncrement, PRBool aExtendSelect
 NS_IMETHODIMP nsTextEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsTextEditor::SelectAll()
+{
+  return Inherited::SelectAll();
 }
 
 NS_IMETHODIMP nsTextEditor::ScrollUp(nsIAtom *aIncrement)
