@@ -895,7 +895,16 @@
                            oncommand="this.parentNode.parentNode.hide();"/>
       </xul:hbox>
     </content>
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULAlertAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
       <property name="type" onget="return this.getAttribute('type');"
                             onset="this.setAttribute('type', val); return val;"/>
 
