@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.cpp,v 1.4 2000/02/17 03:29:29 kvisco%ziplink.net Exp $
+ * $Id: ProcessorState.cpp,v 1.5 2000/02/17 20:57:16 kvisco%ziplink.net Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * This code was ported from XSL:P
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/02/17 03:29:29 $
+ * @version $Revision: 1.5 $ $Date: 2000/02/17 20:57:16 $
 **/
 
 #include "ProcessorState.h"
@@ -64,14 +64,15 @@ ProcessorState::~ProcessorState() {
 
   //-- delete includes
   StringList* keys = includes.keys();
-  StringListIterator iter = keys->iterator();
-  while (iter.hasNext()) {
-      String* key = iter.next();
+  StringListIterator* iter = keys->iterator();
+  while (iter->hasNext()) {
+      String* key = iter->next();
       MITREObjectWrapper* objWrapper
           = (MITREObjectWrapper*)includes.remove(*key);
       delete (Document*)objWrapper->object;
       delete objWrapper;
   }
+  delete iter;
   delete keys;
 
 } //-- ~ProcessorState
@@ -319,9 +320,9 @@ void ProcessorState::getDocumentHref
 
   //-- lookup includes
   StringList* keys = includes.keys();
-  StringListIterator& iter = keys->iterator();
-  while (iter.hasNext()) {
-      String* key = iter.next();
+  StringListIterator* iter = keys->iterator();
+  while (iter->hasNext()) {
+      String* key = iter->next();
       MITREObjectWrapper* objWrapper
           = (MITREObjectWrapper*)includes.get(*key);
       if (xslDocument == objWrapper->object) {
@@ -329,7 +330,7 @@ void ProcessorState::getDocumentHref
           break;
       }
   }
-  delete &iter;
+  delete iter;
   delete keys;
 } //-- getDocumentBase
 
