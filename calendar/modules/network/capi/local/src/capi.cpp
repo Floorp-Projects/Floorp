@@ -584,11 +584,8 @@ CAPIStatus CAPI_FetchEventsByID(
         {
             ic = (ICalComponent *) evtVctr->GetAt(i);
 
-            // TODO: filter event by properties, for now print all
-
             usEvt = ic->format(ICalComponent::componentToString(ic->GetType()),
                 strFmt, "", FALSE);
-            //usEvt = ic->toICALString();
 
             // prepend MIME header to first event
             // append END to last event
@@ -802,10 +799,8 @@ CAPIStatus CAPI_FetchEventsByRange(
                 {
                     ic = (ICalComponent *) evtVctr->GetAt(j);
 
-                    // TODO: filter event by properties, for now print all
                     usEvt = ic->format(ICalComponent::componentToString(ic->GetType()),
                        strFmt, "", FALSE);
-                    //usEvt = ic->toICALString();
            
                     // prepend mime-header to first handle, first event
                     // prepend multipart-header to first event, non-first handle
