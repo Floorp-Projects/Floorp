@@ -3912,6 +3912,8 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             // Suppress the command dispatcher.
             focusController->SetSuppressFocus(PR_TRUE,
                                               "Win32-Only Link Traversal Issue");
+            // Remove focus from the element that has it
+            focusController->SetFocusedElement(nsnull);
         }
     }
 
@@ -3956,11 +3958,9 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
 
     // See the book I wrote above regarding why the focus controller is 
     // being used here.  -- hyatt
-    if (focusController) {
-        focusController->SetFocusedElement(nsnull);
+    if (focusController)
         focusController->SetSuppressFocus(PR_FALSE,
                                           "Win32-Only Link Traversal Issue");
-    }
 
     mContentViewer = aNewViewer;
 
