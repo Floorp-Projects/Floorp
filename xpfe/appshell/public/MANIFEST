@@ -7,7 +7,6 @@ nsAppShellCIDs.h
 nsBuildID.h
 nsIWebShellWindow.h
 nsFileLocations.h
-nsIXULWindowCallbacks.h
 nsIDOMXPConnectFactory.h
 nsINetSupportDialogService.h
 nsISplashScreen.h
