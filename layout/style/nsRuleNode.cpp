@@ -1878,7 +1878,8 @@ SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
       case eSystemFont_Button:
       case eSystemFont_List:
         // Assumption: system defined font is proportional
-        aFont->mSize = PR_MAX(defaultVariableFont->size - NSIntPointsToTwips(2), 0);
+        aFont->mSize = nsStyleFont::ZoomText(aPresContext,
+             PR_MAX(defaultVariableFont->size - NSIntPointsToTwips(2), 0));
         break;
     }
 #endif
