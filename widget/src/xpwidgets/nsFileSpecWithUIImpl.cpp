@@ -151,7 +151,7 @@ void nsFileSpecWithUIImpl::SetFileWidgetFilterList(
   }
 	if (mask & eHTMLFiles)
 	{
-		*nextTitle++ = "HTML Files (*.hml; *.html)";
+		*nextTitle++ = "HTML Files (*.htm; *.html)";
 		*nextFilter++ = "*.htm; *.html";
 	}
 	if (mask & eXMLFiles)
