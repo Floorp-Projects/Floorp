@@ -25,14 +25,17 @@
 
 #include "nsString.h"
 
-#include "nsWrapUtils.h"
-
 #include "nsCOMPtr.h"
 
 // Line breaker stuff
 #include "nsIServiceManager.h"
 #include "nsILineBreakerFactory.h"
 #include "nsLWBrkCIID.h"
+
+static PRUnichar gt ('>');
+static PRUnichar space (' ');
+static PRUnichar nl ('\n');
+static PRUnichar cr('\r');
 
 /** Mail citations using the Internet style: > This is a citation
   */
@@ -75,18 +78,16 @@ nsInternetCiter::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsInternetCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
 {
-  PRUnichar newline ('\n');      // Not XP!
-  PRUnichar cr('\r');
   PRInt32 i = 0;
   PRInt32 length = aInString.Length();
   aOutString.SetLength(0);
-  PRUnichar uch = newline;
+  PRUnichar uch = nl;
 
   // Strip trailing new lines which will otherwise turn up
   // as ugly quoted empty lines.
   while(length > 0 &&
         (aInString[length-1] == cr ||
-         aInString[length-1] == newline))
+         aInString[length-1] == nl))
   {
     --length;
   }
@@ -94,15 +95,22 @@ nsInternetCiter::GetCiteString(const nsString& aInString, nsString& aOutString)
   // Loop over the string:
   while (i < length)
   {
-    if (uch == newline)
-      aOutString.AppendWithConversion("> ");
+    if (uch == nl)
+    {
+      aOutString.Append(gt);
+      // No space between >: this is ">>> " style quoting, for
+      // compatability with RFC 2646 and format=flowed.
+      if (aInString[i] != gt)
+        aOutString.Append(space);
+    }
 
     uch = aInString[i++];
+
     aOutString += uch;
   }
 
-  if (uch != newline)
-    aOutString += newline;
+  if (uch != nl)
+    aOutString += nl;
 
   return NS_OK;
 }
@@ -120,7 +128,6 @@ nsInternetCiter::StripCitesAndLinebreaks(const nsString& aInString,
 
   PRInt32 length = aInString.Length();
   PRInt32 i = 0;
-  PRUnichar gt ('>');
   while (i < length)  // loop over lines
   {
     // Clear out cites first, at the beginning of the line:
@@ -164,25 +171,218 @@ nsInternetCiter::StripCites(const nsString& aInString, nsString& aOutString)
   return StripCitesAndLinebreaks(aInString, aOutString, PR_FALSE, 0);
 }
 
+static void AddCite(nsString& aOutString, PRInt32 citeLevel)
+{
+  for (PRInt32 i = 0; i < citeLevel; ++i)
+    aOutString.Append(gt);
+  if (citeLevel > 0)
+    aOutString.Append(space);
+}
+
 NS_IMETHODIMP
 nsInternetCiter::Rewrap(const nsString& aInString,
                         PRUint32 aWrapCol, PRUint32 aFirstLineOffset,
                         PRBool aRespectNewlines,
                         nsString& aOutString)
 {
-  PRInt32 i;
+  nsCOMPtr<nsILineBreaker> lineBreaker;
+  nsILineBreakerFactory *lf;
+  nsresult rv = NS_OK;
+  rv = nsServiceManager::GetService(kLWBrkCID,
+                                    NS_GET_IID(nsILineBreakerFactory),
+                                    (nsISupports **)&lf);
+  if (NS_SUCCEEDED(rv))
+  {
+    nsAutoString lbarg;
+    rv = lf->GetBreaker(lbarg, getter_AddRefs(lineBreaker));
+    nsServiceManager::ReleaseService(kLWBrkCID, lf);
+  }
 
-  // First, clean up all the existing newlines/cite marks and save the cite level.
-  nsAutoString inString;
-  PRInt32 citeLevel;
-  StripCitesAndLinebreaks(aInString, inString, !aRespectNewlines, &citeLevel);
+  aOutString.SetLength(0);
 
-  nsAutoString citeString;
-  for (i=0; i<citeLevel; ++i)
-    citeString.AppendWithConversion("> ");
+  // Loop over lines in the input string, rewrapping each one.
+  PRUint32 length = aInString.Length();
+  PRUint32 posInString = 0;
+  PRUint32 outStringCol = 0;
+  PRUint32 citeLevel = 0;
+  const PRUnichar* unicodeStr = aInString.GetUnicode();
+  while (posInString < length)
+  {
+#ifdef DEBUG_wrapping
+    nsAutoString debug (Substring(aInString, posInString, length-posInString));
+    printf("Outer loop: '%s'\n", debug.ToNewCString());
+#endif
 
-  return nsWrapUtils::Rewrap(inString, aWrapCol, aFirstLineOffset,
-                             aRespectNewlines, citeString,
-                             aOutString);
+    // Get the new cite level here since we're at the beginning of a line
+    PRUint32 newCiteLevel = 0;
+    while (posInString < length && aInString[posInString] == gt)
+    {
+      ++newCiteLevel;
+      ++posInString;
+      while (posInString < length && aInString[posInString] == space)
+        ++posInString;
+    }
+    if (posInString >= length)
+      break;
+
+    // Special case: if this is a blank line, maintain a blank line
+    // (retain the original paragraph breaks)
+    if (aInString[posInString] == nl)
+    {
+      if (aOutString.Length() > 0 && aOutString[aOutString.Length()-1] != nl)
+        aOutString.Append(nl);
+      AddCite(aOutString, newCiteLevel);
+      aOutString.Append(nl);
+
+      ++posInString;
+      outStringCol = 0;
+      continue;
+    }
+
+    // If the cite level has changed, then start a new line with the
+    // new cite level (but if we're at the beginning of the string,
+    // don't bother).
+    if (newCiteLevel != citeLevel && posInString > newCiteLevel+1
+        && outStringCol != 0)
+    {
+      //aOutString.Append(nl);
+      //AddCite(aOutString, citeLevel);
+      aOutString.Append(nl);
+      outStringCol = 0;
+    }
+    citeLevel = newCiteLevel;
+
+    // Prepend the quote level to the out string if appropriate
+    if (outStringCol == 0)
+    {
+      AddCite(aOutString, citeLevel);
+      outStringCol = citeLevel;
+    }
+    // If it's not a cite, and we're not at the beginning of a line in
+    // the output string, add a space to separate new text from the
+    // previous text.
+    else if (outStringCol > 0)
+    {
+#ifdef DEBUG_wrapping
+      printf("Appending space; citeLevel=%d, outStringCol=%d\n", citeLevel,
+             outStringCol);
+#endif
+      aOutString.Append(space);
+      ++outStringCol;
+    }
+
+    // find the next newline -- don't want to go farther than that
+    PRUint32 nextNewline = aInString.FindChar(nl, PR_FALSE, posInString);
+    if (nextNewline < 0) nextNewline = length;
+
+    // For now, don't wrap unquoted lines at all.
+    // This is because the plaintext edit window has already wrapped them
+    // by the time we get them for rewrap, yet when we call the line
+    // breaker, it will refuse to break backwards, and we'll end up
+    // with a line that's too long and gets displayed as a lone word
+    // on a line by itself.  Need special logic to detect this case
+    // and break it ourselves without resorting to the line breaker.
+    if (citeLevel == 0)
+    {
+#ifdef DEBUG_wrapping
+      nsAutoString debug (Substring(aInString, posInString,
+                                    nextNewline-posInString));
+      printf("Unquoted: appending '%s'\n", debug.ToNewCString());
+#endif
+      aOutString.Append(Substring(aInString, posInString,
+                                  nextNewline-posInString));
+      outStringCol += nextNewline - posInString;
+      if (nextNewline != length)
+      {
+#ifdef DEBUG_wrapping
+        printf("unquoted: appending a newline\n");
+#endif
+        aOutString.Append(nl);
+        outStringCol = 0;
+      }
+      posInString = nextNewline+1;
+      continue;
+    }
+
+    // Otherwise we have to use the line breaker and loop
+    // over this line of the input string to get all of it:
+    while (posInString < nextNewline)
+    {
+#ifdef DEBUG_wrapping
+      nsAutoString debug (Substring(aInString, posInString, nextNewline-posInString));
+      printf("Inner loop: '%s'\n", debug.ToNewCString());
+#endif
+
+      // If this is a short line, just append it and continue:
+      if (outStringCol + nextNewline - posInString <= aWrapCol-citeLevel-1)
+      {
+        // If this short line is the final one in the in string,
+        // then we need to include the final newline, if any:
+        if (nextNewline+1 == length && aInString[nextNewline-1] == nl)
+          ++nextNewline;
+#ifdef DEBUG_wrapping
+        nsAutoString debug (Substring(aInString, posInString, nextNewline - posInString));
+        printf("Short line: '%s'\n", debug.ToNewCString());
+#endif
+        aOutString += Substring(aInString,
+                                posInString, nextNewline - posInString);
+        outStringCol += nextNewline - posInString;
+        posInString = nextNewline + 1;
+        continue;
+      }
+
+      PRInt32 eol = posInString + aWrapCol - citeLevel - 1 - outStringCol;
+      // eol is the prospective end of line ...
+      // first look backwards from there for a place to break.
+      PRUint32 breakPt;
+      PRBool needMore;
+      rv = NS_ERROR_BASE;
+      if (lineBreaker)
+      {
+        rv = lineBreaker->Prev(unicodeStr + posInString, length - posInString,
+                               eol - posInString, &breakPt, &needMore);
+        if (NS_FAILED(rv) || needMore)
+        {
+          // if we couldn't find a breakpoint looking backwards,
+          // try looking forwards:
+          rv = lineBreaker->Next(unicodeStr + posInString,
+                                 length - posInString,
+                                 eol - posInString, &breakPt, &needMore);
+          if (needMore) rv = NS_ERROR_BASE;
+        }
+      }
+      // If rv is okay, then breakPt is the place to break.
+      // If we get out here and rv is set, something went wrong with line
+      // breaker.  Just break the line, hard.
+      if (NS_FAILED(rv))
+      {
+#ifdef DEBUG_akkana
+        printf("nsInternetCiter: LineBreaker not working -- breaking hard\n");
+#endif
+        breakPt = eol;
+      }
+#ifdef DEBUG_wrapping
+      printf("breakPt = %d\n", breakPt);
+#endif
+
+      aOutString += Substring(aInString, posInString, breakPt);
+      posInString += breakPt;
+      outStringCol += breakPt;
+
+      // Add a newline and the quote level to the out string
+      if (posInString < length)    // not for the last line, though
+      {
+        aOutString.Append(nl);
+        AddCite(aOutString, citeLevel);
+        outStringCol = citeLevel + (citeLevel ? 1 : 0);
+      }
+    } // end inner loop within one line of aInString
+#ifdef DEBUG_wrapping
+    printf("---------\nEnd inner loop: out string is now '%s'\n-----------\n",
+           aOutString.ToNewCString());
+#endif
+  } // end outer loop over lines of aInString
+
+  return NS_OK;
 }
 
