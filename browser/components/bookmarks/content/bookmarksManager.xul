@@ -230,12 +230,6 @@
                        oncommand="onViewMenuColumnItemSelected(event);"/>
           </menu>
           <menuseparator/>
-          <menuitem label="&menuitem.newbookmarkfolder.label;" 
-                    command="cmd_bm_setnewbookmarkfolder"
-                    accesskey="&menuitem.newbookmarkfolder.accesskey;"/>
-          <menuitem label="&menuitem.newinternetsearchfolder.label;"
-                    command="cmd_bm_setnewsearchfolder"
-                    accesskey="&menuitem.newinternetsearchfolder.accesskey;"/>
           <menuitem label="&menuitem.personaltoolbarfolder.label;"    
                     command="cmd_bm_setpersonaltoolbarfolder"
                     accesskey="&menuitem.personaltoolbarfolder.accesskey;"/>
