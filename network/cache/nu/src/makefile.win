@@ -20,10 +20,10 @@ IGNORE_MANIFEST = 1
 DEPTH=..\..\..\..
 
 MAKE_OBJ_TYPE = EXE
-DLLNAME = cachelib
+DLLNAME = cache
 #DLL = .\$(OBJDIR)\$(DLLNAME).dll
 
-LIBRARY_NAME=cachelib
+LIBRARY_NAME=cache
 
 #
 # Remember to change libplc21 to $whatever it is...

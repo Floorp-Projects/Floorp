@@ -3907,7 +3907,7 @@ found:
 #endif
 
 #ifdef NU_CACHE
-PUBLIC XP_Bool
+PUBLIC PRBool
 NET_IsURLInCache(const URL_Struct *URL_s)
 {
     return CacheManager_Contains(URL_s->address);
