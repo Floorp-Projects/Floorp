@@ -25,7 +25,6 @@
 #include "nsIDocumentLoader.h"
 #include "nsIServiceManager.h"
 
-static NS_DEFINE_IID(kDocLoaderServiceCID,  NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_IID(kWebShellCID,          NS_WEB_SHELL_CID);
 
 nsresult NS_NewDocLoaderServiceFactory(nsIFactory** aResult);
@@ -54,9 +53,6 @@ NSGetFactory(nsISupports* serviceMgr,
 
   if (aClass.Equals(kWebShellCID)) {
     rv = NS_NewWebShellFactory(aFactory);
-  }
-  else if (aClass.Equals(kDocLoaderServiceCID)) {
-    rv = NS_NewDocLoaderServiceFactory(aFactory);
   }
 
   return rv;

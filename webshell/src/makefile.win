@@ -30,7 +30,6 @@ CPPSRCS=				\
  dlldeps.cpp			    \
  nsComFactory.cpp			\
  nsDLLFactory.cpp			\
- nsDocLoader.cpp			\
  nsWebShell.cpp				\
  $(NULL)
 
@@ -38,7 +37,6 @@ CPP_OBJS=				\
  .\$(OBJDIR)\dlldeps.obj		    \
  .\$(OBJDIR)\nsComFactory.obj		\
  .\$(OBJDIR)\nsDLLFactory.obj		\
- .\$(OBJDIR)\nsDocLoader.obj		\
  .\$(OBJDIR)\nsWebShell.obj		\
  $(NULL)
 
