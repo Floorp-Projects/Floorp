@@ -49,6 +49,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgFolderFlags.h"
+#include "nsMsgLocalSearch.h"
 
 NS_IMPL_ISUPPORTS4(nsMsgSearchSession, nsIMsgSearchSession, nsIUrlListener, nsIFolderListener, nsISupportsWeakReference)
 
@@ -804,5 +805,23 @@ nsMsgSearchSession::OnItemPropertyFlagChanged(nsISupports *item,
                                             PRUint32 newValue)
 {
     return NS_OK;
+}
+
+//this method is used for adding new hdrs to quick search view
+NS_IMETHODIMP
+nsMsgSearchSession::MatchHdr(nsIMsgDBHdr *aMsgHdr, nsIMsgDatabase *aDatabase, PRBool *aResult)
+{
+  nsMsgSearchScopeTerm *scope = (nsMsgSearchScopeTerm *)m_scopeList.SafeElementAt(0);
+  if (scope)
+  {
+    if (scope->m_adapter)
+    {  
+      nsXPIDLString nullCharset, folderCharset;
+      scope->m_adapter->GetSearchCharsets(getter_Copies(nullCharset), getter_Copies(folderCharset));
+      NS_ConvertUCS2toUTF8 charset(folderCharset.get());
+      nsMsgSearchOfflineMail::MatchTermsForSearch(aMsgHdr, m_termList, charset.get(), scope, aDatabase, aResult);
+    }
+  }
+  return NS_OK;
 }
 

@@ -1346,7 +1346,6 @@ nsresult nsMsgSearchScopeTerm::TimeSlice (PRBool *aDone)
 	return m_adapter->Search(aDone);
 }
 
-
 nsresult nsMsgSearchScopeTerm::InitializeAdapter (nsISupportsArray *termList)
 {
   if (m_adapter)

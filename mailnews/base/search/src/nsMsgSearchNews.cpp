@@ -92,7 +92,6 @@ nsresult nsMsgSearchNews::Search (PRBool *aDone)
 	return err;
 }
 
-
 PRUnichar *nsMsgSearchNews::EncodeToWildmat (const PRUnichar *value)
 {
 	// Here we take advantage of XPAT's use of the wildmat format, which allows
@@ -503,8 +502,8 @@ nsresult nsMsgSearchNewsEx::Encode (nsCString *ppOutEncoding)
 	char *imapTerms = nsnull;
 
 	// Figure out the charsets to use for the search terms and targets.
-	nsString srcCharset, dstCharset;
-	GetSearchCharsets(srcCharset, dstCharset);
+	nsXPIDLString srcCharset, dstCharset;
+	GetSearchCharsets(getter_Copies(srcCharset), getter_Copies(dstCharset));
 
 	nsresult err = EncodeImap (&imapTerms, m_searchTerms, srcCharset.get(), dstCharset.get(), PR_TRUE /*reallyDredd*/);
 #ifdef DOING_DREDD

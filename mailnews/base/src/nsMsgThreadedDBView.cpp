@@ -40,6 +40,7 @@
 #include "nsIMsgHdr.h"
 #include "nsIMsgThread.h"
 #include "nsIDBFolderInfo.h"
+#include "nsIMsgSearchSession.h"
 
 #define MSGHDR_CACHE_LOOK_AHEAD_SIZE  25    // Allocate this more to avoid reallocation on new mail.
 #define MSGHDR_CACHE_MAX_SIZE         8192  // Max msghdr cache entries.
@@ -101,6 +102,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Close()
 NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
 {
   mIsSearchView = PR_FALSE;
+  m_searchSession = nsnull;
   m_sortValid = PR_FALSE;  //force a sort
   nsresult rv = NS_OK;
   nsMsgKeyArray preservedSelection;
@@ -542,12 +544,7 @@ nsresult nsMsgThreadedDBView::InitSort(nsMsgViewSortTypeValue sortType, nsMsgVie
 
 nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool ensureListed)
 {
-  nsresult	rv = NS_OK;
-  if (mIsSearchView)
-  {
-    OnHeaderAddedOrDeleted();  //db has changed and we are not adding hdr to view so clear the cached info..
-    return NS_OK; // do not add a new message to search view.
-  }
+  nsresult	rv;
   // views can override this behaviour, which is to append to view.
   // This is the mail behaviour, but threaded views want
   // to insert in order...
@@ -555,6 +552,16 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
   rv = m_db->GetMsgHdrForKey(newKey, getter_AddRefs(msgHdr));
   if (NS_SUCCEEDED(rv) && msgHdr != nsnull)
   {
+    if (mIsSearchView)
+    {
+      PRBool match=PR_FALSE;
+      OnHeaderAddedOrDeleted();  //db has changed, so clear the cached info..
+      nsCOMPtr <nsIMsgSearchSession> searchSession = do_QueryReferent(m_searchSession);
+      if (searchSession)
+        searchSession->MatchHdr(msgHdr, m_db, &match);
+      if (!match)
+        return NS_OK; // do not add a new message if there isn't a match.
+    }
     PRUint32 msgFlags;
     msgHdr->GetFlags(&msgFlags);
     if ((m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) && !ensureListed && (msgFlags & MSG_FLAG_READ))
@@ -562,7 +569,9 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
     // Currently, we only add the header in a threaded view if it's a thread.
     // We used to check if this was the first header in the thread, but that's
     // a bit harder in the unreadOnly view. But we'll catch it below.
-    if (! (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))// || msgHdr->GetMessageKey() == m_messageDB->GetKeyOfFirstMsgInThread(msgHdr->GetMessageKey()))
+
+    // for search view we don't support threaded display so just add it to the view.   
+    if (! (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) || mIsSearchView)// || msgHdr->GetMessageKey() == m_messageDB->GetKeyOfFirstMsgInThread(msgHdr->GetMessageKey()))
       rv = AddHdr(msgHdr);
     else	// need to find the thread we added this to so we can change the hasnew flag
       // added message to existing thread, but not to view

@@ -68,5 +68,6 @@ interface nsIMsgSearchAdapter : nsISupports {
     [noscript] nsIMsgFolder FindTargetFolder([const] in nsMsgResultElement
                                              element);
     void Abort();
+    void getSearchCharsets(out wstring srcCharset, out wstring destCharset);
 };
 

@@ -165,6 +165,7 @@ function onSearch()
       outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
     }
     createSearchTerms();
+    gDBView.searchSession = gSearchSession;
     try
     {
       gSearchSession.search(msgWindow);

@@ -60,6 +60,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 #include "nsIPrefLocalizedString.h"
+#include "nsIMsgSearchSession.h"
 
 /* Implementation file */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -133,7 +134,7 @@ nsMsgDBView::nsMsgDBView()
   mRemovingRow = PR_FALSE;
   mIsSearchView = PR_FALSE;
   m_saveRestoreSelectionDepth = 0;
-
+  m_searchSession = nsnull;
   // initialize any static atoms or unicode strings
   if (gInstanceCount == 0) 
   {
@@ -5121,4 +5122,19 @@ NS_IMETHODIMP
 nsMsgDBView::OnNewSearch()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::GetSearchSession(nsIMsgSearchSession* *aSession)
+{
+  NS_ASSERTION(0, "GetSearchSession method is not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsMsgDBView::SetSearchSession(nsIMsgSearchSession *aSession)
+{
+  m_searchSession = getter_AddRefs(NS_GetWeakReference(aSession));
+  return NS_OK;
 }

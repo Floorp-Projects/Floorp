@@ -45,6 +45,7 @@ interface nsIMsgSearchAdapter;
 interface nsIMsgSearchTerm;
 interface nsIMsgSearchNotify;
 interface nsIMsgHdr;
+interface nsIMsgDatabase;
 
 //////////////////////////////////////////////////////////////////////////////
 // The Msg Search Session is an interface designed to make constructing
@@ -122,6 +123,7 @@ interface nsIMsgSearchSession :  nsISupports {
                                               in voidPtr param);
 
 	[noscript] void AddResultElement(in nsMsgResultElement element);
+  boolean MatchHdr(in nsIMsgDBHdr aMsgHdr, in nsIMsgDatabase aDatabase);
 
 	void addSearchHit(in nsIMsgDBHdr header, in nsIMsgFolder folder);
 

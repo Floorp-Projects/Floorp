@@ -317,10 +317,13 @@ char *nsMsgSearchAdapter::UnEscapeSearchUrl (const char *commandSpecificData)
 }
 
 
-void
-nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset)
+nsresult 
+nsMsgSearchAdapter::GetSearchCharsets(PRUnichar **srcCharset, PRUnichar **dstCharset)
 {
   nsresult rv;
+  NS_ENSURE_ARG(srcCharset);
+  NS_ENSURE_ARG(dstCharset);
+
   if (m_defaultCharset.IsEmpty())
   {
     m_forceAsciiSearch = PR_FALSE;  // set the default value in case of error
@@ -331,9 +334,9 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
       rv = prefs->GetBoolPref("mailnews.force_ascii_search", &m_forceAsciiSearch);
     }
   }
-  srcCharset.Assign(m_defaultCharset.IsEmpty() ?
+  *srcCharset = nsCRT::strdup(m_defaultCharset.IsEmpty() ?
                     NS_LITERAL_STRING("ISO-8859-1").get() : m_defaultCharset.get());
-  dstCharset = srcCharset;
+  *dstCharset = nsCRT::strdup(*srcCharset);
 
 	if (m_scope)
 	{
@@ -347,7 +350,7 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
         {
             nsXPIDLString folderCharset;
             folder->GetCharset(getter_Copies(folderCharset));
-            dstCharset.Assign(folderCharset);
+            *dstCharset = nsCRT::strdup(folderCharset);
         }
 	}
 
@@ -357,8 +360,8 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
 	// the source. (CS_DEFAULT is an indication that the charset
 	// was undefined or unavailable.)
   // ### well, it's not really anymore. Is there an equivalent?
-  if (!nsCRT::strcmp(dstCharset.get(), m_defaultCharset.get()))
-		dstCharset = srcCharset;
+  if (!nsCRT::strcmp(*dstCharset, m_defaultCharset.get()))
+    *dstCharset = nsCRT::strdup(*srcCharset);
 
 	if (m_forceAsciiSearch)
 	{
@@ -369,8 +372,9 @@ nsMsgSearchAdapter::GetSearchCharsets(nsString &srcCharset, nsString& dstCharset
 		// If the dest csid is ISO Latin 1 or MacRoman, attempt to convert the 
 		// source text to US-ASCII. (Not for now.)
 		// if ((dst_csid == CS_LATIN1) || (dst_csid == CS_MAC_ROMAN))
-			dstCharset.Assign(NS_LITERAL_STRING("us-ascii"));
+    *dstCharset = nsCRT::strdup(NS_LITERAL_STRING("us-ascii").get());
 	}
+  return NS_OK;
 }
 
 nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool reallyDredd, const PRUnichar *srcCharset, const PRUnichar *destCharset, char **ppOutTerm)

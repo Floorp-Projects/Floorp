@@ -44,6 +44,7 @@ interface nsIMessenger;
 interface nsIMsgDBHdr;
 interface nsIMsgDBViewCommandUpdater;
 interface nsIMsgDatabase;
+interface nsIMsgSearchSession;
 
 typedef long nsMsgViewNotificationCodeValue;
 typedef long nsMsgViewCommandCheckStateValue;
@@ -299,6 +300,8 @@ interface nsIMsgDBView : nsISupports
     void onDeleteCompleted(in boolean succeeded);
 
     readonly attribute nsIMsgDatabase db;
+
+    attribute nsIMsgSearchSession searchSession;
 };
 
 /* this interface is rapidly morphing from a command updater interface into a more generic

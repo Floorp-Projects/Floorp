@@ -59,6 +59,7 @@
 #include "nsIImapIncomingServer.h"
 #include "nsIMsgSearchNotify.h"
 #include "nsIPref.h"
+#include "nsIWeakReference.h"
 #include "nsIObserver.h"
 
 #include "nsIStringBundle.h"
@@ -323,7 +324,7 @@ protected:
 
   nsCOMPtr <nsIMsgDatabase> m_db;
   nsCOMPtr <nsIMsgFolder> m_folder;
-  
+  nsWeakPtr m_searchSession;
   nsMsgViewSortTypeValue  m_sortType;
   nsMsgViewSortOrderValue m_sortOrder;
   nsMsgViewFlagsTypeValue m_viewFlags;

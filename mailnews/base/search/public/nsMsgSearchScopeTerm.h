@@ -60,7 +60,6 @@ public:
   NS_DECL_NSIMSGSEARCHSCOPETERM
     
   nsresult TimeSlice (PRBool *aDone);
-  
   nsresult InitializeAdapter (nsISupportsArray *termList);
   
   char *GetStatusBarName ();
