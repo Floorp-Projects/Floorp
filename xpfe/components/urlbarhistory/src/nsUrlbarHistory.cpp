@@ -172,7 +172,9 @@ nsUrlbarHistory::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteRe
  
     if (!listener)
         return NS_ERROR_NULL_POINTER;
-        
+      
+
+
     if (uSearchString[0] == 0)
     {
         listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
@@ -183,6 +185,7 @@ nsUrlbarHistory::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteRe
     PRInt32 cnt = mIgnoreArray.Count();
 	for(PRInt32 i=0; i<cnt; i++) {
        nsString * match = (nsString *)mIgnoreArray.ElementAt(i);
+	   
 	   if (match) {
           PRInt32 index = match->Find(uSearchString, PR_TRUE);
 		  if (index == 0) {
@@ -193,6 +196,7 @@ nsUrlbarHistory::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteRe
 	}  //for
     
     nsCOMPtr<nsIAutoCompleteResults> results;
+	/*
     if (NS_FAILED(SearchPreviousResults(uSearchString, previousSearchResult)))
     {
         results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_PROGID);
@@ -201,9 +205,14 @@ nsUrlbarHistory::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteRe
     }
     else
         results = previousSearchResult;
-                
+      */
+	
+	results = do_CreateInstance(NS_AUTOCOMPLETERESULTS_PROGID);
+	NS_ENSURE_TRUE(results, NS_ERROR_FAILURE);
+    rv = SearchCache(uSearchString, results);    
+
     AutoCompleteStatus status = nsIAutoCompleteStatus::failed;
-    if (NS_SUCCEEDED(rv) && results)
+    if (NS_SUCCEEDED(rv))
     {
         PRBool addedDefaultItem = PR_FALSE;
 
@@ -248,6 +257,7 @@ nsUrlbarHistory::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoComple
     nsXPIDLString prevSearchString;
     PRUint32 searchStrLen = nsCRT::strlen(searchStr);
     nsresult rv;
+    nsAutoString   searchAutoStr(searchStr);
 
     rv = previousSearchResult->GetSearchString(getter_Copies(prevSearchString));
     if (NS_FAILED(rv))
@@ -283,7 +293,9 @@ nsUrlbarHistory::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoComple
 
 	        PRUnichar *  itemValue=nsnull;
             resultItem->GetValue(&itemValue);
+			nsAutoString itemAutoStr(itemValue);
 
+            //printf("SearchPreviousResults::Comparing %s with %s \n", searchAutoStr.ToNewCString(), itemAutoStr.ToNewCString());
 			if (!itemValue)
 				continue;
 		    if (nsCRT::strncasecmp(searchStr, itemValue, searchStrLen) == 0)
@@ -305,6 +317,8 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 {
     nsresult rv = NS_OK;
 
+    nsAutoString searchAutoStr(searchStr);
+
 	PRInt32 cnt = mArray.Count();
 	for(PRInt32 i=cnt-1; i>=0; i--)
 	{
@@ -312,11 +326,31 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 	   PRUnichar * match = nsnull;
 	   PRInt32 index = -1;
 	   item = (nsString*) mArray.ElementAt(i);
+	   
+
 	   if (item) {
+		// printf("SearchCache::Comparing %s with %s\n", searchAutoStr.ToNewCString(),item->ToNewCString());
 	     index = item->Find(searchStr, PR_TRUE);
 	     match = item->ToNewUnicode();
 	   }
-	   if (index == 0) {
+	   if (index < 0) {
+		   // strip off any http:// ftp:// and see if that matches.
+		   char * searchCString = nsnull;
+		   searchCString = searchAutoStr.ToNewCString();
+           if (searchCString) {
+             char * searchSubStr = PL_strstr(searchCString, "//");
+			 if (searchSubStr) {
+			   searchSubStr++;searchSubStr++;
+		  //     printf("SearchCache::Comparing %s with %s\n", searchSubStr, item->ToNewCString());
+		       index = item->Find(searchSubStr, PR_TRUE);
+		       if (match)
+			     Recycle(match);
+		       match = item->ToNewUnicode();
+			 }
+		   }
+		   Recycle(searchCString);
+	   }
+	   if (index >=0) {
            // Item found. Create an AutoComplete Item 
 		   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_PROGID));
 		   NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
@@ -326,6 +360,7 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
            rv = results->GetItems(getter_AddRefs(array));
            if (NS_SUCCEEDED(rv))
 		   { 
+			  // printf("Appending element %s to the results array\n", item->ToNewCString());
                 array->AppendElement((nsISupports*)newItem);
 		   }		  
 	   }
