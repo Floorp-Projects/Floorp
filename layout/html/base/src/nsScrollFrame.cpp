@@ -176,7 +176,9 @@ nsScrollFrame::CreateScrollingView()
 
     // Set the scrolling view's insets to whatever our border is
     nsMargin border;
-    spacing->CalcBorderFor(this, border);
+    if (!spacing->GetBorder(border)) {
+      border.SizeTo(0, 0, 0, 0);
+    }
     scrollingView->SetControlInsets(border);
 
     // Remember our view
@@ -252,10 +254,12 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   // Calculate the amount of space needed for borders
-  const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+  const nsStyleSpacing*  spacing = (const nsStyleSpacing*)
     mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin border;
-  spacing->CalcBorderFor(this, border);
+  if (!spacing->GetBorder(border)) {
+    border.SizeTo(0, 0, 0, 0);
+  }
 
   // See whether the scrollbars are always visible or auto
   const nsStyleDisplay*  display = (const nsStyleDisplay*)
