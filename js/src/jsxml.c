@@ -1734,8 +1734,18 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
                 return PN2X_SKIP_CHILD;
             xml_class = JSXML_CLASS_COMMENT;
         } else if (pn->pn_type == TOK_XMLPI) {
+            if (IS_XML(str)) {
+                js_ReportCompileErrorNumber(cx, pn,
+                                            JSREPORT_PN | JSREPORT_ERROR,
+                                            JSMSG_RESERVED_ID,
+                                            js_ValueToPrintableString(cx,
+                                                STRING_TO_JSVAL(str)));
+                return NULL;
+            }
+
             if (flags & XSF_IGNORE_PROCESSING_INSTRUCTIONS)
                 return PN2X_SKIP_CHILD;
+
             inLRS = JS_EnterLocalRootScope(cx);
             if (!inLRS)
                 goto fail;
