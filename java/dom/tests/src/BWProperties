@@ -1,7 +1,0 @@
-BW_TESTDIR=/workspace/mozilla/java/dom/tests/src
-BW_TESTFILE=BWTestClass.lst
-BW_LOGDIR=/workspace/mozilla/java/dom/tests/src/log
-BW_LOGFILE=BWTest.log
-BW_THREADMODE=S
-BW_HTMLTEST=file:
-BW_XMLTEST=file:
