@@ -53,17 +53,13 @@ CVSCO = cvs -q co -P
 
 # Branch tags we use
 IMGLIB_BRANCH = MODULAR_IMGLIB_BRANCH
-NETLIB_BRANCH = MODULAR_NETLIB_BRANCH
-RAPTOR_BRANCH = RAPTOR_BRANCH
-# XPCOM is now on the tip, rah, rah.
 
 # CVS commands to pull the appropriate branch versions
 CVSCO_XPCOM = $(CVSCO)
 CVSCO_IMGLIB = $(CVSCO) -r $(IMGLIB_BRANCH)
-CVSCO_NETLIB = $(CVSCO) -r $(NETLIB_BRANCH)
 CVSCO_RAPTOR = $(CVSCO)
 CVSCO_LIZARD = $(CVSCO)
-CVSCO_NETWORK = $(CVSCO) -A
+CVSCO_NETWORK = $(CVSCO)
 
 # The list of directories that need to be built to build the
 # standalone nglayout test program. The order is important. The
