@@ -476,7 +476,7 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
   if (!POP3LOGMODULE)
       POP3LOGMODULE = PR_NewLogModule("POP3");
 
-  m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE);
+  m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE);
   if(!m_lineStreamBuffer)
 	  return NS_ERROR_OUT_OF_MEMORY;
 

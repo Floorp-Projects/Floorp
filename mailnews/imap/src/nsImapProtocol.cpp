@@ -273,7 +273,7 @@ nsImapProtocol::nsImapProtocol() :
   m_allocatedSize = OUTPUT_BUFFER_SIZE;
 
   // used to buffer incoming data by ReadNextLineFromInput
-  m_inputStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE /* allocate new lines */, PR_FALSE /* leave CRLFs on the returned string */);
+  m_inputStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE /* allocate new lines */, PR_FALSE /* leave CRLFs on the returned string */);
   m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
 
   m_userName = nsnull;

@@ -538,7 +538,7 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;
 
   if (!m_lineStreamBuffer)
-	  m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE /* create new lines */);
+	  m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE /* create new lines */);
 
 	m_typeWanted = 0;
 	m_responseCode = 0;

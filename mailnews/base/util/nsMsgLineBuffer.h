@@ -96,7 +96,7 @@ public:
 	//						ReadNextLine will alter the data so your ptr only has a life time of a per call.
 	// aEatCRLFs  -- PR_TRUE if you don't want to see the CRLFs on the lines returned by ReadNextLine. 
 	//				 PR_FALSE if you do want to see them.
-	nsMsgLineStreamBuffer(PRUint32 aBufferSize, const char * aEndOfLineToken, PRBool aAllocateNewLines, PRBool aEatCRLFs = PR_TRUE); // specify the size of the buffer you want the class to use....
+	nsMsgLineStreamBuffer(PRUint32 aBufferSize, PRBool aAllocateNewLines, PRBool aEatCRLFs = PR_TRUE); // specify the size of the buffer you want the class to use....
 	virtual ~nsMsgLineStreamBuffer();
 
 	// Caller must free the line returned using PR_Free
@@ -109,7 +109,6 @@ protected:
 	PRBool m_eatCRLFs;
 	PRBool m_allocateNewLines;
 	char * m_dataBuffer;
-	const char * m_endOfLineToken;
 	PRUint32 m_dataBufferSize;
     PRUint32 m_startPos;
     PRUint32 m_numBytesInBuffer;

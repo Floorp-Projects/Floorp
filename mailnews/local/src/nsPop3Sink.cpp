@@ -62,6 +62,7 @@ nsPop3Sink::~nsPop3Sink()
     PR_FREEIF(m_accountUrl);
     PR_FREEIF(m_outputBuffer);
     NS_IF_RELEASE(m_popServer);
+    ReleaseFolderLock();
 	NS_IF_RELEASE(m_folder);
     NS_IF_RELEASE(m_newMailParser);
 }

@@ -2139,7 +2139,7 @@ nsresult nsImapService::OfflineAppendFromFile(nsIFileSpec* aFileSpec,
         {
           // now, copy the temp file to the offline store for the dest folder.
           PRInt32 inputBufferSize = 10240;
-          nsMsgLineStreamBuffer *inputStreamBuffer = new nsMsgLineStreamBuffer(inputBufferSize, CRLF, PR_TRUE /* allocate new lines */, PR_FALSE /* leave CRLFs on the returned string */);
+          nsMsgLineStreamBuffer *inputStreamBuffer = new nsMsgLineStreamBuffer(inputBufferSize, PR_TRUE /* allocate new lines */, PR_FALSE /* leave CRLFs on the returned string */);
           PRUint32 fileSize;
           aFileSpec->GetFileSize(&fileSize);
           PRUint32 bytesWritten;

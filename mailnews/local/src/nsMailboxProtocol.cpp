@@ -197,7 +197,7 @@ void nsMailboxProtocol::Initialize(nsIURI * aURL)
 		}
 	}
 
-	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, MSG_LINEBREAK, PR_TRUE);
+	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE);
 
 	m_nextState = MAILBOX_READ_FOLDER;
 	m_initialState = MAILBOX_READ_FOLDER;
