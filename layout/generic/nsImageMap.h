@@ -162,7 +162,7 @@ protected:
   nsIDocument* mDocument; // WEAK - the imagemap will not outlive the document
   nsIDOMHTMLMapElement* mDomMap;
   nsIContent* mMap;
-  nsVoidArray mAreas;
+  nsAutoVoidArray mAreas; // almost always has some entries
   PRBool mContainsBlockContents;
 };
 

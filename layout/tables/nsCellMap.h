@@ -134,7 +134,7 @@ protected:
                           nsCellMap& aNewMap);
 
   nsTableFrame& mTableFrame;
-  nsVoidArray   mCols;
+  nsAutoVoidArray mCols;
   nsCellMap*    mFirstMap;
 };
 
@@ -341,7 +341,7 @@ protected:
 
   /** an array containing col array. It can be larger than mRowCount due to
     * row spans extending beyond the table */
-  nsVoidArray mRows; 
+  nsAutoVoidArray mRows; 
 
   /** the number of rows in the table which is <= the number of rows in the cell map
     * due to row spans extending beyond the end of the table (dead rows) */

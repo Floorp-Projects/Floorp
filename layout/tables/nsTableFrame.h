@@ -860,7 +860,7 @@ public:
             PRBool          aDumpCols, 
             PRBool          aDumpCellMap);
 
-  nsVoidArray mColFrames; // XXX temporarily public 
+  nsAutoVoidArray mColFrames; // XXX temporarily public 
 
 protected:
   void DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aChildFrame);

@@ -80,7 +80,7 @@ private:
   nsIFrame*       mPrevSiblingFrame;
   nsIAtom*        mAttribute;
   nsIAtom*        mListName;
-  nsVoidArray     mPath;
+  nsAutoVoidArray mPath;
   PRInt32         mFlags;
 };
 

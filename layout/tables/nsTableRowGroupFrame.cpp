@@ -1154,7 +1154,7 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext* aPresContext,
                                    nsIFrame*       aFrameList)
 {
   // collect the new row frames in an array
-  nsVoidArray rows;
+  nsAutoVoidArray rows;
   for (nsIFrame* rowFrame = aFrameList; rowFrame; rowFrame->GetNextSibling(&rowFrame)) {
     nsCOMPtr<nsIAtom> frameType;
     rowFrame->GetFrameType(getter_AddRefs(frameType));
