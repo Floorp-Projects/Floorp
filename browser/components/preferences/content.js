@@ -19,6 +19,7 @@
 # 
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Asaf Romano <mozilla.mano@sent.com>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,6 +36,7 @@
 # ***** END LICENSE BLOCK *****
 
 
+const kDefaultFontType          = "font.default.%LANG%";
 const kFontNameFmtSerif         = "font.name.serif.%LANG%";
 const kFontNameFmtSansSerif     = "font.name.sans-serif.%LANG%";
 const kFontNameListFmtSerif     = "font.name-list.serif.%LANG%";
@@ -53,8 +55,8 @@ var gContentPane = {
   _rebuildFonts: function ()
   {
     var langGroupPref = document.getElementById("font.language.group");
-    var isSerifPref = document.getElementById("font.default");
-    this._selectLanguageGroup(langGroupPref.value, isSerifPref.value == "serif");
+    this._selectLanguageGroup(langGroupPref.value, 
+                              this._readDefaultFontTypeForLanguage(langGroupPref.value) == "serif");
   },
   
   _selectLanguageGroup: function (aLanguageGroup, aIsSerif)
@@ -96,6 +98,21 @@ var gContentPane = {
         preference.setElementValue(element);
       }
     }
+  },
+
+  _readDefaultFontTypeForLanguage: function (aLanguageGroup)
+  {
+    var defaultFontTypePref = kDefaultFontType.replace(/%LANG%/, aLanguageGroup);
+    var preference = document.getElementById(defaultFontTypePref);
+    if (!preference) {
+      preference = document.createElement("preference");
+      preference.id = defaultFontTypePref;
+      preference.setAttribute("name", defaultFontTypePref);
+      preference.setAttribute("type", "string");
+      preference.setAttribute("onchange", "gContentPane._rebuildFonts();");
+      document.getElementById("contentPreferences").appendChild(preference);
+    }  
+    return preference.value;
   },
 
   writeEnableImagesPref: function ()

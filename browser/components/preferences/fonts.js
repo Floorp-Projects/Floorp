@@ -19,6 +19,7 @@
 # 
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Asaf Romano <mozilla.mano@sent.com>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,6 +37,7 @@
 
 # browser.display.languageList LOCK ALL when LOCKED
 
+const kDefaultFontType          = "font.default.%LANG%";
 const kFontNameFmtSerif         = "font.name.serif.%LANG%";
 const kFontNameFmtSansSerif     = "font.name.sans-serif.%LANG%";
 const kFontNameFmtMonospace     = "font.name.monospace.%LANG%";
@@ -49,7 +51,8 @@ const kFontMinSizeFmt           = "font.minimum-size.%LANG%";
 var gFontsDialog = {
   _selectLanguageGroup: function (aLanguageGroup)
   {
-    var prefs = [{ format: kFontNameFmtSerif,         type: "unichar", element: "serif",      fonttype: "serif"       },
+    var prefs = [{ format: kDefaultFontType,          type: "string", element: "defaultFontType", fonttype: null},
+                 { format: kFontNameFmtSerif,         type: "unichar", element: "serif",      fonttype: "serif"       },
                  { format: kFontNameFmtSansSerif,     type: "unichar", element: "sans-serif", fonttype: "sans-serif"  },
                  { format: kFontNameFmtMonospace,     type: "unichar", element: "monospace",  fonttype: "monospace"   },
                  { format: kFontNameListFmtSerif,     type: "unichar", element: null,         fonttype: "serif"       },
@@ -65,9 +68,9 @@ var gFontsDialog = {
         preference = document.createElement("preference");
         var name = prefs[i].format.replace(/%LANG%/, aLanguageGroup);
         preference.id = name;
+        preference.setAttribute("name", name);
+        preference.setAttribute("type", prefs[i].type);
         preferences.appendChild(preference);
-        preference.name = name;
-        preference.type = prefs[i].type;
       }
       
       if (!prefs[i].element)

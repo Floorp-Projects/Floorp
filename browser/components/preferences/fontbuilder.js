@@ -96,19 +96,22 @@ var FontBuilder = {
       // All-Fonts list, so walk both lists side-by-side, skipping values we've
       // already created menu items for. 
       var builtItem = separator ? separator.nextSibling : popup.firstChild;
-      
+      var builtItemValue = builtItem ? builtItem.getAttribute("value") : null;
+
       separator = document.createElement("menuseparator");
       popup.appendChild(separator);
       
       for (i = 0; i < this._allFonts.length; ++i) {
-        if (this._allFonts[i] != builtItem.getAttribute("value")) {
+        if (this._allFonts[i] != builtItemValue) {
           menuitem = document.createElement("menuitem");
           menuitem.setAttribute("value", this._allFonts[i]);
           menuitem.setAttribute("label", this._allFonts[i]);
           popup.appendChild(menuitem);
         }
-        else
+        else {
           builtItem = builtItem.nextSibling;
+          builtItemValue = builtItem ? builtItem.getAttribute("value") : null;
+        }
       }
     }
     aMenuList.appendChild(popup);    
