@@ -1379,6 +1379,7 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
      * The stream is complete...  Tell the DocumentLoader to release us...
      */
     m_DocLoader->LoadURLComplete(aURL, (nsIStreamListener *)this, aStatus);
+    NS_IF_RELEASE(m_NextStream);
 
     return rv;
 }
