@@ -22,15 +22,17 @@
 DEPTH=..\..
 MODULE=docshell_base
 
+LIBRARY_NAME=basedocshell_s
+
 XPIDLSRCS=						\
 		.\nsCDocShell.idl			\
 		.\nsIDocShell.idl			\
-    .\nsIDocShellHistory.idl \
+        .\nsIDocShellHistory.idl \
 		.\nsIDocShellLoadInfo.idl			\
 		.\nsIDocShellTreeItem.idl			\
 		.\nsIDocShellTreeNode.idl			\
 		.\nsIDocShellTreeOwner.idl			\
-#		.\nsIContentViewerEdit.idl	\
+		.\nsIContentViewerEdit.idl	\
 #		.\nsIContentViewerFile.idl	\
 		.\nsIMarkupDocumentViewer.idl	\
 		.\nsIScrollable.idl		\
@@ -38,10 +40,9 @@ XPIDLSRCS=						\
 		.\nsIWebNavigation.idl		\
 		$(NULL)
 
-LIBRARY_NAME=basedocshell_s
-
 CPP_OBJS=											\
 		.\$(OBJDIR)\nsDocShell.obj			\
+        .\$(OBJDIR)\nsWebShell.obj          \
 		.\$(OBJDIR)\nsDocShellLoadInfo.obj	\
 		.\$(OBJDIR)\nsDSURIContentListener.obj	\
 #		.\$(OBJDIR)\nsDSWebProgressListener.obj	\
@@ -51,5 +52,5 @@ include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>
 
 install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-	$(MAKE_INSTALL) appstrings.properties $(DIST)\bin\chrome\locales\en-US\global\locale
+    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+    $(MAKE_INSTALL) appstrings.properties $(DIST)\bin\chrome\locales\en-US\global\locale

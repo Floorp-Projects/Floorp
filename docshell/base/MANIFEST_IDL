@@ -29,3 +29,4 @@ nsIDocShellTreeOwner.idl
 nsIMarkupDocumentViewer.idl
 nsIScrollable.idl
 nsITextScroll.idl
+nsIContentViewerEdit.idl	

@@ -42,7 +42,7 @@ interface nsIClipboardCommands : nsISupports {
 	/**
 	 * Cut the current selection onto the clipboard.
 	 */
-	boolean cutSelection();
+	void cutSelection();
 
 	/**
 	 * Copy the current selection onto the clipboard.

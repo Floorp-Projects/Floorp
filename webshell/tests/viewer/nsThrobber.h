@@ -22,7 +22,6 @@
 #ifndef nsThrobber_h___
 #define nsThrobber_h___
 
-#include "nsweb.h"
 #include "nsIImageObserver.h"
 #include "nsIWidget.h"
 #include "nsVoidArray.h"

@@ -69,23 +69,6 @@ class nsISupportsArray;
 { 0x94c6ceb0, 0x9447, 0x11d1, \
   {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
-// specification for data to be sent via form "post"
-// IID for the nsIPostData interface -  152ab6e0-ff13-11d1-beb9-00805f8a66dc
-#define NS_IPOSTDATA_IID      \
-{ 0x152ab6e0, 0xff13, 0x11d1, \
-  {0xbe, 0xb9, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
-
-#if 0
-class nsIPostData : public nsISupports {
-public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IPOSTDATA_IID; return iid; }
-
-  virtual PRBool       IsFile()  = 0;    // is the data a file (or raw data)
-  virtual const char*  GetData() = 0;    // get the file name or raw data
-  virtual PRInt32      GetDataLength() = 0;
-};
-#endif
-
 // The base value for the content ID counter.
 // This counter is used by the document to 
 // assign a monotonically increasing ID to each content

@@ -35,7 +35,6 @@ OBJS =                                  \
 
 LLIBS=				\
  $(DIST)\lib\gkgfxwin.lib 	\
- $(DIST)\lib\gkweb.lib		\
  $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)			\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib		\

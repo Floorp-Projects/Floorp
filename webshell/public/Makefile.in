@@ -28,20 +28,20 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= webshell
 
+XPIDLSRCS = \
+        .\nsIRefreshURI.idl \
+        .\nsIClipboardCommands.idl \
+        .\nsIContentViewerContainer.idl \
+        .\nsIDocumentLoaderFactory.idl \
+        $(NULL)
+
 EXPORTS		= \
-		nsIClipboardCommands.h \
 		nsIContentViewer.h \
-		nsIContentViewerContainer.h \
 		nsIDocStreamLoaderFactory.h \
-		nsIDocumentLoaderFactory.h \
 		nsILinkHandler.h \
-		nsIUrlDispatcher.h \
 		nsIWebShell.h \
-		nsIWebShellServices.h \
-		nsweb.h \
-		nsIRefreshURI.h \
-		nsIContentViewerEdit.h \
-		nsIContentViewerFile.h \
+        nsIContentViewerFile.h \
+        nsIWebShellServices.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

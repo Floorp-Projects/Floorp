@@ -454,11 +454,6 @@ int main(int argc, char **argv)
 #ifdef RHAPSODY
 #undef DETECT_WEBSHELL_LEAKS
 #endif
-#ifdef DETECT_WEBSHELL_LEAKS
-	if ( unsigned long count = NS_TotalWebShellsInExistence() )  {
-		printf("XXX WARNING: Number of webshells being leaked: %d \n", count);
-	}
-#endif
 
 	// Shutdown XPCOM?
 	rv = NS_ShutdownXPCOM(nsnull);

@@ -1647,16 +1647,10 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 		mLastPostData.Copy(PostData);
 	}
 
-	nsIPostData *pIPostData = nsnull;
 	if (PostData && PostData->vt == VT_BSTR)
 	{
 		USES_CONVERSION;
 		char *szPostData = OLE2A(PostData->bstrVal);
-#if 0
-		// TODO fix
-		// Create post data from string
-		NS_NewPostData(PR_FALSE, szPostData, &pIPostData);
-#endif
 	}
 	if (lFlags & navNoHistory)
 	{

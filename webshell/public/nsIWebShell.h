@@ -22,14 +22,12 @@
 #ifndef nsIWebShell_h___
 #define nsIWebShell_h___
 
-#include "nsweb.h"
 #include "nsIWidget.h"
 #include "nsIParser.h"
 #include "nsIScrollableView.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIChannel.h"
 #include "nsIScrollableView.h"
-#include "nsIUrlDispatcher.h"
 
 class nsIDOMElement;
 class nsIDOMWindow;
@@ -155,14 +153,5 @@ public:
    */
   NS_IMETHOD FireUnloadEvent(void) = 0;
 };
-
-extern "C" NS_WEB nsresult
-NS_NewWebShellFactory(nsIFactory** aFactory);
-
-#ifdef DETECT_WEBSHELL_LEAKS
-extern "C" NS_WEB
-unsigned long
-NS_TotalWebShellsInExistence();
-#endif
 
 #endif /* nsIWebShell_h___ */
