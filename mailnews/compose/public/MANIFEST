@@ -19,13 +19,9 @@
 #[installed by xpidl] nsIDOMComposeAppCore.h
 #[installed by xpidl] nsIMsgCompFields.h
 
-nsIMsgSend.h
-nsIMsgSendLater.h
 nsMsgComposeFact.h
 nsMsgCompFieldsFact.h
 nsMsgSendFact.h
 nsISmtpUrl.h
 nsISmtpService.h
-MsgCompGlue.h
 nsMsgSendLaterFact.h
-nsMsgComposeBE.h

@@ -24,7 +24,7 @@
 #include "net.h" /* should be defined into msgCore.h? */
 #include "intl_csi.h"
 #include "msgcom.h"
-#include "MsgCompGlue.h"
+#include "nsMsgTransition.h"
 #include "nsMsgZapIt.h"
 #include "nsMsgSend.h"
 

@@ -29,7 +29,7 @@ static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 	 char * names = NULL;
 	 char * addresses = NULL;
 	 PRUint32 numAddresses = 0; 
-	 sample->ParseHeaderAddresses(NULL, "Scott MacGregor <mscott@netscape.com>", &names, &addresses, numAddresses);
+	 sample->ParseHeaderAddresses(NULL, "Scott MacGregor <mscott@netscape.com>", &names, &addresses, &numAddresses);
 	 if (names)
 	 {
 		 printf(names);

@@ -18,38 +18,8 @@
 #ifndef __nsIMsgSendLater_h__
 #define __nsIMsgSendLater_h__
 
-#include "nsISupports.h" /* interface nsISupports */
-#include "nsIMsgIdentity.h" /* interface nsIMsgCompFields */
-#include "nsIOutputStream.h" 
-#include "nsIMsgSendLaterListener.h" 
-#include "nsMsgComposeBE.h"
-
-#ifdef XPIDL_JS_STUBS
-#include "jsapi.h"
-#endif
-
-/* starting interface:    nsIMsgSendLater */
-
-// {E15C83E8-1CF4-11d3-8EF0-00A024A7D144}
-#define NS_IMSGSENDLATER_IID_STR "E15C83E8-1CF4-11d3-8EF0-00A024A7D144"
-#define NS_IMSGSENDLATER_IID \
-    { 0xe15c83e8, 0x1cf4, 0x11d3, \
-    { 0x8e, 0xf0, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 } };
-
-class nsIMsgSendLater : public nsIOutputStream {
- public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGSENDLATER_IID)
-
-  NS_IMETHOD  SendUnsentMessages(nsIMsgIdentity           *identity, 
-                                 nsIMsgSendLaterListener  **listenerArray) = 0;
-
-  NS_IMETHOD  RemoveListener(nsIMsgSendLaterListener *aListener) = 0; 
-  NS_IMETHOD  AddListener(nsIMsgSendLaterListener *aListener) = 0; 
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgSendLater *priv);
-#endif
-};
+THIS SHOULD NO LONGER BE USED BY ANYTHING IN MAILNEWS! THESE ARE GENERATED
+FROM IDL! IF YOU ARE INCLUDING THIS FILE, THERE IS SOMETHING WRONG WITH THE
+MAKEFILES FOR YOUR TREE
 
 #endif /* __nsIMsgSendLater_h__ */

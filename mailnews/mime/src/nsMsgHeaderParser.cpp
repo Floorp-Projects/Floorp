@@ -81,7 +81,7 @@ NS_IMPL_ADDREF(nsMsgHeaderParser)
 NS_IMPL_RELEASE(nsMsgHeaderParser)
 NS_IMPL_QUERY_INTERFACE(nsMsgHeaderParser, nsIMsgHeaderParser::GetIID()); /* we need to pass in the interface ID of this interface */
 
-nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const char *line, char **names, char **addresses, PRUint32& numAddresses)
+nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const char *line, char **names, char **addresses, PRUint32 *numAddresses)
 {
   char *utf8Str, *outStrings;
 
@@ -89,14 +89,14 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
     utf8Str = nsnull;
   }
   
-  numAddresses = msg_parse_Header_addresses((const char *) utf8Str, names, addresses);
+  *numAddresses = msg_parse_Header_addresses((const char *) utf8Str, names, addresses);
 
   PR_FREEIF(utf8Str);
 
   if (nsnull != names && nsnull != *names) {
     char *s = *names;
     PRInt32 i, len, len_all = 0, outStrLen;
-    for (i = 0; i < (PRInt32) numAddresses; i++) {
+    for (i = 0; i < (PRInt32) *numAddresses; i++) {
       len = PL_strlen(s) + 1;
       len_all += len;
       s += len;
@@ -110,7 +110,7 @@ nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const cha
   if (nsnull != addresses && nsnull != *addresses) {
     char *s = *addresses;
     PRInt32 i, len, len_all = 0, outStrLen;
-    for (i = 0; i < (PRInt32) numAddresses; i++) {
+    for (i = 0; i < (PRInt32) *numAddresses; i++) {
       len = PL_strlen(s) + 1;
       len_all += len;
       s += len;

@@ -52,7 +52,7 @@
        Either of the provided pointers may be NULL if the caller is not interested
        in those components.
     */
-	NS_IMETHOD ParseHeaderAddresses (const char *charset, const char *line, char **names, char **addresses, PRUint32& numAddresses);
+	NS_IMETHOD ParseHeaderAddresses (const char *charset, const char *line, char **names, char **addresses, PRUint32 *numAddresses);
 
 	/* Given a string which contains a list of Header addresses, returns a
 	   comma-seperated list of just the `mailbox' portions.

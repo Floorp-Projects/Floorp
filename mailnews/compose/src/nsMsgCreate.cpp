@@ -73,7 +73,7 @@ CreateVcardAttachment()
 				name = PL_strdup (pCompPrefs.GetUserFullName());
 			// write out a content description string
 #ifdef UNREADY_CODE
-			PR_snprintf(buf, sizeof(buf), XP_GetString (MK_ADDR_BOOK_CARD), name);
+			PR_snprintf(buf, sizeof(buf), XP_GetString (NS_ADDR_BOOK_CARD), name);
 #endif
 			PR_FREEIF(name);
 
@@ -107,7 +107,7 @@ CreateVcardAttachment()
 			{
 				vCardFileName = PL_strdup("vcard.vcf");
 				if (!vCardFileName)
-					return MK_OUT_OF_MEMORY;
+					return NS_OUT_OF_MEMORY;
 			}
 
 			char * origurl = XP_PlatformFileToURL (vCardFileName);
@@ -125,7 +125,7 @@ CreateVcardAttachment()
 					PR_Malloc((datacount + 2) * sizeof(nsMsgAttachmentData));
 			}
 			if (!alist)
-				return MK_OUT_OF_MEMORY;
+				return NS_OUT_OF_MEMORY;
 			m_attachData = alist;
 			memset (m_attachData + datacount, 0, 2 * sizeof (nsMsgAttachmentData));
 			m_attachData[datacount].url = fileurl;
@@ -145,7 +145,7 @@ CreateVcardAttachment()
 			}
 
 			if (!aflist)
-				return MK_OUT_OF_MEMORY;
+				return NS_OUT_OF_MEMORY;
 
 			m_attachedFiles = aflist;
 			memset (m_attachedFiles + filecount, 0, 2 * sizeof (nsMsgAttachedFile));
@@ -538,7 +538,7 @@ MungeThroughRecipients(PRBool* someNonHTML,
 
 	delete m_htmlrecip;
 	m_htmlrecip = new nsMsgHTMLRecipients();
-	if (!m_htmlrecip) return MK_OUT_OF_MEMORY;
+	if (!m_htmlrecip) return NS_OUT_OF_MEMORY;
 
   PRUint32 i;
 	for (i=0 ; i < sizeof(masks) / sizeof(masks[0]) ; i++) {
@@ -547,7 +547,7 @@ MungeThroughRecipients(PRBool* someNonHTML,
 		char* value = NULL;
 		value = PL_strdup(orig);
 		if (!value) {
-			status = MK_OUT_OF_MEMORY;
+			status = NS_OUT_OF_MEMORY;
 			goto FAIL;
 		}
 		
@@ -615,10 +615,10 @@ MungeThroughRecipients(PRBool* someNonHTML,
 				}
 #ifdef UNREADY_CODE
 				char* tmp = PR_smprintf("%s@%s",
-										XP_GetString(MK_MSG_EVERYONE),
+										XP_GetString(NS_MSG_EVERYONE),
 										domain);
 #endif
-				if (!tmp) return MK_OUT_OF_MEMORY;
+				if (!tmp) return NS_OUT_OF_MEMORY;
 				status = m_htmlrecip->AddOne(domain, tmp, Domain, found);
 				PR_Free(tmp);
 				if (status < 0) goto FAIL;
@@ -643,7 +643,7 @@ MungeThroughRecipients(PRBool* someNonHTML,
 		name = PL_strdup(groups);
 		if (end) *end++ = ',';
 		if (!name) {
-			status = MK_OUT_OF_MEMORY;
+			status = NS_OUT_OF_MEMORY;
 			goto FAIL;
 		}
 		char* group = XP_StripLine(name);
@@ -653,7 +653,7 @@ MungeThroughRecipients(PRBool* someNonHTML,
 		if (status < 0) goto FAIL;
 		char* tmp = PL_strdup(group);
 		if (!tmp) {
-			status = MK_OUT_OF_MEMORY;
+			status = NS_OUT_OF_MEMORY;
 			goto FAIL;
 		}
 		
@@ -662,7 +662,7 @@ MungeThroughRecipients(PRBool* someNonHTML,
 
 			char* desc = PR_smprintf("%s.*", tmp);
 			if (!desc) {
-				status = MK_OUT_OF_MEMORY;
+				status = NS_OUT_OF_MEMORY;
 				goto FAIL;
 			}
 			status = m_htmlrecip->AddOne(tmp, desc, GroupHierarchy, found);

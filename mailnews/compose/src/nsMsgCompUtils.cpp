@@ -23,12 +23,13 @@
 #include "nsINetService.h"
 #include "nsMailHeaders.h"
 #include "nsMsgI18N.h"
-//#include "xp_time.h"
 #include "nsMsgCompPrefs.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIMimeURLUtils.h"
 #include "nsINntpService.h"
 #include "nsMsgNewsCID.h"
+#include "nsMimeTypes.h"
+#include "nsMsgComposeStringBundle.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
@@ -201,14 +202,14 @@ nsresult mime_sanity_check_fields (
 
 	/* #### sanity check other_random_headers for newline conventions */
 	if (!from || !*from)
-		return MK_MIME_NO_SENDER;
+		return NS_MSG_NO_SENDER;
 	else
 		if ((!to || !*to) && (!cc || !*cc) &&
 				(!bcc || !*bcc) && (!newsgroups || !*newsgroups))
 #if 0
-			return MK_MIME_NO_RECIPIENTS;
+			return NS_MSG_NO_RECIPIENTS;
 #else
-			return NS_ERROR_FAILURE;
+			return NS_ERROR_INVALID_ARG;
 #endif
 	else
 		return NS_OK;
@@ -292,7 +293,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 
 	buffer = (char *) PR_Malloc (size);
 	if (!buffer)
-		return 0; /* MK_OUT_OF_MEMORY */
+		return 0; /* NS_ERROR_OUT_OF_MEMORY */
 	
 	buffer_tail = buffer;
 
@@ -496,8 +497,10 @@ mime_generate_headers (nsMsgCompFields *fields,
             if (tmpBuffer) PL_strfree(tmpBuffer);
             tmpBuffer=nsnull;
 
+/**** RICHIE - have to change this as we convert to new world stuff!
 			if (!fields->GetOwner()->GetMaster()->IsUserAuthenticated())
 				PUSH_STRING (" (Unverified)");
+****************************/
 			PUSH_NEWLINE ();
 		}
 	}
@@ -599,7 +602,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 			ptr = PL_strdup(pNewsGrp);
 			if (!ptr) {
 				PR_FREEIF(buffer);
-				return 0; /* MK_OUT_OF_MEMORY */
+				return 0; /* NS_ERROR_OUT_OF_MEMORY */
 			}
   	  		n2 = nsMsgStripLine(ptr);
 			NS_ASSERTION(n2 == ptr, "n2 != ptr");	/* Otherwise, the PR_Free below is
@@ -703,7 +706,7 @@ mime_generate_headers (nsMsgCompFields *fields,
 			ptr = PL_strdup(pFollow);
 			if (!ptr) {
 				PR_FREEIF(buffer);
-				return 0; /* MK_OUT_OF_MEMORY */
+				return 0; /* NS_ERROR_OUT_OF_MEMORY */
 			}
 			n2 = nsMsgStripLine (ptr);
 			NS_ASSERTION(n2 == ptr, "n2 != ptr");	/* Otherwise, the PR_Free below is
@@ -896,7 +899,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
 	char *buffer_tail = buffer;
 
 	if (! buffer)
-		return 0; /* MK_OUT_OF_MEMORY */
+		return 0; /* NS_ERROR_OUT_OF_MEMORY */
 
 	NS_ASSERTION (encoding, "null encoding");
 
@@ -1577,19 +1580,19 @@ nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
 
   from = MIME_MakeFromField (CS_DEFAULT);
   if (!from) {
-	status = MK_OUT_OF_MEMORY;
+	status = NS_ERROR_OUT_OF_MEMORY;
 	goto FAIL;
   }
 
   to = nsMsgParseURL (old_post_url, GET_PATH_PART);
   if (!to) {
-	status = MK_OUT_OF_MEMORY;
+	status = NS_ERROR_OUT_OF_MEMORY;
 	goto FAIL;
   }
 
   if (!*to)
 	{
-	  status = MK_MIME_NO_RECIPIENTS; /* rb -1; */
+	  status = NS_MSG_NO_RECIPIENTS; /* rb -1; */
 	  goto FAIL;
 	}
 
@@ -1746,7 +1749,7 @@ nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
  */
   if (!fields)
   {
-	  status = MK_OUT_OF_MEMORY;
+	  status = NS_ERROR_OUT_OF_MEMORY;
 	  goto FAIL;
   }
 
@@ -1755,7 +1758,7 @@ nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
   *headers_return = mime_generate_headers (fields, 0, nsMsgDeliverNow);
   if (*headers_return == 0)
 	{
-	  status = MK_OUT_OF_MEMORY;
+	  status = NS_ERROR_OUT_OF_MEMORY;
 	  goto FAIL;
 	}
 
@@ -1847,8 +1850,11 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
 	 
 	 ### mwelch Note that this function simply duplicates and returns an existing
 	 			MIME header, so we don't need to process it. */
-  MWContext *x = NULL;
-  attachment->m_real_name =	MimeGuessURLContentName(x, url);
+
+  // RICHIE  - NEED TO DO SOMETHING BETTER HERE!!!!!! THIS WILL HELP WITH FILENAMES
+  // FOR TEMP FILES
+  // RICHIE attachment->m_real_name =	MimeGuessURLContentName(x, url);
+  attachment->m_real_name = nsnull;  
   if (attachment->m_real_name)
   {
   	return;

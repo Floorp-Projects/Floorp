@@ -130,7 +130,12 @@ NS_IMETHODIMP nsNntpService::SaveMessageToDisk(const char *aMessageURI, nsIFileS
 {
 	// unimplemented for news right now....if we feel it would be useful to 
 	// be able to spool a news article to disk then this is the method we need to implement.
-	nsresult rv = NS_OK;
+
+  //
+  // Returning success causes us much grief with the editor because we wait until this is
+  // complete to do anything...so changing this to failure.
+  //
+	nsresult rv = NS_ERROR_FAILURE;
 	return rv;
 }
 

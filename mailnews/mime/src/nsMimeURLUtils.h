@@ -35,20 +35,20 @@ public:
     /* this macro defines QueryInterface, AddRef and Release for this class */
 	  NS_DECL_ISUPPORTS
 
-    static const nsIID& GetIID(void) { static nsIID iid = NS_IMIME_URLUTILS_IID; return iid; }
+    static const nsIID& GetIID(void) { static nsIID iid = NS_IMIMEURLUTILS_IID; return iid; }
 
     NS_IMETHOD    URLType(const char *URL, PRInt32  *retType);
 
     NS_IMETHOD    ReduceURL (char *url, char **retURL);
 
-    NS_IMETHOD    ScanForURLs(const char *input, int32 input_size,
-                              char *output, int output_size, PRBool urls_only);
+    NS_IMETHOD    ScanForURLs(const char *input, PRInt32 input_size,
+                              char *output, PRInt32 output_size, PRBool urls_only);
 
-    NS_IMETHOD    MakeAbsoluteURL(char * absolute_url, char * relative_url, char **retURL);
+    NS_IMETHOD    MakeAbsoluteURL(char * absolute_url, const char * relative_url, char **retURL);
 
     NS_IMETHOD    ScanHTMLForURLs(const char* input, char **retBuf);
 
-    NS_IMETHOD    ParseURL(const char *url, int parts_requested, char **returnVal);
+    NS_IMETHOD    ParseURL(const char *url, PRInt32 parts_requested, char **returnVal);
 }; 
 
 

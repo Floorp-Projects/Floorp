@@ -182,7 +182,7 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
 
   if (!tagData)
   {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
   }
 
   nsMsgQuote *ptr = (nsMsgQuote *) tagData;
@@ -224,7 +224,7 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
   {
     NS_RELEASE(ptr);
     printf("Failed to create nsIInputStream\n");
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (NS_FAILED(fileStream->OpenDiskFile(*(ptr->mTmpFileSpec))))
@@ -239,7 +239,7 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
   {
     NS_RELEASE(ptr);
     printf("Unable to set the output stream for the mime parser...\ncould be failure to create internal libmime data\n");
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UNEXPECTED;
   }
 
   // Assuming this is an RFC822 message...
@@ -266,7 +266,7 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, nsIOutputStream *outStream)
 nsresult  rv;
 
   if (!msgURI)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
   mOutStream = outStream;
   mTmpFileSpec = nsMsgCreateTempFileSpec("nsquot.tmp"); 
@@ -281,12 +281,12 @@ nsresult  rv;
   mURI = convertString.ToNewCString();
 
   if (!mURI)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   rv = GetMessageServiceFromURI(mURI, &mMessageService);
   if (NS_FAILED(rv) && !mMessageService)
   {
-    return NS_ERROR_FAILURE;
+    return rv;
   }
 
   NS_ADDREF(this);
@@ -296,13 +296,13 @@ nsresult  rv;
   {
     ReleaseMessageServiceFromURI(mURI, mMessageService);
     mMessageService = nsnull;
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   rv = mMessageService->SaveMessageToDisk(mURI, mTmpIFileSpec, PR_FALSE, sendListener, nsnull);
 
 	if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;    
-
-  return NS_OK;
+    return rv;    
+  else
+    return NS_OK;
 }

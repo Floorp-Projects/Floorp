@@ -31,7 +31,7 @@ nsMsgDisplayMessageByID(PRInt32 msgID)
 
   char *msg = ComposeBEGetStringByID(msgID);
   if (!msg)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
 #ifdef NECKO
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
@@ -39,7 +39,7 @@ nsMsgDisplayMessageByID(PRInt32 msgID)
   NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
 #endif
   if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FACTORY_NOT_LOADED;
 
   nsAutoString alertText(msg);
   if (dialog) 
@@ -63,7 +63,7 @@ nsMsgDisplayMessageByString(char *msg)
   nsresult rv;
 
   if ((!msg) || (!*msg))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
 #ifdef NECKO
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
@@ -71,7 +71,7 @@ nsMsgDisplayMessageByString(char *msg)
   NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
 #endif
   if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FACTORY_NOT_LOADED;
 
   nsAutoString alertText(msg);
   if (dialog) 
@@ -96,7 +96,7 @@ nsMsgAskBooleanQuestionByID(PRInt32 msgID, PRBool *answer)
 
   char *msg = ComposeBEGetStringByID(msgID);
   if (!msg)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
 #ifdef NECKO
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);  
@@ -104,7 +104,7 @@ nsMsgAskBooleanQuestionByID(PRInt32 msgID, PRBool *answer)
   NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);  
 #endif
   if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FACTORY_NOT_LOADED;
   
   nsAutoString confirmText(msg);
   if (dialog) 
@@ -131,7 +131,7 @@ nsMsgAskBooleanQuestionByID(char *msg, PRBool *answer)
   PRInt32 result;
 
   if ((!msg) || (!*msg))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
 #ifdef NECKO
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);  
@@ -139,7 +139,7 @@ nsMsgAskBooleanQuestionByID(char *msg, PRBool *answer)
   NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);  
 #endif
   if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
   
   nsAutoString confirmText(msg);
   if (dialog) 

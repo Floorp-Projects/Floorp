@@ -26,7 +26,7 @@
 #include "msgcom.h"
 #include "nsMsgHeaderMasks.h"
 
-#include "MsgCompGlue.h"
+#include "nsMsgTransition.h"
 
 #include "nsIMsgCompFields.h"
 
@@ -197,12 +197,12 @@ public:
 	NS_IMETHOD SetBody(const char *value);
 	const char* GetBody();
 
-	PRInt16 AppendBody(char*);
+	nsresult AppendBody(char*);
 
 	// When forwarding a bunch of messages, we can have a bunch of
 	// "forward url's" instead of an attachment.
 
-	PRInt16 AddForwardURL(const char*);
+	nsresult AddForwardURL(const char*);
 
 	PRInt32 GetNumForwardURL();
 	const char* GetForwardURL(PRInt32 which);
@@ -225,11 +225,10 @@ public:
 	PRBool GetUseMultipartAlternative() {return m_multipart_alt;}
 
 protected:
-	PRInt16 DecodeHeader(MSG_HEADER_SET header);
+	nsresult DecodeHeader(MSG_HEADER_SET header);
 
 	// These methods allow news URLs in the newsgroups header
 	HJ30181
-	PRInt16 ParseNewsgroupsForUrls (const char *value);
 
 	#define MAX_HEADERS		32
 	MSG_Pane*	m_owner;

@@ -36,6 +36,7 @@ EXPORTS=    nsSmtpUrl.h             \
 			nsMsgCompFields.h \
 			nsMsgQuote.h \
 			nsURLFetcher.h \
+			nsMsgTransition.h \
             $(NULL)
 
 ################################################################################
@@ -45,7 +46,6 @@ LIBRARY_NAME=msgcompose_s
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj             \
             .\$(OBJDIR)\nsSmtpUrl.obj                   \
-                                .\$(OBJDIR)\MsgCompGlue.obj                     \
                         .\$(OBJDIR)\nsSmtpProtocol.obj          \
                         .\$(OBJDIR)\nsMsgSend.obj                       \
                         .\$(OBJDIR)\nsMsgSendPart.obj           \

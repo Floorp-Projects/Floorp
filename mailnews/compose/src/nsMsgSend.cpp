@@ -46,20 +46,8 @@
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIFileSpec.h"
 #include "nsMsgCopy.h"
-
+#include "nsMsgTransition.h"
 #include "nsMsgPrompts.h"
-
-// RICHIE - StringBundle Converstion Place Holder ////////////////////////////
-//
-#define   MK_MSG_MIME_OBJECT_NOT_AVAILABLE    -9999
-#define   MK_ATTACHMENT_LOAD_FAILED           -9998
-#define   MK_MAIL_FAILED_COPY_OPERATION       -9997
-#define   MK_NEWS_FAILED_COPY_OPERATION       -9996
-
-#define   MIME_MULTIPART_BLURB     "This is a multi-part message in MIME format."
-//
-// RICHIE - StringBundle Converstion Place Holder ////////////////////////////
-
 
 /* use these macros to define a class IID for our component. Our object currently supports two interfaces 
    (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
@@ -148,6 +136,9 @@ char * mime_get_stream_write_buffer(void)
 		mime_mailto_stream_write_buffer = (char *) PR_Malloc(MIME_BUFFER_SIZE);
 	return mime_mailto_stream_write_buffer;
 }
+
+// Don't I18N this line...this is per the spec!
+#define   MIME_MULTIPART_BLURB     "This is a multi-part message in MIME format."
 
 /* All of the desired attachments have been written to individual temp files,
    and we know what's in them.  Now we need to make a final temp file of the
@@ -310,7 +301,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		nsOutputFileStream tempfile(*mHTMLFileSpec);
 		if (! tempfile.is_open()) 
     {
-			status = MK_UNABLE_TO_OPEN_TMP_FILE;
+			status = NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
 			goto FAIL;
 		}
 
@@ -318,7 +309,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		if (status < int(m_attachment1_body_length)) 
     {
 			if (status >= 0)
-				status = MK_MIME_ERROR_WRITING_FILE;
+				status = NS_MSG_ERROR_WRITING_FILE;
 			goto FAIL;
 		}
 
@@ -365,7 +356,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	NS_ASSERTION (m_attachment_pending_count == 0, "m_attachment_pending_count != 0");
 
 #ifdef UNREADY_CODE
-	FE_Progress(GetContext(), XP_GetString(MK_MSG_ASSEMBLING_MSG));
+	FE_Progress(GetContext(), XP_GetString(NS_MSG_ASSEMBLING_MSG));
 #endif
 
 	/* First, open the message file.
@@ -377,8 +368,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   mOutputFile = new nsOutputFileStream(*mTempFileSpec);
 	if (! mOutputFile->is_open()) 
   {
-		status = MK_UNABLE_TO_OPEN_TMP_FILE;
-    nsMsgDisplayMessageByID(MK_UNABLE_TO_OPEN_TMP_FILE);
+		status = NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
+    nsMsgDisplayMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE);
 		goto FAIL;
 	}
   
@@ -522,7 +513,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 				MimeEncoderData *plaintext_enc = MIME_QPEncoderInit(mime_encoder_output_fn, this);
 				if (!plaintext_enc)
 				{
-					status = MK_OUT_OF_MEMORY;
+					status = NS_ERROR_OUT_OF_MEMORY;
 					goto FAIL;
 				}
 				plainpart->SetEncoderData(plaintext_enc);
@@ -755,7 +746,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	if (mOutputFile) {
 		/* If we don't do this check...ZERO length files can be sent */
 		if (mOutputFile->failed()) {
-			status = MK_MIME_ERROR_WRITING_FILE;
+			status = NS_MSG_ERROR_WRITING_FILE;
 			goto FAIL;
 		}
 
@@ -765,7 +756,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	mOutputFile = nsnull;
 
 #ifdef UNREADY_CODE
-	FE_Progress(GetContext(), XP_GetString(MK_MSG_ASSEMB_DONE_MSG));
+	FE_Progress(GetContext(), XP_GetString(NS_MSG_ASSEMB_DONE_MSG));
 #endif
 
   if (m_dont_deliver_p && mListenerArrayCount > 0)
@@ -778,7 +769,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     delete mTempFileSpec;
     mTempFileSpec = nsnull;
 	  if (!mReturnFileSpec)
-      NotifyListenersOnStopSending(nsnull, NS_ERROR_FAILURE, nsnull, nsnull);
+      NotifyListenersOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
     else
       NotifyListenersOnStopSending(nsnull, NS_OK, nsnull, mReturnFileSpec);
 
@@ -817,7 +808,7 @@ FAIL:
 	return status;
 
 FAILMEM:
-	status = MK_OUT_OF_MEMORY;
+	status = NS_ERROR_OUT_OF_MEMORY;
 	goto FAIL;
 }
 
@@ -850,7 +841,7 @@ mime_write_message_body (nsMsgComposeAndSend *state,
 
   if (PRInt32(state->mOutputFile->write(buf, size)) < size) 
   {
-    return MK_MIME_ERROR_WRITING_FILE;
+    return NS_MSG_ERROR_WRITING_FILE;
   } 
   else 
   {
@@ -866,8 +857,8 @@ mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure)
 }
 
 int nsMsgComposeAndSend::HackAttachments(
-						  const struct nsMsgAttachmentData *attachments,
-						  const struct nsMsgAttachedFile *preloaded_attachments)
+						  const nsMsgAttachmentData *attachments,
+						  const nsMsgAttachedFile *preloaded_attachments)
 {
   MWContext *x = NULL;
   INTL_CharSetInfo c;
@@ -896,7 +887,7 @@ int nsMsgComposeAndSend::HackAttachments(
     //
 		m_attachments = (nsMsgAttachmentHandler *) new nsMsgAttachmentHandler[m_attachment_count];
 		if (! m_attachments)
-			return MK_OUT_OF_MEMORY;
+			return NS_ERROR_OUT_OF_MEMORY;
 
 		for (i = 0; i < m_attachment_count; i++) 
     {
@@ -969,7 +960,7 @@ int nsMsgComposeAndSend::HackAttachments(
 		new nsMsgAttachmentHandler[m_attachment_count];
 
 		if (! m_attachments)
-			return MK_OUT_OF_MEMORY;
+			return NS_ERROR_OUT_OF_MEMORY;
 
 		for (i = 0; i < m_attachment_count; i++) {
 			m_attachments[i].m_mime_delivery_state = this;
@@ -1029,9 +1020,9 @@ int nsMsgComposeAndSend::HackAttachments(
 
 #ifdef UNREADY_CODE
 		if (m_attachment_count == 1)
-			FE_Progress(GetContext(), XP_GetString(MK_MSG_LOAD_ATTACHMNT));
+			FE_Progress(GetContext(), XP_GetString(NS_MSG_LOAD_ATTACHMNT));
 		else
-			FE_Progress(GetContext(), XP_GetString(MK_MSG_LOAD_ATTACHMNTS));
+			FE_Progress(GetContext(), XP_GetString(NS_MSG_LOAD_ATTACHMNTS));
 #endif
 
 		for (i = 0; i < m_attachment_count; i++) {
@@ -1056,7 +1047,7 @@ int nsMsgComposeAndSend::HackAttachments(
 int nsMsgComposeAndSend::SetMimeHeader(MSG_HEADER_SET header, const char *value)
 {
 	char * dupHeader = nsnull;
-	PRInt32	ret = MK_OUT_OF_MEMORY;
+	PRInt32	ret = NS_ERROR_OUT_OF_MEMORY;
 
 	if (header & (MSG_FROM_HEADER_MASK | MSG_TO_HEADER_MASK | MSG_REPLY_TO_HEADER_MASK | MSG_CC_HEADER_MASK | MSG_BCC_HEADER_MASK))
 		dupHeader = mime_fix_addr_header(value);
@@ -1081,13 +1072,8 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   nsresult        rv = NS_OK;
 	const char      *pStr = nsnull;
 
-	if (mCompFields)
-		mCompFields->Release();
-
-	mCompFields = new nsMsgCompFields;
-	if (mCompFields)
-		mCompFields->AddRef();
-	else
+	mCompFields = do_QueryInterface( new nsMsgCompFields());
+	if (!mCompFields)
 		return NS_ERROR_OUT_OF_MEMORY;
 
   const char *cset = fields->GetCharacterSet();
@@ -1213,8 +1199,8 @@ nsMsgComposeAndSend::Init(
 						  const char *attachment1_type,
 						  const char *attachment1_body,
 						  PRUint32 attachment1_body_length,
-						  const struct nsMsgAttachmentData *attachments,
-						  const struct nsMsgAttachedFile *preloaded_attachments,
+						  const nsMsgAttachmentData *attachments,
+						  const nsMsgAttachedFile *preloaded_attachments,
 						  nsMsgSendPart *relatedPart)
 {
 	nsresult      rv = NS_OK;
@@ -1392,9 +1378,9 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 	if (!buf) 
   {
     // RICHIE_TODO: message loss here
-    char    *eMsg = ComposeBEGetStringByID(MK_OUT_OF_MEMORY);
-    Fail(MK_OUT_OF_MEMORY, eMsg);
-    NotifyListenersOnStopSending(nsnull, MK_OUT_OF_MEMORY, nsnull, nsnull);
+    char    *eMsg = ComposeBEGetStringByID(NS_ERROR_OUT_OF_MEMORY);
+    Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
+    NotifyListenersOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
     PR_FREEIF(eMsg);
     return NS_ERROR_OUT_OF_MEMORY;
 	}
@@ -1642,12 +1628,6 @@ nsMsgComposeAndSend::Clear()
 	PR_FREEIF (m_attachment1_encoding);
 	PR_FREEIF (m_attachment1_body);
 
-	if (mCompFields) 
-  {
-		mCompFields->Release();
-		mCompFields = nsnull;
-	}
-
 	if (m_attachment1_encoder_data) 
   {
 		MIME_EncoderDestroy(m_attachment1_encoder_data, PR_TRUE);
@@ -1822,7 +1802,7 @@ nsMsgComposeAndSend::SetListenerArray(nsIMsgSendListener **aListenerArray)
   // now allocate an array to hold the number of entries.
   mListenerArray = (nsIMsgSendListener **) PR_Malloc(sizeof(nsIMsgSendListener *) * mListenerArrayCount);
   if (!mListenerArray)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCRT::memset(mListenerArray, 0, (sizeof(nsIMsgSendListener *) * mListenerArrayCount));
   
@@ -1846,7 +1826,7 @@ nsMsgComposeAndSend::AddListener(nsIMsgSendListener *aListener)
     mListenerArray = (nsIMsgSendListener **) 
                   PR_Realloc(*mListenerArray, sizeof(nsIMsgSendListener *) * mListenerArrayCount);
     if (!mListenerArray)
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_OUT_OF_MEMORY;
     else
       return NS_OK;
   }
@@ -1855,7 +1835,7 @@ nsMsgComposeAndSend::AddListener(nsIMsgSendListener *aListener)
     mListenerArrayCount = 1;
     mListenerArray = (nsIMsgSendListener **) PR_Malloc(sizeof(nsIMsgSendListener *) * mListenerArrayCount);
     if (!mListenerArray)
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_OUT_OF_MEMORY;
 
     nsCRT::memset(mListenerArray, 0, (sizeof(nsIMsgSendListener *) * mListenerArrayCount));
   
@@ -1877,7 +1857,7 @@ nsMsgComposeAndSend::RemoveListener(nsIMsgSendListener *aListener)
       return NS_OK;
     }
 
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_INVALID_ARG;
 }
 
 nsresult
@@ -2053,8 +2033,8 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 						  const char                        *attachment1_type,
 						  const char                        *attachment1_body,
 						  PRUint32                          attachment1_body_length,
-						  const struct nsMsgAttachmentData  *attachments,
-						  const struct nsMsgAttachedFile    *preloaded_attachments,
+						  const nsMsgAttachmentData  *attachments,
+						  const nsMsgAttachedFile    *preloaded_attachments,
 						  void                              *relatedPart,
               nsIMsgSendListener                **aListenerArray)
 {
@@ -2082,7 +2062,7 @@ nsresult
 nsMsgComposeAndSend::SendMessageFile(
               nsIMsgIdentity                    *aUserIndentity,
  						  nsIMsgCompFields                  *fields,
-              nsFileSpec                        *sendFileSpec,
+              nsIFileSpec                        *sendIFileSpec,
               PRBool                            deleteSendFileOnCompletion,
 						  PRBool                            digest_p,
 						  nsMsgDeliverMode                  mode,
@@ -2092,16 +2072,30 @@ nsMsgComposeAndSend::SendMessageFile(
   nsresult      rv;
 
   if (!fields)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
   //
   // First check to see if the external file we are sending is a valid file.
   //
+  if (!sendIFileSpec)
+    return NS_ERROR_INVALID_ARG;
+
+  PRBool valid;
+  if (NS_FAILED(sendIFileSpec->isValid(&valid)))
+    return NS_ERROR_INVALID_ARG;
+
+  if (!valid)
+    return NS_ERROR_INVALID_ARG;
+
+  nsFileSpec  *sendFileSpec = nsnull;
+  nsFileSpec  tempFileSpec;
+
+  if (NS_FAILED(sendIFileSpec->GetFileSpec(&tempFileSpec)))
+    return NS_ERROR_UNEXPECTED;
+
+  sendFileSpec = new nsFileSpec(tempFileSpec);
   if (!sendFileSpec)
-    return NS_ERROR_FAILURE;
-  
-  if (!sendFileSpec->Exists())
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Setup the listeners...
   SetListenerArray(aListenerArray);
@@ -2111,7 +2105,7 @@ nsMsgComposeAndSend::SendMessageFile(
   {
     NS_NewFileSpecWithSpec(*sendFileSpec, &mReturnFileSpec);
 	  if (!mReturnFileSpec)
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_OUT_OF_MEMORY;
   }
 
   rv = Init(aUserIndentity, (nsMsgCompFields *)fields, sendFileSpec,
@@ -2176,7 +2170,7 @@ nsMsgComposeAndSend::SendWebPage(nsIMsgIdentity                    *aUserIndenti
   // First check to see if the fields are valid...
   //
   if ((!fields) || (!url) )
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
   tmpPageData = BuildURLAttachmentData(url);
 
@@ -2204,8 +2198,8 @@ nsMsgComposeAndSend::SendWebPage(nsIMsgIdentity                    *aUserIndenti
 						  TEXT_PLAIN, //const char                        *attachment1_type,
               msgBody, //const char                        *attachment1_body,
 						  bodyLen, // PRUint32                          attachment1_body_length,
-						  tmpPageData, // const struct nsMsgAttachmentData  *attachments,
-						  nsnull,  // const struct nsMsgAttachedFile    *preloaded_attachments,
+						  tmpPageData, // const nsMsgAttachmentData  *attachments,
+						  nsnull,  // const nsMsgAttachedFile    *preloaded_attachments,
 						  nsnull, // void                              *relatedPart,
               aListenerArray);  
   return rv;
@@ -2230,7 +2224,7 @@ nsMsgComposeAndSend::SendToMagicFolder(nsMsgDeliverMode mode)
     {
       // RICHIE_TODO: message loss here
       char    *eMsg = ComposeBEGetStringByID(rv);
-      Fail(MK_OUT_OF_MEMORY, eMsg);
+      Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
       NotifyListenersOnStopCopy(rv, nsnull);
       PR_FREEIF(eMsg);
     }
@@ -2315,6 +2309,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   char          *obuffer = 0;
   PRInt32       n;
   char          *envelopeLine = nsMsgGetEnvelopeLine();
+  PRBool        folderIsLocal = PR_TRUE;
 
   //
   // Create the file that will be used for the copy service!
@@ -2327,7 +2322,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 	if (!mCopyFileSpec)
   {
     delete tFileSpec;
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
   }
 
   nsOutputFileStream tempOutfile(mCopyFileSpec);
@@ -2337,14 +2332,14 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     switch (mode)
     {
     case nsMsgSaveAsDraft:
-      status = MK_MSG_UNABLE_TO_SAVE_DRAFT;
+      status = NS_MSG_UNABLE_TO_SAVE_DRAFT;
       break;
     case nsMsgSaveAsTemplate:
-      status = MK_MSG_UNABLE_TO_SAVE_TEMPLATE;
+      status = NS_MSG_UNABLE_TO_SAVE_TEMPLATE;
       break;
     case nsMsgDeliverNow:
     default:
-      status = MK_MSG_COULDNT_OPEN_FCC_FILE;
+      status = NS_MSG_COULDNT_OPEN_FCC_FILE;
       break;
     }
     delete tFileSpec;
@@ -2358,7 +2353,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   nsInputFileStream inputFile(*input_file);
   if (!inputFile.is_open())
 	{
-	  status = MK_UNABLE_TO_OPEN_FILE;
+	  status = NS_MSG_UNABLE_TO_OPEN_FILE;
 	  goto FAIL;
 	}
 
@@ -2381,7 +2376,8 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // First, we we need to put a Berkely "From - " delimiter at the head of 
   // the file for parsing...
   //
-  if (envelopeLine)
+  folderIsLocal = MessageFolderIsLocal(mUserIdentity, mode, mCompFields->GetFcc());
+  if ( (envelopeLine) && (folderIsLocal) )
   {
     PRInt32   len = PL_strlen(envelopeLine);
     
@@ -2408,7 +2404,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   // this status information for summary file regeneration for us. 
   if ( (mode == nsMsgQueueForLater  || mode == nsMsgSaveAsDraft ||
 	      mode == nsMsgSaveAsTemplate || mode == nsMsgDeliverNow) &&
-        MessageFolderIsLocal(mUserIdentity, mode, mCompFields->GetFcc())
+        folderIsLocal
      )
 	{
 	  char       *buf = 0;
@@ -2597,7 +2593,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     n += tempOutfile.write(NS_LINEBREAK, NS_LINEBREAK_LEN);
 	  if (n != (PRInt32) (PL_strlen(ibuffer) + NS_LINEBREAK_LEN)) // write failed 
 		{
-		  status = MK_MIME_ERROR_WRITING_FILE;
+		  status = NS_MSG_ERROR_WRITING_FILE;
 		  goto FAIL;
 		}
 	}
@@ -2608,7 +2604,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   n = tempOutfile.write(NS_LINEBREAK, NS_LINEBREAK_LEN);
   if (n != NS_LINEBREAK_LEN) // write failed 
 	{
-		status = MK_MIME_ERROR_WRITING_FILE;
+		status = NS_MSG_ERROR_WRITING_FILE;
     goto FAIL;
 	}
 

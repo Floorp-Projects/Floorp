@@ -51,7 +51,6 @@ EXPORTS = \
 
 CPPSRCS = \
 	nsMsgCompFields.cpp	\
-	msgCompGlue.cpp	\
 	nsSmtpUrl.cpp \
 	nsSmtpProtocol.cpp \
 	nsMsgSend.cpp \

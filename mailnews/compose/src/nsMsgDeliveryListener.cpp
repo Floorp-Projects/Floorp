@@ -27,7 +27,7 @@ nsresult
 nsMsgDeliveryListener::OnStartRunningUrl(nsIURI * aUrl)
 {
 #ifdef NS_DEBUG
-  printf("Starting to run the delivery operation\n");
+//  printf("Starting to run the delivery operation\n");
 #endif
 
   if (mMsgSendObj)
@@ -44,7 +44,7 @@ nsMsgDeliveryListener::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
   nsresult rv;
 #ifdef NS_DEBUG
-  printf("\nOnStopRunningUrl() called!\n");
+//  printf("\nOnStopRunningUrl() called!\n");
 #endif
 
   // First, stop being a listener since we are done.

@@ -1148,7 +1148,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 				char	*names;
 				char	*addresses;
 
-				ret = m_HeaderAddressParser->ParseHeaderAddresses (nsnull, recipient->value, &names, &addresses, numAddresses);
+				ret = m_HeaderAddressParser->ParseHeaderAddresses (nsnull, recipient->value, &names, &addresses, &numAddresses);
 				if (ret == NS_OK)
 				{
 					m_newMsgHdr->SetRecipientsArray(names, addresses, numAddresses);
@@ -1164,7 +1164,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 				char	*names;
 				char	*addresses;
 
-				ret = m_HeaderAddressParser->ParseHeaderAddresses (nsnull, ccList->value, &names, &addresses, numAddresses);
+				ret = m_HeaderAddressParser->ParseHeaderAddresses (nsnull, ccList->value, &names, &addresses, &numAddresses);
 				if (ret == NS_OK)
 				{
 					m_newMsgHdr->SetCCListArray(names, addresses, numAddresses);

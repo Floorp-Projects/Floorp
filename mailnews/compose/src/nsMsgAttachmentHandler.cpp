@@ -25,6 +25,8 @@
 #include "nsMsgEncoders.h"
 #include "nsMsgI18N.h"
 #include "nsURLFetcher.h"
+#include "nsMimeTypes.h"
+#include "nsMsgComposeStringBundle.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -289,7 +291,7 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset)
   {
     m_encoder_data = MIME_B64EncoderInit(mime_encoder_output_fn,
       m_mime_delivery_state);
-    if (!m_encoder_data) return MK_OUT_OF_MEMORY;
+    if (!m_encoder_data) return NS_ERROR_OUT_OF_MEMORY;
   }
   else if (!PL_strcasecmp(m_encoding, ENCODING_UUENCODE))
   {
@@ -324,13 +326,13 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset)
       mime_encoder_output_fn,
       m_mime_delivery_state);
     PR_FREEIF(tailName);
-    if (!m_encoder_data) return MK_OUT_OF_MEMORY;
+    if (!m_encoder_data) return NS_ERROR_OUT_OF_MEMORY;
   }
   else if (!PL_strcasecmp(m_encoding, ENCODING_QUOTED_PRINTABLE))
   {
     m_encoder_data = MIME_QPEncoderInit(mime_encoder_output_fn,
       m_mime_delivery_state);
-    if (!m_encoder_data) return MK_OUT_OF_MEMORY;
+    if (!m_encoder_data) return NS_ERROR_OUT_OF_MEMORY;
   }
   else
   {
@@ -405,29 +407,29 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 
   NS_ASSERTION (! m_done, "Already done");
 
-  mCompFields = compFields;
   if (!mURL)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
+
+  mCompFields = compFields;
 
   // First, get as file spec and create the stream for the
   // temp file where we will save this data
   mFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
   if (! mFileSpec )
-  	return (NS_ERROR_OUT_OF_MEMORY);
+  	return (NS_ERROR_FAILURE);
 
   mOutFile = new nsOutputFileStream(*mFileSpec, PR_WRONLY | PR_CREATE_FILE);
   if (!mOutFile)
   {
     delete mFileSpec;
     mFileSpec = nsnull;
-    //return MK_UNABLE_TO_OPEN_TMP_FILE; 
-    return NS_ERROR_FAILURE;
+    return NS_MSG_UNABLE_TO_OPEN_TMP_FILE; 
   }
 
   mURL->GetSpec(&url_string);
 
 #ifdef XP_MAC
-  // do we need to add IMAP: to this list? NET_IsLocalFileURL returns PR_FALSE always for IMAP 
+  // do we need to add IMAP: to this list? nsMsgIsLocalFileURL returns PR_FALSE always for IMAP 
   if ( (nsMsgIsLocalFile(url_string) &&	    
 	     (PL_strncasecmp(url_string, "mailbox:", 8) != 0)) )
 	{
@@ -435,7 +437,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 		// address in the url.
 	  char  *src_filename = nsMsgGetLocalFileFromURL (url_string);
     if (!src_filename)
-      return MK_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
 
 		// Only use appledouble if we aren't uuencoding.
 	  if( nsMsgIsMacFile(src_filename) && (! UseUUEncode_p()) )
@@ -446,7 +448,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 		  if (!separator)
       {
         PR_FREEIF(src_filename);
-			  return MK_OUT_OF_MEMORY;
+			  return NS_ERROR_OUT_OF_MEMORY;
       }
 						
 		  mAppleFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
@@ -476,7 +478,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       {
         PR_FREEIF(src_filename);
   		  PR_FREEIF(separator);
-        return MK_OUT_OF_MEMORY;
+        return NS_ERROR_OUT_OF_MEMORY;
       }
 
       if (NS_FAILED(nsMsgNewURL(&mURL, nsString(newURLSpec))))
@@ -484,7 +486,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
         PR_FREEIF(src_filename);
   		  PR_FREEIF(separator);
         PR_FREEIF(newURLSpec);
-        return MK_OUT_OF_MEMORY;
+        return NS_ERROR_OUT_OF_MEMORY;
       }
   
       NS_ADDREF(mURL);
@@ -567,7 +569,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
   {
     delete mFetcher;
     mFetcher = nsnull;
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UNEXPECTED;
   }
 
   return status;
@@ -663,7 +665,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 			{
 			  m_mime_delivery_state->Fail(status, 0);
         delete eMsg;
-			  return NS_ERROR_FAILURE;
+			  return NS_ERROR_UNEXPECTED;
 			}
 		}
 	}
@@ -685,9 +687,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
   else
 	{
 	  // If this is not the last attachment, but it got an error,
-		// then report that error and continue (we won't actually
-		// abort the delivery until all the other pending URLs have
-		// caught up with the NET_InterruptWindow() we did up above.)
+		// then report that error and continue 
 	  if (NS_FAILED(status))
 		{
 		  m_mime_delivery_state->Fail(status, eMsg);

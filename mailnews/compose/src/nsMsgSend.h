@@ -124,12 +124,11 @@
 #include "rosetta_mailnews.h"
 #include "nsFileStream.h"
 #include "nsMsgMessageFlags.h"
-#include "MsgCompGlue.h"
+#include "nsMsgTransition.h"
 #include "nsIMsgSend.h"
 #include "nsIURL.h"
 #include "nsMsgAttachmentHandler.h"
 #include "nsMsgCompFields.h"
-#include "nsMsgComposeBE.h"
 #include "nsIMsgSendListener.h"
 #if 0
 #include "nsMsgCopy.h"
@@ -237,8 +236,8 @@ public:
 			             const char       *attachment1_type,
 			             const char       *attachment1_body,
 			             PRUint32         attachment1_body_length,
-			             const struct nsMsgAttachmentData   *attachments,
-			             const struct nsMsgAttachedFile     *preloaded_attachments,
+			             const nsMsgAttachmentData   *attachments,
+			             const nsMsgAttachedFile     *preloaded_attachments,
 			             nsMsgSendPart    *relatedPart);
 
   //
@@ -284,8 +283,8 @@ public:
 						              const char                        *attachment1_type,
 						              const char                        *attachment1_body,
 						              PRUint32                          attachment1_body_length,
-						              const struct nsMsgAttachmentData  *attachments,
-						              const struct nsMsgAttachedFile    *preloaded_attachments,
+						              const nsMsgAttachmentData  *attachments,
+						              const nsMsgAttachedFile    *preloaded_attachments,
 						              void                              *relatedPart,
                           // This is an array of nsIMsgSendListener objects...there must
                           // be N+1 entries in the array with the final entry set to nsnull
@@ -294,7 +293,7 @@ public:
   NS_IMETHOD  SendMessageFile(
                           nsIMsgIdentity                    *aUserIdentity,
  						              nsIMsgCompFields                  *fields,
-                          nsFileSpec                        *sendFileSpec,
+                          nsIFileSpec                       *sendIFileSpec,
                           PRBool                            deleteSendFileOnCompletion,
 						              PRBool                            digest_p,
 						              nsMsgDeliverMode                  mode,
@@ -311,34 +310,34 @@ public:
   //
   // All vars necessary for this implementation
   //
-  nsIMsgIdentity          *mUserIdentity;
-  nsMsgCompFields         *mCompFields;         // All needed composition fields (header, etc...)
-  nsFileSpec              *mTempFileSpec;       // our temporary file
+  nsCOMPtr<nsIMsgIdentity>  mUserIdentity;
+  nsCOMPtr<nsMsgCompFields> mCompFields;         // All needed composition fields (header, etc...)
+  nsFileSpec                *mTempFileSpec;     // our temporary file
   
-  nsOutputFileStream      *mOutputFile;         // the actual output file stream
+  nsOutputFileStream        *mOutputFile;        // the actual output file stream
 
-  PRBool                  m_dont_deliver_p;     // If set, we just return the nsFileSpec of the file
-							                                  // created, instead of actually delivering message.
-  nsMsgDeliverMode        m_deliver_mode;       // nsMsgDeliverNow, nsMsgQueueForLater, nsMsgSaveAsDraft, 
-                                                // nsMsgSaveAsTemplate
-  nsIMessage              *mMsgToReplace;       // If the mode is nsMsgSaveAsDraft, this is the message it will
-                                                // replace
+  PRBool                    m_dont_deliver_p;    // If set, we just return the nsFileSpec of the file
+							                                   // created, instead of actually delivering message.
+  nsMsgDeliverMode          m_deliver_mode;      // nsMsgDeliverNow, nsMsgQueueForLater, nsMsgSaveAsDraft, 
+                                                 // nsMsgSaveAsTemplate
+  nsCOMPtr<nsIMessage>      mMsgToReplace;       // If the mode is nsMsgSaveAsDraft, this is the message it will
+                                                 // replace
 
   // These are needed for callbacks to the FE...  
-  nsIMsgSendListener      **mListenerArray;
-  PRInt32                 mListenerArrayCount;
-  nsMsgDeliveryListener   *mSendListener;
+  nsIMsgSendListener        **mListenerArray;
+  PRInt32                   mListenerArrayCount;
+  nsMsgDeliveryListener     *mSendListener;
 
-  nsIFileSpec             *mReturnFileSpec;     // a holder for file spec's to be returned to caller
+  nsIFileSpec               *mReturnFileSpec;     // a holder for file spec's to be returned to caller
 
   // File where we stored our HTML so that we could make the plaintext form.
-  nsFileSpec              *mHTMLFileSpec;
+  nsFileSpec                *mHTMLFileSpec;
 
   //
   // These variables are needed for message Copy operations!
   //
-  nsIFileSpec             *mCopyFileSpec;
-  nsMsgCopy               *mCopyObj;
+  nsIFileSpec               *mCopyFileSpec;
+  nsMsgCopy                 *mCopyObj;
 
   //
   // The first attachment, if any (typed in by the user.)

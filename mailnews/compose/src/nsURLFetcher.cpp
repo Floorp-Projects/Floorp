@@ -131,7 +131,7 @@ nsURLFetcher::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream,
   PRUint32        wroteIt;
 
   if (!mOutStream)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
   char *buf = (char *)PR_Malloc(aLength);
   if (!buf)
@@ -247,7 +247,7 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
 
   if ( (!aURL) || (!fOut) )
   {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
   }
 
   if (!fOut->is_open())
@@ -259,13 +259,13 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
                                              (nsISupports **)&mNetService);
   if ((rv != NS_OK)  || (!mNetService))
   {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FACTORY_NOT_LOADED;
   }
 
   if (NS_FAILED(mNetService->OpenStream(aURL, this)))
   {
     nsServiceManager::ReleaseService(kNetServiceCID, mNetService);  
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UNEXPECTED;
   }
 
   mURL = aURL;

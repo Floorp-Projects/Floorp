@@ -1,3 +1,8 @@
+// as does this
+#define NS_IMPL_IDS
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+
 #include "nsCOMPtr.h" 
 #include "msgCore.h"
 #include "nsMsgBaseCID.h"
@@ -17,7 +22,6 @@
 #include "nsIMsgCompFields.h"
 #include "nsIMsgSend.h"
 #include "nsIPref.h"
-#include "nsIServiceManager.h"
 #include "nscore.h"
 #include "nsIMsgMailSession.h"
 #include "nsINetSupportDialogService.h"
@@ -38,12 +42,11 @@
 #include "nsIEventQueue.h"
 #include "nsIFileLocator.h"
 
-#include "MsgCompGlue.h"
+#include "nsMsgTransition.h"
 #include "nsCRT.h"
 #include "prmem.h"
 
 #include "nsIMimeURLUtils.h"
-#include "nsICharsetConverterManager.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -65,10 +68,6 @@
 #define UNICHAR_DLL  "libuconv"MOZ_DLL_SUFFIX
 #endif
 #endif
-
-// {588595CB-2012-11d3-8EF0-00A024A7D144}
-#define CONV_CID  { 0x1e3f79f1, 0x6b6b, 0x11d2, { 0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 } };
-#define CONV_IID  { 0x1e3f79f0, 0x6b6b, 0x11d2, {  0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 } }
 
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
@@ -94,9 +93,7 @@ static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kAllocatorCID,  NS_ALLOCATOR_CID);
 
-// I18N
-static NS_DEFINE_CID(charsetCID,  CONV_CID);
-NS_DEFINE_IID(kConvMeIID,             CONV_IID);
+PRBool keepOnRunning = PR_TRUE;
 
 nsICharsetConverterManager *ccMan = nsnull;
 
@@ -238,31 +235,12 @@ in RED!</font></font></b>\n\
 </body>\n\
 </html>"};
 
-nsresult
-CallMe(nsresult aExitCode, void *tagData, nsFileSpec *fs)
-{
-  char *buf = (char *)tagData;
-  
-  printf("Called ME!\n");
-  printf("Exit code = %d\n", aExitCode);
-  printf("What were the magic words => [%s]\n", buf);
-  PR_FREEIF(buf);
-
-  if (fs)
-  {
-    printf("Delivery NOT Requested: Just created an RFC822 file. URL=[%s]\n", fs->GetCString());
-    delete fs;
-  }
-
-  return NS_OK;
-}
-
 static nsresult
 SetupRegistry(void)
 {
   // i18n
-  nsComponentManager::RegisterComponent(charsetCID, NULL, NULL, UNICHAR_DLL,  PR_FALSE, PR_FALSE);
-  nsresult res = nsServiceManager::GetService(charsetCID, kConvMeIID, (nsISupports **)&ccMan);
+  nsComponentManager::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL, UNICHAR_DLL,  PR_FALSE, PR_FALSE);
+  nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID, nsICharsetConverterManager::GetIID(), (nsISupports **)&ccMan);
   if (NS_FAILED(res)) 
   {
     printf("ERROR at GetService() code=0x%x.\n",res);
@@ -403,8 +381,8 @@ int main(int argc, char *argv[])
     if (rv == NS_OK && pMsgCompFields)
     { 
       pMsgCompFields->SetFrom(nsAutoString(", rhp@netscape.com, ").GetUnicode());
-      //pMsgCompFields->SetTo(nsAutoString("rhp@netscape.com").GetUnicode());
-      pMsgCompFields->SetNewsgroups(nsAutoString("news://news.mozilla.org./netscape.test").GetUnicode());
+      pMsgCompFields->SetTo(nsAutoString("rhp@netscape.com").GetUnicode());
+      //pMsgCompFields->SetNewsgroups(nsAutoString("news://news.mozilla.org./netscape.test").GetUnicode());
       pMsgCompFields->SetSubject(nsAutoString("[spam] test").GetUnicode());
       // pMsgCompFields->SetTheForcePlainText(PR_TRUE, &rv);
       pMsgCompFields->SetBody(nsAutoString(email).GetUnicode());
@@ -453,7 +431,7 @@ int main(int argc, char *argv[])
 
 #ifdef XP_PC
   printf("Sitting in an event processing loop ...Hit Cntl-C to exit...");
-  while (1)
+  while (keepOnRunning)
   {
     MSG msg;
     if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -467,7 +445,6 @@ int main(int argc, char *argv[])
   printf("Releasing the interface now...\n");
   pMsgSend->Release(); 
   pMsgCompFields->Release(); 
-
 
   return 0; 
 }

@@ -853,7 +853,7 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		err = errContinueLoop = NS_COMFALSE;
 
 	PRUint32 count;
-	nsresult parseErr = m_headerAddressParser->ParseHeaderAddresses(charset, string, &names, &addresses, count) ;
+	nsresult parseErr = m_headerAddressParser->ParseHeaderAddresses(charset, string, &names, &addresses, &count) ;
 
 	if (NS_SUCCEEDED(parseErr) && count > 0)
 	{

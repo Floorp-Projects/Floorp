@@ -33,6 +33,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/MsgComposeCommands.js \
 	$(srcdir)/defaultTextBody.html \
 	$(srcdir)/defaultHtmlBody.html \
+	$(srcdir)/composebe_en.properties \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

@@ -149,6 +149,8 @@
 #define PARAM_X_MAC_CREATOR                 "x-mac-creator"
 #define PARAM_X_MAC_TYPE                    "x-mac-type"
 
-#define UNKNOWN_CONTENT_TYPE               "application/x-unknown-content-type"
+#define UNKNOWN_CONTENT_TYPE                "application/x-unknown-content-type"
+
+#define APPLICATION_DIRECTORY				        "application/directory" /* text/x-vcard is synonym */
 
 #endif /* nsMimeTypes_h_ */

@@ -16,7 +16,7 @@
  * Reserved.
  */
 #include "msgCore.h"
-#include "MsgCompGlue.h" // need this to get MK_ defines...
+#include "nsMsgTransition.h" // need this to get MK_ defines...
 
 #include "nsSmtpProtocol.h"
 #include "nscore.h"
@@ -497,7 +497,7 @@ PRInt32 nsSmtpProtocol::SendHeloResponse(nsIInputStream * inputStream, PRUint32 
 	if(!userAddress)
 	{
 		nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(m_runningURL);
-		url->SetErrorMessage(NET_ExplainErrorDetails(MK_COULD_NOT_GET_USERS_MAIL_ADDRESS));
+    url->SetErrorMessage(NET_ExplainErrorDetails(MK_COULD_NOT_GET_USERS_MAIL_ADDRESS));
 		return(MK_COULD_NOT_GET_USERS_MAIL_ADDRESS);
 	}
 
@@ -1261,7 +1261,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
 				*/
 				if (addrs1 && *addrs1)
 				{
-					rv = parser->ParseHeaderAddresses(nsnull, addrs1, nsnull, &addrs2, m_addressesLeft);
+					rv = parser->ParseHeaderAddresses(nsnull, addrs1, nsnull, &addrs2, &m_addressesLeft);
 					PR_FREEIF (addrs1);
 				}
 

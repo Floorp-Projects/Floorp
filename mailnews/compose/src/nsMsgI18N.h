@@ -40,10 +40,13 @@ nsresult ConvertToUnicode(const nsString& aCharset,
 
 nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString);
 
+const char *nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec);
 
 //
 // THIS IS BAD STUFF...MAKE IT GO AWAY!!!
 //
+#include "intl_csi.h"
+
 void				nsMsgI18NDestroyCharCodeConverter(CCCDataObject);
 unsigned char *		nsMsgI18NCallCharCodeConverter(CCCDataObject,const unsigned char *,int32);
 int					nsMsgI18NGetCharCodeConverter(int16 ,int16 ,CCCDataObject);

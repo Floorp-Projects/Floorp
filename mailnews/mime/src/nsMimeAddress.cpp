@@ -38,7 +38,7 @@ ParseRFC822Addresses (const char *line,
                                                     (void **) getter_AddRefs(pHeader)); 
   if (NS_SUCCEEDED(res) && pHeader)
   {
-    pHeader->ParseHeaderAddresses(NULL, line, names, addresses, numAddresses);
+    pHeader->ParseHeaderAddresses(NULL, line, names, addresses, &numAddresses);
     return numAddresses;
   }
 

@@ -22,6 +22,7 @@
 #include "nsMsgCompFieldsFact.h"
 #include "nsIPref.h"
 #include "nsMsgI18N.h"
+#include "nsMsgComposeStringBundle.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -120,33 +121,7 @@ nsresult nsMsgCompFields::Copy(nsIMsgCompFields* pMsgCompFields)
 
 nsresult nsMsgCompFields::SetHeader(PRInt32 header, const char *value)
 {
-    int status = 0;
-
-	/* Since colon is not a legal character in a newsgroup name under son-of-1036
-	   we're assuming that such a header contains a URL, and we should parse it out
-	   to infer the news server. */
-// RICHIE - for now we are not restricting this to a single mail host...// if (value && MSG_NEWSGROUPS_HEADER_MASK == header && PL_strchr(value, ':')) 
-  if (PR_FALSE)
-  {
-		status = ParseNewsgroupsForUrls (value);
-		if (status == 0)
-			return status; /* it was a news URL, and we snarfed it up */
-		else 
-    {
-			if (status == MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS) 
-      {
-#ifdef UNREAD_CODE
-				MSG_Pane *owner = GetOwner();
-				if (owner)
-					FE_Alert (owner->GetContext(), XP_GetString(status));
-#endif
-			}
-
-			status = 0; /* It isn't a valid news URL, so treat it like a newsgroup
-                           MSG_CompositionPane::SanityCheck will decide if it's a legal newsgroup name */
-		}
-	}
-
+  int status = 0;
 	int i = DecodeHeader(header);
 	if (i >= 0) {
 		char* old = m_headers[i]; /* Done with careful paranoia, in case the
@@ -157,7 +132,7 @@ nsresult nsMsgCompFields::SetHeader(PRInt32 header, const char *value)
 			if (value) {
 				m_headers[i] = nsCRT::strdup(value);
 				if (!m_headers[i]) 
-				   status = MK_OUT_OF_MEMORY;
+				   status = NS_ERROR_OUT_OF_MEMORY;
 			} else 
 				m_headers[i] = NULL;
 			PR_FREEIF(old);
@@ -516,62 +491,17 @@ HJ36954
 		if (newsPostUrl) {
 			const char *existingHeader = GetHeader(MSG_NEWSPOSTURL_HEADER_MASK);
 			if (existingHeader && *existingHeader && nsCRT::strcasecmp(newsPostUrl, existingHeader))
-				status = MK_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS; /* can only send to one news host at a time */
+				status = NS_MSG_CANT_POST_TO_MULTIPLE_NEWS_HOSTS; /* can only send to one news host at a time */
 			else {
 				SetHeader (MSG_NEWSPOSTURL_HEADER_MASK, newsPostUrl);
 				status = 0; /* we succeeded, no need to keep looking at this header */
 			}
 			PR_Free(newsPostUrl);
 		} else
-			status = MK_OUT_OF_MEMORY;
+			status = NS_ERROR_OUT_OF_MEMORY;
 	}
 
 	return status;
-}
-
-
-PRInt16 nsMsgCompFields::ParseNewsgroupsForUrls (const char *value)
-{
-	int status = 0;
-
-  //
-  // Here we pull apart the comma-separated header value and look for news
-  // URLs. We'll use the URL to set the newspost URL to determine the host 
-  //
-#if 0      // RICHIE - this will change with seth's new approach
-  msg_StringArray values (PR_TRUE /* owns memory for strings */);
-	values.ImportTokenList (value);
-
-	for (int i = 0; i < values.GetSize() && status == 0; i++) {
-		const char *singleValue = values.GetAt(i);
-		if (NEWS_TYPE_URL == NET_URL_Type (singleValue)) {
-			char *hostPort, *group, *id, *data;
-			HJ81279
-			if (status == 0) {
-				HJ78808
-				if (status == 0) {
-					values.RemoveAt(i);         /* Remove the URL spec for this group */
-					values.InsertAt (i, group); /* Add in the plain old group name */
-				}
-				PR_FREEIF (hostPort);
-				PR_FREEIF (group);
-				PR_FREEIF (id);
-				PR_FREEIF (data);
-			}
-		} else
-			status = MK_MSG_INVALID_NEWS_HEADER;
-	}
-
-	if (status == 0) {
-		char *newValue = values.ExportTokenList ();
-		if (newValue) {
-			status = SetHeader (MSG_NEWSGROUPS_HEADER_MASK, newValue);
-			PR_Free(newValue);
-		}
-	}
-#endif
-
-  return status;
 }
 
 nsresult nsMsgCompFields::SetBody(const PRUnichar *value)
@@ -584,7 +514,7 @@ nsresult nsMsgCompFields::SetBody(const PRUnichar *value)
 		ConvertFromUnicode(m_internalCharSet, value, &cString);
 		m_body = cString;
 		if (!m_body)
-			retval = MK_OUT_OF_MEMORY;
+			retval = NS_ERROR_OUT_OF_MEMORY;
     }
     return retval;
 }
@@ -609,7 +539,7 @@ nsresult nsMsgCompFields::SetBody(const char *value)
     if (value) {
 		m_body = nsCRT::strdup(value);
 		if (!m_body)
-			retval = MK_OUT_OF_MEMORY;
+			retval = NS_ERROR_OUT_OF_MEMORY;
     }
     return retval;
 }
@@ -620,7 +550,7 @@ const char* nsMsgCompFields::GetBody()
 }
 
 
-PRInt16 nsMsgCompFields::AppendBody(char* value)
+nsresult nsMsgCompFields::AppendBody(char* value)
 {
     if (!value || !*value)
 		return 0;
@@ -635,13 +565,13 @@ PRInt16 nsMsgCompFields::AppendBody(char* value)
 			PR_Free(m_body);
 			m_body = tmp;
 		} else {
-			return MK_OUT_OF_MEMORY;
+			return NS_ERROR_OUT_OF_MEMORY;
 		}
     }
     return 0;
 }
     
-PRInt16 nsMsgCompFields::DecodeHeader(MSG_HEADER_SET header)
+nsresult nsMsgCompFields::DecodeHeader(MSG_HEADER_SET header)
 {
     int result;
  
@@ -679,7 +609,7 @@ PRInt16 nsMsgCompFields::DecodeHeader(MSG_HEADER_SET header)
     return result;
 }
 
-PRInt16 nsMsgCompFields::AddForwardURL(const char* url)
+nsresult nsMsgCompFields::AddForwardURL(const char* url)
 {
 	NS_ASSERTION(url && *url, "empty url");
 	if (!url || !*url)
@@ -689,7 +619,7 @@ PRInt16 nsMsgCompFields::AddForwardURL(const char* url)
 		m_maxforward += 10;
 		char** tmp = new char* [m_maxforward];
 		if (!tmp)
-			return MK_OUT_OF_MEMORY;
+			return NS_ERROR_OUT_OF_MEMORY;
 		for (PRInt32 i=0 ; i<m_numforward ; i++) {
 			tmp[i] = m_forwardurl[i];
 		}
@@ -698,7 +628,7 @@ PRInt16 nsMsgCompFields::AddForwardURL(const char* url)
 	}
 	m_forwardurl[m_numforward] = new char[nsCRT::strlen(url) + 1];
 	if (!m_forwardurl[m_numforward])
-		return MK_OUT_OF_MEMORY;
+		return NS_ERROR_OUT_OF_MEMORY;
 	m_forwardurl[m_numforward] = nsCRT::strdup(url);
 	m_numforward++;
 	return 0;

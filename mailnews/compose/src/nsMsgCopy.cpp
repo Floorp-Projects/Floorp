@@ -41,6 +41,7 @@ CopyListener::CopyListener(void)
 
 CopyListener::~CopyListener(void) 
 {
+  this;
 }
 
 nsresult
@@ -134,7 +135,7 @@ nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
   PRBool                  isDraft = PR_FALSE;
 
   if (!aMsgSendObj)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
   // Store away the server location...
   if (aSavePref)
@@ -179,7 +180,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
 
   // Check sanity
   if ((!aDiskFile) || (!dstFolder))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
 	//Call copyservice with dstFolder, disk file, and txnManager
 	NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv); 
@@ -187,7 +188,7 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
 	{
     mCopyListener = do_QueryInterface(new CopyListener());
     if (!mCopyListener)
-      return MK_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
 
     mCopyListener->SetMsgComposeAndSendObject(aMsgSendObj);
     rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace, aIsDraft, 

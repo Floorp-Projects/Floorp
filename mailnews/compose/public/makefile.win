@@ -25,6 +25,8 @@ XPIDLSRCS =										\
 				.\nsIMsgQuote.idl			\
 				.\nsIMsgSendListener.idl		\
 				.\nsIMsgSendLaterListener.idl		\
+				.\nsIMsgSend.idl		\
+				.\nsIMsgSendLater.idl		\
 				$(NULL)
 
 ################################################################################
@@ -33,14 +35,10 @@ XPIDLSRCS =										\
 EXPORTS =										\
 				nsMsgComposeFact.h				\
 				nsMsgCompFieldsFact.h			\
-				nsIMsgSend.h					\
 				nsMsgSendFact.h					\
 				nsMsgSendLaterFact.h			\
 				nsISmtpUrl.h					\
 				nsISmtpService.h				\
-				MsgCompGlue.h					\
-				nsMsgComposeBE.h				\
-				nsIMsgSendLater.h				\
 				$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

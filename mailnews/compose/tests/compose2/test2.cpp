@@ -25,7 +25,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "nsIFileLocator.h"
-#include "MsgCompGlue.h"
+#include "nsMsgTransition.h"
 #include "nsCRT.h"
 #include "prmem.h"
 #include "nsIMimeURLUtils.h"
@@ -316,6 +316,7 @@ int main(int argc, char *argv[])
   nsIMsgSend        *pMsgSend;
   nsresult          rv = NS_OK;
   nsFileSpec        *mailFile = nsnull;
+  nsIFileSpec       *mailIFile = nsnull;
 
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
@@ -381,6 +382,10 @@ int main(int argc, char *argv[])
     return 0;
   }
 
+  NS_NewFileSpecWithSpec(*mailFile, &mailIFile);
+	if (!mailIFile)
+    return NS_ERROR_FAILURE;
+
   rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, kIMsgSendIID, (void **) &pMsgSend); 
   if (rv == NS_OK && pMsgSend) 
   { 
@@ -389,7 +394,9 @@ int main(int argc, char *argv[])
                                              (void **) &pMsgCompFields); 
     if (rv == NS_OK && pMsgCompFields)
     { 
-      pMsgCompFields->SetTo("rhp@netscape.com", NULL);
+      const char *to = "rhp@netscape.com";
+      
+      pMsgCompFields->SetTo(nsString(to).GetUnicode());
 
             // Create the listener for the send operation...
       SendOperationListener *mSendListener = new SendOperationListener();
@@ -408,7 +415,7 @@ int main(int argc, char *argv[])
 
       pMsgSend->SendMessageFile(GetHackIdentity(),  // identity...
                           pMsgCompFields, // nsIMsgCompFields                  *fields,
-                          mailFile,             // nsFileSpec                        *sendFileSpec,
+                          mailIFile,             // nsFileSpec                        *sendFileSpec,
                           PR_TRUE,              // PRBool                            deleteSendFileOnCompletion,
 						              PR_FALSE,             // PRBool                            digest_p,
 						              nsMsgDeliverNow,      // nsMsgDeliverMode                  mode,

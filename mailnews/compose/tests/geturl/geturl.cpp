@@ -21,6 +21,11 @@
 
   The program takes a single parameter: url to fetch
  */
+// as does this
+#define NS_IMPL_IDS
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
+
 #include "nsCOMPtr.h"
 #include "nsIURL.h"
 #include "nsIEventQueueService.h"
@@ -28,13 +33,11 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIGenericFactory.h"
-#include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsFileStream.h"
 #include "nsFileSpec.h"
 #include "nsMimeTypes.h"
 #include "nsIPref.h"
-#include "nsICharsetConverterManager.h"
 #include "prprf.h"
 #include "nsIAllocator.h" // for the CID
 #include "nsURLFetcher.h"
@@ -66,16 +69,6 @@
 #define UNICHAR_DLL  "UNICHARUTIL_DLL"
 #endif
 
-// {588595CB-2012-11d3-8EF0-00A024A7D144}
-#define CONV_CID  { 0x1e3f79f1, 0x6b6b, 0x11d2, { 0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 } };
-#define CONV_IID  { 0x1e3f79f0, 0x6b6b, 0x11d2, {  0x8a, 0x86, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 } }
-
-// CIDs
-
-// I18N
-static NS_DEFINE_CID(charsetCID,  CONV_CID);
-NS_DEFINE_IID(kConvMeIID,             CONV_IID);
-
 // prefs
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -92,8 +85,8 @@ static nsresult
 SetupRegistry(void)
 {
   // i18n
-  nsComponentManager::RegisterComponent(charsetCID, NULL, NULL, UNICHAR_DLL,  PR_FALSE, PR_FALSE);
-  nsresult res = nsServiceManager::GetService(charsetCID, kConvMeIID, (nsISupports **)&ccMan);
+  nsComponentManager::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL, UNICHAR_DLL,  PR_FALSE, PR_FALSE);
+  nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID, nsICharsetConverterManager::GetIID(), (nsISupports **)&ccMan);
   if (NS_FAILED(res)) 
   {
     printf("ERROR at GetService() code=0x%x.\n",res);

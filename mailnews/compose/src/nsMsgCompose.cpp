@@ -616,7 +616,10 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
                   }
               }
               
-              QuoteOriginalMessage(originalMsgURI, 1);
+              if (NS_FAILED(QuoteOriginalMessage(originalMsgURI, 1)))
+              {
+                LoadBody();
+              }
               
               break;
         }
@@ -637,10 +640,13 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
           else
           	m_compFields->SetSubject(bString.GetUnicode());
             
+            nsresult tempRes;
             if (type == MSGCOMP_TYPE_ForwardAsAttachment)
-              QuoteOriginalMessage(originalMsgURI, 0);
+              tempRes = QuoteOriginalMessage(originalMsgURI, 0);
             else
-              QuoteOriginalMessage(originalMsgURI, 2);
+              tempRes = QuoteOriginalMessage(originalMsgURI, 2);
+            if (NS_FAILED(tempRes))
+              LoadBody();
             break;
         }
       }      
@@ -819,6 +825,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
 
   if (oldQuoting)
   {
+    mQuotingToFollow = PR_FALSE;
   	printf("nsMsgCompose: using old quoting function!");
 	mQuotingToFollow = PR_FALSE;
     HackToGetBody(what);
@@ -851,97 +858,98 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
 
 void nsMsgCompose::HackToGetBody(PRInt32 what)
 {
-    char *buffer = (char *) PR_CALLOC(16384);
-    if (buffer)
+  char *buffer = (char *) PR_CALLOC(16384);
+  if (buffer)
+  {
+    nsString fileName(TEMP_PATH_DIR);
+    fileName += TEMP_MESSAGE_IN;
+    
+    nsFileSpec fileSpec(fileName);
+    nsInputFileStream fileStream(fileSpec);
+    
+    nsString msgBody = (what == 2 && !m_composeHTML) ? "--------Original Message--------\r\n" 
+      : ""; 
+    
+    // skip RFC822 header
+    while (!fileStream.eof() && !fileStream.failed() &&
+      fileStream.is_open())
     {
-    	nsString fileName(TEMP_PATH_DIR);
-    	fileName += TEMP_MESSAGE_IN;
-   
-        nsFileSpec fileSpec(fileName);
-        nsInputFileStream fileStream(fileSpec);
-
-        nsString msgBody = (what == 2 && !m_composeHTML) ? "--------Original Message--------\r\n" 
-            : ""; 
-
-		// skip RFC822 header
-        while (!fileStream.eof() && !fileStream.failed() &&
-               fileStream.is_open())
-        {
-            fileStream.readline(buffer, 1024);
-            if (*buffer == 0)
-                break;
-        }
-		// copy message body
-        while (!fileStream.eof() && !fileStream.failed() &&
-               fileStream.is_open())
-        {
-            fileStream.readline(buffer, 1024);
-            if (what == 1 && ! m_composeHTML)
-                msgBody += "> ";
-            msgBody += buffer;
-            msgBody += MSG_LINEBREAK;
-        }
-        
-        if (m_composeHTML)
-        {
-        	nsString lowerMsgBody (msgBody);
-        	lowerMsgBody.ToLowerCase();
-        	
-        	PRInt32 startBodyOffset;
-        	PRInt32 endBodyOffset = -1;
-        	PRInt32 offset;
-        	startBodyOffset = lowerMsgBody.Find("<html>");
-        	if (startBodyOffset != -1)	//it's an HTML body
-        	{
-        		//Does it have a <body> tag?
-        		offset = lowerMsgBody.Find("<body");
-        		if (offset != -1)
-        		{
-        			offset = lowerMsgBody.Find('>', offset);
-           			if (offset != -1)
-           			{
-           				startBodyOffset = offset + 1;
-        				endBodyOffset = lowerMsgBody.RFind("</body>");
-        			}
-        		}
-        		if (endBodyOffset == -1)
-        			endBodyOffset = lowerMsgBody.RFind("</html>");        			
-        	}
-        	
-        	if (startBodyOffset == -1)
-        		startBodyOffset = 0;
-    		if (endBodyOffset == -1)
-    			endBodyOffset = lowerMsgBody.Length();
-    		
-    		msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
-    		if (startBodyOffset == 0)
-    		{
-    			msgBody.Insert("</html>", endBodyOffset);
-    			msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
-    		}
-    		msgBody.Insert("</blockquote>", endBodyOffset);
-     		msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
-    		
-    		msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
-    		msgBody.Insert("<blockquote TYPE=CITE>", startBodyOffset);
-    		msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
-    		if (startBodyOffset == 0)
-    		{
-    			msgBody.Insert("<html>", startBodyOffset);
-    			msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
-    			msgBody.Insert("<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">", startBodyOffset);
-     		}
-        }
-        else
-        {
-			//ducarroz: today, we are not converting HTML to plain text if needed!
-        }
-
-		// m_compFields->SetBody(msgBody.ToNewCString());
-		// SetBody() strdup()'s cmsgBody.
-		m_compFields->SetBody(nsAutoCString(msgBody));
-        PR_Free(buffer);
+      fileStream.readline(buffer, 1024);
+      if (*buffer == 0)
+        break;
     }
+    // copy message body
+    while (!fileStream.eof() && !fileStream.failed() &&
+      fileStream.is_open())
+    {
+      fileStream.readline(buffer, 1024);
+      if (what == 1 && ! m_composeHTML)
+        msgBody += "> ";
+      msgBody += buffer;
+      msgBody += MSG_LINEBREAK;
+    }
+    
+    if (m_composeHTML)
+    {
+      nsString lowerMsgBody (msgBody);
+      lowerMsgBody.ToLowerCase();
+      
+      PRInt32 startBodyOffset;
+      PRInt32 endBodyOffset = -1;
+      PRInt32 offset;
+      startBodyOffset = lowerMsgBody.Find("<html>");
+      if (startBodyOffset != -1)	//it's an HTML body
+      {
+        //Does it have a <body> tag?
+        offset = lowerMsgBody.Find("<body");
+        if (offset != -1)
+        {
+          offset = lowerMsgBody.Find('>', offset);
+          if (offset != -1)
+          {
+            startBodyOffset = offset + 1;
+        				endBodyOffset = lowerMsgBody.RFind("</body>");
+          }
+        }
+        if (endBodyOffset == -1)
+          endBodyOffset = lowerMsgBody.RFind("</html>");        			
+      }
+      
+      if (startBodyOffset == -1)
+        startBodyOffset = 0;
+    		if (endBodyOffset == -1)
+          endBodyOffset = lowerMsgBody.Length();
+        
+        msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+        if (startBodyOffset == 0)
+        {
+          msgBody.Insert("</html>", endBodyOffset);
+          msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+        }
+        msgBody.Insert("</blockquote>", endBodyOffset);
+        msgBody.Insert(MSG_LINEBREAK, endBodyOffset);
+        
+        msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+        msgBody.Insert("<blockquote TYPE=CITE>", startBodyOffset);
+        msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+        if (startBodyOffset == 0)
+        {
+          msgBody.Insert("<html>", startBodyOffset);
+          msgBody.Insert(MSG_LINEBREAK, startBodyOffset);
+          msgBody.Insert("<!doctype html public \"-//w3c//dtd html 4.0 transitional//en\">", startBodyOffset);
+        }
+    }
+    else
+    {
+      //ducarroz: today, we are not converting HTML to plain text if needed!
+    }
+    
+    // m_compFields->SetBody(msgBody.ToNewCString());
+    // SetBody() strdup()'s cmsgBody.
+    m_compFields->SetBody(nsAutoCString(msgBody));
+    PR_Free(buffer);
+  }
+  
 	LoadBody();
 }
 

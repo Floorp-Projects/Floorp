@@ -43,6 +43,7 @@
 #include "nsIMsgSendListener.h"
 #include "nsIMsgSendLaterListener.h"
 #include "nsMsgCopy.h"
+#include "nsMsgComposeStringBundle.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -187,7 +188,7 @@ nsMsgSendLater::RebufferLeftovers(char *startBuf, PRUint32 aLen)
   PR_FREEIF(mLeftoverBuffer);
   mLeftoverBuffer = (char *)PR_Malloc(aLen + 1);
   if (!mLeftoverBuffer)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCRT::memcpy(mLeftoverBuffer, startBuf, aLen);
   mLeftoverBuffer[aLen] = '\0';
@@ -430,7 +431,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
 
   // Get the recipients...
   if (NS_FAILED(mMessage->GetRecipients(recips)))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UNEXPECTED;
   else
   	mMessage->GetCCList(ccList);
 
@@ -439,7 +440,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
                                                     (void **) getter_AddRefs(compFields)); 
   if (NS_FAILED(res) || !compFields)
   {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FACTORY_NOT_LOADED;
   }
 
   // Get the message send interface
@@ -447,7 +448,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
                                           (void **) getter_AddRefs(pMsgSend)); 
   if (NS_FAILED(res) || !pMsgSend)
   {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FACTORY_NOT_LOADED;
   }
 
   // Since we have already parsed all of the headers, we are simply going to
@@ -476,7 +477,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   mSendListener = new SendOperationListener();
   if (!mSendListener)
   {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   
   NS_ADDREF(mSendListener);
@@ -486,21 +487,23 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   if (!tArray)
   {
     NS_RELEASE(mSendListener);
-    return NS_ERROR_FAILURE;
+    mSendListener = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   NS_ADDREF(this);  
   rv = pMsgSend->SendMessageFile(mIdentity,
                             compFields, // nsIMsgCompFields                  *fields,
-                            mTempFileSpec,   // nsFileSpec                        *sendFileSpec,
+                            mTempIFileSpec,   // nsIFileSpec                        *sendFileSpec,
                             PR_TRUE,         // PRBool                            deleteSendFileOnCompletion,
                             PR_FALSE,        // PRBool                            digest_p,
                             nsMsgDeliverNow, // nsMsgDeliverMode                  mode,
                             nsnull,          // nsIMessage *msgToReplace, 
                             tArray); 
   NS_RELEASE(mSendListener);
+  mSendListener = nsnull;
   if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
+    return rv;
 
   return NS_OK;
 }
@@ -539,20 +542,20 @@ nsMsgSendLater::StartNextMailFileSend()
   rv = mEnumerator->CurrentItem(getter_AddRefs(currentItem));
   if (NS_FAILED(rv))
   {
-    return NS_ERROR_FAILURE;
+    return rv;
   }
 
   mMessage = do_QueryInterface(currentItem); 
   if(!mMessage)
   {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsCOMPtr<nsIRDFResource>  myRDFNode ;
   myRDFNode = do_QueryInterface(mMessage, &rv);
   if(NS_FAILED(rv) || (!myRDFNode))
   {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   myRDFNode->GetValue(&aMessageURI);
@@ -583,7 +586,7 @@ nsMsgSendLater::StartNextMailFileSend()
   nsIMsgMessageService * messageService = nsnull;
 	rv = GetMessageServiceFromURI(aMessageURI, &messageService);
   if (NS_FAILED(rv) && !messageService)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FACTORY_NOT_LOADED;
 
   ++mTotalSendCount;
 
@@ -613,18 +616,17 @@ nsMsgSendLater::StartNextMailFileSend()
   if (!mSaveListener)
   {
     ReleaseMessageServiceFromURI(aMessageURI, messageService);
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   NS_ADDREF(mSaveListener);
-  mSaveListener->SetMsgSendLaterObject(this);
   rv = messageService->SaveMessageToDisk(aMessageURI, mHackTempIFileSpec, PR_FALSE, mSaveListener, nsnull);
   ReleaseMessageServiceFromURI(aMessageURI, messageService);
 
   // RICHIE NS_RELEASE(mSendListener); - this is causing us grief! Looks like messageService is not addref'ing
 
 	if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;    
+    return rv;    
 
   return NS_OK;
 }
@@ -662,9 +664,10 @@ nsresult
 nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
                                    nsIMsgSendLaterListener          **listenerArray)
 {
+  if (!identity)
+    return NS_ERROR_INVALID_ARG;
+
   mIdentity = identity;
-  if (!mIdentity)
-    return NS_ERROR_FAILURE;
   NS_ADDREF(mIdentity);
 
   // Set the listener array 
@@ -673,11 +676,19 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
 
   mMessageFolder = GetUnsentMessagesFolder(mIdentity);
   if (!mMessageFolder)
+  {
+    NS_RELEASE(mIdentity);
+    mIdentity = nsnull;
     return NS_ERROR_FAILURE;
+  }
 
   nsresult ret = mMessageFolder->GetMessages(&mEnumerator);
 	if (NS_FAILED(ret) || (!mEnumerator))
+  {
+    NS_RELEASE(mIdentity);
+    mIdentity = nsnull;
     return NS_ERROR_FAILURE;
+  }
 
   mFirstTime = PR_TRUE;
 	return StartNextMailFileSend();
@@ -693,7 +704,7 @@ nsMsgSendLater::DeleteCurrentMessage()
                                                     (void **) getter_AddRefs(msgArray)); 
   if (NS_FAILED(res) || !msgArray)
   {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FACTORY_NOT_LOADED;
   }
 
   msgArray->InsertElementAt(mMessage, 0);
@@ -933,7 +944,7 @@ nsMsgSendLater::DriveFakeStream(nsIOutputStream *stream)
   
   inFile = new nsIOFileStream(*mHackTempFileSpec);
   if (!inFile)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   m_headersFP = 0;
   inFile->seek(0);
@@ -968,7 +979,7 @@ DoGrowBuffer(PRInt32 desired_size, PRInt32 element_size, PRInt32 quantum,
                 : (char *) PR_Malloc ((*size + increment)
                 * (element_size / sizeof(char))));
     if (! new_buf)
-      return MK_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
     *buffer = new_buf;
     *size += increment;
   }
@@ -1031,14 +1042,14 @@ nsMsgSendLater::DeliverQueuedLine(char *line, PRInt32 length)
 
 			mOutFile = new nsOutputFileStream(*mTempFileSpec, PR_WRONLY | PR_CREATE_FILE);
       if ( (!mOutFile) || (!mOutFile->is_open()) )
-        return MK_MIME_ERROR_WRITING_FILE;
+        return NS_MSG_ERROR_WRITING_FILE;
 
       nsresult status = BuildHeaders();
       if (NS_FAILED(status))
         return status;
 
       if (mOutFile->write(m_headers, m_headersFP) != m_headersFP)
-        return MK_MIME_ERROR_WRITING_FILE;
+        return NS_MSG_ERROR_WRITING_FILE;
     }
     else
     {
@@ -1067,7 +1078,7 @@ nsMsgSendLater::DeliverQueuedLine(char *line, PRInt32 length)
     {
       PRInt32 wrote = mOutFile->write(line, length);
       if (wrote < (PRInt32) length) 
-        return MK_MIME_ERROR_WRITING_FILE;
+        return NS_MSG_ERROR_WRITING_FILE;
     }
   }
   
@@ -1093,7 +1104,7 @@ nsMsgSendLater::SetListenerArray(nsIMsgSendLaterListener **aListenerArray)
   // now allocate an array to hold the number of entries.
   mListenerArray = (nsIMsgSendLaterListener **) PR_Malloc(sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount);
   if (!mListenerArray)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCRT::memset(mListenerArray, 0, (sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount));
   
@@ -1117,7 +1128,7 @@ nsMsgSendLater::AddListener(nsIMsgSendLaterListener *aListener)
     mListenerArray = (nsIMsgSendLaterListener **) 
                   PR_Realloc(*mListenerArray, sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount);
     if (!mListenerArray)
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_OUT_OF_MEMORY;
     else
       return NS_OK;
   }
@@ -1126,7 +1137,7 @@ nsMsgSendLater::AddListener(nsIMsgSendLaterListener *aListener)
     mListenerArrayCount = 1;
     mListenerArray = (nsIMsgSendLaterListener **) PR_Malloc(sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount);
     if (!mListenerArray)
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_OUT_OF_MEMORY;
 
     nsCRT::memset(mListenerArray, 0, (sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount));
   
@@ -1148,7 +1159,7 @@ nsMsgSendLater::RemoveListener(nsIMsgSendLaterListener *aListener)
       return NS_OK;
     }
 
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_INVALID_ARG;
 }
 
 nsresult

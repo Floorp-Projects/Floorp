@@ -16,37 +16,44 @@
  * Reserved.
  */
 
-#ifndef _MsgCompose_H_
-#define _MsgCompose_H_
+//
+// The goal is to get this file to ZERO and then all old world stuff will
+// be gone...we're getting much closer :-)
+//
 
-#include "msgCore.h"
-#include "prprf.h" /* should be defined into msgCore.h? */
-#include "net.h" /* should be defined into msgCore.h? */
-#include "MailNewsTypes.h"
-#include "intl_csi.h"
+#ifndef _nsMsgTransition_h_
+#define _nsMsgTransition_h_
+
+#define   NS_IMPL_IDS
+#include "mimeenc.h"
+#include "xpgetstr.h"
+#include "xp_qsort.h"
 #include "msgcom.h"
+#include "rosetta_mailnews.h"
+#include "nsMsgZapIt.h"
 
-#include "MsgCompGlue.h"
-#include "nsMsgHeaderMasks.h"
-#include "nsMsgFolderFlags.h"
-#include "nsMsgCompFields.h"
-#include "nsIMsgCompose.h"
-#include "nsMsgSend.h"
+// These are transitional defines that will go away when we 
+// define new NS_... error codes...nsSmptProtocol.cpp is the last 
+// holdout.
+//
+#define MK_SMTP_SERVER_ERROR		-234
+#define MK_TCP_READ_ERROR			-252
+#define MK_COULD_NOT_LOGIN_TO_SMTP_SERVER -229
+#define MK_COULD_NOT_GET_USERS_MAIL_ADDRESS -235
+#define MK_OUT_OF_MEMORY			  -207
+#define MK_POP3_PASSWORD_UNDEFINED	-313
+#define MK_ERROR_SENDING_FROM_COMMAND -230
+#define MK_ERROR_SENDING_RCPT_COMMAND -231
+#define MK_ERROR_SENDING_DATA_COMMAND -232
+#define MK_ERROR_SENDING_MESSAGE	  -233
+#define MK_MIME_NO_RECIPIENTS		  -267
 
-/* The MSG_REPLY_TYPE shares the same space as MSG_CommandType, to avoid
-   possible weird errors, but is restricted to the `composition' commands
-   (MSG_ReplyToSender through MSG_ForwardMessage.)
- */
-typedef MSG_CommandType MSG_REPLY_TYPE;
+class MSG_Pane
+{
+public:
+	void    *unused;
+};
 
+#define MIME_MakeFromField(a)  PL_strdup("testmsg@netscape.com")
 
-struct MSG_AttachedFile;
-typedef struct PrintSetup_ PrintSetup;
-typedef struct _XPDialogState XPDialogState;
-
-HJ08142
-class MSG_NewsHost;
-class MSG_HTMLRecipients;
-
-
-#endif /* _MsgCompose_H_ */
+#endif /* _nsMsgTransition_h_ */

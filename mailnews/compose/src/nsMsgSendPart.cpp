@@ -27,7 +27,7 @@
 #include "nsMsgCompUtils.h"
 #include "nsFileStream.h"
 
-#include "MsgCompGlue.h"
+#include "nsMsgTransition.h"
 
 // defined in msgCompGlue.cpp
 static char *mime_mailto_stream_read_buffer = 0;
@@ -104,7 +104,7 @@ int nsMsgSendPart::CopyString(char** dest, const char* src)
   else
     *dest = PL_strdup(src);
   
-  return *dest? 0 : MK_OUT_OF_MEMORY;
+  return *dest? 0 : NS_ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -112,8 +112,9 @@ int nsMsgSendPart::SetFile(nsFileSpec *filename)
 {
   m_filespec = new nsFileSpec(*filename);
   if (!m_filespec)
-    return NS_ERROR_FAILURE;
-  return NS_OK;
+    return NS_ERROR_OUT_OF_MEMORY;
+  else
+    return NS_OK;
 }
 
 
@@ -128,7 +129,7 @@ int nsMsgSendPart::SetType(const char* type)
 {
   PR_FREEIF(m_type);
   m_type = PL_strdup(type);
-  return m_type ? 0 : MK_OUT_OF_MEMORY;
+  return m_type ? 0 : NS_ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -162,7 +163,7 @@ int nsMsgSendPart::AppendOtherHeaders(const char* more)
 
 	char* tmp = (char *) PR_Malloc(sizeof(char) * (PL_strlen(m_other) + PL_strlen(more) + 2));
 	if (!tmp)
-		return MK_OUT_OF_MEMORY;
+		return NS_ERROR_OUT_OF_MEMORY;
 
 	PL_strcpy(tmp, m_other);
 	PL_strcat(tmp, more);
@@ -189,7 +190,7 @@ int nsMsgSendPart::AddChild(nsMsgSendPart* child)
 {
   m_numchildren++;
   nsMsgSendPart** tmp = new nsMsgSendPart* [m_numchildren];
-  if (tmp == NULL) return MK_OUT_OF_MEMORY;
+  if (tmp == NULL) return NS_ERROR_OUT_OF_MEMORY;
   for (int i=0 ; i<m_numchildren-1 ; i++) {
     tmp[i] = m_children[i];
   }
@@ -308,7 +309,7 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
     
     
     buffer = mime_get_stream_write_buffer();
-    if (!buffer) return MK_OUT_OF_MEMORY;
+    if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
     
     NS_ASSERTION(encoded_data != buffer, "encoded_data == buffer");
     out = buffer;
@@ -395,19 +396,19 @@ itself.  (This relies on the fact that all body-related headers begin with
     
     *message_headers = (char *)PR_Malloc(L+1);
     if (!*message_headers)
-      return MK_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
     
     *content_headers = (char *)PR_Malloc(L+1);
     if (!*content_headers) {
       PR_Free(*message_headers);
-      return MK_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
     
     *content_type_header = (char *)PR_Malloc(L+1);
     if (!*content_type_header) {
       PR_Free(*message_headers);
       PR_Free(*content_headers);
-      return MK_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
     
     message_tail = *message_headers;
@@ -612,7 +613,7 @@ int nsMsgSendPart::Write()
       if (!content_type_header) {
         if (content_headers)
           PR_Free(content_headers);
-        status = MK_OUT_OF_MEMORY;
+        status = NS_ERROR_OUT_OF_MEMORY;
         goto FAIL;
       }
     }
@@ -628,7 +629,7 @@ int nsMsgSendPart::Write()
       if (!separator) {
         separator = mime_make_separator("");
         if (!separator) {
-          status = MK_OUT_OF_MEMORY;
+          status = NS_ERROR_OUT_OF_MEMORY;
           goto FAIL;
         }
       }
@@ -645,7 +646,7 @@ int nsMsgSendPart::Write()
       if (!ct2) {
         if (content_headers)
           PR_Free(content_headers);
-        status = MK_OUT_OF_MEMORY;
+        status = NS_ERROR_OUT_OF_MEMORY;
         goto FAIL;
       }
       
@@ -697,7 +698,7 @@ int nsMsgSendPart::Write()
       mime_mailto_stream_read_buffer = (char *)
         PR_Malloc(MIME_BUFFER_SIZE);
       if (!mime_mailto_stream_read_buffer) {
-        status = MK_OUT_OF_MEMORY;
+        status = NS_ERROR_OUT_OF_MEMORY;
         goto FAIL;
       }
     }

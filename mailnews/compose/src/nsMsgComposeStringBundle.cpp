@@ -30,7 +30,7 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-#define COMPOSE_BE_URL       "resource:/res/mailnews/messenger/compose_be.properties"
+#define COMPOSE_BE_URL       "resource:/chrome/messengercompose/content/default/composebe_en.properties"
 
 extern "C" 
 char *

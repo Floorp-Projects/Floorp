@@ -32,7 +32,7 @@
 #include "nsIEventQueue.h"
 #include "nsIFileLocator.h"
 
-#include "MsgCompGlue.h"
+#include "nsMsgTransition.h"
 #include "nsCRT.h"
 #include "prmem.h"
 

@@ -433,7 +433,7 @@ IsThisAnAmbitiousLinkType(char *link, char *mailToTag, char **linkPrefix)
 }
 
 nsresult
-nsMimeURLUtils::ScanForURLs(const char *input, int32 input_size,
+nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
                             char *output, int output_size, PRBool urls_only)
 {
   int col = 0;
@@ -835,7 +835,7 @@ nsMimeURLUtils::ReduceURL (char *url, char **retURL)
  * Always returns a malloc'd string or NULL on out of memory error
  */
 nsresult
-nsMimeURLUtils::MakeAbsoluteURL(char * absolute_url, char * relative_url, char **retURL)
+nsMimeURLUtils::MakeAbsoluteURL(char * absolute_url, const char * relative_url, char **retURL)
 {
   char * ret_url=0;
   int    new_length;
@@ -1157,7 +1157,7 @@ nsMimeURLUtils::MakeAbsoluteURL(char * absolute_url, char * relative_url, char *
 }
 
 static void
-Append(char** output, int32* output_max, char** curoutput, const char* buf, int32 length)
+Append(char** output, PRInt32* output_max, char** curoutput, const char* buf, PRInt32 length)
 {
   if (length + (*curoutput) - (*output) >= *output_max) {
     int offset = (*curoutput) - (*output);
@@ -1177,10 +1177,10 @@ nsMimeURLUtils::ScanHTMLForURLs(const char* input, char **retBuf)
 {
     char* output = NULL;
     char* curoutput;
-    int32 output_max;
+    PRInt32 output_max;
     char* tmpbuf = NULL;
-    int32 tmpbuf_max;
-    int32 inputlength;
+    PRInt32 tmpbuf_max;
+    PRInt32 inputlength;
     const char* inputend;
     const char* linestart;
     const char* lineend;
