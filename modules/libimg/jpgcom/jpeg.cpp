@@ -18,14 +18,13 @@
 
 /*
  *	  jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.7 1999/10/21 22:22:27 pnunn%netscape.com Exp $
+ *    $Id: jpeg.cpp,v 1.8 1999/10/22 21:01:27 pnunn%netscape.com Exp $
  */
 
 
 
 #include "nsIImgDecoder.h" // include if_struct.h Needs to be first
 #include "nsIImgDCallbk.h"
-//#include "dllcompat.h"
 #include "nsCRT.h"
 #include "nsJPGDecoder.h"
 #include "jpeg.h"

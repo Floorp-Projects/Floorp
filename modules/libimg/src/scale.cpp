@@ -203,7 +203,7 @@ il_flush_image_data(il_container *ic)
     /* Update the displayable area of the pixmap. */
     ic->displayable_rect.x_origin = 0;
     ic->displayable_rect.y_origin = 0;
-    ic->displayable_rect.width = img_header->width;
+    ic->displayable_rect.width = (PRUint16)img_header->width;
     ic->displayable_rect.height = MAX(ic->displayable_rect.height,
                                       end_row + 1);
 

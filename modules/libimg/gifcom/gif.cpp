@@ -63,7 +63,8 @@ mailing address.
 #include "prmem.h"
 
 #include "merrors.h"
-#include "dllcompat.h"
+#include "nsCRT.h"
+
 #include "gif.h"
 #include "nsIImgDCallbk.h"
 
@@ -215,6 +216,42 @@ do {gs->state=gif_gather; gs->gather_request_size = (n);                      \
 /* Get a 32-bit value stored in little-endian format */
 #define GETINT32(p)   (((p)[3]<<24) | ((p)[2]<<16) | ((p)[1]<<8) | ((p)[0]))
 
+/*	binary block Allocate and Concatenate
+ *
+ *   destination_length  is the length of the existing block
+ *   source_length   is the length of the block being added to the 
+ *   destination block
+ */
+char * 
+il_BACat (char **destination, 
+		   size_t destination_length, 
+		   const char *source, 
+		   size_t source_length)
+{
+    if (source) 
+	  {
+        if (*destination) 
+	      {
+      	    *destination = (char *) PR_REALLOC (*destination, destination_length + source_length);
+            if (*destination == NULL) 
+	          return(NULL);
+
+            nsCRT::memmove(*destination + destination_length, source, source_length);
+
+          } 
+		else 
+		  {
+            *destination = (char *) PR_MALLOC (source_length);
+            if (*destination == NULL) 
+	          return(NULL);
+
+            nsCRT::memcpy(*destination, source, source_length);
+          }
+    }
+
+  return *destination;
+}
+#define BlockAllocCat(dest, dest_length, src, src_length)  il_BACat(&(dest), dest_length, src, src_length)
 
 /* Send the data to the display front-end. */
 static void
@@ -1487,7 +1524,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
 
                 /* Shift remaining data to the head of the buffer */
                 if (gs->gathered && (gs->gather_head != gs->hold)) {
-                    XP_MEMMOVE(gs->hold, gs->gather_head, gs->gathered);
+                    nsCRT::memmove(gs->hold, gs->gather_head, gs->gathered);
                     gs->gather_head = gs->hold;
                 }
                  

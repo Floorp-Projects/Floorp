@@ -32,21 +32,12 @@
 #include "prtypes.h"
 #include "nsCom.h"
 
-/*
- * This will probably go away after we stop using 16-bit compilers
- * for Win16.
- */
-#ifdef XP_WIN16
-#define XP_HUGE __huge
-#define XP_HUGE_ALLOC(SIZE) halloc(SIZE,1)
-#define XP_HUGE_FREE(SIZE) hfree(SIZE)
-#define XP_HUGE_MEMCPY(DEST, SOURCE, LEN) hmemcpy(DEST, SOURCE, LEN)
-#else
+
 #define XP_HUGE
 #define XP_HUGE_ALLOC(SIZE) malloc(SIZE)
 #define XP_HUGE_FREE(SIZE) free(SIZE)
 #define XP_HUGE_MEMCPY(DEST, SOURCE, LEN) memcpy(DEST, SOURCE, LEN)
-#endif
+
 
 #define XP_HUGE_CHAR_PTR char XP_HUGE *
 
@@ -73,15 +64,6 @@ extern void XP_QSORT(void *, size_t, size_t,
                      int (*)(const void *, const void *));
 #endif /* XP_MAC */
 
-#define BlockAllocCopy(dest, src, src_length) NET_BACopy((char**)&(dest), src, src_length)
-#define BlockAllocCat(dest, dest_length, src, src_length)  NET_BACat(&(dest), dest_length, src, src_length)
-extern char * NET_BACopy (char **dest, const char *src, size_t src_length);
-extern char * NET_BACat  (char **dest, size_t dest_length, const char *src, size_t src_length);
-
-
-
-extern char * NET_SACopy (char **dest, const char *src);
-extern char * NET_SACat  (char **dest, const char *src);
 
 NS_EXPORT void* IL_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs);
 
