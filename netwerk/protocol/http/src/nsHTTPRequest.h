@@ -108,7 +108,7 @@ public:
     nsresult            ReleaseTransport(nsIChannel *aTransport);
 
     // Build the actual request string based on the settings. 
-    nsresult            WriteRequest(PRBool aIsProxied = PR_FALSE);
+    nsresult            WriteRequest();
 
     nsresult            GetPostDataStream(nsIInputStream* *aResult);
     nsresult            SetPostDataStream(nsIInputStream* aStream);
