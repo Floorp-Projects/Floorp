@@ -47,4 +47,5 @@ include <$(DEPTH)\config\rules.mak>
 libs:: $(DLL)
 
 clobber::
-	$(RM) -f *.sbr
+	$(RM) *.sbr
+  $(RM) $(DIST)\bin\plugins\$(DLLNAME).dll 
