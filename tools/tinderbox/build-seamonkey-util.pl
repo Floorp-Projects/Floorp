@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.75 $ ';
+$::UtilsVersion = '$Revision: 1.76 $ ';
 
 package TinderUtils;
 
@@ -847,30 +847,63 @@ sub run_all_tests {
 	# don't have profiles for tbox right now.)
 	#
     if ($Settings::StartupPerformanceTest and $test_result eq 'success') {
-	  # Settle OS.
-	  run_system_cmd("sync; sleep 10", 35);
+	  my $i;
+	  my $startuptime;         # Startup time in ms.
+	  my $agg_startuptime = 0; # Aggregate startup time.
+	  my $startup_count = 0;   # Number of successful runs.
+	  my $avg_startuptime = 0; # Average startup time.
+	  my @times;
 
-	  # Generate URL of form file:///<path>/startup-test.html?begin=986869495000
-	  # Where begin value is current time.
-	  my ($time, $url, $cwd, $cmd);
+	  for($i=0; $i<10; $i++) {
+		# Settle OS.
+		run_system_cmd("sync; sleep 5", 35);
+		
+		# Generate URL of form file:///<path>/startup-test.html?begin=986869495000
+		# Where begin value is current time.
+		my ($time, $url, $cwd, $cmd);
+		
+		# 
+		# Test for Time::HiRes and report the time.
+		$time = Time::PossiblyHiRes::getTime();
+		
+		$cwd = Cwd::getcwd();
+		print "cwd = $cwd\n";
+		$url  = "\"file:$build_dir/../startup-test.html?begin=$time\"";
+		print "url = $url\n";
+		
+		# Then load startup-test.html, which will pull off the begin argument
+		# and compare it to the current time to compute startup time.
+		# Since we are iterating here, save off logs as StartupPerformanceTest-0,1,2...
+		$startuptime = AliveTestReturnToken("StartupPerformanceTest-$i", 
+											$build_dir,
+											$binary, 
+											$url,
+											$Settings::StartupPerformanceTestTimeout,
+											"__startuptime",
+											",");
+		if($startuptime) {
+		  $test_result = 'success';
 
-	  #
-	  #$time = time() . "000"; # looks stupid, but 'time()*1000' returns a negative
-	  # 
-	  # Test for Time::HiRes and report the time.
-	  $time = Time::PossiblyHiRes::getTime();
+		  # Add our test to the total.
+		  $startup_count++;
+		  $agg_startuptime += $startuptime;
 
-	  $cwd = Cwd::getcwd();
-	  print "cwd = $cwd\n";
-	  $url  = "\"file:$build_dir/../startup-test.html?begin=$time\"";
-	  print "url = $url\n";
+		  # Keep track of the results in an array.
+		  push(@times, $startuptime);
+		}
+	  }
+	  
+	  print_log "\nSummary for startup test:\n";
 
-	  # Then load startup-test.html, which will pull off the begin argument
-	  # and compare it to the current time to compute startup time.
-	  $test_result = AliveTest("StartupPerformanceTest", $build_dir,
-							   $binary, 
-							   $url,
-							   $Settings::StartupPerformanceTestTimeout);
+	  # Print startup times.
+	  chop(@times);
+	  my $times_string = join(" ", @times);
+	  print_log "times = [$times_string]\n";
+
+	  # Figure out the average startup time.
+	  $avg_startuptime = $agg_startuptime / $startup_count;
+	  print_log "Average startup time: $avg_startuptime\n";
+      print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
     }
 
     return $test_result;
@@ -962,6 +995,31 @@ sub file_has_token {
     close TESTLOG;
     return $has_token;
 }
+
+# Parse a file for $token, return the token.
+# Look for the line "<token><delimiter><return-value>", e.g.
+# for "__startuptime,5501"
+#   token        = "__startuptime"
+#   delimiter    = ","
+#   return-value = "5501";
+#
+sub extract_token_from_file {
+    my ($filename, $token, $delimiter) = @_;
+    local $_;
+    my $token_value = 0;
+    open TESTLOG, "<$filename" or die "Cannot open file, $filename: $!";
+    while (<TESTLOG>) {
+        if (/$token/) {
+            # pull the token out of $_
+            $token_value = substr($_, index($_, $delimiter) + 1);
+            last;
+        }
+    }
+    close TESTLOG;
+    return $token_value;
+}
+
+
 
 sub kill_process {
     my ($target_pid) = @_;
@@ -1205,6 +1263,31 @@ sub AliveTest {
         print_test_errors($result, $binary_basename);
         return 'testfailed';
     }
+}
+
+# Same as AliveTest, but look for a token in the log and return
+# the value.  (used for startup iteration test).
+sub AliveTestReturnToken {
+  my ($test_name, $build_dir, $binary, $args, $timeout_secs, $token, $delimiter) = @_;
+  my $status;
+  my $rv = 0;
+  
+  # Same as in AliveTest, needs to match in order to find the log file.
+  my $binary_basename = File::Basename::basename($binary);
+  my $binary_dir = File::Basename::dirname($binary);
+  my $binary_log = "$build_dir/$test_name.log";
+  
+  $status = AliveTest($test_name, $build_dir, $binary, $args, $timeout_secs);
+  
+  # Look for and return token
+  if ($status) {
+	$rv = extract_token_from_file($binary_log, $token, $delimiter);
+	if ($rv) {
+	  print "AliveTestReturnToken: token value = $rv\n";
+	}
+  }
+  
+  return $rv;
 }
 
 
