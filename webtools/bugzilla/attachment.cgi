@@ -574,23 +574,11 @@ sub insert
       }      
   }   
   
-  # Send mail to let people know the attachment has been created.  Uses a 
-  # special syntax of the "open" and "exec" commands to capture the output of 
-  # "processmail", which "system" doesn't allow, without running the command 
-  # through a shell, which backticks (``) do.
-  #system ("./processmail", $bugid , $::userid);
-  #my $mailresults = `./processmail $bugid $::userid`;
-  my $mailresults = '';
-  open(PMAIL, "-|") or exec('./processmail', '-forcecc', $forcecc,  
-                            $::FORM{'bugid'}, $::COOKIE{'Bugzilla_login'});
-  $mailresults .= $_ while <PMAIL>;
-  close(PMAIL);
- 
   # Define the variables and functions that will be passed to the UI template.
+  $vars->{'mailrecipients'} =  { 'changer' => $::COOKIE{'Bugzilla_login'} };
   $vars->{'bugid'} = $::FORM{'bugid'};
   $vars->{'attachid'} = $attachid;
   $vars->{'description'} = $description;
-  $vars->{'mailresults'} = $mailresults;
   $vars->{'contenttypemethod'} = $::FORM{'contenttypemethod'};
   $vars->{'contenttype'} = $::FORM{'contenttype'};
 
@@ -791,21 +779,10 @@ sub update
 
   }
   
-  # Send mail to let people know the bug has changed.  Uses a special syntax
-  # of the "open" and "exec" commands to capture the output of "processmail",
-  # which "system" doesn't allow, without running the command through a shell,
-  # which backticks (``) do.
-  #system ("./processmail", $bugid , $::userid);
-  #my $mailresults = `./processmail $bugid $::userid`;
-  my $mailresults = '';
-  open(PMAIL, "-|") or exec('./processmail', $bugid, DBID_to_name($::userid));
-  $mailresults .= $_ while <PMAIL>;
-  close(PMAIL);
- 
   # Define the variables and functions that will be passed to the UI template.
+  $vars->{'mailrecipients'} = { 'changer' => $::COOKIE{'Bugzilla_login'} };
   $vars->{'attachid'} = $::FORM{'id'}; 
   $vars->{'bugid'} = $bugid; 
-  $vars->{'mailresults'} = $mailresults; 
 
   # Return the appropriate HTTP response headers.
   print "Content-Type: text/html\n\n";

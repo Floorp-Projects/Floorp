@@ -259,6 +259,13 @@ sub create {
             # UserInGroup - you probably want to cache this
             'UserInGroup' => \&::UserInGroup,
 
+            # SendBugMail - sends mail about a bug, using Bugzilla::BugMail.pm
+            'SendBugMail' => sub {
+                my ($id, $mailrecipients) = (@_);
+                require Bugzilla::BugMail;
+                Bugzilla::BugMail::Send($id, $mailrecipients);
+            },
+ 
             # SyncAnyPendingShadowChanges
             # - called in the footer to sync the shadowdb
             'SyncAnyPendingShadowChanges' => \&::SyncAnyPendingShadowChanges,

@@ -150,6 +150,31 @@ if (exists $::FORM{'cleangroupsnow'}) {
            "- reduced from $before records to $after records");
 }
 
+if (exists $::FORM{'rescanallBugMail'}) {
+    require Bugzilla::BugMail;
+
+    Status("OK, now attempting to send unsent mail");
+    SendSQL("SELECT bug_id FROM bugs WHERE lastdiffed < delta_ts AND 
+             delta_ts < date_sub(now(), INTERVAL 30 minute) ORDER BY bug_id");
+    my @list;
+    while (MoreSQLData()) {
+        push (@list, FetchOneColumn());
+    }
+
+    Status(scalar(@list) . ' bugs found with possibly unsent mail.');
+
+    foreach my $bugid (@list) {
+        Bugzilla::BugMail::Send($bugid);
+    }
+
+    if (scalar(@list) > 0) {
+        Status("Unsent mail has been sent.");
+    }
+
+    PutFooter();
+    exit;
+}
+
 print "OK, now running sanity checks.<p>\n";
 
 ###########################################################################
@@ -683,7 +708,7 @@ while (@row = FetchSQLData()) {
 if (@badbugs > 0) {
     Alert("Bugs that have changes but no mail sent for at least half an hour: " .
           join (", ", @badbugs));
-    print("Run <code>processmail rescanall</code> to fix this<p>\n");
+    print qq{<a href="sanitycheck.cgi?rescanallBugMail=1">Send these mails</a>.<p>\n};
 }
 
 ###########################################################################

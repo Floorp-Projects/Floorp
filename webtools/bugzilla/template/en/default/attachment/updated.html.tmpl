@@ -23,7 +23,6 @@
 [%# INTERFACE:
   # bugid: integer. ID of the bug we are updating.
   # attachid: integer. ID of the attachment we just attached.
-  # mailresults: string. Who was mailed and who wasn't. 
   #%]
   
 [% PROCESS global/header.html.tmpl 
@@ -40,7 +39,7 @@
         <a href="attachment.cgi?id=[% attachid %]&amp;action=edit">attachment [% attachid %]</a>
         of bug [% bugid %] submitted
       </h2>
-      [% mailresults %]
+      [% PROCESS "bug/process/bugmail.html.tmpl" mailing_bugid = bugid %]
     </td>
 
     <td>

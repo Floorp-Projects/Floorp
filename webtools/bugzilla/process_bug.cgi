@@ -1360,8 +1360,8 @@ foreach my $id (@idlist) {
     LogActivityEntry($id, "bug_group", $groupDelNames, $groupAddNames,
                      $whoid, $timestamp); 
     $bug_changed = 1;
-    
-    my $removedCcString = "";
+
+    my @ccRemoved = (); 
     if (defined $::FORM{newcc} || defined $::FORM{removecc} || defined $::FORM{masscc}) {
         # Get the current CC list for this bug
         my %oncc;
@@ -1387,8 +1387,6 @@ foreach my $id (@idlist) {
                 $oncc{$pid} = 0;
             }
         }
-        # Save off the removedCcString so it can be fed to processmail
-        $removedCcString = join (",", @removed);
 
         # If any changes were found, record it in the activity log
         if (scalar(@removed) || scalar(@added)) {
@@ -1397,6 +1395,7 @@ foreach my $id (@idlist) {
             LogActivityEntry($id,"cc",$removed,$added,$whoid,$timestamp);
             $bug_changed = 1;
         }
+        @ccRemoved = @removed;
     }
 
     # We need to run processmail for dependson/blocked bugs if the dependencies
@@ -1660,28 +1659,10 @@ foreach my $id (@idlist) {
     }
     SendSQL("UNLOCK TABLES");
 
-    my @ARGLIST = ();
-    if ( $removedCcString ne "" ) {
-        push @ARGLIST, ("-forcecc", $removedCcString);
-    }
-    if ( $origOwner ne "" ) {
-        push @ARGLIST, ("-forceowner", $origOwner);
-    }
-    if ( $origQaContact ne "") { 
-        push @ARGLIST, ( "-forceqacontact", $origQaContact);
-    }
-    push @ARGLIST, ($id, $::COOKIE{'Bugzilla_login'});
-  
-    # Send mail to let people know the bug has been changed.  Uses 
-    # a special syntax of the "open" and "exec" commands to capture 
-    # the output "processmail", which "system" doesn't allow 
-    # (i.e. "system ('./processmail', $bugid , $::userid);"), without 
-    # the insecurity of running the command through a shell via backticks
-    # (i.e. "my $mailresults = `./processmail $bugid $::userid`;").
-    $vars->{'mail'} = "";
-    open(PMAIL, "-|") or exec('./processmail', @ARGLIST);
-    $vars->{'mail'} .= $_ while <PMAIL>;
-    close(PMAIL);
+    $vars->{'mailrecipients'} = { 'cc' => \@ccRemoved,
+                                  'owner' => $origOwner,
+                                  'qa' => $origQaContact,
+                                  'changer' => $::COOKIE{'Bugzilla_login'} };
 
     $vars->{'id'} = $id;
     
@@ -1710,11 +1691,9 @@ foreach my $id (@idlist) {
         CheckFormFieldDefined(\%::FORM,'comment');
         SendSQL("INSERT INTO duplicates VALUES ($duplicate, $::FORM{'id'})");
         
-        $vars->{'mail'} = "";
-        open(PMAIL, "-|") or exec('./processmail', $duplicate, $::COOKIE{'Bugzilla_login'});
-        $vars->{'mail'} .= $_ while <PMAIL>;
-        close(PMAIL);
-        
+        $vars->{'mailrecipients'} = { 'changer' => $::COOKIE{'Bugzilla_login'} 
+                                    }; 
+
         $vars->{'id'} = $duplicate;
         $vars->{'type'} = "dupe";
         
@@ -1725,12 +1704,7 @@ foreach my $id (@idlist) {
 
     if ($check_dep_bugs) {
         foreach my $k (keys(%dependencychanged)) {
-            $vars->{'mail'} = "";
-            open(PMAIL, "-|") 
-              or exec('./processmail', $k, $::COOKIE{'Bugzilla_login'});
-            $vars->{'mail'} .= $_ while <PMAIL>;
-            close(PMAIL);
-
+            $vars->{'mailrecipients'} = { 'changer' => $::COOKIE{'Bugzilla_login'} };
             $vars->{'id'} = $k;
             $vars->{'type'} = "dep";
 

@@ -457,30 +457,16 @@ if (UserInGroup("editbugs")) {
     }
 }
 
-# Assemble the -force* strings so this counts as "Added to this capacity"
-my @ARGLIST = ();
-if (@cc) {
-    push (@ARGLIST, "-forcecc", join(",", @cc));
-}
-
-push (@ARGLIST, "-forceowner", DBID_to_name($::FORM{assigned_to}));
+# Email everyone the details of the new bug 
+$vars->{'mailrecipients'} = { 'cc' => \@cc,
+                              'owner' => DBID_to_name($::FORM{'assigned_to'}),
+                              'reporter' => $::COOKIE{'Bugzilla_login'},
+                              'changer' => $::COOKIE{'Bugzilla_login'} };
 
 if (defined $::FORM{'qa_contact'}) {
-    push (@ARGLIST, "-forceqacontact", DBID_to_name($::FORM{'qa_contact'}));
+    $vars->{'mailrecipients'}->{'qa'} = DBID_to_name($::FORM{'qa_contact'});
 }
 
-push (@ARGLIST, "-forcereporter", DBID_to_name($::userid));
-
-push (@ARGLIST, $id, $::COOKIE{'Bugzilla_login'});
-
-# Send mail to let people know the bug has been created.
-# See attachment.cgi for explanation of why it's done this way.
-my $mailresults = '';
-open(PMAIL, "-|") or exec('./processmail', @ARGLIST);
-$mailresults .= $_ while <PMAIL>;
-close(PMAIL);
-
-# Tell the user all about it
 $vars->{'id'} = $id;
 my $bug = new Bug($id, $::userid);
 $vars->{'bug'} = $bug;
@@ -491,19 +477,10 @@ $vars->{'sentmail'} = [];
 
 push (@{$vars->{'sentmail'}}, { type => 'created',
                                 id => $id,
-                                mail => $mailresults
                               });
 
 foreach my $i (@all_deps) {
-    my $mail = "";
-    open(PMAIL, "-|") or exec('./processmail', $i, $::COOKIE{'Bugzilla_login'});
-    $mail .= $_ while <PMAIL>;
-    close(PMAIL);
-
-    push (@{$vars->{'sentmail'}}, { type => 'dep',
-                                    id => $i,
-                                    mail => $mail
-                                  });
+    push (@{$vars->{'sentmail'}}, { type => 'dep', id => $i, });
 }
 
 my @bug_list;

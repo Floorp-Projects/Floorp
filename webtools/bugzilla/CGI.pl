@@ -755,10 +755,7 @@ sub CheckIfVotedConfirmed {
                       
         $vars->{'type'} = "votes";
         $vars->{'id'} = $id;
-        $vars->{'mail'} = "";
-        open(PMAIL, "-|") or exec('./processmail', $id);
-        $vars->{'mail'} .= $_ while <PMAIL>;
-        close(PMAIL);
+        $vars->{'mailrecipients'} = { 'changer' => $who };
         
         $template->process("bug/process/results.html.tmpl", $vars)
           || ThrowTemplateError($template->error());

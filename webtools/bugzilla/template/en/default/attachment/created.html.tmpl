@@ -26,7 +26,6 @@
   # contenttype: string. The Content Type we attached it as.
   # contenttypemethod: string. How we got the content type of the attachment.
   #  Possible values: autodetect, list, manual.
-  # mailresults: string. who was mailed, and who wasn't.
   #%]
   
 [% PROCESS global/header.html.tmpl 
@@ -42,7 +41,7 @@
         to <a href="show_bug.cgi?id=[% bugid %]">Bug #[% bugid %]</a> Created
       </h2>
 
-      [% mailresults %]
+      [% PROCESS "bug/process/bugmail.html.tmpl" mailing_bugid = bugid %]
 
       [% IF contenttypemethod == 'autodetect' %]
         <p>

@@ -1,4 +1,3 @@
-#!/usr/bonsaitools/bin/perl -wT
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public
@@ -24,27 +23,23 @@
 #                 Alan Raetz <al_raetz@yahoo.com>
 #                 Jacob Steenhagen <jake@actex.net>
 #                 Matthew Tuck <matty@chariot.net.au>
+#                 Bradley Baetz <bbaetz@student.usyd.edu.au>
+#                 J. Paul Reed <preed@sigkill.com>
 
 use strict;
-use lib ".";
 
-require "globals.pl";
+package Bugzilla::BugMail;
 
 use RelationSet;
 
-
-# Shut up misguided -w warnings about "used only once".
-sub processmail_sillyness {
-    my $zz;
-    $zz = $::unconfirmedstate;
-}
-
-$| = 1;
-
-umask(0);
+# This code is really ugly. It was a commandline interface, then it was moved
+# There are package-global variables which we rely on ProcessOneBug to clean
+# up each time, and other sorts of fun.
+# This really needs to be cleaned at some point.
 
 my $nametoexclude = "";
 my %nomail;
+my $last_changed;
 
 my @excludedAddresses = ();
 
@@ -52,15 +47,32 @@ my @excludedAddresses = ();
 my $enableSendMail = 1;
 
 my %force;
-@{$force{'QAcontact'}} = ();
-@{$force{'Owner'}} = ();
-@{$force{'Reporter'}} = ();
-@{$force{'CClist'}} = ();
-@{$force{'Voter'}} = ();
-
 
 my %seen;
 my @sentlist;
+
+# I got sick of adding &:: to everything.
+# However, 'Yuck!'
+# I can't require, cause that pulls it in only once, so it won't then be
+# in the global package, and these aren't modules, so I can't use globals.pl
+# Remove this evilness once our stuff uses real packages.
+sub AUTOLOAD {
+    no strict 'refs';
+    use vars qw($AUTOLOAD);
+    my $subName = $AUTOLOAD;
+    $subName =~ s/.*::/::/; # remove package name
+    *$AUTOLOAD = \&$subName;
+    goto &$AUTOLOAD;
+}
+
+# This is run when we load the package
+if (open(NOMAIL, "<data/nomail")) {
+    while (<NOMAIL>) {
+        $nomail{trim($_)} = 1;
+    }
+    close(NOMAIL);
+}
+
 
 sub FormatTriple {
     my ($a, $b, $c) = (@_);
@@ -82,9 +94,52 @@ END
     ; # This semicolon appeases my emacs editor macros. :-)
     return $^A;
 }
-    
 
-sub ProcessOneBug {
+# This is a bit of a hack, basically keeping the old system()
+# cmd line interface. Should clean this up at some point.
+#
+# args: bug_id, and an optional hash ref which may have keys for:
+# changer, owner, qa, reporter, cc
+# Optional hash contains values of people which will be forced to those
+# roles when the email is sent.
+# All the names are email addresses, not userids
+# values are scalars, except for cc, which is a list
+sub Send($;$) {
+    my ($id, $recipients) = (@_);
+
+    # This doesn't work if its not in a sub. Probably something to do with the
+    # require abuse we do.
+    GetVersionTable();
+
+    # Since any email recipients must be rederived if the user has not
+    # been rederived since the most recent group change, figure out when that
+    # is once and determine the need to rederive users using the same DB 
+    # access that gets the user's email address each time a person is 
+    # processed.
+    SendSQL("SELECT MAX(last_changed) FROM groups");
+    ($last_changed) = FetchSQLData();
+
+    # Make sure to clean up _all_ package vars here. Yuck...
+    $nametoexclude = $recipients->{'changer'} || "";
+    @{$force{'CClist'}} = (exists $recipients->{'cc'} && 
+     scalar($recipients->{'cc'}) > 0) ? map(trim($_), 
+     @{$recipients->{'cc'}}) : ();
+    @{$force{'Owner'}} = $recipients->{'owner'} ? 
+     (trim($recipients->{'owner'})) : ();
+    @{$force{'QAcontact'}} = $recipients->{'qacontact'} ? 
+     (trim($recipients->{'qacontact'})) : ();
+    @{$force{'Reporter'}} = $recipients->{'reporter'} ? 
+     (trim($recipients->{'reporter'})) : ();
+    @{$force{'Voter'}} = ();
+
+    %seen = ();
+    @excludedAddresses = ();
+    @sentlist = ();
+
+    return ProcessOneBug($id);
+}
+
+sub ProcessOneBug($) {
     my ($id) = (@_);
 
     my @headerlist;
@@ -356,19 +411,8 @@ sub ProcessOneBug {
     # Filter the exclude list for dupes one last time
     @excludedAddresses = filterExcludeList(\@excludedAddresses,
                                            \@sentlist);
-    if (@sentlist) {
-        print "<b>Email sent to:</b> " . join(", ", @sentlist) ."<br>\n";
-    } else {
-        print "<b>Email sent to:</b> no one<br>\n";
-    }
 
-    if (@excludedAddresses) {
-        print "<b>Excluding:</b> " . join(", ", @excludedAddresses) . "\n";
-    }
-
-    print "<br><center>If you wish to tweak the kinds of mail Bugzilla sends you, you can";
-    print " <a href=\"userprefs.cgi?tab=email\">change your preferences</a></center>\n";
-
+    return { sent => \@sentlist, excluded => \@excludedAddresses };
 }
 
 # When one person is in different fields on one bug, they may be
@@ -480,7 +524,7 @@ sub getEmailAttributes (\%\@$) {
         # effect filtering later and we're already in the loop.
         if ($fieldName eq 'AssignedTo') {
             push (@{$force{'Owner'}}, $new);
-        } elsif ($fieldName eq 'QAContact') {
+        } elsif ($fieldName eq 'QAcontact') {
            push (@{$force{'QAcontact'}}, $new);
         } elsif ($fieldName eq 'CC') {
             my @added = split (/[ ,]/, $new);
@@ -667,8 +711,8 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     }
 
         
-    SendSQL("SELECT userid, (refreshed_when > " . SqlQuote($::last_changed) . ") " .
-            "FROM profiles WHERE login_name = " . SqlQuote($person));
+    SendSQL("SELECT userid, (refreshed_when > " . SqlQuote($last_changed) . 
+            ") FROM profiles WHERE login_name = " . SqlQuote($person));
     my ($userid, $current) = (FetchSQLData());
 
     $seen{$person} = 1;
@@ -822,107 +866,14 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     }
 
     if ($enableSendMail == 1) {
-    open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
-      die "Can't open sendmail";
+        open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
+          die "Can't open sendmail";
     
-    print SENDMAIL trim($msg) . "\n";
-    close SENDMAIL;
+        print SENDMAIL trim($msg) . "\n";
+        close SENDMAIL;
     }
     push(@sentlist, $person);
     return 1;
 }
 
-# Code starts here
-
-ConnectToDatabase();
-GetVersionTable();
-
-if (open(FID, "<data/nomail")) {
-    while (<FID>) {
-        $nomail{trim($_)} = 1;
-    }
-    close FID;
-}
-
-# Since any email recipients must be rederived if the user has not
-# been rederived since the most recent group change, figure out when that
-# is once and determine the need to rederive users using the same DB access
-# that gets the user's email address each time a person is processed.
-#
-SendSQL("SELECT MAX(last_changed) FROM groups");
-($::last_changed) = FetchSQLData();
-
-if ($#ARGV >= 0 && $ARGV[0] eq "regenerate") {
-    print "Regenerating is no longer required or supported\n";
-    exit;
-}
-
-if ($#ARGV >= 0 && $ARGV[0] eq "-forcecc") {
-    shift(@ARGV);
-    foreach my $i (split(/,/, shift(@ARGV))) {
-        push(@{$force{'CClist'}}, trim($i));
-    }
-}
-
-if ($#ARGV >= 0 && $ARGV[0] eq "-forceowner") {
-    shift(@ARGV);
-    @{$force{'Owner'}} = (trim(shift(@ARGV)));
-}
-
-if ($#ARGV >= 0 && $ARGV[0] eq "-forceqacontact") {
-    shift(@ARGV);
-    @{$force{'QAcontact'}} = (trim(shift(@ARGV)));
-}
-
-if ($#ARGV >= 0 && $ARGV[0] eq "-forcereporter") {
-    shift(@ARGV);
-    @{$force{'Reporter'}} = trim(shift(@ARGV));
-}
-
-if (($#ARGV < 0) || ($#ARGV > 1)) {
-    print "Usage:\n processmail {bugid} {nametoexclude} " . 
-      "[-forcecc list,of,users]\n             [-forceowner name] " .
-      "[-forceqacontact name]\n             [-forcereporter name]\nor\n" .
-      " processmail rescanall\n";
-    exit;
-}
-
-if ($#ARGV == 1) {
-    $nametoexclude = lc($ARGV[1]);
-}
-
-if ($ARGV[0] eq "rescanall") {
-    print "Collecting bug ids...\n";
-    SendSQL("select bug_id, lastdiffed, delta_ts from bugs where lastdiffed < delta_ts AND delta_ts < date_sub(now(), INTERVAL 30 minute) order by bug_id");
-    my @list;
-    while (my @row = FetchSQLData()) {
-        my $time = $row[2];
-        if ($time =~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
-            $time = "$1-$2-$3 $4:$5:$6";
-        }
-        print STDERR "Bug $row[0] has unsent mail. lastdiffed is $row[1], delta_ts is $time.\n";
-        push @list, $row[0];
-    }
-    if (scalar(@list) > 0) {
-        print STDERR scalar(@list) . " bugs found with possibly unsent mail\n";
-        print STDERR "Updating bugs, sending mail if required\n";
-    } else {
-        print "All appropriate mail appears to have been sent\n"
-    }
-    foreach my $id (@list) {
-        if (detaint_natural($id)) {
-            ProcessOneBug($id);
-        }
-    }
-} else {
-    my $bugnum;
-    if ($ARGV[0] =~ m/^([1-9][0-9]*)$/) {
-        $bugnum = $1;
-    } else {
-        print "Error calling processmail (bug id is not an integer)<br>\n";
-        exit;
-    }
-    ProcessOneBug($bugnum);
-}
-
-exit;
+1;
