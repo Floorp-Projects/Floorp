@@ -135,17 +135,6 @@
       <a href="editflagtypes.cgi">Back to flag types.</a>
     </p>
     
-  [% ELSIF message_tag == "series_already_exists" %]
-    [% title = "Series Already Exists" %]
-      A series <em>[% series.category FILTER html %] /
-      [%+ series.subcategory FILTER html %] / 
-      [%+ series.name FILTER html %]</em>
-      already exists. If you want to create this series, you will need to give
-      it a different name.
-      <br><br>
-      Go back or 
-      <a href="query.cgi?format=create-series">create another series</a>.
-    
   [% ELSIF message_tag == "series_created" %]
     [% title = "Series Created" %]
       The series <em>[% series.category FILTER html %] /

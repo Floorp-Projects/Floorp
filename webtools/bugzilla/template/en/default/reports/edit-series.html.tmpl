@@ -28,12 +28,19 @@
 
 [% PROCESS global/header.html.tmpl %]
 
+[% IF changes_saved %]
+  <p>
+    <font color="red">
+      Series updated.
+    </font>
+  </p>
+[% END %]
+
 <form method="get" action="chart.cgi" name="chartform">
   
-  [% button_name = "Change" %]
-
-  [% PROCESS reports/series.html.tmpl %]
-  <input type="hidden" name="action-alter" value="1">
+  [% PROCESS reports/series.html.tmpl 
+     button_name = "Change Data Set" %]
+  <input type="hidden" name="action" value="alter">
   
   [% IF default.series_id %]
     <input type="hidden" name="series_id" value="[% default.series_id %]">
@@ -50,8 +57,12 @@
   [% END %]
 </p>
 
+<p>Note: it is not yet possible to edit the search associated with this data
+set.
+</p>
+
 <p>
-  <a href="query.cgi?[% default.query FILTER html%]">View 
+  <a href="query.cgi?[% default.query FILTER html %]">View 
     series search parameters</a> |
   <a href="buglist.cgi?cmdtype=dorem&amp;namedcmd=
     [% default.category FILTER url_quote %]-

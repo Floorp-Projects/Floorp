@@ -47,9 +47,14 @@ sub new {
 
     my $arg_count = scalar(@_);
     
+    # There are three ways of creating Series objects. Two (CGI and Parameters)
+    # are for use when creating a new series. One (Database) is for retrieving
+    # information on existing series.
     if ($arg_count == 1) {
         if (ref($_[0])) {
             # We've been given a CGI object to create a new Series from.
+            # This series may already exist - external code needs to check
+            # before it calls writeToDatabase().
             $self->initFromCGI($_[0]);
         }
         else {
@@ -60,6 +65,8 @@ sub new {
     }
     elsif ($arg_count >= 6 && $arg_count <= 8) {
         # We've been given a load of parameters to create a new Series from.
+        # Currently, undef is always passed as the first parameter; this allows
+        # you to call writeToDatabase() unconditionally. 
         $self->initFromParameters(@_);
     }
     else {
@@ -146,7 +153,6 @@ sub initFromCGI {
 sub writeToDatabase {
     my $self = shift;
 
-    # Lock some tables
     my $dbh = Bugzilla->dbh;
     $dbh->do("LOCK TABLES series_categories WRITE, series WRITE, " .
              "user_series_map WRITE");
@@ -154,8 +160,15 @@ sub writeToDatabase {
     my $category_id = getCategoryID($self->{'category'});
     my $subcategory_id = getCategoryID($self->{'subcategory'});
 
+    my $exists;
+    if ($self->{'series_id'}) { 
+        $exists = 
+            $dbh->selectrow_array("SELECT series_id FROM series
+                                   WHERE series_id = $self->{'series_id'}");
+    }
+    
     # Is this already in the database?                              
-    if ($self->existsInDatabase()) {
+    if ($exists) {
         # Update existing series
         my $dbh = Bugzilla->dbh;
         $dbh->do("UPDATE series SET " .
@@ -196,7 +209,7 @@ sub writeToDatabase {
 }
 
 # Check whether a series with this name, category and subcategory exists in
-# the DB and, if so, sets series_id to its series_id.
+# the DB and, if so, returns its series_id.
 sub existsInDatabase {
     my $self = shift;
     my $dbh = Bugzilla->dbh;
@@ -205,12 +218,12 @@ sub existsInDatabase {
     my $subcategory_id = getCategoryID($self->{'subcategory'});
     
     trick_taint($self->{'name'});
-    $self->{'series_id'} = $dbh->selectrow_array("SELECT series_id " .
+    my $series_id = $dbh->selectrow_array("SELECT series_id " .
                               "FROM series WHERE category = $category_id " .
                               "AND subcategory = $subcategory_id AND name = " .
                               $dbh->quote($self->{'name'}));
                               
-    return(defined($self->{'series_id'}));
+    return($series_id);
 }
 
 # Get a category or subcategory IDs, creating the category if it doesn't exist.

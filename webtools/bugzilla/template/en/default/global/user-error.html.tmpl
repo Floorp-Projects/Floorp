@@ -657,6 +657,13 @@
     [% title = "Access Denied" %]
     You do not have the permissions necessary to run a sanity check.
 
+  [% ELSIF error == "series_already_exists" %]
+    [% title = "Series Already Exists" %]
+      A series named <em>[% series.category FILTER html %] /
+      [%+ series.subcategory FILTER html %] / 
+      [%+ series.name FILTER html %]</em>
+      already exists.
+    
   [% ELSIF error == "sidebar_supports_mozilla_only" %]
     Sorry - sidebar.cgi currently only supports Mozilla based web browsers.
     <a href="http://www.mozilla.org">Upgrade today</a>. :-)

@@ -86,14 +86,9 @@
       </td>
       <td></td>
       <td>
-        <input type="submit" name="action-create" value="Create Data Set">
+        <input type="submit" name="submit-button" 
+               value="[% button_name FILTER html %]">
       </td>
     </tr>
   </tbody>
 </table>
-
-<script language="JavaScript" type="text/javascript">
-  document.chartform.category[0].selected = true;
-  catSelected();
-  checkNewState();
-</script>

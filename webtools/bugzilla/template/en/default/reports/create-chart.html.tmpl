@@ -190,7 +190,7 @@ function subcatSelected() {
             </td>
 
             <td align="center">
-              [% IF series.creator != 0 %]
+              [% IF NOT series.public %]
                 [% IF series.isSubscribed(user.id) %]
                   <input type="submit" value="Unsubscribe" style="width: 12ex;"
                          name="action-unsubscribe[% series.series_id %]">

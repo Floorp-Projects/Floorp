@@ -275,12 +275,14 @@ if ($::FORM{'cmdtype'} eq "dorem") {
     if ($::FORM{'remaction'} eq "run") {
         $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
         $vars->{'searchname'} = $::FORM{'namedcmd'};
+        $vars->{'searchtype'} = "saved";
         $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
     }
     elsif ($::FORM{'remaction'} eq "runseries") {
         $::buffer = LookupSeries($::FORM{"series_id"});
         $vars->{'searchname'} = $::FORM{'namedcmd'};
+        $vars->{'searchtype'} = "series";
         $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
     }

@@ -21,10 +21,12 @@
 # Contributor(s): Gervase Markham <gerv@gerv.net>
 
 # Glossary:
-# series:  An individual, defined set of data plotted over time.
-# line:    A set of one or more series, to be summed and drawn as a single
-#          line when the series is plotted.
-# chart:   A set of lines
+# series:   An individual, defined set of data plotted over time.
+# data set: What a series is called in the UI.
+# line:     A set of one or more series, to be summed and drawn as a single
+#           line when the series is plotted.
+# chart:    A set of lines
+#
 # So when you select rows in the UI, you are selecting one or more lines, not
 # series.
 
@@ -34,7 +36,6 @@
 # Broken image on error or no data - need to do much better.
 # Centralise permission checking, so UserInGroup('editbugs') not scattered
 #   everywhere.
-# Better protection on collectstats.pl for second run in a day
 # User documentation :-)
 #
 # Bonus:
@@ -84,6 +85,9 @@ ConnectToDatabase();
 
 confirm_login();
 
+# Only admins may create public queries
+UserInGroup('admin') || $cgi->delete('public');
+
 # All these actions relate to chart construction.
 if ($action =~ /^(assemble|add|remove|sum|subscribe|unsubscribe)$/) {
     # These two need to be done before the creation of the Chart object, so
@@ -120,6 +124,7 @@ elsif ($action eq "wrap") {
 }
 elsif ($action eq "create") {
     assertCanCreate($cgi);
+    
     my $series = new Bugzilla::Series($cgi);
 
     if (!$series->existsInDatabase()) {
@@ -127,7 +132,7 @@ elsif ($action eq "create") {
         $vars->{'message'} = "series_created";
     }
     else {
-        $vars->{'message'} = "series_already_exists";
+        ThrowUserError("series_already_exists", {'series' => $series});
     }
 
     $vars->{'series'} = $series;
@@ -150,7 +155,20 @@ elsif ($action eq "alter") {
     assertCanEdit($series_id);
 
     my $series = new Bugzilla::Series($cgi);
+
+    # We need to check if there is _another_ series in the database with
+    # our (potentially new) name. So we call existsInDatabase() to see if
+    # the return value is us or some other series we need to avoid stomping
+    # on.
+    my $id_of_series_in_db = $series->existsInDatabase();
+    if (defined($id_of_series_in_db) && 
+        $id_of_series_in_db != $series->{'series_id'}) 
+    {
+        ThrowUserError("series_already_exists", {'series' => $series});
+    }
+    
     $series->writeToDatabase();
+    $vars->{'changes_saved'} = 1;
     
     edit($series);
 }
@@ -193,9 +211,6 @@ sub assertCanCreate {
     
     UserInGroup("editbugs") || ThrowUserError("illegal_series_creation");
 
-    # Only admins may create public queries
-    UserInGroup('admin') || $cgi->delete('public');
-    
     # Check permission for frequency
     my $min_freq = 7;
     if ($cgi->param('frequency') < $min_freq && !UserInGroup("admin")) {
@@ -231,25 +246,7 @@ sub edit {
 
     $vars->{'category'} = Bugzilla::Chart::getVisibleSeries();
     $vars->{'creator'} = new Bugzilla::User($series->{'creator'});
-
-    # If we've got any parameters, use those in preference to the values
-    # read from the database. This is a bit ugly, but I can't see a better
-    # way to make this work in the no-JS situation.
-    if ($cgi->param('category'))
-    {
-        $vars->{'default'} = new Bugzilla::Series($series->{'series_id'},
-          $cgi->param('category')    || $series->{'category'},
-          $cgi->param('subcategory') || $series->{'subcategory'},
-          $cgi->param('name')        || $series->{'name'},
-          $series->{'creator'},
-          $cgi->param('frequency')   || $series->{'frequency'});
-
-        $vars->{'default'}{'public'}
-                                = $cgi->param('public') || $series->{'public'};
-    }
-    else {
-        $vars->{'default'} = $series;
-    }
+    $vars->{'default'} = $series;
 
     print "Content-Type: text/html\n\n";
     $template->process("reports/edit-series.html.tmpl", $vars)
