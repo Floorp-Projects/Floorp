@@ -29,6 +29,8 @@ function commonDialogOnLoad()
   doSetOKCancel(commonDialogOnOK, commonDialogOnCancel, commonDialogOnButton2, commonDialogOnButton3);
   param = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
 	
+  dump("*** param is " + typeof(param) + "\n");
+  
   // display the main text
 	var messageText = param.GetString(0);
   var messageParent = document.getElementById("info.box");

@@ -36,6 +36,7 @@ CHROME_MISC = \
 		$(NULL)
 
 CHROME_CONTENT = \
+		builtinURLs.js \
 		communicatorOverlay.xul \
 		utilityOverlay.xul \
 		utilityOverlay.js \

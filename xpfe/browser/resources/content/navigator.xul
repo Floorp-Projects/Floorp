@@ -59,7 +59,6 @@ Contributor(s): ______________________________________. -->
 <script language="javascript" src="chrome://global/content/nsTransferable.js"></script>
 <script language="javascript" src="chrome://global/content/nsClipboard.js"></script>
 <script language="javascript" src="chrome://global/content/nsDragAndDrop.js"></script>
-<script language="javascript" src="chrome://global/content/builtinURLs.js"></script>
 <script language="javascript" src="chrome://global/content/strres.js"></script>
 <script language="javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"></script>
 <script language="javascript" src="chrome://navigator/content/navigator.js"></script>

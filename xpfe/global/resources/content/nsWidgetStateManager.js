@@ -221,7 +221,9 @@ nsWidgetStateManager.prototype =
           // set menulist specific properties
           if( aDataObject.data != undefined )
             { 
-              element.selectedItem = element.getElementsByAttribute( "data", aDataObject.data )[0];
+              var matchElement = element.getElementsByAttribute( "data", aDataObject.data );
+              if (matchElement.length && matchElement[0])
+                element.selectedItem = matchElement[0];
             }
         },
         

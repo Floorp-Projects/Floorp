@@ -53,7 +53,6 @@ CHROME_CONTENT= \
 		charsetOverlay.xul \
 		charsetOverlay.js \
 		strres.js \
-		builtinURLs.js \
 		logo.gif \
 		about.xul \
 		credits.html \
