@@ -2379,7 +2379,7 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
    PRInt32 fSlash = uriString.FindChar('/');
    PRUnichar port = nsnull;;
    // if no scheme (protocol) is found, assume http.
-   if (colon == -1 || fSlash == -1 || (fSlash > -1) && (colon > fSlash)) {
+   if (colon == -1 || fSlash == -1 || (fSlash > -1) && (colon+1 != fSlash)) {
       if (colon < (((PRInt32)uriString.Length())-1)) {
          if (colon != -1) port = uriString.CharAt(colon+1);
          if (colon == -1 || uriString.IsDigit(port) ||
@@ -2407,16 +2407,17 @@ NS_IMETHODIMP nsDocShell::CreateFixupURI(const PRUnichar* aStringURI,
 NS_IMETHODIMP nsDocShell::FileURIFixup(const PRUnichar* aStringURI, 
    nsIURI** aURI)
 {
-   nsAutoString uriSpec(aStringURI);
+   nsAutoString uriSpecIn(aStringURI);
+   nsAutoString uriSpecOut(aStringURI);
 
-   ConvertFileToStringURI(uriSpec, uriSpec);
+   ConvertFileToStringURI(uriSpecIn, uriSpecOut);
 
-   if(0 == uriSpec.Find("file:", 0))
+   if(0 == uriSpecOut.Find("file:", 0))
       {
       // if this is file url, we need to  convert the URI
       // from Unicode to the FS charset
       nsCAutoString inFSCharset;
-      NS_ENSURE_SUCCESS(ConvertStringURIToFileCharset(uriSpec, inFSCharset),
+      NS_ENSURE_SUCCESS(ConvertStringURIToFileCharset(uriSpecOut, inFSCharset),
          NS_ERROR_FAILURE);
 
       if(NS_SUCCEEDED(NS_NewURI(aURI, inFSCharset.GetBuffer(), nsnull)))
@@ -2429,7 +2430,6 @@ NS_IMETHODIMP nsDocShell::FileURIFixup(const PRUnichar* aStringURI,
 
 NS_IMETHODIMP nsDocShell::ConvertFileToStringURI(nsString& aIn, nsString& aOut)
 {
-   aOut = aIn;
 #ifdef XP_PC
    // Check for \ in the url-string or just a drive (PC)
    if(kNotFound != aIn.FindChar(PRUnichar('\\')) || ((aIn.Length() == 2 ) && (aIn.Last() == PRUnichar(':') || aIn.Last() == PRUnichar('|'))))
