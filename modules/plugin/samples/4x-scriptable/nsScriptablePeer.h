@@ -100,6 +100,7 @@ public:
 
 protected:
   CPlugin* mPlugin;
+  acmeIScriptObject* mWindow;
 };
 
 #endif

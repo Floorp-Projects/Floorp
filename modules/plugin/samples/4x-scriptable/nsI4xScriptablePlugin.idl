@@ -22,10 +22,14 @@
 
 #include "nsISupports.idl"
 
+interface acmeIScriptObject;
+
 [scriptable, uuid(482e1890-1fe5-11d5-9cf8-0060b0fbd8ac)]
 interface nsI4xScriptablePlugin : nsISupports {
   void showVersion();
   void clear();
   
   readonly attribute string version;
+  
+  void setWindow(in acmeIScriptObject window);
 };
