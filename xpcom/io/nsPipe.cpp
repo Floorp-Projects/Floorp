@@ -133,7 +133,6 @@ nsBufferInputStream::Close(void)
     rv = mBuffer->ReaderClosed();
     // even if ReaderClosed fails, be sure to do the notify:
     if (mBlocking) {
-        nsAutoCMonitor mon(mBuffer);
         nsresult rv2 = mon.Notify();   // wake up the writer
         if (NS_FAILED(rv2)) 
             return rv2;
@@ -176,7 +175,8 @@ nsBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
             break;
         }
 //        if (rv == NS_BASE_STREAM_WOULD_BLOCK) break;
-        if (NS_FAILED(rv)) break;
+        // If a blocking read fails just drop into Fill(.)
+        if (!mBlocking && NS_FAILED(rv)) break;
 
         if (amt == 0) {
             rv = Fill();
@@ -189,7 +189,7 @@ nsBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
             aCount -= amt;
         }
     }
-    if (rv == NS_BASE_STREAM_EOF) {
+    if (mBlocking && rv == NS_BASE_STREAM_EOF) {
         // all we're ever going to get -- so wake up anyone in Flush
 #ifdef DEBUG
         PRUint32 amt;
@@ -198,7 +198,6 @@ nsBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
         NS_ASSERTION(rv2 == NS_BASE_STREAM_EOF ||
                      (NS_SUCCEEDED(rv2) && amt == 0), "Read failed");
 #endif
-        nsAutoCMonitor mon(mBuffer);
         mon.Notify();   // wake up writer
     }
     return (*aReadCount == 0) ? rv : NS_OK;
@@ -245,7 +244,9 @@ nsBufferInputStream::Fill(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCou
         rv = mBuffer->Write(aBuf, aCount, &amt);
         if (rv == NS_BASE_STREAM_EOF)
             return *aWriteCount > 0 ? NS_OK : rv;
-        if (NS_FAILED(rv)) return rv;
+        // If a blocking write fails just drop into Fill()
+        if (!mBlocking && NS_FAILED(rv)) break;
+
         if (amt == 0) {
             rv = Fill();
             if (rv == NS_BASE_STREAM_WOULD_BLOCK)
@@ -279,7 +280,9 @@ nsBufferInputStream::FillFrom(nsIInputStream *fromStream, PRUint32 aCount, PRUin
         rv = mBuffer->WriteFrom(fromStream, aCount, &amt);
         if (rv == NS_BASE_STREAM_EOF)
             return *aWriteCount > 0 ? NS_OK : rv;
-        if (NS_FAILED(rv)) return rv;
+        // If a blocking WriteFrom fails just drop into Fill()
+        if (!mBlocking && NS_FAILED(rv)) break;
+
         if (amt == 0) {
             rv = Fill();
             if (rv == NS_BASE_STREAM_WOULD_BLOCK)
@@ -300,7 +303,6 @@ nsBufferInputStream::Fill()
     nsAutoCMonitor mon(mBuffer);
     nsresult rv;
     if (mBlocking) {
-        nsAutoCMonitor mon(mBuffer);
         while (PR_TRUE) {
             // check read buffer again while in the monitor
             PRUint32 amt;
@@ -381,7 +383,6 @@ nsBufferOutputStream::Close(void)
     rv = mBuffer->SetCondition(NS_BASE_STREAM_EOF);
     // even if SetCondition fails, be sure to do the notify:
     if (mBlocking) {
-        nsAutoCMonitor mon(mBuffer);
         nsresult rv2 = mon.Notify();   // wake up the writer
         if (NS_FAILED(rv2))
             return rv2;
@@ -404,10 +405,12 @@ nsBufferOutputStream::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteC
     *aWriteCount = 0;
     while (aCount > 0) {
         PRUint32 amt;
+        amt = 0;
         rv = mBuffer->Write(aBuf, aCount, &amt);
         NS_ASSERTION(rv != NS_BASE_STREAM_EOF, "Write should not return EOF");
 //        if (rv == NS_BASE_STREAM_WOULD_BLOCK) break;
-        if (NS_FAILED(rv)) break;
+        // If a blocking write fails just drop into Flush(...)
+        if (!mBlocking && NS_FAILED(rv)) break;
 
         if (amt == 0) {
             rv = Flush();
@@ -429,7 +432,6 @@ nsBufferOutputStream::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteC
         NS_ASSERTION(rv2 == NS_BASE_STREAM_EOF ||
                      (NS_SUCCEEDED(rv2) && amt > 0), "Write failed");
 #endif
-        nsAutoCMonitor mon(mBuffer);
         mon.Notify();   // wake up reader
     }
     return (*aWriteCount == 0) ? rv : NS_OK;
@@ -453,7 +455,8 @@ nsBufferOutputStream::WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
         PRUint32 amt;
         rv = mBuffer->WriteFrom(fromStream, aCount, &amt);
 //        if (rv == NS_BASE_STREAM_WOULD_BLOCK) break;
-        if (NS_FAILED(rv)) break;
+        // If a blocking write fails just drop into Flush(...)
+        if (!mBlocking && NS_FAILED(rv)) break;
 
         if (amt == 0) {
             rv = Flush();
@@ -474,7 +477,6 @@ nsBufferOutputStream::WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
         NS_ASSERTION(rv2 == NS_BASE_STREAM_EOF ||
                      (NS_SUCCEEDED(rv2) && amt > 0), "WriteFrom failed");
 #endif
-        nsAutoCMonitor mon(mBuffer);
         mon.Notify();   // wake up reader
     }
     return (*aWriteCount == 0) ? rv : NS_OK;
@@ -487,7 +489,6 @@ nsBufferOutputStream::Flush(void)
     nsresult rv = NS_OK;
     if (mBlocking) {
         nsresult rv;
-        nsAutoCMonitor mon(mBuffer);
         while (PR_TRUE) {
             // check write buffer again while in the monitor
             PRUint32 amt;
