@@ -1080,5 +1080,76 @@ nsresult nsBidiPresUtils::GetBidiEngine(nsIBidi** aBidiEngine)
   }
   return rv; 
 }
+
+nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
+                                     PRInt32              aLength,
+                                     nsBidiDirection      aBaseDirection,
+                                     nsIPresContext*      aPresContext,
+                                     nsIRenderingContext& aRenderingContext,
+                                     nscoord              aX,
+                                     nscoord              aY)
+{
+  PRInt32 runCount;
+
+  mBuffer.Assign(aText);
+
+  nsresult rv = mBidiEngine->SetPara(mBuffer.get(), aLength, aBaseDirection, nsnull);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = mBidiEngine->CountRuns(&runCount);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nscoord width;
+  PRBool isRTL = PR_FALSE;
+  PRInt32 i, start, limit, length;
+  PRUint8 charType;
+  PRUint8 prevType = eCharType_LeftToRight;
+  nsBidiLevel level;
+  PRInt32 lineOffset     = 0;
+  PRInt32 runLength      = 0;
+
+  PRUint32 hints = 0;
+  aRenderingContext.GetHints(hints);
+  PRBool isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
+
+  for (i = 0; i < runCount; i++) {
+    rv = mBidiEngine->GetVisualRun(i, &start, &length, &aBaseDirection);
+    if (NS_FAILED(rv))
+      return rv;
+
+    rv = mBidiEngine->GetLogicalRun(start, &limit, &level);
+    if (NS_FAILED(rv))
+      return rv;
+
+    runLength = limit - start;
+    lineOffset = start;
+    PRInt32 typeLimit = PR_MIN(limit, aLength);
+    CalculateCharType(lineOffset, typeLimit, limit, runLength, runCount, charType, prevType);
+
+    if (eCharType_RightToLeftArabic == charType) {
+      isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
+    }
+    if (isBidiSystem && (CHARTYPE_IS_RTL(charType) ^ isRTL) ) {
+      // set reading order into DC
+      isRTL = !isRTL;
+      aRenderingContext.SetRightToLeftText(isRTL);
+    }
+    FormatUnicodeText(aPresContext, aText + start, length,
+                      (nsCharType)charType, level & 1,
+                      isBidiSystem);
+
+    aRenderingContext.GetWidth(aText + start, length, width, nsnull);
+    aRenderingContext.DrawString(aText + start, length, aX, aY, width);
+    aX += width;
+  } // for
+
+  // Restore original reading order
+  if (isRTL) {
+    aRenderingContext.SetRightToLeftText(PR_FALSE);
+  }
+  return NS_OK;
+}
   
 #endif // IBMBIDI

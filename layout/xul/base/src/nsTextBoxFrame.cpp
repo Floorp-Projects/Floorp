@@ -64,6 +64,7 @@
 #ifdef IBMBIDI
 #include "nsIUBidiUtils.h"
 #include "nsBidiPresUtils.h"
+#include "nsReadableUtils.h"
 #endif // IBMBIDI
 
 #define ELLIPSIS "..."
@@ -409,77 +410,23 @@ nsTextBoxFrame::PaintTitle(nsIPresContext*      aPresContext,
 
     if (mState & NS_FRAME_IS_BIDI) {
       nsBidiPresUtils* bidiUtils;
+      aPresContext->SetBidiEnabled(PR_TRUE);
       aPresContext->GetBidiUtils(&bidiUtils);
 
       if (bidiUtils) {
-        nsCOMPtr<nsIBidi> bidiEngine;
-        bidiUtils->GetBidiEngine(getter_AddRefs(bidiEngine));
-        
-        if (bidiEngine) {
-          const nsStyleVisibility* vis;
-          GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
-          PRUnichar* buffer = (PRUnichar*) mCroppedTitle.get();
-          PRInt32 runCount;
+        PRUnichar* buffer = ToNewUnicode(mCroppedTitle);
+        if (buffer) {
+          const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
           nsBidiDirection direction =
                                     (NS_STYLE_DIRECTION_RTL == vis->mDirection)
                                     ? NSBIDI_RTL : NSBIDI_LTR;
-
-          rv = bidiEngine->SetPara(buffer, mCroppedTitle.Length(), direction, nsnull);
-
-          if (NS_SUCCEEDED(rv) ) {
-            rv = bidiEngine->CountRuns(&runCount);
-
-            if (NS_SUCCEEDED(rv) ) {
-              nscoord width;
-              PRBool isRTL = PR_FALSE;
-              PRInt32 i, start, limit, length;
-              nsCharType charType;
-              nsBidiLevel level;
-
-              PRBool isBidiSystem;
-              PRUint32 hints = 0;
-              aRenderingContext.GetHints(hints);
-              isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
-
-              for (i = 0; i < runCount; i++) {
-                rv = bidiEngine->GetVisualRun(i, &start, &length, &direction);
-                if (NS_FAILED(rv) ) {
-                  break;
-                }
-                bidiEngine->GetCharTypeAt(start, &charType);
-
-                rv = bidiEngine->GetLogicalRun(start, &limit, &level);
-                if (NS_FAILED(rv) ) {
-                  break;
-                }
-                if (eCharType_RightToLeftArabic == charType) {
-                  isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
-                }
-                if (isBidiSystem && (CHARTYPE_IS_RTL(charType) ^ isRTL) ) {
-                  // set reading order into DC
-                  isRTL = !isRTL;
-                  aRenderingContext.SetRightToLeftText(isRTL);
-                }
-                bidiUtils->FormatUnicodeText(aPresContext, buffer + start, length,
-                                             charType, level & 1,
-                                             isBidiSystem);
-
-                aRenderingContext.GetWidth(buffer + start, length, width, nsnull);
-                aRenderingContext.DrawString(buffer + start, length, textRect.x,
-                                             textRect.y + baseline, width);
-                textRect.x += width;
-              } // for
-              // Restore original x (for aRenderingContext.FillRect below),
-              // as well as reading order
-              textRect.x = aRect.x;
-              if (isRTL) {
-                aRenderingContext.SetRightToLeftText(PR_FALSE);
-              }
-            }
-          }
-        } // bidiEngine
-      } // bidiUtils
-    } // frame is bidi
+          rv = bidiUtils->RenderText(buffer, mCroppedTitle.Length(), direction,
+                                     aPresContext, aRenderingContext,
+                                     textRect.x, textRect.y + baseline);
+          nsMemory::Free(buffer);
+        }
+      }
+    }
     if (NS_FAILED(rv) )
 #endif // IBMBIDI
     aRenderingContext.DrawString(mCroppedTitle, textRect.x, textRect.y + baseline);
