@@ -114,7 +114,10 @@ void nsMacNSPREventQueueHandler::StartPumping()
 {
   ++mRefCnt;
   NS_LOG_ADDREF(this, mRefCnt, "nsMacNSPREventQueueHandler", sizeof(*this));
+  
+#if !TARGET_CARBON
   StartRepeating();
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -126,7 +129,9 @@ PRBool nsMacNSPREventQueueHandler::StopPumping()
     --mRefCnt;
     NS_LOG_RELEASE(this, mRefCnt, "nsMacNSPREventQueueHandler");
     if (mRefCnt == 0) {
+#if !TARGET_CARBON
       StopRepeating();
+#endif
       return PR_TRUE;
     }
   }
