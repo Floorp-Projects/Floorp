@@ -654,6 +654,9 @@ main(int argc, char* argv[])
     NS_ASSERTION(NS_SUCCEEDED(rv), "TestChainedPipes failed");
     RunTests(16, 1);
     RunTests(4096, 16);
+    NS_RELEASE(servMgr);
+    rv = NS_ShutdownXPCOM( NULL );
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return 0;
 }
 

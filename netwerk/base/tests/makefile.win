@@ -23,6 +23,9 @@ IGNORE_MANIFEST = 1
 MODULE = urltest
 
 DEPTH= ..\..\..
+REQUIRES	= xpcom \
+                  necko \
+                  string
 
 MAKE_OBJ_TYPE=EXE
 

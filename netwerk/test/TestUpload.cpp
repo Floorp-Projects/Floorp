@@ -133,78 +133,80 @@ main(int argc, char* argv[])
     char* uriSpec  = argv[1];
     char* fileName = argv[2];
 
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        // Create the Event Queue for this thread...
+        nsCOMPtr<nsIEventQueueService> eventQService =
+                 do_GetService(kEventQueueServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-    // Create the Event Queue for this thread...
-    nsCOMPtr<nsIEventQueueService> eventQService = 
-             do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+        eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
 
-    eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
+        nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
+        // first thing to do is create ourselves a stream that
+        // is to be uploaded.
+        nsCOMPtr<nsIInputStream> uploadStream;
+        rv = NS_NewPostDataStream(getter_AddRefs(uploadStream),
+                                  PR_TRUE,
+                                  nsDependentCString(fileName), // XXX UTF-8
+                                  0, ioService);
+        if (NS_FAILED(rv)) return rv;
 
+        // create our url.
+        nsCOMPtr<nsIURI> uri;
+        rv = NS_NewURI(getter_AddRefs(uri), uriSpec);
+        if (NS_FAILED(rv)) return rv;
 
-
-    nsCOMPtr<nsIIOService> ioService(do_GetService(kIOServiceCID, &rv));
-    // first thing to do is create ourselves a stream that
-    // is to be uploaded.
-    nsCOMPtr<nsIInputStream> uploadStream;
-    rv = NS_NewPostDataStream(getter_AddRefs(uploadStream),
-                              PR_TRUE,
-                              nsDependentCString(fileName), // XXX UTF-8
-                              0, ioService);
-    if (NS_FAILED(rv)) return rv;
-
-    // create our url.
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), uriSpec);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIChannel> channel;
-    rv = ioService->NewChannelFromURI(uri, getter_AddRefs(channel));
-    if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIChannel> channel;
+        rv = ioService->NewChannelFromURI(uri, getter_AddRefs(channel));
+        if (NS_FAILED(rv)) return rv;
 	
-    // QI and set the upload stream
-    nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
-    uploadChannel->SetUploadStream(uploadStream, nsnull, -1);
+        // QI and set the upload stream
+        nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(channel));
+        uploadChannel->SetUploadStream(uploadStream, nsnull, -1);
 
-    // create a dummy listener
-    InputTestConsumer* listener;
-    
-    listener = new InputTestConsumer;
-    NS_IF_ADDREF(listener);
-    if (!listener) {
-        NS_ERROR("Failed to create a new stream listener!");
-        return -1;;
-    }
+        // create a dummy listener
+        InputTestConsumer* listener;
 
-    channel->AsyncOpen(listener, nsnull);
+        listener = new InputTestConsumer;
+        if (!listener) {
+            NS_ERROR("Failed to create a new stream listener!");
+            return -1;;
+        }
+        NS_ADDREF(listener);
 
-    while ( gKeepRunning ) {
+        channel->AsyncOpen(listener, nsnull);
+
+        while ( gKeepRunning ) {
 #ifdef WIN32
-        MSG msg;
-        
-        if (GetMessage(&msg, NULL, 0, 0)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        } else {
-            gKeepRunning = 0;
-    }
+            MSG msg;
+
+            if (GetMessage(&msg, NULL, 0, 0)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            } else {
+                gKeepRunning = 0;
+            }
 #else
 #ifdef XP_MAC
-    /* Mac stuff is missing here! */
+            /* Mac stuff is missing here! */
 #else
-    PLEvent *gEvent;
-    rv = gEventQ->WaitForEvent(&gEvent);
-    rv = gEventQ->HandleEvent(gEvent);
+            PLEvent *gEvent;
+            rv = gEventQ->WaitForEvent(&gEvent);
+            rv = gEventQ->HandleEvent(gEvent);
 #endif /* XP_UNIX */
 #endif /* !WIN32 */
-    }
-    NS_ShutdownXPCOM(nsnull);
+        }
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 
     return 0;
 }

@@ -98,7 +98,7 @@ static NS_METHOD streamParse (nsIInputStream* in,
   } else {
     tmp = (char *)fromRawSegment;
   }
-  
+
   while(i < (int)count) {
     i = getStrLine(tmp, lineBuf, i, count);
     if(i < 0) {
@@ -148,7 +148,7 @@ static NS_METHOD streamParse (nsIInputStream* in,
       }
     }
     i++;
-    
+
   }
   *writeCount = count;
   return NS_OK;
@@ -199,7 +199,7 @@ MyListener::OnDataAvailable(nsIRequest *req, nsISupports *ctxt,
     PRUint32 bytesRead=0;
     int i=0;
     char buf[1024];
-   
+
     if(ctxt == nsnull) {
       bytesRead=0;
       rv = stream->ReadSegments(streamParse, &offset, count, &bytesRead);
@@ -293,7 +293,7 @@ int getStrLine(const char *src, char *str, int ind, int max) {
 nsresult auxLoad(char *uriBuf)
 {
     nsresult rv;
-    
+
     nsCOMPtr<nsISupportsPRBool> myBool = do_CreateInstance(NS_SUPPORTS_PRBOOL_CONTRACTID);
 
     nsCOMPtr<nsIURI> uri;
@@ -313,7 +313,7 @@ nsresult auxLoad(char *uriBuf)
       rv = NS_NewURI(getter_AddRefs(uri), uriBuf);
       if (NS_FAILED(rv)) return(rv);
     }
-    
+
     //Compare to see if exists
     PRUint32 num;
     uriList->Count(&num);
@@ -331,13 +331,13 @@ nsresult auxLoad(char *uriBuf)
     uriList->AppendElement(uri);
     rv = NS_NewChannel(getter_AddRefs(chan), uri, nsnull, nsnull, callbacks);
     RETURN_IF_FAILED(rv, "NS_NewChannel");
-    
+
     gKeepRunning++;
     rv = chan->AsyncOpen(listener, myBool);
     RETURN_IF_FAILED(rv, "AsyncOpen");
 
     return NS_OK;
-    
+
 }
 
 //---------Buffer writer fun---------
@@ -348,65 +348,69 @@ nsresult auxLoad(char *uriBuf)
 int main(int argc, char **argv)
 {
     nsresult rv;
- 
+
     if (argc == 1) {
         printf("usage: TestPageLoad <url>\n");
         return -1;
     }
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        PRTime start, finish;
 
-    PRTime start, finish;
+        rv = NS_NewISupportsArray(getter_AddRefs(uriList));
+        RETURN_IF_FAILED(rv, "NS_NewISupportsArray");
 
-    rv = NS_NewISupportsArray(getter_AddRefs(uriList));
-    RETURN_IF_FAILED(rv, "NS_NewISupportsArray");
+        // Create the Event Queue for this thread...
+        nsCOMPtr<nsIEventQueueService> eqs =
+                 do_GetService(kEventQueueServiceCID, &rv);
+        RETURN_IF_FAILED(rv, "do_GetService(EventQueueService)");
 
-    // Create the Event Queue for this thread...
-    nsCOMPtr<nsIEventQueueService> eqs = 
-             do_GetService(kEventQueueServiceCID, &rv);
-    RETURN_IF_FAILED(rv, "do_GetService(EventQueueService)");
+        rv = eqs->CreateMonitoredThreadEventQueue();
+        RETURN_IF_FAILED(rv, "CreateMonitoredThreadEventQueue");
 
-    rv = eqs->CreateMonitoredThreadEventQueue();
-    RETURN_IF_FAILED(rv, "CreateMonitoredThreadEventQueue");
+        rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
+        RETURN_IF_FAILED(rv, "GetThreadEventQueue");
 
-    rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
-    RETURN_IF_FAILED(rv, "GetThreadEventQueue");
+        printf("Loading necko ... \n");
+        nsCOMPtr<nsIChannel> chan;
+        nsCOMPtr<nsIStreamListener> listener = new MyListener();
+        nsCOMPtr<nsIInterfaceRequestor> callbacks = new MyNotifications();
 
-    printf("Loading necko ... \n");
-    nsCOMPtr<nsIChannel> chan;
-    nsCOMPtr<nsIStreamListener> listener = new MyListener();
-    nsCOMPtr<nsIInterfaceRequestor> callbacks = new MyNotifications();
+        rv = NS_NewURI(getter_AddRefs(baseURI), argv[1]);
+        RETURN_IF_FAILED(rv, "NS_NewURI");
 
-    rv = NS_NewURI(getter_AddRefs(baseURI), argv[1]);
-    RETURN_IF_FAILED(rv, "NS_NewURI");
+        rv = NS_NewChannel(getter_AddRefs(chan), baseURI, nsnull, nsnull, callbacks);
+        RETURN_IF_FAILED(rv, "NS_OpenURI");
+        gKeepRunning++;
 
-    rv = NS_NewChannel(getter_AddRefs(chan), baseURI, nsnull, nsnull, callbacks);
-    RETURN_IF_FAILED(rv, "NS_OpenURI");
-    gKeepRunning++;
+        //TIMER STARTED-----------------------
+        printf("Starting clock ... \n");
+        start = PR_Now();
+        rv = chan->AsyncOpen(listener, nsnull);
+        RETURN_IF_FAILED(rv, "AsyncOpen");
 
-    //TIMER STARTED-----------------------
-    printf("Starting clock ... \n");
-    start = PR_Now();
-    rv = chan->AsyncOpen(listener, nsnull);
-    RETURN_IF_FAILED(rv, "AsyncOpen");
+        while (gKeepRunning) {
+            gEventQ->ProcessPendingEvents();
+        }
 
-    while (gKeepRunning) {
-        gEventQ->ProcessPendingEvents();
-    }
+        finish = PR_Now();
+        PRUint32 totalTime32;
+        PRUint64 totalTime64;
+        LL_SUB(totalTime64, finish, start);
+        LL_L2UI(totalTime32, totalTime64);
 
-    finish = PR_Now();
-    PRUint32 totalTime32;
-    PRUint64 totalTime64;
-    LL_SUB(totalTime64, finish, start);
-    LL_L2UI(totalTime32, totalTime64);
- 
-    printf("\n\n--------------------\nAll done:\nnum found:%d\nnum start:%d\n", numFound, numStart);
- 
-    printf("\n\n>>PageLoadTime>>%u>>\n\n", totalTime32);
- 
+        printf("\n\n--------------------\nAll done:\nnum found:%d\nnum start:%d\n", numFound, numStart);
+
+        printf("\n\n>>PageLoadTime>>%u>>\n\n", totalTime32);
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return 0;
 }

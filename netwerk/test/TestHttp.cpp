@@ -134,41 +134,46 @@ int main(int argc, char **argv)
         printf("usage: TestHttp <url>\n");
         return -1;
     }
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        // Create the Event Queue for this thread...
+        nsCOMPtr<nsIEventQueueService> eqs =
+                 do_GetService(kEventQueueServiceCID, &rv);
+        RETURN_IF_FAILED(rv, "do_GetService(EventQueueService)");
 
-    // Create the Event Queue for this thread...
-    nsCOMPtr<nsIEventQueueService> eqs = 
-             do_GetService(kEventQueueServiceCID, &rv);
-    RETURN_IF_FAILED(rv, "do_GetService(EventQueueService)");
+        rv = eqs->CreateMonitoredThreadEventQueue();
+        RETURN_IF_FAILED(rv, "CreateMonitoredThreadEventQueue");
 
-    rv = eqs->CreateMonitoredThreadEventQueue();
-    RETURN_IF_FAILED(rv, "CreateMonitoredThreadEventQueue");
+        rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
+        RETURN_IF_FAILED(rv, "GetThreadEventQueue");
 
-    rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
-    RETURN_IF_FAILED(rv, "GetThreadEventQueue");
+        nsCOMPtr<nsIURI> uri;
+        nsCOMPtr<nsIChannel> chan;
+        nsCOMPtr<nsIStreamListener> listener = new MyListener();
+        nsCOMPtr<nsIInterfaceRequestor> callbacks = new MyNotifications();
 
-    nsCOMPtr<nsIURI> uri;
-    nsCOMPtr<nsIChannel> chan;
-    nsCOMPtr<nsIStreamListener> listener = new MyListener();
-    nsCOMPtr<nsIInterfaceRequestor> callbacks = new MyNotifications();
+        rv = NS_NewURI(getter_AddRefs(uri), argv[1]);
+        RETURN_IF_FAILED(rv, "NS_NewURI");
 
-    rv = NS_NewURI(getter_AddRefs(uri), argv[1]);
-    RETURN_IF_FAILED(rv, "NS_NewURI");
+        rv = NS_NewChannel(getter_AddRefs(chan), uri, nsnull, nsnull, callbacks);
+        RETURN_IF_FAILED(rv, "NS_OpenURI");
 
-    rv = NS_NewChannel(getter_AddRefs(chan), uri, nsnull, nsnull, callbacks);
-    RETURN_IF_FAILED(rv, "NS_OpenURI");
+        rv = chan->AsyncOpen(listener, nsnull);
+        RETURN_IF_FAILED(rv, "AsyncOpen");
 
-    rv = chan->AsyncOpen(listener, nsnull);
-    RETURN_IF_FAILED(rv, "AsyncOpen");
+        while (gKeepRunning)
+            gEventQ->ProcessPendingEvents();
 
-    while (gKeepRunning)
-        gEventQ->ProcessPendingEvents();
-
-    printf(">>> done\n");
+        printf(">>> done\n");
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return 0;
 }

@@ -70,7 +70,7 @@ createEventQueue() {
 // Create channel for requested URL.
 static nsCOMPtr<nsIChannel>
 createChannel( const char *url ) {
-    nsCOMPtr<nsIChannel> result;
+    nsCOMPtr<nsIInputStream> result;
 
     nsCOMPtr<nsIURI> uri;
     printf( "Calling NS_NewURI for %s...\n", url );
@@ -261,12 +261,16 @@ main( int argc, char* argv[] ) {
     // Initialize XPCOM.
     printf( "Initializing XPCOM...\n" );
     rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
-    if ( NS_SUCCEEDED( rv ) ) {
-        printf( "...XPCOM initialized OK\n" );
-
-        // Create the Event Queue for this thread...
-        printf( "Creating event queue for main thread (0x%08X)...\n",
-                (int)(void*)PR_GetCurrentThread() );
+    if ( NS_FAILED( rv ) ) {
+        printf( "%s %d: NS_InitXPCOM failed, rv=0x%08X\n",
+                (char*)__FILE__, (int)__LINE__, (int)rv );
+        return rv;
+    }
+    printf( "...XPCOM initialized OK\n" );
+    // Create the Event Queue for this thread...
+    printf( "Creating event queue for main thread (0x%08X)...\n",
+            (int)(void*)PR_GetCurrentThread() );
+    {
         nsCOMPtr<nsIEventQueue> mainThreadQ = createEventQueue();
 
         if ( mainThreadQ ) {
@@ -300,16 +304,13 @@ main( int argc, char* argv[] ) {
                 PR_JoinThread( thread[ joinThread ] );
             }
         }
-        // Shut down XPCOM.
-        printf( "Shutting down XPCOM...\n" );
-        NS_ShutdownXPCOM( 0 );
-        printf( "...XPCOM shutdown complete\n" );
-    } else {
-        printf( "%s %d: NS_InitXPCOM failed, rv=0x%08X\n",
-                (char*)__FILE__, (int)__LINE__, (int)rv );
-        return rv;
-    }
-    
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    // Shut down XPCOM.
+    printf( "Shutting down XPCOM...\n" );
+    NS_ShutdownXPCOM( 0 );
+    printf( "...XPCOM shutdown complete\n" );
+
     // Exit.
     printf( "...test complete, rv=0x%08X\n", (int)rv );
     return rv;

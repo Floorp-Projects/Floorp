@@ -67,12 +67,12 @@ int writeDBM(int cycles)
                       0600 ,
                       DB_HASH ,
                       &hash_info) ;
-        
+
         if (!myDB) { 
             printf("no db!\n");
             return -1;
         }
-        
+
         // initalize data to write
         int x;
         char * data = (char*) malloc(DATASIZE);
@@ -81,13 +81,13 @@ int writeDBM(int cycles)
         for (x=1; x<=ENTRYCOUNT; x++) {
             nsCAutoString keyName("foo");
             keyName.AppendInt( x );
-            
+
             db_key.data = NS_CONST_CAST(char*, keyName.get());
             db_key.size = keyName.Length();
-            
+
             db_data.data = data;
             db_data.size = DATASIZE ;
-            
+
             if(0 != (*myDB->put)(myDB, &db_key, &db_data, 0)) {
                 printf("--> Error putting\n");
                 return -1;
@@ -97,14 +97,14 @@ int writeDBM(int cycles)
             db_key.size = sizeof(x);
             db_data.data = NS_CONST_CAST(char*, keyName.get());
             db_data.size = keyName.Length();
-            
+
             if(0 != (*myDB->put)(myDB, &db_key, &db_data, 0)) {
                 printf("--> Error putting\n");
                 return -1;
             }
 #endif
         }
-        
+
         (*myDB->sync)(myDB, 0); 
         free(data);
     }
@@ -120,7 +120,7 @@ readDBM(int cycles)
     int status = 0 ;
     DBT db_key, db_data ;
     PRIntervalTime time = PR_IntervalNow();
-    
+
     while (cycles--) {
         for (int x=1; x<=ENTRYCOUNT; x++) {
 #if USE_ENTRY_ID
@@ -128,7 +128,7 @@ readDBM(int cycles)
 
             db_key.data = (void*)&x;
             db_key.size = sizeof(x) ;
-            
+
             status = (*myDB->get)(myDB, &db_key, &entry_data, 0);            
             if(status != 0) {
                 printf("Bad Status %d\n", status);
@@ -162,7 +162,7 @@ readDBM(int cycles)
     }
     (*myDB->sync)(myDB, 0); 
     (*myDB->close)(myDB); 
-    
+
     return PR_IntervalToMilliseconds( PR_IntervalNow() - time);
 }
 
@@ -184,13 +184,13 @@ writeFile(int cycles)
 
         // create "cache" directories
         PR_MakeDir(TMPDIR "foo", 0755);
-        
+
         for (x=0; x<32; x++) {
             nsCAutoString filename; filename.Assign(TMPDIR "foo" DIRSEP);
             filename.AppendInt(x);
             PR_MakeDir(filename.get(), 0755);
         }
-        
+
         // create "cache" files
         for (x=1; x<=ENTRYCOUNT; x++) {
             nsCAutoString filename; filename.Assign(TMPDIR "foo" DIRSEP);
@@ -236,7 +236,7 @@ readFile(int cycles)
     printf("readFile\n");
     PRFileDesc* fd;
     PRInt32 fStatus;
-    
+
     // begin timing "lookups"
     PRIntervalTime time = PR_IntervalNow();
     while (cycles--) {
@@ -245,31 +245,31 @@ readFile(int cycles)
             filename.AppendInt( x % 32 );
             filename.Append(DIRSEP);
             filename.AppendInt( x );
-            
+
             fd = PR_OpenFile(filename.get(), PR_RDONLY, 0);
 
             if (!fd) {
                 printf("bad filename?  %s\n", filename.get());
                 continue;
             }
-            
+
             PRInt32 size = PR_Available(fd);
-            
+
             char* fdBuffer = (char*) malloc (size);
-            
+
             PRIntervalTime i1, i2, i3;
             i1 = PR_IntervalNow();
 
             fStatus = PR_Read(fd, fdBuffer, size);  
 
             i2 = PR_IntervalNow();
-            
+
             if (fStatus == -1) {
                 printf("Bad fStatus %d\n", PR_GetError());
                 exit(1);
             } 
             i3 = PR_IntervalNow();
-            
+
             PR_Close(fd);
             free(fdBuffer);
 

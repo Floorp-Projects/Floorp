@@ -148,6 +148,7 @@ int main( int argc, char *argv[] ) {
         }
         NS_RELEASE(reg);
     }
+    NS_ShutdownXPCOM( servMgr );
 
     return rv;
 }

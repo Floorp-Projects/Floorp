@@ -33,7 +33,7 @@ load_sync_1(nsISupports *element, void *data)
         if (NS_FAILED(rv) || bytesRead == 0)
             break;
     }
-               
+
     return PR_TRUE;
 }
 

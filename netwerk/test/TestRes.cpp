@@ -105,7 +105,7 @@ TestOpenInputStream(const char* url)
         rv = in->Read(buf, sizeof(buf), &amt);
         if (NS_FAILED(rv)) return rv;
         if (amt == 0) break;    // eof
-        
+
         char* str = buf;
         while (amt-- > 0) {
             fputc(*str++, stdout);
@@ -148,7 +148,7 @@ public:
         nsresult rv;
         nsCOMPtr<nsIURI> uri;
         nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-        
+
         rv = channel->GetURI(getter_AddRefs(uri));
         if (NS_SUCCEEDED(rv)) {
             char* str;
@@ -160,13 +160,13 @@ public:
         }
         return NS_OK;
     }
-    
+
     NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
                              nsresult aStatus) {
         nsresult rv;
         nsCOMPtr<nsIURI> uri;
         nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-        
+
         rv = channel->GetURI(getter_AddRefs(uri));
         if (NS_SUCCEEDED(rv)) {
             char* str;
@@ -242,30 +242,34 @@ int
 main(int argc, char* argv[])
 {
     nsresult rv;
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AutoregisterComponents failed");
 
-    NS_ASSERTION(NS_SUCCEEDED(rv), "AutoregisterComponents failed");
+        if (argc < 2) {
+            printf("usage: %s resource://foo/<path-to-resolve>\n", argv[0]);
+            return -1;
+        }
 
-    if (argc < 2) {
-        printf("usage: %s resource://foo/<path-to-resolve>\n", argv[0]);
-        return -1;
-    }
+        rv = SetupMapping();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "SetupMapping failed");
+        if (NS_FAILED(rv)) return rv;
 
-    rv = SetupMapping();
-    NS_ASSERTION(NS_SUCCEEDED(rv), "SetupMapping failed");
-    if (NS_FAILED(rv)) return rv;
+        rv = TestOpenInputStream(argv[1]);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "TestOpenInputStream failed");
 
-    rv = TestOpenInputStream(argv[1]);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "TestOpenInputStream failed");
-
-    rv = TestAsyncRead(argv[1]);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");
-
+        rv = TestAsyncRead(argv[1]);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return rv;
 }
 

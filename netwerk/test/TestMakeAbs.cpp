@@ -49,7 +49,7 @@ nsresult ServiceMakeAbsolute(nsIURI *baseURI, char *relativeInfo, char **_retval
     nsresult rv;
     nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
     if (NS_FAILED(rv)) return rv;
-    
+
     return serv->MakeAbsolute(relativeInfo, baseURI, _retval);
 }
 
@@ -69,30 +69,33 @@ main(int argc, char* argv[])
     PRUint32 cycles = atoi(argv[1]);
     char *base = argv[2];
     char *rel  = argv[3];
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
-
-    nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIURI> uri;
-    rv = serv->NewURI(base, nsnull, getter_AddRefs(uri));
-    if (NS_FAILED(rv)) return rv;
-
-    char *absURLString;
-    PRUint32 i = 0;
-    while (i++ < cycles) {
-        rv = ServiceMakeAbsolute(uri, rel, &absURLString);
+        nsCOMPtr<nsIIOService> serv(do_GetService(kIOServiceCID, &rv));
         if (NS_FAILED(rv)) return rv;
-        nsMemory::Free(absURLString);
 
-        rv = URLMakeAbsolute(uri, rel, &absURLString);
-        nsMemory::Free(absURLString);
-    }
+        nsCOMPtr<nsIURI> uri;
+        rv = serv->NewURI(base, nsnull, getter_AddRefs(uri));
+        if (NS_FAILED(rv)) return rv;
 
+        char *absURLString;
+        PRUint32 i = 0;
+        while (i++ < cycles) {
+            rv = ServiceMakeAbsolute(uri, rel, &absURLString);
+            if (NS_FAILED(rv)) return rv;
+            nsMemory::Free(absURLString);
+
+            rv = URLMakeAbsolute(uri, rel, &absURLString);
+            nsMemory::Free(absURLString);
+        }
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    NS_ShutdownXPCOM(nsnull);
     return rv;
 }

@@ -287,23 +287,30 @@ Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] 
       exit(1);
     }
   }
-  else file = stdin;
+  else
+    file = stdin;
 
+  nsresult ret;
+  {
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    registrar->AutoRegister(nsnull);
 
-  nsCOMPtr<nsIServiceManager> servMan;
-  NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-  NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-  registrar->AutoRegister(nsnull);
+    // Read in the string: very inefficient, but who cares?
+    nsString inString;
+    int c;
+    while ((c = getc(file)) != EOF)
+      inString.Append(PRUnichar(c));
 
-  // Read in the string: very inefficient, but who cares?
-  nsString inString;
-  int c;
-  while ((c = getc(file)) != EOF)
-    inString.Append(PRUnichar(c));
+    if (file != stdin)
+      fclose(file);
 
-  if (file != stdin)
-    fclose(file);
-
-  return HTML2text(inString, inType, outType, flags, wrapCol, compareAgainst);
+    ret = HTML2text(inString, inType, outType, flags, wrapCol, compareAgainst);
+  } // this scopes the nsCOMPtrs
+  // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+  nsresult rv = NS_ShutdownXPCOM( NULL );
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+  return ret;
 }

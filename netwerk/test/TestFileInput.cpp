@@ -109,7 +109,7 @@ public:
         PRThread* prthread;
         thread->GetPRThread(&prthread);
         PR_EnterMonitor(mMonitor);
-        nsCOMPtr<nsIEventQueueService> eventQService = 
+        nsCOMPtr<nsIEventQueueService> eventQService =
                  do_GetService(kEventQueueServiceCID, &rv);
         if (NS_SUCCEEDED(rv)) {
           rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQueue);
@@ -120,7 +120,7 @@ public:
         // wake up event loop
         PR_Notify(mMonitor);
         PR_ExitMonitor(mMonitor);
-        
+
         return NS_OK;
     }
 
@@ -360,7 +360,7 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         nsIStreamListener* listener;
         reader->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)&listener);
         NS_ASSERTION(listener, "QI failed");
-    
+
         nsITransport* trans;
         rv = fts->CreateTransport(localFile, PR_RDONLY, 0, PR_TRUE, &trans);
         NS_ASSERTION(NS_SUCCEEDED(rv), "create failed");
@@ -402,28 +402,32 @@ main(int argc, char* argv[])
     }
     char* dirName = argv[1];
 
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        nsCOMPtr<nsIFileTransportService> fts =
+                 do_GetService(kFileTransportServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIFileTransportService> fts = 
-             do_GetService(kFileTransportServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+        SerialReadTest(dirName);
 
-    SerialReadTest(dirName);
+        //ParallelReadTest(dirName, fts);
 
-    //ParallelReadTest(dirName, fts);
+        fts->ProcessPendingRequests();
 
-    fts->ProcessPendingRequests();
-
-    printf("duration %d ms, volume %d\n",
-           PR_IntervalToMilliseconds(gDuration),
-           gVolume);
-    gVolume = 0;
-
+        printf("duration %d ms, volume %d\n",
+               PR_IntervalToMilliseconds(gDuration),
+               gVolume);
+        gVolume = 0;
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return 0;
 }
 

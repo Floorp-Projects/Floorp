@@ -52,14 +52,12 @@
 #include "nsIComponentRegistrar.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
-#include "nsINetService.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-
+#include "nsNetCID.h"
 #include "nsIURL.h"
-#include "nsINetService.h"
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
@@ -74,9 +72,7 @@
 #endif
 #endif
 
-// Define CIDs...
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-//NS_DEFINE_IID(kIPostToServerIID, NS_IPOSTTOSERVER_IID);
+static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 #ifdef XP_UNIX
 extern "C" char *fe_GetConfigDir(void) {
@@ -238,33 +234,36 @@ int main(int argc, char **argv)
 //    char buf[256];
 //    nsIStreamListener *pConsumer;
 //    nsIURL *pURL;
-    nsresult result;
-    int i;
+    nsresult rv;
 
     if (argc < 2) {
         printf("urltest: <URL> \n");
         return 0;
     }
-
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
     
-    testURL(argv[1]);
-    return 0;
+        testURL(argv[1]);
 #if 0
-    for (i=1; i < argc; i++) {
-        if (PL_strcasecmp(argv[i], "-all") == 0) {
-            testURL(0);
-            continue;
-        } 
+        for (int i=1; i < argc; i++) {
+            if (PL_strcasecmp(argv[i], "-all") == 0) {
+                testURL(0);
+                continue;
+            }
 
-        testURL(argv[i]);
-    }
-    return 0;
+            testURL(argv[i]);
+        }
 #endif
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM FAILED");
+    return 0;
 }
 
 
@@ -302,7 +301,8 @@ int testURL(const char* i_pURL)
 
     for (int i = 0; i< tests; ++i)
     {
-        nsIURL* pURL = CreateURL(url[i]);
+        nsCOMPtr<nsIURL> pURL = do_CreateInstance(kStandardUrlCID);
+pURL CreateURL(url[i]);
         pURL->DebugString(&temp);
         cout << temp << endl;
         pURL->Release();

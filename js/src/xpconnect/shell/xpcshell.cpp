@@ -827,125 +827,125 @@ main(int argc, char **argv)
 
     gErrFile = stderr;
     gOutFile = stdout;
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        if (NS_FAILED(rv)) {
+            printf("NS_InitXPCOM failed!\n");
+            return 1;
+        }
+        {
+            nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+            NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+            if (registrar)
+                registrar->AutoRegister(nsnull);
+        }
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    if (NS_FAILED(rv)) {
-        printf("NS_InitXPCOM failed!\n");
-        return 1;
-    }
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
+        // get the JSRuntime from the runtime svc
+        if (!rtsvc) {
+            printf("failed to get nsJSRuntimeService!\n");
+            return 1;
+        }
     
+        if (NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt) {
+            printf("failed to get JSRuntime from nsJSRuntimeService!\n");
+            return 1;
+        }
 
-    nsCOMPtr<nsIJSRuntimeService> rtsvc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-    // get the JSRuntime from the runtime svc
-    if (!rtsvc) {
-        printf("failed to get nsJSRuntimeService!\n");
-        return 1;
-    } 
-    
-    if (NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt) {
-        printf("failed to get JSRuntime from nsJSRuntimeService!\n");
-        return 1;
-    }
+        jscontext = JS_NewContext(rt, 8192);
+        if (!jscontext) {
+            printf("JS_NewContext failed!\n");
+            return 1;
+        }
 
-    jscontext = JS_NewContext(rt, 8192);
-    if (!jscontext) {
-        printf("JS_NewContext failed!\n");
-        return 1;
-    }
+        JS_SetErrorReporter(jscontext, my_ErrorReporter);
 
-    JS_SetErrorReporter(jscontext, my_ErrorReporter);
+        nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
+        if (!xpc) {
+            printf("failed to get nsXPConnect service!\n");
+            return 1;
+        }
 
-    nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());
-    if (!xpc) {
-        printf("failed to get nsXPConnect service!\n");
-        return 1;
-    }
+        // Since the caps security system might set a default security manager
+        // we will be sure that the secman on this context gives full trust.
+        // That way we can avoid getting principals from the caps security manager
+        // just to shut it up. Also, note that even though our secman will allow
+        // anything, we set the flags to '0' so it ought never get called anyway.
+        nsCOMPtr<nsIXPCSecurityManager> secman =
+            NS_STATIC_CAST(nsIXPCSecurityManager*, new FullTrustSecMan());
+        xpc->SetSecurityManagerForJSContext(jscontext, secman, 0);
 
-    // Since the caps security system might set a default security manager
-    // we will be sure that the secman on this context gives full trust.
-    // That way we can avoid getting principals from the caps security manager
-    // just to shut it up. Also, note that even though our secman will allow
-    // anything, we set the flags to '0' so it ought never get called anyway.
-    nsCOMPtr<nsIXPCSecurityManager> secman = 
-        NS_STATIC_CAST(nsIXPCSecurityManager*, new FullTrustSecMan());
-    xpc->SetSecurityManagerForJSContext(jscontext, secman, 0);
-
-//    xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE); 
-//    xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE); 
+        //    xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE);
+        //    xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE);
 
 #ifdef TEST_TranslateThis
-    nsCOMPtr<nsIXPCFunctionThisTranslator> 
-        translator(new nsXPCFunctionThisTranslator);
-    xpc->SetFunctionThisTranslator(NS_GET_IID(nsITestXPCFunctionCallback), translator, nsnull);
+        nsCOMPtr<nsIXPCFunctionThisTranslator>
+            translator(new nsXPCFunctionThisTranslator);
+        xpc->SetFunctionThisTranslator(NS_GET_IID(nsITestXPCFunctionCallback), translator, nsnull);
 #endif
     
-    nsCOMPtr<nsIJSContextStack> cxstack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
-    if (!cxstack) {
-        printf("failed to get the nsThreadJSContextStack service!\n");
-        return 1;
-    }
+        nsCOMPtr<nsIJSContextStack> cxstack = do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+        if (!cxstack) {
+            printf("failed to get the nsThreadJSContextStack service!\n");
+            return 1;
+        }
 
-    if(NS_FAILED(cxstack->Push(jscontext))) {
-        printf("failed to push the current JSContext on the nsThreadJSContextStack!\n");
-        return 1;
-    }
+        if(NS_FAILED(cxstack->Push(jscontext))) {
+            printf("failed to push the current JSContext on the nsThreadJSContextStack!\n");
+            return 1;
+        }
 
-    glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
-    if (!glob)
-        return 1;
-    if (!JS_InitStandardClasses(jscontext, glob))
-        return 1;
-    if (!JS_DefineFunctions(jscontext, glob, glob_functions))
-        return 1;
-    if (NS_FAILED(xpc->InitClasses(jscontext, glob)))
-        return 1;
+        glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
+        if (!glob)
+            return 1;
+        if (!JS_InitStandardClasses(jscontext, glob))
+            return 1;
+        if (!JS_DefineFunctions(jscontext, glob, glob_functions))
+            return 1;
+        if (NS_FAILED(xpc->InitClasses(jscontext, glob)))
+            return 1;
 
-    argc--;
-    argv++;
+        argc--;
+        argv++;
 
-    result = ProcessArgs(jscontext, glob, argv, argc);
+        result = ProcessArgs(jscontext, glob, argv, argc);
 
 
 #ifdef TEST_InitClassesWithNewWrappedGlobal
-    // quick hacky test...
+        // quick hacky test...
 
-    JSContext* foo = JS_NewContext(rt, 8192);
-    nsCOMPtr<nsIXPCTestNoisy> bar(new TestGlobal());
-    nsCOMPtr<nsIXPConnectJSObjectHolder> baz;
-    xpc->InitClassesWithNewWrappedGlobal(foo, bar, NS_GET_IID(nsIXPCTestNoisy),
-                                         PR_TRUE, getter_AddRefs(baz));
-    bar = nsnull;
-    baz = nsnull;
-    JS_GC(foo);
-    JS_DestroyContext(foo);
+        JSContext* foo = JS_NewContext(rt, 8192);
+        nsCOMPtr<nsIXPCTestNoisy> bar(new TestGlobal());
+        nsCOMPtr<nsIXPConnectJSObjectHolder> baz;
+        xpc->InitClassesWithNewWrappedGlobal(foo, bar, NS_GET_IID(nsIXPCTestNoisy),
+                                             PR_TRUE, getter_AddRefs(baz));
+        bar = nsnull;
+        baz = nsnull;
+        JS_GC(foo);
+        JS_DestroyContext(foo);
 #endif
 
 //#define TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN 1
 
 #ifdef TEST_CALL_ON_WRAPPED_JS_AFTER_SHUTDOWN
-    // test of late call and release (see below)
-    nsCOMPtr<nsIJSContextStack> bogus;
-    xpc->WrapJS(jscontext, glob, NS_GET_IID(nsIJSContextStack), 
-                (void**) getter_AddRefs(bogus));
+        // test of late call and release (see below)
+        nsCOMPtr<nsIJSContextStack> bogus;
+        xpc->WrapJS(jscontext, glob, NS_GET_IID(nsIJSContextStack),
+                    (void**) getter_AddRefs(bogus));
 #endif
 
-    JS_ClearScope(jscontext, glob);
-    JS_GC(jscontext);
-    JSContext *oldcx;
-    cxstack->Pop(&oldcx);
-    NS_ASSERTION(oldcx == jscontext, "JS thread context push/pop mismatch");
-    cxstack = nsnull;
-    JS_GC(jscontext);
-    JS_DestroyContext(jscontext);
-    xpc->SyncJSContexts();
-    xpc = nsnull;   // force nsCOMPtr to Release the service
-    secman = nsnull;
-    rtsvc = nsnull;
-
+        JS_ClearScope(jscontext, glob);
+        JS_GC(jscontext);
+        JSContext *oldcx;
+        cxstack->Pop(&oldcx);
+        NS_ASSERTION(oldcx == jscontext, "JS thread context push/pop mismatch");
+        cxstack = nsnull;
+        JS_GC(jscontext);
+        JS_DestroyContext(jscontext);
+        xpc->SyncJSContexts();
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     rv = NS_ShutdownXPCOM( NULL );
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 

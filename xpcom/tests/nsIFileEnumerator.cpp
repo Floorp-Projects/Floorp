@@ -59,33 +59,38 @@ int
 main(int argc, char* argv[])
 {
     nsresult rv;
-    nsCOMPtr<nsILocalFile> topDir;
-
-    nsCOMPtr<nsIServiceManager> servMan;
-    rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    if (NS_FAILED(rv)) return -1;
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
-
-    if (argc > 1 && argv[1] != nsnull) 
     {
-        char* pathStr = argv[1];
-        NS_NewNativeLocalFile(nsDependentCString(pathStr), PR_FALSE, getter_AddRefs(topDir));
-    }
-    
-    if (!topDir)
-    {
-       printf("No Top Dir\n");
-       return -1;
-    }
-    PRInt32 startTime = PR_IntervalNow();
-    
-    LoopInDir(topDir);
-    
-    PRInt32 endTime = PR_IntervalNow();
-    
-    printf("\nTime: %d\n", PR_IntervalToMilliseconds(endTime - startTime));
+        nsCOMPtr<nsILocalFile> topDir;
 
+        nsCOMPtr<nsIServiceManager> servMan;
+        rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        if (NS_FAILED(rv)) return -1;
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
+
+        if (argc > 1 && argv[1] != nsnull)
+        {
+            char* pathStr = argv[1];
+            NS_NewNativeLocalFile(nsDependentCString(pathStr), PR_FALSE, getter_AddRefs(topDir));
+        }
+    
+        if (!topDir)
+        {
+           printf("No Top Dir\n");
+           return -1;
+        }
+        PRInt32 startTime = PR_IntervalNow();
+    
+        LoopInDir(topDir);
+    
+        PRInt32 endTime = PR_IntervalNow();
+    
+        printf("\nTime: %d\n", PR_IntervalToMilliseconds(endTime - startTime));
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return 0;
 }

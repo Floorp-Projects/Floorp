@@ -371,7 +371,7 @@ TestConnection::Run(void)
   nsresult rv = NS_OK;
 
   // Create the Event Queue for this thread...
-  nsCOMPtr<nsIEventQueueService> eventQService = 
+  nsCOMPtr<nsIEventQueueService> eventQService =
            do_GetService(kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -384,7 +384,7 @@ TestConnection::Run(void)
 
   if (NS_SUCCEEDED(rv)) {
     if (mIsAsync) {
-      
+
       //
       // Initiate an async read...
       //
@@ -587,11 +587,12 @@ main(int argc, char* argv[])
   // Parse the command line args...
   //
   // -----
-///  if (argc < 3) {
-///      printf("usage: %s [-sync|-silent] <host> <path>\n", argv[0]);
-///      return -1;
-///  }
-
+#if 0
+  if (argc < 3) {
+    printf("usage: %s [-sync|-silent] <host> <path>\n", argv[0]);
+    return -1;
+  }
+#endif
   PRBool bIsAsync = PR_TRUE;
   const char* hostName = nsnull;
   int i;
@@ -626,46 +627,47 @@ main(int argc, char* argv[])
   // Initialize XPCom...
   //
   // -----
+  {
+    nsCOMPtr<nsIServiceManager> servMan;
+    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+    if (registrar)
+      registrar->AutoRegister(nsnull);
 
-  nsCOMPtr<nsIServiceManager> servMan;
-  NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-  NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-  registrar->AutoRegister(nsnull);
+    // Create the Event Queue for this thread...
+    nsCOMPtr<nsIEventQueueService> eventQService =
+             do_GetService(kEventQueueServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
 
-  // Create the Event Queue for this thread...
-  nsCOMPtr<nsIEventQueueService> eventQService = 
-           do_GetService(kEventQueueServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  //
-  // Create the connections and threads...
-  //
-  for (i=0; i<NUM_TEST_THREADS; i++) {
-    gConnections[i] = new TestConnection(hostName, 7, bIsAsync);
-    rv = NS_NewThread(&gThreads[i], gConnections[i], 0, PR_JOINABLE_THREAD);
-  }
-
+    //
+    // Create the connections and threads...
+    //
+    for (i=0; i<NUM_TEST_THREADS; i++) {
+      gConnections[i] = new TestConnection(hostName, 7, bIsAsync);
+      rv = NS_NewThread(&gThreads[i], gConnections[i], 0, PR_JOINABLE_THREAD);
+    }
 
 #if defined(USE_TIMERS)
-  //
-  // Start up the timer to test Suspend/Resume APIs on the transport...
-  //
-  nsresult rv;
-  gPeriodicTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
-    gPeriodicTimer->Init(TimerCallback, nsnull, 1000);
-  }
+    //
+    // Start up the timer to test Suspend/Resume APIs on the transport...
+    //
+    gPeriodicTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    if (NS_SUCCEEDED(rv)) {
+      gPeriodicTimer->Init(TimerCallback, nsnull, 1000);
+    }
 #endif /* USE_TIMERS */
-  
 
-  // Enter the message pump to allow the URL load to proceed.
-  Pump_PLEvents(eventQService);
+    // Enter the message pump to allow the URL load to proceed.
+    Pump_PLEvents(eventQService);
 
-  PRTime endTime;
-  endTime = PR_Now();
+    PRTime endTime;
+    endTime = PR_Now();
 
-//  printf("Elapsed time: %d\n", (PRInt32)(endTime/1000UL - gElapsedTime/1000UL));
-
+    //  printf("Elapsed time: %d\n", (PRInt32)(endTime/1000UL - gElapsedTime/1000UL));
+  } // this scopes the nsCOMPtrs
+  // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+  rv = NS_ShutdownXPCOM(nsnull);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
   return 0;
 }

@@ -88,11 +88,11 @@ public:
     RandomStream(PRUint32 aSeed) {
         mStartSeed = mState = aSeed;
     }
-    
+
     PRUint32 GetStartSeed() {
         return mStartSeed;
     }
-    
+
     PRUint32 Next() {
         mState = 1103515245 * mState + 12345 ^ (mState >> 16);
         return mState;
@@ -140,7 +140,7 @@ public:
             if (*aBuf++ != (char)(NextChar() & 0xff))
                 return PR_FALSE;
         }
-        
+
         // Check for terminating NUL character
         if (*aBuf)
             return PR_FALSE;
@@ -160,7 +160,7 @@ public:
     }
 
 protected:
-    
+
     PRUint32 mState;
     PRUint32 mStartSeed;
 };
@@ -223,7 +223,7 @@ public:
                              nsresult aStatus) {
         PRIntervalTime endTime;
         PRIntervalTime duration;
-        
+
         endTime = PR_IntervalNow();
         duration = (endTime - mStartTime);
 
@@ -291,12 +291,12 @@ TestReadStream(nsICachedNetData *cacheEntry, nsITestDataStream *testDataStream,
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     // FIXME    NS_ASSERTION(actualContentLength == expectedStreamLength,
     //                 "nsICachedNetData::GetContentLength() busted ?");
-    
+
     nsReader *reader = new nsReader;
     reader->AddRef();
     rv = reader->Init(testDataStream, expectedStreamLength);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
-    
+
     rv = channel->AsyncOpen(0, reader);
     NS_ASSERTION(NS_SUCCEEDED(rv), " ");
     reader->Release();
@@ -350,7 +350,7 @@ TestRead(nsINetDataCacheManager *aCache, PRUint32 aFlags)
                               aFlags, &inCache);
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
         NS_ASSERTION(inCache, "nsINetDataCacheManager::Contains error");
-        
+
         rv = aCache->GetCachedNetData(uriCacheKey,
                                       secondaryCacheKey, sizeof secondaryCacheKey,
                                       aFlags,
@@ -436,7 +436,7 @@ FillCache(nsINetDataCacheManager *aCache, PRUint32 aFlags, PRUint32 aCacheCapaci
 
     gTotalBytesWritten = 0;
     PRIntervalTime startTime = PR_IntervalNow();
-    
+
     for (testNum = 0; testNum < NUM_CACHE_ENTRIES; testNum++) {
         randomStream = new RandomStream(testNum);
         randomStream->ReadString(cacheKey, sizeof cacheKey - 1);
@@ -448,7 +448,7 @@ FillCache(nsINetDataCacheManager *aCache, PRUint32 aFlags, PRUint32 aCacheCapaci
                               aFlags, &inCache);
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
         NS_ASSERTION(!inCache, "nsINetDataCacheManager::Contains error");
-        
+
         rv = aCache->GetCachedNetData(cacheKey,
                                       secondaryCacheKey, sizeof secondaryCacheKey,
                                       aFlags,
@@ -496,7 +496,7 @@ FillCache(nsINetDataCacheManager *aCache, PRUint32 aFlags, PRUint32 aCacheCapaci
         nsCOMPtr<nsITransport> trans(do_QueryInterface(channel));
         rv = trans->OpenOutputStream(0, -1, 0,getter_AddRefs(outStream));
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
-        
+
         int streamLength = randomStream->Next() % MAX_CONTENT_LENGTH;
         int remaining = streamLength;
         while (remaining) {
@@ -507,7 +507,7 @@ FillCache(nsINetDataCacheManager *aCache, PRUint32 aFlags, PRUint32 aCacheCapaci
             rv = outStream->Write(buf, amount, &numWritten);
             NS_ASSERTION(NS_SUCCEEDED(rv), " ");
             NS_ASSERTION(numWritten == (PRUint32)amount, "Write() bug?");
-            
+
             remaining -= amount;
 
             PRUint32 storageInUse;
@@ -572,29 +572,34 @@ int
 main(int argc, char* argv[])
 {
     nsresult rv;
-    nsCOMPtr<nsINetDataCacheManager> cache;
+    {
+        nsCOMPtr<nsINetDataCacheManager> cache;
 
-  
-    // Start up XPCOM
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        // Start up XPCOM
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    rv = nsComponentManager::CreateInstance(NS_NETWORK_CACHE_MANAGER_CONTRACTID,
-                                            nsnull,
-                                            NS_GET_IID(nsINetDataCacheManager),
-                                            getter_AddRefs(cache));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create cache manager factory") ;
+        rv = nsComponentManager::CreateInstance(NS_NETWORK_CACHE_MANAGER_CONTRACTID,
+                                                nsnull,
+                                                NS_GET_IID(nsINetDataCacheManager),
+                                                getter_AddRefs(cache));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create cache manager factory") ;
 
-    cache->SetDiskCacheCapacity(DISK_CACHE_CAPACITY);
-    cache->SetMemCacheCapacity(MEM_CACHE_CAPACITY);
+        cache->SetDiskCacheCapacity(DISK_CACHE_CAPACITY);
+        cache->SetMemCacheCapacity(MEM_CACHE_CAPACITY);
 
-    InitQueue();
-    
-    Test(cache, nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE, MEM_CACHE_CAPACITY);
-    Test(cache, nsINetDataCacheManager::BYPASS_MEMORY_CACHE, DISK_CACHE_CAPACITY);
+        InitQueue();
+
+        Test(cache, nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE, MEM_CACHE_CAPACITY);
+        Test(cache, nsINetDataCacheManager::BYPASS_MEMORY_CACHE, DISK_CACHE_CAPACITY);
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return 0;
 }
 

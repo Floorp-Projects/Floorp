@@ -112,7 +112,7 @@ TestMemoryObjectCache()
         printf("OpenCacheEntry(ACCESS_READ_WRITE) failed: %x\n", rv);
         goto error_exit;
     }
-    
+
     nsCOMPtr<nsISupportsString> foo =
         do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
 
@@ -124,7 +124,7 @@ TestMemoryObjectCache()
     descriptor = nsnull;
 
     // Test refetching entry
-    
+
     rv = session->OpenCacheEntry("http://www.mozilla.org/somekey",
                                  nsICache::ACCESS_READ_WRITE,
                                  nsICache::BLOCKING,
@@ -141,7 +141,7 @@ TestMemoryObjectCache()
     } else {
         printf("data matches...\n");
     }
-    
+
     char * metaData;
     rv = descriptor->GetMetaDataElement("itemOne", &metaData);
     if (NS_SUCCEEDED(rv))   printf("metaData = %s\n", metaData);
@@ -194,7 +194,7 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) goto error_exit;
 
     eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(gEventQ));
-    
+
     /**
      * Test Cache
      */
@@ -208,7 +208,7 @@ main(int argc, char* argv[])
             printf("nsCacheService::Shutdown() :    rv      = %x\n", rv);
         gCacheService = nsnull;
     }
-    
+
     gEventQ = nsnull;
     eventQService = nsnull;
 
@@ -218,5 +218,5 @@ main(int argc, char* argv[])
     return rv;
 }
 
-    
+
 

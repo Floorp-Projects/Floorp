@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -133,8 +133,9 @@ int ProcessArgs(nsIComponentRegistrar* register, int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-    int ret = 0;
-
+  int ret = 0;
+  nsresult rv;
+  {
     nsCOMPtr<nsIServiceManager> servMan;
     rv = NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
     if (NS_FAILED(rv)) return -1;
@@ -149,6 +150,9 @@ int main(int argc, char *argv[])
     }
     else
       ret = ProcessArgs(registrar, argc, argv);
-
-    return ret;
+  } // this scopes the nsCOMPtrs
+  // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+  rv = NS_ShutdownXPCOM( NULL );
+  NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+  return ret;
 }

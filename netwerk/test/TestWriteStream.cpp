@@ -73,11 +73,11 @@ public:
     RandomStream(PRUint32 aSeed) {
         mStartSeed = mState = aSeed;
     }
-    
+
     PRUint32 GetStartSeed() {
         return mStartSeed;
     }
-    
+
     PRUint32 Next() {
         mState = 1103515245 * mState + 12345;
         return mState;
@@ -107,7 +107,7 @@ public:
     }
 
 protected:
-    
+
     PRUint32 mState;
     PRUint32 mStartSeed;
 };
@@ -124,11 +124,11 @@ TestSyncWrite(char* filename, PRUint32 startPosition, PRInt32 length)
     nsCOMPtr<nsIOutputStream> outStream ;
     RandomStream *randomStream;
     char buf[500];
-    
+
     nsCOMPtr<nsIFileTransportService> fts = 
              do_GetService(kFileTransportServiceCID, &rv) ;
     if (NS_FAILED(rv)) return rv ;
-  
+
     nsCOMPtr<nsILocalFile> fs;
     rv = NS_NewNativeLocalFile(nsDependentCString(filename), PR_FALSE, getter_AddRefs(fs));
     if (NS_FAILED(rv)) return rv ;
@@ -137,10 +137,10 @@ TestSyncWrite(char* filename, PRUint32 startPosition, PRInt32 length)
     rv = fts->CreateTransport(fs, PR_RDWR | PR_CREATE_FILE, 0664, PR_TRUE,
                               getter_AddRefs(transport)) ;
     if (NS_FAILED(rv)) return rv ;
- 
+
     rv = transport->OpenOutputStream(startPosition, -1, 0, getter_AddRefs(outStream)) ;
     if (NS_FAILED(rv)) return rv;
-    
+
     PRIntervalTime startTime = PR_IntervalNow();
 
     randomStream = new RandomStream(PL_HashString(filename));
@@ -154,7 +154,7 @@ TestSyncWrite(char* filename, PRUint32 startPosition, PRInt32 length)
         rv = outStream->Write(buf, amount, &numWritten);
         NS_ASSERTION(NS_SUCCEEDED(rv), " ");
         NS_ASSERTION(numWritten == (PRUint32)amount, "Write() bug?");
-        
+
         remaining -= amount;
     }
     outStream->Close();
@@ -192,7 +192,7 @@ TestSyncWrites(char* filenamePrefix, PRUint32 startPosition, PRInt32 length)
 
     return NS_OK;
 }
-        
+
 ////////////////////////////////////////////////////////////////////////////////
 int
 main(int argc, char* argv[])
@@ -205,15 +205,20 @@ main(int argc, char* argv[])
     }
     char* fileName = argv[1];
     int length = atoi(argv[2]);
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
 
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+        rv = TestSyncWrites(fileName, 0, length);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");
 
-    rv = TestSyncWrites(fileName, 0, length);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "TestAsyncRead failed");
-
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
     return NS_OK;
 }

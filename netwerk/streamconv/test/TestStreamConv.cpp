@@ -140,180 +140,177 @@ int
 main(int argc, char* argv[])
 {
     nsresult rv;
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if (registrar)
+            registrar->AutoRegister(nsnull);
     
-    // Create the Event Queue for this thread...
-    nsCOMPtr<nsIEventQueueService> eventQService = 
-             do_GetService(kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
-
-    nsCOMPtr<nsICategoryManager> catman =
-        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString previous;
-
-    ///////////////////////////////////////////
-    // BEGIN - Stream converter registration
-    //   All stream converters must register with the ComponentManager
-    ///////////////////////////////////////////
-
-    // these stream converters are just for testing. running this harness
-    // from the dist/bin dir will also pickup converters registered
-    // in other modules (necko converters for example).
-
-    PRUint32 converterListSize = 7;
-    const char *const converterList[] = {
-        "?from=a/foo&to=b/foo",
-        "?from=b/foo&to=c/foo",
-        "?from=b/foo&to=d/foo",
-        "?from=c/foo&to=d/foo",
-        "?from=d/foo&to=e/foo",
-        "?from=d/foo&to=f/foo",
-        "?from=t/foo&to=k/foo",
-    };
-
-    TestConverterFactory *convFactory = new TestConverterFactory(kTestConverterCID, "TestConverter", NS_ISTREAMCONVERTER_KEY);
-    nsCOMPtr<nsIFactory> convFactSup(do_QueryInterface(convFactory, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    PRUint32 count = 0;
-    while (count < converterListSize) {
-        // register the TestConverter with the component manager. One contractid registration
-        // per conversion pair (from - to pair).
-        nsCString contractID(NS_ISTREAMCONVERTER_KEY);
-        contractID.Append(converterList[count]);
-        rv = nsComponentManager::RegisterFactory(kTestConverterCID,
-                                                 "TestConverter",
-                                                 contractID.get(),
-                                                 convFactSup,
-                                                 PR_TRUE);
+        // Create the Event Queue for this thread...
+        nsCOMPtr<nsIEventQueueService> eventQService =
+                 do_GetService(kEventQueueServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
-        rv = catman->AddCategoryEntry(NS_ISTREAMCONVERTER_KEY, converterList[count], "x",
-                                        PR_TRUE, PR_TRUE, getter_Copies(previous));
+
+        eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
+
+        nsCOMPtr<nsICategoryManager> catman =
+            do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
-        count++;
-    }
+        nsXPIDLCString previous;
 
-    nsCOMPtr<nsIStreamConverterService> StreamConvService = 
-             do_GetService(kStreamConverterServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+        ///////////////////////////////////////////
+        // BEGIN - Stream converter registration
+        //   All stream converters must register with the ComponentManager
+        ///////////////////////////////////////////
 
-    // Define the *from* content type and *to* content-type for conversion.
-    nsString fromStr;
-    fromStr.Assign(NS_LITERAL_STRING("a/foo"));
-    nsString toStr;
-    toStr.Assign(NS_LITERAL_STRING("c/foo"));
+        // these stream converters are just for testing. running this harness
+        // from the dist/bin dir will also pickup converters registered
+        // in other modules (necko converters for example).
+
+        PRUint32 converterListSize = 7;
+        const char *const converterList[] = {
+            "?from=a/foo&to=b/foo",
+            "?from=b/foo&to=c/foo",
+            "?from=b/foo&to=d/foo",
+            "?from=c/foo&to=d/foo",
+            "?from=d/foo&to=e/foo",
+            "?from=d/foo&to=f/foo",
+            "?from=t/foo&to=k/foo",
+        };
+
+        TestConverterFactory *convFactory = new TestConverterFactory(kTestConverterCID, "TestConverter", NS_ISTREAMCONVERTER_KEY);
+        nsCOMPtr<nsIFactory> convFactSup(do_QueryInterface(convFactory, &rv));
+        if (NS_FAILED(rv)) return rv;
+
+        for (PRUint32 count = 0; count < converterListSize; ++count) {
+            // register the TestConverter with the component manager. One contractid registration
+            // per conversion pair (from - to pair).
+            nsCString contractID(NS_ISTREAMCONVERTER_KEY);
+            contractID.Append(converterList[count]);
+            rv = nsComponentManager::RegisterFactory(kTestConverterCID,
+                                                     "TestConverter",
+                                                     contractID.get(),
+                                                     convFactSup,
+                                                     PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
+            rv = catman->AddCategoryEntry(NS_ISTREAMCONVERTER_KEY, converterList[count], "x",
+                                            PR_TRUE, PR_TRUE, getter_Copies(previous));
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        nsCOMPtr<nsIStreamConverterService> StreamConvService =
+                 do_GetService(kStreamConverterServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        // Define the *from* content type and *to* content-type for conversion.
+        nsString fromStr(NS_LITERAL_STRING("a/foo"));
+        nsString toStr(NS_LITERAL_STRING("c/foo"));
     
 #ifdef ASYNC_TEST
-    // ASYNCRONOUS conversion
+        // ASYNCRONOUS conversion
 
+        // Build up a channel that represents the content we're
+        // starting the transaction with.
+        //
+        // sample multipart mixed content-type string:
+        // "multipart/x-mixed-replacE;boundary=thisrandomstring"
+#if 0
+        nsCOMPtr<nsIChannel> channel;
+        nsCOMPtr<nsIURI> dummyURI;
+        rv = NS_NewURI(getter_AddRefs(dummyURI), "http://meaningless");
+        if (NS_FAILED(rv)) return rv;
 
-    // Build up a channel that represents the content we're
-    // starting the transaction with.
-    //
-    // sample multipart mixed content-type string:
-    // "multipart/x-mixed-replacE;boundary=thisrandomstring"
-    /*nsCOMPtr<nsIChannel> channel;
-    nsCOMPtr<nsIURI> dummyURI;
-    rv = NS_NewURI(getter_AddRefs(dummyURI), "http://meaningless");
-    if (NS_FAILED(rv)) return rv;
+        rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
+                                      dummyURI,
+                                      nsnull,   // inStr
+                                      "text/plain", // content-type
+                                      -1);      // XXX fix contentLength
+        if (NS_FAILED(rv)) return rv;
 
-    rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
-                                  dummyURI,
-                                  nsnull,   // inStr
-                                  "text/plain", // content-type
-                                  -1);      // XXX fix contentLength
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIRequest> request(do_QueryInterface(channel));*/
-
-    nsCOMPtr<nsIRequest> request;
-
-    // setup a listener to receive the converted data. This guy is the end
-    // listener in the chain, he wants the fully converted (toType) data.
-    // An example of this listener in mozilla would be the DocLoader.
-    nsIStreamListener *dataReceiver = new EndListener();
-    NS_ADDREF(dataReceiver);
-
-    // setup a listener to push the data into. This listener sits inbetween the
-    // unconverted data of fromType, and the final listener in the chain (in this case
-    // the dataReceiver.
-    nsIStreamListener *converterListener = nsnull;
-    rv = StreamConvService->AsyncConvertData(fromStr.get(), toStr.get(), 
-                                             dataReceiver, nsnull, &converterListener);
-    if (NS_FAILED(rv)) return rv;
-    NS_RELEASE(dataReceiver);
-
-    // at this point we have a stream listener to push data to, and the one
-    // that will receive the converted data. Let's mimic On*() calls and get the conversion
-    // going. Typically these On*() calls would be made inside their respective wrappers On*()
-    // methods.
-    rv = converterListener->OnStartRequest(request, nsnull);
-    if (NS_FAILED(rv)) return rv;
-
-
-    rv = SEND_DATA("aaa");
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = SEND_DATA("aaa");
-    if (NS_FAILED(rv)) return rv;    
-
-    // Finish the request.
-    rv = converterListener->OnStopRequest(request, nsnull, rv);
-    if (NS_FAILED(rv)) return rv;
-
-    NS_RELEASE(converterListener);
-
-
-#else
-    // SYNCRONOUS conversion
-    nsCOMPtr<nsIInputStream> convertedData;
-    rv = StreamConvService->Convert(inputData, fromStr.get(), toStr.get(), 
-                                    nsnull, getter_AddRefs(convertedData));
-    if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIRequest> request(do_QueryInterface(channel));
 #endif
 
-    // Enter the message pump to allow the URL load to proceed.
-    while ( gKeepRunning ) {
-#ifdef XP_WIN
-        MSG msg;
+        nsCOMPtr<nsIRequest> request;
 
-        if (GetMessage(&msg, NULL, 0, 0)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        } else
-            gKeepRunning = PR_FALSE;
+        // setup a listener to receive the converted data. This guy is the end
+        // listener in the chain, he wants the fully converted (toType) data.
+        // An example of this listener in mozilla would be the DocLoader.
+        nsIStreamListener *dataReceiver = new EndListener();
+        NS_ADDREF(dataReceiver);
+
+        // setup a listener to push the data into. This listener sits inbetween the
+        // unconverted data of fromType, and the final listener in the chain (in this case
+        // the dataReceiver.
+        nsIStreamListener *converterListener = nsnull;
+        rv = StreamConvService->AsyncConvertData(fromStr.get(), toStr.get(),
+                                                 dataReceiver, nsnull, &converterListener);
+        if (NS_FAILED(rv)) return rv;
+        NS_RELEASE(dataReceiver);
+
+        // at this point we have a stream listener to push data to, and the one
+        // that will receive the converted data. Let's mimic On*() calls and get the conversion
+        // going. Typically these On*() calls would be made inside their respective wrappers On*()
+        // methods.
+        rv = converterListener->OnStartRequest(request, nsnull);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = SEND_DATA("aaa");
+        if (NS_FAILED(rv)) return rv;
+
+        rv = SEND_DATA("aaa");
+        if (NS_FAILED(rv)) return rv;
+
+        // Finish the request.
+        rv = converterListener->OnStopRequest(request, nsnull, rv);
+        if (NS_FAILED(rv)) return rv;
+
+        NS_RELEASE(converterListener);
+#else
+        // SYNCRONOUS conversion
+        nsCOMPtr<nsIInputStream> convertedData;
+        rv = StreamConvService->Convert(inputData, fromStr.get(), toStr.get(),
+                                        nsnull, getter_AddRefs(convertedData));
+        if (NS_FAILED(rv)) return rv;
+#endif
+
+        // Enter the message pump to allow the URL load to proceed.
+        while ( gKeepRunning ) {
+#ifdef XP_WIN
+            MSG msg;
+
+            if (GetMessage(&msg, NULL, 0, 0)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            } else
+                gKeepRunning = PR_FALSE;
 #else
 #ifdef XP_MAC
-        /* Mac stuff is missing here! */
+            /* Mac stuff is missing here! */
 #else
 #ifdef XP_OS2
-        QMSG qmsg;
+            QMSG qmsg;
 
-        if (WinGetMsg(0, &qmsg, 0, 0, 0))
-            WinDispatchMsg(0, &qmsg);
-        else
-            gKeepRunning = PR_FALSE;
+            if (WinGetMsg(0, &qmsg, 0, 0, 0))
+                WinDispatchMsg(0, &qmsg);
+            else
+                gKeepRunning = PR_FALSE;
 #else
 #ifdef XP_UNIX
-        PLEvent *gEvent;
-        rv = gEventQ->GetEvent(&gEvent);
-        rv = gEventQ->HandleEvent(gEvent);
-        /* gKeepRunning = PR_FALSE; */
+            PLEvent *gEvent;
+            rv = gEventQ->GetEvent(&gEvent);
+            rv = gEventQ->HandleEvent(gEvent);
+            /* gKeepRunning = PR_FALSE; */
 #else
-        /* Other stuff is missing here! */
+            /* Other stuff is missing here! */
 #endif /* XP_UNIX */
 #endif /* XP_OS2 */
 #endif /* XP_MAC */
 #endif /* XP_WIN */
-    }
-
-    //return NS_ShutdownXPCOM(NULL);
+        }
+    } // this scopes the nsCOMPtrs
+    // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
+    NS_ShutdownXPCOM(nsnull);
     return rv;
 }

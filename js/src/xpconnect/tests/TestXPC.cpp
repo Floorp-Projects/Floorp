@@ -704,75 +704,76 @@ int main()
 
     gErrFile = stderr;
     gOutFile = stdout;
-
-    nsCOMPtr<nsIServiceManager> servMan;
-    NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
-    NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
-    registrar->AutoRegister(nsnull);
+    {
+        nsCOMPtr<nsIServiceManager> servMan;
+        NS_InitXPCOM2(getter_AddRefs(servMan), nsnull, nsnull);
+        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servMan);
+        NS_ASSERTION(registrar, "Null nsIComponentRegistrar");
+        if(registrar)
+            registrar->AutoRegister(nsnull);
     
-    // get the JSRuntime from the runtime svc, if possible
-    nsCOMPtr<nsIJSRuntimeService> rtsvc = 
-             do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
-    if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt)
-        DIE("FAILED to get a JSRuntime");
+        // get the JSRuntime from the runtime svc, if possible
+        nsCOMPtr<nsIJSRuntimeService> rtsvc =
+                 do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
+        if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)) || !rt)
+            DIE("FAILED to get a JSRuntime");
 
-    jscontext = JS_NewContext(rt, 8192);
-    if(!jscontext) 
-        DIE("FAILED to create a JSContext");
+        jscontext = JS_NewContext(rt, 8192);
+        if(!jscontext)
+            DIE("FAILED to create a JSContext");
 
-    JS_SetErrorReporter(jscontext, my_ErrorReporter);
+        JS_SetErrorReporter(jscontext, my_ErrorReporter);
 
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-    if(!xpc) 
-        DIE("FAILED to get xpconnect service\n");
+        nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+        if(!xpc)
+            DIE("FAILED to get xpconnect service\n");
 
-    nsCOMPtr<nsIJSContextStack> cxstack = 
-             do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-    if(NS_FAILED(rv)) 
-        DIE("FAILED to get the nsThreadJSContextStack service!\n");
+        nsCOMPtr<nsIJSContextStack> cxstack =
+                 do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+        if(NS_FAILED(rv))
+            DIE("FAILED to get the nsThreadJSContextStack service!\n");
 
-    if(NS_FAILED(cxstack->Push(jscontext)))
-        DIE("FAILED to push the current jscontext on the nsThreadJSContextStack service!\n");
+        if(NS_FAILED(cxstack->Push(jscontext)))
+            DIE("FAILED to push the current jscontext on the nsThreadJSContextStack service!\n");
 
-    // XXX I'd like to replace this with code that uses a wrapped xpcom object
-    // as the global object. The old TextXPC did this. The support for this 
-    // is not working now in the new xpconnect code.
+        // XXX I'd like to replace this with code that uses a wrapped xpcom object
+        // as the global object. The old TextXPC did this. The support for this
+        // is not working now in the new xpconnect code.
 
-    glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
-    if (!glob)
-        DIE("FAILED to create global object");
-    if (!JS_InitStandardClasses(jscontext, glob))
-        DIE("FAILED to init standard classes");
-    if (!JS_DefineFunctions(jscontext, glob, glob_functions))
-        DIE("FAILED to define global functions");
-    if (NS_FAILED(xpc->InitClasses(jscontext, glob)))
-        DIE("FAILED to init xpconnect classes");
+        glob = JS_NewObject(jscontext, &global_class, NULL, NULL);
+        if (!glob)
+            DIE("FAILED to create global object");
+        if (!JS_InitStandardClasses(jscontext, glob))
+            DIE("FAILED to init standard classes");
+        if (!JS_DefineFunctions(jscontext, glob, glob_functions))
+            DIE("FAILED to define global functions");
+        if (NS_FAILED(xpc->InitClasses(jscontext, glob)))
+            DIE("FAILED to init xpconnect classes");
 
-    /**********************************************/
-    // run the tests...
+        /**********************************************/
+        // run the tests...
 
-    TestCategoryManmager();
-    TestSecurityManager(jscontext, glob, xpc);
-    TestArgFormatter(jscontext, glob, xpc);
-    TestThreadJSContextStack(jscontext);
+        TestCategoryManmager();
+        TestSecurityManager(jscontext, glob, xpc);
+        TestArgFormatter(jscontext, glob, xpc);
+        TestThreadJSContextStack(jscontext);
 
-    /**********************************************/
+        /**********************************************/
 
-    if(NS_FAILED(cxstack->Pop(nsnull)))
-        DIE("FAILED to pop the current jscontext from the nsThreadJSContextStack service!\n");
+        if(NS_FAILED(cxstack->Pop(nsnull)))
+            DIE("FAILED to pop the current jscontext from the nsThreadJSContextStack service!\n");
 
-    JS_ClearScope(jscontext, glob);
-    JS_GC(jscontext);
-    JS_GC(jscontext);
-    JS_DestroyContext(jscontext);
-    xpc->SyncJSContexts();
-    xpc->DebugDump(4);
+        JS_ClearScope(jscontext, glob);
+        JS_GC(jscontext);
+        JS_GC(jscontext);
+        JS_DestroyContext(jscontext);
+        xpc->SyncJSContexts();
+        xpc->DebugDump(4);
 
-    cxstack = nsnull;   // release service held by nsCOMPtr
-    xpc     = nsnull;   // release service held by nsCOMPtr
-    rtsvc   = nsnull;   // release service held by nsCOMPtr
-
+        cxstack = nsnull;   // release service held by nsCOMPtr
+        xpc     = nsnull;   // release service held by nsCOMPtr
+        rtsvc   = nsnull;   // release service held by nsCOMPtr
+    }
     rv = NS_ShutdownXPCOM( NULL );
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM FAILED");
 
