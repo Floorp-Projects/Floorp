@@ -945,22 +945,16 @@ nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
 
 static void 
 MapTableFrameInto(const nsIHTMLMappedAttributes* aAttributes,
-                  nsIStyleContext* aContext,
-                  nsIPresContext* aPresContext, 
-                  nsStyleSpacing* aSpacing)
+                  nsIStyleContext*               aContext,
+                  nsIPresContext*                aPresContext, 
+                  nsStyleSpacing*                aSpacing,
+                  PRUint8                        aBorderStyle)
 {
   // set up defaults
-  if (aSpacing->GetBorderStyle(0) == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->SetBorderStyle(0, NS_STYLE_BORDER_STYLE_BG_OUTSET);
-  }
-  if (aSpacing->GetBorderStyle(1) == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->SetBorderStyle(1, NS_STYLE_BORDER_STYLE_BG_OUTSET);
-  }
-  if (aSpacing->GetBorderStyle(2) == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->SetBorderStyle(2, NS_STYLE_BORDER_STYLE_BG_OUTSET);
-  }
-  if (aSpacing->GetBorderStyle(3) == NS_STYLE_BORDER_STYLE_NONE) {
-    aSpacing->SetBorderStyle(3, NS_STYLE_BORDER_STYLE_BG_OUTSET);
+  for (PRInt32 sideX = NS_SIDE_TOP; sideX <= NS_SIDE_LEFT; sideX++) {
+    if (aSpacing->GetBorderStyle(sideX) == NS_STYLE_BORDER_STYLE_NONE) {
+      aSpacing->SetBorderStyle(sideX, aBorderStyle);
+    }
   }
 
   nsHTMLValue frameValue;
@@ -1017,8 +1011,9 @@ MapTableFrameInto(const nsIHTMLMappedAttributes* aAttributes,
 
 static void 
 MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
-                   nsIStyleContext* aContext,
-                   nsIPresContext* aPresContext)
+                   nsIStyleContext*               aContext,
+                   nsIPresContext*                aPresContext,
+                   PRUint8                        aBorderStyle)
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
@@ -1068,7 +1063,7 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
     spacing->mBorder.SetBottom(twips);
     spacing->mBorder.SetLeft(twips);
     // then account for the frame attribute
-    MapTableFrameInto(aAttributes, aContext, aPresContext, spacing);
+    MapTableFrameInto(aAttributes, aContext, aPresContext, spacing, aBorderStyle);
   }
 }
 
@@ -1110,20 +1105,7 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         spacingStyle->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_BG_INSET);
         spacingStyle->SetBorderStyle(NS_SIDE_RIGHT,  NS_STYLE_BORDER_STYLE_BG_INSET);
 
-        nscolor borderColor = 0xFFC0C0C0;
-        // XXX the next line should be removed when bug 12905 is resolved - until then there is a memory leak
-        NS_ADDREF(aContext);
-        const nsStyleColor* colorData = 
-          nsStyleUtil::FindNonTransparentBackground(aContext);
-        if (colorData != nsnull) // we found a style context which has a background color 
-          borderColor = colorData->mBackgroundColor;
-        // if the border color is white, then shift to grey
-        if (borderColor == 0xFFFFFFFF)
-          borderColor = 0xFFC0C0C0;
-        spacingStyle->SetBorderColor(NS_SIDE_TOP,    borderColor);
-        spacingStyle->SetBorderColor(NS_SIDE_LEFT,   borderColor);
-        spacingStyle->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
-        spacingStyle->SetBorderColor(NS_SIDE_RIGHT,  borderColor);
+        // BG_INSET results in a border color based on background colors
       }
     }
     else {  // handle attributes for table
@@ -1163,19 +1145,24 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         }
       }
 
+      nsStyleSpacing* spacing = (nsStyleSpacing*)aContext->GetMutableStyleData(eStyleStruct_Spacing);
+
+      // default border style is the quirks outset
+      PRUint8 borderStyle = NS_STYLE_BORDER_STYLE_BG_OUTSET;
+
       // bordercolor
       aAttributes->GetAttribute(nsHTMLAtoms::bordercolor, value);
       if ((eHTMLUnit_Color == value.GetUnit()) || (eHTMLUnit_ColorName == value.GetUnit())) {
         nscolor color = value.GetColorValue();
-        nsStyleSpacing* spacing = (nsStyleSpacing*)aContext->GetMutableStyleData(eStyleStruct_Spacing);
         spacing->SetBorderColor(0, color);
         spacing->SetBorderColor(1, color);
         spacing->SetBorderColor(2, color);
         spacing->SetBorderColor(3, color);
+        borderStyle = NS_STYLE_BORDER_STYLE_OUTSET; // use css outset
       }
 
       // border and frame
-      MapTableBorderInto(aAttributes, aContext, aPresContext);
+      MapTableBorderInto(aAttributes, aContext, aPresContext, borderStyle);
 
       // align; Check for enumerated type (it may be another type if
       // illegal)
