@@ -34,6 +34,7 @@
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
+#include "nsFileSpec.h"
 
 class nsIFileChannel;
 
