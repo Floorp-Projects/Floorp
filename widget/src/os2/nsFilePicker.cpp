@@ -238,7 +238,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       strcpy(lastPath, filedlg.szFullFile);
 
       // Store the current directory in mDisplayDirectory
-      mDisplayDirectory->InitWitNativehPath(nsDependentCString(filedlg.szFullFile));
+      mDisplayDirectory->InitWithNativePath(nsDependentCString(filedlg.szFullFile));
       mSelectedType = (PRInt16)pmydata->ulCurExt;
     }
 
