@@ -43,6 +43,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIArray;
 interface nsIRDFResource;
 interface nsITransactionManager;
 
@@ -76,6 +77,8 @@ interface nsIBookmarksService : nsISupports
     nsIRDFResource createSeparator();
 
     nsIRDFResource cloneResource(in nsIRDFResource aSource);
+    nsIRDFResource getParent(in nsIRDFResource aSource);
+    nsIArray getParentChain(in nsIRDFResource aSource);
 
     nsIRDFResource getBookmarksToolbarFolder();
     void setBookmarksToolbarFolder(in nsIRDFResource aSource);
