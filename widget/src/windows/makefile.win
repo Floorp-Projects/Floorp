@@ -24,7 +24,8 @@ DEPTH=..\..\..
 
 LIBRARY_NAME = raptorwidget_s
 REQUIRES=xpcom gfxwin raptor dom network netlib
-DEFINES =-D_IMPL_NS_WIDGET -DMOZ_AIMM
+#DEFINES =-D_IMPL_NS_WIDGET -DMOZ_AIMM
+DEFINES =-D_IMPL_NS_WIDGET
 
 CPPSRCS =              \
 	nsFontRetrieverService.cpp      \
