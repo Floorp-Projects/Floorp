@@ -609,7 +609,7 @@ nsPop3Protocol::WaitForStartOfConnectionResponse(nsIInputStream* aInputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(aInputStream, line_length, pauseForMoreData);
 
-    if(pauseForMoreData || line_length < 0 || !line)
+    if(pauseForMoreData || !line)
     {
 		PR_FREEIF(line);
 		m_pop3ConData->pause_for_read = PR_TRUE;
@@ -640,7 +640,7 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData || ln < 0 || !line)
+    if(pauseForMoreData || !line)
     {
 	    m_pop3ConData->pause_for_read = PR_TRUE; /* don't pause */
 		PR_FREEIF(line);
@@ -744,7 +744,7 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData || ln < 0 || !line) 
+    if(pauseForMoreData || !line) 
     {
 		m_pop3ConData->pause_for_read = PR_TRUE; /* don't pause */
 		PR_FREEIF(line);
@@ -1106,7 +1106,7 @@ nsPop3Protocol::GetList(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData || ln < 0 || !line)
+    if(pauseForMoreData || !line)
     {
 		m_pop3ConData->pause_for_read = PR_TRUE;
 		PR_FREEIF(line);
@@ -1212,7 +1212,7 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData || ln < 0 || !line)
+    if(pauseForMoreData || !line)
     {
 		m_pop3ConData->pause_for_read = PR_TRUE;
 		PR_FREEIF(line);
@@ -1380,7 +1380,7 @@ nsPop3Protocol::GetXtndXlstMsgid(nsIInputStream* inputStream,
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData || ln < 0 || !line)
+    if(pauseForMoreData || !line)
     {
 		m_pop3ConData->pause_for_read = PR_TRUE;
 		PR_FREEIF(line);
@@ -1491,7 +1491,7 @@ PRInt32 nsPop3Protocol::GetUidlList(nsIInputStream* inputStream,
     PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, ln, pauseForMoreData);
 
-    if(pauseForMoreData || ln < 0 || !line)
+    if(pauseForMoreData || !line)
     {
 		PR_FREEIF(line);
 		m_pop3ConData->pause_for_read = PR_TRUE;
