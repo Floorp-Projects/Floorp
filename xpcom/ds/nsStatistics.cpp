@@ -91,7 +91,7 @@ nsStatistics::Print(FILE* aFile)
     fprintf(aFile, "%s count=%d, minimum=%d, maximum=%d, mean=%0.2f+/-%0.2f\n",
             mTopic, mCount, mMinimum, mMaximum, mean, stddev);
 
-    for (PRInt32 i = mMinimum; i < mMaximum; ++i) {
+    for (PRInt32 i = mMinimum; i <= mMaximum; ++i) {
         PRUint32 count = NS_REINTERPRET_CAST(PRUint32, PL_HashTableLookup(mDistribution, NS_REINTERPRET_CAST(const void*, i)));
         if (! count)
             continue;
