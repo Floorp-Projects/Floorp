@@ -1,0 +1,53 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is the Mozilla browser.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Original Author: Marc Mulcahy (marc.mulcahy@sun.com)
+ *
+ * Contributor(s): Paul Sandoz (paul.sandoz@sun.com)
+ *                 Bill Haneman (bill.haneman@sun.com)
+ *                 John Gaunt (jgaunt@netscape.com)
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(91F0A56C-11BE-47C7-8D02-7C15E00C05F5)]
+interface nsIAccessibleEditableText : nsISupports
+{
+    /**
+      * Set font styles, such as italic, bold...
+      */
+  void setAttributes (in long startPos, in long endPos,
+                      in nsISupports attributes);
+  void setTextContents (in AString text);
+  void insertText (in AString text, in long position);
+  void copyText (in long startPos, in long endPos);
+  void cutText (in long startPos, in long endPos);
+  void deleteText (in long startPos, in long endPos);
+  void pasteText (in long position);
+};
+
+/*
+ Assumptions:
+
+ selectAttributes method takes an nsISupports parameter.
+        'set' methods throw exception on failure.
+ 'wstring' inputs are potentially multibyte (UTF-16 for
+        instance); 'string' and UTF-8 may be a better choice.
+
+*/
