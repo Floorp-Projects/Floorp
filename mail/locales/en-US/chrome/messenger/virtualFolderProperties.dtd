@@ -7,7 +7,7 @@
 <!ENTITY searchCriteriaButton.label "Search Criteria...">
 <!ENTITY searchCriteriaButton.accesskey "S">
 
-<!ENTITY searchTermCaption.label "Configure the search criteria used for this virtual folder: ">
+<!ENTITY searchTermCaption.label "Configure the search criteria used for this saved search folder: ">
 
 <!ENTITY folderSelectionCaption.label "Select the folders to search: ">
 <!ENTITY chooseFoldersButton.label "Choose...">
