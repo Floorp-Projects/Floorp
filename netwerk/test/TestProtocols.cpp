@@ -40,7 +40,7 @@
 #include "nsIByteBufferInputStream.h"
 #include "nsCRT.h"
 #include "nsIChannel.h"
-#include "nsIUrl.h"
+#include "nsIURL.h"
 #include "nsIHTTPChannel.h"
 #include "nsIHttpEventSink.h" 
 #include "nsIEventSinkGetter.h" 
