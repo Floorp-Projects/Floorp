@@ -4417,6 +4417,35 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
   return PR_TRUE;
 }
 
+// Structure for collecting plugin files found during directory scanning
+struct pluginFileinDirectory
+{
+  nsString mFilename;
+  PRInt64  mModTime;
+
+  pluginFileinDirectory()
+  {
+    mModTime = LL_ZERO;
+  }
+};
+
+// QuickSort callback for comparing the modification time of two files
+// if the times are the same, compare the filenames
+static int PR_CALLBACK ComparePluginFileInDirectory (const void *v1, const void *v2, void *)
+{
+  const pluginFileinDirectory* pfd1 = NS_STATIC_CAST(const pluginFileinDirectory*, v1);
+  const pluginFileinDirectory* pfd2 = NS_STATIC_CAST(const pluginFileinDirectory*, v2);
+
+  PRInt32 result = 0;
+  if (LL_EQ(pfd1->mModTime, pfd2->mModTime))
+    result = pfd1->mFilename.CompareWithConversion(pfd2->mFilename.get(), PR_TRUE);
+  else if (LL_CMP(pfd1->mModTime, >, pfd2->mModTime))
+    result = -1;
+  else 
+    result = 1;
+
+  return result;
+}
 
 ////////////////////////////////////////////////////////////////////////
 nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir, 
@@ -4437,7 +4466,9 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
   rv = pluginsDir->GetDirectoryEntries(getter_AddRefs(iter));
   if (NS_FAILED(rv))
     return rv;
-  
+
+  // Collect all the files in this directory in a void array we can sort later
+  nsAutoVoidArray pluginFilesArray;  // array for sorting files in this directory
   PRBool hasMore;
   while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore)  
   {
@@ -4457,15 +4488,34 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     PRBool wasSymlink;  
     file.ResolveSymlink(wasSymlink);
 
-    if (nsPluginsDir::IsPluginFile(file))
-    {
+    if (nsPluginsDir::IsPluginFile(file)) {
+      pluginFileinDirectory * item = new pluginFileinDirectory();
+      if (!item) 
+        return NS_ERROR_OUT_OF_MEMORY;
+    
+      // Get file mod time
+      PRInt64 fileModTime = LL_ZERO;
+      dirEntry->GetLastModifiedTime(&fileModTime);
+
+      item->mModTime = fileModTime;
+      item->mFilename.AssignWithConversion(filePath);
+      pluginFilesArray.AppendElement(item);
+    }
+  } // end round of up of plugin files
+
+  // now sort the array by file modification time or by filename, if equal
+  // put newer plugins first to weed out dups and catch upgrades, see bug 119966
+  pluginFilesArray.Sort(ComparePluginFileInDirectory, nsnull);
+
+  // finally, go through the array, looking at each entry and continue processing it
+  for (PRInt32 i = 0; i < pluginFilesArray.Count(); i++) {
+      pluginFileinDirectory* pfd = NS_STATIC_CAST(pluginFileinDirectory*, pluginFilesArray[i]);
+      nsFileSpec file(pfd->mFilename);
+      PRInt64 fileModTime = pfd->mModTime;
+      delete pfd;
+
       // Look for it in our cache
       nsPluginTag *pluginTag = RemoveCachedPluginsInfo(file.GetCString());
-
-      // Get file mod time
-      PRInt64 fileModTime;
-      LL_I2L(fileModTime, 0);
-      dirEntry->GetLastModifiedTime(&fileModTime);
 
       if (pluginTag) {
         PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
@@ -4481,7 +4531,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       }
       else {
         PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
-               ("ScanPluginsDirectory : Plugin NOT found in cache : %s\n", filePath.get()));
+               ("ScanPluginsDirectory : Plugin NOT found in cache : %s\n", file.GetCString()));
       }
 
 
@@ -4572,7 +4622,6 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       else {
         delete pluginTag;
       }
-    }
   }
   return NS_OK;
 }
