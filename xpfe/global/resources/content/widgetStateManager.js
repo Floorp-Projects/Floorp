@@ -108,13 +108,28 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
 
       if( formElement.nodeName.toLowerCase() == "select" ) { // select & combo
         /* commenting out until select fields work properly, or someone tells me how
-           to do this (also, is it better to store .value, or .text?):
-           var value = formElement.options[formElement.options.selectedIndex].value;
-           this.AddAttributes( formElement, elementEntry, value, optAttributes );
-         */
+           to do this (also, is it better to store .value, or .text?):*/
+          if( formElement.getAttribute("multiple") ) {
+            // multiple selections
+            for( var j = 0, idx = 0; j < formElement.options.length; j++ )
+            {
+              if( formElement.options[j].selected ) {
+                elementEntry.value[idx] = formElement.options[j].text;
+                idx++;
+              }
+            }
+          }
+          else {
+            // single selections
+            var value = formElement.options[formElement.selectedIndex].text;
+            formElement.arbitraryvalue = value;
+            this.AddAttributes( formElement, elementEntry, "arbitraryvalue", optAttributes );
+          }
       }
-      else if( formElement.type == "checkbox" || formElement.type == "radio")
+      else if( formElement.getAttribute("type") && ( formElement.type.toLowerCase() == "checkbox" || formElement.type.toLowerCase() == "radio" ) ) {
+        // XXX 11/04/99
         this.AddAttributes( formElement, elementEntry, "checked", optAttributes );
+      }
       else if( formElement.type == "text" &&
                formElement.getAttribute( "datatype" ) == "nsIFileSpec" &&
                formElement.value ) {
@@ -126,11 +141,12 @@ function WSM_SavePageData( currentPageTag, optAttributes, exclElements, inclElem
           dump("*** Failed to create filespec object\n");
         }
         filespec.nativePath = formElement.value;
-        this.AddAttributes( formElement, elementEntry, filespec, optAttributes )
+        this.AddAttributes( formElement, elementEntry, "filespec", optAttributes )
       }
       else 
         this.AddAttributes( formElement, elementEntry, "value", optAttributes );  // generic
 
+      elementEntry.id       = formElement.id;
       elementEntry.nodeName = formElement.nodeName;
     }
   }
@@ -160,6 +176,8 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
       var id    = this.PageData[currentPageTag][i].id;
       var value = this.PageData[currentPageTag][i].value;
 
+      //dump("*** id & value: " + id + " : " + value + "\n");
+      
       if( this.content_frame.SetFields && !hasExtraAttributes )
         this.content_frame.SetFields( id, value );  // user provided setfields
       else if( this.content_frame.SetFields && hasExtraAttributes )
@@ -180,7 +198,7 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
         
         // default "value" attributes        
         if( formElement && formElement.nodeName.toLowerCase() == "input" ) {
-          if( formElement.type == "checkbox" || formElement.type == "radio" ) {
+          if( formElement.type.toLowerCase() == "checkbox" || formElement.type.toLowerCase() == "radio" ) {
             if( value == undefined )
               formElement.checked = formElement.defaultChecked;
             else {
@@ -190,7 +208,7 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
                 formElement.checked = value;
             }
           }
-          else if( formElement.type == "text" &&
+          else if( formElement.type.toLowerCase() == "text" &&
                formElement.getAttribute( "datatype" ) == "nsIFileSpec" ) {
             // formElement has something to do with fileSpec. looked important
             if( value ) {
@@ -213,13 +231,26 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
           }
         } 
         else if( formElement && formElement.nodeName.toLowerCase() == "select" ) {
-          /* commenting this out until select widgets work properly
-            for ( var k = 0; k < formElement.options.length; k++ )
-            {
-              if( formElement.options[k].value == value )
-                formElement.options[k].selected = true;
+          /* commenting this out until select widgets work properly */
+            if( formElement.getAttribute("multiple") && typeof(value) == "object" ) {
+              // multiple selected items
+              for( var j = 0; j < value.length; j++ )
+              {
+                for ( var k = 0; k < formElement.options.length; k++ )
+                {
+                  if( formElement.options[k].text == value[j] )
+                    formElement.options[k].selected = true;
+                }
+              }
             }
-           */
+            else {
+              // single selected item
+              for ( var k = 0; k < formElement.options.length; k++ )
+              {
+                if( formElement.options[k].text == value )
+                  formElement.options[k].selected = true;
+              }
+            }            
         }
         else if( formElement && formElement.nodeName.toLowerCase() == "textarea" )
           formElement.value = value;
@@ -235,6 +266,7 @@ function WSM_SetPageData( currentPageTag, hasExtraAttributes )
  **/               
 function WSM_GetTagFromURL( url, prefix, suffix, mode )
 {
+  // NOTE TO SELF: this is an accident WAITING to happen
   if( mode )
     return url.substring( prefix.length, url.lastIndexOf(suffix) );
   else
