@@ -78,7 +78,8 @@ if (isset($_GET['count']) && $_GET['count'] == null){
 PEAR::setErrorHandling(PEAR_ERROR_CALLBACK, 'handleErrors');
 $db =& DB::connect($config['db_dsn']);
 
-$selected = array('report_id' => 'Report ID', 'host_hostname' => 'Host', 'report_file_date' => "Date");
+// Initial selected array
+$selected = array('report_id' => 'Report ID', 'host_hostname' => 'Host');
 
 if (isset($_GET['count'])){
 	$selected['count'] = 'Number';
@@ -88,9 +89,12 @@ if (isset($_GET['count'])){
 	$_GET['count'] = 'host_id'; // XXX we just hardcode this (just easier for now, and all people will be doing);
 
 	//Sort by
-	if($orderby == ''){
+	if ($orderby == 'report_file_date'){      //XXX this isn't ideal, but nobody will sort by date (pointless and not an option)
 		$orderby = 'count';
 	}
+}
+else {
+	$selected['report_file_date'] = "Date";
 }
 
 // Build SELECT clause of SQL
@@ -123,7 +127,7 @@ else if ($_GET['submit_query']){
 		if (
 			($param == 'report_description') || 
 			($param == 'host_hostname') || 
-			($param == 'report_problem_type') || 
+			($param == 'report_problem_type') ||
 			($param == 'report_behind_login') || 
 			($param == 'report_useragent') || 
 			($param == 'report_gecko') || 
