@@ -28,10 +28,14 @@
 interface nsIMsgQuote : nsISupports {
 	/*
 	 * This is the primary interface for quoting a particular message specified
-	 * by a URI
+	   by a URI
 	 */
-	void		QuoteMessage(in wstring msgURI, in boolean quoteHeaders, in
-                             nsIStreamListener aStreamListener);
+ 
+    /* aCharset is an option parameter which can be used to force the message to be 
+	   quoted using a particular charset. 
+	*/
+	void QuoteMessage(in wstring msgURI, in boolean quoteHeaders, in
+                             nsIStreamListener aStreamListener, in wstring aCharset);
     readonly attribute nsIMimeStreamConverterListener quoteListener;
     readonly attribute nsIChannel quoteChannel;
 	readonly attribute nsIStreamListener streamListener;
