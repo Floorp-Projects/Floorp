@@ -27,7 +27,7 @@
 #include "nsCacheEntry.h"
 #include "nsReadableUtils.h"
 
-NS_IMPL_ISUPPORTS1(nsCacheEntryDescriptor, nsICacheEntryDescriptor)
+NS_IMPL_ISUPPORTS2(nsCacheEntryDescriptor, nsICacheEntryDescriptor, nsITransport)
 
 
 nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
