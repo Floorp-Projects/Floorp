@@ -58,7 +58,7 @@ nsNSSASN1Tree::LoadASN1Structure(nsIASN1Object *asn1Object)
   // by calling RowCountChanged on it.
   //
   PRBool redraw = (mASN1Object && mTree);
-  PRInt32 rowsToDelete;
+  PRInt32 rowsToDelete = 0;
 
   if (redraw) {
     // This is the number of rows we will be deleting after
