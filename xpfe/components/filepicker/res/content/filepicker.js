@@ -13,9 +13,9 @@ function onLoad() {
     retvals = o.retvals; /* set this to a global var so we can set return values */
     var title = o.title;
     var mode = o.mode;
-    var numFilters = o.filters.length;
     var filterTitles = o.filters.titles;
     var filterTypes = o.filters.types;
+    var numFilters = filterTitles.length;
 
     window.title = title;
 
@@ -63,15 +63,15 @@ function onCancel()
 
 function onClick(e) {
 
-  sfile.initWithPath(e.target.parentNode.getAttribute("path"));
+  var file = Components.classes[nsILocalFile_PROGID].createInstance(nsILocalFile);
+  file.initWithPath(e.target.parentNode.getAttribute("path"));
 
   textInput = document.getElementById("textInput");
-  textInput.value = sfile.path;
+  textInput.value = file.path;
 
   if (e.clickCount == 2) {
-
-    if (sfile.isDirectory()) {
-      loadDirectory();
+    if (file.isDirectory()) {
+      gotoDirectory(file.path);
     }
   }
 }
@@ -250,6 +250,7 @@ function loadDirectory() {
 
 function gotoDirectory(directoryName) {
   sfile.initWithPath(directoryName);
+  sfile.normalize();
   loadDirectory();
 }
 
@@ -262,9 +263,7 @@ function textEntered(name) {
   if (file.exists()) {
     if (file.isDirectory()) {
       if (!sfile.equals(file)) {
-        sfile.initWithPath(name);
-        sfile.normalize();
-        loadDirectory();
+        gotoDirectory(name);
       }
       return;
     } else if (file.isFile()) {
@@ -280,9 +279,7 @@ function textEntered(name) {
       retvals.file = nfile;
       window.close();
     } else if (nfile.isDirectory()) {
-      sfile.initWithPath(nfile.path);
-      sfile.normalize();
-      loadDirectory();
+      gotoDirectory(nfile.path);
     } else {
       dump("can't find file \"" + nfile.path + "\"");
     }
