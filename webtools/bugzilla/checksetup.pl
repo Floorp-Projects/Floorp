@@ -322,6 +322,10 @@ my $modules = [
         name => 'Mail::Mailer', 
         version => '1.65'
     },
+    {
+        name => 'Storable',
+        version => '0'
+    },
 ];
 
 my %ppm_modules = (
