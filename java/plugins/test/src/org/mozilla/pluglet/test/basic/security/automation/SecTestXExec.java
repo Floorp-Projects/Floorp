@@ -24,17 +24,18 @@ package org.mozilla.pluglet.test.basic.security.automation;
 import org.mozilla.pluglet.test.basic.*;
 
 public class SecTestXExec implements Test {
-
+private TestContext context;
 private String description = " Exec";
 private String fExec;
 private boolean mustPass;
+private SecurityManager sm;
 
 public void doAction() {
-        System.getSecurityManager().checkExec( fExec );
+    sm.checkExec( fExec );
 }
 	
 public void execute( TestContext c ) {
- 
+ context = c;
  mustPass = false;
 
  if (c.getProperty("SecTestXExec.mustPass").equals( new String("true") )) {
@@ -42,6 +43,15 @@ public void execute( TestContext c ) {
  };
 
  fExec = c.getProperty("SecTestXExec.fExec");
+ sm = System.getSecurityManager();
+ if (sm == null) {
+     if( mustPass ) {
+	 context.registerPASSED("Security manager isn't present.Access allowed");
+     } else {
+	 context.registerFAILED("Security manager isn't present.Access allowed");
+     }
+     return;
+ }
  try {
  	doAction();
      if( mustPass )	

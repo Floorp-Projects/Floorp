@@ -87,10 +87,11 @@ public class PlugletTagInfo2_getParameter_2  implements Test
         }
 	paramName = (String)vectorOfParameters.elementAt(0);
 	paramVal = PlugletTagInfo2_obj.getParameter(paramName);
-	actionPerformed = true;
 	System.err.println("PlugletTagInfo2_getParameter(" + paramName + ") returns \"" + paramVal + "\" value");
+	String allParameters = context.getProperty("ALL_PARAMETERS");
+	verifyParameter(allParameters);
    }
-   public static void verifyParameter(String paramString) 
+   private void verifyParameter(String paramString) 
    {
      Properties paramReal = new Properties();
      if (paramName == null) {

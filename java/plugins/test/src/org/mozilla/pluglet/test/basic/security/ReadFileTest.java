@@ -63,7 +63,7 @@ public void execute( TestContext c ) {
 	mustPass = true;
  };
 
- filename = c.getProperty("ReadFileTest.FileName");
+ filename = c.getTestDir() + "/" + c.getProperty("ReadFileTest.FileName");
  
  try {
  	doReadFile();	

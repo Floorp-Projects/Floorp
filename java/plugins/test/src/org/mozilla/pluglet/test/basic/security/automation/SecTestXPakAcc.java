@@ -24,24 +24,33 @@ package org.mozilla.pluglet.test.basic.security.automation;
 import org.mozilla.pluglet.test.basic.*;
 
 public class SecTestXPakAcc implements Test {
-
+private TestContext context;
 private String description = " Access Package";
 private String fName;
 private boolean mustPass;
+private SecurityManager sm;
 
 public void doAction() {
-        System.getSecurityManager().checkPackageAccess( fName );
+    sm.checkPackageAccess( fName );
 }
 	
 public void execute( TestContext c ) {
- 
+ context = c;
  mustPass = false;
 
  if (c.getProperty("SecTestXPakAcc.mustPass").equals( new String("true") )) {
 	mustPass = true;
  };
  fName = c.getProperty("SecTestXPakAcc.packageName");  
-
+ sm = System.getSecurityManager();
+ if (sm == null) {
+     if( mustPass ) {
+	 context.registerPASSED("Security manager isn't present.Access allowed");
+     } else {
+	 context.registerFAILED("Security manager isn't present.Access allowed");
+     }
+     return;
+ }
  try {
  	doAction();
      if( mustPass )	

@@ -25,17 +25,18 @@ import org.mozilla.pluglet.test.basic.*;
 
 public class SecTestXRead implements Test {
 
+private TestContext context;
 private String description = " CheckRead";
 private String fName;
 private boolean mustPass;
+private SecurityManager sm;
 
 public void doAction() {
-        System.getSecurityManager().checkRead( fName,
-		System.getSecurityManager().getSecurityContext() );
+    sm.checkRead( fName,sm.getSecurityContext() );
 }
 	
 public void execute( TestContext c ) {
- 
+ context = c;
  mustPass = false;
 
  if (c.getProperty("SecTestXRead.mustPass").equals( new String("true") )) {
@@ -43,7 +44,15 @@ public void execute( TestContext c ) {
  };
 
  fName =c.getProperty("SecTestXRead.fName");
-
+ sm = System.getSecurityManager();
+ if (sm == null) {
+     if( mustPass ) {
+	 context.registerPASSED("Security manager isn't present.Access allowed");
+     } else {
+	 context.registerFAILED("Security manager isn't present.Access allowed");
+     }
+     return;
+ }
  try {
  	doAction();
      if( mustPass )	

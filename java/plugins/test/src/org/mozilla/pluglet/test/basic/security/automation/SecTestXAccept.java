@@ -28,15 +28,16 @@ public class SecTestXAccept implements Test {
 private String description = " ckeckAccept";
 private String fHost;
 private String fPort;
+private TestContext context;
 private boolean mustPass;
-
+private SecurityManager sm;
 
 public void doAction() {
-        System.getSecurityManager().checkAccept( fHost, Integer.parseInt(fPort) );
+    sm.checkAccept( fHost, Integer.parseInt(fPort) );
 }
 	
 public void execute( TestContext c ) {
- 
+ context=c;
  mustPass = false;
 
  if (c.getProperty("SecTestXAccept.mustPass").equals( new String("true") )) {
@@ -45,7 +46,15 @@ public void execute( TestContext c ) {
 
  fHost = c.getProperty("SecTestXAccept.fHost");
  fPort = c.getProperty("SecTestXAccept.fPort");
-
+  sm = System.getSecurityManager();
+  if (sm == null) {
+      if( mustPass ) {
+	  context.registerPASSED("Security manager isn't present.Access allowed");
+      } else {
+	  context.registerFAILED("Security manager isn't present.Access allowed");
+      }
+      return;
+  }
  try {
  	doAction();
      if( mustPass )	

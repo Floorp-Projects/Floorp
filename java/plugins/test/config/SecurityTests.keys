@@ -35,7 +35,7 @@ PrintTest.mustPass=true
 # ReadFileTest.java test properties
 #
 ReadFileTest.mustPass=true
-ReadFileTest.FileName=foo
+ReadFileTest.FileName=TestProperties
 
 #
 # RemoteConnectTest.java test properties

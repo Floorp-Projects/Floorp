@@ -62,9 +62,9 @@ tests: $(TESTS)
 
 
 clobber:
-	@cd $(BUILD_DIR_CLASSES)\$(BASIC_PATH)\params
-	-del *.class *.jar
-
+	@-del /Q /S $(BUILD_DIR_CLASSES)\$(BASIC_PATH)\params\*
+	@-del /Q /S $(BUILD_DIR)\test\basic\params\*
+	@-del /Q /S $(HTML_ROOT_DIR)\basic\params\*
 
 $(TESTS)  ::	
 	@echo Making test $@
@@ -93,3 +93,13 @@ Pluglet_createPlugletInstance_mimeType_6::
 PlugletStreamListener_onDataAvailable_input_1 PlugletStreamListener_onDataAvailable_input_2 PlugletStreamListener_onDataAvailable_input_3 PlugletStreamListener_onDataAvailable_input_4 PlugletStreamListener_onDataAvailable_input_5 PlugletStreamListener_onDataAvailable_input_6 PlugletStreamListener_onDataAvailable_input_7 PlugletStreamListener_onDataAvailable_input_8 PlugletStreamListener_onDataAvailable_input_9 PlugletStreamListener_onDataAvailable_input_11 PlugletStreamListener_onDataAvailable_input_12  ::
 	@ -1 copy $@\test.tdt $(HTML_ROOT_DIR)\basic\params\$@
 	@ -1 copy $@\test.tdt $(BUILD_DIR)\test\basic\params\$@
+
+
+
+
+
+
+
+
+
+

@@ -25,25 +25,34 @@ import org.mozilla.pluglet.test.basic.*;
 
 public class SecTestXDelete implements Test {
 
-
+private TestContext context;
 private String description = " CheckDelete";
 private boolean mustPass;
 private String  fName;
+private SecurityManager sm;
 
 
 public void doAction() {
-        System.getSecurityManager().checkDelete( fName );
+    sm.checkDelete( fName );
 }
 	
 public void execute( TestContext c ) {
- 
+ context = c;
  mustPass = false;
 
  if (c.getProperty("SecTestXDelete.mustPass").equals( new String("true") )) {
 	mustPass = true;
  };
  fName = c.getProperty("SecTestXDelete.fName");
-
+ sm = System.getSecurityManager();
+ if (sm == null) {
+     if( mustPass ) {
+	 context.registerPASSED("Security manager isn't present.Access allowed");
+     } else {
+	 context.registerFAILED("Security manager isn't present.Access allowed");
+     }
+     return;
+ }
  try {
  	doAction();
      if( mustPass )	

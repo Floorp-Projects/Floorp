@@ -64,4 +64,12 @@ test_pluglet: classes
 	@cd $(BUILD_DIR_CLASSES)
 	@$(JDKHOME)\bin\jar cvfm $(BASIC_PATH)\security\TestSecurityPluglet.jar $(BASIC_PATH)\security\manifest $(BASIC_PATH)\*.class $(BASIC_PATH)\security\*.class $(BASIC_PATH)\security\automation\*.class
 
-	
+clobber:
+	@-del /Q /S $(BUILD_DIR_CLASSES)\$(BASIC_PATH)\security\*
+	@-del /Q /S $(BUILD_DIR)\test\basic\security\*
+	@-del $(HTML_ROOT_DIR)\security\bastest.html
+
+
+
+
+

@@ -86,10 +86,11 @@ public class PlugletTagInfo2_getAttributes_0  implements Test
         }
 
 	attrsForVerify = PlugletTagInfo2_obj.getAttributes();
-	actionPerformed = true;
 	System.err.println("PlugletTagInfo2_getAttributes returns \"" + attrsForVerify + "\" value");
+	String allAttributes = context.getProperty("ALL_ATTRIBUTES");
+	verifyAttributes(allAttributes);
    }
-   public static void verifyAttributes(String attrString) 
+   private void verifyAttributes(String attrString) 
    {
      Properties attr = new Properties();
      try {

@@ -24,24 +24,33 @@ package org.mozilla.pluglet.test.basic.security.automation;
 import org.mozilla.pluglet.test.basic.*;
 
 public class SecTestXWrite implements Test {
-
+private TestContext context;
 private String description = " CheckWrite";
 private boolean mustPass;
 private String fName;
+private SecurityManager sm;
 
 public void doAction() {
-        System.getSecurityManager().checkWrite( fName );
+    sm.checkWrite( fName );
 }
 	
 public void execute( TestContext c ) {
- 
+ context = c;
  mustPass = false;
 
  if (c.getProperty("SecTestXWrite.mustPass").equals( new String("true") )) {
 	mustPass = true;
  };
  fName = c.getProperty("SecTestXWrite.fName");
-
+ sm = System.getSecurityManager();
+ if (sm == null) {
+     if( mustPass ) {
+	 context.registerPASSED("Security manager isn't present.Access allowed");
+     } else {
+	 context.registerFAILED("Security manager isn't present.Access allowed");
+     }
+     return;
+ }
  try {
  	doAction();
      if( mustPass )	

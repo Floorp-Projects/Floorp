@@ -84,22 +84,14 @@ public class PlugletPeer_getMIMEType_0  implements Test
 	   return;
 	}
 	MIMEType = PlugletPeer_obj.getMIMEType();
-	actionPerformed = true;
-	System.err.println("DEBUG: PlugletPeer_obj.getMIMEType returns \"" + MIMEType + "\" value");
+	String expectedType = context.getProperty("EXPECTED_VALUE");
+	if (expectedType.equals(MIMEType)) {
+	    TestContext.registerPASSED("PlugletPeer_obj.getMIMEType returns \"" + MIMEType + "\" value");
+	} else {
+	    TestContext.registerFAILED("PlugletPeer_obj.getMIMEType returns \"" + MIMEType + 
+				      "\" value, different from \"" + expectedType +"\"");
+	}
    }
-   public static void verifyMIMEType(String type)
-   {
-     if (MIMEType == null) {
-       TestContext.registerFAILED("null MIME type returned instead of  \"" + type +"\"");
-     }
-     if (type.equals(MIMEType)) {
-       TestContext.registerPASSED("PlugletPeer_obj.getMIMEType returns \"" + MIMEType + "\" value");
-     } else {
-       TestContext.registerFAILED("PlugletPeer_obj.getMIMEType returns \"" + MIMEType + 
-				      "\" value, different from \"" + type +"\"");
-     }
-   }
-
    /**
     *
     ***********************************************************

@@ -88,8 +88,32 @@ public class PlugletStreamInfo_getLength_0  implements Test
 	   return;
 	}
 	length = PlugletStreamInfo_obj.getLength();
-	actionPerformed = true;
-	System.err.println("DEBUG: PlugletStreamInfo_getLength returns \"" + length + "\" value");
+	try {
+	    URL sURL = new URL(context.getProperty("HTML_ROOT") + "/" + context.getProperty("SRC_URL"));
+	    //Workaround for starnge JDK1.3.0G(Win32) behaviour when proceed
+	    //url with file:/// and different drive labels.
+	    if (sURL.getProtocol().equals("file")) {
+		String file =  sURL.getFile();
+		int index  = file.indexOf("|/");
+		if (index != -1) {
+		    file = file.charAt(index - 1) + ":" + file.substring(index+1);
+		    sURL = new URL("file",null,-1,file);
+		}
+	    }
+	    int goodLength = sURL.openConnection().getContentLength();
+	    if (length!=goodLength) {
+		TestContext.registerFAILED("PlugletStreamInfo_getLength returns \"" + length + 
+					   "\" value instead of \"" + goodLength + "\"");
+		return;
+	    } else {
+		TestContext.registerPASSED("PlugletStreamInfo_getLength returns \"" + length + 
+					   "\" value ");
+		return;
+	    }
+	} catch(Exception e) {
+	    e.printStackTrace();
+	    TestContext.registerFAILED("Exception " + e );
+	}
    }
    public static void verifySrcLength(String src) 
    {

@@ -31,7 +31,7 @@ all:  tests  TestSeqScenarioPluglet.jar
 
 classes:
 	@echo Building .basic.scenario classes ...
-	@$(JAVAC) -d $(BUILD_DIR_CLASSES) *.java 
+	@$(JAVAC) -classpath $(CLASSPATH) -d $(BUILD_DIR_CLASSES) *.java 
 	@echo done
 
 add_files:
@@ -42,13 +42,13 @@ TestSeqScenarioPluglet.jar: classes add_files
 	$(JDKHOME)/bin/jar cfm $(BASIC_PATH)/scenario/TestSeqScenarioPluglet.jar $(BASIC_PATH)/scenario/manifest $(BASIC_PATH)/*.class $(BASIC_PATH)/scenario/*.class
 
 clobber:
-	@if [ -e $(BUILD_DIR_CLASSES)/$(BASIC_PATH)/scenario ]; then \
+	@if test -d $(BUILD_DIR_CLASSES)/$(BASIC_PATH)/scenario ; then \
 		rm -rf $(BUILD_DIR_CLASSES)/$(BASIC_PATH)/scenario/* ; \
 	fi
-	@if [ -e $(BUILD_DIR)/test/basic/scenario/ ]; then \
+	@if test -d $(BUILD_DIR)/test/basic/scenario/ ; then \
 		rm -rf $(BUILD_DIR)/test/basic/scenario/*; \
 	fi
-	@if [ -e  $(HTML_ROOT_DIR)/basic/scenario ]; then \
+	@if test -d $(HTML_ROOT_DIR)/basic/scenario ; then \
 		rm -rf $(HTML_ROOT_DIR)/basic/scenario/*; \
 	fi
 tests:
@@ -59,10 +59,10 @@ tests:
 		mkdir -p $(BUILD_DIR)/test/basic/scenario/$${i}; \
 		mkdir -p $(HTML_ROOT_DIR)/basic/scenario/$${i}; \
 		perl $(UTIL_DIR)/configurator.pl $(COMMON_CONFIG_FILE) $(BUILD_DIR)/test/basic/scenario/$${i}/TestProperties $${i}/TestProperties; \
-		if [ -e $${i}/*.html ]; then \
+		if test -f $${i}/*.html ; then \
 			cp -f $${i}/*.html $(HTML_ROOT_DIR)/basic/scenario/$${i}; \
 		fi; \
-		if [ -e $${i}/*.js ]; then \
+		if test -f $${i}/*.js ; then \
 			cp -f $${i}/*.js $(HTML_ROOT_DIR)/basic/scenario/$${i}; \
 		fi; \
 	done

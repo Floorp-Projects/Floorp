@@ -31,8 +31,6 @@ import org.mozilla.pluglet.*;
 
 public class PlugletTagInfo2_getWidth_0  implements Test
 {
-   private static int width = -1;
-   public static boolean actionPerformed = false;
   /**
     *
     ***********************************************************
@@ -85,21 +83,22 @@ public class PlugletTagInfo2_getWidth_0  implements Test
           TestContext.registerFAILED("Instance of PlugletTagInfo instead of PlugletTagInfo2 returned");
           return;
         }
-
-	width =	PlugletTagInfo2_obj.getWidth();
-	actionPerformed = true;
+	int expected_width = -1;
+	try {
+	  expected_width = (new Integer(context.getProperty("EXPECTED_VALUE"))).intValue();
+	} catch (Exception e) {
+	  TestContext.registerFAILED("Exception during parsing property EXPECTED_VALUE: " + e);
+	  return;
+	}
+	int width =	PlugletTagInfo2_obj.getWidth();
 	System.err.println("PlugletTagInfo2_getWidth returns \"" + width + "\" value");
+	if (expected_width == width) {
+	    TestContext.registerPASSED("PlugletTagInfo2_getWidth returns right value \"" + width + "\"");
+	} else {
+	    TestContext.registerFAILED("PlugletTagInfo2_getWidth returns value \"" + width + 
+				       "\" instead of \"" + expected_width + "\"");
+	}
    }
-   public static void verifyWidth(int realWidth) {
-     if (width == realWidth) {
-       TestContext.registerPASSED("Good value \"" + width + 
-				  "\" was returned by PlugletTagInfo2_getWidth");
-     } else {
-       TestContext.registerFAILED("PlugletTagInfo2_getWidth returns \"" + width + "\" value " +
-				  "instead of \"" + realWidth + "\"");
-     }
-   }
-
    /**
     *
     ***********************************************************

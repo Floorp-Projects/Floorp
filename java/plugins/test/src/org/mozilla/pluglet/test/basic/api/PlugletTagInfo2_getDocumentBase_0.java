@@ -85,27 +85,22 @@ public class PlugletTagInfo2_getDocumentBase_0  implements Test
           return;
         }
 	docBase = PlugletTagInfo2_obj.getDocumentBase();
-	actionPerformed = true;
-	System.err.println("PlugletTagInfo2_getDocumentBase returns \"" + docBase + "\" value");
-   }
-   public static void verifyDocBase(String curDocBase)
-   {
-     URL realBase = null;
-     URL base = null;
-     try {
-       realBase = new URL(curDocBase);
-       base = new URL(docBase);
-     } catch (Exception e) {
-       TestContext.registerFAILED("Exception during compiling URLs: " + e);
-       return;
-     }
-     if (realBase.equals(base)) {
-       TestContext.registerPASSED("Good value " + docBase + " returned");
-       return;
-     } else {
-       TestContext.registerFAILED("Value " + docBase + " returned instead of " + curDocBase);
-     }
-     
+	String expectedBase = context.getProperty("HTML_ROOT") + "/" + context.getProperty("EXPECTED_VALUE");
+	URL realBase = null;
+	URL base = null;
+	try {
+	    realBase = new URL(expectedBase);
+	    base = new URL(docBase);
+	} catch (Exception e) {
+	    TestContext.registerFAILED("Exception during compiling URLs: " + e);
+	    return;
+	}
+	if (realBase.equals(base)) {
+	    TestContext.registerPASSED("Good value " + docBase + " returned");
+	    return;
+	} else {
+	    TestContext.registerFAILED("Value " + docBase + " returned instead of " + expectedBase);
+	}
    }
    /**
     *

@@ -30,9 +30,9 @@ TEST_DIRS=api params security returns scenario
 all: basic tests
 
 tests:
-	@if [ -z $(HTML_ROOT_DIR) ] ; then \
+	@if [ "aa$(HTML_ROOT_DIR)" = "aa" ] ; then \
 		echo "======================================"; \
-		echo "Error. You MUST specify \$HTML_ROOT_DIR"; \
+		echo "Error. You MUST specify HTML_ROOT_DIR"; \
 		echo "variable for make in test dirs."; \
 		echo "======================================"; \
 		exit -1; \
@@ -45,7 +45,7 @@ basic: classes 	TestLoaderPluglet.jar
 
 classes:
 	@echo "Building .basic classes ..."
-	@$(JAVAC) -d $(BUILD_DIR_CLASSES) *.java 
+	@$(JAVAC) -classpath $(CLASSPATH) -d $(BUILD_DIR_CLASSES) *.java 
 	@echo done
 #$(JDKHOME)/bin/jar cfm 
 

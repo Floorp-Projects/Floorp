@@ -84,19 +84,20 @@ public class PlugletTagInfo2_getBorderVertSpace_0  implements Test
 				     "of PlugletTagInfo2 returned");
           return;
         }
-
+	int expected_VSpace = -1;
+	try {
+	  expected_VSpace = (new Integer(context.getProperty("EXPECTED_VALUE"))).intValue();;
+	} catch (Exception e) {
+	  TestContext.registerFAILED("Exception during parsing property EXPECTED_VALUE: " + e);
+	  return;
+	}
 	VSpace = PlugletTagInfo2_obj.getBorderVertSpace();
-	actionPerformed = true;
-	System.err.println("PlugletTagInfo2_getBorderVertSpace returns \"" + VSpace + "\" value");
-   }
-   public static void verifyVSpace(int vspace) {
-     if (vspace == VSpace) {
-       TestContext.registerPASSED("Good value \"" + VSpace + 
-				  "\" was returned by PlugletTagInfo2_getBorderVertSpace");
-     } else {
-       TestContext.registerFAILED("PlugletTagInfo2_getBorderVertSpace returns \"" + VSpace + "\" value " +
-				  "instead of \"" + vspace + "\"");
-     } 
+	if (expected_VSpace == VSpace) {
+	    TestContext.registerPASSED("PlugletTagInfo2_getBorderVertSpace returns right value \"" + VSpace + "\"");
+	} else {
+	    TestContext.registerFAILED("PlugletTagInfo2_getBorderVertSpace returns value \"" + VSpace + 
+				       "\" instead of \"" + expected_VSpace + "\"");
+	}
    }
    /**
     *

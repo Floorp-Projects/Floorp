@@ -84,23 +84,20 @@ public class PlugletTagInfo2_getTagType_0  implements Test
           TestContext.registerFAILED("Instance of PlugletTagInfo instead of PlugletTagInfo2 returned");
           return;
         }
-
+	String expected_type = null;
+	try {
+	  expected_type = context.getProperty("EXPECTED_VALUE");
+	} catch (Exception e) {
+	  TestContext.registerFAILED("Exception during parsing property EXPECTED_VALUE: " + e);
+	  return;
+	}
 	type = PlugletTagInfo2_obj.getTagType();
-	actionPerformed = true;
-	System.err.println("PlugletTagInfo2_getTagType returns \"" + type + "\" value");
-   }
-   public static void verifyType(String realType) {
-     if (type == null) {
-       TestContext.registerFAILED("PlugletTagInfo2_getTagType returns null value ");
-       return;
-     }
-     if (type.equals(realType)) {
-       TestContext.registerPASSED("Good value \"" + type + 
-				  "\" was returned by PlugletTagInfo2_getTagType");
-     } else {
-       TestContext.registerFAILED("PlugletTagInfo2_getTagType returns \"" + type + "\" value " +
-				     "instead of \"" + realType + "\"");
-     }
+	if (expected_type.equals(type)) {
+	    TestContext.registerPASSED("PlugletTagInfo2_getTagType returns right value \"" + type + "\"");
+	} else {
+	    TestContext.registerFAILED("PlugletTagInfo2_getTagType returns value \"" + type + 
+				       "\" instead of \"" + expected_type + "\"");
+	}
    }
    /**
     *

@@ -3,8 +3,7 @@
 PLUGLET=<TEST_TOP_DIR><FSEP>build<FSEP>classes<FSEP>org<FSEP>mozilla<FSEP>pluglet<FSEP>test<FSEP>basic<FSEP>scenario<FSEP>TestSeqScenarioPluglet.jar
 TEST_CLASS=org.mozilla.pluglet.test.basic.scenario.SequencialScenarioTest
 TEST_HTML=basic/scenario/5/newwindow.html
-RUN_STAGES= \
-	PLUGLET_INITIALIZE \
+RUN_STAGES=PLUGLET_INITIALIZE \
 	PLUGLET_CREATE_PLUGLET_INSTANCE \
 	PLUGLET_INSTANCE_INITIALIZE \
 	PLUGLET_INSTANCE_START \

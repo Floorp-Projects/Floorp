@@ -24,24 +24,33 @@ package org.mozilla.pluglet.test.basic.security.automation;
 import org.mozilla.pluglet.test.basic.*;
 
 public class SecTestXCCL implements Test {
-
+private TestContext context;
 private String description = " CreateClassLoader";
 private boolean mustPass;
+private SecurityManager sm;
 
 public void doAction() {
-        System.getSecurityManager().checkCreateClassLoader();
+    sm.checkCreateClassLoader();
 }
 	
 public void execute( TestContext c ) {
- 
+ context = c;
  mustPass = false;
 
  if (c.getProperty("SecTestXCCL.mustPass").equals( new String("true") )) {
 	mustPass = true;
  };
-
+ sm = System.getSecurityManager();
+ if (sm == null) {
+     if( mustPass ) {
+	 context.registerPASSED("Security manager isn't present.Access allowed");
+     } else {
+	 context.registerFAILED("Security manager isn't present.Access allowed");
+     }
+     return;
+ }
  try {
- 	doAction();
+     doAction();
      if( mustPass )	
 		c.registerPASSED(new String("OK")); else
 		c.registerFAILED(new String(description) + new String(" failed."));

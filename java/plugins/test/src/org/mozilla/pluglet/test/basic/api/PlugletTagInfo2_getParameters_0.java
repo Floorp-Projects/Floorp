@@ -84,10 +84,11 @@ public class PlugletTagInfo2_getParameters_0  implements Test
           return;
         }
 	attrsForVerify = PlugletTagInfo2_obj.getParameters();
-	actionPerformed = true;
 	System.err.println("PlugletTagInfo2_getParameters returns \"" + attrsForVerify + "\" value");
+	String allParameters = context.getProperty("ALL_PARAMETERS");
+	verifyParameters(allParameters);
    }
-   public static void verifyParameters(String attrString) 
+   private void verifyParameters(String attrString) 
    {
      if(attrString.equals("")) { //No parameters set
        if(attrsForVerify.isEmpty()) {

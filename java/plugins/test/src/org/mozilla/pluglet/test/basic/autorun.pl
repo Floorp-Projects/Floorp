@@ -27,6 +27,7 @@
 # Attach Perl Libraries
 ###################################################################
 use Cwd;
+use Cwd 'abs_path';
 use File::Copy;
 #For waitpid
 use POSIX ":sys_wait_h";
@@ -64,6 +65,11 @@ sub usage() {
     print "\n";
     print " where <test cases list file> is file with test cases list\n";
     print "\n";
+    print "or:\n";
+    print "   perl autorun.pl [ -t <test case> ]\n";
+    print "\n";
+    print " where <test case> is one of the test cases IDs\n";
+    print " name ex: basic/api/PlugletTagInfo2_getAttributes\n";
     print "\n";
     print "##################################################################\n";
     print "\n";
@@ -76,16 +82,11 @@ sub usage() {
 sub title() {
 	
     print "\n";
-    print "################################################\n";
-    print "   Automated Execution of Java Pluglet API TestSuite\n";
-    print "################################################\n";
+    print "##################################################################\n";
+    print "        Automated Execution of Java Pluglet API TestSuite\n";
+    print "##################################################################\n";
     print "\n";
     print "\n";
-    print "\n";
-    print "\n";
-    print "\n";
-    print "\n";
-
 }
 
 ##################################################################
@@ -97,18 +98,6 @@ sub checkRun() {
     $runtype = "1";
 }
 
-
-#########################################################################
-#
-# Append table entries to Output HTML File 
-#
-#########################################################################
-sub appendEntries() {
-   print LOGHTML "<tr><td></td><td></td></tr>\n";
-   print LOGHTML "<tr><td></td><td></td></tr>\n";
-   print LOGHTML "<tr bgcolor=\"#FF6666\"><td>Test Status (XML)</td><td>Result</td></tr>\n";
-
-}
 
 #########################################################################
 #
@@ -126,7 +115,7 @@ sub constructHTMLHeader() {
    print LOGHTML "</h2></center>\n";
    print LOGHTML "<hr noshade>";
    print LOGHTML "<table bgcolor=\"#99FFCC\">\n";
-   print LOGHTML "<tr bgcolor=\"#FF6666\">\n";
+   print LOGHTML "<tr bgcolor=\"lightblue\">\n";
    print LOGHTML "<td>Test Case</td>\n";
    print LOGHTML "<td>Result</td>\n";
    print LOGHTML "</tr>\n";
@@ -138,20 +127,25 @@ sub constructHTMLHeader() {
 #
 #########################################################################
 sub constructHTMLBody() {
-	
-    open( MYLOG, $LOGTXT ) || print "WARNING: Cann't open $LOGTXT,HTML_LOG may be incorrect\n";
-    @all_lines = <MYLOG>;
-    close( MYLOG ) || print "WARNING: Cann't close $LOGTXT,HTML_LOG may be incorrect\n";
-    
-    my $line;
-    foreach $line ( sort @all_lines ) {
-        # avoid linebreaks
-	chop $line;  
-	# assuming that all lines are kind'of 'aaa=bbb'
-	($class, $status) = split /=/, $line;	
-	
-	print LOGHTML "<tr><td>",$class,"</td><td>",$status,"</td></tr>\n";
-    } 
+    if (open(LOGTXT,$LOGTXT)) {
+	my @all_lines = <LOGTXT>;
+	close( LOGTXT ) || print "WARNING: Can't close $LOGTXT,HTML_LOG may be incorrect\n";
+	my $line;
+	foreach $line ( @all_lines ) {
+	    # avoid linebreaks
+	    chop $line;  
+	    # assuming that all lines are kind'of 'aaa=bbb'
+	    ($class, $status) = split /=/, $line;	
+	    print LOGHTML "<tr><td>",$class,"</td>";
+	    if ($status=~/FAILED/) {
+		print LOGHTML "<td><font color=\"red\">",$status,"</font></td></tr>\n";
+	    } else {
+		print LOGHTML "<td>",$status,"</td></tr>\n";
+	    }
+	}
+    } else {
+	print "WARNING: Can't open $LOGTXT,HTML_LOG may be incorrect\n";
+    }
 }
 		
 #########################################################################
@@ -169,8 +163,14 @@ sub constructHTMLFooter() {
 #
 #########################################################################
 sub constructHTML() {
-	constructHTMLHeader;
-	constructHTMLBody;
+        if (open( LOGHTML, ">$LOGHTML" )) { 
+	    constructHTMLHeader();
+	    constructHTMLBody();
+	    constructHTMLFooter();
+	    close( LOGHTML) || print("WARNING: Can't close HTML file... $!\n");
+	} else {
+	    print("WARNING: Can't open HTML file... $!\n");
+	}
 }
 
 #########################################################################
@@ -224,7 +224,7 @@ sub constructLogString {
 sub safeAppend {
     my $file = shift(@_);
     my $line = shift(@_);
-    open (FILE, ">>$file") or die ("Cann't open $file");
+    open (FILE, ">>$file") or die ("Can't open $file");
     print FILE $line;
     close FILE;
 }
@@ -236,14 +236,15 @@ sub safeAppend {
 ########################################################################
 sub loadParams {
     my $file = shift(@_);   
-    my $key, $value, %params;
-    open (PARAMS, "<$file") || print "WARNING: Can't open parameters file $file\n";
+    my $key;
+    my $value;
+    my %params;
+    open (PARAMS, "<$file") || die "ERROR: Can't open parameters file $file\n";
     while ($pair = <PARAMS>) {
 	chomp($pair);
 	$pair=~s#^\s*|\s*$##g;
 	($key,$value) = split('=', $pair);
 	$params{$key} = $value;
-	print "$key,$value\n";
     }
     close(PARAMS) || print "WARNING: Can't close parameters file $file\n";
     return %params;
@@ -265,10 +266,8 @@ sub getGlobParam {
 # Getting test parameters 
 #
 ########################################################################
-sub getTestParam {    
-    my $path;
-    $path = getTestDir(shift(@_));
-    print "TestDir is $path\n";
+sub getTestParam {
+    my $path = getTestDir(shift(@_));
     if (! $test_params_loaded){
 	%test_params = loadParams("$path/$test_params_file_name");
 	$test_params_loaded = 1;
@@ -300,15 +299,15 @@ sub copyTestDataIfAny {
 	my @list = <*.lst>;
 	#chdir($curdir); #Commented by avm
 	if ($list[0]) {
-	    open (LST, $list[0]) || die "Cann't open file $list[0]\n";
+	    open (LST, $list[0]) || die "ERROR: Can't open file $list[0]\n";
 	    while ($tp = <LST>){
 		if ($tp =~ /$num: /) {
-		    open (TP_OUT, ">$path/$list[0].TEMP") || die "Cann't open file >$path/$list[0].TEMP";
+		    open (TP_OUT, ">$path/$list[0].TEMP") || die "ERROR: Can't open file >$path/$list[0].TEMP";
 		    $tp =~ s/$num: //;
 		    print TP_OUT $tp;
 		    chomp($tp); 
 		    print "--Save parameters line \"$tp\" to $path/$list[0].TEMP for test number $num\n";
-		    close TP_OUT || die "Cann't close file $path/$list[0].TEMP\n";
+		    close TP_OUT || print "WARNING: Can't close file $path/$list[0].TEMP\n";
 		    chdir($curdir);
 		    return "$path/$list[0].TEMP";
 		} 
@@ -324,15 +323,19 @@ sub copyTestDataIfAny {
 #
 ########################################################################
 sub checkResultFile {    
-    open(TEST_RESULT, $test_result_file_name) || print "Cann't open $test_result_file_name,\n",
-                                                        "test aborted or DELAY_FACTOR so small.\n";
-    $result = <TEST_RESULT>;
-    chomp $result;
-    $result=~s#^\s*|\s*$##g;
-    close(TEST_RESULT);
-    if ($result eq "PASSED") {
-	return 1;
+    if (open(TEST_RESULT, $test_result_file_name)) {
+	$result = <TEST_RESULT>;
+	chomp $result;
+	$result=~s#^\s*|\s*$##g;
+	close(TEST_RESULT) || print "WARNING: Can't close $test_result_file_name";
+	if ($result eq "PASSED") {
+	    return 1;
+	} else {
+	    return 0;
+	}
     } else {
+	print "WARNING: Can't open $test_result_file_name,\n",
+	      "test aborted or DELAY_FACTOR so small.\n";
 	return 0;
     }
 }
@@ -359,10 +362,7 @@ sub runTestCaseUx {
     my $testcase = shift(@_);
     $test_params_loaded = 0;
 
-    open(LST_OUT, ">$LST_OUT") or die ("Cann't open LST_OUT file... $!\n");
-    print LST_OUT $testcase;
-    close(LST_OUT) || die ("Cann't close LST_OUT file...\n");
-
+    
     chdir( $mozhome );
     print "========================================\n";
     $logstr="Running TestCase $testcase....";
@@ -373,11 +373,11 @@ sub runTestCaseUx {
     $nom =~ s/\/|:/_/g;
     $testlog = "$logdir/$nom.log";
 
-    open( TST, ">$mozhome/StartProperties");
+    open( TST, ">$mozhome/StartProperties") || die "ERROR: Can't create $mozhome/StartProperties\n";
     print TST "TEST_TOP_DIR=$topdir\n";
     print TST "TEST_DIR=".getTestDir($testcase)."\n";
     print TST "TEST_CASE=$testcase\n";
-    close( TST);
+    close( TST) || print "WARNING:Can't close $mozhome/StartProperties\n";
 
     #clear log files ..
     unlink("$mozhome/$test_log_file_name") ;
@@ -394,44 +394,44 @@ sub runTestCaseUx {
 	    $pluglet =~ s/$file_separator[^$file_separator]*$//;
 	    $ENV{"PLUGLET"} = $pluglet;
 	}
+	print "--TestDir is: ".getTestDir($testcase)."\n";
 	print "--Use pluglet from: ", $ENV{"PLUGLET"},"\n";
        	print "--Starting ","$mozhome/$program_name $program_args $testhtml\n";
-	exec("$mozhome/$program_name $program_args $testhtml 2>&1 1>$testlog") or print STDERR  "ERROR:cann't start $program_name\n";
+	open( STDOUT, ">$testlog" ) || print "WARNING: Can't redirect STDOUT\n";
+	open( STDERR, ">&STDOUT" )  || print "WARNING: Can't redirect STDOUT\n";
+	select STDERR; $|=1; select STDOUT; $|=1; 
+	exec("$mozhome/$program_name", split(/ /,"$program_args $testhtml")) or print STDERR  "ERROR:cann't start $program_name\n";
 	die "Unfortunately exec behaviour .";
     } 
-    #parent ..
-    $flag = 0;
+    #this is parent process
     $cnt = 0;
-    $grppid = getpgrp(0);
-    print "Enter to parent ....";
     while (true) {
-	print "Sleep to $DELAY_OF_CYCLE -- $pid\n";
 	sleep($DELAY_OF_CYCLE);
-	$ret = waitpid($pid,&WNOHANG);
-	if ($ret) { #Test exited
-	    print "Test exited ...";
+	if (waitpid($pid,&WNOHANG)) { #Test exited
+	    $logstr = "Mozilla terminated by signal ".($? & 127)." with exitcode ".($? >> 8);
+            constructLogString "$logstr";   
 	    if (-e "$mozhome/core") {
+	    	print("Test dumped core\n");
 		safeAppend $LOGTXT,"$testcase=FAILED\n";
 		$logstr="Test dumped core...";
-		constructLogString "$logstr";	    
-	    }
-	    if (!checkResultFile()) {
+		constructLogString "$logstr";
+		$logstr = "Check ErrorLog File $testlog ";
+		constructLogString "$logstr";
+		constructLogString "";
+		unlink "$mozhome/core";
+	    }elsif (!checkResultFile()) {
+	        print("Register FAILED\n");
 		safeAppend $LOGTXT, "$testcase=FAILED\n";
 		$logstr = "Test FAILED by autorun.pl ...";
 		constructLogString "$logstr";
 	    } else {
+	    	print("Register PASSED\n");
 		safeAppend $LOGTXT, "$testcase=PASSED\n";
 	    }
-	    $logstr = "Check ErrorLog File $testlog ";
-	    constructLogString "$logstr";
-	    constructLogString "";
-	    constructLogString "";
-	    $flag = 1;
 	    last;
 	}
 	$cnt += $DELAY_OF_CYCLE;
 	if ( $cnt >= $DELAY_FACTOR ) {
-	    $flag = 0;
 	    if (checkResultFile) {
 		print("Register PASSED\n");
 		safeAppend $LOGTXT, "$testcase=PASSED\n";
@@ -439,33 +439,22 @@ sub runTestCaseUx {
 		print("Register FAILED\n");
 		safeAppend $LOGTXT, "$testcase=FAILED\n";
 	    }
-	    print "kill $pid by timeout\n";
-	    @processes=`ps -o pgid,pid,cmd|grep $grppid|grep $program_name`;
-	    @pids;
-	    for($i=0;$i<=$#processes;$i++) {
-		$processes[$i]=~/\s*$grppid\s+(.*?\s)/;
-		$pids[$i]=$1;
-	    }
-	    kill  9, @pids;
+	    kill  9, $pid;
+	    sleep(1); 
+	    wait();# take exit code
 	    last;
 	}
     } # while with sleep
-    print "\nWHILE exited\n";
-    open(TEST_LOG, "$mozhome/$test_log_file_name") ;
-    #|| print "WARNING: Cann't open $mozhome/$test_log_file_name \n";
-    while (<TEST_LOG>) {
-	chomp($_);
-	constructLogString $_;
+    if (open(TEST_LOG, "$mozhome/$test_log_file_name")) {
+	while (<TEST_LOG>) {
+	    chomp($_);
+	    constructLogString $_;
+	}
+	close(TEST_LOG);
+	unlink("$mozhome/$test_log_file_name") || print "WARNING: Can't remove  $mozhome/$test_log_file_name\n";
     }
-    close(TEST_LOG) ;
-    #|| print "WARNING: Cann't close $mozhome/$test_log_file_name \n";
-    unlink("$mozhome/$test_log_file_name") || 
-	print "WARNING: Cann't remove  $mozhome/$test_log_file_name\n";
-    unlink("$mozhome/$test_result_file_name") || 
-	print "WARNING: Cann't remove  $mozhome/$test_result_file_name\n";
-    unlink($LST_OUT) || 
-	print "WARNING: Cann't remove  $LST_OUT\n";	
-    $testDataFile and unlink($testDataFile);
+    (-f "$mozhome/$test_result_file_name") && unlink("$mozhome/$test_result_file_name");
+    (-f $testDataFile) && unlink($testDataFile);
 	
 }
 
@@ -481,10 +470,7 @@ sub runTestCaseWin {
     my $testcase = shift(@_);
     $test_params_loaded = 0;
     do 'Win32\Process.pm' || die "Can't do Win32\Process.pm $!";
-    open(LST_OUT, ">$LST_OUT") or die ("Cann't open LST_OUT file...\n");
-    print LST_OUT $testcase;
-    close(LST_OUT) || die ("Cann't close LST_OUT file...\n");
-
+    
     chdir( $mozhome );
     print "========================================\n";
     $logstr="Running TestCase $testcase....";
@@ -496,16 +482,19 @@ sub runTestCaseWin {
     $nom =~ s/\/|:/_/g;
     $testlog = "$logdir/$nom.log";
 
-    open( TST, ">$mozhome/StartProperties");
-    print TST "TEST_TOP_DIR=$topdir\n";
-    print TST "TEST_DIR=".getTestDir($testcase)."\n";
-    print TST "TEST_CASE=$testcase\n";
-    close( TST);
+    if (open( TST, ">$mozhome/StartProperties")) {
+	print TST "TEST_TOP_DIR=$topdir\n";
+	print TST "TEST_DIR=".getTestDir($testcase)."\n";
+	print TST "TEST_CASE=$testcase\n";
+	close( TST) || print "WARNING: Can't close $mozhome/StartProperties\n";
+    } else {
+	die "ERROR: Can't create $mozhome/StartProperties\n";
+    }
 
-    unlink("$mozhome/$test_log_file_name") ;
-    #|| print "WARNING: Cann't remove$mozhome/$test_log_file_name\n";
-    unlink("$mozhome/$test_result_file_name") ;
-    #|| print "WARNING: Cann't remove $mozhome/$test_result_file_name\n";
+#Remove log files from previous execution 
+    (-f "$mozhome/$test_log_file_name") && unlink("$mozhome/$test_log_file_name");   
+    (-f "$mozhome/$test_result_file_name") && unlink("$mozhome/$test_result_file_name");
+    
     $testDataFile = copyTestDataIfAny($testcase);
     $testhtml = getGlobParam("HTML_ROOT")."/".getTestParam($testcase, "TEST_HTML");
     $pluglet = getTestParam($testcase, "PLUGLET");
@@ -532,16 +521,15 @@ sub runTestCaseWin {
     open( STDOUT, ">&SAVEOUT" ) || print "WARNING: Cann't restore STDOUT\n";
     open( STDERR, ">&SAVEERR" ) || print "WARNING: Cann't restore STDERR\n";
 	   	
-     #Restore CLASSPATH if it was changed
-     if ($pluglet) {
-       $ENV{"CLASSPATH"}=$saved_classpath;
-     }
-
+    #Restore CLASSPATH if it was changed
+    if ($pluglet) {
+      $ENV{"CLASSPATH"}=$saved_classpath;
+    }
     $flag = 0;
     $cnt = 0;
     while (true) {
 	sleep($DELAY_OF_CYCLE);
-	
+	system("$topdir\\utils\\Killer.exe");
 	$ProcessObj->GetExitCode($exit_code);
 	if ( $exit_code != $STILL_ALIVE ) {
 	    
@@ -549,16 +537,12 @@ sub runTestCaseWin {
 	    constructLogString "$logstr";
 	    if ( (! checkResultFile) or ($exit_code != 0)) {
 		safeAppend $LOGTXT, "$testcase=FAILED\n";
-		$logstr = "Test FAILED by autorun.pl ...";
-		constructLogString "$logstr";
+		constructLogString "Test FAILED by autorun.pl ...";
+		constructLogString "Check ErrorLog File $testlog ";
+		constructLogString "";
 	    } else {
 		safeAppend $LOGTXT, "$testcase=PASSED\n";
-	    }
-	    $logstr = "Check ErrorLog File $testlog ";
-	    constructLogString "$logstr";
-	    constructLogString "";
-	    constructLogString "";
-	    
+	    }	    
 	    $flag = 1;
 	    last;
 	}
@@ -578,31 +562,26 @@ sub runTestCaseWin {
 	}
     } # while with sleep
 
-    open(TEST_LOG, "$mozhome/$test_log_file_name") ;
-    #|| print "WARNING: Cann't open $mozhome/$test_log_file_name \n";
-    while (<TEST_LOG>) {
-	chomp($_);
-	constructLogString $_;
+    if (open(TEST_LOG, "$mozhome/$test_log_file_name")) {
+	while (<TEST_LOG>) {
+	    chomp($_);
+	    constructLogString $_;
+	}
+	close(TEST_LOG);
+	unlink("$mozhome/$test_log_file_name");
     }
-    close(TEST_LOG) ;
-    #|| print "WARNING: Cann't close $mozhome/$test_log_file_name \n";
-    unlink("$mozhome/$test_log_file_name") || 
-	print "WARNING: Cann't remove  $mozhome/$test_log_file_name\n";
-    unlink("$mozhome/$test_result_file_name") || 
-	print "WARNING: Cann't remove  $mozhome/$test_result_file_name\n";
-    unlink($LST_OUT) || 
-	print "WARNING: Cann't remove  $LST_OUT\n";	
-    $testDataFile and unlink($testDataFile);
+    (-f "$mozhome/$test_result_file_name") && unlink("$mozhome/$test_result_file_name");
+    (-f $testDataFile) && unlink($testDataFile);
 	
 }
 ##################################################################
 # main
 ##################################################################
-title;
+title();
 
 $curdir = cwd();           
-
-$topdir = "$curdir/../../../../../..";
+$depth="../../../../../..";
+$topdir = abs_path($depth);
 $date = localtime;
 $date =~ s/[ :]/_/g;
 $logdir = "$topdir/log/$date";
@@ -613,14 +592,11 @@ $LOGFILE = "$logdir/BWTestRun.log";
 $LOGTXT = "$logdir/BWTest.txt";
 $LOGHTML = "$logdir/BWTest.html";
 
-$LST_OUT = "$logdir/BWTest.lst.out";
+
 $test_params_file_name = "TestProperties";
 $glob_params_file_name = "CommonProperties";
 $test_log_file_name = "PlugletTest.log";
 $test_result_file_name = "PlugletTest.res";
-
-$HTML_ROOT = "HTML_ROOT";
-$TEST_HTML = "TEST_HTML";
 
 $glob_params_loaded = 0;
 
@@ -648,24 +624,13 @@ if ($#ARGV >= 0) {
 
 $mozhome = $ENV{"MOZILLA_FIVE_HOME"};
 ( $mozhome eq "" ) and die "MOZILLA_FIVE_HOME is not set. Please set it and rerun this script....\n";
-
 ( -f "$mozhome/$program_name" ) or die "Could not find $program_name in MOZILLA_FIVE_HOME.\n";
 
-# Here must come a piece of code, that determinates 
-# apprunner instance, removes core, but there's no
-# core under win32
-
-$id=$$;
-
-# Prepare log streams
-open( LOGFILE, ">>$LOGFILE" ) or die("Can't open LOG file... $!\n");
+# Prepare TXT log stream
+open( LOGFILE, ">>$LOGFILE" ) || die("ERROR: Can't open LOG file... $!\n");
 select LOGFILE; $| = 1; select STDOUT;
-open( LOGHTML, ">$LOGHTML" ) or die("Can't open HTML file... $!\n");
-
-#$ENV{"CLASSPATH"} = "$topdir/build/classes".$path_separator.$ENV{"CLASSPATH"};
 
 constructLogHeader();
-constructHTMLHeader();
 
 $DELAY_FACTOR=getGlobParam("DELAY");
 $DELAY_OF_CYCLE=getGlobParam("DELAY_OF_CYCLE");
@@ -673,22 +638,24 @@ $DELAY_OF_CYCLE=getGlobParam("DELAY_OF_CYCLE");
 if ($runtype == 1){
     runTestCase($testcase);
 } else {
-    open( LST_IN, $LST_IN ) or die("Can't open $LST_IN...\n");
-    while( $line = <LST_IN> ) {
-	chomp $line;
-	$line=~s#^\s*|\s*$##g;
-	$testcase = $line;
-	if ( $testcase =~ /^\s*#/ ) {
+    open( LST_IN, $LST_IN ) || die("ERROR: Can't open $LST_IN...\n");
+    while( $testcase = <LST_IN> ) {
+	chomp $testcase;
+	$testcase=~s#^\s*|\s*$##g;
+	if ( ($testcase =~ /^\s*#/)||($testcase eq "")) {
 	    next;
 	}
 	runTestCase($testcase);    
     } 
 }    
  
-constructLogFooter;
-constructHTMLBody;
-constructHTMLFooter;
-
-$newfile="$mozhome/BWProperties.$id";
-rename "$newfile", "$mozhome/BWProperties";
+constructLogFooter();
+constructHTML();
 chdir($curdir);
+
+
+
+
+
+
+

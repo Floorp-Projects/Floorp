@@ -84,21 +84,21 @@ public class PlugletTagInfo2_getHeight_0  implements Test
           TestContext.registerFAILED("Instance of PlugletTagInfo instead of PlugletTagInfo2 returned");
           return;
         }
-
+	int expected_height = -1;
+	try {
+	  expected_height = (new Integer(context.getProperty("EXPECTED_VALUE"))).intValue();
+	} catch (Exception e) {
+	  TestContext.registerFAILED("Exception during parsing property EXPECTED_VALUE: " + e);
+	  return;
+	}
 	height = PlugletTagInfo2_obj.getHeight();
-	actionPerformed = true;
-	System.err.println("PlugletTagInfo2_getHeight returns \"" + height + "\" value");
-   }
-   public static void verifyHeight(int realHeight) 
-   {
-     if (height == realHeight) {
-       TestContext.registerPASSED("Good value \"" + height + 
-				  "\" was returned by PlugletTagInfo2_getHeight");
-     } else {
-       TestContext.registerFAILED("PlugletTagInfo2_getHeight returns \"" + height + "\" value " +
-				     "instead of \"" + realHeight + "\"");
-     }
-     
+	if (expected_height == height) {
+	    TestContext.registerPASSED("PlugletTagInfo2_getHeight returns right value \"" + height + "\"");
+	} else {
+	    TestContext.registerFAILED("PlugletTagInfo2_getHeight returns value \"" + height + 
+				       "\" instead of \"" + expected_height + "\"");
+	}
+	
    }
    /**
     *

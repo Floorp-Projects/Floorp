@@ -1,29 +1,6 @@
 <html>
 <head>
-<script language="JavaScript">
-<!-- 
-var iID;
-var name = "TestImage.gif"; //Name of file, used as src.
-var src = "";
-function init(timeout)
-{
-   var loc = window.location.href;
-   src = loc.replace(/PlugletStreamInfo_getLength.html/,name); //src contains full URL, used in src
-   iId = window.setInterval('verifySrcLength()',timeout);
-}
-
-function verifySrcLength()
-{
-   java.lang.System.err.println("Verify ..");
-   if (Packages.org.mozilla.pluglet.test.basic.api.PlugletStreamInfo_getLength_0.actionPerformed) {
-     Packages.org.mozilla.pluglet.test.basic.api.PlugletStreamInfo_getLength_0.verifySrcLength(src);
-     window.clearInterval(iId);
-   } 
-}
-//-->
-</script>
 </head>
-<body onLoad="init(1000)">
 <body>
 <center><H1>Depth 0</H1></center>
 <blockquote>This window contains a pluglet with PlugletStreamInfo_getLength test.</blockquote>

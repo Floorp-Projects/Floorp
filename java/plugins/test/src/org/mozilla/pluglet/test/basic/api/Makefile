@@ -31,7 +31,7 @@ API_HTML_ROOT_DIR=$(HTML_ROOT_DIR)/api
 JSRC= *.java
 JAVAC=$(JDKHOME)/bin/javac
 JAVA=$(JDKHOME)/bin/java
-CLASSPATH=$(MOZILLA_FIVE_HOME)/../classes:$(BUILD_DIR_CLASSES):$$(CLASSPATH)
+CLASSPATH=$(MOZILLA_FIVE_HOME)/../classes:$(BUILD_DIR_CLASSES)
 
 #All tests list
 #PlugletManager_getValue was excluded from test list, method removed
@@ -50,7 +50,11 @@ TESTS = PlugletPeer_getMIMEType \
 	  PlugletStreamInfo_getURL \
 	  PlugletStreamInfo_isSeekable \
 	  PlugletStreamInfo_requestRead \
-	  PlugletTagInfo2_getAlignment \
+	  PlugletTagInfo2_getAlignment_left \
+	  PlugletTagInfo2_getAlignment_right \
+	  PlugletTagInfo2_getAlignment_top \
+	  PlugletTagInfo2_getAlignment_bottom \
+	  PlugletTagInfo2_getAlignment_middle \
 	  PlugletTagInfo_getAttribute \
   	  PlugletTagInfo_getAttributes \
 	  PlugletTagInfo2_getParameter \
@@ -83,7 +87,7 @@ default: classes tests test_pluglet
 
 classes:
 	@echo Compile classes ..
-	@$(JAVAC) -d $(BUILD_DIR_CLASSES) Pluglet*.java
+	@$(JAVAC) -classpath $(CLASSPATH) -d $(BUILD_DIR_CLASSES) Pluglet*.java
 
 test_pluglet:
 	@mkdir -p $(BUILD_DIR_CLASSES)/$(BASIC_PATH)/api

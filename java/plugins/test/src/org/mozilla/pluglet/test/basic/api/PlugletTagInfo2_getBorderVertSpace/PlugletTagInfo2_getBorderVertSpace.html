@@ -1,27 +1,7 @@
 <html>
 <head>
-<script language="JavaScript">
-<!--
-var iID;
-var VSpace = 0;//the default value.
-function init(timeout)
-{
-   iId = window.setInterval('verifyVSpace()',timeout);
-}
-
-function verifyVSpace()
-{
-   java.lang.System.err.println("Verify ..");
-   if (Packages.org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getBorderVertSpace_0.actionPerformed) {
-     Packages.org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getBorderVertSpace_0.verifyVSpace(VSpace);
-     window.clearInterval(iId);
-   } 
-}
-
-//-->
-</script>
 </head>
-<body onLoad="init(1000)">
+<body>
 <center><H1>Depth 0</H1></center>
 <blockquote>This window contains a pluglet PlugletTagInfo2_getBorderVertSpace test.
 The EMBED tag hasn't vspace attribute so 0 should be returned</blockquote>

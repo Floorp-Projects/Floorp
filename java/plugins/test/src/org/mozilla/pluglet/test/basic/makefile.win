@@ -30,13 +30,16 @@ CLASSPATH=$(BUILD_DIR_CLASSES);$(CLASSPATH)
 
 TEST_DIRS=api params security returns scenario 
 
-all: basic $(TEST_DIRS)
+all: basic tests
 
 $(TEST_DIRS)::
+	@echo Making $(MAKE_ARGS) in $@
 	@cd $@
-	@nmake -f makefile.win
+	@$(MAKE) /NOLOGO -f makefile.win $(MAKE_ARGS)
 	@cd ..
-
+tests:
+	@set MAKE_ARGS=all
+	@nmake -f makefile.win $(TEST_DIRS)
 basic: classes TestLoaderPluglet.jar 
 
 classes:
@@ -53,5 +56,9 @@ add_files:
 	@xcopy manifest $(BUILD_DIR_CLASSES)\$(BASIC_PATH)
 
 clobber:
-	@cd $(BUILD_DIR_CLASSES)\$(BASIC_PATH)
-	-del *.class *.jar
+	@del /Q $(BUILD_DIR_CLASSES)\$(BASIC_PATH)\*.class
+	@del /Q $(BUILD_DIR_CLASSES)\$(BASIC_PATH)\*.jar
+	@del /F $(BUILD_DIR_CLASSES)\$(BASIC_PATH)\manifest
+	@set MAKE_ARGS=$@
+	@nmake -f makefile.win $(TEST_DIRS)
+	

@@ -88,9 +88,9 @@ public class PlugletTagInfo2_getAttribute_2  implements Test
         }
 	attrName = (String)vectorOfParameters.elementAt(0);
 	attrVal = PlugletTagInfo2_obj.getAttribute(attrName);
-	actionPerformed = true;
+	String allAttributes = context.getProperty("ALL_ATTRIBUTES");
 	System.err.println("PlugletTagInfo2_getAttribute(" + attrName + ") returns \"" + attrVal + "\" value");
-	
+	verifyAttribute(allAttributes);
    }
    
   public static void verifyAttribute(String attrString) 

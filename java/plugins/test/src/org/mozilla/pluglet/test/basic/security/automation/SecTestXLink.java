@@ -24,17 +24,18 @@ package org.mozilla.pluglet.test.basic.security.automation;
 import org.mozilla.pluglet.test.basic.*;
 
 public class SecTestXLink implements Test {
-
+private TestContext context;
 private String description = " Link";
 private String fLink;
 private boolean mustPass;
+private SecurityManager sm;
 
 public void doAction() {
-        System.getSecurityManager().checkLink( fLink );
+    sm.checkLink( fLink );
 }
 	
 public void execute( TestContext c ) {
- 
+ context = c;
  mustPass = false;
 
  if (c.getProperty("SecTestXLink.mustPass").equals( new String("true") )) {
@@ -42,7 +43,15 @@ public void execute( TestContext c ) {
  };
 
  fLink = c.getProperty("SecTestXLink.fLink");
-
+ sm = System.getSecurityManager();
+ if (sm == null) {
+     if( mustPass ) {
+	 context.registerPASSED("Security manager isn't present.Access allowed");
+     } else {
+	 context.registerFAILED("Security manager isn't present.Access allowed");
+     }
+     return;
+ }
  try {
  	doAction();
      if( mustPass )	

@@ -32,7 +32,6 @@ import org.mozilla.pluglet.*;
 public class PlugletPeer_getTagInfo_0  implements Test
 {
    public static boolean actionPerformed = false;
-   private static String TEST_ATTRIBUTE_NAME = "type";
    private static PlugletTagInfo info = null;
    /**
     *
@@ -80,41 +79,27 @@ public class PlugletPeer_getTagInfo_0  implements Test
      }
      PlugletPeer_obj = context.getPlugletPeer();
      info =	PlugletPeer_obj.getTagInfo();
-     actionPerformed = true; 
-     System.err.println("DEBUG: PlugletPeer_getTagInfo returns \"" + info + "\"value");
-   }
-   public static void verifyAttr(String allAttrs)
-   {
      if (info == null) {
        TestContext.registerFAILED("PlugletPeer_getTagInfo returns null value");
        return;
      }
-     Properties attr = new Properties();
-     try {
-       attr.load((InputStream)new ByteArrayInputStream(allAttrs.getBytes()));
-     } catch (Exception e) {
-       TestContext.registerFAILED("Exception " + e + " ocurred");
-       return;
-     }
-     String attrValue = info.getAttribute(TEST_ATTRIBUTE_NAME);
+     String attrName = context.getProperty("TEST_ATTRIBUTE_NAME");
+     String expectedAttrValue = context.getProperty("TEST_ATTRIBUTE_VALUE");
+     String attrValue = info.getAttribute(attrName);
      if (attrValue == null) {
-       TestContext.registerFAILED("null value returned for attribute \"" + TEST_ATTRIBUTE_NAME + 
+       TestContext.registerFAILED("null value returned for attribute \"" + attrName + 
 				  "\" from PlugletTagInfo object");
        return;
      }
-     String goodAttrValue = attr.getProperty(TEST_ATTRIBUTE_NAME,null);
-     if (goodAttrValue == null) {
-       TestContext.registerFAILED("Attribute with name \"" + TEST_ATTRIBUTE_NAME + "\" isn't passed from JS");
-       return;
-     }
-     if (goodAttrValue.equals(attrValue)) {
+     if (attrValue.equals(expectedAttrValue)) {
        TestContext.registerPASSED("Good TagInfo object returned");
        return;
      } else {
-       TestContext.registerFAILED("Strange TagInfo object returned, " + TEST_ATTRIBUTE_NAME + "=\"" +
-				  attrValue + "\" instead of \"" + goodAttrValue + "\"");
+       TestContext.registerFAILED("Strange TagInfo object returned, " + attrName + "=\"" +
+				 attrValue + "\" instead of \"" + expectedAttrValue + "\"");
        return;
      }
+     
    }
    /**
     *

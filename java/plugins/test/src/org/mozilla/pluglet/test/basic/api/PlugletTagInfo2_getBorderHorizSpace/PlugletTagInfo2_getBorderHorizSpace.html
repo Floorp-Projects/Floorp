@@ -1,27 +1,7 @@
 <html>
 <head>
-<script language="JavaScript">
-<!-- 
-var iID;
-var hspace = 0;//default value, hspace isn't set
-function init(timeout)
-{
-   iId = window.setInterval('verifyHSpace()',timeout);
-}
-
-function verifyHSpace()
-{
-   java.lang.System.err.println("Verify ..");
-   if (Packages.org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getBorderHorizSpace_0.actionPerformed) {
-     Packages.org.mozilla.pluglet.test.basic.api.PlugletTagInfo2_getBorderHorizSpace_0.verifyHSpace(hspace);
-     window.clearInterval(iId);
-   } 
-}
-
-//-->
-</script>
 </head>
-<body onLoad="init(1000)">
+<body>
 <center><H1>Depth 0</H1></center>
 <blockquote>This window contains a pluglet PlugletTagInfo2_getBorderHorizSpace test.
            EMBED tag hasn't hspace attribute, so default value 0 should be returned.</blockquote>

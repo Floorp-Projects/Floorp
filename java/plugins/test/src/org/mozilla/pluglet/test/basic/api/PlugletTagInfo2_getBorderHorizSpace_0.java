@@ -85,19 +85,20 @@ public class PlugletTagInfo2_getBorderHorizSpace_0  implements Test
           TestContext.registerFAILED("Instance of PlugletTagInfo instead of PlugletTagInfo2 returned");
           return;
         }
+	int expected_HSpace = -1;
+	try {
+	  expected_HSpace = (new Integer(context.getProperty("EXPECTED_VALUE"))).intValue();
+	} catch (Exception e) {
+	  TestContext.registerFAILED("Exception during parsing property EXPECTED_VALUE: " + e);
+	  return;
+	}
 	HSpace = PlugletTagInfo2_obj.getBorderHorizSpace();
-	actionPerformed = true;
-	System.err.println("PlugletTagInfo2_getBorderHorizSpace returns \"" + HSpace + "\" value");
-	
-   }
-   public static void verifyHSpace(int hspace) {
-     if (hspace == HSpace) {
-       TestContext.registerPASSED("Good value \"" + HSpace + 
-				  "\" was returned by PlugletTagInfo2_getBorderHorizSpace");
-     } else {
-       TestContext.registerFAILED("PlugletTagInfo2_getBorderHorizSpace returns \"" + HSpace + "\" value " +
-				  "instead of \"" + hspace + "\"");
-     } 
+	if (expected_HSpace == HSpace) {
+	    TestContext.registerPASSED("PlugletTagInfo2_getBorderHorizSpace returns right value \"" + HSpace + "\"");
+	} else {
+	    TestContext.registerFAILED("PlugletTagInfo2_getBorderHorizSpace returns value \"" + HSpace + 
+				       "\" instead of \"" + expected_HSpace + "\"");
+	}
    }
    /**
     *

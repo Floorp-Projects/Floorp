@@ -24,18 +24,19 @@ package org.mozilla.pluglet.test.basic.security.automation;
 import org.mozilla.pluglet.test.basic.*;
 
 public class SecTestXConn implements Test {
-
+private TestContext context;
 private String description = " Connect";
 private String fHost;
 private String fPort;
 private boolean mustPass;
+private SecurityManager sm;
 
 public void doAction() {
-  System.getSecurityManager().checkConnect( fHost, Integer.parseInt(fPort) );
+    sm.checkConnect( fHost, Integer.parseInt(fPort) );
 }
 	
 public void execute( TestContext c ) {
- 
+ context = c;
  mustPass = false;
 
  if (c.getProperty("SecTestXConn.mustPass").equals( new String("true") )) {
@@ -44,7 +45,15 @@ public void execute( TestContext c ) {
 
  fHost = c.getProperty("SecTestXConn.fHost");
  fPort = c.getProperty("SecTestXConn.fPort");
-
+ sm = System.getSecurityManager();
+ if (sm == null) {
+     if( mustPass ) {
+	 context.registerPASSED("Security manager isn't present.Access allowed");
+     } else {
+	 context.registerFAILED("Security manager isn't present.Access allowed");
+     }
+     return;
+ }
  try {
  	doAction();
      if( mustPass )	

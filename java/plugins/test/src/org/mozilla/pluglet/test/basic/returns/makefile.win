@@ -46,8 +46,9 @@ tests: $(TESTS)
 
 
 clobber:
-	@cd $(BUILD_DIR_CLASSES)\$(BASIC_PATH)\returns
-	-del *.class *.jar
+	@-del /Q /S $(BUILD_DIR_CLASSES)\$(BASIC_PATH)\returns\*
+	@-del /Q /S $(HTML_ROOT_DIR)\basic\returns\*
+	@-del /Q /S $(BUILD_DIR)\test\basic\returns\*
 
 
 $(TESTS)  ::	

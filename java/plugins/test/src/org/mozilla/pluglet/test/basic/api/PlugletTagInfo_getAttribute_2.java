@@ -80,10 +80,11 @@ public class PlugletTagInfo_getAttribute_2  implements Test
 	PlugletTagInfo PlugletTagInfo_obj = context.getPlugletPeer().getTagInfo();
 	attrName = (String)vectorOfParameters.elementAt(0);
 	attrVal = PlugletTagInfo_obj.getAttribute(attrName);
-	actionPerformed = true;
+	String allAttributes = context.getProperty("ALL_ATTRIBUTES");
 	System.err.println("PlugletTagInfo_getAttribute(" + attrName + ") returns \"" + attrVal + "\" value");
+	verifyAttribute(allAttributes);
    }
-   public static void verifyAttribute(String attrString) 
+   private void verifyAttribute(String attrString) 
    {
      Properties attrReal = new Properties();
      if (attrName == null) {

@@ -54,7 +54,11 @@ TESTS = PlugletPeer_getMIMEType \
 	  PlugletStreamInfo_getURL \
 	  PlugletStreamInfo_isSeekable \
 	  PlugletStreamInfo_requestRead \
-	  PlugletTagInfo2_getAlignment \
+	  PlugletTagInfo2_getAlignment_left \
+	  PlugletTagInfo2_getAlignment_right \
+	  PlugletTagInfo2_getAlignment_top \
+	  PlugletTagInfo2_getAlignment_bottom \
+	  PlugletTagInfo2_getAlignment_middle \
 	  PlugletTagInfo_getAttribute \
   	  PlugletTagInfo_getAttributes \
 	  PlugletTagInfo2_getParameter \
@@ -83,7 +87,7 @@ TESTS = PlugletPeer_getMIMEType \
 	  PlugletPeer_newStream_0 \
 	  PlugletPeer_newStream_1 
 #Make all, needed for running Pluglet API tests
-default: classes tests test_pluglet
+all: classes tests test_pluglet
 
 #Compile utils for creating test templates
 util:
@@ -91,12 +95,12 @@ util:
 
 #Copmile test and test iterators classes
 classes:
-	@echo Compile classes ..
+	@echo Building .basic.api classes ..
 	@$(JAVAC) -d $(BUILD_DIR_CLASSES) Pluglet*.java
 test_pluglet:
-	copy manifest $(BUILD_DIR_CLASSES)\$(BASIC_PATH)\api
-	cd $(BUILD_DIR_CLASSES)
-	$(JDKHOME)\bin\jar cvfm $(BASIC_PATH)\api\TestAPIPluglet.jar $(BASIC_PATH)\api\manifest $(BASIC_PATH)\*.class $(BASIC_PATH)\api\*.class
+	@copy manifest $(BUILD_DIR_CLASSES)\$(BASIC_PATH)\api
+	@cd $(BUILD_DIR_CLASSES)
+	@$(JDKHOME)\bin\jar cfm $(BASIC_PATH)\api\TestAPIPluglet.jar $(BASIC_PATH)\api\manifest $(BASIC_PATH)\*.class $(BASIC_PATH)\api\*.class
 #Performs make in tests directories.
 #Copy test htmls and props files to the build directory,
 #make java files, if neccessary
@@ -113,13 +117,14 @@ combinations:
 	@set MAKE_ARGS=$@
 	@nmake -f makefile.win $(TESTS)
 
-#Clobber all test class, data and html files
+#Clobber all test classes, data and html files
+#Clobber all api testcases there.
 clobber:
-	@echo Make clobber ..
-	@echo Remove classes ..
-	@del $(CLASSES_LOCATION)\*.class 
-	@set MAKE_ARGS=$@
-	@nmake -f makefile.win $(TESTS)
+	@echo Make clobber for api tests.
+	@-del /Q /S $(BUILD_DIR_CLASSES)\$(BASIC_PATH)\api\*
+	@-del /Q /S $(HTML_ROOT_DIR)\api\*
+	@-del /Q /S $(BUILD_DIR)\test\basic\api\*
+	
 
 $(TESTS)::
 	@echo Making %MAKE_ARGS% in $@
@@ -136,12 +141,6 @@ $(TESTS)::
 #	org.mozilla.pluglet.mozilla.PlugletManagerImpl
 #	$(JAVA) org.mozilla.pluglet.test.basic.api.BWJavaTemplate -d .\ \
 #	org.mozilla.pluglet.mozilla.PlugletStreamInfoImpl
-
-
-
-
-
-
 
 
 

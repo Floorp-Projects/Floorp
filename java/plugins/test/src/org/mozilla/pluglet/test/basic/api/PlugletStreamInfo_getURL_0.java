@@ -87,29 +87,22 @@ public class PlugletStreamInfo_getURL_0  implements Test
 				      " of PlugletStreamInfo_getURL_0");
 	   return;
 	}
-	srcURL = PlugletStreamInfo_obj.getURL();
-	actionPerformed = true;
+	URL srcURL = null;
+	URL expectedURL = null;
+	try {
+	    srcURL = new URL(PlugletStreamInfo_obj.getURL());
+            expectedURL= new URL(context.getProperty("HTML_ROOT") + "/" + context.getProperty("EXPECTED_VALUE"));
+	} catch (Exception e) {
+	    TestContext.registerFAILED("Exception during compiling URLs: " + e);
+	    return;
+	}
+	if (srcURL.equals(expectedURL)) {
+	    TestContext.registerPASSED("Good value " + srcURL + " returned");
+	    return;
+	} else {
+	    TestContext.registerFAILED("Value " + srcURL + " returned instead of " + expectedURL);
+	}
    }
-   public static void verifyUrl(String src) 
-   {
-     if (srcURL == null) {
-       TestContext.registerFAILED("null value returned by getURL method");
-       return;
-     }
-     try {
-       URL sURL = new URL(srcURL);
-       if( sURL.equals(new URL(src)) ) {
-	 TestContext.registerPASSED("PlugletStreamInfo_getURL returns \"" + srcURL + "\" value");
-       } else {
-	 TestContext.registerFAILED("PlugletStreamInfo_getURL returns \"" + srcURL + 
-				    "\" value istead of \"" + src + "\"");
-       }
-     } catch (Exception e) {
-       TestContext.printLog("Exception during compile URL's for test: " + e);
-       TestContext.registerFAILED("PlugletStreamInfo_getURL returns \"" + srcURL + "\" value");
-       e.printStackTrace();
-     }
-   } 
    /**
     *
     ***********************************************************

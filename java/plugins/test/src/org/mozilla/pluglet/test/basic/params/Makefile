@@ -24,15 +24,13 @@ BUILD_DIR=$(DEPTH)/build
 BUILD_DIR_CLASSES=$(BUILD_DIR)/classes
 JAVAC=javac
 BASIC_PATH=org/mozilla/pluglet/test/basic
-CLASSPATH=$(MOZILLA_FIVE_HOME)/../classes:$(BUILD_DIR_CLASSES):$$(CLASSPATH)
-HTML_ROOT_DIR=/set/Mozilla/avm/pl_sol/build/htroot
-#$$(HTML_ROOT_DIR)
+CLASSPATH=$(MOZILLA_FIVE_HOME)/../classes:$(BUILD_DIR_CLASSES)
 
 all:  classes tests_common tests_onda
 
 classes:
 	@echo Building .basic.params classes ...
-	@$(JAVAC) -d $(BUILD_DIR_CLASSES) *.java 
+	@$(JAVAC) -classpath $(CLASSPATH) -d $(BUILD_DIR_CLASSES) *.java 
 	@echo done
 
 ONDA_TESTS= \
@@ -72,7 +70,7 @@ tests_common:
 		perl $(UTIL_DIR)/configurator.pl $(COMMON_CONFIG_FILE) $(BUILD_DIR)/test/basic/params/$${i}/TestProperties $${i}/TestProperties; \
 		mkdir -p $(HTML_ROOT_DIR)/basic/params/$${i}; \
 		mkdir -p $(BUILD_DIR_CLASSES)/$(BASIC_PATH)/params/$${i}; \
-		if [ -e $${i}/*.html ] ; then \
+		if test -f $${i}/*.html ; then \
 			cp  -f $${i}/*.html $(HTML_ROOT_DIR)/basic/params/$${i}; \
 		fi; \
 		cp -f $${i}/manifest $(BUILD_DIR_CLASSES)/$(BASIC_PATH)/params/$${i}; \

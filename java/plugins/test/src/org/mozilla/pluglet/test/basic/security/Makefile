@@ -31,7 +31,7 @@ KEY_LIST_FILE 		=$(CONFIG_DIR)/SecurityTests.keys
 TARGET_FILE		=$(CONFIG_DIR)/SecurityTests.properties
 CONFIG_SCRIPT 		=$(UTIL_DIR)/configurator.pl
 TREE_GEN_SCRIPT		=tree-gen.pl
-CLASSPATH		=$(BUILD_DIR_CLASSES)
+CLASSPATH		=$(BUILD_DIR_CLASSES):$(MOZILLA_FIVE_HOME)/../classes
 #;$(CLASSPATH)
 PERL			=perl
 JAVAC			=javac

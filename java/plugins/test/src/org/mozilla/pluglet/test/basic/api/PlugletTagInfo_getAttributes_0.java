@@ -77,8 +77,9 @@ public class PlugletTagInfo_getAttributes_0  implements Test
 	Vector vectorOfParameters = context.getParameters();
 	PlugletTagInfo PlugletTagInfo_obj = context.getPlugletPeer().getTagInfo();
 	attrsForVerify = PlugletTagInfo_obj.getAttributes();
-	actionPerformed = true;
 	System.err.println("PlugletTagInfo_getAttributes returns \"" + attrsForVerify + "\" value");
+	String allAttributes = context.getProperty("ALL_ATTRIBUTES");
+	verifyAttributes(allAttributes);
    }
    public static void verifyAttributes(String attrString) 
    {

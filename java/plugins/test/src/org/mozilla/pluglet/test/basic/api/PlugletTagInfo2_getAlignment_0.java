@@ -84,8 +84,24 @@ public class PlugletTagInfo2_getAlignment_0  implements Test
           return;
         }
 
-	String rt =	PlugletTagInfo2_obj.getAlignment();
-	System.err.println("PlugletTagInfo2_getAlignment returns \"" + rt + "\" value");
+
+	//String rt =	PlugletTagInfo2_obj.getAlignment();
+	//System.err.println("PlugletTagInfo2_getAlignment returns \"" + rt + "\" value");
+	String expected_align = null;
+	try {
+	  expected_align = (new String(context.getProperty("EXPECTED_VALUE")));
+	} catch (Exception e) {
+	  TestContext.registerFAILED("Exception during parsing property EXPECTED_VALUE: " + e);
+	  return;
+	}
+	String align = PlugletTagInfo2_obj.getAlignment();
+	if (expected_align.equalsIgnoreCase(align)) {
+	    TestContext.registerPASSED("PlugletTagInfo2_getAlignment returns right value \"" + align + "\"");
+	} else {
+	    TestContext.registerFAILED("PlugletTagInfo2_getAlignment returns value \"" + align + 
+				       "\" instead of \"" + expected_align + "\"");
+	}
+
    }
 
    /**

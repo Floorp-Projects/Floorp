@@ -31,7 +31,7 @@ all:  classes tests
 
 classes:
 	@echo Building .basic.returns classes ...
-	@$(JAVAC) -d $(BUILD_DIR_CLASSES) *.java 
+	@$(JAVAC) -classpath $(CLASSPATH) -d $(BUILD_DIR_CLASSES) *.java 
 	@echo done
 
 

@@ -88,21 +88,13 @@ public class PlugletStreamInfo_getContentType_0  implements Test
 	   return;
 	}
 	contentType = PlugletStreamInfo_obj.getContentType();
-	actionPerformed = true;
-	System.err.println("DEBUG: PlugletStreamInfo_getContentType returns \"" + contentType + "\" value");
-   }
-   public static void verifyContentType(String type)
-   {
-     if (contentType == null) {
-       TestContext.registerFAILED("null contentType value returned.");
-       return;
-     }
-     if (type.equals(contentType)) {
-       TestContext.registerPASSED("PlugletStreamInfo_getContentType returns \"" + contentType + "\" value");
-     } else {
-       TestContext.registerFAILED("PlugletStreamInfo_getContentType returns \"" + contentType + 
-				  "\" value instead of \"" + type + "\"");
-     }
+	String expectedType = context.getProperty("EXPECTED_VALUE");
+	if (expectedType.equals(contentType)) {
+	    TestContext.registerPASSED("PlugletStreamInfo_getContentType returns \"" + contentType + "\" value");
+	} else {
+	    TestContext.registerFAILED("PlugletStreamInfo_getContentType returns \"" + contentType + 
+				       "\" value instead of \"" + expectedType + "\"");
+	}
    }
    /**
     *

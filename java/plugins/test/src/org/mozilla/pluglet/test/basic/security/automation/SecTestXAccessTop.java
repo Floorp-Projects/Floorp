@@ -24,31 +24,38 @@ package org.mozilla.pluglet.test.basic.security.automation;
 import org.mozilla.pluglet.test.basic.*;
 
 public class SecTestXAccessTop implements Test {
-
+private TestContext context;
 private String description = " Access(Thread/Group)";
 private boolean mustPass;
+private SecurityManager sm;
 
 public void doAction() {
-	Thread		me = Thread.currentThread();
-	ThreadGroup	tg = me.getThreadGroup();
+    Thread		me = Thread.currentThread();
+    ThreadGroup	tg = me.getThreadGroup();
+    sm.checkAccess( tg );
 
-        System.getSecurityManager().checkAccess( tg );
-
-        ThreadGroup topGroup = tg;
-	while ( topGroup.getParent() != null )
-			topGroup = topGroup.getParent();
-
-		System.getSecurityManager().checkAccess( topGroup );
+    ThreadGroup topGroup = tg;
+    while ( topGroup.getParent() != null )
+	topGroup = topGroup.getParent();
+    sm.checkAccess( topGroup );
 }
 	
 public void execute( TestContext c ) {
- 
+ context = c;
  mustPass = false;
 
  if (c.getProperty("SecTestXAccessTop.mustPass").equals( new String("true") )) {
 	mustPass = true;
  };
-
+ sm = System.getSecurityManager();
+ if (sm == null) {
+     if( mustPass ) {
+	 context.registerPASSED("Security manager isn't present.Access allowed");
+     } else {
+	 context.registerFAILED("Security manager isn't present.Access allowed");
+     }
+     return;
+ }
  try {
  	doAction();
      if( mustPass )	
