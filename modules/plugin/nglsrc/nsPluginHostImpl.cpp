@@ -2777,14 +2777,16 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
   if(tag->mFileName == nsnull)
     return PR_TRUE;
 
-  if(nsnull == PL_strncasecmp(tag->mMimeType, "audio/x-pn-realaudio-plugin", PL_strlen(tag->mMimeType)))
-    return PR_FALSE;
+  for (PRInt32 i = 0; i < tag->mVariants; ++i) {
+    if(nsnull == PL_strcasecmp(tag->mMimeTypeArray[i], "audio/x-pn-realaudio-plugin"))
+      return PR_FALSE;
 
-  if(nsnull == PL_strncasecmp(tag->mMimeType, "application/pdf", PL_strlen(tag->mMimeType)))
-    return PR_FALSE;
+    if(nsnull == PL_strcasecmp(tag->mMimeTypeArray[i], "application/pdf"))
+      return PR_FALSE;
 
-  if(nsnull == PL_strncasecmp(tag->mMimeType, "application/x-shockwave-flash", PL_strlen(tag->mMimeType)))
-    return PR_FALSE;
+    if(nsnull == PL_strcasecmp(tag->mMimeTypeArray[i], "application/x-shockwave-flash"))
+      return PR_FALSE;
+  }
 
   return PR_TRUE;
 }
