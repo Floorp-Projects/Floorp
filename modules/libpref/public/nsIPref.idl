@@ -31,6 +31,9 @@ typedef int (*PrefChangedFunc)(const char *, void *);
     0x11d1,                                            \
     { 0xa9, 0xa4, 0x00, 0x80, 0x5f, 0x8a, 0x7a, 0xc4 } \
   }
+
+#define NS_PREF_PROGID \
+  "component://netscape/preferences" 
  
 #define NS_PREF_VALUE_CHANGED 1 
 %}
@@ -42,22 +45,17 @@ interface nsIFileSpec;
 
 [scriptable, uuid(a22ad7b0-ca86-11d1-a9a4-00805f8a7ac4)]
 interface nsIPref : nsISupports {
-%{C++
-  /* Pref types - see GetPrefType() */
-  enum { 
-      ePrefInvalid = 0,
-      ePrefLocked = 1, 
-      ePrefUserset = 2, 
-      ePrefConfig = 4, 
-      ePreRemote = 8,
-      ePrefLilocal = 16, 
-      ePrefString = 32, 
-      ePrefInt = 64, 
-      ePrefBool = 128,
-      ePrefValuetypeMask = (ePrefString | ePrefInt | ePrefBool)
-  };
-%}
-
+    const long ePrefInvalid = 0;
+    const long ePrefLocked = 1;
+    const long ePrefUserset = 2;
+    const long ePrefConfig = 4;
+    const long ePrefRemote = 8;
+    const long ePrefLilocal = 16;
+    const long ePrefString = 32;
+    const long ePrefInt = 64;
+    const long ePrefBool = 128;
+    const long ePrefValuetypeMask = (ePrefString | ePrefInt | ePrefBool);
+        
   // Initialize/shutdown
   void StartUp();
   void ReadUserPrefs();
