@@ -29,10 +29,20 @@
 var editorShell;
 var documentModified;
 var prefAuthorString = "";
+var NormalMode = 1;
+var PreviewMode = 2;
+// These must match enums in nsIEditorShell.idl:
+var DisplayModePreview = 0;
+var DisplayModeNormal = 1;
+var DisplayModeAllTags = 2;
+var DisplayModeSource = 3;
 var EditorDisplayMode = 1;  // Normal Editor mode
 var WebCompose = false;     // Set true for Web Composer, leave false for Messenger Composer
 var docWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
+var contentWindow = 0;
+var sourceContentWindow = 0;
 
+var prefs;
 // These must be kept in synch with the XUL <options> lists
 var gParagraphTagNames = new Array("","P","H1","H2","H3","H4","H5","H6","BLOCKQUOTE","ADDRESS","PRE","DT","DD");
 var gFontFaceNames = new Array("","tt","Arial, Helvetica","Times","Courier");
@@ -52,20 +62,14 @@ function EditorOnLoad()
     if ( window.arguments && window.arguments[0] ) {
         // Opened via window.openDialog with URL as argument.    
         // Put argument where EditorStartup expects it.
+dump("EditorOnLoad: url to load="+window.arguments[0]+"\n");
         document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
     }
     
+    WebCompose = true;
+    
     // Continue with normal startup.
     EditorStartup('html', document.getElementById("content-frame"));
-
-    // Active menu items that are initially hidden in XUL
-    //  because they are not needed by Messenger Composer
-    var styleMenu = document.getElementById("stylesheetMenu")
-    if (styleMenu)
-      styleMenu.removeAttribute("hidden");
-
-    WebCompose = true;
-    window.tryToClose = EditorClose;
 }
   
 function TextEditorOnLoad()
@@ -118,6 +122,7 @@ var DocumentStateListener =
 function EditorStartup(editorType, editorElement)
 {
   contentWindow = window.content;
+  sourceContentWindow = document.getElementById("HTMLSourceWindow");
   
   // store the editor shell in the window, so that child windows can get to it.
   editorShell = editorElement.editorShell;
@@ -137,17 +142,27 @@ function EditorStartup(editorType, editorElement)
   // add a listener to be called when document is really done loading
   editorShell.RegisterDocumentStateListener( DocumentStateListener );
  
+  // Store the prefs object
+  try {
+    prefs = Components.classes['component://netscape/preferences'];
+    if (prefs) prefs = prefs.getService();
+    if (prefs) prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+    if (prefs)
+      return prefs;
+    else
+      dump("failed to get prefs service!\n");
+
+  }
+  catch(ex)
+  {
+	  dump("failed to get prefs service!\n");
+  }
+ 
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
+dump("EditorStartup: url="+url+"\n");
   editorShell.LoadUrl(url);
-  
-  // Set focus to the edit window
-  // This still doesn't work!
-  // It works after using a toolbar button, however!
-  contentWindow.focus();
-  // call updateCommands to disable while we're loading the page
-  window.updateCommands("create");
 }
 
 
@@ -307,9 +322,10 @@ function EditorOpenRemote()
   return _EditorObsolete();
 }
 
-// used by openLocation. see navigator.js for additional notes.
+// used by openLocation. see openLocation.js for additional notes.
 function delayedOpenWindow(chrome, flags, url)
 {
+dump("delayedOpenWindow: URL="+url+"\n");
   if (PageIsEmptyAndUntouched())
     editorShell.LoadUrl(url);
   else
@@ -426,6 +442,11 @@ function EditorFindNext()
   return _EditorObsolete();
 }
 
+function EditorShowClipboard()
+{
+  dump("EditorShowClipboard not implemented\n");
+}
+
 // --------------------------- View menu ---------------------------
 
 function EditorViewSource()
@@ -471,18 +492,12 @@ function EditorSetTextProperty(property, attribute, value)
   contentWindow.focus();
 }
 
-/*
-function EditorSelectParagraphFormat(commandID, select)
+function onParagraphFormatChange(commandID)
 {
-  content.focus();    // required hack for now
-  
-  if (select.selectedIndex != -1)
-    EditorSetParagraphFormat(commandID, gParagraphTagNames[select.selectedIndex]);
-}
-*/
+  var commandNode = document.getElementById(commmandID);
+  var state = commandNode.getAttribute("state");
+dump(" ==== onParagraphFormatChange was called. state="+state+"|\n");
 
-function onParagraphFormatChange()
-{
   return; //TODO: REWRITE THIS
   var menulist = document.getElementById("ParagraphSelect");
   if (menulist)
@@ -735,6 +750,15 @@ function EditorRemoveBackColor(ColorWellID)
   contentWindow.focus();
 }
 
+
+function SetManualTextColor()
+{
+}
+
+function SetManualTextColor()
+{
+}
+
 function EditorSetFontColor(color)
 {
   editorShell.SetTextProperty("font", "color", color);
@@ -761,27 +785,7 @@ function EditorRemoveStyle(tagName)
 
 function EditorToggleStyle(styleName)
 {
-  // see if the style is already set by looking at the observer node,
-  // which is the appropriate button
-  // cmanske: I don't think we should depend on button state!
-  //  (this won't work for other list styles, anyway)
-  //  We need to get list type from document
-  var theButton = document.getElementById(styleName + "Button");
-  dump("Toggling style " + styleName + "\n");
-  if (theButton)
-  {
-    var isOn = theButton.getAttribute(styleName);
-    if (isOn == "true")
-      editorShell.RemoveTextProperty(gStyleTags[styleName], "", "");
-    else
-      editorShell.SetTextProperty(gStyleTags[styleName], "", "");
-
-    contentWindow.focus();
-  }
-  else
-  {
-    dump("No button found for the " + styleName + " style\n");
-  }
+  return _EditorObsolete();
 }
 
 function EditorRemoveLinks()
@@ -876,7 +880,8 @@ function EditorInsertOrEditImage()
 
 function EditorInsertOrEditHLine()
 {
- return _EditorObsolete();}
+ return _EditorObsolete();
+}
 
 function EditorInsertChars()
 {
@@ -914,10 +919,17 @@ function EditorSetDisplayMode(mode)
   editorShell.SetDisplayMode(mode);
 
   // Set the UI states
-  document.getElementById("PreviewModeButton").setAttribute("selected",Number(mode == 0));
-  document.getElementById("NormalModeButton").setAttribute("selected",Number(mode == 1));
-  document.getElementById("TagModeButton").setAttribute("selected",Number(mode == 2));
-  contentWindow.focus();
+  document.getElementById("PreviewModeButton").setAttribute("selected",Number(mode == DisplayModePreview));
+  document.getElementById("NormalModeButton").setAttribute("selected",Number(mode == DisplayModeNormal));
+  document.getElementById("TagModeButton").setAttribute("selected",Number(mode == DisplayModeAllTags));
+  var HTMLButton = document.getElementById("SourceModeButton");
+  if (HTMLButton)
+    HTMLButton.setAttribute("selected", Number(mode == DisplayModeSource));
+dump(sourceContentWindow+"=SourceWindow\n");  
+  if (mode == DisplayModeSource)
+    sourceContentWindow.focus();
+  else 
+    contentWindow.focus();
 }
 
 function EditorToggleParagraphMarks()
@@ -1326,6 +1338,7 @@ function initFontStyleMenu(menuPopup)
 //--------------------------------------------------------------------
 function onButtonUpdate(button, commmandID)
 {
+dump(" === onButtonUpdate called\n");
   var commandNode = document.getElementById(commmandID);
   var state = commandNode.getAttribute("state");
 

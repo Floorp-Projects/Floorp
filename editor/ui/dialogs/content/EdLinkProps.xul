@@ -55,7 +55,7 @@
       <grid>
         <columns><column/><column/></columns>
         <rows>
-          <row autostretch="never" vertical-align="middle">
+          <row autostretch="never" valign="middle">
             <textfield id="hrefInput" flex="1"/>
             <button class="dialog" id="ChooseFile" flex="1"/>
           </row>

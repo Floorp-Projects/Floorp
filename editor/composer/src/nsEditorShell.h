@@ -145,6 +145,8 @@ class nsEditorShell :   public nsIEditorShell,
     nsCOMPtr<nsISupports>       mSearchContext;		    // context used for search and replace. Owned by the appshell.
     nsCOMPtr<nsISpellChecker>   mSpellChecker;
 
+    PRBool mMailCompose;
+
     // this is a holding pen for doc state listeners. They will be registered with
     // the editor when that gets created.
     nsCOMPtr<nsISupportsArray>  mDocStateListeners;		// contents are nsISupports
@@ -157,6 +159,13 @@ class nsEditorShell :   public nsIEditorShell,
     nsCOMPtr<nsICSSStyleSheet>  mEditModeStyleSheet;
     nsCOMPtr<nsICSSStyleSheet>  mAllTagsModeStyleSheet;
     nsCOMPtr<nsICSSStyleSheet>  mParagraphMarksStyleSheet;
+
+    // The override style sheet that we never unload while editing
+    nsCOMPtr<nsICSSStyleSheet>  mBaseStyleSheet;
+    
+    // Saves the current display mode to reload style sheets
+    //   after loading a url
+    PRInt32 mDisplayMode;
     
     nsIDOMWindow            *mWebShellWindow;				// weak reference
     nsIDOMWindow            *mContentWindow;				// weak reference

@@ -47,6 +47,15 @@
   margin-right: 2px;
 }
 
+.inset-border {
+  border: 1px inset white;
+}
+
+/* THIS DOESN'T WORK ON <text>! */
+.center {
+  text-align: center;
+}
+
 /* end of SHOULD GO IN GLOBAL */
 
 #EditModeToolbar {
@@ -89,10 +98,6 @@
 
 .EditModeButton[selected="1"]:active {
   padding: 1px 5px -1px 3px;
-}
-
-.color-caption {
-  border: 1px inset white;
 }
 
 /* Image URLs for all Editor toolbar buttons */
@@ -228,29 +233,34 @@
 	list-style-image:url("chrome://editor/skin/images/justify.gif");
 }
 
-#ColorButtons {
-  margin: 2px;
+.ColorPickerLabel {
+  border:     1px inset white;
+  margin:     0px;
+  padding:    2px;
+  text-align: center;
 }
+
 /* TODO: How to make inset color skinable? */
-#TextColorPopupButton {
+.color-button {
   border: 1px inset #CCCCCC;
   padding: 0px;
-  margin-right:  7px;
-  margin-bottom: 7px;
   width:  14px;
   height: 12px;
+  margin:  2px;
+}
+
+.color-button:hover {
+  border:  1px solid white;
+}
+
+#TextColorPopupButton {
+  margin: 2px 9px 9px 2px;
   /* TEMP: Set color here. TODO: Set color from page */
   background-color: #AA0000;
 }
 
 #BackColorPopupButton {
-  border: 1px inset #CCCCCC;
-  padding: 0px;
-  margin-top:  7px;
-  margin-left: 7px;
-  width:  14px;
-  height: 12px;
-
+  margin: 9px 2px 2px 9px;
   /* TEMP: Set color here. TODO: Set color from page */
   background-color: #FFFF00;
 }

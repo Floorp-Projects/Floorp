@@ -47,13 +47,13 @@
     <grid>
       <columns><column/><column/><column /></columns>
       <rows>
-        <row vertical-align="baseline" autostretch="never">
+        <row valign="middle" autostretch="never">
           <text class="label" value="&widthEditField.label;"/>
           <textfield class="narrow" id="width" flex="1" onkeyup="forceInteger('width')"/>
           <menulist id="pixelOrPercentMenulist"/>
           <!-- menupopup and menuitems added by JS -->
         </row>
-        <row vertical-align="baseline" autostretch="never">
+        <row valign="middle" autostretch="never">
           <text class="label" value="&heightEditField.label;"/>
           <textfield class="narrow" id="height" onkeyup="forceInteger('height')"/>
           <text class="label" value="&pixelsPopup.value;"/>

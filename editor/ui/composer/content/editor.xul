@@ -135,7 +135,7 @@
 <toolbox id="EditorToolbox">
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
-  <toolbar class="toolbar-primary chromeclass-toolbar" id="EditToolbar" persist="collapsed">
+  <toolbar class="toolbar-primary" id="EditToolbar" persist="collapsed">
     <button id="newButton"/>
     <button id="openButton"/>
     <button id="saveButton"/>
@@ -192,14 +192,19 @@
   <splitter id="sidebar-splitter" class="chromeclass-extrachrome"/>
 
   <box id="appcontent" orient="vertical" flex="1">
-    <editor type="content-primary" id="content-frame" src="about:blank" flex="1"/>
+    <deck id="ContentWindowDeck" index="0" flex="1">
+      <editor type="content-primary" id="content-frame" src="about:blank" flex="1"/>
 
-    <toolbar id="EditModeToolbar" chromeclass="extrachrome" persist="collapsed">
+<!-- DAMN! This worked for a few minutes on 5/1/00, but after updating tree, it crashes creating the textarea editor! -->
+<!-- <textfield id="HTMLSourceWindow" multiline="true" rows="2" flex="1" style="width:10em; height:10em;"/> -->
+    </deck>
+
+    <toolbar id="EditModeToolbar" chromeclass="extrachrome" collapsed="true" persist="collapsed">
       <text class="margin-left-right" value="&editMode.label;"/>
       <!-- From editorOverlay.xul -->
       <text id="NormalModeButton"/>
       <text id="TagModeButton"/>
-<!--      <text id="HTMLModeButton"/> -->
+<!--      <text id="SourceModeButton"/> -->
       <text id="PreviewModeButton"/>
       <spring flex="1"/>
     </toolbar>

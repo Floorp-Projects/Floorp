@@ -45,8 +45,9 @@
   <keyset id="keyset"/>
 
   <text class="label" id="srcMessage" value="&sourceEditField.label;"/>
-  <html:textarea rows="16" cols="80" id="srcInput" flex="1"/> 
-<!--  <textfield id="srcInput" multiline="true" rows="6" flex="1"/> -->
+  <box orient="vertical" flex="1" style="width: 30em; height: 20em;">
+    <textfield id="srcInput" multiline="true" rows="1" style="width: 1em" flex="1"/> -->
+  </box>
   <!-- Will this accept the embedded HTML tags? -->
   <box>
     <spring class="bigspacer"/>

@@ -379,7 +379,11 @@ protected:
   // This doesn't change or use the current selection
   NS_IMETHOD InsertCell(nsIDOMElement *aCell, PRInt32 aRowSpan, PRInt32 aColSpan,
                         PRBool aAfter, nsIDOMElement **aNewCell);
-  NS_IMETHOD DeleteTable(nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMSelection> &aSelection);
+
+  // Move all contents from aCellToMerge into aTargetCell (append at end)
+  NS_IMETHOD MergeCells(nsCOMPtr<nsIDOMElement> aTargetCell, nsCOMPtr<nsIDOMElement> aCellToMerge, PRBool aDeleteCellToMerge);
+
+  NS_IMETHOD DeleteTable2(nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMSelection> &aSelection);
   NS_IMETHOD SetColSpan(nsIDOMElement *aCell, PRInt32 aColSpan);
   NS_IMETHOD SetRowSpan(nsIDOMElement *aCell, PRInt32 aRowSpan);
 
@@ -393,10 +397,15 @@ protected:
   PRBool AllCellsInColumnSelected(nsIDOMElement *aTable, PRInt32 aColIndex, PRInt32 aNumberOfRows);
 
   // Most insert methods need to get the same basic context data
-  NS_IMETHOD GetCellContext(nsCOMPtr<nsIDOMSelection> &aSelection,
-                            nsCOMPtr<nsIDOMElement> &aTable, nsCOMPtr<nsIDOMElement> &aCell, 
-                            nsCOMPtr<nsIDOMNode> &aCellParent, PRInt32& aCellOffset, 
-                            PRInt32& aRow, PRInt32& aCol);
+  // Any of the pointers may be null if you don't need that datum (for more efficiency)
+  // Input: *aCell is a known cell,
+  //        if null, cell is obtained from the anchor node of the selection
+  // Returns NS_EDITOR_ELEMENT_NOT_FOUND if cell is not found even if aCell is null
+  NS_IMETHOD GetCellContext(nsIDOMSelection **aSelection,
+                            nsIDOMElement   **aTable,
+                            nsIDOMElement   **aCell,
+                            nsIDOMNode      **aCellParent, PRInt32 *aCellOffset,
+                            PRInt32 *aRowIndex, PRInt32 *aColIndex);
 
   // Fallback method: Call this after using ClearSelection() and you
   //  failed to set selection to some other content in the document

@@ -117,7 +117,7 @@
             <columns><column/><column/><column/></columns>
             <rows>
               <!--//////  IMAGE WIDTH  //////-->
-              <row vertical-align="baseline" autostretch="never">
+              <row valign="baseline" autostretch="never">
                 <text class = "label" 
                   id    = "widthLabel"
                   for   = "widthInput"
@@ -132,7 +132,7 @@
                 <!-- contents are appended by JS -->
               </row>
               <!--////// IMAGE HEIGHT //////-->
-              <row vertical-align="baseline" autostretch="never">
+              <row valign="baseline" autostretch="never">
                 <text class = "label" 
                   id    = "heightLabel"
                   for   = "heightInput"
@@ -175,7 +175,7 @@
         <titledbox flex="1" orient="vertical">
           <title><text class="label" id="alignLabel" value="&alignment.label;"/></title>
           <menulist id = "alignTypeSelect" onchange ="doOverallEnabling()">
-            <menupopup vertical-align="middle">
+            <menupopup valign="middle">
               <menuitem class="middle"><image id="img-align-top"/>   <text class="label" value = "&topPopup.value;"/></menuitem>
               <menuitem class="middle"><image id="img-align-middle"/><text class="label" value = "&centerPopup.value;"/></menuitem>
               <menuitem class="middle"><image id="img-align-bottom"/><text class="label" value = "&bottomPopup.value;"/></menuitem>
@@ -191,7 +191,7 @@
           <grid>
             <columns><column/><column/><column/></columns>
             <rows>
-              <row vertical-align="baseline" autostretch="never">
+              <row valign="baseline" autostretch="never">
                 <text 
                   class = "label align-right" 
                   id    = "leftrightLabel"
@@ -206,7 +206,7 @@
                   id    = "leftrighttypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>
-              <row vertical-align="baseline" autostretch="never">
+              <row valign="baseline" autostretch="never">
                 <text 
                   class = "label align-right" 
                   id    = "topbottomLabel"
@@ -221,7 +221,7 @@
                   id    = "topbottomtypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>
-              <row vertical-align="baseline" autostretch="never">
+              <row valign="baseline" autostretch="never">
                 <text class = "label align-right" 
                   id    = "borderLabel"
                   value = "&borderEditField.label;"/>

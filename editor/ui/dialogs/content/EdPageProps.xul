@@ -54,15 +54,15 @@
         <text class="label" value="&lastModified.label;" flex ="1" align="left"/>
         <text class="label" id="PageModDate" align="left"/>
       </row>
-      <row vertical-align="middle">
+      <row valign="baseline">
         <text class="label" value="&titleInput.label;"/>
         <textfield id="TitleInput" flex ="1" onkeyup="TextfieldChanged(this.id)"/>
       </row>
-      <row vertical-align="middle">
+      <row valign="baseline">
         <text class="label" value="&authorInput.label;"/>
         <textfield id="AuthorInput" flex ="1" onkeyup="TextfieldChanged(this.id)"/>
       </row>
-      <row vertical-align="middle">
+      <row valign="baseline">
         <text class="label" value="&descriptionInput.label;"/>
         <textfield class="MinWidth20em" id="DescriptionInput" flex ="1" onkeyup="TextfieldChanged(this.id)"/>
       </row>
@@ -76,7 +76,9 @@
   <box id="MoreSection" orient="vertical" flex="1">
     <!-- html used for labels that need to wrap -->
     <html class="wrap" flex="1">"&headSection.label;</html>
-    <textfield class="MinWidth20em" id="HeadSrcInput" multiline="true" rows="10" flex="1"/>
+    <box orient="vertical" flex="1" style="width: 10em; height: 10em;">
+      <textfield id="HeadSrcInput" multiline="true" style="width: 1em" rows="1" flex="1"/>
+    </box>
     <box>
       <box orient="vertical"><text class="label" value="&example.label;"/></box>
       <html class="wrap bold" flex="1">&example.value;</html>

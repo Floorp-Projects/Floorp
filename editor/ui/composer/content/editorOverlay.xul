@@ -55,15 +55,14 @@
     <key id="pastequotationkb" xulkey="true" shift="true" key="&editpaste.keybinding;" observes="cmd_pasteQuote" />
     <key id="key_delete"/>
     <key id="key_selectAll"/>
-    <key id="findkb"        xulkey="true" key="&editfind.keybinding;"     observes="cmd_find" />
-    <key id="findnextkb"    xulkey="true" key="&editfindnext.keybinding;" observes="cmd_findNext" />
+    <key id="findkb"          xulkey="true" key="&editfind.keybinding;"          observes="cmd_find" />
+    <key id="findnextkb"      xulkey="true" key="&editfindnext.keybinding;"      observes="cmd_findNext" />
     <key id="checkspellingkb" xulkey="true" key="&editcheckspelling.keybinding;" observes="cmd_spelling" />
     <key id="key_preferences"/>
 
-    <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;"   observes="cmd_bold"/>
-    <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;" observes="cmd_italic"/>
-    
-    <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" onkeypress="EditorToggleStyle('underline')"/>
+    <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;"      observes="cmd_bold"/>
+    <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;"    observes="cmd_italic"/>
+    <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" observes="cmd_underline"/>
     
     <!-- these should come from tasksOverlay.xul -->
     <key id="navigatortaskkb" xulkey="true" key="1" onkeypress="Navigator()" />
@@ -115,21 +114,22 @@
   	<command id="cmd_viewtaskbar"         oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');"                 checked="true"/>
 
     <!-- format menu -->
-    <command id="cmd_listProperties"                                            oncommand="goDoCommand('cmd_listProperties')"/>
-    <command id="cmd_pageProperties"                                            oncommand="goDoCommand('cmd_pageProperties')"/>
-    <command id="cmd_colorProperties"                                           oncommand="goDoCommand('cmd_colorProperties')"/>
+    <command id="cmd_listProperties"  oncommand="goDoCommand('cmd_listProperties')"/>
+    <command id="cmd_pageProperties"  oncommand="goDoCommand('cmd_pageProperties')"/>
+    <command id="cmd_colorProperties" oncommand="goDoCommand('cmd_colorProperties')"/>
 
-    <command id="cmd_link"            value="&insertLinkCmd.label;"             oncommand="goDoCommand('cmd_link')"/>
-    <command id="cmd_anchor"          value="&insertAnchorCmd.label;"           oncommand="goDoCommand('cmd_anchor')"/>
-    <command id="cmd_insertChars"     value="&insertCharsCmd.label;"            oncommand="goDoCommand('cmd_insertChars')"/>
-    <command id="cmd_image"           value="&insertImageCmd.label;"            oncommand="goDoCommand('cmd_image')"/>
-    <command id="cmd_hline"           value="&insertHLineCmd.label;"            oncommand="goDoCommand('cmd_hline')"/>
-    <command id="cmd_table"           value="&insertTableCmd.label;"            oncommand="goDoCommand('cmd_table')"/>
-    <command id="cmd_editTable"                                                 oncommand="goDoCommand('cmd_editTable')"/>
-    <command id="cmd_insertHTML"      value="&HTMLSourceCmd.label;"             oncommand="goDoCommand('cmd_insertHTML')"/>
-    <command id="cmd_editHTML"        value="&HTMLSourceCmd.label;"             oncommand="goDoCommand('cmd_editHTML')"/>
-    <command id="cmd_insertBreak"     value="&insertLineBreakCmd.label;"        oncommand="goDoCommand('cmd_insertBreak')"/>
-    <command id="cmd_insertBreakAll"  value="&insertBreakBelowImagesCmd.label;" oncommand="goDoCommand('cmd_insertBreakAll')"/>
+    <command id="cmd_link"            oncommand="goDoCommand('cmd_link')"/>
+    <command id="cmd_anchor"          oncommand="goDoCommand('cmd_anchor')"/>
+    <command id="cmd_insertChars"     oncommand="goDoCommand('cmd_insertChars')"/>
+    <command id="cmd_image"           oncommand="goDoCommand('cmd_image')"/>
+    <command id="cmd_hline"           oncommand="goDoCommand('cmd_hline')"/>
+    <command id="cmd_table"           oncommand="goDoCommand('cmd_table')"/>
+    <command id="cmd_insertChars"     oncommand="goDoCommand('cmd_insertChars')"     value="&insertCharsCmd.label;"/>
+    <command id="cmd_editTable"       oncommand="goDoCommand('cmd_editTable')"/>
+    <command id="cmd_insertHTML"      oncommand="goDoCommand('cmd_insertHTML')"      value="&HTMLSourceCmd.label;"/>
+    <command id="cmd_editHTML"        oncommand="goDoCommand('cmd_editHTML')"        value="&HTMLSourceCmd.label;"/>
+    <command id="cmd_insertBreak"     oncommand="goDoCommand('cmd_insertBreak')"     value="&insertLineBreakCmd.label;"/>
+    <command id="cmd_insertBreakAll"  oncommand="goDoCommand('cmd_insertBreakAll')"  value="&insertBreakBelowImagesCmd.label;"/>
 
   </commandset>
   
@@ -161,10 +161,10 @@
 
     <command id="cmd_preferences"/>
 
-    <command id="cmd_find"          value="&findCmd.label;"             oncommand="goDoCommand('cmd_find')"/>
-    <command id="cmd_findNext"      value="&findAgainCmd.label;"        oncommand="goDoCommand('cmd_findNext')"/>
-    <command id="cmd_spelling"      value="&checkSpellingCmd.label;"    oncommand="goDoCommand('cmd_spelling')"/>
-    <command id="cmd_pasteQuote"    value="&pasteAsQuotationCmd.label;" oncommand="goDoCommand('cmd_pasteQuote')"/>
+    <command id="cmd_find"          oncommand="goDoCommand('cmd_find')"/>
+    <command id="cmd_findNext"      oncommand="goDoCommand('cmd_findNext')"   value="&findAgainCmd.label;"/>
+    <command id="cmd_spelling"      oncommand="goDoCommand('cmd_spelling')"/>
+    <command id="cmd_pasteQuote"    oncommand="goDoCommand('cmd_pasteQuote')" value="&pasteAsQuotationCmd.label;"/>
 
   </commandset>
 
@@ -266,10 +266,10 @@
       <menuseparator id="edEditMenuSep2" />
       <menuitem id="menu_selectAll"/>
       <menuseparator class="hide-in-IM"/>
-      <menuitem id="menu_find"       accesskey="&editfind.accesskey;"            key="findkb"         observes="cmd_find"/>
+      <menuitem id="menu_find"       accesskey="&editfind.accesskey;"            key="findkb"         observes="cmd_find" value="&findCmd.label;"/>
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
       <menuseparator class="hide-in-IM" />
-      <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling"/>
+      <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" value="&checkSpellingCmd.label;"/>
       <menuseparator class="hide-in-IM"/>
       <menuitem class="hide-in-IM" id="menu_editHTML"    accesskey="&HTMLsource.accesskey;"            observes="cmd_editHTML"/>
       <menuseparator/>
@@ -378,19 +378,19 @@
       </menupopup>
     </menu>
 
-    <!-- Insert menu -->
+  <!-- Insert menu -->
   <menu id="insertMenu" value="&insertMenu.label;" accesskey="&insertmenu.accesskey;">
     <menupopup>
-      <menuitem accesskey="&insertlink.accesskey;"                               observes="cmd_link"/>
-      <menuitem accesskey="&insertanchor.accesskey;"                             observes="cmd_anchor"/>
-      <menuitem accesskey="&insertimage.accesskey;"                              observes="cmd_image"/>
-      <menuitem accesskey="&inserthline.accesskey;"                              observes="cmd_hline"/>
-      <menuitem accesskey="&inserttable.accesskey;"                              observes="cmd_table"/>
-      <menuitem accesskey="&HTMLsource.accesskey;"    key="inserthtmlkb"         observes="cmd_insertHTML"/>
-      <menuitem accesskey="&insertchars.accesskey;"                              observes="cmd_insertChars"/>
+      <menuitem accesskey="&insertlink.accesskey;"       observes="cmd_link"        value="&insertLinkCmd.label;" />
+      <menuitem accesskey="&insertanchor.accesskey;"     observes="cmd_anchor"      value="&insertCharsCmd.label;"/>
+      <menuitem accesskey="&insertimage.accesskey;"      observes="cmd_image"       value="&insertImageCmd.label;"/>
+      <menuitem accesskey="&inserthline.accesskey;"      observes="cmd_hline"       value="&insertHLineCmd.label;"/>
+      <menuitem accesskey="&inserttable.accesskey;"      observes="cmd_table"       value="&insertTableCmd.label;"/>
+      <menuitem accesskey="&HTMLsource.accesskey;"       observes="cmd_insertHTML"  key="inserthtmlkb"/>
+      <menuitem accesskey="&insertchars.accesskey;"      observes="cmd_insertChars" />
       <menuseparator />
-      <menuitem accesskey="&insertlinebreak.accesskey;"  disabled="true"         observes="cmd_insertBreak"/>
-      <menuitem accesskey="&insertbreak.accesskey;"      disabled="true"         observes="cmd_insertBreakAll"/>
+      <menuitem accesskey="&insertlinebreak.accesskey;"  observes="cmd_insertBreak"/>
+      <menuitem accesskey="&insertbreak.accesskey;"      observes="cmd_insertBreakAll"/>
     </menupopup>
   </menu>
     
@@ -586,59 +586,78 @@
             oncommand="goDoCommand('cmd_colorProperties')"/>
 
   <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
-  <menupopup>
-    <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
-          accesskey="&tableselectmenu.accesskey;">
     <menupopup>
-        <menuitem value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    oncommand="EditorSelectTable()"/>
-        <menuitem value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      oncommand="EditorSelectTableRow()"/>
-        <menuitem value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   oncommand="EditorSelectTableColumn()"/>
-        <menuitem value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     oncommand="EditorSelectTableCell()"/>
-        <menuitem value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" oncommand="EditorSelectAllTableCells()"/>
+      <menu id="tableSelectMenu" value="&tableSelectMenu.label;"
+              accesskey="&tableselectmenu.accesskey;">
+        <menupopup>
+            <menuitem value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    oncommand="EditorSelectTable()"/>
+            <menuitem value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      oncommand="EditorSelectTableRow()"/>
+            <menuitem value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   oncommand="EditorSelectTableColumn()"/>
+            <menuitem value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     oncommand="EditorSelectTableCell()"/>
+            <menuitem value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" oncommand="EditorSelectAllTableCells()"/>
+        </menupopup>
+      </menu>
+      <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
+        <menupopup>
+          <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"       oncommand="EditorInsertTable()"/>
+          <menuseparator />
+          <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"         oncommand="EditorInsertTableRow(false)"/>
+          <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"    oncommand="EditorInsertTableRow(true)"/>
+          <menuseparator />
+          <menuitem value="&tableColumnBefore.label;" accesskey="&tablecolumn.accesskey;"      oncommand="EditorInsertTableColumn(false)"/>
+          <menuitem value="&tableColumnAfter.label;"  accesskey="&tablecolumnafter.accesskey;" oncommand="EditorInsertTableColumn(true)"/>
+          <menuseparator />
+          <menuitem value="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"        oncommand="EditorInsertTableCell(false)"/>
+          <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"   oncommand="EditorInsertTableCell(true)"/>
+        </menupopup>
+      </menu>
+      <menu id="tableDeleteMenu" value="&tableDeleteMenu.label;" accesskey="&tabledeletemenu.accesskey;">
+        <menupopup>
+            <menuitem value="&tableTable.label;"  accesskey="&tabletable.accesskey;"   oncommand="EditorDeleteTable()"/>
+            <menuitem value="&tableRow.label;"    accesskey="&tablerow.accesskey;"     oncommand="EditorDeleteTableRow(1)"/>
+            <menuitem value="&tableColumn.label;" accesskey="&tablecolumn.accesskey;"  oncommand="EditorDeleteTableColumn(1)"/>
+            <menuitem value="&tableCell.label;"   accesskey="&tablecell.accesskey;"    oncommand="EditorDeleteTableCell(1)"/>
+        </menupopup>
+      </menu>
+      <menuseparator />
+      <menuitem id="tableFixupMenuitem"      value="&tableFixup.label;"      accesskey="&tablefixup.accesskey;"   oncommand="EditorNormalizeTable()"/>
+      <!-- menu text set in InitTableMenu -->
+      <menuitem id="tableJoinCellsMenuitem"  value="TEST Join"  accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()" oncreate="InitTableMenu()"/>
+      <menuitem id="tablePropertiesMenuitem" value="&tableProperties.label;" accesskey="&properties.accesskey;"   observes="cmd_editTable"/>
     </menupopup>
-    </menu>
-    <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
-    <menupopup>
-        <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"       oncommand="EditorInsertTable()"/>
-        <menuseparator />
-        <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"         oncommand="EditorInsertTableRow(false)"/>
-        <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"    oncommand="EditorInsertTableRow(true)"/>
-        <menuseparator />
-        <menuitem value="&tableColumnBefore.label;" accesskey="&tablecolumn.accesskey;"      oncommand="EditorInsertTableColumn(false)"/>
-        <menuitem value="&tableColumnAfter.label;"  accesskey="&tablecolumnafter.accesskey;" oncommand="EditorInsertTableColumn(true)"/>
-        <menuseparator />
-        <menuitem value="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"        oncommand="EditorInsertTableCell(false)"/>
-        <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"   oncommand="EditorInsertTableCell(true)"/>
-    </menupopup>
-    </menu>
-    <menu id="tableDeleteMenu" value="&tableDeleteMenu.label;" accesskey="&tabledeletemenu.accesskey;">
-    <menupopup>
-        <menuitem value="&tableTable.label;"  accesskey="&tabletable.accesskey;"   oncommand="EditorDeleteTable()"/>
-        <menuitem value="&tableRow.label;"    accesskey="&tablerow.accesskey;"     oncommand="EditorDeleteTableRow(1)"/>
-        <menuitem value="&tableColumn.label;" accesskey="&tablecolumn.accesskey;"  oncommand="EditorDeleteTableColumn(1)"/>
-        <menuitem value="&tableCell.label;"   accesskey="&tablecell.accesskey;"    oncommand="EditorDeleteTableCell(1)"/>
-    </menupopup>
-    </menu>
-    <menuseparator />
-    <menuitem id="tableFixupMenuitem"      value="&tableFixup.label;"      accesskey="&tablefixup.accesskey;"   oncommand="EditorNormalizeTable()"/>
-    <menuitem id="tableJoinCellsMenuitem"  value="&tableJoinCells.label;"  accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()" disabled="true"/>
-    <menuitem id="tablePropertiesMenuitem" value="&tableProperties.label;" accesskey="&properties.accesskey;"   observes="cmd_editTable"/>
-  </menupopup>
   </menu>
 
   <popup id="TextColorPopup"  popupanchor="bottomleft">
-    <text id="TextColorCaption" class="color-caption" value="&textColorCaption.label;" flex="1"/>
-      <!-- TODO: Add "Last color picked" button and text -->
-      <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton');"/>
-    <button class="button-toolbar" value="&colorPicker.default.label;" oncommand="EditorRemoveTextColor('TextColorPopupButton');"/>
+    <text class="ColorPickerLabel" id="TextColorCaption" value="&textColorCaption.label;" flex="1"/>
+    <!-- TODO: Add "Last color picked" button and text -->
+    <box valign="middle" autostretch="never">
+      <text class="color-button"/>
+      <text class="label" value="&lastPickedColor.label;"/>
+    </box>
+    <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton');"/>
+    <box valign="middle" autostretch="never">
+      <text class="label" value="&colorLabel.label;"/>
+      <textfield id="TextColorInput" flex="1" style="width: 1em"/>
+      <button class="dialog" value="&ok.label;" oncommand="SetManualTextColor()"/>
+    </box>
+    <button class="dialog" value="&colorPicker.default.label;" oncommand="EditorRemoveTextColor('TextColorPopupButton');"/>
   </popup>
 
   <popup id="BackColorPopup" popupanchor="bottomleft" oncreate="InitBackColorPopup()">
     <!-- Text is filled in at runtime according to what background element will be set -->
-    <text id="BackColorCaption" class="color-caption" value="Background Color" flex="1"/>
-      <!-- TODO: Add "Last color picked" button and text -->
-      <colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton');"/>
-    <button class="button-toolbar" value="&colorPicker.default.label;" oncommand="EditorRemoveBackColor('BackColorPopupButton');"/>
+    <text class="ColorPickerLabel" id="BackColorCaption" value="Background Color" flex="1"/>
+    <!-- TODO: Add "Last color picked" button and text -->
+    <box valign="middle" autostretch="never">
+      <text class="color-button"/>
+      <text class="label" value="&lastPickedColor.label;"/>
+    </box>
+    <colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton');"/>
+    <box valign="middle" autostretch="never">
+      <text class="label" value="&colorLabel.label;"/>
+      <textfield id="BackColorInput" flex="1" style="width: 1em"/>
+      <button class="dialog" value="Ok" oncommand="SetManualBackColor()"/>
+    </box>
+    <button class="dialog" value="&colorPicker.default.label;" oncommand="EditorRemoveBackColor('BackColorPopupButton');"/>
   </popup>
 
   <menupopup id="AlignmentPopup">
@@ -693,7 +712,7 @@
 
   <!-- Formatting toolbar items. "data" are HTML tagnames, don't translate -->
   <menulist id="ParagraphSelect">
-    <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange()"/>
+    <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange('cmd_paragraphState')"/>
     <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
       <menuitem value="&normalCmd.label;"              data=""/>
       <menuitem value="&paragraphParagraphCmd.label;"  data="P"/>
@@ -739,8 +758,8 @@
   </menulist>          
 
   <stack id="ColorButtons" autostretch="never">
-    <text id="BackColorPopupButton" popup="BackColorPopup"/>
-    <text id="TextColorPopupButton" popup="TextColorPopup"/>
+    <text class="color-button" id="BackColorPopupButton" popup="BackColorPopup"/>
+    <text class="color-button" id="TextColorPopupButton" popup="TextColorPopup"/>
   </stack>
   
   <button class="button-toolbar" id="DecreaseFontSizeButton" observes="cmd_decreaseFont"/>
@@ -771,7 +790,7 @@
   <!-- Edit Mode toolbar -->
   <text id="NormalModeButton"  class="EditModeButton" selected="1" value="&normalMode.label;"    onclick="EditorSetDisplayMode(1)"/>
   <text id="TagModeButton"     class="EditModeButton" selected="0" value="&showAllTags.label;"   onclick="EditorSetDisplayMode(2)"/>
-  <text id="HTMLModeButton"    class="EditModeButton" selected="0" value="&HTMLSourceCmd.label;" onclick="EditorSetDisplayMode(3)"/>
+  <text id="SourceModeButton"  class="EditModeButton" selected="0" value="&sourceMode.label;"    onclick="EditorSetDisplayMode(3)"/>
   <text id="PreviewModeButton" class="EditModeButton" selected="0" value="&previewMode.label;"   onclick="EditorSetDisplayMode(0)"/>
   
   <!-- InsertPopupButton is used by messengercompose.xul -->

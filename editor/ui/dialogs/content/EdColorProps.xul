@@ -132,7 +132,7 @@
         <textfield id="BackgroundImageInput"/>
         <button class="dialog" id="ChooseFile" flex="1"/>
       </row>
-      <row autostretch="never" vertical-align="middle">
+      <row autostretch="never" valign="middle">
         <html class="label wrap" flex="1">&saveImageMsg.label;</html>
         <button class="dialog" id="AdvancedEditButton" flex="1"/>
       </row>
