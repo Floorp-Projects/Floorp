@@ -645,7 +645,11 @@ Rights Reserved.
         <menuitem id="context-openlink"
                   label="&openLinkCmd.label;"
                   accesskey="&openLinkCmd.accesskey;"
-                  oncommand="gContextMenu.openLink();"/>
+                  oncommand="gContextMenu.openLink();"/> 
+        <menuitem id="context-openlinkintab"
+	          label="&openLinkCmdInTab.label;"
+                  accesskey="&openLinkCmdInTab.accesskey;"
+                  oncommand="gContextMenu.openLinkInTab();"/>
         <menuseparator id="messagePaneContext-sep-link"/>
         <menuitem id="context-selectall"
                   label="&selectAllCmd.label;"
