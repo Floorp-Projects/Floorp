@@ -10,7 +10,7 @@ bookmarks-tree[type="folders"] {
   -moz-binding: url("chrome://browser/content/bookmarks/bookmarksTree.xml#bookmarks-tree-folders");
 }
 
-treechildren:-moz-tree-image(Name) {
+treechildren::-moz-tree-image(Name) {
   width:16px;
   height:16px;
 }

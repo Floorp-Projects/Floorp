@@ -12,7 +12,7 @@ download {
   min-height: 25px;
 }
 
-#downloadHistoryView > treechildren:-moz-tree-image(Name) {
+#downloadHistoryView > treechildren::-moz-tree-image(Name) {
   margin-right: 2px;
 }
 

@@ -556,7 +556,7 @@ statusbarpanel#statusbar-display {
 
 /* ::::: autocomplete ::::: */
 
-.autocomplete-treebody:-moz-tree-cell-text(treecolAutoCompleteComment) {
+.autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
   color: #555566;
 }
 
