@@ -2719,49 +2719,6 @@ void DIR_SetServerFileName(DIR_Server *server, const char* leafName)
 	}
 }
 
-/* This will reconstruct a correct filename including the path */
-void DIR_GetServerFileName(char** filename, const char* leafName)
-{
-#ifdef XP_PlatformFileToURL
-#ifdef XP_MAC
-	char* realLeafName;
-	char* nativeName;
-	char* urlName;
-	if (PL_strchr(leafName, ':') != nsnull)
-		realLeafName = PL_strrchr(leafName, ':') + 1;	/* makes sure that leafName is not a fullpath */
-	else
-		realLeafName = leafName;
-
-	nativeName = WH_FileName(realLeafName, xpAddrBookNew);
-	urlName = XP_PlatformFileToURL(nativeName);
-    (*filename) = nsCRT::strdup(urlName + PL_strlen("file://"));
-	if (urlName) PR_Free(urlName);
-#elif defined(XP_WIN)
-	/* jefft -- Bug 73349. To allow users share same address book.
-	 * This only works if user sepcified a full path name in his
-	 * prefs.js
-	 */ 
-	char *nativeName = WH_FilePlatformName (leafName);
-	char *fullnativeName;
-#ifdef XP_FileIsFullPath
-	if (XP_FileIsFullPath(nativeName)) {
-		fullnativeName = nativeName;
-		nativeName = nsnull;
-	}
-	else {
-		fullnativeName = WH_FileName(nativeName, xpAddrBookNew);
-	}
-#endif /* XP_FileIsFullPath */
-	(*filename) = fullnativeName;
-#else
-	char* nativeName = WH_FilePlatformName (leafName);
-	char* fullnativeName = WH_FileName(nativeName, xpAddrBookNew);
-	(*filename) = fullnativeName;
-#endif
-	if (nativeName) PR_Free(nativeName);
-#endif /* XP_PlatformFileToURL */
-}
-
 char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 {
     nsresult rv = NS_OK;

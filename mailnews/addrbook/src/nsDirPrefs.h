@@ -337,7 +337,6 @@ PRInt32  DIR_GetDirServerSubsetCount(nsVoidArray *wholeList, PRUint32 flags);
 DIR_DescriptionCode DIR_ValidateDirectoryDescription(nsVoidArray * wholeList, DIR_Server * serverToValidate);
 
 char   *DIR_CreateServerPrefName (DIR_Server *server, char *name);
-void	DIR_GetServerFileName(char** filename, const char* leafName);
 void	DIR_SetServerFileName(DIR_Server* pServer, const char* leafName);
 
 /* APIs for site-configurability of LDAP attribute names and 
