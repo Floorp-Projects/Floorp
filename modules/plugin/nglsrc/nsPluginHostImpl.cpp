@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Sean Echevarria <sean@beatnik.com>
+ *   Håkan Waara <hwaara@chello.se>
  */
 
 #include "nsPluginHostImpl.h"
@@ -3396,8 +3397,8 @@ static PRBool areTheSameFileNames(char * aPath1, char * aPath2)
 
   nsresult rv = NS_OK;
 
-  char * filename1 = nsnull;
-  char * filename2 = nsnull;
+  nsXPIDLCString filename1;
+  nsXPIDLCString filename2;
 
   nsCOMPtr<nsILocalFile> file1;
   nsCOMPtr<nsILocalFile> file2;
@@ -3410,15 +3411,15 @@ static PRBool areTheSameFileNames(char * aPath1, char * aPath2)
   if(NS_FAILED(rv))
     return PR_FALSE;
 
-  file1->GetLeafName(&filename1);
-  file2->GetLeafName(&filename2);
+  file1->GetLeafName(getter_Copies(filename1));
+  file2->GetLeafName(getter_Copies(filename2));
   
-  if(PL_strlen(filename1) != PL_strlen(filename2))
+  if(PL_strlen(filename1.get()) != PL_strlen(filename2.get()))
     return PR_FALSE;
 
   // XXX this one MUST be case insensitive for Windows and MUST be case 
   // sensitive for Unix. How about Win2000?
-  return (nsnull == PL_strncasecmp(filename1, filename2, PL_strlen(filename1)));
+  return (nsnull == PL_strncasecmp(filename1.get(), filename2.get(), PL_strlen(filename1.get())));
 }
 
 static PRBool isJavaPlugin(nsPluginTag * tag)
