@@ -1,3 +1,4 @@
+<!--LOCALIZATION NOTE messengercompose.dtd Main UI for message composition -->
 <!ENTITY msgComposeWindow.title "Message Compose">
 
 <!ENTITY fromAddr.label "From:">
@@ -15,6 +16,7 @@
 <!ENTITY attachFileCmd.label "File...">
 <!ENTITY attachPageCmd.label "Web Page...">
 <!ENTITY removeLastAttachmentCmd.label "Remove Last Attachment">
+<!--LOCALIZATION NOTE attachVCardCmd.label Don't translate the term 'vCard' -->
 <!ENTITY attachVCardCmd.label ".Personal Card (vCard)">
 <!ENTITY sendNowCmd.label "Send Now">
 <!ENTITY sendLaterCmd.label "Send Later">
@@ -37,6 +39,7 @@
 <!ENTITY attachmentsCmd.label ".Attachments">
 <!ENTITY wrapCmd.label ".Wrap Long Lines">
 <!ENTITY dcharMenu.label "Character Set">
+<!--LOCALIZATION NOTE dcharIso1Cmd.label Don't change any of the ISO numbers here -->
 <!ENTITY dcharIso1Cmd.label "Western (ISO-8859-1)">
 <!ENTITY dcharIso2Cmd.label "Central European (ISO-8859-2)">
 <!ENTITY dcharIso3Cmd.label "Esperanto/Maltese (ISO-8859-3)">
@@ -81,6 +84,7 @@
 
 <!ENTITY fileCarbonCopyCmd.label "File Carbon Copy">
 
+<!--LOCALIZATION NOTE Debug Menu Don't translate anything in the Debug menu section -->
 <!-- Debug Menu, imported from editorAppShell.dtd -->
 <!ENTITY debugMenu.label "Debug">
 <!ENTITY outputTextCmd.label "Output Text">
@@ -98,6 +102,7 @@
 <!ENTITY stopLogCmd.label "Stop Log">
 <!ENTITY runLogCmd.label "Run Log">
 
+<!--LOCALIZATION NOTE Toolbar items Don't change any "chrome://" URLs -->
 <!-- Toolbar items -->
 <!ENTITY sendButton.img "chrome://messengercompose/skin/send.gif">
 <!ENTITY sendButton.label "Send">
@@ -116,6 +121,7 @@
 <!ENTITY throbberButton.url "http://www.mozilla.org/">
 
 <!-- Toolbar items, imported from editorAppShell.xul -->
+<!--LOCALIZATION NOTE formatToolbar. Don't change any of these Style Characters -->
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
