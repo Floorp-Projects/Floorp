@@ -985,8 +985,6 @@ nsLocalFile::CopyMove(nsIFile *aParentDir, const nsACString &newName, PRBool fol
         if (newName.IsEmpty())
             return NS_ERROR_INVALID_ARG;
 
-        move = PR_TRUE;
-        
         rv = GetParent(getter_AddRefs(newParentDir));
         if (NS_FAILED(rv))
             return rv;
