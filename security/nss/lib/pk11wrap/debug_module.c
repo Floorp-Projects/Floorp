@@ -900,6 +900,7 @@ CK_RV NSSDBGC_SetAttributeValue(
     PR_LOG(modlog, 3, ("  hObject = 0x%x", hObject));
     PR_LOG(modlog, 3, ("  pTemplate = 0x%p", pTemplate));
     PR_LOG(modlog, 3, ("  ulCount = %d", ulCount));
+    print_template(pTemplate, ulCount);
     start = PR_IntervalNow();
     rv = module_functions->C_SetAttributeValue(hSession,
                                  hObject,
@@ -1004,6 +1005,7 @@ CK_RV NSSDBGC_EncryptInit(
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
     PR_LOG(modlog, 3, ("  pMechanism = 0x%p", pMechanism));
     PR_LOG(modlog, 3, ("  hKey = 0x%x", hKey));
+    print_mechanism(pMechanism);
     start = PR_IntervalNow();
     rv = module_functions->C_EncryptInit(hSession,
                                  pMechanism,
@@ -1119,6 +1121,7 @@ CK_RV NSSDBGC_DecryptInit(
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
     PR_LOG(modlog, 3, ("  pMechanism = 0x%p", pMechanism));
     PR_LOG(modlog, 3, ("  hKey = 0x%x", hKey));
+    print_mechanism(pMechanism);
     start = PR_IntervalNow();
     rv = module_functions->C_DecryptInit(hSession,
                                  pMechanism,
@@ -1232,6 +1235,7 @@ CK_RV NSSDBGC_DigestInit(
     PR_LOG(modlog, 1, ("C_DigestInit"));
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
     PR_LOG(modlog, 3, ("  pMechanism = 0x%p", pMechanism));
+    print_mechanism(pMechanism);
     start = PR_IntervalNow();
     rv = module_functions->C_DigestInit(hSession,
                                  pMechanism);
@@ -1470,6 +1474,7 @@ CK_RV NSSDBGC_SignRecoverInit(
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
     PR_LOG(modlog, 3, ("  pMechanism = 0x%p", pMechanism));
     PR_LOG(modlog, 3, ("  hKey = 0x%x", hKey));
+    print_mechanism(pMechanism);
     start = PR_IntervalNow();
     rv = module_functions->C_SignRecoverInit(hSession,
                                  pMechanism,
@@ -1527,6 +1532,7 @@ CK_RV NSSDBGC_VerifyInit(
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
     PR_LOG(modlog, 3, ("  pMechanism = 0x%p", pMechanism));
     PR_LOG(modlog, 3, ("  hKey = 0x%x", hKey));
+    print_mechanism(pMechanism);
     start = PR_IntervalNow();
     rv = module_functions->C_VerifyInit(hSession,
                                  pMechanism,
@@ -1633,6 +1639,7 @@ CK_RV NSSDBGC_VerifyRecoverInit(
     PR_LOG(modlog, 3, ("  hSession = 0x%x", hSession));
     PR_LOG(modlog, 3, ("  pMechanism = 0x%p", pMechanism));
     PR_LOG(modlog, 3, ("  hKey = 0x%x", hKey));
+    print_mechanism(pMechanism);
     start = PR_IntervalNow();
     rv = module_functions->C_VerifyRecoverInit(hSession,
                                  pMechanism,
@@ -1822,6 +1829,8 @@ CK_RV NSSDBGC_GenerateKey(
     PR_LOG(modlog, 3, ("  pTemplate = 0x%p", pTemplate));
     PR_LOG(modlog, 3, ("  ulCount = %d", ulCount));
     PR_LOG(modlog, 3, ("  phKey = 0x%p", phKey));
+    print_template(pTemplate, ulCount);
+    print_mechanism(pMechanism);
     start = PR_IntervalNow();
     rv = module_functions->C_GenerateKey(hSession,
                                  pMechanism,
@@ -1860,6 +1869,9 @@ CK_RV NSSDBGC_GenerateKeyPair(
     PR_LOG(modlog, 3, ("  ulPrivateKeyAttributeCount = %d", ulPrivateKeyAttributeCount));
     PR_LOG(modlog, 3, ("  phPublicKey = 0x%p", phPublicKey));
     PR_LOG(modlog, 3, ("  phPrivateKey = 0x%p", phPrivateKey));
+    print_template(pPublicKeyTemplate, ulPublicKeyAttributeCount);
+    print_template(pPrivateKeyTemplate, ulPrivateKeyAttributeCount);
+    print_mechanism(pMechanism);
     start = PR_IntervalNow();
     rv = module_functions->C_GenerateKeyPair(hSession,
                                  pMechanism,
@@ -1898,6 +1910,7 @@ CK_RV NSSDBGC_WrapKey(
     PR_LOG(modlog, 3, ("  hKey = 0x%x", hKey));
     PR_LOG(modlog, 3, ("  pWrappedKey = 0x%p", pWrappedKey));
     PR_LOG(modlog, 3, ("  pulWrappedKeyLen = 0x%p", pulWrappedKeyLen));
+    print_mechanism(pMechanism);
     start = PR_IntervalNow();
     rv = module_functions->C_WrapKey(hSession,
                                  pMechanism,
@@ -1937,6 +1950,8 @@ CK_RV NSSDBGC_UnwrapKey(
     PR_LOG(modlog, 3, ("  pTemplate = 0x%p", pTemplate));
     PR_LOG(modlog, 3, ("  ulAttributeCount = %d", ulAttributeCount));
     PR_LOG(modlog, 3, ("  phKey = 0x%p", phKey));
+    print_template(pTemplate, ulAttributeCount);
+    print_mechanism(pMechanism);
     start = PR_IntervalNow();
     rv = module_functions->C_UnwrapKey(hSession,
                                  pMechanism,
@@ -1974,6 +1989,8 @@ CK_RV NSSDBGC_DeriveKey(
     PR_LOG(modlog, 3, ("  pTemplate = 0x%p", pTemplate));
     PR_LOG(modlog, 3, ("  ulAttributeCount = %d", ulAttributeCount));
     PR_LOG(modlog, 3, ("  phKey = 0x%p", phKey));
+    print_template(pTemplate, ulAttributeCount);
+    print_mechanism(pMechanism);
     start = PR_IntervalNow();
     rv = module_functions->C_DeriveKey(hSession,
                                  pMechanism,
