@@ -97,7 +97,7 @@ libs:: fontEncoding.properties
 install:: fontEncoding.properties
 	$(INSTALL) $^ $(DESTDIR)$(mozappdir)/res/fonts
 
-DEFINES	+= -D_IMPL_NS_GFXNONXP -DWIN32_LEAN_AND_MEAN -DSTRICT 
+DEFINES	+= -DWIN32_LEAN_AND_MEAN -DSTRICT 
 
 EXTRA_DSO_LDOPTS += \
 		$(EXTRA_DSO_LIBS) \

@@ -77,7 +77,6 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
                 $(NULL)
 
-DEFINES		+= -D_IMPL_NS_GFXNONXP
 ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_BSD_SOURCE
 endif

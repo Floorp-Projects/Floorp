@@ -43,14 +43,6 @@
 #define NS_WIDGET NS_IMPORT
 #endif
 
-#ifdef _IMPL_NS_GFXNONXP
-#define NS_GFXNONXP NS_EXPORT
-#define NS_GFXNONXP_(type) NS_EXPORT_(type)
-#else
-#define NS_GFXNONXP NS_IMPORT
-#define NS_GFXNONXP_(type) NS_IMPORT_(type)
-#endif
-
 #ifdef _IMPL_NS_GFX
 #define NS_GFX NS_EXPORT
 #define NS_GFX_(type) NS_EXPORT_(type)
