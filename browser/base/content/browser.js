@@ -431,23 +431,6 @@ function WindowFocusTimerCallback(element)
   }
 }
 
-function BrowserFlushBookmarksAndHistory()
-{
-  // Flush bookmarks and history (used when window closes or is cached).
-  try {
-    // If bookmarks are dirty, flush 'em to disk
-    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                         .getService(Components.interfaces.nsIRDFRemoteDataSource);
-    bmks.Flush();
-
-    // give history a chance at flushing to disk also
-    var history = Components.classes["@mozilla.org/browser/global-history;1"]
-                            .getService(Components.interfaces.nsIRDFRemoteDataSource);
-    history.Flush();
-  } catch(ex) {
-  }
-}
-
 function Shutdown()
 {
   // remove remote support
@@ -465,8 +448,6 @@ function Shutdown()
 
   window.XULBrowserWindow.destroy();
   window.XULBrowserWindow = null;
-
-  BrowserFlushBookmarksAndHistory();
 
   window.browserContentListener.close();
   // Close the app core.
