@@ -45,7 +45,14 @@
 
 NS_IMPL_ISUPPORTS2(nsCookie, nsICookie, nsISupportsWeakReference);
 
-nsCookie::nsCookie() {
+nsCookie::nsCookie()
+: cookieName(0),
+  cookieValue(0),
+  cookieIsDomain(PR_FALSE),
+  cookieHost(0),
+  cookiePath(0),
+  cookieIsSecure(PR_FALSE)
+{
   NS_INIT_ISUPPORTS();
 }
 
@@ -58,24 +65,30 @@ nsCookie::nsCookie
    PRBool isSecure,
    PRUint64 expires,
    nsCookieStatus status,
-   nsCookiePolicy policy) {
-  cookieName = name;
-  cookieValue = value;
-  cookieIsDomain = isDomain;
-  cookieHost = host;
-  cookiePath = path;
-  cookieIsSecure = isSecure;
+   nsCookiePolicy policy)
+: cookieName(name),
+  cookieValue(value),
+  cookieIsDomain(isDomain),
+  cookieHost(host),
+  cookiePath(path),
+  cookieIsSecure(isSecure)
+{
+  NS_INIT_ISUPPORTS();
+
   cookieExpires = expires;
   cookieStatus = status;
   cookiePolicy = policy;
-  NS_INIT_ISUPPORTS();
 }
 
 nsCookie::~nsCookie(void) {
-  nsCRT::free(cookieName);
-  nsCRT::free(cookieValue);
-  nsCRT::free(cookieHost);
-  nsCRT::free(cookiePath);
+  if (cookieName)
+    nsCRT::free(cookieName);
+  if (cookieValue)
+    nsCRT::free(cookieValue);
+  if (cookieHost)
+    nsCRT::free(cookieHost);
+  if (cookiePath)
+    nsCRT::free(cookiePath);
 }
 
 NS_IMETHODIMP nsCookie::GetName(nsACString& aName) {
