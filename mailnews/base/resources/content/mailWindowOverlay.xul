@@ -442,10 +442,10 @@ Rights Reserved.
 					<menuitem value="&ignoreThreadMsgsCmd.label;" disabled="true" oncommand="MsgViewIgnoreThread();"/>
 				</menupopup>
 			</menu>
-			<menu id="viewheadersmenu" value="&headersMenu.label;" disabled="true">
+			<menu id="viewheadersmenu" value="&headersMenu.label;">
 				<menupopup>
-					<menuitem id="viewallheaders" type="radio" name="viewheadergroup" value="&headersAllCmd.label;" disabled="true" oncommand="MsgViewAllHeaders();"/>
-					<menuitem id="viewnormalheaders" type="radio" name="viewheadergroup" value="&headersNormalCmd.label;" disabled="true" oncommand="MsgViewNormalHeaders();"/>
+					<menuitem id="viewallheaders" type="radio" name="viewheadergroup" value="&headersAllCmd.label;"  oncommand="MsgViewAllHeaders();"/>
+					<menuitem id="viewnormalheaders" type="radio" name="viewheadergroup" value="&headersNormalCmd.label;" oncommand="MsgViewNormalHeaders();"/>
 					<menuitem id="viewbriefheaders" type="radio" name="viewheadergroup" value="&headersBriefCmd.label;" disabled="true" oncommand="MsgViewBriefHeaders();"/>
 				</menupopup>
 			</menu>
