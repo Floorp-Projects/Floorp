@@ -1464,7 +1464,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_TRY: {
         ptrdiff_t start, end;
         ptrdiff_t catchStart = -1, finallyCatch = -1, catchjmp = -1;
-        JSParseNode *iter = pn;
+        JSParseNode *iter;
         uint16 depth;
 
 /* Emit JSOP_GOTO that points to the first op after the catch/finally blocks */
@@ -1528,7 +1528,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         end = CG_OFFSET(cg);
 
         /* If this try has a catch block, emit it. */
-        if (pn->pn_kid2) {
+        iter = pn->pn_kid2;
+        if (iter) {
             catchStart = end;
 
             /*
@@ -1557,9 +1558,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 JSStmtInfo stmtInfo2;
                 JSParseNode *disc;
                 ptrdiff_t guardnote;
-
-                iter = iter->pn_kid2;
-                disc = iter->pn_kid1;
 
                 if (!UpdateLinenoNotes(cx, cg, iter))
                     return JS_FALSE;
@@ -1596,6 +1594,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 }
 
                 /* initcatchvar <atomIndex> */
+                disc = iter->pn_kid1;
                 ale = js_IndexAtom(cx, disc->pn_atom, &cg->atomList);
                 if (!ale)
                     return JS_FALSE;
@@ -1654,10 +1653,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 EMIT_CATCH_GOTO(cx, cg, jmp);
                 if (jmp < 0)
                     return JS_FALSE;
-
-                if (!iter->pn_kid2)
-                    break;
-            } while (iter);
+            } while ((iter = iter->pn_kid2) != NULL);
         }
 
         /*
