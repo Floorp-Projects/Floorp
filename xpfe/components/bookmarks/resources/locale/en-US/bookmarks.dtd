@@ -62,9 +62,9 @@
 <!ENTITY tree.header.name.label         "Name">
 <!ENTITY tree.header.url.label          "Location">
 <!ENTITY tree.header.shortcut.label     "Keyword">
-<!ENTITY tree.header.addedon.label      "Added On">
+<!ENTITY tree.header.addedon.label      "Added">
 <!ENTITY tree.header.lastmod.label      "Last Modified">
-<!ENTITY tree.header.lastvisit.label    "Last Visit">
+<!ENTITY tree.header.lastvisit.label    "Last Visited">
 <!ENTITY tree.header.description.label  "Description">
 <!ENTITY bookmarksWindowTitle.label	    "Bookmarks">
 
