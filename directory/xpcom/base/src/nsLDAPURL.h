@@ -43,9 +43,9 @@
 class nsLDAPURL : public nsILDAPURL
 {
   public:
-    NS_DECL_ISUPPORTS;
-    NS_DECL_NSIURI;
-    NS_DECL_NSILDAPURL;
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIURI
+    NS_DECL_NSILDAPURL
 
     nsLDAPURL();
     virtual ~nsLDAPURL();

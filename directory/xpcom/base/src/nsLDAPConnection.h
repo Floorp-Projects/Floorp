@@ -55,9 +55,9 @@ class nsLDAPConnection : public nsILDAPConnection, nsIRunnable
     friend class nsLDAPMessage;
 
   public:
-    NS_DECL_ISUPPORTS;
-    NS_DECL_NSIRUNNABLE;
-    NS_DECL_NSILDAPCONNECTION;
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIRUNNABLE
+    NS_DECL_NSILDAPCONNECTION
 
     // constructor & destructor
     //

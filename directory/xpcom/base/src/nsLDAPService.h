@@ -51,8 +51,8 @@ class nsLDAPService : public nsIRunnable
  public: 
   // interface decls
   //
-  NS_DECL_ISUPPORTS;
-  NS_DECL_NSIRUNNABLE;
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
 
   // constructor and destructor
   //
