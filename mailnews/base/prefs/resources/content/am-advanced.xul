@@ -8,30 +8,5 @@
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       align="vertical">
 
-<html:div>&advancedSettings.label;</html:div>
-<html:div>&smtpServer.label;</html:div>
-
-<box align="vertical" class="cleanborder">
-  <html:div>&smtpDesc.label;</html:div>
-  <box align="horizontal">
-     <html:div>&smtpHostname.label;</html:div>
-     <spring flex="100%"/>
-     <html:input type="text"/>
-  </box>
-  <box align="horizontal">
-     <html:div>&smtpUsername.label;</html:div>
-     <spring flex="100%"/>
-     <html:input type="text"/>
-  </box>
-</box>
-
-<html:div>&mailFolderLoc.label;</html:div>
-<box align="vertical" class="cleanborder">
-  <html:div>&storeMailHere.label;</html:div>
-  <box align="horizontal">
-    <html:input type="text" flex="100%"/>
-    <titledbutton value="&chooseFolderButton.label;"/>
-  </box>
-</box>
 
 </window>
