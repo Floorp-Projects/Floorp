@@ -18,7 +18,7 @@
   {0xADFB3740, 0xAA57, 0x11d2, \
     { 0xB7, 0xED, 0x00, 0x80, 0x5F, 0x05, 0xFF, 0xA5 }}
 
-class nsINNTPHost {
+class nsINNTPHost : public nsISupports {
  private:
   void operator delete(void *); // NOT TO BE IMPLEMENTED
 

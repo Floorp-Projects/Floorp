@@ -20,10 +20,12 @@ IGNORE_MANIFEST=1
 
 EXPORTS =							\
 		nsINNTPNewsgroupList.h		\
-		nsINNTPNewsHost.h			\
+		nsINNTPCategory.h			\
+		nsINNTPHost.h				\
 		nsINNTPNewsgroup.h 			\
 		nsIMsgOfflineNewsState.h 	\
 		nsINNTPArticleList.h 		\
+		nsINntpURL.h				\
         $(NULL)
 
 MODULE=mailnews
