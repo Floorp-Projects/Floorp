@@ -1138,8 +1138,22 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   nsZipCacheEntry* entry = (nsZipCacheEntry*)mZips.Get(&key);
   if (entry) {
     *result = entry->mZip;
-    entry->mUseCount++;
     NS_ADDREF(*result);
+    if (entry->mUseCount++ == 0) {
+      // remove from free list
+      nsZipCacheEntry** entryPtr = &mFreeList;
+      NS_ASSERTION(*entryPtr, "null free list");
+      while ((*entryPtr)->mNextOlder != nsnull) {
+        if ((*entryPtr)->mNextOlder == entry) {
+          (*entryPtr)->mNextOlder = entry->mNextOlder;
+          entry->mNextOlder = nsnull;
+          --mFreeCount;
+          return NS_OK;
+        }
+        entryPtr = &(*entryPtr)->mNextOlder;
+      }
+      NS_NOTREACHED("couldn't find entry in free list");
+    }
     return NS_OK;
   }
 
