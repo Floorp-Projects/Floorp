@@ -96,12 +96,15 @@ function createEnclosure(paletteItem, currentRow)
   // Create an enclosure for the item.
   var enclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                        "toolbarpaletteitem");
-  enclosure.setAttribute("align", "center");
-  enclosure.setAttribute("pack", "center");
   enclosure.setAttribute("flex", "1");
+  if (paletteItem.localName != "toolbarseparator")
+    enclosure.setAttribute("align", "center");
+  
+  enclosure.setAttribute("pack", "center");
   enclosure.setAttribute("width", "0");
   enclosure.setAttribute("minheight", "0");
   enclosure.setAttribute("minwidth", "0");
+
   enclosure.setAttribute("ondraggesture", "gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragObserver)");
 
   enclosure.appendChild(paletteItem);
@@ -120,7 +123,8 @@ function buildPalette(paletteBox, toolbar, currentSet)
   // Add the toolbar separator first.
   var node = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                       "toolbarseparator");
-  node.id = "separator";
+  node.setAttribute("id", "separator");
+
   createEnclosure(node, currentRow);
 
   node = toolbar.palette.firstChild;
@@ -340,6 +344,13 @@ var paletteDNDObserver = {
       return;
     }
 
+    gToolbarChanged = true;
+
+    if (itemID == "separator") {
+      item.parentNode.removeChild(item);
+      return;
+    }
+
     // We're going back in the palette now, so we have to readd the flex
     // and width which we removed when moving the item to the toolbar.
     // (These attributes help space the items properly in the palette.)
@@ -353,8 +364,6 @@ var paletteDNDObserver = {
     item.setAttribute("minwidth", "0");
     item.setAttribute("ondraggesture", "gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragObserver)");
  
-    gToolbarChanged = true;
-
     // Now insertBefore |item| in the right place.
     var target = aEvent.target;
     
