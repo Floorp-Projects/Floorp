@@ -46,6 +46,7 @@ OBJS	= \
 EXPORTS = \
 	mhtmlstm.h \
 	mprdecod.h \
+      msg.h \
 	$(NULL)
 
 MODULE=mailto
