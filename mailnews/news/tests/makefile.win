@@ -19,7 +19,8 @@ DEPTH=..\..\..
 
 include <$(DEPTH)\config\config.mak>
 
-#tests are broken right now
-#DIRS = nntp newsParser
+DIRS = nntp
+#newsParser is still broken
+#DIRS += newsParser
 
 include <$(DEPTH)\config\rules.mak>

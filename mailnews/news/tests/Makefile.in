@@ -22,8 +22,9 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-#tests are broken right now
-#DIRS = nntp newsParser
+DIRS = nntp 
+#newsParser is still broken
+#DIRS += newsParser
 
 include $(topsrcdir)/config/config.mk
 
