@@ -33,7 +33,7 @@ struct nsStyleSpacing;
  */
 class nsBlockReflowContext {
 public:
-  nsBlockReflowContext(nsIPresContext& aPresContext,
+  nsBlockReflowContext(nsIPresContext* aPresContext,
                        const nsHTMLReflowState& aParentRS,
                        PRBool aComputeMaxElementSize);
   ~nsBlockReflowContext() { }
@@ -99,14 +99,14 @@ public:
 
   static PRBool IsHTMLParagraph(nsIFrame* aFrame);
 
-  static nscoord ComputeCollapsedTopMargin(nsIPresContext& aPresContext,
+  static nscoord ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
                                            nsHTMLReflowState& aRS);
 
 protected:
   nsStyleUnit GetRealMarginLeftUnit();
   nsStyleUnit GetRealMarginRightUnit();
 
-  nsIPresContext& mPresContext;
+  nsIPresContext* mPresContext;
   const nsHTMLReflowState& mOuterReflowState;
 
   nsIFrame* mFrame;
