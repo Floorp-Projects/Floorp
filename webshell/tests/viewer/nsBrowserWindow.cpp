@@ -662,7 +662,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
                                          kINetServiceIID,
                                          (nsISupports **)&netservice);
       if ((NS_OK == res) && (nsnull != netservice)) {
-        res = netservice->Cookie_DisplayCookieInfoAsHTML();
+//        res = netservice->Cookie_DisplayCookieInfoAsHTML();
         NS_RELEASE(netservice);
       }
 #endif // NECKO
@@ -676,7 +676,7 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->SI_DisplaySignonInfoAsHTML();
+//    res = walletservice->SI_DisplaySignonInfoAsHTML();
     NS_RELEASE(walletservice);
   }
   break;
