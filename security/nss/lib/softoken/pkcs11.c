@@ -2413,6 +2413,25 @@ static void nscFreeAllSlots(int moduleIndex)
     }
 }
 
+static void
+pk11_closePeer(PRBool isFIPS)
+{
+    CK_SLOT_ID slotID = isFIPS ? PRIVATE_KEY_SLOT_ID: FIPS_SLOT_ID;
+    PK11Slot *slot;
+    int moduleIndex = isFIPS? NSC_NON_FIPS_MODULE : NSC_FIPS_MODULE;
+    PLHashTable *tmpSlotHashTable = nscSlotHashTable[moduleIndex];
+
+    slot = (PK11Slot *) PL_HashTableLookup(tmpSlotHashTable, (void *)slotID);
+    if (slot == NULL) {
+	return;
+    }
+    pk11_DBShutdown(slot->certDB,slot->keyDB);
+    slot->certDB = NULL;
+    slot->keyDB = NULL;
+    return;
+}
+
+static PRBool nsc_init = PR_FALSE;
 
 /* NSC_Initialize initializes the Cryptoki library. */
 CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
@@ -2454,6 +2473,12 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 	    goto loser;
 	}
 
+	/* if we have a peer already open, have him close his DB's so we
+	 * don't clobber each other. */
+	if ((isFIPS && nsc_init) || (!isFIPS && nsf_init)) {
+	    pk11_closePeer(isFIPS);
+	}
+
 	for (i=0; i < paramStrings.token_count; i++) {
 	    crv = 
 		PK11_SlotInit(paramStrings.configdir, &paramStrings.tokens[i],
@@ -2470,7 +2495,6 @@ loser:
     return crv;
 }
 
-static PRBool nsc_init = PR_FALSE;
 CK_RV NSC_Initialize(CK_VOID_PTR pReserved)
 {
     CK_RV crv;
