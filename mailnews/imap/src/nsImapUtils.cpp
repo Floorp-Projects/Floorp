@@ -36,29 +36,6 @@
 #include "nsIImapFlagAndUidState.h"
 
 nsresult
-nsGetImapServer(const char* username, const char* hostname,
-                nsIMsgIncomingServer ** aResult)
-{
-    nsresult rv = NS_OK; 
-
-    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
-    if(NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = accountManager->FindServer(username,
-                                    hostname,
-                                    "imap",
-                                    getter_AddRefs(server));
-    if (NS_FAILED(rv)) return rv;
-
-    *aResult = server;
-    NS_IF_ADDREF(*aResult);
-
-    return rv;
-}
-
-nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
 	nsresult rv;
@@ -115,10 +92,14 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 	}
 
 	nsCOMPtr<nsIMsgIncomingServer> server;
-	rv = nsGetImapServer((const char *) username,
-						 (const char *) hostname,
-                       getter_AddRefs(server));
-  
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  if(NS_FAILED(rv)) return rv;
+
+  rv = accountManager->FindServer(username,
+                                  hostname,
+                                  "imap",
+                                  getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
   
   if (server) {
@@ -180,18 +161,6 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
     uri.Right(fullName, uri.Length() - hostEnd - 1);
     if (fullName == "") return NS_ERROR_FAILURE;
     *name = fullName.ToNewCString();
-    return NS_OK;
-}
-
-nsresult
-nsURI2ProtocolType(const char* uriStr, nsString& type)
-{
-    nsAutoString uri = uriStr;
-    PRInt32 typeEnd = uri.FindChar(':');
-    if (typeEnd < 1)
-        return NS_ERROR_FAILURE;
-    uri.SetLength(typeEnd);
-    type = uri;
     return NS_OK;
 }
 

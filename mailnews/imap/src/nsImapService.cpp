@@ -46,6 +46,8 @@
 #include "nsILoadGroup.h"
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
+#include "nsIMsgAccountManager.h"
+#include "nsMsgBaseCID.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
@@ -2291,8 +2293,13 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     aImapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(folderName));
     if (NS_FAILED(rv)) return rv;
     
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
     nsCOMPtr<nsIMsgIncomingServer> aServer;
-    rv = nsGetImapServer(userName, hostName, getter_AddRefs(aServer));
+    rv = accountManager->FindServer(userName, hostName, "imap",
+                                    getter_AddRefs(aServer));
     // if we can't extract the imap server from this url then give up!!!
     if (NS_FAILED(rv)) return rv;
 
