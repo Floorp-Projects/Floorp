@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.19 2002/05/16 20:48:27 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.20 2002/05/21 21:26:14 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -242,6 +242,7 @@ certdb_Sync(DB *db, unsigned int flags)
     return(ret);
 }
 
+#define DB_NOT_FOUND -30991  /* from DBM 3.2 */
 static int
 certdb_Del(DB *db, DBT *key, unsigned int flags)
 {
@@ -254,6 +255,11 @@ certdb_Del(DB *db, DBT *key, unsigned int flags)
     ret = (* db->del)(db, key, flags);
     
     prstat = PZ_Unlock(dbLock);
+
+    /* don't fail if the record is already deleted */
+    if (ret == DB_NOT_FOUND) {
+	ret = 0;
+    }
 
     return(ret);
 }
@@ -2717,7 +2723,6 @@ RemovePermSubjectNode(NSSLOWCERTCertificate *cert)
     SECStatus rv;
     
     entry = ReadDBSubjectEntry(cert->dbhandle,&cert->derSubject);
-    PORT_Assert(entry);
     if ( entry == NULL ) {
 	return(SECFailure);
     }
