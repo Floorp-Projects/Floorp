@@ -2411,8 +2411,17 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     }
 
     // Use the document's url since the style data came from there
-    url = mDocumentURL;
-    NS_IF_ADDREF(url);
+    if (0 < mBaseHREF.Length()) { // use base URL
+      rv = NS_NewURL(&url, mBaseHREF);
+      if (NS_FAILED(rv)) {
+        url = mDocumentURL;
+        NS_IF_ADDREF(url);
+      }
+    }
+    else {
+      url = mDocumentURL;
+      NS_IF_ADDREF(url);
+    }
   } else {
     // src with immediate style data doesn't add up
     // XXX what does nav do?
@@ -2540,6 +2549,7 @@ HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
     nsICSSStyleSheet* sheet = nsnull;
     // XXX note: we are ignoring rv until the error code stuff in the
     // input routines is converted to use nsresult's
+    parser->SetCaseSensative(PR_FALSE);
     parser->Parse(aUIN, aURL, sheet);
     if (nsnull != sheet) {
       sheet->SetTitle(aTitle);
