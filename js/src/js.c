@@ -379,12 +379,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 
         /* Clear any pending exception from previous failed compiles.  */
         JS_ClearPendingException(cx);
-        script = JS_CompileScript(cx, obj, buffer, strlen(buffer),
-#ifdef JSDEBUGGER
-                                  "typein",
-#else
-                                  NULL,
-#endif
+        script = JS_CompileScript(cx, obj, buffer, strlen(buffer), "typein",
                                   startline);
         if (script) {
             ok = JS_ExecuteScript(cx, obj, script, &result);
