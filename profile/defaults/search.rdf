@@ -53,9 +53,9 @@
 
 
   <RDF:Seq about="NC:SearchCategory?category=urn:search:category:1">
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:NetscapeSearch.src" />
     <RDF:li resource="NC:SearchCategory?engine=urn:search:engine:google.src" />
-  	<RDF:li resource="NC:SearchCategory?engine=urn:search:engine:dmoz.src" />
+    <RDF:li resource="NC:SearchCategory?engine=urn:search:engine:dmoz.src" />
+    <RDF:li resource="NC:SearchCategory?engine=urn:search:engine:jeeves.src" />
   </RDF:Seq>
 
   <RDF:Seq about="NC:SearchCategory?category=urn:search:category:2">
