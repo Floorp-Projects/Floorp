@@ -534,12 +534,12 @@ il_get_container(IL_GroupContext *img_cx,
 
         ILTRACE(2, ("il: create ic=0x%08x\n", ic));
 
-        if (nsCRT::strncmp(image_url,"chrome", 6) == 0) {
+#ifdef PIN_CHROME
+        if (nsCRT::strncmp(image_url,"chrome", 6) == 0) 
 		    ic->moz_type = TYPE_CHROME;
-    	}
-	    else {
+	    else 
+#endif
 		    ic->moz_type = TYPE_DEFAULT;
-	    }
 
         ic->hash = hash;
         ic->urlhash = urlhash;
