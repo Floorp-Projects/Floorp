@@ -88,11 +88,7 @@
 #define THROBBER_HEIGHT 32
 #define BUTTON_WIDTH 90
 #define BUTTON_HEIGHT THROBBER_HEIGHT
-#ifdef XP_PC
-#define STATUS_HEIGHT 24
-#else
-#define STATUS_HEIGHT 28
-#endif
+
 #ifdef INSET_WEBSHELL
 #define WEBSHELL_LEFT_INSET 5
 #define WEBSHELL_RIGHT_INSET 5
@@ -970,6 +966,15 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
 void
 nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 {
+  nscoord txtHeight;
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+  } else {
+    txtHeight = 24;
+  }
+
+
   // position location bar (it's stretchy)
   if (mLocation) {
     if (mThrobber) {
@@ -998,10 +1003,10 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   }
 
   if (mStatus) {
-    mStatus->Resize(0, aHeight - STATUS_HEIGHT,
-                    aWidth, STATUS_HEIGHT,
+    mStatus->Resize(0, aHeight - txtHeight,
+                    aWidth, txtHeight,
                     PR_TRUE);
-    rr.height -= STATUS_HEIGHT;
+    rr.height -= txtHeight;
   }
 
   // inset the web widget
