@@ -314,7 +314,12 @@ void nsSimpleCharString::LeafReplace(char inSeparator, const char* inLeafName)
         return;
     }
     char* chars = mData->mString;
+#if defined(XP_PC) && !defined(XP_OS2)
+    // XXX OS/2 should use strrchr() of DBCS verison, too
+    char* lastSeparator = (char*) _mbsrchr((const unsigned char*) chars, inSeparator);
+#else
     char* lastSeparator = strrchr(chars, inSeparator);
+#endif
     int oldLength = Length();
     PRBool trailingSeparator = (lastSeparator + 1 == chars + oldLength);
     if (trailingSeparator)
@@ -322,7 +327,12 @@ void nsSimpleCharString::LeafReplace(char inSeparator, const char* inLeafName)
         char savedCh = *lastSeparator;
         char *savedLastSeparator = lastSeparator;
         *lastSeparator = '\0';
+#if defined(XP_PC) && !defined(XP_OS2)
+        // XXX OS/2 should use strrchr() of DBCS verison, too
+        lastSeparator = (char*) _mbsrchr((const unsigned char*) chars, inSeparator);
+#else
         lastSeparator = strrchr(chars, inSeparator);
+#endif
         *savedLastSeparator = savedCh;
     }
     if (lastSeparator)
