@@ -161,7 +161,7 @@ static PRBool gDoAsyncReflowAfterDocLoad = PR_FALSE;
 // 200 bytes
 class FrameArena {
 public:
-  FrameArena(PRUint32 aArenaSize = 2048);
+  FrameArena(PRUint32 aArenaSize = 4096);
   ~FrameArena();
 
   // Memory management functions
