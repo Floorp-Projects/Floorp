@@ -169,5 +169,19 @@
 	  <xul:spring class="tab-border-top-right-cap"/>
 	</content>
   </binding>
+  
+  <binding id="largeheader" extends="chrome://communicator/content/dialogBindings.xml#largeheader">
+    <content>
+      <xul:box class="box-header-header" flex="1" autostretch="never">
+        <xul:box class="box-header-icon-box" autostretch="never">
+          <xul:image inherits="src" class="box-header-icon"/>
+        </xul:box>
+        <xul:box autostretch="never" class="box-header-text-box">
+          <xul:text class="box-header-text" inherits="value"/>
+        </xul:box>
+        <xul:spring flex="1"/>
+      </xul:box>
+    </content>
+  </binding>  
 
 </bindings>

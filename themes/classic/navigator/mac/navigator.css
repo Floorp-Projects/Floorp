@@ -5,28 +5,26 @@
 @import url(chrome://communicator/skin/bookmarks/bookmarks.css);
 @import url(chrome://communicator/skin/sidebar/sidebar.css);
 
+#content
+  {
+    border-left           : 1px solid #000000;
+    border-bottom         : 1px solid #000000;
+  }
+
+#browser
+  {
+    border-left           : 1px solid #9D9D9D;
+  }  
+  
+
 #ubhist 
   {
     margin                : 0px;
-    background-color      : #DDDDDD;
     list-style-image      : url("chrome://global/skin/scroll-down.gif");
+    width                 : 14px;
+    height                : 14px;
   }
 
-#ubhist > .menubutton-icon-internal-box
-  {
-    border-left           : 1px solid #FFFFFF;
-    border-top            : 1px solid #FFFFFF;
-    border-right          : 1px solid #9D9D9D;
-    border-bottom         : 1px solid #9D9D9D;
-  }  
-
-#ubhist:hover:active > .menubutton-icon-internal-box,
-#ubhist[open="true"] > .menubutton-icon-internal-box
-  {
-    border                : 1px solid #9D9D9D;
-  }  
-  
-  
 #urlbar-container
   {
     padding               : 3px 2px 2px 3px;

@@ -54,7 +54,7 @@
     { 
       background-color    : #DDDDDD;
       padding             : 0px;
-      font				  : 10px geneva;
+      font				        : 10px geneva;
     }
   
   window[wait-cursor] 
@@ -66,6 +66,10 @@
     { 
       background-color    : #DDDDDD;
       padding             : 7px 5px 5px 5px;
+      border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
+      border-right        : 1px solid #DDDDDD;
+      border-bottom       : 1px solid #DDDDDD;
     }
 
 /**

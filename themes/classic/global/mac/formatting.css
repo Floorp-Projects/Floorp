@@ -4,6 +4,10 @@
   {
     background-color      : #DDDDDD;
     color                 : #000000;
+    border-left           : 1px solid #FFFFFF;
+    border-top            : 1px solid #FFFFFF;
+    border-right          : 1px solid #DDDDDD;
+    border-bottom         : 1px solid #DDDDDD;    
   }
   
 .color-window

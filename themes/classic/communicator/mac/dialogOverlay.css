@@ -8,7 +8,7 @@
     margin                : 0px 5px 6px 5px;
   }
 
-.toolbar-primary
+.box-smallheader-box.toolbar-primary
   {
     padding               : 0px 0px 3px 0px;
     min-height            : 0px;
@@ -39,13 +39,15 @@
  **/
 .box-header 
   {
-    behavior              : url(chrome://communicator/content/dialogBindings.xml#largeheader);
+    behavior              : url(chrome://global/skin/classicBindings.xml#largeheader);
+    border-bottom         : 1px solid #FFFFFF;
+    background-color      : #FFFFFF;
   }
 
 .box-header-header 
   {
-    padding               : 0px 0px 4px 5px;
-    min-height            : 34px;
+    border-bottom         : 1px solid #DDDDDD;
+    padding               : 5px;
   }
 
 .box-header-text-box 
@@ -56,9 +58,8 @@
 .box-header-text 
   {
     color                 : #000000;
-    font-size             : large;
-    font-weight           : bold;
-    text-decoration       : underline;
+	font                  : 12px charcoal ! important;
+    margin-left           : 7px;
   }
 
 .box-header-icon-box  
@@ -66,16 +67,10 @@
     vertical-align        : middle;
   }
   
-.box-header-circle 
+.box-header-icon 
   {
-    background-image      : url("chrome://global/skin/button28-bg.gif");
-    background-repeat     : no-repeat;
-    background-position   : 50% 4px;
-    background-color      : transparent;
-    min-width             : 28px;
-    margin                : 1px 7px 1px 1px;
-    height                : 28px;
-    width                 : 28px;
+    list-style-image      : inherit;
+    margin-left           : 2px;
   }  
 
 /**
@@ -83,38 +78,6 @@
  **/
 .box-status 
   {
-    behavior              : url(chrome://communicator/content/dialogBindings.xml#status);
+    display               : none;
   }
-
-.box-status-bg 
-  {
-    padding               : 1px 5px 1px 5px;
-    min-height            : 0px ! important;
-  }
-
-.box-status-text, .box-status-progress
-  {
-    color                 : #99cccc ! important;
-  }
-
   
-/** 
- * Utility classes for use when combined headers/footers are used
- **/
-/* display area framed container */
-#contentarea 
-  {
-    border-top            : 2px groove #CCCCCC;
-    border-bottom         : 2px groove #CCCCCC;
-    padding               : 7px;
-  }
-
-/* top border on status area */
-#wizardButtons 
-  {
-    border-bottom         : 1px outset #CCCCCC;
-    padding-top           : 1px;
-    padding-bottom        : 1px;
-  }
-
-
