@@ -102,17 +102,21 @@ nsresult createNode(PRUint32 value, nsIRDFNode **node, nsIRDFService *rdfService
 
 nsresult createNode(const char* charstr, nsIRDFNode **node, nsIRDFService *rdfService)
 {
-  nsresult rv;
+  nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   // use nsString to convert to unicode
 	if (!rdfService) return NS_ERROR_NULL_POINTER;  
 	nsCOMPtr<nsIRDFLiteral> value;
   nsString str(charstr);
   PRUnichar *ucharstr = str.ToNewUnicode();
+  if (ucharstr)
+  {
 	rv = rdfService->GetLiteral(ucharstr, getter_AddRefs(value));
 	if(NS_SUCCEEDED(rv)) {
 		*node = value;
 		NS_IF_ADDREF(*node);
 	}
+	nsAllocator::Free(ucharstr);
+  }
   return rv;
 }
 
