@@ -24,95 +24,95 @@ interface nsIMsgCompFields : nsISupports {
 
 	void Copy(in nsIMsgCompFields pMsgCompFields);
 
-	long SetHeader(in long header, in string value);
-	string GetHeader(in long header);
+	void SetHeader(in long header, in wstring value);
+	wstring GetHeader(in long header);
 
-	long SetBoolHeader(in long header, in boolean bValue);
+	void SetBoolHeader(in long header, in boolean bValue);
 	boolean GetBoolHeader(in long header);
 
 	/* Convenience routines to get and set header's value... */
-	long SetFrom(in string value);
-	string GetFrom();
+	void SetFrom(in wstring value);
+	wstring GetFrom();
 
-	long SetReplyTo(in string value);
-	string GetReplyTo();
+	void SetReplyTo(in wstring value);
+	wstring GetReplyTo();
 
-	long SetTo(in string value);
-	string GetTo();
+	void SetTo(in wstring value);
+	wstring GetTo();
 
-	long SetCc(in string value);
-	string GetCc();
+	void SetCc(in wstring value);
+	wstring GetCc();
 
-	long SetBcc(in string value);
-	string GetBcc();
+	void SetBcc(in wstring value);
+	wstring GetBcc();
 
-	long SetFcc(in string value);
-	string GetFcc();
+	void SetFcc(in wstring value);
+	wstring GetFcc();
 
-	long SetNewsFcc(in string value);
-	string GetNewsFcc();
+	void SetNewsFcc(in wstring value);
+	wstring GetNewsFcc();
 
-	long SetNewsBcc(in string value);
-	string GetNewsBcc();
+	void SetNewsBcc(in wstring value);
+	wstring GetNewsBcc();
 
-	long SetNewsgroups(in string value);
-	string GetNewsgroups();
+	void SetNewsgroups(in wstring value);
+	wstring GetNewsgroups();
 
-	long SetFollowupTo(in string value);
-	string GetFollowupTo();
+	void SetFollowupTo(in wstring value);
+	wstring GetFollowupTo();
 
-	long SetSubject(in string value);
-	string GetSubject();
+	void SetSubject(in wstring value);
+	wstring GetSubject();
 
-	long SetAttachments(in string value);
-	string GetAttachments();
+	void SetAttachments(in wstring value);
+	wstring GetAttachments();
 
-	long SetOrganization(in string value);
-	string GetOrganization();
+	void SetOrganization(in wstring value);
+	wstring GetOrganization();
 
-	long SetReferences(in string value);
-	string GetReferences();
+	void SetReferences(in wstring value);
+	wstring GetReferences();
 
-	long SetOtherRandomHeaders(in string value);
-	string GetOtherRandomHeaders();
+	void SetOtherRandomHeaders(in wstring value);
+	wstring GetOtherRandomHeaders();
 
-	long SetNewspostUrl(in string value);
-	string GetNewspostUrl();
+	void SetNewspostUrl(in wstring value);
+	wstring GetNewspostUrl();
 
-	long SetDefaultBody(in string value);
-	string GetDefaultBody();
+	void SetDefaultBody(in wstring value);
+	wstring GetDefaultBody();
 
-    long SetPriority(in string value);
-    string GetPriority();
+    void SetPriority(in wstring value);
+    wstring GetPriority();
 
-	long SetMessageEncoding(in string value);
-	string GetMessageEncoding();
+	void SetMessageEncoding(in wstring value);
+	wstring GetMessageEncoding();
 
-	long SetCharacterSet(in string value);
-	string GetCharacterSet();
+	void SetCharacterSet(in wstring value);
+	wstring GetCharacterSet();
 
-	long SetMessageId(in string value);
-	string GetMessageId();
+	void SetMessageId(in wstring value);
+	wstring GetMessageId();
 
-	long SetHTMLPart(in string value);
-	string GetHTMLPart();
+	void SetHTMLPart(in wstring value);
+	wstring GetHTMLPart();
 
-	long SetTemplateName(in string value);
-	string GetTemplateName();
+	void SetTemplateName(in wstring value);
+	wstring GetTemplateName();
 
-	long SetReturnReceipt(in boolean value);
+	void SetReturnReceipt(in boolean value);
 	boolean GetReturnReceipt();
 
-	long SetAttachVCard(in boolean value);
+	void SetAttachVCard(in boolean value);
 	boolean GetAttachVCard();
 
-	long SetBody(in string value);
-	string GetBody();
+	void SetBody(in wstring value);
+	wstring GetBody();
 
-	long SetUUEncodeAttachments(in boolean value);
+	void SetUUEncodeAttachments(in boolean value);
 	boolean GetUUEncodeAttachments();
 
-	long SetTheForcePlainText(in boolean value);
+	void SetTheForcePlainText(in boolean value);
 	boolean GetTheForcePlainText();
 };
 

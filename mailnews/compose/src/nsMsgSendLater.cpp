@@ -453,23 +453,24 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   // Since we have already parsed all of the headers, we are simply going to
   // set the composition fields and move on.
   //
+  nsMsgCompFields * fields = (nsMsgCompFields *)compFields.get();
   if (m_to)
-  	compFields->SetTo(m_to, NULL);
+  	fields->SetTo(m_to);
 
   if (m_bcc)
-  	compFields->SetBcc(m_bcc, NULL);
+  	fields->SetBcc(m_bcc);
 
   if (m_fcc)
-  	compFields->SetFcc(m_fcc, NULL);
+  	fields->SetFcc(m_fcc);
 
   if (m_newsgroups)
-    compFields->SetNewsgroups(m_newsgroups, NULL);
+    fields->SetNewsgroups(m_newsgroups);
 
   // If we have this, we found a HEADER_X_MOZILLA_NEWSHOST which means
   // that we saved what the user typed into the "Newsgroup" line in this
   // header
   if (m_newshost)
-    compFields->SetNewsgroups(m_newshost, NULL);
+    fields->SetNewsgroups(m_newshost);
 
   // Create the listener for the send operation...
   mSendListener = new SendOperationListener();

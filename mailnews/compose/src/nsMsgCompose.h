@@ -72,7 +72,7 @@ class nsMsgCompose : public nsIMsgCompose
 	NS_IMETHOD GetDomWindow(nsIDOMWindow * *aDomWindow);
 
 	/* readonly attribute nsIMsgCompFields compFields; */
-	NS_IMETHOD GetCompFields(nsIMsgCompFields * *aCompFields);
+	NS_IMETHOD GetCompFields(nsIMsgCompFields * *aCompFields); //GetCompFields will addref, you need to release when your are done with it
 	
 	/* readonly attribute boolean composeHTML; */
 	NS_IMETHOD GetComposeHTML(PRBool *aComposeHTML);
@@ -86,6 +86,7 @@ class nsMsgCompose : public nsIMsgCompose
 
 private:
 
+	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, const PRUnichar *callback);
 	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsISupports* object);
 	void HackToGetBody(PRInt32 what); //Temporary
 	void CleanUpRecipients(nsString& recipients);
@@ -96,7 +97,7 @@ private:
 	nsIDOMWindow*				m_window;
 	nsIWebShell*				m_webShell;
 	nsIWebShellWindow*			m_webShellWin;
-	nsCOMPtr<nsIMsgCompFields> 	m_compFields;
+	nsMsgCompFields* 			m_compFields;
 	PRBool						m_composeHTML;
   QuotingOutputStreamImpl *mOutStream;
   nsCOMPtr<nsIOutputStream>          mBaseStream;

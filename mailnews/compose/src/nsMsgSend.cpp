@@ -385,7 +385,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	if (mCompFields->GetMessageId() == nsnull || *mCompFields->GetMessageId() == 0)
 	{
 		char * msgID = msg_generate_message_id(mUserIdentity);
-		mCompFields->SetMessageId(msgID, nsnull);
+		mCompFields->SetMessageId(msgID);
 		PR_FREEIF(msgID);
 	}
 
@@ -1068,7 +1068,7 @@ int nsMsgComposeAndSend::SetMimeHeader(MSG_HEADER_SET header, const char *value)
 
 	if (dupHeader) 
   {
-		mCompFields->SetHeader(header, dupHeader, &ret);
+		ret = mCompFields->SetHeader(header, dupHeader);
 		PR_Free(dupHeader);
 	}
 	return ret;
@@ -1089,22 +1089,21 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 	else
 		return MK_OUT_OF_MEMORY;
 
-  char *cset = nsnull;
-  nsresult lrv = fields->GetCharacterSet(&cset);
+  const char *cset = fields->GetCharacterSet();
   // Make sure charset is sane...
-  if (NS_FAILED(lrv) || !cset || !*cset)
+  if (!cset || !*cset)
   {
-    mCompFields->SetCharacterSet("us-ascii", nsnull);
+    mCompFields->SetCharacterSet("us-ascii");
   }
   else
   {
-    mCompFields->SetCharacterSet(fields->GetCharacterSet(), nsnull);
+    mCompFields->SetCharacterSet(fields->GetCharacterSet());
   }
 
 	pStr = fields->GetMessageId();
 	if (pStr)
 	{
-		mCompFields->SetMessageId((char *) pStr, nsnull);
+		mCompFields->SetMessageId((char *) pStr);
 		/* Don't bother checking for out of memory; if it fails, then we'll just
 		   let the server generate the message-id, and suffer with the
 		   possibility of duplicate messages.*/
@@ -1128,9 +1127,9 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   if (fieldsFCC && *fieldsFCC)
   {
     if (PL_strcasecmp(fieldsFCC, "nocopy://") == 0)
-      mCompFields->SetFcc("", nsnull);
+      mCompFields->SetFcc("");
     else
-      mCompFields->SetFcc(fieldsFCC, nsnull);
+      mCompFields->SetFcc(fieldsFCC);
   }
   else
   {
@@ -1142,16 +1141,16 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
     if ( (uri) || (*uri) )
     {
       if (PL_strcasecmp(uri, "nocopy://") == 0)
-        mCompFields->SetFcc("", nsnull);
+        mCompFields->SetFcc("");
       else
-        mCompFields->SetFcc(uri, nsnull);
+        mCompFields->SetFcc(uri);
     }
     else
-      mCompFields->SetFcc("", nsnull);
+      mCompFields->SetFcc("");
   }
 
-	mCompFields->SetNewspostUrl((char *) fields->GetNewspostUrl(), nsnull);
-	mCompFields->SetDefaultBody((char *) fields->GetDefaultBody(), nsnull);
+	mCompFields->SetNewspostUrl((char *) fields->GetNewspostUrl());
+	mCompFields->SetDefaultBody((char *) fields->GetDefaultBody());
 
 	/* strip whitespace from and duplicate header fields. */
 	SetMimeHeader(MSG_FROM_HEADER_MASK, fields->GetFrom());
@@ -1169,17 +1168,16 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 
 	pStr = fields->GetOtherRandomHeaders();
 	if (pStr)
-		mCompFields->SetOtherRandomHeaders((char *) pStr, nsnull);
+		mCompFields->SetOtherRandomHeaders((char *) pStr);
 
 	pStr = fields->GetPriority();
 	if (pStr)
-		mCompFields->SetPriority((char *) pStr, nsnull);
+		mCompFields->SetPriority((char *) pStr);
 
 	int i, j = (int) MSG_LAST_BOOL_HEADER_MASK;
 	for (i = 0; i < j; i++) 
   {
-		mCompFields->SetBoolHeader((MSG_BOOL_HEADER_SET) i,
-		fields->GetBoolHeader((MSG_BOOL_HEADER_SET) i), nsnull);
+		mCompFields->SetBoolHeader((MSG_BOOL_HEADER_SET) i, fields->GetBoolHeader((MSG_BOOL_HEADER_SET) i));
 	}
 
 	mCompFields->SetForcePlainText(fields->GetForcePlainText());
@@ -2180,11 +2178,9 @@ nsMsgComposeAndSend::SendWebPage(nsIMsgIdentity                    *aUserIndenti
   SetListenerArray(aListenerArray);
 
   /* string GetBody(); */
-  char          *msgBody = nsnull;
   PRInt32       bodyLen;
-
-  rv = fields->GetBody(&msgBody);
-  if (NS_FAILED(rv) || (!msgBody))
+  const char    *msgBody = ((nsMsgCompFields*)fields)->GetBody();
+  if (!msgBody)
   {
     const char *body = nsnull;
     url->GetSpec(&body);

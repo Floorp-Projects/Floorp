@@ -1750,7 +1750,7 @@ nsMsgMIMEGenerateMailtoFormPostHeaders (const char *old_post_url,
 	  goto FAIL;
   }
 
-  fields->SetDefaultBody(body, NULL);
+  fields->SetDefaultBody(body);
 
   *headers_return = mime_generate_headers (fields, 0, nsMsgDeliverNow);
   if (*headers_return == 0)

@@ -82,7 +82,7 @@
 #define HJ91531	
 #define HJ62011 
 #define HJ41792 \
-    fields->SetNewspostUrl("news:", NULL);
+    fields->SetNewspostUrl("news:");
 
 #define HJ70669
 #define HJ77514
