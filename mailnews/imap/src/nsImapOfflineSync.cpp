@@ -50,6 +50,8 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIFileStream.h"
 #include "nsIMsgCopyService.h"
+#include "nsImapProtocol.h"
+
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 NS_IMPL_ISUPPORTS2(nsImapOfflineSync, nsIUrlListener, nsIMsgCopyServiceListener)
@@ -107,6 +109,10 @@ nsImapOfflineSync::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
       m_listener->OnStopRunningUrl(url, NS_BINDING_ABORTED);
     return NS_OK;
   }
+  nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(url);
+
+  if (imapUrl)
+    nsImapProtocol::LogImapUrl(NS_SUCCEEDED(rv) ? "offline imap url succeeded:" : "offline imap url failed:", imapUrl);
   // NS_BINDING_ABORTED is used for the user pressing stop, which
   // should cause us to abort the offline process. Other errors
   // should allow us to continue.
