@@ -318,6 +318,19 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       focusevent.message = NS_FOCUS_CONTENT;
 
       if (mDocument) {
+      
+        if(gLastFocusedDocument && gLastFocusedDocument != mDocument) {
+          // fire a blur, on the document only to keep ender happy
+          nsEventStatus blurstatus = nsEventStatus_eIgnore;
+          nsEvent blurevent;
+          blurevent.eventStructType = NS_EVENT;
+          blurevent.message = NS_BLUR_CONTENT;
+      
+          if(gLastFocusedPresContext) {
+            gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
+          }
+        }
+        
         // fire focus on window, not document
         nsCOMPtr<nsIScriptGlobalObject> globalObject;
         mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
