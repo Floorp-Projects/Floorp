@@ -33,6 +33,7 @@
 #include "prmon.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
+#include "nsXPIDLString.h"
 
 class nsFactoryEntry;
 class nsDll;
@@ -182,8 +183,8 @@ protected:
 
 class nsFactoryEntry {
 public:
-    nsFactoryEntry(const nsCID &aClass, char *location, char *aType,
-                   nsIComponentLoader *aLoader);
+    nsFactoryEntry(const nsCID &aClass, const char *location,
+                   const char *aType, nsIComponentLoader *aLoader);
     nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
     ~nsFactoryEntry();
 
@@ -209,9 +210,9 @@ public:
     }
 
     nsCID cid;
-    char *location;
+    nsXPIDLCString location;
     nsCOMPtr<nsIFactory> factory;
-    char *type;
+    nsXPIDLCString type;
     nsCOMPtr<nsIComponentLoader> loader;
 };
 

@@ -87,10 +87,9 @@ proto.addCategoryEntry = function (category, entry, value, persist, replace) {
 
 function deleteEntryFromRegistry(category, entry)
 {
-    dump("(not) deleting " + category + "[" + entry + "] from reg\n");
     try {
         var categorySubtree = registry.getSubtreeRaw(categoriesKey, category);
-        /* registry.deleteValue(categorySubtree, entry); */
+        registry.deleteValue(categorySubtree, entry);
     } catch (e :
              e instanceof Components.interfaces.nsIXPCException &&
              e.result === 0x80510003 /* XXX NS_ERROR_REG_NOT_FOUND */) {
@@ -124,17 +123,13 @@ function deleteCategoryFromRegistry(category) {
 proto.deleteCategory = function (category, persist) {
    delete this.categories[category];
    /*
-    * Don't check for delete success, because persist means to remove from
-    * registry, even if someone has already done a non-persistent removal
-    * before.
+    * Don't check for delete success above, because persist means to
+    * remove from registry, even if someone has already done a
+    * non-persistent removal before.
     */
    if (persist)
        deleteCategoryFromRegistry(category);
 };
-
-function CategoryEnumerator(category) {
-    this.category = category;
-};    
 
 proto.enumerateCategory = function (category) {
     return new CategoryEnumerator(this.categories[category] || { });
@@ -234,6 +229,29 @@ proto.loadRegistryData = function() {
         try { en.next(); } catch (e) { }
     }
 }
+
+function CategoryEnumerator(category) {
+    this.contents = contents = [];
+    for (var i in category.table)
+        contents.push(i);
+};    
+
+CategoryEnumerator.prototype = {
+    hasMoreElements: function() {
+        return this.index !== this.contents.length;
+    },
+    
+    getNext: function() {
+        if (!this.hasMoreElements())
+            return null;        // XXX?
+        var str = Components.classes["component://netscape/supports-string"]
+            .createInterface(Components.interfaces.nsISupportsString);
+        str.data = this.contents[this.index++];
+        return str;
+    },
+
+    index: 0
+};
 
 var module = {
     registerSelf: function (compMgr, fileSpec, location, type) {

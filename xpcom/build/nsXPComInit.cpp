@@ -543,6 +543,12 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     NS_ASSERTION(NS_SUCCEEDED(rv), "Component Manager shutdown failed.");
 #endif
 
+    // Release our own singletons
+    // Do this _after_ shutting down the component manager, because the
+    // JS component loader will use XPConnect to call nsIModule::canUnload,
+    // and that will spin up the InterfaceInfoManager again -- bad mojo
+    XPTI_FreeInterfaceInfoManager();
+
     // Finally, release the component manager last because it unloads the
     // libraries:
     NS_RELEASE2(nsComponentManagerImpl::gComponentManager, cnt);

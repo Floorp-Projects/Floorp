@@ -34,7 +34,7 @@ static const char gIDFormat2[] =
  * an nsID
  */
 
-NS_COM PRBool nsID::Parse(char *aIDStr)
+NS_COM PRBool nsID::Parse(const char *aIDStr)
 {
   PRInt32 count = 0;
   PRInt32 n1, n2, n3[8];

@@ -27,23 +27,22 @@ interface nsIComponentLoader : nsISupports {
     /**
      * Get the factory for a given component.
      */
-    nsIFactory GetFactory(in nsIIDRef aCID, in string aLocation,
+    nsIFactory getFactory(in nsIIDRef aCID, in string aLocation,
                           in string aType);
 
     /**
      * Initialize the loader.
      *
      * We use nsISupports here because nsIRegistry isn't IDLized yet.
-     * Should we pass in a service manager reference too/instead?
      */
-    void Init(in nsIComponentManager aCompMgr, in nsISupports aRegistry);
+    void init(in nsIComponentManager aCompMgr, in nsISupports aRegistry);
     
     /**
      * Called when a component of the appropriate type is registered,
      * to give the component loader an opportunity to do things like
      * annotate the registry and such.
      */
-    void OnRegister(in nsIIDRef aCID, in string aType,
+    void onRegister(in nsIIDRef aCID, in string aType,
                     in string aClassName, in string aProgID,
                     in string aLocation, in boolean aReplace,
                     in boolean aPersist);
@@ -58,7 +57,7 @@ interface nsIComponentLoader : nsISupports {
     /**
      * AutoRegister components in the given directory.
      */
-    void AutoRegisterComponents(in long aWhen, in nsIFileSpec aDirectory);
+    void autoRegisterComponents(in long aWhen, in nsIFileSpec aDirectory);
 
     /**
      * AutoRegister the given component.
@@ -67,11 +66,17 @@ interface nsIComponentLoader : nsISupports {
      * attempt to register the component (wrong type) and ``throws'' an
      * NS_FAILED code if there was an error during registration.
      */
-    boolean AutoRegisterComponent(in long aWhen, in nsIFileSpec aComponent);
+    boolean autoRegisterComponent(in long aWhen, in nsIFileSpec aComponent);
+
+    /**
+     * Register any deferred (NS_ERROR_FACTORY_REGISTER_AGAIN) components.
+     * Return registered-any-components?
+     */
+    boolean registerDeferredComponents(in long aWhen);
 
     /**
      * Unload all components that are willing.
      */
-    void UnloadAll(in long aWhen);
+    void unloadAll(in long aWhen);
     
 };

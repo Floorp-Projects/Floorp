@@ -71,7 +71,7 @@ struct nsID {
    * nsID Parsing method. Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
    * string into an nsID
    */
-  NS_COM PRBool Parse(char *aIDStr);
+  NS_COM PRBool Parse(const char *aIDStr);
 
   /**
    * nsID string encoder. Returns an allocated string in 

@@ -28,8 +28,8 @@
 
 [scriptable, uuid(D1899240-F9D2-11D2-BDD6-000064657374)]
 interface nsISimpleEnumerator : nsISupports {
-  boolean HasMoreElements();
-  nsISupports GetNext();
+  boolean hasMoreElements();
+  nsISupports getNext();
 };
 
 /*
@@ -67,11 +67,11 @@ interface nsIBidirectionalEnumerator : nsIEnumerator {
 
   /** Last will reset the list to the end. will return NS_FAILED if no items
    */
-  void Last();
+  void last();
 
   /** Prev will decrement the list. will return failed if already at beginning
    */
-  void Prev();
+  void prev();
 };
 
 %{C++

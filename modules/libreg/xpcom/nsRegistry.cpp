@@ -27,6 +27,8 @@
 #include "prmem.h"
 #include "prlock.h"
 #include "prlog.h"
+#include "nsCRT.h"
+#include "nsAllocator.h"
 
 /* extra locking for the paranoid */
 /* #define EXTRA_THREADSAFE */
@@ -306,18 +308,6 @@ static void reginfo2Length( const REGINFO &in, PRUint32 &out ) {
     }
 }
 
-/*-------------------------------- PR_strdup -----------------------------------
-| Utility function that does PR_Malloc and copies argument string.  Caller     |
-| must do PR_Free.                                                             |
-------------------------------------------------------------------------------*/
-static char *PR_strdup( const char *in ) {
-    char *result = (char*)PR_Malloc( strlen( in ) + 1 );
-    if ( result ) {
-        strcpy( result, in );
-    }
-    return result;
-}
-
 /*------------------------ nsISupports Implementation --------------------------
 | This code generates the implementation of the nsISupports member functions   |
 | for each class implemented in this file.                                     |
@@ -525,12 +515,8 @@ NS_IMETHODIMP nsRegistry::GetString( nsRegistryKey baseKey, const char *path, ch
 
     if ( err == REGERR_OK )
     {
-        // Allocate buffer for return value
-        PRUint32 vallen = PL_strlen(regStr);
-        *result = (char*)PR_Malloc( vallen + 1 );
-        if (*result)
-            PL_strcpy(*result, regStr);
-        else
+        *result = nsCRT::strdup(regStr);
+        if (!*result)
             rv = NS_ERROR_OUT_OF_MEMORY;
     }
     else if ( err == REGERR_BUFTOOSMALL ) 
@@ -541,7 +527,7 @@ NS_IMETHODIMP nsRegistry::GetString( nsRegistryKey baseKey, const char *path, ch
         // See if that worked.
         if( rv == NS_OK ) 
         {
-            *result =(char*)PR_Malloc( length + 1 );
+            *result =(char*)nsAllocator::Alloc( length + 1 );
             if( *result ) 
             {
                 // Get string from registry into result buffer.
@@ -554,7 +540,7 @@ NS_IMETHODIMP nsRegistry::GetString( nsRegistryKey baseKey, const char *path, ch
                 if ( rv != NS_OK )
                 {
                     // Didn't get result, free buffer
-                    PR_Free( *result );
+                    nsCRT::free( *result );
                     *result = 0;
                 }
             }
@@ -1173,7 +1159,7 @@ nsRegistryNode::~nsRegistryNode()
 NS_IMETHODIMP nsRegistryNode::GetName( char **result ) {
     if (result == NULL) return NS_ERROR_NULL_POINTER;
     // Make sure there is a place to put the result.
-    *result = PR_strdup( mName );
+    *result = nsCRT::strdup( mName );
     if ( !*result ) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
@@ -1223,7 +1209,7 @@ NS_IMETHODIMP nsRegistryValue::GetName( char **result ) {
         rv = getInfo();            
         if( rv == NS_OK || rv == NS_ERROR_REG_NO_MORE ) {
             // worked, return actual result.
-            *result = PR_strdup( mName );
+            *result = nsCRT::strdup( mName );
             if ( *result ) {
                 rv = NS_OK;
             } else {
