@@ -27,8 +27,9 @@ dnl AC_CONFIG_HEADER(include/config.h nsprpub/include/config.h)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
 
-# Set this define to make fixes w/o breaking anything else
+dnl Set this define to make fixes w/o breaking anything else
 AC_DEFINE(USE_AUTOCONF)
+AC_DEFINE(MOZILLA_CLIENT)
 
 d=`pwd`
 if [ test "${srcdir}" = "${d}" || test "${srcdir}" = "." ]; then
@@ -248,7 +249,7 @@ AC_CACHE_VAL(ac_cv_ios_binary,
                  [ac_ios_binary=true],
                  [ac_ios_binary=false])
   ac_cv_ios_binary=$ac_ios_binary])
-ac_syserrlist=$ac_cv_ios_binary
+ac_ios_binary=$ac_cv_ios_binary
 if test $ac_ios_binary = true ; then
   AC_DEFINE(HAVE_IOS_BINARY)
   AC_MSG_RESULT(yes)
@@ -858,9 +859,9 @@ if [ test -n "$MISSING_NSPR" ]; then
 fi
 
 dnl Need to manual make the directories to get around deficiency in AC_OUTPUT
-mkdir lib
-mkdir modules
-mkdir modules/security
+for d in lib modules modules/security; do
+   if [ test ! -d $d ]; then rm -f $d; mkdir $d; fi
+done
 
 NG_MAKEFILES="
 Makefile
