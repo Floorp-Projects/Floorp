@@ -162,7 +162,8 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
 			  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-			  onunload="EditorShutdown()" title="&textEditorWindow.title;" align="vertical">
+			  onunload="EditorShutdown()" title="&textEditorWindow.title;" align="vertical"
+			  width="640" height="480">
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js">
   </html:script>
@@ -196,12 +197,15 @@
   <broadcaster id="dialog.start" ready="false"/>
   <observes element="dialog.start" attribute="ready" onchange="EditorStartup('text')"/>
     
-  
+  <broadcaster id="Editor:Document:Dirty" dirty="false"/>
   <broadcaster id="Editor:Style:IsBold" bold="false"/>
-  <broadcaster id="Editor:Style:IsItalic"/>
-  <broadcaster id="Editor:Style:IsUnderline"/>
+  <broadcaster id="Editor:Style:IsItalic" italic="false"/>
+  <broadcaster id="Editor:Style:IsUnderline" underline="false"/>
+  <broadcaster id="Editor:Paragraph:Format" format=""/>
+  <broadcaster id="Editor:Font:Face" font=""/>
+  <broadcaster id="Editor:Font:Size" size=""/>
 
-  <toolbox>
+  <toolbox id="EditorToolbars">
     <menubar>
     <menu value="&fileMenu.label;">
 	  <menupopup>
@@ -258,6 +262,7 @@
       <menuitem value="&insertBreakBelowImagesCmd.label;" onaction=""/>
 	  </menupopup>
     </menu>
+
     <menu value="&formatMenu.label;">
 	  <menupopup>
       <menu value="&fontfaceMenu.label;">
@@ -312,7 +317,7 @@
         <menuitem value="&paragraphDfnDescCmd.label;"   onaction="EditorSetParagraphFormat('dd')"/>
         </menupopup>
 	  </menu>
-	  </menupopup>
+     </menupopup>
     </menu>
     <menu value="&toolsMenu.label;">
       <menupopup>
@@ -343,17 +348,17 @@
 	<spring flex="100%"/>
   </menubar>
   
-      <toolbar>
+      <toolbar id="EditToolbar">
 		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="left" popup="ParagraphMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="FontFacePopup" value="&fontToolbarMenu.label;" class="popup" align="left" popup="FontFaceMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="FontSizePopup" value="&sizeToolbarMenu.label;" class="popup" align="left" popup="FontSizeMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popup="TextColorMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popup="BackColorMenu" popupanchor="bottomleft"/>
-        <titledbutton id="BoldButton" value="&formatToolbar.boldChar;" onclick="EditorApplyStyle('b')">
+        <titledbutton id="boldButton" value="&formatToolbar.boldChar;" onclick="EditorApplyStyle('b')">
 		      <observes element="Editor:Style:IsBold" attribute="bold" onchange="onBoldChange()"/>
         </titledbutton>
-	      <titledbutton id="&styleItalicCmd.label;" value="&formatToolbar.italicChar;" onclick="EditorApplyStyle('i')"/>
-	      <titledbutton id="&styleUnderlineCmd.label;" value="&formatToolbar.underlineChar;" onclick="EditorApplyStyle('u')"/>
+	      <titledbutton id="italicButton" value="&formatToolbar.italicChar;" onclick="EditorApplyStyle('i')"/>
+	      <titledbutton id="underlineButton" value="&formatToolbar.underlineChar;" onclick="EditorApplyStyle('u')"/>
 	      <titledbutton src="&bulletListIcon.url;" onclick="EditorInsertList('ul')"/>
 	      <titledbutton src="&numberListIcon.url;" onclick="EditorInsertList('ol')"/>
 	      <titledbutton src="&outdentIcon.url;" onclick="EditorIndent('outdent')"/>
@@ -362,22 +367,23 @@
 	      <titledbutton src="&linkIcon.url;" value="&linkToolbarCmd.label;" onclick="EditorInsertLink()"/>
 	      <titledbutton src="&imageIcon.url;" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
 	      <titledbutton src="&spellingIcon.url;" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
+		  <spring flex="100%"/>
       </toolbar>
     </toolbox>
 
     <html:iframe type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
     <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
-    <box align="horizontal" id="status-bar">
+    <box align="horizontal" id="EditorStatusBar">
       <titledbutton value="&tempNotification.label;" onclick="doTests()"/>
-	    <box align="vertical" style="width:100px">
+	    <box id="EditorProgressBox" align="vertical" flex="100%">
 		    <spring flex="100%"/>
 		    <progressmeter mode="normal" value="0">
 		    </progressmeter>
 		    <spring flex="100%"/>
   	  </box>
-      <titledbutton id="statusText" align="left" flex="100%" value="&tempDoneLoading.label;" style="font-family:sans-serif;font-size:2.5mm">
-	    </titledbutton>
+      <titledbutton id="statusText" align="right" flex="100%" value="&tempDoneLoading.label;" style="font-family:sans-serif;font-size:2.5mm">
+	  </titledbutton>
     </box>
 
 <!-- Popup Menus and Windows - Not displayed in primary chrome -->
@@ -437,7 +443,7 @@
 </popup>
 
 <popup id="TextColorMenu">
-  <menu>
+  <menu class="popup">
     <menuitem value="&colorBlackCmd.label;" onaction="EditorSetFontColor('black')"/>
     <menuitem value="&colorGrayCmd.label;" onaction="EditorSetFontColor('gray')"/>
     <menuitem value="&colorSilverCmd.label;" onaction="EditorSetFontColor('silver')"/>
