@@ -31,6 +31,7 @@ class nsIPresContext;
 class nsIPresShell;
 class nsISelection;
 class nsIStreamListener;
+class nsIStreamObserver;
 class nsIStyleSet;
 class nsIStyleSheet;
 class nsIURL;
@@ -47,10 +48,16 @@ class nsIDeviceContext;
   {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
 // specification for data to be sent via form "post"
-class nsIPostData {
+// IID for the nsIPostData interface -  152ab6e0-ff13-11d1-beb9-00805f8a66dc
+#define NS_IPOSTDATA_IID      \
+{ 0x152ab6e0, 0xff13, 0x11d1, \
+  {0xbe, 0xb9, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
+
+class nsIPostData : public nsISupports {
 public:
   virtual PRBool       IsFile()  = 0;    // is the data a file (or raw data)
   virtual const char*  GetData() = 0;    // get the file name or raw data
+  virtual PRInt32      GetDataLength() = 0;
 };
 
 //----------------------------------------------------------------------
@@ -63,10 +70,9 @@ public:
   // returns the arena associated with this document.
   virtual nsIArena* GetArena() = 0;
 
-  NS_IMETHOD LoadURL(nsIURL* aURL,
-                     nsIStreamListener* aListener,
-                     nsIWebWidget* aWebWidget,
-                     nsIPostData* aPostData = 0) = 0;
+  NS_IMETHOD StartDocumentLoad(nsIURL *aUrl, 
+                               nsIWebWidget* aWebWidget,
+                               nsIStreamListener **aDocListener) = 0;
 
   /**
    * Return the title of the document. May return null.
@@ -197,7 +203,11 @@ public:
 // XXX Belongs somewhere else
 extern NS_LAYOUT nsresult
    NS_NewHTMLDocument(nsIDocument** aInstancePtrResult);
+
+// Note: The buffer passed into NewPostData(...) becomes owned by the IPostData
+//       instance and is freed when the instance is destroyed...
+//
 extern NS_LAYOUT nsresult
-   NS_NewPostData(nsIPostData* aPostData, nsIPostData** aInstancePtrResult);
+   NS_NewPostData(PRBool aIsFile, char *aData, nsIPostData** aInstancePtrResult);
 
 #endif /* nsIDocument_h___ */
