@@ -1440,9 +1440,10 @@ nsMsgIncomingServer::SetPort(PRInt32 aPort)
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRInt32 defaultPort;
-    // First param is set to FALSE so that the non-secure
-    // default port is returned
-    rv = protocolInfo->GetDefaultServerPort(PR_FALSE, &defaultPort);
+    PRBool isSecure = PR_FALSE;
+    // Try this, and if it fails, fall back to the non-secure port
+    GetIsSecure(&isSecure);
+    rv = protocolInfo->GetDefaultServerPort(isSecure, &defaultPort);
     if (NS_SUCCEEDED(rv) && aPort == defaultPort)
         // clear it out by setting it to the default
         rv = SetIntValue("port", PORT_NOT_SET);
