@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  prefmigr \
 		  $(NULL)
+
 include <$(DEPTH)/config/config.mak>
 
 
@@ -52,23 +53,6 @@ LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
-
-LINCS= \
-      -I..\..\base                      \
-    -I$(XPDIST)\public\prefm       \
-    -I$(XPDIST)\public\rdf         \
-    -I$(XPDIST)\public\js          \
-    -I$(XPDIST)\public\netlib      \
-    -I$(XPDIST)\public\network     \
-    -I$(XPDIST)\public\dom         \
-    -I$(XPDIST)\public\xpcom       \
-    -I$(XPDIST)\public\util        \
-    -I$(XPDIST)\public\nspr2       \
-    -I$(XPDIST)\public\pref        \
-    -I$(XPDIST)\public\raptor      \
-    -I$(XPDIST)\public\libreg      \
-    -I$(XPDIST)\public\xpfe\components \
-    $(NULL)
 
 LLIBS =                      \
     $(DIST)\lib\xpcom.lib    \
