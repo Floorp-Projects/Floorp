@@ -2002,25 +2002,21 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
             nsPoint point;
             point.x = 0;
             point.y = 0;
-            InitEvent(event,NS_COMPOSITION_START,&point);
-            event.eventStructType = NS_COMPOSITION_START;
-            event.compositionMessage = NS_COMPOSITION_START;
+            InitEvent(event,NS_COMPOSITION_QUERY,&point);
+            event.widget = NS_STATIC_CAST(nsIWidget *, this);
+            event.eventStructType = NS_COMPOSITION_QUERY;
+            event.compositionMessage = NS_COMPOSITION_QUERY;
             DispatchWindowEvent(&event);
-            NS_RELEASE(event.widget);
-            if(event.theReply.mCursorPosition.height)
+            if ((event.theReply.mCursorPosition.x) || 
+                (event.theReply.mCursorPosition.y)) 
             {
               pCursorRect->xLeft = event.theReply.mCursorPosition.x + 1;
               pCursorRect->xRight = pCursorRect->xLeft + event.theReply.mCursorPosition.width - 1;
               pCursorRect->yTop = GetClientHeight() - event.theReply.mCursorPosition.y;
-              pCursorRect->yBottom = pCursorRect->yTop - event.theReply.mCursorPosition.height + 1;
+              pCursorRect->yBottom = pCursorRect->yTop - event.theReply.mCursorPosition.height;
 
               point.x = 0;
               point.y = 0;
-              InitEvent(event,NS_COMPOSITION_END,&point);
-              event.eventStructType = NS_COMPOSITION_END;
-              event.compositionMessage = NS_COMPOSITION_END;
-              DispatchWindowEvent(&event);
-              NS_RELEASE(event.widget);
 
               rc = (MRESULT)QCP_CONVERT;
             }
