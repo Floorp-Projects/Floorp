@@ -19,7 +19,6 @@
  */
 
 @import url(chrome://communicator/skin/);
-@import url(chrome://communicator/skin/sidebar/sidebar.css);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
@@ -30,6 +29,21 @@
     border-bottom         : 1px solid #CACAFF;
     padding               : 0px !important;
   }
+
+#addressingWidgetTree > treechildren > treeitem > treerow,
+#addressingWidgetTree > treechildren > treeitem[selected="true"] > treerow {
+  border: none;
+  background-color: #ffffff;
+  color: #000000;
+}
+
+.treecell-addressingWidget {
+	vertical-align: middle;
+}
+
+#listcol-addressingWidget {
+  width: 100px;
+}
 
 .aw-menulist
   {
@@ -278,5 +292,6 @@
 } /* Workaround for bug 50217. Please remove this rule, when this bug is fixed. */
 
 #navprintplus {
-	display:none !important; 
+  display: none !important;                                                    
 }
+ 
