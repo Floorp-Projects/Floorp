@@ -2014,8 +2014,7 @@ nsresult nsExternalAppHandler::OpenWithApplication()
       NS_ASSERTION(sSrv, "Service gone away!?");
       // Mac users have been very verbal about temp files being deleted on app exit - they
       // don't like it - but we'll continue to do this on other platforms for now
-      mHelperAppService->DeleteTemporaryFileOnExit(mFinalFileDestination);
-      rv = sSrv->LaunchAppWithTempFile(mMimeInfo, mFinalFileDestination);
+      sSrv->DeleteTemporaryFileOnExit(mFinalFileDestination);
 #endif
     }
   }
