@@ -2212,12 +2212,12 @@ bool JS::PrettyPrinter::reduceLeftActiveItems(uint32 rightOffset)
 			
 			  case Item::linearBreak:
 				// Exceptions may be thrown below, but only after updating the PrettyPrinter.
-				outputBreak(lastBreak == lineNum && outputPos + leftItem->totalLength <= lineWidth, length);
+				outputBreak(savedBlocks.back().fits, length);
 				break;
 			
 			  case Item::fillBreak:
 				// Exceptions may be thrown below, but only after updating the PrettyPrinter.
-				outputBreak(savedBlocks.back().fits, length);
+				outputBreak(lastBreak == lineNum && outputPos + leftItem->totalLength <= lineWidth, length);
 				break;
 			}
 		} catch (...) {
