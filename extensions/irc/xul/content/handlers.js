@@ -28,7 +28,22 @@ function onLoad()
     initHost(client);
     readIRCPrefs();
     setClientOutput();
+    frames[0].document.location.href =
+        "chrome://chatzilla/content/outputwindow.html?" + client.DEFAULT_STYLE;
     initStatic();
+
+    client.userScripts = new Array();
+    if (client.INITIAL_SCRIPTS)
+    {
+        var urls = client.INITIAL_SCRIPTS.split (";");
+        for (var i = 0; i < urls.length; ++i)
+        {
+            client.userScripts[i] = new Object();
+            client.load(stringTrim(urls[i]), client.userScripts[i]);
+        }
+    }
+    
+    focusInput();
     mainStep();
 }
 
@@ -62,8 +77,8 @@ function onNotImplemented()
     
 }
 
-/* toolbaritem click */
-function onTBIClick (id)
+/* tab click */
+function onTabClick (id)
 {
     
     var tbi = document.getElementById (id);
@@ -71,6 +86,177 @@ function onTBIClick (id)
 
     setCurrentObject (view.source);
     
+}
+
+function onSimulateCommand (line)
+{
+    onInputCompleteLine ({line: line}, true);
+}
+
+function onPopupSimulateCommand (line)
+{
+    var nick = client._popupContext.user;
+    if (nick == "ME!")
+    {
+        var server =
+            getObjectDetails(client.currentObject).server;
+        if (server)
+            nick = server.me.properNick;
+    }
+
+    line = line.replace (/\$nick/ig, nick);
+    onInputCompleteLine ({line: line}, true);
+}
+
+function onPopupHighlight (ruleText)
+{
+    var user = client._popupContext.user;
+    
+    var rec = findDynamicRule(".msg[msg-user=" + user + "]");
+    
+    if (!ruleText)
+    {
+        if (rec)
+            rec.sheet.deleteRule(rec.index);
+        /* XXX just deleting it doesn't work */
+        addDynamicRule (".msg[msg-user=\"" + user + "\"] { }");
+    }
+    else
+    {
+        if (rec)
+            rec.sheet.deleteRule(rec.index);
+
+        addDynamicRule (".msg[msg-user=\"" + user + "\"] " +
+                        "{" + ruleText + "}");
+    }
+
+}
+
+function createPopupContext(event, target)
+{
+    var targetType;
+    client._popupContext = new Object();
+    client._popupContext.menu = event.originalTarget;
+
+    if (!target)
+        return "unknown";
+    
+    switch (target.tagName.toLowerCase())
+    {
+        case "html:a":
+            var href = target.getAttribute("href");
+            client._popupContext.url = href;
+            if (href.indexOf("irc://") == 0)
+            {
+                var obj = parseIRCUrl(href);
+                if (obj)
+                {
+                    if (obj.target)
+                        if (obj.isnick)
+                        {
+                            targetType="nick-ircurl";
+                            client._popupContext.user = obj.target;
+                        }
+                        else
+                            targetType="channel-ircurl";
+                    else
+                        targetType="untargeted-ircurl";
+                }
+                else
+                    targetType="weburl";
+            }
+            else
+                targetType="weburl";
+            break;
+            
+        case "html:td":            
+            client._popupContext.user = target.getAttribute("msg-user");
+            targetType = target.getAttribute("msg-type");
+            break;            
+    }
+
+    client._popupContext.targetType = targetType;
+    client._popupContext.targetClass = target.getAttribute("class");
+
+    return targetType;
+}
+
+function onOutputContextMenuCreate(e)
+{
+    var target = document.popupNode;
+    var foundSomethingUseful = false;
+    var targetType;
+    
+    do
+    {
+        if (target.tagName == "html:a" ||
+            target.tagName == "html:td")
+            foundSomethingUseful = true;
+        else
+            target = target.parentNode;
+    } while (target && !foundSomethingUseful);
+    
+
+    var targetType = createPopupContext(e, target);
+    var targetClass = client._popupContext.targetClass;
+    var viewType = client.currentObject.TYPE;
+    var targetIsOp = "n/a";
+    var targetIsVoice = "n/a";
+    var iAmOp = "n/a";
+    var targetUser = String(client._popupContext.user);
+    var targetServer = getObjectDetails(client.currentObject).server;
+
+    if (targetServer && targetUser == "ME!")
+    {
+        targetUser = targetServer.me.nick;
+    }
+
+    var targetProperNick = targetUser;
+    if (targetServer && targetServer.users[targetUser])
+        targetProperNick = targetServer.users[targetUser].properNick;
+    
+    if (viewType == "IRCChannel" && targetUser)
+    {
+        var cuser = client.currentObject.users[targetUser];
+        if (cuser)
+        {
+            targetIsOp = cuser.isOp ? "yes" : "no";
+            targetIsVoice = cuser.isVoice ? "yes" : "no";
+        }
+        
+        var server = getObjectDetails(client.currentObject).server;
+        if (server)
+            iAmOp = client.currentObject.users[server.me.nick].isOp ?
+                "yes" : "no";
+    }
+
+    var popup = document.getElementById ("outputContext");
+    var menuitem = popup.firstChild;
+    while (menuitem)
+    {
+        var showfor = menuitem.getAttribute("showfor");
+        
+        if (showfor)
+        {
+            showfor = showfor.replace (/\Wis\W/gi, " == ");
+            showfor = showfor.replace (/\Wor\W/gi, " || ");
+            showfor = showfor.replace (/\Wand\W/gi, " && ");
+            if (eval("(" + showfor + ")"))
+            {
+                var format = menuitem.getAttribute("format");
+                if (format)
+                {
+                    format = format.replace (/\$nick/gi, targetProperNick);
+                    menuitem.setAttribute ("label", format);
+                }
+                menuitem.setAttribute ("hidden", "false");
+            }
+            else
+                menuitem.setAttribute ("hidden", "true");
+        }
+        
+        menuitem = menuitem.nextSibling;
+    }
 }
 
 /* popup click in user list */
@@ -104,7 +290,10 @@ function onToggleTraceHook()
     h.enabled = client.debugMode = !h.enabled;
     document.getElementById("menu-dmessages").setAttribute ("checked",
                                                             h.enabled);
-    
+    if (h.enabled)
+        client.currentObject.display (getMsg("debug_on"), "INFO");
+    else
+        client.currentObject.display (getMsg("debug_off"), "INFO");
 }
 
 function onToggleSaveOnExit()
@@ -127,8 +316,8 @@ function onToggleVisibility(thing)
     
     switch (thing)
     {
-        case "toolbar":
-            ids = ["views-tbar"];
+        case "tabstrip":
+            ids = ["view-tabs"];
             break;
             
         case "info":
@@ -170,7 +359,7 @@ function onToggleVisibility(thing)
     }
 
     updateTitle();
-
+    focusInput();
 }
 
 function onDoStyleChange (newStyle)
@@ -189,11 +378,11 @@ function onDoStyleChange (newStyle)
 
 function onHideCurrentView()
 {
-    var tb = getTBForObject(client.currentObject);
+    var tb = getTabForObject(client.currentObject);
     
     if (tb)
     {
-        var i = deleteToolbutton (tb);
+        var i = deleteTab (tb);
         if (i != -1)
         {
             if (i >= client.viewsArray.length)
@@ -203,12 +392,11 @@ function onHideCurrentView()
         }
         
     }
-    
 }
 
 function onDeleteCurrentView()
 {
-    var tb = getTBForObject(client.currentObject);
+    var tb = getTabForObject(client.currentObject);
     if (client.viewsArray.length < 2)
     {
         client.currentObject.display (getMsg("onDeleteCurrentViewMsg"), "ERROR");
@@ -217,7 +405,7 @@ function onDeleteCurrentView()
     
     if (tb)
     {
-        var i = deleteToolbutton (tb);
+        var i = deleteTab (tb);
         if (i != -1)
         {
             delete client.currentObject.messages;
@@ -344,7 +532,9 @@ function onInputKeyUp (e)
     switch (e.keyCode)
     {        
         case 13: /* CR */
-            e.line = e.target.value;
+            e.line = stringTrim(e.target.value);
+            if (!e.line)
+                return;
             onInputCompleteLine (e);
             e.target.value = "";            
             break;
@@ -555,17 +745,20 @@ function onWindowKeyPress (e)
 
 }
 
-function onInputCompleteLine(e)
+function onInputCompleteLine(e, simulated)
 {
 
-    if (client.inputHistory[0] != e.line)
-        client.inputHistory.unshift (e.line);
+    if (!simulated)
+    {
+        if (client.inputHistory[0] != e.line)
+            client.inputHistory.unshift (e.line);
     
-    if (client.inputHistory.length > client.MAX_HISTORY)
-        client.inputHistory.pop();
+        if (client.inputHistory.length > client.MAX_HISTORY)
+            client.inputHistory.pop();
     
-    client.lastHistoryReferenced = -1;
-    client.incompleteLine = "";
+        client.lastHistoryReferenced = -1;
+        client.incompleteLine = "";
+    }
     
     if (e.line[0] == client.COMMAND_CHAR)
     {
@@ -670,6 +863,31 @@ function cli_icommand (e)
 
 }
 
+client.onInputCSS =
+function cli_icss (e)
+{
+    if (!e.inputData)
+        return false;
+
+    e.inputData = stringTrim(e.inputData);
+    
+    if (e.inputData.search(/^light$/i) != -1)
+        e.inputData = "chrome://chatzilla/skin/output-light.css";
+    else if (e.inputData.search(/^dark$/i) != -1)
+        e.inputData = "chrome://chatzilla/skin/output-dark.css";
+    else if (e.inputData.search(/^default$/i) != -1)
+        e.inputData = "chrome://chatzilla/skin/output-default.css";
+    else if (e.inputData.search(/^none$/i) != -1)
+        e.inputData = "chrome://chatzilla/content/output-base.css";
+    
+    client.currentObject.display (getMsg("cli_icss", e.inputData), "INFO");
+    
+    frames[0].document.location.href =
+        "chrome://chatzilla/content/outputwindow.html?" + e.inputData;
+    client.DEFAULT_STYLE = e.inputData;
+    return true;
+}
+
 client.onInputSimpleCommand =
 function cli_iscommand (e)
 {    
@@ -693,63 +911,83 @@ function cli_istatus (e)
 {    
     function serverStatus (s)
     {
-        var rv;
-        var serverName = s.connection.host + ":" + s.connection.port;
+        if (!s.connection.isConnected)
+        {
+            client.currentObject.display(getMsg("cli_istatusServerOff",
+                                                s.parent.name), "STATUS");
+            return;
+        }
         
-        if (s.connection.isConnected)
-            rv = getMsg("cli_istatusMsg", s.me.properNick);
-        else
-            rv = getMsg("cli_istatusMsg2");
-        if (s.parent.name !== s.connection.host)
-            rv += getMsg("cli_istatusMsg3", s.parent.name);
-        rv += serverName;
-        
-        if (s.parent.primServ == s)
-            rv += getMsg("cli_istatusPrimServ");
-        else
-            rv += ".\n";
-                
-        if (s.connection.isConnected)
-            rv += getMsg("cli_istatusMsg4",
-                         formatDateOffset ((new Date() -
-                                            s.connection.connectDate) / 1000));
-        if (s.lastPing)
-            rv += getMsg("cli_istatusMsg5",
-                         formatDateOffset ((new Date() - s.lastPing) / 1000));
-        if (s.lag != -1)
-            rv += getMsg("cli_istatusMsg6", s.lag);
+        var serverType = (s.parent.primServ == s) ?
+            getMsg("cli_istatusPrimary") : getMsg("cli_istatusSecondary");
+        client.currentObject.display(getMsg("cli_istatusServerOn",
+                                            [s.parent.name, s.me.properNick,
+                                             s.connection.host,
+                                             s.connection.port, serverType]),
+                                     "STATUS");        
 
-        rv += ".";
+        var connectTime = formatDateOffset ((new Date() -
+                                             s.connection.connectDate) / 1000);
+        var pingTime = (s.lastPing) ?
+            formatDateOffset ((new Date() - s.lastPing) / 1000) : getMsg("na");
+        var lag = (s.lag >= 0) ? s.lag : getMsg("na");
 
-        client.currentObject.display(rv, "STATUS");
+        client.currentObject.display(getMsg("cli_istatusServerDetail", 
+                                            [s.parent.name, connectTime,
+                                             pingTime, lag]), "STATUS");
     }
 
     function channelStatus (c)
     {
-        var rv = "";
         var cu;
-        
+        var net = c.parent.parent.name;
+
         if ((cu = c.users[c.parent.me.nick]))
         {
-            if (cu.isOp)
-                rv = getMsg("channelStatusMsg");
-            if (cu.isVoice)
-                rv += (rv) ? getMsg("channelStatusMsg2a") : 
-                             getMsg("channelStatusMsg2b");
-            if (rv)
-                rv += getMsg("channelStatusMsg3");
+            var mtype;
+            
+            if (cu.isOp && cu.isVoice)
+                mtype = getMsg("cli_istatusBoth");
+            else if (cu.isOp)
+                mtype = getMsg("cli_istatusOperator");
+            else if (cu.isVoice)
+                mtype = getMsg("cli_istatusVoiced");
             else
-                rv += getMsg("channelStatusMsg4");
-            rv += getMsg("channelStatusMsg5",[c.name, c.getUsersLength(),
-                                             c.opCount, c.voiceCount]);
+                mtype = getMsg("cli_istatusMember");
+
+            var mode = c.mode.getModeStr();
+            if (!mode)
+                mode = getMsg("cli_istatusNoMode");
+            
+            client.currentObject.display (getMsg("cli_istatusChannelOn",
+                                                 [net, mtype, c.name, mode,
+                                                  "irc://" + escape(net) + "/" +
+                                                  escape(c.name) + "/"]),
+                                          "STATUS");
+            client.currentObject.display (getMsg("cli_istatusChannelDetail",
+                                                 [net, c.name,
+                                                  c.getUsersLength(),
+                                                  c.opCount, c.voiceCount]),
+                                          "STATUS");
             if (c.topic)
-                rv += "\n" + c.name + ": ``" + c.topic + "''.";
+                client.currentObject.display (getMsg("cli_istatusChannelTopic",
+                                                     [net, c.name, c.topic]),
+                                              "STATUS");
+            else
+                client.currentObject.display (getMsg("cli_istatusChannelNoTopic",
+                                                     [net, c.name]), "STATUS");
         }
         else
-            rv = getMsg("channelStatusMsg6", c.name);
-
-        client.currentObject.display(rv, "STATUS");
+            client.currentObject.display (getMsg("cli_istatusChannelOff",
+                                                 [net, c.name]), "STATUS");
     }
+
+    client.currentObject.display (client.userAgent, "STATUS");
+    client.currentObject.display (getMsg("cli_istatusClient",
+                                         [CIRCNetwork.prototype.INITIAL_NICK,
+                                         CIRCNetwork.prototype.INITIAL_NAME,
+                                         CIRCNetwork.prototype.INITIAL_DESC]),
+                                  "STATUS");
         
     var n, s, c;
 
@@ -780,7 +1018,7 @@ function cli_istatus (e)
             break;
     }
 
-    client.currentObject.display (getMsg("channelStatusMsg7"), "END_STATUS");
+    client.currentObject.display (getMsg("cli_istatusEnd"), "END_STATUS");
     return true;
     
 }            
@@ -881,7 +1119,7 @@ function cli_testdisplay (e)
             client.currentObject.display (getMsg("cli_testdisplayMsg19",
                                                  me.nick),
                                           "PRIVMSG", sampleUser, sampleChannel);
-            client.currentObject.display (getMsg("cli_testdisplayMsg20"),
+            client.currentObject.display (getMsg("cli_testdisplayMsg11"),
                                           "PRIVMSG", me, sampleChannel);
         }        
         
@@ -1097,11 +1335,11 @@ function cli_tinfo ()
     
 }
 
-client.onInputToolbar =
-function cli_itbar ()
+client.onInputTabstrip =
+function cli_itabs ()
 {
     
-    onToggleVisibility ("toolbar");
+    onToggleVisibility ("tabstrip");
     return true;
 
 }
@@ -1387,13 +1625,28 @@ function cli_ijoin (e)
     }
     
     var ary = e.inputData.match(/(\S+) ?(\S+)?/);
-    if (!ary)
-        return false;
+    var name;
+    var key = "";
     
-    var name = ary[1];
-    var key = (ary[2]) ? ary[2] : "";
+    if (ary)
+    {
+        name = ary[1];
+        if (ary[2])
+            key = ary[2];
+    }
+    else
+    {
+        if (client.currentObject.TYPE == "IRCChannel")
+            name = client.currentObject.name;
+        else
+            return false;
 
-    if ((name[0] != "#") && (name[0] != "&") && (name[0] != "+"))
+        if (client.currentObject.mode.key)
+            key = client.currentObject.mode.key
+    }
+    
+    if ((name[0] != "#") && (name[0] != "&") && (name[0] != "+") &&
+        (name[0] != "!"))
         name = "#" + name;
 
     e.channel = e.server.addChannel (name);
@@ -1522,7 +1775,7 @@ function cli_iaway (e)
     }
     else
     {
-        e.server.sendData ("AWAY " + e.inputData + "\n");
+        e.server.sendData ("AWAY :" + e.inputData + "\n");
     }
 
     return true;
@@ -1627,6 +1880,26 @@ function cli_iop (e)
 
     return true;   
     
+}
+
+client.onInputPing = 
+function cli_iping (e) 
+{
+    if (!e.inputData)
+        return false;
+    
+    onSimulateCommand("/ctcp " + e.inputData + " PING");
+    return true;
+}
+
+client.onInputVersion = 
+function cli_iversion (e) 
+{
+    if (!e.inputData)
+        return false;
+    
+    onSimulateCommand("/ctcp " + e.inputData + " VERSION");
+    return true;
 }
 
 /**
@@ -1997,6 +2270,7 @@ CIRCNetwork.prototype.on002 = /* your host is */
 CIRCNetwork.prototype.on003 = /* server born-on date */
 CIRCNetwork.prototype.on004 = /* server id */
 CIRCNetwork.prototype.on005 = /* server features */
+CIRCNetwork.prototype.on250 = /* highest connection count */
 CIRCNetwork.prototype.on251 = /* users */
 CIRCNetwork.prototype.on252 = /* opers online (in params[2]) */
 CIRCNetwork.prototype.on254 = /* channels found (in params[2]) */
@@ -2047,6 +2321,14 @@ function my_showtonet (e)
 
     this.displayHere (p + str, e.code.toUpperCase());
     
+}
+
+CIRCNetwork.prototype.onUnknownCTCPReply = 
+function my_ctcprunk (e)
+{
+    this.display (getMsg("my_ctcprunk",
+                         [e.CTCPCode, e.CTCPData, e.user.properNick]),
+                         "CTCP_REPLY", e.user, e.server.me);
 }
 
 CIRCNetwork.prototype.onNotice = 
@@ -2102,25 +2384,25 @@ function my_303 (e)
     
 }
 
+CIRCNetwork.prototype.on321 = /* LIST reply header */
+function my_321 (e)
+{
+    this.displayHere (e.params[2] + " " + e.meat, "321");
+    if (client.currentObject != this)
+    client.currentObject.display (getMsg("my_321", this.name), "INFO");
+}
+
+CIRCNetwork.prototype.on323 = /* end of LIST reply */
+function my_323 (e)
+{
+    this.displayHere (e.meat, "323");
+}
+
 CIRCNetwork.prototype.on322 = /* LIST reply */
 function my_listrply (e)
 {
-    var span = document.createElementNS("http://www.w3.org/1999/xhtml",
-                                        "html:span");
-    var a = document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                      "html:a");
-    a.setAttribute ("href", "irc://" + this.name + "/" + e.params[2]);
-    a.setAttribute ("class", "chatzilla-link");
-    var t = newInlineText (e.params[2]);
-    a.appendChild (t);
-
-    span.appendChild (a);
-
-    t = client.munger.munge (" " + e.params[3] + " " + e.meat);
-    
-    span.appendChild (t);
-    
-    this.displayHere (span, "LIST");
+    this.displayHere (getMsg("my_322", [e.params[2], e.params[3], e.meat]),
+                      "322");
 }
     
 CIRCNetwork.prototype.on311 = /* whois name */
@@ -2165,10 +2447,34 @@ function my_whoisreply (e)
     
 }
 
+CIRCNetwork.prototype.on341 = /* invite reply */
+function my_341 (e)
+{
+    this.display (getMsg("my_341", [e.params[2], e.params[3]]), "341");
+}
+
+CIRCNetwork.prototype.onInvite = /* invite message */
+function my_invite (e)
+{
+    this.display (getMsg("my_Invite", [e.user.properNick, e.user.name,
+                                       e.user.host, e.meat]), "INVITE");
+}
+
 CIRCNetwork.prototype.on433 = /* nickname in use */
 function my_433 (e)
 {
-    e.server.parent.display (getMsg("my_433Msg", e.params[2]), e.code);    
+    if (e.params[2] == CIRCNetwork.prototype.INITIAL_NICK && this.connecting)
+    {
+        var newnick = CIRCNetwork.prototype.INITIAL_NICK + "_";
+        CIRCNetwork.prototype.INITIAL_NICK = newnick;
+        e.server.parent.display (getMsg("my_433Retry", [e.params[2], newnick]),
+                                 "433");
+        this.primServ.sendData("NICK " + newnick + "\n");
+    }
+    else
+    {
+        this.display (getMsg("my_433Msg", e.params[2]), "433");
+    }
 }
 
 CIRCNetwork.prototype.onStartConnect =
@@ -2249,6 +2555,15 @@ function my_netdisconnect (e)
     updateTitle();
     if (client.userClose && client.getConnectionCount() == 0)
         window.close();
+}
+
+CIRCNetwork.prototype.onCTCPReplyPing =
+function my_replyping (e)
+{
+    var delay = formatDateOffset ((new Date() - new Date(Number(e.CTCPData))) /
+                                  1000);
+    display (getMsg("my_replyping", [e.user.properNick, delay]), "INFO",
+             e.user, "ME!");
 }
 
 CIRCNetwork.prototype.onNick =
@@ -2350,10 +2665,9 @@ function my_366 (e)
     
     if (e.channel.pendingNamesReply)
     {       
-        e.channel.display (e.meat, "366");
+        display (e.meat, "366");
         e.channel.pendingNamesReply = false;
     }
-    
 }    
 
 CIRCChannel.prototype.onTopic = /* user changed topic */
