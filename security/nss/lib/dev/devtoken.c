@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.19 $ $Date: 2002/04/24 18:27:17 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.20 $ $Date: 2002/04/25 20:49:49 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -536,7 +536,9 @@ nssToken_ImportCertificate
     CK_ATTRIBUTE_PTR attr;
     CK_ATTRIBUTE cert_tmpl[9];
     CK_ULONG ctsize;
+    nssTokenSearchType searchType;
     nssCryptokiObject *rvObject = NULL;
+
     if (certType == NSSCertificateType_PKIX) {
 	cert_type = CKC_X_509;
     } else {
@@ -545,8 +547,10 @@ nssToken_ImportCertificate
     NSS_CK_TEMPLATE_START(cert_tmpl, attr, ctsize);
     if (asTokenObject) {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_true);
+	searchType = nssTokenSearchType_TokenOnly;
     } else {
 	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_TOKEN, &g_ck_false);
+	searchType = nssTokenSearchType_SessionOnly;
     }
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS,            &g_ck_class_cert);
     NSS_CK_SET_ATTRIBUTE_VAR( attr, CKA_CERTIFICATE_TYPE,  cert_type);
@@ -557,9 +561,43 @@ nssToken_ImportCertificate
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT,           subject);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SERIAL_NUMBER,     serial);
     NSS_CK_TEMPLATE_FINISH(cert_tmpl, attr, ctsize);
-    /* Import the certificate onto the token */
-    rvObject = import_object(tok, sessionOpt, cert_tmpl, ctsize);
+    /* see if the cert is already there */
+    rvObject = nssToken_FindCertificateByIssuerAndSerialNumber(tok,
+                                                               sessionOpt,
+                                                               issuer,
+                                                               serial,
+                                                               searchType,
+                                                               NULL);
+    if (rvObject) {
+	NSSSlot *slot = nssToken_GetSlot(tok);
+	nssSession *session = nssSlot_CreateSession(slot, NULL, PR_TRUE);
+	if (!session) {
+	    nssCryptokiObject_Destroy(rvObject);
+	    return (nssCryptokiObject *)NULL;
+	}
+	/* according to PKCS#11, label, ID, issuer, and serial number 
+	 * may change after the object has been created.  For PKIX, the
+	 * last two attributes can't change, so for now we'll only worry
+	 * about the first two.
+	 */
+	NSS_CK_TEMPLATE_START(cert_tmpl, attr, ctsize);
+	NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ID,    id);
+	NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_LABEL, nickname);
+	NSS_CK_TEMPLATE_FINISH(cert_tmpl, attr, ctsize);
+	/* reset the mutable attributes on the token */
+	nssCKObject_SetAttributes(rvObject->handle, 
+	                          cert_tmpl, ctsize,
+	                          session, slot);
+	nssSession_Destroy(session);
+	nssSlot_Destroy(slot);
+    } else {
+	/* Import the certificate onto the token */
+	rvObject = import_object(tok, sessionOpt, cert_tmpl, ctsize);
+    }
     if (rvObject && tok->cache) {
+	/* The cache will overwrite the attributes if the object already
+	 * exists.
+	 */
 	nssTokenObjectCache_ImportObject(tok->cache, rvObject,
 	                                 CKO_CERTIFICATE,
 	                                 cert_tmpl, ctsize);
