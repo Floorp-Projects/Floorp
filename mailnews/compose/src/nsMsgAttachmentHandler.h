@@ -24,13 +24,11 @@
 #define _nsMsgAttachment_H_
 
 #include "nsIURL.h"
-#include "nsURLFetcher.h"
 #include "nsIMimeConverter.h"
 #include "nsMsgCompFields.h"
 #include "nsIMsgStatusFeedback.h"
-
-// Forward declarations...
-class    nsMsgComposeAndSend;
+#include "nsIRequest.h"
+#include "nsIMsgSend.h"
 
 #ifdef XP_MAC
 
@@ -50,37 +48,41 @@ typedef struct _AppledoubleEncodeObject
 // This is a class that deals with processing remote attachments. It implements
 // an nsIStreamListener interface to deal with incoming data
 //
-class nsMsgAttachmentHandler // : public nsMsgZapIt
+class nsMsgAttachmentHandler
 {
 public:
   nsMsgAttachmentHandler();
   ~nsMsgAttachmentHandler();
+  
 
   //////////////////////////////////////////////////////////////////////
   // Object methods...
   //////////////////////////////////////////////////////////////////////
   //
+public:
   nsresult              SnarfAttachment(nsMsgCompFields *compFields);
-  nsresult              SnarfMsgAttachment(nsMsgCompFields *compFields);
-  nsresult              UrlExit(nsresult status, const PRUnichar* aMsg);
-
-  PRBool                UseUUEncode_p(void);
-  int	                  PickEncoding (const char *charset);
-  void                  AnalyzeDataChunk (const char *chunk, PRInt32 chunkSize);
+  int	                  PickEncoding (const char *charset, nsIMsgSend* mime_delivery_state);
   void                  AnalyzeSnarfedFile ();      // Analyze a previously-snarfed file.
   									                                // (Currently only used for plaintext
   									                                // converted from HTML.) 
+  nsresult              Abort();
+  nsresult              UrlExit(nsresult status, const PRUnichar* aMsg);
 
-  nsresult              LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData, PRBool charsetConversion);
+private:
+  nsresult              SnarfMsgAttachment(nsMsgCompFields *compFields);
+  PRBool                UseUUEncode_p(void);
+  void                  AnalyzeDataChunk (const char *chunk, PRInt32 chunkSize);
+  nsresult              LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData, PRBool charsetConversion); //A similar function already exist in nsMsgCompose!
 
   //////////////////////////////////////////////////////////////////////
   // Member vars...
   //////////////////////////////////////////////////////////////////////
   //
+public:
   nsIURI                *mURL;
   nsFileSpec            *mFileSpec;					// The temp file to which we save it 
   nsOutputFileStream    *mOutFile;          // The temp file stream pointer
-  nsURLFetcher          *mFetcher;          // The URL Fetcher
+  nsIRequest            *mRequest;          // The live request used while fetching an attachment
   nsMsgCompFields       *mCompFields;       // Message composition fields for the sender
   PRBool                m_bogus_attachment; // This is to catch problem children...
 
@@ -92,7 +94,6 @@ public:
   char                  *m_x_mac_creator;   // Mac file creator
   
   PRBool                m_done;
-  nsMsgComposeAndSend		*m_mime_delivery_state;
   char                  *m_charset;         // charset name 
   char                  *m_content_id;      // This is for mutipart/related Content-ID's
   char                  *m_type;            // The real type, once we know it.
@@ -139,8 +140,13 @@ public:
   PRUint32              m_lines;
   PRBool                m_file_analyzed;
 
-  MimeEncoderData *m_encoder_data;  /* Opaque state for base64/qp encoder. */
+  MimeEncoderData       *m_encoder_data;  /* Opaque state for base64/qp encoder. */
   char *                m_uri; // original uri string
+  
+  nsresult              GetMimeDeliveryState(nsIMsgSend** _retval);
+  nsresult              SetMimeDeliveryState(nsIMsgSend* mime_delivery_state);
+private:
+  nsCOMPtr<nsIMsgSend>  m_mime_delivery_state;
 };
 
 

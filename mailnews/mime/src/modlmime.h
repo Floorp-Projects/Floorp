@@ -357,13 +357,13 @@ public:
 									MimeHeaders *headers);
 
   /* Callbacks to create temporary files for drafts attachments. */
-  int (*decompose_file_init_fn) (void *stream_closure, 
+  nsresult (*decompose_file_init_fn) (void *stream_closure, 
 								 MimeHeaders *headers );
 
-  int (*decompose_file_output_fn) (char *buf, PRInt32 size,
+  nsresult (*decompose_file_output_fn) (char *buf, PRInt32 size,
 								   void *stream_closure);
 
-  int (*decompose_file_close_fn) (void *stream_closure);
+  nsresult (*decompose_file_close_fn) (void *stream_closure);
 #endif /* MIME_DRAFTS */
 
   PRInt32 attachment_icon_layer_id; /* Hackhackhack.  This is zero if we have

@@ -25,6 +25,7 @@
 
 #include "nsIMsgCompose.h"
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 #include "nsMsgCompFields.h"
 #include "nsIOutputStream.h"
 #include "nsIMsgQuote.h"
@@ -36,13 +37,14 @@
 #include "nsIBaseWindow.h"
 #include "nsIAbDirectory.h"
 #include "nsIAbCard.h"
+#include "nsIWebProgressListener.h"
 
 // Forward declares
 class QuotingOutputStreamListener;
 class nsMsgComposeSendListener;
 class nsMsgDocumentStateListener;
 
-class nsMsgCompose : public nsIMsgCompose
+class nsMsgCompose : public nsIMsgCompose, public nsSupportsWeakReference
 {
  public: 
 
@@ -55,34 +57,29 @@ class nsMsgCompose : public nsIMsgCompose
 	/*** nsIMsgCompose pure virtual functions */
 	NS_DECL_NSIMSGCOMPOSE
 
-  nsresult                      ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString& aPrefix, nsString& aBuf, 
-                                                            nsString& aSignature, PRBool aQuoted, PRBool aHTMLEditor);
+private:
 
  // Deal with quoting issues...
 	nsresult                      QuoteOriginalMessage(const char * originalMsgURI, PRInt32 what); // New template
-  PRBool                        QuotingToFollow(void);
   nsresult                      SetQuotingToFollow(PRBool aVal);
   nsresult                      ConvertHTMLToText(nsFileSpec& aSigFile, nsString &aSigData);
   nsresult                      ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData);
-  nsresult                      BuildBodyMessageAndSignature();
 
   nsCString                     mQuoteURI;
   nsCString                     mOriginalMsgURI; // used so we can mark message disposition flags after we send the message
 
   PRInt32                       mWhatHolder;
 
-  nsresult                      ProcessSignature(nsIMsgIdentity *identity,        // for setting up the users compose window environment
-                                                  nsString      *aMsgBody);       // the body to append the sig to
-  nsresult                      BuildQuotedMessageAndSignature(void);             // for setting up the users compose window environment
-	nsresult                      ShowWindow(PRBool show);
   nsresult                      LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData);
 
+/*
   nsresult                      GetCompFields(nsMsgCompFields **aCompFields) 
                                 {
                                   if (aCompFields)
                                     *aCompFields = m_compFields;
                                   return NS_OK;
                                 }
+ */
   nsresult                      GetIdentity(nsIMsgIdentity **aIdentity)
                                 {
                                   *aIdentity = m_identity;
@@ -90,10 +87,6 @@ class nsMsgCompose : public nsIMsgCompose
                                 }
   //m_folderName to store the value of the saved drafts folder.
   nsCString                     m_folderName;
-
-  // when we've successfully sent a message, the message send listener will call back into the compose
-  // object telling it to set any reply flags on the original message's folder.
-  nsresult                      ProcessReplyFlags();
 
  private:
 	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, PRBool entityConversionDone);
@@ -104,36 +97,29 @@ class nsMsgCompose : public nsIMsgCompose
   nsresult GetMailListAddresses(nsString& name, nsISupportsArray* mailListArray, nsISupportsArray** addresses);
   nsresult TagConvertible(nsIDOMNode *node,  PRInt32 *_retval);
   nsresult _BodyConvertible(nsIDOMNode *node, PRInt32 *_retval);
+ 
        // Helper function. Parameters are not checked.
   PRBool mConvertStructs;  // for TagConvertible
-
-	typedef enum {
-       eComposeFieldsReady,
-       eComposeProcessDone,
-       eSaveInFolderDone
-	} TStateListenerNotification;
   
-	// tell the doc state listeners that the doc state has changed
-	nsresult NotifyStateListeners(TStateListenerNotification aNotificationType);
+	nsIEditorShell                    *m_editor;
+	nsIDOMWindowInternal              *m_window;
+  nsCOMPtr<nsIBaseWindow>           m_baseWindow;
+	nsMsgCompFields                   *m_compFields;
+	nsCOMPtr<nsIMsgIdentity>          m_identity;
+	PRBool						                m_composeHTML;
+	QuotingOutputStreamListener       *mQuoteStreamListener;
+	nsCOMPtr<nsIOutputStream>         mBaseStream;
 
-	nsIEditorShell                *m_editor;
-	nsIDOMWindowInternal                  *m_window;
-  nsCOMPtr<nsIBaseWindow>        m_baseWindow;
-	nsMsgCompFields               *m_compFields;
-	nsCOMPtr<nsIMsgIdentity>      m_identity;
-	PRBool						  m_composeHTML;
-	QuotingOutputStreamListener   *mQuoteStreamListener;
-	nsCOMPtr<nsIOutputStream>     mBaseStream;
-
-	nsCOMPtr<nsIMsgSend>          mMsgSend;   // for composition back end
+	nsCOMPtr<nsIMsgSend>              mMsgSend;   // for composition back end
+	nsCOMPtr<nsIMsgComposeProgress>   mProgress;  // use by the back end to report progress to the front end
 
   // Deal with quoting issues...
-  nsString                      mCiteReference;
-	nsCOMPtr<nsIMsgQuote>         mQuote;
-	PRBool						            mQuotingToFollow; // Quoting indicator
-	nsMsgDocumentStateListener    *mDocumentListener;
-	MSG_ComposeType				  mType;		//Message type
-  nsCOMPtr<nsISupportsArray> 	  mStateListeners;		// contents are nsISupports
+  nsString                          mCiteReference;
+	nsCOMPtr<nsIMsgQuote>             mQuote;
+	PRBool						                mQuotingToFollow; // Quoting indicator
+	nsMsgDocumentStateListener        *mDocumentListener;
+	MSG_ComposeType                   mType;		//Message type
+  nsCOMPtr<nsISupportsArray>        mStateListeners;		// contents are nsISupports
     
   friend class QuotingOutputStreamListener;
 	friend class nsMsgDocumentStateListener;
@@ -157,12 +143,12 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
-    NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);
+    NS_IMETHOD  SetComposeObj(nsIMsgCompose *obj);
 	  NS_IMETHOD  ConvertToPlainText(PRBool formatflowed = PR_FALSE);
 	  NS_IMETHOD	SetMimeHeaders(nsIMimeHeaders * headers);
 
 private:
-    nsCOMPtr<nsMsgCompose>    mComposeObj;
+    nsWeakPtr                 mWeakComposeObj;
     nsString       				    mMsgBody;
     nsString       				    mCitePrefix;
     nsString       				    mSignature;
@@ -177,7 +163,7 @@ private:
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
-class nsMsgComposeSendListener : public nsIMsgSendListener, public nsIMsgCopyServiceListener
+class nsMsgComposeSendListener : public nsIMsgComposeSendListener, public nsIMsgSendListener, public nsIMsgCopyServiceListener, public nsIWebProgressListener
 {
 public:
   nsMsgComposeSendListener(void);
@@ -186,39 +172,21 @@ public:
   // nsISupports interface
   NS_DECL_ISUPPORTS
 
-  /* void OnStartSending (in string aMsgID, in PRUint32 aMsgSize); */
-  NS_IMETHOD OnStartSending(const char *aMsgID, PRUint32 aMsgSize);
-  
-  /* void OnProgress (in string aMsgID, in PRUint32 aProgress, in PRUint32 aProgressMax); */
-  NS_IMETHOD OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
-  
-  /* void OnStatus (in string aMsgID, in wstring aMsg); */
-  NS_IMETHOD OnStatus(const char *aMsgID, const PRUnichar *aMsg);
-  
-  /* void OnStopSending (in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec); */
-  NS_IMETHOD OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
-                           nsIFileSpec *returnFileSpec);
+  // nsIMsgComposeSendListener interface
+  NS_DECL_NSIMSGCOMPOSESENDLISTENER
 
-  /* void OnGetDraftFolderURI (); */
-  NS_IMETHOD OnGetDraftFolderURI(const char *aFolderURI);
-
-  // For the nsIMsgCopySerivceListener!
-  NS_IMETHOD OnStartCopy();
+  // nsIMsgSendListener interface
+  NS_DECL_NSIMSGSENDLISTENER
   
-  NS_IMETHOD OnProgress(PRUint32 aProgress, PRUint32 aProgressMax);
+  // nsIMsgCopyServiceListener interface
+  NS_DECL_NSIMSGCOPYSERVICELISTENER
   
-  NS_IMETHOD OnStopCopy(nsresult aStatus);
-  NS_IMETHOD SetMessageKey(PRUint32 aMessageKey);
-  NS_IMETHOD GetMessageId(nsCString* aMessageId);
-
-  NS_IMETHOD SetComposeObj(nsMsgCompose *obj);
-	NS_IMETHOD SetDeliverMode(MSG_DeliverMode deliverMode);
-	nsIMsgSendListener **CreateListenerArray(PRUint32 *aLength);
+	// nsIWebProgressListener interface
+	NS_DECL_NSIWEBPROGRESSLISTENER
 
 private:
-
-  nsCOMPtr<nsMsgCompose> mComposeObj;
-	MSG_DeliverMode mDeliverMode;
+  nsWeakPtr               mWeakComposeObj;
+	MSG_DeliverMode         mDeliverMode;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -238,10 +206,10 @@ public:
   NS_IMETHOD  NotifyDocumentWillBeDestroyed(void);
   NS_IMETHOD  NotifyDocumentStateChanged(PRBool nowDirty);
 
-  void        SetComposeObj(nsMsgCompose *obj);
+  void        SetComposeObj(nsIMsgCompose *obj);
 
   // class vars.
-  nsMsgCompose    *mComposeObj;
+  nsWeakPtr                 mWeakComposeObj;
 };
 
 /******************************************************************************

@@ -21,13 +21,9 @@
  */
 
 #include "nsISupports.idl"
-#include "nsrootidl.idl"
 #include "nsIFileSpec.idl"
 
-%{C++
-%}
-
-[scriptable, uuid(ED3D3227-2803-11d3-82B7-444553540002)]
+[scriptable, uuid(ED3D3227-2803-11D3-82B7-444553540002)]
 interface nsIMsgSendListener : nsISupports {
 
     /**
@@ -37,17 +33,17 @@ interface nsIMsgSendListener : nsISupports {
      * @return The return value is currently ignored.  In the future it may be
      * used to cancel the URL load..
      */
-    void OnStartSending(in string aMsgID, in PRUint32 aMsgSize);
+    void onStartSending(in string aMsgID, in PRUint32 aMsgSize);
 
     /**
      * Notify the observer that progress as occurred for the message send
      */
-    void OnProgress(in string aMsgID, in PRUint32 aProgress, in PRUint32 aProgressMax);
+    void onProgress(in string aMsgID, in PRUint32 aProgress, in PRUint32 aProgressMax);
 
     /**
      * Notify the observer with a status message for the message send
      */
-    void OnStatus(in string aMsgID, in wstring aMsg);
+    void onStatus(in string aMsgID, in wstring aMsg);
 
     /**
      * Notify the observer that the message has been sent.  This method is 
@@ -60,13 +56,12 @@ interface nsIMsgSendListener : nsISupports {
      * msg      A text string describing the error.
      * returnFileSpec The returned file spec for save to file operations.
      */
-    void OnStopSending(in string aMsgID, in nsresult aStatus, in wstring aMsg, 
+    void onStopSending(in string aMsgID, in nsresult aStatus, in wstring aMsg, 
 					             in nsIFileSpec returnFileSpec);
 
     /**
      * Notify the observer with the folder uri before the draft is copied.
      */
-    void OnGetDraftFolderURI(in string aFolderURI);
+    void onGetDraftFolderURI(in string aFolderURI);
 
 };
-

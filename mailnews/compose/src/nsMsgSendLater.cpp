@@ -94,7 +94,6 @@ nsMsgSendLater::nsMsgSendLater()
   mMessage = nsnull;
   mLeftoverBuffer = nsnull;
 
-  mSendListener = nsnull;
   mListenerArray = nsnull;
   mListenerArrayCount = 0;
 
@@ -133,7 +132,6 @@ nsMsgSendLater::~nsMsgSendLater()
   PR_FREEIF(mLeftoverBuffer);
   PR_FREEIF(mIdentityKey);
 
-  NS_IF_RELEASE(mSendListener);
   NS_IF_RELEASE(mIdentity);
 }
 
@@ -437,21 +435,6 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
   return rv;
 }
 
-nsIMsgSendListener **
-CreateListenerArray(nsIMsgSendListener *listener, PRUint32 *aListeners)
-{
-  if (!listener)
-    return nsnull;
-
-  nsIMsgSendListener **tArray = (nsIMsgSendListener **)PR_Malloc(sizeof(nsIMsgSendListener *) * 2);
-  if (!tArray)
-    return nsnull;
-  nsCRT::memset(tArray, 0, sizeof(nsIMsgSendListener *) * 2);
-  tArray[0] = listener;
-  *aListeners = 2;
-  return tArray;
-}
-
 nsresult
 nsMsgSendLater::CompleteMailFileSend()
 {
@@ -522,25 +505,15 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
     fields->SetReturnReceipt(PR_TRUE);
 
   // Create the listener for the send operation...
-  mSendListener = new SendOperationListener();
-  if (!mSendListener)
-  {
+  SendOperationListener * sendListener = new SendOperationListener();
+  if (!sendListener)
     return NS_ERROR_OUT_OF_MEMORY;
-  }
   
-  NS_ADDREF(mSendListener);
+  NS_ADDREF(sendListener);
   // set this object for use on completion...
-  mSendListener->SetSendLaterObject(this);
-  PRUint32 listeners;
-  nsIMsgSendListener **tArray = CreateListenerArray(mSendListener, &listeners);
-  if (!tArray)
-  {
-    NS_RELEASE(mSendListener);
-    mSendListener = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  sendListener->SetSendLaterObject(this);
 
-  NS_ADDREF(this);  
+  NS_ADDREF(this);  //TODO: We should remove this!!!
   rv = pMsgSend->SendMessageFile(mIdentity,
                                  compFields, // nsIMsgCompFields *fields,
                                  mTempIFileSpec, // nsIFileSpec *sendFileSpec,
@@ -548,13 +521,9 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
                                  PR_FALSE, // PRBool digest_p,
                                  nsIMsgSend::nsMsgDeliverNow, // nsMsgDeliverMode mode,
                                  nsnull, // nsIMsgDBHdr *msgToReplace, 
-                                 tArray, listeners); 
-  NS_RELEASE(mSendListener);
-  mSendListener = nsnull;
-  if (NS_FAILED(rv))
-    return rv;
-
-  return NS_OK;
+                                 sendListener); 
+  NS_IF_RELEASE(sendListener);
+  return rv;
 }
 
 nsresult
@@ -1152,23 +1121,6 @@ nsMsgSendLater::RemoveListener(nsIMsgSendLaterListener *aListener)
   return NS_ERROR_INVALID_ARG;
 }
 
-nsresult
-nsMsgSendLater::DeleteListeners()
-{
-  if ( (mListenerArray) && (*mListenerArray) )
-  {
-    PRInt32 i;
-    for (i=0; i<mListenerArrayCount; i++)
-    {
-      NS_RELEASE(mListenerArray[i]);
-    }
-    
-    PR_FREEIF(mListenerArray);
-  }
-
-  mListenerArrayCount = 0;
-  return NS_OK;
-}
 
 nsresult
 nsMsgSendLater::NotifyListenersOnStartSending(PRUint32 aTotalMessageCount)

@@ -62,13 +62,13 @@ public:
   
   NS_IMETHOD OnStopCopy(nsresult aStatus);
 
-  NS_IMETHOD SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj);
+  NS_IMETHOD SetMsgComposeAndSendObject(nsIMsgSend *obj);
   
   nsCOMPtr<nsISupports> mCopyObject;
   PRBool                          mCopyInProgress;
 
 private:
-  nsCOMPtr<nsMsgComposeAndSend>       mComposeAndSend;
+  nsCOMPtr<nsIMsgSend>       mComposeAndSend;
 };
 
 //
@@ -95,14 +95,14 @@ public:
   nsresult              StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
                                            nsIFileSpec          *aFileSpec, 
                                            nsMsgDeliverMode     aMode,
-                                           nsMsgComposeAndSend  *aMsgSendObj,
+                                           nsIMsgSend           *aMsgSendObj,
                                            const char           *aSavePref,
                                            nsIMsgDBHdr          *aMsgToReplace);
 
   nsresult              DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
                                nsIMsgDBHdr *aMsgToReplace, PRBool aIsDraft,
                                nsIMsgWindow *msgWindow,
-                               nsMsgComposeAndSend   *aMsgSendObj);
+                               nsIMsgSend   *aMsgSendObj);
 
   nsresult	GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder, PRBool *waitForUrl);
   nsresult	GetDraftsFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **msgFolder, PRBool *waitForUrl);
@@ -120,7 +120,7 @@ public:
   nsCOMPtr<nsIMsgFolder>          mDstFolder;
   nsCOMPtr<nsIMsgDBHdr>           mMsgToReplace;
   PRBool                          mIsDraft;
-  nsMsgComposeAndSend             *mMsgSendObj;
+  nsCOMPtr<nsIMsgSend>            mMsgSendObj;
   char                            *mSavePref;
 };
 

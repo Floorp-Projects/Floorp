@@ -154,7 +154,7 @@ nsMimeConverter::ConvertCharset(const PRBool autoDetection, const char* from_cha
 
 
 nsresult 
-nsMimeConverter::B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure, 
+nsMimeConverter::B64EncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure, 
                    MimeEncoderData **returnEncoderData) 
 {
 MimeEncoderData   *ptr;
@@ -170,7 +170,7 @@ MimeEncoderData   *ptr;
 }
 
 nsresult
-nsMimeConverter::QPEncoderInit (int (*output_fn) (const char *buf, 
+nsMimeConverter::QPEncoderInit (nsresult (*output_fn) (const char *buf, 
                       PRInt32 size, void *closure), void *closure, MimeEncoderData ** returnEncoderData) 
 {
 MimeEncoderData   *ptr;
@@ -186,7 +186,7 @@ MimeEncoderData   *ptr;
 }
 
 nsresult
-nsMimeConverter::UUEncoderInit (char *filename, int (*output_fn) 
+nsMimeConverter::UUEncoderInit (char *filename, nsresult (*output_fn) 
                      (const char *buf, PRInt32 size, void *closure), void *closure, 
                      MimeEncoderData ** returnEncoderData)
 {

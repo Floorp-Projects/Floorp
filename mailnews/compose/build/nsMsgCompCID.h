@@ -74,6 +74,28 @@
  {0x9d, 0xaa, 0x8d, 0xf6, 0x4b, 0xab, 0x2e, 0xfc}}
 
 //
+// nsMsgComposeSendListener
+//
+#define NS_MSGCOMPOSESENDLISTENER_CONTRACTID \
+  "@mozilla.org/messengercompose/composesendlistener;1"
+
+#define NS_MSGCOMPOSESENDLISTENER_CID						  \
+{ /* acc72781-2cea-11d5-9daa-bacdeac1eefc */      \
+ 0xacc72781, 0x2cea, 0x11d5,                      \
+ {0x9d, 0xaa, 0xba, 0xcd, 0xea, 0xc1, 0xee, 0xfc}}
+
+//
+// nsMsgComposeProgress
+//
+#define NS_MSGCOMPOSEPROGRESS_CONTRACTID \
+  "@mozilla.org/messengercompose/composeprogress;1"
+
+#define NS_MSGCOMPOSEPROGRESS_CID						  \
+{ /* 2080d501-149e-11d5-9daa-e276a42bc27c */      \
+ 0x2080d501, 0x149e, 0x11d5,                      \
+ {0x9d, 0xaa, 0xe2, 0x76, 0xa4, 0x2b, 0xc2, 0x7c}}
+
+//
 // nsMsgCompFields
 //
 #define NS_MSGCOMPFIELDS_CONTRACTID \
@@ -221,6 +243,17 @@
 #define NS_SMTPDELEGATEFACTORY_CID \
 { 0xc612141, 0x25fe, 0x11d4, \
  { 0x9a, 0x27, 0x0, 0x10, 0xa4, 0xe0, 0x36, 0x56 } }
+
+//
+// nsURLFetcher
+//
+#define NS_URLFETCHER_CONTRACTID  \
+  "@mozilla.org/messengercompose/urlfetcher;1"
+
+// {01B8A701-2F52-11D5-9DAA-F78DA781A1FC}
+#define NS_URLFETCHER_CID \
+{ 0x01b8a701, 0x2f52, 0x11d5, \
+ { 0x9d, 0xaa, 0xf7, 0x8d, 0xa7, 0x81, 0xa1, 0xfc } }
 
 
 #endif // nsMessageCompCID_h__

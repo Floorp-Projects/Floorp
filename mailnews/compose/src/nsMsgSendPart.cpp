@@ -41,7 +41,7 @@ PRInt32 nsMsgSendPart::M_counter = 0;
 
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
-int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size) 
+nsresult MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size) 
 {
   //  MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
@@ -55,7 +55,7 @@ int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size)
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
 
-nsMsgSendPart::nsMsgSendPart(nsMsgComposeAndSend* state, const char *part_charset)
+nsMsgSendPart::nsMsgSendPart(nsIMsgSend* state, const char *part_charset)
 {
 	m_state = nsnull;
 
@@ -143,7 +143,7 @@ int nsMsgSendPart::SetOtherHeaders(const char* other)
   return CopyString(&m_other, other);
 }
 
-int nsMsgSendPart::SetMimeDeliveryState(nsMsgComposeAndSend *state)
+int nsMsgSendPart::SetMimeDeliveryState(nsIMsgSend *state)
 {
   m_state = state;
   if (GetNumChildren() > 0)

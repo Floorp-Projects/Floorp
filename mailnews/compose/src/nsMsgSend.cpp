@@ -18,9 +18,11 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Jean-Francois Ducarroz <ducarroz@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-#include "msgCore.h"
+#include "nsMsgSend.h"
+
 #include "nsCRT.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgSendPart.h"
@@ -31,7 +33,6 @@
 #include "nsINntpService.h"  // for actually posting the message...
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
-#include "nsMsgSend.h"
 #include "nsEscape.h"
 #include "nsIPref.h"
 #include "nsIMsgMailNewsUrl.h"
@@ -71,17 +72,13 @@
 #include "nsIDocShell.h"
 #include "nsMimeTypes.h"
 #include "nsISmtpUrl.h"
+#include "nsIInterfaceRequestor.h"
 
-// This will go away once select is passed a prompter interface
-#include "nsAppShellCIDs.h" // TODO remove later
-#include "nsIAppShellService.h" // TODO remove later
-#include "nsIXULWindow.h" // TODO remove later
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
 // for these two interfaces 
 //
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
@@ -141,12 +138,15 @@ NS_IMPL_ISUPPORTS1(nsMsgComposeAndSend, nsIMsgSend)
 nsMsgComposeAndSend::nsMsgComposeAndSend() : 
     m_messageKey(0xffffffff)
 {
+#if defined(DEBUG_ducarroz)
+  printf("CREATE nsMsgComposeAndSend: %x\n", this);
+#endif
   mGUINotificationEnabled = PR_TRUE;
+	mAbortInProcess = PR_FALSE;
+  mLastErrorReported = NS_OK;
   mEditor = nsnull;
   mMultipartRelatedAttachmentCount = 0;
   mCompFields = nsnull;			/* Where to send the message once it's done */
-  mListenerArray = nsnull;
-  mListenerArrayCount = 0;
   mSendMailAlso = PR_FALSE;
 	mOutputFile = nsnull;
 
@@ -193,22 +193,47 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
 
 nsMsgComposeAndSend::~nsMsgComposeAndSend()
 {
+#if defined(DEBUG_ducarroz)
+  printf("DISPOSE nsMsgComposeAndSend: %x\n", this);
+#endif
 	Clear();
 }
 
-void nsMsgComposeAndSend::GetDefaultPrompt(nsIPrompt ** aPrompt)
+NS_IMETHODIMP nsMsgComposeAndSend::GetDefaultPrompt(nsIPrompt ** aPrompt)
 {
+  NS_ENSURE_ARG(aPrompt);
+  *aPrompt = nsnull;
+  
+  nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIMsgWindow>    msgWindow;
+  if (mSendProgress)
+  {
+    rv = mSendProgress->GetPrompter(aPrompt);
+    if (NS_SUCCEEDED(rv) && *aPrompt)
+      return NS_OK;
+  }
+  
+  if (mParentWindow)
+  {
+    rv = mParentWindow->GetPrompter(aPrompt);
+    if (NS_SUCCEEDED(rv) && *aPrompt)
+      return NS_OK;
+  }
+  
+  /* If we cannot find a prompter, try the mail3Pane window */
+  nsCOMPtr<nsIMsgWindow> msgWindow;
   nsCOMPtr <nsIMsgMailSession> mailSession (do_GetService(kMsgMailSessionCID));
   mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
 
   if (msgWindow)
-      msgWindow->GetPromptDialog(aPrompt);
+      rv = msgWindow->GetPromptDialog(aPrompt);
+  
+  return rv;
 }
 
 nsresult nsMsgComposeAndSend::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 {
+// TODO: stop using mail3pane window!
   nsCOMPtr<nsIMsgWindow> msgWindow;
   nsCOMPtr<nsIMsgMailSession> mailSession(do_GetService(kMsgMailSessionCID));
   mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
@@ -222,7 +247,7 @@ nsresult nsMsgComposeAndSend::GetNotificationCallbacks(nsIInterfaceRequestor** a
       return NS_OK;
     }
   }
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_FAILURE;  
 }
 
 void 
@@ -361,8 +386,8 @@ nsMsgComposeAndSend::Clear()
 		m_attachments = 0;
 	}
 
-  // Cleanup listener array...
-  DeleteListeners();
+  // Cleanup listener
+  mListener = nsnull;
 }
 
 static char *mime_mailto_stream_read_buffer = 0;
@@ -384,7 +409,7 @@ char * mime_get_stream_write_buffer(void)
    actual mail message, containing all of the other files after having been
    encoded as appropriate.
  */
-int 
+NS_IMETHODIMP 
 nsMsgComposeAndSend::GatherMimeAttachments()
 {
 	PRBool shouldDeleteDeliveryState = PR_TRUE;
@@ -562,7 +587,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		m_plaintext = new nsMsgAttachmentHandler;
 		if (!m_plaintext)
 			goto FAILMEM;
-		m_plaintext->m_mime_delivery_state = this;
+		m_plaintext->SetMimeDeliveryState(this);
 		m_plaintext->m_bogus_attachment = PR_TRUE;
 
     char *tempURL = nsMsgPlatformFileToURL (*mHTMLFileSpec);
@@ -599,9 +624,8 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 
 	NS_ASSERTION (m_attachment_pending_count == 0, "m_attachment_pending_count != 0");
 
-#ifdef UNREADY_CODE
-	FE_Progress(GetContext(), XP_GetString(NS_MSG_ASSEMBLING_MSG));
-#endif
+  mComposeBundle->GetStringByID(NS_MSG_ASSEMBLING_MSG, getter_Copies(msg));
+  SetStatusMessage( msg );
 
 	/* First, open the message file.
 	*/
@@ -710,7 +734,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     m_plaintext->mMainBody = PR_TRUE;
 
     m_plaintext->AnalyzeSnarfedFile(); // look for 8 bit text, long lines, etc.
-		m_plaintext->PickEncoding(mCompFields->GetCharacterSet());
+		m_plaintext->PickEncoding(mCompFields->GetCharacterSet(), this);
 		hdrs = mime_generate_attachment_headers(m_plaintext->m_type,
 											  m_plaintext->m_encoding,
 											  m_plaintext->m_description,
@@ -1016,11 +1040,10 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	}
 	mOutputFile = nsnull;
 
-#ifdef UNREADY_CODE
-	FE_Progress(GetContext(), XP_GetString(NS_MSG_ASSEMB_DONE_MSG));
-#endif
+  mComposeBundle->GetStringByID(NS_MSG_ASSEMB_DONE_MSG, getter_Copies(msg));
+  SetStatusMessage( msg );
 
-  if (m_dont_deliver_p && mListenerArrayCount > 0)
+  if (m_dont_deliver_p && mListener)
 	{
     //
 		// Need to ditch the file spec here so that we don't delete the
@@ -1030,14 +1053,15 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     delete mTempFileSpec;
     mTempFileSpec = nsnull;
 	  if (!mReturnFileSpec)
-      NotifyListenersOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
+      NotifyListenerOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
     else
-      NotifyListenersOnStopSending(nsnull, NS_OK, nsnull, mReturnFileSpec);
+      NotifyListenerOnStopSending(nsnull, NS_OK, nsnull, mReturnFileSpec);
 	}
 	else 
   {
 		status = DeliverMessage();
-		shouldDeleteDeliveryState = PR_FALSE;
+		if (NS_SUCCEEDED(status))
+		  shouldDeleteDeliveryState = PR_FALSE;
 	}
 	goto FAIL;
 
@@ -1063,7 +1087,7 @@ FAIL:
 		if (status < 0) 
 		{
 			m_status = status;
-			Fail (nsnull, status, nsnull);
+			Fail (status, nsnull);
 		}
 	}
 
@@ -1094,7 +1118,7 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
 			return 0;
 	}
 
-	ma->PickEncoding (mCompFields->GetCharacterSet());
+	ma->PickEncoding (mCompFields->GetCharacterSet(), this);
 
 	part = new nsMsgSendPart(this);
 	if (!part)
@@ -1176,20 +1200,27 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
 #endif // XP_MAC && DEBUG
 
 
-int
-mime_write_message_body(nsMsgComposeAndSend *state, char *buf, PRInt32 size)
+nsresult
+mime_write_message_body(nsIMsgSend *state, char *buf, PRInt32 size)
 {
-  if (PRInt32(state->mOutputFile->write(buf, size)) < size) 
+	NS_ENSURE_ARG_POINTER(state);
+
+  nsOutputFileStream * output;
+  state->GetOutputStream(&output);
+  if (!output)
+    return NS_MSG_ERROR_WRITING_FILE;
+    
+  if (PRInt32(output->write(buf, size)) < size) 
   {
     return NS_MSG_ERROR_WRITING_FILE;
   } 
   else 
   {
-    return 0;
+    return NS_OK;
   }
 }
 
-int
+nsresult
 mime_encoder_output_fn(const char *buf, PRInt32 size, void *closure)
 {
   nsMsgComposeAndSend *state = (nsMsgComposeAndSend *) closure;
@@ -1425,7 +1456,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     locCount++;
     m_attachments[i].mDeleteFile = PR_TRUE;
     m_attachments[i].m_done = PR_FALSE;
-    m_attachments[i].m_mime_delivery_state = this;
+    m_attachments[i].SetMimeDeliveryState(this);
     
     // Ok, now we need to get the element in the array and do the magic
     // to process this element.
@@ -1836,7 +1867,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
         // URL that is passed in...
         //
         m_attachments[newLoc].mDeleteFile = PR_FALSE;
-			  m_attachments[newLoc].m_mime_delivery_state = this;
+			  m_attachments[newLoc].SetMimeDeliveryState(this);
 
 			  // These attachments are already "snarfed"...
 #ifdef XP_MAC
@@ -1950,7 +1981,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
 
         m_attachments[newLoc].mDeleteFile = PR_TRUE;
         m_attachments[newLoc].m_done = PR_FALSE;
-			  m_attachments[newLoc].m_mime_delivery_state = this;
+			  m_attachments[newLoc].SetMimeDeliveryState(this);
 
         if (m_attachments[newLoc].mURL)
           NS_RELEASE(m_attachments[newLoc].mURL);
@@ -2067,7 +2098,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 		for (i = mCompFieldLocalAttachments; i < mPreloadedAttachmentCount; i++) 
     {
       m_attachments[i].mDeleteFile = PR_FALSE;
-			m_attachments[i].m_mime_delivery_state = this;
+			m_attachments[i].SetMimeDeliveryState(this);
 
 			/* These attachments are already "snarfed". */
 			m_attachments[i].m_done = PR_TRUE;
@@ -2087,7 +2118,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       // If we still don't have a content type, we should really try sniff one out!
       if ((!m_attachments[i].m_type) || (!*m_attachments[i].m_type))
       {
-        m_attachments[i].PickEncoding(mCompFields->GetCharacterSet());
+        m_attachments[i].PickEncoding(mCompFields->GetCharacterSet(), this);
       }
 
       // For local files, if they are HTML docs and we don't have a charset, we should
@@ -2174,7 +2205,7 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       locCount++;
       m_attachments[i].mDeleteFile = PR_TRUE;
       m_attachments[i].m_done = PR_FALSE;
-			m_attachments[i].m_mime_delivery_state = this;
+			m_attachments[i].SetMimeDeliveryState(this);
 			NS_ASSERTION (attachments[locCount].url, "null url");
 
       if (m_attachments[i].mURL)
@@ -2541,6 +2572,10 @@ nsMsgComposeAndSend::Init(
 						  const nsMsgAttachedFile *preloaded_attachments)
 {
 	nsresult      rv = NS_OK;
+	
+	//Reset last error
+	mLastErrorReported = NS_OK;
+	
   nsXPIDLString msg;
   if (!mComposeBundle)
     mComposeBundle = do_GetService(NS_MSG_COMPOSESTRINGSERVICE_CONTRACTID);
@@ -2683,6 +2718,14 @@ NewsDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
 nsresult
 nsMsgComposeAndSend::DeliverMessage()
 {
+  if (mSendProgress)
+  {
+    PRBool canceled = PR_FALSE;
+    mSendProgress->GetProcessCanceledByUser(&canceled);
+    if (canceled)
+      return NS_ERROR_ABORT;
+  }
+
 	PRBool mail_p = ((mCompFields->GetTo() && *mCompFields->GetTo()) || 
 					(mCompFields->GetCc() && *mCompFields->GetCc()) || 
 					(mCompFields->GetBcc() && *mCompFields->GetBcc()));
@@ -2730,7 +2773,7 @@ nsMsgComposeAndSend::DeliverMessage()
         nsMsgAskBooleanQuestionByString(prompt, printfString, &abortTheSend);
         if (!abortTheSend)
         {
-          Fail(prompt, NS_ERROR_BUT_DONT_SHOW_ALERT, printfString);
+          Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, printfString);
           PR_FREEIF(printfString);
           return NS_ERROR_FAILURE;
         }
@@ -2798,8 +2841,8 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     nsXPIDLString eMsg; 
     mComposeBundle->GetStringByID(NS_ERROR_OUT_OF_MEMORY, getter_Copies(eMsg));
     
-    Fail(promptObject, NS_ERROR_OUT_OF_MEMORY, eMsg);
-    NotifyListenersOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
+    Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
+    NotifyListenerOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
     return NS_ERROR_OUT_OF_MEMORY;
 	}
 
@@ -2950,6 +2993,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 
   nsCOMPtr<nsIMsgWindow>    msgWindow;
 
+//JFD TODO: we should use GetDefaultPrompt instead
 	rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
 	if(NS_FAILED(rv))
 		return rv;
@@ -2963,25 +3007,32 @@ nsMsgComposeAndSend::DeliverFileAsNews()
   return rv;
 }
 
-void 
-nsMsgComposeAndSend::Fail(nsIPrompt * aPrompt, nsresult failure_code, const PRUnichar * error_msg)
+NS_IMETHODIMP 
+nsMsgComposeAndSend::Fail(nsresult failure_code, const PRUnichar * error_msg)
 {
   if (NS_FAILED(failure_code))
   {
     // in certain cases, we've already shown the alert
     // and we don't need to show another alert here.
-    if (failure_code != NS_ERROR_BUT_DONT_SHOW_ALERT) {
+    if (failure_code != NS_ERROR_BUT_DONT_SHOW_ALERT &&  failure_code != NS_ERROR_ABORT)
       if (mGUINotificationEnabled)
       {
-	      if (!error_msg)
-	      {
-         if (NS_FAILED(nsMsgDisplayMessageByID(aPrompt, failure_code)))
-            nsMsgDisplayMessageByID(aPrompt, NS_ERROR_SEND_FAILED);
+        if (mLastErrorReported == NS_OK) //Avoid to report several time a failure error!
+        {
+          nsCOMPtr<nsIPrompt> prompt;
+          GetDefaultPrompt(getter_AddRefs(prompt));
+
+  	      if (!error_msg)
+  	      {
+           if (NS_FAILED(nsMsgDisplayMessageByID(prompt, failure_code)))
+              nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
+  	      }
+  	      else
+  	        nsMsgDisplayMessageByString(prompt, error_msg);
+	        
+	        mLastErrorReported = failure_code;
 	      }
-	      else
-	        nsMsgDisplayMessageByString(aPrompt, error_msg);
       }
-    }
   }
 
   if (m_attachments_done_callback)
@@ -2991,11 +3042,19 @@ nsMsgComposeAndSend::Fail(nsIPrompt * aPrompt, nsresult failure_code, const PRUn
 	  m_attachments_done_callback (failure_code, error_msg, nsnull);
     m_attachments_done_callback = nsnull;
 	}
+	
+  if (m_status == NS_OK)
+    m_status = NS_ERROR_BUT_DONT_SHOW_ALERT;
+
+	//Stop any pending process...
+	Abort();
+	
+	return NS_OK;
 }
 
 void
 nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode, PRBool aCheckForMail)
-{
+{  
   // If we fail on the news delivery, no sense in going on so just notify
   // the user and exit.
   if (NS_FAILED(aExitCode))
@@ -3007,27 +3066,8 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
     nsXPIDLString eMsg; 
     mComposeBundle->GetStringByID(aExitCode, getter_Copies(eMsg));
     
-    // we need a prompt interface for the alert.....but the compose window is currently hidden...
-    // so try to use the prompt interface associated with the smtp url...
-    nsCOMPtr<nsISmtpUrl> smtpUrl (do_QueryInterface(aUri));
-    nsCOMPtr<nsIPrompt> prompt;
-    if (smtpUrl)
-    {
-      smtpUrl->GetPrompt(getter_AddRefs(prompt));
-    }
-    else
-    {
-      nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl (do_QueryInterface(aUri));
-      if (mailnewsUrl)
-      {
-        nsCOMPtr <nsIMsgWindow> msgWindow;
-        mailnewsUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-        if (msgWindow)
-          msgWindow->GetPromptDialog(getter_AddRefs(prompt));
-      }
-    }
-    Fail(prompt, aExitCode, eMsg);
-    NotifyListenersOnStopSending(nsnull, aExitCode, nsnull, nsnull);
+    Fail(aExitCode, eMsg);
+    NotifyListenerOnStopSending(nsnull, aExitCode, nsnull, nsnull);
     return;
   }
 #ifdef NS_DEBUG
@@ -3035,7 +3075,6 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
     printf("\nMessage Delivery SUCCEEDED!\n");
 #endif
 
-  
   if (aCheckForMail)
   {
     if ((mCompFields->GetTo() && *mCompFields->GetTo()) || 
@@ -3052,7 +3091,7 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
   //
   // Tell the listeners that we are done with the sending operation...
   //
-  NotifyListenersOnStopSending(nsnull, aExitCode, nsnull, nsnull);
+  NotifyListenerOnStopSending(nsnull, aExitCode, nsnull, nsnull);
 
   // If we hit here, we are done with delivery!
   //
@@ -3065,6 +3104,7 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode,
   // For now, we don't need to do anything here, but the code will stay this 
   // way until later...
   //
+
   nsresult retCode = DoFcc();
   if (NS_FAILED(retCode))
   {
@@ -3110,8 +3150,8 @@ nsMsgComposeAndSend::DoFcc()
   printf("\nCopy operation disabled by user!\n");
 #endif
 
-    NotifyListenersOnStopSending(nsnull, NS_OK, nsnull, nsnull);
-    NotifyListenersOnStopCopy(NS_OK);  // For closure of compose window...
+    NotifyListenerOnStopSending(nsnull, NS_OK, nsnull, nsnull);
+    NotifyListenerOnStopCopy(NS_OK);  // For closure of compose window...
     return NS_OK;
   }
 
@@ -3131,212 +3171,104 @@ nsMsgComposeAndSend::DoFcc()
     // If we hit here, the copy operation FAILED and we should at least tell the
     // user that it did fail but the send operation has already succeeded.
     //
-    NotifyListenersOnStopCopy(rv);
+    NotifyListenerOnStopCopy(rv);
   }
 
   return rv;
 }
 
-nsresult
-nsMsgComposeAndSend::SetListenerArray(nsIMsgSendListener **aListenerArray,
-                                      PRUint32 aListeners)
+NS_IMETHODIMP
+nsMsgComposeAndSend::NotifyListenerOnStartSending(const char *aMsgID, PRUint32 aMsgSize)
 {
-  if ( (!aListenerArray) || (!*aListenerArray) )
-    return NS_OK;
-
-  // First, count the listeners passed in...
-  mListenerArrayCount = aListeners;
-
-  // now allocate an array to hold the number of entries.
-  mListenerArray = (nsIMsgSendListener **) PR_Malloc(sizeof(nsIMsgSendListener *) * mListenerArrayCount);
-  if (!mListenerArray)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsCRT::memset(mListenerArray, 0, (sizeof(nsIMsgSendListener *) * mListenerArrayCount));
-  
-  // Now assign the listeners...
-  PRInt32 i;
-  for (i=0; i<mListenerArrayCount; i++)
-  {
-    mListenerArray[i] = aListenerArray[i];
-    NS_IF_ADDREF(mListenerArray[i]);
-  }
+  if (mListener)
+    mListener->OnStartSending(aMsgID, aMsgSize);
 
   return NS_OK;
 }
 
-nsresult
-nsMsgComposeAndSend::AddListener(nsIMsgSendListener *aListener)
+NS_IMETHODIMP
+nsMsgComposeAndSend::NotifyListenerOnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax)
 {
-  if ( (mListenerArrayCount > 0) || mListenerArray )
-  {
-    ++mListenerArrayCount;
-    mListenerArray = (nsIMsgSendListener **) 
-                  PR_Realloc(*mListenerArray, sizeof(nsIMsgSendListener *) * mListenerArrayCount);
-    if (!mListenerArray)
-      return NS_ERROR_OUT_OF_MEMORY;
-    else
-    {
-      mListenerArray[mListenerArrayCount - 1] = aListener;
-      return NS_OK;
-    }
-  }
-  else
-  {
-    mListenerArrayCount = 1;
-    mListenerArray = (nsIMsgSendListener **) PR_Malloc(sizeof(nsIMsgSendListener *) * mListenerArrayCount);
-    if (!mListenerArray)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    nsCRT::memset(mListenerArray, 0, (sizeof(nsIMsgSendListener *) * mListenerArrayCount));
-  
-    mListenerArray[0] = aListener;
-    NS_IF_ADDREF(mListenerArray[0]);
-    return NS_OK;
-  }
-}
-
-nsresult
-nsMsgComposeAndSend::RemoveListener(nsIMsgSendListener *aListener)
-{
-  PRInt32 i;
-  for (i=0; i<mListenerArrayCount; i++)
-    if (mListenerArray[i] == aListener)
-    {
-      NS_RELEASE(mListenerArray[i]);
-      mListenerArray[i] = nsnull;
-      return NS_OK;
-    }
-
-  return NS_ERROR_INVALID_ARG;
-}
-
-nsresult
-nsMsgComposeAndSend::DeleteListeners()
-{
-  if ( (mListenerArray) && (*mListenerArray) )
-  {
-    PRInt32 i;
-    for (i=0; i<mListenerArrayCount; i++)
-    {
-      NS_IF_RELEASE(mListenerArray[i]);
-    }
-    
-    PR_FREEIF(mListenerArray);
-  }
-
-  mListenerArrayCount = 0;
-  return NS_OK;
-}
-
-nsresult
-nsMsgComposeAndSend::NotifyListenersOnStartSending(const char *aMsgID, PRUint32 aMsgSize)
-{
-  PRInt32 i;
-  for (i=0; i<mListenerArrayCount; i++)
-    if (mListenerArray[i] != nsnull)
-      mListenerArray[i]->OnStartSending(aMsgID, aMsgSize);
+  if (mListener)
+    mListener->OnProgress(aMsgID, aProgress, aProgressMax);
 
   return NS_OK;
 }
 
-nsresult
-nsMsgComposeAndSend::NotifyListenersOnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax)
+NS_IMETHODIMP
+nsMsgComposeAndSend::NotifyListenerOnStatus(const char *aMsgID, const PRUnichar *aMsg)
 {
-  PRInt32 i;
-  for (i=0; i<mListenerArrayCount; i++)
-    if (mListenerArray[i] != nsnull)
-      mListenerArray[i]->OnProgress(aMsgID, aProgress, aProgressMax);
+  if (mListener)
+    mListener->OnStatus(aMsgID, aMsg);
 
   return NS_OK;
 }
 
-nsresult
-nsMsgComposeAndSend::NotifyListenersOnStatus(const char *aMsgID, const PRUnichar *aMsg)
-{
-  PRInt32 i;
-  for (i=0; i<mListenerArrayCount; i++)
-    if (mListenerArray[i] != nsnull)
-      mListenerArray[i]->OnStatus(aMsgID, aMsg);
-
-  return NS_OK;
-}
-
-nsresult
-nsMsgComposeAndSend::NotifyListenersOnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
+NS_IMETHODIMP
+nsMsgComposeAndSend::NotifyListenerOnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
                                                   nsIFileSpec *returnFileSpec)
 {
-  PRInt32 i;
-  for (i=0; i<mListenerArrayCount; i++)
-    if (mListenerArray[i] != nsnull)
-      mListenerArray[i]->OnStopSending(aMsgID, aStatus, aMsg, returnFileSpec);
+  if (mListener != nsnull)
+    mListener->OnStopSending(aMsgID, aStatus, aMsg, returnFileSpec);
 
   return NS_OK;
 }
 
-nsresult
-nsMsgComposeAndSend::NotifyListenersOnStartCopy()
+NS_IMETHODIMP
+nsMsgComposeAndSend::NotifyListenerOnStartCopy()
 {
   nsCOMPtr<nsIMsgCopyServiceListener> copyListener;
 
-  PRInt32 i;
-  for (i=0; i<mListenerArrayCount; i++)
+  if (mListener)
   {
-    if (mListenerArray[i] != nsnull)
-    {
-      copyListener = do_QueryInterface(mListenerArray[i]);
-      if (copyListener)
-        copyListener->OnStartCopy();      
-    }
+    copyListener = do_QueryInterface(mListener);
+    if (copyListener)
+      copyListener->OnStartCopy();      
   }
 
   return NS_OK;
 }
 
-nsresult
-nsMsgComposeAndSend::NotifyListenersOnProgressCopy(PRUint32 aProgress,
+NS_IMETHODIMP
+nsMsgComposeAndSend::NotifyListenerOnProgressCopy(PRUint32 aProgress,
                                                    PRUint32 aProgressMax)
 {
   nsCOMPtr<nsIMsgCopyServiceListener> copyListener;
 
-  PRInt32 i;
-  for (i=0; i<mListenerArrayCount; i++)
+  if (mListener)
   {
-    if (mListenerArray[i] != nsnull)
-    {
-      copyListener = do_QueryInterface(mListenerArray[i]);
-      if (copyListener)
-        copyListener->OnProgress(aProgress, aProgressMax);
-    }
+    copyListener = do_QueryInterface(mListener);
+    if (copyListener)
+      copyListener->OnProgress(aProgress, aProgressMax);
   }
 
   return NS_OK;  
 }
 
-nsresult
+NS_IMETHODIMP
 nsMsgComposeAndSend::SetMessageKey(PRUint32 aMessageKey)
 {
     m_messageKey = aMessageKey;
     return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsMsgComposeAndSend::GetMessageId(nsCString* aMessageId)
 {
-    if (aMessageId && mCompFields)
-    {
-        *aMessageId = mCompFields->GetMessageId();
-        return NS_OK;
-    }
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG(aMessageId);
+  
+  if (mCompFields)
+  {
+    *aMessageId = mCompFields->GetMessageId();
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
 }
 
-nsresult
-nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
+NS_IMETHODIMP
+nsMsgComposeAndSend::NotifyListenerOnStopCopy(nsresult aStatus)
 {
   nsCOMPtr<nsIMsgCopyServiceListener> copyListener;
-
-  PRInt32 i;
 
   // This is one per copy so make sure we clean this up first.
   if (mCopyObj)
@@ -3385,7 +3317,7 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
 
         nsXPIDLString eMsg; 
         mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
-        Fail(prompt, NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
+        Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
 
         if (mGUINotificationEnabled)
         {
@@ -3410,7 +3342,7 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
 
     nsXPIDLString eMsg; 
     mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
-    Fail(prompt, NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
+    Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
 
     if (mGUINotificationEnabled)
     {
@@ -3421,14 +3353,11 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
   }
 
   // If we are here, its real cleanup time! 
-  for (i=0; i<mListenerArrayCount; i++)
+  if (mListener)
   {
-    if (mListenerArray[i] != nsnull)
-    {
-      copyListener = do_QueryInterface(mListenerArray[i]);
-      if (copyListener)
-        copyListener->OnStopCopy(aStatus);
-    }
+    copyListener = do_QueryInterface(mListener);
+    if (copyListener)
+      copyListener->OnStopCopy(aStatus);
   }
 
   return NS_OK;
@@ -3484,12 +3413,16 @@ nsMsgComposeAndSend::CreateAndSendMessage(
 						  const nsMsgAttachmentData         *attachments,
 						  const nsMsgAttachedFile           *preloaded_attachments,
 						  void                              *relatedPart,
-              nsIMsgSendListener                **aListenerArray,
-              PRUint32 aListeners)
+						  nsIDOMWindowInternal              *parentWindow,
+						  nsIMsgComposeProgress             *progress,
+              nsIMsgSendListener                *aListener
+              )
 {
   nsresult      rv;
 
-  SetListenerArray(aListenerArray, aListeners);
+  mParentWindow = parentWindow;
+  mSendProgress = progress;
+  mListener = aListener;
 
   if (!attachment1_body || !*attachment1_body)
   {
@@ -3522,8 +3455,8 @@ nsMsgComposeAndSend::SendMessageFile(
 						  PRBool                            digest_p,
 						  nsMsgDeliverMode                  mode,
               nsIMsgDBHdr                       *msgToReplace,
-              nsIMsgSendListener                **aListenerArray,
-              PRUint32 aListeners)
+              nsIMsgSendListener                *aListener
+              )
 {
   nsresult      rv;
 
@@ -3553,8 +3486,8 @@ nsMsgComposeAndSend::SendMessageFile(
   if (!sendFileSpec)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // Setup the listeners...
-  SetListenerArray(aListenerArray, aListeners);
+  // Setup the listener...
+  mListener = aListener;
 
   // Should we delete the temp file when done?
   if (!deleteSendFileOnCompletion)
@@ -3627,7 +3560,7 @@ nsMsgComposeAndSend::SendToMagicFolder(nsMsgDeliverMode mode)
     // The caller of MimeDoFCC needs to deal with failure.
     //
     if (NS_FAILED(rv))
-      NotifyListenersOnStopCopy(rv);
+      NotifyListenerOnStopCopy(rv);
     
     return rv;
 }
@@ -3714,6 +3647,15 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   PRUnichar     *printfString = nsnull;
   char          *folderName = nsnull;
   nsXPIDLString msg; 
+
+  // Before continuing, just check the user has not cancel the operation
+  if (mSendProgress)
+  {
+    PRBool canceled = PR_FALSE;
+    mSendProgress->GetProcessCanceledByUser(&canceled);
+    if (canceled)
+      return NS_ERROR_ABORT;
+  }
 
   //
   // Ok, this is here to keep track of this for 2 copy operations... 
@@ -4131,10 +4073,8 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
   else
   	m_folderName = GetFolderURIFromUserPrefs(mode, mUserIdentity);
 
-  PRInt32 i;
-  for (i=0; i<mListenerArrayCount; i++)
-    if (mListenerArray[i] != nsnull)
-      mListenerArray[i]->OnGetDraftFolderURI(m_folderName.get());
+  if (mListener)
+    mListener->OnGetDraftFolderURI(m_folderName.get());
 
   rv = mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
                                     this, m_folderName, mMsgToReplace);
@@ -4146,28 +4086,8 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
 nsresult
 nsMsgComposeAndSend::SetStatusMessage(const PRUnichar *aMsgString)
 {
-  nsresult rv;
-  if ( (!aMsgString) || (!mGUINotificationEnabled) )
-    return NS_OK;
-
-  nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(kMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  if (!mailSession) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIMsgWindow>    msgWindow;
-
-  rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
-  if(NS_FAILED(rv))
-    return rv;
-
-  if (!msgWindow) return NS_OK;
-
-  nsCOMPtr<nsIMsgStatusFeedback> feedback;
-  rv = msgWindow->GetStatusFeedback(getter_AddRefs(feedback));
-  if(NS_FAILED(rv)) return NS_OK;
-
-  feedback->ShowStatusString(aMsgString);
+  if (mSendProgress)
+    mSendProgress->OnStatusChange(nsnull, nsnull, 0, aMsgString);
   return NS_OK;
 }
 
@@ -4176,6 +4096,95 @@ nsresult
 nsMsgComposeAndSend::SetGUINotificationState(PRBool aEnableFlag)
 {
   mGUINotificationEnabled = aEnableFlag;
+  return NS_OK;
+}
+
+nsresult nsMsgComposeAndSend::Abort()
+{
+  PRUint32 i;
+  nsresult rv;
+  
+  if (mAbortInProcess)
+    return NS_OK;
+    
+  mAbortInProcess = PR_TRUE;
+      
+  if (m_plaintext)
+    rv = m_plaintext->Abort();
+  
+  if (m_attachments)
+  {
+    for (i = 0; i < m_attachment_count; i ++)
+    {
+      nsMsgAttachmentHandler *ma = &m_attachments[i];
+      if (ma)
+        rv = ma->Abort();
+    }
+  }
+  
+  mAbortInProcess = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgComposeAndSend::GetProcessAttachmentsSynchronously(PRBool *_retval)
+{
+  NS_ENSURE_ARG(_retval);
+  *_retval = m_be_synchronous_p;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgComposeAndSend::GetAttachmentHandlers(nsMsgAttachmentHandler * *_retval)
+{
+  NS_ENSURE_ARG(_retval);
+  *_retval = m_attachments;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgComposeAndSend::GetAttachmentCount(PRUint32 *aAttachmentCount)
+{
+  NS_ENSURE_ARG(aAttachmentCount);
+  *aAttachmentCount = m_attachment_count;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgComposeAndSend::GetPendingAttachmentCount(PRUint32 *aPendingAttachmentCount)
+{
+  NS_ENSURE_ARG(aPendingAttachmentCount);
+  *aPendingAttachmentCount = m_attachment_pending_count;
+  return NS_OK;
+}
+NS_IMETHODIMP nsMsgComposeAndSend::SetPendingAttachmentCount(PRUint32 aPendingAttachmentCount)
+{
+  m_attachment_pending_count = aPendingAttachmentCount;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgComposeAndSend::GetProgress(nsIMsgComposeProgress **_retval)
+{
+  NS_ENSURE_ARG(_retval);
+  *_retval = mSendProgress;
+  NS_IF_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgComposeAndSend::GetOutputStream(nsOutputFileStream * *_retval)
+{
+  NS_ENSURE_ARG(_retval);
+  *_retval = mOutputFile;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsMsgComposeAndSend::GetStatus(nsresult *aStatus)
+{
+  NS_ENSURE_ARG(aStatus);
+  *aStatus = m_status;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgComposeAndSend::SetStatus(nsresult aStatus)
+{
+  m_status = aStatus;
   return NS_OK;
 }
 

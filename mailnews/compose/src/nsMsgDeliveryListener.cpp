@@ -36,7 +36,7 @@ nsMsgDeliveryListener::OnStartRunningUrl(nsIURI * aUrl)
 #endif
 
   if (mMsgSendObj)
-    mMsgSendObj->NotifyListenersOnStartSending(nsnull, nsnull);
+    mMsgSendObj->NotifyListenerOnStartSending(nsnull, nsnull);
 
   if (mMsgSendLaterObj)
     mMsgSendLaterObj->NotifyListenersOnStartSending(nsnull);
@@ -62,7 +62,7 @@ nsMsgDeliveryListener::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 	}
 
   if (mMsgSendObj)
-    mMsgSendObj->NotifyListenersOnStopSending(
+    mMsgSendObj->NotifyListenerOnStopSending(
                                   nsnull,     // const char *aMsgID, 
                                   aExitCode,  // nsresult aStatus, 
                                   nsnull,     // const PRUnichar *aMsg, 
@@ -105,7 +105,7 @@ nsMsgDeliveryListener::~nsMsgDeliveryListener()
 }
 
 nsresult 
-nsMsgDeliveryListener::SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj)
+nsMsgDeliveryListener::SetMsgComposeAndSendObject(nsIMsgSend *obj)
 {
   mMsgSendObj = obj;
   return NS_OK;

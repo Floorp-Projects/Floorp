@@ -42,10 +42,12 @@
 #include "nsMsgComposeContentHandler.h"
 #include "nsMsgCompose.h"
 #include "nsMsgComposeParams.h"
+#include "nsMsgComposeProgress.h"
 #include "nsMsgSend.h"
 #include "nsMsgQuote.h"
 #include "nsIMsgDraft.h"
 #include "nsMsgCreate.h"    // For drafts...I know, awful file name...
+#include "nsURLFetcher.h"
 #include "nsSmtpServer.h"
 #include "nsSmtpDataSource.h"
 #include "nsSmtpDelegateFactory.h"
@@ -57,6 +59,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpServer);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompose);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeParams);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeSendListener);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeProgress);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompFields);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeAndSend);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSendLater);
@@ -71,6 +75,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgRecipientArray);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposeStringService);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpDataSource);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSmtpDelegateFactory);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsURLFetcher);
 
 ////////////////////////////////////////////////////////////
 //
@@ -100,6 +105,14 @@ static nsModuleComponentInfo components[] =
     NS_MSGCOMPOSEPARAMS_CID,
     NS_MSGCOMPOSEPARAMS_CONTRACTID,
     nsMsgComposeParamsConstructor },
+  { "Msg Compose Send Listener",
+    NS_MSGCOMPOSESENDLISTENER_CID,
+    NS_MSGCOMPOSESENDLISTENER_CONTRACTID,
+    nsMsgComposeSendListenerConstructor },
+  { "Msg Compose Progress",
+    NS_MSGCOMPOSEPROGRESS_CID,
+    NS_MSGCOMPOSEPROGRESS_CONTRACTID,
+    nsMsgComposeProgressConstructor },
   { "Msg Compose Fields",
     NS_MSGCOMPFIELDS_CID,
     NS_MSGCOMPFIELDS_CONTRACTID,
@@ -164,6 +177,10 @@ static nsModuleComponentInfo components[] =
     NS_SMTPDELEGATEFACTORY_CID,
     NS_SMTPDELEGATEFACTORY_CONTRACTID,
     nsSmtpDelegateFactoryConstructor },
+  { "URL Fetcher",
+    NS_URLFETCHER_CID,
+    NS_URLFETCHER_CONTRACTID,
+    nsURLFetcherConstructor },
 };
 
   

@@ -36,6 +36,9 @@
 #include "nsIMsgCompFields.idl"
 #include "nsIMsgSendListener.idl"
 #include "nsIEditorShell.idl"
+#include "nsIMsgComposeProgress.idl"
+#include "domstubs.idl"
+#include "nsIPrompt.idl"
 
 %{C++
 #include "nsIURL.h"
@@ -61,6 +64,9 @@ typedef nsresult (*nsMsgSendUnsentMessagesCallback) (nsresult aExitCode, PRUint3
 %}
 
 %{ C++
+// Forward declaration
+class nsMsgAttachmentHandler;
+
 // Attachment file/URL structures
 struct nsMsgAttachmentData
 {
@@ -131,6 +137,9 @@ typedef struct nsMsgAttachedFile
 
 [ptr] native nsMsgAttachmentData(nsMsgAttachmentData);
 [ptr] native nsMsgAttachedFile(nsMsgAttachedFile);
+[ptr] native nsMsgAttachmentHandler(nsMsgAttachmentHandler);
+[ptr] native nsOutputFileStream(nsOutputFileStream);
+[ptr] native nsCString(nsCString);
 
 [scriptable, uuid(9E9BD970-C5D6-11d2-8297-000000000000)]
 interface nsIMsgSend : nsISupports 
@@ -154,7 +163,7 @@ interface nsIMsgSend : nsISupports
     const nsMsgDeliverMode nsMsgSaveAsTemplate = 5;
 
     [noscript]
-    void CreateAndSendMessage(in nsIEditorShell               aEditor,      
+    void createAndSendMessage(in nsIEditorShell               aEditor,      
                               in nsIMsgIdentity               aUserIdentity,
                               in nsIMsgCompFields             fields,
                               in PRBool                       digest_p,
@@ -167,23 +176,57 @@ interface nsIMsgSend : nsISupports
                               [const] in nsMsgAttachmentData  attachments,
                               [const] in nsMsgAttachedFile    preloaded_attachments,
                               in voidPtr                      relatedPart,
-                              [array, size_is(listeners)]
-                              in nsIMsgSendListener           aListenerArray,
-                              in unsigned long                listeners);
+                              in nsIDOMWindowInternal         parentWindow,
+                              in nsIMsgComposeProgress        progress,
+                              in nsIMsgSendListener           aListener
+                             );
                               
     
-    void SendMessageFile(in nsIMsgIdentity       aUserIdentity,
+    void sendMessageFile(in nsIMsgIdentity       aUserIdentity,
                          in nsIMsgCompFields     fields,
                          in nsIFileSpec          sendIFileSpec,
                          in PRBool               deleteSendFileOnCompletion,
                          in PRBool               digest_p,
                          in nsMsgDeliverMode     mode,
                          in nsIMsgDBHdr          msgToReplace,
-                         [array, size_is(listeners)]
-                         in nsIMsgSendListener   aListenerArray,
-                         in unsigned long listeners); 
+                         in nsIMsgSendListener   aListener
+                        ); 
 
-    void AddListener(in nsIMsgSendListener aListener);
-    void RemoveListener(in nsIMsgSendListener aListener);
-    void SetGUINotificationState(in PRBool aEnableFlag);
+    /* Abort current send/save operation */
+    void abort();
+    
+    /* Report a send failure */
+    void fail(in nsresult failure_code, in wstring error_msg);
+
+    /* Disable UI notification (alert message) */
+    void setGUINotificationState(in PRBool aEnableFlag);
+    
+    /* methods for send listener ... */
+    [noscript] void notifyListenerOnStartSending(in string aMsgID, in unsigned long aMsgSize);
+    [noscript] void notifyListenerOnProgress(in string aMsgID, in unsigned long aProgress, in unsigned long aProgressMax);
+    [noscript] void notifyListenerOnStatus(in string aMsgID, in wstring aMsg);
+    [noscript] void notifyListenerOnStopSending(in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec);
+
+    /* methods for copy listener ... */
+    [noscript] void notifyListenerOnStartCopy(); 
+    [noscript] void notifyListenerOnProgressCopy(in unsigned long aProgress, in unsigned long aProgressMax);
+    [noscript] void notifyListenerOnStopCopy(in nsresult aStatus);
+    [noscript] void setMessageKey(in unsigned long  aMessageKey);
+    [noscript] void getMessageId(in nsCString messageID);
+
+    [noscript] nsIPrompt getDefaultPrompt();
+    
+    /* process attachment */
+    [noscript] void gatherMimeAttachments();
+    [noscript] boolean getProcessAttachmentsSynchronously();
+    [noscript] nsMsgAttachmentHandler getAttachmentHandlers();
+    [noscript] readonly attribute unsigned long attachmentCount;
+    [noscript] attribute unsigned long pendingAttachmentCount;
+
+    [noscript] nsIMsgComposeProgress getProgress();
+    
+    [noscript] nsOutputFileStream getOutputStream();
+
+    [noscript] attribute nsresult status;
+
 };

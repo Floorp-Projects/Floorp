@@ -20,8 +20,9 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
-#include "nsXPIDLString.h"
 #include "nsMsgCopy.h"
+
+#include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
 #include "nsIMsgCopyService.h"
@@ -63,7 +64,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 CopyListener::CopyListener(void) 
 { 
-  mComposeAndSend = nsnull;
   mCopyObject = nsnull;
   mCopyInProgress = PR_FALSE;
   NS_INIT_REFCNT(); 
@@ -81,7 +81,7 @@ CopyListener::OnStartCopy()
 #endif
 
   if (mComposeAndSend)
-    mComposeAndSend->NotifyListenersOnStartCopy();
+    mComposeAndSend->NotifyListenerOnStartCopy();
   return NS_OK;
 }
   
@@ -93,7 +93,7 @@ CopyListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
 #endif
 
   if (mComposeAndSend)
-    mComposeAndSend->NotifyListenersOnProgressCopy(aProgress, aProgressMax);
+    mComposeAndSend->NotifyListenerOnProgressCopy(aProgress, aProgressMax);
 
   return NS_OK;
 }
@@ -101,17 +101,17 @@ CopyListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
 nsresult
 CopyListener::SetMessageKey(PRUint32 aMessageKey)
 {
-    if (mComposeAndSend)
-        mComposeAndSend->SetMessageKey(aMessageKey);
-    return NS_OK;
+  if (mComposeAndSend)
+      mComposeAndSend->SetMessageKey(aMessageKey);
+  return NS_OK;
 }
 
 nsresult
-CopyListener::GetMessageId(nsCString* aMessageId)
+CopyListener::GetMessageId(nsCString *aMessageId)
 {
-    if (mComposeAndSend)
-        mComposeAndSend->GetMessageId(aMessageId);
-    return NS_OK;
+  if (mComposeAndSend)
+      mComposeAndSend->GetMessageId(aMessageId);
+  return NS_OK;
 }
 
 nsresult
@@ -138,13 +138,13 @@ CopyListener::OnStopCopy(nsresult aStatus)
       PR_CExitMonitor(mCopyObject);
   }
   if (mComposeAndSend)
-    mComposeAndSend->NotifyListenersOnStopCopy(aStatus);
+    mComposeAndSend->NotifyListenerOnStopCopy(aStatus);
 
   return NS_OK;
 }
 
 nsresult
-CopyListener::SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj)
+CopyListener::SetMsgComposeAndSendObject(nsIMsgSend *obj)
 {
   if (obj)
     mComposeAndSend = obj;
@@ -179,7 +179,7 @@ nsresult
 nsMsgCopy::StartCopyOperation(nsIMsgIdentity       *aUserIdentity,
                               nsIFileSpec          *aFileSpec, 
                               nsMsgDeliverMode     aMode,
-                              nsMsgComposeAndSend  *aMsgSendObj,
+                              nsIMsgSend           *aMsgSendObj,
                               const char           *aSavePref,
                               nsIMsgDBHdr            *aMsgToReplace)
 {
@@ -252,7 +252,7 @@ nsresult
 nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
                   nsIMsgDBHdr *aMsgToReplace, PRBool aIsDraft,
                   nsIMsgWindow *msgWindow,
-                  nsMsgComposeAndSend   *aMsgSendObj)
+                  nsIMsgSend   *aMsgSendObj)
 {
   nsresult rv = NS_OK;
 

@@ -26,6 +26,8 @@
 #include "nsIMsgComposeParams.idl"
 #include "nsIEditorShell.idl"
 #include "nsIMsgIdentity.idl"
+#include "nsIMsgSend.idl"
+#include "nsIMsgComposeProgress.idl"
 
 
 %{ C++
@@ -89,6 +91,18 @@ interface nsIMsgComposeStateListener : nsISupports
   void        SaveInFolderDone(in string folderName);
 };
 
+%{ C++
+/* TODO: we should create an interface for this enum! */
+typedef enum {
+   eComposeFieldsReady,
+   eComposeProcessDone,
+   eSaveInFolderDone
+} TStateListenerNotification;
+%}
+
+native TStateListenerNotification(TStateListenerNotification);
+native nsString(nsString);
+
 [scriptable, uuid(4E606270-B588-11D2-8289-00805F2A0107)]
 interface nsIMsgCompose : nsISupports {
 
@@ -105,7 +119,7 @@ interface nsIMsgCompose : nsISupports {
 	void UnregisterStateListener(in nsIMsgComposeStateListener stateListener);
 
 	/* ... */
-	void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity);
+	void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity, in nsIMsgComposeProgress progress);
 
 	/* ... */
   void CloseWindow();
@@ -144,27 +158,78 @@ interface nsIMsgCompose : nsISupports {
   void ResetNodeEventHandlers(in nsIDOMNode node);
 
 	/* ... */
-	  attribute nsIEditorShell editor;
+  attribute nsIEditorShell editor;
 
 	/* ... */
-    readonly attribute nsIDOMWindowInternal domWindow;
+  readonly attribute nsIDOMWindowInternal domWindow;
 
 	/* ... */
-    readonly attribute nsIMsgCompFields compFields;
+  readonly attribute nsIMsgCompFields compFields;
     
 	/* ... */
-    readonly attribute boolean composeHTML;
+  readonly attribute boolean composeHTML;
 
 	/* ... */
-    readonly attribute MSG_ComposeType type;
+  readonly attribute MSG_ComposeType type;
 
 	/* ... */
-    readonly attribute long wrapLength;
+  readonly attribute long wrapLength;
 
 	/* by reading this value, you can determine if yes or not the message has been mofified
 	   by the user. When you set this value to false, you reset the modification count
 	   of the body to 0 (clean).
 	*/
 	attribute boolean bodyModified;
+	
+
+	/* The following functions are for internal use, essentially for the listener */
+	
+	/* ... */
+	[noscript] void setCiteReference(in nsString citeReference);
+
+  /* Set the URI of the folder where the message has been saved */
+  [noscript] void setSavedFoldeURI(in string folderURI);
+
+  /* Append the signature defined in the identity to the msgBody */
+  [noscript] void processSignature(in nsIMsgIdentity identity, inout nsString aMsgBody);
+
+  /* set any reply flags on the original message's folder */
+  [noscript] void processReplyFlags();
+
+	/* ... */
+	[noscript] void convertAndLoadComposeWindow(in nsIEditorShell aEditorShell, in nsString aPrefix, in nsString aBuf, 
+                                              in nsString aSignature, in boolean aQuoted, in boolean aHTMLEditor);
+
+	/* Tell the doc state listeners that the doc state has changed */
+	[noscript] void notifyStateListeners(in TStateListenerNotification aNotificationType);
+
+  /* Retreive the progress object */
+  [nocript] nsIMsgComposeProgress getProgress();
+  
+  /* Set the message send object */
+  [nocript] void setMessageSend(in nsIMsgSend msgSend);
+  
+  /* Retreive the message send object */
+  [nocript] nsIMsgSend getMessageSend();
+  
+	/* ... */
+  [noscript] void buildBodyMessageAndSignature();
+  
+	/* ... */
+  [noscript] void buildQuotedMessageAndSignature();
+
+ 	/* ... */
+  [noscript] void getQuotingToFollow(out boolean quotingToFollow);
+
 };
+
+/* Listener interface */
+[noscript, uuid(ACC72780-2CEA-11D5-9DAA-BACDEAC1EEFC)]
+interface nsIMsgComposeSendListener : nsISupports {
+
+  void setMsgCompose(in nsIMsgCompose msgCompose);
+  void setDeliverMode(in MSG_DeliverMode deliverMode);
+ 
+};
+
 

@@ -27,9 +27,9 @@ include <$(DEPTH)\config\config.mak>
 ################################################################################
 ## exports
 
-EXPORTS=    nsSmtpUrl.h             \
-            nsSmtpProtocol.h        \
-            nsSmtpService.h                 \
+EXPORTS=    nsSmtpUrl.h \
+            nsSmtpProtocol.h \
+            nsSmtpService.h \
             nsMsgCreate.h \
             nsMsgSendLater.h \
             nsMsgCompUtils.h \
@@ -38,6 +38,7 @@ EXPORTS=    nsSmtpUrl.h             \
             nsMsgAttachmentHandler.h \
 			      nsMsgComposeService.h \
 			      nsMsgComposeParams.h \
+			      nsMsgComposeProgress.h \
 			      nsMsgComposeContentHandler.h \
 			      nsMsgCompose.h \
 			      nsMsgCompFields.h \
@@ -55,30 +56,31 @@ EXPORTS=    nsSmtpUrl.h             \
 
 LIBRARY_NAME=msgcompose_s
 
-CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj             \
-            .\$(OBJDIR)\nsSmtpUrl.obj                   \
-                        .\$(OBJDIR)\nsSmtpProtocol.obj          \
-                        .\$(OBJDIR)\nsMsgSend.obj                       \
-                        .\$(OBJDIR)\nsMsgSendPart.obj           \
-                        .\$(OBJDIR)\nsSmtpService.obj           \
-                        .\$(OBJDIR)\nsMsgComposeService.obj     \
-                        .\$(OBJDIR)\nsMsgComposeParams.obj     \
-                        .\$(OBJDIR)\nsMsgComposeContentHandler.obj     \
-                        .\$(OBJDIR)\nsMsgCompose.obj            \
-                        .\$(OBJDIR)\nsMsgCreate.obj \
-                .\$(OBJDIR)\nsMsgCopy.obj \
-                  .\$(OBJDIR)\nsMsgSendLater.obj \
-                        .\$(OBJDIR)\nsMsgDeliveryListener.obj \
-                        .\$(OBJDIR)\nsMsgComposeStringBundle.obj \
-                        .\$(OBJDIR)\nsMsgEncoders.obj \
-                        .\$(OBJDIR)\nsMsgCompUtils.obj \
-                        .\$(OBJDIR)\nsMsgAttachmentHandler.obj \
-                        .\$(OBJDIR)\nsMsgPrompts.obj \
-                        .\$(OBJDIR)\nsMsgQuote.obj \
-                        .\$(OBJDIR)\nsMsgRecipientArray.obj \
-                        .\$(OBJDIR)\nsURLFetcher.obj \
-                        .\$(OBJDIR)\nsSmtpServer.obj \
-                        .\$(OBJDIR)\nsSmtpDataSource.obj \
+CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj \
+            .\$(OBJDIR)\nsSmtpUrl.obj \
+            .\$(OBJDIR)\nsSmtpProtocol.obj \
+            .\$(OBJDIR)\nsMsgSend.obj \
+            .\$(OBJDIR)\nsMsgSendPart.obj \
+            .\$(OBJDIR)\nsSmtpService.obj \
+            .\$(OBJDIR)\nsMsgComposeService.obj \
+            .\$(OBJDIR)\nsMsgComposeParams.obj \
+            .\$(OBJDIR)\nsMsgComposeProgress.obj \
+            .\$(OBJDIR)\nsMsgComposeContentHandler.obj \
+            .\$(OBJDIR)\nsMsgCompose.obj \
+            .\$(OBJDIR)\nsMsgCreate.obj \
+            .\$(OBJDIR)\nsMsgCopy.obj \
+            .\$(OBJDIR)\nsMsgSendLater.obj \
+            .\$(OBJDIR)\nsMsgDeliveryListener.obj \
+            .\$(OBJDIR)\nsMsgComposeStringBundle.obj \
+            .\$(OBJDIR)\nsMsgEncoders.obj \
+            .\$(OBJDIR)\nsMsgCompUtils.obj \
+            .\$(OBJDIR)\nsMsgAttachmentHandler.obj \
+            .\$(OBJDIR)\nsMsgPrompts.obj \
+            .\$(OBJDIR)\nsMsgQuote.obj \
+            .\$(OBJDIR)\nsMsgRecipientArray.obj \
+            .\$(OBJDIR)\nsURLFetcher.obj \
+            .\$(OBJDIR)\nsSmtpServer.obj \
+            .\$(OBJDIR)\nsSmtpDataSource.obj \
 						.\$(OBJDIR)\nsSmtpDelegateFactory.obj \
             $(NULL)
 

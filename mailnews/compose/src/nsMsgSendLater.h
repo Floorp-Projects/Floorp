@@ -23,11 +23,11 @@
 #ifndef _nsMsgSendLater_H_
 #define _nsMsgSendLater_H_
 
-#include "nsIMsgIdentity.h"
 #include "nsIMsgSendLater.h"
+
+#include "nsIMsgIdentity.h"
 #include "nsIEnumerator.h"
 #include "nsIMsgFolder.h"
-//#include "nsIMessage.h"
 #include "nsIFileSpec.h"
 #include "nsFileStream.h"
 #include "nsIMsgSendListener.h"
@@ -35,6 +35,7 @@
 #include "nsMsgDeliveryListener.h"
 #include "nsIMsgSendLater.h"
 #include "nsIMsgWindow.h"
+
 ////////////////////////////////////////////////////////////////////////////////////
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
@@ -51,22 +52,9 @@ public:
   // nsISupports interface
   NS_DECL_ISUPPORTS
 
-  /* void OnStartSending (in string aMsgID, in PRUint32 aMsgSize); */
-  NS_IMETHOD OnStartSending(const char *aMsgID, PRUint32 aMsgSize);
-  
-  /* void OnProgress (in string aMsgID, in PRUint32 aProgress, in PRUint32 aProgressMax); */
-  NS_IMETHOD OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
-  
-  /* void OnStatus (in string aMsgID, in wstring aMsg); */
-  NS_IMETHOD OnStatus(const char *aMsgID, const PRUnichar *aMsg);
-  
-  /* void OnStopSending (in string aMsgID, in nsresult aStatus, in wstring aMsg, in nsIFileSpec returnFileSpec); */
-  NS_IMETHOD OnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
-                           nsIFileSpec *returnFileSpec);
-
-  /* void OnGetDraftFolderURI (); */
-  NS_IMETHOD OnGetDraftFolderURI(const char *aFolderURI);
-  
+  // nsIMsgSendListener interface
+  NS_DECL_NSIMSGSENDLISTENER
+    
   NS_IMETHOD SetSendLaterObject(nsMsgSendLater *obj);
 private:
   nsMsgSendLater    *mSendLater;
@@ -100,7 +88,6 @@ public:
   nsresult                  BuildNewBuffer(const char* aBuf, PRUint32 aCount, PRUint32 *totalBufSize);
 
   // methods for listener array processing...
-  nsresult  DeleteListeners();
   nsresult  NotifyListenersOnStartSending(PRUint32 aTotalMessageCount);
   nsresult  NotifyListenersOnProgress(PRUint32 aCurrentMessage, PRUint32 aTotalMessage);
   nsresult  NotifyListenersOnStatus(const PRUnichar *aMsg);
@@ -124,7 +111,6 @@ private:
   PRInt32                   mListenerArrayCount;
 
   nsMsgSendUnsentMessagesCallback  mCompleteCallback;
-  SendOperationListener     *mSendListener;
 
   nsCOMPtr<nsIMsgDBHdr>      mMessage;
 

@@ -34,7 +34,7 @@ typedef int (*MSG_SendPartWriteFunc)(const char* line, PRInt32 size,
 
 class nsMsgSendPart {
 public:
-    nsMsgSendPart(nsMsgComposeAndSend* state, const char *part_charset = NULL);
+    nsMsgSendPart(nsIMsgSend* state, const char *part_charset = NULL);
     virtual ~nsMsgSendPart();	  // Note that the destructor also destroys
 								                // any children that were added.
 
@@ -56,7 +56,7 @@ public:
     const char        *SetOtherHeaders() {return m_other;}
 	  virtual int       AppendOtherHeaders(const char* moreother);
 
-	  virtual int       SetMimeDeliveryState(nsMsgComposeAndSend* state);
+	  virtual int       SetMimeDeliveryState(nsIMsgSend* state);
 
 	// Note that the nsMsgSendPart class will take over ownership of the
 	// MimeEncoderData* object, deleting it when it chooses.  (This is
@@ -87,7 +87,7 @@ protected:
 	int                 CopyString(char** dest, const char* src);
 	int                 PushBody(char* buffer, PRInt32 length);
 
-	nsMsgComposeAndSend *m_state;
+	nsCOMPtr<nsIMsgSend> m_state;
 	nsMsgSendPart       *m_parent;
   nsFileSpec          *m_filespec;
 	XP_FileType         m_filetype;

@@ -60,7 +60,7 @@ public:
 	// nsIUrlListener support
 	NS_IMETHOD          OnStartRunningUrl(nsIURI * aUrl);
 	NS_IMETHOD          OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
-  NS_IMETHOD          SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj);
+  NS_IMETHOD          SetMsgComposeAndSendObject(nsIMsgSend *obj);
   NS_IMETHOD          SetMsgSendLaterObject(nsMsgSendLater *obj);
 
 private:
@@ -68,7 +68,7 @@ private:
   void                            *mTagData;
   nsFileSpec                      *mTempFileSpec;
   nsMsgDeliveryType               mDeliveryType;
-  nsCOMPtr<nsMsgComposeAndSend>   mMsgSendObj;
+  nsCOMPtr<nsIMsgSend>            mMsgSendObj;
   nsMsgSendLater                  *mMsgSendLaterObj;
   nsMsgDeliveryCompletionCallback mCompletionCallback;
 };

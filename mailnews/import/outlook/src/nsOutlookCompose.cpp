@@ -259,13 +259,6 @@ nsresult nsOutlookCompose::CreateComponents( void)
 	}
 	if (!m_pListener && NS_SUCCEEDED( rv)) {
 		rv = SendListener::CreateSendListener( &m_pListener);
-		if (NS_SUCCEEDED( rv)) {
-			rv = m_pMsgSend->AddListener( m_pListener);
-			if (NS_FAILED( rv)) {
-				NS_IF_RELEASE( m_pListener);
-				m_pListener = nsnull;
-			}
-		}
 	}
 
 	if (NS_SUCCEEDED(rv) && m_pMsgSend) { 
@@ -640,7 +633,9 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg)
 										nsnull,			// remote attachment data
 										pAttach,		// local attachments
 										nsnull,			// related part
-										nsnull, 0);		// listener array
+										nsnull,     // parent window
+										nsnull,     // progress listener
+										m_pListener);		// listener
 
 	
 	// IMPORT_LOG0( "Returned from CreateAndSendMessage\n");

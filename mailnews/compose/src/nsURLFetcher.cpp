@@ -21,6 +21,8 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+#include "nsURLFetcher.h"
+
 #include "msgCore.h" // for pre-compiled headers
 #include "nsCOMPtr.h"
 #include <stdio.h>
@@ -31,56 +33,30 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsRepository.h"
-#include "nsIURI.h"
 #include "nsString.h"
-#include "nsURLFetcher.h"
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsIHTTPChannel.h"
 #include "nsIWebProgress.h"
+#include "nsMsgAttachmentHandler.h"
+#include "nsMsgSend.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-/* 
- * This function will be used by the factory to generate an 
- * mime object class object....
- */
-nsresult NS_NewURLFetcher(nsURLFetcher ** aInstancePtrResult)
-{
-	//nsresult result = NS_OK;
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (nsnull != aInstancePtrResult)
-	{
-		nsURLFetcher *obj = new nsURLFetcher();
-		if (obj)
-			return obj->QueryInterface(NS_GET_IID(nsIStreamListener), (void**) aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; // we couldn't allocate the object 
-	}
-	else
-		return NS_ERROR_NULL_POINTER; // aInstancePtrResult was NULL....
-}
 
-NS_IMPL_ADDREF(nsURLFetcher)
-NS_IMPL_RELEASE(nsURLFetcher)
+NS_IMPL_ISUPPORTS6(nsURLFetcher, nsIURLFetcher, nsIStreamListener, nsIURIContentListener, nsIInterfaceRequestor, nsIWebProgressListener, nsISupportsWeakReference)
 
-NS_INTERFACE_MAP_BEGIN(nsURLFetcher)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
-   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
-   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-NS_INTERFACE_MAP_END
 
 /* 
  * Inherited methods for nsMimeConverter
  */
 nsURLFetcher::nsURLFetcher()
 {
+#if defined(DEBUG_ducarroz)
+  printf("CREATE nsURLFetcher: %x\n", this);
+#endif
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
 
@@ -96,7 +72,11 @@ nsURLFetcher::nsURLFetcher()
 
 nsURLFetcher::~nsURLFetcher()
 {
+#if defined(DEBUG_ducarroz)
+  printf("DISPOSE nsURLFetcher: %x\n", this);
+#endif
   mStillRunning = PR_FALSE;
+  
   PR_FREEIF(mContentType);
   PR_FREEIF(mCharset);
   // Remove the DocShell as a listener of the old WebProgress...
@@ -265,13 +245,33 @@ nsURLFetcher::OnDataAvailable(nsIRequest *request, nsISupports * ctxt, nsIInputS
 nsresult
 nsURLFetcher::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
+  nsMsgAttachmentHandler *attachmentHdl = (nsMsgAttachmentHandler *)mTagData;
+  if (attachmentHdl)
+  {
+    nsCOMPtr<nsIMsgSend> sendPtr;
+    attachmentHdl->GetMimeDeliveryState(getter_AddRefs(sendPtr));
+    if (sendPtr)
+    {
+      nsCOMPtr<nsIMsgComposeProgress> progress;
+      sendPtr->GetProgress(getter_AddRefs(progress));
+      if (progress)
+      {
+        PRBool cancel = PR_FALSE;
+        progress->GetProcessCanceledByUser(&cancel);
+        if (cancel)
+          return request->Cancel(NS_ERROR_ABORT);
+      }
+    }
+    attachmentHdl->mRequest = request;
+  }
+
   return NS_OK;
 }
 
 nsresult
 nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsresult aStatus)
 {
-#ifdef NS_DEBUG_rhp
+#if defined(DEBUG_ducarroz)
   printf("nsURLFetcher::OnStopRequest()\n");
 #endif
 
@@ -281,6 +281,10 @@ nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsres
 
   if (mOnStopRequestProcessed) return NS_OK;
   mOnStopRequestProcessed = PR_TRUE;
+  
+  nsMsgAttachmentHandler *attachmentHdl = (nsMsgAttachmentHandler *)mTagData;
+  if (attachmentHdl)
+    attachmentHdl->mRequest = nsnull;
 
   //
   // Now complete the stream!
@@ -321,7 +325,7 @@ nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsres
 
   // Now if there is a callback, we need to call it...
   if (mCallback)
-    mCallback (mURL, aStatus, mContentType, mCharset, mTotalWritten, nsnull, mTagData);
+    mCallback (aStatus, mContentType, mCharset, mTotalWritten, nsnull, mTagData);
 
   // Time to return...
   return NS_OK;
@@ -339,8 +343,8 @@ nsURLFetcher::Initialize(nsOutputFileStream *fOut,
     return NS_ERROR_FAILURE;
 
   mOutStream = fOut;
-  mCallback = cb;
-  mTagData = tagData;
+  mCallback = cb;     //JFD: Please, no more callback, use a listener...
+  mTagData = tagData; //JFD: TODO, WE SHOULD USE A NSCOMPTR to hold this stuff!!!
   return NS_OK;
 }
 
@@ -376,11 +380,10 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
   rv = pURILoader->OpenURI(channel, nsIURILoader::viewNormal, nsnull /* window target */, 
                            cntListener);
 
-  mURL = dont_QueryInterface(aURL);
   mOutStream = fOut;
   mCallback = cb;
   mTagData = tagData;
-  NS_ADDREF(this);
+
   return NS_OK;
 }
 

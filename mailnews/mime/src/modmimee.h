@@ -29,6 +29,7 @@
 #define _MIMEENC_H_
 
 #include "prtypes.h"
+#include "nsError.h"
 
 /* This file defines interfaces to generic implementations of Base64, 
    Quoted-Printable, and UU decoders; and of Base64 and Quoted-Printable
@@ -43,29 +44,29 @@ typedef struct MimeEncoderData MimeEncoderData;
 
 /* functions for creating that opaque data.
  */
-MimeDecoderData *MimeB64DecoderInit(int (*output_fn) (const char *buf,
+MimeDecoderData *MimeB64DecoderInit(nsresult (*output_fn) (const char *buf,
 													  PRInt32 size,
 													  void *closure),
 									void *closure);
-MimeDecoderData *MimeQPDecoderInit (int (*output_fn) (const char *buf,
+MimeDecoderData *MimeQPDecoderInit (nsresult (*output_fn) (const char *buf,
 													  PRInt32 size,
 													  void *closure),
 									void *closure);
-MimeDecoderData *MimeUUDecoderInit (int (*output_fn) (const char *buf,
+MimeDecoderData *MimeUUDecoderInit (nsresult (*output_fn) (const char *buf,
 													  PRInt32 size,
 													  void *closure),
 									void *closure);
 
-MimeEncoderData *MimeB64EncoderInit(int (*output_fn) (const char *buf,
+MimeEncoderData *MimeB64EncoderInit(nsresult (*output_fn) (const char *buf,
 													  PRInt32 size,
 													  void *closure),
 									void *closure);
-MimeEncoderData *MimeQPEncoderInit (int (*output_fn) (const char *buf,
+MimeEncoderData *MimeQPEncoderInit (nsresult (*output_fn) (const char *buf,
 													  PRInt32 size,
 													  void *closure),
 									void *closure);
 MimeEncoderData *MimeUUEncoderInit (char *filename,
-									int (*output_fn) (const char *buf,
+									nsresult (*output_fn) (const char *buf,
 													  PRInt32 size,
 													  void *closure),
 									void *closure);

@@ -24,13 +24,13 @@
 #define _nsMsgEncoders_H_
 
 extern "C" MimeEncoderData *
-MIME_B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure); 
+MIME_B64EncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure); 
 
 extern "C" MimeEncoderData *	
-MIME_QPEncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
+MIME_QPEncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
 
 extern "C" MimeEncoderData *	
-MIME_UUEncoderInit(char *filename, int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
+MIME_UUEncoderInit(char *filename, nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure);
 
 extern "C" nsresult
 MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p);

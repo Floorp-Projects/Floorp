@@ -461,10 +461,6 @@ int ap_encode_data(
 		
 		if (!p_ap_encode_obj->text_file_type)
 		{	
-			OSErr 	err;
-			FSSpec	file_spec;
-			char*	path;
-      
       /*
       **	do a smart check for the file type.
       */

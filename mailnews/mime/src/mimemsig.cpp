@@ -367,7 +367,7 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 		 (Similar logic is in MimeLeafClass->parse_begin.)
 	   */
 	  {
-		MimeDecoderData *(*fn) (int (*) (const char*, PRInt32,void*), void*) = 0;
+		MimeDecoderData *(*fn) (nsresult (*) (const char*, PRInt32,void*), void*) = 0;
 		char *encoding = MimeHeaders_get (sig->sig_hdrs,
 										  HEADER_CONTENT_TRANSFER_ENCODING,
 										  PR_TRUE, PR_FALSE);
@@ -386,7 +386,7 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 		if (fn)
 		  {
 			sig->sig_decoder_data =
-			  fn (((int (*) (const char *, PRInt32, void *))
+			  fn (((nsresult (*) (const char *, PRInt32, void *))
 				   (((MimeMultipartSignedClass *) obj->clazz)
 					->xlation_signature_hash)),
 				  sig->xlation_closure);
@@ -674,18 +674,18 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 		  !mime_typep(body, (MimeObjectClass*)&mimeMultipartClass)  &&
 		  body->options->decompose_file_output_fn)
 		  status = MimePartBufferRead (sig->part_buffer,
-							   /* The (int (*) ...) cast is to turn the
+							   /* The (nsresult (*) ...) cast is to turn the
 								  `void' argument into `MimeObject'. */
-							   ((int (*) (char *, PRInt32, void *))
+							   ((nsresult (*) (char *, PRInt32, void *))
 							   body->options->decompose_file_output_fn),
 							   body->options->stream_closure);
 	  else
 #endif /* MIME_DRAFTS */
 
 	  status = MimePartBufferRead (sig->part_buffer,
-							   /* The (int (*) ...) cast is to turn the
+							   /* The (nsresult (*) ...) cast is to turn the
 								  `void' argument into `MimeObject'. */
-							   ((int (*) (char *, PRInt32, void *))
+							   ((nsresult (*) (char *, PRInt32, void *))
 								body->clazz->parse_buffer),
 								body);
 	  if (status < 0) return status;

@@ -72,9 +72,9 @@
 // Forward declarations...
 //
 extern "C" char     *MIME_StripContinuations(char *original);
-int                 mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers );
-int                 mime_decompose_file_output_fn ( char *buf, PRInt32 size, void *stream_closure );
-int                 mime_decompose_file_close_fn ( void *stream_closure );
+nsresult            mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers );
+nsresult            mime_decompose_file_output_fn ( char *buf, PRInt32 size, void *stream_closure );
+nsresult            mime_decompose_file_close_fn ( void *stream_closure );
 extern int          MimeHeaders_build_heads_list(MimeHeaders *hdrs);
 
 // CID's
@@ -1561,7 +1561,7 @@ make_mime_headers_copy ( void *closure, MimeHeaders *headers )
   return 0;
 }
 
-int 
+nsresult 
 mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
 {
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream_closure;
@@ -1790,7 +1790,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   // for the message. This way, we have native data 
   if (creatingMsgBody) 
   {
-    MimeDecoderData *(*fn) (int (*) (const char*, PRInt32, void*), void*) = 0;
+    MimeDecoderData *(*fn) (nsresult (*) (const char*, PRInt32, void*), void*) = 0;
     
     //
     // Initialize a decoder if necessary.
@@ -1809,8 +1809,8 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     
     if (fn) 
     {
-      mdd->decoder_data = fn (/* The (int (*) ...) cast is to turn the `void' argument into `MimeObject'. */
-                              ((int (*) (const char *, PRInt32, void *))
+      mdd->decoder_data = fn (/* The (nsresult (*) ...) cast is to turn the `void' argument into `MimeObject'. */
+                              ((nsresult (*) (const char *, PRInt32, void *))
                               dummy_file_write), mdd->tmpFileStream);
       if (!mdd->decoder_data)
         return MIME_OUT_OF_MEMORY;
@@ -1820,7 +1820,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   return 0;
 }
 
-int 
+nsresult 
 mime_decompose_file_output_fn (char     *buf,
 								               PRInt32  size,
 								               void     *stream_closure )
@@ -1849,7 +1849,7 @@ mime_decompose_file_output_fn (char     *buf,
   return 0;
 }
 
-int
+nsresult
 mime_decompose_file_close_fn ( void *stream_closure )
 {
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream_closure;

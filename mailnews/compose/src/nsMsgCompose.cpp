@@ -18,11 +18,13 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *     Jean-Francois Ducarroz <ducarroz@netscaape.com>
  *     Ben Bucksch <mozilla@bucksch.org>
  *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMsgCompose.h"
+
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
@@ -138,12 +140,15 @@ static void TranslateLineEnding(nsString& data)
 
 nsMsgCompose::nsMsgCompose()
 {
+#if defined(DEBUG_ducarroz)
+  printf("CREATE nsMsgCompose: %x\n", this);
+#endif
+
 	NS_INIT_REFCNT();
 
 	mQuotingToFollow = PR_FALSE;
 	mWhatHolder = 1;
 	mDocumentListener = nsnull;
-	mMsgSend = nsnull;
 	m_window = nsnull;
 	m_editor = nsnull;
 	mQuoteStreamListener=nsnull;
@@ -172,6 +177,10 @@ nsMsgCompose::nsMsgCompose()
 
 nsMsgCompose::~nsMsgCompose()
 {
+#if defined(DEBUG_ducarroz)
+  printf("DISPOSE nsMsgCompose: %x\n", this);
+#endif
+
 	if (mDocumentListener)
 	{
 		mDocumentListener->SetComposeObj(nsnull);      
@@ -182,7 +191,7 @@ nsMsgCompose::~nsMsgCompose()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS1(nsMsgCompose, nsMsgCompose)
+NS_IMPL_ISUPPORTS2(nsMsgCompose, nsIMsgCompose, nsISupportsWeakReference)
 
 //
 // Once we are here, convert the data which we know to be UTF-8 to UTF-16
@@ -241,9 +250,8 @@ GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *o
   return result;
 }
 
-nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString& aPrefix, nsString& aBuf, 
-                                                   nsString& aSignature, PRBool aQuoted, PRBool aHTMLEditor)
-
+NS_IMETHODIMP nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aPrefix, nsString aBuf,
+                                                  nsString aSignature, PRBool aQuoted, PRBool aHTMLEditor)
 {
   // First, get the nsIEditor interface for future use
   nsCOMPtr<nsIEditor> editor;
@@ -402,10 +410,12 @@ nsMsgCompose::SetQuotingToFollow(PRBool aVal)
   return NS_OK;
 }
 
-PRBool
-nsMsgCompose::QuotingToFollow(void)
+NS_IMETHODIMP
+nsMsgCompose::GetQuotingToFollow(PRBool* quotingToFollow)
 {
-  return mQuotingToFollow;
+  NS_ENSURE_ARG(quotingToFollow);
+  *quotingToFollow = mQuotingToFollow;
+  return NS_OK;
 }
 
 nsresult nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow,
@@ -517,7 +527,7 @@ nsresult nsMsgCompose::UnregisterStateListener(nsIMsgComposeStateListener *state
 nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, PRBool entityConversionDone)
 {
   nsresult rv = NS_OK;
-  
+    
   if (m_compFields && identity) 
   {
     // Pref values are supposed to be stored as UTF-8, so no conversion
@@ -556,11 +566,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
     printf("----------------------------\n");
 #endif //DEBUG
 
-    nsMsgComposeAndSend *tMsgComp = new nsMsgComposeAndSend();
-    if (!tMsgComp)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    mMsgSend = do_QueryInterface( tMsgComp );
+    mMsgSend = do_CreateInstance(NS_MSGSEND_CONTRACTID);
     if (mMsgSend)
     {
       PRBool      newBody = PR_FALSE;
@@ -589,59 +595,45 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       bodyLength = PL_strlen(bodyString);
       
       // Create the listener for the send operation...
-      nsMsgComposeSendListener *sendListener = new nsMsgComposeSendListener();
-      if (!sendListener)
+      nsCOMPtr<nsIMsgComposeSendListener> composeSendListener = do_CreateInstance(NS_MSGCOMPOSESENDLISTENER_CONTRACTID);
+      if (!composeSendListener)
         return NS_ERROR_OUT_OF_MEMORY;
       
-      // We must hold a reference to it as long as we have tArray (below)
-      nsCOMPtr<nsIMsgSendListener> kungFuDeathGrip(sendListener);
-      // set this object for use on completion...
-      sendListener->SetComposeObj(this);
-      sendListener->SetDeliverMode(deliverMode);
-      PRUint32 listeners = 0;
-      nsIMsgSendListener **tArray = sendListener->CreateListenerArray(&listeners);
-      if (!tArray)
+      composeSendListener->SetMsgCompose(this);
+      composeSendListener->SetDeliverMode(deliverMode);
+
+      if (mProgress)
       {
-#ifdef DEBUG
-        printf("Error creating listener array.\n");
-#endif
-        return NS_ERROR_FAILURE;
+        nsCOMPtr<nsIWebProgressListener> progressListener = do_QueryInterface(composeSendListener);
+        mProgress->RegisterListener(progressListener);
       }
-      
+            
       // If we are composing HTML, then this should be sent as
       // multipart/related which means we pass the editor into the
       // backend...if not, just pass nsnull
       //
-      nsIEditorShell  *tEditor = nsnull;
-      
-      if (m_composeHTML)
-      {
-        tEditor = m_editor;
-      }
-      else
-        tEditor = nsnull;    
-
+      nsCOMPtr<nsIMsgSendListener> sendListener = do_QueryInterface(composeSendListener);
       rv = mMsgSend->CreateAndSendMessage(
-                    tEditor,
+                    m_composeHTML?m_editor:nsnull,
                     identity,
                     m_compFields, 
                     PR_FALSE,         					        // PRBool                            digest_p,
                     PR_FALSE,         					        // PRBool                            dont_deliver_p,
                     (nsMsgDeliverMode)deliverMode,   		// nsMsgDeliverMode                  mode,
-                    nsnull,                     			  // nsIMsgDBHdr *msgToReplace, 
-                    m_composeHTML?TEXT_HTML:TEXT_PLAIN, // const char                        *attachment1_type,
+                    nsnull,                     			  // nsIMsgDBHdr *msgToReplace                        *msgToReplace, 
+                    m_composeHTML?TEXT_HTML:TEXT_PLAIN,	// const char                        *attachment1_type,
                     bodyString,               			    // const char                        *attachment1_body,
                     bodyLength,               			    // PRUint32                          attachment1_body_length,
                     nsnull,             					      // const struct nsMsgAttachmentData  *attachments,
                     nsnull,             					      // const struct nsMsgAttachedFile    *preloaded_attachments,
                     nsnull,             					      // nsMsgSendPart                     *relatedPart,
-                    tArray, listeners);                 // listener array
-      
+                    m_window,                           // nsIDOMWindowInternal              *parentWindow;
+                    mProgress,                          // nsIMsgComposeProgress             *progress,
+                    sendListener);                      // listener
+
       // Cleanup converted body...
       if (newBody)
         PR_FREEIF(bodyString);
-
-      PR_Free(tArray);
     }
     else
 	    	rv = NS_ERROR_FAILURE;
@@ -649,29 +641,41 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
   else
     rv = NS_ERROR_NOT_INITIALIZED;
   
-  if (NS_SUCCEEDED(rv))
-  {
-    // rhp:
-    // We shouldn't close the window if we are just saving a draft or a template
-    // so do this check
-    if ( (deliverMode != nsIMsgSend::nsMsgSaveAsDraft) &&
-         (deliverMode != nsIMsgSend::nsMsgSaveAsTemplate) )
-      ShowWindow(PR_FALSE);
-  }
-  else
+  if (NS_FAILED(rv))
     NotifyStateListeners(eComposeProcessDone);
 	
   return rv;
 }
 
-nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *identity)
+nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *identity, nsIMsgComposeProgress *progress)
 {
 	nsresult rv = NS_OK;
 	PRBool entityConversionDone = PR_FALSE;
+  nsCOMPtr<nsIPrompt> prompt;
+
+  // Let's open the progress dialog
+  if (progress)
+  {
+    mProgress = progress;
+    nsXPIDLString msgSubject;
+    m_compFields->GetSubject(getter_Copies(msgSubject));
+
+    PRBool showProgress = PR_FALSE;
+	  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+    if (prefs)
+    {
+		  prefs->GetBoolPref("mailnews.show_send_progress", &showProgress);
+      if (showProgress)
+      {
+        mProgress->OpenProgress(m_window, (const PRUnichar*)msgSubject, deliverMode != nsIMsgSend::nsMsgDeliverNow);
+        mProgress->GetPrompter(getter_AddRefs(prompt));
+        mProgress->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_START, 0);
+      }
+    }
+  }
 
   // i'm assuming the compose window is still up at this point...
-  nsCOMPtr<nsIPrompt> prompt;
-  if (m_window)
+  if (!prompt && m_window)
      m_window->GetPrompter(getter_AddRefs(prompt));
 
 	if (m_editor && m_compFields && !m_composeHTML)
@@ -725,10 +729,12 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
   rv = _SendMsg(deliverMode, identity, entityConversionDone);
 	if (NS_FAILED(rv))
 	{
-		ShowWindow(PR_TRUE);
     if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
       if (NS_FAILED(nsMsgDisplayMessageByID(prompt, rv)))
         nsMsgDisplayMessageByID(prompt, NS_ERROR_SEND_FAILED);
+
+    if (progress)
+      progress->CloseProgress(PR_TRUE);
 	}
 	
 	return rv;
@@ -738,26 +744,17 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 nsresult nsMsgCompose::CloseWindow()
 {
     nsresult rv = NS_OK;
+
     if (m_baseWindow) {
-        m_editor = nsnull;	      /* m_editor will be destroyed during the Close Window. Set it to null to */
-							      /* be sure we wont use it anymore. */
+        m_editor = nsnull;	/* m_editor will be destroyed during the Close Window. Set it to null to */
+							              /* be sure we wont use it anymore. */
 
         nsIBaseWindow * aWindow = m_baseWindow;
         m_baseWindow = nsnull;
         rv = aWindow->Destroy();              
     }
 
-    // Need to relelase the mComposeObj...
-    mMsgSend = nsnull;
   	return rv;
-}
-
-nsresult nsMsgCompose::ShowWindow(PRBool show)
-{
-	if (m_baseWindow) {
-        return m_baseWindow->SetVisibility(show);
-    }
-	return NS_OK;
 }
 
 nsresult nsMsgCompose::GetEditor(nsIEditorShell * *aEditor) 
@@ -772,6 +769,9 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
     // First, store the editor shell but do not addref it (see sfraser@netscape.com for explanation).
     m_editor = aEditor;
 
+    if (nsnull == m_editor)
+      return NS_OK;
+    
     //
     // Now this routine will create a listener for state changes
     // in the editor and set us as the compose object of interest.
@@ -1075,6 +1075,41 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   return rv;
 }
 
+NS_IMETHODIMP nsMsgCompose::GetProgress(nsIMsgComposeProgress **_retval)
+{
+  NS_ENSURE_ARG(_retval);
+  *_retval = mProgress;
+  NS_IF_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompose::SetMessageSend(nsIMsgSend *msgSend)
+{
+  mMsgSend = msgSend;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompose::GetMessageSend(nsIMsgSend **_retval)
+{
+  NS_ENSURE_ARG(_retval);
+  *_retval = mMsgSend;
+  NS_IF_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompose::SetCiteReference(nsString citeReference)
+{
+  mCiteReference = citeReference;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompose::SetSavedFoldeURI(const char *folderURI)
+{
+  m_folderName = folderURI;
+  return NS_OK;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////
 // THIS IS THE CLASS THAT IS THE STREAM CONSUMER OF THE HTML OUPUT
 // FROM LIBMIME. THIS IS FOR QUOTING
@@ -1187,20 +1222,21 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
   nsresult rv = NS_OK;
   nsAutoString aCharset;
   
-  if (mComposeObj) 
+  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+  if (compose) 
   {
     MSG_ComposeType type;
-    mComposeObj->GetType(&type);
+    compose->GetType(&type);
     
     // Assign cite information if available...
     if (!mCiteReference.IsEmpty())
-      mComposeObj->mCiteReference = mCiteReference;
+      compose->SetCiteReference(mCiteReference);
 
     if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll || type == nsIMsgCompType::ReplyToSender ||
                      type == nsIMsgCompType::ReplyToGroup || type == nsIMsgCompType::ReplyToSenderAndGroup))
     {
       nsIMsgCompFields *compFields = nsnull;
-      mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
+      compose->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
       if (compFields)
       {
         aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
@@ -1329,7 +1365,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     composeService->TimeStamp("done with mime. Lets update some UI element", PR_FALSE);
 #endif
 
-    mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeFieldsReady);
+    compose->NotifyStateListeners(eComposeFieldsReady);
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
     composeService->TimeStamp("addressing widget, windows title and focus are now set, time to insert the body", PR_FALSE);
@@ -1345,7 +1381,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     //
     // XXX not m_composeHTML? /BenB
     PRBool composeHTML = PR_TRUE;
-    mComposeObj->GetComposeHTML(&composeHTML);
+    compose->GetComposeHTML(&composeHTML);
     if (!composeHTML)
     {
       // Downsampling. The charset should only consist of ascii.
@@ -1355,16 +1391,14 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
       Recycle(target_charset);
     }
 
-    mComposeObj->ProcessSignature(mIdentity, &mSignature);
+    compose->ProcessSignature(mIdentity, &mSignature);
     
     nsCOMPtr<nsIEditorShell>editor;
-    if (NS_SUCCEEDED(mComposeObj->GetEditor(getter_AddRefs(editor))) && editor)
+    if (NS_SUCCEEDED(compose->GetEditor(getter_AddRefs(editor))) && editor)
     {
-      mComposeObj->ConvertAndLoadComposeWindow(editor, mCitePrefix, mMsgBody, mSignature, PR_TRUE, composeHTML);
+      compose->ConvertAndLoadComposeWindow(editor, mCitePrefix, mMsgBody, mSignature, PR_TRUE, composeHTML);
     }
   }
-
-  mComposeObj = null_nsCOMPtr();	//We are done with it, therefore release it.
   return rv;
 }
 
@@ -1408,9 +1442,9 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIRequest *request,
 }
 
 nsresult
-QuotingOutputStreamListener::SetComposeObj(nsMsgCompose *obj)
+QuotingOutputStreamListener::SetComposeObj(nsIMsgCompose *obj)
 {
-  mComposeObj = obj;
+  mWeakComposeObj = getter_AddRefs(NS_GetWeakReference(obj));
   return NS_OK;
 }
 
@@ -1466,7 +1500,6 @@ nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // 
   }
   NS_ADDREF(mQuoteStreamListener);
 
-  NS_ADDREF(this);
   mQuoteStreamListener->SetComposeObj(this);
 
   rv = mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener, m_compFields->GetCharacterSet());
@@ -1569,24 +1602,27 @@ nsresult nsMsgCompose::ProcessReplyFlags()
 NS_IMPL_ADDREF(nsMsgComposeSendListener)
 NS_IMPL_RELEASE(nsMsgComposeSendListener)
 
-nsIMsgSendListener **
-nsMsgComposeSendListener::CreateListenerArray(PRUint32 *aListeners)
-{
-  nsIMsgSendListener **tArray = (nsIMsgSendListener **)PR_Malloc(sizeof(nsIMsgSendListener *) * 2);
-  if (!tArray)
-    return nsnull;
-  nsCRT::memset(tArray, 0, sizeof(nsIMsgSendListener *) * 2);
-  tArray[0] = this;
-  *aListeners = 2;
-  return tArray;
-}
-
-NS_IMPL_QUERY_INTERFACE2(nsMsgComposeSendListener,
+/*
+NS_IMPL_QUERY_INTERFACE4(nsMsgComposeSendListener,
+                         nsIMsgComposeSendListener,
                          nsIMsgSendListener,
-                         nsIMsgCopyServiceListener)
+                         nsIMsgCopyServiceListener,
+                         nsIWebProgressListener)
+*/
+NS_INTERFACE_MAP_BEGIN(nsMsgComposeSendListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgComposeSendListener)
+  NS_INTERFACE_MAP_ENTRY(nsIMsgComposeSendListener)
+  NS_INTERFACE_MAP_ENTRY(nsIMsgSendListener)
+  NS_INTERFACE_MAP_ENTRY(nsIMsgCopyServiceListener)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+NS_INTERFACE_MAP_END
+
 
 nsMsgComposeSendListener::nsMsgComposeSendListener(void) 
 { 
+#if defined(DEBUG_ducarroz)
+  printf("CREATE nsMsgComposeSendListener: %x\n", this);
+#endif
 	mDeliverMode = 0;
 
   NS_INIT_REFCNT(); 
@@ -1594,15 +1630,18 @@ nsMsgComposeSendListener::nsMsgComposeSendListener(void)
 
 nsMsgComposeSendListener::~nsMsgComposeSendListener(void) 
 {
+#if defined(DEBUG_ducarroz)
+  printf("DISPOSE nsMsgComposeSendListener: %x\n", this);
+#endif
 }
 
-nsresult nsMsgComposeSendListener::SetComposeObj(nsMsgCompose *obj)
+NS_IMETHODIMP nsMsgComposeSendListener::SetMsgCompose(nsIMsgCompose *obj)
 {
-	mComposeObj = obj;
+  mWeakComposeObj = getter_AddRefs(NS_GetWeakReference(obj));
 	return NS_OK;
 }
 
-nsresult nsMsgComposeSendListener::SetDeliverMode(MSG_DeliverMode deliverMode)
+NS_IMETHODIMP nsMsgComposeSendListener::SetDeliverMode(MSG_DeliverMode deliverMode)
 {
 	mDeliverMode = deliverMode;
 	return NS_OK;
@@ -1641,18 +1680,26 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 {
 	nsresult rv = NS_OK;
 
-	if (mComposeObj)
+  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+	if (compose)
 	{
+	  nsCOMPtr<nsIMsgComposeProgress> progress;
+	  compose->GetProgress(getter_AddRefs(progress));
+	  
+    //Unregister ourself from msg compose progress
+    if (progress)
+      progress->UnregisterListener(this);
+
 		if (NS_SUCCEEDED(aStatus))
 		{
 #ifdef NS_DEBUG
 			printf("nsMsgComposeSendListener: Success on the message send operation!\n");
 #endif
       nsIMsgCompFields *compFields = nsnull;
-      mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
+      compose->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
 
       // only process the reply flags if we successfully sent the message
-      mComposeObj->ProcessReplyFlags();
+      compose->ProcessReplyFlags();
 
 			// Close the window ONLY if we are not going to do a save operation
       PRUnichar *fieldsFCC = nsnull;
@@ -1662,15 +1709,19 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
         {
 			    if (nsCRT::strcasecmp(fieldsFCC, "nocopy://") == 0)
 			    {
-			      mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeProcessDone);
-            mComposeObj->CloseWindow();
+			      compose->NotifyStateListeners(eComposeProcessDone);
+            if (progress)
+              progress->CloseProgress(PR_FALSE);
+            compose->CloseWindow();
           }
         }
       }
       else
       {
-			  mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeProcessDone);
-        mComposeObj->CloseWindow();  // if we fail on the simple GetFcc call, close the window to be safe and avoid
+			  compose->NotifyStateListeners(eComposeProcessDone);
+        if (progress)
+          progress->CloseProgress(PR_FALSE);
+        compose->CloseWindow();  // if we fail on the simple GetFcc call, close the window to be safe and avoid
                                      // windows hanging around to prevent the app from exiting.
       }
 
@@ -1681,11 +1732,12 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 #ifdef NS_DEBUG
 			printf("nsMsgComposeSendListener: the message send operation failed!\n");
 #endif
-			mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeProcessDone);
-			mComposeObj->ShowWindow(PR_TRUE);
+			compose->NotifyStateListeners(eComposeProcessDone);
+      if (progress)
+        progress->CloseProgress(PR_TRUE);
 
       // Need to relelase the mComposeObj...
-      mComposeObj->mMsgSend = nsnull;
+      compose->SetMessageSend(nsnull);
 		}
 	}
 
@@ -1695,8 +1747,10 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 nsresult
 nsMsgComposeSendListener::OnGetDraftFolderURI(const char *aFolderURI)
 {
-	if (mComposeObj)
-    mComposeObj->m_folderName = (const char*)aFolderURI;
+  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+	if (compose)
+    compose->SetSavedFoldeURI(aFolderURI);
+
   return NS_OK;
 }
 
@@ -1725,34 +1779,34 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 {
 	nsresult rv = NS_OK;
 
-	if (mComposeObj)
+  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+	if (compose)
 	{
     // Ok, if we are here, we are done with the send/copy operation so
     // we have to do something with the window....SHOW if failed, Close
     // if succeeded
+
+	  nsCOMPtr<nsIMsgComposeProgress> progress;
+	  compose->GetProgress(getter_AddRefs(progress));
+    if (progress)
+      progress->CloseProgress(NS_FAILED(aStatus));
+		compose->NotifyStateListeners(eComposeProcessDone);
+
 		if (NS_SUCCEEDED(aStatus))
 		{
 #ifdef NS_DEBUG
 			printf("nsMsgComposeSendListener: Success on the message copy operation!\n");
 #endif
-			mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeProcessDone);
       // We should only close the window if we are done. Things like templates
       // and drafts aren't done so their windows should stay open
       if ( (mDeliverMode != nsIMsgSend::nsMsgSaveAsDraft) &&
            (mDeliverMode != nsIMsgSend::nsMsgSaveAsTemplate) )
-        mComposeObj->CloseWindow();
-      else
-        mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveInFolderDone);
-
+        compose->CloseWindow();
 		}
-		else
-		{
 #ifdef NS_DEBUG
+		else
 			printf("nsMsgComposeSendListener: the message copy operation failed!\n");
 #endif
-			mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeProcessDone);
-			mComposeObj->ShowWindow(PR_TRUE);
-		}
 	}
 
   return rv;
@@ -1769,6 +1823,72 @@ nsMsgComposeSendListener::GetMessageId(nsCString* aMessageId)
 {
 	return NS_OK;
 }
+
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
+NS_IMETHODIMP nsMsgComposeSendListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
+{
+  if (aStateFlags == nsIWebProgressListener::STATE_STOP)
+  {
+    nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+	  if (compose)
+	  {
+  	  nsCOMPtr<nsIMsgComposeProgress> progress;
+  	  compose->GetProgress(getter_AddRefs(progress));
+  	  
+      //Time to stop any pending operation...
+      if (progress)
+      {
+        //Unregister ourself from msg compose progress
+        progress->UnregisterListener(this);
+    
+        PRBool  bCanceled = PR_FALSE;
+        progress->GetProcessCanceledByUser(&bCanceled);
+        if (bCanceled)
+        {
+          nsXPIDLString msg; 
+          nsCOMPtr<nsIMsgStringService> strBundle = do_GetService(NS_MSG_COMPOSESTRINGSERVICE_CONTRACTID);
+          strBundle->GetStringByID(NS_MSG_CANCELLING, getter_Copies(msg));
+          progress->OnStatusChange(nsnull, nsnull, 0, msg);
+        }
+      }
+      
+      nsCOMPtr<nsIMsgSend> msgSend;
+      compose->GetMessageSend(getter_AddRefs(msgSend));
+      if (msgSend)
+          msgSend->Abort();
+    }
+  }
+  return NS_OK;
+}
+
+/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
+NS_IMETHODIMP nsMsgComposeSendListener::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+  /* Ignore this call */
+  return NS_OK;
+}
+
+/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
+NS_IMETHODIMP nsMsgComposeSendListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
+{
+  /* Ignore this call */
+  return NS_OK;
+}
+
+/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
+NS_IMETHODIMP nsMsgComposeSendListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
+{
+  /* Ignore this call */
+  return NS_OK;
+}
+
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+NS_IMETHODIMP nsMsgComposeSendListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+{
+  /* Ignore this call */
+  return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 // This is a class that will allow us to listen to state changes in the Ender 
@@ -1788,9 +1908,9 @@ nsMsgDocumentStateListener::~nsMsgDocumentStateListener(void)
 }
 
 void        
-nsMsgDocumentStateListener::SetComposeObj(nsMsgCompose *obj)
+nsMsgDocumentStateListener::SetComposeObj(nsIMsgCompose *obj)
 {
-  mComposeObj = obj;
+  mWeakComposeObj = getter_AddRefs(NS_GetWeakReference(obj));
 }
 
 nsresult
@@ -1807,21 +1927,28 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
   composeService->TimeStamp("Editor is done loading about::blank. Now let mime do its job", PR_FALSE);
 #endif
 
-  if ( mComposeObj->QuotingToFollow() )
-    return mComposeObj->BuildQuotedMessageAndSignature();
-  else
+  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+  if (compose)
   {
-    mComposeObj->NotifyStateListeners(nsMsgCompose::eComposeFieldsReady);
-    return mComposeObj->BuildBodyMessageAndSignature();
+    PRBool quotingToFollow = PR_FALSE;
+    compose->GetQuotingToFollow(&quotingToFollow);
+    if (quotingToFollow)
+      return compose->BuildQuotedMessageAndSignature();
+    else
+    {
+      compose->NotifyStateListeners(eComposeFieldsReady);
+      return compose->BuildBodyMessageAndSignature();
+    }
   }
 }
 
 nsresult
 nsMsgDocumentStateListener::NotifyDocumentWillBeDestroyed(void)
 {
-  if (mComposeObj)
-    mComposeObj->m_editor = nsnull;	/* m_editor will be destroyed. Set it to null to */
-									/* be sure we wont use it anymore. */
+  nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
+  if (compose)
+    compose->SetEditor(nsnull); /* m_editor will be destroyed. Set it to null to */
+									              /* be sure we wont use it anymore. */
   return NS_OK;
 }
 
@@ -3244,6 +3371,7 @@ nsresult nsMsgCompose::ResetNodeEventHandlers(nsIDOMNode *node)
     
     return rv;
 }
+
 
 NS_IMPL_ADDREF(nsMsgRecipient)
 NS_IMPL_RELEASE(nsMsgRecipient)

@@ -124,11 +124,12 @@
 //
 // Necessary includes
 //
+#include "nsIMsgSend.h"
+
 #include "msgCore.h"
 #include "prprf.h" 
 #include "nsFileStream.h"
 #include "nsMsgMessageFlags.h"
-#include "nsIMsgSend.h"
 #include "nsIURL.h"
 #include "nsMsgAttachmentHandler.h"
 #include "nsMsgCompFields.h"
@@ -138,15 +139,11 @@
 #include "nsIUrlListener.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgStringService.h"
-#include "nsIMsgHdr.h"
-#if 0
-#include "nsMsgCopy.h"
-#endif
 #include "nsIMsgIdentity.h"
-#if 0
-#include "nsMsgDeliveryListener.h"
-#endif
-
+#include "nsIMsgHdr.h"
+#include "nsIMsgIdentity.h"
+#include "nsWeakReference.h"
+#include "nsIDOMWindowInternal.h"
 
 //
 // Some necessary defines...
@@ -193,13 +190,6 @@ public:
   nsMsgComposeAndSend();
 	virtual     ~nsMsgComposeAndSend();
 
-  // When you send a message, the compose window goes away. So when you show alerts AFTER 
-  // we've dimissed the compose window, we want to parent them off an existing window for modality purposes.
-  // Ideally, when we create the compose window, we'll remember the dom window that created us
-  // and we'll pass the nsIPrompt associated that window around into this class. But that isn't happening right now
-  // So for now, I'm going to wrap all of that into this function which will have a temporary implementation
-  // for extracting the top most window and using that prompt interface...
-  void GetDefaultPrompt(nsIPrompt ** aPrompt);
 
   // Delivery and completion callback routines...
   NS_IMETHOD  DeliverMessage();
@@ -215,7 +205,6 @@ public:
                                         char			   *dest_uri);
 
   void	      Clear();
-  void	      Fail(nsIPrompt * aPrompt, nsresult failure_code, const PRUnichar * error_msg);
 
   NS_METHOD   SendToMagicFolder (nsMsgDeliverMode flag);
   nsresult    QueueForLater();
@@ -256,27 +245,10 @@ public:
   int         SetMimeHeader(nsMsgCompFields::MsgHeaderID header, const char *value);
   NS_IMETHOD  GetBodyFromEditor();
 
-  // methods for listener array processing...
-  NS_IMETHOD  SetListenerArray(nsIMsgSendListener **aListener, PRUint32 aListenrs);
-  NS_IMETHOD  DeleteListeners();
-  NS_IMETHOD  NotifyListenersOnStartSending(const char *aMsgID, PRUint32 aMsgSize);
-  NS_IMETHOD  NotifyListenersOnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD  NotifyListenersOnStatus(const char *aMsgID, const PRUnichar *aMsg);
-  NS_IMETHOD  NotifyListenersOnStopSending(const char *aMsgID, nsresult aStatus, const PRUnichar *aMsg, 
-                                           nsIFileSpec *returnFileSpec);
-
-  // If the listener has implemented the nsIMsgCopyServiceListener interface, I will drive it from 
-  // here
-  NS_IMETHOD  NotifyListenersOnStartCopy(); 
-  NS_IMETHOD  NotifyListenersOnProgressCopy(PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD  NotifyListenersOnStopCopy(nsresult aStatus);
-  NS_IMETHOD  SetMessageKey(PRUint32 aMessageKey);
-  NS_IMETHOD  GetMessageId(nsCString* aMessageId);
 
   //
   // Attachment processing...
   //
-  int	        GatherMimeAttachments();
   int         HackAttachments(const struct nsMsgAttachmentData *attachments,
 					                    const struct nsMsgAttachedFile *preloaded_attachments);
   nsresult    CountCompFieldAttachments();
@@ -298,7 +270,7 @@ public:
 
   NS_DECL_NSIMSGSEND
   nsresult    SetStatusMessage(const PRUnichar *aMsgString);     // Status message method
-
+  
   //
   // All vars necessary for this implementation
   //
@@ -317,9 +289,10 @@ public:
   nsCOMPtr<nsIMsgDBHdr>     mMsgToReplace;       // If the mode is nsMsgSaveAsDraft, this is the message it will
                                                  // replace
 
-  // These are needed for callbacks to the FE...  
-  nsIMsgSendListener        **mListenerArray;
-  PRInt32                   mListenerArrayCount;
+  // These are needed for callbacks to the FE...
+  nsCOMPtr<nsIDOMWindowInternal>  mParentWindow;
+  nsCOMPtr<nsIMsgComposeProgress> mSendProgress;
+  nsCOMPtr<nsIMsgSendListener> mListener;
 
   // we need two, in the case where we are sending and posting the same message
   nsCOMPtr<nsIUrlListener>  mNewsPostListener;
@@ -367,7 +340,7 @@ public:
   PRUint32                m_attachment_count;
   PRUint32                m_attachment_pending_count;
   nsMsgAttachmentHandler  *m_attachments;
-  PRInt32                 m_status; // in case some attachments fail but not all 
+  nsresult                m_status; // in case some attachments fail but not all 
 
   PRUint32                mPreloadedAttachmentCount;
   PRUint32                mRemoteAttachmentCount;
@@ -401,7 +374,10 @@ public:
 								                                        // or mailbox: loading them in parallel would
 								                                        // cause multiple connections to the news
 								                                        // server to be opened, or would cause much seek()ing.
+
   PRBool                  mGUINotificationEnabled;      // Should we throw up the GUI alerts on errors?
+  PRBool                  mLastErrorReported;           // Last error reported to the user.
+  PRBool                  mAbortInProcess;              // Used by Abort to avoid reentrance.
 
   void                    *m_crypto_closure;
 
@@ -413,9 +389,9 @@ protected:
 // 
 // These C routines should only be used by the nsMsgSendPart class.
 //
-extern int    mime_write_message_body(nsMsgComposeAndSend *state, char *buf, PRInt32 size);
+extern nsresult mime_write_message_body(nsIMsgSend *state, char *buf, PRInt32 size);
 extern char   *mime_get_stream_write_buffer(void);
-extern int PR_CALLBACK mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure);
+extern nsresult PR_CALLBACK mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure);
 extern PRBool UseQuotedPrintable(void);
 
 #endif /*  __MSGSEND_H__ */

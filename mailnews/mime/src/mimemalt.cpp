@@ -301,9 +301,9 @@ MimeMultipartAlternative_display_cached_part(MimeObject *obj)
 #endif /* MIME_DRAFTS */
 
 	status = MimePartBufferRead (malt->part_buffer,
-								 /* The (int (*) ...) cast is to turn the
+								 /* The (nsresult (*) ...) cast is to turn the
 									`void' argument into `MimeObject'. */
-								 ((int (*) (char *, PRInt32, void *))
+								 ((nsresult (*) (char *, PRInt32, void *))
 								  body->clazz->parse_buffer),
 								 body);
 

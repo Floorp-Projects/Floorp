@@ -49,6 +49,7 @@ var windowLocked = false;
 var contentChanged = false;
 var currentIdentity = null;
 var defaultSaveOperation = "draft";
+var sendOrSaveOperationInProgress = false;
 
 var gComposeMsgsBundle;
 
@@ -88,6 +89,55 @@ var stateListener = {
   SaveInFolderDone: function(folderURI) {
     DisplaySaveFolderDlg(folderURI);
   }
+};
+
+// all progress notifications are done through the nsIWebProgressListener implementation...
+var progressListener = {
+    onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus)
+    {
+      if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_START)
+      {
+        document.getElementById('progressmeter').setAttribute( "mode", "undetermined" );
+      }
+      
+      if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
+      {
+        sendOrSaveOperationInProgress = false;
+        document.getElementById('progressmeter').setAttribute( "mode", "normal" );
+        document.getElementById('progressmeter').setAttribute( "value", 0 );
+        setTimeout("document.getElementById('statusText').setAttribute('label', '')", 5000);
+      }
+    },
+    
+    onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
+    {
+      // we can ignore this notification
+    },
+
+	  onLocationChange: function(aWebProgress, aRequest, aLocation)
+    {
+      // we can ignore this notification
+    },
+
+    onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage)
+    {
+      statusText = document.getElementById("statusText");
+      if (statusText)
+        statusText.setAttribute("label", aMessage);
+    },
+
+    onSecurityChange: function(aWebProgress, aRequest, state)
+    {
+      // we can ignore this notification
+    },
+
+    QueryInterface : function(iid)
+    {
+     if (iid.equals(Components.interfaces.nsIWebProgressListener) || iid.equals(Components.interfaces.nsISupportsWeakReference))
+      return this;
+     
+     throw Components.results.NS_NOINTERFACE;
+    }
 };
 
 // i18n globals
@@ -1100,7 +1150,14 @@ function GenericSendMessage( msgType )
 			try {
 			  windowLocked = true;
 			  CommandUpdate_MsgCompose();
-				msgCompose.SendMsg(msgType, getCurrentIdentity());
+			  
+        var progress = Components.classes["@mozilla.org/messengercompose/composeprogress;1"].createInstance(Components.interfaces.nsIMsgComposeProgress);
+        if (progress)
+        {
+          progress.registerListener(progressListener);
+          sendOrSaveOperationInProgress = true;
+        }
+				msgCompose.SendMsg(msgType, getCurrentIdentity(), progress);
 				contentChanged = false;
 				msgCompose.bodyModified = false;
 			}
@@ -1394,6 +1451,9 @@ function SetComposeWindowTitle(event)
 // This is hooked up to the OS's window close widget (e.g., "X" for Windows)
 function ComposeCanClose()
 {
+  if (sendOrSaveOperationInProgress)
+    return false;
+
 	// Returns FALSE only if user cancels save action
 	if (contentChanged || msgCompose.bodyModified)
 	{

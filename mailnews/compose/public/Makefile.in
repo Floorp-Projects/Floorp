@@ -32,6 +32,7 @@ EXPORTS		= \
 		$(NULL)
 
 XPIDLSRCS	= \
+		nsIMsgComposeProgress.idl \
 		nsIMsgComposeParams.idl \
 		nsIMsgComposeService.idl \
 		nsIMsgCompose.idl \
@@ -46,6 +47,7 @@ XPIDLSRCS	= \
 		nsISmtpServer.idl \
 		nsISmtpUrl.idl \
 		nsISmtpService.idl \
+		nsIURLFetcher.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

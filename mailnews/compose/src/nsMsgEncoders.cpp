@@ -33,7 +33,7 @@
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 extern "C" MimeEncoderData *
-MIME_B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+MIME_B64EncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
 {
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
@@ -48,7 +48,7 @@ MIME_B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closu
 }
 
 extern "C" MimeEncoderData *	
-MIME_QPEncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+MIME_QPEncoderInit(nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
 {
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
@@ -63,7 +63,7 @@ MIME_QPEncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closur
 }
 
 extern "C" MimeEncoderData *	
-MIME_UUEncoderInit(char *filename, int (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
+MIME_UUEncoderInit(char *filename, nsresult (*output_fn) (const char *buf, PRInt32 size, void *closure), void *closure) 
 {
   MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;

@@ -22,10 +22,11 @@
 #ifndef nsURLFetcher_h_
 #define nsURLFetcher_h_
 
+#include "nsIURLFetcher.h"
+
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
-#include "nsFileStream.h"
 
 #include "nsIInterfaceRequestor.h"
 #include "nsCURILoader.h"
@@ -33,17 +34,9 @@
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
-//
-// Callback declarations for URL completion
-//
-// For completion of send/message creation operations...
-typedef nsresult (*nsAttachSaveCompletionCallback) (nsIURI* aURL, nsresult aStatus,
-                                                    const char *aContentType,
-                                                    const char *aCharset,
-                                                    PRInt32 totalSize, const PRUnichar* aMsg, 
-                                                    void *tagData);
 
-class nsURLFetcher : public nsIStreamListener,
+class nsURLFetcher : public nsIURLFetcher,
+                     public nsIStreamListener,
                      public nsIURIContentListener, 
                      public nsIInterfaceRequestor,
                      public nsIWebProgressListener,
@@ -56,33 +49,28 @@ public:
   /* this macro defines QueryInterface, AddRef and Release for this class */
   NS_DECL_ISUPPORTS
 
-  // 
-  // This is the output stream where the stream converter will write processed data after 
-  // conversion. 
-  // 
-  NS_IMETHOD StillRunning(PRBool *running);
-
-  NS_IMETHOD FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut, 
-                            nsAttachSaveCompletionCallback cb, void *tagData);
-
-  NS_IMETHOD Initialize(nsOutputFileStream *fOut,
-						nsAttachSaveCompletionCallback cb,
-						void *tagData);
+  // Methods for nsIURLFetcher
+  NS_DECL_NSIURLFETCHER
 
   // Methods for nsIStreamListener
   NS_DECL_NSISTREAMLISTENER
+
   // Methods for nsIRequestObserver
   NS_DECL_NSIREQUESTOBSERVER
   
+  // Methods for nsIURICOntentListener
   NS_DECL_NSIURICONTENTLISTENER
+
+  // Methods for nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
+
+  // Methods for nsIWebProgressListener
   NS_DECL_NSIWEBPROGRESSLISTENER
 
 private:
   nsOutputFileStream              *mOutStream;    // the output file stream
   PRBool                          mStillRunning;  // Are we still running?
   PRInt32                         mTotalWritten;  // Size counter variable
-  nsCOMPtr<nsIURI>                mURL;           // URL being processed
   char                            *mContentType;  // The content type retrieved from the server
   char                            *mCharset;      // The charset retrieved from the server
   void                            *mTagData;      // Tag data for callback...
@@ -90,8 +78,5 @@ private:
   nsCOMPtr<nsISupports>           mLoadCookie;    // load cookie used by the uri loader when we fetch the url
   PRBool                          mOnStopRequestProcessed; // used to prevent calling OnStopRequest multiple times
 }; 
-
-/* this function will be used by the factory to generate an class access object....*/
-extern nsresult NS_NewURLFetcher(nsURLFetcher **aInstancePtrResult);
 
 #endif /* nsURLFetcher_h_ */

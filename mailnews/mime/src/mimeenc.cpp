@@ -48,7 +48,7 @@ struct MimeDecoderData {
   char uue_line_buffer [128];
 
   /* Where to write the decoded data */
-  int (*write_buffer) (const char *buf, PRInt32 size, void *closure);
+  nsresult (*write_buffer) (const char *buf, PRInt32 size, void *closure);
   void *closure;
 };
 
@@ -554,7 +554,7 @@ MimeDecoderDestroy (MimeDecoderData *data, PRBool abort_p)
 
 static MimeDecoderData *
 mime_decoder_init (mime_encoding which,
-				   int (*output_fn) (const char *, PRInt32, void *),
+				   nsresult (*output_fn) (const char *, PRInt32, void *),
 				   void *closure)
 {
   MimeDecoderData *data = PR_NEW(MimeDecoderData);
@@ -567,21 +567,21 @@ mime_decoder_init (mime_encoding which,
 }
 
 MimeDecoderData *
-MimeB64DecoderInit (int (*output_fn) (const char *, PRInt32, void *),
+MimeB64DecoderInit (nsresult (*output_fn) (const char *, PRInt32, void *),
 					void *closure)
 {
   return mime_decoder_init (mime_Base64, output_fn, closure);
 }
 
 MimeDecoderData *
-MimeQPDecoderInit (int (*output_fn) (const char *, PRInt32, void *),
+MimeQPDecoderInit (nsresult (*output_fn) (const char *, PRInt32, void *),
 				   void *closure)
 {
   return mime_decoder_init (mime_QuotedPrintable, output_fn, closure);
 }
 
 MimeDecoderData *
-MimeUUDecoderInit (int (*output_fn) (const char *, PRInt32, void *),
+MimeUUDecoderInit (nsresult (*output_fn) (const char *, PRInt32, void *),
 				   void *closure)
 {
   return mime_decoder_init (mime_uuencode, output_fn, closure);
@@ -627,7 +627,7 @@ struct MimeEncoderData {
   char *filename; /* filename for use with uuencoding */
 
   /* Where to write the encoded data */
-  int (*write_buffer) (const char *buf, PRInt32 size, void *closure);
+  nsresult (*write_buffer) (const char *buf, PRInt32 size, void *closure);
   void *closure;
 };
 
@@ -1063,7 +1063,7 @@ MimeEncoderDestroy (MimeEncoderData *data, PRBool abort_p)
 
 static MimeEncoderData *
 mime_encoder_init (mime_encoding which,
-				   int (*output_fn) (const char *, PRInt32, void *),
+				   nsresult (*output_fn) (const char *, PRInt32, void *),
 				   void *closure)
 {
   MimeEncoderData *data = PR_NEW(MimeEncoderData);
@@ -1076,14 +1076,14 @@ mime_encoder_init (mime_encoding which,
 }
 
 MimeEncoderData *
-MimeB64EncoderInit (int (*output_fn) (const char *, PRInt32, void *),
+MimeB64EncoderInit (nsresult (*output_fn) (const char *, PRInt32, void *),
 					void *closure)
 {
   return mime_encoder_init (mime_Base64, output_fn, closure);
 }
 
 MimeEncoderData *
-MimeQPEncoderInit (int (*output_fn) (const char *, PRInt32, void *),
+MimeQPEncoderInit (nsresult (*output_fn) (const char *, PRInt32, void *),
 				   void *closure)
 {
   return mime_encoder_init (mime_QuotedPrintable, output_fn, closure);
@@ -1091,7 +1091,7 @@ MimeQPEncoderInit (int (*output_fn) (const char *, PRInt32, void *),
 
 MimeEncoderData *
 MimeUUEncoderInit (char *filename,
-					int (*output_fn) (const char *, PRInt32, void *),
+					nsresult (*output_fn) (const char *, PRInt32, void *),
 					void *closure)
 {
   MimeEncoderData *enc = mime_encoder_init (mime_uuencode, output_fn, closure);

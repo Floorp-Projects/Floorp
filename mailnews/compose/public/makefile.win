@@ -22,21 +22,23 @@
 DEPTH=..\..\..
 MODULE=msgcompo
 
-XPIDLSRCS =										\
-				.\nsIMsgComposeParams.idl		\
+XPIDLSRCS =										        \
+        .\nsIMsgComposeProgress.idl   \
+				.\nsIMsgComposeParams.idl		  \
 				.\nsIMsgComposeService.idl		\
-				.\nsIMsgCompose.idl				\
-				.\nsIMsgCompFields.idl			\
-				.\nsIMsgQuote.idl				\
-				.\nsIMsgSendListener.idl		\
+				.\nsIMsgCompose.idl				    \
+				.\nsIMsgCompFields.idl			  \
+				.\nsIMsgQuote.idl				      \
+				.\nsIMsgSendListener.idl		  \
 				.\nsIMsgSendLaterListener.idl	\
-				.\nsIMsgSend.idl				\
-				.\nsIMsgSendLater.idl			\
+				.\nsIMsgSend.idl				      \
+				.\nsIMsgSendLater.idl			    \
 				.\nsIMsgRecipientArray.idl		\
-				.\nsIMsgDraft.idl				\
-				.\nsISmtpServer.idl				\
-				.\nsISmtpUrl.idl				\
-				.\nsISmtpService.idl			\
+				.\nsIMsgDraft.idl				      \
+				.\nsISmtpServer.idl				    \
+				.\nsISmtpUrl.idl				      \
+				.\nsISmtpService.idl			    \
+				.\nsIURLFetcher.idl			      \
 				$(NULL)
 
 ################################################################################
