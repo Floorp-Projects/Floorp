@@ -1081,32 +1081,62 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawPolygon(const nsPoint aPoints[], PRInt
 
 NS_IMETHODIMP nsRenderingContextPh :: FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::FillPolygon\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::FillPolygon aNumPoints=%d\n", aNumPoints));
 
+#if 0
+ return NS_OK;
+#else  
   PhPoint_t *pts;
-
+  int err;
+  
   if(( pts = new PhPoint_t [aNumPoints] ) != NULL )
   {
     PhPoint_t pos = {0,0};
-    PRInt32 i;
-
-    for(i=0;i<aNumPoints;i++)
-    {
+    PRInt32 i,c;
     int x,y;
+
+	  /* Put the first point into pts */
+      x = aPoints[0].x;
+      y = aPoints[0].y;
+      mTMatrix->TransformCoord(&x,&y);
+      pts[0].x = x;
+      pts[0].y = y;	  
+
+    for(i=1,c=0;i<aNumPoints;i++)
+    {
       x = aPoints[i].x;
       y = aPoints[i].y;
       mTMatrix->TransformCoord(&x,&y);
-      pts[i].x = x;
-      pts[i].y = y;
+
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::FillPolygon %d (%d,%d) -> (%d,%d) \n", i, aPoints[i].x, aPoints[i].y, x, y));
+
+      if ((pts[c].x != x) || (pts[c].y != y))
+	  {
+		c++;
+        pts[c].x = x;
+        pts[c].y = y;
+      }
     }
 
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::FillPolygon calling SELECT with %d points\n", (c+1) ));
+
     SELECT(mSurface);
-    PgDrawPolygon( pts, aNumPoints, &pos, Pg_DRAW_FILL_STROKE | Pg_CLOSED );
+//    err=PgDrawPolygon( pts, (c+1), &pos, Pg_DRAW_FILL_STROKE | Pg_CLOSED );
+    err=PgDrawPolygon( pts, (c+1), &pos, Pg_DRAW_FILL_STROKE );
+
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::FillPolygon after PgDrawPolgon err=<%d>\n", err));
 
     delete [] pts;
   }
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::FillPolygon before PgFlush \n"));
+
   PgFLUSH();	//kedl
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("untested nsRenderingContextPh::FillPolygon after PgFlush \n"));
+
   return NS_OK;
+#endif
 }
 
 
@@ -1627,6 +1657,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   else
     destsurf = mOffscreenSurface;
 
+  /* This is really needed.... */
   if ( (mBufferIsEmpty) && (aCopyFlags != 12))
   {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits Buffer empty, skipping.\n"));
