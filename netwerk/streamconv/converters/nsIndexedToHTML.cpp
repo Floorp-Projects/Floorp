@@ -51,7 +51,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsIndexedToHTML,
 
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
-NS_IMETHODIMP
+nsresult
 nsIndexedToHTML::Init(nsIStreamListener* aListener) {
     nsresult rv = NS_OK;
 
