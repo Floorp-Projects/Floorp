@@ -125,7 +125,8 @@ public:
     virtual nsIFontMetrics* GetFont(void);
     NS_IMETHOD            	SetFont(const nsFont &aFont);
     NS_IMETHOD            	Invalidate(PRBool aIsSynchronous);
-    NS_IMETHOD							Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
+    NS_IMETHOD				Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
+    NS_IMETHOD				InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
 
     virtual void*           GetNativeData(PRUint32 aDataType);
     NS_IMETHOD            	SetColorMap(nsColorMap *aColorMap);
@@ -158,8 +159,8 @@ public:
     
     NS_IMETHOD  			SetCursor(nsCursor aCursor);
     
-    NS_IMETHOD         CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
-    NS_IMETHOD        SetTitle(const nsString& title);
+    NS_IMETHOD				CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
+    NS_IMETHOD				SetTitle(const nsString& title);
   
     // Mac specific methods
     void 					nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;

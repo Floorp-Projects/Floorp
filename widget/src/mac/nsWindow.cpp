@@ -54,6 +54,7 @@ nsIWidget         * gRollupWidget   = nsnull;
 
 #pragma mark -
 
+// #define PAINT_DEBUGGING
 // #define BLINK_DEBUGGING
 
 #ifdef BLINK_DEBUGGING
@@ -77,11 +78,6 @@ inline Boolean IsRegionComplex(RgnHandle region)
 inline void GetWindowPortBounds(WindowRef window, Rect* rect)
 {
 	*rect = window->portRect;
-}
-
-inline void InvalWindowRect(WindowRef window, Rect* rect)
-{
-	::InvalRect(rect);
 }
 
 inline void GetPortVisibleRegion(GrafPtr port, RgnHandle visRgn)
@@ -724,63 +720,7 @@ static void blinkRgn(RgnHandle rgn)
 
 //-------------------------------------------------------------------------
 //
-// Invalidate this component visible area
-//
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
-{
-	if (!mWindowPtr)
-		return NS_OK;
-
-#if 0	// We don't want to draw synchronously on Mac: it makes the xpfe apps much slower
-	static PRBool	reentrant = PR_FALSE;
-	if (aIsSynchronous && !reentrant)
-	{
-		reentrant = PR_TRUE;	// no reentrance please
-		Update();
-		reentrant = PR_FALSE;
-	}
-	else
-#endif
-
-#if 0
-	// this is correct, but slow.
-	StartDraw();
-	{
-		Rect macRect;
-		nsRectToMacRect(aRect, macRect);
-		::InvalRect(&macRect);
-	}
-	EndDraw();
-	return NS_OK;
-#endif
-
-	{
-		nsRect wRect = aRect;
-		wRect.MoveBy(mBounds.x, mBounds.y);				// beard:  this is required, see GetNativeData(NS_NATIVE_OFFSETX).
-		LocalToWindowCoordinate(wRect);
-		Rect macRect;
-		nsRectToMacRect(wRect, macRect);
-
-		StPortSetter portSetter(mWindowPtr);
-		Rect savePortRect;
-		::GetWindowPortBounds(mWindowPtr, &savePortRect);
-		::SetOrigin(0, 0);
-
-#ifdef BLINK_DEBUGGING
-		if (caps_lock())
-			::blinkRect(&macRect);
-#endif
-
-		::InvalWindowRect(mWindowPtr, &macRect);
-		::SetOrigin(savePortRect.left, savePortRect.top);
-	}
-	return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Invalidate this component visible area
+// Invalidate this component's visible area
 //
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
@@ -788,6 +728,76 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 	nsRect area = mBounds;
 	area.x = area.y = 0;
 	nsWindow::Invalidate(area, aIsSynchronous);
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Invalidate this component's visible area
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
+{
+	if (!mWindowPtr)
+		return NS_OK;
+
+	nsRect wRect = aRect;
+	wRect.MoveBy(mBounds.x, mBounds.y);				// beard:  this is required, see GetNativeData(NS_NATIVE_OFFSETX).
+	LocalToWindowCoordinate(wRect);
+	Rect macRect;
+	nsRectToMacRect(wRect, macRect);
+
+	StPortSetter portSetter(mWindowPtr);
+	Rect savePortRect;
+	::GetWindowPortBounds(mWindowPtr, &savePortRect);
+	::SetOrigin(0, 0);
+
+#ifdef BLINK_DEBUGGING
+	if (caps_lock())
+		::blinkRect(&macRect);
+#endif
+
+	::InvalWindowRect(mWindowPtr, &macRect);
+	::SetOrigin(savePortRect.left, savePortRect.top);
+
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Invalidate this component's visible area
+//
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
+{
+	if (!mWindowPtr)
+		return NS_OK;
+
+	// copy invalid region into a working region.
+	void* nativeRgn;
+	aRegion->GetNativeRegion(nativeRgn);
+	StRegionFromPool windowRgn;
+	::CopyRgn(RgnHandle(nativeRgn), windowRgn);
+
+	// translate this region into window coordinates.
+	PRInt32	offX, offY;
+	this->CalcOffset(offX, offY);
+	::OffsetRgn(windowRgn, mBounds.x + offX, mBounds.y + offY);
+	
+	StPortSetter portSetter(mWindowPtr);
+	Rect savePortRect;
+	::GetWindowPortBounds(mWindowPtr, &savePortRect);
+	::SetOrigin(0, 0);
+
+#ifdef BLINK_DEBUGGING
+	if (caps_lock())
+		::blinkRgn(windowRgn);
+#endif
+
+	::InvalWindowRgn(mWindowPtr, windowRgn);
+	::SetOrigin(savePortRect.left, savePortRect.top);
+
 	return NS_OK;
 }
 
@@ -1000,7 +1010,7 @@ nsresult nsWindow::HandleUpdateEvent()
 		return NS_ERROR_OUT_OF_MEMORY;
 	::GetPortVisibleRegion(GrafPtr(GetWindowPort(mWindowPtr)), damagedRgn);
 
-#ifdef BLINK_DEBUGGING	
+#ifdef PAINT_DEBUGGING	
 	blinkRgn(damagedRgn);
 #endif
 
@@ -1016,7 +1026,7 @@ nsresult nsWindow::HandleUpdateEvent()
 	LocalToWindowCoordinate(bounds);
 	::OffsetRgn(updateRgn, bounds.x, bounds.y);
 
-#ifdef BLINK_DEBUGGING
+#ifdef PAINT_DEBUGGING
 	blinkRgn(updateRgn);
 #endif
 	
@@ -1811,7 +1821,7 @@ void nsWindow::nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const
 void  nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 {
 	PRInt32	offX, offY;
-  this->CalcOffset(offX,offY);
+	this->CalcOffset(offX,offY);
 
 	aX += offX;
 	aY += offY;
