@@ -469,11 +469,6 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
   TranslateLineEnding(aBuf);
   TranslateLineEnding(aSignature);
 
-  // this is probably a mapi send, so we need to replace '\n' with <br>
-  // so that the line breaks won't be lost by html.
-  if (!aQuoted && aHTMLEditor)
-    aBuf.ReplaceSubstring(NS_LITERAL_STRING("\n").get(), NS_LITERAL_STRING("<br>").get());
-
   // We're going to be inserting stuff, and MsgComposeCommands
   // may have set the editor to readonly in the recycled case.
   // So set it back to writable.
@@ -3540,6 +3535,12 @@ nsMsgCompose::BuildBodyMessageAndSignature()
 
   if (addSignature)
     ProcessSignature(m_identity, PR_FALSE, &tSignature);
+
+  // if type is new, but we have body, this is probably a mapi send, so we need to 
+  // replace '\n' with <br> so that the line breaks won't be lost by html.
+  // if mailtourl, do the same.
+  if (m_composeHTML && (mType == nsIMsgCompType::New || mType == nsIMsgCompType::MailToUrl))
+    body.ReplaceSubstring(NS_LITERAL_STRING("\n").get(), NS_LITERAL_STRING("<br>").get());
 
   nsString empty;
   rv = ConvertAndLoadComposeWindow(empty, body, tSignature,
