@@ -3,7 +3,6 @@
  */
 
 const nsIFilePicker          = Components.interfaces.nsIFilePicker;
-const nsINetDataCacheManager = Components.interfaces.nsINetDataCacheManager;
 
 const FILEPICKER_CONTRACTID  = "@mozilla.org/filepicker;1";
 
