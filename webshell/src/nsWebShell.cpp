@@ -1978,14 +1978,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   rv = aUri->GetSpec(getter_Copies(urlSpec));
   if (NS_FAILED(rv)) return rv;
 
-  /* mURL is being set the value again so that calls to DoLoadURL() from Viewer 
-   * will work right. This statement could go to Goto(), but that really is
-   * Vidur's call 
-   */
-  mURL = urlSpec;
-
-  mReferrer = aReferrer;
-
   // If it's a normal reload that uses the cache, look at the destination anchor
   // and see if it's an element within the current document
   // We don't have a reload loadtype yet in necko. So, check for just history
@@ -2092,8 +2084,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
  /* WebShell was primarily passing the buck when it came to streamObserver.
   * So, pass on the observer which is already a streamObserver to DocLoder.
   */
-
-  return mDocLoader->LoadDocument(aUri,        // URL string
+  rv = mDocLoader->LoadDocument(aUri,        // URL string
                                   aCommand,        // Command
                                   this,            // Container
                                   aPostDataStream, // Post Data
@@ -2101,6 +2092,15 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                                   aType,           // reload type
                                   aLocalIP,        // load attributes.
                                   aReferrer);      // referrer
+
+  // Fix for bug 1646.  Change the notion of current url and referrer only after
+  // the document load succeeds.
+  if (NS_SUCCEEDED(rv)) {
+    mURL = urlSpec;
+    mReferrer = aReferrer;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP 
