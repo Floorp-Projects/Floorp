@@ -1001,7 +1001,7 @@ BEGIN
     LTEXT           "&Port:",IDC_STATIC,7,29,25,10
     EDITTEXT        IDC_EDIT_PORT,35,28,83,12,ES_AUTOHSCROLL
 #ifdef MOZ_SECURITY
-    CONTROL         "Se&cure",IDC_SECURE,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Se&cure",IDC_X,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,35,47,49,13
 #endif
     DEFPUSHBUTTON   "OK",IDOK,21,79,50,14
@@ -1080,7 +1080,7 @@ BEGIN
                     11
     EDITTEXT        IDC_EDIT_MAX_HITS,95,66,32,12,ES_AUTOHSCROLL
 #ifdef MOZ_SECURITY
-    CONTROL         "Se&cure",IDC_SECURE,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Se&cure",IDC_X,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,155,55,55,10
 #endif
     CONTROL         "S&ave Password",IDC_SAVE_PASSWORD,"Button",

@@ -909,7 +909,7 @@ void CNewsServerDialog::OnHelp()
 
 BEGIN_MESSAGE_MAP(CNewsServerDialog, CDialog)
 	ON_BN_CLICKED(IDOK, OnOK)
-	ON_BN_CLICKED(IDC_SECURE, OnCheckSecure)
+	ON_BN_CLICKED(IDC_X, OnCheckSecure)
 	ON_BN_CLICKED(ID_HELP, OnHelp)
 END_MESSAGE_MAP()
 

@@ -819,7 +819,7 @@
 #define IDB_EDIT_JAVA_MASK              914
 #define IDB_EDIT_PLUGIN                 915
 #define IDB_EDIT_PLUGIN_MASK            916
-#define IDD_ADDRESS_SECURITY            917
+#define IDD_ADDRESS_X		        917
 #define IDS_EMAILADDRESS                917
 #define IDD_ADDRESS_COOLTALK            918
 #define IDS_COMPANYNAME                 918
@@ -913,7 +913,7 @@
 #define IDC_HEIGHT                      1017
 #define IDC_KEEP_ALL                    1017
 #define IDC_PERCENT_HEIGHT              1018
-#define IDC_SECURE                      1018
+#define IDC_X	                        1018
 #define IDC_LIST3                       1019
 #define IDC_CHECK_SAVE_PASSWORD         1019
 #define IDC_SAVE_PASSWORD               1019

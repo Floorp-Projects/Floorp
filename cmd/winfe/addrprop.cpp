@@ -65,7 +65,7 @@ CAddrEditProperties::CAddrEditProperties (CAddrFrame* frameref,
 {
 	m_pUserProperties = NULL;
 	m_pContact = NULL;
-	m_pSecurity = NULL;
+	HG92380
 	m_pCooltalk = NULL;
 	m_context = context;
 	m_pPane = pane;
@@ -82,8 +82,7 @@ CAddrEditProperties::~CAddrEditProperties ( )
         delete m_pUserProperties;
 	if ( m_pContact )
         delete m_pContact;
-	if ( m_pSecurity )
-        delete m_pSecurity;
+	HG28336
 	if ( m_pCooltalk )
         delete m_pCooltalk;
 }
@@ -94,7 +93,7 @@ BOOL CAddrEditProperties::Create(CWnd* pParentWnd, DWORD dwStyle, DWORD dwExStyl
 	if (m_MailNewsResourceSwitcher.Initialize ()) {
 		m_pUserProperties = new CAddressUser (this, m_bNew);
 		m_pContact = new CAddressContact (this);
-		m_pSecurity = NULL;
+		HG92380
 		m_pCooltalk = new CAddressCooltalk (this);
 		AddPage( m_pUserProperties );
 		AddPage( m_pContact );
@@ -113,7 +112,7 @@ int CAddrEditProperties::DoModal()
 		return -1;
 	m_pUserProperties = new CAddressUser (this, m_bNew);
 	m_pContact = new CAddressContact (this);
-	m_pSecurity = NULL;
+	HG92380
 	m_pCooltalk = new CAddressCooltalk (this);
 	AddPage( m_pUserProperties );
 	AddPage( m_pContact );
@@ -1311,7 +1310,6 @@ BOOL CServerDialog::OnInitDialog()
 #else
 	((CEdit*)GetDlgItem(IDC_EDIT_DESCRIPTION))->LimitText(MAX_DESCRIPTION_LEN - 1);
 	((CEdit*)GetDlgItem(IDC_EDIT_SERVER))->LimitText(MAX_HOSTNAME_LEN - 1);
-	// we aren't doing secure ldap on win16 so hide the checkbox
 	HG18671
 #endif
 	((CEdit*)GetDlgItem(IDC_EDIT_DESCRIPTION))->SetFocus();
@@ -1403,7 +1401,7 @@ void CServerDialog::OnOK()
 	}
 }
 
-void CServerDialog::OnCheckSecure() 
+void CServerDialog::OnCheckX() 
 {
 	HG98219
 }
@@ -1480,7 +1478,7 @@ void CServerDialog::OnHelp()
 }
 
 BEGIN_MESSAGE_MAP(CServerDialog, CNetscapePropertyPage)
-	ON_BN_CLICKED(IDC_SECURE, OnCheckSecure)
+	ON_BN_CLICKED(IDC_X, OnCheckX)
 	ON_BN_CLICKED(IDC_LOGIN_LDAP, OnEnableLoginLDAP)
 	ON_BN_CLICKED(ID_HELP, OnHelp)
 END_MESSAGE_MAP()
@@ -1589,6 +1587,7 @@ END_MESSAGE_MAP()
 // the address book
 //
 
+#include "rosetta.h"
 #include "addrfrm.h"
 #include "template.h"
 #include "xpgetstr.h"
@@ -1627,7 +1626,7 @@ CAddrEditProperties::CAddrEditProperties (CAddrFrame* frameref,
 
 	m_pUserProperties = NULL;
 	m_pContact = NULL;
-	m_pSecurity = NULL;
+	HG92380
 	m_pCooltalk = NULL;
 	m_entryID = entryID;
 	m_dir = dir;
@@ -1645,8 +1644,7 @@ CAddrEditProperties::~CAddrEditProperties ( )
         delete m_pUserProperties;
 	if ( m_pContact )
         delete m_pContact;
-	if ( m_pSecurity )
-        delete m_pSecurity;
+	HG28336
 	if ( m_pCooltalk )
         delete m_pCooltalk;
 }
@@ -1657,7 +1655,7 @@ BOOL CAddrEditProperties::Create(CWnd* pParentWnd, DWORD dwStyle, DWORD dwExStyl
 	if (m_MailNewsResourceSwitcher.Initialize ()) {
 		m_pUserProperties = new CAddressUser (this);
 		m_pContact = new CAddressContact (this);
-		m_pSecurity = NULL;
+		HG92380
 		m_pCooltalk = new CAddressCooltalk (this);
 		AddPage( m_pUserProperties );
 		AddPage( m_pContact );
@@ -1675,7 +1673,7 @@ int CAddrEditProperties::DoModal()
 		return -1;
 	m_pUserProperties = new CAddressUser (this);
 	m_pContact = new CAddressContact (this);
-	m_pSecurity = NULL;
+	HG92380
 	m_pCooltalk = new CAddressCooltalk (this);
 	AddPage( m_pUserProperties );
 	AddPage( m_pContact );
@@ -2640,7 +2638,6 @@ BOOL CServerDialog::OnInitDialog()
 #else
 	((CEdit*)GetDlgItem(IDC_EDIT_DESCRIPTION))->LimitText(MAX_DESCRIPTION_LEN - 1);
 	((CEdit*)GetDlgItem(IDC_EDIT_SERVER))->LimitText(MAX_HOSTNAME_LEN - 1);
-	// we aren't doing secure ldap on win16 so hide the checkbox
 	
 #endif
 	((CEdit*)GetDlgItem(IDC_EDIT_DESCRIPTION))->SetFocus();
@@ -2733,7 +2730,7 @@ void CServerDialog::OnOK()
 	}
 }
 
-void CServerDialog::OnCheckSecure() 
+void CServerDialog::OnCheckX() 
 {
 	HG91761
 }
@@ -2810,7 +2807,7 @@ void CServerDialog::OnHelp()
 }
 
 BEGIN_MESSAGE_MAP(CServerDialog, CNetscapePropertyPage)
-	ON_BN_CLICKED(IDC_SECURE, OnCheckSecure)
+	ON_BN_CLICKED(IDC_X, OnCheckX)
 	ON_BN_CLICKED(IDC_LOGIN_LDAP, OnEnableLoginLDAP)
 	ON_BN_CLICKED(ID_HELP, OnHelp)
 END_MESSAGE_MAP()

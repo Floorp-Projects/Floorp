@@ -30,6 +30,7 @@
 //		classes.
 //
 
+#include "rosetta.h"
 #include "outliner.h"
 #include "apimsg.h"
 #include "xp_core.h"
@@ -60,7 +61,7 @@ protected:
 
     CPropertyPage * m_pUserProperties;
 	CPropertyPage * m_pContact;
-	CPropertyPage * m_pSecurity;
+	HG91827
 	CPropertyPage * m_pCooltalk;
 	CMailNewsResourceSwitcher m_MailNewsResourceSwitcher;
 	MSG_Pane * m_pPane;
@@ -292,19 +293,19 @@ protected:
 
 /****************************************************************************
 *
-*	Class: CAddressSecurity
+*	Class: CAddressX
 *
 *	DESCRIPTION:
-*		This class is the property page for editing and accessing the security
+*		This class is the property page for editing and accessing the x
 *		attributes for a person object.
 *
 ****************************************************************************/
-class CAddressSecurity : public CNetscapePropertyPage
+class CAddressX : public CNetscapePropertyPage
 {
 // Construction
 public:
-	CAddressSecurity(CWnd *pParent);   // standard constructor
-	virtual ~CAddressSecurity();
+	CAddressX(CWnd *pParent);   // standard constructor
+	virtual ~CAddressX();
 
 	BOOL m_bActivated;
 
@@ -312,8 +313,8 @@ public:
 	BOOL PerformOnOK(MSG_Pane *pane);
 
 // Dialog Data
-	//{{AFX_DATA(CAddressSecurity)
-	enum { IDD = IDD_ADDRESS_SECURITY };
+	//{{AFX_DATA(CAddressX)
+	enum { IDD = IDD_ADDRESS_X };
 	CString	m_explain1;
 	CString	m_explain2;
 	CString m_explain3;
@@ -322,7 +323,7 @@ public:
 
 // Overrides
 	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CAddressSecurity)
+	//{{AFX_VIRTUAL(CAddressX)
 	public:
 	virtual BOOL OnInitDialog();
 	virtual BOOL OnSetActive();
@@ -333,7 +334,7 @@ public:
 // Implementation
 protected:
 	// Generated message map functions
-	//{{AFX_MSG(CAddressSecurity)
+	//{{AFX_MSG(CAddressX)
 		// NOTE: the ClassWizard will add member functions here
 		afx_msg void OnCloseWindow();
 	//}}AFX_MSG
@@ -424,7 +425,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	//}}AFX_VIRTUAL
 
-	afx_msg void OnCheckSecure();
+	afx_msg void OnCheckX();
 	afx_msg void OnEnableLoginLDAP();
 	afx_msg void OnHelp();
 	DECLARE_MESSAGE_MAP()
@@ -479,6 +480,7 @@ protected:
 //		classes.
 //
 
+#include "rosetta.h"
 #include "outliner.h"
 #include "apimsg.h"
 #include "xp_core.h"
@@ -509,7 +511,7 @@ protected:
 
     CPropertyPage * m_pUserProperties;
 	CPropertyPage * m_pContact;
-	CPropertyPage * m_pSecurity;
+	HG91827
 	CPropertyPage * m_pCooltalk;
 	CMailNewsResourceSwitcher m_MailNewsResourceSwitcher;
 
@@ -826,7 +828,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	//}}AFX_VIRTUAL
 
-	afx_msg void OnCheckSecure();
+	afx_msg void OnCheckX();
 	afx_msg void OnEnableLoginLDAP();
 	afx_msg void OnHelp();
 	DECLARE_MESSAGE_MAP()

@@ -421,7 +421,7 @@ BOOL CReadNewsPage::OnInitDialog()
 		char	szPort[16];
 
 		PREF_GetBoolPref("news.server_is_secure", &bSecure);
-		CheckDlgButton(IDC_SECURE, bSecure);
+		CheckDlgButton(IDC_X, bSecure);
 		PREF_GetIntPref("news.server_port", &lPort);
 		sprintf(szPort, "%ld", lPort);
 		SetDlgItemText(IDC_EDIT_PORT, szPort);
@@ -467,7 +467,7 @@ BOOL CReadNewsPage::DoFinish()
 		return TRUE;
 	}
 
-	if (IsDlgButtonChecked(IDC_SECURE))	
+	if (IsDlgButtonChecked(IDC_X))	
 		bIsSecure = TRUE;
 	if (GetDlgItemText(IDC_EDIT_PORT, port, 16))
 	{
@@ -526,7 +526,7 @@ void CReadNewsPage::OnCheckSecure()
 	char port[16];
 	BOOL bIsSecure;
 
-	if (IsDlgButtonChecked(IDC_SECURE))
+	if (IsDlgButtonChecked(IDC_X))
 		bIsSecure = TRUE;
 	else
 		bIsSecure = FALSE;
@@ -548,7 +548,7 @@ void CReadNewsPage::OnCheckSecure()
 }
 
 BEGIN_MESSAGE_MAP(CReadNewsPage, CNetscapePropertyPage)
-	ON_BN_CLICKED(IDC_SECURE, OnCheckSecure)
+	ON_BN_CLICKED(IDC_X, OnCheckSecure)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -709,7 +709,7 @@ BOOL CMailNewsWizard::OnInitDialog()
 	GetDlgItem(IDC_READMAIL_POP)->ShowWindow(SW_HIDE);
 	GetDlgItem(IDC_READMAIL_IMAP)->ShowWindow(SW_HIDE);
 	GetDlgItem(IDC_STATIC5)->ShowWindow(SW_HIDE);
-	GetDlgItem(IDC_SECURE)->ShowWindow(SW_HIDE);
+	GetDlgItem(IDC_X)->ShowWindow(SW_HIDE);
 
 	GetDlgItem(IDC_BUTTON_BACK)->EnableWindow(FALSE);
 
@@ -935,7 +935,7 @@ void CMailNewsWizard::ShowHideReadNewsControls(int nShowCmd)
 	GetDlgItem(IDC_STATIC2)->ShowWindow(nShowCmd);
 	GetDlgItem(IDC_EDIT2)->ShowWindow(nShowCmd);
 	GetDlgItem(IDC_STATIC5)->ShowWindow(nShowCmd);
-	GetDlgItem(IDC_SECURE)->ShowWindow(nShowCmd);
+	GetDlgItem(IDC_X)->ShowWindow(nShowCmd);
 	if (nShowCmd == SW_SHOW)
 	{	// init value
 		char szPort[16];
@@ -943,9 +943,9 @@ void CMailNewsWizard::ShowHideReadNewsControls(int nShowCmd)
 		sprintf(szPort, "%ld", m_lPort);
 		SetDlgItemText(IDC_EDIT2, szPort);
 		if (m_bIsSecure)
-			((CButton*)GetDlgItem(IDC_SECURE))->SetCheck(TRUE);
+			((CButton*)GetDlgItem(IDC_X))->SetCheck(TRUE);
 		else
-			((CButton*)GetDlgItem(IDC_SECURE))->SetCheck(FALSE);
+			((CButton*)GetDlgItem(IDC_X))->SetCheck(FALSE);
 	}
 	else
 	{	// save value
@@ -954,7 +954,7 @@ void CMailNewsWizard::ShowHideReadNewsControls(int nShowCmd)
 			m_szNewsServer = text;
 		else 
 			m_szNewsServer = "";
-		if (IsDlgButtonChecked(IDC_SECURE)) 
+		if (IsDlgButtonChecked(IDC_X)) 
 			m_bIsSecure = TRUE;
 		else
 			m_bIsSecure = FALSE;
@@ -980,7 +980,7 @@ BOOL CMailNewsWizard::DoFinish()
 	else 
 		m_szNewsServer = "";
 
-	if (IsDlgButtonChecked(IDC_SECURE)) 
+	if (IsDlgButtonChecked(IDC_X)) 
 		m_bIsSecure = TRUE;
 	else
 		m_bIsSecure = FALSE;
@@ -1052,7 +1052,7 @@ void CMailNewsWizard::OnCheckSecure()
 	char port[16];
 	BOOL bIsSecure;
 
-	if (IsDlgButtonChecked(IDC_SECURE))
+	if (IsDlgButtonChecked(IDC_X))
 		bIsSecure = TRUE;
 	else
 		bIsSecure = FALSE;
@@ -1076,7 +1076,7 @@ void CMailNewsWizard::OnCheckSecure()
 
 BEGIN_MESSAGE_MAP(CMailNewsWizard, CDialog)
     ON_BN_CLICKED(IDC_BUTTON_BACK, DoBack)
-    ON_BN_CLICKED(IDC_SECURE, OnCheckSecure)
+    ON_BN_CLICKED(IDC_X, OnCheckSecure)
     ON_BN_CLICKED(IDOK, DoNext)
 END_MESSAGE_MAP()
 

@@ -474,7 +474,9 @@ BEGIN
             MENUITEM SEPARATOR
         END
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
+#ifdef MOZ_SECURITY
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#endif
 #ifdef MOZ_MAIL_NEWS
 		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
 #endif
@@ -667,7 +669,9 @@ BEGIN
 #if defined(JAVA) || defined(OJI)
 		MENUITEM "&Java Console",                   ID_OPTIONS_SHOWJAVACONSOLE
 #endif
+#ifdef MOZ_SECURITY
 		MENUITEM "&Security Info\tCtrl+Shift+I",	ID_SECURITY
+#endif
 #ifdef MOZ_MAIL_NEWS
 		MENUITEM "Migration Tools",					ID_MIGRATION_TOOLS
 #endif //MOZ_MAIL_NEWS
@@ -1083,7 +1087,7 @@ BEGIN
                     IDC_MNWIZ_READNEWS_FINISH,0,130,240,19
     LTEXT           "&Port:",IDC_STATIC,0,63,17,10
     EDITTEXT        IDC_EDIT_PORT,20,61,83,12,ES_AUTOHSCROLL
-    CONTROL         "Se&cure",IDC_SECURE,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Se&cure",IDC_X,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,111,61,49,13
 END
 
@@ -1144,7 +1148,7 @@ BEGIN
     EDITTEXT        IDC_EDIT2,9,86,135,12,ES_AUTOHSCROLL
     LTEXT           "(e.g. jsmith@company.com)",IDC_STATIC_EG2,150,88,109,10
     LTEXT           "static3",IDC_STATIC3,11,103,135,10
-    CONTROL         "Se&cure",IDC_SECURE,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Se&cure",IDC_X,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,10,100,49,13
     EDITTEXT        IDC_EDIT3,10,115,135,12,ES_AUTOHSCROLL
     CONTROL         "IM&AP",IDC_READMAIL_IMAP,"Button",BS_AUTORADIOBUTTON,10,
@@ -1240,7 +1244,7 @@ BEGIN
     PUSHBUTTON      "< Back",IDC_BUTTON_BACK,55,187,50,14
     DEFPUSHBUTTON   "Next >",IDOK,106,187,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,162,187,50,14
-    CONTROL         "Se&cure",IDC_SECURE,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Se&cure",IDC_X,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,11,103,52,12
 END
 
@@ -1428,8 +1432,10 @@ BEGIN
     "D",            ID_HOTLIST_ADDCURRENTTOHOTLIST, VIRTKEY, CONTROL, 
                                                     NOINVERT
     "H",            ID_GO_HISTORY,          VIRTKEY, CONTROL, NOINVERT
+#ifdef MOZ_SECURITY
     "I",            ID_SECURITY,            VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+#endif
     "K",            ID_FILE_COMPRESSTHISFOLDER, VIRTKEY, CONTROL, NOINVERT
     "M",            ID_FILE_NEWMESSAGE,     VIRTKEY, CONTROL, NOINVERT
     "N",            ID_NEW_FRAME,           VIRTKEY, CONTROL, NOINVERT
@@ -1476,8 +1482,10 @@ BEGIN
     "E",            ID_EDIT_REDO,           VIRTKEY, CONTROL, NOINVERT
     "F",            ID_EDIT_FIND,           VIRTKEY, CONTROL, NOINVERT
     "H",            ID_GO_HISTORY,          VIRTKEY, CONTROL, NOINVERT
+#ifdef MOZ_SECURITY
     "I",            ID_SECURITY,            VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+#endif
     "M",            ID_FILE_NEWMESSAGE,     VIRTKEY, CONTROL, NOINVERT
     "N",            ID_NEW_FRAME,           VIRTKEY, CONTROL, NOINVERT
     "N",            ID_EDT_NEW_DOC_BLANK,   VIRTKEY, SHIFT, CONTROL, 
@@ -1518,8 +1526,10 @@ BEGIN
     "G",            ID_EDIT_FINDAGAIN,      VIRTKEY, CONTROL, NOINVERT
     "H",            ID_GO_HISTORY,          VIRTKEY, CONTROL, NOINVERT
     "I",            ID_MESSAGE_KILL,        VIRTKEY, CONTROL, NOINVERT
+#ifdef MOZ_SECURITY
     "I",            ID_SECURITY,            VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+#endif
     "L",            ID_MESSAGE_FORWARDQUOTED, VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
     "M",            ID_FILE_MAILNEW,        VIRTKEY, CONTROL, NOINVERT
@@ -1586,8 +1596,10 @@ BEGIN
     "G",            ID_EDIT_FINDAGAIN,      VIRTKEY, CONTROL, NOINVERT
     "H",            ID_GO_HISTORY,          VIRTKEY, CONTROL, NOINVERT
     "I",            ID_MESSAGE_KILL,        VIRTKEY, CONTROL, NOINVERT
+#ifdef MOZ_SECURITY
     "I",            ID_SECURITY,            VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+#endif
     "K",            ID_FILE_COMPRESSTHISFOLDER, VIRTKEY, CONTROL, NOINVERT
     "L",            ID_MESSAGE_FORWARD,     VIRTKEY, CONTROL, NOINVERT
     "L",            ID_MESSAGE_FORWARDQUOTED, VIRTKEY, SHIFT, CONTROL, 
@@ -1673,8 +1685,10 @@ BEGIN
     "F",            IDM_FINDINMESSAGE,      VIRTKEY, CONTROL, NOINVERT
     "G",            IDM_FINDAGAIN,          VIRTKEY, CONTROL, NOINVERT
     "H",            ID_GO_HISTORY,          VIRTKEY, CONTROL, NOINVERT
+#ifdef MOZ_SECURITY
     "I",            ID_SECURITY,            VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+#endif
     "M",            ID_FILE_MAILNEW,        VIRTKEY, CONTROL, NOINVERT
     "N",            ID_NEW_FRAME,           VIRTKEY, CONTROL, NOINVERT
     "N",            ID_EDT_NEW_DOC_BLANK,   VIRTKEY, SHIFT, CONTROL, 
@@ -1864,7 +1878,9 @@ BEGIN
         END
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
+#ifdef MOZ_SECURITY
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#endif
 		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
 		POPUP "Server Tools"
 		BEGIN
@@ -1980,7 +1996,9 @@ BEGIN
         END
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
+#ifdef MOZ_SECURITY
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#endif
 		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
         MENUITEM SEPARATOR
         MENUITEM "Replace Me!",                 ID_WINDOW_WINDOW_0
@@ -2077,7 +2095,9 @@ BEGIN
         END
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
+#ifdef MOZ_SECURITY
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#endif
 		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
         MENUITEM SEPARATOR
         MENUITEM "Replace Me!",                 ID_WINDOW_WINDOW_0
@@ -2334,7 +2354,9 @@ BEGIN
         END
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
+#ifdef MOZ_SECURITY
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#endif
 		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
 		POPUP "Server Tools"
 		BEGIN
@@ -2627,7 +2649,9 @@ BEGIN
         END
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
+#ifdef MOZ_SECURITY
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#endif
 		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
 		POPUP "Server Tools"
 		BEGIN
@@ -3049,7 +3073,9 @@ BEGIN
         END
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
+#ifdef MOZ_SECURITY
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#endif
 		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
         MENUITEM SEPARATOR
         MENUITEM "Replace Me!",                 ID_WINDOW_WINDOW_0
@@ -3396,7 +3422,9 @@ BEGIN
         END
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
+#ifdef MOZ_SECURITY
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#endif
 #ifdef MOZ_MAIL_NEWS
 		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
 #endif //MOZ_MAIL_NEWS
@@ -3522,7 +3550,9 @@ BEGIN
         END
         MENUITEM "&History\tCtrl+H",            ID_GO_HISTORY
         MENUITEM "&Java Console",               ID_OPTIONS_SHOWJAVACONSOLE
+#ifdef MOZ_SECURITY
         MENUITEM "&Security Info\tCtrl+Shift+I", ID_SECURITY
+#endif
 #ifdef MOZ_MAIL_NEWS
 		MENUITEM "Migration Tools",				ID_MIGRATION_TOOLS
 #endif

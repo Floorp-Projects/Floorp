@@ -781,7 +781,7 @@ BOOL CNewProfileWizard::OnInitDialog()
 	GetDlgItem(IDC_READMAIL_POP2)->ShowWindow(SW_HIDE);
 	GetDlgItem(IDC_READMAIL_IMAP)->ShowWindow(SW_HIDE);
 	GetDlgItem(IDC_STATIC5)->ShowWindow(SW_HIDE);
-	GetDlgItem(IDC_SECURE)->ShowWindow(SW_HIDE);
+	GetDlgItem(IDC_X)->ShowWindow(SW_HIDE);
 
 	GetDlgItem(IDC_STATIC_TITLE)->ShowWindow(SW_HIDE);
 	GetDlgItem(IDC_STATIC1)->ShowWindow(SW_HIDE);
@@ -1330,7 +1330,7 @@ void CNewProfileWizard::ShowHideNewsPage(int nShowCmd)
 	GetDlgItem(IDC_STATIC1)->ShowWindow(nShowCmd);
 	GetDlgItem(IDC_STATIC2)->ShowWindow(nShowCmd);
 	GetDlgItem(IDC_EDIT2)->ShowWindow(nShowCmd);
-	GetDlgItem(IDC_SECURE)->ShowWindow(nShowCmd);
+	GetDlgItem(IDC_X)->ShowWindow(nShowCmd);
 	if (nShowCmd == SW_SHOW)
 	{       // init value
 		char szPort[16];
@@ -1338,9 +1338,9 @@ void CNewProfileWizard::ShowHideNewsPage(int nShowCmd)
 		sprintf(szPort, "%ld", m_nPort);
 		SetDlgItemText(IDC_EDIT2, szPort);
 		if (m_bIsSecure)
-			((CButton*)GetDlgItem(IDC_SECURE))->SetCheck(TRUE);
+			((CButton*)GetDlgItem(IDC_X))->SetCheck(TRUE);
 		else
-			((CButton*)GetDlgItem(IDC_SECURE))->SetCheck(FALSE);
+			((CButton*)GetDlgItem(IDC_X))->SetCheck(FALSE);
 		GetDlgItem(IDC_EDIT1)->SetFocus();
 	}
 	else
@@ -1351,7 +1351,7 @@ void CNewProfileWizard::ShowHideNewsPage(int nShowCmd)
 		else 
 			m_szNewsServer = "";
 
-		if (IsDlgButtonChecked(IDC_SECURE)) 
+		if (IsDlgButtonChecked(IDC_X)) 
 			m_bIsSecure = TRUE;
 		else
 			m_bIsSecure = FALSE;
@@ -1606,7 +1606,7 @@ BOOL CNewProfileWizard::DoFinish()
 		else 
 			m_szNewsServer = "";
 
-		if (IsDlgButtonChecked(IDC_SECURE)) 
+		if (IsDlgButtonChecked(IDC_X)) 
 			m_bIsSecure = TRUE;
 		else
 			m_bIsSecure = FALSE;
@@ -1662,7 +1662,7 @@ void CNewProfileWizard::OnCheckSecure()
 	char port[16];
 	BOOL bIsSecure;
 
-	if (IsDlgButtonChecked(IDC_SECURE))
+	if (IsDlgButtonChecked(IDC_X))
 		bIsSecure = TRUE;
 	else
 		bIsSecure = FALSE;
@@ -1687,7 +1687,7 @@ void CNewProfileWizard::OnCheckSecure()
 BEGIN_MESSAGE_MAP(CNewProfileWizard, CDialog)
     ON_BN_CLICKED(IDC_BUTTON_BACK, DoBack)
     ON_BN_CLICKED(IDOK, DoNext)
-    ON_BN_CLICKED(IDC_SECURE, OnCheckSecure)
+    ON_BN_CLICKED(IDC_X, OnCheckSecure)
 	ON_WM_MOVE()
 END_MESSAGE_MAP()
 
