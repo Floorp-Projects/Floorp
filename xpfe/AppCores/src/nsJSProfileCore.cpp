@@ -156,10 +156,7 @@ ProfileCoreCreateNewProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
-    return JS_FALSE;
-  }
-  {
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "profilecore.createnewprofile", &ok);
     if (!ok) {
@@ -168,17 +165,16 @@ ProfileCoreCreateNewProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
     NS_RELEASE(secMan);
   }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  {
-    if (argc < 1) {
-      JS_ReportError(cx, "Function CreateNewProfile requires 1 parameter");
-      return JS_FALSE;
-    }
+  if (argc >= 1) {
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -187,6 +183,10 @@ ProfileCoreCreateNewProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     }
 
     *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function CreateNewProfile requires 1 parameters");
+    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -207,10 +207,7 @@ ProfileCoreRenameProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
-    return JS_FALSE;
-  }
-  {
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "profilecore.renameprofile", &ok);
     if (!ok) {
@@ -219,19 +216,19 @@ ProfileCoreRenameProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     }
     NS_RELEASE(secMan);
   }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  {
-    if (argc < 2) {
-      JS_ReportError(cx, "Function RenameProfile requires 2 parameters");
-      return JS_FALSE;
-    }
+  if (argc >= 2) {
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
     if (NS_OK != nativeThis->RenameProfile(b0, b1)) {
@@ -239,6 +236,10 @@ ProfileCoreRenameProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     }
 
     *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function RenameProfile requires 2 parameters");
+    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -253,15 +254,13 @@ ProfileCoreDeleteProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 {
   nsIDOMProfileCore *nativeThis = (nsIDOMProfileCore*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsAutoString b0;
+  nsAutoString b1;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
-    return JS_FALSE;
-  }
-  {
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "profilecore.deleteprofile", &ok);
     if (!ok) {
@@ -270,25 +269,30 @@ ProfileCoreDeleteProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     }
     NS_RELEASE(secMan);
   }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  {
-    if (argc < 1) {
-      JS_ReportError(cx, "Function DeleteProfile requires 1 parameter");
-      return JS_FALSE;
-    }
+  if (argc >= 2) {
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->DeleteProfile(b0)) {
+    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
+
+    if (NS_OK != nativeThis->DeleteProfile(b0, b1)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function DeleteProfile requires 2 parameters");
+    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -308,10 +312,7 @@ ProfileCoreGetProfileList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
-    return JS_FALSE;
-  }
-  {
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "profilecore.getprofilelist", &ok);
     if (!ok) {
@@ -320,19 +321,26 @@ ProfileCoreGetProfileList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     NS_RELEASE(secMan);
   }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  {
+  if (argc >= 0) {
 
     if (NS_OK != nativeThis->GetProfileList(nativeRet)) {
       return JS_FALSE;
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function GetProfileList requires 0 parameters");
+    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -352,10 +360,7 @@ ProfileCoreStartCommunicator(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
-    return JS_FALSE;
-  }
-  {
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "profilecore.startcommunicator", &ok);
     if (!ok) {
@@ -364,17 +369,16 @@ ProfileCoreStartCommunicator(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     }
     NS_RELEASE(secMan);
   }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  {
-    if (argc < 1) {
-      JS_ReportError(cx, "Function StartCommunicator requires 1 parameter");
-      return JS_FALSE;
-    }
+  if (argc >= 1) {
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -383,6 +387,10 @@ ProfileCoreStartCommunicator(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     }
 
     *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function StartCommunicator requires 1 parameters");
+    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -402,10 +410,7 @@ ProfileCoreGetCurrentProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
-    return JS_FALSE;
-  }
-  {
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "profilecore.getcurrentprofile", &ok);
     if (!ok) {
@@ -414,19 +419,26 @@ ProfileCoreGetCurrentProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
     }
     NS_RELEASE(secMan);
   }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  {
+  if (argc >= 0) {
 
     if (NS_OK != nativeThis->GetCurrentProfile(nativeRet)) {
       return JS_FALSE;
     }
 
     nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+  else {
+    JS_ReportError(cx, "Function GetCurrentProfile requires 0 parameters");
+    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -446,10 +458,7 @@ ProfileCoreMigrateProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
-    return JS_FALSE;
-  }
-  {
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
     PRBool ok;
     secMan->CheckScriptAccess(scriptCX, obj, "profilecore.migrateprofile", &ok);
     if (!ok) {
@@ -458,17 +467,16 @@ ProfileCoreMigrateProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
     NS_RELEASE(secMan);
   }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  {
-    if (argc < 1) {
-      JS_ReportError(cx, "Function MigrateProfile requires 1 parameter");
-      return JS_FALSE;
-    }
+  if (argc >= 1) {
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
@@ -477,6 +485,10 @@ ProfileCoreMigrateProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function MigrateProfile requires 1 parameters");
+    return JS_FALSE;
   }
 
   return JS_TRUE;
@@ -517,7 +529,7 @@ static JSFunctionSpec ProfileCoreMethods[] =
 {
   {"CreateNewProfile",          ProfileCoreCreateNewProfile,     1},
   {"RenameProfile",          ProfileCoreRenameProfile,     2},
-  {"DeleteProfile",          ProfileCoreDeleteProfile,     1},
+  {"DeleteProfile",          ProfileCoreDeleteProfile,     2},
   {"GetProfileList",          ProfileCoreGetProfileList,     0},
   {"StartCommunicator",          ProfileCoreStartCommunicator,     1},
   {"GetCurrentProfile",          ProfileCoreGetCurrentProfile,     0},
