@@ -4312,8 +4312,9 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
                           ? mContentOffset + mContentLength : -1;
 #endif // IBMBIDI
                   }
-                  keepSearching = PR_FALSE;
-                  found = PR_TRUE;
+                  keepSearching = (mContentOffset + mContentLength) <= aPos->mContentOffset;
+                  if (!keepSearching)
+                    found = PR_TRUE;
                 }
                 else  //we just need to jump the space, done here
                 {
@@ -4334,13 +4335,15 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
 #endif // IBMBIDI
                   }
-                  keepSearching = PR_FALSE;
-                  found = PR_TRUE;
+                  keepSearching = (mContentOffset + mContentLength) <= aPos->mContentOffset;
+                  if (!keepSearching)
+                    found = PR_TRUE;
                 }
               } // if we should eat space to the next word
               else {
-                keepSearching = PR_FALSE;
-                found = PR_TRUE;
+                keepSearching = (mContentOffset + mContentLength) <= aPos->mContentOffset;
+                if (!keepSearching)
+                  found = PR_TRUE;
               }
             }
             else if (aPos->mEatingWS)
