@@ -51,7 +51,7 @@
 
 
 //
-//  Screen class implementation 
+//  Screen class implementation
 //
 ScreenImpl::ScreenImpl(nsIDocShell* aDocShell) : mDocShell(aDocShell)
 {
@@ -84,17 +84,22 @@ NS_IMETHODIMP ScreenImpl::SetDocShell(nsIDocShell* aDocShell)
 NS_IMETHODIMP
 ScreenImpl::GetTop(PRInt32* aTop)
 {
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
-	if ( context )
-	{
-		nsRect rect;
-		context->GetRect( rect );
-		float devUnits;
-		context->GetDevUnitsToAppUnits(devUnits);
-		*aTop = NSToIntRound(float(rect.y) / devUnits );
-		return NS_OK;
-	}
+  nsCOMPtr<nsIDeviceContext> context (getter_AddRefs(GetDeviceContext()));
+
+  if (context) {
+    nsRect rect;
+    context->GetRect(rect);
+
+    float devUnits;
+    context->GetDevUnitsToAppUnits(devUnits);
+
+    *aTop = NSToIntRound(float(rect.y) / devUnits);
+
+    return NS_OK;
+  }
+
   *aTop = -1;
+
   return NS_ERROR_FAILURE;
 }
 
@@ -102,17 +107,22 @@ ScreenImpl::GetTop(PRInt32* aTop)
 NS_IMETHODIMP
 ScreenImpl::GetLeft(PRInt32* aLeft)
 {
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
-	if ( context )
-	{
-		nsRect rect;
-		context->GetRect( rect );
-		float devUnits;
-		context->GetDevUnitsToAppUnits(devUnits);
-		*aLeft = NSToIntRound(float(rect.x) / devUnits );
-		return NS_OK;
-	}
+  nsCOMPtr<nsIDeviceContext> context (getter_AddRefs(GetDeviceContext()));
+
+  if (context) {
+    nsRect rect;
+    context->GetRect(rect);
+
+    float devUnits;
+    context->GetDevUnitsToAppUnits(devUnits);
+
+    *aLeft = NSToIntRound(float(rect.x) / devUnits);
+
+    return NS_OK;
+  }
+
   *aLeft = -1;
+
   return NS_ERROR_FAILURE;
 }
 
@@ -120,166 +130,193 @@ ScreenImpl::GetLeft(PRInt32* aLeft)
 NS_IMETHODIMP
 ScreenImpl::GetWidth(PRInt32* aWidth)
 {
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
-	if ( context )
-	{
-		PRInt32 height;
-		context->GetDeviceSurfaceDimensions( *aWidth, height  );
-		float devUnits;
-		context->GetDevUnitsToAppUnits(devUnits);
-		*aWidth = NSToIntRound(float( *aWidth) / devUnits );
-		return NS_OK;
-	}
+  nsCOMPtr<nsIDeviceContext> context (getter_AddRefs(GetDeviceContext()));
+
+  if (context) {
+    PRInt32 height;
+    context->GetDeviceSurfaceDimensions(*aWidth, height);
+
+    float devUnits;
+    context->GetDevUnitsToAppUnits(devUnits);
+
+    *aWidth = NSToIntRound(float(*aWidth) / devUnits);
+
+    return NS_OK;
+  }
 
   *aWidth = -1;
+
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetHeight(PRInt32* aHeight)
 {
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
-	if ( context )
-	{
-		PRInt32 width;
-		context->GetDeviceSurfaceDimensions( width, *aHeight  );
-		float devUnits;
-		context->GetDevUnitsToAppUnits(devUnits);
-		*aHeight = NSToIntRound(float( *aHeight) / devUnits );
-		return NS_OK;
-	}
-	
+  nsCOMPtr<nsIDeviceContext> context (getter_AddRefs(GetDeviceContext()));
+
+  if (context) {
+    PRInt32 width;
+    context->GetDeviceSurfaceDimensions(width, *aHeight);
+
+    float devUnits;
+    context->GetDevUnitsToAppUnits(devUnits);
+
+    *aHeight = NSToIntRound(float(*aHeight) / devUnits);
+
+    return NS_OK;
+  }
+
   *aHeight = -1;
+
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetPixelDepth(PRInt32* aPixelDepth)
 {
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
-	if ( context )
-	{
-		PRUint32 depth;
-		context->GetDepth( depth  );
-		*aPixelDepth = depth;
-		return NS_OK;
-	}
-  //XXX not implmented
+  nsCOMPtr<nsIDeviceContext> context (getter_AddRefs(GetDeviceContext()));
+
+  if (context) {
+    PRUint32 depth;
+    context->GetDepth(depth);
+
+    *aPixelDepth = depth;
+
+    return NS_OK;
+  }
+
   *aPixelDepth = -1;
+
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetColorDepth(PRInt32* aColorDepth)
 {
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
-	if ( context )
-	{
-		PRUint32 depth;
-		context->GetDepth( depth  );
-		*aColorDepth = depth;
-		return NS_OK;
-	}
-  
+  nsCOMPtr<nsIDeviceContext> context (getter_AddRefs(GetDeviceContext()));
+
+  if (context) {
+    PRUint32 depth;
+    context->GetDepth(depth);
+
+    *aColorDepth = depth;
+
+    return NS_OK;
+  }
+
   *aColorDepth = -1;
+
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailWidth(PRInt32* aAvailWidth)
 {
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
-  if ( context )
-  {
-	  nsRect rect;
-	  context->GetClientRect( rect  );
-	  float devUnits;
-	  context->GetDevUnitsToAppUnits(devUnits);
-	  *aAvailWidth = NSToIntRound(float( rect.width) / devUnits );
-	  return NS_OK;
+  nsCOMPtr<nsIDeviceContext> context (getter_AddRefs(GetDeviceContext()));
+
+  if (context) {
+    nsRect rect;
+    context->GetClientRect(rect);
+
+    float devUnits;
+    context->GetDevUnitsToAppUnits(devUnits);
+
+    *aAvailWidth = NSToIntRound(float(rect.width) / devUnits);
+
+    return NS_OK;
   }
 
   *aAvailWidth = -1;
-  return NS_ERROR_FAILURE;
 
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailHeight(PRInt32* aAvailHeight)
 {
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
-  if ( context )
-  {
-	  nsRect rect;
-	  context->GetClientRect( rect  );
-	  float devUnits;
-	  context->GetDevUnitsToAppUnits(devUnits);
-	  *aAvailHeight = NSToIntRound(float( rect.height) / devUnits );
-	  return NS_OK;
+  nsCOMPtr<nsIDeviceContext> context (getter_AddRefs(GetDeviceContext()));
+
+  if (context) {
+    nsRect rect;
+    context->GetClientRect(rect);
+
+    float devUnits;
+    context->GetDevUnitsToAppUnits(devUnits);
+
+    *aAvailHeight = NSToIntRound(float(rect.height) / devUnits);
+
+    return NS_OK;
   }
 
   *aAvailHeight = -1;
-  return NS_ERROR_FAILURE;
 
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailLeft(PRInt32* aAvailLeft)
 {
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
-  if ( context )
-  {
-	  nsRect rect;
-	  context->GetClientRect( rect  );
-	  float devUnits;
-	  context->GetDevUnitsToAppUnits(devUnits);
-	  *aAvailLeft = NSToIntRound(float( rect.x) / devUnits );
-	  return NS_OK;
- }
+  nsCOMPtr<nsIDeviceContext> context (getter_AddRefs(GetDeviceContext()));
+
+  if (context) {
+    nsRect rect;
+    context->GetClientRect(rect);
+
+    float devUnits;
+    context->GetDevUnitsToAppUnits(devUnits);
+
+    *aAvailLeft = NSToIntRound(float(rect.x) / devUnits);
+
+    return NS_OK;
+  }
 
   *aAvailLeft = -1;
+
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 ScreenImpl::GetAvailTop(PRInt32* aAvailTop)
 {
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
-  if ( context )
-  {
-	  nsRect rect;
-	  context->GetClientRect( rect  );
-	  float devUnits;
-	  context->GetDevUnitsToAppUnits(devUnits);
-	  *aAvailTop = NSToIntRound(float( rect.y) / devUnits );
-	  return NS_OK;
+  nsCOMPtr<nsIDeviceContext> context (getter_AddRefs(GetDeviceContext()));
+
+  if (context) {
+    nsRect rect;
+    context->GetClientRect(rect);
+
+    float devUnits;
+    context->GetDevUnitsToAppUnits(devUnits);
+
+    *aAvailTop = NSToIntRound(float(rect.y) / devUnits);
+
+    return NS_OK;
   }
 
   *aAvailTop = -1;
+
   return NS_ERROR_FAILURE;
 }
 
 nsIDeviceContext* ScreenImpl::GetDeviceContext()
 {
-  
-   if(!mDocShell)
-      return nsnull;
+  if(!mDocShell)
+    return nsnull;
 
-	nsCOMPtr<nsIContentViewer> contentViewer;
-   mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+  nsCOMPtr<nsIContentViewer> contentViewer;
+  mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
 
-   nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
-   if(!docViewer)
-      return nsnull;
+  nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
+  if(!docViewer)
+    return nsnull;
 
-   nsCOMPtr<nsIPresContext> presContext;
-   docViewer->GetPresContext(*getter_AddRefs(presContext));
+  nsCOMPtr<nsIPresContext> presContext;
+  docViewer->GetPresContext(*getter_AddRefs(presContext));
 
-	nsIDeviceContext* context = nsnull;
-   if(presContext)
-      presContext->GetDeviceContext(&context);
+  nsIDeviceContext* context = nsnull;
+  if(presContext)
+    presContext->GetDeviceContext(&context);
 
-   return context;
+  return context;
 }
 
 
