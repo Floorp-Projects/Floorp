@@ -21,19 +21,26 @@
    -   Akkana Peck
   -->
 
-<!-- extracted from replacedialog.xul -->
+<!-- extracted from EdReplace.xul -->
 
 <!ENTITY replaceDialog.title "Find and Replace">
-<!ENTITY findField.label "Find what:">
+<!ENTITY findField.label "Find text:">
+<!ENTITY findField.accesskey "n">
 <!ENTITY replaceField.label "Replace with:">
+<!ENTITY replaceField.accesskey "e">
 <!ENTITY caseSensitiveCheckbox.label "Match upper/lower case">
+<!ENTITY caseSensitiveCheckbox.accesskey "c">
 <!ENTITY wrapCheckbox.label "Wrap around">
+<!ENTITY wrapCheckbox.accesskey "W">
 <!ENTITY backwardsCheckbox.label "Search backwards">
-<!ENTITY findField.tooltip "Type one or more words to search for">
-<!ENTITY replaceField.tooltip "Type one or more words to replace with">
+<!ENTITY backwardsCheckbox.accesskey "b">
 <!ENTITY findNextButton.label "Find Next">
+<!ENTITY findNextButton.accesskey "F">
 <!ENTITY replaceButton.label "Replace">
+<!ENTITY replaceButton.accesskey "R">
 <!ENTITY replaceAndFindButton.label "Replace and Find">
+<!ENTITY replaceAndFindButton.accesskey "d">
 <!ENTITY replaceAllButton.label "Replace All">
+<!ENTITY replaceAllButton.accesskey "A">
 <!ENTITY closeButton.label "Close">
 <!ENTITY notFoundWarning.label "The text you entered was not found.">
