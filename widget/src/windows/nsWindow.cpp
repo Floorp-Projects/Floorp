@@ -4056,6 +4056,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             // No window is under the pointer
             break;
           }
+
+          // We don't care about windows belonging to other processes.
+          DWORD processId = 0;
+          GetWindowThreadProcessId(destWnd, &processId);
+          if (processId != GetCurrentProcessId())
+          {
+            // Somebody elses window
+            break;
+          }
           
           LONG proc = ::GetWindowLong(destWnd, GWL_WNDPROC);
           if (proc != (LONG)&nsWindow::WindowProc)  {
