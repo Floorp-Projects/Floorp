@@ -278,9 +278,13 @@ sameOrigins(JSContext *cx, const char *origin1, const char *origin2)
     cmp2 = getCanonicalizedOrigin(cx, origin2);
     if (cmp1 && cmp2 &&
         XP_STRNCASECMP(cmp1, file_url_prefix, FILE_URL_PREFIX_LEN) == 0 &&
-	XP_STRNCASECMP(cmp2, file_url_prefix, FILE_URL_PREFIX_LEN) == 0)
-	return JS_TRUE;
+	XP_STRNCASECMP(cmp2, file_url_prefix, FILE_URL_PREFIX_LEN) == 0) {
+	ok = JS_TRUE;
+	goto done;
+    }
     ok = (JSBool)(cmp1 && cmp2 && XP_STRCMP(cmp1, cmp2) == 0);
+
+done:
     PR_FREEIF(cmp1);
     PR_FREEIF(cmp2);
     return ok;
