@@ -290,39 +290,33 @@ if (Param('useclassification') && (defined $classification)) {
 }
 
 #
-# product = '' -> Show nice list of products
+# product = '' -> Show nice list of classifications (if
+# classifications enabled)
 #
 
 if (Param('useclassification')) {
     unless ($classification) {
-        PutHeader("Select classification");
 
-        SendSQL("SELECT classifications.name, classifications.description,
-                        COUNT(classification_id) AS total
+        my $dbh = Bugzilla->dbh;
+
+        my $query = 
+            "SELECT classifications.name, classifications.description,
+                    COUNT(classification_id) AS product_count
              FROM classifications
              LEFT JOIN products
-               ON classifications.id = products.classification_id " .
-             $dbh->sql_group_by('classifications.id',
-                                'classifications.name,
-                                 classifications.description') . "
-             ORDER BY name");
-        print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0><TR BGCOLOR=\"#6666FF\">\n";
-        print "  <TH ALIGN=\"left\">Edit products of ...</TH>\n";
-        print "  <TH ALIGN=\"left\">Description</TH>\n";
-        print "  <TH ALIGN=\"left\">Total</TH>\n";
-        print "</TR>";
-        while ( MoreSQLData() ) {
-            my ($classification, $description, $count) = FetchSQLData();
-            $description ||= "<FONT COLOR=\"red\">missing</FONT>";
-            print "<TR>\n";
-            print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?classification=",url_quote($classification),"\"><B>$classification</B></A></TD>\n";
-            print "  <TD VALIGN=\"top\">$description</TD>\n";
-            $count ||= "none";
-            print "  <TD VALIGN=\"top\">$count</TD>\n";
-        }
-        print "</TR></TABLE>\n";
+                  ON classifications.id = products.classification_id " .
+                  $dbh->sql_group_by('classifications.id',
+                                     'classifications.name,
+                                      classifications.description') . "
+             ORDER BY name";
 
-        PutTrailer();
+        $vars->{'classifications'} = $dbh->selectall_arrayref($query,
+                                                              {'Slice' => {}});
+
+        $template->process("admin/products/list-classifications.html.tmpl",
+                           $vars)
+            || ThrowTemplateError($template->error());
+
         exit;
     }
 }

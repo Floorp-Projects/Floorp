@@ -43,11 +43,9 @@
 
 [% UNLESS no_add_product_link %]
   <a title="Add a product"
-     href="editproducts.cgi?action=add">Add</a> a product
-
-
-  [%# Strictly speaking, we should not have to check for a
-      classification if they are enabled, but I'm just being paranoid %]
+     href="editproducts.cgi?action=add">Add</a> a product[% -%]
+[%# Strictly speaking, we should not have to check for a
+    classification if they are enabled, but I'm just being paranoid %]
   [% IF Param('useclassification') && classification %]
     (<a title="Add a product to classification '
                [%- classification FILTER html %]'"
