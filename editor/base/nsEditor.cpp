@@ -295,6 +295,10 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, PRUint32 aFlags)
 NS_IMETHODIMP
 nsEditor::PostCreate()
 {
+  // nuke the modification count, so the doc appears unmodified
+  // do this before we notify listeners
+  ResetDocModCount();
+  
   // update the UI with our state
   NotifyDocumentListeners(eDocumentCreated);
   NotifyDocumentListeners(eDocumentStateChanged);
