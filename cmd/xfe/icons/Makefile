@@ -170,7 +170,7 @@ MKICONS_EXTRA	= $(OS_LIBS) -lm
 
 # XXX We need to reach into the Image Library modules's source directory to 
 # get the file if.h
-$(MKICONS_EXE): mkicons.c $(MKICONS_LIB)
+$(MKICONS_EXE): mkicons.cpp $(MKICONS_LIB)
 	$(CCC) $(CFLAGS) -o $@ -I$(DEPTH)/modules/libimg/src $< $(MKICONS_LIB) $(MKICONS_EXTRA)
 
 $(ICONLIST): $(ICONS)
