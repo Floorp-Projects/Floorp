@@ -218,8 +218,14 @@ DownloadProgressListener.prototype =
     
     var format = "";
     if (!progressHasMB && !totalHasMB) {
-      format = this._statusFormatUnknownKB;
-      format = this._replaceInsert(format, 1, aKBytes);
+      if (!aTotalKBytes) {
+      	 format = this._statusFormatUnknownKB;
+        format = this._replaceInsert(format, 1, aKBytes);
+      } else {
+        format = this._statusFormatKBKB;
+        format = this._replaceInsert(format, 1, aKBytes);
+        format = this._replaceInsert(format, 2, aTotalKBytes);
+      }
     }
     else if (progressHasMB && totalHasMB) {
       format = this._statusFormatMBMB;
