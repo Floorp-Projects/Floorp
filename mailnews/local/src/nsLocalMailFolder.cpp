@@ -784,10 +784,10 @@ nsMsgLocalMailFolder::CheckIfFolderExists(const PRUnichar *folderName, nsFileSpe
 nsresult
 nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow *msgWindow )
 {
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 	    
-	nsFileSpec path;
-    nsCOMPtr<nsIMsgFolder> child;
+  nsFileSpec path;
+  nsCOMPtr<nsIMsgFolder> child;
 	//Get a directory based on our current path.
 	rv = CreateDirectoryForFolder(path);
 	if(NS_FAILED(rv))
@@ -795,13 +795,13 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 
 	//Now we have a valid directory or we have returned.
 	//Make sure the new folder name is valid
-    rv = CheckIfFolderExists(folderName, path, msgWindow);
-    if(NS_FAILED(rv))
-       return rv;
+  rv = CheckIfFolderExists(folderName, path, msgWindow);
+  if(NS_FAILED(rv))
+     return rv;
 
-    nsXPIDLCString nativeFolderName;
-    ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(folderName),
-                       getter_Copies(nativeFolderName));
+  nsXPIDLCString nativeFolderName;
+  ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(folderName),
+                     getter_Copies(nativeFolderName));
   
   nsCAutoString safeFolderName;
   safeFolderName.Assign(nativeFolderName.get());
@@ -809,49 +809,54 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
 	path += safeFolderName.get();
 		
 	nsOutputFileStream outputStream(path, PR_WRONLY | PR_CREATE_FILE, 00600);	
-    if (outputStream.is_open())
-    {
-      outputStream.flush();
-      outputStream.close();
-    }
-   
-	// Create an empty database for this mail folder, set its name from the user  
+  if (outputStream.is_open())
+  {
+    outputStream.flush();
+    outputStream.close();
+  }
+
+  //Now let's create the actual new folder
+  nsAutoString folderNameStr(folderName);
+  //GetFlags and SetFlags in AddSubfolder will fail because we have no db at this point but mFlags is set.
+  rv = AddSubfolder(&folderNameStr, getter_AddRefs(child));
+  if (!child || NS_FAILED(rv))
+  {
+    path.Delete(PR_FALSE);
+    return rv;
+  }
+		
+  // Create an empty database for this mail folder, set its name from the user  
 	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
 
 	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
-        nsCOMPtr<nsIMsgDatabase> unusedDB;
-		nsCOMPtr <nsIFileSpec> dbFileSpec;
-		NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
-		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, getter_AddRefs(unusedDB));
+    nsCOMPtr<nsIMsgDatabase> unusedDB;
+		rv = mailDBFactory->OpenFolderDB(child, PR_TRUE, PR_TRUE, getter_AddRefs(unusedDB));
 
-        if (NS_SUCCEEDED(rv) && unusedDB)
-        {
+    if (NS_SUCCEEDED(rv) && unusedDB)
+    {
 			//need to set the folder name
-			nsAutoString folderNameStr(folderName);
 			nsCOMPtr<nsIDBFolderInfo> folderInfo;
 			rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
 			if(NS_SUCCEEDED(rv))
 			{
 				folderInfo->SetMailboxName(&folderNameStr);
 			}
-
-			//Now let's create the actual new folder
-			rv = AddSubfolder(&folderNameStr, getter_AddRefs(child));
-			if (child)
-				child->SetPrettyName(folderNameStr.get());  //because empty trash will create a new trash folder
-            unusedDB->SetSummaryValid(PR_TRUE);
-            unusedDB->Close(PR_TRUE);
-        }
-        else
-        {
-			path.Delete(PR_FALSE);
-            rv = NS_MSG_CANT_CREATE_FOLDER;
-        }
+      unusedDB->SetSummaryValid(PR_TRUE);
+      unusedDB->Close(PR_TRUE);
+    }
+    else
+    {
+      path.Delete(PR_FALSE);
+      rv = NS_MSG_CANT_CREATE_FOLDER;
+    }
 	}
-	if(rv == NS_OK && child)
+	if(NS_SUCCEEDED(rv))
 	{
+    //we need to notify explicitly the flag change because it failed when we did AddSubfolder
+    child->OnFlagChange(mFlags);
+		child->SetPrettyName(folderNameStr.get());  //because empty trash will create a new trash folder
 		nsCOMPtr<nsISupports> childSupports(do_QueryInterface(child));
 		nsCOMPtr<nsISupports> folderSupports(do_QueryInterface(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this), &rv));
 		if(childSupports && NS_SUCCEEDED(rv))
