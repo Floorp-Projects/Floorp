@@ -2169,7 +2169,7 @@ class IdEnumeration implements Enumeration {
                 break;
             }
         }
-        return result;
+        return ScriptRuntime.toString(result);
     }
 
     private Object next;
