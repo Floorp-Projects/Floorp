@@ -46,6 +46,18 @@
 #include <ctype.h>
   // for |EOF|, |WEOF|
 
+#define FORCED_CPP_2BYTE_WCHAR_T
+  // disable special optimizations for now through this hack
+
+#if defined(HAVE_CPP_2BYTE_WCHAR_T) && !defined(FORCED_CPP_2BYTE_WCHAR_T)
+#define USE_CPP_WCHAR_FUNCS
+#endif
+
+#ifdef USE_CPP_WCHAR_FUNCS
+#include <wchar.h>
+  // for |wmemset|, et al
+#endif
+
 #include <string.h>
   // for |memcpy|, et al
 
@@ -64,16 +76,18 @@
   typedef PRBool nsCharTraits_bool;
 #endif
 
-template <class CharT>
-struct nsCharTraits
+template <class CharT> struct nsCharTraits {};
+
+NS_SPECIALIZE_TEMPLATE
+struct nsCharTraits<PRUnichar>
   {
-    typedef CharT     char_type;
-    typedef CharT     unsigned_char_type;
+    typedef PRUnichar char_type;
+    typedef PRUint16  unsigned_char_type;
     typedef char      incompatible_char_type;
 
     static
     void
-    assign( char_type& lhs, const char_type& rhs )
+    assign( char_type& lhs, char_type rhs )
       {
         lhs = rhs;
       }
@@ -81,25 +95,29 @@ struct nsCharTraits
 
       // integer representation of characters:
 
+#ifdef USE_CPP_WCHAR_FUNCS
+    typedef wint_t int_type;
+#else
     typedef int int_type;
+#endif
 
     static
     char_type
-    to_char_type( const int_type& c )
+    to_char_type( int_type c )
       {
         return char_type(c);
       }
 
     static
     int_type
-    to_int_type( const char_type& c )
+    to_int_type( char_type c )
       {
-        return int_type(c);
+        return int_type( NS_STATIC_CAST(unsigned_char_type, c) );
       }
 
     static
     nsCharTraits_bool
-    eq_int_type( const int_type& lhs, const int_type& rhs )
+    eq_int_type( int_type lhs, int_type rhs )
       {
         return lhs == rhs;
       }
@@ -109,14 +127,14 @@ struct nsCharTraits
 
     static
     nsCharTraits_bool
-    eq( const char_type& lhs, const char_type& rhs )
+    eq( char_type lhs, char_type rhs )
       {
         return lhs == rhs;
       }
 
     static
     nsCharTraits_bool
-    lt( const char_type& lhs, const char_type& rhs )
+    lt( char_type lhs, char_type rhs )
       {
         return lhs < rhs;
       }
@@ -126,75 +144,60 @@ struct nsCharTraits
 
     static
     char_type*
-    copy( char_type* s1, const char_type* s2, size_t n )
-      {
-        char_type* result = s1;
-        while ( n-- )
-          assign(*s1++, *s2++);
-        return result;
-      }
-
-    static
-    char_type*
     move( char_type* s1, const char_type* s2, size_t n )
       {
-        char_type* result = s1;
-
-        if ( n )
-          {
-            if ( s2 > s1 )
-              copy(s1, s2, n);
-            else
-              {
-                s1 += n;
-                s2 += n;
-                while ( n-- )
-                  assign(*--s1, *--s2);
-              }
-          }
-        
-        return result;
+        return NS_STATIC_CAST(char_type*, memmove(s1, s2, n * sizeof(char_type)));
       }
 
     static
     char_type*
-    assign( char_type* s, size_t n, const char_type& c )
+    copy( char_type* s1, const char_type* s2, size_t n )
       {
+        return NS_STATIC_CAST(char_type*, memcpy(s1, s2, n * sizeof(char_type)));
+      }
+
+    static
+    char_type*
+    assign( char_type* s, size_t n, char_type c )
+      {
+#ifdef USE_CPP_WCHAR_FUNCS
+        return NS_STATIC_CAST(char_type*, wmemset(s, to_int_type(c), n));
+#else
         char_type* result = s;
         while ( n-- )
           assign(*s++, c);
         return result;
+#endif
       }
 
     static
     int
     compare( const char_type* s1, const char_type* s2, size_t n )
       {
-        for ( ; n--; ++s1, ++s2 )
-          {
-            if ( lt(*s1, *s2) )
-              return -1;
-            if ( lt(*s2, *s1) )
-              return 1;
-          }
-
-        return 0;
+        return memcmp(s1, s2, n * sizeof(char_type));
       }
 
     static
     size_t
     length( const char_type* s )
       {
+#ifdef USE_CPP_WCHAR_FUNCS
+        return wcslen(s);
+#else
         size_t result = 0;
-        while ( !eq(*s++, CharT(0)) )
+        while ( !eq(*s++, char_type(0)) )
           ++result;
         return result;
+#endif
       }
 
     static
     const char_type*
-    find( const char_type* s, size_t n, const char_type& c )
+    find( const char_type* s, size_t n, char_type c )
       {
+#ifdef USE_CPP_WCHAR_FUNCS
+        return NS_REINTERPRET_CAST(const char_type*, wmemchr(s, to_int_type(c), n));
+#else
         while ( n-- )
           {
             if ( eq(*s, c) )
@@ -203,6 +206,7 @@ struct nsCharTraits
           }
 
         return 0;
+#endif
       }
 
 #if 0
@@ -216,12 +220,16 @@ struct nsCharTraits
     int_type
     eof()
       {
+#ifdef USE_CPP_WCHAR_FUNCS
+        return WEOF;
+#else
         return EOF;
+#endif
       }
 
     static
     int_type
-    not_eof( const int_type& c )
+    not_eof( int_type c )
       {
         return eq_int_type(c, eof()) ? ~eof() : c;
       }
@@ -239,7 +247,7 @@ struct nsCharTraits<char>
 
     static
     void
-    assign( char& lhs, char rhs )
+    assign( char_type& lhs, char_type rhs )
       {
         lhs = rhs;
       }
@@ -250,22 +258,22 @@ struct nsCharTraits<char>
     typedef int int_type;
 
     static
-    char
-    to_char_type( int c )
+    char_type
+    to_char_type( int_type c )
       {
-        return char(c);
+        return char_type(c);
       }
 
     static
-    int
-    to_int_type( char c )
+    int_type
+    to_int_type( char_type c )
       {
-        return int( NS_STATIC_CAST(unsigned char, c) );
+        return int_type( NS_STATIC_CAST(unsigned_char_type, c) );
       }
 
     static
     nsCharTraits_bool
-    eq_int_type( int lhs, int rhs )
+    eq_int_type( int_type lhs, int_type rhs )
       {
         return lhs == rhs;
       }
@@ -275,14 +283,14 @@ struct nsCharTraits<char>
 
     static
     nsCharTraits_bool
-    eq( char lhs, char rhs )
+    eq( char_type lhs, char_type rhs )
       {
         return lhs == rhs;
       }
 
     static
     nsCharTraits_bool
-    lt( char lhs, char rhs )
+    lt( char_type lhs, char_type rhs )
       {
         return lhs < rhs;
       }
@@ -291,45 +299,45 @@ struct nsCharTraits<char>
       // operations on s[n] arrays:
 
     static
-    char*
-    move( char* s1, const char* s2, size_t n )
+    char_type*
+    move( char_type* s1, const char_type* s2, size_t n )
       {
-        return NS_STATIC_CAST(char*, memmove(s1, s2, n));
+        return NS_STATIC_CAST(char_type*, memmove(s1, s2, n * sizeof(char_type)));
       }
 
     static
-    char*
-    copy( char* s1, const char* s2, size_t n )
+    char_type*
+    copy( char_type* s1, const char_type* s2, size_t n )
       {
-        return NS_STATIC_CAST(char*, memcpy(s1, s2, n));
+        return NS_STATIC_CAST(char_type*, memcpy(s1, s2, n * sizeof(char_type)));
       }
 
     static
-    char*
-    assign( char* s, size_t n, char c )
+    char_type*
+    assign( char_type* s, size_t n, char_type c )
       {
-        return NS_STATIC_CAST(char*, memset(s, to_int_type(c), n));
+        return NS_STATIC_CAST(char_type*, memset(s, to_int_type(c), n));
       }
 
     static
     int
-    compare( const char* s1, const char* s2, size_t n )
+    compare( const char_type* s1, const char_type* s2, size_t n )
       {
         return memcmp(s1, s2, n);
       }
 
     static
     size_t
-    length( const char* s )
+    length( const char_type* s )
       {
         return strlen(s);
       }
 
     static
-    const char*
-    find( const char* s, size_t n, char c )
+    const char_type*
+    find( const char_type* s, size_t n, char_type c )
       {
-        return NS_REINTERPRET_CAST(const char*, memchr(s, to_int_type(c), n));
+        return NS_REINTERPRET_CAST(const char_type*, memchr(s, to_int_type(c), n));
       }
 
 #if 0
@@ -347,148 +355,15 @@ struct nsCharTraits<char>
       }
 
     static
-    int
-    not_eof( int c )
-      {
-        return c==eof() ? ~eof() : c;
-      }
-
-    // static state_type get_state( pos_type );
-#endif
-  };
-
-#if 0
-NS_SPECIALIZE_TEMPLATE
-struct nsCharTraits<wchar_t>
-  {
-    typedef wchar_t     char_type;
-    /* we need to put these here for real if/when we use 
-     * this specialized template.
-     *
-     * typedef wchar_t     unsigned_char_type;
-     * typedef char        incompatible_char_type;
-     */
-
-    static
-    void
-    assign( wchar_t& lhs, wchar_t rhs )
-      {
-        lhs = rhs;
-      }
-
-
-      // integer representation of characters:
-
-    typedef wint_t int_type;
-
-    static
-    wchar_t
-    to_char_type( int_type c )
-      {
-        return wchar_t(c);
-      }
-
-    static
-    int_type
-    to_int_type( wchar_t c )
-      {
-        return int_type(c);
-      }
-
-    static
-    nsCharTraits_bool
-    eq_int_type( int_type lhs, int_type rhs )
-      {
-        return lhs == rhs;
-      }
-
-
-      // |char_type| comparisons:
-
-    static
-    nsCharTraits_bool
-    eq( wchar_t lhs, wchar_t rhs )
-      {
-        return lhs == rhs;
-      }
-
-    static
-    nsCharTraits_bool
-    lt( wchar_t lhs, wchar_t rhs )
-      {
-        return lhs < rhs;
-      }
-
-
-      // operations on s[n] arrays:
-
-    static
-    wchar_t*
-    move( wchar_t* s1, const wchar_t* s2, size_t n )
-      {
-        return NS_STATIC_CAST(wchar_t*, wmemmove(s1, s2, n));
-      }
-
-    static
-    wchar_t*
-    copy( wchar_t* s1, const wchar_t* s2, size_t n )
-      {
-        return NS_STATIC_CAST(wchar_t*, wmemcpy(s1, s2, n));
-      }
-
-    static
-    wchar_t*
-    assign( wchar_t* s, size_t n, wchar_t c )
-      {
-        return NS_STATIC_CAST(wchar_t*, wmemset(s, to_int_type(c), n));
-      }
-
-    static
-    int
-    compare( const wchar_t* s1, const wchar_t* s2, size_t n )
-      {
-        return wmemcmp(s1, s2, n);
-      }
-
-    static
-    size_t
-    length( const wchar_t* s )
-      {
-        return wcslen(s);
-      }
-
-    static
-    const wchar_t*
-    find( const wchar_t* s, size_t n, wchar_t c )
-      {
-        return NS_REINTERPRET_CAST(const wchar_t*, wmemchr(s, to_int_type(c), n));
-      }
-
-#if 0
-      // I/O related:
-
-    typedef streamoff off_type;
-    typedef streampos pos_type;
-    typedef mbstate_t state_type;
-
-    static
-    int_type
-    eof()
-      {
-        return WEOF;
-      }
-
-    static
     int_type
     not_eof( int_type c )
       {
-        return c==eof() ? ~eof() : c;
+        return eq_int_type(c, eof()) ? ~eof() : c;
       }
 
     // static state_type get_state( pos_type );
 #endif
   };
-#endif
 
 template <class InputIterator>
 struct nsCharSourceTraits
