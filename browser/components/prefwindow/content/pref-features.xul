@@ -87,7 +87,7 @@
     <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
               prefstring="security.enable_java"/>
     <hbox>
-      <checkbox id="enableJavascript" label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
+      <checkbox id="enableJavaScript" label="&enableJavaScript.label;" accesskey="&enableJavaScript.accesskey;"
                 prefstring="javascript.enabled"
                 oncommand="javascriptEnabledChange(!this.checked);"/>
       <spring flex="1"/>
