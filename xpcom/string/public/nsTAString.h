@@ -452,7 +452,7 @@ class nsTAString_CharT
 
         // GCC 2.95.3, EGCS-2.91.66, and Sun Workshop/Forte require a public
         // copy-constructor in order to support automatic construction of a
-        // nsTAString from a nsTStringTuple.  I believe enabling the default
+        // nsTAString from a nsTSubstringTuple.  I believe enabling the default
         // copy-constructor is harmless, but I do not want it to be enabled by
         // default because that might tempt people into using it (where it
         // would be invalid).
