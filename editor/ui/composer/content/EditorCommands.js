@@ -1025,7 +1025,18 @@ function EditorTestSelection()
 
   dump("====== Selection as HTML ======================\n");
   output = editorShell.GetContentsAs("text/html", 1);
+  dump(output + "\n\n");  
+
+  dump("====== Length and status =====================\n");
+  output = "Document is ";
+  if (editorShell.documentIsEmpty)
+    output += "empty\n";
+  else
+    output += "not empty\n";
+  output += "Document length is " + editorShell.documentLength + " characters";
   dump(output + "\n\n");
+
+
 }
 
 function EditorTestTableLayout()
