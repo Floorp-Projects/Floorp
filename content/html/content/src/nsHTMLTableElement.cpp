@@ -969,8 +969,8 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
 {
   /* ignore summary, just a string */
   /* attributes that resolve to pixels, with min=0 */
-  if ((aAttribute == nsHTMLAtoms::cellspacing) ||
-      (aAttribute == nsHTMLAtoms::cellpadding)) {
+  if (aAttribute == nsHTMLAtoms::cellspacing ||
+      aAttribute == nsHTMLAtoms::cellpadding) {
     if (aResult.ParseIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
@@ -1027,12 +1027,8 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::bgcolor) {
-    if (aResult.ParseColor(aValue, mDocument)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::bordercolor) {
+  else if (aAttribute == nsHTMLAtoms::bgcolor ||
+           aAttribute == nsHTMLAtoms::bordercolor) {
     if (aResult.ParseColor(aValue, mDocument)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
@@ -1052,12 +1048,8 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::hspace) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::vspace) {
+  else if (aAttribute == nsHTMLAtoms::hspace ||
+           aAttribute == nsHTMLAtoms::vspace) {
     if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
