@@ -47,10 +47,10 @@ void
 xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
 {
     while (p) {
-	struct _IDL_LIST *list = &IDL_LIST(p);
+        struct _IDL_LIST *list = &IDL_LIST(p);
         if (!foreach(list->data, IDL_tree_get_scope(list->data), user_data))
             return;
-    	p = list->next;
+        p = list->next;
     }
 }
 
@@ -86,7 +86,7 @@ process_tree(TreeState *state)
     IDL_tree top = state->tree;
     if (!process_tree_pass1(state))
         return FALSE;
-    state->tree = top;		/* pass1 might mutate state */
+    state->tree = top;          /* pass1 might mutate state */
     if (!xpidl_process_node(state))
         return FALSE;
     state->tree = NULL;
@@ -102,7 +102,7 @@ msg_callback(int level, int num, int line, const char *file,
     return 1;
 }
 
-#define INPUT_BUF_CHUNK		8192
+#define INPUT_BUF_CHUNK         8192
 
 struct input_callback_data {
     FILE *input;                /* stream for getting data */
@@ -143,7 +143,7 @@ fopen_from_includes(const char *filename, const char *mode,
 
     while (include_path) {
         pathname = g_strdup_printf("%s" G_DIR_SEPARATOR_S "%s",
-				   include_path->directory, filename);
+                                   include_path->directory, filename);
         if (!pathname)
             return NULL;
 #ifdef DEBUG_shaver_bufmgmt
@@ -151,9 +151,9 @@ fopen_from_includes(const char *filename, const char *mode,
 #endif
         file = fopen(pathname, mode);
         free(pathname);
-	if (file)
-	    return file;
-    	include_path = include_path->next;
+        if (file)
+            return file;
+        include_path = include_path->next;
     }
     fprintf(stderr, "can't open %s for reading\n", filename);
     return NULL;
@@ -371,13 +371,13 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
                     /* now continue getting data from new file */
                     goto fill_start;
                 }
-		/*
-		 * if we started with a #include, but we've already
-		 * processed that file, we need to continue scanning
-		 * for special sequences.
-		 */
-		data->f_include = INPUT_IN_NONE;
-		goto scan_for_special;
+                /*
+                 * if we started with a #include, but we've already
+                 * processed that file, we need to continue scanning
+                 * for special sequences.
+                 */
+                data->f_include = INPUT_IN_NONE;
+                goto scan_for_special;
             }
         } else {
 #ifdef DEBUG_shaver_bufmgmt
@@ -511,8 +511,8 @@ xpidl_dump_comment(TreeState *state, int indent)
 {
     fprintf(state->file, "\n%*s/* ", indent, "");
     IDL_tree_to_IDL(state->tree, state->ns, state->file,
-    		    IDLF_OUTPUT_NO_NEWLINES |
-		    IDLF_OUTPUT_NO_QUALIFY_IDENTS |
-		    IDLF_OUTPUT_PROPERTIES);
+                    IDLF_OUTPUT_NO_NEWLINES |
+                    IDLF_OUTPUT_NO_QUALIFY_IDENTS |
+                    IDLF_OUTPUT_PROPERTIES);
     fputs(" */\n", state->file);
 }

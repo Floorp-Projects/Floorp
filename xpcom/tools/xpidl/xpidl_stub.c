@@ -21,6 +21,7 @@
  */
 
 #include "xpidl.h"
+#include <ctype.h>
 
 struct stub_private {
     IDL_tree    iface;
@@ -32,7 +33,19 @@ struct stub_private {
     unsigned    nprops;
 };
 
-#define VECTOR_CHUNK	8U
+static void
+free_stub_private(struct stub_private *priv)
+{
+    if (priv->funcs)
+        free(priv->funcs);
+    if (priv->const_dbls)
+        free(priv->const_dbls);
+    if (priv->props)
+        free(priv->props);
+    free(priv);
+}
+
+#define VECTOR_CHUNK    8U
 
 /* XXXbe */ extern char OOM[];
 
@@ -42,17 +55,15 @@ append_to_vector(IDL_tree **vecp, unsigned *lenp, IDL_tree elem)
     IDL_tree *vec = *vecp;
     unsigned len = *lenp;
     if (len % VECTOR_CHUNK == 0) {
-	if (!vec) {
-	    vec = xpidl_malloc(VECTOR_CHUNK * sizeof *vec);
-	} else {
-	    vec = realloc(vec,
-	    		  ((len + VECTOR_CHUNK) / VECTOR_CHUNK) * VECTOR_CHUNK
-			  * sizeof *vec);
-	    if (!vec) {
-		fputs(OOM, stderr);
-		exit(1);
-	    }
-	}
+        if (!vec) {
+            vec = xpidl_malloc(VECTOR_CHUNK * sizeof *vec);
+        } else {
+            vec = realloc(vec, (len + VECTOR_CHUNK) * sizeof *vec);
+            if (!vec) {
+                fputs(OOM, stderr);
+                exit(1);
+            }
+        }
     }
     vec[len++] = elem;
     *vecp = vec;
@@ -64,18 +75,19 @@ stub_pass_1(TreeState *state)
 {
     if (state->tree) {
         fprintf(state->file,
-		"/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM %s.idl\n */\n"
-		"#include \"jsapi.h\"\n"
-		"#include \"nsIXPConnect.h\"\n",
-		state->basename);
+                "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM %s.idl\n */\n"
+                "#include \"jsapi.h\"\n"
+                "#include \"nsISupports.h\"\n"
+                "#include \"nsIXPConnect.h\"\n",
+                state->basename);
 
-    	state->priv = NULL;
+        state->priv = NULL;
     } else {
-	struct stub_private *priv = state->priv;
-	if (priv) {
-	    state->priv = NULL;
-	    free(priv);
-	}
+        struct stub_private *priv = state->priv;
+        if (priv) {
+            state->priv = NULL;
+            free_stub_private(priv);
+        }
     }
     return TRUE;
 }
@@ -89,13 +101,6 @@ stub_list(TreeState *state)
         if (!xpidl_process_node(state))
             return FALSE;
     }
-    return TRUE;
-}
-
-static gboolean
-stub_type_dcl(TreeState *state)
-{
-    fputs("XXXbe type_dcl\n", state->file);
     return TRUE;
 }
 
@@ -117,29 +122,29 @@ js_convert_arguments_format(IDL_tree param)
 
     switch (IDL_NODE_TYPE(type)) {
       case IDLN_TYPE_INTEGER: {
-	gboolean sign = IDL_TYPE_INTEGER(type).f_signed;
-	switch (IDL_TYPE_INTEGER(type).f_type) {
-	  case IDL_INTEGER_TYPE_LONG:
-	    return sign ? 'i' : 'u';
-	  default:
-	    return '*'; /* XXXbe */
-	}
-	break;
+        gboolean sign = IDL_TYPE_INTEGER(type).f_signed;
+        switch (IDL_TYPE_INTEGER(type).f_type) {
+          case IDL_INTEGER_TYPE_LONG:
+            return sign ? 'i' : 'u';
+          default:
+            return '*'; /* XXXbe */
+        }
+        break;
       }
       case IDLN_TYPE_CHAR:
-	return '*'; /* XXXbe */
+        return '*'; /* XXXbe */
       case IDLN_TYPE_WIDE_CHAR:
-	return 'c';
+        return 'c';
       case IDLN_TYPE_STRING:
-	return 's';
+        return 's';
       case IDLN_TYPE_WIDE_STRING:
-	return 'S';
+        return 'S';
       case IDLN_TYPE_BOOLEAN:
-	return 'b';
+        return 'b';
       case IDLN_IDENT:
-	return 'o';
+        return 'o';
       default:
-      	return '*'; /* XXXbe */
+        return '*'; /* XXXbe */
     }
 }
 
@@ -153,7 +158,7 @@ stub_op_dcl(TreeState *state)
     char *className;
 
     if (op->f_noscript)
-    	return TRUE;
+        return TRUE;
 
     append_to_vector(&priv->funcs, &priv->nfuncs, method);
     xpidl_dump_comment(state, 0);
@@ -164,21 +169,21 @@ stub_op_dcl(TreeState *state)
     className = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
 
     fprintf(state->file,
-	    "static JSBool\n"
-	    "%s_%s(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,"
-	         " jsval *rval)\n"
-	    "{\n",
-	    className, IDL_IDENT(op->ident).str);
+            "static JSBool\n"
+            "%s_%s(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,"
+                 " jsval *rval)\n"
+            "{\n",
+            className, IDL_IDENT(op->ident).str);
 
     fprintf(state->file,
-    	    "  %s *priv = (%s *) JS_GetPrivate(cx, obj);\n"
-	    "  if (!priv)\n"
-	    "    return JS_TRUE;\n",
-	    className, className);
+            "  %s *priv = (%s *)JS_GetPrivate(cx, obj);\n"
+            "  if (!priv)\n"
+            "    return JS_TRUE;\n",
+            className, className);
 
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
         state->tree = IDL_LIST(iter).data;
-	fputs("  ", state->file);
+        fputs("  ", state->file);
         if (!xpcom_param(state))
             return FALSE;
         fputs(";\n", state->file);
@@ -186,67 +191,83 @@ stub_op_dcl(TreeState *state)
 
     fputs("  if (!JS_ConvertArguments(cx, argc, argv, \"", state->file);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
-	param = IDL_LIST(iter).data;
-	assert(param);
-	fputc(js_convert_arguments_format(param), state->file);
+        param = IDL_LIST(iter).data;
+        assert(param);
+        fputc(js_convert_arguments_format(param), state->file);
     }
     fputc('\"', state->file);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
-	param = IDL_LIST(iter).data;
-	fprintf(state->file, ", &%s",
-		IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
+        param = IDL_LIST(iter).data;
+        fprintf(state->file, ", &%s",
+                IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
     }
     fputs("))\n"
           "    return JS_FALSE;\n"
-	  "  ",
-	  state->file);
+          "  ",
+          state->file);
 
     state->tree = op->op_type_spec;
     xpcom_type(state);
     fputs(" retval;\n", state->file);
 
     fprintf(state->file,
-    	    "  nsresult result = priv->%s(",
-	    IDL_IDENT(op->ident).str);
+            "  nsresult result = priv->%s(",
+            IDL_IDENT(op->ident).str);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
-	param = IDL_LIST(iter).data;
-	fprintf(state->file,
-		"%s, ",
-		IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
+        param = IDL_LIST(iter).data;
+        fprintf(state->file,
+                "%s, ",
+                IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
     }
     fputs("&retval);\n", state->file);
 
     fputs("  if (NS_FAILED(result)) {\n"
-	  "    JS_ReportError(cx, XXXnsresult2string(result));\n"
+          "    JS_ReportError(cx, XXXnsresult2string(result));\n"
           "    return JS_FALSE;\n"
           "  }\n",
-	  state->file);
+          state->file);
 
     switch (IDL_NODE_TYPE(state->tree)) {
       case IDLN_TYPE_INTEGER:
-	fputs("  if (!JS_NewNumberValue(cx, (jsdouble) retval, rval))\n"
-	      "    return JS_FALSE;\n",
-	      state->file);
-	break;
+        fputs("  if (!JS_NewNumberValue(cx, (jsdouble) retval, rval))\n"
+              "    return JS_FALSE;\n",
+              state->file);
+        break;
       case IDLN_TYPE_STRING:
-	fputs("  JSString *str = JS_NewStringCopyZ(cx, retval);\n"
-	      "  if (!str)\n"
-	      "    return JS_FALSE;\n"
-	      "  *rval = STRING_TO_JSVAL(str);\n",
-	      state->file);
+        /* XXXbe leak retval here after XPCOM-compliant out-param return? */
+        fputs("  JSString *str = JS_NewStringCopyZ(cx, retval);\n"
+              "  if (!str)\n"
+              "    return JS_FALSE;\n"
+              "  *rval = STRING_TO_JSVAL(str);\n",
+              state->file);
         break;
       case IDLN_TYPE_BOOLEAN:
-	fputs("  *rval = BOOLEAN_TO_JSVAL(retval);\n", state->file);
+        fputs("  *rval = BOOLEAN_TO_JSVAL(retval);\n", state->file);
         break;
       case IDLN_IDENT:
+        fputs("  *rval = JSVAL_NULL;\n", state->file);
+        if (IDL_NODE_UP(state->tree) &&
+            IDL_NODE_TYPE(IDL_NODE_UP(state->tree)) == IDLN_NATIVE) {
+            /* XXXbe issue warning, method should have been noscript? */
+            break;
+        }
+        fputs("  nsIXPConnectWrappedNative *xwn = 0;\n"
+              "  if (NS_SUCCEEDED(retval->QueryInterface(nsIXPConnectWrappedNative::IID(),\n"
+              "                   (void**) &xwn))) {\n"
+              "    JSObject *xjo = 0;\n"
+              "    if (NS_SUCCEEDED(xwn->GetJSObject(&xjo)))\n"
+              "      *rval = OBJECT_TO_JSVAL(xjo);\n"
+              "    NS_RELEASE(xwn);\n"
+              "  }\n",
+              state->file);
         break;
       default:
-	assert(0); /* XXXbe */
+        assert(0); /* XXXbe */
         break;
     }
     fputs("  return JS_TRUE;\n"
           "}\n",
-	  state->file);
+          state->file);
     return TRUE;
 }
 
@@ -254,6 +275,61 @@ static gboolean
 stub_type_enum(TreeState *state)
 {
     fputs("XXXbe type_enum\n", state->file);
+    return TRUE;
+}
+
+static gboolean
+emit_property_op(TreeState *state, const char *className, char which)
+{
+    struct stub_private *priv = state->priv;
+    unsigned i;
+
+    fprintf(state->file,
+            "\nstatic JSBool\n"
+            "%s_%cetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)\n"
+            "{\n"
+            "  if (!JSVAL_IS_INT(id))\n"
+            "    return JS_TRUE;\n"
+            "  nsresult result;\n"
+            "  %s *priv = (%s *)JS_GetPrivate(cx, obj);\n"
+            "  switch (JSVAL_TO_INT(id)) {\n",
+            className, which, className, className);
+
+    for (i = 0; i < priv->nprops; i++) {
+        IDL_tree attr = priv->props[i];
+        const char *id = IDL_IDENT(IDL_LIST(IDL_ATTR_DCL(attr)
+                                            .simple_declarations)
+                                   .data).str;
+
+        if (which == 'S' && IDL_ATTR_DCL(attr).f_readonly)
+            continue;
+        fprintf(state->file,
+                "   case %d:\n"
+                "    ",
+                -1 - (int)i);
+        state->tree = IDL_ATTR_DCL(attr).param_type_spec;
+        if (!xpcom_type(state))
+            return FALSE;
+        fprintf(state->file, " %s;\n", id);
+        if (which == 'S') {
+            fputs("// XXXbe subr and call ConvertArgument, but for vp\n",
+                  state->file);
+        }
+        fprintf(state->file,
+                "    result = priv->%cet%c%s(%s%s);\n",
+                which, toupper(*id), id + 1, (which == 'G') ? "&" : "", id);
+        if (which == 'G') {
+            fputs("// XXXbe subr and call rval computation, but for vp\n",
+                  state->file);
+        }
+        fputs(  "    break;\n",
+                state->file);
+    }
+
+    fputs(  "  }\n"
+            "  return JS_TRUE;\n"
+            "}\n",
+            state->file);
     return TRUE;
 }
 
@@ -277,146 +353,150 @@ stub_interface(TreeState *state)
     state->tree = IDL_INTERFACE(iface).body;
     ok = !state->tree || xpidl_process_node(state);
     if (ok) {
-	unsigned i;
+        gboolean allreadonly = TRUE;
+        unsigned i;
 
-	if (priv->funcs) {
-	    fprintf(state->file,
-		    "\nstatic JSFunctionSpec %s_funcs[] = {\n",
-		    className);
-	    for (i = 0; i < priv->nfuncs; i++) {
-		IDL_tree method = priv->funcs[i];
-		unsigned nargs = 0;
-		IDL_tree iter;
-		for (iter = IDL_OP_DCL(method).parameter_dcls;
-		     iter;
-		     iter = IDL_LIST(iter).next) {
-		     nargs++;
-		}
-		fprintf(state->file, "  {\"%s\", %s_%s, %u},\n",
-			IDL_IDENT(IDL_OP_DCL(method).ident).str,
-			className,
-			IDL_IDENT(IDL_OP_DCL(method).ident).str,
-			nargs);
-	    }
-	    fputs("  {0}\n};\n", state->file);
-	}
+        if (priv->funcs) {
+            fprintf(state->file,
+                    "\nstatic JSFunctionSpec %s_funcs[] = {\n",
+                    className);
+            for (i = 0; i < priv->nfuncs; i++) {
+                IDL_tree method = priv->funcs[i];
+                unsigned nargs = 0;
+                IDL_tree iter;
+                for (iter = IDL_OP_DCL(method).parameter_dcls;
+                     iter;
+                     iter = IDL_LIST(iter).next) {
+                     nargs++;
+                }
+                fprintf(state->file, "  {\"%s\", %s_%s, %u},\n",
+                        IDL_IDENT(IDL_OP_DCL(method).ident).str,
+                        className,
+                        IDL_IDENT(IDL_OP_DCL(method).ident).str,
+                        nargs);
+            }
+            fputs("  {0}\n};\n", state->file);
+        }
 
-	if (priv->const_dbls) {
-	    fprintf(state->file,
-		    "\nstatic JSConstDoubleSpec %s_const_dbls[] = {\n",
-		    className);
-	    for (i = 0; i < priv->nconst_dbls; i++) {
-		fprintf(state->file, "  {%g, \"%s\"},\n", 0., "d'oh!");
-	    }
-	    fputs("  {0}\n};\n", state->file);
+        if (priv->const_dbls) {
+            fprintf(state->file,
+                    "\nstatic JSConstDoubleSpec %s_const_dbls[] = {\n",
+                    className);
+            for (i = 0; i < priv->nconst_dbls; i++) {
+                fprintf(state->file, "  {%g, \"%s\"},\n", 0., "d'oh!");
+            }
+            fputs("  {0}\n};\n", state->file);
 
-	}
+        }
 
-	if (priv->props) {
-	    /* XXXbe check for tinyid overflow */
-	    fprintf(state->file,
-		    "\nstatic JSPropertySpec %s_props[] = {\n",
-		    className);
-	    for (i = 0; i < priv->nprops; i++) {
-		IDL_tree attr = priv->props[i];
-		fprintf(state->file, "  {\"%s\", %u",
-		  IDL_IDENT(IDL_LIST(IDL_ATTR_DCL(attr).simple_declarations)
-			    .data).str, i);
-		if (IDL_ATTR_DCL(attr).f_readonly)
-		    fputs(", JSPROP_READONLY", state->file);
-		fputs("},\n", state->file);
-	    }
-	    fputs("  {0}\n};\n", state->file);
+        if (priv->props) {
+            /* XXXbe check for tinyid overflow */
+            fprintf(state->file,
+                    "\nstatic JSPropertySpec %s_props[] = {\n",
+                    className);
+            for (i = 0; i < priv->nprops; i++) {
+                IDL_tree attr = priv->props[i];
+                if (!IDL_ATTR_DCL(attr).f_readonly)
+                    allreadonly = FALSE;
+                fprintf(state->file, "  {\"%s\", %d",
+                  IDL_IDENT(IDL_LIST(IDL_ATTR_DCL(attr).simple_declarations)
+                            .data).str, -1 - (int)i);
+                if (IDL_ATTR_DCL(attr).f_readonly)
+                    fputs(", JSPROP_READONLY", state->file);
+                fputs("},\n", state->file);
+            }
+            fputs("  {0}\n};\n", state->file);
 
-	    /* Emit GetProperty. */
-	    /* Emit SetProperty. */
-	}
+            /* Emit GetProperty. */
+            if (!emit_property_op(state, className, 'G'))
+                return FALSE;
 
-	/* Emit a finalizer. */
-	fprintf(state->file,
-		"\nstatic void\n"
-		"%s_Finalize(JSContext *cx, JSObject *obj)\n"
-		"{\n"
-		"  %s *priv = JS_GetPrivate(cx, obj);\n"
-		"  if (!priv)\n"
-		"    return;\n"
-		"  NS_RELEASE(priv);\n"
-		"}\n",
-		className, className);
+            /* Emit SetProperty. */
+            if (!allreadonly && !emit_property_op(state, className, 'S'))
+                return FALSE;
+        }
 
-	/* Emit a constructor. */
-	fprintf(state->file,
-		"\nstatic JSBool\n"
-		"%s_ctor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,"
-		       " jsval *rval)\n"
-		"{\n"
-		"  return JS_TRUE;\n"
-		"}\n",
-		className);
+        /* Emit a finalizer. */
+        fprintf(state->file,
+                "\nstatic void\n"
+                "%s_Finalize(JSContext *cx, JSObject *obj)\n"
+                "{\n"
+                "  nsISupports *priv = (nsISupports *)JS_GetPrivate(cx, obj);\n"
+                "  if (!priv)\n"
+                "    return;\n"
+                "  // XXXbe QI nsIXPConnectWrappedNative and SetJSObject(0)\n"
+                "  NS_RELEASE(priv);\n"
+                "}\n",
+                className);
 
-	/* Emit an initialized JSClass struct. */
-	fprintf(state->file,
-		"\nstatic JSClass %s_class = {\n"
-		"  \"%s\",\n"
-		"  JSCLASS_HAS_PRIVATE,\n"
-		"  JS_PropertyStub, JS_PropertyStub, ",
-		className, className);
-	if (priv->props) {
-	    fprintf(state->file,
-		    "%s_GetProperty, %s_SetProperty",
-		    className, className);
-	} else {
-	    fputs("JS_PropertyStub, JS_PropertyStub",
-		  state->file);
-	}
-	fputs(",\n  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, ",
-	      state->file);
-	fprintf(state->file, "%s_Finalize\n};\n", className);
+        /* Emit a constructor. */
+        fprintf(state->file,
+                "\nstatic JSBool\n"
+                "%s_ctor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,"
+                       " jsval *rval)\n"
+                "{\n"
+                "  return JS_TRUE;\n"
+                "}\n",
+                className);
 
-	/* Emit a JSClass initialization function. */
-	fprintf(state->file,
-		"\nextern JSObject *\n"
-		"%s_InitJSClass(JSContext *cx, JSObject *obj, JSObject *parent_proto)\n"
-		"{\n"
-		"  JSObject *proto = JS_InitClass(cx, obj, parent_proto,\n"
-		"                                 &%s_class, %s_ctor, 0,\n",
-		className, className, className);
-	fputs(	"                                 ",
-		state->file);
-    	if (priv->props)
-	    fprintf(state->file, "%s_props", className);
-	else
-	    fputc('0', state->file);
-	fputs(", ", state->file);
-    	if (priv->funcs)
-	    fprintf(state->file, "%s_funcs", className);
-	else
-	    fputc('0', state->file);
-	fputs(	", 0, 0);\n"
-		"  if (!proto)\n"
-		"    return 0;\n",
-		state->file);
-	if (priv->const_dbls) {
-	    fprintf(state->file,
-		    "  JSObject *ctor = JS_GetConstructor(cx, proto);\n"
-		    "  if (!JS_DefineConstDoubles(cx, ctor, &%s_const_dbls))\n"
-		    "    return 0;\n",
-		    className);
-	}
-	fputs(	"  return proto;\n"
-		"}\n",
-		state->file);
+        /* Emit an initialized JSClass struct. */
+        fprintf(state->file,
+                "\nstatic JSClass %s_class = {\n"
+                "  \"%s\",\n"
+                "  JSCLASS_HAS_PRIVATE,\n"
+                "  JS_PropertyStub, JS_PropertyStub, ",
+                className, className);
+        if (priv->props) {
+            fprintf(state->file, "%s_GetProperty, ", className);
+            if (!allreadonly)
+                fprintf(state->file, "%s_SetProperty", className);
+            else
+                fputs("JS_PropertyStub", state->file);
+        } else {
+            fputs("JS_PropertyStub, JS_PropertyStub",
+                  state->file);
+        }
+        fputs(",\n  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, ",
+              state->file);
+        fprintf(state->file, "%s_Finalize\n};\n", className);
+
+        /* Emit a JSClass initialization function. */
+        fprintf(state->file,
+                "\nextern JSObject *\n"
+                "%s_InitJSClass(JSContext *cx, JSObject *obj, JSObject *parent_proto)\n"
+                "{\n"
+                "  JSObject *proto = JS_InitClass(cx, obj, parent_proto,\n"
+                "                                 &%s_class, %s_ctor, 0,\n",
+                className, className, className);
+        fputs(  "                                 ",
+                state->file);
+        if (priv->props)
+            fprintf(state->file, "%s_props", className);
+        else
+            fputc('0', state->file);
+        fputs(", ", state->file);
+        if (priv->funcs)
+            fprintf(state->file, "%s_funcs", className);
+        else
+            fputc('0', state->file);
+        fputs(", 0, 0);\n", state->file);
+        if (priv->const_dbls) {
+            fprintf(state->file,
+                    "  if (!proto)\n"
+                    "    return 0;\n"
+                    "  JSObject *ctor = JS_GetConstructor(cx, proto);\n"
+                    "  if (!ctor || !JS_DefineConstDoubles(cx, ctor, &%s_const_dbls))\n"
+                    "    return 0;\n",
+                    className);
+        }
+        fputs(  "  return proto;\n"
+                "}\n",
+                state->file);
     }
 
     /* Clean up whether or not there were errors. */
-    if (priv->funcs)
-	free(priv->funcs);
-    if (priv->const_dbls)
-	free(priv->const_dbls);
-    if (priv->props)
-	free(priv->props);
-    free(priv);
     state->priv = save_priv;
+    free_stub_private(priv);
     return ok;
 }
 
@@ -428,7 +508,6 @@ xpidl_stub_dispatch(void)
     if (!table[IDLN_NONE]) {
         table[IDLN_NONE] = stub_pass_1;
         table[IDLN_LIST] = stub_list;
-        table[IDLN_TYPE_DCL] = stub_type_dcl;
         table[IDLN_ATTR_DCL] = stub_attr_dcl;
         table[IDLN_OP_DCL] = stub_op_dcl;
         table[IDLN_TYPE_ENUM] = stub_type_enum;

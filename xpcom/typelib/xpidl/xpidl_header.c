@@ -34,9 +34,9 @@
 
 /* is this type output in the form "<foo> *"? */
 #define STARRED_TYPE(node) (IDL_NODE_TYPE(node) == IDLN_TYPE_STRING ||        \
-			    IDL_NODE_TYPE(node) == IDLN_TYPE_WIDE_STRING ||   \
-			    (IDL_NODE_TYPE(node) == IDLN_IDENT &&             \
-			     UP_IS_AGGREGATE(node)))
+                            IDL_NODE_TYPE(node) == IDLN_TYPE_WIDE_STRING ||   \
+                            (IDL_NODE_TYPE(node) == IDLN_IDENT &&             \
+                             UP_IS_AGGREGATE(node)))
 
 static void
 write_header(gpointer key, gpointer value, gpointer user_data)
@@ -163,29 +163,29 @@ xpcom_type(TreeState *state)
 
     switch (IDL_NODE_TYPE(state->tree)) {
       case IDLN_TYPE_INTEGER: {
-	gboolean sign = IDL_TYPE_INTEGER(state->tree).f_signed;
-	switch (IDL_TYPE_INTEGER(state->tree).f_type) {
-	  case IDL_INTEGER_TYPE_SHORT:
-	    fputs(sign ? "PRInt16" : "PRUint16", state->file);
-	    break;
-	  case IDL_INTEGER_TYPE_LONG:
-	    fputs(sign ? "PRInt32" : "PRUint32", state->file);
-	    break;
-	  case IDL_INTEGER_TYPE_LONGLONG:
-	    fputs(sign ? "PRInt64" : "PRUint64", state->file);
-	    break;
-	  default:
-	    g_error("Unknown integer type %d\n",
-		    IDL_TYPE_INTEGER(state->tree).f_type);
-	    return FALSE;
-	}
-	break;
+        gboolean sign = IDL_TYPE_INTEGER(state->tree).f_signed;
+        switch (IDL_TYPE_INTEGER(state->tree).f_type) {
+          case IDL_INTEGER_TYPE_SHORT:
+            fputs(sign ? "PRInt16" : "PRUint16", state->file);
+            break;
+          case IDL_INTEGER_TYPE_LONG:
+            fputs(sign ? "PRInt32" : "PRUint32", state->file);
+            break;
+          case IDL_INTEGER_TYPE_LONGLONG:
+            fputs(sign ? "PRInt64" : "PRUint64", state->file);
+            break;
+          default:
+            g_error("Unknown integer type %d\n",
+                    IDL_TYPE_INTEGER(state->tree).f_type);
+            return FALSE;
+        }
+        break;
       }
       case IDLN_TYPE_CHAR:
         fputs("char", state->file);
         break;
       case IDLN_TYPE_WIDE_CHAR:
-        fputs("PRUint16", state->file);	/* wchar_t? */
+        fputs("PRUint16", state->file); /* wchar_t? */
         break;
       case IDLN_TYPE_WIDE_STRING:
         fputs("PRUnichar *", state->file);
@@ -301,7 +301,7 @@ do_typedef(TreeState *state)
 
 /*
  * param generation:
- * in string foo	    -->     nsString *foo
+ * in string foo        -->     nsString *foo
  * out string foo       -->     nsString **foo;
  * inout string foo     -->     nsString **foo;
  */
