@@ -229,11 +229,13 @@ nsBrowserWindow::FindBrowserFor(nsIWidget* aWidget, PRIntn aWhich)
     if (nsnull != bw) {
       switch (aWhich) {
       case FIND_WINDOW:
-        bw->mWindow->QueryInterface(kIWidgetIID, (void**) &widget);
-        if (widget == aWidget) {
-          result = bw;
+        if (bw->mWindow) {
+          bw->mWindow->QueryInterface(kIWidgetIID, (void**) &widget);
+          if (widget == aWidget) {
+            result = bw;
+          }
+          NS_IF_RELEASE(widget);
         }
-        NS_IF_RELEASE(widget);
         break;
       case FIND_BACK:
         if (bw->mBack) {
