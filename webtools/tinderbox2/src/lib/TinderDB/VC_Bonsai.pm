@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.27 $ 
-# $Date: 2002/05/03 03:37:04 $ 
+# $Revision: 1.28 $ 
+# $Date: 2002/05/03 03:38:44 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.27 $ )[1];
+$VERSION = ( qw $Revision: 1.28 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -291,7 +291,7 @@ sub status_table_legend {
   foreach $state (TreeData::get_all_sorted_tree_states()) {
     my ($cell_color) = TreeData::TreeState2color($state);
     my ($char) = TreeData::TreeState2char($state);
-    my ($description) = TreeData::TreeStates2descriptions($state)
+    my ($description) = TreeData::TreeStates2descriptions($state);
     my $description = "$state: $description";
     my $text_browser_color_string = 
       HTMLPopUp::text_browser_color_string($cell_color, $char);
