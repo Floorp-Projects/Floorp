@@ -1918,8 +1918,9 @@ wallet_StepForwardOrBack
       result = inputElement->GetType(type);
       if (goForward) {
         if (NS_SUCCEEDED(result) &&
-              ((type.CompareWithConversion("text", PR_TRUE) == 0) ||
-               type.IsEmpty())) {
+            (type.IsEmpty() ||
+             (Compare(type, NS_LITERAL_STRING("text"), 
+                      nsCaseInsensitiveStringComparator()) == 0))) {
           /* at <input> element and it's type is either "text" or is missing ("text" by default) */
           atInputOrSelect = PR_TRUE;
           return;
