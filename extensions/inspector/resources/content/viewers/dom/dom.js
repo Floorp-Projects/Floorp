@@ -493,18 +493,25 @@ DOMViewer.prototype =
 
   doFindElementById: function(aWalker)
   {
-    return aWalker.currentNode && aWalker.currentNode.id == this.mFindParams[0];
+    return aWalker.currentNode
+           && "id" in aWalker.currentNode
+           && aWalker.currentNode.id == this.mFindParams[0];
   },
 
   doFindElementsByTagName: function(aWalker)
   {
-    return aWalker.currentNode && aWalker.currentNode.localName.toLowerCase() == this.mFindParams[0].toLowerCase();
+    return aWalker.currentNode
+           && aWalker.currentNode.nodeType == Node.ELEMENT_NODE
+           && aWalker.currentNode.localName.toLowerCase() == this.mFindParams[0].toLowerCase();
   },
 
   doFindElementsByAttr: function(aWalker)
   {
-    return aWalker.currentNode && 
-           aWalker.currentNode.getAttribute(this.mFindParams[0]) == this.mFindParams[1];
+    return aWalker.currentNode 
+           && aWalker.currentNode.nodeType == Node.ELEMENT_NODE
+           && this.mFindParams[1] == ""
+              ? aWalker.currentNode.hasAttribute(this.mFindParams[0])
+              : aWalker.currentNode.getAttribute(this.mFindParams[0]) == this.mFindParams[1];
   },
   
   ///////////////////////////////////////////////////////////////////////////
@@ -900,4 +907,3 @@ function dumpDOM2(aNode)
   dump(DOMViewer.prototype.toXML(aNode));
 }
 
-  
