@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.30 2001/11/08 02:15:36 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.31 2001/11/09 05:39:34 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -64,6 +64,7 @@
 		(x)->pValue=(v); (x)->ulValueLen = (l);
 #endif
 
+static void      ssl3_CleanupPeerCerts(ssl3State *ssl3);
 static PK11SymKey *ssl3_GenerateRSAPMS(sslSocket *ss, ssl3CipherSpec *spec,
                                        PK11SlotInfo * serverKeySlot);
 static SECStatus ssl3_GenerateSessionKeys(sslSocket *ss, const PK11SymKey *pms);
@@ -1611,6 +1612,7 @@ ssl3_HandleNoCertificate(sslSocket *ss)
 	CERT_DestroyCertificate(ss->sec->peerCert);
 	ss->sec->peerCert = NULL;
     }
+    ssl3_CleanupPeerCerts(ss->ssl3);
 
     /* If the server has required client-auth blindly but doesn't
      * actually look at the certificate it won't know that no
@@ -5133,6 +5135,14 @@ compression_found:
 	ss->sec->keaType       = sid->keaType;
 	ss->sec->keaKeyBits    = sid->keaKeyBits;
 
+	/* server sids don't remember the server cert we previously sent,
+	** but they do remember the kea type we originally used, so we
+	** can locate it again, provided that the current ssl socket
+	** has had its server certs configured the same as the previous one.
+	*/
+	ss->sec->localCert     = 
+		CERT_DupCertificate(ss->serverCerts[sid->keaType].serverCert);
+
 	ssl_GetXmitBufLock(ss); haveXmitBufLock = PR_TRUE;
 
 	rv = ssl3_SendServerHello(ss);
@@ -6310,6 +6320,8 @@ ssl3_SendCertificate(sslSocket *ss)
     PORT_Assert( ssl_HaveXmitBufLock(ss));
     PORT_Assert( ssl_HaveSSL3HandshakeLock(ss));
 
+    if (ss->sec->localCert)
+    	CERT_DestroyCertificate(ss->sec->localCert);
     if (ss->sec->isServer) {
 	sslServerCerts * sc = 
 			ss->serverCerts + ss->ssl3->hs.kea_def->exchKeyType;
@@ -6377,7 +6389,7 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     ssl3State *      ssl3  	= ss->ssl3;
     sslSecurityInfo *sec   	= ss->sec;
     CERTCertificate *cert;
-    PRInt32          remaining;
+    PRInt32          remaining  = 0;
     PRInt32          size;
     SECStatus        rv;
     PRBool           isServer	= (PRBool)(!!sec->isServer);
@@ -6410,12 +6422,22 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	sec->peerCert = NULL;
     }
 
-    remaining = ssl3_ConsumeHandshakeNumber(ss, 3, &b, &length);
-    if (remaining < 0)
-	goto loser;	/* fatal alert already sent by ConsumeHandshake. */
-
+    ssl3_CleanupPeerCerts(ssl3);
     isTLS = (PRBool)(ssl3->prSpec->version > SSL_LIBRARY_VERSION_3_0);
-    if (!remaining && isTLS && isServer) { 
+
+    /* It is reported that some TLS client sends a Certificate message
+    ** with a zero-length message body.  We'll treat that case like a
+    ** normal no_certificates message to maximize interoperability.
+    */
+    if (length) {
+	remaining = ssl3_ConsumeHandshakeNumber(ss, 3, &b, &length);
+	if (remaining < 0)
+	    goto loser;	/* fatal alert already sent by ConsumeHandshake. */
+    }
+
+    if (!remaining) {
+	if (!(isTLS && isServer))
+	    goto alert_loser;
     	/* This is TLS's version of a no_certificate alert. */
     	/* I'm a server. I've requested a client cert. He hasn't got one. */
 	rv = ssl3_HandleNoCertificate(ss);
@@ -6580,9 +6602,7 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     	}
     }
 
-    /* We don't need the CA certs now that we've authenticated the peer cert. */
     ssl3->peerCertChain = certs;  certs = NULL;  arena = NULL;
-    ssl3_CleanupPeerCerts(ssl3);
 
 cert_block:
     if (sec->isServer) {
@@ -6706,7 +6726,6 @@ ssl3_RestartHandshakeAfterServerCert(sslSocket *ss)
 
     if (ss->handshake != NULL) {
 	ss->handshake = ssl_GatherRecord1stHandshake;
-	ssl3_CleanupPeerCerts(ssl3);
 	ss->sec->ci.sid->peerCert = CERT_DupCertificate(ss->sec->peerCert);
 
 	ssl_GetRecvBufLock(ss);
@@ -6933,6 +6952,7 @@ xmit_loser:
     sid->keaKeyBits         = sec->keaKeyBits;
     sid->lastAccessTime     = sid->creationTime = ssl_Time();
     sid->expirationTime     = sid->creationTime + ssl3_sid_timeout;
+    sid->localCert          = CERT_DupCertificate(sec->localCert);
 
     ssl_GetSpecReadLock(ss);	/*************************************/
     symKeySlot = PK11_GetSlotFromKey(ssl3->crSpec->master_secret);
