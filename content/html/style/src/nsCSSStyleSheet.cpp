@@ -1073,7 +1073,7 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
     mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();
-  nsCSSAtoms::AddrefAtoms();
+  nsCSSAtoms::AddRefAtoms();
 
   mInner = new CSSStyleSheetInner(this);
 
@@ -1100,7 +1100,7 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
     mInner(aCopy.mInner)
 {
   NS_INIT_REFCNT();
-  nsCSSAtoms::AddrefAtoms();
+  nsCSSAtoms::AddRefAtoms();
 
   mInner->AddSheet(this);
 
@@ -2382,15 +2382,15 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 
   if (mMedia) {
     fputs(" media: ", out);
-    PRUint32 index = 0;
+    index = 0;
     PRUint32 count;
     mMedia->Count(&count);
     nsAutoString  buffer;
-    while (index < count) {
+    while (index < PRInt32(count)) {
       nsIAtom* medium = (nsIAtom*)mMedia->ElementAt(index++);
       medium->ToString(buffer);
       fputs(buffer, out);
-      if (index < count) {
+      if (index < PRInt32(count)) {
         fputs(", ", out);
       }
       NS_RELEASE(medium);
@@ -2464,6 +2464,7 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
   nsAtomList* pseudoClass = aSelector.mPseudoClassList;
   while (pseudoClass) {
     if ((pseudoClass->mAtom == nsCSSAtoms::activePseudo) ||
+        (pseudoClass->mAtom == nsCSSAtoms::checkedPseudo) ||
         (pseudoClass->mAtom == nsCSSAtoms::disabledPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::dragOverPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::dragPseudo) || 
@@ -2472,7 +2473,6 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
         (pseudoClass->mAtom == nsCSSAtoms::hoverPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::linkPseudo) ||
         (pseudoClass->mAtom == nsCSSAtoms::outOfDatePseudo) ||
-        (pseudoClass->mAtom == nsCSSAtoms::selectedPseudo) ||
         (pseudoClass->mAtom == nsCSSAtoms::selectionPseudo) ||
         (pseudoClass->mAtom == nsCSSAtoms::visitedPseudo)) {
       return PR_TRUE;
@@ -2621,6 +2621,7 @@ CSSStyleSheetImpl::SlowCascadeRulesInto(nsIAtom* aMedium, nsISupportsArray* aRul
 }
 #endif
 
+#ifdef FAST_CASCADE
 static PRInt32
 CompareStyleRuleWeight(nsISupports* aRule1, nsISupports* aRule2, void* aData)
 {
@@ -2628,6 +2629,7 @@ CompareStyleRuleWeight(nsISupports* aRule1, nsISupports* aRule2, void* aData)
   nsICSSStyleRule* rule2 = (nsICSSStyleRule*)aRule2;
   return (rule2->GetWeight() - rule1->GetWeight());
 }
+#endif
 
 nsresult
 CSSStyleSheetImpl::CascadeRulesInto(nsIAtom* aMedium, nsISupportsArray* aRules)
