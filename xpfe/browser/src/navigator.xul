@@ -532,7 +532,7 @@
     </menu>
     
      <menu name="Help">
-      <menuitem name="Help Contents" onclick="BrowserReload();"/>
+      <menuitem name="Help Contents" onclick="window.frames[0].location.href = 'http://www.mozilla.org/projects/user-docs/local/browserhelp/browsertop.html'"/>
       <separator />
       <menuitem name="How To Tutorial" onclick="BrowserReload();"/>
       <menuitem name="Help Channel" onclick="BrowserReload();" />
