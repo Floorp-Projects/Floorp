@@ -29,5 +29,5 @@ Rights Reserved.
 <!ENTITY moveToSent.label "Move it to my Sent Mail folder">
 <!ENTITY requestMDN.label " When I receive a message and the sender requested a receipt (MDN)">
 <!ENTITY returnSome.label "Return receipts for some messages">
-<!ENTITY never.label "Return receipts for some messages">
+<!ENTITY never.label "Never return a receipt">
 <!ENTITY custom.label "Customize...">
