@@ -638,11 +638,12 @@ embedding/browser/setup/Makefile
 
 
 # xpfe/browser/public/Makefile
+
 END_NGMAKEFILES
 
-if [ "$MOZ_MAIL_NEWS" ]; then
+#if [ "$MOZ_MAIL_NEWS" ]; then
   add_makefiles < ${srcdir}/mailnews/makefiles
-fi
+#fi
 
 #
 # l10n/
