@@ -34,6 +34,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/tasksOverlay.dtd \
 		$(srcdir)/taskbarOverlay.dtd \
 		$(srcdir)/taskbar.rdf \
+		$(srcdir)/builtinURLs.rdf \
 		$(srcdir)/commonDialog.dtd \
 		$(srcdir)/charsetOverlay.dtd \
 		$(srcdir)/charsetDetectorsOverlay.dtd \
