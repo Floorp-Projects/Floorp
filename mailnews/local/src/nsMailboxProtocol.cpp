@@ -356,7 +356,9 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
 		nsCOMPtr<nsIMsgDBHdr> msgHdr;
 
 		rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
-		if (NS_SUCCEEDED(rv)) 
+    PRBool isRead;
+    msgHdr->GetIsRead(&isRead);
+    if (NS_SUCCEEDED(rv) && !isRead) 
     {
       NS_ASSERTION(msgHdr, "no msg hdr!");
       if (!msgHdr) return NS_ERROR_UNEXPECTED;
