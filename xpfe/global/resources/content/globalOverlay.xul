@@ -161,4 +161,13 @@
 		<box id="status-bar-rightcap"/>
 	</box>
 	
+<popupset id="aTooltipSet">
+  <popup id="aTooltip" 
+    oncreate="return FillInTooltip(document.tooltipNode);"
+    style="border: thin solid black;"> 
+   <titledbutton id="replaceMe" align="left" crop="right" class="borderless"
+     value="Empty Tooltip" />
+ </popup>
+</popupset>
+
 </overlay>		
