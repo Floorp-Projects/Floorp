@@ -562,7 +562,7 @@ NS_IMPL_INT_ATTR(nsHTMLInputElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
 //NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Size, size, 0)
-NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Type, type, "text")
+//NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Type, type, "text")
 
 NS_IMETHODIMP
 nsHTMLInputElement::GetSize(PRUint32* aValue)
@@ -1779,6 +1779,35 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
 
   return nsGenericHTMLFormElement::AttributeToString(aAttribute, aValue,
                                                      aResult);
+}
+
+
+NS_IMETHODIMP
+nsHTMLInputElement::GetType(nsAString& aValue)
+{
+  const nsHTMLValue::EnumTable *table = kInputTypeTable;
+
+  while (table->tag) {
+    if (mType == table->value) {
+      CopyUTF8toUTF16(table->tag, aValue);
+
+      return NS_OK;
+    }
+
+    ++table;
+  }
+
+  NS_ERROR("Shound't get here!");
+
+  aValue.Truncate();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SetType(const nsAString& aValue)
+{
+  return SetAttrHelper(nsHTMLAtoms::type, aValue);
 }
 
 static void
