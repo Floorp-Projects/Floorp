@@ -637,6 +637,7 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:mailnews:addrbook:resources:locale:en-US:MANIFEST",	"$addressbook_locale_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:content:MANIFEST", "$addressbook_content_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:addrbook:prefs:resources:locale:en-US:MANIFEST", "$addressbook_locale_chrome_dir", 0);
+		_InstallResources(":mozilla:mailnews:absync:resources:content:MANIFEST",		"$addressbook_content_chrome_dir", 0);
 
 		_InstallResources(":mozilla:mailnews:import:resources:content:MANIFEST",		"$messenger_content_chrome_dir", 0);
 		_InstallResources(":mozilla:mailnews:import:resources:locale:en-US:MANIFEST",	"$messenger_locale_chrome_dir", 0);
@@ -1169,6 +1170,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:mailnews:addrbook:public:MANIFEST_IDL",			"$distdirectory:idl:");
 	_InstallFromManifest(":mozilla:mailnews:addrbook:src:MANIFEST",				"$distdirectory:mailnews:");
 	_InstallFromManifest(":mozilla:mailnews:addrbook:build:MANIFEST",				"$distdirectory:mailnews:");
+	_InstallFromManifest(":mozilla:mailnews:absync:public:MANIFEST",				"$distdirectory:mailnews:");
 
 	print("--- Client Dist export complete ----\n");
 }
@@ -1417,6 +1419,7 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:mailnews:local:macbuild:msglocalIDL.mcp",				"MsgLocal");
 	BuildIDLProject(":mozilla:mailnews:news:macbuild:msgnewsIDL.mcp",				"MsgNews");
 	BuildIDLProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbookIDL.mcp",		"MsgAddrbook");
+	BuildIDLProject(":mozilla:mailnews:absync:macbuild:abSyncIDL.mcp",		"AbSyncSvc");
 	BuildIDLProject(":mozilla:mailnews:db:macbuild:msgDBIDL.mcp",					"MsgDB");
 	BuildIDLProject(":mozilla:mailnews:imap:macbuild:msgimapIDL.mcp",				"MsgImap");
 	BuildIDLProject(":mozilla:mailnews:mime:macbuild:mimeIDL.mcp",					"Mime");
@@ -1943,6 +1946,7 @@ sub BuildMailNewsProjects()
 	BuildOneProject(":mozilla:mailnews:imap:macbuild:msgimap.mcp",						"MsgImap$D.shlb", "MsgImap.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:mailnews:news:macbuild:msgnews.mcp",						"MsgNews$D.shlb", "MsgNews.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:mailnews:addrbook:macbuild:msgAddrbook.mcp",				"MsgAddrbook$D.shlb", "MsgAddrbook.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:mailnews:absync:macbuild:AbSync.mcp",				"AbSyncSvc$D.shlb", "AbSyncSvc.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",							"Mime$D.shlb", "Mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:mailnews:mime:emitters:macbuild:mimeEmitter.mcp",			"mimeEmitter$D.shlb", "mimeEmitter.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:mailnews:mime:cthandlers:vcard:macbuild:vcard.mcp",		"vcard$D.shlb", "vcard.toc", 1, $main::ALIAS_SYM_FILES, 1);
