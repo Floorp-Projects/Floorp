@@ -415,22 +415,21 @@ sub BuildDist()
    InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
 
 	# MAILNEWS
-   if ($main::build{mailnews})
-   {
-	   InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",						"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",						"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",						"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",					"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:db:mdb:public:MANIFEST",					"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",					"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",					"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
-	   InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
-	}
+   InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:base:public:MANIFEST",					"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:base:build:MANIFEST",						"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:base:src:MANIFEST",						"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:base:util:MANIFEST",						"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:compose:public:MANIFEST",					"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:db:mdb:public:MANIFEST",					"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:db:msgdb:public:MANIFEST",				"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:db:msgdb:build:MANIFEST",					"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:local:public:MANIFEST",					"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:local:build:MANIFEST",					"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:local:src:MANIFEST",						"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:imap:public:MANIFEST",					"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:mime:public:MANIFEST",					"$distdirectory:mailnews:");
+   InstallFromManifest(":mozilla:mailnews:news:public:MANIFEST",					"$distdirectory:mailnews:");
 
 	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
 	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
@@ -726,18 +725,16 @@ sub MakeResourceAliases()
 		InstallResources(":mozilla:editor:ui:dialogs:skin:MANIFEST",				"$editor_chrome_dir:dialogs:skin:default:", 0);
 	}
 
-	if ($main::build{mailnews})
+	# if ($main::build{mailnews})
 	{
-		my($messenger_dir) = "$resource_dir" . "mailnews:messenger:";
-		BuildFolderResourceAliases(":mozilla:mailnews:ui:messenger:resources:",			"$messenger_dir");	
-		BuildFolderResourceAliases(":mozilla:mailnews:mime:emitters:resources:",		"$messenger_dir");	
+		my($mailnews_dir) = "$resource_dir" . "mailnews";
 		
-		my($compose_dir) = "$resource_dir" . "mailnews:compose:";
-		BuildFolderResourceAliases(":mozilla:mailnews:ui:compose:resources:",			"$compose_dir");	
-
-		my($msgpref_dir) = "$resource_dir" . "mailnews:preference:";
-		BuildFolderResourceAliases(":mozilla:mailnews:ui:preference:resources:",		"$msgpref_dir");
-	}	
+		InstallResources(":mozilla:mailnews:ui:messenger:resources:MANIFEST",		"$mailnews_dir:messenger:", 0);
+		InstallResources(":mozilla:mailnews:mime:emitters:resources:MANIFEST",		"$mailnews_dir:messenger:", 0);	
+		InstallResources(":mozilla:mailnews:ui:compose:resources:MANIFEST",			"$mailnews_dir:compose:", 0);	
+		InstallResources(":mozilla:mailnews:ui:preference:resources:MANIFEST",		"$mailnews_dir:preference:", 0);
+		InstallResources(":mozilla:mailnews:ui:ab:resources:MANIFEST",				"$mailnews_dir:addrbook:", 0);
+	}
 
 	# copy the chrome registry. We want an actual copy so that changes for custom UI's
 	# don't accidentally get checked into the tree. (pinkerton, bug#5296).
@@ -913,6 +910,10 @@ sub BuildMailNewsProjects()
 	BuildOneProject(":mozilla:mailnews:db:macbuild:msgDB.mcp",							"MsgDB$D.shlb", "MsgDB.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:mailnews:local:macbuild:msglocal.mcp",					"MsgLocal$D.shlb", "MsgLocal.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+#	BuildOneProject(":mozilla:mailnews:imap:macbuild:msgimap.mcp",						"MsgImap$D.shlb", "MsgImap.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+#	BuildOneProject(":mozilla:mailnews:news:macbuild:msgnews.mcp",						"MsgNews$D.shlb", "MsgNews.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",							"Mime$D.shlb", "Mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
