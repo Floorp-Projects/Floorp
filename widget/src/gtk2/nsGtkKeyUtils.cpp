@@ -38,6 +38,7 @@
 
 #include <gdk/gdkkeysyms.h>
 #include <gdk/gdkevents.h>
+#include <gdk/gdkx.h>
 #include "nsGUIEvent.h"
 #include "keysym2ucs.h"
 
@@ -146,11 +147,24 @@ struct nsKeyConverter nsKeycodes[] = {
     { NS_VK_EQUALS, GDK_plus }
 };
 
+#define IS_XSUN_XSERVER(dpy) \
+    (strstr(XServerVendor(dpy), "Sun Microsystems") != NULL)
+
+// map Sun Keyboard special keysyms on to NS_VK keys
+struct nsKeyConverter nsSunKeycodes[] = {
+    {NS_VK_ESCAPE, GDK_F11 }, //bug 57262, Sun Stop key generates F11 keysym
+    {NS_VK_F11, 0x1005ff10 }, //Sun F11 key generates SunF36(0x1005ff10) keysym
+    {NS_VK_F12, 0x1005ff11 }, //Sun F12 key generates SunF37(0x1005ff11) keysym
+    {NS_VK_PAGE_UP,    GDK_F29 }, //KP_Prior
+    {NS_VK_PAGE_DOWN,  GDK_F35 }, //KP_Next
+    {NS_VK_HOME,       GDK_F27 }, //KP_Home
+    {NS_VK_END,        GDK_F33 }, //KP_End
+};
+
 int
 GdkKeyCodeToDOMKeyCode(int aKeysym)
 {
-    int i;
-    int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
+    int i, length = 0;
 
     // First, try to handle alphanumeric input, not listed in nsKeycodes:
     // most likely, more letters will be getting typed in than things in
@@ -171,28 +185,22 @@ GdkKeyCodeToDOMKeyCode(int aKeysym)
     if (aKeysym >= GDK_KP_0 && aKeysym <= GDK_KP_9)
         return aKeysym - GDK_KP_0 + NS_VK_NUMPAD0;
 
+    // map Sun Keyboard special keysyms
+    if (IS_XSUN_XSERVER(GDK_DISPLAY())) {
+        length = sizeof(nsSunKeycodes) / sizeof(struct nsKeyConverter);
+        for (i = 0; i < length; i++) {
+            if (nsSunKeycodes[i].keysym == aKeysym)
+                return(nsSunKeycodes[i].vkCode);
+        }
+    }
+
     // misc other things
+    length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
     for (i = 0; i < length; i++) {
         if (nsKeycodes[i].keysym == aKeysym)
             return(nsKeycodes[i].vkCode);
     }
 
-    // function keys
-    // See bug 57262, Sun's Stop key generates F11 keysym code, in order to
-    // make Stop key stops the page loading while not sabotaging F11 key in
-    // all platforms, this code catches F11 keysym, then changes it into ESCAPE,
-    // which stops the page loading on all platforms.
-    // Now, Stop key has the same function as ESC in Solaris
-#if defined(SUNOS4) || defined(SOLARIS)
-    if (aKeysym == GDK_F11)
-        return NS_VK_ESCAPE;
-    //When F11 key is pressed in Sun keyboard, keysym is SunF36 not F11
-    if (aKeysym == 268828432)  //SunF36's value is 0x1005ff10(268828432)
-        return NS_VK_F11;       //Change it into F11
-    //When F12 key is pressed in Sun keyboard, keysym is SunF37 not F12
-    if (aKeysym == 268828433)  //SunF37's value is 0x1005ff11(268828433)
-        return NS_VK_F12;       //Change it into F12
-#endif
     // function keys
     if (aKeysym >= GDK_F1 && aKeysym <= GDK_F24)
         return aKeysym - GDK_F1 + NS_VK_F1;
