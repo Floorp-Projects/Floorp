@@ -30,8 +30,8 @@
   </treehead>
   
 
-  <treebody id="mailbox://Inbox" name="threadTreeBody">
-    <treeitem  open="true">
+  <treebody id="" name="threadTreeBody">
+    <treeitem  open="false">
     </treeitem>
   </treebody>
 </tree>
