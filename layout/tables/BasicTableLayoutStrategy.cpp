@@ -30,7 +30,7 @@ NS_DEF_PTR(nsIStyleContext);
 
 
 #ifdef NS_DEBUG
-static PRBool gsDebug = PR_FALSE;
+static PRBool gsDebug = PR_TRUE;
 static PRBool gsDebugCLD = PR_FALSE;
 #else
 static const PRBool gsDebug = PR_FALSE;
@@ -489,8 +489,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
               colFrame->SetMinColWidth(spanCellMinWidth);     // set the new min width for the col
               mMinTableWidth += spanCellMinWidth-colMinWidth; // add in the col min width delta 
               if (gsDebug==PR_TRUE) 
-                printf ("    for spanning cell into col %d with remaining span=%d, \
-                        old min = %d, new min = %d\n", 
+                printf ("    for spanning cell into col %d with remaining span=%d, old min = %d, new min = %d\n", 
                         colIndex, spanInfo->span, colMinWidth, spanCellMinWidth);
               // if the new min width is greater than the desired width, bump up the desired width
               nscoord colMaxWidth = colFrame->GetMaxColWidth();
@@ -498,19 +497,29 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
               {
                 colFrame->SetMaxColWidth(spanCellMinWidth);
                 mMaxTableWidth += spanCellMinWidth - colMaxWidth;
+                if (gsDebug)
+                  printf("   also set max from %d to %d\n", colMaxWidth, spanCellMinWidth);
               }
             }
           }
           else
           {
-            spanCellMinWidth = spanInfo->cellMinWidth/spanInfo->initialColSpan;
-            colFrame->SetMinColWidth(spanCellMinWidth);
-            //QQQ
-            //mMinTableWidth += spanCellMinWidth-colMinWidth; // add in the col min width delta 
-            if (gsDebug==PR_TRUE) 
-                printf ("    for spanning cell into col %d with remaining span=%d, \
-                        old min = %d, new min = %d\n", 
-                        colIndex, spanInfo->span, colMinWidth, spanCellMinWidth);
+            if (colMinWidth < spanCellMinWidth)
+            {
+              spanCellMinWidth = spanInfo->cellMinWidth/spanInfo->initialColSpan;
+              colFrame->SetMinColWidth(spanCellMinWidth);
+              if (gsDebug==PR_TRUE) 
+                  printf ("    for spanning cell into col %d with remaining span=%d, old min = %d, new min = %d\n", 
+                          colIndex, spanInfo->span, colMinWidth, spanCellMinWidth);
+              // if the new min width is greater than the desired width, bump up the desired width
+              nscoord colMaxWidth = colFrame->GetMaxColWidth();
+              if (colMaxWidth < spanCellMinWidth)
+              {
+                colFrame->SetMaxColWidth(spanCellMinWidth);
+                if (gsDebug)
+                  printf("   also set max from %d to %d\n", colMaxWidth, spanCellMinWidth);
+              }
+            }
           }
 
 
@@ -531,8 +540,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
               mMaxTableWidth += spanCellMaxWidth-colMaxWidth; // add in the col max width delta 
               mTableFrame->SetColumnWidth(colIndex, spanCellMaxWidth);  // set the column to the new desired max width
               if (gsDebug==PR_TRUE) 
-                printf ("    for spanning cell into col %d with remaining span=%d, \
-                        old max = %d, new max = %d\n", 
+                printf ("    for spanning cell into col %d with remaining span=%d, old max = %d, new max = %d\n", 
                         colIndex, spanInfo->span, colMaxWidth, spanCellMaxWidth);
             }
           }
@@ -543,11 +551,8 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
             spanCellMaxWidth = PR_MAX(spanCellMaxWidth, minColWidth);
             colFrame->SetMaxColWidth(spanCellMaxWidth);
             mTableFrame->SetColumnWidth(colIndex, spanCellMaxWidth);
-            //QQQ mMaxTW already taken care of at this point?
-            //mMaxTableWidth += spanCellMaxWidth-colMaxWidth; // add in the col max width delta 
             if (gsDebug==PR_TRUE) 
-              printf ("    for spanning cell into col %d with remaining span=%d, \
-                      old max = %d, new max = %d\n", 
+              printf ("    for spanning cell into col %d with remaining span=%d, old max = %d, new max = %d\n", 
                       colIndex, spanInfo->span, colMaxWidth, spanCellMaxWidth);
           }
 
@@ -842,22 +847,28 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
             {
               minColWidth = spanCellMinWidth;     // set the new min width for the col
               if (gsDebug==PR_TRUE) 
-                printf ("    for spanning cell into col %d with remaining span=%d, \
-                        new min = %d\n", 
+                printf ("    for spanning cell into col %d with remaining span=%d, new min = %d\n", 
                         colIndex, spanInfo->span, minColWidth);
               // if the new min width is greater than the desired width, bump up the desired width
               maxColWidth = PR_MAX(maxColWidth, minColWidth);
+              if (gsDebug)
+                printf ("   and maxColWidth = %d\n", maxColWidth);
             }
           }
           else
           {
             spanCellMinWidth = spanInfo->cellMinWidth/spanInfo->initialColSpan;
-            minColWidth = spanCellMinWidth;
-            //QQQ is mMinTableWidth already taken care of at this point?
-            if (gsDebug==PR_TRUE) 
-                printf ("    for spanning cell into col %d with remaining span=%d, \
-                        new min = %d\n", 
-                        colIndex, spanInfo->span, minColWidth);
+            if (minColWidth < spanCellMinWidth)
+            {
+              minColWidth = spanCellMinWidth;
+              if (gsDebug==PR_TRUE) 
+                  printf ("    for spanning cell into col %d with remaining span=%d, new min = %d\n", 
+                          colIndex, spanInfo->span, minColWidth);
+              // if the new min width is greater than the desired width, bump up the desired width
+              maxColWidth = PR_MAX(maxColWidth, minColWidth);
+              if (gsDebug)
+                  printf ("   and maxColWidth = %d\n", maxColWidth);
+            }
           }
 
 
@@ -1349,20 +1360,26 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
             {
               minColWidth = spanCellMinWidth;     // set the new min width for the col
               if (gsDebug==PR_TRUE) 
-                printf ("    for spanning cell into col %d with remaining span=%d, \
-                        new min = %d\n", 
+                printf ("    for spanning cell into col %d with remaining span=%d, new min = %d\n", 
                         colIndex, spanInfo->span, minColWidth);
+              maxColWidth = PR_MAX(maxColWidth, minColWidth);
+              if (gsDebug) 
+                printf ("    maxColWidth = %d\n", maxColWidth);
             }
           }
           else
           {
             spanCellMinWidth = spanInfo->cellMinWidth/spanInfo->initialColSpan;
-            minColWidth = spanCellMinWidth;
-            //QQQ is mMinTableWidth already taken care of at this point?
-            if (gsDebug==PR_TRUE) 
-                printf ("    for spanning cell into col %d with remaining span=%d, \
-                        new min = %d\n", 
+            if (minColWidth < spanCellMinWidth)
+            {
+              minColWidth = spanCellMinWidth;
+              if (gsDebug==PR_TRUE) 
+                printf ("    for spanning cell into col %d with remaining span=%d, new min = %d\n", 
                         colIndex, spanInfo->span, minColWidth);
+              maxColWidth = PR_MAX(maxColWidth, minColWidth);
+              if (gsDebug) 
+                printf ("    maxColWidth = %d\n", maxColWidth);  
+            }
           }
 
 
@@ -2026,6 +2043,7 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooNarrow(nscoord aComputedWidth
           break;
       }
     }
+    delete [] colsToGrow;
   } // end while (0<excess)
   if (PR_TRUE==gsDebug)
   {
