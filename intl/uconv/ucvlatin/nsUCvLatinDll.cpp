@@ -25,6 +25,7 @@
 #include "nsLatin1ToUnicode.h"
 #include "nsISO88597ToUnicode.h"
 #include "nsCP1253ToUnicode.h"
+#include "nsUnicodeToLatin1.h"
 #include "nsUCvLatinCID.h"
 // just for NS_IMPL_IDS
 #include "nsIUnicodeDecodeUtil.h"
@@ -64,6 +65,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 
     return res;
   }
+
   // the ISO88597ToUnicode converter
   if (aCID.Equals(kISO88597ToUnicodeCID)) {
     nsISO88597ToUnicodeFactory *factory = new nsISO88597ToUnicodeFactory();
@@ -90,6 +92,19 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
     return res;
   }
 
+  // the UnicodeToLatin1 converter
+  if (aCID.Equals(kUnicodeToLatin1CID)) {
+    nsUnicodeToLatin1Factory *factory = new nsUnicodeToLatin1Factory();
+    nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
+
+    if (NS_FAILED(res)) {
+      *aFactory = NULL;
+      delete factory;
+    }
+
+    return res;
+  }
+
   return NS_NOINTERFACE;
 }
 
@@ -103,9 +118,13 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
 
   res = nsRepository::RegisterFactory(kCP1253ToUnicodeCID, path, 
       PR_TRUE, PR_TRUE);
-
   if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+
   res = nsRepository::RegisterFactory(kISO88597ToUnicodeCID, path, 
+      PR_TRUE, PR_TRUE);
+  if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
+
+  res = nsRepository::RegisterFactory(kUnicodeToLatin1CID, path, 
       PR_TRUE, PR_TRUE);
 
   return res;
@@ -122,5 +141,8 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char * path)
   if(NS_FAILED(res)) return res;
 
   res = nsRepository::UnregisterFactory(kISO88597ToUnicodeCID, path);
+  if(NS_FAILED(res)) return res;
+
+  res = nsRepository::UnregisterFactory(kUnicodeToLatin1CID, path);
   return res;
 }
