@@ -1253,7 +1253,9 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   nsCOMPtr<nsIFontMetrics> fm;
   presContext->GetMetricsFor(f, getter_AddRefs(fm));
   nscoord fontHeight = 1;
-  fm->GetHeight(fontHeight);
+  NS_ASSERTION(fm,"FontMetrics is null assuming fontHeight == 1");
+  if (fm)
+    fm->GetHeight(fontHeight);
 
   nscoord maxX = scrolledContentSize.width - scrollAreaRect.width;
   nscoord maxY = scrolledContentSize.height - scrollAreaRect.height;
