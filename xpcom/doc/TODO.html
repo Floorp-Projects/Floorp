@@ -2,7 +2,7 @@
 <html>
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-   <meta name="GENERATOR" content="Mozilla/4.51 [en] (X11; U; Linux 2.0.36 i686) [Netscape]">
+   <meta name="GENERATOR" content="Mozilla/4.51 [en] (WinNT; U) [Netscape]">
    <meta name="Author" content="Suresh Duddi">
    <title>TODO List for XPCOM</title>
 </head>
@@ -53,13 +53,27 @@ Mostly, there is equivalence between NR_*() calls and nsRegistry calls.&nbsp;</t
 <br><b>DONE</b></td>
 </tr>
 
+<tr BGCOLOR="#33CCFF">
+<td>RegisterFactory() and RegisterComponent(..persist=0) ignoring PROGID.
+Needs Fix.</td>
+
+<td>P1</td>
+
+<td>Nick Ambrose &lt;<a href="mailto:nicka87@hotmail.com">nicka87@hotmail.com</a>></td>
+
+<td>4/6/1999 started
+<br>4/7/1999 Patch submitted
+<br>4/12/1999 Patch Checked in
+<br><b>DONE</b></td>
+</tr>
+
 <tr>
 <td>Startup components: Some components need to be created at startup.
 Have a framework for them.</td>
 
 <td>P1</td>
 
-<td></td>
+<td><a href="mailto:dp@netscape.com">Suresh Duddi</a></td>
 
 <td></td>
 </tr>
@@ -97,8 +111,7 @@ paths.</td>
 <td>3/22/1999 Started.
 <br>- checked in a fixed xpcom initialization sequence.
 <br>- Now got to fix all code statically calling it. I know Netlib does.
-<br>- 4/1/1999 Fixed netlib on unix from static intialization. WIN&nbsp;is
-left.</td>
+<br>- 4/1/1999 Fixed netlib on unix from static intialization. WIN is left.</td>
 </tr>
 
 <tr>
@@ -117,7 +130,7 @@ Possibly move autoreg out of xpcom</li>
 <br><a href="mailto:rjc@netscape.com">Robert Churchill</a></td>
 
 <td>3/24/1999 started
-<br>Blocked on deciding which solution to pick.</td>
+<br><b>Blocked </b>on deciding which solution to pick.</td>
 </tr>
 
 <tr>
@@ -170,15 +183,11 @@ Registry path strings in nsComponentManager.cpp #defined</li>
 <br><b>DONE</b></td>
 </tr>
 
-<tr>
+<tr BGCOLOR="#33CCFF">
 <td>Performance
 <ul>
 <li>
 Cache commonly used registry keys</li>
-
-<li>
-Factories: Use previously created factories for object creation instead
-of creating the factory everytime the object needs to be created</li>
 </ul>
 </td>
 
@@ -186,7 +195,28 @@ of creating the factory everytime the object needs to be created</li>
 
 <td>Nick Ambrose &lt;<a href="mailto:nicka87@hotmail.com">nicka87@hotmail.com</a>></td>
 
-<td>4/1/1999 started</td>
+<td>4/1/1999 started
+<br>4/5/1999 Patch submitted and checked in
+<br><b>DONE</b></td>
+</tr>
+
+<tr>
+<td>Factories: Use previously created factories for object creation instead
+of creating the factory everytime the object needs to be created.
+<ul>
+<li>
+This is very tricky as the factory is owned by the component and when it
+decides to unload itself on a CanUnload() call, the factory will be released.
+Got to make sure that the component manager gets notified of this if it
+caches the factory.</li>
+</ul>
+</td>
+
+<td>P2</td>
+
+<td></td>
+
+<td></td>
 </tr>
 
 <tr BGCOLOR="#33CCFF" NOSAVE>
