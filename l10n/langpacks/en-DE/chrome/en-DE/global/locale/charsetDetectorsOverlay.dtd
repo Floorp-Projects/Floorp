@@ -1,0 +1,3 @@
+<!-- extracted from charsetDetectorsOverlay.xul -->
+<!ENTITY charsetDetectorsMenu.label	"Auto Detect">
+<!ENTITY CustomizeMenu.label		"Customize">
