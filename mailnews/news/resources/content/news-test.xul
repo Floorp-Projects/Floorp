@@ -6,8 +6,8 @@
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <html:script language="javascript" src="news-test.js">
-  </html:script>
+<html:script language="javascript" src="news-test.js"/>
+<html:div flex="100%">
 
 <html:b>news tests</html:b>
 <html:hr/>
@@ -27,14 +27,12 @@ if we detect that, we stop and return error.
 <html:hr/>
 <html:b>Newsgroups:</html:b>
 <box align="horizontal" flex="100%">
-<html:input id="newsgroups" type="text" style="min-width: 400px; min-height: 27px" flex="100%"/>
+<html:input id="newsgroups" type="text" style="min-width: 400px; min-height: 27px" flex="100%" onkeyup="if (event.which == 13) { doit(); }"/>
 </box>  
 <html:br/>
 <html:b>result:</html:b>
 <box align="horizontal" flex="100%">
 <html:input id="result" type="text" style="min-width: 400px; min-height: 27px" flex="100%"/>
 </box>  
-<html:hr/>
-<html:button onclick="doit()">do it</html:button>
-
+</html:div>
 </window>
