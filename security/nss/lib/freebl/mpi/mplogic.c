@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.c,v 1.2 2000/07/20 04:20:21 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.c,v 1.3 2000/07/21 21:04:14 nelsonb%netscape.com Exp $
  */
 
 #include "mplogic.h"
@@ -43,6 +43,7 @@
 /* Some things from the guts of the MPI library we make use of... */
 extern mp_err   s_mp_lshd(mp_int *mp, mp_size p);
 extern void     s_mp_rshd(mp_int *mp, mp_size p);
+extern mp_err   s_mp_pad(mp_int *mp, mp_size min); /* left pad with zeroes */
 
 #define  s_mp_clamp(mp)\
    { while(USED(mp) > 1 && DIGIT((mp), USED(mp) - 1) == 0) USED(mp) -= 1; }
@@ -405,6 +406,85 @@ mp_err mpl_parity(mp_int *a)
 } /* end mpl_parity() */
 
 /* }}} */
+
+/*
+  mpl_set_bit
+
+  Returns MP_OKAY or some error code.
+  Grows a if needed to set a bit to 1.
+ */
+mp_err mpl_set_bit(mp_int *a, unsigned int bitNum, unsigned int value)
+{
+  unsigned int ix;
+  mp_err       rv;
+  mp_digit     mask;
+
+  ARGCHK(a != NULL, MP_BADARG);
+
+  ix = bitNum / MP_DIGIT_BIT;
+  if (value && (ix > MP_USED(a) - 1)) {
+    rv = s_mp_pad(a, ix);
+    if (rv != MP_OKAY)
+      return rv;
+  }
+
+  bitNum = bitNum % MP_DIGIT_BIT;
+  mask = (mp_digit)1 << bitNum;
+  if (value)
+    MP_DIGIT(a,ix) |= mask;
+  else
+    MP_DIGIT(a,ix) &= ~mask;
+  return MP_OKAY;
+}
+
+/*
+  mpl_get_bit
+
+  returns 0 or 1 or some (negative) error code.
+ */
+mp_err mpl_get_bit(mp_int *a, unsigned int bitNum)
+{
+  unsigned int bit, ix;
+  mp_err       rv;
+
+  ARGCHK(a != NULL, MP_BADARG);
+
+  ix = bitNum / MP_DIGIT_BIT;
+  ARGCHK(ix > MP_USED(a) - 1, MP_RANGE);
+
+  bit   = bitNum % MP_DIGIT_BIT;
+  rv = (mp_err)(MP_DIGIT(a, ix) >> bit) & 1;
+  return rv;
+}
+
+/*
+  mpl_significant_bits
+  returns number of significnant bits in abs(a).
+  returns 1 if value is zero.
+ */
+mp_err mpl_significant_bits(mp_int *a)
+{
+  mp_err bits 	= 0;
+  int    ix;
+
+  ARGCHK(a != NULL, MP_BADARG);
+
+  ix = MP_USED(a);
+  for (ix = MP_USED(a); ix > 0; ) {
+    mp_digit d = MP_DIGIT(a, --ix);
+    if (d) {
+      while (d) {
+	++bits;
+	d >>= 1;
+      }
+      break;
+    }
+  }
+  bits += ix * MP_DIGIT_BIT;
+  if (!bits)
+    bits = 1;
+  return bits;
+}
 
 /*------------------------------------------------------------------------*/
 /* HERE THERE BE DRAGONS                                                  */
