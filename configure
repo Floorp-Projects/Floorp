@@ -118,7 +118,7 @@ ac_help="$ac_help
 ac_help="$ac_help
   --disable-pedantic      Issue all warnings demanded by strict ANSI C "
 ac_help="$ac_help
-  --enable-ignore-no-long-long-warning       pass -Wno-long-long to the compiler"
+  --enable-long-long-warning Pass -Wno-long-long to the compiler"
 ac_help="$ac_help
   --disable-shared        Disable building of internal shared libs"
 ac_help="$ac_help
@@ -8859,15 +8859,15 @@ if test "$_PEDANTIC"; then
   _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
 fi
 
-# Check whether --enable-ignore-no-long-long-warning or --disable-ignore-no-long-long-warning was given.
-if test "${enable_ignore_no_long_long_warning+set}" = set; then
-  enableval="$enable_ignore_no_long_long_warning"
+# Check whether --enable-long-long-warning or --disable-long-long-warning was given.
+if test "${enable_long_long_warning+set}" = set; then
+  enableval="$enable_long_long_warning"
   if test "$enableval" = "yes"; then
     _IGNORE_LONG_LONG_WARNINGS=
   elif test "$enableval" = "no"; then
     :
   else
-    { echo "configure: error: Option, ignore-no-long-long-warning, does not take an argument ($enableval)." 1>&2; exit 1; }
+    { echo "configure: error: Option, long-long-warning, does not take an argument ($enableval)." 1>&2; exit 1; }
   fi
 fi
 
