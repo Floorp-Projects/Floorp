@@ -186,8 +186,8 @@ NS_IMETHODIMP nsUnicodeToGB18030Font1::FillInfo(PRUint32 *aInfo)
     aInfo[i] = 0;
 
   // remove above U+4db5
-  //   remove U+4db5 to U+4dbf one by one
-  for(i = 0x4db5;i <0x4dc0;i++)
+  //   remove U+4db6 to U+4dbf one by one
+  for(i = 0x4db6;i <0x4dc0;i++)
     CLEAR_REPRESENTABLE(aInfo, i);
 
   //   remove above U+4dc0
