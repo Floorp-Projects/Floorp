@@ -50,7 +50,10 @@
 #include "nsConsoleService.h"
 #include "nsConsoleMessage.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsConsoleService, nsIConsoleService)
+NS_IMPL_THREADSAFE_ADDREF(nsConsoleService)
+NS_IMPL_THREADSAFE_RELEASE(nsConsoleService)
+NS_IMPL_QUERY_INTERFACE1_CI(nsConsoleService, nsIConsoleService)
+NS_IMPL_CI_INTERFACE_GETTER1(nsConsoleService, nsIConsoleService)
 
 nsConsoleService::nsConsoleService()
     : mCurrent(0), mFull(PR_FALSE), mListening(PR_FALSE), mLock(nsnull)
