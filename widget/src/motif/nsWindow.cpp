@@ -1206,12 +1206,14 @@ NS_METHOD nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle)
 
 NS_METHOD nsWindow::SetTitle(const nsString& aTitle) 
 {
+/*
   if(!mBaseWindow)
     return NS_ERROR_FAILURE;
     
   const char *text = aTitle.ToNewCString();
   XStoreName(gDisplay, mBaseWindow, text);
   delete [] text;
+*/
   return NS_OK;
 }
 
