@@ -110,23 +110,25 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
   if (NS_FAILED(rv)) 
     return rv;
 
-  // this string may still contain HTML formatting, so we need to remove that too.
-  nsCOMPtr<nsIFormatConverter> htmlConverter = do_CreateInstance(kHTMLConverterCID);
-  NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsISupportsString> plainHTML;
-  plainHTML = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-  NS_ENSURE_TRUE(plainHTML, NS_ERROR_FAILURE);
-  nsresult plainhtml_rv = plainHTML->SetData(textBuffer);
-
-  nsCOMPtr<nsISupportsString> ConvertedData;
-  PRUint32 ConvertedLen;
-  htmlConverter->Convert(kHTMLMime, plainHTML, textBuffer.Length() * 2, kUnicodeMime, getter_AddRefs(ConvertedData), &ConvertedLen);
-
-  nsresult converted_rv = ConvertedData->GetData(plaintextBuffer);
+  nsCOMPtr<nsIFormatConverter> htmlConverter;
 
   // sometimes we also need the HTML version
   if (bIsHTMLCopy) {
+
+    // this string may still contain HTML formatting, so we need to remove that too.
+    htmlConverter = do_CreateInstance(kHTMLConverterCID);
+    NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsISupportsString> plainHTML = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+    NS_ENSURE_TRUE(plainHTML, NS_ERROR_FAILURE);
+    plainHTML->SetData(textBuffer);
+
+    nsCOMPtr<nsISupportsString> ConvertedData;
+    PRUint32 ConvertedLen;
+    htmlConverter->Convert(kHTMLMime, plainHTML, textBuffer.Length() * 2, kUnicodeMime, getter_AddRefs(ConvertedData), &ConvertedLen);
+
+    ConvertedData->GetData(plaintextBuffer);
+
     mimeType.AssignLiteral(kHTMLMime);
 
     flags = 0;
@@ -161,10 +163,10 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       textWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
       NS_ENSURE_TRUE(textWrapper, NS_ERROR_FAILURE);
 
-      nsresult text_rv = textWrapper->SetData(plaintextBuffer);
-
       if (bIsHTMLCopy)
       {
+        nsresult text_rv = textWrapper->SetData(plaintextBuffer);
+
         // set up the data converter
         trans->SetConverter(htmlConverter);
 
@@ -246,15 +248,17 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       }
       else
       {
+        nsresult text_rv = textWrapper->SetData(textBuffer);
+
         // QI the data object an |nsISupports| so that when the transferable holds
         // onto it, it will addref the correct interface.
         nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(textWrapper) );
 
-        if (!plaintextBuffer.IsEmpty() && NS_SUCCEEDED(text_rv))
+        if (!textBuffer.IsEmpty() && NS_SUCCEEDED(text_rv))
         {
          // Add the unicode DataFlavor to the transferable
           trans->AddDataFlavor(kUnicodeMime);
-          trans->SetTransferData(kUnicodeMime, genericDataObj, plaintextBuffer.Length()*2);
+          trans->SetTransferData(kUnicodeMime, genericDataObj, textBuffer.Length()*2);
         }
       }
 
