@@ -109,7 +109,7 @@ nsKeygenFormProcessor::ChooseToken(PCMT_CONTROL control,
     goto loser;
   }
   if (NS_SUCCEEDED(rv)) {
-    handler->DisplayURI(400, 300, PR_TRUE, (char*)url.data);
+    handler->DisplayURI(400, 300, PR_TRUE, (char*)url.data, nsnull);
   } else {
     goto loser;
   }
@@ -140,7 +140,7 @@ nsKeygenFormProcessor::SetUserPassword(PCMT_CONTROL control,
     goto loser;
   }
 
-  handler->DisplayURI(500, 450, PR_TRUE, (char*)url.data);
+  handler->DisplayURI(500, 450, PR_TRUE, (char*)url.data, nsnull);
   
   return CMT_GetGenKeyResponse(control, psmarg, reason);
  loser:
