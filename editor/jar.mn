@@ -226,6 +226,8 @@ comm.jar:
 	content/editor/EditorPublishSettings.xul                 (ui/dialogs/content/EditorPublishSettings.xul) 
 	content/editor/EditorPublishSettings.js                  (ui/dialogs/content/EditorPublishSettings.js) 
 	content/editor/EditorPublishOverlay.xul                  (ui/dialogs/content/EditorPublishOverlay.xul) 
+	content/editor/EditorPublishProgress.xul                 (ui/dialogs/content/EditorPublishProgress.xul) 
+	content/editor/EditorPublishProgress.js                  (ui/dialogs/content/EditorPublishProgress.js) 
 
 en-US.jar:
         locale/en-US/editor/editor.dtd                   (ui/composer/locale/en-US/editor.dtd)
@@ -270,6 +272,7 @@ en-US.jar:
 	locale/en-US/editor/EditorSaveAsCharset.dtd      (ui/dialogs/locale/en-US/EditorSaveAsCharset.dtd) 
 	locale/en-US/editor/EdConvertToTable.dtd         (ui/dialogs/locale/en-US/EdConvertToTable.dtd) 
 	locale/en-US/editor/EditorPublish.dtd            (ui/dialogs/locale/en-US/EditorPublish.dtd) 
+	locale/en-US/editor/EditorPublishProgress.dtd    (ui/dialogs/locale/en-US/EditorPublishProgress.dtd) 
 
 US.jar:
         locale/US/editor-region/contents.rdf             (ui/composer/locale/en-US/contents-region.rdf)
