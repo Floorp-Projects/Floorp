@@ -135,7 +135,12 @@ nsTimerGtk::Cancel()
   if (mTimerId)
     gtk_timeout_remove(mTimerId);
 
-  NS_RELEASE(me);
+  //
+  // This is reported as a leak by purify, but it also causes a 
+  // crash on startup if uncommented.  Need to dig deeper.
+  //
+  //NS_RELEASE(me);
+  //
 }
 
 gint nsTimerExpired(gpointer aCallData)
