@@ -84,6 +84,7 @@ sub query_checkins {
     my ($ci,$result,$lastlog,$rev,$begin_tag,$end_tag);
     my $have_mod_map;
 
+    $::query_module = 'all' unless defined $::query_module;
     if( $::query_module ne 'all' && $::query_module ne 'allrepositories' && @::query_dirs == 0 ){
         $have_mod_map = 1;
         %mod_map = &get_module_map( $::query_module );
