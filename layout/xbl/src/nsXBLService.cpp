@@ -137,7 +137,7 @@ static const char kDisableChromeCachePref[] = "nglayout.debug.disable_xul_cache"
 PRInt32 nsXBLService::kNameSpaceID_XBL;
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS1(nsXBLService, nsIXBLService)
+NS_IMPL_ISUPPORTS2(nsXBLService, nsIXBLService, nsIMemoryPressureObserver)
 
 // Constructors/Destructors
 nsXBLService::nsXBLService(void)
