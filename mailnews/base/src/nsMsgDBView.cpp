@@ -487,7 +487,7 @@ nsresult nsMsgDBView::AppendSelectedTextColorProperties(nsMsgLabelValue label, n
 // nsITreeView Implementation Methods (and helper methods)
 ///////////////////////////////////////////////////////////////////////////
 
-nsresult nsMsgDBView::FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aSenderString)
+nsresult nsMsgDBView::FetchAuthor(nsIMsgDBHdr * aHdr, PRUnichar ** aSenderString)
 {
   nsXPIDLString unparsedAuthor;
   if (!mHeaderParser)
@@ -513,7 +513,7 @@ nsresult nsMsgDBView::FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aSenderString)
   return NS_OK;
 }
 
-nsresult nsMsgDBView::FetchAccount(nsIMsgHdr * aHdr, PRUnichar ** aAccount)
+nsresult nsMsgDBView::FetchAccount(nsIMsgDBHdr * aHdr, PRUnichar ** aAccount)
 {
   nsXPIDLCString accountKey;
 
@@ -541,7 +541,7 @@ nsresult nsMsgDBView::FetchAccount(nsIMsgHdr * aHdr, PRUnichar ** aAccount)
 }
 
 
-nsresult nsMsgDBView::FetchRecipients(nsIMsgHdr * aHdr, PRUnichar ** aRecipientsString)
+nsresult nsMsgDBView::FetchRecipients(nsIMsgDBHdr * aHdr, PRUnichar ** aRecipientsString)
 {
   nsXPIDLString unparsedRecipients;
   if (!mHeaderParser)
@@ -567,7 +567,7 @@ nsresult nsMsgDBView::FetchRecipients(nsIMsgHdr * aHdr, PRUnichar ** aRecipients
   return NS_OK;
 }
 
-nsresult nsMsgDBView::FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue)
+nsresult nsMsgDBView::FetchSubject(nsIMsgDBHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue)
 {
   if (aFlags & MSG_FLAG_HAS_RE)
   {
@@ -586,7 +586,7 @@ nsresult nsMsgDBView::FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnich
 
 // in case we want to play around with the date string, I've broken it out into
 // a separate routine. 
-nsresult nsMsgDBView::FetchDate(nsIMsgHdr * aHdr, PRUnichar ** aDateString)
+nsresult nsMsgDBView::FetchDate(nsIMsgDBHdr * aHdr, PRUnichar ** aDateString)
 {
   PRTime dateOfMsg;
   nsAutoString formattedDateString;
@@ -691,7 +691,7 @@ nsresult nsMsgDBView::FetchStatus(PRUint32 aFlags, PRUnichar ** aStatusString)
   return NS_OK;
 }
 
-nsresult nsMsgDBView::FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString)
+nsresult nsMsgDBView::FetchSize(nsIMsgDBHdr * aHdr, PRUnichar ** aSizeString)
 {
   nsAutoString formattedSizeString;
   PRUint32 msgSize = 0;
@@ -729,7 +729,7 @@ nsresult nsMsgDBView::FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString)
   return (*aSizeString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult nsMsgDBView::FetchPriority(nsIMsgHdr *aHdr, PRUnichar ** aPriorityString)
+nsresult nsMsgDBView::FetchPriority(nsIMsgDBHdr *aHdr, PRUnichar ** aPriorityString)
 {
   nsMsgPriorityValue priority = nsMsgPriority::notSet;
   const PRUnichar * priorityString = nsnull;
@@ -764,7 +764,7 @@ nsresult nsMsgDBView::FetchPriority(nsIMsgHdr *aHdr, PRUnichar ** aPriorityStrin
   return NS_OK;
 }
 
-nsresult nsMsgDBView::FetchLabel(nsIMsgHdr *aHdr, PRUnichar ** aLabelString)
+nsresult nsMsgDBView::FetchLabel(nsIMsgDBHdr *aHdr, PRUnichar ** aLabelString)
 {
   nsresult rv = NS_OK;
   nsMsgLabelValue label = 0;
@@ -5925,7 +5925,7 @@ nsMsgDBView::FindIndexFromKey(nsMsgKey aMsgKey, PRBool aExpand, nsMsgViewIndex *
   return NS_OK;
 }
  
-static void getDateFormatPref( const nsCOMPtr<nsIPrefBranch>& _prefBranch, const char* _prefLocalName, nsDateFormatSelector& _format )
+static void getDateFormatPref( nsIPrefBranch* _prefBranch, const char* _prefLocalName, nsDateFormatSelector& _format )
 {
   // read
   PRInt32 nFormatSetting( 0 );

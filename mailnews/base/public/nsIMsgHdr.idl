@@ -47,8 +47,8 @@
 
 interface nsIMsgFolder;
 
-[scriptable, uuid(89b3cc7e-1f50-4f6a-8576-e5aaf71f00b1)]
-interface nsIMsgHdr : nsISupports
+[scriptable, uuid(B5212A60-F93F-11d2-951C-006097222B83)]
+interface nsIMsgDBHdr : nsISupports
 {
     /* general property routines - I think this can retrieve any
        header in the db */
@@ -119,12 +119,6 @@ interface nsIMsgHdr : nsISupports
     attribute nsMsgLabelValue label;
     attribute string accountKey;
     readonly attribute nsIMsgFolder folder;
-};
-
-[scriptable, uuid(B5212A60-F93F-11d2-951C-006097222B83)]
-interface nsIMsgDBHdr : nsIMsgHdr
-{
-
 };
 /* *******************************************************************************/
 

@@ -160,15 +160,15 @@ protected:
   PRPackedBool  mCommandsNeedDisablingBecauseOfSelection;
   PRPackedBool  mSuppressChangeNotification;
   virtual const char * GetViewName(void) {return "MsgDBView"; }
-  nsresult FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aAuthorString);
-  nsresult FetchRecipients(nsIMsgHdr * aHdr, PRUnichar ** aRecipientsString);
-  nsresult FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue);
-  nsresult FetchDate(nsIMsgHdr * aHdr, PRUnichar ** aDateString);
+  nsresult FetchAuthor(nsIMsgDBHdr * aHdr, PRUnichar ** aAuthorString);
+  nsresult FetchRecipients(nsIMsgDBHdr * aHdr, PRUnichar ** aRecipientsString);
+  nsresult FetchSubject(nsIMsgDBHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue);
+  nsresult FetchDate(nsIMsgDBHdr * aHdr, PRUnichar ** aDateString);
   nsresult FetchStatus(PRUint32 aFlags, PRUnichar ** aStatusString);
-  nsresult FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString);
-  nsresult FetchPriority(nsIMsgHdr *aHdr, PRUnichar ** aPriorityString);
-  nsresult FetchLabel(nsIMsgHdr *aHdr, PRUnichar ** aLabelString);
-  nsresult FetchAccount(nsIMsgHdr * aHdr, PRUnichar ** aAccount);
+  nsresult FetchSize(nsIMsgDBHdr * aHdr, PRUnichar ** aSizeString);
+  nsresult FetchPriority(nsIMsgDBHdr *aHdr, PRUnichar ** aPriorityString);
+  nsresult FetchLabel(nsIMsgDBHdr *aHdr, PRUnichar ** aLabelString);
+  nsresult FetchAccount(nsIMsgDBHdr * aHdr, PRUnichar ** aAccount);
   nsresult CycleThreadedColumn(nsIDOMElement * aElement);
 
   // Save and Restore Selection are a pair of routines you should

@@ -40,7 +40,6 @@
 #include "MailNewsTypes2.idl"
 
 interface nsIMsgDBHdr;
-interface nsIMsgHdr;
 
 interface nsIDBChangeAnnouncer;
 

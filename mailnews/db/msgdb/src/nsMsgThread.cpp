@@ -228,7 +228,7 @@ nsresult nsMsgThread::RerootThread(nsIMsgDBHdr *newParentOfOldRoot, nsIMsgDBHdr 
   ReparentNonReferenceChildrenOf(oldRoot, newRoot, announcer);
   if (ancestorHdr)
   {
-    nsIMsgHdr *msgHdr = ancestorHdr;
+    nsIMsgDBHdr *msgHdr = ancestorHdr;
     nsMsgHdr* rootMsgHdr = NS_STATIC_CAST(nsMsgHdr*, msgHdr);          // closed system, cast ok
     nsIMdbRow *newRootHdrRow = rootMsgHdr->GetMDBRow();
     // move the  root hdr to pos 0.
