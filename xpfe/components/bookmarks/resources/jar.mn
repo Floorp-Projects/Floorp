@@ -33,6 +33,7 @@ comm.jar:
 	content/communicator/bookmarks/bookmarksPanel.xul
 	content/communicator/bookmarks/bookmarksPanel.js
 	content/communicator/bookmarks/pref-bookmarks.xul
+	content/communicator/bookmarks/oTest.xul
 
 en-US.jar:
 	locale/en-US/communicator/bookmarks/addBookmark.dtd         (locale/en-US/addBookmark.dtd)
