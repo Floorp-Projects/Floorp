@@ -462,7 +462,7 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
     nsCOMPtr<nsIMIMEService> mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return;
     
-    char * contentType;
+    char * contentType = nsnull;
     rv = mimeService->GetTypeFromURI(uri, &contentType);
     if (NS_FAILED(rv)) {
       if (contentType)
