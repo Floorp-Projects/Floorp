@@ -931,3 +931,6 @@ sourcetext {
   display: block;
 /*  border: 2px dashed green; */
 }
+
+:-moz-line-frame {
+}
