@@ -91,14 +91,17 @@ interface nsIMsgHdr : nsISupports
     void setCCListArray(in string names, in string addresses,
                         in unsigned long numAddresses);
 
-	[noscript] void getMime2DecodedAuthor(in nsString resultAuthor);
-	[noscript] void getMime2DecodedSubject(in nsString resultSubject);
-	[noscript] void getMime2DecodedRecipients(in nsString resultRecipients);
+    readonly attribute wstring mime2DecodedAuthor;
+    readonly attribute wstring mime2DecodedSubject;
+    readonly attribute wstring mime2DecodedRecipients;
+    //	[noscript] void getMime2DecodedAuthor(in nsString resultAuthor);
+    //	[noscript] void getMime2DecodedSubject(in nsString resultSubject);
+    //	[noscript] void getMime2DecodedRecipients(in nsString resultRecipients);
 
-	[noscript] void getAuthorCollationKey(in nsString resultAuthor);
-	[noscript] void getSubjectCollationKey(in nsString resultSubject);
-	[noscript] void getRecipientsCollationKey(in nsString resultRecipients);
-
+    readonly attribute wstring authorCollationKey;
+    readonly attribute wstring subjectCollationKey;
+    readonly attribute wstring recipientsCollationKey;
+    
 	[noscript] void getCharSet(in nsString result);
 };
 

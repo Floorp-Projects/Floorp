@@ -42,6 +42,7 @@
 #include "nsIEntityConverter.h"
 #include "nsISaveAsCharset.h"
 #include "nsHankakuToZenkakuCID.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
@@ -245,7 +246,9 @@ nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset,
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
                                                     NS_GET_IID(nsIMimeConverter), (void **)&converter);
   if (NS_SUCCEEDED(res) && nsnull != converter) {
-    res = converter->DecodeMimePartIIStr(header, charset, decodedString, eatContinuations);
+    nsXPIDLString decodedUnichar;
+    res = converter->DecodeMimePartIIStr(header, charset, getter_Copies(decodedUnichar), eatContinuations);
+    decodedString = (const PRUnichar*)decodedUnichar;
     NS_RELEASE(converter);
   }
   return res;

@@ -25,6 +25,7 @@
 
 #include "msgCore.h"
 #include "prprf.h" /* should be defined into msgCore.h? */
+#include "xp_core.h"
 #include "intl_csi.h"
 #include "nsMsgZapIt.h"
 #include "nsMsgSend.h"

@@ -29,8 +29,6 @@
 #ifndef ad_codes_h
 #define ad_codes_h
 
-#include "xp_core.h"
-
 /*
 ** applefile definitions used 
 */

@@ -2364,7 +2364,7 @@ nsresult nsMsgDatabase::RowCellColumnTonsCString(nsIMdbRow *hdrRow, mdb_token co
 	return err;
 }
 
-nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr)
+nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, PRUnichar* *resultStr)
 {
 	nsresult err = NS_OK;
 	nsAutoString nakedString;
@@ -2424,23 +2424,25 @@ nsresult nsMsgDatabase::GetCollationKeyGenerator()
 	return err;
 }
 
-nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr)
+nsresult nsMsgDatabase::RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, PRUnichar* *resultStr)
 {
-	nsAutoString nakedString;
+    nsXPIDLString nakedString;
 	nsresult err;
 
-	err = RowCellColumnToMime2DecodedString(row, columnToken, nakedString);
+	err = RowCellColumnToMime2DecodedString(row, columnToken, getter_Copies(nakedString));
 	if (NS_SUCCEEDED(err))
 		err = CreateCollationKey(nakedString, resultStr);
 
 	return err;
 }
 
-nsresult nsMsgDatabase::CreateCollationKey(nsString &sourceString, nsString &resultString)
+nsresult nsMsgDatabase::CreateCollationKey(const PRUnichar *sourceString, PRUnichar **resultString)
 {
 	nsresult err = GetCollationKeyGenerator();
+    nsAutoString resultStr;
 	if (NS_SUCCEEDED(err) && m_collationKeyGenerator)
-		err = m_collationKeyGenerator->CreateSortKey( kCollationCaseInSensitive, sourceString, resultString) ;
+		err = m_collationKeyGenerator->CreateSortKey( kCollationCaseInSensitive, sourceString, resultStr) ;
+    *resultString = resultStr.ToNewUnicode();
 	return err;
 }
 

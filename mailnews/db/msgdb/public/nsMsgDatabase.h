@@ -218,15 +218,15 @@ public:
 	nsresult				RowCellColumnTonsCString(nsIMdbRow *row, mdb_token columnToken, nsCString &resultStr);
 	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 *uint32Result, PRUint32 defaultValue = 0);
 	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 &uint32Result, PRUint32 defaultValue = 0);
-	nsresult				RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
-	nsresult				RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
+	nsresult				RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, PRUnichar **);
+	nsresult				RowCellColumnToCollationKey(nsIMdbRow *row, mdb_token columnToken, PRUnichar**);
 
 	// helper functions to put values in cells for the passed-in row
 	nsresult				UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value);
 	nsresult				CharPtrToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, const char *charPtr);
 	nsresult				RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnToken, char **result);
 
-	nsresult				CreateCollationKey(nsString &sourceString, nsString &resultString);
+	nsresult				CreateCollationKey(const PRUnichar* sourceString, PRUnichar **resultString);
 
 	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
 	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);

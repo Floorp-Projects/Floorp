@@ -110,6 +110,8 @@ nsresult createNode(const char*, nsIRDFNode **, nsIRDFService *rdfService);
 //Given a PRUint32, create an nsiIRDFNode.
 nsresult createNode(PRUint32 value, nsIRDFNode **node, nsIRDFService *rdfService);
 
+nsresult createNode(const PRUnichar *str, nsIRDFNode **, nsIRDFService *rdfService);
+
 //Given a PRTime create an nsIRDFNode that is really a date literal.
 nsresult createDateNode(PRTime time, nsIRDFNode **node, nsIRDFService *rdfService);
 

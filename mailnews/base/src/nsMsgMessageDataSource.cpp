@@ -294,7 +294,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTarget(nsIRDFResource* source,
 }
 
 //sender is the string we need to parse.  senderuserName is the parsed user name we get back.
-nsresult nsMsgMessageDataSource::GetSenderName(nsAutoString& sender, nsAutoString *senderUserName)
+nsresult nsMsgMessageDataSource::GetSenderName(const PRUnichar *sender, nsAutoString *senderUserName)
 {
 	//XXXOnce we get the csid, use Intl version
 	nsresult rv = NS_OK;
@@ -302,7 +302,8 @@ nsresult nsMsgMessageDataSource::GetSenderName(nsAutoString& sender, nsAutoStrin
 	{
 
 		char *name;
-		char *senderUTF8 = sender.ToNewUTF8String();
+    nsAutoString senderStr(sender);
+		char *senderUTF8 = senderStr.ToNewUTF8String();
 		if(!senderUTF8)
 			return NS_ERROR_FAILURE;
 
@@ -899,14 +900,14 @@ nsMsgMessageDataSource::createMessageNameNode(nsIMessage *message,
                                              nsIRDFNode **target)
 {
   nsresult rv = NS_OK;
-  nsAutoString subject;
+  nsXPIDLString subject;
   if(sort)
 	{
-      rv = message->GetSubjectCollationKey(&subject);
+      rv = message->GetSubjectCollationKey(getter_Copies(subject));
 	}
   else
 	{
-      rv = message->GetMime2DecodedSubject(&subject);
+      rv = message->GetMime2DecodedSubject(getter_Copies(subject));
 			if(NS_FAILED(rv))
 				return rv;
       PRUint32 flags;
@@ -915,7 +916,7 @@ nsMsgMessageDataSource::createMessageNameNode(nsIMessage *message,
 			{
 					nsAutoString reStr="Re: ";
 					reStr +=subject;
-					subject = reStr;
+					*getter_Copies(subject) = nsXPIDLString::Copy(reStr.GetUnicode());
 			}
 	}
 	if(NS_SUCCEEDED(rv))
@@ -930,16 +931,17 @@ nsMsgMessageDataSource::createMessageSenderNode(nsIMessage *message,
                                                nsIRDFNode **target)
 {
   nsresult rv = NS_OK;
-  nsAutoString sender, senderUserName;
+  nsXPIDLString sender;
+  nsAutoString senderUserName;
   if(sort)
 	{
-      rv = message->GetAuthorCollationKey(&sender);
+      rv = message->GetAuthorCollationKey(getter_Copies(sender));
 			if(NS_SUCCEEDED(rv))
 	      rv = createNode(sender, target, getRDFService());
 	}
   else
 	{
-      rv = message->GetMime2DecodedAuthor(&sender);
+      rv = message->GetMime2DecodedAuthor(getter_Copies(sender));
       if(NS_SUCCEEDED(rv))
 				 rv = GetSenderName(sender, &senderUserName);
 			if(NS_SUCCEEDED(rv))
@@ -1291,6 +1293,7 @@ PRBool nsMsgMessageDataSource::IsThreadsFirstMessage(nsIMsgThread *thread, nsIMe
 	rv = thread->GetRootHdr(nsnull, getter_AddRefs(firstHdr));
 	if(NS_FAILED(rv))
 		return PR_FALSE;
+  NS_ASSERTION(firstHdr, "Failed to get root header!");
 
 	nsMsgKey messageKey, firstHdrKey;
 

@@ -80,6 +80,18 @@ peqSort(nsIRDFResource* r1, nsIRDFResource* r2)
 	return peqWithParameter(r1, r2, "sort=true");
 }
 
+nsresult createNode(const PRUnichar *str, nsIRDFNode **node, nsIRDFService *rdfService)
+{
+  nsresult rv;
+  nsCOMPtr<nsIRDFLiteral> value;
+  rv = rdfService->GetLiteral(str, getter_AddRefs(value));
+  if (NS_SUCCEEDED(rv)) {
+    *node = value;
+    NS_IF_ADDREF(*node);
+  }
+  return rv;
+}
+
 nsresult createNode(nsString& str, nsIRDFNode **node, nsIRDFService *rdfService)
 {
 	*node = nsnull;

@@ -45,7 +45,6 @@
 #include "nsIMsgCompFields.h"
 #include "nsMsgCompCID.h"
 #include "nsIMsgComposeService.h"
-#include "nsIMsgCompose.h"
 #include "nsMsgI18N.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIMsgMessageService.h"

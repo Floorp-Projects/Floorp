@@ -112,7 +112,7 @@ public:
 
 protected:
 
-	nsresult  GetSenderName(nsAutoString& sender, nsAutoString *senderUserName);
+	nsresult  GetSenderName(const PRUnichar *sender, nsAutoString *senderUserName);
 
 	nsresult createMessageNode(nsIMessage *message, nsIRDFResource *property,
 							 nsIRDFNode **target);

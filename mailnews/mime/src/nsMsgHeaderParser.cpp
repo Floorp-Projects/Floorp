@@ -22,6 +22,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
+#include "nsXPIDLString.h"
 #include "nsMsgHeaderParser.h"
 #include "nsISimpleEnumerator.h"	 
 #include "comi18n.h"
@@ -105,30 +106,28 @@ NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(PRUnichar ** aAddress, 
   // *yuck* the mime converter interface is requiring us to pass in nsStrings which is forcing
   // all this extra string copying...we need to fix the interface!
   nsAutoString charset ("UTF-8");
-  nsAutoString unicodeValue;
+  nsXPIDLString unicodeValue;
   nsAutoString value;
   if (aAddress)
   {
     value = mCurrentAddress;
-    rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, unicodeValue);
-    *aAddress = unicodeValue.ToNewUnicode(); 
+    rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, aAddress);
   }
   if (aName)
   {
     value = mCurrentName;
-    rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, unicodeValue);
-    *aName = unicodeValue.ToNewUnicode();
+    rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, aName);
   }
   if (aFullAddress)
   {
-    char * fullAddress;
-    rv = mHeaderParser->MakeFullAddress("UTF-8", mCurrentName, mCurrentAddress, &fullAddress);
-    if (NS_SUCCEEDED(rv) && fullAddress)
+    nsXPIDLCString fullAddress;
+    rv = mHeaderParser->MakeFullAddress("UTF-8", mCurrentName,
+                                        mCurrentAddress,
+                                        getter_Copies(fullAddress));
+    if (NS_SUCCEEDED(rv) && (const char*)fullAddress)
     {
       value = fullAddress;
-      rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, unicodeValue);
-      *aFullAddress = unicodeValue.ToNewUnicode();
-      nsCRT::free(fullAddress);
+      rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, aFullAddress);
     }
 
   }

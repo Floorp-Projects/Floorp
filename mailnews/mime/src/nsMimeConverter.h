@@ -59,7 +59,7 @@ public:
   // OBSOLESCENT Decode routine (also converts output to unicode)
   NS_IMETHOD DecodeMimePartIIStr(const nsString& header, 
                                  nsString& charset, 
-                                 nsString& decodedString,
+                                 PRUnichar **decodedString,
 								 PRBool eatContinuations = PR_TRUE);
   // Encode routine
   NS_IMETHOD EncodeMimePartIIStr(const char    *header, 

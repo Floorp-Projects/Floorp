@@ -25,9 +25,17 @@
 #include "nsMessage.h"
 #include "nsIMsgFolder.h"
 
+// temp dependancy on RDF
+#include "nsRDFCID.h"
+#include "nsIRDFService.h"
+
+static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 nsMessage::nsMessage(void)
-  : nsRDFResource(), mFolder(nsnull)
+  : nsRDFResource(),
+    mFolder(nsnull),
+    mMsgKey(0),
+    mMsgKeyValid(PR_FALSE)
 {
 
 }
@@ -259,7 +267,7 @@ NS_IMETHODIMP nsMessage::GetMessageId(char **resultMessageId)
 }
 
 
-NS_IMETHODIMP nsMessage::GetMime2DecodedAuthor(nsString *resultAuthor)
+NS_IMETHODIMP nsMessage::GetMime2DecodedAuthor(PRUnichar **resultAuthor)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetMime2DecodedAuthor(resultAuthor);
@@ -267,7 +275,7 @@ NS_IMETHODIMP nsMessage::GetMime2DecodedAuthor(nsString *resultAuthor)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetMime2DecodedSubject(nsString *resultSubject)
+NS_IMETHODIMP nsMessage::GetMime2DecodedSubject(PRUnichar* *resultSubject)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetMime2DecodedSubject(resultSubject);
@@ -275,7 +283,7 @@ NS_IMETHODIMP nsMessage::GetMime2DecodedSubject(nsString *resultSubject)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetMime2DecodedRecipients(nsString *resultRecipients)
+NS_IMETHODIMP nsMessage::GetMime2DecodedRecipients(PRUnichar* *resultRecipients)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetMime2DecodedRecipients(resultRecipients);
@@ -284,7 +292,7 @@ NS_IMETHODIMP nsMessage::GetMime2DecodedRecipients(nsString *resultRecipients)
 }
 
 
-NS_IMETHODIMP nsMessage::GetAuthorCollationKey(nsString *resultAuthor)
+NS_IMETHODIMP nsMessage::GetAuthorCollationKey(PRUnichar* *resultAuthor)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetAuthorCollationKey(resultAuthor);
@@ -292,7 +300,7 @@ NS_IMETHODIMP nsMessage::GetAuthorCollationKey(nsString *resultAuthor)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetSubjectCollationKey(nsString *resultSubject)
+NS_IMETHODIMP nsMessage::GetSubjectCollationKey(PRUnichar* *resultSubject)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetSubjectCollationKey(resultSubject);
@@ -300,7 +308,7 @@ NS_IMETHODIMP nsMessage::GetSubjectCollationKey(nsString *resultSubject)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetRecipientsCollationKey(nsString *resultRecipients)
+NS_IMETHODIMP nsMessage::GetRecipientsCollationKey(PRUnichar* *resultRecipients)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetRecipientsCollationKey(resultRecipients);
@@ -494,13 +502,38 @@ NS_IMETHODIMP nsMessage::GetMsgFolder(nsIMsgFolder **aFolder)
   nsresult rv;
 	nsCOMPtr<nsIMsgFolder> folder = do_QueryReferent(mFolder, &rv);
 
-  if (*aFolder) {
-    *aFolder = folder;
-    NS_ADDREF(*aFolder);
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
+  if (!folder) {
+    // quick hack to determine the msgfolder
+    nsCAutoString folderURI(mURI);
+
+    // get rid of _message from schema (what a hack)
+    PRInt32 messageStart = folderURI.Find("_message");
+    if (messageStart)
+      folderURI.Cut(messageStart, nsCRT::strlen("_message"));
+
+    // chop # off the end
+    PRInt32 folderEnd = folderURI.FindChar('#');
+    if (folderEnd>0)
+      folderURI.Truncate(folderEnd);
+
+    // now go through RDF
+    nsCOMPtr<nsIRDFService> rdfService =
+      do_GetService(kRDFServiceCID, &rv);
+    nsCOMPtr<nsIRDFResource> folderResource;
+    rv = rdfService->GetResource((const char*)folderURI,
+                                 getter_AddRefs(folderResource));
+    NS_ENSURE_SUCCESS(rv, rv);
+      
+    folder = do_QueryInterface(folderResource, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    SetMsgFolder(folder);
+  }
+  
+  *aFolder = folder;
+  NS_IF_ADDREF(*aFolder);
+
+  return NS_OK;
 }
 
 
@@ -532,6 +565,11 @@ NS_IMETHODIMP nsMessage::GetMsgDBHdr(nsIMsgDBHdr **hdr)
 NS_IMETHODIMP nsMessage::GetMsgKey(nsMsgKey *aMsgKey)
 {
   nsCAutoString uriStr(mURI);
+  if (mMsgKeyValid) {
+    *aMsgKey = mMsgKey;
+    return NS_OK;
+  }
+    
 
 	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
@@ -546,7 +584,11 @@ NS_IMETHODIMP nsMessage::GetMsgKey(nsMsgKey *aMsgKey)
         uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
     
 		PRInt32 errorCode;
-		*aMsgKey = keyStr.ToInteger(&errorCode);
+		mMsgKey = keyStr.ToInteger(&errorCode);
+
+    if (NS_SUCCEEDED(errorCode))
+      mMsgKeyValid=PR_TRUE;
+    *aMsgKey = mMsgKey;
     return (nsresult)errorCode;
 	}
 

@@ -28,6 +28,7 @@
 #include "nsMsgHeaderMasks.h"
 #include "nsIMsgCompFields.h"
 #include "nsMsgZapIt.h"
+#include "xp_core.h"
 #include "msgcom.h"
 #include "rosetta_mailnews.h"
 

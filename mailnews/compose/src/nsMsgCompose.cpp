@@ -152,7 +152,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 nsresult
 TranslateLineEndings(nsString &aString)
 {
-  PRUnichar   *transBuf = nsnull;
 
   // First, do sanity checking...if aString doesn't have
   // any CR's, then there is no reason to call this rest
@@ -1130,7 +1129,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
   if (originalMsg && !quoteHeaders)
   {
     nsresult rv;
-    nsAutoString author;
+    nsXPIDLString author;
 
     // Setup the cite information....
     char    *msgID = nsnull;
@@ -1140,7 +1139,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
       PR_FREEIF(msgID);
     }
 
-    rv = originalMsg->GetMime2DecodedAuthor(&author);
+    rv = originalMsg->GetMime2DecodedAuthor(getter_Copies(author));
     if (NS_SUCCEEDED(rv))
     {
       char * authorName = nsnull;
@@ -1150,19 +1149,20 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
       {
         nsAutoString aCharset(msgCompHeaderInternalCharset());
         char * utf8Author = nsnull;
-        rv = ConvertFromUnicode(aCharset, author, &utf8Author);
+        nsAutoString authorStr(author);
+        rv = ConvertFromUnicode(aCharset, authorStr, &utf8Author);
         if (NS_SUCCEEDED(rv) && utf8Author)
         {
           rv = parser->ExtractHeaderAddressName(nsCAutoString(aCharset), utf8Author, &authorName);
           if (NS_SUCCEEDED(rv))
-            rv = ConvertToUnicode(aCharset, authorName, author);
+            rv = ConvertToUnicode(aCharset, authorName, authorStr);
         }
         
         if (!utf8Author || NS_FAILED(rv))
         {
           rv = parser->ExtractHeaderAddressName(nsnull, nsCAutoString(author), &authorName);
           if (NS_SUCCEEDED(rv))
-            author = authorName;
+            authorStr = authorName;
         }
         if (NS_SUCCEEDED(rv))
         {

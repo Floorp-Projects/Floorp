@@ -87,7 +87,7 @@ nsMimeConverter::DecodeMimePartIIStr(const nsCString& header,
 nsresult 
 nsMimeConverter::DecodeMimePartIIStr(const nsString& header, 
                                            nsString& charset, 
-                                           nsString& decodedString,
+                                           PRUnichar **decodedString,
                                      PRBool eatContinuations)
 {
   char charsetCstr[kMAX_CSNAME+1];
@@ -102,16 +102,20 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
   if (nsnull == decodedCstr) {
     // no decode needed and no default charset was specified
     if (*charsetCstr == '\0') {
-      decodedString = header;
+      *decodedString = header.ToNewUnicode();
     }
     else {
       // no MIME encoded, convert default charset to unicode
-      res = ConvertToUnicode(charset, encodedStr, decodedString);
+      nsAutoString decodedStr;
+      res = ConvertToUnicode(charset, encodedStr, decodedStr);
+      *decodedString = decodedStr.ToNewUnicode();
     }
   }
   else {
     // convert MIME charset to unicode
-    res = ConvertToUnicode(nsAutoString(charsetCstr), (const char *) decodedCstr, decodedString);
+    nsAutoString decodedStr;
+    res = ConvertToUnicode(nsAutoString(charsetCstr), (const char *) decodedCstr, decodedStr);
+    *decodedString = decodedStr.ToNewUnicode();
     PR_FREEIF(decodedCstr);
   }
   return res;

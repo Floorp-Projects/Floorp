@@ -498,7 +498,7 @@ nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, 
 
 	// Now, we have to loop until we find a filename that doesn't already
 	// exist on the disk
-	PRBool nameSpaceExhausted = FALSE;
+	PRBool nameSpaceExhausted = PR_FALSE;
 	nsXPIDLCString leafName;
 	
 	path.SetLeafName(mangledLeaf.GetBuffer());

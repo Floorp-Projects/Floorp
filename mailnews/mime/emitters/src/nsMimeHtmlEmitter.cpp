@@ -176,8 +176,7 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
   // and broadcast them to the header sink. However, we need to 
   // convert our UTF-8 header values into unicode before 
   // broadcasting them....
-  nsAutoString unicodeHeaderValue;
-  nsAutoString headerValue;
+  nsXPIDLString unicodeHeaderValue;
   nsAutoString charset ("UTF-8");
 
   for (PRInt32 i=0; i<mHeaderArray->Count(); i++)
@@ -189,15 +188,17 @@ nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
 
     if (headerSink)
     {
-        headerValue = headerInfo->value;
         // this interface for DecodeMimePartIIStr requires us to pass in nsStrings by reference
         // we should remove the nsString requirements from the interface....
         if (mUnicodeConverter)
-  			  rv = mUnicodeConverter->DecodeMimePartIIStr(headerValue, charset, unicodeHeaderValue);
-        else
-          unicodeHeaderValue = headerValue; 
+  			  rv = mUnicodeConverter->DecodeMimePartIIStr(headerInfo->value, charset, getter_Copies(unicodeHeaderValue));
+        else {
+          nsAutoString headerValue(headerInfo->value);
+          *getter_Copies(unicodeHeaderValue) =
+            nsXPIDLString::Copy(headerValue.GetUnicode());
+        }
         if (NS_SUCCEEDED(rv))
-          headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue.GetUnicode());
+          headerSink->HandleHeader(headerInfo->name, unicodeHeaderValue);
     }
   }
 
@@ -232,17 +233,20 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
 
     // we need to convert the attachment name from UTF-8 to unicode before
     // we emit it...
-    nsAutoString unicodeHeaderValue;
-    nsAutoString attachmentName (name);
+    nsXPIDLString unicodeHeaderValue;
     nsAutoString charset ("UTF-8");
   
     if (mUnicodeConverter)
-  	  rv = mUnicodeConverter->DecodeMimePartIIStr(attachmentName, charset, unicodeHeaderValue);
-    else
-      unicodeHeaderValue = attachmentName; 
+  	  rv = mUnicodeConverter->DecodeMimePartIIStr(name, charset,
+                                                  getter_Copies(unicodeHeaderValue));
+    else {
+      nsAutoString attachmentName (name);
+      *getter_Copies(unicodeHeaderValue) =
+        nsXPIDLString::Copy(attachmentName.GetUnicode());
+    }
 
     if (NS_SUCCEEDED(rv))
-      headerSink->HandleAttachment(escapedUrl, unicodeHeaderValue.GetUnicode(), uriString);
+      headerSink->HandleAttachment(escapedUrl, unicodeHeaderValue, uriString);
     nsCRT::free(escapedUrl);
     mSkipAttachment = PR_TRUE;
   }

@@ -22,6 +22,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 #include "stdio.h"
 #include "nsMimeBaseEmitter.h"
 #include "nsMailHeaders.h"
@@ -42,6 +43,7 @@
 #include "nsIMimeStreamConverter.h"
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
+#include "prlog.h"
 
 static PRLogModuleInfo * gMimeEmitterLogModule = nsnull;
 
@@ -587,20 +589,16 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
 
   if ( (mUnicodeConverter) && (mFormat != nsMimeOutput::nsMimeMessageSaveAs) )
   {
-    nsAutoString  unicodeHeaderValue;
-    nsAutoString  charset ("UTF-8");
-    char          *tValue = nsnull;
+    nsXPIDLCString tValue;
 
     // we're going to need a converter to convert
-    nsresult rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, unicodeHeaderValue);
+    nsresult rv = mUnicodeConverter->DecodeMimePartIIStr(value, "UTF-8", getter_Copies(tValue));
     if (NS_SUCCEEDED(rv))
     {
-      tValue = unicodeHeaderValue.ToNewCString();
       if (!tValue)
         return NS_OK;
 
       newValue = nsEscapeHTML(tValue);
-      PR_FREEIF(tValue);
     }
   }
   else

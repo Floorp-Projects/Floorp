@@ -54,6 +54,8 @@ protected:
 
 private:
   nsWeakPtr mFolder;
+  nsMsgKey mMsgKey;
+  PRBool mMsgKeyValid;
 };
 
 #endif //nsMessage_h__
