@@ -1269,29 +1269,24 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
     }
   }
 
-  nsIPresShell *shell = presContext->GetPresShell();
-  nsIDocument *document = nsnull;
-  if (shell)
-    document = shell->GetDocument();
+  nsIScrollableFrame *scrollable;
+  CallQueryInterface(mOuter, &scrollable);
 
-  // create horizontal scrollbar
-  if (!document) {
+  ScrollbarStyles styles = scrollable->GetScrollbarStyles();
+  PRBool canHaveHorizontal = styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
+  PRBool canHaveVertical = styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN;
+  if (!canHaveHorizontal && !canHaveVertical)
+    // Nothing to do.
     return;
-  }
 
-  nsNodeInfoManager *nodeInfoManager = document->NodeInfoManager();
-
+  nsNodeInfoManager *nodeInfoManager =
+    presContext->GetDocument()->NodeInfoManager();
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nodeInfoManager->GetNodeInfo(nsXULAtoms::scrollbar, nsnull,
                                kNameSpaceID_XUL, getter_AddRefs(nodeInfo));
 
   nsCOMPtr<nsIContent> content;
 
-  nsCOMPtr<nsIScrollableFrame> scrollable =
-    do_QueryInterface(NS_STATIC_CAST(nsIFrame*, mOuter));
-  ScrollbarStyles styles = scrollable->GetScrollbarStyles();
-  PRBool canHaveHorizontal = styles.mHorizontal == NS_STYLE_OVERFLOW_AUTO
-    || styles.mHorizontal == NS_STYLE_OVERFLOW_SCROLL;
   if (canHaveHorizontal) {
     NS_NewElement(getter_AddRefs(content), kNameSpaceID_XUL, nodeInfo);
     content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
@@ -1299,8 +1294,6 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsISupportsArray& aAnonymousChildr
     aAnonymousChildren.AppendElement(content);
   }
 
-  PRBool canHaveVertical = styles.mVertical == NS_STYLE_OVERFLOW_AUTO
-    || styles.mVertical == NS_STYLE_OVERFLOW_SCROLL;
   if (canHaveVertical) {
     NS_NewElement(getter_AddRefs(content), kNameSpaceID_XUL, nodeInfo);
     content->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
@@ -1746,8 +1739,8 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
    (if we're the viewport and we added or removed a scrollbar).
    **************/
 
-  nsCOMPtr<nsIScrollableFrame> scrollableFrame =
-    do_QueryInterface(NS_STATIC_CAST(nsIFrame*, mOuter));
+  nsIScrollableFrame *scrollableFrame;
+  CallQueryInterface(mOuter, &scrollableFrame);
   ScrollbarStyles styles = scrollableFrame->GetScrollbarStyles();
 
   // Look at our style do we always have vertical or horizontal scrollbars?
