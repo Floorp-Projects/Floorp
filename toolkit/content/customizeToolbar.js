@@ -31,6 +31,7 @@ var gToolboxDocument = null;
 var gToolbox = null;
 var gCurrentDragOverItem = null;
 var gToolboxChanged = false;
+var gToolboxIconSize = false;
 
 function onLoad()
 {
@@ -71,12 +72,12 @@ function initDialog()
   
   var mode = gToolbox.getAttribute("mode");
   document.getElementById("modelist").value = mode;
-  var iconSize = gToolbox.getAttribute("iconsize");
+  gToolboxIconSize = gToolbox.getAttribute("iconsize");
   var smallIconsCheckbox = document.getElementById("smallicons");
   if (mode == "text")
     smallIconsCheckbox.disabled = true;
   else
-    smallIconsCheckbox.checked = iconSize == "small"; 
+    smallIconsCheckbox.checked = gToolboxIconSize == "small"; 
 
   // Build up the palette of other items.
   buildPalette();
@@ -586,15 +587,15 @@ function restoreDefaultSet()
 
 function updateIconSize(aUseSmallIcons)
 {
-  var val = aUseSmallIcons ? "small" : null;
+  gToolboxIconSize = aUseSmallIcons ? "small" : null;
   
-  setAttribute(gToolbox, "iconsize", val);
+  setAttribute(gToolbox, "iconsize", gToolboxIconSize);
   gToolboxDocument.persist(gToolbox.id, "iconsize");
   
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
     var toolbar = getToolbarAt(i);
     if (isCustomizableToolbar(toolbar)) {
-      setAttribute(toolbar, "iconsize", val);
+      setAttribute(toolbar, "iconsize", gToolboxIconSize);
       gToolboxDocument.persist(toolbar.id, "iconsize");
     }
   }
@@ -619,10 +620,10 @@ function updateToolbarMode(aModeValue)
   if (aModeValue == "text") {
     iconSizeCheckbox.disabled = true;
     iconSizeCheckbox.checked = false;
-    updateIconSize(false);
   }
   else {
     iconSizeCheckbox.disabled = false;
+    iconSizeCheckbox.checked = gToolboxIconSize;
   }
 
   repositionDialog();
