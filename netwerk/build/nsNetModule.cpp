@@ -140,8 +140,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerTee)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef NECKO_COOKIES
 #include "nsCookieService.h"
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCookieService, nsCookieService::GetSingleton)
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // protocols
@@ -1036,6 +1038,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
        nsCacheService::Create
     },
 
+#ifdef NECKO_COOKIES
     { NS_COOKIEMANAGER_CLASSNAME,
       NS_COOKIEMANAGER_CID,
       NS_COOKIEMANAGER_CONTRACTID,
@@ -1047,6 +1050,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_COOKIESERVICE_CONTRACTID,
       nsCookieServiceConstructor
     },
+#endif
 
 };
 
