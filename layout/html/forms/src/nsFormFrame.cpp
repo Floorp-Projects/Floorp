@@ -907,7 +907,7 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       postBuffer.AssignWithConversion(data);
 
       if (isURLEncoded) {
-        rv = NS_NewPostDataStream(&postDataStream, !isURLEncoded, postBuffer.GetBuffer(), 0);
+        rv = NS_NewPostDataStream(&postDataStream, !isURLEncoded, postBuffer.get(), 0);
       } else {
 // Cut-and-paste of NS_NewPostDataStream
         NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);

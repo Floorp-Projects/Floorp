@@ -2134,8 +2134,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 				if (eTagValue.Length() > 0)
 				{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-					const char *eTagVal = eTagValue.GetBuffer();
-					printf("eTag: '%s'\n", eTagVal);
+					printf("eTag: '%s'\n", eTagValue.get());
 #endif
 					nsAutoString		eTagStr;
 					nsCOMPtr<nsIRDFNode>	currentETagNode;
@@ -2179,8 +2178,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 		if ((changedFlag == PR_FALSE) && (lastModValue.Length() > 0))
 		{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-			const char *lastModVal = lastModValue.GetBuffer();
-			printf("Last-Modified: '%s'\n", lastModVal);
+			printf("Last-Modified: '%s'\n", lastModValue.get());
 #endif
 			nsAutoString		lastModStr;
 			nsCOMPtr<nsIRDFNode>	currentLastModNode;
@@ -2222,8 +2220,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 		if ((changedFlag == PR_FALSE) && (contentLengthValue.Length() > 0))
 		{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-			const char *contentLengthVal = contentLengthValue.GetBuffer();
-			printf("Content-Length: '%s'\n", contentLengthVal);
+			printf("Content-Length: '%s'\n", contentLengthValue.get());
 #endif
 			nsAutoString		contentLenStr;
 			nsCOMPtr<nsIRDFNode>	currentContentLengthNode;

@@ -152,7 +152,7 @@ nsStreamConverterService::BuildGraph() {
         actualContractID.Append(name);
 
         // now we've got the CONTRACTID, let's parse it up.
-        rv = AddAdjacency(actualContractID.GetBuffer());
+        rv = AddAdjacency(actualContractID.get());
 
         // cleanup
         nsCRT::free(name);
@@ -185,9 +185,9 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     // each MIME-type is represented as a key in our hashtable.
 
     PRBool delFrom = PR_TRUE, delTo = PR_TRUE;
-    nsCStringKey *fromKey = new nsCStringKey(fromStr.GetBuffer());
+    nsCStringKey *fromKey = new nsCStringKey(fromStr);
     if (!fromKey) return NS_ERROR_OUT_OF_MEMORY;
-    nsCStringKey *toKey = new nsCStringKey(toStr.GetBuffer());
+    nsCStringKey *toKey = new nsCStringKey(toStr);
     if (!toKey) {
         delete fromKey;
         return NS_ERROR_OUT_OF_MEMORY;
@@ -204,7 +204,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
         }
         data->key = fromKey;
         delFrom = PR_FALSE;
-        data->keyString = new nsCString(fromStr.GetBuffer());
+        data->keyString = new nsCString(fromStr);
         if (!data->keyString) {
             delete fromKey;
             delete toKey;
@@ -233,7 +233,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
         }
         data->key = toKey;
         delTo = PR_FALSE;
-        data->keyString = new nsCString(toStr.GetBuffer());
+        data->keyString = new nsCString(toStr);
         if (!data->keyString) {
             delete fromKey;
             delete toKey;
@@ -260,7 +260,7 @@ nsStreamConverterService::AddAdjacency(const char *aContractID) {
     if (delFrom)
         delete fromKey;
     NS_ASSERTION(edges, "something wrong in adjacency list construction");
-    const char *toCStr = toStr.GetBuffer();
+    const char *toCStr = toStr.get();
     nsIAtom *vertex = NS_NewAtom(toCStr); 
     if (!vertex) return NS_ERROR_OUT_OF_MEMORY;
     nsVoidArray *adjacencyList = (nsVoidArray*)edges->data;
@@ -355,7 +355,7 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
     rv = ParseFromTo(aContractID, fromC, toC);
     if (NS_FAILED(rv)) return rv;
 
-    nsCStringKey *source = new nsCStringKey(fromC.GetBuffer());
+    nsCStringKey *source = new nsCStringKey(fromC);
     if (!source) return NS_ERROR_OUT_OF_MEMORY;
 
     SCTableData *data = (SCTableData*)lBFSTable.Get(source);
@@ -456,10 +456,10 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsCStringArray 
         nsCString *newContractID = new nsCString(ContractIDPrefix);
         newContractID->Append("?from=");
 
-        newContractID->Append(predecessorData->keyString->GetBuffer());
+        newContractID->Append(*predecessorData->keyString);
 
         newContractID->Append("&to=");
-        newContractID->Append(data->keyString->GetBuffer());
+        newContractID->Append(*data->keyString);
     
         // Add this CONTRACTID to the chain.
         rv = shortestPath->AppendCString(*newContractID) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
@@ -494,7 +494,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
     contractID.AppendWithConversion(aFromType);
     contractID.Append("&to=");
     contractID.AppendWithConversion(aToType);
-    const char *cContractID = contractID.GetBuffer();
+    const char *cContractID = contractID.get();
 
     nsIComponentManager *comMgr;
     rv = NS_GetGlobalComponentManager(&comMgr);
@@ -534,7 +534,7 @@ nsStreamConverterService::Convert(nsIInputStream *aFromStream,
                 delete converterChain;
                 return NS_ERROR_FAILURE;
             }
-            const char *lContractID = contractIDStr->GetBuffer();
+            const char *lContractID = contractIDStr->get();
 
             rv = comMgr->CreateInstanceByContractID(lContractID, nsnull,
                                                 NS_GET_IID(nsIStreamConverter),
@@ -608,7 +608,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
     contractID.AppendWithConversion(aFromType);
     contractID.Append("&to=");
     contractID.AppendWithConversion(aToType);
-    const char *cContractID = contractID.GetBuffer();
+    const char *cContractID = contractID.get();
 
     nsIComponentManager *comMgr;
     rv = NS_GetGlobalComponentManager(&comMgr);
@@ -647,7 +647,7 @@ nsStreamConverterService::AsyncConvertData(const PRUnichar *aFromType,
                 delete converterChain;
                 return NS_ERROR_FAILURE;
             }
-            const char *lContractID = contractIDStr->GetBuffer();
+            const char *lContractID = contractIDStr->get();
 
             nsCOMPtr<nsIStreamConverter> converter;
             rv = comMgr->CreateInstanceByContractID(lContractID, nsnull,

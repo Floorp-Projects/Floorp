@@ -78,7 +78,7 @@ public:
   // ISupports interface...
   NS_DECL_ISUPPORTS
 
-  const char* Name() { return mURLString.GetBuffer(); }
+  const char* Name() { return mURLString.get(); }
   PRInt32   mBytesRead;
   PRTime    mTotalTime;
   PRTime    mConnectTime;
@@ -167,7 +167,7 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
                 key->ToString(field);
                 nsCAutoString theField;
                 theField.AssignWithConversion(field);
-                printf("\t%s: ", theField.GetBuffer());
+                printf("\t%s: ", theField.get());
 
                 header->GetValue(getter_Copies(value));
                 printf("%s\n", (const char*)value);
@@ -195,7 +195,7 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
                 key->ToString(field);
                 nsCAutoString theField;
                 theField.AssignWithConversion(field);
-                printf("\t%s: ", theField.GetBuffer());
+                printf("\t%s: ", theField.get());
 
                 header->GetValue(getter_Copies(value));
                 printf("%s\n", (const char*)value);
@@ -587,8 +587,8 @@ nsresult LoadURLsFromFile(char *aFileName)
 
                 urlString.StripChars("\r");
                 if (urlString.Length()) {
-                    printf("\t%s\n", urlString.GetBuffer());
-                    rv = StartLoadingURL(urlString.GetBuffer());
+                    printf("\t%s\n", urlString.get());
+                    rv = StartLoadingURL(urlString.get());
                 }
             }
         }
@@ -597,8 +597,8 @@ nsresult LoadURLsFromFile(char *aFileName)
     // If anything is left in the fileBuffer, treat it as a URL...
     fileBuffer.StripChars("\r");
     if (fileBuffer.Length()) {
-        printf("\t%s\n", fileBuffer.GetBuffer());
-        StartLoadingURL(fileBuffer.GetBuffer());
+        printf("\t%s\n", fileBuffer.get());
+        StartLoadingURL(fileBuffer.get());
     }
     
     PR_Close(fd);

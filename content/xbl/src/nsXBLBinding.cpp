@@ -1034,7 +1034,7 @@ nsXBLBinding::InstallProperties()
                                         argCount,
                                         (const char**)args,
                                         body, 
-                                        functionUri.GetBuffer(),
+                                        functionUri.get(),
                                         0,
                                         PR_FALSE,
                                         &myFunc);
@@ -1094,7 +1094,7 @@ nsXBLBinding::InstallProperties()
                                           0,
                                           nsnull,
                                           getter, 
-                                          functionUri.GetBuffer(),
+                                          functionUri.get(),
                                           0,
                                           PR_FALSE,
                                           &getFunc);
@@ -1132,7 +1132,7 @@ nsXBLBinding::InstallProperties()
                                           1,
                                           gPropertyArg,
                                           setter, 
-                                          functionUri.GetBuffer(),
+                                          functionUri.get(),
                                           0,
                                           PR_FALSE,
                                           &setFunc);

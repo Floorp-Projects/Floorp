@@ -1069,7 +1069,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
       if(!retryHost.IsEmpty()) {
         // This seems evil, since it is modifying the original URL
-        rv = url->SetHost(retryHost.GetBuffer());
+        rv = url->SetHost(retryHost.get());
         if (NS_FAILED(rv)) return rv;
         
         rv = url->GetSpec(getter_Copies(host));
@@ -1141,7 +1141,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         combo.AppendInt(port);
       }
       
-      PRUnichar *msg = nsTextFormatter::smprintf(messageStr, combo.GetBuffer());
+      PRUnichar *msg = nsTextFormatter::smprintf(messageStr, combo.get());
       if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
       prompter->Alert(nsnull, msg);

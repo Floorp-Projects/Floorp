@@ -649,7 +649,7 @@ HDC   ps = NULL;
     name.AppendWithConversion(*mGeneric);
     name.Append('.');
     name.Append(USER_DEFINED);
-    gPref->CopyUnicharPref(name.GetBuffer(), &value);
+    gPref->CopyUnicharPref(name.get(), &value);
     if (value) {
       mUserDefined = value;
       nsMemory::Free(value);

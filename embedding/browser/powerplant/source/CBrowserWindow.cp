@@ -418,7 +418,7 @@ Boolean CBrowserWindow::ObeyCommand(CommandT			inCommand,
 										&getURLEvent);
                 ThrowIfOSErr_(err);
         		
-        		StAEDescriptor urlDesc(typeChar, urlSpec.GetBuffer(), urlSpec.Length());
+        		StAEDescriptor urlDesc(typeChar, urlSpec.get(), urlSpec.Length());
         		
         		err = ::AEPutParamDesc(&getURLEvent, keyDirectObject, urlDesc);
         		if (err) {
@@ -573,7 +573,7 @@ NS_METHOD CBrowserWindow::SetStatus(const PRUnichar* aStatus)
 		nsCAutoString cStr;
 		
         CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsLiteralString(aStatus), cStr);
-		mStatusBar->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+		mStatusBar->SetText(const_cast<char *>(cStr.get()), cStr.Length());
    }
    return NS_OK;
 }
@@ -585,7 +585,7 @@ NS_METHOD CBrowserWindow::SetLocation(const nsString& aLocation)
 		nsCAutoString cStr;
 		
         CPlatformUCSConversion::GetInstance()->UCSToPlatform(aLocation, cStr);
-		mURLField->SetText(const_cast<char *>(cStr.GetBuffer()), cStr.Length());
+		mURLField->SetText(const_cast<char *>(cStr.get()), cStr.Length());
 	}
    return NS_OK;
 }

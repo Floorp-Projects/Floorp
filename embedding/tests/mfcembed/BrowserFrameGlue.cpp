@@ -61,7 +61,7 @@ void CBrowserFrame::BrowserFrameGlueObj::UpdateStatusBarText(const PRUnichar *aM
     if(aMessage)
         strStatus.AssignWithConversion(aMessage);
 
-    pThis->m_wndStatusBar.SetPaneText(0, strStatus.GetBuffer());
+    pThis->m_wndStatusBar.SetPaneText(0, strStatus.get());
 }
 
 void CBrowserFrame::BrowserFrameGlueObj::UpdateProgress(PRInt32 aCurrent, PRInt32 aMax)

@@ -391,7 +391,7 @@ void nsHashtable::Reset(nsHashtableEnumFunc destroyFunc, void* closure)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsCStringKey::nsCStringKey(const nsCString& str)
-    : mStr((char*)str.GetBuffer()), mStrLen(str.Length()), mOwnership(OWN_CLONE)
+    : mStr((char*)str.get()), mStrLen(str.Length()), mOwnership(OWN_CLONE)
 {
     NS_ASSERTION(mStr, "null string key");
 #ifdef DEBUG

@@ -448,7 +448,7 @@ nsLog::Print(const PRUnichar *message)
     nsAutoMonitor monitor(gLogMonitor);
 
     nsCString str; str.AssignWithConversion(message);
-    nsresult rv = Printf(str.GetBuffer());
+    nsresult rv = Printf(str.get());
     return rv;
 }
 

@@ -140,7 +140,7 @@ rdf_MakeAbsoluteURI(nsIURI* aURL, nsCString& aURI)
     nsresult rv;
     nsXPIDLCString result;
 
-    rv = NS_MakeAbsoluteURI(getter_Copies(result), aURI.GetBuffer(), aURL);
+    rv = NS_MakeAbsoluteURI(getter_Copies(result), aURI.get(), aURL);
 
     if (NS_SUCCEEDED(rv)) {
         aURI.Assign(result);

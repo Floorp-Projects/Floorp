@@ -334,7 +334,7 @@ nsHTTPRequest::formHeaders(PRUint32 capabilities)
     if (NS_SUCCEEDED(httpHandler->GetUserAgent(getter_Copies(ua))))
     {
         nsCAutoString uaString; uaString.AssignWithConversion(NS_STATIC_CAST(const PRUnichar*, ua));
-        SetHeader(nsHTTPAtoms::User_Agent, uaString.GetBuffer());
+        SetHeader(nsHTTPAtoms::User_Agent, uaString.get());
     }
 
     PRUint32 loadAttributes;
@@ -705,7 +705,7 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
 ("\nnsHTTPRequest::Build() [this=%p].\tWriting Request:\n"
             "=== Start\n%s=== End\n",
-            this, mRequestBuffer.GetBuffer()));
+            this, mRequestBuffer.get()));
 
     //
     // Create a string stream to feed to the socket transport.  This stream
@@ -715,7 +715,7 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
     nsCOMPtr<nsISupports>    result;
     nsCOMPtr<nsIInputStream> stream;
 
-    rv = NS_NewCharInputStream(getter_AddRefs(result), mRequestBuffer.GetBuffer());
+    rv = NS_NewCharInputStream(getter_AddRefs(result), mRequestBuffer.get());
     if (NS_FAILED(rv)) return rv;
 
     stream = do_QueryInterface(result, &rv);

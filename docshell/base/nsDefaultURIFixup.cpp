@@ -130,7 +130,7 @@ nsresult nsDefaultURIFixup::FileURIFixup(const PRUnichar* aStringURI,
         NS_ENSURE_SUCCESS(ConvertStringURIToFileCharset(uriSpecOut, inFSCharset),
         NS_ERROR_FAILURE);
 
-        if(NS_SUCCEEDED(NS_NewURI(aURI, inFSCharset.GetBuffer(), nsnull)))
+        if(NS_SUCCEEDED(NS_NewURI(aURI, inFSCharset.get(), nsnull)))
             return NS_OK;
     } 
     return NS_ERROR_FAILURE;
@@ -201,9 +201,9 @@ nsresult nsDefaultURIFixup::ConvertStringURIToFileCharset(nsString& aIn,
     aOut.SetCapacity(bufLen+1);
     PRInt32 srclen = aIn.Length();
     NS_ENSURE_SUCCESS(fsEncoder->Convert(aIn.GetUnicode(), &srclen, 
-        (char*)aOut.GetBuffer(), &bufLen), NS_ERROR_FAILURE);
+        (char*)aOut.get(), &bufLen), NS_ERROR_FAILURE);
 
-    ((char*)aOut.GetBuffer())[bufLen]='\0';
+    ((char*)aOut.get())[bufLen]='\0';
     aOut.SetLength(bufLen);
 
     return NS_OK;
@@ -248,7 +248,7 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const PRUnichar* aStringURI,
                 if(escapedUTF8Spec) 
                 {
                     keywordSpec.Append(escapedUTF8Spec);
-                    NS_NewURI(aURI, keywordSpec.GetBuffer(), nsnull);
+                    NS_NewURI(aURI, keywordSpec.get(), nsnull);
                     nsMemory::Free(escapedUTF8Spec);
                 } // escapedUTF8Spec
                 nsMemory::Free(utf8Spec);

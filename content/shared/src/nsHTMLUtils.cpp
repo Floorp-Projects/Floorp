@@ -147,7 +147,7 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
     // XXX Unfortunately, we can't escape "in place". Maybe the new string
     // APIs will make that better some day.
     nsXPIDLCString escaped;
-    ioservice->Escape(spec.GetBuffer(), kEscapeConservatively, getter_Copies(escaped));
+    ioservice->Escape(spec.get(), kEscapeConservatively, getter_Copies(escaped));
 
     spec = escaped;
   }

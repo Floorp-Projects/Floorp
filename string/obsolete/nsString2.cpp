@@ -1598,7 +1598,7 @@ void nsString::DebugDump(void) const {
 
   if(eTwoByte==mCharSize) {  
     nsStr::StrAssign(temp, *this, 0, mLength);  
-    theBuffer=temp.GetBuffer();
+    theBuffer=temp.get();
   }
 
   if(theBuffer) {

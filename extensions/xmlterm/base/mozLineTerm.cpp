@@ -383,7 +383,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
   // Convert initInput to CString
   nsCAutoString initCStr;
   initCStr.AssignWithConversion(initInput);
-  XMLT_LOG(mozLineTerm::Open,22, ("initInput=%s\n", initCStr.GetBuffer()));
+  XMLT_LOG(mozLineTerm::Open,22, ("initInput=%s\n", initCStr.get()));
 
   // List of prompt delimiters
   static const PRInt32 PROMPT_DELIMS = 5;
@@ -392,12 +392,12 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
   PR_ASSERT(ucslen(prompt_regexp) == PROMPT_DELIMS);
 
   if (anObserver != nsnull) {
-    result = lterm_open(mLTerm, NULL, cookieCStr, initCStr.GetBuffer(),
+    result = lterm_open(mLTerm, NULL, cookieCStr, initCStr.get(),
                         prompt_regexp, options, processType,
                         nRows, nCols, xPixels, yPixels,
                         mozLineTerm::Callback, (void *) this);
   } else {
-    result = lterm_open(mLTerm, NULL, cookieCStr, initCStr.GetBuffer(),
+    result = lterm_open(mLTerm, NULL, cookieCStr, initCStr.get(),
                         prompt_regexp, options, processType,
                         nRows, nCols, xPixels, yPixels,
                         NULL, NULL);

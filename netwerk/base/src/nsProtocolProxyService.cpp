@@ -225,7 +225,7 @@ nsProtocolProxyService::CanUseProxy(nsIURI* aURI)
             filter_host_len = hp->host->Length();
             if ((host_len >= filter_host_len) && 
                 (0 == PL_strncasecmp(host + host_len - filter_host_len, 
-                                     hp->host->GetBuffer(), filter_host_len)))
+                                     hp->host->get(), filter_host_len)))
                 return PR_FALSE;
         }
     }

@@ -87,7 +87,7 @@ nsDataHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                                             NS_GET_IID(nsIURI),
                                             (void**)&url);
     if (NS_FAILED(rv)) return rv;
-    rv = url->SetSpec(spec.GetBuffer());
+    rv = url->SetSpec(spec.get());
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         return rv;

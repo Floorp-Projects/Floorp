@@ -423,7 +423,7 @@ ConvertAndWrite(nsAReadableString& aString,
 
   nsCAutoString charXferString;
   charXferString.SetCapacity(charLength);
-  char* charXferBuf = (char*)charXferString.GetBuffer();
+  char* charXferBuf = (char*)charXferString.get();
   nsresult convert_rv = NS_OK;
 
   do {
@@ -453,7 +453,7 @@ ConvertAndWrite(nsAReadableString& aString,
       entString.AppendInt(unicodeBuf[unicodeLength - 1]);
       entString.Append(';');
 
-      rv = aStream->Write(entString.GetBuffer(), entString.Length(), &written);
+      rv = aStream->Write(entString.get(), entString.Length(), &written);
       NS_ENSURE_SUCCESS(rv, rv);
 
       unicodeBuf += unicodeLength;

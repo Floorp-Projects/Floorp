@@ -1484,7 +1484,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
     if(ptr) {
       nsCString path(ptr+5);
       path.CompressWhitespace();
-      StrAllocCopy(path_from_header, path.GetBuffer());
+      StrAllocCopy(path_from_header, path.get());
       /* terminate at first space or semi-colon */
       for(ptr=path_from_header; *ptr != '\0'; ptr++) {
         if(COOKIE_IS_SPACE(*ptr) || *ptr == ';' || *ptr == ',') {
@@ -1510,7 +1510,7 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
       /* allocate more than we need */
       nsCString domain(ptr+7);
       domain.CompressWhitespace();
-      StrAllocCopy(domain_from_header, domain.GetBuffer());
+      StrAllocCopy(domain_from_header, domain.get());
 
       /* terminate at first space or semi-colon */
       for(ptr=domain_from_header; *ptr != '\0'; ptr++) {
@@ -1652,12 +1652,12 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
   nsCString cookieHeader(setCookieHeader);
   cookieHeader.CompressWhitespace();
   if(equal) {
-    StrAllocCopy(name_from_header, cookieHeader.GetBuffer());
+    StrAllocCopy(name_from_header, cookieHeader.get());
     nsCString value(equal+1);
     value.CompressWhitespace();
-    StrAllocCopy(cookie_from_header, value.GetBuffer());
+    StrAllocCopy(cookie_from_header, value.get());
   } else {
-    StrAllocCopy(cookie_from_header, cookieHeader.GetBuffer());
+    StrAllocCopy(cookie_from_header, cookieHeader.get());
     StrAllocCopy(name_from_header, "");
   }
 
@@ -1909,7 +1909,7 @@ permission_Save() {
           (permission_TypeStruct*, hostStruct->permissionList->ElementAt(typeIndex));
         strm.write("\t", 1);
         nsCAutoString tmp; tmp.AppendInt(typeStruct->type);
-        strm.write(tmp.GetBuffer(), tmp.Length());
+        strm.write(tmp.get(), tmp.Length());
         if (typeStruct->permission) {
           strm.write("T", 1);
         } else {
@@ -1925,7 +1925,7 @@ permission_Save() {
   for (PRInt32 type = 0; type < NUMBER_OF_PERMISSIONS; type++) {
     strm.write("\t", 1);
     nsCAutoString tmp; tmp.AppendInt(type);
-    strm.write(tmp.GetBuffer(), tmp.Length());
+    strm.write(tmp.get(), tmp.Length());
     if (permission_GetRememberChecked(type)) {
       strm.write("T", 1);
     } else {

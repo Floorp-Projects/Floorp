@@ -1287,7 +1287,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const PRUnichar *aString,
 		PhRect_t      extent;
 
 		NS_ConvertUCS2toUTF8    theUnicodeString (aString, aLength);
-		ret_code = GetWidth(theUnicodeString.GetBuffer(), strlen(theUnicodeString.GetBuffer()), aWidth);
+		ret_code = GetWidth(theUnicodeString.get(), strlen(theUnicodeString.get()), aWidth);
     }
 	if (nsnull != aFontID)
 	  *aFontID = 0;
@@ -1343,7 +1343,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const PRUnichar *aString, PRUin
   	nsresult ret = NS_ERROR_FAILURE;
   	char *str;
 	NS_ConvertUCS2toUTF8    theUnicodeString (aString, aLength);
-	ret = DrawString(theUnicodeString.GetBuffer(), strlen(theUnicodeString.GetBuffer()),
+	ret = DrawString(theUnicodeString.get(), strlen(theUnicodeString.get()),
 		aX, aY, aSpacing);
 	return ret;
 }
@@ -1355,7 +1355,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const nsString& aString,
 {
   	nsresult ret = NS_ERROR_FAILURE;
 	NS_ConvertUCS2toUTF8    theUnicodeString (aString.GetUnicode(), aString.Length());
-	ret = DrawString(theUnicodeString.GetBuffer(), strlen(theUnicodeString.GetBuffer()),
+	ret = DrawString(theUnicodeString.get(), strlen(theUnicodeString.get()),
 			aX, aY, aSpacing);
 	return ret;
 }

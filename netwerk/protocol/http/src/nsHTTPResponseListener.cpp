@@ -422,7 +422,7 @@ nsHTTPServerListener::OnDataAvailable(nsIRequest *request,
     //
 
     if (mSimpleResponse && mHeaderBuffer.Length()) {
-        const char *cp = mHeaderBuffer.GetBuffer();
+        const char *cp = mHeaderBuffer.get();
         nsCOMPtr<nsIByteArrayInputStream> is;
 
         nsresult rv1 = NS_NewByteArrayInputStream(getter_AddRefs(is),
@@ -899,7 +899,7 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIInputStream* in,
     if (bL > 0 && mHeaderBuffer.CharAt(bL - 1) != LF) return NS_OK;
 
     LOG(("\tParseStatusLine [this=%x].\tGot Status-Line:%s\n",
-        this, mHeaderBuffer.GetBuffer()));
+        this, mHeaderBuffer.get()));
 
     //
     // Replace all LWS with single SP characters.  Also remove the CRLF
@@ -980,7 +980,7 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIInputStream* in,
         if ((PRUint32)newlineOffset == mHeaderBuffer.Length())
             return NS_OK;
 
-        const char* buf = mHeaderBuffer.GetBuffer();
+        const char* buf = mHeaderBuffer.get();
         const char charAfterNewline = buf[newlineOffset + 1];
         if ((charAfterNewline != ' ') || (charAfterNewline != '\t'))
             break;
@@ -988,7 +988,7 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIInputStream* in,
     } while (PR_TRUE);
 
     LOG(("\tParseHTTPHeader [this=%x].\tGot header string:%s\n",
-        this, mHeaderBuffer.GetBuffer()));
+        this, mHeaderBuffer.get()));
 
     //
     // Replace all LWS with single SP characters.  And remove all of the CRLF

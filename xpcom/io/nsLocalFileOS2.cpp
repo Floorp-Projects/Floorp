@@ -547,7 +547,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
     // file extension.
 
     char temp[4];
-    const char* workingFilePath = mWorkingPath.GetBuffer();
+    const char* workingFilePath = mWorkingPath.get();
     const char* nsprPath = workingFilePath;
 
     if (mWorkingPath.Length() == 2 && mWorkingPath.CharAt(1) == ':') {
@@ -729,7 +729,7 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
         return rv;  
     
    // create nested directories to target
-    unsigned char* slash = _mbschr((const unsigned char*) mResolvedPath.GetBuffer(), '\\');
+    unsigned char* slash = _mbschr((const unsigned char*) mResolvedPath.get(), '\\');
     // skip the first '\\'
     ++slash;
     slash = _mbschr(slash, '\\');
@@ -817,7 +817,7 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 {
     NS_ENSURE_ARG_POINTER(aLeafName);
 
-    const char* temp = mWorkingPath.GetBuffer();
+    const char* temp = mWorkingPath.get();
     if(temp == nsnull)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
@@ -838,7 +838,7 @@ nsLocalFile::SetLeafName(const char * aLeafName)
 {
     MakeDirty();
     
-    const unsigned char* temp = (const unsigned char*) mWorkingPath.GetBuffer();
+    const unsigned char* temp = (const unsigned char*) mWorkingPath.get();
     if(temp == nsnull)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
@@ -1259,7 +1259,7 @@ nsLocalFile::Delete(PRBool recursive)
     if (NS_FAILED(rv))
         return rv;
 
-    const char *filePath = mResolvedPath.GetBuffer();
+    const char *filePath = mResolvedPath.get();
 
     if (isDir)
     {
@@ -1360,7 +1360,7 @@ nsLocalFile::SetModDate(PRInt64 aLastModificationDate, PRBool resolveTerminal)
     if (NS_FAILED(rv))
         return rv;
     
-    const char *filePath = mResolvedPath.GetBuffer();
+    const char *filePath = mResolvedPath.get();
     
 #ifndef XP_OS2
     HANDLE file = CreateFile(  filePath,          // pointer to name of the file
@@ -1459,7 +1459,7 @@ nsLocalFile::GetPermissions(PRUint32 *aPermissions)
     if (NS_FAILED(rv))
         return rv;
     
-    const char *filePath = mResolvedPath.GetBuffer();
+    const char *filePath = mResolvedPath.get();
 
 
     return NS_OK;
@@ -1480,7 +1480,7 @@ nsLocalFile::SetPermissions(PRUint32 aPermissions)
     if (NS_FAILED(rv))
         return rv;
     
-    const char *filePath = mResolvedPath.GetBuffer();
+    const char *filePath = mResolvedPath.get();
     if( chmod(filePath, aPermissions) == -1 )
         return NS_ERROR_FAILURE;
         
@@ -1495,7 +1495,7 @@ nsLocalFile::SetPermissionsOfLink(PRUint32 aPermissions)
     if (NS_FAILED(rv))
         return rv;
     
-    const char *filePath = mResolvedPath.GetBuffer();
+    const char *filePath = mResolvedPath.get();
     if( chmod(filePath, aPermissions) == -1 )
         return NS_ERROR_FAILURE;
         
@@ -1535,7 +1535,7 @@ nsLocalFile::SetFileSize(PRInt64 aFileSize)
     if (NS_FAILED(rv))
         return rv;
     
-    const char *filePath = mResolvedPath.GetBuffer();
+    const char *filePath = mResolvedPath.get();
 
 
 #ifdef XP_OS2   
@@ -1649,7 +1649,7 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
                                                     fsAllocate.cSectorUnit *
                                                     (ULONG)fsAllocate.cbSector);
 #else   
-    const char *filePath = mResolvedPath.GetBuffer();
+    const char *filePath = mResolvedPath.get();
 
     PRInt64 int64;
     
@@ -1708,15 +1708,15 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     nsCString parentPath = mWorkingPath;
 
     // cannot use nsCString::RFindChar() due to 0x5c problem
-    PRInt32 offset = (PRInt32) (_mbsrchr((const unsigned char *) parentPath.GetBuffer(), '\\')
-                     - (const unsigned char *) parentPath.GetBuffer());
+    PRInt32 offset = (PRInt32) (_mbsrchr((const unsigned char *) parentPath.get(), '\\')
+                     - (const unsigned char *) parentPath.get());
     if (offset < 0)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
     parentPath.Truncate(offset);
 
     nsCOMPtr<nsILocalFile> localFile;
-    nsresult rv =  NS_NewLocalFile(parentPath.GetBuffer(), mFollowSymlinks, getter_AddRefs(localFile));
+    nsresult rv =  NS_NewLocalFile(parentPath.get(), mFollowSymlinks, getter_AddRefs(localFile));
     
     if(NS_SUCCEEDED(rv) && localFile)
     {
@@ -1752,7 +1752,7 @@ nsLocalFile::IsWritable(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;  
     
-    const char *workingFilePath = mWorkingPath.GetBuffer();
+    const char *workingFilePath = mWorkingPath.get();
 
 #ifdef XP_OS2
     APIRET rc;
@@ -1882,7 +1882,7 @@ nsLocalFile::IsHidden(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
     
-    const char *workingFilePath = mWorkingPath.GetBuffer();
+    const char *workingFilePath = mWorkingPath.get();
 
 #ifdef XP_OS2
     APIRET rc;
@@ -1948,7 +1948,7 @@ nsLocalFile::IsSpecial(PRBool *_retval)
     if (NS_FAILED(rv))
         return rv;
     
-    const char *workingFilePath = mWorkingPath.GetBuffer();
+    const char *workingFilePath = mWorkingPath.get();
 
 #ifdef XP_OS2
     APIRET rc;

@@ -796,7 +796,7 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
                 mPackageFolder->GetDirectoryPath(path);
 
             VR_Install( NS_ConvertUCS2toUTF8(mRegistryPackageName), 
-                        (char*)path.GetBuffer(),
+                        (char*)path.get(),
                         (char*)(const char*)nsAutoCString(versionString), 
                         PR_TRUE );
         }

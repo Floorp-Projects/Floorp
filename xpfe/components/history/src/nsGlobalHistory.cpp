@@ -603,7 +603,7 @@ nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt32 aVa
   mdb_err err;
   
   nsCAutoString buf; buf.AppendInt(aValue);
-  mdbYarn yarn = { (void *)buf.GetBuffer(), buf.Length(), buf.Length(), 0, 0, nsnull };
+  mdbYarn yarn = { (void *)buf.get(), buf.Length(), buf.Length(), 0, 0, nsnull };
 
   err = aRow->AddColumn(mEnv, aCol, &yarn);
   

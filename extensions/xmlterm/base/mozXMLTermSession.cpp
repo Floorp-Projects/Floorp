@@ -892,12 +892,13 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
               result = mozXMLTermUtils::ExecuteScript(domDoc,
                                                       JSCommand,
                                                       metaCommandOutput);
-              if (NS_FAILED(result))
-                metaCommandOutput.AssignWithConversion("Error in displaying URL\n");
-
-              nsCAutoString cstrout(metaCommandOutput.GetBuffer());
+              nsCAutoString cstrout;
+              if (NS_SUCCEEDED(result))
+                CopyUCS2toASCII(metaCommandOutput, cstrout);
+              else
+                cstrout = "Error in displaying URL\n";
               printf("mozXMLTermSession::ReadAll, DEFAULT_META output=%s\n",
-                     cstrout.GetBuffer());
+                     cstrout.get());
 
             }
             break;
@@ -926,12 +927,13 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
               result = mozXMLTermUtils::ExecuteScript(domDoc,
                                                       commandArgs,
                                                       metaCommandOutput);
-              if (NS_FAILED(result))
-                metaCommandOutput.AssignWithConversion("Error in executing JavaScript command\n");
-
-              nsCAutoString cstrout(metaCommandOutput.GetBuffer());
+              nsCAutoString cstrout;
+              if (NS_SUCCEEDED(result))
+                CopyUCS2toASCII(metaCommandOutput, cstrout);
+              else
+                cstrout = "Error in executing JavaScript command\n";
               printf("mozXMLTermSession::ReadAll, JS output=%s\n",
-                     cstrout.GetBuffer());
+                     cstrout.get());
 
             }
             break;
@@ -1411,9 +1413,9 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
     }
 
     nsCAutoString url; url.AssignWithConversion(streamURL);
-    result = mXMLTermStream->Open(outerDOMWindow, iframeName.GetBuffer(),
-                                  url.GetBuffer(),
-                                  contentType.GetBuffer(), 800);
+    result = mXMLTermStream->Open(outerDOMWindow, iframeName.get(),
+                                  url.get(),
+                                  contentType.get(), 800);
     if (NS_FAILED(result)) {
       fprintf(stderr,
               "mozXMLTermSession::InitStream: Failed to open stream\n");

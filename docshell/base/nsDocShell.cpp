@@ -1475,7 +1475,7 @@ NS_IMETHODIMP nsDocShell::LoadURI(const PRUnichar* aURI, PRUint32 aLoadFlags)
       nsCAutoString cScheme;
       cScheme.AssignWithConversion(scheme);
 
-      PRUnichar *msg = nsTextFormatter::smprintf(messageStr, cScheme.GetBuffer());
+      PRUnichar *msg = nsTextFormatter::smprintf(messageStr, cScheme.get());
       if (!msg) return NS_ERROR_OUT_OF_MEMORY;
 
       prompter->Alert(nsnull, msg);

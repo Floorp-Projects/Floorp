@@ -1492,7 +1492,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
   nsCOMPtr<nsIHTTPChannel>	theHTTPChannel = do_QueryInterface(channel);
   if (theHTTPChannel) {
      char * lastModified;
-     nsCOMPtr<nsIAtom> header = NS_NewAtom("last-modified");
+     nsCOMPtr<nsIAtom> header(dont_AddRef(NS_NewAtom("last-modified")));
 
      theHTTPChannel->GetResponseHeader(header, &lastModified);
      if (lastModified) {
@@ -3820,7 +3820,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
                   postDataRandomAccess->Seek(PR_SEEK_SET, 0);
                 }
               
-              nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
+              nsCOMPtr<nsIAtom> method(dont_AddRef(NS_NewAtom("POST")));
               httpChannel->SetRequestMethod(method);
               httpChannel->SetUploadStream(postDataStream);
 

@@ -107,7 +107,7 @@ struct Mutex {
         : mName( name ),
           mHandle( 0 ),
           mState( -1 ) {
-        mHandle = CreateMutex( 0, FALSE, mName.GetBuffer() );
+        mHandle = CreateMutex( 0, FALSE, mName.get() );
         #if MOZ_DEBUG_DDE
         printf( "CreateMutex error = 0x%08X\n", (int)GetLastError() );
         #endif
@@ -759,11 +759,11 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                                               ULONG dwData2 ) { // transaction-specific data
 
     #if MOZ_DEBUG_DDE
-    printf( "DDE: uType  =%s\n",      uTypeDesc( uType ).GetBuffer() );
+    printf( "DDE: uType  =%s\n",      uTypeDesc( uType ).get() );
     printf( "     uFmt   =%u\n",      (unsigned)uFmt );
     printf( "     hconv  =%08x\n",    (int)hconv );
-    printf( "     hsz1   =%08x:%s\n", (int)hsz1, hszValue( mInstance, hsz1 ).GetBuffer() );
-    printf( "     hsz2   =%08x:%s\n", (int)hsz2, hszValue( mInstance, hsz2 ).GetBuffer() );
+    printf( "     hsz1   =%08x:%s\n", (int)hsz1, hszValue( mInstance, hsz1 ).get() );
+    printf( "     hsz2   =%08x:%s\n", (int)hsz2, hszValue( mInstance, hsz2 ).get() );
     printf( "     hdata  =%08x\n",    (int)hdata );
     printf( "     dwData1=%08x\n",    (int)dwData1 );
     printf( "     dwData2=%08x\n",    (int)dwData2 );
@@ -914,7 +914,7 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
                 // End current arg.
                 if ( !justCounting ) {
                     argv[argc] = new char[ arg.Length() + 1 ];
-                    strcpy( argv[argc], arg.GetBuffer() ); 
+                    strcpy( argv[argc], arg.get() ); 
                 }
                 argc++;
                 // We're now between args.

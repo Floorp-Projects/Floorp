@@ -49,7 +49,7 @@ nsURLProperties::nsURLProperties(nsString& aUrl)
 
   nsCAutoString aUrlCString;
   aUrlCString.AssignWithConversion(aUrl);
-  res = gIOService->NewURI(aUrlCString.GetBuffer(), nsnull, &url);
+  res = gIOService->NewURI(aUrlCString.get(), nsnull, &url);
   if (NS_FAILED(res)) return;
 
   res = NS_OpenURI(&in, url);

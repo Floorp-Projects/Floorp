@@ -50,7 +50,7 @@ NS_IMETHODIMP_(const char*) nsEditorParserObserver::GetTagNameAt(PRUint32 aTagIn
 {
   nsCString* theString = mWatchTags[aTagIndex];
   if (theString)
-    return theString->GetBuffer();
+    return theString->get();
   else
     return nsnull;
 }

@@ -854,9 +854,9 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     mLangGroup->GetUnicode(&langGroup);
     name.AppendWithConversion(langGroup);
     PRInt32 minimum = 0;
-    res = gPref->GetIntPref(name.GetBuffer(), &minimum);
+    res = gPref->GetIntPref(name.get(), &minimum);
     if (NS_FAILED(res)) {
-      gPref->GetDefaultIntPref(name.GetBuffer(), &minimum);
+      gPref->GetDefaultIntPref(name.get(), &minimum);
     }
     if (minimum < 0) {
       minimum = 0;
@@ -896,7 +896,7 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     name.Append(*mGeneric);
     name.Append(char('.'));
     name.Append(USER_DEFINED);
-    gPref->CopyCharPref(name.GetBuffer(), &value);
+    gPref->CopyCharPref(name.get(), &value);
     if (value) {
       mUserDefined = value;
       nsMemory::Free(value);
@@ -2826,7 +2826,7 @@ FindFamily(nsCString* aName)
     if (family) {
       char pattern[256];
       PR_snprintf(pattern, sizeof(pattern), "-*-%s-*-*-*-*-*-*-*-*-*-*-*-*",
-        aName->GetBuffer());
+        aName->get());
       GetFontNames(pattern, &family->mNodes);
       gFamilies->Put(&key, family);
     }
@@ -2951,7 +2951,7 @@ nsFontMetricsGTK::FindLocalFont(PRUnichar aChar)
     /*
      * count hyphens
      */
-    const char* str = familyName->GetBuffer();
+    const char* str = familyName->get();
     PRUint32 len = familyName->Length();
     int hyphens = 0;
     for (PRUint32 i = 0; i < len; i++) {
@@ -3036,7 +3036,7 @@ nsFontMetricsGTK::FindGenericFont(PRUnichar aChar)
     mLangGroup->GetUnicode(&langGroup);
     pref.AppendWithConversion(langGroup);
     char* value = nsnull;
-    gPref->CopyCharPref(pref.GetBuffer(), &value);
+    gPref->CopyCharPref(pref.get(), &value);
     nsCAutoString str;
     nsFontGTK* font;
     if (value) {
@@ -3049,7 +3049,7 @@ nsFontMetricsGTK::FindGenericFont(PRUnichar aChar)
       }
     }
     value = nsnull;
-    gPref->CopyDefaultCharPref(pref.GetBuffer(), &value);
+    gPref->CopyDefaultCharPref(pref.get(), &value);
     if (value) {
       str = value;
       nsMemory::Free(value);
@@ -3061,7 +3061,7 @@ nsFontMetricsGTK::FindGenericFont(PRUnichar aChar)
     }
   }
   nsFontSearch search = { this, aChar, nsnull };
-  gPref->EnumerateChildren(prefix.GetBuffer(), PrefEnumCallback, &search);
+  gPref->EnumerateChildren(prefix.get(), PrefEnumCallback, &search);
   if (search.mFont && search.mFont->SupportsChar(aChar)) {
     return search.mFont;
   }
@@ -3150,7 +3150,7 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
   if (gDebug & NS_FONT_DEBUG_CALL_TRACE) {
     printf("FindFont(%04X)[", aChar);
     for (PRInt32 i = 0; i < mFonts.Count(); i++) {
-      printf("%s, ", mFonts.CStringAt(i)->GetBuffer());
+      printf("%s, ", mFonts.CStringAt(i)->get());
     }
     printf("]\nreturns ");
     if (font) {

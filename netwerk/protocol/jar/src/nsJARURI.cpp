@@ -339,7 +339,7 @@ nsJARURI::Resolve(const char *relativePath, char **result)
         path = "";
 
     char* resolvedEntry;
-    rv = serv->ResolveRelativePath(relativePath, path.GetBuffer(),
+    rv = serv->ResolveRelativePath(relativePath, path.get(),
                                    &resolvedEntry);
     if (NS_FAILED(rv)) return rv;
 

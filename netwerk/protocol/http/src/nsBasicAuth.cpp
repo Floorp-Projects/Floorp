@@ -68,7 +68,7 @@ nsBasicAuth::Authenticate(nsIURI* i_URI, const char *protocol,
         userpass.AppendWithConversion(iPass);
     }
 
-    char *base64Buff = PL_Base64Encode(userpass.GetBuffer(),
+    char *base64Buff = PL_Base64Encode(userpass.get(),
             userpass.Length(),
             nsnull);
     

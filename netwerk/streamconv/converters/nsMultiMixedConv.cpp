@@ -254,7 +254,7 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     // ask the HTTP channel for the content-type and extract the boundary from it.
     nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel, &rv);
     if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIAtom> header = NS_NewAtom("content-type");
+        nsCOMPtr<nsIAtom> header(dont_AddRef(NS_NewAtom("content-type")));
         if (!header) return NS_ERROR_OUT_OF_MEMORY;
         rv = httpChannel->GetResponseHeader(header, getter_Copies(delimiter));
         if (NS_FAILED(rv)) return rv;
@@ -281,7 +281,7 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
 
     boundaryString.Trim(" \"");
 
-    mToken = boundaryString.GetBuffer();
+    mToken = boundaryString.get();
     if (!mToken) return NS_ERROR_OUT_OF_MEMORY;
     mTokenLen = boundaryString.Length();
     return NS_OK;
@@ -362,7 +362,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     rv = NS_NewInputStreamChannel(getter_AddRefs(mPartChannel), 
                                                  partURI, 
                                                  nsnull,       // inStr
-                                                 mContentType.GetBuffer(), 
+                                                 mContentType.get(), 
                                                  mContentLength);
     if (NS_FAILED(rv)) return rv;
 
@@ -488,7 +488,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
             nsCAutoString headerStr(cursor);
             headerStr.CompressWhitespace();
             headerStr.ToLowerCase();
-            nsCOMPtr<nsIAtom> header = NS_NewAtom(headerStr.GetBuffer());
+            nsCOMPtr<nsIAtom> header(dont_AddRef(NS_NewAtom(headerStr.get())));
             if (!header) return NS_ERROR_OUT_OF_MEMORY;
             *colon = ':';
 
@@ -499,7 +499,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
             if (headerStr.Equals("content-type")) {
                 mContentType = headerVal;
             } else if (headerStr.Equals("content-length")) {
-                mContentLength = atoi(headerVal.GetBuffer());
+                mContentLength = atoi(headerVal.get());
             } else if (headerStr.Equals("set-cookie")) {
                 // setting headers on the HTTP channel
                 // causes HTTP to notify, again if necessary,
@@ -546,7 +546,7 @@ nsMultiMixedConv::FindToken(char *aCursor, PRUint32 aLen) {
                         // we're playing w/ double dash tokens, adjust.
                         nsCString newToken("--");
                         newToken.Append(mToken);
-                        mToken = newToken.GetBuffer();
+                        mToken = newToken.get();
                         mTokenLen += 2;
                     }
                 }

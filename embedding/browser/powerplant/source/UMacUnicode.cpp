@@ -178,7 +178,7 @@ CPlatformUCSConversion::UCSToPlatform(const nsAReadableString& aIn, Str255& aOut
         PRUint32 outLength = cStr.Length();
         if (outLength > 255)
             outLength = 255;
-        memcpy(&aOut[1], cStr.GetBuffer(), outLength);
+        memcpy(&aOut[1], cStr.get(), outLength);
         aOut[0] = outLength;
     }
     return res;

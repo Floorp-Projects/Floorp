@@ -193,7 +193,7 @@ nsIMEPreedit::GetPreeditString() const {
 
 char*
 nsIMEPreedit::GetPreeditFeedback() const {
-  return (char*)mIMECompAttr->GetBuffer();
+  return (char*)mIMECompAttr->get();
 }
 
 int nsIMEPreedit::GetPreeditLength() const {

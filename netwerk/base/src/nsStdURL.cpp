@@ -1009,7 +1009,7 @@ nsStdURL::GetFile(nsIFile * *aFile)
 #if defined( XP_MAC )
         // Now Swap the / and colons to convert back to a mac path
         // Do this only on the mDirectory portion - not mFileBaseName or mFileExtension
-        SwapSlashColon( (char*)path.GetBuffer() );
+        SwapSlashColon( (char*)path.get() );
 #endif
     }
 
@@ -1035,7 +1035,7 @@ nsStdURL::GetFile(nsIFile * *aFile)
     path.ReplaceChar('/', '\\');
 #endif
 
-    nsUnescape((char*)path.GetBuffer());
+    nsUnescape((char*)path.get());
 #if defined( XP_MAC )
     // wack off leading :'s
     if (path.CharAt(0) == ':')
@@ -1102,7 +1102,7 @@ nsStdURL::SetFile(nsIFile * aFile)
                 // make sure we have a trailing slash
                 escPath += "/";
             }
-            rv = SetPath(escPath.GetBuffer());
+            rv = SetPath(escPath.get());
         }
     }
     CRTFREEIF(ePath);

@@ -219,7 +219,7 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
   if (info)
   {
     nsCAutoString mimetype ((char *)&entry.MIMEType[1], entry.MIMEType[0]);
-    info->SetMIMEType(mimetype.GetBuffer());
+    info->SetMIMEType(mimetype.get());
     
     // convert entry.extension which is a Str255 
     // don't forget to remove the '.' in front of the file extension....
@@ -228,10 +228,10 @@ nsresult nsInternetConfigService::FillMIMEInfoForICEntry(ICMapEntry& entry, nsIM
     info->SetMacType(entry.fileType);
     info->SetMacCreator(entry.fileCreator);
     temp.Assign((char *) &entry.entryName[1], entry.entryName[0]);
-    info->SetDescription(NS_ConvertASCIItoUCS2(temp.GetBuffer()).get());
+    info->SetDescription(NS_ConvertASCIItoUCS2(temp.get()).get());
     
     temp.Assign((char *) &entry.postAppName[1], entry.postAppName[0]);
-    info->SetApplicationDescription(NS_ConvertASCIItoUCS2(temp.GetBuffer()).get());
+    info->SetApplicationDescription(NS_ConvertASCIItoUCS2(temp.get()).get());
     
     if (entry.flags & kICMapPostMask)
     {

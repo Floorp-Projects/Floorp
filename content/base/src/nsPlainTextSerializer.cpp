@@ -642,7 +642,7 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
         leadup += ".";
       }
       leadup += " ";
-      Write(NS_ConvertASCIItoUCS2(leadup.GetBuffer()));
+      Write(NS_ConvertASCIItoUCS2(leadup.get()));
     }
     else if (mHeaderStrategy == 1) { // indent increasingly
       mIndent += kIndentSizeHeaders;

@@ -204,7 +204,7 @@ DataStruct::WriteCache(nsISupports* aData, PRUint32 aDataLen)
     cacheFile->GetOutputStream( getter_AddRefs(outStr) );
     
     void* buff = nsnull;
-    nsPrimitiveHelpers::CreateDataFromPrimitive ( mFlavor.GetBuffer(), aData, &buff, aDataLen );
+    nsPrimitiveHelpers::CreateDataFromPrimitive ( mFlavor.get(), aData, &buff, aDataLen );
     if ( buff ) {
       PRUint32 ignored;
       outStr->Write(NS_REINTERPRET_CAST(char*, buff), aDataLen, &ignored);
@@ -244,7 +244,7 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
     // make sure we got all the data ok
     if ( NS_SUCCEEDED(rv) && *aDataLen == (PRUint32)fileSize) {
       *aDataLen = fileSize; 
-      nsPrimitiveHelpers::CreatePrimitiveForData ( mFlavor.GetBuffer(), data, fileSize, aData );
+      nsPrimitiveHelpers::CreatePrimitiveForData ( mFlavor.get(), data, fileSize, aData );
       return *aData ? NS_OK : NS_ERROR_FAILURE;
     }
 
@@ -313,7 +313,7 @@ nsTransferable :: GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
       rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
                                                NS_GET_IID(nsISupportsString), getter_AddRefs(flavorWrapper));
       if ( flavorWrapper ) {
-        flavorWrapper->SetData ( NS_CONST_CAST(char*, data->GetFlavor().GetBuffer()) );
+        flavorWrapper->SetData ( NS_CONST_CAST(char*, data->GetFlavor().get()) );
         nsCOMPtr<nsISupports> genericWrapper ( do_QueryInterface(flavorWrapper) );
         (*aDataFlavorList)->AppendElement( genericWrapper );
       }
@@ -357,12 +357,12 @@ nsTransferable :: GetTransferData(const char *aFlavor, nsISupports **aData, PRUi
     for (i=0;i<mDataArray->Count();i++) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
       PRBool canConvert = PR_FALSE;
-      mFormatConv->CanConvert(data->GetFlavor().GetBuffer(), aFlavor, &canConvert);
+      mFormatConv->CanConvert(data->GetFlavor().get(), aFlavor, &canConvert);
       if ( canConvert ) {
         nsCOMPtr<nsISupports> dataBytes;
         PRUint32 len;
         data->GetData(getter_AddRefs(dataBytes), &len);
-        mFormatConv->Convert(data->GetFlavor().GetBuffer(), dataBytes, len, aFlavor, aData, aDataLen);
+        mFormatConv->Convert(data->GetFlavor().get(), dataBytes, len, aFlavor, aData, aDataLen);
         found = PR_TRUE;
       }
     }
@@ -422,12 +422,12 @@ nsTransferable::SetTransferData(const char *aFlavor, nsISupports *aData, PRUint3
     for ( i=0; i<mDataArray->Count(); ++i) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
       PRBool canConvert = PR_FALSE;
-      mFormatConv->CanConvert(aFlavor, data->GetFlavor().GetBuffer(), &canConvert);
+      mFormatConv->CanConvert(aFlavor, data->GetFlavor().get(), &canConvert);
 
       if ( canConvert ) {
         nsCOMPtr<nsISupports> ConvertedData;
         PRUint32 ConvertedLen;
-        mFormatConv->Convert(aFlavor, aData, aDataLen, data->GetFlavor().GetBuffer(), getter_AddRefs(ConvertedData), &ConvertedLen);
+        mFormatConv->Convert(aFlavor, aData, aDataLen, data->GetFlavor().get(), getter_AddRefs(ConvertedData), &ConvertedLen);
         data->SetData(ConvertedData, ConvertedLen);
         return NS_OK;
       }

@@ -541,7 +541,7 @@ nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
             parserService->HTMLConvertUnicodeToEntity(val, entityReplacement);
 
             if (entityReplacement.Length() > 0) {
-              entityText = entityReplacement.GetBuffer();
+              entityText = entityReplacement.get();
               break;
             }
           }

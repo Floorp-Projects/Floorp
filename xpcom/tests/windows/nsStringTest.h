@@ -417,28 +417,28 @@ int CStringTester::TestSearching(){
     nsCString T5(test5);
     nsCString T6(test6);
  
-    pos = T4.FindCharInSet(T5.GetBuffer());
+    pos = T4.FindCharInSet(T5.get());
     NS_ASSERTION(0==pos,"Error in FindcharInSet"); //This should succeed.
 
-    pos = T4.FindCharInSet(T6.GetBuffer());
+    pos = T4.FindCharInSet(T6.get());
     NS_ASSERTION(kNotFound<pos,"Error in FindcharInSet");  //This should succeed.
 
-    pos = T4.RFindCharInSet(T5.GetBuffer(),2);
+    pos = T4.RFindCharInSet(T5.get(),2);
     NS_ASSERTION(0==pos,"Error in RFindCharInSet");  //This should fail.
 
-    pos = T4.RFindCharInSet(T6.GetBuffer(),2);
+    pos = T4.RFindCharInSet(T6.get(),2);
     NS_ASSERTION(kNotFound<pos,"Error in RFindCharInSet");  //This should fail.
 
-    pos = T4.Find(T5.GetBuffer(), PR_FALSE, 0, 1);
+    pos = T4.Find(T5.get(), PR_FALSE, 0, 1);
     NS_ASSERTION(0==pos,"Error in Find");  //This should succeed.
 
-    pos= T4.Find(T6.GetBuffer(), PR_FALSE, 0, 1);
+    pos= T4.Find(T6.get(), PR_FALSE, 0, 1);
     NS_ASSERTION(kNotFound<pos,"Error in Find"); //This should fail.
 
-    pos = T4.RFind(T5.GetBuffer(), PR_FALSE, 2, 1);
+    pos = T4.RFind(T5.get(), PR_FALSE, 2, 1);
     NS_ASSERTION(kNotFound==pos,"Error in RFind");
     
-    pos =T4.RFind(T6.GetBuffer(), PR_FALSE, 2, 1);
+    pos =T4.RFind(T6.get(), PR_FALSE, 2, 1);
     NS_ASSERTION(kNotFound==pos,"Error in RFind");
 
 

@@ -512,7 +512,7 @@ nsFrameUtil::DumpNode(Node* aNode, FILE* aOutputFile, PRInt32 aIndent)
   fprintf(aOutputFile, "%s 0x%x %d,%d,%d,%d, %s\n", aNode->type, aNode->state,
           aNode->bbox.x, aNode->bbox.y,
           aNode->bbox.width, aNode->bbox.height,
-          aNode->styleData.GetBuffer());
+          aNode->styleData.get());
 }
 
 void
@@ -584,8 +584,8 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
     }
     if (tree1->styleData != tree2->styleData) {
       printf("frame style data mismatch: %s vs. %s\n",
-        tree1->styleData.GetBuffer(),
-        tree2->styleData.GetBuffer());
+        tree1->styleData.get(),
+        tree2->styleData.get());
     }
 
     // Check child lists too

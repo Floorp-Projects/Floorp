@@ -1210,7 +1210,7 @@ nsPSMComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
     commonName.Append(orgUnitPos, orgUnitLen);
   }
   nsXPIDLCString commonChar;
-  commonChar = commonName.GetBuffer();
+  commonChar = commonName.get();
   if (!commonChar) return NS_ERROR_OUT_OF_MEMORY;
   rv = certificate->SetCommonName(commonChar);
   return rv;

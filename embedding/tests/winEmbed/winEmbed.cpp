@@ -1027,7 +1027,7 @@ void Win32ChromeUI::UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUn
     nsCString status; 
     if (aStatusText)
         status.AssignWithConversion(aStatusText);
-    SetDlgItemText(hwndDlg, IDC_STATUS, status.GetBuffer());
+    SetDlgItemText(hwndDlg, IDC_STATUS, status.get());
 }
 
 

@@ -564,12 +564,12 @@ extern "C" void RunChromeInstallOnThread(void *data)
  
             if ( isContent )
             {
-                rv = reg->InstallPackage(spec.GetBuffer(), PR_TRUE);
+                rv = reg->InstallPackage(spec.get(), PR_TRUE);
             }
 
             if ( isSkin )
             {
-              rv = reg->InstallSkin(spec.GetBuffer(), PR_TRUE, PR_FALSE);
+              rv = reg->InstallSkin(spec.get(), PR_TRUE, PR_FALSE);
                 if (NS_SUCCEEDED(rv) && selected)
                 {
                     rv = reg->SelectSkin(info->GetArguments(), PR_TRUE);
@@ -578,7 +578,7 @@ extern "C" void RunChromeInstallOnThread(void *data)
 
             if ( isLocale ) 
             {
-                rv = reg->InstallLocale(spec.GetBuffer(), PR_TRUE);
+                rv = reg->InstallLocale(spec.get(), PR_TRUE);
                 if (NS_SUCCEEDED(rv) && selected)
                 {
                     rv = reg->SelectLocale(info->GetArguments(), PR_TRUE);

@@ -138,7 +138,7 @@ nsDataChannel::ParseData() {
 
         nsCAutoString cType(buffer);
         cType.ToLowerCase();
-        mContentType = cType.GetBuffer();
+        mContentType = cType.get();
 
         if (semiColon)
             *semiColon = ';';

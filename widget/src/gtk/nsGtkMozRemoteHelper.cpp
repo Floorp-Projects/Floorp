@@ -362,7 +362,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
   // make sure that it's there and it's not the first character
   if (begin_command == kNotFound || begin_command == 0)
   {
-    *aResponse = BuildResponse(s500ParseCommand, origString.GetBuffer());
+    *aResponse = BuildResponse(s500ParseCommand, origString.get());
     return;
   }
 
@@ -370,7 +370,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
   end_command = origString.RFindChar(')');
   if (end_command == kNotFound || end_command < begin_command)
   {
-    *aResponse = BuildResponse(s500ParseCommand, origString.GetBuffer());
+    *aResponse = BuildResponse(s500ParseCommand, origString.get());
     return;
   }
 
@@ -428,7 +428,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
 	newWindow = PR_TRUE;
       }
       // ok, do it
-	  rv = OpenURL(commandString.GetBuffer(), newWindow, raiseWindow);
+	  rv = OpenURL(commandString.get(), newWindow, raiseWindow);
     }
   }
 
@@ -448,7 +448,7 @@ nsGtkMozRemoteHelper::ParseCommand(const char *aCommand, char **aResponse)
     }
     else
     {
-      rv = OpenFile(commandString.GetBuffer(), raiseWindow);
+      rv = OpenFile(commandString.get(), raiseWindow);
     }
   }
 
