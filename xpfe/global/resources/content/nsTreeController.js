@@ -1,3 +1,27 @@
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Peter Annema <disttsc@bart.nl>
+ *   Blake Ross <blakeross@telocity.com>
+ *   Alec Flett <alecf@netscape.com>
+ */
 
 // helper routines, for doing rdf-based cut/copy/paste/etc
 
@@ -8,6 +32,7 @@ const clipboard_contractid = "@mozilla.org/widget/clipboard;1";
 const rdf_contractid = "@mozilla.org/rdf/rdf-service;1";
 const separatorUri = NC_NS + "BookmarkSeparator";
 const supportswstring_contractid = "@mozilla.org/supports-wstring;1";
+const rdfc_contractid = "@mozilla.org/rdf/container;1";
 
 // some oft-used interfaces
 const nsISupportsWString = Components.interfaces.nsISupportsWString;
@@ -22,10 +47,12 @@ var RDF = Components.classes[rdf_contractid].getService(Components.interfaces.ns
 var nameResource = RDF.GetResource(NC_NS + "Name");
 var typeRes = RDF.GetResource(RDF_NS + "type");
 var bmTypeRes = RDF.GetResource(NC_NS + "Bookmark");
+// this is a hack for now - just assume containment
+var containment = RDF.GetResource(NC_NS + "child");
 
 function debug(foo)
 {
-    dump(foo);
+    //    dump(foo);
 }
 
 function isContainer(node)
@@ -161,8 +188,7 @@ function nsTreeController_paste(tree)
     var strings = url.split(";");
     if (!strings) return false;
 
-    var rdfc_uri = "@mozilla.org/rdf/container;1";
-    var RDFC = Components.classes[rdfc_uri].getService(nsIRDFContainer);
+    var RDFC = Components.classes[rdfc_contractid].getService(nsIRDFContainer);
     
     var nameRes = RDF.GetResource(NC_NS + "Name");
     if (!nameRes) return false;
@@ -268,6 +294,87 @@ function nsTreeController_paste(tree)
 
 function nsTreeController_delete(tree)
 {
+    // this should eventually be a parameter to this function
+    var promptFlag = false;
+        
+    if (!tree) return false;
+    var select_list = tree.selectedItems;
+    if (!select_list) return false;
+    if (select_list.length < 1) return false;
+    
+    var datasource = tree.database;
+
+    debug("# of Nodes selected: " + select_list.length);
+
+    if (promptFlag == true)
+    {
+        var deleteStr = '';
+        if (select_list.length == 1) {
+            deleteStr = get_localized_string("DeleteItem");
+        } else {
+            deleteStr = get_localized_string("DeleteItems");
+        }
+        var ok = confirm(deleteStr);
+        if (!ok) return false;
+    }
+
+    var RDFC = Components.classes[rdfc_contractid].getService(nsIRDFContainer);
+
+
+    var dirty = false;
+
+    // note: backwards delete so that we handle odd deletion cases such as
+    //       deleting a child of a folder as well as the folder itself
+    for (var nodeIndex=select_list.length-1; nodeIndex>=0; nodeIndex--)
+    {
+        var node = select_list[nodeIndex];
+        if (!node) continue;
+        var ID = node.id;
+        if (!ID) continue;
+
+        // XXX - make tree templates flag special folders as read-only
+        // don't allow deletion of various "special" folders
+        if ((ID == "NC:BookmarksRoot") || (ID == "NC:IEFavoritesRoot"))
+        {
+            continue;
+        }
+
+        var parentID = node.parentNode.parentNode.getAttribute("ref");
+        if (!parentID)
+            parentID = node.parentNode.parentNode.id;
+        if (!parentID) continue;
+
+        debug("Node " + nodeIndex + ": " + ID);
+        debug("Parent Node " + nodeIndex + ": " + parentID);
+
+        var IDRes = RDF.GetResource(ID);
+        if (!IDRes) continue;
+        var parentIDRes = RDF.GetResource(parentID);
+        if (!parentIDRes) continue;
+
+        try {
+            // first try a container-based approach
+            RDFC.Init(datasource, parentIDRes);
+            RDFC.RemoveElement(IDRes, true);
+        } catch (ex) {
+            // nope! just remove the parent/child assertion then
+            datasource.Unassert(parentIDRes, containment, IDRes);
+
+        }
+        dirty = true;
+    }
+
+    if (dirty == true)
+    {
+        try {
+            var remote = datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+            remote.Flush();
+            debug("Wrote out bookmark changes.");
+        } catch (ex) {
+        }
+    }
+
+    return true;
 
 }
 
