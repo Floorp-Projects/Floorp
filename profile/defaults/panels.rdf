@@ -5,17 +5,7 @@
   These are the panels that will be displayed in the sidebar.
 
 -->
-<!DOCTYPE RDF 
-[
-<!ENTITY sidebar.panel.whats-related "What's Related">
-<!ENTITY sidebar.panel.search "Search">
-<!ENTITY sidebar.panel.tinderbox "Tinderbox">
-<!ENTITY sidebar.panel.tinderbox-ports "Tinderbox-Ports">
-<!ENTITY sidebar.nc-panel.stocks "Stocks">
-<!ENTITY sidebar.panel.client-bookmarks "Bookmarks">
-<!ENTITY sidebar.panel.client-history "History">
-]
->
+<!DOCTYPE RDF SYSTEM "chrome://communicator/locale/sidebar/local-panels.dtd">
 
 <RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:NC="http://home.netscape.com/NC-rdf#">
@@ -34,27 +24,27 @@
     <NC:version>0.1</NC:version>
   </RDF:Description>
   <RDF:Description about="urn:sidebar:panel:whats-related">
-    <NC:title>&sidebar.panel.whats-related;</NC:title>
+    <NC:title>&sidebar.whats-related.label;</NC:title>
     <NC:content>chrome://communicator/content/related/related-panel.xul</NC:content>
   </RDF:Description>
   <RDF:Description about="urn:sidebar:panel:search">
-    <NC:title>&sidebar.panel.search;</NC:title>
+    <NC:title>&sidebar.search.label;</NC:title>
     <NC:content>chrome://communicator/content/search/search-panel.xul</NC:content>
   </RDF:Description>
   <RDF:Description about="urn:sidebar:panel:tinderbox">
-    <NC:title>Tinderbox: SeaMonkey</NC:title>
+    <NC:title>&sidebar.tinderbox-seamonkey.label;</NC:title>
     <NC:content>http://tinderbox.mozilla.org/SeaMonkey/panel.html</NC:content>
   </RDF:Description>
   <RDF:Description about="urn:sidebar:panel:tinderbox-ports">
-    <NC:title>Tinderbox: SeaMonkey-Ports</NC:title>
+    <NC:title>&sidebar.tinderbox-ports.label;</NC:title>
     <NC:content>http://tinderbox.mozilla.org/SeaMonkey-Ports/panel.html</NC:content>
   </RDF:Description>
   <RDF:Description about="urn:sidebar:panel:bookmarks">
-    <NC:title>&sidebar.panel.client-bookmarks;</NC:title>
+    <NC:title>&sidebar.client-bookmarks.label;</NC:title>
     <NC:content>chrome://communicator/content/bookmarks/bm-panel.xul</NC:content>
   </RDF:Description>
   <RDF:Description about="urn:sidebar:panel:history">
-    <NC:title>&sidebar.panel.client-history;</NC:title>
+    <NC:title>&sidebar.client-history.label;</NC:title>
     <NC:content>chrome://communicator/content/history/history-panel.xul</NC:content>
   </RDF:Description>
 </RDF:RDF>
