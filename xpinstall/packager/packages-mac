@@ -115,8 +115,6 @@ viewer:Components:oji.xpt
 viewer:Components:pngdecoder.shlb 
 viewer:Components:prefm.shlb 
 viewer:Components:prefm.xpt 
-viewer:Components:prefwindow.shlb 
-viewer:Components:prefwindow.xpt 
 viewer:Components:profile.shlb 
 viewer:Components:profileservices.xpt 
 viewer:Components:rdf.xpt 
@@ -234,8 +232,6 @@ viewer:res:samples:sampleimages
 -viewer:res:samples:.cvsignore
 -viewer:res:samples:Makefile.in
 -viewer:res:samples:makefile.win
--viewer:res:samples:resources:.cvsignore
--viewer:res:samples:resources:CVS
 -viewer:res:samples:sampleimages:.cvsignore
 -viewer:res:samples:sampleimages:CVS
 -viewer:res:samples:sampleimages:Makefile.in
