@@ -32,6 +32,10 @@ EXPORTS =				\
 	nsIHTMLContent.h		\
 	nsILineIterator.h		\
 	nsHTMLParts.h			\
+!ifdef IBMBIDI
+	nsTextTransformer.h		\
+	nsBidiFrames.h			\
+!endif        
 	$(NULL)
 
 CPPSRCS=				\
@@ -74,6 +78,9 @@ CPPSRCS=				\
 	nsTextFrame.cpp			\
 	nsTextTransformer.cpp		\
 	nsViewportFrame.cpp		\
+!ifdef IBMBIDI
+	nsBidiFrames.cpp		\
+!endif        
 	$(NULL)
 
 CPP_OBJS=						\
@@ -116,6 +123,9 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsTextFrame.obj			\
 	.\$(OBJDIR)\nsTextTransformer.obj		\
 	.\$(OBJDIR)\nsViewportFrame.obj			\
+!ifdef IBMBIDI
+	.\$(OBJDIR)\nsBidiFrames.obj			\
+!endif        
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
