@@ -343,14 +343,19 @@ public class SignerInfo implements ASN1Value {
             digest = md.digest( enc );
         }
 
-        // put the digest in a DigestInfo
-        SEQUENCE digestInfo = new SEQUENCE();
-        AlgorithmIdentifier digestAlgId =
-                new AlgorithmIdentifier( digestAlg.toOID(),null );
-        digestInfo.addElement( digestAlgId );
-        digestInfo.addElement( new OCTET_STRING( digest ) );
-        byte[] toBeSigned = ASN1Util.encode(digestInfo);
- 
+        byte[] toBeSigned;
+        if( signingAlg.getRawAlg() == SignatureAlgorithm.RSASignature ) {
+            // put the digest in a DigestInfo
+            SEQUENCE digestInfo = new SEQUENCE();
+            AlgorithmIdentifier digestAlgId =
+                    new AlgorithmIdentifier( digestAlg.toOID(),null );
+            digestInfo.addElement( digestAlgId );
+            digestInfo.addElement( new OCTET_STRING( digest ) );
+            toBeSigned = ASN1Util.encode(digestInfo);
+        } else {
+            toBeSigned = digest;
+        }
+        
         // encrypt the DER-encoded DigestInfo with the private key
         CryptoToken token = signingKey.getOwningToken();
         Signature sig;
@@ -511,18 +516,24 @@ public class SignerInfo implements ASN1Value {
                 " no signed attributes");
         }
 
-        // create DigestInfo structure
-        SEQUENCE digestInfo = new SEQUENCE();
-        digestInfo.addElement( digestAlgorithm.getOID() );
-        digestInfo.addElement( new OCTET_STRING(messageDigest) );
-        byte[] toBeVerified = ASN1Util.encode(digestInfo);
-
-        CryptoToken token = CryptoManager.getInstance()
-                                .getInternalCryptoToken();
         SignatureAlgorithm sigAlg =
             SignatureAlgorithm.fromOID(
                 digestEncryptionAlgorithm.getOID()
             );
+
+        byte[] toBeVerified;
+        if( sigAlg.getRawAlg() == SignatureAlgorithm.RSASignature ) {
+            // create DigestInfo structure
+            SEQUENCE digestInfo = new SEQUENCE();
+            digestInfo.addElement( digestAlgorithm.getOID() );
+            digestInfo.addElement( new OCTET_STRING(messageDigest) );
+            toBeVerified = ASN1Util.encode(digestInfo);
+        } else {
+            toBeVerified = messageDigest;
+        }
+
+        CryptoToken token = CryptoManager.getInstance()
+                                .getInternalCryptoToken();
         Signature sig = token.getSignatureContext(sigAlg);
         sig.initVerify(pubkey);
         sig.update(toBeVerified);
@@ -679,14 +690,14 @@ public class SignerInfo implements ASN1Value {
                 " PKCS #9 message-digest attribute");
         }
 
+        SignatureAlgorithm sigAlg = SignatureAlgorithm.fromOID(
+            digestEncryptionAlgorithm.getOID() );
+
         // All the signed attributes are present and correct.
         // Now verify the signature.
         CryptoToken token =
                     CryptoManager.getInstance().getInternalCryptoToken();
-        Signature sig = token.getSignatureContext(
-            SignatureAlgorithm.fromOID(
-                digestEncryptionAlgorithm.getOID()     )
-            );
+        Signature sig = token.getSignatureContext( sigAlg );
         sig.initVerify(pubkey);
 
         // verify the contents octets of the DER encoded signed attribs
@@ -704,16 +715,20 @@ public class SignerInfo implements ASN1Value {
                 DigestAlgorithm.fromOID(digestAlgorithm.getOID()).toString() );
         byte[] digest = md.digest(toBeDigested);
 
-        // create DigestInfo structure
-        SEQUENCE digestInfo = new SEQUENCE();
-        //digestInfo.addElement( digestAlgorithm );
+        byte[] toBeVerified;
+        if( sigAlg.getRawAlg() == SignatureAlgorithm.RSASignature ) {
+            // create DigestInfo structure
+            SEQUENCE digestInfo = new SEQUENCE();
 		
-        AlgorithmIdentifier digestAlgId =
-                new AlgorithmIdentifier( digestAlgorithm.getOID(),null );
-        digestInfo.addElement( digestAlgId );
+            AlgorithmIdentifier digestAlgId =
+                    new AlgorithmIdentifier( digestAlgorithm.getOID(),null );
+            digestInfo.addElement( digestAlgId );
 		
-        digestInfo.addElement( new OCTET_STRING(digest) );
-        byte[] toBeVerified = ASN1Util.encode(digestInfo);
+            digestInfo.addElement( new OCTET_STRING(digest) );
+            toBeVerified = ASN1Util.encode(digestInfo);
+        } else {
+            toBeVerified = digest;
+        }
  
         sig.update( toBeVerified );
 
