@@ -15,6 +15,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#ifndef __netCore_h__
+#define __netCore_h__
+
 #include "nsError.h"
 
  /* networking error codes */
@@ -33,4 +37,5 @@
 
 #define NS_ERROR_TCP_TIMEOUT \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 5)
- 
+
+#endif // __netCore_h__
