@@ -34,6 +34,7 @@ EXPORT_RESOURCE_SAMPLES = \
 		threadPane.xul \
 		msgHdrViewOverlay.xul \
 		msgHdrViewOverlay.js \
+		msgHdrViewAddresses.js \
 		widgetglue.js \
 		commandglue.js \
 		shareglue.js \
