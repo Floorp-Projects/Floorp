@@ -107,6 +107,7 @@ private:
 
   static MenuSpec separator_spec[];
   static MenuSpec openLinkNew_spec[];
+  static MenuSpec openLinkInFrame_spec[];
   static MenuSpec openFrameNew_spec[];
   static MenuSpec openLinkEdit_spec[];
   static MenuSpec go_spec[];
@@ -124,10 +125,7 @@ private:
   static MenuSpec copy_spec[];
   static MenuSpec copyLink_spec[];
   static MenuSpec copyImage_spec[];
-
-#ifdef XFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
   static MenuSpec fileBookmark_spec[];
-#endif
 
   URL_Struct *m_urlUnderMouse;
   URL_Struct *m_imageUnderMouse;

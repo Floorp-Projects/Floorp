@@ -36,9 +36,7 @@
 #include "EditorFrame.h"
 #endif
 
-#ifdef XFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
 #include "BookmarkMenu.h"	  // Need for file bookmark generate function
-#endif
 
 #include "htrdf.h"
 #include "net.h"
@@ -146,6 +144,10 @@ MenuSpec XFE_HTMLView::openLinkNew_spec[] = {
   { xfeCmdOpenLinkNew , PUSHBUTTON },
   { NULL },
 };
+MenuSpec XFE_HTMLView::openLinkInFrame_spec[] = {
+  { xfeCmdOpenLinkInFrame , PUSHBUTTON },
+  { NULL },
+};
 MenuSpec XFE_HTMLView::openFrameNew_spec[] = {
   { xfeCmdOpenFrameNew , PUSHBUTTON },
   { xfeCmdOpenFrameInWindow , PUSHBUTTON },
@@ -221,7 +223,6 @@ MenuSpec XFE_HTMLView::copyImage_spec[] = {
   { NULL },
 };
 
-#ifdef XFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
 MenuSpec XFE_HTMLView::fileBookmark_spec[] = 
 {
 	{ 
@@ -235,7 +236,6 @@ MenuSpec XFE_HTMLView::fileBookmark_spec[] =
 	},
 	{ NULL },
 };
-#endif
 
 extern Boolean fe_IsPageLoaded (MWContext *context);
 
@@ -893,6 +893,31 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
       m_urlUnderMouse = NULL; /* it will be freed in the exit routine. */
       return;
     }
+  else if (IS_CMD(xfeCmdOpenLinkInFrame))
+  {
+      fe_UserActivity (m_contextData);
+
+      if (!m_urlUnderMouse)
+	  {
+		  return;
+	  }
+
+	  // Find the context for the target frame
+      MWContext * grid_context = fe_GetFocusGridOfContext(m_contextData);
+
+      if (!grid_context)
+	  {
+		  return;
+	  }
+	  
+	  // Do it
+	  fe_GetURL(grid_context,m_urlUnderMouse,False);
+
+	  // Freed by exit routine
+	  m_urlUnderMouse = NULL;
+      
+      return;
+  }
   else if (IS_CMD(xfeCmdOpenFrameNew))
     {
       fe_UserActivity (m_contextData);
@@ -929,6 +954,11 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
       URL_Struct * url = NET_CreateURLStruct(h->address,NET_DONT_RELOAD);
 
 	  fe_GetURL(top_context,url,False);
+
+	  // Freed by exit routine
+	  m_urlUnderMouse = NULL;
+
+	  return;
     }
 #ifdef EDITOR
   else if (IS_CMD(xfeCmdOpenLinkEdit))
@@ -1287,6 +1317,10 @@ XFE_HTMLView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInfo*
     {
       return True;
     }
+  else if (IS_CMD(xfeCmdOpenLinkInFrame))
+    {
+      return True;
+    }
 #ifdef EDITOR
   else if (IS_CMD(xfeCmdOpenLinkEdit))
     {
@@ -1399,6 +1433,7 @@ XFE_HTMLView::handlesCommand(CommandType cmd, void *calldata, XFE_CommandInfo*)
 
       // context menu items
       || IS_CMD(xfeCmdOpenLinkNew)
+      || IS_CMD(xfeCmdOpenLinkInFrame)
       || IS_CMD(xfeCmdOpenFrameNew)
       || IS_CMD(xfeCmdOpenFrameInWindow)
 #ifdef EDITOR
@@ -2026,15 +2061,28 @@ XFE_HTMLView::doPopup(MWContext *context, CL_Layer *layer,
 		  if (isImage && image_delayed_p)          ADD_SPEC ( showImage_spec );
 		  if (isCommandEnabled(xfeCmdStopLoading)) ADD_SPEC ( stopLoading_spec );
 		  ADD_MENU_SEPARATOR;
-		  if (isBrowserLink)                       ADD_SPEC ( openLinkNew_spec );
-		  if (isFrame)                             ADD_SPEC ( openFrameNew_spec );
+
+		  if (isBrowserLink)
+		  {
+			  ADD_SPEC ( openLinkNew_spec );
+
 #ifdef EDITOR
-		  if (isBrowserLink)                       ADD_SPEC ( openLinkEdit_spec );
+			  ADD_SPEC ( openLinkEdit_spec );
 #endif
-#ifdef XFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
+
+			  if (isFrame)
+			  {
+				  ADD_SPEC ( openLinkInFrame_spec );
+			  }
+
+			  ADD_MENU_SEPARATOR;
+		  }
+
+		  if (isFrame)                             ADD_SPEC ( openFrameNew_spec );
+
 		  ADD_MENU_SEPARATOR;
 		  if (isBrowserLink)                       ADD_SPEC ( fileBookmark_spec );
-#endif
+
 		  ADD_MENU_SEPARATOR;
 		  if (isBrowser)                           ADD_SPEC ( page_details_spec );
 		  if (isImage)                             ADD_SPEC ( openImage_spec );

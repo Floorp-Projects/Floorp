@@ -3529,15 +3529,15 @@ by @NAME@'s plug-ins or @NAME@'s helper applications.
 !========================
 
 *popup.title.labelString:		@NAME@ Commands:
-*popup.openURLNewWindow.labelString:	Open Link in New Window
-*popup.openURLNewWindow.mnemonic:		 O
-*popup*openURLNewWindow.acceleratorText:  Button2
-*popup.openFrameNew.labelString:		Open Frame in New Window
-*popup.openFrameNew.mnemonic:			 w
-*popup.openFrameInWindow.labelString:	Open Frame in Window
-*popup.openFrameInWindow.mnemonic:		 i
-*popup.editLink.labelString:			Open Link in Composer
-*popup.editLink.mnemonic:				 e
+*popup.openURLNewWindow.labelString:		Open Link in New Window
+*popup.openURLNewWindow.mnemonic:			O
+*popup*openURLNewWindow.acceleratorText:	Button2
+*popup.openFrameNew.labelString:			Open Frame in New Window
+*popup.openFrameNew.mnemonic:				w
+*popup.openFrameInWindow.labelString:		Open Frame in Window
+*popup.editLink.labelString:				Open Link in Composer
+*popup.editLink.mnemonic:					e
+*popup.openLinkInFrame.labelString:			Open Link in Frame
 *popup.fileBookmarksSubmenu.labelString:	File Bookmark
 *popup.fileBookmarksSubmenu.mnemonic:		l
 

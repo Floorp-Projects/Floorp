@@ -117,6 +117,7 @@ xfeCmdOpenPage                           openPage
 xfeCmdOpenPageChooseFile                 openPageChooseFile
 xfeCmdOpenLinkNew                        openURLNewWindow
 xfeCmdOpenLinkEdit                       editLink
+xfeCmdOpenLinkInFrame                    openLinkInFrame
 xfeCmdCopyLink                           copyLink
 xfeCmdCopyImage                          copyImage
 xfeCmdImageWallpaper                     imageWallpaper
