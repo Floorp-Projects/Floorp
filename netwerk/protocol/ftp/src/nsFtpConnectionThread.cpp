@@ -58,6 +58,8 @@ nsFtpConnectionThread::nsFtpConnectionThread(PLEventQueue* aEventQ, nsIStreamLis
                            // so we can post events back to them.
     mListener = aListener;
     NS_ADDREF(mListener);
+    mAction = GET;
+    mState = FTP_S_USER;
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
@@ -71,7 +73,7 @@ nsFtpConnectionThread::Run() {
     nsresult rv;
     nsITransport* lCPipe = nsnull;
 
-    mState = FTP_CONNECT;
+    mState = FTP_S_USER;
 
     NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
     if(NS_FAILED(rv)) return rv;
@@ -83,6 +85,18 @@ nsFtpConnectionThread::Run() {
     if (NS_FAILED(rv)) return rv;
     rv = mUrl->GetPort(port);
 	if (NS_FAILED(rv)) return rv;
+
+    rv = sts->CreateTransport(host, port, &lCPipe); // the command channel
+    if (NS_FAILED(rv)) return rv;
+
+    // get the output stream so we can write to the server
+    rv = lCPipe->OpenOutputStream(&mOutStream);
+    if (NS_FAILED(rv)) return rv;
+
+    // get the input stream so we can read data from the server.
+    rv = lCPipe->OpenInputStream(&mInStream);
+    if (NS_FAILED(rv)) return rv;
+
 
     // tell the user that we've begun the transaction.
     nsFtpOnStartBindingEvent* event =
@@ -96,17 +110,6 @@ nsFtpConnectionThread::Run() {
         return rv;
     }
 
-    rv = sts->CreateTransport(host, port, &lCPipe); // the command channel
-    if (NS_FAILED(rv)) return rv;
-
-    // get the output stream so we can write to the server
-    rv = lCPipe->OpenOutputStream(&mOutStream);
-    if (NS_FAILED(rv)) return rv;
-
-    // get the input stream so we can read data from the server.
-    rv = lCPipe->OpenInputStream(&mInStream);
-    if (NS_FAILED(rv)) return rv;
-
 	while (1) {
         nsresult rv;
         char *buffer = nsnull;      // the buffer to be sent to the server
@@ -119,6 +122,9 @@ nsFtpConnectionThread::Run() {
 	    // XXX some of the "buffer"s allocated below in the individual states can be removed
 	    // XXX and replaced with static char or #defines.
         switch(mState) {
+
+            // Reading state. used after a write in order to retrieve
+            // the response from the server.
             case FTP_READ_BUF:
                 if (mState == mNextState)
                     NS_ASSERTION(0, "ftp read state mixup");
@@ -127,6 +133,11 @@ nsFtpConnectionThread::Run() {
                 mState = mNextState;
                 break;
                 // END: FTP_READ_BUF
+
+//////////////////////////////
+//// CONNECTION SETUP STATES
+//////////////////////////////
+
 
             case FTP_S_USER:
                 buffer = "USER anonymous";
@@ -391,17 +402,21 @@ nsFtpConnectionThread::Run() {
 			    }
 			    // END: FTP_R_PWD
 
-            case FTP_COMPLETE:
+//////////////////////////////
+//// ACTION STATES
+//////////////////////////////
             default:
                 ;
-        }    		
-	}
+
+        } // END: switch 
+    } // END: event loop/message pump/while loop
 
     // Close the command channel
-    //lCPipe->CloseConnection();
+    NS_RELEASE(lCPipe);
 }
 
-nsresult nsFtpConnectionThread::Init(nsIThread* aThread) {
+nsresult
+nsFtpConnectionThread::Init(nsIThread* aThread) {
 /*    mThread = aThread;
     NS_ADDREF(mThread);
 
@@ -413,6 +428,22 @@ nsresult nsFtpConnectionThread::Init(nsIThread* aThread) {
     PR_CNotify(this);
     PR_CExitMonitor(this);
 */
+    return NS_OK;
+}
+
+nsresult
+nsFtpConnectionThread::SetAction(FTP_ACTION aAction) {
+    if (mConnected)
+        return NS_ERROR_NOT_IMPLEMENTED;
+    mAction = aAction;
+    return NS_OK;
+}
+
+nsresult
+nsFtpConnectionThread::SetUsePasv(PRBool aUsePasv) {
+    if (mConnected)
+        return NS_ERROR_NOT_IMPLEMENTED;
+    mUsePasv = aUsePasv;
     return NS_OK;
 }
 
