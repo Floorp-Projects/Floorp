@@ -102,7 +102,8 @@ INTL_ResourceCharSet()
 int16
 INTL_DefaultDocCharSetID(MWContext *cxt)
 {
-  printf("INTL_DefaultDocCharSetID (empty)\n");
+  printf("INTL_DefaultDocCharSetID\n");
+  return (CS_LATIN1);
 }
 
 /*

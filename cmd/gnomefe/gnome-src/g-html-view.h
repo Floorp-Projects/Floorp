@@ -50,7 +50,7 @@ struct _MozHTMLView {
   int32 sw_width, sw_height;
 
   GtkWidget *scrolled_window;
-  int s_width, s_height;
+  int s_width, s_height, s_depth;
 };
 
 extern void		moz_html_view_init(MozHTMLView *view, MozFrame *parent_frame, MWContext *context);

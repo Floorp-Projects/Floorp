@@ -51,14 +51,18 @@ FE_HandleLayerEvent(MWContext *context,
     {
     case CL_EVENT_MOUSE_MOVE:
       html_view_handle_pointer_motion_for_layer(view, layer, event);
+      return TRUE;
       break;
     case CL_EVENT_MOUSE_BUTTON_DOWN:
       html_view_handle_button_press_for_layer(view, layer, event);
+      return TRUE;
       break;
     case CL_EVENT_MOUSE_BUTTON_UP:
       html_view_handle_button_release_for_layer(view, layer, event);
+      return TRUE;
       break;
     default:
+      return FALSE;
       break;
     }
 }

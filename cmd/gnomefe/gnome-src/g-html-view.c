@@ -377,18 +377,25 @@ html_view_event_handler(GtkWidget *widget,
         if (view->scrolled_window->allocation.width != 
             view->s_width ||
             view->scrolled_window->allocation.height !=
-            view->s_height) {
+            view->s_height ||
+            view->s_depth != gnomefe_depth) {
           event->configure.width = view->s_width =
             view->scrolled_window->allocation.width;
           event->configure.height = view->s_height =
             view->scrolled_window->allocation.height;
 				/* Fall thru... */
+          return TRUE;
+          break;
 	}
 	else
-	  break;
+          {
+            return FALSE;
+            break;
+          }
       }
     case GDK_CONFIGURE:
-      printf ("configure %d,%d\n", event->configure.width, event->configure.height);
+      printf ("html_view_event_handler: configure %d,%d\n",
+              event->configure.width, event->configure.height);
       /* We only need the composited area without the scrollbars.  However,
 	 since the scrollbars can become managed and then unmanaged during
 	 layout, it is not worth the effort of keeping track of when they
@@ -398,21 +405,25 @@ html_view_event_handler(GtkWidget *widget,
 	CL_ResizeCompositorWindow(context->compositor,
 				  event->configure.width,
 				  event->configure.height);
+      return TRUE;
       break;
     case GDK_MOTION_NOTIFY:
       html_view_handle_pointer_motion(view, event);
+      return TRUE;
       break;
     case GDK_BUTTON_PRESS:
       html_view_handle_button_press(view, event);
+      return TRUE;
       break;
     case GDK_BUTTON_RELEASE:
       html_view_handle_button_release(view, event);
+      return TRUE;
       break;
     case GDK_2BUTTON_PRESS:
     default:
+      return FALSE;
       break;
     }
-  return TRUE;
 }
 
 void 

@@ -143,14 +143,20 @@ _IMGCB_NewPixmap(IMGCB* img_cb, jint op, void *dpy_cx, jint width, jint height,
                    img_header->width,
                    img_header->height,
                    visual_depth);
-  if (mask)
-    mask_client_data->gdk_pixmap =
-      gdk_pixmap_new((GdkWindow *)fe_drawable->drawable,
-                     mask_header->width,
-                     mask_header->height,
-                     1);
-  printf("\tNewpixmap: width, height = %d, %d\n", img_header->width,
+  printf("\tNewpixmap: width, height = %d, %d\n",
+         img_header->width,
 	 img_header->height);
+  if (mask)
+    {
+      mask_client_data->gdk_pixmap =
+        gdk_pixmap_new((GdkWindow *)fe_drawable->drawable,
+                       mask_header->width,
+                       mask_header->height,
+                       1);
+      printf("Newbitmap: width, height = %d, %d\n",
+             mask_header->width,
+             mask_header->height);
+    }
   
   /* Fill in the pixmap client_data. */
   image->client_data = (void *)img_client_data;
@@ -216,8 +222,8 @@ _IMGCB_UpdatePixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* pixmap,
   bits = (unsigned char *)pixmap->bits + widthBytes * y_offset;
 
   x_image = XCreateImage(dpy, visual,
-                         (pixmap_depth == 1 ? 1 : visual_depth),
-                         (pixmap_depth == 1 ? XYPixmap : ZPixmap),
+                         ((pixmap_depth == 1) ? 1 : visual_depth),
+                         ((pixmap_depth == 1) ? XYPixmap : ZPixmap),
                          x_offset,                   /* offset */
                          bits,
                          width,
@@ -313,8 +319,6 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
 
   GdkPixmap *img_x_pixmap=NULL, *mask_x_pixmap=NULL;
   GdkGC *gc;
-  GdkGCValues gcv;
-  GdkGCValuesMask flags;
   XP_Bool tiling_required = FALSE;
   GdkWindow * window = (GdkWindow *)fe_drawable->drawable;
 
@@ -324,75 +328,76 @@ _IMGCB_DisplayPixmap(IMGCB* img_cb, jint op, void* dpy_cx, IL_Pixmap* image,
 				/* Check for zero display area. */
   if (width == 0 || height == 0)
     return;
-
+  
 				/* Retrieve the server pixmaps. */
   img_client_data = (fe_PixmapClientData *)image->client_data;
   if (!img_client_data)
     return;
   img_x_pixmap = img_client_data->gdk_pixmap;
   if (!img_x_pixmap)
-        return;
-    if (mask) {
-        mask_client_data = (fe_PixmapClientData *)mask->client_data;
-        mask_x_pixmap = mask_client_data->gdk_pixmap;
-    }
-
-    /* Determine whether tiling is required. */
-    if ((x_offset + width > img_width) || (y_offset + height > img_height))
-        tiling_required = TRUE;
-
-    /* Compute the offset into the drawable of the image origin. */
-    img_x_offset = x - find_html_view(context)->doc_x +
-        fe_drawable->x_origin;
-    img_y_offset = y - find_html_view(context)->doc_y +
-        fe_drawable->y_origin;
-
-    /* Compute the offset into the drawable for the area to be drawn. */
-    rect_x_offset = img_x_offset + x_offset;
-    rect_y_offset = img_y_offset + y_offset;
-
-    /* Do the actual drawing.  There are several cases to be dealt with:
-       transparent vs non-transparent, tiled vs non-tiled and clipped by
-       compositor's clip region vs not clipped. */
-    memset(&gcv, ~0, sizeof (gcv));
-
-    printf("Display: mask %p, tiling %d, clip %p\n", mask,
-           tiling_required, fe_drawable->clip_region);
-    
-
-    gc = gdk_gc_new(window);
-    if (mask)
+    return;
+  if (mask) {
+    mask_client_data = (fe_PixmapClientData *)mask->client_data;
+    mask_x_pixmap = mask_client_data->gdk_pixmap;
+  }
+  
+  /* Determine whether tiling is required. */
+  if ((x_offset + width > img_width) || (y_offset + height > img_height))
+    tiling_required = TRUE;
+  
+  /* Compute the offset into the drawable of the image origin. */
+  img_x_offset = x - find_html_view(context)->doc_x +
+    fe_drawable->x_origin;
+  img_y_offset = y - find_html_view(context)->doc_y +
+    fe_drawable->y_origin;
+  
+  /* Compute the offset into the drawable for the area to be drawn. */
+  rect_x_offset = img_x_offset + x_offset;
+  rect_y_offset = img_y_offset + y_offset;
+  
+  /* Do the actual drawing.  There are several cases to be dealt with:
+     transparent vs non-transparent, tiled vs non-tiled and clipped by
+     compositor's clip region vs not clipped. */
+  
+  printf("Display: mask %p, tiling %d, clip %p\n", mask,
+         tiling_required, fe_drawable->clip_region);
+  
+  
+  gc = gdk_gc_new(window);
+  if (mask)
+    {
       gdk_gc_set_clip_mask(gc, mask_x_pixmap);
-
-    gdk_gc_set_ts_origin(gc, x_offset, y_offset);
-    gdk_gc_set_clip_origin(gc, rect_x_offset, rect_y_offset);
-
-    if (fe_drawable->clip_region) { /* This is a bad hack */
+      gdk_gc_set_clip_origin(gc, rect_x_offset, rect_y_offset);
+    }
+  
+#if 0
+  if (fe_drawable->clip_region) { /* This is a bad hack */
       GdkRegionPrivate * hack = gdk_region_new();
       FE_CopyRegion((Region)fe_drawable->clip_region, 
                     hack->xregion );
       gdk_gc_set_clip_region(gc, hack);
       gdk_region_destroy(hack);
-    }
+  }
+#endif
 
-    if (tiling_required) 
-      gdk_draw_rectangle(drawable, gc, TRUE,
-                         rect_x_offset, rect_y_offset, width,
-                         height);
-    else {
-      printf("draw_pixmap (xo %d, yo %d, rxo %d, ryo %d, w %d, h %d)\n",
-             x_offset, y_offset,
-             rect_x_offset, rect_y_offset,
-             width, height);
-      gdk_draw_pixmap(drawable, gc, img_x_pixmap,
-                      x_offset, y_offset,
-                      rect_x_offset, rect_y_offset,
-                      width, height);
-    }
-    
+  if (tiling_required) 
+    gdk_draw_rectangle(drawable, gc, TRUE,
+                       rect_x_offset, rect_y_offset, width,
+                       height);
+  else {
+    printf("draw_pixmap (xo %d, yo %d, rxo %d, ryo %d, w %d, h %d)\n",
+           x_offset, y_offset,
+           rect_x_offset, rect_y_offset,
+           width, height);
+    gdk_draw_pixmap(drawable, gc, img_x_pixmap,
+                    x_offset, y_offset,
+                    rect_x_offset, rect_y_offset,
+                    width, height);
+  }
+  
 				/* Clean up. */
-    gdk_gc_destroy(gc);
-
+  gdk_gc_destroy(gc);
+  
 }
 
 JMC_PUBLIC_API(void)
