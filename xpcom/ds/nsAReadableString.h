@@ -27,6 +27,7 @@
   // WORK IN PROGRESS
 
 #include "nscore.h"
+#include <iterator>
 
 
 /*
@@ -58,20 +59,26 @@ class basic_nsAReadableString
   {
     protected:
 
-      enum FragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFragment };
 
       struct ConstFragment
         {
           const CharT* mStart;
           const CharT* mEnd;
 
-          basic_nsAReadableString<CharT>* mOwningString;
-          void*                           mFragmentIdentifier;
+          const basic_nsAReadableString<CharT>* mOwningString;
+          void*                                 mFragmentIdentifier;
+
+          explicit
+          ConstFragment( const basic_nsAReadableString<CharT>* aOwner = 0 )
+              : mStart(0), mEnd(0), mOwningString(aOwner), mFragmentIdentifier(0)
+            {
+              // nothing else to do here
+            }
         };
 
-      virtual PRBool GetFragment( ConstFragment&, FragmentRequest ) const = 0;
-
     public:
+      enum FragmentRequest { kPrevFragment, kFirstFragment, kLastFragment, kNextFragment, kFragmentAt };
+      virtual const CharT* GetFragment( ConstFragment&, FragmentRequest, PRUint32 = 0 ) const = 0;
 
       friend class ConstIterator;
       class ConstIterator
@@ -79,57 +86,135 @@ class basic_nsAReadableString
         {
             friend class basic_nsAReadableString<CharT>;
 
-            ConstFragment mCurrentFragment;
+            ConstFragment mFragment;
+            const CharT*  mPosition;
+
+            void
+            normalize_forward()
+              {
+                if ( mPosition == mFragment.mEnd )
+                  if ( mFragment.mOwningString->GetFragment(mFragment, kNextFragment) )
+                    mPosition = mFragment.mStart;
+              }
+
+            void
+            normalize_backward()
+              {
+                if ( mPosition == mFragment.mStart )
+                  if ( mFragment.mOwningString->GetFragment(mFragment, kPrevFragment) )
+                    mPosition = mFragment.mEnd;
+              }
+
+            ConstIterator( const ConstFragment& aFragment, const CharT* aStartingPosition )
+                : mFragment(aFragment), mPosition(aStartingPosition)
+              {
+                // nothing else to do here
+              }
 
           public:
             // ConstIterator( const ConstIterator& ); ...use default copy-constructor
+            // ConstIterator& operator=( const ConstIterator& ); ...use default copy-assignment operator
 
             
+            CharT
+            operator*()
+              {
+                normalize_forward();
+                return *mPosition;
+              }
+
+            ConstIterator&
+            operator++()
+              {
+                normalize_forward();
+                ++mPosition;
+                return *this;
+              }
+
+            ConstIterator
+            operator++( int )
+              {
+                ConstIterator result(*this);
+                normalize_forward();
+                ++mPosition;
+                return result;
+              }
+
+            ConstIterator&
+            operator--()
+              {
+                normalize_backward();
+                ++mPosition;
+                return *this;
+              }
+
+            ConstIterator
+            operator--( int )
+              {
+                ConstIterator result(*this);
+                normalize_backward();
+                ++mPosition;
+                return result;
+              }
+
+            bool
+            operator==( const ConstIterator& rhs )
+              {
+                return mPosition == rhs.mPosition;
+              }
+
+            bool
+            operator!=( const ConstIterator& rhs )
+              {
+                return mPosition != rhs.mPosition;
+              }
         };
 
 
     public:
-      typedef unsigned long size_type;
+
+      ConstIterator
+      Begin( PRUint32 aOffset = 0 ) const
+        {
+          ConstFragment fragment(this);
+          const CharT* startPos = GetFragment(fragment, kFragmentAt, aOffset);
+          return ConstIterator(fragment, startPos);
+        }
+
+      ConstIterator
+      End( PRUint32 aOffset = 0 ) const
+        {
+          ConstFragment fragment(this);
+          const CharT* startPos = GetFragment(fragment, kFragmentAt, min(0U, Length()-aOffset));
+          return ConstIterator(fragment, startPos);
+        }
 
     public:
       virtual ~basic_nsAReadableString<CharT>() { }
 
-      virtual size_type Length() const = 0;
+      virtual PRUint32 Length() const = 0;
       PRBool IsEmpty() const { return Length()==0; }
-      PRBool IsUnicode() const { return PR_FALSE; }
 
       // PRBool IsOrdered() const;
 
 
 
+      PRBool IsUnicode() const { return PR_FALSE; }
+        // ...but note specialization for |PRUnichar|, below
 
-      const CharT*
-      GetBuffer() const
-          // DEPRECATED: use the iterators instead
-        {
-          ConstFragment fragment;
-          GetFragment(fragment, kFirstFragment);
-          return fragment.mStart;
-        }
+      const CharT* GetBuffer() const { return 0; }
+      const CharT* GetUnicode() const { return 0; }
+        // ...but note specializations for |char| and |PRUnichar|, below
 
-      const CharT*
-      GetUnicode() const
-          // DEPRECATED: use the iterators instead
-        {
-          ConstFragment fragment;
-          GetNextFragment(fragment, kFirstFragment);
-          return fragment.mStart;
-        }
-
-      // CharT operator[]( size_type ) const;
-      // CharT CharAt( size_type ) const;
+      // CharT operator[]( PRUint32 ) const;
+      // CharT CharAt( PRUint32 ) const;
       // CharT First() const;
       // CharT Last() const;
 
       void ToLowerCase( basic_nsAWritableString<CharT>& ) const;
       void ToUpperCase( basic_nsAWritableString<CharT>& ) const;
 
-      // size_type CountChar( char_type ) const;
+      // PRUint32 CountChar( char_type ) const;
 
       // nsString* ToNewString() const; NO!  The right way to say this is
       // new nsString( fromAReadableString )
@@ -137,15 +222,15 @@ class basic_nsAReadableString
       // char* ToNewCString() const;
       // char* ToNewUTF8String() const;
       // PRUnichar* ToNewUnicode() const;
-      // char* ToCString( char*, size_type, size_type ) const;
+      // char* ToCString( char*, PRUint32, PRUint32 ) const;
       // double ToFLoat( PRInt32* aErrorCode ) const;
       // long ToInteger( PRInt32* aErrorCode, PRUint32 aRadix );
 
-      size_type Left( basic_nsAWritableString<CharT>&, size_type ) const;
-      size_type Mid( basic_nsAWritableString<CharT>&, size_type, size_type ) const;
-      size_type Right( basic_nsAWritableString<CharT>&, size_type ) const;
+      PRUint32 Left( basic_nsAWritableString<CharT>&, PRUint32 ) const;
+      PRUint32 Mid( basic_nsAWritableString<CharT>&, PRUint32, PRUint32 ) const;
+      PRUint32 Right( basic_nsAWritableString<CharT>&, PRUint32 ) const;
 
-      // size_type BinarySearch( CharT ) const;
+      // PRUint32 BinarySearch( CharT ) const;
       // Find( ... ) const;
       // FindChar( ... ) const;
       // FindCharInSet( ... ) const;
@@ -176,33 +261,40 @@ basic_nsAReadableString<PRUnichar>::IsUnicode() const
 NS_SPECIALIZE_TEMPLATE
 inline
 const PRUnichar*
-basic_nsAReadableString<PRUnichar>::GetBuffer() const
+basic_nsAReadableString<PRUnichar>::GetUnicode() const
+    // DEPRECATED: use the iterators instead
   {
-    return 0;
+    ConstFragment fragment;
+    GetFragment(fragment, kFirstFragment);
+    return fragment.mStart;
   }
 
 NS_SPECIALIZE_TEMPLATE
 inline
 const char*
-basic_nsAReadableString<char>::GetUnicode() const
+basic_nsAReadableString<char>::GetBuffer() const
+    // DEPRECATED: use the iterators instead
   {
-    return 0;
+    ConstFragment fragment;
+    GetFragment(fragment, kFirstFragment);
+    return fragment.mStart;
   }
 
 
 template <class CharT>
 class do_ToLowerCase : unary_function<CharT, CharT>
   {
-    std::locale loc;
-    std::ctype<CharT> ct;
+    // std::locale loc;
+    // std::ctype<CharT> ct;
 
     public:
-      do_ToLowerCase() : ct( use_facet< std::ctype<CharT> >(loc) ) { }
+      // do_ToLowerCase() : ct( use_facet< std::ctype<CharT> >(loc) ) { }
    
       CharT
       operator()( CharT aChar )
         {
-          return ct.tolower(aChar);
+          // return ct.tolower(aChar);
+          return CharT(std::tolower(aChar));
         }
   };
 
@@ -211,22 +303,23 @@ void
 basic_nsAReadableString<CharT>::ToLowerCase( basic_nsAWritableString<CharT>& aResult ) const
   {
     aResult.SetLength(Length());
-    std::transform(begin(), end(), aResult.begin(), do_ToLowerCase<CharT>());
+    std::transform(Begin(), End(), aResult.Begin(), do_ToLowerCase<CharT>());
   }
 
 template <class CharT>
 class do_ToUpperCase : unary_function<CharT, CharT>
   {
-    std::locale loc;
-    std::ctype<CharT> ct;
+    // std::locale loc;
+    // std::ctype<CharT> ct;
 
     public:
-      do_ToUpperCase() : ct( use_facet< std::ctype<CharT> >(loc) ) { }
+      // do_ToUpperCase() : ct( use_facet< std::ctype<CharT> >(loc) ) { }
    
       CharT
       operator()( CharT aChar )
         {
-          return ct.toupper(aChar);
+          // return ct.toupper(aChar);
+          return CharT(std::toupper(aChar));
         }
   };
 
@@ -235,35 +328,38 @@ void
 basic_nsAReadableString<CharT>::ToUpperCase( basic_nsAWritableString<CharT>& aResult ) const
   {
     aResult.SetLength(Length());
-    std::transform(begin(), end(), aResult.begin(), do_ToUpperCase<CharT>());
+    std::transform(Begin(), End(), aResult.Begin(), do_ToUpperCase<CharT>());
   }
 
 template <class CharT>
-typename basic_nsAReadableString<CharT>::size_type
-basic_nsAReadableString<CharT>::Left( basic_nsAWritableString<CharT>& aResult, size_type aLengthToCopy ) const
+PRUint32
+basic_nsAReadableString<CharT>::Left( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
   {
     aLengthToCopy = min(aLengthToCopy, Length());
     aResult.SetLength(aLengthToCopy);
-    std::copy(begin(), begin()+aLengthToCopy, aResult.begin());
+    std::copy(Begin(), Begin(aLengthToCopy), aResult.Begin());
+    return aLengthToCopy;
   }
 
 template <class CharT>
-typename basic_nsAReadableString<CharT>::size_type
-basic_nsAReadableString<CharT>::Mid( basic_nsAWritableString<CharT>& aResult, size_type aStartPos, size_type aLengthToCopy ) const
+PRUint32
+basic_nsAReadableString<CharT>::Mid( basic_nsAWritableString<CharT>& aResult, PRUint32 aStartPos, PRUint32 aLengthToCopy ) const
   {
     aStartPos = min(aStartPos, Length());
     aLengthToCopy = min(aLengthToCopy, Length()-aStartPos);
     aResult.SetLength(aLengthToCopy);
-    std::copy(begin()+aStartPos, begin()+(aStartPos+aLengthToCopy), aResult.begin());
+    std::copy(Begin(aStartPos), Begin(aStartPos+aLengthToCopy), aResult.Begin());
+    return aLengthToCopy;
   }
 
 template <class CharT>
-typename basic_nsAReadableString<CharT>::size_type
-basic_nsAReadableString<CharT>::Right( basic_nsAWritableString<CharT>& aResult, size_type aLengthToCopy ) const
+PRUint32
+basic_nsAReadableString<CharT>::Right( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
   {
     aLengthToCopy = min(aLengthToCopy, Length());
     aResult.SetLength(aLengthToCopy);
-    std::copy(end()-aLengthToCopy, end(), aResult.begin());
+    std::copy(End(aLengthToCopy), End(), aResult.Begin());
+    return aLengthToCopy;
   }
 
 template <class CharT>
@@ -335,7 +431,13 @@ class nsConcatString
 // readable + CharT* --> concat
 // CharT* + readable --> concat
 
-// operator<<
+template <class CharT, class TraitsT>
+basic_ostream<CharT, class TraitsT>&
+operator<<( basic_ostream<CharT, TraitsT>& os, const basic_nsAReadableString<CharT>& s )
+  {
+    std::copy(s.Begin(), s.End(), ostream_iterator<CharT, CharT, TraitsT>(os));
+    return os;
+  }
 
 typedef basic_nsAReadableString<PRUnichar>  nsAReadableString;
 typedef basic_nsAReadableString<char>       nsAReadableCString;

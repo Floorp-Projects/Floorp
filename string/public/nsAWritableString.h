@@ -45,9 +45,6 @@ class basic_nsAWritableString
       ...
     */
   {
-    public:
-      typedef typename basic_nsAReadableString<CharT>::size_type  size_type;
-
     protected:
       typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
       typedef typename basic_nsAReadableString<CharT>::ConstFragment    ConstFragment;
@@ -59,19 +56,131 @@ class basic_nsAWritableString
 
           basic_nsAWritableString<CharT>* mOwningString;
           void*                           mFragmentIdentifier;
+
+          explicit
+          Fragment( basic_nsAWritableString<CharT>* aOwner = 0 )
+              : mStart(0), mEnd(0), mOwningString(aOwner), mFragmentIdentifier(0)
+            {
+              // nothing else to do here
+            }
         };
 
+    public:
       using basic_nsAReadableString<CharT>::GetFragment;
-      virtual PRBool GetFragment( Fragment&, FragmentRequest ) = 0;
+      virtual CharT* GetFragment( Fragment&, FragmentRequest, PRUint32 = 0 ) = 0;
+
+      friend class Iterator;
+      class Iterator
+          : public std::bidirectional_iterator_tag
+        {
+            friend class basic_nsAWritableString<CharT>;
+
+            Fragment  mFragment;
+            CharT*    mPosition;
+
+            void
+            normalize_forward()
+              {
+                if ( mPosition == mFragment.mEnd )
+                  if ( mFragment.mOwningString->GetFragment(mFragment, kNextFragment) )
+                    mPosition = mFragment.mStart;
+              }
+
+            void
+            normalize_backward()
+              {
+                if ( mPosition == mFragment.mStart )
+                  if ( mFragment.mOwningString->GetFragment(mFragment, kPrevFragment) )
+                    mPosition = mFragment.mEnd;
+              }
+
+            Iterator( Fragment& aFragment, CharT* aStartingPosition )
+                : mFragment(aFragment), mPosition(aStartingPosition)
+              {
+                // nothing else to do here
+              }
+
+          public:
+            // Iterator( const Iterator& ); ...use default copy-constructor
+            // Iterator& operator=( const Iterator& ); ...use default copy-assignment operator
+
+            
+            CharT&
+            operator*()
+              {
+                normalize_forward();
+                return *mPosition;
+              }
+
+            Iterator&
+            operator++()
+              {
+                normalize_forward();
+                ++mPosition;
+                return *this;
+              }
+
+            Iterator
+            operator++( int )
+              {
+                Iterator result(*this);
+                normalize_forward();
+                ++mPosition;
+                return result;
+              }
+
+            Iterator&
+            operator--()
+              {
+                normalize_backward();
+                ++mPosition;
+                return *this;
+              }
+
+            Iterator
+            operator--( int )
+              {
+                Iterator result(*this);
+                normalize_backward();
+                ++mPosition;
+                return result;
+              }
+
+            const CharT*
+            get() const
+              {
+                return mPosition;
+              }
+        };
 
     public:
-      virtual void SetCapacity( size_type ) = 0;
-      virtual void SetLength( size_type ) = 0;
+      using basic_nsAReadableString<CharT>::Begin;
+
+      Iterator
+      Begin( PRUint32 aOffset = 0 )
+        {
+          Fragment fragment(this);
+          CharT* startPos = GetFragment(fragment, kFragmentAt, aOffset);
+          return Iterator(fragment, startPos);
+        }
+
+      using basic_nsAReadableString<CharT>::End;
+
+      Iterator
+      End( PRUint32 aOffset = 0 )
+        {
+          Fragment fragment(this);
+          CharT* startPos = GetFragment(fragment, kFragmentAt, min(0U, Length()-aOffset));
+          return Iterator(fragment, startPos);
+        }
+
+      virtual void SetCapacity( PRUint32 ) = 0;
+      virtual void SetLength( PRUint32 ) = 0;
 
 
         // ...a synonym for |SetLength()|
       void
-      Truncate( size_type aNewLength=0 )
+      Truncate( PRUint32 aNewLength=0 )
         {
           SetLength(aNewLength);
         }

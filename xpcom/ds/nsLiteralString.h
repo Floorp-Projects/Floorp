@@ -27,13 +27,63 @@
   // WORK IN PROGRESS
 
 #include "nsAReadableString.h"
+#include <string>
 
 template <class CharT>
 class basic_nsLiteralString
       : public basic_nsAReadableString<CharT>
   {
-    // ...
+    typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
+    typedef typename basic_nsAWritableString<CharT>::ConstFragment    ConstFragment;
+
+    protected:
+      virtual const CharT* GetFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
+
+    public:
+      basic_nsLiteralString( const CharT* );
+      virtual PRUint32 Length() const;
+      // ...
+
+    private:
+      const CharT* mStart;
+      const CharT* mEnd;
   };
+
+template <class CharT>
+basic_nsLiteralString<CharT>::basic_nsLiteralString( const CharT* aStringLiteral )
+    : mStart(aStringLiteral)
+  {
+    mEnd = mStart + char_traits<CharT>::length(mStart);
+  }
+
+template <class CharT>
+const CharT*
+basic_nsLiteralString<CharT>::GetFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aOffset ) const
+  {
+    switch ( aRequest )
+      {
+        case kFirstFragment:
+        case kLastFragment:
+        case kFragmentAt:
+          aFragment.mStart = mStart;
+          aFragment.mEnd = mEnd;
+          return mStart + aOffset;
+        
+        case kPrevFragment:
+        case kNextFragment:
+        default:
+          return 0;
+      }
+  }
+
+template <class CharT>
+PRUint32
+basic_nsLiteralString<CharT>::Length() const
+  {
+    return PRUint32(mEnd - mStart);
+  }
+
+
 
 typedef basic_nsLiteralString<PRUnichar>  nsLiteralString;
 typedef basic_nsLiteralString<char>       nsLiteralCString;
