@@ -333,32 +333,41 @@ nsContentList::DocumentWillBeDestroyed(nsIDocument *aDocument)
 nsresult
 nsContentList::Match(nsIContent *aContent, PRBool *aMatch)
 {
-  if (nsnull != mMatchAtom) {
-    nsIAtom *name = nsnull;
-    aContent->GetTag(name);
+  *aMatch = PR_FALSE;
 
-    // If we have to match all, only do those that have
-    // a tagName i.e. only the elements.
-    if (mMatchAll && (nsLayoutAtoms::textTagName != name) &&
-        (nsLayoutAtoms::commentTagName != name) &&
-        (nsLayoutAtoms::processingInstructionTagName != name)) {
+  if (!aContent) {
+    return NS_OK;
+  }
+
+  if (mMatchAtom) {
+    nsCOMPtr<nsINodeInfo> ni;
+    aContent->GetNodeInfo(*getter_AddRefs(ni));
+
+    if (!ni)
+      return NS_OK;
+
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
+
+    if (!node)
+      return NS_OK;
+
+    PRUint16 type;
+    node->GetNodeType(&type);
+
+    if (type != nsIDOMNode::ELEMENT_NODE)
+      return NS_OK;
+
+    if (mMatchNameSpaceId == kNameSpaceID_Unknown) {
+      if (mMatchAll || ni->Equals(mMatchAtom)) {
+        *aMatch = PR_TRUE;
+      }
+    } else if ((mMatchAll && ni->NamespaceEquals(mMatchNameSpaceId)) ||
+               ni->Equals(mMatchAtom, mMatchNameSpaceId)) {
       *aMatch = PR_TRUE;
     }
-    // XXX We don't yet match on namespace. Maybe we should??
-    else if (name == mMatchAtom) {
-      *aMatch = PR_TRUE;
-    }
-    else {
-      *aMatch = PR_FALSE;
-    }
-    
-    NS_IF_RELEASE(name);
   }
   else if (nsnull != mFunc) {
     *aMatch = (*mFunc)(aContent, mData);
-  }
-  else {
-    *aMatch = PR_FALSE;
   }
 
   return NS_OK;

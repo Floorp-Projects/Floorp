@@ -80,9 +80,6 @@ public:
                                   nsIDOMAttr** aReturn);
   NS_IMETHOD    GetElementById(const nsString& aElementId,
                                nsIDOMElement** aReturn);
-  NS_IMETHOD    GetElementsByTagNameNS(const nsString& aNamespaceURI,
-                                       const nsString& aLocalName,
-                                       nsIDOMNodeList** aReturn);
   NS_IMETHOD    Load(const nsString& aUrl, const nsString& aMimeType);
 
   // nsIXMLDocument interface

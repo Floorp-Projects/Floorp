@@ -2139,10 +2139,9 @@ nsHTMLDocument::GetElementsByTagNameNS(const nsString& aNamespaceURI,
                                        const nsString& aLocalName,
                                        nsIDOMNodeList** aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return nsDocument::GetElementsByTagNameNS(aNamespaceURI, aLocalName,
+                                            aReturn); 
 }
-
 
 PRBool
 nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, nsString* aData)
