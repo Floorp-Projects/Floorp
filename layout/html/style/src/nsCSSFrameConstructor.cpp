@@ -8080,7 +8080,9 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
           }
         }
       }
-      else {
+      // Don't create child frames for iframes/frames, they should not
+      // display any content that they contain.
+      else if (nsLayoutAtoms::htmlFrameOuterFrame != frameType.get()) {
         // Construct a child frame (that does not have a table as parent)
         ConstructFrame(shell, aPresContext, state, childContent, parentFrame, frameItems);
       }
