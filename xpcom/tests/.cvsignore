@@ -14,10 +14,12 @@ TestAutoLock
 TestBuffers
 TestCOMPtr
 TestCOMPtrEq
+TestArray
 TestCRT
 TestFactory
 TestID
 TestObserverService
+TestPermanentAtoms
 TestPipes
 TestThreads 
 TestVoidBTree
