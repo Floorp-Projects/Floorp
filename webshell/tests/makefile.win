@@ -22,6 +22,6 @@
 DEPTH=..\..
 
 
-DIRS= viewer ComFactory
+DIRS= viewer
 
 include <$(DEPTH)\config\rules.mak>
