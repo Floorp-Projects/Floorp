@@ -81,7 +81,8 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsGfxAutoTextControlFrame.obj \
   .\$(OBJDIR)\nsNativeFormControlFrame.obj \
   .\$(OBJDIR)\nsNativeRadioControlFrame.obj \
-  .\$(OBJDIR)\nsRadioControlGroup.obj
+  .\$(OBJDIR)\nsRadioControlGroup.obj \
+  .\$(OBJDIR)\nsNativeCheckboxControlFram.obj \
 
 
 LINCS= -I$(PUBLIC)\xpcom  \
