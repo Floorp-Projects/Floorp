@@ -360,13 +360,13 @@ PRBool nsPrincipal::isSecurePrincipal(void)
   if (!isCodebase()) 
     return PR_TRUE;
 
-  if ((memcmp("https:", itsKey, strlen("https:"))) ||
-      (memcmp("file:", itsKey, strlen("file:"))))
+  if ((0 == memcmp("https:", itsKey, strlen("https:"))) ||
+      (0 == memcmp("file:", itsKey, strlen("file:"))))
     return PR_TRUE;
 
   /* signed.applets.codebase_principal_support */
-  if ((memcmp("http:", itsKey, strlen("http:"))) && 
-      (!CMGetBoolPref("signed.applets.codebase_principal_support")))
+  if ((0 == memcmp("http:", itsKey, strlen("http:"))) && 
+      (CMGetBoolPref("signed.applets.codebase_principal_support")))
     return PR_TRUE;
 
   return PR_FALSE;
