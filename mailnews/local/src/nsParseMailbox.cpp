@@ -1697,6 +1697,8 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
         PRInt32 junkScore;
         filterAction->GetJunkScore(&junkScore);
         junkScoreStr.AppendInt(junkScore);
+        nsMsgKey msgKey;
+        msgHdr->GetMessageKey(&msgKey);
         m_mailDB->SetStringProperty(msgKey, "junkscore", junkScoreStr.get());
         m_mailDB->SetStringProperty(msgKey, "junkscoreorigin", /* ### should this be plugin? */"plugin");
       }
