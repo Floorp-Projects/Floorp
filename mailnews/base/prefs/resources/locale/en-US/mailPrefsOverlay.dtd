@@ -1,12 +1,12 @@
 
-<!ENTITY enbJsCheckMailNews.label     "Enable JavaScript for Mail and News">
+<!ENTITY enbJsCheckMailNews.label     "Enable JavaScript for Mail &amp; Newsgroups">
 <!ENTITY enbJsCheckMailNews.accesskey "m">
 
 <!--LOCALIZATION NOTE (mesCheck.label): DONT_TRANSLATE -->
 <!ENTITY mesCheck.label "&vendorShortName; Mail">
 <!ENTITY mesCheck.accesskey "m">
 
-<!ENTITY mail.label "Mail and Newsgroups">
+<!ENTITY mail.label "Mail &amp; Newsgroups">
 <!ENTITY address.label "Addressing">
 <!ENTITY viewingMessages.label "Message Display">
 <!ENTITY composingMessages.label "Message Composition">

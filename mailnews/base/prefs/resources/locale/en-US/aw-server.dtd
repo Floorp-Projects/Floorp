@@ -26,4 +26,4 @@
 	  inserting text after the "&quot;" entity in currentSmtpAfter.label, if required grammatically
 -->
 <!-- LOCALIZATION NOTE (haveSmtp1.label) : Do not translate "SMTP" in below line -->
-<!ENTITY haveSmtp1.label "'@server_name@' is set as your outgoing server (SMTP). You need only one outgoing server, even for multiple accounts. Normally you choose the outgoing server for your most active mail account . To specify additional outgoing servers, choose Mail/News Account Settings from the Edit menu.">
+<!ENTITY haveSmtp1.label "'@server_name@' is set as your outgoing server (SMTP). You need only one outgoing server, even for multiple accounts. Normally you choose the outgoing server for your most active mail account . To specify additional outgoing servers, choose Mail &amp; Newsgroups Account Settings from the Edit menu.">

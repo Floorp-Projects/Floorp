@@ -1,12 +1,12 @@
 
 <!-- LOCALIZATION NOTE (messengerCmd.label): DONT_TRANSLATE -->
-<!ENTITY messengerCmd.label					"Mail &amp; News">
+<!ENTITY messengerCmd.label					"Mail &amp; Newsgroups">
 <!ENTITY messengerCmd.accesskey				"m">
 <!ENTITY messengerCmd.commandkey			"2">
 <!ENTITY addressBookCmd.label				"Address Book">  
 <!ENTITY addressBookCmd.accesskey			"a">
 <!ENTITY addressBookCmd.commandkey			"5">
 
-<!ENTITY taskMessenger.tooltip  "Mail &amp; News">
+<!ENTITY taskMessenger.tooltip  "Mail &amp; Newsgroups">
 <!ENTITY taskAddressBook.tooltip  "Address Book">
 

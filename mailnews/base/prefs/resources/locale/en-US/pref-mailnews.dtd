@@ -18,8 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY pane.title                       "Mail and Newsgroups">
-<!ENTITY pane.description                 "General Mail/News settings">
+<!ENTITY pane.title                       "Mail &amp; Newsgroups">
 
 <!ENTITY windowSettings.label             "General Settings">
 <!ENTITY selectWindowLayout.label         "Select the window layout you prefer for Mail:">

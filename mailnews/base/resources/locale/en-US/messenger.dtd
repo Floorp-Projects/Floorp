@@ -18,7 +18,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!ENTITY messengerWindow.title "Mail &amp; News">
+<!ENTITY messengerWindow.title "Mail &amp; Newsgroups">
 <!ENTITY titleModifier.label "&brandShortName;">
 <!ENTITY titleSeperator.label " - ">
 
@@ -105,7 +105,7 @@ Rights Reserved.
 <!ENTITY filtersCmd.accesskey "i">
 <!ENTITY folderPropsCmd.label "Properties...">
 <!ENTITY folderPropsCmd.accesskey "o">
-<!ENTITY accountManagerCmd.label "Mail/News Account Settings...">
+<!ENTITY accountManagerCmd.label "Mail &amp; Newsgroups Account Settings...">
 <!ENTITY accountManagerCmd.accesskey "M">
 <!ENTITY undoDeleteMsgCmd.label "Undo Delete Message">
 <!ENTITY redoDeleteMsgCmd.label "Redo Delete Message">
