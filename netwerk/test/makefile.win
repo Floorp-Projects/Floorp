@@ -17,12 +17,6 @@
 
 DEPTH=..\..
 
-// temporary, until we land:
-!ifndef NECKO
-include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\netwerk\dist\include
-!endif
-
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestFileInput.exe
 PROG2 = .\$(OBJDIR)\TestSocketInput.exe

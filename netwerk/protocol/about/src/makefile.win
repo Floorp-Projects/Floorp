@@ -18,12 +18,6 @@
 DEPTH=..\..\..\..
 MODULE=necko
 
-// temporary, until we land:
-!ifndef NECKO
-include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\netwerk\dist\include
-!endif
-
 IS_COMPONENT=1
 MAKE_OBJ_TYPE=DLL
 DLLNAME=necko_about
