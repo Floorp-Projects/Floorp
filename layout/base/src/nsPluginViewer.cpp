@@ -52,6 +52,7 @@ static NS_DEFINE_IID(kIContentViewerIID, NS_ICONTENT_VIEWER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIPluginInstanceOwnerIID, NS_IPLUGININSTANCEOWNER_IID);
+static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
@@ -78,7 +79,8 @@ public:
   nsIStreamListener* mNextStream;
 };
 
-class pluginInstanceOwner : public nsIPluginInstanceOwner {
+class pluginInstanceOwner : public nsIPluginInstanceOwner
+{
 public:
   pluginInstanceOwner();
   virtual ~pluginInstanceOwner();
@@ -322,12 +324,11 @@ PluginViewerImpl::StartLoad(nsIChannel* channel, nsIStreamListener*& aResult)
 
   // Only instantiate the plugin if our container can host it
   nsCOMPtr<nsIPluginHost> host;
-  nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(mContainer));
-  NS_ENSURE_TRUE(requestor, NS_ERROR_FAILURE);
 
-  nsresult rv = requestor->GetInterface(NS_GET_IID(nsIPluginHost), 
-   getter_AddRefs(host));
-  if (NS_OK == rv) {
+  host = do_GetService(kCPluginManagerCID);
+  nsresult rv = NS_ERROR_FAILURE;
+  if(host) 
+  {
     nsRect r;
     mWindow->GetClientBounds(r);
     rv = CreatePlugin(host, nsRect(0, 0, r.width, r.height), aResult);

@@ -1780,7 +1780,6 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 {
   nsresult  rv;
   nsIURI    *url;
-  nsPluginTagType tagType;
   PRBool isJavaEnabled = PR_TRUE;
 
 #ifdef NS_DEBUG
