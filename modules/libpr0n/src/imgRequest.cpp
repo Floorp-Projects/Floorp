@@ -466,7 +466,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     }
 
     /* get the http expires date */
-    nsCOMPtr<nsIAtom> expiresAtom(NS_NewAtom(NS_LITERAL_CSTRING("Expires")));
+    nsCOMPtr<nsIAtom> expiresAtom(dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("Expires"))));
     nsXPIDLCString expires;
     httpChannel->GetResponseHeader(expiresAtom, getter_Copies(expires));
     if (expires.get()) {
