@@ -30,6 +30,7 @@
 #include "nsIMemory.h"
 #include "nsIPluginStreamListener.h"
 #include "nsPluginsDir.h"
+#include "nsPluginSafety.h"
 
 #ifdef XP_MAC
 #include <Resources.h>
@@ -38,6 +39,7 @@
 #include "nsIPref.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -342,7 +344,11 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 	}
 
 	// call into the entry point
-	if(CallNPP_MainEntryProc(pfnMain, &(ns4xPlugin::CALLBACKS), &callbacks, &pfnShutdown) != NPERR_NO_ERROR)
+  NS_TRY_SAFE_CALL_RETURN(error, CallNPP_MainEntryProc(pfnMain, 
+                                                       &(ns4xPlugin::CALLBACKS), 
+                                                       &callbacks, 
+                                                       &pfnShutdown), fLibrary);
+  if(error != NPERR_NO_ERROR)
 		return NS_ERROR_FAILURE;
 
 	::UseResFile(appRefNum);
@@ -385,7 +391,7 @@ nsresult ns4xPlugin :: CreateInstance(nsISupports *aOuter,
   *aResult = NULL;  
   
   // XXX This is suspicuous!
-  ns4xPluginInstance *inst = new ns4xPluginInstance(&fCallbacks);
+  ns4xPluginInstance *inst = new ns4xPluginInstance(&fCallbacks, fLibrary);
 
   if (inst == NULL) {  
     return NS_ERROR_OUT_OF_MEMORY;  
@@ -433,7 +439,7 @@ ns4xPlugin::Shutdown(void)
 	::CloseResFile(fPluginRefNum);
 #endif
 #else
-    fShutdownEntry();
+  NS_TRY_SAFE_CALL_VOID(fShutdownEntry(), fLibrary);
 #endif
 
     fShutdownEntry = nsnull;
