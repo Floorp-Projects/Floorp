@@ -19,6 +19,8 @@
 
 #include "nsTableCellFrame.h"
 
+class nsTreeFrame;
+
 class nsTreeCellFrame : public nsTableCellFrame
 {
 public:
@@ -36,6 +38,8 @@ public:
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext); // Overridden to set whether we're a column header 
 
+  void Select(nsIPresContext& presContext, PRBool isSelected);
+
 protected:
   nsTreeCellFrame();
   virtual ~nsTreeCellFrame();
@@ -44,10 +48,11 @@ protected:
 								nsGUIEvent*     aEvent,
 							    nsEventStatus&  aEventStatus);
 
-  void SetSelection(nsIPresContext& aPresContext);
-
+  
 protected:
   // Data members
   PRBool mIsHeader; // Whether or not we're a column header
   nsIStyleContext* mSelectedContext; // The style context to use when the tree item is selected
+  nsIStyleContext* mNormalContext; // The style context to use normally.
+  nsTreeFrame* mTreeFrame; // Our parent tree frame.
 }; // class nsTableCellFrame
