@@ -30,6 +30,9 @@
 #include "nsSocketTransportService.h"
 #include "nsSocketProviderService.h"
 #include "nscore.h"
+#include "nsStdURLParser.h"
+#include "nsAuthURLParser.h"
+#include "nsNoAuthURLParser.h"
 #include "nsStdURL.h"
 #include "nsSimpleURI.h"
 #include "nsDnsService.h"
@@ -98,7 +101,20 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     { "Load Group", 
       NS_LOADGROUP_CID,
       "component://netscape/network/load-group",
-      nsLoadGroup::Create }
+      nsLoadGroup::Create },
+    { "StdURLParser", 
+      NS_STANDARDURLPARSER_CID,
+      "component://netscape/network/standard-urlparser",
+      nsStdURLParser::Create },
+    { "AuthURLParser", 
+      NS_AUTHORITYURLPARSER_CID,
+      "component://netscape/network/authority-urlparser",
+      nsAuthURLParser::Create },
+    { "NoAuthURLParser", 
+      NS_NOAUTHORITYURLPARSER_CID,
+      "component://netscape/network/no-authority-urlparser",
+      nsNoAuthURLParser::Create },
 };
 
 NS_IMPL_NSGETMODULE("net", gNetModuleInfo)
+

@@ -309,7 +309,6 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetScheme(const char * aScheme)
 	return m_baseURL->SetScheme(aScheme);
 }
 
-
 NS_IMETHODIMP nsMsgMailNewsUrl::GetPreHost(char * *aPreHost)
 {
 	return m_baseURL->GetPreHost(aPreHost);
@@ -318,6 +317,26 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetPreHost(char * *aPreHost)
 NS_IMETHODIMP nsMsgMailNewsUrl::SetPreHost(const char * aPreHost)
 {
 	return m_baseURL->SetPreHost(aPreHost);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetUsername(char * *aUsername)
+{
+	return m_baseURL->GetUsername(aUsername);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetUsername(const char * aUsername)
+{
+	return m_baseURL->SetUsername(aUsername);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetPassword(char * *aPassword)
+{
+	return m_baseURL->GetPassword(aPassword);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetPassword(const char * aPassword)
+{
+	return m_baseURL->SetPassword(aPassword);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetHost(char * *aHost)
@@ -350,11 +369,20 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetPath(const char * aPath)
 	return m_baseURL->SetPath(aPath);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetURLParser(nsIURLParser * *aURLParser)
+{
+	return m_baseURL->GetURLParser(aURLParser);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetURLParser(nsIURLParser* aURLParser)
+{
+	return m_baseURL->SetURLParser(aURLParser);
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl::Equals(nsIURI *other, PRBool *_retval)
 {
 	return m_baseURL->Equals(other, _retval);
 }
-
 
 NS_IMETHODIMP nsMsgMailNewsUrl::Clone(nsIURI **_retval)
 {
@@ -389,22 +417,22 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetFileName(char * *aFileName)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFileBaseName(char * *aFileBaseName)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	return m_baseURL->GetFileBaseName(aFileBaseName);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileBaseName(const char * aFileBaseName)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	return m_baseURL->SetFileBaseName(aFileBaseName);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetFileExtension(char * *aFileExtension)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	return m_baseURL->GetFileExtension(aFileExtension);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileExtension(const char * aFileExtension)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+	return m_baseURL->SetFileExtension(aFileExtension);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetFileName(const char * aFileName)

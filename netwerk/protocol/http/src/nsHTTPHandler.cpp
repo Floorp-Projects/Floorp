@@ -39,6 +39,8 @@
 #include "nsHTTPEncodeStream.h" 
 #include "nsHTTPAtoms.h"
 #include "nsFileSpec.h"
+#include "nsAuthURLParser.h"
+
 #include "nsIPref.h" // preferences stuff
 #ifdef DEBUG_gagan
 #include "nsUnixColorPrintf.h"
@@ -63,6 +65,7 @@ PRLogModuleInfo* gHTTPLog = nsnull;
 #define MAX_NUMBER_OF_OPEN_TRANSPORTS 8
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kAuthUrlParserCID, NS_AUTHORITYURLPARSER_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
@@ -264,6 +267,7 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     nsresult rv;
 
     nsIURI* url = nsnull;
+    nsIURLParser* urlparser = nsnull;
     if (aBaseURI)
     {
         rv = aBaseURI->Clone(&url);
@@ -272,10 +276,23 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     }
     else
     {
+        rv = nsComponentManager::CreateInstance(kAuthUrlParserCID, 
+                                    nsnull, NS_GET_IID(nsIURLParser),
+                                    (void**)&urlparser);
+        if (NS_FAILED(rv)) return rv;
         rv = nsComponentManager::CreateInstance(kStandardUrlCID, 
                                     nsnull, NS_GET_IID(nsIURI),
                                     (void**)&url);
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(urlparser);
+            return rv;
+        }
+        rv = url->SetURLParser(urlparser);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(urlparser);
+            NS_RELEASE(url);
+            return rv;
+        }
         rv = url->SetSpec((char*)aSpec);
     }
     if (NS_FAILED(rv)) {

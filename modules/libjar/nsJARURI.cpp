@@ -158,6 +158,30 @@ nsJARURI::SetPreHost(const char * aPreHost)
 }
 
 NS_IMETHODIMP
+nsJARURI::GetUsername(char * *aUsername)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsJARURI::SetUsername(const char * aUsername)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsJARURI::GetPassword(char * *aPassword)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsJARURI::SetPassword(const char * aPassword)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsJARURI::GetHost(char * *aHost)
 {
     return NS_ERROR_FAILURE;
@@ -189,6 +213,18 @@ nsJARURI::GetPath(char * *aPath)
 
 NS_IMETHODIMP
 nsJARURI::SetPath(const char * aPath)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsJARURI::GetURLParser(nsIURLParser * *aURLParser)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsJARURI::SetURLParser(nsIURLParser * aURLParser)
 {
     return NS_ERROR_FAILURE;
 }

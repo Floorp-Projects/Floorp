@@ -23,6 +23,7 @@
 #include "nsFtpProtocolHandler.h"
 #include "nsFTPChannel.h"
 #include "nsIURL.h"
+#include "nsAuthURLParser.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIInterfaceRequestor.h"
@@ -46,7 +47,8 @@ PRLogModuleInfo* gFTPLog = nsnull;
 
 #endif /* PR_LOGGING */
 
-static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kStandardUrlCID,        NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kAuthUrlParserCID,      NS_AUTHORITYURLPARSER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -130,17 +132,31 @@ nsFtpProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     nsresult rv;
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("FTP attempt at %s ", aSpec));
 
-    nsIURI* url;
+    nsIURI* url = nsnull;
+    nsIURLParser* urlparser = nsnull;
     if (aBaseURI) {
         rv = aBaseURI->Clone(&url);
         if (NS_FAILED(rv)) return rv;
         rv = url->SetRelativePath(aSpec);
     }
     else {
-        rv = nsComponentManager::CreateInstance(kStandardURLCID, nsnull,
-                                                NS_GET_IID(nsIURI),
-                                                (void**)&url);
+        rv = nsComponentManager::CreateInstance(kAuthUrlParserCID, 
+                                    nsnull, NS_GET_IID(nsIURLParser),
+                                    (void**)&urlparser);
         if (NS_FAILED(rv)) return rv;
+        rv = nsComponentManager::CreateInstance(kStandardUrlCID, 
+                                    nsnull, NS_GET_IID(nsIURI),
+                                    (void**)&url);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(urlparser);
+            return rv;
+        }
+        rv = url->SetURLParser(urlparser);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(urlparser);
+            NS_RELEASE(url);
+            return rv;
+        }
         rv = url->SetSpec((char*)aSpec);
     }
     if (NS_FAILED(rv)) {

@@ -24,6 +24,8 @@
 #define nsStdURL_h__
 
 #include "nsIURL.h"
+#include "nsIURLParser.h"
+#include "nsURLHelper.h"
 #include "nsAgg.h"
 #include "nsCRT.h"
 #include "nsString.h" // REMOVE Later!!
@@ -39,9 +41,10 @@
 class nsStdURL : public nsIURL
 {
 public:
-    ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // nsStdURL methods:
 
+    nsStdURL();
     nsStdURL(const char* i_Spec, nsISupports* outer=nsnull);
     nsStdURL(const nsStdURL& i_URL); 
     virtual ~nsStdURL();
@@ -54,156 +57,67 @@ public:
 
     NS_DECL_AGGREGATED
 
-    ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // nsIURI methods:
     NS_DECL_NSIURI
 
-    ////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     // nsIURL methods:
     NS_DECL_NSIURL
 
-    /* todo move this to protected later */
-    nsresult ParsePath(void);
-
 protected:
-    nsresult Parse(void);
-    nsresult ReconstructPath(void);
-    nsresult ReconstructSpec(void);
+    enum Format { ESCAPED, UNESCAPED };
+    nsresult Parse(const char* i_Spec);
+    nsresult AppendString(nsCString& buffer, char* fromUnescapedStr, 
+                          Format toFormat, PRInt16 mask);
+    nsresult GetString(char** result, char* fromEscapedStr, 
+                       Format toFormat);
+    nsresult AppendPreHost(nsCString& buffer, char* i_Username, 
+                           char* i_Password, Format toFormat);
+    nsresult AppendFileName(nsCString& buffer, char* i_FileBaseName, 
+                           char* i_FileExtension, Format toFormat);
 
-    // Some handy functions 
-    nsresult DupString(char* *o_Dest, const char* i_Src);
-    nsresult ExtractString(char* i_Src, char* *o_Dest, PRUint32 length);
 protected:
 
     char*       mScheme;
-    char*       mPreHost;
+    char*       mUsername;
+    char*       mPassword;
     char*       mHost;
     PRInt32     mPort;
-    char*       mPath;
 
     char*       mDirectory;
-    char*       mFileName;
+    char*       mFileBaseName;
+    char*       mFileExtension;
     char*       mParam;
     char*       mQuery;
     char*       mRef;
 
-    char*       mSpec; 
+    nsIURLParser* mURLParser;
 
 };
 
 inline NS_METHOD
-nsStdURL::GetSpec(char* *o_Spec)
-{
-    return DupString(o_Spec, mSpec);
-}
-
-inline NS_METHOD
 nsStdURL::GetScheme(char* *o_Scheme)
 {
-    return DupString(o_Scheme, mScheme);
+    return GetString(o_Scheme, mScheme, UNESCAPED);
 }
 
 inline NS_METHOD
-nsStdURL::GetPreHost(char* *o_PreHost)
+nsStdURL::GetUsername(char* *o_Username)
 {
-    return DupString(o_PreHost, mPreHost);
+    return GetString(o_Username, mUsername, UNESCAPED);
+}
+
+inline NS_METHOD
+nsStdURL::GetPassword(char* *o_Password)
+{
+    return GetString(o_Password, mPassword, UNESCAPED);
 }
 
 inline NS_METHOD
 nsStdURL::GetHost(char* *o_Host)
 {
-    return DupString(o_Host, mHost);
-}
-
-inline NS_METHOD
-nsStdURL::GetPath(char* *o_Path)
-{
-    return DupString(o_Path, mPath);
-}
-
-inline NS_METHOD
-nsStdURL::GetDirectory(char* *o_Directory)
-{
-    return DupString(o_Directory, mDirectory);
-}
-
-inline NS_METHOD
-nsStdURL::GetFileName(char* *o_FileName)
-{
-    return DupString(o_FileName, mFileName);
-}
-
-inline NS_METHOD
-nsStdURL::GetFileExtension(char* *o_FileExtension)
-{
-    if (!o_FileExtension)
-        return NS_ERROR_NULL_POINTER;
-
-    char *dot = mFileName;
-    if (dot) {
-        // find the last dot
-        while (*dot) dot++;
-        while ( (dot != mFileName) && (*dot != '.') ) dot--; // goto the dot.
-        if (*dot == '.') {
-            nsCAutoString ext(dot+1);
-            *o_FileExtension = ext.ToNewCString();
-            if (!*o_FileExtension) return NS_ERROR_OUT_OF_MEMORY;
-        } else {
-            *o_FileExtension = nsnull;
-        }
-    }
-    return NS_OK;
-}
-
-inline NS_METHOD
-nsStdURL::SetFileExtension(const char* FileExtension)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-inline NS_METHOD
-nsStdURL::GetRef(char* *o_Ref)
-{
-    return DupString(o_Ref, mRef);
-}
-
-inline NS_METHOD
-nsStdURL::GetParam(char **o_Param)
-{
-    return DupString(o_Param, mParam);
-}
-
-inline NS_METHOD
-nsStdURL::GetQuery(char* *o_Query)
-{
-    return DupString(o_Query, mQuery);
-}
-
-inline NS_METHOD
-nsStdURL::SetScheme(const char* i_Scheme)
-{
-    if (mScheme) nsCRT::free(mScheme);
-    nsresult status = DupString(&mScheme, i_Scheme);
-    ReconstructSpec();
-    return status;
-}
-
-inline NS_METHOD
-nsStdURL::SetPreHost(const char* i_PreHost)
-{
-    if (mPreHost) nsCRT::free(mPreHost);
-    nsresult status = DupString(&mPreHost, i_PreHost);
-    ReconstructSpec();
-    return status;
-}
-
-inline NS_METHOD
-nsStdURL::SetHost(const char* i_Host)
-{
-    if (mHost) nsCRT::free(mHost);
-    nsresult status = DupString(&mHost, i_Host);
-    ReconstructSpec();
-    return status;
+    return GetString(o_Host, mHost, UNESCAPED);
 }
 
 inline NS_METHOD
@@ -218,11 +132,83 @@ nsStdURL::GetPort(PRInt32 *aPort)
 }
 
 inline NS_METHOD
+nsStdURL::GetFileBaseName(char* *o_FileBaseName)
+{
+    return GetString(o_FileBaseName, mFileBaseName, UNESCAPED);
+}
+
+inline NS_METHOD
+nsStdURL::GetFileExtension(char* *o_FileExtension)
+{
+    return GetString(o_FileExtension, mFileExtension, UNESCAPED);
+}
+
+inline NS_METHOD
+nsStdURL::GetParam(char **o_Param)
+{
+    return GetString(o_Param, mParam, UNESCAPED);
+}
+
+inline NS_METHOD
+nsStdURL::GetQuery(char* *o_Query)
+{
+    return GetString(o_Query, mQuery, UNESCAPED);
+}
+
+inline NS_METHOD
+nsStdURL::GetRef(char* *o_Ref)
+{
+    return GetString(o_Ref, mRef, UNESCAPED);
+}
+
+inline NS_METHOD
+nsStdURL::SetScheme(const char* i_Scheme)
+{
+    CRTFREEIF(mScheme);
+    return DupString(&mScheme, i_Scheme);
+}
+
+inline NS_METHOD
+nsStdURL::SetUsername(const char* i_Username)
+{
+    CRTFREEIF(mUsername);
+    return DupString(&mUsername, i_Username);
+}
+
+inline NS_METHOD
+nsStdURL::SetPassword(const char* i_Password)
+{
+    CRTFREEIF(mPassword);
+    return DupString(&mPassword, i_Password);
+}
+
+inline NS_METHOD
+nsStdURL::SetHost(const char* i_Host)
+{
+    CRTFREEIF(mHost);
+    return DupString(&mHost, i_Host);
+}
+
+inline NS_METHOD
 nsStdURL::SetPort(PRInt32 aPort)
 {
     mPort = aPort;
-    ReconstructSpec();
     return NS_OK;
 }
 
+inline NS_METHOD
+nsStdURL::SetFileBaseName(const char* i_FileBaseName)
+{
+    CRTFREEIF(mFileBaseName);
+    return DupString(&mFileBaseName, i_FileBaseName);
+}
+
+inline NS_METHOD
+nsStdURL::SetFileExtension(const char* i_FileExtension)
+{
+    CRTFREEIF(mFileExtension);
+    return DupString(&mFileExtension, i_FileExtension);
+}
+
 #endif // nsStdURL_h__
+

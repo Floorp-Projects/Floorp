@@ -51,6 +51,7 @@ XPIDLSRCS	= \
 		nsIUnicharStreamLoader.idl \
 		nsINetPrompt.idl \
 		nsISocketTransport.idl \
+		nsIURLParser.idl \
 		$(NULL)
 
 EXPORTS		= \
