@@ -45,8 +45,8 @@
 #include "nsIPrefService.h"
 #include "nsIMIMEInfo.h"
 
-#define SHOW_DLMGR_PREF "browser.download.manager.showWhenStarting"
-#define USE_DL_WINDOW_PREF "browser.download.manager.useWindow"
+#define PREF_BDM_SHOWWHENSTARTING "browser.download.manager.showWhenStarting"
+#define PREF_BDM_USEWINDOW "browser.download.manager.useWindow"
 
 class nsDownloadProxy : public nsIDownload,
                         public nsIWebProgressListener
@@ -76,10 +76,10 @@ public:
     nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
 
     PRBool showDM = PR_TRUE;
-    branch->GetBoolPref(SHOW_DLMGR_PREF, &showDM);
+    branch->GetBoolPref(PREF_BDM_SHOWWHENSTARTING , &showDM);
 
     PRBool useWindow = PR_TRUE;
-    branch->GetBoolPref(USE_DL_WINDOW_PREF, &useWindow);
+    branch->GetBoolPref(PREF_BDM_USEWINDOW, &useWindow);
     if (showDM && useWindow) {
       nsAutoString path;
       rv = aTarget->GetPath(path);

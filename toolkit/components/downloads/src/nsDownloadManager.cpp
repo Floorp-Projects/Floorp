@@ -74,6 +74,11 @@ static PRBool gQuitting = PR_FALSE;
 #define DOWNLOAD_MANAGER_FE_URL "chrome://mozapps/content/downloads/downloads.xul"
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
 #define DOWNLOAD_MANAGER_ALERT_ICON "chrome://mozapps/skin/downloads/downloadIcon.png"
+#define PREF_BDM_SHOWALERTONCOMPLETE "browser.download.manager.showAlertOnComplete"
+#define PREF_BDM_SHOWALERTINTERVAL "browser.download.manager.showAlertInterval"
+#define PREF_BDM_RETENTION "browser.download.manager.retention"
+#define PREF_BDM_OPENDELAY "browser.download.manager.openDelay"
+#define PREF_BDM_FOCUSWHENSTARTING "browser.download.manager.focusWhenStarting"
 #define INTERVAL 500
 
 static nsIRDFResource* gNC_DownloadsRoot = nsnull;
@@ -197,7 +202,7 @@ nsDownloadManager::GetRetentionBehavior()
   PRInt32 val = 0;
   nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (pref) {
-    nsresult rv = pref->GetIntPref("browser.download.manager.retention", &val);
+    nsresult rv = pref->GetIntPref(PREF_BDM_RETENTION, &val);
     if (NS_FAILED(rv))
       val = 0; // Use 0 as the default ("remove when done")
   }
@@ -1027,7 +1032,7 @@ nsDownloadManager::Open(nsIDOMWindow* aParent, const PRUnichar* aPath)
   PRInt32 delay = 0;
   nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (pref)
-    pref->GetIntPref("browser.download.manager.openDelay", &delay);
+    pref->GetIntPref(PREF_BDM_OPENDELAY, &delay);
 
   // 3). Look for an existing Download Manager window, if we find one we just 
   //     tell it that a new download has begun (we don't focus, that's 
@@ -1056,7 +1061,7 @@ nsDownloadManager::OpenTimerCallback(nsITimer* aTimer, void* aClosure)
     PRBool focusDM = PR_FALSE;
     nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (pref)
-      pref->GetBoolPref("browser.download.manager.focusWhenStarting", &focusDM);
+      pref->GetBoolPref(PREF_BDM_FOCUSWHENSTARTING, &focusDM);
 
     nsDownloadManager::OpenDownloadManager(focusDM, download, parent);
   }
@@ -1510,30 +1515,51 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
         mDownloadManager->DownloadEnded(path.get(), nsnull);
       }
 
-      gObserverService->NotifyObservers(NS_STATIC_CAST(nsIDownload *, this), "dl-done", nsnull);
-
 #ifdef XP_WIN
-      if ((mDownloadManager->mCurrDownloads).Count() == 0) {
-        nsCOMPtr<nsIAlertsService> alerts(do_GetService("@mozilla.org/alerts-service;1"));
-        if (alerts) {
-          nsXPIDLString title, message;
+      // Master pref to control this function. 
+      PRBool showTaskbarAlert = PR_FALSE;
+      nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
+      if (pref)
+        pref->GetBoolPref(PREF_BDM_SHOWALERTONCOMPLETE, &showTaskbarAlert);
 
-          mDownloadManager->mBundle->GetStringFromName(NS_LITERAL_STRING("downloadsCompleteTitle").get(), getter_Copies(title));
-          mDownloadManager->mBundle->GetStringFromName(NS_LITERAL_STRING("downloadsCompleteMsg").get(), getter_Copies(message));
+      if (showTaskbarAlert) {
+        PRInt32 alertInterval = -1;
+        if (pref)
+          pref->GetIntPref(PREF_BDM_SHOWALERTINTERVAL, &alertInterval);
 
-          PRBool removeWhenDone = mDownloadManager->GetRetentionBehavior() == 0;
+        PRInt64 temp, uSecPerMSec, alertIntervalUSec;
+        LL_I2L(temp, alertInterval);
+        LL_I2L(uSecPerMSec, PR_USEC_PER_MSEC);
+        LL_MUL(alertIntervalUSec, temp, uSecPerMSec);
+        
+        PRInt64 goat = PR_Now() - mStartTime;
+        showTaskbarAlert = goat > alertIntervalUSec;
+        
+        if (showTaskbarAlert && (mDownloadManager->mCurrDownloads).Count() == 0) {
+          nsCOMPtr<nsIAlertsService> alerts(do_GetService("@mozilla.org/alerts-service;1"));
+          if (alerts) {
+            nsXPIDLString title, message;
+
+            mDownloadManager->mBundle->GetStringFromName(NS_LITERAL_STRING("downloadsCompleteTitle").get(), getter_Copies(title));
+            mDownloadManager->mBundle->GetStringFromName(NS_LITERAL_STRING("downloadsCompleteMsg").get(), getter_Copies(message));
+
+            PRBool removeWhenDone = mDownloadManager->GetRetentionBehavior() == 0;
 
 
-          // If downloads are automatically removed per the user's retention policy, 
-          // there's no reason to make the text clickable because if it is, they'll
-          // click open the download manager and the items they downloaded will have
-          // been removed. 
-          alerts->ShowAlertNotification(DOWNLOAD_MANAGER_ALERT_ICON, title, message, !removeWhenDone, 
-                                        NS_LITERAL_STRING("").get(), NS_STATIC_CAST(nsIAlertListener*, mDownloadManager));
+            // If downloads are automatically removed per the user's retention policy, 
+            // there's no reason to make the text clickable because if it is, they'll
+            // click open the download manager and the items they downloaded will have
+            // been removed. 
+            alerts->ShowAlertNotification(DOWNLOAD_MANAGER_ALERT_ICON, title, message, !removeWhenDone, 
+                                          NS_LITERAL_STRING("").get(), NS_STATIC_CAST(nsIAlertListener*, mDownloadManager));
+          }
         }
       }
 #endif
     }
+
+    gObserverService->NotifyObservers(NS_STATIC_CAST(nsIDownload *, this), "dl-done", nsnull);
+
 
     // break the cycle we created in AddDownload
     if (mPersist)
