@@ -206,9 +206,6 @@ sub Checkout()
   
   		#// Check out the MRJ OJI plugin. Needs to be added to the "SeaMonkeyEditor" module.
   		$session->checkout("mozilla/plugin/oji/MRJ")				|| die "checkout failure";
-
-  		#// Check out the Boehm GC for leak detection. Needs to be added to the "SeaMonkeyEditor" module.
-  		$session->checkout("mozilla/gc/boehm")						|| die "checkout failure";
 	} elsif ($main::pull{runtime}) {
 		$session->checkout("mozilla/build")							|| die "checkout failure";
 		$session->checkout("mozilla/lib/mac/InterfaceLib")	        || die "checkout failure";
@@ -964,11 +961,7 @@ sub BuildRuntimeProjects()
 		}
 	}
 
-	if ($main::GC_LEAK_DETECTOR) {
-		BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",					"NSStdLibGC.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
-	} else {
-		BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",					"NSStdLib$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
-	}
+	BuildOneProject(":mozilla:lib:mac:NSStdLib:NSStdLib.mcp",						"NSStdLib$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:nsprpub:macbuild:NSPR20PPC.mcp",						"NSPR20$D.shlb", "NSPR20.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
