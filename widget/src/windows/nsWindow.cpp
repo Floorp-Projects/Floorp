@@ -175,6 +175,9 @@ UINT nsWindow::uMSH_MOUSEWHEEL     = 0;
 UINT nsWindow::uWM_MSIME_RECONVERT = 0; // reconvert messge for MSIME
 UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse messge for MSIME
 UINT nsWindow::uWM_ATOK_RECONVERT  = 0; // reconvert messge for ATOK
+
+PRBool nsWindow::sSkipWMCHARProcessing; // enables the skipping of WM_CHAR processing the key press
+
 #ifdef ACCESSIBILITY
 BOOL nsWindow::gIsAccessibilityOn = FALSE;
 #endif
@@ -2642,10 +2645,10 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
   else if (mIsControlDown && aVirtualKeyCode == NS_VK_TAB) {
     DispatchKeyEvent(NS_KEY_PRESS, 0, NS_VK_TAB, aKeyData);
   }
-  else if (mIsControlDown && aVirtualKeyCode == NS_VK_SUBTRACT) {
+  else if (mIsControlDown && !mIsShiftDown && aVirtualKeyCode == NS_VK_SUBTRACT) {
     DispatchKeyEvent(NS_KEY_PRESS, aVirtualKeyCode-64, 0, aKeyData);
   }
-  else if (mIsControlDown && 
+  else if ((mIsControlDown && !mIsShiftDown) &&
            ((( NS_VK_0 <= aVirtualKeyCode) && (aVirtualKeyCode <= NS_VK_9)) ||
             (aVirtualKeyCode == NS_VK_SEMICOLON) ||
             (aVirtualKeyCode == NS_VK_EQUALS)    ||
@@ -2666,6 +2669,16 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
             (aVirtualKeyCode != NS_VK_SLASH))
   {
     DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode, aKeyData);
+  } 
+
+   // Fix for 50255 (<ctrl><enter> not working
+   // Send keypress event for <ctrl><enter> keyboard action
+   // Set sSkipWMCHARProcessing to true so the 0x0a char code sent to OnCHar
+   // will be thrown away.
+  if (mIsControlDown && aVirtualKeyCode == VK_RETURN ) 
+  {
+    sSkipWMCHARProcessing = PR_TRUE;
+    DispatchKeyEvent(NS_KEY_PRESS,  0, aVirtualKeyCode, aKeyData);
   } 
 
   return result;
@@ -2712,6 +2725,14 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
       uniChar = virtualKeyCode - 1 + 'a' ; 
     virtualKeyCode = 0;
   } 
+  else if (mIsControlDown && (virtualKeyCode <= 0x1F) ) {
+    // Fix for 50255 - <ctrl><[> and <ctrl><]> are not being processed.
+    // also fixes ctrl+\ (x1c), ctrl+^ (x1e) and ctrl+_ (x1f)
+    // for some reason the keypress handler need to have the uniChar code set
+    // with the addition of a upper case A not the lower case.
+    uniChar = virtualKeyCode -1 + 'A';
+    virtualKeyCode = 0;
+  }
   else 
   { // 0x20 - SPACE, 0x3D - EQUALS
     if(virtualKeyCode < 0x20 || (virtualKeyCode == 0x3D && mIsControlDown)) 
@@ -3279,6 +3300,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             unsigned char    ch = (unsigned char)wParam;
             UINT            char_result;
   
+            // <ctrl><enter> and <ctrl>J and generate exactly the same char code
+            // but we want to "eat" the event for <ctrl><enter> because
+            // we generate the KEY_PRESS on the KeyDown, so we want to throw 
+            // this event away here 
+            if (mIsControlDown && ch == 0x0a && sSkipWMCHARProcessing) {
+              result = PR_FALSE;
+              break;
+            }
             //
             // check first for backspace or return, handle them specially 
             //
@@ -3343,6 +3372,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             printf("%s\t\twp=%4x\tlp=%8x\n",  
                    (WM_KEYDOWN==msg)?"WM_KEYDOWN":"WM_SYSKEYDOWN" , wParam, lParam);
 #endif
+
+            // Always set this to false
+            // Used to discard the processing of the WM_CHAR events for:
+            //   <ctrl><enter>
+            sSkipWMCHARProcessing = PR_FALSE;
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             if(WM_SYSKEYDOWN==msg)
             {
@@ -3814,6 +3848,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
       } 
 #endif
+      
       default: {
         // Handle both flavors of mouse wheel events.
         if ((msg == WM_MOUSEWHEEL) || (msg == uMSH_MOUSEWHEEL)) {
