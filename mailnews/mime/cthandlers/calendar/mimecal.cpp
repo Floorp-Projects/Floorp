@@ -23,6 +23,7 @@
 #include "mimexpcom.h"
 #include "mimecth.h"
 #include "mimeobj.h"
+#include "nsCRT.h"
 
 static int MimeInlineTextCalendar_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextCalendar_parse_eof (MimeObject *, PRBool);
@@ -79,7 +80,7 @@ MimeInlineTextCalendarClassInitialize(MimeInlineTextCalendarClass *clazz)
 int
 mime_TranslateCalendar(char* caldata, char** html) 
 {
-  *html = XP_STRDUP("\
+  *html = nsCRT::strdup("\
 <text=\"#000000\" bgcolor=\"#FFFFFF\" link=\"#FF0000\" vlink=\"#800080\" alink=\"#0000FF\">\
 <center><table BORDER=1 BGCOLOR=\"#CCFFFF\" ><tr>\
 <td>This libmime Content Type Handler plugin for the Content-Type <b>text/calendar\
@@ -131,10 +132,10 @@ MimeInlineTextCalendar_parse_line(char *line, PRInt32 length, MimeObject *obj)
     do {
       clazz->buffermax += 512;
     } while (clazz->bufferlen + length >= clazz->buffermax);
-    clazz->buffer = (char *)XP_REALLOC(clazz->buffer, clazz->buffermax);
+    clazz->buffer = (char *)PR_Realloc(clazz->buffer, clazz->buffermax);
     if (clazz->buffer == NULL) return MK_OUT_OF_MEMORY;
   }
-  XP_MEMCPY(clazz->buffer + clazz->bufferlen, line, length);
+  nsCRT::memcpy(clazz->buffer + clazz->bufferlen, line, length);
   clazz->bufferlen += length;
   return 0;
 }
