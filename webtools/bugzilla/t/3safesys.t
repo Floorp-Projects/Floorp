@@ -35,9 +35,10 @@
 #Bugzilla Test 3#
 ###Safesystem####
 
-BEGIN { use Test::More tests => 51; }
 BEGIN { use lib 't/'; }
 BEGIN { use Support::Files; }
+BEGIN { $tests = @Support::Files::testitems; }    
+BEGIN { use Test::More tests => $tests; }
 
 @testitems = @Support::Files::testitems; 
 my $verbose = $::ENV{VERBOSE};

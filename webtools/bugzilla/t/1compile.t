@@ -35,10 +35,10 @@
 #################
 #Bugzilla Test 1#
 ###Compilation###
-
-BEGIN { use Test::More tests => 55; }
 BEGIN { use lib 't/'; }
 BEGIN { use Support::Files; }
+BEGIN { $tests = @Support::Files::testitems + 4; }
+BEGIN { use Test::More tests => $tests; }
 
 # First now we test the scripts                                                   
 @testitems = @Support::Files::testitems; 

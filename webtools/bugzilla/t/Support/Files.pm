@@ -33,58 +33,33 @@
 
 package Support::Files;
 
-@testitems = split("\n",qq(
-bug_form.pl #1
-buglist.cgi #2
-changepassword.cgi #3
-checksetup.pl #4
-colchange.cgi #5
-collectstats.pl #6
-createaccount.cgi #7
-createattachment.cgi #8
-defparams.pl #9
-describecomponents.cgi #10
-describekeywords.cgi #11
-doeditparams.cgi #12
-doeditvotes.cgi #13
-duplicates.cgi #14
-editcomponents.cgi #15
-editgroups.cgi #16
-editkeywords.cgi #27
-editmilestones.cgi #18
-editparams.cgi #19
-editproducts.cgi #20
-editusers.cgi #21
-editversions.cgi #22
-enter_bug.cgi #23
-globals.pl #24
-importxml.pl #25
-long_list.cgi #26
-move.pl #27
-new_comment.cgi #28
-post_bug.cgi #29
-process_bug.cgi #30
-query.cgi #31
-queryhelp.cgi #32
-quips.cgi #33
-relogin.cgi #34
-reports.cgi #35
-sanitycheck.cgi #36
-show_activity.cgi #37
-show_bug.cgi #38
-showattachment.cgi #39
-showdependencygraph.cgi #40
-showdependencytree.cgi #41
-showvotes.cgi #42
-syncshadowdb #43
-token.cgi #44
-userprefs.cgi #45
-whineatnews.pl #46
-xml.cgi #47
-attachment.cgi #48
-editattachstatuses.cgi #49
-globals.pl #50
-CGI.pl #51
-));
+@additional_files = ('syncshadowdb');
+@exclude_files    = ('processmail');
+
+$file = '*';
+@files = glob($file);
+
+sub isTestingFile {
+  my ($file) = @_;
+  if ($file =~ /\.cgi$|\.pl$/) {
+    return 1;
+  }
+  my $additional;
+  foreach $additional (@additional_files) {
+    if ($file eq $additional) { return 1; }
+  }
+  my $exclude;
+  foreach $exclude (@exclude_files) {
+  	if ($file eq $exclude) { return undef; } # get rid of excluded files.
+  }
+  return undef;
+}
+
+foreach $currentfile (@files) {
+	if (isTestingFile($currentfile)) {
+		push(@testitems,$currentfile);
+	}
+}
+
 
 1;
