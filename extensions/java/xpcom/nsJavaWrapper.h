@@ -39,12 +39,14 @@
 #define _nsJavaWrapper_h_
 
 #include "jni.h"
+#include "nsISupports.h"
 
 
 void CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
                      jint aMethodIndex, jobjectArray aParams, jvalue &aResult);
 
-// Creates a Java stub for an XPCOM object of type aClassName
-jobject CreateJavaWrapper(JNIEnv* env, const char* aClassName);
+// Creates a Java proxy for the given XPCOM object.
+nsresult CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject,
+                         const nsIID& aIID, jobject* aResult);
 
 #endif // _nsJavaWrapper_h_

@@ -131,23 +131,12 @@ XPCOM_NATIVE(initXPCOM) (JNIEnv* env, jclass, jobject aMozBinDirectory,
         }
 
         if (NS_SUCCEEDED(rv)) {
-          // wrap xpcom instance
-          JavaXPCOMInstance* inst;
-          rv = CreateJavaXPCOMInstance(servMan, &NS_GET_IID(nsIServiceManager),
-                                       &inst);
+          jobject javaProxy;
+          rv = CreateJavaProxy(env, servMan, NS_GET_IID(nsIServiceManager),
+                               &javaProxy);
           NS_RELEASE(servMan);   // JavaXPCOMInstance has owning ref
-
-          if (NS_SUCCEEDED(rv)) {
-            // create java stub
-            jobject java_stub = CreateJavaWrapper(env, "nsIServiceManager");
-
-            if (java_stub) {
-              // Associate XPCOM object w/ Java stub
-              rv = gBindings->AddBinding(env, java_stub, inst);
-              if (NS_SUCCEEDED(rv))
-                return java_stub;
-            }
-          }
+          if (NS_SUCCEEDED(rv))
+            return javaProxy;
         }
       }
     }
@@ -207,22 +196,11 @@ XPCOM_NATIVE(newLocalFile) (JNIEnv *env, jclass, jstring aPath,
   nsresult rv = NS_NewLocalFile(path_str, aFollowLinks, &file);
 
   if (NS_SUCCEEDED(rv)) {
-    // wrap xpcom instance
-    JavaXPCOMInstance* inst;
-    rv = CreateJavaXPCOMInstance(file, &NS_GET_IID(nsILocalFile), &inst);
+    jobject javaProxy;
+    rv = CreateJavaProxy(env, file, NS_GET_IID(nsILocalFile), &javaProxy);
     NS_RELEASE(file);   // JavaXPCOMInstance has owning ref
-
-    if (NS_SUCCEEDED(rv)) {
-      // create java stub
-      jobject java_stub = CreateJavaWrapper(env, "nsILocalFile");
-
-      if (java_stub) {
-        // Associate XPCOM object w/ Java stub
-        rv = gBindings->AddBinding(env, java_stub, inst);
-        if (NS_SUCCEEDED(rv))
-          return java_stub;
-      }
-    }
+    if (NS_SUCCEEDED(rv))
+      return javaProxy;
   }
 
   ThrowException(env, rv, "Failure in newLocalFile");
@@ -237,22 +215,11 @@ XPCOM_NATIVE(getComponentManager) (JNIEnv *env, jclass)
   nsresult rv = NS_GetComponentManager(&cm);
 
   if (NS_SUCCEEDED(rv)) {
-    // wrap xpcom instance
-    JavaXPCOMInstance* inst;
-    rv = CreateJavaXPCOMInstance(cm, &NS_GET_IID(nsIComponentManager), &inst);
+    jobject javaProxy;
+    rv = CreateJavaProxy(env, cm, NS_GET_IID(nsIComponentManager), &javaProxy);
     NS_RELEASE(cm);   // JavaXPCOMInstance has owning ref
-
-    if (NS_SUCCEEDED(rv)) {
-      // create java stub
-      jobject java_stub = CreateJavaWrapper(env, "nsIComponentManager");
-
-      if (java_stub) {
-        // Associate XPCOM object w/ Java stub
-        rv = gBindings->AddBinding(env, java_stub, inst);
-        if (NS_SUCCEEDED(rv))
-          return java_stub;
-      }
-    }
+    if (NS_SUCCEEDED(rv))
+      return javaProxy;
   }
 
   ThrowException(env, rv, "Failure in getComponentManager");
@@ -267,22 +234,11 @@ XPCOM_NATIVE(getComponentRegistrar) (JNIEnv *env, jclass)
   nsresult rv = NS_GetComponentRegistrar(&cr);
 
   if (NS_SUCCEEDED(rv)) {
-    // wrap xpcom instance
-    JavaXPCOMInstance* inst;
-    rv = CreateJavaXPCOMInstance(cr, &NS_GET_IID(nsIComponentRegistrar), &inst);
+    jobject javaProxy;
+    rv = CreateJavaProxy(env, cr, NS_GET_IID(nsIComponentRegistrar), &javaProxy);
     NS_RELEASE(cr);   // JavaXPCOMInstance has owning ref
-
-    if (NS_SUCCEEDED(rv)) {
-      // create java stub
-      jobject java_stub = CreateJavaWrapper(env, "nsIComponentRegistrar");
-
-      if (java_stub) {
-        // Associate XPCOM object w/ Java stub
-        rv = gBindings->AddBinding(env, java_stub, inst);
-        if (NS_SUCCEEDED(rv))
-          return java_stub;
-      }
-    }
+    if (NS_SUCCEEDED(rv))
+      return javaProxy;
   }
 
   ThrowException(env, rv, "Failure in getComponentRegistrar");
@@ -297,22 +253,11 @@ XPCOM_NATIVE(getServiceManager) (JNIEnv *env, jclass)
   nsresult rv = NS_GetServiceManager(&sm);
 
   if (NS_SUCCEEDED(rv)) {
-    // wrap xpcom instance
-    JavaXPCOMInstance* inst;
-    rv = CreateJavaXPCOMInstance(sm, &NS_GET_IID(nsIServiceManager), &inst);
+    jobject javaProxy;
+    rv = CreateJavaProxy(env, sm, NS_GET_IID(nsIServiceManager), &javaProxy);
     NS_RELEASE(sm);   // JavaXPCOMInstance has owning ref
-
-    if (NS_SUCCEEDED(rv)) {
-      // create java stub
-      jobject java_stub = CreateJavaWrapper(env, "nsIServiceManager");
-
-      if (java_stub) {
-        // Associate XPCOM object w/ Java stub
-        rv = gBindings->AddBinding(env, java_stub, inst);
-        if (NS_SUCCEEDED(rv))
-          return java_stub;
-      }
-    }
+    if (NS_SUCCEEDED(rv))
+      return javaProxy;
   }
 
   ThrowException(env, rv, "Failure in getServiceManager");

@@ -38,6 +38,7 @@
 
 #include "nsJavaXPCOMBindingUtils.h"
 #include "nsJavaXPTCStub.h"
+#include "nsJavaWrapper.h"
 #include "jni.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsILocalFile.h"
@@ -287,39 +288,56 @@ nsJavaXPCOMBindings::GetXPCOMObject(JNIEnv* env, jobject aJavaObject)
   return nsnull;
 }
 
-jobject
-nsJavaXPCOMBindings::GetJavaObject(JNIEnv* env, void* aXPCOMObject)
+NS_IMETHODIMP
+nsJavaXPCOMBindings::GetJavaObject(JNIEnv* env, void* aXPCOMObject,
+                                   const nsIID& aIID, PRBool aDoReleaseObject,
+                                   jobject* aResult)
 {
-  jobject java_obj = nsnull;
+  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  *aResult = nsnull;
   nsISupports* xpcom_obj = NS_STATIC_CAST(nsISupports*, aXPCOMObject);
+  nsresult rv;
 
   nsJavaXPTCStub* stub = nsnull;
   xpcom_obj->QueryInterface(NS_GET_IID(nsJavaXPTCStub), (void**) &stub);
   if (stub) {
-    java_obj = stub->GetJavaObject();
-    NS_ASSERTION(java_obj != nsnull, "nsJavaXPTCStub w/o matching Java object");
+    // Get associated Java object directly from nsJavaXPTCStub
+    *aResult = stub->GetJavaObject();
+    NS_ASSERTION(*aResult != nsnull, "nsJavaXPTCStub w/o matching Java object");
     NS_RELEASE(stub);
-  }
-
-  if (java_obj == nsnull) {
+    rv = NS_OK;
+  } else {
+    // Get associated Java object from hash table
     JavaXPCOMBindingEntry *entry =
       NS_STATIC_CAST(JavaXPCOMBindingEntry*,
                      PL_DHashTableOperate(mXPCOMtoJAVABindings, aXPCOMObject,
                                           PL_DHASH_LOOKUP));
 
     if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-      java_obj = entry->mJavaObject;
+      *aResult = entry->mJavaObject;
+      rv = NS_OK;
     }
   }
 
+  if (*aResult == nsnull) {
+    // No Java object is associated with the given XPCOM object, so we create
+    // a Java proxy.
+    rv = CreateJavaProxy(env, xpcom_obj, aIID, aResult);
+    if (NS_SUCCEEDED(rv) && aDoReleaseObject)
+      NS_RELEASE(xpcom_obj);   // Owning ref passed on
+  }
+
 #ifdef DEBUG_pedemonte
-  if (java_obj) {
+  if (*aResult) {
     LOG(("< Get Java<->XPCOM binding (Java=0x%08x | XPCOM=0x%08x)\n",
-         env->CallIntMethod(java_obj, hashCodeMID), (int) aXPCOMObject));
+         env->CallIntMethod(*aResult, hashCodeMID), (int) aXPCOMObject));
   }
 #endif
 
-  return java_obj;
+  return rv;
 }
 
 
@@ -476,28 +494,6 @@ JavaXPCOMInstance::~JavaXPCOMInstance()
   if (NS_SUCCEEDED(rv))
     rv = NS_ProxyRelease(eventQ, mInstance);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to release using NS_ProxyRelease");
-}
-
-nsresult
-CreateJavaXPCOMInstance(nsISupports* aXPCOMObject, const nsIID* aIID,
-                        JavaXPCOMInstance** aResult)
-{
-  nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
-  NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
-  if (!iim)
-    return NS_ERROR_FAILURE;
-
-  // Get interface info for class
-  nsCOMPtr<nsIInterfaceInfo> info;
-  nsresult rv = iim->GetInfoForIID(aIID, getter_AddRefs(info));
-
-  // Wrap XPCOM object
-  if (NS_SUCCEEDED(rv)) {
-    *aResult = new JavaXPCOMInstance(aXPCOMObject, info);
-    if (!*aResult)
-      rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  return rv;
 }
 
 
