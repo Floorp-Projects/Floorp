@@ -92,14 +92,28 @@ class CToken {
      * @update	gess5/11/98
      * @param   value is the new ord value for this token
      */
-    virtual void SetOrdinal(PRInt32 value);
+    virtual void SetOrdinal(PRInt16 value);
 
     /**
      * Getter which retrieves the current ordinal value for this token
      * @update	gess5/11/98
      * @return  current ordinal value 
      */
-    virtual PRInt32 GetOrdinal(void);
+    virtual PRInt16 GetOrdinal(void);
+
+    /**
+     * Sets the # of attributes found for this token.
+     * @update	gess5/11/98
+     * @param   value is the attr count
+     */
+    virtual void SetAttributeCount(PRInt16 aValue);
+
+    /**
+     * Getter which retrieves the current attribute count for this token
+     * @update	gess5/11/98
+     * @return  current attribute count 
+     */
+    virtual PRInt16 GetAttributeCount(void);
 
     /**
      * Causes token to consume data from given scanner.
@@ -147,7 +161,8 @@ class CToken {
     virtual void SelfTest(void);
 
 protected:
-            PRInt32       mOrdinalValue;
+            PRInt16       mOrdinalValue;
+            PRInt16       mAttrCount;
             nsString      mTextValue;
 };
 

@@ -54,11 +54,11 @@ class nsIParser : public nsISupports {
 
     virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
 
-    virtual PRInt32 Parse(nsIURL* aURL,PRBool aIncremental=PR_FALSE)=0;
+    virtual PRInt32 Parse(nsIURL* aURL,PRBool aIncremental=PR_TRUE)=0;
     virtual PRInt32 Parse(const char* aFilename,PRBool aIncremental)=0;
     virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens)=0;
 
-    virtual PRInt32 ResumeParse(PRInt32 anIterator)=0;
+    virtual PRInt32 ResumeParse(void)=0;
     virtual PRInt32 GetStack(PRInt32* aStackPtr)=0;
     virtual PRBool  HasOpenContainer(PRInt32 aContainer) const=0;
 };

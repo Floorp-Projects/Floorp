@@ -150,7 +150,7 @@ protected:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    PRInt32     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner);
+    PRInt32     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
     
     /**
      * Retrieve a sequence of text from given scanner.

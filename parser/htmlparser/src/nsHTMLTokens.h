@@ -39,12 +39,12 @@
 class CScanner;
 
 enum eHTMLTokenTypes {
-  eToken_unknown=2000,
-
-  eToken_start,       eToken_end,     eToken_comment, eToken_entity,
-  eToken_whitespace,  eToken_newline, eToken_text,    eToken_attribute,
-  eToken_script,      eToken_style,   eToken_skippedcontent,  //used in cases like <SCRIPT> where we skip over script content.
-  eToken_last
+  
+  eToken_unknown=0,
+  eToken_start=1,     eToken_end,     eToken_comment,         eToken_entity,
+  eToken_whitespace,  eToken_newline, eToken_text,            eToken_attribute,
+  eToken_script,      eToken_style,   eToken_skippedcontent,  
+  eToken_last //make sure this stays the last token...
 };
 
 //*** This enum is used to define the known universe of HTML tags.

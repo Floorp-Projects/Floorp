@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+ 
 /**
  * MODULE NOTES:
  * @update  gess 4/1/98
@@ -114,7 +114,7 @@ friend class CTokenHandler;
      * @param   aMode is the desired parser mode (Nav, other, etc.)
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(nsIURL* aURL,PRBool aIncremental=PR_FALSE);
+    virtual PRInt32 Parse(nsIURL* aURL,PRBool aIncremental=PR_TRUE);
 
     /**
      * Cause parser to parse input from given file in given mode
@@ -138,7 +138,7 @@ friend class CTokenHandler;
      * @update	gess5/11/98
      * @return  TRUE if all went well, otherwise FALSE
      */
-    virtual PRInt32 ResumeParse(PRInt32 anIteration);
+    virtual PRInt32 ResumeParse(void);
 
     /**
      * Retrieve ptr to internal context vector stack
@@ -164,7 +164,7 @@ friend class CTokenHandler;
      * @param   aToken is the start token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRBool HandleStartToken(CToken* aToken);
+    PRInt32 HandleStartToken(CToken* aToken);
 
     /**
      * This method gets called when a start token has been consumed, and
@@ -177,7 +177,7 @@ friend class CTokenHandler;
      * @param   aNode is a node be updated with info from given token
      * @return  TRUE if the token was handled.
      */
-    PRBool HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
+    PRInt32 HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
 
     /**
      * This method gets called when an end token has been consumed and needs 
@@ -186,7 +186,7 @@ friend class CTokenHandler;
      * @param   aToken is the end token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRBool HandleEndToken(CToken* aToken);
+    PRInt32 HandleEndToken(CToken* aToken);
 
     /**
      * This method gets called when an entity token has been consumed and needs 
@@ -195,7 +195,7 @@ friend class CTokenHandler;
      * @param   aToken is the entity token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRBool HandleEntityToken(CToken* aToken);
+    PRInt32 HandleEntityToken(CToken* aToken);
 
     /**
      * This method gets called when a comment token has been consumed and needs 
@@ -204,7 +204,7 @@ friend class CTokenHandler;
      * @param   aToken is the comment token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRBool HandleCommentToken(CToken* aToken);
+    PRInt32 HandleCommentToken(CToken* aToken);
 
     /**
      * This method gets called when a skipped-content token has been consumed and needs 
@@ -213,7 +213,7 @@ friend class CTokenHandler;
      * @param   aToken is the skipped-content token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRBool HandleSkippedContentToken(CToken* aToken);
+    PRInt32 HandleSkippedContentToken(CToken* aToken);
 
     /**
      * This method gets called when an attribute token has been consumed and needs 
@@ -222,7 +222,7 @@ friend class CTokenHandler;
      * @param   aToken is the attribute token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRBool HandleAttributeToken(CToken* aToken);
+    PRInt32 HandleAttributeToken(CToken* aToken);
 
     /**
      * This method gets called when a script token has been consumed and needs 
@@ -231,7 +231,7 @@ friend class CTokenHandler;
      * @param   aToken is the script token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRBool HandleScriptToken(CToken* aToken);
+    PRInt32 HandleScriptToken(CToken* aToken);
     
     /**
      * This method gets called when a style token has been consumed and needs 
@@ -240,7 +240,7 @@ friend class CTokenHandler;
      * @param   aToken is the style token to be handled
      * @return  TRUE if the token was handled.
      */
-    PRBool HandleStyleToken(CToken* aToken);
+    PRInt32 HandleStyleToken(CToken* aToken);
 
       //*********************************************
       // These methods are callback methods used by
@@ -255,20 +255,28 @@ friend class CTokenHandler;
 protected:
 
     /**
+     * 
+     * @update	gess5/18/98
+     * @param 
+     * @return
+     */
+    PRInt32 WillBuildModel(void);
+
+    /**
+     * 
+     * @update	gess5/18/98
+     * @param 
+     * @return
+     */
+    PRInt32 DidBuildModel(PRInt32 anErrorCode);
+
+    /**
      * This method gets called when the tokens have been consumed, and it's time
      * to build the model via the content sink.
      * @update	gess5/11/98
      * @return  YES if model building went well -- NO otherwise.
      */
-    PRBool IterateTokens();
-
-    /**
-     * Retrieves the tag type for the element on the context vector stack at given pos.
-     * @update	gess5/11/98
-     * @param   pos of item you want to retrieve
-     * @return  tag type (may be unknown)
-     */
-    eHTMLTags NodeAt(PRInt32 aPos) const;
+    PRInt32 IterateTokens(void);
 
     /**
      * Retrieve the tag type of the topmost item on context vector stack
@@ -278,20 +286,13 @@ protected:
     eHTMLTags GetTopNode() const;
 
     /**
-     * Retrieve the number of items on context vector stack
-     * @update	gess5/11/98
-     * @return  count of items on stack -- may be 0
-     */
-    PRInt32 GetStackPos() const;
-
-    /**
      * Causes the parser to scan foward, collecting nearby (sequential)
      * attribute tokens into the given node.
      * @update	gess5/11/98
      * @param   node to store attributes
      * @return  number of attributes added to node.
      */
-    PRInt32 CollectAttributes(nsCParserNode& aNode);
+    PRInt32 CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
 
     /**
      * Causes the next skipped-content token (if any) to
@@ -309,12 +310,7 @@ protected:
      */
     void InitializeDefaultTokenHandlers();
 
-    /**
-     * DEPRECATED
-     * @update	gess5/11/98
-     */
-    CTokenHandler* GetTokenHandler(const nsString& aString) const;
-
+   
     /**
      * DEPRECATED
      * @update	gess5/11/98
@@ -345,7 +341,7 @@ protected:
      * @param   HTML (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRBool OpenHTML(const nsIParserNode& aNode);
+    PRInt32 OpenHTML(const nsIParserNode& aNode);
 
     /**
      * 
@@ -353,7 +349,7 @@ protected:
      * @param 
      * @return
      */
-    PRBool CloseHTML(const nsIParserNode& aNode);
+    PRInt32 CloseHTML(const nsIParserNode& aNode);
 
     /**
      * This cover method opens the given node as a head item in 
@@ -362,7 +358,7 @@ protected:
      * @param   HEAD (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRBool OpenHead(const nsIParserNode& aNode);
+    PRInt32 OpenHead(const nsIParserNode& aNode);
 
     /**
      * This cover method causes the content-sink head to be closed
@@ -370,7 +366,7 @@ protected:
      * @param   aNode is the node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRBool CloseHead(const nsIParserNode& aNode);
+    PRInt32 CloseHead(const nsIParserNode& aNode);
 
     /**
      * This cover method opens the given node as a body item in 
@@ -379,7 +375,7 @@ protected:
      * @param   BODY (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRBool OpenBody(const nsIParserNode& aNode);
+    PRInt32 OpenBody(const nsIParserNode& aNode);
 
     /**
      * This cover method causes the content-sink body to be closed
@@ -387,7 +383,7 @@ protected:
      * @param   aNode is the body node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRBool CloseBody(const nsIParserNode& aNode);
+    PRInt32 CloseBody(const nsIParserNode& aNode);
 
     /**
      * This cover method opens the given node as a form item in 
@@ -396,7 +392,7 @@ protected:
      * @param   FORM (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRBool OpenForm(const nsIParserNode& aNode);
+    PRInt32 OpenForm(const nsIParserNode& aNode);
 
     /**
      * This cover method causes the content-sink form to be closed
@@ -404,7 +400,7 @@ protected:
      * @param   aNode is the form node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRBool CloseForm(const nsIParserNode& aNode);
+    PRInt32 CloseForm(const nsIParserNode& aNode);
 
     /**
      * This cover method opens the given node as a frameset item in 
@@ -413,7 +409,7 @@ protected:
      * @param   FRAMESET (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRBool OpenFrameset(const nsIParserNode& aNode);
+    PRInt32 OpenFrameset(const nsIParserNode& aNode);
 
     /**
      * This cover method causes the content-sink frameset to be closed
@@ -421,7 +417,7 @@ protected:
      * @param   aNode is the frameeset node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRBool CloseFrameset(const nsIParserNode& aNode);
+    PRInt32 CloseFrameset(const nsIParserNode& aNode);
 
     /**
      * This cover method opens the given node as a generic container in 
@@ -430,7 +426,7 @@ protected:
      * @param   generic container (node) to be opened in content sink.
      * @return  TRUE if all went well.
      */
-    PRBool OpenContainer(const nsIParserNode& aNode);
+    PRInt32 OpenContainer(const nsIParserNode& aNode);
 
     /**
      * This cover method causes a generic containre in the content-sink to be closed
@@ -438,14 +434,14 @@ protected:
      * @param   aNode is the node to be closed in sink (usually ignored)
      * @return  TRUE if all went well.
      */
-    PRBool CloseContainer(const nsIParserNode& aNode);
+    PRInt32 CloseContainer(const nsIParserNode& aNode);
     
     /**
      * This cover method causes the topmost container to be closed in sink
      * @update	gess5/11/98
      * @return  TRUE if all went well.
      */
-    PRBool CloseTopmostContainer();
+    PRInt32 CloseTopmostContainer();
     
     /**
      * Cause all containers down to topmost given tag to be closed
@@ -453,7 +449,7 @@ protected:
      * @param   aTag is the tag at which auto-closure should stop (inclusive) 
      * @return  TRUE if all went well -- otherwise FALSE
      */
-    PRBool CloseContainersTo(eHTMLTags aTag);
+    PRInt32 CloseContainersTo(eHTMLTags aTag);
 
     /**
      * Cause all containers down to given position to be closed
@@ -461,7 +457,7 @@ protected:
      * @param   anIndex is the stack pos at which auto-closure should stop (inclusive) 
      * @return  TRUE if all went well -- otherwise FALSE
      */
-    PRBool CloseContainersTo(PRInt32 anIndex);
+    PRInt32 CloseContainersTo(PRInt32 anIndex);
 
     /**
      * Causes leaf to be added to sink at current vector pos.
@@ -469,15 +465,8 @@ protected:
      * @param   aNode is leaf node to be added.
      * @return  TRUE if all went well -- FALSE otherwise.
      */
-    PRBool AddLeaf(const nsIParserNode& aNode);
+    PRInt32 AddLeaf(const nsIParserNode& aNode);
 
-    /**
-     * Determine if the given tag is open in the context vector stack.
-     * @update	gess5/11/98
-     * @param   aTag is the type of tag you want to test for openness
-     * @return  TRUE if open, FALSE otherwise.
-     */
-    PRBool IsOpen(eHTMLTags aTag) const;
 
     /**
      * Finds the topmost occurance of given tag within context vector stack.
@@ -495,7 +484,7 @@ protected:
      * @param   child to be added (somewhere) to context vector stack.
      * @return  TRUE if succeeds, otherwise FALSE
      */
-    PRBool ReduceContextStackFor(PRInt32 aChildTag);
+    PRInt32 ReduceContextStackFor(PRInt32 aChildTag);
 
     /**
      * Attempt forward and/or backward propagation for the given
@@ -504,7 +493,7 @@ protected:
      * @param   type of child to be propagated.
      * @return  TRUE if succeeds, otherwise FALSE
      */
-    PRBool CreateContextStackFor(PRInt32 aChildTag);
+    PRInt32 CreateContextStackFor(PRInt32 aChildTag);
 
 private:
     PRInt32 ParseFileIncrementally(const char* aFilename);  //XXX ONLY FOR DEBUG PURPOSES...
@@ -520,19 +509,20 @@ protected:
     PRInt32             mContextStack[50];
     PRInt32             mContextStackPos;
 
-    CTokenHandler*      mTokenHandlers[100];
-    PRInt32             mTokenHandlerCount;
+    CTokenHandler*      mTokenHandlers[eToken_last];
+
     nsDequeIterator*    mCurrentPos;
+    nsDequeIterator*    mMarkPos;
 
     nsIDTD*             mDTD;
     eParseMode          mParseMode;
     PRBool              mHasOpenForm;
     PRBool              mIncremental;
     ITokenizerDelegate* mDelegate;
+    PRInt32             mIteration;
+    char*               mTransferBuffer;
 };
 
 
 #endif 
-
-
 

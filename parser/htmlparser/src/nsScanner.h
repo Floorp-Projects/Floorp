@@ -39,8 +39,7 @@
 #include <fstream.h>
 
 class nsIURL;
-//class ifstream; XXX mac didn't like this, but this doesn't seem to be needed
-// for the pc either...
+class ifstream;
 
 class CScanner {
   public:
@@ -215,6 +214,15 @@ class CScanner {
        *  @return  
        */
       PRBool Append(nsString& aBuffer);
+
+      /**
+       *  
+       *  
+       *  @update  gess 5/21/98
+       *  @param   
+       *  @return  
+       */
+      PRBool Append(const char* aBuffer, PRInt32 aLen);
 
       /**
        *  

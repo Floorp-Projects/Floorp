@@ -48,7 +48,7 @@ class nsIContentSink : public nsISupports {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-  virtual PRBool        OpenContainer(const nsIParserNode& aNode) = 0;
+  virtual PRInt32 OpenContainer(const nsIParserNode& aNode) = 0;
 
    /**
     *  This method gets called by the parser when a close
@@ -58,7 +58,7 @@ class nsIContentSink : public nsISupports {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-  virtual PRBool        CloseContainer(const nsIParserNode& aNode) = 0;
+  virtual PRInt32 CloseContainer(const nsIParserNode& aNode) = 0;
 
    /**
     * This method gets called by the parser when a the
@@ -67,7 +67,7 @@ class nsIContentSink : public nsISupports {
     * @update 4/1/98 gess
     * @return PR_TRUE if successful. 
     */     
-  virtual PRBool        CloseTopmostContainer() = 0;
+  virtual PRInt32 CloseTopmostContainer() = 0;
 
    /**
     * This gets called by the parser when you want to add
@@ -78,7 +78,7 @@ class nsIContentSink : public nsISupports {
     * @param  nsIParserNode reference to parser node interface
     * @return PR_TRUE if successful. 
     */     
-  virtual PRBool        AddLeaf(const nsIParserNode& aNode) = 0;
+  virtual PRInt32 AddLeaf(const nsIParserNode& aNode) = 0;
 
    /**
     * This method gets called when the parser begins the process

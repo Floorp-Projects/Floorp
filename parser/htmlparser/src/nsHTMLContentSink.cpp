@@ -18,6 +18,7 @@
 
 #include "nsHTMLContentSink.h"
 #include "nsHTMLTokens.h"
+#include "nsParserTypes.h"
 #include "prtypes.h" 
 #include <iostream.h>  
 
@@ -143,9 +144,9 @@ nsresult nsHTMLContentSink::QueryInterface(const nsIID& aIID, void** aInstancePt
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::OpenHTML(const nsIParserNode& aNode) {
+PRInt32 nsHTMLContentSink::OpenHTML(const nsIParserNode& aNode) {
 
-  PRBool result=PR_TRUE;
+  PRInt32 result=kNoError;
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
 #ifdef VERBOSE_DEBUG
@@ -162,11 +163,11 @@ PRBool nsHTMLContentSink::OpenHTML(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::CloseHTML(const nsIParserNode& aNode){
+PRInt32 nsHTMLContentSink::CloseHTML(const nsIParserNode& aNode){
 
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
 
-  PRBool result=PR_TRUE;
+  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
@@ -186,8 +187,8 @@ PRBool nsHTMLContentSink::CloseHTML(const nsIParserNode& aNode){
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::OpenHead(const nsIParserNode& aNode) {
-  PRBool result=PR_TRUE;
+PRInt32 nsHTMLContentSink::OpenHead(const nsIParserNode& aNode) {
+  PRInt32 result=kNoError;
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
 #ifdef VERBOSE_DEBUG
@@ -205,10 +206,10 @@ PRBool nsHTMLContentSink::OpenHead(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::CloseHead(const nsIParserNode& aNode) {
+PRInt32 nsHTMLContentSink::CloseHead(const nsIParserNode& aNode) {
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
 
-  PRBool result=PR_TRUE;
+  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
@@ -226,8 +227,8 @@ PRBool nsHTMLContentSink::CloseHead(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::SetTitle(const nsString& aValue){
-  PRBool result=PR_TRUE;
+PRInt32 nsHTMLContentSink::SetTitle(const nsString& aValue){
+  PRInt32 result=kNoError;
   mTitle=aValue;
   return result;
 }
@@ -240,8 +241,8 @@ PRBool nsHTMLContentSink::SetTitle(const nsString& aValue){
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::OpenBody(const nsIParserNode& aNode) {
-  PRBool result=PR_TRUE;
+PRInt32 nsHTMLContentSink::OpenBody(const nsIParserNode& aNode) {
+  PRInt32 result=kNoError;
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
   #ifdef VERBOSE_DEBUG
@@ -259,9 +260,9 @@ PRBool nsHTMLContentSink::OpenBody(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::CloseBody(const nsIParserNode& aNode){
+PRInt32 nsHTMLContentSink::CloseBody(const nsIParserNode& aNode){
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
-  PRBool result=PR_TRUE;
+  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
@@ -279,8 +280,8 @@ PRBool nsHTMLContentSink::CloseBody(const nsIParserNode& aNode){
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::OpenForm(const nsIParserNode& aNode) {
-  PRBool result=PR_TRUE;
+PRInt32 nsHTMLContentSink::OpenForm(const nsIParserNode& aNode) {
+  PRInt32 result=kNoError;
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
 #ifdef VERBOSE_DEBUG
@@ -298,10 +299,10 @@ PRBool nsHTMLContentSink::OpenForm(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::CloseForm(const nsIParserNode& aNode){
+PRInt32 nsHTMLContentSink::CloseForm(const nsIParserNode& aNode){
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
 
-  PRBool result=PR_TRUE;
+  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
@@ -319,8 +320,8 @@ PRBool nsHTMLContentSink::CloseForm(const nsIParserNode& aNode){
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::OpenFrameset(const nsIParserNode& aNode) {
-  PRBool result=PR_TRUE;
+PRInt32 nsHTMLContentSink::OpenFrameset(const nsIParserNode& aNode) {
+  PRInt32 result=kNoError;
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
   #ifdef VERBOSE_DEBUG
@@ -338,10 +339,10 @@ PRBool nsHTMLContentSink::OpenFrameset(const nsIParserNode& aNode) {
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::CloseFrameset(const nsIParserNode& aNode){
+PRInt32 nsHTMLContentSink::CloseFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
 
-  PRBool result=PR_TRUE;
+  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
@@ -360,8 +361,8 @@ PRBool nsHTMLContentSink::CloseFrameset(const nsIParserNode& aNode){
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::OpenContainer(const nsIParserNode& aNode){  
-  PRBool result=PR_TRUE;
+PRInt32 nsHTMLContentSink::OpenContainer(const nsIParserNode& aNode){  
+  PRInt32 result=kNoError;
   mNodeStack[mNodeStackPos++]=(eHTMLTags)aNode.GetNodeType();
 
 #ifdef VERBOSE_DEBUG
@@ -379,10 +380,10 @@ PRBool nsHTMLContentSink::OpenContainer(const nsIParserNode& aNode){
  *  @param  
  *  @return 
  */
-PRBool nsHTMLContentSink::CloseContainer(const nsIParserNode& aNode){
+PRInt32 nsHTMLContentSink::CloseContainer(const nsIParserNode& aNode){
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
 
-  PRBool result=PR_TRUE;
+  PRInt32 result=kNoError;
   mNodeStack[--mNodeStackPos]=eHTMLTag_unknown;
 
 #ifdef VERBOSE_DEBUG
@@ -400,9 +401,9 @@ PRBool nsHTMLContentSink::CloseContainer(const nsIParserNode& aNode){
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::CloseTopmostContainer(){
+PRInt32 nsHTMLContentSink::CloseTopmostContainer(){
   NS_PRECONDITION(mNodeStackPos > 0, "node stack empty");
-  PRBool result=PR_TRUE;
+  PRInt32 result=kNoError;
   mNodeStack[mNodeStackPos--]=eHTMLTag_unknown;
   return result;
 }
@@ -416,8 +417,8 @@ PRBool nsHTMLContentSink::CloseTopmostContainer(){
  *  @param   
  *  @return  
  */
-PRBool nsHTMLContentSink::AddLeaf(const nsIParserNode& aNode){
-  PRBool result=PR_TRUE;
+PRInt32 nsHTMLContentSink::AddLeaf(const nsIParserNode& aNode){
+  PRInt32 result=kNoError;
 
 #ifdef VERBOSE_DEBUG
   DebugDump("<",aNode.GetText(),(mNodeStackPos)*2);
