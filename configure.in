@@ -67,6 +67,12 @@ MISSING_MOTIF=
 MISSING_NSPR=
 MISSING_X=
 
+dnl Initialize the Pthread test variables early so they can be
+dnl  overridden by each platform.
+dnl ========================================================
+USE_PTHREADS=
+PTHREAD_LDFLAGS=""
+
 dnl Do not allow a separate objdir build if a srcdir build exists.
 dnl ==============================================================
 _topsrcdir=`cd \`dirname $0\`; pwd`
@@ -394,6 +400,8 @@ alpha*-*-linux*)
     _PREPROCESSOR_PREFIX="-Wp,"
     _COMPILER_PREFIX="-Wc,"
     _LINKER_PREFIX="-Wl,"      
+	USE_PTHREADS=1
+	PTHREAD_LDFLAGS=""
     ;;
 
 *-openbsd*)
@@ -1000,8 +1008,6 @@ dnl
 dnl Start by checking whether the system support pthreads
 dnl 
 
-USE_PTHREADS=
-PTHREAD_LDFLAGS=""
 
 dnl 
 dnl Try lib pthread
