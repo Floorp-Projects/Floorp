@@ -85,8 +85,6 @@ NS_NewLayoutHistoryState(nsILayoutHistoryState** aState)
 nsLayoutHistoryState::nsLayoutHistoryState()
 {
   NS_INIT_REFCNT();
-  
-  
 }
 
 nsLayoutHistoryState::~nsLayoutHistoryState()
