@@ -121,7 +121,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsSupportsArrayEnumerator.obj \
         .\$(OBJDIR)\nsSupportsPrimitives.obj      \
         .\$(OBJDIR)\nsTextFormatter.obj           \
-        .\$(OBJDIR)\nsThreadSafeRecycler.obj      \
         .\$(OBJDIR)\nsUnicharBuffer.obj           \
         .\$(OBJDIR)\nsVoidArray.obj               \
         .\$(OBJDIR)\nsVoidBTree.obj               \
