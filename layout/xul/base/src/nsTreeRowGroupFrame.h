@@ -30,7 +30,9 @@ class nsTreeRowGroupFrame : public nsTableRowGroupFrame, public nsIScrollbarList
 public:
   friend nsresult NS_NewTreeRowGroupFrame(nsIFrame** aNewFrame);
 
-  virtual PRBool ExcludeFrameFromReflow(nsIFrame* aFrame);
+  NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
+                                         nsIAtom** aListName) const;
+  NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
 
   void SetScrollbarFrame(nsIFrame* aFrame);
   void SetFrameConstructor(nsCSSFrameConstructor* aFrameConstructor) { mFrameConstructor = aFrameConstructor; };
@@ -93,7 +95,11 @@ protected:
   void ConstructContentChain(nsIContent* aRowContent);
   void FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpwardHint, 
                               nsIContent* aDownwardHint, nsIContent** aResult);
+  void FindRowContentAtIndex(PRInt32& aIndex, nsIContent* aParent, 
+                             nsIContent** aResult);
   void GetFirstRowContent(nsIContent** aRowContent);
+
+  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
 protected: // Data Members
   nsIFrame* mTopFrame; // The current topmost frame in the view.
@@ -104,7 +110,8 @@ protected: // Data Members
   PRBool mIsFull; // Whether or not we have any more room.
 
   nsIFrame* mScrollbar; // Our scrollbar.
-  
+  nsFrameList mScrollbarList; // A frame list that holds our scrollbar.
+
   nsISupportsArray* mContentChain; // Our content chain
 
   nsCSSFrameConstructor* mFrameConstructor; // We don't own this. (No addref/release allowed, punk.)

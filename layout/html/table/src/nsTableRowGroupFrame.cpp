@@ -410,17 +410,6 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
  
   for ( ; nsnull != kidFrame; ) 
   {
-    if (ExcludeFrameFromReflow(kidFrame)) {
-      // The tree widget has some frames that aren't reflowed by
-      // the normal row group reflow.
-      if (PR_FALSE==aDoSiblings)
-        break;
-
-      // Get the next child
-      GetNextFrameForReflow(aPresContext, kidFrame, &kidFrame);
-      continue;
-    }
-
     nsSize kidAvailSize(aReflowState.availSize);
     if (0>=kidAvailSize.height)
       kidAvailSize.height = 1;      // XXX: HaCk - we don't handle negative heights yet
@@ -758,7 +747,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
         rowGroupHeight += rowHeights[rowIndex];
         rowIndex++;
       }
-      else if (!ExcludeFrameFromReflow(rowFrame)) {
+      else {
         // Anything that isn't a row contributes to the row group's total height.
         nsSize frameSize;
         rowFrame->GetSize(frameSize);
