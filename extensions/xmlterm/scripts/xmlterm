@@ -24,7 +24,7 @@ else
       MOZILLA_DIR=`rpm -q --queryformat "%{INSTALLPREFIX}" xmlterm`
    fi
 
-   if [ ${#MOZILLA_DIR} -eq 0 ]
+   if [ ! "$MOZILLA_DIR" ]
    then
       # Assume command prefix points to mozilla directory
       MOZILLA_DIR=$PREFIX
