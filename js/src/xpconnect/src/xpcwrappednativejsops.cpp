@@ -824,13 +824,15 @@ static JSObjectOps WrappedNative_ops = {
     WrappedNative_HasInstance,  /* hasInstance  */
     nsnull,                     /* setProto */
     nsnull,                     /* setParent */
-    0,0,0,0                     /* spare */
+    nsnull,                     /* filled in at runtime! - mark */
+    nsnull,                     /* filled in at runtime! - clear */
+    0,0                         /* spare */
 };
 
 static JSObjectOps WrappedNativeWithCall_ops = {
     /* Mandatory non-null function pointer members. */
-    nsnull,                       /* filled in at runtime! - newObjectMap */
-    nsnull,                       /* filled in at runtime! - destroyObjectMap */
+    nsnull,                     /* filled in at runtime! - newObjectMap */
+    nsnull,                     /* filled in at runtime! - destroyObjectMap */
     WrappedNative_LookupProperty,
     WrappedNative_DefineProperty,
     WrappedNative_GetProperty,
@@ -849,9 +851,11 @@ static JSObjectOps WrappedNativeWithCall_ops = {
     WrappedNative_Construct,    /* construct    */
     nsnull,                     /* xdrObject    */
     WrappedNative_HasInstance,  /* hasInstance  */
-    NULL,                       /* setProto */
-    NULL,                       /* setParent */
-    0,0,0,0                     /* spare */
+    nsnull,                     /* setProto */
+    nsnull,                     /* setParent */
+    nsnull,                     /* filled in at runtime! - mark */
+    nsnull,                     /* filled in at runtime! - clear */
+    0,0                         /* spare */
 };
 
 JS_STATIC_DLL_CALLBACK(JSObjectOps *)
@@ -905,9 +909,13 @@ JSBool xpc_InitWrappedNativeJSOps()
     {
         WrappedNative_ops.newObjectMap     = js_ObjectOps.newObjectMap;
         WrappedNative_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
+        WrappedNative_ops.mark             = js_ObjectOps.mark;
+        WrappedNative_ops.clear            = js_ObjectOps.clear;
 
         WrappedNativeWithCall_ops.newObjectMap     = js_ObjectOps.newObjectMap;
         WrappedNativeWithCall_ops.destroyObjectMap = js_ObjectOps.destroyObjectMap;
+        WrappedNativeWithCall_ops.mark             = js_ObjectOps.mark;
+        WrappedNativeWithCall_ops.clear            = js_ObjectOps.clear;
     }
     return JS_TRUE;
 }

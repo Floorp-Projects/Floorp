@@ -336,7 +336,8 @@ JSClass JavaPackage_class = {
     NULL,                       /* construct */
     NULL,                       /* xdrObject */
     NULL,                       /* hasInstance */
-    {0, 0},                     /* spare */
+    NULL,                       /* mark */
+    0,                          /* spare */
 };
 
 JavaPackageDef

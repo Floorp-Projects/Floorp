@@ -1043,6 +1043,21 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 
 #endif /* !JS_HAS_INSTANCEOF */
 
+static uint32
+fun_mark(JSContext *cx, JSObject *obj, void *arg)
+{
+    JSFunction *fun;
+
+    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+    if (fun) {
+        if (fun->atom)
+            js_MarkAtom(cx, fun->atom, arg);
+        if (fun->script)
+            js_MarkScript(cx, fun->script, arg);
+    }
+    return 0;
+}
+
 JSClass js_FunctionClass = {
     js_Function_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
@@ -1053,7 +1068,7 @@ JSClass js_FunctionClass = {
     NULL,             NULL,
     NULL,             NULL,
     fun_xdrObject,    fun_hasInstance,
-    {0,0}
+    fun_mark,         0
 };
 
 static JSBool

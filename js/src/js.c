@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -140,7 +140,7 @@ int fputs(const char *s, FILE *file)
     char buffer[4096];
     int n = strlen(s);
     int extra = 0;
-    
+
     while (n > sizeof buffer) {
         memcpy(buffer, s, sizeof buffer);
         translateLFtoCR(buffer, sizeof buffer);
@@ -629,7 +629,7 @@ Help(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 static JSBool
 Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    int r = 0;    
+    int r = 0;
 
 #ifdef LIVECONNECT
     JSJ_SimpleShutdown();
@@ -1336,6 +1336,15 @@ BuildDate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    if (argc != 0 && !JS_ValueToObject(cx, argv[0], &obj))
+        return JS_FALSE;
+    JS_ClearScope(cx, obj);
+    return JS_TRUE;
+}
+
 static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
@@ -1362,6 +1371,7 @@ static JSFunctionSpec shell_functions[] = {
     {"cvtargs",         ConvertArgs,    0, 0, 12},
 #endif
     {"build",           BuildDate,      0},
+    {"clear",           Clear,          0},
     {0}
 };
 

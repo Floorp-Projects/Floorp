@@ -2488,8 +2488,7 @@ JSClass js_RegExpClass = {
     JS_PropertyStub,  JS_PropertyStub,  regexp_getProperty, regexp_setProperty,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,     regexp_finalize,
     NULL,             NULL,             regexp_call,        NULL,
-    regexp_xdrObject,
-    0,{0,0}
+    regexp_xdrObject, NULL,             NULL,               0
 };
 
 static JSBool

@@ -523,6 +523,22 @@ JS_LockGCThing(JSContext *cx, void *thing);
 extern JS_PUBLIC_API(JSBool)
 JS_UnlockGCThing(JSContext *cx, void *thing);
 
+/*
+ * For implementors of JSObjectOps.mark, to mark a GC-thing reachable via a
+ * property or other strong ref identified for debugging purposes by name.
+ * The name argument's storage needs to live only as long as the call to
+ * this routine.
+ *
+ * The final arg is used by GC_MARK_DEBUG code to build a ref path through
+ * the GC's live thing graph.  Implementors of JSObjectOps.mark should pass
+ * its final arg through to this function when marking all GC-things that are
+ * directly reachable from the object being marked.
+ *
+ * See the JSMarkOp typedef in jspubtd.h, and the JSObjectOps struct below.
+ */
+extern JS_PUBLIC_API(void)
+JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg);
+
 extern JS_PUBLIC_API(void)
 JS_GC(JSContext *cx);
 
@@ -561,16 +577,17 @@ struct JSClass {
     JSNative            construct;
     JSXDRObjectOp       xdrObject;
     JSHasInstanceOp     hasInstance;
-    jsword              spare[2];
+    JSMarkOp            mark;
+    jsword              spare;
 };
 
 #define JSCLASS_HAS_PRIVATE     0x01    /* class instances have private slot */
 #define JSCLASS_NEW_ENUMERATE   0x02    /* class has JSNewEnumerateOp method */
 #define JSCLASS_NEW_RESOLVE     0x04    /* class has JSNewResolveOp method */
-#define JSCLASS_PRIVATE_IS_NSISUPPORTS 0x08  /* private slot is nsISupports* */
-/* Fill in null values for unused members. */
-#define JSCLASS_NO_OPTIONAL_MEMBERS \
-        0,0,0,0,0,0,{0,0}
+#define JSCLASS_PRIVATE_IS_NSISUPPORTS  0x08  /* private is (nsISupports *) */
+
+/* Initializer for unused members of statically initialized JSClass structs. */
+#define JSCLASS_NO_OPTIONAL_MEMBERS     0,0,0,0,0,0,0,0
 
 struct JSObjectOps {
     /* Mandatory non-null function pointer members. */
@@ -596,10 +613,10 @@ struct JSObjectOps {
     JSHasInstanceOp     hasInstance;
     JSSetObjectSlotOp   setProto;
     JSSetObjectSlotOp   setParent;
+    JSMarkOp            mark;
+    JSFinalizeOp        clear;
     jsword              spare1;
     jsword              spare2;
-    jsword              spare3;
-    jsword              spare4;
 };
 
 /*

@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -37,24 +37,25 @@
 /*
  * JS Garbage Collector.
  */
+#include "jsprvtd.h"
 #include "jspubtd.h"
 
 JS_BEGIN_EXTERN_C
 
 /* GC thing type indexes. */
-#define GCX_OBJECT	0			/* JSObject */
-#define GCX_STRING	1			/* JSString */
-#define GCX_DOUBLE	2			/* jsdouble */
+#define GCX_OBJECT      0                       /* JSObject */
+#define GCX_STRING      1                       /* JSString */
+#define GCX_DOUBLE      2                       /* jsdouble */
 #define GCX_DECIMAL     3                       /* JSDecimal */
 #define GCX_NTYPES      4
 
 /* GC flag definitions (type index goes in low bits). */
-#define GCF_TYPEMASK	JS_BITMASK(2)		/* use low bits for type */
-#define GCF_MARK	JS_BIT(2)		/* mark bit */
-#define GCF_FINAL	JS_BIT(3)		/* in finalization bit */
-#define GCF_LOCKBIT	4			/* lock bit shift and mask */
-#define GCF_LOCKMASK	(JS_BITMASK(4) << GCF_LOCKBIT)
-#define GCF_LOCK	JS_BIT(GCF_LOCKBIT)	/* lock request bit in API */
+#define GCF_TYPEMASK    JS_BITMASK(2)           /* use low bits for type */
+#define GCF_MARK        JS_BIT(2)               /* mark bit */
+#define GCF_FINAL       JS_BIT(3)               /* in finalization bit */
+#define GCF_LOCKBIT     4                       /* lock bit shift and mask */
+#define GCF_LOCKMASK    (JS_BITMASK(4) << GCF_LOCKBIT)
+#define GCF_LOCK        JS_BIT(GCF_LOCKBIT)     /* lock request bit in API */
 
 #if 1
 /*
@@ -86,6 +87,40 @@ js_LockGCThing(JSContext *cx, void *thing);
 
 extern JSBool
 js_UnlockGCThing(JSContext *cx, void *thing);
+
+extern void
+js_MarkAtom(JSContext *cx, JSAtom *atom, void *arg);
+
+extern void
+js_MarkGCThing(JSContext *cx, void *thing, void *arg);
+
+#ifdef GC_MARK_DEBUG
+
+typedef struct GCMarkNode GCMarkNode;
+
+struct GCMarkNode {
+    void        *thing;
+    const char  *name;
+    GCMarkNode  *next;
+    GCMarkNode  *prev;
+};
+
+#define GC_MARK(_cx, _thing, _name, _prev)                                    \
+    JS_BEGIN_MACRO                                                            \
+        GCMarkNode _node;                                                     \
+        _node.thing = _thing;                                                 \
+        _node.name  = _name;                                                  \
+        _node.next  = NULL;                                                   \
+        _node.prev  = _prev;                                                  \
+        if (_prev) ((GCMarkNode *)(_prev))->next = &_node;                    \
+        js_MarkGCThing(_cx, _thing, &_node);                                  \
+    JS_END_MACRO
+
+#else  /* !GC_MARK_DEBUG */
+
+#define GC_MARK(cx, thing, name, prev)   js_MarkGCThing(cx, thing, NULL)
+
+#endif /* !GC_MARK_DEBUG */
 
 extern JS_FRIEND_API(void)
 js_ForceGC(JSContext *cx);

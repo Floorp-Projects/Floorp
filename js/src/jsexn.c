@@ -68,7 +68,7 @@ static JSClass ExceptionClass = {
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   exn_finalize,
     NULL,             NULL,             NULL,             Exception,
-    0,0,{0,0}
+    NULL,             NULL,             NULL,             0
 };
 
 /*

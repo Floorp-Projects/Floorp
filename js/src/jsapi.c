@@ -958,7 +958,7 @@ InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     if (!cx->globalObject)
         cx->globalObject = obj;
 
-    /* Record both Function and Object in resolving, if we are resolving. */
+    /* Record both Function and Object in cx->resolving, if we are resolving. */
     table = cx->resolving;
     if (table) {
         rt = cx->runtime;
@@ -1047,7 +1047,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #define OFFSET_TO_ATOM(rt,off)  (*(JSAtom **)((char*)&(rt)->atomState + (off)))
 #define TAG_ATOM_OFFSET(name)   ((const char *) ATOM_OFFSET(name))
 #define TAG_CHAR_STRING(name)   name
-#define UNTAG_ATOM_OFFSET(ptr)  ((size_t) (ptr))
+#define UNTAG_ATOM_OFFSET(ptr)  ((size_t)(ptr))
 #define UNTAG_CHAR_STRING(ptr)  ptr
 #define IS_ATOM_OFFSET(ptr)     ((size_t)(ptr) < sizeof(JSAtomState))
 
@@ -1488,6 +1488,17 @@ JS_UnlockGCThing(JSContext *cx, void *thing)
     if (!ok)
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_UNLOCK);
     return ok;
+}
+
+JS_PUBLIC_API(void)
+JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg)
+{
+    JS_ASSERT(cx->runtime->gcLevel > 0);
+#ifdef JS_THREADSAFE
+    JS_ASSERT(cx->runtime->gcThread == js_CurrentThreadId());
+#endif
+
+    GC_MARK(cx, thing, name, arg);
 }
 
 JS_PUBLIC_API(void)
@@ -2433,25 +2444,10 @@ JS_DeleteElement2(JSContext *cx, JSObject *obj, jsint index, jsval *rval)
 JS_PUBLIC_API(void)
 JS_ClearScope(JSContext *cx, JSObject *obj)
 {
-    JSObjectMap *map;
-    JSScope *scope;
-    uint32 i;
-
     CHECK_REQUEST(cx);
-    /* XXXbe push this into jsobj.c or jsscope.c */
-    /* XXXbe2 worse, assumes obj is native here, before MAP_IS_NATIVE! */
-    JS_LOCK_OBJ(cx, obj);
-    map = obj->map;
-    if (MAP_IS_NATIVE(map)) {
-	scope = (JSScope *)map;
-	scope->ops->clear(cx, scope);
-    }
 
-    /* Clear slot values and reset freeslot so we're consistent. */
-    map->freeslot = JSSLOT_FREE(OBJ_GET_CLASS(cx, obj));
-    for (i = map->nslots-1; i >= map->freeslot; --i)
-        obj->slots[i] = JSVAL_VOID;
-    JS_UNLOCK_OBJ(cx, obj);
+    if (obj->map->ops->clear)
+        obj->map->ops->clear(cx, obj);
 }
 
 JS_PUBLIC_API(JSIdArray *)

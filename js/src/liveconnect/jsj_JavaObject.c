@@ -908,7 +908,9 @@ JSObjectOps JavaObject_ops = {
     NULL,                       /* hasInstance */
     NULL,                       /* setProto */
     NULL,                       /* setParent */
-    0,0,0,0                     /* spare */
+    NULL,                       /* mark */
+    NULL,                       /* clear */
+    0,0                         /* spare */
 };
 
 static JSObjectOps *
@@ -929,7 +931,8 @@ JSClass JavaObject_class = {
     NULL,                       /* construct */
     NULL,                       /* xdrObject */
     NULL,                       /* hasInstance */
-    {0, 0},                     /* spare */
+    NULL,                       /* mark */
+    0,                          /* spare */
 };
 
 extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;

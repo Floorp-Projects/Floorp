@@ -354,6 +354,12 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
 extern JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp);
 
+extern uint32
+js_Mark(JSContext *cx, JSObject *obj, void *arg);
+
+extern void
+js_Clear(JSContext *cx, JSObject *obj);
+
 JS_END_EXTERN_C
 
 #endif /* jsobj_h___ */
