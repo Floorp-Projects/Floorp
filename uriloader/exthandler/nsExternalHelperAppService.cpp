@@ -1294,8 +1294,16 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
   mStopRequestIssued = PR_TRUE;
 
   // first, check to see if we've been canceled....
-  if (mCanceled) // then go cancel our underlying channel too
-    return request->Cancel(NS_BINDING_ABORTED);
+  if (mCanceled) { // then go cancel our underlying channel too
+    nsresult rv = request->Cancel(NS_BINDING_ABORTED);
+    // Notify dialog that download is complete.
+    if(mWebProgressListener)
+    {
+      // XXX Do we need to check for errors here (server goes down, network cable cut, etc.)?
+      mWebProgressListener->OnStateChange(nsnull, request, nsIWebProgressListener::STATE_STOP, NS_OK);
+    }
+    return rv;
+  }
 
   // go ahead and execute the application passing in our temp file as an argument
   // this may involve us calling back into the OS external app service to make the call
