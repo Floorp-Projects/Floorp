@@ -55,6 +55,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsFTPDirListingConv.obj       \
         .\$(OBJDIR)\nsConvFactories.obj           \
         .\$(OBJDIR)\mozTXTToHTMLConv.obj \
+        .\$(OBJDIR)\nsUnknownDecoder.obj \
         $(NULL)
 
 LOCAL_INCLUDES=-I.

@@ -27,6 +27,7 @@
 #include "nsFTPDirListingConv.h"
 #include "nsMultiMixedConv.h"
 #include "mozTXTToHTMLConv.h"
+#include "nsUnknownDecoder.h"
 
 nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 nsresult NS_NewMultiMixedConv(nsMultiMixedConv** result);
@@ -105,6 +106,35 @@ CreateNewTXTToHTMLConvFactory(nsISupports* aOuter, REFNSIID aIID, void **aResult
     return rv;              
 }
 
+#if defined(XP_WIN) || defined(XP_UNIX)
+static NS_IMETHODIMP
+CreateNewUnknownDecoderFactory(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
+
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = nsnull;
+
+  if (aOuter) {
+    return NS_ERROR_NO_AGGREGATION;
+  }
+
+  nsUnknownDecoder *inst;
+  
+  inst = new nsUnknownDecoder();
+  if (!inst) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
+}
+#endif
+
 // The list of components we register
 static nsModuleComponentInfo components[] =
 {
@@ -131,6 +161,13 @@ static nsModuleComponentInfo components[] =
       NS_ISTREAMCONVERTER_KEY "?from=text/plain?to=text/html", 
       CreateNewTXTToHTMLConvFactory
     },
+#if defined(XP_WIN) || defined(XP_UNIX)
+    { "Unknown Content-Type Decoder",
+      NS_UNKNOWNDECODER_CID,
+      NS_ISTREAMCONVERTER_KEY "?from=application/x-unknown-content-type?to=*/*",
+      CreateNewUnknownDecoderFactory
+    },
+#endif
 };
 
 NS_IMPL_NSGETMODULE("nsConvModule", components);
