@@ -380,7 +380,7 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 
 nsresult nsMailDatabase::GetFolderName(nsString &folderName)
 {
-	folderName = *m_folderSpec;
+	folderName.AssignWithConversion(NS_STATIC_CAST(const char*, *m_folderSpec));
 	return NS_OK;
 }
 

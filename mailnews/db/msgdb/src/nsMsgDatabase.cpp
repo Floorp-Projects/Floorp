@@ -81,7 +81,7 @@ nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
 	{
 		// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
 		nsCAutoString strKey;
-		strKey.Append(key, 10);
+		strKey.AppendInt(key, 10);
 		nsStringKey hashKey(strKey.GetBuffer());
 		// nsSupportsHashtable does an addref
 		*result = (nsIMsgDBHdr *) m_cachedHeaders->Get(&hashKey);
@@ -104,7 +104,7 @@ nsresult nsMsgDatabase::AddHdrToCache(nsIMsgDBHdr *hdr, nsMsgKey key) // do we w
 				ClearHdrCache();
 			// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
 			nsCAutoString strKey;
-			strKey.Append(key, 10);
+			strKey.AppendInt(key, 10);
 			nsStringKey hashKey(strKey.GetBuffer());
 			m_cachedHeaders->Put(&hashKey, hdr);
 			return NS_OK;
@@ -130,7 +130,7 @@ nsresult nsMsgDatabase::RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 			hdr->GetMessageKey(&key);
 
 		nsCAutoString strKey;
-		strKey.Append(key, 10);
+		strKey.AppendInt(key, 10);
 		nsStringKey hashKey(strKey.GetBuffer());
 		nsIMsgDBHdr *removedHdr = (nsIMsgDBHdr *) m_cachedHeaders->Remove(&hashKey); // does this release, or do I have to?
 	}
@@ -151,7 +151,7 @@ nsresult nsMsgDatabase::GetHdrFromUseCache(nsMsgKey key, nsIMsgDBHdr* *result)
 	{
 		// it would be nice if we had a hash table that hashed 32 bit int's
 		nsCAutoString strKey;
-		strKey.Append(key, 10);
+		strKey.AppendInt(key, 10);
 		nsStringKey hashKey(strKey.GetBuffer());
 		// nsHashtable doesn't do an addref
 		*result = (nsIMsgDBHdr *) m_headersInUse->Get(&hashKey);
@@ -173,7 +173,7 @@ nsresult nsMsgDatabase::AddHdrToUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 		nsCOMPtr<nsISupports> supports(do_QueryInterface(hdr));
 		// it would be nice if we had an nsISupports hash table that hashed 32 bit int's
 		nsCAutoString strKey;
-		strKey.Append(key, 10);
+		strKey.AppendInt(key, 10);
 		nsStringKey hashKey(strKey.GetBuffer());
 		m_headersInUse->Put(&hashKey, hdr);
 		NS_ADDREF(hdr);
@@ -202,7 +202,7 @@ nsresult nsMsgDatabase::RemoveHdrFromUseCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 			hdr->GetMessageKey(&key);
 
 		nsCAutoString strKey;
-		strKey.Append(key, 10);
+		strKey.AppendInt(key, 10);
 		nsStringKey hashKey(strKey.GetBuffer());
 		nsIMsgDBHdr *removedHdr = (nsIMsgDBHdr *) m_headersInUse->Remove(&hashKey); 
 	}
@@ -2569,7 +2569,7 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 
 /* static */void nsMsgDatabase::YarnTonsString(struct mdbYarn *yarn, nsString *str)
 {
-	str->Assign((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
+	str->AssignWithConversion((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
 }
 
 /* static */void nsMsgDatabase::YarnTonsCString(struct mdbYarn *yarn, nsCString *str)

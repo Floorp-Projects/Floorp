@@ -638,7 +638,7 @@ NS_IMETHODIMP nsMsgHdr::GetAuthorCollationKey(PRUnichar* *resultAuthor)
 	}
 	if (NS_SUCCEEDED(ret))
 	{
-		nsAutoString autoString(name);
+		nsAutoString autoString; autoString.AssignWithConversion(name);
         PRUnichar *uniName = autoString.ToNewUnicode();
 		ret = m_mdb->CreateCollationKey(uniName, resultAuthor);
         Recycle(uniName);
