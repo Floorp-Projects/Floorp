@@ -3367,6 +3367,11 @@ void CEditView::DisplayCell( int inLocation, LO_CellStruct *inCellStruct )
 			StColorPenState state;
 			PenPat( &qd.gray );
 			PenMode( srcXor );
+			
+			if ( (inCellStruct->ele_attrmask & LO_ELE_SELECTED)
+			|| (inCellStruct->ele_attrmask & LO_ELE_SELECTED_SPECIAL ) )
+				::PenSize( ED_SELECTION_BORDER, ED_SELECTION_BORDER );
+			
 			FrameRect( &theFrame );
 		}
 		else if ( (inCellStruct->ele_attrmask & LO_ELE_SELECTED)
