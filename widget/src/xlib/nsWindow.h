@@ -21,12 +21,14 @@
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
  *   B.J. Rossiter <bj@igelaus.com.au>
+ *   Tony Tsui <tony@igelaus.com.au>
  */
 
 #ifndef nsWindow_h__
 #define nsWindow_h__
 
 #include "nsWidget.h"
+#include <X11/cursorfont.h>
 
 #include "nsString.h"
 
@@ -69,9 +71,9 @@ class nsWindow : public nsWidget
   nsWindow();
   ~nsWindow();
   static void      UpdateIdle (void *data);
-  NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener,
-																PRBool aDoCapture,
-																PRBool aConsumeRollupEvent);
+  NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener, 
+                                 PRBool aDoCapture, 
+                                 PRBool aConsumeRollupEvent);
   NS_IMETHOD Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
   NS_IMETHOD           InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous);
@@ -102,14 +104,16 @@ protected:
 
   virtual long GetEventMask();
 
-
+  // Keyboard and Pointer Grabbing
+  void NativeGrab(PRBool aGrab);
 
   void                 QueueDraw();
   void                 UnqueueDraw();
   PRBool mIsUpdating;
   PRBool mBlockFocusEvents;
 
-
+  static PRBool    sIsGrabbing;
+  static nsWindow  *sGrabWindow;
 
 #if 0
   virtual void CreateNative(Window aParent, nsRect aRect);

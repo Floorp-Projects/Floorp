@@ -20,7 +20,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Peter Hartshorn <peter@igelaus.com.au>
- *   Ken Faulkner ><faulkner@igelaus.com.au>
+ *   Ken Faulkner <faulkner@igelaus.com.au>
  */
 
 /* TODO:
@@ -97,7 +97,8 @@ void nsClipboard::Init() {
 
 // This is the callback function for our nsWidget. It is given the
 // XEvent from nsAppShell.
-
+// FIXME: We _should_ assign mTransferable here depending on if its a 
+// selectionrequest
 nsEventStatus PR_CALLBACK nsClipboard::Callback(nsGUIEvent *event) {
   XEvent *ev = (XEvent *)event->nativeMsg;
 
@@ -192,6 +193,12 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   nsCOMPtr<nsISupportsArray> flavorList;
   nsCOMPtr<nsITransferable> transferable(getter_AddRefs(GetTransferable(aWhichClipboard)));
 
+  // FIXME Need to make sure mTransferable has reference to selectionclipboard.
+  // This solves the problem with copying to an external app.
+  // but cannot be sure if its fully correct until menu copy/paste is working.
+ if (aWhichClipboard == kSelectionClipboard)
+    mTransferable = transferable; 
+  
   // make sure we have a good transferable
   if (nsnull == transferable) {
 #ifdef DEBUG_faulkner

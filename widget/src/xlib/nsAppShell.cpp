@@ -20,6 +20,8 @@
  * Contributor(s): 
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
+ *   Tony Tsui <tony@igelaus.com.au>
+ *   Caspian Maclean <caspian@igelaus.com.au>
  */
 
 #include <stdlib.h>
@@ -214,7 +216,7 @@ static int CallTimeToNextTimeoutFunc(struct timeval * aTimeval)
 #endif /* MOZ_MONOLITHIC_TOOLKIT */
 }
 
-static void CallProcessTimeoutsProc(void)
+static void CallProcessTimeoutsProc(Display *aDisplay)
 {
 #ifdef MOZ_MONOLITHIC_TOOLKIT
   NS_ProcessTimeouts();
@@ -223,7 +225,7 @@ static void CallProcessTimeoutsProc(void)
 
   if (proc)
   {
-    (*proc)();
+    (*proc)(aDisplay);
   }
 #endif /* MOZ_MONOLITHIC_TOOLKIT */
 }
@@ -447,7 +449,7 @@ nsresult nsAppShell::Run()
     }
 
     if (please_run_timer_queue) {
-      CallProcessTimeoutsProc();
+      CallProcessTimeoutsProc(mDisplay);
     }
 
     // Flush the nsWindow's drawing queue
@@ -533,7 +535,7 @@ nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
     free(event);
   }
 
-  CallProcessTimeoutsProc();
+  CallProcessTimeoutsProc(mDisplay);
 
   nsWindow::UpdateIdle(nsnull);
   return rv;
@@ -655,6 +657,11 @@ nsAppShell::HandleMotionNotifyEvent(XEvent *event, nsWidget *aWidget)
   mevent.point.x = event->xmotion.x;
   mevent.point.y = event->xmotion.y;
 
+  mevent.isShift = mShiftDown;
+  mevent.isControl = mCtrlDown;
+  mevent.isAlt = mAltDown;
+  mevent.isMeta = mMetaDown;
+  
   Display * dpy = (Display *)aWidget->GetNativeData(NS_NATIVE_DISPLAY);
   Window win = (Window)aWidget->GetNativeData(NS_NATIVE_WINDOW);
   // We are only interested in the LAST (newest) location of the pointer
@@ -868,6 +875,38 @@ nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
   delete sevent.windowSize;
 }
 
+PRUint32 nsConvertCharCodeToUnicode(XKeyEvent* xkey)
+{
+  // The only Unicode specific at the moment is casting to PRUint32.
+
+  // For control characters convert from the event ascii code (e.g. 1 for
+  // control-a) to the ascii code for the key, e.g., 'a' for
+  // control-a.
+
+  KeySym         keysym;
+  XComposeStatus compose;
+  unsigned char  string_buf[CHAR_BUF_SIZE];
+  int            len = 0;
+
+  len = XLookupString(xkey, (char *)string_buf, CHAR_BUF_SIZE, &keysym, &compose);
+  if (0 == len) return 0;
+
+  if (xkey->state & ControlMask) {
+    if (xkey->state & ShiftMask) {
+      return (PRUint32)(string_buf[0] + 'A' - 1);
+    }
+    else {
+      return (PRUint32)(string_buf[0] + 'a' - 1);
+    }
+  }
+  if (!isprint(string_buf[0])) {
+    return 0;
+  }
+  else {
+    return (PRUint32)(string_buf[0]);
+  }
+}
+
 void
 nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
 {
@@ -931,7 +970,7 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
   keyEvent.charCode = 0;
   keyEvent.time = event->xkey.time;
-  keyEvent.isShift = event->xkey.state & ShiftMask;
+  keyEvent.isShift = (event->xkey.state & ShiftMask) ? PR_TRUE : PR_FALSE;
   keyEvent.isControl = (event->xkey.state & ControlMask) ? 1 : 0;
   keyEvent.isAlt = (event->xkey.state & Mod1Mask) ? 1 : 0;
   // I think 'meta' is the same as 'alt' in X11. Is this OK for other systems?
@@ -950,9 +989,9 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   focusWidget->DispatchKeyEvent(keyEvent);
 
   keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
-  keyEvent.charCode = isprint(string_buf[0]) ? string_buf[0] : 0;
+  keyEvent.charCode = nsConvertCharCodeToUnicode(&event->xkey);
   keyEvent.time = event->xkey.time;
-  keyEvent.isShift = event->xkey.state & ShiftMask;
+  keyEvent.isShift = (event->xkey.state & ShiftMask) ? PR_TRUE : PR_FALSE;
   keyEvent.isControl = (event->xkey.state & ControlMask) ? 1 : 0;
   keyEvent.isAlt = (event->xkey.state & Mod1Mask) ? 1 : 0;
   keyEvent.isMeta = (event->xkey.state & Mod1Mask) ? 1 : 0;
@@ -961,6 +1000,20 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   keyEvent.message = NS_KEY_PRESS;
   keyEvent.widget = focusWidget;
   keyEvent.eventStructType = NS_KEY_EVENT;
+
+  if (keyEvent.charCode)
+  {
+    /* This is the comment from the GTK code. Hope it makes more sense to you 
+     * than it did for me.                                                    
+     *  
+     * if the control, meta, or alt key is down, then we should leave
+     * the isShift flag alone (probably not a printable character)
+     * if none of the other modifier keys are pressed then we need to
+     * clear isShift so the character can be inserted in the editor
+     */
+    if (!keyEvent.isControl && !keyEvent.isAlt && !keyEvent.isMeta)
+      keyEvent.isShift = PR_FALSE;
+  }
 
   focusWidget->DispatchKeyEvent(keyEvent);
 
@@ -1090,7 +1143,11 @@ nsAppShell::HandleEnterEvent(XEvent *event, nsWidget *aWidget)
   
   enterEvent.message = NS_MOUSE_ENTER;
   enterEvent.eventStructType = NS_MOUSE_EVENT;
-  
+
+  // make sure this is in focus. This will do until I rewrite all the 
+  // focus routines. KenF
+  aWidget->SetFocus();
+
   NS_ADDREF(aWidget);
   aWidget->DispatchWindowEvent(enterEvent);
   NS_RELEASE(aWidget);
@@ -1249,6 +1306,8 @@ void nsAppShell::HandleDragLeaveEvent(XEvent *event, nsWidget *aWidget) {
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                              nsIDragService::GetIID(),
                                              (nsISupports**)&dragService);
+
+  // FIXME: Not sure if currentlyDragging is required. KenF
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDragSessionXlib> dragServiceXlib;
     dragServiceXlib = do_QueryInterface(dragService);
@@ -1280,6 +1339,8 @@ void nsAppShell::HandleDragDropEvent(XEvent *event, nsWidget *aWidget) {
   nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
                                              nsIDragService::GetIID(),
                                              (nsISupports**)&dragService);
+
+  // FIXME: Dont think the currentlyDragging check is required. KenF
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDragSessionXlib> dragServiceXlib;
     dragServiceXlib = do_QueryInterface(dragService);
@@ -1299,6 +1360,8 @@ void nsAppShell::HandleDragDropEvent(XEvent *event, nsWidget *aWidget) {
     NS_IF_ADDREF(aWidget);
     aWidget->DispatchMouseEvent(mevent);
     NS_IF_RELEASE(aWidget);
+
+    dragService->EndDragSession();
   }
 }
 
