@@ -88,7 +88,7 @@
 <!ENTITY folderPropsNewsgroupCmd.label "Newsgroup Properties...">
 <!ENTITY folderPropsCmd.accesskey "o">
 <!ENTITY accountManagerCmd.label "Account Settings...">
-<!ENTITY accountManagerCmd.accesskey "A">
+<!ENTITY accountManagerCmd.accesskey "c">
 <!ENTITY undoDeleteMsgCmd.label "Undo Delete Message">
 <!ENTITY redoDeleteMsgCmd.label "Redo Delete Message">
 <!ENTITY undoMoveMsgCmd.label "Undo Move Message">
@@ -398,7 +398,7 @@
 <!ENTITY deleteJunk.label "Delete Mail Marked as Junk in Folder">
 <!ENTITY deleteJunk.accesskey "l">
 <!ENTITY javaScriptConsoleCmd.label "JavaScript Console">
-<!ENTITY javaScriptConsoleCmd.accesskey "C">
+<!ENTITY javaScriptConsoleCmd.accesskey "n">
 
 <!-- Help Menu -->
 <!ENTITY helpMenu.label "Help">
