@@ -1248,6 +1248,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
 
   // (9) Show the window. Don't give the focus yet because we may not want to.
   // For example, popup windows want focus, but tooltips do not.
+  window->SetSizeFromXUL();
   newWindow->Show(PR_TRUE);
 
   // (10) Do some layout.
