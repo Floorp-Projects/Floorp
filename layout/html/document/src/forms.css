@@ -329,6 +329,9 @@ input[type="checkbox"][disabled]:hover,
 input[type="checkbox"][disabled]:hover:active {
   padding: 1px;
   border: 1px inset ThreeDShadow ! important;
+  /* same as above, but !important */
+  color: GrayText ! important;
+  background-color: ThreeDFace ! important;
 }
 
 input[type="checkbox"]:focus,
