@@ -18,6 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Dan Mosedale <dmose@mozilla.org>
+ *                 Leif Hedstrom <leif@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -40,28 +41,27 @@ interface nsILDAPURL : nsIURI {
     /**
      * the distinguished name of the URL (ie the base DN for the search)
      *
-     * XXXdmose NS_ERROR_NOT_INITIALIZED may become unneccessary once
-     * it becomes possible to build up the URL by using the setters for its
-     * constituent parts
-     *
      * for the getter:
      *
-     * @exception NS_ERROR_ILLEGAL_VALUE        null pointer passed in
-     * @exception NS_ERROR_NOT_INITIALIZED      URL spec not set
-     * @exception NS_ERROR_OUT_OF_MEMORY        ran out of memory
+     * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
+     * @exception NS_ERROR_OUT_OF_MEMORY	ran out of memory
      */
     attribute string dn;
 
     /**
      * the LDAP attributes to return.  defaults to all attributes.
+     * This is currently not implemented, and the setter is also
+     * missing.
      *
-     * XXXdmose - there should be a setter for this too
      */
     void getAttributes(out unsigned long count, 
                        [retval, array, size_is(count)] out string values);
 
     /**
-     * the scope of the search.  defaults to NS_LDAP_SCOPE_BASE. 
+     * the scope of the search.  defaults to SCOPE_BASE. 
+     *
+     * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
+     * @exception NS_ERROR_MALFORMED_URI	Illegal base to SET method
      */
     attribute long scope;
 
@@ -87,12 +87,15 @@ interface nsILDAPURL : nsIURI {
 
     /**
      * any options defined for this URL (check options using a bitwise and)
+     * 
+     * @exception NS_ERROR_NULL_POINTER     NULL pointer to GET method
+     * @exception NS_ERROR_OUT_OF_MEMORY    ran out of memory
      */
     attribute unsigned long options;
 
     /**
-     * if this is set, this is an ldaps: URL, not an ldap: URL
+     * if this is set/true, this is an ldaps: URL, not an ldap: URL
      */
-    const unsigned long NS_LDAP_URL_OPT_SECURE = 0x01;
+    const unsigned long OPT_SECURE = 0x01;
 
 };

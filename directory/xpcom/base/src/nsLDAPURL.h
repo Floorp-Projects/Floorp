@@ -18,6 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Dan Mosedale <dmose@mozilla.org>
+ *                 Leif Hedstrom <leif@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -34,8 +35,8 @@
 
 #include "nsLDAP.h"
 #include "ldap.h"
-#include "nsILDAPURL.h"
 #include "nsString.h"
+#include "nsILDAPURL.h"
 
 // cb7c67f8-0053-4072-89e9-501cbd1b35ab
 #define NS_LDAPURL_CID \
@@ -53,6 +54,13 @@ class nsLDAPURL : public nsILDAPURL
     virtual ~nsLDAPURL();
 
   protected:
-    LDAPURLDesc *mDesc;         // the URL descriptor we're wrapping
-    nsCString mSpec;            // string representation
+    nsCString mHost;		// Host name of this Directory server
+    PRInt32 mPort;			// LDAP port number
+    nsCString mDN;			// Base Distinguished Name (Base DN)
+
+    // Need array for attrs here... See bug: 70611.
+
+    PRInt32 mScope;			// Search scope (base, one or sub)
+    nsCString mFilter;		// LDAP search filter
+    PRUint32 mOptions;		// Options
 };
