@@ -109,8 +109,8 @@ static void ListCounters(void)
 {
     PR_DEFINE_COUNTER( qh );
     PR_DEFINE_COUNTER( rh );
-    char *qn, *rn, *dn;
-    char **qname = &qn, **rname = &rn, **desc = &dn;
+    const char *qn, *rn, *dn;
+    const char **qname = &qn, **rname = &rn, **desc = &dn;
     PRUint32    tCtr;
 
     PR_INIT_COUNTER_HANDLE( qh, NULL );
@@ -137,8 +137,8 @@ static void ListTraces(void)
 {
     PR_DEFINE_TRACE( qh );
     PR_DEFINE_TRACE( rh );
-    char *qn, *rn, *dn;
-    char **qname = &qn, **rname = &rn, **desc = &dn;
+    const char *qn, *rn, *dn;
+    const char **qname = &qn, **rname = &rn, **desc = &dn;
 
     PR_INIT_TRACE_HANDLE( qh, NULL );
     PR_FIND_NEXT_TRACE_QNAME(qh, qh );
