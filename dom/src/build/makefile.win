@@ -20,7 +20,7 @@ DEPTH=..\..\..
 DEFINES=-D_IMPL_NS_DOM
 
 MODULE=raptor 
-REQUIRES=xpcom raptor dom
+REQUIRES=xpcom raptor dom caps oji
 
 CPPSRCS = nsDOMFactory.cpp      	\
 	  nsHTMLTagsEnums.cpp		\
@@ -57,6 +57,8 @@ MISCDEP =						\
 	$(DIST)\lib\xpcom.lib				\
 	$(DIST)\lib\plds3.lib			\
 	$(DIST)\lib\plc3.lib			\
+	$(DIST)\lib\caps.lib				\
+	$(DIST)\lib\oji.lib				\
 	$(LIBNSPR)
 
 LCFLAGS = \
@@ -83,6 +85,8 @@ LLIBS=							\
 	$(DIST)\lib\xpcom.lib				\
 	$(DIST)\lib\plds3.lib			\
 	$(DIST)\lib\plc3.lib			\
+	$(DIST)\lib\caps.lib				\
+	$(DIST)\lib\oji.lib				\
 	$(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>

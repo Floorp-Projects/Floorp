@@ -60,6 +60,7 @@
 #include "nsScreen.h"
 #include "nsHistory.h"
 #include "nsBarProps.h"
+#include "nsIScriptSecurityManager.h"
 #ifndef NECKO
 #include "nsINetService.h"
 #else
@@ -79,6 +80,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIScriptGlobalObjectDataIID, NS_ISCRIPTGLOBALOBJECTDATA_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMWindowIID, NS_IDOMWINDOW_IID);
@@ -127,6 +129,7 @@ GlobalWindowImpl::GlobalWindowImpl()
   mLocation = nsnull;
   mFrames = nsnull;
   mOpener = nsnull;
+  mPrincipals = nsnull;
 
   mTimeouts = nsnull;
   mTimeoutInsertionPoint = nsnull;
@@ -141,6 +144,10 @@ GlobalWindowImpl::GlobalWindowImpl()
 
 GlobalWindowImpl::~GlobalWindowImpl() 
 {  
+  if (mPrincipals && mContext) {
+    JSPRINCIPALS_DROP((JSContext*)mContext->GetNativeContext(), mPrincipals);
+  }
+
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mNavigator);
@@ -176,6 +183,11 @@ GlobalWindowImpl::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(kIScriptGlobalObjectIID)) {
     *aInstancePtrResult = (void*) ((nsIScriptGlobalObject*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIScriptGlobalObjectDataIID)) {
+    *aInstancePtrResult = (void*) ((nsIScriptGlobalObjectData*)this);
     AddRef();
     return NS_OK;
   }
@@ -265,13 +277,18 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
   
   ClearAllTimeouts();
   
+  if (mPrincipals && mContext) {
+    JSPRINCIPALS_DROP((JSContext *)mContext->GetNativeContext(), mPrincipals);
+    mPrincipals = nsnull;
+  }
+
   if ((nsnull != mScriptObject) && 
       (nsnull != mContext) /* &&
       (nsnull != aDocument) */ ) {
     JS_ClearScope((JSContext *)mContext->GetNativeContext(),
                   (JSObject *)mScriptObject);
   }
-  
+
   if (nsnull != mDocument) {
     NS_RELEASE(mDocument);
   }
@@ -1513,7 +1530,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
                                  timeout->filename,
                                  timeout->lineno, nsAutoString(""), &isundefined);
 #endif
-        JS_EvaluateScript(cx, (JSObject *)mScriptObject,
+        JS_EvaluateScriptForPrincipals(cx, (JSObject *)mScriptObject, timeout->principals,
                           timeout->expr, 
                           PL_strlen(timeout->expr),
                           timeout->filename, timeout->lineno, 
@@ -1632,6 +1649,11 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
   nsTimeoutImpl *timeout, **insertion_point;
   jsdouble interval;
   PRInt64 now, delta;
+  JSPrincipals* principals;
+
+  if (NS_FAILED(GetPrincipals((void**)&principals))) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (argc >= 2) {
     if (!JS_ValueToNumber(cx, argv[1], &interval)) {
@@ -1670,7 +1692,7 @@ GlobalWindowImpl::SetTimeoutOrInterval(JSContext *cx,
         timeout->interval = (PRInt32)interval;
     timeout->expr = expr;
     timeout->funobj = funobj;
-    timeout->principals = nsnull;
+    timeout->principals = principals;
     if (expr) {
       timeout->argv = 0;
       timeout->argc = 0;
@@ -2556,6 +2578,117 @@ GlobalWindowImpl::ReleaseEvent(const nsString& aType)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+GlobalWindowImpl::GetPrincipals(void** aPrincipals) 
+{
+  if (!mPrincipals) {
+    if (mContext) {
+      nsIScriptSecurityManager* secMan = nsnull;
+      mContext->GetSecurityManager(&secMan);
+      if (secMan) {
+        nsAutoString codebase;
+        if (NS_SUCCEEDED(GetOrigin(&codebase))) {
+          secMan->NewJSPrincipals(nsnull, nsnull, &codebase, &mPrincipals);
+        }
+        NS_RELEASE(secMan);
+      }
+    }
+
+    if (!mPrincipals) {
+      return NS_ERROR_FAILURE;
+    }
+    if (mContext) {
+      JSPRINCIPALS_HOLD((JSContext *)mContext->GetNativeContext(), mPrincipals);
+    }
+  }
+
+  *aPrincipals = (void*)mPrincipals;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetPrincipals(void* aPrincipals)
+{
+  if (mPrincipals && mContext) {
+    JSPRINCIPALS_DROP((JSContext *)mContext->GetNativeContext(), mPrincipals);
+  }
+
+  mPrincipals = (JSPrincipals*)aPrincipals;
+
+  if (mPrincipals && mContext) {
+    JSPRINCIPALS_HOLD((JSContext *)mContext->GetNativeContext(), mPrincipals);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetOrigin(nsString* aOrigin)
+{
+  nsIDocument* doc;
+  if (mDocument && NS_OK == mDocument->QueryInterface(kIDocumentIID, (void**)&doc)) {
+    nsIURI* docURL = doc->GetDocumentURL();
+    if (docURL) {
+      PRUnichar* str;
+      docURL->ToString(&str);
+      *aOrigin = str;
+      delete str;
+      NS_RELEASE(docURL);
+    }
+    NS_RELEASE(doc);
+  }
+
+
+#if 0
+  //Old code from 4.0 to show what funcitonality needs replicating
+  History_entry *he;
+  const char *address;
+  JSContext *aCx;
+  MochaDecoder *decoder;
+
+  he = SHIST_GetCurrent(&context->hist);
+  if (he) {
+    address = he->wysiwyg_url;
+    if (!address)
+      address = he->address;
+    switch (NET_URL_Type(address)) {
+      case MOCHA_TYPE_URL:
+        /* This type cannot name the true origin (server) of JS code. */
+        break;
+      case VIEW_SOURCE_TYPE_URL:
+        NS_ASSERTION(0, "Invalid url type");
+      default:
+        return address;
+    }
+  }
+
+  if (context->grid_parent) {
+    address = FindCreatorURL(context->grid_parent);
+    if (address)
+      return address;
+  }
+
+  aCx = context->mocha_context;
+  if (aCx) {
+    decoder = JS_GetPrivate(aCx, JS_GetGlobalObject(aCx));
+    if (decoder && decoder->opener) {
+      /* self.opener property is valid, check its MWContext. */
+      MochaDecoder *opener = JS_GetPrivate(aCx, decoder->opener);
+      if (!opener->visited) {
+        opener->visited = PR_TRUE;
+        address = opener->window_context
+                ? FindCreatorURL(opener->window_context)
+                : nsnull;
+        opener->visited = PR_FALSE;
+        if (address)
+          return address;
+      }
+    }
+  }
+#endif
+  return NS_OK;
+}
+
 extern "C" NS_DOM nsresult
 NS_NewScriptGlobalObject(nsIScriptGlobalObject **aResult)
 {
@@ -2572,6 +2705,8 @@ NS_NewScriptGlobalObject(nsIScriptGlobalObject **aResult)
 
   return global->QueryInterface(kIScriptGlobalObjectIID, (void **)aResult);
 }
+
+
 
 //
 //  Navigator class implementation 

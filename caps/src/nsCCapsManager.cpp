@@ -24,6 +24,14 @@
 #include "nsCCertPrincipal.h"
 #include "nsCCodeSourcePrincipal.h"
 #include "nsCaps.h"
+#include "nsICapsSecurityCallbacks.h"
+#include "nsLoadZig.h"
+#include "secnav.h"
+
+#ifdef MOZ_SECURITY
+#include "navhook.h"
+#include "jarutil.h"
+#endif /* MOZ_SECURITY */
 
 static NS_DEFINE_CID(kCCapsManagerCID, NS_CCAPSMANAGER_CID);
 static NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
@@ -234,6 +242,19 @@ nsCCapsManager::Initialize(PRBool *result)
 {
     *result = nsCapsInitialize();
     return NS_OK;
+}
+
+/**
+  * Initializes the capabilities frame walking code.
+  *
+  * @param aInterface - interface for calling frame walking code.
+  */
+NS_METHOD
+nsCCapsManager::InitializeFrameWalker(nsICapsSecurityCallbacks* aInterface)
+{
+  //XXX write me  
+  
+  return NS_OK;
 }
 
 /**
@@ -516,6 +537,95 @@ NS_METHOD
 nsCCapsManager::NewPrincipalArray(PRUint32 count, void* *ret_val)
 {
   *ret_val = nsCapsNewPrincipalArray(count);
+  return NS_OK;
+}
+
+/*
+ * CreateMixedPrincipalArray take codebase and  ZIG file information and returns a
+ * pointer to an array of nsIPrincipal objects.
+ */
+NS_METHOD
+nsCCapsManager::CreateMixedPrincipalArray(void *aZig, char* name, const char* codebase, void** result)
+{
+  *result = NULL;
+  PRBool hasCodebase;
+  int i;
+  PRUint32 count;
+  nsIPrincipal *principal;
+
+  hasCodebase = (PRBool)codebase;
+
+  /* First count the number of principals */
+  count = codebase ? 1 : 0;
+
+//Should possibly be #ifdef MOZ_SECURITY but I don't want to break the sec build
+#if 0
+  SOBITEM *item;
+  ZIG_Context * zig_aCx = NULL;
+  ZIG *zig = (ZIG*)aZig;
+
+  if (zig && name) {
+    /* Make sure file is signed */
+    if ((zig_aCx = SOB_find(zig, name, ZIG_SIGN)) != NULL) {
+      int zig_count=0;
+      /* count the number of signers */
+      while (SOB_find_next(zig_aCx, &item) >= 0) {
+        zig_count++;
+      }
+      SOB_find_end(zig_aCx);
+      count += zig_count;
+    } 
+    else {
+      zig = NULL;
+    }
+  }
+#endif
+  if (count == 0) {
+    return NS_OK;
+  }
+
+  NewPrincipalArray(count, result);
+
+  if (*result == NULL) {
+    return NS_ERROR_FAILURE;
+  }
+
+#if 0
+  if (zig && ((zig_aCx = SOB_find(zig, name, ZIG_SIGN)) == NULL)) {
+    return NS_ERROR_FAILURE;
+  }
+  i = 0;
+  while (zig && SOB_find_next(zig_aCx, &item) >= 0) {
+    FINGERZIG *fingPrint;
+
+    fingPrint = (FINGERZIG *) item->data;
+
+    /* create a  new nsIPrincipal(CERT_KEY, fingPrint->key) */
+    NewPrincipal(nsPrincipalType_CertKey,
+                               fingPrint->key,
+                               fingPrint->length,
+                               zig, 
+                               &principal);
+    RegisterPrincipal(principal, NULL);
+    SetPrincipalArrayElement(*result, i++, principal);
+  }
+
+  if (zig) {
+    SOB_find_end(zig_aCx);
+  }
+#endif
+
+  if (codebase) {
+    // Add a codebase principal.
+    NewPrincipal(nsPrincipalType_CodebaseExact,
+                               (void*)codebase,
+                               PL_strlen(codebase),
+                               NULL,
+                               &principal);
+    RegisterPrincipal(principal, NULL);
+    SetPrincipalArrayElement(*result, i++, principal);
+  }
+
   return NS_OK;
 }
 

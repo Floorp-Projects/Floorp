@@ -28,7 +28,8 @@ EXPORTS	=  nsIPrincipal.h           \
  nsICertPrincipal.h       \
  nsICapsManager.h         \
  nsICodeSourcePrincipal.h \
- nsCapsPublicEnums.h      
+ nsCapsPublicEnums.h      \
+ nsICapsSecurityCallbacks.h
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
