@@ -50,7 +50,8 @@ public:
 
   // Given a color name, return the color enum value
   // This only functions provided a valid ref on the table
-  static nsColorName LookupName(const nsStr& aName);
+  static nsColorName LookupName(const nsString& aName);
+  static nsColorName LookupName(const nsCString& aName);
 
   static const nsCString& GetStringValue(nsColorName aColorName);
 
