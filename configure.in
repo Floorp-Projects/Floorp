@@ -3493,7 +3493,12 @@ dnl ========================================================
 
 if test "$_X11_TOOLKIT"
 then
-    MOZ_ENABLE_GNOMEVFS=1
+    dnl build the gnomevfs extension by default only when the
+    dnl GTK2 toolkit is in use.
+    if test "$MOZ_ENABLE_GTK2"
+    then
+        MOZ_ENABLE_GNOMEVFS=1
+    fi
 
     MOZ_ARG_DISABLE_BOOL(gnomevfs,
     [  --disable-gnomevfs      Disable GnomeVFS support ],
@@ -3745,7 +3750,7 @@ fi
 if test -z "$MOZ_ENABLE_GNOMEVFS" && test `echo "$MOZ_EXTENSIONS" | grep -c gnomevfs` -ne 0; then
     # Suppress warning on non-X11 platforms
     if test "$_X11_TOOLKIT"; then
-        AC_MSG_WARN([Cannot build gnomevfs without gnome-vfs-2 toolkit. Removing gnomevfs from MOZ_EXTENSIONS.])
+        AC_MSG_WARN([Cannot build gnomevfs without required libraries. Removing gnomevfs from MOZ_EXTENSIONS.])
     fi
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gnomevfs||'`
 fi
