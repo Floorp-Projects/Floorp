@@ -1161,7 +1161,7 @@ nsMessenger::SendUnsentMessages()
 NS_IMETHODIMP
 nsMessenger::LoadFirstDraft()
 {
-	nsresult              rv;
+	nsresult              rv = NS_ERROR_FAILURE;
 	nsCOMPtr<nsIMsgDraft> pMsgDraft; 
 
 	rv = nsComponentManager::CreateInstance(kMsgDraftCID, NULL, nsCOMTypeInfo<nsIMsgDraft>::GetIID(),
@@ -1174,10 +1174,10 @@ nsMessenger::LoadFirstDraft()
 
 
     // This should really pass in a URI, but for now, just to test, we can pass in nsnull
-    pMsgDraft->OpenDraftMsg(nsnull, nsnull); 
+    rv = pMsgDraft->OpenDraftMsg(nsnull, nsnull); 
   } 
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsMessenger::DoPrint()
