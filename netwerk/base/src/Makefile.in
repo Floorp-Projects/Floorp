@@ -51,4 +51,4 @@ ifndef NECKO
 PUBLIC = $(DEPTH)/netwerk/dist/include
 endif
 
-include $(DEPTH)/config/rules.mk
+include $(topsrcdir)/config/rules.mk
