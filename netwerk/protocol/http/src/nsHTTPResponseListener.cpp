@@ -136,7 +136,11 @@ nsHTTPCacheListener::OnStartRequest(nsIChannel *aChannel,
                                     nsISupports *aContext)
 {
     PR_LOG (gHTTPLog, PR_LOG_DEBUG, ("nsHTTPCacheListener::OnStartRequest [this=%x]\n", this));
-
+    mBodyBytesReceived = 0;
+    
+    // get and store the content length which will be used in ODA for computing
+    // progress information. 
+    aChannel->GetContentLength(&mContentLength);
     return mResponseDataListener->OnStartRequest(mChannel, aContext);
 }
 
@@ -183,13 +187,16 @@ nsHTTPCacheListener::OnDataAvailable(nsIChannel *aChannel,
                                                 aCount);
     if (NS_FAILED(rv)) return rv;
 
+
+    mBodyBytesReceived += aCount;
+
     // Report progress
     if (mChannel->mProgressEventSink) {
         rv = mChannel->mProgressEventSink->OnProgress(mChannel,
                        mChannel->mResponseContext,
-                       aSourceOffset, aCount);
-        if (NS_FAILED(rv)) return rv;
+                       mBodyBytesReceived, mContentLength);
     }
+
     return rv;
 }
 
