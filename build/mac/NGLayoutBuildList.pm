@@ -209,6 +209,7 @@ sub BuildDist()
 	
 	#MAC_COMMON
 	InstallFromManifest(":mozilla:build:mac:MANIFEST",								"$distdirectory:mac:common:");
+	InstallFromManifest(":mozilla:lib:mac:NSRuntime:include:MANIFEST",				"$distdirectory:mac:common:");
 	InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:MANIFEST",				"$distdirectory:mac:common:");
 	InstallFromManifest(":mozilla:lib:mac:MacMemoryAllocator:include:MANIFEST",		"$distdirectory:mac:common:");
 	InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",							"$distdirectory:mac:common:");
@@ -601,14 +602,24 @@ sub BuildCommonProjects()
 	#// for NSRuntime under Carbon, don't use BuildOneProject to alias the shlb or the xsym since the 
 	#// target names differ from the output names. Make them by hand instead.
 	if ( $main::CARBON ) {
-		BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntimeCarbon$D.shlb", "", 0, 0, 0);
+		if ($main::PROFILE) {
+			BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntimeCarbonProfil.shlb", "", 0, 0, 0);
+		}
+		else {
+			BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntimeCarbon$D.shlb", "", 0, 0, 0);
+		}
 		MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb", ":mozilla:dist:viewer_debug:Essential Files:");
 		if ( $main::ALIAS_SYM_FILES ) {
 			MakeAlias(":mozilla:lib:mac:NSRuntime:NSRuntime$D.shlb.xSYM", ":mozilla:dist:viewer_debug:Essential Files:");		
 		}
 	}
 	else {
-		BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntime$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+		if ($main::PROFILE) {
+			BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntimeProfil.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+		}
+		else {
+			BuildOneProject(":mozilla:lib:mac:NSRuntime:NSRuntime.mcp",					"NSRuntime$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
+		}
 	}
 	
 	BuildProject(":mozilla:lib:mac:MoreFiles:build:MoreFilesPPC.mcp",			"MoreFiles.o");
