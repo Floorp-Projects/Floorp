@@ -90,3 +90,6 @@
 
 <!ENTITY pkcs12.getpassword.title  "Password Entry Dialog">
 <!ENTITY pkcs12.getpassword.message  "Please enter the portable security password protecting this security certificate and private key.">
+
+<!ENTITY chooseToken.title  "Choose Token Dialog">
+<!ENTITY chooseToken.message1 "Please choose a token.">

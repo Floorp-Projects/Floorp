@@ -43,6 +43,7 @@ interface nsISupportsArray;
 interface nsIX509Cert;
 interface nsIPK11Token;
 interface nsILocalFile;
+interface nsIInterfaceRequestor;
 
 %{C++
 
@@ -123,6 +124,15 @@ interface nsIX509CertDB : nsISupports {
                                     in unsigned long trust,
                                     in wstring nickname); 
 
+  /*
+   * importCertificate
+   *
+   * Import a user certificate into the database.
+   * XXX This method and the importCertificate should be merged into one.
+   */
+  [noscript] void importUserCertificate(in charPtr data, 
+                                    in unsigned long length,
+                                    in nsIInterfaceRequestor ctx);
   /*
    * deleteCertificate
    *

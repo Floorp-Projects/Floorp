@@ -34,6 +34,8 @@ pippki.jar:
     content/pippki/clientauthask.js			 (content/clientauthask.js)
     content/pippki/certViewer.xul            (content/certViewer.xul)
     content/pippki/certDump.xul              (content/certDump.xul)
+    content/pippki/choosetoken.xul           (content/choosetoken.xul)
+    content/pippki/choosetoken.js            (content/choosetoken.js)
     locale/en-US/pippki/contents.rdf         (locale/en-US/contents.rdf)
     locale/en-US/pippki/pippki.dtd           (locale/en-US/pippki.dtd)
     locale/en-US/pippki/pref-ssl.dtd         (locale/en-US/pref-ssl.dtd)

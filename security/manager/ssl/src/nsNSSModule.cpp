@@ -30,6 +30,7 @@
 #include "nsSecureBrowserUIImpl.h"
 #include "nsSSLSocketProvider.h"
 #include "nsTLSSocketProvider.h"
+#include "nsKeygenHandler.h"
 
 #include "nsCURILoader.h"
 
@@ -147,6 +148,13 @@ static nsModuleComponentInfo components[] =
     NS_X509CERTDB_CID,
     NS_X509CERTDB_CONTRACTID,
     nsNSSCertificateDBConstructor
+  },
+
+  {
+    "Form Processor",
+    NS_FORMPROCESSOR_CID,
+    NS_FORMPROCESSOR_CONTRACTID,
+    nsKeygenFormProcessor::Create
   },
 
   {

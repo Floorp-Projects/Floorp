@@ -144,13 +144,23 @@ interface nsIClientAuthDialogs : nsISupports
    *   UI shown when a user is asked to do SSL client auth.
    */
   void ChooseCertificate(in nsIInterfaceRequestor ctx, 
-                      in wstring cn,
-					  in wstring organization,
-					  in wstring issuer,
-					  [array, size_is(count)] in wstring certNickList,
-					  in PRUint32 count,
-                      out wstring certNick,
-                      out boolean canceled);
+                        in wstring cn,
+                        in wstring organization,
+                        in wstring issuer,
+                        [array, size_is(count)] in wstring certNickList,
+                        in PRUint32 count,
+                        out wstring certNick,
+                        out boolean canceled);
+};
+
+[scriptable, uuid(bb4bae9c-39c5-11d5-ba26-00108303b117)]
+interface nsITokenDialogs : nsISupports
+{
+	void ChooseToken(in nsIInterfaceRequestor ctx,
+                  [array, size_is(count)] in wstring tokenNameList,
+                  in PRUint32 count,
+                  out wstring tokenName,
+                  out boolean canceled);
 };
 
 /**
