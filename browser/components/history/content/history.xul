@@ -117,9 +117,11 @@
 </menubar>
 <toolbar>
   <hbox align="center" pack="center">
-    <label value="&find.label;" accesskey="&find.accesskey;"/>
+    <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
   </hbox>
-  <textbox type="timed" timeout="800" callback="searchHistory(this.value);" flex="1"/>
+  <textbox id="search-box" flex="1"
+           type="timed" timeout="800"
+           callback="searchHistory(this.value);"/>
 </toolbar>
 </toolbox>
 <tree id="historyTree"/>
