@@ -67,12 +67,12 @@ XPIDLSRCS	= \
 		nsIComponentLoader.idl \
 		nsIComponentLoaderManager.idl \
 		nsIComponentManagerObsolete.idl \
-		nsIComponentRegistrar.idl \
 		nsIRegistry.idl \
 		$(NULL)
 
 SDK_XPIDLSRCS	= \
 		nsIClassInfo.idl	\
+		nsIComponentRegistrar.idl \
 		nsIFactory.idl		\
 		nsIModule.idl		\
 		nsIServiceManager.idl	\
