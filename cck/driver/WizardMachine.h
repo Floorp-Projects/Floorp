@@ -168,13 +168,14 @@ public:
 	void PrintNodeInfo(NODE* node);
 	void CheckIniFileExistence(CString file);
 	BOOL FileExists(CString file);
+	void FillGlobalWidgetArray(CString file);
 	void FillGlobalWidgetArray();
 	void CreateNewCache();
 	BOOL IsLastNode(NODE* treeNode);
 	BOOL IsFirstNode(NODE* treeNode);
 	CString GetModulePath();
 	CString GetGlobal(CString theName);
-	BOOL SetGlobal(CString theName, CString theValue);
+	WIDGET* SetGlobal(CString theName, CString theValue);
 	CString GetGlobalOptions(CString theName);
 	WIDGET* findWidget(char *name);
 	void BuildWidget(WIDGET* aWidget, CString iniSection, CString iniFile, int pageBaseIndex, BOOL readValue);

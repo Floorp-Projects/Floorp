@@ -76,16 +76,13 @@ char rootPath[MAX_SIZE];
 char customizationPath[MAX_SIZE];
 
 CString CacheFile;
+CString CachePath;
 BOOL UseCache = FALSE;
 extern CSingleLock prevLock;
 extern BOOL isBuildInstaller;
 //Output file pointer for QA purposes
 // Optimize here on global pointers. This many not needed.
 FILE *out, *globs, *filePtr;;
-//CString CWizardMachineApp::GetGlobal(CString theName);
-//BOOL CWizardMachineApp::SetGlobal(CString theName, CString theValue);
-//CString CWizardMachineApp::GetGlobalOptions(CString theName);
-//WIDGET* CWizardMachineApp::findWidget(char *theName);
 
 /////////////////////////////////////////////////////////////////////////////
 // CWizardMachineApp initialization
@@ -208,14 +205,13 @@ BOOL CWizardMachineApp::InitInstance()
 	CString cacheExt = ".che";
 	CacheFile = CString(iniFile); 
 	CacheFile = CacheFile.GetBufferSetLength(CacheFile.Find(".ini")) + cacheExt;
+	CachePath = Path + CacheFile;
 
 	char buffer[MAX_SIZE] = {'\0'};
-	if (FileExists(Path+CacheFile))
+	if (FileExists(CachePath))
 	{
 		UseCache = TRUE;
-		globs = OpenAFile(Path + CacheFile, "r");
-		FillGlobalWidgetArray();
-		fclose(globs);
+		FillGlobalWidgetArray(CachePath);
 	}
 	
 	fprintf(out, "___________________________________________________________\n\n");
@@ -750,9 +746,17 @@ void CWizardMachineApp::GoToNextNode()
 		//for now check existence of display information
 		//go to first child and so on
 
-	//check for specialized actions
-		//OnNext action for that node
+	//----------------------------------------------------------------------------------------------
+	// Handle OnNext processing before doing anything else
+	//----------------------------------------------------------------------------------------------
+	if (CurrentNode->navControls->onNextAction)
+	{
+		if (strncmp(CurrentNode->navControls->onNextAction, "Reload", 6) == 0)
+		{
+		}
+	}
 
+	//----------------------------------------------------------------------------------------------
 	NODE* tmpParentNode;
 
 	tmpParentNode = CurrentNode->parent;
@@ -976,21 +980,13 @@ BOOL CWizardMachineApp::FileExists(CString file)
 		return TRUE;
 }
 
-void CWizardMachineApp::FillGlobalWidgetArray()
+void CWizardMachineApp::FillGlobalWidgetArray(CString file)
 {
 	char buffer[MAX_SIZE] = {'\0'};
-	char name[MAX_SIZE] = {'\0'};
-	char value[MAX_SIZE] = {'\0'};
+	CString name = "";
+	CString value = "";
 
-	/**
-	char filePath[MAX_SIZE] = {'\0'};
-	strcpy(filePath, (char *)(LPCTSTR) customizationPath);
-	strcat(filePath, selCust);
-	strcat(filePath, "\\");
-	strcat(filePath, (char *)(LPCTSTR) CacheFile);
-	
-	globs = OpenAFile(CString(filePath), "r");
-	**/
+	globs = OpenAFile(file, "r");
 
 	while(!feof(globs))
 	{
@@ -998,28 +994,28 @@ void CWizardMachineApp::FillGlobalWidgetArray()
 		{
 			if (strstr(buffer, "="))
 			{
-				GlobalWidgetArray[GlobalArrayIndex].name =  CString(strtok(buffer,"="));
-				GlobalWidgetArray[GlobalArrayIndex].value = CString(strtok(NULL,"="));
-
-				//int newLineIndex = GlobalWidgetArray[GlobalArrayIndex].value.ReverseFind('\n');
+				name =  CString(strtok(buffer,"="));
+				value = CString(strtok(NULL,"="));
+				value.TrimRight();
 				
-				//if (newLineIndex > -1)
-				//GlobalWidgetArray[GlobalArrayIndex].value.SetAt(newLineIndex, '\0');
-		
-				GlobalWidgetArray[GlobalArrayIndex].value.TrimRight();
-				
-				GlobalWidgetArray[GlobalArrayIndex].cached = TRUE;
-
-				GlobalArrayIndex++;
+				WIDGET* w = SetGlobal(name, value);
+				if (w)
+					w->cached = TRUE;
 			}
 		}
 	}
+
+	fclose(globs);
 }
 
+void CWizardMachineApp::FillGlobalWidgetArray()
+{
+	FillGlobalWidgetArray(CachePath);
+}
 
 void CWizardMachineApp::CreateNewCache()
 {
-	globs = OpenAFile(Path+CacheFile, "w");
+	globs = OpenAFile(CachePath, "w");
 
 	for(int i=0; i< GlobalArrayIndex; i++)
 	{
@@ -1150,17 +1146,24 @@ CString CWizardMachineApp::GetGlobalOptions(CString theName)
 	return temp;
 }
 
-BOOL CWizardMachineApp::SetGlobal(CString theName, CString theValue)
+WIDGET* CWizardMachineApp::SetGlobal(CString theName, CString theValue)
 {
-	for (int i = 0; i <= GlobalArrayIndex; i++)
+	WIDGET* w = findWidget((char *)(LPCTSTR) theName);
+	if (w == NULL)
 	{
-		if (GlobalWidgetArray[i].name == theName) {
-			GlobalWidgetArray[i].value = theValue;
-			return TRUE;
+		if (++GlobalArrayIndex >= sizeof(GlobalWidgetArray))
+		{
+			fprintf(out, "----------------** TERMINATED - Out of Global Space **---------------\n");
+			exit(11);
 		}
-	}
 
-	return FALSE;
+		GlobalWidgetArray[GlobalArrayIndex].value = theValue;
+		w = &GlobalWidgetArray[GlobalArrayIndex];
+	}
+	else 
+		w->value = theValue;
+
+	return w;
 }
 
 WIDGET* CWizardMachineApp::findWidget(char *theName)
