@@ -63,6 +63,7 @@ interface nsIBrowserInstance : nsISupports {
 
     // Edit.
     void copy();
+    void selectAll();
     void print();
     void close();
     void exit();
