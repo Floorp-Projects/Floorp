@@ -93,7 +93,7 @@ access_java_array_element(JSContext *cx,
     if (!java_wrapper) {
         const char *property_name;
         if (JS_IdToValue(cx, id, &idval) && JSVAL_IS_STRING(idval) &&
-            (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval)))) {
+            (property_name = JS_GetStringBytes(JSVAL_TO_STRING(idval))) != NULL) {
             if (!strcmp(property_name, "constructor")) {
                 *vp = JSVAL_VOID;
                 return JS_TRUE;
