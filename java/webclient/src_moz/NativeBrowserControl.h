@@ -87,6 +87,9 @@ public:
     // attach event listeners.
     void        ContentStateChange    (void);
 
+    nsresult        SetNewWindowListenerAttached(PRBool newState);
+    nsresult        GetNewWindowListenerAttached(PRBool *_retval);
+
 private:
 
     void GetListener (void);
@@ -133,6 +136,9 @@ public:
     PRBool                         mIsDestroyed;
     // is the chrome listener attached yet?
     PRBool                         mListenersAttached;
+
+    // do we have a newWindowListener?
+    PRBool                         mNewWindowListenerAttached;
 
     jobject                        mJavaBrowserControl;
 

@@ -327,6 +327,17 @@ EmbedEventListener::SetEventRegistration(jobject yourEventRegistration)
     return rv;
 }
 
+nsresult
+EmbedEventListener::GetEventRegistration(jobject *_retval)
+{
+    nsresult result = NS_ERROR_NULL_POINTER;
+    if (nsnull != _retval) {
+        *_retval = mEventRegistration;
+        result = NS_OK;
+    }
+    return result;
+}
+
 
 nsresult EmbedEventListener::PopulatePropertiesFromEvent(nsIDOMEvent *event)
 {

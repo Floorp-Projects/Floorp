@@ -60,6 +60,7 @@ NativeBrowserControl::NativeBrowserControl(void)
     mChromeLoaded     = PR_FALSE;
     mIsDestroyed      = PR_FALSE;
     mListenersAttached = PR_FALSE;
+    mNewWindowListenerAttached = PR_FALSE;
 }
 
 NativeBrowserControl::~NativeBrowserControl()
@@ -344,8 +345,25 @@ NativeBrowserControl::ContentStateChange(void)
     
     AttachListeners();
     
-}    
+}
 
+nsresult        
+NativeBrowserControl::SetNewWindowListenerAttached(PRBool newState)
+{
+    mNewWindowListenerAttached = newState;
+    return NS_OK;
+}
+
+nsresult
+NativeBrowserControl::GetNewWindowListenerAttached(PRBool *_retval) {
+    nsresult result = NS_ERROR_NULL_POINTER;
+    if (nsnull != _retval) {
+        *_retval = mNewWindowListenerAttached;
+        result = NS_OK;
+    }
+    return result;
+}
+    
 void 
 NativeBrowserControl::GetListener()
 {

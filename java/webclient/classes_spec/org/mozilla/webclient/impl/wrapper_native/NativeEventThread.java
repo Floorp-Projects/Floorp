@@ -82,8 +82,10 @@ public class NativeEventThread extends Thread {
 			     WrapperFactory yourFactory,
 			     int yourNativeWrapperFactory) {
 	super(threadName);
-	Assert.assert_it(null == instance);
-	instance = this;
+	// Don't do this check for subclasses
+	if (this.getClass() == NativeEventThread.class) {
+	    instance = this;
+	}
 	ParameterCheck.nonNull(yourFactory);
 	
 	wrapperFactory = yourFactory;
@@ -225,6 +227,12 @@ public void run()
     Object pushBlockingWCRunnable(WCRunnable toInvoke) {
 	Object result = null;
 	RuntimeException e = null;
+
+	if (Thread.currentThread().getName().equals(instance.getName())){
+	    result = toInvoke.run();
+	    return result;
+	}
+
 	synchronized (this) {
 	    blockingRunnables.push(toInvoke);
 	    try {

@@ -40,3 +40,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_EventRegi
 
 }
 
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_EventRegistrationImpl_nativeSetNewWindowListenerAttached
+(JNIEnv *env, jobject obj, jint nativeBCPtr, jboolean newState)
+{
+
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    nativeBrowserControl->SetNewWindowListenerAttached(newState);
+}
+

@@ -35,4 +35,14 @@ public NewWindowEvent(Object source, long newType,
     super(source, newType, newEventData);
 }
 
+protected BrowserControl browserControl;
+public BrowserControl getBrowserControl() {
+	return browserControl;
+}
+    
+public void setBrowserControl(BrowserControl newBrowserControl) {
+	browserControl = newBrowserControl;
+}
+    
+
 } // end of class NewWindowEvent

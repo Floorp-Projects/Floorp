@@ -132,7 +132,6 @@ extern jstring MOUSE_LISTENER_CLASSNAME;
 extern jstring KEY_LISTENER_CLASSNAME;
 extern jstring NEW_WINDOW_LISTENER_CLASSNAME;
 
-
 // 
 // Listener support
 //
@@ -152,7 +151,6 @@ typedef enum {
 #define MOUSE_LISTENER_CLASSNAME_VALUE "java.awt.event.MouseListener"
 #define KEY_LISTENER_CLASSNAME_VALUE "java.awt.event.KeyListener"
 #define NEW_WINDOW_LISTENER_CLASSNAME_VALUE "org.mozilla.webclient.NewWindowListener"
-
 
 #define START_DOCUMENT_LOAD_EVENT_MASK_VALUE "START_DOCUMENT_LOAD_EVENT_MASK"
 #define END_DOCUMENT_LOAD_EVENT_MASK_VALUE "END_DOCUMENT_LOAD_EVENT_MASK"
@@ -263,7 +261,7 @@ void    util_ThrowExceptionToJava (JNIEnv * env, const char * message);
 
  */
 
-void    util_SendEventToJava(JNIEnv *env, jobject eventRegistrationImpl,
+jint    util_SendEventToJava(JNIEnv *env, jobject eventRegistrationImpl,
                              jstring eventListenerClassName,
                              jlong eventType,
                              jobject eventData);

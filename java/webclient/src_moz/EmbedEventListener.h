@@ -65,6 +65,7 @@ class EmbedEventListener : public nsIDOMKeyListener,
   NS_IMETHOD MouseOut(nsIDOMEvent* aDOMEvent);
 
     nsresult SetEventRegistration(jobject eventRegistration);
+    nsresult GetEventRegistration(jobject *_retval);
 
  private:
 

@@ -383,10 +383,11 @@ void util_ThrowExceptionToJava (JNIEnv * env, const char * message)
 	}
 } // ThrowExceptionToJava()
 
-void util_SendEventToJava(JNIEnv *yourEnv, jobject eventRegistrationImpl,
+jint util_SendEventToJava(JNIEnv *yourEnv, jobject eventRegistrationImpl,
                           jstring eventListenerClassName,
                           jlong eventType, jobject eventData)
 {
+    jint rv = -1;
 #ifdef BAL_INTERFACE
     if (nsnull != externalEventOccurred) {
         externalEventOccurred(yourEnv, eventRegistrationImpl,
@@ -394,13 +395,13 @@ void util_SendEventToJava(JNIEnv *yourEnv, jobject eventRegistrationImpl,
     }
 #else
     if (nsnull == gVm) {
-        return;
+        return rv;
     }
 
 	JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
 
     if (nsnull == env) {
-      return;
+      return rv;
     }
 
     jthrowable exception;
@@ -411,15 +412,16 @@ void util_SendEventToJava(JNIEnv *yourEnv, jobject eventRegistrationImpl,
 
     jclass clazz = env->GetObjectClass(eventRegistrationImpl);
     jmethodID mid = env->GetMethodID(clazz, "nativeEventOccurred", 
-                                   "(Ljava/lang/String;JLjava/lang/Object;)V");
+                                     "(Ljava/lang/String;JLjava/lang/Object;)I");
     if ( mid != nsnull) {
-        env->CallVoidMethod(eventRegistrationImpl, mid,
-                            eventListenerClassName,
-                            eventType, eventData);
+        rv = env->CallIntMethod(eventRegistrationImpl, mid,
+                                eventListenerClassName,
+                                eventType, eventData);
     } else {
         util_LogMessage(3, "cannot call the Java Method!\n");
     }
 #endif
+    return rv;
 }
 
 /**

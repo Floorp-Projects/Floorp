@@ -26,8 +26,24 @@ import java.awt.event.KeyListener;
 
 public interface EventRegistration2  extends EventRegistration {
 
-public void addNewWindowListener(NewWindowListener listener); 
-public void removeNewWindowListener(NewWindowListener listener); 
+public void setNewWindowListener(NewWindowListener listener); 
+
+/**
+ * <p>Use {@link #setNewWindowListener} instead.  Implementations must
+ * implement this method as a call to {@link #setNewWindowListener}
+ * passing null, followed by a call to {@link #setNewWindowListener}
+ * passing the argument listener.</p>
+ *
+ * @deprecated
+ */
+public void addNewWindowListener(NewWindowListener listener);
+
+/**
+ * <p>Use {@link #setNewWindowListener} passing <code>null</code>.</p>
+ *
+ * @deprecated
+ */
+public void removeNewWindowListener(NewWindowListener listener);
 
 public void addKeyListener(KeyListener listener); 
 public void removeKeyListener(KeyListener listener); 

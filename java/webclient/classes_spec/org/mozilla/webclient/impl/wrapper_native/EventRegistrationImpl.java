@@ -83,7 +83,7 @@ public class EventRegistrationImpl extends ImplObjectNative implements EventRegi
 
     private List keyListeners;
 
-    private List newWindowListeners;
+    private NewWindowListener newWindowListener;
 
     private BrowserToJavaEventPump eventPump = null;
 
@@ -109,7 +109,7 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
     documentLoadListeners = null;
     mouseListeners = null;
     keyListeners = null;
-    newWindowListeners = null;
+    newWindowListener = null;
     eventPump = new BrowserToJavaEventPump(instanceCount++);
     eventPump.start();
 }
@@ -128,10 +128,7 @@ public void delete()
 	keyListeners.clear();
     }
     keyListeners = null;
-    if (null != newWindowListeners) {
-	newWindowListeners.clear();
-    }
-    newWindowListeners = null;
+    newWindowListener = null;
     super.delete();
     eventPump.stopRunning();
 }
@@ -241,30 +238,38 @@ public void removeKeyListener(KeyListener listener)
     }
 }
 
-public void addNewWindowListener(NewWindowListener listener)
-{
-    ParameterCheck.nonNull(listener);
-    getWrapperFactory().verifyInitialized();
-
-    if (null == newWindowListeners) {
-	newWindowListeners = new ArrayList();
-    }
-    
-    synchronized(newWindowListeners) {
-	newWindowListeners.add(listener);
-    }
+public void addNewWindowListener(NewWindowListener listener) {
+    this.setNewWindowListener(null);
+    this.setNewWindowListener(listener);
 }
 
-public void removeNewWindowListener(NewWindowListener listener)
-{
-    ParameterCheck.nonNull(listener);
-    getWrapperFactory().verifyInitialized();
-    
-    synchronized(newWindowListeners) {
-	newWindowListeners.remove(listener);
-    }
+public void removeNewWindowListener(NewWindowListener listener) {
+    this.setNewWindowListener(null);
 }
 
+public void setNewWindowListener(NewWindowListener listener)
+{
+    getWrapperFactory().verifyInitialized();
+
+    synchronized(this) {
+	final boolean doClear = null == listener;
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+		public Object run() {
+		    if (doClear) {
+			nativeSetNewWindowListenerAttached(getNativeBrowserControl(),
+							   false);
+		    }
+		    else {
+			nativeSetNewWindowListenerAttached(getNativeBrowserControl(),
+							   true);
+		    }
+		    return null;
+		}
+	    });
+	
+	newWindowListener = listener;
+    }
+}
 
 /**
 
@@ -275,9 +280,10 @@ public void removeNewWindowListener(NewWindowListener listener)
 
  */
 
-void nativeEventOccurred(String targetClassName, long eventType,
-                         Object eventData)
+int nativeEventOccurred(String targetClassName, long eventType,
+			Object eventData)
 {
+    int rc = 0;
     ParameterCheck.nonNull(targetClassName);
 
     EventObject event = null;
@@ -294,12 +300,16 @@ void nativeEventOccurred(String targetClassName, long eventType,
 	event = createKeyEvent(eventType, eventData);
     }
     else if (NewWindowListener.class.getName().equals(targetClassName)) {
-        event = new NewWindowEvent(this, eventType, eventData);
+	NewWindowEvent newWindowEvent = new NewWindowEvent(this, eventType, 
+							   eventData);
+	newWindowListener.eventDispatched(newWindowEvent);
+	return getNativeBrowserControlFromNewWindowEvent(newWindowEvent);
     }
     // else...
 
     eventPump.queueEvent(event);
     eventPump.V();
+    return rc;
 }
 
 private EventObject createMouseEvent(long eventType, Object eventData) {
@@ -481,8 +491,37 @@ private EventObject createKeyEvent(long eventType, Object eventData) {
     return event;
 }
 
+private int getNativeBrowserControlFromNewWindowEvent(NewWindowEvent event) {
+    BrowserControl newBrowserControl = null;
+    BrowserControlCanvas newCanvas = null;
+    EventRegistration2 newEventRegistration = null;
+
+    if (null == (newBrowserControl = event.getBrowserControl())) {
+	return 0;
+    }
+
+    try {
+	newEventRegistration = (EventRegistration2)
+	    newBrowserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+    }
+    catch (ClassNotFoundException cnf) {
+	// PENDING(edburns): correct logging story of root cause stack
+	// trace.
+	throw new IllegalStateException("Can't create new browser control in response to NewWindow event");
+    }
+
+    if (null == newEventRegistration) {
+	return 0;
+    }
+    
+    return ((ImplObjectNative)newEventRegistration).getNativeBrowserControl();
+}
+
 private native void nativeSetCapturePageInfo(int webShellPtr, 
 					     boolean newState);
+
+private native void nativeSetNewWindowListenerAttached(int webShellPtr, 
+						       boolean newState);
 
 public class BrowserToJavaEventPump extends Thread {
     private boolean keepRunning = false;
@@ -490,7 +529,7 @@ public class BrowserToJavaEventPump extends Thread {
     private List eventsToJava = null;
 
     private int count = 0;
-    
+
     public BrowserToJavaEventPump(int instanceCount) {
 	super("BrowserToJavaEventPump-" + instanceCount);
 	eventsToJava = new ArrayList();
@@ -554,6 +593,10 @@ public class BrowserToJavaEventPump extends Thread {
 	    else if (curEvent instanceof WebclientEvent &&
 		     ((WebclientEvent)curEvent).getEventData() instanceof KeyEvent) {
 		listeners = EventRegistrationImpl.this.keyListeners;
+	    }
+	    else if (curEvent instanceof NewWindowEvent) {
+		EventRegistrationImpl.this.newWindowListener.eventDispatched((NewWindowEvent) curEvent);
+		continue;
 	    }
 	    // else...
 
