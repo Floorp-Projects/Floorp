@@ -52,16 +52,38 @@ struct _GtkMozEmbedClass
   void (* js_status)    (GtkMozEmbed *embed);
   void (* location)     (GtkMozEmbed *embed);
   void (* title)        (GtkMozEmbed *embed);
-  void (* net_status)   (GtkMozEmbed *embed, gint32 status, gint32 status);
+  void (* progress)     (GtkMozEmbed *embed, gint32 maxprogress, gint32 curprogress);
+  void (* net_status)   (GtkMozEmbed *embed, gint32 status);
+  void (* net_start)    (GtkMozEmbed *embed);
+  void (* net_stop)     (GtkMozEmbed *embed);
 };
 
 extern GtkType      gtk_moz_embed_get_type         (void);
 extern GtkWidget   *gtk_moz_embed_new              (void);
 extern void         gtk_moz_embed_load_url         (GtkWidget *widget, const char *url);
+extern void         gtk_moz_embed_stop_load        (GtkWidget *widget);
 extern char        *gtk_moz_embed_get_link_message (GtkWidget *widget);
 extern char        *gtk_moz_embed_get_js_status    (GtkWidget *widget);
 extern char        *gtk_moz_embed_get_title        (GtkWidget *widget);
 extern char        *gtk_moz_embed_get_location     (GtkWidget *widget);
+
+/* These are straight out of nsIWebProgress.h */
+
+enum { gtk_moz_embed_flag_net_start = 1,
+       gtk_moz_embed_flag_net_stop = 2,
+       gtk_moz_embed_flag_net_dns = 4,
+       gtk_moz_embed_flag_net_connecting = 8,
+       gtk_moz_embed_flag_net_redirecting = 16,
+       gtk_moz_embed_flag_net_negotiating = 32,
+       gtk_moz_embed_flag_net_transferring = 64,
+       gtk_moz_embed_flag_net_failedDNS = 4096,
+       gtk_moz_embed_flag_net_failedConnect = 8192,
+       gtk_moz_embed_flag_net_failedTransfer = 16384,
+       gtk_moz_embed_flag_net_failedTimeout = 32768,
+       gtk_moz_embed_flag_net_userCancelled = 65536,
+       gtk_moz_embed_flag_win_start = 1048576,
+       gtk_moz_embed_flag_win_stop = 2097152 };
+
 
 #ifdef __cplusplus
 }

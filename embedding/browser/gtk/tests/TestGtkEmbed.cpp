@@ -24,6 +24,18 @@ location_cb(GtkMozEmbed *embed, gpointer data);
 void
 title_cb(GtkMozEmbed *embed, gpointer data);
 
+void
+progress_cb(GtkMozEmbed *embed, gint32 maxprogress, gint32 curprogress, gpointer data);
+
+void
+net_status_cb(GtkMozEmbed *embed, gint32 flags, gpointer data);
+
+void
+net_start_cb(GtkMozEmbed *embed, gpointer data);
+
+void
+net_stop_cb(GtkMozEmbed *embed, gpointer data);
+
 int
 main(int argc, char **argv)
 {
@@ -57,6 +69,14 @@ main(int argc, char **argv)
 		     GTK_SIGNAL_FUNC(location_cb), NULL);
   gtk_signal_connect(GTK_OBJECT(moz_embed), "title",
 		     GTK_SIGNAL_FUNC(title_cb), NULL);
+  gtk_signal_connect(GTK_OBJECT(moz_embed), "progress",
+		     GTK_SIGNAL_FUNC(progress_cb), NULL);
+  gtk_signal_connect(GTK_OBJECT(moz_embed), "net_status",
+		     GTK_SIGNAL_FUNC(net_status_cb), NULL);
+  gtk_signal_connect(GTK_OBJECT(moz_embed), "net_start",
+		     GTK_SIGNAL_FUNC(net_start_cb), NULL);
+  gtk_signal_connect(GTK_OBJECT(moz_embed), "net_stop",
+		     GTK_SIGNAL_FUNC(net_stop_cb), NULL);
 
   gtk_widget_set_usize(moz_embed, 100, 100);
   gtk_box_pack_end(GTK_BOX(box), moz_embed, TRUE, TRUE, 1);
@@ -111,4 +131,29 @@ void
 title_cb(GtkMozEmbed *embed, gpointer data)
 {
   g_print("title_cb\n");
+}
+
+
+void
+progress_cb(GtkMozEmbed *embed, gint32 maxprogress, gint32 curprogress, gpointer data)
+{
+  g_print("progress_cb\n");
+}
+
+void
+net_status_cb(GtkMozEmbed *embed, gint32 flags, gpointer data)
+{
+  g_print("net_status\n");
+}
+
+void
+net_start_cb(GtkMozEmbed *embed, gpointer data)
+{
+  g_print("net_start\n");
+}
+
+void
+net_stop_cb(GtkMozEmbed *embed, gpointer data)
+{
+  g_print("net_stop\n");
 }
