@@ -92,7 +92,7 @@ nsXIContext::~nsXIContext()
 
 #define MAX_KEY_SIZE 64
 #define FIRST_ERR -601
-#define LAST_ERR  -630
+#define LAST_ERR  -631
 int
 nsXIContext::LoadResources()
 {

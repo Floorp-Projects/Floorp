@@ -1044,52 +1044,41 @@ nsInstallDlg::PSDlgOK(GtkWidget *aWidget, gpointer aData)
     GtkWidget *dlg = (GtkWidget *) aData;
     char *text;
 
+    XI_IF_FREE(gCtx->opt->mProxyHost);
+    XI_IF_FREE(gCtx->opt->mProxyPort);
+    XI_IF_FREE(gCtx->opt->mProxyUser);
+    XI_IF_FREE(gCtx->opt->mProxyPswd);
+
     // grab proxy host field
-    if (sPSTextEntry[0])
-    {
-        text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[0]), 0, -1);
-        if (text)
-        {
-            XI_IF_FREE(gCtx->opt->mProxyHost);
-            gCtx->opt->mProxyHost = text;
-        }
-    }
+    text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[0]), 0, -1);
+    if (text && *text)
+       gCtx->opt->mProxyHost = text;
 
     // grab proxy port field
-    if (sPSTextEntry[1])
-    {
-        text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[1]), 0, -1);
-        if (text)
-        {
-            XI_IF_FREE(gCtx->opt->mProxyPort);
-            gCtx->opt->mProxyPort = text;
-        }
-    }
+    text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[1]), 0, -1);
+    if (text && *text)
+       gCtx->opt->mProxyPort = text;
 
     // grab proxy user field
-    if (sPSTextEntry[2])
-    {
-        text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[2]), 0, -1);
-        if (text)
-        {
-            XI_IF_FREE(gCtx->opt->mProxyUser);
-            gCtx->opt->mProxyUser = text;
-        }
-    }
+    text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[2]), 0, -1);
+    if (text && *text)
+       gCtx->opt->mProxyUser = text;
 
     // grab proxy pswd field
-    if (sPSTextEntry[3])
-    {
-        text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[3]), 0, -1);
-        if (text)
-        {
-            XI_IF_FREE(gCtx->opt->mProxyPswd);
-            gCtx->opt->mProxyPswd = text;
-        }
-    }
+    text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[3]), 0, -1);
+    if (text && *text)
+       gCtx->opt->mProxyPswd = text;
 
-    if (dlg)
+    if ( (gCtx->opt->mProxyHost || gCtx->opt->mProxyPort || 
+          gCtx->opt->mProxyUser || gCtx->opt->mProxyPswd)
+          && (!gCtx->opt->mProxyHost || !gCtx->opt->mProxyPort) )
+    {
+        ErrorHandler(E_INVALID_PROXY);
+    }
+    else
+    {
         gtk_widget_destroy(dlg);
+    }
 }
 
 void
