@@ -140,9 +140,9 @@ $ops{"NEW_CLASS"} =
   };
 $ops{"NEW_FUNCTION"} =
   {
-   super  => "Instruction_2",
-   rem    => "dest, ICodeModule", 
-   params => [ ("TypedRegister", "ICodeModule*") ]
+   super  => "Instruction_3",
+   rem    => "dest, ICodeModule, Function Definition", 
+   params => [ ("TypedRegister", "ICodeModule*", "FunctionDefinition*") ]
   };
 $ops{"NEW_ARRAY"} =
   {
@@ -289,13 +289,13 @@ $ops{"CALL"} =
   {
    super  => "Instruction_4",
    rem    => "result, target, this, args",
-   params => [ ("TypedRegister", "TypedRegister", "TypedRegister", "RegisterList") ]
+   params => [ ("TypedRegister", "TypedRegister", "TypedRegister", "ArgumentList") ]
   };
 $ops{"DIRECT_CALL"} =
   {
    super  => "Instruction_3",
    rem    => "result, target, args",
-   params => [ ("TypedRegister", "JSFunction *", "RegisterList") ]
+   params => [ ("TypedRegister", "JSFunction *", "ArgumentList") ]
   };
 $ops{"GET_METHOD"} =
   {
@@ -428,7 +428,7 @@ sub collect {
             my $printops_body = &get_printops_body(@types);
             my $printops_decl =  "virtual Formatter& printOperands(Formatter& f, ";
 
-            $printops_decl .= ($dec_list =~ /RegisterList/) ?
+            $printops_decl .= ($dec_list =~ /ArgumentList/) ?
                                "const JSValues& registers" :
                                "const JSValues& registers";
             $printops_decl .= ") {\n";
@@ -554,6 +554,8 @@ sub get_print_body {
             push (@oplist, "\"'\" << ((mOp$op) ? \"true\" : \"false\") << \"'\"");
         } elsif ($type =~ /ICodeModule/) {
             push (@oplist, "\"ICodeModule\"");
+        } elsif ($type =~ /FunctionDefinition/) {
+            push (@oplist, "\"FunctionDefinition\"");
         } elsif ($type =~ /JSClass *\*/) {
             push (@oplist, "mOp$op->getName()");
         } else {
@@ -585,7 +587,7 @@ sub get_printops_body {
             push (@oplist, "getRegisterValue(registers, mOp$op.first)");
 #            push (@oplist, "mOp$op.first");
 #            push (@oplist, "\"R\" << mOp$op.first << '=' << registers[mOp$op.first]");
-        } elsif ($type eq "RegisterList") {
+        } elsif ($type eq "ArgumentList") {
             push (@oplist, "ArgList(mOp$op, registers)");
         }
 
