@@ -59,6 +59,13 @@ function RestoreSelectionWithoutContentLoad(tree)
         // selected, DO NOT clear the selection, else it will prevent the
         // tree view from refreshing.
         treeSelection.clearSelection();
+
+    // Need to reset gRightMouseButtonDown to false here because
+    // TreeOnMouseDown() is only called on a mousedown, not on a key down.
+    // So resetting it here allows the loading of messages in the messagepane
+    // when navigating via the keyboard or the toolbar buttons *after*
+    // the context menu has been dismissed.
+    gRightMouseButtonDown = false;
 }
 
 function threadPaneOnPopupHiding()
