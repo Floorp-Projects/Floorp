@@ -38,7 +38,10 @@ function GetSecurityInfo()
       {
         msgCompFields.securityInfo = smimeComposefields;
         // set up the intial security state....
-        smimeComposefields.alwaysEncryptMessage = gCurrentIdentity.getBoolAttribute("encrypt_mail_always");
+        var encryptionPolicy = gCurrentIdentity.getIntAttribute("encryptionpolicy");
+        // 0 == never, 1 == if possible, 2 == always Encrypt.
+        smimeComposefields.alwaysEncryptMessage = encryptionPolicy == 2;
+
         smimeComposefields.signMessage = gCurrentIdentity.getBoolAttribute("sign_mail");
       }
     } 
@@ -48,7 +51,7 @@ function GetSecurityInfo()
     }
   } // if we have message compose fields...
 
-  return smimeComposefields
+  return smimeComposefields;
 }
 
 function noEncryption()

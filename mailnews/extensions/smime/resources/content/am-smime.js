@@ -23,8 +23,8 @@
 var gIdentity;
 var gPref = null;
 var gEncryptionCertName = null;
-var gEncryptIfPossible  = null;
-var gEncryptAlways  = null;
+var gHiddenEncryptionPolicy = null;
+var gEncryptionChoices = null;
 var gSignCertName  = null;
 var gSignMessages  = null;
 
@@ -32,21 +32,37 @@ function onInit()
 {
   // initialize all of our elements based on the current identity values....
   gEncryptionCertName = document.getElementById("identity.encryption_cert_name");
-  gEncryptIfPossible  =  document.getElementById("identity.encrypt_mail_if_possible");
-  gEncryptAlways      = document.getElementById("identity.encrypt_mail_always");
+  gHiddenEncryptionPolicy = document.getElementById("identity.encryptionpolicy");
+  gEncryptionChoices = document.getElementById("encryptionChoices");
   gSignCertName       = document.getElementById("identity.signing_cert_name");
   gSignMessages       = document.getElementById("identity.sign_mail");
 
   gEncryptionCertName.value = gIdentity.getUnicharAttribute("encryption_cert_name");
-  gEncryptIfPossible.checked = gIdentity.getBoolAttribute("encrypt_mail_if_possible");
-  gEncryptAlways.checked = gIdentity.getBoolAttribute("encrypt_mail_always");
+
+  var selectedItemId = null;
+  var encryptionPolicy = gIdentity.getIntAttribute("encryptionpolicy");
+  switch (encryptionPolicy)
+  {
+    case 1:
+      selectedItemId = 'encrypt_mail_if_possible';
+      break;
+    case 2:
+      selectedItemId = 'encrypt_mail_always';
+      break;
+    default:
+      selectedItemId = 'encrypt_mail_never';
+      break;
+  }
+
+  gEncryptionChoices.selectedItem = document.getElementById(selectedItemId);
+    
   if (!gEncryptionCertName.value)
   {
     gEncryptAlways.setAttribute("disabled", true);
   }
 
   // we currently don't support encrypt if possible so keep it disabled for now...
-  gEncryptIfPossible.setAttribute("disabled", true);
+  document.getElementById('encrypt_mail_if_possible').setAttribute("disabled", true);
 
   gSignCertName.value = gIdentity.getUnicharAttribute("signing_cert_name");
   gSignMessages.checked = gIdentity.getBoolAttribute("sign_mail");
@@ -63,6 +79,9 @@ function onPreInit(account, accountValues)
 
 function onSave()
 {
+  // find out which radio for the encryption radio group is selected and set that on our hidden encryptionChoice pref....
+  var newValue = gEncryptionChoices.selectedItem.value;
+  gHiddenEncryptionPolicy.setAttribute('value', newValue);
 }
 
 function onLockPreference()

@@ -1,11 +1,13 @@
 <!ENTITY securityTitle.label "Security">
 <!ENTITY encryptionGroupTitle.label "Encryption">
-<!ENTITY ifPossibleEncryptMessage.label "Encrypt messages if possible">
-<!ENTITY alwaysEncryptMessage.label "Always encrypt messages">
-<!ENTITY encryptionCert.message "Personal certificate used for encryption:">
+<!ENTITY encryptionChoiceLabel.label "Use encryption when sending messages:">
+<!ENTITY neverEncrypt.label "Never">
+<!ENTITY ifPossibleEncryptMessage.label "If possible (messages are sent without encryption if not all recipients have a certificate)">
+<!ENTITY alwaysEncryptMessage.label "Always (disable send unless all recipients have a certificate">
+<!ENTITY encryptionCert.message "Use the following personal certificate:">
 <!ENTITY encryptionCert.notselected "No certificate set">
-<!ENTITY certificate.button "Select Certificate">
-<!ENTITY signingGroupTitle.label "Signing">
+<!ENTITY certificate.button "Select...">
+<!ENTITY signingGroupTitle.label "Digital Signing">
 <!ENTITY signMessage.label "Digitally sign messages">
-<!ENTITY signingCert.message "Personal certificate used for signing:">
+<!ENTITY signingCert.message "Use the following personal certificate:">
 <!ENTITY signingCert.notselected "No certificate set">

@@ -39,58 +39,61 @@ Contributors:
     
   <dialogheader title="&securityTitle.label;" />
 
-  <groupbox orient="vertical" id="encryption.titlebox">
-    <caption label="&encryptionGroupTitle.label;"/>
+  <label hidden="true" wsm_persist="true" id="identity.encryptionpolicy" genericattr="true"
+                pref="true" preftype="int" prefattribute="value"
+                prefstring="mail.identity.%identitykey%.encryptionpolicy"/>
 
-    <label value="&encryptionCert.message;"/>
-    <separator class="thin"/>
-
-    <textbox id="identity.encryption_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
-             pref="true" preftype="wstring" prefattribute="value" 
-             prefstring="mail.identity.%identitykey%.encryption_cert_name" readonly="true" disabled="true"/>
-
-    <separator class="thin"/>
-    <hbox>
-      <spacer flex="1"/>
-      <button id="encryptionCertSelectButton"
-              label="&certificate.button;"
-              oncommand="smimeSelectCert('identity.encryption_cert_name')"/>
-    </hbox>
-
-    <checkbox id="identity.encrypt_mail_if_possible" iscontrolcontainer="true" wsm_persist="true" genericattr="true" pref="true" 
-              preftype="bool" prefattribute="value" 
-              prefstring="mail.identity.%identitykey%.encrypt_mail_if_possible"
-              label="&ifPossibleEncryptMessage.label;" />
-
-    <checkbox id="identity.encrypt_mail_always" iscontrolcontainer="true" wsm_persist="true" genericattr="true" pref="true"
-              preftype="bool" prefattribute="value"  
-              prefstring="mail.identity.%identitykey%.encrypt_mail_always"
-              label="&alwaysEncryptMessage.label;" />
-  </groupbox>    
-    
-  <separator class="thin"/>
   <groupbox orient="vertical" id="signing.titlebox">
     <caption label="&signingGroupTitle.label;"/>
-      
-    <label value="&signingCert.message;"/>
-    <separator class="thin"/>
-
-    <textbox id="identity.signing_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
-             pref="true" preftype="wstring" prefattribute="value" 
-             prefstring="mail.identity.%identitykey%.signing_cert_name" readonly="true" disabled="true"/>
-
-    <separator class="thin"/>
     
-    <hbox>
-      <spacer flex="1"/>
-      <button id="signingCertSelectButton"
-              label="&certificate.button;"
-              oncommand="smimeSelectCert('identity.signing_cert_name')"/>
-    </hbox>
-
     <checkbox id="identity.sign_mail" iscontrolcontainer="true" wsm_persist="true" genericattr="true" pref="true"
               preftype="bool" prefattribute="value"  
               prefstring="mail.identity.%identitykey%.sign_mail"
               label="&signMessage.label;"/>
+    
+    <separator class="thin"/>
+    <label value="&signingCert.message;"/>
+
+    <hbox>
+      <textbox id="identity.signing_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
+             pref="true" preftype="wstring" prefattribute="value" 
+             prefstring="mail.identity.%identitykey%.signing_cert_name" readonly="true" disabled="true"/>
+ 
+      <button id="signingCertSelectButton"
+              label="&certificate.button;"
+              oncommand="smimeSelectCert('identity.signing_cert_name')"/>
+    </hbox>
   </groupbox>
+
+  <separator class="thin"/>
+
+  <groupbox orient="vertical" id="encryption.titlebox">
+    <caption label="&encryptionGroupTitle.label;"/>
+
+    <label value="&encryptionChoiceLabel.label;"/>
+
+    <radiogroup id="encryptionChoices">
+      <radio id="encrypt_mail_never" wsm_persist="true" value="0"
+             label="&neverEncrypt.label;" />
+
+      <radio id="encrypt_mail_if_possible" wsm_persist="true" value="1"
+             label="&ifPossibleEncryptMessage.label;" />
+    
+      <radio id="encrypt_mail_always" wsm_persist="true" value="2"
+              label="&alwaysEncryptMessage.label;" />
+    </radiogroup>
+
+    <separator class="thin"/>
+    <label value="&encryptionCert.message;"/>
+    
+    <hbox>
+      <textbox id="identity.encryption_cert_name" iscontrolcontainer="true" wsm_persist="true" genericattr="true" flex="1" 
+               pref="true" preftype="wstring" prefattribute="value" 
+               prefstring="mail.identity.%identitykey%.encryption_cert_name" readonly="true" disabled="true"/>
+      
+      <button id="encryptionCertSelectButton"
+              label="&certificate.button;"
+              oncommand="smimeSelectCert('identity.encryption_cert_name')"/>
+    </hbox>
+  </groupbox>    
 </page>
