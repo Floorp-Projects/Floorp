@@ -52,7 +52,7 @@ nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;                                                        
   }                                                                      
   if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)(nsISupports*) this;                        
+    *aInstancePtr = (void*)this;                        
     NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   }
