@@ -2879,53 +2879,6 @@ nsImapMailFolder::SetImapHostPassword(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::GetPasswordForUser(nsIImapProtocol* aProtocol,
-                                     const char* userName)
-{
-	nsresult rv = NS_OK;
-	NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-
-	nsCOMPtr<nsIMsgIncomingServer> server;
-	if (NS_SUCCEEDED(rv))
-		rv = GetServer(getter_AddRefs(server));
- 
-	if (NS_SUCCEEDED(rv))
-	{
-		PRUnichar * uniPassword;
-		PRBool okayValue = PR_TRUE;
-		char * promptText = nsnull;
-	
-		PRUnichar *passwordPrompt = IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT);
-        char *hostName = nsnull;
-        GetHostname(&hostName);
-
-		// lossy, but we need to use PR_smprintf
-		nsCString cStrPasswordPrompt(passwordPrompt);
-		if (hostName)
-			promptText = PR_smprintf(cStrPasswordPrompt, userName, (const char *) hostName);
-		else
-			promptText = PL_strdup("Enter your password here: ");
-
-        PR_FREEIF(hostName);
-		dialog->PromptPassword(nsAutoString(promptText).GetUnicode(), &uniPassword, &okayValue);
-		PR_FREEIF(promptText);
-		
-		if (!okayValue) // if the user pressed cancel, just return NULL;
-			return nsnull;
-
-		nsCAutoString password = uniPassword;
-
-		// passwords will always be ascii, right?
-
-		// this ugly cast is ok...there is a bug in the idl compiler that is preventing 
-		// the char * argument to SetPassword from being const.
-		server->SetPassword((char *) password.GetBuffer());
-	}
-	return rv;
-
-}
-
-NS_IMETHODIMP
 nsImapMailFolder::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                         nsMsgBiffState biffState)
 {
