@@ -97,20 +97,19 @@ nsClipboard::~nsClipboard()
 //-------------------------------------------------------------------------
 UINT nsClipboard::GetFormat(const char* aMimeStr)
 {
-  nsCAutoString mimeStr ( CBufDescriptor(NS_CONST_CAST(char*,aMimeStr), PR_TRUE, PL_strlen(aMimeStr)+1) );
-  UINT format = 0;
+  UINT format;
 
-  if (mimeStr.Equals(kTextMime))
+  if (strcmp(aMimeStr, kTextMime) == 0)
     format = CF_TEXT;
-  else if (mimeStr.Equals(kUnicodeMime))
+  else if (strcmp(aMimeStr, kUnicodeMime) == 0)
     format = CF_UNICODETEXT;
-  else if (mimeStr.Equals(kJPEGImageMime))
+  else if (strcmp(aMimeStr, kJPEGImageMime) == 0)
     format = CF_DIB;
-  else if (mimeStr.Equals(kFileMime))
+  else if (strcmp(aMimeStr, kFileMime) == 0)
     format = CF_HDROP;
-  else if (mimeStr.Equals(kURLMime))
+  else if (strcmp(aMimeStr, kURLMime) == 0)
     format = CF_UNICODETEXT;
-  else if (mimeStr.Equals(kNativeHTMLMime))
+  else if (strcmp(aMimeStr, kNativeHTMLMime) == 0)
     format = CF_HTML;
   else
     format = ::RegisterClipboardFormat(aMimeStr);
