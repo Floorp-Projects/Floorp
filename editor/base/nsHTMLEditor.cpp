@@ -517,12 +517,12 @@ NS_IMETHODIMP nsHTMLEditor::InsertHTML(const nsString& aInputString)
   return res;
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputText(nsString& aOutputString)
+NS_IMETHODIMP nsHTMLEditor::OutputTextToString(nsString& aOutputString)
 {
-  return nsTextEditor::OutputText(aOutputString);
+  return nsTextEditor::OutputTextToString(aOutputString);
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsString& aOutputString)
+NS_IMETHODIMP nsHTMLEditor::OutputHTMLToString(nsString& aOutputString)
 {
 #if defined(DEBUG_kostello) || defined(DEBUG_akkana)
   nsCOMPtr<nsIHTMLEncoder> encoder;
@@ -535,18 +535,18 @@ NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsString& aOutputString)
 
   return encoder->EncodeToString(aOutputString);
 #else
-  return nsTextEditor::OutputHTML(aOutputString);
+  return nsTextEditor::OutputHTMLToString(aOutputString);
 #endif
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride)
+NS_IMETHODIMP nsHTMLEditor::OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride)
 {
-  return nsTextEditor::OutputText(aOutputStream,aCharsetOverride);
+  return nsTextEditor::OutputTextToStream(aOutputStream,aCharsetOverride);
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsIOutputStream* aOutputStream,nsString* aCharsetOverride)
+NS_IMETHODIMP nsHTMLEditor::OutputHTMLToStream(nsIOutputStream* aOutputStream,nsString* aCharsetOverride)
 {
-  return nsTextEditor::OutputHTML(aOutputStream,aCharsetOverride);
+  return nsTextEditor::OutputHTMLToStream(aOutputStream,aCharsetOverride);
 }
 
 

@@ -99,11 +99,11 @@ public:
 
   NS_IMETHOD InsertHTML(const nsString &aInputString)=0;
 
-  NS_IMETHOD OutputText(nsString& aOutputString)=0;
-  NS_IMETHOD OutputHTML(nsString& aOutputString)=0;
+  NS_IMETHOD OutputTextToString(nsString& aOutputString)=0;
+  NS_IMETHOD OutputHTMLToString(nsString& aOutputString)=0;
 
-  NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
-  NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
+  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
+  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
 
   NS_IMETHOD GetLocalFileURL(nsIDOMWindow* aParent, const nsString& aFilterType, nsString& aReturn)=0;
 

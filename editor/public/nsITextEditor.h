@@ -314,11 +314,11 @@ public:
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
 
 // Input/Output
-  NS_IMETHOD OutputText(nsString& aOutputString)=0;
-  NS_IMETHOD OutputHTML(nsString& aOutputString)=0;
+  NS_IMETHOD OutputTextToString(nsString& aOutputString)=0;
+  NS_IMETHOD OutputHTMLToString(nsString& aOutputString)=0;
   
-  NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
-  NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
+  NS_IMETHOD OutputTextToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
+  NS_IMETHOD OutputHTMLToStream(nsIOutputStream* aOutputStream, nsString* aCharsetOverride = nsnull)=0;
 
   /** Get and set the body wrap width
     * @param aWrapColumn - the column to wrap at. This is set as a COLS attribute
