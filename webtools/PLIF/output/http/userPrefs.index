@@ -127,6 +127,9 @@ TemplateToolkit
 [%- "\n   </ol>" IF manyUsers -%]
 
    <p>
+   [%- FOREACH userID = userIDs %]
+    <input type="hidden" name="userPrefs.userID" value="[% userID %]">
+   [%- END %]
     <input type="hidden" name="command" value="userPrefsSet">
     <input type="submit" value="Submit">
    </p>
