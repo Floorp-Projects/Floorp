@@ -449,6 +449,22 @@ JS_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval);
 extern JS_PUBLIC_API(JSBool)
 JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
 
+/*
+ * A JS GC root is a pointer to a JSObject *, JSString *, or jsdouble * that
+ * itself points into the GC heap (more recently, we support this extension:
+ * a root may be a pointer to a jsval v for which JSVAL_IS_GCTHING(v) is true).
+ *
+ * Therefore, you never pass JSObject *obj to JS_AddRoot(cx, obj).  You always
+ * call JS_AddRoot(cx, &obj), passing obj by reference.  And later, before obj
+ * or the structure it is embedded within goes out of scope or is freed, you
+ * must call JS_RemoveRoot(cx, &obj).
+ *
+ * Also, use JS_AddNamedRoot(cx, &structPtr->memberObj, "structPtr->memberObj")
+ * in preference to JS_AddRoot(cx, &structPtr->memberObj), in order to identify
+ * roots by their source callsites.  This way, you can find the callsite while
+ * debugging if you should fail to do JS_RemoveRoot(cx, &structPtr->memberObj)
+ * before freeing structPtr's memory.
+ */
 extern JS_PUBLIC_API(JSBool)
 JS_AddRoot(JSContext *cx, void *rp);
 
@@ -482,6 +498,9 @@ JS_MaybeGC(JSContext *cx);
 
 extern JS_PUBLIC_API(JSGCCallback)
 JS_SetGCCallback(JSContext *cx, JSGCCallback cb);
+
+extern JS_PUBLIC_API(JSGCCallback)
+JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb);
 
 /************************************************************************/
 
@@ -1046,6 +1065,12 @@ JS_IsConstructing(JSContext *cx);
 
 /*
  * Strings.
+ *
+ * NB: JS_NewString takes ownership of bytes on success, avoiding a copy; but
+ * on error (signified by null return), it leaves bytes owned by the caller.
+ * So the caller must free bytes in the error case, if it has no use for them.
+ * In contrast, all the JS_New*StringCopy* functions do not take ownership of
+ * the character memory passed to them -- they copy it.
  */
 extern JS_PUBLIC_API(JSString *)
 JS_NewString(JSContext *cx, char *bytes, size_t length);
