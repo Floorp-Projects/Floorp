@@ -1180,7 +1180,12 @@ sub MakeResourceAliases()
 	  _InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST-skin",			"$history_dir:skin:default");
 	  _InstallResources(":mozilla:xpfe:components:history:resources:locale:MANIFEST",			"$history_dir:locale");
         }
-	_InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST",			"$samples_dir");
+        {
+          my($related_dir) = "$chrome_dir"."Related";
+	  _InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-content",			"$related_dir:content:default");
+	  _InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST-skin",			"$related_dir:skin:default");
+	  _InstallResources(":mozilla:xpfe:components:related:resources:locale:MANIFEST",			"$related_dir:locale");
+        }
 	_InstallResources(":mozilla:xpfe:components:search:resources:MANIFEST",			"$samples_dir");
         {
           my($sidebar_chrome_dir) = "$chrome_dir" . "Sidebar";

@@ -243,6 +243,27 @@
 
   </chrome> 
 
+  <chrome about="chrome://related/"> 
+
+    <content> 
+      <RDF:Description about="chrome://related/content/">
+	    <base>resource:/chrome/related/content/default/</base>
+      </RDF:Description> 
+    </content> 
+
+    <skin> 
+      <RDF:Description about="chrome://related/skin/">
+	    <base>resource:/chrome/related/skin/default/</base>
+      </RDF:Description> 
+    </skin> 
+
+    <locale> 
+      <RDF:Description about="chrome://related/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
+  </chrome> 
 </RDF:RDF> 
 
 
