@@ -11,6 +11,8 @@
      onload="parent.onPanelLoaded('am-main.xul');"
      align="vertical">
 
+    <html:script src="chrome://global/content/strres.js"/>
+    <html:script src="chrome://pref/content/prefutilities.js"/>
     <box class="header" align="horizontal">  
     <titledbutton class="left-header-text" value="&accountTitle.label;"/>
       <spring class="header-spring" flex="1"/>
@@ -69,7 +71,7 @@
         <html:input name="identity.attachSignature" id="identity.attachSignature" type="checkbox"/>
         <html:label for="identity.attachSignature">&signature.label;</html:label>
         <html:input type="text" id="identity.signature" datatype="nsIFileSpec" flex="100%" name="identity.signature"/>
-        <titledbutton class="dialog push" name="browse" type="button" value="&choose.label;" onclick="PrefNavSelectFile('identity.signature')"/>
+        <titledbutton class="dialog push" name="browse" type="button" value="&choose.label;" onclick="prefNavSelectFile('identity.signature', 'choosefile')"/>
       </html:div>
 
 <!--
