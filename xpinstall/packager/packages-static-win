@@ -191,6 +191,7 @@ bin\components\nsProgressDialog.js
 bin\components\progressDlg.xpt
 bin\components\nsDownloadProgressListener.js
 bin\components\transformiix.xpt
+bin\components\typeaheadfind.xpt
 
 
 ; chrome stuff
@@ -315,9 +316,3 @@ bin\chrome\inspector.jar
 bin\defaults\pref\inspector.js
 bin\res\inspector\viewer-registry.rdf
 bin\res\inspector\search-registry.rdf
-
-[typeaheadfind]
-bin\components\typeaheadfind.dll
-bin\components\typeaheadfind.xpt
-bin\chrome\typeaheadfind.jar
-bin\defaults\pref\typeaheadfind.js

@@ -133,6 +133,12 @@ pref("accessibility.usetexttospeech", "");
 pref("accessibility.usebrailledisplay", "");
 pref("accessibility.accesskeycausesactivation", true);
 
+// Type Ahead Find
+pref("accessibility.typeaheadfind", true);
+pref("accessibility.typeaheadfind.linksonly", true);
+pref("accessibility.typeaheadfind.startlinksonly", false);
+pref("accessibility.typeaheadfind.timeout", 5000);
+
 // Dialog modality issues
 pref("browser.prefWindowModal", true);
 pref("browser.show_about_as_stupid_modal_window", false);

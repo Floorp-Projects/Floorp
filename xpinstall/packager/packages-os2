@@ -264,6 +264,8 @@ bin/components/t8iix.dll
 ;bin/ISimpleDOMNodeMarshal.dll
 ;bin/ISimpleDOMDocumentMarshal.dll
 ;bin/components/nsSetDefaultBrowser.js
+bin/components/typeaheadfind.xpt
+bin/components/typeheadfind.dll
 
 ; LDAP components need to be in the browser for AutoConfig
 bin/components/mozldap.dll

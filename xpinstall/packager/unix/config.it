@@ -43,7 +43,6 @@ C4=Component5
 C5=Component6
 C6=Component7
 C7=Component8
-C8=Component11
 
 [Setup Type1]
 ; *** LOCALIZE ME BABY ***
@@ -61,7 +60,6 @@ C7=Component7
 C8=Component8
 C9=Component9
 C10=Component10
-C11=Component11
 
 [Setup Type2]
 ; *** LOCALIZE ME BABY ***
@@ -75,7 +73,6 @@ C3=Component5
 C4=COmponent6
 C5=Component7
 C6=Component8
-C7=Component11
 
 [Setup Type3]
 ; *** LOCALIZE ME BABY ***
@@ -93,7 +90,6 @@ C7=Component7
 C8=Component8
 C9=Component9
 C10=Component10
-C11=Component11
 
 
 ;-------------------------------------------------------------------------
@@ -211,16 +207,6 @@ Description Long=DOM Inspector
 Archive=inspector.xpi
 $InstallSize$:inspector
 $InstallSizeArchive$:inspector.xpi
-Attributes=SELECTED
-URL0=$URLPath$
-
-[Component11]
-Description Short=TypeAheadFind
-; *** LOCALIZE ME BABY ***
-Description Long=Type Ahead Find
-Archive=typeaheadfind.xpi
-$InstallSize$:typeaheadfind
-$InstallSizeArchive$:typeaheadfind.xpi
 Attributes=SELECTED
 URL0=$URLPath$
 
