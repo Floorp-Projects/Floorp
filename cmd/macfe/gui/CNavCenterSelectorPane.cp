@@ -35,7 +35,7 @@ const RGBColor CNavCenterSelectorPane::mBGColor = { 0xDDDD, 0xDDDD, 0xDDDD };
 CNavCenterSelectorPane::CNavCenterSelectorPane( LStream* inStream )
 		: LView(inStream), LDragAndDrop ( GetMacPort(), this ),
 			mIsEmbedded(false), mHTPane(nil), mTooltipIndex(-1), mMouseIsInsidePane(false),
-			mImageMode(0L), mCellHeight(35), mCachedWorkspace(NULL)
+			mImageMode(0L), mCellHeight(25), mCachedWorkspace(NULL)
 {
 	// nothing else to do here.
 }
@@ -473,6 +473,9 @@ CNavCenterSelectorPane :: FindCommandStatus ( CommandT inCommand, Boolean &outEn
 
 SelectorData :: SelectorData ( HT_View inView )
 {
+	const ResIDT cFolderIconID = -3999;		// use the OS Finder folder icon
+	enum { kWorkspaceID = cFolderIconID, kHistoryID = 16251, kSearchID = 16252, kSiteMapID = 16253 };
+
 	char viewName[64];
 #if DRAW_WITH_TITLE
 	HT_ViewDisplayString ( inView, viewName, 8 );
@@ -485,14 +488,14 @@ SelectorData :: SelectorData ( HT_View inView )
 	char* iconURL = HT_GetWorkspaceLargeIconURL(inView);
 
 	char workspace[500];
-	ResIDT iconID = 15141;
+	ResIDT iconID = kWorkspaceID;
 	sscanf ( iconURL, "icon/large:workspace,%s", workspace );
 	if ( strcmp(workspace, "history") == 0 )
-		iconID = 15161;
+		iconID = kHistoryID;
 	else if ( strcmp(workspace, "search") == 0 )
-		iconID = 15149;
-	else if ( strcmp(workspace, "guide") == 0 )
-		iconID = 15156;
+		iconID = kSearchID;
+	else if ( strcmp(workspace, "sitemap") == 0 )
+		iconID = kSiteMapID;
 	
 	workspaceImage = new TitleImage(viewName, iconID);
 
@@ -547,20 +550,18 @@ TitleImage :: DrawInCurrentView( const Rect& inBounds, unsigned long inMode ) co
 	textbg.top = inBounds.bottom - 12;
 #endif
 	
-	// center the icon in the bounding rect. The problem is that our icons really aren't
-	// 32x32, but something smaller. |iconRect| still needs to be 32x32, though, else
-	// PlotIconID() will freak.
-	iconRect.right 	= iconRect.left + 32;
-	iconRect.bottom	= iconRect.top  + 32;
-	iconRect.left += 5; iconRect.right += 5;
-	iconRect.top += 5; iconRect.bottom += 5;
-	
+	iconRect.right 	= iconRect.left + 16;
+	iconRect.bottom	= iconRect.top  + 16;
+	UGraphicGizmos::CenterRectOnRect ( iconRect, inBounds );
+		
 	SInt16 iconTransform = kTransformNone;
 	if ( inMode & CNavCenterSelectorPane::kSelected ) {
 		iconTransform = kTransformSelected;
-//		::BackColor(blackColor);
-//		::EraseRect(&textbg);
-//		::TextMode(srcXor);
+#if DRAW_WITH_TITLE	
+		::BackColor(blackColor);
+		::EraseRect(&textbg);
+		::TextMode(srcXor);
+#endif
 #if DRAW_SELECTED_AS_TAB
 		Rect temp = inBounds;
 		temp.left += 2;
