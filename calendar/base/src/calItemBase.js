@@ -108,6 +108,9 @@ calItemBase.prototype = {
     // for subclasses to use; copies the ItemBase's values
     // into m
     cloneItemBaseInto: function (m) {
+        var suppressDCE = this.lastModifiedTime;
+        suppressDCE = this.stampTime;
+
         m.mImmutable = false;
         m.mGeneration = this.mGeneration;
         m.mLastModifiedTime = this.mLastModifiedTime.clone();
@@ -143,6 +146,8 @@ calItemBase.prototype = {
             var prop = e.getNext().QueryInterface(Components.interfaces.nsIProperty);
             m.mProperties.setProperty (prop.name, prop.value);
         }
+
+        m.mDirty = this.mDirty;
 
         return m;
     },
@@ -227,6 +232,17 @@ calItemBase.prototype = {
         this.mAttendees.push(attendee);
     },
 
+    get parent () {
+        return this.mParent;
+    },
+
+    set parent (v) {
+        if (this.mImmutable)
+            // Components.results.NS_ERROR_CALENDAR_IMMUTABLE;
+            throw Components.results.NS_ERROR_FAILURE;
+        this.mParent = v;
+    },
+
     /* MEMBER_ATTR(mIcalString, "", icalString), */
     get icalString() {
         throw Components.results.NS_NOT_IMPLEMENTED;
@@ -239,7 +255,7 @@ calItemBase.prototype = {
     itemBasePromotedProps: {
         "CREATED": true,
         "UID": true,
-        "LASTMODIFIED": true,
+        "LAST-MODIFIED": true,
         "SUMMARY": true,
         "PRIORITY": true,
         "METHOD": true,
@@ -379,7 +395,6 @@ calItemOccurrence.prototype = {
 
 makeMemberAttr(calItemBase, "mGeneration", 0, "generation");
 makeMemberAttr(calItemBase, "mCreationDate", null, "creationDate");
-makeMemberAttr(calItemBase, "mParent", null, "parent");
 makeMemberAttr(calItemBase, "mId", null, "id");
 makeMemberAttr(calItemBase, "mTitle", null, "title");
 makeMemberAttr(calItemBase, "mPriority", 0, "priority");

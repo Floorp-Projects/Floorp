@@ -156,6 +156,8 @@ calEvent.prototype = {
             __proto__: this.itemBasePromotedProps
         };
         this.importUnpromotedProperties(event, promotedProps);
+        // Importing didn't really change anything
+        this.mDirty = false;
     }
 };
 
