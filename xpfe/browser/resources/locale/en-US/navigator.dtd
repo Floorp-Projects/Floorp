@@ -10,8 +10,6 @@
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
 <!ENTITY viewsourcetitle.preface "Source for: ">
-<!-- LOCALIZATION NOTE (throbber.url): DONT_TRANSLATE --> 
-<!ENTITY throbber.url "http://www.mozilla.org"> 
 
 <!ENTITY browserCmd.label					"New Navigator Window">
 <!ENTITY browserCmd.accesskey				"n">
