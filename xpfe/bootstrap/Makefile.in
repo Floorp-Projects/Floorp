@@ -356,8 +356,9 @@ MOZILLA_SCRIPT=mozilla
 
 $(MOZILLA_SCRIPT):: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
+		-e "s|%MOZ_USER_DIR%|.mozilla|" \
 		-e "s|%MREDIR%|$(mredir)|" \
-		-e "s|mozilla-bin|$(PROGRAM)|g" > $@
+		-e "s|%MOZILLA-BIN%|$(PROGRAM)|g" > $@
 	chmod +x $@
 
 libs:: $(MOZILLA_SCRIPT)
