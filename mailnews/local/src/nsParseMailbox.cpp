@@ -1341,6 +1341,7 @@ nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStr
 	m_position = folder.GetFileSize();
 #ifdef DOING_FILTERS
 	m_rootFolder = rootFolder;
+	m_inboxFileSpec = folder;
 	m_inboxFileStream = inboxFileStream;
 #endif
 	// the new mail parser isn't going to get the stream input, it seems, so we can't use
@@ -1587,7 +1588,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 					}
 
 				}
-				if (NS_SUCCEEDED(matchTermStatus))
+				if (matchTermStatus == NS_OK)
 				{
 					nsMsgRuleActionType actionType;
 					void				*value = nsnull;
@@ -1748,7 +1749,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
 	nsCOMPtr <nsISupports> myISupports = dont_QueryInterface(myThis);
 
-	NS_RELEASE(myThis);
+//	NS_RELEASE(myThis);
 	if (lockedFolder && (err = lockedFolder->AcquireSemaphore (myISupports)) != 0)
 		return err;
 
@@ -1764,14 +1765,19 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 		return NS_MSG_FOLDER_UNREADABLE;	// ### dmb
 	}
 
-	PRUint32 messageOffset;
+	PRUint32 messageOffset = 0;
 
 	mailHdr->GetMessageOffset(&messageOffset);
 	m_inboxFileStream->seek(PR_SEEK_SET, messageOffset);
 	int newMsgPos;
 
-	nsFileSpec destDBSpec(destFolder);
-	destFile = new nsIOFileStream(destDBSpec, PR_WRONLY | PR_CREATE_FILE);
+	nsFileSpec rootDirectory;
+	m_inboxFileSpec.GetParent(rootDirectory);
+	nsFileSpec destFolderSpec(rootDirectory);
+	// ### Not sure this will work if destFolder is a sub-folder
+//	destFolderSpec.SetLeafName(destFolder);
+	destFolderSpec += destFolder;
+	destFile = new nsIOFileStream(destFolderSpec, PR_WRONLY | PR_CREATE_FILE);
 
 	if (!destFile) 
 	{
@@ -1791,8 +1797,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
-		nsFileSpec destDBSpec(destFolder);
-		rv = mailDBFactory->Open(destDBSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(destMailDB), PR_TRUE);
+		rv = mailDBFactory->Open(destFolderSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(destMailDB), PR_TRUE);
 	}
 	NS_ASSERTION(destMailDB, "failed to open mail db parsing folder");
 	// don't force upgrade in place - open the db here before we start writing to the 
@@ -2061,74 +2066,6 @@ void ParseIMAPMailboxState::ApplyFilters(PRBool *pMoved)
  		fFetchBodyKeys.Add(m_parseMsgState->m_newMsgHdr->GetMessageKey());
 }
 
-
-// For IMAP, the message key is the IMAP UID
-// This is where I will add code to fix the message length as well - km
-void ParseIMAPMailboxState::FolderTypeSpecificTweakMsgHeader(nsIMsgDBHdr *tweakMe)
-{
-	if (m_mailDB && tweakMe)
-	{
-		tweakMe->SetMessageKey(fNextMessagePublishUID);
-		tweakMe->SetByteLength(fNextMessageByteLength);
-		tweakMe->SetMessageSize(fNextMessageByteLength);
-		
-		if (fFlagState)
-		{
-			PRBool foundIt = FALSE;
-			imapMessageFlagsType imap_flags = IMAP_GetMessageFlagsFromUID(fNextMessagePublishUID, &foundIt, fFlagState);
-			if (foundIt)
-			{
-				// make a mask and clear these message flags
-				PRUint32 mask = MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_MARKED | MSG_FLAG_IMAP_DELETED;
-				tweakMe->SetFlags(tweakMe->GetFlags() & ~mask);
-				
-				// set the new value for these flags
-				PRUint32 newFlags = 0;
-				if (imap_flags & kImapMsgSeenFlag)
-					newFlags |= MSG_FLAG_READ;
-				else // if (imap_flags & kImapMsgRecentFlag)
-					newFlags |= MSG_FLAG_NEW;
-
-				// Okay here is the MDN needed logic (if DNT header seen):
-				/* if server support user defined flag:
-						MDNSent flag set => clear kMDNNeeded flag
-						MDNSent flag not set => do nothing, leave kMDNNeeded on
-				   else if 
-						not MSG_FLAG_NEW => clear kMDNNeeded flag
-						MSG_FLAG_NEW => do nothing, leave kMDNNeeded on
-				 */
-				if (IMAP_SupportMessageFlags(fFlagState, (kImapMsgSupportUserFlag |
-														  kImapMsgSupportMDNSentFlag)))
-				{
-					if (imap_flags & kImapMsgMDNSentFlag)
-					{
-						newFlags |= kMDNSent;
-						if (tweakMe->GetFlags() & kMDNNeeded)
-							tweakMe->SetFlags(tweakMe->GetFlags() & ~kMDNNeeded);
-					}
-				}
-				else
-				{
-					if (!(imap_flags & kImapMsgRecentFlag) && 
-						tweakMe->GetFlags() & kMDNNeeded)
-						tweakMe->SetFlags(tweakMe->GetFlags() & ~kMDNNeeded);
-				}
-
-				if (imap_flags & kImapMsgAnsweredFlag)
-					newFlags |= MSG_FLAG_REPLIED;
-				if (imap_flags & kImapMsgFlaggedFlag)
-					newFlags |= MSG_FLAG_MARKED;
-				if (imap_flags & kImapMsgDeletedFlag)
-					newFlags |= MSG_FLAG_IMAP_DELETED;
-				if (imap_flags & kImapMsgForwardedFlag)
-					newFlags |= MSG_FLAG_FORWARDED;
-
-				if (newFlags)
-					tweakMe->SetFlags(tweakMe->GetFlags() | newFlags);
-			}
-		}
-	}
-}
 
 PRInt32	ParseIMAPMailboxState::PublishMsgHeader()
 {

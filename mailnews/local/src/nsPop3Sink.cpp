@@ -142,8 +142,7 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
     nsFileSpec fileSpec(mailDirectory);
     PL_strfree(mailDirectory);
     fileSpec += "Inbox";
-    m_outFileStream = new nsIOFileStream(fileSpec, 
-                                             PR_WRONLY | PR_CREATE_FILE);
+    m_outFileStream = new nsIOFileStream(fileSpec /*, PR_CREATE_FILE */);
 	if (m_outFileStream)
 		m_outFileStream->seek(fileSpec.GetFileSize());
 
@@ -171,17 +170,19 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
 nsresult
 nsPop3Sink::EndMailDelivery()
 {
+	if (m_newMailParser)
+	{
+		if (m_outFileStream)
+			m_outFileStream->flush();	// try this.
+		m_newMailParser->OnStopBinding(nsnull, NS_OK, nsnull);
+		delete m_newMailParser;
+		m_newMailParser = NULL;
+	}
     if (m_outFileStream)
     {
         delete m_outFileStream;
         m_outFileStream = 0;
     }
-	if (m_newMailParser)
-	{
-		m_newMailParser->OnStopBinding(nsnull, NS_OK, nsnull);
-		delete m_newMailParser;
-		m_newMailParser = NULL;
-	}
 
 #ifdef DEBUG
     printf("End mail message delivery.\n");

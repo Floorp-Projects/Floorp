@@ -272,6 +272,7 @@ protected:
 	nsCOMPtr <nsIFolder> m_rootFolder;
 	nsOutputFileStream	*m_logFile;
 	nsIOFileStream		*m_inboxFileStream;
+	nsFileSpec			m_inboxFileSpec;
 #endif // DOING_FILTERS
 	char				*m_tmpdbName;				// Temporary filename of new database
 	PRBool				m_usingTempDB;
