@@ -2006,7 +2006,7 @@ public class Context
      * <p>
      * The WrapFactory allows custom object wrapping behavior for
      * Java object manipulated with JavaScript.
-     * @see org.mozilla.javascript.WrapFactory
+     * @see WrapFactory
      * @since 1.5 Release 4
      */
     public final void setWrapFactory(WrapFactory wrapFactory)
@@ -2017,8 +2017,8 @@ public class Context
     }
 
     /**
-     * Return the current WrapHandler, or null if none is defined.
-     * @see org.mozilla.javascript.WrapHandler
+     * Return the current WrapFactory, or null if none is defined.
+     * @see WrapFactory
      * @since 1.5 Release 4
      */
     public final WrapFactory getWrapFactory()
