@@ -38,6 +38,8 @@ interface nsIRDFService : nsISupports {
     // be converted to a single-byte representation internally.
     nsIRDFResource GetUnicodeResource(in wstring aURI);
 
+    nsIRDFResource GetAnonymousResource();
+
     // Construct an RDF literal from a Unicode string.
     nsIRDFLiteral  GetLiteral(in wstring aValue);
 
@@ -46,6 +48,8 @@ interface nsIRDFService : nsISupports {
 
     // Construct an RDF literal from an int.
     nsIRDFInt      GetIntLiteral(in long aValue);
+
+    boolean IsAnonymousResource(in nsIRDFResource aResource);
 
     // Registers a resource with the RDF system, making it unique w.r.t.
     // GetResource.

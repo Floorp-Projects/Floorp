@@ -1031,7 +1031,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
     }
 
     // Otherwise, we couldn't find anything, so just gensym one...
-    rv = rdf_CreateAnonymousResource(nsCAutoString(docURI), aResource);
+    rv = gRDFService->GetAnonymousResource(aResource);
     return rv;
 }
 
