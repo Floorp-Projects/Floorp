@@ -111,8 +111,8 @@ __get_buf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp, int newpage)
 {
 	register BUFHEAD *bp;
 	register uint32 is_disk_mask;
-	register int is_disk, segment_ndx;
-	SEGMENT segp;
+	register int is_disk, segment_ndx = 0;
+	SEGMENT segp = 0;
 
 	is_disk = 0;
 	is_disk_mask = 0;
