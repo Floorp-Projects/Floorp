@@ -146,13 +146,13 @@ function ReadAvailableLanguages()
        curItem = curItem.QueryInterface(Components.interfaces.nsIPropertyElement);
 
        //dump string name (key)
-       stringName = curItem.getKey();
+       stringName = curItem.key;
        stringNameProperty = stringName.split('.');
 
        if (stringNameProperty[1] == 'accept') {
 
           //dump the UI string (value)
-           visible   = curItem.getValue();
+           visible   = curItem.value;
 
           //if (visible == 'true') {
 
