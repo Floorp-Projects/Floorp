@@ -77,8 +77,9 @@ NS_IMETHODIMP nsWalletlibService::WALLET_OKToCapture
 NS_IMETHODIMP nsWalletlibService::WALLET_Capture(
         nsIDocument* doc,
         nsString name,
-        nsString value) {
-    ::WLLT_Capture(doc, name, value);
+        nsString value,
+        nsString vcard) {
+    ::WLLT_Capture(doc, name, value, vcard);
     return NS_OK;
 }
 

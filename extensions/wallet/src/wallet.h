@@ -46,7 +46,7 @@ extern void
 WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName);
 
 extern void
-WLLT_Capture(nsIDocument* doc, nsString name, nsString value);
+WLLT_Capture(nsIDocument* doc, nsString name, nsString value, nsString vcard);
 
 XP_END_PROTOS
 

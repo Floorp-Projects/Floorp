@@ -32,7 +32,8 @@ public:
     NS_IMETHOD WALLET_ChangePassword();
     NS_IMETHOD WALLET_PreEdit(nsIURL* url);
     NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, PRBool quick);
-    NS_IMETHOD WALLET_Capture(nsIDocument* doc, nsString name, nsString value);
+    NS_IMETHOD WALLET_Capture
+      (nsIDocument* doc, nsString name, nsString value, nsString vcard);
     NS_IMETHOD WALLET_OKToCapture(PRBool* result, PRInt32 count, char* URLName);
 
     NS_IMETHOD SI_DisplaySignonInfoAsHTML();

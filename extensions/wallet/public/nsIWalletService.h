@@ -47,7 +47,8 @@ struct nsIWalletService : public nsISupports
     NS_IMETHOD WALLET_PreEdit(nsIURL* url) = 0;
     NS_IMETHOD WALLET_ChangePassword() = 0;
     NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, PRBool quick) = 0;
-    NS_IMETHOD WALLET_Capture(nsIDocument* doc, nsString name, nsString value) = 0;
+    NS_IMETHOD WALLET_Capture
+      (nsIDocument* doc, nsString name, nsString value, nsString vcard) = 0;
     NS_IMETHOD WALLET_OKToCapture(PRBool* result, PRInt32 count, char* URLName) = 0;
 
     NS_IMETHOD SI_DisplaySignonInfoAsHTML()=0;

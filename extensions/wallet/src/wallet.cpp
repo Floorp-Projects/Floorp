@@ -2204,7 +2204,7 @@ WLLT_OKToCapture(PRBool * result, PRInt32 count, char* URLName) {
  * capture the value of a form element
  */
 PUBLIC void
-WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
+WLLT_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard) {
 
   /* do nothing if there is no value */
   if (!value.Length()) {
@@ -2212,22 +2212,25 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
   }
 
   /* read in the mappings if they are not already present */
-  wallet_Initialize();
-  wallet_InitializeCurrentURL(doc);
-  if (Wallet_BadKey()) {
-    return;
+  if (!vcard.Length()) {
+    wallet_Initialize();
+    wallet_InitializeCurrentURL(doc);
+    if (Wallet_BadKey()) {
+      return;
+    }
   }
 
   nsAutoString oldValue;
 
   /* is there a mapping from this field name to a schema name */
-  nsAutoString schema;
+  nsAutoString schema(vcard);
   XP_List* FieldToSchema_list = wallet_FieldToSchema_list;
   XP_List* URLFieldToSchema_list = wallet_specificURLFieldToSchema_list;
   XP_List* SchemaToValue_list = wallet_SchemaToValue_list;
   XP_List* dummy;
 
-  if ((wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list) != -1) ||
+  if (schema.Length() ||
+      (wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list) != -1) ||
       (wallet_ReadFromList(field, schema, dummy, FieldToSchema_list) != -1)) {
 
     /* field to schema mapping already exists */
@@ -2278,7 +2281,7 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
 //}
 
 //PUBLIC void
-//WLLT_Capture(nsIDocument* doc, nsString field, nsString value) {
+//WLLT_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard) {
 //}
 
 //}
