@@ -23,7 +23,7 @@ function onLoad()
   if (!okButton || !cancelButton)
     return false;
 
-  okButton.setAttribute("value", gMigrationundle.getString("migrate"));
+  okButton.setAttribute("value", gMigrationBundle.getString("migrate"));
   okButton.setAttribute("class", okButton.getAttribute("class") + " padded");
   cancelButton.setAttribute("value", gMigrationBundle.getString("newprofile"));
   cancelButton.setAttribute("class", cancelButton.getAttribute("class") + " padded");
