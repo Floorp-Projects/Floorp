@@ -19,26 +19,16 @@
 #
 # Fix brain-damaged compilers that don't understand -o and -c together
 #
+CC=`echo $1 | sed -e "s|'||g" -e 's|"||g'`
+shift
 DASH_C=0
 DASH_O=0
 for i in $*
 do
 	[ "${CHECK_O}" = yes ]  && {
-	case $i in
-		./*.o)	i="" ;;
-		*.o)	if [ $i = `basename $i` ]
-			then
-				i=""
-			else
-				OPTS="${OPTS} -o"
-   				DASH_O=1
-			fi
-			;;
-		*)	OPTS="${OPTS} -o $i"
-   			DASH_O=1
-			i=""
-			;;
-	esac
+   		OBJECT=$i
+		OPTS="${OPTS} -o $i"
+ 		i=""
 	CHECK_O=no
 	}
    case $i in
@@ -53,15 +43,12 @@ do
    *.s)    S_SRC=$i
 	OPTS="${OPTS} $i"
 		;;
-   *.o)    OBJECT=$i
-	OPTS="${OPTS} $i"
-		;;
    *) 	OPTS="${OPTS} $i"
 		;;
    esac
 done
 
-cc ${OPTS} || exit $?
+${CC} ${OPTS} || exit $?
 
 # if there was no -c and -o we're done
 [ $DASH_C = 1 -a $DASH_O = 1 ] || exit 0
@@ -71,4 +58,4 @@ cc ${OPTS} || exit $?
 # or the .o from the .s name
 [ $S_SRC ] && OBJ=`basename $S_SRC .s`.o
 
-[ -f $OBJECT ] || [ -f $OBJ ] && mv -f $OBJ $OBJECT 
+[ -f $OBJECT ] || ( [ -f $OBJ ] && mv -f $OBJ $OBJECT )
