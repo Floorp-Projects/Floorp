@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -121,7 +121,7 @@ public:\
   NS_DECL_NSISOAPENCODER\
   NS_DECL_NSISOAPDECODER\
 };\
-NS_IMPL_ISUPPORTS2(ns##name##Encoder,nsISOAPEncoder,nsISOAPDecoder) \
+NS_IMPL_ISUPPORTS2_CI(ns##name##Encoder,nsISOAPEncoder,nsISOAPDecoder) \
 ns##name##Encoder::ns##name##Encoder() {NS_INIT_ISUPPORTS();}\
 ns##name##Encoder::~ns##name##Encoder() {}
 

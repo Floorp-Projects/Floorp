@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -34,7 +34,15 @@ nsSOAPResponse::~nsSOAPResponse()
   /* destructor code */
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsSOAPResponse, nsSOAPMessage, nsISOAPResponse)
+NS_IMPL_CI_INTERFACE_GETTER2(nsSOAPResponse, nsISOAPMessage, nsISOAPResponse)
+NS_IMPL_ADDREF_INHERITED(nsSOAPResponse, nsSOAPMessage)
+NS_IMPL_RELEASE_INHERITED(nsSOAPResponse, nsSOAPMessage)
+
+NS_INTERFACE_MAP_BEGIN(nsSOAPResponse)
+NS_INTERFACE_MAP_ENTRY(nsISOAPResponse)
+NS_IMPL_QUERY_CLASSINFO(nsSOAPResponse)
+NS_INTERFACE_MAP_END_INHERITING(nsSOAPMessage)
+
 
 /* attribute nsISOAPCall respondingTo; */
 NS_IMETHODIMP nsSOAPResponse::GetRespondingTo(nsISOAPCall * *aRespondingTo)

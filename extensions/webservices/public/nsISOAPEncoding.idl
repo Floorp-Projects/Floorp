@@ -173,12 +173,18 @@ interface nsISOAPEncoding : nsISupports {
 };
 
 %{ C++
+#define NS_SOAPENCODING_CID                            \
+{ /* db612ec6-1dd1-11b2-a8bc-e6777bf70a30 */        \
+  0xdb612ec6, 0x1dd1, 0x11b2,                       \
+ {0xa8, 0xbc, 0xe6, 0x77, 0x7b, 0xf7, 0x0a, 0x30} }
+#define NS_SOAPENCODING_CONTRACTID \
+"@mozilla.org/xmlextras/soap/encoding;1"
 #define NS_DEFAULTSOAPENCODER_CID                            \
 { /* 06fb035c-1dd2-11b2-bc30-f6d8e314d6b9 */        \
   0x06fb035c, 0x1dd2, 0x11b2,                       \
  {0xbc, 0x30, 0xf6, 0xd8, 0xe3, 0x14, 0xd6, 0xb9} }
 #define NS_SOAPENCODING_CONTRACTID_PREFIX \
-"@mozilla.org/xmlextras/soap/encoding;1?uri="
+NS_SOAPENCODING_CONTRACTID "?uri="
 #define NS_DEFAULTSOAPENCODER_CONTRACTID \
 NS_SOAPENCODING_CONTRACTID_PREFIX "http://schemas.xmlsoap.org/soap/encoding/"
 %}

@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
@@ -160,7 +160,7 @@ NS_IMETHODIMP nsSOAPEncodingRegistry::Decode(nsIDOMElement *aSource, nsISchemaTy
 
 //  Second, we create the encodings themselves.
 
-NS_IMPL_ISUPPORTS2(nsSOAPEncoding, nsISOAPEncoding, nsISecurityCheckedComponent)
+NS_IMPL_ISUPPORTS2_CI(nsSOAPEncoding, nsISOAPEncoding, nsISecurityCheckedComponent)
 
 nsSOAPEncoding::nsSOAPEncoding(): mEncoders(new nsSupportsHashtable),
   mDecoders(new nsSupportsHashtable)

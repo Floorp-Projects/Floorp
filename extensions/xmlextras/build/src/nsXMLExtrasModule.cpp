@@ -54,6 +54,8 @@
 #include "nsSOAPHeaderBlock.h"
 #include "nsSOAPParameter.h"
 #include "nsSOAPCall.h"
+#include "nsSOAPResponse.h"
+#include "nsSOAPEncoding.h"
 #include "nsDefaultSOAPEncoder.h"
 #include "nsHTTPSOAPTransport.h"
 #include "nsSchemaLoader.h"
@@ -77,11 +79,15 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 #ifdef MOZ_SOAP
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPCall)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPResponse)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPEncoding)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPHeaderBlock)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSOAPParameter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
 NS_DECL_CLASSINFO(nsSOAPCall)
+NS_DECL_CLASSINFO(nsSOAPResponse)
+NS_DECL_CLASSINFO(nsSOAPEncoding)
 NS_DECL_CLASSINFO(nsSOAPHeaderBlock)
 NS_DECL_CLASSINFO(nsSOAPParameter)
 NS_DECL_CLASSINFO(nsHTTPSOAPTransport)
@@ -223,6 +229,18 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "SOAPResponse",
+                                NS_SOAPRESPONSE_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "SOAPEncoding",
+                                NS_SOAPENCODING_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
                                 "SOAPHeaderBlock",
                                 NS_SOAPHEADERBLOCK_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
@@ -269,7 +287,17 @@ static nsModuleComponentInfo components[] = {
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPCall), 
     nsnull, &NS_CLASSINFO_NAME(nsSOAPCall), 
     nsIClassInfo::DOM_OBJECT },
-  { "SOAP HeaderBlock", NS_SOAPHEADERBLOCK_CID, NS_SOAPHEADERBLOCK_CONTRACTID,
+  { "SOAP Response", NS_SOAPRESPONSE_CID, NS_SOAPRESPONSE_CONTRACTID,
+    nsSOAPResponseConstructor, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPResponse), 
+    nsnull, &NS_CLASSINFO_NAME(nsSOAPResponse), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SOAP Encoding", NS_SOAPENCODING_CID, NS_SOAPENCODING_CONTRACTID,
+    nsSOAPEncodingConstructor, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPEncoding), 
+    nsnull, &NS_CLASSINFO_NAME(nsSOAPEncoding), 
+    nsIClassInfo::DOM_OBJECT },
+  { "SOAP Header Block", NS_SOAPHEADERBLOCK_CID, NS_SOAPHEADERBLOCK_CONTRACTID,
     nsSOAPHeaderBlockConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSOAPHeaderBlock), 
     nsnull, &NS_CLASSINFO_NAME(nsSOAPHeaderBlock), 
