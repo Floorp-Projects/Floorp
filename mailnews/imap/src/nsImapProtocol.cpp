@@ -944,6 +944,16 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 	GetServerStateParser().InitializeState();
 	GetServerStateParser().SetConnected(PR_TRUE);
 
+	// acknowledge that we are running the url now..
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
+    if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
+    {
+        m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_TRUE,
+                                             NS_OK);
+        WaitForFEEventCompletion();
+    }
+
     // if we are set up as a channel, we should notify our channel listener that we are starting...
 	// so pass in ourself as the channel and not the underlying socket or file channel the protocol
 	// happens to be using
@@ -1012,9 +1022,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     else if (!logonFailed)
         HandleCurrentUrlError(); 
 
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
-    if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
+    if (mailnewsurl && m_imapMiscellaneousSink)
     {
         m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_FALSE,
                                              NS_OK);  // we are done with this
@@ -1106,17 +1114,17 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIChannel * /* aChannel */, nsISu
 
 NS_IMETHODIMP nsImapProtocol::OnStartRequest(nsIChannel * /* aChannel */, nsISupports *ctxt)
 {
-    PR_CEnterMonitor(this);
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
-    if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
-    {
-        m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_TRUE,
-                                             NS_OK);
-        WaitForFEEventCompletion();
-    }
+	// we used to change the url state here......but OnStartRequest only gets called
+	// once....when the connnection is first build from necko...So we'll set the url
+	// state in ProcessCurrentUrl instead. 
+	//
+	// If you actually add code back to this method, be careful as we ran
+	// into some problems pumping events on the imap event queue. When this method
+	// gets called, it is in response to an event getting placed by the socket thread.
+	// If you turn around and call a method like WaitForFEEventCompletion which 
+	// blocks until another event gets pumped on the imap event queue you will be
+	// very sorry as we'll be blocked...
 
-    PR_CExitMonitor(this);
 	return NS_OK;
 }
 
@@ -1125,13 +1133,6 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIChannel * /* aChannel */, nsISupp
 {
     PR_CEnterMonitor(this);
 	nsresult rv = NS_OK;
-	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningUrl, &rv);
-    if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMiscellaneousSink)
-    {
-        m_imapMiscellaneousSink->SetUrlState(this, mailnewsurl, PR_FALSE,
-                                             aStatus); // set change in url
-        WaitForFEEventCompletion();
-    }
     m_channel = null_nsCOMPtr();
     m_outputStream = null_nsCOMPtr();
     m_inputStream = null_nsCOMPtr();
