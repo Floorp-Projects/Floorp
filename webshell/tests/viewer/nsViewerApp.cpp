@@ -979,7 +979,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
 
 //----------------------------------------
 static nsBrowserWindow* gWinData;
-static int gTop100Pointer = 80;
+static int gTop100Pointer = 0;
 static char * gTop100List[] = {
    "http://www.yahoo.com",
    "http://www.netscape.com",
