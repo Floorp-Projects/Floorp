@@ -117,21 +117,13 @@ sub InstallDefaultsFiles()
     my($default_profile_dir) = "$defaults_dir"."Profile:";
     mkdir($default_profile_dir, 0);
 
-    copy(":mozilla:profile:defaults:bookmarks.html","$default_profile_dir"."bookmarks.html");
-    copy(":mozilla:profile:defaults:panels.rdf","$default_profile_dir"."panels.rdf");
-    copy(":mozilla:profile:defaults:localstore.rdf","$default_profile_dir"."localstore.rdf");
-    copy(":mozilla:profile:defaults:search.rdf","$default_profile_dir"."search.rdf");
-    copy(":mozilla:profile:defaults:mimeTypes.rdf","$default_profile_dir"."mimeTypes.rdf");
+    InstallResources(":mozilla:profile:defaults:MANIFEST",                             "$default_profile_dir", 0);
 
     # make a dup in en-US
     my($default_profile_dir_en_US) = "$default_profile_dir"."en-US:";
     mkdir($default_profile_dir_en_US, 0);
 
-    copy(":mozilla:profile:defaults:bookmarks.html","$default_profile_dir_en_US"."bookmarks.html");
-    copy(":mozilla:profile:defaults:panels.rdf","$default_profile_dir_en_US"."panels.rdf");
-    copy(":mozilla:profile:defaults:localstore.rdf","$default_profile_dir_en_US"."localstore.rdf");
-    copy(":mozilla:profile:defaults:search.rdf","$default_profile_dir_en_US"."search.rdf");
-    copy(":mozilla:profile:defaults:mimeTypes.rdf","$default_profile_dir_en_US"."mimeTypes.rdf");
+    InstallResources(":mozilla:profile:defaults:MANIFEST",                             "$default_profile_dir_en_US", 0);
     }
     
     # Default _pref_ directory stuff
