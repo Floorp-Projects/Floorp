@@ -307,12 +307,14 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
 
     if(offset>start) {
       // Pass in the line
-      rv = DoAddLeaf(eHTMLTag_text, Substring(textstr, start, offset-start));
+      rv = DoAddLeaf(nsnull,
+                     eHTMLTag_text,
+                     Substring(textstr, start, offset-start));
       if (NS_FAILED(rv)) break;
     }
 
     // Pass in a newline
-    rv = DoAddLeaf(eHTMLTag_newline, mLineBreak);
+    rv = DoAddLeaf(nsnull, eHTMLTag_newline, mLineBreak);
     if (NS_FAILED(rv)) break;
     
     start = offset+1;
@@ -322,10 +324,12 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
   // Consume the last bit of the string if there's any left
   if (NS_SUCCEEDED(rv) & (start < length)) {
     if (start) {
-      rv = DoAddLeaf(eHTMLTag_text, Substring(textstr, start, length-start));
+      rv = DoAddLeaf(nsnull,
+                     eHTMLTag_text,
+                     Substring(textstr, start, length-start));
     }
     else {
-      rv = DoAddLeaf(eHTMLTag_text, textstr);
+      rv = DoAddLeaf(nsnull, eHTMLTag_text, textstr);
     }
   }
   
@@ -354,11 +358,11 @@ nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
   mOutputString = &aStr;
 
   if (isContainer) {
-    rv = DoOpenContainer(id);
+    rv = DoOpenContainer(nsnull, id);
   }
   else {
     nsAutoString empty;
-    rv = DoAddLeaf(id, empty);
+    rv = DoAddLeaf(nsnull, id, empty);
   }
 
   mContent = 0;
@@ -423,15 +427,12 @@ nsPlainTextSerializer::OpenContainer(const nsIParserNode& aNode)
 {
   PRInt32 type = aNode.GetNodeType();
 
-  mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
-  return DoOpenContainer(type);
+  return DoOpenContainer(&aNode, type);
 }
 
 NS_IMETHODIMP 
 nsPlainTextSerializer::CloseContainer(const nsHTMLTag aTag)
 {
-  // XXXXXXXXXX - Do this to fix the regression test.
-  mParserNode = 0;
   return DoCloseContainer(aTag);
 }
  
@@ -445,7 +446,6 @@ nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
   const nsAString& text = aNode.GetText();
 
-  mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
   if ((type == eHTMLTag_text) ||
       (type == eHTMLTag_whitespace) ||
       (type == eHTMLTag_newline)) {
@@ -456,10 +456,10 @@ nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
     nsReadingIterator<PRUnichar> srcStart, srcEnd;
     length = nsContentUtils::CopyNewlineNormalizedUnicodeTo(text.BeginReading(srcStart), text.EndReading(srcEnd), str);
     str.SetLength(length);
-    return DoAddLeaf(type, str);
+    return DoAddLeaf(&aNode, type, str);
   }
   else {
-    return DoAddLeaf(type, text);
+    return DoAddLeaf(&aNode, type, text);
   }
 }
 
@@ -561,8 +561,12 @@ nsPlainTextSerializer::DoFragment(PRBool aFlag)
   return NS_OK;
 }
 
+/**
+ * aNode may be null when we're working with the DOM, but then mContent is
+ * useable instead.
+ */
 nsresult
-nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
+nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
 {
   eHTMLTags type = (eHTMLTags)aTag;
 
@@ -597,7 +601,7 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     // (which arguably we should only do if told to do so).
     nsAutoString style;
     PRInt32 whitespace;
-    if(NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::style, style)) &&
+    if(NS_SUCCEEDED(GetAttributeValue(aNode, nsHTMLAtoms::style, style)) &&
        (kNotFound != (whitespace = style.Find("white-space:")))) {
 
       if (kNotFound != style.Find("-moz-pre-wrap", PR_TRUE, whitespace)) {
@@ -676,7 +680,7 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     if (mOLStackIndex < OLStackSize) {
       nsAutoString startAttr;
       PRInt32 startVal = 1;
-      if(NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::start, startAttr))){
+      if(NS_SUCCEEDED(GetAttributeValue(aNode, nsHTMLAtoms::start, startAttr))){
         PRInt32 rv = 0;
         startVal = startAttr.ToInteger(&rv);
         if (NS_FAILED(rv))
@@ -690,7 +694,7 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     if (mTagStackIndex > 1 && IsInOL()) {
       if (mOLStackIndex > 0) {
         nsAutoString valueAttr;
-        if(NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::value, valueAttr))){
+        if(NS_SUCCEEDED(GetAttributeValue(aNode, nsHTMLAtoms::value, valueAttr))){
           PRInt32 rv = 0;
           PRInt32 valueAttrVal = valueAttr.ToInteger(&rv);
           if (NS_SUCCEEDED(rv))
@@ -732,9 +736,13 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     EnsureVerticalSpace(1);
 
     nsAutoString value;
-    nsresult rv = GetAttributeValue(nsHTMLAtoms::type, value);
+    nsresult rv = GetAttributeValue(aNode, nsHTMLAtoms::type, value);
 
-    if (NS_SUCCEEDED(rv) && value.EqualsIgnoreCase("cite")) {
+    PRBool isInCiteBlockquote =
+      NS_SUCCEEDED(rv) && value.EqualsIgnoreCase("cite");
+    // Push
+    mIsInCiteBlockquote.AppendElement((void*)isInCiteBlockquote);
+    if (isInCiteBlockquote) {
       mCiteQuoteLevel++;
     }
     else {
@@ -756,6 +764,10 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
   // The rest of this routine is formatted output stuff,
   // which we should skip if we're not formatted:
   //////////////////////////////////////////////////////////////
+
+  // Push on stack
+  PRBool currentNodeIsConverted = IsCurrentNodeConverted(aNode);
+  mCurrentNodeIsConverted.AppendElement((void*)currentNodeIsConverted);
 
   if (type == eHTMLTag_h1 || type == eHTMLTag_h2 ||
       type == eHTMLTag_h3 || type == eHTMLTag_h4 ||
@@ -792,9 +804,9 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
       }
     }
   }
-  else if (type == eHTMLTag_a && !IsCurrentNodeConverted()) {
+  else if (type == eHTMLTag_a && !currentNodeIsConverted) {
     nsAutoString url;
-    if (NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::href, url))
+    if (NS_SUCCEEDED(GetAttributeValue(aNode, nsHTMLAtoms::href, url))
         && !url.IsEmpty()) {
       mURL = url;
     }
@@ -802,25 +814,48 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
   else if (type == eHTMLTag_q) {
     Write(NS_LITERAL_STRING("\""));
   }
-  else if (type == eHTMLTag_sup && mStructs && !IsCurrentNodeConverted()) {
+  else if (type == eHTMLTag_sup && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("^"));
   }
-  else if (type == eHTMLTag_sub && mStructs && !IsCurrentNodeConverted()) { 
+  else if (type == eHTMLTag_sub && mStructs && !currentNodeIsConverted) { 
     Write(NS_LITERAL_STRING("_"));
   }
-  else if (type == eHTMLTag_code && mStructs && !IsCurrentNodeConverted()) {
+  else if (type == eHTMLTag_code && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("|"));
   }
   else if ((type == eHTMLTag_strong || type == eHTMLTag_b)
-           && mStructs && !IsCurrentNodeConverted()) {
+           && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("*"));
   }
   else if ((type == eHTMLTag_em || type == eHTMLTag_i)
-           && mStructs && !IsCurrentNodeConverted()) {
+           && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("/"));
   }
-  else if (type == eHTMLTag_u && mStructs && !IsCurrentNodeConverted()) {
+  else if (type == eHTMLTag_u && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("_"));
+  }
+  else if (type == eHTMLTag_img) {
+    /* Output (in decreasing order of preference)
+       alt, title or nothing */
+    // See <http://www.w3.org/TR/REC-html40/struct/objects.html#edef-IMG>
+    nsAutoString imageDescription;
+    if (NS_SUCCEEDED(GetAttributeValue(aNode,
+                                       nsHTMLAtoms::alt,
+                                       imageDescription))) {
+      // If the alt attribute has an empty value (|alt=""|), output nothing
+    }
+    else if (NS_SUCCEEDED(GetAttributeValue(aNode,
+                                            nsHTMLAtoms::title,
+                                            imageDescription))
+             && !imageDescription.IsEmpty()) {
+      imageDescription = NS_LITERAL_STRING(" [") +
+                         imageDescription +
+                         NS_LITERAL_STRING("] ");
+    }
+    
+    if (!imageDescription.IsEmpty()) {
+      Write(imageDescription);
+    }
   }
 
   return NS_OK;
@@ -906,10 +941,15 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   else if (type == eHTMLTag_blockquote) {
     FlushLine();    // Is this needed?
 
-    nsAutoString value;
-    GetAttributeValue(nsHTMLAtoms::type, value);
+    // Pop
+    PRBool isInCiteBlockquote = PR_FALSE;
+    if (mIsInCiteBlockquote.Count() > 0) {
+      isInCiteBlockquote =
+        (PRBool)mIsInCiteBlockquote[mIsInCiteBlockquote.Count()-1];
+      mIsInCiteBlockquote.RemoveElementAt(mIsInCiteBlockquote.Count()-1);
+    }
 
-    if (mCiteQuoteLevel) {
+    if (isInCiteBlockquote) {
       mCiteQuoteLevel--;
     }
     else {
@@ -945,6 +985,14 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   // which we should skip if we're not formatted:
   //////////////////////////////////////////////////////////////
 
+  // Pop the currentConverted stack
+  PRBool currentNodeIsConverted = PR_FALSE;
+  if (mCurrentNodeIsConverted.Count() > 0) {
+    currentNodeIsConverted =
+      (PRBool)mCurrentNodeIsConverted[mCurrentNodeIsConverted.Count()-1];
+    mCurrentNodeIsConverted.RemoveElementAt(mCurrentNodeIsConverted.Count()-1);
+  }
+  
   if (type == eHTMLTag_h1 || type == eHTMLTag_h2 ||
       type == eHTMLTag_h3 || type == eHTMLTag_h4 ||
       type == eHTMLTag_h5 || type == eHTMLTag_h6) {
@@ -960,7 +1008,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     }
     EnsureVerticalSpace(1);
   }
-  else if (type == eHTMLTag_a && !IsCurrentNodeConverted() && !mURL.IsEmpty()) {
+  else if (type == eHTMLTag_a && !currentNodeIsConverted && !mURL.IsEmpty()) {
     nsAutoString temp; 
     temp.Assign(NS_LITERAL_STRING(" <"));
     temp += mURL;
@@ -972,29 +1020,33 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     Write(NS_LITERAL_STRING("\""));
   }
   else if ((type == eHTMLTag_sup || type == eHTMLTag_sub) 
-           && mStructs && !IsCurrentNodeConverted()) {
+           && mStructs && !currentNodeIsConverted) {
     Write(kSpace);
   }
-  else if (type == eHTMLTag_code && mStructs && !IsCurrentNodeConverted()) {
+  else if (type == eHTMLTag_code && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("|"));
   }
   else if ((type == eHTMLTag_strong || type == eHTMLTag_b)
-           && mStructs && !IsCurrentNodeConverted()) {
+           && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("*"));
   }
   else if ((type == eHTMLTag_em || type == eHTMLTag_i)
-           && mStructs && !IsCurrentNodeConverted()) {
+           && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("/"));
   }
-  else if (type == eHTMLTag_u && mStructs && !IsCurrentNodeConverted()) {
+  else if (type == eHTMLTag_u && mStructs && !currentNodeIsConverted) {
     Write(NS_LITERAL_STRING("_"));
   }
 
   return NS_OK;
 }
 
+/**
+ * aNode may be null when we're working with the DOM, but then mContent is
+ * useable instead.
+ */
 nsresult
-nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag, 
+nsPlainTextSerializer::DoAddLeaf(const nsIParserNode *aNode, PRInt32 aTag, 
                                  const nsAString& aText)
 {
   // If we don't want any output, just return
@@ -1004,6 +1056,8 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
   
   if (mLineBreakDue)
     EnsureVerticalSpace(mFloatingLines);
+
+  PRBool currentNodeIsConverted = IsCurrentNodeConverted(aNode);
 
   eHTMLTags type = (eHTMLTags)aTag;
   
@@ -1050,7 +1104,7 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
     // Another egregious editor workaround, see bug 38194:
     // ignore the bogus br tags that the editor sticks here and there.
     nsAutoString typeAttr;
-    if (NS_FAILED(GetAttributeValue(nsHTMLAtoms::type, typeAttr))
+    if (NS_FAILED(GetAttributeValue(aNode, nsHTMLAtoms::type, typeAttr))
         || !typeAttr.Equals(NS_LITERAL_STRING("_moz"))) {
       EnsureVerticalSpace(mEmptyLines+1);
     }
@@ -1101,29 +1155,6 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
     Write(line);
 
     EnsureVerticalSpace(0);
-  }
-  else if (type == eHTMLTag_img) {
-    /* Output (in decreasing order of preference)
-       alt, title or nothing */
-    // See <http://www.w3.org/TR/REC-html40/struct/objects.html#edef-IMG>
-    nsAutoString desc, temp;
-    if (NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::alt, desc))) {
-      if (!desc.IsEmpty()) {
-        desc.StripChars("\"");
-        temp += desc;
-      }
-      // If the alt attribute has an empty value (|alt=""|), output nothing
-    }
-    else if (NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::title, desc))
-             && !desc.IsEmpty()) {
-      temp.Append(NS_LITERAL_STRING(" ["));
-      desc.StripChars("\"");
-      temp += desc;
-      temp.Append(NS_LITERAL_STRING("] "));
-    }
-    if (!temp.IsEmpty()) {
-      Write(temp);
-    }
   }
 
   return NS_OK;
@@ -1707,7 +1738,8 @@ nsPlainTextSerializer::Write(const nsAString& aString)
  * NS_ERROR_NOT_AVAILABLE, there was none such attribute specified.
  */
 nsresult
-nsPlainTextSerializer::GetAttributeValue(nsIAtom* aName,
+nsPlainTextSerializer::GetAttributeValue(const nsIParserNode* aNode,
+                                         nsIAtom* aName,
                                          nsString& aValueRet)
 {
   if (mContent) {
@@ -1716,16 +1748,15 @@ nsPlainTextSerializer::GetAttributeValue(nsIAtom* aName,
       return NS_OK;
     }
   }
-  else if (mParserNode) {
+  else if (aNode) {
     const PRUnichar *name; 
     aName->GetUnicode(&name);
 
-    PRInt32 count = mParserNode->GetAttributeCount();
+    PRInt32 count = aNode->GetAttributeCount();
     for (PRInt32 i=0;i<count;i++) {
-      const nsAString& key = mParserNode->GetKeyAt(i);
+      const nsAString& key = aNode->GetKeyAt(i);
       if (key.Equals(name, nsCaseInsensitiveStringComparator())) {
-        aValueRet = mParserNode->GetValueAt(i);
-        aValueRet.StripChars("\"");
+        aValueRet = aNode->GetValueAt(i);
         return NS_OK;
       }
     }
@@ -1739,10 +1770,10 @@ nsPlainTextSerializer::GetAttributeValue(nsIAtom* aName,
  * In this case, we should ignore it.
  */
 PRBool 
-nsPlainTextSerializer::IsCurrentNodeConverted()
+nsPlainTextSerializer::IsCurrentNodeConverted(const nsIParserNode* aNode)
 {
   nsAutoString value;
-  nsresult rv = GetAttributeValue(nsHTMLAtoms::kClass, value);
+  nsresult rv = GetAttributeValue(aNode, nsHTMLAtoms::kClass, value);
   return (NS_SUCCEEDED(rv) &&
           (value.EqualsIgnoreCase("moz-txt", 7) ||
            value.EqualsIgnoreCase("\"moz-txt", 8)));

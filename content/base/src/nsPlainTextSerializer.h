@@ -49,6 +49,7 @@
 #include "nsIAtom.h"
 #include "nsIHTMLToTextSink.h"
 #include "nsIDocumentEncoder.h"
+#include "nsVoidArray.h"
 
 
 class nsPlainTextSerializer : public nsIContentSerializer,
@@ -134,7 +135,7 @@ public:
                         PRUint32 aFlags, PRUint32 aWrapCol);
 
 protected:
-  nsresult GetAttributeValue(nsIAtom* aName, nsString& aValueRet);
+  nsresult GetAttributeValue(const nsIParserNode* node, nsIAtom* aName, nsString& aValueRet);
   void AddToLine(const PRUnichar* aStringToAdd, PRInt32 aLength);
   void EndLine(PRBool softlinebreak);
   void EnsureVerticalSpace(PRInt32 noOfRows);
@@ -146,11 +147,13 @@ protected:
   PRBool IsContainer(PRInt32 aId);
   PRBool IsInPre();
   PRBool IsInOL();
-  PRBool IsCurrentNodeConverted();
+  PRBool IsCurrentNodeConverted(const nsIParserNode* aNode);
   nsresult GetIdForContent(nsIContent* aContent, PRInt32* aID);
-  nsresult DoOpenContainer(PRInt32 aTag);
+  nsresult DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag);
   nsresult DoCloseContainer(PRInt32 aTag);
-  nsresult DoAddLeaf(PRInt32 aTag, const nsAString& aText);
+  nsresult DoAddLeaf(const nsIParserNode* aNode,
+                     PRInt32 aTag,
+                     const nsAString& aText);
 
   // Inlined functions
   inline PRBool MayWrap()
@@ -231,8 +234,12 @@ protected:
                                           mHeaderCounter[1] for <h1> etc. */
 
   nsCOMPtr<nsIContent> mContent;
-  nsIParserNode*       mParserNode;
 
+  // Values gotten in OpenContainer that is (also) needed in CloseContainer
+  nsAutoVoidArray     mCurrentNodeIsConverted; // really an array of bools
+  nsAutoVoidArray     mIsInCiteBlockquote; // really an array of bools
+
+  // The output data
   nsAString*            mOutputString;
 
   // The tag stack: the stack of tags we're operating on, so we can nest:
