@@ -74,10 +74,10 @@ $CLOBBER_DIST_LIBS 		= 0;	# turn on to clobber only aliases/files for libraries/
 # and do not affect what is built.
 #-----------------------------------------------
 $CodeWarriorLib::CLOSE_PROJECTS_FIRST
-						= 1;
+						= 0;
 								# 1 = close then make (for development),
 								# 0 = make then close (for tinderbox).
-$USE_TIMESTAMPED_LOGS 	= 1;
+$USE_TIMESTAMPED_LOGS 	= 0;
 #-----------------------------------------------
 # END OF CONFIG SWITCHES
 #-----------------------------------------------
