@@ -799,7 +799,7 @@ struct nsStyleTableBorder: public nsStyleStruct {
 
 enum nsStyleContentType {
   eStyleContentType_String        = 1,
-  eStyleContentType_URL           = 10,
+  eStyleContentType_Image         = 10,
   eStyleContentType_Attr          = 20,
   eStyleContentType_Counter       = 30,
   eStyleContentType_Counters      = 31,
@@ -813,45 +813,14 @@ struct nsStyleContentData {
   nsStyleContentType  mType;
   union {
     PRUnichar *mString;
-    nsIURI    *mURL;
+    imgIRequest *mImage;
   } mContent;
 
   // empty constructor to keep Sun compiler happy
   nsStyleContentData() {}
-
-  ~nsStyleContentData() {
-    if (mType == eStyleContentType_URL) {
-      NS_IF_RELEASE(mContent.mURL);
-    } else if (mContent.mString) {
-      nsCRT::free(mContent.mString);
-    }
-  }
-
-  nsStyleContentData& operator=(const nsStyleContentData& aOther) {
-    mType = aOther.mType;
-    if (mType == eStyleContentType_URL) {
-      mContent.mURL = aOther.mContent.mURL;
-      NS_IF_ADDREF(mContent.mURL);
-    } else if (aOther.mContent.mString) {
-      mContent.mString = nsCRT::strdup(aOther.mContent.mString);
-    } else {
-      mContent.mString = nsnull;
-    }
-    return *this;
-  }
-
-  PRBool operator==(const nsStyleContentData& aOther) {
-    if (mType != aOther.mType)
-      return PR_FALSE;
-    if (mType == eStyleContentType_URL) {
-      PRBool eq;
-      return mContent.mURL == aOther.mContent.mURL ||  // handles null==null
-             (mContent.mURL && aOther.mContent.mURL &&
-              NS_SUCCEEDED(mContent.mURL->Equals(aOther.mContent.mURL, &eq)) &&
-              eq);
-    }
-    return mContent.mString == aOther.mContent.mString;
-  }
+  ~nsStyleContentData();
+  nsStyleContentData& operator=(const nsStyleContentData& aOther);
+  PRBool operator==(const nsStyleContentData& aOther);
 
   PRBool operator!=(const nsStyleContentData& aOther) {
     return !(*this == aOther);

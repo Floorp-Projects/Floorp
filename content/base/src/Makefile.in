@@ -104,6 +104,7 @@ CPPSRCS		= \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \
 		nsDOMLists.cpp \
+		nsGenConImageContent.cpp \
 		nsGeneratedIterator.cpp \
 		nsGenericDOMDataNode.cpp \
 		nsGenericDOMNodeList.cpp \
@@ -147,6 +148,7 @@ INCLUDES	+= \
 		-I$(srcdir)/../../events/src \
 		-I$(srcdir)/../../html/base/src \
 		-I$(srcdir)/../../html/style/src \
+		-I$(srcdir)/../../xml/content/src \
 		-I$(srcdir)/../../xul/base/src \
 		-I$(srcdir)/../../xul/content/src \
 		-I$(srcdir)/../../html/content/src \

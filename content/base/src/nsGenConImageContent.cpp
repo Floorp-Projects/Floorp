@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,16 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is nsGenConImageContent.
  *
- * The Initial Developer of the Original Code is
- * Peter Van der Beken.
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Peter Van der Beken <peter@propagandism.org>
- *
+ *   L. David Baron <dbaron@dbaron.org> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,61 +34,50 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-#ifndef nsContentCreatorFunctions_h__
-#define nsContentCreatorFunctions_h__
-
-#include "nscore.h"
+#include "nsContentCreatorFunctions.h"
+#include "nsXMLElement.h"
+#include "nsImageLoadingContent.h"
+#include "imgIRequest.h"
 
 /**
- * Functions to create content, to be used only inside Gecko
- * (mozilla/content and mozilla/layout).
+ * A fake content node class so that the image frame for
+ *   p:before { content: url(foo.gif); }
+ * can have a content node that knows about image loading but can take
+ * an imgIRequest that's already been loaded from the style system.
  */
+class nsGenConImageContent : public nsXMLElement,
+                             public nsImageLoadingContent
+{
+public:
+  nsGenConImageContent(nsINodeInfo* aNodeInfo)
+    : nsXMLElement(aNodeInfo)
+  {
+  }
 
-class nsAString;
-class nsIContent;
-class nsINodeInfo;
-class imgIRequest;
+  nsresult Init(imgIRequest* aImageRequest)
+  {
+    return aImageRequest->Clone(this, getter_AddRefs(mCurrentRequest));
+  }
+private:
+  ~nsGenConImageContent() {}
 
-nsresult
-NS_NewElement(nsIContent** aResult, PRInt32 aElementType,
-              nsINodeInfo* aNodeInfo);
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+};
 
-nsresult
-NS_NewXMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
-
-nsresult
-NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
-                               const nsAString& aTarget,
-                               const nsAString& aData);
-
-nsresult
-NS_NewXMLStylesheetProcessingInstruction(nsIContent** aInstancePtrResult,
-                                         const nsAString& aData);
-
-nsresult
-NS_NewXMLCDATASection(nsIContent** aInstancePtrResult);
-
-nsresult
-NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo);
-
-#ifdef MOZ_MATHML
-nsresult
-NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
-#endif
-
-#ifdef MOZ_XUL
-nsresult
-NS_NewXULElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
-#endif
-
-#ifdef MOZ_SVG
-nsresult
-NS_NewSVGElement(nsIContent** aResult, nsINodeInfo* aNodeInfo);
-#endif
+NS_IMPL_ISUPPORTS_INHERITED2(nsGenConImageContent, nsXMLElement,
+                             nsIImageLoadingContent, imgIDecoderObserver)
 
 nsresult
 NS_NewGenConImageContent(nsIContent** aResult, nsINodeInfo* aNodeInfo,
-                         imgIRequest* aImageRequest);
-
-#endif // nsContentCreatorFunctions_h__
+                         imgIRequest* aImageRequest)
+{
+  nsGenConImageContent *it = new nsGenConImageContent(aNodeInfo);
+  if (!it)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aResult = it);
+  nsresult rv = it->Init(aImageRequest);
+  if (NS_FAILED(rv))
+    NS_RELEASE(*aResult);
+  return rv;
+}
