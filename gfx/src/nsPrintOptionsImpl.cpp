@@ -383,13 +383,13 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsString& aPrefName, PRUi
     nscoord halfInch = NS_INCHES_TO_TWIPS(0.5);
     nsMargin margin;
     margin.SizeTo(halfInch, halfInch, halfInch, halfInch);
-    ReadInchesToTwipsPref(GetPrefName(kMarginTop, aPrefName),    margin.top);
+    ReadInchesToTwipsPref(GetPrefName(kMarginTop, aPrefName), margin.top, kMarginTop);
     DUMP_INT(kReadStr, kMarginTop, margin.top);
-    ReadInchesToTwipsPref(GetPrefName(kMarginLeft, aPrefName),   margin.left);
+    ReadInchesToTwipsPref(GetPrefName(kMarginLeft, aPrefName), margin.left, kMarginLeft);
     DUMP_INT(kReadStr, kMarginLeft, margin.left);
-    ReadInchesToTwipsPref(GetPrefName(kMarginBottom, aPrefName), margin.bottom);
+    ReadInchesToTwipsPref(GetPrefName(kMarginBottom, aPrefName), margin.bottom, kMarginBottom);
     DUMP_INT(kReadStr, kMarginBottom, margin.bottom);
-    ReadInchesToTwipsPref(GetPrefName(kMarginRight, aPrefName),  margin.right);
+    ReadInchesToTwipsPref(GetPrefName(kMarginRight, aPrefName), margin.right, kMarginRight);
     DUMP_INT(kReadStr, kMarginRight, margin.right);
     aPS->SetMarginInTwips(margin);
   }
@@ -1141,7 +1141,8 @@ nsresult nsPrintOptions::WritePrefDouble(const char * aPrefId,
 
 //---------------------------------------------------
 void nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId, 
-                                           nscoord&     aTwips)
+                                           nscoord&     aTwips,
+                                           const char * aMarginPref)
 {
   if (!mPrefBranch) {
     return;
@@ -1149,6 +1150,8 @@ void nsPrintOptions::ReadInchesToTwipsPref(const char * aPrefId,
 
   char * str = nsnull;
   nsresult rv = mPrefBranch->GetCharPref(aPrefId, &str);
+  if (NS_FAILED(rv) || !str) 
+    rv = mPrefBranch->GetCharPref(aMarginPref, &str);
   if (NS_SUCCEEDED(rv) && str) {
     nsAutoString justStr;
     justStr.AssignWithConversion(str);
