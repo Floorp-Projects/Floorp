@@ -4884,6 +4884,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
         rv = NS_NewImageFrame(aPresShell, &newFrame);
       }
       else if (nsHTMLAtoms::hr == aTag) {
+        isReplaced = PR_TRUE;
         if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
           ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
         }
@@ -5036,6 +5037,17 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
   if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
+    // XXX: may want to special case this for HR's if we don't want
+    //      to advertise full support of :before and :after for release 1
+    // first, create it's "before" generated content
+    nsIFrame* generatedFrame;
+    if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, newFrame, aContent,
+                                    aStyleContext, nsCSSAtoms::beforePseudo,
+                                    PR_FALSE, &generatedFrame)) {
+      // Add the generated frame to the child list
+      aFrameItems.AddChild(generatedFrame);
+    }
+
     // If the frame is a replaced element, then set the frame state bit
     if (isReplaced) {
       nsFrameState  state;
@@ -5163,6 +5175,15 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
       // the placeholder frame
       aState.mFrameManager->SetPrimaryFrameFor(aContent, newFrame);
     }
+
+    // finally, create it's "after" generated content
+    if (CreateGeneratedContentFrame(aPresShell, aPresContext, aState, newFrame, aContent,
+                                    aStyleContext, nsCSSAtoms::afterPseudo,
+                                    PR_FALSE, &generatedFrame)) {
+      // Add the generated frame to the child list
+      aFrameItems.AddChild(generatedFrame);
+    }
+
   }
 
   return rv;
@@ -12400,7 +12421,7 @@ nsCSSFrameConstructor::AreAllKidsInline(nsIFrame* aFrameList)
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructInline(nsIPresShell* aPresShell, 
+nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell, 
                                        nsIPresContext*          aPresContext,
                                        nsFrameConstructorState& aState,
                                        const nsStyleDisplay*    aDisplay,
