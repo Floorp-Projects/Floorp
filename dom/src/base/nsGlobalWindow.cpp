@@ -1636,6 +1636,14 @@ GlobalWindowImpl::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GlobalWindowImpl::CreateAnchoredPopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                              const nsString& anAnchorAlignment,
+                              const nsString& aPopupType, const nsString& aPopupAlignment)
+{
+  return NS_OK;
+}
+
 nsresult 
 GlobalWindowImpl::CheckWindowName(JSContext *cx, nsString& aName)
 {

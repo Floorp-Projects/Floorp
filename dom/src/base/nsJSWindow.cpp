@@ -1417,6 +1417,66 @@ WindowCreatePopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
 
 //
+// Native method CreateAnchoredPopup
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowCreateAnchoredPopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMElementPtr b0;
+  nsIDOMElementPtr b1;
+  nsAutoString b2;
+  nsAutoString b3;
+  nsAutoString b4;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 5) {
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
+                                           kIElementIID,
+                                           "Element",
+                                           cx,
+                                           argv[0])) {
+      return JS_FALSE;
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
+                                           kIElementIID,
+                                           "Element",
+                                           cx,
+                                           argv[1])) {
+      return JS_FALSE;
+    }
+
+    nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
+
+    nsJSUtils::nsConvertJSValToString(b3, cx, argv[3]);
+
+    nsJSUtils::nsConvertJSValToString(b4, cx, argv[4]);
+
+    if (NS_OK != nativeThis->CreateAnchoredPopup(b0, b1, b2, b3, b4)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function createAnchoredPopup requires 5 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method Open
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -1763,6 +1823,7 @@ static JSFunctionSpec WindowMethods[] =
   {"setTimeout",          WindowSetTimeout,     0},
   {"setInterval",          WindowSetInterval,     0},
   {"createPopup",          WindowCreatePopup,     6},
+  {"createAnchoredPopup",          WindowCreateAnchoredPopup,     5},
   {"open",          WindowOpen,     0},
   {"openDialog",          WindowOpenDialog,     0},
   {"captureEvent",          EventCapturerCaptureEvent,     1},
