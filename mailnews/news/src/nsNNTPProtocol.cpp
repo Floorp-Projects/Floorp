@@ -4025,7 +4025,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
   
   if (!subject || !other_random_headers || !body) {
 	  status = MK_OUT_OF_MEMORY;
-          failure = true;
+          failure = PR_TRUE;
 	  goto FAIL;
   }
   
