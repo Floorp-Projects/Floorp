@@ -485,18 +485,13 @@ nsScrollFrame::Paint(nsIPresContext&      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect)
 {
-  const nsStyleDisplay* display = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
+  // Paint our border only (no background)
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
-  if (display->mVisible) {
-    // If we're visible then paint our border only (no background)
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-
-    nsRect  rect(0, 0, mRect.width, mRect.height);
-    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *spacing, 0);
-  }
+  nsRect  rect(0, 0, mRect.width, mRect.height);
+  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                              aDirtyRect, rect, *spacing, 0);
 
   // Paint our children
   return nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
