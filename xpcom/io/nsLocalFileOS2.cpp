@@ -62,10 +62,10 @@ _mbsrchr( const unsigned char* stringToSearch, int charToSearchFor);
 #ifdef XP_OS2_VACPP
 #include <direct.h>
 #include "dirent.h"
-#include <io.h>    // for chmod
 #else
 #include <unistd.h>
 #endif
+#include <io.h>
 
 
 #ifdef XP_OS2
