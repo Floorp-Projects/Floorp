@@ -38,7 +38,7 @@
 
 
 /*
- *  npapi.h $Revision: 3.18 $
+ *  npapi.h $Revision: 3.19 $
  *  Netscape client plug-in API spec
  */
 
@@ -103,7 +103,7 @@
 /*----------------------------------------------------------------------*/
 
 #define NP_VERSION_MAJOR 0
-#define NP_VERSION_MINOR 12
+#define NP_VERSION_MINOR 13
 
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
