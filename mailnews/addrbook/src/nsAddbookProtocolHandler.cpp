@@ -94,12 +94,14 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsAddbookProtocolHandler::nsAddbookProtocolHandler()
 {
-    NS_INIT_REFCNT();
-
+  NS_INIT_REFCNT();
+  mReportColumns = nsnull;
 }
 
 nsAddbookProtocolHandler::~nsAddbookProtocolHandler()
 {
+  PR_FREEIF(mReportColumns);
+  mReportColumns = nsnull;
 }
 
 NS_IMPL_ISUPPORTS(nsAddbookProtocolHandler, NS_GET_IID(nsIProtocolHandler));
@@ -280,6 +282,7 @@ nsAddbookProtocolHandler::AddIndividualUserAttribPair(nsString &aString, const c
     aString.Append("<tr>");
 
     aString.Append("<td><b>");
+    // RICHIE - Should really convert this to some string bundled thing? 
     aString.Append(aColumn);
     aString.Append("</b></td>");
 
@@ -447,6 +450,9 @@ nsAddbookProtocolHandler::BuildSingleHTML(nsIAddrDatabase *aDatabase, nsIAbDirec
   PRUnichar                     *aName = nsnull;
   nsCOMPtr <nsIAbCard>          workCard;
 
+  if (NS_FAILED(InitPrintColumns()))
+    return NS_ERROR_FAILURE;
+
   nsresult rv = aDatabase->GetCardForEmailAddress(directory, charEmail, getter_AddRefs(workCard));
   if (NS_FAILED(rv) || (!workCard)) 
     return NS_ERROR_FAILURE;
@@ -462,46 +468,9 @@ nsAddbookProtocolHandler::BuildSingleHTML(nsIAddrDatabase *aDatabase, nsIAbDirec
     workBuffer.Append(aName);
     workBuffer.Append("</b></caption>");
   }
-  
-  AddIndividualUserAttribPair(workBuffer, kWorkAddressBook, workCard);
-  AddIndividualUserAttribPair(workBuffer, kFirstNameColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kLastNameColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kDisplayNameColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kNicknameColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kPriEmailColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, k2ndEmailColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kPlainTextColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kWorkPhoneColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kHomePhoneColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kFaxColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kPagerColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kCellularColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kHomeAddressColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kHomeAddress2Column, workCard);
-  AddIndividualUserAttribPair(workBuffer, kHomeCityColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kHomeStateColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kHomeZipCodeColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kHomeCountryColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kWorkAddressColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kWorkAddress2Column, workCard);
-  AddIndividualUserAttribPair(workBuffer, kWorkCityColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kWorkStateColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kWorkZipCodeColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kWorkCountryColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kJobTitleColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kDepartmentColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kCompanyColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kWebPage1Column, workCard);
-  AddIndividualUserAttribPair(workBuffer, kWebPage2Column, workCard);
-  AddIndividualUserAttribPair(workBuffer, kBirthYearColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kBirthMonthColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kBirthDayColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kCustom1Column, workCard);
-  AddIndividualUserAttribPair(workBuffer, kCustom2Column, workCard);
-  AddIndividualUserAttribPair(workBuffer, kCustom3Column, workCard);
-  AddIndividualUserAttribPair(workBuffer, kCustom4Column, workCard);
-  AddIndividualUserAttribPair(workBuffer, kNotesColumn, workCard);
-  AddIndividualUserAttribPair(workBuffer, kLastModifiedDateColumn, workCard);
+
+  for (PRInt32 i=0; i<kMaxReportColumns; i++)
+    AddIndividualUserAttribPair(workBuffer,  mReportColumns[i].abField, workCard);
 
   workBuffer.Append("</TABLE>");
   workBuffer.Append("<CENTER>");
@@ -509,79 +478,211 @@ nsAddbookProtocolHandler::BuildSingleHTML(nsIAddrDatabase *aDatabase, nsIAbDirec
   return rv;
 }
 
-#define       MAX_FIELDS  39
-
 NS_IMETHODIMP    
 nsAddbookProtocolHandler::BuildAllHTML(nsIAddrDatabase *aDatabase, nsIAbDirectory *directory, 
                                        nsString &workBuffer)
 {
   nsresult                rv = NS_OK;
-  reportColumnStruct      reportColumns[MAX_FIELDS];
-  PRUnichar               *aName = nsnull;
-  nsCOMPtr <nsIAbCard>    workCard;
 
-  reportColumns[0].abField = kFirstNameColumn;
-  reportColumns[1].abField = kLastNameColumn;
-  reportColumns[2].abField = kDisplayNameColumn;
-  reportColumns[3].abField = kNicknameColumn;
-  reportColumns[4].abField = kPriEmailColumn;
-  reportColumns[5].abField = k2ndEmailColumn;
-  reportColumns[6].abField = kPlainTextColumn;
-  reportColumns[7].abField = kWorkPhoneColumn;
-  reportColumns[8].abField = kHomePhoneColumn;
-  reportColumns[9].abField = kFaxColumn;
-  reportColumns[10].abField = kPagerColumn;
-  reportColumns[11].abField = kCellularColumn;
-  reportColumns[12].abField = kHomeAddressColumn;
-  reportColumns[13].abField = kHomeAddress2Column;
-  reportColumns[14].abField = kHomeCityColumn;
-  reportColumns[15].abField = kHomeStateColumn;
-  reportColumns[16].abField = kHomeZipCodeColumn;
-  reportColumns[17].abField = kHomeCountryColumn;
-  reportColumns[18].abField = kWorkAddressColumn;
-  reportColumns[19].abField = kWorkAddress2Column;
-  reportColumns[20].abField = kWorkCityColumn;
-  reportColumns[21].abField = kWorkStateColumn;
-  reportColumns[22].abField = kWorkZipCodeColumn;
-  reportColumns[23].abField = kWorkCountryColumn;
-  reportColumns[24].abField = kJobTitleColumn;
-  reportColumns[25].abField = kDepartmentColumn;
-  reportColumns[26].abField = kCompanyColumn;
-  reportColumns[27].abField = kWebPage1Column;
-  reportColumns[28].abField = kWebPage2Column;
-  reportColumns[29].abField = kBirthYearColumn;
-  reportColumns[30].abField = kBirthMonthColumn;
-  reportColumns[31].abField = kBirthDayColumn;
-  reportColumns[32].abField = kCustom1Column;
-  reportColumns[33].abField = kCustom2Column;
-  reportColumns[34].abField = kCustom3Column;
-  reportColumns[35].abField = kCustom4Column;
-  reportColumns[36].abField = kNotesColumn;
-  reportColumns[37].abField = kLastModifiedDateColumn;
-  reportColumns[38].abField = nsnull;
+  if (NS_FAILED(InitPrintColumns()))
+    return NS_ERROR_FAILURE;
 
-  for (PRInt32 i=0; i<MAX_FIELDS; i++)
+  nsIEnumerator     *cardEnum = nsnull;
+  rv = aDatabase->EnumerateCards(directory, &cardEnum);
+  if (NS_FAILED(rv) || (!cardEnum))
+    return NS_ERROR_FAILURE;
+
+  InitPrintColumns();
+
+  // Ok, we make 2 passes at this enumerator. The first is to
+  // check the columns that we should output and the second is
+  // to actually generate the output
+  //
+  nsCOMPtr<nsISupports>   obj = nsnull;
+  cardEnum->First();
+  do
   {
-    reportColumns[i].includeIt = PR_FALSE;
-  }
+    if (NS_FAILED(cardEnum->CurrentItem(getter_AddRefs(obj))))
+      break;
+    else
+    {
+      nsCOMPtr<nsIAbCard> card;
+      card = do_QueryInterface(obj, &rv);
+      if ( NS_SUCCEEDED(rv) && (card) )
+      {
+        CheckColumnValidity(card);
+      }
+    }
 
+  } while (NS_SUCCEEDED(cardEnum->Next()));
+
+  // Now, we need to generate some fun output!
+  // 
   // Ok, build a little HTML for output...
   workBuffer.Append("<HTML><BODY>");
   workBuffer.Append("<CENTER>");
   workBuffer.Append("<TABLE BORDER>");
 
-  // RICHIE - need more work here
-  // NS_IMETHODIMP nsAddrDatabase::EnumerateCards(nsIAbDirectory *directory, nsIEnumerator **result)
+  GenerateColumnHeadings(workBuffer);
 
-  if (NS_SUCCEEDED(workCard->GetName(&aName)) && (aName))
+  cardEnum->First();
+  do
   {
-    workBuffer.Append("<caption><b>");
-    workBuffer.Append(aName);
-    workBuffer.Append("</b></caption>");
-  }
+    if (NS_FAILED(cardEnum->CurrentItem(getter_AddRefs(obj))))
+      break;
+    else
+    {
+      nsCOMPtr<nsIAbCard> card;
+      card = do_QueryInterface(obj, &rv);
+      if ( NS_SUCCEEDED(rv) && (card) )
+      {
+        GenerateRowForCard(workBuffer, card);
+      }
+    }
 
+  } while (NS_SUCCEEDED(cardEnum->Next()));
+
+  delete cardEnum;
+
+  // Finish up and get out!
+  //
   workBuffer.Append("</TABLE>");
   workBuffer.Append("<CENTER>");
   workBuffer.Append("</BODY></HTML>");
   return rv;
+}
+
+PRBool
+ValidColumn(nsIAbCard *aCard, const char *aColumn)
+{
+  PRUnichar     *aName = nsnull;
+
+  if (NS_SUCCEEDED(aCard->GetCardValue(aColumn, &aName)) && (aName) && (*aName))
+    return PR_TRUE;
+  else
+    return PR_FALSE;
+}
+
+nsresult
+TackOnColumn(nsIAbCard *aCard, const char *aColumn, nsString &aString)
+{
+  PRUnichar     *aName = nsnull;
+
+  aString.Append("<td>");
+
+  if (NS_SUCCEEDED(aCard->GetCardValue(aColumn, &aName)) && (aName) && (*aName))
+  {
+    aString.Append(aName);
+  }
+
+  aString.Append("</td>");
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsAddbookProtocolHandler::CheckColumnValidity(nsIAbCard *aCard)
+{
+  for (PRInt32 i=0; i<kMaxReportColumns; i++)
+  {
+    if (!mReportColumns[i].includeIt)
+      mReportColumns[i].includeIt = ValidColumn(aCard, mReportColumns[i].abField);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsAddbookProtocolHandler::GenerateColumnHeadings(nsString           &aString)
+{
+  aString.Append("<tr>");
+
+  for (PRInt32 i=0; i<kMaxReportColumns; i++)
+  {
+    if (mReportColumns[i].includeIt)
+    {
+      aString.Append("<td>");
+      aString.Append("<B>");
+      // RICHIE - Should really convert this to some string bundled thing? 
+      aString.Append(mReportColumns[i].abField);
+      aString.Append("</B>");
+      aString.Append("</td>");
+    }
+  }
+
+  aString.Append("</tr>");
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsAddbookProtocolHandler::GenerateRowForCard(nsString           &aString, 
+                                             nsIAbCard          *aCard)
+{
+  aString.Append("<tr>");
+
+  for (PRInt32 i=0; i<kMaxReportColumns; i++)
+  {
+    if (mReportColumns[i].includeIt)
+      TackOnColumn(aCard, mReportColumns[i].abField, aString);
+  }
+
+  aString.Append("</tr>");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAddbookProtocolHandler::InitPrintColumns()
+{
+  if (!mReportColumns)
+  {
+    mReportColumns = (reportColumnStruct *) PR_Malloc(sizeof(reportColumnStruct) * kMaxReportColumns);
+    if (mReportColumns == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    mReportColumns[0].abField = kFirstNameColumn;
+    mReportColumns[1].abField = kLastNameColumn;
+    mReportColumns[2].abField = kDisplayNameColumn;
+    mReportColumns[3].abField = kNicknameColumn;
+    mReportColumns[4].abField = kPriEmailColumn;
+    mReportColumns[5].abField = k2ndEmailColumn;
+    mReportColumns[6].abField = kPlainTextColumn;
+    mReportColumns[7].abField = kWorkPhoneColumn;
+    mReportColumns[8].abField = kHomePhoneColumn;
+    mReportColumns[9].abField = kFaxColumn;
+    mReportColumns[10].abField = kPagerColumn;
+    mReportColumns[11].abField = kCellularColumn;
+    mReportColumns[12].abField = kHomeAddressColumn;
+    mReportColumns[13].abField = kHomeAddress2Column;
+    mReportColumns[14].abField = kHomeCityColumn;
+    mReportColumns[15].abField = kHomeStateColumn;
+    mReportColumns[16].abField = kHomeZipCodeColumn;
+    mReportColumns[17].abField = kHomeCountryColumn;
+    mReportColumns[18].abField = kWorkAddressColumn;
+    mReportColumns[19].abField = kWorkAddress2Column;
+    mReportColumns[20].abField = kWorkCityColumn;
+    mReportColumns[21].abField = kWorkStateColumn;
+    mReportColumns[22].abField = kWorkZipCodeColumn;
+    mReportColumns[23].abField = kWorkCountryColumn;
+    mReportColumns[24].abField = kJobTitleColumn;
+    mReportColumns[25].abField = kDepartmentColumn;
+    mReportColumns[26].abField = kCompanyColumn;
+    mReportColumns[27].abField = kWebPage1Column;
+    mReportColumns[28].abField = kWebPage2Column;
+    mReportColumns[29].abField = kBirthYearColumn;
+    mReportColumns[30].abField = kBirthMonthColumn;
+    mReportColumns[31].abField = kBirthDayColumn;
+    mReportColumns[32].abField = kCustom1Column;
+    mReportColumns[33].abField = kCustom2Column;
+    mReportColumns[34].abField = kCustom3Column;
+    mReportColumns[35].abField = kCustom4Column;
+    mReportColumns[36].abField = kNotesColumn;
+    mReportColumns[37].abField = kLastModifiedDateColumn;
+    mReportColumns[38].abField = nsnull;
+  }
+
+  for (PRInt32 i=0; i<kMaxReportColumns; i++)
+  {
+    mReportColumns[i].includeIt = PR_FALSE;
+  }
+
+  return NS_OK;
 }

@@ -217,8 +217,11 @@ nsAddbookUrl::CrackPrintURL(char *searchPart, PRInt32 aOperation)
   if (emailAddr.IsEmpty() && (aOperation == nsIAddbookUrlOperation::PrintIndividual))
     return NS_ERROR_FAILURE;
 
-  nsUnescape(emailAddr);
-  mAbCardProperty->SetCardValue(kPriEmailColumn, nsString(emailAddr).GetUnicode());
+  if (!emailAddr.IsEmpty())
+  {
+    nsUnescape(emailAddr);
+    mAbCardProperty->SetCardValue(kPriEmailColumn, nsString(emailAddr).GetUnicode());
+  }
 
   if (!folderName.IsEmpty())
   {

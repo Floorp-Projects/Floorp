@@ -36,6 +36,8 @@ typedef struct {
   PRBool      includeIt;
 } reportColumnStruct;
 
+#define       kMaxReportColumns   39
+
 class nsAddbookProtocolHandler : public nsIProtocolHandler
 {
 public:
@@ -74,8 +76,15 @@ private:
   NS_METHOD    FindPossibleAbName(nsIAbCard  *aCard,
                                   PRUnichar  **retName);
 
+  NS_METHOD    CheckColumnValidity(nsIAbCard *aCard);
+  NS_METHOD    GenerateRowForCard(nsString           &aString, 
+                                  nsIAbCard          *aCard);
+  NS_METHOD    GenerateColumnHeadings(nsString           &aString);
+  NS_METHOD    InitPrintColumns();
+
   // Member vars...
-  PRInt32      mAddbookOperation;
+  PRInt32             mAddbookOperation;
+  reportColumnStruct  *mReportColumns;
 };
 
 #endif /* nsAddbookProtocolHandler_h___ */
