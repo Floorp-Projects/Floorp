@@ -170,11 +170,16 @@ ifeq ($(OS_ARCH), AIX)
 EXTRA_SHARED_LIBS += -brtl 
 endif
 
+# On Linux we must use the -rpath-link option to tell the linker
+# where to find libsoftokn3.so, an implicit dependency of libnss3.so.
+ifeq ($(OS_ARCH), Linux) 
+EXTRA_SHARED_LIBS += -Wl,-rpath-link,$(DIST)/lib
+endif
+
 # $(PROGRAM) has NO explicit dependencies on $(EXTRA_SHARED_LIBS)
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib/ \
-	-lsoftokn3 \
 	-lssl3 \
 	-lsmime3 \
 	-lnss3 \
