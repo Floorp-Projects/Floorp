@@ -394,8 +394,8 @@ public:
   virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const;
   virtual nsIContent* GetPrevContent(const nsIContent *aContent) const;
   virtual nsIContent* GetNextContent(const nsIContent *aContent) const;
-  virtual void SetDisplaySelection(PRBool aToggle);
-  virtual PRBool GetDisplaySelection() const;
+  virtual void SetDisplaySelection(PRInt8 aToggle);
+  virtual PRInt8 GetDisplaySelection() const;
 
   // nsIJSScriptObject interface
   virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
@@ -469,7 +469,7 @@ protected:
   void* mScriptObject;
   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
   nsIEventListenerManager* mListenerManager;
-  PRBool mDisplaySelection;
+  PRInt8 mDisplaySelection;
   PRBool mInDestructor;
   nsDOMStyleSheetCollection *mDOMStyleSheets;
   nsINameSpaceManager* mNameSpaceManager;

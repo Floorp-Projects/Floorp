@@ -606,7 +606,7 @@ nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
 		    }
 		  }
       if (isOkToTurnOn && !result) {
-        doc->SetDisplaySelection(PR_TRUE);
+        doc->SetDisplaySelection(nsIDocument::SELECTION_ON);
         result = PR_TRUE;
       }
     }

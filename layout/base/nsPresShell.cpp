@@ -995,7 +995,7 @@ PresShell::Init(nsIDocument* aDocument,
       result = docShell->GetItemType(&docShellType);
       if (NS_SUCCEEDED(result)){
         if (nsIDocShellTreeItem::typeContent == docShellType){
-          mDocument->SetDisplaySelection(PR_TRUE);
+          mDocument->SetDisplaySelection(nsIDocument::SELECTION_ON);
         }
       }      
     }

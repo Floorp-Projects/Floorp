@@ -1223,7 +1223,7 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       presShell->GetDocument(getter_AddRefs(doc));
       NS_ASSERTION(doc, "null document");
       if (!doc) { return NS_ERROR_NULL_POINTER; }
-      doc->SetDisplaySelection(PR_FALSE);
+      doc->SetDisplaySelection(nsIDocument::SELECTION_OFF);
     }
     else 
     { // unset readonly
@@ -1233,7 +1233,7 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       presShell->GetDocument(getter_AddRefs(doc));
       NS_ASSERTION(doc, "null document");
       if (!doc) { return NS_ERROR_NULL_POINTER; }
-      doc->SetDisplaySelection(PR_TRUE);
+      doc->SetDisplaySelection(nsIDocument::SELECTION_ON);
     }    
     mEditor->SetFlags(flags);
   }
@@ -3417,7 +3417,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
         aPresShell->SetCaretEnabled(PR_FALSE);
         nsCOMPtr<nsIDocument>doc = do_QueryInterface(aDoc);
         if (doc) {
-          doc->SetDisplaySelection(PR_FALSE);
+          doc->SetDisplaySelection(nsIDocument::SELECTION_OFF);
         }
       }
     }

@@ -1145,7 +1145,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
             nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
             if (doc)
             {
-              doc->SetDisplaySelection(PR_TRUE);
+              doc->SetDisplaySelection(nsIDocument::SELECTION_ON);
             }
           }
 #ifdef USE_HACK_REPAINT
@@ -1191,20 +1191,11 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
         editor->GetDocument(getter_AddRefs(domDoc));
         if (domDoc)
         {
-          if ((flags & nsIHTMLEditor::eEditorPlaintextMask) ||
-              (flags & nsIHTMLEditor::eEditorSingleLineMask) ||
-              (flags & nsIHTMLEditor::eEditorPasswordMask) ||
-              (flags & nsIHTMLEditor::eEditorReadonlyMask) ||
-              (flags & nsIHTMLEditor::eEditorDisabledMask) ||
-              (flags & nsIHTMLEditor::eEditorFilterInputMask) ||
-              (flags & nsIHTMLEditor::eEditorMailMask))
-          {//HACK UNTIL UNFOCUSED SELECTION DRAWS CORRECTLY
-            nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
-            if (doc)
-            {
-              doc->SetDisplaySelection(PR_FALSE);
-            }
-          }//END HACK
+          nsCOMPtr<nsIDocument>doc = do_QueryInterface(domDoc);
+          if (doc)
+          {
+            doc->SetDisplaySelection(nsIDocument::SELECTION_DISABLED);
+          }
         }
 #ifdef USE_HACK_REPAINT
 // begin hack repaint

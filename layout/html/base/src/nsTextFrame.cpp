@@ -780,9 +780,12 @@ inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
 //helper class for drawing multiply selected text
 class DrawSelectionIterator
 {
+  enum {DISABLED_COLOR = NS_RGB(176,176,176)};
   enum {SELECTION_TYPES_WE_CARE_ABOUT=SELECTION_NONE+SELECTION_NORMAL};
 public:
-  DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText,PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle);
+  DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText,
+                        PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle,
+                        PRInt8 aSelectionStatus);
   ~DrawSelectionIterator();
   PRBool      First();
   PRBool      Next();
@@ -807,12 +810,14 @@ private:
   PRBool    mDone;
   PRUint8 * mTypes;
   PRBool    mInit;
+  PRInt8    mSelectionStatus;//see nsIDocument.h SetDisplaySelection()
+  nscolor   mDisabledColor;
   //private methods
   void FillCurrentData();
 };
 
 DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText, 
-							PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle)
+							PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle, PRInt8 aSelectionStatus)
               :mOldStyle(aTextStyle)
 {
     mDetails = aSelDetails;
@@ -821,6 +826,9 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
     mLength = aTextLength;
     mTypes = nsnull;
     mInit = PR_FALSE;
+    mSelectionStatus = aSelectionStatus;
+    mDisabledColor = EnsureDifferentColors(DISABLED_COLOR, mOldStyle.mSelectionBGColor);
+
     if (!aSelDetails)
     {
       mDone = PR_TRUE;
@@ -1009,13 +1017,13 @@ DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor)
   {
       if (mCurrentIdx == (PRUint32)mDetails->mStart)
       {
-    		aColor = mOldStyle.mSelectionBGColor;
+        aColor = (mSelectionStatus==nsIDocument::SELECTION_ON)?mOldStyle.mSelectionBGColor:mDisabledColor;
         return PR_TRUE;
       }
   }
   else if (mTypes[mCurrentIdx] | SELECTION_NORMAL)
   {
-    aColor = mOldStyle.mSelectionBGColor;
+    aColor = (mSelectionStatus==nsIDocument::SELECTION_ON)?mOldStyle.mSelectionBGColor:mDisabledColor;
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -1723,7 +1731,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 {
   nsCOMPtr<nsIDocument> doc(getter_AddRefs(GetDocument(aPresContext)));
 
-  PRBool displaySelection;
+  PRInt8 displaySelection;
   displaySelection = doc->GetDisplaySelection();
 
   // Make enough space to transform
@@ -1796,7 +1804,7 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
       }
       //while we have substrings...
       PRBool drawn = PR_FALSE;
-      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle);
+      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, displaySelection);
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;
@@ -2295,7 +2303,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
         sdptr = sdptr->mNext;
       }
 
-      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle);
+      DrawSelectionIterator iter(details,text,(PRUint32)textLength,aTextStyle, displaySelection);
       if (!iter.IsDone() && iter.First())
       {
 	      nscoord currentX = dx;
@@ -2482,7 +2490,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
         sdptr->mEnd = ip[sdptr->mEnd]  - mContentOffset;
         sdptr = sdptr->mNext;
       }
-      DrawSelectionIterator iter(details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle);//ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
+      DrawSelectionIterator iter(details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle, displaySelection);//ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;
