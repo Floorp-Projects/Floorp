@@ -48,3 +48,9 @@ interface nsIStreamConverter : nsIStreamListener {
 				 in wstring aToType,
 				 in nsIStreamListener aListener);
 };
+
+%{C++
+
+#define NS_ISTREAMCONVERTER_KEY         "component://netscape/strmconv/"
+
+%}
