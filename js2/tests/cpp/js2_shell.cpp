@@ -30,6 +30,7 @@
 #undef INTERPRET_INPUT
 #endif
 
+#include <algorithm>
 #include <assert.h>
 
 #include "world.h"
