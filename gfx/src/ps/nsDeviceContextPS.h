@@ -25,6 +25,8 @@
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
 #include "nsPrintManager.h"
+#include "nsVoidArray.h"
+
 
 class nsDeviceContextWin;       // need to be a friend of the class using us.
 
@@ -40,7 +42,7 @@ public:
    * with a NativeWidget.
    * @update 12/21/98 dwc
    */
-  NS_IMETHOD  Init(nsIDeviceContext *aCreatingDeviceContext);  
+  NS_IMETHOD  Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext, HDC aTheDC);  
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
@@ -51,23 +53,23 @@ public:
   NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
 
-  NS_IMETHOD 	CheckFontExistence(const nsString& aFontName);
-  NS_IMETHOD 	CreateILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD 	  CheckFontExistence(const nsString& aFontName);
+  NS_IMETHOD 	  CreateILColorSpace(IL_ColorSpace*& aColorSpace);
   NS_IMETHODIMP GetILColorSpace(IL_ColorSpace*& aColorSpace);
-  NS_IMETHOD 	GetDepth(PRUint32& aDepth);
-  NS_IMETHOD 	ConvertPixel(nscolor aColor, PRUint32 & aPixel);
+  NS_IMETHOD 	  GetDepth(PRUint32& aDepth);
+  NS_IMETHOD 	  ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
   NS_IMETHOD 	GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
 
   NS_IMETHOD 	GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                  nsIDeviceContext *&aContext);
 
+  NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
   NS_IMETHOD 	BeginDocument(void);
   NS_IMETHOD 	EndDocument(void);
 
   NS_IMETHOD 	BeginPage(void);
   NS_IMETHOD 	EndPage(void);
-
 
 protected:
   virtual 	~nsDeviceContextPS();
@@ -78,12 +80,17 @@ protected:
   nsIDeviceContextSpec  *mSpec;
   nsIDeviceContext      *mDelContext;   // since this is not really a device context, we ned a deligate
   PrintSetup            *mPrintSetup;
+  float                 mPixelScale;
+  nsVoidArray           mFontMetrics;  // we are not using the normal font cache, this is special for PostScript.
 
 
 
 public:
   //static bool   GetMacFontNumber(const nsString& aFontName, short &fontNum);
   MWContext*    GetPrintContext() { return mPrintContext; }
+
+public:
+  HDC           mDC;
 
 friend nsDeviceContextWin;         // need to be a friend of the class using us.
 };
