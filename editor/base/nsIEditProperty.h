@@ -44,8 +44,33 @@ public:
 
 /* we're still trying to decide how edit atoms will work.  Until then, use these */
 // XXX: fix ASAP!
-  static nsIAtom *bold;
-  static nsIAtom *italic;
+  // tags
+  static nsIAtom *a;
+  static nsIAtom *b;
+  static nsIAtom *big;
+  static nsIAtom *font;
+  static nsIAtom *i;
+  static nsIAtom *span;
+  static nsIAtom *small;
+  static nsIAtom *strike;
+  static nsIAtom *sub;
+  static nsIAtom *sup;
+  static nsIAtom *tt;
+  static nsIAtom *u;
+
+/* from HTML 3.2 spec
+TT teletype or monospaced text 
+I italic text style 
+B bold text style 
+U underlined text style 
+STRIKE strike-through text style 
+BIG places text in a large font 
+SMALL places text in a small font 
+SUB places text in subscript style 
+SUP places text in superscript style 
+*/
+
+  // XXX: end temp code
 };
 
 extern nsresult NS_NewEditProperty(nsIEditProperty **aResult);

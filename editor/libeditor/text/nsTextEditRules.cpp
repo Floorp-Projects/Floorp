@@ -17,7 +17,7 @@
  */
 
 #include "nsTextEditRules.h"
-#include "nsEditor.h"
+#include "nsTextEditor.h"
 #include "PlaceholderTxn.h"
 #include "InsertTextTxn.h"
 #include "nsCOMPtr.h"
@@ -29,6 +29,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIEnumerator.h"
 #include "nsIContent.h"
+#include "nsIEditProperty.h"
 
 const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 const static char* kMOZEditorBogusNodeValue="TRUE";
@@ -118,7 +119,7 @@ nsTextEditRules::~nsTextEditRules()
 
 
 NS_IMETHODIMP
-nsTextEditRules::Init(nsEditor *aEditor)
+nsTextEditRules::Init(nsTextEditor *aEditor)
 {
   // null aNextRule is ok
   if (!aEditor) { return NS_ERROR_NULL_POINTER; }
@@ -165,9 +166,10 @@ nsTextEditRules::DidInsert(nsIDOMSelection *aSelection, nsresult aResult)
 
 NS_IMETHODIMP
 nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection, 
-                                const nsString& aInputString,
-                                PRBool *aCancel,
-                                nsString& aOutputString,
+                                const nsString  &aInputString,
+                                PRBool          *aCancel,
+                                nsString        &aOutputString,
+                                TypeInState     &aTypeInState,
                                 PlaceholderTxn **aTxn)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
@@ -175,7 +177,8 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   *aCancel = PR_FALSE;
   // by default, we insert what we're told to insert
   aOutputString = aInputString;
-  if (mBogusNode)
+  TypeInState typeInState = aTypeInState; // remember the initial type-in state
+  if (mBogusNode || (PR_TRUE==typeInState.IsAnySet()))
   {
     nsresult result = TransactionFactory::GetNewTransaction(kPlaceholderTxnIID, (EditTxn **)aTxn);
     if (NS_FAILED(result)) { return result; }
@@ -184,6 +187,13 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
     mEditor->Do(*aTxn);
   }
   nsresult result = WillInsert(aSelection, aCancel);
+  if (NS_SUCCEEDED(result) && (PR_FALSE==*aCancel))
+  {
+    if (PR_TRUE==typeInState.IsAnySet())
+    { // for every property that is set, insert a new inline style node
+      result = CreateStyleForInsertText(aSelection, typeInState);
+    }
+  }
   return result;
 }
 
@@ -194,6 +204,128 @@ nsTextEditRules::DidInsertText(nsIDOMSelection *aSelection,
 {
   return DidInsert(aSelection, aResult);
 }
+
+NS_IMETHODIMP
+nsTextEditRules::CreateStyleForInsertText(nsIDOMSelection *aSelection, TypeInState &aTypeInState)
+{ 
+  // private method, we know aSelection is not null, and that it is collapsed
+  NS_ASSERTION(nsnull!=aSelection, "bad selection");
+
+  // We know at least one style is set and we're about to insert at least one character.
+  // If the selection is in a text node, split the node (even if we're at the beginning or end)
+  // then put the text node inside new inline style parents.
+  // Otherwise, create the text node and the new inline style parents.
+  nsCOMPtr<nsIDOMNode>anchor;
+  PRInt32 offset;
+  nsresult result = aSelection->GetAnchorNodeAndOffset(getter_AddRefs(anchor), &offset);
+  if ((NS_SUCCEEDED(result)) && anchor)
+  {
+    nsCOMPtr<nsIDOMCharacterData>anchorAsText;
+    anchorAsText = do_QueryInterface(anchor);
+    if (anchorAsText)
+    {
+      nsCOMPtr<nsIDOMNode>newTextNode;
+      // create an empty text node by splitting the selected text node according to offset
+      if (0==offset)
+      {
+        result = mEditor->SplitNode(anchorAsText, offset, getter_AddRefs(newTextNode));
+      }
+      else
+      {
+        PRUint32 length;
+        anchorAsText->GetLength(&length);
+        if (length==offset)
+        {
+          // newTextNode will be the left node
+          result = mEditor->SplitNode(anchorAsText, offset, getter_AddRefs(newTextNode));
+          // but we want the right node in this case
+          newTextNode = do_QueryInterface(anchor);
+        }
+        else
+        {
+          // splitting anchor twice sets newTextNode as an empty text node between 
+          // two halves of the original text node
+          result = mEditor->SplitNode(anchorAsText, offset, getter_AddRefs(newTextNode));
+          result = mEditor->SplitNode(anchorAsText, 0, getter_AddRefs(newTextNode));
+        }
+      }
+      // now we have the new text node we are going to insert into.  
+      // create style nodes or move it up the content hierarchy as needed.
+      if ((NS_SUCCEEDED(result)) && newTextNode)
+      {
+        if (aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
+        {
+          if (PR_TRUE==aTypeInState.GetBold())
+          { // make the next char bold
+            nsCOMPtr<nsIDOMNode>parent;
+            newTextNode->GetParentNode(getter_AddRefs(parent));
+            PRInt32 offsetInParent;
+            nsIEditorSupport::GetChildOffset(newTextNode, parent, offsetInParent);
+            nsAutoString tag;
+            nsIEditProperty::b->ToString(tag);
+            nsCOMPtr<nsIDOMNode>newStyleNode;
+            result = mEditor->CreateNode(tag, parent, offsetInParent, getter_AddRefs(newStyleNode));
+            result = mEditor->DeleteNode(newTextNode);
+            result = mEditor->InsertNode(newTextNode, newStyleNode, 0);
+            aSelection->Collapse(newTextNode, 0);
+          }
+          else
+          {
+            printf("not yet implemented, make unbold in a bold context\n");
+          }
+        }
+      }
+    }
+    else
+    {
+      printf("not yet implemented.  selection is not text.\n");
+    }
+  }
+  else  // we have no selection, so insert a style tag in the body
+  {
+    nsCOMPtr<nsIDOMDocument>doc;
+    mEditor->GetDocument(getter_AddRefs(doc));  
+    nsCOMPtr<nsIDOMNodeList>nodeList;
+    nsAutoString bodyTag = "body";
+    nsresult result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
+    if ((NS_SUCCEEDED(result)) && nodeList)
+    {
+      PRUint32 count;
+      nodeList->GetLength(&count);
+      NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
+      nsCOMPtr<nsIDOMNode>bodyNode;
+      result = nodeList->Item(0, getter_AddRefs(bodyNode));
+      if ((NS_SUCCEEDED(result)) && bodyNode)
+      { // now we've got the body tag.  insert the style tag
+        if (aTypeInState.IsSet(NS_TYPEINSTATE_BOLD))
+        {
+          if (PR_TRUE==aTypeInState.GetBold())
+          { // make the next char bold
+            nsAutoString tag;
+            nsIEditProperty::b->ToString(tag);
+            nsCOMPtr<nsIDOMNode>newStyleNode;
+            nsCOMPtr<nsIDOMNode>newTextNode;
+            result = mEditor->CreateNode(tag, bodyNode, 0, getter_AddRefs(newStyleNode));
+            result = mEditor->CreateNode(nsIEditor::GetTextNodeTag(), newStyleNode, 0, getter_AddRefs(newTextNode));
+            aSelection->Collapse(newTextNode, 0);
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
+
+/*
+NS_IMETHODIMP
+nsTextEditRules::GetInsertBreakTag(nsIAtom **aTag)
+{
+  if (!aTag) { return NS_ERROR_NULL_POINTER; }
+  *aTag = NS_NewAtom("BR");
+  return NS_OK;
+}
+*/
 
 NS_IMETHODIMP
 nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCancel)
@@ -325,10 +457,6 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
                 nsCOMPtr<nsIDOMNode> parentNode;
                 selectedNode->GetParentNode(getter_AddRefs(parentNode));
                 result = mEditor->JoinNodes(siblingNode, selectedNode, parentNode);
-                // set selection to point between the end of siblingNode and start of selectedNode
-                aSelection->Collapse(siblingNode, siblingLength);
-                selectedNode = do_QueryInterface(siblingNode);  // subsequent code relies on selectedNode
-                                                                // being the real node in the DOM tree
               }
             }
             selectedNode->GetNextSibling(getter_AddRefs(siblingNode));

@@ -38,6 +38,10 @@ class EditAggregateTxn : public EditTxn
 {
 public:
 
+  NS_DECL_ISUPPORTS_INHERITED
+
+  static const nsIID& GetIID() { static nsIID iid = EDIT_AGGREGATE_TXN_IID; return iid; }
+
   EditAggregateTxn();
 
   virtual ~EditAggregateTxn();

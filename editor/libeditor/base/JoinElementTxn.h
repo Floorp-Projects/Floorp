@@ -31,8 +31,10 @@
 
 
 /**
- * A transaction that joins two elements E1 and E2 into a single node E.  
+ * A transaction that joins two elements E1 (left node) and E2 (right node)
+ * into a single node E.  
  * The children of E are the children of E1 followed by the children of E2.
+ * After Do() and Redo(), E1 is removed from the content tree and E2 remains.
  */
 class JoinElementTxn : public EditTxn
 {
@@ -57,7 +59,7 @@ public:
 
   NS_IMETHOD Undo(void);
 
-  NS_IMETHOD Redo(void);
+//  NS_IMETHOD Redo(void);
 
   NS_IMETHOD GetIsTransient(PRBool *aIsTransient);
 

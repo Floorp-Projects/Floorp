@@ -24,7 +24,7 @@
 EditAggregateTxn::EditAggregateTxn()
   : EditTxn()
 {
-  NS_INIT_REFCNT();
+  // base class does this: NS_INIT_REFCNT();
   mChildren = new nsVoidArray();
 }
 
@@ -203,6 +203,30 @@ NS_IMETHODIMP EditAggregateTxn::GetName(nsIAtom **aName)
     }
   }
   return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP_(nsrefcnt) EditAggregateTxn::AddRef(void)
+{
+  return EditTxn::AddRef();
+}
+
+//NS_IMPL_RELEASE_INHERITED(Class, Super)
+NS_IMETHODIMP_(nsrefcnt) EditAggregateTxn::Release(void)
+{
+  return EditTxn::Release();
+}
+
+//NS_IMPL_QUERY_INTERFACE_INHERITED(Class, Super, AdditionalInterface)
+NS_IMETHODIMP EditAggregateTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+ 
+  if (aIID.Equals(EditAggregateTxn::GetIID())) {
+    *aInstancePtr = (nsISupports*)(EditAggregateTxn*)(this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return EditTxn::QueryInterface(aIID, aInstancePtr);
 }
 
 

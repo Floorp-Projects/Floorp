@@ -22,6 +22,12 @@
 #include "nsIDOMSelection.h"
 #include "nsIEditorSupport.h"
 
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_TRUE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
+
 static NS_DEFINE_IID(kIEditorSupportIID,    NS_IEDITORSUPPORT_IID);
 
 
@@ -45,8 +51,10 @@ JoinElementTxn::~JoinElementTxn()
 {
 }
 
+// After Do() and Redo(), the left node is removed from the content tree and right node remains.
 NS_IMETHODIMP JoinElementTxn::Do(void)
 {
+  if (gNoisy) { printf("%p Do Join of %p and %p\n", this, mLeftNode.get(), mRightNode.get()); }
   nsresult result;
 
   if ((mLeftNode) && (mRightNode))
@@ -82,6 +90,7 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
             result = editor->JoinNodesImpl(mRightNode, mLeftNode, mParent, PR_FALSE);
             if (NS_SUCCEEDED(result))
             {
+              if (gNoisy) { printf("  left node = %p removed\n", this, mLeftNode.get()); }
               nsCOMPtr<nsIDOMSelection>selection;
               mEditor->GetSelection(getter_AddRefs(selection));
               if (selection)
@@ -102,9 +111,11 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
   return result;
 }
 
-
+//XXX: what if instead of split, we just deleted the unneeded children of mRight
+//     and re-inserted mLeft?
 NS_IMETHODIMP JoinElementTxn::Undo(void)
 {
+  /*
   nsresult result;
   nsCOMPtr<nsIEditorSupport> editor;
   result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
@@ -112,6 +123,7 @@ NS_IMETHODIMP JoinElementTxn::Undo(void)
     result = editor->SplitNodeImpl(mRightNode, mOffset, mLeftNode, mParent);
     if (NS_SUCCEEDED(result) && mLeftNode)
     {
+      if (gNoisy) { printf("  created left node = %p\n", this, mLeftNode.get()); }
       nsCOMPtr<nsIDOMSelection>selection;
       mEditor->GetSelection(getter_AddRefs(selection));
       if (selection)
@@ -124,10 +136,47 @@ NS_IMETHODIMP JoinElementTxn::Undo(void)
     result = NS_ERROR_NOT_IMPLEMENTED;
   }
   return result;
+  */
+
+  if (gNoisy) { printf("%p Undo Join, right node = %p\n", this, mRightNode.get()); }
+  NS_ASSERTION(mRightNode && mLeftNode && mParent, "bad state");
+  if (!mRightNode || !mLeftNode || !mParent) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  nsresult result;
+  nsCOMPtr<nsIDOMNode>resultNode;
+  // first, massage the existing node so it is in its post-split state
+  nsCOMPtr<nsIDOMCharacterData>rightNodeAsText;
+  rightNodeAsText = do_QueryInterface(mRightNode);
+  if (rightNodeAsText)
+  {
+    result = rightNodeAsText->DeleteData(0, mOffset);
+  }
+  else
+  {
+    nsCOMPtr<nsIDOMNode>child;
+    nsCOMPtr<nsIDOMNode>nextSibling;
+    result = mRightNode->GetFirstChild(getter_AddRefs(child));
+    PRInt32 i;
+    for (i=0; i<mOffset; i++)
+    {
+      if (NS_FAILED(result)) {return result;}
+      if (!child) {return NS_ERROR_NULL_POINTER;}
+      child->GetNextSibling(getter_AddRefs(nextSibling));
+      result = mRightNode->RemoveChild(child, getter_AddRefs(resultNode));
+      child = do_QueryInterface(nextSibling);
+    }
+  }
+  // second, re-insert the left node into the tree 
+  result = mParent->InsertBefore(mLeftNode, mRightNode, getter_AddRefs(resultNode));
+  return result;
+
 }
 
+/*
 NS_IMETHODIMP JoinElementTxn::Redo(void)
 {
+  if (gNoisy) { printf("Redo Join\n"); }
   nsresult result;
   nsCOMPtr<nsIEditorSupport> editor;
   result = mEditor->QueryInterface(kIEditorSupportIID, getter_AddRefs(editor));
@@ -149,7 +198,7 @@ NS_IMETHODIMP JoinElementTxn::Redo(void)
   }
   return result;
 }
-
+*/
 
 NS_IMETHODIMP JoinElementTxn::GetIsTransient(PRBool *aIsTransient)
 {

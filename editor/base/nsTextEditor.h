@@ -24,6 +24,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsEditor.h"
 #include "nsTextEditRules.h"
+#include "TypeInState.h"
 
 class nsIStyleContext;
 class nsIDOMRange;
@@ -33,7 +34,7 @@ class nsIDOMRange;
  * Use to edit text represented as a DOM tree. 
  * This class is used for editing both plain text and rich text (attributed text).
  */
-class nsTextEditor  : public nsEditor, public nsITextEditor
+class nsTextEditor : public nsEditor, public nsITextEditor
 {
 public:
   // see nsITextEditor for documentation
@@ -88,6 +89,7 @@ public:
   NS_IMETHOD OutputText(nsString& aOutputString);
   NS_IMETHOD OutputHTML(nsString& aOutputString);
 
+
 protected:
 
 // rules initialization
@@ -96,9 +98,23 @@ protected:
   
 // Utility Methods
 
+  virtual void IsTextPropertySetByContent(nsIDOMNode *aNode,
+                                          nsIAtom    *aProperty, 
+                                          PRBool     &aIsSet) const;
+
   virtual void IsTextStyleSet(nsIStyleContext *aSC, 
-                              nsIAtom *aProperty, 
-                              PRBool &aIsSet) const;
+                              nsIAtom         *aProperty, 
+                              PRBool          &aIsSet) const;
+
+  NS_IMETHOD IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline) const;
+
+  NS_IMETHOD IntermediateNodesAreInline(nsIDOMRange  *aRange,
+                                        nsIDOMNode   *aStartNode, 
+                                        PRInt32       aStartOffset, 
+                                        nsIDOMNode   *aEndNode,
+                                        PRInt32       aEndOffset,
+                                        nsIDOMNode   *aParent,
+                                        PRBool       &aResult) const;
 
   NS_IMETHOD SetTextPropertiesForNode(nsIDOMNode *aNode, 
                                       nsIDOMNode *aParent,
@@ -121,11 +137,13 @@ protected:
                                                           nsIDOMNode  *aParent,
                                                           nsIAtom     *aPropName);
 
-  NS_IMETHOD SetTagFromProperty(nsAutoString &aTag, nsIAtom *aPropName) const;
+
+  NS_IMETHOD SetTypeInStateForProperty(TypeInState &aTypeInState, nsIAtom *aPropName);
 
 
 // Data members
 protected:
+  TypeInState      mTypeInState;
   nsTextEditRules* mRules;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;

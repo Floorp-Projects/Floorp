@@ -69,6 +69,7 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 // END
+#endif
 
 //#define NEW_CLIPBOARD_SUPPORT
 
@@ -94,7 +95,6 @@ static NS_DEFINE_IID(kCXIFFormatConverterCID,    NS_XIFFORMATCONVERTER_CID);
 static NS_DEFINE_IID(kIFormatConverterIID, NS_IFORMATCONVERTER_IID);
 #endif
 
-#endif
 static NS_DEFINE_IID(kIContentIID,          NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID,          NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMElementIID,       NS_IDOMELEMENT_IID);
@@ -145,6 +145,12 @@ static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
+
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_TRUE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
 
 
 
@@ -676,6 +682,7 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
 NS_IMETHODIMP 
 nsEditor::Do(nsITransaction *aTxn)
 {
+  if (gNoisy) { printf("Editor::Do ----------\n"); }
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMSelection>selection;
   nsresult selectionResult = GetSelection(getter_AddRefs(selection));
@@ -698,6 +705,7 @@ nsEditor::Do(nsITransaction *aTxn)
 NS_IMETHODIMP 
 nsEditor::Undo(PRUint32 aCount)
 {
+  if (gNoisy) { printf("Editor::Undo ----------\n"); }
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMSelection>selection;
   nsresult selectionResult = GetSelection(getter_AddRefs(selection));
@@ -721,6 +729,7 @@ nsEditor::Undo(PRUint32 aCount)
 NS_IMETHODIMP 
 nsEditor::Redo(PRUint32 aCount)
 {
+  if (gNoisy) { printf("Editor::Redo ----------\n"); }
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMSelection>selection;
   nsresult selectionResult = GetSelection(getter_AddRefs(selection));
@@ -955,8 +964,8 @@ NS_IMETHODIMP nsEditor::CreateTxnForCreateElement(const nsString& aTag,
 }
 
 NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
-                              nsIDOMNode * aParent,
-                              PRInt32      aPosition)
+                                   nsIDOMNode * aParent,
+                                   PRInt32      aPosition)
 {
   InsertElementTxn *txn;
   nsresult result = CreateTxnForInsertElement(aNode, aParent, aPosition, &txn);
@@ -976,7 +985,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
   {
     result = TransactionFactory::GetNewTransaction(kInsertElementTxnIID, (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result)) {
-      result = (*aTxn)->Init(aNode, aParent, aPosition);
+      result = (*aTxn)->Init(aNode, aParent, aPosition, this);
     }
   }
   return result;

@@ -22,7 +22,7 @@
 #endif
 
 #ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
+static PRBool gNoisy = PR_TRUE;
 #else
 static const PRBool gNoisy = PR_FALSE;
 #endif
@@ -50,6 +50,7 @@ DeleteElementTxn::~DeleteElementTxn()
 
 NS_IMETHODIMP DeleteElementTxn::Do(void)
 {
+  if (gNoisy) { printf("Do Delete Element element = %p\n", mElement.get()); }
   if (!mElement)
     return NS_ERROR_NULL_POINTER;
 
@@ -96,6 +97,7 @@ NS_IMETHODIMP DeleteElementTxn::Do(void)
 
 NS_IMETHODIMP DeleteElementTxn::Undo(void)
 {
+  if (gNoisy) { printf("Do Delete Element element = %p, parent = %p\n", mElement.get(), mParent.get()); }
   if (!mParent  ||  !mElement)
     return NS_ERROR_NULL_POINTER;
 
@@ -106,6 +108,7 @@ NS_IMETHODIMP DeleteElementTxn::Undo(void)
 
 NS_IMETHODIMP DeleteElementTxn::Redo(void)
 {
+  if (gNoisy) { printf("Redo Delete Element\n"); }
   if (!mParent  ||  !mElement)
     return NS_ERROR_NULL_POINTER;
 
@@ -113,6 +116,7 @@ NS_IMETHODIMP DeleteElementTxn::Redo(void)
   nsresult result = mParent->RemoveChild(mElement, getter_AddRefs(resultNode));
   return result;
 }
+
 
 NS_IMETHODIMP DeleteElementTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {

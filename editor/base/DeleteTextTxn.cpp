@@ -20,6 +20,11 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMSelection.h"
 
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_TRUE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
 
 DeleteTextTxn::DeleteTextTxn()
   : EditTxn()
@@ -47,6 +52,7 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
 
 NS_IMETHODIMP DeleteTextTxn::Do(void)
 {
+  if (gNoisy) { printf("Do Delete Text\n"); }
   nsresult result = NS_ERROR_NULL_POINTER;
   if (mEditor && mElement)
   {
@@ -71,6 +77,7 @@ NS_IMETHODIMP DeleteTextTxn::Do(void)
 //     was it an insertion point or an extended selection?
 NS_IMETHODIMP DeleteTextTxn::Undo(void)
 {
+  if (gNoisy) { printf("Undo Delete Text\n"); }
   nsresult result = NS_ERROR_NULL_POINTER;
   if (mEditor && mElement)
   {
