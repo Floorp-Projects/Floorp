@@ -105,14 +105,16 @@ inline nsPermissionState nsPrivilege::add(nsPermissionState p1, nsPermissionStat
 {
   if (p1 < p2)
     return p1;
-  return p2;
+  else 
+    return p2;
 }
 
 inline nsPrivilege * nsPrivilege::add(nsPrivilege *p1, nsPrivilege *p2)
 {
   if (p1->itsPerm < p2->itsPerm)
     return p1;
-  return p2;
+  else
+    return p2;
 }
 
 
