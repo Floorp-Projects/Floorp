@@ -517,7 +517,8 @@ public class SignerInfo implements ASN1Value {
         if( sigAlg.getRawAlg() == SignatureAlgorithm.RSASignature ) {
             // create DigestInfo structure
             SEQUENCE digestInfo = new SEQUENCE();
-            digestInfo.addElement( digestAlgorithm.getOID() );
+            digestInfo.addElement(
+                new AlgorithmIdentifier(digestAlgorithm.getOID(), null) );
             digestInfo.addElement( new OCTET_STRING(messageDigest) );
             toBeVerified = ASN1Util.encode(digestInfo);
         } else {
@@ -694,15 +695,7 @@ public class SignerInfo implements ASN1Value {
 
         // verify the contents octets of the DER encoded authenticated attribs
         byte[] toBeDigested;
-        try {
-            byte[] encodedAuthAttrib = ASN1Util.encode(authenticatedAttributes);
-            ANY any = (ANY)
-                ASN1Util.decode( ANY.getTemplate(), encodedAuthAttrib );
-            toBeDigested = any.getContents();
-        } catch(InvalidBERException e ) {
-            Assert.notReached("Unable to decode authenticated attributes");
-            toBeDigested = null;
-        }
+        toBeDigested = ASN1Util.encode(authenticatedAttributes);
     
         MessageDigest md = MessageDigest.getInstance(
                 DigestAlgorithm.fromOID(digestAlgorithm.getOID()).toString() );
@@ -712,7 +705,8 @@ public class SignerInfo implements ASN1Value {
         if( sigAlg.getRawAlg() == SignatureAlgorithm.RSASignature ) {
             // create DigestInfo structure
             SEQUENCE digestInfo = new SEQUENCE();
-            digestInfo.addElement( digestAlgorithm.getOID() );
+            digestInfo.addElement(
+                new AlgorithmIdentifier(digestAlgorithm.getOID(),null) );
             digestInfo.addElement( new OCTET_STRING(digest) );
             toBeVerified = ASN1Util.encode(digestInfo);
         } else {

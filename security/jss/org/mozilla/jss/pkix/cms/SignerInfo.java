@@ -526,7 +526,8 @@ public class SignerInfo implements ASN1Value {
         if( sigAlg.getRawAlg() == SignatureAlgorithm.RSASignature ) {
             // create DigestInfo structure
             SEQUENCE digestInfo = new SEQUENCE();
-            digestInfo.addElement( digestAlgorithm.getOID() );
+            digestInfo.addElement(
+                new AlgorithmIdentifier(digestAlgorithm.getOID(), null) );
             digestInfo.addElement( new OCTET_STRING(messageDigest) );
             toBeVerified = ASN1Util.encode(digestInfo);
         } else {
@@ -702,15 +703,7 @@ public class SignerInfo implements ASN1Value {
         sig.initVerify(pubkey);
 
         // verify the contents octets of the DER encoded signed attribs
-        byte[] toBeDigested;
-        try {
-            byte[] encodedSignedAttrib = ASN1Util.encode(signedAttributes);
-            toBeDigested = encodedSignedAttrib;
-
-        } catch(Exception e ) {
-            Assert.notReached("Unable to decode signed attributes");
-            toBeDigested = null;
-        }
+        byte[] toBeDigested = ASN1Util.encode(signedAttributes);
     
         MessageDigest md = MessageDigest.getInstance(
                 DigestAlgorithm.fromOID(digestAlgorithm.getOID()).toString() );
