@@ -74,7 +74,7 @@
 #include "nsISelectionController.h"//for the enums
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
-#define DEBUG_TABLE 1
+//#define DEBUG_TABLE 1
 
 //static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kCGenContentIteratorCID, NS_GENERATEDCONTENTITERATOR_CID);
