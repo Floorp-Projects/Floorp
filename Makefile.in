@@ -43,6 +43,10 @@ else
 default: $(SUBMAKEFILES)
 	$(MAKE) nspr
 	$(MAKE) tier_0
+ifdef MOZ_LDAP_XPCOM
+	$(MAKE) -C directory/c-sdk/ldap export
+	$(MAKE) -C directory/c-sdk/ldap install
+endif
 	$(MAKE) tier_1
 	$(MAKE) tier_9
 ifdef MOZ_PSM
@@ -62,6 +66,10 @@ DIRS = $(NSPRPUB_DIR) \
 	$(tier_1_dirs) \
 	$(tier_9_dirs) \
 	$(NULL)
+
+ifdef MOZ_LDAP_XPCOM
+DIRS += directory/c-sdk/ldap
+endif
 
 ifdef MOZ_PSM
 DIRS += $(tier_95_dirs)
@@ -186,7 +194,7 @@ tier_9_dirs    += accessible
 endif
 
 ifdef MOZ_LDAP_XPCOM
-tier_9_dirs	+= directory/c-sdk/ldap directory/xpcom
+tier_9_dirs	+= directory/xpcom
 endif
 
 # This must preceed xpfe
