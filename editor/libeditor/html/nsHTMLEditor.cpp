@@ -44,22 +44,13 @@
 #include "nsIFileWidget.h" // for GetLocalFileURL stuff
 #include "nsWidgetsCID.h"
 
-static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
-static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
 
 static NS_DEFINE_IID(kInsertHTMLTxnIID, NS_INSERT_HTML_TXN_IID);
 
 static NS_DEFINE_CID(kEditorCID,      NS_EDITOR_CID);
-static NS_DEFINE_IID(kIEditorIID,     NS_IEDITOR_IID);
-static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
-
-static NS_DEFINE_IID(kITextEditorIID, NS_ITEXTEDITOR_IID);
 static NS_DEFINE_CID(kTextEditorCID,  NS_TEXTEDITOR_CID);
-static NS_DEFINE_IID(kIHTMLEditorIID, NS_IHTMLEDITOR_IID);
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
-static NS_DEFINE_IID(kIContentIteratorIID, NS_ICONTENTITERTOR_IID);
 static NS_DEFINE_IID(kFileWidgetCID, NS_FILEWIDGET_CID);
 
 #ifdef NS_DEBUG
@@ -1795,7 +1786,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
         nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
         nsCOMPtr<nsIContentIterator> iter;
         result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                    kIContentIteratorIID, 
+                                                    nsIContentIterator::GetIID(), 
                                                     getter_AddRefs(iter));
         if ((NS_SUCCEEDED(result)) && iter)
         {

@@ -19,9 +19,6 @@
 #include "nsEditProperty.h"
 #include "nsString.h"
 
-static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIEditPropertyIID, NS_IEDITPROPERTY_IID);
-
 
 NS_IMPL_ADDREF(nsEditProperty)
 
@@ -110,6 +107,7 @@ nsEditProperty::InstanceShutdown()
   // special
   if (nsIEditProperty::allProperties) {
     delete (nsIEditProperty::allProperties);
+    nsIEditProperty::allProperties = nsnull;
   }
 }
 
@@ -119,12 +117,12 @@ nsEditProperty::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kISupportsIID)) {
+  if (aIID.Equals(nsISupports::GetIID())) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIEditPropertyIID)) {
+  if (aIID.Equals(nsIEditProperty::GetIID())) {
     *aInstancePtr = (void*)(nsIEditProperty*)this;
     NS_ADDREF_THIS();
     return NS_OK;
