@@ -25,129 +25,102 @@
 #include "nsImageMac.h"
 #include "nsDeviceContextMac.h"
 #include "nsRegionMac.h"
+#include "nsScriptableRegion.h"
 #include "nsDeviceContextSpecMac.h"
 #include "nsDeviceContextSpecFactoryM.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
+static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
 static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
-class nsGfxFactoryMac : public nsIFactory
-{   
-  public:   
-    // nsISupports methods   
-    NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                                       void **aResult);   
-    NS_IMETHOD_(nsrefcnt) AddRef(void);   
-    NS_IMETHOD_(nsrefcnt) Release(void);   
+class nsGfxFactoryMac : public nsIFactory {
+public:   
+	// nsISupports methods
+	NS_DECL_ISUPPORTS
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                                       const nsIID &aIID,   
-                                       void **aResult);   
+	// nsIFactory methods   
+	NS_IMETHOD CreateInstance(nsISupports *aOuter,   
+	                          const nsIID &aIID,   
+	                          void **aResult);
 
-    NS_IMETHOD LockFactory(PRBool aLock);   
+	NS_IMETHOD LockFactory(PRBool aLock);   
 
-    nsGfxFactoryMac(const nsCID &aClass);   
-    ~nsGfxFactoryMac();   
+	nsGfxFactoryMac(const nsCID &aClass);   
+	~nsGfxFactoryMac();   
 
-  private:   
-    nsrefcnt  mRefCnt;   
-    nsCID     mClassID;
+private:   
+	nsCID     mClassID;
 };   
 
 nsGfxFactoryMac::nsGfxFactoryMac(const nsCID &aClass)   
-{   
-  mRefCnt = 0;
-  mClassID = aClass;
+{
+	NS_INIT_ISUPPORTS();
+	mClassID = aClass;
 }   
 
 nsGfxFactoryMac::~nsGfxFactoryMac()   
 {   
 }   
 
-nsresult nsGfxFactoryMac::QueryInterface(const nsIID &aIID,   
-                                         void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
-
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsGfxFactoryMac);
-NS_IMPL_RELEASE(nsGfxFactoryMac);
+NS_IMPL_ISUPPORTS1(nsGfxFactoryMac, nsIFactory)
 
 nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,  
                                           const nsIID &aIID,  
                                           void **aResult)  
 {  
-  if (aResult == NULL) {  
-    return NS_ERROR_NULL_POINTER;  
-  }  
+	if (aResult == NULL) {  
+		return NS_ERROR_NULL_POINTER;  
+	}  
 
-  *aResult = NULL;  
-  
-  nsISupports *inst = nsnull;
+	*aResult = NULL;  
 
-  if (mClassID.Equals(kCFontMetrics)) {
-    inst = (nsISupports *)new nsFontMetricsMac();
-  }
-  else if (mClassID.Equals(kCDeviceContext)) {
-    inst = (nsISupports *)new nsDeviceContextMac();
-  }
-  else if (mClassID.Equals(kCRenderingContext)) {
-    inst = (nsISupports *)new nsRenderingContextMac();
-  }
-  else if (mClassID.Equals(kCImage)) {
-    inst = (nsISupports *)new nsImageMac();
-  }
-  else if (mClassID.Equals(kCRegion)) {
-    inst = (nsISupports *)new nsRegionMac();
-  }
-  else if (mClassID.Equals(kCDeviceContextSpec)) {
-    nsDeviceContextSpecMac* dcs;
-    NS_NEWXPCOM(dcs, nsDeviceContextSpecMac);
-    inst = (nsISupports *)dcs;
-  }
-  else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
-    nsDeviceContextSpecFactoryMac* dcs;
-    NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryMac);
-    inst = (nsISupports *)dcs;
-  }
+	nsCOMPtr<nsISupports> inst;
 
-  if (inst == NULL) {  
-    return NS_ERROR_OUT_OF_MEMORY;  
-  }  
+	if (mClassID.Equals(kCFontMetrics)) {
+		NS_NEWXPCOM(inst, nsFontMetricsMac);
+	}
+	else if (mClassID.Equals(kCDeviceContext)) {
+		NS_NEWXPCOM(inst, nsDeviceContextMac);
+	}
+	else if (mClassID.Equals(kCRenderingContext)) {
+		NS_NEWXPCOM(inst, nsRenderingContextMac);
+	}
+	else if (mClassID.Equals(kCImage)) {
+		NS_NEWXPCOM(inst, nsImageMac);
+	}
+	else if (mClassID.Equals(kCRegion)) {
+		NS_NEWXPCOM(inst, nsRegionMac);
+	}
+	else if (mClassID.Equals(kCScriptableRegion)) {
+		nsCOMPtr<nsIRegion> rgn;
+		NS_NEWXPCOM(rgn, nsRegionMac);
+		if (rgn != nsnull) {
+			nsCOMPtr<nsIScriptableRegion> scriptableRgn = new nsScriptableRegion(rgn);
+			inst = scriptableRgn;
+		}
+	}
+	else if (mClassID.Equals(kCDeviceContextSpec)) {
+		NS_NEWXPCOM(inst, nsDeviceContextSpecMac);
+	}
+	else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
+		NS_NEWXPCOM(inst, nsDeviceContextSpecFactoryMac);
+	}
 
-	NS_ADDREF(inst);
-  nsresult res = inst->QueryInterface(aIID, aResult);
-	NS_RELEASE(inst);
+	if (inst == NULL) {  
+		return NS_ERROR_OUT_OF_MEMORY;  
+	}  
 
-  return res;  
-}  
+	return inst->QueryInterface(aIID, aResult);
+}
 
 nsresult nsGfxFactoryMac::LockFactory(PRBool aLock)  
 {  
@@ -156,29 +129,21 @@ nsresult nsGfxFactoryMac::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
-#if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" NS_GFX nsresult NSGetFactory_GFXWIN_DLL(nsISupports* servMgr,
-                                                   const nsCID &aClass,
-                                                   const char *aClassName,
-                                                   const char *aProgID,
-                                                   nsIFactory **aFactory)
-#else
+
 extern "C" NS_GFX nsresult NSGetFactory(nsISupports* servMgr,
                                         const nsCID &aClass,
                                         const char *aClassName,
                                         const char *aProgID,
                                         nsIFactory **aFactory)
-#endif
 {
-  if (nsnull == aFactory) {
-    return NS_ERROR_NULL_POINTER;
-  }
+	if (nsnull == aFactory) {
+		return NS_ERROR_NULL_POINTER;
+	}
 
-  *aFactory = new nsGfxFactoryMac(aClass);
-
-  if (nsnull == aFactory) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+	nsCOMPtr<nsIFactory> factory = new nsGfxFactoryMac(aClass);
+	if (nsnull == factory) {
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+	
+	return factory->QueryInterface(kIFactoryIID, (void**)aFactory);
 }
