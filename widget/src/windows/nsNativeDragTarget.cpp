@@ -31,6 +31,13 @@
 #include "nsIWidget.h"
 #include "nsWindow.h"
 
+#if (_MSC_VER == 1100)
+#define INITGUID
+#include "objbase.h"
+DEFINE_OLEGUID(IID_IDropTarget, 0x00000122L, 0, 0);
+DEFINE_OLEGUID(IID_IUnknown, 0x00000000L, 0, 0);
+#endif
+
 #define DRAG_DEBUG 0
 
 /* Define Class IDs */
