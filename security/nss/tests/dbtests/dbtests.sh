@@ -113,7 +113,7 @@ dbtest_main()
     cd ${HOSTDIR}
 
     
-    Echo "test opening the database readonly in a nonexisting directory"
+    Echo "test opening the database read/write in a nonexisting directory"
     certutil -L -X -d ./non_existant_dir
     ret=$?
     if [ $ret -ne 255 ]; then
