@@ -20,7 +20,6 @@
 #define nsIXPFCObserverManager_h___
 
 #include "nsISupports.h"
-#include "nsIXPFCCommandStateObserver.h"
 
 class nsIXPFCSubject;
 class nsIXPFCObserver;
@@ -30,6 +29,12 @@ class nsIXPFCCommand;
 #define NS_IXPFC_OBSERVERMANAGER_IID   \
 { 0xd28a5590, 0x1f56, 0x11d2,    \
 { 0xbe, 0xd9, 0x00, 0x80, 0x5f, 0x8a, 0x8d, 0xbd } }
+
+enum nsCommandState {  
+  nsCommandState_eNone,
+  nsCommandState_eComplete
+};
+
 
 class nsIXPFCObserverManager : public nsISupports
 {
@@ -43,7 +48,7 @@ public:
   NS_IMETHOD Unregister(nsIXPFCSubject * aSubject, nsIXPFCObserver * aObserver) = 0;
   NS_IMETHOD Notify(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand) = 0;
 
-  NS_IMETHOD RegisterForCommandState(nsIXPFCCommandStateObserver * aCommandStateObserver, nsCommandState aCommandState) = 0;
+  NS_IMETHOD RegisterForCommandState(nsIXPFCObserver * aObserver, nsCommandState aCommandState) = 0;
 
 };
 

@@ -23,7 +23,6 @@
 #include "nsIVector.h"
 #include "nsIIterator.h"
 #include "nsCalToolkit.h"
-#include "nsCalDayListCommand.h"
 #include "nsCalNewModelCommand.h"
 #include "nscalstrings.h"
 

@@ -25,6 +25,7 @@
 #include "nsCalComponent.h"
 #include "nsCalDurationCommand.h"
 #include "nsCalDayListCommand.h"
+#include "nsCalFetchEventsCommand.h"
 #include "nsCalNewModelCommand.h"
 #include "nsCalContextController.h"
 #include "nsCalTimebarContextController.h"
@@ -50,6 +51,7 @@ static NS_DEFINE_IID(kCCalTimeContext, NS_CAL_TIME_CONTEXT_CID);
 static NS_DEFINE_IID(kCCalComponent, NS_CAL_COMPONENT_CID);
 static NS_DEFINE_IID(kCCalDurationCommand, NS_CAL_DURATION_COMMAND_CID);
 static NS_DEFINE_IID(kCCalDayListCommand, NS_CAL_DAYLIST_COMMAND_CID);
+static NS_DEFINE_IID(kCCalFetchEventsCommand, NS_CAL_FETCHEVENTS_COMMAND_CID);
 static NS_DEFINE_IID(kCCalNewModelCommand, NS_CAL_NEWMODEL_COMMAND_CID);
 static NS_DEFINE_IID(kCCalContextController, NS_CAL_CONTEXT_CONTROLLER_CID);
 static NS_DEFINE_IID(kCCalTimebarContextController, NS_CAL_TIMEBAR_CONTEXT_CONTROLLER_CID);
@@ -175,6 +177,9 @@ nsresult nsCalFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kCCalDayListCommand)) {
     inst = (nsISupports *)new nsCalDayListCommand();
+  }
+  else if (mClassID.Equals(kCCalFetchEventsCommand)) {
+    inst = (nsISupports *)new nsCalFetchEventsCommand();
   }
   else if (mClassID.Equals(kCCalNewModelCommand)) {
     inst = (nsISupports *)new nsCalNewModelCommand();

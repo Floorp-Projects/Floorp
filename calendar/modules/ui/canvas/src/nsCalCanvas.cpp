@@ -18,6 +18,8 @@
 
 #include "nsCalCanvas.h"
 #include "nsCalUICIID.h"
+#include "nsXPFCModelUpdateCommand.h"
+#include "nsXPFCToolkit.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCalCanvasCID, NS_CAL_CANVAS_CID);
@@ -89,3 +91,33 @@ nsresult nsCalCanvas :: SetModel(nsIModel * aModel)
 {
   return (nsXPFCCanvas::SetModel(aModel));
 }
+
+nsEventStatus nsCalCanvas::Action(nsIXPFCCommand * aCommand)
+{
+  nsresult res;
+
+  nsXPFCModelUpdateCommand * command  = nsnull;
+  static NS_DEFINE_IID(kModelUpdateCommandCID, NS_XPFC_MODELUPDATE_COMMAND_CID);                 
+  
+  res = aCommand->QueryInterface(kModelUpdateCommandCID,(void**)&command);
+
+  /*
+   * On a ModelUpdate Command, just repaint ourselves....
+   */
+
+  if ((NS_OK == res) && (GetView() != nsnull))
+  {
+    nsRect bounds;
+
+    GetView()->GetBounds(bounds);
+
+    gXPFCToolkit->GetViewManager()->UpdateView(GetView(), 
+                                               bounds, 
+                                               NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_NO_SYNC);
+
+    NS_RELEASE(command);
+  }
+
+  return (nsXPFCCanvas::Action(aCommand));
+}
+

@@ -27,6 +27,9 @@
 #include "nsIXPFCCommandReceiver.h"
 #include "nsIXPFCSubject.h"
 
+class nsXPFCNotificationStateCommand;
+class nsCalFetchEventsCommand;
+
 class nsCalendarModel : public nsICalendarModel,
                         public nsIModel,
                         public nsIXPFCObserver,
@@ -55,6 +58,11 @@ public:
   NS_IMETHOD Attach(nsIXPFCObserver * aObserver);
   NS_IMETHOD Detach(nsIXPFCObserver * aObserver);
   NS_IMETHOD Notify(nsIXPFCCommand * aCommand);
+
+private:
+  NS_IMETHOD HandleNotificationCommand(nsXPFCNotificationStateCommand * aCommand);
+  NS_IMETHOD HandleFetchCommand(nsCalFetchEventsCommand * aCommand);
+  NS_IMETHOD SendModelUpdateCommand();
 
 protected:
   nsICalendarUser    * mCalendarUser;

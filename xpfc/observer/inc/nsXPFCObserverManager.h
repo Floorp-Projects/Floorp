@@ -42,7 +42,11 @@ public:
   NS_IMETHOD Unregister(nsISupports * aSubjectObserver);
   NS_IMETHOD Unregister(nsIXPFCSubject * aSubject, nsIXPFCObserver * aObserver);
   NS_IMETHOD Notify(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand);
-  NS_IMETHOD RegisterForCommandState(nsIXPFCCommandStateObserver * aCommandStateObserver, nsCommandState aCommandState);
+  NS_IMETHOD RegisterForCommandState(nsIXPFCObserver * aObserver, nsCommandState aCommandState);
+
+private:
+  NS_METHOD CheckForCommandStateNotification(nsIXPFCObserver * aObserver);
+  NS_METHOD SendCommandStateNotifications(nsCommandState aCommandState);
 
 protected:
   ~nsXPFCObserverManager();
@@ -50,9 +54,11 @@ protected:
 public:
   PRMonitor * monitor;
 
-public:
+private:
   nsIVector * mList ;
   nsIVector * mState ;
+  PRUint32 mNotificationCount;
+  nsIXPFCSubject * mOriginalNotifier;
 
 };
 

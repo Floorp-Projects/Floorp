@@ -21,6 +21,7 @@
 #include "nsCalUtilCIID.h"
 #include "nsIXPFCCommand.h"
 #include "nsCalDurationCommand.h"
+#include "nsCalFetchEventsCommand.h"
 #include "nsCalToolkit.h"
 #include "nsDateTime.h"
 #include "math.h"
@@ -644,19 +645,59 @@ PRUint32 nsCalTimeContext::GetLastVisibleTime(nsCalPeriodFormat aFormat)
 nsEventStatus nsCalTimeContext::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
 {
 
+  nsEventStatus status ;
   /*
    * Update our internal structure based on this update
    */
 
-  Action(aCommand);
+  status = Action(aCommand);
 
   /*
-   * Tell others we are updated
+   * Pass this notification on.  There may be other
+   * TimeContext's watching us. It is assumed observer's
+   * like Model's will ignore this command
    */
 
   Notify(aCommand);
 
-  return (nsEventStatus_eIgnore);
+  /*
+   * If we consumed the event, send a FetchEvents Command to our observers
+   * Only Model data want this.  If we get a FetchEvents command, we'll just
+   * pass it on (above)
+   */
+
+  if (nsEventStatus_eIgnore != status)
+  {
+    // XXX: Change this to a Fetch for range.  I suppose we just
+    //      Want to ask for our current visible range.  Let the 
+    //      CacheManager decide what to actually request over the
+    //      wire.
+
+    nsCalFetchEventsCommand * fetch_command  = nsnull;
+    nsresult res;
+
+    static NS_DEFINE_IID(kCalFetchEventsCommandCID, NS_CAL_FETCHEVENTS_COMMAND_CID);                 
+
+    res = nsRepository::CreateInstance(kCalFetchEventsCommandCID, 
+                                       nsnull, 
+                                       kXPFCCommandIID, 
+                                       (void **)&fetch_command);
+
+    if (NS_OK == res)
+    {
+      fetch_command->Init();
+
+      // XXX: Are these setup correctly?
+      fetch_command->mStartDate = mStartTime; 
+      fetch_command->mEndDate = mEndTime;
+
+      Notify(fetch_command);
+
+      NS_IF_RELEASE(fetch_command);
+    }
+  }
+
+  return (status);
 }
 
 nsEventStatus nsCalTimeContext::Action(nsIXPFCCommand * aCommand)
@@ -720,7 +761,7 @@ nsEventStatus nsCalTimeContext::HandleDayListCommand(nsCalDayListCommand * aDayL
   NS_IF_RELEASE(iterator);
   NS_IF_RELEASE(aDayListCommand);
 
-  return nsEventStatus_eIgnore;
+  return nsEventStatus_eConsumeDoDefault;
 }
 
 nsEventStatus nsCalTimeContext::HandleDurationCommand(nsCalDurationCommand * aDurationCommand)
@@ -782,7 +823,7 @@ nsEventStatus nsCalTimeContext::HandleDurationCommand(nsCalDurationCommand * aDu
 
   NS_IF_RELEASE(aDurationCommand);
 
-  return nsEventStatus_eIgnore;
+  return nsEventStatus_eConsumeDoDefault;
 }
 
 nsresult nsCalTimeContext :: Attach(nsIXPFCObserver * aObserver)

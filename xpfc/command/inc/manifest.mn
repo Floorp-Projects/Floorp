@@ -13,6 +13,8 @@ EXPORTS = \
 	nsXPFCCommand.h \
 	nsXPFCActionCommand.h \
 	nsXPFCMethodInvokerCommand.h \
+	nsXPFCNotificationStateCommand.h \
+	nsXPFCModelUpdateCommand.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \

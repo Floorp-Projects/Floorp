@@ -15,6 +15,7 @@ EXPORTS = \
 PRIVATE_EXPORTS = \
 	nsCalDurationCommand.h \
 	nsCalDayListCommand.h \
+	nsCalFetchEventsCommand.h \
 	nsCalNewModelCommand.h \
 	$(NULL)
 

@@ -760,6 +760,7 @@ nsresult nsCalendarContainer::RegisterFactories()
   nsRepository::RegisterFactory(kCDurationCID, UTIL_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalDurationCommandCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalDayListCommandCID, CALUI_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCCalFetchEventsCommandCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalNewModelCommandCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalStatusCanvasCID, CALUI_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCCalCommandCanvasCID, CALUI_DLL, PR_FALSE, PR_FALSE);
@@ -788,6 +789,8 @@ nsresult nsCalendarContainer::RegisterFactories()
   nsRepository::RegisterFactory(kCXPFCCanvasCID, XPFC_DLL, PR_TRUE, PR_TRUE);
   nsRepository::RegisterFactory(kCXPFCCanvasManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCXPFCMethodInvokerCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCNotificationStateCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCModelUpdateCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCXPFCActionCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCXPFCCommandServerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
 

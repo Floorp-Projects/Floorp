@@ -16,36 +16,28 @@
  * Reserved.
  */
 
-#ifndef nsCalCanvas_h___
-#define nsCalCanvas_h___
+#ifndef nsXPFCNotificationStateCommand_h___
+#define nsXPFCNotificationStateCommand_h___
 
-#include "nsXPFCCanvas.h"
-#include "nsICalendarUser.h"
+#include "nsXPFCCommand.h"
+#include "nsString.h"
+#include "nsIXPFCObserverManager.h"
 
-class nsCalCanvas : public nsXPFCCanvas
-
+class nsXPFCNotificationStateCommand : public nsXPFCCommand
 {
 public:
-  nsCalCanvas(nsISupports* outer);
+  nsXPFCNotificationStateCommand();
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init();
+  NS_IMETHOD Init() ;
 
-  NS_IMETHOD GetUser(nsICalendarUser *& aUser);  
-  NS_IMETHOD SetUser(nsICalendarUser * aUser);
-
-  NS_IMETHOD_(nsIModel *)   GetModel();
-  NS_IMETHOD                GetModelInterface(const nsIID &aModelIID, nsISupports * aInterface) ;
-  NS_IMETHOD                SetModel(nsIModel * aModel);
-  NS_IMETHOD_(nsEventStatus) Action(nsIXPFCCommand * aCommand);
+public:
+  nsCommandState mCommandState;
 
 protected:
-  ~nsCalCanvas();
-
-protected:
-  nsICalendarUser * mUser;
+  ~nsXPFCNotificationStateCommand();
 
 };
 
-#endif /* nsCalCanvas_h___ */
+#endif /* nsXPFCNotificationStateCommand_h___ */

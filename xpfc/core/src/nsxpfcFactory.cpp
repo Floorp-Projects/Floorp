@@ -142,6 +142,10 @@ nsresult nsxpfcFactory::CreateInstance(nsISupports *aOuter,
     inst = (nsISupports *)new nsXPFCObserverManager();
   } else if (mClassID.Equals(kCXPFCMethodInvokerCommand)) {
     inst = (nsISupports *)new nsXPFCMethodInvokerCommand();
+  } else if (mClassID.Equals(kCXPFCNotificationStateCommand)) {
+    inst = (nsISupports *)new nsXPFCNotificationStateCommand();
+  } else if (mClassID.Equals(kCXPFCModelUpdateCommand)) {
+    inst = (nsISupports *)new nsXPFCModelUpdateCommand();
   } else if (mClassID.Equals(kCXPFCActionCommand)) {
     inst = (nsISupports *)new nsXPFCActionCommand();
   } else if (mClassID.Equals(kCXPFCSubject)) {

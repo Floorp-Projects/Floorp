@@ -39,8 +39,6 @@ class nsICalendarShell;
 #include "nsIXPFCCanvasManager.h"
 #include "nsIXPFCCommand.h"
 #include "nsCalDurationCommand.h"
-#include "nsCalDayListCommand.h"
-#include "nsXPFCMethodInvokerCommand.h"
 #include "nsXPFCActionCommand.h"
 #include "nsIXPFCSubject.h"
 #include "nsICalContextController.h"

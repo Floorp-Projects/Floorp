@@ -845,28 +845,43 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
               /*
                * Now register context and target canvas
+               *
+               * What we want to do is register the canvas with the
+               * Model, not the TimeContext.  Then, register the
+               * Model with the TimeContext.
+               *
+               * Need to figure how this will get affected on Change 
+               * commands
                */
 
+              nsIModel * model = timebar->GetModel();
               res = context->QueryInterface(kXPFCSubjectIID, (void **)&subject2);
 
-              if (res == NS_OK)
+              // Register the Model as Observer of Context
+              if ((nsnull != model) && (res == NS_OK))
               {
-
-                res = timebar->QueryInterface(kXPFCObserverIID, (void **)&observer2);
-
+                res = model->QueryInterface(kXPFCObserverIID, (void **)&observer2);
                 if (res == NS_OK)
                 {
-
                   om->Register(subject2, observer2);
-
                   NS_RELEASE(observer2);
+                }
+                NS_RELEASE(subject2);
 
+                // Register the Canvas as Observer of Model
+                res = model->QueryInterface(kXPFCSubjectIID, (void **)&subject2);
+                if (res == NS_OK)
+                {
+                  res = timebar->QueryInterface(kXPFCObserverIID, (void **)&observer2);
+                  if (res == NS_OK)
+                  {
+                    om->Register(subject2, observer2);
+                    NS_RELEASE(observer2);
+                  }
+                  NS_RELEASE(subject2);
                 }
 
-                NS_RELEASE(subject2);
               }
-
-
             }
 
             NS_RELEASE(timebar);
@@ -882,7 +897,11 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     } else {
 
     /*
-     * Is this a canvas instead
+     * Is this a canvas instead.
+     *
+     * What we really want to do here is register the
+     * context with the Model and the Canvas with
+     * the model.
      */
 
 
@@ -905,7 +924,6 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
             if (res == NS_OK)
             {
-
               canvas2 = root->CanvasFromName(item->control);
 
               if (canvas2 != nsnull)
@@ -915,10 +933,25 @@ NS_IMETHODIMP nsCalXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
                 if (res == NS_OK)
                 {
+                  nsIModel * model = canvas2->GetModel();
 
-                  om->Register(subject, observer);
-
-                  NS_RELEASE(observer);
+                  if (nsnull != model)
+                  {
+                    nsIXPFCSubject *  msubject;
+                    nsIXPFCObserver * mobserver;
+                    res = model->QueryInterface(kXPFCObserverIID, (void **)&mobserver);
+                    if (NS_OK == res)
+                    {
+                      om->Register(subject, mobserver);
+                      NS_RELEASE(mobserver);
+                    }
+                    res = model->QueryInterface(kXPFCSubjectIID, (void **)&msubject);
+                    if (NS_OK == res)
+                    {
+                      om->Register(msubject, observer);
+                      NS_RELEASE(msubject);
+                    }
+                  }
                 }
 
               }

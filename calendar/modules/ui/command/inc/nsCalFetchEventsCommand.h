@@ -16,36 +16,29 @@
  * Reserved.
  */
 
-#ifndef nsCalCanvas_h___
-#define nsCalCanvas_h___
+#ifndef nsCalFetchEventsCommand_h___
+#define nsCalFetchEventsCommand_h___
 
-#include "nsXPFCCanvas.h"
-#include "nsICalendarUser.h"
+#include "nsXPFCCommand.h"
+#include "nsCalUtilCIID.h"
+#include "nsIDateTime.h"
 
-class nsCalCanvas : public nsXPFCCanvas
-
+class nsCalFetchEventsCommand : public nsXPFCCommand
 {
 public:
-  nsCalCanvas(nsISupports* outer);
+  nsCalFetchEventsCommand();
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Init();
-
-  NS_IMETHOD GetUser(nsICalendarUser *& aUser);  
-  NS_IMETHOD SetUser(nsICalendarUser * aUser);
-
-  NS_IMETHOD_(nsIModel *)   GetModel();
-  NS_IMETHOD                GetModelInterface(const nsIID &aModelIID, nsISupports * aInterface) ;
-  NS_IMETHOD                SetModel(nsIModel * aModel);
-  NS_IMETHOD_(nsEventStatus) Action(nsIXPFCCommand * aCommand);
+  NS_IMETHOD Init() ;
 
 protected:
-  ~nsCalCanvas();
+  ~nsCalFetchEventsCommand();
 
-protected:
-  nsICalendarUser * mUser;
+public:
+  nsIDateTime * mStartDate;
+  nsIDateTime * mEndDate;
 
 };
 
-#endif /* nsCalCanvas_h___ */
+#endif /* nsCalFetchEventsCommand_h___ */
