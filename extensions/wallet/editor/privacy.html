@@ -17,12 +17,15 @@ in control – nobody can obtain personal information about you unless you
 explicitly allow them to.
 <p>There are various ways that a site has of obtaining information about
 you.&nbsp; When you request a page from a site, a certain amount of information
-is disclosed in the page-request that your browser makes on your behalf.&nbsp;
-While you are getting the page, the site could be taking notes about your
-behavior (tracking you) and storing those notes on an area of your hard
-disk which it can read back later.&nbsp; And whenever you fill out and
-submit a form, the information on that form is sent to the site.&nbsp;
-Each of these aspects are described below in detail.
+is automatically disclosed in the page-request that your browser makes
+on your behalf.&nbsp; Once you've received the page, the site could ask
+your browser for some additional information.&nbsp; While you are getting
+the page, the site could be tracking you by taking notes about your behavior
+and storing those notes in an area of your hard disk (cookies) which it
+can read back later.&nbsp; And whenever you fill out and submit a form,
+the information on that form is sent to the site.&nbsp; Each of these aspects
+are described below in detail.
+<br>&nbsp;
 <p><b>Requesting a Page</b>
 <p>When you request a page from a site, a small amount of information about
 you is given to that site.&nbsp; In particular, the site is told the three
@@ -58,12 +61,52 @@ It is no more a part of your identity than is the phone number of a pay
 telephone which you happen to be using when making a phone call.
 <p>But if you are concerned and want to block your IP address from being
 given out, see the section on <i>Hiding Your Internet Address</i>.
-<p><i>3. Who referred you</i>
+<p><i>3. Referrer</i>
 <p>The site is also told where you just came from.&nbsp; In other words,
 it knows which page you were reading when you clicked on the link to the
 page you are now requesting.&nbsp; This allows the site to know which other
 site referred you to it.&nbsp; Also, as you traverse the site, it allows
 the site to know where in the site you were most recently.
+<br>&nbsp;
+<p><b>After the Page is Received</b>
+<p>After you receive a page from a site, that page is displayed.&nbsp;
+The page might contain programs, referred to as <i>javascript code, which</i>
+will then execute on your machine.&nbsp; Javascript code has the ability
+to request some information about your machine and to send such information
+back to the site.
+<p>If you do not want any additional information given out, you can easily
+prevent it.&nbsp; Whether or not your browser allows javascript code to
+execute is controlled by your preference settings.&nbsp; That preference
+is initially set to allow javascript to execute.&nbsp; By changing that
+preference, you will be preventing the site from requesting and transmitting
+this information.
+<p>The information that the site can request by using javascript code in
+this manner is usually not very interesting.&nbsp; It includes such things
+as the number (but not the names) of the sites you previously visited,
+whether or not your browser can execute programs written in a language
+called&nbsp; <i>java</i>, the number and type of plugins you have installed
+in your browser, the height and width of the browser window, etc..
+<p>Javascript code is normally incapable of obtaining any information about
+you that would seriously compromise your privacy.&nbsp; However, with your
+permission, javascript code can obtain much more personal information.&nbsp;
+In fact, it could even read information from arbitrary files on your hard
+disk and transfer that information back to the site.&nbsp; But you have
+to grant your permission before any of this can happen.&nbsp; You'll know
+when the site is attempting to use javascript in this manner because a
+box will appear asking you to grant your permission.&nbsp; You should not
+grant it unless you have absolute trust in that site.&nbsp; If you refuse,
+the javascript code is rendered harmless.
+<br>&nbsp;
+<p><b>Downloading a File</b>
+<p>When you are requesting a file (as opposed to a viewable page), your
+e-mail address might be divulged as a courtesy to the site.&nbsp; You know
+when you are requesting a file because its address starts with "ftp://"
+instead of the more usual "http://".
+<p>One of your preference settings determines if your e-mail address should
+be sent as your password when you request files.&nbsp; This preference
+is initially set to not send your e-mail address so, unless you've changed
+it, your e-mail address will not be divulged.
+<br>&nbsp;
 <p><b>Being Tracked by Cookies</b>
 <p>Since the site does not know who you are, it cannot possibly be collecting
 any information on you and has no knowledge of any previous times that
@@ -100,6 +143,7 @@ that it could tell you if a new dog book became available since your last
 visit.&nbsp; It would be a bad thing if it then sold that information to
 the local dog pound so they could cross-check for potential dog owners
 who do not have valid dog licenses.
+<br>&nbsp;
 <p><b>Encountering Foreign Cookies</b>
 <p>When a site stores a cookie, it is the only site that is able to read
 that cookie in the future.&nbsp; That permits a site to build up a profile
@@ -111,7 +155,7 @@ is site specific and nobody can build up a universal database on you.
 stored not by sheep.com but by some marketing site called wolf.com.&nbsp;
 And sheep.com can cause that to happen very simply by having an image from
 wolf.com displayed on its home page.&nbsp; So when you visit sheep.com,
-you are really making a side-trip to wolf.com&nbsp; to get the image and
+you are really making a side trip to wolf.com&nbsp; to get the image and
 wolf.com can store the cookie at that time.&nbsp; Suppose that wolf.com
 has enlisted many other sites to also display its cookie-storing image.&nbsp;
 Now wolf.com will be building up a cookie that contains information about
@@ -123,6 +167,7 @@ think you are visiting are called <i>foreign cookies</i>.&nbsp; If you
 are concerned about the privacy implications of&nbsp; foreign cookies but
 not concerned about ordinary cookies, you could give permission for sites
 to store ordinary cookies only but not store foreign ones.
+<br>&nbsp;
 <p><b>Controlling Your Cookies</b>
 <p>The way you give permission for a site to use (store and/or read) cookies
 is by your preference settings.&nbsp; Your preference could be that your
@@ -160,30 +205,39 @@ reject all future cookie-storing attempts from this site.
 that have been stored on your hard disk as well as a&nbsp; list of sites&nbsp;
 for which you have asked to have the cookie-storing decisions remembered.&nbsp;
 And you can selectively delete any of the cookies or sites in these lists.
+<br>&nbsp;
 <p><b>Evading Cookies</b>
 <p>It should be mentioned that even if you have disabled cookies, the site
-still has a way of tracking you, at least while you remain at that site.
-It does this by storing the information not in a cookie on your machine
+still has ways of tracking you, at least while you remain at that site.
+Presented here is one example.
+<p>The site could store the information not in a cookie on your machine
 but rather in the links that it lets you fetch.&nbsp; Each link that it
-presents for you to click on contains the name of the next page to fetch.&nbsp;
+presents for you to click on contains the address of the next page to fetch.&nbsp;
 But the site could customize that link specifically for you so that it
 contains a bit of tracking information as well.
-<p>To make this clear, suppose that you visit a site called x1.com.&nbsp;
-That site presents you with its home page that has a link to a second page.&nbsp;
-What you see on your screen is some text describing the link (for example,
-"visit our second page").&nbsp; In addition to the visible text, the link
-also contains the address of the second page, such as x2.com.&nbsp;&nbsp;&nbsp;
-But suppose the link on the home page doesn't contain just"x2.com but contains
-something like x2.com?0 instead.&nbsp; The "?0" might be a code saying
-that you haven't visited x2.com yet.&nbsp; Suppose you click on this link
-and then return back to the home page via a link on the second page.&nbsp;
-The home page that the site presents to you this time differs from the
-one it sent you previously in that the link back to x2.com now contains
-x2.com?1.
+<p>To make this clear, suppose that you visit a site called trackme.com.&nbsp;
+That site presents you with its home page and that page contains a link
+to a second page.&nbsp; What you see on your screen is some text describing
+the link (for example, "visit our second page").&nbsp; In addition to the
+visible text, the link also contains the address of the second page, such
+as trackme.com/secondpage.&nbsp;&nbsp;&nbsp; But suppose the link on the
+home page doesn't contain just trackme.com/secondpage but contains something
+like trackme.com/secondpage?0 instead.&nbsp; The "?0" might be a code saying
+that you haven't visited the second page yet.&nbsp; Suppose you click on
+this link and view the second page.&nbsp; Then you click on a link on the
+second page that gets you back to the home page.&nbsp; The home page that
+the site presents to you this time differs from the one it sent you previously
+in that the link back to trackme.com/secondpage now contains trackme.com/secondpage?1.&nbsp;
+The site is now using the page itself (rather than a cookie) to keep track
+of where you've been and what things you've clicked on.
 <p>The good news is that this sort of tracking works only as long as you
 remain at the site and visit its related pages.&nbsp; Once you leave the
 site all of this information is lost.&nbsp; If you should then return again
-later you will be presented with the "x2.com?0" link all over again.
+later you will be presented with the "trackme.com/secondpage?0" link all
+over again.&nbsp; (Of course if you bookmark a page from such a site, when
+you return to that page via the bookmark that tracking information will
+still be there.)
+<br>&nbsp;
 <p><b>Submitting Information on Forms</b>
 <p>Of course if you voluntarily chose to divulge information to the site,
 such as by submitting a form that the site presents to you, you are knowingly
@@ -212,17 +266,18 @@ machine and not on any website.&nbsp; When the Form Manager prefills a
 form with the saved information, that information is not sent to the site
 until you submit the form.&nbsp; Once again you are in control -- no information
 is released until you say so.
+<br>&nbsp;
 <p><b>Divulging your Password</b>
 <p>If you are like most users, you've registered for services at various
 sites.&nbsp; The registration consisted of selecting a user name and password.&nbsp;
 Each time you return to such a site, you fill out and submit a form containing
-the user name and password that you selected for that site.&nbsp; You might
-not want to be burdened with having to remember a different password for
-each site, especially those you don't visit often, so you probably used
-the same password for each site.&nbsp; And the same goes for your user
-name, providing somebody else hadn't already taken it.
-<p>So now each site that you register with has a record of two important
-pieces of information about you, your user name and password.&nbsp; And
+the user name and password that you selected for that site.&nbsp; To avoid
+having to remember a different password for each site, especially those
+you don't visit often, you might have used the same password everywhere.&nbsp;
+And the same goes for your user name, providing somebody else hadn't already
+taken it.
+<p>So each site that you registered with has a record of two important
+pieces of information about you -- your user name and password.&nbsp; And
 if this is the same user name and password that you always use, an unscrupulous
 site administrator at any one of these sites has enough information to
 go impersonating you by logging in to other sites at which you are registered.&nbsp;
@@ -242,6 +297,7 @@ or change them before submitting if they are not what you want.
 <p>The Password Manager also allows you to see which user names you have
 stored for which sites.&nbsp; And it allows you to selectively delete any
 of these items if you wish.
+<br>&nbsp;
 <p><b>Hiding Your Internet Address</b>
 <p>When you request to see a page from a site, your browser needs to tell
 the site your internet address (IP address) so the site knows where to
@@ -268,5 +324,6 @@ you.&nbsp; The site that supplied the page never gets to see your IP address.
 <p>There are several sites that provide such services.&nbsp; Use your favorite
 search engine to find them -- try search words such as "anonymous" and
 "surfing".
+<br>&nbsp;
 </body>
 </html>
