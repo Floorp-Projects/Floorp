@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Terry Weissman <terry@netscape.com>, 22 Oct 1997.
+ * Contributors: Joel York <joel_york@yahoo.com>
  */
 
 package grendel.storage;
@@ -102,12 +103,12 @@ public class BerkeleyStore extends Store {
   }
 
   public Folder getFolder(URL url) {
-    Assert.NotYetImplemented("BerkeleyStore.getFolder(URL)");
-    return null;
+    URLName urlName = new URLName(url);
+    return getFolder(urlName);
   }
 
   public Folder getFolder(URLName urlName) {
-    Assert.NotYetImplemented("BerkeleyStore.getFolder(URLName)");
-    return null;
+    Folder folder = new BerkeleyFolder(this, new File(urlName.getFile()));
+    return folder;
   }
 }
