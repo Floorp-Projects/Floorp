@@ -300,6 +300,8 @@ int main(int argc, char **argv)
 
         if (NS_FAILED(result)) return 1;
 
+        protoConn->Open();
+
 #endif // 0
         
         

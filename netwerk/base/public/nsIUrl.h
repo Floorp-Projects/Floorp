@@ -98,7 +98,7 @@ public:
  * If you do feel something belongs here, please do send me a mail. Thanks!
  */
 
-class nsIUrl : public nsITypicalUrl {
+class nsIUrl : public nsISupports {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IURL_IID);
 

@@ -37,7 +37,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 // Client initiation is the most command case and is attempted first.
 
 nsFtpProtocolConnection::nsFtpProtocolConnection()
-    : mUrl(nsnull), mConnected(PR_FALSE) {
+    : mUrl(nsnull), mConnected(PR_FALSE), mListener(nsnull) {
 
     mEventQueue = PL_CreateEventQueue("FTP Event Queue", PR_CurrentThread());
     NS_INIT_REFCNT();
@@ -61,12 +61,12 @@ nsFtpProtocolConnection::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    /*if (aIID.Equals(nsIStreamListener::GetIID()) ||
+    if (aIID.Equals(nsIStreamListener::GetIID()) ||
         aIID.Equals(nsIStreamObserver::GetIID())) {
         *aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
         NS_ADDREF_THIS();
         return NS_OK;
-    }*/
+    }
     return NS_NOINTERFACE; 
 }
 
@@ -112,19 +112,20 @@ nsFtpProtocolConnection::Open(void) {
     nsresult rv;
     nsIThread* workerThread = nsnull;
     nsFtpConnectionThread* protocolInterpreter = 
-        new nsFtpConnectionThread(mEventQueue, mListener);
+        new nsFtpConnectionThread(mEventQueue, this);
     NS_ASSERTION(protocolInterpreter, "ftp protocol interpreter alloc failed");
     NS_ADDREF(protocolInterpreter);
 
     if (!protocolInterpreter)
         return NS_ERROR_OUT_OF_MEMORY;
-    
+
+    protocolInterpreter->Init(workerThread, mUrl);
+    protocolInterpreter->SetUsePasv(PR_TRUE);
+
     rv = NS_NewThread(&workerThread, protocolInterpreter);
     NS_ASSERTION(NS_SUCCEEDED(rv), "new thread failed");
     
-    // XXX not sure this is necessary.
-    protocolInterpreter->Init(workerThread);
-
+    // XXX this release should probably be in the destructor.
     NS_RELEASE(protocolInterpreter);
     return NS_OK;
 }
@@ -153,14 +154,33 @@ nsFtpProtocolConnection::GetOutputStream(nsIOutputStream* *result) {
 
 NS_IMETHODIMP
 nsFtpProtocolConnection::Get(void) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return Open();
 }
 
 NS_IMETHODIMP
 nsFtpProtocolConnection::Put(void) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    nsIThread* workerThread = nsnull;
+    nsFtpConnectionThread* protocolInterpreter = 
+        new nsFtpConnectionThread(mEventQueue, this);
+    NS_ASSERTION(protocolInterpreter, "ftp protocol interpreter alloc failed");
+    NS_ADDREF(protocolInterpreter);
+
+    if (!protocolInterpreter)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    protocolInterpreter->Init(workerThread, mUrl);
+    protocolInterpreter->SetAction(PUT);
+    protocolInterpreter->SetUsePasv(PR_TRUE);
+
+    rv = NS_NewThread(&workerThread, protocolInterpreter);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "new thread failed");
+    
+    // XXX this release should probably be in the destructor.
+    NS_RELEASE(protocolInterpreter);
+    return NS_OK;
 }
-/*
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIStreamObserver methods:
 
@@ -173,6 +193,7 @@ NS_IMETHODIMP
 nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
                                         nsresult aStatus,
                                         nsIString* aMsg) {
+    // Release the lock so the user get's the data stream
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -183,10 +204,11 @@ NS_IMETHODIMP
 nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
                                          nsIInputStream *aIStream, 
                                          PRUint32 aSourceOffset,
-                                         PRUint32 aLength)
+                                         PRUint32 aLength) {
+    // Fill in the buffer w/ the new data.
     return NS_ERROR_NOT_IMPLEMENTED;
 }
-*/
+
 NS_IMETHODIMP
 nsFtpProtocolConnection::SetStreamListener(nsIStreamListener *aListener) {
     mListener = aListener;

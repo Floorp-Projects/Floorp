@@ -27,13 +27,13 @@ nsFtpStreamListenerEvent::nsFtpStreamListenerEvent(nsIStreamListener* listener,
                                              nsISupports* context)
     : mListener(listener), mContext(context)
 {
-    NS_ADDREF(mListener);
+    NS_IF_ADDREF(mListener);
     NS_IF_ADDREF(mContext);
 }
 
 nsFtpStreamListenerEvent::~nsFtpStreamListenerEvent()
 {
-    NS_RELEASE(mListener);
+    NS_IF_RELEASE(mListener);
     NS_IF_RELEASE(mContext);
 }
 

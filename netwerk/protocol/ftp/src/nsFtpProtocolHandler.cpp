@@ -90,7 +90,16 @@ nsFtpProtocolHandler::NewUrl(const char* aSpec,
 
     rv = url->Init(aSpec, aBaseUrl);
 
-    *result = NS_STATIC_CAST(nsIUrl*, url);
+    nsIUrl* realUrl = nsnull;
+    
+    rv = url->QueryInterface(nsIUrl::GetIID(), (void**)&realUrl);
+    if (NS_FAILED(rv)) return rv;
+
+    // XXX this is the default port for ftp. we need to strip out the actual
+    // XXX requested port.
+    realUrl->SetPort(21);
+
+    *result = realUrl;
     NS_ADDREF(*result);
 
     return rv;
