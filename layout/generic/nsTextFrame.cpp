@@ -39,11 +39,6 @@
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsXIFConverter.h"
-#if XP_NEW_SELECTION
-#else
-#include "nsISelection.h"
-#endif
-#include "nsSelectionRange.h"
 #include "nsHTMLAtoms.h"
 
 #include "nsITextContent.h"
@@ -580,16 +575,15 @@ TextFrame::ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
                                 PRInt32* aIndicies, PRInt32 aTextLength,
                                 SelectionInfo& aResult)
 {
+#if 0
+//DEBUG MJUDGE  HERE IS WHERE THE WORK IS
   // Assume, for now, that the selection misses this section of
   // content completely.
   aResult.mStartOffset = aTextLength;
   aResult.mEndOffset = aTextLength;
   aResult.mEmptySelection = PR_FALSE;
 
-#if XP_NEW_SELECTION
-#else
   nsISelection     * selection;
-#endif
   aDocument->GetSelection(selection);
 
   nsSelectionRange * range     = selection->GetRange();
@@ -674,6 +668,7 @@ TextFrame::ComputeSelectionInfo(nsIRenderingContext& aRenderingContext,
   NS_IF_RELEASE(startContent);
   NS_IF_RELEASE(endContent);
   NS_RELEASE(selection);
+#endif //0
 }
 
 #define XP_IS_SPACE_W XP_IS_SPACE

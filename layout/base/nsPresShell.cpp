@@ -38,6 +38,8 @@
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsHTMLParts.h"
+#include "nsISelection.h"
+#include "nsLayoutCID.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -142,6 +144,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPresShellIID, NS_IPRESSHELL_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 static NS_DEFINE_IID(kIViewObserverIID, NS_IVIEWOBSERVER_IID);
+static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
+static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver
@@ -215,6 +219,8 @@ public:
   virtual nsIPresContext* GetPresContext();
   virtual nsIViewManager* GetViewManager();
   virtual nsIStyleSet* GetStyleSet();
+  virtual nsresult SetFocus(nsIFrame *aFrame);
+  virtual nsresult GetSelection(nsISelection **aSelection);
   NS_IMETHOD EnterReflowLock();
   NS_IMETHOD ExitReflowLock();
   virtual void BeginObservingDocument();
@@ -261,6 +267,8 @@ protected:
   PRUint32 mReflowLockCount;
   PRBool mIsDestroying;
   nsIFrame* mCurrentEventFrame;
+  nsIFrame* mFocusEventFrame; //keeps track of which frame has focus. 
+  nsISelection *mSelection;
 };
 
 #ifdef NS_DEBUG
@@ -322,6 +330,7 @@ PresShell::PresShell()
 {
   //XXX joki 11/17 - temporary event hack.
   mIsDestroying = PR_FALSE;
+  nsRepository::CreateInstance(kRangeListCID, nsnull, kISelectionIID, (void **) &mSelection);
 }
 
 #ifdef NS_DEBUG
@@ -394,6 +403,7 @@ PresShell::~PresShell()
     mDocument->DeleteShell(this);
     NS_RELEASE(mDocument);
   }
+  NS_IF_RELEASE(mSelection);
   mRefCnt = 0;
 }
 
@@ -482,6 +492,27 @@ PresShell::GetStyleSet()
   NS_IF_ADDREF(mStyleSet);
   return mStyleSet;
 }
+
+nsresult 
+PresShell::SetFocus(nsIFrame *aFrame)
+{
+  if (!aFrame)
+    return NS_ERROR_NULL_POINTER;
+  mFocusEventFrame = aFrame;
+  return NS_OK;
+}
+
+
+
+nsresult
+PresShell::GetSelection(nsISelection **aSelection)
+{
+  if (!aSelection || !mSelection)
+    return NS_ERROR_NULL_POINTER;
+  return mSelection->QueryInterface(kISelectionIID,(void **)aSelection);
+}
+
+
 
 // Make shell be a document observer
 void
@@ -816,6 +847,9 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
   if (aFrame == mCurrentEventFrame) {
     mCurrentEventFrame = nsnull;
   }
+  if (aFrame == mFocusEventFrame) {
+    mFocusEventFrame = nsnull;
+  }
 }
 
 NS_IMETHODIMP PresShell :: CreateRenderingContext(nsIFrame *aFrame,
@@ -1142,6 +1176,10 @@ NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
   frame = (nsIFrame *)clientData;
 
   if (nsnull != frame) {
+    if (mSelection && mFocusEventFrame && aEvent->eventStructType == NS_KEY_EVENT)
+    {
+      mSelection->HandleKeyEvent(aEvent, mFocusEventFrame);
+    }
     frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
     if (nsnull != mCurrentEventFrame) {
       //Once we have the targetFrame, handle the event in this order

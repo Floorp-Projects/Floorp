@@ -351,14 +351,6 @@ protected:
   static PRInt32    mStartPos;
 
   // Selection data is valid only from the Mouse Press to the Mouse Release
-#if XP_NEW_SELECTION
-#else
-  static nsSelectionRange * mSelectionRange;
-  static nsISelection     * mSelection;
-
-  static nsSelectionPoint * mStartSelectionPoint;
-  static nsSelectionPoint * mEndSelectionPoint;
-#endif //XP_NEW_SELECTION
   ///////////////////////////////////
 
 
