@@ -31,7 +31,7 @@ MODULE=raptor
 REQUIRES=util img xpcom raptor netlib
 
 DEFINES += -D_IMPL_NS_GFXONXP 
-CFLAGS	+= $(shell gtk-config --cflags)
+CFLAGS	+= $(TK_GTK_CFLAGS)
 
 LLIBS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorbase.a $(DIST)/lib/libraptorgfx.a
 
