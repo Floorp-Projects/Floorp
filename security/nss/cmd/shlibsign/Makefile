@@ -60,10 +60,6 @@ else
     IS_WINDOWS="NO"
 endif
 
-ifeq ($(OS_TARGET), IRIX)
-    OS_LIBS += -lgen
-endif
-
 #
 # we really should have this driven from a list file made during the normal
 # NSS build prodecure.
