@@ -762,9 +762,13 @@ _pl_NativeNotify(PLEventQueue* self)
     unsigned char buf[] = { NOTIFY_TOKEN };
 
     count = write(self->eventPipe[1], buf, 1);
-	self->notifyCount++;
-    return (count == 1 || (count == -1 && (errno == EAGAIN
-    || errno == EWOULDBLOCK))) ? PR_SUCCESS : PR_FAILURE;
+	if (count == 1) {
+		self->notifyCount++;
+		return PR_SUCCESS;
+	} else if ((count == -1) && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) {
+		return PR_SUCCESS;
+	} else
+		return PR_FAILURE;
 }/* --- end _pl_NativeNotify() --- */
 #endif /* XP_UNIX */
 
@@ -820,11 +824,13 @@ _pl_AcknowledgeNativeNotify(PLEventQueue* self)
 	if (self->notifyCount <= 0) return PR_SUCCESS;
     /* consume the byte NativeNotify put in our pipe: */
     count = read(self->eventPipe[0], &c, 1);
-	self->notifyCount--;
-    return ((count == 1 && c == NOTIFY_TOKEN) || (count == -1
-    && (errno == EAGAIN || errno == EWOULDBLOCK)))
-    ? PR_SUCCESS : PR_FAILURE;
-
+	if ((count == 1) && (c == NOTIFY_TOKEN)) {
+		self->notifyCount--;
+		return PR_SUCCESS;
+	} else if ((count == -1) && ((errno == EAGAIN) || (errno == EWOULDBLOCK))) {
+		return PR_SUCCESS;
+	} else
+		return PR_FAILURE;
 #else
 
 #if defined(XP_MAC)
