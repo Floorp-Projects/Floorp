@@ -33,6 +33,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 
+#include "ImageErrors.h"
 #include "ImageLogging.h"
 
 #include "nspr.h"
@@ -102,20 +103,7 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
 
   mListener = aObserver;
 
-  if (aLoadGroup) {
-    //
-    // XXX: This does not deal with the situation where cached content
-    //      is being revalidated.  In this case, the request needs to
-    //      be added in case the cache entry is doomed.
-    //
-    PRUint32 imageStatus = mOwner->GetImageStatus();
-    if (!(imageStatus & imgIRequest::STATUS_LOAD_COMPLETE) &&
-        !(imageStatus & imgIRequest::STATUS_ERROR)) {
-      aLoadGroup->AddRequest(this, nsnull);
-      mLoadGroup = aLoadGroup;
-      mIsInLoadGroup = PR_TRUE;
-    }
-  }
+  mLoadGroup = aLoadGroup;
 
   PR_Unlock(mLock);
 
@@ -131,7 +119,7 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
 
   PR_Lock(mLock);
 
-  mOwner->RemoveProxy(this, NS_OK, PR_FALSE);
+  mOwner->RemoveProxy(this, NS_IMAGELIB_CHANGING_OWNER, PR_FALSE);
   NS_RELEASE(mOwner);
 
   mOwner = aNewOwner;
@@ -142,6 +130,35 @@ nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
   PR_Unlock(mLock);
 
   return NS_OK;
+}
+
+void imgRequestProxy::AddToLoadGroup()
+{
+  NS_ASSERTION(!mIsInLoadGroup, "Whaa, we're already in the loadgroup!");
+
+  if (!mIsInLoadGroup && mLoadGroup) {
+    mLoadGroup->AddRequest(this, nsnull);
+    mIsInLoadGroup = PR_TRUE;
+  }
+}
+
+void imgRequestProxy::RemoveFromLoadGroup()
+{
+  if (!mIsInLoadGroup)
+    return;
+
+  /* calling RemoveFromLoadGroup may cause the document to finish
+     loading, which could result in our death.  We need to make sure
+     that we stay alive long enough to fight another battle... at
+     least until we exit this function.
+  */
+  nsCOMPtr<imgIRequest> kungFuDeathGrip(this);
+
+  mLoadGroup->RemoveRequest(this, NS_OK, nsnull);
+  mIsInLoadGroup = PR_FALSE;
+
+  // We're done with the loadgroup, release it.
+  mLoadGroup = nsnull;
 }
 
 
@@ -391,34 +408,16 @@ void imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   GetName(name);
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStartRequest", "name", name.get());
 #endif
-
-  if (!mIsInLoadGroup && mLoadGroup) {
-    mLoadGroup->AddRequest(this, nsnull);
-    mIsInLoadGroup = PR_TRUE;
-  }
-
 }
 
 void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode)
 {
-  /* it is ok to get multiple OnStopRequest messages */
-  if (!mLoadGroup)
-    return;
-
 #ifdef PR_LOGGING
   nsCAutoString name;
   GetName(name);
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStopRequest", "name", name.get());
 #endif
 
-  /* calling RemoveRequest may cause the document to finish loading,
-     which could result in our death.  We need to make sure that we stay
-     alive long enough to fight another battle... at least until we exit
-     this function.
-   */
-  nsCOMPtr<imgIRequest> kungFuDeathGrip(this);
-
-  mLoadGroup->RemoveRequest(this, nsnull, statusCode);
-  mIsInLoadGroup = PR_FALSE;
+  RemoveFromLoadGroup();
 }
 

@@ -58,6 +58,9 @@ public:
   nsresult ChangeOwner(imgRequest *aNewOwner); // this will change mOwner.  Do not call this if the previous
                                                // owner has already sent notifications out!
 
+  void AddToLoadGroup();
+  void RemoveFromLoadGroup();
+
 protected:
   friend class imgRequest;
 
