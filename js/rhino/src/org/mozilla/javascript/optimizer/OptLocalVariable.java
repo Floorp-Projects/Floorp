@@ -37,14 +37,13 @@
 package org.mozilla.javascript.optimizer;
 
 import org.mozilla.javascript.*;
-import org.mozilla.classfile.JavaVariable;
 
-final class OptLocalVariable implements JavaVariable
+final class OptLocalVariable
 {
 
-    OptLocalVariable(String name, boolean isParameter)
+    OptLocalVariable(int index, boolean isParameter)
     {
-        itsName = name;
+        itsIndex = index;
         itsIsParameter = isParameter;
     }
 
@@ -55,23 +54,7 @@ final class OptLocalVariable implements JavaVariable
         return (OptLocalVariable)n.getProp(Node.VARIABLE_PROP);
     }
 
-    public String toString() {
-        return "LocalVariable : '" + getName()
-                    + "', index = " + getIndex()
-                    + ", isNumber = " + itsIsNumber
-                    + ", isParameter = " + isParameter()
-                    + ", JRegister = " + itsJRegister;
-    }
-
-    public String getName() {
-        return itsName;
-    }
-
-    public String getTypeDescriptor() {
-        return isNumber() ? "D" : "Ljava/lang/Object;";
-    }
-
-    public short getJRegister() {
+    short getJRegister() {
         return itsJRegister;
     }
 
@@ -79,28 +62,8 @@ final class OptLocalVariable implements JavaVariable
         itsJRegister = aJReg;
     }
 
-    /**
-     * Get the offset into the bytecode where the variable becomes live.
-     * Used for generating the local variable table.
-     */
-    public int getStartPC() {
-        return initPC;
-    }
-
     int getIndex() {
         return itsIndex;
-    }
-
-    void setIndex(int index) {
-        itsIndex = index;
-    }
-
-    /**
-     * Set the offset into the bytecode where the variable becomes live.
-     * Used for generating the local variable table.
-     */
-    void setStartPC(int pc) {
-        initPC = pc;
     }
 
     void setIsNumber()      { itsIsNumber = true; }
@@ -108,13 +71,10 @@ final class OptLocalVariable implements JavaVariable
 
     boolean isParameter()   { return itsIsParameter; }
 
-    private String itsName;
     private boolean itsIsParameter;
-    private int itsIndex = -1;
+    private int itsIndex;
 
     private short itsJRegister = -1;   // unassigned
 
     private boolean itsIsNumber;
-
-    private int initPC;
 }

@@ -68,7 +68,7 @@ public class InvokerImpl extends Invoker {
                       "org.mozilla.javascript.Invoker",
                       "<init>", "()V");
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)1, null); // one argument -- this???
+        cfw.stopMethod((short)1); // one argument -- this???
 
         // Add the invoke() method call
         cfw.startMethod("invoke",
@@ -267,7 +267,7 @@ public class InvokerImpl extends Invoker {
         } else {
             cfw.add(ByteCode.ARETURN);
         }
-        cfw.stopMethod((short)3, null); // three arguments, including the this pointer???
+        cfw.stopMethod((short)3); // three arguments, including the this pointer???
 
         byte[] bytes = cfw.toByteArray();
 

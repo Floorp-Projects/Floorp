@@ -68,8 +68,6 @@ class Optimizer
     {
         if (theFunction.fnode.requiresActivation()) return;
 
-        theFunction.establishVarsIndices();
-
         inDirectCallFunction = theFunction.isTargetOfDirectCall();
 
         ObjArray statementsArray = new ObjArray();

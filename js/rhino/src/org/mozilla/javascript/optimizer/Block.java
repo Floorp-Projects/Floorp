@@ -585,7 +585,7 @@ class Block
     {
         if (DEBUG) {
             for (int i = 0; i < fn.getVarCount(); i++) {
-                String name = fn.getVar(i).getName();
+                String name = fn.fnode.getParamOrVarName(i);
                 if (itsUseBeforeDefSet.test(i))
                     System.out.println(name + " is used before def'd");
                 if (itsNotDefSet.test(i))

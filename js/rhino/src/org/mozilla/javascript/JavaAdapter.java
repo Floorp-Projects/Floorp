@@ -542,7 +542,7 @@ public final class JavaAdapter
         cfw.addInvoke(ByteCode.INVOKESPECIAL,
                       superName, "<init>", "()V");
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)1, null); // 1: single this argument
+        cfw.stopMethod((short)1); // 1: single this argument
 
         for (int i = 0; i != methods.length; ++i) {
             Method method = methods[i];
@@ -564,7 +564,7 @@ public final class JavaAdapter
                           "([Ljava/lang/Object;)Ljava/lang/Object;");
             generateReturnResult(cfw, returnType);
 
-            cfw.stopMethod((short)localsEnd, null);
+            cfw.stopMethod((short)localsEnd);
         }
 
         return cfw.toByteArray();
@@ -673,7 +673,7 @@ public final class JavaAdapter
                 "Lorg/mozilla/javascript/Scriptable;");
 
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)3, null); // 2: this + delegee
+        cfw.stopMethod((short)3); // 2: this + delegee
     }
 
     private static void generateSerialCtor(ClassFileWriter cfw,
@@ -703,7 +703,7 @@ public final class JavaAdapter
                 "Lorg/mozilla/javascript/Scriptable;");
 
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)20, null); // TODO: magic number "20"
+        cfw.stopMethod((short)20); // TODO: magic number "20"
     }
 
     private static void generateEmptyCtor(ClassFileWriter cfw,
@@ -750,7 +750,7 @@ public final class JavaAdapter
                 "Lorg/mozilla/javascript/Scriptable;");
 
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)2, null); // this + delegee
+        cfw.stopMethod((short)2); // this + delegee
     }
 
     /**
@@ -990,7 +990,7 @@ public final class JavaAdapter
 
         generateReturnResult(cfw, returnType);
 
-        cfw.stopMethod((short)LOCALS_END, null);
+        cfw.stopMethod((short)LOCALS_END);
     }
 
     /**
@@ -1097,7 +1097,7 @@ public final class JavaAdapter
         } else {
             cfw.add(ByteCode.RETURN);
         }
-        cfw.stopMethod((short)(paramOffset + 1), null);
+        cfw.stopMethod((short)(paramOffset + 1));
     }
 
     /**

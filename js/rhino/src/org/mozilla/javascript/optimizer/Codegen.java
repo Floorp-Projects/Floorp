@@ -361,7 +361,7 @@ public class Codegen extends Interpreter
         cfw.addALoad(firstLocal);
         cfw.add(ByteCode.ARETURN);
 
-        cfw.stopMethod((short)(firstLocal + 1), null);
+        cfw.stopMethod((short)(firstLocal + 1));
 
     }
 
@@ -441,7 +441,7 @@ public class Codegen extends Interpreter
                           getBodyMethodSignature(n));
             cfw.add(ByteCode.ARETURN);
         }
-        cfw.stopMethod((short)5, null);
+        cfw.stopMethod((short)5);
         // 5: this, cx, scope, js this, args[]
     }
 
@@ -464,7 +464,7 @@ public class Codegen extends Interpreter
                       "(Lorg/mozilla/javascript/Script;[Ljava/lang/String;)V");
         cfw.add(ByteCode.RETURN);
         // 1 = String[] args
-        cfw.stopMethod((short)1, null);
+        cfw.stopMethod((short)1);
     }
 
     private void generateExecute(ClassFileWriter cfw, ScriptOrFnNode script)
@@ -495,7 +495,7 @@ public class Codegen extends Interpreter
 
         cfw.add(ByteCode.ARETURN);
         // 3 = this + context + scope
-        cfw.stopMethod((short)3, null);
+        cfw.stopMethod((short)3);
     }
 
     private void generateScriptCtor(ClassFileWriter cfw,
@@ -526,7 +526,7 @@ public class Codegen extends Interpreter
 
         cfw.add(ByteCode.RETURN);
         // 1 parameter = this
-        cfw.stopMethod((short)1, null);
+        cfw.stopMethod((short)1);
     }
 
     private void generateFunctionConstructor(ClassFileWriter cfw)
@@ -582,7 +582,7 @@ public class Codegen extends Interpreter
         }
 
         // 4 = this + scope + context + id
-        cfw.stopMethod((short)4, null);
+        cfw.stopMethod((short)4);
     }
 
     private void generateFunctionInit(ClassFileWriter cfw,
@@ -624,7 +624,7 @@ public class Codegen extends Interpreter
 
         cfw.add(ByteCode.RETURN);
         // 3 = (scriptThis/functionRef) + scope + context
-        cfw.stopMethod((short)3, null);
+        cfw.stopMethod((short)3);
     }
 
     private void generateGetEncodedSource(ClassFileWriter cfw,
@@ -687,7 +687,7 @@ public class Codegen extends Interpreter
         cfw.add(ByteCode.ARETURN);
 
         // 1: this and no argument or locals
-        cfw.stopMethod((short)1, null);
+        cfw.stopMethod((short)1);
     }
 
     private void emitRegExpInit(ClassFileWriter cfw)
@@ -747,7 +747,7 @@ public class Codegen extends Interpreter
         cfw.addPush(1);
         cfw.add(ByteCode.PUTSTATIC, mainClassName, "_reInitDone", "Z");
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)2, null);
+        cfw.stopMethod((short)2);
     }
 
     private void emitConstantDudeInitializers(ClassFileWriter cfw)
@@ -783,7 +783,7 @@ public class Codegen extends Interpreter
         }
 
         cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)0, null);
+        cfw.stopMethod((short)0);
     }
 
     private static void pushParamNamesArray(ClassFileWriter cfw,
@@ -1062,7 +1062,7 @@ class BodyCodegen
 
         generateEpilogue();
 
-        cfw.stopMethod((short)(localsMax + 1), debugVars);
+        cfw.stopMethod((short)(localsMax + 1));
     }
 
     private void initBodyGeneration()
@@ -1231,13 +1231,18 @@ class BodyCodegen
                 if (reg >= 0) {
                     lVar.assignJRegister(reg);
                 }
-                lVar.setStartPC(cfw.getCurrentCodeOffset());
-            }
 
-            // Indicate that we should generate debug information for
-            // the variable table. (If we're generating debug info at
-            // all.)
-            debugVars = fnCurrent.getVarsArray();
+                // Add debug table enry if we're generating debug info
+                if (compilerEnv.isGenerateDebugInfo()) {
+                    String name = fnCurrent.fnode.getParamOrVarName(i);
+                    String type = lVar.isNumber() ? "D" : "Ljava/lang/Object;";
+                    int startPC = cfw.getCurrentCodeOffset();
+                    if (reg < 0) {
+                        reg = lVar.getJRegister();
+                    }
+                    cfw.addVariableDescriptor(name, type, startPC, reg);
+                }
+            }
 
             // Skip creating activation object.
             return;
@@ -1306,13 +1311,7 @@ class BodyCodegen
 
         // default is to generate debug info
         if (compilerEnv.isGenerateDebugInfo()) {
-            OptLocalVariable lv = new OptLocalVariable(debugVariableName,
-                                                       false);
-            lv.assignJRegister(variableObjectLocal);
-            lv.setStartPC(cfw.getCurrentCodeOffset());
-
-            debugVars = new OptLocalVariable[1];
-            debugVars[0] = lv;
+            cfw.addVariableDescriptor(debugVariableName, "Ljava/lang/Object;", cfw.getCurrentCodeOffset(), variableObjectLocal);
         }
 
         if (fnCurrent == null) {
@@ -3686,7 +3685,6 @@ class BodyCodegen
     private short firstFreeLocal;
     private short localsMax;
 
-    private OptLocalVariable[] debugVars;
     private int itsLineNumber;
 
     private boolean hasVarsInRegs;

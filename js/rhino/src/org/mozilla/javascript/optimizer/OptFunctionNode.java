@@ -48,8 +48,7 @@ final class OptFunctionNode
         int parameterCount = fnode.getParamCount();
         optVars = new OptLocalVariable[N];
         for (int i = 0; i != N; ++i) {
-            String name = fnode.getParamOrVarName(i);
-            optVars[i] = new OptLocalVariable(name, i < parameterCount);
+            optVars[i] = new OptLocalVariable(i, i < parameterCount);
         }
         fnode.setCompilerData(this);
     }
@@ -108,14 +107,6 @@ final class OptFunctionNode
         int index = fnode.getParamOrVarIndex(name);
         if (index < 0) { return null; }
         return optVars[index];
-    }
-
-    void establishVarsIndices()
-    {
-        int N = optVars.length;
-        for (int i = 0; i != N; i++) {
-            optVars[i].setIndex(i);
-        }
     }
 
     OptLocalVariable[] getVarsArray()
