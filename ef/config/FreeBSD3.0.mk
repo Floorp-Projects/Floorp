@@ -1,4 +1,3 @@
-#! gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,29 +14,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH	= ..
+#
+# Config stuff for FreeBSD 3.0 (ELF)
+#
 
-include $(DEPTH)/config/config.mk
-DIRS = mkdepend
-CSRCS	= nsinstall.c pathsub.c
-
-PLSRCS	= nfspwd.pl
-
-ifneq ($(OS_ARCH),WINNT)
-PROGRAM	= nsinstall
-#TARGETS = $(PROGRAM) $(OBJDIR)/$(PLSRCS:.pl=)
-endif
-
-MKDEPENDENCIES =
-
-include $(DEPTH)/config/rules.mk
-
-# Redefine MAKE_OBJDIR for just this directory (nsinstall is not compiled yet !)
-define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); fi
-endef
-
-export:: $(TARGETS)
-
-clean clobber realclean clobber_all::
-	$(MAKE) $@ -C ./mkdepend
+include $(DEPTH)/config/FreeBSD.mk

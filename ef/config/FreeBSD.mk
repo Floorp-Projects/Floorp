@@ -15,12 +15,12 @@
 # Reserved.
 
 #
-# Config stuff for Linux
+# Config stuff for FreeBSD
 #
 
 include $(DEPTH)/config/UNIX.mk
 
-DEFAULT_COMPILER                = gcc
+DEFAULT_COMPILER		= gcc
 CC				= gcc
 CXX				= g++
 AS				= gcc -c
@@ -31,16 +31,19 @@ MKMODULE		= ld -Ur -o $@
 WARNING_CFLAG	= -Wall
 
 # used by mkdepend
-X11INCLUDES             =   -I/usr/X11R6/include
+X11INCLUDES		=   -I/usr/X11R6/include
 INCLUDES		+=  -I$(subst libgcc.a,include, \
                                       $(shell gcc -print-libgcc-file-name))
+
 ifeq ($(CPU_ARCH),x86)
 DEPENDFLAGS		+= -D__i386__
 endif
 
-OS_CFLAGS		= $(DSO_CFLAGS) -DLINUX -Dlinux
+OS_REL_CFLAGS           = -mno-486 -Di386
+
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -DFREEBSD -ansi -Wall -pipe -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 OS_CXXFLAGS		= $(OS_CFLAGS)
-OS_ASFLAGS		= -DLINUX -Dlinux
+OS_ASFLAGS		= -DFREEBSD
 OS_LDFLAGS		=
 OS_LIBS			= -lm
 

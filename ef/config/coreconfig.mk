@@ -16,35 +16,22 @@
 
 #
 # Configuration information for building in the "Core Components" source module
-# This is a copy of the coreconf config file without ruleset.mk.
-# We need to do this until we can convince the coreconf folks to not include
+# This is a copy of the config/core config file without ruleset.mk.
+# We need to do this until we can convince the config/core folks to not include
 # ruleset.mk in their config.mk file
 #
-ifndef ($(CORE_DEPTH))
-	CORE_DEPTH=$(DEPTH)/..
-endif
 
-include $(CORE_DEPTH)/coreconf/arch.mk
+include $(DEPTH)/config/arch.mk
 
-include $(CORE_DEPTH)/coreconf/command.mk
+include $(DEPTH)/config/command.mk
 
-include $(CORE_DEPTH)/coreconf/$(OS_CONFIG).mk
+include $(DEPTH)/config/$(OS_CONFIG).mk
 
-include $(CORE_DEPTH)/coreconf/platform.mk
+PLATFORM = $(OBJDIR_NAME)
 
-include $(CORE_DEPTH)/coreconf/tree.mk
+include $(DEPTH)/config/location.mk
 
-include $(CORE_DEPTH)/coreconf/module.mk
+include $(DEPTH)/config/prefix.mk
 
-include $(CORE_DEPTH)/coreconf/version.mk
-
-include $(CORE_DEPTH)/coreconf/location.mk
-
-include $(CORE_DEPTH)/coreconf/source.mk
-
-include $(CORE_DEPTH)/coreconf/headers.mk
-
-include $(CORE_DEPTH)/coreconf/prefix.mk
-
-include $(CORE_DEPTH)/coreconf/suffix.mk
+include $(DEPTH)/config/suffix.mk
 

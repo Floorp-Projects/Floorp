@@ -43,7 +43,7 @@ platform::
 
 import::
 	@echo "== import.pl =="
-	@perl -I$(CORE_DEPTH)/coreconf $(CORE_DEPTH)/coreconf/import.pl \
+	@perl -I$(DEPTH)/config/core $(DEPTH)/config/core/import.pl \
 		"RELEASE_TREE=$(RELEASE_TREE)"   \
 		"IMPORTS=$(IMPORTS)"             \
 		"VERSION=$(VERSION)"		 \
@@ -51,20 +51,20 @@ import::
 		"PLATFORM=$(PLATFORM)"		 \
 		"SOURCE_RELEASE_PREFIX=$(SOURCE_RELEASE_XP_DIR)" \
 		"SOURCE_MD_DIR=$(SOURCE_MD_DIR)"      \
-		"SOURCE_XP_DIR=$(SOURCE_XP_DIR)"      \
+		"SOURCE_XP_DIR=$(XPDIST)"      \
 		"FILES=$(XPCLASS_JAR) $(XPHEADER_JAR) $(MDHEADER_JAR) $(MDBINARY_JAR)" \
 		"$(XPCLASS_JAR)=$(RELEASE_XP_DIR)|$(SOURCE_CLASSES_DIR)"    \
-		"$(XPHEADER_JAR)=$(RELEASE_XP_DIR)|$(SOURCE_XP_DIR)/public/" \
+		"$(XPHEADER_JAR)=$(RELEASE_XP_DIR)|$(XPDIST)/public/" \
 		"$(MDHEADER_JAR)=$(RELEASE_MD_DIR)|$(SOURCE_MD_DIR)/include"        \
 		"$(MDBINARY_JAR)=$(RELEASE_MD_DIR)|$(SOURCE_MD_DIR)"
 
-#	perl -I$(CORE_DEPTH)/coreconf $(CORE_DEPTH)/coreconf/import.pl \
+#	perl -I$(DEPTH)/config/core $(DEPTH)/config/core/import.pl \
 #		"IMPORTS=$(IMPORTS)"             \
 #		"RELEASE_TREE=$(RELEASE_TREE)"   \
 #		"VERSION=$(VERSION)"             \
 #		"PLATFORM=$(PLATFORM)"           \
 #		"SOURCE_MD_DIR=$(SOURCE_MD_DIR)" \
-#		"SOURCE_XP_DIR=$(SOURCE_XP_DIR)" \
+#		"SOURCE_XP_DIR=$(XPDIST)" \
 #		"OS_ARCH=$(OS_ARCH)" ;
 
 
@@ -91,24 +91,23 @@ endif
 
 install:: $(TARGETS)
 ifdef LIBRARY
-	$(INSTALL) -m 444 $(LIBRARY) $(SOURCE_LIB_DIR)
+	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
 endif
-
 ifdef SHARED_LIBRARY
 ifeq ($(OS_ARCH),WINNT)
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(SOURCE_BIN_DIR)
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
 else
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(SOURCE_LIB_DIR)
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
 endif
 endif
 ifdef IMPORT_LIBRARY
-	$(INSTALL) -m 555 $(IMPORT_LIBRARY) $(SOURCE_LIB_DIR)
+	$(INSTALL) -m 555 $(IMPORT_LIBRARY) $(DIST)/lib
 endif
 ifdef PROGRAM
-	$(INSTALL) -m 555 $(PROGRAM) $(SOURCE_BIN_DIR)
+	$(INSTALL) -m 555 $(PROGRAM) $(DIST)/bin
 endif
 ifdef PROGRAMS
-	$(INSTALL) -m 555 $(PROGRAMS) $(SOURCE_BIN_DIR)
+	$(INSTALL) -m 555 $(PROGRAMS) $(DIST)/bin
 endif
 ifndef NO_INSTALL_IN_SUBDIRS
 	+$(LOOP_OVER_DIRS)
@@ -147,15 +146,14 @@ realclean clobber_all::
 
 
 release_clean::
-	rm -rf $(SOURCE_XP_DIR)/release
+	rm -rf $(XPDIST)/release
 
 release:: release_clean release_export release_md release_jars release_cpdistdir
 
 release_cpdistdir::
 	@echo "== cpdist.pl =="
-	@perl -I$(CORE_DEPTH)/coreconf $(CORE_DEPTH)/coreconf/cpdist.pl \
+	@perl -I$(DEPTH)/config/core $(DEPTH)/config/core/cpdist.pl \
 		"RELEASE_TREE=$(RELEASE_TREE)" \
-		"CORE_DEPTH=$(CORE_DEPTH)" \
 		"MODULE=${MODULE}" \
 		"OS_ARCH=$(OS_ARCH)" \
 		"RELEASE=$(RELEASE)" \
@@ -180,7 +178,7 @@ release_cpdistdir::
 
 release_jars::
 	@echo "== release.pl =="
-	@perl -I$(CORE_DEPTH)/coreconf $(CORE_DEPTH)/coreconf/release.pl \
+	@perl -I$(DEPTH)/config/core $(DEPTH)/config/core/release.pl \
 		"RELEASE_TREE=$(RELEASE_TREE)" \
 		"PLATFORM=$(PLATFORM)" \
 		"OS_ARCH=$(OS_ARCH)" \
@@ -226,20 +224,20 @@ ifeq ($(OS_ARCH),WINNT)
 else
 	$(CC) -o $@ $(CFLAGS) $(OBJS) $(LDFLAGS) $(OS_LIBS)
 endif
-	$(INSTALL) -m 555 $(PROGRAM) $(SOURCE_BIN_DIR)
+	$(INSTALL) -m 555 $(PROGRAM) $(DIST)/bin
 
 $(LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 	$(AR) $(OBJS)
 	$(RANLIB) $@
-	$(INSTALL) -m 444 $(LIBRARY) $(SOURCE_LIB_DIR)
+	$(INSTALL) -m 444 $(LIBRARY) $(DIST)/lib
 
 
 ifeq ($(OS_TARGET), WIN16)
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 	wlib +$(SHARED_LIBRARY)
-	$(INSTALL) -m 555 $(IMPORT_LIBRARY) $(SOURCE_LIB_DIR)
+	$(INSTALL) -m 555 $(IMPORT_LIBRARY) $(DIST)lib
 endif
 
 $(SHARED_LIBRARY): $(OBJS)
@@ -272,16 +270,16 @@ ifeq ($(OS_TARGET), WIN16)
 else
 		$(LINK_DLL) -MAP $(DLLBASE) $(OS_LIBS) $(EXTRA_LIBS) $(OBJS) $(LDFLAGS)
 endif
-	$(INSTALL) -m 555 $(LIBRARY) $(SOURCE_LIB_DIR)
+	$(INSTALL) -m 555 $(LIBRARY) $(DIST)/lib
 else
 	$(MKSHLIB) -o $@ $(OBJS) $(LD_LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 	chmod +x $@
 endif
 endif
 ifeq ($(OS_ARCH),WINNT)
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(SOURCE_BIN_DIR)
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
 else
-	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(SOURCE_LIB_DIR)
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
 endif
 
 $(PURE_LIBRARY):
@@ -329,7 +327,7 @@ $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET), WIN16)
-		#	$(CORE_DEPTH)/coreconf/w16opt $(WCCFLAGS3)
+		#	$(DEPTH)/config/core/w16opt $(WCCFLAGS3)
 		echo $(WCCFLAGS3) >w16wccf
 		$(CC) -zq -fo$(OBJDIR)\\$(PROG_PREFIX)$*$(OBJ_SUFFIX)  @w16wccf $*.c
 		rm w16wccf
@@ -393,7 +391,7 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 %.i: %.c
 	$(CC) -C -E $(CFLAGS) $< > $*.i
 
-%: %.pl
+$(OBJDIR)/%: %.pl
 	rm -f $@; cp $*.pl $@; chmod +x $@
 
 %: %.sh
@@ -443,7 +441,7 @@ endif
 
 ifneq ($(JSRCS),)
 export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
-	@list=`perl $(NETLIBDEPTH)/coreconf/outofdate.pl $(PERLARG)	\
+	@list=`perl $(DEPTH)/config/core/outofdate.pl $(PERLARG)	\
 		    -d $(JAVA_DESTPATH)/$(PACKAGE) $(JSRCS)`;	\
 	if test "$$list"x != "x"; then				\
 	    echo $(JAVAC) $$list;				\
@@ -453,7 +451,7 @@ export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
 all:: export
 
 clobber::
-	rm -f $(SOURCE_XP_DIR)/classes/$(PACKAGE)/*.class
+	rm -f $(XPDIST)/classes/$(PACKAGE)/*.class
 
 endif
 
@@ -470,9 +468,9 @@ export:: $(JAVA_DESTPATH) $(JAVA_DESTPATH)/$(PACKAGE)
 		if test -d $$d; then						\
 			set $(EXIT_ON_ERROR);					\
 			files=`echo $$d/*.java`;				\
-			list=`perl $(NETLIBDEPTH)/coreconf/outofdate.pl $(PERLARG)	\
+			list=`perl $(DEPTH)/config/core/outofdate.pl $(PERLARG)	\
 				    -d $(JAVA_DESTPATH)/$(PACKAGE) $$files`;	\
-			if test "$${list}x" != "x"; then			\
+			if test "$${list}x" != "x"; thecoreconfn			\
 			    echo Building all java files in $$d;		\
 			    echo $(JAVAC) $$list;				\
 			    $(JAVAC) $$list;					\
@@ -492,7 +490,7 @@ endif
 #
 ifneq ($(JDK_GEN),)
 ifdef NSBUILDROOT
-	INCLUDES += -I$(JDK_GEN_DIR) -I$(SOURCE_XP_DIR)
+	INCLUDES += -I$(JDK_GEN_DIR) -I$(XPDIST)
 else
 	INCLUDES += -I$(JDK_GEN_DIR)
 endif
@@ -511,17 +509,6 @@ export::
 	$(JAVAH) -d $(JDK_GEN_DIR) $(JDK_PACKAGE_CLASSES)
 	@echo Generating/Updating JDK stubs
 	$(JAVAH) -stubs -d $(JDK_STUB_DIR) $(JDK_PACKAGE_CLASSES)
-ifndef NO_MAC_JAVA_SHIT
-	@if test ! -d $(NETLIBDEPTH)/lib/mac/Java/; then						\
-		echo "!!! You need to have a ns/lib/mac/Java directory checked out.";		\
-		echo "!!! This allows us to automatically update generated files for the mac.";	\
-		echo "!!! If you see any modified files there, please check them in.";		\
-	fi
-	@echo Generating/Updating JDK headers for the Mac
-	$(JAVAH) -mac -d $(NETLIBDEPTH)/lib/mac/Java/_gen $(JDK_PACKAGE_CLASSES)
-	@echo Generating/Updating JDK stubs for the Mac
-	$(JAVAH) -mac -stubs -d $(NETLIBDEPTH)/lib/mac/Java/_stubs $(JDK_PACKAGE_CLASSES)
-endif
 endif
 
 #
@@ -531,7 +518,7 @@ endif
 #
 ifneq ($(JRI_GEN),)
 ifdef NSBUILDROOT
-	INCLUDES += -I$(JRI_GEN_DIR) -I$(SOURCE_XP_DIR)
+	INCLUDES += -I$(JRI_GEN_DIR) -I$(XPDIST)
 else
 	INCLUDES += -I$(JRI_GEN_DIR)
 endif
@@ -550,17 +537,6 @@ export::
 	$(JAVAH) -jri -d $(JRI_GEN_DIR) $(JRI_PACKAGE_CLASSES)
 	@echo Generating/Updating JRI stubs
 	$(JAVAH) -jri -stubs -d $(JRI_GEN_DIR) $(JRI_PACKAGE_CLASSES)
-ifndef NO_MAC_JAVA_SHIT
-	@if test ! -d $(NETLIBDEPTH)/lib/mac/Java/; then						\
-		echo "!!! You need to have a ns/lib/mac/Java directory checked out.";		\
-		echo "!!! This allows us to automatically update generated files for the mac.";	\
-		echo "!!! If you see any modified files there, please check them in.";		\
-	fi
-	@echo Generating/Updating JRI headers for the Mac
-	$(JAVAH) -jri -mac -d $(NETLIBDEPTH)/lib/mac/Java/_jri $(JRI_PACKAGE_CLASSES)
-	@echo Generating/Updating JRI stubs for the Mac
-	$(JAVAH) -jri -mac -stubs -d $(NETLIBDEPTH)/lib/mac/Java/_jri $(JRI_PACKAGE_CLASSES)
-endif
 endif
 
 #
@@ -604,30 +580,30 @@ export:: $(JMC_HEADERS) $(JMC_STUBS)
 endif
 
 #
-# Copy each element of EXPORTS to $(SOURCE_XP_DIR)/public/$(MODULE)/
+# Copy each element of EXPORTS to $(XPDIST)/public/$(MODULE)/
 #
 ifneq ($(EXPORTS),)
-$(SOURCE_XP_DIR)/public/$(MODULE)::
+$(XPDIST)/public/$(MODULE)::
 	@if test ! -d $@; then	    \
 		echo Creating $@;   \
 		$(NSINSTALL) -D $@; \
 	fi
 
-export:: $(EXPORTS) $(SOURCE_XP_DIR)/public/$(MODULE)
-	$(INSTALL) -m 444 $(EXPORTS) $(SOURCE_XP_DIR)/public/$(MODULE)
+export:: $(EXPORTS) $(XPDIST)/public/$(MODULE)
+	$(INSTALL) -m 444 $(EXPORTS) $(XPDIST)/public/$(MODULE)
 endif
 
 # Duplicate export rule for private exports, with different directories
 
 ifneq ($(PRIVATE_EXPORTS),)
-$(SOURCE_XP_DIR)/private/$(MODULE)::
+$(XPDIST)/private/$(MODULE)::
 	@if test ! -d $@; then	    \
 		echo Creating $@;   \
 		$(NSINSTALL) -D $@; \
 	fi
 
-private_export:: $(PRIVATE_EXPORTS) $(SOURCE_XP_DIR)/private/$(MODULE)
-	$(INSTALL) -m 444 $(PRIVATE_EXPORTS) $(SOURCE_XP_DIR)/private/$(MODULE)
+private_export:: $(PRIVATE_EXPORTS) $(XPDIST)/private/$(MODULE)
+	$(INSTALL) -m 444 $(PRIVATE_EXPORTS) $(XPDIST)/private/$(MODULE)
 else
 private_export:: 
 endif
@@ -635,14 +611,14 @@ endif
 # Duplicate export rule for releases, with different directories
 
 ifneq ($(EXPORTS),)
-$(SOURCE_XP_DIR)/release/include::
+$(XPDIST)/release/include::
 	@if test ! -d $@; then	    \
 		echo Creating $@;   \
 		$(NSINSTALL) -D $@; \
 	fi
 
-release_export:: $(EXPORTS) $(SOURCE_XP_DIR)/release/include
-	$(INSTALL) -m 444 $(EXPORTS) $(SOURCE_XP_DIR)/release/include
+release_export:: $(EXPORTS) $(XPDIST)/release/include
+	$(INSTALL) -m 444 $(EXPORTS) $(XPDIST)/release/include
 endif
 
 
@@ -692,7 +668,7 @@ endif
 #############################################################################
 
 $(MKDEPENDENCIES): $(CSRCS) $(CPPSRCS) $(ASFILES) Makefile \
-                   manifest.mn $(EXPORTS) $(LOCAL_EXPORTS)
+                   $(EXPORTS) $(LOCAL_EXPORTS)
 	@$(MAKE_OBJDIR)
 	touch $(MKDEPENDENCIES)
 	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'$(OBJ_SUFFIX)' -f$(MKDEPENDENCIES) $(INCLUDES) $(CSRCS) $(CPPSRCS) $(ASFILES)
@@ -722,9 +698,9 @@ endif
 
 endif
 
-#ifneq ($(filter *.mk,$(wildcard $(CUR_DIR)/$(OBJDIR)/depend.mk)),)
+ifneq ($(filter *.mk,$(wildcard $(CUR_DIR)/$(OBJDIR)/depend.mk)),)
 -include $(CUR_DIR)/$(OBJDIR)/depend.mk
-#endif
+endif
 
 
 ################################################################################

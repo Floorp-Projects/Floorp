@@ -14,7 +14,6 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-OBJ_SUFFIX		= o
 LIB_SUFFIX		= a
 DLL_SUFFIX		= so
 AR				= ar cr $@
@@ -28,8 +27,6 @@ OPTIMIZER		= -g
 DEFINES			= -DXP_UNIX -DDEBUG -UNDEBUG -DDEBUG_$(shell whoami) -DPR_LOGGING
 OBJDIR_TAG		= _DBG
 endif
-
-EXCEPTION_FLAG	= -fhandle-exceptions
 
 #
 # Name of the binary code directories
@@ -53,30 +50,29 @@ OBJDIR_NAME		= $(OS_CONFIG)$(COMPILER_TAG)$(OBJDIR_TAG).OBJ
 #
 ####################################################################
 
-NSINSTALL		= $(DEPTH)/config/$(OBJDIR_NAME)/nsinstall
+NSINSTALL_DIR  = $(DEPTH)/config
+NSINSTALL      = $(DEPTH)/config/$(OBJDIR_NAME)/nsinstall
+
+MKDEPEND_DIR	= $(DEPTH)/config/mkdepend
+MKDEPEND	= $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend
+MKDEPENDENCIES	= $(OBJDIR_NAME)/depend.mk
 
 ifeq ($(NSDISTMODE),copy)
-# copy files, but preserve source mtime
-INSTALL			= $(NSINSTALL) -t
+        # copy files, but preserve source mtime
+        INSTALL  = $(NSINSTALL)
+        INSTALL += -t
 else
-ifeq ($(NSDISTMODE),absolute_symlink)
-# install using absolute symbolic links
-INSTALL			= $(NSINSTALL) -L `$(NFSPWD)`
-else
-# install using relative symbolic links
-INSTALL			= $(NSINSTALL) -R
-endif
+        ifeq ($(NSDISTMODE),absolute_symlink)
+                # install using absolute symbolic links
+                INSTALL  = $(NSINSTALL)
+                INSTALL += -L `$(NFSPWD)`
+        else
+                # install using relative symbolic links
+                INSTALL  = $(NSINSTALL)
+                INSTALL += -R
+        endif
 endif
 
 define MAKE_OBJDIR
 if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); fi
 endef
-
-#
-# Dependencies
-#
-
-MKDEPEND_DIR	= $(DEPTH)/config/mkdepend
-MKDEPEND		= $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend
-MKDEPENDENCIES	= $(OBJDIR_NAME)/depend.mk
-

@@ -1,4 +1,3 @@
-#! gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,29 +14,23 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH	= ..
+#######################################################################
+# Master "Core Components" macros to figure out binary code location  #
+#######################################################################
 
-include $(DEPTH)/config/config.mk
-DIRS = mkdepend
-CSRCS	= nsinstall.c pathsub.c
+#
+# Figure out where the binary code lives.
+#
 
-PLSRCS	= nfspwd.pl
+BUILD         = $(PLATFORM)
+OBJDIR        = $(PLATFORM)
+XPDIST	      = $(DEPTH)/dist
+DIST          = $(XPDIST)/$(PLATFORM)
+VPATH         = $(NSINSTALL_DIR)/$(PLATFORM)
+DEPENDENCIES  = $(PLATFORM)/.md
 
-ifneq ($(OS_ARCH),WINNT)
-PROGRAM	= nsinstall
-#TARGETS = $(PROGRAM) $(OBJDIR)/$(PLSRCS:.pl=)
+ifdef BUILD_DEBUG_GC
+	DEFINES += -DDEBUG_GC
 endif
 
-MKDEPENDENCIES =
-
-include $(DEPTH)/config/rules.mk
-
-# Redefine MAKE_OBJDIR for just this directory (nsinstall is not compiled yet !)
-define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); fi
-endef
-
-export:: $(TARGETS)
-
-clean clobber realclean clobber_all::
-	$(MAKE) $@ -C ./mkdepend
+GARBAGE += $(DEPENDENCIES) core $(wildcard core.[0-9]*)

@@ -15,15 +15,15 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-include $(CORE_DEPTH)/coreconf/ruleset.mk
+include $(DEPTH)/config/ruleset.mk
 
-# Set TARGETS to null so that the coreconf rules work 
-TARGETS =
+# Set TARGETS to null so that the config/corerules work 
+#TARGETS =
 
 # This is actually our modified version of 
-# $(CORE_DEPTH)/coreconf/rules.mk, and should
+# $(DEPTH)/config/core/rules.mk, and should
 # hopefully be temporary until we can get the
-# coreconf people to merge our changes with theirs
+# config/core people to merge our changes with theirs
 include $(DEPTH)/config/corerules.mk
 
 ifneq ($(MODULE_NAME),)
@@ -35,9 +35,9 @@ OBJFILTERS = $(filter %$(OBJ_SUFFIX),$(OBJS))
 ifneq ($(OBJFILTERS),)
 MODULE_FILE = $(OBJDIR)/moduleFile
 $(MODULE_FILE): $(OBJS)
-	@$(MKDIR)  $(DEPTH)/$(OBJDIR)/$(MODULE_NAME)
+	@$(MKDIR)  $(DIST)/modules/$(MODULE_NAME)
 	@$(MAKE_OBJDIR)
-	cp -f $? $(DEPTH)/$(OBJDIR)/$(MODULE_NAME)
+	cp -f $? $(DIST)/modules/$(MODULE_NAME)
 	touch $(MODULE_FILE)
 
 libs:: $(MODULE_FILE)
