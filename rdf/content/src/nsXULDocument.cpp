@@ -3009,7 +3009,7 @@ NS_IMETHODIMP
 nsXULDocument::LoadBindingDocument(const nsString& aURL)
 {
   if (mBindingManager)
-    return mBindingManager->LoadBindingDocument(aURL);
+    return mBindingManager->LoadBindingDocument(this, aURL);
   return NS_ERROR_FAILURE;
 }
 
