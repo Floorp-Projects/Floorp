@@ -130,10 +130,10 @@ box#DisplayModeBar titledbutton[class~=DisplayModeButton]:hover {
 
 box#DisplayModeBar titledbutton[class~=DisplayModeButton][selected="1"] {
   border:  1px outset white;
-  padding: 1px 4px 0px 4px;
+  padding: 0px 4px 0px 4px;
   margin: -2px 0px 0px 0px;
   color: black;
-  text-decoration: bold;
+  font-weight: bold;
 	background-color: #CCCCCC;
 }
 
