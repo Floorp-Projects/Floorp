@@ -135,6 +135,8 @@ usage: %s [ options ... ]\n\
        -display <dpy>            to specify the X server to use.\n\
        -geometry =WxH+X+Y        to position and size the window.\n\
        -visual <id-or-number>    to use a specific server visual.\n\
+       -config-dir <directory>   Overrides ~/.netscape as the default\n\
+                                 configuration directory.\n\
        -install                  to install a private colormap.\n\
        -no-install               to use the default colormap.\n" )
 ResDef(XFE_USAGE_MSG2, XFE_ERR_OFFSET + 154, "\
@@ -144,7 +146,9 @@ ResDef(XFE_USAGE_MSG2, XFE_ERR_OFFSET + 154, "\
        -no-share                 cause each window to use the same colormap.\n")
 ResDef(XFE_USAGE_MSG3, XFE_ERR_OFFSET + 86, "\
        -ncols <N>                when not using -install, set the maximum\n\
-                                 number of colors to allocate for images.\n\
+                                 number of colors to allocate for images\n\
+                                 in addition to the colors needed to render\n\
+                                 the default user interface.\n\
        -mono                     to force 1-bit-deep image display.\n\
        -iconic                   to start up iconified.\n\
        -xrm <resource-spec>      to set a specific X resource.\n\
