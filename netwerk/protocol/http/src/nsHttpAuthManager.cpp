@@ -78,18 +78,16 @@ nsHttpAuthManager::GetAuthIdentity(const nsACString & aHost,
 {
   nsHttpAuthEntry * entry = nsnull;
   nsresult rv;
-  if (!aRealm.IsEmpty())
+  if (!aPath.IsEmpty())
+    rv = mAuthCache->GetAuthEntryForPath(PromiseFlatCString(aHost).get(),
+                                         aPort,
+                                         PromiseFlatCString(aPath).get(),
+                                         &entry);
+  else
     rv = mAuthCache->GetAuthEntryForDomain(PromiseFlatCString(aHost).get(),
                                            aPort,
                                            PromiseFlatCString(aRealm).get(),
                                            &entry);
-  else if (!aPath.IsEmpty())
-    rv = mAuthCache->GetAuthEntryForPath(PromiseFlatCString(aHost).get(),
-                                           aPort,
-                                           PromiseFlatCString(aPath).get(),
-                                           &entry);
-  else
-    return NS_ERROR_FAILURE;
 
   if (NS_FAILED(rv))
     return rv;
