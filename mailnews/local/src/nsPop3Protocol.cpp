@@ -789,7 +789,13 @@ nsPop3Protocol::WaitForResponse(nsIInputStream* inputStream, PRUint32 length)
     {
         m_pop3ConData->command_succeeded = PR_TRUE;
         if(PL_strlen(line) > 4)
-			m_commandResponse = line + 4;
+		{
+			if(!PL_strncasecmp(line, "+OK", 3))
+ 				m_commandResponse = line + 4;
+			else 
+				m_commandResponse = "+";
+		}
+	
         else
 			m_commandResponse = line;
     }
