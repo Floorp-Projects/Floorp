@@ -1,4 +1,4 @@
-#!gmake
+#
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
 # compliance with the License. You may obtain a copy of the License at
@@ -15,39 +15,38 @@
 # Inc. Portions created by New Dimensions Consulting, Inc. Copyright (C) 1999
 # New Dimenstions Consulting, Inc. All Rights Reserved.
 #
-#
 # Contributor(s):
 #  Robert Ginda, rginda@ndcico.com, original author
+#
 
 DEPTH		= ../../..
-topsrcdir       = @top_srcdir@
-VPATH           = @srcdir@
-srcdir          = @srcdir@
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CSRCS = \
-	bsutil.c \
-	bserror.c \
-	bsevent.c \
-	bsqueue.c \
-	bsnetwork.c \
-	bsserver.c \
-	bsconnection.c \
-	$(NULL)
+MODULE		= bs
+LIBRARY_NAME	= bs
+IS_COMPONENT	= 1
 
-XPIDLSRCS = \
-	bsIConnection.idl \
-	$(NULL)
+REQUIRES	= bs xpcom
 
-CPPSRCS = \
-	bsXPCConnection.cpp \
-	bsXPCConnectionFactory.cpp \
-	$(NULL)
+CSRCS		= \
+		bsutil.c \
+		bserror.c \
+		bsevent.c \
+		bsqueue.c \
+		bsnetwork.c \
+		bsserver.c \
+		bsconnection.c \
+		$(NULL)
 
-REQUIRES = bs xpcom
-MODULE = bs
-LIBRARY_NAME = bs
-IS_COMPONENT = 1
+CPPSRCS		= \
+		bsXPCConnection.cpp \
+		bsXPCConnectionFactory.cpp \
+		$(NULL)
+
+XPIDLSRCS	= bsIConnection.idl
 
 include $(topsrcdir)/config/rules.mk
