@@ -139,19 +139,12 @@ CNavCenterSelectorPane::ClickSelf( const SMouseDownEvent& inMouseDown )
 	// change the shelf state on a context click.
 	if ( clickedView != GetActiveWorkspace() ) {
 		HT_View oldSelection = GetActiveWorkspace();
-
-		// SetActiveWorkspace() will affect the shelf state so we don't have to send it a 
-		// message (code commented out below). This creates a problem, however, with context 
-		// menus. We have to set the active workspace before we handle the context menu,
-		// but this will cause the UI to refresh and the shelf to open.....At least it
-		// closes correctly when you're done with the context menu...I tried turning 
-		// off HT notifications, but then nothing works. We should revisit this issue later...
 		SetActiveWorkspace(clickedView);
 
 		ExecuteAttachments(CContextMenuAttachment::msg_ContextMenu, (void*)&params);
 		if ( params.outResult != CContextMenuAttachment::eHandledByAttachment && mIsEmbedded ) {
-//			bool value = true;
-//			BroadcastMessage ( msg_ShelfStateShouldChange, &value );		// force open
+			bool value = true;
+			BroadcastMessage ( msg_ShelfStateShouldChange, &value );		// force open
 		}
 		else {
 			// this combats the problem when there is no workspace and the user context clicks. We
@@ -165,8 +158,8 @@ CNavCenterSelectorPane::ClickSelf( const SMouseDownEvent& inMouseDown )
 	else {
 		ExecuteAttachments(CContextMenuAttachment::msg_ContextMenu, (void*)&params);
 		if ( params.outResult != CContextMenuAttachment::eHandledByAttachment && mIsEmbedded ) {
-//			bool value = false;
-//			BroadcastMessage ( msg_ShelfStateShouldChange, &value );		// force closed
+			bool value = false;
+			BroadcastMessage ( msg_ShelfStateShouldChange, &value );		// force closed
 			SetActiveWorkspace( NULL );
 		}
 	}
@@ -484,10 +477,14 @@ SelectorData :: SelectorData ( HT_View inView )
 	viewName[0] = NULL;
 #endif
 	
-	// еее HACK: figure out what pane this is and give it an icon
+	// еее HACK: figure out what pane this is and give it an icon. We should just be
+	// using the url given and pass that to the imageLib, but the API is too complicated
+	// and I just can't figure it out. Instead, parse the url string looking for things
+	// we recognize and use the "Finder folder" icon if we can't determine it.
 	char* iconURL = HT_GetWorkspaceLargeIconURL(inView);
 
 	char workspace[500];
+	workspace[0] = NULL;			// clear out value left on stack from last time.
 	ResIDT iconID = kWorkspaceID;
 	sscanf ( iconURL, "icon/large:workspace,%s", workspace );
 	if ( strcmp(workspace, "history") == 0 )
