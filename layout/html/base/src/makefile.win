@@ -32,6 +32,7 @@ EXPORTS =				\
 	$(NULL)
 
 CPPSRCS=				\
+        nsSelectsAreaframe.cpp	        \
         nsScrollPortFrame.cpp	        \
         nsGfxScrollFrame.cpp	        \
 	nsAbsoluteContainingBlock.cpp	\
@@ -74,6 +75,7 @@ CPPSRCS=				\
 	$(NULL)
 
 CPP_OBJS=						\
+        .\$(OBJDIR)\nsSelectsAreaFrame.obj         	\
         .\$(OBJDIR)\nsScrollPortFrame.obj         	\
         .\$(OBJDIR)\nsGfxScrollFrame.obj         	\
 	.\$(OBJDIR)\nsAbsoluteContainingBlock.obj	\
