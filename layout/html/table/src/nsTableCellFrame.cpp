@@ -203,7 +203,6 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
     nsTableCellFrame* prevFrame = (nsTableCellFrame *)mPrevInFlow;
 
     nsIFrame* prevPseudoFrame = prevFrame->mFirstChild;
-    NS_ASSERTION(prevFrame->ChildIsPseudoFrame(prevPseudoFrame), "bad previous pseudo-frame");
 
     // Create a continuing column
     nsIStyleContext* kidSC;

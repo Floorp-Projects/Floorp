@@ -245,10 +245,6 @@ protected:
    */
   void AppendChildren(nsIFrame* aChild, PRBool aSetParent = PR_TRUE);
 
-  // Returns true if aChild is being used as a pseudo frame
-  // XXX deprecated
-  PRBool ChildIsPseudoFrame(const nsIFrame* aChild) const;
-
   virtual void WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow);
 
 #ifdef NS_DEBUG
@@ -263,8 +259,6 @@ protected:
   PRBool IsLastChild(const nsIFrame* aChild) const;
 
   void DumpTree() const;
-
-  PRBool IsEmpty();
 #endif
 
   nsIFrame*   mFirstChild;
