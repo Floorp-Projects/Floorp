@@ -308,9 +308,6 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 
     nsAutoString charset = "ISO-8859-1"; // fallback value in case webShell return error
     nsCharsetSource charsetSource = kCharsetFromDocTypeDefault;
-    const PRUnichar* requestCharset = nsnull;
-    nsCharsetSource requestCharsetSource = kCharsetUninitialized;
-    
 
 #ifdef rickgdebug
     nsString outString;   // added out. Redirect to stdout if desired -- gpk 04/01/99
@@ -327,12 +324,6 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
             charset = defaultCharsetFromWebShell;
             charsetSource = kCharsetFromUserDefault;
        }
-       // for html, we need to find out the Meta tag from the hint.
-       rv = webShell->GetCharacterSetHint(&requestCharset, &requestCharsetSource);
-       if(NS_SUCCEEDED(rv)) {
-            if(requestCharsetSource > charsetSource)
-            	charset = requestCharset;
-       }
     }
     NS_IF_RELEASE(webShell);
 #endif
@@ -340,6 +331,8 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
     // XXXX
     // We should take care two more cases here
     // 1. The charset attribute from HTTP header
+    // 2. The charset parameter from the META Tag - 
+    //   which explicit pass to nsWebShell from nsCharsetObserver
 
     if (NS_SUCCEEDED(rv)) {
        rv = this->SetDocumentCharacterSet(charset);
