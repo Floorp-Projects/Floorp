@@ -178,6 +178,8 @@ NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(PRUint32 *result)
 nsresult
 nsCacheEntryDescriptor::RequestDataSizeChange(PRInt32 deltaSize)
 {
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
     nsresult  rv;
     rv = nsCacheService::GlobalInstance()->OnDataSizeChange(mCacheEntry, deltaSize);
     if (NS_SUCCEEDED(rv)) {
