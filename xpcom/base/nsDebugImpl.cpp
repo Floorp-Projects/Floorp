@@ -142,7 +142,7 @@ PRBool InDebugger()
 
 #endif /* WIN32*/
 
-NS_IMPL_ISUPPORTS1(nsDebugImpl, nsIDebug)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsDebugImpl, nsIDebug)
 
 nsDebugImpl::nsDebugImpl()
 {
