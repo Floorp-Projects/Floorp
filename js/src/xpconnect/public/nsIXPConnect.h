@@ -191,6 +191,40 @@ public:
 };
 
 /***************************************************************************/
+
+/*
+* This is a somewhat special interface. It is available from the global
+* nsIXPConnect object when native methods have been called. It is only relevent 
+* to the currently called native method on the given JSContext/thread. Holding
+* a reference past that time (or while other native methods are being called)
+* will not assure access to this data.
+*/
+
+// {0FA68A60-8289-11d3-BB1A-00805F8A5DD7}
+#define NS_IXPCNATIVECALLCONTEXT_IID    \
+{ 0xfa68a60, 0x8289, 0x11d3, \
+  { 0xbb, 0x1a, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 } }
+
+class nsIXPCNativeCallContext : public nsISupports
+{
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCNATIVECALLCONTEXT_IID)
+
+    NS_IMETHOD GetCallee(nsISupports** calleep) = 0;
+    NS_IMETHOD GetCalleeMethodIndex(uint16* indexp) = 0;
+    NS_IMETHOD GetCalleeWrapper(nsIXPConnectWrappedNative** wrapperp) = 0;
+    NS_IMETHOD GetJSContext(JSContext** cxp) = 0;
+    NS_IMETHOD GetArgc(PRUint32* argcp) = 0;
+    NS_IMETHOD GetArgv(jsval** argvp) = 0;
+    // This may be NULL if the JS caller is ignoring the result of the call.
+    NS_IMETHOD GetRetValPtr(jsval** retvalp) = 0;
+    // Set this if JS_SetPendingException has been called. Return NS_OK or
+    // else this will be ignored and the native method's nsresult will be 
+    // converted into an exception and thrown into JS as is the normal case.
+    NS_IMETHOD SetExceptionWasThrown(JSBool threw) = 0;
+};
+
+/***************************************************************************/
 // {EFAE37B0-946D-11d2-BA58-00805F8A5DD7}
 #define NS_IXPCONNECT_IID    \
 { 0xefae37b0, 0x946d, 0x11d2, \
@@ -266,6 +300,8 @@ public:
     NS_IMETHOD SetPendingException(nsIXPCException* aException) = 0;
 
     NS_IMETHOD DebugDumpJSStack() = 0;
+
+    NS_IMETHOD GetCurrentNativeCallContext(nsIXPCNativeCallContext** aCC) = 0;
 
     // XXX other methods?
 };

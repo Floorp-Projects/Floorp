@@ -121,6 +121,9 @@ interface nsIEcho : nsISupports {
                               [iid_is(uuid),retval] out nsQIResult result);
 
     void DebugDumpJSStack();
+
+    void printArgTypes(/* optional params */);
+    void throwArg(/* optional param */);
 };
 
 /***************************************************************************/

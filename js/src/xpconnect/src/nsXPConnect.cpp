@@ -606,23 +606,10 @@ nsXPConnect::GetSecurityManagerForJSContext(JSContext* aJSContext,
 NS_IMETHODIMP
 nsXPConnect::GetCurrentJSStack(nsIJSStackFrameLocation** aStack)
 {
-    if(!aStack)
-    {
-        NS_ASSERTION(0,"called GetCurrentJSStack with null pointer");
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    nsresult rv;
-    NS_WITH_SERVICE(nsIJSContextStack, cxstack, "nsThreadJSContextStack", &rv);
-
-    if(NS_FAILED(rv))
-    {
-        NS_ASSERTION(0,"could not get nsThreadJSContextStack service");
-        return NS_ERROR_FAILURE;
-    }
+    NS_ENSURE_ARG_POINTER(aStack);    
 
     JSContext* cx;
-    if(NS_FAILED(cxstack->Peek(&cx)) || !cx)
+    if(NS_FAILED(mContextStack->Peek(&cx)) || !cx)
     {
         // no current context available
         *aStack = nsnull;
@@ -682,6 +669,25 @@ nsXPConnect::SetPendingException(nsIXPCException* aException)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXPConnect::GetCurrentNativeCallContext(nsIXPCNativeCallContext** aCC)
+{
+    NS_ENSURE_ARG_POINTER(aCC);    
+
+    JSContext* cx;
+    XPCContext* xpcc;
+    if(NS_FAILED(mContextStack->Peek(&cx)) || !cx ||
+       !(xpcc = mContextMap->Find(cx)))
+    {
+        // no current context available
+        *aCC = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    // these things are not refcounted
+    *aCC = xpcc->GetNativeCallContext();
+    return NS_OK;
+}
 
 /***************************************************************************/
 // has to go somewhere...

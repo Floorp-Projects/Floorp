@@ -309,6 +309,102 @@ xpctestEcho::DebugDumpJSStack()
     return rv;
 }        
 
+/***************************************************/
+
+// some tests of nsIXPCNativeCallContext
+
+#define GET_CALL_CONTEXT \
+  nsresult rv; \
+  nsCOMPtr<nsIXPCNativeCallContext> cc; \
+  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv); \
+  if(NS_SUCCEEDED(rv)) \
+    rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc)) /* no ';' */        
+
+/* void printArgTypes (); */
+NS_IMETHODIMP
+xpctestEcho::PrintArgTypes(void)
+{
+    GET_CALL_CONTEXT;
+    if(NS_FAILED(rv) || !cc)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsISupports> callee;
+    if(NS_FAILED(cc->GetCallee(getter_AddRefs(callee))) || callee != this)
+        return NS_ERROR_FAILURE;
+
+    PRUint32 argc;
+    if(NS_SUCCEEDED(cc->GetArgc(&argc)))
+        printf("argc = %d  ", (int)argc);
+    else
+        return NS_ERROR_FAILURE;
+
+    jsval* argv;
+    if(NS_FAILED(cc->GetArgv(&argv)))
+        return NS_ERROR_FAILURE;
+
+    printf("argv types = [", (int)argc);
+
+    for(PRUint32 i = 0; i < argc; i++)
+    {
+        const char* type = "<unknown>";
+        if(JSVAL_IS_OBJECT(argv[i]))
+        {
+            if(JSVAL_IS_NULL(argv[i]))
+                type = "null";
+            else
+                type = "object";
+        }
+        else if (JSVAL_IS_BOOLEAN(argv[i]))
+            type = "boolean";
+        else if (JSVAL_IS_STRING(argv[i]))
+            type = "string";
+        else if (JSVAL_IS_DOUBLE(argv[i]))
+            type = "double";
+        else if (JSVAL_IS_INT(argv[i]))
+            type = "int";
+        else if (JSVAL_IS_VOID(argv[i]))
+            type = "void";
+
+        printf(type);
+
+        if(i < argc-1)
+            printf(", ");
+    }
+    printf("]\n");
+    
+    return NS_OK;
+}
+
+/* void throwArg (); */
+NS_IMETHODIMP
+xpctestEcho::ThrowArg(void)
+{
+    GET_CALL_CONTEXT;
+    if(NS_FAILED(rv) || !cc)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsISupports> callee;
+    if(NS_FAILED(cc->GetCallee(getter_AddRefs(callee))) || callee != this)
+        return NS_ERROR_FAILURE;
+
+    PRUint32 argc;
+    if(NS_FAILED(cc->GetArgc(&argc)) || !argc)
+        return NS_OK;
+
+    jsval* argv;
+    JSContext* cx;
+    if(NS_FAILED(cc->GetArgv(&argv)) ||
+       NS_FAILED(cc->GetJSContext(&cx)))
+        return NS_ERROR_FAILURE;
+
+    JS_SetPendingException(cx, argv[0]);
+    cc->SetExceptionWasThrown(JS_TRUE);
+        
+    return NS_OK;
+}
+
+/***************************************************/
+
 /***************************************************************************/
 
 // static

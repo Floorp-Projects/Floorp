@@ -429,6 +429,10 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     XPCContext* xpcc = nsXPConnect::GetContext(cx);
     nsIXPCSecurityManager* securityManager;
     JSBool foundDependentParam;
+    nsISupports* callee = wrapper->GetNative();
+    NativeCallContextData ccdata;
+    NativeCallContextData* oldccdata;
+    nsXPCNativeCallContext* cc;
 
 #ifdef DEBUG_stats_jband
     static int count = 0;
@@ -459,7 +463,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                (xpcc->GetSecurityManagerFlags() &
                 nsIXPCSecurityManager::HOOK_CALL_METHOD) &&
                NS_OK !=
-                securityManager->CanCallMethod(cx, mIID, wrapper->GetNative(),
+                securityManager->CanCallMethod(cx, mIID, callee,
                                                mInfo, vtblIndex, desc->id))
             {
                 // the security manager vetoed. It should have set an exception.
@@ -474,7 +478,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                (xpcc->GetSecurityManagerFlags() &
                 nsIXPCSecurityManager::HOOK_GET_PROPERTY) &&
                NS_OK !=
-                securityManager->CanGetProperty(cx, mIID, wrapper->GetNative(),
+                securityManager->CanGetProperty(cx, mIID, callee,
                                                 mInfo, vtblIndex, desc->id))
             {
                 // the security manager vetoed. It should have set an exception.
@@ -492,7 +496,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                (xpcc->GetSecurityManagerFlags() &
                 nsIXPCSecurityManager::HOOK_SET_PROPERTY) &&
                NS_OK !=
-                securityManager->CanSetProperty(cx, mIID, wrapper->GetNative(),
+                securityManager->CanSetProperty(cx, mIID, callee,
                                                 mInfo, vtblIndex, desc->id))
             {
                 // the security manager vetoed. It should have set an exception.
@@ -777,13 +781,25 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         }
     }
 
+    // setup the call context in case the callee wants to see it
+    cc = xpcc->GetNativeCallContext(); // can't fail
+    ccdata.init(callee, vtblIndex, wrapper, cx, argc, argv, vp);
+    oldccdata = cc->SetData(&ccdata);
+
     // do the invoke
-    invokeResult = XPTC_InvokeByIndex(wrapper->GetNative(), vtblIndex,
+    invokeResult = XPTC_InvokeByIndex(callee, vtblIndex,
                                       paramCount, dispatchParams);
     xpcc->SetLastResult(invokeResult);
+    cc->SetData(oldccdata);
+
     if(NS_FAILED(invokeResult))
     {
         ThrowBadResultException(cx, desc, invokeResult);
+        goto done;
+    }
+    else if(ccdata.threw)
+    {
+        // the native callee claims to have already set a JSException
         goto done;
     }
 
