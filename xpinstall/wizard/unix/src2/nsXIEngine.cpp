@@ -292,7 +292,7 @@ nsXIEngine::FTPAnonGet(char *aHost, char *aDir, char *aArchive)
     sprintf(basename, "%s/%s", mTmp, aArchive);
     sprintf(ftpcmds, "\
 \
-ftp -n %s <<EndFTP\n\
+ftp -n %s >& /dev/null <<EndFTP\n\
 user anonymous dev@null.edu\n\
 binary\n\
 passive\n\

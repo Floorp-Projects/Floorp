@@ -226,7 +226,7 @@ nsLicenseDlg::SetLicenseFile(char *aLicenseFile)
     if (!aLicenseFile)
         return E_PARAM;
 
-    aLicenseFile = mLicenseFile;
+    mLicenseFile = aLicenseFile;
 
     return OK;
 }
