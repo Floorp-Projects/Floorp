@@ -89,8 +89,6 @@ public:
   // in nsWidget now
   //    virtual  PRBool OnResize(nsSizeEvent &aEvent);
 
-    char gInstanceClassName[256];
-  
 protected:
 
   virtual void InitCallbacks(char * aName = nsnull);

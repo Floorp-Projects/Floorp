@@ -72,7 +72,6 @@ nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 nsWindow::nsWindow() 
 {
   NS_INIT_REFCNT();
-  strcpy(gInstanceClassName, "nsWindow");
   mFontMetrics = nsnull;
   mShell = nsnull;
   mVBox = nsnull;
