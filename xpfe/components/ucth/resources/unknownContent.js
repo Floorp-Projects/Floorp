@@ -35,8 +35,7 @@ function initData()
     data.location = data.channel.URI.spec;
 }
 
-function initDialog() 
-{
+function initDialog() {
     // Create dialog object and initialize.
     dialog = new Object;
     dialog.contentType = document.getElementById("dialog.contentType");
@@ -46,8 +45,8 @@ function initDialog()
     var pickApp = document.getElementById("Button2");
     pickApp.setAttribute( "style", "display: inherit" );
     pickApp.setAttribute( "value", bundle.GetStringFromName("pick") );
-    var save = document.getElementById("ok");
-    save.setAttribute( "value", bundle.GetStringFromName("save") );
+    var saveButton = document.getElementById("ok");
+    saveButton.setAttribute( "value", bundle.GetStringFromName("save") );
     doSetOKCancel( save, null, pick, null );
 }
 
