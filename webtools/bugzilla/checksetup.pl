@@ -101,16 +101,6 @@ use strict;
 # this way we can look in the symbol table to see if they've been declared
 # yet or not.
 
-# Trim whitespace from front and back.
-
-sub trim {
-    ($_) = (@_);
-    s/^\s+//g;
-    s/\s+$//g;
-    return $_;
-}
-
-
 
 ###########################################################################
 # Check required module
@@ -535,6 +525,16 @@ my @my_priorities = @{*{$main::{'priorities'}}{ARRAY}};
 my @my_platforms = @{*{$main::{'platforms'}}{ARRAY}};
 my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
+###########################################################################
+# Global Utility Library
+###########################################################################
+
+# Use the Bugzilla utility library for various functions.  We do this
+# here rather than at the top of the file so globals.pl doesn't define
+# localconfig variables for us before we get a chance to check for
+# their existence and create them if they don't exist.  Also, globals.pl
+# removes $ENV{'path'}, which we need in order to run `which mysql` above.
+require "globals.pl";
 
 ###########################################################################
 # Check data directory
@@ -1375,7 +1375,7 @@ while (my ($tabname, $fielddef) = each %table) {
 # Populate groups table
 ###########################################################################
 
-sub GroupExists ($)
+sub GroupDoesExist ($)
 {
     my ($name) = @_;
     my $sth = $dbh->prepare("SELECT name FROM groups WHERE name='$name'");
@@ -1396,7 +1396,7 @@ sub AddGroup {
     my ($name, $desc, $userregexp) = @_;
     $userregexp ||= "";
 
-    return if GroupExists($name);
+    return if GroupDoesExist($name);
     
     # get highest bit number
     my $sth = $dbh->prepare("SELECT bit FROM groups ORDER BY bit DESC");
@@ -1435,12 +1435,12 @@ AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
 # code that updates the database structure.
 &AddField('profiles', 'groupset', 'bigint not null');
 
-if (!GroupExists("editbugs")) {
+if (!GroupDoesExist("editbugs")) {
     my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
     $dbh->do("UPDATE profiles SET groupset = groupset | $id");
 }
 
-if (!GroupExists("canconfirm")) {
+if (!GroupDoesExist("canconfirm")) {
     my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
     $dbh->do("UPDATE profiles SET groupset = groupset | $id");
 }
@@ -1785,39 +1785,6 @@ _End_Of_SQL_
 _End_Of_SQL_
   }
   print "\n$login is now set up as the administrator account.\n";
-}
-
-
-sub Crypt {
-    # Crypts a password, generating a random salt to do it.
-    # Random salts are generated because the alternative is usually
-    # to use the first two characters of the password itself, and since
-    # the salt appears in plaintext at the beginning of the crypted
-    # password string this has the effect of revealing the first two
-    # characters of the password to anyone who views the crypted version.
-
-    my ($password) = @_;
-
-    # The list of characters that can appear in a salt.  Salts and hashes
-    # are both encoded as a sequence of characters from a set containing
-    # 64 characters, each one of which represents 6 bits of the salt/hash.
-    # The encoding is similar to BASE64, the difference being that the
-    # BASE64 plus sign (+) is replaced with a forward slash (/).
-    my @saltchars = (0..9, 'A'..'Z', 'a'..'z', '.', '/');
-
-    # Generate the salt.  We use an 8 character (48 bit) salt for maximum
-    # security on systems whose crypt uses MD5.  Systems with older
-    # versions of crypt will just use the first two characters of the salt.
-    my $salt = '';
-    for ( my $i=0 ; $i < 8 ; ++$i ) {
-        $salt .= $saltchars[rand(64)];
-    }
-
-    # Crypt the password.
-    my $cryptedpassword = crypt($password, $salt);
-
-    # Return the crypted password.
-    return $cryptedpassword;
 }
 
 
@@ -2773,4 +2740,18 @@ if (GetFieldDef("logincookies", "hostname")) {
 # Final checks...
 
 unlink "data/versioncache";
+
+# Remove parameters from the data/params file that no longer exist in Bugzilla.
+require "data/params";
+require "defparams.pl";
+use vars @::param_list;
+foreach my $item (keys %::param) {
+    if (!grep($_ eq $item, @::param_list) && $item ne "version") {
+        print "The $item parameter is no longer used in Bugzilla\n" . 
+              "and has been removed from your parameters file.\n";
+        delete $::param{$item};
+    }
+}
+WriteParams();
+
 print "Reminder: Bugzilla now requires version 8.7 or later of sendmail.\n";
