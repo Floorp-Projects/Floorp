@@ -62,9 +62,12 @@
 #include "nsITypeAheadFind.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
+#include "nsISound.h"
 
 #define TYPEAHEADFIND_BUNDLE_URL \
         "chrome://navigator/locale/typeaheadfind.properties"
+#define TYPEAHEADFIND_NOTFOUND_WAV_URL \
+        "chrome://global/content/notfound.wav"
 
 enum {
   eRepeatingNone,
@@ -131,6 +134,7 @@ protected:
   nsresult HandleChar(PRUnichar aChar);
   PRBool HandleBackspace();
   void SaveFind();
+  void PlayNotFoundSound();
   void GetTopContentPresShell(nsIDocShellTreeItem *aTreeItem, 
                               nsIPresShell **aPresShell);
   nsresult GetWebBrowserFind(nsIDOMWindow *aDOMWin,
@@ -209,6 +213,12 @@ protected:
   PRInt32 mRepeatingMode;
   PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled
 
+  // Sound is played asynchronously on some platforms.
+  // If we destroy mSoundInterface before sound has played, it won't play
+  nsCOMPtr<nsISound> mSoundInterface;
+  PRBool mIsSoundInitialized;
+  PRBool mIsSoundEnabledPref;
+  
   static PRInt32 sAccelKey;  // magic value of -1 indicates unitialized state
 
   // where selection was when user started the find

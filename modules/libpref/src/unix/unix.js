@@ -72,6 +72,10 @@ pref("browser.urlbar.clickSelectsAll", false);
 // Leave this at the default, 7, to match mozilla1.0-era user expectations.
 // pref("accessibility.tabfocus", 1);
 
+// Keep sound pref'd off in Linux, at least until nsISound becomes 
+// asynchronous (bug 110385) 
+pref("accessibility.typeaheadfind.enablesound", false);
+
 // override double-click word selection behavior.
 pref("layout.word_select.stop_at_punctuation", false);
 

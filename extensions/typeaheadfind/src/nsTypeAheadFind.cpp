@@ -44,6 +44,9 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIDocumentLoader.h"
 #include "nsCURILoader.h"
+#include "nsNetUtil.h"
+#include "nsIURL.h"
+#include "nsIURI.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIEditorDocShell.h"
@@ -88,7 +91,6 @@
 #include "nsIWebNavigation.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsISound.h"
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
 #include "nsWidgetsCID.h"
@@ -148,7 +150,9 @@ nsTypeAheadFind::nsTypeAheadFind():
   mIsFirstVisiblePreferred(PR_FALSE), mIsIMETypeAheadActive(PR_FALSE),
   mIsBackspaceProtectOn(PR_FALSE),
   mBadKeysSinceMatch(0), mLastBadChar(0),
-  mRepeatingMode(eRepeatingNone), mTimeoutLength(0)
+  mRepeatingMode(eRepeatingNone), mTimeoutLength(0),
+  mSoundInterface(nsnull), mIsSoundInitialized(PR_FALSE), 
+  mIsSoundEnabledPref(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
 
@@ -319,6 +323,10 @@ nsTypeAheadFind::PrefsReset(const char* aPrefName, void* instance_data)
   prefs->GetBoolPref("accessibility.typeaheadfind.startlinksonly",
                      &typeAheadFind->mStartLinksOnlyPref);
 
+  prefs->GetBoolPref("accessibility.typeaheadfind.enablesound",
+                     &typeAheadFind->mIsSoundEnabledPref);
+  typeAheadFind->mSoundInterface = nsnull; // will get as needed
+
   prefs->GetIntPref("accessibility.typeaheadfind.timeout",
                      &typeAheadFind->mTimeoutLength);
 
@@ -353,6 +361,7 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
   }
   else if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     Shutdown();
+    return NS_OK;
   }
   else if (!nsCRT::strcmp(aTopic,"nsWebBrowserFind_FindAgain")) {
     // A find next command wants to be executed.
@@ -516,6 +525,26 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
+#ifdef XP_WIN
+  // Deal with nsISound impl quirks in Windows
+  if (!mIsSoundInitialized && mIsSoundEnabledPref) {
+    // Don't play a sound, just make sure sound system is initialized
+    // This makes sure system sound library (winmm.dll) is loaded so that
+    // there's no lag before the first sound is played
+    // by waiting for the first keystroke, we still get the startup time benefits
+    mIsSoundInitialized = PR_TRUE;
+    mSoundInterface = do_CreateInstance("@mozilla.org/sound;1");
+    if (mSoundInterface) {
+      mSoundInterface->PlaySystemSound("");
+    }
+  }
+
+  // After each keystroke, destroy sound object to free up memory 
+  // allocated for error sound, otherwise Windows' nsISound impl 
+  // holds onto the last played sound.
+  mSoundInterface = nsnull;
+#endif
+
   nsCOMPtr<nsIContent> targetContent;
   nsCOMPtr<nsIPresShell> targetPresShell;
   GetTargetIfTypeAheadOkay(aEvent, getter_AddRefs(targetContent), 
@@ -567,7 +596,9 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
       aEvent->PreventDefault();
       CancelFind();
     }
-    mFocusedDocSelection->CollapseToStart();
+    if (mFocusedDocSelection) {
+      mFocusedDocSelection->CollapseToStart();
+    }
 
     return NS_OK;
   }
@@ -895,13 +926,13 @@ nsTypeAheadFind::HandleChar(PRUnichar aChar)
     mRepeatingMode = eRepeatingNone;
 
     ++mBadKeysSinceMatch;
-    // Error beep (don't been when backspace is pressed, they're 
+
+    // Error sound (don't fire when backspace is pressed, they're 
     // trying to correct the mistake!)
-    nsCOMPtr<nsISound> soundInterface =
-      do_CreateInstance("@mozilla.org/sound;1");
-    if (soundInterface) {
-      soundInterface->Beep();
+    if (mIsSoundEnabledPref) {
+      PlayNotFoundSound();
     }
+
     // Remove bad character from buffer, so we can continue typing from
     // last matched character
     if (length >= 1) {
@@ -941,6 +972,24 @@ nsTypeAheadFind::SaveFind()
   // --- If accessibility.typeaheadfind.timeout is set,
   //     cancel find after specified # milliseconds ---
   StartTimeout();
+}
+
+
+void
+nsTypeAheadFind::PlayNotFoundSound()
+{
+  if (!mSoundInterface) {
+    mSoundInterface = do_CreateInstance("@mozilla.org/sound;1");
+  }
+  if (mSoundInterface) {
+    mIsSoundInitialized = PR_TRUE;
+    nsCOMPtr<nsIURI> soundURI;
+    NS_NewURI(getter_AddRefs(soundURI), NS_LITERAL_CSTRING(TYPEAHEADFIND_NOTFOUND_WAV_URL));
+    nsCOMPtr<nsIURL> soundURL(do_QueryInterface(soundURI));
+    if (soundURL) {
+      mSoundInterface->Play(soundURL);
+    }
+  }
 }
 
 
