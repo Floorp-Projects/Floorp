@@ -30,10 +30,13 @@
     code 		= "th";
   },
   {
+    code 		= "zh-CN";
+  },
+  {
     code 		= "zh-TW";
   },
   {
-    code 		= "zh-CN";
+    code 		= "zh-HK";
   },
   {
     code 		= "ja";
