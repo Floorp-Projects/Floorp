@@ -66,6 +66,8 @@
 
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
+#define IS_SECURE(state) ((state & 0xFFFF) == STATE_IS_SECURE)
+
 #if defined(PR_LOGGING)
 //
 // Log module for nsSecureBroswerUI logging...
@@ -189,7 +191,7 @@ static nsresult IsChildOfDomWindow(nsIDOMWindow *parent, nsIDOMWindow *child,
   return NS_OK;
 }
 
-static PRInt16 GetSecurityStateFromChannel(nsIChannel* aChannel)
+static PRInt32 GetSecurityStateFromChannel(nsIChannel* aChannel)
 {
   nsresult res;
   PRInt32 securityState;
@@ -313,23 +315,29 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   // A document has finished loading
   if ((aProgressStateFlags & STATE_STOP) &&
       (aProgressStateFlags & STATE_IS_NETWORK) &&
-      (mSecurityState == STATE_IS_SECURE ||
+      (IS_SECURE(mSecurityState) ||
        mSecurityState == STATE_IS_BROKEN))
     {
-      if (mSecurityState == STATE_IS_SECURE) {
+      if (IS_SECURE(mSecurityState)) {
         // XXX Shouldn't we do this even if the state is broken?
         // XXX Shouldn't we grab the pickled status at STATE_NET_TRANSFERRING?
         
-        if (GetSecurityStateFromChannel(channel) == STATE_IS_SECURE) {
+        if (IS_SECURE(GetSecurityStateFromChannel(channel))) {
           // Everything looks okay.
           PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to lock\n", this));
           
-          if (mSecurityButton)
-            res = mSecurityButton->SetAttribute(NS_LITERAL_STRING("level"),
-                                                NS_LITERAL_STRING("high"));
+          if (mSecurityButton) {
+            if (mSecurityState == (STATE_IS_SECURE|STATE_SECURE_HIGH)) {
+              res = mSecurityButton->SetAttribute(NS_LITERAL_STRING("level"),
+                                                  NS_LITERAL_STRING("high"));
+            } else {
+              res = mSecurityButton->SetAttribute(NS_LITERAL_STRING("level"),
+                                                  NS_LITERAL_STRING("low"));
+            }
+          }
           
           if (eventSink)
-            eventSink->OnSecurityChange(aRequest, (STATE_IS_SECURE));
+            eventSink->OnSecurityChange(aRequest, mSecurityState);
           
           if (!mSecurityButton)
             return res;
@@ -365,7 +373,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   
   // don't need to do anything more if the page is broken or not secure...
   
-  if (mSecurityState != STATE_IS_SECURE)
+  if (!IS_SECURE(mSecurityState))
     return NS_OK;
   
   // A URL is starting to load...
@@ -472,7 +480,7 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch(nsISecurityEventSink* eventSin
 
   // Check to see if we are going from a secure page to an insecure page
   if (newSecurityState == STATE_IS_INSECURE &&
-      (oldSecurityState == STATE_IS_SECURE ||
+      (IS_SECURE(oldSecurityState) ||
        oldSecurityState == STATE_IS_BROKEN)) {
 
     SetBrokenLockIcon(eventSink, aRequest, PR_TRUE);
@@ -481,11 +489,19 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch(nsISecurityEventSink* eventSin
 
   }
   // check to see if we are going from an insecure page to a secure one.
-  else if ((newSecurityState == STATE_IS_SECURE ||
+  else if ((newSecurityState == (STATE_IS_SECURE|STATE_SECURE_HIGH) ||
             newSecurityState == STATE_IS_BROKEN) &&
            oldSecurityState == STATE_IS_INSECURE) {
-
     AlertEnteringSecure();
+  }
+  // check to see if we are going from a strong or insecure page to a
+  // weak one.
+  else if ((IS_SECURE(newSecurityState) &&
+            newSecurityState != (STATE_IS_SECURE|STATE_SECURE_HIGH)) &&
+           (oldSecurityState == STATE_IS_INSECURE ||
+            oldSecurityState == (STATE_IS_SECURE|STATE_SECURE_HIGH))) {
+
+    AlertEnteringWeak();
   }
   
   mSecurityState = newSecurityState;
@@ -496,13 +512,13 @@ nsresult
 nsSecureBrowserUIImpl::CheckMixedContext(nsISecurityEventSink *eventSink,
                                          nsIRequest* aRequest, nsIChannel* aChannel)
 {
-  PRInt16 newSecurityState;
+  PRInt32 newSecurityState;
 
   newSecurityState = GetSecurityStateFromChannel(aChannel);
 
   if ((newSecurityState == STATE_IS_INSECURE ||
        newSecurityState == STATE_IS_BROKEN) &&
-      mSecurityState == STATE_IS_SECURE) {
+      IS_SECURE(mSecurityState)) {
     
     // work-around for bug 48515
     nsCOMPtr<nsIURI> aURI;
@@ -544,14 +560,14 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
   
   // if we are posting to a secure link from a secure page, all is okay.
   if (secure &&
-      (mSecurityState == STATE_IS_SECURE ||
+      (IS_SECURE(mSecurityState) ||
        mSecurityState == STATE_IS_BROKEN)) {
     return NS_OK;
   }
     
   // posting to insecure webpage from a secure webpage.
   // NOTE: This test is inconsistant with the one above
-  if (!secure  && (mSecurityState == STATE_IS_SECURE)) {
+  if (!secure && IS_SECURE(mSecurityState)) {
     *okayToPost = ConfirmPostToInsecureFromSecure();
   } else {
     *okayToPost = ConfirmPostToInsecure();
@@ -667,6 +683,21 @@ AlertEnteringSecure()
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
 
   dialogs->AlertEnteringSecure(ctx);
+
+  return;
+}
+
+void nsSecureBrowserUIImpl::
+AlertEnteringWeak()
+{
+  nsCOMPtr<nsISecurityWarningDialogs> dialogs;
+
+  GetNSSDialogs(NS_GET_IID(nsISecurityWarningDialogs), getter_AddRefs(dialogs));
+  if (!dialogs) return;
+
+  nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
+
+  dialogs->AlertEnteringWeak(ctx);
 
   return;
 }

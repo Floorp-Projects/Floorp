@@ -90,6 +90,7 @@ protected:
 
   // Alerts for security transitions
   void AlertEnteringSecure();
+  void AlertEnteringWeak();
   void AlertLeavingSecure();
   void AlertMixedMode();
   PRBool ConfirmPostToInsecure();

@@ -79,6 +79,11 @@ interface nsISecurityWarningDialogs : nsISupports
   void alertEnteringSecure(in nsIInterfaceRequestor ctx);
 
   /**
+   * alertEnteringWeak
+   */
+  void alertEnteringWeak(in nsIInterfaceRequestor ctx);
+
+  /**
    * alertLeavingSecure
    */
   void alertLeavingSecure(in nsIInterfaceRequestor ctx);

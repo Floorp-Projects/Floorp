@@ -55,6 +55,7 @@
 #define STRING_BUNDLE_URL    "chrome://communicator/locale/security.properties"
 
 #define ENTER_SITE_PREF      "security.warn_entering_secure"
+#define WEAK_SITE_PREF       "security.warn_entering_weak"
 #define LEAVE_SITE_PREF      "security.warn_leaving_secure"
 #define MIXEDCONTENT_PREF    "security.warn_viewing_mixed"
 #define INSECURE_SUBMIT_PREF "security.warn_submit_insecure"
@@ -499,6 +500,16 @@ nsNSSDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx)
   return rv;
 }
 
+nsresult
+nsNSSDialogs::AlertEnteringWeak(nsIInterfaceRequestor *ctx)
+{
+  nsresult rv;
+
+  rv = AlertDialog(ctx, WEAK_SITE_PREF,
+                   NS_LITERAL_STRING("WeakSiteMessage").get());
+
+  return rv;
+}
 
 nsresult
 nsNSSDialogs::AlertLeavingSecure(nsIInterfaceRequestor *ctx)
