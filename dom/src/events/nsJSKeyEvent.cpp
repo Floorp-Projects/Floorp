@@ -736,8 +736,77 @@ extern "C" NS_DOM nsresult NS_InitKeyEventClass(nsIScriptContext *aContext, void
     if ((PR_TRUE == JS_LookupProperty(jscontext, global, "KeyEvent", &vp)) &&
         JSVAL_IS_OBJECT(vp) &&
         ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_CHAR_UNDEFINED);
-      JS_SetProperty(jscontext, constructor, "DOM_CHAR_UNDEFINED", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CANCEL);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_CANCEL", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_BACK_SPACE);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_BACK_SPACE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_TAB);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_TAB", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CLEAR);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_CLEAR", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_RETURN);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_RETURN", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ENTER);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_ENTER", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SHIFT);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_SHIFT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CONTROL);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_CONTROL", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ALT);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_ALT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PAUSE);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_PAUSE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CAPS_LOCK);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_CAPS_LOCK", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ESCAPE);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_ESCAPE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SPACE);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_SPACE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PAGE_UP);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_PAGE_UP", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PAGE_DOWN);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_PAGE_DOWN", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_END);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_END", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_HOME);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_HOME", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_LEFT);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_LEFT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_UP);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_UP", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_RIGHT);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_RIGHT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DOWN);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_DOWN", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PRINTSCREEN);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_PRINTSCREEN", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_INSERT);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_INSERT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DELETE);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_DELETE", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_0);
       JS_SetProperty(jscontext, constructor, "DOM_VK_0", &vp);
@@ -769,374 +838,89 @@ extern "C" NS_DOM nsresult NS_InitKeyEventClass(nsIScriptContext *aContext, void
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_9);
       JS_SetProperty(jscontext, constructor, "DOM_VK_9", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_A);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_A", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ACCEPT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ACCEPT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ADD);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ADD", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_AGAIN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_AGAIN", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ALL_CANDIDATES);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ALL_CANDIDATES", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ALPHANUMERIC);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ALPHANUMERIC", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ALT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ALT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ALT_GRAPH);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ALT_GRAPH", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_AMPERSAND);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_AMPERSAND", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ASTERISK);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ASTERISK", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_AT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_AT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_B);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_B", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_BACK_QUOTE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_BACK_QUOTE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_BACK_SLASH);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_BACK_SLASH", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_BACK_SPACE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_BACK_SPACE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_BRACELEFT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_BRACELEFT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_BRACERIGHT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_BRACERIGHT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_C);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_C", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CANCEL);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CANCEL", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CAPS_LOCK);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CAPS_LOCK", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CIRCUMFLEX);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CIRCUMFLEX", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CLEAR);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CLEAR", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CLOSE_BRACKET);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CLOSE_BRACKET", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CODE_INPUT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CODE_INPUT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_COLON);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_COLON", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_COMMA);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_COMMA", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_COMPOSE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_COMPOSE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CONTROL);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CONTROL", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CONVERT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CONVERT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_COPY);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_COPY", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CUT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CUT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_D);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_D", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_ABOVEDOT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_ABOVEDOT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_ABOVERING);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_ABOVERING", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_ACUTE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_ACUTE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_BREVE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_BREVE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_CARON);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_CARON", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_CEDILLA);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_CEDILLA", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_CIRCUMFLEX);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_CIRCUMFLEX", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_DIAERESIS);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_DIAERESIS", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_DOUBLEACUTE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_DOUBLEACUTE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_GRAVE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_GRAVE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_IOTA);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_IOTA", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_MACRON);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_MACRON", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_OGONEK);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_OGONEK", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_SEMIVOICED_SOUND);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_SEMIVOICED_SOUND", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_TILDE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_TILDE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DEAD_VOICED_SOUND);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DEAD_VOICED_SOUND", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DECIMAL);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DECIMAL", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DELETE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DELETE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DIVIDE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DIVIDE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DOLLAR);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DOLLAR", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DOWN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DOWN", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_E);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_E", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_END);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_END", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ENTER);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ENTER", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SEMICOLON);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_SEMICOLON", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_EQUALS);
       JS_SetProperty(jscontext, constructor, "DOM_VK_EQUALS", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ESCAPE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ESCAPE", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_A);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_A", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_EURO_SIGN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_EURO_SIGN", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_B);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_B", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_EXCLAMATION_MARK);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_EXCLAMATION_MARK", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_C);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_C", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_D);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_D", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_E);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_E", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F);
       JS_SetProperty(jscontext, constructor, "DOM_VK_F", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F1);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F1", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F10);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F10", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F11);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F11", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F12);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F12", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F13);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F13", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F14);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F14", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F15);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F15", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F16);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F16", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F17);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F17", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F18);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F18", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F19);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F19", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F2);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F2", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F20);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F20", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F21);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F21", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F22);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F22", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F23);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F23", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F24);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F24", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F3);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F3", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F4);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F4", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F5);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F5", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F6);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F6", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F7);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F7", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F8);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F8", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F9);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F9", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_FINAL);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_FINAL", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_FIND);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_FIND", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_FULL_WIDTH);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_FULL_WIDTH", &vp);
-
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_G);
       JS_SetProperty(jscontext, constructor, "DOM_VK_G", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_GREATER);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_GREATER", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_H);
       JS_SetProperty(jscontext, constructor, "DOM_VK_H", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_HALF_WIDTH);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_HALF_WIDTH", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_HELP);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_HELP", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_HIRAGANA);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_HIRAGANA", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_HOME);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_HOME", &vp);
-
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_I);
       JS_SetProperty(jscontext, constructor, "DOM_VK_I", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_INSERT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_INSERT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_INVERTED_EXCLAMATION_MARK);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_INVERTED_EXCLAMATION_MARK", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_J);
       JS_SetProperty(jscontext, constructor, "DOM_VK_J", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_JAPANESE_HIRAGANA);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_JAPANESE_HIRAGANA", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_JAPANESE_KATAKANA);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_JAPANESE_KATAKANA", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_JAPANESE_ROMAN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_JAPANESE_ROMAN", &vp);
-
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_K);
       JS_SetProperty(jscontext, constructor, "DOM_VK_K", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_KANA);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_KANA", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_KANJI);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_KANJI", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_KATAKANA);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_KATAKANA", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_KP_DOWN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_KP_DOWN", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_KP_LEFT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_KP_LEFT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_KP_RIGHT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_KP_RIGHT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_KP_UP);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_KP_UP", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_L);
       JS_SetProperty(jscontext, constructor, "DOM_VK_L", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_LEFT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_LEFT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_LEFT_PARENTHESIS);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_LEFT_PARENTHESIS", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_LESS);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_LESS", &vp);
-
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_M);
       JS_SetProperty(jscontext, constructor, "DOM_VK_M", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_META);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_META", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_MINUS);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_MINUS", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_MODECHANGE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_MODECHANGE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_MULTIPLY);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_MULTIPLY", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_N);
       JS_SetProperty(jscontext, constructor, "DOM_VK_N", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_NONCONVERT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NONCONVERT", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_O);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_O", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_NUM_LOCK);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUM_LOCK", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_P);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_P", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_NUMBER_SIGN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUMBER_SIGN", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_Q);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_Q", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_R);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_R", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_S);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_S", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_T);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_T", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_U);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_U", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_V);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_V", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_W);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_W", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_X);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_X", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_Y);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_Y", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_Z);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_Z", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_NUMPAD0);
       JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD0", &vp);
@@ -1168,128 +952,125 @@ extern "C" NS_DOM nsresult NS_InitKeyEventClass(nsIScriptContext *aContext, void
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_NUMPAD9);
       JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD9", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_O);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_O", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_MULTIPLY);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_MULTIPLY", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_OPEN_BRACKET);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_OPEN_BRACKET", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ADD);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_ADD", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_P);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_P", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PAGE_DOWN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PAGE_DOWN", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PAGE_UP);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PAGE_UP", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PASTE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PASTE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PAUSE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PAUSE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PERIOD);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PERIOD", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PLUS);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PLUS", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PREVIOUS_CANDIDATE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PREVIOUS_CANDIDATE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PRINTSCREEN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PRINTSCREEN", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PROPS);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PROPS", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_Q);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_Q", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_QUOTE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_QUOTE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_QUOTEDBL);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_QUOTEDBL", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_R);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_R", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_RETURN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_RETURN", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_RIGHT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_RIGHT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_RIGHT_PARENTHESIS);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_RIGHT_PARENTHESIS", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_ROMAN_CHARACTERS);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ROMAN_CHARACTERS", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_S);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_S", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SCROLL_LOCK);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SCROLL_LOCK", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SEMICOLON);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SEMICOLON", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SEPARATER);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SEPARATER", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SHIFT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SHIFT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SLASH);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SLASH", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SPACE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SPACE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_STOP);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_STOP", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SEPARATOR);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_SEPARATOR", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SUBTRACT);
       JS_SetProperty(jscontext, constructor, "DOM_VK_SUBTRACT", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_T);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_T", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DECIMAL);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_DECIMAL", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_TAB);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_TAB", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_DIVIDE);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_DIVIDE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_U);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_U", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F1);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F1", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_UNDEFINED);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_UNDEFINED", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F2);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F2", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_UNDERSCORE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_UNDERSCORE", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F3);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F3", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_UNDO);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_UNDO", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F4);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F4", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_UP);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_UP", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F5);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F5", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_V);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_V", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F6);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F6", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_W);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_W", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F7);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F7", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_X);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_X", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F8);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F8", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_Y);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_Y", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F9);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F9", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_Z);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_Z", &vp);
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F10);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F10", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F11);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F11", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F12);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F12", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F13);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F13", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F14);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F14", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F15);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F15", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F16);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F16", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F17);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F17", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F18);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F18", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F19);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F19", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F20);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F20", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F21);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F21", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F22);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F22", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F23);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F23", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_F24);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_F24", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_NUM_LOCK);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_NUM_LOCK", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SCROLL_LOCK);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_SCROLL_LOCK", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_COMMA);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_COMMA", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_PERIOD);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_PERIOD", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_SLASH);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_SLASH", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_BACK_QUOTE);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_BACK_QUOTE", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_OPEN_BRACKET);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_OPEN_BRACKET", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_BACK_SLASH);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_BACK_SLASH", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_CLOSE_BRACKET);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_CLOSE_BRACKET", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMKeyEvent::DOM_VK_QUOTE);
+      JS_SetProperty(jscontext, constructor, "DOM_VK_QUOTE", &vp);
 
     }
 
