@@ -87,6 +87,10 @@ textarea {
   -moz-binding: url("resource:///res/builtin/platformHTMLBindings.xml#textAreas");
 }
 
+textarea > scrollbar {
+  cursor: default;
+}
+
 *|*:-moz-singleline-textcontrol-frame {
   overflow: hidden;
   white-space: nowrap;

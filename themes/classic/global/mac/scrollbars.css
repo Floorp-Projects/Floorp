@@ -5,6 +5,8 @@
 scrollbar {
    -moz-binding: url("chrome://global/skin/classicBindings.xml#scrollbar");
    border-top: 1px solid black;
+   cursor: default;
+
 }
 
 scrollbar[align="vertical"] {
@@ -90,7 +92,6 @@ scrollbarbutton {
   -moz-user-focus: ignore;
   -moz-user-select: none;
   vertical-align: bottom;
-  cursor: default;
 }
 
 scrollbarbutton:hover:active {
