@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -63,9 +64,20 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLBODYELEMENT_ALINK:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.alink", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetALink(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -77,6 +89,11 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBODYELEMENT_BACKGROUND:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.background", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetBackground(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -88,6 +105,11 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBODYELEMENT_BGCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.bgcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetBgColor(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -99,6 +121,11 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBODYELEMENT_LINK:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.link", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetLink(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -110,6 +137,11 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBODYELEMENT_TEXT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.text", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetText(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -121,6 +153,11 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBODYELEMENT_VLINK:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.vlink", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetVLink(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -133,6 +170,7 @@ GetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -156,9 +194,20 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLBODYELEMENT_ALINK:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.alink", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -168,6 +217,11 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBODYELEMENT_BACKGROUND:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.background", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -177,6 +231,11 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBODYELEMENT_BGCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.bgcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -186,6 +245,11 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBODYELEMENT_LINK:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.link", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -195,6 +259,11 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBODYELEMENT_TEXT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.text", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -204,6 +273,11 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBODYELEMENT_VLINK:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbodyelement.vlink", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -214,6 +288,7 @@ SetHTMLBodyElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -64,9 +65,20 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case PLUGIN_DESCRIPTION:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "plugin.description", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetDescription(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -78,6 +90,11 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case PLUGIN_FILENAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "plugin.filename", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetFilename(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -89,6 +106,11 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case PLUGIN_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "plugin.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -100,6 +122,11 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case PLUGIN_LENGTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "plugin.length", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRUint32 prop;
         if (NS_OK == a->GetLength(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -169,11 +196,18 @@ SetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -226,6 +260,21 @@ PluginItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "plugin.item", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -265,6 +314,21 @@ PluginNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "plugin.nameditem", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {

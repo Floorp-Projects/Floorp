@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -82,9 +83,20 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case UIEVENT_TEXT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.text", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetText(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -96,6 +108,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_COMMITTEXT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.committext", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetCommitText(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -107,6 +124,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_SCREENX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.screenx", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetScreenX(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -118,6 +140,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_SCREENY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.screeny", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetScreenY(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -129,6 +156,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_CLIENTX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clientx", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetClientX(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -140,6 +172,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_CLIENTY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clienty", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetClientY(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -151,6 +188,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_ALTKEY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.altkey", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetAltKey(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -162,6 +204,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_CTRLKEY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.ctrlkey", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetCtrlKey(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -173,6 +220,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_SHIFTKEY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.shiftkey", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetShiftKey(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -184,6 +236,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_METAKEY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.metakey", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetMetaKey(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -195,6 +252,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_CHARCODE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.charcode", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRUint32 prop;
         if (NS_OK == a->GetCharCode(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -206,6 +268,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_KEYCODE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.keycode", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRUint32 prop;
         if (NS_OK == a->GetKeyCode(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -217,6 +284,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case UIEVENT_BUTTON:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.button", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRUint32 prop;
         if (NS_OK == a->GetButton(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -228,6 +300,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSUIEVENT_LAYERX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.layerx", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
@@ -248,6 +325,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSUIEVENT_LAYERY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.layery", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
@@ -268,6 +350,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSUIEVENT_PAGEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.pagex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
@@ -288,6 +375,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSUIEVENT_PAGEY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.pagey", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
@@ -308,6 +400,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSUIEVENT_WHICH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.which", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRUint32 prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
@@ -328,6 +425,11 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSUIEVENT_RC:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.rc", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMRenderingContext* prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
@@ -350,6 +452,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -373,9 +476,20 @@ SetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case UIEVENT_COMMITTEXT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.committext", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
@@ -388,6 +502,7 @@ SetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -433,7 +548,7 @@ ResolveUIEvent(JSContext *cx, JSObject *obj, jsval id)
 //
 JSClass UIEventClass = {
   "UIEvent", 
-  JSCLASS_HAS_PRIVATE,
+  JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
   JS_PropertyStub,
   JS_PropertyStub,
   GetUIEventProperty,

@@ -96,12 +96,14 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   mNameSpaceManager = nsnull;
   mIsInitialized = PR_FALSE;
   mNumEvaluations = 0;
+  mSecManager = nsnull;
 }
 
 nsJSContext::~nsJSContext()
 {
   NS_IF_RELEASE(mNameSpaceManager);
   JS_DestroyContext(mContext);
+  NS_IF_RELEASE(mSecManager);
 }
 
 NS_IMPL_ISUPPORTS(nsJSContext, kIScriptContextIID);
@@ -358,7 +360,17 @@ nsJSContext::GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr)
 NS_IMETHODIMP
 nsJSContext::GetSecurityManager(nsIScriptSecurityManager** aInstancePtr)
 {
-  return NS_NewScriptSecurityManager(aInstancePtr);
+  if (mSecManager) {
+    *aInstancePtr = mSecManager;
+    NS_ADDREF(*aInstancePtr);
+    return NS_OK;
+  }
+  nsresult ret = NS_NewScriptSecurityManager(&mSecManager);
+  if (NS_OK == ret) {
+    *aInstancePtr = mSecManager;
+    NS_ADDREF(*aInstancePtr);
+  }
+  return ret;
 }
 
 nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;

@@ -36,14 +36,23 @@ class nsIScriptContext;
 class nsIScriptSecurityManager : public nsISupports {
 
 public:
+ /**
+  * Inits the security manager
+  */
+  NS_IMETHOD Init() = 0;
 
  /**
   * Checks script access to the property/method in question
   */
-
-  NS_IMETHOD CheckScriptAccess(nsIScriptContext* aContext, PRBool* aResult) = 0;
+  NS_IMETHOD CheckScriptAccess(nsIScriptContext* aContext, void* aObj, const char* aProp, PRBool* aResult) = 0;
 
 };
+
+//Security flags
+#define SCRIPT_SECURITY_NO_ACCESS           0x0001
+#define SCRIPT_SECURITY_SAME_DOMAIN_ACCESS  0x0002
+//XXX expand this flag out once we know the privileges we'll support
+#define SCRIPT_SECURITY_SIGNED_ACCESS       0x0004
 
 extern "C" NS_DOM nsresult NS_NewScriptSecurityManager(nsIScriptSecurityManager ** aInstancePtrResult);
 

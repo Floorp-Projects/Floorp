@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -70,9 +71,20 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLBUTTONELEMENT_FORM:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.form", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLFormElement* prop;
         if (NS_OK == a->GetForm(&prop)) {
           // get the js object
@@ -85,6 +97,11 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBUTTONELEMENT_ACCESSKEY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.accesskey", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAccessKey(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -96,6 +113,11 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBUTTONELEMENT_DISABLED:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.disabled", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetDisabled(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -107,6 +129,11 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBUTTONELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -118,6 +145,11 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBUTTONELEMENT_TABINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.tabindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetTabIndex(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -129,6 +161,11 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBUTTONELEMENT_TYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.type", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetType(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -140,6 +177,11 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBUTTONELEMENT_VALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.value", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetValue(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -152,6 +194,7 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -175,9 +218,20 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLBUTTONELEMENT_ACCESSKEY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.accesskey", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -187,6 +241,11 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBUTTONELEMENT_DISABLED:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.disabled", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
@@ -198,6 +257,11 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBUTTONELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -207,6 +271,11 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBUTTONELEMENT_TABINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.tabindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -223,6 +292,11 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLBUTTONELEMENT_VALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.value", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -233,6 +307,7 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -289,6 +364,21 @@ NSHTMLButtonElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlbuttonelement.blur", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -327,6 +417,21 @@ NSHTMLButtonElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlbuttonelement.focus", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {

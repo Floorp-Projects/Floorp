@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -61,9 +62,20 @@ GetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLMETAELEMENT_CONTENT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.content", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetContent(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -75,6 +87,11 @@ GetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLMETAELEMENT_HTTPEQUIV:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.httpequiv", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetHttpEquiv(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -86,6 +103,11 @@ GetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLMETAELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -97,6 +119,11 @@ GetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLMETAELEMENT_SCHEME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.scheme", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetScheme(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -109,6 +136,7 @@ GetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -132,9 +160,20 @@ SetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLMETAELEMENT_CONTENT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.content", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -144,6 +183,11 @@ SetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLMETAELEMENT_HTTPEQUIV:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.httpequiv", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -153,6 +197,11 @@ SetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLMETAELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -162,6 +211,11 @@ SetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLMETAELEMENT_SCHEME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmetaelement.scheme", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -172,6 +226,7 @@ SetHTMLMetaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

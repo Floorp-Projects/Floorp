@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -78,9 +79,20 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLOBJECTELEMENT_FORM:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.form", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLFormElement* prop;
         if (NS_OK == a->GetForm(&prop)) {
           // get the js object
@@ -93,6 +105,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_CODE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.code", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetCode(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -104,6 +121,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_ALIGN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.align", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAlign(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -115,6 +137,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_ARCHIVE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.archive", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetArchive(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -126,6 +153,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_BORDER:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.border", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetBorder(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -137,6 +169,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_CODEBASE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.codebase", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetCodeBase(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -148,6 +185,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_CODETYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.codetype", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetCodeType(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -159,6 +201,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_DATA:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.data", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetData(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -170,6 +217,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_DECLARE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.declare", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetDeclare(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -181,6 +233,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_HEIGHT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.height", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetHeight(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -192,6 +249,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_HSPACE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.hspace", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetHspace(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -203,6 +265,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -214,6 +281,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_STANDBY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.standby", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetStandby(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -225,6 +297,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_TABINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.tabindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetTabIndex(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -236,6 +313,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_TYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.type", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetType(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -247,6 +329,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_USEMAP:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.usemap", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetUseMap(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -258,6 +345,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_VSPACE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.vspace", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetVspace(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -269,6 +361,11 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_WIDTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.width", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetWidth(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -281,6 +378,7 @@ GetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -304,9 +402,20 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLOBJECTELEMENT_CODE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.code", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -316,6 +425,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_ALIGN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.align", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -325,6 +439,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_ARCHIVE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.archive", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -334,6 +453,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_BORDER:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.border", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -343,6 +467,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_CODEBASE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.codebase", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -352,6 +481,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_CODETYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.codetype", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -361,6 +495,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_DATA:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.data", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -370,6 +509,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_DECLARE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.declare", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
@@ -381,6 +525,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_HEIGHT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.height", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -390,6 +539,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_HSPACE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.hspace", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -399,6 +553,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -408,6 +567,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_STANDBY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.standby", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -417,6 +581,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_TABINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.tabindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -433,6 +602,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_TYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.type", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -442,6 +616,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_USEMAP:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.usemap", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -451,6 +630,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_VSPACE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.vspace", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -460,6 +644,11 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOBJECTELEMENT_WIDTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlobjectelement.width", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -470,6 +659,7 @@ SetHTMLObjectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

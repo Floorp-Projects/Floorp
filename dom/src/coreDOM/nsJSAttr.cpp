@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -60,9 +61,20 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case ATTR_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "attr.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -74,6 +86,11 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case ATTR_SPECIFIED:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "attr.specified", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetSpecified(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -85,6 +102,11 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case ATTR_VALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "attr.value", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetValue(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -97,6 +119,7 @@ GetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -120,9 +143,20 @@ SetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case ATTR_VALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "attr.value", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -133,6 +167,7 @@ SetAttrProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

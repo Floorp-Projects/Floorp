@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -68,9 +69,20 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLLAYERELEMENT_TOP:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.top", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetTop(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -82,6 +94,11 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_LEFT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.left", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetLeft(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -93,6 +110,11 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_VISIBILITY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.visibility", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetVisibility(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -104,6 +126,11 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_BACKGROUND:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.background", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetBackground(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -115,6 +142,11 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_BGCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.bgcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetBgColor(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -126,6 +158,11 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -137,6 +174,11 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_ZINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.zindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetZIndex(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -148,6 +190,11 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_DOCUMENT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.document", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMDocument* prop;
         if (NS_OK == a->GetDocument(&prop)) {
           // get the js object
@@ -161,6 +208,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -184,9 +232,20 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLLAYERELEMENT_TOP:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.top", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -203,6 +262,11 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_LEFT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.left", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -219,6 +283,11 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_VISIBILITY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.visibility", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -228,6 +297,11 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_BACKGROUND:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.background", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -237,6 +311,11 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_BGCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.bgcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -246,6 +325,11 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -255,6 +339,11 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLLAYERELEMENT_ZINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.zindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -272,6 +361,7 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -106,9 +107,20 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case WINDOW_WINDOW:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.window", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMWindow* prop;
         if (NS_OK == a->GetWindow(&prop)) {
           // get the js object
@@ -121,6 +133,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_SELF:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.self", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMWindow* prop;
         if (NS_OK == a->GetSelf(&prop)) {
           // get the js object
@@ -133,6 +150,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_DOCUMENT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.document", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMDocument* prop;
         if (NS_OK == a->GetDocument(&prop)) {
           // get the js object
@@ -145,6 +167,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_NAVIGATOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.navigator", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMNavigator* prop;
         if (NS_OK == a->GetNavigator(&prop)) {
           // get the js object
@@ -157,6 +184,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_SCREEN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.screen", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMScreen* prop;
         if (NS_OK == a->GetScreen(&prop)) {
           // get the js object
@@ -169,6 +201,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_HISTORY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.history", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHistory* prop;
         if (NS_OK == a->GetHistory(&prop)) {
           // get the js object
@@ -181,6 +218,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_PARENT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.parent", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMWindow* prop;
         if (NS_OK == a->GetParent(&prop)) {
           // get the js object
@@ -193,6 +235,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_TOP:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.top", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMWindow* prop;
         if (NS_OK == a->GetTop(&prop)) {
           // get the js object
@@ -205,6 +252,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_CLOSED:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.closed", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetClosed(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -216,6 +268,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_FRAMES:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.frames", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMWindowCollection* prop;
         if (NS_OK == a->GetFrames(&prop)) {
           // get the js object
@@ -228,6 +285,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_OPENER:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.opener", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMWindow* prop;
         if (NS_OK == a->GetOpener(&prop)) {
           // get the js object
@@ -240,6 +302,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_STATUS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.status", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetStatus(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -251,6 +318,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_DEFAULTSTATUS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.defaultstatus", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetDefaultStatus(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -262,6 +334,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -273,6 +350,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_INNERWIDTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.innerwidth", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetInnerWidth(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -284,6 +366,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_INNERHEIGHT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.innerheight", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetInnerHeight(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -295,6 +382,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_OUTERWIDTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.outerwidth", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetOuterWidth(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -306,6 +398,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_OUTERHEIGHT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.outerheight", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetOuterHeight(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -317,6 +414,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_SCREENX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.screenx", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetScreenX(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -328,6 +430,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_SCREENY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.screeny", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetScreenY(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -339,6 +446,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_PAGEXOFFSET:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.pagexoffset", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetPageXOffset(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -350,6 +462,11 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_PAGEYOFFSET:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.pageyoffset", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetPageYOffset(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -362,6 +479,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -385,9 +503,20 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case WINDOW_OPENER:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.opener", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMWindow* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
                                                 kIWindowIID, "Window",
@@ -401,6 +530,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_STATUS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.status", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -410,6 +544,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_DEFAULTSTATUS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.defaultstatus", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -419,6 +558,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -428,6 +572,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_INNERWIDTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.innerwidth", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -444,6 +593,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_INNERHEIGHT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.innerheight", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -460,6 +614,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_OUTERWIDTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.outerwidth", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -476,6 +635,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_OUTERHEIGHT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.outerheight", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -492,6 +656,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_SCREENX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.screenx", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -508,6 +677,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_SCREENY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.screeny", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -524,6 +698,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_PAGEXOFFSET:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.pagexoffset", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -540,6 +719,11 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case WINDOW_PAGEYOFFSET:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "window.pageyoffset", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -557,6 +741,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -607,6 +792,21 @@ WindowDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.dump", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -643,6 +843,21 @@ WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.alert", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -678,6 +893,21 @@ WindowFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.focus", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -710,6 +940,21 @@ WindowBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.blur", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -744,6 +989,21 @@ WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.close", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -776,6 +1036,21 @@ WindowBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.back", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -810,6 +1085,21 @@ WindowForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.forward", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -842,6 +1132,21 @@ WindowHome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.home", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -876,6 +1181,21 @@ WindowStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.stop", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -908,6 +1228,21 @@ WindowPrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.print", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -943,6 +1278,21 @@ WindowMoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   PRInt32 b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.moveto", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -989,6 +1339,21 @@ WindowMoveBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.moveby", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1033,6 +1398,21 @@ WindowResizeTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   PRInt32 b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.resizeto", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1079,6 +1459,21 @@ WindowResizeBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.resizeby", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1123,6 +1518,21 @@ WindowScrollTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   PRInt32 b1;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.scrollto", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1169,6 +1579,21 @@ WindowScrollBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.scrollby", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1213,6 +1638,21 @@ WindowClearTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.cleartimeout", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1251,6 +1691,21 @@ WindowClearInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   PRInt32 b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.clearinterval", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1291,6 +1746,21 @@ WindowSetTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.settimeout", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1324,6 +1794,21 @@ WindowSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   PRInt32 nativeRet;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.setinterval", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1363,6 +1848,21 @@ WindowCreatePopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   nsAutoString b5;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.createpopup", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1432,6 +1932,21 @@ WindowCreateAnchoredPopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.createanchoredpopup", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1488,6 +2003,21 @@ WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.open", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1521,6 +2051,21 @@ WindowOpenDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   nsIDOMWindow* nativeRet;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "window.opendialog", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1561,6 +2106,21 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.captureevent", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1603,6 +2163,21 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.releaseevent", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1648,6 +2223,21 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   PRBool b3;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.addeventlistener", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -1708,6 +2298,21 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   PRBool b3;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.removeeventlistener", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {

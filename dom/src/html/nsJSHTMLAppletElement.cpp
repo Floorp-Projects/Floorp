@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -68,9 +69,20 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLAPPLETELEMENT_ALIGN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.align", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAlign(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -82,6 +94,11 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_ALT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.alt", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAlt(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -93,6 +110,11 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_ARCHIVE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.archive", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetArchive(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -104,6 +126,11 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_CODE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.code", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetCode(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -115,6 +142,11 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_CODEBASE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.codebase", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetCodeBase(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -126,6 +158,11 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_HEIGHT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.height", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetHeight(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -137,6 +174,11 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_HSPACE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.hspace", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetHspace(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -148,6 +190,11 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -159,6 +206,11 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_OBJECT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.object", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetObject(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -170,6 +222,11 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_VSPACE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.vspace", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetVspace(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -181,6 +238,11 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_WIDTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.width", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetWidth(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -193,6 +255,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -216,9 +279,20 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLAPPLETELEMENT_ALIGN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.align", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -228,6 +302,11 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_ALT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.alt", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -237,6 +316,11 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_ARCHIVE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.archive", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -246,6 +330,11 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_CODE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.code", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -255,6 +344,11 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_CODEBASE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.codebase", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -264,6 +358,11 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_HEIGHT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.height", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -273,6 +372,11 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_HSPACE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.hspace", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -282,6 +386,11 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -291,6 +400,11 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_OBJECT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.object", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -300,6 +414,11 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_VSPACE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.vspace", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -309,6 +428,11 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAPPLETELEMENT_WIDTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.width", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -319,6 +443,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

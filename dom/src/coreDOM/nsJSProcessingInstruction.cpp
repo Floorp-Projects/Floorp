@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -59,9 +60,20 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case PROCESSINGINSTRUCTION_TARGET:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.target", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetTarget(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -73,6 +85,11 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
       }
       case PROCESSINGINSTRUCTION_DATA:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.data", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetData(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -85,6 +102,7 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -108,9 +126,20 @@ SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case PROCESSINGINSTRUCTION_DATA:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "processinginstruction.data", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -121,6 +150,7 @@ SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -83,9 +84,20 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case NODE_NODENAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.nodename", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetNodeName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -97,6 +109,11 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NODE_NODEVALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.nodevalue", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetNodeValue(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -108,6 +125,11 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NODE_NODETYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.nodetype", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRUint16 prop;
         if (NS_OK == a->GetNodeType(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -119,6 +141,11 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NODE_PARENTNODE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.parentnode", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMNode* prop;
         if (NS_OK == a->GetParentNode(&prop)) {
           // get the js object
@@ -131,6 +158,11 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NODE_CHILDNODES:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.childnodes", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMNodeList* prop;
         if (NS_OK == a->GetChildNodes(&prop)) {
           // get the js object
@@ -143,6 +175,11 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NODE_FIRSTCHILD:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.firstchild", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMNode* prop;
         if (NS_OK == a->GetFirstChild(&prop)) {
           // get the js object
@@ -155,6 +192,11 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NODE_LASTCHILD:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.lastchild", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMNode* prop;
         if (NS_OK == a->GetLastChild(&prop)) {
           // get the js object
@@ -167,6 +209,11 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NODE_PREVIOUSSIBLING:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.previoussibling", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMNode* prop;
         if (NS_OK == a->GetPreviousSibling(&prop)) {
           // get the js object
@@ -179,6 +226,11 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NODE_NEXTSIBLING:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.nextsibling", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMNode* prop;
         if (NS_OK == a->GetNextSibling(&prop)) {
           // get the js object
@@ -191,6 +243,11 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NODE_ATTRIBUTES:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.attributes", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMNamedNodeMap* prop;
         if (NS_OK == a->GetAttributes(&prop)) {
           // get the js object
@@ -203,6 +260,11 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NODE_OWNERDOCUMENT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.ownerdocument", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMDocument* prop;
         if (NS_OK == a->GetOwnerDocument(&prop)) {
           // get the js object
@@ -216,6 +278,7 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -239,9 +302,20 @@ SetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case NODE_NODEVALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "node.nodevalue", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -252,6 +326,7 @@ SetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -305,6 +380,21 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "node.insertbefore", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -357,6 +447,21 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "node.replacechild", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -408,6 +513,21 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "node.removechild", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -451,6 +571,21 @@ NodeAppendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "node.appendchild", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -493,6 +628,21 @@ NodeHasChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "node.haschildnodes", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -527,6 +677,21 @@ NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   PRBool b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "node.clonenode", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -574,6 +739,21 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   PRBool b3;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.addeventlistener", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -634,6 +814,21 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   PRBool b3;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.removeeventlistener", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {

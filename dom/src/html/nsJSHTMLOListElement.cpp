@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -60,9 +61,20 @@ GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLOLISTELEMENT_COMPACT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.compact", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetCompact(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -74,6 +86,11 @@ GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOLISTELEMENT_START:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.start", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetStart(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -85,6 +102,11 @@ GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOLISTELEMENT_TYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.type", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetType(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -97,6 +119,7 @@ GetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -120,9 +143,20 @@ SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLOLISTELEMENT_COMPACT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.compact", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
@@ -134,6 +168,11 @@ SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOLISTELEMENT_START:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.start", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -150,6 +189,11 @@ SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLOLISTELEMENT_TYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlolistelement.type", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -160,6 +204,7 @@ SetHTMLOListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

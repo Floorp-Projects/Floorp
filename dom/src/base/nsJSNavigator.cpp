@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -72,9 +73,20 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case NAVIGATOR_APPCODENAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.appcodename", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAppCodeName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -86,6 +98,11 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NAVIGATOR_APPNAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.appname", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAppName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -97,6 +114,11 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NAVIGATOR_APPVERSION:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.appversion", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAppVersion(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -108,6 +130,11 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NAVIGATOR_LANGUAGE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.language", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetLanguage(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -119,6 +146,11 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NAVIGATOR_MIMETYPES:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.mimetypes", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMMimeTypeArray* prop;
         if (NS_OK == a->GetMimeTypes(&prop)) {
           // get the js object
@@ -131,6 +163,11 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NAVIGATOR_PLATFORM:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.platform", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetPlatform(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -142,6 +179,11 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NAVIGATOR_PLUGINS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.plugins", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMPluginArray* prop;
         if (NS_OK == a->GetPlugins(&prop)) {
           // get the js object
@@ -154,6 +196,11 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NAVIGATOR_SECURITYPOLICY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.securitypolicy", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetSecurityPolicy(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -165,6 +212,11 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NAVIGATOR_USERAGENT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.useragent", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetUserAgent(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -177,6 +229,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -200,11 +253,18 @@ SetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -255,6 +315,21 @@ NavigatorJavaEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   PRBool nativeRet;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "navigator.javaenabled", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {

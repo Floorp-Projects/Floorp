@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -71,9 +72,20 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLTABLEROWELEMENT_ROWINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.rowindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetRowIndex(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -85,6 +97,11 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_SECTIONROWINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.sectionrowindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetSectionRowIndex(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -96,6 +113,11 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_CELLS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.cells", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetCells(&prop)) {
           // get the js object
@@ -108,6 +130,11 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_ALIGN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.align", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAlign(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -119,6 +146,11 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_BGCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.bgcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetBgColor(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -130,6 +162,11 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_CH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.ch", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetCh(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -141,6 +178,11 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_CHOFF:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.choff", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetChOff(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -152,6 +194,11 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_VALIGN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.valign", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetVAlign(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -164,6 +211,7 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -187,9 +235,20 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLTABLEROWELEMENT_ROWINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.rowindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -206,6 +265,11 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_SECTIONROWINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.sectionrowindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -222,6 +286,11 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_CELLS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.cells", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLCollection* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
                                                 kIHTMLCollectionIID, "HTMLCollection",
@@ -235,6 +304,11 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_ALIGN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.align", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -244,6 +318,11 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_BGCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.bgcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -253,6 +332,11 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_CH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.ch", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -262,6 +346,11 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_CHOFF:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.choff", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -271,6 +360,11 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       }
       case HTMLTABLEROWELEMENT_VALIGN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.valign", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -281,6 +375,7 @@ SetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -333,6 +428,21 @@ HTMLTableRowElementInsertCell(JSContext *cx, JSObject *obj, uintN argc, jsval *a
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.insertcell", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -371,6 +481,21 @@ HTMLTableRowElementDeleteCell(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   PRInt32 b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltablerowelement.deletecell", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
