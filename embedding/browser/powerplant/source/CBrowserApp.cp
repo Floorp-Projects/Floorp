@@ -55,10 +55,7 @@
 
 extern "C" void NS_SetupRegistry();
 
-
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
-
 
 // ===========================================================================
 //		¥ Main Program
@@ -102,8 +99,7 @@ int main()
 // ---------------------------------------------------------------------------
 
 MMozillaApp::MMozillaApp() :
-  mpIEventQueueService(nsnull), mpIServiceManager(nsnull),
-  mpIPref(nsnull)
+  mpIEventQueueService(nsnull), mpIServiceManager(nsnull)
 {
 	nsresult rv = InitWebShellApp();
 	if (rv != NS_OK)
@@ -127,7 +123,6 @@ MMozillaApp::~MMozillaApp()
 
 nsresult MMozillaApp::InitWebShellApp()
 {
-	//RegisterClass_(CWebShell);
 	RegisterClass_(CBrowserShell);
 	RegisterClass_(CBrowserWindow);
 	RegisterClass_(CUrlField);
@@ -163,20 +158,19 @@ nsresult MMozillaApp::InitWebShellApp()
 	}
 			
   // Load preferences
-	rv = nsComponentManager::CreateInstance(kPrefCID, NULL, kIPrefIID,
-	                                        (void **) &mpIPref);
-	if (NS_OK != rv) {
-		NS_ASSERTION(PR_FALSE, "Could not create prefs object");
-		return rv;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	if (NS_SUCCEEDED(rv))
+	{	  
+		prefs->StartUp();
+		prefs->ReadUserPrefs();
+		
+		// HACK ALERT: Since we don't have profiles, we don't have prefs
+		// Reduce the default font size here by hand
+	    prefs->SetIntPref("font.size.variable.x-western", 12);
+	    prefs->SetIntPref("font.size.fixed.x-western", 9);
 	}
-	  
-	mpIPref->StartUp();
-	mpIPref->ReadUserPrefs();
-	
-	// HACK ALERT: Since we don't have profiles, we don't have prefs
-	// Reduce the default font size here by hand
-    mpIPref->SetIntPref("font.size.variable.x-western", 12);
-    mpIPref->SetIntPref("font.size.fixed.x-western", 9);
+	else
+		NS_ASSERTION(PR_FALSE, "Could not get preferences service");
 	
 	return NS_OK;
 }
@@ -199,15 +193,13 @@ void MMozillaApp::TermWebShellApp()
 		mpIEventQueueService = nsnull;
 	}
 	
-	if (nsnull != mpIPref) {
-    	mpIPref->ShutDown();
-    	NS_RELEASE(mpIPref);
-	}
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	if (NS_SUCCEEDED(rv))
+    	prefs->ShutDown();
 	
 	// Shutdown XPCOM?
-	rv = NS_ShutdownXPCOM(nsnull);
+	rv = NS_ShutdownXPCOM(mpIServiceManager);
 	NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
-
 }
 
 
@@ -330,15 +322,17 @@ CBrowserApp::ObeyCommand(
 
 	switch (inCommand) {
 	
-		// Handle command messages (defined in PP_Messages.h).
 		case PP_PowerPlant::cmd_New:
-			
-			PP_PowerPlant::LWindow	*theWindow =
-									PP_PowerPlant::LWindow::CreateWindow(wind_BrowserWindow, this);
-			ThrowIfNil_(theWindow);
-			
-			// LWindow is not initially visible in PPob resource
-			theWindow->Show();
+			{
+   			CBrowserWindow	*theWindow = dynamic_cast<CBrowserWindow*>(LWindow::CreateWindow(wind_BrowserWindow, this));
+   			ThrowIfNil_(theWindow);
+   			// LWindow is not initially visible in PPob resource
+   			theWindow->Show();
+
+            // Just for demo sake, load a URL	
+            LStr255     urlString("http://www.mozilla.org");
+            theWindow->GetBrowserShell()->LoadURL((Ptr)&urlString[1], urlString.Length());
+			}
 			break;
 
 		// Any that you don't handle, such as cmd_About and cmd_Quit,
