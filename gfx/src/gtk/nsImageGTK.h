@@ -69,9 +69,8 @@ public:
 
   NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
                       nsDrawingSurface aSurface,
-                      nscoord aX0, nscoord aY0,
-                      nscoord aX1, nscoord aY1,
-                      nscoord aWidth, nscoord aHeight);
+                      nsRect &aSrcRect,
+                      nsRect &aTileRect);
 
   virtual void ImageUpdated(nsIDeviceContext *aContext,
                             PRUint8 aFlags, nsRect *aUpdateRect);
