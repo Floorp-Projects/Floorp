@@ -21,6 +21,7 @@
 
 interface nsIUrlListener;
 interface nsIMsgStatusFeedback;
+interface nsIMsgIncomingServer;
 
 [scriptable, uuid(6CFFCEB0-CB8C-11d2-8065-006008128C4E)]
 interface nsIMsgMailNewsUrl : nsIURL {
@@ -42,6 +43,8 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	// running) you should look into becoming a urlListener...
 	void SetUrlState(in boolean runningUrl, in nsresult aStatusCode);
 	void GetUrlState(out boolean runningUrl);
+
+	void GetServer(out nsIMsgIncomingServer aIncomingServer);
 
 	// the ownership model for msg feedback
 	void SetStatusFeedback(in nsIMsgStatusFeedback aMsgFeedback);

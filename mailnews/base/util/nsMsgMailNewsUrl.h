@@ -65,6 +65,10 @@ public:
 	NS_IMETHOD SetStatusFeedback(nsIMsgStatusFeedback *aMsgFeedback);
 	NS_IMETHOD GetStatusFeedback(nsIMsgStatusFeedback **aMsgFeedback);
 
+	// This is just a stub implementation. It is the responsibility of derived
+	// url classes to over-ride this method.
+	NS_IMETHOD GetServer(nsIMsgIncomingServer ** aIncomingServer);
+
 	// if you really want to know what the current state of the url is (running or not
 	// running) you should look into becoming a urlListener...
 	NS_IMETHOD SetUrlState(PRBool runningUrl, nsresult aStatusCode);
@@ -124,6 +128,9 @@ public:
 
 protected:
 	virtual ~nsMsgMailNewsUrl();
+
+	// a helper function I needed from derived urls...
+	virtual const char * GetUserName() = 0;
 
 	nsCOMPtr<nsIURL> m_baseURL;
 	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;

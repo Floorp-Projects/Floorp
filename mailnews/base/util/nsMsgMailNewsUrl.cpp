@@ -20,6 +20,7 @@
 #include "nsMsgMailNewsUrl.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgMailSession.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -148,6 +149,37 @@ nsresult nsMsgMailNewsUrl::GetErrorMessage (char ** errorMessage)
 {
 	// functionality has been moved to nsIMsgStatusFeedback
 	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServer)
+{
+	// mscott --> we could cache a copy of the server here....but if we did, we run
+	// the risk of leaking the server if any single url gets leaked....of course that
+	// shouldn't happen...but it could. so i'm going to look it up every time and
+	// we can look at caching it later.
+
+	nsXPIDLCString host;
+	nsXPIDLCString scheme;
+
+	nsresult rv = GetHost(getter_Copies(host));
+	rv = GetScheme(getter_Copies(scheme));
+    if (NS_SUCCEEDED(rv))
+    {
+        NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
+        if (NS_FAILED(rv)) return rv;
+        
+        nsCOMPtr<nsIMsgAccountManager> accountManager;
+        rv = session->GetAccountManager(getter_AddRefs(accountManager));
+        if(NS_FAILED(rv)) return rv;
+        
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        rv = accountManager->FindServer(GetUserName(),
+                                        host,
+                                        scheme,
+                                        aIncomingServer);
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::SetStatusFeedback(nsIMsgStatusFeedback *aMsgFeedback)
