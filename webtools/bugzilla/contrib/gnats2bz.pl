@@ -19,8 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Tom Schutter <tom@platte.com>
-
-
+#
 # Perl script to convert a GNATS database to a Bugzilla database.
 # This script generates a file that contains SQL commands for MySQL.
 # This script DOES NOT MODIFY the GNATS database.
@@ -74,6 +73,16 @@
 #     is no place to put the "Why" text, which can have a fair amount
 #     of information content.
 #
+# 15 January 2002 - changes from Andrea Dell'Amico <adellam@link.it>
+#
+#     * Adapted to the new database structure: now long_descs is a 
+#       separate table.
+#     * Set a default for the target milestone, otherwise bugzilla
+#       doesn't work with the imported database if milestones are used.
+#     * In gnats version 3.113 records are separated by "|" and not ":".
+#     * userid "1" is for the bugzilla administrator, so it's better to
+#       start from 2.
+#
 
 use strict;
 
@@ -102,8 +111,9 @@ my($cleanup_with_edit_pr) = 0;
 my($default_component) = "GNATS Import";
 my($default_component_description) = "Bugs imported from GNATS.";
 
-# First generated userid.
-my($userid_base) = 1;
+# First generated userid. Start from 2: 1 is used for the bugzilla
+# administrator.
+my($userid_base) = 2;
 
 # Output filenames.
 my($cleanup_pathname) = "gnats2bz_cleanup.sh";
@@ -150,7 +160,7 @@ my($pr_data_dup_fields) = "";
 # String to hold badly labeled fields found during read of PR.
 # This usually happens when the user does not separate the field name
 # from the field data with whitespace.
-my($pr_data_bad_fields) = "";
+my($pr_data_bad_fields) = " ";
 
 # Hash to hold statistics (note that this a hash of hashes).
 my(%pr_stats);
@@ -215,6 +225,9 @@ foreach $pr (@pr_list) {
     update_versions();
 
     write_bugs();
+
+    write_longdescs();
+
 }
 
 write_non_bugs_tables();
@@ -233,7 +246,7 @@ sub load_index {
     open(INDEX, $pathname) || die "Unable to open $pathname: $!";
 
     while ($record = <INDEX>) {
-        @fields = split(/:/, $record);
+        @fields = split(/\|/, $record);
         push(@pr_list, $fields[0]);
     }
 
@@ -270,7 +283,7 @@ sub load_responsible {
         if ($record =~ /^#/) {
             next;
         }
-        push(@responsible_list, [split(/:/, $record)]);
+        push(@responsible_list, [split(/\|/, $record)]);
     }
 
     close(RESPONSIBLE) || die "Unable to close $pathname: $!";
@@ -667,29 +680,7 @@ sub write_bugs {
 
     my($short_desc) = SqlQuote($pr_data{"Synopsis"});
 
-    my($long_desc) = $pr_data{"Description"};
-    if (defined($pr_data{"How-To-Repeat"}) && $pr_data{"How-To-Repeat"} ne "") {
-        $long_desc =
-            $long_desc . "\n\nHow-To-Repeat:\n" . $pr_data{"How-To-Repeat"};
-    }
-    if (defined($pr_data{"Fix"}) && $pr_data{"Fix"} ne "") {
-        $long_desc = $long_desc . "\n\nFix:\n" . $pr_data{"Fix"};
-    }
-    if (defined($pr_data{"Originator"}) && $pr_data{"Originator"} ne "") {
-        $long_desc = $long_desc . "\n\nOriginator:\n" . $pr_data{"Originator"};
-    }
-    if (defined($pr_data{"Organization"}) && $pr_data{"Organization"} ne "") {
-        $long_desc = $long_desc . "\n\nOrganization:\n" . $pr_data{"Organization"};
-    }
-    if (defined($pr_data{"Audit-Trail"}) && $pr_data{"Audit-Trail"} ne "") {
-        $long_desc = $long_desc . "\n\nAudit-Trail:\n" . $pr_data{"Audit-Trail"};
-    }
-    if (defined($pr_data{"Unformatted"}) && $pr_data{"Unformatted"} ne "") {
-        $long_desc = $long_desc . "\n\nUnformatted:\n" . $pr_data{"Unformatted"};
-    }
-    $long_desc = SqlQuote($long_desc);
-
-    my($rep_platform, $op_sys) = split(/:/, $pr_data{"Environment"});
+    my($rep_platform, $op_sys) = split(/\|/, $pr_data{"Environment"});
     $rep_platform = SqlQuote($rep_platform);
     $op_sys = SqlQuote($op_sys);
 
@@ -715,8 +706,8 @@ sub write_bugs {
 
     my($component) = SqlQuote($default_component);
 
-    my($target_milestone) = "";
-    $target_milestone = SqlQuote($target_milestone);
+    my($target_milestone) = "0";
+    # $target_milestone = SqlQuote($target_milestone);
 
     my($qa_contact) = "0";
 
@@ -730,15 +721,52 @@ sub write_bugs {
     print DATA "  bug_id, assigned_to, bug_severity, priority, bug_status, creation_ts, delta_ts,\n";
     print DATA "  short_desc,\n";
     print DATA "  rep_platform, op_sys, reporter, version,\n";
-    print DATA "  product, component, resolution, target_milestone, qa_contact,\n";
-    print DATA "  long_desc\n";
+    print DATA "  product, component, resolution, target_milestone, qa_contact\n";
     print DATA ") values (\n";
     print DATA "  $bug_id, $userid, $bug_severity, $priority, $bug_status, $creation_ts, $delta_ts,\n";
     print DATA "  $short_desc,\n";
     print DATA "  $rep_platform, $op_sys, $reporter, $version,\n";
-    print DATA "  $product, $component, $resolution, $target_milestone, $qa_contact,\n";
-    print DATA "  $long_desc\n";
+    print DATA "  $product, $component, $resolution, $target_milestone, $qa_contact\n";
     print DATA ");\n";
+}
+
+sub write_longdescs {
+
+    my($bug_id) = $pr_data{"Number"};
+    my($who) = get_userid($pr_data{"Responsible"});;
+    my($bug_when) = "";
+    if (defined($pr_data{"Arrival-Date"}) && $pr_data{"Arrival-Date"} ne "") {
+        $bug_when = unixdate2datetime($bug_id, $pr_data{"Arrival-Date"});
+    }
+    $bug_when = SqlQuote($bug_when);
+    my($thetext) = $pr_data{"Description"};
+    if (defined($pr_data{"How-To-Repeat"}) && $pr_data{"How-To-Repeat"} ne "") {
+        $thetext =
+            $thetext . "\n\nHow-To-Repeat:\n" . $pr_data{"How-To-Repeat"};
+    }
+    if (defined($pr_data{"Fix"}) && $pr_data{"Fix"} ne "") {
+        $thetext = $thetext . "\n\nFix:\n" . $pr_data{"Fix"};
+    }
+    if (defined($pr_data{"Originator"}) && $pr_data{"Originator"} ne "") {
+        $thetext = $thetext . "\n\nOriginator:\n" . $pr_data{"Originator"};
+    }
+    if (defined($pr_data{"Organization"}) && $pr_data{"Organization"} ne "") {
+        $thetext = $thetext . "\n\nOrganization:\n" . $pr_data{"Organization"};
+    }
+    if (defined($pr_data{"Audit-Trail"}) && $pr_data{"Audit-Trail"} ne "") {
+        $thetext = $thetext . "\n\nAudit-Trail:\n" . $pr_data{"Audit-Trail"};
+    }
+    if (defined($pr_data{"Unformatted"}) && $pr_data{"Unformatted"} ne "") {
+        $thetext = $thetext . "\n\nUnformatted:\n" . $pr_data{"Unformatted"};
+    }
+    $thetext = SqlQuote($thetext);
+
+    print DATA "\ninsert into longdescs (\n";
+    print DATA "  bug_id, who, bug_when, thetext\n";
+    print DATA ") values (\n";
+    print DATA "  $bug_id, $who, $bug_when, $thetext\n";
+    print DATA ");\n";
+
 }
 
 sub write_non_bugs_tables {
@@ -765,6 +793,14 @@ sub write_non_bugs_tables {
         print DATA
             "  $component, $product, $initialowner, '', $description\n";
         print DATA ");\n";
+
+        print DATA "\ninsert into milestones (\n";
+        print DATA
+            "  value, product, sortkey\n";
+        print DATA ") values (\n";
+        print DATA
+            "  0, $product, 0\n";
+        print DATA ");\n";
     }
 
     my($username);
@@ -778,10 +814,10 @@ sub write_non_bugs_tables {
         $realname = SqlQuote($realname);
         print DATA "\ninsert into profiles (\n";
         print DATA
-            "  userid, login_name, password, cryptpassword, realname, groupset\n";
+            "  userid, login_name, cryptpassword, realname, groupset\n";
         print DATA ") values (\n";
         print DATA
-            "  $userid, $username, '$password', encrypt('$password'), $realname, $groupset\n";
+            "  $userid, $username, encrypt('$password'), $realname, $groupset\n";
         print DATA ");\n";
         $userid++;
     }
@@ -799,6 +835,7 @@ sub write_non_bugs_tables {
             print DATA "values ($version, $product);\n";
         }
     }
+
 }
 
 sub map_username_to_realname() {
@@ -826,10 +863,18 @@ sub map_username_to_realname() {
 
 # This routine was copied from globals.pl which was largely copied
 # from Mysql.pm.
+sub detaint_string {
+    my ($str) = @_;
+    $str =~ m/^(.*)$/s;
+    $str = $1;
+}
+
 sub SqlQuote {
-    my($str) = @_;
+    my ($str) = (@_);
     $str =~ s/([\\\'])/\\$1/g;
     $str =~ s/\0/\\0/g;
+    # If it's been SqlQuote()ed, then it's safe, so we tell -T that.
+    $str = detaint_string($str);
     return "'$str'";
 }
 
@@ -967,7 +1012,7 @@ sub split_unixdate {
         return(1);
     }
 
-    @parts = split(/\//, $unixdate);
+    @parts = split(/:/, $unixdate);
     if (@parts == 3 && length($unixdate) <= 8) {
         $$year = "19" . $parts[2];
 
@@ -1021,3 +1066,4 @@ sub month2number {
 
     return(1);
 }
+
