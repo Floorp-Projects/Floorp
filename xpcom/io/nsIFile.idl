@@ -26,128 +26,154 @@
 interface nsIFile : nsISupports
 {
 
-	/**
-	 *	 Different path types that nsIFile can parse.
-	 *
-     *   NATIVE_PATH is a **native** path.  For example, on windows 
-	 *   this would be "c:\\foo\\bar" and on the mac it would be 
-	 *   "Macintosh HD:foo:bar"
+    /**
+     *   Different path types that nsIFile can parse.
      *
-	 *   UNIX_PATH is a unix style path.  If you are running on unix 
-	 *   this is the same as InitWithNativePath.  This strings look like
-	 *   "/Development/MPW/SysErrs.err"
-	 *
-	 *   NSPR_PATH is a NSPR style path.  NSPR expects a UNIX path on unix 
-	 *   and Macintosh, but a native path on windows.  If you want to create 
-	 *   a nsIFile form a string that comes back from NSPR, use this call
-	 */
-
-	const unsigned long NATIVE_PATH = 0;
-	const unsigned long UNIX_PATH = 1;
-	const unsigned long NSPR_PATH = 2;
+     *   NATIVE_PATH is a **native** path.  For example, on windows 
+     *   this would be "c:\\foo\\bar" and on the mac it would be 
+     *   "Macintosh HD:foo:bar"
+     *
+     *   UNIX_PATH is a unix style path.  If you are running on unix 
+     *   this is the same as InitWithNativePath.  This strings look like
+     *   "/Development/MPW/SysErrs.err"
+     *
+     *   NSPR_PATH is a NSPR style path.  NSPR expects a UNIX path on unix 
+     *   and Macintosh, but a native path on windows.  If you want to create 
+     *   a nsIFile form a string that comes back from NSPR, use this call
+     */
 
     /**
-	 *	 Initialization routines.  These functions shall be called to 
-	 *   setup the nsIFile.  
-	 */
-	void Init([const] in string filePath, in unsigned long pathType);
-	
-	/**
-	 *  Create() will create a new file, directory or symlink in the file system.  
-	 *  Any nodes that have not been created or resolved, will be.
-	 * 
-	 *  type -       TODO
-	 *  attributes - 
-	 */
-	void Create([const] in string type, [const] in string attributes);
-	
-	/**
-	 *  Append() will create concatenate a relative path to this nsIFile.  It
-	 *  is used for constructing the nsIFile of a descendant.  If this object is 
-	 *  already Created, it must be either a directory or symlink to a directory. 
-     *  Append() will do what nsString does, it will tag the |node| at the end
-	 *  of what the nsIFile already has stuff in it.  It will also do
+     *   Path Types
+     */
+    const unsigned long NATIVE_PATH = 0;
+    const unsigned long UNIX_PATH   = 1;
+    const unsigned long NSPR_PATH   = 2;
+
+    /**
+     *   Create Types
+     */
+    const unsigned long NORMAL_FILE_TYPE = 0;
+    const unsigned long DIRECTORY_TYPE   = 1;
+    const unsigned long SYMLINK_TYPE     = 2;
+    
+    /**
+     *   Initialization routines.  These function shall be called to 
+     *   setup the nsIFile.  
+     */
+    void init([const] in string filePath, in unsigned long pathType);
+    
+    /**
+     *  Create() will create a new file, directory or symlink in the file system.  
+     *  Any nodes that have not been created or resolved, will be.
+     * 
+     *  type -       a create Type
+     *  attributes - unix style octal attributes
+     */
+    void create(in unsigned long type, in unsigned long attributes);
+    
+    /**
+     *  appendPath() will create concatenate a relative path to this nsIFile.  It
+     *  is used for constructing the nsIFile of a descendant.  If this object is 
+     *  already Created, it must be either a directory or symlink to a directory. 
+     *  appendPath() will do what nsString does, it will tag the |node| at the end
+     *  of what the nsIFile already has stuff in it.  It will also do
      *  non-terminal symlink resolution.
-	 *
-	 *  pathType is only meaningful if |node| is a compound path (eg. "foo/bar/i/am/")
-	 */
-	void Append([const] in string node, in unsigned long pathType);
+     *
+     *  pathType is only meaningful if |node| is a compound path (eg. "foo/bar/i/am/")
+     */
+    void appendPath([const] in string node, in unsigned long pathType);
 
-	/**
-	 *	 Accessor to the file name (the leaf name not the full file path) of the file itself.   
+    /**
+     *   Accessor to the file name (the leaf name not the full file path) of the file itself.   
+     */
+    readonly attribute string fileName;
+    
+    /**
+     *  Accessor to the full file path.  The use of the Path is strongly discouraged 
+     *  The problem affects platforms (Macintosh) in which a path does not fully
+     *  specify a file, because two volumes can have the same name.  This is solved 
+     *  by holding a "private" native data.  This data is lost when you convert to  
+     *  a string.
+     */
+    string getPath(in unsigned long pathType);
+    
+  
+    /**
+     *  This will copy this file (if created) to the specified 
+     *  newParentDir.  Permissions will try to be mantained.
+     *  If a newName is specified, the file will be renamed.
+     *  If the newParentDir is nsnull, copyTo() will simply  
+     *  rename this file.
+     *
+	 *  copyTo will resolve aliases/shortcuts in its this parameter 
+	 *  (the nsIFile instance being operated on).  It will resolve all
+     *  components in its newParentDir parameter (non-terminal and terminal). 
 	 */
-	readonly attribute string FileName;
-	
-	/**
-	 *	Accessor to the full file path.  The use of the Path is strongly discouraged 
-	 *  The problem affects platforms (Macintosh) in which a path does not fully
-	 *  specify a file, because two volumes can have the same name.  This is solved 
-	 *  by holding a "private" native data.  This data is lost when you convert to  
-	 *  a string.
-	 */
-	string GetPath(in unsigned long pathType);
-	
-	/**
-	 *  This will rename the file on disk.  This function will
-	 *  not move file objects.  If the file can not be renamed 
-	 *  an error code will be returned.      
-	 */
-	void Rename([const] in string newName);
-	
-	/**
-	 *  This will copy this file (if created) to the specified 
-	 *  newParentDir.  Permissions will try to be mantained.
-	 */
-	void CopyTo([const] in nsIFile newParentDir);
-	
-	/**
-	 *  This will move (copy then delete) this file (if created) 
-	 *  to the specified newParentDir.  Permissions will try 
-	 *  to be mantained.  If the MoveTo failes, this will not
-	 *  be deleted.
-	 */
-	void MoveTo([const] in nsIFile newParentDir);
-	
-	/**
-	 *  This will try to execute this file.  It will not block for
-	 *  execution.  'args' will be passed through on the command line
-	 *  if the OS supports that.
-	 */
-	void Execute([const] in string args);
-	
-	/**
-	 *  This will try to delete this file.  The 'recursive' flag
-	 *  must be PR_TRUE to delete directories which are not empty.
-	 */
-	void Delete(in boolean recursive);
+    void copyTo([const] in nsIFile newParentDir, [const] in string newName);
+    void copyToFollowingLinks([const] in nsIFile newParentDir, [const] in string newName);
+    
+    /**
+     *  This will move (copy then delete) this file (if created) 
+     *  to the specified newParentDir.  Permissions will try 
+     *  to be mantained.  If the MoveTo failes, this will not
+     *  be deleted.
+     *
+     *  If a newName is specified, the file will be renamed.
+     *
+     */
+    void moveTo([const] in nsIFile newParentDir, [const] in string newName);
+    void moveToFollowingLinks([const] in nsIFile newParentDir, [const] in string newName);
+    
+    /**
+     *  This will try to execute this file.  It will not block for
+     *  execution.  'args' will be passed through on the command line
+     *  if the OS supports that.
+     */
+    void execute([const] in string args);
+    
+    /**
+     *  This will try to delete this file.  The 'recursive' flag
+     *  must be PR_TRUE to delete directories which are not empty.
+     *
+     *  This will not resolve any symlinks.
+     */
+    void delete(in boolean recursive);
 
-	/**
-	 *  This will resolve the terminal node of the nsIFile.
-	 */
-	void ResolveSymlink(void);
+    /**
+     *  This will resolve the terminal node of the nsIFile.
+     */
+    //void resolveSymlink(void);
 
-	/**
-	 *  Will determine if the inFile equals this.
-	 */
+    /**
+     *  Attributes of nsIFile.
+     */
+    attribute unsigned long lastModificationDate;
+    attribute unsigned long lastModificationDateOfLink;
+        
+    readonly attribute unsigned long permissions;
+    readonly attribute unsigned long permissionsOfLink;
 
-	/**
-	 *  Attributes of nsIFile.
-	 */
-	attribute unsigned long LastModificationDate;
-		
-	readonly attribute unsigned long Permissions;
-	readonly attribute unsigned long FileSize;
-	readonly attribute unsigned long DiskSpaceAvailable;
+    readonly attribute unsigned long fileSize;
+    readonly attribute unsigned long fileSizeOfLink;
+    
 
-	readonly attribute nsIFile Parent;
-	
-	boolean IsExists();
-	boolean IsWriteable();
-	boolean IsReadable();
-	boolean IsDirectory();
-	boolean IsFile();
-	boolean IsHidden();
-	boolean IsSymlink();
-	
-	bool IsEqual([const] in nsIFile inFile);
+    readonly attribute unsigned long diskSpaceAvailable;  // maybe we should put this somewhere else.
+
+    /**
+     * Parent will be nsnull when this is at the top of the volume.
+     */
+	readonly attribute nsIFile parent;
+    
+    boolean isExists();
+    boolean isWriteable();
+    boolean isReadable();
+    boolean isDirectory();
+    boolean isFile();
+    boolean isHidden();
+    boolean isSymlink();
+    
+    /**
+     *  Will determine if the inFile equals this.
+     */
+    boolean isEqual([const] in nsIFile inFile);
 };
