@@ -1173,18 +1173,26 @@ NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
        to avoid flashing. here's where we defeat that. */
     mZoomOnShow = aMode == nsSizeMode_Maximized;
   } else {
-    Rect macRect;
+    PRInt32 previousMode;
     mZooming = PR_TRUE;
+
+    nsBaseWidget::GetSizeMode(&previousMode);
     rv = nsBaseWidget::SetSizeMode(aMode);
     if (NS_SUCCEEDED(rv)) {
       if (aMode == nsSizeMode_Maximized) {
         CalculateAndSetZoomedSize();
         ::ZoomWindow(mWindowPtr, inZoomOut, ::FrontWindow() == mWindowPtr);
-      } else
-        ::ZoomWindow(mWindowPtr, inZoomIn, ::FrontWindow() == mWindowPtr);
+      } else if (aMode == nsSizeMode_Normal) {
+        // Only zoom in if the previous state was Maximized
+        if (previousMode == nsSizeMode_Maximized)
+          ::ZoomWindow(mWindowPtr, inZoomIn, ::FrontWindow() == mWindowPtr);
+      }
+
+      Rect macRect;
       ::GetWindowPortBounds(mWindowPtr, &macRect);
       Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
     }
+
     mZooming = PR_FALSE;
   }
 
