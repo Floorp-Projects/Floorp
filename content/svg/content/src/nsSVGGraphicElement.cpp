@@ -203,7 +203,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
     // We either didn't find an SVG parent, or our parent failed in
     // giving us a CTM. In either case:
     NS_WARNING("Couldn't get CTM");
-    nsSVGMatrix::Create(getter_AddRefs(CTM));
+    NS_NewSVGMatrix(getter_AddRefs(CTM));
   }
 
   // append our local transformations:
@@ -287,7 +287,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
     // We either didn't find an SVG parent, or our parent failed in
     // giving us a CTM. In either case:
     NS_ERROR("couldn't get ctm");
-    nsSVGMatrix::Create(getter_AddRefs(screenCTM));
+    NS_NewSVGMatrix(getter_AddRefs(screenCTM));
   }
 
   // append our local transformations:

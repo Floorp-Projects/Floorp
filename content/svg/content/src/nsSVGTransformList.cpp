@@ -269,8 +269,8 @@ nsSVGTransformList::SetValueString(const nsAString& aValue)
       float f = (float) PR_strtod(arg, &end);
 
       nsCOMPtr<nsIDOMSVGMatrix> matrix;
-      nsSVGMatrix::Create(getter_AddRefs(matrix),
-                          a, b, c, d, e, f);
+      NS_NewSVGMatrix(getter_AddRefs(matrix),
+                      a, b, c, d, e, f);
       NS_ASSERTION(matrix, "couldn't create matrix");
       transform->SetMatrix(matrix);
     }
@@ -532,7 +532,7 @@ NS_IMETHODIMP nsSVGTransformList::GetConsolidationMatrix(nsIDOMSVGMatrix **_retv
   PRInt32 count = mTransforms.Count();
 
   nsCOMPtr<nsIDOMSVGMatrix> conmatrix;
-  nsresult rv = nsSVGMatrix::Create(getter_AddRefs(conmatrix));
+  nsresult rv = NS_NewSVGMatrix(getter_AddRefs(conmatrix));
   if (NS_FAILED(rv))
     return rv;
   

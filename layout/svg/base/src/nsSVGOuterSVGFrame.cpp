@@ -71,6 +71,7 @@
 #include "nsIDOMSVGZoomAndPan.h"
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsIDOMSVGFitToViewBox.h"
+#include "nsSVGRect.h"
 
 ////////////////////////////////////////////////////////////////////////
 // VMRectInvalidator: helper class for invalidating rects on the viewmanager.
@@ -233,7 +234,6 @@ public:
   NS_IMETHOD InvalidateRegion(nsISVGRendererRegion* region, PRBool bRedraw);
   NS_IMETHOD IsRedrawSuspended(PRBool* isSuspended);
   NS_IMETHOD GetRenderer(nsISVGRenderer**renderer);
-  NS_IMETHOD CreateSVGRect(nsIDOMSVGRect **_retval);
 
   // nsISVGSVGFrame interface:
   NS_IMETHOD SuspendRedraw();
@@ -495,9 +495,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
   RemoveAsWidthHeightObserver();
 
   nsCOMPtr<nsIDOMSVGRect> r;
-  CreateSVGRect(getter_AddRefs(r));
-  r->SetWidth(preferredWidth);
-  r->SetHeight(preferredHeight);
+  NS_NewSVGRect(getter_AddRefs(r), 0, 0, preferredWidth, preferredHeight);
   SetCoordCtxRect(r);
   
 #ifdef DEBUG
@@ -931,16 +929,6 @@ nsSVGOuterSVGFrame::GetRenderer(nsISVGRenderer**renderer)
   *renderer = mRenderer;
   NS_IF_ADDREF(*renderer);
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::CreateSVGRect(nsIDOMSVGRect **_retval)
-{
-  nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(mContent);
-  NS_ASSERTION(svgElement, "wrong content element");  
-  if(svgElement)
-    return svgElement->CreateSVGRect(_retval);
-  return NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------

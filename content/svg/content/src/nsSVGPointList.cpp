@@ -186,7 +186,7 @@ nsSVGPointList::SetValueString(const nsAString& aValue)
     }
     
     nsCOMPtr<nsIDOMSVGPoint> point;
-    nsSVGPoint::Create((float)x, (float)y, getter_AddRefs(point));
+    NS_NewSVGPoint(getter_AddRefs(point), (float)x, (float)y);
     if (!point) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       break;
@@ -195,7 +195,7 @@ nsSVGPointList::SetValueString(const nsAString& aValue)
   }
 
   if (token1 || NS_FAILED(rv)) {
-    // there was a parse error. 
+    // there was a parse error or we ran out of memory
     rv = NS_ERROR_FAILURE;
   }
   else {

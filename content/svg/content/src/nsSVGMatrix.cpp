@@ -38,25 +38,49 @@
 
 #include "nsSVGMatrix.h"
 #include "nsDOMError.h"
+#include "nsSVGValue.h"
 #include <math.h>
 
 const double radPerDegree = 2.0*3.1415926535 / 360.0;
 
-nsresult
-nsSVGMatrix::Create(nsIDOMSVGMatrix** aResult,
-                    float a, float b, float c,
-                    float d, float e, float f)
+class nsSVGMatrix : public nsIDOMSVGMatrix,
+                    public nsSVGValue
 {
-  *aResult = (nsIDOMSVGMatrix*) new nsSVGMatrix(a, b, c, d, e, f);
-  if(!*aResult) return NS_ERROR_OUT_OF_MEMORY;
+public:
+  nsSVGMatrix(float a, float b, float c, float d, float e, float f); // addrefs
   
-  NS_ADDREF(*aResult);
+  // nsISupports interface:
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMSVGMatrix interface:
+  NS_DECL_NSIDOMSVGMATRIX
+
+  // nsISVGValue interface:
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
+  
+protected:
+  float mA, mB, mC, mD, mE, mF;
+};
+
+//----------------------------------------------------------------------
+// Implementation
+
+nsresult
+NS_NewSVGMatrix(nsIDOMSVGMatrix** result,
+                float a, float b, float c,
+                float d, float e, float f)
+{
+  *result = new nsSVGMatrix(a, b, c, d, e, f);
+  if (!*result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   return NS_OK;
 }
 
 nsSVGMatrix::nsSVGMatrix(float a, float b, float c,
                          float d, float e, float f)
-    : mA(a), mB(b), mC(c), mD(d), mE(e), mF(f)
+  : mRefCnt(1), mA(a), mB(b), mC(c), mD(d), mE(e), mF(f)
 {
 }
 
@@ -176,17 +200,10 @@ NS_IMETHODIMP nsSVGMatrix::Multiply(nsIDOMSVGMatrix *secondMatrix, nsIDOMSVGMatr
   secondMatrix->GetE(&se);
   secondMatrix->GetF(&sf);
 
-  Create(_retval);
-  if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-
-  (*_retval)->SetA( mA*sa + mC*sb );
-  (*_retval)->SetB( mB*sa + mD*sb );
-  (*_retval)->SetC( mA*sc + mC*sd );
-  (*_retval)->SetD( mB*sc + mD*sd );
-  (*_retval)->SetE( mA*se + mC*sf + mE );
-  (*_retval)->SetF( mB*se + mD*sf + mF );
-  
-  return NS_OK;
+  return NS_NewSVGMatrix(_retval,
+                         mA*sa + mC*sb,      mB*sa + mD*sb,
+                         mA*sc + mC*sd,      mB*sc + mD*sd,
+                         mA*se + mC*sf + mE, mB*se + mD*sf + mF);
 }
 
 /* nsIDOMSVGMatrix inverse (); */
@@ -196,84 +213,49 @@ NS_IMETHODIMP nsSVGMatrix::Inverse(nsIDOMSVGMatrix **_retval)
   if (det == 0.0)
     return NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE;
 
-  Create(_retval);
-  if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-
-  (*_retval)->SetA( (float)( mD/det) );
-  (*_retval)->SetB( (float)(-mB/det) );
-  (*_retval)->SetC( (float)(-mC/det) );
-  (*_retval)->SetD( (float)( mA/det) );
-  (*_retval)->SetE( (float)((mC*mF - mE*mD)/det) );
-  (*_retval)->SetF( (float)((mE*mB - mA*mF)/det) );
-  
-  return NS_OK;
+  return NS_NewSVGMatrix(_retval,
+                         (float)( mD/det),             (float)(-mB/det),
+                         (float)(-mC/det),             (float)( mA/det),
+                         (float)((mC*mF - mE*mD)/det), (float)((mE*mB - mA*mF)/det));
 }
 
 /* nsIDOMSVGMatrix translate (in float x, in float y); */
 NS_IMETHODIMP nsSVGMatrix::Translate(float x, float y, nsIDOMSVGMatrix **_retval)
 {
-  Create(_retval);
-  if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-
-  (*_retval)->SetA( mA );
-  (*_retval)->SetB( mB );
-  (*_retval)->SetC( mC );
-  (*_retval)->SetD( mD );
-  (*_retval)->SetE( mA*x + mC*y + mE );
-  (*_retval)->SetF( mB*x + mD*y + mF );  
-  
-  return NS_OK;
+  return NS_NewSVGMatrix(_retval,
+                         mA,               mB,
+                         mC,               mD,
+                         mA*x + mC*y + mE, mB*x + mD*y + mF);
 }
 
 /* nsIDOMSVGMatrix scale (in float scaleFactor); */
 NS_IMETHODIMP nsSVGMatrix::Scale(float scaleFactor, nsIDOMSVGMatrix **_retval)
 {
-  Create(_retval);
-  if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-
-  (*_retval)->SetA( mA*scaleFactor );
-  (*_retval)->SetB( mB*scaleFactor );
-  (*_retval)->SetC( mC*scaleFactor );
-  (*_retval)->SetD( mD*scaleFactor );
-  (*_retval)->SetE( mE );
-  (*_retval)->SetF( mF );  
-  
-  return NS_OK;
+  return NS_NewSVGMatrix(_retval,
+                         mA*scaleFactor, mB*scaleFactor,
+                         mC*scaleFactor, mD*scaleFactor,
+                         mE,             mF);  
 }
 
 /* nsIDOMSVGMatrix scaleNonUniform (in float scaleFactorX, in float scaleFactorY); */
 NS_IMETHODIMP nsSVGMatrix::ScaleNonUniform(float scaleFactorX, float scaleFactorY, nsIDOMSVGMatrix **_retval)
 {
-  Create(_retval);
-  if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-
-  (*_retval)->SetA( mA*scaleFactorX );
-  (*_retval)->SetB( mB*scaleFactorX );
-  (*_retval)->SetC( mC*scaleFactorY );
-  (*_retval)->SetD( mD*scaleFactorY );
-  (*_retval)->SetE( mE );
-  (*_retval)->SetF( mF );  
-  
-  return NS_OK;
+  return NS_NewSVGMatrix(_retval,
+                         mA*scaleFactorX, mB*scaleFactorX,
+                         mC*scaleFactorY, mD*scaleFactorY,
+                         mE,              mF);  
 }
 
 /* nsIDOMSVGMatrix rotate (in float angle); */
 NS_IMETHODIMP nsSVGMatrix::Rotate(float angle, nsIDOMSVGMatrix **_retval)
 {
-  Create(_retval);
-  if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-  
   double ca = cos( angle*radPerDegree );
   double sa = sin( angle*radPerDegree );
   
-  (*_retval)->SetA( (float) (mA*ca + mC*sa) );
-  (*_retval)->SetB( (float) (mB*ca + mD*sa) );
-  (*_retval)->SetC( (float) (mC*ca - mA*sa) );
-  (*_retval)->SetD( (float) (mD*ca - mB*sa) );
-  (*_retval)->SetE( mE );
-  (*_retval)->SetF( mF );  
-  
-  return NS_OK;
+  return NS_NewSVGMatrix(_retval,
+                         (float) (mA*ca + mC*sa), (float) (mB*ca + mD*sa),
+                         (float) (mC*ca - mA*sa), (float) (mD*ca - mB*sa),
+                         mE,                      mF);  
 }
 
 /* nsIDOMSVGMatrix rotateFromVector (in float x, in float y); */
@@ -300,37 +282,23 @@ NS_IMETHODIMP nsSVGMatrix::FlipY(nsIDOMSVGMatrix **_retval)
 /* nsIDOMSVGMatrix skewX (in float angle); */
 NS_IMETHODIMP nsSVGMatrix::SkewX(float angle, nsIDOMSVGMatrix **_retval)
 {
-  Create(_retval);
-  if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-  
   double ta = tan( angle*radPerDegree );
-  
-  (*_retval)->SetA( mA );
-  (*_retval)->SetB( mB );
-  (*_retval)->SetC( (float) ( mC + mA*ta) );
-  (*_retval)->SetD( (float) ( mD + mB*ta) );
-  (*_retval)->SetE( mE );
-  (*_retval)->SetF( mF );  
-  
-  return NS_OK;
+
+  return NS_NewSVGMatrix(_retval,
+                         mA,                    mB,
+                         (float) ( mC + mA*ta), (float) ( mD + mB*ta),
+                         mE,                    mF);
 }
 
 /* nsIDOMSVGMatrix skewY (in float angle); */
 NS_IMETHODIMP nsSVGMatrix::SkewY(float angle, nsIDOMSVGMatrix **_retval)
 {
-  Create(_retval);
-  if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
-  
   double ta = tan( angle*radPerDegree );
-  
-  (*_retval)->SetA( (float) (mA + mC*ta) );
-  (*_retval)->SetB( (float) (mB + mD*ta) );
-  (*_retval)->SetC( mC );
-  (*_retval)->SetD( mD );
-  (*_retval)->SetE( mE );
-  (*_retval)->SetF( mF ); 
-  
-  return NS_OK;
+
+  return NS_NewSVGMatrix(_retval,
+                         (float) (mA + mC*ta), (float) (mB + mD*ta),
+                         mC,                    mD,
+                         mE,                    mF);
 }
 
 

@@ -46,9 +46,8 @@ class nsIFrame;
 class nsISVGRendererRegion;
 class nsPresContext;
 
-// {5A889B3C-A235-41E2-8AB4-65547FCC79DB}
 #define NS_ISVGOUTERSVGFRAME_IID \
-{ 0x5a889b3c, 0xa235, 0x41e2, { 0x8a, 0xb4, 0x65, 0x54, 0x7f, 0xcc, 0x79, 0xdb } }
+{ 0xddf1071a, 0x556d, 0x4429, { 0xaf, 0xc7, 0xc6, 0xeb, 0x06, 0x20, 0x4c, 0x7c } }
 
 class nsISVGOuterSVGFrame : public nsISVGSVGFrame {
 public:
@@ -59,7 +58,6 @@ public:
   NS_IMETHOD SuspendRedraw()=0;
   NS_IMETHOD UnsuspendRedraw()=0;
   NS_IMETHOD GetRenderer(nsISVGRenderer**renderer)=0;
-  NS_IMETHOD CreateSVGRect(nsIDOMSVGRect **_retval)=0;
   NS_IMETHOD NotifyViewportChange()=0; // called by our correspoding content element
 };
 

@@ -40,33 +40,8 @@
 #define __NS_SVGPOINT_H__
 
 #include "nsIDOMSVGPoint.h"
-#include "nsSVGValue.h"
 
-class nsSVGPoint : public nsIDOMSVGPoint,
-                   public nsSVGValue
-{
-public:
-  static nsresult Create(float x, float y, nsIDOMSVGPoint** aResult);
-  
-protected:
-  nsSVGPoint(float x, float y);
-  
-public:
-  // nsISupports interface:
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMSVGPoint interface:
-  NS_DECL_NSIDOMSVGPOINT
-
-  // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString& aValue);
-  NS_IMETHOD GetValueString(nsAString& aValue);
-  
-  
-protected:
-  float mX;
-  float mY;
-};
-
+nsresult
+NS_NewSVGPoint(nsIDOMSVGPoint** result, float x = 0.0f, float y = 0.0f);
 
 #endif //__NS_SVGPOINT_H__
