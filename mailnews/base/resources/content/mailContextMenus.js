@@ -323,7 +323,7 @@ function SetMenuItemAccessKey(id, accessKey)
 
 function fillMessagePaneContextMenu(contextMenuNode)
 {
-	contextMenu = new nsContextMenu(contextMenuNode);
+	var contextMenu = new nsContextMenu(contextMenuNode);
 
 	var message = GetLoadedMessage();
 	var numSelected = (message) ? 1 : 0;
