@@ -997,7 +997,7 @@ nsHTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
     return rv;
   }
 
-  aStartIndex = PR_MIN(aStartIndex, numOptions - 1);
+  aStartIndex = PR_MIN(aStartIndex, (PRInt32)numOptions - 1);
   aStartIndex = PR_MAX(0, aStartIndex);
 
   nsCOMPtr<nsIDOMNode> node;

@@ -1845,7 +1845,7 @@ nsComboboxControlFrame::SetDropDown(nsIFrame* aDropDownFrame)
 {
   mDropdownFrame = aDropDownFrame;
  
-  if (NS_OK != mDropdownFrame->QueryInterface(NS_GET_IID(nsIListControlFrame), (void**)&mListControlFrame)) {
+  if (NS_OK != CallQueryInterface(mDropdownFrame, &mListControlFrame)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1981,10 +1981,10 @@ nsComboboxControlFrame::ActuallyDisplayText(nsAString& aText, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::GetIndexOfDisplayArea(PRInt32* aSelectedIndex)
+nsComboboxControlFrame::GetIndexOfDisplayArea(PRInt32* aDisplayedIndex)
 {
-  NS_ENSURE_ARG_POINTER(aSelectedIndex);
-  *aSelectedIndex = mDisplayedIndex;
+  NS_ENSURE_ARG_POINTER(aDisplayedIndex);
+  *aDisplayedIndex = mDisplayedIndex;
   return NS_OK;
 }
 
@@ -1997,9 +1997,8 @@ nsComboboxControlFrame::DoneAddingChildren(PRBool aIsDone)
   nsISelectControlFrame* listFrame = nsnull;
   nsresult rv = NS_ERROR_FAILURE;
   if (mDropdownFrame != nsnull) {
-    rv = mDropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
-                                                (void**)&listFrame);
-    if (NS_SUCCEEDED(rv) && listFrame) {
+    rv = CallQueryInterface(mDropdownFrame, &listFrame);
+    if (listFrame) {
       rv = listFrame->DoneAddingChildren(aIsDone);
       NS_RELEASE(listFrame);
     }
@@ -2013,33 +2012,31 @@ nsComboboxControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 #ifdef DO_REFLOW_DEBUGXX
   printf("*********AddOption: %d\n", aIndex);
 #endif
-  nsresult rv = NS_ERROR_FAILURE;
-  if (mDropdownFrame) {
-    nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
-    rv = lcf->AddOption(aPresContext, aIndex);
-  }
-  return rv;
+  nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
+  return lcf->AddOption(aPresContext, aIndex);
 }
   
 
 NS_IMETHODIMP
 nsComboboxControlFrame::RemoveOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  if (mDropdownFrame != nsnull) {
-    nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
-    rv = lcf->RemoveOption(aPresContext, aIndex);
+  // If we removed the last option, we need to blank things out
+  PRInt32 len;
+  mListControlFrame->GetNumberOfOptions(&len);
+  if (len == 0) {
+    RedisplayText(-1);
   }
-  return rv;
+
+  nsListControlFrame* lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
+  return lcf->RemoveOption(aPresContext, aIndex);
 }
 
 NS_IMETHODIMP
 nsComboboxControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
 {
   nsISelectControlFrame* listFrame = nsnull;
-  nsresult rv = mDropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
-                                              (void**)&listFrame);
-  if (NS_SUCCEEDED(rv) && listFrame) {
+  nsresult rv = CallQueryInterface(mDropdownFrame, &listFrame);
+  if (listFrame) {
     rv = listFrame->GetOptionSelected(aIndex, aValue);
     NS_RELEASE(listFrame);
   }
@@ -2142,7 +2139,7 @@ NS_IMETHODIMP
 nsComboboxControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue)
 {
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = mDropdownFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
+  nsresult result = CallQueryInterface(mDropdownFrame, &fcFrame);
   if ((NS_SUCCEEDED(result)) && (nsnull != fcFrame)) {
     return fcFrame->SetProperty(aPresContext, aName, aValue);
   }
@@ -2153,7 +2150,7 @@ NS_IMETHODIMP
 nsComboboxControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
 {
   nsIFormControlFrame* fcFrame = nsnull;
-  nsresult result = mDropdownFrame->QueryInterface(NS_GET_IID(nsIFormControlFrame), (void**)&fcFrame);
+  nsresult result = CallQueryInterface(mDropdownFrame, &fcFrame);
   if ((NS_SUCCEEDED(result)) && (nsnull != fcFrame)) {
     return fcFrame->GetProperty(aName, aValue);
   }
