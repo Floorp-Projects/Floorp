@@ -22,7 +22,7 @@
 
 DEPTH=..\..\..\..
 MODULE	= 	xpcom
-REQUIRES	= jar \
+REQUIRES	= \
 		  string \
 		  $(NULL)
 

@@ -41,165 +41,19 @@
 
 #include "xptiprivate.h"
 
-#ifdef XPTI_HAS_ZIP_SUPPORT
-
-static const char gCacheContractID[] = "@mozilla.org/libjar/zip-reader-cache;1";
-
-static const PRUint32 gCacheSize = 1;
-
-nsCOMPtr<nsIZipReaderCache> xptiZipLoader::gCache = nsnull;
-
-// static 
-nsIZipReader*
-xptiZipLoader::GetZipReader(nsILocalFile* file)
+XPTHeader*
+xptiZipLoader::ReadXPTFileFromInputStream(nsIInputStream *stream,
+                                          xptiWorkingSet* aWorkingSet)
 {
-    NS_ASSERTION(file, "bad file");
-    
-    if(!gCache)
-    {
-        gCache = do_CreateInstance(gCacheContractID);
-        if(!gCache || NS_FAILED(gCache->Init(gCacheSize)))
-            return nsnull;
-    }
-
-    nsIZipReader* reader = nsnull;
-
-    if(NS_FAILED(gCache->GetZip(file, &reader)))
-        return nsnull;
-
-    return reader;
-}
-
-// static 
-void
-xptiZipLoader::Shutdown()
-{
-    gCache = nsnull;
-}
-
-// static 
-PRBool 
-xptiZipLoader::EnumerateZipEntries(nsILocalFile* file,
-                                   xptiEntrySink* sink,
-                                   xptiWorkingSet* aWorkingSet)
-{
-    NS_ASSERTION(file, "loser!");
-    NS_ASSERTION(sink, "loser!");
-    NS_ASSERTION(aWorkingSet, "loser!");
-
-    nsCOMPtr<nsIZipReader> zip = dont_AddRef(GetZipReader(file));
-    if(!zip)
-    {
-        // XXX We are going to say that failure to open a zip/jar is OK. 
-        // We have at least one case where a jar file exists but is not 
-        // available to us to read (MRJPlugin.jar on Mac - bug 109893). 
-        // We TRUST that such files are not going to have xpt files that we 
-        // need to see.
-        LOG_AUTOREG(("      FAILED to open file! Skipping.\n"));
-        return PR_TRUE;
-    }
-    
-    nsCOMPtr<nsISimpleEnumerator> entries;
-    if(NS_FAILED(zip->FindEntries("*.xpt", getter_AddRefs(entries))) ||
-       !entries)
-    {
-        // XXX We TRUST that this means there are no .xpt files.    
-        return PR_TRUE;
-    }
-
-    do
-    {
-        PRBool result = PR_FALSE;
-        int index = 0;
-        PRBool hasMore;
-        
-        if(NS_FAILED(entries->HasMoreElements(&hasMore)))
-            return PR_FALSE;
-        if(!hasMore)
-            break;
-
-        nsCOMPtr<nsISupports> sup;
-        if(NS_FAILED(entries->GetNext(getter_AddRefs(sup))) ||!sup)
-            return PR_FALSE;
-        
-        nsCOMPtr<nsIZipEntry> entry = do_QueryInterface(sup);
-        if(!entry)
-            return PR_FALSE;
-
-        // we have a zip entry!
-
-        char* itemName = nsnull;
-        
-        if(NS_FAILED(entry->GetName(&itemName)) || !itemName)
-            return PR_FALSE;
-
-        XPTHeader* header = 
-            ReadXPTFileFromOpenZip(zip, entry, itemName, aWorkingSet);
-        
-        if(header)
-            result = sink->FoundEntry(itemName, index++, header, aWorkingSet);
-        nsMemory::Free(itemName);
-
-        if(!header)
-            return PR_FALSE;
-        
-        if(result != PR_TRUE)
-            return result;        
-    } while(1);
-
-    return PR_TRUE;
-}
-
-// static
-XPTHeader* 
-xptiZipLoader::ReadXPTFileFromZip(nsILocalFile* file,
-                                  const char* entryName,
-                                  xptiWorkingSet* aWorkingSet)
-{
-    nsCOMPtr<nsIZipReader> zip = dont_AddRef(GetZipReader(file));
-    if(!zip)
-        return nsnull;
-
-    nsCOMPtr<nsIZipEntry> entry;
-    if(NS_FAILED(zip->GetEntry(entryName, getter_AddRefs(entry))) || !entry)
-    {
-        return nsnull;
-    }
-
-    return ReadXPTFileFromOpenZip(zip, entry, entryName, aWorkingSet);
-}
-
-// static
-XPTHeader* 
-xptiZipLoader::ReadXPTFileFromOpenZip(nsIZipReader* zip,
-                                      nsIZipEntry* entry,
-                                      const char* entryName,
-                                      xptiWorkingSet* aWorkingSet)
-{
-    NS_ASSERTION(zip, "loser!");
-    NS_ASSERTION(entry, "loser!");
-    NS_ASSERTION(entryName, "loser!");
-
-    XPTHeader *header = nsnull;
-    char *whole = nsnull;
-    XPTState *state = nsnull;
     XPTCursor cursor;
-    PRUint32 flen;
     PRUint32 totalRead = 0;
+    XPTState *state = nsnull;
+    XPTHeader *header = nsnull;
 
-    if(NS_FAILED(entry->GetRealSize(&flen)) || !flen)
-    {
-        return nsnull;
-    }
-
-    nsCOMPtr<nsIInputStream> stream;
-    if(NS_FAILED(zip->GetInputStream(entryName, getter_AddRefs(stream))) || 
-       !stream)
-    {
-        return nsnull;
-    }
-
-    whole = new char[flen];
+    PRUint32 flen;
+    stream->Available(&flen);
+    
+    char *whole = new char[flen];
     if (!whole)
     {
         return nsnull;
@@ -257,4 +111,3 @@ xptiZipLoader::ReadXPTFileFromOpenZip(nsIZipReader* zip,
     return header;
 }
 
-#endif /* XPTI_HAS_ZIP_SUPPORT */

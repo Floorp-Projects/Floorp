@@ -42,10 +42,6 @@
 #ifndef xptiprivate_h___
 #define xptiprivate_h___
 
-#ifndef XPCOM_STANDALONE
-#define XPTI_HAS_ZIP_SUPPORT 1
-#endif /* XPCOM_STANDALONE */
-
 #include "nscore.h"
 #include "nsISupports.h"
 
@@ -57,6 +53,7 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptinfo.h"
+#include "nsIXPTLoader.h"
 
 #include "nsIServiceManager.h"
 #include "nsIFile.h"
@@ -76,10 +73,6 @@
 #include "nsQuickSort.h"
 
 #include "nsXPIDLString.h"
-
-#ifdef XPTI_HAS_ZIP_SUPPORT
-#include "nsIZipReader.h"
-#endif /* XPTI_HAS_ZIP_SUPPORT */
 
 #include "nsIInputStream.h"
 
@@ -788,51 +781,35 @@ private:
 
 /***************************************************************************/
 
-class xptiEntrySink
+class xptiZipLoaderSink : public nsIXPTLoaderSink
 {
 public:
+    xptiZipLoaderSink(xptiInterfaceInfoManager* aMgr,
+                      xptiWorkingSet* aWorkingSet) :
+        mManager(aMgr),
+        mWorkingSet(aWorkingSet) { NS_INIT_REFCNT(); }
+    virtual ~xptiZipLoaderSink() {};
+    
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIXPTLOADERSINK
+    
+private:
+    xptiInterfaceInfoManager* mManager;
+    xptiWorkingSet* mWorkingSet;
 
-    virtual PRBool 
-    FoundEntry(const char* entryName,
-               int index,
-               XPTHeader* header,
-               xptiWorkingSet* aWorkingSet) = 0;
 };
-
-#ifdef XPTI_HAS_ZIP_SUPPORT
 
 class xptiZipLoader
 {
 public:
     xptiZipLoader();  // not implemented
 
-    static PRBool 
-    EnumerateZipEntries(nsILocalFile* file,
-                        xptiEntrySink* sink,
-                        xptiWorkingSet* aWorkingSet);
+    static XPTHeader*
+    ReadXPTFileFromInputStream(nsIInputStream *stream,
+                               xptiWorkingSet* aWorkingSet);
 
-    static XPTHeader* 
-    ReadXPTFileFromZip(nsILocalFile* file,
-                       const char* entryName,
-                       xptiWorkingSet* aWorkingSet);
-
-    static void
-    Shutdown();
-
-private:    
-    static XPTHeader* 
-    ReadXPTFileFromOpenZip(nsIZipReader* zip,
-                           nsIZipEntry* entry,
-                           const char* entryName,
-                           xptiWorkingSet* aWorkingSet);
-
-    static nsIZipReader*
-    GetZipReader(nsILocalFile* file);
-
-    static nsCOMPtr<nsIZipReaderCache> gCache;
 };
 
-#endif /* XPTI_HAS_ZIP_SUPPORT */
 
 /***************************************************************************/
 
@@ -880,19 +857,18 @@ private:
 /***************************************************************************/
 
 class xptiInterfaceInfoManager 
-    : public nsIInterfaceInfoSuperManager,
-      public xptiEntrySink
+    : public nsIInterfaceInfoSuperManager
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEINFOMANAGER
     NS_DECL_NSIINTERFACEINFOSUPERMANAGER
 
-    // implement xptiEntrySink
+    // helper
     PRBool 
-    FoundEntry(const char* entryName,
-               int index,
-               XPTHeader* header,
-               xptiWorkingSet* aWorkingSet);
+    FoundZipEntry(const char* entryName,
+                  int index,
+                  XPTHeader* header,
+                  xptiWorkingSet* aWorkingSet);
 
 public:
     virtual ~xptiInterfaceInfoManager();
