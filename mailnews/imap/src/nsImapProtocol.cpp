@@ -4854,37 +4854,35 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
   char * currentCommand=nsnull;
   nsresult rv;
 
-#if 0
   if (flag & kHasCRAMCapability)
   {
-    nsCOMPtr<nsIKeyedHashAlgorithm> keyedHash (do_GetService(NS_KEYEDHASHALGORITHM_CONTRACTID_PREFIX "MD5"));
-    if (keyedHash)
-    {
+#define DIGEST_LENGTH 16
+  nsresult rv;
+    nsXPIDLCString digest;
       // inform the server that we want to begin a CRAM authentication procedure...
       nsCAutoString command (GetServerCommandTag());
       command.Append(" authenticate CRAM-MD5" CRLF);
-      rv = SendData(command);
+    rv = SendData(command.get());
       ParseIMAPandCheckForNewMail();
       if (GetServerStateParser().LastCommandSuccessful()) 
       {
-          unsigned char * digest;
+//      unsigned char * digest;
           char * decodedChallenge = PL_Base64Decode(GetServerStateParser().fCRAMDigest, 
                                                     nsCRT::strlen(GetServerStateParser().fCRAMDigest), nsnull);
 
-          rv = keyedHash->KeyedHash((unsigned char *) decodedChallenge, 
-                                  nsCRT::strlen(decodedChallenge), 
-                                  (unsigned char *) password, nsCRT::strlen(password), 
-                                  &digest);
+      if (m_imapServerSink)
+        rv = m_imapServerSink->CramMD5Hash(decodedChallenge, password, getter_Copies(digest));
+
           PR_FREEIF(decodedChallenge);
           if (NS_SUCCEEDED(rv) && digest)
           {
             nsCAutoString encodedDigest;
-            PRUint32 digestLength = nsCRT::strlen((const char *) digest);
+        PRUint32 digestLength = digest.Length();
             char hexVal[8];
 
             for (PRUint32 j=0; j<digestLength; j++) 
             {
-              PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)digest[j]);
+          PR_snprintf (hexVal,8, "%.2x", 0x0ff & (unsigned short)(digest.get()[j]));
               encodedDigest.Append(hexVal); 
             }
 
@@ -4892,18 +4890,16 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
             char *base64Str = PL_Base64Encode(m_dataOutputBuf, nsCRT::strlen(m_dataOutputBuf), nsnull);
             PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s" CRLF, base64Str);
             PR_FREEIF(base64Str);
-            PR_FREEIF(digest);
+//        PR_FREEIF(digest);
             rv = SendData(m_dataOutputBuf);
             if (NS_SUCCEEDED(rv))
-               ParseIMAPandCheckForNewMail(command);
+           ParseIMAPandCheckForNewMail(command.get());
             if (GetServerStateParser().LastCommandSuccessful())
               return;
           }
-      } // if CRAM response was received
-    } // if keyed hash
   }
+  } // if CRAM response was received
   else 
-#endif
   if (flag & kHasAuthPlainCapability)
   {
     PR_snprintf(m_dataOutputBuf, OUTPUT_BUFFER_SIZE, "%s authenticate plain" CRLF, GetServerCommandTag());
@@ -4932,7 +4928,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
             ParseIMAPandCheckForNewMail(currentCommand);
         if (GetServerStateParser().LastCommandSuccessful())
         {
-          PR_FREEIF(currentCommand);
+          PR_Free(currentCommand);
           return;
         } // if the last command succeeded
       } // if we got a base 64 encoded string
@@ -7261,7 +7257,7 @@ PRBool nsImapProtocol::TryToLogon()
         // for now, disable CRAM auth...we currently rely on PSM being present for this to work
         // in order to get an MD5 hash routine. I'm in the process of adding this routine to 
         // xpcom/ds so until then I'm going to leave CRAM turned off (although it does now work!)
-#if 0
+
         // try to use CRAM before we fall back to plain or auth login....
         if (GetServerStateParser().GetCapabilityFlag() & kHasCRAMCapability)
         {
@@ -7269,7 +7265,6 @@ PRBool nsImapProtocol::TryToLogon()
           logonTries++;
         }
         else 
-#endif
         if (GetServerStateParser().GetCapabilityFlag() & kHasAuthPlainCapability)
         {
           AuthLogin (userName, password, kHasAuthPlainCapability);

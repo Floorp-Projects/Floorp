@@ -75,5 +75,7 @@ interface nsIImapServerSink : nsISupports {
   void forgetPassword();
 
   readonly attribute boolean showAttachmentsInline;
+  string cramMD5Hash(in string decodedChallenge, in string key);
+
 };
 

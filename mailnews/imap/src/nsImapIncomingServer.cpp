@@ -3843,3 +3843,15 @@ nsImapIncomingServer::GetMsgFolderFromURI(nsIMsgFolder *aFolderResource, const c
   NS_IF_ADDREF(*aFolder = msgFolder);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsImapIncomingServer::CramMD5Hash(const char *decodedChallenge, const char *key, char **result)
+{
+  unsigned char resultDigest[16];
+  nsresult rv = MSGCramMD5(decodedChallenge, strlen(decodedChallenge), 
+        key, strlen(key), resultDigest);
+  NS_ENSURE_SUCCESS(rv, rv);
+  *result = strdup((const char *) resultDigest);
+  return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
