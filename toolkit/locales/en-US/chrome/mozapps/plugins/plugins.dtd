@@ -1,4 +1,5 @@
 <!ENTITY pluginWizard.title                                  "Plugin Finder Service">
+<!ENTITY pluginWizard.firstPage.title                        "Welcome to the &pluginWizard.title;">
 
 <!ENTITY pluginWizard.checkingForPlugins.description.label   "&brandShortName; is now checking for available plugins...">
 
@@ -17,4 +18,5 @@
 <!ENTITY pluginWizard.finalPage.description.label            "&brandShortName; finished installing the missing plugins:">
 
 <!ENTITY pluginWizard.finalPage.moreInfo.label               "Find out more about Plugins or manually find missing plugins.">
-<!ENTITY pluginWizard.finalPage.restart.label               "&brandShortName; needs to be restarted for the plugin(s) to work.">
+<!ENTITY pluginWizard.finalPage.restart.label                "&brandShortName; needs to be restarted for the plugin(s) to work.">
+
