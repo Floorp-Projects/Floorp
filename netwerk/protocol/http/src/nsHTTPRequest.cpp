@@ -74,7 +74,80 @@ nsHTTPRequest::~nsHTTPRequest()
 */
 }
 
-NS_IMPL_ISUPPORTS(nsHTTPRequest, nsCOMTypeInfo<nsIStreamObserver>::GetIID())
+NS_IMPL_ADDREF(nsHTTPRequest);
+NS_IMPL_RELEASE(nsHTTPRequest);
+
+NS_IMETHODIMP
+nsHTTPRequest::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr)
+        return NS_ERROR_NULL_POINTER;
+
+    *aInstancePtr = NULL;
+    
+    if (aIID.Equals(nsCOMTypeInfo<nsIStreamObserver>::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
+        *aInstancePtr = NS_STATIC_CAST(nsIStreamObserver*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    if (aIID.Equals(nsCOMTypeInfo<nsIRequest>::GetIID())) {
+        *aInstancePtr = NS_STATIC_CAST(nsIRequest*, this);
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+
+    return NS_NOINTERFACE;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIRequest methods:
+
+NS_IMETHODIMP
+nsHTTPRequest::IsPending(PRBool *result)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;
+
+  if (m_pTransport) {
+    rv = m_pTransport->IsPending(result);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPRequest::Cancel(void)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;
+
+  if (m_pTransport) {
+    rv = m_pTransport->Cancel();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPRequest::Suspend(void)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;
+
+  if (m_pTransport) {
+    rv = m_pTransport->Suspend();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTTPRequest::Resume(void)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;
+
+  if (m_pTransport) {
+    rv = m_pTransport->Resume();
+  }
+  return rv;
+}
+
 
 
 // Finally our own methods...
@@ -413,3 +486,5 @@ nsresult nsHTTPRequest::GetHeaderEnumerator(nsISimpleEnumerator** aResult)
 {
     return mHeaders.GetEnumerator(aResult);
 }
+
+
