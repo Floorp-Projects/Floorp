@@ -22,6 +22,7 @@
    - Contributor(s):
    -    Ben Goodger
    -    Michael Lowe
+   -    Sammy Ford
   -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
@@ -175,6 +176,8 @@
     <menupopup>
       <menuitem accesskey="&viewcompositiontb.accesskey;" observes="Editor:ToggleCompositionToolbar"/>
       <menuitem accesskey="&viewformattingtb.accesskey;"  observes="Editor:ToggleFormattingToolbar" />
+      <menuseparator />
+      <menuitem value="&viewPageSource.label;" accesskey="&viewpagesource.accesskey;" oncommand="EditorViewSource();" />
       <menuseparator />
       <menu value="&dcharMenu.label;" accesskey="&viewcharsetmenu.accesskey;">
         <menupopup>
