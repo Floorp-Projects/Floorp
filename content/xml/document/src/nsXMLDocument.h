@@ -92,7 +92,6 @@ public:
 
   // nsIXMLDocument interface
   NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl);
-  NS_IMETHOD SetTitle(const PRUnichar *aTitle);
 
   // nsIHTMLContentContainer
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);

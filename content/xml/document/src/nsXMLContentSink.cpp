@@ -29,6 +29,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMDOMImplementation.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIXMLDocument.h"
 #include "nsIXMLContent.h"
 #include "nsIScriptGlobalObject.h"
@@ -798,11 +799,11 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
       appendContent = PR_TRUE;
     } else if (tagAtom.get() == nsHTMLAtoms::title) {
       if (mInTitle) { // The first title wins
-        nsCOMPtr<nsIXMLDocument> xmlDoc(do_QueryInterface(mDocument));
-        if (xmlDoc) {
+        nsCOMPtr<nsIDOMNSDocument> dom_doc(do_QueryInterface(mDocument));
+        if (dom_doc) {
           mTitleText.CompressWhitespace();
-          xmlDoc->SetTitle(mTitleText.get());
-        }        
+          dom_doc->SetTitle(mTitleText);
+        }
         mInTitle = PR_FALSE;
       }
     } else if (tagAtom.get() == nsHTMLAtoms::textarea) {
