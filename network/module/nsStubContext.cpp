@@ -537,6 +537,7 @@ void stub_abort(NET_StreamClass *stream, int status)
 int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
 {
     PRInt32 bytesWritten, errorCode;
+    nsresult rv = NS_OK;
     nsConnectionInfo *pConn = GetConnectionInfoFromStream(stream);
 
     TRACEMSG(("+++ stream put_block.  Length = %d\n", length));
@@ -554,12 +555,11 @@ int stub_put_block(NET_StreamClass *stream, const char *buffer, int32 length)
         return -1;
     }
 
-    /* XXX: check return value to abort connection if necessary */
     if (pConn->pConsumer && (0 < bytesWritten)) {
-        pConn->pConsumer->OnDataAvailable(pConn->pURL, pConn->pNetStream, bytesWritten);
+        rv = pConn->pConsumer->OnDataAvailable(pConn->pURL, pConn->pNetStream, bytesWritten);
     }
 
-    return (bytesWritten == length);
+    return ((NS_OK == rv) && (bytesWritten == length));
 }
 
 unsigned int stub_is_write_ready(NET_StreamClass *stream)
