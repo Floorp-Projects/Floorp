@@ -43,6 +43,7 @@
 #import "BookmarksDataSource.h"
 #import "CHHistoryDataSource.h"
 #import "CHExtendedTabView.h"
+#import "CHUserDefaults.h"
 
 #include "nsIWebNavigation.h"
 #include "nsIDOMElement.h"
@@ -1117,7 +1118,7 @@ static NSArray* sToolbarDefaults = nil;
 - (BOOL)shouldShowBookmarkToolbar
 {
   NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-  if ([defaults integerForKey:@"Hide Personal Toolbar"] == 1)
+  if ([defaults integerForKey:USER_DEFAULTS_HIDE_PERS_TOOLBAR_KEY] == 1)
      return NO;
 
   return YES;

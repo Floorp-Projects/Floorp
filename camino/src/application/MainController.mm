@@ -43,6 +43,7 @@
 #import "BookmarksService.h"
 #import "nsCocoaBrowserService.h"
 #import "CHAboutBox.h"
+#import "CHUserDefaults.h"
 
 #include "nsCOMPtr.h"
 #include "nsEmbedAPI.h"
@@ -67,7 +68,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
     if ( (self = [super init]) ) {
         NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-        if ([defaults boolForKey:@"autoRegister"]) {
+        if ([defaults boolForKey:USER_DEFAULTS_AUTOREGISTER_KEY]) {
             // This option causes us to simply initialize embedding and exit.
             NSString *path = [[[NSBundle mainBundle] executablePath] stringByDeletingLastPathComponent];
             setenv("MOZILLA_FIVE_HOME", [path fileSystemRepresentation], 1);
@@ -91,7 +92,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
             return self;
         }
 
-        NSString* url = [defaults stringForKey:@"url"];
+        NSString* url = [defaults stringForKey:USER_DEFAULTS_URL_KEY];
         mStartURL = url ? [url retain] : nil;
         mSplashScreen = [[CHSplashScreenWindow alloc] splashImage:nil withFade:YES withStatusRect:NSMakeRect(0,0,0,0)];
         mFindDialog = nil;
@@ -642,7 +643,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
   // save prefs here
   NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
-  [defaults setObject: [NSNumber numberWithInt: ((showToolbar) ? 0 : 1)] forKey: @"Hide Personal Toolbar"];
+  [defaults setInteger: ((showToolbar) ? 0 : 1) forKey: USER_DEFAULTS_HIDE_PERS_TOOLBAR_KEY];
 }
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle
