@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public db base imap news local ui compose mime
+DIRS = public  base db imap news local ui compose mime 
 
 include $(topsrcdir)/config/config.mk
 
