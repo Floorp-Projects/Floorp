@@ -57,9 +57,6 @@ LIBS		= \
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DJS_THREADSAFE
-ifeq ($(OS_ARCH), Linux)
-DEFINES         += -D_BSD_SOURCE
-endif
 
 #
 # Line editing support.  If your OS supplies the readline library, define

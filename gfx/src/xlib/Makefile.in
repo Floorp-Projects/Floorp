@@ -110,10 +110,6 @@ EXTRA_DSO_LDOPTS += \
 
 DEFINES		+= -DUSE_MOZILLA_TYPES
 
-ifeq ($(OS_ARCH), Linux)
-DEFINES         += -D_BSD_SOURCE
-endif
-
 ifdef MOZ_ENABLE_POSTSCRIPT
 DEFINES         += -DUSE_POSTSCRIPT
 endif
