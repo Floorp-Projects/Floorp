@@ -10456,8 +10456,8 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
           if (frameChange & ~(nsChangeHint_AttrChange | nsChangeHint_Aural)) {
             // let primary frame deal with it
             result = primaryFrame1->ContentStateChanged(aPresContext, aContent1, frameChange);
-          ProcessRestyledFrames(changeList, aPresContext);
           }
+          ProcessRestyledFrames(changeList, aPresContext);
         }
       }
 
