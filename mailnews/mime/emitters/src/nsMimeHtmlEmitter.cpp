@@ -218,7 +218,7 @@ NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
               nsCRT::strcasecmp("cc", headerInfo->name) && nsCRT::strcasecmp("newsgroups", headerInfo->name) &&
               nsCRT::strcasecmp("bcc", headerInfo->name) && nsCRT::strcasecmp("followup-to", headerInfo->name) &&
               nsCRT::strcasecmp("reply-to", headerInfo->name) && nsCRT::strcasecmp("subject", headerInfo->name) &&
-              nsCRT::strcasecmp("user-agent", headerInfo->name))
+              nsCRT::strcasecmp("organization", headerInfo->name) && nsCRT::strcasecmp("user-agent", headerInfo->name))
                 continue;
         }
 

@@ -36,6 +36,7 @@ var abAddressCollectorContractID	 = "@mozilla.org/addressbook/services/addressCo
 
 var gViewAllHeaders = false;
 var gNumAddressesToShow = 3;
+var gShowOrganization = false;
 var gShowUserAgent = false;
 var gCollectIncoming = false;
 var gCollectOutgoing = false;
@@ -182,6 +183,12 @@ function initializeHeaderViewTables()
       gExpandedHeaderView[headerName] = new createHeaderEntry('expanded', gExpandedHeaderList[index]);
     }
     
+    if (gShowOrganization)
+    {
+      var organizationEntry = {name:"organization", outputFunction:updateHeaderValue};
+      gExpandedHeaderView[organizationEntry.name] = new createHeaderEntry('expanded', organizationEntry);
+    }
+    
     if (gShowUserAgent)
     {
       var userAgentEntry = {name:"user-agent", outputFunction:updateHeaderValue};
@@ -204,6 +211,7 @@ function OnLoadMsgHeaderPane()
   gCollectNewsgroup = pref.getBoolPref("mail.collect_email_address_newsgroup");
   gCollectOutgoing = pref.getBoolPref("mail.collect_email_address_outgoing");
   gShowUserAgent = pref.getBoolPref("mailnews.headers.showUserAgent");
+  gShowOrganization = pref.getBoolPref("mailnews.headers.showOrganization");
   initializeHeaderViewTables();
 
   var toggleHeaderView = document.getElementById("msgHeaderView");

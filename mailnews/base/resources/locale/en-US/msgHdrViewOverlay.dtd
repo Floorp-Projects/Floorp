@@ -20,6 +20,7 @@ Rights Reserved.
 
 <!ENTITY toField.label "To: ">
 <!ENTITY fromField.label "From: ">
+<!ENTITY organizationField.label "Organization: ">
 <!ENTITY replyToField.label "Reply-To: ">
 
 <!ENTITY subjectField.label "Subject: ">

@@ -67,6 +67,10 @@ pref("mailnews.auto_unzip_saved_attachments", false);
 // is displayed in the message pane or not...
 pref("mailnews.headers.showUserAgent",       false);
 
+// hidden pref for controlling if the organization string
+// is displayed in the message pane or not...
+pref("mailnews.headers.showOrganization",    false);
+
 // Mail server preferences, pop by default
 pref("mail.server_type",	0); 	// 0 pop, 1 imap,
 					// (Unix only:)
