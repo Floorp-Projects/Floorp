@@ -166,14 +166,10 @@ nsXMLContentSink::nsXMLContentSink()
 
 nsXMLContentSink::~nsXMLContentSink()
 {
+  NS_ASSERTION(mNameSpaceStack.Count() == 0, "Namespaces left on the stack!");
   NS_IF_RELEASE(mDocElement);
-  // XXXbz we'd like to assert that mNameSpaceStack.Count() == 0... but the XBL
-  // content sink never calls our HandleEndElement() for some of the magical
-  // XBL tags, while it _always_ calls HandleStartElement().  Hence
-  // mNameSpaceStack will in fact _NOT_ be empty here, until we fix the XBL
-  // sink.
-  if (nsnull != mText) {
-    PR_FREEIF(mText);
+  if (mText) {
+    PR_Free(mText);  //  Doesn't null out, unlike PR_FREEIF
   }
 }
 
@@ -795,11 +791,10 @@ nsXMLContentSink::PopNameSpaces()
 {
   PRInt32 count = mNameSpaceStack.Count();
 
+  NS_ASSERTION(count > 0, "Bogus Count() or bogus PopNameSpaces call");
   if (count == 0) {
     return nsnull;
   }
-
-  NS_ASSERTION(count > 0, "Bogus Count()");
   
   nsINameSpace* nameSpace = mNameSpaceStack[count - 1];
   NS_ADDREF(nameSpace);
@@ -1146,8 +1141,13 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
 
   PRInt32 nameSpaceID = GetNameSpaceId(nameSpacePrefix);
 
-  if (!OnOpenContainer(aAtts, aAttsCount, nameSpaceID, tagAtom, aLineNumber))
+  if (!OnOpenContainer(aAtts, aAttsCount, nameSpaceID, tagAtom, aLineNumber)) {
+    // Pop the namespaces we pushed for this element, since HandleEndElement
+    // won't get called for it.
+    nsINameSpace* nameSpace = PopNameSpaces().get();
+    NS_IF_RELEASE(nameSpace);
     return NS_OK;
+  }
   
   nsCOMPtr<nsINodeInfo> nodeInfo;
 
