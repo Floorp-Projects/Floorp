@@ -31,12 +31,19 @@ that you have configured the program correctly.
      will avoids any day light savings problems.
 
 7) set up the $prefix/bin/processmail* programs to receive the
-incoming tinderbox mail.  We use the mail address 'tinderbox_builds'
-for build information destined for the webserver (similarly the bug
-tracking system sends mail to 'tinderbox_bugs' on the webserver).  The
-process id which receives and process the mail must be the the same id
-which runs the cron job.  (currently I have a program called
-'processmail' it will eventually be renamed to 'processmail_builds')
+incoming tinderbox mail.  The process id which receives and process
+the mail must be the the same id which runs the cron job.  We use the
+mail address 'tinderbox_builds' for build information destined for the
+webserver.  Each build machine mails the build log of each build to
+this address, and puts some build data at the top of the log.  Build
+information includes whether the build was a success, which error
+parsers to use on the log file and what build this is.  Similarly the
+bug tracking system sends mail to 'tinderbox_bugs' on the webserver
+whenever a Bug ticket changes state. It is not interesting to see
+which tickets are being worked on, so we restrict mailing to changes
+in state not updates of a ticket. (Currently I have a program called
+'processmail' it will eventually be renamed to 'processmail_builds' so
+that it is clear what mail it is processing.)
 
 8) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
 for tinderbox to use.  Log into the CVS repository yourself, once for
