@@ -60,6 +60,10 @@ bugzilla.mozilla.org.
   middle.
   (bug 29820)
 
+- Some security holes have been fixed where shell escape characters
+  could be passed to Bugzilla, allowing remote users to execute
+  system commands on the web server.
+
 *** Other changes of note ***
 
 - Bug titles now appear in the page title, and will hence
