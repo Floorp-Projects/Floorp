@@ -172,9 +172,11 @@ namespace Silverstone.Manticore.Browser
       mApplication.Quit();
     }
 
-    public Object GetCurrentLayoutEngine()
+    public Object currentLayoutEngine
     {
-      return mWebBrowser.GetCurrentLayoutEngine();
+      get {
+        return mWebBrowser.currentLayoutEngine;
+      }
     }
 
     private int previousProgress = 0;
@@ -200,7 +202,7 @@ namespace Silverstone.Manticore.Browser
     public Object OnNewWindow()
     {
       BrowserWindow window = mApplication.OpenNewBrowser();
-      return window.GetCurrentLayoutEngine();
+      return window.currentLayoutEngine;
     }
   
     public void DoCommand(String s) 

@@ -64,9 +64,10 @@ namespace Silverstone.Manticore.Browser
       restoreSessionSettingsButton.Click += new EventHandler(OnRestoreSessionSettings);
 
       button2.Click += new EventHandler(OnUseCurrent);
+      button1.Click += new EventHandler(OnBrowseForHomepage);
     }
 
-    public void OnUseCurrent(object sender, EventArgs e)
+    protected internal void OnUseCurrent(object sender, EventArgs e)
     {
       // XXX what we really want to do here is use a window-mediator like
       //     entity to find the most recent browser window. This will surely
@@ -74,6 +75,20 @@ namespace Silverstone.Manticore.Browser
       BrowserWindow window = mOpener as BrowserWindow;
       if (window != null)
         textBox1.Text = window.URL;
+    }
+
+    protected internal void OnBrowseForHomepage(object sender, EventArgs e)
+    {
+      OpenFileDialog ofd = new OpenFileDialog();
+      // Initially set directory to "My Documents";
+      ofd.InitialDirectory = FileLocator.GetFolderPath(FileLocator.SpecialFolders.ssfPERSONAL);
+      ofd.Filter = "HTML documents (*.html;*.htm)|*.html;*.htm|All files (*.*)|*.*";
+      ofd.FilterIndex = 1;
+      ofd.RestoreDirectory = true;
+      ofd.Title = "Browse for Home Page";
+
+      if(ofd.ShowDialog() == DialogResult.OK)
+        textBox1.Text = ofd.FileName;
     }
 
     public void OnRestoreSessionSettings(object sender, EventArgs e)

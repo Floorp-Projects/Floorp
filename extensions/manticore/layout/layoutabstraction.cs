@@ -161,13 +161,15 @@ namespace Silverstone.Manticore.Layout
       LoadURL(url, false);
     }
 
-    public Object GetCurrentLayoutEngine()
+    public Object currentLayoutEngine
     {
-      if (gecko != null) 
-        return gecko;
-      else if (trident != null)
-        return trident;
-      return null;
+      get {
+        if (gecko != null) 
+          return gecko;
+        else if (trident != null)
+          return trident;
+        return null;
+      }
     }
 
     public void LoadURL(String url, Boolean bypassCache)

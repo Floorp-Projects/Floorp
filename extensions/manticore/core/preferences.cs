@@ -56,7 +56,7 @@ namespace Silverstone.Manticore.Core
     {
       // Do we ever want to support multiple defaults files? For now, no.
       // XXX need a better place for this file.
-      ReadDocument("default-prefs.xml", mDefaultsDocument);
+      ReadDocument(@"defaults\default-prefs.xml", mDefaultsDocument);
     }
 
     private void ReadDocument(String aFile, XmlDocument aDocument)
@@ -81,14 +81,29 @@ namespace Silverstone.Manticore.Core
 
     public void LoadUserPreferences()
     {
-      // XXX this needs to go into Documents and Settings
-      LoadPreferencesFile("user-prefs.xml");
+      String manticoreAppData = FileLocator.GetManticorePath("AppData");
+      String prefPath = FileLocator.GetManticorePath("UserPrefs");
+      try {
+        LoadPreferencesFile(prefPath);
+      }
+      catch (XmlException) {
+        // Something went wrong, we'll just assume a malformed or non-existant 
+        // preferences file, blow it away and insert a new one. Could potentially
+        // be dangerous. 
+        try {
+          File.Copy(@"defaults\user-prefs.xml", prefPath, true);
+        }
+        catch (DirectoryNotFoundException) {
+          Directory.CreateDirectory(manticoreAppData);
+          File.Copy(@"defaults\user-prefs.xml", prefPath, true);
+        }
+        LoadPreferencesFile(prefPath);
+      }
     }
 
     public void FlushUserPreferences()
     {
-      // XXX this needs to go into Documents and Settings
-      FlushPreferencesFile("user-prefs.xml");
+      FlushPreferencesFile(FileLocator.GetManticorePath("UserPrefs"));
     }
 
     public void OnNodeChanged(object sender, XmlNodeChangedEventArgs e)

@@ -78,6 +78,7 @@ namespace Silverstone.Manticore.App
       return window;
     }
 
+    [STAThread]
     public static void Main(string[] args) 
     {
       ManticoreApp app = new ManticoreApp();
