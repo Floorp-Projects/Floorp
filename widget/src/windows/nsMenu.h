@@ -71,6 +71,7 @@ public:
   NS_IMETHOD InsertSeparator(const PRUint32 aCount);
   NS_IMETHOD RemoveItem(const PRUint32 aCount);
   NS_IMETHOD RemoveAll();
+  NS_IMETHOD  GetNativeData(void*& aData);
 
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();
@@ -79,6 +80,7 @@ public:
 protected:
   nsString mLabel;
   PRUint32 mNumMenuItems;
+  HMENU    mMenu;
 
 };
 

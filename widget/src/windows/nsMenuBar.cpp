@@ -126,13 +126,13 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent,
       }
     }
 
-    mWnd = (HMENU)CreateMenu();
+    mMenu = (HMENU)CreateMenu();
     
     if (aParent) {
         aParent->AddChild(this);
     }
 
-    VERIFY(mWnd);
+    //VERIFY(mWnd);
 
     // call the event callback to notify about creation
 
@@ -168,22 +168,18 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
   aMenu->GetLabel(name);
   char * nameStr = name.ToNewCString();
 
-  HWND hwnd = nsnull;
-	nsIWidget* 	widget;
-	if (NS_OK == aMenu->QueryInterface(kIWidgetIID,(void**)&widget)) {
-    hwnd = (HWND)widget->GetNativeData(NS_NATIVE_WIDGET);
-  }
-  NS_RELEASE(widget);
+  HMENU nativeMenuHandle;
+  aMenu->GetNativeData(nativeMenuHandle);
 
   MENUITEMINFO menuInfo;
 
   menuInfo.cbSize     = sizeof(menuInfo);
   menuInfo.fMask      = MIIM_SUBMENU | MIIM_TYPE;
-  menuInfo.hSubMenu   = hwnd;
+  menuInfo.hSubMenu   = nativeMenuHandle;
   menuInfo.fType      = MFT_STRING;
   menuInfo.dwTypeData = nameStr;
 
-  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenus++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem(mMenu, mNumMenus++, TRUE, &menuInfo);
 
   delete[] nameStr;
 
@@ -219,6 +215,14 @@ NS_METHOD nsMenuBar::RemoveAll()
 {
   return NS_OK;
 }
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuBar::GetNativeData(void *& aData)
+{
+  aData = (void *)mMenu;
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 
 //-------------------------------------------------------------------------

@@ -114,6 +114,11 @@ class nsIMenu : public nsISupports {
     */
     NS_IMETHOD RemoveAll() = 0;
 
+   /**
+    * Gets Native MenuHandle
+    *
+    */
+    NS_IMETHOD  GetNativeData(void*& aData) = 0;
 };
 
 #endif

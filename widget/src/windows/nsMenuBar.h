@@ -64,6 +64,7 @@ public:
   NS_IMETHOD InsertMenuAt(const PRUint32 aCount, nsIMenu *& aMenu);
   NS_IMETHOD RemoveMenu(const PRUint32 aCount);
   NS_IMETHOD RemoveAll();
+  NS_IMETHOD GetNativeData(void*& aData);
 
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();
@@ -71,6 +72,8 @@ public:
 
 protected:
   PRUint32 mNumMenus;
+  HMENU    mMenu;
+
 };
 
 #endif // nsMenuBar_h__

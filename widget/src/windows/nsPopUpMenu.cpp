@@ -130,13 +130,13 @@ NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent,
       }
     }
 
-    mWnd = (HMENU)CreatePopupMenu();
+    mMenu = CreatePopupMenu();
     
     if (aParent) {
         aParent->AddChild(this);
     }
 
-    VERIFY(mWnd);
+    //VERIFY(mWnd);
 
     // call the event callback to notify about creation
 
@@ -189,7 +189,7 @@ NS_METHOD nsPopUpMenu::AddItem(nsIMenuItem * aMenuItem)
   menuInfo.wID        = (DWORD)command;
   menuInfo.cch        = strlen(nameStr);
 
-  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem(mMenu, mNumMenuItems++, TRUE, &menuInfo);
 
   delete[] nameStr;
 
@@ -203,22 +203,18 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
   aMenu->GetLabel(name);
   char * nameStr = name.ToNewCString();
 
-  HWND hwnd = nsnull;
-	nsIWidget* 	widget;
-	if (NS_OK == aMenu->QueryInterface(kIWidgetIID,(void**)&widget)) {
-    hwnd = (HWND)widget->GetNativeData(NS_NATIVE_WIDGET);
-  }
-  NS_RELEASE(widget);
+  HMENU nativeMenuHandle;
+  aMenu->GetNativeData(nativeMenuHandle);
 
   MENUITEMINFO menuInfo;
 
   menuInfo.cbSize     = sizeof(menuInfo);
   menuInfo.fMask      = MIIM_SUBMENU | MIIM_TYPE;
-  menuInfo.hSubMenu   = (HMENU)hwnd;
+  menuInfo.hSubMenu   = nativeMenuHandle;
   menuInfo.fType      = MFT_STRING;
   menuInfo.dwTypeData = nameStr;
 
-  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem(mMenu, mNumMenuItems++, TRUE, &menuInfo);
 
   delete[] nameStr;
 
@@ -235,7 +231,7 @@ NS_METHOD nsPopUpMenu::AddSeparator()
   menuInfo.fMask  = MIIM_TYPE;
   menuInfo.fType  = MFT_SEPARATOR;
 
-  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem(mMenu, mNumMenuItems++, TRUE, &menuInfo);
 
   return NS_OK;
 }
@@ -296,7 +292,7 @@ NS_METHOD nsPopUpMenu::ShowMenu(PRInt32 aX, PRInt32 aY)
       ClientToScreen (pWnd, &point) ;
       point.x += aX;
       point.y += aY;
-      BOOL status = TrackPopupMenu((HMENU)mWnd, TPM_LEFTALIGN | TPM_TOPALIGN, point.x, point.y, 0, pWnd, NULL);
+      BOOL status = TrackPopupMenu(mMenu, TPM_LEFTALIGN | TPM_TOPALIGN, point.x, point.y, 0, pWnd, NULL);
     }
   }
 
@@ -304,6 +300,12 @@ NS_METHOD nsPopUpMenu::ShowMenu(PRInt32 aX, PRInt32 aY)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+NS_METHOD nsPopUpMenu::GetNativeData(void *& aData)
+{
+  aData = (void *)mMenu;
+  return NS_OK;
+}
 
 
 //-------------------------------------------------------------------------

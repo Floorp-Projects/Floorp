@@ -126,13 +126,13 @@ NS_METHOD nsMenu::Create(nsIWidget *aParent,
       }
     }
 
-    mWnd = (HMENU)CreatePopupMenu();
+    mMenu = CreatePopupMenu();
     
     if (aParent) {
         aParent->AddChild(this);
     }
 
-    VERIFY(mWnd);
+    //VERIFY(mWnd);
 
     // call the event callback to notify about creation
 
@@ -199,7 +199,7 @@ NS_METHOD nsMenu::AddItem(nsIMenuItem * aMenuItem)
   menuInfo.wID        = (DWORD)command;
   menuInfo.cch        = strlen(nameStr);
 
-  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem(mMenu, mNumMenuItems++, TRUE, &menuInfo);
 
   delete[] nameStr;
 
@@ -213,22 +213,18 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
   aMenu->GetLabel(name);
   char * nameStr = name.ToNewCString();
 
-  HWND hwnd = nsnull;
-	nsIWidget* 	widget;
-	if (NS_OK == aMenu->QueryInterface(kIWidgetIID,(void**)&widget)) {
-    hwnd = (HWND)widget->GetNativeData(NS_NATIVE_WIDGET);
-  }
-  NS_RELEASE(widget);
+  HMENU nativeMenuHandle;
+  aMenu->GetNativeData(nativeMenuHandle);
 
   MENUITEMINFO menuInfo;
 
   menuInfo.cbSize     = sizeof(menuInfo);
   menuInfo.fMask      = MIIM_SUBMENU | MIIM_TYPE;
-  menuInfo.hSubMenu   = hwnd;
+  menuInfo.hSubMenu   = nativeMenuHandle;
   menuInfo.fType      = MFT_STRING;
   menuInfo.dwTypeData = nameStr;
 
-  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem(mMenu, mNumMenuItems++, TRUE, &menuInfo);
 
   delete[] nameStr;
 
@@ -245,7 +241,7 @@ NS_METHOD nsMenu::AddSeparator()
   menuInfo.fMask  = MIIM_TYPE;
   menuInfo.fType  = MFT_SEPARATOR;
 
-  BOOL status = InsertMenuItem((HMENU)mWnd, mNumMenuItems++, TRUE, &menuInfo);
+  BOOL status = InsertMenuItem(mMenu, mNumMenuItems++, TRUE, &menuInfo);
 
   return NS_OK;
 }
@@ -292,6 +288,12 @@ NS_METHOD nsMenu::RemoveAll()
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::GetNativeData(void *& aData)
+{
+  aData = (void *)mMenu;
+  return NS_OK;
+}
 
 
 //-------------------------------------------------------------------------

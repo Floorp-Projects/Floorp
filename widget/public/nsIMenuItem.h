@@ -67,6 +67,11 @@ class nsIMenuItem : public nsISupports {
     */
     NS_IMETHOD GetCommand(PRUint32 & aCommand) = 0;
     
+   /**
+    * Gets Native Menu Handle
+    *
+    */
+    NS_IMETHOD GetNativeData(void*& aData) = 0;
 
 
 };

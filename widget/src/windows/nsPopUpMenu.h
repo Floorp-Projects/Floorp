@@ -70,6 +70,7 @@ public:
   NS_IMETHOD RemoveItem(const PRUint32 aCount);
   NS_IMETHOD RemoveAll();
   NS_IMETHOD ShowMenu(PRInt32 aX, PRInt32 aY);
+  NS_IMETHOD  GetNativeData(void*& aData);
 
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint();
@@ -78,6 +79,7 @@ public:
 protected:
   PRUint32 mNumMenuItems;
   nsIWidget * mPopUpParent;
+  HMENU       mMenu;
 };
 
 #endif // nsPopUpMenu_h__
