@@ -805,25 +805,25 @@
   <button class="button-toolbar" id="IncreaseFontSizeButton" observes="cmd_increaseFont"
           tooltip="aTooltip"     tooltiptext="&increaseFontSizeToolbarCmd.tooltip;"/>
 
-  <button class="button-toolbar" id="boldButton" oncommand="goDoCommand('cmd_bold')"
+  <button class="button-toolbar" id="boldButton" align="center" observes="cmd_bold"
           tooltip="aTooltip"     tooltiptext="&boldToolbarCmd.tooltip;">
     <observes element="cmd_bold" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_bold')"/>
   </button>
-  <button class="button-toolbar" id="italicButton" align="center" oncommand="goDoCommand('cmd_italic')"
+  <button class="button-toolbar" id="italicButton" align="center" observes="cmd_italic"
           tooltip="aTooltip"     tooltiptext="&italicToolbarCmd.tooltip;">
     <observes element="cmd_italic" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_italic')"/>
   </button>
-  <button class="button-toolbar" id="underlineButton" align="center" oncommand="goDoCommand('cmd_underline')"
+  <button class="button-toolbar" id="underlineButton" align="center" observes="cmd_underline"
           tooltip="aTooltip"     tooltiptext="&underlineToolbarCmd.tooltip;">
     <observes element="cmd_underline" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_underline')"/>
   </button>
 
-  <button class="button-toolbar" id="ulButton" oncommand="goDoCommand('cmd_ul')" 
+  <button class="button-toolbar" id="ulButton" observes="cmd_ul"
           tooltip="aTooltip"     tooltiptext="&bulletListToolbarCmd.tooltip;">
       <observes element="cmd_ul" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ul')"/>
   </button>
 
-  <button class="button-toolbar" id="olButton" oncommand="goDoCommand('cmd_ol')" 
+  <button class="button-toolbar" id="olButton" observes="cmd_ol"
           tooltip="aTooltip"     tooltiptext="&numberListToolbarCmd.tooltip;">
       <observes element="cmd_ol" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ol')"/>
   </button>
