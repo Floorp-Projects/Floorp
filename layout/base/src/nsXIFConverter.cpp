@@ -39,6 +39,7 @@ nsXIFConverter::nsXIFConverter(nsString& aBuffer) :
   mContainer = "container";
   mLeaf = "leaf";
   mIsa = "isa";
+  mEntity = "entity";
 
   mSelector = "css_selector";
   mRule = "css_rule";
@@ -228,13 +229,78 @@ void nsXIFConverter::AddEndTag(nsIAtom* aTag, PRBool aDoIndent, PRBool aDoReturn
   AddEndTag(tag,aDoIndent,aDoReturn);
 }
 
+
+
+PRBool  nsXIFConverter::IsMarkupEntity(const PRUnichar aChar)
+{
+  PRBool result = PR_FALSE;
+  switch (aChar)
+  {
+    case '<':
+    case '>':
+    case '&':
+      result = PR_TRUE;
+    break;
+  }
+  return result;
+
+}
+
+PRBool  nsXIFConverter::AddMarkupEntity(const PRUnichar aChar)
+{
+  nsAutoString data;
+  PRBool  result = PR_TRUE;
+
+  switch (aChar)
+  {
+    case '<': data = "lt"; break;
+    case '>': data = "gt"; break;
+    case '&': data = "amp"; break;
+    default:
+      result = PR_FALSE;
+    break;
+  }
+  if (result == PR_TRUE)
+  {
+    BeginStartTag(mEntity);
+    AddAttribute(mValue,data);
+    FinishStartTag(mEntity,PR_TRUE,PR_FALSE);
+  }
+  return result;
+}
+
+
 void nsXIFConverter::AddContent(const nsString& aContent)
 {
   nsString  tag(mContent);
 
   AddStartTag(tag,PR_FALSE);
 
-  mBuffer.Append(aContent);  
+  PRBool  startTagAdded = PR_TRUE;
+  PRInt32   length = aContent.Length();
+  PRUnichar ch;
+  for (PRInt32 i = 0; i < length; i++)
+  {
+    ch = aContent[i];
+    if (IsMarkupEntity(ch))
+    {
+      if (startTagAdded == PR_TRUE)
+      {
+        AddEndTag(tag,PR_FALSE);
+        startTagAdded = PR_FALSE;
+      }
+      AddMarkupEntity(ch);
+    }
+    else
+    {
+      if (startTagAdded == PR_FALSE)
+      {
+        AddStartTag(tag,PR_FALSE);
+        startTagAdded = PR_TRUE;
+      }
+      mBuffer.Append(ch);
+    }
+  }
   AddEndTag(tag,PR_FALSE);
 }
 
