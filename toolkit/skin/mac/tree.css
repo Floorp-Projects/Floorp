@@ -267,6 +267,6 @@ treechildren::-moz-tree-image(Name) {
 }
 
 treechildren::-moz-tree-image(Name, container) {
- list-style-image: url("chrome://global/skin/tree//folder.png");
+ list-style-image: url("chrome://global/skin/tree/folder.png");
 
 }
