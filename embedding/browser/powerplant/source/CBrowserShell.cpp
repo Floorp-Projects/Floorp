@@ -36,6 +36,9 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebProgressListener.h"
 
+#include <UModalDialogs.h>
+#include <LStream.h>
+
 #include "ApplIDs.h"
 #include "CBrowserWindow.h"
 #include "CFindComponent.h"
@@ -298,6 +301,16 @@ NS_IMETHODIMP CBrowserShell::SetTopLevelWindow(nsIWebBrowserChrome * aTopLevelWi
    NS_ENSURE_TRUE(aDocShell, NS_ERROR_FAILURE);
  	*/
  	 
+   return NS_OK;
+}
+
+
+NS_METHOD CBrowserShell::GetWebBrowser(nsIWebBrowser** aBrowser)
+{
+   NS_ENSURE_ARG_POINTER(aBrowser);
+
+   *aBrowser = mWebBrowser;
+   NS_IF_ADDREF(*aBrowser);
    return NS_OK;
 }
 
