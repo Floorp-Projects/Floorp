@@ -42,14 +42,6 @@ static const PRUnichar table[] =
     '4','5','6','7','8','9'};
 
 
-nsMIMEInfoOS2::nsMIMEInfoOS2() : nsMIMEInfoImpl()
-{
-}
-
-nsMIMEInfoOS2::nsMIMEInfoOS2(const char* aType) : nsMIMEInfoImpl(aType)
-{
-}
-
 nsMIMEInfoOS2::~nsMIMEInfoOS2()
 {
 }

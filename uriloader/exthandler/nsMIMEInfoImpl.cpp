@@ -45,12 +45,6 @@
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEInfoBase, nsIMIMEInfo)
 
 // nsMIMEInfoImpl methods
-nsMIMEInfoBase::nsMIMEInfoBase() :
-    mPreferredAction(nsIMIMEInfo::saveToDisk),
-    mAlwaysAskBeforeHandling(PR_TRUE)
-{
-}
-
 nsMIMEInfoBase::nsMIMEInfoBase(const char *aMIMEType) :
     mMIMEType(aMIMEType),
     mPreferredAction(nsIMIMEInfo::saveToDisk),

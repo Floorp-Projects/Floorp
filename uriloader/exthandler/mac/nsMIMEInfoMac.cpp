@@ -26,14 +26,6 @@
 #include "nsMIMEInfoMac.h"
 #include "nsILocalFileMac.h"
 
-nsMIMEInfoMac::nsMIMEInfoMac() : nsMIMEInfoImpl()
-{
-}
-
-nsMIMEInfoMac::nsMIMEInfoMac(const char* aType) : nsMIMEInfoImpl(aType)
-{
-}
-
 NS_IMETHODIMP
 nsMIMEInfoMac::LaunchWithFile(nsIFile* aFile)
 {

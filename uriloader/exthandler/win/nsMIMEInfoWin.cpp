@@ -24,14 +24,6 @@
 #include "nsILocalFile.h"
 #include "nsMIMEInfoWin.h"
 
-nsMIMEInfoWin::nsMIMEInfoWin() : nsMIMEInfoBase()
-{
-}
-
-nsMIMEInfoWin::nsMIMEInfoWin(const char* aType) : nsMIMEInfoBase(aType)
-{
-}
-
 nsMIMEInfoWin::~nsMIMEInfoWin()
 {
 }
