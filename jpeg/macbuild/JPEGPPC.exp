@@ -19,7 +19,7 @@
 
 jpeg_calc_output_dimensions
 jpeg_consume_input
-jpeg_create_decompress
+jpeg_CreateDecompress
 jpeg_destroy_decompress
 jpeg_finish_decompress
 jpeg_finish_output
