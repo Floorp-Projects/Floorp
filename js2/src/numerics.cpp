@@ -232,8 +232,8 @@ static PRLock *freelist_lock;
 double JS::positiveInfinity;
 double JS::negativeInfinity;
 double JS::nan;
-double JS::minValue;
-double JS::maxValue;
+double JS::minDouble;
+double JS::maxDouble;
 
 
 
@@ -248,9 +248,9 @@ InitNumerics::InitNumerics()
     word1(JS::negativeInfinity) = 0;
     word0(JS::nan) = 0x7FFFFFFF;
     word1(JS::nan) = 0xFFFFFFFF;
-    word0(JS::minValue) = 0;
-    word1(JS::minValue) = 1;
-    JS::maxValue = 1.7976931348623157E+308;
+    word0(JS::minDouble) = 0;
+    word1(JS::minDouble) = 1;
+    JS::maxDouble = 1.7976931348623157E+308;
 }
 
 // had to move these here since they depend upon the values

@@ -230,5 +230,34 @@ namespace MetaData {
         return thatValue;
     }
 
+    void initRegExpObject(JS2Metadata *meta)
+    {
+        meta->regexpClass->construct = RegExp_Constructor;
+
+        NamespaceList publicNamespaceList;
+        publicNamespaceList.push_back(meta->publicNamespace);
+
+#define INSTANCE_VAR_COUNT (5)
+
+        struct {
+            char *name;
+            JS2Class *type;
+        } RegExpInstanceVars[INSTANCE_VAR_COUNT] = {
+            { "source", meta->stringClass }, 
+            { "global", meta->booleanClass }, 
+            { "multiline", meta->booleanClass }, 
+            { "ignoreCase", meta->booleanClass }, 
+            { "lastIndex", meta->numberClass },         
+        };
+
+
+        for (uint32 i = 0; i < INSTANCE_VAR_COUNT; i++)
+        {
+            InstanceMember *m = new InstanceVariable(RegExpInstanceVars[i].type, false, false, meta->regexpClass->slotCount++);
+            meta->defineInstanceMember(meta->regexpClass, &meta->cxt, &meta->world.identifiers[RegExpInstanceVars[i].name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+        }
+
+    }
+
 }
 }

@@ -61,6 +61,8 @@ extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
 extern void initMathObject(JS2Metadata *meta);
 extern void initArrayObject(JS2Metadata *meta);
+extern void initRegExpObject(JS2Metadata *meta);
+extern void initNumberObject(JS2Metadata *meta);
 
 extern js2val String_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);

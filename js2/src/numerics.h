@@ -66,8 +66,8 @@ namespace JavaScript {
     extern double positiveInfinity;
     extern double negativeInfinity;
     extern double nan;
-    extern double minValue;
-    extern double maxValue;
+    extern double minDouble;
+    extern double maxDouble;
 
     static const double two32minus1 = 4294967295.0;
     static const double two32 = 4294967296.0;

@@ -2605,27 +2605,6 @@ doUnary:
         return BOOLEAN_TO_JS2VAL(JSDOUBLE_IS_NaN(d));
     }
 
-    static js2val Number_Constructor(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc)
-    {   
-        js2val thatValue = OBJECT_TO_JS2VAL(new NumberInstance(meta->numberClass));
-        NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thatValue));
-
-        if (argc > 0)
-            numInst->mValue = meta->toFloat64(argv[0]);
-        else
-            numInst->mValue = 0.0;
-        return thatValue;
-    }
-    
-    static js2val Number_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
-    {
-        if (meta->objectType(thisValue) != meta->numberClass)
-            meta->reportError(Exception::typeError, "Number.toString called on something other than a number thing", meta->engine->errorPos());
-        NumberInstance *numInst = checked_cast<NumberInstance *>(JS2VAL_TO_OBJECT(thisValue));
-        return meta->engine->allocString(numberToString(&numInst->mValue));
-    }
-
-
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code)
     {
         FixedInstance *fInst = new FixedInstance(functionClass);
@@ -2685,11 +2664,11 @@ doUnary:
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
         writeDynamicProperty(objectClass->prototype, new Multiname(engine->toString_StringAtom, publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 
-        // needed for class instance variables...
+
+        // needed for class instance variables etc...
         NamespaceList publicNamespaceList;
         publicNamespaceList.push_back(publicNamespace);
         Variable *v;
-        InstanceMember *m;
 
 /*** ECMA 3  Date Class ***/
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, &world.identifiers["Date"]);
@@ -2702,17 +2681,7 @@ doUnary:
         MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, &world.identifiers["RegExp"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(regexpClass), true);
         defineStaticMember(&env, &world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        regexpClass->construct = RegExp_Constructor;
-        m = new InstanceVariable(objectClass, false, false, regexpClass->slotCount++);
-        defineInstanceMember(regexpClass, &cxt, &world.identifiers["source"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
-        m = new InstanceVariable(objectClass, false, false, regexpClass->slotCount++);
-        defineInstanceMember(regexpClass, &cxt, &world.identifiers["global"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
-        m = new InstanceVariable(objectClass, false, false, regexpClass->slotCount++);
-        defineInstanceMember(regexpClass, &cxt, &world.identifiers["lastIndex"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
-        m = new InstanceVariable(objectClass, false, false, regexpClass->slotCount++);
-        defineInstanceMember(regexpClass, &cxt, &world.identifiers["ignoreCase"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
-        m = new InstanceVariable(objectClass, false, false, regexpClass->slotCount++);
-        defineInstanceMember(regexpClass, &cxt, &world.identifiers["multiline"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
+        initRegExpObject(this);
 
 /*** ECMA 3  String Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(stringClass), true);
@@ -2722,12 +2691,7 @@ doUnary:
 /*** ECMA 3  Number Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(numberClass), true);
         defineStaticMember(&env, &world.identifiers["Number"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        numberClass->construct = Number_Constructor;
-        fInst = new FixedInstance(functionClass);
-        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Number_toString);
-        m = new InstanceMethod(fInst);
-        defineInstanceMember(numberClass, &cxt, &world.identifiers["toString"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
-
+        initNumberObject(this);
 
 /*** ECMA 3  Math Class ***/
         MAKEBUILTINCLASS(mathClass, objectClass, true, true, true, &world.identifiers["Math"]);
