@@ -66,5 +66,5 @@ else
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 endif
 
-#install:: $(TARGETS)
-#	$(INSTALL) $(srcdir)/directory.rdf $(DIST)/bin/res/samples
+install:: $(TARGETS)
+	$(INSTALL) $(srcdir)/registry.rdf $(DIST)/bin/chrome
