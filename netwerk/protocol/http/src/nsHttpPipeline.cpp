@@ -556,6 +556,7 @@ nsHttpPipeline::OnStopTransaction(nsresult status)
     if (mConnection) {
         NS_ASSERTION(PR_GetCurrentThread() == NS_SOCKET_THREAD, "wrong thread");
         nsAutoLock lock(mLock);
+        // XXX this assertion is wrong!!  what about network errors??
         NS_ASSERTION(mStatus == status, "unexpected status");
         // reset any transactions that haven't already completed.
         //

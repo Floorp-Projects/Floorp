@@ -77,7 +77,7 @@ public:
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStepUp();
 
-    PRBool   SupportsPipelining() { return mServerVersion > NS_HTTP_VERSION_1_0; }
+    PRBool   SupportsPipelining() { return mSupportsPipelining; }
     PRBool   IsKeepAlive() { return mKeepAliveMask && mKeepAlive; }
     PRBool   CanReuse();   // can this connection be reused?
     void     DontReuse()   { mKeepAliveMask = PR_FALSE;
@@ -104,6 +104,7 @@ private:
     nsresult SetupSSLProxyConnect();
 
     PRBool   IsAlive();
+    PRBool   SupportsPipelining(nsHttpResponseHead *);
 
 private:
     nsCOMPtr<nsISocketTransport>    mSocketTransport;
@@ -122,12 +123,11 @@ private:
     PRUint16                        mMaxHangTime;    // max download time before dropping keep-alive status
     PRUint16                        mIdleTimeout;    // value of keep-alive: timeout=
 
-    PRUint8                         mServerVersion;
-
     PRPackedBool                    mKeepAlive;
     PRPackedBool                    mKeepAliveMask;
     PRPackedBool                    mWriteDone;
     PRPackedBool                    mReadDone;
+    PRPackedBool                    mSupportsPipelining;
 };
 
 #endif // nsHttpConnection_h__
