@@ -17,6 +17,12 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+/*
+
+  An interface for RDF content model elements.
+
+ */
+
 #ifndef nsIRDFContent_h___
 #define nsIRDFContent_h___
 
