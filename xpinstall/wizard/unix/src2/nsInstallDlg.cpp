@@ -91,6 +91,10 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     bCus = (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
     comps = gCtx->sdlg->GetSelectedSetupType()->GetComponents();
 
+    // hide the cancel button
+    if (gCtx->cancel)
+        gtk_widget_hide(gCtx->cancel);
+
     // initialize progress bar cleanly
     if (nsXIEngine::ExistAllXPIs(bCus, comps))
         gtk_label_set_text(GTK_LABEL(sMajorLabel), PREPARING);

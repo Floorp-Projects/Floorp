@@ -27,7 +27,9 @@
 
 static GtkWidget *sErrDlg;
 
-static char *ERRORS[25] = {
+static char *ERRORS[] = {
+        "___ACCOUNT_FOR_ZERO_INDEX___",
+
         "Out of memory", 
         "Invalid param",
         "Invalid member variable",
@@ -52,6 +54,7 @@ static char *ERRORS[25] = {
         "Copy of a .xpi failed", 
         "Destination directory doesn't exist",
         "Can't make destination directory",
+
         "___PREVENT_FALLING_OF_END___"
 };
 

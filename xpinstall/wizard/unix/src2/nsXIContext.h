@@ -62,6 +62,7 @@ public:
     GtkWidget           *window;    /* unique canvas for dialogs */
     GtkWidget           *back;      /* back button */
     GtkWidget           *next;      /* next button */
+    GtkWidget           *cancel;    /* cancel button */
     GtkWidget           *nextLabel;     /* "Next" label */
     GtkWidget           *backLabel;     /* "Back" label */
     GtkWidget           *acceptLabel;   /* "Accept" label */
