@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/Arrow.c>											*/
 /* Description:	XfeArrow widget source.									*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #include <Xfe/ArrowP.h>
 #include <Xfe/ManagerP.h>

@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/TempTwoP.h>										*/
 /* Description:	XfeTempTwo widget private header file.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeTempTwoP_h_							/* start TempTwoP.h		*/
 #define _XfeTempTwoP_h_
 
 #include <Xfe/TempTwo.h>
 #include <Xfe/ManagerP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 	
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -154,9 +152,7 @@ typedef struct _XfeTempTwoConstraintRec
 #define _XfeTempTwoConstraintPart(w) \
 (&(((XfeTempTwoConstraintRec *) _XfeConstraints(w)) -> xfe_temp_two))
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end TempTwoP.h		*/
 

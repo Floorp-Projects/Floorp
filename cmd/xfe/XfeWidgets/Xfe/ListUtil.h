@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ListUtil.h>										*/
 /* Description:	List misc utilities header.								*/
@@ -23,15 +24,12 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeListUtil_h_							/* start ListUtil.h		*/
 #define _XfeListUtil_h_
 
 #include <Xm/Xm.h>								/* Motif public defs	*/
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -42,8 +40,6 @@ extern Widget
 XfeCascadeGetSubList			(Widget			w);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ListUtil.h		*/

@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/StringUtil.c>										*/
 /* Description:	Xfe widgets XmString utilities.							*/

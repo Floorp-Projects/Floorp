@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/Resources.c>										*/
 /* Description:	Xfe widgets resources utilities.						*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #include <Xfe/XfeP.h>
 

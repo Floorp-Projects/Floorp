@@ -28,15 +28,12 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeXfeBm_h_							/* start XfeBm.h		*/
 #define _XfeXfeBm_h_
 
 #include <Xfe/Xfe.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -190,8 +187,6 @@ XfeMenuItemEraseAccent			(Widget			item,
 								 Dimension		accent_thickness);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end XfeBm.h			*/

@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<XfeTest/TestIcons.c>									*/
 /* Description:	Xfe widget icon test funcs.								*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #include <Xfe/XfeTest.h>
 

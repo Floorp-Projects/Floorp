@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/LabelP.h>											*/
 /* Description:	XfeLabel widget private header file.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeLabelP_h_							/* start LabelP.h		*/
 #define _XfeLabelP_h_
 
 #include <Xfe/Label.h>
 #include <Xfe/PrimitiveP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -187,8 +185,6 @@ _XfeLabelSetSelected			(Widget			w,
 								 Boolean		invoke_callbacks);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end LabelP.h			*/

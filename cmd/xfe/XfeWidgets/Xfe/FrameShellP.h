@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/FrameShellP.h>										*/
 /* Description:	XfeFrameShell widget private header file.				*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #ifndef _XfeFrameShellP_h_						/* start FrameShellP.h	*/
 #define _XfeFrameShellP_h_
@@ -32,9 +32,7 @@
 #include <X11/ShellP.h>
 #include <Xm/VendorSEP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 	
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -148,9 +146,7 @@ typedef struct _XfeFrameShellRec
 /*----------------------------------------------------------------------*/
 #define _WMShellPart(w) &(((WMShellWidget) w) -> wm)
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end FrameShellP.h	*/
 

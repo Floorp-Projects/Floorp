@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/BypassShell.h>										*/
 /* Description:	XfeBypassShell widget public header file.				*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeBypassShell_h_						/* start BypassShell.h	*/
 #define _XfeBypassShell_h_
 
 #include <Xfe/Xfe.h>
 #include <Xfe/Manager.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -63,8 +61,6 @@ XfeCreateBypassShell			(Widget		pw,
 								 Cardinal	ac);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end BypassShell.h	*/

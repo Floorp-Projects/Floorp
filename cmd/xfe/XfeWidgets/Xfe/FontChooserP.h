@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/FontChooserP.h>									*/
 /* Description:	XfeFontChooser widget private header file.				*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeFontChooserP_h_						/* start FontChooserP.h	*/
 #define _XfeFontChooserP_h_
 
 #include <Xfe/FontChooser.h>
 #include <Xfe/CascadeP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -103,8 +101,6 @@ typedef struct _XfeFontChooserRec
 /*----------------------------------------------------------------------*/
 #define _XfeFontChooserPart(w) &(((XfeFontChooserWidget) w)->xfe_font_chooser)
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end FontChooserP.h	*/

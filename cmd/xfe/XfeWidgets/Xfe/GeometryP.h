@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/GeometryP.h>										*/
 /* Description:	Xfe geometry functions private header.					*/
@@ -23,13 +24,10 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeGeometryP_h_						/* start GeometryP.h	*/
 #define _XfeGeometryP_h_
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 #include <Xm/XmP.h>
 #include <Xfe/Geometry.h>
@@ -140,8 +138,6 @@ _XfeLiberalGeometryManager		(Widget				child,
 								 XtWidgetGeometry *	reply);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end GeometryP.h		*/

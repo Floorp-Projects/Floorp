@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/Draw.h>											*/
 /* Description:	Xfe widgets drawing functions header file.				*/
@@ -23,15 +24,12 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeDraw_h_								/* start Draw.h			*/
 #define _XfeDraw_h_
 
 #include <Xm/Xm.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -150,8 +148,6 @@ XfeDrawShadowsAroundWidget	(Widget			parent,
 							 unsigned char	shadow_type);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end Draw.h			*/

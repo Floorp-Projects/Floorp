@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/Primitive.c>										*/
 /* Description:	XfePrimitive widget source.								*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #include <stdio.h>
 
@@ -1248,7 +1248,7 @@ GetHeight(Widget w)
 /* XfePrimitive Method invocation functions								*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitivePreferredGeometry(Widget w,Dimension *width,Dimension *height)
 {
 	XfePrimitiveWidgetClass pc = (XfePrimitiveWidgetClass) XtClass(w);
@@ -1271,7 +1271,7 @@ _XfePrimitivePreferredGeometry(Widget w,Dimension *width,Dimension *height)
 	}
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveMinimumGeometry(Widget w,Dimension *width,Dimension *height)
 {
 	XfePrimitiveWidgetClass pc = (XfePrimitiveWidgetClass) XtClass(w);
@@ -1294,7 +1294,7 @@ _XfePrimitiveMinimumGeometry(Widget w,Dimension *width,Dimension *height)
 	}
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitivePrepareComponents(Widget w,int flags)
 {
 	WidgetClass					cc;
@@ -1329,7 +1329,7 @@ _XfePrimitivePrepareComponents(Widget w,int flags)
 	}
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveUpdateRect(Widget w)
 {
 	XfePrimitiveWidgetClass pc = (XfePrimitiveWidgetClass) XtClass(w);
@@ -1340,7 +1340,7 @@ _XfePrimitiveUpdateRect(Widget w)
 	}
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveLayoutComponents(Widget w)
 {
 	XfePrimitiveWidgetClass pc = (XfePrimitiveWidgetClass) XtClass(w);
@@ -1351,7 +1351,7 @@ _XfePrimitiveLayoutComponents(Widget w)
 	}
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveDrawBackground(Widget	w,
 							XEvent *	event,
 							Region	region,
@@ -1365,7 +1365,7 @@ _XfePrimitiveDrawBackground(Widget	w,
 	}
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveDrawComponents(Widget	w,
 							XEvent *	event,
 							Region	region,
@@ -1379,7 +1379,7 @@ _XfePrimitiveDrawComponents(Widget	w,
 	}
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveDrawShadow(Widget		w,
 						XEvent *		event,
 						Region		region,
@@ -1393,7 +1393,7 @@ _XfePrimitiveDrawShadow(Widget		w,
 	}
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveBorderHighlight(Widget w)
 {
 	XmPrimitiveWidgetClass pc = (XmPrimitiveWidgetClass) XtClass(w);
@@ -1404,7 +1404,7 @@ _XfePrimitiveBorderHighlight(Widget w)
 	}
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveBorderUnhighlight(Widget w)
 {
 	XmPrimitiveWidgetClass pc = (XmPrimitiveWidgetClass) XtClass(w);
@@ -1446,7 +1446,7 @@ _XfePrimitiveChainSetValues(Widget ow,Widget rw,Widget nw,WidgetClass wc)
 	return False;
 }
 /*----------------------------------------------------------------------*/
-Drawable
+/* extern */ Drawable
 _XfePrimitiveDrawable(Widget w)
 {
     Drawable d = None;
@@ -1469,7 +1469,7 @@ _XfePrimitiveDrawable(Widget w)
     return d;
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveDrawEverything(Widget w,XEvent * event,Region region)
 {
     static XRectangle rect;
@@ -1506,7 +1506,7 @@ _XfePrimitiveDrawEverything(Widget w,XEvent * event,Region region)
     _XfePrimitiveDrawComponents(w,event,region,&_XfeWidgetRect(w));
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveClearBackground(Widget w)
 {
     /* Clear the widget background including margins */
@@ -1530,7 +1530,7 @@ _XfePrimitiveClearBackground(Widget w)
     }
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveAllocateBackgroundGC(Widget w)
 {
 	/* Make sure the background gc gets allocated only once */
@@ -1550,7 +1550,7 @@ _XfePrimitiveAllocateBackgroundGC(Widget w)
 	}
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveReleaseBackgroundGC(Widget w)
 {
 	/* Make sure the gc has been allocated */
@@ -1563,7 +1563,7 @@ _XfePrimitiveReleaseBackgroundGC(Widget w)
     XtReleaseGC(w,_XfeBackgroundGC(w));
 }
 /*----------------------------------------------------------------------*/
-void
+/* extern */ void
 _XfePrimitiveDrawBuffer(Widget w,XEvent * event,Region region)
 {
     XCopyArea(XtDisplay(w),

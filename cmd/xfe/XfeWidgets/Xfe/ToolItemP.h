@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ToolItemP.h>										*/
 /* Description:	XfeToolItem widget private header file.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeToolItemP_h_						/* start ToolItemP.h	*/
 #define _XfeToolItemP_h_
 
 #include <Xfe/ToolItem.h>
 #include <Xfe/ManagerP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -97,9 +95,7 @@ typedef struct _XfeToolItemRec
 /*----------------------------------------------------------------------*/
 #define _XfeToolItemPart(w) &(((XfeToolItemWidget) w) -> xfe_tool_item)
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ToolItemP.h		*/
 

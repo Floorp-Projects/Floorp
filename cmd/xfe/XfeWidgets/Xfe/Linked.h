@@ -27,11 +27,9 @@
 #ifndef _XfeLinked_h_							/* start Linked.h		*/
 #define _XfeLinked_h_
 
-#include <X11/Intrinsic.h>
+#include <Xfe/Xfe.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -186,8 +184,6 @@ extern XtPointer
 XfeLinkNodeItem					(XfeLinkNode				node);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end Linked.h			*/

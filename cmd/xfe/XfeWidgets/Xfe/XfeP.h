@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/Xfe.h>												*/
 /* Description:	Xfe widgets private header file.						*/
@@ -23,18 +24,17 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeXfeP_h_								/* start XfeP.h			*/
 #define _XfeXfeP_h_
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+/* XFE_BEGIN_CPLUSPLUS_PROTECTION */
 
 #include <Xm/XmP.h>
 #include <Xm/DrawP.h>
 #include <Xfe/Xfe.h>
 #include <Xfe/GeometryP.h>
+
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -571,7 +571,7 @@ _XfePixmapPrepare				(Widget			w,
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Privat functions not exposed in motif 2.0							*/
+/* Private functions not exposed in motif 2.0							*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 #if XmVersion >= 2000
@@ -594,8 +594,6 @@ extern XtGeometryResult	_XmMakeGeometryRequest	(Widget,XtWidgetGeometry *);
 
 #endif /* XmVersion >= 2000 */
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end XfeP.h			*/

@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ToolBar.h>											*/
 /* Description:	XfeToolBar widget public header file.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeToolBar_h_							/* start ToolBar.h		*/
 #define _XfeToolBar_h_
 
 #include <Xfe/Oriented.h>
 #include <Xfe/Cascade.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -165,8 +163,6 @@ XfeToolBarEditItem				(Widget		w,
 								 int		label_height);
 /*----------------------------------------------------------------------*/
 	
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ToolBar.h		*/

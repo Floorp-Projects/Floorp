@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/Converters.h>										*/
 /* Description:	Xfe widgets utilities to find children.					*/
@@ -23,15 +24,12 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeConverters_h_						/* start Converters.h	*/
 #define _XfeConverters_h_
 
 #include <Xm/Xm.h>								/* Motif public defs	*/
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -44,8 +42,6 @@ extern void			XfeRegisterStringToModifiersCvt	(void);
 extern void			XfeRegisterConverters			(void);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end Converters.h		*/

@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ArrowP.h>											*/
 /* Description:	XfeArrow widget private header file.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeArrowP_h_							/* start ArrowP.h		*/
 #define _XfeArrowP_h_
 
 #include <Xfe/Arrow.h>
 #include <Xfe/ButtonP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -100,8 +98,6 @@ typedef struct _XfeArrowRec
 /*----------------------------------------------------------------------*/
 #define _XfeArrowPart(w) &(((XfeArrowWidget) w)->xfe_arrow)
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ArrowP.h			*/

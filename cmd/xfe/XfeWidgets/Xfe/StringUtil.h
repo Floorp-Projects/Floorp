@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/StringUtil.h>										*/
 /* Description:	Xfe widgets XmString utilities.							*/
@@ -23,15 +24,12 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeStringUtil_h_						/* start StringUtil.h	*/
 #define _XfeStringUtil_h_
 
 #include <Xm/Xm.h>								/* Motif public defs	*/
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -73,8 +71,6 @@ XfeXmStringTableCopy			(XmString *		items,
 								 Cardinal		num_items);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end StringUtil.h		*/

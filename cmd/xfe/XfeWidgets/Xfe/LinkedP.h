@@ -29,9 +29,7 @@
 
 #include <Xfe/Linked.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -59,9 +57,7 @@ typedef struct _XfeLinkedRec
    Cardinal						count;		/* Item Count				*/
 } XfeLinkedRec; 
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif /* LinkedP.h */
 

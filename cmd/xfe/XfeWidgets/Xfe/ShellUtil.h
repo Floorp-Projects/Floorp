@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ShellUtil.h>										*/
 /* Description:	Shell misc utilities header.							*/
@@ -23,15 +24,12 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeShellUtil_h_						/* start ShellUtil.h	*/
 #define _XfeShellUtil_h_
 
 #include <X11/Intrinsic.h>						/* Xt public defs		*/
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -85,8 +83,6 @@ XfeShellPlaceAtLocation				(Widget			shell,
 									 Dimension		dy);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ShellUtil.h		*/

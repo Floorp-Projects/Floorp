@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ToolScrollP.h>										*/
 /* Description:	XfeToolScroll widget private header file.				*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeToolScrollP_h_						/* start ToolScrollP.h	*/
 #define _XfeToolScrollP_h_
 
 #include <Xfe/ToolScroll.h>
 #include <Xfe/OrientedP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -108,9 +106,7 @@ typedef struct _XfeToolScrollRec
 /*----------------------------------------------------------------------*/
 #define _XfeToolScrollPart(w) &(((XfeToolScrollWidget) w) -> xfe_tool_scroll)
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ToolScrollP.h	*/
 

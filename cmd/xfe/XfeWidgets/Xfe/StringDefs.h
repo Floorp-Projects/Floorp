@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/StringDefs.h>										*/
 /* Description:	Xfe widgets string definitions.							*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #ifndef _XfeStringDefs_h_						/* start StringDefs.h	*/
 #define _XfeStringDefs_h_
@@ -207,8 +207,12 @@
 #define XmNmatchSubMenuWidth			"matchSubMenuWidth"
 #define XmNmaxChildHeight				"maxChildHeight"
 #define XmNmaxChildWidth				"maxChildWidth"
+#define XmNmaxLayableChildrenHeight		"maxLayableChildrenHeight"
+#define XmNmaxLayableChildrenWidth		"maxLayableChildrenWidth"
 #define XmNmaxNumColumns				"maxNumColumns"
 #define XmNmaxNumRows					"maxNumRows"
+#define XmNminLayableChildrenHeight		"minLayableChildrenHeight"
+#define XmNminLayableChildrenWidth		"minLayableChildrenWidth"
 #define XmNnumAnimationPixmaps			"numAnimationPixmaps"
 #define XmNnumFontItems					"numFontItems"
 #define XmNnumLayableChildren			"numLayableChildren"
@@ -287,6 +291,8 @@
 #define XmNtopView						"topView"
 #define XmNtorn							"torn"
 #define XmNtornShellTitle				"tornShellTitle"
+#define XmNtotalLayableChildrenHeight	"totalLayableChildrenHeight"
+#define XmNtotalLayableChildrenWidth	"totalLayableChildrenWidth"
 #define XmNtrackDeleteWindow			"trackDeleteWindow"
 #define XmNtrackEditres					"trackEditres"
 #define XmNtrackMapping					"trackMapping"

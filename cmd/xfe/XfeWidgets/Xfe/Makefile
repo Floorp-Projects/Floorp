@@ -128,6 +128,7 @@ EXPORTS			= \
 				$(UNUSED_EXPORTS) \
 				Arrow.h \
 				ArrowP.h \
+				BasicDefines.h \
 				Button.h \
 				ButtonP.h \
 				BypassShell.h \

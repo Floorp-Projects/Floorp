@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/BmCascadeP.h>										*/
 /* Description:	XfeBmCascade widget private header file.				*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #ifndef _XfeBmCascadeP_h_						/* start BmCascadeP.h	*/
 #define _XfeBmCascadeP_h_
@@ -31,9 +31,7 @@
 #include <Xfe/BmCascade.h>
 #include <Xm/CascadeBP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -101,8 +99,6 @@ typedef struct _XfeBmCascadeRec
 /*----------------------------------------------------------------------*/
 #define _XfeBmCascadePart(w) &(((XfeBmCascadeWidget) w) -> bm_cascade)
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end BmCascadeP.h		*/

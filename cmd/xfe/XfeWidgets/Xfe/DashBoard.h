@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/DashBoard.h>										*/
 /* Description:	XfeDashBoard widget public header file.					*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #ifndef _XfeDashBoard_h_						/* start DashBoard.h	*/
 #define _XfeDashBoard_h_
@@ -34,9 +34,7 @@
 #include <Xfe/TaskBar.h>
 #include <Xfe/ToolBar.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -86,8 +84,6 @@ XfeDashBoardGetComponent		(Widget					dashboard,
 								 XfeDashBoardComponent	component);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end DashBoard.h		*/

@@ -18,57 +18,42 @@
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		<Xfe/Logo.h>											*/
-/* Description:	XfeLogo widget public header file.						*/
+/* Name:		<Xfe/BasicDefines.h>									*/
+/* Description:	Xfe widgets basic defines.								*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-#ifndef _XfeLogo_h_								/* start Logo.h			*/
-#define _XfeLogo_h_
-
-#include <Xfe/Xfe.h>
-
-XFE_BEGIN_CPLUSPLUS_PROTECTION
+#ifndef _XfeBasicDefines_h_						/* start BasicDefines.h	*/
+#define _XfeBasicDefines_h_
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeLogo class names													*/
+/* Include the main Xt header for the various types (Widget, etc).		*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-externalref WidgetClass xfeLogoWidgetClass;
-    
-typedef struct _XfeLogoClassRec *	XfeLogoWidgetClass;
-typedef struct _XfeLogoRec *		XfeLogoWidget;
+#include <X11/Intrinsic.h>
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* XfeLogo subclass test macro											*/
+/* Macros to protect C code from the evils of C++.						*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-#define XfeIsLogo(w)	XtIsSubclass(w,xfeLogoWidgetClass)
+#ifdef __cplusplus
 
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* XfeLogo public functions												*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-extern Widget
-XfeCreateLogo				(Widget		parent,
-							 String		name,
-							 Arg *		args,
-							 Cardinal	num_args);
-/*----------------------------------------------------------------------*/
-extern void
-XfeLogoAnimationStart		(Widget		w);
-/*----------------------------------------------------------------------*/
-extern void
-XfeLogoAnimationStop		(Widget		w);
-/*----------------------------------------------------------------------*/
-extern void
-XfeLogoAnimationReset		(Widget		w);
-/*----------------------------------------------------------------------*/
+#ifndef XFE_BEGIN_CPLUSPLUS_PROTECTION
+#define XFE_BEGIN_CPLUSPLUS_PROTECTION extern "C" {
+#endif
 
-XFE_END_CPLUSPLUS_PROTECTION
+#ifndef XFE_END_CPLUSPLUS_PROTECTION
+#define XFE_END_CPLUSPLUS_PROTECTION }
+#endif
 
-#endif											/* end Logo.h			*/
+#else
+
+#define XFE_BEGIN_CPLUSPLUS_PROTECTION
+#define XFE_END_CPLUSPLUS_PROTECTION
+
+#endif
+
+#endif											/* end BasciDefines.h	*/

@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/BmButtonP.h>										*/
 /* Description:	XfeBmButton widget private header file.					*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #ifndef _XfeBmButtonP_h_						/* start BmButtonP.h	*/
 #define _XfeBmButtonP_h_
@@ -31,9 +31,7 @@
 #include <Xfe/BmButton.h>
 #include <Xm/PushBP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -125,8 +123,6 @@ _XfeBmProcWithoutDrawing		(Widget				w,
 /*----------------------------------------------------------------------*/
 #define XfeACCENT_OUTSIDE -1
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end BmButtonP.h		*/

@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ToolBoxP.h>										*/
 /* Description:	XfeToolBox widget private header file.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeToolBoxP_h_							/* start ToolBoxP.h		*/
 #define _XfeToolBoxP_h_
 
 #include <Xfe/ToolBox.h>
 #include <Xfe/ManagerP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -191,9 +189,7 @@ typedef struct _XfeToolBoxConstraintRec
 ((_XfeToolBoxConstraintPart(child)) -> open)
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ToolBoxP.h	*/
 

@@ -15,15 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		MenuTest.c												*/
 /* Description:	Test for XfeBmButton and XfeBmCascade widgets.			*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
-
 
 #include <Xfe/XfeTest.h>
 

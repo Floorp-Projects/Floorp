@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/Geometry.h>										*/
 /* Description:	Xfe geometry public functions header.					*/
@@ -23,15 +24,12 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeGeometry_h_							/* start Geometry.h		*/
 #define _XfeGeometry_h_
 
-#include <Xm/Xm.h>								/* Motif public defs	*/
+#include <Xfe/BasicDefines.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -67,8 +65,6 @@ XfeVaGetTallestWidget			(Widget			widget,
 								 ...);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end Geometry.h		*/

@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/TaskBarP.h>										*/
 /* Description:	XfeTaskBar widget private header file.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeTaskBarP_h_							/* start TaskBarP.h		*/
 #define _XfeTaskBarP_h_
 
 #include <Xfe/ToolBarP.h>
 #include <Xfe/TaskBar.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -106,9 +104,7 @@ typedef struct _XfeTaskBarRec
 /*----------------------------------------------------------------------*/
 #define _XfeTaskBarPart(w) &(((XfeTaskBarWidget) w) -> xfe_task_bar)
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end TaskBarP.h		*/
 

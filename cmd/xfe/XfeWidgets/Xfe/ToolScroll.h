@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ToolScroll.h>										*/
 /* Description:	XfeToolScroll widget public header file.				*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #ifndef _XfeToolScroll_h_						/* start ToolScroll.h	*/
 #define _XfeToolScroll_h_
@@ -31,9 +31,7 @@
 #include <Xfe/Logo.h>
 #include <Xfe/ToolBar.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -76,8 +74,6 @@ XfeCreateToolScroll				(Widget		pw,
 								 Cardinal	ac);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ToolScroll.h		*/

@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/FancyBoxP.h>										*/
 /* Description:	XfeFancyBox widget private header file.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeFancyBoxP_h_						/* start FancyBoxP.h	*/
 #define _XfeFancyBoxP_h_
 
 #include <Xfe/FancyBox.h>
 #include <Xfe/ComboBoxP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 	
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -129,9 +127,7 @@ typedef struct _XfeFancyBoxRec
 /*----------------------------------------------------------------------*/
 #define _XfeFancyBoxPart(w) &(((XfeFancyBoxWidget) w) -> xfe_fancy_box)
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end FancyBoxP.h		*/
 

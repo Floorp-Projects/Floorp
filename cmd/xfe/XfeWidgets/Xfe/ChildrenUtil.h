@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ChildrenUtil.h>									*/
 /* Description:	Children misc utilities header.							*/
@@ -23,16 +24,12 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
-
 #ifndef _XfeChildrenUtil_h_						/* start ChildrenUtil.h	*/
 #define _XfeChildrenUtil_h_
 
 #include <X11/Intrinsic.h>						/* Xt public defs		*/
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -119,8 +116,6 @@ XfeChildrenRemoveEventHandler(Widget			w,
 
 
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ChildrenUtil.h	*/

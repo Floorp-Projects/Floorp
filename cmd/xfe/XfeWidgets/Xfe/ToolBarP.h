@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ToolBarP.h>										*/
 /* Description:	XfeToolBar widget private header file.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeToolBarP_h_							/* start ToolBarP.h		*/
 #define _XfeToolBarP_h_
 
 #include <Xfe/ToolBar.h>
 #include <Xfe/OrientedP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 	
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -190,9 +188,7 @@ extern void
 _XfeToolBarLayoutIndicator		(Widget			w);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ToolBarP.h		*/
 

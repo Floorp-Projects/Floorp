@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/PrimitiveP.h>										*/
 /* Description:	XfePrimitive widget private header file.				*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #ifndef _XfePrimitiveP_h_						/* start PrimitiveP.h	*/
 #define _XfePrimitiveP_h_
@@ -33,9 +33,7 @@
 #include <Xm/PrimitiveP.h>
 #include <Xm/DrawP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
     
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -461,8 +459,6 @@ _XfePrimitiveFocus					(Widget,XEvent *,char **,Cardinal *);
 #define XfePRIMITIVE_DEFAULT_HEIGHT	2
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end PrimitiveP.h		*/

@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/CascadeP.h>										*/
 /* Description:	XfeCascade widget private header file.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeCascadeP_h_							/* start CascadeP.h		*/
 #define _XfeCascadeP_h_
 
 #include <Xfe/Cascade.h>
 #include <Xfe/ButtonP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -120,8 +118,6 @@ typedef struct _XfeCascadeRec
 /*----------------------------------------------------------------------*/
 #define _XfeCascadePart(w) &(((XfeCascadeWidget) w)->xfe_cascade)
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end CascadeP.h		*/

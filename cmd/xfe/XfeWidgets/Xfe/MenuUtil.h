@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/MenuUtil.h>										*/
 /* Description:	Menu/RowColum misc utilities header.					*/
@@ -23,15 +24,12 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeMenuUtil_h_							/* start MenuUtil.h		*/
 #define _XfeMenuUtil_h_
 
-#include <Xm/Xm.h>								/* Motif public defs	*/
+#include <Xfe/BasicDefines.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -144,8 +142,6 @@ XfeDestroyMenuWidgetTree		(WidgetList		children,
 								 Boolean		skip_private_components);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end MenuUtil.h		*/

@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/Xfe.h>												*/
 /* Description:	Xfe widgets main header file.							*/
@@ -23,11 +24,18 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeXfe_h_								/* start Xfe.h			*/
 #define _XfeXfe_h_
 
-#include <Xm/Xm.h>								/* Motif public defs	*/
+#include <Xfe/BasicDefines.h>					/* The basic defines	*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Include all the goodies.	 Everything is organized into reasonable	*/
+/* headers.  There will be a small compile time penalty for including	*/
+/* so many headers.  The convenient organization is worth the penalty.	*/
+/*																		*/
+/*----------------------------------------------------------------------*/
 #include <Xfe/StringDefs.h>						/* Xfe public str defs	*/
 #include <Xfe/Defaults.h>						/* Xfe default res vals	*/
 #include <Xfe/ChildrenUtil.h>					/* Children utils		*/
@@ -50,9 +58,7 @@
 
 #include <assert.h>								/* Assert				*/
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -402,8 +408,6 @@ XfeEventGetModifiers			(XEvent *			event);
 extern Boolean		XfeIsPrivateComponent	(Widget	w);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end Xfe.h			*/

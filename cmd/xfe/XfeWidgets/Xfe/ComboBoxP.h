@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/ComboBoxP.h>										*/
 /* Description:	XfeComboBox widget private header file.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeComboBoxP_h_						/* start ComboBoxP.h	*/
 #define _XfeComboBoxP_h_
 
 #include <Xfe/ComboBox.h>
 #include <Xfe/ManagerP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 	
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -160,9 +158,7 @@ _XfeComboBoxDrawTitleShadow		(Widget			w,
 								 XRectangle *	clip_rect);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end ComboBoxP.h		*/
 

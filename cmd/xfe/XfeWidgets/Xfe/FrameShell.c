@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/TempShell.c>										*/
 /* Description:	XfeTempShell widget source.								*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #include <stdio.h>
 
@@ -33,9 +33,7 @@
 
 #define BYPASS_SHELL_NAME "SharedBypassShell"
 
-#ifndef __hpux
 #define EDITRES 1
-#endif
 
 #ifdef EDITRES
 #include <X11/Xmu/Editres.h>

@@ -15,14 +15,14 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<XfeTest/XfeTest.h>										*/
 /* Description:	Xfe widget tests main header file.						*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
 /*----------------------------------------------------------------------*/
-
 
 #ifndef _XfeTest_h_				/* start XfeTest.h		*/
 #define _XfeTest_h_
@@ -38,10 +38,8 @@
 
 #include <Xm/XmAll.h>
 
-#ifdef __cplusplus				/* start C++		*/
-extern "C" {
-#endif
-
+XFE_BEGIN_CPLUSPLUS_PROTECTION
+ 
 typedef struct
 {
 	String      name;
@@ -446,8 +444,6 @@ extern void
 XfeStringToLower				(String		s);
 /*----------------------------------------------------------------------*/
 
-#ifdef __cplusplus				/* end C++		*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif						/* end XfeTest.h		*/

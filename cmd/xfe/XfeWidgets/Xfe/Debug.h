@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/Debug.h>											*/
 /* Description:	Xfe widgets functions for debugging.					*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeDebug_h_							/* start Debug.h		*/
 #define _XfeDebug_h_
 
 #include <Xm/Xm.h>								/* Motif public defs	*/
 #include <stdio.h>								/* stdio				*/
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 
 #ifdef DEBUG									/* ifdef DEBUG			*/
 
@@ -88,8 +86,6 @@ XfeDebugPrintfFunction				(Widget		w,
 
 #endif											/* endif DEBUG			*/
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end Debug.h			*/

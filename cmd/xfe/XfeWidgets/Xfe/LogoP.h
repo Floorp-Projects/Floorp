@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/LogoP.h>											*/
 /* Description:	XfeLogo widget private header file.						*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeLogoP_h_							/* start LogoP.h		*/
 #define _XfeLogoP_h_
 
 #include <Xfe/Logo.h>
 #include <Xfe/ButtonP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -109,8 +107,6 @@ typedef struct _XfeLogoRec
 /*----------------------------------------------------------------------*/
 #define _XfeLogoPart(w) &(((XfeLogoWidget) w) -> xfe_logo)
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end LogoP.h			*/

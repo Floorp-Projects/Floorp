@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/PaneP.h>											*/
 /* Description:	XfePane widget private header file.						*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfePaneP_h_							/* start PaneP.h		*/
 #define _XfePaneP_h_
 
 #include <Xfe/Pane.h>
 #include <Xfe/OrientedP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
 	
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -170,9 +168,7 @@ typedef struct _XfePaneConstraintRec
 #define _XfePaneConstraintPart(w) \
 (&(((XfePaneConstraintRec *) _XfeConstraints(w)) -> xfe_pane))
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end PaneP.h			*/
 

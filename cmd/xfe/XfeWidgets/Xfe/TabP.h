@@ -15,7 +15,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/*-----------------------------------------*/
+
+/*----------------------------------------------------------------------*/
 /*																		*/
 /* Name:		<Xfe/TabP.h>											*/
 /* Description:	XfeTab widget private header file.						*/
@@ -23,16 +24,13 @@
 /*																		*/
 /*----------------------------------------------------------------------*/
 
-
 #ifndef _XfeTabP_h_								/* start TabP.h			*/
 #define _XfeTabP_h_
 
 #include <Xfe/Tab.h>
 #include <Xfe/ButtonP.h>
 
-#ifdef __cplusplus								/* start C++			*/
-extern "C" {
-#endif
+XFE_BEGIN_CPLUSPLUS_PROTECTION
    
 /*----------------------------------------------------------------------*/
 /*																		*/
@@ -122,8 +120,6 @@ typedef struct _XfeTabRec
 /*----------------------------------------------------------------------*/
 #define _XfeTabPart(w) &(((XfeTabWidget) w)->xfe_tab)
 
-#ifdef __cplusplus								/* end C++				*/
-}
-#endif
+XFE_END_CPLUSPLUS_PROTECTION
 
 #endif											/* end TabP.h		*/
