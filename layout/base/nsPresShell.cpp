@@ -1365,12 +1365,39 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
           
       scrollingView->GetScrolledView(scrolledView);
       aFrame->GetOffsetFromView(offset, &view);
-
-      // XXX If view != scrolledView, then there is a scrolled frame,
-      // e.g., a DIV with 'overflow' of 'scroll', somewhere in the middle,
-      // or maybe an absolutely positioned element that has a view. We
-      // need to handle these cases...
-      scrollingView->ScrollTo(0, offset.y, NS_VMREFRESH_IMMEDIATE);
+      if (aVFlags & NS_PRESSHELL_SCROLL_ANYWHERE)
+      { // if we just care that the frame is in the view port, check to see if it is already visible
+        // first, get the frame's absolute position relative to the scrolling view
+        nsRect frameRect (offset, nsSize(1,1));   // XXX: this is biased toward showing the top of the frame
+        nsIView *parentView;
+        view->GetParent(parentView);
+        nsRect bounds;
+        while (parentView)
+        {
+          parentView->GetBounds(bounds);
+          frameRect.y += bounds.y;
+          nsIScrollableView *parentScrollableView=nsnull;
+          nsresult result = parentView->QueryInterface(kIScrollableViewIID, (void**)&parentScrollableView);
+          if (NS_SUCCEEDED(result))
+          {
+            if (parentScrollableView==scrollingView)
+              break;
+          }
+          parentView->GetParent(parentView);
+        }
+        PRBool alreadyVisible = frameRect.Intersects(bounds);
+        if (PR_FALSE==alreadyVisible) {
+          scrollingView->ScrollTo(0, offset.y, NS_VMREFRESH_IMMEDIATE);
+        }
+      }
+      else
+      {
+        // XXX If view != scrolledView, then there is a scrolled frame,
+        // e.g., a DIV with 'overflow' of 'scroll', somewhere in the middle,
+        // or maybe an absolutely positioned element that has a view. We
+        // need to handle these cases...
+        scrollingView->ScrollTo(0, offset.y, NS_VMREFRESH_IMMEDIATE);
+      }
       rv = NS_OK;
     }
   }
