@@ -165,6 +165,7 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
+static NS_DEFINE_IID(kClipboardCID, NS_CLIPBOARD_CID);
 
 
 
@@ -1231,6 +1232,7 @@ nsresult WidgetTest(int *argc, char **argv)
     nsComponentManager::RegisterComponent(kCTooltipWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kCToolkitCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kClipboardCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID); 
     static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID); 
     static NS_DEFINE_IID(kCFontMetricsIID, NS_FONT_METRICS_CID); 
