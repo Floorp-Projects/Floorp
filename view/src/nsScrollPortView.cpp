@@ -222,69 +222,23 @@ NS_IMETHODIMP nsScrollPortView::GetScrollPreference(nsScrollPreference &aScrollP
 
 static void ComputeVelocities(PRInt32 aCurVelocity, nscoord aCurPos, nscoord aDstPos,
                               PRInt32* aVelocities) {
-  PRInt32 absCurVelocity;
-  PRInt32 direction;
-
-  if (aCurPos < aDstPos) {
-    direction = 1;
-    if (aCurVelocity < 0) {
-      absCurVelocity = 0;
-    } else {
-      absCurVelocity = aCurVelocity;
-    }
-  } else {
-    direction = -1;
-    if (aCurVelocity > 0) {
-      absCurVelocity = 0;
-    } else {
-      absCurVelocity = -aCurVelocity;
-    }
-  }
-  
-  PRInt32 absDistance = direction*(aDstPos - aCurPos);
-  
-  // The target velocity is the velocity we want to reach at frame N/2. We choose the
-  // target velocity so that after coming to a stop at frame N, we will have reached
-  // the scroll destination (actually we'll overshoot because of rounding, but that's
-  // the idea).
-  // It's chosen to satisfy
-  //    aDstPos - aCurPos = N/2 (aTargetVelocity/2) + N/2 ((aCurVelocity + aTargetVelocity)/2)
-  //   distance travelled     avg. velocity in 1st half      avg. velocity in 2nd half
-  PRInt32 absTargetVelocity = (PRInt32)ceil(2.0*absDistance/SMOOTH_SCROLL_FRAMES - 0.5*absCurVelocity);
-
-  // if we're going too fast already, slow down to the target velocity
-  if (absCurVelocity > absTargetVelocity) {
-    absCurVelocity = absTargetVelocity;
-  }
-
   PRInt32 i;
-  const int halfFrames = SMOOTH_SCROLL_FRAMES/2;
-  for (i = 0; i < halfFrames; i++) {
-    aVelocities[i*2] = PR_MAX(0, absCurVelocity + (absTargetVelocity*i + halfFrames - 1)/halfFrames);
-  }
-  for (i = halfFrames; i < halfFrames*2; i++) {
-    aVelocities[i*2] = PR_MAX(0, (absTargetVelocity*(halfFrames*2 - (i - 1)) + halfFrames - 1)/halfFrames);
-  }
+  PRInt32 direction = (aCurPos < aDstPos ? 1 : -1);
+  PRInt32 absDelta = (aDstPos - aCurPos)*direction;
+  PRInt32 baseVelocity = absDelta/SMOOTH_SCROLL_FRAMES;
 
-  PRInt32 total = 0;
   for (i = 0; i < SMOOTH_SCROLL_FRAMES; i++) {
-    total += aVelocities[i*2];
+    aVelocities[i*2] = baseVelocity;
   }
-  PRInt32 leftover = total - absDistance;
-  NS_ASSERTION(leftover >= 0, "Lost some distance due to rounding? We should have been rounding up only");
-
-  while (leftover > 0) {
-    for (i = SMOOTH_SCROLL_FRAMES - 1; i >= 0; i--) {
-      if (aVelocities[i*2] > 0) {
-        aVelocities[i*2]--;
-        leftover--;
-        if (leftover <= 0) {
-          break;
-        }
-      }
+  nscoord total = baseVelocity*SMOOTH_SCROLL_FRAMES;
+  for (i = 0; i < SMOOTH_SCROLL_FRAMES; i++) {
+    if (total < absDelta) {
+      aVelocities[i*2]++;
+      total++;
     }
   }
-  
+  NS_ASSERTION(total == absDelta, "Invalid velocity sum");
+
   for (i = 0; i < SMOOTH_SCROLL_FRAMES; i++) {
     aVelocities[i*2] *= direction;
   }
@@ -392,10 +346,6 @@ NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aDestinationX, nscoord aDestina
   ComputeVelocities(currentVelocityY, mOffsetY,
                     mSmoothScroll->mDestinationY, mSmoothScroll->mVelocities + 1);
 
-  // call a scroll immediately, don't wait for the timer to callback.
-  // this improves responsiveness
-  IncrementalScroll();
-  
   return NS_OK;
 }
 

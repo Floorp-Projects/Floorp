@@ -151,6 +151,10 @@ public:
 
   nsresult Layout(nsBoxLayoutState& aState);
   nsresult LayoutBox(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
+  
+  // Like ScrollPositionDidChange, but initiated by this frame rather than from the
+  // scrolling view
+  void InternalScrollPositionDidChange(nscoord aX, nscoord aY);
 
    PRBool AddRemoveScrollbar       (PRBool& aHasScrollbar, 
                                   nscoord& aXY, 
@@ -199,7 +203,8 @@ public:
   PRPackedBool mFirstPass;
   PRPackedBool mIsRoot;
   PRPackedBool mNeverReflowed;
-  PRPackedBool mScrollingInitiated;
+  PRPackedBool mViewInitiatedScroll;
+  PRPackedBool mFrameInitiatedScroll;
 };
 
 NS_IMPL_ISUPPORTS2(nsGfxScrollFrameInner, nsIDocumentObserver, nsIScrollPositionListener)
@@ -227,7 +232,8 @@ nsGfxScrollFrame::nsGfxScrollFrame(nsIPresShell* aShell, nsIDocument* aDocument,
     mPresContext = nsnull;
     mInner->mIsRoot = PR_FALSE;
     mInner->mNeverReflowed = PR_TRUE;
-    mInner->mScrollingInitiated = PR_FALSE;
+    mInner->mViewInitiatedScroll = PR_FALSE;
+    mInner->mFrameInitiatedScroll = PR_FALSE;
     SetLayoutManager(nsnull);
 }
 
@@ -914,6 +920,19 @@ nsGfxScrollFrameInner::ScrollPositionWillChange(nsIScrollableView* aScrollable, 
 }
 
 /**
+ * Called when someone (external or this frame) moves the scroll area.
+ */
+void
+nsGfxScrollFrameInner::InternalScrollPositionDidChange(nscoord aX, nscoord aY)
+{
+  if (mVScrollbarBox)
+    SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, aY);
+  
+  if (mHScrollbarBox)
+    SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, aX);
+}
+
+/**
  * Called if something externally moves the scroll area
  * This can happen if the user pages up down or uses arrow keys
  * So what we need to do up adjust the scrollbars to match.
@@ -921,13 +940,15 @@ nsGfxScrollFrameInner::ScrollPositionWillChange(nsIScrollableView* aScrollable, 
 NS_IMETHODIMP
 nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
-   if (mVScrollbarBox)
-     SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, aY);
-   
-   if (mHScrollbarBox)
-     SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, aX);
-   
-   return NS_OK;
+  NS_ASSERTION(!mViewInitiatedScroll, "Cannot reenter ScrollPositionDidChange");
+
+  mViewInitiatedScroll = PR_TRUE;
+
+  InternalScrollPositionDidChange(aX, aY);
+
+  mViewInitiatedScroll = PR_FALSE;
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -938,11 +959,30 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
                               PRInt32         aModType,
                               nsChangeHint    aHint) 
 {
-   // Don't reenter if we're getting this attribute change notification
-   // because we caused the view to scroll and the view is telling
-   // us about it.
-   if (mScrollingInitiated) return NS_OK;
-  
+  // Attribute changes on the scrollbars happen in one of three ways:
+  // 1) The scrollbar changed the attribute in response to some user event
+  // 2) We changed the attribute in response to a ScrollPositionDidChange
+  // callback from the scrolling view
+  // 3) We changed the attribute to adjust the scrollbars for the start
+  // of a smooth scroll operation
+  //
+  // In case 2), we don't need to scroll the view because the scrolling
+  // has already happened. In case 3) we don't need to scroll because
+  // we're just adjusting the scrollbars back to the correct setting
+  // for the view.
+  // 
+  // We used to detect this case implicitly because we'd compare the
+  // scrollbar attributes with the view's current scroll position and
+  // bail out if they were equal. But that approach is fragile; it can
+  // fail when, for example, the view scrolls horizontally and
+  // vertically simultaneously; we'll get here when only the vertical
+  // attribute has been set, so the attributes and the view scroll
+  // position don't yet agree, and we'd tell the view to scroll to the
+  // new vertical position and the old horizontal position! Even worse
+  // things could happen when smooth scrolling got involved ... crashes
+  // and other terrors.
+  if (mViewInitiatedScroll || mFrameInitiatedScroll) return NS_OK;
+
    if (mHScrollbarBox && mVScrollbarBox)
    {
      nsIFrame* hframe = nsnull;
@@ -1000,19 +1040,20 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
           PRBool isSmooth = vcontent->HasAttr(kNameSpaceID_None, nsXULAtoms::smooth)
             || hcontent->HasAttr(kNameSpaceID_None, nsXULAtoms::smooth);
         
-          // Remember that we asked the view to scroll, so we don't need to
-          // take notice of any attribute change caused by the view's scrolling
-          // action.
-          mScrollingInitiated = PR_TRUE;
-          ScrollbarChanged(mOuter->mPresContext, x*mOnePixel, y*mOnePixel, isSmooth ? NS_VMREFRESH_SMOOTHSCROLL : 0);
           if (isSmooth) {
             // Make sure an attribute-setting callback occurs even if the view didn't actually move yet
             // We need to make sure other listeners see that the scroll position is not (yet)
             // what they thought it was.
             s->GetScrollPosition(curPosX, curPosY);
-            ScrollPositionDidChange(s, curPosX, curPosY);
+
+            NS_ASSERTION(!mFrameInitiatedScroll, "Unexpected reentry");
+            // Make sure we don't do anything in when the view calls us back for this
+            // scroll operation.
+            mFrameInitiatedScroll = PR_TRUE;
+            InternalScrollPositionDidChange(curPosX, curPosY);
+            mFrameInitiatedScroll = PR_FALSE;
           }
-          mScrollingInitiated = PR_FALSE;
+          ScrollbarChanged(mOuter->mPresContext, x*mOnePixel, y*mOnePixel, isSmooth ? NS_VMREFRESH_SMOOTHSCROLL : 0);
 
           // Fire the onScroll event now that we have scrolled
           nsCOMPtr<nsIPresShell> presShell;
