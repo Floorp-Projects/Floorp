@@ -91,9 +91,8 @@ ifdef MOZ_OJI
 	JSJ_LIB = -ljsj
 endif
 
-EX_LIBS = \
-	-L$(DIST)/bin \
-	-lraptorbase    \
+LIBS = \
+	-lraptorbase \
 	-lpref \
 	-lraptorbase \
 	$(TOOLKIT_WIDGET_LIB) \
@@ -142,28 +141,11 @@ EX_LIBS = \
 	-lmozdbm \
 	$(NULL)
 
-PROGS = viewer
-
-TARGETS = $(PROGS)
+PROGRAM = viewer
 
 include $(topsrcdir)/config/rules.mk
 
-$(PROGS): $(OBJS) #$(EX_LIBS)
-	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
-else
-ifeq ($(OS_ARCH),IRIX)
-	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
-else
-	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
-endif
-endif
-
-export::
-
 install:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
 	$(INSTALL) $(srcdir)/resources/find.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/resources/printsetup.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/resources/image_props.html $(DIST)/bin/res/samples
@@ -204,7 +186,7 @@ install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/throbber/anims13.gif $(DIST)/bin/res/throbber
 
 clobber::
-	rm -f $(DIST)/bin/viewer.exe
+	rm -f $(DIST)/bin/viewer
 	rm -f $(DIST)/bin/res/samples/find.html
 	rm -f $(DIST)/bin/res/samples/printsetup.html
 	rm -f $(DIST)/bin/res/samples/test0.html
