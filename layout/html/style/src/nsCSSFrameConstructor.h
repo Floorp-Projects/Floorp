@@ -823,7 +823,8 @@ protected:
                           nsIContent*              aContent,
                           nsIFrame*                aParentFrame,
                           nsIStyleContext*         aStyleContext,
-                          nsIFrame*                aNewFrame);
+                          nsIFrame*                aNewFrame,
+                          PRBool                   aRelPos);
 
   nsresult ProcessBlockChildren(nsIPresShell*            aPresShell, 
                                 nsIPresContext*          aPresContext,

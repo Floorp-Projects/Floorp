@@ -110,10 +110,9 @@ NS_NewAttributeContent(nsIContent ** aResult);
 extern nsresult NS_NewSelectsAreaFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
                                        PRUint32 aFlags = NS_BLOCK_WRAP_SIZE);
 
-// Create a basic area frame. By default, area frames will extend
-// their height to cover any children that "stick out".
+// Create a basic area frame.
 extern nsresult NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
-                                PRUint32 aFlags = NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE);
+                                PRUint32 aFlags);
 
 // These AreaFrame's shrink wrap around their contents
 inline nsresult NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
@@ -140,7 +139,7 @@ inline nsresult NS_NewFloatingItemWrapperFrame(nsIPresShell* aPresShell, nsIFram
 // This type of AreaFrame doesn't use its own space manager and
 // doesn't shrink wrap.
 inline nsresult NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aPresShell, aNewFrame);
+  return NS_NewAreaFrame(aPresShell, aNewFrame, 0);
 }
 
 extern nsresult NS_NewBRFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
