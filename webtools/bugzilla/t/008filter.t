@@ -41,14 +41,17 @@ use Cwd;
 
 # Undefine the record separator so we can read in whole files at once
 my $oldrecsep = $/;
-$/ = undef;
 my $topdir = cwd;
+$/ = undef;
 
 foreach my $path (@Support::Templates::include_paths) {
-    $path =~ m|template/([^/]+)/|;
+    $path =~ m|template/([^/]+)/([^/]+)|;
     my $lang = $1;
+    my $flavor = $2;
+
     chdir $topdir; # absolute path
     my @testitems = Support::Templates::find_actual_files($path);
+    chdir $topdir; # absolute path
     
     next unless @testitems;
     
@@ -79,7 +82,7 @@ foreach my $path (@Support::Templates::include_paths) {
         # There are some files we don't check, because there is no need to
         # filter their contents due to their content-type.
         if ($file =~ /\.(txt|png)\.tmpl$/) {
-            ok(1, "($lang) $file is filter-safe");
+            ok(1, "($lang/$flavor) $file is filter-safe");
             next;
         }
         
@@ -155,7 +158,7 @@ foreach my $path (@Support::Templates::include_paths) {
         
         if (@unfiltered) {
             my $uflist = join("\n  ", @unfiltered);
-            ok(0, "($lang) $fullpath has unfiltered directives:\n  $uflist\n--ERROR");
+            ok(0, "($lang/$flavor) $fullpath has unfiltered directives:\n  $uflist\n--ERROR");
         }
         else {
             # Find any members of the exclusion list which were not found
@@ -166,12 +169,12 @@ foreach my $path (@Support::Templates::include_paths) {
 
             if (@notfound) {
                 my $nflist = join("\n  ", @notfound);
-                ok(0, "($lang) $fullpath - FEL has extra members:\n  $nflist\n" . 
+                ok(0, "($lang/$flavor) $fullpath - FEL has extra members:\n  $nflist\n" . 
                                                                   "--WARNING");
             }
             else {
                 # Don't use the full path here - it's too long and unwieldy.
-                ok(1, "($lang) $file is filter-safe");
+                ok(1, "($lang/$flavor) $file is filter-safe");
             }
         }
     }
