@@ -32,6 +32,9 @@ Also, note that the "whineatnews" script has changed name (it now has
 an extension of .pl instead of .tcl), so you'll need to change your
 cron job.
 
+And the "comments" file has been moved to the data directory.  Just do
+"cat comments >> data/comments" to restore any old comments that may
+have been lost.
 
 
 
