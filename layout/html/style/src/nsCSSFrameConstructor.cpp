@@ -10015,6 +10015,16 @@ SyncAndInvalidateView(nsIPresContext* aPresContext,
       }
       NS_IF_RELEASE(frameType);
     }
+  } else {
+    // if the view is for a popup, don't show the view if the popup is closed
+    nsCOMPtr<nsIWidget> widget;
+    aView->GetWidget(*getter_AddRefs(widget));
+    if (widget) {
+      nsWindowType windowType;
+      widget->GetWindowType(windowType);
+      if (windowType == eWindowType_popup)
+        widget->IsVisible(viewIsVisible);
+    }
   }
 
   // If the frame has visible content that overflows the content area, then we
