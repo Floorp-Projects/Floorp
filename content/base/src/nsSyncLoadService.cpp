@@ -582,7 +582,7 @@ nsSyncLoadService::LoadLocalDocument(nsIChannel* aChannel, nsIURI* aLoaderURI,
     nsSyncLoader* loader = new nsSyncLoader();
     NS_ENSURE_TRUE(loader, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(loader);
-    nsresult rv = loader->LoadDocument(aChannel, aLoaderURI, PR_TRUE, PR_FALSE,
+    nsresult rv = loader->LoadDocument(aChannel, aLoaderURI, PR_TRUE, PR_TRUE,
                                        _retval);
     NS_RELEASE(loader);
     return rv;
