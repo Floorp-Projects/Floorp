@@ -18,7 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /**
@@ -142,10 +141,8 @@ class nsHTMLContentSinkStream : public nsIHTMLContentSinkStream
   NS_IMETHOD BeginContext(PRInt32 aPosition);
   NS_IMETHOD EndContext(PRInt32 aPosition);
 
-
 public:
   void SetLowerCaseTags(PRBool aDoLowerCase) { mLowerCaseTags = aDoLowerCase; }
-    
 
 protected:
 
@@ -195,6 +192,8 @@ protected:
     PRInt32   mPreLevel;
 
     PRInt32   mMaxColumn;
+
+    nsString  mLineBreak;
 
     nsCOMPtr<nsISaveAsCharset> mCharsetEncoder;
     nsCOMPtr<nsIEntityConverter> mEntityConverter;

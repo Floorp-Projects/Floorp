@@ -2181,7 +2181,7 @@ nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionContro
       nsIGfxTextControlFrame2 *tcf;
       if (NS_SUCCEEDED(tmp->QueryInterface(nsIGfxTextControlFrame2::GetIID(),(void**)&tcf)))
       {
-        return tcf->GetSelectionController(aSelCon);
+        return tcf->GetSelectionContr(aSelCon);
       }
       if (NS_FAILED(tmp->GetParent(&tmp)))
         break;

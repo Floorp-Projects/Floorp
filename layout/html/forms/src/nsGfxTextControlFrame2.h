@@ -122,7 +122,7 @@ public:
   NS_IMETHOD    SetSelectionEnd(PRInt32 aSelectionEnd);
   NS_IMETHOD    SetSelectionRange(PRInt32 aSelectionStart, PRInt32 aSelectionEnd);
   NS_IMETHOD    GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
-  NS_IMETHOD    GetSelectionController(nsISelectionController **aSelCon);
+  NS_IMETHOD    GetSelectionContr(nsISelectionController **aSelCon);
 
 //==== END NSIGFXTEXTCONTROLFRAME2
 //==== OVERLOAD of nsIFrame
