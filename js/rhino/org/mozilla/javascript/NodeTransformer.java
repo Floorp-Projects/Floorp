@@ -608,8 +608,11 @@ public class NodeTransformer {
         String name = "";
         if (left.getType() == TokenStream.NAME)
             name = left.getString();
+        else
+            if (left.getType() == TokenStream.GETPROP)
+                name = left.getLastChild().getString();
         if (name.equals("eval") || name.equals("Closure") ||
-            name.equals("With"))
+            name.equals("With") || name.equals("exec"))
         {
             // Calls to these functions require activation objects.
             if (inFunction)

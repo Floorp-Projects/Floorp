@@ -101,9 +101,9 @@ public class NativeScript extends NativeFunction implements Script {
     }
 
     public Object js_exec() throws JavaScriptException {
-        Context cx = Context.getContext();
-        Scriptable scope = getTopLevelScope(getParentScope());
-        return exec(cx, scope);
+        Object[] msgArgs = { "exec" };
+        throw Context.reportRuntimeError(
+            Context.getMessage("msg.cant.call.indirect", msgArgs));
     }
 
     public static Object js_toString(Context cx, Scriptable thisObj,

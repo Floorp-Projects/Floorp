@@ -1236,7 +1236,7 @@ public class ScriptRuntime {
     }
 
     private static Object callOrNewSpecial(Context cx, Scriptable scope, 
-                                           Object fun, Object thisArg,
+                                           Object fun, Object jsThis, Object thisArg,
                                            Object[] args, boolean isCall,
                                            String filename, int lineNumber)
         throws JavaScriptException
@@ -1253,6 +1253,8 @@ public class ScriptRuntime {
                 return NativeClosure.newClosureSpecial(cx, scope, args, fo);
             if (name.equals("With") && cl == NativeWith.class)
                 return NativeWith.newWithSpecial(cx, args, fo, !isCall);
+            if (name.equals("js_exec") && cl == NativeScript.class)
+                return ((NativeScript)jsThis).exec(cx, scope);
         }
                 
         if (isCall)
@@ -1267,7 +1269,8 @@ public class ScriptRuntime {
                                      int lineNumber)
         throws JavaScriptException
     {
-        return callOrNewSpecial(cx, scope, fun, enclosingThisArg, args, true,
+        return callOrNewSpecial(cx, scope, fun, thisArg, 
+                                enclosingThisArg, args, true,
                                 filename, lineNumber);
     }
     
@@ -1299,7 +1302,7 @@ public class ScriptRuntime {
                                               Object[] args, Scriptable scope)
         throws JavaScriptException
     {
-        return (Scriptable) callOrNewSpecial(cx, scope, fun, null, args, 
+        return (Scriptable) callOrNewSpecial(cx, scope, fun, null, null, args, 
                                              false, null, -1);
     }
 
