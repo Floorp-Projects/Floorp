@@ -96,7 +96,7 @@ public abstract class IdScriptable extends ScriptableObject
         if (maxId != 0) {
             int id = mapNameToId_cached(name);
             if (id != 0) {
-                int attr = getAttributes(id);
+                int attr = getIdDefaultAttributes(id);
                 if ((attr & READONLY) == 0 && !isSealed()) {
                     if (start == this) {
                         setIdValue(id, value);
@@ -117,7 +117,7 @@ public abstract class IdScriptable extends ScriptableObject
             if (id != 0) {
                 // Let the super class to throw exceptions for sealed objects
                 if (!isSealed()) {
-                    int attr = getAttributes(id);
+                    int attr = getIdDefaultAttributes(id);
                     if ((attr & PERMANENT) == 0) {
                         deleteIdValue(id);
                     }
@@ -135,7 +135,7 @@ public abstract class IdScriptable extends ScriptableObject
             int id = mapNameToId(name);
             if (id != 0) {
                 if (hasValue(id)) {
-                    return getAttributes(id);
+                    return getIdDefaultAttributes(id);
                 }
                 // For ids with deleted values super will throw exceptions
             }
@@ -150,11 +150,11 @@ public abstract class IdScriptable extends ScriptableObject
         if (maxId != 0) {
             int id = mapNameToId(name);
             if (id != 0) {
-                if (hasValue(id)) {
-                    synchronized (this) {
-                        setAttributes(id, attributes);
+                synchronized (this) {
+                    if (hasValue(id)) {
+                        setIdAttributes(id, attributes);
+                        return;
                     }
-                    return;
                 }
                 // For ids with deleted values super will throw exceptions
             }
@@ -175,13 +175,13 @@ public abstract class IdScriptable extends ScriptableObject
         if (maxId != 0) {
             int id = mapNameToId(propertyName);
             if (id != 0) {
-                int default_attributes = getIdDefaultAttributes(id);
-                if ((default_attributes & READONLY) != 0) {
+                int current_attributes = getIdDefaultAttributes(id);
+                if ((current_attributes & READONLY) != 0) {
                     // It is a bug to redefine id with readonly attributes
                     throw new RuntimeException
                         ("Attempt to redefine read-only id " + propertyName);
                 }
-                setAttributes(id, attributes);
+                setIdAttributes(id, attributes);
                 setIdValue(id, value);
                 return;
             }
@@ -198,7 +198,7 @@ public abstract class IdScriptable extends ScriptableObject
 
             for (int id = maxId; id != 0; --id) {
                 if (hasValue(id)) {
-                    if (getAll || (getAttributes(id) & DONTENUM) == 0) {
+                    if (getAll || (getIdDefaultAttributes(id) & DONTENUM) == 0) {
                         if (count == 0) {
                             // Need extra room for nor more then [1..id] names
                             ids = new Object[id];
@@ -266,7 +266,7 @@ public abstract class IdScriptable extends ScriptableObject
      */
     protected abstract String getIdName(int id);
 
-    /** Get default attributes for id.
+    /** Get attributes for id.
      ** Default implementation return DONTENUM that is the standard attribute
      ** for core EcmaScript function. Typically descendants need to overwrite
      ** this for non-function attributes like length to return
@@ -274,6 +274,22 @@ public abstract class IdScriptable extends ScriptableObject
      */
     protected int getIdDefaultAttributes(int id) {
         return DONTENUM;
+    }
+
+    /**
+     * Set attributes for id.
+     * Descendants should override the default implementation if they want to
+     * allow to change id attributes since the default implementation throw an
+     * exception unless new attributes eqaul the result of
+     * <tt>getIdDefaultAttributes(id)</tt>.
+     */
+    protected void setIdAttributes(int id, int attributes)
+    {
+        int current = getIdDefaultAttributes(id);
+        if (attributes != current) {
+            throw new RuntimeException(
+                "Change of attributes for this id is not supported");
+        }
     }
 
     /** Check if id value exists.
@@ -363,7 +379,7 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     /** Set maximum id mapNameToId can generate */
-    protected void setMaxId(int maxId) {
+    protected final void setMaxId(int maxId) {
         // maxId can only go up
         if (maxId < this.maxId) Context.codeBug();
         this.maxId = maxId;
@@ -496,41 +512,8 @@ public abstract class IdScriptable extends ScriptableObject
         return data;
     }
 
-    private int getAttributes(int id) {
-        int attributes = getIdDefaultAttributes(id);
-        byte[] array = attributesArray;
-        if (array != null) {
-            attributes |= 0xFF & array[id - 1];
-        }
-        return attributes;
-    }
-
-    private void setAttributes(int id, int attributes) {
-        int defaultAttrs = getIdDefaultAttributes(id);
-        if ((attributes & defaultAttrs) != defaultAttrs) {
-            // It is a bug to set attributes to less restrictive values
-            // then given by defaultAttrs
-            throw new RuntimeException("Attempt to unset default attributes");
-        }
-        // Store only additional bits
-        attributes &= ~defaultAttrs;
-        byte[] array = attributesArray;
-        if (array == null && attributes != 0) {
-            synchronized (this) {
-                array = attributesArray;
-                if (array == null) {
-                    attributesArray = array = new byte[maxId];
-                }
-            }
-        }
-        if (array != null) {
-            array[id - 1] = (byte)attributes;
-        }
-    }
-
     private int maxId;
     private Object[] idMapData;
-    private byte[] attributesArray;
 
     private static final boolean CACHE_NAMES = true;
     private int lastIdCache;
