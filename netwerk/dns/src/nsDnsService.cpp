@@ -552,7 +552,7 @@ nsDNSLookup::InitiateLookup(void)
         if(PR_SUCCESS == status) // it WAS numeric, we're done.
             return rv;
     }
-    // Incomming hostname is not a numeric ip address. Need to do the actual
+    // Incoming hostname is not a numeric ip address. Need to do the actual
     // dns lookup.
 
 #if defined(XP_MAC)
@@ -563,7 +563,17 @@ nsDNSLookup::InitiateLookup(void)
         rv = NS_ERROR_UNEXPECTED;
 #endif /* XP_MAC */
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#ifdef XP_OS2
+    // temporary SYNC version
+    status = PR_GetHostByName(mHostName, 
+                              mHostEntry.buffer, 
+                              PR_NETDB_BUF_SIZE, 
+                              &(mHostEntry.hostEnt));
+
+    if (PR_SUCCESS != status) rv = NS_ERROR_UNKNOWN_HOST;
+             
+    return CompletedLookup(rv);
+#elif defined(XP_PC)
     mMsgID = nsDNSService::gService->AllocMsgID();
     if (mMsgID == 0)
         return NS_ERROR_UNEXPECTED;
@@ -872,18 +882,18 @@ nsDNSService::Init()
     if (mMonitor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
     // sync with DNS thread to allow it to create the DNS window
     nsAutoMonitor mon(mMonitor);
 #endif
 
-#if defined(XP_MAC) || defined(XP_PC)
+#if defined(XP_MAC) || (defined(XP_PC) && !defined(XP_OS2))
     // create DNS thread
     NS_ASSERTION(mThread == nsnull, "nsDNSService not shut down");
     rv = NS_NewThread(getter_AddRefs(mThread), this, 0, PR_JOINABLE_THREAD);
 #endif
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
     mon.Wait();
 #endif
 
@@ -1103,7 +1113,7 @@ nsDNSService::Lookup(const char*     hostName,
         }
     }
 
-#if !defined(XP_UNIX)
+#if !defined(XP_UNIX) && !defined(XP_OS2)
     if (mThread == nsnull)
         return NS_ERROR_OFFLINE;
 #endif
@@ -1195,7 +1205,7 @@ nsDNSService::Shutdown()
 {
     nsresult rv = NS_OK;
 
-#if !defined(XP_UNIX)
+#if !defined(XP_UNIX) && !defined(XP_OS2)
     if (mThread == nsnull) return rv;
 #endif
 
