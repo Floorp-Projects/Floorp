@@ -17,6 +17,6 @@
     <titledbutton id="grippy" class="grippy" open='true'
                   onclick="resize();" flex="100%"/>
   </box>
-  <html:iframe id="content" src="about:blank" flex="100%" />
+  <html:iframe type="content" id="content" src="about:blank" flex="100%" />
 </box>
 </window>
