@@ -642,6 +642,11 @@ private:
                                 PRInt32 & aLeft,
                                 PRInt32 & aRight,
                                 PRBool aClearIndexes);
+  void  DoClipShorthand(nsAString & aString,
+                        PRInt32 aTop,
+                        PRInt32 aBottom,
+                        PRInt32 aLeft,
+                        PRInt32 aRight);
   void  TryBackgroundShorthand(nsAString & aString,
                                PRInt32 & aBgColor, PRInt32 & aBgImage,
                                PRInt32 & aBgRepeat, PRInt32 & aBgAttachment,
