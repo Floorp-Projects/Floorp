@@ -61,7 +61,7 @@ CFG=MozillaControl - Win32 Debug
 # PROP Intermediate_Dir "Debug"
 # PROP Cmd_Line "NMAKE /f makefile.win"
 # PROP Rebuild_Opt "/a"
-# PROP Target_File ".\WIN32_D.OBJ\MozillaControl.dll"
+# PROP Target_File ".\WIN32_D.OBJ\npmozctl.dll"
 # PROP Bsc_Name "MozillaControl.bsc"
 # PROP Target_Dir ""
 
@@ -83,7 +83,19 @@ CFG=MozillaControl - Win32 Debug
 # PROP Default_Filter "*.cpp,*.c,*.idl,*.rc"
 # Begin Source File
 
+SOURCE=.\ActiveXPlugin.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ActiveXPluginInstance.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ControlSite.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\LegacyPlugin.cpp
 # End Source File
 # Begin Source File
 
@@ -95,6 +107,10 @@ SOURCE=.\MozillaControl.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\MozillaControl.def
+# End Source File
+# Begin Source File
+
 SOURCE=.\MozillaControl.idl
 # End Source File
 # Begin Source File
@@ -103,7 +119,15 @@ SOURCE=.\MozillaControl.rc
 # End Source File
 # Begin Source File
 
+SOURCE=.\npwin.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\nsSetupRegistry.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\PropertyBag.cpp
 # End Source File
 # Begin Source File
 
@@ -117,6 +141,14 @@ SOURCE=.\WebShellContainer.cpp
 # Begin Group "Header Files"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\ActiveXPlugin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ActiveXPluginInstance.h
+# End Source File
 # Begin Source File
 
 SOURCE=.\BrowserDiagnostics.h
@@ -136,6 +168,14 @@ SOURCE=.\MozillaBrowser.h
 # Begin Source File
 
 SOURCE=.\MozillaControl.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PropertyBag.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\PropertyList.h
 # End Source File
 # Begin Source File
 
