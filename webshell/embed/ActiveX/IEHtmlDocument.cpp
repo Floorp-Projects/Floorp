@@ -45,7 +45,13 @@ HRESULT CIEHtmlDocument::GetIDispatch(IDispatch **pDispatch)
 	{
 		return E_INVALIDARG;
 	}
-	return QueryInterface(IID_IDispatch, (void **) pDispatch);
+
+	IDispatch *pDisp = (IDispatch *) this;
+	NG_ASSERT(pDisp);
+	pDisp->AddRef();
+	*pDispatch = pDisp;
+
+	return S_OK;
 }
 
 
