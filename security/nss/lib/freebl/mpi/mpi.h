@@ -36,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- *  $Id: mpi.h,v 1.19 2001/03/13 19:01:52 relyea%netscape.com Exp $
+ *  $Id: mpi.h,v 1.20 2002/04/04 00:19:43 nelsonb%netscape.com Exp $
  */
 
 #ifndef _H_MPI_
@@ -60,8 +60,10 @@
 #undef ULLONG_MAX
 #endif
 
-#ifdef macintosh
+#if defined( macintosh )
 #include <Types.h>
+#elif defined( _WIN32_WCE)
+/* #include <sys/types.h> What do we need here ?? */
 #else
 #include <sys/types.h>
 #endif
