@@ -225,7 +225,11 @@ nsresult WriteProperties(const char* properties_file)
     }
 
     nsCOMPtr<nsIFile> chromeFile;
-    NS_GetSpecialDirectory(NS_APP_CHROME_DIR, getter_AddRefs(chromeFile));
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR, getter_AddRefs(chromeFile));
+    if(NS_FAILED(rv)) {
+        fclose(props);
+        return rv;
+    }
 
     chromeFile->AppendNative(NS_LITERAL_CSTRING("chrome.rdf"));
     
