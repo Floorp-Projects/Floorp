@@ -3,7 +3,6 @@ toolkit.jar:
 * content/global/viewSource.js             (content/viewSource.js)
 * content/global/viewPartialSource.xul     (content/viewPartialSource.xul)
 * content/global/viewPartialSource.js      (content/viewPartialSource.js)
-* content/global/viewSourceOverlay.xul     (content/viewSourceOverlay.xul)
 
 en-US.jar:
   locale/en-US/global/viewSource.dtd       (locale/viewSource.dtd)
