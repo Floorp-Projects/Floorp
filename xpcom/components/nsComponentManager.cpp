@@ -469,7 +469,11 @@ nsFactoryEntry::~nsFactoryEntry(void)
 nsresult
 nsFactoryEntry::ReInit(const nsCID &aClass, const char *aLocation, int aType)
 {
-    NS_ENSURE_TRUE(cid.Equals(aClass), NS_ERROR_INVALID_ARG);
+    NS_ENSURE_TRUE(typeIndex != NS_COMPONENT_TYPE_FACTORY_ONLY, NS_ERROR_INVALID_ARG);
+    // cid has to match
+    // SERVICE_ONLY entries can be promoted to an entry of another type
+    NS_ENSURE_TRUE((typeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY || cid.Equals(aClass)),
+                   NS_ERROR_INVALID_ARG);
     location = aLocation;
     typeIndex = aType;
     return NS_OK;
@@ -478,8 +482,12 @@ nsFactoryEntry::ReInit(const nsCID &aClass, const char *aLocation, int aType)
 nsresult
 nsFactoryEntry::ReInit(const nsCID &aClass, nsIFactory *aFactory)
 {
-    NS_ENSURE_TRUE(cid.Equals(aClass), NS_ERROR_INVALID_ARG);
-    NS_ENSURE_TRUE(typeIndex >= 0, NS_ERROR_INVALID_ARG);
+    // Cannot reinit a NATIVE entry with a FACTORY_ONLY entry
+    NS_ENSURE_TRUE(typeIndex != NS_COMPONENT_TYPE_NATIVE, NS_ERROR_INVALID_ARG);
+    // cids has to match
+    // SERVICE_ONLY entries can be promoted to an entry of another type
+    NS_ENSURE_TRUE((typeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY || cid.Equals(aClass)),
+                   NS_ERROR_INVALID_ARG);
     factory = aFactory;
     typeIndex = NS_COMPONENT_TYPE_FACTORY_ONLY;
     return NS_OK;
