@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: API.pm,v 1.10 1998/08/13 09:13:55 leif Exp $
+# $Id: API.pm,v 1.11 1998/08/13 13:10:23 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -218,10 +218,10 @@ require AutoLoader;
 	ldap_multisort_entries ldap_next_attribute ldap_next_entry
 	ldap_perror ldap_result ldap_result2error ldap_search ldap_search_s
 	ldap_search_st ldap_set_filter_additions ldap_set_lderrno
-	ldap_set_option ldap_set_rebind_proc ldap_simple_bind
-	ldap_simple_bind_s ldap_sort_entries ldap_unbind ldap_unbind_s
-	ldap_url_parse ldap_url_search ldap_url_search_s ldap_url_search_st
-	ldap_version)],
+	ldap_set_option ldap_set_rebind_proc ldap_set_default_rebind_proc
+	ldap_simple_bind ldap_simple_bind_s ldap_sort_entries ldap_unbind
+	ldap_unbind_s ldap_url_parse ldap_url_search ldap_url_search_s
+	ldap_url_search_st ldap_version)],
 	apiv3 => [qw(
 	ldap_abandon_ext ldap_add_ext ldap_add_ext_s ldap_compare_ext
 	ldap_compare_ext_s ldap_control_free ldap_controls_count

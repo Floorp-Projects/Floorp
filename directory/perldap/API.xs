@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: API.xs,v 1.13 1998/08/04 02:28:12 clayton Exp $
+ * $Id: API.xs,v 1.14 1998/08/13 13:10:24 clayton Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -57,8 +57,15 @@ static LDAPMod **hash2mod(SV *ldap_change_ref,int ldap_add_func,const char *func
 static int LDAP_CALL internal_rebind_proc(LDAP *ld,char **dnp,char **pwp,
             int *authmethodp,int freeit,void *arg);
 
+static int LDAP_CALL ldap_default_rebind_proc(LDAP *ld, char **dn, char **pswd,
+            int *auth, int freeit, void *arg);
+
+
 /* Global Definitions and Variables */
 SV *ldap_perl_rebindproc = NULL;
+static char *ldap_default_rebind_dn = NULL;
+static char *ldap_default_rebind_pwd = NULL;
+static int ldap_default_rebind_auth = LDAP_AUTH_SIMPLE;
 
 /* Return a Perl List from a char ** in PPCODE */
 #define RET_CPP(cppvar) \
@@ -376,6 +383,29 @@ int LDAP_CALL internal_rebind_proc(LDAP *ld, char **dnp, char **pwp,
    }
    return(LDAP_SUCCESS);
 }
+
+/* NT and internal_rebind_proc hate each other, so they need this... */
+
+static int LDAP_CALL ldap_default_rebind_proc(LDAP *ld, char **dn, char **pwd,
+   int *auth, int freeit, void *arg)
+{
+  if (!ldap_default_rebind_dn || !ldap_default_rebind_pwd)
+    {
+      *dn = NULL;
+      *pwd = NULL;
+      *auth = 0;
+
+      return LDAP_OPERATIONS_ERROR;
+    }
+
+  *dn = ldap_default_rebind_dn;
+  *pwd = ldap_default_rebind_pwd;
+  *auth = ldap_default_rebind_auth;
+
+  return LDAP_SUCCESS;
+}
+
+
 
 MODULE = Mozilla::LDAP::API		PACKAGE = Mozilla::LDAP::API
 PROTOTYPES: ENABLE
@@ -1366,6 +1396,22 @@ ldap_set_rebind_proc(ld,rebindproc)
 	      ldap_set_rebind_proc(ld,internal_rebind_proc,NULL);
 	   }
 	}
+
+void
+ldap_set_default_rebind_proc(ld, dn, pwd, auth)
+     LDAP *ld
+     char *dn
+     char *pwd
+     int auth
+     CODE:
+        {
+          ldap_default_rebind_dn = strdup(dn);
+          ldap_default_rebind_pwd = strdup(pwd);
+          ldap_default_rebind_auth = auth;
+
+          ldap_set_rebind_proc(ld,
+           (LDAP_REBINDPROC_CALLBACK *)&ldap_default_rebind_proc,NULL);
+        }
 
 int
 ldap_simple_bind(ld,who,passwd)
