@@ -1021,6 +1021,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
             // update the summary totals so the front end will
             // show the right thing for the new trash folder
             // see bug #161999
+            nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
+            nsCOMPtr<nsIMsgDatabase> db; 
+            newTrashFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db));
+            if (dbFolderInfo)
+            {
+              dbFolderInfo->SetNumUnreadMessages(0);
+              dbFolderInfo->SetNumMessages(0);
+            }
             newTrashFolder->UpdateSummaryTotals(PR_TRUE);
           }
         }
