@@ -241,11 +241,11 @@ public:
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
   NS_IMETHOD CanCreateNewWebShell(PRBool& aResult);
-  NS_IMETHOD ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult);
+  NS_IMETHOD ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode);
 
   NS_IMETHOD SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
                                 nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
-                                nsIWebShell** aNewShell);
+                                nsIWebShell** aNewShell, nsIWebShell** anInnerShell);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
@@ -1906,11 +1906,10 @@ nsWebShell::CanCreateNewWebShell(PRBool& aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult)
+nsWebShell::ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode)
 {
-  aResult = PR_FALSE;
   if (nsnull != mContainer) {
-    return mContainer->ChildShellAdded(aChildShell, frameNode, aResult);
+    return mContainer->ChildShellAdded(aChildShell, frameNode);
   }
   return NS_OK;
 }
@@ -1918,10 +1917,10 @@ nsWebShell::ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRB
 NS_IMETHODIMP
 nsWebShell::SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
                                 nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
-                                nsIWebShell** aNewShell)
+                                nsIWebShell** aNewShell, nsIWebShell** anInnerShell)
 {
   if (nsnull != mContainer) {
-    return mContainer->SetNewWebShellInfo(aName, anURL, aOpenerShell, aChromeMask, aNewShell);
+    return mContainer->SetNewWebShellInfo(aName, anURL, aOpenerShell, aChromeMask, aNewShell, anInnerShell);
   }
   return NS_OK;
 }

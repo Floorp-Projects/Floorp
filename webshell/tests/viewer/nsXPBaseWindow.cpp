@@ -569,16 +569,15 @@ nsXPBaseWindow::CanCreateNewWebShell(PRBool& aResult)
 }
 
 NS_IMETHODIMP
-nsXPBaseWindow::ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult)
+nsXPBaseWindow::ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode)
 {
-  aResult = PR_FALSE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXPBaseWindow::SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
                                 nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
-                                nsIWebShell** aNewShell)
+                                nsIWebShell** aNewShell, nsIWebShell** anInnerShell)
 {
   return NS_OK; // We don't care about this method, since we can make new web shells immediately.
 }
