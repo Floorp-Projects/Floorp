@@ -42,6 +42,7 @@
 #include "nsIThread.h"
 #include "nsIImapMockChannel.h"
 #include "nsILoadGroup.h"
+#include "nsIPrincipal.h"
 #include "nsCOMPtr.h"
 
 class nsIMAPMessagePartIDArray;
