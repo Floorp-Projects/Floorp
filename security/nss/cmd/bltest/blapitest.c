@@ -1189,6 +1189,7 @@ md5_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
 	cx_cpy = MD5_Resurrect(cxbytes, NULL);
 	if (!cx_cpy) {
 	    PR_fprintf(PR_STDERR, "%s: MD5_Resurrect failed!\n", progName);
+	    rv = SECFailure;
 	    goto finish;
 	}
 	rv = PORT_Memcmp(cx, cx_cpy, len);
@@ -1226,6 +1227,7 @@ sha1_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
 	cx_cpy = SHA1_Resurrect(cxbytes, NULL);
 	if (!cx_cpy) {
 	    PR_fprintf(PR_STDERR, "%s: SHA1_Resurrect failed!\n", progName);
+	    rv = SECFailure;
 	    goto finish;
 	}
 	rv = PORT_Memcmp(cx, cx_cpy, len);
