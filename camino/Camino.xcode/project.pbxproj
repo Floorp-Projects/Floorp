@@ -262,7 +262,6 @@
 				3F44AD8805BDFB9F00CB4B08,
 				3F44AD9F05BDFB9F00CB4B08,
 				3F44ADB305BDFBA000CB4B08,
-				3F44ADC205BDFBA000CB4B08,
 				3F44ADDA05BDFBA000CB4B08,
 				3F44ADF105BDFBA000CB4B08,
 				3F44AE0805BDFBA000CB4B08,
@@ -311,7 +310,6 @@
 				3F44ABD005BDFB9E00CB4B08,
 				3F44AD8A05BDFB9F00CB4B08,
 				3F44ADA005BDFB9F00CB4B08,
-				3F44ADB405BDFBA000CB4B08,
 				3F44ADC305BDFBA000CB4B08,
 				3F44ADDB05BDFBA000CB4B08,
 				3F44ADF205BDFBA000CB4B08,
@@ -331,15 +329,7 @@
 				29B97323FDCFA39411CA2CEA,
 				19C28FACFE9D520D11CA2CBB,
 				F6BD637A01B30E0F01A962F7,
-				3F44AD8705BDFB9F00CB4B08,
-				3F44AD9E05BDFB9F00CB4B08,
-				3F44ADB205BDFBA000CB4B08,
-				3F44ADC105BDFBA000CB4B08,
-				3F44ADD905BDFBA000CB4B08,
-				3F44ADF005BDFBA000CB4B08,
-				3F44AE0705BDFBA000CB4B08,
-				3F44AFC505BDFBA100CB4B08,
-				3F44AFD305BDFBA100CB4B08,
+				3FECC78F05D1F68E0068E7ED,
 			);
 			isa = PBXGroup;
 			name = Camino;
@@ -3784,7 +3774,7 @@
 			dependencies = (
 			);
 			isa = PBXNativeTarget;
-			name = "AppearancePrefPane (Upgraded)";
+			name = AppearancePrefPane;
 			productInstallPath = "$(USER_LIBRARY_DIR)/Bundles";
 			productName = AppearancePrefPane;
 			productReference = 3F44AD9F05BDFB9F00CB4B08;
@@ -3963,7 +3953,7 @@
 			dependencies = (
 			);
 			isa = PBXNativeTarget;
-			name = "NavigationPrefPane (Upgraded)";
+			name = NavigationPrefPane;
 			productInstallPath = "$(USER_LIBRARY_DIR)/Bundles";
 			productName = NavigationPrefPane;
 			productReference = 3F44ADB305BDFBA000CB4B08;
@@ -4096,134 +4086,12 @@
 			refType = 3;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		3F44ADB405BDFBA000CB4B08 = {
-			buildPhases = (
-				3F44ADB505BDFBA000CB4B08,
-				3F44ADB705BDFBA000CB4B08,
-				3F44ADBA05BDFBA000CB4B08,
-				3F44ADBC05BDFBA000CB4B08,
-				3F44ADBF05BDFBA000CB4B08,
-			);
-			buildRules = (
-			);
-			buildSettings = {
-				GCC_ENABLE_CPP_EXCEPTIONS = NO;
-				GCC_ENABLE_CPP_RTTI = NO;
-				GCC_ENABLE_PASCAL_STRINGS = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_OPTIMIZATION_LEVEL = 2;
-				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
-				GCC_PREPROCESSOR_DEFINITIONS = "OSTYPE=Darwin1.4 OSARCH=Darwin";
-				HEADER_SEARCH_PATHS = ../dist/include/;
-				INFOPLIST_FILE = "Info-PersonalPrefPane__Upgraded_.plist";
-				OTHER_CFLAGS = "-fshort-wchar";
-				OTHER_LDFLAGS = "-bundle";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = Personal;
-				SECTORDER_FLAGS = "";
-				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
-				WRAPPER_EXTENSION = prefPane;
-			};
-			dependencies = (
-			);
-			isa = PBXNativeTarget;
-			name = "PersonalPrefPane (Upgraded)";
-			productInstallPath = "$(USER_LIBRARY_DIR)/Bundles";
-			productName = PersonalPrefPane;
-			productReference = 3F44ADC205BDFBA000CB4B08;
-			productType = "com.apple.product-type.bundle";
-		};
-		3F44ADB505BDFBA000CB4B08 = {
-			buildActionMask = 2147483647;
-			files = (
-				3F44ADB605BDFBA000CB4B08,
-			);
-			isa = PBXHeadersBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44ADB605BDFBA000CB4B08 = {
-			fileRef = F53F21FF022B7C77010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44ADB705BDFBA000CB4B08 = {
-			buildActionMask = 2147483647;
-			files = (
-				3F44ADB805BDFBA000CB4B08,
-				3F44ADB905BDFBA000CB4B08,
-			);
-			isa = PBXResourcesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44ADB805BDFBA000CB4B08 = {
-			fileRef = F507A85F031194B101026D5D;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44ADB905BDFBA000CB4B08 = {
-			fileRef = F53F21FE022B7C77010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44ADBA05BDFBA000CB4B08 = {
-			buildActionMask = 2147483647;
-			files = (
-				3F44ADBB05BDFBA000CB4B08,
-			);
-			isa = PBXSourcesBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44ADBB05BDFBA000CB4B08 = {
-			fileRef = F53F2200022B7C77010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44ADBC05BDFBA000CB4B08 = {
-			buildActionMask = 2147483647;
-			files = (
-				3F44ADBD05BDFBA000CB4B08,
-				3F44ADBE05BDFBA000CB4B08,
-			);
-			isa = PBXFrameworksBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		3F44ADBD05BDFBA000CB4B08 = {
-			fileRef = 1058C7A1FEA54F0111CA2CBB;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44ADBE05BDFBA000CB4B08 = {
-			fileRef = F557193A022B4102010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44ADBF05BDFBA000CB4B08 = {
-			buildActionMask = 2147483647;
-			files = (
-			);
-			isa = PBXRezBuildPhase;
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		3F44ADC105BDFBA000CB4B08 = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.xml;
 			path = "Info-PersonalPrefPane__Upgraded_.plist";
 			refType = 4;
 			sourceTree = "<group>";
-		};
-		3F44ADC205BDFBA000CB4B08 = {
-			explicitFileType = wrapper.cfbundle;
-			includeInIndex = 0;
-			isa = PBXFileReference;
-			path = Personal.prefPane;
-			refType = 3;
-			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		3F44ADC305BDFBA000CB4B08 = {
 			buildPhases = (
@@ -4258,7 +4126,7 @@
 			dependencies = (
 			);
 			isa = PBXNativeTarget;
-			name = "PrivacyPrefPane (Upgraded)";
+			name = PrivacyPrefPane;
 			productInstallPath = "$(USER_LIBRARY_DIR)/Bundles";
 			productName = PrivacyPrefPane;
 			productReference = 3F44ADDA05BDFBA000CB4B08;
@@ -4452,7 +4320,7 @@
 			dependencies = (
 			);
 			isa = PBXNativeTarget;
-			name = "SecurityPrefPane (Upgraded)";
+			name = SecurityPrefPane;
 			productInstallPath = "$(USER_LIBRARY_DIR)/Bundles";
 			productName = PrivacyPrefPane;
 			productReference = 3F44ADF105BDFBA000CB4B08;
@@ -4639,7 +4507,7 @@
 			dependencies = (
 			);
 			isa = PBXNativeTarget;
-			name = "WebFeaturesPrefPane (Upgraded)";
+			name = WebFeaturesPrefPane;
 			productInstallPath = "$(USER_LIBRARY_DIR)/Bundles";
 			productName = PrivacyPrefPane;
 			productReference = 3F44AE0805BDFBA000CB4B08;
@@ -7951,7 +7819,7 @@
 			dependencies = (
 			);
 			isa = PBXNativeTarget;
-			name = "AddressBookManager (Upgraded)";
+			name = AddressBookManager;
 			productInstallPath = "$(USER_LIBRARY_DIR)/Bundles";
 			productName = AddressBookManager;
 			productReference = 3F44AFD405BDFBA100CB4B08;
@@ -8786,6 +8654,23 @@
 			refType = 4;
 			sourceTree = "<group>";
 		};
+		3FECC78F05D1F68E0068E7ED = {
+			children = (
+				3F44AD8705BDFB9F00CB4B08,
+				3F44AD9E05BDFB9F00CB4B08,
+				3F44ADB205BDFBA000CB4B08,
+				3F44ADC105BDFBA000CB4B08,
+				3F44ADD905BDFBA000CB4B08,
+				3F44ADF005BDFBA000CB4B08,
+				3F44AE0705BDFBA000CB4B08,
+				3F44AFC505BDFBA100CB4B08,
+				3F44AFD305BDFBA100CB4B08,
+			);
+			isa = PBXGroup;
+			name = "Target Plists";
+			refType = 4;
+			sourceTree = "<group>";
+		};
 //3F0
 //3F1
 //3F2
@@ -9040,16 +8925,6 @@
 			isa = PBXVariantGroup;
 			name = Privacy.nib;
 			path = PreferencePanes/Privacy;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F507A85F031194B101026D5D = {
-			children = (
-				F53F21FD022B7C77010001CA,
-			);
-			isa = PBXVariantGroup;
-			name = Personal.nib;
-			path = PreferencePanes/Personal;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -10172,7 +10047,6 @@
 				F5A8CE4D02DFF167013CA8EC,
 				F52627CC027E96AE01000102,
 				F57F205D029997E701000106,
-				F53F21F5022B7C77010001CA,
 				F51704D1034A303101026D5D,
 				F51704FC034A38E601026D5D,
 			);
@@ -10262,50 +10136,6 @@
 			path = src/preferences/MVPreferencesMultipleIconView.m;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
-		};
-		F53F21F5022B7C77010001CA = {
-			children = (
-				F507A85F031194B101026D5D,
-				F53F21FE022B7C77010001CA,
-				F53F2200022B7C77010001CA,
-				F53F21FF022B7C77010001CA,
-			);
-			isa = PBXGroup;
-			name = Personal;
-			path = PreferencePanes/Personal;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F53F21FD022B7C77010001CA = {
-			isa = PBXFileReference;
-			lastKnownFileType = wrapper.nib;
-			name = English;
-			path = English.lproj/Personal.nib;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		F53F21FE022B7C77010001CA = {
-			isa = PBXFileReference;
-			lastKnownFileType = image.tiff;
-			path = Personal.tiff;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		F53F21FF022B7C77010001CA = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.c.h;
-			path = PersonalPane.h;
-			refType = 4;
-			sourceTree = "<group>";
-		};
-		F53F2200022B7C77010001CA = {
-			fileEncoding = 30;
-			isa = PBXFileReference;
-			lastKnownFileType = sourcecode.c.objc;
-			path = PersonalPane.m;
-			refType = 4;
-			sourceTree = "<group>";
 		};
 		F540BD1A029ED15301026D5D = {
 			isa = PBXFileReference;
