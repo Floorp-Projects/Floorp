@@ -251,7 +251,67 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
          } // if (kNotFound != start)	
       } // if
     }
+    else
+    {
+      nsAutoString compatCharset;
+      if (NS_SUCCEEDED(GetCharsetFromCompatibilityTag(keys, values, compatCharset)))
+      {
+          if (!compatCharset.IsEmpty())
+              res = NotifyWebShell(aDocumentID, NS_ConvertUCS2toUTF8(compatCharset).get(), kCharsetFromMetaTag);
+      }
+    }
     return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsMetaCharsetObserver::GetCharsetFromCompatibilityTag(
+                     const nsStringArray* keys, 
+                     const nsStringArray* values, 
+                     nsAWritableString& aCharset)
+{
+    if (!mAlias)
+        return NS_ERROR_ABORT;
+
+    aCharset.Truncate(0);
+    nsresult res = NS_OK;
+
+
+    // support for non standard case for compatibility
+    // e.g. <META charset="ISO-8859-1">
+    PRInt32 numOfAttributes = keys->Count();
+    if ((numOfAttributes >= 3) &&
+        (0 == nsCRT::strcasecmp((keys->StringAt(0))->GetUnicode(), "charset")))
+    {
+      nsAutoString srcStr((values->StringAt(numOfAttributes-2))->GetUnicode());
+      PRInt32 err;
+      nsCharsetSource  src = (nsCharsetSource) srcStr.ToInteger(&err);
+      // if we cannot convert the string into nsCharsetSource, return error
+      if (NS_FAILED(err))
+          return NS_ERROR_ILLEGAL_VALUE;
+      
+      // current charset have a lower priority
+      if (kCharsetFromMetaTag > src)
+      {
+          // need nsString for GetPreferred
+          nsAutoString newCharset((values->StringAt(0))->GetUnicode());
+          nsAutoString preferred;
+          res = mAlias->GetPreferred(newCharset, preferred);
+          if (NS_SUCCEEDED(res))
+          {
+              // compare against the current charset, 
+              // also some charsets which should have been found in the BOM detection.
+              if (!preferred.Equals((values->StringAt(numOfAttributes-3))->GetUnicode()) &&
+                  !preferred.Equals(NS_LITERAL_STRING("UTF-16")) &&
+                  !preferred.Equals(NS_LITERAL_STRING("UTF-16BE")) &&
+                  !preferred.Equals(NS_LITERAL_STRING("UTF-16LE")) &&
+                  !preferred.Equals(NS_LITERAL_STRING("UTF-32BE")) &&
+                  !preferred.Equals(NS_LITERAL_STRING("UTF-32LE")))
+                  aCharset = preferred;
+          }
+      }
+    }
+
+  return res;
 }
 
 //-------------------------------------------------------------------------
