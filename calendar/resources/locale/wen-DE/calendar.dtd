@@ -145,15 +145,15 @@
 <!ENTITY newtodo.starttime.warning "Waš startowy datum so po wašim datumje spjelnjenja wotměwa.">
 <!ENTITY newtodo.cancelled.label "Přetorhnjeny">
 <!ENTITY newtodo.status.label "Status">
-<!ENTITY newtodo.beforealarm.label  "before the task starts" >
-<!ENTITY newtodo.beforealarmends.label  "before the task is due" >
+<!ENTITY newtodo.beforealarm.label  "prjedy nadawk so započina" >
+<!ENTITY newtodo.beforealarmends.label  "prjedy nadawk so dyrbi stać" >
 <!ENTITY newtodo.newtodo.tab.label "Nadawk" >
 <!ENTITY newtodo.status.longlabel "Status nadawka">
 <!ENTITY newtodo.duetime.warning    "Waš startowy čas je po wašim kónčnym času.">
 <!ENTITY newtodo.duedate.warning    "Waš startowy datum je po wašim kónčnym datumje.">
-<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
+<!ENTITY newtodo.repeatstart.warning "Startowy datum trěbny za wospjetowanje.">
 
-<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
+<!ENTITY calendar.confirm.deleteallevents  "Sće wy wěsty, zo chceće wšě wubrane podawki wotstronić?" >
 <!ENTITY calendar.confirm.deleteevent "Sće wy wěsty, zo chceće podawk z sćěhowacym titlom wotstronić?" >        
 <!ENTITY calendar.confirm.deleteuntitledevent "Sće wy wěsty, zo chceće tutón podawk bjez titla wotstronić?" >
 
@@ -162,7 +162,7 @@
 <!ENTITY event.title.alarm         "Alarm" >
 <!ENTITY event.title.new         "Nowy podawk" >
 <!ENTITY event.title.edit        "Podawk wobdźěłać" >
-<!ENTITY event.title.heading        "Calendar Alarm" >
+<!ENTITY event.title.heading        "Alarm protyki" >
 
 <!ENTITY onthe-text            "Dnja ">
 <!ENTITY last-text             "Posledni ">
@@ -188,8 +188,8 @@
 <!ENTITY calendar.weekview.accesskey           "T" >
 <!ENTITY calendar.flat.topbar.monthview        "Mesačny wid" >
 <!ENTITY calendar.monthview.accesskey          "M" >
-<!ENTITY calendar.flat.topbar.multiweekview    "Multitydźeń" >
-<!ENTITY calendar.multiweekview.accesskey      "l" >
+<!ENTITY calendar.flat.topbar.multiweekview    "Wjacetydźenski wid" >
+<!ENTITY calendar.multiweekview.accesskey      "W" >
 <!ENTITY calendar.dayView.key                  "1" >
 <!ENTITY calendar.weekView.key                 "2" >
 <!ENTITY calendar.multiweekView.key            "3" >
@@ -221,10 +221,10 @@
 <!ENTITY calendar.events.filter.month.label "Podawki w přichodnym měsacu">
 <!ENTITY calendar.events.filter.future.label "Wšě přichodne podawki">
 <!ENTITY calendar.events.filter.current.label "Tuchwilu wubrany dźeń">
-<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
-<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
-<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
-<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
+<!ENTITY calendar.events.filter.next7Days.label "Podawki za přichodne 7 dnjow">
+<!ENTITY calendar.events.filter.next14Days.label "Podawki za přichodne 14 dnjow">
+<!ENTITY calendar.events.filter.next31Days.label "Podawki za přichodne 31 dnjow">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "Podawki w tutym protykowym měsacu">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Sčinjeny">
 <!ENTITY calendar.unifinder.tree.priority.label      "Priorita">
@@ -261,45 +261,45 @@
 
 <!ENTITY calendar.choosedate.button.label       "Datum wubrać" >
 
-<!ENTITY calendar.cut.button.tooltip            "Cut" >
-<!ENTITY calendar.copy.button.tooltip           "Copy" >
-<!ENTITY calendar.paste.button.tooltip          "Paste" >
-<!ENTITY calendar.print.button.tooltip          "Print Calendar" >
+<!ENTITY calendar.cut.button.tooltip            "Wutřihać" >
+<!ENTITY calendar.copy.button.tooltip           "Kopěrować" >
+<!ENTITY calendar.paste.button.tooltip          "Zasunyć" >
+<!ENTITY calendar.print.button.tooltip          "Protyku čišćeć" >
 
-<!ENTITY calendar.cut.button.label              "Cut" >
-<!ENTITY calendar.copy.button.label             "Copy" >
-<!ENTITY calendar.paste.button.label            "Paste" >
-<!ENTITY calendar.print.button.label            "Print" >
+<!ENTITY calendar.cut.button.label              "Wutřihać" >
+<!ENTITY calendar.copy.button.label             "Kopěrować" >
+<!ENTITY calendar.paste.button.label            "Zasunyć" >
+<!ENTITY calendar.print.button.label            "Ćišćeć" >
 
-<!ENTITY calendar.import.button.tooltip            "Import: Import events from a local file." >
-<!ENTITY calendar.export.button.tooltip            "Export: Export events to a local file." >
-<!ENTITY calendar.subscribe.button.tooltip         "Subscribe: Subscribe to a calendar file on a remote machine." >
-<!ENTITY calendar.publish.button.tooltip            "Publish: Publish events to a remote machine." >
+<!ENTITY calendar.import.button.tooltip            "Import: Podawki z lokaleje dataje importować." >
+<!ENTITY calendar.export.button.tooltip            "Eksport: Podawki do lokalneje dataje eksportować." >
+<!ENTITY calendar.subscribe.button.tooltip         "Abonować: Protykowu dataju na internetny serwer abonować." >
+<!ENTITY calendar.publish.button.tooltip            "Publikować: Podawki na internetnym serwerje publikować." >
 
-<!ENTITY calendar.import.button.label              "Import" >
-<!ENTITY calendar.export.button.label              "Export" >
-<!ENTITY calendar.subscribe.button.label           "Subscribe" >
-<!ENTITY calendar.publish.button.label             "Publish" >
+<!ENTITY calendar.import.button.label              "Importować" >
+<!ENTITY calendar.export.button.label              "Eksportować" >
+<!ENTITY calendar.subscribe.button.label           "Abonować" >
+<!ENTITY calendar.publish.button.label             "Publikować" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "Lokalne začitanje" >
+<!ENTITY calendar.localreload.button.tooltip  "Wšě lokalne protyki začitać" >
+<!ENTITY calendar.remotereload.button.label   "Začitać" >
+<!ENTITY calendar.remotereload.button.tooltip   "Wšě nazdalne protyki začitać" >
 
 <!ENTITY calendar.dayview.button.label          "Dnjowy wid" >
 <!ENTITY calendar.weekview.button.label         "Tydźenski wid" >
 <!ENTITY calendar.monthview.button.label        "Měsačny wid" >
 <!ENTITY calendar.multiweekview.button.label        "Multitydźeń" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Jenož póndźela-pjatka" >
-<!ENTITY calendar.onlyworkday.checkbox.accesskey  "F" >
+<!ENTITY calendar.onlyworkday.checkbox.accesskey  "J" >
 <!ENTITY calendar.displaytodos.checkbox.label   "Nadawki we widźe" >
-<!ENTITY calendar.displaytodos.checkbox.accesskey "V" >
+<!ENTITY calendar.displaytodos.checkbox.accesskey "N" >
 
 <!ENTITY calendar.menu.options.modify           "Wobdźěłać" >
 <!ENTITY calendar.menu.options.remove           "Wotstronić" >
 <!ENTITY calendar.menu.options.close            "Woknješko začinić" >
 <!ENTITY calendar.menu.options.close.key        "W">
-<!ENTITY calendar.menu.options.close.accesskey  "C" >
+<!ENTITY calendar.menu.options.close.accesskey  "W" >
 
 <!ENTITY calendar.main.tab.label        "Podawki" >
 <!ENTITY calendar.search.tab.label      "Pytanje">
@@ -331,21 +331,21 @@
 <!ENTITY window.title            "Mozilla Protyka">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Customize">
-<!ENTITY calendar.context.customize.accesskey         "C">
-<!ENTITY calendar.menu.customize.label                "Customize Toolbars">
-<!ENTITY calendar.menu.customize.accesskey            "C">
-<!ENTITY calendar.maintoolbar.name                    "Main Toolbar">
+<!ENTITY calendar.context.customize.label             "Přiměrić...">
+<!ENTITY calendar.context.customize.accesskey         "P">
+<!ENTITY calendar.menu.customize.label                "Wobkromy přiměrić...">
+<!ENTITY calendar.menu.customize.accesskey            "b">
+<!ENTITY calendar.maintoolbar.name                    "Hłowna wobkroma">
 <!ENTITY calendar.maintoolbar.accesskey               "M">
 
 <!-- Context Menu -->
-<!ENTITY calendar.context.newevent.label              "Nowy podawk">
+<!ENTITY calendar.context.newevent.label              "Nowy podawk...">
 <!ENTITY calendar.context.newevent.accesskey          "n">
-<!ENTITY calendar.context.newtodo.label               "Nowy nadawk">
+<!ENTITY calendar.context.newtodo.label               "Nowy nadawk...">
 <!ENTITY calendar.context.newtodo.accesskey           "k">
-<!ENTITY calendar.context.modifyevent.label           "Wubrany podawk wobdźěłać">
+<!ENTITY calendar.context.modifyevent.label           "Wubrany podawk wobdźěłać...">
 <!ENTITY calendar.context.modifyevent.accesskey       "b">
-<!ENTITY calendar.context.modifytask.label            "Nadawk wobdźěłać">
+<!ENTITY calendar.context.modifytask.label            "Nadawk wobdźěłać...">
 <!ENTITY calendar.context.modifytask.accesskey        "d">
 <!ENTITY calendar.context.deleteevent.label           "Wubrany podawk wotstronić">
 <!ENTITY calendar.context.deleteevent.accesskey       "o">
@@ -371,9 +371,9 @@
 <!ENTITY calendar.context.multiweekview.accesskey    "u">
 <!ENTITY calendar.context.reload.label                "Znowa">
 <!ENTITY calendar.context.reload.accesskey            "n">
-<!ENTITY calendar.context.emailevent.label            "Wubrany(e) podawk(i) z emailom słać">
+<!ENTITY calendar.context.emailevent.label            "Wubrany(e) podawk(i) z emailom słać...">
 <!ENTITY calendar.context.emailevent.accesskey        "i">
-<!ENTITY calendar.context.emailtask.label             "Nadawk z emailom słać">
+<!ENTITY calendar.context.emailtask.label             "Nadawk z emailom słać...">
 <!ENTITY calendar.context.emailtask.accesskey         "i">
 
 <!-- Task Context Menu -->
@@ -399,13 +399,13 @@
 <!ENTITY calendar.context.newserver.label              "Nowa protyka">
 <!ENTITY calendar.context.newserver.accesskey          "N">
 <!ENTITY calendar.context.editserver.label             "Protyku wobdźěłać">
-<!ENTITY calendar.context.editserver.accesskey         "E">
+<!ENTITY calendar.context.editserver.accesskey         "b">
 <!ENTITY calendar.context.deleteserver.label           "Protyku wostronić">
-<!ENTITY calendar.context.deleteserver.accesskey       "D">
-<!ENTITY calendar.context.reloadserver.label           "Nazdalne protyki aktualizować">
-<!ENTITY calendar.context.reloadserver.accesskey       "R">
+<!ENTITY calendar.context.deleteserver.accesskey       "P">
+<!ENTITY calendar.context.reloadserver.label           "Nazdalne protyki wobnowić">
+<!ENTITY calendar.context.reloadserver.accesskey       "d">
 <!ENTITY calendar.context.publish.label                "Cyłu protyku publikować">
-<!ENTITY calendar.context.publish.accesskey            "P">
+<!ENTITY calendar.context.publish.accesskey            "C">
 
 <!-- About Dialog -->
 <!ENTITY calendar.about.title "Wo Mozilla-Protyce">
@@ -427,18 +427,17 @@
 <!ENTITY calendar.server.dialog.title.new           "Nowu protyku dataju">
 <!ENTITY calendar.server.dialog.title.open          "Wočinić protyku dataju">
 <!ENTITY calendar.server.dialog.title.edit          "Protyku wobdźěłać">
-<!ENTITY calendar.server.dialog.name.label          "Mjeno">
-<!ENTITY calendar.server.dialog.publish.label       "Změny awtomatisce publikować? Za nazdalne protyki budźe to nowu wersiju sćahnyć, prjedy hač podawk přidaće, wobdźěłaće abo wotstroniće. Budźe so potom waša akcija wuwjesć a nowa dataja na server pósłać.">
-<!ENTITY calendar.server.dialog.location.label      "Městno (opciske)">
-<!ENTITY calendar.server.dialog.local.location.label "Městno lokalneje dataje">
-<!ENTITY calendar.server.dialog.browse.label        "Za lokalnej dataju pytać...">
+<!ENTITY calendar.server.dialog.name.label          "Mjeno protyki">
+<!ENTITY calendar.server.dialog.publish.label       "Waše změny awtomatisce k nazdalnej protyce publikować? Jelizo aktiwizowane, budźe so aktualna wersija sćahnyć, prjedy hač so změna, kotruž činiće, wukutkuje. Waše změny so potom nałožuja a protyka budźe so wróćo k serwerej wotesyłać.">
+<!ENTITY calendar.server.dialog.location.label      "URL nazdalneho serwera">
+<!ENTITY calendar.server.dialog.local.location.label "Městno lokalneje dataje:">
+<!ENTITY calendar.server.dialog.browse.label        "Přepytać...">
 <!ENTITY calendar.server.dialog.help.label          "Móžeće šćežku lokalneje dataje abo nazdaleneje dataje kaž http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics zapisać">
 <!ENTITY calendar.local.calendar.dialog.help.label  "Móžeće, jelizo chceće, datajowu adresu podać, hdźež so dyrbi protyka załožić.">
-<!ENTITY calendar.local.calendar.dialog.optional.label "Sćěhowace pólka su opciske a wužiwaja so za publikowanje protyki na nazdalnu adresu.">
+<!ENTITY calendar.local.calendar.dialog.optional.label "Tute dobrowólne nastajenja so wužiwaja, hdyž so tuta protyka k nazdalnemu městnu publikuje.">
 
 <!-- Calendar Coloring -->
-<!ENTITY calendar.server.dialog.color.label "Barba">
-
+<!ENTITY calendar.server.dialog.color.label "Barba:">
 
 <!-- Calendar Publish Dialog -->
 <!ENTITY calendar.publish.dialog.title              "Protyku publikować">
@@ -461,23 +460,23 @@
 <!-- TRANSLATORS: all outlook*.label -fields should be translated word to word (or if possible
                   copied from outlook csv file headers -->
 <!ENTITY calendar.importoutlook.dialog.title "Outlook CSV Import" >
-<!ENTITY calendar.importoutlook.mapconcepts.label "Please map the following calendar concepts to their Outlook CSV equivalents:" >
-<!ENTITY calendar.importoutlook.outlooksubject.label "Subject" >
-<!ENTITY calendar.importoutlook.outlookstartdate.label "Start date" >
-<!ENTITY calendar.importoutlook.outlookstarttime.label "Start time" >
-<!ENTITY calendar.importoutlook.outlookenddate.label "End date" >
-<!ENTITY calendar.importoutlook.outlookendtime.label "End time" >
-<!ENTITY calendar.importoutlook.outlooklocation.label "Location" >
-<!ENTITY calendar.importoutlook.outlookdescription.label "Description" >
-<!ENTITY calendar.importoutlook.outlookallday.label "All-day event" >
-<!ENTITY calendar.importoutlook.outlookprivate.label "Private" >
-<!ENTITY calendar.importoutlook.outlookalarm.label "Alarm on/off" >
-<!ENTITY calendar.importoutlook.outlookalarmdate.label "Alarm date" >
-<!ENTITY calendar.importoutlook.outlookalarmtime.label "Alarm time" >
-<!ENTITY calendar.importoutlook.outlookcategories.label "Categories" >
-<!ENTITY calendar.importoutlook.selectmeaning.label "Select the meaning of the following word: " >
-<!ENTITY calendar.importoutlook.true.label "True" >
-<!ENTITY calendar.importoutlook.false.label "False" >
+<!ENTITY calendar.importoutlook.mapconcepts.label "Prošu připokazajće sćěhowace protykowe zapřijeća jich CSV-ekwiwalentam z programa Outlook:" >
+<!ENTITY calendar.importoutlook.outlooksubject.label "Tema" >
+<!ENTITY calendar.importoutlook.outlookstartdate.label "Startowy datum" >
+<!ENTITY calendar.importoutlook.outlookstarttime.label "Startowy čas" >
+<!ENTITY calendar.importoutlook.outlookenddate.label "Kónčny datum" >
+<!ENTITY calendar.importoutlook.outlookendtime.label "Kónčny čas" >
+<!ENTITY calendar.importoutlook.outlooklocation.label "Městno" >
+<!ENTITY calendar.importoutlook.outlookdescription.label "Wopisanje" >
+<!ENTITY calendar.importoutlook.outlookallday.label "Cyłodnjowy podawk" >
+<!ENTITY calendar.importoutlook.outlookprivate.label "Priwatny" >
+<!ENTITY calendar.importoutlook.outlookalarm.label "Zapinjeny/wupinjeny" >
+<!ENTITY calendar.importoutlook.outlookalarmdate.label "Datum alarma" >
+<!ENTITY calendar.importoutlook.outlookalarmtime.label "Čas alarma" >
+<!ENTITY calendar.importoutlook.outlookcategories.label "Kategorije" >
+<!ENTITY calendar.importoutlook.selectmeaning.label "Woznam sćěhowaceho słowa wubrać: " >
+<!ENTITY calendar.importoutlook.true.label "Wěrno" >
+<!ENTITY calendar.importoutlook.false.label "Njewěrno" >
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Protyku ćišćeć">

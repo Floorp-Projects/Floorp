@@ -45,9 +45,9 @@
 <!ENTITY calendar.views.label       "Widy">
 <!ENTITY calendar.timezone.label    "Moje časowe pasmo">
 
-<!ENTITY prefWindow.title            "Calendar Options">
+<!ENTITY prefWindow.title            "Opcije protyki">
 <!ENTITY prefWindow.size             "width: 52.3em; height: 41em;">
-<!ENTITY prefWindow.category         "Category">
+<!ENTITY prefWindow.category         "Kategorija">
 
 <!ENTITY pref.mainbox.label         "Powšitkowne nastajenja" >
 <!ENTITY pref.alarmgoesoff.label "Hdyž alarm wubuchnje:" >
@@ -68,12 +68,12 @@
 <!ENTITY pref.dateformat.label      "Tekstowy format datuma:" >
 <!ENTITY pref.dateformat.long       "Dołhi" >
 <!ENTITY pref.dateformat.short      "Krótki"  >
-<!ENTITY pref.dateformat.storeingmt "Store dates in Universal Time" >
+<!ENTITY pref.dateformat.storeingmt "Datum w Swětowym času składować" >
 <!ENTITY pref.defaultlength.label   "Standardna dołhosć podawka:" >
 <!ENTITY pref.defaultsnoozelength.label   "Standardna dołhosć drěmka:" >
 
 <!ENTITY pref.weekstarts.label     "Prěni dźen tydźenja:" >
-<!ENTITY pref.daysoff.label     "Day(s) Off Each Week:" >
+<!ENTITY pref.daysoff.label     "Swobodne dny kóždeho tydźenja:" >
 
 <!ENTITY pref.numberofweeks.label     "Standardna cyłkowna ličba njedźelow:" >
 <!ENTITY pref.numberofweeks.0      "Žadyn" >
@@ -126,22 +126,22 @@
 
 <!ENTITY pref.categories.help.description   "Wužijće komu mjez kóždej kategoriju, kotruž chceće přidać." >
 
-<!ENTITY pref.categories.add.title    "Add Category">
-<!ENTITY pref.categories.add.prompt   "Enter the name of the category">
-<!ENTITY pref.categories.edit.title   "Edit Category">
+<!ENTITY pref.categories.add.title    "Kategoriju přidać">
+<!ENTITY pref.categories.add.prompt   "Mjeno kategorije zapodać">
+<!ENTITY pref.categories.edit.title   "Kategoriju wobdźěłać">
 
 
 <!ENTITY pref.reloadonlaunch       "Nazdalne protyki za startowanje čitać" >
 
 <!ENTITY pref.publish.caption        "Publikowanske nastajenja" >
-<!ENTITY pref.publish.path.label     "Šćežka k serverej" >
+<!ENTITY pref.publish.path.label     "Šćežka k serwerej" >
 
 <!ENTITY pref.minutes.label "mjeńšin">
 
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Moje časowe pasmo">
 <!ENTITY pref.calendar.timezone.caption "Časowe pasmo">
-<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
+<!ENTITY pref.calendar.timezone.description "ID časoweho pasma je (twjerdź abo ocean)/ (najwjetše město w regionje zakonskeho časoweho pasma).">
 <!ENTITY pref.defaultzone.label     "Standardne časowe pasmo:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "Afrika/Abidjan" >

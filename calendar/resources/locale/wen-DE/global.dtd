@@ -106,6 +106,6 @@
 <!ENTITY more.label "WJACE" >
 <!ENTITY less.label "MJENJE" >
 
-<!ENTITY add.label     "Add">
-<!ENTITY edit.label    "Edit">
-<!ENTITY remove.label  "Remove">
+<!ENTITY add.label     "Přidać">
+<!ENTITY edit.label    "Wobdźěłać">
+<!ENTITY remove.label  "Wotstronić">
