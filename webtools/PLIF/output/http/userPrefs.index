@@ -3,16 +3,24 @@ TemplateToolkit
 
 [% INCLUDE template.header
    title = 'User Preferences' -%]
+[%- manyUsers = userIDs.size >= 2 %]
+[%- IF manyUsers %]
+   [%- indent = '  ' -%]
+[%- ELSE -%]
+   [%- indent = '' -%]
+[%- END %]
 
   <form action="?" method="GET">
-
+[%- "\n   <ol>" IF manyUsers -%]
 [%- FOREACH userID = userIDs -%]
- [%- user = userData.$userID -%]
+  [%- user = userData.$userID -%]
 
-   <h2> User [% userID %] <input type="hidden" name="userPrefs.userID" value="[% userID | html %]"> </h2>
+[%- "\n    <li>" IF manyUsers -%]
 
- [%- IF session.right.${'userPrefs.editOthers.adminMessage'} or session.right.${'userPrefs.editOthers.mode'} %]
-   <h3> Administration </h3>
+[%- FILTER indent(indent) -%]
+
+ [%- IF session.right.${'userPrefs.editOthers.adminMessage'} or session.right.${'userPrefs.editOthers.mode'} -%]
+   <h2> Administration </h2>
   [%- IF session.right.${'userPrefs.editOthers.adminMessage'} %]
    <p> Admin Message: <input type="text" name="userPrefs.[% userID | html %].adminMessage" value="[% user.adminMessage | html %]"> </p>
   [%- END -%]
@@ -23,11 +31,11 @@ TemplateToolkit
      <option value="1"[% ' selected="selected"' IF user.mode == 1 %]>Disabled</option>
     </select>
    </p>
-  [%- END %]
- [%- END %]
+  [%- END -%]
+ [%- END -%]
 
  [%- IF (session.right.${'userPrefs.editOthers.contactMethods'} or user.editingUserIsTargetUser) and metaData.contact.keys.size %]
-   <h3> Contact Methods </h3>
+   <h2> Contact Methods </h2>
    [%- FOREACH field = metaData.contact.keys %]
    <p>
     <label>
@@ -35,11 +43,11 @@ TemplateToolkit
      [% metaData.contact.$field.type WRAPPER dictionary section='fields.control' name="userPrefs.${userID}.fields.contact.${field}" value=user.fields.contact.$field %]
     </label>
    </p>
-   [%- END %]
- [%- END %]
+   [%- END -%]
+ [%- END -%]
 
  [%- IF (session.right.${'userPrefs.editOthers.personalDetails'} or user.editingUserIsTargetUser) and metaData.personal.keys.size %]
-   <h3> Personal Details </h3>
+   <h2> Personal Details </h2>
    [%- FOREACH field = metaData.personal.keys %]
    <p>
     <label>
@@ -47,25 +55,38 @@ TemplateToolkit
      [% metaData.personal.$field.type WRAPPER dictionary section='fields.control' name="userPrefs.${userID}.fields.personal.${field}" value=user.fields.personal.$field %]
     </label>
    </p>
-   [%- END %]
- [%- END %]
+   [%- END -%]
+ [%- END -%]
 
- [%- IF (session.right.${'userPrefs.editOthers.settings'} or user.editingUserIsTargetUser) and metaData.settings.keys.size %]
-   <h3> Settings </h3>
-   [%- FOREACH field = metaData.settings.keys %][% SWITCH field %]
-   [%- CASE [ 'cosesEditor.index.variantsSortColumn'
-              'cosesEditor.index.stringsSortColumn' ] -%][%- CASE DEFAULT -%]
+ [%- IF session.right.${'userPrefs.editOthers.settings'} -%]
+  [%- importantSettings = metaData.settings.keys -%]
+ [%- ELSE -%]
+  [%-# hide the less interesting settings #-%]
+  [%- importantSettings = [] -%]
+  [%- FOREACH field = metaData.settings.keys -%]
+   [%- SWITCH field -%]
+    [%- CASE [ 'cosesEditor.index.variantsSortColumn'
+               'cosesEditor.index.stringsSortColumn' ] -%]
+    [%- CASE DEFAULT %]
+     [%- importantSettings.push(field) -%]
+   [%- END -%]
+  [%- END -%]
+ [%- END -%]
+
+ [%- IF (session.right.${'userPrefs.editOthers.settings'} or user.editingUserIsTargetUser) and importantSettings.size %]
+   <h2> Settings </h2>
+   [%- FOREACH field = importantSettings %]
    <p>
     <label>
      [% field WRAPPER dictionary section='settings' %]:
      [% metaData.settings.$field.type WRAPPER dictionary section='fields.control' name="userPrefs.${userID}.fields.settings.${field}" value=user.fields.settings.$field %]
     </label>
    </p>
-   [%- END %][% END %]
- [%- END %]
+   [%- END -%]
+ [%- END -%]
 
  [%- IF user.groups.values.size %]
-   <h3> Groups </h3>
+   <h2> Groups </h2>
    [%- FOREACH group = user.groups.keys %]
    <p> [% groupNames.$group WRAPPER dictionary section='groups' %]:
     [%- IF session.right.${'userPrefs.editOthers.groups'} or session.groupsByID.$group.level >= 3 %]
@@ -84,29 +105,31 @@ TemplateToolkit
     [% ELSIF user.groups.$group == 1 %]<label><input type="radio" checked="checked"> Member</label>
     [% ELSIF user.groups.$group == 2 %]<label><input type="radio" checked="checked"> Administrator</label>
     [% ELSIF user.groups.$group == 3 %]<label><input type="radio" checked="checked"> Owner</label>[% END %]
-    [%- END -%]
+    [%- END %]
    </p>
-   [%- END %]
- [%- END %]
+   [%- END -%]
+ [%- END -%]
 
- [% IF session.right.${'userPrefs.editOthers.passwords'} or user.editingUserIsTargetUser %]
-   <h3> Password </h3>
+ [%- IF session.right.${'userPrefs.editOthers.passwords'} or user.editingUserIsTargetUser %]
+   <h2> Password </h2>
   [%- IF user.editingUserIsTargetUser %]
    <p> Old password: <input type="password" name="userPrefs.[% userID | html %].password.old" value=""> </p>
    <p> New password: <input type="password" name="userPrefs.[% userID | html %].password" value=""> </p>
    <p> New password again: <input type="password" name="userPrefs.[% userID | html %].password.confirmation" value=""> </p>
   [%- ELSE %]
    <p> Change password: <input type="password" name="userPrefs.[% userID | html %].password" value=""> </p>
-  [%- END %]
- [%- END %]
+  [%- END -%]
+ [%- END -%]
 
 [%- END -%]
+[%- "\n    </li>" IF manyUsers -%]
+[%- END -%]
+[%- "\n   </ol>" IF manyUsers -%]
 
    <p>
     <input type="hidden" name="command" value="userPrefsSet">
     <input type="submit" value="Submit">
    </p>
-
   </form>
 
 [% INCLUDE template.footer %]
