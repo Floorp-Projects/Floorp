@@ -6254,12 +6254,12 @@ NS_IMETHODIMP nsImapMockChannel::GetContentLength(PRInt32 * aContentLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapMockChannel::GetPrincipal(nsIPrincipal * *aPrincipal)
+NS_IMETHODIMP nsImapMockChannel::GetOwner(nsISupports * *aPrincipal)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsImapMockChannel::SetPrincipal(nsIPrincipal * aPrincipal)
+NS_IMETHODIMP nsImapMockChannel::SetOwner(nsISupports * aPrincipal)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
