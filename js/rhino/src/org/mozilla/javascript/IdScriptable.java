@@ -136,8 +136,7 @@ public abstract class IdScriptable extends ScriptableObject
         super.delete(name);
     }
 
-    public int getAttributes(String name, Scriptable start)
-        throws PropertyException
+    public int getAttributes(String name)
     {
         if (maxId != 0) {
             int id = mapNameToId(name);
@@ -148,12 +147,10 @@ public abstract class IdScriptable extends ScriptableObject
                 // For ids with deleted values super will throw exceptions
             }
         }
-        return super.getAttributes(name, start);
+        return super.getAttributes(name);
     }
 
-    public void setAttributes(String name, Scriptable start,
-                              int attributes)
-        throws PropertyException
+    public void setAttributes(String name, int attributes)
     {
         if (maxId != 0) {
             int id = mapNameToId(name);
@@ -167,7 +164,7 @@ public abstract class IdScriptable extends ScriptableObject
                 // For ids with deleted values super will throw exceptions
             }
         }
-        super.setAttributes(name, start, attributes);
+        super.setAttributes(name, attributes);
     }
 
     /**

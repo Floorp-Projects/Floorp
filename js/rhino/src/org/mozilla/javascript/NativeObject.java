@@ -126,12 +126,10 @@ final class NativeObjectPrototype extends NativeObject
                     if (thisObj.has(name, thisObj)) {
                         if (thisObj instanceof ScriptableObject) {
                             ScriptableObject so = (ScriptableObject)thisObj;
-                            try {
-                                int a = so.getAttributes(name, thisObj);
-                                if ((a & ScriptableObject.DONTENUM) == 0) {
-                                    return Boolean.TRUE;
-                                }
-                            } catch (PropertyException x) { }
+                            int a = so.getAttributes(name);
+                            if ((a & ScriptableObject.DONTENUM) == 0) {
+                                return Boolean.TRUE;
+                            }
                         }
                     }
                 }

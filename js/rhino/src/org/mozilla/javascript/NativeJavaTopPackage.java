@@ -105,7 +105,6 @@ public class NativeJavaTopPackage
     }
 
     public static void init(Context cx, Scriptable scope, boolean sealed)
-        throws PropertyException
     {
         ClassLoader loader = cx.getApplicationClassLoader();
         final NativeJavaTopPackage top = new NativeJavaTopPackage(loader);
@@ -129,8 +128,7 @@ public class NativeJavaTopPackage
         // We want to get a real alias, and not a distinct JavaPackage
         // with the same packageName, so that we share classes and top
         // that are underneath.
-        NativeJavaPackage javaAlias = (NativeJavaPackage)top.get("java",
-                                                                      top);
+        NativeJavaPackage javaAlias = (NativeJavaPackage)top.get("java", top);
 
         // It's safe to downcast here since initStandardObjects takes
         // a ScriptableObject.

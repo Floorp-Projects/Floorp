@@ -367,28 +367,67 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     }
 
     /**
+     * @deprecated Use {@link getAttributes(String name)}. The engine always
+     * ignored the start argument.
+     */
+    public final int getAttributes(String name, Scriptable start)
+        throws PropertyException
+    {
+        return getAttributes(name);
+    }
+
+    /**
+     * @deprecated Use {@link getAttributes(int index)}. The engine always
+     * ignored the start argument.
+     */
+    public final int getAttributes(int index, Scriptable start)
+        throws PropertyException
+    {
+        return getAttributes(index);
+    }
+
+    /**
+     * @deprecated Use {@link setAttributes(String name, int attributes)}.
+     * The engine always ignored the start argument.
+     */
+    public final void setAttributes(String name, Scriptable start,
+                                    int attributes)
+        throws PropertyException
+    {
+        setAttributes(name, attributes);
+    }
+
+    /**
+     * @deprecated Use {@link setAttributes(int index, int attributes)}.
+     * The engine always ignored the start argument.
+     */
+    public void setAttributes(int index, Scriptable start,
+                              int attributes)
+        throws PropertyException
+    {
+        setAttributes(index, attributes);
+    }
+
+    /**
      * Get the attributes of a named property.
      *
      * The property is specified by <code>name</code>
      * as defined for <code>has</code>.<p>
      *
      * @param name the identifier for the property
-     * @param start the object in which the lookup began
      * @return the bitset of attributes
-     * @exception PropertyException if the named property
-     *            is not found
+     * @exception EvaluatorException if the named property is not found
      * @see org.mozilla.javascript.ScriptableObject#has
      * @see org.mozilla.javascript.ScriptableObject#READONLY
      * @see org.mozilla.javascript.ScriptableObject#DONTENUM
      * @see org.mozilla.javascript.ScriptableObject#PERMANENT
      * @see org.mozilla.javascript.ScriptableObject#EMPTY
      */
-    public int getAttributes(String name, Scriptable start)
-        throws PropertyException
+    public int getAttributes(String name)
     {
         Slot slot = getSlot(name, name.hashCode());
         if (slot == null) {
-            throw PropertyException.withMessage0("msg.prop.not.found");
+            throw Context.reportRuntimeError1("msg.prop.not.found", name);
         }
         return slot.attributes;
     }
@@ -397,8 +436,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * Get the attributes of an indexed property.
      *
      * @param index the numeric index for the property
-     * @param start the object in which the lookup began
-     * @exception PropertyException if the indexed property
+     * @exception EvaluatorException if the named property is not found
      *            is not found
      * @return the bitset of attributes
      * @see org.mozilla.javascript.ScriptableObject#has
@@ -407,12 +445,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @see org.mozilla.javascript.ScriptableObject#PERMANENT
      * @see org.mozilla.javascript.ScriptableObject#EMPTY
      */
-    public int getAttributes(int index, Scriptable start)
-        throws PropertyException
+    public int getAttributes(int index)
     {
         Slot slot = getSlot(null, index);
         if (slot == null) {
-            throw PropertyException.withMessage0("msg.prop.not.found");
+            throw Context.reportRuntimeError1("msg.prop.not.found",
+                                              String.valueOf(index));
         }
         return slot.attributes;
     }
@@ -430,25 +468,21 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * bits are reserved for future use.
      *
      * @param name the name of the property
-     * @param start the object in which the lookup began
      * @param attributes the bitset of attributes
-     * @exception PropertyException if the named property
-     *            is not found
+     * @exception EvaluatorException if the named property is not found
      * @see org.mozilla.javascript.Scriptable#has
      * @see org.mozilla.javascript.ScriptableObject#READONLY
      * @see org.mozilla.javascript.ScriptableObject#DONTENUM
      * @see org.mozilla.javascript.ScriptableObject#PERMANENT
      * @see org.mozilla.javascript.ScriptableObject#EMPTY
      */
-    public void setAttributes(String name, Scriptable start,
-                              int attributes)
-        throws PropertyException
+    public void setAttributes(String name, int attributes)
     {
         final int mask = READONLY | DONTENUM | PERMANENT;
         attributes &= mask; // mask out unused bits
         Slot slot = getSlot(name, name.hashCode());
         if (slot == null) {
-            throw PropertyException.withMessage0("msg.prop.not.found");
+            throw Context.reportRuntimeError1("msg.prop.not.found", name);
         }
         slot.attributes = (short) attributes;
     }
@@ -459,23 +493,21 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param index the numeric index for the property
      * @param start the object in which the lookup began
      * @param attributes the bitset of attributes
-     * @exception PropertyException if the indexed property
-     *            is not found
+     * @exception EvaluatorException if the named property is not found
      * @see org.mozilla.javascript.Scriptable#has
      * @see org.mozilla.javascript.ScriptableObject#READONLY
      * @see org.mozilla.javascript.ScriptableObject#DONTENUM
      * @see org.mozilla.javascript.ScriptableObject#PERMANENT
      * @see org.mozilla.javascript.ScriptableObject#EMPTY
      */
-    public void setAttributes(int index, Scriptable start,
-                              int attributes)
-        throws PropertyException
+    public void setAttributes(int index, int attributes)
     {
         final int mask = READONLY | DONTENUM | PERMANENT;
         attributes &= mask; // mask out unused bits
         Slot slot = getSlot(null, index);
         if (slot == null) {
-            throw PropertyException.withMessage0("msg.prop.not.found");
+            throw Context.reportRuntimeError1("msg.prop.not.found",
+                                              String.valueOf(index));
         }
         slot.attributes = (short) attributes;
     }
@@ -968,12 +1000,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                int attributes)
     {
         put(propertyName, this, value);
-        try {
-            setAttributes(propertyName, this, attributes);
-        }
-        catch (PropertyException e) {
-            throw new RuntimeException("Cannot create property");
-        }
+        setAttributes(propertyName, attributes);
     }
 
     /**
