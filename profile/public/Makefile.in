@@ -28,8 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= profile
 
-XPIDLSRCS	= \
+SDK_XPIDLSRCS	= \
                   nsIProfile.idl \
+                  $(NULL)
+
+XPIDLSRCS	= \
                   nsIProfileInternal.idl \
                   nsIProfileStartupListener.idl \
                   nsIProfileChangeStatus.idl \

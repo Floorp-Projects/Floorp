@@ -29,8 +29,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= find
 XPIDL_MODULE	= find
 
-XPIDLSRCS	= nsIWebBrowserFind.idl \
-		  nsIFind.idl \
+SDK_XPIDLSRCS   = nsIWebBrowserFind.idl \
+		  $(NULL)
+XPIDLSRCS	= nsIFind.idl \
                   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -29,9 +29,14 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dom
 XPIDL_MODULE	= dom_base
 
+SDK_XPIDLSRCS =                                 \
+	nsIDOMBarProp.idl			\
+	nsIDOMWindow.idl			\
+	nsIDOMWindowCollection.idl		\
+	$(NULL)
+
 XPIDLSRCS =					\
 	domstubs.idl				\
-	nsIDOMBarProp.idl			\
 	nsIDOMCRMFObject.idl			\
 	nsIDOMCrypto.idl			\
 	nsIDOMHistory.idl			\
@@ -45,8 +50,6 @@ XPIDLSRCS =					\
 	nsIDOMPlugin.idl			\
 	nsIDOMPluginArray.idl			\
 	nsIDOMScreen.idl			\
-	nsIDOMWindow.idl			\
-	nsIDOMWindowCollection.idl		\
 	nsIDOMWindowInternal.idl		\
 	nsIDOMJSWindow.idl			\
 	nsIDOMChromeWindow.idl			\

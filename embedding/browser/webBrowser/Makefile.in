@@ -51,20 +51,23 @@ EXPORTS         = \
                 nsCTooltipTextProvider.h \
                 $(NULL)
 
+SDK_XPIDLSRCS   = \
+		nsIContextMenuListener.idl  \
+		nsIEmbeddingSiteWindow.idl  \
+		nsITooltipListener.idl	    \
+		nsITooltipTextProvider.idl  \
+		nsIWebBrowser.idl	    \
+		nsIWebBrowserChrome.idl	    \
+		nsIWebBrowserSetup.idl	    \
+		nsIWebBrowserPrint.idl      \
+                $(NULL)
+
 XPIDLSRCS	= \
 		nsCWebBrowser.idl			\
-		nsIWebBrowser.idl			\
-		nsIWebBrowserChrome.idl			\
 		nsIWebBrowserChromeFocus.idl		\
-		nsIWebBrowserSetup.idl			\
 		nsICommandHandler.idl			\
-		nsIContextMenuListener.idl		\
-		nsIEmbeddingSiteWindow.idl  \
 		nsIEmbeddingSiteWindow2.idl \
-		nsITooltipListener.idl		\
-		nsITooltipTextProvider.idl	\
 		nsIWebBrowserFocus.idl		\
-		nsIWebBrowserPrint.idl       \
 		nsIPrintingPrompt.idl       \
 		nsIPrintingPromptService.idl       \
 		$(NULL)

@@ -28,11 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= wallet
 
+SDK_XPIDLSRCS   = \
+    nsIPassword.idl    \
+    $(NULL)
+
 XPIDLSRCS   = \
     nsIPasswordSink.idl \
     nsIKeyedStreamGenerator.idl \
     nsIWalletService.idl    \
-    nsIPassword.idl    \
     $(NULL)
 
 EXPORTS	= \

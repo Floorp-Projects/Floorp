@@ -28,17 +28,27 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= necko
 
+SDK_XPIDLSRCS   = \
+		nsIChannel.idl \
+		nsILoadGroup.idl \
+		nsIProtocolHandler.idl \
+		nsIRequest.idl \
+		nsIRequestObserver.idl \
+		nsIStreamListener.idl \
+		nsIURI.idl \
+		nsIURIChecker.idl \
+		nsIURL.idl \
+		$(NULL)
+
 XPIDLSRCS	= \
 		nsIAuthenticator.idl \
 		nsIAuthPrompt.idl \
-		nsIChannel.idl \
 		nsIDirectoryListing.idl \
 		nsIDownloader.idl \
 		nsIFileChannel.idl \
 		nsIFileStreams.idl \
 		nsIFileTransportService.idl \
 		nsIIOService.idl \
-		nsILoadGroup.idl \
 		nsIMIMEInputStream.idl \
 		nsINetModRegEntry.idl \
 		nsINetModuleMgr.idl \
@@ -47,14 +57,12 @@ XPIDLSRCS	= \
 		nsIPasswordManagerInternal.idl \
 		nsIProgressEventSink.idl \
 		nsIPrompt.idl \
-		nsIProtocolHandler.idl \
 		nsIProtocolProxyService.idl \
 		nsIProxiedProtocolHandler.idl \
 		nsIProxy.idl \
 		nsIProxyAutoConfig.idl \
 		nsIProxyAutoConfigUtils.idl \
 		nsIProxyInfo.idl \
-		nsIRequest.idl \
 		nsITransport.idl \
 		nsISocketTransport.idl \
 		nsISocketTransportService.idl \
@@ -62,9 +70,7 @@ XPIDLSRCS	= \
 		nsIStreamIOChannel.idl \
 		nsIResumableChannel.idl \
 		nsIResumableEntityID.idl \
-		nsIRequestObserver.idl \
 		nsIRequestObserverProxy.idl \
-		nsIStreamListener.idl \
 		nsIStreamListenerProxy.idl \
 		nsIStreamListenerTee.idl \
 		nsIStreamProvider.idl \
@@ -73,9 +79,6 @@ XPIDLSRCS	= \
 		nsISimpleStreamProvider.idl \
 		nsIStreamLoader.idl \
 		nsIUploadChannel.idl \
-		nsIURI.idl \
-		nsIURIChecker.idl \
-		nsIURL.idl \
 		nsIFileURL.idl \
 		nsIStandardURL.idl \
 		nsIURLParser.idl \
