@@ -554,8 +554,7 @@ endif
 SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
 endif
 
-ifndef SHARED_LIBRARY_LIBS
-
+ifdef USE_IMPLICIT_ARCHIVE
 # This rule overrides the builtin rule that tells make how to insert object
 # files into archive libraries.  A few notes about what is going on:
 # The whole point of doing this is to avoid having to store the .o files in
@@ -572,6 +571,7 @@ ifndef SHARED_LIBRARY_LIBS
 # as we proceed from command to the next.  This means that the "ar t" is
 # evaluating the library before we insert new objects.
 #
+ifndef SHARED_LIBRARY_LIBS
 $(LIBRARY)(%.o): %.o
 	@echo 'queueing $< for insertion into $(LIBRARY)'; \
 	touch $(LIBRARY:%.a=.%.timestamp)
@@ -595,6 +595,17 @@ else
 
 $(LIBRARY): $(OBJS) $(LOBJS) Makefile Makefile.in
 	rm -f $@
+	@rm -f $(SUB_LOBJS)
+	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
+	$(AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SUB_LOBJS)
+	$(RANLIB) $@
+	@rm -f foodummyfilefoo $(SUB_LOBJS)
+endif # ! SHARED_LIBRARY_LIBS
+
+else # ! USE_IMPLICIT_ARCHIVE
+
+$(LIBRARY): $(OBJS) $(LOBJS) Makefile Makefile.in
+	rm -f $@
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
@@ -603,8 +614,8 @@ endif
 	$(RANLIB) $@
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
 
-endif
-else
+endif # USE_IMPLICIT_ARCHIVE
+else # OS2
 ifdef OS2_IMPLIB
 $(LIBRARY): $(OBJS) $(DEF_FILE)
 	rm -f $@
@@ -1293,7 +1304,7 @@ $(MDDEPDIR):
 MDDEPEND_FILES		:= $(wildcard $(MDDEPDIR)/*.pp)
 
 ifdef MDDEPEND_FILES
-ifdef SHARED_LIBRARY_LIBS
+ifdef PERL
 # The script mddepend.pl checks the dependencies and writes to stdout
 # one rule to force out-of-date objects. For example,
 #   foo.o boo.o: FORCE
