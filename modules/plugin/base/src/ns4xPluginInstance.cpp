@@ -1095,7 +1095,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
   gpointer user_data = nsnull;
   gdk_window_get_user_data(win, &user_data);
-  if (user_data) {
+  if (user_data && GTK_IS_WIDGET(user_data)) {
     GtkWidget* widget = GTK_WIDGET(user_data);
 
     if (GTK_IS_SOCKET(widget))
