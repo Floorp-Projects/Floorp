@@ -72,26 +72,8 @@ Rights Reserved.
 
 <broadcasterset id="broadcasterset"/>
 
-<keyset id="keyset">
-	<!-- File Menu -->
-	<key id="key_newNavigator"/>
-	<key id="key_newMessage"/>
-	<key id="key_close"/>
-	<key id="key_quit"/>
-	<!-- Edit Menu -->
-	<key id="key_undo"/>
-	<key id="key_redo"/>
-	<key id="key_cut"/>
-	<key id="key_copy"/>
-	<key id="key_paste"/>
-	<key id="key_delete" shift="false"/>
-	<key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete')"/>
-	<key id="key_selectAll"/>
-	<key id="key_preferences"/>
-  
-	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" control="false" shift="false" observes="cmd_nextUnreadMsg"/>
-	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;" control="false" shift="false" observes="cmd_nextUnreadThread"/>
-</keyset>
+<keyset id="keyset"/>
+
 
 <popupset>
 	<popup id="threadPaneContext" oncreate="return fillThreadPaneContextMenu();" >
