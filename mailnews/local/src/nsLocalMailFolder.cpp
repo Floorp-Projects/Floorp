@@ -211,6 +211,11 @@ nsShouldIgnoreFile(nsString& name)
       nsStringEndsWith(name, ".toc"))
     return PR_TRUE;
 
+  // ignore RSS data source files
+  if (name.LowerCaseEqualsLiteral("feeds.rdf") ||
+      name.LowerCaseEqualsLiteral("feeditems.rdf"))
+    return PR_TRUE;
+
   return (nsStringEndsWith(name,".sbd") || nsStringEndsWith(name,".msf"));
 }
 

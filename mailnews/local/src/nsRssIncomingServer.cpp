@@ -57,6 +57,38 @@ nsRssIncomingServer::~nsRssIncomingServer()
 {
 }
 
+nsresult nsRssIncomingServer::FillInDataSourcePath(const nsAString& aDataSourceName, nsILocalFile ** aLocation)
+{
+  nsresult rv;
+  // start by gettting the local path for this server
+  nsCOMPtr<nsIFileSpec> localPathForServer;
+  rv = GetLocalPath(getter_AddRefs(localPathForServer));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // convert to a nsIFile
+  nsCOMPtr<nsILocalFile> localFile;
+  nsFileSpec pathSpec;
+  localPathForServer->GetFileSpec(&pathSpec);
+  rv = NS_FileSpecToIFile(&pathSpec, getter_AddRefs(localFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // now append the name of the subscriptions data source
+  rv = localFile->Append(aDataSourceName);
+  NS_IF_ADDREF(*aLocation = localFile);
+  return rv;
+}
+
+// nsIRSSIncomingServer methods
+NS_IMETHODIMP nsRssIncomingServer::GetSubscriptionsDataSourcePath(nsILocalFile ** aLocation)
+{
+  return FillInDataSourcePath(NS_LITERAL_STRING("feeds.rdf"), aLocation);
+}
+
+NS_IMETHODIMP nsRssIncomingServer::GetFeedItemsDataSourcePath(nsILocalFile ** aLocation)
+{
+  return FillInDataSourcePath(NS_LITERAL_STRING("feeditems.rdf"), aLocation);
+}
+
 NS_IMETHODIMP nsRssIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 {
     NS_ENSURE_ARG_POINTER(path);
@@ -133,9 +165,9 @@ NS_IMETHODIMP nsRssIncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlLi
 
   // before we even try to get New Mail, check to see if the passed in folder was the root folder.
   // If it was, then call PerformBiff which will properly walk through each RSS folder, asking it to check for new Mail.
-  nsCOMPtr<nsIMsgFolder> rootRSSFolder;
-  GetRootMsgFolder(getter_AddRefs(rootRSSFolder));
-  if (rootRSSFolder == aFolder) // pointing to the same folder?
+  PRBool rootFolder = PR_FALSE;
+  aFolder->GetIsServer(&rootFolder);
+  if (rootFolder)
     return PerformBiff(aMsgWindow);
   
   PRBool valid = PR_FALSE;

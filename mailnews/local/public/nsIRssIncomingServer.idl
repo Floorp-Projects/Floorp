@@ -36,7 +36,13 @@
 
 #include "nsISupports.idl"
 
+interface nsILocalFile;
+
 [scriptable, uuid(6d744e7f-2218-45c6-8734-998a56cb3c6d)]
 interface nsIRssIncomingServer : nsISupports {
-};
+  // Path to the subscriptions data source for this RSS server
+  readonly attribute nsILocalFile subscriptionsDataSourcePath;
 
+  // Path to the feed items data source for this RSS server
+  readonly attribute nsILocalFile feedItemsDataSourcePath;
+};

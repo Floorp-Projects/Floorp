@@ -60,7 +60,8 @@ public:
 
     nsRssIncomingServer();
     virtual ~nsRssIncomingServer();
-
+protected:
+    nsresult FillInDataSourcePath(const nsAString& aDataSourceName, nsILocalFile ** aLocation);
 };
 
 #endif /* __nsRssIncomingServer_h */
