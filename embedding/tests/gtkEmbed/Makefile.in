@@ -24,7 +24,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS		= WebBrowser.cpp  \
+CPPSRCS		= WebBrowserChrome.cpp  \
 	          main.cpp        \
               $(NULL)
 
