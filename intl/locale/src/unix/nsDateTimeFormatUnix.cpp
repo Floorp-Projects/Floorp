@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#define NS_IMPL_IDS
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
 #include "nsDateTimeFormatUnix.h"
 
 NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
@@ -41,7 +44,8 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
 #define NSDATETIME_FORMAT_BUFFER_LEN  80
   char strOut[NSDATETIME_FORMAT_BUFFER_LEN];
   char fmtD[32], fmtT[32];
-
+  
+  // set date format
   switch (dateFormatSelector) {
     case kDateFormatNone:
       strcpy(fmtD, "");
@@ -61,6 +65,8 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
     default:
       strcpy(fmtD, ""); 
   }
+
+  // set time format
   switch (timeFormatSelector) {
     case kTimeFormatNone:
       strcpy(fmtT, ""); 
@@ -80,6 +86,8 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
     default:
       strcpy(fmtT, ""); 
   }
+
+  // generate data/time string
   if (strlen(fmtD) && strlen(fmtT)) {
     strcat(fmtD, " ");
     strcat(fmtD, fmtT);
@@ -94,7 +102,38 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   else {
     strcpy(strOut, "");
   }
-  stringOut.SetString(strOut);
+//  stringOut.SetString(strOut);
 
-  return NS_OK;
+  // convert result to unicode
+  nsresult res;
+  nsString aCharset("ISO-8859-1");	//TODO: need to get this from locale
+  nsICharsetConverterManager * ccm = nsnull;
+
+  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                                   kICharsetConverterManagerIID, 
+                                   (nsISupports**)&ccm);
+  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsIUnicodeDecoder * decoder = nsnull;
+    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
+      PRInt32 unicharLength = 0;
+      PRInt32 srcLength = (PRInt32) strlen(strOut);
+      res = decoder->Length(strOut, 0, srcLength, &unicharLength);
+      PRUnichar *unichars = new PRUnichar [ unicharLength ];
+  
+      if (nsnull != unichars) {
+        res = decoder->Convert(unichars, 0, &unicharLength,
+                               strOut, 0, &srcLength);
+        if (NS_SUCCEEDED(res)) {
+          stringOut.SetString(unichars, unicharLength);
+        }
+      }
+      delete [] unichars;
+      NS_IF_RELEASE(decoder);
+    }    
+    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+  }
+  
+  return res;
 }
+
