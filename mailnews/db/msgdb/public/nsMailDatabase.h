@@ -20,9 +20,12 @@
 #define _nsMailDatabase_H_
 
 #include "nsMsgDatabase.h"
+#include "nsMsgMessageFlags.h"
 
 // This is the subclass of nsMsgDatabase that handles local mail messages.
 class nsOfflineImapOperation;
+class nsMsgKeyArray;
+class ChangeListener;
 
 class nsMailDatabase : public nsMsgDatabase
 {
@@ -35,22 +38,22 @@ public:
 
 	virtual nsresult		OnNewPath (nsFilePath &newPath);
 
-	virtual nsresult		DeleteMessages(IDArray &messageKeys, ChangeListener *instigator);
+	virtual nsresult		DeleteMessages(nsMsgKeyArray &messageKeys, ChangeListener *instigator);
 
-	virtual int				GetCurVersion() {return kMailDBVersion;}
+//	virtual int				GetCurVersion() {return kMailDBVersion;}
 	static  nsresult		SetFolderInfoValid(nsFilePath &pathname, int num, int numunread);
 	virtual const char		*GetFolderName() {return m_folderName;}
 	virtual nsMailDatabase	*GetMailDB() {return this;}
-			MSG_Master		*GetMaster() {return m_master;}
-			void			SetMaster(MSG_Master *master) {m_master = master;}
+//			MSG_Master		*GetMaster() {return m_master;}
+//			void			SetMaster(MSG_Master *master) {m_master = master;}
 
-	virtual MSG_FolderInfo *GetFolderInfo();
+//	virtual MSG_FolderInfo *GetFolderInfo();
 	
 	// for offline imap queued operations
 	// these are in the base mail class (presumably) because offline moves between online and offline
 	// folders can cause these operations to be stored in local mail folders.
-	nsresult				ListAllOfflineOpIds(IDArray &outputIds);
-	int						ListAllOfflineDeletes(IDArray &outputIds);
+	nsresult				ListAllOfflineOpIds(nsMsgKeyArray &outputIds);
+	int						ListAllOfflineDeletes(nsMsgKeyArray &outputIds);
 	nsresult				GetOfflineOpForKey(MessageKey opKey, PRBool create, nsOfflineImapOperation **);
 	nsresult				AddOfflineOp(nsOfflineImapOperation *op);
 	nsresult				DeleteOfflineOp(MessageKey opKey);
@@ -58,7 +61,7 @@ public:
 	
 	virtual nsresult		SetSummaryValid(PRBool valid = TRUE);
 	
-	nsresult 				GetIdsWithNoBodies (IDArray &bodylessIds);
+	nsresult 				GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds);
 
 
 protected:
@@ -70,7 +73,6 @@ protected:
 	XP_Bool			m_reparse;
 	char			*m_folderName;
 	PRFileDesc		*m_folderFile;	/* this is a cache for loops which want file left open */
-	MSG_Master		*m_master;
 };
 
 #endif

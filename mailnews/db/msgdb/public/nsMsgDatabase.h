@@ -96,6 +96,7 @@ public:
 #endif
 protected:
 	mdbEnv		*m_mdbEnv;	// to be used in all the db calls.
+	mdbStore	*m_mdbStore;
 	nsFilePath	m_dbName;
 	nsrefcnt	mRefCnt;
 

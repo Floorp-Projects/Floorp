@@ -147,6 +147,16 @@ void nsMsgDatabase::DumpCache()
 }
 #endif /* DEBUG */
 
+nsMsgDatabase::nsMsgDatabase() : m_dbName("")
+{
+	m_mdbEnv = NULL;
+	m_mdbStore = NULL;
+}
+
+nsMsgDatabase::~nsMsgDatabase()
+{
+}
+
 // ref counting methods - if we inherit from nsISupports, we won't need these,
 // and we can take advantage of the nsISupports ref-counting tracing methods
 nsrefcnt nsMsgDatabase::AddRef(void)
@@ -176,6 +186,9 @@ nsrefcnt nsMsgDatabase::Release(void)
 	return gMDBFactory;
 }
 
+// Open the MDB database synchronously. If successful, this routine
+// will set up the m_mdbStore and m_mdbEnv of the database object 
+// so other database calls can work.
 nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 {
 	nsresult ret = NS_OK;
@@ -183,6 +196,28 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 	if (myMDBFactory)
 	{
 		ret = myMDBFactory->MakeEnv(&m_mdbEnv);
+		if (NS_SUCCEEDED(ret))
+		{
+			mdbThumb *thumb;
+			ret = myMDBFactory->OpenFileStore(m_mdbEnv, dbName, NULL, /* const mdbOpenPolicy* inOpenPolicy */
+				&thumb); 
+			if (NS_SUCCEEDED(ret))
+			{
+				mdb_count outTotal;    // total somethings to do in operation
+				mdb_count outCurrent;  // subportion of total completed so far
+				mdb_bool outDone = PR_FALSE;      // is operation finished?
+				mdb_bool outBroken;     // is operation irreparably dead and broken?
+				do
+				{
+					ret = thumb->DoMore(m_mdbEnv, &outTotal, &outCurrent, &outDone, &outBroken);
+				}
+				while (NS_SUCCEEDED(ret) && !outBroken && !outDone);
+				if (NS_SUCCEEDED(ret) && outDone)
+				{
+					ret = myMDBFactory->ThumbToOpenStore(m_mdbEnv, thumb, &m_mdbStore);
+				}
+			}
+		}
 	}
 	return ret;
 }

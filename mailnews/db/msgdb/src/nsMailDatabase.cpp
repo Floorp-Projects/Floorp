@@ -27,7 +27,7 @@ nsMailDatabase::~nsMailDatabase()
 }
 
 
-static nsresult	nsMailDatabase::Open(nsFilePath &dbName, PRBool create, nsMailDatabase** pMessageDB)
+/* static */ nsresult	nsMailDatabase::Open(nsFilePath &dbName, PRBool create, nsMailDatabase** pMessageDB)
 {
 	nsMailDatabase	*mailDB;
 	int				statResult;
@@ -64,20 +64,19 @@ static nsresult	nsMailDatabase::Open(nsFilePath &dbName, PRBool create, nsMailDa
 	// stat file before we open the db, because if we've latered
 	// any messages, handling latered will change time stamp on
 	// folder file.
-    result = XP_Stat( newName, info );
 	statResult = XP_Stat (folderName, &st, xpMailFolder);
 
-	MsgERR err = mailDB->OpenMDB(dbName, create);
+	nsresult err = mailDB->OpenMDB(dbName, create);
 	XP_FREE(dbName);
 
-	if (err == eSUCCESS)
+	if (NS_SUCCEEDED(err))
 	{
-		folderInfo = mailDB->GetDBFolderInfo();
-		if (folderInfo == NULL)
-		{
-			err = eOldSummaryFile;
-		}
-		else
+//		folderInfo = mailDB->GetDBFolderInfo();
+//		if (folderInfo == NULL)
+//		{
+//			err = eOldSummaryFile;
+//		}
+//		else
 		{
 			// if opening existing file, make sure summary file is up to date.
 			// if caller is upgrading, don't return eOldSummaryFile so the caller
