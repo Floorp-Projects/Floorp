@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.14 $ 
-# $Date: 2001/02/27 15:09:14 $ 
+# $Revision: 1.15 $ 
+# $Date: 2001/03/26 13:36:28 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -170,6 +170,7 @@ sub get_env {
 # set_static_vars) so that the error environment is setup incase of
 # problems.
 
+  umask 0022; 
   $| = 1;
   $PROGRAM = File::Basename::basename($0);
   $TIME = time();
