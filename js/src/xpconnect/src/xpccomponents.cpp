@@ -2110,8 +2110,11 @@ nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, c
 NS_IMETHODIMP 
 nsXPCComponents::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
-    static const PRUnichar* interfaces = NS_LITERAL_STRING("interfaces");
-    if(!nsCRT::strcmp(propertyName, interfaces))
+    static const NS_NAMED_LITERAL_STRING(s_interfaces, "interfaces");
+    
+    const nsLiteralString name(propertyName);
+
+    if(name.Equals(s_interfaces))
         *_retval = CloneAllAccess();
     else
         *_retval = nsnull;

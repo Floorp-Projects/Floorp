@@ -386,8 +386,11 @@ nsXPCException::CanCreateWrapper(const nsIID * iid, char **_retval)
 NS_IMETHODIMP 
 nsXPCException::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
 {
-    static const PRUnichar* toString = NS_LITERAL_STRING("toString");
-    if(!nsCRT::strcmp(methodName, toString))
+    static const NS_NAMED_LITERAL_STRING(s_toString, "toString");
+    
+    const nsLiteralString name(methodName);
+
+    if(name.Equals(s_toString))
         *_retval = CloneAllAccess();
     else
         *_retval = nsnull;
@@ -398,13 +401,15 @@ nsXPCException::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, ch
 NS_IMETHODIMP 
 nsXPCException::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
-    static const PRUnichar* message  = NS_LITERAL_STRING("message");
-    static const PRUnichar* result   = NS_LITERAL_STRING("result");
-    static const PRUnichar* name     = NS_LITERAL_STRING("name");
-    
-    if(!nsCRT::strcmp(propertyName, message) ||
-       !nsCRT::strcmp(propertyName, result) ||
-       !nsCRT::strcmp(propertyName, name))
+    static const NS_NAMED_LITERAL_STRING(s_message, "message");
+    static const NS_NAMED_LITERAL_STRING(s_result , "result");
+    static const NS_NAMED_LITERAL_STRING(s_name   , "name");
+
+    const nsLiteralString name(propertyName);
+
+    if(name.Equals(s_message) ||
+       name.Equals(s_result)  ||
+       name.Equals(s_name))
         *_retval = CloneAllAccess();
     else
         *_retval = nsnull;
