@@ -549,13 +549,11 @@ gif_init_transparency(gif_struct* gs, int index)
 static void
 gif_destroy_transparency(gif_struct* gs)
 {
-#if 0
     if (gs->transparent_pixel) {
         /* Destroy the source image's transparent pixel. */
         PR_Free(gs->transparent_pixel);
         gs->transparent_pixel = NULL;
     }
-#endif
 }
 
 //******************************************************************************
@@ -731,7 +729,7 @@ gif_clear_screen(gif_struct *gs)
         PRUintn i;
         int src_trans_pixel_index;
         PRUint8 *rowbuf = gs->rowbuf;
-        GIF_IRGB *saved_src_trans_pixel, *saved_img_trans_pixel;
+        //GIF_IRGB *saved_src_trans_pixel, *saved_img_trans_pixel;
 
         /* Catch images that fall outside the logical screen. */
         if ((erase_x_offset + erase_width) > gs->screen_width)
@@ -748,10 +746,15 @@ gif_clear_screen(gif_struct *gs)
            The actual choice is immaterial since it will only be used for
            the clear screen operation. */
 
-        src_trans_pixel_index = 0;
-        if (!gif_init_transparency(gs, src_trans_pixel_index))
-            return NS_ERROR_FAILURE; // XXX: should be out of mem error
+        GIF_IRGB * saved_gs_trans_pixel = gs->transparent_pixel;
+        gs->transparent_pixel = NULL;
 
+        src_trans_pixel_index = 0;
+        if (!gif_init_transparency(gs, src_trans_pixel_index)) {
+            gs->transparent_pixel = saved_gs_trans_pixel;
+            return NS_ERROR_FAILURE; // XXX: should be out of mem error
+        }
+        
         /* Now fill in the row buffer. */
         for (i = 0; i < erase_width; i++)
             rowbuf[i] = src_trans_pixel_index;
@@ -772,7 +775,7 @@ gif_clear_screen(gif_struct *gs)
         /* Reset the source image's transparent pixel to its former state. */
             gif_destroy_transparency(gs);
         //src_header->transparent_pixel = saved_src_trans_pixel;
-            gs->transparent_pixel = saved_img_trans_pixel;
+            gs->transparent_pixel = saved_gs_trans_pixel;
         }
     }
     return 0;
