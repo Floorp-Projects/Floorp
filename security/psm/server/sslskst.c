@@ -291,7 +291,8 @@ SSMStatus SSMSSLSocketStatus_Pickle(SSMResource *res, PRIntn * len,
     
     /* allocate memory for the pickled blob */
     blobSize = certSize + sizeof(PRUint32)*5 + 
-        SSMSTRING_PADDED_LENGTH(strlen(resource->m_cipherName));
+        SSMSTRING_PADDED_LENGTH(strlen(resource->m_cipherName)) +
+        SSMSTRING_PADDED_LENGTH(strlen(resource->m_caName));
     curptr = PORT_ZAlloc(blobSize);
     if (!curptr) {
         rv = PR_OUT_OF_MEMORY_ERROR;
@@ -313,6 +314,15 @@ SSMStatus SSMSSLSocketStatus_Pickle(SSMResource *res, PRIntn * len,
     curptr = (char *)curptr + SSM_SIZEOF_STRING(*(SSMString *)tmpStr);
     PR_Free(tmpStr);
     tmpStr = NULL;
+
+	rv = SSM_StringToSSMString((SSMString **)&tmpStr, 0, resource->m_caName);
+    if (rv != PR_SUCCESS) 
+        goto loser;
+    memcpy(curptr, tmpStr, SSM_SIZEOF_STRING(*(SSMString *)tmpStr));
+    curptr = (char *)curptr + SSM_SIZEOF_STRING(*(SSMString *)tmpStr);
+    PR_Free(tmpStr);
+    tmpStr = NULL;
+
     /* copy cert into the blob */
     memcpy(curptr, certBlob, certSize);
 
@@ -377,7 +387,15 @@ SSMStatus SSMSSLSocketStatus_Unpickle(SSMResource ** res,
         goto loser;
     curptr = (char *)curptr + SSMSTRING_PADDED_LENGTH(strLength) + 
         sizeof(PRUint32);
-    
+
+    /* Fix this */
+    rv = SSM_SSMStringToString(&ss->m_caName, (int *) &strLength, 
+                               (SSMString *)curptr);
+    if (rv != PR_SUCCESS || ss->m_cipherName == NULL || strLength == 0) 
+        goto loser;
+    curptr = (char *)curptr + SSMSTRING_PADDED_LENGTH(strLength) + 
+        sizeof(PRUint32);
+
     /* Unpickle cert */
     certLength = len - ((unsigned long)curptr - (unsigned long)value);
     rv = SSM_UnpickleResource(&certResource, SSM_RESTYPE_CERTIFICATE, 
