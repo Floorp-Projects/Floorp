@@ -124,7 +124,7 @@ nsresult NS_MsgGetOperatorFromString(const char *string, int16 *op)
 		return NS_ERROR_NULL_POINTER;
 	
 	XP_Bool found = FALSE;
-	for (int idxOp = 0; idxOp < sizeof(SearchOperatorEntryTable) / sizeof(nsMsgSearchOperatorEntry); idxOp++)
+	for (unsigned int idxOp = 0; idxOp < sizeof(SearchOperatorEntryTable) / sizeof(nsMsgSearchOperatorEntry); idxOp++)
 	{
 		// I'm using the idx's as aliases into MSG_SearchAttribute and 
 		// MSG_SearchOperator enums which is legal because of the way the
@@ -144,7 +144,7 @@ nsresult NS_MsgGetStringForOperator(int16 op, const char **string)
 	if (NULL == string)
 		return NS_ERROR_NULL_POINTER;
 	PRBool found = FALSE;
-	for (int idxOp = 0; idxOp < sizeof(SearchOperatorEntryTable) / sizeof(nsMsgSearchOperatorEntry); idxOp++)
+	for (unsigned int idxOp = 0; idxOp < sizeof(SearchOperatorEntryTable) / sizeof(nsMsgSearchOperatorEntry); idxOp++)
 	{
 		// I'm using the idx's as aliases into MSG_SearchAttribute and 
 		// MSG_SearchOperator enums which is legal because of the way the
@@ -866,7 +866,7 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		nsString2 walkAddresses(addresses, eOneByte);
 		PRInt32 namePos = 0;
 		PRInt32 addressPos = 0;
-		for (int i = 0; i < count && err == errContinueLoop; i++)
+		for (PRUint32 i = 0; i < count && err == errContinueLoop; i++)
 		{
 			err = MatchString (&walkNames, charset);
 			if (errContinueLoop == err)
