@@ -59,6 +59,13 @@ input, select, textarea {
   -moz-user-focus: none !important;
 }
 
+/* We suppress user/author's prefs for link underline, 
+   so we must set explicitly
+*/
+a:link {
+  text-decoration: underline;
+}
+
 input[type="hidden"] {
   border: 1px solid black !important;
   visibility: visible !important;
