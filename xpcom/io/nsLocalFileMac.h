@@ -125,6 +125,8 @@ private:
     PRPackedBool	mHaveFileInfo;					// have we got the file info?    
     CInfoPBRec  	mTargetFileInfoRec;			// cached file info, for the mTargetSpec
     
+    OSType			mType, mCreator;
+    
 };
 
 #endif
