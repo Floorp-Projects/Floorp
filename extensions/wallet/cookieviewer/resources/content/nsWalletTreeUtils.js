@@ -115,8 +115,22 @@ function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, 
   var ascending = (column == lastSortColumn) ? !lastSortAscending : true;
 
   // do the sort or re-sort
-  var compareFunc = function compare(first, second) {
-    return first[column].toLowerCase().localeCompare(second[column].toLowerCase());
+  // this is a temporary hack for 1.7, we should implement
+  // display and sort variables here for trees in general
+  var compareFunc;
+  if (column == "expires") {
+    compareFunc = function compare(first, second) {
+      if (first.expiresSortValue > second.expiresSortValue)
+        return 1;
+      else if (first.expiresSortValue < second.expiresSortValue)
+        return -1;
+      else
+        return 0;
+    }
+  } else {
+    compareFunc = function compare(first, second) {
+      return first[column].toLowerCase().localeCompare(second[column].toLowerCase());
+    }
   }
   table.sort(compareFunc);
   if (!ascending)
