@@ -1996,9 +1996,10 @@ function ensureSearchPref()
   }
 }
 
-function OpenSearch(tabName, searchStr, newWindowFlag)
+function OpenSearch(tabName, searchStr, newTabFlag)
 {
   //This function needs to be split up someday.
+  //XXXnoririty I don't want any prefs switching open by tabs to window
 
   var defaultSearchURL = null;
   var navigatorRegionBundle = document.getElementById("bundle_browser_region");
@@ -2052,10 +2053,14 @@ function OpenSearch(tabName, searchStr, newWindowFlag)
         } catch (ex) {
         }
 
-        if (!newWindowFlag)
+        if (!newTabFlag) {
           loadURI(defaultSearchURL);
-        else
-          window.open(defaultSearchURL, "_blank");
+        }
+        else {
+          var newTab = getBrowser().addTab(defaultSearchURL);
+          if (!pref.getBoolPref("browser.tabs.loadInBackground"))
+            getBrowser().selectedTab = newTab;
+        }
       }
     }
   }
