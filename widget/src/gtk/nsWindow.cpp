@@ -886,7 +886,22 @@ nsWindow::OnDestroySignal(GtkWidget* aGtkWidget)
 gint handle_delete_event(GtkWidget *w, GdkEventAny *e, nsWindow *win)
 {
   NS_ADDREF(win);
-  win->Destroy();
+
+  // dispatch an "onclose" event. to delete immediately, call win->Destroy()
+
+  nsGUIEvent event;
+  nsEventStatus status;
+  
+  event.message = NS_XUL_CLOSE;
+  event.widget  = win;
+  event.eventStructType = NS_GUI_EVENT;
+
+  event.time = 0;
+  event.point.x = 0;
+  event.point.y = 0;
+ 
+  win->DispatchEvent(&event, status);
+
   NS_RELEASE(win);
   return TRUE;
 }

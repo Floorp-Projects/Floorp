@@ -268,6 +268,7 @@ protected:
   void                     SetTitleFromXUL();
   void                     ShowAppropriateChrome();
   void                     LoadContentAreas();
+  PRBool                   ExecuteCloseHandler();
 
   virtual ~nsWebShellWindow();
 

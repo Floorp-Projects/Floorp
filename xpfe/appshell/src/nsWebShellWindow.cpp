@@ -479,6 +479,15 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         result = nsEventStatus_eConsumeNoDefault;
         break;
       }
+      case NS_XUL_CLOSE: {
+        void* data;
+        nsWebShellWindow *win;
+        aEvent->widget->GetClientData(data);
+        win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
+        if (!win->ExecuteCloseHandler())
+          win->Close();
+        break;
+      }
       /*
        * Notify the ApplicationShellService that the window is being closed...
        */
@@ -1123,8 +1132,7 @@ nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow**
   nsCOMPtr<nsIDOMWindow> newDOMWindow;
 
   newContextOwner = do_QueryInterface(aShell);
-  if (newContextOwner)
-  {
+  if (newContextOwner) {
     if (NS_FAILED(rv = newContextOwner->GetScriptGlobalObject(getter_AddRefs(newGlobalObject)))) {
       NS_ERROR("Unable to retrieve global object.");
       return rv;
@@ -2397,6 +2405,48 @@ void nsWebShellWindow::LoadContentAreas() {
     }
   }
 }
+
+/**
+ * ExecuteCloseHandler - Run the close handler, if any.
+ * @return PR_TRUE iff we found a close handler to run.
+ */
+PRBool nsWebShellWindow::ExecuteCloseHandler()
+{
+  /* If the event handler closes this window -- a likely scenario --
+     things get deleted out of order without this death grip.
+     (The problem may be the death grip in nsWindow::windowProc,
+     which forces this window's widget to remain alive longer
+     than it otherwise would.) */
+  nsCOMPtr<nsIWebShellWindow> kungFuDeathGrip(this);
+
+  nsresult rv;
+  nsCOMPtr<nsIScriptContextOwner> contextOwner;
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+
+  contextOwner = do_QueryInterface(mWebShell);
+  if (contextOwner) {
+    if (NS_SUCCEEDED(contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject))) && globalObject) {
+      nsCOMPtr<nsIContentViewer> contentViewer;
+      if (NS_SUCCEEDED(mWebShell->GetContentViewer(getter_AddRefs(contentViewer)))) {
+        nsCOMPtr<nsIDocumentViewer> docViewer;
+        nsCOMPtr<nsIPresContext> presContext;
+        docViewer = do_QueryInterface(contentViewer);
+        if (NS_SUCCEEDED(docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsMouseEvent event;
+          event.eventStructType = NS_EVENT;
+          event.message = NS_XUL_CLOSE;
+          rv = globalObject->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+          if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault)
+            return PR_TRUE;
+          // else fall through and return PR_FALSE
+        }
+      }
+    }
+  }
+
+  return PR_FALSE;
+} // ExecuteCloseHandler
 
 //----------------------------------------------------------------
 //-- nsIDocumentObserver

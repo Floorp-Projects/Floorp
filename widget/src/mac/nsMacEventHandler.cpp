@@ -90,28 +90,37 @@ nsMacEventDispatchHandler::~nsMacEventDispatchHandler()
 //-------------------------------------------------------------------------
 //
 //-------------------------------------------------------------------------
+void nsMacEventDispatchHandler::DispatchGuiEvent(PRUint32 aEventType)
+{
+	if (mActiveWidget)
+	{
+		nsGUIEvent	guiEvent;
+		guiEvent.eventStructType = NS_GUI_EVENT;
+		guiEvent.point.x = 0;
+		guiEvent.point.y = 0;
+		guiEvent.time = PR_IntervalNow();
+		guiEvent.widget = nsnull;
+		guiEvent.nativeMsg = nsnull;
+		guiEvent.message = aEventType;
+		guiEvent.widget = mActiveWidget;
+		mActiveWidget->DispatchWindowEvent(guiEvent);
+	}
+}
+
+//-------------------------------------------------------------------------
+//
+//-------------------------------------------------------------------------
 void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 {
     // This short circut lives inside of nsEventStateManager now
 	if (aFocusedWidget == mActiveWidget)
 		return;
 		
-	nsGUIEvent guiEvent;
-	guiEvent.eventStructType = NS_GUI_EVENT;
-	guiEvent.point.x		= 0;
-	guiEvent.point.y		= 0;
-	guiEvent.time				= PR_IntervalNow();
-	guiEvent.widget			= nsnull;
-	guiEvent.nativeMsg	= nsnull;
-
 	// tell the old widget it is not focused
 	if (mActiveWidget)
 	{
 		mActiveWidget->RemoveDeleteObserver(this);
-
-		guiEvent.message = NS_LOSTFOCUS;
-		guiEvent.widget = mActiveWidget;
-		mActiveWidget->DispatchWindowEvent(guiEvent);
+		DispatchGuiEvent(NS_LOSTFOCUS);
 	}
 
 	mActiveWidget = aFocusedWidget;
@@ -120,10 +129,7 @@ void nsMacEventDispatchHandler::SetFocus(nsWindow *aFocusedWidget)
 	if (mActiveWidget)
 	{
 		mActiveWidget->AddDeleteObserver(this);
-
-		guiEvent.message = NS_GOTFOCUS;
-		guiEvent.widget = mActiveWidget;		
-		mActiveWidget->DispatchWindowEvent(guiEvent);
+		DispatchGuiEvent(NS_GOTFOCUS);
 	}
 }
 
@@ -141,18 +147,7 @@ void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 	if (mActiveWidget)
 	{
 		mActiveWidget->AddDeleteObserver(this);
-		
-	    // Dispatch an NS_ACTIVATE event 
-		nsGUIEvent guiEvent;
-		guiEvent.eventStructType = NS_GUI_EVENT;
-		guiEvent.point.x	= 0;
-		guiEvent.point.y	= 0;
-		guiEvent.time		= PR_IntervalNow();
-		guiEvent.widget		= nsnull;
-		guiEvent.nativeMsg	= nsnull;
-		guiEvent.message 	= NS_ACTIVATE;
-		guiEvent.widget 	= mActiveWidget;
-		mActiveWidget->DispatchWindowEvent(guiEvent);
+		DispatchGuiEvent(NS_ACTIVATE);
 	}
 }
 
@@ -164,18 +159,7 @@ void nsMacEventDispatchHandler::SetDeactivated(nsWindow *aDeactivatedWidget)
 	// let the old one know it lost activation
 	if (mActiveWidget)
 	{	
-	    // Dispatch an NS_DEACTIVATE event 
-		nsGUIEvent guiEvent;
-		guiEvent.eventStructType = NS_GUI_EVENT;
-		guiEvent.point.x	= 0;
-		guiEvent.point.y	= 0;
-		guiEvent.time		= PR_IntervalNow();
-		guiEvent.widget		= nsnull;
-		guiEvent.nativeMsg	= nsnull;
-		guiEvent.message 	= NS_DEACTIVATE;
-		guiEvent.widget 	= mActiveWidget;
-		mActiveWidget->DispatchWindowEvent(guiEvent);
-		
+		DispatchGuiEvent(NS_DEACTIVATE);		
 		mActiveWidget->RemoveDeleteObserver(this);
 		mActiveWidget = nsnull;
 	}
@@ -372,7 +356,7 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 	menuEvent.nativeMsg	= (void*)&aOSEvent;
 
 	// nsMenuEvent
-	menuEvent.mMenuItem	= nsnull;						//¥TODO: initialize mMenuItem
+	menuEvent.mMenuItem	= nsnull;						//€TODO: initialize mMenuItem
 	menuEvent.mCommand	= aMenuResult;
 
 	// dispatch the menu event
@@ -421,7 +405,7 @@ PRBool nsMacEventHandler::HandleMenuCommand(
 // for processing. Create a Gecko event (using the appropriate message type) and pass
 // it along.
 //
-// ¥¥¥THIS REALLY NEEDS TO BE CLEANED UP! TOO MUCH CODE COPIED FROM ConvertOSEventToMouseEvent
+// €€€THIS REALLY NEEDS TO BE CLEANED UP! TOO MUCH CODE COPIED FROM ConvertOSEventToMouseEvent
 //
 PRBool nsMacEventHandler::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers )
 {
@@ -986,7 +970,7 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		(err==noErr)?"":"ERROR", err);
 #endif
 		
-		//¥TODO: we should restore the focus to the the widget
+		//€TODO: we should restore the focus to the the widget
 		//       that had it when the window was deactivated
 		nsWindow*	focusedWidget = mTopLevelWidget;
 		gEventDispatchHandler.SetActivated(focusedWidget);
@@ -999,7 +983,7 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		}
 		else
 		{
-		  //¥TODO:	if the focusedWidget doesn't have a menubar,
+		  //€TODO:	if the focusedWidget doesn't have a menubar,
 		  //				look all the way up to the window
 		  //				until one of the parents has a menubar
 		}
@@ -1103,7 +1087,8 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 			if (nsnull != gRollupListener && (nsnull != gRollupWidget) ) {
 				gRollupListener->Rollup();
 			}
-			mTopLevelWidget->Destroy();
+			gEventDispatchHandler.DispatchGuiEvent(NS_XUL_CLOSE);		
+//			mTopLevelWidget->Destroy();
 			break;
 		}
 
