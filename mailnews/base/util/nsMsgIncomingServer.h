@@ -32,26 +32,6 @@
 #include "nsWeakReference.h"
 #include "nsIMsgDatabase.h"
 
-/*
- * Following values for offline support have been used by
- * various files. If you are modifying any of the values
- * below, please do take care of the following files.
- * - mozilla/mailnews/base/src/nsMsgAccountManagerDS.cpp
- * - mozilla/mailnews/base/util/nsMsgIncomingServer.cpp
- * - mozilla/mailnews/imap/src/nsImapIncomingServer.cpp
- * - mozilla/mailnews/local/src/nsPop3IncomingServer.cpp
- * - mozilla/mailnews/news/src/nsNntpIncomingServer.cpp
- * - mozilla/mailnews/base/resources/content/msgAccountCentral.js
- * - mozilla/modules/libpref/src/init/mailnews.js
- * - ns/modules/libpref/src/init/mailnews-ns.js
- * - ns/mailnews/base/ispdata/aol.rdf
- * - ns/mailnews/base/ispdata/nswebmail.rdf
- */
-#define OFFLINE_SUPPORT_LEVEL_NONE 0
-#define OFFLINE_SUPPORT_LEVEL_REGULAR 10
-#define OFFLINE_SUPPORT_LEVEL_EXTENDED 20
-#define OFFLINE_SUPPORT_LEVEL_UNDEFINED -1
-
 class nsIMsgFolderCache;
 class nsIMsgProtocolInfo;
 

@@ -1111,18 +1111,13 @@ function SpaceHit()
 }
 
 
-function DoesAccountHaveOfflineSupport()
+function IsOfflineSettingsEnabled()
 {
     var selectedFolders = GetSelectedMsgFolders();
 
-    if (selectedFolders && selectedFolders.length > 0)
-    {
-        var server = selectedFolders[0].server;
-        if(server && server.offlineSupportLevel > 0)
-            return true; 
-    } 
+    if (selectedFolders && (selectedFolders.length == 1))
+        return selectedFolders[0].supportsOffline;
        
     return false;
-
 }
 

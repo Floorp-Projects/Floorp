@@ -2819,6 +2819,44 @@ nsImapIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
     return NS_OK;
 }
 
+nsresult
+nsImapIncomingServer::CreateHostSpecificPrefName(const char *prefPrefix, nsCAutoString &prefName)
+{
+  NS_ENSURE_ARG_POINTER(prefPrefix);
+
+  nsXPIDLCString hostName;
+  nsresult rv = GetHostName(getter_Copies(hostName));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  prefName = prefPrefix;
+  prefName.Append(".");
+  prefName.Append(hostName.get());
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetSupportsDiskSpace(PRBool *aSupportsDiskSpace)
+{
+  NS_ENSURE_ARG_POINTER(aSupportsDiskSpace);
+  nsCAutoString prefName;
+  nsresult rv = CreateHostSpecificPrefName("default_supports_diskspace", prefName);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if(NS_SUCCEEDED(rv)) {
+     rv = prefs->GetBoolPref(prefName.get(), aSupportsDiskSpace);
+  }
+
+  // Couldn't get the default value with the hostname.
+  // Fall back on IMAP default value
+  if (NS_FAILED(rv)) {
+     // set default value
+     *aSupportsDiskSpace = PR_TRUE;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsImapIncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
 {
@@ -2828,25 +2866,20 @@ nsImapIncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
     rv = GetIntValue("offline_support_level", aSupportLevel);
     if (*aSupportLevel != OFFLINE_SUPPORT_LEVEL_UNDEFINED) return rv;
     
-    nsCAutoString prefName("default_offline_support_level");
-    nsXPIDLCString hostName;
-    GetHostName(getter_Copies(hostName));
+    nsCAutoString prefName;
+    rv = CreateHostSpecificPrefName("default_offline_support_level", prefName);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-    if (hostName.get()) {
-        prefName.Append(".");
-        prefName.Append(hostName);
-
-        NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-        if(NS_SUCCEEDED(rv)) {
-            rv = prefs->GetIntPref(prefName, aSupportLevel);
-        } 
-    }
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if(NS_SUCCEEDED(rv)) {
+      rv = prefs->GetIntPref(prefName.get(), aSupportLevel);
+    } 
 
     // Couldn't get the pref value with the hostname. 
     // Fall back on IMAP default value
     if (NS_FAILED(rv)) {
-        // set default value
-        *aSupportLevel = OFFLINE_SUPPORT_LEVEL_REGULAR;
+      // set default value
+      *aSupportLevel = OFFLINE_SUPPORT_LEVEL_REGULAR;
     }
     return NS_OK;
 }

@@ -63,6 +63,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_ServerType = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_IsServer = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_IsSecure = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanSubscribe = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_SupportsOffline = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanFileMessages = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanCreateSubfolders = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanRename = nsnull;
@@ -119,6 +120,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_ISSERVER, &kNC_IsServer);
     rdf->GetResource(NC_RDF_ISSECURE, &kNC_IsSecure);
     rdf->GetResource(NC_RDF_CANSUBSCRIBE, &kNC_CanSubscribe);
+    rdf->GetResource(NC_RDF_SUPPORTSOFFLINE, &kNC_SupportsOffline);
     rdf->GetResource(NC_RDF_CANFILEMESSAGES, &kNC_CanFileMessages);
     rdf->GetResource(NC_RDF_CANCREATESUBFOLDERS, &kNC_CanCreateSubfolders);
     rdf->GetResource(NC_RDF_CANRENAME, &kNC_CanRename);
@@ -179,6 +181,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_IsServer, refcnt);
 		NS_RELEASE2(kNC_IsSecure, refcnt);
 		NS_RELEASE2(kNC_CanSubscribe, refcnt);
+		NS_RELEASE2(kNC_SupportsOffline, refcnt);
 		NS_RELEASE2(kNC_CanFileMessages, refcnt);
 		NS_RELEASE2(kNC_CanCreateSubfolders, refcnt);
 		NS_RELEASE2(kNC_CanRename, refcnt);
@@ -399,6 +402,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
              (kNC_IsServer == property) ||
              (kNC_IsSecure == property) ||
              (kNC_CanSubscribe == property) ||
+             (kNC_SupportsOffline == property) ||
              (kNC_CanFileMessages == property) ||
              (kNC_CanCreateSubfolders == property) ||
              (kNC_CanRename == property) ||
@@ -487,6 +491,7 @@ nsMsgFolderDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, 
                aArc == kNC_IsServer ||
                aArc == kNC_IsSecure ||
                aArc == kNC_CanSubscribe ||
+               aArc == kNC_SupportsOffline ||
                aArc == kNC_CanFileMessages ||
                aArc == kNC_CanCreateSubfolders ||
                aArc == kNC_CanRename ||
@@ -546,6 +551,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
   (*arcs)->AppendElement(kNC_IsServer);
   (*arcs)->AppendElement(kNC_IsSecure);
   (*arcs)->AppendElement(kNC_CanSubscribe);
+  (*arcs)->AppendElement(kNC_SupportsOffline);
   (*arcs)->AppendElement(kNC_CanFileMessages);
   (*arcs)->AppendElement(kNC_CanCreateSubfolders);
   (*arcs)->AppendElement(kNC_CanRename);
@@ -935,6 +941,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
     rv = createFolderIsSecureNode(folder, target);
   else if ((kNC_CanSubscribe == property))
     rv = createFolderCanSubscribeNode(folder, target);
+  else if ((kNC_SupportsOffline == property))
+    rv = createFolderSupportsOfflineNode(folder, target);
   else if ((kNC_CanFileMessages == property))
     rv = createFolderCanFileMessagesNode(folder, target);
   else if ((kNC_CanCreateSubfolders == property))
@@ -1217,6 +1225,25 @@ nsMsgFolderDataSource::createFolderCanSubscribeNode(nsIMsgFolder* folder,
 
   if (canSubscribe)
         *target = kTrueLiteral;
+  else
+    *target = kFalseLiteral;
+  NS_IF_ADDREF(*target);
+  return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::createFolderSupportsOfflineNode(nsIMsgFolder* folder,
+                                                  nsIRDFNode **target)
+{
+  nsresult rv;
+  PRBool supportsOffline;
+  rv = folder->GetSupportsOffline(&supportsOffline);
+  NS_ENSURE_SUCCESS(rv,rv);
+ 
+  *target = nsnull;
+
+  if (supportsOffline) 
+    *target = kTrueLiteral;
   else
     *target = kFalseLiteral;
   NS_IF_ADDREF(*target);
@@ -1828,6 +1855,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
            (kNC_IsServer == property) ||
            (kNC_IsSecure == property) ||
            (kNC_CanSubscribe == property) ||
+           (kNC_SupportsOffline == property) ||
            (kNC_CanFileMessages == property) ||
            (kNC_CanCreateSubfolders == property) ||
            (kNC_CanRename == property) ||

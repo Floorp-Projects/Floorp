@@ -34,13 +34,15 @@ Contributors:
         class="color-dialog"
         onload="parent.onPanelLoaded('am-offline.xul');"
         orient="vertical">
-  
+ 
+    <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/> 
+
     <script type="text/javascript" src="chrome://messenger/content/AccountManager.js"/>
     <script type="text/javascript" src="chrome://messenger/content/am-offline.js"/>
 
     <text hidden="true" wsm_persist="true" id="server.type"/>  
 
-    <box class="box-smallheader" title="&offlineSettings.label;"/>
+    <box id="headertitle" class="box-smallheader"/>
 
     <titledbox orient="vertical" id="offlinepop.titlebox" hidable="true" hidefor="imap,nntp">
       <html iscontrolcontainer="true">&offlinePopDesc.label;</html>

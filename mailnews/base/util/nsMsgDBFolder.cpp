@@ -834,6 +834,23 @@ nsresult nsMsgDBFolder::MsgFitsDownloadCriteria(nsMsgKey msgKey, PRBool *result)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBFolder::GetSupportsOffline(PRBool *aSupportsOffline)
+{  
+   NS_ENSURE_ARG_POINTER(aSupportsOffline);
+
+   nsCOMPtr<nsIMsgIncomingServer> server;
+   nsresult rv = GetServer(getter_AddRefs(server));
+   NS_ENSURE_SUCCESS(rv,rv);
+   if (!server) return NS_ERROR_FAILURE;
+  
+   PRInt32 offlineSupportLevel;
+   rv = server->GetOfflineSupportLevel(&offlineSupportLevel);
+   NS_ENSURE_SUCCESS(rv,rv);
+
+   *aSupportsOffline = (offlineSupportLevel >= OFFLINE_SUPPORT_LEVEL_REGULAR);
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDBFolder::ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result)
 {
   NS_ENSURE_ARG(result);

@@ -65,6 +65,7 @@ public:
         NS_IMETHOD GetCanBeDefaultServer(PRBool *canBeDefaultServer);
         NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
     NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
+        NS_IMETHOD GetSupportsDiskSpace(PRBool *aSupportsDiskSpace);
 
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);
@@ -80,14 +81,15 @@ protected:
   const char *GetPFCName();
   nsresult GetPFCForStringId(PRBool createIfMissing, PRInt32 stringId, nsIMsgFolder **aFolder);
 private:
-    nsresult SetDelimiterFromHierarchyDelimiter();
-	nsresult SubscribeToFolder(const PRUnichar *aName, PRBool subscribe);
+  nsresult SetDelimiterFromHierarchyDelimiter();
+  nsresult SubscribeToFolder(const PRUnichar *aName, PRBool subscribe);
   nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
                                    nsIImapProtocol** aImapConnection);
-	nsresult CreateProtocolInstance(nsIEventQueue *aEventQueue, 
+  nsresult CreateProtocolInstance(nsIEventQueue *aEventQueue, 
                                            nsIImapProtocol ** aImapConnection);
-	nsresult RequestOverrideInfo(nsIMsgWindow *aMsgWindow);
+  nsresult RequestOverrideInfo(nsIMsgWindow *aMsgWindow);
+  nsresult CreateHostSpecificPrefName(const char *prefPrefix, nsCAutoString &prefName);
 
   PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
   nsCOMPtr<nsISupportsArray> m_connectionCache;

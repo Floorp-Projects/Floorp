@@ -61,7 +61,7 @@ Contributors:
         onclick="onSpaceClick(event);">
 
     <template>
-    <rule>
+    <rule NC:SupportsOffline="true">
     <treechildren flex="1">
         <treeitem class="folderTreeItem" uri="..." 
                   SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"

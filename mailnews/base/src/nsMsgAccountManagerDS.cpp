@@ -53,7 +53,8 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #define NC_RDF_PAGETITLE_SERVER   NC_NAMESPACE_URI "PageTitleServer"
 #define NC_RDF_PAGETITLE_COPIES   NC_NAMESPACE_URI "PageTitleCopies"
 #define NC_RDF_PAGETITLE_ADVANCED NC_NAMESPACE_URI "PageTitleAdvanced"
-#define NC_RDF_PAGETITLE_OFFLINE  NC_NAMESPACE_URI "PageTitleOffline"
+#define NC_RDF_PAGETITLE_OFFLINEANDDISKSPACE  NC_NAMESPACE_URI "PageTitleOfflineAndDiskSpace"
+#define NC_RDF_PAGETITLE_DISKSPACE  NC_NAMESPACE_URI "PageTitleDiskSpace"
 #define NC_RDF_PAGETITLE_ADDRESSING  NC_NAMESPACE_URI "PageTitleAddressing"
 #define NC_RDF_PAGETITLE_SMTP     NC_NAMESPACE_URI "PageTitleSMTP"
 #define NC_RDF_PAGETAG NC_NAMESPACE_URI "PageTag"
@@ -97,7 +98,8 @@ nsIRDFResource* nsMsgAccountManagerDataSource::kNC_Identity=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleMain=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleServer=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleCopies=nsnull;
-nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleOffline=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleOfflineAndDiskSpace=nsnull;
+nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleDiskSpace=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAddressing=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleAdvanced=nsnull;
 nsIRDFResource* nsMsgAccountManagerDataSource::kNC_PageTitleSMTP=nsnull;
@@ -146,7 +148,8 @@ nsMsgAccountManagerDataSource::nsMsgAccountManagerDataSource()
       getRDFService()->GetResource(NC_RDF_PAGETITLE_MAIN, &kNC_PageTitleMain);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_SERVER, &kNC_PageTitleServer);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_COPIES, &kNC_PageTitleCopies);
-	  getRDFService()->GetResource(NC_RDF_PAGETITLE_OFFLINE, &kNC_PageTitleOffline);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_OFFLINEANDDISKSPACE, &kNC_PageTitleOfflineAndDiskSpace);
+      getRDFService()->GetResource(NC_RDF_PAGETITLE_DISKSPACE, &kNC_PageTitleDiskSpace);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_ADDRESSING, &kNC_PageTitleAddressing);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_ADVANCED, &kNC_PageTitleAdvanced);
       getRDFService()->GetResource(NC_RDF_PAGETITLE_SMTP, &kNC_PageTitleSMTP);
@@ -187,7 +190,8 @@ nsMsgAccountManagerDataSource::~nsMsgAccountManagerDataSource()
       NS_IF_RELEASE(kNC_PageTitleMain);
       NS_IF_RELEASE(kNC_PageTitleServer);
       NS_IF_RELEASE(kNC_PageTitleCopies);
-      NS_IF_RELEASE(kNC_PageTitleOffline);
+      NS_IF_RELEASE(kNC_PageTitleOfflineAndDiskSpace);
+      NS_IF_RELEASE(kNC_PageTitleDiskSpace);
       NS_IF_RELEASE(kNC_PageTitleAddressing);
       NS_IF_RELEASE(kNC_PageTitleAdvanced);
       NS_IF_RELEASE(kNC_PageTitleSMTP);
@@ -279,8 +283,11 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       else if (source == kNC_PageTitleCopies)
           mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-copies").GetUnicode(),
                                            getter_Copies(pageTitle));
-      else if (source == kNC_PageTitleOffline)
-          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-offline").GetUnicode(),
+      else if (source == kNC_PageTitleOfflineAndDiskSpace)
+          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-offline-and-diskspace").GetUnicode(),
+                                           getter_Copies(pageTitle));
+      else if (source == kNC_PageTitleDiskSpace)
+          mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-diskspace").GetUnicode(),
                                            getter_Copies(pageTitle));
       else if (source == kNC_PageTitleAddressing)
           mStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("prefPanel-addressing").GetUnicode(),
@@ -311,7 +318,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       str = NS_LITERAL_STRING("am-server.xul");
     else if (source == kNC_PageTitleCopies)
       str = NS_LITERAL_STRING("am-copies.xul");
-    else if (source == kNC_PageTitleOffline)
+    else if ((source == kNC_PageTitleOfflineAndDiskSpace) || (source == kNC_PageTitleDiskSpace))
       str.AssignWithConversion("am-offline.xul");
     else if (source == kNC_PageTitleAddressing)
       str = NS_LITERAL_STRING("am-addressing.xul");
@@ -535,14 +542,30 @@ nsMsgAccountManagerDataSource::createSettingsResources(nsIRDFResource *aSource,
             if (hasIdentities) {
                 aNodeArray->AppendElement(kNC_PageTitleServer);
                 aNodeArray->AppendElement(kNC_PageTitleCopies);
+                aNodeArray->AppendElement(kNC_PageTitleAddressing);
+
+		// XXX todo, these should not be in the if block for
+		// hasIdentities.  "Local Folders", which doesn't have any
+		// identities, still has disk space settings
+		// see bug #86132
 
                 // Check the offline capability before adding 
                 // offline item 
                 PRInt32 offlineSupportLevel = 0;
-                server->GetOfflineSupportLevel(&offlineSupportLevel); 
-                if (offlineSupportLevel >= OFFLINE_SUPPORT_LEVEL_REGULAR)
-                    aNodeArray->AppendElement(kNC_PageTitleOffline);
-                aNodeArray->AppendElement(kNC_PageTitleAddressing);
+                rv = server->GetOfflineSupportLevel(&offlineSupportLevel); 
+                NS_ENSURE_SUCCESS(rv,rv);
+
+                PRBool supportsDiskSpace;
+                rv = server->GetSupportsDiskSpace(&supportsDiskSpace); 
+                NS_ENSURE_SUCCESS(rv,rv);
+                  
+	        // currently there is no offline without diskspace
+                if (offlineSupportLevel >= OFFLINE_SUPPORT_LEVEL_REGULAR) {
+                   aNodeArray->AppendElement(kNC_PageTitleOfflineAndDiskSpace);
+                }
+                else if (supportsDiskSpace) {
+                   aNodeArray->AppendElement(kNC_PageTitleDiskSpace);
+                }
             }
         }
     }
@@ -667,6 +690,7 @@ nsMsgAccountManagerDataSource::HasArcOut(nsIRDFResource *source, nsIRDFResource 
       nsCOMPtr<nsIMsgIncomingServer> server;
       rv = getServerForFolderNode(source, getter_AddRefs(server));
       if (server) {
+          // this is not complete, see bug #86132
           return serverHasIdentities(server, result);
       }
 	}

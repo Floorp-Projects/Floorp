@@ -110,8 +110,20 @@ function onPreInit(account, accountValues)
     gIncomingServer= account.incomingServer;
     gIncomingServer.type = gServerType;
 
-}
+    var titleStringID;
+    // 10 is OFFLINE_SUPPORT_LEVEL_REGULAR, see nsIMsgIncomingServer.idl
+    // currently, there is no offline without diskspace
+    if (gIncomingServer.offlineSupportLevel >= 10) {
+      titleStringID = "prefPanel-offline-and-diskspace";
+    }
+    else {
+      titleStringID = "prefPanel-diskspace";
+    }
 
+    var prefBundle = document.getElementById("bundle_prefs");
+    var headertitle = document.getElementById("headertitle");
+    headertitle.setAttribute('title',prefBundle.getString(titleStringID));
+}
 
 function hideShowControls(type)
 {

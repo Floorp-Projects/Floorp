@@ -1,4 +1,3 @@
-<!ENTITY offlineSettings.label "Offline &amp; Disk Space">
 <!ENTITY offlineDesc.label "Offline enables you to download your messages locally so that they are available when you are disconnected from the server. Use the &quot;Select&quot; button to choose which messages will be available when you are offline.">
 <!ENTITY offlinePopDesc.label "Messages are stored locally on your computer. To save disk space:">
 <!ENTITY offlineMsg.label "To save download time and disk space:">

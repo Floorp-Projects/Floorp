@@ -326,6 +326,6 @@ nsPop3IncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
     if (*aSupportLevel != OFFLINE_SUPPORT_LEVEL_UNDEFINED) return rv;
     
     // set default value
-    *aSupportLevel = OFFLINE_SUPPORT_LEVEL_REGULAR;
+    *aSupportLevel = OFFLINE_SUPPORT_LEVEL_NONE;
     return NS_OK;
 }

@@ -228,13 +228,38 @@ interface nsIMsgIncomingServer : nsISupports {
    *
    * Each server can initialize itself to the support level if needed
    * to override the default choice i.e., no offline support.
-   * IMAP and POP3 servers are set with level 10 and NEWS with level 20. 
-   * None and Movemail will default to 0. 
+   *
+   * POP3, None and Movemail will default to 0. 
+   * IMAP level 10 and NEWS with level 20. 
+   * 
    */
   attribute long offlineSupportLevel;
+	
+  /* does this server have disk space settings? */
+  readonly attribute boolean supportsDiskSpace;
 };
 
 %{C++
+/*
+ * Following values for offline support have been used by
+ * various files. If you are modifying any of the values
+ * below, please do take care of the following files.
+ * - mozilla/mailnews/base/src/nsMsgAccountManagerDS.cpp
+ * - mozilla/mailnews/base/util/nsMsgIncomingServer.cpp
+ * - mozilla/mailnews/imap/src/nsImapIncomingServer.cpp
+ * - mozilla/mailnews/local/src/nsPop3IncomingServer.cpp
+ * - mozilla/mailnews/news/src/nsNntpIncomingServer.cpp
+ * - mozilla/mailnews/base/resources/content/msgAccountCentral.js
+ * - mozilla/modules/libpref/src/init/mailnews.js
+ * - ns/modules/libpref/src/init/mailnews-ns.js
+ * - ns/mailnews/base/ispdata/aol.rdf
+ * - ns/mailnews/base/ispdata/nswebmail.rdf
+ */
+#define OFFLINE_SUPPORT_LEVEL_NONE 0
+#define OFFLINE_SUPPORT_LEVEL_REGULAR 10
+#define OFFLINE_SUPPORT_LEVEL_EXTENDED 20
+#define OFFLINE_SUPPORT_LEVEL_UNDEFINED -1
+
 /* some useful macros to implement nsIMsgIncomingServer accessors */
 #define NS_IMPL_SERVERPREF_STR(_class, _postfix, _prefname)	\
 NS_IMETHODIMP								   	\

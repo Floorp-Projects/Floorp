@@ -85,6 +85,7 @@ public:
   NS_IMETHOD GetGettingNewMessages(PRBool *gettingNewMessages);
   NS_IMETHOD SetGettingNewMessages(PRBool gettingNewMessages);
 
+  NS_IMETHOD GetSupportsOffline(PRBool *aSupportsOffline);
   NS_IMETHOD ShouldStoreMsgOffline(nsMsgKey msgKey, PRBool *result);
   NS_IMETHOD GetOfflineFileTransport(nsMsgKey msgKey, PRUint32 *offset, PRUint32 *size, nsITransport **_retval);
   NS_IMETHOD HasMsgOffline(nsMsgKey msgKey, PRBool *result);
