@@ -62,7 +62,9 @@ static NS_DEFINE_CID(kEditorCommandTableCID, NS_EDITORCOMMANDTABLE_CID);
 PR_STATIC_CALLBACK(nsresult)
 Initialize(nsIModule* self)
 {
+#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
     nsEditProperty::RegisterAtoms();
+#endif
     return NS_OK;
 }
 
