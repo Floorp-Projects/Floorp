@@ -78,7 +78,7 @@ literal_string( const char* aPtr, PRUint32 aLength )
   #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  NS_ConvertASCIItoUCS2 n(s, PRUint32(sizeof(s)-1))
 #endif
 
-#define NS_LITERAL_STRING(s)                      NS_MULTILINE_LITERAL_STRING(NS_L(s))
+#define NS_LITERAL_STRING(s)                      NS_STATIC_CAST(const nsAFlatString&, NS_MULTILINE_LITERAL_STRING(NS_L(s)))
 #define NS_NAMED_LITERAL_STRING(n,s)              NS_NAMED_MULTILINE_LITERAL_STRING(n,NS_L(s))
 
 #define NS_LITERAL_CSTRING(s)                     nsDependentCString(s, PRUint32(sizeof(s)-1))
