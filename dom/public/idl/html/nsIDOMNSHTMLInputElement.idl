@@ -21,6 +21,9 @@
 
 #include "domstubs.idl"
 
+interface nsIControllers;
+
+
 [scriptable, uuid(993d2efc-a768-11d3-bccd-0060b0fc76bd)]
 interface nsIDOMNSHTMLInputElement : nsISupports
 {

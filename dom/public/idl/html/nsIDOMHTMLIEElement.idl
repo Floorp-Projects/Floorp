@@ -21,11 +21,13 @@
 
 #include "domstubs.idl"
 
-interface nsIControllers;
-
-
-[scriptable, uuid(ca066b44-9ddf-11d3-bccc-0060b0fc76bd)]
-interface nsIDOMNSHTMLTextAreaElement : nsISupports
+[scriptable, uuid(da83b2ec-8264-4410-8496-ada3acd2ae42)]
+interface nsIDOMHTMLIEElement : nsISupports
 {
-	readonly attribute nsIControllers   controllers;
+  readonly attribute long             offsetTop;
+  readonly attribute long             offsetLeft;
+  readonly attribute long             offsetWidth;
+  readonly attribute long             offsetHeight;
+  readonly attribute nsIDOMElement    offsetParent;
+           attribute DOMString        innerHTML;
 };
