@@ -253,8 +253,8 @@ BookmarksUIElement.prototype = {
                   "bm_properties"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavoriteFolder":
-      commands = ["bm_openfolder", "bm_openinnewwindow", "bm_separator",
-                  "bm_copy"];
+      commands = ["bm_openfolder", "bm_separator",
+                  "bm_delete"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavorite":
       commands = ["bm_open", "bm_openinnewwindow", /* "bm_openinnewtab", */ "bm_separator",
