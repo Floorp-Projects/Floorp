@@ -40,6 +40,10 @@
 #include "nsIXULBrowserWindow.h"
 #include "nsPIDOMWindow.h"
 
+// Needed for nsIDocument::FlushPendingNotifications(...)
+#include "nsIDOMDocument.h"
+#include "nsIDocument.h"
+
 // CIDs
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
@@ -338,7 +342,24 @@ NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnicha
      }
    }
 
-   return NS_OK;
+  //
+  // Force pending notifications to be processed immediately... This
+  // causes the status message to be displayed synchronously.
+  //
+  // XXX: This is nasty because we have to drill down to the nsIDocument to
+  //      force the flushing...
+  //
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  nsCOMPtr<nsIDocument> doc;
+
+  domWindow->GetDocument(getter_AddRefs(domDoc));
+  doc = do_QueryInterface(domDoc);
+
+  if (doc) {
+    doc->FlushPendingNotifications(PR_TRUE, PR_TRUE);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetWebBrowser(nsIWebBrowser* aWebBrowser)
