@@ -92,7 +92,7 @@ private:
 
     // utility routines
   static void FindFirstAnchor(nsIDOMNode* inNode, nsIDOMNode** outAnchor);
-  static void FindParentNode(nsIDOMNode* inNode, const PRUnichar* inLocalName, nsIDOMNode** outParent);
+  static void FindParentLinkNode(nsIDOMNode* inNode, nsIDOMNode** outParent);
   static void GetAnchorURL(nsIDOMNode* inNode, nsAString& outURL);
   static void CreateLinkText(const nsAString& inURL, const nsAString & inText,
                               nsAString& outLinkText);

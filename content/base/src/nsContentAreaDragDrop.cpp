@@ -1,4 +1,4 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- *//* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -55,7 +55,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMRange.h"
@@ -64,6 +63,9 @@
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLImageElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLBodyElement.h"
+#include "nsIDOMHTMLHtmlElement.h"
 #include "nsITransferable.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
@@ -75,7 +77,12 @@
 #include "nsIFile.h"
 #include "nsIWebNavigation.h"
 #include "nsIDragDropOverride.h"
-
+#include "nsIContent.h"
+#include "nsIXMLContent.h"
+#include "nsINameSpaceManager.h"
+#include "nsUnicharUtils.h"
+#include "nsHTMLAtoms.h"
+#include "nsIURI.h"
 
 NS_IMPL_ADDREF(nsContentAreaDragDrop)
 NS_IMPL_RELEASE(nsContentAreaDragDrop)
@@ -266,7 +273,7 @@ nsContentAreaDragDrop::ExtractURLFromData(const nsACString & inFlavor, nsISuppor
 {
   if ( !inDataWrapper )
     return;
-  outURL = NS_LITERAL_STRING("");
+  outURL.Truncate();
   
   if ( inFlavor.Equals(kUnicodeMime) ) {
     // the data is regular unicode, just go with what we get. It may be a url, it
@@ -383,8 +390,7 @@ nsContentAreaDragDrop::DragDrop(nsIDOMEvent* inMouseEvent)
 //
 // FindFirstAnchor
 //
-// A recursive routine that finds the first child with a localname of "a",
-// meaning that it's an anchor tag.
+// A recursive routine that finds the first child link initiating anchor
 //
 void
 nsContentAreaDragDrop::FindFirstAnchor(nsIDOMNode* inNode, nsIDOMNode** outAnchor)
@@ -393,18 +399,42 @@ nsContentAreaDragDrop::FindFirstAnchor(nsIDOMNode* inNode, nsIDOMNode** outAncho
     return;
   *outAnchor = nsnull;
     
+  static NS_NAMED_LITERAL_STRING(simple, "simple");
+
   nsCOMPtr<nsIDOMNode> curr = inNode;
   while ( curr ) {
     // check me (base case of recursion)
     PRUint16 nodeType = 0;
     curr->GetNodeType(&nodeType);
-    nsAutoString localName;
-    curr->GetLocalName(localName);
-    ToLowerCase(localName);
-    if ( nodeType == nsIDOMNode::ELEMENT_NODE && localName.Equals(NS_LITERAL_STRING("a")) ) {
-      *outAnchor = curr;
-      NS_IF_ADDREF(*outAnchor);
-      return;
+    if ( nodeType == nsIDOMNode::ELEMENT_NODE ) {
+      // a?
+      nsCOMPtr<nsIDOMHTMLAnchorElement> a(do_QueryInterface(curr));
+      if (a) {
+        *outAnchor = curr;
+        NS_ADDREF(*outAnchor);
+        return;
+      }
+
+      // area?
+      nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(curr));
+      if (area) {
+        *outAnchor = curr;
+        NS_ADDREF(*outAnchor);
+        return;
+      }
+
+      // Simple XLink?
+      nsCOMPtr<nsIContent> content(do_QueryInterface(curr));
+      NS_WARN_IF_FALSE(content, "DOM node is not content?");
+      if (!content)
+        return;
+      nsAutoString value;
+      content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
+      if (value.Equals(simple)) {
+        *outAnchor = curr;
+        NS_ADDREF(*outAnchor);
+        return;
+      }
     }
     
     // recursively check my children
@@ -422,16 +452,16 @@ nsContentAreaDragDrop::FindFirstAnchor(nsIDOMNode* inNode, nsIDOMNode** outAncho
 
 }
 
-
 //
-// FindParentNode
+// FindParentLinkNode
 //
-// Finds the parent with the given tag starting at |inNode|. If it gets 
+// Finds the parent with the given link tag starting at |inNode|. If it gets 
 // up to <body> or <html> or the top document w/out finding it, we
 // stop looking and |outParent| will be null.
 //
 void
-nsContentAreaDragDrop::FindParentNode(nsIDOMNode* inNode, const PRUnichar* inLocalName, nsIDOMNode** outParent)
+nsContentAreaDragDrop::FindParentLinkNode(nsIDOMNode* inNode, 
+                                          nsIDOMNode** outParent)
 {
   if ( !inNode || !outParent )
     return;
@@ -443,18 +473,55 @@ nsContentAreaDragDrop::FindParentNode(nsIDOMNode* inNode, const PRUnichar* inLoc
   if ( nodeType == nsIDOMNode::TEXT_NODE )
     inNode->GetParentNode(getter_AddRefs(node));
   
+  static NS_NAMED_LITERAL_STRING(document, "#document");
+  static NS_NAMED_LITERAL_STRING(simple, "simple");
+
   while ( node ) {
+    // (X)HTML body or html?
+    node->GetNodeType(&nodeType);
+    if ( nodeType == nsIDOMNode::ELEMENT_NODE ) {
+      // body?
+      nsCOMPtr<nsIDOMHTMLBodyElement> body(do_QueryInterface(node));
+      if (body) {
+        return;
+      }
+
+      // html?
+      nsCOMPtr<nsIDOMHTMLHtmlElement> html(do_QueryInterface(node));
+      if (html) {
+        return;
+      }
+    }
+
+    // Other document root?
     nsAutoString localName;
     node->GetLocalName(localName);
     if ( localName.IsEmpty() )
       return;
-    ToLowerCase(localName);
-    if ( localName.Equals(NS_LITERAL_STRING("body")) || localName.Equals(NS_LITERAL_STRING("html")) ||
-          localName.Equals(NS_LITERAL_STRING("#document")) )
-      return;
-    if ( localName.Equals(inLocalName) ) {    // found it!
-      *outParent = node;
-      NS_IF_ADDREF(*outParent);
+    if ( localName.Equals(document, nsCaseInsensitiveStringComparator()) )
+      return; // XXX Check if #document always lower case
+
+    if ( nodeType == nsIDOMNode::ELEMENT_NODE ) {
+      PRBool found = PR_FALSE;
+      nsCOMPtr<nsIDOMHTMLAnchorElement> a(do_QueryInterface(node));
+      if (a) {
+        found = PR_TRUE;
+      } else {
+        nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+        NS_WARN_IF_FALSE(content, "DOM node is not content?");
+        if (!content)
+          return;
+        nsAutoString value;
+        content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
+        if (value.Equals(simple)) {
+          found = PR_TRUE;
+        }
+      }
+      if (found) {
+        *outParent = node;
+        NS_ADDREF(*outParent);
+        return;
+      }
     }
     
     // keep going, up to parent
@@ -468,17 +535,56 @@ nsContentAreaDragDrop::FindParentNode(nsIDOMNode* inNode, const PRUnichar* inLoc
 //
 // GetAnchorURL
 //
-// Get the url for this anchor tag. First try the href, and if that's empty,
+// Get the url for this anchor. First try the href, and if that's empty,
 // go for the name.
 //
 void
 nsContentAreaDragDrop::GetAnchorURL(nsIDOMNode* inNode, nsAString& outURL)
 {
+  outURL.Truncate();
+
+  // a?
   nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(inNode));
   if ( anchor ) {
     anchor->GetHref(outURL);
     if ( outURL.IsEmpty() )
      anchor->GetName(outURL);
+  } else {
+    // area?
+    nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(inNode));
+    if ( area ) {
+      area->GetHref(outURL);
+      if ( outURL.IsEmpty() ) {
+        nsCOMPtr<nsIDOMHTMLElement> e(do_QueryInterface(inNode));
+        e->GetId(outURL);
+      }
+    } else {
+      // Try XLink next...
+      nsCOMPtr<nsIContent> content(do_QueryInterface(inNode));
+      nsAutoString value;
+      content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, value);
+      if (value.Equals(NS_LITERAL_STRING("simple"))) {
+        content->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, value);
+        if (!value.IsEmpty()) {
+          nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(inNode));
+          if (xml) {
+            nsCOMPtr<nsIURI> baseURI;
+            if (NS_SUCCEEDED(xml->GetXMLBaseURI(getter_AddRefs(baseURI)))) {
+              nsCAutoString absoluteSpec;
+              baseURI->Resolve(NS_ConvertUCS2toUTF8(value), absoluteSpec);
+              outURL = NS_ConvertUTF8toUCS2(absoluteSpec);
+            }
+          }
+        }
+      } else {
+        // ... or just get the ID
+        nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(inNode));
+        nsCOMPtr<nsIAtom> id;
+        if (xml && NS_SUCCEEDED(xml->GetID(*getter_AddRefs(id))) && id) {
+          id->ToString(outURL);
+        }
+      }
+    }
   }
 }
 
@@ -495,11 +601,11 @@ nsContentAreaDragDrop::CreateLinkText(const nsAString& inURL, const nsAString & 
 {
   // use a temp var in case |inText| is the same string as |outLinkText| to
   // avoid overwriting it while building up the string in pieces.
-  nsAutoString linkText(NS_LITERAL_STRING("<a href=\""));
-  linkText += inURL;
-  linkText += NS_LITERAL_STRING("\">");
-  linkText += inText;
-  linkText += NS_LITERAL_STRING("</a>");
+  nsAutoString linkText(NS_LITERAL_STRING("<a href=\"") +
+                        inURL +
+                        NS_LITERAL_STRING("\">") +
+                        inText +
+                        NS_LITERAL_STRING("</a>") );
   
   outLinkText = linkText;
 }
@@ -513,7 +619,7 @@ nsContentAreaDragDrop::CreateLinkText(const nsAString& inURL, const nsAString & 
 void
 nsContentAreaDragDrop::GetNodeString(nsIDOMNode* inNode, nsAString & outNodeString)
 {
-  outNodeString = NS_LITERAL_STRING("");
+  outNodeString.Truncate();
   
   // use a range to get the text-equivalent of the node
   nsCOMPtr<nsIDOMDocument> doc;
@@ -598,7 +704,11 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
 {
   if ( !outIsAnchor )
     return PR_FALSE;
-  outURLString = outTitleString = outHTMLString = NS_LITERAL_STRING("");
+ 
+  outURLString.Truncate();
+  outTitleString.Truncate();
+  outHTMLString.Truncate();
+ 
   *outIsAnchor = PR_FALSE;
   
   nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(inMouseEvent));
@@ -652,10 +762,7 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
       selection->ContainsNode(firstAnchor, PR_FALSE, &anchorInSelection);
       if ( anchorInSelection ) {
         *outIsAnchor = PR_TRUE;
-        nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement(do_QueryInterface(firstAnchor));
-        NS_ASSERTION(anchorElement, "uh oh, found anchor, but it's not a nsIDOMHTMLAnchorElement");
-        if ( anchorElement )
-          anchorElement->GetHref(urlString);
+        GetAnchorURL(firstAnchor, urlString);
       }
     }
       
@@ -675,83 +782,70 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
     // if the alt key is down, don't start a drag if we're in an anchor because
     // we want to do selection.
     nsCOMPtr<nsIDOMNode> parentAnchor;
-    FindParentNode(draggedNode, NS_LITERAL_STRING("a").get(), getter_AddRefs(parentAnchor));
+    FindParentLinkNode(draggedNode, 
+                   getter_AddRefs(parentAnchor));
     if ( isAltKeyDown && parentAnchor )
       return NS_OK;
     
-    nsAutoString localName;
-    draggedNode->GetLocalName(localName);
-    ToUpperCase(localName);
-    
-    if ( localName.Equals(NS_LITERAL_STRING("AREA")) ) {
-      nsCOMPtr<nsIDOMHTMLAreaElement> draggedElement(do_QueryInterface(draggedNode));
-      NS_ASSERTION(draggedElement, "node is not a domElement");
-      if ( !draggedElement )
-        return PR_FALSE;
-        
+    nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(draggedNode));    
+    if ( area ) {
       *outIsAnchor = PR_TRUE;
       // grab the href as the url, use alt text as the title of the area if it's there.
       // the drag data is the image tag and src attribute.
-      draggedElement->GetAttribute(NS_LITERAL_STRING("href"), urlString);
-      draggedElement->GetAttribute(NS_LITERAL_STRING("alt"), titleString);
+      area->GetAttribute(NS_LITERAL_STRING("href"), urlString);
+      area->GetAttribute(NS_LITERAL_STRING("alt"), titleString);
       if ( titleString.IsEmpty() )
         titleString = urlString;
-      htmlString = NS_LITERAL_STRING("<img src=\"");
-      htmlString += urlString;
-      htmlString += NS_LITERAL_STRING("\"");
-    }
-    else if ( localName.Equals(NS_LITERAL_STRING("IMG")) ) {
-      nsCOMPtr<nsIDOMHTMLImageElement> draggedElement(do_QueryInterface(draggedNode));
-      NS_ASSERTION(draggedElement, "node is not a domElement");
-      if ( !draggedElement )
-        return PR_FALSE;
-        
-      *outIsAnchor = PR_TRUE;
-      // grab the href as the url, use alt text as the title of the area if it's there.
-      // the drag data is the image tag and src attribute.
-      draggedElement->GetAttribute(NS_LITERAL_STRING("src"), urlString);
-      draggedElement->GetAttribute(NS_LITERAL_STRING("alt"), titleString);
-      if ( titleString.IsEmpty() )
-        titleString = urlString;
-      htmlString = NS_LITERAL_STRING("<img src=\"");
-      htmlString += urlString;
-      htmlString += NS_LITERAL_STRING("\"");
-
-      // if the image is also a link, then re-wrap htmlstring in
-      // an anchor tag
-      nsCOMPtr<nsIDOMNode> linkNode;
-      FindParentNode(draggedNode, NS_LITERAL_STRING("a").get(), getter_AddRefs(linkNode));
-      if ( linkNode ) {
-        *outIsAnchor = PR_TRUE;
-        GetAnchorURL(linkNode, urlString);
-        CreateLinkText(urlString, htmlString, htmlString);
-      }
-    }
-    else if ( localName.Equals(NS_LITERAL_STRING("A")) ) {
-      nsCOMPtr<nsIDOMHTMLLinkElement> draggedElement(do_QueryInterface(draggedNode));
-      NS_ASSERTION(draggedElement, "node is not a domElement");
-      if ( !draggedElement )
-        return PR_FALSE;
-        
-      *outIsAnchor = PR_TRUE;
-      GetAnchorURL(draggedNode, urlString);
-      GetNodeString(draggedNode, titleString);
-    }
+      htmlString = NS_LITERAL_STRING("<img src=\"") +
+        urlString +
+        NS_LITERAL_STRING("\">");
+    } // area
     else {
-      nsCOMPtr<nsIDOMNode> linkNode;
-      FindParentNode(draggedNode, NS_LITERAL_STRING("a").get(), getter_AddRefs(linkNode));
-      if ( linkNode ) {
+      nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(draggedNode));
+      if ( img ) {
         *outIsAnchor = PR_TRUE;
-        GetAnchorURL(linkNode, urlString);
-        GetNodeString(linkNode, titleString);
-        
-        // select siblings up to and including the selected link. this
-        // shouldn't be fatal, and we should still do the drag if this fails
-        NormalizeSelection(linkNode, selection);
-      }
+        // grab the href as the url, use alt text as the title of the area if it's there.
+        // the drag data is the image tag and src attribute.
+        img->GetSrc(urlString);
+        img->GetAttribute(NS_LITERAL_STRING("alt"), titleString);
+        if ( titleString.IsEmpty() )
+          titleString = urlString;
+        htmlString = NS_LITERAL_STRING("<img src=\"") +
+          urlString +
+          NS_LITERAL_STRING("\">");
+
+        // if the image is also a link, then re-wrap htmlstring in
+        // an anchor tag
+        if ( parentAnchor ) {
+          *outIsAnchor = PR_TRUE;
+          GetAnchorURL(parentAnchor, urlString);
+          CreateLinkText(urlString, htmlString, htmlString);
+        }
+      } // img
       else {
-        // indicate that we don't allow drags in this case
-        startDrag = PR_FALSE;
+        nsCOMPtr<nsIDOMHTMLLinkElement> link(do_QueryInterface(draggedNode));
+        if ( link ) {
+          *outIsAnchor = PR_TRUE;
+          GetAnchorURL(draggedNode, urlString);
+          GetNodeString(draggedNode, titleString);
+        } // link
+        else {
+          nsCOMPtr<nsIDOMNode> linkNode;
+          FindParentLinkNode(draggedNode, getter_AddRefs(linkNode));
+          if ( linkNode ) {
+            *outIsAnchor = PR_TRUE;
+            GetAnchorURL(linkNode, urlString);
+            GetNodeString(linkNode, titleString);
+        
+            // select siblings up to and including the selected link. this
+            // shouldn't be fatal, and we should still do the drag if this fails
+            NormalizeSelection(linkNode, selection);
+          }
+          else {
+            // indicate that we don't allow drags in this case
+            startDrag = PR_FALSE;
+          }
+        }
       }
     }
   } // else no selection or drag outside it
