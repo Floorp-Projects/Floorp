@@ -82,6 +82,9 @@ public:
 
 	char * savePrincipalPermanently(void);
 
+    /* Caller should free the principals and the Principal array */
+	static nsPrincipalArray* getSigners(void* zigPtr, char* pathname);
+
 
 private:
 	/* Private Field Accessors */

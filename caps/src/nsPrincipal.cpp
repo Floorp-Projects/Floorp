@@ -436,6 +436,60 @@ char * nsPrincipal::savePrincipalPermanently(void)
 }
 
 
+/* The following used to be LJ_GetCertificates */
+nsPrincipalArray* nsPrincipal::getSigners(void* zigPtr, char* pathname)
+{
+  SOBITEM *item;
+  ZIG *zig = (ZIG *)zigPtr;
+  struct nsPrincipal *principal;
+  ZIG_Context * context;
+  FINGERZIG *fingPrint;
+  int size=0;
+  int slot=0;
+
+  if (!pathname)
+    return NULL;
+
+  if (!zig) {
+    return NULL;
+  }
+
+  /* count the number of signers */ 
+  if ((context = SOB_find(zig, pathname, ZIG_SIGN)) == NULL)
+    return NULL;
+  while (SOB_find_next (context, &item) >= 0) {
+    size++;
+  }
+  SOB_find_end(context);
+
+  /* Now allocate the array */
+  nsPrincipalArray *result = new nsPrincipalArray();
+  result->SetSize(size, 1);
+  if (result == NULL) {
+    return NULL;
+  }
+
+  if ((context = SOB_find(zig, pathname, ZIG_SIGN)) == NULL) {
+    return NULL;
+  }
+  while (SOB_find_next(context, &item) >= 0) {
+    PR_ASSERT(slot < size);
+
+    /* Allocate the Cert's FP and put them in an array */
+    fingPrint = (FINGERZIG *) item->data;
+    principal = nsCapsNewPrincipal(nsPrincipalType_CertKey, 
+                                   fingPrint->key, 
+                                   fingPrint->length,
+                                   zig);
+    nsCapsSetPrincipalArrayElement(result, slot++, principal);
+
+  }
+  SOB_find_end(context);
+   
+  return result;
+}
+
+
 //
 // 			PRIVATE METHODS 
 //
