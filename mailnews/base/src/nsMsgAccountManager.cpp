@@ -909,7 +909,7 @@ nsMsgAccountManager::addIdentityIfUnique(nsISupports *element, void *aData)
     array->GetElementAt(i, getter_AddRefs(thisElement));
 
     nsCOMPtr<nsIMsgIdentity> thisIdentity =
-      do_QueryInterface(element, &rv);
+      do_QueryInterface(thisElement, &rv);
     if (NS_FAILED(rv)) continue;
 
     nsXPIDLCString thisKey;
