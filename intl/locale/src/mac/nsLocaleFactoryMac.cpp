@@ -20,6 +20,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsCollationMac.h"
+#include "nsDateTimeFormatCID.h"
 #include "nsDateTimeFormatMac.h"
 #include "nsLocaleFactoryMac.h"
 
@@ -100,6 +101,9 @@ nsresult nsLocaleMacFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (aIID.Equals(kIDateTimeFormatIID)) {
      NS_NEWXPCOM(inst, nsDateTimeFormatMac);
+  }
+  else if (aIID.Equals(nsIScriptableDateFormat::GetIID())) {
+     inst = NEW_SCRIPTABLE_DATEFORMAT();
   }
   else 
   {

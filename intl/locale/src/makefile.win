@@ -31,11 +31,13 @@ LIBRARY_NAME = nslocale_s
 
 CPPSRCS		=	nsLocale.cpp				\
 				nsLocaleFactory.cpp			\
+				nsScriptableDateFormat.cpp			\
 				nsCollation.cpp
 
 
 CPP_OBJS	=	.\$(OBJDIR)\nsLocale.obj			\
 				.\$(OBJDIR)\nsLocaleFactory.obj		\
+				.\$(OBJDIR)\nsScriptableDateFormat.obj		\
 				.\$(OBJDIR)\nsCollation.obj
 
 LINCS		= -I.						\

@@ -147,7 +147,10 @@ static void DebugDump(nsString& aString, ostream& aStream) {
   aStream.flush();
   printf("%s\n", oOutputStr);
 #else
- aString.DebugDump(aStream);
+  for (int i = 0; i < aString.Length(); i++) {
+    aStream << (char) aString[i];
+  }
+  aStream << "\n";
 #endif
 }
 
@@ -197,7 +200,6 @@ static void TestCollation(nsILocale *locale)
      PRUint8 *aKey1, *aKey2, *aKey3;
      PRUint32 i;
      PRInt32 result;
-     nsresult res;
 
       cout << "String data used:\n";
       cout << "string1: ";
@@ -663,12 +665,59 @@ static void TestSort(nsILocale *locale, nsCollationStrength collationStrength, F
 //
 static void TestDateTimeFormat(nsILocale *locale)
 {
+  nsresult res;
+
+  cout << "==============================\n";
+  cout << "Start nsIScriptableDateFormat Test \n";
+  cout << "==============================\n";
+
+  nsIScriptableDateFormat *aScriptableDateFormat;
+  res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
+                                           NULL,
+                                           nsIScriptableDateFormat::GetIID(),
+                                           (void**) &aScriptableDateFormat);
+  if(NS_FAILED(res) || ( aScriptableDateFormat == NULL ) ) {
+    cout << "\tnsIScriptableDateFormat CreateInstance failed\n";
+  }
+
+  const PRUnichar *aUnichar;
+  nsString aString;
+  PRUnichar aLocaleUnichar[1];
+  *aLocaleUnichar = 0;
+  res = aScriptableDateFormat->FormatDateTime(aLocaleUnichar, kDateFormatShort, kTimeFormatSeconds,
+                        1999, 
+                        7, 
+                        31, 
+                        8, 
+                        21, 
+                        58,
+                        &aUnichar);
+  aString.SetString(aUnichar);
+  DebugDump(aString, cout);
+
+  res = aScriptableDateFormat->FormatDate(aLocaleUnichar, kDateFormatLong,
+                        1970, 
+                        4, 
+                        20, 
+                        &aUnichar);
+  aString.SetString(aUnichar);
+  DebugDump(aString, cout);
+
+  res = aScriptableDateFormat->FormatTime(aLocaleUnichar, kTimeFormatSecondsForce24Hour,
+                        13, 
+                        59, 
+                        31,
+                        &aUnichar);
+  aString.SetString(aUnichar);
+  DebugDump(aString, cout);
+
+  aScriptableDateFormat->Release();
+
   cout << "==============================\n";
   cout << "Start nsIDateTimeFormat Test \n";
   cout << "==============================\n";
 
   nsIDateTimeFormat *t = NULL;
-  nsresult res;
   res = nsComponentManager::CreateInstance(kDateTimeFormatCID,
                                            NULL,
                                            nsIDateTimeFormat::GetIID(),
