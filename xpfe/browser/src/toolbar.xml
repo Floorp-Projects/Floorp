@@ -16,7 +16,7 @@
   </xul:commands>
   <xul:menubar>
     <xul:menu name="File">
-      <xul:menuitem name="Print" cmd="nsCmd:BrowserPrint""/>
+      <xul:menuitem name="Print" cmd="nsCmd:BrowserPrint"/>
     </xul:menu>
     <xul:menu name="View">
       <xul:menuitem name="Reload" cmd="nsCmd:BrowserReload"/>
