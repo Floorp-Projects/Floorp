@@ -715,7 +715,7 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   focusWidget->DispatchKeyEvent(keyEvent);
 
   keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
-  keyEvent.charCode = string_buf[0];
+  keyEvent.charCode = isprint(string_buf[0]) ? string_buf[0] : 0;
   keyEvent.time = event->xkey.time;
   keyEvent.isShift = event->xkey.state & ShiftMask;
   keyEvent.isControl = event->xkey.state & ControlMask;
