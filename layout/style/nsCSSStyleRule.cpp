@@ -1912,37 +1912,35 @@ MapDeclarationDisplayInto(nsICSSDeclaration* aDeclaration,
           display->mClipFlags = 0; // clear it
 
           if (eCSSUnit_Auto == ourDisplay->mClip->mTop.GetUnit()) {
-            display->mClip.y = 0;
+            display->mClip.top = 0;
             display->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
           } 
           else if (ourDisplay->mClip->mTop.IsLengthUnit()) {
-            display->mClip.y = CalcLength(ourDisplay->mClip->mTop, aFont->mFont, aPresContext);
-            fullAuto = PR_FALSE;
-          }
-          if (eCSSUnit_Auto == ourDisplay->mClip->mBottom.GetUnit()) {
-            display->mClip.height = 0;
-            display->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
-          } 
-          else if (ourDisplay->mClip->mBottom.IsLengthUnit()) {
-            display->mClip.height = CalcLength(ourDisplay->mClip->mBottom, aFont->mFont, aPresContext) -
-                                    display->mClip.y;
-            fullAuto = PR_FALSE;
-          }
-          if (eCSSUnit_Auto == ourDisplay->mClip->mLeft.GetUnit()) {
-            display->mClip.x = 0;
-            display->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
-          } 
-          else if (ourDisplay->mClip->mLeft.IsLengthUnit()) {
-            display->mClip.x = CalcLength(ourDisplay->mClip->mLeft, aFont->mFont, aPresContext);
+            display->mClip.top = CalcLength(ourDisplay->mClip->mTop, aFont->mFont, aPresContext);
             fullAuto = PR_FALSE;
           }
           if (eCSSUnit_Auto == ourDisplay->mClip->mRight.GetUnit()) {
-            display->mClip.width = 0;
+            display->mClip.right = 0;
             display->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
           } 
           else if (ourDisplay->mClip->mRight.IsLengthUnit()) {
-            display->mClip.width = CalcLength(ourDisplay->mClip->mRight, aFont->mFont, aPresContext) -
-                                   display->mClip.x;
+            display->mClip.right = CalcLength(ourDisplay->mClip->mRight, aFont->mFont, aPresContext);
+            fullAuto = PR_FALSE;
+          }
+          if (eCSSUnit_Auto == ourDisplay->mClip->mBottom.GetUnit()) {
+            display->mClip.bottom = 0;
+            display->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
+          } 
+          else if (ourDisplay->mClip->mBottom.IsLengthUnit()) {
+            display->mClip.bottom = CalcLength(ourDisplay->mClip->mBottom, aFont->mFont, aPresContext);
+            fullAuto = PR_FALSE;
+          }
+          if (eCSSUnit_Auto == ourDisplay->mClip->mLeft.GetUnit()) {
+            display->mClip.left = 0;
+            display->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
+          } 
+          else if (ourDisplay->mClip->mLeft.IsLengthUnit()) {
+            display->mClip.left = CalcLength(ourDisplay->mClip->mLeft, aFont->mFont, aPresContext);
             fullAuto = PR_FALSE;
           }
           display->mClipFlags &= ~NS_STYLE_CLIP_TYPE_MASK;
