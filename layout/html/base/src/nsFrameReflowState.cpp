@@ -71,31 +71,9 @@ nsFrameReflowState::nsFrameReflowState(nsIPresContext& aPresContext,
   if ((0 != mBorderPadding.top) || (0 != mBorderPadding.bottom)) {
     mIsMarginRoot = PR_TRUE;
   }
-  else {
-    // A sleazy way to detect a block frame that's acting on behalf of
-    // another frame to reflow the other frames contents.
-    // XXX a better solution puhleeze!
-    nsIFrame* parent;
-    frame->GetGeometricParent(parent);
-    if (nsnull != parent) {
-      nsIContent* parentContent;
-      parent->GetContent(parentContent);
-      if (nsnull != parentContent) {
-        nsIContent* frameContent;
-        frame->GetContent(frameContent);
-        if (nsnull != frameContent) {
-          if (parentContent == frameContent) {
-            mIsMarginRoot = PR_TRUE;
-          }
-          NS_RELEASE(frameContent);
-        }
-        NS_RELEASE(parentContent);
-      }
-    }
-  }
-
   mCollapsedTopMargin = 0;
   mPrevBottomMargin = 0;
+  mCarriedOutMarginFlags = 0;
 }
 
 nsFrameReflowState::~nsFrameReflowState()
