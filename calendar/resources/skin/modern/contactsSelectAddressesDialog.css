@@ -1,0 +1,40 @@
+/** INSERT OPEN OEONE LICENSE */
+
+/*--------------------------------------------------------------------
+ *   Select Addresses Dialog
+ *-------------------------------------------------------------------*/
+
+#contactsSelectAddressesDialogWindow
+{
+    min-height: 300px;
+    min-width: 650px;
+} 
+
+#topBox
+{
+    min-width: 300px;
+    -moz-box-align: left;
+}
+
+#abResultsTree treechildren:-moz-tree-row( disabled )
+{
+  background-color: transparent;
+}
+
+#abResultsTree treechildren:-moz-tree-cell-text( disabled )
+{
+    font-style: italic;
+}
+
+#addressBookList
+{
+    min-width: 20em;
+    max-width: 20em;
+}
+
+#bucketBox
+{
+    min-width: 100px;
+}
+ 
+ 
