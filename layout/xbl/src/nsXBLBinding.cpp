@@ -48,6 +48,7 @@
 #include "nsINameSpace.h"
 
 // Event listeners
+#include "nsIEventListenerManager.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMLoadListener.h"
@@ -123,6 +124,8 @@ class nsXBLBinding: public nsIXBLBinding
 public:
   nsXBLBinding();
   virtual ~nsXBLBinding();
+
+  NS_IMETHOD AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
 
 // Static members
   static PRUint32 gRefCnt;
@@ -503,6 +506,8 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
           PRBool key = IsKeyHandler(type);
           PRBool xul = IsXULHandler(type);
 
+          nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
+            
           if (mouse || key || xul) {
             // Create a new nsXBLEventHandler.
             nsXBLEventHandler* handler;
@@ -516,7 +521,6 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
               useCapture = PR_TRUE;
 
             // Add the event listener.
-            nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
             if (mouse)
               receiver->AddEventListener(type, (nsIDOMMouseListener*)handler, useCapture);
             else if(key)
@@ -526,8 +530,12 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
 
             NS_RELEASE(handler);
           }
-      
-          // XXX Call AddScriptEventListener for other IID types
+          else {
+            // Call AddScriptEventListener for other IID types
+            nsAutoString value;
+            child->GetAttribute(kNameSpaceID_None, kValueAtom, value);
+            AddScriptEventListener(mBoundElement, eventAtom, value, iid);
+          }
         }
       }
     }
@@ -871,6 +879,51 @@ nsXBLBinding::IsXULHandler(const nsString& aName)
 {
   return ((aName == "create") || (aName == "destroy") || (aName=="broadcast") ||
           (aName == "command") || (aName == "commandupdate") || (aName == "close"));
+}
+
+NS_IMETHODIMP
+nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID)
+{
+  nsAutoString val;
+  aName->ToString(val);
+  
+  nsAutoString eventStr("on");
+  eventStr += val;
+
+  nsCOMPtr<nsIAtom> eventName = getter_AddRefs(NS_NewAtom(eventStr));
+
+  nsresult rv;
+  nsCOMPtr<nsIDocument> document;
+  aElement->GetDocument(*getter_AddRefs(document));
+  if (!document)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(aElement));
+  if (!receiver)
+    return NS_OK;
+
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  document->GetScriptGlobalObject(getter_AddRefs(global));
+
+  // This can happen normally as part of teardown code.
+  if (!global)
+    return NS_OK;
+
+  nsCOMPtr<nsIScriptContext> context;
+  rv = global->GetContext(getter_AddRefs(context));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIEventListenerManager> manager;
+  rv = receiver->GetListenerManager(getter_AddRefs(manager));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIScriptObjectOwner> scriptOwner(do_QueryInterface(receiver));
+  if (!scriptOwner)
+    return NS_OK;
+
+  rv = manager->AddScriptEventListener(context, scriptOwner, eventName, aValue, aIID, PR_FALSE);
+
+  return rv;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
