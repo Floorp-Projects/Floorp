@@ -1,3 +1,34 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: Mozilla-sample-code 1.0
+ *
+ * Copyright (c) 2002 Netscape Communications Corporation and
+ * other contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this Mozilla sample software and associated documentation files
+ * (the "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the
+ * following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Contributor(s):
+ *
+ *   adamlock@netscape.com
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 #include "GeckoProtocolHandler.h"
 
 #include "nsString.h"
@@ -50,6 +81,42 @@ public:
     static NS_METHOD Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 };
 
+
+class GeckoProtocolChannel :
+    public nsIChannel,
+    public nsIStreamListener
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIREQUEST
+    NS_DECL_NSICHANNEL
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSISTREAMLISTENER
+
+    GeckoProtocolChannel();
+    nsresult Init(nsIURI *aURI);
+
+protected:
+    nsCOMPtr<nsIURI>                    mURI;
+    nsCOMPtr<nsIURI>                    mOriginalURI;
+    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
+    nsCOMPtr<nsIProgressEventSink>      mProgressSink;
+    nsCOMPtr<nsISupports>               mOwner;
+    nsCOMPtr<nsILoadGroup>              mLoadGroup;
+    nsCOMPtr<nsIStreamListener>         mListener;
+    nsCOMPtr<nsISupports>               mListenerContext;
+    nsCOMPtr<nsIInputStream>            mContentStream;
+    nsCString                           mContentType;
+    nsCString                           mContentCharset;
+    PRUint32                            mLoadFlags;
+    nsresult                            mStatus;
+    PRUint32                            mContentLength;
+    void                              * mData;
+    nsCOMPtr<nsIInputStreamPump>        mPump;
+
+    virtual ~GeckoProtocolChannel();
+};
+
 nsresult GeckoProtocolHandler::RegisterHandler(const char *aScheme, const char *aDescription, GeckoChannelCallback *aCallback)
 {
     if (!aScheme || !aCallback)
@@ -97,45 +164,10 @@ nsresult GeckoProtocolHandler::RegisterHandler(const char *aScheme, const char *
 ///////////////////////////////////////////////////////////////////////////////
 
 
-class GeckoProtocolChannel :
-    public nsIChannel,
-    public nsIStreamListener
-{
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUEST
-    NS_DECL_NSICHANNEL
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
-
-    GeckoProtocolChannel();
-    nsresult Init(nsIURI *aURI);
-
-protected:
-    nsCOMPtr<nsIURI>                    mURI;
-    nsCOMPtr<nsIURI>                    mOriginalURI;
-    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
-    nsCOMPtr<nsIProgressEventSink>      mProgressSink;
-    nsCOMPtr<nsISupports>               mOwner;
-    nsCOMPtr<nsILoadGroup>              mLoadGroup;
-    nsCOMPtr<nsIStreamListener>         mListener;
-    nsCOMPtr<nsISupports>               mListenerContext;
-    nsCOMPtr<nsIInputStream>            mContentStream;
-    nsCString                           mContentType;
-    nsCString                           mContentCharset;
-    PRUint32                            mLoadFlags;
-    nsresult                            mStatus;
-    PRUint32                             mContentLength;
-    void                              * mData;
-    nsCOMPtr<nsIInputStreamPump>        mPump;
-
-    virtual ~GeckoProtocolChannel();
-};
-
 GeckoProtocolChannel::GeckoProtocolChannel() :
     mContentLength(0),
     mData(nsnull),
-    mStatus(NS_OK),
+    mStatus(NS_ERROR_FAILURE),
     mLoadFlags(LOAD_NORMAL)
 {
 }

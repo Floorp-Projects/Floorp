@@ -38,6 +38,7 @@ MOZINC = \
   -I$(MOZSDK)\include\profile \
   -I$(MOZSDK)\include\webbrwsr \
   -I$(MOZSDK)\include\embed_base \
+  -I$(MOZSDK)\include\windowwatcher \
   $(NULL)
 
 # This isn't much better either!
