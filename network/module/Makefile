@@ -44,6 +44,7 @@ EXPORTS = nsIStreamListener.h           \
           nsIHttpUrl.h                  \
           nsINetContainerApplication.h  \
           nsIRefreshUrl.h               \
+	  nsIConnectionInfo.h		\
           $(NULL)
 
 include $(DEPTH)/config/config.mk

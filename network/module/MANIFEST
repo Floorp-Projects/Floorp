@@ -11,3 +11,4 @@ nsIPostToServer.h
 nsIHttpUrl.h
 nsINetContainerApplication.h
 nsIRefreshUrl.h
+nsIConnectionInfo.h
