@@ -396,3 +396,8 @@ NSPR_4.3 {
 		PR_CallOnceWithArg;
 		PR_GetLibraryFilePathname;
 } NSPR_4.1;
+
+NSPR_4.4 {
+	global:
+		PR_GetPathSeparator;
+} NSPR_4.3;

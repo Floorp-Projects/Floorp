@@ -57,6 +57,13 @@ NSPR_API(char) PR_GetDirectorySeparator(void);
 
 NSPR_API(char) PR_GetDirectorySepartor(void);
 
+/*
+** Get the host' path separator.
+**  Paths are assumed to be of the form:
+**      <directory>[<sep><directory>]*
+*/
+
+NSPR_API(char) PR_GetPathSeparator(void);
 
 /* Types of information available via PR_GetSystemInfo(...) */
 typedef enum {

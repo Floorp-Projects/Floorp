@@ -86,6 +86,11 @@ PR_IMPLEMENT(char) PR_GetDirectorySepartor(void)
     return PR_GetDirectorySeparator();
 }  /* PR_GetDirectorySepartor */
 
+PR_IMPLEMENT(char) PR_GetPathSeparator(void)
+{
+    return PR_PATH_SEPARATOR;
+}  /* PR_GetPathSeparator */
+
 PR_IMPLEMENT(PRStatus) PR_GetSystemInfo(PRSysInfo cmd, char *buf, PRUint32 buflen)
 {
     PRUintn len = 0;
