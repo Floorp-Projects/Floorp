@@ -1191,7 +1191,10 @@ nsStyleContent::CalcDifference(const nsStyleContent& aOther) const
       while (0 < ix--) {
         if ((mContents[ix].mType != aOther.mContents[ix].mType) || 
             (mContents[ix].mContent != aOther.mContents[ix].mContent)) {
-          return NS_STYLE_HINT_REFLOW;
+          // Unfortunately we need to reframe here; a simple reflow
+          // will not pick up different text or different image URLs,
+          // since we set all that up in the CSSFrameConstructor
+          return NS_STYLE_HINT_FRAMECHANGE;
         }
       }
       ix = mIncrementCount;
