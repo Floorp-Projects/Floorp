@@ -926,6 +926,7 @@ nsHttpTransaction::Read(char *buf, PRUint32 count, PRUint32 *bytesWritten)
             NS_ASSERTION(mConnection, "no connection");
             mConnection->PushBack(buf + countConsumed, count - countConsumed);
         }
+        return rv;
     }
 
     // wait for more data
