@@ -45,7 +45,10 @@ body {
 	max-width: 120ex;
 }
 
-:link:hover { color: red; }
+:link:hover,
+:visited:hover {
+  color: -moz-activehyperlinktext;
+}
 
 a[href^="http://"]:after,
 a[href^="https://"]:after {
