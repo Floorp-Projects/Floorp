@@ -443,10 +443,10 @@ void
 nsTableOuterFrame::ZeroAutoMargin(nsHTMLReflowState& aReflowState,
                                   nsMargin&          aMargin)
 {
-  if (eStyleUnit_Auto == aReflowState.mStyleSpacing->mMargin.GetLeftUnit()) {
+  if (eStyleUnit_Auto == aReflowState.mStyleMargin->mMargin.GetLeftUnit()) {
     aMargin.left = 0;
   }
-  if (eStyleUnit_Auto == aReflowState.mStyleSpacing->mMargin.GetRightUnit()) {
+  if (eStyleUnit_Auto == aReflowState.mStyleMargin->mMargin.GetRightUnit()) {
     aMargin.right = 0;
   }
 }
@@ -456,8 +456,8 @@ FixAutoMargins(nscoord            aAvailWidth,
                nsHTMLReflowState& aReflowState)
 {
   // see if there are auto margins. they may have been set to 0 in mComputedMargin
-  PRBool hasAutoMargin = eStyleUnit_Auto == aReflowState.mStyleSpacing->mMargin.GetLeftUnit() ||
-                         eStyleUnit_Auto == aReflowState.mStyleSpacing->mMargin.GetRightUnit();
+  PRBool hasAutoMargin = eStyleUnit_Auto == aReflowState.mStyleMargin->mMargin.GetLeftUnit() ||
+                         eStyleUnit_Auto == aReflowState.mStyleMargin->mMargin.GetRightUnit();
   if (hasAutoMargin) {
     nsRect rect;
     aReflowState.frame->GetRect(rect);

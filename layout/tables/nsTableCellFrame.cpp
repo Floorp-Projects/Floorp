@@ -302,10 +302,10 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
       }
 //END SELECTION
 
-      const nsStyleSpacing* mySpacing =
-        (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+      const nsStyleBorder* myBorder =
+        (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
       NS_ASSERTION(nsnull!=myColor, "bad style color");
-      NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
+      NS_ASSERTION(nsnull!=myBorder, "bad style spacing");
 
       const nsStyleTable* cellTableStyle;
       GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)cellTableStyle)); 
@@ -314,7 +314,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
       // only non empty cells render their background
       if (PR_FALSE == GetContentEmpty()) {
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
+                                        aDirtyRect, rect, *myColor, *myBorder, 0, 0);
       }
     
       // empty cells do not render their border
@@ -336,7 +336,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
           if (NS_STYLE_BORDER_SEPARATE == tableFrame->GetBorderCollapseStyle())
           {
             nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *mySpacing, mStyleContext, skipSides);
+                                        aDirtyRect, rect, *myBorder, mStyleContext, skipSides);
           }
           else
           {
@@ -782,7 +782,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     kidOrigin.MoveTo(leftInset, topInset);
   } else {
     // handle percent padding-left which was 0 during initial reflow
-    if (eStyleUnit_Percent == aReflowState.mStyleSpacing->mPadding.GetLeftUnit()) {
+    if (eStyleUnit_Percent == aReflowState.mStylePadding->mPadding.GetLeftUnit()) {
       nsRect kidRect;
       firstKid->GetRect(kidRect);
       // only move in the x direction for the same reason as above
@@ -932,7 +932,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   *
   */
 void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, 
-                                          nsStyleSpacing& aSpacingStyle,
+                                          nsStyleBorder&  aBorderStyle,
                                           nsTableFrame*   aTableFrame)
 {
   //adjust the border style based on the table rules attribute
@@ -946,20 +946,20 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
   switch (tableStyle->mRules)
   {
   case NS_STYLE_TABLE_RULES_NONE:
-    aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-    aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
-    aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-    aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+    aBorderStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+    aBorderStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+    aBorderStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+    aBorderStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
     break;
 
   case NS_STYLE_TABLE_RULES_COLS:
-	  aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-    aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+	  aBorderStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+    aBorderStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
     break;
 
   case NS_STYLE_TABLE_RULES_ROWS:
-    aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
-    aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+    aBorderStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+    aBorderStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
     break;
 
   default:
@@ -1000,9 +1000,9 @@ void nsTableCellFrame::MapBorderPadding(nsIPresContext* aPresContext)
   // get the table frame style context, and from it get cellpadding, cellspacing, and border info
   const nsStyleTable* tableStyle;
   tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  const nsStyleSpacing* tableSpacingStyle;
-  tableFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)tableSpacingStyle);
-  nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
+  const nsStylePadding* tablePaddingStyle;
+  tableFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct *&)tablePaddingStyle);
+  nsStylePadding* paddingData = (nsStylePadding*)mStyleContext->GetMutableStyleData(eStyleStruct_Padding);
 
   float p2t;
   aPresContext->GetPixelsToTwips(&p2t);
@@ -1015,16 +1015,17 @@ void nsTableCellFrame::MapBorderPadding(nsIPresContext* aPresContext)
   }
 
   // if the padding is not already set, set it to the table's cellpadding
-  if (eStyleUnit_Null == spacingData->mPadding.GetTopUnit()) 
-    spacingData->mPadding.SetTop(defaultPadding);
-  if (eStyleUnit_Null == spacingData->mPadding.GetRightUnit()) 
-    spacingData->mPadding.SetRight(defaultPadding); 
-  if (eStyleUnit_Null == spacingData->mPadding.GetBottomUnit())
-    spacingData->mPadding.SetBottom(defaultPadding);
-  if (eStyleUnit_Null == spacingData->mPadding.GetLeftUnit()) 
-    spacingData->mPadding.SetLeft(defaultPadding);
+  if (eStyleUnit_Null == paddingData->mPadding.GetTopUnit()) 
+    paddingData->mPadding.SetTop(defaultPadding);
+  if (eStyleUnit_Null == paddingData->mPadding.GetRightUnit()) 
+    paddingData->mPadding.SetRight(defaultPadding); 
+  if (eStyleUnit_Null == paddingData->mPadding.GetBottomUnit())
+    paddingData->mPadding.SetBottom(defaultPadding);
+  if (eStyleUnit_Null == paddingData->mPadding.GetLeftUnit()) 
+    paddingData->mPadding.SetLeft(defaultPadding);
 
-  MapHTMLBorderStyle(aPresContext, *spacingData, tableFrame);
+  nsStyleBorder* borderData = (nsStyleBorder*)mStyleContext->GetMutableStyleData(eStyleStruct_Border);
+  MapHTMLBorderStyle(aPresContext, *borderData, tableFrame);
 
   MapVAlignAttribute(aPresContext, tableFrame);
   MapHAlignAttribute(aPresContext, tableFrame);
@@ -1275,9 +1276,9 @@ nsTableCellFrame::GetCellBorder(nsMargin&     aBorder,
     NS_PRECONDITION(mBorderEdges, "haven't allocated border edges struct");
     aBorder = mBorderEdges->mMaxBorderWidth;
   } else {
-    const nsStyleSpacing* spacing;
-    GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
-    spacing->GetBorder(aBorder);
+    const nsStyleBorder* borderData;
+    GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData);
+    borderData->GetBorder(aBorder);
   }
 }
 

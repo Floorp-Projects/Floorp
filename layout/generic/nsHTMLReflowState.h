@@ -33,7 +33,9 @@ class nsLineLayout;
 
 struct nsStyleDisplay;
 struct nsStylePosition;
-struct nsStyleSpacing;
+struct nsStyleBorder;
+struct nsStyleMargin;
+struct nsStylePadding;
 struct nsStyleText;
 struct nsHypotheticalBox;
 
@@ -206,7 +208,9 @@ struct nsHTMLReflowState {
   // Cached pointers to the various style structs used during intialization
   const nsStyleDisplay* mStyleDisplay;
   const nsStylePosition* mStylePosition;
-  const nsStyleSpacing* mStyleSpacing;
+  const nsStyleBorder* mStyleBorder;
+  const nsStyleMargin* mStyleMargin;
+  const nsStylePadding* mStylePadding;
   const nsStyleText* mStyleText;
 
   // This value keeps track of how deeply nested a given reflow state

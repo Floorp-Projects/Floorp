@@ -929,9 +929,9 @@ nsresult nsFormControlFrame::PaintSpecialBorder(nsIPresContext* aPresContext,
     if (specialBorderStyle){
       // paint the border
 
-      const nsStyleSpacing* spacing = (const nsStyleSpacing*)specialBorderStyle ->GetStyleData(eStyleStruct_Spacing);
+      const nsStyleBorder* border = (const nsStyleBorder*)specialBorderStyle ->GetStyleData(eStyleStruct_Border);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aFrame,
-                                  aDirtyRect, aRect, *spacing, specialBorderStyle, 0);
+                                  aDirtyRect, aRect, *border, specialBorderStyle, 0);
     }
 
   } else {

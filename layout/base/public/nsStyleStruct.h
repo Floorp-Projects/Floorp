@@ -25,15 +25,22 @@
 enum nsStyleStructID {
   eStyleStruct_Font           = 1,
   eStyleStruct_Color          = 2,
-  eStyleStruct_Spacing        = 3,
-  eStyleStruct_List           = 4,
-  eStyleStruct_Position       = 5,
-  eStyleStruct_Text           = 6,
-  eStyleStruct_Display        = 7,
-  eStyleStruct_Table          = 8,
-  eStyleStruct_Content        = 9,
-  eStyleStruct_UserInterface  = 10,
-  eStyleStruct_Print					= 11
+  eStyleStruct_List           = 3,
+  eStyleStruct_Position       = 4,
+  eStyleStruct_Text           = 5,
+  eStyleStruct_Display        = 6,
+  eStyleStruct_Table          = 7,
+  eStyleStruct_Content        = 8,
+  eStyleStruct_UserInterface  = 9,
+  eStyleStruct_Print					= 10,
+  eStyleStruct_Margin         = 11,
+  eStyleStruct_Padding        = 12,
+  eStyleStruct_Border         = 13,
+  eStyleStruct_Outline        = 14,
+
+  eStyleStruct_Max            = eStyleStruct_Outline,
+
+  eStyleStruct_BorderPaddingShortcut = 15       // only for use in GetStyle()
 };
 
 

@@ -2371,33 +2371,41 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
   nsCSSMargin*  ourMargin;
   if (NS_OK == aDeclaration->GetData(kCSSMarginSID, (nsCSSStruct**)&ourMargin)) {
     if (nsnull != ourMargin) {
-      nsStyleSpacing* spacing = (nsStyleSpacing*)
-        aContext->GetMutableStyleData(eStyleStruct_Spacing);
+      nsStyleMargin* margin = (nsStyleMargin*)aContext->GetMutableStyleData(eStyleStruct_Margin);
+      nsStylePadding* padding = (nsStylePadding*)aContext->GetMutableStyleData(eStyleStruct_Padding);
+      nsStyleBorder* border = (nsStyleBorder*)aContext->GetMutableStyleData(eStyleStruct_Border);
+      nsStyleOutline* outline = (nsStyleOutline*)aContext->GetMutableStyleData(eStyleStruct_Outline);
 
-      const nsStyleSpacing* parentSpacing = spacing;
+      const nsStyleMargin* parentMargin = margin;
+      const nsStylePadding* parentPadding = padding;
+      const nsStyleBorder* parentBorder = border;
+      const nsStyleOutline* parentOutline = outline;
       if (nsnull != aParentContext) {
-        parentSpacing = (const nsStyleSpacing*)aParentContext->GetStyleData(eStyleStruct_Spacing);
+        parentMargin = (const nsStyleMargin*)aParentContext->GetStyleData(eStyleStruct_Margin);
+        parentPadding = (const nsStylePadding*)aParentContext->GetStyleData(eStyleStruct_Padding);
+        parentBorder = (const nsStyleBorder*)aParentContext->GetStyleData(eStyleStruct_Border);
+        parentOutline = (const nsStyleOutline*)aParentContext->GetStyleData(eStyleStruct_Outline);
       }
 
       // margin: length, percent, auto, inherit
       if (nsnull != ourMargin->mMargin) {
         nsStyleCoord  coord;
         nsStyleCoord  parentCoord;
-        parentSpacing->mMargin.GetLeft(parentCoord);
+        parentMargin->mMargin.GetLeft(parentCoord);
         if (SetCoord(ourMargin->mMargin->mLeft, coord, parentCoord, SETCOORD_LPAH, aFont->mFont, aPresContext)) {
-          spacing->mMargin.SetLeft(coord);
+          margin->mMargin.SetLeft(coord);
         }
-        parentSpacing->mMargin.GetTop(parentCoord);
+        parentMargin->mMargin.GetTop(parentCoord);
         if (SetCoord(ourMargin->mMargin->mTop, coord, parentCoord, SETCOORD_LPAH, aFont->mFont, aPresContext)) {
-          spacing->mMargin.SetTop(coord);
+          margin->mMargin.SetTop(coord);
         }
-        parentSpacing->mMargin.GetRight(parentCoord);
+        parentMargin->mMargin.GetRight(parentCoord);
         if (SetCoord(ourMargin->mMargin->mRight, coord, parentCoord, SETCOORD_LPAH, aFont->mFont, aPresContext)) {
-          spacing->mMargin.SetRight(coord);
+          margin->mMargin.SetRight(coord);
         }
-        parentSpacing->mMargin.GetBottom(parentCoord);
+        parentMargin->mMargin.GetBottom(parentCoord);
         if (SetCoord(ourMargin->mMargin->mBottom, coord, parentCoord, SETCOORD_LPAH, aFont->mFont, aPresContext)) {
-          spacing->mMargin.SetBottom(coord);
+          margin->mMargin.SetBottom(coord);
         }
       }
 
@@ -2405,21 +2413,21 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
       if (nsnull != ourMargin->mPadding) {
         nsStyleCoord  coord;
         nsStyleCoord  parentCoord;
-        parentSpacing->mPadding.GetLeft(parentCoord);
+        parentPadding->mPadding.GetLeft(parentCoord);
         if (SetCoord(ourMargin->mPadding->mLeft, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mPadding.SetLeft(coord);
+          padding->mPadding.SetLeft(coord);
         }
-        parentSpacing->mPadding.GetTop(parentCoord);
+        parentPadding->mPadding.GetTop(parentCoord);
         if (SetCoord(ourMargin->mPadding->mTop, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mPadding.SetTop(coord);
+          padding->mPadding.SetTop(coord);
         }
-        parentSpacing->mPadding.GetRight(parentCoord);
+        parentPadding->mPadding.GetRight(parentCoord);
         if (SetCoord(ourMargin->mPadding->mRight, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mPadding.SetRight(coord);
+          padding->mPadding.SetRight(coord);
         }
-        parentSpacing->mPadding.GetBottom(parentCoord);
+        parentPadding->mPadding.GetBottom(parentCoord);
         if (SetCoord(ourMargin->mPadding->mBottom, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mPadding.SetBottom(coord);
+          padding->mPadding.SetBottom(coord);
         }
       }
 
@@ -2428,31 +2436,31 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
         nsStyleCoord  coord;
         nsStyleCoord  parentCoord;
         if (SetCoord(ourMargin->mBorderWidth->mLeft, coord, parentCoord, SETCOORD_LE, aFont->mFont, aPresContext)) {
-          spacing->mBorder.SetLeft(coord);
+          border->mBorder.SetLeft(coord);
         }
         else if (eCSSUnit_Inherit == ourMargin->mBorderWidth->mLeft.GetUnit()) {
-          spacing->mBorder.SetLeft(parentSpacing->mBorder.GetLeft(coord));
+          border->mBorder.SetLeft(parentBorder->mBorder.GetLeft(coord));
         }
 
         if (SetCoord(ourMargin->mBorderWidth->mTop, coord, parentCoord, SETCOORD_LE, aFont->mFont, aPresContext)) {
-          spacing->mBorder.SetTop(coord);
+          border->mBorder.SetTop(coord);
         }
         else if (eCSSUnit_Inherit == ourMargin->mBorderWidth->mTop.GetUnit()) {
-          spacing->mBorder.SetTop(parentSpacing->mBorder.GetTop(coord));
+          border->mBorder.SetTop(parentBorder->mBorder.GetTop(coord));
         }
 
         if (SetCoord(ourMargin->mBorderWidth->mRight, coord, parentCoord, SETCOORD_LE, aFont->mFont, aPresContext)) {
-          spacing->mBorder.SetRight(coord);
+          border->mBorder.SetRight(coord);
         }
         else if (eCSSUnit_Inherit == ourMargin->mBorderWidth->mRight.GetUnit()) {
-          spacing->mBorder.SetRight(parentSpacing->mBorder.GetRight(coord));
+          border->mBorder.SetRight(parentBorder->mBorder.GetRight(coord));
         }
 
         if (SetCoord(ourMargin->mBorderWidth->mBottom, coord, parentCoord, SETCOORD_LE, aFont->mFont, aPresContext)) {
-          spacing->mBorder.SetBottom(coord);
+          border->mBorder.SetBottom(coord);
         }
         else if (eCSSUnit_Inherit == ourMargin->mBorderWidth->mBottom.GetUnit()) {
-          spacing->mBorder.SetBottom(parentSpacing->mBorder.GetBottom(coord));
+          border->mBorder.SetBottom(parentBorder->mBorder.GetBottom(coord));
         }
       }
 
@@ -2460,43 +2468,43 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
       if (nsnull != ourMargin->mBorderStyle) {
         nsCSSRect* ourStyle = ourMargin->mBorderStyle;
         if (eCSSUnit_Enumerated == ourStyle->mTop.GetUnit()) {
-          spacing->SetBorderStyle(NS_SIDE_TOP, ourStyle->mTop.GetIntValue());
+          border->SetBorderStyle(NS_SIDE_TOP, ourStyle->mTop.GetIntValue());
         }
         else if (eCSSUnit_None == ourStyle->mTop.GetUnit()) {
-          spacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+          border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
         }
         else if (eCSSUnit_Inherit == ourStyle->mTop.GetUnit()) {
-          spacing->SetBorderStyle(NS_SIDE_TOP, parentSpacing->GetBorderStyle(NS_SIDE_TOP));
+          border->SetBorderStyle(NS_SIDE_TOP, parentBorder->GetBorderStyle(NS_SIDE_TOP));
         }
 
         if (eCSSUnit_Enumerated == ourStyle->mRight.GetUnit()) {
-          spacing->SetBorderStyle(NS_SIDE_RIGHT, ourStyle->mRight.GetIntValue());
+          border->SetBorderStyle(NS_SIDE_RIGHT, ourStyle->mRight.GetIntValue());
         }
         else if (eCSSUnit_None == ourStyle->mRight.GetUnit()) {
-          spacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+          border->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
         }
         else if (eCSSUnit_Inherit == ourStyle->mRight.GetUnit()) {
-          spacing->SetBorderStyle(NS_SIDE_RIGHT, parentSpacing->GetBorderStyle(NS_SIDE_RIGHT));
+          border->SetBorderStyle(NS_SIDE_RIGHT, parentBorder->GetBorderStyle(NS_SIDE_RIGHT));
         }
 
         if (eCSSUnit_Enumerated == ourStyle->mBottom.GetUnit()) {
-          spacing->SetBorderStyle(NS_SIDE_BOTTOM, ourStyle->mBottom.GetIntValue());
+          border->SetBorderStyle(NS_SIDE_BOTTOM, ourStyle->mBottom.GetIntValue());
         }
         else if (eCSSUnit_None == ourStyle->mBottom.GetUnit()) {
-          spacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+          border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
         }
         else if (eCSSUnit_Inherit == ourStyle->mBottom.GetUnit()) { 
-          spacing->SetBorderStyle(NS_SIDE_BOTTOM, parentSpacing->GetBorderStyle(NS_SIDE_BOTTOM));
+          border->SetBorderStyle(NS_SIDE_BOTTOM, parentBorder->GetBorderStyle(NS_SIDE_BOTTOM));
         }
 
         if (eCSSUnit_Enumerated == ourStyle->mLeft.GetUnit()) {
-          spacing->SetBorderStyle(NS_SIDE_LEFT, ourStyle->mLeft.GetIntValue());
+          border->SetBorderStyle(NS_SIDE_LEFT, ourStyle->mLeft.GetIntValue());
         }
         else if (eCSSUnit_None == ourStyle->mLeft.GetUnit()) {
-         spacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+         border->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
         }
         else if (eCSSUnit_Inherit == ourStyle->mLeft.GetUnit()) {
-          spacing->SetBorderStyle(NS_SIDE_LEFT, parentSpacing->GetBorderStyle(NS_SIDE_LEFT));
+          border->SetBorderStyle(NS_SIDE_LEFT, parentBorder->GetBorderStyle(NS_SIDE_LEFT));
         }
       }
 
@@ -2507,63 +2515,63 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
         nscolor unused = NS_RGB(0,0,0);
 
         if (eCSSUnit_Inherit == ourBorderColor->mTop.GetUnit()) {
-          if (parentSpacing->GetBorderColor(NS_SIDE_TOP, borderColor)) {
-            spacing->SetBorderColor(NS_SIDE_TOP, borderColor);
+          if (parentBorder->GetBorderColor(NS_SIDE_TOP, borderColor)) {
+            border->SetBorderColor(NS_SIDE_TOP, borderColor);
           }
           else {
-            spacing->SetBorderTransparent(NS_SIDE_TOP);
+            border->SetBorderTransparent(NS_SIDE_TOP);
           }
         }
         else if (SetColor(ourBorderColor->mTop, unused, aPresContext, borderColor)) {
-          spacing->SetBorderColor(NS_SIDE_TOP, borderColor);
+          border->SetBorderColor(NS_SIDE_TOP, borderColor);
         }
         else if (eCSSUnit_Enumerated == ourBorderColor->mTop.GetUnit()) {
-          spacing->SetBorderTransparent(NS_SIDE_TOP);
+          border->SetBorderTransparent(NS_SIDE_TOP);
         }
 
         if (eCSSUnit_Inherit == ourBorderColor->mRight.GetUnit()) {
-          if (parentSpacing->GetBorderColor(NS_SIDE_RIGHT, borderColor)) {
-            spacing->SetBorderColor(NS_SIDE_RIGHT, borderColor);
+          if (parentBorder->GetBorderColor(NS_SIDE_RIGHT, borderColor)) {
+            border->SetBorderColor(NS_SIDE_RIGHT, borderColor);
           }
           else {
-            spacing->SetBorderTransparent(NS_SIDE_RIGHT);
+            border->SetBorderTransparent(NS_SIDE_RIGHT);
           }
         }
         else if (SetColor(ourBorderColor->mRight, unused, aPresContext, borderColor)) {
-          spacing->SetBorderColor(NS_SIDE_RIGHT, borderColor);
+          border->SetBorderColor(NS_SIDE_RIGHT, borderColor);
         }
         else if (eCSSUnit_Enumerated == ourBorderColor->mRight.GetUnit()) {
-          spacing->SetBorderTransparent(NS_SIDE_RIGHT);
+          border->SetBorderTransparent(NS_SIDE_RIGHT);
         }
 
         if (eCSSUnit_Inherit == ourBorderColor->mBottom.GetUnit()) {
-          if (parentSpacing->GetBorderColor(NS_SIDE_BOTTOM, borderColor)) {
-            spacing->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
+          if (parentBorder->GetBorderColor(NS_SIDE_BOTTOM, borderColor)) {
+            border->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
           }
           else {
-            spacing->SetBorderTransparent(NS_SIDE_BOTTOM);
+            border->SetBorderTransparent(NS_SIDE_BOTTOM);
           }
         }
         else if (SetColor(ourBorderColor->mBottom, unused, aPresContext, borderColor)) {
-          spacing->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
+          border->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
         }
         else if (eCSSUnit_Enumerated == ourBorderColor->mBottom.GetUnit()) {
-          spacing->SetBorderTransparent(NS_SIDE_BOTTOM);
+          border->SetBorderTransparent(NS_SIDE_BOTTOM);
         }
 
         if (eCSSUnit_Inherit == ourBorderColor->mLeft.GetUnit()) {
-          if (parentSpacing->GetBorderColor(NS_SIDE_LEFT, borderColor)) {
-            spacing->SetBorderColor(NS_SIDE_LEFT, borderColor);
+          if (parentBorder->GetBorderColor(NS_SIDE_LEFT, borderColor)) {
+            border->SetBorderColor(NS_SIDE_LEFT, borderColor);
           }
           else {
-            spacing->SetBorderTransparent(NS_SIDE_LEFT);
+            border->SetBorderTransparent(NS_SIDE_LEFT);
           }
         }
         else if (SetColor(ourBorderColor->mLeft, unused, aPresContext, borderColor)) {
-          spacing->SetBorderColor(NS_SIDE_LEFT, borderColor);
+          border->SetBorderColor(NS_SIDE_LEFT, borderColor);
         }
         else if (eCSSUnit_Enumerated == ourBorderColor->mLeft.GetUnit()) {
-          spacing->SetBorderTransparent(NS_SIDE_LEFT);
+          border->SetBorderTransparent(NS_SIDE_LEFT);
         }
       }
 
@@ -2571,21 +2579,21 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
       if (nsnull != ourMargin->mBorderRadius) {
         nsStyleCoord  coord;
         nsStyleCoord  parentCoord;
-        parentSpacing->mBorderRadius.GetLeft(parentCoord);
+        parentBorder->mBorderRadius.GetLeft(parentCoord);
         if (SetCoord(ourMargin->mBorderRadius->mLeft, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mBorderRadius.SetLeft(coord);
+          border->mBorderRadius.SetLeft(coord);
         }
-        parentSpacing->mBorderRadius.GetTop(parentCoord);
+        parentBorder->mBorderRadius.GetTop(parentCoord);
         if (SetCoord(ourMargin->mBorderRadius->mTop, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mBorderRadius.SetTop(coord);
+          border->mBorderRadius.SetTop(coord);
         }
-        parentSpacing->mBorderRadius.GetRight(parentCoord);
+        parentBorder->mBorderRadius.GetRight(parentCoord);
         if (SetCoord(ourMargin->mBorderRadius->mRight, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mBorderRadius.SetRight(coord);
+          border->mBorderRadius.SetRight(coord);
         }
-        parentSpacing->mBorderRadius.GetBottom(parentCoord);
+        parentBorder->mBorderRadius.GetBottom(parentCoord);
         if (SetCoord(ourMargin->mBorderRadius->mBottom, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mBorderRadius.SetBottom(coord);
+          border->mBorderRadius.SetBottom(coord);
         }
       }
 
@@ -2593,26 +2601,26 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
       if (nsnull != ourMargin->mOutlineRadius) {
         nsStyleCoord  coord;
         nsStyleCoord  parentCoord;
-        parentSpacing->mOutlineRadius.GetLeft(parentCoord);
+        parentOutline->mOutlineRadius.GetLeft(parentCoord);
         if (SetCoord(ourMargin->mOutlineRadius->mLeft, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mOutlineRadius.SetLeft(coord);
+          outline->mOutlineRadius.SetLeft(coord);
         }
-        parentSpacing->mOutlineRadius.GetTop(parentCoord);
+        parentOutline->mOutlineRadius.GetTop(parentCoord);
         if (SetCoord(ourMargin->mOutlineRadius->mTop, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mOutlineRadius.SetTop(coord);
+          outline->mOutlineRadius.SetTop(coord);
         }
-        parentSpacing->mOutlineRadius.GetRight(parentCoord);
+        parentOutline->mOutlineRadius.GetRight(parentCoord);
         if (SetCoord(ourMargin->mOutlineRadius->mRight, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mOutlineRadius.SetRight(coord);
+          outline->mOutlineRadius.SetRight(coord);
         }
-        parentSpacing->mOutlineRadius.GetBottom(parentCoord);
+        parentOutline->mOutlineRadius.GetBottom(parentCoord);
         if (SetCoord(ourMargin->mOutlineRadius->mBottom, coord, parentCoord, SETCOORD_LPH, aFont->mFont, aPresContext)) {
-          spacing->mOutlineRadius.SetBottom(coord);
+          outline->mOutlineRadius.SetBottom(coord);
         }
       }
 
       // outline-width: length, enum, inherit
-      if (! SetCoord(ourMargin->mOutlineWidth, spacing->mOutlineWidth, parentSpacing->mOutlineWidth,
+      if (! SetCoord(ourMargin->mOutlineWidth, outline->mOutlineWidth, parentOutline->mOutlineWidth,
                      SETCOORD_LEH, aFont->mFont, aPresContext)) {
       }
 
@@ -2620,37 +2628,37 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
       nscolor outlineColor;
       nscolor unused = NS_RGB(0,0,0);
       if (eCSSUnit_Inherit == ourMargin->mOutlineColor.GetUnit()) {
-        if (parentSpacing->GetOutlineColor(outlineColor)) {
-          spacing->SetOutlineColor(outlineColor);
+        if (parentOutline->GetOutlineColor(outlineColor)) {
+          outline->SetOutlineColor(outlineColor);
         }
         else {
-          spacing->SetOutlineInvert();
+          outline->SetOutlineInvert();
         }
       }
       else if (SetColor(ourMargin->mOutlineColor, unused, aPresContext, outlineColor)) {
-        spacing->SetOutlineColor(outlineColor);
+        outline->SetOutlineColor(outlineColor);
       }
       else if (eCSSUnit_Enumerated == ourMargin->mOutlineColor.GetUnit()) {
-        spacing->SetOutlineInvert();
+        outline->SetOutlineInvert();
       }
 
       // outline-style: enum, none, inherit
       if (eCSSUnit_Enumerated == ourMargin->mOutlineStyle.GetUnit()) {
-        spacing->SetOutlineStyle(ourMargin->mOutlineStyle.GetIntValue());
+        outline->SetOutlineStyle(ourMargin->mOutlineStyle.GetIntValue());
       }
       else if (eCSSUnit_None == ourMargin->mOutlineStyle.GetUnit()) {
-        spacing->SetOutlineStyle(NS_STYLE_BORDER_STYLE_NONE);
+        outline->SetOutlineStyle(NS_STYLE_BORDER_STYLE_NONE);
       }
       else if (eCSSUnit_Inherit == ourMargin->mOutlineStyle.GetUnit()) {
-        spacing->SetOutlineStyle(parentSpacing->GetOutlineStyle());
+        outline->SetOutlineStyle(parentOutline->GetOutlineStyle());
       }
 
       // float-edge: enum, inherit
       if (eCSSUnit_Enumerated == ourMargin->mFloatEdge.GetUnit()) {
-        spacing->mFloatEdge = ourMargin->mFloatEdge.GetIntValue();
+        border->mFloatEdge = ourMargin->mFloatEdge.GetIntValue();
       }
       else if (eCSSUnit_Inherit == ourMargin->mFloatEdge.GetUnit()) {
-        spacing->mFloatEdge = parentSpacing->mFloatEdge;
+        border->mFloatEdge = parentBorder->mFloatEdge;
       }
     }
   }

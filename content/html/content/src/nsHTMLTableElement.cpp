@@ -1063,13 +1063,13 @@ static void
 MapTableFrameInto(const nsIHTMLMappedAttributes* aAttributes,
                   nsIMutableStyleContext*        aContext,
                   nsIPresContext*                aPresContext, 
-                  nsStyleSpacing*                aSpacing,
+                  nsStyleBorder*                 aBorder,
                   PRUint8                        aBorderStyle)
 {
   // set up defaults
   for (PRInt32 sideX = NS_SIDE_TOP; sideX <= NS_SIDE_LEFT; sideX++) {
-    if (aSpacing->GetBorderStyle(sideX) == NS_STYLE_BORDER_STYLE_NONE) {
-      aSpacing->SetBorderStyle(sideX, aBorderStyle);
+    if (aBorder->GetBorderStyle(sideX) == NS_STYLE_BORDER_STYLE_NONE) {
+      aBorder->SetBorderStyle(sideX, aBorderStyle);
     }
   }
 
@@ -1082,44 +1082,44 @@ MapTableFrameInto(const nsIHTMLMappedAttributes* aAttributes,
     switch (frameValue.GetIntValue())
     {
     case NS_STYLE_TABLE_FRAME_NONE:
-      aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
 
       break;
     case NS_STYLE_TABLE_FRAME_ABOVE:
-      aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
 
       break;
     case NS_STYLE_TABLE_FRAME_BELOW:
-      aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
 
       break;
     case NS_STYLE_TABLE_FRAME_HSIDES:
-      aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
 
       break;
     case NS_STYLE_TABLE_FRAME_LEFT:
-      aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
 
       break;
     case NS_STYLE_TABLE_FRAME_RIGHT:
-      aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_NONE);
 
       break;
     case NS_STYLE_TABLE_FRAME_VSIDES:
-      aSpacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-      aSpacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+      aBorder->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
 
       break;
     // BOX and BORDER are ignored, the caller has already set all the border sides
@@ -1151,8 +1151,8 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
   }
 
   if (borderValue.GetUnit() != eHTMLUnit_Null) {
-    nsStyleSpacing* spacing = (nsStyleSpacing*)
-      aContext->GetMutableStyleData(eStyleStruct_Spacing);
+    nsStyleBorder* border = (nsStyleBorder*)
+      aContext->GetMutableStyleData(eStyleStruct_Border);
     nsStyleTable *tableStyle = (nsStyleTable*)
       aContext->GetMutableStyleData(eStyleStruct_Table);
     nsStyleCoord twips;
@@ -1183,12 +1183,12 @@ MapTableBorderInto(const nsIHTMLMappedAttributes* aAttributes,
     }
 
     // by default, set all border sides to the specified width
-    spacing->mBorder.SetTop(twips);
-    spacing->mBorder.SetRight(twips);
-    spacing->mBorder.SetBottom(twips);
-    spacing->mBorder.SetLeft(twips);
+    border->mBorder.SetTop(twips);
+    border->mBorder.SetRight(twips);
+    border->mBorder.SetBottom(twips);
+    border->mBorder.SetLeft(twips);
     // then account for the frame attribute
-    MapTableFrameInto(aAttributes, aContext, aPresContext, spacing,
+    MapTableFrameInto(aAttributes, aContext, aPresContext, border,
                       aBorderStyle);
   }
 }
@@ -1219,14 +1219,14 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         aPresContext->GetPixelsToTwips(&p2t);
 
         nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-        nsStyleSpacing* spacingStyle = (nsStyleSpacing*)aContext->GetMutableStyleData(eStyleStruct_Spacing);
+        nsStyleBorder* borderStyleData = (nsStyleBorder*)aContext->GetMutableStyleData(eStyleStruct_Border);
         nsStyleCoord width;
         width.SetCoordValue(onePixel);
 
-        spacingStyle->mBorder.SetTop(width);
-        spacingStyle->mBorder.SetLeft(width);
-        spacingStyle->mBorder.SetBottom(width);
-        spacingStyle->mBorder.SetRight(width);
+        borderStyleData->mBorder.SetTop(width);
+        borderStyleData->mBorder.SetLeft(width);
+        borderStyleData->mBorder.SetBottom(width);
+        borderStyleData->mBorder.SetRight(width);
 
         nsCompatibility mode;
         aPresContext->GetCompatibilityMode(&mode);
@@ -1235,10 +1235,10 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           // BG_INSET results in a border color based on background colors
           // used for NavQuirks only...
 
-        spacingStyle->SetBorderStyle(NS_SIDE_TOP,    borderStyle);
-        spacingStyle->SetBorderStyle(NS_SIDE_LEFT,   borderStyle);
-        spacingStyle->SetBorderStyle(NS_SIDE_BOTTOM, borderStyle);
-        spacingStyle->SetBorderStyle(NS_SIDE_RIGHT,  borderStyle);
+        borderStyleData->SetBorderStyle(NS_SIDE_TOP,    borderStyle);
+        borderStyleData->SetBorderStyle(NS_SIDE_LEFT,   borderStyle);
+        borderStyleData->SetBorderStyle(NS_SIDE_BOTTOM, borderStyle);
+        borderStyleData->SetBorderStyle(NS_SIDE_RIGHT,  borderStyle);
       }
     }
     else {  // handle attributes for table
@@ -1289,8 +1289,10 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         }
       }
 
-      nsStyleSpacing* spacing = (nsStyleSpacing*)
-        aContext->GetMutableStyleData(eStyleStruct_Spacing);
+      nsStyleBorder* borderStyleData = (nsStyleBorder*)
+        aContext->GetMutableStyleData(eStyleStruct_Border);
+      nsStyleMargin* marginStyleData = (nsStyleMargin*)
+        aContext->GetMutableStyleData(eStyleStruct_Margin);
 
       // default border style is the Nav4.6 extension which uses the
       // background color as the basis of the outset border. If the
@@ -1312,10 +1314,10 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
       if ((eHTMLUnit_Color == value.GetUnit()) ||
           (eHTMLUnit_ColorName == value.GetUnit())) {
         nscolor color = value.GetColorValue();
-        spacing->SetBorderColor(0, color);
-        spacing->SetBorderColor(1, color);
-        spacing->SetBorderColor(2, color);
-        spacing->SetBorderColor(3, color);
+        borderStyleData->SetBorderColor(0, color);
+        borderStyleData->SetBorderColor(1, color);
+        borderStyleData->SetBorderColor(2, color);
+        borderStyleData->SetBorderColor(3, color);
         borderStyle = NS_STYLE_BORDER_STYLE_OUTSET; // use css outset
       }
 
@@ -1330,8 +1332,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         if ((NS_STYLE_TEXT_ALIGN_CENTER == value.GetIntValue()) ||
             (NS_STYLE_TEXT_ALIGN_MOZ_CENTER == value.GetIntValue())) {
           nsStyleCoord otto(eStyleUnit_Auto);
-          spacing->mMargin.SetLeft(otto);
-          spacing->mMargin.SetRight(otto);
+          marginStyleData->mMargin.SetLeft(otto);
+          marginStyleData->mMargin.SetRight(otto);
         }
         else {
           nsStyleDisplay* display = (nsStyleDisplay*)
@@ -1415,8 +1417,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         if (value.GetUnit() == eHTMLUnit_Pixel) {
           nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), sp2t);
           nsStyleCoord hspace(twips);
-          spacing->mMargin.SetLeft(hspace);
-          spacing->mMargin.SetRight(hspace);
+          marginStyleData->mMargin.SetLeft(hspace);
+          marginStyleData->mMargin.SetRight(hspace);
         }
 
         aAttributes->GetAttribute(nsHTMLAtoms::vspace, value);
@@ -1424,8 +1426,8 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
         if (value.GetUnit() == eHTMLUnit_Pixel) {
           nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), sp2t);
           nsStyleCoord vspace(twips);
-          spacing->mMargin.SetTop(vspace);
-          spacing->mMargin.SetBottom(vspace);
+          marginStyleData->mMargin.SetTop(vspace);
+          marginStyleData->mMargin.SetBottom(vspace);
         }
       }
 

@@ -571,16 +571,16 @@ void nsTableFrame::ProcessGroupRules(nsIPresContext* aPresContext)
           if (originates) {
             nsCOMPtr<nsIStyleContext> styleContext;
             cell->GetStyleContext(getter_AddRefs(styleContext));
-            nsStyleSpacing* spacing = (nsStyleSpacing*)styleContext->GetMutableStyleData(eStyleStruct_Spacing);
+            nsStyleBorder* border = (nsStyleBorder*)styleContext->GetMutableStyleData(eStyleStruct_Border);
             if (rowX == startRow) { 
-              spacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+              border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
             }
             else if (rowX == endRow) { 
-              spacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+              border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
             }
             else {
-              spacing->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
-              spacing->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
+              border->SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_NONE);
+              border->SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_NONE);
             }
             styleContext->RecalcAutomaticData(aPresContext);
           }
@@ -1326,8 +1326,8 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext* aPresContext,
     const nsStyleDisplay* disp =
       (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
     if (disp->IsVisibleOrCollapsed()) {
-      const nsStyleSpacing* spacing =
-        (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+      const nsStyleBorder* border =
+        (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
       const nsStyleColor* color =
         (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 
@@ -1337,7 +1337,7 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext* aPresContext,
       aPresContext->GetCompatibilityMode(&mode);
       if (eCompatibility_NavQuirks != mode) {
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *color, *spacing, 0, 0);
+                                        aDirtyRect, rect, *color, *border, 0, 0);
       }
       // paint the column groups and columns
       nsIFrame* colGroupFrame = mColGroups.FirstChild();
@@ -1350,7 +1350,7 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext* aPresContext,
       if (NS_STYLE_BORDER_SEPARATE == GetBorderCollapseStyle())
       {
         nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *spacing, mStyleContext, skipSides);
+                                    aDirtyRect, rect, *border, mStyleContext, skipSides);
       }
       else
       {
@@ -1511,8 +1511,6 @@ nsresult nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresCon
     // Update the max element size
     //XXX: this should call into layout strategy to get the width field
     if (aMaxElementSize) {
-      const nsStyleSpacing* tableSpacing;
-      GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
       nsMargin borderPadding;
       GetTableBorder (borderPadding); // gets the max border thickness for each edge
       borderPadding += aReflowState.reflowState.mComputedPadding;
@@ -1853,10 +1851,10 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext*          aPresContext,
       // Get the table's border padding
       nsMargin borderPadding;
       GetTableBorderForRowGroup(GetRowGroupFrame(kidFrame), borderPadding);
-      const nsStyleSpacing* tableSpacing;
-      GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)tableSpacing));
+      const nsStylePadding* tablePadding;
+      GetStyleData(eStyleStruct_Padding, ((const nsStyleStruct *&)tablePadding));
       nsMargin padding;
-      tableSpacing->GetPadding(padding);
+      tablePadding->GetPadding(padding);
       borderPadding += padding;
 
       y += cellSpacingY;
@@ -1911,12 +1909,12 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext*          aPresContext,
   }
 
   // Get the table's border/padding
-  const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
-    mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  const nsStylePadding* myPadding = (const nsStylePadding*)
+    mStyleContext->GetStyleData(eStyleStruct_Padding);
   nsMargin tableBorderPadding;
   GetTableBorder (tableBorderPadding);   // this gets the max border thickness at each edge
   nsMargin tablePadding;
-  mySpacing->GetPadding(tablePadding);
+  myPadding->GetPadding(tablePadding);
   tableBorderPadding += tablePadding;
 
   aDesiredSize.width = kidSize.width;
@@ -2778,8 +2776,6 @@ nsTableFrame::RecoverState(InnerTableReflowState& aReflowState,
     //XXX: this should call into layout strategy to get the width field
     if (nsnull != aMaxElementSize) 
     {
-      const nsStyleSpacing* tableSpacing;
-      GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
       nsMargin borderPadding;
       GetTableBorder (borderPadding); // gets the max border thickness for each edge
       borderPadding += aReflowState.reflowState.mComputedPadding;
@@ -2840,8 +2836,6 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
   //XXX: this should call into layout strategy to get the width field
   if (nsnull != aDesiredSize.maxElementSize) 
   {
-    const nsStyleSpacing* tableSpacing;
-    GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
     nsMargin borderPadding;
     GetTableBorder (borderPadding); // gets the max border thickness for each edge
     borderPadding += aReflowState.reflowState.mComputedPadding;
@@ -2960,8 +2954,6 @@ void nsTableFrame::PlaceChild(nsIPresContext*        aPresContext,
 
   //XXX: this should call into layout strategy to get the width field
   if (nsnull != aMaxElementSize) {
-    const nsStyleSpacing* tableSpacing;
-    GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
     nsMargin borderPadding;
     GetTableBorder (borderPadding); // gets the max border thickness for each edge
     borderPadding += aReflowState.reflowState.mComputedPadding;
@@ -3094,8 +3086,6 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext*        aPresContext
 
       nsMargin borderPadding;
       GetTableBorderForRowGroup(GetRowGroupFrame(kidFrame), borderPadding);
-      const nsStyleSpacing* tableSpacing;
-      GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)tableSpacing));
       borderPadding += aReflowState.reflowState.mComputedPadding;
 
       // Reflow the child into the available space
@@ -3777,19 +3767,19 @@ void  nsTableFrame::SetColumnWidth(PRInt32 aColIndex, nscoord aWidth)
   * Update the border style to map to the HTML border style
   *
   */
-void nsTableFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth)
+void nsTableFrame::MapHTMLBorderStyle(nsStyleBorder& aBorderStyle, nscoord aBorderWidth)
 {
   nsStyleCoord  width;
   width.SetCoordValue(aBorderWidth);
-  aSpacingStyle.mBorder.SetTop(width);
-  aSpacingStyle.mBorder.SetLeft(width);
-  aSpacingStyle.mBorder.SetBottom(width);
-  aSpacingStyle.mBorder.SetRight(width);
+  aBorderStyle.mBorder.SetTop(width);
+  aBorderStyle.mBorder.SetLeft(width);
+  aBorderStyle.mBorder.SetBottom(width);
+  aBorderStyle.mBorder.SetRight(width);
 
-  aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_BG_OUTSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_BG_OUTSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_BG_OUTSET);
-  aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_BG_OUTSET);
+  aBorderStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_BG_OUTSET);
+  aBorderStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_BG_OUTSET);
+  aBorderStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_BG_OUTSET);
+  aBorderStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_BG_OUTSET);
 
   nsIStyleContext* styleContext = mStyleContext; 
   const nsStyleColor* colorData = (const nsStyleColor*)
@@ -3827,10 +3817,10 @@ void nsTableFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBo
   if (borderColor == 0xFFFFFFFF)
     borderColor = 0xFFC0C0C0;
 
-  aSpacingStyle.SetBorderColor(NS_SIDE_TOP, borderColor);
-  aSpacingStyle.SetBorderColor(NS_SIDE_LEFT, borderColor);
-  aSpacingStyle.SetBorderColor(NS_SIDE_BOTTOM, borderColor);
-  aSpacingStyle.SetBorderColor(NS_SIDE_RIGHT, borderColor);
+  aBorderStyle.SetBorderColor(NS_SIDE_TOP, borderColor);
+  aBorderStyle.SetBorderColor(NS_SIDE_LEFT, borderColor);
+  aBorderStyle.SetBorderColor(NS_SIDE_BOTTOM, borderColor);
+  aBorderStyle.SetBorderColor(NS_SIDE_RIGHT, borderColor);
 
 }
 
@@ -3878,7 +3868,7 @@ void nsTableFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   if (!table)
     return;
 
-  nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
+  nsStyleBorder* borderData = (nsStyleBorder*)mStyleContext->GetMutableStyleData(eStyleStruct_Border);
 
   border_result = table->GetAttribute(nsHTMLAtoms::border,border_value);
   if (border_result == NS_CONTENT_ATTR_HAS_VALUE)
@@ -3888,7 +3878,7 @@ void nsTableFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
     if (ConvertToPixelValue(border_value,1,intValue)) //XXX this is busted if this code is ever used again. MMP
       border = NSIntPixelsToTwips(intValue, p2t); 
   }
-  MapHTMLBorderStyle(*spacingData,border);
+  MapHTMLBorderStyle(*borderData,border);
 #endif
 }
 
@@ -3903,39 +3893,39 @@ CalcPercentPadding(nscoord      aBasis,
 
 void 
 GetPaddingFor(const nsSize&         aBasis, 
-              const nsStyleSpacing& aSpacing, 
+              const nsStylePadding& aPaddingData, 
               nsMargin&             aPadding)
 {
   nsStyleCoord styleCoord;
-  aSpacing.mPadding.GetTop(styleCoord);
-  if (eStyleUnit_Percent == aSpacing.mPadding.GetTopUnit()) {
+  aPaddingData.mPadding.GetTop(styleCoord);
+  if (eStyleUnit_Percent == aPaddingData.mPadding.GetTopUnit()) {
     aPadding.top = CalcPercentPadding(aBasis.height, styleCoord);
   }
-  else if (eStyleUnit_Coord == aSpacing.mPadding.GetTopUnit()) {
+  else if (eStyleUnit_Coord == aPaddingData.mPadding.GetTopUnit()) {
     aPadding.top = styleCoord.GetCoordValue();
   }
 
-  aSpacing.mPadding.GetRight(styleCoord);
-  if (eStyleUnit_Percent == aSpacing.mPadding.GetRightUnit()) {
+  aPaddingData.mPadding.GetRight(styleCoord);
+  if (eStyleUnit_Percent == aPaddingData.mPadding.GetRightUnit()) {
     aPadding.right = CalcPercentPadding(aBasis.width, styleCoord);
   }
-  else if (eStyleUnit_Coord == aSpacing.mPadding.GetTopUnit()) {
+  else if (eStyleUnit_Coord == aPaddingData.mPadding.GetTopUnit()) {
     aPadding.right = styleCoord.GetCoordValue();
   }
 
-  aSpacing.mPadding.GetBottom(styleCoord);
-  if (eStyleUnit_Percent == aSpacing.mPadding.GetBottomUnit()) {
+  aPaddingData.mPadding.GetBottom(styleCoord);
+  if (eStyleUnit_Percent == aPaddingData.mPadding.GetBottomUnit()) {
     aPadding.bottom = CalcPercentPadding(aBasis.height, styleCoord);
   }
-  else if (eStyleUnit_Coord == aSpacing.mPadding.GetTopUnit()) {
+  else if (eStyleUnit_Coord == aPaddingData.mPadding.GetTopUnit()) {
     aPadding.bottom = styleCoord.GetCoordValue();
   }
 
-  aSpacing.mPadding.GetLeft(styleCoord);
-  if (eStyleUnit_Percent == aSpacing.mPadding.GetLeftUnit()) {
+  aPaddingData.mPadding.GetLeft(styleCoord);
+  if (eStyleUnit_Percent == aPaddingData.mPadding.GetLeftUnit()) {
     aPadding.left = CalcPercentPadding(aBasis.width, styleCoord);
   }
-  else if (eStyleUnit_Coord == aSpacing.mPadding.GetTopUnit()) {
+  else if (eStyleUnit_Coord == aPaddingData.mPadding.GetTopUnit()) {
     aPadding.left = styleCoord.GetCoordValue();
   }
 }
@@ -3944,10 +3934,10 @@ nsMargin
 nsTableFrame::GetPadding(const nsHTMLReflowState& aReflowState,
                          const nsTableCellFrame*  aCellFrame)
 {
-  const nsStyleSpacing* spacing;
-  aCellFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)spacing);
+  const nsStylePadding* paddingData;
+  aCellFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct *&)paddingData);
   nsMargin padding(0,0,0,0);
-  if (!spacing->GetPadding(padding)) {
+  if (!paddingData->GetPadding(padding)) {
     const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
     while (parentRS) {
       if (parentRS->frame) {
@@ -3955,7 +3945,7 @@ nsTableFrame::GetPadding(const nsHTMLReflowState& aReflowState,
         parentRS->frame->GetFrameType(getter_AddRefs(frameType));
         if (nsLayoutAtoms::tableFrame == frameType.get()) {
           nsSize basis(parentRS->mComputedWidth, parentRS->mComputedHeight);
-          GetPaddingFor(basis, *spacing, padding);
+          GetPaddingFor(basis, *paddingData, padding);
           break;
         }
       }
@@ -3969,11 +3959,11 @@ nsMargin
 nsTableFrame::GetPadding(const nsSize&           aBasis,
                          const nsTableCellFrame* aCellFrame)
 {
-  const nsStyleSpacing* spacing;
-  aCellFrame->GetStyleData(eStyleStruct_Spacing,(const nsStyleStruct *&)spacing);
+  const nsStylePadding* paddingData;
+  aCellFrame->GetStyleData(eStyleStruct_Padding,(const nsStyleStruct *&)paddingData);
   nsMargin padding(0,0,0,0);
-  if (!spacing->GetPadding(padding)) {
-    GetPaddingFor(aBasis, *spacing, padding);
+  if (!paddingData->GetPadding(padding)) {
+    GetPaddingFor(aBasis, *paddingData, padding);
   }
   return padding;
 }
@@ -3985,9 +3975,9 @@ void nsTableFrame::GetTableBorder(nsMargin &aBorder)
     mBorderCollapser->GetBorder(aBorder);
   }
   else {
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    spacing->GetBorder(aBorder);
+    const nsStyleBorder* border =
+      (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
+    border->GetBorder(aBorder);
   }
 }
 
@@ -4007,9 +3997,9 @@ void nsTableFrame::GetTableBorderAt(PRInt32   aRowIndex,
     }
   }
   else {
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    spacing->GetBorder(aBorder);
+    const nsStyleBorder* border =
+      (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
+    border->GetBorder(aBorder);
   }
 }
 
@@ -4199,13 +4189,16 @@ nscoord nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
     }
     if (NS_UNCONSTRAINEDSIZE != aState.availableWidth) {
       nsMargin margin(0,0,0,0);
-      aState.mStyleSpacing->GetMargin(margin);
+      aState.mStyleMargin->GetMargin(margin);
       width = aState.availableWidth - margin.left - margin.right;
     }
   }
   else if (width != NS_UNCONSTRAINEDSIZE) {
+    nsMargin border(0,0,0,0);
+    aState.mStyleBorder->GetBorder(border);
     nsMargin borderPadding(0,0,0,0);
-    aState.mStyleSpacing->GetBorderPadding(borderPadding);
+    aState.mStylePadding->GetPadding(borderPadding);
+    borderPadding += border;
     width += borderPadding.left + borderPadding.right;
   }
   width = PR_MAX(width, 0);
