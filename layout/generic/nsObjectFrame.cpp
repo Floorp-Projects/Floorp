@@ -2419,13 +2419,12 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const
   nsresult rv = EnsureCachedAttrParamArrays();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // make sure we have at least one param tag because embed's don't have any
-  if (!mNumCachedParams)
-    return NS_ERROR_FAILURE;
-
   n = mNumCachedParams;
-  names  = (const char **)(mCachedAttrParamNames + mNumCachedAttrs + 1);
-  values = (const char **)(mCachedAttrParamValues + mNumCachedAttrs + 1);
+  if (n) {
+    names  = (const char **)(mCachedAttrParamNames + mNumCachedAttrs + 1);
+    values = (const char **)(mCachedAttrParamValues + mNumCachedAttrs + 1);
+  } else
+    names = values = nsnull;
 
   return rv;
 }

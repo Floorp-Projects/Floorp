@@ -823,7 +823,8 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
       const char* const* pvalues = nsnull;    
       if (NS_SUCCEEDED(taginfo->GetParameters(pcount, pnames, pvalues))) {
         NS_ASSERTION(nsnull == values[count], "attribute/parameter array not setup correctly for 4.x plugins");
-        count += ++pcount; //if it's all setup correctly, then all we need is to change the count
+        if (pcount)
+          count += ++pcount; //if it's all setup correctly, then all we need is to change the count (attrs + PARAM/blank + params)
       }
     }
   }
