@@ -956,7 +956,10 @@ NS_IMETHODIMP pluginInstanceOwner :: SetInstance(nsIPluginInstance *aInstance)
 
 NS_IMETHODIMP pluginInstanceOwner :: GetInstance(nsIPluginInstance *&aInstance)
 {
-  NS_IF_ADDREF(mInstance);
+  if(!mInstance)
+    return NS_ERROR_FAILURE;
+
+  NS_ADDREF(mInstance);
   aInstance = mInstance;
 
   return NS_OK;
