@@ -99,15 +99,25 @@ public:
   virtual PRInt32 GetNumberOfDocStyleSheets();
   virtual nsIStyleSheet* GetDocStyleSheetAt(PRInt32 aIndex);
 
-  virtual void AppendBackstopStyleSheet(nsIStyleSheet* aSheet);
-  virtual void InsertBackstopStyleSheetAfter(nsIStyleSheet* aSheet,
+  virtual void AppendUserStyleSheet(nsIStyleSheet* aSheet);
+  virtual void InsertUserStyleSheetAfter(nsIStyleSheet* aSheet,
                                              nsIStyleSheet* aAfterSheet);
-  virtual void InsertBackstopStyleSheetBefore(nsIStyleSheet* aSheet,
+  virtual void InsertUserStyleSheetBefore(nsIStyleSheet* aSheet,
                                               nsIStyleSheet* aBeforeSheet);
-  virtual void RemoveBackstopStyleSheet(nsIStyleSheet* aSheet);
-  virtual PRInt32 GetNumberOfBackstopStyleSheets();
-  virtual nsIStyleSheet* GetBackstopStyleSheetAt(PRInt32 aIndex);
-  virtual void ReplaceBackstopStyleSheets(nsISupportsArray* aNewSheets);
+  virtual void RemoveUserStyleSheet(nsIStyleSheet* aSheet);
+  virtual PRInt32 GetNumberOfUserStyleSheets();
+  virtual nsIStyleSheet* GetUserStyleSheetAt(PRInt32 aIndex);
+  virtual void ReplaceUserStyleSheets(nsISupportsArray* aNewSheets);
+
+  virtual void AppendAgentStyleSheet(nsIStyleSheet* aSheet);
+  virtual void InsertAgentStyleSheetAfter(nsIStyleSheet* aSheet,
+                                             nsIStyleSheet* aAfterSheet);
+  virtual void InsertAgentStyleSheetBefore(nsIStyleSheet* aSheet,
+                                              nsIStyleSheet* aBeforeSheet);
+  virtual void RemoveAgentStyleSheet(nsIStyleSheet* aSheet);
+  virtual PRInt32 GetNumberOfAgentStyleSheets();
+  virtual nsIStyleSheet* GetAgentStyleSheetAt(PRInt32 aIndex);
+  virtual void ReplaceAgentStyleSheets(nsISupportsArray* aNewSheets);
   
   NS_IMETHOD EnableQuirkStyleSheet(PRBool aEnable);
 
@@ -238,8 +248,6 @@ public:
 #endif
   virtual void ResetUniqueStyleItems(void);
 
-  void AddImportantRules(nsRuleNode* aRuleNode);
-
 #ifdef MOZ_PERF_METRICS
   NS_DECL_NSITIMERECORDER
 #endif
@@ -260,17 +268,21 @@ private:
 
 protected:
   virtual ~StyleSetImpl();
-  PRBool EnsureArray(nsISupportsArray** aArray);
-  void RecycleArray(nsISupportsArray** aArray);
+  PRBool EnsureArray(nsCOMPtr<nsISupportsArray> &aArray);
+  void RecycleArray(nsCOMPtr<nsISupportsArray> &aArray);
   
   void EnsureRuleWalker(nsIPresContext* aPresContext);
 
   void ClearRuleProcessors(void);
-  void ClearOverrideRuleProcessors(void);
-  void ClearBackstopRuleProcessors(void);
+  void ClearAgentRuleProcessors(void);
+  void ClearUserRuleProcessors(void);
   void ClearDocRuleProcessors(void);
+  void ClearOverrideRuleProcessors(void);
 
-  nsresult  GatherRuleProcessors(void);
+  nsresult GatherRuleProcessors(void);
+
+  void AddImportantRules(nsRuleNode* aCurrLevelNode, nsRuleNode* aLastPrevLevelNode);
+  void FileRules(nsISupportsArrayEnumFunc aCollectorFunc, void* aData, nsIContent* aContent);
 
   nsIStyleContext* GetContext(nsIPresContext* aPresContext, 
                               nsIStyleContext* aParentContext,
@@ -281,15 +293,17 @@ protected:
   void  ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent);
 #endif
 
-  nsISupportsArray* mOverrideSheets;  // most significant first
-  nsISupportsArray* mDocSheets;       // " "
-  nsISupportsArray* mBackstopSheets;  // " "
+  nsCOMPtr<nsISupportsArray> mOverrideSheets;  // most significant first
+  nsCOMPtr<nsISupportsArray> mDocSheets;       // " "
+  nsCOMPtr<nsISupportsArray> mUserSheets;      // " "
+  nsCOMPtr<nsISupportsArray> mAgentSheets;     // " "
 
-  nsISupportsArray* mBackstopRuleProcessors;  // least significant first
-  nsISupportsArray* mDocRuleProcessors; // " "
-  nsISupportsArray* mOverrideRuleProcessors; // " "
+  nsCOMPtr<nsISupportsArray> mAgentRuleProcessors;     // least significant first
+  nsCOMPtr<nsISupportsArray> mUserRuleProcessors;      // " "
+  nsCOMPtr<nsISupportsArray> mDocRuleProcessors;       // " "
+  nsCOMPtr<nsISupportsArray> mOverrideRuleProcessors;  // " "
 
-  nsISupportsArray* mRecycler;
+  nsCOMPtr<nsISupportsArray> mRecycler;
 
   nsIStyleFrameConstruction* mFrameConstructor;
   nsIStyleSheet*    mQuirkStyleSheet; // cached instance for enabling/disabling
@@ -313,16 +327,8 @@ nsrefcnt StyleSetImpl::gInstances = 0;
 nsIURI *StyleSetImpl::gQuirkURI = 0;
 
 StyleSetImpl::StyleSetImpl()
-  : mOverrideSheets(nsnull),
-    mDocSheets(nsnull),
-    mBackstopSheets(nsnull),
-    mBackstopRuleProcessors(nsnull),
-    mDocRuleProcessors(nsnull),
-    mOverrideRuleProcessors(nsnull),
-    mRecycler(nsnull),
-    mFrameConstructor(nsnull),
+  : mFrameConstructor(nsnull),
     mQuirkStyleSheet(nsnull),
-    mStyleRuleSupplier(nsnull),
     mRuleTree(nsnull),
     mRuleWalker(nsnull)
 #ifdef MOZ_PERF_METRICS
@@ -340,14 +346,7 @@ StyleSetImpl::StyleSetImpl()
 
 StyleSetImpl::~StyleSetImpl()
 {
-  NS_IF_RELEASE(mOverrideSheets);
-  NS_IF_RELEASE(mDocSheets);
-  NS_IF_RELEASE(mBackstopSheets);
-  NS_IF_RELEASE(mBackstopRuleProcessors);
-  NS_IF_RELEASE(mDocRuleProcessors);
-  NS_IF_RELEASE(mOverrideRuleProcessors);
   NS_IF_RELEASE(mFrameConstructor);
-  NS_IF_RELEASE(mRecycler);
   NS_IF_RELEASE(mQuirkStyleSheet);
   if (--gInstances == 0)
   {
@@ -361,13 +360,13 @@ NS_IMPL_ISUPPORTS1(StyleSetImpl, nsIStyleSet)
 NS_IMPL_ISUPPORTS2(StyleSetImpl, nsIStyleSet, nsITimeRecorder)
 #endif
 
-PRBool StyleSetImpl::EnsureArray(nsISupportsArray** aArray)
+PRBool StyleSetImpl::EnsureArray(nsCOMPtr<nsISupportsArray> &aArray)
 {
-  if (nsnull == *aArray) {
-    (*aArray) = mRecycler;
+  if (nsnull == aArray) {
+    aArray = mRecycler;
     mRecycler = nsnull;
-    if (nsnull == *aArray) {
-      if (NS_OK != NS_NewISupportsArray(aArray)) {
+    if (nsnull == aArray) {
+      if (NS_OK != NS_NewISupportsArray(getter_AddRefs(aArray))) {
         return PR_FALSE;
       }
     }
@@ -376,45 +375,53 @@ PRBool StyleSetImpl::EnsureArray(nsISupportsArray** aArray)
 }
 
 void
-StyleSetImpl::RecycleArray(nsISupportsArray** aArray)
+StyleSetImpl::RecycleArray(nsCOMPtr<nsISupportsArray> &aArray)
 {
-  if (! mRecycler) {
-    mRecycler = *aArray;  // take ref
+  if (!mRecycler) {
+    mRecycler = aArray;  // take ref
     mRecycler->Clear();
-    *aArray = nsnull; 
+    aArray = nsnull; 
   }
   else {  // already have a recycled array
-    NS_RELEASE(*aArray);
+    aArray = nsnull;
   }
 }
 
-void  
+void
 StyleSetImpl::ClearRuleProcessors(void)
 {
-  ClearBackstopRuleProcessors();
+  ClearAgentRuleProcessors();
+  ClearUserRuleProcessors();
   ClearDocRuleProcessors();
   ClearOverrideRuleProcessors();
 }
 
-void  
-StyleSetImpl::ClearBackstopRuleProcessors(void)
+void
+StyleSetImpl::ClearAgentRuleProcessors(void)
 {
-  if (mBackstopRuleProcessors)
-    RecycleArray(&mBackstopRuleProcessors);
+  if (mAgentRuleProcessors)
+    RecycleArray(mAgentRuleProcessors);
 }
 
-void  
+void
+StyleSetImpl::ClearUserRuleProcessors(void)
+{
+  if (mUserRuleProcessors)
+    RecycleArray(mUserRuleProcessors);
+}
+
+void
 StyleSetImpl::ClearDocRuleProcessors(void)
 {
   if (mDocRuleProcessors)
-    RecycleArray(&mDocRuleProcessors);
+    RecycleArray(mDocRuleProcessors);
 }
 
-void  
+void
 StyleSetImpl::ClearOverrideRuleProcessors(void)
 {
   if (mOverrideRuleProcessors)
-    RecycleArray(&mOverrideRuleProcessors);
+    RecycleArray(mOverrideRuleProcessors);
 }
 
 struct RuleProcessorData {
@@ -449,38 +456,50 @@ nsresult
 StyleSetImpl::GatherRuleProcessors(void)
 {
   nsresult result = NS_ERROR_OUT_OF_MEMORY;
-  if (mBackstopSheets && !mBackstopRuleProcessors) {
-    if (EnsureArray(&mBackstopRuleProcessors)) {
-      RuleProcessorData data(mBackstopRuleProcessors);
-      mBackstopSheets->EnumerateBackwards(EnumRuleProcessor, &data);
+  if (mAgentSheets && !mAgentRuleProcessors) {
+    if (EnsureArray(mAgentRuleProcessors)) {
+      RuleProcessorData data(mAgentRuleProcessors);
+      mAgentSheets->EnumerateBackwards(EnumRuleProcessor, &data);
       PRUint32 count;
-      mBackstopRuleProcessors->Count(&count);
+      mAgentRuleProcessors->Count(&count);
       if (0 == count) {
-        RecycleArray(&mBackstopRuleProcessors);
+        RecycleArray(mAgentRuleProcessors);
+      }
+    } else return result;
+  }
+
+  if (mUserSheets && !mUserRuleProcessors) {
+    if (EnsureArray(mUserRuleProcessors)) {
+      RuleProcessorData data(mUserRuleProcessors);
+      mUserSheets->EnumerateBackwards(EnumRuleProcessor, &data);
+      PRUint32 count;
+      mUserRuleProcessors->Count(&count);
+      if (0 == count) {
+        RecycleArray(mUserRuleProcessors);
       }
     } else return result;
   }
 
   if (mDocSheets && !mDocRuleProcessors) {
-    if (EnsureArray(&mDocRuleProcessors)) {
+    if (EnsureArray(mDocRuleProcessors)) {
       RuleProcessorData data(mDocRuleProcessors);
       mDocSheets->EnumerateBackwards(EnumRuleProcessor, &data);
       PRUint32 count;
       mDocRuleProcessors->Count(&count);
       if (0 == count) {
-        RecycleArray(&mDocRuleProcessors);
+        RecycleArray(mDocRuleProcessors);
       }
     } else return result;
   }
 
   if (mOverrideSheets && !mOverrideRuleProcessors) {
-    if (EnsureArray(&mOverrideRuleProcessors)) {
+    if (EnsureArray(mOverrideRuleProcessors)) {
       RuleProcessorData data(mOverrideRuleProcessors);
       mOverrideSheets->EnumerateBackwards(EnumRuleProcessor, &data);
       PRUint32 count;
       mOverrideRuleProcessors->Count(&count);
       if (0 == count) {
-        RecycleArray(&mOverrideRuleProcessors);
+        RecycleArray(mOverrideRuleProcessors);
       }
     } else return result;
   }
@@ -494,7 +513,7 @@ StyleSetImpl::GatherRuleProcessors(void)
 void StyleSetImpl::AppendOverrideStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-  if (EnsureArray(&mOverrideSheets)) {
+  if (EnsureArray(mOverrideSheets)) {
     mOverrideSheets->RemoveElement(aSheet);
     mOverrideSheets->AppendElement(aSheet);
     ClearOverrideRuleProcessors();
@@ -505,7 +524,7 @@ void StyleSetImpl::InsertOverrideStyleSheetAfter(nsIStyleSheet* aSheet,
                                                  nsIStyleSheet* aAfterSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-  if (EnsureArray(&mOverrideSheets)) {
+  if (EnsureArray(mOverrideSheets)) {
     mOverrideSheets->RemoveElement(aSheet);
     PRInt32 index = mOverrideSheets->IndexOf(aAfterSheet);
     mOverrideSheets->InsertElementAt(aSheet, ++index);
@@ -517,7 +536,7 @@ void StyleSetImpl::InsertOverrideStyleSheetBefore(nsIStyleSheet* aSheet,
                                                   nsIStyleSheet* aBeforeSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-  if (EnsureArray(&mOverrideSheets)) {
+  if (EnsureArray(mOverrideSheets)) {
     mOverrideSheets->RemoveElement(aSheet);
     PRInt32 index = mOverrideSheets->IndexOf(aBeforeSheet);
     mOverrideSheets->InsertElementAt(aSheet, ((-1 < index) ? index : 0));
@@ -560,7 +579,7 @@ nsIStyleSheet* StyleSetImpl::GetOverrideStyleSheetAt(PRInt32 aIndex)
 void StyleSetImpl::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
 {
   NS_PRECONDITION((nsnull != aSheet) && (nsnull != aDocument), "null arg");
-  if (EnsureArray(&mDocSheets)) {
+  if (EnsureArray(mDocSheets)) {
     mDocSheets->RemoveElement(aSheet);
     // lowest index last
     PRInt32 newDocIndex = 0;
@@ -623,60 +642,133 @@ nsIStyleSheet* StyleSetImpl::GetDocStyleSheetAt(PRInt32 aIndex)
   return sheet;
 }
 
-// ------ backstop sheets
+// ------ user sheets
 
-void StyleSetImpl::AppendBackstopStyleSheet(nsIStyleSheet* aSheet)
+void StyleSetImpl::AppendUserStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-  if (EnsureArray(&mBackstopSheets)) {
-    mBackstopSheets->RemoveElement(aSheet);
-    mBackstopSheets->AppendElement(aSheet);
-    ClearBackstopRuleProcessors();
+  if (EnsureArray(mUserSheets)) {
+    mUserSheets->RemoveElement(aSheet);
+    mUserSheets->AppendElement(aSheet);
+    ClearUserRuleProcessors();
   }
 }
 
-void StyleSetImpl::InsertBackstopStyleSheetAfter(nsIStyleSheet* aSheet,
-                                                 nsIStyleSheet* aAfterSheet)
+void StyleSetImpl::InsertUserStyleSheetAfter(nsIStyleSheet* aSheet,
+                                             nsIStyleSheet* aAfterSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-  if (EnsureArray(&mBackstopSheets)) {
-    mBackstopSheets->RemoveElement(aSheet);
-    PRInt32 index = mBackstopSheets->IndexOf(aAfterSheet);
-    mBackstopSheets->InsertElementAt(aSheet, ++index);
-    ClearBackstopRuleProcessors();
+  if (EnsureArray(mUserSheets)) {
+    mUserSheets->RemoveElement(aSheet);
+    PRInt32 index = mUserSheets->IndexOf(aAfterSheet);
+    mUserSheets->InsertElementAt(aSheet, ++index);
+    ClearUserRuleProcessors();
   }
 }
 
-void StyleSetImpl::InsertBackstopStyleSheetBefore(nsIStyleSheet* aSheet,
-                                                  nsIStyleSheet* aBeforeSheet)
+void StyleSetImpl::InsertUserStyleSheetBefore(nsIStyleSheet* aSheet,
+                                              nsIStyleSheet* aBeforeSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
-  if (EnsureArray(&mBackstopSheets)) {
-    mBackstopSheets->RemoveElement(aSheet);
-    PRInt32 index = mBackstopSheets->IndexOf(aBeforeSheet);
-    mBackstopSheets->InsertElementAt(aSheet, ((-1 < index) ? index : 0));
-    ClearBackstopRuleProcessors();
+  if (EnsureArray(mUserSheets)) {
+    mUserSheets->RemoveElement(aSheet);
+    PRInt32 index = mUserSheets->IndexOf(aBeforeSheet);
+    mUserSheets->InsertElementAt(aSheet, ((-1 < index) ? index : 0));
+    ClearUserRuleProcessors();
   }
 }
 
-void StyleSetImpl::RemoveBackstopStyleSheet(nsIStyleSheet* aSheet)
+void StyleSetImpl::RemoveUserStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
 
-  if (nsnull != mBackstopSheets) {
-    mBackstopSheets->RemoveElement(aSheet);
-    ClearBackstopRuleProcessors();
+  if (nsnull != mUserSheets) {
+    mUserSheets->RemoveElement(aSheet);
+    ClearUserRuleProcessors();
   }
 }
 
-PRInt32 StyleSetImpl::GetNumberOfBackstopStyleSheets()
+PRInt32 StyleSetImpl::GetNumberOfUserStyleSheets()
 {
-  if (nsnull != mBackstopSheets) {
+  if (nsnull != mUserSheets) {
     PRUint32 cnt;
-    nsresult rv = mBackstopSheets->Count(&cnt);
+    nsresult rv = mUserSheets->Count(&cnt);
     if (NS_FAILED(rv)) return 0;        // XXX error?
     return cnt;
   }
+  return 0;
+}
+
+nsIStyleSheet* StyleSetImpl::GetUserStyleSheetAt(PRInt32 aIndex)
+{
+  nsIStyleSheet* sheet = nsnull;
+  if (nsnull != mUserSheets) {
+    sheet = (nsIStyleSheet*)mUserSheets->ElementAt(aIndex);
+  }
+  return sheet;
+}
+
+void
+StyleSetImpl::ReplaceUserStyleSheets(nsISupportsArray* aNewUserSheets)
+{
+  ClearUserRuleProcessors();
+  mUserSheets = aNewUserSheets;
+}
+
+// ------ agent sheets
+
+void StyleSetImpl::AppendAgentStyleSheet(nsIStyleSheet* aSheet)
+{
+  NS_PRECONDITION(nsnull != aSheet, "null arg");
+  if (EnsureArray(mAgentSheets)) {
+    mAgentSheets->RemoveElement(aSheet);
+    mAgentSheets->AppendElement(aSheet);
+    ClearAgentRuleProcessors();
+  }
+}
+
+void StyleSetImpl::InsertAgentStyleSheetAfter(nsIStyleSheet* aSheet,
+                                              nsIStyleSheet* aAfterSheet)
+{
+  NS_PRECONDITION(nsnull != aSheet, "null arg");
+  if (EnsureArray(mAgentSheets)) {
+    mAgentSheets->RemoveElement(aSheet);
+    PRInt32 index = mAgentSheets->IndexOf(aAfterSheet);
+    mAgentSheets->InsertElementAt(aSheet, ++index);
+    ClearAgentRuleProcessors();
+  }
+}
+
+void StyleSetImpl::InsertAgentStyleSheetBefore(nsIStyleSheet* aSheet,
+                                               nsIStyleSheet* aBeforeSheet)
+{
+  NS_PRECONDITION(nsnull != aSheet, "null arg");
+  if (EnsureArray(mAgentSheets)) {
+    mAgentSheets->RemoveElement(aSheet);
+    PRInt32 index = mAgentSheets->IndexOf(aBeforeSheet);
+    mAgentSheets->InsertElementAt(aSheet, ((-1 < index) ? index : 0));
+    ClearAgentRuleProcessors();
+  }
+}
+
+void StyleSetImpl::RemoveAgentStyleSheet(nsIStyleSheet* aSheet)
+{
+  NS_PRECONDITION(nsnull != aSheet, "null arg");
+
+  if (nsnull != mAgentSheets) {
+    mAgentSheets->RemoveElement(aSheet);
+    ClearAgentRuleProcessors();
+  }
+}
+
+PRInt32 StyleSetImpl::GetNumberOfAgentStyleSheets()
+{
+  if (nsnull != mAgentSheets) {
+    PRUint32 cnt;
+    nsresult rv = mAgentSheets->Count(&cnt);
+    if (NS_FAILED(rv)) return 0;        // XXX error?
+    return cnt;
+ }
   return 0;
 }
 
@@ -685,12 +777,12 @@ NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
   nsresult rv = NS_OK;
   if (nsnull == mQuirkStyleSheet) {
     // first find the quirk sheet:
-    // - run through all of the backstop sheets and check for a CSSStyleSheet that
+    // - run through all of the agent sheets and check for a CSSStyleSheet that
     //   has the URL we want
-    PRUint32 i, nSheets = GetNumberOfBackstopStyleSheets();
+    PRUint32 i, nSheets = GetNumberOfAgentStyleSheets();
     for (i=0; i< nSheets; i++) {
       nsCOMPtr<nsIStyleSheet> sheet;
-      sheet = getter_AddRefs(GetBackstopStyleSheetAt(i));
+      sheet = getter_AddRefs(GetAgentStyleSheetAt(i));
       if (sheet) {
         nsCOMPtr<nsICSSStyleSheet> cssSheet;
         sheet->QueryInterface(NS_GET_IID(nsICSSStyleSheet), getter_AddRefs(cssSheet));
@@ -723,6 +815,22 @@ NS_IMETHODIMP StyleSetImpl::EnableQuirkStyleSheet(PRBool aEnable)
   return rv;
 }
 
+nsIStyleSheet* StyleSetImpl::GetAgentStyleSheetAt(PRInt32 aIndex)
+{
+  nsIStyleSheet* sheet = nsnull;
+  if (nsnull != mAgentSheets) {
+    sheet = (nsIStyleSheet*)mAgentSheets->ElementAt(aIndex);
+  }
+  return sheet;
+}
+
+void
+StyleSetImpl::ReplaceAgentStyleSheets(nsISupportsArray* aNewAgentSheets)
+{
+  ClearAgentRuleProcessors();
+  mAgentSheets = aNewAgentSheets;
+}
+
 NS_IMETHODIMP 
 StyleSetImpl::NotifyStyleSheetStateChanged(PRBool aDisabled)
 {
@@ -731,23 +839,6 @@ StyleSetImpl::NotifyStyleSheetStateChanged(PRBool aDisabled)
   return NS_OK;
 }
 
-nsIStyleSheet* StyleSetImpl::GetBackstopStyleSheetAt(PRInt32 aIndex)
-{
-  nsIStyleSheet* sheet = nsnull;
-  if (nsnull != mBackstopSheets) {
-    sheet = (nsIStyleSheet*)mBackstopSheets->ElementAt(aIndex);
-  }
-  return sheet;
-}
-
-void
-StyleSetImpl::ReplaceBackstopStyleSheets(nsISupportsArray* aNewBackstopSheets)
-{
-  ClearBackstopRuleProcessors();
-  NS_IF_RELEASE(mBackstopSheets);
-  mBackstopSheets = aNewBackstopSheets;
-  NS_IF_ADDREF(mBackstopSheets);
-}
  
 struct RulesMatchingData {
   RulesMatchingData(nsIPresContext* aPresContext,
@@ -812,22 +903,77 @@ nsIStyleContext* StyleSetImpl::GetContext(nsIPresContext* aPresContext,
 }
 
 void
-StyleSetImpl::AddImportantRules(nsRuleNode* aCurrNode)
+StyleSetImpl::AddImportantRules(nsRuleNode* aCurrLevelNode,
+                                nsRuleNode* aLastPrevLevelNode)
 {
-  // XXX Note: this is still incorrect from a cascade standpoint, but
-  // it preserves the existing incorrect cascade behavior.
-  nsRuleNode* parent = aCurrNode->GetParent();
-  if (parent)
-    AddImportantRules(parent);
+  if (!aCurrLevelNode || aCurrLevelNode == aLastPrevLevelNode)
+    return;
+
+  AddImportantRules(aCurrLevelNode->GetParent(), aLastPrevLevelNode);
 
   nsCOMPtr<nsIStyleRule> rule;;
-  aCurrNode->GetRule(getter_AddRefs(rule));
+  aCurrLevelNode->GetRule(getter_AddRefs(rule));
   nsCOMPtr<nsICSSStyleRule> cssRule(do_QueryInterface(rule));
   if (cssRule) {
     nsCOMPtr<nsIStyleRule> impRule = getter_AddRefs(cssRule->GetImportantRule());
     if (impRule)
       mRuleWalker->Forward(impRule);
   }
+}
+
+void
+StyleSetImpl::FileRules(nsISupportsArrayEnumFunc aCollectorFunc, 
+                        void* aData,
+                        nsIContent* aContent)
+{
+
+  // Cascading order:
+  // [least important]
+  //  1. UA normal rules                    = Agent     normal
+  //  2. User normal rules                  = User      normal
+  //  3. Author normal rules                = Document  normal
+  //  4. Override normal rules              = Override  normal
+  //  5. Author !important rules            = Document !important
+  //  6. Override !important rules          = Override !important
+  //  7. User !important rules              = User     !important
+  //  8. UA !important rules                = Agent    !important
+  // [most important]
+
+  nsRuleNode* lastAgentRN = nsnull;
+  if (mAgentRuleProcessors) {
+    mAgentRuleProcessors->EnumerateForwards(aCollectorFunc, aData);
+    lastAgentRN = mRuleWalker->GetCurrentNode();
+  }
+
+  nsRuleNode* lastUserRN = lastAgentRN;
+  if (mUserRuleProcessors) {
+    mUserRuleProcessors->EnumerateForwards(aCollectorFunc, aData);
+    lastUserRN = mRuleWalker->GetCurrentNode();
+  }
+
+  nsRuleNode* lastDocRN = lastUserRN;
+  PRBool useRuleProcessors = PR_TRUE;
+  if (mStyleRuleSupplier) {
+    // We can supply additional document-level sheets that should be walked.
+    mStyleRuleSupplier->WalkRules(this, aCollectorFunc, aData, aContent);
+    mStyleRuleSupplier->UseDocumentRules(aContent, &useRuleProcessors);
+  }
+  if (mDocRuleProcessors) {
+    mDocRuleProcessors->EnumerateForwards(aCollectorFunc, aData);
+  }
+  lastDocRN = mRuleWalker->GetCurrentNode();
+
+  nsRuleNode* lastOvrRN = lastDocRN;
+  if (mOverrideRuleProcessors) {
+    mOverrideRuleProcessors->EnumerateForwards(aCollectorFunc, aData);
+    lastOvrRN = mRuleWalker->GetCurrentNode();
+  }
+
+  AddImportantRules(lastDocRN, lastUserRN);   //doc
+  AddImportantRules(lastOvrRN, lastDocRN);    //ovr
+  AddImportantRules(lastUserRN, lastAgentRN); //user
+  AddImportantRules(lastAgentRN, nsnull);     //agent
+
 }
 
 #ifdef NS_DEBUG
@@ -866,16 +1012,15 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
 
   if (aContent && aPresContext) {
     GatherRuleProcessors();
-    if (mBackstopRuleProcessors || mDocRuleProcessors || mOverrideRuleProcessors) {
+    if (mAgentRuleProcessors ||
+        mUserRuleProcessors  ||
+        mDocRuleProcessors   ||
+        mOverrideRuleProcessors) {
       EnsureRuleWalker(aPresContext);
       nsCOMPtr<nsIAtom> medium;
       aPresContext->GetMedium(getter_AddRefs(medium));
       RulesMatchingData data(aPresContext, medium, aContent, aParentContext, mRuleWalker);
-      WalkRuleProcessors(EnumRulesMatching, &data, aContent);
-      
-      // Walk all of the rules and add in the !important counterparts.
-      nsRuleNode* ruleNode = mRuleWalker->GetCurrentNode();
-      AddImportantRules(ruleNode);
+      FileRules(EnumRulesMatching, &data, aContent);
       result = GetContext(aPresContext, aParentContext, nsnull, aForceUnique);
      
       // Now reset the walker back to the root of the tree.
@@ -902,8 +1047,9 @@ nsIStyleContext* StyleSetImpl::ResolveStyleForNonElement(
 
   if (aPresContext) {
     GatherRuleProcessors();
-    if (mBackstopRuleProcessors ||
-        mDocRuleProcessors ||
+    if (mAgentRuleProcessors ||
+        mUserRuleProcessors  ||
+        mDocRuleProcessors   ||
         mOverrideRuleProcessors) {
       EnsureRuleWalker(aPresContext);
       result = GetContext(aPresContext, aParentContext, nsnull, aForceUnique);
@@ -975,17 +1121,17 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
 
   if (aPseudoTag && aPresContext) {
     GatherRuleProcessors();
-    if (mBackstopRuleProcessors || mDocRuleProcessors || mOverrideRuleProcessors) {
+    if (mAgentRuleProcessors ||
+        mUserRuleProcessors  ||
+        mDocRuleProcessors   ||
+        mOverrideRuleProcessors) {
       nsCOMPtr<nsIAtom> medium;
       aPresContext->GetMedium(getter_AddRefs(medium));
       EnsureRuleWalker(aPresContext);
       PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
                                    aPseudoTag, aParentContext, aComparator, mRuleWalker);
-      WalkRuleProcessors(EnumPseudoRulesMatching, &data, aParentContent);
-      
-      // Walk all of the rules and add in the !important counterparts.
-      nsRuleNode* ruleNode = mRuleWalker->GetCurrentNode();
-      AddImportantRules(ruleNode);
+      FileRules(EnumPseudoRulesMatching, &data, aParentContent);
+
       result = GetContext(aPresContext, aParentContext, aPseudoTag, aForceUnique);
      
       // Now reset the walker back to the root of the tree.
@@ -1017,17 +1163,17 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
 
   if (aPseudoTag && aPresContext) {
     GatherRuleProcessors();
-    if (mBackstopRuleProcessors || mDocRuleProcessors || mOverrideRuleProcessors) {
+    if (mAgentRuleProcessors ||
+        mUserRuleProcessors  ||
+        mDocRuleProcessors   ||
+        mOverrideRuleProcessors) {
       nsCOMPtr<nsIAtom> medium;
       aPresContext->GetMedium(getter_AddRefs(medium));
       EnsureRuleWalker(aPresContext);
       PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
                                    aPseudoTag, aParentContext, nsnull, mRuleWalker);
-      WalkRuleProcessors(EnumPseudoRulesMatching, &data, aParentContent);
-    
-      // Walk all of the rules and add in the !important counterparts.
-      nsRuleNode* ruleNode = mRuleWalker->GetCurrentNode();
-      AddImportantRules(ruleNode);
+      FileRules(EnumPseudoRulesMatching, &data, aParentContent);
+
       if (!mRuleWalker->AtRoot())
         result = GetContext(aPresContext, aParentContext, aPseudoTag, aForceUnique);
  
@@ -1212,8 +1358,9 @@ StyleSetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
   GatherRuleProcessors();
 
   if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
-      (mBackstopRuleProcessors ||
-       mDocRuleProcessors ||
+      (mAgentRuleProcessors ||
+       mUserRuleProcessors  ||
+       mDocRuleProcessors   ||
        mOverrideRuleProcessors)) {  
     nsIAtom* medium = nsnull;
     aPresContext->GetMedium(&medium);
@@ -1421,7 +1568,8 @@ void StyleSetImpl::List(FILE* out, PRInt32 aIndent)
 {
 //  List(out, aIndent, mOverrideSheets);
   List(out, aIndent, mDocSheets);
-//  List(out, aIndent, mBackstopSheets);
+//  List(out, aIndent, mUserSheets);
+//  List(out, aIndent, mAgentSheets);
 }
 
 
@@ -1616,7 +1764,9 @@ StyleSetImpl::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
     if ((mDocSheets && !mDocSheets->EnumerateForwards(EnumAffectsStyle, &pair)) ||
         (mOverrideSheets && !mOverrideSheets->EnumerateForwards(EnumAffectsStyle,
                                                                 &pair)) ||
-        (mBackstopSheets && !mBackstopSheets->EnumerateForwards(EnumAffectsStyle,
+        (mUserSheets && !mUserSheets->EnumerateForwards(EnumAffectsStyle,
+                                                                &pair)) ||
+        (mAgentSheets && !mAgentSheets->EnumerateForwards(EnumAffectsStyle,
                                                                 &pair))) {
       aAffects = PR_TRUE;
     } else {
@@ -1636,7 +1786,7 @@ StyleSetImpl::AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
 *       and the FrameConstructor overhead
 *
 *  Contained / Aggregated data (not reported as StyleSetImpl's size):
-*    1) Override Sheets, DocSheets, BackstopSheets, RuleProcessors, Recycler
+*    1) Override Sheets, DocSheets, UserSheets, AgentSheets, RuleProcessors, Recycler
 *       are all delegated to.
 *
 *  Children / siblings / parents:
@@ -1668,11 +1818,17 @@ void StyleSetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   if (mDocSheets && uniqueItems->AddItem(mDocSheets)){
     aSize += sizeof(*mDocSheets);
   }
-  if (mBackstopSheets && uniqueItems->AddItem(mBackstopSheets)){
-    aSize += sizeof(*mBackstopSheets);
+  if (mUserSheets && uniqueItems->AddItem(mUserSheets)){
+    aSize += sizeof(*mUserSheets);
   }
-  if (mBackstopRuleProcessors && uniqueItems->AddItem(mBackstopRuleProcessors)){
-    aSize += sizeof(*mBackstopRuleProcessors);
+  if (mAgentSheets && uniqueItems->AddItem(mAgentSheets)){
+    aSize += sizeof(*mAgentSheets);
+  }
+  if (mAgentRuleProcessors && uniqueItems->AddItem(mAgentRuleProcessors)){
+    aSize += sizeof(*mAgentRuleProcessors);
+  }
+  if (mUserRuleProcessors && uniqueItems->AddItem(mUserRuleProcessors)){
+    aSize += sizeof(*mUserRuleProcessors);
   }
   if (mDocRuleProcessors && uniqueItems->AddItem(mDocRuleProcessors)){
     aSize += sizeof(*mDocRuleProcessors);
@@ -1717,9 +1873,19 @@ void StyleSetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     NS_IF_RELEASE(pSheet);
   }
 
-  numSheets = GetNumberOfBackstopStyleSheets();
+  numSheets = GetNumberOfUserStyleSheets();
   for(curSheet=0; curSheet < numSheets; curSheet++){
-    nsIStyleSheet* pSheet = GetBackstopStyleSheetAt(curSheet);
+    nsIStyleSheet* pSheet = GetUserStyleSheetAt(curSheet);
+    if(pSheet){
+      localSize=0;
+      pSheet->SizeOf(aSizeOfHandler, localSize);
+    }
+    NS_IF_RELEASE(pSheet);
+  }
+
+  numSheets = GetNumberOfAgentStyleSheets();
+  for(curSheet=0; curSheet < numSheets; curSheet++){
+    nsIStyleSheet* pSheet = GetAgentStyleSheetAt(curSheet);
     if(pSheet){
       localSize=0;
       pSheet->SizeOf(aSizeOfHandler, localSize);
@@ -1729,11 +1895,23 @@ void StyleSetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   ///////////////////////////////////////////////
   // rule processors
   PRUint32 numRuleProcessors,curRuleProcessor;
-  if(mBackstopRuleProcessors){
-    mBackstopRuleProcessors->Count(&numRuleProcessors);
+  if(mAgentRuleProcessors){
+    mAgentRuleProcessors->Count(&numRuleProcessors);
     for(curRuleProcessor=0; curRuleProcessor < numRuleProcessors; curRuleProcessor++){
       nsIStyleRuleProcessor* processor = 
-        (nsIStyleRuleProcessor* )mBackstopRuleProcessors->ElementAt(curRuleProcessor);
+        (nsIStyleRuleProcessor* )mAgentRuleProcessors->ElementAt(curRuleProcessor);
+      if(processor){
+        localSize=0;
+        processor->SizeOf(aSizeOfHandler, localSize);
+      }
+      NS_IF_RELEASE(processor);
+    }
+  }
+  if(mUserRuleProcessors){
+    mUserRuleProcessors->Count(&numRuleProcessors);
+    for(curRuleProcessor=0; curRuleProcessor < numRuleProcessors; curRuleProcessor++){
+      nsIStyleRuleProcessor* processor = 
+        (nsIStyleRuleProcessor* )mUserRuleProcessors->ElementAt(curRuleProcessor);
       if(processor){
         localSize=0;
         processor->SizeOf(aSizeOfHandler, localSize);
@@ -1792,9 +1970,13 @@ void
 StyleSetImpl::WalkRuleProcessors(nsISupportsArrayEnumFunc aFunc, void* aData,
                                  nsIContent* aContent)
 {
-  // Walk the backstop rules first.
-  if (mBackstopRuleProcessors)
-    mBackstopRuleProcessors->EnumerateForwards(aFunc, aData);
+  // Walk the agent rules first.
+  if (mAgentRuleProcessors)
+    mAgentRuleProcessors->EnumerateForwards(aFunc, aData);
+
+  // Walk the user rules next.
+  if (mUserRuleProcessors)
+    mUserRuleProcessors->EnumerateForwards(aFunc, aData);
 
   PRBool useRuleProcessors = PR_TRUE;
   if (mStyleRuleSupplier) {
@@ -1803,7 +1985,7 @@ StyleSetImpl::WalkRuleProcessors(nsISupportsArrayEnumFunc aFunc, void* aData,
     mStyleRuleSupplier->UseDocumentRules(aContent, &useRuleProcessors);
   }
 
-  // Walk the doc rules next.
+  // Now walk the doc rules.
   if (mDocRuleProcessors && useRuleProcessors)
     mDocRuleProcessors->EnumerateForwards(aFunc, aData);
   

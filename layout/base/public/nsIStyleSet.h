@@ -86,15 +86,25 @@ public:
   virtual PRInt32 GetNumberOfDocStyleSheets() = 0;
   virtual nsIStyleSheet* GetDocStyleSheetAt(PRInt32 aIndex) = 0;
 
-  virtual void AppendBackstopStyleSheet(nsIStyleSheet* aSheet) = 0;
-  virtual void InsertBackstopStyleSheetAfter(nsIStyleSheet* aSheet,
+  virtual void AppendUserStyleSheet(nsIStyleSheet* aSheet) = 0;
+  virtual void InsertUserStyleSheetAfter(nsIStyleSheet* aSheet,
                                              nsIStyleSheet* aAfterSheet) = 0;
-  virtual void InsertBackstopStyleSheetBefore(nsIStyleSheet* aSheet,
+  virtual void InsertUserStyleSheetBefore(nsIStyleSheet* aSheet,
                                               nsIStyleSheet* aBeforeSheet) = 0;
-  virtual void RemoveBackstopStyleSheet(nsIStyleSheet* aSheet) = 0;
-  virtual PRInt32 GetNumberOfBackstopStyleSheets() = 0;
-  virtual nsIStyleSheet* GetBackstopStyleSheetAt(PRInt32 aIndex) = 0;
-  virtual void ReplaceBackstopStyleSheets(nsISupportsArray* aNewSheets) = 0;
+  virtual void RemoveUserStyleSheet(nsIStyleSheet* aSheet) = 0;
+  virtual PRInt32 GetNumberOfUserStyleSheets() = 0;
+  virtual nsIStyleSheet* GetUserStyleSheetAt(PRInt32 aIndex) = 0;
+  virtual void ReplaceUserStyleSheets(nsISupportsArray* aNewSheets) = 0;
+
+  virtual void AppendAgentStyleSheet(nsIStyleSheet* aSheet) = 0;
+  virtual void InsertAgentStyleSheetAfter(nsIStyleSheet* aSheet,
+                                             nsIStyleSheet* aAfterSheet) = 0;
+  virtual void InsertAgentStyleSheetBefore(nsIStyleSheet* aSheet,
+                                              nsIStyleSheet* aBeforeSheet) = 0;
+  virtual void RemoveAgentStyleSheet(nsIStyleSheet* aSheet) = 0;
+  virtual PRInt32 GetNumberOfAgentStyleSheets() = 0;
+  virtual nsIStyleSheet* GetAgentStyleSheetAt(PRInt32 aIndex) = 0;
+  virtual void ReplaceAgentStyleSheets(nsISupportsArray* aNewSheets) = 0;
   
   virtual nsresult GetRuleTree(nsRuleNode** aResult) = 0;
   virtual nsresult ClearCachedDataInRuleTree(nsIStyleRule* aRule) = 0;

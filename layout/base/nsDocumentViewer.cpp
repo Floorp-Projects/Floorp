@@ -3924,28 +3924,26 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
         sheets->Count(&count);
         for(PRUint32 i=0; i<count; i++) {
           sheets->GetElementAt(i, getter_AddRefs(sheet));
-          // XXX For now, append as backstop until we figure out something
-          // better to do.
-          (*aStyleSet)->AppendBackstopStyleSheet(sheet);
+          (*aStyleSet)->AppendUserStyleSheet(sheet);
         }
       }
 
       // Append chrome sheets (scrollbars + forms).
       nsCOMPtr<nsIDocShell> ds(do_QueryInterface(mContainer));
-      chromeRegistry->GetBackstopSheets(ds, getter_AddRefs(sheets));
+      chromeRegistry->GetAgentSheets(ds, getter_AddRefs(sheets));
       if(sheets){
         nsCOMPtr<nsICSSStyleSheet> sheet;
         PRUint32 count;
         sheets->Count(&count);
         for(PRUint32 i=0; i<count; i++) {
           sheets->GetElementAt(i, getter_AddRefs(sheet));
-          (*aStyleSet)->AppendBackstopStyleSheet(sheet);
+          (*aStyleSet)->AppendAgentStyleSheet(sheet);
         }
       }
     }
 
     if (mUAStyleSheet) {
-      (*aStyleSet)->AppendBackstopStyleSheet(mUAStyleSheet);
+      (*aStyleSet)->AppendAgentStyleSheet(mUAStyleSheet);
     }
   }
   return NS_OK;

@@ -168,14 +168,14 @@ static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
 // supporting bugs 31816, 20760, 22963
 // define USE_OVERRIDE to put prefs in as an override stylesheet
-// otherwise they go in as a Backstop stylesheets
+// otherwise they go in as a Agent stylesheets
 //  - OVERRIDE is better for text and bg colors, but bad for link colors,
-//    so eventually, we should probably have a backstop and an override and 
-//    put the link colors in the backstop and the text and bg colors in the override,
-//    but using the backstop stylesheet with !important rules solves 95% of the 
+//    so eventually, we should probably have an agent and an override and 
+//    put the link colors in the agent and the text and bg colors in the override,
+//    but using the agent stylesheet with !important rules solves 95% of the 
 //    problem and should suffice for RTM
 //
-// XXX: use backstop stylesheet of link colors and link underline, 
+// XXX: use agent stylesheet of link colors and link underline, 
 //      user override stylesheet for forcing background and text colors, post RTM
 //
 // #define PREFS_USE_OVERRIDE
@@ -2065,8 +2065,8 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
       }
 
       // now the link rules (must come after the color rules, or links will not be correct color!)
-      // XXX - when there is both an override and backstop pref stylesheet this won't matter,
-      //       as the color rules will be overrides and the links rules will be backstop
+      // XXX - when there is both an override and agent pref stylesheet this won't matter,
+      //       as the color rules will be overrides and the links rules will be agent
       if (NS_SUCCEEDED(result)) {
         result = SetPrefLinkRules();
       }
@@ -2115,7 +2115,7 @@ nsresult PresShell::ClearPreferenceStyleRules(void)
  #ifdef PREFS_USE_OVERRIDE
       PRInt32 numBefore = mStyleSet->GetNumberOfOverrideStyleSheets();
  #else
-      PRInt32 numBefore = mStyleSet->GetNumberOfBackstopStyleSheets();
+      PRInt32 numBefore = mStyleSet->GetNumberOfAgentStyleSheets();
  #endif
       NS_ASSERTION(numBefore > 0, "no override stylesheets in styleset, but we have one!");
 #endif
@@ -2123,7 +2123,7 @@ nsresult PresShell::ClearPreferenceStyleRules(void)
  #ifdef PREFS_USE_OVERRIDE
       mStyleSet->RemoveOverrideStyleSheet(mPrefStyleSheet);
  #else 
-      mStyleSet->RemoveBackstopStyleSheet(mPrefStyleSheet);
+      mStyleSet->RemoveAgentStyleSheet(mPrefStyleSheet);
  #endif
 
 #ifdef DEBUG_attinasi
@@ -2131,7 +2131,7 @@ nsresult PresShell::ClearPreferenceStyleRules(void)
       NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfOverrideStyleSheets(),
                    "Pref stylesheet was not removed");
  #else
-      NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfBackstopStyleSheets(),
+      NS_ASSERTION((numBefore - 1) == mStyleSet->GetNumberOfAgentStyleSheets(),
                    "Pref stylesheet was not removed");
  #endif
       printf("PrefStyleSheet removed\n");
@@ -2161,7 +2161,7 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
  #ifdef PREFS_USE_OVERRIDE
         mStyleSet->AppendOverrideStyleSheet(mPrefStyleSheet);
  #else
-        mStyleSet->AppendBackstopStyleSheet(mPrefStyleSheet);
+        mStyleSet->AppendAgentStyleSheet(mPrefStyleSheet);
  #endif
       }
     }
@@ -2214,7 +2214,7 @@ nsresult PresShell::SetPrefColorRules(void)
               // create a rule for background and foreground color and
               // add it to the style sheet              
               // - the rule is !important so it overrides all but author
-              //   important rules (when put into a backstop stylesheet) and 
+              //   important rules (when put into an agent stylesheet) and 
               //   all (even author important) when put into an override stylesheet
 
               ///////////////////////////////////////////////////////////////
@@ -2268,9 +2268,9 @@ nsresult PresShell::SetPrefLinkRules(void)
 
         // support default link colors: 
         //   this means the link colors need to be overridable, 
-        //   which they are if we put them in the backstop stylesheet,
+        //   which they are if we put them in the agent stylesheet,
         //   though if using an override sheet this will cause authors grief still
-        //   In the backstop stylesheet, they are !important when we are ignoring document colors
+        //   In the agent stylesheet, they are !important when we are ignoring document colors
         //
         // XXX: do active links and visited links get another color?
         //      They were red in the html.css rules
@@ -2322,7 +2322,7 @@ nsresult PresShell::SetPrefLinkRules(void)
               // create a rule to make underlining happen
               //  ':link, :visited {text-decoration:[underline|none];}'
               // no need for important, we want these to be overridable
-              // NOTE: these must go in the backstop stylesheet or they cannot be
+              // NOTE: these must go in the agent stylesheet or they cannot be
               //       overridden by authors
   #ifdef DEBUG_attinasi
               printf (" - Creating rules for enabling link underlines\n");
@@ -6230,13 +6230,22 @@ PresShell::CloneStyleSet(nsIStyleSet* aSet, nsIStyleSet** aResult)
       NS_RELEASE(ss);
     }
   }
-
-  n = aSet->GetNumberOfBackstopStyleSheets();
+  n = aSet->GetNumberOfUserStyleSheets();
   for (i = 0; i < n; i++) {
     nsIStyleSheet* ss;
-    ss = aSet->GetBackstopStyleSheetAt(i);
+    ss = aSet->GetUserStyleSheetAt(i);
     if (nsnull != ss) {
-      clone->AppendBackstopStyleSheet(ss);
+      clone->AppendUserStyleSheet(ss);
+      NS_RELEASE(ss);
+    }
+  }
+
+  n = aSet->GetNumberOfAgentStyleSheets();
+  for (i = 0; i < n; i++) {
+    nsIStyleSheet* ss;
+    ss = aSet->GetAgentStyleSheetAt(i);
+    if (nsnull != ss) {
+      clone->AppendAgentStyleSheet(ss);
       NS_RELEASE(ss);
     }
   }
