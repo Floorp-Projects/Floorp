@@ -81,6 +81,7 @@ NS_INTERFACE_MAP_BEGIN(nsMsgStatusFeedback)
    NS_INTERFACE_MAP_ENTRY(nsIMsgStatusFeedback)
    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink) 
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) 
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 //////////////////////////////////////////////////////////////////////////////////

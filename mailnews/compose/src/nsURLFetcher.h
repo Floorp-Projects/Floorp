@@ -31,6 +31,7 @@
 #include "nsCURILoader.h"
 #include "nsIURIContentListener.h"
 #include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
 
 //
 // Callback declarations for URL completion
@@ -42,8 +43,12 @@ typedef nsresult (*nsAttachSaveCompletionCallback) (nsIURI* aURL, nsresult aStat
                                                     PRInt32 totalSize, const PRUnichar* aMsg, 
                                                     void *tagData);
 
-class nsURLFetcher : public nsIStreamListener, public nsIURIContentListener, public nsIInterfaceRequestor,
-                     public nsIWebProgressListener { 
+class nsURLFetcher : public nsIStreamListener,
+                     public nsIURIContentListener, 
+                     public nsIInterfaceRequestor,
+                     public nsIWebProgressListener,
+                     public nsSupportsWeakReference
+{ 
 public: 
   nsURLFetcher();
   virtual ~nsURLFetcher();

@@ -33,6 +33,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
 #include "nsIWebShell.h"  // We still have to implement nsIWebShellContainer
                           // in order to receveive some DocumentLoaderObserver
                           // events.  edburns
@@ -65,7 +66,8 @@ class CBrowserContainer :
 		public nsIInterfaceRequestor,
 		public nsIPrompt,
 		public nsIDOMMouseListener,
-    public wcIBrowserContainer
+        public wcIBrowserContainer,
+        public nsSupportsWeakReference
 {
 
 public:

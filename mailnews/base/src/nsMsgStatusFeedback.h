@@ -31,10 +31,12 @@
 #include "nsIMsgStatusFeedback.h"
 #include "nsIProgressEventSink.h"
 #include "nsIStringBundle.h"
+#include "nsWeakReference.h"
 
 class nsMsgStatusFeedback : public nsIMsgStatusFeedback,
                             public nsIProgressEventSink,
-                            public nsIWebProgressListener
+                            public nsIWebProgressListener,
+                            public nsSupportsWeakReference
 {
 public:
 	nsMsgStatusFeedback();
