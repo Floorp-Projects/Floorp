@@ -1528,8 +1528,7 @@ nsBrowserInstance::InitializeSearch( nsIFindComponent *finder )
 
     if (!mSearchContext ) {
         // Create the search context for this browser window.
-        nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
-        rv = finder->CreateContext( webShell, nsnull, getter_AddRefs(mSearchContext));
+        rv = finder->CreateContext(mContentWindow, nsnull, getter_AddRefs(mSearchContext));
     }
     return rv;
 }

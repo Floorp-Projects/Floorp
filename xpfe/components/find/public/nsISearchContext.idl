@@ -47,7 +47,7 @@ interface nsISearchContext : nsISupports {
     attribute boolean searchBackwards;
     attribute boolean caseSensitive;
     attribute boolean wrapSearch;
-    [noscript] readonly attribute nsIWebShell targetWebShell;
+    readonly attribute nsIDOMWindow targetWindow;
     attribute nsIDOMWindow findDialog;
     void ConvertToWeakReference();
     void ConvertToOwningReference();

@@ -50,7 +50,6 @@
 #include "nsNetUtil.h"
 
 #include "nsIScriptGlobalObject.h"
-#include "nsIWebShellWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsCOMPtr.h"
 
@@ -2572,8 +2571,7 @@ nsEditorShell::DoFind(PRBool aFindNext)
   // make the search context if we need to
   if (!mSearchContext)
   {
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mContentAreaDocShell));
-    rv = findComponent->CreateContext( webShell, nsnull, getter_AddRefs(mSearchContext));
+    rv = findComponent->CreateContext(mContentWindow, nsnull, getter_AddRefs(mSearchContext));
   }
   
   if (NS_SUCCEEDED(rv))
