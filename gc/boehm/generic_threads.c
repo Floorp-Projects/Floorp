@@ -58,7 +58,6 @@ void GC_generic_init_threads(GC_generic_mark_all_stacks_proc mark_all_stacks,
 	// GC_set_max_heap_size(20L * 1024L * 1024L);
 }
 
-#ifndef LINUX_THREADS
 #ifndef WIN32_THREADS
 void GC_push_all_stacks()
 {
@@ -75,4 +74,3 @@ void GC_start_world()
 	GC_generic_starter(GC_generic_mutex);
 }
 #endif /* WIN32_THREADS */
-#endif
