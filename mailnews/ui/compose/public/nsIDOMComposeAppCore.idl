@@ -28,7 +28,8 @@ interface nsIDOMComposeAppCore : nsIDOMBaseAppCore {
 
     void SetWindow(in nsIDOMWindow ptr);
 	void CompleteCallback(in wstring script);
-    void NewMessage();
-	void SendMessage(in wstring addrTo, in wstring subject, in wstring msg);
+    void NewMessage(in wstring url);
+	void SendMessage(in wstring addrFrom, in wstring aSmtp, in wstring addrTo,
+		in wstring addrCc, in wstring addrBcc, in wstring subject, in wstring msg);
 };
 

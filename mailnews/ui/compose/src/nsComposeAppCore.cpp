@@ -82,8 +82,9 @@ public:
 	// nsIComposeAppCore
 	NS_IMETHOD CompleteCallback(const nsString& aScript);
 	NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
-	NS_IMETHOD NewMessage();
-	NS_IMETHOD SendMessage(const nsString& aAddrTo, const nsString& aSubject, const nsString& aMsg);
+	NS_IMETHOD NewMessage(const nsString& aUrl);
+	NS_IMETHOD SendMessage(const nsString& aAddrFrom, const nsString& aSmtp, const nsString& aAddrTo,
+		const nsString& aAddrCc, const nsString& aAddrBcc, const nsString& aSubject, const nsString& aMsg);
 
 protected:
   
@@ -251,7 +252,7 @@ nsComposeAppCore::CompleteCallback(const nsString& aScript)
 }
 
 NS_IMETHODIMP    
-nsComposeAppCore::NewMessage()
+nsComposeAppCore::NewMessage(const nsString& aUrl)
 {
 	static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 
@@ -260,28 +261,27 @@ nsComposeAppCore::NewMessage()
 	nsresult rv;
 	nsString controllerCID;
 
-	urlstr = "resource:/res/samples/compose.html";
 	rv = nsServiceManager::GetService(kAppShellServiceCID,
 									  nsIAppShellService::IID(),
 									  (nsISupports**)&appShell);
 	nsIURL* url;
 	nsIWidget* newWindow;
   
-	rv = NS_NewURL(&url, urlstr);
+	rv = NS_NewURL(&url, aUrl);
 	if (NS_FAILED(rv)) {
 	  goto done;
 	}
 
-	controllerCID = "6B75BB61-BD41-11d2-9D31-00805F8ADDDE";
+	controllerCID = "6B75BB61-BD41-11d2-9D31-00805F8ADDDF";
 	appShell->CreateTopLevelWindow(nsnull,      // parent
                                    url,
                                    controllerCID,
                                    newWindow,   // result widget
                                    nsnull,      // observer
                                    nsnull,      // callbacks
-                                   100,         // width
-                                   100);        // height
-	done:
+                                   615,         // width
+                                   650);        // height
+done:
 	NS_RELEASE(url);
 	if (nsnull != appShell) {
 		nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
@@ -290,7 +290,8 @@ nsComposeAppCore::NewMessage()
 }
 
 NS_IMETHODIMP    
-nsComposeAppCore::SendMessage(const nsString& aAddrTo, const nsString& aSubject, const nsString& aMsg)
+nsComposeAppCore::SendMessage(const nsString& aAddrFrom, const nsString& aSmtp, const nsString& aAddrTo,
+		const nsString& aAddrCc, const nsString& aAddrBcc, const nsString& aSubject, const nsString& aMsg)
 {
   if (nsnull == mScriptContext) {
     return NS_ERROR_FAILURE;
@@ -299,11 +300,13 @@ nsComposeAppCore::SendMessage(const nsString& aAddrTo, const nsString& aSubject,
   printf("----------------------------\n");
   printf("-- Sending Mail Message\n");
   printf("----------------------------\n");
-  printf("To: %s  \nSub: %s  \nMsg: %s\n", aAddrTo.ToNewCString(), aSubject.ToNewCString(), aMsg.ToNewCString());
+  printf("From: %s  Smtp:%s\n", aAddrFrom.ToNewCString(), aSmtp.ToNewCString());
+  printf("To: %s  Cc: %s  Bcc: %s\n", aAddrTo.ToNewCString(), aAddrCc.ToNewCString(), aAddrBcc.ToNewCString());
+  printf("Subject: %s  \nMsg: %s\n", aSubject.ToNewCString(), aMsg.ToNewCString());
   printf("----------------------------\n");
 
   {
-	nsIMsgCompose *pMsgCompose; 
+//	nsIMsgCompose *pMsgCompose; 
 	nsIMsgCompFields *pMsgCompFields;
 	nsIMsgSend *pMsgSend;
 	nsresult res;
@@ -327,12 +330,14 @@ nsComposeAppCore::SendMessage(const nsString& aAddrTo, const nsString& aSubject,
 													kIMsgCompFieldsIID, 
 													(void **) &pMsgCompFields); 
 		if (res == NS_OK && pMsgCompFields) { 
-			pMsgCompFields->SetFrom("qatest02@netscape.com", NULL);
+			pMsgCompFields->SetFrom(aAddrFrom.ToNewCString(), NULL);
 			pMsgCompFields->SetTo(aAddrTo.ToNewCString(), NULL);
+			pMsgCompFields->SetCc(aAddrCc.ToNewCString(), NULL);
+			pMsgCompFields->SetBcc(aAddrBcc.ToNewCString(), NULL);
 			pMsgCompFields->SetSubject(aSubject.ToNewCString(), NULL);
 			pMsgCompFields->SetBody(aMsg.ToNewCString(), NULL);
 
-			pMsgSend->SendMessage(pMsgCompFields);
+			pMsgSend->SendMessage(pMsgCompFields, aSmtp.ToNewCString());
 
 			pMsgCompFields->Release(); 
 		}

@@ -32,10 +32,12 @@ class nsIDOMComposeAppCore : public nsIDOMBaseAppCore {
   NS_IMETHOD CompleteCallback(const nsString& aScript) = 0;
 
   /* void NewMessage (); */
-  NS_IMETHOD NewMessage() = 0;
+  NS_IMETHOD NewMessage(const nsString& aUrl) = 0;
 
   /* void SendMessage (); */
-  NS_IMETHOD SendMessage(const nsString& aAddrTo, const nsString& aSubject, const nsString& aMsg) = 0;
+  NS_IMETHOD SendMessage(const nsString& aAddrFrom, const nsString& aSmtp,
+	  const nsString& aAddrTo, const nsString& aAddrCc,  const nsString& aAddrBcc, 
+	  const nsString& aSubject, const nsString& aMsg) = 0;
 };
 
 

@@ -200,7 +200,7 @@ ComposeAppCoreCompleteCallback(JSContext *cx, JSObject *obj, uintN argc, jsval *
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function CompleteCallback requires 1 parameters");
+    JS_ReportError(cx, "Function CompleteCallback requires 1 parameter");
     return JS_FALSE;
   }
 
@@ -216,6 +216,7 @@ ComposeAppCoreNewMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 {
   nsIDOMComposeAppCore *nativeThis = (nsIDOMComposeAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
+  nsAutoString b0;
 
   *rval = JSVAL_NULL;
 
@@ -224,16 +225,18 @@ ComposeAppCoreNewMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
+  if (argc >= 1) {
 
-    if (NS_OK != nativeThis->NewMessage()) {
+   nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+   if (NS_OK != nativeThis->NewMessage(b0)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function NewMessage requires 0 parameters");
+    JS_ReportError(cx, "Function NewMessage requires 1 parameter");
     return JS_FALSE;
   }
 
@@ -252,6 +255,10 @@ ComposeAppCoreSendMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsAutoString b0;
   nsAutoString b1;
   nsAutoString b2;
+  nsAutoString b3;
+  nsAutoString b4;
+  nsAutoString b5;
+  nsAutoString b6;
 
   *rval = JSVAL_NULL;
 
@@ -260,22 +267,24 @@ ComposeAppCoreSendMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
   }
 
-  if (argc >= 3) {
+  if (argc >= 7) {
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
-
     nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
+    nsJSUtils::nsConvertJSValToString(b3, cx, argv[3]);
+    nsJSUtils::nsConvertJSValToString(b4, cx, argv[4]);
+    nsJSUtils::nsConvertJSValToString(b5, cx, argv[5]);
+    nsJSUtils::nsConvertJSValToString(b6, cx, argv[6]);
 
-    if (NS_OK != nativeThis->SendMessage(b0, b1, b2)) {
+    if (NS_OK != nativeThis->SendMessage(b0, b1, b2, b3, b4, b5, b6)) {
       return JS_FALSE;
     }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function SendMessage requires 3 parameters");
+    JS_ReportError(cx, "Function SendMessage requires 6 parameters");
     return JS_FALSE;
   }
 
@@ -317,8 +326,8 @@ static JSFunctionSpec ComposeAppCoreMethods[] =
 {
   {"SetWindow",				ComposeAppCoreSetWindow,     1},
   {"CompleteCallback",		ComposeAppCoreCompleteCallback,     1},
-  {"NewMessage",			ComposeAppCoreNewMessage,     0},
-  {"SendMessage",			ComposeAppCoreSendMessage,     3},
+  {"NewMessage",			ComposeAppCoreNewMessage,     1},
+  {"SendMessage",			ComposeAppCoreSendMessage,     7},
   {0}
 };
 
