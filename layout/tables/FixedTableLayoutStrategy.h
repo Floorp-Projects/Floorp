@@ -60,8 +60,7 @@ class FixedTableLayoutStrategy : public BasicTableLayoutStrategy
 public:
 
   /** Public constructor.
-    * @paran aFrame           the table frame for which this delegate will do layout
-    * @param aNumCols         the total number of columns in the table    
+    * @param aFrame           the table frame for which this delegate will do layout   
     */
   FixedTableLayoutStrategy(nsTableFrame *aFrame);
 
@@ -69,16 +68,23 @@ public:
   virtual ~FixedTableLayoutStrategy();
 
   /** Called during resize reflow to determine the new column widths
-    * @param aTableStyle - the resolved style for mTableFrame
-	  * @param aReflowState - the reflow state for mTableFrame
-	  * @param aMaxWidth - the computed max width for columns to fit into
-	  */
+   * @param aPresContext - the presentation context
+   * @param aReflowState - the reflow state for mTableFrame
+   */
   virtual PRBool  BalanceColumnWidths(nsIPresContext*          aPresContext,
                                       const nsHTMLReflowState& aReflowState);
-
+  
+  /**
+    * Calculate the basis for percent width calculations of the table elements
+    * @param aReflowState   - the reflow state of the table
+    * @param aAvailWidth    - the available width for the table
+    * @param aPixelToTwips  - the number of twips in a pixel.
+    * @return               - the basis for percent calculations
+    */
   virtual nscoord CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowState,
                                        nscoord                  aAvailWidth,
                                        float                    aPixelToTwips) {return 0;};
+
 #ifdef DEBUG
   void  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
     *aResult = sizeof(*this);
