@@ -636,7 +636,8 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
   nsresult rv;
   NS_WITH_SERVICE ( nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv );
   if ( NS_SUCCEEDED(rv) ) {
-    nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
+    nsCOMPtr<nsIDragSession> dragSession;
+    dragService->GetCurrentSession(getter_AddRefs(dragService)));
     if ( dragSession ) {
       PRUint32 flags;
       if (NS_SUCCEEDED(mEditor->GetFlags(&flags))) {
@@ -694,7 +695,8 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
                                       // editfields if that is what is desired.
     }
 
-    nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
+    nsCOMPtr<nsIDragSession> dragSession;
+    dragService->GetCurrentSession(getter_AddRefs(dragService)));
     if (dragSession)
     {
        PRBool flavorSupported = PR_FALSE;

@@ -187,8 +187,8 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   NS_WITH_SERVICE(nsIDragService, dragService, "@mozilla.org/widget/dragservice;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
-  
+  nsCOMPtr<nsIDragSession> dragSession;
+  dragService->GetCurrentSession(getter_AddRefs(dragService)));
   if (!dragSession) return NS_OK;
 
   // Get the nsITransferable interface for getting the data from the drop
