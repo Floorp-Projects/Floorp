@@ -25,6 +25,7 @@
 
 #include "nsIFrame.h"
 #include "nsIContent.h"
+#include "nsIParser.h"  // for nsCharSetSource
 #include "nsIDOMDocument.h"
 
 #include "nsCHTMLDocShell.h"
@@ -43,6 +44,9 @@ public:
    //nsIDocShellEdit Overrides
    NS_IMETHOD SelectAll();
 
+   // nsIDocShellContainer Overrides
+   NS_IMETHOD AddChild(nsIDocShell *aChild);
+
    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
 protected:
@@ -56,6 +60,11 @@ protected:
    PRInt32  mMarginWidth;
    PRInt32  mMarginHeight;
    PRBool   mIsFrame;
+   /* character set member data */
+   nsString mDefaultCharacterSet;
+   nsString mHintCharset;
+   nsCharsetSource mHintCharsetSource;
+   nsString mForceCharacterSet;
 };
 
 #endif /* nsHTMLDocShell_h__ */
