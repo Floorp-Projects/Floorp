@@ -253,7 +253,7 @@ ifdef MOZ_XUL_APP
 tier_50_dirs	+= toolkit
 endif
 
-ifdef MINIMO
+ifndef MOZ_XUL
 tier_9_dirs	+= embedding/minimo
 endif
 
