@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -86,11 +86,11 @@
 #include "nsDTDUtils.h"
 #include "nsTimer.h"
 #include "nsIEventQueue.h"
+#include "nsIContentSink.h"
+#include "nsIParserFilter.h"
 
-class IContentSink;
 class nsIDTD;
 class nsScanner;
-class nsIParserFilter;
 class nsIProgressEventSink;
 
 #ifdef XP_WIN
@@ -113,7 +113,7 @@ class nsParser : public nsIParser,
      * default constructor
      * @update	gess5/11/98
      */
-    nsParser(nsITokenObserver* anObserver=0);
+    nsParser();
 
 
     /**
@@ -128,7 +128,7 @@ class nsParser : public nsIParser,
      * @param   aSink is the new sink to be used by parser
      * @return  old sink, or NULL
      */
-    virtual nsIContentSink* SetContentSink(nsIContentSink* aSink);
+    NS_IMETHOD_(void) SetContentSink(nsIContentSink* aSink);
 
     /**
      * retrive the sink set into the parser 
@@ -136,40 +136,40 @@ class nsParser : public nsIParser,
      * @param   aSink is the new sink to be used by parser
      * @return  old sink, or NULL
      */
-    virtual nsIContentSink* GetContentSink(void);
+    NS_IMETHOD_(nsIContentSink*) GetContentSink(void);
     
     /**
      *  Call this method once you've created a parser, and want to instruct it
-	   *  about the command which caused the parser to be constructed. For example,
+     *  about the command which caused the parser to be constructed. For example,
      *  this allows us to select a DTD which can do, say, view-source.
      *  
      *  @update  gess 3/25/98
-     *  @param   aContentSink -- ptr to content sink that will receive output
-     *  @return	 ptr to previously set contentsink (usually null)  
+     *  @param   aCommand -- ptrs to string that contains command
+     *  @return	 nada
      */
-    virtual void GetCommand(nsString& aCommand);
-    virtual void SetCommand(const char* aCommand);
-    virtual void SetCommand(eParserCommands aParserCommand);
+    NS_IMETHOD_(void) GetCommand(nsString& aCommand);
+    NS_IMETHOD_(void) SetCommand(const char* aCommand);
+    NS_IMETHOD_(void) SetCommand(eParserCommands aParserCommand);
 
     /**
      *  Call this method once you've created a parser, and want to instruct it
      *  about what charset to load
      *  
      *  @update  ftang 4/23/99
-     *  @param   aCharset- the charest of a document
-     *  @param   aCharsetSource- the soure of the chares
+     *  @param   aCharset- the charset of a document
+     *  @param   aCharsetSource- the source of the charset
      *  @return	 nada
      */
-    virtual void SetDocumentCharset(const nsAString& aCharset, PRInt32 aSource);
+    NS_IMETHOD_(void) SetDocumentCharset(const nsAString& aCharset, PRInt32 aSource);
 
-    void GetDocumentCharset(nsAString& aCharset, PRInt32& aSource)
+    NS_IMETHOD_(void) GetDocumentCharset(nsAString& aCharset, PRInt32& aSource)
     {
          aCharset = mCharset;
          aSource = mCharsetSource;
     }
 
 
-    virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter);
+    NS_IMETHOD_(void) SetParserFilter(nsIParserFilter* aFilter);
     
     NS_IMETHOD RegisterDTD(nsIDTD* aDTD);
 
@@ -179,15 +179,7 @@ class nsParser : public nsIParser,
      *  @update  gess 6/9/98
      *  @return  ptr to scanner
      */
-    virtual nsDTDMode GetParseMode(void);
-
-    /**
-     *  Retrieve the scanner from the topmost parser context
-     *  
-     *  @update  gess 6/9/98
-     *  @return  ptr to scanner
-     */
-    virtual nsScanner* GetScanner(void);
+    NS_IMETHOD_(nsDTDMode) GetParseMode(void);
 
     /**
      * Cause parser to parse input from given URL 
@@ -196,7 +188,11 @@ class nsParser : public nsIParser,
      * @param   aListener is a listener to forward notifications to
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIURI* aURL,nsIRequestObserver* aListener,PRBool aEnableVerify=PR_FALSE,void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect);
+    NS_IMETHOD Parse(nsIURI* aURL,
+                     nsIRequestObserver* aListener = nsnull,
+                     PRBool aEnableVerify = PR_FALSE,
+                     void* aKey = 0,
+                     nsDTDMode aMode = eDTDMode_autodetect);
 
     /**
      * Cause parser to parse input from given stream 
@@ -204,7 +200,11 @@ class nsParser : public nsIParser,
      * @param   aStream is the i/o source
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsIInputStream* aStream,const nsACString& aMimeType,PRBool aEnableVerify=PR_FALSE,void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect);
+    NS_IMETHOD Parse(nsIInputStream* aStream,
+                     const nsACString& aMimeType,
+                     PRBool aEnableVerify = PR_FALSE,
+                     void* aKey = 0,
+                     nsDTDMode aMode = eDTDMode_autodetect);
 
     /**
      * @update	gess5/11/98
@@ -212,15 +212,28 @@ class nsParser : public nsIParser,
      * @param   appendTokens tells us whether we should insert tokens inline, or append them.
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(const nsAString& aSourceBuffer,void* aKey,const nsACString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE,nsDTDMode aMode=eDTDMode_autodetect);
+    NS_IMETHOD Parse(const nsAString& aSourceBuffer,
+                     void* aKey,
+                     const nsACString& aContentType,
+                     PRBool aEnableVerify,
+                     PRBool aLastCall,
+                     nsDTDMode aMode = eDTDMode_autodetect);
 
-    virtual nsresult  ParseFragment(const nsAString& aSourceBuffer,
-                                    void* aKey,
-                                    nsVoidArray& aTagStack,
-                                    PRUint32 anInsertPos,
-                                    const nsACString& aContentType,
-                                    nsDTDMode aMode=eDTDMode_autodetect);
+    NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
+                             void* aKey,
+                             nsVoidArray& aTagStack,
+                             PRUint32 anInsertPos,
+                             const nsACString& aContentType,
+                             nsDTDMode aMode = eDTDMode_autodetect);
 
+
+    /**
+     * This method gets called when the tokens have been consumed, and it's time
+     * to build the model via the content sink.
+     * @update	gess5/11/98
+     * @return  YES if model building went well -- NO otherwise.
+     */
+    NS_IMETHOD BuildModel(void);
 
     /**
      *  Call this when you want control whether or not the parser will parse
@@ -231,10 +244,10 @@ class nsParser : public nsIParser,
      *  @param   aState determines whether we parse/tokenize or just cache.
      *  @return  current state
      */
-    virtual nsresult  ContinueParsing();
-    virtual void      BlockParser();
-    virtual void      UnblockParser();
-    virtual nsresult  Terminate(void);
+    NS_IMETHOD        ContinueParsing();
+    NS_IMETHOD_(void) BlockParser();
+    NS_IMETHOD_(void) UnblockParser();
+    NS_IMETHOD        Terminate(void);
 
     /**
      * Call this to query whether the parser is enabled or not.
@@ -242,7 +255,7 @@ class nsParser : public nsIParser,
      *  @update  vidur 4/12/99
      *  @return  current state
      */
-    virtual PRBool    IsParserEnabled();
+    NS_IMETHOD_(PRBool) IsParserEnabled();
 
     /**
      * Call this to query whether the parser thinks it's done with parsing.
@@ -250,7 +263,7 @@ class nsParser : public nsIParser,
      *  @update  rickg 5/12/01
      *  @return  complete state
      */
-    virtual PRBool    IsComplete();
+    NS_IMETHOD_(PRBool) IsComplete();
 
     /**
      *  This rather arcane method (hack) is used as a signal between the
@@ -377,14 +390,6 @@ protected:
      * @return
      */
     nsresult DidBuildModel(nsresult anErrorCode);
-
-    /**
-     * This method gets called when the tokens have been consumed, and it's time
-     * to build the model via the content sink.
-     * @update	gess5/11/98
-     * @return  YES if model building went well -- NO otherwise.
-     */
-    virtual nsresult BuildModel(void);
     
 private:
 
@@ -432,14 +437,13 @@ protected:
     //*********************************************
     
       
-    nsCOMPtr<nsIEventQueue> mEventQueue;
-    CParserContext*         mParserContext;
-    nsIRequestObserver*     mObserver;
-    nsIContentSink*         mSink;
+    nsCOMPtr<nsIEventQueue>      mEventQueue;
+    CParserContext*              mParserContext;
+    nsCOMPtr<nsIRequestObserver> mObserver;
+    nsCOMPtr<nsIContentSink>     mSink;
    
-    nsIParserFilter*    mParserFilter;
-    nsITokenObserver*   mTokenObserver;
-    nsTokenAllocator    mTokenAllocator;
+    nsCOMPtr<nsIParserFilter> mParserFilter;
+    nsTokenAllocator          mTokenAllocator;
     
     eParserCommands     mCommand;
     nsresult            mInternalState;

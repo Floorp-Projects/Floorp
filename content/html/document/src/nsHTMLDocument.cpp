@@ -734,11 +734,8 @@ nsHTMLDocument::StartAutodetection(nsIDocShell *aDocShell, nsAString& aCharset,
           rv_detect = adp->Init(wss, cdet, this, mParser,
                                 PromiseFlatString(aCharset).get(), aCommand);
 
-          // The current implementation for SetParserFilter needs to
-          // be changed to be more XPCOM friendly. See bug #40149
           if (mParser)
-            nsCOMPtr<nsIParserFilter> oldFilter =
-              getter_AddRefs(mParser->SetParserFilter(cdetflt));
+            mParser->SetParserFilter(cdetflt);
         }
       }
     }
