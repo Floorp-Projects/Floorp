@@ -1665,7 +1665,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
     NS_ENSURE_SUCCESS(result, result);
 
     nsCOMPtr<nsINodeInfo> ni;
-    result = nimgr->GetNodeInfo(aAttribute, nsnull, kNameSpaceID_None,
+    result = nimgr->GetNodeInfo(aAttribute, nsnull, aNameSpaceID,
                                 getter_AddRefs(ni));
     NS_ENSURE_SUCCESS(result, result);
 
