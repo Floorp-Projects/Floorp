@@ -162,7 +162,7 @@ function viewSource(url)
           // This allows the content to be fetched from the cache (if
           // possible) rather than the network...
           //
-          PageLoader.LoadPage(arg, pageLoaderIface.DISPLAY_AS_SOURCE);
+          PageLoader.loadPage(arg, pageLoaderIface.DISPLAY_AS_SOURCE);
           // The content was successfully loaded from the page cookie.
           loadFromURL = false;
         }
@@ -584,24 +584,24 @@ function highlightSyntax()
   gPrefs.setBoolPref("view_source.syntax_highlight", highlightSyntax);
 
   var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
-  PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+  PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
 }
 
 // Fix for bug 136322: this function overrides the function in
-// browser.js to call PageLoader.LoadPage() instead of BrowserReloadWithFlags()
+// browser.js to call PageLoader.loadPage() instead of BrowserReloadWithFlags()
 function BrowserSetForcedCharacterSet(aCharset)
 {
   var docCharset = getBrowser().docShell.QueryInterface(
                             Components.interfaces.nsIDocCharset);
   docCharset.charset = aCharset;
   var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
-  PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+  PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
 }
 
 // fix for bug #229503
 // we need to define BrowserSetForcedDetector() so that we can
 // change auto-detect options in the "View | Character Encoding" menu.
-// As with BrowserSetForcedCharacterSet(), call PageLoader.LoadPage() 
+// As with BrowserSetForcedCharacterSet(), call PageLoader.loadPage() 
 // instead of BrowserReloadWithFlags()
 function BrowserSetForcedDetector(doReload)
 {
@@ -609,7 +609,7 @@ function BrowserSetForcedDetector(doReload)
   if (doReload)
   {
     var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
-    PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+    PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
   }
 }
 
