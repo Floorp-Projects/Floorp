@@ -45,7 +45,6 @@ CPPSRCS		=				\
 		nsSubstring.cpp			\
 		nsSubstringTuple.cpp		\
 		nsString.cpp			\
-		nsStringAPI.cpp			\
 		nsStringComparator.cpp		\
 		nsStringObsolete.cpp		\
 		$(NULL)
