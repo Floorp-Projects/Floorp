@@ -2983,7 +2983,7 @@ PRTransmitFileFlags flags, PRIntervalTime timeout)
 	 * to not consume too much virtual address space
 	 */
 	if ((sfd->file_offset == 0) ||
-			(sfd->file_offset & (pagesize - 1) == 0)) {
+			((sfd->file_offset & (pagesize - 1)) == 0)) {
 		/*
 		 * case 1: page-aligned file offset
 		 */
