@@ -118,11 +118,11 @@ function dispatchCommand (text)
 function display(message, msgtype)
 {
     if (typeof message == "undefined")
-        throw BadMojo(ERR_REQUIRED_PARAM, "message");
+        throw new BadMojo(ERR_REQUIRED_PARAM, "message");
 
     if (typeof message != "string" &&
         !(message instanceof Components.interfaces.nsIDOMHTMLElement))
-        throw BadMojo(ERR_INVALID_PARAM, ["message", String(message)]);
+        throw new BadMojo(ERR_INVALID_PARAM, ["message", String(message)]);
 
     if (typeof msgtype == "undefined")
         msgtype = MT_INFO;
@@ -248,28 +248,26 @@ function fillInTooltip(tipElement)
     return retVal;
 }
 
-function formatEvalException (ex, prefix)
+function formatException (ex)
 {
-    var str = "";
-    
-    if (ex.fileName && ex.lineNumber && ex.message)
-    {
-        if (!ex.name)
-            ex.name = "Error";    
-        
-        /* if it looks like a normal exception, print all the bits */
-        str = getMsg (MSN_EVAL_ERROR, [ex.name, ex.fileName, ex.lineNumber]);
-        if (ex.functionName)
-            str += " (" + ex.functionName + ")";
-        
-        str += ": " + ex.message;
-    }
-    else
-        /* otherwise, just convert to a string */
-        str = getMsg (MSN_EVAL_THREW,  String(ex));
-    
-    return str;
+    if (ex instanceof BadMojo)
+        return getMsg (MSN_FMT_BADMOJO,
+                       [ex.errno, ex.message, ex.fileName, ex.lineNumber, 
+                        ex.functionName]);
 
+    if (ex instanceof Error)
+        return getMsg (MSN_FMT_JSEXCEPTION, [ex.name, ex.message, ex.fileName, 
+                                             ex.lineNumber]);    
+
+    return String(ex);
+}
+
+function formatEvalException (ex)
+{
+    if (ex instanceof BadMojo || ex instanceof Error)
+        return formatException (ex);
+    
+    return getMsg (MSN_EVAL_THREW,  String(ex));
 }
 
 function htmlVA (attribs, href, contents)
@@ -418,19 +416,23 @@ const ERR_NO_DEBUGGER     = 4;
 const ERR_FAILURE         = 5;
 const ERR_NO_STACK        = 6;
 
-/* venkman exception factory, can be used with or without |new|.
- * throw BadMojo (ERR_REQUIRED_PARAM, MSG_VAL_OBJECT);
- * throw new BadMojo (ERR_NOT_IMPLEMENTED);
- */
+/* venkman exception class */
 function BadMojo (errno, params)
 {
     var msg = getMsg(exceptionMsgNames[errno], params);
     
     dd ("new BadMojo (" + errno + ": " + msg + ") from\n" + getStackTrace());
-    return {message: msg, name: "Error " + errno,
-            fileName: Components.stack.caller.filename,
-            lineNumber: Components.stack.caller.lineNumber,
-            functionName: Components.stack.caller.functionName};
+    this.message= msg;
+    this.errno = errno;
+    this.fileName = Components.stack.caller.filename;
+    this.lineNumber = Components.stack.caller.lineNumber;
+    this.functionName = Components.stack.caller.name;
+}
+
+BadMojo.prototype.toString =
+function bm_tostring ()
+{
+    return formatException (this);
 }
 
 /* console object */
