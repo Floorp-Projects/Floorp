@@ -24,6 +24,8 @@ IGNORE_MANIFEST=1
 #
 #------------------------------------------------------------------------
 
+DEPTH=..\..
+include <$(DEPTH)\config\config.mak>
 
 #
 # Make sure we have MOZILLA_CLIENT defined so we get the
@@ -93,7 +95,6 @@ CSRCS =	\
 
 
 MODULE=network 
-DEPTH=..\..
 
 LIBRARY_NAME=network 
 
