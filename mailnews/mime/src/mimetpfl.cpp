@@ -235,7 +235,20 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     default: break; // Nothing
     }
   }
-  buffersizeneeded += 30; // For possible <nobr> ... </nobr>
+
+  buffersizeneeded += 30;                         // For possible <nobr> ... </nobr>
+
+  // Ok, there is always the issue of guessing how much space we will need for emoticons.
+  // So what we will do is count the total number of "special" chars and multiply by 82 
+  // (max len for a smiley line) and add one for good measure
+  PRInt32   specialCharCount = 0;
+  for (PRInt32 z=0; z<length; z++)
+  {
+    if ( (line[z] == ')') || (line[z] == '(') || (line[z] == ':') || (line[z] == ';') )
+      ++specialCharCount;
+  }
+  buffersizeneeded += 82 * (specialCharCount + 1); 
+
   status = MimeObject_grow_obuffer (obj, buffersizeneeded);
   if (status < 0) return status;
 
