@@ -39,7 +39,7 @@
 <!ENTITY bookmarks.name.label         "Name:">
 <!ENTITY bookmarks.location.label     "Location:">
 <!ENTITY bookmarks.shortcut.label     "Keyword:">
-<!ENTITY bookmarks.description.label  "Comments:">
+<!ENTITY bookmarks.description.label  "Description:">
 
 <!ENTITY checkforupdates.legend.label "Check this location for updates:">
 <!ENTITY when.label                   "When:">
