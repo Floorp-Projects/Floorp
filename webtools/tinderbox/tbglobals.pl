@@ -105,6 +105,8 @@ BEGIN {
   my $have_loaded_treedata = 0;
 
   sub tb_load_treedata {
+    my $tree = shift;
+
     return if $have_loaded_treedata;
     $have_loaded_treedata = 1;
     require "$tree/treedata.pl" if -r "$tree/treedata.pl";
@@ -116,7 +118,7 @@ sub tb_load_data {
 
   return undef unless $tree;
   
-  tb_load_treedata();
+  tb_load_treedata($tree);
         
   $ignore_builds = {};
 

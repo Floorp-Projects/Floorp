@@ -507,8 +507,10 @@ BEGIN {
   my $checked_state = 0;
 
   sub _check_tree_state {
+    my $tree = shift;
+
     $checked_state = 1;
-    tb_load_treedata();
+    tb_load_treedata($tree); # Loading for the global, $bonsai_tree
     return unless defined $bonsai_tree and $bonsai_tree ne '';
 
     local $_;
@@ -518,7 +520,6 @@ BEGIN {
       warn "No BatchID in ../bonsai/data/$bonsai_tree/batchid.pl\n";
       return;
     }
-    
     open(BATCH, "<../bonsai/data/$bonsai_tree/batch-$::BatchID.pl")
       or print "can't open batch-$::BatchID.pl<br>";
     while (<BATCH>) { 
@@ -531,14 +532,18 @@ BEGIN {
   }
 
   sub is_tree_state_available {
+    my $tree = shift;
+    $tree = $::tree unless defined $tree;
     return 1 if defined $treestate;
     return 0 if $checked_state;
-    _check_tree_state();
+    _check_tree_state($tree);
     return is_tree_state_available();
   }
 
   sub is_tree_open {
-    _check_tree_state() unless $checked_state;
+    my $tree = shift;
+    $tree = $::tree unless defined $tree;
+    _check_tree_state($tree) unless $checked_state;
     return $treestate;
   }
 }
@@ -879,13 +884,13 @@ sub do_quickparse {
   print "Content-type: text/plain\n\n";
 
   my @treelist = split /,/, $::tree;
-  foreach my $t (@treelist) {
-    if (is_tree_state_available()) {
-      my $state = is_tree_open() ? 'open' : 'closed';
-      print "State|$t|$bonsai_tree|$state\n";
+  foreach my $tt (@treelist) {
+    if (is_tree_state_available($tt)) {
+      my $state = is_tree_open($tt) ? 'open' : 'closed';
+      print "State|$tt|$bonsai_tree|$state\n";
     }
     my (%build, %times);
-    tb_loadquickparseinfo($t, \%build, \%times);
+    tb_loadquickparseinfo($tt, \%build, \%times);
     
     foreach my $buildname (sort keys %build) {
       print "Build|$t|$buildname|$build{$buildname}\n";
