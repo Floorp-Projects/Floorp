@@ -648,8 +648,8 @@ sub NewProcessOnePerson ($$$$$$$$$$) {
     foreach my $f (@headerlist) {
       if ($mailhead{$f}) {
         my $value = $values{$f};
-        if (!defined $value) {
-          # Probaby ought to whine or something. ###
+        # If there isn't anything to show, don't include this header
+        if (! $value) {
           next;
         }
         my $desc = $fielddescription{$f};
