@@ -19,10 +19,13 @@ THIS_MAKEFILE=nglayout.mak
 THAT_MAKEFILE=makefile.win
 
 !if !defined(MODULAR_NETLIB) || !defined(STANDALONE_IMAGE_LIB) || !defined(NGLAYOUT_PLUGINS)
-ERR_MSG = ^
-You need to set MODULAR_NETLIB=1, STANDALONE_IMAGE_LIB=1 ^
-and NGLAYOUT_PLUGINS=1 in your environment.
-!ERROR $(ERR_MSG)
+#ERR_MSG = ^
+#You need to set MODULAR_NETLIB=1, STANDALONE_IMAGE_LIB=1 ^
+#and NGLAYOUT_PLUGINS=1 in your environment.
+#!ERROR $(ERR_MSG)
+set MODULAR_NETLIB=1
+set STANDALONE_IMAGE_LIB=1
+set NGLAYOUT_PLUGINS=1
 !endif
 
 !if !defined(MOZ_TOP)
@@ -62,6 +65,12 @@ CVSCO_TAG = cvs -q co -P
 IMGLIB_BRANCH =
 PLUGIN_BRANCH =
 XPCOM_BRANCH =
+
+##############################
+## all this pull logic now exists in client.mak
+## which is the right place for it to be. 
+## It should be removed from here as soon as practical
+##############################
 
 !if defined(MOZ_DATE)
 # CVS commands to pull the appropriate branch versions
@@ -170,10 +179,23 @@ $(DIST_DIRS) $(RAPTOR_DIRS)::
 
 ######################################################################
 
+##############################
+## all this pull logic now exists in client.mak
+## which is the right place for it to be. 
+## It should be removed from here as soon as practical
+##############################
+
 # Rules for pulling the source from the cvs repository
 
-pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout \
+pull_all: pull_seamonkey
+
+pull_nglayout: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout \
 pull_editor
+
+pull_seamonkey:
+	cd $(MOZ_SRC)\.
+	$(CVSCO_TAG) -r NSPRPUB_RELEASE_3_0 NSPR
+	$(CVSCO_LIZARD) SeaMonkeyEditor
 
 pull_lizard:
 	cd $(MOZ_SRC)\.
