@@ -2884,7 +2884,10 @@ JS_HoldPrincipals(JSContext *cx, JSPrincipals *principals)
 JS_PUBLIC_API(jsrefcount)
 JS_DropPrincipals(JSContext *cx, JSPrincipals *principals)
 {
-    return JS_ATOMIC_DECREMENT(&principals->refcount);
+    jsrefcount rc = JS_ATOMIC_DECREMENT(&principals->refcount);
+    if (rc == 0)
+        principals->destroy(cx, principals);
+    return rc;
 }
 #endif
 
