@@ -301,6 +301,7 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
     tc->flags |= TCF_IN_FUNCTION;
     pn = Statements(cx, ts, tc);
 
+#ifdef CHECK_RETURN_EXPR
     /* Check for falling off the end of a function that returns a value. */
     if (pn && (tc->flags & TCF_RETURN_EXPR)) {
 	if (!CheckFinalReturn(pn)) {
@@ -308,6 +309,7 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
 	    pn = NULL;
 	}
     }
+#endif
 
     cx->fp = fp;
     tc->flags = oldflags;
