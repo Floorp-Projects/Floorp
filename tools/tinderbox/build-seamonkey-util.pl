@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.234 $ ';
+$::UtilsVersion = '$Revision: 1.235 $ ';
 
 package TinderUtils;
 
@@ -45,7 +45,7 @@ require "gettime.pl";
 # Bundle::LWP      for http (to report data to graph)
 #
 # The "CPAN" way of installing this is to start here:
-#   % perl -MCPAN -e shell
+#   % sudo perl -MCPAN -e shell
 #   <take defaults..>
 #   cpan> install Time::HiRes
 #   [...]
