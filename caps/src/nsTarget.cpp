@@ -227,7 +227,7 @@ static nsHashtable *theTargetRegistry = new nsHashtable();
 static nsHashtable *theSystemTargetRegistry = new nsHashtable();
 static nsHashtable *theDescToTargetRegistry = new nsHashtable();
 
-static PRBool addToTargetArray(nsHashKey *aKey, void *aData);
+static PRBool addToTargetArray(nsHashKey *aKey, void *aData, void* closure);
 
 #ifdef __cplusplus
 extern "C" {
@@ -1323,7 +1323,7 @@ void nsTarget::getFlattenedTargets(nsHashtable *targHash,
   }
 }
 
-static PRBool addToTargetArray(nsHashKey *aKey, void *aData) 
+static PRBool addToTargetArray(nsHashKey *aKey, void *aData, void* closure) 
 {
   TargetKey *targetKey = (TargetKey *) aKey;
   nsTarget *target = targetKey->itsTarget;

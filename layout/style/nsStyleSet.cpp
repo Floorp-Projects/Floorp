@@ -250,7 +250,7 @@ StyleSetImpl::StyleSetImpl()
   NS_INIT_REFCNT();
 }
 
-PRBool ReleaseContext(nsHashKey *aKey, void *aData)
+PRBool ReleaseContext(nsHashKey *aKey, void *aData, void* closure)
 {
   ((nsIStyleContext*)aData)->Release();
   return PR_TRUE;
@@ -726,7 +726,7 @@ static ContextNode* FindNode(nsIStyleContext* aContext, ContextNode* aStart)
   return nsnull;
 }
 
-PRBool GatherContexts(nsHashKey *aKey, void *aData)
+PRBool GatherContexts(nsHashKey *aKey, void *aData, void* closure)
 {
   PRBool  result = PR_TRUE;
 
