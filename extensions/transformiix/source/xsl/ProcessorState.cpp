@@ -3,32 +3,32 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is TransforMiiX XSLT processor.
- * 
+ *
  * The Initial Developer of the Original Code is The MITRE Corporation.
  * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
  * Portions created by Keith Visco as a Non MITRE employee,
  * (C) 1999 Keith Visco. All Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.cpp,v 1.3 1999/11/18 04:39:57 kvisco%ziplink.net Exp $
+ * $Id: ProcessorState.cpp,v 1.4 2000/02/17 03:29:29 kvisco%ziplink.net Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * This code was ported from XSL:P
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 1999/11/18 04:39:57 $
+ * @version $Revision: 1.4 $ $Date: 2000/02/17 03:29:29 $
 **/
 
 #include "ProcessorState.h"
@@ -67,10 +67,10 @@ ProcessorState::~ProcessorState() {
   StringListIterator iter = keys->iterator();
   while (iter.hasNext()) {
       String* key = iter.next();
-      MITREObjectWrapper* objWrapper 
+      MITREObjectWrapper* objWrapper
           = (MITREObjectWrapper*)includes.remove(*key);
       delete (Document*)objWrapper->object;
-      delete objWrapper;      
+      delete objWrapper;
   }
   delete keys;
 
@@ -312,7 +312,7 @@ const String& ProcessorState::getDocumentBase() {
  * includes and imports lists
  **/
 void ProcessorState::getDocumentHref
-    (Document* xslDocument, String& documentBase) 
+    (Document* xslDocument, String& documentBase)
 {
 
   documentBase.clear();
@@ -322,7 +322,7 @@ void ProcessorState::getDocumentHref
   StringListIterator& iter = keys->iterator();
   while (iter.hasNext()) {
       String* key = iter.next();
-      MITREObjectWrapper* objWrapper 
+      MITREObjectWrapper* objWrapper
           = (MITREObjectWrapper*)includes.get(*key);
       if (xslDocument == objWrapper->object) {
 	  documentBase.append(*key);
@@ -335,7 +335,7 @@ void ProcessorState::getDocumentHref
 
 /**
  * @return the included xsl document that was associated with the
- * given href, or null if no document is found 
+ * given href, or null if no document is found
 **/
 Document* ProcessorState::getInclude(const String& href) {
   MITREObjectWrapper* objWrapper = (MITREObjectWrapper*)includes.get(href);
@@ -471,7 +471,7 @@ void ProcessorState::stripSpace(String& names) {
 //--------------------------------------------------/
 
 /**
- * Returns the parent of the given Node. This method is needed 
+ * Returns the parent of the given Node. This method is needed
  * beacuse with the DOM some nodes such as Attr do not have parents
  * @param node the Node to find the parent of
  * @return the parent of the given Node, or null if not found
@@ -674,7 +674,7 @@ void ProcessorState::initialize() {
                     }
                 }
                 else if ( attName.isEqual(RESULT_NS_ATTR) ) {
-		    if (attValue.length() > 0) { 
+		    if (attValue.length() > 0) {
 		        if ( attValue.indexOf(HTML_NS) == 0 ) {
 			    format.setMethod("html");
                         }
