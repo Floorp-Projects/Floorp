@@ -354,7 +354,7 @@ nsChromeRegistry::Init()
            do_GetService("@mozilla.org/observer-service;1", &rv);
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", PR_TRUE);
-    observerService->AddObserver(this, "profile-do-change", PR_TRUE);
+    observerService->AddObserver(this, "profile-after-change", PR_TRUE);
   }
 
   CheckForNewChrome();
@@ -3180,7 +3180,7 @@ NS_IMETHODIMP nsChromeRegistry::Observe(nsISupports *aSubject, const char *aTopi
         rv = userChromeDir->Remove(PR_TRUE);
     }
   }
-  else if (!nsCRT::strcmp("profile-do-change", aTopic)) {
+  else if (!nsCRT::strcmp("profile-after-change", aTopic)) {
     if (!mProfileInitialized)
       rv = LoadProfileDataSource();
   }
