@@ -104,6 +104,12 @@ struct nsXREAppData
 };
 
 /**
+ * The contract id for the nsIXULAppInfo service.
+ */
+#define XULAPPINFO_SERVICE_CONTRACTID \
+  "@mozilla.org/xre/app-info;1"
+
+/**
  * Begin an XUL application. Does not return until the user exits the
  * application.
  * @param aAppData Information about the application being run.

@@ -1,0 +1,84 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is XUL bootstrap code.
+ *
+ * The Initial Developer of the Original Code is
+ * Benjamin Smedberg <benjamin@smedbergs.us>
+ * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+/**
+ * A scriptable interface to the nsXULAppAPI structure.
+ *
+ * @status IN-FLUX This interface *will* change before it stabilizes. Use at your
+ *         own risk.
+ */
+
+[scriptable, uuid(e781bdd9-bc92-4deb-a1e8-8cbf94365ef9)]
+interface nsIXULAppInfo : nsISupports
+{
+  /**
+   * The name of the application vendor. This is ASCII, and is normally
+   * mixed-case; e.g. "Mozilla". It may not be specified, resulting in the
+   * empty string.
+   */
+  readonly attribute ACString vendor;
+
+  /**
+   * The name of the application. This is ASCII, and is normally mixed-case;
+   * e.g. "Firefox".
+   */
+  readonly attribute ACString name;
+
+  /**
+   * The version of the application. By tradition, this is in the form
+   * <major>.<minor>.<release> with an optonal trailing +
+   */
+  readonly attribute ACString version;
+
+  /**
+   * The build ID/date of the application. For xulrunner applications,
+   * this will be different than the build ID of gecko. Be careful
+   * about which one you want. It is in the form YYYYMMDDHH.
+   */
+  readonly attribute ACString appBuildID;
+
+  /**
+   * Thie build ID/date of gecko and the xulrunner.
+   */
+  readonly attribute ACString geckoBuildID;
+
+  /**
+   * XXXTodo: add app UUID and em-enablement prefs. Also
+   * think about adding safe-mode.
+   */
+};
