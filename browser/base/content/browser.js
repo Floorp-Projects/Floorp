@@ -1374,7 +1374,7 @@ function handleURLBarRevert()
   
   // don't revert to last valid url unless page is NOT loading
   // and user is NOT key-scrolling through autocomplete list
-  if (!throbberElement.hasAttribute("busy") && !isScrolling) {
+  if ((!throbberElement || !throbberElement.hasAttribute("busy")) && !isScrolling) {
     if (url != "about:blank") { 
       gURLBar.value = url;
       gURLBar.select();
@@ -3757,7 +3757,8 @@ nsBrowserStatusHandler.prototype =
 
         // Turn the progress meter and throbber off.
         this.statusMeter.value = 0;  // be sure to clear the progress bar
-        this.throbberElement.removeAttribute("busy");
+        if (this.throbberElement)
+          this.throbberElement.removeAttribute("busy");
 
         // XXX: These need to be based on window activity...
         // XXXjag: <command id="cmd_stop"/> ?
