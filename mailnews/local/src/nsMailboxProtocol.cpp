@@ -262,7 +262,11 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 					// create a temp file to write the message into. We need to do this because
 					// we don't have pluggable converters yet. We want to let mkfile do the work of 
 					// converting the message from RFC-822 to HTML before displaying it...
-					ClearFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
+					if (m_mailboxAction ==
+                        nsIMailboxUrl::ActionSaveMessageToDisk) 
+                        SetFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
+                    else
+                        ClearFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
 					m_tempMessageFile->OpenStreamForWriting();
 					m_nextState = MAILBOX_READ_MESSAGE;
 					break;
