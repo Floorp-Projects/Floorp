@@ -968,13 +968,9 @@ NS_IMETHODIMP nsMsgDBView::SetOutliner(nsIOutlinerBoxObject *outliner)
 
 NS_IMETHODIMP nsMsgDBView::ToggleOpenState(PRInt32 index)
 {
-  PRUint32 numChanged = 0;
-  PRInt32 multiplier = -1;
-  if (m_flags[index] & MSG_FLAG_ELIDED)
-    multiplier = 1;
+  PRUint32 numChanged;
   nsresult rv = ToggleExpansion(index, &numChanged);
   NS_ENSURE_SUCCESS(rv,rv);
-  mOutliner->RowCountChanged(index, numChanged * multiplier);
   return NS_OK;
 }
 
