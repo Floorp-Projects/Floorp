@@ -46,7 +46,7 @@ struct ScribbleApp {
 };
 
 
-void CreateApplication();
+nsresult CreateApplication();
 
 #endif
 

@@ -1,4 +1,4 @@
-#!nmake
+#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -15,18 +15,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
-IGNORE_MANIFEST=1
+DEPTH = ../..
 
-DEFINES=-D_IMPL_NS_UI 
-MODULE=raptor 
+include $(DEPTH)/config/config.mk
 
-EXPORTS=nsui.h nsIWidget.h nsIButton.h nsICheckButton.h nsIListWidget.h \
-    nsIComboBox.h nsITextWidget.h nsITextAreaWidget.h nsIComboBox.h \
-    nsIListBox.h nsIFileWidget.h nsIScrollbar.h nsGUIEvent.h \
-    nsIRadioButton.h nsIRadioGroup.h nsIMouseListener.h \
-    nsIEventListener.h nsIToolkit.h nsWidgetsCID.h nsITabWidget.h \
-    nsITooltipWidget.h nsIAppShell.h
-
-include <$(DEPTH)\config\rules.mak>
-
+include $(DEPTH)/config/rules.mk

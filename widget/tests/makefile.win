@@ -18,35 +18,6 @@
 DEPTH=..\..
 IGNORE_MANIFEST=1
 
-DIRS = windows 
-
-MAKE_OBJ_TYPE   = EXE
-PROGRAM = .\$(OBJDIR)\scribble.exe
-#RESFILE = scribble.res
-
-OBJS =                                  \
-	.\$(OBJDIR)\main.obj            \
-	.\$(OBJDIR)\Scribble.obj        \
-	$(NULL)
-
-LINCS=-I$(PUBLIC)\raptor -I$(PUBLIC)\xpcom 
-
-MYLIBS=				\
- $(DIST)\lib\xpcom32.lib	\
- $(LIBNSPR)			\
- $(DIST)\lib\raptorbase.lib	\
- $(DIST)\lib\raptorgfx.lib	\
- $(NULL)
-
-LLIBS= $(MYLIBS)		\
- -SUBSYSTEM:CONSOLE 
+DIRS=scribble widget 
 
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(PROGRAM)
-	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
-
-clobber::
-	rm -f $(DIST)\bin\scribble.exe
-
-$(PROGRAM):: $(OBJS) $(MYLIBS)

@@ -41,6 +41,7 @@ EXPORTS =               \
         nsIToolkit.h \
         nsWidgetsCID.h \
 		nsITooltipWidget.h \
+		nsIAppShell.h \
         $(NULL)
 
 MODULE = raptor

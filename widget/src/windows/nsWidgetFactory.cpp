@@ -36,6 +36,7 @@
 #include "nsTabWidget.h"
 #include "nsTooltipWidget.h"
 #include "nsWindow.h"
+#include "nsAppShell.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -52,6 +53,7 @@ static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kCTabWidget,     NS_TABWIDGET_CID);
 static NS_DEFINE_IID(kCTooltipWidget, NS_TOOLTIPWIDGET_CID);
+static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
@@ -192,6 +194,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCTooltipWidget)) {
         inst = (nsObject*)new nsTooltipWidget(aOuter);
+    }
+    else if (mClassID.Equals(kCAppShell)) {
+        inst = (nsObject*)new nsAppShell(aOuter);
     }
   
     if (inst == NULL) {  
