@@ -40,16 +40,8 @@ void		getZones();
 void		processZones(char *zones, uint16 numZones);
 void		checkServerLookup (MPPParamBlock *nbp);
 void		getServers(RDF_Resource parent);
-Assertion	atalkarg1 (RDF_Resource u);
-Assertion	setatalkarg1 (RDF_Resource u, Assertion as);
-Assertion	atalkarg2 (RDF_Resource u);
-Assertion	setatalkarg2 (RDF_Resource u, Assertion as);
-PRBool		AtalkHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
-void *		AtalkGetSlotValue(RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,	PRBool inversep, PRBool tv);
-PRBool		AtalkAdd (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type);
-void *		AtalkNextValue (RDFT rdf, RDF_Cursor c);
-RDF_Cursor	AtalkGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  PRBool inversep, PRBool tv);
-RDF_Error	AtalkDisposeCursor (RDFT rdf, RDF_Cursor c);
+void		setAtalkResourceName(RDF_Resource u);
+void		AtalkPossible(RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep);
 RDF_Error	AtalkDestroy (RDFT r);
 RDFT		MakeAtalkStore (char* url);
 

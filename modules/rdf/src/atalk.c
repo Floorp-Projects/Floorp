@@ -116,62 +116,11 @@ processZones(char *zones, uint16 numZones)
 			if (r == NULL)	break;
 
 			setContainerp(r, PR_TRUE);
-			AtalkAdd(gRDFDB, r, gCoreVocab->RDF_parent,
-				parent, RDF_RESOURCE_TYPE);
+			setAtalkResourceName(r);
+			remoteStoreAdd(gRDFDB, r, gCoreVocab->RDF_parent,
+				parent, RDF_RESOURCE_TYPE, PR_TRUE);
 			parent = r;
 		}
-
-#if 0		XP_SPRINTF(url, "zone://");
-		XP_STRNCAT(url, zones+1, (unsigned)zones[0]);
-		p = &url[7];
-
-		parent = gNavCenter->RDF_Appletalk;
-		while (p != NULL)
-		{
-			r = NULL;
-			if ((q = XP_STRCHR(p,' ')))
-			{
-				*q = '\0';
-				escapedURL =  NET_Escape(url + strlen("zone://"), URL_XALPHAS);	/* URL_PATH */
-				if (escapedURL != NULL)
-				{
-					strcpy(virtualUrl, "virtualzone://");
-					strcat(virtualUrl, escapedURL);
-					if ((r = RDF_GetResource(NULL, escapedURL, PR_TRUE)) != NULL)
-					{
-						setResourceType(r, ATALKVIRTUAL_RT);
-					}
-					XP_FREE(escapedURL);
-				}
-			}
-			else
-			{
-				escapedURL = NET_Escape(url + strlen("zone://"), URL_XALPHAS);  /* URL_PATH */
-				if (escapedURL != NULL)
-				{
-					strcpy(virtualUrl, "zone://");
-					strcat(virtualUrl, escapedURL);
-					if ((r = RDF_GetResource(NULL, virtualUrl, PR_TRUE)) != NULL)
-					{
-						setResourceType(r, ATALK_RT);
-					}
-					XP_FREE(escapedURL);
-				}
-				q = NULL;
-			}			
-			if (r == NULL)	break;
-
-			setContainerp(r, PR_TRUE);
-			AtalkAdd(gRDFDB, r, gCoreVocab->RDF_parent,
-				parent, RDF_RESOURCE_TYPE);
-			parent = r;
-			
-			if (q == NULL)	break;
-			*q++ = ' ';
-			p=q;
-		}
-#endif
-
 		zones += (1 + (unsigned)zones[0]);
 	}
 }
@@ -218,8 +167,9 @@ checkServerLookup (MPPParamBlock *nbp)
 							if ((r = RDF_GetResource(NULL, afpUrl, PR_TRUE)) != NULL)
 							{
 								setResourceType(r, ATALK_RT);
-								AtalkAdd(gRDFDB, r, gCoreVocab->RDF_parent,
-									parent, RDF_RESOURCE_TYPE);
+								setAtalkResourceName(r);
+								remoteStoreAdd(gRDFDB, r, gCoreVocab->RDF_parent,
+									parent, RDF_RESOURCE_TYPE, PR_TRUE);
 							}
 						}
 						XP_FREE(escapedURL);
@@ -285,84 +235,15 @@ getServers(RDF_Resource parent)
 
 
 
-Assertion
-atalkarg1 (RDF_Resource u)
-{
-	return (Assertion) PR_HashTableLookup(atalk2rdfHash, u);
-}
-
-
-
-Assertion
-setatalkarg1 (RDF_Resource u, Assertion as)
-{
-	return (Assertion) PR_HashTableAdd(atalk2rdfHash, u, as);
-}
-
-
-
-Assertion
-atalkarg2 (RDF_Resource u)
-{
-	return (Assertion) PR_HashTableLookup(invatalk2rdfHash, u);
-}
-
-
-
-Assertion
-setatalkarg2 (RDF_Resource u, Assertion as)
-{
-	return (Assertion) PR_HashTableAdd(invatalk2rdfHash, u, as);
-}
-
-
-
-PRBool
-AtalkHasAssertion (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, 
-		       RDF_ValueType type, PRBool tv)
-{
-	Assertion		nextAs;
-
-	if (startsWith("zone://", resourceID(u)))
-	{
-		nextAs = atalkarg1(u);
-		while (nextAs != null)
-		{
-			if (asEqual(rdf, nextAs, u, s, v, type) && (nextAs->tv == tv)) return true;
-			nextAs = nextAs->next;
-		}
-
-		if (s == gCoreVocab->RDF_parent || s == gCoreVocab->RDF_child)
-		{
-			if (atalkarg1(u) == NULL)
-			{
-				getServers(u);
-			}
-		}
-
-		nextAs = atalkarg1(u);
-		while (nextAs != null)
-		{
-			if (asEqual(rdf, nextAs, u, s, v, type) && (nextAs->tv == tv)) return true;
-			nextAs = nextAs->next;
-		}
-	}
-	return(PR_FALSE);
-}
-
-
-
-void *
-AtalkGetSlotValue(RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,
-		PRBool inversep, PRBool tv)
+void
+setAtalkResourceName(RDF_Resource u)
 {
 	void			*val = NULL;
 	char			*url;
 
-	if (u == NULL)	return(NULL);
+	if (u == NULL)	return;
 
-	if ((s == gCoreVocab->RDF_name) && ((resourceType(u) == ATALK_RT) ||
-		(resourceType(u) == ATALKVIRTUAL_RT)) && (type == RDF_STRING_TYPE) && (tv))
+	if ((resourceType(u) == ATALK_RT) || (resourceType(u) == ATALKVIRTUAL_RT))
 	{
 		if (u == gNavCenter->RDF_Appletalk)
 		{
@@ -413,124 +294,26 @@ AtalkGetSlotValue(RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,
 			}
 		}
 	}
-	return(val);
+	if (val != NULL)
+	{
+		remoteStoreAdd(gRDFDB, u, gCoreVocab->RDF_name,
+			val, RDF_STRING_TYPE, PR_TRUE);
+	}
 }
 
 
 
-PRBool
-AtalkAdd (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
+void
+AtalkPossible(RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep)
 {
-	Assertion		nextAs, prevAs, newAs;
+	char		*id;
 
-	if ((s == gCoreVocab->RDF_instanceOf) && (v == gWebData->RDF_Container))
+	if (((resourceType(u) == ATALK_RT) || (resourceType(u) == ATALKVIRTUAL_RT)) &&
+		(s == gCoreVocab->RDF_parent) && (containerp(u)))
 	{
-		setContainerp(u, true);
-		return 1;
-	}
-	nextAs = prevAs = u->rarg1;
-	while (nextAs != null)
-	{
-		if (asEqual(rdf, nextAs, u, s, v, type)) return 1;
-		prevAs = nextAs;
-		nextAs = nextAs->next;
-	}
-	newAs = makeNewAssertion(rdf, u, s, v, type, 1);
-	if (prevAs == null)
-	{
-		u->rarg1 = newAs;
-	}
-	else
-	{
-		prevAs->next = newAs;
-	}
-	if (type == RDF_RESOURCE_TYPE)
-	{
-		nextAs = prevAs = ((RDF_Resource)v)->rarg2;
-		while (nextAs != null)
-		{
-			prevAs = nextAs;
-			nextAs = nextAs->invNext;
-		}
-		if (prevAs == null)
-		{
-			((RDF_Resource)v)->rarg2 = newAs;
-		}
-		else
-		{
-			prevAs->invNext = newAs;
-		}
-	}
-	sendNotifications2(rdf, RDF_INSERT_NOTIFY, u, s, v, type, 1);
-	return true;
-}
-
-
-
-void *
-AtalkNextValue (RDFT rdf, RDF_Cursor c)
-{
-	Assertion		as;
-
-	XP_ASSERT(c != NULL);
-	if (c == NULL)		return(NULL);
-
-	while (c->pdata != null)
-	{
-		as = (Assertion) c->pdata;
-		if ((as->s == c->s) && (as->tv == c->tv) && (c->type == as->type))
-		{
-			c->value = (c->inversep ? as->u : as->value);
-			c->pdata = (c->inversep ? as->invNext : as->next);
-			return c->value;
-		}
-		c->pdata = (c->inversep ? as->invNext : as->next);
-	}
-	return(NULL);
-}
-
-
-
-RDF_Cursor
-AtalkGetSlotValues (RDFT rdf, RDF_Resource u, RDF_Resource s,
-		RDF_ValueType type,  PRBool inversep, PRBool tv)
-{
-	Assertion		as;
-	RDF_Cursor		c = NULL;
-
-	as  = (inversep ? atalkarg2(u) : atalkarg1(u));
-	if (as == null)
-	{
+		id = resourceID(u);
 		getServers(u);
-
-		as  = (inversep ? atalkarg2(u) : atalkarg1(u));
-		if (as == null)
-			return null;
 	}
-
-	if ((c = (RDF_Cursor)getMem(sizeof(struct RDF_CursorStruct))) != NULL)
-	{
-		c->u = u;
-		c->s = s;
-		c->value = NULL;
-		c->type = type;
-		c->inversep = inversep;
-		c->tv = tv;
-		c->count = 0;
-	}
-	return(c);
-}
-
-
-
-RDF_Error
-AtalkDisposeCursor (RDFT rdf, RDF_Cursor c)
-{
-	if (c != NULL)
-	{
-		freeMem(c);
-	} 
-	return(0);
 }
 
 
@@ -556,18 +339,20 @@ MakeAtalkStore (char* url)
 		{
 			ntr->assert = NULL;
 			ntr->unassert = NULL;
-			ntr->hasAssertion = AtalkHasAssertion;
-			ntr->getSlotValue = AtalkGetSlotValue;
-			ntr->getSlotValues = AtalkGetSlotValues;
-			ntr->nextValue = AtalkNextValue;
-			ntr->disposeCursor = AtalkDisposeCursor;
+			ntr->hasAssertion = remoteStoreHasAssertion;
+			ntr->getSlotValue = remoteStoreGetSlotValue;
+			ntr->getSlotValues = remoteStoreGetSlotValues;
+			ntr->nextValue = remoteStoreNextValue;
+			ntr->disposeCursor = remoteStoreDisposeCursor;
+			ntr->possiblyAccessFile =  AtalkPossible;
 			ntr->destroy = AtalkDestroy;
 			ntr->url = copyString(url);
+			gRDFDB  = ntr;
 
 			atalk2rdfHash = PR_NewHashTable(500, idenHash, idenEqual, idenEqual, null, null);
 			invatalk2rdfHash = PR_NewHashTable(500, idenHash, idenEqual, idenEqual, null, null);
-			gRDFDB  = ntr;
 
+			setAtalkResourceName(gNavCenter->RDF_Appletalk);
 			getZones();
 		}
 	       
