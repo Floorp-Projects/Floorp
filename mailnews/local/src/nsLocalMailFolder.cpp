@@ -3007,6 +3007,8 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRBool a
         curFolderPop3MailServer->GetLeaveMessagesOnServer(&leaveOnServer);
       }
 
+      if (!deleteMailLeftOnServer)
+        continue;
       msgDBHdr->GetMessageOffset(&messageOffset);
       rv = seekableStream->Seek(PR_SEEK_SET, messageOffset);
       NS_ENSURE_SUCCESS(rv,rv);
