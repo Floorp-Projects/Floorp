@@ -25,7 +25,8 @@
 
 #include "pratom.h"
 #include "nsRepository.h"
-#include "nsIAppShellComponentImpl.h"
+#include "nsIAppShellService.h"
+#include "nsAppShellCIDs.h"
 #include "nsIComponentManager.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIServiceManager.h"
