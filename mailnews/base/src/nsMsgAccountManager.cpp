@@ -995,6 +995,9 @@ PRBool PR_CALLBACK nsMsgAccountManager::cleanupOnExit(nsHashKey *aKey, void *aDa
   PRBool cleanupInboxOnExit = PR_FALSE;
   nsresult rv;
     
+  if (WeAreOffline())
+    return PR_TRUE;
+
   server->GetEmptyTrashOnExit(&emptyTrashOnExit);
   nsCOMPtr <nsIImapIncomingServer> imapserver = do_QueryInterface(server);
   if (imapserver)
