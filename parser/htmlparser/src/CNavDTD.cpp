@@ -45,7 +45,6 @@
 #include "prmem.h"
 
 #undef  ENABLE_RESIDUALSTYLE  
-#define RGESS_DEBUG 1
 #define RICKG_DEBUG 
 #ifdef  RICKG_DEBUG
 #include  <fstream.h>  
