@@ -859,9 +859,12 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
         PaintTextDecorations(aRenderingContext, aStyleContext,
                              aTextStyle, dx, dy, width);
 //        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+
+				shell->RefreshCaret();
+				
+#ifdef SHOW_SELECTION_CURSOR
         aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
 
-#ifdef SHOW_SELECTION_CURSOR
         RenderSelectionCursor(aRenderingContext,
                             dx + textWidth, dy, mRect.height,
                             CURSOR_COLOR);
@@ -1191,6 +1194,9 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
       if (si.mEmptySelection) {
         RenderString(aRenderingContext, aStyleContext, aTextStyle,
                      text, textLength, dx, dy, width);
+
+				shell->RefreshCaret();
+
 #ifdef SHOW_SELECTION_CURSOR
 
         GetWidth(aRenderingContext, aTextStyle,
@@ -1337,6 +1343,9 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
         PaintTextDecorations(aRenderingContext, aStyleContext,
                              aTextStyle, dx, dy, width);
 //        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
+
+				shell->RefreshCaret();
+
 #ifdef SHOW_SELECTION_CURSOR
         aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
