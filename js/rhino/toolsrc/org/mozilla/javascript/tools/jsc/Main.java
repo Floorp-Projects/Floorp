@@ -250,7 +250,7 @@ public class Main {
             }
             try {
                 Reader in = new FileReader(filename);
-                cx.compileReader(null, in, filename, 1, null);
+                cx.compileReader(in, filename, 1, null);
             }
             catch (FileNotFoundException ex) {
                 cx.reportError(ToolErrorReporter.getMessage(

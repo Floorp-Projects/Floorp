@@ -159,7 +159,7 @@ public class NativeScript extends NativeFunction implements Script
                     String source = (args.length == 0)
                                     ? ""
                                     : ScriptRuntime.toString(args[0]);
-                    Script script = compile(cx, scope, source);
+                    Script script = compile(cx, source);
                     NativeScript nscript = new NativeScript(script);
                     nscript.setParentScope(scope);
                     nscript.setPrototype(getClassPrototype(scope, "Script"));
@@ -179,7 +179,7 @@ public class NativeScript extends NativeFunction implements Script
                 case Id_compile: {
                     NativeScript real = realThis(thisObj, f);
                     String source = ScriptRuntime.toString(args, 0);
-                    real.script = compile(cx, scope, source);
+                    real.script = compile(cx, source);
                     return real;
                 }
             }
@@ -195,7 +195,7 @@ public class NativeScript extends NativeFunction implements Script
         return (NativeScript)thisObj;
     }
 
-    private static Script compile(Context cx, Scriptable scope, String source)
+    private static Script compile(Context cx, String source)
     {
         int[] linep = { 0 };
         String filename = Context.getSourcePositionFromStack(linep);
@@ -203,7 +203,7 @@ public class NativeScript extends NativeFunction implements Script
             filename = "<Script object>";
             linep[0] = 1;
         }
-        return cx.compileString(scope, source, filename, linep[0], null);
+        return cx.compileString(source, filename, linep[0], null);
     }
 
     protected String getIdName(int id)

@@ -1565,8 +1565,7 @@ public class ScriptRuntime {
         cx.setOptimizationLevel(-1);
         Script script;
         try {
-            script = cx.compileString(scope, (String)x, sourceName, 1,
-                                      null);
+            script = cx.compileString((String)x, true, sourceName, 1, null);
         } finally {
             cx.setOptimizationLevel(oldOptLevel);
         }

@@ -1978,12 +1978,12 @@ class ExitInterrupt implements Runnable {
     }
 };
 
-class OpenFile implements Runnable {
-    Scriptable scope;
+class OpenFile implements Runnable
+{
     String fileName;
     Main db;
-    OpenFile(Main db, Scriptable scope, String fileName) {
-        this.scope = scope;
+    OpenFile(Main db, String fileName)
+    {
         this.fileName = fileName;
         this.db = db;
     }
@@ -1992,8 +1992,7 @@ class OpenFile implements Runnable {
         ContextData contextData = ContextData.get(cx);
         contextData.breakNextLine = true;
         try {
-            cx.compileReader(scope, new FileReader(fileName),
-                             fileName, 1, null);
+            cx.compileReader(new FileReader(fileName), fileName, 1, null);
         } catch (Exception exc) {
             String msg = exc.getMessage();
             if (exc instanceof EcmaError) {
@@ -3197,15 +3196,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
         } else if (cmd.equals("Exit")) {
             Exit();
         } else if (cmd.equals("Open")) {
-            Scriptable scope = getScope();
-            if (scope == null) {
-                MessageDialogWrapper.showMessageDialog(this, "Can't compile scripts: no scope available", "Open", JOptionPane.ERROR_MESSAGE);
-            } else {
-                String fileName = chooseFile("Select a file to compile");
-                if (fileName != null) {
-                    new Thread(new OpenFile(this, scope,
-                                            fileName)).start();
-                }
+            String fileName = chooseFile("Select a file to compile");
+            if (fileName != null) {
+                new Thread(new OpenFile(this, fileName)).start();
             }
         } else if (cmd.equals("Load")) {
             Scriptable scope = getScope();
@@ -3412,17 +3405,16 @@ public class Main extends JFrame implements Debugger, ContextListener {
         boolean savedBreakNextLine = contextData.breakNextLine;
         contextData.breakNextLine = false;
         try {
-            Scriptable scope;
-            FrameHelper frame = contextData.getFrame(frameIndex);
-            scope = frame.getVariableObject();
             Script script;
             int savedLevel = cx.getOptimizationLevel();
             try {
                 cx.setOptimizationLevel(-1);
-                script = cx.compileString(scope, expr, "", 0, null);
+                script = cx.compileString(expr, "", 0, null);
             } finally {
                 cx.setOptimizationLevel(savedLevel);
             }
+            FrameHelper frame = contextData.getFrame(frameIndex);
+            Scriptable scope = frame.getVariableObject();
             Object result;
             if (scope instanceof NativeCall
                 && script instanceof Function)
