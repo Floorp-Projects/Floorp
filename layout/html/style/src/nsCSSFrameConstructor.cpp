@@ -5726,14 +5726,12 @@ nsCSSFrameConstructor::WrapTextFrame(nsIPresContext* aPresContext,
     }
     nsIStyleContext* sc = GetFirstLetterStyle(aPresContext, correctContent,
                                               parentStyleContext);
-    if (correctContent != aContent) {
-      NS_RELEASE(correctContent);
-    }
     if (sc) {
       const nsStyleDisplay* display = (const nsStyleDisplay*)
         sc->GetStyleData(eStyleStruct_Display);
       if (display->IsFloating()) {
-        CreateFloatingFirstLetterFrame(aPresContext, aTextFrame, aContent,
+        CreateFloatingFirstLetterFrame(aPresContext, aTextFrame,
+                                       correctContent,
                                        aChildContent, aParentFrame,
                                        aFrameItems, aFloatingItems, sc);
       }
@@ -5742,7 +5740,7 @@ nsCSSFrameConstructor::WrapTextFrame(nsIPresContext* aPresContext,
         nsresult rv = NS_NewFirstLetterFrame(&newFrame);
         if (NS_SUCCEEDED(rv)) {
           // Initialize the first-letter-frame.
-          rv = newFrame->Init(*aPresContext, aContent, aParentFrame, sc,
+          rv = newFrame->Init(*aPresContext, correctContent, aParentFrame, sc,
                               nsnull);
           newFrame->SetInitialChildList(*aPresContext, nsnull, aTextFrame);
           aTextFrame->SetParent(newFrame);
@@ -5754,6 +5752,9 @@ nsCSSFrameConstructor::WrapTextFrame(nsIPresContext* aPresContext,
         }
       }
       NS_RELEASE(sc);
+    }
+    if (correctContent != aContent) {
+      NS_RELEASE(correctContent);
     }
     NS_RELEASE(parentStyleContext);
   }
