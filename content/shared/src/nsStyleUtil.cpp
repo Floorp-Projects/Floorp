@@ -176,8 +176,13 @@ static nscoord NewCalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
 #define sFontSizeTableMin  9 
 #define sFontSizeTableMax 16 
 
-#if 0
-  static PRInt32 sFontSizeTable[sFontSizeTableMax - sFontSizeTableMin + 1][8] =
+// This table seems to be the one used by MacIE5. We hope its adoption in Mozilla
+// and eventually in WinIE5.5 will help to establish a standard rendering across
+// platforms and browsers. For now, it is used only in Strict mode. More can be read
+// in the document written by Todd Farhner at:
+// http://style.verso.com/font_size_intervals/altintervals.html
+//
+  static PRInt32 sStrictFontSizeTable[sFontSizeTableMax - sFontSizeTableMin + 1][8] =
   {
       { 9,    9,     9,     9,    11,    14,    18,    27},
       { 9,    9,     9,    10,    12,    15,    20,    30},
@@ -193,7 +198,7 @@ static nscoord NewCalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
 //                          |
 //                      user pref
 //
-#else
+//------------------------------------------------------------
 //
 // This table gives us compatibility with WinNav4 for the default fonts only.
 // In WinNav4, the default fonts were:
@@ -209,7 +214,7 @@ static nscoord NewCalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
 // going below 9px, and maintaining a "diagonal" relationship. See for
 // example the 13s -- they follow a diagonal line through the table.
 //
-  static PRInt32 sFontSizeTable[sFontSizeTableMax - sFontSizeTableMin + 1][8] =
+  static PRInt32 sQuirksFontSizeTable[sFontSizeTableMax - sFontSizeTableMin + 1][8] =
   {
       { 9,    9,     9,     9,    11,    14,    18,    28 },
       { 9,    9,     9,    10,    12,    15,    20,    31 },
@@ -224,7 +229,6 @@ static nscoord NewCalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
 // CSS  xxs   xs     s      m      l     xl     xxl
 //                          |
 //                      user pref
-#endif
 
 #if 0
 //
@@ -276,7 +280,14 @@ static nscoord NewCalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
     aPresContext->GetPixelsToTwips(&p2t);
 
     PRInt32 row = fontSize - sFontSizeTableMin;
-    dFontSize = NSIntPixelsToTwips(sFontSizeTable[row][column[aHTMLSize]], p2t);
+
+		nsCompatibility mode;
+	  aPresContext->GetCompatibilityMode(&mode);
+	  if (mode == eCompatibility_NavQuirks) {
+	    dFontSize = NSIntPixelsToTwips(sQuirksFontSizeTable[row][column[aHTMLSize]], p2t);
+	  } else {
+	    dFontSize = NSIntPixelsToTwips(sStrictFontSizeTable[row][column[aHTMLSize]], p2t);
+	  }
   }
   else
   {
@@ -317,19 +328,30 @@ nscoord nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize
 //------------------------------------------------------------------------------
 
 PRInt32 nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                             float aScalingFactor, nsIPresContext* aPresContext)
+                                             float aScalingFactor, nsIPresContext* aPresContext,
+                                             nsFontSizeType aFontSizeType)
 {
   PRInt32 index;
+  PRInt32 indexMin;
+  PRInt32 indexMax;
   PRInt32 fontSize = NSTwipsToFloorIntPoints(aFontSize);
 
-  if (NSTwipsToFloorIntPoints(CalcFontPointSize(1, aBasePointSize, aScalingFactor, aPresContext)) < fontSize) {
-    if (fontSize <= NSTwipsToFloorIntPoints(CalcFontPointSize(7, aBasePointSize, aScalingFactor, aPresContext))) { // in HTML table
-      for (index = 7; index > 1; index--)
-        if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext)))
+	if (aFontSizeType == eFontSize_HTML) {
+		indexMin = 1;
+		indexMax = 7;
+	} else {
+		indexMin = 0;
+		indexMax = 6;
+	}
+
+  if (NSTwipsToFloorIntPoints(CalcFontPointSize(indexMin, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType)) < fontSize) {
+    if (fontSize <= NSTwipsToFloorIntPoints(CalcFontPointSize(indexMax, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType))) { // in HTML table
+      for (index = indexMax; index > indexMin; index--)
+        if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType)))
           break;
     }
     else {  // larger than HTML table
-      return 7;
+      return indexMax;
 //    for (index = 8; ; index++)
 //      if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext))) {
 //        index--;
@@ -338,7 +360,7 @@ PRInt32 nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
     }
   }
   else { // smaller than HTML table
-    return 1;
+    return indexMin;
 //  for (index = 0; -25<index ; index--) //prevent infinite loop (bug 17045)
 //    if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext))) {
 //      break;
@@ -353,26 +375,37 @@ PRInt32 nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
 //------------------------------------------------------------------------------
 
 PRInt32 nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
-                                            float aScalingFactor, nsIPresContext* aPresContext)
+                                            float aScalingFactor, nsIPresContext* aPresContext,
+                                            nsFontSizeType aFontSizeType)
 {
   PRInt32 index;
+  PRInt32 indexMin;
+  PRInt32 indexMax;
   PRInt32 fontSize = NSTwipsToFloorIntPoints(aFontSize);
 
-  if (NSTwipsToFloorIntPoints(CalcFontPointSize(1, aBasePointSize, aScalingFactor, aPresContext)) <= fontSize) {
-    if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(7, aBasePointSize, aScalingFactor, aPresContext))) { // in HTML table
-      for (index = 1; index < 7; index++)
-        if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext)))
+	if (aFontSizeType == eFontSize_HTML) {
+		indexMin = 1;
+		indexMax = 7;
+	} else {
+		indexMin = 0;
+		indexMax = 6;
+	}
+
+  if (NSTwipsToFloorIntPoints(CalcFontPointSize(indexMin, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType)) <= fontSize) {
+    if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(indexMax, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType))) { // in HTML table
+      for (index = indexMin; index < indexMax; index++)
+        if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext, aFontSizeType)))
           break;
     }
     else {  // larger than HTML table
-			return 7;
+			return indexMax;
 //    for (index = 8; ; index++)
 //      if (fontSize < NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext)))
 //        break;
     }
   }
   else {  // smaller than HTML table
-    return 1;
+    return indexMin;
 //  for (index = 0; -25<index ; index--) //prevent infinite loop (bug 17045)
 //    if (fontSize > NSTwipsToFloorIntPoints(CalcFontPointSize(index, aBasePointSize, aScalingFactor, aPresContext))) {
 //      index++;
