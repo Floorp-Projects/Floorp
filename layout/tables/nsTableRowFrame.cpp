@@ -1366,16 +1366,6 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
       }
     }
 
-    // Now that we know the minimum and preferred widths see if the column
-    // widths need to be rebalanced
-    if (!aReflowState.tableFrame->ColumnsAreValidFor(*(nsTableCellFrame*)aNextFrame,
-                                                     oldCellMinSize.width,
-                                                     oldCellMaximumWidth)) {
-      // The column widths need to be rebalanced. Tell the table to rebalance
-      // the column widths
-      aReflowState.tableFrame->InvalidateColumnWidths();
-    } 
-
     // Calculate the cell's actual size given its pass2 size. This function
     // takes into account the specified height (in the style), and any special
     // logic needed for backwards compatibility
@@ -1445,6 +1435,17 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     PlaceChild(aPresContext, aReflowState, aNextFrame, cellMet, aReflowState.x,
                0, aDesiredSize.maxElementSize, &kidMaxElementSize);
 
+
+    // Now that we know the minimum and preferred widths see if the column
+    // widths need to be rebalanced
+    if (!aDesiredSize.mNothingChanged &&
+        !aReflowState.tableFrame->ColumnsAreValidFor(*(nsTableCellFrame*)aNextFrame,
+                                                      oldCellMinSize.width,
+                                                      oldCellMaximumWidth)) {
+      // The column widths need to be rebalanced. Tell the table to rebalance
+      // the column widths
+      aReflowState.tableFrame->InvalidateColumnWidths();
+    } 
 
     // Return our desired size. Note that our desired width is just whatever width
     // we were given by the row group frame
