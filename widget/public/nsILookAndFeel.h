@@ -92,8 +92,18 @@ public:
     eColor__moz_mac_focusring,				//ring around text fields and lists
     eColor__moz_mac_menuselect,				//colour used when mouse is over a menu item
     eColor__moz_mac_menushadow,				//colour used to do shadows on menu items
-    eColor__moz_mac_menutextselect			//colour used to display text while mouse is over a menu item
+    eColor__moz_mac_menutextselect,			//colour used to display text while mouse is over a menu item
     
+  	//all of the accert colours
+  	eColor__moz_mac_accentlightesthighlight,
+    eColor__moz_mac_accentregularhighlight,
+    eColor__moz_mac_accentface,
+    eColor__moz_mac_accentlightshadow,
+    eColor__moz_mac_accentregularshadow,
+    eColor__moz_mac_accentdarkshadow,
+    eColor__moz_mac_accentdarkestshadow
+  
+  
   } nsColorID;
 
   typedef enum {

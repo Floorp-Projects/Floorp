@@ -240,10 +240,6 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 		//default to lavender if not available
 		res = GetMacBrushColor(kThemeBrushFocusHighlight, aColor, NS_RGB(0x63,0x63,0xCE));
 	    break;
-	case eColor__moz_mac_menuselect:
-		//get this colour by querying variation table, ows. default to Platinum/Lavendar
-		res = GetMacAccentColor(eColorOffset_mac_accentregularshadow, aColor, NS_RGB(0x63,0x63,0xCE));
-	    break;
 	case eColor__moz_mac_menushadow:
 		res = GetMacBrushColor(kThemeBrushBevelActiveDark, aColor, NS_RGB(0x88,0x88,0x88));
 	    break;	        
@@ -251,6 +247,35 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 		//default to white, which is what Platinum uses, if not available		
 		res = GetMacTextColor(kThemeTextColorMenuItemSelected, aColor, NS_RGB(0xFF,0xFF,0xFF));
 	    break;	    
+	case eColor__moz_mac_accentlightesthighlight:
+		//get this colour by querying variation table, ows. default to Platinum/Lavendar
+		res = GetMacAccentColor(eColorOffset_mac_accentlightesthighlight, aColor, NS_RGB(0xEE,0xEE,0xEE));
+	    break;    
+    case eColor__moz_mac_accentregularhighlight:
+		//get this colour by querying variation table, ows. default to Platinum/Lavendar
+		res = GetMacAccentColor(eColorOffset_mac_accentregularhighlight, aColor, NS_RGB(0xCC,0xCC,0xFF));
+	    break;        
+    case eColor__moz_mac_accentface:
+		//get this colour by querying variation table, ows. default to Platinum/Lavendar
+		res = GetMacAccentColor(eColorOffset_mac_accentface, aColor, NS_RGB(0x99,0x99,0xFF));
+	    break;            
+    case eColor__moz_mac_accentlightshadow:
+		//get this colour by querying variation table, ows. default to Platinum/Lavendar
+		res = GetMacAccentColor(eColorOffset_mac_accentlightshadow, aColor, NS_RGB(0x66,0x66,0xCC));
+	    break; 
+	case eColor__moz_mac_menuselect:
+	case eColor__moz_mac_accentregularshadow:
+		//get this colour by querying variation table, ows. default to Platinum/Lavendar
+		res = GetMacAccentColor(eColorOffset_mac_accentregularshadow, aColor, NS_RGB(0x63,0x63,0xCE));
+	    break;
+    case eColor__moz_mac_accentdarkshadow:
+    	//get this colour by querying variation table, ows. default to Platinum/Lavendar
+		res = GetMacAccentColor(eColorOffset_mac_accentdarkshadow, aColor, NS_RGB(0x00,0x00,0x88));
+	    break;
+    case eColor__moz_mac_accentdarkestshadow:
+    	//get this colour by querying variation table, ows. default to Platinum/Lavendar
+		res = GetMacAccentColor(eColorOffset_mac_accentdarkestshadow, aColor, NS_RGB(0x00,0x00,0x55));
+	    break;
     default:
         NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
         aColor = NS_RGB(0xff,0xff,0xff);
