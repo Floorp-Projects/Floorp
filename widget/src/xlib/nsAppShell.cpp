@@ -395,14 +395,14 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
     /* Add listener -
      * but only if we arn't already in the table... */
     if (!PL_HashTableLookup(sQueueHashTable, key)) {
-      int tag;
-      
+      long tag;
+        
       /* set up our fds callbacks */
-      tag = (int)XtAppAddInput(mAppContext,
-                               queue_fd,
-                               (XtPointer)(long)(XtInputReadMask),
-                               HandleQueueXtProc,
-                               (XtPointer)mEventQueue);
+      tag = (long)XtAppAddInput(mAppContext,
+                                queue_fd,
+                                (XtPointer)(long)(XtInputReadMask),
+                                HandleQueueXtProc,
+                                (XtPointer)mEventQueue);
 
 /* This hack would not be neccesary if we would have a hashtable function
  * which returns success/failure in a seperate var ...
@@ -427,7 +427,7 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
     PL_UnregisterEventIDFunc(plqueue);
     sEventQueueList->RemoveElement(plqueue);
 
-    int tag = int(PL_HashTableLookup(sQueueHashTable, key));
+    int tag = long(PL_HashTableLookup(sQueueHashTable, key));
     if (tag) {
       tag -= NEVER_BE_ZERO_MAGIC;
       XtRemoveInput((XtInputId)tag);
