@@ -691,6 +691,7 @@ JS_DestroyRuntime(JSRuntime *rt)
 #endif
 #endif
 
+    js_FinishAtomState(&rt->atomState);
     js_FinishGC(rt);
 #ifdef JS_THREADSAFE
     if (rt->gcLock)
@@ -3392,7 +3393,7 @@ JS_InternString(JSContext *cx, const char *s)
     JSAtom *atom;
 
     CHECK_REQUEST(cx);
-    atom = js_Atomize(cx, s, strlen(s), ATOM_PINNED);
+    atom = js_Atomize(cx, s, strlen(s), ATOM_INTERNED);
     if (!atom)
 	return NULL;
     return ATOM_TO_STRING(atom);
@@ -3427,7 +3428,7 @@ JS_InternUCStringN(JSContext *cx, const jschar *s, size_t length)
     JSAtom *atom;
 
     CHECK_REQUEST(cx);
-    atom = js_AtomizeChars(cx, s, length, ATOM_PINNED);
+    atom = js_AtomizeChars(cx, s, length, ATOM_INTERNED);
     if (!atom)
 	return NULL;
     return ATOM_TO_STRING(atom);

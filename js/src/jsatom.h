@@ -50,14 +50,15 @@
 
 JS_BEGIN_EXTERN_C
 
-#define ATOM_NOCOPY     0x01            /* don't copy atom string bytes */
-#define ATOM_TMPSTR     0x02            /* internal, to avoid extra string */
+#define ATOM_PINNED     0x01            /* atom is pinned against GC */
+#define ATOM_INTERNED   0x02            /* pinned variant for JS_Intern* API */
 #define ATOM_MARK       0x04            /* atom is reachable via GC */
-#define ATOM_PINNED     0x08            /* atom is pinned against GC */
+#define ATOM_NOCOPY     0x40            /* don't copy atom string bytes */
+#define ATOM_TMPSTR     0x80            /* internal, to avoid extra string */
 
 struct JSAtom {
     JSHashEntry         entry;          /* key is jsval, value keyword info */
-    uint8               flags;          /* flags, PINNED and/or MARK for now */
+    uint8               flags;          /* pinned, interned, and mark flags */
     int8                kwindex;        /* keyword index, -1 if not keyword */
     jsatomid            number;         /* atom serial number and hash code */
 };
@@ -134,6 +135,7 @@ struct JSAtomState {
     JSRuntime           *runtime;       /* runtime that owns us */
     JSHashTable         *table;         /* hash table containing all atoms */
     jsatomid            number;         /* one beyond greatest atom number */
+    jsatomid            interns;        /* number of interned strings */
 
     /* Type names and value literals. */
     JSAtom              *typeAtoms[JSTYPE_LIMIT];
@@ -232,10 +234,26 @@ extern JSBool
 js_InitAtomState(JSContext *cx, JSAtomState *state);
 
 /*
- * Free and clear atom state.
+ * Free and clear atom state (except for any interned string atoms).
  */
 extern void
 js_FreeAtomState(JSContext *cx, JSAtomState *state);
+
+/*
+ * Interned strings are atoms that live until state's runtime is destroyed.
+ * This function frees all interned string atoms, and then frees and clears
+ * state's members (just as js_FreeAtomState does), unless there aren't any
+ * interned strings in state -- in which case state must be "free" already.
+ *
+ * NB: js_FreeAtomState is called for each "last" context being destroyed in
+ * a runtime, where there may yet be another context created in the runtime;
+ * whereas js_FinishAtomState is called from JS_DestroyRuntime, when we know
+ * that no more contexts will be created.  Thus we minimize garbage during
+ * context-free episodes on a runtime, while preserving atoms created by the
+ * JS_Intern*String APIs for the life of the runtime.
+ */
+extern void
+js_FinishAtomState(JSAtomState *state);
 
 /*
  * Atom garbage collection hooks.
