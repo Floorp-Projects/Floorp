@@ -50,6 +50,7 @@ function onLoad()
   setText("message2", message2);
   //Set the focus so key press events work
   document.getElementById('ok-button').focus();
+  window.sizeToContent();
 }
 
 function viewCert()
