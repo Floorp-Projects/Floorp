@@ -52,7 +52,7 @@
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(Components.interfaces.nsIIOService);
         uri = ioService.newURI(gContextMenu.imageURL, null, null);
-        return permissionmanager.testPermission(uri, nsIPermissionManager.IMAGE_TYPE) != nsIPermissionManager.DENY_ACTION;
+        return permissionmanager.testPermission(uri, "image") != nsIPermissionManager.DENY_ACTION;
       },
 
       // Determine if "imageBlocker.enabled" pref is set
@@ -78,9 +78,7 @@
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(Components.interfaces.nsIIOService);
         uri = ioService.newURI(gContextMenu.imageURL, null, null);
-        permissionmanager.add(uri,
-                              nsIPermissionManager.IMAGE_TYPE,
-                              nsIPermissionManager.DENY_ACTION);
+        permissionmanager.add(uri, "image", nsIPermissionManager.DENY_ACTION);
       },
 
       // Unblock image from loading in the future.
@@ -95,9 +93,7 @@
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(Components.interfaces.nsIIOService);
         uri = ioService.newURI(gContextMenu.imageURL, null, null);
-        permissionmanager.add(uri,
-                              nsIPermissionManager.IMAGE_TYPE,
-                              nsIPermissionManager.ALLOW_ACTION);
+        permissionmanager.add(uri, "image", nsIPermissionManager.ALLOW_ACTION);
       },
 
       initImageBlocking : function () {

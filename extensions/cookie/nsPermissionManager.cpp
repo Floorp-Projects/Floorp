@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *
+ *   Michiel van Leeuwen (mvl@exedo.nl)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -79,26 +79,6 @@ nsHostEntry::nsHostEntry(const nsHostEntry& toCopy)
   mHost = ArenaStrDup(toCopy.mHost, gHostArena);
 }
 
-inline void 
-nsHostEntry::SetPermission(PRUint32 aType, PRUint32 aPermission)
-{
-  mPermissions[aType] = (PRUint8)aPermission;
-}
-
-inline PRUint32 
-nsHostEntry::GetPermission(PRUint32 aType) const
-{
-  return (PRUint32)mPermissions[aType];
-}
-
-inline PRBool 
-nsHostEntry::PermissionsAreEmpty() const
-{
-  // Cast to PRUint32, to make this faster. Only 2 checks instead of 8
-  return (*NS_REINTERPRET_CAST(const PRUint32*, &mPermissions[0])==0 && 
-          *NS_REINTERPRET_CAST(const PRUint32*, &mPermissions[4])==0 );
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsPermissionEnumerator : public nsISimpleEnumerator
@@ -106,12 +86,16 @@ class nsPermissionEnumerator : public nsISimpleEnumerator
   public:
     NS_DECL_ISUPPORTS
     
-    nsPermissionEnumerator(const nsTHashtable<nsHostEntry> *aHostTable, const char* *aHostList, const PRUint32 aHostCount)
+    nsPermissionEnumerator(const nsTHashtable<nsHostEntry> *aHostTable,
+                           const char*   *aHostList,
+                           const PRUint32 aHostCount,
+                           const char*   *aTypeArray)
       : mHostCount(aHostCount),
         mHostIndex(0),
         mTypeIndex(0),
         mHostTable(aHostTable),
-        mHostList(aHostList)
+        mHostList(aHostList),
+        mTypeArray(aTypeArray)
     {
       Prefetch();
     }
@@ -150,6 +134,7 @@ class nsPermissionEnumerator : public nsISimpleEnumerator
     const nsTHashtable<nsHostEntry> *mHostTable;
     const char*                     *mHostList;
     nsCOMPtr<nsIPermission>          mNextPermission;
+    const char*                     *mTypeArray;
 };
 
 NS_IMPL_ISUPPORTS1(nsPermissionEnumerator, nsISimpleEnumerator)
@@ -171,7 +156,9 @@ nsPermissionEnumerator::Prefetch()
       // see if we've found it
       permission = entry->GetPermission(mTypeIndex);
       if (permission != nsIPermissionManager::UNKNOWN_ACTION) {
-        mNextPermission = new nsPermission(entry->GetHost(), mTypeIndex, permission);
+        mNextPermission = new nsPermission(entry->GetHost(), 
+                                           nsDependentCString(mTypeArray[mTypeIndex]),
+                                           permission);
       }
     }
 
@@ -199,6 +186,7 @@ nsPermissionManager::nsPermissionManager()
 
 nsPermissionManager::~nsPermissionManager()
 {
+  RemoveTypeStrings();
   RemoveAllFromMemory();
 }
 
@@ -216,6 +204,9 @@ nsresult nsPermissionManager::Init()
     rv = mPermissionsFile->AppendNative(NS_LITERAL_CSTRING(kPermissionsFileName));
   }
 
+  // Clear the array of type strings
+  memset(mTypeArray, nsnull, sizeof(mTypeArray));
+
   // Ignore an error. That is not a problem. No cookperm.txt usually.
   Read();
 
@@ -229,9 +220,9 @@ nsresult nsPermissionManager::Init()
 }
 
 NS_IMETHODIMP
-nsPermissionManager::Add(nsIURI *aURI,
-                         PRUint32 aType,
-                         PRUint32 aPermission)
+nsPermissionManager::Add(nsIURI     *aURI,
+                         const char *aType,
+                         PRUint32    aPermission)
 {
   NS_ASSERTION(aURI, "could not get uri");
   nsresult rv;
@@ -243,7 +234,11 @@ nsPermissionManager::Add(nsIURI *aURI,
     return NS_OK;
   }
 
-  rv = AddInternal(hostPort, aType, aPermission);
+  PRInt32 typeIndex = GetTypeIndex(aType, PR_TRUE);
+  if (typeIndex == -1 || aPermission >= NUMBER_OF_PERMISSIONS)
+    return NS_ERROR_FAILURE;
+
+  rv = AddInternal(hostPort, typeIndex, aPermission);
   if (NS_FAILED(rv)) return rv;
 
   // Notify permission manager dialog to update its display
@@ -257,16 +252,13 @@ nsPermissionManager::Add(nsIURI *aURI,
   return NS_OK;
 }
 
-//Only add to memory, don't save. That's up to the caller.
+// This only adds a permission to memory (it doesn't save to disk), and doesn't
+// bounds check aTypeIndex or aPermission. These are up to the caller.
 nsresult
 nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
-                                 PRUint32 aType,
+                                 PRInt32 aTypeIndex,
                                  PRUint32 aPermission)
 {
-  if (aType > NUMBER_OF_TYPES) {
-    return NS_ERROR_FAILURE;
-  }
-
   if (!gHostArena) {
     gHostArena = new PLArenaPool;
     if (!gHostArena)
@@ -282,22 +274,23 @@ nsPermissionManager::AddInternal(const nsAFlatCString &aHost,
   if (entry->PermissionsAreEmpty()) {
     ++mHostCount;
   }
-  entry->SetPermission(aType, aPermission);
+  entry->SetPermission(aTypeIndex, aPermission);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsPermissionManager::Remove(const nsACString &aHost,
-                            PRUint32 aType)
+                            const char       *aType)
 {
-  if (aType > NUMBER_OF_TYPES) {
-    return NS_ERROR_FAILURE;
-  }
+  PRInt32 typeIndex = GetTypeIndex(aType, PR_FALSE);
+  // If type == -1, the type isn't known,
+  // so just return NS_OK
+  if (typeIndex == -1) return NS_OK;
 
   nsHostEntry* entry = mHostTable.GetEntry(PromiseFlatCString(aHost).get());
   if (entry) {
-    entry->SetPermission(aType, nsIPermissionManager::UNKNOWN_ACTION);
+    entry->SetPermission(typeIndex, nsIPermissionManager::UNKNOWN_ACTION);
 
     // If no more types are present, remove the entry
     if (entry->PermissionsAreEmpty()) {
@@ -322,9 +315,9 @@ nsPermissionManager::RemoveAll()
 }
 
 NS_IMETHODIMP
-nsPermissionManager::TestPermission(nsIURI *aURI,
-                                    PRUint32 aType,
-                                    PRUint32 *aPermission)
+nsPermissionManager::TestPermission(nsIURI     *aURI,
+                                    const char *aType,
+                                    PRUint32   *aPermission)
 {
   NS_ASSERTION(aURI, "could not get uri");
   NS_ASSERTION(aPermission, "no permission pointer");
@@ -339,15 +332,16 @@ nsPermissionManager::TestPermission(nsIURI *aURI,
     return NS_OK;
   }
   
-  if (aType > NUMBER_OF_TYPES) {
-    return NS_ERROR_FAILURE;
-  }
+  PRInt32 typeIndex = GetTypeIndex(aType, PR_FALSE);
+  // If type == -1, the type isn't known,
+  // so just return NS_OK
+  if (typeIndex == -1) return NS_OK;
 
   PRUint32 offset = 0;
   do {
     nsHostEntry *entry = mHostTable.GetEntry(hostPort.get() + offset);
     if (entry) {
-      *aPermission = entry->GetPermission(aType);
+      *aPermission = entry->GetPermission(typeIndex);
       if (*aPermission != nsIPermissionManager::UNKNOWN_ACTION)
         break;
     }
@@ -392,7 +386,7 @@ NS_IMETHODIMP nsPermissionManager::GetEnumerator(nsISimpleEnumerator **aEnum)
   const char** hostListCopy = hostList;
   mHostTable.EnumerateEntries(AddHostToList, &hostListCopy);
 
-  nsPermissionEnumerator* permissionEnum = new nsPermissionEnumerator(&mHostTable, hostList, mHostCount);
+  nsPermissionEnumerator* permissionEnum = new nsPermissionEnumerator(&mHostTable, hostList, mHostCount, NS_CONST_CAST(const char**, mTypeArray));
   if (!permissionEnum) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -416,7 +410,9 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports *aSubject, const char *aT
     // was accepted).  If this condition ever changes, the permission
     // file would need to be updated here.
 
+    RemoveTypeStrings();
     RemoveAllFromMemory();
+    
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
       if (mPermissionsFile) {
         mPermissionsFile->Remove(PR_FALSE);
@@ -455,6 +451,50 @@ nsPermissionManager::RemoveAllFromMemory()
   return NS_OK;
 }
 
+void
+nsPermissionManager::RemoveTypeStrings()
+{
+  for (PRUint32 i = NUMBER_OF_TYPES; i--; ) {
+    if (mTypeArray[i]) {
+      PL_strfree(mTypeArray[i]);
+      mTypeArray[i] = nsnull;
+    }
+  }
+}
+
+// Returns -1 on failure
+PRInt32
+nsPermissionManager::GetTypeIndex(const char *aType,
+                                  PRBool      aAdd)
+{
+  PRInt32 firstEmpty = -1;
+
+  for (PRUint32 i = 0; i < NUMBER_OF_TYPES; ++i) {
+    if (!mTypeArray[i]) {
+      if (firstEmpty == -1)
+        // Don't break, the type might be later in the array
+        firstEmpty = i;
+    } else if (!strcmp(aType, mTypeArray[i])) {
+      return i;
+    }
+  }
+
+  if (!aAdd || firstEmpty == -1)
+    // Not found, but that is ok - we were just looking.
+    // Or, no free spots left - error.
+    return -1;
+
+  // This type was not registered before.
+  // Can't use ToNewCString here, other strings in the array are allocated
+  // with PL_strdup too, and they all need to be freed the same way
+  mTypeArray[firstEmpty] = PL_strdup(aType);
+  if (!mTypeArray[firstEmpty])
+    return -1;
+
+  return firstEmpty;
+}
+
+
 // broadcast a notification that a permission has changed
 nsresult
 nsPermissionManager::NotifyObservers(const nsACString &aHost)
@@ -471,6 +511,13 @@ nsPermissionManager::NotifyObservers(const nsACString &aHost)
 // We don't do checkbox states here anymore.
 // When a consumer wants it back, that is up to the consumer, not this backend
 // For cookies, it is now done with a persist in the dialog xul file.
+
+static const char kTab = '\t';
+static const char kNew = '\n';
+static const char kTrue = 'T';
+static const char kFalse = 'F';
+static const char kFirstLetter = 'a';
+static const char kTypeSign = '%';
 
 nsresult
 nsPermissionManager::Read()
@@ -491,6 +538,8 @@ nsPermissionManager::Read()
   /* format is:
    * host \t number permission \t number permission ... \n
    * if this format isn't respected we move onto the next line in the file.
+   * permission is T or F for accept or deny, otherwise a lowercase letter,
+   * with a=0, b=1 etc
    */
 
   nsAutoString bufferUnicode;
@@ -500,6 +549,24 @@ nsPermissionManager::Read()
   while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore))) {
     CopyUCS2toASCII(bufferUnicode, buffer);
     if (buffer.IsEmpty() || buffer.First() == '#') {
+      continue;
+    }
+
+    if (buffer.First() == kTypeSign) {
+      // A permission string line
+
+      PRInt32 stringIndex;
+      
+      if ((stringIndex = buffer.FindChar(kTab) + 1) == 0) {
+        continue;      
+      }
+
+      PRUint32 type;
+      if (!PR_sscanf(buffer.get() + 1, "%u", &type) || type >= NUMBER_OF_TYPES) {
+        continue;
+      }
+      mTypeArray[type] = PL_strdup(buffer.get() + stringIndex);
+
       continue;
     }
 
@@ -525,13 +592,13 @@ nsPermissionManager::Read()
       if (nextPermissionIndex == buffer.Length()+1) {
         break;
       }
-      if ((nextPermissionIndex = buffer.FindChar('\t', permissionIndex)+1) == 0) {
+      if ((nextPermissionIndex = buffer.FindChar(kTab, permissionIndex) + 1) == 0) {
         nextPermissionIndex = buffer.Length()+1;
       }
       const nsASingleFragmentCString &permissionString = Substring(buffer, permissionIndex, nextPermissionIndex - permissionIndex - 1);
       permissionIndex = nextPermissionIndex;
 
-      PRUint32 type = 0;
+      PRInt32 type = 0;
       PRUint32 index = 0;
 
       if (permissionString.IsEmpty()) {
@@ -546,8 +613,18 @@ nsPermissionManager::Read()
       if (index >= permissionString.Length()) {
         continue; // bad format for this permission entry
       }
-      PRUint32 permission = (permissionString.CharAt(index) == 'T') ? nsIPermissionManager::ALLOW_ACTION : nsIPermissionManager::DENY_ACTION;
+      PRUint32 permission;
+      if (permissionString.CharAt(index) == kTrue)
+        permission = nsIPermissionManager::ALLOW_ACTION;
+      else if (permissionString.CharAt(index) == kFalse)
+        permission = nsIPermissionManager::DENY_ACTION;
+      else
+        permission = permissionString.CharAt(index) - kFirstLetter;
 
+      // |permission| is unsigned, so no need to check for < 0
+      if (permission >= NUMBER_OF_PERMISSIONS)
+        continue;
+    
       // Ignore @@@ as host. Old style checkbox status
       if (!permissionString.IsEmpty() && !host.Equals(NS_LITERAL_CSTRING("@@@@"))) {
         rv = AddInternal(host, type, permission);
@@ -558,6 +635,11 @@ nsPermissionManager::Read()
   }
 
   mChangedList = PR_FALSE;
+
+  // For backwards compatibility, add those types when not yet set.
+  if (!mTypeArray[0]) mTypeArray[0] = PL_strdup("cookie");
+  if (!mTypeArray[1]) mTypeArray[1] = PL_strdup("image");
+  if (!mTypeArray[2]) mTypeArray[2] = PL_strdup("popup");
 
   return NS_OK;
 }
@@ -578,6 +660,7 @@ AddEntryToList(nsHostEntry *entry, void *arg)
   ++(*elementPtr);
   return PL_DHASH_NEXT;
 }
+
 
 nsresult
 nsPermissionManager::Write()
@@ -608,13 +691,28 @@ nsPermissionManager::Write()
 
   bufferedOutputStream->Write(kHeader, sizeof(kHeader) - 1, &rv);
 
+  // Write the type strings.
+  // Format: % index \t typestring \n
+  // (% sign is to distinguish type string lines from permission lines)
+
+  for (PRUint32 i = 0; i < NUMBER_OF_TYPES; ++i) {
+    if (mTypeArray[i]) {
+      bufferedOutputStream->Write(&kTypeSign, 1, &rv);
+
+      char typeNumber[3];
+      PRUint32 len = PR_snprintf(typeNumber, sizeof(typeNumber), "%u", i);
+      bufferedOutputStream->Write(typeNumber, len, &rv);
+
+      bufferedOutputStream->Write(&kTab, 1, &rv);
+      bufferedOutputStream->Write(mTypeArray[i], strlen(mTypeArray[i]), &rv);
+      bufferedOutputStream->Write(&kNew, 1, &rv);
+    }
+  }
+  bufferedOutputStream->Write(&kNew, 1, &rv);
+
   /* format shall be:
    * host \t permission \t permission ... \n
    */
-  static const char kTab[] = "\t";
-  static const char kNew[] = "\n";
-  static const char kTrue[] = "T";
-  static const char kFalse[] = "F";
 
   // create a new host list
   nsHostEntry* *hostList = new nsHostEntry*[mHostCount];
@@ -635,20 +733,24 @@ nsPermissionManager::Write()
     
       PRUint32 permission = entry->GetPermission(type);
       if (permission) {
-        bufferedOutputStream->Write(kTab, sizeof(kTab) - 1, &rv);
+        bufferedOutputStream->Write(&kTab, 1, &rv);
 
         char typeString[5];
-        PRUint32 len = PR_snprintf(typeString, sizeof(typeString), "%u", type);
+        PRUint32 len = PR_snprintf(typeString, sizeof(typeString), "%d", type);
         bufferedOutputStream->Write(typeString, len, &rv);
 
         if (permission == nsIPermissionManager::ALLOW_ACTION) {
-          bufferedOutputStream->Write(kTrue, sizeof(kTrue) - 1, &rv);
+          bufferedOutputStream->Write(&kTrue, 1, &rv);
         } else if (permission == nsIPermissionManager::DENY_ACTION) {
-          bufferedOutputStream->Write(kFalse, sizeof(kFalse) - 1, &rv);
+          bufferedOutputStream->Write(&kFalse, 1, &rv);
+        } else {
+          char permString[2];
+          PR_snprintf(permString, sizeof(permString), "%c", kFirstLetter + permission);
+          bufferedOutputStream->Write(permString, 1, &rv);
         }
       }
     }
-    bufferedOutputStream->Write(kNew, sizeof(kNew) - 1, &rv);
+    bufferedOutputStream->Write(&kNew, 1, &rv);
   }
 
   delete[] hostList;

@@ -37,10 +37,13 @@ interface nsIPermission : nsISupports
     readonly attribute AUTF8String host;
 
     /**
-     * The type of permission (e.g., cookie, image, etc)
-     * (see nsIPermissionManager.idl for allowed values)
+     * a case-sensitive ASCII string, indicating the type of permission
+     * (e.g., "cookie", "image", etc).
+     * This string is specified by the consumer when adding a permission 
+     * via nsIPermissionManager.
+     * @see nsIPermissionManager
      */
-    readonly attribute PRUint32 type;
+    readonly attribute ACString type;
 
     /**
      * The permission (see nsIPermissionManager.idl for allowed values)

@@ -43,7 +43,7 @@
 NS_IMPL_ISUPPORTS1(nsPermission, nsIPermission)
 
 nsPermission::nsPermission(const nsACString &aHost,
-                           PRUint32         aType,
+                           const nsACString &aType,
                            PRUint32         aCapability)
  : mHost(aHost)
  , mType(aType)
@@ -63,9 +63,9 @@ nsPermission::GetHost(nsACString &aHost)
 }
 
 NS_IMETHODIMP
-nsPermission::GetType(PRUint32 *aType)
+nsPermission::GetType(nsACString &aType)
 {
-  *aType = mType;
+  aType = mType;
   return NS_OK;
 }
 

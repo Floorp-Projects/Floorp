@@ -54,7 +54,7 @@
       var _elementIDs = ["popupPolicy","playSound","playSoundUrl","displayIcon","removeBlacklist","prefillWhitelist"];
 
       const nsIPermissionManager = Components.interfaces.nsIPermissionManager
-      const popupType = nsIPermissionManager.POPUP_TYPE;
+      const popupType = "popup";
 
       var gPolicyCheckbox;
       var gSoundCheckbox;

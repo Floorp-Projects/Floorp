@@ -92,7 +92,7 @@ nsCookiePermission::TestPermission(nsIURI *aURI,
 
   PRUint32 listPermission = nsIPermissionManager::UNKNOWN_ACTION;
   if (mPermissionManager) {
-    mPermissionManager->TestPermission(aURI, nsIPermissionManager::COOKIE_TYPE, &listPermission);
+    mPermissionManager->TestPermission(aURI, "cookie", &listPermission);
   }
 
   if (listPermission == nsIPermissionManager::UNKNOWN_ACTION) {
@@ -111,7 +111,7 @@ nsCookiePermission::TestPermission(nsIURI *aURI,
 
       if (rememberDecision && mPermissionManager) {
         // Remember this decision
-        mPermissionManager->Add(aURI, nsIPermissionManager::COOKIE_TYPE, 
+        mPermissionManager->Add(aURI, "cookie", 
                                 *aPermission ? nsIPermissionManager::ALLOW_ACTION : nsIPermissionManager::DENY_ACTION);
       }
     }
