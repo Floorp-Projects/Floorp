@@ -95,6 +95,8 @@ function nsWidgetStateManager ( aFrameID )
      **/
     this.handlers     =
       {
+        colorpicker:
+          {  get: wsm.get_Colorpicker, set: wsm.set_Colorpicker   },
         menulist:
           {  get: wsm.get_Menulist,    set: wsm.set_Menulist      },
         radiogroup:
@@ -249,6 +251,40 @@ nsWidgetStateManager.prototype =
               return dataObject;
             }
             return null;
+        },
+
+    // <colorpicker>
+    set_Colorpicker:
+      function ( aElementID, aDataObject )
+        {
+          var element = wsm.contentArea.document.getElementById( aElementID );
+          // set all generic properties
+          wsm.generic_Set( element, aDataObject );
+          // set colorpicker specific properties
+          if( 'color' in aDataObject )
+            {
+              try {
+                element.color = aDataObject.color;
+              }
+              catch (ex) {
+                dump(aElementID +", ex: " + ex + "\n");
+              }
+            }
+        },
+
+    get_Colorpicker:
+      function ( aElementID )
+        {
+          var element     = wsm.contentArea.document.getElementById( aElementID );
+          // retrieve all generic attributes
+          var dataObject  = wsm.generic_Get( element );
+          // retrieve all colorpicker specific attributes
+          if( dataObject )
+            {
+              dataObject.color = element.color;
+              return dataObject;
+            }
+          return null;
         },
 
     // <menulist>

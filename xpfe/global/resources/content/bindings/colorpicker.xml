@@ -412,7 +412,7 @@
     </resources>
     
     <content>
-      <xul:hbox class="colorpicker-button-colorbox" anonid="colorbox" flex="1"/>
+      <xul:hbox class="colorpicker-button-colorbox" anonid="colorbox" flex="1" xbl:inherits="disabled"/>
 
       <xul:popupset>
         <xul:popup class="colorpicker-button-menupopup" anonid="colorpopup"
@@ -420,14 +420,14 @@
           onpopupshowing="this._colorPicker.onPopupShowing()"
           onpopuphiding="this._colorPicker.onPopupHiding()">
 
-          <xul:colorpicker xbl:inherits="palettename" allowevents="true" anonid="colorpicker"
+          <xul:colorpicker xbl:inherits="palettename,disabled" allowevents="true" anonid="colorpicker"
            onselect="this.parentNode.parentNode.parentNode.pickerChange()"/>
 
          </xul:popup>
        </xul:popupset>
     </content>
     
-    <implementation implements="nsIAccessibleProvider" >
+    <implementation implements="nsIAccessibleProvider, nsIDOMXULControlElement">
       <property name="accessible">
         <getter>
           <![CDATA[
@@ -438,6 +438,11 @@
       </property>
     
       <property name="open" onget="return this.mOpen"/>
+
+      <property name="disabled" onset="if (val) this.setAttribute('disabled',true);
+                                       else this.removeAttribute('disabled');
+                                       return val;"
+                                onget="return this.hasAttribute('disabled');"/>
 
       <property name="color">
         <getter><![CDATA[
@@ -533,6 +538,9 @@
       ]]></handler>
 
       <handler event="mousedown"><![CDATA[
+        if (this.disabled)
+          return;
+
         // Though I would prefer the open the popup using the built-in
         // popup="_child" mechanism, I can't use that because I can't seem to
         // get it to recognize the popupalign and popupanchor attributes that way
