@@ -552,8 +552,9 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     // See if the view should be hidden or visible
     PRBool  viewIsVisible = PR_TRUE;
     PRBool  viewHasTransparentContent =
-        (!hasBG ||
-         (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT));
+         (!hasBG ||
+         (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) ||
+         !aFrame->CanPaintBackground());
     if (isCanvas && viewHasTransparentContent) {
       nsIView* rootView;
       vm->GetRootView(rootView);
