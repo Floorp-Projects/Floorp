@@ -104,7 +104,7 @@ namespace JavaScript {
     /****************************************************************/
     /****************************************************************/
 
-    enum StateKind { While_State, If_state };
+    enum StateKind { While_State, If_State };
 
     class ICodeState { 
     public :
@@ -139,7 +139,7 @@ namespace JavaScript {
 
     class IfCodeState : public ICodeState {
     public:
-        IfCodeState(int32 a, int32 b) : ICodeState(If_state), elseLabel(a), beyondElse(b) { }
+        IfCodeState(int32 a, int32 b) : ICodeState(If_State), elseLabel(a), beyondElse(b) { }
         int32 elseLabel;
         int32 beyondElse;
     };
