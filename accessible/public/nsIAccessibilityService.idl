@@ -34,7 +34,8 @@ interface nsIWeakReference;
 interface nsIAccessibilityService : nsISupports
 {
   nsIAccessible createRootAccessible(in nsISupports aPresContext, in nsISupports aFrame);
-  nsIAccessible createHTMLSelectAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
+  nsIAccessible createHTMLComboboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
+  nsIAccessible createHTMLListboxAccessible(in nsIDOMNode aNode, in nsISupports aPresShell);
   nsIAccessible createHTMLSelectOptionAccessible(in nsIDOMNode aNode, in nsIAccessible aAccParent, in nsISupports aPresShell);
   nsIAccessible createHTMLCheckboxAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
