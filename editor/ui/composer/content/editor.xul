@@ -50,6 +50,12 @@
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
 
+  <commands id="commands">
+    <commandset id="globalEditMenuItems"/>
+    <commandset id="selectEditMenuItems"/>
+    <commandset id="undoEditMenuItems"/>
+  </commands>
+
   <!-- Use this when we abandon the default startup page -->
   <!-- broadcaster id="args" value="about:blank"/ -->
   <broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
@@ -62,7 +68,7 @@
   <!-- broadcaster nodes are appended here from the overlays -->
   <broadcasterset id="broadcasterset">
     <broadcaster id="Editor:Throbber" busy="false"/>
-	</broadcasterset>
+  </broadcasterset>
 
   <popupset>
     <popup id="BackColorPopup"/>
