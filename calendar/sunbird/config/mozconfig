@@ -8,6 +8,8 @@ mk_add_options MOZ_SUNBIRD=1
 
 ac_add_options --enable-calendar
 
+ac_add_options --enable-single-profile
+ac_add_options --disable-profilesharing
 ac_add_options --disable-ldap
 ac_add_options --disable-mailnews
 ac_add_options --enable-extensions=pref
