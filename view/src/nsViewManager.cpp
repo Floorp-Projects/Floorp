@@ -598,7 +598,6 @@ NS_IMETHODIMP nsViewManager::ResetScrolling(void)
 */
 void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIRegion *aRegion, PRUint32 aUpdateFlags)
 {
-  nsRect              wrect;
   nsCOMPtr<nsIRenderingContext> localcx;
   nsDrawingSurface    ds = nsnull;
 
@@ -665,16 +664,14 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
     }
   }
 
+  nsRect damageRectInPixels;
+  aRegion->GetBoundingBox(&damageRectInPixels.x, &damageRectInPixels.y, &damageRectInPixels.width, &damageRectInPixels.height);
+
   if (aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER)
   {
-    nsCOMPtr<nsIWidget> widget;
-    aView->GetWidget(*getter_AddRefs(widget));
-    widget->GetClientBounds(wrect);
-    wrect.x = wrect.y = 0;
-
     nsRect maxWidgetSize;
     GetMaxWidgetBounds(maxWidgetSize);
-    if NS_FAILED(localcx->GetBackbuffer(wrect, maxWidgetSize, ds)) {
+    if NS_FAILED(localcx->GetBackbuffer(nsRect(0, 0, damageRectInPixels.width, damageRectInPixels.height), maxWidgetSize, ds)) {
       //Failed to get backbuffer so turn off double buffering
       aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
     }
@@ -684,21 +681,33 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
   aView->GetBounds(viewRect);
   viewRect.x = viewRect.y = 0;
 
-  nsRect damageRect;
+  nsRect damageRect = damageRectInPixels;
   nsRect paintRect;
   float  p2t;
   mContext->GetDevUnitsToAppUnits(p2t);
-  aRegion->GetBoundingBox(&damageRect.x, &damageRect.y, &damageRect.width, &damageRect.height);
   damageRect.ScaleRoundOut(p2t);
 
   if (paintRect.IntersectRect(damageRect, viewRect)) {
+
+    if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds) {  
+      // backbuffer's (0,0) is mapped to damageRect.x, damageRect.y
+      localcx->Translate(-damageRect.x, -damageRect.y);
+      aRegion->Offset(-damageRectInPixels.x, -damageRectInPixels.y);
+    }
+
     PRBool result;
     localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, result);
     localcx->SetClipRect(paintRect, nsClipCombine_kIntersect, result);
     RenderViews(aView, *localcx, paintRect, result);
 
-    if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
-      localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+    if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds) {
+      // Setup the region relative to the destination's coordinates 
+      aRegion->Offset(damageRectInPixels.x, damageRectInPixels.y);
+      localcx->SetClipRegion(*aRegion, nsClipCombine_kReplace, result);
+      localcx->Translate(damageRect.x, damageRect.y);
+      localcx->SetClipRect(paintRect, nsClipCombine_kIntersect, result);
+      localcx->CopyOffScreenBits(ds, 0, 0, damageRectInPixels, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
+    }
   } else {
 #ifdef DEBUG
     printf("XXX Damage rectangle (%d,%d,%d,%d) does not intersect the widget's view (%d,%d,%d,%d)!\n",
