@@ -36,8 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#define DEBUG_FIND 1
+//#define DEBUG_FIND 1
 
 #include "nsFind.h"
 #include "nsContentCID.h"
