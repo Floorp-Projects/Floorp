@@ -176,12 +176,17 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
 
   if (0 < remainingWidth) {
     if (propTotal > 0) {
+      nscoord amountToAllocate = 0;
       for (colX = 0; colX < numCols; colX++) {
         if (propInfo[colX] > 0) {
           // We're proportional
           float percent = ((float)propInfo[colX])/((float)propTotal);
-          colWidths[colX] = nsTableFrame::RoundToPixel(NSToCoordRound(percent * (float)remainingWidth), aPixelToTwips);
+          amountToAllocate += NSToCoordRound(percent * (float)remainingWidth);
+          colWidths[colX] = (amountToAllocate > 0) ?
+            nsTableFrame::RoundToPixel(amountToAllocate, aPixelToTwips,
+                                       eRoundUpIfHalfOrMore) : 0;
           totalColWidth += colWidths[colX];
+          amountToAllocate -= colWidths[colX];
           lastColAllocated = colX;
         }
       }  
@@ -189,22 +194,35 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     else if (tableIsFixedWidth) {
       if (numCols > specifiedCols) {
         // allocate the extra space to the columns which have no width specified
-        nscoord colAlloc = nsTableFrame::RoundToPixel( NSToCoordRound(((float)remainingWidth) / (((float)numCols) - ((float)specifiedCols))), aPixelToTwips);
+        nscoord colAlloc =
+          NSToCoordRound(((float)remainingWidth) /
+                         (((float)numCols) - ((float)specifiedCols)));
+        nscoord amountToAllocate = 0;
         for (colX = 0; colX < numCols; colX++) {
           if (-1 == colWidths[colX]) {
-            colWidths[colX] = colAlloc;
-            totalColWidth += colAlloc; 
+            amountToAllocate += colAlloc;
+            colWidths[colX] = (amountToAllocate > 0) ?
+              nsTableFrame::RoundToPixel(amountToAllocate,
+                                         aPixelToTwips,
+                                         eRoundUpIfHalfOrMore) : 0;
+            totalColWidth += colWidths[colX];
+            amountToAllocate -= colWidths[colX];
             lastColAllocated = colX;
           }
         }
       }
       else { // allocate the extra space to the columns which have width specified
         float divisor = (float)totalColWidth;
+        nscoord amountToAllocate = 0;
         for (colX = 0; colX < numCols; colX++) {
           if (colWidths[colX] > 0) {
-            nscoord colAlloc = nsTableFrame::RoundToPixel(NSToCoordRound(remainingWidth * colWidths[colX] / divisor), aPixelToTwips);
+            amountToAllocate += NSToCoordRound(remainingWidth * colWidths[colX] / divisor);
+            nscoord colAlloc = (amountToAllocate > 0) ?
+              nsTableFrame::RoundToPixel(amountToAllocate, aPixelToTwips,
+                                         eRoundUpIfHalfOrMore) : 0;
             colWidths[colX] += colAlloc;
-            totalColWidth += colAlloc; 
+            totalColWidth += colAlloc;
+            amountToAllocate -= colAlloc;
             lastColAllocated = colX;
           }
         }
@@ -220,8 +238,10 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
       colWidths[colX] = 0;
     // if there was too much allocated due to rounding, remove it from the last col
     if ((colX == lastColAllocated) && (overAllocation != 0)) {
-      colWidths[colX] -= overAllocation;
-      colWidths[colX] = nsTableFrame::RoundToPixel(colWidths[colX], aPixelToTwips);
+      nscoord thisRemoval = nsTableFrame::RoundToPixel(overAllocation, aPixelToTwips);
+      colWidths[colX] -= thisRemoval;
+      totalColWidth -= thisRemoval;
+      
       totalColWidth -= colWidths[colX] - PR_MAX(0, colWidths[colX]);
       colWidths[colX] = PR_MAX(0, colWidths[colX]);
     }
@@ -230,14 +250,22 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     ? totalColWidth - availWidth : 0;
   if(overAllocation > 0){
     // reduce over specified percent col
+    nscoord amountToRemove = 0;
     for (colX = 0; colX < numCols; colX++) {
       nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
       if(( colFrame->GetWidth(PCT) > 0) && ( percTotal > 0)){
-        colWidths[colX] -= nsTableFrame::RoundToPixel(NSToCoordRound(overAllocation* colWidths[colX] / (float) percTotal), aPixelToTwips);
+        amountToRemove += NSToCoordRound(overAllocation* colWidths[colX] / (float) percTotal);
+        nscoord thisRemoval = (amountToRemove > 0) ?
+          nsTableFrame::RoundToPixel(amountToRemove, aPixelToTwips,
+                                     eRoundUpIfHalfOrMore) : 0;
+        colWidths[colX] -= thisRemoval;
+        amountToRemove -= thisRemoval;
+        totalColWidth -= thisRemoval;
+        
         totalColWidth -= colWidths[colX] - PR_MAX(0, colWidths[colX]);
-      colWidths[colX] = PR_MAX(0, colWidths[colX]);
+        colWidths[colX] = PR_MAX(0, colWidths[colX]);
         colFrame->SetWidth(PCT, colWidths[colX]);
-         }
+      }
     }
   }
   for (colX = 0; colX < numCols; colX++) {
