@@ -4792,6 +4792,23 @@
 			settings = {
 			};
 		};
+		F59A0E320307635401A967F3 = {
+			isa = PBXFileReference;
+			path = chimera.js;
+			refType = 2;
+		};
+		F59A0E350307639801A967F3 = {
+			fileRef = F59A0E320307635401A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F59A0E360307639801A967F3 = {
+			fileRef = F59A0E320307635401A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F59E9F3D0237E28401A967DF = {
 			isa = PBXFileReference;
 			path = ContentClickListener.h;
@@ -7044,6 +7061,7 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F5BAAC2002AC69DA01A967F3,
+				F59A0E360307639801A967F3,
 				F5C2793A02C515F2010000E1,
 				F5C2793B02C515F2010000E1,
 				F5BAAC2102AC69DA01A967F3,
@@ -9649,6 +9667,7 @@
 				F5C2793102C514FF010000E1,
 				F5C2793202C514FF010000E1,
 				F55A9BC60228CCE101DAE4DB,
+				F59A0E320307635401A967F3,
 			);
 			isa = PBXGroup;
 			name = "Gecko Pref Defaults";
@@ -9745,6 +9764,7 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F6BD652001B3184301A962F7,
+				F59A0E350307639801A967F3,
 				F5C2793702C5158B010000E1,
 				F5C2793802C5158B010000E1,
 				F55A9BC70228CCE201DAE4DB,
