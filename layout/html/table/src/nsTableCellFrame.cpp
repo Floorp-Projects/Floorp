@@ -829,9 +829,6 @@ void nsTableCellFrame::MapBorderPadding(nsIPresContext* aPresContext)
   if (!tableFrame)
     return;
 
-  nscoord   spacingX = tableFrame->GetCellSpacingX();
-  nscoord   spacingY = tableFrame->GetCellSpacingY();
-
   // get the table frame style context, and from it get cellpadding, cellspacing, and border info
   const nsStyleTable* tableStyle;
   tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);

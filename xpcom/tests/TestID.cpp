@@ -30,7 +30,7 @@ static char* ids[] = {
   "fc347b10-d55c-f1d1-f9b7-006008911b81",
   "{fc347b10-d55c-f1d1-f9b7-006008911b81}",
 };
-#define NUM_IDS (sizeof(ids) / sizeof(ids[0]))
+#define NUM_IDS ((int) (sizeof(ids) / sizeof(ids[0])))
 
 int main(int argc, char** argv)
 {

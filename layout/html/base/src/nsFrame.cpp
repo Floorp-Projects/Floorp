@@ -2325,14 +2325,13 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       {
         if (firstFrame)
         {
-          nsPoint point;
           nsPoint offsetPoint; //used for offset of result frame
           nsIView * view; //used for call of get offset from view
           firstFrame->GetOffsetFromView(offsetPoint, &view);
 
-          point.x = 0;//all the way to the left
-          point.y = offsetPoint.y;
-          result = firstFrame->GetContentAndOffsetsFromPoint(*(context.get()),point,
+          offsetPoint.x = 0;//all the way to the left
+          result = firstFrame->GetContentAndOffsetsFromPoint(*(context.get()),
+                                                             offsetPoint,
                                            getter_AddRefs(aPos->mResultContent),
                                            aPos->mContentOffset,
                                            endoffset,
@@ -2354,12 +2353,10 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
             nsIView * view; //used for call of get offset from view
             nextFrame->GetOffsetFromView(offsetPoint, &view);
 
-            nsPoint point;
-            point.x = 2* usedRect.width; //2* just to be sure we are off the edge
-            point.y = offsetPoint.y;
+            offsetPoint.x = 2* usedRect.width; //2* just to be sure we are off the edge
 
             result = nextFrame->GetContentAndOffsetsFromPoint(*(context.get()),
-                                            point,
+                                            offsetPoint,
                                             getter_AddRefs(aPos->mResultContent),
                                             aPos->mContentOffset,
                                             endoffset,

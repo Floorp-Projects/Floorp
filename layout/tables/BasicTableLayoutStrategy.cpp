@@ -757,18 +757,18 @@ nscoord BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
             nscoord otherDesWidth = 0;
             PRInt32 colX2;
             for (colX2 = 0; colX2 < colX; colX2++) {
-              nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX2);
-              nscoord prefWidth = colFrame->GetFixWidth();
+              nsTableColFrame* colX2Frame = mTableFrame->GetColFrame(colX2);
+              nscoord prefWidth = colX2Frame->GetFixWidth();
               if (prefWidth <= 0) {
-                prefWidth = colFrame->GetDesWidth();
+                prefWidth = colX2Frame->GetDesWidth();
               }
               otherDesWidth += prefWidth;
             }
             for (colX2 = colX + colSpan; colX2 < mNumCols; colX2++) {
-              nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX2);
-              nscoord prefWidth = colFrame->GetFixWidth();
+              nsTableColFrame* colX2Frame = mTableFrame->GetColFrame(colX2);
+              nscoord prefWidth = colX2Frame->GetFixWidth();
               if (prefWidth <= 0) {
-                prefWidth = colFrame->GetDesWidth();
+                prefWidth = colX2Frame->GetDesWidth();
               }
               otherDesWidth += prefWidth;
             }

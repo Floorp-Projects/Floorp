@@ -319,7 +319,7 @@ public:
     NS_INIT_ISUPPORTS();
   }
 
-  ~nsAutoScrollTimer()
+  virtual ~nsAutoScrollTimer()
   {
     if (mTimer)
     {
@@ -758,6 +758,7 @@ void printRange(nsIDOMRange *aDomRange)
 }
 #endif /* PRINT_RANGE */
 
+#ifdef OLD_SELECTION
 nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIAtom> atom;
@@ -798,6 +799,7 @@ ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset)
   }
   return result;
 }
+#endif
 
 
 
