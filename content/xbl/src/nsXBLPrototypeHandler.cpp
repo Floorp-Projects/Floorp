@@ -403,6 +403,10 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
 
   JSObject* scriptObject = nsnull;
 
+  // strong ref to a GC root we'll need to protect scriptObject in the case
+  // where it is not the global object (!winRoot).
+  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
+
   if (winRoot) {
     scriptObject = boundGlobal->GetGlobalJSObject();
   } else {
@@ -410,9 +414,6 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
     JSContext *cx = (JSContext *)boundContext->GetNativeContext();
 
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-
-    // root
-    nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
 
     // XXX: Don't use the global object!
     rv = xpc->WrapNative(cx, global, aReceiver, NS_GET_IID(nsISupports),
