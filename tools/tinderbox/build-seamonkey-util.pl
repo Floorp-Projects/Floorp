@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.177 $ ';
+$::UtilsVersion = '$Revision: 1.178 $ ';
 
 package TinderUtils;
 
@@ -1298,6 +1298,7 @@ sub run_all_tests {
 
     my $test_result = 'success';
 
+    # Windows needs this for file: urls.
     my $win32_build_dir = $build_dir;
     if ($Settings::OS =~ /^WIN/ && $win32_build_dir =~ m/^\/cygdrive\//) {
         $win32_build_dir =~ s/^\/cygdrive\///;
@@ -1575,110 +1576,19 @@ sub run_all_tests {
         }
     }
 
-    # Startup performance test.  Time how fast it takes the browser
-    # to start up.  Some help from John Morrison to get this going.
-    #
-    # Needs user_pref("browser.dom.window.dump.enabled", 1);
-    # (or CPPFLAGS=-DMOZ_ENABLE_JS_DUMP in mozconfig since we
-    # don't have profiles for tbox right now.)
-    #
     if ($Settings::StartupPerformanceTest and $test_result eq 'success') {
-        my $i;
-        my $startuptime;         # Startup time in ms.
-        my $agg_startuptime = 0; # Aggregate startup time.
-        my $startup_count   = 0; # Number of successful runs.
-        my $avg_startuptime = 0; # Average startup time.
-        my @times;
 
-        for($i=0; $i<10; $i++) {
-            # Settle OS.
-            run_system_cmd("sync; sleep 5", 35);
+      # Win32 needs to do some url magic for file: urls.
+      my $startup_build_dir = $build_dir;
+      if ($Settings::OS =~ /^WIN/) {
+        $startup_build_dir = $win32_build_dir;
+      }
 
-            # Generate URL of form file:///<path>/startup-test.html?begin=986869495000
-            # Where begin value is current time.
-            my ($time, $url, $cwd, $cmd);
-
-            #
-            # Test for Time::HiRes and report the time.
-            $time = Time::PossiblyHiRes::getTime();
-
-            $cwd = get_system_cwd();
-            print "cwd = $cwd\n";
-            if ($Settings::OS =~ /^WIN/) {
-                $url  = "\"file:$win32_build_dir/../startup-test.html?begin=$time\"";
-            } else {
-                $url  = "\"file:$build_dir/../startup-test.html?begin=$time\"";
-            }
-            print "url = $url\n";
-
-            # Then load startup-test.html, which will pull off the begin argument
-            # and compare it to the current time to compute startup time.
-            # Since we are iterating here, save off logs as StartupPerformanceTest-0,1,2...
-            #
-            # -P $Settings::MozProfileName added 3% to startup time, assume one profile
-            # and get the 3% back. (http://bugzilla.mozilla.org/show_bug.cgi?id=112767)
-            #
-            if($test_result eq 'success') {
-                $startuptime =
-                    AliveTestReturnToken("StartupPerformanceTest-$i",
-                                         $build_dir,
-                                         "$binary -P $Settings::MozProfileName",
-                                         $url,
-                                         $Settings::StartupPerformanceTestTimeout,
-                                         "__startuptime",
-                                         ",");
-            }
-
-            if($startuptime) {
-                $test_result = 'success';
-
-                # Add our test to the total.
-                $startup_count++;
-                $agg_startuptime += $startuptime;
-
-                # Keep track of the results in an array.
-                push(@times, $startuptime);
-            } else {
-                $test_result = 'testfailed';
-            }
-
-        } # for loop
-
-        if($test_result eq 'success') {
-            print_log "\nSummary for startup test:\n";
-
-            # Print startup times.
-            chop(@times);
-            my $times_string = join(" ", @times);
-            print_log "times = [$times_string]\n";
-
-            # Figure out the average startup time.
-            $avg_startuptime = $agg_startuptime / $startup_count;
-            print_log "Average startup time: $avg_startuptime\n";
-
-            my $min_startuptime = min(@times);
-            print_log "Minimum startup time: $min_startuptime\n";
-
-            # Old mechanism here, new = TinderboxPrint.
-            # print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
-            # print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
-
-            my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
-            my $print_string = "\n\nTinderboxPrint:<a title=\"Best startup time out of 10 startups\"href=\"http://$Settings::results_server/graph/query.cgi?testname=startup&tbox="
-                . ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$min_startuptime\">Ts:" . $min_startuptime . "ms</a>\n\n";
-            print_log "$print_string";
-
-            # Report data back to server
-            if($Settings::TestsPhoneHome) {
-                print_log "phonehome = 1\n";
-                send_results_to_server($min_startuptime, $times_string,
-                                       "startup", ::hostname());
-            }
-
-        }
+      $test_result = StartupPerformanceTest("StartupPerformanceTest",
+                                            $binary,
+                                            $startup_build_dir,
+                                            "-P $Settings::MozProfileName");
     }
-
-    return $test_result;
 }
 
 
@@ -1884,6 +1794,112 @@ sub LayoutPerformanceTest {
     }
 
     return $layout_test_result;
+}
+
+
+
+# Startup performance test.  Time how fast it takes the browser
+# to start up.  Some help from John Morrison to get this going.
+#
+# Needs user_pref("browser.dom.window.dump.enabled", 1);
+# (or CPPFLAGS=-DMOZ_ENABLE_JS_DUMP in mozconfig since we
+# don't have profiles for tbox right now.)
+#
+sub StartupPerformanceTest {
+  my ($test_name, $binary, $build_dir, $layout_test_args) = @_;
+  
+  my $i;
+  my $startuptime;         # Startup time in ms.
+  my $agg_startuptime = 0; # Aggregate startup time.
+  my $startup_count   = 0; # Number of successful runs.
+  my $avg_startuptime = 0; # Average startup time.
+  my @times;
+  my $startup_test_result = 'success';
+  
+  for($i=0; $i<10; $i++) {
+    # Settle OS.
+    run_system_cmd("sync; sleep 5", 35);
+    
+    # Generate URL of form file:///<path>/startup-test.html?begin=986869495000
+    # Where begin value is current time.
+    my ($time, $url, $cwd, $cmd);
+    
+    #
+    # Test for Time::HiRes and report the time.
+    $time = Time::PossiblyHiRes::getTime();
+    
+    $cwd = get_system_cwd();
+    print "cwd = $cwd\n";
+    $url  = "\"file:$build_dir/../startup-test.html?begin=$time\"";
+    
+    print "url = $url\n";
+    
+    # Then load startup-test.html, which will pull off the begin argument
+    # and compare it to the current time to compute startup time.
+    # Since we are iterating here, save off logs as StartupPerformanceTest-0,1,2...
+    #
+    # -P $Settings::MozProfileName added 3% to startup time, assume one profile
+    # and get the 3% back. (http://bugzilla.mozilla.org/show_bug.cgi?id=112767)
+    #
+    if($startup_test_result eq 'success') {
+      $startuptime =
+        AliveTestReturnToken("StartupPerformanceTest-$i",
+                             $build_dir,
+                             "$binary -P $Settings::MozProfileName",
+                             $url,
+                             $Settings::StartupPerformanceTestTimeout,
+                             "__startuptime",
+                             ",");
+    }
+    
+    if($startuptime) {
+      $startup_test_result = 'success';
+      
+      # Add our test to the total.
+      $startup_count++;
+      $agg_startuptime += $startuptime;
+      
+      # Keep track of the results in an array.
+      push(@times, $startuptime);
+    } else {
+      $startup_test_result = 'testfailed';
+    }
+    
+  } # for loop
+  
+  if($startup_test_result eq 'success') {
+    print_log "\nSummary for startup test:\n";
+    
+    # Print startup times.
+    chop(@times);
+    my $times_string = join(" ", @times);
+    print_log "times = [$times_string]\n";
+    
+    # Figure out the average startup time.
+    $avg_startuptime = $agg_startuptime / $startup_count;
+    print_log "Average startup time: $avg_startuptime\n";
+    
+    my $min_startuptime = min(@times);
+    print_log "Minimum startup time: $min_startuptime\n";
+    
+    # Old mechanism here, new = TinderboxPrint.
+    # print_log "\n\n  __avg_startuptime,$avg_startuptime\n\n";
+    # print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
+    
+    my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
+    my $print_string = "\n\nTinderboxPrint:<a title=\"Best startup time out of 10 startups\"href=\"http://$Settings::results_server/graph/query.cgi?testname=startup&tbox="
+      . ::hostname() . "&autoscale=1&days=7&avg=1&showpoint=$time,$min_startuptime\">Ts:" . $min_startuptime . "ms</a>\n\n";
+    print_log "$print_string";
+    
+    # Report data back to server
+    if($Settings::TestsPhoneHome) {
+      print_log "phonehome = 1\n";
+      send_results_to_server($min_startuptime, $times_string,
+                             "startup", ::hostname());
+    } 
+  }
+
+  return $startup_test_result;
 }
 
 
