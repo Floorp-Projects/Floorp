@@ -63,8 +63,8 @@ public:
   nsresult ParseAttributeString(const nsString& aStr, 
                                 nsIAtom*& aName,
                                 PRInt32& aNameSpaceID);
-  nsresult GetNameSpacePrefix(PRInt32 aNameSpaceID,
-                              nsIAtom*& aPrefix);
+  nsresult GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
+                                    nsIAtom*& aPrefix);
 
 
   // nsIXMLContent

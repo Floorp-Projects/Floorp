@@ -141,8 +141,8 @@ nsGenericXMLElement::ParseAttributeString(const nsString& aStr,
 }
 
 nsresult 
-nsGenericXMLElement::GetNameSpacePrefix(PRInt32 aNameSpaceID,
-                                        nsIAtom*& aPrefix)
+nsGenericXMLElement::GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
+                                              nsIAtom*& aPrefix)
 {
   if (nsnull != mNameSpace) {
     return mNameSpace->FindNameSpacePrefix(aNameSpaceID, aPrefix);

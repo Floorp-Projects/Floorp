@@ -87,8 +87,8 @@ public:
   nsresult ParseAttributeString(const nsString& aStr, 
                                 nsIAtom*& aName,
                                 PRInt32& aNameSpaceID);
-  nsresult GetNameSpacePrefix(PRInt32 aNameSpaceID,
-                              nsIAtom*& aPrefix);
+  nsresult GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
+                                    nsIAtom*& aPrefix);
   nsresult SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue,
                         PRBool aNotify);
   nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;

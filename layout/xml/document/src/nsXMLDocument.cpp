@@ -656,5 +656,51 @@ nsXMLDocument::AppendToEpilog(nsIContent* aContent)
   return NS_OK;
 }
 
+static nsIContent *
+MatchName(nsIContent *aContent, const nsString& aName)
+{
+  nsAutoString value;
+  nsIContent *result = nsnull;
+  PRInt32 ns;
+
+  aContent->GetNameSpaceID(ns);
+  if (kNameSpaceID_HTML == ns) {
+    if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value)) &&
+        aName.Equals(value)) {
+      return aContent;
+    }
+    else if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, value)) &&
+             aName.Equals(value)) {
+      return aContent;
+    }
+  }
+  
+  PRInt32 i, count;
+  aContent->ChildCount(count);
+  for (i = 0; i < count && result == nsnull; i++) {
+    nsIContent *child;
+    aContent->ChildAt(i, child);
+    result = MatchName(child, aName);
+    NS_RELEASE(child);
+  }  
+
+  return result;
+}
+
+NS_IMETHODIMP 
+nsXMLDocument::GetContentById(const nsString& aName, nsIContent** aContent)
+{
+  // XXX Since we don't have a validating parser, the only content
+  // that this applies to is HTML content.
+  nsIContent *content;
+
+  content = MatchName(mRootContent, aName);
+
+  NS_IF_ADDREF(content);
+  *aContent = content;
+
+  return NS_OK;
+}
+
 
 

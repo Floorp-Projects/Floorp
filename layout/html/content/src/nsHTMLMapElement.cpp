@@ -117,9 +117,9 @@ public:
                                   PRInt32& aNameSpaceID) {                 
     return mInner.ParseAttributeString(aStr, aName, aNameSpaceID);             
   }                                                                        
-  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,                      
+  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,                    
                                 nsIAtom*& aPrefix) {                       
-    return mInner.GetNameSpacePrefix(aNameSpaceID, aPrefix);                   
+    return mInner.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             
   }                                                                        
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            
                           const nsString& aValue, PRBool aNotify) {        

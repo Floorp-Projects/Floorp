@@ -99,8 +99,8 @@ public:
       aNameSpaceID = kNameSpaceID_None;
       return NS_OK; 
     }
-  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,
-                                nsIAtom*& aPrefix)
+  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
+                                      nsIAtom*& aPrefix)
     {
       aPrefix = nsnull;
       return NS_OK;

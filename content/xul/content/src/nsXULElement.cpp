@@ -190,7 +190,7 @@ public:
     NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpeceID) const;
     NS_IMETHOD GetTag(nsIAtom*& aResult) const;
     NS_IMETHOD ParseAttributeString(const nsString& aStr, nsIAtom*& aName, PRInt32& aNameSpaceID);
-    NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix);
+    NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID, nsIAtom*& aPrefix);
     NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue, PRBool aNotify);
     NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;
     NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
@@ -1579,8 +1579,8 @@ static char kNameSpaceSeparator[] = ":";
 }
 
 NS_IMETHODIMP
-RDFElementImpl::GetNameSpacePrefix(PRInt32 aNameSpaceID, 
-                                   nsIAtom*& aPrefix)
+RDFElementImpl::GetNameSpacePrefixFromId(PRInt32 aNameSpaceID, 
+                                         nsIAtom*& aPrefix)
 {
     NS_NOTYETIMPLEMENTED("write me!");
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -41,6 +41,10 @@ public:
   NS_IMETHOD EpilogElementAt(PRUint32 aOffset, nsIContent** aContent)=0;
   NS_IMETHOD EpilogCount(PRUint32* aCount)=0;
   NS_IMETHOD AppendToEpilog(nsIContent* aContent)=0;
+
+  // XXX This (or a variant thereof) should be in a DOM interface.
+  // Since it isn't, we add it here temporarily
+  NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent)=0;
 };
 
 #endif // nsIXMLDocument_h___

@@ -132,8 +132,8 @@ struct nsGenericDOMDataNode {
     aNameSpaceID = kNameSpaceID_None;
     return NS_OK; 
   }
-  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,
-                                nsIAtom*& aPrefix) {
+  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,
+                                      nsIAtom*& aPrefix) {
     aPrefix = nsnull;
     return NS_OK;
   }
@@ -395,9 +395,9 @@ struct nsGenericDOMDataNode {
                                   PRInt32& aNameSpaceID) {                 \
     return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
   }                                                                        \
-  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,                      \
+  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,                \
                                 nsIAtom*& aPrefix) {                       \
-    return _g.GetNameSpacePrefix(aNameSpaceID, aPrefix);                   \
+    return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
   }                                                                        \
   NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,       \
                           nsString &aResult) const {                       \

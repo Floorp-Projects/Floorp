@@ -54,6 +54,7 @@
 #include "nsICaret.h"
 #include "nsCaretProperties.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIXMLDocument.h"
 #include "nsIScrollableView.h"
 #include "nsIDOMSelectionListener.h"
 #include "nsISelectionMgr.h"
@@ -68,7 +69,6 @@
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
 
- 
 // comment out to hide caret
 #define SHOW_CARET
 
@@ -186,6 +186,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kICaretIID, NS_ICARET_IID);
 static NS_DEFINE_IID(kICaretID,  NS_ICARET_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
@@ -1369,29 +1370,33 @@ NS_IMETHODIMP
 PresShell::GoToAnchor(const nsString& aAnchorName) const
 {
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc;
+  nsCOMPtr<nsIXMLDocument> xmlDoc;
   nsresult                     rv;
+  nsCOMPtr<nsIContent>  content;
 
   if (NS_SUCCEEDED(mDocument->QueryInterface(kIDOMHTMLDocumentIID,
-                                             getter_AddRefs(htmlDoc)))) {
-    // Find the element with the specified id
+                                             getter_AddRefs(htmlDoc)))) {    
     nsCOMPtr<nsIDOMElement> element;
-    rv = htmlDoc->GetElementById(aAnchorName, getter_AddRefs(element));
 
+    // Find the element with the specified id
+    rv = htmlDoc->GetElementById(aAnchorName, getter_AddRefs(element));
     if (NS_SUCCEEDED(rv)) {
       // Get the nsIContent interface, because that's what we need to
       // get the primary frame
-      nsCOMPtr<nsIContent>  content;
+      rv = element->QueryInterface(kIContentIID, getter_AddRefs(content));
+    }
+  }
+  else if (NS_SUCCEEDED(mDocument->QueryInterface(kIXMLDocumentIID,
+                                                  getter_AddRefs(xmlDoc)))) {
+    rv = xmlDoc->GetContentById(aAnchorName,  getter_AddRefs(content));
+  }
 
-      if (NS_SUCCEEDED(element->QueryInterface(kIContentIID, getter_AddRefs(content)))) {
-        nsIFrame* frame;
-
-        // Get the primary frame
-        if (NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame))) {
-          rv = ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP, 0, NS_PRESSHELL_SCROLL_LEFT, 0);
-        }
-      } else {
-        rv = NS_ERROR_FAILURE;
-      }
+  if (NS_SUCCEEDED(rv)) {
+    nsIFrame* frame;
+    
+    // Get the primary frame
+    if (NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame))) {
+      rv = ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP, 0, NS_PRESSHELL_SCROLL_LEFT, 0);
     }
   } else {
     rv = NS_ERROR_FAILURE;

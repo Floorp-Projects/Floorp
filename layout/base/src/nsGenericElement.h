@@ -442,9 +442,9 @@ public:
                                   PRInt32& aNameSpaceID) {                 \
     return _g.ParseAttributeString(aStr, aName, aNameSpaceID);             \
   }                                                                        \
-  NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID,                      \
+  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID,                \
                                 nsIAtom*& aPrefix) {                       \
-    return _g.GetNameSpacePrefix(aNameSpaceID, aPrefix);                   \
+    return _g.GetNameSpacePrefixFromId(aNameSpaceID, aPrefix);             \
   }                                                                        \
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,            \
                           const nsString& aValue, PRBool aNotify) {        \

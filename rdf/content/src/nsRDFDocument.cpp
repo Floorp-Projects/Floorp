@@ -295,6 +295,8 @@ public:
     NS_IMETHOD EpilogCount(PRUint32* aCount);
     NS_IMETHOD AppendToEpilog(nsIContent* aContent);
 
+    NS_IMETHOD GetContentById(const nsString& aName, nsIContent** aContent);
+
     // nsIHTMLContentContainer interface
     NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
     NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
@@ -1553,6 +1555,13 @@ RDFDocumentImpl::EpilogCount(PRUint32* aCount)
 
 NS_IMETHODIMP
 RDFDocumentImpl::AppendToEpilog(nsIContent* aContent)
+{
+    PR_ASSERT(0);
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+RDFDocumentImpl::GetContentById(const nsString& aName, nsIContent** aContent)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
