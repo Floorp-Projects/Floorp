@@ -20,7 +20,7 @@
     </treeitem>
   </treehead>
   
-  <treebody rdf:id="mailbox://asdfdsafdsf" rdf:containment="http://home.netscape.com/NC-rdf#MessageChild">
+  <treebody id="mailbox://asdfdsafdsf" rdf:containment="http://home.netscape.com/NC-rdf#MessageChild">
     <treeitem  open="true">
       <treecell><treeindentation/><html:img html:hspace="2" html:style="vertical-align: bottom" html:src="http://rava/~hyatt/ClosedRead.gif"/>Local Mail</treecell>
       <treecell></treecell>
