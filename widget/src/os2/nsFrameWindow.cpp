@@ -58,7 +58,7 @@ void nsFrameWindow::SetWindowListVisibility( PRBool bState)
    HSWITCH hswitch;
    SWCNTRL swctl;
 
-   hswitch = WinQuerySwitchHandle(GetMainWindow(), 0);
+   hswitch = WinQuerySwitchHandle(mFrameWnd, 0);
    if( hswitch)
    {
       WinQuerySwitchEntry( hswitch, &swctl);
