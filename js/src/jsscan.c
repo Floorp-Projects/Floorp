@@ -62,10 +62,6 @@
 #include "jsregexp.h"
 #include "jsscan.h"
 
-/* Unicode separators that are treated as line terminators, in addition to \n, \r */
-#define LINE_SEPARATOR  (0x2028)
-#define PARA_SEPARATOR  (0x2029)
-
 #define RESERVE_JAVA_KEYWORDS
 #define RESERVE_ECMA_KEYWORDS
 

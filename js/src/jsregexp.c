@@ -915,12 +915,12 @@ ParseAtom(CompilerState *state)
                                             JSMSG_UNTERM_CLASS, ocp);
                 return NULL;
             }
-            if ((c = *++cp) == ']')
+            if ((c = *cp++) == ']')
                 break;
             if (c == '\\' && (cp+1 != state->cpend))
                 cp++;
         } while (JS_TRUE);
-        ren->u.kid2 = (void *)cp++;
+        ren->u.kid2 = (void *)cp;
         
         ren->u.ucclass.bitmap = NULL;
 
@@ -1703,6 +1703,11 @@ static JSBool buildBitmap(MatchState *state, RENode *ren)
 	}
 	lastc = c;
     }
+#define IS_LINE_TERMINATOR(c) ( (c == '\n')               \
+                                || (c == '\r')            \
+                                || (c == LINE_SEPARATOR)  \
+                                || (c == PARA_SEPARATOR) )
+
     return JS_TRUE;
 }
 
@@ -1894,7 +1899,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
               return NULL;
           break;
         case REOP_DOT:
-          if ((cp != cpend) && (*cp != '\n'))
+          if ((cp != cpend) && !IS_LINE_TERMINATOR(*cp))
               cp++;
           else
               return NULL;
@@ -1904,13 +1909,13 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
               const jschar *cp3 = matchRENodes(state, ren->next, stop, cp2);
               if (cp3 != NULL)
                   return cp3;
-              if (*cp2 == '\n')
+              if (IS_LINE_TERMINATOR(*cp2))
                   return NULL;
           }
           return NULL;
         case REOP_DOTSTAR:
           for (cp2 = cp; cp2 < cpend; cp2++)
-              if (*cp2 == '\n')
+              if (IS_LINE_TERMINATOR(*cp2))
                   break;
           while (cp2 >= cp) {
               const jschar *cp3 = matchRENodes(state, ren->next, NULL, cp2);
@@ -1942,7 +1947,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
           else {
               if (state->context->regExpStatics.multiline
                     || ((state->flags & JSREG_MULTILINE) != 0))
-                  if (*cp == '\n')
+                  if (IS_LINE_TERMINATOR(*cp))
                       ;/* leave cp */
                   else
                       return NULL;
@@ -1955,7 +1960,7 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
               if ((cp < cpend)
                    && (state->context->regExpStatics.multiline
                       || ((state->flags & JSREG_MULTILINE) != 0))) {
-                  if (cp[-1] == '\n') {
+                  if (IS_LINE_TERMINATOR(cp[-1])) {
                       break;
                   }
               }
