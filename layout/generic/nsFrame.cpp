@@ -520,10 +520,6 @@ nsFrame::Init(nsIPresContext*  aPresContext,
   NS_IF_ADDREF(mContent);
   mParent = aParent;
 
-  if (mContent) {
-    mContent->SetMayHaveFrame(PR_TRUE);
-  }
-
   if (aPrevInFlow) {
     // Make sure the general flags bits are the same
     nsFrameState state = aPrevInFlow->GetStateBits();
