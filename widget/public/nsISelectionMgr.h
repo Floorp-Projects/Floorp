@@ -28,7 +28,7 @@
 
 // We'd like to declare this as a forwarded class,
 // but for some reason the Mac won't accept that here.
-#include <ostream.h>
+#include <iostream.h>
 
 /**
  * Selection Manager interface.
