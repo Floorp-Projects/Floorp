@@ -1230,6 +1230,58 @@ nsGenericElement::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
   return NS_OK;
 }
 
+nsresult
+nsGenericElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
+{
+  nsDOMSlots *slots = GetDOMSlots();
+
+  if (!slots->mChildNodes) {
+    slots->mChildNodes = new nsChildContentList(this);
+    if (!slots->mChildNodes) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  NS_ADDREF(*aChildNodes = slots->mChildNodes);
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::HasChildNodes(PRBool* aReturn)
+{
+  *aReturn = mAttrsAndChildren.ChildCount() > 0;
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::GetFirstChild(nsIDOMNode** aNode)
+{
+  nsIContent *child = mAttrsAndChildren.GetSafeChildAt(0);
+  if (child) {
+    return CallQueryInterface(child, aNode);
+  }
+
+  *aNode = nsnull;
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::GetLastChild(nsIDOMNode** aNode)
+{
+  PRUint32 count = mAttrsAndChildren.ChildCount();
+  
+  if (count > 0) {
+    return CallQueryInterface(mAttrsAndChildren.ChildAt(count - 1), aNode);
+  }
+
+  *aNode = nsnull;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsGenericElement::GetTagName(nsAString& aTagName)
 {
@@ -2126,6 +2178,8 @@ nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
 NS_IMETHODIMP
 nsGenericElement::Compact()
 {
+  mAttrsAndChildren.Compact();
+
   return NS_OK;
 }
 
@@ -2433,16 +2487,15 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
 {
   NS_PRECONDITION(aKid, "null ptr");
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
-
+  
   PRBool isAppend;
 
   if (aNotify) {
     isAppend = aIndex == GetChildCount();
   }
 
-  if (!InternalInsertChildAt(aKid, aIndex)) {
-    return NS_OK;
-  }
+  nsresult rv = mAttrsAndChildren.InsertChildAt(aKid, aIndex);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   aKid->SetParent(this);
   nsRange::OwnerChildInserted(this, aIndex);
@@ -2480,10 +2533,8 @@ nsGenericElement::ReplaceChildAt(nsIContent* aKid,
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
 
   nsRange::OwnerChildReplaced(this, aIndex, oldKid);
-  if (!InternalReplaceChildAt(aKid, aIndex)) {
-    return NS_OK;
-  }
-
+  mAttrsAndChildren.ReplaceChildAt(aKid, aIndex);
+  
   aKid->SetParent(this);
 
   if (mDocument) {
@@ -2516,9 +2567,8 @@ nsGenericElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
   NS_PRECONDITION(aKid && this != aKid, "null ptr");
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
   
-  if (!InternalAppendChildTo(aKid)) {
-    return NS_OK;
-  }
+  nsresult rv = mAttrsAndChildren.AppendChild(aKid);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   aKid->SetParent(this);
   // ranges don't need adjustment since new child is at end of list
@@ -2559,10 +2609,8 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 
     nsRange::OwnerChildRemoved(this, aIndex, oldKid);
 
-    if (!InternalRemoveChildAt(aIndex)) {
-      return NS_OK;
-    }
-    
+    mAttrsAndChildren.RemoveChildAt(aIndex);
+
     if (aNotify && mDocument) {
       mDocument->ContentRemoved(this, oldKid, aIndex);
     }
@@ -3187,8 +3235,7 @@ nsGenericContainerElement::InternalGetExistingAttrNameFromQName(const nsAString&
 }
 
 nsresult
-nsGenericContainerElement::CopyInnerTo(nsIContent* aSrcContent,
-                                       nsGenericContainerElement* aDst,
+nsGenericContainerElement::CopyInnerTo(nsGenericContainerElement* aDst,
                                        PRBool aDeep)
 {
   nsresult rv;
@@ -3221,58 +3268,6 @@ nsGenericContainerElement::CopyInnerTo(nsIContent* aSrcContent,
     rv = aDst->AppendChildTo(newContent, PR_FALSE, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  nsDOMSlots *slots = GetDOMSlots();
-
-  if (!slots->mChildNodes) {
-    slots->mChildNodes = new nsChildContentList(this);
-    if (!slots->mChildNodes) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  NS_ADDREF(*aChildNodes = slots->mChildNodes);
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericContainerElement::HasChildNodes(PRBool* aReturn)
-{
-  *aReturn = mAttrsAndChildren.ChildCount() > 0;
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericContainerElement::GetFirstChild(nsIDOMNode** aNode)
-{
-  nsIContent *child = mAttrsAndChildren.GetSafeChildAt(0);
-  if (child) {
-    return CallQueryInterface(child, aNode);
-  }
-
-  *aNode = nsnull;
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericContainerElement::GetLastChild(nsIDOMNode** aNode)
-{
-  PRUint32 count = mAttrsAndChildren.ChildCount();
-  
-  if (count) {
-    return CallQueryInterface(mAttrsAndChildren.ChildAt(count - 1), aNode);
-  }
-
-  *aNode = nsnull;
 
   return NS_OK;
 }
@@ -3471,30 +3466,35 @@ nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
   }
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
-  if (aNotify && mDocument) {
-    mDocument->AttributeWillChange(this, aNameSpaceID, aName);
-  }
+  if (mDocument) {
+    if (aNotify) {
+      mDocument->AttributeWillChange(this, aNameSpaceID, aName);
+    }
 
-  if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-    nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-    nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
+    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
+      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
 
-    nsAutoString attrName;
-    aName->ToString(attrName);
-    nsCOMPtr<nsIDOMAttr> attrNode;
-    GetAttributeNode(attrName, getter_AddRefs(attrNode));
-    mutation.mRelatedNode = attrNode;
-    mutation.mAttrName = aName;
+      nsAutoString attrName;
+      aName->ToString(attrName);
+      nsCOMPtr<nsIDOMAttr> attrNode;
+      GetAttributeNode(attrName, getter_AddRefs(attrNode));
+      mutation.mRelatedNode = attrNode;
+      mutation.mAttrName = aName;
 
-    nsAutoString value;
-    mAttrsAndChildren.AttrAt(index)->ToString(value);
-    if (!value.IsEmpty())
-      mutation.mPrevAttrValue = do_GetAtom(value);
-    mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
+      nsAutoString value;
+      // It sucks that we have to call GetAttr here, but HTML can't always
+      // get the value from the nsAttrAndChildArray. Specifically enums and
+      // nsISupports can't be converted to strings.
+      GetAttr(aNameSpaceID, aName, value);
+      if (!value.IsEmpty())
+        mutation.mPrevAttrValue = do_GetAtom(value);
+      mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
-    nsEventStatus status = nsEventStatus_eIgnore;
-    this->HandleDOMEvent(nsnull, &mutation, nsnull,
-                         NS_EVENT_FLAG_INIT, &status);
+      nsEventStatus status = nsEventStatus_eIgnore;
+      HandleDOMEvent(nsnull, &mutation, nsnull,
+                     NS_EVENT_FLAG_INIT, &status);
+    }
   }
 
   nsresult rv = mAttrsAndChildren.RemoveAttrAt(index);

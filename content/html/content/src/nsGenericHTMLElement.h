@@ -73,7 +73,7 @@ struct nsSize;
 /**
  * A common superclass for HTML elements
  */
-class nsGenericHTMLElement : public nsGenericElement
+class nsGenericHTMLElement : public nsGenericContainerElement
 {
 public:
 #ifdef GATHER_ELEMENT_USEAGE_STATISTICS
@@ -98,19 +98,13 @@ public:
                              void **aInstancePtr);
 
   // From nsGenericElement
-  nsresult CopyInnerTo(nsIContent* aSrcContent, nsGenericHTMLElement* aDest,
-                       PRBool aDeep);
+  nsresult CopyInnerTo(nsGenericHTMLElement* aDest, PRBool aDeep);
 
   // Implementation for nsIDOMNode
   NS_METHOD GetNodeName(nsAString& aNodeName);
   NS_METHOD GetLocalName(nsAString& aLocalName);
 
   // Implementation for nsIDOMElement
-  NS_METHOD GetAttribute(const nsAString& aName,
-                         nsAString& aReturn) 
-  {
-    return nsGenericElement::GetAttribute(aName, aReturn);
-  }
   NS_METHOD SetAttribute(const nsAString& aName,
                          const nsAString& aValue);
   NS_METHOD GetTagName(nsAString& aTagName);
@@ -184,12 +178,8 @@ public:
                            PRBool aNotify);
   virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsAString& aResult) const;
-  virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              PRBool aNotify);
-  virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
-                                 nsIAtom** aName, nsIAtom** aPrefix) const;
-  virtual PRUint32 GetAttrCount() const;
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const;
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
@@ -675,36 +665,13 @@ public:
    * Find an ancestor of this content node which is a form (could be null)
    * @param aForm the form ancestore [OUT]
    */
-  nsresult FindForm(nsIDOMHTMLFormElement **aForm);
-
-  /**
-   * Find the form for this element and set aFormControl's form to it
-   * (aFormControl is passed in to avoid QI)
-   *
-   * @param aFormControl the form control to set the form for
-   */
-  void FindAndSetForm(nsIFormControl *aFormControl);
+  already_AddRefed<nsIDOMHTMLFormElement> FindForm();
 
   /**
    * See if the document being tested has nav-quirks mode enabled.
    * @param doc the document
    */
   static PRBool InNavQuirksMode(nsIDocument* aDoc);
-
-  /**
-   * Helper for the form subclasses of nsGenericHTMLElement to take care
-   * of fixing up form.elements when name, id and type change
-   *
-   * @param aForm the form the control is in
-   * @param aNameSpaceID the namespace of the attr
-   * @param aName the name of the attr
-   * @param aValue the value of the attr
-   * @param aNotify whether to notify the document of the attribute change
-   */
-  nsresult SetFormControlAttribute(nsIForm* aForm, PRInt32 aNameSpaceID,
-                                   nsIAtom* aName, nsIAtom* aPrefix,
-                                   const nsAString& aValue,
-                                   PRBool aNotify);
 
   /**
    * Set attribute and (if needed) notify documentobservers and fire off
@@ -730,11 +697,6 @@ public:
                             PRBool aFireMutation,
                             PRBool aNotify);
  
-  /**
-   * Array containing all attributes and children for this element
-   */
-  nsAttrAndChildArray mAttrsAndChildren;
-
   // Helper functions for <a> and <area>
   static nsresult SetProtocolInHrefString(const nsAString &aHref,
                                           const nsAString &aProtocol,
@@ -808,143 +770,7 @@ protected:
   PRBool IsEventName(nsIAtom* aName);
 
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
-};
 
-
-//----------------------------------------------------------------------
-
-/**
- * A helper class to subclass for leaf elements.
- */
-class nsGenericHTMLLeafElement : public nsGenericHTMLElement {
-public:
-  nsresult CopyInnerTo(nsIContent* aSrcContent,
-                       nsGenericHTMLLeafElement* aDest, PRBool aDeep);
-
-  // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
-  NS_METHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
-  NS_METHOD HasChildNodes(PRBool* aHasChildNodes) {
-    *aHasChildNodes = PR_FALSE;
-    return NS_OK;
-  }
-  NS_METHOD GetFirstChild(nsIDOMNode** aFirstChild) {
-    *aFirstChild = nsnull;
-    return NS_OK;
-  }
-  NS_METHOD GetLastChild(nsIDOMNode** aLastChild) {
-    *aLastChild = nsnull;
-    return NS_OK;
-  }
-  NS_METHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                        nsIDOMNode** aReturn) {
-    return NS_ERROR_FAILURE;
-  }
-  NS_METHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                        nsIDOMNode** aReturn) {
-    return NS_ERROR_FAILURE;
-  }
-  NS_METHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn) {
-    return NS_ERROR_FAILURE;
-  }
-  NS_METHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Remainder of nsIHTMLContent (and nsIContent)
-  NS_IMETHOD Compact() {
-    return NS_OK;
-  }
-  virtual PRBool CanContainChildren() const {
-    return PR_FALSE;
-  }
-  virtual PRUint32 GetChildCount() const {
-    return 0;
-  }
-  virtual nsIContent *GetChildAt(PRUint32 aIndex) const {
-    return nsnull;
-  }
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const {
-    return -1;
-  }
-  virtual nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                 PRBool aNotify, PRBool aDeepSetDocument) {
-    return NS_OK;
-  }
-  virtual nsresult ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                  PRBool aNotify, PRBool aDeepSetDocument) {
-    return NS_OK;
-  }
-  virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
-                                 PRBool aDeepSetDocument) {
-    return NS_OK;
-  }
-  virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify) {
-    return NS_OK;
-  }
-};
-
-//----------------------------------------------------------------------
-
-/**
- * A helper class to subclass for elements that can contain children
- */
-class nsGenericHTMLContainerElement : public nsGenericHTMLElement
-{
-public:
-  nsresult CopyInnerTo(nsIContent* aSrcContent,
-                       nsGenericHTMLContainerElement* aDest, PRBool aDeep);
-
-  // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
-  NS_METHOD GetChildNodes(nsIDOMNodeList** aChildNodes);
-  NS_METHOD HasChildNodes(PRBool* aHasChildNodes);
-  NS_METHOD GetFirstChild(nsIDOMNode** aFirstChild);
-  NS_METHOD GetLastChild(nsIDOMNode** aLastChild);
-  
-  NS_METHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
-                         nsIDOMNode** aReturn)
-  {
-    return nsGenericElement::doInsertBefore(this, aNewChild, aRefChild,
-                                            aReturn);
-  }
-  NS_METHOD ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                         nsIDOMNode** aReturn)
-  {
-    return nsGenericElement::doReplaceChild(this, aNewChild, aOldChild,
-                                            aReturn);
-  }
-  NS_METHOD RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
-  {
-    return nsGenericElement::doRemoveChild(this, aOldChild, aReturn);
-  }
-  NS_METHOD AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
-  {
-    return nsGenericElement::doInsertBefore(this, aNewChild, nsnull, aReturn);
-  }
-
-  // Remainder of nsIHTMLContent (and nsIContent)
-  NS_IMETHOD Compact();
-  virtual PRBool CanContainChildren() const;
-  virtual PRUint32 GetChildCount() const;
-  virtual nsIContent *GetChildAt(PRUint32 aIndex) const;
-  virtual PRInt32 IndexOf(nsIContent* aPossibleChild) const;
-
-  // Child list modification hooks
-  virtual PRBool InternalInsertChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    return NS_SUCCEEDED(mAttrsAndChildren.InsertChildAt(aKid, aIndex));
-  }
-  virtual PRBool InternalReplaceChildAt(nsIContent* aKid, PRUint32 aIndex) {
-    mAttrsAndChildren.ReplaceChildAt(aKid, aIndex);
-    return PR_TRUE;
-  }
-  virtual PRBool InternalAppendChildTo(nsIContent* aKid) {
-    return NS_SUCCEEDED(mAttrsAndChildren.AppendChild(aKid));
-  }
-  virtual PRBool InternalRemoveChildAt(PRUint32 aIndex) {
-    mAttrsAndChildren.RemoveChildAt(aIndex);
-    return PR_TRUE;
-  }
-
-protected:
   /**
    * ReplaceContentsWithText will take the aText string and make sure
    * that the only child of |this| is a textnode which corresponds to
@@ -966,17 +792,18 @@ protected:
   nsresult GetContentsAsText(nsAString& aText);
 };
 
+
 //----------------------------------------------------------------------
 
 /**
  * A helper class for form elements that can contain children
  */
-class nsGenericHTMLContainerFormElement : public nsGenericHTMLContainerElement,
-                                          public nsIFormControl
+class nsGenericHTMLFormElement : public nsGenericHTMLElement,
+                                 public nsIFormControl
 {
 public:
-  nsGenericHTMLContainerFormElement();
-  virtual ~nsGenericHTMLContainerFormElement();
+  nsGenericHTMLFormElement();
+  virtual ~nsGenericHTMLFormElement();
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
@@ -1003,66 +830,18 @@ public:
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
 
-  NS_IMETHOD SetAttribute(const nsAString& aName,
-                          const nsAString& aValue)
-  {
-    return nsGenericHTMLElement::SetAttribute(aName, aValue);
-  }
-
 protected:
+  /**
+   * Find the form for this element and set aFormControl's form to it
+   * (aFormControl is passed in to avoid QI)
+   *
+   * @param aFormControl the form control to set the form for
+   */
+  void FindAndSetForm();
+
   /** The form that contains this control */
   nsIForm* mForm;
 };
-
-//----------------------------------------------------------------------
-
-/**
- * A helper class for form elements that can contain children
- */
-class nsGenericHTMLLeafFormElement : public nsGenericHTMLLeafElement,
-                                     public nsIFormControl
-{
-public:
-  nsGenericHTMLLeafFormElement();
-  ~nsGenericHTMLLeafFormElement();
-
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-
-  virtual PRBool IsContentOfType(PRUint32 aFlags) const;
-
-  // nsIFormControl
-  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
-  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
-                     PRBool aRemoveFromForm = PR_TRUE);
-  NS_IMETHOD SaveState() { return NS_OK; }
-  NS_IMETHOD RestoreState(nsIPresState* aState) { return NS_OK; }
-
-  // nsIContent
-  virtual void SetParent(nsIContent *aParent);
-  virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
-                           PRBool aCompileEventHandlers);
-
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
-  virtual void DoneCreatingElement();
-
-  NS_IMETHOD SetAttribute(const nsAString& aName,
-                          const nsAString& aValue)
-  {
-    return nsGenericHTMLElement::SetAttribute(aName, aValue);
-  }
-
-protected:
-  /** The form that contains this control */
-  nsIForm* mForm;
-};
-
 
 //----------------------------------------------------------------------
 

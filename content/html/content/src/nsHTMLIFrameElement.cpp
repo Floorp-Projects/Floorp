@@ -55,7 +55,7 @@
 #include "nsIDocShell.h"
 #include "nsIInterfaceRequestorUtils.h"
 
-class nsHTMLIFrameElement : public nsGenericHTMLContainerElement,
+class nsHTMLIFrameElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLIFrameElement,
                             public nsIDOMNSHTMLFrameElement,
                             public nsIChromeEventHandler,
@@ -69,13 +69,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLIFrameElement
   NS_DECL_NSIDOMHTMLIFRAMEELEMENT
@@ -110,9 +110,8 @@ public:
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify)
   {
-    nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
-                                                         aPrefix, aValue,
-                                                         aNotify);
+    nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                                aValue, aNotify);
 
     if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None &&
         aName == nsHTMLAtoms::src) {
@@ -177,8 +176,7 @@ NS_IMPL_ADDREF(nsHTMLIFrameElement)
 NS_IMPL_RELEASE(nsHTMLIFrameElement)
 
 // QueryInterface implementation for nsHTMLIFrameElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLIFrameElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLIFrameElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLIFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
@@ -205,7 +203,7 @@ nsHTMLIFrameElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -326,7 +324,7 @@ nsHTMLIFrameElement::LoadSrc()
 void
 nsHTMLIFrameElement::SetParent(nsIContent *aParent)
 {
-  nsGenericHTMLContainerElement::SetParent(aParent);
+  nsGenericHTMLElement::SetParent(aParent);
 
   // When parent is being set to null on the element's destruction, do not
   // call LoadSrc().
@@ -343,8 +341,8 @@ nsHTMLIFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
 {
   const nsIDocument *old_doc = mDocument;
 
-  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                             aCompileEventHandlers);
+  nsGenericHTMLElement::SetDocument(aDocument, aDeep,
+                                    aCompileEventHandlers);
 
   if (!aDocument && mFrameLoader) {
     // This iframe is being taken out of the document, destroy the
@@ -428,8 +426,7 @@ nsHTMLIFrameElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
-                                                          aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void

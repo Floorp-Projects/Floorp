@@ -48,7 +48,7 @@
 #include "nsCOMPtr.h"
 
 
-class nsHTMLMapElement : public nsGenericHTMLContainerElement,
+class nsHTMLMapElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLMapElement
 {
 public:
@@ -59,13 +59,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLMapElement
   NS_DECL_NSIDOMHTMLMAPELEMENT
@@ -124,8 +124,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLMapElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLMapElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLMapElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLMapElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLMapElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLMapElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -145,8 +144,7 @@ nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     }
   }
 
-  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                             aCompileEventHandlers);
+  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
   
   if (documentChanging) {
     // Since we changed the document, gotta re-QI
@@ -177,7 +175,7 @@ nsHTMLMapElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 

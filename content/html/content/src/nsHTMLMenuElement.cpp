@@ -50,7 +50,7 @@
 extern nsHTMLValue::EnumTable kListTypeTable[];
 
 
-class nsHTMLMenuElement : public nsGenericHTMLContainerElement,
+class nsHTMLMenuElement : public nsGenericHTMLElement,
                           public nsIDOMHTMLMenuElement
 {
 public:
@@ -61,13 +61,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLMenuElement
   NS_IMETHOD GetCompact(PRBool* aCompact);
@@ -124,8 +124,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLMenuElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLMenuElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLMenuElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLMenuElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLMenuElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLMenuElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -150,7 +149,7 @@ nsHTMLMenuElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -192,8 +191,7 @@ nsHTMLMenuElement::AttributeToString(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
-  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
-                                                          aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void

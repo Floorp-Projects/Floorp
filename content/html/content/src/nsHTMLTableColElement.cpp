@@ -50,7 +50,7 @@
 // http://lxr.mozilla.org/classic/source/lib/layout/laytable.c#46
 #define MAX_COLSPAN 1000
 
-class nsHTMLTableColElement : public nsGenericHTMLContainerElement,
+class nsHTMLTableColElement : public nsGenericHTMLElement,
                               public nsIDOMHTMLTableColElement,
                               public nsIHTMLTableColElement
 {
@@ -62,13 +62,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLTableColElement
   NS_DECL_NSIDOMHTMLTABLECOLELEMENT
@@ -128,7 +128,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTableColElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLTableColElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableColElement,
-                                    nsGenericHTMLContainerElement)
+                                    nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableColElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIHTMLTableColElement, col) // for col only
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableColElement)
@@ -154,7 +154,7 @@ nsHTMLTableColElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -240,8 +240,7 @@ nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
-                                                          aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static 

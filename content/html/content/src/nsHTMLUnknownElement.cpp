@@ -49,7 +49,7 @@
 #include "nsIHTMLStyleSheet.h"
 #include "nsIDOMMutationEvent.h"
 
-class nsHTMLUnknownElement : public nsGenericHTMLContainerElement,
+class nsHTMLUnknownElement : public nsGenericHTMLElement,
                              public nsIDOMHTMLElement
 {
 public:
@@ -60,13 +60,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 };
 
 nsresult
@@ -111,7 +111,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLUnknownElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLUnknownElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLUnknownElement,
-                                    nsGenericHTMLContainerElement)
+                                    nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLUnknownElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -135,7 +135,7 @@ nsHTMLUnknownElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 

@@ -44,7 +44,7 @@
 #include "nsIPresContext.h"
 
 
-class nsHTMLDListElement : public nsGenericHTMLContainerElement,
+class nsHTMLDListElement : public nsGenericHTMLElement,
                            public nsIDOMHTMLDListElement
 {
 public:
@@ -55,13 +55,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLDListElement
   NS_IMETHOD GetCompact(PRBool* aCompact);
@@ -109,8 +109,7 @@ NS_IMPL_RELEASE(nsHTMLDListElement)
 
 
 // QueryInterface implementation for nsHTMLDListElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLDListElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLDListElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLDListElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLDListElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -135,7 +134,7 @@ nsHTMLDListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 

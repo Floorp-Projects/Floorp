@@ -289,9 +289,8 @@ private:
 //----------------------------------------------------------------------
 
 /**
- * Mostly implement the nsIDOMNode API by forwarding the methods to a
- * generic content object (either nsGenericHTMLLeafElement or
- * nsGenericHTMLContainerContent)
+ * Mostly implement the nsIDOMNode API by forwarding the methods to
+ * nsGenericDOMDataNode
  *
  * Note that classes using this macro will need to implement:
  *       NS_IMETHOD GetNodeType(PRUint16* aNodeType);

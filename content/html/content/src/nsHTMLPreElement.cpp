@@ -49,7 +49,7 @@
 // XXX wrap, variable, cols, tabstop
 
 
-class nsHTMLPreElement : public nsGenericHTMLContainerElement,
+class nsHTMLPreElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLPreElement
 {
 public:
@@ -60,13 +60,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLPreElement
   NS_IMETHOD GetWidth(PRInt32* aWidth);
@@ -123,8 +123,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLPreElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLPreElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLPreElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLPreElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLPreElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLPreElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -149,7 +148,7 @@ nsHTMLPreElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -253,8 +252,7 @@ nsHTMLPreElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
                                          nsChangeHint& aHint) const
 {
   nsresult rv =
-    nsGenericHTMLContainerElement::GetAttributeChangeHint(aAttribute,
-                                                          aModType, aHint);
+    nsGenericHTMLElement::GetAttributeChangeHint(aAttribute, aModType, aHint);
   if (aAttribute == nsHTMLAtoms::tabstop) {
     NS_UpdateHint(aHint, NS_STYLE_HINT_REFLOW);
   }

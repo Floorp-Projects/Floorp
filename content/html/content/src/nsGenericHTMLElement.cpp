@@ -272,8 +272,7 @@ nsGenericHTMLElement::Shutdown()
 }
 
 nsresult
-nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
-                                  nsGenericHTMLElement* aDst,
+nsGenericHTMLElement::CopyInnerTo(nsGenericHTMLElement* aDst,
                                   PRBool aDeep)
 {
   nsresult rv = NS_OK;
@@ -332,7 +331,26 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
 
   aDst->SetContentID(id);
 
-  return rv;
+  if (aDeep) {
+    PRInt32 i;
+    PRInt32 count = mAttrsAndChildren.ChildCount();
+    for (i = 0; i < count; ++i) {
+      nsCOMPtr<nsIDOMNode> node = 
+          do_QueryInterface(mAttrsAndChildren.ChildAt(i));
+      NS_ASSERTION(node, "child doesn't implement nsIDOMNode");
+
+      nsCOMPtr<nsIDOMNode> newNode;
+      rv = node->CloneNode(aDeep, getter_AddRefs(newNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCOMPtr<nsIContent> newContent(do_QueryInterface(newNode));
+      NS_ASSERTION(newContent, "clone doesn't implement nsIContent");
+      rv = aDst->AppendChildTo(newContent, PR_FALSE, PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -1274,20 +1292,18 @@ nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   }
 }
 
-nsresult
-nsGenericHTMLElement::FindForm(nsIDOMHTMLFormElement **aForm)
+already_AddRefed<nsIDOMHTMLFormElement>
+nsGenericHTMLElement::FindForm()
 {
-  // XXX: Namespaces!!!
-
   nsIContent* content = this;
-
-  *aForm = nsnull;
-
   while (content) {
     // If the current ancestor is a form, return it as our form
     if (content->IsContentOfType(nsIContent::eHTML) &&
         content->GetNodeInfo()->Equals(nsHTMLAtoms::form)) {
-      return CallQueryInterface(content, aForm);
+      nsIDOMHTMLFormElement* form;
+      CallQueryInterface(content, &form);
+
+      return form;
     }
 
     nsIContent *tmp = content;
@@ -1307,18 +1323,6 @@ nsGenericHTMLElement::FindForm(nsIDOMHTMLFormElement **aForm)
   }
 
   return NS_OK;
-}
-
-void
-nsGenericHTMLElement::FindAndSetForm(nsIFormControl *aFormControl)
-{
-  nsCOMPtr<nsIDOMHTMLFormElement> form;
-
-  FindForm(getter_AddRefs(form));
-
-  if (form) {
-    aFormControl->SetForm(form);  // always succeeds
-  }
 }
 
 static PRBool
@@ -1887,8 +1891,6 @@ nsresult
 nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                 PRBool aNotify)
 {
-  nsresult result = NS_OK;
-
   // Check for event handlers
   if (aNameSpaceID == kNameSpaceID_None &&
       IsEventName(aAttribute)) {
@@ -1896,58 +1898,12 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     GetListenerManager(getter_AddRefs(manager));
 
     if (manager) {
-      result = manager->RemoveScriptEventListener(aAttribute);
+      manager->RemoveScriptEventListener(aAttribute);
     }
   }
 
-  mozAutoDocUpdate updateBatch(mDocument, UPDATE_CONTENT_MODEL, aNotify);
-  if (mDocument) {
-    if (aNotify) {
-      mDocument->AttributeWillChange(this, aNameSpaceID, aAttribute);
-    }
-
-    if (nsGenericElement::HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
-      nsCOMPtr<nsIDOMEventTarget> node(do_QueryInterface(NS_STATIC_CAST(nsIContent *, this)));
-      nsMutationEvent mutation(NS_MUTATION_ATTRMODIFIED, node);
-
-      nsAutoString attrName;
-      aAttribute->ToString(attrName);
-      nsCOMPtr<nsIDOMAttr> attrNode;
-      GetAttributeNode(attrName, getter_AddRefs(attrNode));
-      mutation.mRelatedNode = attrNode;
-
-      mutation.mAttrName = aAttribute;
-
-      nsAutoString attr;
-      GetAttr(aNameSpaceID, aAttribute, attr);
-      if (!attr.IsEmpty())
-        mutation.mPrevAttrValue = do_GetAtom(attr);
-      mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
-
-      nsEventStatus status = nsEventStatus_eIgnore;
-      HandleDOMEvent(nsnull, &mutation, nsnull,
-                     NS_EVENT_FLAG_INIT, &status);
-    }
-  }
-
-  PRInt32 index = mAttrsAndChildren.IndexOfAttr(aAttribute);
-  if (index >= 0) {
-    mAttrsAndChildren.RemoveAttrAt(index);
-  }
-
-  if (mDocument) {
-    nsCOMPtr<nsIXBLBinding> binding;
-    mDocument->GetBindingManager()->GetBinding(this, getter_AddRefs(binding));
-    if (binding)
-      binding->AttributeChanged(aAttribute, aNameSpaceID, PR_TRUE, aNotify);
-
-    if (aNotify) {
-      mDocument->AttributeChanged(this, aNameSpaceID, aAttribute,
-                                  nsIDOMMutationEvent::REMOVAL);
-    }
-  }
-
-  return result;
+  return nsGenericContainerElement::UnsetAttr(aNameSpaceID, aAttribute,
+                                              aNotify);
 }
 
 nsresult
@@ -2005,14 +1961,6 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
   return NS_CONTENT_ATTR_HAS_VALUE;
 }
 
-PRBool
-nsGenericHTMLElement::HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const
-{
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
-               "must have a real namespace ID!");
-  return mAttrsAndChildren.IndexOfAttr(aName, aNameSpaceID) >= 0;
-}
-
 nsresult
 nsGenericHTMLElement::GetHTMLAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aValue) const
@@ -2045,34 +1993,6 @@ nsGenericHTMLElement::GetHTMLAttribute(nsIAtom* aAttribute,
   }
 
   return NS_CONTENT_ATTR_HAS_VALUE;
-}
-
-nsresult
-nsGenericHTMLElement::GetAttrNameAt(PRUint32 aIndex,
-                                    PRInt32* aNameSpaceID,
-                                    nsIAtom** aName,
-                                    nsIAtom** aPrefix) const
-{
-  const nsAttrName* name = mAttrsAndChildren.GetSafeAttrNameAt(aIndex);
-  if (name) {
-    *aNameSpaceID = name->NamespaceID();
-    NS_ADDREF(*aName = name->LocalName());
-    NS_IF_ADDREF(*aPrefix = name->GetPrefix());
-
-    return NS_OK;
-  }
-
-  *aNameSpaceID = kNameSpaceID_None;
-  *aName = nsnull;
-  *aPrefix = nsnull;
-
-  return NS_ERROR_ILLEGAL_VALUE;
-}
-
-PRUint32
-nsGenericHTMLElement::GetAttrCount() const
-{
-  return mAttrsAndChildren.AttrCount();
 }
 
 nsresult
@@ -3365,162 +3285,8 @@ nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttri
 //----------------------------------------------------------------------
 
 nsresult
-nsGenericHTMLLeafElement::CopyInnerTo(nsIContent* aSrcContent,
-                                      nsGenericHTMLLeafElement* aDst,
-                                      PRBool aDeep)
-{
-  nsresult result = nsGenericHTMLElement::CopyInnerTo(aSrcContent,
-                                                      aDst,
-                                                      aDeep);
-  return result;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  nsDOMSlots* slots = GetDOMSlots();
-
-  if (!slots->mChildNodes) {
-    slots->mChildNodes = new nsChildContentList(nsnull);
-    if (!slots->mChildNodes) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  NS_ADDREF(*aChildNodes = slots->mChildNodes);
-
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-nsresult
-nsGenericHTMLContainerElement::CopyInnerTo(nsIContent* aSrcContent,
-                                           nsGenericHTMLContainerElement* aDst,
-                                           PRBool aDeep)
-{
-  nsresult rv = nsGenericHTMLElement::CopyInnerTo(aSrcContent, aDst, aDeep);
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (aDeep) {
-    PRInt32 indx;
-    PRInt32 count = mAttrsAndChildren.ChildCount();
-    for (indx = 0; indx < count; indx++) {
-      nsCOMPtr<nsIDOMNode> node = 
-          do_QueryInterface(mAttrsAndChildren.ChildAt(indx));
-
-      if (node) {
-        nsCOMPtr<nsIDOMNode> newNode;
-
-        rv = node->CloneNode(aDeep, getter_AddRefs(newNode));
-        if (node) {
-          nsCOMPtr<nsIContent> newContent(do_QueryInterface(newNode));
-
-          if (newContent) {
-            rv = aDst->AppendChildTo(newContent, PR_FALSE, PR_FALSE);
-            }
-          }
-        }
-
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLContainerElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
-{
-  nsDOMSlots *slots = GetDOMSlots();
-
-  if (!slots->mChildNodes) {
-    slots->mChildNodes = new nsChildContentList(this);
-    if (!slots->mChildNodes) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  NS_ADDREF(*aChildNodes = slots->mChildNodes);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLContainerElement::HasChildNodes(PRBool* aReturn)
-{
-  *aReturn = mAttrsAndChildren.ChildCount() > 0;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLContainerElement::GetFirstChild(nsIDOMNode** aNode)
-{
-  nsIContent *child = mAttrsAndChildren.GetSafeChildAt(0);
-  if (child) {
-    return CallQueryInterface(child, aNode);
-  }
-
-  *aNode = nsnull;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLContainerElement::GetLastChild(nsIDOMNode** aNode)
-{
-  PRUint32 count = mAttrsAndChildren.ChildCount();
-  
-  if (count) {
-    return CallQueryInterface(mAttrsAndChildren.ChildAt(count - 1), aNode);
-  }
-
-  *aNode = nsnull;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLContainerElement::Compact()
-{
-  mAttrsAndChildren.Compact();
-
-  return NS_OK;
-}
-
-PRBool
-nsGenericHTMLContainerElement::CanContainChildren() const
-{
-  return PR_TRUE;
-}
-
-PRUint32
-nsGenericHTMLContainerElement::GetChildCount() const
-{
-  return mAttrsAndChildren.ChildCount();
-}
-
-nsIContent *
-nsGenericHTMLContainerElement::GetChildAt(PRUint32 aIndex) const
-{
-  return mAttrsAndChildren.GetSafeChildAt(aIndex);
-}
-
-PRInt32
-nsGenericHTMLContainerElement::IndexOf(nsIContent* aPossibleChild) const
-{
-  return mAttrsAndChildren.IndexOfChild(aPossibleChild);
-}
-
-nsresult
-nsGenericHTMLContainerElement::ReplaceContentsWithText(const nsAString& aText,
-                                                       PRBool aNotify)
+nsGenericHTMLElement::ReplaceContentsWithText(const nsAString& aText,
+                                              PRBool aNotify)
 {
   PRUint32 count = GetChildCount();
   nsresult rv = NS_OK;
@@ -3554,7 +3320,7 @@ nsGenericHTMLContainerElement::ReplaceContentsWithText(const nsAString& aText,
 }
 
 nsresult
-nsGenericHTMLContainerElement::GetContentsAsText(nsAString& aText)
+nsGenericHTMLElement::GetContentsAsText(nsAString& aText)
 {
   aText.Truncate();
   PRInt32 children = GetChildCount();
@@ -3580,31 +3346,31 @@ nsGenericHTMLContainerElement::GetContentsAsText(nsAString& aText)
 
 //----------------------------------------------------------------------
 
-nsGenericHTMLContainerFormElement::nsGenericHTMLContainerFormElement()
+nsGenericHTMLFormElement::nsGenericHTMLFormElement()
 {
   mForm = nsnull;
 }
 
-nsGenericHTMLContainerFormElement::~nsGenericHTMLContainerFormElement()
+nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
 {
   // Clean up.  Set the form to nsnull so it knows we went away.
   SetForm(nsnull);
 }
 
-NS_INTERFACE_MAP_BEGIN(nsGenericHTMLContainerFormElement)
+NS_INTERFACE_MAP_BEGIN(nsGenericHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIFormControl)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 
 PRBool
-nsGenericHTMLContainerFormElement::IsContentOfType(PRUint32 aFlags) const
+nsGenericHTMLFormElement::IsContentOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eELEMENT | eHTML | eHTML_FORM_CONTROL));
 }
 
 NS_IMETHODIMP
-nsGenericHTMLContainerFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
-                                           PRBool aRemoveFromForm)
+nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
+                                  PRBool aRemoveFromForm)
 {
   nsAutoString nameVal, idVal;
 
@@ -3649,7 +3415,7 @@ nsGenericHTMLContainerFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
 }
 
 NS_IMETHODIMP
-nsGenericHTMLContainerFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
+nsGenericHTMLFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
   NS_ENSURE_ARG_POINTER(aForm);
   *aForm = nsnull;
@@ -3662,7 +3428,7 @@ nsGenericHTMLContainerFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
 }
 
 void
-nsGenericHTMLContainerFormElement::SetParent(nsIContent* aParent)
+nsGenericHTMLFormElement::SetParent(nsIContent* aParent)
 {
   if (!aParent && mForm) {
     SetForm(nsnull);
@@ -3673,16 +3439,15 @@ nsGenericHTMLContainerFormElement::SetParent(nsIContent* aParent)
     // search. In this case, someone (possibly the content sink) has
     // already set the form for us.
 
-    FindAndSetForm(this);
+    FindAndSetForm();
   }
 
   nsGenericElement::SetParent(aParent);
 }
 
 void
-nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
-                                               PRBool aDeep,
-                                               PRBool aCompileEventHandlers)
+nsGenericHTMLFormElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                                      PRBool aCompileEventHandlers)
 {
   // Save state before doing anything if the document is being removed
   if (!aDocument) {
@@ -3690,7 +3455,7 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
   }
 
   if (aDocument && GetParent() && !mForm) {
-    FindAndSetForm(this);
+    FindAndSetForm();
   } else if (!aDocument && mForm) {
     // We got removed from document.  We have a parent form.  Check
     // that the form is still in the document, and if so remove
@@ -3707,12 +3472,9 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
 
 
 nsresult
-nsGenericHTMLElement::SetFormControlAttribute(nsIForm* aForm,
-                                              PRInt32 aNameSpaceID,
-                                              nsIAtom* aName,
-                                              nsIAtom* aPrefix,
-                                              const nsAString& aValue,
-                                              PRBool aNotify)
+nsGenericHTMLFormElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                  nsIAtom* aPrefix, const nsAString& aValue,
+                                  PRBool aNotify)
 {
   if (aNameSpaceID != kNameSpaceID_None) {
     return nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
@@ -3726,214 +3488,66 @@ nsGenericHTMLElement::SetFormControlAttribute(nsIForm* aForm,
   QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(thisControl));
 
   // Add & remove the control to and/or from the hash table
-  if (aForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id)) {
+  if (mForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id)) {
     GetAttr(kNameSpaceID_None, aName, tmp);
 
     if (!tmp.IsEmpty()) {
-      aForm->RemoveElementFromTable(thisControl, tmp);
+      mForm->RemoveElementFromTable(thisControl, tmp);
     }
   }
 
-  if (aForm && aName == nsHTMLAtoms::type) {
+  if (mForm && aName == nsHTMLAtoms::type) {
     GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
 
     if (!tmp.IsEmpty()) {
-      aForm->RemoveElementFromTable(thisControl, tmp);
+      mForm->RemoveElementFromTable(thisControl, tmp);
     }
 
     GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
 
     if (!tmp.IsEmpty()) {
-      aForm->RemoveElementFromTable(thisControl, tmp);
+      mForm->RemoveElementFromTable(thisControl, tmp);
     }
 
-    aForm->RemoveElement(thisControl);
+    mForm->RemoveElement(thisControl);
   }
 
   rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue, aNotify);
 
-  if (aForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id)) {
+  if (mForm && (aName == nsHTMLAtoms::name || aName == nsHTMLAtoms::id)) {
     GetAttr(kNameSpaceID_None, aName, tmp);
 
     if (!tmp.IsEmpty()) {
-      aForm->AddElementToTable(thisControl, tmp);
+      mForm->AddElementToTable(thisControl, tmp);
     }
   }
 
-  if (aForm && aName == nsHTMLAtoms::type) {
+  if (mForm && aName == nsHTMLAtoms::type) {
     GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, tmp);
 
     if (!tmp.IsEmpty()) {
-      aForm->AddElementToTable(thisControl, tmp);
+      mForm->AddElementToTable(thisControl, tmp);
     }
 
     GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, tmp);
 
     if (!tmp.IsEmpty()) {
-      aForm->AddElementToTable(thisControl, tmp);
+      mForm->AddElementToTable(thisControl, tmp);
     }
 
-    aForm->AddElement(thisControl);
+    mForm->AddElement(thisControl);
   }
 
   return rv;
 }
 
-nsresult
-nsGenericHTMLContainerFormElement::SetAttr(PRInt32 aNameSpaceID,
-                                           nsIAtom* aName,
-                                           nsIAtom* aPrefix,
-                                           const nsAString& aVal,
-                                           PRBool aNotify)
-{
-  return SetFormControlAttribute(mForm, aNameSpaceID, aName, aPrefix, aVal,
-                                 aNotify);
-}
-
-//----------------------------------------------------------------------
-
-nsGenericHTMLLeafFormElement::nsGenericHTMLLeafFormElement()
-{
-  mForm = nsnull;
-}
-
-nsGenericHTMLLeafFormElement::~nsGenericHTMLLeafFormElement()
-{
-  // Clean up.  Set the form to nsnull so it knows we went away.
-  SetForm(nsnull);
-}
-
-NS_INTERFACE_MAP_BEGIN(nsGenericHTMLLeafFormElement)
-  NS_INTERFACE_MAP_ENTRY(nsIFormControl)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
-
-
-PRBool
-nsGenericHTMLLeafFormElement::IsContentOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~(eELEMENT | eHTML | eHTML_FORM_CONTROL));
-}
-
-NS_IMETHODIMP
-nsGenericHTMLLeafFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
-                                      PRBool aRemoveFromForm)
-{
-  nsAutoString nameVal, idVal;
-
-  if (aForm || (mForm && aRemoveFromForm)) {
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-    GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
-  }
-
-  if (mForm && aRemoveFromForm) {
-    mForm->RemoveElement(this);
-
-    if (!nameVal.IsEmpty()) {
-      mForm->RemoveElementFromTable(this, nameVal);
-    }
-
-    if (!idVal.IsEmpty()) {
-      mForm->RemoveElementFromTable(this, idVal);
-    }
-  }
-
-  if (aForm) {
-    // keep a *weak* ref to the form here
-    CallQueryInterface(aForm, &mForm);
-    mForm->Release();
-  } else {
-    mForm = nsnull;
-  }
-
-  if (mForm) {
-    mForm->AddElement(this);
-
-    if (!nameVal.IsEmpty()) {
-      mForm->AddElementToTable(this, nameVal);
-    }
-
-    if (!idVal.IsEmpty()) {
-      mForm->AddElementToTable(this, idVal);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLLeafFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
-{
-  NS_ENSURE_ARG_POINTER(aForm);
-  *aForm = nsnull;
-
-  if (mForm) {
-    CallQueryInterface(mForm, aForm);
-  }
-
-  return NS_OK;
-}
-
 void
-nsGenericHTMLLeafFormElement::SetParent(nsIContent* aParent)
+nsGenericHTMLFormElement::FindAndSetForm()
 {
-  PRBool old_parent = NS_PTR_TO_INT32(GetParent());
-
-  nsGenericElement::SetParent(aParent);
-
-  if (!aParent && mForm) {
-    SetForm(nsnull);
+  nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm();
+  if (form) {
+    SetForm(form);  // always succeeds
   }
-  // If we have a new parent and either we had an old parent or we
-  // don't have a form, search for a containing form.  If we didn't
-  // have an old parent, but we do have a form, we shouldn't do the
-  // search. In this case, someone (possibly the content sink) has
-  // already set the form for us.
-  else if (mDocument && aParent && (old_parent || !mForm)) {
-    FindAndSetForm(this);
-  }
-}
-
-void
-nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
-                                          PRBool aDeep,
-                                          PRBool aCompileEventHandlers)
-{
-  // Save state before doing anything if the document is being removed
-  if (!aDocument) {
-    SaveState();
-  }
-
-  if (aDocument && GetParent() && !mForm) {
-    FindAndSetForm(this);
-  } else if (!aDocument && mForm) {
-    // We got removed from document.  We have a parent form.  Check
-    // that the form is still in the document, and if so remove
-    // ourselves from the form.  This keeps ghosts from appearing in
-    // the form's |elements| array
-    nsCOMPtr<nsIContent> formContent(do_QueryInterface(mForm));
-    if (formContent && formContent->GetDocument()) {
-      SetForm(nsnull);
-    }
-  }
-
-  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
-}
-
-void
-nsGenericHTMLLeafFormElement::DoneCreatingElement()
-{
-  RestoreFormControlState(this, this);
-}
-
-nsresult
-nsGenericHTMLLeafFormElement::SetAttr(PRInt32 aNameSpaceID,
-                                      nsIAtom* aName,
-                                      nsIAtom* aPrefix,
-                                      const nsAString& aValue,
-                                      PRBool aNotify)
-{
-  return SetFormControlAttribute(mForm, aNameSpaceID, aName, aPrefix, aValue,
-                                 aNotify);
 }
 
 void

@@ -61,7 +61,7 @@
 class GenericElementCollection;
 class TableRowsCollection;
 
-class nsHTMLTableElement :  public nsGenericHTMLContainerElement,
+class nsHTMLTableElement :  public nsGenericHTMLElement,
                             public nsIDOMHTMLTableElement
 {
 public:
@@ -72,13 +72,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLTableElement
   NS_DECL_NSIDOMHTMLTABLEELEMENT
@@ -363,8 +363,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTableElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLTableElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLTableElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -389,7 +388,7 @@ nsHTMLTableElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -1009,8 +1008,7 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::bgcolor ||
            aAttribute == nsHTMLAtoms::bordercolor) {
-    if (aResult.ParseColor(aValue,
-                           nsGenericHTMLContainerElement::GetOwnerDocument())) {
+    if (aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument())) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -1068,8 +1066,7 @@ nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
     }
   }
 
-  return nsGenericHTMLContainerElement::AttributeToString(aAttribute, aValue,
-                                                          aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void 

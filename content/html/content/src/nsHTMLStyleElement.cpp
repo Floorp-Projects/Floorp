@@ -53,7 +53,7 @@
 #include "nsParserUtils.h"
 
 
-class nsHTMLStyleElement : public nsGenericHTMLContainerElement,
+class nsHTMLStyleElement : public nsGenericHTMLElement,
                            public nsIDOMHTMLStyleElement,
                            public nsStyleLinkElement
 {
@@ -65,13 +65,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLStyleElement
   NS_DECL_NSIDOMHTMLSTYLEELEMENT
@@ -149,8 +149,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLStyleElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLStyleElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLStyleElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLStyleElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLStyleElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLinkStyle)
   NS_INTERFACE_MAP_ENTRY(nsIStyleSheetLinkingElement)
@@ -177,7 +176,7 @@ nsHTMLStyleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -229,8 +228,8 @@ nsHTMLStyleElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                                   PRBool aNotify, PRBool aDeepSetDocument)
 {
   nsresult rv =
-    nsGenericHTMLContainerElement::InsertChildAt(aKid, aIndex, aNotify,
-                                                 aDeepSetDocument);
+    nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify,
+                                        aDeepSetDocument);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }
@@ -243,8 +242,8 @@ nsHTMLStyleElement::ReplaceChildAt(nsIContent* aKid, PRUint32 aIndex,
                                    PRBool aNotify, PRBool aDeepSetDocument)
 {
   nsresult rv =
-    nsGenericHTMLContainerElement::ReplaceChildAt(aKid, aIndex, aNotify,
-                                                  aDeepSetDocument);
+    nsGenericHTMLElement::ReplaceChildAt(aKid, aIndex, aNotify,
+                                         aDeepSetDocument);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }
@@ -257,8 +256,7 @@ nsHTMLStyleElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                   PRBool aDeepSetDocument)
 {
   nsresult rv =
-    nsGenericHTMLContainerElement::AppendChildTo(aKid, aNotify,
-                                                 aDeepSetDocument);
+    nsGenericHTMLElement::AppendChildTo(aKid, aNotify, aDeepSetDocument);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }
@@ -269,7 +267,7 @@ nsHTMLStyleElement::AppendChildTo(nsIContent* aKid, PRBool aNotify,
 nsresult
 nsHTMLStyleElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-  nsresult rv = nsGenericHTMLContainerElement::RemoveChildAt(aIndex, aNotify);
+  nsresult rv = nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }
@@ -283,8 +281,7 @@ nsHTMLStyleElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 {
   nsCOMPtr<nsIDocument> oldDoc = mDocument;
 
-  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                             aCompileEventHandlers);
+  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 
   UpdateStyleSheet(oldDoc);
 }
@@ -294,9 +291,8 @@ nsHTMLStyleElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                             nsIAtom* aPrefix, const nsAString& aValue,
                             PRBool aNotify)
 {
-  nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
-                                                       aPrefix, aValue,
-                                                       aNotify);
+  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                              aValue, aNotify);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }
@@ -308,9 +304,8 @@ nsresult
 nsHTMLStyleElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                               PRBool aNotify)
 {
-  nsresult rv = nsGenericHTMLContainerElement::UnsetAttr(aNameSpaceID,
-                                                         aAttribute,
-                                                         aNotify);
+  nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
+                                                aNotify);
   if (NS_SUCCEEDED(rv)) {
     UpdateStyleSheet();
   }

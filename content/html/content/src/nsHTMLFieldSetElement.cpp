@@ -47,7 +47,7 @@
 #include "nsIFormControl.h"
 
 
-class nsHTMLFieldSetElement : public nsGenericHTMLContainerFormElement,
+class nsHTMLFieldSetElement : public nsGenericHTMLFormElement,
                               public nsIDOMHTMLFieldSetElement
 {
 public:
@@ -58,13 +58,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerFormElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLFormElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerFormElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerFormElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
 
   // nsIDOMHTMLFieldSetElement
   NS_DECL_NSIDOMHTMLFIELDSETELEMENT
@@ -121,7 +121,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFieldSetElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLFieldSetElement
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFieldSetElement,
-                                    nsGenericHTMLContainerFormElement)
+                                    nsGenericHTMLFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFieldSetElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFieldSetElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
@@ -148,7 +148,7 @@ nsHTMLFieldSetElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -162,7 +162,7 @@ nsHTMLFieldSetElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLFieldSetElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return nsGenericHTMLContainerFormElement::GetForm(aForm);
+  return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
 // nsIFormControl

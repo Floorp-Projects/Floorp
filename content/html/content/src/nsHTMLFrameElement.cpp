@@ -52,7 +52,7 @@
 #include "nsDOMError.h"
 
 
-class nsHTMLFrameElement : public nsGenericHTMLLeafElement,
+class nsHTMLFrameElement : public nsGenericHTMLElement,
                            public nsIDOMHTMLFrameElement,
                            public nsIDOMNSHTMLFrameElement,
                            public nsIChromeEventHandler
@@ -65,13 +65,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLLeafElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLFrameElement
   NS_DECL_NSIDOMHTMLFRAMEELEMENT
@@ -133,8 +133,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFrameElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFrameElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameElement,
-                                    nsGenericHTMLLeafElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
   NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
@@ -161,7 +160,7 @@ nsHTMLFrameElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
 
@@ -231,8 +230,7 @@ nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
-    if (aResult.ParseColor(aValue,
-                           nsGenericHTMLLeafElement::GetOwnerDocument())) {
+    if (aResult.ParseColor(aValue, nsGenericHTMLElement::GetOwnerDocument())) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -278,8 +276,7 @@ nsHTMLFrameElement::AttributeToString(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 
-  return nsGenericHTMLLeafElement::AttributeToString(aAttribute, aValue,
-                                                     aResult);
+  return nsGenericHTMLElement::AttributeToString(aAttribute, aValue, aResult);
 }
 
 static void

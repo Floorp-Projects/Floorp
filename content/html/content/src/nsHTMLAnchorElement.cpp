@@ -74,7 +74,7 @@ nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 // XXX either suppress is handled in the event code below OR we need a
 // custom frame
 
-class nsHTMLAnchorElement : public nsGenericHTMLContainerElement,
+class nsHTMLAnchorElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLAnchorElement,
                             public nsIDOMNSHTMLAnchorElement,
                             public nsILink
@@ -87,13 +87,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericHTMLElement::)
 
   // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLContainerElement::)
+  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
 
   // nsIDOMHTMLAnchorElement
   NS_DECL_NSIDOMHTMLANCHORELEMENT  
@@ -176,8 +176,7 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLAnchorElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAnchorElement,
-                                    nsGenericHTMLContainerElement)
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAnchorElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLAnchorElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAnchorElement)
   NS_INTERFACE_MAP_ENTRY(nsILink)
@@ -204,7 +203,7 @@ nsHTMLAnchorElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   if (NS_FAILED(rv))
     return rv;
 
-  CopyInnerTo(this, it, aDeep);
+  CopyInnerTo(it, aDeep);
 
   *aReturn = it;
 
@@ -238,8 +237,7 @@ nsHTMLAnchorElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
     RegUnRegAccessKey(PR_FALSE);
   }
 
-  nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                             aCompileEventHandlers);
+  nsGenericHTMLElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 
   // Register the access key for the new document.
   if (documentChanging && mDocument) {
@@ -379,7 +377,7 @@ nsHTMLAnchorElement::GetProtocol(nsAString& aProtocol)
 
   // XXX this should really use GetHrefURI and not do so much string stuff
   return GetProtocolFromHrefString(href, aProtocol,
-                                   nsGenericHTMLContainerElement::GetOwnerDocument());
+                                   nsGenericHTMLElement::GetOwnerDocument());
 }
 
 NS_IMETHODIMP
