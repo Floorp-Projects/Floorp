@@ -317,8 +317,6 @@ sub BuildClientDist()
 	_MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
 
 	_InstallFromManifest(":mozilla:include:MANIFEST",								"$distdirectory:include:");		
-	_InstallFromManifest(":mozilla:cmd:macfe:pch:MANIFEST",							"$distdirectory:include:");
-	_InstallFromManifest(":mozilla:cmd:macfe:utility:MANIFEST",						"$distdirectory:include:");
 
 	#INTL
 	#CHARDET
