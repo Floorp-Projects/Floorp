@@ -4,3 +4,5 @@
 <!ENTITY  brandShortName        "Mozilla Application">
 <!ENTITY  version               "0.0">
 <!ENTITY  vendorShortName       "Mozilla Application">
+
+<!ENTITY  releaseURL            "http://">
