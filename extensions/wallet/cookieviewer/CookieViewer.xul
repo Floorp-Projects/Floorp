@@ -35,7 +35,8 @@
         style="width: 30em;"
         onload="Startup()"
         onunload="Shutdown()"
-        ondialoghelp="doHelpButton();">
+        ondialoghelp="doHelpButton();"
+        persist="screenX screenY width height">
 
   <script src="chrome://communicator/content/wallet/CookieViewer.js"/>
   <script src="chrome://global/content/strres.js"/>
