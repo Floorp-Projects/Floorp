@@ -176,6 +176,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   mMinLineHeight = nsHTMLReflowState::CalcLineHeight(mPresContext,
                                                      aReflowState.rendContext,
                                                      aReflowState.frame);
+
+  SetFlag(BRS_DAMAGECONSTRAINED, IsIncrementalDamageConstrained(aFrame));
 }
 
 nsBlockReflowState::~nsBlockReflowState()
@@ -186,6 +188,32 @@ nsBlockReflowState::~nsBlockReflowState()
     const nsMargin& borderPadding = BorderPadding();
     mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
   }
+}
+
+PRBool 
+nsBlockReflowState::IsIncrementalDamageConstrained(nsIFrame* aBlockFrame) const
+{
+  // see if the reflow will go through a text control. if so, we can optimize 
+  // because we know the text control won't change size.
+  if ((eReflowReason_Incremental == mReflowState.reason) && (mReflowState.reflowCommand)) {
+    nsIFrame* target;
+    mReflowState.reflowCommand->GetTarget(target);
+    while (target) { 
+      // starting with the target's parent, scan for a text control
+      nsIFrame* parent;
+      target->GetParent(&parent);
+      if ((aBlockFrame == parent) || !parent)  // the null check is paranoia, it should never happen
+        break;  // we found the block, so we know there's no text control between the block and target
+      nsCOMPtr<nsIAtom> frameType;
+      parent->GetFrameType(getter_AddRefs(frameType));
+      if (frameType) {
+        if (nsLayoutAtoms::textInputFrame == frameType.get())
+          return PR_TRUE; // damage is constrained to the text control innards
+      }
+      target = parent;  // advance the loop up the frame tree
+    }
+  }
+  return PR_FALSE;  // default case, damage is not constrained (or unknown)
 }
 
 nsLineBox*

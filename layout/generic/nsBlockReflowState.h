@@ -112,6 +112,10 @@ public:
 protected:
   void RecoverFloaters(nsLineList::iterator aLine, nscoord aDeltaY);
 
+  // return PR_TRUE if the incremental reflow is 100% contained
+  // within the bounds of an ancestor frame, relative to aBlockFrame
+  PRBool IsIncrementalDamageConstrained(nsIFrame* aBlockFrame) const;
+
 public:
   void RecoverStateFrom(nsLineList::iterator aLine, nscoord aDeltaY);
 
@@ -251,7 +255,8 @@ public:
 #define BRS_APPLYTOPMARGIN        0x00000100  // See ShouldApplyTopMargin
 #define BRS_COMPUTEMAXELEMENTSIZE 0x00000200
 #define BRS_COMPUTEMAXWIDTH       0x00000400
-#define BRS_LASTFLAG              BRS_COMPUTEMAXWIDTH
+#define BRS_DAMAGECONSTRAINED     0x00000800  // is the target of an incremental reflow command inside a text control
+#define BRS_LASTFLAG              BRS_DAMAGECONSTRAINED
 
   PRInt16 mFlags;
 

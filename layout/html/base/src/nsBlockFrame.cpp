@@ -781,7 +781,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     // Do nothing; the dirty lines will already have been marked.
     break;
 
-  case eReflowReason_Incremental:  // should call GetNext() ?
+  case eReflowReason_Incremental:  
     aReflowState.reflowCommand->GetTarget(target);
     if (this == target) {
       nsReflowType type;
@@ -2112,33 +2112,6 @@ WrappedLinesAreDirty(nsLineList::iterator aLine,
   return PR_FALSE;
 }
 
-PRBool nsBlockFrame::IsIncrementalDamageConstrained(const nsBlockReflowState& aState) const
-{
-  // see if the reflow will go through a text control.  if so, we can optimize 
-  // because we know the text control won't change size.
-  if (aState.mReflowState.reflowCommand)
-  {
-    nsIFrame *target;
-    aState.mReflowState.reflowCommand->GetTarget(target);
-    while (target)
-    { // starting with the target's parent, scan for a text control
-      nsIFrame *parent;
-      target->GetParent(&parent);
-      if ((nsIFrame*)this==parent || !parent)  // the null check is paranoia, it should never happen
-        break;  // we found ourself, so we know there's no text control between us and target
-      nsCOMPtr<nsIAtom> frameType;
-      parent->GetFrameType(getter_AddRefs(frameType));
-      if (frameType)
-      {
-        if (nsLayoutAtoms::textInputFrame == frameType.get())
-          return PR_TRUE; // damage is constrained to the text control innards
-      }
-      target = parent;  // advance the loop up the frame tree
-    }
-  }
-  return PR_FALSE;  // default case, damage is not constrained (or unknown)
-}
-
 static void PlaceFrameView(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
 /**
@@ -2273,10 +2246,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
       // Reflow the dirty line. If it's an incremental reflow, then force
       // it to invalidate the dirty area if necessary
-      PRBool forceInvalidate = PR_FALSE;
-      if (incrementalReflow) {
-        forceInvalidate = !IsIncrementalDamageConstrained(aState);
-      }
+      PRBool forceInvalidate = incrementalReflow && !aState.GetFlag(BRS_DAMAGECONSTRAINED);
       rv = ReflowLine(aState, line, &keepGoing, forceInvalidate);
       if (NS_FAILED(rv)) {
         return rv;
