@@ -380,7 +380,7 @@ protected:
   /** false if the parser is in the middle of adding children. */
   PRBool    mIsDoneAddingChildren;
   /** The number of non-options as children of the select */
-  PRUint32  mArtifactsAtTopLevel;
+  PRUint32  mNonOptionChildren;
   /** The number of optgroups anywhere under the select */
   PRUint32  mOptGroupCount;
   /**
@@ -436,7 +436,7 @@ nsHTMLSelectElement::nsHTMLSelectElement(PRBool aFromParser)
   // DoneAddingChildren() will be called later if it's from the parser,
   // otherwise it is
   mIsDoneAddingChildren = !aFromParser;
-  mArtifactsAtTopLevel = 0;
+  mNonOptionChildren = 0;
   mOptGroupCount = 0;
 
   mOptions = new nsHTMLOptionCollection(this);
@@ -725,7 +725,7 @@ nsHTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
   // If it's at the top level, then we just found out there are non-options
   // at the top level, which will throw off the insert count
   if (aDepth == 0) {
-    mArtifactsAtTopLevel++;
+    mNonOptionChildren++;
   }
 
   nsCOMPtr<nsIAtom> tag;
@@ -776,7 +776,7 @@ nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
 
   // Yay, one less artifact at the top level.
   if (aDepth == 0) {
-    mArtifactsAtTopLevel--;
+    mNonOptionChildren--;
   }
 
   if (mOptGroupCount) {
@@ -824,21 +824,30 @@ nsHTMLSelectElement::WillAddOptions(nsIContent* aOptions,
 
   // Get the index where the options will be inserted
   PRInt32 ind = -1;
-  PRInt32 children;
-  aParent->ChildCount(children);
-  if (aContentIndex >= children) {
-    // If the content insert is after the end of the parent, then we want to get
-    // the next index *after* the parent and insert there.
-    ind = GetOptionIndexAfter(aParent);
+  if (!mNonOptionChildren) { 
+    // If there are no artifacts, aContentIndex == ind
+    ind = aContentIndex;
   } else {
-    // If the content insert is somewhere in the middle of the container, then
-    // we want to get the option currently at the index and insert in front of
-    // that.
-    nsCOMPtr<nsIContent> currentKid;
-    aParent->ChildAt(aContentIndex, *getter_AddRefs(currentKid));
-    NS_ASSERTION(currentKid, "Child not found!");
-    if (currentKid) {
-      ind = GetOptionIndexAt(currentKid);
+    // If there are artifacts, we have to get the index of the option the
+    // hard way
+    PRInt32 children;
+    aParent->ChildCount(children);
+    if (aContentIndex >= children) {
+      // If the content insert is after the end of the parent, then we want to get
+      // the next index *after* the parent and insert there.
+      ind = GetOptionIndexAfter(aParent);
+    } else {
+      // If the content insert is somewhere in the middle of the container, then
+      // we want to get the option currently at the index and insert in front of
+      // that.
+      nsCOMPtr<nsIContent> currentKid;
+      aParent->ChildAt(aContentIndex, *getter_AddRefs(currentKid));
+      NS_ASSERTION(currentKid, "Child not found!");
+      if (currentKid) {
+        ind = GetOptionIndexAt(currentKid);
+      } else {
+        ind = -1;
+      }
     }
   }
 
@@ -860,7 +869,15 @@ nsHTMLSelectElement::WillRemoveOptions(nsIContent* aParent,
   nsCOMPtr<nsIContent> currentKid;
   aParent->ChildAt(aContentIndex, *getter_AddRefs(currentKid));
   if (currentKid) {
-    PRInt32 ind = GetFirstOptionIndex(currentKid);
+    PRInt32 ind;
+    if (!mNonOptionChildren) { 
+      // If there are no artifacts, aContentIndex == ind
+      ind = aContentIndex;
+    } else {
+      // If there are artifacts, we have to get the index of the option the
+      // hard way
+      ind = GetFirstOptionIndex(currentKid);
+    }
     if (ind != -1) {
       rv = RemoveOptionsFromList(currentKid, ind, level);
     }
@@ -1477,7 +1494,7 @@ nsHTMLSelectElement::IsOptionDisabled(PRInt32 aIndex, PRBool* aIsDisabled)
 
   // Check for disabled optgroups
   // If there are no artifacts, there are no optgroups
-  if (mArtifactsAtTopLevel) {
+  if (mNonOptionChildren) {
     nsCOMPtr<nsIDOMNode> parent;
     while (1) {
       optionNode->GetParentNode(getter_AddRefs(parent));
