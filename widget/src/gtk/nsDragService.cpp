@@ -38,6 +38,7 @@ static PRLogModuleInfo *sDragLm = NULL;
 
 static char *gMimeListType = "application/x-moz-internal-item-list";
 static char *gMozUrlType = "_NETSCAPE_URL";
+static char *gTextUriListType = "text/uri-list";
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
@@ -207,6 +208,84 @@ nsDragService::GetCanDrop            (PRBool          *aCanDrop)
   return NS_OK;
 }
 
+// count the number of URIs in some text/uri-list format data.
+static PRUint32
+CountTextUriListItems (const char *data,
+                       PRUint32 datalen)
+{
+  const char *p = data;
+  const char *endPtr = p + datalen;
+  PRUint32 count = 0;
+
+  while (p < endPtr) {
+    // skip whitespace (if any)
+    while (p < endPtr && *p != '\0' && isspace(*p))
+      p++;
+
+    // if we aren't at the end of the line ...
+    if (p != endPtr && *p != '\0' && *p != '\n' && *p != '\r')
+      count++;
+
+    // skip to the end of the line
+    while (p < endPtr && *p != '\0' && *p != '\n')
+      p++;
+    p++; // skip the actual newline as well.
+  }
+  return count;
+}
+
+// extract an item from text/uri-list formatted data and convert it to
+// unicode.
+static void
+GetTextUriListItem(const char *data,
+                   PRUint32 datalen,
+                   PRUint32 aItemIndex,
+                   PRUnichar **convertedText,
+                   PRInt32 *convertedTextLen)
+{
+  const char *p = data;
+  const char *endPtr = p + datalen;
+  unsigned int count = 0;
+
+  *convertedText = nsnull;
+  while (p < endPtr) {
+    // skip whitespace (if any)
+    while (p < endPtr && *p != '\0' && isspace(*p))
+      p++;
+
+    // if we aren't at the end of the line, we have a url
+    if (p != endPtr && *p != '\0' && *p != '\n' && *p != '\r')
+      count++;
+
+    // this is the item we are after ...
+    if (aItemIndex + 1 == count) {
+      const char *q = p;
+
+      while (q < endPtr && *q != '\0' && *q != '\n' && *q != '\r')
+        q++;
+
+      nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(p,
+                                                            q - p, 
+                                                            convertedText,
+                                                            convertedTextLen);
+      break;
+    }
+
+    // skip to the end of the line
+    while (p < endPtr && *p != '\0' && *p != '\n')
+      p++;
+    p++; // skip the actual newline as well.
+  }
+
+  // didn't find the desired item, so just pass the whole lot
+  if (!*convertedText) {
+    nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(data,
+                                                          datalen,
+                                                          convertedText,
+                                                          convertedTextLen);
+  }
+}
+
 NS_IMETHODIMP
 nsDragService::GetNumDropItems       (PRUint32 * aNumItems)
 {
@@ -214,11 +293,20 @@ nsDragService::GetNumDropItems       (PRUint32 * aNumItems)
   PRBool isList = IsTargetContextList();
   if (isList)
     mSourceDataItems->Count(aNumItems);
-  else
-    *aNumItems = 1;
+  else {
+    GdkAtom gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
+    GetTargetDragData(gdkFlavor);
+    if (mTargetDragData) {
+      const char *data = NS_REINTERPRET_CAST(char*, mTargetDragData);
+
+      *aNumItems = CountTextUriListItems(data, mTargetDragDataLen);
+    } else
+      *aNumItems = 1;
+  }
   PR_LOG(sDragLm, PR_LOG_DEBUG, ("%d items", *aNumItems));
   return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsDragService::GetData               (nsITransferable * aTransferable,
@@ -339,21 +427,22 @@ nsDragService::GetData               (nsITransferable * aTransferable,
         } // if looking for text/unicode   
 
         // if we are looking for text/x-moz-url and we failed to find
-        // it on the clipboard, try again with _NETSCAPE_URL
+        // it on the clipboard, try again with text/uri-list, and then
+        // _NETSCAPE_URL
         if (strcmp(flavorStr, kURLMime) == 0) {
           PR_LOG(sDragLm, PR_LOG_DEBUG,
-                 ("we were looking for text/x-moz-url...trying again with _NETSCAP_URL\n"));
-          gdkFlavor = gdk_atom_intern(gMozUrlType, FALSE);
+                 ("we were looking for text/x-moz-url...trying again with text/uri-list\n"));
+          gdkFlavor = gdk_atom_intern(gTextUriListType, FALSE);
           GetTargetDragData(gdkFlavor);
           if (mTargetDragData) {
-            PR_LOG(sDragLm, PR_LOG_DEBUG, ("Got _NETSCAPE_URL data\n"));
-            const char* castedText = NS_REINTERPRET_CAST(char*, mTargetDragData);
+            PR_LOG(sDragLm, PR_LOG_DEBUG, ("Got text/uri-list data\n"));
+            const char *data = NS_REINTERPRET_CAST(char*, mTargetDragData);
             PRUnichar* convertedText = nsnull;
             PRInt32 convertedTextLen = 0;
-            nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(castedText,
-                                                                  mTargetDragDataLen, 
-                                                                  &convertedText,
-                                                                  &convertedTextLen);
+
+            GetTextUriListItem(data, mTargetDragDataLen, aItemIndex,
+                               &convertedText, &convertedTextLen);
+
             if ( convertedText ) {
               PR_LOG(sDragLm, PR_LOG_DEBUG,
                      ("successfully converted _NETSCAPE_URL to unicode.\n"));
@@ -365,7 +454,35 @@ nsDragService::GetData               (nsITransferable * aTransferable,
             }
           }
           else {
-            PR_LOG(sDragLm, PR_LOG_DEBUG, ("failed to get _NETSCAPE_URL data\n"));
+            PR_LOG(sDragLm, PR_LOG_DEBUG, ("failed to get text/uri-list data\n"));
+          }
+          if (!dataFound) {
+            PR_LOG(sDragLm, PR_LOG_DEBUG,
+                   ("we were looking for text/x-moz-url...trying again with _NETSCAP_URL\n"));
+            gdkFlavor = gdk_atom_intern(gMozUrlType, FALSE);
+            GetTargetDragData(gdkFlavor);
+            if (mTargetDragData) {
+              PR_LOG(sDragLm, PR_LOG_DEBUG, ("Got _NETSCAPE_URL data\n"));
+              const char* castedText = NS_REINTERPRET_CAST(char*, mTargetDragData);
+              PRUnichar* convertedText = nsnull;
+              PRInt32 convertedTextLen = 0;
+              nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode(castedText,
+                                                                    mTargetDragDataLen, 
+                                                                    &convertedText,
+                                                                    &convertedTextLen);
+              if ( convertedText ) {
+                PR_LOG(sDragLm, PR_LOG_DEBUG,
+                       ("successfully converted _NETSCAPE_URL to unicode.\n"));
+                // out with the old, in with the new 
+                g_free(mTargetDragData);
+                mTargetDragData = convertedText;
+                mTargetDragDataLen = convertedTextLen * 2;
+                dataFound = PR_TRUE;
+              }
+            }
+            else {
+              PR_LOG(sDragLm, PR_LOG_DEBUG, ("failed to get _NETSCAPE_URL data\n"));
+            }
           }
         }
 
