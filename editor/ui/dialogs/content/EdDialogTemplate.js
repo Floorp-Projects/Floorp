@@ -1,7 +1,6 @@
 //Cancel() is in EdDialogCommon.js
 var editorShell;
 var insertNew = true;
-var inserted = false;
 var tagname = "TAG NAME"
 
 // dialog initialization code
@@ -56,18 +55,7 @@ function onOK()
 // Set attribute example:
 //  imageElement.setAttribute("src",dialog.srcInput.value);
   if (insertNew) {
-    editorShell.InsertElement(element, true);
-    // Select the newly-inserted image
-    editorShell.SelectElement(element);
-    // Mark that we inserted so we can collapse the selection
-    //  when dialog closes
-    inserted = true;
-  }
-
-  if (inserted) {
-    // We selected the object, undo it by
-    //  setting caret to just after the inserted element
-    editorShell.SetSelectionAfterElement(imageElement);
+    editorShell.InsertElement(element, false);
   }
   window.close();
 }
