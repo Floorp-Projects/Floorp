@@ -38,7 +38,7 @@ NS_IMPL_RELEASE(nsComboBox);
 nsComboBox::nsComboBox() : nsMacControl(), nsIListWidget(), nsIComboBox()
 {
 	NS_INIT_REFCNT();
-	strcpy(gInstanceClassName, "nsComboBox");
+	gInstanceClassName = "nsComboBox";
 	SetControlType(kControlPopupButtonProc + kControlPopupFixedWidthVariant);
 
 	mMenuHandle	= nsnull;

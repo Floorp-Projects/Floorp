@@ -42,7 +42,7 @@ nsScrollbar::nsScrollbar(PRBool /*aIsVertical*/)
 	,	mClickedPartCode(0)
 {
 	NS_INIT_REFCNT();
-	strcpy(gInstanceClassName, "nsScrollbar");
+	gInstanceClassName = "nsScrollbar";
 	SetControlType(kControlScrollBarLiveProc);
 	if (!sControlActionProc)
 		sControlActionProc = NewControlActionProc(nsScrollbar::ScrollActionProc);

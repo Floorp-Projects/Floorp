@@ -31,7 +31,7 @@ NS_IMPL_RELEASE(nsRadioButton);
 nsRadioButton::nsRadioButton() : nsMacControl(), nsIRadioButton() 
 {
   NS_INIT_REFCNT();
-  strcpy(gInstanceClassName, "nsRadioButton");
+  gInstanceClassName = "nsRadioButton";
   SetControlType(radioButProc);
 }
 

@@ -182,7 +182,7 @@ protected:
 	void					ScrollBits ( Rect & foo, PRInt32 inLeftDelta, PRInt32 inTopDelta ) ;
 
 protected:
-	char					gInstanceClassName[256];
+	const char*				gInstanceClassName;
 
 	nsIWidget*				mParent;
 	PRBool					mResizingChildren;

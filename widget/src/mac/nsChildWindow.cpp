@@ -26,7 +26,7 @@
 
 nsChildWindow::nsChildWindow() : nsWindow()
 {
-	strcpy(gInstanceClassName, "nsChildWindow");
+	gInstanceClassName = "nsChildWindow";
 	mClipChildren = PR_FALSE;
 	mClipSiblings = PR_FALSE;
 }

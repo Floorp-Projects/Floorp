@@ -57,7 +57,7 @@ enum
 nsTextWidget::nsTextWidget() : nsMacControl(), nsITextWidget(), Repeater()
 {
   NS_INIT_REFCNT();
-  strcpy(gInstanceClassName, "nsTextWidget");
+  gInstanceClassName = "nsTextWidget";
   SetControlType(kControlEditTextProc);
 	mIsPassword = PR_FALSE;
 	mIsReadOnly = PR_FALSE;

@@ -31,7 +31,7 @@ NS_IMPL_RELEASE(nsButton);
 nsButton::nsButton() : nsMacControl(), nsIButton()
 {
   NS_INIT_REFCNT();
-  strcpy(gInstanceClassName, "nsButton");
+  gInstanceClassName = "nsButton";
   SetControlType(pushButProc);
 }
 
