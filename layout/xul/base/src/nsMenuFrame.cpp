@@ -1140,7 +1140,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
       // Set the default for the xul key modifier
 #ifdef XP_MAC
       commandValue = "true";
-#elif XP_PC
+#elif defined(XP_PC) || defined(NTO)
       controlValue = "true";
 #else 
       altValue = "true";
