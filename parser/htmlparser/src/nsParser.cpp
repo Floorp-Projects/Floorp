@@ -2568,9 +2568,6 @@ nsresult nsParser::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
       rv = ResumeParse();
     }
   }
-  else {
-    rv = NS_ERROR_UNEXPECTED;
-  }
 
   return rv;
 }
