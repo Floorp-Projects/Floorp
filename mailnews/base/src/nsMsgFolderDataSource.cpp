@@ -912,7 +912,7 @@ nsMsgFolderDataSource::createFolderServerTypeNode(nsIMsgFolder* folder,
   nsresult rv;
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = folder->GetServer(getter_AddRefs(server));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv) || !server) return NS_ERROR_FAILURE;
 
   nsXPIDLCString serverType;
   rv = server->GetType(getter_Copies(serverType));

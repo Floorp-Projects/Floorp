@@ -171,6 +171,7 @@ protected:
 	nsLocalMailCopyState *mCopyState; //We will only allow one of these at a
                                     //time
   nsCOMPtr<nsITransactionManager> mTxnMgr;
+  const char *mType;
 };
 
 #endif // nsMsgLocalMailFolder_h__

@@ -97,22 +97,11 @@ nsPop3IncomingServer::SetPop3CapabilityFlags(PRUint32 flags)
 }
 
 nsresult
-nsPop3IncomingServer::GetServerURI(char **uri)
+nsPop3IncomingServer::GetLocalStoreType(char **type)
 {
-    nsresult rv;
-
-    nsXPIDLCString username;
-    rv = GetUsername(getter_Copies(username));
-    if (NS_FAILED(rv)) return rv;
-
-    nsXPIDLCString hostname;
-    rv = GetHostName(getter_Copies(hostname));
-    if (NS_FAILED(rv)) return rv;
-
-    *uri = PR_smprintf("mailbox://%s@%s",
-                       (const char *)username,
-                       (const char *)hostname);
-    return rv;
+    NS_ENSURE_ARG_POINTER(type);
+    *type = nsCRT::strdup("mailbox");
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()

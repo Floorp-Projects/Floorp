@@ -35,7 +35,7 @@ public:
     nsNoIncomingServer();
     virtual ~nsNoIncomingServer();
     
-    NS_IMETHOD GetServerURI(char * *uri);
+    NS_IMETHOD GetLocalStoreType(char * *type);
 };
 
 

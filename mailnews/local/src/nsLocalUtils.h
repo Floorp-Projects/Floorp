@@ -30,9 +30,6 @@ nsresult
 nsLocalURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
 
 nsresult
-nsLocalURI2Server(const char* uriStr, nsIMsgIncomingServer ** aResult);
-
-nsresult
 nsParseLocalMessageURI(const char* uri, nsCString& folderURI, PRUint32 *key);
 
 nsresult 

@@ -1024,6 +1024,7 @@ nsresult
 nsMsgAccountManager::FindServerIndex(nsIMsgIncomingServer* server,
                                      PRInt32* result)
 {
+  NS_ENSURE_ARG_POINTER(server);
   nsresult rv;
   
   nsXPIDLCString key;

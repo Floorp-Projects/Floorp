@@ -137,22 +137,11 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
 	return rv;
 }
 
-NS_IMETHODIMP nsImapIncomingServer::GetServerURI(char ** aServerURI)
+NS_IMETHODIMP nsImapIncomingServer::GetLocalStoreType(char ** type)
 {
-	nsresult rv = NS_OK;
-
-    nsXPIDLCString hostname;
-    rv = GetHostName(getter_Copies(hostname));
-
-    nsXPIDLCString username;
-    rv = GetUsername(getter_Copies(username));
-    
-    if (NS_FAILED(rv)) return rv;
-
-    *aServerURI = PR_smprintf("imap://%s@%s", (const char*)username,
-                              (const char*)hostname);
-
-	return rv;
+    NS_ENSURE_ARG_POINTER(type);
+    *type = nsCRT::strdup("imap");
+    return NS_OK;
 }
 
 NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, AdminUrl,

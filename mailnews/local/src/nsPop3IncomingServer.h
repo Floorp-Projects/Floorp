@@ -35,7 +35,7 @@ public:
     nsPop3IncomingServer();
     virtual ~nsPop3IncomingServer();
 
-    NS_IMETHOD GetServerURI(char **);
+    NS_IMETHOD GetLocalStoreType(char **);
     NS_IMETHOD PerformBiff();
     
 private:

@@ -57,7 +57,6 @@
 #include "nsMsgTxn.h"
 #include "nsIFileSpec.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -65,6 +64,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
+static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
 //////////////////////////////////////////////////////////////////////////////
 // nsLocal
@@ -103,7 +103,7 @@ nsLocalMailCopyState::~nsLocalMailCopyState()
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
   : mExpungedBytes(0), 
     mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
-    mInitialized(PR_FALSE), mCopyState(nsnull)
+    mInitialized(PR_FALSE), mCopyState(nsnull), mType(nsnull)
 {
 	mPath = nsnull;
 //  NS_INIT_REFCNT(); done by superclass
@@ -387,44 +387,48 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       if (NS_SUCCEEDED(rv) && isServer)
       {
         // TODO:  move this into the IncomingServer
-    	if (PL_strcmp(type, "pop3") == 0) {
-            nsCOMPtr<nsIMsgIncomingServer> server;
-            rv = GetServer(getter_AddRefs(server));
+        if (PL_strcmp(type, "pop3") == 0) {
+          nsCOMPtr<nsIMsgIncomingServer> server;
+          rv = GetServer(getter_AddRefs(server));
 
+          if (NS_SUCCEEDED(rv) && server) {
             nsCOMPtr<nsIPop3IncomingServer> popServer;
             rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
                                         (void **)&popServer);
             if (NS_SUCCEEDED(rv)) {
-		nsCOMPtr<nsIFileSpec> spec;
-		rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
-		if (NS_FAILED(rv)) return rv;
-                rv = popServer->CreateDefaultMailboxes(spec);
-		if (NS_FAILED(rv)) return rv;
+              nsCOMPtr<nsIFileSpec> spec;
+              rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
+              if (NS_FAILED(rv)) return rv;
+              rv = popServer->CreateDefaultMailboxes(spec);
+              if (NS_FAILED(rv)) return rv;
             }
-	}
-	else if (PL_strcmp(type, "none") == 0) {
-            nsCOMPtr<nsIMsgIncomingServer> server;
-            rv = GetServer(getter_AddRefs(server));
-
+          }
+        }
+        else if (PL_strcmp(type, "none") == 0) {
+          nsCOMPtr<nsIMsgIncomingServer> server;
+          rv = GetServer(getter_AddRefs(server));
+        
+          if (NS_SUCCEEDED(rv) && server) {
             nsCOMPtr<nsINoIncomingServer> noneServer;
             rv = server->QueryInterface(nsINoIncomingServer::GetIID(),
                                         (void **)&noneServer);
             if (NS_SUCCEEDED(rv)) {
-		nsCOMPtr<nsIFileSpec> spec;
-		rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
-		if (NS_FAILED(rv)) return rv;
-                rv = noneServer->CreateDefaultMailboxes(spec);
-		if (NS_FAILED(rv)) return rv;
+              nsCOMPtr<nsIFileSpec> spec;
+              rv = NS_NewFileSpecWithSpec(path, getter_AddRefs(spec));
+              if (NS_FAILED(rv)) return rv;
+              rv = noneServer->CreateDefaultMailboxes(spec);
+              if (NS_FAILED(rv)) return rv;
             }
-	}
- 	else {
-		NS_ASSERTION(0,"error, don't know about this server type yet.\n");
-	}
+          }
+        }
+        else {
+          NS_ASSERTION(0,"error, don't know about this server type yet.\n");
+        }
       }
       rv = CreateSubFolders(path);
     }
     UpdateSummaryTotals(PR_FALSE);
-
+    
     if (NS_FAILED(rv)) return rv;
     mInitialized = PR_TRUE;      // XXX do this on failure too?
   }
@@ -1810,27 +1814,64 @@ nsresult nsMsgLocalMailFolder::CopyMessageTo(nsIMessage *message,
 
 // TODO:  once we move certain code into the IncomingServer (search for TODO)
 // this method will go away.
+// sometimes this gets called when we don't have the server yet, so
+// that's why we're not calling GetServer()
 const char *
 nsMsgLocalMailFolder::GetIncomingServerType()
 {
-	nsXPIDLCString type;
-	nsCOMPtr<nsIMsgIncomingServer> server;
-	nsresult rv = nsLocalURI2Server(mURI,getter_AddRefs(server));
-	NS_ASSERTION(NS_SUCCEEDED(rv), "nsLocalURI2Server() failed");
-	if (NS_FAILED(rv)) return "";
+  nsresult rv;
 
-	rv = server->GetType(getter_Copies(type));
-	NS_ASSERTION(NS_SUCCEEDED(rv), "GetType() failed");
-	if (NS_FAILED(rv)) return "";
+  if (mType) return mType;
 
-	if (PL_strcmp(type, "pop3") == 0) {
-		return "pop3";
-	}
-	else if (PL_strcmp(type, "none") == 0) {
-		return "none";
-	}
-	else {
-		NS_ASSERTION(0,"server type not known yet.\n");
-		return "";
-	}
+  nsCOMPtr<nsIURL> url;
+  
+  // this is totally hacky - we have to re-parse the URI, then
+  // guess at "none" or "pop3"
+  // if anyone has any better ideas mail me! -alecf@netscape.com
+  rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull,
+                                          NS_GET_IID(nsIURL),
+                                          (void **)getter_AddRefs(url));
+
+  if (NS_FAILED(rv)) return "";
+
+  rv = url->SetSpec(mURI);
+  if (NS_FAILED(rv)) return "";
+
+  nsXPIDLCString userName;
+  rv = url->GetPreHost(getter_Copies(userName));
+  if (NS_FAILED(rv)) return "";
+  nsUnescape(NS_CONST_CAST(char*,(const char*)userName));
+
+  nsXPIDLCString hostName;
+  rv = url->GetHost(getter_Copies(hostName));
+  if (NS_FAILED(rv)) return "";
+  nsUnescape(NS_CONST_CAST(char*,(const char*)hostName));
+
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) return "";
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+
+  // try "none" first
+  rv = accountManager->FindServer(userName,
+                                  hostName,
+                                  "none",
+                                  getter_AddRefs(server));
+  if (NS_SUCCEEDED(rv) && server) {
+    mType = "none";
+    return mType;
+  }
+
+  // next try "pop3"
+  rv = accountManager->FindServer(userName,
+                                  hostName,
+                                  "pop3",
+                                  getter_AddRefs(server));
+  if (NS_SUCCEEDED(rv) && server) {
+    mType = "pop3";
+    return mType;
+  }
+
+  return "";
 }

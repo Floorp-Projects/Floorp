@@ -255,7 +255,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
 
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = folder->GetServer(getter_AddRefs(server));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv) || !server) return NS_ERROR_FAILURE;
 
     PRInt32 accountNum;
     rv = mAccountManager->FindServerIndex(server, &accountNum);

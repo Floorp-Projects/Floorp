@@ -114,25 +114,11 @@ nsNntpIncomingServer::SetNewsrcFilePath(nsIFileSpec *spec)
 }          
 
 NS_IMETHODIMP
-nsNntpIncomingServer::GetServerURI(char **uri)
+nsNntpIncomingServer::GetLocalStoreType(char **type)
 {
-    nsresult rv;
-
-    nsXPIDLCString hostname;
-    rv = GetHostName(getter_Copies(hostname));
-
-    nsXPIDLCString username;
-    rv = GetUsername(getter_Copies(username));
-    
-    if (NS_FAILED(rv)) return rv;
-
-    if ((const char*)username)
-        *uri = PR_smprintf("news://%s@%s", (const char*)username,
-                           (const char*)hostname);
-    else
-        *uri = PR_smprintf("news://%s", (const char*)hostname);
-
-    return rv;
+    NS_ENSURE_ARG_POINTER(type);
+    *type = nsCRT::strdup("news");
+    return NS_OK;
 }
 
 NS_IMETHODIMP

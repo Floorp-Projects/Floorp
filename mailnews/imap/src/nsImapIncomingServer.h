@@ -40,7 +40,7 @@ public:
 
     // overriding nsMsgIncomingServer methods
 	NS_IMETHOD SetKey(const char * aKey);  // override nsMsgIncomingServer's implementation...
-	NS_IMETHOD GetServerURI(char * *aServerURI);
+	NS_IMETHOD GetLocalStoreType(char * *type);
 
 	NS_DECL_NSIIMAPINCOMINGSERVER
 	NS_DECL_NSIIMAPSERVERSINK

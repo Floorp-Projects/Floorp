@@ -140,31 +140,43 @@ nsMsgIncomingServer::CloseCachedConnections()
 
 // construct <localStoreType>://[<username>@]<hostname
 NS_IMETHODIMP
-nsMsgIncomingServer::GetServerURI(char **)
+nsMsgIncomingServer::GetServerURI(char **aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
     nsresult rv;
     nsCAutoString uri;
 
     nsXPIDLCString localStoreType;
     rv = GetLocalStoreType(getter_Copies(localStoreType));
-    
+    if (NS_FAILED(rv)) return rv;
+
     uri += localStoreType;
     uri += "://";
 
     nsXPIDLCString username;
     rv = GetUsername(getter_Copies(username));
 
-    nsXPIDLCString escapedUsername;
-    *((char **)getter_Copies(escapedUsername)) = nsEscape(username, url_Path);
-    // not all servers have hostnames
-    if (NS_SUCCEEDED(rv) && ((const char*)username) && username[0])
-        uri += username;
+    if (NS_SUCCEEDED(rv) && ((const char*)username) && username[0]) {
+        nsXPIDLCString escapedUsername;
+        *((char **)getter_Copies(escapedUsername)) =
+            nsEscape(username, url_Path);
+        // not all servers have hostnames
+        uri += escapedUsername;
+        uri += '@';
+    }
 
     nsXPIDLCString hostname;
     rv = GetHostName(getter_Copies(hostname));
 
-    uri += hostname;
-    
+    if (NS_SUCCEEDED(rv) && ((const char*)hostname) && hostname[0]) {
+        nsXPIDLCString escapedHostname;
+        *((char **)getter_Copies(escapedHostname)) =
+            nsEscape(hostname, url_Path);
+        // not all servers have hostnames
+        uri += escapedHostname;
+    }
+
+    *aResult = uri.ToNewCString();
     return NS_OK;
 }
 

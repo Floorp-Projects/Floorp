@@ -41,7 +41,7 @@ public:
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
     
-    NS_IMETHOD GetServerURI(char * *uri);
+    NS_IMETHOD GetLocalStoreType(char * *type);
 };
 
 #endif

@@ -43,6 +43,8 @@ nsGetMailboxServer(const char *username, const char *hostname, nsIMsgIncomingSer
 {
   nsresult rv = NS_OK;
 
+  nsUnescape(NS_CONST_CAST(char*,username));
+  nsUnescape(NS_CONST_CAST(char*,hostname));
   // retrieve the AccountManager
   NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -80,7 +82,7 @@ nsGetMailboxServer(const char *username, const char *hostname, nsIMsgIncomingSer
   return rv;
 }
 
-nsresult
+static nsresult
 nsLocalURI2Server(const char* uriStr,
                   nsIMsgIncomingServer ** aResult)
 {
