@@ -26,14 +26,10 @@ CPP_OBJS=                            \
         .\$(OBJDIR)\nsNetFactory.obj \
 	$(NULL)
 
-include <$(DEPTH)\config\config.mak>
-
 LLIBS=                              \
         $(DIST)\lib\neckobase_s.lib \
         $(DIST)\lib\neckodns_s.lib  \
-!ifdef NET_SOCKET_PROVIDER_BUILD
         $(DIST)\lib\neckosocket_s.lib  \
-!endif
         $(DIST)\lib\xpcom.lib       \
         $(LIBNSPR)  
 
@@ -41,9 +37,7 @@ INCS = $(INCS)                      \
         -I$(DEPTH)\dist\include     \
         -I$(DEPTH)\netwerk\base\src \
         -I$(DEPTH)\netwerk\dns\src  \
-!ifdef NET_SOCKET_PROVIDER_BUILD
         -I$(DEPTH)\netwerk\socket\base \
-!endif
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
