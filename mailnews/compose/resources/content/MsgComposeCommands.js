@@ -332,6 +332,7 @@ var defaultController =
       case "cmd_bold":
       case "cmd_italic":
       case "cmd_underline":
+      case "cmd_smiley":
       case "cmd_strikethrough":
       case "cmd_superscript":
       case "cmd_subscript":
@@ -511,6 +512,7 @@ function CommandUpdate_MsgCompose()
     goUpdateCommand("cmd_indent");
     goUpdateCommand("cmd_outdent");
     goUpdateCommand("cmd_align");
+    goUpdateCommand("cmd_smiley");
     goUpdateCommand("cmd_objectProperties");
     goUpdateCommand("cmd_InsertTable");
     goUpdateCommand("cmd_InsertRowAbove");
