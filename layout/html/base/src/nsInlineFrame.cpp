@@ -21,6 +21,7 @@
 #include "nsBlockReflowContext.h"
 #include "nsLineLayout.h"
 #include "nsInlineReflow.h"
+#include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsCOMPtr.h"
@@ -45,13 +46,6 @@ static NS_DEFINE_IID(kInlineFrameCID, INLINE_FRAME_CID);
 
 // Theory of operation:
 // XXX write this
-
-#if XXX
-// An additional bit in the reserved portion of nsIFrame's frame-state
-// that we use. When set the bit indicates that this inline frame has
-// an anonymous block that it is using to reflow block child frames.
-#define HAVE_ANONYMOUS_BLOCK 0x10000
-#endif
 
 #define nsInlineFrameSuper nsHTMLContainerFrame
 
@@ -93,13 +87,15 @@ public:
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
-#if XXX_fix_me
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout);
+#if XXX_fix_me
   NS_IMETHOD AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace);
   NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth);
 #endif
+  NS_IMETHOD VerticalAlignFrames(nscoord aLineHeight,
+                                 nscoord aDistanceFromTopEdge);
 
 protected:
   // Reflow state used during our reflow methods
@@ -145,13 +141,9 @@ protected:
   virtual PRIntn GetSkipSides() const;
 
   PRBool HaveAnonymousBlock() const {
-#ifdef HAVE_ANONYMOUS_BLOCK
-    return 0 != (mState & HAVE_ANONYMOUS_BLOCK);
-#else
     return mFrames.NotEmpty()
       ? nsLineLayout::TreatFrameAsBlock(mFrames.FirstChild())
       : PR_FALSE;
-#endif
   }
 
   static PRBool ParentIsInlineFrame(nsIFrame* aFrame, nsIFrame** aParent) {
@@ -1218,21 +1210,11 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
 
   nsresult rv;
   if (mFrames.IsEmpty()) {
-#ifdef HAVE_ANONYMOUS_BLOCK
-    NS_ASSERTION(!HaveAnonymousBlock(), "bad state");
-#endif
-
     // Try to pull over one frame before starting so that we know what
-    // state the HAVE_ANONYMOUS_BLOCK flag should be in.
+    // state we should be in.
     nsIFrame* frame = PullAnyFrame(rs);
-    if (nsnull != frame) {
-#ifdef HAVE_ANONYMOUS_BLOCK
-      if (nsLineLayout::TreatFrameAsBlock(frame)) {
-        mState |= HAVE_ANONYMOUS_BLOCK;
-      }
-#endif
-    }
-    else {
+    if (nsnull == frame) {
+      // Nothing to pull, nothing to do...
       aStatus = NS_FRAME_COMPLETE;
       aMetrics.width = 0;
       aMetrics.height = 0;
@@ -1287,6 +1269,83 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
   return rv;
 }
 
+NS_IMETHODIMP
+nsInlineFrame::FindTextRuns(nsLineLayout& aLineLayout)
+{
+  if (HaveAnonymousBlock()) {
+    aLineLayout.EndTextRun();
+  }
+  else {
+    nsIFrame* frame = mFrames.FirstChild();
+    while (nsnull != frame) {
+      nsIHTMLReflow* ihr;
+      nsresult rv = frame->QueryInterface(kIHTMLReflowIID, (void**)&ihr);
+      if (NS_SUCCEEDED(rv)) {
+        ihr->FindTextRuns(aLineLayout);
+      }
+      frame->GetNextSibling(&frame);
+    }
+  }
+  return NS_OK;
+}
+
+// Perform pass2 vertical alignment on top/bottom aligned child frames
+NS_IMETHODIMP
+nsInlineFrame::VerticalAlignFrames(nscoord aLineHeight,
+                                   nscoord aDistanceFromTopEdge)
+{
+  if (HaveAnonymousBlock()) {
+    // This should be impossible - when we have an inline frame and it
+    // contains an anonymous block, none of the blocks children or the
+    // block itself will trigger a pass2 valign at this level.
+    NS_NOTREACHED("can't get here");
+    return NS_OK;
+  }
+
+  nsRect bbox;
+
+  nsIFrame* frame = mFrames.FirstChild();
+  while (nsnull != frame) {
+    const nsStyleText* textStyle;
+    frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
+    nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
+    frame->GetRect(bbox);
+    if (eStyleUnit_Enumerated == verticalAlignUnit) {
+      PRUint8 verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
+      switch (verticalAlignEnum) {
+      default:
+        break;
+
+      case NS_STYLE_VERTICAL_ALIGN_TOP:
+        // XXX what about the top margin?
+        // XXX relative positioning will need to be done *after* this
+        bbox.y = -aDistanceFromTopEdge;
+        frame->SetRect(bbox);
+        break;
+
+      case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
+        // XXX what about the bottom margin?
+        // XXX relative positioning will need to be done *after* this
+        bbox.y = (aLineHeight - bbox.height) - aDistanceFromTopEdge;
+        frame->SetRect(bbox);
+        break;
+      }
+    }
+
+    // Perform pass2 vertical alignment for top/bottom aligned
+    // frames that are not our direct descendants.
+    nsIHTMLReflow* ihr;
+    nsresult rv = frame->QueryInterface(kIHTMLReflowIID, (void**)&ihr);
+    if (NS_SUCCEEDED(rv)) {
+      nscoord distanceFromTopEdge = aDistanceFromTopEdge + mRect.y;
+      ihr->VerticalAlignFrames(aLineHeight, distanceFromTopEdge);
+    }
+
+    frame->GetNextSibling(&frame);
+  }
+  return NS_OK;
+}
+
 void
 nsInlineFrame::DrainOverflow()
 {
@@ -1306,20 +1365,6 @@ nsInlineFrame::DrainOverflow()
     NS_ASSERTION(mFrames.NotEmpty(), "overflow list w/o frames");
     mFrames.Join(nsnull, mOverflowFrames);
   }
-
-#ifdef HAVE_ANONYMOUS_BLOCK
-  if (changedFirstFrame) {
-    // Update our HAVE_ANONYMOUS_BLOCK state bit in case our first
-    // child has changed to a new frame.
-    nsIFrame* frame = mFrames.FirstChild();
-    if (nsLineLayout::TreatFrameAsBlock(frame)) {
-      mState |= HAVE_ANONYMOUS_BLOCK;
-    }
-    else {
-      mState &= ~HAVE_ANONYMOUS_BLOCK;
-    }
-  }
-#endif
 }
 
 nsresult
@@ -1529,30 +1574,8 @@ nsInlineFrame::PullAnyFrame(ReflowState& rs)
   while (nsnull != nextInFlow) {
     frame = mFrames.PullFrame(this, rs.prevFrame, nextInFlow->mFrames);
     if (nsnull != frame) {
-#ifdef HAVE_ANONYMOUS_BLOCK
-      nsIFrame* first = nextInFlow->mFrames.FirstChild();
-      if (nsnull != first) {
-        if (nsLineLayout::TreatFrameAsBlock(first)) {
-          nextInFlow->mState |= HAVE_ANONYMOUS_BLOCK;
-        }
-        else {
-          nextInFlow->mState &= ~HAVE_ANONYMOUS_BLOCK;
-        }
-      }
-      else {
-        // Since next-in-flow has no more frames, it can't have a
-        // block frame so clear out the state that indicates that.
-        nextInFlow->mState &= ~HAVE_ANONYMOUS_BLOCK;
-      }
-#endif
       break;
     }
-
-#ifdef HAVE_ANONYMOUS_BLOCK
-    // Since next-in-flow has no more frames, it can't have a block
-    // frame so clear out the state that indicates that.
-    nextInFlow->mState &= ~HAVE_ANONYMOUS_BLOCK;
-#endif
 
     nextInFlow = (nsInlineFrame*) nextInFlow->mNextInFlow;
     rs.nextInFlow = nextInFlow;
