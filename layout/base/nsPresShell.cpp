@@ -6547,6 +6547,18 @@ ReResolveMenusAndTrees(nsIFrame *aFrame, void *aClosure)
   return PR_TRUE;
 }
 
+PR_STATIC_CALLBACK(PRBool)
+ReframeImageBoxes(nsIFrame *aFrame, void *aClosure)
+{
+  nsStyleChangeList *list = NS_STATIC_CAST(nsStyleChangeList*, aClosure);
+  if (aFrame->GetType() == nsLayoutAtoms::imageBoxFrame) {
+    list->AppendChange(aFrame, aFrame->GetContent(),
+                       NS_STYLE_HINT_FRAMECHANGE);
+    return PR_FALSE; // don't walk descendants
+  }
+  return PR_TRUE; // walk descendants
+}
+
 static void
 WalkFramesThroughPlaceholders(nsIPresContext *aPresContext, nsIFrame *aFrame,
                               frameWalkerFn aFunc, void *aClosure)
@@ -6593,9 +6605,17 @@ PresShell::Observe(nsISupports* aSubject,
     GetRootFrame(&rootFrame);
     // Need to null-check because "chrome-flush-skin-caches" can happen
     // at interesting times during startup.
-    if (rootFrame)
+    if (rootFrame) {
       WalkFramesThroughPlaceholders(mPresContext, rootFrame,
                                     &ReResolveMenusAndTrees, nsnull);
+
+      // Because "chrome:" URL equality is messy, reframe image box
+      // frames (hack!).
+      nsStyleChangeList changeList;
+      WalkFramesThroughPlaceholders(mPresContext, rootFrame,
+                                    ReframeImageBoxes, &changeList);
+      mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+    }
     return NS_OK;
   }
 #endif

@@ -92,6 +92,7 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
+  virtual nsIAtom* GetType() const;
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
