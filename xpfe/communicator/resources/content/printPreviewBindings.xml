@@ -254,7 +254,7 @@
             newValue = parseInt(aValue);
           
           // bounds check the new value
-          if (newValue >= 50 && newValue <= 100)
+          if (newValue >= 10 && newValue <= 500)
           {
             this.mScaleTextBox.value = newValue;
 

@@ -5685,9 +5685,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
           if (!mPrt->mShrinkToFit) {
             double scaling;
             mPrt->mPrintSettings->GetScaling(&scaling);
-            if (scaling <= 1.0) {
-              mDeviceContext->SetCanonicalPixelScale(float(scaling));
-            }
+            mDeviceContext->SetCanonicalPixelScale(float(scaling)*mPrt->mOrigDCScale);
           }
         }
         ppDC->GetDeviceSurfaceDimensions(width, height);
@@ -6041,9 +6039,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
           if (!mPrt->mShrinkToFit) {
             double scaling;
             mPrt->mPrintSettings->GetScaling(&scaling);
-            if (scaling <= 1.0) {
-              mPrt->mPrintDC->SetCanonicalPixelScale(float(scaling)*mPrt->mOrigDCScale);
-            }
+            mPrt->mPrintDC->SetCanonicalPixelScale(float(scaling)*mPrt->mOrigDCScale);
           }
 
           if(webContainer) {
