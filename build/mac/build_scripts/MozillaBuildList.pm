@@ -784,6 +784,9 @@ sub BuildClientDist()
     if ($main::options{xmlextras})
     {
         InstallFromManifest(":mozilla:extensions:xmlextras:base:public:MANIFEST_IDL", "$distdirectory:idl:");
+    }
+    if ($main::options{soap})
+    {
         InstallFromManifest(":mozilla:extensions:xmlextras:soap:public:MANIFEST_IDL", "$distdirectory:idl:");
     }
 
@@ -1028,6 +1031,10 @@ sub BuildIDLProjects()
     if ($main::options{xmlextras})
     {
         BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlextrasIDL.mcp", "xmlextras");
+    }
+    if ($main::options{soap})
+    {
+        BuildIDLProject(":mozilla:extensions:xmlextras:macbuild:xmlsoapIDL.mcp", "xmlsoap");
     }
 
     EndBuildModule("idl");
@@ -1556,6 +1563,14 @@ sub BuildExtensionsProjects()
     }
     
     # XML Extras
+    if ($main::options{soap})
+    {
+        BuildOneProject(":mozilla:extensions:xmlextras:macbuild:xmlsoap.mcp", "xmlsoap$D.o", 0, 0, 0);
+    }
+    else
+    {
+        BuildOneProject(":mozilla:extensions:xmlextras:macbuild:xmlsoap.mcp", "xmlsoap$D.o stub", 0, 0, 0);
+    }
     if ($main::options{xmlextras})
     {
         BuildOneProject(":mozilla:extensions:xmlextras:macbuild:xmlextras.mcp", "xmlextras$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);

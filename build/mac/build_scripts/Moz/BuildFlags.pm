@@ -220,6 +220,7 @@ sub SetOptionDefines($)
   $optiondefines->{"svg"}{"MOZ_SVG"}          = 1;
   $optiondefines->{"carbon"}{"TARGET_CARBON"} = 1;
   $optiondefines->{"cache"}{"MOZ_NEW_CACHE"}  = 1;
+  $optiondefines->{"soap"}{"MOZ_SOAP"}        = 1;
 }
 
 

@@ -41,7 +41,8 @@ mathml          0
 svg             0
 mng             1
 ldap            0
-xmlextras       0
+xmlextras       1
+soap            0
 mailextras      1
 xptlink         0
 psm             0
