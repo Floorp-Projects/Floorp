@@ -382,7 +382,7 @@ private:
   nsIRenderingContext *mWhiteCX;
 
   nsISupportsArray  *mCompositeListeners;
- 
+  void DestroyZTreeNode(DisplayZTreeNode* aNode);
 protected:
   nsIView           *mRootView;
   nscoord           mX;
