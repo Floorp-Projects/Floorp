@@ -337,6 +337,7 @@ own_GetClientAuthData(void *                       arg,
                       struct SECKEYPrivateKeyStr **pRetKey)
 {
     if (verbose > 1) {
+	SECStatus rv;
         fprintf(stderr, "Server requested Client Authentication\n");
 	if (caNames && caNames->nnames > 0) {
 	    PLArenaPool *arena = caNames->arena;
@@ -347,7 +348,6 @@ own_GetClientAuthData(void *                       arg,
 		for (i = 0; i < caNames->nnames; ++i) {
 		    char *nameString;
 		    CERTName dn;
-		    SECStatus rv;
 		    rv = SEC_QuickDERDecodeItem(arena, 
 					    &dn,
 					    SEC_ASN1_GET(CERT_NameTemplate), 
@@ -365,6 +365,17 @@ own_GetClientAuthData(void *                       arg,
 		}
 	    }
 	}
+	rv = NSS_GetClientAuthData(arg, socket, caNames, pRetCert, pRetKey);
+	if (rv == SECSuccess && *pRetCert) {
+	    char *nameString = CERT_NameToAscii(&((*pRetCert)->subject));
+	    if (nameString) {
+		fprintf(stderr, "sent cert: %s\n", nameString);
+		PORT_Free(nameString);
+	    }
+	} else {
+	    fprintf(stderr, "send no cert\n");
+	}
+	return rv;
     }
     return NSS_GetClientAuthData(arg, socket, caNames, pRetCert, pRetKey);
 }
