@@ -131,6 +131,38 @@ NS_IMETHODIMP nsMsgAttachment::SetContentType(const char * aContentType)
   return NS_OK;
 }
 
+/* attribute string contentTypeParam; */
+NS_IMETHODIMP nsMsgAttachment::GetContentTypeParam(char * *aContentTypeParam)
+{
+  NS_ENSURE_ARG_POINTER(aContentTypeParam);
+
+  *aContentTypeParam = ToNewCString(mContentTypeParam);
+  return (*aContentTypeParam ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+}
+NS_IMETHODIMP nsMsgAttachment::SetContentTypeParam(const char * aContentTypeParam)
+{
+  if (aContentTypeParam)
+    while (*aContentTypeParam == ';' || *aContentTypeParam == ' ')
+      aContentTypeParam ++;
+  mContentTypeParam = aContentTypeParam;
+
+  return NS_OK;
+}
+
+/* attribute string charset; */
+NS_IMETHODIMP nsMsgAttachment::GetCharset(char * *aCharset)
+{
+  NS_ENSURE_ARG_POINTER(aCharset);
+
+  *aCharset = ToNewCString(mCharset);
+  return (*aCharset ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+}
+NS_IMETHODIMP nsMsgAttachment::SetCharset(const char * aCharset)
+{
+  mCharset = aCharset;
+  return NS_OK;
+}
+
 /* attribute string macType; */
 NS_IMETHODIMP nsMsgAttachment::GetMacType(char * *aMacType)
 {

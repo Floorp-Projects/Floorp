@@ -119,6 +119,7 @@ nsMsgAttachmentHandler::nsMsgAttachmentHandler()
 
   m_done = PR_FALSE;
   m_type = nsnull;
+  m_type_param = nsnull;
   m_size = 0;
 
   mCompFields = nsnull;   // Message composition fields for the sender
@@ -153,18 +154,19 @@ nsMsgAttachmentHandler::~nsMsgAttachmentHandler()
   delete mFileSpec;
   mFileSpec=nsnull;
 
-  PR_FREEIF(m_charset);
-  PR_FREEIF(m_type);
-  PR_FREEIF(m_content_id);
-  PR_FREEIF(m_desired_type);
-  PR_FREEIF(m_encoding);
-  PR_FREEIF(m_override_type);
-  PR_FREEIF(m_description);
-  PR_FREEIF(m_real_name);
-  PR_FREEIF(m_override_encoding);
-  PR_FREEIF(m_x_mac_type);
-  PR_FREEIF(m_x_mac_creator);
-  PR_FREEIF(m_uri);
+  PR_Free(m_charset);
+  PR_Free(m_type);
+  PR_Free(m_type_param);
+  PR_Free(m_content_id);
+  PR_Free(m_desired_type);
+  PR_Free(m_encoding);
+  PR_Free(m_override_type);
+  PR_Free(m_description);
+  PR_Free(m_real_name);
+  PR_Free(m_override_encoding);
+  PR_Free(m_x_mac_type);
+  PR_Free(m_x_mac_creator);
+  PR_Free(m_uri);
 }
 
 void

@@ -58,6 +58,8 @@ private:
   PRBool      mTemporary;
   nsCString   mContentLocation;
   nsCString   mContentType;
+  nsCString   mContentTypeParam;
+  nsCString   mCharset;
   nsCString   mMacType;
   nsCString   mMacCreator;
 };

@@ -113,6 +113,7 @@ public:
   char                  *m_charset;         // charset name 
   char                  *m_content_id;      // This is for mutipart/related Content-ID's
   char                  *m_type;            // The real type, once we know it.
+  char                  *m_type_param;      // Any addition parameters to add to the content-type (other than charset, macType and maccreator)
   char                  *m_override_type;   // The type we should assume it to be
                                             // or 0, if we should get it from the
                                             // server)

@@ -715,7 +715,9 @@ char
 }
 
 char * 
-mime_generate_attachment_headers (const char *type, const char *encoding,
+mime_generate_attachment_headers (const char *type,
+                  const char *type_param,
+                  const char *encoding,
                   const char *description,
                   const char *x_mac_type,
                   const char *x_mac_creator,
@@ -783,6 +785,13 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
 
   PUSH_STRING ("Content-Type: ");
   PUSH_STRING (type);
+
+  if (type_param && *type_param)
+  {
+    if (*type_param != ';')
+      PUSH_STRING("; ");
+    PUSH_STRING(type_param);
+  }
 
   if (mime_type_needs_charset (type)) 
   {

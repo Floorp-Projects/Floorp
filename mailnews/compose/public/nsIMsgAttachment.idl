@@ -73,16 +73,34 @@ interface nsIMsgAttachment : nsISupports {
   /**
    * contentType attribute
    *
-   * @Specify the content-type of the attachment
+   * @Specify the content-type of the attachment, this not include extra content-type parameters. If
+   * @you need to specify extra information, use contentTypeParam, charset, macType or macCreator.
    * @If ommitted, it will be determined base on either the name, the url or the content of the file.
    */
   attribute string    contentType;
 
+  /**
+   * contentTypeParam attribute
+   *
+   * @Specify the any content-type parameter (other than the content-type itself, charset, macType or macCreator).
+   * @It will be added to the content-type during the send/save operation.
+   */
+  attribute string    contentTypeParam;
+  
+  /**
+   * charset attribute
+   *
+   * @Specify the charset of the attachment. It will be added to the content-type during the
+   * @send/save operation
+   * @If omitted, will be determined automatically (if possible).
+   */
+  attribute string    charset;
   
   /**
    * macType attribute
    *
-   * @Specify the Mac file type of the attachment
+   * @Specify the Mac file type of the attachment. It will be added to the content-type during the
+   * @send/save operation
    * @If omitted, will be determined automatically on Macintosh OS.
    */
   attribute string    macType;
@@ -90,7 +108,8 @@ interface nsIMsgAttachment : nsISupports {
   /**
    * macCreator attribute
    *
-   * @Specify the Mac file creator of the attachment
+   * @Specify the Mac file creator of the attachment. It will be added to the content-type during the
+   * @send/save operation
    * @If omitted, will be determined automatically on Macintosh OS.
    */
   attribute string    macCreator;

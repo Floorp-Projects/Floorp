@@ -94,7 +94,9 @@ char        *mime_generate_headers (nsMsgCompFields *fields,
 char        *mime_make_separator(const char *prefix);
 char        *mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress);
 
-char        *mime_generate_attachment_headers (const char *type,
+char        *mime_generate_attachment_headers (
+                           const char *type,
+                           const char *type_param,
                            const char *encoding,
                            const char *description,
                            const char *x_mac_type,
