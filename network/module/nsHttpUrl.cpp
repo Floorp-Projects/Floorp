@@ -55,26 +55,22 @@ nsHttpUrlImpl::nsHttpUrlImpl(nsISupports* aContainer, nsIURLGroup* aGroup)
     mPort = -1;
     mSpec = nsnull;
     mSearch = nsnull;
-    mPostData = nsnull;
     mContainer = nsnull;
-    mLoadAttribs = nsnull;
     mURLGroup = aGroup;
   
-    NS_NewLoadAttribs(&mLoadAttribs);
+    NS_NewLoadAttribs( getter_AddRefs(mLoadAttribs) );
 
-    NS_IF_ADDREF(mURLGroup);
+    // NS_IF_ADDREF(mURLGroup); --- a url should not own its group, its group already owns it
 
     mContainer = aContainer;
-    NS_IF_ADDREF(mContainer);
+    // NS_IF_ADDREF(mContainer); --- a url should not own its container, its container already owns it
     //  ParseURL(aSpec, aURL);      // XXX whh
 }
  
 nsHttpUrlImpl::~nsHttpUrlImpl()
 {
-    NS_IF_RELEASE(mContainer);
-    NS_IF_RELEASE(mLoadAttribs);
-    NS_IF_RELEASE(mURLGroup);
-    NS_IF_RELEASE(mPostData);
+    // NS_IF_RELEASE(mContainer);
+    // NS_IF_RELEASE(mURLGroup);
 
     PR_FREEIF(mSpec);
     PR_FREEIF(mProtocol);
@@ -818,7 +814,7 @@ nsresult nsHttpUrlImpl::GetContainer(nsISupports* *result) const
 {
     NS_LOCK_INSTANCE();
     *result = mContainer;
-    NS_IF_ADDREF(mContainer);
+    NS_IF_ADDREF(mContainer);  // getters must |AddRef| their result, even if they _didn't_ already own it
     NS_UNLOCK_INSTANCE();
     if (mContainer)
     	return NS_OK;
@@ -830,9 +826,9 @@ nsresult nsHttpUrlImpl::SetContainer(nsISupports* container)
 {
     NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
     NS_LOCK_INSTANCE();
-    NS_IF_RELEASE(mContainer);
+    // NS_IF_RELEASE(mContainer);
     mContainer = container;
-    NS_IF_ADDREF(mContainer);
+    // NS_IF_ADDREF(mContainer);
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
@@ -841,7 +837,7 @@ nsresult nsHttpUrlImpl::GetLoadAttribs(nsILoadAttribs* *result) const
 {
     NS_LOCK_INSTANCE();
     *result = mLoadAttribs;
-    NS_IF_ADDREF(mLoadAttribs);
+    NS_IF_ADDREF(*result);
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
@@ -850,9 +846,7 @@ nsresult nsHttpUrlImpl::SetLoadAttribs(nsILoadAttribs* aLoadAttribs)
 {
     NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
     NS_LOCK_INSTANCE();
-    NS_IF_RELEASE(mLoadAttribs);
-    mLoadAttribs = aLoadAttribs;
-    NS_IF_ADDREF(mLoadAttribs);
+    mLoadAttribs = dont_QueryInterface(aLoadAttribs);
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
@@ -861,7 +855,7 @@ nsresult nsHttpUrlImpl::GetURLGroup(nsIURLGroup* *result) const
 {
     NS_LOCK_INSTANCE();
     *result = mURLGroup;
-    NS_IF_ADDREF(mURLGroup);
+    NS_IF_ADDREF(mURLGroup); // getters must |AddRef| their result, even if they didn'st already own it
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
@@ -870,9 +864,9 @@ nsresult nsHttpUrlImpl::SetURLGroup(nsIURLGroup* group)
 {
     NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
     NS_LOCK_INSTANCE();
-    NS_IF_RELEASE(mURLGroup);
+    // NS_IF_RELEASE(mURLGroup);
     mURLGroup = group;
-    NS_IF_ADDREF(mURLGroup);
+    // NS_IF_ADDREF(mURLGroup);
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
@@ -889,8 +883,7 @@ nsresult nsHttpUrlImpl::SetPostHeader(const char* name, const char* value)
 nsresult nsHttpUrlImpl::SetPostData(nsIInputStream* input)
 {
     NS_LOCK_INSTANCE();
-    mPostData = input;
-    input->AddRef();
+    mPostData = dont_QueryInterface(input);
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
