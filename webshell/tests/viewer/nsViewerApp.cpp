@@ -543,9 +543,8 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
       else if (PL_strcmp(argv[i], "-M") == 0) {
         mShowLoadTimes = PR_TRUE;
       }
-      else {
+      else if (PL_strcmp(argv[i], "-?") == 0) {
         PrintHelpInfo(argv);
-        exit(-1);
       }
     }
     else
