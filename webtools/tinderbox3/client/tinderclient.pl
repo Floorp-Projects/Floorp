@@ -647,6 +647,7 @@ sub maybe_upgrade {
         eval {
           # Throttle just in case we get in an upgrade client loop
           $this->maybe_throttle();
+          chdir($this->{BUILD_VARS}{olddir});
           exec("perl", $0, @{$this->{ORIGINAL_ARGS}});
         };
         exit(0);
@@ -675,20 +676,18 @@ sub call_module {
 sub build_iteration {
   my $this = shift;
 
-  my $olddir;
+  # Initialize transient variables
+  $this->{BUILD_VARS} = { fields => {} };
+  $this->{BUILD_VARS}{START_TIME} = time;
+
   if ($this->{ARGS}{dir}) {
-    $olddir = getcwd();
+    $this->{BUILD_VARS}{olddir} = getcwd();
     chdir($this->{ARGS}{dir});
   }
 
   # Open the log
   open $this->{LOG_OUT}, ">tinderclient.log" or die "Could not output to tinder log";
   open $this->{LOG_IN}, "tinderclient.log" or die "Could not read tinder log";
-
-  # Initialize transient variables
-  $this->{BUILD_VARS} = { fields => {} };
-
-  $this->{BUILD_VARS}{START_TIME} = time;
 
   #
   # Send build start notification
@@ -729,8 +728,8 @@ sub build_iteration {
   $this->maybe_throttle();
 
   # Change back to where we were before this iteration
-  if (defined($olddir)) {
-    chdir($olddir);
+  if (defined($this->{BUILD_VARS}{olddir})) {
+    chdir($this->{BUILD_VARS}{olddir});
   }
 }
 
