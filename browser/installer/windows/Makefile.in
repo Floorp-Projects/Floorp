@@ -42,13 +42,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOZ_SRC=$(shell cygpath -wa $(topsrcdir)/..)
-export MOZ_SRC
-
-CONFIG_DIR=$(shell cygpath -wa $(srcdir))
+CONFIG_DIR=$(shell cygpath -a $(srcdir))
+OBJ_DIR=$(shell cygpath -a $(topsrcdir))
+SRC_DIR=$(shell cygpath -a $(DEPTH))
 
 installer:
-	cd $(topsrcdir)/toolkit/mozapps/installer/windows && perl build_static.pl -config "$(CONFIG_DIR)"
+	cd $(topsrcdir)/toolkit/mozapps/installer && perl build_static.pl -config "$(CONFIG_DIR)" -srcDir "$(SRC_DIR)" -objDir "$(OBJ_DIR)"
 
 include $(topsrcdir)/config/rules.mk
 
