@@ -506,6 +506,7 @@ nsresult nsImageDocument::UpdateTitle( void )
     nsAutoString widthStr;
     nsAutoString heightStr;
     nsXPIDLString fileStr;
+    nsAutoString typeStr;
     PRUint32 width = 0, height = 0;
 
     nsCOMPtr<nsIURL> url = do_QueryInterface(mDocumentURL);
@@ -535,30 +536,44 @@ nsresult nsImageDocument::UpdateTitle( void )
 
       widthStr.AppendInt(width);
       heightStr.AppendInt(height);
+
+      nsXPIDLCString mimeType;
+      mImageRequest->GetMimeType(getter_Copies(mimeType));
+      ToUpperCase(mimeType);
+      nsXPIDLCString::const_iterator start, end;
+      mimeType.BeginReading(start);
+      mimeType.EndReading(end);
+      nsXPIDLCString::const_iterator iter = end;
+      if (FindInReadable(NS_LITERAL_CSTRING("IMAGE/"), start, iter) && iter != end) {
+        CopyASCIItoUCS2(Substring(iter, end), typeStr);
+      } else {
+        CopyASCIItoUCS2(mimeType, typeStr);
+      }
     }
     // If we got a filename, display it
-    if(!fileStr.IsEmpty()) {
+    if (!fileStr.IsEmpty()) {
       // if we got a valid size (sometimes we do not) then display it
       if (width != 0 && height != 0){
-        const PRUnichar *formatStrings[3]  = {fileStr.get(), widthStr.get(), heightStr.get()};
-        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithDimensionsAndFile").get(), formatStrings, 3, getter_Copies(valUni));
+        const PRUnichar *formatStrings[4]  = {fileStr.get(), typeStr.get(), widthStr.get(), heightStr.get()};
+        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithDimensionsAndFile").get(), formatStrings, 4, getter_Copies(valUni));
       } else {
-        const PRUnichar *formatStrings[1] = {fileStr.get()};
-        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithoutDimensions").get(), formatStrings, 1, getter_Copies(valUni));
+        const PRUnichar *formatStrings[2] = {fileStr.get(), typeStr.get()};
+        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithoutDimensions").get(), formatStrings, 2, getter_Copies(valUni));
       }
     } else {
       // if we got a valid size (sometimes we do not) then display it
       if (width != 0 && height != 0){
-        const PRUnichar *formatStrings[2]  = {widthStr.get(), heightStr.get()};
-        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithDimensions").get(), formatStrings, 2, getter_Copies(valUni));
+        const PRUnichar *formatStrings[3]  = {typeStr.get(), widthStr.get(), heightStr.get()};
+        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithDimensions").get(), formatStrings, 3, getter_Copies(valUni));
       } else {
-        rv = bundle->GetStringFromName(NS_LITERAL_STRING("ImageTitleWithoutDimensionsAndFile").get(), getter_Copies(valUni));
+        const PRUnichar *formatStrings[1]  = {typeStr.get()};
+        rv = bundle->FormatStringFromName(NS_LITERAL_STRING("ImageTitleWithNeitherDimensionsNorFile").get(), formatStrings, 1, getter_Copies(valUni));
       }
     }
 
     if (NS_SUCCEEDED(rv) && valUni) {
       // set it on the document
-      SetTitle(nsDependentString(valUni));
+      SetTitle(valUni);
     }
   }
   return NS_OK;
