@@ -166,10 +166,19 @@ function checkboxClick( event )
       var completedTime = new Date();
       
       ThisToDo.completed.setTime( completedTime );
+      
+      ThisToDo.status = ThisToDo.ICAL_STATUS_COMPLETED;
+      
    }
    else
+   {
       ThisToDo.completed.clear();
 
+      if( ThisToDo.percent == 0 )
+         ThisToDo.status = ThisToDo.ICAL_STATUS_NEEDSACTION;
+      else
+         ThisToDo.status = ThisToDo.ICAL_STATUS_INPROCESS;
+   }
    gICalLib.modifyTodo( ThisToDo );
 
    toDoUnifinderRefesh();
