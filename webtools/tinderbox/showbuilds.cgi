@@ -238,13 +238,13 @@ sub print_delta {
   if ($value >= 1000000) {
       $value = int($value / 1000000);
       $min = int($min / 1000000);
-      $units = "Mb";
+      $units = " M";
   }
   else {
       if ($value >= 1000) {
           $value = int($value / 1000);
           $min = int($min / 1000);
-          $units = "Kb";
+          $units = " K";
       }
   }
 
