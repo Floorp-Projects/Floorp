@@ -1383,3 +1383,16 @@ envirocheck::
 	@echo "MOZ_LITE       = $(MOZ_LITE)"
 	@echo "MOZ_MEDIUM     = $(MOZ_MEDIUM)"
 	@echo -----------------------------------
+
+echo-dirs:
+	@echo $(DIRS)
+
+echo-depth-path:
+	@$(topsrcdir)/build/autoconf/print-depth-path.sh
+
+echo-module-name:
+	@$(topsrcdir)/build/package/rpm/print-module-name.sh
+
+echo-module-filelist:
+	@$(topsrcdir)/build/package/rpm/print-module-filelist.sh
+

@@ -47,8 +47,6 @@ build/unix/Makefile
 build/unix/mozilla-config
 build/unix/nspr_my_config.mk
 build/unix/nspr_my_overrides.mk
-build/package/rpm/mozilla.spec
-build/package/rpm/nspr-pthreads.spec
 config/Makefile
 config/autoconf.mk
 config/mkdepend/Makefile

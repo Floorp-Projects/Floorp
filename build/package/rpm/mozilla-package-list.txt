@@ -1,0 +1,9 @@
+nspr
+core
+network
+layout
+xpinstall
+profile
+xptoolkit
+cookie
+wallet
