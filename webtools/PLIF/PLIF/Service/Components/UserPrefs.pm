@@ -421,7 +421,7 @@ sub applyUserPrefsFieldChange {
             $self->warn(2, "user $userID tried to change user $targetUserID's $fieldCategory.$fieldName field: denied");
             return [$targetUserID, "fields.$fieldCategory.$fieldName", 'accessDenied'];
         }
-    } elsif ($fieldCategory eq 'detail') {
+    } elsif ($fieldCategory eq 'personal') {
         if ($editingUserIsTargetUser or $rightPersonalDetails) {
             if ($newValue eq '') {
                 $field->remove();
