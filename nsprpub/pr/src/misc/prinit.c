@@ -123,22 +123,34 @@ PR_IMPLEMENT(PRBool) PR_Initialized(void)
 {
     return _pr_initialized;
 }
+
 PRInt32 _native_threads_only = 0;
 
+#ifdef WINNT
+static void _pr_SetNativeThreadsOnlyMode(void)
+{
+    HMODULE mainExe;
+    PRBool *globalp;
+    char *envp;
+
+    mainExe = GetModuleHandle(NULL);
+    PR_ASSERT(NULL != mainExe);
+    globalp = (PRBool *) GetProcAddress(mainExe, "nspr_native_threads_only");
+    if (globalp) {
+        _native_threads_only = (*globalp != PR_FALSE);
+    } else if (envp = getenv("NSPR_NATIVE_THREADS_ONLY")) {
+        _native_threads_only = (atoi(envp) == 1);
+    }
+}
+#endif
 
 static void _PR_InitStuff(void)
 {
-#ifdef WINNT
-	char *envp;
-#endif
 
     if (_pr_initialized) return;
     _pr_initialized = PR_TRUE;
 #ifdef WINNT
-    if (envp = getenv("NSPR_NATIVE_THREADS_ONLY")) {
-        if (atoi(envp) == 1)
-            _native_threads_only = 1;
-    }
+    _pr_SetNativeThreadsOnlyMode();
 #endif
 
 
