@@ -113,7 +113,7 @@ FILE *gErrFile = NULL;
 static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
-    printf(message);
+    printf("%s\n", message);
 }
 
 static JSBool
