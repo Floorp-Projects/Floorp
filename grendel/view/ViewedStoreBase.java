@@ -27,6 +27,7 @@ import javax.mail.AuthenticationFailedException;
 import javax.mail.Folder;
 import javax.mail.MessagingException;
 import javax.mail.Store;
+import javax.mail.URLName;
 import javax.mail.event.ConnectionEvent;
 import javax.mail.event.ConnectionListener;
 import javax.mail.event.FolderEvent;
@@ -104,6 +105,11 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
     return fStore;
   }
 
+  public boolean isLocal() {
+    URLName url = fStore.getURLName();
+    return (url.getProtocol().equals("berkeley"));
+  }
+
   /**
    * Returns the store's default folder wrapped in a ViewedFolder
    * object.
@@ -112,7 +118,7 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
   public ViewedFolder getDefaultFolder() throws MessagingException {
     if (fDefaultFolder == null) {
       checkConnected();
-      if (isConnected()) {
+      if (isConnected() || isLocal()) {
         fDefaultFolder = new ViewedFolderBase(this, null,
                                               fStore.getDefaultFolder());
 
@@ -179,9 +185,30 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
     fListeners.remove(ViewedStoreListener.class, l);
   }
 
+  void connectStore() {
+    try {
+      if (fStore != null) {
+        fStore.connect(getHost(), getUsername(), null);
+      }
+    } catch (AuthenticationFailedException e) {
+      JOptionPane.showMessageDialog(null,
+                                    // labels.getString("loginFailedLabel"),
+                                    // labels.getString("errorDialogLabel"),
+                                    "Login failed",
+                                    "Grendel Error",
+                                    JOptionPane.ERROR_MESSAGE);
+      
+    } catch (MessagingException e) {
+      System.out.println("Got exception " + e +
+                         " while connecting to " + this);
+      e.printStackTrace();
+    }
+  }
+
   void checkConnected() throws MessagingException {
     if (!isConnected()) {
       boolean success = false;
+
       Thread connect = new Thread(new ConnectThread());
       connect.start();
       success = true;
@@ -314,23 +341,7 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
 
   class ConnectThread implements Runnable {
     public void run() {
-      try {
-        if (fStore != null) {
-          fStore.connect(getHost(), getUsername(), null);
-        }
-      } catch (AuthenticationFailedException e) {
-        JOptionPane.showMessageDialog(null,
-                                      // labels.getString("loginFailedLabel"),
-                                      // labels.getString("errorDialogLabel"),
-                                      "Login failed",
-                                      "Grendel Error",
-                                      JOptionPane.ERROR_MESSAGE);
-        
-      } catch (MessagingException e) {
-        System.out.println("Got exception " + e +
-                           " while connecting to " + this);
-        e.printStackTrace();
-      }
+      connectStore();
     }
   }
 
