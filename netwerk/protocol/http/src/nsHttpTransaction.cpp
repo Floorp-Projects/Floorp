@@ -503,14 +503,6 @@ nsHttpTransaction::HandleContentStart()
                 if (!mChunkedDecoder)
                     return NS_ERROR_OUT_OF_MEMORY;
                 LOG(("chunked decoder created\n"));
-
-                val = mResponseHead->PeekHeader(nsHttp::Trailer);
-                if (val) {
-                    LOG(("response contains a Trailer header\n"));
-                    // FIXME we should at least eat the trailer headers so this
-                    // connection could be reused.
-                    mConnection->DontReuse();
-                }
             }
 #if defined(PR_LOGGING)
             else if (mContentLength == -1)

@@ -43,7 +43,11 @@ public:
 
     nsresult VisitHeaders(nsIHttpHeaderVisitor *visitor);
 
-    void     Flatten(nsACString &);
+    // parse a header line, return the header atom and a pointer to the 
+    // header value (the substring of the header line -- do not free).
+    void ParseHeaderLine(char *line, nsHttpAtom *header=nsnull, char **value=nsnull);
+
+    void Flatten(nsACString &);
 
     PRUint32 Count() { return (PRUint32) mHeaders.Count(); }
 

@@ -76,6 +76,9 @@ struct nsHttpAtom
     operator const char *() { return _val; }
     const char *get() { return _val; }
 
+    void operator=(const char *v) { _val = v; }
+    void operator=(const nsHttpAtom &a) { _val = a._val; }
+
     // private
     const char *_val;
 };
