@@ -55,7 +55,7 @@ use Chatbot::Eliza;
 
 $|++;
 
-my $VERSION = "1.27"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.30"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
@@ -124,6 +124,9 @@ my $last_moon = 0;
 # leave @trees empty if you don't want tinderbox details
 
 my @trees = qw (Mozilla-External SeaMonkey);
+if ($nick =~ /grend/) {
+    @trees = qw (Grendel);
+}
 my $trees;
 my $status;
 my $last_tree;
@@ -671,7 +674,7 @@ sub bot_tinderbox {
 
     $buf = $buf || 
 			"something broke. report a bug here: " .
-			"http://cvs-mirror.mozilla.org/webtools/bugzilla/enter_bug.cgi " .
+			"http://bugzilla.mozilla.org/enter_bug.cgi " .
 			"with product of Webtools and component set to Mozbot";
 
     push @buf, "last update: " .
@@ -1034,8 +1037,7 @@ sub stocks {
 
 
 sub LoadStockList {
-     %stocklist = ("NSCP" => [$channel],
-                   "AOL" => [$channel]);
+     %stocklist = ("AOL" => [$channel]);
 
      if (open(LIST, $stockf)) {
          %stocklist = ();
