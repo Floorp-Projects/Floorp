@@ -1393,6 +1393,7 @@ nsDocument::UpdateStyleSheets(nsISupportsArray* aOldSheets, nsISupportsArray* aN
     }
   }
 
+  // XXXldb Hopefully the observer doesn't care which sheet you use.
   for (PRInt32 indx = 0; indx < mObservers.Count(); indx++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(indx);
     observer->StyleSheetRemoved(this, sheet);
@@ -3468,41 +3469,6 @@ nsDocument::RemoveReference(void *aKey, nsISupports **aOldReference)
 
   mContentWrapperHash.Remove(&key, aOldReference);
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsDocument::GetDTD(nsIDTD** aDTD) const
-{
-  if (!aDTD)
-    return NS_ERROR_INVALID_ARG;
-  if (!mDTD)
-  {
-    nsCOMPtr<nsIDOMDocumentType> doctype;
-    // Wish for mutable:
-    nsresult rv = NS_CONST_CAST(nsDocument* , this)->GetDoctype(getter_AddRefs(doctype));
-    if (NS_FAILED(rv)) return rv;
-    if (!doctype) return NS_ERROR_FAILURE;
-    nsAutoString doctypename;
-    rv = doctype->GetName(doctypename);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIParser> parser( do_CreateInstance(kCParserCID, &rv) );
-    if (NS_FAILED(rv)) return rv;
-    if (!parser) return NS_ERROR_FAILURE;
-
-    nsIDTD* dtd = 0;
-    rv = parser->CreateCompatibleDTD(&dtd, &doctypename, eViewNormal,
-                                     0, eDTDMode_unknown);
-    if (NS_FAILED(rv)) return rv;
-    if (!dtd) return NS_ERROR_FAILURE;
-
-    // Wish again for mutable:
-    NS_CONST_CAST(nsDocument* , this)->mDTD = dtd;
-  }
-
-  NS_ADDREF(mDTD);
-  *aDTD = mDTD;
   return NS_OK;
 }
 

@@ -80,7 +80,6 @@ static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
 static NS_DEFINE_IID(kExpatDriverCID, NS_EXPAT_DRIVER_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-static NS_DEFINE_CID(kCOtherDTDCID, NS_COTHER_DTD_CID);
 static NS_DEFINE_CID(kViewSourceDTDCID, NS_VIEWSOURCE_DTD_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
@@ -122,20 +121,12 @@ public:
   CSharedParserObjects()
   :mDTDDeque(0), 
    mHasViewSourceDTD(PR_FALSE),
-   mHasXMLDTD(PR_FALSE),
-   mOtherDTD(nsnull)
+   mHasXMLDTD(PR_FALSE)
   {
 
     //Note: To cut down on startup time/overhead, we defer the construction of non-html DTD's. 
 
     nsIDTD* theDTD;
-
-    const char* theStrictDTDEnabled=PR_GetEnv("ENABLE_STRICT");  //always false (except rickg's machine)
-
-    if(theStrictDTDEnabled) { 
-      NS_NewOtherHTMLDTD(&mOtherDTD);  //do this as the default DTD for strict documents...
-      mDTDDeque.Push(mOtherDTD);
-    }
 
     NS_NewNavHTMLDTD(&theDTD);    //do this as a default HTML DTD...
     
@@ -169,7 +160,6 @@ public:
   nsDeque mDTDDeque;
   PRBool  mHasViewSourceDTD;  //this allows us to defer construction of this object.
   PRBool  mHasXMLDTD;         //also defer XML dtd construction
-  nsIDTD  *mOtherDTD;         //it's ok to leak this; the deque contains a copy too.
 };
 
 
@@ -1134,7 +1124,6 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
       return PR_TRUE;
 
   CSharedParserObjects& gSharedObjects=GetSharedObjects();
-  aParserContext.mValidator=gSharedObjects.mOtherDTD;
 
   aParserContext.mAutoDetectStatus=eUnknownDetect;
   PRInt32 theDTDIndex=0;
@@ -1175,139 +1164,10 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aBuffer) {
   }
 
   if(theBestDTD) {
-
-//#define FORCE_HTML_THROUGH_STRICT_DTD
-#if FORCE_HTML_THROUGH_STRICT_DTD
-    if(theBestDTD==gSharedObjects.mDTDDeque.ObjectAt(0))
-      theBestDTD=(nsIDTD*)gSharedObjects.mDTDDeque.ObjectAt(1);
-#endif
-
     theBestDTD->CreateNewInstance(&aParserContext.mDTD);
     return PR_TRUE;
   }
   return PR_FALSE;
-}
-
-/**
- *  Call this method to determine a DTD for a DOCTYPE
- *  
- *  @update  harishd 05/01/00
- *  @param   aDTD  -- Carries the deduced ( from DOCTYPE ) DTD.
- *  @param   aDocTypeStr -- A doctype for which a DTD is to be selected.
- *  @param   aMimeType   -- A mimetype for which a DTD is to be selected.
- *                          Note: aParseMode might be required.
- *  @param   aCommand    -- A command for which a DTD is to be selected.
- *  @param   aParseMode  -- Used with aMimeType to choose the correct DTD.
- *  @return  NS_OK if succeeded else ERROR.
- */
-NS_IMETHODIMP nsParser::CreateCompatibleDTD(nsIDTD** aDTD, 
-                                            nsString* aDocTypeStr, 
-                                            eParserCommands aCommand,
-                                            const nsString* aMimeType,
-                                            nsDTDMode aDTDMode)
-{
-  nsresult       result=NS_OK; 
-  const nsCID*   theDTDClassID=0;
-
-  /**
-   *  If the command is eViewNormal then we choose the DTD from
-   *  either the DOCTYPE or form the MIMETYPE. DOCTYPE is given
-   *  precedence over MIMETYPE. The passsed in DTD mode takes
-   *  precedence over the DTD mode figured out from the DOCTYPE string.
-   *  Ex. Assume the following:
-   *      aDocTypeStr=<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-   *      aCommand=eViewNormal 
-   *      aMimeType=text/html
-   *      aDTDMode=eDTDMode_strict
-   *  The above example would invoke DetermineParseMode(). This would figure out
-   *  a DTD mode ( eDTDMode_quirks ) and the doctype (eHTML4Text). Based on this
-   *  info. NavDTD would be chosen. However, since the passed in mode (aDTDMode) requests
-   *  for a strict the COtherDTD ( strict mode ) would get chosen rather than NavDTD. 
-   *  That is, aDTDMode overrides theDTDMode ( configured by the DOCTYPE ).The mime type 
-   *  will be taken into consideration only if a DOCTYPE string is not available.
-   *
-   *  Usage ( a sample ):
-   *
-   *  nsCOMPtr<nsIDTD> theDTD;
-   *  nsAutoString     theMimeType;
-   *  nsAutoString     theDocType;
-   *  
-   *  theDocType.Assign(NS_LITERAL_STRING("<!DOCTYPE>"));
-   *  theMimeType.Assign(NS_LITERAL_STRING("text/html"));
-   *
-   *  result=CreateCompatibleDTD(getter_AddRefs(theDTD),&theDocType,eViewNormal,&theMimeType,eDTDMode_quirks);
-   *       
-   */
-  
-  if(aCommand==eViewNormal) {
-    if(aDocTypeStr) {
-      nsDTDMode      theDTDMode=eDTDMode_unknown;
-      eParserDocType theDocType=ePlainText;
-
-      if(!aMimeType) {
-        nsAutoString temp;
-        DetermineParseMode(*aDocTypeStr,theDTDMode,theDocType,temp);
-      } 
-      else DetermineParseMode(*aDocTypeStr,theDTDMode,theDocType,*aMimeType);
-
-      NS_ASSERTION(aDTDMode==eDTDMode_unknown || aDTDMode==theDTDMode,"aDTDMode overrides the mode selected from the DOCTYPE ");
-
-      if(aDTDMode!=eDTDMode_unknown) theDTDMode=aDTDMode;  // aDTDMode takes precedence over theDTDMode
-
-      switch(theDocType) {
-        case eHTML_Strict:
-          NS_ASSERTION(theDTDMode==eDTDMode_strict, "wrong mode");
-          theDTDClassID=&kCOtherDTDCID;
-          break;
-        case eHTML3_Quirks:
-        case eHTML_Quirks:
-          theDTDClassID=&kNavDTDCID;
-          break;
-        case eXML:
-          theDTDClassID=&kExpatDriverCID;
-          break;
-        default:
-          theDTDClassID=&kNavDTDCID;
-          break;
-      }
-    }
-    else if(aMimeType) {
-          
-      NS_ASSERTION(aDTDMode!=eDTDMode_unknown,"DTD selection might require a parsemode");
-
-      if(aMimeType->EqualsWithConversion(kHTMLTextContentType)) {
-        if(aDTDMode==eDTDMode_strict) {
-          theDTDClassID=&kCOtherDTDCID;
-        }
-        else {
-         theDTDClassID=&kNavDTDCID;
-        }
-      }
-      else if(aMimeType->EqualsWithConversion(kPlainTextContentType)) {
-        theDTDClassID=&kNavDTDCID;
-      }
-      else if(aMimeType->EqualsWithConversion(kXMLTextContentType) ||
-        aMimeType->EqualsWithConversion(kXMLApplicationContentType) ||
-        aMimeType->EqualsWithConversion(kXHTMLApplicationContentType) ||
-        aMimeType->EqualsWithConversion(kXULTextContentType) ||
-        aMimeType->EqualsWithConversion(kRDFTextContentType)) {
-        theDTDClassID=&kExpatDriverCID;
-      }
-      else {
-        theDTDClassID=&kNavDTDCID;
-      }
-    }
-  }
-  else {
-    if(aCommand==eViewSource) {
-      theDTDClassID=&kViewSourceDTDCID;
-    }
-  }
-
-  result=(theDTDClassID)? nsComponentManager::CreateInstance(*theDTDClassID, nsnull, NS_GET_IID(nsIDTD),(void**)aDTD):NS_OK;
-
-  return result;
-
 }
 
 NS_IMETHODIMP 

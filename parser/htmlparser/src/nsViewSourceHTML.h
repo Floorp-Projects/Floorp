@@ -73,15 +73,6 @@ private:
                       PRInt32 attrCount,
                       PRBool aNewlineRequired);
     
-    nsresult WriteTagWithError(PRInt32 tagType,
-                               const nsAReadableString& aToken,
-                               PRInt32 attrCount,
-                               PRBool aNewlineRequired);
-    
-    void AddContainmentError(eHTMLTags aChild,
-                             eHTMLTags aParent,
-                             PRInt32 aLineNumber);
-
     nsresult WriteAttributes(PRInt32 attrCount);
     nsresult GenerateSummary();
     void StartNewPreBlock(void);
@@ -116,11 +107,9 @@ protected:
     PRInt32             mErrorCount;
     PRInt32             mTagCount;
 
-    nsIDTD              *mValidator;
     nsString            mFilename;
     nsString            mTags;
     nsString            mErrors;
-    PRPackedBool        mShowErrors;
     PRPackedBool        mHasOpenRoot;
     PRPackedBool        mHasOpenBody;
 

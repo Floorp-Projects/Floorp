@@ -118,11 +118,6 @@
 #include "nsIPref.h"
 const PRUnichar nbsp = 160;
 
-// HACK - CID for NS_CTRANSITIONAL_DTD_CID so that we can get at transitional dtd
-#define NS_CTRANSITIONAL_DTD_CID \
-{ 0x4611d482, 0x960a, 0x11d4, { 0x8e, 0xb0, 0xb6, 0x17, 0x66, 0x1b, 0x6f, 0x7c } }
-
-
 static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 

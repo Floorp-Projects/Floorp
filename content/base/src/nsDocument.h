@@ -558,8 +558,6 @@ public:
   virtual nsresult Init();
 
 protected:
-  NS_IMETHOD GetDTD(nsIDTD** aDTD) const;
-
   // subclass hooks for sheet ordering
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet,
                                      PRUint32 aFlags);
