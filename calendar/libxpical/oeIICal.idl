@@ -95,6 +95,7 @@ interface oeIICalEvent : nsISupports
     void addException( in PRTime exdate );
 	nsISimpleEnumerator getExceptions();
     void setSnoozeTime( in PRTime exdate );
+    oeIICalEvent clone();
 };
 
 [scriptable, uuid(b8584baa-1507-40d4-b542-5a2758e1c86d)]

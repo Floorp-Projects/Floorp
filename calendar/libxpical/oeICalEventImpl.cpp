@@ -995,6 +995,36 @@ NS_IMETHODIMP oeICalEventImpl::SetSnoozeTime( PRTime snoozetime )
     return NS_OK;
 }
 
+NS_IMETHODIMP oeICalEventImpl::Clone( oeIICalEvent **ev )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventImpl::Clone()\n" );
+#endif
+    nsresult rv;
+    oeICalEventImpl *icalevent =nsnull;
+    if( NS_FAILED( rv = NS_NewICalEvent( (oeIICalEvent**) &icalevent ) ) ) {
+        return rv;
+    }
+    icalcomponent *vcalendar = AsIcalComponent();
+    if ( !vcalendar ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalEventImpl::Clone() failed!\n" );
+        #endif
+        icalevent->Release();
+        return NS_OK;
+    }
+    icalcomponent *vevent = icalcomponent_get_first_component( vcalendar, ICAL_VEVENT_COMPONENT );
+    if( !(icalevent->ParseIcalComponent( vevent )) ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalEventImpl::Clone() failed.\n" );
+        #endif
+        icalevent->Release();
+        return NS_OK;
+    }
+    *ev = icalevent;
+    return NS_OK;
+}
+
 bool oeICalEventImpl::ParseIcalComponent( icalcomponent *vevent )
 {
 #ifdef ICAL_DEBUG_ALL
