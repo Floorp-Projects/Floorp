@@ -151,8 +151,8 @@
            extends="chrome://global/content/bindings/progressmeter.xml#progressmeter">
     <content>
       <xul:progressbar class="progressmeter-progressbar" inherits="value,mode,statusbar" flex="1">
-        <xul:spring class="progress-bar" inherits="mode"/>
-        <xul:spring class="progress-remainder" inherits="mode"/>
+        <xul:box class="progress-bar" inherits="mode"/>
+        <xul:box class="progress-remainder" inherits="mode"/>
       </xul:progressbar>
     </content>
   </binding>
