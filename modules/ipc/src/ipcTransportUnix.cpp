@@ -35,9 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <pwd.h>
-#include <unistd.h>
-#include <sys/types.h>
+#include "prenv.h"
 
 #include "nsIFile.h"
 #include "nsIServiceManager.h"
@@ -200,13 +198,19 @@ ipcTransport::GetSocketPath(nsACString &socketPath)
     NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file));
     if (!file)
         return NS_ERROR_FAILURE;
-    // XXX may want to use getpwuid_r when available
-    struct passwd *pw = getpwuid(geteuid());
-    if (!pw)
-        return NS_ERROR_UNEXPECTED;
+
+    const char *logName = PR_GetEnv("LOGNAME");
+    if (!(logName && *logName)) {
+        logName = PR_GetEnv("USER");
+        if (!(logName && *logName)) {
+            LOG(("could not determine username from environment\n"));
+            return NS_ERROR_FAILURE;
+        }
+    }
+
     nsCAutoString leaf;
     leaf = NS_LITERAL_CSTRING(".mozilla-ipc-")
-         + nsDependentCString(pw->pw_name);
+         + nsDependentCString(logName);
     file->AppendNative(leaf);
     file->AppendNative(NS_LITERAL_CSTRING("ipcd"));
     file->GetNativePath(socketPath);

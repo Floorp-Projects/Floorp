@@ -161,14 +161,14 @@ ipcService::OnIPCMClientInfo(const ipcmMessageClientInfo *msg)
     PRUint32 targetCount = msg->TargetCount();
     PRUint32 i;
 
-    const char **names = (const char **) calloc(nameCount + 1, sizeof(const char *));
+    const char **names = (const char **) calloc(nameCount, sizeof(char *));
     const char *lastName = NULL;
     for (i = 0; i < nameCount; ++i) {
         lastName = msg->NextName(lastName);
         names[i] = lastName;
     }
 
-    const nsID **targets = (const nsID **) calloc(targetCount + 1, sizeof(const nsID *));
+    const nsID **targets = (const nsID **) calloc(targetCount, sizeof(nsID *));
     const nsID *lastTarget = NULL;
     for (i = 0; i < targetCount; ++i) {
         lastTarget = msg->NextTarget(lastTarget);
