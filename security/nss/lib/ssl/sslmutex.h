@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslmutex.h,v 1.1 2001/06/08 02:56:31 nelsonb%netscape.com Exp $
+ * $Id: sslmutex.h,v 1.2 2001/06/12 01:10:01 nelsonb%netscape.com Exp $
  */
 #ifndef __SSLMUTEX_H_
 #define __SSLMUTEX_H_ 1
@@ -63,8 +63,12 @@ typedef int    sslPID;
 #elif defined(LINUX) || defined(AIX)
 
 #include <sys/types.h>
+#include "prtypes.h"
 
-typedef struct { int ps[3]; } sslMutex;
+typedef struct { 
+    int      mPipes[3]; 
+    PRInt32  nWaiters;
+} sslMutex;
 typedef pid_t sslPID;
 
 #elif defined(XP_UNIX) /* other types of Unix */

@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslmutex.c,v 1.1 2001/06/08 02:56:29 nelsonb%netscape.com Exp $
+ * $Id: sslmutex.c,v 1.2 2001/06/12 01:10:01 nelsonb%netscape.com Exp $
  */
 
 #include "sslmutex.h"
@@ -43,6 +43,7 @@
 #include <string.h>
 #include <errno.h>
 #include "unix_err.h"
+#include "pratom.h"
 
 #define SSL_MUTEX_MAGIC 0xfeedfd
 #define NONBLOCKING_POSTS 1	/* maybe this is faster */
@@ -75,108 +76,118 @@ SECStatus
 sslMutex_Init(sslMutex *pMutex, int shared)
 {
     int  err;
-    int  mPipes[3];
-    char c      = 1;
 
-    memset(pMutex, -1, sizeof *pMutex);
-    err = pipe(mPipes);
+    pMutex->mPipes[0] = -1;
+    pMutex->mPipes[1] = -1;
+    pMutex->mPipes[2] = -1;
+    pMutex->nWaiters  =  0;
+
+    err = pipe(pMutex->mPipes);
     if (err) {
 	return err;
     }
     /* close-on-exec is false by default */
     if (!shared) {
-	err = fcntl(mPipes[0], F_SETFD, FD_CLOEXEC);
+	err = fcntl(pMutex->mPipes[0], F_SETFD, FD_CLOEXEC);
 	if (err) 
 	    goto loser;
 
-	err = fcntl(mPipes[1], F_SETFD, FD_CLOEXEC);
+	err = fcntl(pMutex->mPipes[1], F_SETFD, FD_CLOEXEC);
 	if (err) 
 	    goto loser;
     }
 
 #if NONBLOCKING_POSTS
-    err = setNonBlocking(mPipes[1], 1);
+    err = setNonBlocking(pMutex->mPipes[1], 1);
     if (err)
 	goto loser;
 #endif
 
+    /* Pipe starts out empty */
 
-    do {
-	err = write(mPipes[1], &c, 1);
-    } while (err < 0 && (errno == EINTR || errno == EAGAIN));
-    if (0 > err)
-	goto loser;
+    pMutex->mPipes[2] = SSL_MUTEX_MAGIC;
 
-    mPipes[2] = SSL_MUTEX_MAGIC;
-
-    memcpy(pMutex, mPipes, sizeof mPipes);
     return SECSuccess;
 
 loser:
     nss_MD_unix_map_default_error(errno);
-    close(mPipes[0]);
-    close(mPipes[1]);
+    close(pMutex->mPipes[0]);
+    close(pMutex->mPipes[1]);
     return SECFailure;
 }
 
 SECStatus
 sslMutex_Destroy(sslMutex *pMutex)
 {
-    int * mPipes = (int *)pMutex;
-    if (mPipes[2] != SSL_MUTEX_MAGIC) {
+    if (pMutex->mPipes[2] != SSL_MUTEX_MAGIC) {
 	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
 	return SECFailure;
     }
-    close(mPipes[0]);
-    close(mPipes[1]);
-    memset(pMutex, -1, sizeof *pMutex);
+    close(pMutex->mPipes[0]);
+    close(pMutex->mPipes[1]);
+
+    pMutex->mPipes[0] = -1;
+    pMutex->mPipes[1] = -1;
+    pMutex->mPipes[2] = -1;
+    pMutex->nWaiters  =  0;
+
     return SECSuccess;
 }
 
 SECStatus 
 sslMutex_Unlock(sslMutex *pMutex)
 {
-    int * mPipes = (int *)pMutex;
-    int   cc;
-    char  c  = 1;
+    PRInt32 oldValue;
 
-    if (mPipes[2] != SSL_MUTEX_MAGIC) {
+    if (pMutex->mPipes[2] != SSL_MUTEX_MAGIC) {
 	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
 	return SECFailure;
     }
-    do {
-	cc = write(mPipes[1], &c, 1);
-    } while (cc < 0 && (errno == EINTR || errno == EAGAIN));
-    if (cc == 1)
-	return SECSuccess;
-    if (cc < 0)
-	nss_MD_unix_map_default_error(errno);
-    else
-	PORT_SetError(PR_UNKNOWN_ERROR);
-    return SECFailure;
+    /* Do Memory Barrier here. */
+    oldValue = PR_AtomicDecrement(&pMutex->nWaiters);
+    if (oldValue > 1) {
+	int  cc;
+	char c  = 1;
+	do {
+	    cc = write(pMutex->mPipes[1], &c, 1);
+	} while (cc < 0 && (errno == EINTR || errno == EAGAIN));
+	if (cc != 1) {
+	    if (cc < 0)
+		nss_MD_unix_map_default_error(errno);
+	    else
+		PORT_SetError(PR_UNKNOWN_ERROR);
+	    return SECFailure;
+	}
+    }
+    return SECSuccess;
 }
 
 SECStatus 
 sslMutex_Lock(sslMutex *pMutex)
 {
-    int * mPipes = (int *)pMutex;
-    int   cc;
-    char  c;
+    PRInt32 oldValue;
 
-    if (mPipes[2] != SSL_MUTEX_MAGIC) {
+    if (pMutex->mPipes[2] != SSL_MUTEX_MAGIC) {
 	PORT_SetError(PR_INVALID_ARGUMENT_ERROR);
 	return SECFailure;
     }
-    do {
-	cc = read(mPipes[0], &c, 1);
-    } while (cc < 0 && errno == EINTR);
-    if (cc == 1)
-	return SECSuccess;
-    if (cc < 0)
-	nss_MD_unix_map_default_error(errno);
-    else
-	PORT_SetError(PR_UNKNOWN_ERROR);
-    return SECFailure;
+    oldValue = PR_AtomicDecrement(&pMutex->nWaiters);
+    /* Do Memory Barrier here. */
+    if (oldValue > 0) {
+	int   cc;
+	char  c;
+	do {
+	    cc = read(pMutex->mPipes[0], &c, 1);
+	} while (cc < 0 && errno == EINTR);
+	if (cc != 1) {
+	    if (cc < 0)
+		nss_MD_unix_map_default_error(errno);
+	    else
+		PORT_SetError(PR_UNKNOWN_ERROR);
+	    return SECFailure;
+	}
+    }
+    return SECSuccess;
 }
 
 #elif defined(WIN32)
