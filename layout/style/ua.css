@@ -689,9 +689,8 @@ input[type=password] {
 label {
   display: inline;
   vertical-align: bottom;
-  background-color: white; 
-	padding-left: 3px;
-	padding-right: 3px;
+  padding-left: 3px;
+  padding-right: 3px;
 }
 
 select {
