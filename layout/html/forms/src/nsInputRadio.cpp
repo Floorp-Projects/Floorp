@@ -161,6 +161,7 @@ void nsInputRadio::MapAttributesInto(nsIStyleContext* aContext,
     }
     nsInput::MapAttributesInto(aContext, aPresContext);
   }
+  NS_IF_RELEASE(formMan);
 }
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -180,7 +181,11 @@ nsInputRadioFrame::MouseClicked(nsIPresContext* aPresContext)
     nsresult status = radio->QueryInterface(kIFormControlIID, (void **)&control); 
     NS_ASSERTION(NS_OK == status, "nsInputRadio has no nsIFormControl interface");
     if (NS_OK == status) {
-      radio->GetFormManager()->OnRadioChecked(*control);
+      nsIFormManager* formMan = radio->GetFormManager();
+      if (formMan) {
+        formMan->OnRadioChecked(*control);
+        NS_RELEASE(formMan);
+      }
       NS_RELEASE(radio);
     } 
   }
