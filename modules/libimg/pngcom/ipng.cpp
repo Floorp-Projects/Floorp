@@ -131,15 +131,24 @@ png_set_dims( il_container *ic, png_structp png_ptr)
     src_hdr->width = img_hdr->width = png_ptr->width;
     src_hdr->height = img_hdr->height = png_ptr->height;
 
-    if((png_ptr->channels > 3 )||(png_ptr->trans)){
-        il_create_alpha_mask( (il_container *)png_ptr->io_ptr, 0, png_ptr->width, png_ptr->height);
-        ic->image->header.is_interleaved_alpha = TRUE;
-        //il_init_image_transparent_pixel(ic);
-       ic->imgdcb->ImgDCBInitTransparentPixel();
-
+    if((png_ptr->num_trans)||(png_ptr->color_type  & PNG_COLOR_MASK_ALPHA))
+    {
+      ic->image->header.alpha_bits = 1;
+      ic->image->header.alpha_shift = 0;
+      ic->image->header.is_interleaved_alpha = TRUE;
     }
-
-    //status = il_size(ic);
+/*
+    if(png_ptr->num_trans){
+      ic->image->header.alpha_bits = 1;
+      ic->image->header.alpha_shift = 0;
+      ic->image->header.is_interleaved_alpha = TRUE;
+    }
+    if(png_ptr->color_type  & PNG_COLOR_MASK_ALPHA){
+      ic->image->header.alpha_bits = 8;
+      ic->image->header.alpha_shift = 0;
+      ic->image->header.is_interleaved_alpha = TRUE;
+    }
+*/
     status = ic->imgdcb->ImgDCBImageSize();
 
     /*Note: all png's are decoded to RGB or RGBa and
@@ -173,11 +182,6 @@ il_png_init_transparency(png_structp png_ptr, il_container *ic, int index)
         src_trans_pixel->green = png_ptr->trans_values.green;
         src_trans_pixel->blue = png_ptr->trans_values.blue;
   
-/* 
-        src_trans_pixel->red = img_trans_pixel->red;
-        src_trans_pixel->green = img_trans_pixel->green;
-        src_trans_pixel->blue = img_trans_pixel->blue;
-*/
         
     /* Set the source image's transparent pixel index.  Do this even if the source
        image's transparent pixel has previously been set, since the index can vary
