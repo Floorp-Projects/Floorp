@@ -163,9 +163,9 @@ protected:
   nsIContent *MatchName(nsIContent *aContent, const nsString& aName);
 
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);
-  static PRBool MatchLinks(nsIContent *aContent, void* aData);
-  static PRBool MatchAnchors(nsIContent *aContent, void* aData);
-  static PRBool MatchNameAttribute(nsIContent* aContent, void* aData);
+  static PRBool MatchLinks(nsIContent *aContent, nsString* aData);
+  static PRBool MatchAnchors(nsIContent *aContent, nsString* aData);
+  static PRBool MatchNameAttribute(nsIContent* aContent, nsString* aData);
 
   PRBool GetBodyContent();
   nsresult GetBodyElement(nsIDOMHTMLBodyElement** aBody);

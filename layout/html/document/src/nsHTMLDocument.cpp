@@ -1073,7 +1073,7 @@ nsHTMLDocument::GetApplets(nsIDOMHTMLCollection** aApplets)
 }
 
 PRBool
-nsHTMLDocument::MatchLinks(nsIContent *aContent, void* aData)
+nsHTMLDocument::MatchLinks(nsIContent *aContent, nsString* aData)
 {
   nsIAtom *name;
   aContent->GetTag(name);
@@ -1108,7 +1108,7 @@ nsHTMLDocument::GetLinks(nsIDOMHTMLCollection** aLinks)
 }
 
 PRBool
-nsHTMLDocument::MatchAnchors(nsIContent *aContent, void* aData)
+nsHTMLDocument::MatchAnchors(nsIContent *aContent, nsString* aData)
 {
   nsIAtom *name;
   aContent->GetTag(name);
@@ -1358,16 +1358,15 @@ nsHTMLDocument::GetElementById(const nsString& aElementId, nsIDOMElement** aRetu
 }
 
 PRBool
-nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, void* aData)
+nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, nsString* aData)
 {
   nsresult result;
   nsAutoString name;
-  char* matchName = (char*)aData;
 
   result = aContent->GetAttribute(kNameSpaceID_None, 
                                   nsHTMLAtoms::name,
                                   name);
-  if ((result == NS_OK) && name.Equals(matchName)) {
+  if ((result == NS_OK) && (nsnull != aData) && name.Equals(*aData)) {
     return PR_TRUE;
   }
   else {
@@ -1379,10 +1378,9 @@ NS_IMETHODIMP
 nsHTMLDocument::GetElementsByName(const nsString& aElementName, 
                                   nsIDOMNodeList** aReturn)
 {
-  char* name = aElementName.ToNewCString();
   nsContentList* elements = new nsContentList(this, 
                                               MatchNameAttribute, 
-                                              name);
+                                              &aElementName);
   if (nsnull == elements) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
