@@ -170,18 +170,30 @@ void nsDocument::SetDocumentCharacterSet(nsCharSetID aCharSetID)
   mCharacterSet = aCharSetID;
 }
 
-nsIPresShell* nsDocument::CreateShell(nsIPresContext* aContext,
-                                      nsIViewManager* aViewManager,
-                                      nsIStyleSet* aStyleSet)
+nsresult nsDocument::CreateShell(nsIPresContext* aContext,
+                                 nsIViewManager* aViewManager,
+                                 nsIStyleSet* aStyleSet,
+                                 nsIPresShell** aInstancePtrResult)
 {
-  nsIPresShell* shell;
-  nsresult status = NS_NewPresShell(&shell);
-  if ((NS_OK == status) &&
-      (NS_OK == shell->Init(this, aContext, aViewManager, aStyleSet))) {
-    // Note: we don't hold a ref to the shell (it holds a ref to us)
-    mPresShells.AppendElement(shell);
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
   }
-  return shell;
+
+  nsIPresShell* shell;
+  nsresult rv = NS_NewPresShell(&shell);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  if (NS_OK != shell->Init(this, aContext, aViewManager, aStyleSet)) {
+    NS_RELEASE(shell);
+    return rv;
+  }
+
+  // Note: we don't hold a ref to the shell (it holds a ref to us)
+  mPresShells.AppendElement(shell);
+  *aInstancePtrResult = shell;
+  return NS_OK;
 }
 
 PRBool nsDocument::DeleteShell(nsIPresShell* aShell)

@@ -58,9 +58,10 @@ public:
    * it's presentation context (presentation context's <b>must not</b> be
    * shared among multiple presentation shell's).
    */
-  virtual nsIPresShell* CreateShell(nsIPresContext* aContext,
-                                    nsIViewManager* aViewManager,
-                                    nsIStyleSet* aStyleSet);
+  virtual nsresult CreateShell(nsIPresContext* aContext,
+                               nsIViewManager* aViewManager,
+                               nsIStyleSet* aStyleSet,
+                               nsIPresShell** aInstancePtrResult);
   virtual PRBool DeleteShell(nsIPresShell* aShell);
   virtual PRInt32 GetNumberOfShells();
   virtual nsIPresShell* GetShellAt(PRInt32 aIndex);
