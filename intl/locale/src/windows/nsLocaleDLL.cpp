@@ -55,6 +55,13 @@ NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
 NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
+//
+// private entry points used for debugging
+//
+#ifdef DEBUG
+void test_internal_tables(void);
+#endif
+
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
@@ -63,6 +70,10 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 {
 	nsIFactory*	factoryInstance;
 	nsresult		res;
+
+#ifdef DEBUG_tague
+	test_internal_tables();
+#endif
 
 	if (aFactory == NULL) return NS_ERROR_NULL_POINTER;
 
