@@ -160,6 +160,10 @@ public:
   void MapImagePropertiesInto(nsIStyleContext* aContext,
                               nsIPresContext* aPresContext);
 
+  void MapImageBorderInto(nsIStyleContext* aContext,
+                          nsIPresContext* aPresContext,
+                          nscolor aBorderColors[4]);
+
   static PRBool ParseAlignParam(const nsString& aString, nsHTMLValue& aResult);
 
   static PRBool AlignParamToString(const nsHTMLValue& aValue,
