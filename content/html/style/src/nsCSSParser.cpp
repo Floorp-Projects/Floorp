@@ -117,7 +117,7 @@ public:
                                        nsIURI*           aBaseURL,
                                        nsCSSDeclaration* aDeclaration,
                                        PRBool            aParseOnlyOneDecl,
-                                       nsChangeHint*     aHint,
+                                       PRBool*           aChanged,
                                        PRBool            aClearOldDecl);
 
   NS_IMETHOD ParseRule(const nsAString&   aRule,
@@ -128,7 +128,7 @@ public:
                            const nsAString& aPropValue,
                            nsIURI* aBaseURL,
                            nsCSSDeclaration* aDeclaration,
-                           nsChangeHint* aHint);
+                           PRBool* aChanged);
 
   void AppendRule(nsICSSRule* aRule);
 
@@ -192,18 +192,20 @@ protected:
   PRBool ParseDeclaration(PRInt32& aErrorCode,
                           nsCSSDeclaration* aDeclaration,
                           PRBool aCheckForBraces,
-                          nsChangeHint& aChangeHint);
+                          PRBool* aChanged);
   // After a parse error parsing |aPropID|, clear the data in
   // |mTempData|.
   void ClearTempData(nsCSSProperty aPropID);
   // After a successful parse of |aPropID|, transfer data from
-  // |mTempData| to |mData|.
+  // |mTempData| to |mData|.  Set |*aChanged| to true if something
+  // changed, but leave it unmodified otherwise.
   void TransferTempData(nsCSSDeclaration* aDeclaration,
-                        nsCSSProperty aPropID, PRBool aIsImportant);
+                        nsCSSProperty aPropID, PRBool aIsImportant,
+                        PRBool* aChanged);
   void DoTransferTempData(nsCSSDeclaration* aDeclaration,
-                          nsCSSProperty aPropID, PRBool aIsImportant);
-  PRBool ParseProperty(PRInt32& aErrorCode, nsCSSProperty aPropID,
-                       nsChangeHint& aChangeHint);
+                          nsCSSProperty aPropID, PRBool aIsImportant,
+                          PRBool* aChanged);
+  PRBool ParseProperty(PRInt32& aErrorCode, nsCSSProperty aPropID);
   PRBool ParseSingleValueProperty(PRInt32& aErrorCode, nsCSSValue& aValue, 
                                   nsCSSProperty aPropID);
 
@@ -213,62 +215,57 @@ protected:
 
   // Property specific parsing routines
   PRBool ParseAzimuth(PRInt32& aErrorCode, nsCSSValue& aValue);
-  PRBool ParseBackground(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParseBackgroundPosition(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParseBorder(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParseBorderColor(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
+  PRBool ParseBackground(PRInt32& aErrorCode);
+  PRBool ParseBackgroundPosition(PRInt32& aErrorCode);
+  PRBool ParseBorder(PRInt32& aErrorCode);
+  PRBool ParseBorderColor(PRInt32& aErrorCode);
   PRBool ParseBorderColors(PRInt32& aErrorCode,
                            nsCSSValueList** aResult,
-                           nsChangeHint& aChangeHint,
                            nsCSSProperty aProperty);
-  PRBool ParseBorderSpacing(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
+  PRBool ParseBorderSpacing(PRInt32& aErrorCode);
   PRBool ParseBorderSide(PRInt32& aErrorCode,
-                         const nsCSSProperty aPropIDs[], nsChangeHint& aChangeHint);
-  PRBool ParseBorderStyle(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParseBorderWidth(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParseBorderRadius(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
+                         const nsCSSProperty aPropIDs[]);
+  PRBool ParseBorderStyle(PRInt32& aErrorCode);
+  PRBool ParseBorderWidth(PRInt32& aErrorCode);
+  PRBool ParseBorderRadius(PRInt32& aErrorCode);
 #ifdef ENABLE_OUTLINE
-  PRBool ParseOutlineRadius(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
+  PRBool ParseOutlineRadius(PRInt32& aErrorCode);
 #endif
   // for 'clip' and '-moz-image-region'
   PRBool ParseRect(nsCSSRect& aRect, PRInt32& aErrorCode,
-                   nsCSSProperty aPropID, nsChangeHint& aChangeHint);
-  PRBool DoParseRect(nsCSSRect& aRect, PRInt32& aErrorCode,
-                     nsChangeHint& aChangeHint);
-  PRBool ParseContent(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
+                   nsCSSProperty aPropID);
+  PRBool DoParseRect(nsCSSRect& aRect, PRInt32& aErrorCode);
+  PRBool ParseContent(PRInt32& aErrorCode);
   PRBool SetSingleCounterValue(nsCSSCounterData** aResult,
                                PRInt32& aErrorCode,
                                nsCSSProperty aPropID,
-                               const nsCSSValue& aValue,
-                               nsChangeHint& aChangeHint);
+                               const nsCSSValue& aValue);
   PRBool ParseCounterData(PRInt32& aErrorCode,
                           nsCSSCounterData** aResult,
-                          nsCSSProperty aPropID, nsChangeHint& aChangeHint);
-  PRBool ParseCue(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParseCursor(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParseFont(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
+                          nsCSSProperty aPropID);
+  PRBool ParseCue(PRInt32& aErrorCode);
+  PRBool ParseCursor(PRInt32& aErrorCode);
+  PRBool ParseFont(PRInt32& aErrorCode);
   PRBool ParseFontWeight(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseFamily(PRInt32& aErrorCode, nsCSSValue& aValue);
-  PRBool ParseListStyle(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParseMargin(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
+  PRBool ParseListStyle(PRInt32& aErrorCode);
+  PRBool ParseMargin(PRInt32& aErrorCode);
   PRBool ParseMarks(PRInt32& aErrorCode, nsCSSValue& aValue);
 #ifdef ENABLE_OUTLINE
-  PRBool ParseOutline(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
+  PRBool ParseOutline(PRInt32& aErrorCode);
 #endif
-  PRBool ParsePadding(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParsePause(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParsePlayDuring(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParseQuotes(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
-  PRBool ParseSize(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
+  PRBool ParsePadding(PRInt32& aErrorCode);
+  PRBool ParsePause(PRInt32& aErrorCode);
+  PRBool ParsePlayDuring(PRInt32& aErrorCode);
+  PRBool ParseQuotes(PRInt32& aErrorCode);
+  PRBool ParseSize(PRInt32& aErrorCode);
   PRBool ParseTextDecoration(PRInt32& aErrorCode, nsCSSValue& aValue);
-  PRBool ParseTextShadow(PRInt32& aErrorCode, nsChangeHint& aChangeHint);
+  PRBool ParseTextShadow(PRInt32& aErrorCode);
 
   // Reused utility parsing routines
-  void AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue,
-                   nsChangeHint& aChangeHint);
+  void AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue);
   PRBool ParseBoxProperties(PRInt32& aErrorCode, nsCSSRect& aResult,
-                            const nsCSSProperty aPropIDs[],
-                            nsChangeHint& aChangeHint);
+                            const nsCSSProperty aPropIDs[]);
   PRInt32 ParseChoice(PRInt32& aErrorCode, nsCSSValue aValues[],
                       const nsCSSProperty aPropIDs[], PRInt32 aNumIDs);
   PRBool ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue);
@@ -661,10 +658,11 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
                                          nsIURI*           aBaseURL,
                                          nsCSSDeclaration* aDeclaration,
                                          PRBool            aParseOnlyOneDecl,
-                                         nsChangeHint*     aHint,
+                                         PRBool*           aChanged,
                                          PRBool            aClearOldDecl)
 {
 //  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
+  *aChanged = PR_FALSE;
 
   nsString* str = new nsString(aBuffer);
   if (nsnull == str) {
@@ -686,25 +684,17 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
   mSection = eCSSSection_General;
   PRInt32 errorCode = NS_OK;
 
-  nsChangeHint hint = NS_STYLE_HINT_NONE;
-
-  if (nsnull != aHint) {
-    *aHint = hint;
-  }
-
   if (aClearOldDecl) {
     mData.AssertInitialState();
     aDeclaration->ClearData();
+    // We could check if it was already empty, but...
+    *aChanged = PR_TRUE;
   } else {
     aDeclaration->ExpandTo(&mData);
   }
 
   do {
-    if (ParseDeclaration(errorCode, aDeclaration, PR_FALSE, hint)) {
-      if (aHint) {
-        NS_UpdateHint(*aHint, hint);
-      }
-    } else {
+    if (!ParseDeclaration(errorCode, aDeclaration, PR_FALSE, aChanged)) {
       if (errorCode != -1) { // -1 means EOF so we ignore that
         rv = errorCode;
       }
@@ -785,10 +775,11 @@ CSSParserImpl::ParseProperty(const nsAString& aPropName,
                              const nsAString& aPropValue,
                              nsIURI* aBaseURL,
                              nsCSSDeclaration* aDeclaration,
-                             nsChangeHint* aHint)
+                             PRBool* aChanged)
 {
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
   NS_ASSERTION(nsnull != aDeclaration, "Need declaration to parse into!");
+  *aChanged = PR_FALSE;
 
   nsString* str = new nsAutoString(aPropValue);
   if (!str) {
@@ -810,11 +801,6 @@ CSSParserImpl::ParseProperty(const nsAString& aPropName,
   mSection = eCSSSection_General;
   PRInt32 errorCode = NS_OK;
 
-  nsChangeHint hint = NS_STYLE_HINT_NONE;
-
-  if (aHint) {
-    *aHint = hint;
-  }
   nsCSSProperty propID = nsCSSProps::LookupProperty(aPropName);
   if (eCSSProperty_UNKNOWN == propID) { // unknown property
     REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown property '") +
@@ -829,8 +815,8 @@ CSSParserImpl::ParseProperty(const nsAString& aPropName,
   mTempData.AssertInitialState();
   aDeclaration->ExpandTo(&mData);
   nsresult result = NS_OK;
-  if (ParseProperty(errorCode, propID, hint)) {
-    TransferTempData(aDeclaration, propID, PR_FALSE);
+  if (ParseProperty(errorCode, propID)) {
+    TransferTempData(aDeclaration, propID, PR_FALSE, aChanged);
   } else {
     REPORT_UNEXPECTED(
       NS_LITERAL_STRING("Error in parsing value for property '") +
@@ -845,9 +831,6 @@ CSSParserImpl::ParseProperty(const nsAString& aPropName,
   CLEAR_ERROR();
   
   aDeclaration->CompressFrom(&mData);
-  if (aHint) {
-    NS_UpdateHint(*aHint, hint);
-  }
   
   ReleaseScanner();
   return result;
@@ -2410,8 +2393,9 @@ CSSParserImpl::ParseDeclarationBlock(PRInt32& aErrorCode,
   mData.AssertInitialState();
   if (declaration) {
     for (;;) {
-      nsChangeHint hint = NS_STYLE_HINT_NONE;
-      if (!ParseDeclaration(aErrorCode, declaration, aCheckForBraces, hint)) {
+      PRBool changed;
+      if (!ParseDeclaration(aErrorCode, declaration, aCheckForBraces,
+                            &changed)) {
         if (!SkipDeclaration(aErrorCode, aCheckForBraces)) {
           break;
         }
@@ -2795,7 +2779,7 @@ PRBool
 CSSParserImpl::ParseDeclaration(PRInt32& aErrorCode,
                                 nsCSSDeclaration* aDeclaration,
                                 PRBool aCheckForBraces,
-                                nsChangeHint& aChangeHint)
+                                PRBool* aChanged)
 {
   mTempData.AssertInitialState();
 
@@ -2846,7 +2830,7 @@ CSSParserImpl::ParseDeclaration(PRInt32& aErrorCode,
     OUTPUT_ERROR();
     return PR_FALSE;
   }
-  if (! ParseProperty(aErrorCode, propID, aChangeHint)) {
+  if (! ParseProperty(aErrorCode, propID)) {
     // XXX Much better to put stuff in the value parsers instead...
     REPORT_UNEXPECTED(
       NS_LITERAL_STRING("Error in parsing value for property '") +
@@ -2867,7 +2851,7 @@ CSSParserImpl::ParseDeclaration(PRInt32& aErrorCode,
       ClearTempData(propID);
       return PR_FALSE;
     }
-    TransferTempData(aDeclaration, propID, isImportant);
+    TransferTempData(aDeclaration, propID, isImportant, aChanged);
     return PR_TRUE;
   }
   else {
@@ -2913,12 +2897,12 @@ CSSParserImpl::ParseDeclaration(PRInt32& aErrorCode,
       ClearTempData(propID);
       return PR_FALSE;
     }
-    TransferTempData(aDeclaration, propID, isImportant);
+    TransferTempData(aDeclaration, propID, isImportant, aChanged);
     return PR_TRUE;
   } 
   if (eCSSToken_Symbol == tk->mType) {
     if (';' == tk->mSymbol) {
-      TransferTempData(aDeclaration, propID, isImportant);
+      TransferTempData(aDeclaration, propID, isImportant, aChanged);
       return PR_TRUE;
     }
     if (!aCheckForBraces) {
@@ -2933,7 +2917,7 @@ CSSParserImpl::ParseDeclaration(PRInt32& aErrorCode,
     }
     if ('}' == tk->mSymbol) {
       UngetToken();
-      TransferTempData(aDeclaration, propID, isImportant);
+      TransferTempData(aDeclaration, propID, isImportant, aChanged);
       return PR_TRUE;
     }
   }
@@ -2962,14 +2946,15 @@ CSSParserImpl::ClearTempData(nsCSSProperty aPropID)
 
 void
 CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
-                                nsCSSProperty aPropID, PRBool aIsImportant)
+                                nsCSSProperty aPropID, PRBool aIsImportant,
+                                PRBool* aChanged)
 {
   if (nsCSSProps::IsShorthand(aPropID)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
-      DoTransferTempData(aDeclaration, *p, aIsImportant);
+      DoTransferTempData(aDeclaration, *p, aIsImportant, aChanged);
     }
   } else {
-    DoTransferTempData(aDeclaration, aPropID, aIsImportant);
+    DoTransferTempData(aDeclaration, aPropID, aIsImportant, aChanged);
   }
   mTempData.AssertInitialState();
 }
@@ -2979,10 +2964,13 @@ CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
 // can't think of why).
 void
 CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
-                                  nsCSSProperty aPropID, PRBool aIsImportant)
+                                  nsCSSProperty aPropID, PRBool aIsImportant,
+                                  PRBool* aChanged)
 {
   NS_ASSERTION(mTempData.HasPropertyBit(aPropID), "oops");
   if (aIsImportant) {
+    if (!mData.HasImportantBit(aPropID))
+      *aChanged = PR_TRUE;
     mData.SetImportantBit(aPropID);
   } else {
     if (mData.HasImportantBit(aPropID)) {
@@ -3006,6 +2994,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     case eCSSType_Value: {
       nsCSSValue *source = NS_STATIC_CAST(nsCSSValue*, v_source);
       nsCSSValue *dest = NS_STATIC_CAST(nsCSSValue*, v_dest);
+      if (*source != *dest)
+        *aChanged = PR_TRUE;
       dest->~nsCSSValue();
       memcpy(dest, source, sizeof(nsCSSValue));
       new (source) nsCSSValue();
@@ -3014,6 +3004,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     case eCSSType_Rect: {
       nsCSSRect *source = NS_STATIC_CAST(nsCSSRect*, v_source);
       nsCSSRect *dest = NS_STATIC_CAST(nsCSSRect*, v_dest);
+      if (*source != *dest)
+        *aChanged = PR_TRUE;
       dest->~nsCSSRect();
       memcpy(dest, source, sizeof(nsCSSRect));
       new (source) nsCSSRect();
@@ -3022,6 +3014,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     case eCSSType_ValueList: {
       nsCSSValueList **source = NS_STATIC_CAST(nsCSSValueList**, v_source);
       nsCSSValueList **dest = NS_STATIC_CAST(nsCSSValueList**, v_dest);
+      if (!nsCSSValueList::Equal(*source, *dest))
+        *aChanged = PR_TRUE;
       delete *dest;
       *dest = *source;
       *source = nsnull;
@@ -3030,6 +3024,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     case eCSSType_CounterData: {
       nsCSSCounterData **source = NS_STATIC_CAST(nsCSSCounterData**, v_source);
       nsCSSCounterData **dest = NS_STATIC_CAST(nsCSSCounterData**, v_dest);
+      if (!nsCSSCounterData::Equal(*source, *dest))
+        *aChanged = PR_TRUE;
       delete *dest;
       *dest = *source;
       *source = nsnull;
@@ -3038,6 +3034,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     case eCSSType_Quotes: {
       nsCSSQuotes **source = NS_STATIC_CAST(nsCSSQuotes**, v_source);
       nsCSSQuotes **dest = NS_STATIC_CAST(nsCSSQuotes**, v_dest);
+      if (!nsCSSQuotes::Equal(*source, *dest))
+        *aChanged = PR_TRUE;
       delete *dest;
       *dest = *source;
       *source = nsnull;
@@ -3046,6 +3044,8 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     case eCSSType_Shadow: {
       nsCSSShadow **source = NS_STATIC_CAST(nsCSSShadow**, v_source);
       nsCSSShadow **dest = NS_STATIC_CAST(nsCSSShadow**, v_dest);
+      if (!nsCSSShadow::Equal(*source, *dest))
+        *aChanged = PR_TRUE;
       delete *dest;
       *dest = *source;
       *source = nsnull;
@@ -3640,40 +3640,9 @@ PRInt32 CSSParserImpl::ParseChoice(PRInt32& aErrorCode, nsCSSValue aValues[],
   return found;
 }
 
-static nsChangeHint ComputeChangeHint(nsCSSProperty aPropID,
-                                     const nsCSSValue& aOldValue,
-                                     const nsCSSValue& aValue) 
-{
-  NS_ASSERTION(aOldValue != aValue,
-    "ComputeChangeHint should not be called with equal values");
-
-  switch (aPropID) {
-  case eCSSProperty_opacity:
-    // If the opacity is changing to or from 1.0, then reframe to (possibly)
-    // cause a view to be created or eliminated
-    // Otherwise we just need a visual change. This is important because
-    // opacity is frequently used for fade effects, and we don't want to reframe
-    // for every step of the fade.
-    if (aOldValue.GetUnit() == eCSSUnit_Number && aValue.GetUnit() == eCSSUnit_Number) {
-      if (aOldValue.GetFloatValue() == 1.0 || aValue.GetFloatValue() == 1.0) {
-        // XXX: it would be better to pass out a hint NS_STYLE_HINT_VIEWCHANGE,
-        // but it does not exist
-        return NS_STYLE_HINT_FRAMECHANGE;
-      }
-      return NS_STYLE_HINT_VISUAL;
-    }
-    break;
-  default:
-    break;
-  }
-  
-  return nsCSSProps::kHintTable[aPropID];
-}
-
 void
 CSSParserImpl::AppendValue(nsCSSProperty aPropID,
-                           const nsCSSValue& aValue,
-                           nsChangeHint& aChangeHint)
+                           const nsCSSValue& aValue)
 {
   NS_ASSERTION(0 <= aPropID && aPropID < eCSSProperty_COUNT_no_shorthands,
                "property out of range");
@@ -3682,10 +3651,7 @@ CSSParserImpl::AppendValue(nsCSSProperty aPropID,
                              nsCSSProps::GetStringValue(aPropID).get()).get());
   nsCSSValue& storage =
       *NS_STATIC_CAST(nsCSSValue*, mTempData.PropertyAt(aPropID));
-  if (storage != aValue) {
-    NS_UpdateHint(aChangeHint, ComputeChangeHint(aPropID, storage, aValue));
-    storage = aValue;
-  }
+  storage = aValue;
   mTempData.SetPropertyBit(aPropID);
 }
 
@@ -3696,8 +3662,7 @@ CSSParserImpl::AppendValue(nsCSSProperty aPropID,
  */
 PRBool CSSParserImpl::ParseBoxProperties(PRInt32& aErrorCode,
                                          nsCSSRect& aResult,
-                                         const nsCSSProperty aPropIDs[],
-                                         nsChangeHint& aChangeHint)
+                                         const nsCSSProperty aPropIDs[])
 {
   // Get up to four values for the property
   PRInt32 count = 0;
@@ -3735,10 +3700,6 @@ PRBool CSSParserImpl::ParseBoxProperties(PRInt32& aErrorCode,
   }
 
   for (index = 0; index < 4; index++) {
-    nsCSSRect::side_type side = nsCSSRect::sides[index];
-    if (aResult.*side != result.*side)
-      NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[aPropIDs[index]]);
-    
     mTempData.SetPropertyBit(aPropIDs[index]);
   }
   aResult = result;
@@ -3746,94 +3707,93 @@ PRBool CSSParserImpl::ParseBoxProperties(PRInt32& aErrorCode,
 }
 
 PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
-                                    nsCSSProperty aPropID,
-                                    nsChangeHint& aChangeHint)
+                                    nsCSSProperty aPropID)
 {
   switch (aPropID) {  // handle shorthand or multiple properties
   case eCSSProperty_background:
-    return ParseBackground(aErrorCode, aChangeHint);
+    return ParseBackground(aErrorCode);
   case eCSSProperty_background_position:
-    return ParseBackgroundPosition(aErrorCode, aChangeHint);
+    return ParseBackgroundPosition(aErrorCode);
   case eCSSProperty_border:
-    return ParseBorder(aErrorCode, aChangeHint);
+    return ParseBorder(aErrorCode);
   case eCSSProperty_border_color:
-    return ParseBorderColor(aErrorCode, aChangeHint);
+    return ParseBorderColor(aErrorCode);
   case eCSSProperty_border_spacing:
-    return ParseBorderSpacing(aErrorCode, aChangeHint);
+    return ParseBorderSpacing(aErrorCode);
   case eCSSProperty_border_style:
-    return ParseBorderStyle(aErrorCode, aChangeHint);
+    return ParseBorderStyle(aErrorCode);
   case eCSSProperty_border_bottom:
-    return ParseBorderSide(aErrorCode, kBorderBottomIDs, aChangeHint);
+    return ParseBorderSide(aErrorCode, kBorderBottomIDs);
   case eCSSProperty_border_left:
-    return ParseBorderSide(aErrorCode, kBorderLeftIDs, aChangeHint);
+    return ParseBorderSide(aErrorCode, kBorderLeftIDs);
   case eCSSProperty_border_right:
-    return ParseBorderSide(aErrorCode, kBorderRightIDs, aChangeHint);
+    return ParseBorderSide(aErrorCode, kBorderRightIDs);
   case eCSSProperty_border_top:
-    return ParseBorderSide(aErrorCode, kBorderTopIDs, aChangeHint);
+    return ParseBorderSide(aErrorCode, kBorderTopIDs);
   case eCSSProperty_border_bottom_colors:
     return ParseBorderColors(aErrorCode,
                              &mTempData.mMargin.mBorderColors.mBottom,
-                             aChangeHint, aPropID);
+                             aPropID);
   case eCSSProperty_border_left_colors:
     return ParseBorderColors(aErrorCode,
                              &mTempData.mMargin.mBorderColors.mLeft,
-                             aChangeHint, aPropID);
+                             aPropID);
   case eCSSProperty_border_right_colors:
     return ParseBorderColors(aErrorCode,
                              &mTempData.mMargin.mBorderColors.mRight,
-                             aChangeHint, aPropID);
+                             aPropID);
   case eCSSProperty_border_top_colors:
     return ParseBorderColors(aErrorCode,
                              &mTempData.mMargin.mBorderColors.mTop,
-                             aChangeHint, aPropID);
+                             aPropID);
   case eCSSProperty_border_width:
-    return ParseBorderWidth(aErrorCode, aChangeHint);
+    return ParseBorderWidth(aErrorCode);
   case eCSSProperty__moz_border_radius:
-    return ParseBorderRadius(aErrorCode, aChangeHint);
+    return ParseBorderRadius(aErrorCode);
 #ifdef ENABLE_OUTLINE
   case eCSSProperty__moz_outline_radius:
-    return ParseOutlineRadius(aErrorCode, aChangeHint);
+    return ParseOutlineRadius(aErrorCode);
 #endif
   case eCSSProperty_clip:
     return ParseRect(mTempData.mDisplay.mClip, aErrorCode,
-                     eCSSProperty_clip, aChangeHint);
+                     eCSSProperty_clip);
   case eCSSProperty_content:
-    return ParseContent(aErrorCode, aChangeHint);
+    return ParseContent(aErrorCode);
   case eCSSProperty__moz_counter_increment:
     return ParseCounterData(aErrorCode, &mTempData.mContent.mCounterIncrement,
-                            aPropID, aChangeHint);
+                            aPropID);
   case eCSSProperty__moz_counter_reset:
     return ParseCounterData(aErrorCode, &mTempData.mContent.mCounterReset,
-                            aPropID, aChangeHint);
+                            aPropID);
   case eCSSProperty_cue:
-    return ParseCue(aErrorCode, aChangeHint);
+    return ParseCue(aErrorCode);
   case eCSSProperty_cursor:
-    return ParseCursor(aErrorCode, aChangeHint);
+    return ParseCursor(aErrorCode);
   case eCSSProperty_font:
-    return ParseFont(aErrorCode, aChangeHint);
+    return ParseFont(aErrorCode);
   case eCSSProperty_image_region:
     return ParseRect(mTempData.mList.mImageRegion, aErrorCode,
-                     eCSSProperty_image_region, aChangeHint);
+                     eCSSProperty_image_region);
   case eCSSProperty_list_style:
-    return ParseListStyle(aErrorCode, aChangeHint);
+    return ParseListStyle(aErrorCode);
   case eCSSProperty_margin:
-    return ParseMargin(aErrorCode, aChangeHint);
+    return ParseMargin(aErrorCode);
 #ifdef ENABLE_OUTLINE
   case eCSSProperty__moz_outline:
-    return ParseOutline(aErrorCode, aChangeHint);
+    return ParseOutline(aErrorCode);
 #endif
   case eCSSProperty_padding:
-    return ParsePadding(aErrorCode, aChangeHint);
+    return ParsePadding(aErrorCode);
   case eCSSProperty_pause:
-    return ParsePause(aErrorCode, aChangeHint);
+    return ParsePause(aErrorCode);
   case eCSSProperty_play_during:
-    return ParsePlayDuring(aErrorCode, aChangeHint);
+    return ParsePlayDuring(aErrorCode);
   case eCSSProperty_quotes:
-    return ParseQuotes(aErrorCode, aChangeHint);
+    return ParseQuotes(aErrorCode);
   case eCSSProperty_size:
-    return ParseSize(aErrorCode, aChangeHint);
+    return ParseSize(aErrorCode);
   case eCSSProperty_text_shadow:
-    return ParseTextShadow(aErrorCode, aChangeHint);
+    return ParseTextShadow(aErrorCode);
 
   // Strip out properties we use internally. These properties are used
   // by compound property parsing routines (e.g. "background-position").
@@ -3853,7 +3813,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
       nsCSSValue value;
       if (ParseSingleValueProperty(aErrorCode, value, aPropID)) {
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          AppendValue(aPropID, value, aChangeHint);
+          AppendValue(aPropID, value);
           aErrorCode = NS_OK;
           return PR_TRUE;
         }
@@ -4301,8 +4261,7 @@ PRBool CSSParserImpl::ParseAzimuth(PRInt32& aErrorCode, nsCSSValue& aValue)
   return PR_FALSE;
 }
 
-PRBool CSSParserImpl::ParseBackground(PRInt32& aErrorCode,
-                                      nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseBackground(PRInt32& aErrorCode)
 {
   const PRInt32 numProps = 6;
   static const nsCSSProperty kBackgroundIDs[numProps] = {
@@ -4436,7 +4395,7 @@ PRBool CSSParserImpl::ParseBackground(PRInt32& aErrorCode,
 
   PRInt32 index;
   for (index = 0; index < numProps; ++index) {
-    AppendValue(kBackgroundIDs[index], values[index], aChangeHint);
+    AppendValue(kBackgroundIDs[index], values[index]);
   }
 
   // Background properties not settable from the shorthand get reset to their initial value
@@ -4450,14 +4409,13 @@ PRBool CSSParserImpl::ParseBackground(PRInt32& aErrorCode,
   nsCSSValue initial;
   initial.SetInitialValue();
   for (index = 0; index < numResetProps; ++index) {
-    AppendValue(kBackgroundResetIDs[index], initial, aChangeHint);
+    AppendValue(kBackgroundResetIDs[index], initial);
   }
 
   return PR_TRUE;
 }
 
-PRBool CSSParserImpl::ParseBackgroundPosition(PRInt32& aErrorCode,
-                                              nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseBackgroundPosition(PRInt32& aErrorCode)
 {
   // First try a number or a length value
   nsCSSValue  xValue;
@@ -4465,8 +4423,8 @@ PRBool CSSParserImpl::ParseBackgroundPosition(PRInt32& aErrorCode,
     if (eCSSUnit_Inherit == xValue.GetUnit() ||
         eCSSUnit_Initial == xValue.GetUnit()) {  // both are inherited or both are set to initial
       if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-        AppendValue(eCSSProperty_background_x_position, xValue, aChangeHint);
-        AppendValue(eCSSProperty_background_y_position, xValue, aChangeHint);
+        AppendValue(eCSSProperty_background_x_position, xValue);
+        AppendValue(eCSSProperty_background_y_position, xValue);
         return PR_TRUE;
       }
       return PR_FALSE;
@@ -4476,8 +4434,8 @@ PRBool CSSParserImpl::ParseBackgroundPosition(PRInt32& aErrorCode,
     if (ParseVariant(aErrorCode, yValue, VARIANT_LP, nsnull)) {
       // We have two numbers
       if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-        AppendValue(eCSSProperty_background_x_position, xValue, aChangeHint);
-        AppendValue(eCSSProperty_background_y_position, yValue, aChangeHint);
+        AppendValue(eCSSProperty_background_x_position, xValue);
+        AppendValue(eCSSProperty_background_y_position, yValue);
         return PR_TRUE;
       }
       return PR_FALSE;
@@ -4486,8 +4444,8 @@ PRBool CSSParserImpl::ParseBackgroundPosition(PRInt32& aErrorCode,
     // We have one number which is the x position. Create an value for
     // the vertical position which is of value 50%
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_background_x_position, xValue, aChangeHint);
-      AppendValue(eCSSProperty_background_y_position, nsCSSValue(0.5f, eCSSUnit_Percent), aChangeHint);
+      AppendValue(eCSSProperty_background_x_position, xValue);
+      AppendValue(eCSSProperty_background_y_position, nsCSSValue(0.5f, eCSSUnit_Percent));
       return PR_TRUE;
     }
     return PR_FALSE;
@@ -4539,8 +4497,8 @@ PRBool CSSParserImpl::ParseBackgroundPosition(PRInt32& aErrorCode,
 
   if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
     // Create style values
-    AppendValue(eCSSProperty_background_x_position, nsCSSValue(xEnumValue, eCSSUnit_Enumerated), aChangeHint);
-    AppendValue(eCSSProperty_background_y_position, nsCSSValue(yEnumValue, eCSSUnit_Enumerated), aChangeHint);
+    AppendValue(eCSSProperty_background_x_position, nsCSSValue(xEnumValue, eCSSUnit_Enumerated));
+    AppendValue(eCSSProperty_background_y_position, nsCSSValue(yEnumValue, eCSSUnit_Enumerated));
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -4578,8 +4536,7 @@ static const nsCSSProperty kOutlineRadiusIDs[] = {
   eCSSProperty__moz_outline_radius_bottomLeft
 };
 
-PRBool CSSParserImpl::ParseBorder(PRInt32& aErrorCode,
-                                  nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseBorder(PRInt32& aErrorCode)
 {
   const PRInt32 numProps = 3;
   static const nsCSSProperty kBorderIDs[] = {
@@ -4609,23 +4566,21 @@ PRBool CSSParserImpl::ParseBorder(PRInt32& aErrorCode,
 
   PRInt32 index;
   for (index = 0; index < 4; index++) {
-    AppendValue(kBorderWidthIDs[index], values[0], aChangeHint);
-    AppendValue(kBorderStyleIDs[index], values[1], aChangeHint);
-    AppendValue(kBorderColorIDs[index], values[2], aChangeHint);
+    AppendValue(kBorderWidthIDs[index], values[0]);
+    AppendValue(kBorderStyleIDs[index], values[1]);
+    AppendValue(kBorderColorIDs[index], values[2]);
   }
 
   return PR_TRUE;
 }
 
-PRBool CSSParserImpl::ParseBorderColor(PRInt32& aErrorCode,
-                                       nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseBorderColor(PRInt32& aErrorCode)
 {
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mBorderColor,
-                            kBorderColorIDs, aChangeHint);
+                            kBorderColorIDs);
 }
 
-PRBool CSSParserImpl::ParseBorderSpacing(PRInt32& aErrorCode,
-                                         nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseBorderSpacing(PRInt32& aErrorCode)
 {
   nsCSSValue  xValue;
   if (ParsePositiveVariant(aErrorCode, xValue, VARIANT_HL, nsnull)) {
@@ -4635,8 +4590,8 @@ PRBool CSSParserImpl::ParseBorderSpacing(PRInt32& aErrorCode,
       if (ParsePositiveVariant(aErrorCode, yValue, VARIANT_LENGTH, nsnull)) {
         // We have two numbers
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          AppendValue(eCSSProperty_border_x_spacing, xValue, aChangeHint);
-          AppendValue(eCSSProperty_border_y_spacing, yValue, aChangeHint);
+          AppendValue(eCSSProperty_border_x_spacing, xValue);
+          AppendValue(eCSSProperty_border_y_spacing, yValue);
           return PR_TRUE;
         }
         return PR_FALSE;
@@ -4646,8 +4601,8 @@ PRBool CSSParserImpl::ParseBorderSpacing(PRInt32& aErrorCode,
     // We have one length which is the horizontal spacing. Create a value for
     // the vertical spacing which is equal
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_border_x_spacing, xValue, aChangeHint);
-      AppendValue(eCSSProperty_border_y_spacing, xValue, aChangeHint);
+      AppendValue(eCSSProperty_border_x_spacing, xValue);
+      AppendValue(eCSSProperty_border_y_spacing, xValue);
       return PR_TRUE;
     }
   }
@@ -4655,7 +4610,7 @@ PRBool CSSParserImpl::ParseBorderSpacing(PRInt32& aErrorCode,
 }
 
 PRBool CSSParserImpl::ParseBorderSide(PRInt32& aErrorCode,
-                                      const nsCSSProperty aPropIDs[], nsChangeHint& aChangeHint)
+                                      const nsCSSProperty aPropIDs[])
 {
   const PRInt32 numProps = 3;
   nsCSSValue  values[numProps];
@@ -4677,44 +4632,40 @@ PRBool CSSParserImpl::ParseBorderSide(PRInt32& aErrorCode,
 
   PRInt32 index;
   for (index = 0; index < numProps; index++) {
-    AppendValue(aPropIDs[index], values[index], aChangeHint);
+    AppendValue(aPropIDs[index], values[index]);
   }
   return PR_TRUE;
 }
 
-PRBool CSSParserImpl::ParseBorderStyle(PRInt32& aErrorCode,
-                                       nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseBorderStyle(PRInt32& aErrorCode)
 {
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mBorderStyle,
-                            kBorderStyleIDs, aChangeHint);
+                            kBorderStyleIDs);
 }
 
-PRBool CSSParserImpl::ParseBorderWidth(PRInt32& aErrorCode,
-                                       nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseBorderWidth(PRInt32& aErrorCode)
 {
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mBorderWidth,
-                            kBorderWidthIDs, aChangeHint);
+                            kBorderWidthIDs);
 }
 
-PRBool CSSParserImpl::ParseBorderRadius(PRInt32& aErrorCode,
-                                       nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseBorderRadius(PRInt32& aErrorCode)
 {
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mBorderRadius,
-                            kBorderRadiusIDs, aChangeHint);
+                            kBorderRadiusIDs);
 }
 
 #ifdef ENABLE_OUTLINE
-PRBool CSSParserImpl::ParseOutlineRadius(PRInt32& aErrorCode,
-                                       nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseOutlineRadius(PRInt32& aErrorCode)
 {
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mOutlineRadius,
-                            kOutlineRadiusIDs, aChangeHint);
+                            kOutlineRadiusIDs);
 }
 #endif
 
 PRBool CSSParserImpl::ParseBorderColors(PRInt32& aErrorCode,
                                         nsCSSValueList** aResult,
-                                        nsChangeHint& aChangeHint, nsCSSProperty aProperty)
+                                        nsCSSProperty aProperty)
 {
   nsCSSValue value;
   if (ParseVariant(aErrorCode, value, VARIANT_HCK|VARIANT_NONE, nsCSSProps::kBorderColorKTable)) {
@@ -4728,8 +4679,6 @@ PRBool CSSParserImpl::ParseBorderColors(PRInt32& aErrorCode,
 
     while (list) {
       if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-        NS_UpdateHint(aChangeHint,
-                      nsCSSProps::kHintTable[eCSSProperty_border_top_colors]);
         mTempData.SetPropertyBit(aProperty);
         *aResult = listHead;
         aErrorCode = NS_OK;
@@ -4753,13 +4702,12 @@ PRBool CSSParserImpl::ParseBorderColors(PRInt32& aErrorCode,
 
 PRBool
 CSSParserImpl::ParseRect(nsCSSRect& aRect, PRInt32& aErrorCode,
-                         nsCSSProperty aPropID, nsChangeHint& aChangeHint)
+                         nsCSSProperty aPropID)
 {
   nsCSSRect rect;
   PRBool result;
-  if ((result = DoParseRect(rect, aErrorCode, aChangeHint)) &&
+  if ((result = DoParseRect(rect, aErrorCode)) &&
       rect != aRect) {
-    NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[aPropID]);
     aRect = rect;
     mTempData.SetPropertyBit(aPropID);
   }
@@ -4767,8 +4715,7 @@ CSSParserImpl::ParseRect(nsCSSRect& aRect, PRInt32& aErrorCode,
 }
 
 PRBool
-CSSParserImpl::DoParseRect(nsCSSRect& aRect, PRInt32& aErrorCode,
-                           nsChangeHint& aChangeHint)
+CSSParserImpl::DoParseRect(nsCSSRect& aRect, PRInt32& aErrorCode)
 {
   if (! GetToken(aErrorCode, PR_TRUE)) {
     return PR_FALSE;
@@ -4821,8 +4768,7 @@ CSSParserImpl::DoParseRect(nsCSSRect& aRect, PRInt32& aErrorCode,
 
 #define VARIANT_CONTENT (VARIANT_STRING | VARIANT_URL | VARIANT_COUNTER | VARIANT_ATTR | \
                          VARIANT_KEYWORD)
-PRBool CSSParserImpl::ParseContent(PRInt32& aErrorCode,
-                                   nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseContent(PRInt32& aErrorCode)
 {
   nsCSSValue  value;
   if (ParseVariant(aErrorCode, value, VARIANT_CONTENT | VARIANT_INHERIT, 
@@ -4837,7 +4783,6 @@ PRBool CSSParserImpl::ParseContent(PRInt32& aErrorCode,
 
     while (nsnull != list) {
       if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-        NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[eCSSProperty_content]);
         mTempData.SetPropertyBit(eCSSProperty_content);
         mTempData.mContent.mContent = listHead;
         aErrorCode = NS_OK;
@@ -4871,8 +4816,7 @@ PRBool
 CSSParserImpl::SetSingleCounterValue(nsCSSCounterData** aResult,
                                      PRInt32& aErrorCode,
                                      nsCSSProperty aPropID,
-                                     const nsCSSValue& aValue,
-                                     nsChangeHint& aChangeHint)
+                                     const nsCSSValue& aValue)
 {
   nsCSSCounterData* dataHead = new nsCSSCounterData();
   if (!dataHead) {
@@ -4881,14 +4825,13 @@ CSSParserImpl::SetSingleCounterValue(nsCSSCounterData** aResult,
   }
   dataHead->mCounter = aValue;
   *aResult = dataHead;
-  NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[aPropID]);
   mTempData.SetPropertyBit(aPropID);
   return PR_TRUE;
 }
 
 PRBool CSSParserImpl::ParseCounterData(PRInt32& aErrorCode,
                                        nsCSSCounterData** aResult,
-                                       nsCSSProperty aPropID, nsChangeHint& aChangeHint)
+                                       nsCSSProperty aPropID)
 {
   nsString* ident = NextIdent(aErrorCode);
   if (nsnull == ident) {
@@ -4897,21 +4840,21 @@ PRBool CSSParserImpl::ParseCounterData(PRInt32& aErrorCode,
   if (ident->EqualsIgnoreCase("none")) {
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       return SetSingleCounterValue(aResult, aErrorCode, aPropID,
-                                   nsCSSValue(eCSSUnit_None), aChangeHint);
+                                   nsCSSValue(eCSSUnit_None));
     }
     return PR_FALSE;
   }
   else if (ident->EqualsIgnoreCase("inherit")) {
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       return SetSingleCounterValue(aResult, aErrorCode, aPropID,
-                                   nsCSSValue(eCSSUnit_Inherit), aChangeHint);
+                                   nsCSSValue(eCSSUnit_Inherit));
     }
     return PR_FALSE;
   }
   else if (ident->EqualsIgnoreCase("-moz-initial")) {
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       return SetSingleCounterValue(aResult, aErrorCode, aPropID,
-                                   nsCSSValue(eCSSUnit_Initial), aChangeHint);
+                                   nsCSSValue(eCSSUnit_Initial));
     }
     return PR_FALSE;
   }
@@ -4926,7 +4869,6 @@ PRBool CSSParserImpl::ParseCounterData(PRInt32& aErrorCode,
 
     while (nsnull != data) {
       if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-        NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[aPropID]);
         mTempData.SetPropertyBit(aPropID);
         *aResult = dataHead;
         aErrorCode = NS_OK;
@@ -4938,7 +4880,6 @@ PRBool CSSParserImpl::ParseCounterData(PRInt32& aErrorCode,
       if ((eCSSToken_Number == mToken.mType) && (mToken.mIntegerValid)) {
         data->mValue.SetIntValue(mToken.mInteger, eCSSUnit_Integer);
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[aPropID]);
           mTempData.SetPropertyBit(aPropID);
           *aResult = dataHead;
           aErrorCode = NS_OK;
@@ -4967,8 +4908,7 @@ PRBool CSSParserImpl::ParseCounterData(PRInt32& aErrorCode,
   return PR_FALSE;
 }
 
-PRBool CSSParserImpl::ParseCue(PRInt32& aErrorCode,
-                               nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseCue(PRInt32& aErrorCode)
 {
   nsCSSValue before;
   if (ParseSingleValueProperty(aErrorCode, before, eCSSProperty_cue_before)) {
@@ -4976,24 +4916,23 @@ PRBool CSSParserImpl::ParseCue(PRInt32& aErrorCode,
       nsCSSValue after;
       if (ParseSingleValueProperty(aErrorCode, after, eCSSProperty_cue_after)) {
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          AppendValue(eCSSProperty_cue_before, before, aChangeHint);
-          AppendValue(eCSSProperty_cue_after, after, aChangeHint);
+          AppendValue(eCSSProperty_cue_before, before);
+          AppendValue(eCSSProperty_cue_after, after);
           return PR_TRUE;
         }
         return PR_FALSE;
       }
     }
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_cue_before, before, aChangeHint);
-      AppendValue(eCSSProperty_cue_after, before, aChangeHint);
+      AppendValue(eCSSProperty_cue_before, before);
+      AppendValue(eCSSProperty_cue_after, before);
       return PR_TRUE;
     }
   }
   return PR_FALSE;
 }
 
-PRBool CSSParserImpl::ParseCursor(PRInt32& aErrorCode,
-                                  nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseCursor(PRInt32& aErrorCode)
 {
   nsCSSValue  value;
   if (ParseVariant(aErrorCode, value, VARIANT_AHUK, nsCSSProps::kCursorKTable)) {
@@ -5012,7 +4951,6 @@ PRBool CSSParserImpl::ParseCursor(PRInt32& aErrorCode,
           }
         }
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[eCSSProperty_cursor]);
           mTempData.SetPropertyBit(eCSSProperty_cursor);
           mTempData.mUserInterface.mCursor = listHead;
           aErrorCode = NS_OK;
@@ -5036,7 +4974,6 @@ PRBool CSSParserImpl::ParseCursor(PRInt32& aErrorCode,
       return PR_FALSE;
     }
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[eCSSProperty_cursor]);
       mTempData.SetPropertyBit(eCSSProperty_cursor);
       mTempData.mUserInterface.mCursor = listHead;
       aErrorCode = NS_OK;
@@ -5047,8 +4984,7 @@ PRBool CSSParserImpl::ParseCursor(PRInt32& aErrorCode,
 }
 
 
-PRBool CSSParserImpl::ParseFont(PRInt32& aErrorCode,
-                                nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseFont(PRInt32& aErrorCode)
 {
   static const nsCSSProperty fontIDs[] = {
     eCSSProperty_font_style,
@@ -5060,25 +4996,25 @@ PRBool CSSParserImpl::ParseFont(PRInt32& aErrorCode,
   if (ParseVariant(aErrorCode, family, VARIANT_HK, nsCSSProps::kFontKTable)) {
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       if (eCSSUnit_Inherit == family.GetUnit()) {
-        AppendValue(eCSSProperty_font_family, family, aChangeHint);
-        AppendValue(eCSSProperty_font_style, family, aChangeHint);
-        AppendValue(eCSSProperty_font_variant, family, aChangeHint);
-        AppendValue(eCSSProperty_font_weight, family, aChangeHint);
-        AppendValue(eCSSProperty_font_size, family, aChangeHint);
-        AppendValue(eCSSProperty_line_height, family, aChangeHint);
-        AppendValue(eCSSProperty_font_stretch, family, aChangeHint);
-        AppendValue(eCSSProperty_font_size_adjust, family, aChangeHint);
+        AppendValue(eCSSProperty_font_family, family);
+        AppendValue(eCSSProperty_font_style, family);
+        AppendValue(eCSSProperty_font_variant, family);
+        AppendValue(eCSSProperty_font_weight, family);
+        AppendValue(eCSSProperty_font_size, family);
+        AppendValue(eCSSProperty_line_height, family);
+        AppendValue(eCSSProperty_font_stretch, family);
+        AppendValue(eCSSProperty_font_size_adjust, family);
       }
       else {
-        AppendValue(eCSSProperty_font_family, family, aChangeHint);  // keyword value overrides everything else
+        AppendValue(eCSSProperty_font_family, family);  // keyword value overrides everything else
         nsCSSValue empty;
-        AppendValue(eCSSProperty_font_style, empty, aChangeHint);
-        AppendValue(eCSSProperty_font_variant, empty, aChangeHint);
-        AppendValue(eCSSProperty_font_weight, empty, aChangeHint);
-        AppendValue(eCSSProperty_font_size, empty, aChangeHint);
-        AppendValue(eCSSProperty_line_height, empty, aChangeHint);
-        AppendValue(eCSSProperty_font_stretch, empty, aChangeHint);
-        AppendValue(eCSSProperty_font_size_adjust, empty, aChangeHint);
+        AppendValue(eCSSProperty_font_style, empty);
+        AppendValue(eCSSProperty_font_variant, empty);
+        AppendValue(eCSSProperty_font_weight, empty);
+        AppendValue(eCSSProperty_font_size, empty);
+        AppendValue(eCSSProperty_line_height, empty);
+        AppendValue(eCSSProperty_font_stretch, empty);
+        AppendValue(eCSSProperty_font_size_adjust, empty);
       }
       return PR_TRUE;
     }
@@ -5127,14 +5063,14 @@ PRBool CSSParserImpl::ParseFont(PRInt32& aErrorCode,
   if (ParseFamily(aErrorCode, family)) {
     if ((eCSSUnit_Inherit != family.GetUnit()) && (eCSSUnit_Initial != family.GetUnit()) &&
         ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_font_family, family, aChangeHint);
-      AppendValue(eCSSProperty_font_style, values[0], aChangeHint);
-      AppendValue(eCSSProperty_font_variant, values[1], aChangeHint);
-      AppendValue(eCSSProperty_font_weight, values[2], aChangeHint);
-      AppendValue(eCSSProperty_font_size, size, aChangeHint);
-      AppendValue(eCSSProperty_line_height, lineHeight, aChangeHint);
-      AppendValue(eCSSProperty_font_stretch, nsCSSValue(eCSSUnit_Normal), aChangeHint);
-      AppendValue(eCSSProperty_font_size_adjust, nsCSSValue(eCSSUnit_None), aChangeHint);
+      AppendValue(eCSSProperty_font_family, family);
+      AppendValue(eCSSProperty_font_style, values[0]);
+      AppendValue(eCSSProperty_font_variant, values[1]);
+      AppendValue(eCSSProperty_font_weight, values[2]);
+      AppendValue(eCSSProperty_font_size, size);
+      AppendValue(eCSSProperty_line_height, lineHeight);
+      AppendValue(eCSSProperty_font_stretch, nsCSSValue(eCSSUnit_Normal));
+      AppendValue(eCSSProperty_font_size_adjust, nsCSSValue(eCSSUnit_None));
       return PR_TRUE;
     }
   }
@@ -5233,8 +5169,7 @@ PRBool CSSParserImpl::ParseFamily(PRInt32& aErrorCode, nsCSSValue& aValue)
   return PR_TRUE;
 }
 
-PRBool CSSParserImpl::ParseListStyle(PRInt32& aErrorCode,
-                                     nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseListStyle(PRInt32& aErrorCode)
 {
   const PRInt32 numProps = 3;
   static const nsCSSProperty listStyleIDs[] = {
@@ -5262,13 +5197,12 @@ PRBool CSSParserImpl::ParseListStyle(PRInt32& aErrorCode,
   }
 
   for (index = 0; index < numProps; index++) {
-    AppendValue(listStyleIDs[index], values[index], aChangeHint);
+    AppendValue(listStyleIDs[index], values[index]);
   }
   return PR_TRUE;
 }
 
-PRBool CSSParserImpl::ParseMargin(PRInt32& aErrorCode,
-                                  nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseMargin(PRInt32& aErrorCode)
 {
   static const nsCSSProperty kMarginSideIDs[] = {
     eCSSProperty_margin_top,
@@ -5277,7 +5211,7 @@ PRBool CSSParserImpl::ParseMargin(PRInt32& aErrorCode,
     eCSSProperty_margin_left
   };
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mMargin,
-                            kMarginSideIDs, aChangeHint);
+                            kMarginSideIDs);
 }
 
 PRBool CSSParserImpl::ParseMarks(PRInt32& aErrorCode, nsCSSValue& aValue)
@@ -5299,8 +5233,7 @@ PRBool CSSParserImpl::ParseMarks(PRInt32& aErrorCode, nsCSSValue& aValue)
 }
 
 #ifdef ENABLE_OUTLINE
-PRBool CSSParserImpl::ParseOutline(PRInt32& aErrorCode,
-                                   nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseOutline(PRInt32& aErrorCode)
 {
   const PRInt32 numProps = 3;
   static const nsCSSProperty kOutlineIDs[] = {
@@ -5328,14 +5261,13 @@ PRBool CSSParserImpl::ParseOutline(PRInt32& aErrorCode,
 
   PRInt32 index;
   for (index = 0; index < numProps; index++) {
-    AppendValue(kOutlineIDs[index], values[index], aChangeHint);
+    AppendValue(kOutlineIDs[index], values[index]);
   }
   return PR_TRUE;
 }
 #endif
 
-PRBool CSSParserImpl::ParsePadding(PRInt32& aErrorCode,
-                                   nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParsePadding(PRInt32& aErrorCode)
 {
   static const nsCSSProperty kPaddingSideIDs[] = {
     eCSSProperty_padding_top,
@@ -5344,11 +5276,10 @@ PRBool CSSParserImpl::ParsePadding(PRInt32& aErrorCode,
     eCSSProperty_padding_left
   };
   return ParseBoxProperties(aErrorCode, mTempData.mMargin.mPadding,
-                            kPaddingSideIDs, aChangeHint);
+                            kPaddingSideIDs);
 }
 
-PRBool CSSParserImpl::ParsePause(PRInt32& aErrorCode,
-                                 nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParsePause(PRInt32& aErrorCode)
 {
   nsCSSValue  before;
   if (ParseSingleValueProperty(aErrorCode, before, eCSSProperty_pause_before)) {
@@ -5356,24 +5287,23 @@ PRBool CSSParserImpl::ParsePause(PRInt32& aErrorCode,
       nsCSSValue after;
       if (ParseSingleValueProperty(aErrorCode, after, eCSSProperty_pause_after)) {
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          AppendValue(eCSSProperty_pause_before, before, aChangeHint);
-          AppendValue(eCSSProperty_pause_after, after, aChangeHint);
+          AppendValue(eCSSProperty_pause_before, before);
+          AppendValue(eCSSProperty_pause_after, after);
           return PR_TRUE;
         }
         return PR_FALSE;
       }
     }
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_pause_before, before, aChangeHint);
-      AppendValue(eCSSProperty_pause_after, before, aChangeHint);
+      AppendValue(eCSSProperty_pause_before, before);
+      AppendValue(eCSSProperty_pause_after, before);
       return PR_TRUE;
     }
   }
   return PR_FALSE;
 }
 
-PRBool CSSParserImpl::ParsePlayDuring(PRInt32& aErrorCode,
-                                      nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParsePlayDuring(PRInt32& aErrorCode)
 {
   nsCSSValue  playDuring;
   nsCSSValue  flags;
@@ -5387,16 +5317,15 @@ PRBool CSSParserImpl::ParsePlayDuring(PRInt32& aErrorCode,
       }
     }
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_play_during, playDuring, aChangeHint);
-      AppendValue(eCSSProperty_play_during_flags, flags, aChangeHint);
+      AppendValue(eCSSProperty_play_during, playDuring);
+      AppendValue(eCSSProperty_play_during_flags, flags);
       return PR_TRUE;
     }
   }
   return PR_FALSE;
 }
 
-PRBool CSSParserImpl::ParseQuotes(PRInt32& aErrorCode,
-                                  nsChangeHint &aChangeHint)
+PRBool CSSParserImpl::ParseQuotes(PRInt32& aErrorCode)
 {
   nsCSSValue  open;
   if (ParseVariant(aErrorCode, open, VARIANT_HOS, nsnull)) {
@@ -5412,7 +5341,6 @@ PRBool CSSParserImpl::ParseQuotes(PRInt32& aErrorCode,
         // get mandatory close
         if (ParseVariant(aErrorCode, quotes->mClose, VARIANT_STRING, nsnull)) {
           if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-            NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[eCSSProperty_quotes]);
             mTempData.SetPropertyBit(eCSSProperty_quotes);
             mTempData.mContent.mQuotes = quotesHead;
             aErrorCode = NS_OK;
@@ -5437,7 +5365,6 @@ PRBool CSSParserImpl::ParseQuotes(PRInt32& aErrorCode,
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       nsCSSQuotes* quotesHead = new nsCSSQuotes();
       quotesHead->mOpen = open;
-      NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[eCSSProperty_quotes]);
       mTempData.mContent.mQuotes = quotesHead;
       mTempData.SetPropertyBit(eCSSProperty_quotes);
       return PR_TRUE;
@@ -5446,8 +5373,7 @@ PRBool CSSParserImpl::ParseQuotes(PRInt32& aErrorCode,
   return PR_FALSE;
 }
 
-PRBool CSSParserImpl::ParseSize(PRInt32& aErrorCode,
-                                nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseSize(PRInt32& aErrorCode)
 {
   nsCSSValue width;
   if (ParseVariant(aErrorCode, width, VARIANT_AHKL, nsCSSProps::kPageSizeKTable)) {
@@ -5455,16 +5381,16 @@ PRBool CSSParserImpl::ParseSize(PRInt32& aErrorCode,
       nsCSSValue  height;
       if (ParseVariant(aErrorCode, height, VARIANT_LENGTH, nsnull)) {
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-          AppendValue(eCSSProperty_size_width, width, aChangeHint);
-          AppendValue(eCSSProperty_size_height, height, aChangeHint);
+          AppendValue(eCSSProperty_size_width, width);
+          AppendValue(eCSSProperty_size_height, height);
           return PR_TRUE;
         }
         return PR_FALSE;
       }
     }
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-      AppendValue(eCSSProperty_size_width, width, aChangeHint);
-      AppendValue(eCSSProperty_size_height, width, aChangeHint);
+      AppendValue(eCSSProperty_size_width, width);
+      AppendValue(eCSSProperty_size_height, width);
       return PR_TRUE;
     }
   }
@@ -5493,8 +5419,7 @@ PRBool CSSParserImpl::ParseTextDecoration(PRInt32& aErrorCode, nsCSSValue& aValu
   return PR_FALSE;
 }
 
-PRBool CSSParserImpl::ParseTextShadow(PRInt32& aErrorCode,
-                                      nsChangeHint& aChangeHint)
+PRBool CSSParserImpl::ParseTextShadow(PRInt32& aErrorCode)
 {
   nsCSSValue  value;
   if (ParseVariant(aErrorCode, value, VARIANT_HC | VARIANT_LENGTH | VARIANT_NONE, nsnull)) {
@@ -5548,7 +5473,6 @@ PRBool CSSParserImpl::ParseTextShadow(PRInt32& aErrorCode,
         }
         else {
           if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
-            NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[eCSSProperty_text_shadow]);
             mTempData.SetPropertyBit(eCSSProperty_text_shadow);
             mTempData.mText.mTextShadow = shadowHead;
             aErrorCode = NS_OK;
@@ -5564,7 +5488,6 @@ PRBool CSSParserImpl::ParseTextShadow(PRInt32& aErrorCode,
     if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
       nsCSSShadow* shadowHead = new nsCSSShadow();
       shadowHead->mXOffset = value;
-      NS_UpdateHint(aChangeHint, nsCSSProps::kHintTable[eCSSProperty_text_shadow]);
       mTempData.SetPropertyBit(eCSSProperty_text_shadow);
       mTempData.mText.mTextShadow = shadowHead;
       return PR_TRUE;
