@@ -31,7 +31,7 @@
 <!ENTITY  keywordsEnabled.accesskey             "k">
 
 
-<!ENTITY  autoCompleteHeader.label          "Urlbar AutoComplete">
-<!ENTITY  autoCompleteDescription.label     "Automatically completes text typed into Location field">
-<!ENTITY  autoCompleteEnabled.label                 "Enable Urlbar AutoComplete">
-<!ENTITY  autoCompleteEnabled.accesskey             "c">
+<!ENTITY  autoCompleteHeader.label          "Location Bar Autocomplete">
+<!ENTITY  autoCompleteDescription.label     "Automatically completes text typed into the Location bar">
+<!ENTITY  autoCompleteEnabled.label                 "Enable Location bar autocomplete">
+<!ENTITY  autoCompleteEnabled.accesskey             "l">
