@@ -31,9 +31,6 @@ nsMsgRDFDataSource::nsMsgRDFDataSource():
     mObservers(nsnull)
 {
     NS_INIT_REFCNT();
-#ifdef DEBUG_alecf
-    fprintf(stderr, "nsMsgRDFDataSource being created\n");
-#endif
 }
 
 nsMsgRDFDataSource::~nsMsgRDFDataSource()
