@@ -114,8 +114,8 @@ class nsPropertyEnumeratorByURL : public nsISimpleEnumerator
 public:
     nsPropertyEnumeratorByURL(const nsACString& aURL,
                               nsISimpleEnumerator* aOuter) :
-        mURL(aURL),
-        mOuter(aOuter)
+        mOuter(aOuter),
+        mURL(aURL)
     {
         // prepare the url once so we can use its value later
         // persistent properties uses ":" as a delimiter, so escape
