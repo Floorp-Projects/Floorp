@@ -22,13 +22,13 @@
 #include "EditTxn.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
+#include "nsISupportsArray.h"
 
 #define EDIT_AGGREGATE_TXN_CID \
 {/* 345921a0-ac49-11d2-86d8-000064657374 */ \
 0x345921a0, 0xac49, 0x11d2, \
 {0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
-class nsVoidArray;
 
 /**
  * base class for all document editing transactions that require aggregation.
@@ -68,7 +68,7 @@ public:
   /** get the number of nested txns.  
     * This is the number of top-level txns, it does not do recursive decent.
     */
-  NS_IMETHOD GetCount(PRInt32 *aCount);
+  NS_IMETHOD GetCount(PRUint32 *aCount);
 
   /** get the txn at index aIndex.
     * returns NS_ERROR_UNEXPECTED if there is no txn at aIndex.
@@ -85,8 +85,7 @@ public:
 
 protected:
 
-  //XXX: if this was an nsISupportsArray, it would handle refcounting for us
-  nsVoidArray * mChildren;
+  nsCOMPtr<nsISupportsArray> mChildren;
   nsCOMPtr<nsIAtom> mName;
 };
 

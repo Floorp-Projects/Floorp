@@ -356,25 +356,31 @@ nsEditor::Do(nsITransaction *aTxn)
   if (mPlaceHolderBatch && !mPlaceHolderTxn)
   {
     // it's pretty darn amazing how many different types of pointers
-    // this transcation goes through here.  I bet this is a record.
+    // this transaction goes through here.  I bet this is a record.
+    
+    // We start off with an EditTxn since that's what the factory returns.
     EditTxn *editTxn;
-    nsCOMPtr<nsIAbsorbingTransaction> plcTxn;
     result = TransactionFactory::GetNewTransaction(PlaceholderTxn::GetCID(), &editTxn);
     if (NS_FAILED(result)) { return result; }
     if (!editTxn) { return NS_ERROR_NULL_POINTER; }
+
+    // Then we QI to an nsIAbsorbingTransaction to get at placeholder functionality
+    nsCOMPtr<nsIAbsorbingTransaction> plcTxn;
     editTxn->QueryInterface(nsIAbsorbingTransaction::GetIID(), getter_AddRefs(plcTxn));
-    // have to use line above instead of line below due to our broken 
-    // interface model for transactions.
-//    plcTxn = do_QueryInterface(editTxn);
+    // have to use line above instead of "plcTxn = do_QueryInterface(editTxn);"
+    // due to our broken interface model for transactions.
+
     // save off weak reference to placeholder txn
     mPlaceHolderTxn = getter_AddRefs( NS_GetWeakReference(plcTxn) );
     plcTxn->Init(mPresShellWeak, mPlaceHolderName, mTxnStartNode, mTxnStartOffset);
-    // we will recurse, but will not hit this case in the nested call
+    
+    // finally we QI to an nsITransaction since that's what Do() expects
     nsCOMPtr<nsITransaction> theTxn = do_QueryInterface(plcTxn);
     nsITransaction* txn = theTxn;
-    // we want to escape from this routine with a positive refcount
-    txn->AddRef();
-    Do(txn);
+    Do(txn);  // we will recurse, but will not hit this case in the nested call
+    
+    // The transaction system (if any) has taken ownwership of txn
+    NS_IF_RELEASE(txn);
   }
 
   if (aTxn)
@@ -398,7 +404,7 @@ nsEditor::Do(nsITransaction *aTxn)
   
     selection->EndBatchChanges(); // no need to check result here, don't lose result of operation
   }
-
+ 
   NS_POSTCONDITION((NS_SUCCEEDED(result)), "transaction did not execute properly\n");
 
   return result;
@@ -853,6 +859,8 @@ nsEditor::SetAttribute(nsIDOMElement *aElement, const nsString& aAttribute, cons
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
+  // The transaction system (if any) has taken ownwership of txn
+  NS_IF_RELEASE(txn);
   return result;
 }
 
@@ -886,6 +894,8 @@ nsEditor::RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute)
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
+  // The transaction system (if any) has taken ownwership of txn
+  NS_IF_RELEASE(txn);
   return result;
 }
 
@@ -906,6 +916,8 @@ NS_IMETHODIMP nsEditor::CreateNode(const nsString& aTag,
       NS_ASSERTION((NS_SUCCEEDED(result)), "GetNewNode can't fail if txn::Do succeeded.");
     }
   }
+  // The transaction system (if any) has taken ownwership of txn
+  NS_IF_RELEASE(txn);
   return result;
 }
 
@@ -932,6 +944,8 @@ NS_IMETHODIMP nsEditor::InsertNode(nsIDOMNode * aNode,
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
+  // The transaction system (if any) has taken ownwership of txn
+  NS_IF_RELEASE(txn);
 
   if (mActionListeners)
   {
@@ -976,6 +990,8 @@ nsEditor::SplitNode(nsIDOMNode * aNode,
       NS_ASSERTION((NS_SUCCEEDED(result)), "result must succeeded for GetNewNode");
     }
   }
+  // The transaction system (if any) has taken ownwership of txn
+  NS_IF_RELEASE(txn);
 
   if (mActionListeners)
   {
@@ -1020,6 +1036,10 @@ nsEditor::InsertNoneditableTextNode(nsIDOMNode* parent, PRInt32 offset,
   // Now get the pointer to the node we just created ...
   nsCOMPtr<nsIDOMNode> newNode;
   res = txn->GetNewNode(getter_AddRefs(newNode));
+
+  // The transaction system (if any) has taken ownwership of txn
+  NS_IF_RELEASE(txn);
+
   if (NS_FAILED(res))
     return res;
   nsCOMPtr<nsIDOMCharacterData> newTextNode;
@@ -1112,6 +1132,9 @@ nsEditor::JoinNodes(nsIDOMNode * aLeftNode,
     result = Do(txn);  
   }
 
+  // The transaction system (if any) has taken ownwership of txn
+  NS_IF_RELEASE(txn);
+
   if (mActionListeners)
   {
     for (i = 0; i < mActionListeners->Count(); i++)
@@ -1146,6 +1169,9 @@ NS_IMETHODIMP nsEditor::DeleteNode(nsIDOMNode * aElement)
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
+
+  // The transaction system (if any) has taken ownwership of txn
+  NS_IF_RELEASE(txn);
 
   if (mActionListeners)
   {
@@ -1360,8 +1386,9 @@ nsEditor::EndComposition(void)
   // Note that this means IME won't work without an undo stack!
   if (mTxnMgr) 
   {
-    nsCOMPtr<nsITransaction> txn;
-    result = mTxnMgr->PeekUndoStack(getter_AddRefs(txn));
+    nsITransaction *txn;
+    result = mTxnMgr->PeekUndoStack(&txn);  
+    // PeekUndoStack does not addref
     nsCOMPtr<nsIAbsorbingTransaction> plcTxn = do_QueryInterface(txn);
     if (plcTxn)
     {
@@ -1589,6 +1616,9 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
     BeginUpdateViewBatch();
     result = Do(aggTxn);
     result = Do(txn);
+    // The transaction system (if any) has taken ownwership of txns.
+    // aggTxn released at end of routine.
+    NS_IF_RELEASE(txn);
     EndUpdateViewBatch();
   }
   else if (NS_ERROR_EDITOR_NO_SELECTION==result)  
@@ -1599,9 +1629,9 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
   {
 
     // only execute the aggTxn if we actually populated it with at least one sub-txn
-    PRInt32 count=0;
+    PRUint32 count=0;
     aggTxn->GetCount(&count);
-    if (0!=count)
+    if (count)
     {
       result = Do(aggTxn);
     }
@@ -1609,6 +1639,8 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
     {
       result = NS_OK;
     }
+    // The transaction system (if any) has taken ownwership of txns
+    NS_IF_RELEASE(aggTxn);
 
     // create the text node
     if (NS_SUCCEEDED(result))
@@ -1645,6 +1677,8 @@ NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert)
       }            
     }
   }
+  // The transaction system (if any) has taken ownwership of txns
+  NS_IF_RELEASE(aggTxn);
   return result;
 }
 
@@ -1981,6 +2015,8 @@ NS_IMETHODIMP nsEditor::DoInitialInsert(const nsString & aStringToInsert)
               if (NS_SUCCEEDED(result)) {
                 result = Do(insertTxn);
               }
+              // The transaction system (if any) has taken ownwership of txn
+              NS_IF_RELEASE(insertTxn);
             }
             else {
               result = NS_ERROR_UNEXPECTED;
@@ -1988,6 +2024,8 @@ NS_IMETHODIMP nsEditor::DoInitialInsert(const nsString & aStringToInsert)
           }
         }
       }
+      // The transaction system (if any) has taken ownwership of txn
+      NS_IF_RELEASE(txn);
     }
   }
   return result;
@@ -2003,6 +2041,8 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
     result = Do(txn);  
     // HACKForceRedraw();
   }
+  // The transaction system (if any) has taken ownwership of txn
+  NS_IF_RELEASE(txn);
   return result;
 }
 
@@ -3960,6 +4000,9 @@ nsEditor::DeleteSelectionImpl(ESelectionCollapseDirection aAction)
   if (NS_SUCCEEDED(result))  {
     result = Do(txn);  
   }
+
+  // The transaction system (if any) has taken ownwership of txn
+  NS_IF_RELEASE(txn);
 
   return result;
 }

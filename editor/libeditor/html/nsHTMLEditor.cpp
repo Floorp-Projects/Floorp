@@ -1260,6 +1260,8 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
   if (!selection) return NS_ERROR_NULL_POINTER;
   nsAutoString resultString;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertText);
+  // set a different action flag if we are an IME event
+  if (mInIMEMode) ruleInfo.action = nsTextEditRules::kInsertTextIME;
   ruleInfo.inString = &aStringToInsert;
   ruleInfo.outString = &resultString;
   ruleInfo.typeInState = *mTypeInState;
@@ -2881,6 +2883,8 @@ nsHTMLEditor::AddStyleSheet(nsICSSStyleSheet* aSheet)
       mLastStyleSheet = do_QueryInterface(aSheet);    // save it so we can remove before applying the next one
     }
   }
+  // The transaction system (if any) has taken ownwership of txns
+  NS_IF_RELEASE(txn);
   
   return rv;
 }
@@ -2900,6 +2904,8 @@ nsHTMLEditor::RemoveStyleSheet(nsICSSStyleSheet* aSheet)
       mLastStyleSheet = nsnull;        // forget it
     }
   }
+  // The transaction system (if any) has taken ownwership of txns
+  NS_IF_RELEASE(txn);
   
   return rv;
 }

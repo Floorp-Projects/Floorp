@@ -47,13 +47,14 @@ protected:
 
 
   // nsHTMLEditRules implementation methods
-  nsresult WillInsertText(nsIDOMSelection  *aSelection, 
-                            PRBool         *aCancel,
-                            PRBool         *aHandled,
-                            const nsString *inString,
-                            nsString       *outString,
-                            TypeInState     typeInState,
-                            PRInt32         aMaxLength);
+  nsresult WillInsertText(  PRInt32          aAction,
+                            nsIDOMSelection *aSelection, 
+                            PRBool          *aCancel,
+                            PRBool          *aHandled,
+                            const nsString  *inString,
+                            nsString        *outString,
+                            TypeInState      typeInState,
+                            PRInt32          aMaxLength);
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESelectionCollapseDirection aAction, 
                                PRBool *aCancel, PRBool *aHandled);
@@ -66,6 +67,7 @@ protected:
 
   nsresult InsertTab(nsIDOMSelection *aSelection, nsString *outString);
   nsresult InsertSpace(nsIDOMSelection *aSelection, nsString *outString);
+  nsresult InsertMozBR();
 
   nsresult ReturnInHeader(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   nsresult ReturnInParagraph(nsIDOMSelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel, PRBool *aHandled);
@@ -88,13 +90,20 @@ protected:
   static PRBool IsDiv(nsIDOMNode *aNode);
   static PRBool IsNormalDiv(nsIDOMNode *aNode);
   static PRBool IsMozDiv(nsIDOMNode *aNode);
+  static PRBool IsMozBR(nsIDOMNode *aNode);
   static PRBool IsMailCite(nsIDOMNode *aNode);
   static PRBool HasMozAttr(nsIDOMNode *aNode);
   
   static PRBool InBody(nsIDOMNode *aNode);
   
-  nsresult IsEmptyBlock(nsIDOMNode *aNode, PRBool *outIsEmptyBlock);
-  nsresult IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyNode);
+  nsresult IsEmptyBlock(nsIDOMNode *aNode, 
+                       PRBool *outIsEmptyBlock, 
+                       PRBool aMozBRDoesntCount = PR_FALSE,
+                       PRBool aListItemsNotEmpty = PR_FALSE);
+  nsresult IsEmptyNode(nsIDOMNode *aNode, 
+                       PRBool *outIsEmptyBlock, 
+                       PRBool aMozBRDoesntCount = PR_FALSE,
+                       PRBool aListItemsNotEmpty = PR_FALSE);
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
   PRBool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
