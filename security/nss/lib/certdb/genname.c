@@ -1093,20 +1093,59 @@ loser:
 }
 
 /* Returns SECSuccess if name matches constraint per RFC 3280 rules for 
-** DNS name constraints.  SECFailure otherwise.
-** The constraint string must match the right most substring of the same
-** length in the name.  If the name string is longer, then the leftmost
-** character of the constraint string cannot be in the middle of a domain
-** name component.  Examples:
+** URI name constraints.  SECFailure otherwise.
+** If the constraint begins with a dot, it is a domain name, otherwise
+** It is a host name.  Examples:
+**  Constraint            Name             Result
+** ------------      ---------------      --------
+**  foo.bar.com          foo.bar.com      matches
+**  foo.bar.com          FoO.bAr.CoM      matches
+**  foo.bar.com      www.foo.bar.com      no match
+**  foo.bar.com        nofoo.bar.com      no match
+** .foo.bar.com      www.foo.bar.com      matches
+** .foo.bar.com        nofoo.bar.com      no match
+** .foo.bar.com          foo.bar.com      no match
+** .foo.bar.com     www..foo.bar.com      no match
+*/
+static SECStatus
+compareURIN2C(const SECItem *name, const SECItem *constraint)
+{
+    int offset;
+    /* The spec is silent on intepreting zero-length constraints.
+    ** We interpret them as matching no URI names.
+    */
+    if (!constraint->len)
+        return SECFailure;
+    if (constraint->data[0] != '.') { 
+    	/* constraint is a host name. */
+    	if (name->len != constraint->len ||
+	    PL_strncasecmp(name->data, constraint->data, constraint->len))
+	    return SECFailure;
+    	return SECSuccess;
+    }
+    /* constraint is a domain name. */
+    if (name->len < constraint->len)
+        return SECFailure;
+    offset = name->len - constraint->len;
+    if (PL_strncasecmp(name->data + offset, constraint->data, constraint->len))
+        return SECFailure;
+    if (!offset || 
+        (name->data[offset - 1] == '.') + (constraint->data[0] == '.') == 1)
+	return SECSuccess;
+    return SECFailure;
+}
+
+/* for DNSnames, the constraint matches any string to which it matches the 
+** rightmost characters in that string.
 **  Constraint            Name             Result
 ** ------------      ---------------      --------
 **  foo.bar.com          foo.bar.com      matches
 **  foo.bar.com          FoO.bAr.CoM      matches
 **  foo.bar.com      www.foo.bar.com      matches
-**  foo.bar.com        nofoo.bar.com      no match
+**  foo.bar.com        nofoo.bar.com      MATCHES
 ** .foo.bar.com      www.foo.bar.com      matches
 ** .foo.bar.com          foo.bar.com      no match
-** .foo.bar.com     www..foo.bar.com      no match
+** .foo.bar.com     www..foo.bar.com      matches
 */
 static SECStatus
 compareDNSN2C(const SECItem *name, const SECItem *constraint)
@@ -1122,10 +1161,7 @@ compareDNSN2C(const SECItem *name, const SECItem *constraint)
     offset = name->len - constraint->len;
     if (PL_strncasecmp(name->data + offset, constraint->data, constraint->len))
         return SECFailure;
-    if (!offset || 
-        (name->data[offset - 1] == '.') + (constraint->data[0] == '.') == 1)
-	return SECSuccess;
-    return SECFailure;
+    return SECSuccess;
 }
 
 /* Returns SECSuccess if name matches constraint per RFC 3280 rules for
@@ -1288,7 +1324,7 @@ cert_CompareNameWithConstraints(CERTGeneralName     *name,
 		rv = parseUriHostname(&uri);
 		if (rv == SECSuccess) {
 		    /* does our hostname meet the constraint? */
-		    matched = compareDNSN2C(&uri, &current->name.name.other);
+		    matched = compareURIN2C(&uri, &current->name.name.other);
 		}
 	    }
 	    break;
