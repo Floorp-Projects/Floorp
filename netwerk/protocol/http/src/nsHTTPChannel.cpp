@@ -965,6 +965,11 @@ nsHTTPChannel::CheckCache()
             mustRevalidate = PR_TRUE;
     }
 
+    nsXPIDLCString varyHeader;
+    mCachedResponse->GetHeader(nsHTTPAtoms::Vary, getter_Copies(varyHeader));
+    if (varyHeader)
+        mustRevalidate = PR_TRUE;
+    
     // If the FORCE_VALIDATION flag is set, any cached data won't be used until
     // it's revalidated with the server, so there's no point in checking if it's
     // expired.
