@@ -53,7 +53,7 @@ public:
   virtual PRBool OnScroll (nsScrollbarEvent & aEvent, PRUint32 cPos);
 
 protected:
-  NS_IMETHOD CreateNative(GtkWidget *parentWindow);
+  NS_IMETHOD CreateNative(GtkObject *parentWindow);
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 
 private:

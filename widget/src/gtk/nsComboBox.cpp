@@ -279,7 +279,7 @@ NS_METHOD nsComboBox::Deselect()
 // Create the native GtkCombo widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsComboBox::CreateNative(GtkWidget *parentWindow)
+NS_METHOD  nsComboBox::CreateNative(GtkObject *parentWindow)
 {
   mWidget = ::gtk_event_box_new();
 

@@ -336,7 +336,7 @@ NS_IMETHODIMP nsListBox::PreCreateWidget(nsWidgetInitData *aInitData)
 // Create the native widget
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsListBox::CreateNative(GtkWidget *parentWindow)
+NS_IMETHODIMP nsListBox::CreateNative(GtkObject *parentWindow)
 {
   // to handle scrolling
   mWidget = gtk_scrolled_window_new (nsnull, nsnull);

@@ -55,7 +55,7 @@ nsLabel::~nsLabel()
 // Create the nativeLabel widget
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP  nsLabel::CreateNative(GtkWidget *parentWindow)
+NS_IMETHODIMP  nsLabel::CreateNative(GtkObject *parentWindow)
 {
   unsigned char alignment = GetNativeAlignment();
 

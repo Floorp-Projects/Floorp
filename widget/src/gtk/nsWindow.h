@@ -30,6 +30,9 @@
 
 #include "nsString.h"
 
+#include "gtkmozarea.h"
+#include "gdksuperwin.h"
+
 class nsFont;
 class nsIAppShell;
 
@@ -69,6 +72,28 @@ public:
   NS_IMETHOD           EndResizingChildren(void);
   NS_IMETHOD           Destroy(void);
 
+#ifdef USE_SUPERWIN
+  NS_IMETHOD           GetAbsoluteBounds(nsRect &aRect);
+  NS_IMETHOD           CaptureRollupEvents(nsIRollupListener * aListener,
+                                           PRBool aDoCapture,
+                                           PRBool aConsumeRollupEvent);
+  NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
+  NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
+  NS_IMETHOD           SetBackgroundColor(const nscolor &aColor);
+  NS_IMETHOD           SetCursor(nsCursor aCursor);
+  NS_IMETHOD           SetFocus(void);
+  void                 QueueDraw();
+  void                 UnqueueDraw();
+  void                 DoPaint(PRInt32 x, PRInt32 y, PRInt32 width, PRInt32 height,
+                               nsIRegion *aClipRegion);
+  static gboolean      UpdateIdle (gpointer data);
+  NS_IMETHOD           Update(void);
+  virtual void         OnFocusInSignal(GdkEventFocus * aGdkFocusEvent);
+  virtual void         OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent);
+  virtual void         InstallFocusInSignal(GtkWidget * aWidget);
+  virtual void         InstallFocusOutSignal(GtkWidget * aWidget);
+#endif /* USE_SUPERWIN */
+
   gint                 ConvertBorderStyles(nsBorderStyle bs);
 
   // Add an XATOM property to this window.
@@ -92,8 +117,22 @@ public:
   virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
   // in nsWidget now
   //    virtual  PRBool OnResize(nsSizeEvent &aEvent);
+  
+  static void SuperWinFilter(GdkSuperWin *superwin, XEvent *event, gpointer p);
+  
+  void HandleXlibExposeEvent(XEvent *event);
+  void HandleXlibConfigureNotifyEvent(XEvent *event);
+  void HandleXlibButtonEvent(XButtonEvent *aButtonEvent);
+  void HandleXlibMotionNotifyEvent(XMotionEvent *aMotionEvent);
+  void HandleXlibCrossingEvent(XCrossingEvent * aCrossingEvent);
+ 
+  // Return the GtkMozArea that is the nearest parent of this widget
+  GtkWidget *GetMozArea();
 
-
+  // Return the Gdk window used for rendering
+  virtual GdkWindow * GetRenderWindow(GtkObject * aGtkWidget);
+  //  XXX Chris - fix these
+  //  virtual void OnButtonPressSignal(GdkEventButton * aGdkButtonEvent);
 
 protected:
 
@@ -122,7 +161,7 @@ protected:
   //////////////////////////////////////////////////////////////////////
 
   virtual void InitCallbacks(char * aName = nsnull);
-  NS_IMETHOD CreateNative(GtkWidget *parentWidget);
+  NS_IMETHOD CreateNative(GtkObject *parentWidget);
 
   nsIFontMetrics *mFontMetrics;
   PRBool      mVisible;
@@ -139,12 +178,21 @@ protected:
   PRBool mLowerLeft;
 
   GtkWidget *mShell;  /* used for toplevel windows */
-  
+  GdkSuperWin *mSuperWin;
+  GtkWidget   *mMozArea;
+  GtkWidget   *mMozAreaClosestParent;
+
   nsIMenuBar *mMenuBar;
 private:
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
                        GdkBitmap *window_mask);
   nsresult     SetIcon();
+  PRBool       mIsUpdating;
+  // this is the current GdkSuperWin with the focus
+  static nsWindow  *focusWindow;
+  // when this is PR_TRUE we will block focus
+  // events to prevent recursion
+  PRBool       mBlockFocusEvents;
 };
 
 //
@@ -155,7 +203,9 @@ public:
   ChildWindow();
   ~ChildWindow();
   virtual PRBool IsChild() const;
+#ifndef USE_SUPERWIN
   NS_IMETHOD Destroy(void);
+#endif
 };
 
 #endif // Window_h__

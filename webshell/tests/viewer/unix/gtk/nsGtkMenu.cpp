@@ -22,6 +22,9 @@
 
 #include <gtk/gtk.h>
 
+#include "gdksuperwin.h"
+#include "gtkmozbox.h"
+
 #include "nsBrowserWindow.h"
 #include "resources.h"
 #include "nscore.h"
@@ -148,9 +151,12 @@ void CreateViewerMenus(nsIWidget *   aParent,
 
   GtkItemFactory *item_factory;
   GtkWidget *menubar;
-  
-  GtkWidget *gtkLayout = (GtkWidget*)aParent->GetNativeData(NS_NATIVE_WIDGET);
 
+  GdkSuperWin *gdkSuperWin;
+  GtkWidget   *mozBox;
+
+  gdkSuperWin = (GdkSuperWin*)aParent->GetNativeData(NS_NATIVE_WIDGET);
+  
   int nmenu_items = sizeof (menu_items) / sizeof (menu_items[0]);
   item_factory = gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>", nsnull);
 
@@ -160,10 +166,13 @@ void CreateViewerMenus(nsIWidget *   aParent,
 
   gtk_menu_bar_set_shadow_type (GTK_MENU_BAR(menubar), GTK_SHADOW_NONE);
 
-  NS_ASSERTION(GTK_IS_LAYOUT(gtkLayout),"code assumes a GtkLayout widget.");
+  NS_ASSERTION(GDK_IS_SUPERWIN(gdkSuperWin), "code assumes a gdksuperwin.");
+  mozBox = gtk_mozbox_new(gdkSuperWin->bin_window);
+  NS_ASSERTION((mozBox != NULL), "failed to create mozBox.");
 
-  gtk_layout_put(GTK_LAYOUT(gtkLayout),menubar,0,0);
-
+  gtk_container_add(GTK_CONTAINER(mozBox), menubar);
+  gtk_mozbox_set_position(GTK_MOZBOX(mozBox), 0, 0 );
+  gtk_widget_show(mozBox);
   gtk_widget_show(menubar);
 
   *aMenuBarOut = menubar;

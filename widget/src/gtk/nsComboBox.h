@@ -60,7 +60,7 @@ public:
   virtual void SetFontNative(GdkFont *aFont);
 
 protected:
-  NS_IMETHOD  CreateNative(GtkWidget *parentWindow);
+  NS_IMETHOD  CreateNative(GtkObject *parentWindow);
   virtual void InitCallbacks(char * aName = nsnull);
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
   virtual void OnUnmapSignal(GtkWidget* aWidget);

@@ -55,7 +55,7 @@ nsTextAreaWidget::~nsTextAreaWidget()
 // Create the native Text widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsTextAreaWidget::CreateNative(GtkWidget *parentWindow)
+NS_METHOD nsTextAreaWidget::CreateNative(GtkObject *parentWindow)
 {
   PRBool oldIsReadOnly;
   mWidget = gtk_scrolled_window_new(nsnull, nsnull);

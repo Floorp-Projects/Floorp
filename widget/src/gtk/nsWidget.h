@@ -38,6 +38,10 @@ class nsIToolkit;
 
 #include <gdk/gdkprivate.h>
 
+#include "gtkmozbox.h"
+
+#define USE_SUPERWIN
+
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
   gdk.x = ns.x; \
@@ -146,6 +150,7 @@ public:
     
   // Utility functions
 
+  void       HandleEvent(GdkEvent *event);
   PRBool     ConvertStatus(nsEventStatus aStatus);
   PRBool     DispatchMouseEvent(nsMouseEvent& aEvent);
   PRBool     DispatchStandardEvent(PRUint32 aMsg);
@@ -159,14 +164,14 @@ public:
 #endif
 
   // Return the Gdk window used for rendering
-  virtual GdkWindow * GetRenderWindow(GtkWidget * aGtkWidget);
+  virtual GdkWindow * GetRenderWindow(GtkObject * aGtkWidget);
 
 protected:
 
   virtual void InitCallbacks(char * aName = nsnull);
   virtual void OnDestroy();
 
-  NS_IMETHOD CreateNative(GtkWidget *parentWindow) { return NS_OK; }
+  NS_IMETHOD CreateNative(GtkObject *parentWindow) { return NS_OK; }
 
   nsresult CreateWidget(nsIWidget *aParent,
                         const nsRect &aRect,
@@ -179,7 +184,6 @@ protected:
 
 
   PRBool DispatchWindowEvent(nsGUIEvent* event);
-  PRBool DispatchWindowEvent(nsGUIEvent* event, nsEventStatus &aEventStatus);
 
   // Return the Gdk window whose background should change
   virtual GdkWindow *GetWindowForSetBackground();
@@ -211,8 +215,10 @@ protected:
 
   void InstallButtonReleaseSignal(GtkWidget * aWidget);
 
+  virtual
   void InstallFocusInSignal(GtkWidget * aWidget);
 
+  virtual
   void InstallFocusOutSignal(GtkWidget * aWidget);
 
   void InstallRealizeSignal(GtkWidget * aWidget);
@@ -267,7 +273,7 @@ public:
 
 
 
-private:
+protected:
 
   //////////////////////////////////////////////////////////////////
   //
@@ -354,12 +360,17 @@ protected:
                       PRUint32         aEventType);
 
 #ifdef DEBUG
+  nsCAutoString  debug_GetName(GtkObject * aGtkWidget);
   nsCAutoString  debug_GetName(GtkWidget * aGtkWidget);
+  PRInt32       debug_GetRenderXID(GtkObject * aGtkWidget);
   PRInt32       debug_GetRenderXID(GtkWidget * aGtkWidget);
 #endif
 
   guint32 mGrabTime;
   GtkWidget *mWidget;
+  // our mozbox for those native widgets
+  GtkWidget *mMozBox;
+
   nsIWidget *mParent;
 
   // This is the composite update area (union of all the calls to
@@ -369,13 +380,17 @@ protected:
   PRBool mShown;
 
   PRUint32 mPreferredWidth, mPreferredHeight;
+  PRBool       mListenForResizes;
 
   GdkICPrivate *mIC;
   GdkICPrivate *GetXIC();
   void SetXIC(GdkICPrivate *aIC);
   void GetXYFromPosition(unsigned long *aX, unsigned long *aY);
 
-
+  // this is the rollup listener variables
+  static nsIRollupListener *gRollupListener;
+  static nsIWidget         *gRollupWidget;
+  static PRBool             gRollupConsumeRollupEvent;
 
 private:
   PRBool mIsDragDest;
