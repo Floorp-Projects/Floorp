@@ -813,22 +813,15 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
           }
         } // end link/visited/active rules
       } // end A tag
-      // add the quirks background compatibility rule if in quirks mode
-      // and/or the Table TH rule for handling <TH> differently than <TD>
-      else if ((tag == nsHTMLAtoms::td) ||
-               (tag == nsHTMLAtoms::th) ||
-               (tag == nsHTMLAtoms::tr) ||
-               (tag == nsHTMLAtoms::thead) || // Nav4.X doesn't support row groups, but it is a lot
-               (tag == nsHTMLAtoms::tbody) || // easier passing from the table to rows this way
-               (tag == nsHTMLAtoms::tfoot)) {
-        // add the rule to handle text-align for a <th>
-        if (tag == nsHTMLAtoms::th) {
+      // add the rule to handle text-align for a <th>
+      else if  (tag == nsHTMLAtoms::th) {
           aRuleWalker->Forward(mTableTHRule);
-        }
-        nsCompatibility mode;
-        aPresContext->GetCompatibilityMode(&mode);
-        if (eCompatibility_NavQuirks == mode) {
-          if (mDocumentColorRule) {
+      }
+      else if (tag == nsHTMLAtoms::table) {
+        if (mDocumentColorRule) {
+          nsCompatibility mode;
+          aPresContext->GetCompatibilityMode(&mode);
+          if (eCompatibility_NavQuirks == mode) {
             aRuleWalker->Forward(mDocumentColorRule);
           }
         }
