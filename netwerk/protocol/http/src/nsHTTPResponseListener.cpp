@@ -218,6 +218,7 @@ nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel, nsHTTPHandle
                       mBytesReceived(0),
                       mBodyBytesReceived (0),
                       mCompressHeaderChecked (PR_FALSE),
+                      mChunkHeaderEOF(PR_FALSE),
                       mChunkHeaderChecked (PR_FALSE),
                       mPipelinedRequest (request)
 {
@@ -395,7 +396,6 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                 if (!mChunkHeaderChecked)
                 {
                     mChunkHeaderChecked = PR_TRUE;
-                    mChunkHeaderEOF     = PR_FALSE;
                     
                     nsXPIDLCString chunkHeader;
                     rv = mResponse -> GetHeader (nsHTTPAtoms::Transfer_Encoding, getter_Copies (chunkHeader));
@@ -421,14 +421,18 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                     }
 				}
 
+                rv = mResponseDataListener -> OnDataAvailable (mChannel, mChannel -> mResponseContext, i_pStream, 0, i_Length);
+
                 PRInt32 cl = -1;
 				mResponse -> GetContentLength (&cl);
 
                 mBodyBytesReceived += i_Length;
 
-                if (cl != -1 && cl - mBodyBytesReceived == 0 || mChunkHeaderEOF)
+                if (mPipelinedRequest
+                    && (cl != -1 && cl - mBodyBytesReceived == 0 || mChunkHeaderEOF))
                 {
-                    rv = mPipelinedRequest -> AdvanceToNextRequest ();
+                    nsresult rv = mPipelinedRequest -> AdvanceToNextRequest ();
+
                     if (NS_FAILED (rv))
                     {
                         mHandler -> ReleasePipelinedRequest (mPipelinedRequest);
@@ -440,12 +444,9 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                         if (NS_SUCCEEDED (rv))
 			    		    trans -> SetBytesExpected (0);
 
-                        rv = mResponseDataListener -> OnDataAvailable (mChannel, mChannel -> mResponseContext, i_pStream, 0, i_Length);
                     }
                     else
                     {
-                        rv = mResponseDataListener -> OnDataAvailable (mChannel, mChannel -> mResponseContext, i_pStream, 0, i_Length);
-
                         PRUint32 status = 0;
                         if (mResponse)
                             mResponse -> GetStatus(&status);
@@ -459,8 +460,6 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                         OnStartRequest (nsnull, nsnull);
                     }
 				}
-                else
-                    rv = mResponseDataListener -> OnDataAvailable (mChannel, mChannel -> mResponseContext, i_pStream, 0, i_Length);
             }
         } 
     } // end !mChannel->mOpenObserver
@@ -479,6 +478,7 @@ nsHTTPServerListener::OnStartRequest (nsIChannel* channel, nsISupports* i_pConte
     mHeadersDone     = PR_FALSE;
     mFirstLineParsed = PR_FALSE;
     mCompressHeaderChecked = PR_FALSE;
+    mChunkHeaderEOF        = PR_FALSE;
     mChunkHeaderChecked    = PR_FALSE;
     mBytesReceived     = 0;
     mBodyBytesReceived = 0;
