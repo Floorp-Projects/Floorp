@@ -429,8 +429,8 @@ static JSBool ParseQuantifier(CompilerState *state);
  *  regexp:     altern                  A regular expression is one or more
  *              altern '|' regexp       alternatives separated by vertical bar.
  */
+#define INITIAL_STACK_SIZE  128
 
-#define INITIAL_STACK_SIZE (128)
 static JSBool
 ParseRegExp(CompilerState *state)
 {
@@ -641,6 +641,15 @@ restartOperator:
                 }
             }
             break;
+        case '+':
+        case '*':
+        case '?':
+        case '{':
+            js_ReportCompileErrorNumber(state->context, state->tokenStream,
+                                        NULL, JSREPORT_ERROR,
+                                        JSMSG_BAD_QUANTIFIER, state->cp);
+            result = JS_FALSE;
+            goto out;
         default:
             /* Anything else is the start of the next term */
             op = REOP_CONCAT;
@@ -692,7 +701,7 @@ FindParenCount(CompilerState *state)
 
     /*
      * Copy state into temp, flag it so we never report an invalid backref,
-     * and reset its state to parse the entire regexp.  This is obviously
+     * and reset its members to parse the entire regexp.  This is obviously
      * suboptimal, but GetDecimalValue calls us only if a backref appears to
      * refer to a forward parenthetical, which is rare.
      */
@@ -2516,8 +2525,8 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                     break;
                 }
                 curState->u.assertion.top
-                    = (char *)gData->backTrackSP
-                                - (char *)gData->backTrackStack;
+                    = (char *)gData->backTrackSP -
+                      (char *)gData->backTrackStack;
                 curState->u.assertion.sz = gData->cursz;
                 curState->index = x->cp - gData->cpbegin;
                 curState->parenSoFar = parenSoFar;
