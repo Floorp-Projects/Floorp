@@ -28,7 +28,6 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsHTMLAtoms.h"
-#include "nsIDocumentEncoder.h"
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 #include "nsINameSpaceManager.h"
@@ -59,8 +58,8 @@ static const  PRInt32 kIndentSizeList = (kTabSize > kOLNumberWidth+3) ? kTabSize
 static const  PRInt32 kIndentSizeDD = kTabSize;  // Indention of <dd>
 
 static PRInt32 HeaderLevel(eHTMLTags aTag);
-static PRInt32 unicharwidth(PRUnichar ucs);
-static PRInt32 unicharwidth(const PRUnichar* pwcs, PRInt32 n);
+static PRInt32 GetUnicharWidth(PRUnichar ucs);
+static PRInt32 GetUnicharStringWidth(const PRUnichar* pwcs, PRInt32 n);
 
 // Someday may want to make this non-const:
 static const PRUint32 TagStackSize = 500;
@@ -78,12 +77,13 @@ nsresult NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer)
 }
 
 nsPlainTextSerializer::nsPlainTextSerializer()
+  : kSpace(NS_LITERAL_STRING(" ")) // Init of "constant"
 {
   NS_INIT_ISUPPORTS();
 
   mOutputString = nsnull;
   mInHead = PR_FALSE;
-  mColPos = 0;
+  mAtFirstColumn = PR_TRUE;
   mIndent = 0;
   mCiteQuoteLevel = 0;
   mStructs = PR_TRUE;       // will be read from prefs later
@@ -100,7 +100,6 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mEmptyLines = 1; // The start of the document is an "empty line" in itself,
   mInWhitespace = PR_TRUE;
   mPreFormatted = PR_FALSE;
-  mCacheLine = PR_FALSE;
   mStartedOutput = PR_FALSE;
 
   // initialize the tag stack to zero:
@@ -128,43 +127,54 @@ NS_IMPL_ISUPPORTS4(nsPlainTextSerializer,
 NS_IMETHODIMP 
 nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn)
 {
+#ifdef DEBUG
+  // Check if the major control flags are set correctly.
+  if(aFlags & nsIDocumentEncoder::OutputFormatFlowed) {
+    NS_ASSERTION(aFlags & nsIDocumentEncoder::OutputFormatted,
+                 "If you want format=flowed, you must combine it with "
+                 "nsIDocumentEncoder::OutputFormatted");
+  }
+
+  if(aFlags & nsIDocumentEncoder::OutputFormatted) {
+    NS_ASSERTION(!(aFlags & nsIDocumentEncoder::OutputPreformatted),
+                 "Can't do formatted and preformatted output at the same time!");
+  }
+#endif
+  
+  nsresult rv;
+  
   mFlags = aFlags;
   mWrapColumn = aWrapColumn;
 
-  nsresult rv;
-  NS_WITH_SERVICE(nsILineBreakerFactory, lf, kLWBrkCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsAutoString lbarg;
-    rv = lf->GetBreaker(lbarg, getter_AddRefs(mLineBreaker));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  }
-
-  // Turn on caching if we are wrapping or we want formatting.
-  // We need this even when flags indicate preformatted,
-  // in order to wrap textareas with wrap=hard.
-  if((mFlags & nsIDocumentEncoder::OutputFormatted) ||
-     (mFlags & nsIDocumentEncoder::OutputWrap))
-  {
-    mCacheLine = PR_TRUE;
+  // Only create a linebreaker if we will handle wrapping.
+  if(MayWrap()) {
+    NS_WITH_SERVICE(nsILineBreakerFactory, lf, kLWBrkCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString lbarg;
+      rv = lf->GetBreaker(lbarg, getter_AddRefs(mLineBreaker));
+      if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    }
   }
 
   // Set the line break character:
   if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
       && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) // Windows/mail
-    mLineBreak.AssignWithConversion("\r\n");
+    mLineBreak.Assign(NS_LITERAL_STRING("\r\n"));
   else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) // Mac
-    mLineBreak.AssignWithConversion("\r");
+    mLineBreak.Assign(PRUnichar('\r'));
   else if (mFlags & nsIDocumentEncoder::OutputLFLineBreak) // Unix/DOM
-    mLineBreak.AssignWithConversion("\n");
+    mLineBreak.Assign(PRUnichar('\n'));
   else
     mLineBreak.AssignWithConversion(NS_LINEBREAK);         // Platform/default
 
-  // Get some prefs
-  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && prefs)
-  {
-    prefs->GetBoolPref(PREF_STRUCTS, &mStructs);
-    prefs->GetIntPref(PREF_HEADER_STRATEGY, &mHeaderStrategy);
+  
+  if(mFlags & nsIDocumentEncoder::OutputFormatted) {
+    // Get some prefs that controls how we do formatted output
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && prefs) {
+      prefs->GetBoolPref(PREF_STRUCTS, &mStructs);
+      prefs->GetIntPref(PREF_HEADER_STRATEGY, &mHeaderStrategy);
+    }
   }
 
   return NS_OK;
@@ -223,10 +233,12 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
   PRInt32 offset = textstr.FindCharInSet("\n\r");
   while (offset != kNotFound) {
 
-    // Pass in the line
-    textstr.Mid(linebuffer, start, offset-start);
-    rv = DoAddLeaf(eHTMLTag_text, linebuffer);
-    if (NS_FAILED(rv)) break;
+    if(offset>start) {
+      // Pass in the line
+      textstr.Mid(linebuffer, start, offset-start);
+      rv = DoAddLeaf(eHTMLTag_text, linebuffer);
+      if (NS_FAILED(rv)) break;
+    }
 
     // Pass in a newline
     rv = DoAddLeaf(eHTMLTag_newline, mLineBreak);
@@ -460,13 +472,6 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
   }
 
   if (type == eHTMLTag_body) {
-    //    body ->  can turn on cacheing unless it's already preformatted
-    if(!(mFlags & nsIDocumentEncoder::OutputPreformatted) && 
-       ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
-        (mFlags & nsIDocumentEncoder::OutputWrap))) {
-      mCacheLine = PR_TRUE;
-    }
-
     // Try to figure out here whether we have a
     // preformatted style attribute.
     //
@@ -478,14 +483,13 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     nsAutoString style;
     PRInt32 whitespace;
     if(NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::style, style)) &&
-       (-1 != (whitespace = style.Find("white-space:")))) {
+       (kNotFound != (whitespace = style.Find("white-space:")))) {
 
-      if (-1 != style.Find("-moz-pre-wrap", PR_TRUE, whitespace)) {
+      if (kNotFound != style.Find("-moz-pre-wrap", PR_TRUE, whitespace)) {
 #ifdef DEBUG_preformatted
         printf("Set mPreFormatted based on style moz-pre-wrap\n");
 #endif
         mPreFormatted = PR_TRUE;
-        mCacheLine = PR_TRUE;
         PRInt32 widthOffset = style.Find("width:");
         if (widthOffset >= 0) {
           // We have to search for the ch before the semicolon,
@@ -509,18 +513,16 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
           }
         }
       }
-      else if (-1 != style.Find("pre", PR_TRUE, whitespace)) {
+      else if (kNotFound != style.Find("pre", PR_TRUE, whitespace)) {
 #ifdef DEBUG_preformatted
         printf("Set mPreFormatted based on style pre\n");
 #endif
         mPreFormatted = PR_TRUE;
-        mCacheLine = PR_TRUE;
         mWrapColumn = 0;
       }
     } 
     else {
       mPreFormatted = PR_FALSE;
-      mCacheLine = PR_TRUE; // Cache lines unless something else tells us not to
     }
 
     return NS_OK;
@@ -542,14 +544,7 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
     // seems like a better solution.
     if(!mInWhitespace) {
       // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
-      if(mCacheLine) {
-        AddToLine(NS_ConvertASCIItoUCS2(" "), 1);
-      } 
-      else {
-        nsAutoString space;
-        space.AssignWithConversion(" ");
-        WriteSimple(space);
-      }
+      AddToLine(kSpace.GetUnicode(), 1);
       mInWhitespace = PR_TRUE;
     }
   }
@@ -572,17 +567,17 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
         mInIndentString.AppendInt(mOLStack[mOLStackIndex-1]++, 10);
       }
       else {
-        mInIndentString.AppendWithConversion("#");
+        mInIndentString.Append(PRUnichar('#'));
       }
 
-      mInIndentString.AppendWithConversion('.');
+      mInIndentString.Append(PRUnichar('.'));
 
     }
     else {
-      mInIndentString.AppendWithConversion('*');
+      mInIndentString.Append(PRUnichar('*'));
     }
     
-    mInIndentString.AppendWithConversion(' ');
+    mInIndentString.Append(PRUnichar(' '));
   }
   else if (type == eHTMLTag_dl) {
     EnsureVerticalSpace(1);
@@ -644,17 +639,10 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
   else if (type == eHTMLTag_blockquote) {
     EnsureVerticalSpace(1);
 
-    // Find out whether it's a type=cite, and insert "> " instead.
-    // Eventually we should get the value of the pref controlling citations,
-    // and handle AOL-style citations as well.
-    // If we want to support RFC 2646 (and we do!) we have to have:
-    // >>>> text
-    // >>> fdfd
-    // when a mail is sent.
     nsAutoString value;
     nsresult rv = GetAttributeValue(nsHTMLAtoms::type, value);
 
-    if (NS_SUCCEEDED(rv) && value.EqualsWithConversion("cite", PR_TRUE)) {
+    if (NS_SUCCEEDED(rv) && value.EqualsIgnoreCase("cite")) {
       mCiteQuoteLevel++;
     }
     else {
@@ -781,7 +769,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     nsAutoString value;
     nsresult rv = GetAttributeValue(nsHTMLAtoms::type, value);
 
-    if (NS_SUCCEEDED(rv)  && value.EqualsWithConversion("cite", PR_TRUE)) {
+    if (NS_SUCCEEDED(rv)  && value.EqualsIgnoreCase("cite")) {
       mCiteQuoteLevel--;
     }
     else {
@@ -792,9 +780,9 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   }
   else if (type == eHTMLTag_a && !IsCurrentNodeConverted() && !mURL.IsEmpty()) {
     nsAutoString temp; 
-    temp.AssignWithConversion(" <");
+    temp.Assign(NS_LITERAL_STRING(" <"));
     temp += mURL;
-    temp.AppendWithConversion(">");
+    temp.Append(PRUnichar('>'));
     Write(temp);
     mURL.Truncate();
   }
@@ -803,7 +791,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   }
   else if ((type == eHTMLTag_sup || type == eHTMLTag_sub) 
            && mStructs && !IsCurrentNodeConverted()) {
-    Write(NS_ConvertASCIItoUCS2(" "));
+    Write(kSpace);
   }
   else if (type == eHTMLTag_code && mStructs && !IsCurrentNodeConverted()) {
     Write(NS_ConvertASCIItoUCS2("|"));
@@ -834,9 +822,13 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
   
   eHTMLTags type = (eHTMLTags)aTag;
   
-  if (mTagStackIndex > 1 && mTagStack[mTagStackIndex-2] == eHTMLTag_select) {
+  if ((mTagStackIndex > 1 &&
+       mTagStack[mTagStackIndex-2] == eHTMLTag_select) ||
+      (mTagStackIndex > 0 &&
+        mTagStack[mTagStackIndex-1] == eHTMLTag_select)) {
     // Don't output the contents of SELECT elements;
     // Might be nice, eventually, to output just the selected element.
+    // Read more in bug 31994.
     return NS_OK;
   }
   else if (mTagStackIndex > 0 && mTagStack[mTagStackIndex-1] == eHTMLTag_script) {
@@ -844,18 +836,13 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
     return NS_OK;
   }
   else if (type == eHTMLTag_text) {
-    /* Check, if some other MUA (e.g. 4.x) recognized the URL in
-       plain text and inserted an <a> element. If yes, output only once. */
+    /* Check, if we are in a link (symbolized with mURL containing the URL)
+       and the text is equal to the URL. In that case we don't want to output
+       the URL twice so we scrap the text in mURL. */
     if (!mURL.IsEmpty() && mURL.Equals(aText)) {
       mURL.Truncate();
     }
-    if (
-         // Bug 31994 says we shouldn't output the contents of SELECT elements.
-         mTagStackIndex <= 0 ||
-         mTagStack[mTagStackIndex-1] != eHTMLTag_select
-         ) {
-      Write(aText);
-    }
+    Write(aText);
   }
   else if (type == eHTMLTag_entity) {
     nsCOMPtr<nsIParserService> parserService;
@@ -890,13 +877,13 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
         (mPreFormatted && !mWrapColumn) ||
         ((mFlags & nsIDocumentEncoder::OutputFormatted)
          && IsInPre())) {
-      Write(aText); // XXX: spacestuffing (maybe call AddToLine if mCacheLine==true)
+      Write(aText);
     }
     else if(!mInWhitespace ||
             (!mStartedOutput
              && mFlags | nsIDocumentEncoder::OutputSelectionOnly)) {
       mInWhitespace = PR_FALSE;
-      Write( NS_ConvertToString(" ") );
+      Write(kSpace);
       mInWhitespace = PR_TRUE;
     }
   }
@@ -907,7 +894,7 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
       EnsureVerticalSpace(mEmptyLines+1);
     }
     else {
-      Write(NS_ConvertASCIItoUCS2(" "));
+      Write(kSpace);
     }
   }
   else if (type == eHTMLTag_hr &&
@@ -919,7 +906,7 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
     nsAutoString line;
     PRUint32 width = (mWrapColumn > 0 ? mWrapColumn : 25);
     while (line.Length() < width) {
-      line.AppendWithConversion('-');
+      line.Append(PRUnichar('-'));
     }
     Write(line);
 
@@ -932,26 +919,26 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
     nsAutoString desc, temp;
     if (NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::alt, desc))) {
       if (!desc.IsEmpty()) {
-        temp.AppendWithConversion(" ["); // Should we output chars at all here?
+        temp.Append(NS_LITERAL_STRING(" [")); // Should we output chars at all here?
         desc.StripChars("\"");
         temp += desc;
-        temp.AppendWithConversion("] ");
+        temp.Append(NS_LITERAL_STRING("] "));
       }
       // If the alt attribute has an empty value (|alt=""|), output nothing
     }
     else if (NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::title, desc))
              && !desc.IsEmpty()) {
-      temp.AppendWithConversion(" [");
+      temp.Append(NS_LITERAL_STRING(" ["));
       desc.StripChars("\"");
       temp += desc;
-      temp.AppendWithConversion("] ");
+      temp.Append(NS_LITERAL_STRING("] "));
     }
     else if (NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::src, desc))
              && !desc.IsEmpty()) {
-      temp.AppendWithConversion(" <");
+      temp.Append(NS_LITERAL_STRING(" <"));
       desc.StripChars("\"");
       temp += desc;
-      temp.AppendWithConversion("> ");
+      temp.Append(NS_LITERAL_STRING("> "));
     }
     if (!temp.IsEmpty()) {
       Write(temp);
@@ -961,6 +948,13 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
   return NS_OK;
 }
 
+/**
+ * Adds as many newline as necessary to get |noOfRows| empty lines
+ *
+ * noOfRows = -1    :   Being in the middle of some line of text
+ * noOfRows =  0    :   Being at the start of a line
+ * noOfRows =  n>0  :   Having n empty lines before the current line.
+ */
 void
 nsPlainTextSerializer::EnsureVerticalSpace(PRInt32 noOfRows)
 {
@@ -969,26 +963,37 @@ nsPlainTextSerializer::EnsureVerticalSpace(PRInt32 noOfRows)
   }
 }
 
-// This empties the current line cache without adding a NEWLINE.
-// Should not be used if line wrapping is of importance since
-// this function destroys the cache information.
+/**
+ * This empties the current line cache without adding a NEWLINE.
+ * Should not be used if line wrapping is of importance since
+ * this function destroys the cache information.
+ *
+ * It will also write indentation and quotes if we believe us to be
+ * at the start of the line.
+ */
 void
 nsPlainTextSerializer::FlushLine()
 {
   if(mCurrentLine.Length()>0) {
-    if(0 == mColPos) {
-      WriteQuotesAndIndent();
+    if(mAtFirstColumn) {
+      OutputQuotesAndIndent(); // XXX: Should we always do this? Bug?
     }
 
-    WriteSimple(mCurrentLine);
-    mColPos += mCurrentLine.Length();
+    Output(mCurrentLine);
+    mAtFirstColumn = mAtFirstColumn && mCurrentLine.Length() == 0;
     mCurrentLine.Truncate();
     mCurrentLineWidth = 0;
   }
 }
 
+/**
+ * Prints the text to output to our current output device (the string mOutputString).
+ * The only logic here is to replace non breaking spaces with a normal space since
+ * most (all?) receivers of the result won't understand the nbsp and even be
+ * confused by it.
+ */
 void 
-nsPlainTextSerializer::WriteSimple(nsString& aString)
+nsPlainTextSerializer::Output(nsString& aString)
 {
   if (aString.Length() > 0) {
     mStartedOutput = PR_TRUE;
@@ -1003,6 +1008,12 @@ nsPlainTextSerializer::WriteSimple(nsString& aString)
   mOutputString->Append(aString);
 }
 
+/**
+ * This function adds a piece of text to the current stored line. If we are
+ * wrapping text and the stored line will become too long, a suitable
+ * location to wrap will be found and the line that's complete will be
+ * output.
+ */
 void
 nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment, 
                                  PRInt32 aLineFragmentLength)
@@ -1022,12 +1033,12 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
          (!nsCRT::strncmp(aLineFragment, "From ", 5))) {
 
         // Space stuffing a la RFC 2646 (format=flowed).
-        mCurrentLine.AppendWithConversion(' ');
+        mCurrentLine.Append(PRUnichar(' '));
 
         if(MayWrap()) {
-          mCurrentLineWidth += unicharwidth(' ');
+          mCurrentLineWidth += GetUnicharWidth(' ');
 #ifdef DEBUG_wrapping
-          NS_ASSERTION(unicharwidth(mCurrentLine.GetUnicode(),
+          NS_ASSERTION(GetUnicharStringWidth(mCurrentLine.GetUnicode(),
                                     mCurrentLine.Length()) ==
                        (PRInt32)mCurrentLineWidth,
                        "mCurrentLineWidth and reality out of sync!");
@@ -1040,10 +1051,11 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
     
   mCurrentLine.Append(aLineFragment, aLineFragmentLength);
   if(MayWrap()) {
-    mCurrentLineWidth += unicharwidth(aLineFragment, aLineFragmentLength);
+    mCurrentLineWidth += GetUnicharStringWidth(aLineFragment,
+                                               aLineFragmentLength);
 #ifdef DEBUG_wrapping
-    NS_ASSERTION(unicharwidth(mCurrentLine.GetUnicode(),
-                              mCurrentLine.Length()) ==
+    NS_ASSERTION(GetUnicharstringWidth(mCurrentLine.GetUnicode(),
+                                       mCurrentLine.Length()) ==
                  (PRInt32)mCurrentLineWidth,
                  "mCurrentLineWidth and reality out of sync!");
 #endif
@@ -1056,7 +1068,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
   if(MayWrap())
   {
 #ifdef DEBUG_wrapping
-    NS_ASSERTION(unicharwidth(mCurrentLine.GetUnicode(),
+    NS_ASSERTION(GetUnicharstringWidth(mCurrentLine.GetUnicode(),
                                   mCurrentLine.Length()) ==
                  (PRInt32)mCurrentLineWidth,
                  "mCurrentLineWidth and reality out of sync!");
@@ -1067,7 +1079,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
     // wrapcolumn is more than 20.
     PRUint32 bonuswidth = (mWrapColumn > 20) ? 4 : 0;
 
-    // XXX: Should calculate prefixwidth with unicharwidth
+    // XXX: Should calculate prefixwidth with GetUnicharStringWidth
     while(mCurrentLineWidth+prefixwidth > mWrapColumn+bonuswidth) {
       // Must wrap. Let's find a good place to do that.
       nsresult result = NS_OK;
@@ -1078,7 +1090,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
       PRUint32 width = mCurrentLineWidth;
       while(goodSpace > 0 && (width+prefixwidth > mWrapColumn)) {
         goodSpace--;
-        width -= unicharwidth(mCurrentLine[goodSpace]);
+        width -= GetUnicharWidth(mCurrentLine[goodSpace]);
       }
 
       goodSpace++;
@@ -1144,14 +1156,14 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
           if((restOfLine.Length()>0) &&
              ((restOfLine[0] == '>') ||
               (restOfLine[0] == ' ') ||
-              (!restOfLine.CompareWithConversion("From ",PR_FALSE,5)))) {
+              (restOfLine.EqualsWithConversion("From ",PR_FALSE,5)))) {
             // Space stuffing a la RFC 2646 (format=flowed).
-            mCurrentLine.AppendWithConversion(' ');
+            mCurrentLine.Append(PRUnichar(' '));
           }
         }
         mCurrentLine.Append(restOfLine);
-        mCurrentLineWidth = unicharwidth(mCurrentLine.GetUnicode(),
-                                          mCurrentLine.Length());
+        mCurrentLineWidth = GetUnicharStringWidth(mCurrentLine.GetUnicode(),
+                                                  mCurrentLine.Length());
         linelength = mCurrentLine.Length();
         mEmptyLines = -1;
       } 
@@ -1167,79 +1179,89 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
   }
 }
 
+/**
+ * Outputs the contents of mCurrentLine, and resets line specific
+ * variables. Also adds an indentation and prefix if there is
+ * one specified. Strips ending spaces from the line if it isn't
+ * preformatted.
+ */
 void
-nsPlainTextSerializer::EndLine(PRBool softlinebreak)
+nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
 {
-  if(softlinebreak) {
-    if(0 == mCurrentLine.Length()) {
-      // No meaning
-      return;
+  PRUint32 currentlinelength = mCurrentLine.Length();
+
+  if(aSoftlinebreak && 0 == currentlinelength) {
+    // No meaning
+    return;
+  }
+  
+  if(mAtFirstColumn) {
+    OutputQuotesAndIndent();
+  }
+
+  // In non-preformatted mode, remove SPACE from the end
+  // of the line, unless we got "-- " in a format=flowed
+  // output. "-- " is the sig delimiter by convention and
+  // shouldn't be touched even in format=flowed
+  // (see RFC 2646). We only check for "-- " when it's a hard line
+  // break for obvious reasons.
+  if(!(mFlags & nsIDocumentEncoder::OutputPreformatted) &&
+     (aSoftlinebreak || !mCurrentLine.EqualsWithConversion("-- "))) {
+    // Remove SPACE:s from the end of the line.
+    while(currentlinelength > 0 &&
+          ' ' == mCurrentLine[currentlinelength-1]) {
+      --currentlinelength;
     }
-    WriteQuotesAndIndent();
-    // Remove SPACE from the end of the line.
-    PRUint32 linelength = mCurrentLine.Length();
-    while(linelength > 0 &&
-          ' ' == mCurrentLine[--linelength]) {
-      mCurrentLine.SetLength(linelength);
-    }
-    if((mFlags & nsIDocumentEncoder::OutputFormatFlowed) &&
-       (mIndent == 0)) {
-      // Add the soft part of the soft linebreak (RFC 2646 4.1)
-      // We only do this when there is no indentation since format=flowed
-      // lines and indentation doesn't work well together.
-      mCurrentLine.AppendWithConversion(' ');
-    }
-    mCurrentLine.Append(mLineBreak);
-    WriteSimple(mCurrentLine);
-    mCurrentLine.Truncate();
-    mCurrentLineWidth = 0;
-    mColPos=0;
+    mCurrentLine.SetLength(currentlinelength);
+  }
+  
+  if(aSoftlinebreak &&
+     (mFlags & nsIDocumentEncoder::OutputFormatFlowed) &&
+     (mIndent == 0)) {
+    // Add the soft part of the soft linebreak (RFC 2646 4.1)
+    // We only do this when there is no indentation since format=flowed
+    // lines and indentation doesn't work well together.
+    mCurrentLine.Append(PRUnichar(' '));
+  }
+
+  if(aSoftlinebreak) {
     mEmptyLines=0;
-    mInWhitespace=PR_TRUE;
   } 
   else {
     // Hard break
-    if(0 == mColPos) {
-      WriteQuotesAndIndent();
-    }
     if(mCurrentLine.Length()>0) {
       mEmptyLines=-1;
     }
 
-    // Output current line
-    // Remove SPACE from the end of the line, unless we got
-    // "-- " in a format=flowed output. "-- " is the sig delimiter
-    // by convention and shouldn't be touched even in format=flowed
-    // (see RFC 2646).
-    PRUint32 currentlinelength = mCurrentLine.Length();
-    while((currentlinelength > 0) &&
-          (' ' == mCurrentLine[currentlinelength-1]) &&
-          (!mCurrentLine.EqualsWithConversion("-- "))) {
-      mCurrentLine.SetLength(--currentlinelength);
-    }
-
-    mCurrentLine.Append(mLineBreak);
-    WriteSimple(mCurrentLine);
-    mCurrentLine.Truncate();
-    mCurrentLineWidth = 0;
-    mColPos=0;
     mEmptyLines++;
-    mInWhitespace=PR_TRUE;
   }
+
+  mCurrentLine.Append(mLineBreak);
+  Output(mCurrentLine);
+  mCurrentLine.Truncate();
+  mCurrentLineWidth = 0;
+  mAtFirstColumn=PR_TRUE;
+  mInWhitespace=PR_TRUE;
 }
 
+
+/**
+ * Outputs the calculated and stored indent and text in the indentation. That is
+ * quote chars and numbers for numbered lists and such. It will also reset any
+ * stored text to put in the indentation after using it.
+ */
 void
-nsPlainTextSerializer::WriteQuotesAndIndent()
+nsPlainTextSerializer::OutputQuotesAndIndent()
 {
   // Put the mail quote "> " chars in, if appropriate:
   if (mCiteQuoteLevel > 0) {
     nsAutoString quotes;
     for(int i=0; i < mCiteQuoteLevel; i++) {
-      quotes.AppendWithConversion('>');
+      quotes.Append(PRUnichar('>'));
     }
-    quotes.AppendWithConversion(' ');
-    WriteSimple(quotes);
-    mColPos += (mCiteQuoteLevel+1);
+    quotes.Append(PRUnichar(' '));
+    Output(quotes);
+    mAtFirstColumn = PR_FALSE;
   }
   
   // Indent if necessary
@@ -1247,29 +1269,29 @@ nsPlainTextSerializer::WriteQuotesAndIndent()
   if (indentwidth > 0) {
     nsAutoString spaces;
     for (int i=0; i < indentwidth; ++i)
-      spaces.AppendWithConversion(' ');
-    WriteSimple(spaces);
-    mColPos += indentwidth;
+      spaces.Append(PRUnichar(' '));
+    Output(spaces);
+    mAtFirstColumn = PR_FALSE;
   }
   
   if(mInIndentString.Length() > 0) {
-    WriteSimple(mInIndentString);
-    mColPos += mInIndentString.Length();
+    Output(mInIndentString);
+    mAtFirstColumn = PR_FALSE;
     mInIndentString.Truncate();
   }
 }
 
-//
-// Write a string, wrapping appropriately to mWrapColumn.
-// This routine also handles indentation and mail-quoting,
-// and so should be used for formatted output even if we're not wrapping.
-//
+/**
+ * Write a string. This is the highlevel function to use to get text output.
+ * By using AddToLine, Output, EndLine and other functions it handles quotation,
+ * line wrapping, indentation, whitespace compression and other things.
+ */
 void
 nsPlainTextSerializer::Write(const nsAReadableString& aString)
 {
 #ifdef DEBUG_wrapping
   char* foo = ToNewCString(aString);
-  printf("Write(%s): wrap col = %d, mColPos = %d\n", foo, mWrapColumn, mColPos);
+  printf("Write(%s): wrap col = %d\n", foo, mWrapColumn);
   nsMemory::Free(foo);
 #endif
 
@@ -1277,12 +1299,15 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
   PRInt32 newline;
   
   PRInt32 totLen = aString.Length();
-  
-  if ((mPreFormatted && !mWrapColumn) || IsInPre()) {
-    // No intelligent wrapping. This mustn't be mixed with
-    // intelligent wrapping without clearing the mCurrentLine
-    // buffer before!!!
 
+  // We have two major codepaths here. One that does preformatted text and one
+  // that does normal formatted text. The one for preformatted text calls
+  // Output directly while the other code path goes through AddToLine.
+  if ((mPreFormatted && !mWrapColumn) || IsInPre()) {
+    // No intelligent wrapping.
+
+    // This mustn't be mixed with intelligent wrapping without clearing
+    // the mCurrentLine buffer before!!!
     NS_WARN_IF_FALSE(mCurrentLine.Length() == 0,
                  "Mixed wrapping data and nonwrapping data on the same line");
     if (mCurrentLine.Length() > 0) {
@@ -1292,14 +1317,28 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
     // Put the mail quote "> " chars in, if appropriate.
     // Have to put it in before every line.
     while(bol<totLen) {
-      if(0 == mColPos) {
-        WriteQuotesAndIndent();
+      if(mAtFirstColumn) {
+        OutputQuotesAndIndent();
       }
-      
-      newline = aString.FindChar(PRUnichar('\n'),bol);
-      // XXX should probably also look for \r even though they shouldn't happen
-      
-      if(newline < 0) {
+
+      // Find one of '\n' or '\r' using iterators since nsAReadableString
+      // doesn't have the old FindCharInSet function.
+      nsAReadableString::const_iterator iter = aString.BeginReading();
+      nsAReadableString::const_iterator done_searching = aString.EndReading();
+      iter += bol; 
+      PRInt32 new_newline = bol;
+      newline = kNotFound;
+      while(iter != done_searching) {
+        if('\n' == *iter || '\r' == *iter) {
+          newline = new_newline;
+          break;
+        }
+        ++new_newline;
+        ++iter;
+      }
+
+      // Done searching
+      if(newline == kNotFound) {
         // No new lines.
         nsAutoString stringpart;
         aString.Right(stringpart, totLen-bol);
@@ -1313,9 +1352,9 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
             mInWhitespace = PR_FALSE;
           }
         }
-        WriteSimple(stringpart);
+        Output(stringpart);
         mEmptyLines=-1;
-        mColPos += totLen-bol;
+        mAtFirstColumn = mAtFirstColumn && (totLen-bol)==0;
         bol = totLen;
       } 
       else {
@@ -1323,18 +1362,24 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
         nsAutoString stringpart;
         aString.Mid(stringpart, bol, newline-bol);
         mInWhitespace = PR_TRUE;
-        WriteSimple(stringpart);
+        Output(stringpart);
         // and write the newline
-        WriteSimple(mLineBreak);
+        Output(mLineBreak);
         mEmptyLines=0;
-        mColPos=0;
+        mAtFirstColumn = PR_TRUE;
         bol = newline+1;
+        if('\r' == aString[newline] && bol < totLen && '\n' == aString[bol]) {
+          // There was a CRLF in the input. This used to be illegal and
+          // stripped by the parser. Apparently not anymore. Let's skip
+          // over the LF.
+          bol++;
+        }
       }
     }
 
 #ifdef DEBUG_wrapping
-    printf("No wrapping: newline is %d, totLen is %d; leaving mColPos = %d\n",
-           newline, totLen, mColPos);
+    printf("No wrapping: newline is %d, totLen is %d\n",
+           newline, totLen);
 #endif
     return;
   }
@@ -1362,17 +1407,10 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
     nsMemory::Free(foo);
 #endif
 
-    if(nextpos < 0) {
+    if(nextpos == kNotFound) {
       // The rest of the string
-      if(!mCacheLine) {
-        str.Right(tempstr, totLen-bol);
-        WriteSimple(tempstr);
-      } 
-      else {
-        offsetIntoBuffer = str.GetUnicode();
-        offsetIntoBuffer = &offsetIntoBuffer[bol];
-        AddToLine(offsetIntoBuffer, totLen-bol);
-      }
+      offsetIntoBuffer = str.GetUnicode() + bol;
+      AddToLine(offsetIntoBuffer, totLen-bol);
       bol=totLen;
       mInWhitespace=PR_FALSE;
     } 
@@ -1390,62 +1428,36 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
       if(nextpos == bol) {
         // Note that we are in whitespace.
         mInWhitespace = PR_TRUE;
-        if(!mCacheLine) {
-          nsAutoString whitestring(str[nextpos]);
-          WriteSimple(whitestring);
-        } 
-        else {
-          offsetIntoBuffer = str.GetUnicode();
-          offsetIntoBuffer = &offsetIntoBuffer[nextpos];
-          AddToLine(offsetIntoBuffer, 1);
-        }
+        offsetIntoBuffer = str.GetUnicode() + nextpos;
+        AddToLine(offsetIntoBuffer, 1);
         bol++;
         continue;
       }
       
-      if(!mCacheLine) {
-        str.Mid(tempstr,bol,nextpos-bol);
-        if(mFlags & nsIDocumentEncoder::OutputPreformatted) {
-          bol = nextpos;
-        } 
-        else {
-          tempstr.AppendWithConversion(" ");
-          bol = nextpos + 1;
-          mInWhitespace = PR_TRUE;
-        }
-        WriteSimple(tempstr);
+      mInWhitespace = PR_TRUE;
+      
+      offsetIntoBuffer = str.GetUnicode() + bol;
+      if(mPreFormatted || (mFlags & nsIDocumentEncoder::OutputPreformatted)) {
+        // Preserve the real whitespace character
+        nextpos++;
+        AddToLine(offsetIntoBuffer, nextpos-bol);
+        bol = nextpos;
       } 
       else {
-         mInWhitespace = PR_TRUE;
-         
-         offsetIntoBuffer = str.GetUnicode();
-         offsetIntoBuffer = &offsetIntoBuffer[bol];
-         if(mPreFormatted || (mFlags & nsIDocumentEncoder::OutputPreformatted)) {
-           // Preserve the real whitespace character
-           nextpos++;
-           AddToLine(offsetIntoBuffer, nextpos-bol);
-           bol = nextpos;
-         } 
-         else {
-           // Replace the whitespace with a space
-           AddToLine(offsetIntoBuffer, nextpos-bol);
-           AddToLine(NS_ConvertToString(" ").GetUnicode(),1);
-           bol = nextpos + 1; // Let's eat the whitespace
-         }
+        // Replace the whitespace with a space
+        AddToLine(offsetIntoBuffer, nextpos-bol);
+        AddToLine(kSpace.GetUnicode(),1);
+        bol = nextpos + 1; // Let's eat the whitespace
       }
     }
   } // Continue looping over the string
 }
 
-PRBool 
-nsPlainTextSerializer::MayWrap()
-{
-  return mWrapColumn &&
-    ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
-     (mFlags & nsIDocumentEncoder::OutputWrap));
 
-}
-
+/**
+ * Gets the value of an attribute in a string. If the function returns
+ * NS_ERROR_NOT_AVAILABLE, there was none such attribute specified.
+ */
 nsresult
 nsPlainTextSerializer::GetAttributeValue(nsIAtom* aName,
                                          nsString& aValueRet)
@@ -1484,15 +1496,10 @@ nsPlainTextSerializer::IsCurrentNodeConverted()
   nsAutoString value;
   nsresult rv = GetAttributeValue(nsHTMLAtoms::kClass, value);
   return (NS_SUCCEEDED(rv) &&
-          (value.EqualsWithConversion("txt", PR_TRUE, 3) ||
-           value.EqualsWithConversion("\"txt", PR_TRUE, 4)));
+          (value.EqualsIgnoreCase("txt", 3) ||
+           value.EqualsIgnoreCase("\"txt", 4)));
 }
 
-PRBool 
-nsPlainTextSerializer::DoOutput()
-{
-  return !mInHead;
-}
 
 nsresult
 nsPlainTextSerializer::GetIdForContent(nsIContent* aContent,
@@ -1535,6 +1542,10 @@ nsPlainTextSerializer::GetParserService(nsIParserService** aParserService)
   return NS_OK;
 }
 
+/**
+ * Returns true if the id represents an element of block type.
+ * Can be used to determine if a new paragraph should be started.
+ */
 PRBool 
 nsPlainTextSerializer::IsBlockLevel(PRInt32 aId)
 {
@@ -1549,6 +1560,9 @@ nsPlainTextSerializer::IsBlockLevel(PRInt32 aId)
   return isBlock;
 }
 
+/**
+ * Returns true if the id represents a container.
+ */
 PRBool 
 nsPlainTextSerializer::IsContainer(PRInt32 aId)
 {
@@ -1616,7 +1630,8 @@ PRInt32 HeaderLevel(eHTMLTags aTag)
 
 
 /*
- * This is an implementation of wcwidth() and wcswidth() as defined in
+ * This is an implementation of GetUnicharWidth() and
+ * GetUnicharStringWidth() as defined in
  * "The Single UNIX Specification, Version 2, The Open Group, 1997"
  * <http://www.UNIX-systems.org/online.html>
  *
@@ -1649,7 +1664,7 @@ PRInt32 HeaderLevel(eHTMLTags aTag)
  * in ISO 10646.
  */
 
-PRInt32 unicharwidth(PRUnichar ucs)
+PRInt32 GetUnicharWidth(PRUnichar ucs)
 {
   /* sorted list of non-overlapping intervals of non-spacing characters */
   static const struct interval {
@@ -1731,12 +1746,12 @@ PRInt32 unicharwidth(PRUnichar ucs)
 }
 
 
-PRInt32 unicharwidth(const PRUnichar* pwcs, PRInt32 n)
+PRInt32 GetUnicharStringWidth(const PRUnichar* pwcs, PRInt32 n)
 {
   PRInt32 w, width = 0;
 
   for (;*pwcs && n-- > 0; pwcs++)
-    if ((w = unicharwidth(*pwcs)) < 0)
+    if ((w = GetUnicharWidth(*pwcs)) < 0)
       return -1;
     else
       width += w;

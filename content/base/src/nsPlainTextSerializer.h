@@ -33,6 +33,7 @@
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsIHTMLToTextSink.h"
+#include "nsIDocumentEncoder.h"
 
 
 class nsPlainTextSerializer : public nsIContentSerializer,
@@ -112,11 +113,9 @@ protected:
   void EndLine(PRBool softlinebreak);
   void EnsureVerticalSpace(PRInt32 noOfRows);
   void FlushLine();
-  void WriteQuotesAndIndent();
-  void WriteSimple(nsString& aString);
+  void OutputQuotesAndIndent();
+  void Output(nsString& aString);
   void Write(const nsAReadableString& aString);
-  PRBool DoOutput();
-  PRBool MayWrap(); 
   PRBool IsBlockLevel(PRInt32 aId);
   PRBool IsContainer(PRInt32 aId);
   PRBool IsInPre();
@@ -127,6 +126,19 @@ protected:
   nsresult DoCloseContainer(PRInt32 aTag);
   nsresult DoAddLeaf(PRInt32 aTag, const nsAReadableString& aText);
 
+  // Inlined functions
+  inline PRBool MayWrap()
+  {
+    return mWrapColumn &&
+      ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
+       (mFlags & nsIDocumentEncoder::OutputWrap));
+  }
+
+  inline PRBool DoOutput()
+  {
+    return !mInHead;
+  }
+  
 protected:
   nsString         mCurrentLine;
 
@@ -136,7 +148,7 @@ protected:
   // That could be, for instance, the bullet in a bulleted list.
   nsString         mInIndentString;
   PRInt32          mCiteQuoteLevel;
-  PRInt32          mColPos;
+  PRBool           mAtFirstColumn;
   PRInt32          mFlags;
 
   // The wrap column is how many standard sized chars (western languages)
@@ -153,7 +165,6 @@ protected:
                                 // line and -1 if we are in a line.
   PRBool           mInWhitespace;
   PRBool           mPreFormatted;
-  PRBool           mCacheLine;   // If the line should be cached before output. This makes it possible to do smarter wrapping.
   PRBool           mStartedOutput; // we've produced at least a character
 
   nsString         mURL;
@@ -185,6 +196,10 @@ protected:
   nsString                     mLineBreak;
   nsCOMPtr<nsILineBreaker>     mLineBreaker;
   nsCOMPtr<nsIParserService>   mParserService;
+
+  // Conveniance constant. It would be nice to have it as a const static
+  // variable, but that causes issues with OpenBSD and module unloading.
+  const nsString          kSpace;
 };
 
 extern nsresult NS_NewPlainTextSerializer(nsIContentSerializer** aSerializer);
