@@ -42,6 +42,7 @@ static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 {
     NS_INIT_REFCNT();
+    MOZ_COUNT_CTOR(nsMsgHdr);
 	m_mdb = db;
 	Init();
 	m_mdbRow = dbRow;
@@ -126,6 +127,7 @@ nsresult nsMsgHdr::InitFlags()
 
 nsMsgHdr::~nsMsgHdr()
 {
+    MOZ_COUNT_DTOR(nsMsgHdr);
 	if (m_mdbRow)
 	{
 		if (m_mdb)

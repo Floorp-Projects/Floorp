@@ -663,11 +663,13 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_bCacheHeaders(PR_FALSE)
 {
 	NS_INIT_REFCNT();
+	MOZ_COUNT_CTOR(nsMsgDatabase);
 	m_bCacheHeaders = PR_TRUE;
 }
 
 nsMsgDatabase::~nsMsgDatabase()
 {
+	MOZ_COUNT_DTOR(nsMsgDatabase);
 //	Close(FALSE);	// better have already been closed.
 	ClearHdrCache();
 	ClearUseHdrCache();
