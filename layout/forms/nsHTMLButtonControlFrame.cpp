@@ -667,7 +667,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
   //aDesiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
   //aDesiredSize.height += aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
 
-#if 1
+#if 0
   //adjust our max element size, if necessary
   if (aDesiredSize.maxElementSize) {
     aDesiredSize.AddBorderPaddingToMaxElementSize(aReflowState.mComputedBorderPadding);
