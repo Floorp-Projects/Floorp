@@ -49,16 +49,25 @@ typedef gint (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
   const PRUnichar* aSrcBuf, PRUint32 aSrcLen, PRUint8* aDestBuf,
   PRUint32 aDestLen);
 
-typedef struct nsFontGTK
+struct nsFontCharSet;
+class nsFontMetricsGTK;
+
+struct nsFontGTK
 {
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  void LoadFont(nsFontCharSet* aCharSet, nsFontMetricsGTK* aMetrics);
+
   GdkFont*               mFont;
   PRUint8*               mMap;
   nsFontCharSetInfo*     mCharSetInfo;
   char*                  mName;
-} nsFontGTK;
+  PRUint16               mSize;
+  PRUint16               mActualSize;
+  PRInt16                mBaselineAdjust;
+};
 
 struct nsFontStretch;
-struct nsFontCharSet;
 struct nsFontFamily;
 typedef struct nsFontSearch nsFontSearch;
 
@@ -94,19 +103,20 @@ public:
 #ifdef FONT_SWITCHING
 
   nsFontGTK*  FindFont(PRUnichar aChar);
-  static gint GetWidth(GdkFont* aFont, nsFontCharSetInfo* aInfo,
-                       const PRUnichar* aString, PRUint32 aLength);
-  static void DrawString(nsDrawingSurfaceGTK* aSurface, GdkFont* aFont,
-                         nsFontCharSetInfo* aInfo, nscoord aX, nscoord aY,
-			 const PRUnichar* aString, PRUint32 aLength);
+  static gint GetWidth(nsFontGTK* aFont, const PRUnichar* aString,
+                       PRUint32 aLength);
+  static void DrawString(nsDrawingSurfaceGTK* aSurface, nsFontGTK* aFont,
+                         nscoord aX, nscoord aY, const PRUnichar* aString,
+			 PRUint32 aLength);
   static void InitFonts(void);
 
   friend void PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
                                nsFontCharSet* aCharSet);
   friend void TryCharSet(nsFontSearch* aSearch, nsFontCharSet* aCharSet);
   friend void TryFamily(nsFontSearch* aSearch, nsFontFamily* aFamily);
+  friend struct nsFontGTK;
 
-  nsFontGTK   *mLoadedFonts;
+  nsFontGTK   **mLoadedFonts;
   PRUint16    mLoadedFontsAlloc;
   PRUint16    mLoadedFontsCount;
 

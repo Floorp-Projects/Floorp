@@ -706,8 +706,8 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetFontHandle(nsFontHandle &aHandle)
  *   font-size:    XFontStruct.max_bounds.ascent + descent
  *
  * The following property is not specified in the algorithm spec. It will be
- * ignored for now:
- *   font-stretch: RELATIVE_SETWIDTH, SETWIDTH_NAME (XXX)
+ * inserted between the font-weight and font-size steps for now:
+ *   font-stretch: RELATIVE_SETWIDTH (XXX), SETWIDTH_NAME
  */
 
 /*
@@ -723,20 +723,9 @@ struct nsFontCharSetInfo
 {
   nsFontCharSetConverter Convert;
   void                   (*GenerateMap)(nsFontCharSetInfo* aSelf);
+  PRUint8                mSpecialUnderline;
   PRUint8*               mMap;
   nsIUnicodeEncoder*     mEncoder;
-};
-
-struct nsFontSize
-{
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
-  void LoadFont(void);
-
-  char*      mName;
-  int        mSize;
-  GdkFont*   mFont;
-  int        mActualSize;
 };
 
 struct nsFontStretch
@@ -745,9 +734,9 @@ struct nsFontStretch
 
   void SortSizes(void);
 
-  nsFontSize*        mSizes;
-  int                mSizesAlloc;
-  int                mSizesCount;
+  nsFontGTK*         mSizes;
+  PRUint16           mSizesAlloc;
+  PRUint16           mSizesCount;
 };
 
 struct nsFontWeight
@@ -775,8 +764,8 @@ struct nsFontCharSet
   void FillStyleHoles(void);
 
   nsFontCharSetInfo* mInfo;
-  int                mHolesFilled;
   nsFontStyle*       mStyles[3];
+  PRUint8            mHolesFilled;
 };
 
 struct nsFontFamily
@@ -888,7 +877,7 @@ ISO88591GenerateMap(nsFontCharSetInfo* aSelf)
 }
 
 static nsFontCharSetInfo ISO88591 =
-  { ISO88591Convert, ISO88591GenerateMap, nsnull };
+  { ISO88591Convert, ISO88591GenerateMap, 0 };
 
 #define JAPANESE
 #ifdef JAPANESE
@@ -1079,7 +1068,7 @@ JISX02081983GenerateMap(nsFontCharSetInfo* aSelf)
 #endif /* TEMPORARY_CONVERTERS */
 
 static nsFontCharSetInfo JISX02081983 =
-  { JISX02081983Convert, JISX02081983GenerateMap, nsnull };
+  { JISX02081983Convert, JISX02081983GenerateMap, 1 };
 
 #endif /* JAPANESE */
 
@@ -1191,7 +1180,7 @@ DumpCharSet(PLHashEntry* he, PRIntn i, void* arg)
   printf("        %s\n", (char*) he->key);
   nsFontCharSet* charSet = (nsFontCharSet*) he->value;
   for (int sizeIndex = 0; sizeIndex < charSet->mSizesCount; sizeIndex++) {
-    nsFontSize* size = &charSet->mSizes[sizeIndex];
+    nsFontGTK* size = &charSet->mSizes[sizeIndex];
     printf("          %d %s\n", size->mSize, size->mName);
   }
   return HT_ENUMERATE_NEXT;
@@ -1263,14 +1252,52 @@ struct nsFontSearch
   nsFontGTK*        mFont;
 };
 
+static void
+GetUnderlineInfo(XFontStruct* aFont, unsigned long* aPositionX2,
+  unsigned long* aThickness)
+{
+  /*
+   * XLFD 1.5 says underline position defaults descent/2.
+   * Hence we return position*2 to avoid rounding error.
+   */
+  if (::XGetFontProperty(aFont, XA_UNDERLINE_POSITION, aPositionX2)) {
+    *aPositionX2 *= 2;
+  }
+  else {
+    *aPositionX2 = aFont->max_bounds.descent;
+  }
+
+  /*
+   * XLFD 1.5 says underline thickness defaults to cap stem width.
+   * We don't know what that is, so we just take the thickness of "_".
+   * This way, we get thicker underlines for bold fonts.
+   */
+  if (!::XGetFontProperty(aFont, XA_UNDERLINE_THICKNESS, aThickness)) {
+    int dir, ascent, descent;
+    XCharStruct overall;
+    XTextExtents(aFont, "_", 1, &dir, &ascent, &descent, &overall);
+    *aThickness = (overall.ascent + overall.descent);
+  }
+}
+
 void
-nsFontSize::LoadFont(void)
+nsFontGTK::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsGTK* aMetrics)
 {
   GdkFont* gdkFont = ::gdk_font_load(mName);
   if (gdkFont) {
     mFont = gdkFont;
+    mMap = aCharSet->mInfo->mMap;
     XFontStruct* xFont = (XFontStruct*) GDK_FONT_XFONT(gdkFont);
     mActualSize = xFont->max_bounds.ascent + xFont->max_bounds.descent;
+    if (aCharSet->mInfo->mSpecialUnderline) {
+      XFontStruct* asciiXFont =
+        (XFontStruct*) GDK_FONT_XFONT(aMetrics->mFontHandle);
+      unsigned long positionX2;
+      unsigned long thickness;
+      GetUnderlineInfo(asciiXFont, &positionX2, &thickness);
+      mActualSize += (positionX2 + thickness);
+      mBaselineAdjust = (-xFont->max_bounds.descent);
+    }
   }
 }
 
@@ -1278,9 +1305,9 @@ void
 PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   nsFontCharSet* aCharSet)
 {
-  nsFontSize* s;
-  nsFontSize* begin = aStretch->mSizes;
-  nsFontSize* end = &aStretch->mSizes[aStretch->mSizesCount];
+  nsFontGTK* s;
+  nsFontGTK* begin = aStretch->mSizes;
+  nsFontGTK* end = &aStretch->mSizes[aStretch->mSizesCount];
   nsFontMetricsGTK* m = aSearch->mMetrics;
   int desiredSize = m->mPixelSize;
 
@@ -1299,7 +1326,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   }
 
   if (!s->mFont) {
-    s->LoadFont();
+    s->LoadFont(aCharSet, m);
     if (!s->mFont) {
       return;
     }
@@ -1307,7 +1334,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   if (s->mActualSize > desiredSize) {
     for (; s >= begin; s--) {
       if (!s->mFont) {
-        s->LoadFont();
+        s->LoadFont(aCharSet, m);
 	if (!s->mFont) {
 	  return;
 	}
@@ -1327,7 +1354,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   else if (s->mActualSize < desiredSize) {
     for (; s < end; s++) {
       if (!s->mFont) {
-        s->LoadFont();
+        s->LoadFont(aCharSet, m);
 	if (!s->mFont) {
 	  return;
 	}
@@ -1353,8 +1380,8 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
     else {
       newSize = 1;
     }
-    nsFontGTK* newPointer = (nsFontGTK*) PR_Realloc(m->mLoadedFonts,
-      newSize * sizeof(nsFontGTK));
+    nsFontGTK** newPointer = (nsFontGTK**) PR_Realloc(m->mLoadedFonts,
+      newSize * sizeof(nsFontGTK*));
     if (newPointer) {
       m->mLoadedFonts = newPointer;
       m->mLoadedFontsAlloc = newSize;
@@ -1363,15 +1390,11 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
       return;
     }
   }
-  nsFontGTK* f = &m->mLoadedFonts[m->mLoadedFontsCount++];
-  f->mFont = s->mFont;
-  f->mMap = aCharSet->mInfo->mMap;
-  f->mCharSetInfo = aCharSet->mInfo;
-  f->mName = s->mName;
-  aSearch->mFont = f;
+  m->mLoadedFonts[m->mLoadedFontsCount++] = s;
+  aSearch->mFont = s;
 
 #if 0
-  nsFontSize* result = s;
+  nsFontGTK* result = s;
   for (s = begin; s < end; s++) {
     printf("%d/%d ", s->mSize, s->mActualSize);
   }
@@ -1382,7 +1405,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
 static int
 CompareSizes(const void* aArg1, const void* aArg2)
 {
-  return ((nsFontSize*) aArg1)->mSize - ((nsFontSize*) aArg2)->mSize;
+  return ((nsFontGTK*) aArg1)->mSize - ((nsFontGTK*) aArg2)->mSize;
 }
 
 void
@@ -1892,8 +1915,8 @@ GetFontNames(char* aPattern)
   
     int pixels = atoi(pixelSize);
     if (stretch->mSizesCount) {
-      nsFontSize* end = &stretch->mSizes[stretch->mSizesCount];
-      nsFontSize* s;
+      nsFontGTK* end = &stretch->mSizes[stretch->mSizesCount];
+      nsFontGTK* s;
       for (s = stretch->mSizes; s < end; s++) {
         if (s->mSize == pixels) {
           break;
@@ -1905,7 +1928,7 @@ GetFontNames(char* aPattern)
     }
     if (stretch->mSizesCount == stretch->mSizesAlloc) {
       int newSize = 2 * (stretch->mSizesAlloc ? stretch->mSizesAlloc : 1);
-      nsFontSize* newPointer = new nsFontSize[newSize];
+      nsFontGTK* newPointer = new nsFontGTK[newSize];
       if (newPointer) {
         for (int i = stretch->mSizesAlloc - 1; i >= 0; i--) {
           newPointer[i] = stretch->mSizes[i];
@@ -1929,11 +1952,14 @@ GetFontNames(char* aPattern)
     if (!copy) {
       continue;
     }
-    nsFontSize* size = &stretch->mSizes[stretch->mSizesCount++];
+    nsFontGTK* size = &stretch->mSizes[stretch->mSizesCount++];
     size->mName = copy;
-    size->mSize = pixels;
     size->mFont = nsnull;
+    size->mSize = pixels;
     size->mActualSize = 0;
+    size->mBaselineAdjust = 0;
+    size->mMap = nsnull;
+    size->mCharSetInfo = charSetInfo;
   }
 
 #ifdef DEBUG_DUMP_TREE
@@ -2050,25 +2076,24 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
 }
 
 gint
-nsFontMetricsGTK::GetWidth(GdkFont* aFont, nsFontCharSetInfo* aInfo,
-  const PRUnichar* aString, PRUint32 aLength)
-{
-  XChar2b buf[512];
-  gint len = aInfo->Convert(aInfo, aString, aLength, (PRUint8*) buf,
-    sizeof(buf));
-  return gdk_text_width(aFont, (char*) buf, len);
-}
-
-void
-nsFontMetricsGTK::DrawString(nsDrawingSurfaceGTK* aSurface, GdkFont* aFont,
-  nsFontCharSetInfo* aInfo, nscoord aX, nscoord aY, const PRUnichar* aString,
+nsFontMetricsGTK::GetWidth(nsFontGTK* aFont, const PRUnichar* aString,
   PRUint32 aLength)
 {
   XChar2b buf[512];
-  gint len = aInfo->Convert(aInfo, aString, aLength, (PRUint8*) buf,
-    sizeof(buf));
-  ::gdk_draw_text(aSurface->GetDrawable(), aFont, aSurface->GetGC(), aX, aY,
-    (char*) buf, len);
+  gint len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
+    (PRUint8*) buf, sizeof(buf));
+  return gdk_text_width(aFont->mFont, (char*) buf, len);
+}
+
+void
+nsFontMetricsGTK::DrawString(nsDrawingSurfaceGTK* aSurface, nsFontGTK* aFont,
+  nscoord aX, nscoord aY, const PRUnichar* aString, PRUint32 aLength)
+{
+  XChar2b buf[512];
+  gint len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
+    (PRUint8*) buf, sizeof(buf));
+  ::gdk_draw_text(aSurface->GetDrawable(), aFont->mFont, aSurface->GetGC(), aX,
+    aY + aFont->mBaselineAdjust, (char*) buf, len);
 }
 
 #endif /* FONT_SWITCHING */
