@@ -36,6 +36,8 @@
 #include "nsIView.h"
 #include "nsStyleUtil.h"
 #include "nsLayoutAtoms.h"
+#include "nsIFrameManager.h"
+#include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsIHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
@@ -162,7 +164,6 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
         mBorderEdges->mEdges[NS_SIDE_BOTTOM].AppendElement(borderToAdd);
       }
     }
-    mCollapseOffset = nsPoint(0,0);
   }
 }
 
@@ -280,7 +281,8 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
   // the rendering context.
   PRBool clipState;
   aRenderingContext.PushState();
-  nsPoint offset = mCollapseOffset;
+  nsPoint offset;
+  GetCollapseOffset(&aPresContext, offset);
   if ((0 != offset.x) || (0 != offset.y)) {
     aRenderingContext.Translate(offset.x, offset.y);
   }
@@ -1119,19 +1121,84 @@ nsTableCellFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("TableCell", aResult);
 }
 
-void nsTableCellFrame::SetCollapseOffsetX(nscoord aXOffset)
+// Destructor function for the collapse offset frame property
+static void
+DestroyPointFunc(nsIPresContext* aPresContext,
+                 nsIFrame*       aFrame,
+                 nsIAtom*        aPropertyName,
+                 void*           aPropertyValue)
 {
-  mCollapseOffset.x = aXOffset;
+  delete (nsPoint*)aPropertyValue;
 }
 
-void nsTableCellFrame::SetCollapseOffsetY(nscoord aYOffset)
+static nsPoint*
+GetCollapseOffsetProperty(nsIPresContext* aPresContext,
+                          nsIFrame*       aFrame,
+                          PRBool          aCreateIfNecessary = PR_FALSE)
 {
-  mCollapseOffset.y = aYOffset;
+  nsCOMPtr<nsIPresShell>     presShell;
+  aPresContext->GetShell(getter_AddRefs(presShell));
+
+  if (presShell) {
+    nsCOMPtr<nsIFrameManager>  frameManager;
+    presShell->GetFrameManager(getter_AddRefs(frameManager));
+  
+    if (frameManager) {
+      void* value;
+  
+      frameManager->GetFrameProperty(aFrame, nsLayoutAtoms::collapseOffsetProperty,
+                                     0, &value);
+      if (value) {
+        return (nsPoint*)value;  // the property already exists
+
+      } else if (aCreateIfNecessary) {
+        // The property isn't set yet, so allocate a new point, set the property,
+        // and return the newly allocated point
+        nsPoint*  offset = new nsPoint(0, 0);
+
+        frameManager->SetFrameProperty(aFrame, nsLayoutAtoms::collapseOffsetProperty,
+                                       offset, DestroyPointFunc);
+        return offset;
+      }
+    }
+  }
+
+  return nsnull;
 }
 
-nsPoint nsTableCellFrame::GetCollapseOffset()
+void nsTableCellFrame::SetCollapseOffsetX(nsIPresContext* aPresContext,
+                                          nscoord         aXOffset)
 {
-  return mCollapseOffset;
+  // Get the frame property (creating a point struct if necessary)
+  nsPoint*  offset = ::GetCollapseOffsetProperty(aPresContext, this, PR_TRUE);
+
+  if (offset) {
+    offset->x = aXOffset;
+  }
+}
+
+void nsTableCellFrame::SetCollapseOffsetY(nsIPresContext* aPresContext,
+                                          nscoord         aYOffset)
+{
+  // Get the property (creating a point struct if necessary)
+  nsPoint*  offset = ::GetCollapseOffsetProperty(aPresContext, this, PR_TRUE);
+
+  if (offset) {
+    offset->y = aYOffset;
+  }
+}
+
+void nsTableCellFrame::GetCollapseOffset(nsIPresContext* aPresContext,
+                                         nsPoint&        aOffset)
+{
+  // See if the property is set
+  nsPoint*  offset = ::GetCollapseOffsetProperty(aPresContext, this);
+
+  if (offset) {
+    aOffset = *offset;
+  } else {
+    aOffset.MoveTo(0, 0);
+  }
 }
 
 #ifdef DEBUG

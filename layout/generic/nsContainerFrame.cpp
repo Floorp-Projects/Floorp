@@ -462,10 +462,10 @@ nsContainerFrame::GetOverflowFrames(nsIPresContext* aPresContext,
                                     PRBool          aRemoveProperty)
 {
   nsCOMPtr<nsIPresShell>     presShell;
-  nsCOMPtr<nsIFrameManager>  frameManager;
-
   aPresContext->GetShell(getter_AddRefs(presShell));
+
   if (presShell) {
+    nsCOMPtr<nsIFrameManager>  frameManager;
     presShell->GetFrameManager(getter_AddRefs(frameManager));
   
     if (frameManager) {
@@ -503,11 +503,11 @@ nsContainerFrame::SetOverflowFrames(nsIPresContext* aPresContext,
                                     nsIFrame*       aOverflowFrames)
 {
   nsCOMPtr<nsIPresShell>     presShell;
-  nsCOMPtr<nsIFrameManager>  frameManager;
   nsresult                   rv = NS_ERROR_FAILURE;
 
   aPresContext->GetShell(getter_AddRefs(presShell));
   if (presShell) {
+    nsCOMPtr<nsIFrameManager>  frameManager;
     presShell->GetFrameManager(getter_AddRefs(frameManager));
   
     if (frameManager) {
