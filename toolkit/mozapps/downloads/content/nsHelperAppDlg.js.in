@@ -711,7 +711,10 @@ nsUnknownContentTypeDialog.prototype = {
           try {
             targetFile = prefs.getComplexValue("browser.download.defaultFolder", 
                                                Components.interfaces.nsILocalFile);
-            targetFile.append(this.dialogElement("location").value);
+            var leafName = this.dialogElement("location").value;                                               
+            targetFile.append(leafName);
+            // Ensure that we don't overwrite any existing files here. 
+            targetFile = this.validateLeafName(targetFile, leafName);
           }
           catch(e) {}
           
