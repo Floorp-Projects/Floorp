@@ -316,15 +316,39 @@ nsContextMenu.prototype = {
         this.copyToClipboard( this.imageURL );
     },
     // Determine if "Block Image" is to appear in the menu.
-    // Return false unless "imageBlocker.enabled" pref is set.
+    // Return true if "imageBlocker.enabled" pref is set and image is not already blocked.
     isBlockingImages: function () {
+        /* determine if "imageBlocker.enabled" pref is set */
         var pref = this.getService( 'component://netscape/preferences', 'nsIPref' );
         var result = false;
         try {
            result = pref.GetBoolPref( "imageblocker.enabled" );
         } catch(e) {
         }
-        return result;
+        if (!result) {
+          /* pref is not set so return false */
+          return false;
+        }
+
+        /* determine if image is already being blocked */
+        var cookieViewer = this.createInstance
+          ("component://netscape/cookieviewer/cookieviewer-world", "nsICookieViewer");
+        var list = cookieViewer.GetPermissionValue(1);
+        var permissionList  = list.split(list[0]);
+        for(var i = 1; i < permissionList.length; i+=2) {
+          permStr = permissionList[i+1];
+          var type = permStr.substring(0,1);
+          if (type == "-") {
+            /* some host is being blocked, need to find out if it's our image's host */
+            var host = permStr.substring(1,permStr.length);
+            if (this.imageURL.search(host) != -1) {
+              /* it's our image's host that's being blocked */
+              return false;
+            }
+          }
+        }  
+        /* image is not already being blocked, so "Block Image" can appear on the menu */
+        return true;
     },
     // Block image from loading in the future.
     blockImage : function () {
