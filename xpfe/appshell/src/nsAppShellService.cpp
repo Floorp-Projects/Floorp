@@ -514,6 +514,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   nsresult rv;
   nsWebShellWindow* window;
   PRBool intrinsicallySized;
+  PRUint32 zlevel;
 
   *aResult = nsnull;
   intrinsicallySized = PR_FALSE;
@@ -555,6 +556,12 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
       }
     }
 
+    zlevel = nsIXULWindow::normalZ;
+    if (aChromeMask & nsIWebBrowserChrome::windowRaised)
+      zlevel = nsIXULWindow::raisedZ;
+    else if (aChromeMask & nsIWebBrowserChrome::windowLowered)
+      zlevel = nsIXULWindow::loweredZ;
+
     if (aInitialWidth == NS_SIZETOCONTENT ||
         aInitialHeight == NS_SIZETOCONTENT) {
       aInitialWidth = 1;
@@ -564,7 +571,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     }
 
     rv = window->Initialize(aParent, mAppShell, aUrl,
-                            aShowWindow, aLoadDefaultPage,
+                            aShowWindow, aLoadDefaultPage, zlevel,
                             aInitialWidth, aInitialHeight, widgetInitData);
       
     if (NS_SUCCEEDED(rv)) {
