@@ -3695,21 +3695,29 @@ nsImapProtocol::AlertUserEventFromServer(const char * aServerEvent)
 void
 nsImapProtocol::ShowProgress()
 {
-    ProgressInfo aProgressInfo;
-
 	if (m_progressStringId)
 	{
 		PRUnichar *progressString = NULL;
 		progressString = IMAPGetStringByID(m_progressStringId);
-//		progressString = PR_sprintf_append(progressString, XP_GetString(m_progressStringId), (mailboxName) ? mailboxName : "", ++m_progressIndex, m_progressCount);
 		if (progressString)
-			PercentProgressUpdateEvent(progressString,(100*(++m_progressIndex))/m_progressCount );
-		PR_FREEIF(progressString);
-		aProgressInfo.message = progressString;
-		aProgressInfo.percent = (100*(m_progressIndex))/m_progressCount;
+		{
+			// lossy if localized string has non-8-bit chars, but we're 
+			// stuck with PR_smprintf for now.
+			nsCString cProgressString(progressString);
+			const char *mailboxName = GetServerStateParser().GetSelectedMailboxName();
 
-		if (m_imapMiscellaneousSink)
-			m_imapMiscellaneousSink->PercentProgress(this, &aProgressInfo);
+			char *printfString = PR_smprintf(cProgressString, (mailboxName) ? mailboxName : "", ++m_progressIndex, m_progressCount);
+			if (printfString)
+			{
+				nsString formattedString(printfString);
+				PR_FREEIF(progressString);
+				progressString = nsCRT::strdup(formattedString.GetUnicode());	
+
+			}
+			if (progressString)
+				PercentProgressUpdateEvent(progressString,(100*(m_progressIndex))/m_progressCount );
+			PR_FREEIF(progressString);
+		}
 	}
 }
 
