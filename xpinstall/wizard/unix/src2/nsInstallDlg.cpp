@@ -112,6 +112,9 @@ nsInstallDlg::Back(GtkWidget *aWidget, gpointer aData)
     gtk_signal_disconnect(GTK_OBJECT(gCtx->back), gCtx->backID);
     gtk_signal_disconnect(GTK_OBJECT(gCtx->next), gCtx->nextID);
 
+    if (bDownload && sDLTable)
+        gtk_widget_hide(sDLTable);
+
     // show the last dlg
     if (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1))
         gCtx->cdlg->Show(nsXInstallerDlg::BACKWARD_MOVE);
@@ -393,11 +396,6 @@ nsInstallDlg::Show(int aDirection)
 
     if (mWidgetsInit == FALSE)
     {
-        int bCus = 
-            (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
-        nsComponentList *comps = 
-            gCtx->sdlg->GetSelectedSetupType()->GetComponents(); 
-
         // create a new table and add it as a page of the notebook
         mTable = gtk_table_new(4, 1, FALSE);
         gtk_notebook_append_page(GTK_NOTEBOOK(gCtx->notebook), mTable, NULL);
@@ -414,38 +412,35 @@ nsInstallDlg::Show(int aDirection)
 			GTK_FILL, 20, 20);
         gtk_widget_show(sMsg0Label);
 
-        if (!nsXIEngine::ExistAllXPIs(bCus, comps, &totalComps))
-        {
-            // insert a [ x ] heterogenous table
-            sDLTable = gtk_table_new(2, 2, FALSE);
-            gtk_widget_show(sDLTable);
+        // Proxy Settings
+        // insert a [ x ] heterogenous table
+        sDLTable = gtk_table_new(2, 2, FALSE);
 
-            gtk_table_attach(GTK_TABLE(mTable), sDLTable, 0, 1, 1, 4, 
-                static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-    			GTK_FILL, 20, 20);
+        gtk_table_attach(GTK_TABLE(mTable), sDLTable, 0, 1, 1, 4, 
+            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+            GTK_FILL, 20, 20);
             
-            // download settings groupbox
-            dlFrame = gtk_frame_new(gCtx->Res("DL_SETTINGS"));
-            gtk_table_attach_defaults(GTK_TABLE(sDLTable), dlFrame, 0, 2, 0, 2);
-            gtk_widget_show(dlFrame);
+        // download settings groupbox
+        dlFrame = gtk_frame_new(gCtx->Res("DL_SETTINGS"));
+        gtk_table_attach_defaults(GTK_TABLE(sDLTable), dlFrame, 0, 2, 0, 2);
+        gtk_widget_show(dlFrame);
     
-            // save installer modules checkbox and label
-            dlCheckbox = gtk_check_button_new_with_label(
-                            gCtx->Res("SAVE_MODULES"));
-            gtk_widget_show(dlCheckbox);
-            gtk_table_attach(GTK_TABLE(sDLTable), dlCheckbox, 0, 2, 0, 1,
-                GTK_FILL, GTK_FILL, 10, 20);
-            gtk_signal_connect(GTK_OBJECT(dlCheckbox), "toggled",
-                GTK_SIGNAL_FUNC(SaveModulesToggled), NULL);
+        // save installer modules checkbox and label
+        dlCheckbox = gtk_check_button_new_with_label(
+                        gCtx->Res("SAVE_MODULES"));
+        gtk_widget_show(dlCheckbox);
+        gtk_table_attach(GTK_TABLE(sDLTable), dlCheckbox, 0, 2, 0, 1,
+            GTK_FILL, GTK_FILL, 10, 20);
+        gtk_signal_connect(GTK_OBJECT(dlCheckbox), "toggled",
+            GTK_SIGNAL_FUNC(SaveModulesToggled), NULL);
 
-            // proxy settings button
-            dlProxyBtn = gtk_button_new_with_label(gCtx->Res("PROXY_SETTINGS"));
-            gtk_widget_show(dlProxyBtn);
-            gtk_table_attach(GTK_TABLE(sDLTable), dlProxyBtn, 0, 1, 1, 2,
-                GTK_FILL, GTK_FILL, 10, 10);
-            gtk_signal_connect(GTK_OBJECT(dlProxyBtn), "clicked",
-                   GTK_SIGNAL_FUNC(ShowProxySettings), NULL);
-        }
+        // proxy settings button
+        dlProxyBtn = gtk_button_new_with_label(gCtx->Res("PROXY_SETTINGS"));
+        gtk_widget_show(dlProxyBtn);
+        gtk_table_attach(GTK_TABLE(sDLTable), dlProxyBtn, 0, 1, 1, 2,
+            GTK_FILL, GTK_FILL, 10, 10);
+        gtk_signal_connect(GTK_OBJECT(dlProxyBtn), "clicked",
+            GTK_SIGNAL_FUNC(ShowProxySettings), NULL);
 
         // vbox with two widgets packed in: label0 / progmeter0 (major)
         vbox = gtk_vbox_new(FALSE, 0);
@@ -492,6 +487,17 @@ nsInstallDlg::Show(int aDirection)
     {
         gtk_notebook_set_page(GTK_NOTEBOOK(gCtx->notebook), mPageNum);
         gtk_widget_show(mTable);
+    }
+
+    int bCus = 
+        (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
+    nsComponentList *comps = 
+        gCtx->sdlg->GetSelectedSetupType()->GetComponents(); 
+
+    if (!nsXIEngine::ExistAllXPIs(bCus, comps, &totalComps))
+    {
+        bDownload = TRUE;
+        gtk_widget_show(sDLTable);
     }
 
     // signal connect the buttons
