@@ -143,6 +143,11 @@ public: \
                          nsIXPConnectWrappedNative* wrapper,                \
                          nsIXPCScriptable* arbitrary,                       \
                          JSBool* retval) COND_PURE ;                        \
+    NS_IMETHOD HasInstance(JSContext *cx, JSObject *obj,                    \
+                           jsval v, JSBool *bp,                             \
+                           nsIXPConnectWrappedNative* wrapper,              \
+                           nsIXPCScriptable* arbitrary,                     \
+                           JSBool* retval) COND_PURE ;                      \
     NS_IMETHOD Finalize(JSContext *cx, JSObject *obj,                       \
                         nsIXPConnectWrappedNative* wrapper,                 \
                         nsIXPCScriptable* arbitrary) COND_PURE ;
@@ -296,6 +301,15 @@ public:
     {return arbitrary->Construct(cx, obj, argc, argv, rval, wrapper,        \
                                  NULL, retval);}
 
+#define XPC_IMPLEMENT_FORWARD_HASINSTANCE(_class)                           \
+    NS_IMETHODIMP _class::HasInstance(JSContext *cx, JSObject *obj,         \
+                           jsval v, JSBool *bp,                             \
+                           nsIXPConnectWrappedNative* wrapper,              \
+                           nsIXPCScriptable* arbitrary,                     \
+                           JSBool* retval)                                  \
+    {return arbitrary->HasInstance(cx, obj, v, bp, wrapper,                 \
+                                 NULL, retval);}
+
 #define XPC_IMPLEMENT_FORWARD_FINALIZE(_class) \
     NS_IMETHODIMP _class::Finalize(JSContext *cx, JSObject *obj,            \
                         nsIXPConnectWrappedNative* wrapper,                 \
@@ -423,6 +437,14 @@ public:
                          JSBool* retval)                                    \
     {*rval = JSVAL_NULL; *retval = JS_TRUE; return NS_OK;}
 
+#define XPC_IMPLEMENT_IGNORE_HASINSTANCE(_class)                            \
+    NS_IMETHODIMP _class::HasInstance(JSContext *cx, JSObject *obj,         \
+                           jsval v, JSBool *bp,                             \
+                           nsIXPConnectWrappedNative* wrapper,              \
+                           nsIXPCScriptable* arbitrary,                     \
+                           JSBool* retval)                                  \
+    {*bp = JS_FALSE; *retval = JS_TRUE; return NS_OK;}
+
 #define XPC_IMPLEMENT_IGNORE_FINALIZE(_class) \
     NS_IMETHODIMP _class::Finalize(JSContext *cx, JSObject *obj,            \
                         nsIXPConnectWrappedNative* wrapper,                 \
@@ -447,6 +469,7 @@ public:
     XPC_IMPLEMENT_FORWARD_CHECKACCESS(_class)           \
     XPC_IMPLEMENT_FORWARD_CALL(_class)                  \
     XPC_IMPLEMENT_FORWARD_CONSTRUCT(_class)             \
+    XPC_IMPLEMENT_FORWARD_HASINSTANCE(_class)           \
     XPC_IMPLEMENT_FORWARD_FINALIZE(_class)
 
 #define XPC_IMPLEMENT_IGNORE_IXPCSCRIPTABLE(_class)     \
@@ -464,6 +487,7 @@ public:
     XPC_IMPLEMENT_IGNORE_CHECKACCESS(_class)            \
     XPC_IMPLEMENT_IGNORE_CALL(_class)                   \
     XPC_IMPLEMENT_IGNORE_CONSTRUCT(_class)              \
+    XPC_IMPLEMENT_IGNORE_HASINSTANCE(_class)            \
     XPC_IMPLEMENT_IGNORE_FINALIZE(_class)
 
 
@@ -481,21 +505,26 @@ public:
 * also deals with returning the scriptable interface object.
 */
 
-#define NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(_class, _scriptable)          \
+#define NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(_class, _classiiddef, _scriptable) \
 nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
 {                                                                        \
   if (NULL == aInstancePtr) {                                            \
     return NS_ERROR_NULL_POINTER;                                        \
   }                                                                      \
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ||               \
-      aIID.Equals(_class::GetIID())) {                                   \
-    *aInstancePtr = (void*) this;                                        \
+  static NS_DEFINE_IID(kClassIID, _classiiddef);                         \
+  if (aIID.Equals(kClassIID)) {                                          \
+    *aInstancePtr = (void*) (_class*)this;                               \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
   }                                                                      \
   if (aIID.Equals(nsIXPCScriptable::GetIID())) {                         \
-    *aInstancePtr = (void*) _scriptable;                                 \
-    NS_ADDREF(_scriptable);                                              \
+    *aInstancePtr = NS_STATIC_CAST(nsIXPCScriptable*, _scriptable);      \
+    NS_ADDREF((nsISupports*)*aInstancePtr);                              \
+    return NS_OK;                                                        \
+  }                                                                      \
+  if (aIID.Equals(NS_GET_IID(nsISupports))) {                            \
+    *aInstancePtr = (void*) (_class*)this;                               \
+    NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
   }                                                                      \
   *aInstancePtr = NULL;                                                  \

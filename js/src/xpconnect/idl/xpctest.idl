@@ -91,7 +91,6 @@ interface nsIEcho : nsISupports {
     void SharedString([retval, shared] out string str);
 
     void ReturnCode_NS_OK();
-    void ReturnCode_NS_COMFALSE();
     void ReturnCode_NS_ERROR_NULL_POINTER();
     void ReturnCode_NS_ERROR_UNEXPECTED();
     void ReturnCode_NS_ERROR_OUT_OF_MEMORY();

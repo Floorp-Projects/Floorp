@@ -33,44 +33,114 @@ const char XPC_COMPONENTS_STR[] = "Components";
 
 nsXPConnect* nsXPConnect::mSelf = NULL;
 
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
+/***************************************************************************/
+
+class xpcPerThreadData
+{
+public:
+    xpcPerThreadData();
+    ~xpcPerThreadData();
+
+    nsIXPCException* GetException();
+    void             SetException(nsIXPCException* aException);
+
+private:
+    nsIXPCException* mException;
+};
+
+xpcPerThreadData::xpcPerThreadData()
+    :   mException(nsnull)
+{
+    // empty
+}
+
+xpcPerThreadData::~xpcPerThreadData()
+{
+    NS_IF_RELEASE(mException);
+}
+
+nsIXPCException*
+xpcPerThreadData::GetException()
+{
+    NS_IF_ADDREF(mException);
+    return mException;
+}
+
+void
+xpcPerThreadData::SetException(nsIXPCException* aException)
+{
+    NS_IF_ADDREF(aException);
+    NS_IF_RELEASE(mException);
+    mException = aException;
+}
+
+/*************************************************/
+
+JS_STATIC_DLL_CALLBACK(void)
+xpc_ThreadDataDtorCB(void* ptr)
+{
+    xpcPerThreadData* data = (xpcPerThreadData*) ptr;
+    if(data)
+        delete data;
+}
+
+static xpcPerThreadData*
+GetPerThreadData()
+{
+#define BAD_TLS_INDEX ((PRUintn) -1)
+    xpcPerThreadData* data;
+    static PRUintn index = BAD_TLS_INDEX;
+    if(index == BAD_TLS_INDEX)
+    {
+        if(PR_FAILURE == PR_NewThreadPrivateIndex(&index, xpc_ThreadDataDtorCB))
+        {
+            NS_ASSERTION(0, "PR_NewThreadPrivateIndex failed!");
+            return NULL;
+        }
+    }
+
+    data = (xpcPerThreadData*) PR_GetThreadPrivate(index);
+    if(!data)
+    {
+        if(NULL != (data = new xpcPerThreadData()))
+        {
+            if(PR_FAILURE == PR_SetThreadPrivate(index, data))
+            {
+                NS_ASSERTION(0, "PR_SetThreadPrivate failed!");
+                delete data;
+                data = NULL;
+            }
+        }
+        else
+        {
+            NS_ASSERTION(0, "new xpcPerThreadData failed!");
+        }
+    }
+    return data;
+}
+
+
+/***************************************************************************/
 
 // static
 nsXPConnect*
 nsXPConnect::GetXPConnect()
 {
     // XXX This pattern causes us to retain an extra ref on the singleton.
-    // XXX Should the singleton nsXpConnect object *ever* be deleted?
+    // XXX Should the singleton nsXPConnect object *ever* be deleted?
     if(!mSelf)
     {
         mSelf = new nsXPConnect();
         if(mSelf && (!mSelf->mContextMap ||
-                     !mSelf->mAllocator ||
                      !mSelf->mArbitraryScriptable ||
                      !mSelf->mInterfaceInfoManager ||
-                     !mSelf->mThrower))
+                     !mSelf->mThrower ||
+                     !mSelf->mContextStack))
             NS_RELEASE(mSelf);
     }
     if(mSelf)
         NS_ADDREF(mSelf);
     return mSelf;
-}
-
-// static
-nsIAllocator*
-nsXPConnect::GetAllocator(nsXPConnect* xpc /*= NULL*/)
-{
-    nsIAllocator* al;
-    nsXPConnect* xpcl = xpc;
-
-    if(!xpcl && !(xpcl = GetXPConnect()))
-        return NULL;
-    if(NULL != (al = xpcl->mAllocator))
-        NS_ADDREF(al);
-    if(!xpc)
-        NS_RELEASE(xpcl);
-    return al;
 }
 
 // static
@@ -87,6 +157,22 @@ nsXPConnect::GetInterfaceInfoManager(nsXPConnect* xpc /*= NULL*/)
     if(!xpc)
         NS_RELEASE(xpcl);
     return iim;
+}
+
+// static
+nsIJSContextStack*
+nsXPConnect::GetContextStack(nsXPConnect* xpc /*= NULL*/)
+{
+    nsIJSContextStack* cs;
+    nsXPConnect* xpcl = xpc;
+
+    if(!xpcl && !(xpcl = GetXPConnect()))
+        return NULL;
+    if(NULL != (cs = xpcl->mContextStack))
+        NS_ADDREF(cs);
+    if(!xpc)
+        NS_RELEASE(xpcl);
+    return cs;
 }
 
 // static
@@ -153,10 +239,10 @@ nsXPConnect::IsISupportsDescendent(nsIInterfaceInfo* info)
 
 nsXPConnect::nsXPConnect()
     :   mContextMap(NULL),
-        mAllocator(NULL),
         mArbitraryScriptable(NULL),
         mInterfaceInfoManager(NULL),
-        mThrower(NULL)
+        mThrower(NULL),
+        mContextStack(NULL)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -165,21 +251,19 @@ nsXPConnect::nsXPConnect()
     mContextMap = JSContext2XPCContextMap::newMap(CONTEXT_MAP_SIZE);
     mArbitraryScriptable = new nsXPCArbitraryScriptable();
 
-    nsServiceManager::GetService(kAllocatorCID,
-                                 kIAllocatorIID,
-                                 (nsISupports **)&mAllocator);
-
     // XXX later this will be a service
     mInterfaceInfoManager = XPTI_GetInterfaceInfoManager();
     mThrower = new XPCJSThrower(JS_TRUE);
+
+    nsServiceManager::GetService("nsThreadJSContextStack",
+                                 NS_GET_IID(nsIJSContextStack),
+                                 (nsISupports **)&mContextStack);
 }
 
 nsXPConnect::~nsXPConnect()
 {
     if(mContextMap)
         delete mContextMap;
-    if(mAllocator)
-        nsServiceManager::ReleaseService(kAllocatorCID, mAllocator);
     if(mArbitraryScriptable)
         NS_RELEASE(mArbitraryScriptable);
     // XXX later this will be a service
@@ -187,6 +271,8 @@ nsXPConnect::~nsXPConnect()
         NS_RELEASE(mInterfaceInfoManager);
     if(mThrower)
         delete mThrower;
+    if(mContextStack)
+        nsServiceManager::ReleaseService("nsThreadJSContextStack", mContextStack);
     mSelf = NULL;
 }
 
@@ -195,6 +281,7 @@ nsXPConnect::InitJSContext(JSContext* aJSContext,
                             JSObject* aGlobalJSObj,
                             JSBool AddComponentsObject)
 {
+    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
     if(!aJSContext)
     {
         XPC_LOG_ERROR(("nsXPConnect::InitJSContext failed with null pointer"));
@@ -222,6 +309,7 @@ nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
                           JSBool AddComponentsObject,
                           nsIXPConnectWrappedNative** aWrapper)
 {
+    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
     nsXPCWrappedNative* wrapper = NULL;
     XPCContext* xpcc = NULL;
     if(!mContextMap->Find(aJSContext) &&
@@ -256,6 +344,7 @@ NS_IMETHODIMP
 nsXPConnect::AddNewComponentsObject(JSContext* aJSContext,
                                     JSObject* aGlobalJSObj)
 {
+    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
     JSBool success;
 
     if(!aJSContext)
@@ -340,6 +429,7 @@ nsXPConnect::WrapNative(JSContext* aJSContext,
     NS_PRECONDITION(aCOMObj,"bad param");
     NS_PRECONDITION(aWrapper,"bad param");
 
+    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
     XPCContext* xpcc = nsXPConnect::GetContext(aJSContext, this);
     if(xpcc)
     {
@@ -366,7 +456,7 @@ nsXPConnect::WrapJS(JSContext* aJSContext,
     NS_PRECONDITION(aJSObj,"bad param");
     NS_PRECONDITION(aWrapper,"bad param");
 
-
+    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
     XPCContext* xpcc = nsXPConnect::GetContext(aJSContext, this);
     if(xpcc)
     {
@@ -404,6 +494,7 @@ nsXPConnect::AbandonJSContext(JSContext* aJSContext)
     NS_PRECONDITION(aJSContext,"bad param");
     NS_PRECONDITION(mContextMap,"bad state");
 
+    AUTO_PUSH_JSCONTEXT2(aJSContext, this);
     XPCContext* xpcc = mContextMap->Find(aJSContext);
     if(!xpcc)
     {
@@ -521,6 +612,35 @@ nsXPConnect::CreateStackFrameLocation(JSBool isJSFrame,
     return *aStack ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
+NS_IMETHODIMP
+nsXPConnect::GetPendingException(nsIXPCException** aException)
+{
+    if(!aException)
+        return NS_ERROR_NULL_POINTER;
+
+    xpcPerThreadData* data = GetPerThreadData();
+    if(!data)
+    {
+        *aException = nsnull;
+        return NS_ERROR_FAILURE;
+    }
+
+    *aException = data->GetException();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPConnect::SetPendingException(nsIXPCException* aException)
+{
+    xpcPerThreadData* data = GetPerThreadData();
+    if(!data)
+        return NS_ERROR_FAILURE;
+
+    data->SetException(aException);
+    return NS_OK;
+}
+
+
 /***************************************************************************/
 // has to go somewhere...
 nsXPCArbitraryScriptable::nsXPCArbitraryScriptable()
@@ -545,7 +665,6 @@ nsXPConnect::DebugDump(int depth)
     depth-- ;
     XPC_LOG_ALWAYS(("nsXPConnect @ %x with mRefCnt = %d", this, mRefCnt));
     XPC_LOG_INDENT();
-        XPC_LOG_ALWAYS(("mAllocator @ %x", mAllocator));
         XPC_LOG_ALWAYS(("mArbitraryScriptable @ %x", mArbitraryScriptable));
         XPC_LOG_ALWAYS(("mInterfaceInfoManager @ %x", mInterfaceInfoManager));
         XPC_LOG_ALWAYS(("mContextMap @ %x with %d context(s)", \

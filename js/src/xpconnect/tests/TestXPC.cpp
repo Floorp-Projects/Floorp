@@ -71,21 +71,22 @@ static NS_DEFINE_IID(kMyScriptableIID, NS_IXPCSCRIPTABLE_IID);
 NS_IMPL_ISUPPORTS(MyScriptable, kMyScriptableIID);
 
 // XPC_IMPLEMENT_FORWARD_IXPCSCRIPTABLE(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_CREATE(MyScriptable);
-    XPC_IMPLEMENT_IGNORE_GETFLAGS(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_GETPROPERTY(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_SETPROPERTY(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_SETATTRIBUTES(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_DELETEPROPERTY(MyScriptable);
-//    XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_ENUMERATE(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_CHECKACCESS(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_CALL(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_CONSTRUCT(MyScriptable);
-    XPC_IMPLEMENT_FORWARD_FINALIZE(MyScriptable);
+XPC_IMPLEMENT_FORWARD_CREATE(MyScriptable);
+XPC_IMPLEMENT_IGNORE_GETFLAGS(MyScriptable);
+XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(MyScriptable);
+XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(MyScriptable);
+XPC_IMPLEMENT_FORWARD_GETPROPERTY(MyScriptable);
+XPC_IMPLEMENT_FORWARD_SETPROPERTY(MyScriptable);
+XPC_IMPLEMENT_FORWARD_GETATTRIBUTES(MyScriptable);
+XPC_IMPLEMENT_FORWARD_SETATTRIBUTES(MyScriptable);
+XPC_IMPLEMENT_FORWARD_DELETEPROPERTY(MyScriptable);
+// XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(MyScriptable);
+XPC_IMPLEMENT_FORWARD_ENUMERATE(MyScriptable);
+XPC_IMPLEMENT_FORWARD_CHECKACCESS(MyScriptable);
+XPC_IMPLEMENT_FORWARD_CALL(MyScriptable);
+XPC_IMPLEMENT_FORWARD_CONSTRUCT(MyScriptable);
+XPC_IMPLEMENT_FORWARD_HASINSTANCE(MyScriptable);
+XPC_IMPLEMENT_FORWARD_FINALIZE(MyScriptable);
 
 NS_IMETHODIMP
 MyScriptable::DefaultValue(JSContext *cx, JSObject *obj,
@@ -256,9 +257,6 @@ public:
 
     /* void ReturnCode_NS_OK (); */
     NS_IMETHOD ReturnCode_NS_OK();
-
-    /* void ReturnCode_NS_COMFALSE (); */
-    NS_IMETHOD ReturnCode_NS_COMFALSE();
 
     /* void ReturnCode_NS_ERROR_NULL_POINTER (); */
     NS_IMETHOD ReturnCode_NS_ERROR_NULL_POINTER();
@@ -441,10 +439,6 @@ MyEcho::SharedString(const char **str)
 NS_IMETHODIMP
 MyEcho::ReturnCode_NS_OK()
 {return NS_OK;}
-
-NS_IMETHODIMP
-MyEcho::ReturnCode_NS_COMFALSE()
-{return NS_COMFALSE;}
 
 NS_IMETHODIMP
 MyEcho::ReturnCode_NS_ERROR_NULL_POINTER()
@@ -1026,12 +1020,12 @@ int main()
 
     sm->SetMode(MySecMan::OK_ALL);
     printf("  createInstance no veto: ");
-    t = "try{Components.classes.nsIID.createInstance(Components.interfaces.nsIJSIID); print('passed');}catch(e){failed = true; print('failed');}";
+    t = "try{Components.classes.nsID.createInstance(Components.interfaces.nsIJSID); print('passed');}catch(e){failed = true; print('failed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
     sm->SetMode(MySecMan::VETO_ALL);
     printf("  getService with veto: ");
-    t = "try{Components.classes.nsIID.createInstance(Components.interfaces.nsIJSIID); failed = true; print('failed');}catch(e){print('passed');}";
+    t = "try{Components.classes.nsID.createInstance(Components.interfaces.nsIJSID); failed = true; print('failed');}catch(e){print('passed');}";
     JS_EvaluateScript(jscontext, glob, t, strlen(t), "builtin", 1, &rval);
 
 

@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* An xpcom implmentation of the JavaScript nsIID and nsCID objects. */
+/* An xpcom implementation of the JavaScript nsIID and nsCID objects. */
 
 #include "xpcprivate.h"
 
@@ -35,17 +35,19 @@ static void ThrowBadResultException(uintN errNum, JSContext* cx, nsresult rv)
 }
 
 /***************************************************************************/
-// shared impl...
+// nsJSID
 
-char nsJSIDDDetails::gNoString[] = "";
+NS_IMPL_ISUPPORTS(nsJSID, NS_GET_IID(nsIJSID))
 
-nsJSIDDDetails::nsJSIDDDetails()
+char nsJSID::gNoString[] = "";
+
+nsJSID::nsJSID()
     : mID(GetInvalidIID()), mNumber(gNoString), mName(gNoString)
 {
-    // empty
+    NS_INIT_ISUPPORTS();    
 };
 
-nsJSIDDDetails::~nsJSIDDDetails()
+nsJSID::~nsJSID()
 {
     if(mNumber && mNumber != gNoString)
         delete [] mNumber;
@@ -53,7 +55,7 @@ nsJSIDDDetails::~nsJSIDDDetails()
         delete [] mName;
 }
 
-void nsJSIDDDetails::reset()
+void nsJSID::reset()
 {
     mID = GetInvalidIID();
 
@@ -66,7 +68,7 @@ void nsJSIDDDetails::reset()
 }
 
 PRBool
-nsJSIDDDetails::setName(const char* name)
+nsJSID::setName(const char* name)
 {
     NS_ASSERTION(!mName || mName == gNoString ,"name already set");
     NS_ASSERTION(name,"null name");
@@ -78,16 +80,18 @@ nsJSIDDDetails::setName(const char* name)
     return PR_TRUE;
 }
 
-nsresult
-nsJSIDDDetails::GetName(char * *aName)
+NS_IMETHODIMP
+nsJSID::GetName(char * *aName)
 {
+    if(!nameIsSet())
+        setNameToNoString();
     NS_ASSERTION(mName, "name not set");
     *aName = (char*) nsAllocator::Clone(mName, strlen(mName)+1);
     return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult
-nsJSIDDDetails::GetNumber(char * *aNumber)
+NS_IMETHODIMP
+nsJSID::GetNumber(char * *aNumber)
 {
     if(!mNumber)
     {
@@ -99,22 +103,22 @@ nsJSIDDDetails::GetNumber(char * *aNumber)
     return *aNumber ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult
-nsJSIDDDetails::GetId(nsID* *aId)
+NS_IMETHODIMP
+nsJSID::GetId(nsID* *aId)
 {
     *aId = (nsID*) nsAllocator::Clone(&mID, sizeof(nsID));
     return *aId ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult
-nsJSIDDDetails::GetValid(PRBool *aValid)
+NS_IMETHODIMP
+nsJSID::GetValid(PRBool *aValid)
 {
     *aValid = !mID.Equals(GetInvalidIID());
     return NS_OK;
 }
 
-nsresult
-nsJSIDDDetails::equals(nsIJSID *other, PRBool *_retval)
+NS_IMETHODIMP
+nsJSID::equals(nsIJSID *other, PRBool *_retval)
 {
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
@@ -133,10 +137,10 @@ nsJSIDDDetails::equals(nsIJSID *other, PRBool *_retval)
     return NS_OK;
 }
 
-nsresult
-nsJSIDDDetails::init(const char *idString, PRBool *_retval)
+NS_IMETHODIMP
+nsJSID::initialize(const char *idString)
 {
-    if(!_retval || !idString)
+    if(!idString)
         return NS_ERROR_NULL_POINTER;
 
     PRBool success = PR_FALSE;
@@ -155,12 +159,11 @@ nsJSIDDDetails::init(const char *idString, PRBool *_retval)
             }
         }
     }
-    *_retval = success;
-    return NS_OK;
+    return success ? NS_OK : NS_ERROR_FAILURE;
 }
 
 PRBool 
-nsJSIDDDetails::initWithName(const nsID& id, const char *nameString)
+nsJSID::initWithName(const nsID& id, const char *nameString)
 {
     NS_ASSERTION(nameString, "no name");
     reset();
@@ -169,8 +172,8 @@ nsJSIDDDetails::initWithName(const nsID& id, const char *nameString)
 }        
 
 // try to use the name, if no name, then use the number
-nsresult
-nsJSIDDDetails::toString(char **_retval)
+NS_IMETHODIMP
+nsJSID::toString(char **_retval)
 {
     if(mName != gNoString)
     {
@@ -190,12 +193,32 @@ nsJSIDDDetails::toString(char **_retval)
 }
 
 const nsID& 
-nsJSIDDDetails::GetInvalidIID() const
+nsJSID::GetInvalidIID() const
 {
     // {BB1F47B0-D137-11d2-9841-006008962422}
     static nsID invalid = {0xbb1f47b0, 0xd137, 0x11d2,
                             {0x98, 0x41, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22}};
     return invalid;
+}
+
+//static
+nsJSID*
+nsJSID::NewID(const char* str)
+{
+    if(!str)
+    {
+        NS_ASSERTION(0,"no string");
+        return nsnull;    
+    }
+
+    nsJSID* idObj = new nsJSID();
+    if(idObj)
+    {
+        NS_ADDREF(idObj);
+        if(NS_FAILED(idObj->initialize(str)))
+            NS_RELEASE(idObj);
+    }
+    return idObj;
 }
 
 /***************************************************************************/
@@ -239,8 +262,8 @@ NS_IMETHODIMP nsJSIID::GetValid(PRBool *aValid)
 NS_IMETHODIMP nsJSIID::equals(nsIJSID *other, PRBool *_retval)
     {return mDetails.equals(other, _retval);}
 
-NS_IMETHODIMP nsJSIID::init(const char *idString, PRBool *_retval)
-    {return mDetails.init(idString, _retval);}
+NS_IMETHODIMP nsJSIID::initialize(const char *idString)
+    {return mDetails.initialize(idString);}
 
 NS_IMETHODIMP nsJSIID::toString(char **_retval)
     {resolveName(); return mDetails.toString(_retval);}
@@ -284,7 +307,8 @@ nsJSIID::NewID(const char* str)
 
         if(str[0] == '{')
         {
-            idObj->init(str, &success);
+            if(NS_SUCCEEDED(idObj->initialize(str)))
+                success = PR_TRUE;
         }
         else
         {
@@ -318,69 +342,74 @@ nsJSIID::NewID(const char* str)
 * ServiceManager's protocol for releasing a service.
 */
 
-class CIDCreateInstanceScriptable : public nsIXPCScriptable
-{
-public:
-    NS_DECL_ISUPPORTS
-    XPC_DECLARE_IXPCSCRIPTABLE
-    CIDCreateInstanceScriptable();
-    virtual ~CIDCreateInstanceScriptable();
- };
-
 // {16A43B00-F116-11d2-985A-006008962422}
 #define NS_CIDCREATEINSTANCE_IID \
 { 0x16a43b00, 0xf116, 0x11d2, \
     { 0x98, 0x5a, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
 
-class CIDCreateInstance : public nsISupports
+class CIDCreateInstance : public nsIXPCScriptable
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_CIDCREATEINSTANCE_IID)
     NS_DECL_ISUPPORTS
+    XPC_DECLARE_IXPCSCRIPTABLE
+
     CIDCreateInstance(nsJSCID* aCID);
     virtual ~CIDCreateInstance();
     nsJSCID* GetCID() const {return mCID;}
+
 private:
     CIDCreateInstance(); // not implemented
-    static CIDCreateInstanceScriptable* GetScriptable();
+
+private:
     nsJSCID* mCID;
 };
 
-/**********************************************/
+/*********************************************/
 
-CIDCreateInstanceScriptable::CIDCreateInstanceScriptable()
+NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(CIDCreateInstance, \
+                                   NS_GET_IID(CIDCreateInstance), \
+                                   this)
+NS_IMPL_ADDREF(CIDCreateInstance)
+NS_IMPL_RELEASE(CIDCreateInstance)
+
+CIDCreateInstance::CIDCreateInstance(nsJSCID *aCID)
+    : mCID(aCID)
 {
-    NS_INIT_REFCNT();
+    NS_PRECONDITION(mCID, "bad cid");
+    NS_INIT_ISUPPORTS();
+    NS_IF_ADDREF(mCID);
+}        
+
+CIDCreateInstance::~CIDCreateInstance()
+{
+    NS_IF_RELEASE(mCID);
 }
 
-CIDCreateInstanceScriptable::~CIDCreateInstanceScriptable() {}
-
-static NS_DEFINE_IID(kCIDCreateInstanceScriptableIID, NS_IXPCSCRIPTABLE_IID);
-NS_IMPL_ISUPPORTS(CIDCreateInstanceScriptable, kCIDCreateInstanceScriptableIID);
-
-XPC_IMPLEMENT_FORWARD_CREATE(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_IGNORE_GETFLAGS(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_IGNORE_LOOKUPPROPERTY(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_IGNORE_GETPROPERTY(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_IGNORE_SETPROPERTY(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_FORWARD_ENUMERATE(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_FORWARD_CHECKACCESS(CIDCreateInstanceScriptable);
-// XPC_IMPLEMENT_IGNORE_CALL(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_IGNORE_CONSTRUCT(CIDCreateInstanceScriptable);
-XPC_IMPLEMENT_FORWARD_FINALIZE(CIDCreateInstanceScriptable);
+XPC_IMPLEMENT_FORWARD_CREATE(CIDCreateInstance);
+XPC_IMPLEMENT_IGNORE_GETFLAGS(CIDCreateInstance);
+XPC_IMPLEMENT_IGNORE_LOOKUPPROPERTY(CIDCreateInstance);
+XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(CIDCreateInstance);
+XPC_IMPLEMENT_IGNORE_GETPROPERTY(CIDCreateInstance);
+XPC_IMPLEMENT_IGNORE_SETPROPERTY(CIDCreateInstance);
+XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(CIDCreateInstance);
+XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(CIDCreateInstance);
+XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(CIDCreateInstance);
+XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(CIDCreateInstance);
+XPC_IMPLEMENT_FORWARD_ENUMERATE(CIDCreateInstance);
+XPC_IMPLEMENT_FORWARD_CHECKACCESS(CIDCreateInstance);
+// XPC_IMPLEMENT_IGNORE_CALL(CIDCreateInstance);
+XPC_IMPLEMENT_IGNORE_CONSTRUCT(CIDCreateInstance);
+XPC_IMPLEMENT_FORWARD_HASINSTANCE(CIDCreateInstance);
+XPC_IMPLEMENT_FORWARD_FINALIZE(CIDCreateInstance);
 
 NS_IMETHODIMP
-CIDCreateInstanceScriptable::Call(JSContext *cx, JSObject *obj,
-                                  uintN argc, jsval *argv,
-                                  jsval *rval,
-                                  nsIXPConnectWrappedNative* wrapper,
-                                  nsIXPCScriptable* arbitrary,
-                                  JSBool* retval)
+CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
+                        uintN argc, jsval *argv,
+                        jsval *rval,
+                        nsIXPConnectWrappedNative* wrapper,
+                        nsIXPCScriptable* arbitrary,
+                        JSBool* retval)
 {
     CIDCreateInstance* self;
     nsJSCID* cidObj;
@@ -476,73 +505,9 @@ CIDCreateInstanceScriptable::Call(JSContext *cx, JSObject *obj,
     return NS_OK;
 }
 
-/*********************************************/
-
-NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(CIDCreateInstance, GetScriptable())
-NS_IMPL_ADDREF(CIDCreateInstance)
-NS_IMPL_RELEASE(CIDCreateInstance)
-
-CIDCreateInstance::CIDCreateInstance(nsJSCID *aCID)
-    : mCID(aCID)
-{
-    NS_PRECONDITION(mCID, "bad cid");
-    NS_INIT_ISUPPORTS();
-    NS_ADDREF(mCID);
-}        
-
-CIDCreateInstance::~CIDCreateInstance()
-{
-    if(mCID)
-        NS_RELEASE(mCID);
-}
-
-// static 
-CIDCreateInstanceScriptable* 
-CIDCreateInstance::GetScriptable()
-{
-    static CIDCreateInstanceScriptable* scriptable = NULL;
-    if(!scriptable)
-    {
-        scriptable = new CIDCreateInstanceScriptable();
-        // we leak this singleton
-        if(scriptable)
-            NS_ADDREF(scriptable);
-    }
-    return scriptable;
-}        
-
 /***************************************************************************/
-
-class CIDGetServiceScriptable : public nsIXPCScriptable
-{
-public:
-    NS_DECL_ISUPPORTS
-    XPC_DECLARE_IXPCSCRIPTABLE
-    CIDGetServiceScriptable();
-    virtual ~CIDGetServiceScriptable();
- };
-
-// {C46BC320-F13E-11d2-985A-006008962422}
-#define NS_CIDGETSERVICE_IID \
-{ 0xc46bc320, 0xf13e, 0x11d2, \
-  { 0x98, 0x5a, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
-
-class CIDGetService : public nsISupports
-{
-public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_CIDGETSERVICE_IID)
-    NS_DECL_ISUPPORTS
-    CIDGetService(nsJSCID* aCID);
-    virtual ~CIDGetService();
-    nsJSCID* GetCID() const {return mCID;}
-private:
-    CIDGetService(); // not implemented
-
-    static CIDGetServiceScriptable* GetScriptable();
-    nsJSCID* mCID;
-};
-
-/**********************************************/
+/***************************************************************************/
+/***************************************************************************/
 
 // {23423AA0-F142-11d2-985A-006008962422}
 #define NS_SERVICE_RELEASER_IID \
@@ -563,9 +528,7 @@ private:
     nsCID mCID;
 };
 
-static NS_DEFINE_IID(kServiceReleaserIID, NS_SERVICE_RELEASER_IID);
-NS_IMPL_ISUPPORTS(ServiceReleaser, kServiceReleaserIID);
-
+NS_IMPL_ISUPPORTS(ServiceReleaser, NS_GET_IID(ServiceReleaser));
 
 ServiceReleaser::ServiceReleaser(const nsCID& aCID)
     : mCID(aCID)
@@ -581,41 +544,76 @@ ServiceReleaser::AboutToRelease(nsISupports* aObj)
     return nsServiceManager::ReleaseService(mCID, aObj, NULL);
 }
 
-/**********************************************/
+/*********************************************/
 
-CIDGetServiceScriptable::CIDGetServiceScriptable()
+// {C46BC320-F13E-11d2-985A-006008962422}
+#define NS_CIDGETSERVICE_IID \
+{ 0xc46bc320, 0xf13e, 0x11d2, \
+  { 0x98, 0x5a, 0x0, 0x60, 0x8, 0x96, 0x24, 0x22 } }
+
+class CIDGetService : public nsIXPCScriptable
 {
-    NS_INIT_REFCNT();
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_CIDGETSERVICE_IID)
+    NS_DECL_ISUPPORTS
+    XPC_DECLARE_IXPCSCRIPTABLE
+
+    CIDGetService(nsJSCID* aCID);
+    virtual ~CIDGetService();
+    nsJSCID* GetCID() const {return mCID;}
+
+private:
+    CIDGetService(); // not implemented
+
+private:
+    nsJSCID* mCID;
+};
+
+/*********************************************/
+
+NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(CIDGetService, \
+                                   NS_GET_IID(CIDGetService), \
+                                   this)
+NS_IMPL_ADDREF(CIDGetService)
+NS_IMPL_RELEASE(CIDGetService)
+
+CIDGetService::CIDGetService(nsJSCID *aCID)
+    : mCID(aCID)
+{
+    NS_PRECONDITION(mCID, "bad cid");
+    NS_INIT_ISUPPORTS();
+    NS_IF_ADDREF(mCID);
+}        
+
+CIDGetService::~CIDGetService()
+{
+    NS_IF_RELEASE(mCID);
 }
 
-CIDGetServiceScriptable::~CIDGetServiceScriptable() {}
-
-static NS_DEFINE_IID(kCIDGetServiceScriptableIID, NS_IXPCSCRIPTABLE_IID);
-NS_IMPL_ISUPPORTS(CIDGetServiceScriptable, kCIDGetServiceScriptableIID);
-
-XPC_IMPLEMENT_FORWARD_CREATE(CIDGetServiceScriptable);
-XPC_IMPLEMENT_IGNORE_GETFLAGS(CIDGetServiceScriptable);
-XPC_IMPLEMENT_IGNORE_LOOKUPPROPERTY(CIDGetServiceScriptable);
-XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(CIDGetServiceScriptable);
-XPC_IMPLEMENT_IGNORE_GETPROPERTY(CIDGetServiceScriptable);
-XPC_IMPLEMENT_IGNORE_SETPROPERTY(CIDGetServiceScriptable);
-XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(CIDGetServiceScriptable);
-XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(CIDGetServiceScriptable);
-XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(CIDGetServiceScriptable);
-XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(CIDGetServiceScriptable);
-XPC_IMPLEMENT_FORWARD_ENUMERATE(CIDGetServiceScriptable);
-XPC_IMPLEMENT_FORWARD_CHECKACCESS(CIDGetServiceScriptable);
-// XPC_IMPLEMENT_IGNORE_CALL(CIDGetServiceScriptable);
-XPC_IMPLEMENT_IGNORE_CONSTRUCT(CIDGetServiceScriptable);
-XPC_IMPLEMENT_FORWARD_FINALIZE(CIDGetServiceScriptable);
+XPC_IMPLEMENT_FORWARD_CREATE(CIDGetService);
+XPC_IMPLEMENT_IGNORE_GETFLAGS(CIDGetService);
+XPC_IMPLEMENT_IGNORE_LOOKUPPROPERTY(CIDGetService);
+XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(CIDGetService);
+XPC_IMPLEMENT_IGNORE_GETPROPERTY(CIDGetService);
+XPC_IMPLEMENT_IGNORE_SETPROPERTY(CIDGetService);
+XPC_IMPLEMENT_IGNORE_GETATTRIBUTES(CIDGetService);
+XPC_IMPLEMENT_IGNORE_SETATTRIBUTES(CIDGetService);
+XPC_IMPLEMENT_IGNORE_DELETEPROPERTY(CIDGetService);
+XPC_IMPLEMENT_FORWARD_DEFAULTVALUE(CIDGetService);
+XPC_IMPLEMENT_FORWARD_ENUMERATE(CIDGetService);
+XPC_IMPLEMENT_FORWARD_CHECKACCESS(CIDGetService);
+// XPC_IMPLEMENT_IGNORE_CALL(CIDGetService);
+XPC_IMPLEMENT_IGNORE_CONSTRUCT(CIDGetService);
+XPC_IMPLEMENT_FORWARD_HASINSTANCE(CIDGetService);
+XPC_IMPLEMENT_FORWARD_FINALIZE(CIDGetService);
 
 NS_IMETHODIMP
-CIDGetServiceScriptable::Call(JSContext *cx, JSObject *obj,
-                                  uintN argc, jsval *argv,
-                                  jsval *rval,
-                                  nsIXPConnectWrappedNative* wrapper,
-                                  nsIXPCScriptable* arbitrary,
-                                  JSBool* retval)
+CIDGetService::Call(JSContext *cx, JSObject *obj,
+                    uintN argc, jsval *argv,
+                    jsval *rval,
+                    nsIXPConnectWrappedNative* wrapper,
+                    nsIXPCScriptable* arbitrary,
+                    JSBool* retval)
 {
     CIDGetService* self;
     nsJSCID* cidObj;
@@ -729,41 +727,6 @@ CIDGetServiceScriptable::Call(JSContext *cx, JSObject *obj,
     return NS_OK;
 }
 
-/*********************************************/
-
-NS_IMPL_QUERY_INTERFACE_SCRIPTABLE(CIDGetService, GetScriptable())
-NS_IMPL_ADDREF(CIDGetService)
-NS_IMPL_RELEASE(CIDGetService)
-
-CIDGetService::CIDGetService(nsJSCID *aCID)
-    : mCID(aCID)
-{
-    NS_PRECONDITION(mCID, "bad cid");
-    NS_INIT_ISUPPORTS();
-    NS_ADDREF(mCID);
-}        
-
-CIDGetService::~CIDGetService()
-{
-    if(mCID)
-        NS_RELEASE(mCID);
-}
-
-// static 
-CIDGetServiceScriptable* 
-CIDGetService::GetScriptable()
-{
-    static CIDGetServiceScriptable* scriptable = NULL;
-    if(!scriptable)
-    {
-        // we leak this singleton
-        scriptable = new CIDGetServiceScriptable();
-        if(scriptable)
-            NS_ADDREF(scriptable);
-    }
-    return scriptable;
-}        
-
 /***************************************************************************/
 /***************************************************************************/
 
@@ -805,8 +768,8 @@ NS_IMETHODIMP nsJSCID::GetValid(PRBool *aValid)
 NS_IMETHODIMP nsJSCID::equals(nsIJSID *other, PRBool *_retval)
     {return mDetails.equals(other, _retval);}
 
-NS_IMETHODIMP nsJSCID::init(const char *idString, PRBool *_retval)
-    {return mDetails.init(idString, _retval);}
+NS_IMETHODIMP nsJSCID::initialize(const char *idString)
+    {return mDetails.initialize(idString);}
 
 NS_IMETHODIMP nsJSCID::toString(char **_retval)
     {resolveName(); return mDetails.toString(_retval);}
@@ -836,7 +799,8 @@ nsJSCID::NewID(const char* str)
 
         if(str[0] == '{')
         {
-            idObj->init(str, &success);
+            if(NS_SUCCEEDED(idObj->initialize(str)))
+                success = PR_TRUE;
         }
         else
         {
@@ -883,14 +847,14 @@ nsJSCID::GetGetService(nsISupports * *aGetService)
 // additional utilities...
 
 JSObject *
-xpc_NewIIDObject(JSContext *cx, const nsID& aID)
+xpc_NewIDObject(JSContext *cx, const nsID& aID)
 {
     JSObject *obj = NULL;
 
     char* idString = aID.ToString();
     if(idString)
     {
-        nsJSIID* iid = nsJSIID::NewID(idString);
+        nsJSID* iid = nsJSID::NewID(idString);
         delete [] idString;
         if(iid)
         {
@@ -900,7 +864,7 @@ xpc_NewIIDObject(JSContext *cx, const nsID& aID)
                 nsIXPConnectWrappedNative* nsid_wrapper;
                 if(NS_SUCCEEDED(xpc->WrapNative(cx, 
                                         NS_STATIC_CAST(nsISupports*,iid),
-                                        NS_GET_IID(nsIJSIID),
+                                        NS_GET_IID(nsIJSID),
                                         &nsid_wrapper)))
                 {
                     nsid_wrapper->GetJSObject(&obj);

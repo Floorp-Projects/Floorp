@@ -31,6 +31,7 @@ CPPSRCS		= \
 		xpccomponents.cpp \
 		xpccontext.cpp \
 		xpcconvert.cpp \
+		xpcexception.cpp \
 		xpcjsid.cpp \
 		xpclog.cpp \
 		xpcmaps.cpp \
