@@ -240,7 +240,7 @@ printf( "\tCall PfLoadMetrics for NSFullFontName=%s\n", NSFullFontName );
 
 	dev2app = mDeviceContext->DevUnitsToAppUnits();
 	onePixel = NSToCoordRound(1 * dev2app);
-	height = node->descender - node->ascender + 1.0;
+	height = node->descender - node->ascender;
 	PfExtent( &extent, NULL, NSFullFontName, 0L, 0L, " ", 1, PF_SIMPLE_METRICS, NULL );
 	mSpaceWidth = NSToCoordRound((extent.lr.x - extent.ul.x + 1) * dev2app);
 
