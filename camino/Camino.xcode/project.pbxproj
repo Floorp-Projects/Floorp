@@ -5,6 +5,110 @@
 	};
 	objectVersion = 39;
 	objects = {
+		032FFDCC077351A800440548 = {
+			children = (
+				032FFDCD077351A800440548,
+				032FFDCE077351A800440548,
+				032FFDCF077351A800440548,
+				032FFDD0077351A800440548,
+				032FFDD2077351A800440548,
+			);
+			isa = PBXGroup;
+			name = Downloads;
+			path = ../../PreferencePanes/Downloads;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		032FFDCD077351A800440548 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			path = Downloads.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		032FFDCE077351A800440548 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			path = Downloads.mm;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		032FFDCF077351A800440548 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			path = Downloads.tiff;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		032FFDD0077351A800440548 = {
+			children = (
+				032FFDD1077351A800440548,
+			);
+			isa = PBXVariantGroup;
+			name = Downloads.nib;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		032FFDD1077351A800440548 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = English.lproj/Downloads.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		032FFDD2077351A800440548 = {
+			children = (
+				032FFDD3077351A800440548,
+			);
+			isa = PBXVariantGroup;
+			name = Localizable.strings;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		032FFDD3077351A800440548 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.strings;
+			name = English;
+			path = English.lproj/Localizable.strings;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		032FFDD4077351D700440548 = {
+			fileRef = 032FFDCD077351A800440548;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		032FFDD5077351DA00440548 = {
+			fileRef = 032FFDCE077351A800440548;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		032FFDD6077351EA00440548 = {
+			fileRef = 032FFDCF077351A800440548;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		032FFDD7077351EA00440548 = {
+			fileRef = 032FFDD0077351A800440548;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		032FFDD8077351EA00440548 = {
+			fileRef = 032FFDD2077351A800440548;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0382B4D907303CCA00A0228A = {
 			isa = PBXFileReference;
 			lastKnownFileType = image.tiff;
@@ -21,6 +125,468 @@
 		};
 		0382B4DB07303CCA00A0228A = {
 			fileRef = 0382B4D907303CCA00A0228A;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03C5AB0C07722DFC00EAF77D = {
+			buildActionMask = 2147483647;
+			files = (
+				032FFDD6077351EA00440548,
+				032FFDD7077351EA00440548,
+				032FFDD8077351EA00440548,
+			);
+			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		03C5AB0D07722DFC00EAF77D = {
+			buildActionMask = 2147483647;
+			files = (
+				03C5AC3907722FAF00EAF77D,
+				032FFDD5077351DA00440548,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		03C5AB0E07722DFC00EAF77D = {
+			buildActionMask = 2147483647;
+			files = (
+				03C5AC3507722FA200EAF77D,
+				03C5AC3607722FA200EAF77D,
+				03C5AC3707722FA200EAF77D,
+				03C5AC3807722FA200EAF77D,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		03C5AB0F07722DFC00EAF77D = {
+			buildPhases = (
+				03C5AB2B07722F7D00EAF77D,
+				03C5AB0C07722DFC00EAF77D,
+				03C5AB0D07722DFC00EAF77D,
+				03C5AB0E07722DFC00EAF77D,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
+				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
+				INFOPLIST_FILE = "Info-DownloadsPrefPane.plist";
+				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				OTHER_CFLAGS = "-fshort-wchar";
+				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Downloads;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+				WRAPPER_EXTENSION = prefPane;
+			};
+			dependencies = (
+			);
+			isa = PBXNativeTarget;
+			name = DownloadsPrefPane;
+			productName = DownloadsPrefPane;
+			productReference = 03C5AB1007722DFC00EAF77D;
+			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>DownloadsPrefPane</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.yourcompany.DownloadsPrefPane</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+</dict>
+</plist>
+";
+			productType = "com.apple.product-type.bundle";
+		};
+		03C5AB1007722DFC00EAF77D = {
+			explicitFileType = wrapper.cfbundle;
+			includeInIndex = 0;
+			isa = PBXFileReference;
+			path = Downloads.prefPane;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		03C5AB1107722DFD00EAF77D = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xml;
+			path = "Info-DownloadsPrefPane.plist";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		03C5AB1207722EFC00EAF77D = {
+			containerPortal = 29B97313FDCFA39411CA2CEA;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 03C5AB0F07722DFC00EAF77D;
+			remoteInfo = DownloadsPrefPane;
+		};
+		03C5AB1307722EFC00EAF77D = {
+			isa = PBXTargetDependency;
+			target = 03C5AB0F07722DFC00EAF77D;
+			targetProxy = 03C5AB1207722EFC00EAF77D;
+		};
+		03C5AB1407722F1100EAF77D = {
+			containerPortal = 29B97313FDCFA39411CA2CEA;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 03E2D8520771F73F00BD2443;
+			remoteInfo = TabbedBrowsingPrefPane;
+		};
+		03C5AB1507722F1100EAF77D = {
+			isa = PBXTargetDependency;
+			target = 03E2D8520771F73F00BD2443;
+			targetProxy = 03C5AB1407722F1100EAF77D;
+		};
+		03C5AB1607722F1100EAF77D = {
+			containerPortal = 29B97313FDCFA39411CA2CEA;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 03C5AB0F07722DFC00EAF77D;
+			remoteInfo = DownloadsPrefPane;
+		};
+		03C5AB1707722F1100EAF77D = {
+			isa = PBXTargetDependency;
+			target = 03C5AB0F07722DFC00EAF77D;
+			targetProxy = 03C5AB1607722F1100EAF77D;
+		};
+		03C5AB1907722F3400EAF77D = {
+			fileRef = 03C5AB1007722DFC00EAF77D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03C5AB1A07722F3E00EAF77D = {
+			fileRef = 03C5AB1007722DFC00EAF77D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03C5AB1B07722F4B00EAF77D = {
+			fileRef = 03E2D8530771F73F00BD2443;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03C5AB2B07722F7D00EAF77D = {
+			buildActionMask = 2147483647;
+			files = (
+				03C5AB2C07722F8F00EAF77D,
+				032FFDD4077351D700440548,
+			);
+			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		03C5AB2C07722F8F00EAF77D = {
+			fileRef = F5A8CE4102DFEF4C013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03C5AC3507722FA200EAF77D = {
+			fileRef = F52D5CDB027D412A01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03C5AC3607722FA200EAF77D = {
+			fileRef = 1058C7A1FEA54F0111CA2CBB;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03C5AC3707722FA200EAF77D = {
+			fileRef = 29B97325FDCFA39411CA2CEA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03C5AC3807722FA200EAF77D = {
+			fileRef = F557193A022B4102010001CA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03C5AC3907722FAF00EAF77D = {
+			fileRef = F5A8CE4202DFEF4C013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D84F0771F73F00BD2443 = {
+			buildActionMask = 2147483647;
+			files = (
+				03E2D86F0771F8D100BD2443,
+				03E2D8700771F8D100BD2443,
+				03E2D8710771F8D100BD2443,
+			);
+			isa = PBXResourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		03E2D8500771F73F00BD2443 = {
+			buildActionMask = 2147483647;
+			files = (
+				03E2D8720771F8EC00BD2443,
+				03E2D8730771F8EC00BD2443,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		03E2D8510771F73F00BD2443 = {
+			buildActionMask = 2147483647;
+			files = (
+				03E2D8740771F90B00BD2443,
+				03E2D8750771F90B00BD2443,
+				03E2D8760771F90B00BD2443,
+				03E2D8770771F90B00BD2443,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		03E2D8520771F73F00BD2443 = {
+			buildPhases = (
+				03E2D86B0771F87100BD2443,
+				03E2D84F0771F73F00BD2443,
+				03E2D8500771F73F00BD2443,
+				03E2D8510771F73F00BD2443,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = src/includes/ChimeraPrefix.h;
+				HEADER_SEARCH_PATHS = "../dist/include/nkcache ../dist/include/webbrwsr ../dist/include/dom ../dist/include/nspr ../dist/include/string ../dist/include/rdf ../dist/include/necko ../dist/include/find ../dist/include/embed_base ../dist/include/windowwatcher ../dist/include/webshell ../dist/include/widget ../dist/include/uriloader ../dist/include/docshell ../dist/include/profile ../dist/include/layout ../dist/include/content ../dist/include/webbrowserpersist ../dist/include/pref ../dist/include/mimetype ../dist/include/shistory ../dist/include/history ../dist/include/view ../dist/include/gfx ../dist/include/xultmpl ../dist/include/xmlextras ../dist/include/htmlparser ../dist/include/locale ../dist/include/unicharutil ../dist/include/appcomps ../dist/include/xpcom ../dist/include/ $(SYSTEM_DEVELOPER_DIR)/Headers/FlatCarbon";
+				INFOPLIST_FILE = "Info-TabsPrefPane.plist";
+				INSTALL_PATH = "$(USER_LIBRARY_DIR)/Bundles";
+				LIBRARY_SEARCH_PATHS = "../dist/bin ../dist/lib ../intl/unicharutil/util";
+				OTHER_CFLAGS = "-fshort-wchar";
+				OTHER_LDFLAGS = "-bundle -lxpcom -lxpcom_core -lplds4 -lplc4 -lnspr4 -lpthread -lm";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = Tabs;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+				WRAPPER_EXTENSION = prefPane;
+			};
+			dependencies = (
+			);
+			isa = PBXNativeTarget;
+			name = TabsPrefPane;
+			productName = TabbedBrowsingPrefPane;
+			productReference = 03E2D8530771F73F00BD2443;
+			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>TabbedBrowsingPrefPane</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.yourcompany.TabbedBrowsingPrefPane</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
+</dict>
+</plist>
+";
+			productType = "com.apple.product-type.bundle";
+		};
+		03E2D8530771F73F00BD2443 = {
+			explicitFileType = wrapper.cfbundle;
+			includeInIndex = 0;
+			isa = PBXFileReference;
+			path = Tabs.prefPane;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		03E2D8540771F73F00BD2443 = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.xml;
+			path = "Info-TabsPrefPane.plist";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		03E2D8590771F78500BD2443 = {
+			children = (
+				03E2D85A0771F78500BD2443,
+				03E2D85C0771F78500BD2443,
+				03E2D85E0771F78500BD2443,
+				03E2D85F0771F78500BD2443,
+				03E2D8600771F78500BD2443,
+			);
+			isa = PBXGroup;
+			name = Tabs;
+			path = PreferencePanes/Tabs;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		03E2D85A0771F78500BD2443 = {
+			children = (
+				03E2D85B0771F78500BD2443,
+			);
+			isa = PBXVariantGroup;
+			name = Localizable.strings;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		03E2D85B0771F78500BD2443 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.strings;
+			name = English;
+			path = English.lproj/Localizable.strings;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		03E2D85C0771F78500BD2443 = {
+			children = (
+				03E2D85D0771F78500BD2443,
+			);
+			isa = PBXVariantGroup;
+			name = Tabs.nib;
+			path = "";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		03E2D85D0771F78500BD2443 = {
+			isa = PBXFileReference;
+			lastKnownFileType = wrapper.nib;
+			name = English;
+			path = English.lproj/Tabs.nib;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		03E2D85E0771F78500BD2443 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			path = Tabs.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		03E2D85F0771F78500BD2443 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			path = Tabs.mm;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		03E2D8600771F78500BD2443 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			path = Tabs.tiff;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		03E2D86B0771F87100BD2443 = {
+			buildActionMask = 2147483647;
+			files = (
+				03E2D86D0771F88C00BD2443,
+				03E2D86E0771F89900BD2443,
+			);
+			isa = PBXHeadersBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		03E2D86D0771F88C00BD2443 = {
+			fileRef = F5A8CE4102DFEF4C013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D86E0771F89900BD2443 = {
+			fileRef = 03E2D85E0771F78500BD2443;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D86F0771F8D100BD2443 = {
+			fileRef = 03E2D85A0771F78500BD2443;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D8700771F8D100BD2443 = {
+			fileRef = 03E2D85C0771F78500BD2443;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D8710771F8D100BD2443 = {
+			fileRef = 03E2D8600771F78500BD2443;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D8720771F8EC00BD2443 = {
+			fileRef = 03E2D85F0771F78500BD2443;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D8730771F8EC00BD2443 = {
+			fileRef = F5A8CE4202DFEF4C013CA8EC;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D8740771F90B00BD2443 = {
+			fileRef = F52D5CDB027D412A01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D8750771F90B00BD2443 = {
+			fileRef = 1058C7A1FEA54F0111CA2CBB;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D8760771F90B00BD2443 = {
+			fileRef = 29B97325FDCFA39411CA2CEA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D8770771F90B00BD2443 = {
+			fileRef = F557193A022B4102010001CA;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		03E2D98F0771FB9300BD2443 = {
+			containerPortal = 29B97313FDCFA39411CA2CEA;
+			isa = PBXContainerItemProxy;
+			proxyType = 1;
+			remoteGlobalIDString = 03E2D8520771F73F00BD2443;
+			remoteInfo = TabbedBrowsingPrefPane;
+		};
+		03E2D9900771FB9300BD2443 = {
+			isa = PBXTargetDependency;
+			target = 03E2D8520771F73F00BD2443;
+			targetProxy = 03E2D98F0771FB9300BD2443;
+		};
+		03E2D9920771FBD400BD2443 = {
+			fileRef = 03E2D8530771F73F00BD2443;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -298,6 +864,8 @@
 				3F44AE0805BDFBA000CB4B08,
 				3F44AFC605BDFBA100CB4B08,
 				3F44AFD405BDFBA100CB4B08,
+				03E2D8530771F73F00BD2443,
+				03C5AB1007722DFC00EAF77D,
 			);
 			isa = PBXGroup;
 			name = Products;
@@ -346,6 +914,8 @@
 				3F44ADF205BDFBA000CB4B08,
 				3F44AE0905BDFBA000CB4B08,
 				3F44AFC805BDFBA100CB4B08,
+				03E2D8520771F73F00BD2443,
+				03C5AB0F07722DFC00EAF77D,
 			);
 		};
 		29B97314FDCFA39411CA2CEA = {
@@ -1047,6 +1617,8 @@
 				3F44AFDC05BDFBA100CB4B08,
 				3F44AFDE05BDFBA100CB4B08,
 				3F44AFE005BDFBA100CB4B08,
+				03E2D9900771FB9300BD2443,
+				03C5AB1307722EFC00EAF77D,
 			);
 			isa = PBXNativeTarget;
 			name = Camino;
@@ -3915,6 +4487,8 @@
 				3F44AFF005BDFBA100CB4B08,
 				3F44AFF105BDFBA100CB4B08,
 				3F44AFF205BDFBA100CB4B08,
+				03E2D9920771FBD400BD2443,
+				03C5AB1907722F3400EAF77D,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5029,6 +5603,8 @@
 				3F44AFE805BDFBA100CB4B08,
 				3F44AFEA05BDFBA100CB4B08,
 				3F44AFEC05BDFBA100CB4B08,
+				03C5AB1507722F1100EAF77D,
+				03C5AB1707722F1100EAF77D,
 			);
 			isa = PBXNativeTarget;
 			name = CaminoStatic;
@@ -7608,6 +8184,8 @@
 				3F44AFF605BDFBA100CB4B08,
 				3F44AFF705BDFBA100CB4B08,
 				3F44AFF805BDFBA100CB4B08,
+				03C5AB1B07722F4B00EAF77D,
+				03C5AB1A07722F3E00EAF77D,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -9048,6 +9626,8 @@
 				3F44AE0705BDFBA000CB4B08,
 				3F44AFC505BDFBA100CB4B08,
 				3F44AFD305BDFBA100CB4B08,
+				03E2D8540771F73F00BD2443,
+				03C5AB1107722DFD00EAF77D,
 			);
 			isa = PBXGroup;
 			name = "Target Plists";
@@ -12007,6 +12587,8 @@
 		};
 		F53F21EB022B7C77010001CA = {
 			children = (
+				032FFDCC077351A800440548,
+				03E2D8590771F78500BD2443,
 				F5CA1A1D02D4ECDA01F34900,
 				F5A8CE4002DFEF4C013CA8EC,
 				F5A8CE4D02DFF167013CA8EC,
