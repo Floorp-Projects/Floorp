@@ -448,12 +448,6 @@ webshell/tests/viewer/unix/motif/Makefile
 webshell/tests/viewer/unix/qt/Makefile
 webshell/tests/viewer/unix/xlib/Makefile
 webshell/embed/Makefile
-webshell/embed/xlib/Makefile
-webshell/embed/xlib/gtk/Makefile
-webshell/embed/xlib/motif/Makefile
-webshell/embed/xlib/qt/Makefile
-webshell/embed/xlib/xt/Makefile
-webshell/embed/gtk/mozilla_config.mk
 widget/Makefile
 widget/public/Makefile
 widget/src/Makefile
@@ -641,6 +635,9 @@ embedding/browser/Makefile
 embedding/browser/build/Makefile
 embedding/browser/webBrowser/Makefile
 embedding/browser/setup/Makefile
+embedding/browser/gtk/Makefile
+embedding/browser/gtk/src/Makefile
+embedding/browser/gtk/tests/Makefile
 
 # Security Makefiles
 security/Makefile

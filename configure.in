@@ -1123,20 +1123,6 @@ fi
 
     MOZ_GTK_CFLAGS=$GTK_CFLAGS
 
-	dnl ========================================================
-	dnl =
-	dnl = GtkMozilla support
-	dnl = 
-	dnl = On by default on linux whenever ENABLE_GTK is true
-	dnl = 
-	dnl ========================================================
-	case "$target" in
-		*-linux*)
-			MOZ_ENABLE_GTK_MOZILLA=1
-		;;
-	esac
-
-
 fi
 dnl ========================================================
 dnl =                                                      =
@@ -2491,12 +2477,6 @@ dnl = End MOZ_MONOLITHIC_TOOLKIT hacks
 dnl =
 dnl ========================================================
 
-
-MOZ_ARG_DISABLE_BOOL(gtk-mozilla,
-[  --disable-gtk-mozilla   Disable building of GtkMozilla GTK+ widget],
-   MOZ_ENABLE_GTK_MOZILLA=)
-
-
 dnl ========================================================
 dnl =
 dnl = --diable-pic-dso-cflags
@@ -3070,7 +3050,6 @@ AC_SUBST(MOZ_USER_DIR)
 dnl AC_SUBST(MOZ_SMART_MAIL)
 AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(BUILD_IDLC)
-AC_SUBST(MOZ_ENABLE_GTK_MOZILLA)
 AC_SUBST(USE_IMPLICIT_ARCHIVE)
 
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
@@ -3654,9 +3633,4 @@ unset CONFIG_FILES
 if test -z "$MOZ_NATIVE_NSPR" && test -n "$USE_NSPR_AUTOCONF"; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist"
   AC_OUTPUT_SUBDIRS(nsprpub)
-fi
-
-if test "$MOZ_ENABLE_GTK_MOZILLA"; then
-  ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-mozilla=$MOZ_BUILD_ROOT/dist --with-nspr-version=$NSPR_VERSION"
-  AC_OUTPUT_SUBDIRS(webshell/embed/gtk)
 fi
