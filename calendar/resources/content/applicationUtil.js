@@ -102,3 +102,65 @@ function launchBrowser( UrlToGoTo )
    //window.open(UrlToGoTo, "_blank", "chrome,menubar,toolbar,resizable,dialog=no");
    //window.open( UrlToGoTo, "calendar-opened-window" );
 }
+
+function goToggleToolbar( id, elementID )
+{
+  var toolbar = document.getElementById(id);
+  var element = document.getElementById(elementID);
+  if (toolbar) {
+    var isHidden = toolbar.hidden;
+    toolbar.hidden = !isHidden;
+    document.persist(id, 'hidden');
+    if (element) {
+      element.setAttribute("checked", isHidden ? "true" : "false");
+      document.persist(elementID, 'checked');
+    }
+  }
+}
+
+function openExtensions(aOpenMode)
+{
+  const EMTYPE = "Extension:Manager";
+  
+  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                     .getService(Components.interfaces.nsIWindowMediator);
+  var needToOpen = true;
+  var windowType = EMTYPE + "-" + aOpenMode;
+  var windows = wm.getEnumerator(windowType);
+  while (windows.hasMoreElements()) {
+    var theEM = windows.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
+    if (theEM.document.documentElement.getAttribute("windowtype") == windowType) {
+      theEM.focus();
+      needToOpen = false;
+      break;
+    }
+  }
+
+  if (needToOpen) {
+    const EMURL = "chrome://mozapps/content/extensions/extensions.xul?type=" + aOpenMode;
+    const EMFEATURES = "chrome,dialog=no,resizable";
+    window.openDialog(EMURL, "", EMFEATURES);
+  }
+}
+
+function showElement( elementId )
+{
+  try {
+    dump("showElement: showing "+elementId+"\n");
+    document.getElementById( elementId ).removeAttribute( "hidden" );
+  }
+  catch (e) {
+    dump("showElement: Couldn't remove hidden attribute from "+elementId+"\n");
+  }
+}
+
+function hideElement( elementId )
+{
+  try {
+    dump("hideElement: hiding "+elementId+"\n");
+    document.getElementById( elementId ).setAttribute( "hidden", "true" );
+  }
+  catch (e) {
+    dump("hideElement: Couldn't set hidden attribute on "+elementId+"\n");
+  }
+}

@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -68,6 +69,8 @@
 /*-----------------------------------------------------------------
 *  G L O B A L     V A R I A B L E S
 */
+
+var gCalendar = null;
 
 //the next line needs XX-DATE-XY but last X instead of Y
 var gDateMade = "2002052213-cal"
@@ -168,15 +171,11 @@ var categoryPrefObserver =
 
 function calendarInit() 
 {
-	// get the calendar event data source
-   gEventSource = new CalendarEventDataSource();
-   
-   // get the Ical Library
-   gICalLib = gEventSource.getICalLib();
+    // XXX remove this eventually
+    gICalLib = new Object();
 
-   // this suspends feedbacks to observers until all is settled
-   gICalLib.batchMode = true;
-   
+    gCalendar = createCalendar();
+
    // set up the CalendarWindow instance
    
    gCalendarWindow = new CalendarWindow();
@@ -196,8 +195,13 @@ function calendarInit()
    
    update_date();
    	
-	checkForMailNews();
+   checkForMailNews();
+   
+   //updateColors();
+}
 
+function updateColors()
+{
    // Change made by CofC for Calendar Coloring
    // initialize calendar color style rules in the calendar's styleSheet
 
@@ -657,6 +661,13 @@ function multiweekToDoBoxDoubleClickEvent( todoBox, event )
 }
    
 
+function jsDateToDateTime(date)
+{
+    newDate = createDateTime();
+    newDate.nativeTime = date;
+    return newDate;
+}
+
 /** 
 * Called when the new event button is clicked
 */
@@ -664,6 +675,7 @@ var gNewDateVariable = null;
 
 function newEventCommand( event )
 {
+    /*
    var startDate;
 
    if( gNewDateVariable != null )
@@ -675,13 +687,11 @@ function newEventCommand( event )
 
    var Minutes = Math.ceil( startDate.getMinutes() / 5 ) * 5 ;
    
-   startDate = new Date( startDate.getFullYear(),
-                         startDate.getMonth(),
-                         startDate.getDate(),
-                         startDate.getHours(),
-                         Minutes,
-                         0);
-   newEvent( startDate );
+   date = jsDateToDateTime(startDate);
+   date.minute = Minutes;
+    */
+    date = null;
+   newEvent( date );
 }
 
 
@@ -697,29 +707,34 @@ function newToDoCommand()
 
 function createEvent ()
 {
-   var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
-   var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
-   return iCalEvent;
+    return Components.classes["@mozilla.org/calendar/event;1"].createInstance(Components.interfaces.calIEvent);
 }
 
 
 function createToDo ()
 {
-   var iCalToDoComponent = Components.classes["@mozilla.org/icaltodo;1"].createInstance();
-   var iCalToDo = iCalToDoComponent.QueryInterface(Components.interfaces.oeIICalTodo);
-   return iCalToDo;
+    return Components.classes["@mozilla.org/calendar/todo;1"].createInstance(Components.interfaces.calITodo);
 }
 
+function createDateTime()
+{
+    return Components.classes["@mozilla.org/calendar/datetime;1"].createInstance(Components.interfaces.calIDateTime);
+}
+
+function createCalendar()
+{
+    return Components.classes["@mozilla.org/calendar/calendar;1?type=memory"].getService(Components.interfaces.calICalendar);
+}
 
 function isEvent ( aObject )
 {
-   return (aObject instanceof Components.interfaces.oeIICalEvent) && !(aObject instanceof Components.interfaces.oeIICalTodo);
+   return aObject instanceof Components.interfaces.calIEvent;
 }
 
 
 function isToDo ( aObject )
 {
-   return aObject instanceof Components.interfaces.oeIICalTodo;
+   return aObject instanceof Components.interfaces.calITodo;
 }
 
 
@@ -769,27 +784,29 @@ function newEvent( startDate, endDate, allDay )
 {
    // create a new event to be edited and added
    var calendarEvent = createEvent();
-   
-   if( !startDate )
-      startDate = gCalendarWindow.currentView.getNewEventDate();
 
-   calendarEvent.start.setTime( startDate );
-   
-   if( !endDate )
-   {
-     var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", gCalendarBundle.getString("defaultEventLength" ) );
-   
-      var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
-   
-      calendarEvent.end.setTime( endDateTime );
+   /*   
+   if (!startDate) {
+       startDate = gCalendarWindow.currentView.getNewEventDate();
    }
-   else
+
+   calendarEvent.startDate.jsDate = startDate;
+
+
+   if (!endDate)
    {
-      calendarEvent.end.setTime( endDate.getTime() );
+       var MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", gCalendarBundle.getString("defaultEventLength" ) );
+       
+       var endDateTime = startDate.clone();
+       endDateTime.minute += MinutesToAddOn; // XXX this could overflow
+       endDateTime.normalize();
    }
+
+   calendarEvent.endDate.jsDate = endDate
+   */
    
-   if( allDay )
-     calendarEvent.allDay = true;
+   if (allDay)
+       calendarEvent.isAllDay = true;
    
    var server = getSelectedCalendarPathOrNull();
    
@@ -806,18 +823,14 @@ function newToDo ( startDate, dueDate )
     var calendarToDo = createToDo();
    
     // created todo has no start or due date unless user wants one
-    if (! startDate ) 
-      calendarToDo.start.clear();
-  else
-    calendarToDo.start.setTime( startDate );
+    if (startDate) 
+        calendarToDo.start.jsDate = startDate;
 
-    if (! dueDate ) 
-      calendarToDo.due.clear();
-  else
-    calendarToDo.due.setTime( dueDate );
+    if (dueDate)
+        calendarToDo.dueDate.jsDate = dueDate;
 
     var server = getSelectedCalendarPathOrNull();
-   
+    
     editNewToDo(calendarToDo, server);
 }
 
@@ -879,7 +892,7 @@ function addEventDialogResponse( calendarEvent, Server )
 
 function addToDoDialogResponse( calendarToDo, Server )
 {
-    saveItem( calendarToDo, Server, "addTodo" );
+    addEventDialogResponse(calendarToDo, Server);
 }
 
 
@@ -931,7 +944,7 @@ function modifyEventDialogResponse( calendarEvent, Server, originalEvent )
 
 function modifyToDoDialogResponse( calendarToDo, Server, originalToDo )
 {
-    saveItem( calendarToDo, Server, "modifyTodo", originalToDo );
+    modifyEventDialogResponse(calendarToDo, Server, originalToDo);
 }
 
 
@@ -999,6 +1012,18 @@ function editEventCommand()
 //used to check if there were external changes for shared calendar
 function saveItem( calendarEvent, Server, functionToRun, originalEvent )
 {
+
+    if (functionToRun == 'addEvent')
+        gCalendar.addItem(calendarEvent, null);
+
+    else if (functionToRun == 'modifyEvent')
+        gCalendar.modifyItem(calendarEvent, null);
+
+
+
+
+
+    /*
    var calendarServer = gCalendarWindow.calendarManager.getCalendarByName( Server );
    var path = calendarServer.getAttribute("http://home.netscape.com/NC-rdf#path");
    var shared = (calendarServer.getAttribute("http://home.netscape.com/NC-rdf#shared" ) == "true");
@@ -1059,6 +1084,8 @@ function saveItem( calendarEvent, Server, functionToRun, originalEvent )
       eval( "gICalLib."+functionToRun+"( calendarEvent, Server )" );
       gCalendarWindow.clearSelectedEvent( calendarEvent );
    }
+
+    */
 }
 
 
@@ -1278,7 +1305,7 @@ function launchWizard()
 
 function reloadApplication()
 {
-	gEventSource.calendarManager.refreshAllRemoteCalendars();
+    gEventSource.calendarManager.refreshAllRemoteCalendars();
 }
 
 

@@ -165,6 +165,7 @@ interface calIItemBase : nsISupports
   readonly attribute nsISimpleEnumerator propertyEnumerator;
   nsIVariant getProperty(in AString name);
   void setProperty(in AString name, in nsIVariant value);
+  // will not throw an error if you delete a property that doesn't exist
   void deleteProperty(in AString name);
 
   // The array returned here is not live; it will not reflect calls to

@@ -47,7 +47,6 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/communicator.css" type="text/css"?>
 
 <!-- Overlays -->
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
@@ -199,7 +198,6 @@
 <!-- Javascript includes -->
 
 <script type="application/x-javascript" src="chrome://calendar/content/jslib/jslib.js"/>
-<script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
 
 <!-- NEEDED FOR DRAG AND DROP SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/dragDrop.js"/>

@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -47,7 +48,7 @@
 *   Garth Smedley
 * REQUIRED INCLUDES 
 *   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
-*   
+*   <script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
 * NOTES
 *   Code for the calendar's new/edit event dialog.
 *
@@ -79,11 +80,10 @@
 *   W I N D O W      V A R I A B L E S
 */
 
-var debugenabled=false;
+var debugenabled=true;
 
 var gEvent;          // event being edited
 var gOnOkFunction;   // function to be called when user clicks OK
-var gOriginalEvent;  //Event before edits
 
 var gDuration = -1;   // used to preserve duration when changing event start.
 
@@ -113,223 +113,228 @@ var gEndDate = new Date( );
 
 function loadCalendarEventDialog()
 {
-   // Get arguments, see description at top of file
+    // Get arguments, see description at top of file
+    var args = window.arguments[0];
+
+    gOnOkFunction = args.onOk;
+    // XXX I want to get rid of the use of gEvent
+    gEvent = args.calendarEvent;
+
+
+    event = args.calendarEvent;
+
+    // mode is "new or "edit" - show proper header
+    var titleDataItem = null;
+
+    if ("new" == args.mode)
+        title = document.getElementById("data-event-title-new").getAttribute("value");
+    else {
+        title = document.getElementById("data-event-title-edit").getAttribute("value");
+    }
+
+    document.getElementById("calendar-new-component-window").setAttribute("title", title);
+
+
+    // fill in fields from the event
+    gStartDate = event.startDate.jsDate;
+    document.getElementById("start-datetime").value = gStartDate;
+
+    gEndDate = event.endDate.jsDate;
+    var displayEndDate = new Date(gEndDate);
+    if (event.isAllDay) {
+        //displayEndDate == icalEndDate - 1, in the case of allday events
+        displayEndDate.setDate(displayEndDate.getDate() - 1);
+    }
+    document.getElementById("end-datetime").value = displayEndDate;
+
+    gDuration = gEndDate.getTime() - gStartDate.getTime(); //in ms
+
+    /*
+    if (event.recurForever) {
+        event.recurEnd.setTime(gEndDate);
+    }
+    
+    //do the stuff for exceptions
+    var ArrayOfExceptions = event.getExceptions();
+
+    while( ArrayOfExceptions.hasMoreElements() ) {
+        var ExceptionTime = ArrayOfExceptions.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data;
+
+        var ExceptionDate = new Date( ExceptionTime );
+
+        addException( ExceptionDate );
+    }
+
+    //file attachments;
+    for( var i = 0; i < event.attachmentsArray.Count(); i++ ) {
+        var thisAttachment = event.attachmentsArray.QueryElementAt( i, Components.interfaces.nsIMsgAttachment );
+
+        addAttachment( thisAttachment );
+    }
+    */
+
+    document.getElementById("exceptions-date-picker").value = gStartDate;
+
+    dump("event: "+event+"\n");
+    setFieldValue("title-field",       event.title  );
+    setFieldValue("description-field", event.getProperty("description"));
+    setFieldValue("location-field",    event.getProperty("location"));
+    setFieldValue("uri-field",         event.getProperty("url"));
+
+    switch(event.status) {
+    case event.CAL_ITEM_STATUS_TENTATIVE:
+        setFieldValue("event-status-field", "ICAL_STATUS_TENTATIVE");
+        break;
+    case event.CAL_ITEM_STATUS_CONFIRMED:
+        setFieldValue("event-status-field", "ICAL_STATUS_CONFIRMED");
+        break;
+    case event.CAL_ITEM_STATUS_CANCELLED:
+        setFieldValue("event-status-field", "ICAL_STATUS_CANCELLED");
+        break;
+    }
+
+    setFieldValue("all-day-event-checkbox", event.isAllDay,  "checked");
+    setFieldValue("private-checkbox",       event.isPrivate, "checked");
+
+    if (!event.hasAlarm) {
+        // If the event has no alarm
+        setFieldValue("alarm-type", "none");
+    }    
+    else {
+        setFieldValue("alarm-length-field",     event.getProperty("alarmLength"));
+        setFieldValue("alarm-length-units",     event.getProperty("alarmUnits"));
+        setFieldValue("alarm-trigger-relation", event.getProperty("ICAL_RELATED_PARAMETER"));
+        // If the event has an alarm email address, assume email alarm type
+        var alarmEmailAddress = event.getProperty("alarmEmailAddress");
+        if (alarmEmailAddress && alarmEmailAddress != "") {
+            setFieldValue("alarm-type", "email");
+            setFieldValue("alarm-email-field", alarmEmailAddress);
+        }
+        else {
+            setFieldValue("alarm-type", "popup");
+            /* XXX lilmatt: finish this by selection between popup and 
+               popupAndSound by checking pref "calendar.alarms.playsound" */
+        }
+    }
+
+    var inviteEmailAddress = event.getProperty("inviteEmailAddress");
+    if (inviteEmailAddress != undefined && inviteEmailAddress != "") {
+        setFieldValue("invite-checkbox", true, "checked");
+        setFieldValue("invite-email-field", inviteEmailAddress);
+    }
+    else {
+        setFieldValue("invite-checkbox", false, "checked");
+    }
+
+    /* XXX
+    setFieldValue("repeat-checkbox", gEvent.recur, "checked");
+    if( gEvent.recurInterval < 1 )
+        gEvent.recurInterval = 1;
+
+    setFieldValue( "repeat-length-field", gEvent.recurInterval );
+    if( gEvent.recurUnits )
+        setFieldValue( "repeat-length-units", gEvent.recurUnits );  //don't put the extra "value" element here, or it won't work.
+    else
+        setFieldValue( "repeat-length-units", "weeks" );
+
+    if ( gEvent.recurEnd && gEvent.recurEnd.isSet )
+        setFieldValue( "repeat-end-date-picker", new Date( gEvent.recurEnd.getTime() ) );
+    else
+        setFieldValue( "repeat-end-date-picker", new Date() ); // now
+    
+    setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
+    
+    setFieldValue( "repeat-until-radio", ( (gEvent.recurForever == undefined || gEvent.recurForever == false ) && gEvent.recurCount == 0), "selected" );
+ 
+    setFieldValue( "repeat-numberoftimes-radio", (gEvent.recurCount != 0), "selected" );
+    setFieldValue( "repeat-numberoftimes-textbox", Math.max(gEvent.recurCount, 1));
+    */
+
+
+    /* Categories stuff */
+
+    // Load categories
+    /*
+    var categoriesString = opener.GetUnicharPref(opener.gCalendarWindow.calendarPreferences.calendarPref, "categories.names", getDefaultCategories());
+
+    var categoriesList = categoriesString.split( "," );
+
+    // insert the category already in the task so it doesn't get lost
+    var categories = event.getProperty("categories");
+    if (categories) {
+        if (categoriesString.indexOf(categories) == -1)
+            categoriesList[categoriesList.length] = categories;
+    }
+
+    categoriesList.sort();
+
+    var oldMenulist = document.getElementById( "categories-menulist-menupopup" );
+    while( oldMenulist.hasChildNodes() )
+        oldMenulist.removeChild( oldMenulist.lastChild );
+
+    for (i = 0; i < categoriesList.length ; i++)
+    {
+        document.getElementById( "categories-field" ).appendItem(categoriesList[i], categoriesList[i]);
+    }
+
+    document.getElementById( "categories-field" ).selectedIndex = -1;
+    setFieldValue( "categories-field", gEvent.categories );
    
-   var args = window.arguments[0];
+
+    // Server stuff
+    document.getElementById( "server-menulist-menupopup" ).database.AddDataSource( opener.gCalendarWindow.calendarManager.rdf.getDatasource() );
+    document.getElementById( "server-menulist-menupopup" ).builder.rebuild();
    
-   gOnOkFunction = args.onOk;
-   gEvent = args.calendarEvent;
-   
-   // mode is "new or "edit" - show proper header
-   var titleDataItem = null;
+    if (args.mode == "new") {
+        if ("server" in args) {
+            setFieldValue( "server-field", args.server );
+        }
+        else {
+            document.getElementById( "server-field" ).selectedIndex = 1;
+        }
+    } else {
+        if (gEvent.parent)
+            setFieldValue( "server-field", gEvent.parent.server );
+        else
+            document.getElementById( "server-field" ).selectedIndex = 1;
+          
+        //for now you can't edit which file the event is in.
+        setFieldValue( "server-field", "true", "disabled" );
+        setFieldValue( "server-field-label", "true", "disabled" );
+    }
+    */
 
-   if( "new" == args.mode )
-   {
-      titleDataItem = document.getElementById( "data-event-title-new" );
-   }
-   else
-   {
-      titleDataItem = document.getElementById( "data-event-title-edit" );
-      gOriginalEvent =  gEvent.clone(); 
-   }
-   
-   var titleString = titleDataItem.getAttribute( "value" );
-   document.getElementById("calendar-new-eventwindow").setAttribute("title", titleString);
 
-   // fill in fields from the event
-   gStartDate.setTime( gEvent.start.getTime() );
-   document.getElementById( "start-datetime" ).value = gStartDate;
-   
-   gEndDate.setTime( gEvent.end.getTime() );
-   var displayEndDate = new Date(gEndDate);
-   if( gEvent.allDay ) {
-      //displayEndDate == icalEndDate - 1, in the case of allday events 
-      displayEndDate.setDate( displayEndDate.getDate() - 1 );
-   }
-   document.getElementById( "end-datetime" ).value = displayEndDate;
-   
-   gDuration = gEndDate.getTime() - gStartDate.getTime(); //in ms
-   
-   if ( gEvent.recurForever ) 
-   {
-      gEvent.recurEnd.setTime( gEndDate );
-   }
+    // update enabling and disabling
+    updateRepeatItemEnabled();
+    updateStartEndItemEnabled();
+    updateInviteItemEnabled();
 
-   //do the stuff for exceptions
-   var ArrayOfExceptions = gEvent.getExceptions();
+    updateAddExceptionButton();
 
-   while( ArrayOfExceptions.hasMoreElements() )
-   {
-      var ExceptionTime = ArrayOfExceptions.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data;
-      
-      var ExceptionDate = new Date( ExceptionTime );
+    //set the advanced weekly repeating stuff
+    setAdvancedWeekRepeat();
 
-      addException( ExceptionDate );
-   }
+    /*
+    setFieldValue("advanced-repeat-dayofmonth", (gEvent.recurWeekNumber == 0 || gEvent.recurWeekNumber == undefined), "selected");
+    setFieldValue("advanced-repeat-dayofweek", (gEvent.recurWeekNumber > 0 && gEvent.recurWeekNumber != 5), "selected");
+    setFieldValue("advanced-repeat-dayofweek-last", (gEvent.recurWeekNumber == 5), "selected");
+    */
 
-   //file attachments;
-   for( var i = 0; i < gEvent.attachmentsArray.Count(); i++ )
-   {
-      var thisAttachment = gEvent.attachmentsArray.QueryElementAt( i, Components.interfaces.nsIMsgAttachment );
-      
-      addAttachment( thisAttachment );
-   }
+    // hide/show fields and widgets for item type
+    processComponentType();
 
-   document.getElementById( "exceptions-date-picker" ).value = gStartDate;
-      
-   setFieldValue( "title-field", gEvent.title  );
-   setFieldValue( "description-field", gEvent.description );
-   setFieldValue( "location-field", gEvent.location );
-   setFieldValue( "uri-field", gEvent.url );
+    // hide/show fields and widgets for alarm type
+    processAlarmType();
 
-   switch( gEvent.status )
-   {
-      case gEvent.ICAL_STATUS_TENTATIVE:
-         setFieldValue( "status-field", "ICAL_STATUS_TENTATIVE" );
-      break;
-      case gEvent.ICAL_STATUS_CONFIRMED:
-         setFieldValue( "status-field", "ICAL_STATUS_CONFIRMED" );
-      break;
-      case gEvent.ICAL_STATUS_CANCELLED:
-         setFieldValue( "status-field", "ICAL_STATUS_CANCELLED" );
-      break;
-   }
-   setFieldValue( "all-day-event-checkbox", gEvent.allDay, "checked" );
+    // start focus on title
+    var firstFocus = document.getElementById("title-field");
+    firstFocus.focus();
 
-   setFieldValue( "private-checkbox", gEvent.privateEvent, "checked" );
-   
-   setFieldValue( "alarm-checkbox", gEvent.alarm, "checked" );
-   setFieldValue( "alarm-length-field", gEvent.alarmLength );
-   setFieldValue( "alarm-length-units", gEvent.alarmUnits );
-   setFieldValue( "alarm-trigger-relation", gEvent.getParameter( "ICAL_RELATED_PARAMETER" ) );
+    // revert cursor from "wait" set in calendar.js editEvent, editNewEvent
+    opener.setCursor( "auto" );
 
-   if ( gEvent.alarmEmailAddress && gEvent.alarmEmailAddress != "" ) 
-   {
-      setFieldValue( "alarm-email-checkbox", true, "checked" );
-      setFieldValue( "alarm-email-field", gEvent.alarmEmailAddress );
-   }
-   else
-   {
-      setFieldValue( "alarm-email-checkbox", false, "checked" );
-      setFieldValue( "alarm-email-field", true, "disabled" );
-   }
-   
-   if ( gEvent.inviteEmailAddress != undefined && gEvent.inviteEmailAddress != "" ) 
-   {
-      setFieldValue( "invite-checkbox", true, "checked" );
-      setFieldValue( "invite-email-field", gEvent.inviteEmailAddress );
-   }
-   else
-   {
-      setFieldValue( "invite-checkbox", false, "checked" );
-   }
-   
-   setFieldValue( "repeat-checkbox", gEvent.recur, "checked");
-   if( gEvent.recurInterval < 1 )
-      gEvent.recurInterval = 1;
-
-   setFieldValue( "repeat-length-field", gEvent.recurInterval );
-   if( gEvent.recurUnits )
-       setFieldValue( "repeat-length-units", gEvent.recurUnits );  //don't put the extra "value" element here, or it won't work.
-   else
-       setFieldValue( "repeat-length-units", "weeks" );
-
-   if ( gEvent.recurEnd && gEvent.recurEnd.isSet )
-   setFieldValue( "repeat-end-date-picker", new Date( gEvent.recurEnd.getTime() ) );
-   else
-     setFieldValue( "repeat-end-date-picker", new Date() ); // now
-   
-   setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
-   
-   setFieldValue( "repeat-until-radio", ( (gEvent.recurForever == undefined || gEvent.recurForever == false ) && gEvent.recurCount == 0), "selected" );
-
-   setFieldValue( "repeat-numberoftimes-radio", (gEvent.recurCount != 0), "selected" );
-   setFieldValue( "repeat-numberoftimes-textbox", Math.max(gEvent.recurCount, 1));
-
-   /* Categories stuff */
-   // Load categories
-   var categoriesString = opener.GetUnicharPref(opener.gCalendarWindow.calendarPreferences.calendarPref, "categories.names", getDefaultCategories() );
-   
-   var categoriesList = categoriesString.split( "," );
-   
-   // insert the category already in the task so it doesn't get lost
-   if( gEvent.categories )
-   {
-      if( categoriesString.indexOf( gEvent.categories ) == -1 )
-         categoriesList[categoriesList.length] =  gEvent.categories;
-   }
-
-   categoriesList.sort();
-
-   var oldMenulist = document.getElementById( "categories-menulist-menupopup" );
-   while( oldMenulist.hasChildNodes() )
-      oldMenulist.removeChild( oldMenulist.lastChild );
-
-   for (i = 0; i < categoriesList.length ; i++)
-   {
-      document.getElementById( "categories-field" ).appendItem(categoriesList[i], categoriesList[i]);
-   }
-
-   document.getElementById( "categories-field" ).selectedIndex = -1;
-   setFieldValue( "categories-field", gEvent.categories );
-   
-   /* Server stuff */
-   document.getElementById( "server-menulist-menupopup" ).database.AddDataSource( opener.gCalendarWindow.calendarManager.rdf.getDatasource() );
-   document.getElementById( "server-menulist-menupopup" ).builder.rebuild();
-   
-   if( args.mode == "new" )
-   {
-      if( "server" in args )
-      {
-         setFieldValue( "server-field", args.server );
-      }
-      else
-      {
-         document.getElementById( "server-field" ).selectedIndex = 1;
-      }
-   }
-   else
-   {
-      if( gEvent.parent )
-         setFieldValue( "server-field", gEvent.parent.server );
-      else
-      {
-         document.getElementById( "server-field" ).selectedIndex = 1;
-      }
-         
-      //for now you can't edit which file the event is in.
-      setFieldValue( "server-field", "true", "disabled" );
-
-      setFieldValue( "server-field-label", "true", "disabled" );
-   }
-   
-   // update enabling and disabling
-   updateRepeatItemEnabled();
-   updateStartEndItemEnabled();
-   updateAlarmItemEnabled();
-   updateInviteItemEnabled();
-      
-   updateAddExceptionButton();
-
-   //updateAlarmEmailItemEnabled();
-
-   /*
-   ** set the advanced weekly repeating stuff
-   */
-   setAdvancedWeekRepeat();
-   
-   setFieldValue( "advanced-repeat-dayofmonth", ( gEvent.recurWeekNumber == 0 || gEvent.recurWeekNumber == undefined ), "selected" );
-   setFieldValue( "advanced-repeat-dayofweek", ( gEvent.recurWeekNumber > 0 && gEvent.recurWeekNumber != 5 ), "selected" );
-   setFieldValue( "advanced-repeat-dayofweek-last", ( gEvent.recurWeekNumber == 5 ), "selected" );
-   
-   // start focus on title
-   var firstFocus = document.getElementById( "title-field" );
-   firstFocus.focus();
-
-   // revert cursor from "wait" set in calendar.js editEvent, editNewEvent
-   opener.setCursor( "auto" );
-
-   self.focus();
+    self.focus();
 }
 
 
@@ -340,100 +345,76 @@ function loadCalendarEventDialog()
 
 function onOKCommand()
 {
-   // get values from the form and put them into the event
-   
-   gEvent.title       = getFieldValue( "title-field" );
-   gEvent.description = getFieldValue( "description-field" );
-   gEvent.location    = getFieldValue( "location-field" );
-   gEvent.start.setTime( gStartDate.getTime() );
-   gEvent.end.setTime( gEndDate.getTime() );
+    event = gEvent;
 
-   if( getFieldValue( "status-field" ) != "" )
-      gEvent.status      = eval( "gEvent."+getFieldValue( "status-field" ) );
-   
-   gEvent.allDay      = getFieldValue( "all-day-event-checkbox", "checked" );
-   gEvent.url = getFieldValue( "uri-field" );
+    // if this event isn't mutable, we need to clone it like a sheep
+    var originalEvent = event;
+    if (!event.isMutable)
+        event = originalEvent.clone();
 
-   gEvent.privateEvent = getFieldValue( "private-checkbox", "checked" );
-   
-   if( getFieldValue( "invite-checkbox", "checked" ) )
-   {
-      gEvent.inviteEmailAddress = getFieldValue( "invite-email-field", "value" );
-   }
-   else
-   {
-      gEvent.inviteEmailAddress = "";
-   }
-   gEvent.alarm       = getFieldValue( "alarm-checkbox", "checked" );
-   gEvent.alarmLength = getFieldValue( "alarm-length-field" );
-   gEvent.alarmUnits  = getFieldValue( "alarm-length-units", "value" );  
-   gEvent.setParameter( "ICAL_RELATED_PARAMETER", getFieldValue( "alarm-trigger-relation", "value" ) );
+    // get values from the form and put them into the event
+    // calIEvent properties
+    //event.startDate.jsDate = gStartDate;
+    //event.endDate.jsDate   = gEndDate;
+    event.isAllDay = getFieldValue( "all-day-event-checkbox", "checked" );
 
-   if ( getFieldValue( "alarm-email-checkbox", "checked" ) ) 
-   {
-      gEvent.alarmEmailAddress = getFieldValue( "alarm-email-field", "value" );
-   }
-   else
-   {
-      gEvent.alarmEmailAddress = "";
-   }
 
-   gEvent.categories    = getFieldValue( "categories-field", "value" );
+    // calIItemBase properties
+    event.title = getFieldValue( "title-field" );
+    event.isPrivate = getFieldValue( "private-checkbox", "checked" );
+    if (getFieldValue( "alarm-type" ) != "" && getFieldValue( "alarm-type" ) != "none")
+        event.hasAlarm == 1
+    if (event.hasAlarm) {
+        alarmLength = getFieldValue( "alarm-length-field" );
+        alarmUnits  = getFieldValue( "alarm-length-units", "value" );
+    //event.alarmTime = ...
+    }
 
-   gEvent.recur         = getFieldValue( "repeat-checkbox", "checked" );
-   gEvent.recurUnits    = getFieldValue( "repeat-length-units", "value" );  
-   gEvent.recurForever  = getFieldValue( "repeat-forever-radio", "selected" );
-   gEvent.recurInterval = getFieldValue( "repeat-length-field" );
-   gEvent.recurCount    = (getFieldValue("repeat-numberoftimes-radio", "selected")
-                           ? Math.max(1, getFieldValue( "repeat-numberoftimes-textbox"))
-                           : 0); // 0 means not selected.
-   
-   if( gEvent.recurInterval == 0 )
-      gEvent.recur = false;
+    event.recurrenceInfo = null;
+    
+    if (getFieldValue("repeat-checkbox", "checked")) {
+        recurrenceInfo = createRecurrenceInfo();
+        recurUnits    = getFieldValue("repeat-length-units", "value");
+    recurForever  = getFieldValue("repeat-forever-radio", "selected");
+    recurInterval = getFieldValue("repeat-length-field");
+    recurCount    = (getFieldValue("repeat-numberoftimes-radio", "selected")
+        ? Math.max(1, getFieldValue("repeat-numberoftimes-textbox"))
+        : 0); // 0 means not selected.
 
-   if ( gEvent.recur && getFieldValue( "repeat-until-radio", "selected" ))
-   {
-   var recurEndDate = document.getElementById( "repeat-end-date-picker" ).value;
-   
-   gEvent.recurEnd.setTime( recurEndDate );
-   gEvent.recurEnd.hour = gEvent.start.hour;
-   gEvent.recurEnd.minute = gEvent.start.minute;
-   }
-   else
-   {
-     gEvent.recurEnd.clear();
-   }
+    //recurrenceInfo.recurType = ...
+    //recurrenceInfo.recurEnd = ...
+    }
 
-   if( gEvent.recur == true )
-   {
-      if( gEvent.recurUnits == "weeks" )
-      {
-         /*
-         ** advanced weekly repeating, choosing the days to repeat
-         */
-         gEvent.recurWeekdays = getAdvancedWeekRepeat();
-      }
-      else if( gEvent.recurUnits == "months" )
-      {
-         /*
-         ** advanced month repeating, either every day or every date
-         */
-         if( getFieldValue( "advanced-repeat-dayofweek", "selected" ) == true )
-         {
-            gEvent.recurWeekNumber = getWeekNumberOfMonth();
-         } 
-         else if( getFieldValue( "advanced-repeat-dayofweek-last", "selected" ) == true )
-         {
-            gEvent.recurWeekNumber = 5;
-         }
-         else
-            gEvent.recurWeekNumber = 0;
-      
-      }
-   }
+
+
+    // other properties
+    event.setProperty('categories',  getFieldValue("categories-field", "value"));
+    event.setProperty('description', getFieldValue("description-field"));
+    event.setProperty('location',    getFieldValue("location-field"));
+    event.setProperty('url',         getFieldValue("uri-field"));
+
+    event.setProperty("ICAL_RELATED_PARAMETER", getFieldValue("alarm-trigger-relation", "value"));
+
+    if (getFieldValue("alarm-type") == "email" )
+        event.setProperty('alarmEmailAddress', getFieldValue("alarm-email-field", "value"));
+    else
+        event.deleteProperty('alarmEmailAddress');
+
+
+    /*
+      if( getFieldValue( "status-field" ) != "" )
+          gEvent.status      = eval( "gEvent."+getFieldValue( "status-field" ) );
+    */
+
+    if (getFieldValue("invite-checkbox", "checked"))
+        event.setProperty('inviteEmailAddress', getFieldValue("invite-email-field", "value"));
+    else
+        event.deleteProperty('inviteEmailAddress');
+
 
    /* EXCEPTIONS */
    
+/*
    gEvent.removeAllExceptions();
 
    var listbox = document.getElementById( "exception-dates-listbox" );
@@ -447,51 +428,47 @@ function onOKCommand()
 
       gEvent.addException( dateObj );
    }
+*/
 
-   /* File attachments */
-   //loop over the items in the listbox
-   gEvent.removeAttachments();
+    /* File attachments */
+    //loop over the items in the listbox
+    //event.attachments.clear();
 
-   var attachmentListbox = document.getElementById( "attachmentBucket" );
+    var attachmentListbox = document.getElementById( "attachmentBucket" );
 
-   for( i = 0; i < attachmentListbox.childNodes.length; i++ )
-   {
-      Attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance( Components.interfaces.nsIMsgAttachment );
-	   
-      Attachment.url = attachmentListbox.childNodes[i].getAttribute( "label" );
-	
-      gEvent.addAttachment( Attachment );
-   }
+    for (i = 0; i < attachmentListbox.childNodes.length; i++) {
+        attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
+    attachment.url = attachmentListbox.childNodes[i].getAttribute("label");
+    // XXX
+    //event.attachments.appendElement(attachment);
+    }
 
     // Attach any specified contacts to the event
-    if( gEventCardArray )
-    {
-        try{
+    if (gEventCardArray) {
+        try {
             // Remove any existing contacts
-            gEvent.removeContacts();
-        
-            // Add specified contacts
-            for( var cardId in gEventCardArray )
-            {
-                if( gEventCardArray[ cardId ] )
-                {
-                    gEvent.addContact( gEventCardArray[ cardId ] );
-                }
-            }
-        }
-        catch( e )
-        {
+            //event.contacts.clear();
 
+            // Add specified contacts
+            for (var cardId in gEventCardArray)
+                if (gEventCardArray[cardId]) {
+                    // XXX
+                    //event.contacts.appendElement(gEventCardArray[cardId]);
+                }
+        }
+        catch (e)
+        {
         }
     }
 
    var Server = getFieldValue( "server-field" );
-   
+
    // :TODO: REALLY only do this if the alarm or start settings change.?
    //if the end time is later than the start time... alert the user using text from the dtd.
    // call caller's on OK function
-   gOnOkFunction( gEvent, Server, gOriginalEvent );
-      
+
+   gOnOkFunction(event, Server, originalEvent);
+
    // tell standard dialog stuff to close the dialog
    return true;
 }
@@ -577,25 +554,25 @@ function checkSetRecur()
 
 function setRecurError(state)
 {
-   document.getElementById("repeat-time-warning" ).setAttribute( "collapsed", !state);
+   document.getElementById("repeat-time-warning" ).setAttribute( "hidden", !state);
 }
 
 function setDateError(state)
 { 
-   document.getElementById( "end-date-warning" ).setAttribute( "collapsed", !state );
+   document.getElementById( "end-date-warning" ).setAttribute( "hidden", !state );
 }
 
 function setTimeError(state)
 { 
-   document.getElementById( "end-time-warning" ).setAttribute( "collapsed", !state );
+   document.getElementById( "end-time-warning" ).setAttribute( "hidden", !state );
 }
 
 function setOkButton(state)
 {
    if (state == false)
-      document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).setAttribute( "disabled", true );
+      document.getElementById( "calendar-new-component-window" ).getButton( "accept" ).setAttribute( "disabled", true );
    else
-      document.getElementById( "calendar-new-eventwindow" ).getButton( "accept" ).removeAttribute( "disabled" );
+      document.getElementById( "calendar-new-component-window" ).getButton( "accept" ).removeAttribute( "disabled" );
 }
 
 function updateOKButton()
@@ -698,89 +675,9 @@ function commandAllDay()
    updateOKButton();
 }
 
-/**
-*   Called when the alarm checkbox is clicked.
-*/
-
-function commandAlarm()
-{
-   updateAlarmItemEnabled();
-}
-
 
 /**
-*   Enable/Disable Alarm items
-*/
-
-function updateAlarmItemEnabled()
-{
-   var alarmCheckBox = "alarm-checkbox";
-   
-   var alarmField = "alarm-length-field";
-   var alarmMenu = "alarm-length-units";
-   var alarmTrigger = "alarm-trigger-relation";
-      
-   var alarmEmailCheckbox = "alarm-email-checkbox";
-   var alarmEmailField = "alarm-email-field";
-
-//   if( getFieldValue(alarmCheckBox, "checked" ) || getFieldValue( alarmEmailCheckbox, "checked" ) )
-   if( getFieldValue(alarmCheckBox, "checked" ) )
-   {
-      // call remove attribute beacuse some widget code checks for the presense of a 
-      // disabled attribute, not the value.
-      setFieldValue( alarmField, false, "disabled" );
-      setFieldValue( alarmMenu, false, "disabled" );
-      setFieldValue( alarmTrigger, false, "disabled" );
-      setFieldValue( alarmEmailField, false, "disabled" );
-      setFieldValue( alarmEmailCheckbox, false, "disabled" );
-   }
-   else
-   {
-      setFieldValue( alarmField, true, "disabled" );
-      setFieldValue( alarmMenu, true, "disabled" );
-      setFieldValue( alarmTrigger, true, "disabled" );
-      setFieldValue( alarmEmailField, true, "disabled" );
-      setFieldValue( alarmEmailCheckbox, true, "disabled" );
-   }
-}
-
-
-/**
-*   Called when the alarm checkbox is clicked.
-*/
-
-function commandAlarmEmail()
-{
-   updateAlarmEmailItemEnabled();
-}
-
-
-/**
-*   Enable/Disable Alarm items
-*/
-
-function updateAlarmEmailItemEnabled()
-{
-   var alarmCheckBox = "alarm-email-checkbox";
-   
-   var alarmEmailField = "alarm-email-field";
-      
-   if( getFieldValue( alarmCheckBox, "checked" ) )
-   {
-      // call remove attribute beacuse some widget code checks for the presense of a 
-      // disabled attribute, not the value.
-      
-      setFieldValue( alarmEmailField, false, "disabled" );
-   }
-   else
-   {
-      setFieldValue( alarmEmailField, true, "disabled" );
-   }
-}
-
-
-/**
-*   Called when the alarm checkbox is clicked.
+*   Called when the invite checkbox is clicked.
 */
 
 function commandInvite()
@@ -883,7 +780,8 @@ function updateMenuPlural( lengthFieldId, menuId )
     
     var newLabelNumber; 
     
-    if( Number( length ) > 1  )
+    // XXX This assumes that "0 days, minutes, etc." is plural in other languages.
+    if( ( Number( length ) == 0 ) || ( Number( length ) > 1 ) )
     {
         newLabelNumber = "labelplural"
     }
@@ -997,7 +895,6 @@ function updateRepeatUnitExtensions( )
 }
 
 
-
 /**
 *   Enable/Disable Start/End items
 */
@@ -1013,8 +910,6 @@ function updateStartEndItemEnabled()
    startTimePicker.timepickerdisabled = editTimeDisabled;
    endTimePicker.timepickerdisabled = editTimeDisabled;
 }
-
-
 
 
 /**
@@ -1414,22 +1309,29 @@ function setFieldValue( elementId, newValue, propertyName  )
 {
    var undefined;
    
-   if( newValue !== undefined )
-   {
+   if( newValue !== undefined ) {
       var field = document.getElementById( elementId );
       
-      if( newValue === false )
-      {
-         field.removeAttribute( propertyName );
-      }
-      else
-      {
-         if( propertyName )
-         {
-            field.setAttribute( propertyName, newValue );
+      if( newValue === false ) {
+         try {
+             field.removeAttribute( propertyName );
          }
-         else
-         {
+         catch (e) {
+             dump("setFieldValue: field.removeAttribute couldn't remove "+propertyName+
+                  " from "+elementId+" e: "+e+"\n");
+         }
+      }
+      else {
+         if( propertyName ) {
+             try {
+                 field.setAttribute( propertyName, newValue );
+             }
+             catch (e) {
+                 dump("setFieldValue: field.setAttribute couldn't set "+propertyName+
+                      " from "+elementId+" to "+newValue+" e: "+e+"\n");
+             }
+         }
+         else {
             field.value = newValue;
          }
       }
@@ -1518,7 +1420,6 @@ function setDateFieldValue( elementId, newDate  )
 function setTimeFieldValue( elementId, newDate  )
 {
    // set the value to a formatted time string 
-
    var field = document.getElementById( elementId );
    field.value = formatTime( newDate );
    
@@ -1556,4 +1457,86 @@ function debug( text )
 {
     if( debugenabled )
         dump( "\n"+ text + "\n");
+}
+
+// XXX lilmatt's new crap for the new XUL
+
+function processAlarmType()
+{
+  var alarmMenu = document.getElementById("alarm-type");
+  if( alarmMenu.selectedItem ) {
+    dump("processAlarmType: "+alarmMenu.selectedItem.value+"\n");
+    switch( alarmMenu.selectedItem.value )
+    {
+      case "none":
+        hideElement("alarm-length-field");
+        hideElement("alarm-length-units");
+        hideElement("alarm-box-email");
+        break;
+      case "popup":
+        showElement("alarm-length-field");
+        showElement("alarm-length-units");
+        hideElement("alarm-box-email");
+        break;
+      case "popupAndSound":
+        showElement("alarm-length-field");
+        showElement("alarm-length-units");
+        hideElement("alarm-box-email");
+        break;
+      case "email":
+        showElement("alarm-length-field");
+        showElement("alarm-length-units");
+        showElement("alarm-box-email");
+        break;
+    }
+    // Make the window big enough for all the fields and widgets
+    window.sizeToContent();
+  }
+  else
+    dump("processAlarmType: no alarmMenu.selectedItem!\n");
+}
+
+function processComponentType()
+{
+  var componentMenu = document.getElementById("component-type");
+  if( componentMenu.selectedItem) {
+    dump("processComponentType: "+componentMenu.selectedItem.value+"\n");
+    var args = window.arguments[0];
+    switch( componentMenu.selectedItem.value )
+    {
+      case "ICAL_COMPONENT_EVENT":
+        // Hide and show the appropriate fields and widgets
+        hideElement("task-status-label");
+        hideElement("cancelled-checkbox");
+        showElement("event-status-label");
+        showElement("event-status-field");
+        showElement("all-day-event-checkbox");
+        // Set menubar title correctly - New vs. Edit
+        if( "new" == args.mode )
+          titleDataItem = document.getElementById( "data-event-title-new" );
+        else
+          titleDataItem = document.getElementById( "data-event-title-edit" );
+        document.getElementById("calendar-new-component-window").setAttribute("title", titleDataItem.getAttribute( "value" ));
+        break;
+      case "ICAL_COMPONENT_TODO":
+        // Hide and show the appropriate fields and widgets
+        hideElement("event-status-label");
+        hideElement("event-status-field");
+        hideElement("all-day-event-checkbox");
+        showElement("task-status-label");
+        showElement("cancelled-checkbox");
+        // Set menubar title correctly - New vs. Edit
+        if( "new" == args.mode )
+          titleDataItem = document.getElementById( "data-event-title-new" );
+        else
+          titleDataItem = document.getElementById( "data-event-title-edit" );
+        document.getElementById("calendar-new-component-window").setAttribute("title", titleDataItem.getAttribute( "value" ));
+        break;
+      //case "ICAL_COMPONENT_JOURNAL":
+    }
+    // Make the window big enough for all the fields and widgets
+    window.sizeToContent();
+  }
+  else
+    dump("processComponentType: no componentMenu.selectedItem!\n");
 }

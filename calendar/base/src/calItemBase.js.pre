@@ -148,7 +148,11 @@ calItemBase.prototype = {
 
     get propertyEnumerator() { return this.mProperties.enumerator; },
     getProperty: function (aName) {
-        return this.mProperties.getProperty(aName);
+        try {
+            return this.mProperties.getProperty(aName);
+        } catch (e) {
+            return null;
+        }
     },
     setProperty: function (aName, aValue) {
         if (this.mImmutable)
@@ -158,7 +162,10 @@ calItemBase.prototype = {
     deleteProperty: function (aName) {
         if (this.mImmutable)
             throw Components.results.NS_ERROR_FAILURE;
-        this.mProperties.deleteProperty(aName);
+        try {
+            this.mProperties.deleteProperty(aName);
+        } catch (e) {
+        }
     },
 
     getAttendees: function (countObj) {

@@ -25,6 +25,7 @@
    -                 Chris Charabaruk <ccharabaruk@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
    -                 Mostafa Hosseini <mostafah@oeone.com>
+   -                 Matthew Willis <mattwillis@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,22 +61,20 @@
 
 
 <dialog
-   id="calendar-new-eventwindow"
-   title="Calendar Event"
+   id="calendar-new-component-window"
+   title="Calendar Component"
    onload="loadCalendarEventDialog()"
    buttons="accept,cancel"
    ondialogaccept="return onOKCommand();"
    ondialogcancel="return true;"
    persist="screenX screenY"
+   minwidth="490"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:nc="http://home.netscape.com/NC-rdf#">
     
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_calendar" src="chrome://calendar/locale/calendar.properties"/>
 </stringbundleset>
-   
-<!-- Javascript DTD To Variable -->
-<script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
 
 <script type="application/x-javascript">
    var DTD_noEmailMessage           = "&ab-selectAddressesDialogNoEmailMessage.label;";
@@ -108,6 +107,8 @@
 <dataset>
     <data id="data-event-title-new"             value="&event.title.new;" />
     <data id="data-event-title-edit"            value="&event.title.edit;" />
+    <data id="data-event-title-new"             value="&todo.title.new;" />
+    <data id="data-event-title-edit"            value="&todo.title.edit;" />
     <data id="onthe-text"                       value="&onthe-text;" />
     <data id="last-text"                        value="&last-text;" />
     <data id="ofthemonth-text"                  value="&ofthemonth-text;" />
@@ -116,423 +117,469 @@
 
 <!-- Dialog content -->
 
-      <tabbox>
-         <tabs>
-            <tab label="&newevent.newevent.tab.label;"/>
-            <tab label="&newevent.recurrence.tab.label;"/>
-            <tab label="&newevent.contacts.tab.label;" hidden="true"/>
-            <tab label="&newevent.files.tab.label;" hidden="true"/>
-         </tabs>
-         <tabpanels>
-            <tabpanel>
-               <grid>
-                  <columns>
-                     <column />
-                     <column flex="1"/>
-                  </columns>
-                  
-                  <rows>
-                     <!-- Title -->    
-                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label for="title-field" value="&newevent.title.label;"/>
-                        </hbox>
-                        <textbox id="title-field"/>
-                     </row>
-                     
-                     <!-- Location -->    
-                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label for="location-field" value="&newevent.location.label;"/>
-                        </hbox>
-                        <textbox id="location-field"/>
-                     </row>
-                        
-                     <!-- Start Date -->    
-                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label value="&newevent.startdate.label;"/>
-                        </hbox>
-                        <datetimepicker id="start-datetime" value=""
-                         onchange="onDateTimePick( this );"/>
-                     </row>
-                     
-                     <!-- End Date -->    
-                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label value="&newevent.enddate.label;"/>
-                        </hbox>
-                        <datetimepicker id="end-datetime" value="" 
-                         onchange="onDateTimePick( this );"/>
-                     </row>
-              
-                     <!-- End Time Warning -->    
-                     <row align="center">
-                        <spacer />
-                        <label id="end-time-warning"
-                               class="warning-text-class"
-                               value="&newevent.endtime.warning;"
-                               collapsed="true"/>
-                     </row>
-              
-                     <!-- End Date Warning -->    
-                     <row align="center">
-                        <spacer />
-                        <label id="end-date-warning"
-                               class="warning-text-class"
-                               value="&newevent.enddate.warning;"
-                               collapsed="true"/>
-                     </row>
-              
-              
-                     <!-- All Day -->    
-                     <row align="center">
-                        <spacer />
-                        <checkbox id="all-day-event-checkbox"
-                                  label="&newevent.alldayevent.label;"
-                                  oncommand="commandAllDay()"
-                                  persist="checked"/>
-                     </row>
-                     
-                     
-                     <!-- Description -->    
-                     <row flex="1" align="start">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label for="description-field" value="&newevent.description.label;"/>
-                        </hbox>
-                        <textbox id="description-field"
-                                 multiline="true"
-                                 rows="3"
-                                 cols="30" />
-                     </row>
-                     
-                     
-                     <!-- URI/URL -->    
-                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label for="uri-field" value="&newevent.uri.label;"/>
-                        </hbox>
-                        <hbox>
-                            <textbox id="uri-field"
-#ifndef MOZ_SUNBIRD
-                                     type="autocomplete"
-                                     searchSessions="history"
-#endif
-                                     flex="1"/>
-                            <button label="&newevent.uri.visit.label;"
-                                    oncommand="loadURL()"/>
-                        </hbox>
-                     </row>
-              
-      
-                     <!-- Private -->    
-                     <row align="center">
-                        <spacer />
-                        <checkbox id="private-checkbox"
-                                  checked="false"
-                                  label="&newevent.private.label;"/>
-                     </row>
-                     
-                     
-                     <!-- Alarm -->    
-                     <row align="center">
-                        <spacer />
-                        <vbox>
-                           <hbox  id="alarm-box" align="center">
-                              <checkbox id="alarm-checkbox"
-                                        class="proper-align"
-                                        label="&newevent.alarm.label;"
-                                        checked="false"
-                                        oncommand="commandAlarm()"/>
-                              <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
-                              <menulist id="alarm-length-units" crop="none" labelnumber="labelplural">
-                                 <menupopup>
-                                    <menuitem label="&alarm.units.minutes;"
-                                              labelplural="&alarm.units.minutes;"
-                                              labelsingular="&alarm.units.minutes.singular;"
-                                              value="minutes"/>
-                                    <menuitem label="&alarm.units.hours;"
-                                              labelplural="&alarm.units.hours;"
-                                              labelsingular="&alarm.units.hours.singular;"
-                                              value="hours" />
-                                    <menuitem label="&alarm.units.days;"
-                                              labelplural="&alarm.units.days;"
-                                              labelsingular="&alarm.units.days.singular;"
-                                              value="days"/>
-                                 </menupopup>
-                              </menulist>
-                              <menulist id="alarm-trigger-relation" crop="none">
-                                 <menupopup>
-                                    <menuitem label="&newevent.beforealarm.label;"
-                                              value="ICAL_RELATED_START"/>
-                                    <menuitem label="&newevent.beforealarmends.label;"
-                                              value="ICAL_RELATED_END"/>
-                                 </menupopup>
-                              </menulist>
-                           </hbox>
-                           
-                           <hbox id="alarm-box-email" align="center">
-                               <spacer width="15"/>
-                               <checkbox id="alarm-email-checkbox"
-                                         label="&newevent.email.label;"
-                                         checked="false"
-                                         oncommand="commandAlarmEmail()"/>
-                               <textbox id="alarm-email-field"
-#ifndef MOZ_SUNBIRD
-                                        type="autocomplete"
-                                        searchSessions="addrbook"
-#endif
-                                        size="39"
-                                        value="" />
-                           </hbox>       
-                        </vbox>
-                     </row>
-   
-                     <!-- Status -->
-                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label value="&newevent.status.longlabel;"/>
-                        </hbox>
-                        <menulist id="status-field" label="&newevent.status.label;">
-                            <menupopup id="status-menulist-menupopup">
-                                <menuitem label="&newevent.status.tentative.label;"
-                                          value="ICAL_STATUS_TENTATIVE"/>
-                                <menuitem label="&newevent.status.confirmed.label;"
-                                          value="ICAL_STATUS_CONFIRMED"/>
-                                <menuitem label="&newevent.status.cancelled.label;"
-                                          value="ICAL_STATUS_CANCELLED"/>
-                            </menupopup>
-                        </menulist>
-                     </row>
-
-                     <!-- Categories -->
-                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label value="&newtodo.categories.label;"/>
-                        </hbox>
-                        <menulist id="categories-field" label="&newevent.category.label;">
-                            <menupopup id="categories-menulist-menupopup">
-                                <menuitem label="&priority.level.none;" value="0"/>
-                            </menupopup>
-                        </menulist>
-                     </row>
-            
-                     <!-- Calendar Server -->
-                     <row align="center">
-                        <hbox class="field-label-box-class" pack="end">
-                            <label id="server-field-label" value="&newevent.server.label;"/>
-                        </hbox>
-                        <menulist id="server-field">
-                           <menupopup id="server-menulist-menupopup"
-                                      datasources="rdf:null"
-                                      ref="urn:calendarcontainer">
-                              <template>
-                                 <rule>   
-                                    <menuitem uri="rdf:*"
-                                              value="rdf:http://home.netscape.com/NC-rdf#path"
-                                              label="rdf:http://home.netscape.com/NC-rdf#name"/>
-                                 </rule>
-                              </template>
-                            </menupopup>
-                        </menulist>
-                     </row>
-                  </rows>
-               </grid>
-            </tabpanel>
-             
-            <!-- Repeat -->    
-            <tabpanel>
-               <vbox>
-                  <hbox id="repeat-box" align="center">
-                     <checkbox id="repeat-checkbox"
-                               class="proper-align"
-                               label="&newevent.repeat.label;"
-                               checked="false"
-                               oncommand="commandRepeat();commandUntil()"/>
-                     <textbox id="repeat-length-field"
-                              class="cursor-pointer"
-                              disable-controller="repeat"
-                              value=""
-                              oninput="repeatLengthKeyDown( this )"/>
-                              
-                     <menulist crop="none"
-                               oncommand="repeatUnitCommand( this )"
-                               labelnumber="labelplural"
-                               id="repeat-length-units"
-                               disable-controller="repeat">
-                        <menupopup>
-                           <menuitem label="&repeat.units.days;"
-                                     labelplural="&repeat.units.days;"
-                                     labelsingular="&repeat.units.days.singular;"
-                                     id="repeat-length-days"
-                                     value="days" />
-                           <menuitem label="&repeat.units.weeks;"
-                                     labelplural="&repeat.units.weeks;"
-                                     labelsingular="&repeat.units.weeks.singular;"
-                                     id="repeat-length-weeks"
-                                     value="weeks"/>
-                           <menuitem label="&repeat.units.months;"
-                                     labelplural="&repeat.units.months;"
-                                     labelsingular="&repeat.units.months.singular;"
-                                     id="repeat-length-months"
-                                     value="months"/>
-                           <menuitem label="&repeat.units.years;"
-                                     labelplural="&repeat.units.years;"
-                                     labelsingular="&repeat.units.years.singular;"
-                                     id="repeat-length-years"
-                                     value="years" />
-                        </menupopup>
-                     </menulist>
+<tabbox>
+  <tabs>
+    <!-- XXX label="&newevent.newevent.tab.label;" -->
+    <tab label="General"/>
+    <tab label="&newevent.recurrence.tab.label;"/>
+    <!-- XXX label="&newevent.contacts.tab.label;" -->
+    <tab label="Attendees"/>
+    <!-- XXX label="&newevent.files.tab.label;" -->
+    <tab label="Attachments"/>
+    <tab label="Advanced"/>
+  </tabs>
+  <tabpanels>
+    <tabpanel>
+      <vbox flex="1">
+        <hbox flex="1">
+          <groupbox flex="1">
+            <caption label="General Settings"/>
+            <grid>
+              <columns>
+                <column />
+                <column flex="1"/>
+              </columns>
+              <rows>
+                <row align="center">
+                  <!-- Item Type -->
+                  <hbox pack="end">
+                    <label for="component-type" value="Item Type"/>
                   </hbox>
-                    
-                  <hbox id="repeat-extenstions-week"
-                        disabled="true"
-                        disable-controller="repeat"
-                        collapsed="false"
-                        align="center">
-                     <checkbox disable-controller="repeat"
-                               class="repeat-day-class"
-                               label="&day.1.Ddd;"
-                               id="advanced-repeat-week-0"
-                               value="0"
-                               checked="false" />
-                     <checkbox disable-controller="repeat"
-                               class="repeat-day-class"
-                               label="&day.2.Ddd;"
-                               id="advanced-repeat-week-1"
-                               value="1"
-                               checked="false" />
-                     <checkbox disable-controller="repeat"
-                               class="repeat-day-class"
-                               label="&day.3.Ddd;"
-                               id="advanced-repeat-week-2"
-                               value="2"
-                               checked="false" />
-                     <checkbox disable-controller="repeat"
-                               class="repeat-day-class"
-                               label="&day.4.Ddd;"
-                               id="advanced-repeat-week-3"
-                               value="3"
-                               checked="false" />
-                     <checkbox disable-controller="repeat"
-                               class="repeat-day-class"
-                               label="&day.5.Ddd;"
-                               id="advanced-repeat-week-4"
-                               value="4"
-                               checked="false" />
-                     <checkbox disable-controller="repeat"
-                               class="repeat-day-class"
-                               label="&day.6.Ddd;"
-                               id="advanced-repeat-week-5"
-                               value="5"
-                               checked="false" />
-                     <checkbox disable-controller="repeat"
-                               class="repeat-day-class"
-                               label="&day.7.Ddd;"
-                               id="advanced-repeat-week-6"
-                               value="6"
-                               checked="false" />
-                  </hbox>
-                         
-                  <hbox id="repeat-extenstions-month"
-                        disabled="true"
-                        collapsed="true"
-                        align="center">
-                     <vbox align="center">
-                        <radiogroup id="advanced-repeat-month"
-                                    disable-controller="repeat">
-                           <radio disable-controller="repeat"
-                                  id="advanced-repeat-dayofmonth"
-                                  label="&newevent.advanced.repeat.dayofmonth.label;"
-                                  selected="true"/>
-                           <radio disable-controller="repeat"
-                                  id="advanced-repeat-dayofweek"
-                                  label="&newevent.advanced.repeat.dayofweek.label;"/>
-                           <radio disable-controller="repeat"
-                                  id="advanced-repeat-dayofweek-last"
-                                  label="&newevent.advanced.repeat.lastdayofweek.label;"
+                  <hbox>
+                    <menulist id="component-type" crop="none" oncommand="processComponentType()">
+                      <menupopup id="component-menulist-menupopup">
+                        <menuitem label="Event"   value="ICAL_COMPONENT_EVENT"/>
+                        <menuitem label="Task"    value="ICAL_COMPONENT_TODO"/>
+                        <menuitem label="Journal" value="ICAL_COMPONENT_JOURNAL"
                                   disabled="true"/>
-                        </radiogroup>
-                     </vbox>
+                      </menupopup>
+                    </menulist>
+                    <spacer width="10px"/>
+                    <!-- Calendar Server &newevent.server.label; -->
+                    <hbox align="center" flex="1">
+                      <label id="server-field-label" value="Calendar"/>
+                      <menulist id="server-field">
+                        <menupopup id="server-menulist-menupopup" datasources="rdf:null"
+                                   ref="urn:calendarcontainer">
+                          <template>
+                            <rule>
+                              <menuitem uri="rdf:*"
+                                        value="rdf:http://home.netscape.com/NC-rdf#path"
+                                        label="rdf:http://home.netscape.com/NC-rdf#name"/>
+                            </rule>
+                          </template>
+                        </menupopup>
+                      </menulist>
+                    </hbox>
                   </hbox>
-                         
-                  <spacer height="10" />
-                      
-                  <hbox align="center">
-                     <spacer class="repeat-left-spacer" />
-                     <radiogroup id="repeat-until-group"
-                                 disable-controller="repeat">
-                        <radio id="repeat-forever-radio"
-                               disable-controller="repeat"
-                               label="&newevent.forever.label;"
-                               oncommand="commandUntil()"/>
-                        <hbox>
-                           <radio id="repeat-numberoftimes-radio"
-                                  disable-controller="repeat"
-                                  label="&newevent.numberoftimes.label;"
-                                  oncommand="commandUntil()"/>
-                           <textbox id="repeat-numberoftimes-textbox"
-                                    disable-controller="repeat"/>
-                        </hbox>
-                        <hbox>
-                           <radio id="repeat-until-radio"
-                                  disable-controller="repeat"
-                                  label="&newevent.until.label;"
-                                  oncommand="commandUntil()"/>
-                            <spacer id="until-spacer"/>
-                            <datepicker id="repeat-end-date-picker"
-                                        disable-controller="repeat"
-                                        value=""
-                                        onchange="commandUntil()"/>
-                        </hbox>
-                        <label id="repeat-time-warning"
-                               class="warning-text-class"
-                               value="&newevent.recurend.warning;"
-                               collapsed="true"/>
-                     </radiogroup>
+                </row>
+                <!-- Title -->
+                <row align="center">
+                  <hbox pack="end">
+                    <label for="title-field" value="&newevent.title.label;"/>
                   </hbox>
-                    
-                  <hbox align="center">
-                     <spacer class="repeat-left-spacer" />
-                     <groupbox>
-                        <caption label="&newevent.exceptions.caption;"/>
-                        <grid>
-                           <columns>
-                              <column flex="1"/>
-                              <column/>
-                           </columns>
-                           <rows>
-                              <row>
-                                 <hbox align="center">
-                                    <datepicker id="exceptions-date-picker"
-                                                disable-controller="repeat"
-                                                onchange="updateAddExceptionButton();"
-                                                value=""/>
-                                 </hbox>
-                                 <button id="exception-add-button"
-                                         label="&newevent.addexceptions.label;"
-                                         disable-controller="repeat"
-                                         oncommand="addException()"/>
-                              </row>
-                              <row>
-                                 <listbox id="exception-dates-listbox"
-                                          disable-controller="repeat"
-                                          rows="4"/>
-                                 <vbox>
-                                    <button label="&newevent.deleteexceptions.label;"
-                                            disable-controller="repeat"
-                                            oncommand="removeSelectedExceptionDate()"/>
-                                 </vbox>
-                              </row>
-                           </rows>
-                        </grid>
-                     </groupbox>
+                  <textbox id="title-field"/>
+                </row>
+                <!-- Location -->
+                <row align="center">
+                  <hbox pack="end">
+                    <label for="location-field" value="&newevent.location.label;"/>
                   </hbox>
-               </vbox>
-            </tabpanel><!-- /Repeat -->   
-      
+                  <textbox id="location-field"/>
+                </row>
+                <row align="center">
+                  <!-- Status -->
+                  <hbox pack="end">
+                    <label id="event-status-label" for="event-status-menulist-menupopup"
+                           value="&newevent.status.label;" hidden="true"/>
+                    <label id="task-status-label" for="cancelled-checkbox"
+                           value="&newtodo.status.label;" hidden="true"/>
+                  </hbox>
+                  <hbox>
+                    <menulist id="event-status-field" label="&newevent.status.label;"
+                              hidden="true">
+                      <menupopup id="event-status-menulist-menupopup">
+                        <menuitem label="None"/>
+                        <menuitem label="&newevent.status.tentative.label;"
+                                  value="ICAL_STATUS_TENTATIVE"/>
+                        <menuitem label="&newevent.status.confirmed.label;"
+                                  value="ICAL_STATUS_CONFIRMED"/>
+                        <menuitem label="&newevent.status.cancelled.label;"
+                                  value="ICAL_STATUS_CANCELLED"/>
+                      </menupopup>
+                    </menulist>
+                    <checkbox id="cancelled-checkbox" label="&newtodo.cancelled.label;"
+                              checked="false" hidden="true"/>
+                    <spacer width="10px"/>
+                    <!-- Categories -->
+                    <hbox align="center">
+                      <label for="categories-menulist-menupopup" value="&newtodo.categories.label;"/>
+                      <menulist id="categories-field" label="&newevent.category.label;">
+                        <menupopup id="categories-menulist-menupopup">
+                          <menuitem label="&priority.level.none;" value="0"/>
+                        </menupopup>
+                      </menulist>
+                    </hbox>
+                  </hbox>
+                </row>
+              </rows>
+            </grid>
+            <hbox>
+              <separator class="thin"/>
+            </hbox>
+          </groupbox>
+        </hbox>
+        <hbox flex="1">
+          <!-- Schedule -->
+          <groupbox flex="1">
+            <caption label="Schedule"/>
+            <hbox>
+              <checkbox id="all-day-event-checkbox" label="&newevent.alldayevent.label;"
+                        oncommand="commandAllDay()" persist="checked" hidden="true"/>
+            </hbox>
+            <separator class="thin"/>
+            <hbox>
+              <grid>
+                <columns>
+                  <column/>
+                  <column/>
+                </columns>
+                <rows>
+                  <row>
+                    <hbox pack="end" align="center">
+                      <label class="field-label-box-class" value="From"/>
+                    </hbox>
+                    <hbox flex="1">
+                      <datetimepicker id="start-datetime" value="" onchange="onDateTimePick( this );"/>
+                      <spacer flex="1"/>
+                    </hbox>
+                  </row>
+                  <row>
+                    <hbox pack="end" align="center">
+                      <label value="To"/>
+                    </hbox>
+                    <hbox flex="1">
+                      <datetimepicker id="end-datetime" value="" onchange="onDateTimePick( this );"/>
+                      <spacer flex="1"/>
+                    </hbox>
+                  </row>
+                  <!-- Invalid end date/time warnings -->
+                  <row align="center">
+                    <spacer />
+                    <label id="end-time-warning" class="warning-text-class"
+                           value="&newevent.endtime.warning;" hidden="true"/>
+                  </row>
+                  <row align="center">
+                    <spacer />
+                    <label id="end-date-warning" class="warning-text-class"
+                           value="&newevent.enddate.warning;" hidden="true"/>
+                  </row>
+                  
+                  <!-- Invalid due date/time warnings -->
+                  <row align="center">
+                    <spacer />
+                    <label id="due-time-warning" class="warning-text-class"
+                           value="&newtodo.duetime.warning;" hidden="true"/>
+                  </row>
+                  <row align="center">
+                    <spacer />
+                    <label id="due-date-warning" class="warning-text-class"
+                           value="&newtodo.duedate.warning;" hidden="true"/>
+                  </row>
+                </rows>
+              </grid>
+            </hbox>
+            <hbox>
+              <separator class="thin"/>
+            </hbox>
+          </groupbox>
+        </hbox>
+
+        <!-- Alarm -->
+        <hbox flex="1">
+          <groupbox flex="1">
+            <caption label="Alarm"/>
+            <hbox>
+              <vbox>
+                <menulist id="alarm-type" crop="none" oncommand="processAlarmType()">
+                  <menupopup>
+                    <menuitem label="None" value="none"/>
+                    <menuitem label="Popup" value="popup"/>
+                    <menuitem label="Popup &amp; Play Sound" value="popupAndSound"
+                              disabled="true"/>
+                    <menuitem label="Send Email" value="email"/>
+                  </menupopup>
+                </menulist>
+              </vbox>
+              <vbox>
+                <textbox id="alarm-length-field" size="5" maxlength="3" oninput="alarmLengthKeyDown( this )"/>
+              </vbox>
+              <vbox>
+                <menulist id="alarm-length-units" crop="none" labelnumber="labelplural">
+                  <menupopup>
+                    <menuitem label="minutes before this begins"
+                              labelplural="minutes before this begins"
+                              labelsingular="minute before this begins"
+                              value="minutes"/>
+                    <menuitem label="hours before this begins"
+                              labelplural="hours before this begins"
+                              labelsingular="hour before this begins"
+                              value="hours" />
+                    <menuitem label="days before this begins"
+                              labelplural="days before this begins"
+                              labelsingular="day before this begins"
+                              value="days"/>
+                    <menuitem label="minutes before this ends"
+                              labelplural="minutes before this ends"
+                              labelsingular="minute before this ends"
+                              value="minutes"/>
+                    <menuitem label="hours before this ends"
+                              labelplural="hours before this ends"
+                              labelsingular="hour before this ends"
+                              value="hours" />
+                    <menuitem label="days before this ends"
+                              labelplural="days before this ends"
+                              labelsingular="day before this ends"
+                              value="days"/>
+                    <!-- XXX original code for fixing localization 
+                    <menuitem label="&alarm.units.minutes;"
+                              labelplural="&alarm.units.minutes;"
+                              labelsingular="&alarm.units.minutes.singular;"
+                              value="minutes"/>
+                    <menuitem label="&alarm.units.hours;"
+                              labelplural="&alarm.units.hours;"
+                              labelsingular="&alarm.units.hours.singular;"
+                              value="hours" />
+                    <menuitem label="&alarm.units.days;"
+                              labelplural="&alarm.units.days;"
+                              labelsingular="&alarm.units.days.singular;"
+                              value="days"/>
+                    <menuitem label="&newevent.beforealarm.label;"
+                              value="ICAL_RELATED_START"/>
+                    <menuitem label="&newevent.beforealarmends.label;"
+                              value="ICAL_RELATED_END"/>
+                    -->
+                  </menupopup>
+                </menulist>
+              </vbox>
+            </hbox>
+            <hbox id="alarm-box-email" align="center">
+              <!-- XXX &newevent.email.label; -->
+              <label class="field-label-box-class" for="alarm-email-field" value="Send email to:"/>
+              <!-- XXX oncommand="commandAlarmEmail()"/> -->
+              <textbox id="alarm-email-field"
+#ifndef MOZ_SUNBIRD
+                       type="autocomplete"
+                       searchSessions="addrbook"
+#endif
+                       size="40"
+                       value=""
+                       hidden="false"/>
+            </hbox>
+            <hbox>
+              <textbox id="alarm-trigger-relation" hidden="true"/>
+            </hbox>
+            <hbox>
+              <separator class="thin"/>
+            </hbox>
+          </groupbox>
+        </hbox>
+        <hbox flex="10"/> <!-- Creates white space at bottom of dialog -->
+      </vbox>
+    </tabpanel>
+
+    <!-- Repeat -->
+    <tabpanel>
+      <vbox flex="1">
+        <hbox flex="1">
+          <groupbox flex="1">
+          <caption label="Recurrence"/>
+          <hbox id="repeat-box" align="center">
+            <checkbox id="repeat-checkbox"
+                      class="proper-align"
+                      label="&newevent.repeat.label;"
+                      checked="false"
+                      oncommand="commandRepeat();commandUntil()"/>
+            <textbox id="repeat-length-field"
+                     class="cursor-pointer"
+                     disable-controller="repeat"
+                     value=""
+                     oninput="repeatLengthKeyDown( this )"/>
+            <menulist crop="none"
+                      oncommand="repeatUnitCommand( this )"
+                      labelnumber="labelplural"
+                      id="repeat-length-units"
+                      disable-controller="repeat">
+              <menupopup>
+                <menuitem label="&repeat.units.days;"
+                          labelplural="&repeat.units.days;"
+                          labelsingular="&repeat.units.days.singular;"
+                          id="repeat-length-days"
+                          value="days" />
+                <menuitem label="&repeat.units.weeks;"
+                          labelplural="&repeat.units.weeks;"
+                          labelsingular="&repeat.units.weeks.singular;"
+                          id="repeat-length-weeks"
+                          value="weeks"/>
+                <menuitem label="&repeat.units.months;"
+                          labelplural="&repeat.units.months;"
+                          labelsingular="&repeat.units.months.singular;"
+                          id="repeat-length-months"
+                          value="months"/>
+                <menuitem label="&repeat.units.years;"
+                          labelplural="&repeat.units.years;"
+                          labelsingular="&repeat.units.years.singular;"
+                          id="repeat-length-years"
+                          value="years" />
+              </menupopup>
+            </menulist>
+          </hbox>
+          <hbox id="repeat-extenstions-week"
+                disabled="true"
+                disable-controller="repeat"
+                collapsed="false"
+                align="center">
+            <checkbox disable-controller="repeat"
+                      class="repeat-day-class"
+                      label="&day.1.Ddd;"
+                      id="advanced-repeat-week-0"
+                      value="0"
+                      checked="false" />
+            <checkbox disable-controller="repeat"
+                      class="repeat-day-class"
+                      label="&day.2.Ddd;"
+                      id="advanced-repeat-week-1"
+                      value="1"
+                      checked="false" />
+            <checkbox disable-controller="repeat"
+                      class="repeat-day-class"
+                      label="&day.3.Ddd;"
+                      id="advanced-repeat-week-2"
+                      value="2"
+                      checked="false" />
+            <checkbox disable-controller="repeat"
+                      class="repeat-day-class"
+                      label="&day.4.Ddd;"
+                      id="advanced-repeat-week-3"
+                      value="3"
+                      checked="false" />
+            <checkbox disable-controller="repeat"
+                      class="repeat-day-class"
+                      label="&day.5.Ddd;"
+                      id="advanced-repeat-week-4"
+                      value="4"
+                      checked="false" />
+            <checkbox disable-controller="repeat"
+                      class="repeat-day-class"
+                      label="&day.6.Ddd;"
+                      id="advanced-repeat-week-5"
+                      value="5"
+                      checked="false" />
+            <checkbox disable-controller="repeat"
+                      class="repeat-day-class"
+                      label="&day.7.Ddd;"
+                      id="advanced-repeat-week-6"
+                      value="6"
+                      checked="false" />
+          </hbox>
+          <hbox id="repeat-extenstions-month"
+                disabled="true"
+                collapsed="true"
+                align="center">
+            <vbox align="center">
+              <radiogroup id="advanced-repeat-month"
+                          disable-controller="repeat">
+                <radio disable-controller="repeat"
+                       id="advanced-repeat-dayofmonth"
+                       label="&newevent.advanced.repeat.dayofmonth.label;"
+                       selected="true"/>
+                <radio disable-controller="repeat"
+                       id="advanced-repeat-dayofweek"
+                       label="&newevent.advanced.repeat.dayofweek.label;"/>
+                <radio disable-controller="repeat"
+                       id="advanced-repeat-dayofweek-last"
+                       label="&newevent.advanced.repeat.lastdayofweek.label;"
+                       disabled="true"/>
+              </radiogroup>
+            </vbox>
+          </hbox>
+          <spacer height="10" />
+          <hbox align="center">
+            <spacer class="repeat-left-spacer" />
+            <radiogroup id="repeat-until-group"
+                        disable-controller="repeat">
+              <radio id="repeat-forever-radio"
+                     disable-controller="repeat"
+                     label="&newevent.forever.label;"
+                     oncommand="commandUntil()"/>
+              <hbox>
+                <radio id="repeat-numberoftimes-radio"
+                       disable-controller="repeat"
+                       label="&newevent.numberoftimes.label;"
+                       oncommand="commandUntil()"/>
+                <textbox id="repeat-numberoftimes-textbox"
+                         disable-controller="repeat"/>
+              </hbox>
+              <hbox>
+                <radio id="repeat-until-radio"
+                       disable-controller="repeat"
+                       label="&newevent.until.label;"
+                       oncommand="commandUntil()"/>
+                <spacer id="until-spacer"/>
+                <datepicker id="repeat-end-date-picker"
+                            disable-controller="repeat"
+                            value=""
+                            onchange="commandUntil()"/>
+              </hbox>
+              <label id="repeat-time-warning"
+                     class="warning-text-class"
+                     value="&newevent.recurend.warning;"
+                     hidden="true"/>
+            </radiogroup>
+          </hbox>
+        </groupbox>
+      </hbox>
+      <hbox flex="1">
+        <spacer class="repeat-left-spacer" />
+        <groupbox flex="1">
+          <caption label="&newevent.exceptions.caption;"/>
+          <grid>
+            <columns>
+              <column flex="1"/>
+              <column/>
+            </columns>
+            <rows>
+              <row>
+                <hbox align="center">
+                  <datepicker id="exceptions-date-picker"
+                              disable-controller="repeat"
+                              onchange="updateAddExceptionButton();"
+                              value=""/>
+                </hbox>
+                <button id="exception-add-button"
+                        label="&newevent.addexceptions.label;"
+                        disable-controller="repeat"
+                        oncommand="addException()"/>
+              </row>
+              <row>
+                <listbox id="exception-dates-listbox"
+                         disable-controller="repeat"
+                         rows="4"/>
+                <vbox>
+                  <button label="&newevent.deleteexceptions.label;"
+                          disable-controller="repeat"
+                          oncommand="removeSelectedExceptionDate()"/>
+                </vbox>
+              </row>
+            </rows>
+          </grid>
+        </groupbox>
+        </hbox>
+      </vbox>
+    </tabpanel><!-- /Repeat -->
+
             <!-- Contacts panel -->
-            <tabpanel orient="vertical" hidden="true">
+            <tabpanel orient="vertical">
                <!-- Invite -->    
                <vbox collapsed="true">
                   <hbox id="invite-box" align="center">
@@ -545,13 +592,13 @@
                               disabled="true"/>
                   </hbox>
                </vbox>
-            
+
                <vbox flex="1">
                <hbox id="topBox" align="center">
                   <label value="&ab-selectAddressesDialogLookIn.label;" />
-                  
-                  <!-- Address book chooser -->                    
-                  <menulist id="addressBookList" oncommand="onChooseAddressBookEventDialog( this );">
+
+                  <!-- Address book chooser -->
+<!--                  <menulist id="addressBookList" oncommand="onChooseAddressBookEventDialog( this );">
                      <menupopup id="addressBookList-menupopup"
                                 ref="moz-abdirectory://"
                                 datasources="rdf:addressdirectory">
@@ -563,7 +610,7 @@
                            </rule>
                         </template> 
                      </menupopup>
-                  </menulist>
+                  </menulist>-->
                </hbox>
                
                <hbox flex="1">    
@@ -655,6 +702,59 @@
                <spacer flex="1"/>
             </vbox>
          </tabpanel>
+
+         <!-- "Advanced" tab -->
+         <tabpanel>
+
+            <grid>
+               <columns>
+                  <column/>
+                  <column flex="1"/>
+               </columns>
+               
+               <rows>
+                  <!-- URI/URL -->
+                  <row align="center" flex="1">
+                     <hbox class="field-label-box-class" pack="end">
+                         <label for="uri-field" value="&newevent.uri.label;"/>
+                     </hbox>
+                     <hbox>
+                         <textbox id="uri-field"
+#ifndef MOZ_SUNBIRD
+                                  type="autocomplete"
+                                  searchSessions="history"
+#endif
+                                  flex="1"/>
+                         <button label="&newevent.uri.visit.label;"
+                                 oncommand="loadURL()"/>
+                     </hbox>
+                  </row>
+
+                  <!-- Private -->
+                  <row align="center" flex="1">
+                     <spacer />
+                     <checkbox id="private-checkbox"
+                               checked="false"
+                               label="&newevent.private.label;"/>
+                  </row>
+
+                  <!-- Description -->    
+                  <row flex="1" align="start">
+                     <hbox class="field-label-box-class" pack="end">
+                         <label for="description-field" value="&newevent.description.label;"/>
+                     </hbox>
+                     <textbox id="description-field"
+                              multiline="true"
+                              rows="3"
+                              cols="30"
+                              flex="1" />
+                  </row>
+               </rows>
+            </grid>
+            
+            
+         </tabpanel>
+         
       </tabpanels>
    </tabbox>
 </dialog>
