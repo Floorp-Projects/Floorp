@@ -198,6 +198,7 @@ private:
 	PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging = PR_FALSE);
 
   nsresult CleanupAfterRunningUrl();
+  void Cleanup(); //free char* member variables
 
   void ParseHeaderForCancel(char *buf);
 

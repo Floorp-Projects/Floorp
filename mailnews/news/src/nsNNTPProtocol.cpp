@@ -431,18 +431,33 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
 
 nsNNTPProtocol::~nsNNTPProtocol()
 {
-    PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) destroying",this));
-    if (m_nntpServer) {
-        m_nntpServer->WriteNewsrcFile();
-        m_nntpServer->RemoveConnection(this);
-    }
-    if (m_lineStreamBuffer) {
-        delete m_lineStreamBuffer;
-    }
-    if (mUpdateTimer) {
-      mUpdateTimer->Cancel();
+  PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) destroying",this));
+  if (m_nntpServer) {
+    m_nntpServer->WriteNewsrcFile();
+    m_nntpServer->RemoveConnection(this);
+  }
+  if (m_lineStreamBuffer) {
+     delete m_lineStreamBuffer;
+  }
+  if (mUpdateTimer) {
+    mUpdateTimer->Cancel();
 	  mUpdateTimer = nsnull;
 	}
+  Cleanup();
+}
+
+void nsNNTPProtocol::Cleanup()  //free char* member variables
+{
+  PR_FREEIF(m_responseText);
+  PR_FREEIF(m_dataBuf);
+  PR_FREEIF(m_path);
+  PR_FREEIF(m_cancelFromHdr);
+  PR_FREEIF(m_cancelNewsgroups);
+  PR_FREEIF(m_cancelDistribution);
+  PR_FREEIF(m_cancelID);
+  PR_FREEIF(m_messageID);
+  PR_FREEIF(m_commandSpecificData);
+  PR_FREEIF(m_searchData);
 }
 
 NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
@@ -765,6 +780,7 @@ nsresult nsNNTPProtocol::ReadFromMemCache(nsICacheEntryDescriptor *entry)
     nsXPIDLCString group;
     nsXPIDLCString commandSpecificData;
     // do this to get m_key set, so that marking the message read will work.
+    PR_FREEIF(m_messageID);
     rv = ParseURL(m_url, getter_Copies(group), &m_messageID, getter_Copies(commandSpecificData));
 
     nsNntpCacheStreamListener * cacheListener = new nsNntpCacheStreamListener();
@@ -812,6 +828,7 @@ PRBool nsNNTPProtocol::ReadFromLocalCache()
   {
     nsXPIDLCString group;
     nsXPIDLCString commandSpecificData;
+    PR_FREEIF(m_messageID);
     rv = ParseURL(m_url, getter_Copies(group), &m_messageID, getter_Copies(commandSpecificData));
     nsCOMPtr <nsIMsgFolder> folder = do_QueryInterface(m_newsFolder);
     if (folder && NS_SUCCEEDED(rv))
@@ -5412,20 +5429,9 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
       mailnewsurl->SetMemCacheEntry(nsnull);
     }
   }
-
-  PR_FREEIF(m_path);
-  PR_FREEIF(m_responseText);
-  PR_FREEIF(m_dataBuf);
-
-  PR_FREEIF(m_cancelNewsgroups);
-  m_cancelNewsgroups = nsnull;
-  PR_FREEIF(m_cancelDistribution);
-  m_cancelDistribution = nsnull;
-  PR_FREEIF(m_cancelFromHdr);
-  m_cancelFromHdr = nsnull;
-  PR_FREEIF(m_cancelID);  
-  m_cancelID = nsnull;
   
+  Cleanup();
+
   mDisplayInputStream = nsnull;
   mDisplayOutputStream = nsnull;
   mProgressEventSink = nsnull;
