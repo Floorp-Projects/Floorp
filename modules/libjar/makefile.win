@@ -43,7 +43,8 @@ EXPORTS=zipfile.h
 
 OBJS=.\$(OBJDIR)\nsZipArchive.obj \
      .\$(OBJDIR)\nsJAR.obj \
-     .\$(OBJDIR)\nsJARFactory.obj
+     .\$(OBJDIR)\nsJARFactory.obj \
+     .\$(OBJDIR)\nsWildCard.obj	\
 
 LINCS=                         \
     -I$(XPDIST)\public\nspr    \
@@ -57,7 +58,6 @@ LINCS=                         \
 LLIBS=                        \
       $(LIBNSPR)                    \
       $(DIST)\lib\zlib.lib    \
-      $(DIST)\lib\xplib.lib   \
       $(DIST)\lib\xpcom.lib \
       $(NULL)
 
