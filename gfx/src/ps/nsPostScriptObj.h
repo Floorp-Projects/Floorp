@@ -211,7 +211,7 @@ public:
    *  Init PostScript Object 
    *	@update 3/19/99 dwc
    */
-  nsresult Init( nsIDeviceContextSpecPS *aSpec);
+  nsresult Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle);
   /** ---------------------------------------------------
    *  Start a postscript page
    *	@update 2/1/99 dwc
@@ -408,6 +408,7 @@ private:
   PrintSetup            *mPrintSetup;
   PRUint16              mPageNumber;
   nsCOMPtr<nsIPersistentProperties> mPrinterProps;
+  char                  *mTitle;
 
 
 
