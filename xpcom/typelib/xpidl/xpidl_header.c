@@ -34,24 +34,9 @@
 
 /* is this type output in the form "<foo> *"? */
 #define STARRED_TYPE(node) (IDL_NODE_TYPE(node) == IDLN_TYPE_STRING ||        \
-			    IDL_NODE_TYPE(node) == IDLN_TYPE_WIDE_STRING ||               \
-			    (IDL_NODE_TYPE(node) == IDLN_IDENT &&                         \
-			     UP_IS_AGGREGATE(node)) )
-
-#define IDL_OUTPUT_FLAGS (IDLF_OUTPUT_NO_NEWLINES |                           \
-                          IDLF_OUTPUT_NO_QUALIFY_IDENTS |                     \
-                          IDLF_OUTPUT_PROPERTIES)
-
-static void
-dump_IDL(TreeState *state)
-{
-    IDL_tree_to_IDL(state->tree, state->ns, state->file, IDL_OUTPUT_FLAGS);
-}
-
-#define DUMP_IDL_COMMENT(state)                                               \
-  fputs("\n  /* ", state->file);                                              \
-  dump_IDL(state);                                                            \
-  fputs(" */\n", state->file);
+			    IDL_NODE_TYPE(node) == IDLN_TYPE_WIDE_STRING ||   \
+			    (IDL_NODE_TYPE(node) == IDLN_IDENT &&             \
+			     UP_IS_AGGREGATE(node)))
 
 static void
 write_header(gpointer key, gpointer value, gpointer user_data)
@@ -65,8 +50,8 @@ write_header(gpointer key, gpointer value, gpointer user_data)
 static gboolean
 pass_1(TreeState *state)
 {
+    char *define = g_basename(state->basename);
     if (state->tree) {
-        char *define = g_basename(state->basename);
         fprintf(state->file, "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM"
                 " %s.idl\n */\n", state->basename);
         fprintf(state->file, "\n#ifndef __gen_%s_h__\n"
@@ -77,7 +62,7 @@ pass_1(TreeState *state)
             fputc('\n', state->file);
         }
     } else {
-        fprintf(state->file, "\n#endif /* __gen_%s_h__ */\n", state->basename);
+        fprintf(state->file, "\n#endif /* __gen_%s_h__ */\n", define);
     }
     return TRUE;
 }
@@ -168,7 +153,7 @@ list(TreeState *state)
     return TRUE;
 }
 
-static gboolean
+/* XXXbe static */ gboolean
 xpcom_type(TreeState *state)
 {
     if (!state->tree) {
@@ -176,25 +161,25 @@ xpcom_type(TreeState *state)
         return TRUE;
     }
 
-    switch(IDL_NODE_TYPE(state->tree)) {
+    switch (IDL_NODE_TYPE(state->tree)) {
       case IDLN_TYPE_INTEGER: {
-          gboolean sign = IDL_TYPE_INTEGER(state->tree).f_signed;
-          switch (IDL_TYPE_INTEGER(state->tree).f_type) {
-            case IDL_INTEGER_TYPE_SHORT:
-              fputs(sign ? "PRInt16" : "PRUint16", state->file);
-              break;
-            case IDL_INTEGER_TYPE_LONG:
-              fputs(sign ? "PRInt32" : "PRUint32", state->file);
-              break;
-            case IDL_INTEGER_TYPE_LONGLONG:
-              fputs(sign ? "PRInt64" : "PRUint64", state->file);
-              break;
-            default:
-              g_error("Unknown integer type %d\n",
-                      IDL_TYPE_INTEGER(state->tree).f_type);
-              return FALSE;
-          }
-          break;
+	gboolean sign = IDL_TYPE_INTEGER(state->tree).f_signed;
+	switch (IDL_TYPE_INTEGER(state->tree).f_type) {
+	  case IDL_INTEGER_TYPE_SHORT:
+	    fputs(sign ? "PRInt16" : "PRUint16", state->file);
+	    break;
+	  case IDL_INTEGER_TYPE_LONG:
+	    fputs(sign ? "PRInt32" : "PRUint32", state->file);
+	    break;
+	  case IDL_INTEGER_TYPE_LONGLONG:
+	    fputs(sign ? "PRInt64" : "PRUint64", state->file);
+	    break;
+	  default:
+	    g_error("Unknown integer type %d\n",
+		    IDL_TYPE_INTEGER(state->tree).f_type);
+	    return FALSE;
+	}
+	break;
       }
       case IDLN_TYPE_CHAR:
         fputs("char", state->file);
@@ -223,97 +208,6 @@ xpcom_type(TreeState *state)
       default:
         fprintf(state->file, "unknown_type_%d", IDL_NODE_TYPE(state->tree));
         break;
-    }
-    return TRUE;
-}
-
-static gboolean
-type_integer(TreeState *state)
-{
-    IDL_tree p = state->tree;
-
-    if (!IDL_TYPE_INTEGER(p).f_signed)
-        fputs("unsigned ", state->file);
-
-    switch(IDL_TYPE_INTEGER(p).f_type) {
-      case IDL_INTEGER_TYPE_SHORT:
-        printf("short");
-        break;
-      case IDL_INTEGER_TYPE_LONG:
-        printf("long");
-        break;
-      case IDL_INTEGER_TYPE_LONGLONG:
-        printf("long long");
-        break;
-    }
-    return TRUE;
-}
-
-static gboolean
-type(TreeState *state)
-{
-    if (!state->tree) {
-        fputs("void", state->file);
-        return TRUE;
-    }
-
-    switch(IDL_NODE_TYPE(state->tree)) {
-      case IDLN_TYPE_INTEGER:
-        return type_integer(state);
-      case IDLN_TYPE_STRING:
-        fputs("string", state->file);
-        return TRUE;
-      case IDLN_TYPE_WIDE_STRING:
-        fputs("wstring", state->file);
-        return TRUE;
-      case IDLN_TYPE_CHAR:
-        fputs("char", state->file);
-        return TRUE;
-      case IDLN_TYPE_WIDE_CHAR:
-        fputs("wchar", state->file);
-        return TRUE;
-      case IDLN_TYPE_BOOLEAN:
-        fputs("boolean", state->file);
-        return TRUE;
-      case IDLN_IDENT:
-        fputs(IDL_IDENT(state->tree).str, state->file);
-        break;
-      default:
-        fprintf(state->file, "unknown_type_%d", IDL_NODE_TYPE(state->tree));
-        return TRUE;
-    }
-
-    return TRUE;
-}
-
-static gboolean
-param_dcls(TreeState *state)
-{
-    IDL_tree iter;
-    fputs("(", state->file);
-    for (iter = state->tree; iter; iter = IDL_LIST(iter).next) {
-        struct _IDL_PARAM_DCL decl = IDL_PARAM_DCL(IDL_LIST(iter).data);
-        switch(decl.attr) {
-          case IDL_PARAM_IN:
-            fputs("in ", state->file);
-            break;
-          case IDL_PARAM_OUT:
-            fputs("out ", state->file);
-            break;
-          case IDL_PARAM_INOUT:
-            fputs("inout ", state->file);
-            break;
-          default:;
-        }
-        state->tree = (IDL_tree)decl.param_type_spec;
-        if (!type(state))
-            return FALSE;
-        fputs(" ", state->file);
-        state->tree = (IDL_tree)decl.simple_declarator;
-        if (!xpidl_process_node(state))
-            return FALSE;
-        if (IDL_LIST(iter).next)
-            fputs(", ", state->file);
     }
     return TRUE;
 }
@@ -356,7 +250,7 @@ static gboolean
 attr_dcl(TreeState *state)
 {
     gboolean ro = IDL_ATTR_DCL(state->tree).f_readonly;
-    DUMP_IDL_COMMENT(state);
+    xpidl_dump_comment(state, 2);
     return attr_accessor(state, TRUE) && (ro || attr_accessor(state, FALSE));
 }
 
@@ -412,7 +306,7 @@ do_typedef(TreeState *state)
  * inout string foo     -->     nsString **foo;
  */
 
-static gboolean
+/* XXXbe static */ gboolean
 xpcom_param(TreeState *state)
 {
     IDL_tree param = state->tree;
@@ -435,36 +329,36 @@ xpcom_param(TreeState *state)
 static gboolean
 op_dcl(TreeState *state)
 {
-    struct _IDL_OP_DCL op = IDL_OP_DCL(state->tree);
+    struct _IDL_OP_DCL *op = &IDL_OP_DCL(state->tree);
     IDL_tree iter;
 
-    DUMP_IDL_COMMENT(state);
+    xpidl_dump_comment(state, 2);
 
-    fprintf(state->file, "  NS_IMETHOD %s(", IDL_IDENT(op.ident).str);
-    for (iter = op.parameter_dcls; iter; iter = IDL_LIST(iter).next) {
+    fprintf(state->file, "  NS_IMETHOD %s(", IDL_IDENT(op->ident).str);
+    for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
         state->tree = IDL_LIST(iter).data;
         if (!xpcom_param(state))
             return FALSE;
-        if (IDL_LIST(iter).next || op.op_type_spec || op.f_varargs)
+        if (IDL_LIST(iter).next || op->op_type_spec || op->f_varargs)
             fputs(", ", state->file);
     }
 
     /* make IDL return value into trailing out argument */
-    if (op.op_type_spec) {
+    if (op->op_type_spec) {
         IDL_tree fake_param = IDL_param_dcl_new(IDL_PARAM_OUT,
-                                                op.op_type_spec,
+                                                op->op_type_spec,
                                                 IDL_ident_new("_retval"));
         if (!fake_param)
             return FALSE;
         state->tree = fake_param;
         if (!xpcom_param(state))
             return FALSE;
-        if (op.f_varargs)
+        if (op->f_varargs)
             fputs(", ", state->file);
     }
 
     /* varargs go last */
-    if (op.f_varargs) {
+    if (op->f_varargs) {
         fputs("nsVarArgs *_varargs", state->file);
     }
     fputs(") = 0;\n", state->file);
@@ -491,22 +385,20 @@ codefrag(TreeState *state)
     return TRUE;
 }
 
-nodeHandler *xpidl_header_dispatch()
+nodeHandler *
+xpidl_header_dispatch(void)
 {
     static nodeHandler table[IDLN_LAST];
-    static gboolean initialized = FALSE;
 
-    if (!initialized) {
+    if (!table[IDLN_NONE]) {
         table[IDLN_NONE] = pass_1;
         table[IDLN_LIST] = list;
         table[IDLN_ATTR_DCL] = attr_dcl;
         table[IDLN_OP_DCL] = op_dcl;
-        table[IDLN_PARAM_DCL] = param_dcls;
         table[IDLN_TYPE_ENUM] = do_enum;
         table[IDLN_INTERFACE] = interface;
         table[IDLN_CODEFRAG] = codefrag;
         table[IDLN_TYPE_DCL] = do_typedef;
-        initialized = TRUE;
     }
 
     return table;

@@ -23,7 +23,8 @@
 
 #include "xpidl.h"
 
-nodeHandler *xpidl_typelib_dispatch()
+nodeHandler *
+xpidl_typelib_dispatch(void)
 {
   static nodeHandler table[IDLN_LAST];
   static gboolean initialized = FALSE;
