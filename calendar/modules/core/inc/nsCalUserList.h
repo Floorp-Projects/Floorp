@@ -1,41 +1,43 @@
 /**
- * nsCalList.cpp: implementation of the nsCalList class.
+ * nsCalUserList.cpp: implementation of the nsCalUserList class.
  * This class manages the list of calendars currently in memory.
  * All calendars that are to be displayed should be registered
  * in this list.
  */
 
-#if !defined(AFX_NSCALLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_)
-#define AFX_NSCALLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_
+#if !defined(AFX_NSCALUSERLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_)
+#define AFX_NSCALUSERLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_
 
 #include "jdefines.h"
 #include "ptrarray.h"
+#include "nscalexport.h"
+#include "nsCalUser.h"
 
-class nsCalList  
+class NS_CALENDAR nsCalUserList  
 {
 public:
   JulianPtrArray m_List;
 
-	nsCalList();
-	virtual ~nsCalList();
+	nsCalUserList();
+	virtual ~nsCalUserList();
 
   /**
-   * Add a calendar to the list
-   * @param pCal pointer to the calendar to add
+   * Add a user calendar to the list
+   * @param pUser pointer to the user to add
    * @return 0 on success
    */
-  nsresult Add(NSCalendar* pCal);
+  nsresult Add(nsCalUser* pUser);
 
   /**
-   * Delete the calendar matching the supplied pointer.
-   * @param pCal pointer to the calendar to add
+   * Delete the user matching the supplied pointer.
+   * @param pUser pointer to the calendar to add
    * @return 0 on success
    *         1 if not found
    */
-  nsresult Delete(NSCalendar* pCal);
+  nsresult Delete(nsCalUser* pUser);
 
   /**
-   * Delete all calendars having the supplied cal url
+   * Delete all users having the supplied cal url
    * @param pCurl pointer to the curl of this calendar store
    * @return 0 on success
    *         1 if not found
@@ -43,7 +45,7 @@ public:
   nsresult Delete(char* psCurl);
 
   /**
-   * Search for a calendar.
+   * Search for a user.
    * @param psCurl pointer to the curl of this calendar store
    * @param iStart start searching at this point in the list
    *               if iStart is < 0 it is snapped to 0. If it
@@ -64,10 +66,10 @@ public:
    * @return 0 if the index is bad, otherwise it is a pointer
    *           to the calendar at index i in the list
    */ 
-  NSCalendar* GetAt(int i);
+  nsCalUser* GetAt(int i);
 
 };
 
-#endif /* !defined(AFX_NSCALLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_) */
+#endif /* !defined(AFX_NSCALUSERLIST_H__BC9A7773_3EF1_11D2_8ED1_000000000000__INCLUDED_) */
 
 

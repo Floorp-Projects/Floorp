@@ -27,8 +27,9 @@
  */
 #ifndef __NS_CAL_USER__
 #define __NS_CAL_USER__
+#include "nscalexport.h"
 
-class nsCalUser
+class NS_CALENDAR nsCalUser
 {
 private:
   JulianString    m_sUserName;      /* example: sman */

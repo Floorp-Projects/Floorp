@@ -18,30 +18,35 @@
  */ 
 
 /**
- * This extends the nsCalUser just a bit. It includes a password for 
- * logging in and a local capi url.
+ *  nsCalScheduler
+ *     Wraps all the capi and parsing code. A more convenient
+ *     interface for performing scheduling tasks.
  *
- * sman
+ *  sman
  */
 
-#ifndef __NS_CAL_LOGGED_IN_USER__
-#define __NS_CAL_LOGGED_IN_USER__
+#if !defined(AFX_NSCALSCHEDULER_H__A53027E1_42D1_11D2_8ED8_0060088A4B1D__INCLUDED_)
+#define AFX_NSCALSCHEDULER_H__A53027E1_42D1_11D2_8ED8_0060088A4B1D__INCLUDED_
 
-class nsCalLoggedInUser : public nsCalUser
+#include "nscore.h"
+#include "nsError.h"
+#include "nsCom.h"
+#include "capi.h"
+#include "julnstr.h"
+#include "nsDateTime.h"
+#include "nscalexport.h"
+
+class nsCalendarShell;
+
+class NS_CALENDAR nsCalScheduler  
 {
-private:
-  JulianString    m_sPassword;      /* user's password */
-  JulianString    m_sLocalCapiUrl;  /* url to local capi file */
-
+  nsCalendarShell* mpShell;
 public:
-                  nsCalLoggedInUser();
-  virtual         ~nsCalLoggedInUser();
+	nsCalScheduler();
+	virtual ~nsCalScheduler();
+  nsresult InitialLoadData();
+  nsresult SetShell(nsCalendarShell* p) {mpShell = p; return NS_OK; }
 
-  JulianString&   GetPassword() {return m_sPassword;}
-  void            SetPassword(char* psName) { m_sPassword = psName; }
-
-  JulianString&   GetLocalCapiUrl() {return m_sLocalCapiUrl;}
-  void            SetLocalCapiUrl(char* psName) { m_sLocalCapiUrl = psName; }
 };
 
-#endif  // __NS_CAL_LOGGED_IN_USER__
+#endif // !defined(AFX_NSCALSCHEDULER_H__A53027E1_42D1_11D2_8ED8_0060088A4B1D__INCLUDED_)

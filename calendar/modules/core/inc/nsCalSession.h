@@ -28,8 +28,9 @@
 
 #include "capi.h"
 #include "nsICapi.h"
+#include "nscalexport.h"
 
-class nsCalSession
+class NS_CALENDAR nsCalSession
 {
 public:
   nsICapi * mCapi;

@@ -19,11 +19,12 @@
 #ifndef nsLayerCollection_h___
 #define nsLayerCollection_h___
 
+#include "nscalexport.h"
 #include "nsILayer.h"
 #include "nsILayerCollection.h"
 #include "nsIVector.h"
 
-class nsLayerCollection : public nsILayerCollection,
+class NS_CALENDAR nsLayerCollection : public nsILayerCollection,
                                  nsILayer
 {
 

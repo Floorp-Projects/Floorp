@@ -11,8 +11,9 @@
 #include "jdefines.h"
 #include "ptrarray.h"
 #include "nsCalSession.h"
+#include "nscalexport.h"
 
-class nsCalSessionMgr  
+class NS_CALENDAR nsCalSessionMgr  
 {
   JulianPtrArray m_List;
 

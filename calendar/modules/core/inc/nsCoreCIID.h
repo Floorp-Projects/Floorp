@@ -22,6 +22,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsRepository.h"
+#include "nscalexport.h"
 
 // d4797370-4cc8-11d2-924a-00805f8a7ab6
 #define NS_LAYER_CID   \

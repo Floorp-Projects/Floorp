@@ -27,6 +27,8 @@ LD_LIBS += \
 	nscnv$(MOZ_BITS)30 \
 	nssb$(MOZ_BITS)30 \
 	$(NATIVE_RAPTOR_WIDGET) \
+	calcapi10 \
+	util10  \
 	xpcom$(MOZ_BITS) \
 	$(XP_REG_LIB)
 

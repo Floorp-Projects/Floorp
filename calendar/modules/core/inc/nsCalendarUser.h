@@ -19,11 +19,12 @@
 #ifndef nsCalendarUser_h___
 #define nsCalendarUser_h___
 
+#include "nscalexport.h"
 #include "nsICalendarUser.h"
 #include "nsIUser.h"
 #include "nsILayer.h"
 
-class nsCalendarUser : public nsICalendarUser 
+class NS_CALENDAR nsCalendarUser : public nsICalendarUser 
 {
 
 public:

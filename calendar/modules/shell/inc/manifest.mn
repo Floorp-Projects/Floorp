@@ -17,19 +17,12 @@ EXPORTS = \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
-    nsCalList.h \
-    nsCalUserList.h \
-    nsCalUser.h \
-    nsCalSession.h \
-    nsCalSessionMgr.h \
     nscalcids.h \
-    nsCalLoggedInUser.h \
     nsCalShellCIID.h \
     nsCalendarShell.h \
     nsCalendarWidget.h \
     nsCalShellFactory.h \
-    nsCalScheduler.h \
-	$(NULL)
+    $(NULL)
 
 MODULE = trex
 

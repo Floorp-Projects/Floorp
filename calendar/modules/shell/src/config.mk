@@ -59,6 +59,7 @@ LD_LIBS += \
 	nssb$(MOZ_BITS)30 \
 	xpcom$(MOZ_BITS) \
 	util10 \
+	calcore10 \
 	$(XP_REG_LIB)
 
 STATIC_LIBS += shell

@@ -19,9 +19,10 @@
 #ifndef nsLayer_h___
 #define nsLayer_h___
 
+#include "nscalexport.h"
 #include "nsILayer.h"
 
-class nsLayer : public nsILayer 
+class NS_CALENDAR nsLayer : public nsILayer 
 {
 
 public:
