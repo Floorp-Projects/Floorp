@@ -84,18 +84,19 @@ public:
         NS_INIT_REFCNT();
     }
     
-    nsresult Init(nsFileSpec& origFile) {
+    nsresult Init(const char* origFile) {
         nsresult rv;
-        char* name = origFile.GetLeafName();
-        if (name == nsnull)
-            return NS_ERROR_OUT_OF_MEMORY;
-        nsAutoString str; str.AssignWithConversion(name);
-        nsMemory::Free(name);
-        str.AppendWithConversion(".bak");
-        nsFileSpec spec(origFile);
-        spec.SetLeafName(str);
         nsCOMPtr<nsILocalFile> file;
-        rv = NS_NewLocalFile(spec, getter_AddRefs(file));
+        rv = NS_NewLocalFile(origFile, getter_AddRefs(file));
+        if (NS_FAILED(rv)) return rv;
+        char* name;
+        rv = file->GetLeafName(&name);
+        if (NS_FAILED(rv)) return rv;
+        nsCAutoString str(name);
+        nsMemory::Free(name);
+        str.Append(".bak");
+        rv = file->SetLeafName(str);
+        if (NS_FAILED(rv)) return rv;
         rv = NS_NewLocalFileOutputStream(getter_AddRefs(mOut),
                                          file, 
                                          PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
@@ -114,7 +115,7 @@ protected:
     PRUint32 mStopCount;
 };
 
-NS_IMPL_ISUPPORTS2(MyListener, nsIStreamListener, nsIStreamObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS2(MyListener, nsIStreamListener, nsIStreamObserver);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -126,10 +127,9 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsFileSpec fs(fileName);
     nsIChannel* fileTrans;
     nsCOMPtr<nsILocalFile> file;
-    rv = NS_NewLocalFile(fs, getter_AddRefs(file));
+    rv = NS_NewLocalFile(fileName, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
     rv = fts->CreateTransport(file, PR_RDONLY, 0, &fileTrans);
     if (NS_FAILED(rv)) return rv;
@@ -138,7 +138,7 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
     if (listener == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(listener);
-    rv = listener->Init(fs);
+    rv = listener->Init(fileName);
     if (NS_FAILED(rv)) return rv;
 
     gDone = PR_FALSE;
@@ -146,7 +146,7 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
     rv = fileTrans->SetTransferCount(length);
     if (NS_FAILED(rv)) return rv;
-    rv = fileTrans->AsyncRead(nsnull, listener);
+    rv = fileTrans->AsyncRead(listener, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     while (!gDone) {
@@ -172,12 +172,11 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsString outFile; outFile.AssignWithConversion(fileName);
-    outFile.AppendWithConversion(".out");
-    nsFileSpec fs(outFile);
+    nsCAutoString outFile(fileName);
+    outFile.Append(".out");
     nsIChannel* fileTrans;
     nsCOMPtr<nsILocalFile> file;
-    rv = NS_NewLocalFile(fs, getter_AddRefs(file));
+    rv = NS_NewLocalFile(outFile, getter_AddRefs(file));
     if (NS_FAILED(rv)) return rv;
     rv = fts->CreateTransport(file,
                               PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
@@ -188,12 +187,11 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     if (listener == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(listener);
-    rv = listener->Init(fs);
+    rv = listener->Init(outFile);
     if (NS_FAILED(rv)) return rv;
 
-    nsFileSpec spec(fileName);
     nsCOMPtr<nsILocalFile> f;
-    rv = NS_NewLocalFile(spec, getter_AddRefs(f));
+    rv = NS_NewLocalFile(fileName, getter_AddRefs(f));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIInputStream> inStr;
     rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), f);
@@ -204,7 +202,7 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
     rv = fileTrans->SetTransferCount(length);
     if (NS_FAILED(rv)) return rv;
-    rv = fileTrans->AsyncWrite(inStr, nsnull, listener);
+    rv = fileTrans->AsyncWrite(inStr, listener, nsnull);
     if (NS_FAILED(rv)) return rv;
 
     while (!gDone) {

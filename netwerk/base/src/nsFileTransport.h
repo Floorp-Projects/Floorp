@@ -74,23 +74,23 @@ public:
     void Process(void);
     void DoClose(void);
 
-    enum State {
+    enum XferState {
         CLOSED,
-        OPENING,
-        OPENED,
+        OPEN_FOR_READ,
         START_READ,
         READING,
         END_READ,
+        OPEN_FOR_WRITE,
         START_WRITE,
         WRITING,
         END_WRITE,
         CLOSING
     };
 
-    enum Command {
-        NONE,
-        INITIATE_READ,
-        INITIATE_WRITE
+    enum RunState {
+        RUNNING,
+        SUSPENDED,
+        CANCELED
     };
 
 protected:
@@ -102,10 +102,13 @@ protected:
     PRUint32                            mBufferMaxSize;
 
     nsCOMPtr<nsISupports>               mContext;
-    State                               mState;
-    Command                             mCommand;
-    PRBool                              mSuspended;
-    PRMonitor*                          mMonitor;
+
+    // mXferState is only changed by the file transport thread:
+    XferState                           mXferState;
+    // mRunState is only changed by the user's thread, but looked at by the
+    // file transport thread:
+    RunState                            mRunState;
+    nsresult                            mCancelStatus;
 
     // state variables:
     nsresult                            mStatus;
