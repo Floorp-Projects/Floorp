@@ -171,7 +171,9 @@ Usage(const char *progName)
     fprintf(stderr, 
     	"Usage: %s [-n rsa_nickname] [-p port] [-d dbdir] [-c connections]\n"
 	"          [-v] [-N] [-f fortezza_nickname] [-2 filename]\n"
-	"          [-w dbpasswd] [-C cipher(s)] hostname\n",
+	"          [-w dbpasswd] [-C cipher(s)] [-t threads] hostname\n"
+	" where -v means verbose\n"
+	"       -N means no session reuse\n",
 	progName);
     exit(1);
 }
@@ -290,7 +292,8 @@ static int /* should be SECStatus but public prototype says int. */
 myBadCertHandler( void *arg, PRFileDesc *fd)
 {
     int err = PR_GetError();
-    fprintf(stderr, 
+    if (!MakeCertOK)
+	fprintf(stderr, 
 	    "strsclnt: -- SSL: Server Certificate Invalid, err %d.\n%s\n", 
             err, SECU_Strerror(err));
     return (MakeCertOK ? SECSuccess : SECFailure);
@@ -358,6 +361,8 @@ PRCondVar * threadEndQ;
 
 int         numUsed;
 int         numRunning;
+PRUint32    numConnected;
+int         max_threads = 8;	/* default much less than max. */
 
 typedef enum { rs_idle = 0, rs_running = 1, rs_zombie = 2 } runState;
 
@@ -415,7 +420,7 @@ launch_thread(
 	threadEndQ   = PR_NewCondVar(threadLock);
     }
     PR_Lock(threadLock);
-    while (numRunning >= MAX_THREADS) {
+    while (numRunning >= max_threads) {
     	PR_WaitCondVar(threadStartQ, PR_INTERVAL_NO_TIMEOUT);
     }
     for (i = 0; i < numUsed; ++i) {
@@ -460,7 +465,7 @@ launch_thread(
     return SECSuccess;
 }
 
-/* Wait until num_running == 0 */
+/* Wait until numRunning == 0 */
 int 
 reap_threads(void)
 {
@@ -726,6 +731,7 @@ do_connects(
     PRFileDesc *        ssl_sock	= 0;
     PRFileDesc *        tcp_sock	= 0;
     PRStatus	        prStatus;
+    PRUint32            sleepInterval	= 50; /* milliseconds */
     SECStatus   	result;
     int                 rv 		= SECSuccess;
     PRSocketOptionData  opt;
@@ -750,8 +756,15 @@ retry:
 	PRErrorCode err = PR_GetError();
 	if ((err == PR_CONNECT_REFUSED_ERROR) || 
 	    (err == PR_CONNECT_RESET_ERROR)      ) {
+	    int connections = numConnected;
+
 	    PR_Close(tcp_sock);
-	    PR_Sleep(PR_MillisecondsToInterval(10));
+	    if (connections > 2 && max_threads >= connections) {
+	        max_threads = connections - 1;
+		fprintf(stderr,"max_threads set down to %d\n", max_threads);
+	    }
+	    PR_Sleep(PR_MillisecondsToInterval(sleepInterval));
+	    sleepInterval <<= 1;
 	    goto retry;
 	}
 	errWarn("PR_Connect");
@@ -772,11 +785,15 @@ retry:
 	goto done;
     }
 
+    PR_AtomicIncrement(&numConnected);
+
     if (bigBuf.data != NULL) {
 	result = handle_fdx_connection( ssl_sock, connection);
     } else {
 	result = handle_connection( ssl_sock, connection);
     }
+
+    PR_AtomicDecrement(&numConnected);
 
 done:
     if (ssl_sock) {
@@ -994,6 +1011,7 @@ main(int argc, char **argv)
     SECKEYPrivateKey *   privKey[kt_kea_size] = { NULL };
     int                  connections = 1;
     int                  exitVal;
+    int                  tmpInt;
     unsigned short       port        = 443;
     SECStatus            rv;
     PLOptState *         optstate;
@@ -1008,7 +1026,7 @@ main(int argc, char **argv)
     progName = progName ? progName + 1 : tmp;
  
 
-    optstate = PL_CreateOptState(argc, argv, "2:C:Nc:d:f:n:op:vw:");
+    optstate = PL_CreateOptState(argc, argv, "2:C:Nc:d:f:n:op:t:vw:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
 
@@ -1044,6 +1062,12 @@ main(int argc, char **argv)
 
 	case 'p':
 	    port = PORT_Atoi(optstate->value);
+	    break;
+
+	case 't':
+	    tmpInt = PORT_Atoi(optstate->value);
+	    if (tmpInt > 0 && tmpInt < MAX_THREADS) 
+	        max_threads = tmpInt;
 	    break;
 
         case 'v':
