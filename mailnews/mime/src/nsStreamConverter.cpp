@@ -924,7 +924,7 @@ const char output[] = "\
   char * endPtr = buf + readLen;
 
   // First let see if the stream contains null characters
-  for (readPtr = buf; *readPtr && readPtr < endPtr; readPtr ++)
+  for (readPtr = buf; readPtr < endPtr && *readPtr; readPtr ++)
     ;
 
   // Did we find a null character? Then, we need to cleanup the stream
