@@ -28,17 +28,16 @@
 
 [% filtered_desc = bug.short_desc FILTER html %]
 [% filtered_timestamp = bug.delta_ts FILTER time %]
-[% bodyattrs = BLOCK %]class='bz_bug bz_status_[% bug.bug_status 
-  FILTER css_class_quote %] bz_component_[% bug.component 
-  FILTER css_class_quote %] bz_bug_[% bug.bug_id 
-  FILTER css_class_quote %]' 
-[% END %]
 [% PROCESS global/header.html.tmpl
   title = "$terms.Bug $bug.bug_id - $bug.short_desc"
   h1 = "$terms.Bugzilla $terms.Bug $bug.bug_id"
   h2 = filtered_desc
   h3 = "Last modified: $filtered_timestamp"
-  bodyattrs = bodyattrs
+  bodyclasses = ['bz_bug',
+                 "bz_status_$bug.bug_status",
+                 "bz_component_$bug.component",
+                 "bz_bug_$bug.bug_id"
+                ]
 %]
 
 [% PROCESS bug/navigate.html.tmpl %]

@@ -28,6 +28,7 @@
   # h3: string. Right-aligned subheader.
   # bgcolor: string. the page's background color ("#rrggbb").
   # bodyattrs: any extra attributes for the <body> tag
+  # bodyclasses: array of extra CSS classes for the <body>
   # onload: string. JavaScript code to run when the page finishes loading.
   # javascript: string. Javascript to go in the header.
   # javascript_urls: list. List of URLs to Javascript.
@@ -106,8 +107,11 @@
   #%]
 
   <body bgcolor="[% bgcolor %]" onload="[% onload %]"
-   class="[% Param('urlbase').replace('^https?://','').replace('/$','').replace('[-~@:/.]+','-') %]" 
-   [%+ bodyattrs %]>
+        class="[% Param('urlbase').replace('^https?://','').replace('/$','').replace('[-~@:/.]+','-') %]
+               [% FOREACH class = bodyclasses %]
+                 [% ' ' %][% class FILTER css_class_quote %]
+               [% END %]"
+        [%+ bodyattrs %]>
 
 [%# Migration note: the following file corresponds to the old Param
   # 'bannerhtml'
