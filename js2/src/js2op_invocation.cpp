@@ -170,7 +170,7 @@
 
     case eReturn: 
         {
-            retval = pop();
+            retval = top();
             rts();
             if (pc == NULL) 
                 return pop();

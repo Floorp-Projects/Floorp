@@ -87,7 +87,7 @@ namespace MetaData {
                 stdOut << '\n';
             }
             if (parsedStatements) {
-                CompilationData *oldData = startCompilationUnit(&p);
+                CompilationData *oldData = startCompilationUnit(NULL, str, fileName);
                 ValidateStmtList(parsedStatements);
                 result = ExecuteStmtList(RunPhase, parsedStatements);
                 restoreCompilationUnit(oldData);
@@ -996,14 +996,13 @@ namespace MetaData {
         case StmtNode::Function:
             {
                 FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
-                BytecodeContainer *saveBacon = bCon;
-                bCon = f->fWrap->bCon;
+                CompilationData *oldData = startCompilationUnit(f->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
                 env->addFrame(f->fWrap->compileFrame);
                 EvalStmt(env, phase, f->function.body);
                 // XXX need to make sure that all paths lead to an exit of some kind
                 bCon->emitOp(eReturnVoid, p->pos);
                 env->removeTopFrame();
-                bCon = saveBacon;
+                restoreCompilationUnit(oldData);
             }
             break;
         case StmtNode::Var:
@@ -3640,13 +3639,17 @@ deleteClassProperty:
 
     // Save off info about the current compilation and begin a
     // new one - using the given parser.
-    CompilationData *JS2Metadata::startCompilationUnit(Parser *parser)
+    CompilationData *JS2Metadata::startCompilationUnit(BytecodeContainer *newBCon, const String &source, const String &sourceLocation)
     {
         CompilationData *result = new CompilationData();
         result->bCon = bCon;
 
-        bCon = new BytecodeContainer();
-        bCon->mParser = parser;
+        if (newBCon)
+            bCon = newBCon;
+        else
+            bCon = new BytecodeContainer();
+        bCon->mSource = source;
+        bCon->mSourceLocation = sourceLocation;
 
         return result;
     }
@@ -3676,10 +3679,12 @@ deleteClassProperty:
             uint32 a = x.find(widenCString("{0}"));
             x.replace(a, 3, widenCString(arg));
         }
-        uint32 lineNum = bCon->mParser->lexer.reader.posToLineNum(pos);
-        size_t linePos = bCon->mParser->lexer.reader.getLine(lineNum, lineBegin, lineEnd);
+        Reader reader(engine->bCon->mSource, engine->bCon->mSourceLocation, 1);
+        reader.fillLineStartsTable();
+        uint32 lineNum = reader.posToLineNum(pos);
+        size_t linePos = reader.getLine(lineNum, lineBegin, lineEnd);
         ASSERT(lineBegin && lineEnd && linePos <= pos);
-        throw Exception(kind, x, bCon->mParser->lexer.reader.sourceLocation, 
+        throw Exception(kind, x, reader.sourceLocation, 
                             lineNum, pos - linePos, pos, lineBegin, lineEnd);
     }
 

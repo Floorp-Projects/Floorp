@@ -169,7 +169,8 @@ public:
     void addFixup(LabelID label);
     void setLabel(LabelID label);
 
-    Parser *mParser;                // for error reporting
+    String mSource;                     // for error reporting
+    String mSourceLocation;             // for error reporting
 
 };
 

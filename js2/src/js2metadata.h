@@ -821,7 +821,7 @@ typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val ar
 class FunctionWrapper {
 public:
     FunctionWrapper(bool unchecked, ParameterFrame *compileFrame) 
-        : bCon(new BytecodeContainer), code(NULL), unchecked(unchecked), compileFrame(compileFrame) { }
+        : bCon(new BytecodeContainer()), code(NULL), unchecked(unchecked), compileFrame(compileFrame) { }
     FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, NativeCode *code) 
         : bCon(NULL), code(code), unchecked(unchecked), compileFrame(compileFrame) { }
 
@@ -900,7 +900,7 @@ public:
     
     JS2Metadata(World &world);
 
-    CompilationData *startCompilationUnit(Parser *parser);
+    CompilationData *startCompilationUnit(BytecodeContainer *newBCon, const String &source, const String &sourceLocation);
     void restoreCompilationUnit(CompilationData *oldData);
 
 

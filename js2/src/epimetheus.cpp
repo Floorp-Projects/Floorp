@@ -142,7 +142,7 @@ static int readEvalPrint(FILE *in)
                     stdOut << '\n';
                 }
                 if (parsedStatements) {
-                    MetaData::CompilationData *oldData = metadata->startCompilationUnit(&p);            
+                    MetaData::CompilationData *oldData = metadata->startCompilationUnit(NULL, buffer, ConsoleName);            
                     metadata->ValidateStmtList(parsedStatements);
                     js2val rval = metadata->ExecuteStmtList(RunPhase, parsedStatements);
                     if (!JS2VAL_IS_VOID(rval))
