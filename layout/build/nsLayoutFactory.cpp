@@ -48,6 +48,11 @@
 #include "nsIDocumentEncoder.h"
 #include "nsCOMPtr.h"
 
+#include "nsCSSKeywords.h"  // to addref/release table
+#include "nsCSSProps.h"  // to addref/release table
+#include "nsCSSAtoms.h"  // to addref/release table
+#include "nsColorNames.h"  // to addref/release table
+
 class nsIDocumentLoaderFactory;
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -127,11 +132,19 @@ nsLayoutFactory::nsLayoutFactory(const nsCID &aClass)
 {   
   mRefCnt = 0;
   mClassID = aClass;
+  nsCSSAtoms::AddRefAtoms();
+  nsCSSKeywords::AddRefTable();
+  nsCSSProps::AddRefTable();
+  nsColorNames::AddRefTable();
 }   
 
 nsLayoutFactory::~nsLayoutFactory()   
 {   
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
+  nsColorNames::ReleaseTable();
+  nsCSSProps::ReleaseTable();
+  nsCSSKeywords::ReleaseTable();
+  nsCSSAtoms::ReleaseAtoms();
 }   
 
 nsresult
