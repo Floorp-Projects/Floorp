@@ -60,7 +60,7 @@ const COPYCOL_IMAGE_ADDRESS = 1;
 const DRAGSERVICE_CONTRACTID    = "@mozilla.org/widget/dragservice;1";
 const TRANSFERABLE_CONTRACTID   = "@mozilla.org/widget/transferable;1";
 const ARRAY_CONTRACTID          = "@mozilla.org/supports-array;1";
-const WSTRING_CONTRACTID        = "@mozilla.org/supports-wstring;1";
+const STRING_CONTRACTID         = "@mozilla.org/supports-string;1";
 
 // a number of services I'll need later
 // the cache services
@@ -581,7 +581,7 @@ function onBeginLinkDrag(event,urlField,descField)
   var elt = {};
   tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
   if (row.value == -1)
-    return false;
+    return;
 
   // Getting drag-system needed services
   var dragService = Components.classes[DRAGSERVICE_CONTRACTID].getService().QueryInterface(Components.interfaces.nsIDragService);
@@ -596,7 +596,7 @@ function onBeginLinkDrag(event,urlField,descField)
   trans.addDataFlavor("text/x-moz-url");
   var url = tree.treeBoxObject.view.getCellText(row.value, urlField);
   var desc = tree.treeBoxObject.view.getCellText(row.value, descField);
-  var stringURL = Components.classes[WSTRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsWString);
+  var stringURL = Components.classes[STRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsString);
   stringURL.data = url + "\n"+desc;
   trans.setTransferData("text/x-moz-url", stringURL, stringURL.data.length * 2 );
   transArray.AppendElement(trans.QueryInterface(Components.interfaces.nsISupports));
