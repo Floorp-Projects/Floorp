@@ -43,7 +43,7 @@
     of the <em>action</em> variable.
   
   [% ELSIF error == "attachment_already_obsolete" %]
-    Attachment #[% attachid FILTER html %] ([% description FILTER html %]) 
+    Attachment #[% attach_id FILTER html %] ([% description FILTER html %]) 
     is already obsolete.
 
   [% ELSIF error == "auth_err" %]
