@@ -227,7 +227,6 @@ protected:
   static NPNetscapeFuncs CALLBACKS;
 
   static nsIPluginManager   *mPluginManager;
-  static nsINetworkManager  *mNetworkManager;
   static nsIMalloc          *mMalloc;
 };
 

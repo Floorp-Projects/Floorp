@@ -28,7 +28,6 @@
 
 NPNetscapeFuncs ns4xPlugin::CALLBACKS;
 nsIPluginManager *  ns4xPlugin::mPluginManager;
-nsINetworkManager * ns4xPlugin::mNetworkManager;
 nsIMalloc *         ns4xPlugin::mMalloc;
 
 void
@@ -40,7 +39,6 @@ ns4xPlugin::CheckClassInitialized(void)
         return;
 
     mPluginManager = nsnull;
-    mNetworkManager = nsnull;
     mMalloc = nsnull;
 
     // XXX It'd be nice to make this const and initialize it
@@ -235,7 +233,6 @@ nsresult ns4xPlugin :: LockFactory(PRBool aLock)
 }  
 
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID); 
-static NS_DEFINE_IID(kINetworkManagerIID, NS_INETWORKMANAGER_IID); 
 static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID); 
 
 nsresult
@@ -245,9 +242,6 @@ ns4xPlugin::Initialize(nsISupports* browserInterfaces)
 
   if (nsnull == mPluginManager)
     rv = browserInterfaces->QueryInterface(kIPluginManagerIID, (void **)&mPluginManager);
-
-  if (nsnull == mNetworkManager)
-    rv = browserInterfaces->QueryInterface(kINetworkManagerIID, (void **)&mNetworkManager);
 
   if (nsnull == mMalloc)
     rv = browserInterfaces->QueryInterface(kIMallocIID, (void **)&mMalloc);
@@ -268,7 +262,6 @@ printf("shutting down plugin %08x\n", this);
   }
 
   NS_IF_RELEASE(mPluginManager);
-  NS_IF_RELEASE(mNetworkManager);
   NS_IF_RELEASE(mMalloc);
 
   return NS_OK;
@@ -307,12 +300,12 @@ ns4xPlugin::_geturl(NPP npp, const char* relativeURL, const char* target)
     nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
     NS_ASSERTION(inst != NULL, "null instance");
-    NS_ASSERTION(mNetworkManager != NULL, "null manager");
+    NS_ASSERTION(mPluginManager != NULL, "null manager");
 
     if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
-    return mNetworkManager->GetURL(inst, relativeURL, target);
+    return mPluginManager->GetURL(inst, relativeURL, target);
 }
 
 nsresult NP_EXPORT
@@ -322,13 +315,13 @@ ns4xPlugin::_geturlnotify(NPP npp, const char* relativeURL, const char* target,
     nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
     NS_ASSERTION(inst != NULL, "null instance");
-    NS_ASSERTION(mNetworkManager != NULL, "null manager");
+    NS_ASSERTION(mPluginManager != NULL, "null manager");
 
     if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
-    return mNetworkManager->GetURL(inst, relativeURL, target,
-                                   notifyData);
+    return mPluginManager->GetURL(inst, relativeURL, target,
+                                  notifyData);
 }
 
 
@@ -340,13 +333,13 @@ ns4xPlugin::_posturlnotify(NPP npp, const char* relativeURL, const char *target,
     nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
     NS_ASSERTION(inst != NULL, "null instance");
-    NS_ASSERTION(mNetworkManager != NULL, "null manager");
+    NS_ASSERTION(mPluginManager != NULL, "null manager");
 
     if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
-    return mNetworkManager->PostURL(inst, relativeURL, target,
-                                    len, buf, file, notifyData);
+    return mPluginManager->PostURL(inst, relativeURL, target,
+                                   len, buf, file, notifyData);
 }
 
 
@@ -357,13 +350,13 @@ ns4xPlugin::_posturl(NPP npp, const char* relativeURL, const char *target, uint3
     nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
     NS_ASSERTION(inst != NULL, "null instance");
-    NS_ASSERTION(mNetworkManager != NULL, "null manager");
+    NS_ASSERTION(mPluginManager != NULL, "null manager");
 
     if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
-    return mNetworkManager->PostURL(inst, relativeURL, target,
-                                    len, buf, file);
+    return mPluginManager->PostURL(inst, relativeURL, target,
+                                   len, buf, file);
 }
 
 ////////////////////////////////////////////////////////////////////////

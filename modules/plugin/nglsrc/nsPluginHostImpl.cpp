@@ -38,7 +38,6 @@
 static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID); 
 static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID); 
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
-static NS_DEFINE_IID(kINetworkManagerIID, NS_INETWORKMANAGER_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIPluginStreamPeerIID, NS_IPLUGINSTREAMPEER_IID);
 static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID);
@@ -507,13 +506,6 @@ nsresult nsPluginHostImpl :: QueryInterface(const nsIID& aIID,
   if (aIID.Equals(kIPluginHostIID))
   {
     *aInstancePtrResult = (void *)((nsIPluginHost *)this);
-    AddRef();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(kINetworkManagerIID))
-  {
-    *aInstancePtrResult = (void *)((nsINetworkManager *)this);
     AddRef();
     return NS_OK;
   }
