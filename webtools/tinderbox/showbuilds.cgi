@@ -844,7 +844,7 @@ xmlns="http://my.netscape.com/rdf/simple/0.9/">
     require "$tree/treedata.pl";
     if ($bonsai_tree ne "") {
         my $state = tree_open() ? "OPEN" : "CLOSED";
-        print "<item><title>The tree is currently $state</title></item>\n";
+        print "<item><title>The tree is currently $state</title><link>$mainurl</link></item>\n";
     }
     my %build;
     my %times;
@@ -852,7 +852,7 @@ xmlns="http://my.netscape.com/rdf/simple/0.9/">
     
     for my $buildname (sort(keys %build)) {
         if ($build{$buildname} eq 'busted') {
-            print "<item><title>$buildname is in flames</title></item>\n";
+            print "<item><title>$buildname is in flames</title><link>$mainurl</link></item>\n";
         }
     }
     print "</rdf:RDF>\n";
