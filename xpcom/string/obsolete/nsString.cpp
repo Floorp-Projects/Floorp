@@ -958,7 +958,7 @@ void nsCString::AssignWithConversion(PRUnichar aChar) {
 #ifdef NEW_STRING_APIS
 void nsCString::do_AppendFromReadable( const nsAReadableCString& aReadable )
   {
-    if ( SameImplementation(*this, aReadable) )
+    if ( SameImplementation( NS_STATIC_CAST(const nsAReadableCString&, *this), aReadable) )
       StrAppend(*this, NS_STATIC_CAST(const nsCString&, aReadable), 0, aReadable.Length());
     else
       nsAWritableCString::do_AppendFromReadable(aReadable);
@@ -1200,7 +1200,7 @@ void nsCString::InsertWithConversion(PRUnichar aChar,PRUint32 anOffset){
 #ifdef NEW_STRING_APIS
 void nsCString::do_InsertFromReadable( const nsAReadableCString& aReadable, PRUint32 atPosition )
   {
-    if ( SameImplementation(*this, aReadable) )
+    if ( SameImplementation( NS_STATIC_CAST(const nsAReadableCString&, *this), aReadable) )
       StrInsert(*this, atPosition, NS_STATIC_CAST(const nsCString&, aReadable), 0, aReadable.Length());
     else
       nsAWritableCString::do_InsertFromReadable(aReadable, atPosition);
