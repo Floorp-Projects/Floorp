@@ -215,9 +215,9 @@ test++; //22
 if (this.toString() != "[object Object]") badTest += test + " ";
 
 
-function f1(a,b,...c) { return a - (b + c["e"]); }
+function f1(a, b = 3, ...f, named c = 4, named d = 5, named e = 6) { return a + b + c + d + e + f.g; }
 test++; //23
-if (f1(2, "a":13, "e":5) != 6)  badTest += test + " ";
+if (f1(2, "e":1, "c":5, "g":-16) != 0)  badTest += test + " ";
 
 
 if (badTest == 0) print("still sane (after " + test + " tests)") else print("gone off the deep end at test #" + badTest);
