@@ -48,8 +48,8 @@ public:
   //////////////////////////
   //  nsITransferable
   //////////////////////////
-  NS_IMETHOD FlavorsTransferableCanExport ( nsISupportsArray** outFlavorList ) ;
-  NS_IMETHOD GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList);
+  NS_IMETHOD FlavorsTransferableCanExport ( nsVoidArray** outFlavorList ) ;
+  NS_IMETHOD GetTransferDataFlavors(nsVoidArray ** aDataFlavorList);
 
    // Transferable still owns |aData|. Do not delete it.
   NS_IMETHOD GetTransferData(nsString * aFlavor, void ** aData, PRUint32 * aDataLen);
