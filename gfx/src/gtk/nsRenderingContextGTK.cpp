@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsFixedSizeAllocator.h"
 #include "nsRenderingContextGTK.h"
 #include "nsRegionGTK.h"
 #include "nsImageGTK.h"
@@ -70,6 +71,7 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
   PR_END_MACRO
 
 static nsGCCache *gcCache = nsnull;
+static nsFixedSizeAllocator *gStatePool = nsnull;
 
 nsRenderingContextGTK::nsRenderingContextGTK()
 {
@@ -98,8 +100,14 @@ nsRenderingContextGTK::~nsRenderingContextGTK()
   while (--cnt >= 0)
     PopState();
 
-  if (mTranMatrix)
-    delete mTranMatrix;
+  if (mTranMatrix) {
+    if (gStatePool) {
+      mTranMatrix->~nsTransform2D();
+      gStatePool->Free(mTranMatrix, sizeof(nsTransform2D));
+    } else {
+      delete mTranMatrix;
+    }
+  }
   NS_IF_RELEASE(mOffscreenSurface);
   NS_IF_RELEASE(mFontMetrics);
   NS_IF_RELEASE(mContext);
@@ -117,6 +125,7 @@ nsRenderingContextGTK::~nsRenderingContextGTK()
 nsRenderingContextGTK::Shutdown()
 {
   delete gcCache;
+  delete gStatePool;
   return NS_OK;
 }
 
@@ -311,24 +320,45 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(PRInt32 aFlags)
   return NS_OK;
 }
 #endif
+
 NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
 {
   //  Get a new GS
-#ifdef USE_GS_POOL
-  nsGraphicsState *state = nsGraphicsStatePool::GetNewGS();
-#else
-  nsGraphicsState *state = new nsGraphicsState;
-#endif
+  if (!gStatePool) {
+    gStatePool = new nsFixedSizeAllocator();
+    size_t sizes[] = {sizeof(nsGraphicsState), sizeof(nsTransform2D)};
+    if (gStatePool)
+      gStatePool->Init("GTKStatePool", sizes, sizeof(sizes)/sizeof(size_t),
+                       sizeof(nsGraphicsState)*64);
+  }
+
+  nsGraphicsState *state = nsnull;
+  if (gStatePool) {
+    void *space = gStatePool->Alloc(sizeof(nsGraphicsState));
+    if (space)
+      state = ::new(space) nsGraphicsState;
+  } else {
+    state = new nsGraphicsState;
+  }
+
   // Push into this state object, add to vector
   if (!state)
     return NS_ERROR_FAILURE;
 
   state->mMatrix = mTranMatrix;
 
-  if (nsnull == mTranMatrix)
-    mTranMatrix = new nsTransform2D();
-  else
-    mTranMatrix = new nsTransform2D(mTranMatrix);
+  if (gStatePool) {
+    void *space = gStatePool->Alloc(sizeof(nsTransform2D));
+    if (mTranMatrix)
+      mTranMatrix = ::new(space) nsTransform2D(mTranMatrix);
+    else
+      mTranMatrix = ::new(space) nsTransform2D();
+  } else {
+    if (mTranMatrix)
+      mTranMatrix = ::new nsTransform2D(mTranMatrix);
+    else
+      mTranMatrix = ::new nsTransform2D();
+  }
 
   // set state to mClipRegion.. SetClip{Rect,Region}() will do copy-on-write stuff
   state->mClipRegion = mClipRegion;
@@ -355,8 +385,14 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(void)
 
     // Assign all local attributes from the state object just popped
     if (state->mMatrix) {
-      if (mTranMatrix)
-        delete mTranMatrix;
+      if (mTranMatrix) {
+        if (gStatePool) {
+          mTranMatrix->~nsTransform2D();
+          gStatePool->Free(mTranMatrix, sizeof(nsTransform2D));
+        } else {
+          delete mTranMatrix;
+        }
+      }
       mTranMatrix = state->mMatrix;
     }
 
@@ -372,11 +408,12 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(void)
       SetLineStyle(state->mLineStyle);
 
     // Delete this graphics state object
-#ifdef USE_GS_POOL
-    nsGraphicsStatePool::ReleaseGS(state);
-#else
-    delete state;
-#endif
+    if (gStatePool) {
+      state->~nsGraphicsState();
+      gStatePool->Free(state, sizeof(nsGraphicsState));
+    } else {
+      delete state;
+    }
   }
 
   return NS_OK;
