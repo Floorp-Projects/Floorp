@@ -1545,9 +1545,10 @@ nsresult nsHTTPChannel::ResponseCompleted(
 {
     nsresult rv = NS_OK;
 
-    PR_LOG(gHTTPLog, PR_LOG_ERROR, ("nsHTTPChannel::ResponseComplete() [this=%x] "
-                " mDataListenet=%x, Status=%o\n",
-                this, mResponseDataListener, aStatus));
+    PR_LOG(gHTTPLog, PR_LOG_ERROR,
+            ("nsHTTPChannel::ResponseComplete() [this=%x] "
+             " mDataListenet=%x, Status=%o\n",
+             this, (void*)mResponseDataListener, aStatus));
 
 #if 0
     if (NS_FAILED (aStatus) && !mResponse)
@@ -1712,6 +1713,15 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
     nsIChannel* channel;
     if (!iChallenge)
         return NS_ERROR_NULL_POINTER;
+
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    //flush out existing records of this URI in authengine-
+    nsAuthEngine* pEngine;
+    if (NS_SUCCEEDED(mHandler->GetAuthEngine(&pEngine))) 
+    {
+        rv = pEngine->SetAuthString(mURI, 0);
+    }
     
     // Determine the new username password combination to use 
     char* newUserPass = nsnull;
@@ -1722,8 +1732,6 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         if (NS_SUCCEEDED(rv = mURI->GetPreHost(getter_Copies(prehost))))
         {
             if ((const char*)prehost) {
-                NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-                if (NS_FAILED(rv)) return rv;
                 rv = serv->Unescape(prehost, &newUserPass);
                 if (NS_FAILED(rv)) return rv;
             }
@@ -1783,9 +1791,6 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         return rv; // Failed to construct an authentication string.
 
     // Construct a new channel
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     // For security/privacy purposes, a response to an authenticated request is
     // not cached, except perhaps in the memory cache.
     mLoadAttributes |= nsIChannel::INHIBIT_PERSISTENT_CACHING;
@@ -1892,10 +1897,10 @@ nsHTTPChannel::ProcessStatusCode(void)
                         mProxy, mProxyPort, authString);
             }
 
-            if (statusCode != 401 && mAuthTriedWithPrehost) 
+            if ((statusCode != 401) && mAuthTriedWithPrehost)
             {
                 rv = GetRequestHeader(nsHTTPAtoms::Authorization,
-                                getter_Copies(authString));
+                        getter_Copies(authString));
                 pEngine->SetAuthString(mURI, authString);
             }
         }
@@ -2113,7 +2118,7 @@ nsHTTPChannel::ProcessAuthentication(PRInt32 aStatusCode)
 
     nsresult rv = NS_OK; // Let life go on...
     nsXPIDLCString challenge; // identifies the auth type and realm.
-    
+
     if (401 == aStatusCode)
     {
         rv = GetResponseHeader(nsHTTPAtoms::WWW_Authenticate, 
@@ -2126,6 +2131,7 @@ nsHTTPChannel::ProcessAuthentication(PRInt32 aStatusCode)
     }
     else 
         return rv;
+
     // We can't send user-password without this challenge.
     if (NS_FAILED(rv) || !challenge || !*challenge)
         return rv;
