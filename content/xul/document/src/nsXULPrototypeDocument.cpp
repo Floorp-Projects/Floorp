@@ -166,12 +166,6 @@ nsXULPDGlobalObject_finalize(JSContext *cx, JSObject *obj)
 JSBool PR_CALLBACK
 nsXULPDGlobalObject_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
-    if (JSVAL_IS_STRING(id)) {
-        JSString *str = JSVAL_TO_STRING(id);
-
-        jschar *s = ::JS_GetStringChars(str);
-    }
-
     JSBool did_resolve = JS_FALSE;
 
     return JS_ResolveStandardClass(cx, obj, id, &did_resolve);
