@@ -146,3 +146,6 @@ install: all
 
 clean:
 	rm -f treeconfig.pl params
+
+distclean: clean
+	rm -f config.cache config.log confdefs.h Makefile

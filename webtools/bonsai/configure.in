@@ -23,13 +23,15 @@ else
     AC_MSG_RESULT([yes])    
 fi
 
-AC_PERL_DB
-AC_PERL_DATEPARSE
+AC_PATH_PROG(CO, co)
+AC_PATH_PROG(CVS, cvs)
+AC_PATH_PROG(CVSGRAPH, cvsgraph)
+AC_PATH_PROG(RLOG, rlog)
+AC_PATH_PROG(RCSDIFF, rcsdiff)
 
-AC_PATH_PROG(CO,co)
-AC_PATH_PROG(CVS,cvs)
-AC_PATH_PROG(RLOG,rlog)
-AC_PATH_PROG(RCSDIFF,rcsdiff)
+if test -z "$CO" -o -z "$CVS" -o -z "$RLOG" -o -z "$RCSDIFF"; then
+   AC_MSG_ERROR([Missing one or more required binaries.])
+fi
 
 
 dnl Checks for libraries.
@@ -39,6 +41,22 @@ dnl Checks for header files.
 dnl Checks for typedefs, structures, and compiler characteristics.
 
 dnl Checks for library functions.
+AC_CHECK_PERL_MODULES([ \
+	CGI::Carp \
+	DBD::mysql \
+	DBI \
+	Date::Format \
+	Date::Parse \
+	File::Basename \
+	File::Path \
+	Mail::Internet \
+	Mail::Mailer \
+	Time::Local \
+],,_missing_perl_mod=1)
+
+if test -n "$_missing_perl_mod"; then
+   AC_MSG_ERROR([Missing one or more required Perl modules.])
+fi
 
 AC_OUTPUT(Makefile)
 AC_OUTPUT_COMMANDS([echo type 'make install' to install bonsai])
