@@ -141,7 +141,7 @@ CSharedParserObjects gSharedParserObjects;
  *  @param   
  *  @return   
  */
-nsParser::nsParser(nsITokenObserver* anObserver) : mCommand("") {
+nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput("") {
   NS_INIT_REFCNT();
   mParserFilter = 0;
   mObserver = 0;
@@ -519,7 +519,21 @@ CParserContext* nsParser::PopContext() {
  *  and tokenize input (TRUE), or whether it just caches input to be 
  *  parsed later (FALSE).
  *  
- *  @update  vidur 12/11/98
+ *  @update  gess 1/29/99
+ *  @param   aState determines whether we parse/tokenize or just cache.
+ *  @return  current state
+ */
+void nsParser::SetUnusedInput(nsString& aBuffer) {
+  mUnusedInput=aBuffer;
+}
+
+
+/**
+ *  Call this when you want control whether or not the parser will parse
+ *  and tokenize input (TRUE), or whether it just caches input to be 
+ *  parsed later (FALSE).
+ *  
+ *  @update  gess 1/29/99
  *  @param   aState determines whether we parse/tokenize or just cache.
  *  @return  current state
  */
@@ -629,32 +643,36 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEna
   //NOTE: Make sure that updates to this method don't cause 
   //      bug #2361 to break again!
 
-  mDTDVerification=aEnableVerify;
   nsresult result=NS_OK;
-  CParserContext* pc=0; 
+  if(aSourceBuffer.Length() || mUnusedInput.Length()) {
+    mDTDVerification=aEnableVerify;
+    CParserContext* pc=0; 
 
-  if((!mParserContext) || (mParserContext->mKey!=&aSourceBuffer))  {
-    //only make a new context if we dont have one, OR if we do, but has a different context key...
-    pc=new CParserContext(new nsScanner(aSourceBuffer),&aSourceBuffer,0);
-    if(pc) {
-      PushContext(*pc);
-      pc->mStreamListenerState=eOnStart;  
-      pc->mContextType=CParserContext::eCTString;
-      if(PR_TRUE==anHTMLString)
-        pc->mSourceType="text/html";
-    } 
-    else return NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    pc=mParserContext;
+    if((!mParserContext) || (mParserContext->mKey!=&aSourceBuffer))  {
+      //only make a new context if we dont have one, OR if we do, but has a different context key...
+      pc=new CParserContext(new nsScanner(mUnusedInput),&aSourceBuffer,0);
+      if(pc) {
+        PushContext(*pc);
+        pc->mStreamListenerState=eOnStart;  
+        pc->mContextType=CParserContext::eCTString;
+        if(PR_TRUE==anHTMLString)
+          pc->mSourceType="text/html";
+      } 
+      else return NS_ERROR_OUT_OF_MEMORY;
+    }
+    else {
+      pc=mParserContext;
+      pc->mScanner->Append(mUnusedInput);
+    }
     pc->mScanner->Append(aSourceBuffer);
-  }
-  pc->mMultipart=!aLastCall;
-  result=ResumeParse();
-  if(aLastCall) {
-    pc=PopContext(); 
-    delete pc;
-  }
+    pc->mMultipart=!aLastCall;
+    result=ResumeParse();
+    if(aLastCall) {
+      pc->mScanner->CopyUnusedData(mUnusedInput);
+      pc=PopContext(); 
+      delete pc;
+    }//if
+  }//if
   return result;
 }
 

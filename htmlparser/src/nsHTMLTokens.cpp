@@ -580,7 +580,7 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
 
 
 /*
- *  default constructor
+ *  Default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aName -- string to init token name with
@@ -591,7 +591,7 @@ CCommentToken::CCommentToken() : CHTMLToken(eHTMLTag_comment) {
 
 
 /*
- *  Default constructor
+ *  Copy constructor
  *  
  *  @update  gess 3/25/98
  *  @param   
@@ -602,46 +602,139 @@ CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
 }
 
 /*
+ *  This method consumes a comment using the (CORRECT) comment parsing
+ *  algorithm supplied by W3C. 
+ *  
+ *  @update  gess 01/04/99
+ *  @param   
+ *  @param   
+ *  @return  
+ */
+nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) {
+  static    nsAutoString gMinus("-");
+  nsresult  result=NS_OK;
+ 
+  /*********************************************************
+    NOTE: This algorithm does a fine job of handling comments
+          when they're formatted per spec, but if they're not
+          we don't handle them well. For example, we gack
+          on the following:
+
+          <!-- xx -- xx --> 
+   *********************************************************/
+
+  aString="<!";
+  while(NS_OK==result) {
+    result=aScanner.GetChar(aChar);
+    if(NS_OK==result) {
+      aString+=aChar;
+      if(kMinus==aChar) {
+        result=aScanner.GetChar(aChar);
+        if(NS_OK==result) {
+          if(kMinus==aChar) {
+               //in this case, we're reading a long-form comment <-- xxx -->
+            aString+=aChar;
+            result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_FALSE);  //get all available '---'
+            if(NS_OK==result) {
+              PRInt32 findpos=-1;
+              nsAutoString temp("");
+              //Read to the first ending sequence '--'
+              while((kNotFound==findpos) && (NS_OK==result)) {
+                result=aScanner.ReadUntil(temp,kMinus,PR_TRUE);
+                findpos=temp.RFind("--");
+              } 
+              aString+=temp;
+              if(NS_OK==result) {
+                result=aScanner.ReadWhile(aString,gMinus,PR_TRUE,PR_FALSE);  //get all available '---'
+                if(NS_OK==result) {
+                  temp="->";
+                  result=aScanner.ReadUntil(aString,temp,PR_FALSE,PR_FALSE);
+                }
+              } 
+            }
+          } //
+          else break; //go find '>'
+        }
+      }//if
+      else if(kGreaterThan==aChar) {
+        return result;
+      }
+      else break; //go find '>'
+    }//if
+  }//while
+  if(NS_OK==result) {
+     //if you're here, we're consuming a "short-form" comment
+    result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);
+  }
+  return result;
+}
+
+/*
+ *  This method consumes a comment using common (actually non-standard)
+ *  algorithm that seems to work against the content on the web.
+ *  
+ *  @update  gess 01/04/99
+ *  @param   
+ *  @param   
+ *  @return  
+ */
+nsresult ConsumeComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) {
+  static    nsAutoString gMinus("-");
+  nsresult  result=NS_OK;
+ 
+  /*********************************************************
+    NOTE: This algorithm does a fine job of handling comments
+          commonly used, but it doesn't really consume them
+          per spec (But then, neither does IE or Nav).
+   *********************************************************/
+
+  aString="<!";
+  result=aScanner.GetChar(aChar);
+  if(NS_OK==result) {
+    aString+=aChar;
+    if(kMinus==aChar) {
+      result=aScanner.GetChar(aChar);
+      if(NS_OK==result) {
+        if(kMinus==aChar) {
+             //in this case, we're reading a long-form comment <-- xxx -->
+          aString+=aChar;
+          nsAutoString temp("");
+          PRBool done=PR_FALSE;
+          PRInt32 findpos=kNotFound;
+          result=aScanner.ReadWhile(temp,gMinus,PR_TRUE,PR_TRUE);  //get all available '---'
+          while((kNotFound==findpos) && (NS_OK==result)) {
+            result=aScanner.ReadUntil(temp,kMinus,PR_TRUE);
+            if(NS_OK==result) {
+              result=aScanner.ReadWhile(temp,gMinus,PR_TRUE,PR_TRUE);  //get all available '---'
+            }
+            findpos=temp.RFind("->");
+            aString+=temp;
+            temp="";
+          } //while
+          return result;
+        } //if
+      }//if
+    }//if
+  }//if
+  if(NS_OK==result) {
+     //Read up to the closing '>'
+    result=aScanner.ReadUntil(aString,kGreaterThan,PR_TRUE);
+  }
+  return result;
+}
+
+/*
  *  Consume the identifier portion of the comment. 
  *  Note that we've already eaten the "<!" portion.
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 1/27/99
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
  */
 nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
-
-  nsresult  result=NS_OK;
-    
-  result=aScanner.GetChar(aChar);
-  if(NS_OK==result) {
-    mTextValue="<!";
-    if(kMinus==aChar) {
-      mTextValue+="-";
-      result=aScanner.GetChar(aChar);
-      if(NS_OK==result) {
-        if(kMinus==aChar) {
-             //in this case, we're reading a long-form comment <-- xxx -->
-          mTextValue+="-";
-          PRInt32 findpos=-1;
-          while((findpos<3) && (NS_OK==result)) {
-            result=aScanner.ReadUntil(mTextValue,kMinus,PR_TRUE);
-            findpos=mTextValue.RFind("--");
-          }
-          if(NS_OK==result) {
-            result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE); //now skip to '>'
-          }
-          return result;
-        }
-      }
-    }
-  }
-  if(NS_OK==result) {
-     //if you're here, we're consuming a "short-form" comment
-    mTextValue+=aChar;
-    result=aScanner.ReadUntil(mTextValue,kGreaterThan,PR_TRUE);
-  }
+  PRBool theStrictForm=PR_FALSE;
+  nsresult result=(theStrictForm) ? ConsumeStrictComment(aChar,aScanner,mTextValue) : ConsumeComment(aChar,aScanner,mTextValue);
   return result;
 }
 
@@ -842,7 +935,7 @@ void CAttributeToken::DebugDumpToken(ostream& out) {
   mTextValue.ToCString(buffer,sizeof(buffer)-1);
   out << buffer << ": " << mTypeID << endl;
 }
-
+ 
 
 /*
  *  This general purpose method is used when you want to
@@ -872,6 +965,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
   PRUnichar ch=aString.Last();
   if(ch!=aChar)
     aString+=aChar;
+  aString.StripChars("\r\n");
   return result;
 }
 

@@ -1268,7 +1268,7 @@ nsHTMLDocument::WriteCommon(JSContext *cx,
       str.Append('\n');
     }
 
-    result = mParser->Parse(str, PR_TRUE,PR_FALSE,PR_FALSE);
+    result = mParser->Parse(str, PR_TRUE,PR_FALSE,PR_TRUE);
     if (NS_OK != result) {
       return result;
     }
