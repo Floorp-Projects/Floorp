@@ -63,7 +63,7 @@
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
-    <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/calendarMenuOverlay.dtd" > %calendarMenuOverlayDTD;
+    <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
 ]>
 
 

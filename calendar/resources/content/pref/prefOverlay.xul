@@ -36,7 +36,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!DOCTYPE overlay [
-   <!ENTITY % calendarPrefsOverlayDTD SYSTEM "chrome://calendar/locale/calendarPrefs.dtd" >
+   <!ENTITY % calendarPrefsOverlayDTD SYSTEM "chrome://calendar/locale/prefs.dtd" >
    %calendarPrefsOverlayDTD;
 ]>
 

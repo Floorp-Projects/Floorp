@@ -46,7 +46,7 @@
 [
 	<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" > %navigatorDTD;
    <!ENTITY % calendarDTD SYSTEM "chrome://calendar/locale/calendar.dtd" > %calendarDTD;
-	<!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/calendarMenuOverlay.dtd" > %calendarMenuOverlayDTD;
+	<!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
 ]>
 
 <overlay id="calendarOverlay"

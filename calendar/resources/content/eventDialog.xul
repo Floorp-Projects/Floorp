@@ -45,21 +45,21 @@
 <?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
-<?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
+<?xml-stylesheet href="chrome://calendar/skin/eventDialog.css" ?>
 <?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
 
 <?xml-stylesheet href="chrome://calendar/context/datepicker/datepicker.css" ?>
 <?xml-stylesheet href="chrome://calendar/context/datepicker/calendar.css" ?>
 
 <!-- CSS for selecting contacts to invite to event -->
-<?xml-stylesheet href="chrome://calendar/skin/contactsSelectAddressesDialog.css" ?>
+<?xml-stylesheet href="chrome://calendar/skin/selectAddresses.css" ?>
 
 <!-- DTD File with all strings specific to the calendar -->
 <!DOCTYPE dialog 
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
-    <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/contactsSelectAddressesDialog.dtd" > %dtd3;
+    <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/selectAddresses.dtd" > %dtd3;
 ]>
 
 

@@ -63,11 +63,11 @@
    
   <!-- calendar pref page -->
   <RDF:Seq about="chrome://communicator/content/pref/preftree.xul">
-    <RDF:li>chrome://calendar/content/pref/calendarPrefOverlay.xul</RDF:li>
+    <RDF:li>chrome://calendar/content/pref/prefOverlay.xul</RDF:li>
   </RDF:Seq>
   
   <!-- calendar startup pref -->
   <RDF:Seq about="chrome://communicator/content/pref/pref-appearance.xul">
-    <RDF:li>chrome://calendar/content/pref/calendarPrefOverlay.xul</RDF:li>
+    <RDF:li>chrome://calendar/content/pref/prefOverlay.xul</RDF:li>
   </RDF:Seq>
 </RDF:RDF>

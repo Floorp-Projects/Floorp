@@ -43,7 +43,7 @@
 <?xul-overlay href="chrome://calendar/content/timepicker/timepicker-overlay.xul"?>
 
 <!-- CSS File with all styles specific to the dialog -->
-<?xml-stylesheet href="chrome://calendar/skin/calendarEventDialog.css" ?>
+<?xml-stylesheet href="chrome://calendar/skin/eventDialog.css" ?>
 <?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
 
 <?xml-stylesheet href="chrome://calendar/context/datepicker/datepicker.css" ?>

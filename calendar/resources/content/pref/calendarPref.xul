@@ -42,7 +42,7 @@
 <!-- DTD File with all strings specific to the file -->
 <!DOCTYPE page 
 [
-    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/calendarPrefs.dtd" > %dtd1;
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/prefs.dtd" > %dtd1;
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -39,9 +39,9 @@
 
 
 
-<?xml-stylesheet href="chrome://calendar/skin/calendarOverlay.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://calendar/skin/overlay.css" type="text/css"?> 
 
-<!DOCTYPE overlay SYSTEM "chrome://calendar/locale/calendarOverlay.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://calendar/locale/overlay.dtd" >
 
 <!-- This is the overlay that addes "Calendar" to the (global) task menu and to the component bar icons on the status bar. -->
 
