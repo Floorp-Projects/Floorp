@@ -206,9 +206,6 @@ CFLAGS=$(CFLAGS) -DMODULAR_NETLIB -DNS_MT_SUPPORTED -DNETLIB_THREAD -DNS_NET_FIL
 # Defines for cookie management feature...
 CFLAGS=$(CFLAGS) -DCookieManagement
 
-# Defines for new clipboard support
-CFLAGS=$(CFLAGS) -DNEW_CLIPBOARD_SUPPORT
-
 # Defines for single signon and client wallet features...
 !ifndef MOZ_NO_WALLET_HACK
 CFLAGS=$(CFLAGS) -DSingleSignon -DClientWallet
