@@ -121,16 +121,18 @@
   <h3>UNIX, Windows (gmake), Mac (mach-o)</h3>
 
   <ol>
-   <li>Get a bog standard Mozilla tree built.</li>
-   <li>if you have MOZ_OBJDIR set in your mozconfig file, <kbd>cd</kbd>
-   to that directory</li>
-   <li><kbd>sh -c "CONFIG_FILES=browser/Makefile ./config.status"</kbd></li>
-   <li><kbd>cd browser</kbd></li>
-   <li><kbd>make</kbd></li>
-   <li>Run mozilla with arguments <kbd>-chrome chrome://browser/content/</kbd></li>
+   <li>Ensure that MOZ_PHOENIX is set to 1 in your .mozconfig file. A good .mozconfig file is shown below:<br>
+       <br>
+       <code>
+        mk_add_options MOZ_PHOENIX=1<br>
+        ac_add_options --enable-crypto<br>
+        ac_add_options --disable-tests<br>
+        ac_add_options --disable-debug<br>
+        ac_add_options --enable-optimize=-O2<br>
+        <br>
+       </code>
+   <li>Run the mozbrowser executable that is left in dist/bin</li>
   </ol>
-
-  Note that steps 2 and 3 need only be run once.
 
   <h2>Mac (CodeWarrior)</h2>
 
