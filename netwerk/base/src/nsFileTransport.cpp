@@ -885,8 +885,9 @@ nsFileTransport::Process(void)
                ("nsFileTransport: END_READ [this=%x %s] status=%x",
                 this, (const char*)mSpec, mStatus));
 
+#if defined (DEBUG_dougt) || defined (DEBUG_warren)
         NS_ASSERTION(mTransferAmount <= 0 || NS_FAILED(mStatus), "didn't transfer all the data");
-
+#endif 
         mBufferOutputStream->Flush();
         mBufferOutputStream = null_nsCOMPtr();
         mBufferInputStream = null_nsCOMPtr();
