@@ -178,6 +178,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
     mEventCallback = nsnull;
     RemoveDamagedWidget(mWidget);
     PtDestroyWidget( mWidget );
+
     mWidget = nsnull;
 
     if( PR_FALSE == mOnDestroyCalled )
@@ -2103,7 +2104,7 @@ void nsWidget::UpdateWidgetDamage()
         extent.lr.x = extent.ul.x + temp_rect.width - 1;
         extent.lr.y = extent.ul.y + temp_rect.height - 1;
 
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::UpdateWidgetDamaged this=<%p> extent=(%d,%d,%d,%d)\n", this, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y));
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::UpdateWidgetDamaged this=<%p> mWidget=<%p> extent=(%d,%d,%d,%d)\n", this, mWidget, extent.ul.x, extent.ul.y, extent.lr.x, extent.lr.y));
 
         PtDamageExtent( mWidget, &extent );
       }
