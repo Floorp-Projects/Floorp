@@ -253,7 +253,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   if (mouseEvent) {
     PRUint16 whichButton;
     if (NS_SUCCEEDED(mouseEvent->GetButton(&whichButton))) {
-      if (whichButton != 1) {
+      if (whichButton != 0) {
         return NS_OK;
       }
     }
