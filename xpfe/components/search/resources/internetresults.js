@@ -5,7 +5,6 @@ function doClick(node)
 
 	var theID = node.getAttribute("id");
 	if (!theID)	return(false);
-	dump("You single-clicked on '" + theID + "'.\n");
 
 	try
 	{
@@ -25,18 +24,19 @@ function doClick(node)
 				{
 					htmlText = target;
 
-					var htmlArea = window.frames["content-frame"];
+					var htmlArea = window.content;
 					if (htmlArea)
 					{
-						htmlArea.document.open("text/html", "replace");
+						htmlArea.open();
 
-						htmlArea.document.writeln("<HTML><BODY><TABLE><TR><TD>");
-						htmlArea.document.writeln(target);
-						htmlArea.document.writeln("</TD></TR></TABLE></BODY></HTML>");
+//						htmlArea.write("<HTML><BODY><TABLE><TR><TD>");
+//						htmlArea.write(target);
+//						htmlArea.write("</TD></TR></TABLE></BODY></HTML>\n");
 
-						htmlArea.document.close();
+						htmlArea.close();
+						
+						dump("HTML\n----------\n" + target + "\n----------\n");
 					}
-					else dump("no html area.\n");
 				}
 			}
 		}
