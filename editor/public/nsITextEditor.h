@@ -31,7 +31,8 @@ class nsIEditorCallback;
 class nsISupportsArray;
 class nsIAtom;
 class nsIInputStream;
-class nsIOutputStream;
+//class nsIOutputStream;
+class nsString;
 
 /**
  * The general text editor interface. 
@@ -234,8 +235,8 @@ public:
 // Input/Output
   // nsString will be a stream, as soon as I can figure out what kind of stream we should be using
   NS_IMETHOD Insert(nsIInputStream *aInputStream)=0;
-  NS_IMETHOD OutputText(nsIOutputStream *aOutputStream)=0;
-  NS_IMETHOD OutputHTML(nsIOutputStream *aOutputStream)=0;
+  NS_IMETHOD OutputText(nsString& aOutputString)=0;
+  NS_IMETHOD OutputHTML(nsString& aOutputString)=0;
 
 // Miscellaneous Methods
   /*

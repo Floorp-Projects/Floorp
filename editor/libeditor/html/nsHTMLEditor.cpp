@@ -213,14 +213,14 @@ NS_IMETHODIMP nsHTMLEditor::Insert(nsIInputStream *aInputStream)
   return Inherited::Insert(aInputStream);
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputText(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP nsHTMLEditor::OutputText(nsString& aOutputString)
 {
-  return Inherited::OutputText(aOutputStream);
+  return Inherited::OutputText(aOutputString);
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsIOutputStream *aOutputStream)
+NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsString& aOutputString)
 {
-  return Inherited::OutputHTML(aOutputStream);
+  return Inherited::OutputHTML(aOutputString);
 }
 
 //================================================================

@@ -73,8 +73,8 @@ public:
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
 
   NS_IMETHOD Insert(nsIInputStream *aInputStream)=0;
-  NS_IMETHOD OutputText(nsIOutputStream *aOutputStream)=0;
-  NS_IMETHOD OutputHTML(nsIOutputStream *aOutputStream)=0;
+  NS_IMETHOD OutputText(nsString& aOutputString)=0;
+  NS_IMETHOD OutputHTML(nsString& aOutputString)=0;
 
 // Miscellaneous Methods
   /*
