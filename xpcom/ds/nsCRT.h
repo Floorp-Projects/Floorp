@@ -66,6 +66,11 @@ public:
     return PRInt32(PL_strcasecmp(s1, s2));
   }
 
+  /// Case-insensitive string comparison with length
+  static PRInt32 strncasecmp(const char* s1, const char* s2, PRInt32 aMaxLen) {
+    return PRInt32(PL_strncasecmp(s1, s2, aMaxLen));
+  }
+
   /// Like strlen except for ucs2 strings
   static PRInt32 strlen(const PRUnichar* s);
 
