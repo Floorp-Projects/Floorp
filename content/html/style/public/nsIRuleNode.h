@@ -305,6 +305,13 @@ class nsIRuleNode : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRULENODE_IID)
 
+  enum { // Types of RuleBits
+    eNoneBits,
+    eInheritBits
+  };
+
+  NS_IMETHOD GetBits(PRInt32 aType, PRUint32* aResult)=0;
+
   NS_IMETHOD Transition(nsIStyleRule* aRule, nsIRuleNode** aResult)=0;
   
   NS_IMETHOD GetParent(nsIRuleNode** aResult)=0;

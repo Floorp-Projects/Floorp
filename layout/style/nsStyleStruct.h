@@ -128,11 +128,14 @@ struct nsStyleFont : public nsStyleStruct {
   void* operator new(size_t sz, nsIPresContext* aContext);
   void Destroy(nsIPresContext* aContext);
 
-  nsFont  mFont;        // [inherited]
-  nsFont  mFixedFont;   // [inherited]
   PRUint8 mFlags;       // [inherited] See nsStyleConsts.h
+  nsFont  mFont;        // [inherited]
+  nscoord mSize;        // [inherited] Our "computed size". Can be different from mFont.size
+                        // which is our "actual size" and is enforced to be >= the user's
+                        // preferred min-size. mFont.size should be used for display purposes
+                        // while mSize is the value to return in getComputedStyle() for example.
 
-  nsStyleFont(const nsFont& aVariableFont, const nsFont& aFixedFont);
+  nsStyleFont(const nsFont& aFont);
   nsStyleFont(const nsStyleFont& aStyleFont);
   nsStyleFont(nsIPresContext* aPresContext);
 };

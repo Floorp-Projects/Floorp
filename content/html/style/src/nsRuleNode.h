@@ -241,6 +241,7 @@ public:
   static void CreateRootNode(nsIPresContext* aPresContext, nsIRuleNode** aResult);
 
   // The nsIRuleNode Interface
+  NS_IMETHOD GetBits(PRInt32 aType, PRUint32* aResult);
   NS_IMETHOD Transition(nsIStyleRule* aRule, nsIRuleNode** aResult);
   NS_IMETHOD GetParent(nsIRuleNode** aResult);
   NS_IMETHOD IsRoot(PRBool* aResult);
