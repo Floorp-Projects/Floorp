@@ -73,7 +73,7 @@ public:
 	nsresult ExecuteScriptEventHandler(PRInt32 handlerID);
 
 protected:
-	PRBool					mUseBlur;
+	PRBool					mUseBlurr;
 	nsITimer*				mLookupTimer;
 	PRInt32					mLookupInterval;
 	nsString				mEvtHdlrProp[LAST_ID];
