@@ -61,12 +61,12 @@
     //    integral type should result in a runtime error.
 
     a[i++] = new TestObject (
-         "dt.PUB_DOUBLE_REPRESENTATION = -9223372036854776000.6;"+
+         "dt.PUB_DOUBLE_REPRESENTATION = -9223372036854777000;"+
          "dt.setLong( dt )",
          "dt.PUB_LONG",
          "dt.getLong()",
          "typeof dt.getLong()",
-         -9223372036854776000,
+         "error",
          "number" );
 
     for ( i = 0; i < a.length; i++ ) {
