@@ -35,11 +35,13 @@
  * Nathan Pride, npride@wavo.com
  *    -- fixed a document base issue
  *
- * $Id: XSLTProcessor.cpp,v 1.14 2000/05/23 08:33:18 kvisco%ziplink.net Exp $
+ * $Id: XSLTProcessor.cpp,v 1.15 2000/06/11 16:56:06 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "XSLTProcessor.h"
-
+#ifdef MOZILLA
+#include "nsIObserverService.h"
+#endif
 
   //-----------------------------------/
  //- Implementation of XSLTProcessor -/
@@ -48,7 +50,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.14 $ $Date: 2000/05/23 08:33:18 $
+ * @version $Revision: 1.15 $ $Date: 2000/06/11 16:56:06 $
 **/
 
 /**
@@ -288,19 +290,19 @@ Document* XSLTProcessor::process
     XMLParser xmlParser;
     Document* xmlDoc = xmlParser.parse(xmlInput);
     if (!xmlDoc) {
-            String err("error reading XML document: ");
-            err.append(xmlParser.getErrorString());
-            notifyError(err, ErrorObserver::FATAL);
-            return 0;
+        String err("error reading XML document: ");
+        err.append(xmlParser.getErrorString());
+        notifyError(err, ErrorObserver::FATAL);
+        return 0;
     }
     //-- Read in XSL document
     Document* xslDoc = xmlParser.parse(xslInput);
     if (!xslDoc) {
-            String err("error reading XSL stylesheet document: ");
-            err.append(xmlParser.getErrorString());
-            notifyError(err, ErrorObserver::FATAL);
-            delete xmlDoc;
-            return 0;
+        String err("error reading XSL stylesheet document: ");
+        err.append(xmlParser.getErrorString());
+        notifyError(err, ErrorObserver::FATAL);
+        delete xmlDoc;
+        return 0;
     }
     Document* result = process(*xmlDoc, *xslDoc, documentBase);
     delete xmlDoc;
@@ -323,10 +325,10 @@ Document* XSLTProcessor::process(istream& xmlInput, String& documentBase) {
     XMLParser xmlParser;
     Document* xmlDoc = xmlParser.parse(xmlInput);
     if (!xmlDoc) {
-            String err("error reading XML document: ");
-            err.append(xmlParser.getErrorString());
-            notifyError(err, ErrorObserver::FATAL);
-            return 0;
+        String err("error reading XML document: ");
+        err.append(xmlParser.getErrorString());
+        notifyError(err, ErrorObserver::FATAL);
+        return 0;
     }
     //-- Read in XSL document
     String href;
@@ -339,11 +341,11 @@ Document* XSLTProcessor::process(istream& xmlInput, String& documentBase) {
         delete xslInput;
     }
     if (!xslDoc) {
-            String err("error reading XSL stylesheet document: ");
-            err.append(xmlParser.getErrorString());
-            notifyError(err, ErrorObserver::FATAL);
-            delete xmlDoc;
-            return 0;
+        String err("error reading XSL stylesheet document: ");
+        err.append(xmlParser.getErrorString());
+        notifyError(err, ErrorObserver::FATAL);
+        delete xmlDoc;
+        return 0;
     }
     Document* result = process(*xmlDoc, *xslDoc, documentBase);
     delete xmlDoc;
@@ -380,7 +382,7 @@ void XSLTProcessor::processTopLevel
         Node* node = nl->item(i);
         if (node->getNodeType() == Node::ELEMENT_NODE) {
             Element* element = (Element*)node;
-            DOMString name = element->getNodeName();
+            String name = element->getNodeName();
             switch (getElementType(name, ps)) {
                 case XSLType::ATTRIBUTE_SET:
                     ps->addAttributeSet(element);
@@ -399,64 +401,64 @@ void XSLTProcessor::processTopLevel
                     bindVariable(name, exprResult, MB_TRUE, ps);
                     break;
                 }
-   	        case XSLType::INCLUDE :
-		    {
+                case XSLType::INCLUDE :
+                {
 
                     String href = element->getAttribute(HREF_ATTR);
                     //-- Read in XSL document
 
                     if (ps->getInclude(href)) {
-		                String err("stylesheet already included: ");
+                        String err("stylesheet already included: ");
                         err.append(href);
                         notifyError(err, ErrorObserver::WARNING);
                         break;
-		             }
+                    }
 
                     //-- get document base
                     String documentBase;
                     String currentHref;
                     //ps->getDocumentHref(element->getOwnerDocument(),
-		            //		currentHref);
+                    //        currentHref);
                     if (currentHref.length() == 0) {
-		                documentBase.append(ps->getDocumentBase());
-		            }
+                        documentBase.append(ps->getDocumentBase());
+                    }
                     else {
                         //-- Fix for relative URIs (npride)
                         documentBase.append(ps->getDocumentBase());
                         documentBase.append('/');
                         //-- End fix
-		                URIUtils::getDocumentBase(currentHref, documentBase);
-		            }
+                        URIUtils::getDocumentBase(currentHref, documentBase);
+                    }
 
                     String errMsg;
                     istream* xslInput = URIUtils::getInputStream(href,documentBase,errMsg);
-		            Document* xslDoc = 0;
+                    Document* xslDoc = 0;
                     XMLParser xmlParser;
-		            if ( xslInput ) {
-		                xslDoc = xmlParser.parse(*xslInput);
-		                delete xslInput;
-		            }
-		            if (!xslDoc) {
-		                String err("error including XSL stylesheet: ");
+                    if ( xslInput ) {
+                        xslDoc = xmlParser.parse(*xslInput);
+                        delete xslInput;
+                    }
+                    if (!xslDoc) {
+                        String err("error including XSL stylesheet: ");
                         err.append(href);
                         err.append("; ");
-			            err.append(xmlParser.getErrorString());
-			            notifyError(err);
-		            }
+                        err.append(xmlParser.getErrorString());
+                        notifyError(err);
+                    }
                     else {
-		                //-- add stylesheet to list of includes
-		                ps->addInclude(href, xslDoc);
-		                processTopLevel(xslDoc, ps);
+                        //-- add stylesheet to list of includes
+                        ps->addInclude(href, xslDoc);
+                        processTopLevel(xslDoc, ps);
                     }
                     break;
 
-	          }
-	        case XSLType::OUTPUT :
-		{
+                }
+                case XSLType::OUTPUT :
+                {
                     OutputFormat* format = ps->getOutputFormat();
 
-		    String attValue = element->getAttribute(METHOD_ATTR);
-                    if (attValue.length() > 0) format->setMethod(attValue);
+                    String attValue = element->getAttribute(METHOD_ATTR);
+                    if (attValue.length() > 0) ps->setOutputMethod(attValue);
 
                     attValue = element->getAttribute(VERSION_ATTR);
                     if (attValue.length() > 0) format->setVersion(attValue);
@@ -466,20 +468,20 @@ void XSLTProcessor::processTopLevel
 
                     attValue = element->getAttribute(INDENT_ATTR);
                     if (attValue.length() > 0) {
-		       MBool allowIndent = attValue.isEqual(YES_VALUE);
+                        MBool allowIndent = attValue.isEqual(YES_VALUE);
                        format->setIndent(allowIndent);
-		    }
+                    }
 
                     attValue = element->getAttribute(DOCTYPE_PUBLIC_ATTR);
                     if (attValue.length() > 0)
-		        format->setDoctypePublic(attValue);
+                        format->setDoctypePublic(attValue);
 
                     attValue = element->getAttribute(DOCTYPE_SYSTEM_ATTR);
                     if (attValue.length() > 0)
-		        format->setDoctypeSystem(attValue);
+                        format->setDoctypeSystem(attValue);
 
-		    break;
-		}
+                    break;
+                }
                 case XSLType::TEMPLATE :
                     ps->addTemplate(element);
                     break;
@@ -621,10 +623,10 @@ void XSLTProcessor::process
     XMLParser xmlParser;
     Document* xmlDoc = xmlParser.parse(xmlInput);
     if (!xmlDoc) {
-            String err("error reading XML document: ");
-            err.append(xmlParser.getErrorString());
-            notifyError(err, ErrorObserver::FATAL);
-            return;
+        String err("error reading XML document: ");
+        err.append(xmlParser.getErrorString());
+        notifyError(err, ErrorObserver::FATAL);
+        return;
     }
     //-- Read in XSL document
     String href;
@@ -637,11 +639,11 @@ void XSLTProcessor::process
         delete xslInput;
     }
     if (!xslDoc) {
-            String err("error reading XSL stylesheet document: ");
-            err.append(xmlParser.getErrorString());
-            notifyError(err, ErrorObserver::FATAL);
-            delete xmlDoc;
-            return;
+        String err("error reading XSL stylesheet document: ");
+        err.append(xmlParser.getErrorString());
+        notifyError(err, ErrorObserver::FATAL);
+        delete xmlDoc;
+        return;
     }
     process(*xmlDoc, *xslDoc, out, documentBase);
     delete xmlDoc;
@@ -662,19 +664,19 @@ void XSLTProcessor::process
     XMLParser xmlParser;
     Document* xmlDoc = xmlParser.parse(xmlInput);
     if (!xmlDoc) {
-            String err("error reading XML document: ");
-            err.append(xmlParser.getErrorString());
-            notifyError(err, ErrorObserver::FATAL);
-            return;
+        String err("error reading XML document: ");
+        err.append(xmlParser.getErrorString());
+        notifyError(err, ErrorObserver::FATAL);
+        return;
     }
     //-- read in XSL Document
     Document* xslDoc = xmlParser.parse(xslInput);
     if (!xslDoc) {
-            String err("error reading XSL stylesheet document: ");
-            err.append(xmlParser.getErrorString());
-            notifyError(err, ErrorObserver::FATAL);
-            delete xmlDoc;
-            return;
+        String err("error reading XSL stylesheet document: ");
+        err.append(xmlParser.getErrorString());
+        notifyError(err, ErrorObserver::FATAL);
+        delete xmlDoc;
+        return;
     }
     process(*xmlDoc, *xslDoc, out, documentBase);
     delete xmlDoc;
@@ -752,7 +754,7 @@ short XSLTProcessor::getElementType(String& name, ProcessorState* ps) {
  * @param allowOnlyTextNodes
 **/
 MBool XSLTProcessor::getText
-    (DocumentFragment* dfrag, DOMString& dest, MBool deep, MBool allowOnlyTextNodes)
+    (DocumentFragment* dfrag, String& dest, MBool deep, MBool allowOnlyTextNodes)
 {
     if ( !dfrag ) return MB_TRUE;
 
@@ -878,14 +880,14 @@ void XSLTProcessor::processAction
                 if ( exprResult->getResultType() == ExprResult::NODESET ) {
                     nodeSet = (NodeSet*)exprResult;
 
-				    //-- make sure nodes are in DocumentOrder
+                    //-- make sure nodes are in DocumentOrder
                     ps->sortByDocumentOrder(nodeSet);
 
                     //-- look for xsl:sort elements
                     Node* child = actionElement->getFirstChild();
                     while (child) {
                         if (child->getNodeType() == Node::ELEMENT_NODE) {
-                            DOMString nodeName = child->getNodeName();
+                            String nodeName = child->getNodeName();
                             if (getElementType(nodeName, ps) == XSLType::SORT) {
                                 NodeSorter::sort(nodeSet, (Element*)child, node, ps);
                                 break;
@@ -920,7 +922,7 @@ void XSLTProcessor::processAction
                 else {
                     String ns = actionElement->getAttribute(NAMESPACE_ATTR);
                     //-- process name as an AttributeValueTemplate
-                    DOMString name;
+                    String name;
                     processAttrValueTemplate(attr->getValue(),name,node,ps);
                     Attr* newAttr = 0;
                     //-- check name validity
@@ -938,7 +940,7 @@ void XSLTProcessor::processAction
                         ps->getNodeStack()->push(dfrag);
                         processTemplate(node, actionElement, ps);
                         ps->getNodeStack()->pop();
-                        DOMString value;
+                        String value;
                         XMLDOMUtils::getNodeValue(dfrag, &value);
                         XMLUtils::normalizeAttributeValue(value);
                         newAttr->setValue(value);
@@ -979,7 +981,7 @@ void XSLTProcessor::processAction
                     Node* tmp = nl->item(i);
                     if ( tmp->getNodeType() != Node::ELEMENT_NODE ) continue;
                     xslTemplate = (Element*)tmp;
-                    DOMString nodeName = xslTemplate->getNodeName();
+                    String nodeName = xslTemplate->getNodeName();
                     switch ( getElementType(nodeName, ps) ) {
                         case XSLType::WHEN :
                         {
@@ -1006,7 +1008,7 @@ void XSLTProcessor::processAction
                 ps->getNodeStack()->push(dfrag);
                 processTemplate(node, actionElement, ps);
                 ps->getNodeStack()->pop();
-                DOMString value;
+                String value;
                 if (!getText(dfrag, value, MB_FALSE,MB_TRUE)) {
                     String warning(NON_TEXT_TEMPLATE_WARNING);
                     warning.append(COMMENT);
@@ -1025,7 +1027,7 @@ void XSLTProcessor::processAction
             //-- xsl:copy-of
             case XSLType::COPY_OF:
             {
-                DOMString selectAtt = actionElement->getAttribute(SELECT_ATTR);
+                String selectAtt = actionElement->getAttribute(SELECT_ATTR);
                 Expr* expr = ps->getExpr(selectAtt);
                 ExprResult* exprResult = expr->evaluate(node, ps);
                 xslCopyOf(exprResult, ps);
@@ -1042,12 +1044,19 @@ void XSLTProcessor::processAction
                 else {
                     String ns = actionElement->getAttribute(NAMESPACE_ATTR);
                     //-- process name as an AttributeValueTemplate
-                    DOMString name;
+                    String name;
                     processAttrValueTemplate(attr->getValue(),name,node,ps);
                     Element* element = 0;
                     //-- check name validity
                     if ( XMLUtils::isValidQName(name)) {
+#ifdef MOZILLA
+                        // XXX (pvdb) Check if we need to set a new default namespace?
+                        String nameSpaceURI;
+                        ps->getNameSpaceURI(name, nameSpaceURI);
+                        element = resultDoc->createElementNS(nameSpaceURI, name);
+#else
                         element = resultDoc->createElement(name);
+#endif
                     }
                     else {
                         String err("error processing xsl:element, '");
@@ -1082,14 +1091,14 @@ void XSLTProcessor::processAction
                 if ( exprResult->getResultType() == ExprResult::NODESET ) {
                     nodeSet = (NodeSet*)exprResult;
 
-				    //-- make sure nodes are in DocumentOrder
+                    //-- make sure nodes are in DocumentOrder
                     ps->sortByDocumentOrder(nodeSet);
 
                     //-- look for xsl:sort elements
                     Node* child = actionElement->getFirstChild();
                     while (child) {
                         if (child->getNodeType() == Node::ELEMENT_NODE) {
-                            DOMString nodeName = child->getNodeName();
+                            String nodeName = child->getNodeName();
                             if (getElementType(nodeName, ps) == XSLType::SORT) {
                                 NodeSorter::sort(nodeSet, (Element*)child, node, ps);
                                 break;
@@ -1116,7 +1125,7 @@ void XSLTProcessor::processAction
             // xsl:if
             case XSLType::IF :
             {
-                DOMString selectAtt = actionElement->getAttribute(TEST_ATTR);
+                String selectAtt = actionElement->getAttribute(TEST_ATTR);
                 expr = ps->getExpr(selectAtt);
                 //-- check for Error
                     /* add later when we create ErrResult */
@@ -1132,7 +1141,7 @@ void XSLTProcessor::processAction
             //-- xsl:message
             case XSLType::MESSAGE :
             {
-                DOMString message;
+                String message;
 
                 DocumentFragment* dfrag = resultDoc->createDocumentFragment();
                 ps->getNodeStack()->push(dfrag);
@@ -1153,10 +1162,10 @@ void XSLTProcessor::processAction
                 ps->addToResultTree(resultDoc->createTextNode(result));
                 break;
             }
-	          //-- xsl:param
-	          case XSLType::PARAM:
-	          //-- ignore in this loop already processed
-	              break;
+            //-- xsl:param
+            case XSLType::PARAM:
+                //-- ignore in this loop already processed
+                break;
             //-- xsl:processing-instruction
             case XSLType::PI:
             {
@@ -1169,7 +1178,7 @@ void XSLTProcessor::processAction
                 else {
                     String ns = actionElement->getAttribute(NAMESPACE_ATTR);
                     //-- process name as an AttributeValueTemplate
-                    DOMString name;
+                    String name;
                     processAttrValueTemplate(attr->getValue(),name,node,ps);
                     //-- check name validity
                     if ( !XMLUtils::isValidQName(name)) {
@@ -1184,7 +1193,7 @@ void XSLTProcessor::processAction
                     ps->getNodeStack()->push(dfrag);
                     processTemplate(node, actionElement, ps);
                     ps->getNodeStack()->pop();
-                    DOMString value;
+                    String value;
                     if (!getText(dfrag, value, MB_FALSE,MB_TRUE)) {
                         String warning(NON_TEXT_TEMPLATE_WARNING);
                         warning.append(PI);
@@ -1204,7 +1213,7 @@ void XSLTProcessor::processAction
             //-- xsl:text
             case XSLType::TEXT :
             {
-                DOMString data;
+                String data;
                 //-- get Node value, and do not perform whitespace stripping
                 XMLDOMUtils::getNodeValue(actionElement, &data);
                 Text* text = resultDoc->createTextNode(data);
@@ -1213,10 +1222,10 @@ void XSLTProcessor::processAction
             }
             case XSLType::EXPR_DEBUG: //-- proprietary debug element
             {
-                DOMString exprAtt = actionElement->getAttribute(EXPR_ATTR);
+                String exprAtt = actionElement->getAttribute(EXPR_ATTR);
                 Expr* expr = ps->getExpr(exprAtt);
                 ExprResult* exprResult = expr->evaluate(node, ps);
-                DOMString data("expr debug: ");
+                String data("expr debug: ");
                 expr->toString(data);
                 cout << data << endl;
                 data.clear();
@@ -1239,11 +1248,11 @@ void XSLTProcessor::processAction
             //-- xsl:value-of
             case XSLType::VALUE_OF :
             {
-                DOMString selectAtt = actionElement->getAttribute(SELECT_ATTR);
+                String selectAtt = actionElement->getAttribute(SELECT_ATTR);
 
                 Expr* expr = ps->getExpr(selectAtt);
                 ExprResult* exprResult = expr->evaluate(node, ps);
-                DOMString value;
+                String value;
                 if ( !exprResult ) {
                     notifyError("null ExprResult");
                     break;
@@ -1278,7 +1287,23 @@ void XSLTProcessor::processAction
             }
             //-- literal
             default:
+#ifdef MOZILLA
+                // Find out if we have a new default namespace
+                MBool newDefaultNS = MB_FALSE;
+                String nsURI = actionElement->getAttribute(XMLUtils::XMLNS);
+                if ( nsURI.length() != 0 ) {
+                    // Set the default namespace
+                    ps->setDefaultNameSpaceURI(nsURI);
+                    newDefaultNS = MB_TRUE;
+                }
+
+                String nameSpaceURI;
+                ps->getNameSpaceURI(nodeName, nameSpaceURI);
+                Element* element = resultDoc->createElementNS(nameSpaceURI, nodeName);
+#else
                 Element* element = resultDoc->createElement(nodeName);
+#endif
+
                 ps->addToResultTree(element);
                 ps->getNodeStack()->push(element);
                 //-- handle attributes
@@ -1309,7 +1334,7 @@ void XSLTProcessor::processAction
                         Attr* attr = (Attr*) nonXSLAtts.get(i);
                         Attr* newAttr = resultDoc->createAttribute(attr->getName());
                         //-- process Attribute Value Templates
-                        DOMString value;
+                        String value;
                         processAttrValueTemplate(attr->getValue(), value, node, ps);
                         newAttr->setValue(value);
                         ps->addToResultTree(newAttr);
@@ -1322,6 +1347,11 @@ void XSLTProcessor::processAction
                     processAction(node, nl->item(i),ps);
                 }
                 ps->getNodeStack()->pop();
+#ifdef MOZILLA
+                if ( newDefaultNS ) {
+                    ps->getDefaultNSURIStack()->pop();
+                }
+#endif
                 break;
         }
     }
@@ -1370,7 +1400,7 @@ void XSLTProcessor::processAttributeSets
  * @param ps the current ProcessorState
 **/
 void XSLTProcessor::processAttrValueTemplate
-    (const String& attValue, DOMString& result, Node* context, ProcessorState* ps)
+    (const String& attValue, String& result, Node* context, ProcessorState* ps)
 {
     AttributeValueTemplate* avt = 0;
     avt = exprParser.createAttributeValueTemplate(attValue);
@@ -1530,7 +1560,22 @@ void XSLTProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
         {
             Element* element = (Element*)node;
             String nodeName = element->getNodeName();
+#ifdef MOZILLA
+            // Find out if we have a new default namespace
+            MBool newDefaultNS = MB_FALSE;
+            String nsURI = element->getAttribute(XMLUtils::XMLNS);
+            if ( nsURI.length() != 0 ) {
+                // Set the default namespace
+                ps->setDefaultNameSpaceURI(nsURI);
+                newDefaultNS = MB_TRUE;
+            }
+
+            String nameSpaceURI;
+            ps->getNameSpaceURI(nodeName, nameSpaceURI);
+            copy = resultDoc->createElementNS(nameSpaceURI, nodeName);
+#else
             copy = resultDoc->createElement(nodeName);
+#endif
             ps->addToResultTree(copy);
             ps->getNodeStack()->push(copy);
 
@@ -1543,6 +1588,11 @@ void XSLTProcessor::xslCopy(Node* node, Element* action, ProcessorState* ps) {
             //-- process template
             processTemplate(node, action, ps);
             ps->getNodeStack()->pop();
+#ifdef MOZILLA
+            if ( newDefaultNS ) {
+                ps->getDefaultNSURIStack()->pop();
+            }
+#endif
             return;
         }
         //-- just copy node, xsl:copy template does not get processed
@@ -1584,7 +1634,7 @@ void XSLTProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
         }
         default:
         {
-            DOMString value;
+            String value;
             exprResult->stringValue(value);
             ps->addToResultTree(resultDoc->createTextNode(value));
             break;
@@ -1616,6 +1666,7 @@ XSLTProcessor::TransformDocument(nsIDOMElement* aSourceDOM,
 
     //-- create a new ProcessorState
     ProcessorState* ps = new ProcessorState(*xslDocument, *resultDocument);
+    ps->initialize(&styleElement);
 
     nsCOMPtr<nsIDocument> sourceNsDocument = do_QueryInterface(sourceDOMDocument);
     nsCOMPtr<nsIURI> docURL;
@@ -1625,7 +1676,7 @@ XSLTProcessor::TransformDocument(nsIDOMElement* aSourceDOM,
         char* urlString;
 
         docURL->GetSpec(&urlString);
-        DOMString documentBase(urlString);
+        String documentBase(urlString);
 //cout << "documentbase: " << documentBase << endl;
         ps->setDocumentBase(documentBase);
         nsCRT::free(urlString);
@@ -1633,7 +1684,6 @@ XSLTProcessor::TransformDocument(nsIDOMElement* aSourceDOM,
     else
         ps->setDocumentBase("");
     
-
     //-- add error observers
 
       //------------------------------------------------------/
@@ -1646,24 +1696,22 @@ XSLTProcessor::TransformDocument(nsIDOMElement* aSourceDOM,
      //- Process root of XML source document -/
     //---------------------------------------/
     process(&sourceNode, &sourceNode, ps);
- 
-/*
-    Uncomment and add #include "printers.h" to see the output document
-    in the log.
 
-    XMLPrinter outputprinter;
-    outputprinter.setUseFormat(MB_TRUE);
-  
-    cout << endl << "--- Result document ---" << endl;
-    outputprinter.print(&resultDocument);
-    cout << endl;
-*/
+    Element* theResultElement = resultDocument->getDocumentElement();
 
-	/* XXX HACK (pvdb)
-	   This is leaking! But otherwise we crash on Mac (and others?).
-	   This workaround can be removed once we figure out what's going on.
-	*/
-	delete ps;
+    nsresult res = NS_OK;
+    nsAutoString XSLTransformer; XSLTransformer.AssignWithConversion("XSLTransformer");
+    nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_PROGID, &res);
+    if (NS_SUCCEEDED(res)) {
+        anObserverService->AddObserver(aObserver, XSLTransformer.GetUnicode());
+        anObserverService->Notify(theResultElement->getNSObj(), XSLTransformer.GetUnicode(), nsnull);
+    }
+
+    /* XXX HACK (pvdb)
+       This is leaking! But otherwise we crash on Mac (and others?).
+       This workaround can be removed once we figure out what's going on.
+    */
+    delete ps;
 //    delete resultDocument;
 //    delete xslDocument;
     delete sourceDocument;
