@@ -871,7 +871,7 @@ nsDNSLookup::DoSyncLookup()
     PRStatus status = DoSyncLookupInternal();
     
     if (PR_SUCCESS != status) {
-        if (nsDNSService::Reset());
+        if (nsDNSService::Reset())
             status = DoSyncLookupInternal();
     }
     MarkComplete(PR_SUCCESS == status ? NS_OK : NS_ERROR_UNKNOWN_HOST);
