@@ -972,6 +972,7 @@ static const PubIDInfo kPublicIDs[] = {
   {"-//w3o//dtd w3 html strict 3.0//en//" /* "-//W3O//DTD W3 HTML Strict 3.0//EN//" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
   {"-//webtechs//dtd mozilla html 2.0//en" /* "-//WebTechs//DTD Mozilla HTML 2.0//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
   {"-//webtechs//dtd mozilla html//en" /* "-//WebTechs//DTD Mozilla HTML//EN" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
+  {"-/w3c/dtd html 4.0 transitional/en" /* "-/W3C/DTD HTML 4.0 Transitional/EN" */, PubIDInfo::eQuirks, PubIDInfo::eQuirks},
   {"html" /* "HTML" */, PubIDInfo::eQuirks3, PubIDInfo::eQuirks3},
 };
 

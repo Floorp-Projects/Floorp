@@ -799,13 +799,14 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
     }
     else if(mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
       // Included TD & TH to fix Bug# 20797
-      static eHTMLTags gLegalElements[]={eHTMLTag_table,eHTMLTag_thead,eHTMLTag_tbody,
-                                         eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tfoot};
-      if(theToken) {
-        eHTMLTags theParentTag=mBodyContext->Last();
-        theTag=(eHTMLTags)theToken->GetTypeID();
-        if((FindTagInSet(theTag,gLegalElements,sizeof(gLegalElements)/sizeof(theTag))) ||
-          (gHTMLElements[theParentTag].CanContain(theTag)) && (theTag!=eHTMLTag_comment)) { // Added comment -> bug 40855
+      static eHTMLTags gLegalElements[] = {eHTMLTag_table, eHTMLTag_tr, eHTMLTag_td,
+                                           eHTMLTag_th, eHTMLTag_caption, eHTMLTag_colgroup,
+                                           eHTMLTag_col, eHTMLTag_tbody, eHTMLTag_thead,
+                                           eHTMLTag_tfoot};
+      if (theToken) {
+        eHTMLTags theParentTag = mBodyContext->Last();
+        theTag = (eHTMLTags)theToken->GetTypeID();
+        if (FindTagInSet(theTag,gLegalElements,sizeof(gLegalElements)/sizeof(theTag))) { 
             
           mFlags &= ~NS_DTD_FLAG_MISPLACED_CONTENT; // reset the state since all the misplaced tokens are about to get handled.
 
