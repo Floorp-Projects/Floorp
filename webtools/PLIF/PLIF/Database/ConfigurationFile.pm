@@ -106,7 +106,7 @@ sub write {
     foreach my $variable (sort(keys(%$self))) {
         if ($variable !~ /^_/o) { # we skip the internal variables (prefixed with '_')
             my $contents = Data::Dumper->Dump([$self->{$variable}]);
-            chop($contents); # remove the newline
+            chop($contents); # remove the newline (newline is guarenteed so no need to chomp)
             $settings .= "\$self->propertySet('$variable', $contents);\n";
         }
     }
