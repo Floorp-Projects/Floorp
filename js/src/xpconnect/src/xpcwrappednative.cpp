@@ -35,7 +35,6 @@
 
 /* Wrapper object for reflecting native xpcom objects into JavaScript. */
 
-#include "nscore.h"
 #include "xpcprivate.h"
 
 /***************************************************************************/
@@ -1326,10 +1325,13 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
         // into an infinite loop.
         // see: http://bugzilla.mozilla.org/show_bug.cgi?id=96725
 
+        // The code in this block also does a check for the double wrapped
+        // nsIPropertyBag case.
+
         nsCOMPtr<nsIXPConnectWrappedJS> wrappedJS(do_QueryInterface(obj));
         if(wrappedJS)
         {
-            JSObject* jso;
+            JSObject* jso = nsnull;
             if(NS_SUCCEEDED(wrappedJS->GetJSObject(&jso)) &&
                jso == GetFlatJSObject())
             {
@@ -1378,7 +1380,34 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
                 NS_RELEASE(obj);
                 aTearOff->SetInterface(nsnull);
                 return NS_OK;
-            }         
+            }
+            
+            // Decide whether or not to expose nsIPropertyBag to calling
+            // JS code in the double wrapped case.
+            //
+            // Our rule here is that when JSObjects are double wrapped and
+            // exposed to other JSObjects then the nsIPropertyBag interface
+            // is only exposed on an 'opt-in' basis; i.e. if the underlying
+            // JSObject wants other JSObjects to be able to see this interface
+            // then it must implement QueryInterface and not throw an exception
+            // when asked for nsIPropertyBag. It need not actually *implement*
+            // nsIPropertyBag - xpconnect will do that work.
+
+            nsXPCWrappedJSClass* clazz;
+            if(iid->Equals(NS_GET_IID(nsIPropertyBag)) && jso &&
+               NS_SUCCEEDED(nsXPCWrappedJSClass::GetNewOrUsed(ccx,*iid,&clazz))&&
+               clazz)
+            {
+                JSObject* answer =
+                    clazz->CallQueryInterfaceOnJSObject(ccx, jso, *iid);
+                NS_RELEASE(clazz);
+                if(!answer)
+                {
+                    NS_RELEASE(obj);
+                    aTearOff->SetInterface(nsnull);
+                    return NS_ERROR_NO_INTERFACE;
+                }
+            }
         }
 
         nsIXPCSecurityManager* sm;
@@ -1567,6 +1596,22 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 #define PARAM_BUFFER_COUNT     8
 
     nsXPTCVariant paramBuffer[PARAM_BUFFER_COUNT];
+
+    // Number of nsAutoStrings to construct on the stack for use with method
+    // calls that use 'out' AStrings (aka [domstring]). These can save us from 
+    // a new/delete of an nsString. But the cost is that the ctor/dtor code 
+    // is run for each nsAutoString in the array for each call - whether or not 
+    // a specific call actually uses *any* AStrings. Also, we have these
+    // large-ish nsAutoString objects using up stack space.
+    //
+    // Set this to zero to disable use of these auto strings.
+#define PARAM_AUTOSTRING_COUNT     1
+
+#if PARAM_AUTOSTRING_COUNT
+    XPCVoidableString autoStrings[PARAM_AUTOSTRING_COUNT];
+    int autoStringIndex = 0;
+#endif
+
     JSBool retval = JS_FALSE;
 
     nsXPTCVariant* dispatchParams = nsnull;
@@ -1744,12 +1789,24 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                     break;
 
                 case nsXPTType::T_DOMSTRING:
-                    dp->SetValIsDOMString();
                     if(paramInfo.IsDipper())
                     {
                         // Is an 'out' DOMString. Make a new nsAWritableString
                         // now and then continue in order to skip the call to
                         // JSData2Native
+
+                        // If autoStrings array support is enabld, then use
+                        // one of them if they are not already used up.
+#if PARAM_AUTOSTRING_COUNT
+                        if(autoStringIndex < PARAM_AUTOSTRING_COUNT)
+                        {
+                            // Don't call SetValIsDOMString because we don't 
+                            // want to delete this pointer.
+                            dp->val.p = &autoStrings[autoStringIndex++];
+                            continue;
+                        }
+#endif
+                        dp->SetValIsDOMString();
                         if(!(dp->val.p = new XPCVoidableString()))
                         {
                             JS_ReportOutOfMemory(ccx);
@@ -1762,6 +1819,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                     // Is an 'in' DOMString. Set 'useAllocator' to indicate
                     // that JSData2Native should allocate a new
                     // nsAReadableString.
+                    dp->SetValIsDOMString();
                     useAllocator = JS_TRUE;
                     break;
                 }
@@ -2134,7 +2192,7 @@ done:
     if(dispatchParams && dispatchParams != paramBuffer)
         delete [] dispatchParams;
 
-#ifdef DEBUG_stats_jband
+#ifdef off_DEBUG_stats_jband
     endTime = PR_IntervalNow();
 
     printf("%s::%s %d ( js->c ) \n",

@@ -74,6 +74,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpcstring.obj \
 	.\$(OBJDIR)\xpcthreadcontext.obj	\
 	.\$(OBJDIR)\xpcthrower.obj	\
+	.\$(OBJDIR)\xpcvariant.obj	\
 	.\$(OBJDIR)\xpcwrappedjs.obj	\
 	.\$(OBJDIR)\xpcwrappedjsclass.obj	\
 	.\$(OBJDIR)\xpcwrappednative.obj	\

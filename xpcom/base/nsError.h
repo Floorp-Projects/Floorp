@@ -273,6 +273,16 @@
 #define NS_ERROR_FILE_ACCESS_DENIED             NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 21)
 
 ////////////////////////////////////////////////////////////////////////////////
+// Result codes used by nsIVariant
+
+#define NS_ERROR_CANNOT_CONVERT_DATA            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM,  1)
+#define NS_ERROR_OBJECT_IS_IMMUTABLE            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM,  2)
+#define NS_ERROR_LOSS_OF_SIGNIFICANT_DATA       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM,  3)
+
+#define NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCOM,  1)
+
+
+////////////////////////////////////////////////////////////////////////////////
 // This will return the nsresult corresponding to the most recent NSPR failure
 // returned by PR_GetError.
 

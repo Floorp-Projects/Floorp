@@ -53,6 +53,7 @@ EXPORTS =                          \
 	nsTime.h                   \
 	nsTimelineService.h        \
 	nsUnitConversion.h         \
+	nsVariant.h                \
 	nsVector.h                 \
 	nsVoidArray.h              \
 	nsVoidBTree.h              \
@@ -72,12 +73,14 @@ XPIDLSRCS =                            \
 	.\nsIPersistentProperties2.idl \
 	.\nsITimelineService.idl       \
 	.\nsIProperties.idl            \
+	.\nsIPropertyBag.idl           \
 	.\nsISerializable.idl          \
         .\nsISimpleEnumerator.idl      \
 	.\nsIStopwatch.idl             \
 	.\nsISupportsArray.idl         \
 	.\nsISupportsIterators.idl     \
 	.\nsISupportsPrimitives.idl    \
+	.\nsIVariant.idl               \
 	$(NULL)
 
 ################################################################################
@@ -116,6 +119,7 @@ CPP_OBJS =                                        \
 	.\$(OBJDIR)\nsTextFormatter.obj           \
 	.\$(OBJDIR)\nsTimelineService.obj         \
 	.\$(OBJDIR)\nsUnicharBuffer.obj           \
+	.\$(OBJDIR)\nsVariant.obj                 \
 	.\$(OBJDIR)\nsVoidArray.obj               \
 	.\$(OBJDIR)\nsVoidBTree.obj               \
 	.\$(OBJDIR)\pldhash.obj                   \

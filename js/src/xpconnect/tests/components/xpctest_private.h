@@ -48,6 +48,7 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsAWritableString.h"
+#include "nsVariant.h"
 #include <stdio.h>
 
 #include "xpctest.h"
@@ -149,6 +150,11 @@
   {0xdb569f7e, 0x16fb, 0x1bcb, \
     { 0xa8, 0x6c, 0xe0, 0x8a, 0xa7, 0xf9, 0x76, 0x66 }}
 
+// {DC932D30-95B0-11d5-90FC-0010A4E73D9A}
+#define NS_XPCTESTVARIANT_CID \
+  {0xdc932d30, 0x95b0, 0x11d5, \
+    { 0x90, 0xfc, 0x0, 0x10, 0xa4, 0xe7, 0x3d, 0x9a }}
+
 // 'namespace' class
 class xpctest
 {
@@ -173,6 +179,7 @@ public:
   static NS_METHOD ConstructXPCTestChild5(nsISupports *aOuter, REFNSIID aIID, void **aResult);
   static NS_METHOD ConstructArrayTest(nsISupports *aOuter, REFNSIID aIID, void **aResult);
   static NS_METHOD ConstructXPCTestDOMString(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+  static NS_METHOD ConstructXPCTestVariant(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 private:
     xpctest();  // not implemented

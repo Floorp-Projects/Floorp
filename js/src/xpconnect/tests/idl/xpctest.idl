@@ -35,6 +35,8 @@
 
 #include "nsISupports.idl"
 #include "xpcexception.idl"
+#include "nsIVariant.idl"
+#include "nsIPropertyBag.idl"
 
 // forward declaration (to test that such things work)
 interface nsITestXPCSomeUselessThing;
@@ -238,4 +240,60 @@ interface nsIXPCTestArray : nsISupports {
 interface nsIWrappedJSObjectTest : nsISupports
 {
     void interfaceMember();        
+};
+
+[scriptable, uuid(41d923d0-5bc1-11d5-90db-0010a4e73d9a)]
+interface nsIBogus1 : nsISupports {};
+
+[scriptable, uuid(8d8f4210-5bc1-11d5-90db-0010a4e73d9a)]
+interface nsIBogus2 : nsISupports 
+{
+    attribute nsIBogus1 bogus;
+};
+
+[scriptable, uuid(34bc9990-95af-11d5-90fc-0010a4e73d9a)]
+interface nsITestVariant : nsISupports
+{
+    /**
+     * Just return the variant that was passed in.
+     */
+    nsIVariant passThruVariant(in nsIVariant value);
+    
+    /**
+     * Just return the type of the passed in variant.
+     */
+    PRUint16   returnVariantType(in nsIVariant value);
+    
+    /**
+     * Construct and return a default xpcom variant instance using the
+     * value of the passed in variant. Use the type of the passed in variant. 
+     */
+    nsIVariant copyVariant(in nsIVariant value);
+    
+    /**
+     * Construct and return a default xpcom variant instance using the
+     * value of the passed in variant. Use the type as specified to get data 
+     * from the passed in variant. 
+     */
+    nsIVariant copyVariantAsType(in nsIVariant value, in PRUint16 type);
+    
+    /**
+     * Construct a default xpcom variant instance using the
+     * value of the passed in variant. Use the type as specified in type1 to 
+     * get data from the passed in variant. Then construct and return a default
+     * xpcom variant based on that object using the type2. This allows for 
+     * testing all the 'ConvertTo*' methods on the default xpcom variant class.
+     */
+    nsIVariant copyVariantAsTypeTwice(in nsIVariant value, 
+                                      in PRUint16 type1, in PRUint16 type2);
+
+    /**
+     * Get a named property from object that will be QI'd to nsIPropertyBag.
+     */
+    nsIVariant getNamedProperty(in nsISupports aBag, in AString aName);
+
+    /**
+     * Get a enumerator from object that will be QI'd to nsIPropertyBag.
+     */
+    nsISimpleEnumerator getEnumerator(in nsISupports aBag);
 };

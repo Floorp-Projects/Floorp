@@ -47,6 +47,7 @@
 #include "nsIXPCSecurityManager.h"
 #include "nsICategoryManager.h"
 #include "nsAWritableString.h"
+#include "nsIVariant.h"
 
 #include "jsapi.h"
 #include "jsgc.h"   // for js_ForceGC
@@ -440,62 +441,98 @@ TestArgFormatter(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
     jsval* argv;
     void* mark;
 
-    nsTestXPCFoo* foo = new nsTestXPCFoo();
-    const char* a_in = "some string";
-    const char* b_in = "another meaningless chunck of text";
-    char* a_out;
-    char* b_out;
+    const char*                  a_in = "some string";
+    nsCOMPtr<nsITestXPCFoo>      b_in = new nsTestXPCFoo();
+    nsCOMPtr<nsIWritableVariant> c_in = do_CreateInstance("@mozilla.org/variant;1"); 
+    static const NS_NAMED_LITERAL_STRING(d_in, "foo bar");
+    const char*                  e_in = "another meaningless chunck of text";
+    
+
+    char*                   a_out;
+    nsCOMPtr<nsISupports>   b_out;
+    nsCOMPtr<nsIVariant>    c_out;
+    nsAutoString            d_out;
+    char*                   e_out;
+
+    nsCOMPtr<nsITestXPCFoo> specified;
+    PRInt32                 val;
 
     printf("ArgumentFormatter test: ");
 
-    argv = JS_PushArguments(jscontext, &mark, "s %ip s",
-                            a_in, &NS_GET_IID(nsITestXPCFoo2), foo, b_in);
-
-    if(argv)
+    if(!b_in || !c_in || NS_FAILED(c_in->SetAsInt32(5)))
     {
-        nsISupports* fooc;
-        nsTestXPCFoo* foog;
-        if(JS_ConvertArguments(jscontext, 3, argv, "s %ip s",
-                               &a_out, &fooc, &b_out))
-        {
-            if(fooc)
-            {
-                if(NS_SUCCEEDED(fooc->QueryInterface(NS_GET_IID(nsTestXPCFoo),
-                                (void**)&foog)))
-                {
-                    if(foog == foo)
-                    {
-                        if(!strcmp(a_in, a_out) && !strcmp(b_in, b_out))
-                            printf("passed\n");
-                        else
-                            printf(" conversion OK, but surrounding was mangled -- FAILED!\n");
-                    }
-                    else
-                        printf(" JS to native returned wrong value -- FAILED!\n");
-                    NS_RELEASE(foog);
-                }
-                else
-                {
-                    printf(" could not QI value JS to native returned -- FAILED!\n");
-                }
-                NS_RELEASE(fooc);
-            }
-            else
-            {
-                printf(" JS to native returned NULL -- FAILED!\n");
-            }
-        }
-        else
-        {
-            printf(" could not convert from JS to native -- FAILED!\n");
-        }
-        JS_PopArguments(jscontext, mark);
+        printf(" failed to construct test objects -- FAILED!\n");
+        return;
     }
-    else
+
+    argv = JS_PushArguments(jscontext, &mark, "s %ip %iv %is s",
+                            a_in, 
+                            &NS_GET_IID(nsITestXPCFoo2), b_in, 
+                            c_in,
+                            NS_STATIC_CAST(const nsAString*, &d_in), 
+                            e_in);
+
+    if(!argv)
     {
         printf(" could not convert from native to JS -- FAILED!\n");
+        return;
     }
-    NS_IF_RELEASE(foo);
+
+    if(!JS_ConvertArguments(jscontext, 5, argv, "s %ip %iv %is s",
+                            &a_out, 
+                            getter_AddRefs(b_out), 
+                            getter_AddRefs(c_out),
+                            NS_STATIC_CAST(nsAString*, &d_out), 
+                            &e_out))
+    {
+        printf(" could not convert from JS to native -- FAILED!\n");
+        goto out;
+    }
+
+    if(!b_out)
+    {
+        printf(" JS to native for %ip returned NULL -- FAILED!\n");
+        goto out;
+    }
+
+    specified = do_QueryInterface(b_out);
+    if(!specified)
+    {
+        printf(" could not QI value JS to native returned -- FAILED!\n");
+        goto out;
+    }
+
+    if(specified.get() != b_in.get())
+    {
+        printf(" JS to native returned wrong value -- FAILED!\n");
+        goto out;
+    }
+
+    if(!c_out)
+    {
+        printf(" JS to native for %iv returned NULL -- FAILED!\n");
+        goto out;
+    }
+
+    if(NS_FAILED(c_out->GetAsInt32(&val)) || val != 5)
+    {
+        printf(" JS to native for %iv holds wrong value -- FAILED!\n");
+        goto out;
+    }
+
+    if(d_in != d_out)
+    {
+        printf(" JS to native for %is returned the wrong value -- FAILED!\n");
+        goto out;
+    }
+
+    if(!strcmp(a_in, a_out) && !strcmp(e_in, e_out))
+        printf("passed\n");
+    else
+        printf(" conversion OK, but surrounding was mangled -- FAILED!\n");
+
+out:
+    JS_PopArguments(jscontext, mark);
 }
 
 /***************************************************************************/
@@ -700,7 +737,7 @@ int main()
         DIE("FAILED to get the nsThreadJSContextStack service!\n");
 
     if(NS_FAILED(cxstack->Push(jscontext)))
-        DIE("FAILED to get push the current jscontext on the nsThreadJSContextStack service!\n");
+        DIE("FAILED to push the current jscontext on the nsThreadJSContextStack service!\n");
 
     // XXX I'd like to replace this with code that uses a wrapped xpcom object
     // as the global object. The old TextXPC did this. The support for this 
@@ -719,12 +756,16 @@ int main()
     /**********************************************/
     // run the tests...
 
-    TestCategoryManmager();
-    TestSecurityManager(jscontext, glob, xpc);
+    //TestCategoryManmager();
+    //TestSecurityManager(jscontext, glob, xpc);
     TestArgFormatter(jscontext, glob, xpc);
-    TestThreadJSContextStack(jscontext);
+    //TestThreadJSContextStack(jscontext);
 
     /**********************************************/
+
+    if(NS_FAILED(cxstack->Pop(nsnull)))
+        DIE("FAILED to pop the current jscontext from the nsThreadJSContextStack service!\n");
+
     JS_ClearScope(jscontext, glob);
     js_ForceGC(jscontext);
     js_ForceGC(jscontext);

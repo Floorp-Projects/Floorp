@@ -37,11 +37,7 @@
 
 #include "nsISupports.idl"
 
-/* XXX should be built in */
-native nsID(nsID *);
-
 [scriptable, uuid(948c2080-0398-11d3-915e-0000863011c4)]
-
 interface nsIProxyCreateInstance : nsISupports 
 {
     [noscript] void CreateInstanceByIID(in nsIIDRef cid, 

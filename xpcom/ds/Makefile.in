@@ -65,6 +65,7 @@ CPPSRCS		= \
 		nsSupportsArrayEnumerator.cpp \
 		nsSupportsPrimitives.cpp \
 		nsUnicharBuffer.cpp \
+		nsVariant.cpp \
 		nsVoidArray.cpp \
 		nsVoidBTree.cpp \
 		nsTextFormatter.cpp \
@@ -94,6 +95,7 @@ EXPORTS		= \
 		nsSupportsPrimitives.h \
 		nsTime.h \
 		nsUnitConversion.h \
+		nsVariant.h \
 		nsVector.h \
 		nsVoidArray.h \
 		nsVoidBTree.h \
@@ -111,6 +113,8 @@ XPIDLSRCS	= \
 		nsIObserverService.idl \
 		nsIPersistentProperties2.idl \
 		nsIProperties.idl \
+		nsIPropertyBag.idl \
+		nsIVariant.idl \
 		nsISerializable.idl \
 		nsISimpleEnumerator.idl \
 		nsIStopwatch.idl \

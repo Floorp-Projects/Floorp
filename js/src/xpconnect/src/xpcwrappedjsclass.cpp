@@ -280,6 +280,184 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
 }
 
 /***************************************************************************/
+
+static JSBool 
+GetNamedPropertyAsVariantRaw(XPCCallContext& ccx, 
+                             JSObject* aJSObj,
+                             jsid aName, 
+                             nsIVariant** aResult,
+                             nsresult* pErr)
+{
+    nsXPTType type = nsXPTType((uint8)(TD_INTERFACE_TYPE | XPT_TDP_POINTER));
+    jsval val;
+
+    return OBJ_GET_PROPERTY(ccx, aJSObj, aName, &val) &&
+           XPCConvert::JSData2Native(ccx, aResult, val, type, JS_FALSE, 
+                                     &NS_GET_IID(nsIVariant), pErr);
+}
+
+// static
+nsresult
+nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx, 
+                                               JSObject* aJSObj,
+                                               jsval aName, 
+                                               nsIVariant** aResult)
+{
+    JSContext* cx = ccx.GetJSContext();
+    JSBool ok;
+    jsid id;
+    nsresult rv;
+
+    JSExceptionState* saved_exception = DoPreScriptEvaluated(cx);
+    JSErrorReporter older = JS_SetErrorReporter(cx, nsnull);
+
+    ok = JS_ValueToId(cx, aName, &id) && 
+         GetNamedPropertyAsVariantRaw(ccx, aJSObj, id, aResult, &rv);
+
+    JS_SetErrorReporter(cx, older);
+    DoPostScriptEvaluated(cx, saved_exception);
+
+    return ok ? NS_OK : NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
+}
+
+/***************************************************************************/
+
+// static 
+nsresult 
+nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
+                                             JSObject* aJSObj,
+                                             nsISimpleEnumerator** aEnumerate)
+{
+    JSContext* cx = ccx.GetJSContext();
+    nsresult retval = NS_ERROR_FAILURE;
+    JSIdArray* idArray = nsnull;
+    xpcPropertyBagEnumerator* enumerator = nsnull;
+    int i;
+
+    // Saved state must be restored, all exits through 'out'...
+    JSExceptionState* saved_exception = DoPreScriptEvaluated(cx);
+    JSErrorReporter older = JS_SetErrorReporter(cx, nsnull);
+
+    idArray = JS_Enumerate(cx, aJSObj);
+    if(!idArray)
+        goto out;
+    
+    enumerator = new xpcPropertyBagEnumerator(idArray->length);
+    if(!enumerator)
+        goto out;
+    NS_ADDREF(enumerator);
+        
+    for(i = 0; i < idArray->length; i++)
+    {
+        nsCOMPtr<nsIVariant> value;
+        jsid idName = idArray->vector[i];
+        nsresult rv;
+
+        if(!GetNamedPropertyAsVariantRaw(ccx, aJSObj, idName, 
+                                         getter_AddRefs(value), &rv))
+        {
+            if(NS_FAILED(rv))
+                retval = rv;                                        
+            goto out;
+        }
+
+        jsval jsvalName;
+        if(!JS_IdToValue(cx, idName, &jsvalName))
+            goto out;
+
+        JSString* name = JS_ValueToString(cx, jsvalName);
+        if(!name)
+            goto out;
+
+        nsCOMPtr<nsIProperty> property = 
+            new xpcProperty(JS_GetStringChars(name), 
+                            JS_GetStringLength(name),
+                            value);
+        if(!property)
+            goto out;
+
+        if(!enumerator->AppendElement(property))
+            goto out;
+    }
+
+    NS_ADDREF(*aEnumerate = enumerator);
+    retval = NS_OK;
+
+out:
+    NS_IF_RELEASE(enumerator);
+    if(idArray)
+        JS_DestroyIdArray(cx, idArray);
+    JS_SetErrorReporter(cx, older);
+    DoPostScriptEvaluated(cx, saved_exception);
+
+    return retval;
+}
+
+/***************************************************************************/
+
+NS_IMPL_ISUPPORTS1(xpcProperty, nsIProperty)
+
+xpcProperty::xpcProperty(const PRUnichar* aName, PRUint32 aNameLen, 
+                         nsIVariant* aValue)
+    : mName(aName, aNameLen), mValue(aValue)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+/* readonly attribute AString name; */
+NS_IMETHODIMP xpcProperty::GetName(nsAWritableString & aName)
+{
+    aName.Assign(mName);
+    return NS_OK;
+}
+
+/* readonly attribute nsIVariant value; */
+NS_IMETHODIMP xpcProperty::GetValue(nsIVariant * *aValue)
+{
+    NS_ADDREF(*aValue = mValue);
+    return NS_OK;
+}
+
+/***************************************************************************/
+
+NS_IMPL_ISUPPORTS1(xpcPropertyBagEnumerator, nsISimpleEnumerator)
+
+xpcPropertyBagEnumerator::xpcPropertyBagEnumerator(PRUint32 count)
+    : mIndex(0), mCount(0)
+{
+    NS_INIT_ISUPPORTS();
+    mArray.SizeTo(count);
+}
+
+JSBool xpcPropertyBagEnumerator::AppendElement(nsISupports* element)
+{
+    if(!mArray.AppendElement(element))
+        return JS_FALSE;
+    mCount++;
+    return JS_TRUE;
+}
+
+/* boolean hasMoreElements (); */
+NS_IMETHODIMP xpcPropertyBagEnumerator::HasMoreElements(PRBool *_retval)
+{
+    *_retval = mIndex < mCount;
+    return NS_OK;
+}
+
+/* nsISupports getNext (); */
+NS_IMETHODIMP xpcPropertyBagEnumerator::GetNext(nsISupports **_retval)
+{
+    if(!(mIndex < mCount))
+    {
+        NS_ERROR("Bad nsISimpleEnumerator caller!");
+        return NS_ERROR_FAILURE;    
+    }
+    
+    *_retval = mArray.ElementAt(mIndex++);
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/***************************************************************************/
 // This 'WrappedJSIdentity' class and singleton allow us to figure out if
 // any given nsISupports* is implemented by a WrappedJS object. This is done
 // using a QueryInterface call on the interface pointer with our ID. If
@@ -339,6 +517,22 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     {
         // asking to find out if this is a wrapper object
         *aInstancePtr = WrappedJSIdentity::GetSingleton();
+        return NS_OK;
+    }
+
+    if(aIID.Equals(NS_GET_IID(nsIPropertyBag)))
+    {
+        // We only want to expose one implementation from our aggregate.
+        nsXPCWrappedJS* root = self->GetRootWrapper();
+
+        if(!root->IsValid())
+        {
+            *aInstancePtr = nsnull;
+            return NS_NOINTERFACE;
+        }
+
+        NS_ADDREF(root);
+        *aInstancePtr = (void*) NS_STATIC_CAST(nsIPropertyBag*,root);
         return NS_OK;
     }
 

@@ -13,3 +13,4 @@ nsISupportsArray.idl
 nsITimelineService.idl
 nsISupportsIterators.idl
 nsISupportsPrimitives.idl
+nsIVariant.idl
