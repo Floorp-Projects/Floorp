@@ -12,3 +12,4 @@ xpcjsid.idl
 nsIScriptError.idl
 mozIJSSubScriptLoader.idl
 nsIXPCScriptable.idl
+nsIXPCScriptNotify.idl

@@ -28,9 +28,10 @@
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIXPCScriptNotify.h"
 
 
-class nsJSContext : public nsIScriptContext
+class nsJSContext : public nsIScriptContext, public nsIXPCScriptNotify
 {
 public:
   nsJSContext(JSRuntime *aRuntime);
@@ -107,6 +108,7 @@ public:
   NS_IMETHOD GetProcessingScriptTag(PRBool * aResult);
   NS_IMETHOD SetProcessingScriptTag(PRBool  aResult);
 
+  NS_DECL_NSIXPCSCRIPTNOTIFY
 protected:
   nsresult InitClasses();
   nsresult InitializeExternalClasses();

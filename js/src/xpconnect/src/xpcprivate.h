@@ -93,8 +93,8 @@
 #include "nsIScriptError.h"
 #include "nsIExceptionService.h"
 
+#include "nsIXPCScriptNotify.h"  // used to notify: ScriptEvaluated
 #ifndef XPCONNECT_STANDALONE
-#include "nsIScriptContext.h"  // used to notify: ScriptEvaluated
 #define XPC_USE_SECURITY_CHECKED_COMPONENT
 #endif
 

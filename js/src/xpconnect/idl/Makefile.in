@@ -51,6 +51,7 @@ XPIDLSRCS	= \
 		nsIXPCScriptable.idl \
 		nsIScriptError.idl \
 		mozIJSSubScriptLoader.idl \
+		nsIXPCScriptNotify.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

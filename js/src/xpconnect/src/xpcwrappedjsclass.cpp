@@ -77,9 +77,9 @@ static inline void DoPostScriptEvaluated(JSContext* cx, JSExceptionState* state)
     if(JS_GetContextThread(cx))
         JS_EndRequest(cx);
 
-#ifndef XPCONNECT_STANDALONE
-    // If this is a DOM JSContext, then notify nsIScriptContext of script
-    // completion so that it can reset its infinite loop detection mechanism.
+    // If this is a JSContext that has a private context that provides a
+    // nsIXPCScriptNotify interface, then notify the object the script has
+    // been executed.
     //
     // Note: We rely on the rule that if any JSContext in our JSRuntime has
     // private data that points to an nsISupports subclass, it has also set
@@ -91,11 +91,11 @@ static inline void DoPostScriptEvaluated(JSContext* cx, JSExceptionState* state)
         : nsnull;
     if(supports)
     {
-        nsCOMPtr<nsIScriptContext> scx = do_QueryInterface(supports);
-        if(scx)
-            scx->ScriptEvaluated(PR_FALSE);
+        nsCOMPtr<nsIXPCScriptNotify> scriptNotify = 
+            do_QueryInterface(supports);
+        if(scriptNotify)
+            scriptNotify->ScriptExecuted();
     }
-#endif /* XPCONNECT_STANDALONE */
 }
 
 // It turns out that some errors may be not worth reporting. So, this
