@@ -405,7 +405,7 @@ sub get_printops_body {
     for $type (@types) {
 
         if ($type eq "Register") {
-            push (@oplist, "\"R\" << mOp$op << \" = \" << registers[mOp$op]");
+            push (@oplist, "\"R\" << mOp$op << '=' << registers[mOp$op]");
         } elsif ($type eq "RegisterList") {
             push (@oplist, "ArgList(mOp$op, registers)");
         }
