@@ -132,6 +132,7 @@ interface nsIImapService : nsISupports
   void discoverAllFolders(in nsIEventQueue aClientEventQueue, 
                           in nsIMsgFolder aImapMailFolder,
                           in nsIUrlListener aUrlListener,
+						  in nsIMsgWindow aMsgWindow,
                           out nsIURI aURL);
 
   void discoverAllAndSubscribedFolders(in nsIEventQueue aClientEventQueue, 
