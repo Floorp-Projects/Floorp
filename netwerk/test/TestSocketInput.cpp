@@ -110,9 +110,6 @@ InputTestConsumer::OnStopBinding(nsISupports* context,
 }
 
 
-
-
-
 int
 main(int argc, char* argv[])
 {
@@ -157,8 +154,11 @@ main(int argc, char* argv[])
     NS_RELEASE(transport);
   }
 
+  PLEvent *gEvent;
+
   // Enter the message pump to allow the URL load to proceed.
   while ( gKeepRunning ) {
+
 #ifdef WIN32
     MSG msg;
 
@@ -166,6 +166,13 @@ main(int argc, char* argv[])
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     }
+#else
+#ifdef XP_MAC
+    /* Mac stuff is missing here! */
+#else
+    rv = eventQ->GetEvent(&gEvent);
+    PL_HandleEvent(gEvent);
+#endif
 #endif
   }
 
