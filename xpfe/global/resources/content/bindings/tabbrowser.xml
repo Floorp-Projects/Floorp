@@ -1044,6 +1044,12 @@
         </body>
       </method>
 
+      <property name="tabContainer">
+        <getter>
+          return this.mTabContainer;
+        </getter>
+      </property>
+
       <property name="selectedTab">
         <getter>
           return this.mTabBox.selectedTab;

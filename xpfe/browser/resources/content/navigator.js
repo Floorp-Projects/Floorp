@@ -110,7 +110,7 @@ const gTabStripPrefListener =
       return;
 
     var stripVisibility = !pref.getBoolPref(prefName);
-    if (gBrowser.mTabContainer.childNodes.length == 1) {
+    if (gBrowser.tabContainer.childNodes.length == 1) {
       gBrowser.setStripVisibilityTo(stripVisibility);
       pref.setBoolPref("browser.tabs.forceHide", false);
     }
@@ -1195,7 +1195,7 @@ function updateCloseItems()
     document.getElementById('menu_close').setAttribute('label', gNavigatorBundle.getString('tabs.closeTab'));
     document.getElementById('menu_closeWindow').hidden = false;
     document.getElementById('menu_closeOtherTabs').hidden = false;
-    if (browser.mTabContainer.childNodes.length > 1)
+    if (browser.tabContainer.childNodes.length > 1)
       document.getElementById('cmd_closeOtherTabs').removeAttribute('disabled');
     else
       document.getElementById('cmd_closeOtherTabs').setAttribute('disabled', 'true');
@@ -1215,7 +1215,7 @@ function BrowserCloseOtherTabs()
 function BrowserCloseTabOrWindow()
 {
   var browser = getBrowser();
-  if (browser.mTabContainer.childNodes.length > 1) {
+  if (browser.tabContainer.childNodes.length > 1) {
     // Just close up a tab.
     browser.removeCurrentTab();
     return;
@@ -2279,7 +2279,7 @@ function maybeInitPopupContext()
 function WindowIsClosing()
 {
   var browser = getBrowser();
-  var cn = browser.mTabContainer.childNodes;
+  var cn = browser.tabContainer.childNodes;
   var numtabs = cn.length;
   var reallyClose = true;
 
