@@ -1676,12 +1676,6 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
   else
   {
     event.widget = this;
-
-    if (aGdkMotionEvent)
-    {
-      event.point.x = nscoord(x);
-      event.point.y = nscoord(y);
-    }
   }
 
   if (aGdkMotionEvent)
