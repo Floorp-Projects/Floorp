@@ -369,6 +369,56 @@ nsImageOS2::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
   return NS_OK;
 }
 
+nscoord
+nsImageOS2::BuildTile(HPS hpsTile, HBITMAP hBmpTile,
+                              nscoord aWidth, nscoord aHeight,
+                              LONG tileWidth, LONG tileHeight, PRBool bMsk)
+{
+   GFX (::GpiSetBitmap (hpsTile, hBmpTile), HBM_ERROR);
+   PRInt32 notLoadedDY = 0;
+   if( mDecodedY2 < mInfo->cy)
+   {
+      // If bitmap not fully loaded, fill unloaded area
+      notLoadedDY = mInfo->cy - mDecodedY2;
+      RECTL rect = { 0, 0, aWidth, notLoadedDY };
+      ::WinFillRect( hpsTile, &rect, CLR_BACKGROUND);
+   }
+
+   // Set up blit coord array
+   POINTL aptl[ 4] = { { 0, notLoadedDY },
+                       { aWidth - 1, aHeight - 1 },
+                       { 0, notLoadedDY },
+                       { mInfo->cx, mInfo->cy } };
+
+   // Draw bitmap once into temporary PS
+   DrawBitmap( hpsTile, aptl, ROP_SRCCOPY, bMsk);
+
+   // Copy bitmap horizontally, doubling each time
+   while( aWidth < tileWidth)
+   {
+      POINTL aptlCopy[ 4] = { { aWidth, 0 },
+                              { 2*aWidth, aHeight },
+                              { 0, 0 },
+                              { aWidth, aHeight } };
+
+      GFX (::GpiBitBlt (hpsTile, hpsTile, 4, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
+      aWidth *= 2;
+   }
+   // Copy bitmap vertically, doubling each time
+   while( aHeight < tileHeight)
+   {
+      POINTL aptlCopy[ 4] = { { 0, aHeight },
+                              { aWidth, 2*aHeight },
+                              { 0, 0 },
+                              { aWidth, aHeight } };
+
+      GFX (::GpiBitBlt (hpsTile, hpsTile, 4, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
+      aHeight *= 2;
+   }
+
+   return aHeight;
+}
+
 PRBool 
 nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                               nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
@@ -382,14 +432,14 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
    if( (aWidth <= tileWidth/2) || (aHeight <= tileHeight/2))
    {
       nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
-   
+
       // Find the compatible device context and create a memory one
       HDC hdcCompat = GFX (::GpiQueryDevice (surf->mPS), HDC_ERROR);
 
       DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
       HDC MemDC = ::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5,
                                (PDEVOPENDATA) &dop, hdcCompat);
-   
+
       if( DEV_ERROR != MemDC)
       {
          // create the PS
@@ -405,14 +455,14 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
          ib.usMixMode  = FM_OVERPAINT;
          ib.usBackMixMode = BM_OVERPAINT;
          GFX (::GpiSetAttrs (MemPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
-   
+
          if( GPI_ERROR != MemPS)
          {
             // now create a bitmap of the right size
             HBITMAP hBmp;
             HBITMAP hBmpMask = 0;
             BITMAPINFOHEADER2 hdr = { 0 };
-         
+
             hdr.cbFix = sizeof( BITMAPINFOHEADER2);
             // Maximum size of tiled area (could do this better)
             LONG endWidth = aWidth * 2;
@@ -428,14 +478,14 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
             hdr.cx = endWidth;
             hdr.cy = endHeight;
             hdr.cPlanes = 1;
-   
+
             // find bitdepth
             LONG lBitCount = 0;
             GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
             hdr.cBitCount = (USHORT) lBitCount;
-         
+
             hBmp = GFX (::GpiCreateBitmap (MemPS, &hdr, 0, 0, 0), GPI_ERROR);
-   
+
             if( GPI_ERROR != hBmp)
             {
                if (mAlphaDepth != 0)
@@ -446,76 +496,20 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                nsRect trect( aX0, aY0, tileWidth, tileHeight);
                RECTL  rcl;
                ((nsRenderingContextOS2 &)aContext).NS2PM_ININ( trect, rcl); // !! !! !!
-   
-               GFX (::GpiSetBitmap (MemPS, hBmp), HBM_ERROR);
-               PRInt32 notLoadedDY = 0;
-               if( mDecodedY2 < mInfo->cy)
-               {
-                  // If bitmap not fully loaded, fill unloaded area
-                  notLoadedDY = mInfo->cy - mDecodedY2;
-                  RECTL rect = { 0, 0, aWidth, notLoadedDY };
-                  ::WinFillRect( MemPS, &rect, CLR_BACKGROUND);
-               }
 
-               // Set up blit coord array
-               POINTL aptl[ 4] = { { 0, notLoadedDY },
-                                   { aWidth - 1, aHeight - 1 },
-                                   { 0, notLoadedDY },
-                                   { mInfo->cx, mInfo->cy } };
-   
-               // Draw bitmap once into temporary PS
-               DrawBitmap( MemPS, aptl, ROP_SRCCOPY, PR_FALSE);
-
+               nscoord nHeight = BuildTile( MemPS, hBmp, aWidth, aHeight,
+                                            tileWidth, tileHeight, PR_FALSE );
                if( hBmpMask)
                {
-                  GFX (::GpiSetBitmap (MemPS, hBmpMask), HBM_ERROR);
-                  DrawBitmap (MemPS, aptl, ROP_SRCCOPY, PR_TRUE);
-                  GFX (::GpiSetBitmap (MemPS, hBmp), HBM_ERROR);
-               }            
+                  BuildTile( MemPS, hBmpMask, aWidth, aHeight,
+                             tileWidth, tileHeight, PR_TRUE );
+               }
 
-               // Copy bitmap horizontally, doubling each time
-               while( aWidth < tileWidth)
-               {
-                  POINTL aptlCopy[ 4] = { { aWidth, 0 },
-                                          { 2*aWidth, aHeight },
-                                          { 0, 0 },
-                                          { aWidth, aHeight } };
-            
-               
-                  GFX (::GpiBitBlt (MemPS, MemPS, 4, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
-
-                  if ( hBmpMask)
-                  {
-                     GFX (::GpiSetBitmap (MemPS, hBmpMask), HBM_ERROR);
-                     GFX (::GpiBitBlt (MemPS, MemPS, 4, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
-                     GFX (::GpiSetBitmap (MemPS, hBmp), HBM_ERROR);
-                  }
-                  aWidth *= 2;
-               } 
-               // Copy bitmap vertically, doubling each time
-               while( aHeight < tileHeight)
-               {
-                  POINTL aptlCopy[ 4] = { { 0, aHeight },
-                                          { aWidth, 2*aHeight },
-                                          { 0, 0 },
-                                          { aWidth, aHeight } };
-               
-                  GFX (::GpiBitBlt (MemPS, MemPS, 4, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
-
-                  if ( hBmpMask)
-                  {
-                     GFX (::GpiSetBitmap (MemPS, hBmpMask), HBM_ERROR);
-                     GFX (::GpiBitBlt (MemPS, MemPS, 4, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
-                     GFX (::GpiSetBitmap (MemPS, hBmp), HBM_ERROR);
-                  }
-                  aHeight *= 2;
-               } 
-   
                POINTL aptlTile[ 4] = { { rcl.xLeft, rcl.yBottom },
                                        { rcl.xRight + 1, rcl.yTop + 1 },
-                                       { 0, aHeight - tileHeight },
-                                       { tileWidth, aHeight } };
-   
+                                       { 0, nHeight - tileHeight },
+                                       { tileWidth, nHeight } };
+
                // Copy tiled bitmap into destination PS
                if( mAlphaDepth == 0)
                {
@@ -525,16 +519,16 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                else
                {
                   // Apply mask to target, clear pels we will fill in from the image
-                  GFX (::GpiSetBitmap (MemPS, hBmpMask), HBM_ERROR);
+//                  GFX (::GpiSetBitmap (MemPS, hBmpMask), HBM_ERROR);
                   GFX (::GpiBitBlt (surf->mPS, MemPS, 4, aptlTile, ROP_NOTSRCAND, 0L), GPI_ERROR);
                   // Now combine image with target
                   GFX (::GpiSetBitmap (MemPS, hBmp), HBM_ERROR);
                   GFX (::GpiBitBlt (surf->mPS, MemPS, 4, aptlTile, ROP_SRCPAINT, 0L), GPI_ERROR);
                }
-   
+
                // Tiling successful
                didTile = PR_TRUE;
-   
+
                // Must deselect bitmap from PS before freeing bitmap and PS.
                GFX (::GpiSetBitmap (MemPS, NULLHANDLE), HBM_ERROR);
                GFX (::GpiDeleteBitmap (hBmp), FALSE);

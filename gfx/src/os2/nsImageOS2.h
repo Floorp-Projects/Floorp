@@ -209,6 +209,8 @@ public:
 
   void CreateBitmaps( nsDrawingSurfaceOS2 *surf);
   void DrawBitmap( HPS hps, PPOINTL pPts, LONG lRop, PRBool bMsk);
+
+  nscoord BuildTile(HPS hpsMem, HBITMAP hBmpTile, nscoord aWidth, nscoord aHeight, LONG tileWidth, LONG tileHeight, PRBool bMsk);
 };
 
 #endif
