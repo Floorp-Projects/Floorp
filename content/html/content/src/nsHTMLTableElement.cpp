@@ -85,11 +85,11 @@ public:
   NS_DECL_NSIDOMHTMLTABLEELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
@@ -116,7 +116,7 @@ public:
 
   NS_IMETHOD    GetLength(PRUint32* aLength);
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD    NamedItem(const nsAReadableString& aName,
+  NS_IMETHOD    NamedItem(const nsAString& aName,
                           nsIDOMNode** aReturn);
 
   NS_IMETHOD    ParentDestroyed();
@@ -296,7 +296,7 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP 
-TableRowsCollection::NamedItem(const nsAReadableString& aName,
+TableRowsCollection::NamedItem(const nsAString& aName,
                                nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -963,7 +963,7 @@ static nsGenericHTMLElement::EnumTable kLayoutTable[] = {
 
 NS_IMETHODIMP
 nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAReadableString& aValue,
+                                      const nsAString& aValue,
                                       nsHTMLValue& aResult)
 {
   /* ignore summary, just a string */
@@ -1068,7 +1068,7 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const
+                               nsAString& aResult) const
 {
   /* ignore summary, just a string */
   /* ignore attributes that are of standard types border, cellpadding,

@@ -125,7 +125,7 @@ public:
                            PRBool aDeepSetDocument);
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
@@ -393,7 +393,7 @@ NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, TabIndex, tabindex)
   
 
 NS_IMETHODIMP 
-nsHTMLTextAreaElement::GetType(nsAWritableString& aType)
+nsHTMLTextAreaElement::GetType(nsAString& aType)
 {
   aType.Assign(NS_LITERAL_STRING("textarea"));
 
@@ -401,7 +401,7 @@ nsHTMLTextAreaElement::GetType(nsAWritableString& aType)
 }
 
 NS_IMETHODIMP 
-nsHTMLTextAreaElement::GetValue(nsAWritableString& aValue)
+nsHTMLTextAreaElement::GetValue(nsAString& aValue)
 {
   // No need to flush here, if there is no frame yet for this textarea
   // there won't be a value in it we don't already have even if we
@@ -471,7 +471,7 @@ nsHTMLTextAreaElement::SetValueGuaranteed(const nsAString& aValue,
 }
 
 NS_IMETHODIMP 
-nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
+nsHTMLTextAreaElement::SetValue(const nsAString& aValue)
 {
   return SetValueGuaranteed(aValue, nsnull);
 }
@@ -489,7 +489,7 @@ nsHTMLTextAreaElement::SetValueChanged(PRBool aValueChanged)
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::GetDefaultValue(nsAWritableString& aDefaultValue)
+nsHTMLTextAreaElement::GetDefaultValue(nsAString& aDefaultValue)
 {
   nsresult rv;
   PRInt32 nChildren, i;
@@ -517,7 +517,7 @@ nsHTMLTextAreaElement::GetDefaultValue(nsAWritableString& aDefaultValue)
 }  
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::SetDefaultValue(const nsAReadableString& aDefaultValue)
+nsHTMLTextAreaElement::SetDefaultValue(const nsAString& aDefaultValue)
 {
   nsresult rv;
   PRInt32 nChildren, i;
@@ -612,7 +612,7 @@ nsHTMLTextAreaElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::StringToAttribute(nsIAtom* aAttribute,
-                                         const nsAReadableString& aValue,
+                                         const nsAString& aValue,
                                          nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::disabled) {

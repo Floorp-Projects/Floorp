@@ -87,11 +87,11 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -250,7 +250,7 @@ nsHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
 
 NS_IMETHODIMP
 nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAReadableString& aValue,
+                                      const nsAString& aValue,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::bordercolor) {
@@ -289,7 +289,7 @@ nsHTMLFrameElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLFrameElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsAWritableString& aResult) const
+                                      nsAString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::frameborder) {
     FrameborderValueToString(aValue, aResult);

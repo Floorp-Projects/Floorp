@@ -91,25 +91,25 @@ public:
   }
  
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAReadableString& aValue, PRBool aNotify) {
+                     const nsAString& aValue, PRBool aNotify) {
     nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNameSpaceID, aName,
                                                          aValue, aNotify);
     UpdateStyleSheet(aNotify);
     return rv;
   }
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAReadableString& aValue, PRBool aNotify) {
+                     const nsAString& aValue, PRBool aNotify) {
     nsresult rv = nsGenericHTMLContainerElement::SetAttr(aNodeInfo, aValue,
                                                          aNotify);
 
     // nsGenericHTMLContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
-    //                                             const nsAReadableString& aValue,
+    //                                             const nsAString& aValue,
     //                                             PRBool aNotify)
     //
     // calls
     //
     // SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-    //              const nsAReadableString& aValue, PRBool aNotify)
+    //              const nsAString& aValue, PRBool aNotify)
     //
     // which ends up calling UpdateStyleSheet so we don't call UpdateStyleSheet
     // here ourselves.
@@ -130,10 +130,10 @@ public:
 #endif
 
 protected:
-  virtual void GetStyleSheetInfo(nsAWritableString& aUrl,
-                                 nsAWritableString& aTitle,
-                                 nsAWritableString& aType,
-                                 nsAWritableString& aMedia,
+  virtual void GetStyleSheetInfo(nsAString& aUrl,
+                                 nsAString& aTitle,
+                                 nsAString& aType,
+                                 nsAString& aMedia,
                                  PRBool* aDoBlock);
 
   nsresult GetHrefCString(char* &aBuf);
@@ -305,10 +305,10 @@ nsHTMLStyleElement::GetHrefCString(char* &aBuf)
 }
 
 void
-nsHTMLStyleElement::GetStyleSheetInfo(nsAWritableString& aUrl,
-                                      nsAWritableString& aTitle,
-                                      nsAWritableString& aType,
-                                      nsAWritableString& aMedia,
+nsHTMLStyleElement::GetStyleSheetInfo(nsAString& aUrl,
+                                      nsAString& aTitle,
+                                      nsAString& aType,
+                                      nsAString& aMedia,
                                       PRBool* aIsAlternate)
 {
   nsresult rv = NS_OK;

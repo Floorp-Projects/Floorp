@@ -183,7 +183,7 @@ public:
   NS_DECL_NSISELECTELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
@@ -860,7 +860,7 @@ nsHTMLSelectElement::GetOptions(nsIDOMHTMLCollection** aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::GetType(nsAWritableString& aType)
+nsHTMLSelectElement::GetType(nsAString& aType)
 {
   PRBool isMultiple;
   nsresult rv = NS_OK;
@@ -1387,7 +1387,7 @@ nsHTMLSelectElement::IsOptionDisabled(PRInt32 aIndex, PRBool* aIsDisabled)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::GetValue(nsAWritableString& aValue)
+nsHTMLSelectElement::GetValue(nsAString& aValue)
 {
   PRInt32 selectedIndex;
 
@@ -1443,7 +1443,7 @@ nsHTMLSelectElement::GetValue(nsAWritableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::SetValue(const nsAReadableString& aValue)
+nsHTMLSelectElement::SetValue(const nsAString& aValue)
 {
   nsresult rv = NS_OK;
 
@@ -1572,7 +1572,7 @@ nsHTMLSelectElement::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP 
-nsHTMLSelectElement::NamedItem(const nsAReadableString& aName,
+nsHTMLSelectElement::NamedItem(const nsAString& aName,
                                nsIDOMNode** aReturn)
 {
   return mOptions->NamedItem(aName, aReturn);
@@ -1676,7 +1676,7 @@ nsHTMLSelectElement::DoneAddingContent(PRBool aIsDone)
 
 NS_IMETHODIMP
 nsHTMLSelectElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsAReadableString& aValue,
+                                       const nsAString& aValue,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::disabled) {
@@ -2195,7 +2195,7 @@ nsHTMLOptionCollection::ItemAsOption(PRInt32 aIndex,
 }
 
 NS_IMETHODIMP 
-nsHTMLOptionCollection::NamedItem(const nsAReadableString& aName,
+nsHTMLOptionCollection::NamedItem(const nsAString& aName,
                                   nsIDOMNode** aReturn)
 {
   PRUint32 count;

@@ -80,11 +80,11 @@ public:
 
   // nsIContent
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -205,7 +205,7 @@ static nsGenericHTMLElement::EnumTable kAlignTable[] = {
 
 NS_IMETHODIMP
 nsHTMLLegendElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsAReadableString& aValue,
+                                       const nsAString& aValue,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
@@ -220,7 +220,7 @@ nsHTMLLegendElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLLegendElement::AttributeToString(nsIAtom* aAttribute,
                                        const nsHTMLValue& aValue,
-                                       nsAWritableString& aResult) const
+                                       nsAString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {

@@ -70,11 +70,11 @@ public:
   NS_DECL_NSIDOMHTMLHEADINGELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
@@ -165,7 +165,7 @@ NS_IMPL_STRING_ATTR(nsHTMLHeadingElement, Align, align)
 
 NS_IMETHODIMP
 nsHTMLHeadingElement::StringToAttribute(nsIAtom* aAttribute,
-                                        const nsAReadableString& aValue,
+                                        const nsAString& aValue,
                                         nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
@@ -180,7 +180,7 @@ nsHTMLHeadingElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLHeadingElement::AttributeToString(nsIAtom* aAttribute,
                                         const nsHTMLValue& aValue,
-                                        nsAWritableString& aResult) const
+                                        nsAString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {

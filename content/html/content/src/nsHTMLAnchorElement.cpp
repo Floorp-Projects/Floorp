@@ -113,17 +113,17 @@ public:
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
 
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify);
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify);
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify);
 
@@ -233,7 +233,7 @@ NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Type, type)
 
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::GetAccessKey(nsAWritableString& aValue)
+nsHTMLAnchorElement::GetAccessKey(nsAString& aValue)
 {
   NS_STATIC_CAST(nsIHTMLContent *, this)->GetAttr(kNameSpaceID_None,
                                                   nsHTMLAtoms::accesskey,
@@ -242,7 +242,7 @@ nsHTMLAnchorElement::GetAccessKey(nsAWritableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetAccessKey(const nsAReadableString& aValue)
+nsHTMLAnchorElement::SetAccessKey(const nsAString& aValue)
 {
   RegUnRegAccessKey(PR_FALSE);
 
@@ -399,7 +399,7 @@ nsHTMLAnchorElement::RemoveFocus(nsIPresContext* aPresContext)
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
-                                       const nsAReadableString& aValue,
+                                       const nsAString& aValue,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
@@ -430,7 +430,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::GetHref(nsAWritableString& aValue)
+nsHTMLAnchorElement::GetHref(nsAString& aValue)
 {
   char *buf;
   nsresult rv = GetHrefCString(buf);
@@ -444,7 +444,7 @@ nsHTMLAnchorElement::GetHref(nsAWritableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetHref(const nsAReadableString& aValue)
+nsHTMLAnchorElement::SetHref(const nsAString& aValue)
 {
   // Clobber our "cache", so we'll recompute it the next time
   // somebody asks for it.
@@ -456,7 +456,7 @@ nsHTMLAnchorElement::SetHref(const nsAReadableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::GetTarget(nsAWritableString& aValue)
+nsHTMLAnchorElement::GetTarget(nsAString& aValue)
 {
   aValue.Truncate();
 
@@ -472,7 +472,7 @@ nsHTMLAnchorElement::GetTarget(nsAWritableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetTarget(const nsAReadableString& aValue)
+nsHTMLAnchorElement::SetTarget(const nsAString& aValue)
 {
   return NS_STATIC_CAST(nsIContent *, this)->SetAttr(kNameSpaceID_HTML,
                                                      nsHTMLAtoms::target,
@@ -491,7 +491,7 @@ nsHTMLAnchorElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetProtocol(nsAWritableString& aProtocol)
+nsHTMLAnchorElement::GetProtocol(nsAString& aProtocol)
 {
   nsAutoString href;
 
@@ -506,7 +506,7 @@ nsHTMLAnchorElement::GetProtocol(nsAWritableString& aProtocol)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetProtocol(const nsAReadableString& aProtocol)
+nsHTMLAnchorElement::SetProtocol(const nsAString& aProtocol)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -522,7 +522,7 @@ nsHTMLAnchorElement::SetProtocol(const nsAReadableString& aProtocol)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHost(nsAWritableString& aHost)
+nsHTMLAnchorElement::GetHost(nsAString& aHost)
 {
   nsAutoString href;
   
@@ -534,7 +534,7 @@ nsHTMLAnchorElement::GetHost(nsAWritableString& aHost)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetHost(const nsAReadableString& aHost)
+nsHTMLAnchorElement::SetHost(const nsAString& aHost)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -550,7 +550,7 @@ nsHTMLAnchorElement::SetHost(const nsAReadableString& aHost)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHostname(nsAWritableString& aHostname)
+nsHTMLAnchorElement::GetHostname(nsAString& aHostname)
 {
   nsAutoString href;
   nsresult rv = GetHref(href);
@@ -561,7 +561,7 @@ nsHTMLAnchorElement::GetHostname(nsAWritableString& aHostname)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetHostname(const nsAReadableString& aHostname)
+nsHTMLAnchorElement::SetHostname(const nsAString& aHostname)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -577,7 +577,7 @@ nsHTMLAnchorElement::SetHostname(const nsAReadableString& aHostname)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetPathname(nsAWritableString& aPathname)
+nsHTMLAnchorElement::GetPathname(nsAString& aPathname)
 {
   nsAutoString href;
  
@@ -589,7 +589,7 @@ nsHTMLAnchorElement::GetPathname(nsAWritableString& aPathname)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetPathname(const nsAReadableString& aPathname)
+nsHTMLAnchorElement::SetPathname(const nsAString& aPathname)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -605,7 +605,7 @@ nsHTMLAnchorElement::SetPathname(const nsAReadableString& aPathname)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetSearch(nsAWritableString& aSearch)
+nsHTMLAnchorElement::GetSearch(nsAString& aSearch)
 {
   nsAutoString href;
 
@@ -617,7 +617,7 @@ nsHTMLAnchorElement::GetSearch(nsAWritableString& aSearch)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetSearch(const nsAReadableString& aSearch)
+nsHTMLAnchorElement::SetSearch(const nsAString& aSearch)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -634,7 +634,7 @@ nsHTMLAnchorElement::SetSearch(const nsAReadableString& aSearch)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetPort(nsAWritableString& aPort)
+nsHTMLAnchorElement::GetPort(nsAString& aPort)
 {
   nsAutoString href;
   
@@ -646,7 +646,7 @@ nsHTMLAnchorElement::GetPort(nsAWritableString& aPort)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetPort(const nsAReadableString& aPort)
+nsHTMLAnchorElement::SetPort(const nsAString& aPort)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -663,7 +663,7 @@ nsHTMLAnchorElement::SetPort(const nsAReadableString& aPort)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetHash(nsAWritableString& aHash)
+nsHTMLAnchorElement::GetHash(nsAString& aHash)
 {
   nsAutoString href;
 
@@ -675,7 +675,7 @@ nsHTMLAnchorElement::GetHash(nsAWritableString& aHash)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::SetHash(const nsAReadableString& aHash)
+nsHTMLAnchorElement::SetHash(const nsAString& aHash)
 {
   nsAutoString href, new_href;
   nsresult rv = GetHref(href);
@@ -692,7 +692,7 @@ nsHTMLAnchorElement::SetHash(const nsAReadableString& aHash)
 }
 
 NS_IMETHODIMP    
-nsHTMLAnchorElement::GetText(nsAWritableString& aText)
+nsHTMLAnchorElement::GetText(nsAString& aText)
 {
   aText.Truncate();
 
@@ -737,7 +737,7 @@ nsHTMLAnchorElement::GetText(nsAWritableString& aText)
 }
 
 NS_IMETHODIMP
-nsHTMLAnchorElement::ToString(nsAWritableString& aSource)
+nsHTMLAnchorElement::ToString(nsAString& aSource)
 {
   return GetHref(aSource);
 }
@@ -796,7 +796,7 @@ nsHTMLAnchorElement::GetHrefCString(char* &aBuf)
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                             const nsAReadableString& aValue,
+                             const nsAString& aValue,
                              PRBool aNotify)
 {
   if (aName == nsHTMLAtoms::href && kNameSpaceID_None == aNameSpaceID) {
@@ -812,7 +812,7 @@ nsHTMLAnchorElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 NS_IMETHODIMP
 nsHTMLAnchorElement::SetAttr(nsINodeInfo* aNodeInfo,
-                             const nsAReadableString& aValue,
+                             const nsAString& aValue,
                              PRBool aNotify)
 {
   return nsGenericHTMLElement::SetAttr(aNodeInfo, aValue, aNotify);

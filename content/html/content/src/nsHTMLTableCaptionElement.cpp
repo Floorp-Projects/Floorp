@@ -70,11 +70,11 @@ public:
   NS_DECL_NSIDOMHTMLTABLECAPTIONELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
@@ -173,7 +173,7 @@ static nsGenericHTMLElement::EnumTable kCaptionAlignTable[] = {
 
 NS_IMETHODIMP
 nsHTMLTableCaptionElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAReadableString& aValue,
+                                      const nsAString& aValue,
                                       nsHTMLValue&    aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
@@ -187,7 +187,7 @@ nsHTMLTableCaptionElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLTableCaptionElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsAWritableString& aResult) const
+                                      nsAString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {

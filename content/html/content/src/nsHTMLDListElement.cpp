@@ -71,7 +71,7 @@ public:
   NS_IMETHOD SetCompact(PRBool aCompact);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
@@ -163,7 +163,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLDListElement, Compact, compact)
 
 NS_IMETHODIMP
 nsHTMLDListElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAReadableString& aValue,
+                                      const nsAString& aValue,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::compact) {

@@ -99,7 +99,7 @@ public:
                         PRUint32 argc, jsval *argv);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
@@ -347,7 +347,7 @@ nsHTMLOptionElement::SetDisabled(PRBool aDisabled)
 }
 
 NS_IMETHODIMP                                                      
-nsHTMLOptionElement::GetLabel(nsAWritableString& aValue)
+nsHTMLOptionElement::GetLabel(nsAString& aValue)
 {                                                                  
   nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_HTML,
                                          nsHTMLAtoms::label, aValue);
@@ -355,7 +355,7 @@ nsHTMLOptionElement::GetLabel(nsAWritableString& aValue)
 }         
                                                          
 NS_IMETHODIMP                                                      
-nsHTMLOptionElement::SetLabel(const nsAReadableString& aValue)
+nsHTMLOptionElement::SetLabel(const nsAString& aValue)
 {                                                                  
   nsresult result;
 
@@ -453,7 +453,7 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
 
 NS_IMETHODIMP
 nsHTMLOptionElement::StringToAttribute(nsIAtom* aAttribute,
-                                const nsAReadableString& aValue,
+                                const nsAString& aValue,
                                 nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::selected) {
@@ -489,7 +489,7 @@ nsHTMLOptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32
 }
 
 NS_IMETHODIMP
-nsHTMLOptionElement::GetText(nsAWritableString& aText)
+nsHTMLOptionElement::GetText(nsAString& aText)
 {
   PRInt32 numNodes, i;
 
@@ -532,7 +532,7 @@ nsHTMLOptionElement::GetText(nsAWritableString& aText)
 }
 
 NS_IMETHODIMP
-nsHTMLOptionElement::SetText(const nsAReadableString& aText)
+nsHTMLOptionElement::SetText(const nsAString& aText)
 {
   PRInt32 numNodes, i;
   PRBool usedExistingTextNode = PR_FALSE;  // Do we need to create a text node?

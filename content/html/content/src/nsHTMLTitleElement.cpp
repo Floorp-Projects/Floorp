@@ -153,7 +153,7 @@ nsHTMLTitleElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP 
-nsHTMLTitleElement::GetText(nsAWritableString& aTitle)
+nsHTMLTitleElement::GetText(nsAString& aTitle)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMNode> child;
@@ -172,7 +172,7 @@ nsHTMLTitleElement::GetText(nsAWritableString& aTitle)
 }
 
 NS_IMETHODIMP 
-nsHTMLTitleElement::SetText(const nsAReadableString& aTitle)
+nsHTMLTitleElement::SetText(const nsAString& aTitle)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMNode> child;

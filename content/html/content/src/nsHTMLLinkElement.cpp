@@ -139,26 +139,26 @@ public:
   }
 
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAReadableString& aValue, PRBool aNotify) {
+                     const nsAString& aValue, PRBool aNotify) {
     nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName,
                                                     aValue, aNotify);
     UpdateStyleSheet(aNotify);
     return rv;
   }
-  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAString& aValue,
                      PRBool aNotify) {
     nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNodeInfo, aValue,
                                                     aNotify);
 
     // nsGenericHTMLLeafElement::SetAttr(nsINodeInfo* aNodeInfo,
-    //                                   const nsAReadableString& aValue,
+    //                                   const nsAString& aValue,
     //                                   PRBool aNotify)
     //
     // calls
     //
     // nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID,
     //                            nsIAtom* aName,
-    //                            const nsAReadableString& aValue,
+    //                            const nsAString& aValue,
     //                            PRBool aNotify)
     //
     // which ends up calling UpdateStyleSheet so we don't call UpdateStyleSheet
@@ -183,10 +183,10 @@ public:
 #endif
 
 protected:
-  virtual void GetStyleSheetInfo(nsAWritableString& aUrl,
-                                 nsAWritableString& aTitle,
-                                 nsAWritableString& aType,
-                                 nsAWritableString& aMedia,
+  virtual void GetStyleSheetInfo(nsAString& aUrl,
+                                 nsAString& aTitle,
+                                 nsAString& aType,
+                                 nsAString& aMedia,
                                  PRBool* aDoBlock);
  
   // The cached visited state
@@ -314,7 +314,7 @@ NS_IMPL_STRING_ATTR(nsHTMLLinkElement, Type, type)
 
 
 NS_IMETHODIMP
-nsHTMLLinkElement::GetHref(nsAWritableString& aValue)
+nsHTMLLinkElement::GetHref(nsAString& aValue)
 {
   char *buf;
   nsresult rv = GetHrefCString(buf);
@@ -330,7 +330,7 @@ nsHTMLLinkElement::GetHref(nsAWritableString& aValue)
 }
 
 NS_IMETHODIMP
-nsHTMLLinkElement::SetHref(const nsAReadableString& aValue)
+nsHTMLLinkElement::SetHref(const nsAString& aValue)
 {
   // Clobber our "cache", so we'll recompute it the next time
   // somebody asks for it.
@@ -417,10 +417,10 @@ nsHTMLLinkElement::GetHrefCString(char* &aBuf)
 }
 
 void
-nsHTMLLinkElement::GetStyleSheetInfo(nsAWritableString& aUrl,
-                                     nsAWritableString& aTitle,
-                                     nsAWritableString& aType,
-                                     nsAWritableString& aMedia,
+nsHTMLLinkElement::GetStyleSheetInfo(nsAString& aUrl,
+                                     nsAString& aTitle,
+                                     nsAString& aType,
+                                     nsAString& aMedia,
                                      PRBool* aIsAlternate)
 {
   nsresult rv = NS_OK;

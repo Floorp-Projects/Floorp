@@ -75,7 +75,7 @@ public:
   NS_IMETHOD SetWidth(PRInt32 aWidth);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                       PRInt32& aHint) const;
@@ -167,7 +167,7 @@ NS_IMPL_INT_ATTR(nsHTMLPreElement, Width, width)
 
 NS_IMETHODIMP
 nsHTMLPreElement::StringToAttribute(nsIAtom* aAttribute,
-                                    const nsAReadableString& aValue,
+                                    const nsAString& aValue,
                                     nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::cols) {

@@ -119,11 +119,11 @@ public:
 
   // nsIContent
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32 aModType,
                                       PRInt32& aHint) const;
@@ -136,7 +136,7 @@ public:
 #endif
 
 protected:
-  nsresult SetSrcInner(nsIURI* aBaseURL, const nsAReadableString& aSrc);
+  nsresult SetSrcInner(nsIURI* aBaseURL, const nsAString& aSrc);
   static nsresult GetCallerSourceURL(nsIURI** sourceURL);
 
   nsresult GetImageFrame(nsIImageFrame** aImageFrame);
@@ -565,7 +565,7 @@ nsHTMLImageElement::SetWidth(PRInt32 aWidth)
 
 NS_IMETHODIMP
 nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,
-                                      const nsAReadableString& aValue,
+                                      const nsAString& aValue,
                                       nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
@@ -591,7 +591,7 @@ nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsHTMLImageElement::AttributeToString(nsIAtom* aAttribute,
                                       const nsHTMLValue& aValue,
-                                      nsAWritableString& aResult) const
+                                      nsAString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
@@ -763,7 +763,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::GetSrc(nsAWritableString& aSrc)
+nsHTMLImageElement::GetSrc(nsAString& aSrc)
 {
   // Resolve url to an absolute url
   nsresult rv = NS_OK;
@@ -884,7 +884,7 @@ NS_IMETHODIMP nsHTMLImageElement::FrameChanged(imgIContainer *container, nsISupp
 
 nsresult
 nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
-                                const nsAReadableString& aSrc)
+                                const nsAString& aSrc)
 {
   nsresult result = SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, aSrc,
                             PR_TRUE);
@@ -968,7 +968,7 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
 }
 
 NS_IMETHODIMP
-nsHTMLImageElement::SetSrc(const nsAReadableString& aSrc)
+nsHTMLImageElement::SetSrc(const nsAString& aSrc)
 {
   nsCOMPtr<nsIURI> baseURL;
   nsresult rv = NS_OK;

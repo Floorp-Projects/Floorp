@@ -127,7 +127,7 @@ public:
   NS_DECL_NSIDOMHTMLBODYELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
@@ -444,7 +444,7 @@ NS_IMPL_STRING_ATTR(nsHTMLBodyElement, VLink, vlink)
 
 
 NS_IMETHODIMP 
-nsHTMLBodyElement::GetBgColor(nsAWritableString& aBgColor)
+nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
 {
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
@@ -493,14 +493,14 @@ nsHTMLBodyElement::GetBgColor(nsAWritableString& aBgColor)
 }
 
 NS_IMETHODIMP 
-nsHTMLBodyElement::SetBgColor(const nsAReadableString& aBgColor)
+nsHTMLBodyElement::SetBgColor(const nsAString& aBgColor)
 {
   return SetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor, PR_TRUE); 
 }
 
 NS_IMETHODIMP
 nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
-                                     const nsAReadableString& aValue,
+                                     const nsAString& aValue,
                                      nsHTMLValue& aResult)
 {
   if ((aAttribute == nsHTMLAtoms::bgcolor) ||
