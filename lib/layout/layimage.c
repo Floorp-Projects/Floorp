@@ -547,7 +547,7 @@ lo_BodyForeground(MWContext *context, lo_DocState *state, PA_Tag *tag)
             /* Last param tells this to check state->top_state->body_attr
                state to suppress changing color during layout
             */
-            lo_ChangeBodyTextFGColor(context, state, &text_fg, FALSE);
+            lo_ChangeBodyTextFGColor(context, state, &text_fg);
 		}
 	}
 
