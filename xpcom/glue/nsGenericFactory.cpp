@@ -98,8 +98,6 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
-
 nsGenericModule::nsGenericModule(const char* moduleName, PRUint32 componentCount,
                                  nsModuleComponentInfo* components)
     : mInitialized(PR_FALSE), 
@@ -116,7 +114,7 @@ nsGenericModule::~nsGenericModule()
     Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsGenericModule, kIModuleIID)
+NS_IMPL_ISUPPORTS1(nsGenericModule, nsIModule)
 
 // Perform our one-time intialization for this module
 nsresult
@@ -164,7 +162,7 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
     // Choose the appropriate factory, based on the desired instance
     // class type (aClass).
     nsIDKey key(aClass);
-    nsCOMPtr<nsIGenericFactory> fact = (nsIGenericFactory*)mFactories.Get(&key);
+    nsCOMPtr<nsIGenericFactory> fact = getter_AddRefs(NS_REINTERPRET_CAST(nsIGenericFactory *, mFactories.Get(&key)));
     if (fact == nsnull) {
         nsModuleComponentInfo* desc = mComponents;
         for (PRUint32 i = 0; i < mComponentCount; i++) {
@@ -190,8 +188,6 @@ nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
     rv = fact->QueryInterface(aIID, r_classObj);
     return rv;
 }
-
-#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
 NS_IMETHODIMP
 nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
