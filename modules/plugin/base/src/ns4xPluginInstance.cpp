@@ -23,7 +23,7 @@
 #include "prlog.h"
 #include "prmem.h"
 #include "nscore.h"
-#include "ns4xPlugin.h"
+
 #include "ns4xPluginInstance.h"
 #include "ns4xPluginStreamListener.h"
 #include "nsPluginHostImpl.h"
