@@ -36,8 +36,8 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsCSSDeclaration_h___
-#define nsCSSDeclaration_h___
+#ifndef nsCSSStruct_h___
+#define nsCSSStruct_h___
 
 #include "nsISupports.h"
 #include "nsColor.h"
@@ -45,11 +45,6 @@
 #include "nsString.h"
 #include "nsCoord.h"
 #include "nsCSSValue.h"
-#include "nsCSSProps.h"
-#include "nsVoidArray.h"
-#include "nsValueArray.h"
-
-class nsStringArray;
 
 struct nsCSSStruct {
   // EMPTY on purpose.  ABSTRACT with no virtuals (typedef void nsCSSStruct?)
@@ -602,154 +597,4 @@ struct nsCSSDeclContains
 #define CSSDECLIDX_SVG(decl)           ((decl).mContains.mHasSVG + CSSDECLIDX_Aural(decl))
 #endif
 
-// --- nsCSSDeclaration -----------------
-
-class nsCSSDeclaration {
-public:
-  nsCSSDeclaration(void);
-  nsCSSDeclaration(const nsCSSDeclaration& aCopy);
-
-public:
-  NS_DECL_ZEROING_OPERATOR_NEW
-
-  nsCSSStruct* GetData(const nsID& aSID);
-  nsCSSStruct* EnsureData(const nsID& aSID);
-
-  nsresult AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValue);
-  nsresult AppendStructValue(nsCSSProperty aProperty, void* aStruct);
-  nsresult SetValueImportant(nsCSSProperty aProperty);
-  nsresult AppendComment(const nsAString& aComment);
-  nsresult RemoveProperty(nsCSSProperty aProperty, nsCSSValue& aValue);
-
-  nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue);
-  nsresult GetValue(nsCSSProperty aProperty, nsAString& aValue);
-  nsresult GetValue(const nsAString& aProperty, nsAString& aValue);
-
-  nsCSSDeclaration* GetImportantValues();
-  PRBool GetValueIsImportant(nsCSSProperty aProperty);
-  PRBool GetValueIsImportant(const nsAString& aProperty);
-
-  PRUint32 Count();
-  nsresult GetNthProperty(PRUint32 aIndex, nsAString& aReturn);
-
-  nsChangeHint GetStyleImpact() const;
-
-  nsresult ToString(nsAString& aString);
-
-  nsCSSDeclaration* Clone() const;
-
-#ifdef DEBUG
-  void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-  
-protected:
-  nsresult RemoveProperty(nsCSSProperty aProperty);
-
-private:
-  nsresult GetValueOrImportantValue(nsCSSProperty aProperty, nsCSSValue& aValue);
-  void     AppendImportanceToString(PRBool aIsImportant, nsAString& aString);
-  PRBool   AppendValueToString(nsCSSProperty aProperty, nsAString& aResult);
-  PRBool   AppendValueOrImportantValueToString(nsCSSProperty aProperty, nsAString& aResult);
-  PRBool   AppendValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAString& aResult);
-  nsCSSDeclaration& operator=(const nsCSSDeclaration& aCopy);
-  PRBool operator==(const nsCSSDeclaration& aCopy) const;
-
-  void   PropertyIsSet(PRInt32 & aPropertyIndex, PRInt32 aIndex, PRUint32 & aSet, PRUint32 aValue);
-  PRBool TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSet,
-                            PRInt32 aBorderTopWidth,
-                            PRInt32 aBorderTopStyle,
-                            PRInt32 aBorderTopColor,
-                            PRInt32 aBorderBottomWidth,
-                            PRInt32 aBorderBottomStyle,
-                            PRInt32 aBorderBottomColor,
-                            PRInt32 aBorderLeftWidth,
-                            PRInt32 aBorderLeftStyle,
-                            PRInt32 aBorderLeftColor,
-                            PRInt32 aBorderRightWidth,
-                            PRInt32 aBorderRightStyle,
-                            PRInt32 aBorderRightColor);
-  PRBool  TryBorderSideShorthand(nsAString & aString,
-                                 nsCSSProperty  aShorthand,
-                                 PRInt32 aBorderWidth,
-                                 PRInt32 aBorderStyle,
-                                 PRInt32 aBorderColor);
-  PRBool  TryFourSidesShorthand(nsAString & aString,
-                                nsCSSProperty aShorthand,
-                                PRInt32 & aTop,
-                                PRInt32 & aBottom,
-                                PRInt32 & aLeft,
-                                PRInt32 & aRight,
-                                PRBool aClearIndexes);
-  void  DoClipShorthand(nsAString & aString,
-                        PRInt32 aTop,
-                        PRInt32 aBottom,
-                        PRInt32 aLeft,
-                        PRInt32 aRight);
-  void  TryBackgroundShorthand(nsAString & aString,
-                               PRInt32 & aBgColor, PRInt32 & aBgImage,
-                               PRInt32 & aBgRepeat, PRInt32 & aBgAttachment,
-                               PRInt32 & aBgPositionX,
-                               PRInt32 & aBgPositionY);
-  void  UseBackgroundPosition(nsAString & aString,
-                              PRInt32 & aBgPositionX,
-                              PRInt32 & aBgPositionY);
-
-  PRBool   AllPropertiesSameImportance(PRInt32 aFirst, PRInt32 aSecond,
-                                       PRInt32 aThird, PRInt32 aFourth,
-                                       PRInt32 aFifth, PRInt32 aSixth,
-                                       PRBool & aImportance);
-  PRBool   AllPropertiesSameValue(PRInt32 aFirst, PRInt32 aSecond,
-                                  PRInt32 aThird, PRInt32 aFourth);
-  void     AppendPropertyAndValueToString(nsCSSProperty aProperty,
-                                          nsAString& aResult);
-
-protected:
-    //
-    // Specialized ref counting.
-    // We do not want everyone to ref count us, only the rules which hold
-    //  onto us (our well defined lifetime is when the last rule releases
-    //  us).
-    // It's worth a comment here that the main nsCSSDeclaration is refcounted,
-    //  but it's |mImportant| is not refcounted, but just owned by the
-    //  non-important declaration.
-    //
-    friend class CSSStyleRuleImpl;
-    void AddRef(void) {
-      mRuleRefs++;
-    }
-    void Release(void) {
-      NS_ASSERTION(0 < mRuleRefs, "bad Release");
-      if (0 == --mRuleRefs) {
-        delete this;
-      }
-    }
-public:
-    void RuleAbort(void) {
-      NS_ASSERTION(0 == mRuleRefs, "bad RuleAbort");
-      delete this;
-    }
-protected:
-    //
-    // Block everyone, except us or a derivitive, from deleting us.
-    //
-  ~nsCSSDeclaration(void);
-    
-
-private:
-    nsValueArray* mOrder;
-    nsCSSDeclaration* mImportant;
-    nsSmallVoidArray mStructs;
-
-    //
-    // Keep these two together, as they should pack.
-    //
-    nsCSSDeclRefCount mRuleRefs;
-    nsCSSDeclContains mContains;
-};
-
-
-nsresult
-NS_NewCSSDeclaration(nsCSSDeclaration** aInstancePtrResult);
-
-
-#endif /* nsCSSDeclaration_h___ */
+#endif /* nsCSSStruct_h___ */
