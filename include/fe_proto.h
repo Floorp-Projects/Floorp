@@ -117,8 +117,8 @@ extern void FE_ClearConnectPoll(PRFileDesc *fd);
 extern int FE_AsyncDNSLookup(MWContext *context, 
 				             char * host_port,
 				             PRHostEnt ** hoststruct_ptr_ptr, 
-	                         PRFileDesc *socket);
-extern void FE_AbortDNSLookup(PRFileDesc *socket);
+	                         PRFileDesc *sock);
+extern void FE_AbortDNSLookup(PRFileDesc *sock);
 
 /* all the other selects are depricated and should be removed shortly */
 

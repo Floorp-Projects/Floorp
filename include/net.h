@@ -1512,7 +1512,7 @@ Bool NET_SetActiveEntryBusyStatus(URL_Struct *nurl, Bool set_busy);
  *
  * returns -1 on error.
  */
-extern int NET_InterruptSocket (PRFileDesc *socket);
+extern int NET_InterruptSocket (PRFileDesc *sock);
 
 /* check for any active URL transfers in progress for the given
  * window Id
