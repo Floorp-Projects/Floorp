@@ -23,11 +23,9 @@
 
 #include "nsWindowsTimer.h"
 #include "nsITimerQueue.h"
-#include "nsIWindowsTimerMap.h"
 #include "nsCRT.h"
 #include "prlog.h"
 #include <stdio.h>
-#include <windows.h>
 #include <limits.h>
 #include "nsWidgetsCID.h"
 #include "nsIServiceManager.h"
@@ -36,7 +34,7 @@
 
 static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
-static nsCOMPtr<nsIWindowsTimerMap> sTimerMap;
+static nsCOMPtr<nsIWindowsTimerMap> sTimerMap = nsnull;
 static nsCOMPtr<nsITimerQueue> sTimerQueue;
 
 class nsTimer;
@@ -109,7 +107,12 @@ nsTimer::nsTimer() : nsITimer()
     cachedService = 1;
 
     nsresult rv;
-    sTimerMap = do_GetService(kTimerManagerCID, &rv);
+    mKungFuDeathGripTimerMap = do_GetService(kTimerManagerCID, &rv);
+
+    // copy to static var, so it can be accessed by the FireTimeout
+    // function
+
+    sTimerMap = mKungFuDeathGripTimerMap;
     sTimerQueue = do_GetService(kTimerManagerCID, &rv);
   }
 }
@@ -117,6 +120,7 @@ nsTimer::nsTimer() : nsITimer()
 
 nsTimer::~nsTimer()
 {
+  sTimerMap = nsnull;
   KillOSTimer();
   
   NS_IF_RELEASE(mCallback);
@@ -232,13 +236,13 @@ void nsTimer::StartOSTimer(PRUint32 aDelay)
 {
   PR_ASSERT(mTimerID == 0);
 
-  if (!sTimerMap) return;
+  if (!mKungFuDeathGripTimerMap) return;
 
   // create OS timer
   mTimerID = ::SetTimer(NULL, 0, aDelay, (TIMERPROC)FireTimeout);
 
   // store mapping from OS timer to timer object
-  sTimerMap->AddTimer(mTimerID, this);
+  mKungFuDeathGripTimerMap->AddTimer(mTimerID, this);
 }
 
 
@@ -247,8 +251,8 @@ void nsTimer::KillOSTimer()
   if (mTimerID != 0) {
 
     // remove mapping from OS timer to timer object
-    if (sTimerMap) {
-      sTimerMap->RemoveTimer(mTimerID);
+    if (mKungFuDeathGripTimerMap) {
+      mKungFuDeathGripTimerMap->RemoveTimer(mTimerID);
     }
 
     // kill OS timer
