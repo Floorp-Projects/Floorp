@@ -28,38 +28,32 @@
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nscore.h" // for PRUnichar
-%}
-
 [scriptable, uuid(9491C383-E3C4-11d2-BDBE-0050040A9B44)]
 interface nsIGlobalHistory : nsISupports
 {
-    // Add a page to the history
-    void AddPage(in string aURL, in string aReferrerURL, in long long aDate);
+    /**
+     * addPAge
+     * Add a page to the history - aReferrer can be null, but aDate
+     * must be the date to set in the history
+     */
 
-    // Set the title for a page in the global history
-    void SetPageTitle(in string aURL, in wstring aTitle);
+    void addPage(in string aURL, in string aReferrerURL, in long long aDate);
 
-    // Remove the specified page from the global history
-    void RemovePage(in string aURL);
+    /**
+     * setPageTitle
+     * set the page title for the given url. Ignores urls that are not
+     * already in the history
+     */
+    void setPageTitle(in string aURL, in wstring aTitle);
 
-    // Remove all pages from the given host.
-    // If aEntireDomain is true, will assume aHost is a domain,
-    // and remove all pages from the entire domain.
-    void RemovePagesFromHost(in string aHost, in boolean aEntireDomain);
+    /**
+     * getLastVisitDate
+     * retrieves the last visit date for the given url. will return
+     * a zero date if the page is not in the history
+     * (this is often used to determine if something is in history or not)
+     */
+    long long getLastVisitDate(in string aURL);
 
-    // Remove all pages from global history
-    void RemoveAllPages();
-
-    // Get the URL's last visit date
-    long long GetLastVisitDate(in string aURL);
-
-    // Get the preferred completion for aURL
-    string GetURLCompletion(in string aURL);
-
-    // get the last page visited
-    string GetLastPageVisited();
 };
 
 %{ C++

@@ -465,8 +465,9 @@ nsGlobalHistory::~nsGlobalHistory()
 //
 //   nsISupports methods
 
-NS_IMPL_ISUPPORTS5(nsGlobalHistory,
+NS_IMPL_ISUPPORTS6(nsGlobalHistory,
                    nsIGlobalHistory,
+                   nsIBrowserHistory,
                    nsIObserver,
                    nsISupportsWeakReference,
                    nsIRDFDataSource,
@@ -1030,14 +1031,6 @@ nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
   return GetRowValue(row, kToken_LastVisitDateColumn, _retval);
 
   return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsGlobalHistory::GetURLCompletion(const char *aURL, char **_retval)
-{
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
@@ -1686,7 +1679,7 @@ nsGlobalHistory::HasAssertion(nsIRDFResource* aSource,
                               PRBool aTruthValue,
                               PRBool* aHasAssertion)
 {
-         
+
   NS_PRECONDITION(aSource != nsnull, "null ptr");
   if (! aSource)
     return NS_ERROR_NULL_POINTER;
@@ -1864,6 +1857,17 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
     array->AppendElement(kNC_Hostname);
     array->AppendElement(kNC_Referrer);
 
+    return NS_NewArrayEnumerator(aLabels, array);
+  }
+  else if (IsFindResource(aSource)) {
+    nsCOMPtr<nsISupportsArray> array;
+    rv = NS_NewISupportsArray(getter_AddRefs(array));
+    if (NS_FAILED(rv)) return rv;
+
+    array->AppendElement(kNC_child);
+    array->AppendElement(kNC_Name);
+    array->AppendElement(kNC_NameSort);
+    
     return NS_NewArrayEnumerator(aLabels, array);
   }
   else {
@@ -2723,7 +2727,7 @@ nsGlobalHistory::TokenListToSearchQuery(const nsVoidArray& aTokens,
     *method=nsnull, *text=nsnull;
 
   PRUint32 datasourceLen=0, propertyLen=0, methodLen=0, textLen=0;
-  rowMatchCallback matchCallback;      // matching callback if needed
+  rowMatchCallback matchCallback=nsnull; // matching callback if needed
   
   for (i=0; i<length; i++) {
     tokenPair *token = (tokenPair *)aTokens[i];
@@ -2756,8 +2760,6 @@ nsGlobalHistory::TokenListToSearchQuery(const nsVoidArray& aTokens,
       err = mStore->QueryToken(mEnv,
                                nsCAutoString(token->tokenValue),
                                &aResult.groupBy);
-      printf("Converted %s to %d\n", nsCAutoString(token->tokenValue).get(),
-             aResult.groupBy);
       if (err != 0)
         aResult.groupBy = 0;
     }
@@ -2794,10 +2796,6 @@ nsGlobalHistory::GetFindUriName(const char *aURL, nsIRDFNode **aResult)
 
   nsresult rv;
 
-#if 0
-  printf("GetFindUriName for %s\n", aURL);
-#endif
-  
   // build up a token list first
   nsVoidArray tokens;
   FindUrlToTokenList(aURL, tokens);

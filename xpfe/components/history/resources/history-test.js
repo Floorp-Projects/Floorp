@@ -34,7 +34,7 @@ function ShowLastPageVisited() {
     }
     if (history) {
       try {
-	lastpagevisited = history.GetLastPageVisited();
+        lastpagevisited = history.lastPageVisited;
 	document.getElementById('result').value =  lastpagevisited;
       } 
       catch (ex) {
