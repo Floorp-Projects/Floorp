@@ -3574,7 +3574,7 @@ void CDCCX::DisplayTable(MWContext *pContext, int iLocation, LO_TableStruct *pTa
             iSelectionBorder = DisplayTableBorder(Rect, pTable);
 		} 
 #ifdef EDITOR
-        else // if ( EDT_DISPLAY_TABLE_BORDERS(pContext) ) // We always display table borders
+        else if( EDT_IS_EDITOR(pContext) )
         {
             if( 0 == pTable->inter_cell_space )
             {
