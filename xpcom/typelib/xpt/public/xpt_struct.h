@@ -48,7 +48,6 @@ typedef struct XPTTypeDescriptorPrefix XPTTypeDescriptorPrefix;
 typedef struct XPTSimpleTypeDescriptor XPTSimpleTypeDescriptor;
 typedef struct XPTInterfaceDescriptor XPTInterfaceDescriptor;
 typedef struct XPTInterfaceIsTypeDescriptor XPTInterfaceIsTypeDescriptor;
-typedef char *XPTIdentifier;    
 typedef struct XPTString XPTString;
 typedef struct XPTAnnotationPrefix XPTAnnotationPrefix;
 typedef struct XPTEmptyAnnotation XPTEmptyAnnotation;
@@ -79,8 +78,8 @@ struct XPTInterfaceDescriptor {
     XPTConstDescriptor                  *const_descriptors;
 };
 
-struct XPTConstDescriptorD {
-    XPTIdentifier       name;
+struct XPTConstDescriptor {
+    char                *name;
     XPTTypeDescriptor   type;
     char                value[0]; /* really varies according to type */
 };
@@ -88,7 +87,7 @@ struct XPTConstDescriptorD {
 struct XPTMethodDescriptor {
     uint8               is_getter:1, is_setter:1, is_varargs:1,
                         is_constructor:1, reserved:4;
-    XPTIdentifier       name;
+    char                *name;
     uint8               num_args;
     XPTParamDescriptor  *params;
     XPTParamDescriptor  *result;
@@ -110,7 +109,7 @@ struct XPTSimpleTypeDescriptor {
 
 struct XPTInterfaceTypeDescriptor {
     XPTTypeDescriptorPrefix     prefix;
-    XPTInterfaceDirectoryEntry *interface; /* XPTInterfaceDirectoryEntryD */
+    XPTInterfaceDirectoryEntry *interface;
 };
 
 struct XPTInterfaceIsTypeDescriptor {

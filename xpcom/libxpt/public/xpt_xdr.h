@@ -34,7 +34,17 @@ PRBool
 XPT_DoString(XPTXDRState *state, XPTString **strp);
 
 PRBool
-XPT_DoIdentifier(XPTState *state, XPTIdentifier *identp);
+XPT_DoIdentifier(XPTState *state, char **identp);
+
+/*
+ * XXX need to think about ordering and API issues for offset<->addr
+ * XXX conversion
+ */
+PRBool
+XPT_GetOffsetForAddr(XPTXDRState *state, void *addr, uint32 *offsetp);
+
+PRBool
+XPT_GetAddrForOffset(XPTXDRState *state, uint32 offset, void **addr);
 
 PRBool
 XPT_Do32(XPTXDRState *state, uint32 *u32p);
@@ -46,34 +56,17 @@ PRBool
 XPT_Do8(XPTXDRState *state, uint8 *u8p);
 
 /*
- * When working with bitfields, use the Do7-Do1 calls with a uint8.
- * Only the appropriate number of bits are manipulated, and when in decode
- * mode, the rest are zeroed.  When you're done sending bits along, use
+ * When working with bitfields, use the DoBits call with a uint8.
+ * Only the appropriate number of bits are manipulated, so when
+ * you're decoding you probably want to ensure that the uint8 is pre-zeroed.
+ * When you're done sending bits along, use
  * XPT_FlushBits to make sure that you don't eat a leading bit from the
  * next structure.  (You should probably be writing full bytes' worth of bits
- * anyway, and zeroing out the bits you don't use, but just to be sure...
+ * anyway, and zeroing out the bits you don't use, but just to be sure...)
  */
 
 PRBool
 XPT_DoBits(XPTXDRState *state, uint8 *u8p, uintN nbits);
-
-PRBool
-XPT_Do6(XPTXDRState *state, uint8 *u6p);
-
-PRBool
-XPT_Do5(XPTXDRState *state, uint8 *u5p);
-
-PRBool
-XPT_Do4(XPTXDRState *state, uint8 *u4p);
-
-PRBool
-XPT_Do3(XPTXDRState *state, uint8 *u3p);
-
-PRBool
-XPT_Do2(XPTXDRState *state, uint8 *u2p);
-
-PRBool
-XPT_Do1(XPTXDRState *state, uint8 *u1p);
 
 /* returns the number of bits skipped, which should be 0-7 */
 int
@@ -91,11 +84,16 @@ struct XPTXDRState {
 
 struct XPTXDRDatapool {
     PLHash      *offset_map;
-    void        *data;
+    char        *data;
     uint32      point;
-    uint8       bits;
+    uint8       bit;
     uint32      allocated;
 };
+
+/* increase the data allocation for the pool by XPT_GROW_CHUNK */
+#define XPT_GROW_CHUNK 8192
+PRBool
+XPT_GrowPool(XPTXDRDatapool *pool);
 
 /* all data structures are big-endian */
 
