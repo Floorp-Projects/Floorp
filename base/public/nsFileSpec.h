@@ -209,7 +209,7 @@ protected:
 //========================================================================================
 class NS_BASE nsFileSpec
 //    This is whatever each platform really prefers to describe files as.  Declared first
-//  because the other two types have an embeded nsFileSpec object.
+//  because the other two types have an embedded nsFileSpec object.
 //========================================================================================
 {
     public:
@@ -310,6 +310,26 @@ class NS_BASE nsFileSpec
                                     // but a spec.  Volumes on Macintosh can have identical
                                     // names.  Perhaps could be used for an operator --() ?
 
+        typedef PRUint32        TimeStamp; // ie nsFileSpec::TimeStamp.  This is 32 bits now,
+                                           // but might change, eg, to a 64-bit class.  So use the
+                                           // typedef, and use a streaming operator to convert
+                                           // to a string, so that your code won't break.  It's
+                                           // none of your business what the number means.  Don't
+                                           // rely on the implementation.
+        void                    GetModDate(TimeStamp& outStamp) const;
+                                           // This will return different values on different
+                                           // platforms, even for the same file (eg, on a server).
+                                           // But if the platform is constant, it will increase after
+                                           // every file modification.
+        PRBool                  ModDateChanged(const TimeStamp& oldStamp) const
+                                {
+                                    TimeStamp newStamp;
+                                    GetModDate(newStamp);
+                                    return newStamp != oldStamp;
+                                }
+        
+        PRUint32                GetFileSize() const;
+        
         nsFileSpec              operator + (const char* inRelativePath) const;
         nsFileSpec              operator + (const nsString& inRelativePath) const
                                 {
@@ -368,12 +388,17 @@ class NS_BASE nsFileSpec
                                     return Execute(argsString);
                                 }
 
+    protected:
+    #ifdef XP_MAC
+        OSErr                   GetCatInfo(CInfoPBRec& outInfo) const;
+    #endif
         //--------------------------------------------------
         // Data
         //--------------------------------------------------
 
     protected:
                                 friend class nsFilePath;
+                                friend class nsDirectoryIterator;
 #ifdef XP_MAC
         FSSpec                  mSpec;
 #else

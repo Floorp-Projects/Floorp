@@ -776,18 +776,22 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
    if ( inOther.mSpec.vRefNum == mSpec.vRefNum &&
         inOther.mSpec.parID   == mSpec.parID &&
         EqualString(inOther.mSpec.name, mSpec.name, false, false))
-        return (PR_TRUE);
-#elif XP_PC
-   // windows does not care about case.
-
-   if (_stricmp(mPath, inOther.mPath ) == 0)
-       return (PR_TRUE);
+        return PR_TRUE;
 #else
-    if (strcmp(mPath, inOther.mPath ) == 0)
-       return (PR_TRUE);
+   if (!mPath)
+       return inOther.mPath == nsNull;
+   if (!inOther.mPath)
+       return PR_FALSE;
+	#if defined(XP_PC)
+	   // windows does not care about case.
+	   if (_stricmp(mPath, inOther.mPath ) == 0)
+	       return PR_TRUE;
+	#else
+	   if (strcmp(mPath, inOther.mPath ) == 0)
+	       return PR_TRUE;
+	#endif
 #endif
-
-   return (PR_FALSE);
+   return PR_FALSE;
 }
 
 //----------------------------------------------------------------------------------------

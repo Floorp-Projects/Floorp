@@ -99,6 +99,27 @@ PRBool nsFileSpec::Exists() const
 } // nsFileSpec::Exists
 
 //----------------------------------------------------------------------------------------
+void nsFileSpec::GetModDate(TimeStamp& outStamp) const
+//----------------------------------------------------------------------------------------
+{
+	struct stat st;
+    if (stat(mPath, &st) == 0) 
+        outStamp = st.st_mtime; 
+    else
+        outStamp = 0;
+} // nsFileSpec::GetModDate
+
+//----------------------------------------------------------------------------------------
+PRUint32 nsFileSpec::GetFileSize() const
+//----------------------------------------------------------------------------------------
+{
+	struct stat st;
+    if (stat(mPath, &st) == 0) 
+        return (PRUint32)st.st_size; 
+    return 0;
+} // nsFileSpec::GetFileSize
+
+//----------------------------------------------------------------------------------------
 PRBool nsFileSpec::IsFile() const
 //----------------------------------------------------------------------------------------
 {

@@ -603,6 +603,27 @@ PRBool nsFileSpec::Exists() const
 } // nsFileSpec::operator =
 
 //----------------------------------------------------------------------------------------
+void nsFileSpec::GetModDate(TimeStamp& outStamp) const
+//----------------------------------------------------------------------------------------
+{
+	CInfoPBRec pb;
+    if (GetCatInfo(pb) == noErr)
+        outStamp = ((DirInfo*)&pb)->ioDrMdDat; // The mod date is in the same spot for files and dirs.
+    else
+        outStamp = 0;
+} // nsFileSpec::GetModDate
+
+//----------------------------------------------------------------------------------------
+PRUint32 nsFileSpec::GetFileSize() const
+//----------------------------------------------------------------------------------------
+{
+	CInfoPBRec pb;
+    if (noErr == GetCatInfo(pb))
+        return (PRUint32)((HFileInfo*)&pb)->ioFlLgLen;
+    return 0;
+} // nsFileSpec::GetFileSize
+
+//----------------------------------------------------------------------------------------
 void nsFileSpec::SetLeafName(const char* inLeafName)
 // In leaf name can actually be a partial path...
 //----------------------------------------------------------------------------------------
@@ -793,6 +814,19 @@ nsresult nsFileSpec::Execute(const char* /*args - how can this be cross-platform
   
 } // nsFileSpec::Execute
 
+//----------------------------------------------------------------------------------------
+OSErr nsFileSpec::GetCatInfo(CInfoPBRec& outInfo) const
+//----------------------------------------------------------------------------------------
+{
+	DirInfo	*dipb=(DirInfo *)&outInfo;
+    dipb->ioCompletion = nsnull;
+	dipb->ioFDirIndex = 0; // use dirID and name
+	dipb->ioVRefNum = mSpec.vRefNum;
+	dipb->ioDrDirID = mSpec.parID;
+	dipb->ioNamePtr = const_cast<nsFileSpec*>(this)->mSpec.name;
+	return PBGetCatInfoSync(&outInfo);
+} // nsFileSpec::GetCatInfo()
+
 //========================================================================================
 //					Macintosh nsFilePath implementation
 //========================================================================================
@@ -888,24 +922,15 @@ nsDirectoryIterator::nsDirectoryIterator(
 	, mIndex(-1)
 {
 	CInfoPBRec pb;
-	DirInfo* dipb = (DirInfo*)&pb;
-	// Sorry about this, there seems to be a bug in CWPro 4:
-	const FSSpec& inSpec = inDirectory.nsFileSpec::operator const FSSpec&();
-    Str255 outName;
-    MacFileHelpers::PLstrcpy(outName, inSpec.name);
-	pb.hFileInfo.ioNamePtr = outName;
-	pb.hFileInfo.ioVRefNum = inSpec.vRefNum;
-	pb.hFileInfo.ioDirID = inSpec.parID;
-	pb.hFileInfo.ioFDirIndex = 0;	// use ioNamePtr and ioDirID
-
-	OSErr err = PBGetCatInfoSync( &pb );
-
+    OSErr err = inDirectory.GetCatInfo(pb);
+    
 	// test that we have got a directory back, not a file
-	if ( (err != noErr ) || !( dipb->ioFlAttrib & 0x0010 ) )
+	DirInfo* dipb = (DirInfo*)&pb;
+	if (err != noErr  || !( dipb->ioFlAttrib & 0x0010))
 		return;
 	// Sorry about this, there seems to be a bug in CWPro 4:
 	FSSpec& currentSpec = mCurrent.nsFileSpec::operator FSSpec&();
-	currentSpec.vRefNum = inSpec.vRefNum;
+	currentSpec.vRefNum = currentSpec.vRefNum;
 	currentSpec.parID = dipb->ioDrDirID;
 	mMaxIndex = pb.dirInfo.ioDrNmFls;
 	if (inIterateDirection > 0)
@@ -969,3 +994,4 @@ nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
 		}
 	return *this;
 } // nsDirectoryIterator::operator ++
+
