@@ -22,6 +22,7 @@
 #include "nsIWidget.h"
 #include "nsIPref.h"
 #include "plevent.h"
+#include "prmem.h"
 
 #include "nsIAppShell.h"
 #include "nsICmdLineService.h"
@@ -30,15 +31,13 @@
 #include "prprf.h"
 #include "nsCRT.h"
 #include "nsFileSpec.h"
-
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
+#include "nsFileStream.h"
+#include "nsSpecialSystemDirectory.h"
 
 // header file for profile manager
-#if defined(XP_PC)
-	// include this for _getcwd call
-	#include <direct.h>
-
-	#include "nsIProfile.h"
-#endif // XP_PC
+#include "nsIProfile.h"
 
 #if defined(XP_MAC)
 #include "macstdlibextras.h"
@@ -51,13 +50,15 @@ static struct MacInitializer { MacInitializer() { InitializeMacToolbox(); } } gI
 static NS_DEFINE_IID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
+static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kIAppShellServiceIID,  NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kICmdLineServiceIID,   NS_ICOMMANDLINE_SERVICE_IID);
+static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 
 // defined for profileManager
-#if defined(XP_PC) 
+#if defined(NS_USING_PROFILES)
 static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 #endif // XP_PC
 
@@ -65,14 +66,13 @@ static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
  AppCores
 *********************************************/
 
-//#if defined(XP_PC) || defined(XP_MAC)
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
 
 //static nsIDOMAppCoresManager *appCoresManager = nsnull;
 static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,     NS_APPCORESMANAGER_CID);
-//#endif
+
 /*********************************************/
 
 /*
@@ -103,7 +103,8 @@ int main(int argc, char* argv[])
   nsresult rv;
   nsString controllerCID;
 
-  nsICmdLineService *  cmdLineArgs;
+  nsICmdLineService *  cmdLineArgs = nsnull;
+
   char *  urlstr=nsnull;
   char *   progname = nsnull;
   char *   width=nsnull, *height=nsnull;
@@ -118,12 +119,11 @@ int main(int argc, char* argv[])
   nsIPref *prefs;
 
   // initializations for profile manager
-  #if defined(XP_PC)
-	char * currProfileName=nsnull;
-	char * currProfileDir=nsnull;
+#if defined(NS_USING_PROFILES)
+	nsFileSpec currProfileDirSpec;
 	PRBool profileDirSet = PR_FALSE;
-	nsIProfile *profile;
-  #endif // XP_PC
+	nsIProfile *profileService = nsnull;
+#endif // defined(NS_USING_PROFILES)
 
   /* 
    * initialize all variables that are NS_IF_RELEASE(...) during
@@ -137,10 +137,6 @@ int main(int argc, char* argv[])
 
   char* cmdResult = nsnull;
 
-  #if defined(XP_PC) 
-      profile  = nsnull;
-  #endif // XP_PC
-
   /*
    * Initialize XPCOM.  Ultimately, this should be a function call such as
    * NS_XPCOM_Initialize(...).
@@ -152,19 +148,27 @@ int main(int argc, char* argv[])
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1();
 
+  //Is there a call to get current working directory ?
+  nsIFileLocator* locator = nsnull;
+  rv = nsServiceManager::GetService(kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
+  if (NS_FAILED(rv))
+      return rv;
+  if (!locator)
+      return NS_ERROR_FAILURE;
+
   // get and start the ProfileManager service
-  #if defined(XP_PC) 
+  #if defined(NS_USING_PROFILES)
   rv = nsServiceManager::GetService(kProfileCID, 
                                     nsIProfile::GetIID(), 
-                                    (nsISupports **)&profile);
+                                    (nsISupports **)&profileService);
   
 
   if (NS_FAILED(rv)) {
     goto done;
   }
-  profile->Startup(nsnull);
+  profileService->Startup(nsnull);
 
-  #endif // XP_PC
+  #endif // defined(NS_USING_PROFILES)
 
 
 
@@ -202,7 +206,7 @@ int main(int argc, char* argv[])
   if (nsnull == urlstr){
 
 	// check for command line arguments for profile manager
-        #if defined(XP_PC) 
+    #if defined(NS_USING_PROFILES)
 	
 	// -P command line option works this way:
 	// apprunner -P profilename 
@@ -212,19 +216,16 @@ int main(int argc, char* argv[])
     if (NS_SUCCEEDED(rv))
     {
 		if (cmdResult) {
-			nsFileSpec* profileDir = nsnull;
-			currProfileName = cmdResult;
+			char* currProfileName = cmdResult;
 
 			fprintf(stderr, "ProfileName : %s\n", cmdResult);
 			
-			profile->GetProfileDir(currProfileName, &profileDir);
-			printf("** ProfileDir  :  %s **\n", profileDir->GetCString());
+			rv = profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+			printf("** ProfileDir  :  %s **\n", currProfileDirSpec.GetCString());
 			
-			currProfileDir = (char *)profileDir->GetCString();
-			if (currProfileDir){
+			if (NS_SUCCEEDED(rv)){
 				profileDirSet = PR_TRUE;
 			}
-			
 		}
     }
 
@@ -243,24 +244,22 @@ int main(int argc, char* argv[])
     if (NS_SUCCEEDED(rv))
     {
 		if (cmdResult) {
-			currProfileName = strtok(cmdResult, " ");
-            currProfileDir = strtok(NULL, " ");
+			char* currProfileName = strtok(cmdResult, " ");
+            char* currProfileDirString = strtok(NULL, " ");
 			
-			if (!currProfileDir) {
-				char currDir[_MAX_PATH] = {'\0'};
-				_getcwd(currDir, _MAX_PATH);
-				currProfileDir = currDir;
-			}
-
-			nsFileSpec profileDir(currProfileDir);
+			if (currProfileDirString)
+			    currProfileDirSpec = currProfileDirString;
+			else
+				currProfileDirSpec
+				    = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
 
 			fprintf(stderr, "profileName & profileDir are: %s\n", cmdResult);
-			profile->SetProfileDir(currProfileName, profileDir);
+			profileService->SetProfileDir(currProfileName, currProfileDirSpec);
 	  		profileDirSet = PR_TRUE;
 			
 		}
     }
-	#endif // XP_PC
+	#endif // defined(NS_USING_PROFILES)
     
     rv = cmdLineArgs->GetCmdLineValue("-editor", &cmdResult);
     if (NS_SUCCEEDED(rv))
@@ -314,65 +313,10 @@ int main(int argc, char* argv[])
    * check if we have a profile directory
    */
 
-  #if defined(XP_PC) 
-  if (!profileDirSet) {
-	  int numProfiles = 0;
-	  profile->GetProfileCount(&numProfiles);
-
-	  // no profiles exists: creates "default" profile and 
-	  // sets its directory to your CWD
-	  if (numProfiles == 0) {	
-		  char currDir[_MAX_PATH] = {'\0'};
-		  //XP_MAC impact on this....!
-		  //Is there a call to get current working directory ?
-		  _getcwd(currDir, _MAX_PATH);
-  		  nsFileSpec profileDir(currDir);
-		  profile->SetProfileDir("default", profileDir);
-		  currProfileName = "default";
-		  currProfileDir  = currDir;
-	  }
-	  // one profile exists: use that profile
-	  else if (numProfiles == 1) {
-		  char *profileName = nsnull;
-		  nsFileSpec* profileDir = nsnull;
-		  profileDir = new nsFileSpec;
-
-		  profile->GetSingleProfile(&profileName);
-		  profile->GetProfileDir(profileName, &profileDir);
-		  currProfileName = profileName;
-		  currProfileDir = (char *)profileDir->GetCString();
-	  }
-
-	  // multiple profiles exist: we'll use the same profile as last time 
-	  // (see following rules) 
-      // (if we can't figure out what the last profile used was for some reason, 
-	  // we'll pick the first one as returned from the registry query) 
-	  else {
-		  char *profileName = nsnull;
-		  nsFileSpec* profileDir = nsnull;
-		  profileDir = new nsFileSpec;
-		
-		  profile->GetCurrentProfile(&profileName);
-		  if (profileName) {
-			  profile->GetProfileDir(profileName, &profileDir);
-			  currProfileName = profileName;
-	  		  currProfileDir = (char *)profileDir->GetCString();
-		  }
-		  else {
-		  	  profile->GetFirstProfile(&profileName);
-			  profile->GetProfileDir(profileName, &profileDir);
-			  currProfileName = profileName;
-	  		  currProfileDir = (char *)profileDir->GetCString();
-		  }
-	  }
-
-	  if (currProfileName && currProfileDir) {
-		fprintf(stderr, "ProfileName : %s\n", currProfileName);
-		fprintf(stderr, "ProfileDir  : %s\n", currProfileDir);
-	  }
-  }
-
- #endif // XP_PC
+#if defined(NS_USING_PROFILES)
+  if (!profileDirSet)
+      locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &currProfileDirSpec);
+#endif // defined(NS_USING_PROFILES)
 
 
   /*
@@ -381,11 +325,31 @@ int main(int argc, char* argv[])
   rv = nsServiceManager::GetService(kPrefCID, 
                                     nsIPref::GetIID(), 
                                     (nsISupports **)&prefs);
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv))
     goto done;
-  }
-  prefs->Startup(nsnull);
-  
+
+  { // <-Scoping for nsFileSpec
+	  nsFileSpec newPrefs;
+	  rv = locator->GetFileLocation(nsSpecialFileSpec::App_PreferencesFile50, &newPrefs);
+	  if (NS_SUCCEEDED(rv))
+	  {
+	    if (!newPrefs.Exists())
+	    {
+	       nsOutputFileStream stream(newPrefs);
+	       if (stream.is_open())
+	       {
+	           stream << "// This is an empty prefs file" << nsEndl;
+	       }
+	    }
+	    if (newPrefs.Exists())
+	       rv = prefs->Startup(newPrefs.GetCString());
+	    else
+	    {
+	       rv = NS_ERROR_FAILURE;
+	       goto done;
+	    }
+	  }
+  } // <- end of scoping for nsFileSpec
 
   /*
    * Create the Application Shell instance...
@@ -536,13 +500,15 @@ done:
     nsServiceManager::ReleaseService(kPrefCID, prefs);
   }
 
-#if defined(XP_PC) 
-  /* Release the global profile... */
-  if (profile) {
-    profile->Shutdown();
-    nsServiceManager::ReleaseService(kProfileCID, profile);
+#if defined(NS_USING_PROFILES)
+  /* Release the global profile service... */
+  if (profileService) {
+    profileService->Shutdown();
+    nsServiceManager::ReleaseService(kProfileCID, profileService);
   }
-#endif
+#endif // defined(NS_USING_PROFILES)
+
+    nsServiceManager::ReleaseService(kFileLocatorCID, locator);
 
   /* 
    * Translate the nsresult into an appropriate platform-specific return code.
