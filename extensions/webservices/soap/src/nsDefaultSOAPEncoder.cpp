@@ -2490,7 +2490,7 @@ static PRUint32 DecodeArrayDimensions(const nsAString& src, PRInt32* aDimensionS
       }
     }
   }
-  dst = Substring(dst, 0, len);              //  Truncate the string.
+  dst = Substring(src, 0, len);              //  Truncate the string.
   return dimensionCount + 1;                    //  Return the number of dimensions
 }
 
