@@ -42,6 +42,9 @@ EXPORTS		= \
 		  nsTraceRefcnt.h \
 		  nsVector.h \
 		  plvector.h \
+        nsXPComFactory.h        \
+        nsXPComCIID.h           \
+        nsIEventQueueService.h  \
 		  $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
