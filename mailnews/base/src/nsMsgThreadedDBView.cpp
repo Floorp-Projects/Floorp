@@ -79,15 +79,18 @@ NS_IMETHODIMP nsMsgThreadedDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeV
       dbFolderInfo->GetNumMessages(&totalMessages);
       if (totalMessages > MSGHDR_CACHE_MAX_SIZE) 
         totalMessages = MSGHDR_CACHE_MAX_SIZE;        // use max default
-      else
+      else if (totalMessages > 0)
         totalMessages += MSGHDR_CACHE_LOOK_AHEAD_SIZE;// allocate extra entries to avoid reallocation on new mail.
     }
-    m_db->SetMsgHdrCacheSize((PRUint32)totalMessages);
+    // if total messages is 0, then we probably don't have any idea how many headers are in the db
+    // so we have no business setting the cache size.
+    if (totalMessages > 0)
+      m_db->SetMsgHdrCacheSize((PRUint32)totalMessages);
   }
-
-	if (pCount)
-		*pCount = 0;
-	return InitThreadedView(pCount);
+  
+  if (pCount)
+    *pCount = 0;
+  return InitThreadedView(pCount);
 }
 
 NS_IMETHODIMP nsMsgThreadedDBView::Close()
