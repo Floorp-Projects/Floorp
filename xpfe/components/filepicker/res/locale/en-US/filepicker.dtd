@@ -6,3 +6,4 @@
 <!ENTITY lastModified.label     "Last Modified">
 <!ENTITY permissions.label      "Permissions">
 
+<!ENTITY noPermissionError.label "You do not have the permissions necessary to view this directory.">

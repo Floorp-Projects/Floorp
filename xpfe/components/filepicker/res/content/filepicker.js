@@ -317,7 +317,7 @@ function selectOnOK()
         }
         if (!parent.isWritable()) {
           errorMessage =
-            gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_dir", [file.unicodePath]);
+            gFilePickerBundle.getFormattedString("saveWithoutPermissionMessage_dir", [parent.unicodePath]);
         }
         promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                   .getService(Components.interfaces.nsIPromptService);
@@ -557,16 +557,11 @@ function goUp() {
 function gotoDirectory(directory) {
   window.setCursor("wait");
   try {
-    outlinerView.setDirectory(directory);
     populateAncestorList(directory);
+    outlinerView.setDirectory(directory);
+    document.getElementById("errorShower").selectedIndex = 0;
   } catch(ex) {
-    var errorTitle = gFilePickerBundle.getString("noPermissionTitle");
-    var errorMsg = gFilePickerBundle.getString("noPermissionError");
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                              .getService(Components.interfaces.nsIPromptService);
-    promptService.alert(window, errorTitle, errorMsg);
-    window.setCursor("auto");
-    return;
+    document.getElementById("errorShower").selectedIndex = 1;
   }
 
   window.setCursor("auto");
