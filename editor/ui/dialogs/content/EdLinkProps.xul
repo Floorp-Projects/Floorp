@@ -66,7 +66,7 @@
           </box>
         </box>
         <!-- ***** The style: width setting is need to cover a bug in button width resizing when text changes ***** -->
-        <html:div><titledbutton class="push" id="MoreFewerButton" align="left" style="width: 10em" onclick="onMoreFewer()" persist="more"/></html:div>
+        <html:div><titledbutton class="push" id="MoreFewerButton" style="width: 10em" align="left" onclick="onMoreFewer()" persist="more"/></html:div>
         <box id="MoreSection" align="vertical">
           <spring class="spacer"/>
           <html:div>&NamedAnchorMsg.label;</html:div>

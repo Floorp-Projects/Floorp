@@ -44,7 +44,7 @@
   <xul:keyset id="keyset"/>
 
   <table>
-    <tr class="vcenter">
+    <tr>
       <td align="right">
         <label for="rows"> &numRowsEditField.label; </label>
       </td>
@@ -53,7 +53,7 @@
             onkeyup="forceInteger('rows')" />
       </td>
     </tr>
-    <tr class="vcenter">
+    <tr>
       <td align="right">
         <label for="columns"> &numColumnsEditField.label; </label>
       </td>
@@ -62,7 +62,7 @@
             onkeyup="forceInteger('columns')" />
       </td>
     </tr>
-    <tr class="vcenter">
+    <tr>
       <td align="right">
         <label for="width" > &widthEditField.label; </label>
       </td>
@@ -75,7 +75,7 @@
         <!-- option elements are appended by JS -->
       </td>
     </tr>
-    <tr class="vcenter">
+    <tr>
       <td align="right">
         <label for="border"> &borderEditField.label; </label>
       </td>

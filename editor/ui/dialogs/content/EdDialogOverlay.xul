@@ -30,6 +30,8 @@
 
 <box id="AdvancedEditButton" align="vertical">
   <box align="horizontal" id="AdvancedEditButtonNoHR" style="margin-top: 0.2em">
+    <!-- This will right-align the button -->
+    <!-- spring flex="100%"/ -->
     <titledbutton class="push" id="AdvancedEdit" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
   </box>
   <html:div class="separator" align="horizontal"/>

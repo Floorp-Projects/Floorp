@@ -143,12 +143,14 @@ nsInterfaceState::ForceUpdate()
   // update underline
   rv = UpdateTextState("u", "Editor:Underline", "underline", mUnderlineState);
   
+  // update the paragraph format popup
+  rv = UpdateParagraphState("Editor:Paragraph:Format", "format", mParagraphFormat);
+
   // udpate the font face
   rv = UpdateFontFace("Editor:Font:Face", "font", mFontString);
   
-  // update the paragraph format popup
-  rv = UpdateParagraphState("Editor:Paragraph:Format", "format", mParagraphFormat);
-  
+  // TODO: FINISH FONT FACE AND ADD FONT SIZE ("Editor:Font:Size", "size", mFontSize)
+
   // update the list buttons
   rv = UpdateListState("Editor:Paragraph:ListType");
 
@@ -183,18 +185,33 @@ nsInterfaceState::UpdateParagraphState(const char* observerName, const char* att
   mEditor->GetParagraphTags(&tagList);
 
   PRInt32 numTags = tagList.Count();
+  nsAutoString  thisTag;
+  //Note: If numTags == 0, we probably have a text node not in a container
+  //  (directly under <body>). Consider it normal
   if (numTags > 0)
   {
-    nsAutoString  thisTag;
+#ifdef DEBUG_cmanske
+    if (thisTag.Length() > 0)
+      printf (thisTag.ToNewCString());
+    else
+      printf("[emtpy string]");
+    printf(",");
+    if (mParagraphFormat.Length() > 0)
+      printf (mParagraphFormat.ToNewCString());
+    else
+      printf("[mParagraph is empty]");
+    printf(" = ParagraphTag,mParagraphFormat in nsInterfaceState::UpdateParagraphState()\n");
+#endif
+    // This will never show the "mixed state"
+    // TODO: Scan list of tags and if any are different, set to "mixed"
     tagList.StringAt(0, thisTag);
-    if (thisTag != mParagraphFormat)
-    {
-      nsresult rv = SetNodeAttribute(observerName, attributeName, thisTag);
-      if (NS_FAILED(rv)) return rv;
-      mParagraphFormat = thisTag;
-    }
   }
-  
+  if (thisTag != mParagraphFormat)
+  {
+    nsresult rv = SetNodeAttribute(observerName, attributeName, thisTag);
+    if (NS_FAILED(rv)) return rv;
+    mParagraphFormat = thisTag;
+  }
   return NS_OK;
 }
 
@@ -252,16 +269,47 @@ nsInterfaceState::UpdateFontFace(const char* observerName, const char* attribute
 
   nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom("font"));
   nsAutoString faceStr("face");
+  nsAutoString thisFace;
+  
+  // Use to test for "Default Fixed Width"
+  nsCOMPtr<nsIAtom> fixedStyleAtom = getter_AddRefs(NS_NewAtom("tt"));
+
+  PRBool testBoolean;
   
   if (SelectionIsCollapsed())
   {
     rv = mEditor->GetTypingStateValue(styleAtom, ioFontString);
+    if (ioFontString.Length() == 0)
+    {
+      // We don't have a font set, so check for "tt" (= "Default Fixed Width")
+      PRBool stateHasProp = PR_FALSE;
+      rv = mEditor->GetTypingState(fixedStyleAtom, testBoolean);
+      testBoolean = stateHasProp;
+      if (stateHasProp)
+        thisFace = faceStr;
+    }
+    else
+      testBoolean = PR_TRUE;
   }
   else
   {
     rv = mEditor->GetInlineProperty(styleAtom, &faceStr, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
+    if( !anyOfSelectionHasProp )
+    {
+      // No font face set -- check for "tt"
+      rv = mEditor->GetInlineProperty(fixedStyleAtom, nsnull, nsnull, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
+      testBoolean = anyOfSelectionHasProp;
+      thisFace = faceStr;
+    }
   }
-  // XXX this needs finishing.
+  // TODO: HANDLE "MIXED" STATE
+  if (thisFace != mFontString)
+  {
+    nsresult rv = SetNodeAttribute(observerName, faceStr.GetBuffer(), thisFace);
+    if (NS_FAILED(rv)) return rv;
+  
+    mFontString = thisFace;
+  }
   return rv;
 }
 

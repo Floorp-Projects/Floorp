@@ -219,11 +219,11 @@
 <!-- Font Face SubMenu -->
 <!ENTITY fontfaceMenu.label "Font Face">
 <!ENTITY formatfontmenu.accesskey "f">
-<!ENTITY defaultVariableWidthCmd.label "Default Variable Width">
+<!ENTITY defaultVariableWidthCmd.label "Variable Width">
 <!ENTITY fontvarwidth.accesskey "v">
-<!ENTITY defaultFixedWidthCmd.label "Default Fixed Width">
+<!ENTITY defaultFixedWidthCmd.label "Fixed Width">
 <!ENTITY fontfixedwidth.accesskey "x">
-<!ENTITY arialHelveticaFont.label "Arial, Helvetica">
+<!ENTITY arialHelveticaFont.label "Arial, Helv.">
 <!ENTITY fonthelvetica.accesskey "l">
 <!ENTITY timesFont.label "Times">
 <!ENTITY fonttimes.accesskey "t">
@@ -233,19 +233,19 @@
 <!-- Font Size SubMenu -->
 <!ENTITY fontsizeMenu.label "Size">
 <!ENTITY formatsizemenu.accesskey "s">
-<!ENTITY sizeMinusTwoCmd.label " -2">
-<!ENTITY sizeminus2.accesskey "-">
-<!ENTITY sizeMinusOneCmd.label " -1 (smaller)">
-<!ENTITY sizeminus1.accesskey "s">
-<!ENTITY sizeNormalCmd.label " Normal">
-<!ENTITY sizenormal.accesskey "n">
-<!ENTITY sizePlusOneCmd.label " +1 (bigger)">
+<!ENTITY size-2Cmd.label " -2">
+<!ENTITY size-2.accesskey "-">
+<!ENTITY size-1Cmd.label " -1">
+<!ENTITY size-1.accesskey "s">
+<!ENTITY size0Cmd.label " 0">
+<!ENTITY size0.accesskey "n">
+<!ENTITY size1Cmd.label " +1">
 <!ENTITY size1.accesskey "1">
-<!ENTITY sizePlusTwoCmd.label " +2">
+<!ENTITY size2Cmd.label " +2">
 <!ENTITY size2.accesskey "2">
-<!ENTITY sizePlusThreeCmd.label " +3">
+<!ENTITY size3Cmd.label " +3">
 <!ENTITY size3.accesskey "3">
-<!ENTITY sizePlusFourCmd.label " +4">
+<!ENTITY size4Cmd.label " +4">
 <!ENTITY size4.accesskey "4">
 
 <!-- Font Style SubMenu -->
@@ -302,17 +302,17 @@
 <!ENTITY formatheadingmenu.accesskey "h">
 <!ENTITY headingNormalCmd.label "Normal">
 <!ENTITY headingnone.accesskey "n">
-<!ENTITY headingOneCmd.label "Heading 1">
+<!ENTITY heading1Cmd.label "Heading 1">
 <!ENTITY heading1.accesskey "1">
-<!ENTITY headingTwoCmd.label "Heading 2">
+<!ENTITY heading2Cmd.label "Heading 2">
 <!ENTITY heading2.accesskey "2">
-<!ENTITY headingThreeCmd.label "Heading 3">
+<!ENTITY heading3Cmd.label "Heading 3">
 <!ENTITY heading3.accesskey "3">
-<!ENTITY headingFourCmd.label "Heading 4">
+<!ENTITY heading4Cmd.label "Heading 4">
 <!ENTITY heading4.accesskey "4">
-<!ENTITY headingFiveCmd.label "Heading 5">
+<!ENTITY heading5Cmd.label "Heading 5">
 <!ENTITY heading5.accesskey "5">
-<!ENTITY headingSixCmd.label "Heading 6">
+<!ENTITY heading6Cmd.label "Heading 6">
 <!ENTITY heading6.accesskey "6">
 
 <!ENTITY paragraphMenu.label "Paragraph">
@@ -327,9 +327,9 @@
 <!ENTITY paragraphpreformat.accesskey "p">
 <!ENTITY paragraphListCmd.label "List item">
 <!ENTITY paragraphlist.accesskey "l">
-<!ENTITY paragraphDfnTermCmd.label "Definition term">
+<!ENTITY paragraphDfnTermCmd.label "Def. term">
 <!ENTITY paragraphterm.accesskey "t">
-<!ENTITY paragraphDfnDescCmd.label "Definition description">
+<!ENTITY paragraphDfnDescCmd.label "Def. description">
 <!ENTITY paragraphdesc.accesskey "d">
 
 <!-- List menu items -->
@@ -438,19 +438,6 @@
 <!ENTITY toolspellcheck.accesskey "s">
 
 <!-- editor toolbar -->
-<!ENTITY newEditorIcon.url "chrome://editor/skin/images/newfile.gif">
-<!ENTITY openEditorIcon.url "chrome://editor/skin/images/openfile.gif">
-<!ENTITY saveIcon.url "chrome://editor/skin/images/savefile.gif">
-<!ENTITY publishIcon.url "chrome://editor/skin/images/publish.gif">
-<!ENTITY previewIcon.url "chrome://editor/skin/images/preview.gif">
-<!ENTITY printIcon.url "chrome://editor/skin/images/print.gif">
-<!ENTITY findIcon.url "chrome://editor/skin/images/find.gif">
-<!ENTITY linkIcon.url "chrome://editor/skin/images/link.gif">
-<!ENTITY imageIcon.url "chrome://editor/skin/images/image.gif">
-<!ENTITY anchorIcon.url "chrome://editor/skin/images/anchor.gif">
-<!ENTITY hlineIcon.url "chrome://editor/skin/images/hline.gif">
-<!ENTITY tableIcon.url "chrome://editor/skin/images/table.gif">
-<!ENTITY spellingIcon.url "chrome://editor/skin/images/spell.gif">
 
 <!-- formatting toolbar -->
 <!ENTITY paragraphToolbarMenu.label "Paragraph">
@@ -459,15 +446,10 @@
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
-<!ENTITY bulletListIcon.url "chrome://editor/skin/images/bullets.gif">
-<!ENTITY numberListIcon.url "chrome://editor/skin/images/numbers.gif">
-<!ENTITY outdentIcon.url "chrome://editor/skin/images/outdent.gif">
-<!ENTITY indentIcon.url "chrome://editor/skin/images/indent.gif">
-<!ENTITY alignpopupIcon.url "chrome://editor/skin/images/align.gif">
 <!ENTITY alignLeft.label "Left">
 <!ENTITY alignCenter.label "Center">
 <!ENTITY alignRight.label "Right">
 <!ENTITY alignJustify.label "Justify">
 
-<!ENTITY tempNotification.label "Some random notification">
-<!ENTITY tempDoneLoading.label "Document: Done">
+<!ENTITY tempNotification.label "[status message]">
+<!ENTITY tempDoneLoading.label "[Document loading message]">

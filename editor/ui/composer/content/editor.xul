@@ -38,7 +38,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="EditorOnLoad()"
         onunload="EditorShutdown()"
-        titlemodifier="&textEditorWindow.titlemodifier;"
+        titlemodifier="&editorWindow.titlemodifier;"
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
         align="vertical"
         width="640" height="480">
@@ -157,19 +157,13 @@
     </toolbar>
     
     <toolbar id="FormatToolbar" persist="collapsed">
-      <!-- buttons are filled out from editorOverlay -->
-      <menu>
-      	<titledbutton id="ParagraphPopupButton"/>
-        <menupopup id="ParagraphPopup"/>
-      </menu>
-      <menu>
-        <titledbutton id="FontFacePopupButton"/>
-        <menupopup id="FontFacePopup"/>
-      </menu>
-      <menu>
-        <titledbutton id="FontSizePopupButton"/>
-        <menupopup id="FontSizePopup"/>
-      </menu>
+      <html:div class="toolbar-middle">
+        <!-- items are filled out from editorOverlay -->
+        <html:select id="ParagraphSelect"/>
+        <html:select id="FontFaceSelect"/>
+        <html:select id="FontSizeSelect"/>
+      </html:div>
+
       <menu>
         <titledbutton id="TextColorPopupButton"/>
         <menupopup id="TextColorPopup"/>

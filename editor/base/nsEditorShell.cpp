@@ -1738,7 +1738,7 @@ nsEditorShell::SetDocumentTitle(const PRUnichar *title)
             if (NS_SUCCEEDED(res) && textNode)
             {
               // Go through the editor API so action is undoable
-              res = editor->InsertNode(textNode, headNode, 0);
+              res = editor->InsertNode(textNode, titleNode, 0);
               // This is the non-undoable code:
               //res = titleNode->AppendChild(textNode,getter_AddRefs(resultNode));
             }

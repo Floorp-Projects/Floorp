@@ -27,22 +27,10 @@ var toolbar;
 var documentModified;
 var EditorDisplayMode = 0;  // Normal Editor mode
 
-var gTagToFormat = {
-    "P"          : "Normal",	// these should really be entities. Not sure how to do that from JS
-    "H1"         : "Heading 1",
-    "H2"         : "Heading 2",
-    "H3"         : "Heading 3",
-    "H4"         : "Heading 4",
-    "H5"         : "Heading 5",
-    "H6"         : "Heading 6",
-    "BLOCKQUOTE" : "Blockquote",
-    "ADDRESS"    : "Address",
-    "PRE"        : "Preformatted",
-    "LI"         : "List Item",
-    "DT"         : "Definition Term",
-    "DD"         : "Definition Description"
-  };
-
+// These must be kept in synch with the XUL <options> lists
+var gParagraphTagNames = new Array("P","H1","H2","H3","H4","H5","H6","BLOCKQUOTE","ADDRESS","PRE","DT","DD");
+var gFontFaceNames = new Array("","tt","Arial, Helvetica","Times","Courier");
+var gFontSizeNames = new Array("-2","-1","0","+1","+2","+3","+4");
 
 var gStyleTags = {
     "bold"       : "b",
@@ -83,18 +71,7 @@ function EditorStartup(editorType, editorElement)
   window.addEventListener("load", EditorDocumentLoaded, true, false);  
   
   dump("Trying to make an Editor Shell through the component manager...\n");
-/*  var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
-  if (editorShell)
-    editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
 
-  if (!editorShell)
-  {
-    dump("Failed to create editor shell\n");
-    // 7/12/99 THIS DOESN'T WORK YET!
-    window.close();
-    return;
-  }
-*/
   // store the editor shell in the window, so that child windows can get to it.
   var editorShell = window.editorShell = editorElement.editorShell;
   
@@ -110,6 +87,7 @@ function EditorStartup(editorType, editorElement)
   editorShell.LoadUrl(url);
   
   dump("EditorAppCore windows have been set.\n");
+
   SetupToolbarElements();
   
   // Set focus to the edit window
@@ -138,7 +116,7 @@ function TestMenuCreation()
     dump("Failed to find new menu item\n");
 }
 
-
+// NOT USED?
 function GenerateFormatToolbar()
 {
   var toolbarButtons = [
@@ -207,7 +185,6 @@ function GenerateFormatToolbar()
     dump("Failed to find button\n");
   
 }
-
 
 function SetupToolbarElements()
 {
@@ -372,41 +349,96 @@ function EditorSetTextProperty(property, attribute, value)
   contentWindow.focus();
 }
 
+function EditorSelectParagraphFormat()
+{
+  var select = document.getElementById("ParagraphSelect");
+  if (select)
+  { 
+    if (select.selectedIndex == -1)
+      return;
+    editorShell.SetParagraphFormat(gParagraphTagNames[select.selectedIndex]);
+  }
+}
+
+function onParagraphFormatChange()
+{
+  var select = document.getElementById("ParagraphSelect");
+  if (select)
+  { 
+    // If we don't match anything, set to "normal"
+    var newIndex = 0;
+  	var format = select.getAttribute("format");
+    if ( format == "mixed")
+    {
+      // No single type selected
+      newIndex = -1;
+    }
+    else
+    {
+      for( var i = 0; i < gParagraphTagNames.length; i++)
+      {
+        if( gParagraphTagNames[i] == format )
+        {
+          newIndex = i;
+          break;
+        }
+      }
+    }
+    if (select.selectedIndex != newIndex)
+      select.selectedIndex = newIndex;
+  }
+}
+
 function EditorSetParagraphFormat(paraFormat)
 {
   editorShell.SetParagraphFormat(paraFormat);
   contentWindow.focus();
 }
 
-function EditorListProperties()
+function EditorSelectFontFace() 
 {
-  window.openDialog("chrome://editor/content/EdListProps.xul","_blank", "chrome,close,titlebar,modal");
-  contentWindow.focus();
+  var select = document.getElementById("FontFaceSelect");
+dump("EditorSelectFontFace: "+gFontFaceNames[select.selectedIndex]+"\n");
+  if (select)
+  { 
+    if (select.selectedIndex == -1)
+      return;
+
+    EditorSetFontFace(gFontFaceNames[select.selectedIndex]);
+  }
 }
 
-function EditorSetFontSize(size)
+function onFontFaceChange()
 {
-  if( size == "0" || size == "normal" || 
-      size == "+0" )
-  {
-    editorShell.RemoveTextProperty("font", size);
-    dump("Removing font size\n");
-  } else {
-    dump("Setting font size\n");
-    editorShell.SetTextProperty("font", "size", size);
+  var select = document.getElementById("FontFaceSelect");
+  if (select)
+  { 
+    // Default selects "Variable Width"
+    var newIndex = 0;
+  	var face = select.getAttribute("face");
+    if ( face == "mixed")
+    {
+      // No single type selected
+      newIndex = -1;
+    }
+    else 
+    {
+      for( var i = 0; i < gFontFaceNames.length; i++)
+      {
+        if( gFontFaceNames[i] == face )
+        {
+          newIndex = i;
+          break;
+        }
+      }
+    }
+    if (select.selectedIndex != newIndex)
+      select.selectedIndex = newIndex;
   }
-  contentWindow.focus();
 }
 
 function EditorSetFontFace(fontFace)
 {
-/* Testing returning out params
-  var first = new Object();
-  var all = new Object();
-  var any = new Object();
-  editorShell.GetTextProperty("tt", "", "", first, any, all);
-  dump("GetTextProperty: first: "+first.value+", any: "+any.value+", all: "+all.value+"\n");
-*/
   if( fontFace == "tt") {
     // The old "teletype" attribute
     editorShell.SetTextProperty("tt", "", "");  
@@ -422,6 +454,62 @@ function EditorSetFontFace(fontFace)
       editorShell.SetTextProperty("font", "face", fontFace);
     }
   }        
+  contentWindow.focus();
+}
+
+function EditorSelectFontSize()
+{
+  var select = document.getElementById("FontSizeSelect");
+dump("EditorSelectFontSize: "+gFontSizeNames[select.selectedIndex]+"\n");
+  if (select)
+  { 
+    if (select.selectedIndex == -1)
+      return;
+
+    EditorSetFontSize(gFontSizeNames[select.selectedIndex]);
+  }
+}
+
+function onFontSizeChange()
+{
+  var select = document.getElementById("FontFaceSelect");
+  if (select)
+  { 
+    // If we don't match anything, set to "0 (normal)"
+    var newIndex = 2;
+  	var size = select.getAttribute("size");
+    if ( size == "mixed")
+    {
+      // No single type selected
+      newIndex = -1;
+    }
+    else 
+    {
+      for( var i = 0; i < gFontSizeNames.length; i++)
+      {
+        if( gFontSizeNames[i] == size )
+        {
+          newIndex = i;
+          break;
+        }
+      }
+    }
+    if (select.selectedIndex != newIndex)
+      select.selectedIndex = newIndex;
+  }
+}
+
+function EditorSetFontSize(size)
+{
+  if( size == "0" || size == "normal" || 
+      size == "+0" )
+  {
+    editorShell.RemoveTextProperty("font", size);
+    dump("Removing font size\n");
+  } else {
+    dump("Setting font size\n");
+    editorShell.SetTextProperty("font", "size", size);
+  }
   contentWindow.focus();
 }
 
@@ -478,6 +566,12 @@ function EditorToggleStyle(styleName)
 function EditorRemoveLinks()
 {
   editorShell.RemoveTextProperty("a", "");
+  contentWindow.focus();
+}
+
+function EditorListProperties()
+{
+  window.openDialog("chrome://editor/content/EdListProps.xul","_blank", "chrome,close,titlebar,modal");
   contentWindow.focus();
 }
 
@@ -1203,23 +1297,12 @@ function onDirtyChange()
   var theButton = document.getElementById("saveButton");
   if (theButton)
   {
-	var isDirty = theButton.getAttribute("dirty");
+    var isDirty = theButton.getAttribute("dirty");
     if (isDirty == "true") {
-      theButton.setAttribute("src", "chrome://editor/skin/images/ED_SaveMod.gif");
+      theButton.setAttribute("src", "chrome://editor/skin/images/savemod.gif");
     } else {
-      theButton.setAttribute("src", "chrome://editor/skin/images/ED_SaveFile.gif");
+      theButton.setAttribute("src", "chrome://editor/skin/images/savefile.gif");
     }
-  }
-}
-
-function onParagraphFormatChange()
-{
-  var theButton = document.getElementById("ParagraphPopupButton");
-  if (theButton)
-  {
-	var theFormat = theButton.getAttribute("format");
-    theButton.setAttribute("value", gTagToFormat[theFormat]);
-    dump("Setting value\n");
   }
 }
 

@@ -20,12 +20,6 @@
    - Contributor(s): 
   -->
 
-<!-- These strings are generic to all or most of the editor's dialogs. -->
-<!-- This button is for the progressive disclosure of additional editing functionality -->
-<!-- THIS TEXT WILL CHANGE DYNAMICALLY, SO VALUES SHOULD BE IN Editor.properties STRING BUNDLE FILE -->
-<!ENTITY MoreButton.label "More">
-<!ENTITY FewerButton.label "Fewer">
-
 <!-- These strings are for use specifically in the editor's image dialog. -->
 
 <!-- Window title -->
@@ -49,17 +43,12 @@
 <!ENTITY constrainCheckbox.label "Constrain">
 
 <!-- These are the options for image alignment -->
-<!ENTITY alignment.label "Align Text to Image">
+<!ENTITY alignment.label "Align Text to Image:">
 <!ENTITY bottomPopup.value "at the bottom">
 <!ENTITY topPopup.value "at the top">
 <!ENTITY centerPopup.value "in the center">
-<!ENTITY wrapRightPopup.value "wrap around right side">
-<!ENTITY wrapLeftPopup.value "wrap around left side">
-<!ENTITY bottomIcon.url "chrome://editor/skin/images/img-align-bottom.gif">
-<!ENTITY topIcon.url "chrome://editor/skin/images/img-align-top.gif">
-<!ENTITY centerIcon.url "chrome://editor/skin/images/img-align-middle.gif">
-<!ENTITY wrapRightIcon.url "chrome://editor/skin/images/img-align-left.gif">
-<!ENTITY wrapLeftIcon.url "chrome://editor/skin/images/img-align-right.gif">
+<!ENTITY wrapRightPopup.value "wrap to the right">
+<!ENTITY wrapLeftPopup.value "wrap to the left">
 
 <!-- These controls are in the Spacing Fieldset of the expanded area -->
 <!ENTITY spacingFieldset.label "Spacing">

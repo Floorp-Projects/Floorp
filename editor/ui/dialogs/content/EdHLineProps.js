@@ -150,7 +150,6 @@ function ValidateData()
 {
   // Height is always pixels
   height = ValidateNumberString(dialog.heightInput.value, 1, maxPixels);
-  var isPercent = (dialog.pixelOrPercentSelect.selectedIndex == 1);
   if (height == "") {
     // Set focus to the offending control
     dump("Height is empty\n");
@@ -160,6 +159,7 @@ function ValidateData()
   dump("Setting height="+height+"\n");
   globalElement.setAttribute("size", height);
 
+  var isPercent = (dialog.pixelOrPercentSelect.selectedIndex == 1);
   var maxLimit;
   if (isPercent) {
     maxLimit = 100;
