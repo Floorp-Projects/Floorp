@@ -2504,8 +2504,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 pc += ARG_LEN;                 /* start of ASSERT child */
                 op = (REOp) *pc++;
                 if (REOP_IS_SIMPLE(op) &&
-                    (!SimpleMatch(gData, x, op, &pc, JS_FALSE) ||
-                     pc != nextpc)) {
+                    !SimpleMatch(gData, x, op, &pc, JS_FALSE)) {
                     result = NULL;
                     break;
                 }
