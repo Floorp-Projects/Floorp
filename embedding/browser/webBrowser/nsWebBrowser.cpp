@@ -632,6 +632,14 @@ NS_IMETHODIMP nsWebBrowser::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
    return NS_OK;
 }
 
+NS_IMETHODIMP nsWebBrowser::GetPositionAndSize(PRInt32* aX, PRInt32* aY, 
+   PRInt32* aCX, PRInt32* aCY)
+{
+   //XXX Implement
+   NS_ERROR("Not implemented yet");
+   return NS_OK;
+}
+
 NS_IMETHODIMP nsWebBrowser::Repaint(PRBool fForce)
 {
    NS_ENSURE_STATE(mDocShell);
@@ -736,6 +744,15 @@ NS_IMETHODIMP nsWebBrowser::SetFocus()
    nsCOMPtr<nsIBaseWindow> docShellWindow(do_QueryInterface(mDocShell));
    
    NS_ENSURE_SUCCESS(docShellWindow->SetFocus(), NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsWebBrowser::FocusAvailable(nsIBaseWindow* aCurrentFocus,
+   PRBool* aTookFocus)
+{
+   //XXX Implemented
+   NS_ERROR("Not Implemented yet");
 
    return NS_OK;
 }
