@@ -31,25 +31,55 @@ NS_IMPL_ADDREF(nsTransactionManager)
 NS_IMPL_RELEASE(nsTransactionManager)
 
 nsresult
-nsTransactionManager::Execute(nsITransaction *tx)
+nsTransactionManager::Do(nsITransaction *aTransaction)
 {
   return NS_OK;
 }
 
 nsresult
-nsTransactionManager::Undo(PRInt32 n)
+nsTransactionManager::Undo()
 {
   return NS_OK;
 }
 
 nsresult
-nsTransactionManager::Redo(PRInt32 n)
+nsTransactionManager::Redo()
 {
   return NS_OK;
 }
 
 nsresult
-nsTransactionManager::Write(nsIOutputStream *os)
+nsTransactionManager::GetNumberOfUndoItems(PRInt32 *aNumItems)
+{
+  if (aNumItems)
+    *aNumItems = 0;
+
+  return NS_OK;
+}
+
+nsresult
+nsTransactionManager::GetNumberOfRedoItems(PRInt32 *aNumItems)
+{
+  if (aNumItems)
+    *aNumItems = 0;
+
+  return NS_OK;
+}
+
+nsresult
+nsTransactionManager::Write(nsIOutputStream *aOutputStream)
+{
+  return NS_OK;
+}
+
+nsresult
+nsTransactionManager::AddListener(nsITransactionListener *aListener)
+{
+  return NS_OK;
+}
+
+nsresult
+nsTransactionManager::RemoveListener(nsITransactionListener *aListener)
 {
   return NS_OK;
 }
