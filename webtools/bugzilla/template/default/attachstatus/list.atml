@@ -44,8 +44,14 @@
       <td>[% statusdef.sortkey %]</td>
       <td>[% statusdef.product %]</td>
       <td>
-        <a href="editattachstatuses.cgi?action=edit&id=[% statusdef.id %]">Edit</a>
-        <a href="editattachstatuses.cgi?action=delete&id=[% statusdef.id %]" onclick="return confirmDelete();">Delete</a>
+        <a href="editattachstatuses.cgi?action=edit&id=[% statusdef.id %]">
+            Edit</a>
+        &nbsp;|&nbsp;
+        <a href="editattachstatuses.cgi?action=confirmdelete&id=[% statusdef.id %]" 
+         onclick="return confirmDelete([% statusdef.attachcount %],
+                                       '[% statusdef.name FILTER js %]',
+                                       [% statusdef.id %]);">
+            Delete</a>
       </td>
     </tr>
 
@@ -59,13 +65,23 @@
   </tr>
 
 </table>
-
 <script language="JavaScript">
-  function confirmDelete()
+  function confirmDelete(attachcount, name, id)
   {
-    return confirm('Are you sure you want to permanently delete ' +
-                   'this attachment status?  All attachments ' + 
-                   'with this status will have it unset.');
+    if (attachcount > 0) {
+        msg = attachcount + ' attachments have the status ' +
+              name + '.  If you delete it, those attachments ' +
+              'will lose this status.  Do you really want to ' +
+              'delete this status?';
+    }
+    else {
+        msg = 'Are you sure you want to delete attachment status ' +
+              name + '?';
+    }
+    if (confirm(msg)) {
+      location.href = "editattachstatuses.cgi?action=delete&id=" + id;
+    }
+    return false;
   }
 </script>
 
