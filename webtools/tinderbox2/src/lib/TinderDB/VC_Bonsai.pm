@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.22 $ 
-# $Date: 2002/05/02 23:57:16 $ 
+# $Revision: 1.23 $ 
+# $Date: 2002/05/02 23:58:48 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.22 $ )[1];
+$VERSION = ( qw $Revision: 1.23 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -422,8 +422,8 @@ sub status_table_row {
        if (
            ($cell_color !~ m/white/) &&
            (!($text_browser_color_string)) &&
-           (!($empty_cell_contents) &&
-            ) {
+           (!($empty_cell_contents)) &&
+           ) {
                $empty_cell_contents = "&nbsp;";
            }
   }
