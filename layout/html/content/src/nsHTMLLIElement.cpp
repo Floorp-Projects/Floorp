@@ -219,7 +219,7 @@ nsHTMLLIElement::GetStyleHintForAttributeChange(
     // XXX This shouldn't require a frame change, just a reapplication
     // of style down the tree (and a reflow). The style changes aren't 
     // percolating down far enough.
-    *aHint = NS_STYLE_HINT_FRAMECHANGE;
+    *aHint = NS_STYLE_HINT_REFLOW;
   }
   else {
     nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
