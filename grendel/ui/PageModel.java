@@ -90,7 +90,8 @@ public class PageModel {
     }
 
     public void itemStateChanged(ItemEvent event) {
-      System.out.println(comp.isSelected());
+      Boolean b = new Boolean(comp.isSelected());
+      values.put(key, b);
     }
   }
 

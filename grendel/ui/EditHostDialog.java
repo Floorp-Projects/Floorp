@@ -158,7 +158,6 @@ public class EditHostDialog extends GeneralDialog {
         if (value == JOptionPane.OK_OPTION) {
           // Grab all the values
           // fPanel.saveAll();
-          System.out.println(model.getAttribute("imapRadio"));
 
           String proto;
           Boolean imap = (Boolean) model.getAttribute(kIMAPRadioKey);
