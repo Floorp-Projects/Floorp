@@ -77,9 +77,11 @@ static PRBool gStringAcquiredMemory = PR_TRUE;
 void nsStrPrivate::Initialize(nsStr& aDest,eCharSize aCharSize) {
   aDest.mStr=(char*)gCommonEmptyBuffer;
   aDest.mLength=0;
-  aDest.SetInternalCapacity(0);
+  aDest.mCapacityAndFlags = 0;
+  // handled by mCapacityAndFlags
+  // aDest.SetInternalCapacity(0);
+  // aDest.SetOwnsBuffer(PR_FALSE);
   aDest.SetCharSize(aCharSize);
-  aDest.SetOwnsBuffer(PR_FALSE);
 }
 
 /**
@@ -91,6 +93,7 @@ void nsStrPrivate::Initialize(nsStr& aDest,eCharSize aCharSize) {
 void nsStrPrivate::Initialize(nsStr& aDest,char* aCString,PRUint32 aCapacity,PRUint32 aLength,eCharSize aCharSize,PRBool aOwnsBuffer){
   aDest.mStr=(aCString) ? aCString : (char*)gCommonEmptyBuffer;
   aDest.mLength=aLength;
+  aDest.mCapacityAndFlags = 0;
   aDest.SetInternalCapacity(aCapacity);
   aDest.SetCharSize(aCharSize);
   aDest.SetOwnsBuffer(aOwnsBuffer);
