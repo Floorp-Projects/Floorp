@@ -8410,9 +8410,11 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresShell*    aPresShell,
                                            aStyleContext, PR_FALSE);
 
   // If the frame is out-of-flow, then mark it as such
-  nsFrameState  frameState;
-  containerFrame->GetFrameState(&frameState);
-  containerFrame->SetFrameState(frameState | NS_FRAME_OUT_OF_FLOW);
+  if (isOutOfFlow) {
+    nsFrameState  frameState;
+    containerFrame->GetFrameState(&frameState);
+    containerFrame->SetFrameState(frameState | NS_FRAME_OUT_OF_FLOW);
+  }
 
   // Create a text frame to display the alt-text. It gets a pseudo-element
   // style context
