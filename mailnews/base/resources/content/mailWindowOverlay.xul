@@ -762,7 +762,7 @@ Rights Reserved.
 
 </popup>
 
-<menubar id="mailMenubar">
+<menubar id="mailMenubar" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
   <menu id="menu_File" >
     <menupopup id="menu_FilePopup" onpopupshowing="file_init();">
       <menuitem label="&newMsgCmd.label;"
@@ -1223,7 +1223,7 @@ Rights Reserved.
 </menubar>
 
 <toolbox id="mailToolbarToolbox">
-  <toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed">
+  <toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&mailToolbar.tooltip;">
     <hbox id="toolbar_button_box">
       <toolbarbutton type="menu-button" id="button-getmsg" 
                      class="toolbarbutton-1"

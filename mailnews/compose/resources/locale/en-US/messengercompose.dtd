@@ -170,6 +170,9 @@
 <!ENTITY stopButton.label "Stop">
 
 <!--tooltips-->
+<!-- We already inherit &menuBar.tooltip and &mailToolbar.tooltip from messenger.dtd -->
+<!ENTITY addressBar.tooltip "Address Bar">
+<!ENTITY formatToolbar.tooltip "Formatting Toolbar">
 <!ENTITY sendButton.tooltip "Send this message now"> 
 <!ENTITY quoteButton.tooltip "Quote the previous message"> 
 <!ENTITY addressButton.tooltip "Select a recipient from an Address Book"> 

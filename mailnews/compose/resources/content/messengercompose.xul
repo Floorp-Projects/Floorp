@@ -178,7 +178,7 @@
 </popupset>
 
   <toolbox class="toolbox-top">
-    <menubar id="compose-menubar">
+    <menubar id="compose-menubar" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
           <menuitem label="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" oncommand="goOpenNewMessage();"/>
@@ -353,7 +353,7 @@
       <menu id="menu_Help"/>
     </menubar>
 
-    <toolbar class="toolbar-primary chromeclass-toolbar" id="composeToolbar" persist="collapsed">
+    <toolbar class="toolbar-primary chromeclass-toolbar" id="composeToolbar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&mailToolbar.tooltip;">
       <hbox id="toolbar_button_box">
        <toolbarbutton class="toolbarbutton-1"
                id="button-send" label="&sendButton.label;"
@@ -392,7 +392,7 @@
        </hbox>
     </toolbar>
   
-    <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbalign="stretch" flex="1">
+    <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbalign="stretch" flex="1" grippytooltip="aTooltip" grippytooltiptext="&addressBar.tooltip;">
       <hbox id="msgheaderstoolbar-box" flex="1">
         <vbox flex="75">
           <hbox autostretch="never">
@@ -431,7 +431,7 @@
     </toolbar>
   
     <!-- These toolbar items get filled out from the editorOverlay -->
-    <toolbar id="FormatToolbar" persist="collapsed" tbautostretch="never">
+    <toolbar id="FormatToolbar" persist="collapsed" tbautostretch="never" grippytooltip="aTooltip" grippytooltiptext="&formatToolbar.tooltip;">
       <menulist id="ParagraphSelect"/>
       <menulist id="FontFaceSelect"/>
       <stack id="ColorButtons"/>

@@ -134,6 +134,8 @@
   </popup>
 </popupset>
 
+<popupset id="aTooltipSet"/>
+
 <popupset id="contextMenus">
     <popup id="userlistPopup" oncommand="onUserListPopupClick(event)">
         <menuitem label="&op.value;" accesskey="&op.accesskey;" code="/op" />
@@ -209,7 +211,7 @@
 </popupset>
 
 <toolbox>
-  <menubar id="main-menubar" persist="collapsed">
+  <menubar id="main-menubar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
     <menu id="menu_File">
       <menupopup id="menu_FilePopup">
         <menu label="&OptionsCmd.label;">
@@ -397,7 +399,8 @@
 </vbox> <!-- outer-box -->
 
 <toolbox id="status-bar-tbox" crop="right">
-  <toolbar id="status-bar-tbar" class="chromeclass-status" persist="collapsed"
+  <toolbar id="status-bar-tbar" class="chromeclass-status" persist="collapsed" grippytooltip="aTooltip"
+    grippytooltiptext="&statusBar.tooltip;"
     crop="right">
     <hbox class="status-box" flex="20%" crop="right">
       <vbox class="status-label" crop="right">

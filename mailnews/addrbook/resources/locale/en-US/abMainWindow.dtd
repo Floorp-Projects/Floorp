@@ -91,6 +91,7 @@ Rights Reserved.
 <!ENTITY showNames.label "Show names containing:">  
 
 <!-- Tooltips -->
+<!ENTITY addressbookToolbar.tooltip "Address Book Toolbar">
 <!ENTITY newcardButton.tooltip "Create a new address book card"> 
 <!ENTITY newlistButton.tooltip "Create a new list"> 
 <!ENTITY editButton.tooltip "Edit the selected card"> 

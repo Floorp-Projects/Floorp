@@ -398,6 +398,8 @@ Rights Reserved.
 <!ENTITY stopButton.label "Stop">
 
 <!--Tooltips-->
+<!ENTITY menuBar.tooltip "Menu Bar">
+<!ENTITY mailToolbar.tooltip "Mail Toolbar">
 <!ENTITY getMsgButton.tooltip "Get new messages">
 <!ENTITY newMsgButton.tooltip "Create a new message">
 <!ENTITY replyButton.tooltip "Reply to the message">

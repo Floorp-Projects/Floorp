@@ -114,7 +114,7 @@ Rights Reserved.
 </popupset>
 
 <toolbox class="toolbox-top">
-	<menubar id="ab-menubar">
+	<menubar id="ab-menubar" grippytooltip="aTooltip" grippytooltiptext="&menuBar.tooltip;">
 		<menu id="menu_File">
 			<menupopup id="menu_FilePopup">
         <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard()"/>
@@ -217,7 +217,7 @@ Rights Reserved.
 	</menubar>
 	
 	<!-- toolbar -->
-		<toolbar class="toolbar-primary" id="abToolbar" persist="collapsed">
+		<toolbar class="toolbar-primary" id="abToolbar" persist="collapsed" grippytooltip="aTooltip" grippytooltiptext="&addressbookToolbar.tooltip;">
 			<hbox id="toolbar_button_box">
         <toolbarbutton class="toolbarbutton-1" id="button-newcard" label="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard();"/>
         <toolbarbutton class="toolbarbutton-1" id="button-newlist" label="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList();"/>

@@ -557,6 +557,9 @@
 <!ENTITY setFocusCmd.label "Set Focus">
 
 <!-- toolbar-only items -->
+<!ENTITY menuBar.tooltip "Menu Bar">
+<!ENTITY compositionToolbar.tooltip "Composition Toolbar">
+<!ENTITY formatToolbar.tooltip "Formatting Toolbar">
 <!ENTITY newToolbarCmd.tooltip "Create a new Composer page">
 <!ENTITY openToolbarCmd.label "Open">
 <!ENTITY openToolbarCmd.tooltip "Open a local file">

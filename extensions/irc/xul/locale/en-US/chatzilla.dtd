@@ -1,3 +1,5 @@
+<!ENTITY menuBar.tooltip        "Menu Bar">
+<!ENTITY statusBar.tooltip      "Status Bar">
 <!ENTITY op.value		"Op">
 <!ENTITY op.accesskey		"o">
 <!ENTITY deop.value		"Deop">
