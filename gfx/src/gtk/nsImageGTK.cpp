@@ -1636,7 +1636,6 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
                                       nscoord aDX, nscoord aDY,
                                       nscoord aDWidth, nscoord aDHeight)
 {
-  NS_ENSURE_ARG_POINTER(aDstImage);
   nsImageGTK *dest = NS_STATIC_CAST(nsImageGTK *, aDstImage);
 
   if (!dest)
@@ -1645,11 +1644,16 @@ NS_IMETHODIMP nsImageGTK::DrawToImage(nsIImage* aDstImage,
   if (mPendingUpdate)
     UpdateCachedImage();
   
-  if (!dest->mImagePixmap)
+  if (!dest->mImagePixmap) {
     dest->CreateOffscreenPixmap(dest->mWidth, dest->mHeight);
+  }
   
-  NS_ENSURE_TRUE(dest->mImagePixmap, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(mImagePixmap, NS_ERROR_FAILURE);
+  if (!dest->mImagePixmap) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!mImagePixmap)
+    return NS_ERROR_FAILURE;
 
   GdkGC *gc = gdk_gc_new(dest->mImagePixmap);
 
