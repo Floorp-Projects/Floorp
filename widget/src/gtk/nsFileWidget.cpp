@@ -113,7 +113,7 @@ NS_METHOD  nsFileWidget::GetFile(nsString& aFile)
 
   aFile.SetLength(0);
   aFile.Append(fn);
-  delete fn;
+//  g_free(fn);
   return NS_OK;
 }
 
