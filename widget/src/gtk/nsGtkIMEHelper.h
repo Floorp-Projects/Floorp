@@ -150,7 +150,10 @@ class nsIMEGtkIC {
   static int preedit_start_cbproc(XIC, XPointer, XPointer);
   static int preedit_draw_cbproc(XIC, XPointer, XPointer);
   static int preedit_done_cbproc(XIC, XPointer, XPointer);
+  static int preedit_caret_cbproc(XIC, XPointer, XPointer) { return 0; };
   static int status_draw_cbproc(XIC, XPointer, XPointer);
+  static int status_start_cbproc(XIC, XPointer, XPointer) { return 0; };
+  static int status_done_cbproc(XIC, XPointer, XPointer) { return 0; };
   static nsIMEStatus *gStatus;
   nsWindow *mClientWindow;
   nsWindow *mFocusWindow;
@@ -161,9 +164,6 @@ class nsIMEGtkIC {
   GdkICPrivate *mIC_backup;
   nsIMEPreedit *mPreedit;
   GdkFont      *mStatusFontset;
-#ifdef _AIX
-  static GdkIMStyle gIMStyle;
-#endif // _AIX
 
  public:
   nsIMEPreedit *GetPreedit() {return mPreedit;}

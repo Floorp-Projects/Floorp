@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Frank Tang <ftang@netsape.com>
+ *   IBM Corporation
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -57,9 +58,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 nsIMEStatus *nsIMEGtkIC::gStatus = 0;
 nsWindow *nsIMEGtkIC::gGlobalFocusWindow = 0;
 
-#ifdef _AIX
-GdkIMStyle nsIMEGtkIC::gIMStyle = (GdkIMStyle)0; 
-#endif // _AIX
 #endif // USE_XIM 
 
 nsGtkIMEHelper* nsGtkIMEHelper::gSingleton = nsnull;
@@ -1226,43 +1224,6 @@ nsIMEGtkIC::GetInputStyle() {
   return ret_style;
 #endif
 
-#ifdef _AIX
-  if (!gIMStyle) {
-    XIM input_method = XOpenIM(GDK_DISPLAY(), NULL, NULL, NULL);
-
-    if (input_method) {
-      XIMStyles* supported_styles = NULL;
-      // Query styles supported by the current IM server.
-      XGetIMValues(input_method, XNQueryInputStyle, &supported_styles, NULL);
-
-      if (supported_styles) {
-        XIMStyle curr_style;
-    
-        // Create a bit mask of all allowed styles.
-        const XIMStyle best_style = XIMPreeditCallbacks | XIMStatusCallbacks
-                                  | XIMPreeditArea      | XIMStatusArea
-                                  | XIMPreeditNothing   | XIMStatusNothing
-                                  | XIMPreeditNone      | XIMStatusNone
-                                  | XIMPreeditPosition;
-
-        for (int i = 0; i < supported_styles->count_styles; i++) {
-          curr_style = supported_styles->supported_styles[i];
-          // Ensure that curr_style only contains allowed styles
-          if ((curr_style & best_style) == curr_style) {
-            gIMStyle = (GdkIMStyle)curr_style;
-            break;
-          }
-        }
-        XFree(supported_styles);
-      }
-      XCloseIM(input_method);
-    }
-    if (!gIMStyle)
-      gIMStyle = (GdkIMStyle)(GDK_IM_PREEDIT_NONE | GDK_IM_STATUS_NONE);
-  }
-  return gIMStyle;
-#endif // _AIX
-
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
   if (NS_SUCCEEDED(rv) && (prefs)) {
     char *input_style;
@@ -1501,6 +1462,30 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
   mPreedit = 0;
   mStatusText = 0;
 
+  XIMCallback1 preedit_start_cb;
+  XIMCallback1 preedit_draw_cb;
+  XIMCallback1 preedit_done_cb;
+  XIMCallback1 preedit_caret_cb;
+  XIMCallback1 status_draw_cb;
+  XIMCallback1 status_start_cb;
+  XIMCallback1 status_done_cb;
+
+  status_draw_cb.client_data = (char *)this;
+  status_draw_cb.callback = status_draw_cbproc;
+  status_start_cb.client_data = (char *)this;
+  status_start_cb.callback = status_start_cbproc;
+  status_done_cb.client_data = (char *)this;
+  status_done_cb.callback = status_done_cbproc;
+
+  preedit_start_cb.client_data = (char *)this;
+  preedit_start_cb.callback = preedit_start_cbproc;
+  preedit_draw_cb.client_data = (char *)this;
+  preedit_draw_cb.callback = preedit_draw_cbproc;
+  preedit_done_cb.client_data = (char *)this;
+  preedit_done_cb.callback = preedit_done_cbproc;
+  preedit_caret_cb.client_data = (char *)this;
+  preedit_caret_cb.callback = preedit_caret_cbproc;
+
   GdkWindow *gdkWindow = (GdkWindow *) aFocusWindow->GetNativeData(NS_NATIVE_WINDOW);
   if (!gdkWindow) {
     return;
@@ -1546,12 +1531,65 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
   }
 
 #ifdef _AIX
-  if (mInputStyle & GDK_IM_STATUS_AREA)
+  // If GDK_IM_STATUS_CALLBACKS and GDK_IM_PREEDIT_CALLBACKS are set, then
+  // we will create a dummy GdkIC with style GDK_IM_STATUS_AREA and 
+  // GDK_IM_PREEDIT_POSITION. This is due to the limitation in Gtk 1.2 which
+  // prevents setting the callback functions before creating an input 
+  // context. AIX requires that all callbacks be specified at the time
+  // XCreateIC is defined, so this allows us to create a valid GdkIC and 
+  // swap out its dummy XIC below.
+  if (mInputStyle & GDK_IM_STATUS_CALLBACKS && 
+      mInputStyle & GDK_IM_PREEDIT_CALLBACKS) {
+    attr->style = (GdkIMStyle)(GDK_IM_STATUS_AREA | GDK_IM_PREEDIT_POSITION);
     attrmask = (GdkICAttributesType)(attrmask | GDK_IC_STATUS_AREA);
+    if (aStatusFontSet) {
+      attr->status_fontset = aStatusFontSet;
+      attrmask = (GdkICAttributesType)(attrmask | GDK_IC_STATUS_FONTSET);
+    }
+  }
 #endif // _AIX
 
   GdkICPrivate *IC = (GdkICPrivate *)gdk_ic_new(attr, attrmask);
 
+#ifdef _AIX
+  // Here we acquire the dummy XIC created in the above gdk_ic_new call,
+  // look up its XIM, destroy it, and then create a valid XIC with all
+  // of the callback functions defined.
+  if (IC && IC->xic && 
+      mInputStyle & GDK_IM_STATUS_CALLBACKS && 
+      mInputStyle & GDK_IM_PREEDIT_CALLBACKS) {
+    attr->style = mInputStyle;
+    XIM xim = XIMOfIC(IC->xic);
+    XDestroyIC(IC->xic);
+    XVaNestedList preedit_attr = 
+      XVaCreateNestedList(0,
+                          XNPreeditStartCallback, &preedit_start_cb,
+                          XNPreeditDrawCallback, &preedit_draw_cb,
+                          XNPreeditDoneCallback, &preedit_done_cb,
+                          XNPreeditCaretCallback, &preedit_caret_cb,
+                          0);
+    XVaNestedList status_attr =
+      XVaCreateNestedList(0,
+                          XNStatusDrawCallback, &status_draw_cb,
+                          XNStatusStartCallback, &status_start_cb,
+                          XNStatusDoneCallback, &status_done_cb,
+                          0);
+
+    IC->attr->style = mInputStyle;
+    IC->xic = XCreateIC (xim,
+                         XNInputStyle,
+                         attr->style,
+                         XNClientWindow,
+                         GDK_WINDOW_XWINDOW(attr->client_window),
+                         XNPreeditAttributes,
+                         preedit_attr,
+                         XNStatusAttributes,
+                         status_attr,
+                         NULL);
+    XFree(preedit_attr);
+    XFree(status_attr);
+  }
+#else
   // If we destroy on-the-spot XIC during the conversion ON mode,
   // kinput2 never turns conversion ON for any other XIC. This seems
   // to be a bug of kinput2.
@@ -1564,67 +1602,50 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
     // don't need to set actuall callbacks for this xic
     mIC_backup = (GdkICPrivate *)gdk_ic_new(attr, attrmask);
   }
+#endif
 
   gdk_ic_attr_destroy(attr);
 
-  if (!IC || !((GdkICPrivate *) IC)->xic) {
+  if (!IC || !IC->xic) {
     return;
   }
   mIC = IC;
 
-  XIC xic = ((GdkICPrivate *) IC)->xic;
-
+#ifndef _AIX
   /* set callbacks here */
   if (mInputStyle & GDK_IM_PREEDIT_CALLBACKS) {
-    XVaNestedList preedit_attr;
-
-    XIMCallback1 preedit_start_cb;
-    XIMCallback1 preedit_draw_cb;
-    XIMCallback1 preedit_done_cb;
-
-    preedit_start_cb.client_data = (char *)this;
-    preedit_start_cb.callback = preedit_start_cbproc;
-    preedit_draw_cb.client_data = (char *)this;
-    preedit_draw_cb.callback = preedit_draw_cbproc;
-    preedit_done_cb.client_data = (char *)this;
-    preedit_done_cb.callback = preedit_done_cbproc;
-
-    preedit_attr =
+    XVaNestedList preedit_attr =
       XVaCreateNestedList(0,
                           XNPreeditStartCallback, &preedit_start_cb,
                           XNPreeditDrawCallback, &preedit_draw_cb,
                           XNPreeditDoneCallback, &preedit_done_cb,
+                          XNPreeditCaretCallback, &preedit_caret_cb,
                           0);
-    XSetICValues(xic,
+    XSetICValues(IC->xic,
                  XNPreeditAttributes, preedit_attr,
                  0);
     XFree(preedit_attr);
   }
+#endif
 
   if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
-    XIMCallback1 status_draw_cb;
-
-    XVaNestedList status_attr;
-
-    status_draw_cb.client_data = (char *)this;
-    status_draw_cb.callback = status_draw_cbproc;
-
-    status_attr =
+#ifndef _AIX
+    XVaNestedList status_attr =
       XVaCreateNestedList(0,
                           XNStatusDrawCallback, &status_draw_cb,
+                          XNStatusStartCallback, &status_start_cb,
+                          XNStatusDoneCallback, &status_done_cb,
                           0);
-    XSetICValues(xic,
+    XSetICValues(IC->xic,
                  XNStatusAttributes, status_attr,
                  0);
     XFree(status_attr);
+#endif
 
-    if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
-      if (!gStatus) {
-        gStatus = new nsIMEStatus();
-      }
-      SetStatusText("");
+    if (!gStatus) {
+      gStatus = new nsIMEStatus();
     }
+    SetStatusText("");
   }
-  return;
 }
 #endif // USE_XIM 
