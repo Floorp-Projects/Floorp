@@ -382,8 +382,8 @@ nsNSSComponent::InstallLoadableRoots()
     char *fullModuleName = nsnull;
 #ifdef XP_MAC
     nsCAutoString nativePath;
-    mozFile->Append(NS_LITERAL_CSTRING("Essential Files"));
-    mozFile->Append(LOADABLE_CERTS_MODULE);
+    mozFile->AppendNative(NS_LITERAL_CSTRING("Essential Files"));
+    mozFile->AppendNative(LOADABLE_CERTS_MODULE);
     mozFile->GetNativePath(nativePath);    
     fullModuleName = (char *) nativePath.get();
 #else
@@ -851,7 +851,7 @@ nsNSSComponent::InitializeNSS()
   #ifdef XP_MAC
     // On the Mac we place all NSS DBs in the Security
     // Folder in the profile directory.
-    profilePath->Append(NS_LITERAL_CSTRING("Security"));
+    profilePath->AppendNative(NS_LITERAL_CSTRING("Security"));
     profilePath->Create(nsIFile::DIRECTORY_TYPE, 0); //This is for Mac, don't worry about
                                                      //permissions.
   #endif 
