@@ -76,6 +76,7 @@ nsFormControlFrame::nsFormControlFrame()
   mFormFrame      = nsnull;
   mSuggestedWidth = NS_FORMSIZE_NOTSET;
   mSuggestedHeight = NS_FORMSIZE_NOTSET;
+  mPresContext    = nsnull;
 
   // Reflow Optimization
   mCacheSize.width             = -1;

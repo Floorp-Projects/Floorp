@@ -57,7 +57,7 @@ public:
 
   PRInt32 GetAlign();
 
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsIPresContext * mPresContext;
 };
 
 

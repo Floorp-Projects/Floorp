@@ -156,7 +156,7 @@ protected:
   PRBool mDidInit;
   nsButtonFrameRenderer mRenderer;
 
-  nsCOMPtr<nsIPresContext> mPresContext;
+  nsIPresContext * mPresContext;
 
   //Resize Reflow OpitmizationSize;
   nsSize                mCacheSize;
