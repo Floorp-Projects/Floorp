@@ -190,6 +190,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
 
 NS_IMETHODIMP nsHTMLEditor::SetBodyAttribute(const nsString& aAttribute, const nsString& aValue)
 {
+
 #ifdef ENABLE_JS_EDITOR_LOG
   nsAutoJSEditorLogLock logLock(mJSEditorLog);
 
@@ -1859,6 +1860,8 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   
   nsAutoString TagName = aTagName;
   TagName.ToLowerCase();
+  // Empty string indicates we should match any element tag
+  PRBool anyTag = (TagName == "");
   
   //Note that this doesn't need to go through the transaction system
 
@@ -1918,6 +1921,14 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
               nsAutoString domTagName;
               selectedElement->GetNodeName(domTagName);
               domTagName.ToLowerCase();
+
+              if (anyTag)
+              {
+                // Get name of first selected element
+                selectedElement->GetTagName(TagName);
+                TagName.ToLowerCase();
+                anyTag = PR_FALSE;
+              }
 
               // The "A" tag is a pain,
               //  used for both link(href is set) and "Named Anchor"
@@ -2138,16 +2149,20 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
       selection->ClearSelection();    
     }
   }
-
+  PRBool isInline;
+  
+    //
   res = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, offsetOfNewNode);
   if (NS_SUCCEEDED(res))
   {
     nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(aElement);
-
-    res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
-
+    res = IsNodeInline(newNode, isInline);
+    if( NS_SUCCEEDED(res))
+    {
+      // The simple case of an inline node
+      res = InsertNode(aElement, parentSelectedNode, offsetOfNewNode);
+    }
   }
-  
   return res;
 }
 
