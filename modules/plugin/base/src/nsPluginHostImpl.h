@@ -79,7 +79,8 @@ public:
               const char* const* aMimeDescriptions,
               const char* const* aExtensions,
               PRInt32 aVariants,
-              PRInt64 aLastModifiedTime = 0);
+              PRInt64 aLastModifiedTime = 0,
+              PRBool aCanUnload = PR_TRUE);
 
   ~nsPluginTag();
 

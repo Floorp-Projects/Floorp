@@ -179,7 +179,9 @@
 static const char *kPluginTmpDirName = "plugtmp";
 
 // Version of cached plugin info
-static const char *kPluginInfoVersion = "0.01";
+// 0.01 first implementation
+// 0.02 added caching of CanUnload to fix bug 105935
+static const char *kPluginInfoVersion = "0.02";
 
 ////////////////////////////////////////////////////////////////////////
 // CID's && IID's
@@ -212,6 +214,7 @@ static const char kPluginsDescKey[] = "description";
 static const char kPluginsFilenameKey[] = "filename";
 static const char kPluginsFullpathKey[] = "fullpath";
 static const char kPluginsModTimeKey[] = "lastModTimeStamp";
+static const char kPluginsCanUnload[] = "canUnload";
 static const char kPluginsVersionKey[] = "version";
 static const char kPluginsMimeTypeKey[] = "mimetype";
 static const char kPluginsMimeDescKey[] = "description";
@@ -896,14 +899,15 @@ nsPluginTag::nsPluginTag(const char* aName,
                          const char* const* aMimeDescriptions,
                          const char* const* aExtensions,
                          PRInt32 aVariants,
-                         PRInt64 aLastModifiedTime)
+                         PRInt64 aLastModifiedTime,
+                         PRBool aCanUnload)
   : mNext(nsnull),
     mVariants(aVariants),
     mMimeTypeArray(nsnull),
     mMimeDescriptionArray(nsnull),
     mExtensionsArray(nsnull),
     mLibrary(nsnull),
-    mCanUnloadLibrary(PR_TRUE),
+    mCanUnloadLibrary(aCanUnload),
     mEntryPoint(nsnull),
     mFlags(0),
     mXPConnected(PR_FALSE),
@@ -4792,6 +4796,9 @@ LoadXPCOMPlugin(nsIRegistry* aRegistry,
   PRInt64 lastmod = LL_ZERO;
   aRegistry->GetLongLong(aPluginKey, kPluginsModTimeKey, &lastmod);
 
+  PRInt32 intval = 1;  // Default for canunload is PR_TRUE
+  aRegistry->GetInt(aPluginKey, kPluginsCanUnload, &intval);
+  PRBool canunload = (intval > 0);
 
   nsCOMPtr<nsIEnumerator> enumerator;
   rv = aRegistry->EnumerateAllSubtrees(aPluginKey, getter_AddRefs(enumerator));
@@ -4870,7 +4877,7 @@ LoadXPCOMPlugin(nsIRegistry* aRegistry,
                         (const char* const*)mimetypes,
                         (const char* const*)mimedescriptions,
                         (const char* const*)extensions,
-                        count, lastmod);
+                        count, lastmod, canunload);
 
     if (! tag)
       rv = NS_ERROR_OUT_OF_MEMORY;
@@ -4908,6 +4915,7 @@ AddPluginInfoToRegistry(nsIRegistry* registry, nsRegistryKey top,
     registry->SetStringUTF8(pluginKey, kPluginsNameKey, tag->mName);
     registry->SetStringUTF8(pluginKey, kPluginsDescKey, tag->mDescription);
     registry->SetLongLong(pluginKey, kPluginsModTimeKey, &(tag->mLastModifiedTime));
+    registry->SetInt(pluginKey, kPluginsCanUnload, tag->mCanUnloadLibrary);
 
     // Add in each mimetype this plugin supports
     for (int i=0; i<tag->mVariants; i++) {
