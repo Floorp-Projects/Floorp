@@ -1317,7 +1317,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                                String className)
     {
         scope = getTopLevelScope(scope);
-        Object ctor = ScriptRuntime.getTopLevelProp(scope, className);
+        Object ctor = getProperty(scope, className);
         if (ctor == NOT_FOUND || !(ctor instanceof Scriptable))
             return null;
         Scriptable ctorObj = (Scriptable) ctor;
