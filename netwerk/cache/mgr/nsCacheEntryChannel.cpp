@@ -169,6 +169,8 @@ nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, PRInt32 aReadCount,
 {
     nsresult rv;
 
+	NS_ENSURE_ARG(aListener);
+
     mCacheEntry->NoteAccess();
 
     nsCOMPtr<nsIStreamListener> headListener;
@@ -183,6 +185,9 @@ nsCacheEntryChannel::AsyncRead(PRUint32 aStartPosition, PRInt32 aReadCount,
                                                   getter_AddRefs(headListener));
             if (NS_FAILED(rv)) return rv;
         }
+        NS_ASSERTION(headListener, "Load group listener factory did not create listener");
+        if (!headListener)
+            headListener = aListener;
 
     } else {
         headListener = aListener;
