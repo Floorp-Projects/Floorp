@@ -20,7 +20,7 @@
 */
 
 #include "prlog.h"
-#include "nsIDOMUIEvent.h"
+#include "nsIDOMMouseEvent.h"
 #include "javaDOMEventsGlobals.h"
 #include "org_mozilla_dom_events_MouseEventImpl.h"
 
@@ -32,7 +32,7 @@
 JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getAltKey
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMUIEvent* event = (nsIDOMUIEvent*) 
+    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
         env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID); 
     if (!event) {
         JavaDOMGlobals::ThrowException(env,
@@ -61,7 +61,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getAltKey
 JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getButton
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMUIEvent* event = (nsIDOMUIEvent*)
+    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
         env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
     if (!event) {
         JavaDOMGlobals::ThrowException(env,
@@ -88,7 +88,7 @@ JNIEXPORT jshort JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getButton
 JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getClientX
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMUIEvent* event = (nsIDOMUIEvent*)
+    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
         env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
     if (!event) {
         JavaDOMGlobals::ThrowException(env,
@@ -115,7 +115,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getClientX
 JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getClientY
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMUIEvent* event = (nsIDOMUIEvent*)
+    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
         env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
     if (!event) {
         JavaDOMGlobals::ThrowException(env,
@@ -143,7 +143,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getClientY
 JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getCtrlKey
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMUIEvent* event = (nsIDOMUIEvent*) 
+    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
         env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID); 
     if (!event) {
         JavaDOMGlobals::ThrowException(env,
@@ -171,7 +171,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getCtrlKey
 JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getMetaKey
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMUIEvent* event = (nsIDOMUIEvent*) 
+    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
         env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID); 
     if (!event) {
         JavaDOMGlobals::ThrowException(env,
@@ -199,7 +199,7 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getMetaKey
 JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenX
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMUIEvent* event = (nsIDOMUIEvent*)
+    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
         env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
     if (!event) {
         JavaDOMGlobals::ThrowException(env,
@@ -226,7 +226,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenX
 JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenY
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMUIEvent* event = (nsIDOMUIEvent*)
+    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*)
         env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID);
     if (!event) {
         JavaDOMGlobals::ThrowException(env,
@@ -254,7 +254,7 @@ JNIEXPORT jint JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getScreenY
 JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_events_MouseEventImpl_getShiftKey
   (JNIEnv *env, jobject jthis)
 {
-    nsIDOMUIEvent* event = (nsIDOMUIEvent*) 
+    nsIDOMMouseEvent* event = (nsIDOMMouseEvent*) 
         env->GetLongField(jthis, JavaDOMEventsGlobals::eventPtrFID); 
     if (!event) {
         JavaDOMGlobals::ThrowException(env,

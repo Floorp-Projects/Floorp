@@ -1860,12 +1860,13 @@ jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env,
   jclass clazz = eventClass;
   nsISupports *isupports;
   void *target;
+  nsresult rv;
   
   isupports = (nsISupports *) event;
 
   //check whenever our Event is UIEvent
-  isupports->QueryInterface(kIDOMUIEventIID, (void **) &target);
-  if (target) {
+  rv = isupports->QueryInterface(kIDOMUIEventIID, (void **) &target);
+  if (!NS_FAILED(rv) && target) {
     // At the moment DOM2 draft specifies set of UIEvent subclasses 
     // However Mozilla still presents these events as nsUIEvent
     // So we need a cludge to determine proper java class to be created
@@ -1899,34 +1900,32 @@ jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env,
     };
 
 
-    nsString nsType;
-    nsresult rv = event->GetType(nsType);
+    nsString eventType;
+    rv = event->GetType(eventType);
     if (NS_FAILED(rv)) {
         JavaDOMGlobals::ThrowException(env,
             "Event.getType at JavaDOMEventsGlobals: failed");
         return NULL;
     }
 
-    if (isEventOfType(mouseEventTypes, nsType) == JNI_TRUE) {
+    if (isEventOfType(mouseEventTypes, eventType) == JNI_TRUE) {
         clazz = mouseEventClass;
-    } else if (isEventOfType(keyEventTypes, nsType) == JNI_TRUE) {
+    } else if (isEventOfType(keyEventTypes, eventType) == JNI_TRUE) {
         clazz = keyEventClass;
-    } else if (isEventOfType(uiEventTypes, nsType) == JNI_TRUE) {  
+    } else if (isEventOfType(uiEventTypes, eventType) == JNI_TRUE) {  
             clazz = uiEventClass;
     } else {
-      /* Being paranoid here, make sure the (unicode) string is
-         NULL-terminated before passing it to PR_LOG. Otherwise, we
-         may cause a crash */
+      char* buffer = nsnull;
+      if (eventType.IsUnicode()) {
+	buffer = eventType.ToNewUTF8String();
+      } else {
+	buffer = eventType.ToNewCString();
+      }
+      PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING,
+	     ("Unknown type of UI event (%s)", buffer));
+      nsString::Recycle(&eventType);
 
-            PRInt32 length = nsType.Length();
-            char* buffer = new char[length+1];
-	    strncpy(buffer, nsType.GetBuffer(), length);
-	    buffer[length] = 0;
-
-            PR_LOG(JavaDOMGlobals::log, PR_LOG_WARNING,
-                ("Unknown type of UI event (%s)", buffer));
-	    delete[] buffer;
-            clazz = uiEventClass;
+      clazz = uiEventClass;
     }
 
     event->Release();
