@@ -23,4 +23,4 @@
  *
  * Until then, include the real file to keep everything in sync.
  */
-#include "..\..\tests\viewer\nsSetupRegistry.cpp"
+#include "..\..\..\xpfe\bootstrap\nsSetupRegistry.cpp"
