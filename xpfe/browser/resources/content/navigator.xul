@@ -109,8 +109,7 @@ Contributor(s): ______________________________________. -->
  </window>
 </popup>
 
-  <broadcaster id="canGoBack" disabled="true"/>
-  <broadcaster id="canGoForward" disabled="true"/>
+ 
   <broadcaster id="canReload"/>
   <broadcaster id="canStop"/>
   <broadcaster id="canPrint"/>
