@@ -1073,7 +1073,7 @@ sub BuildCommonProjects()
 		BuildOneProject(":mozilla:network:macbuild:network.mcp",					"NetworkModular$D.shlb", "network.toc", 1, $main::ALIAS_SYM_FILES, 0);
 	}
 	
-	BuildOneProject(":mozilla:uriloader:macbuild:uriLoader.mcp",						"uriLoader$D.shlb", "uriloader.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	BuildOneProject(":mozilla:uriloader:macbuild:uriLoader.mcp",						"uriLoader$D.shlb", "uriloader.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
 	BuildOneProject(":mozilla:profile:macbuild:profile.mcp",					"profile$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:profile:pref-migrator:macbuild:prefmigrator.mcp",	"prefm$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
