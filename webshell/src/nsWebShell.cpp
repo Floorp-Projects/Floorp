@@ -176,7 +176,6 @@ class nsWebShell : public nsDocShell,
                    public nsILinkHandler,
                    public nsIDocumentLoaderObserver,
                    public nsIProgressEventSink, // should go away (nsIDocLoaderObs)
-                   public nsIRefreshURI,
                    public nsIURIContentListener,
                    public nsIClipboardCommands
 {
@@ -245,8 +244,6 @@ public:
   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
       const char* aWindowTarget, nsIInputStream* aPostData, loadType aLoadType);
 
-  NS_IMETHOD Stop(void);
-
   void SetReferrer(const PRUnichar* aReferrer);
 
   // History api's
@@ -278,10 +275,6 @@ public:
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec);
   NS_IMETHOD GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState);
-
-  // nsIRefreshURL interface methods...
-  NS_IMETHOD RefreshURI(nsIURI* aURI, PRInt32 aMillis, PRBool aRepeat);
-  NS_IMETHOD CancelRefreshURITimers(void);
 
   // nsIProgressEventSink
   NS_DECL_NSIPROGRESSEVENTSINK
@@ -358,8 +351,6 @@ protected:
 
   PRPackedBool mIsInSHist;
   PRPackedBool mFailedToLoadHistoryService;
-
-  nsVoidArray mRefreshments;
 
   eCharsetReloadState mCharsetReloadState;
 
@@ -442,7 +433,6 @@ static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
 // XXX not sure
 static NS_DEFINE_IID(kILinkHandlerIID,        NS_ILINKHANDLER_IID);
 
-
 //----------------------------------------------------------------------
 
 // Note: operator new zeros our memory
@@ -475,6 +465,7 @@ nsWebShell::nsWebShell() : nsDocShell()
 
 nsWebShell::~nsWebShell()
 {
+   Destroy();
   if (nsnull != mHistoryService) {
     nsServiceManager::ReleaseService(kGlobalHistoryCID, mHistoryService);
     mHistoryService = nsnull;
@@ -591,7 +582,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
-   NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
    NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 #if 0 // inherits from nsDocShell:
@@ -602,6 +592,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeNode)
    NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
+   NS_INTERFACE_MAP_ENTRY(nsIRefreshURI)
    NS_INTERFACE_MAP_ENTRY(nsIScrollable)
 #endif
 NS_INTERFACE_MAP_END_INHERITING(nsDocShell)
@@ -1442,15 +1433,6 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
    return rv;
 }
 
-
-NS_IMETHODIMP nsWebShell::Stop(void)
-{
-  // Cancel any timers that were set for this loader.
-  CancelRefreshURITimers();
-
-  return nsDocShell::Stop();
-}
-
 //----------------------------------------
 
 NS_IMETHODIMP nsWebShell::SessionHistoryInternalLoadURL(const PRUnichar *aURLSpec,
@@ -2213,104 +2195,6 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
   }
   return NS_OK;
 }
-
-/* For use with redirect/refresh url api */
-class refreshData : public nsITimerCallback
-{
-public:
-  refreshData();
-
-  NS_DECL_ISUPPORTS
-
-  // nsITimerCallback interface
-  NS_IMETHOD_(void) Notify(nsITimer *timer);
-
-  nsCOMPtr<nsIDocShell> mDocShell;
-  nsCOMPtr<nsIURI> mURI;
-  PRBool       mRepeat;
-  PRInt32      mDelay;
-
-protected:
-  virtual ~refreshData();
-};
-
-refreshData::refreshData()
-{
-  NS_INIT_REFCNT();
-}
-
-refreshData::~refreshData()
-{
-}
-
-
-NS_IMPL_ISUPPORTS(refreshData, kITimerCallbackIID);
-
-NS_IMETHODIMP_(void) refreshData::Notify(nsITimer *aTimer)
-{
-   NS_ASSERTION(mDocShell, "DocShell is somehow null");
-
-   if(mDocShell)
-      mDocShell->LoadURI(mURI, nsnull);
-  /*
-   * LoadURL(...) will cancel all refresh timers... This causes the Timer and
-   * its refreshData instance to be released...
-   */
-}
-
-
-NS_IMETHODIMP nsWebShell::RefreshURI(nsIURI* aURI, PRInt32 aDelay, PRBool aRepeat)
-{
-   NS_ENSURE_ARG(aURI);
-
-   refreshData* data = new refreshData();
-   NS_ENSURE_TRUE(data, NS_ERROR_OUT_OF_MEMORY);
-
-   nsCOMPtr<nsISupports> dataRef = data; // Get the ref count to 1
-
-   data->mDocShell = this;
-   data->mURI = aURI;
-   data->mDelay = aDelay;
-   data->mRepeat = aRepeat;
-
-   nsITimer* timer = nsnull;
-
-   NS_NewTimer(&timer);
-   NS_ENSURE_TRUE(timer, NS_ERROR_FAILURE);
-
-   NS_LOCK_INSTANCE();  // XXX What is this for?
-   mRefreshments.AppendElement(timer);
-   timer->Init(data, aDelay);
-   NS_UNLOCK_INSTANCE();
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::CancelRefreshURITimers(void)
-{
-  PRInt32 i;
-  nsITimer* timer;
-
-  /* Right now all we can do is cancel all the timers for this webshell. */
-  NS_LOCK_INSTANCE();
-
-  /* Walk the list backwards to avoid copying the array as it shrinks.. */
-  for (i = mRefreshments.Count()-1; (0 <= i); i--) {
-    timer=(nsITimer*)mRefreshments.ElementAt(i);
-    /* Remove the entry from the list before releasing the timer.*/
-    mRefreshments.RemoveElementAt(i);
-
-    if (timer) {
-      timer->Cancel();
-      NS_RELEASE(timer);
-    }
-  }
-  NS_UNLOCK_INSTANCE();
-
-  return NS_OK;
-}
-
 
 //----------------------------------------------------------------------
 
