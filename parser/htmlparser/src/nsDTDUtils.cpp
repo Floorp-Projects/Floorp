@@ -1079,6 +1079,7 @@ nsIParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
       if(aTag==theStack->Last()) {
         result=theStack->Pop();
         mResidualStyleCount--;
+        break; // Fix bug 50710 - Stop after finding a style.
       } else {
         // NS_ERROR("bad residual style entry");
       }
