@@ -63,8 +63,6 @@
 
 #if JS_HAS_REGEXPS
 
-typedef struct RENode RENode;
-
 typedef enum REOp {
     REOP_EMPTY      = 0,  /* match rest of input against rest of r.e. */
     REOP_ALT        = 1,  /* alternative subexpressions in kid and next */
@@ -1233,12 +1231,92 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     re->lastIndex = 0;
     re->parenCount = state.parenCount;
     re->flags = flags;
+#ifdef JS_THREADSAFE
+    re->owningThread = 0;
+    re->lastIndexes = NULL;
+#endif
 
     re->ren = ren;
 
 out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return re;
+}
+
+#ifdef JS_THREADSAFE
+typedef struct LastIndexEntry {
+    JSDHashEntryHdr     hdr;
+    jsword              thread;
+    uintN               index;
+} LastIndexEntry;
+#endif
+
+/*
+ * NB: Get and SetLastIndex must be called with re's owning object locked.
+ */
+static uintN
+GetLastIndex(JSContext *cx, JSRegExp *re)
+{
+#ifdef JS_THREADSAFE
+    /*
+     * If no thread has set a lastIndex property yet, return re->lastIndex,
+     * which must be 0.  But if another thread owns re, then re->lastIndexes
+     * must have been created by SetLastIndex, even though cx->thread may not
+     * be mapped by re->lastIndexes yet (in which case, we return 0).
+     */
+    if (!re->owningThread) {
+        JS_ASSERT(re->lastIndex == 0);
+    } else if (cx->thread != re->owningThread) {
+        LastIndexEntry *entry = (LastIndexEntry *)
+            JS_DHashTableOperate(re->lastIndexes, (const void *) cx->thread,
+                                 JS_DHASH_LOOKUP);
+        if (JS_DHASH_ENTRY_IS_BUSY(&entry->hdr))
+            return entry->index;
+        return 0;
+    }
+#endif
+    return re->lastIndex;
+}
+
+static JSBool
+SetLastIndex(JSContext *cx, JSRegExp *re, uintN lastIndex)
+{
+#ifdef JS_THREADSAFE
+    if (!re->owningThread) {
+        /*
+         * Claim ownership and fall through to the final "update re->lastIndex
+         * and return" clause.  Recall that re's object must be locked (and we
+         * know re has an object, else why would its lastIndex member be set).
+         */
+        re->owningThread = cx->thread;
+    } else if (cx->thread != re->owningThread) {
+        LastIndexEntry *entry;
+
+        /* Bootstrap re->lastIndexes, interlocked by re's object lock. */
+        if (!re->lastIndexes) {
+            re->lastIndexes = JS_NewDHashTable(JS_DHashGetStubOps(), NULL,
+                                               sizeof(LastIndexEntry),
+                                               JS_DHASH_MIN_SIZE);
+            if (!re->lastIndexes)
+                goto boom;
+        }
+
+        /* Find or create a mapping from cx->thread to its own last index. */
+        entry = (LastIndexEntry *)
+            JS_DHashTableOperate(re->lastIndexes, (const void *) cx->thread,
+                                 JS_DHASH_ADD);
+        if (!entry) {
+      boom:
+            JS_ReportOutOfMemory(cx);
+            return JS_FALSE;
+        }
+        entry->thread = cx->thread;
+        entry->index = lastIndex;
+        return JS_TRUE;
+    }
+#endif
+    re->lastIndex = lastIndex;
+    return JS_TRUE;
 }
 
 JSRegExp *
@@ -1317,6 +1395,10 @@ js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 {
     if (JS_ATOMIC_DECREMENT(&re->nrefs) == 0) {
         freeRENtree(cx, re->ren, NULL);
+#ifdef JS_THREADSAFE
+        if (re->lastIndexes)
+            JS_DHashTableDestroy(re->lastIndexes);
+#endif
         JS_free(cx, re);
     }
 }
@@ -2327,7 +2409,7 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	    break;
 	  case REGEXP_LAST_INDEX:
             /* NB: early unlock/return, so we don't deadlock with the GC. */
-            lastIndex = re->lastIndex;
+            lastIndex = GetLastIndex(cx, re);
             JS_UNLOCK_OBJ(cx, obj);
             return js_NewNumberValue(cx, lastIndex, vp);
 	  case REGEXP_MULTILINE:
@@ -2342,12 +2424,14 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+    JSBool ok;
     jsint slot;
     JSRegExp *re;
     jsdouble d;
 
+    ok = JS_TRUE;
     if (!JSVAL_IS_INT(id))
-	return JS_TRUE;
+	return ok;
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX) {
         if (!js_ValueToNumber(cx, *vp, &d))
@@ -2356,10 +2440,10 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         JS_LOCK_OBJ(cx, obj);
         re = (JSRegExp *) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
         if (re)
-            re->lastIndex = (uintN)d;
+            ok = SetLastIndex(cx, re, (uintN)d);
         JS_UNLOCK_OBJ(cx, obj);
     }
-    return JS_TRUE;
+    return ok;
 }
 
 /*
@@ -2746,7 +2830,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* NB: we must reach out: after this paragraph, in order to drop re. */
     HOLD_REGEXP(cx, re);
-    i = (re->flags & JSREG_GLOB) ? re->lastIndex : 0;
+    i = (re->flags & JSREG_GLOB) ? GetLastIndex(cx, re) : 0;
     JS_UNLOCK_OBJ(cx, obj);
 
     /* Now that obj is unlocked, it's safe to (potentially) grab the GC lock. */
@@ -2770,8 +2854,8 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     ok = js_ExecuteRegExp(cx, re, str, &i, test, rval);
     JS_LOCK_OBJ(cx, obj);
-    if (re->flags & JSREG_GLOB)
-	re->lastIndex = (*rval == JSVAL_NULL) ? 0 : i;
+    if (ok && (re->flags & JSREG_GLOB))
+	ok = SetLastIndex(cx, re, (*rval == JSVAL_NULL) ? 0 : i);
     JS_UNLOCK_OBJ(cx, obj);
 
 out:
