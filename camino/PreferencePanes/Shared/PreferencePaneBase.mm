@@ -98,6 +98,10 @@
     
     returnColor = [NSColor colorWithCalibratedRed:redFloat green:greenFloat blue:blueFloat alpha:1.0f];
   }
+  else
+  {
+    *outSuccess = NO;
+  }
 
   return returnColor;
 }
