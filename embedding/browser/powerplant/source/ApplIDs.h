@@ -160,6 +160,9 @@ enum {
 
 	cmd_ViewPageSource          = 'VSrc',
 	cmd_ViewImage               = 'VImg',
+	cmd_ViewBackgroundImage     = 'VBIm',
+	
+	cmd_CopyImage               = 'CpIm',
 
 	cmd_CopyLinkLocation        = 'CLnk',
 	cmd_CopyImageLocation       = 'CImg',

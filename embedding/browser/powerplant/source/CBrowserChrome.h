@@ -47,11 +47,10 @@
 // Interfaces Needed
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebBrowserChromeFocus.h"
-#include "nsIEmbeddingSiteWindow.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIContextMenuListener.h"
+#include "nsIContextMenuListener2.h"
 #include "nsITooltipListener.h"
 #include "nsWeakReference.h"
 
@@ -67,7 +66,7 @@ class CBrowserChrome : public nsIWebBrowserChrome,
                        public nsIWebBrowserChromeFocus,
                        public nsIEmbeddingSiteWindow2,
                        public nsIInterfaceRequestor,
-                       public nsIContextMenuListener,
+                       public nsIContextMenuListener2,
                        public nsITooltipListener,
                        public nsSupportsWeakReference,
                        public LListener
@@ -81,7 +80,7 @@ public:
     NS_DECL_NSIEMBEDDINGSITEWINDOW
     NS_DECL_NSIEMBEDDINGSITEWINDOW2
     NS_DECL_NSIINTERFACEREQUESTOR
-    NS_DECL_NSICONTEXTMENULISTENER
+    NS_DECL_NSICONTEXTMENULISTENER2
     NS_DECL_NSITOOLTIPLISTENER
 
     // LListener

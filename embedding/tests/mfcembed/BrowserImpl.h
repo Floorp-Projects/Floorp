@@ -37,12 +37,12 @@
 #include "nsICommandParams.h"
 
 class CBrowserImpl : public nsIInterfaceRequestor,
-					 public nsIWebBrowserChrome,
+                     public nsIWebBrowserChrome,
                      public nsIWebBrowserChromeFocus,
-					 public nsIEmbeddingSiteWindow2,
-					 public nsIWebProgressListener,
-					 public nsIContextMenuListener,
-					 public nsSupportsWeakReference
+                     public nsIEmbeddingSiteWindow2,
+                     public nsIWebProgressListener,
+                     public nsIContextMenuListener2,
+                     public nsSupportsWeakReference
 {
 public:
     CBrowserImpl();
@@ -57,7 +57,7 @@ public:
     NS_DECL_NSIEMBEDDINGSITEWINDOW
     NS_DECL_NSIEMBEDDINGSITEWINDOW2
     NS_DECL_NSIWEBPROGRESSLISTENER
-    NS_DECL_NSICONTEXTMENULISTENER
+    NS_DECL_NSICONTEXTMENULISTENER2
 
 protected:
 
