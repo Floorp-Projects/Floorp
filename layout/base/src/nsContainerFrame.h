@@ -342,6 +342,8 @@ protected:
    */
   void SetLastContentOffset(const nsIFrame* aLastChild);
 
+  virtual void WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow);
+
 #ifdef NS_DEBUG
   /**
    * Return the number of children in the sibling list, starting at aChild.
