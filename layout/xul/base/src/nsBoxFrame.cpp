@@ -946,9 +946,7 @@ nsBoxFrame::Reflow(nsIPresContext*          aPresContext,
   nsSize computedSize(aReflowState.mComputedWidth,aReflowState.mComputedHeight);
 
   nsMargin m;
-  m = aReflowState.mComputedBorderPadding;
-
-  //GetBorderAndPadding(m);
+  GetBorderAndPadding(m);
 
   // this happens sometimes. So lets handle it gracefully.
   if (aReflowState.mComputedHeight == 0) {
