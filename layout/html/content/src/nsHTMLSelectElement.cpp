@@ -328,7 +328,6 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
   if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
     nsString value;
     formControlFrame->GetProperty(nsHTMLAtoms::selectedindex, value);
-    NS_RELEASE(formControlFrame);
     if (value.Length() > 0) {
       PRInt32 retval = 0;
       PRInt32 error = 0;
