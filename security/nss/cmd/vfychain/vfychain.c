@@ -128,119 +128,6 @@ exitErr(char *function)
     exit(1);
 }
 
-static char *
-bestCertName(CERTCertificate *cert) {
-    if (cert->nickname) {
-	return cert->nickname;
-    }
-    if (cert->emailAddr) {
-	return cert->emailAddr;
-    }
-    return cert->subjectName;
-}
-
-void
-printCertProblems(FILE *outfile, CERTCertDBHandle *handle, 
-	CERTCertificate *cert, PRBool checksig, 
-	SECCertUsage certUsage, void *pinArg)
-{
-    CERTVerifyLog      log;
-    CERTVerifyLogNode *node   = NULL;
-    unsigned int       depth  = (unsigned int)-1;
-    unsigned int       flags  = 0;
-    char *             errstr = NULL;
-    PRErrorCode	       err    = PORT_GetError();
-
-    log.arena = PORT_NewArena(512);
-    log.head = log.tail = NULL;
-    log.count = 0;
-    CERT_VerifyCert(handle, cert, checksig, certUsage,
-	            PR_Now(), pinArg, &log);
-
-    if (log.count > 0) {
-	fprintf(outfile,"PROBLEM WITH THE CERT CHAIN:\n");
-	for (node = log.head; node; node = node->next) {
-	    if (depth != node->depth) {
-		depth = node->depth;
-		fprintf(outfile,"CERT %d. %s %s:\n", depth,
-				 bestCertName(node->cert), 
-			  	 depth ? "[Certificate Authority]": "");
-	    	if (verbose) {
-		    const char * emailAddr;
-		    emailAddr = CERT_GetFirstEmailAddress(node->cert);
-		    if (emailAddr) {
-		    	fprintf(outfile,"Email Address(es): ");
-			do {
-			    fprintf(outfile, "%s\n", emailAddr);
-			    emailAddr = CERT_GetNextEmailAddress(node->cert,
-			                                         emailAddr);
-			} while (emailAddr);
-		    }
-		}
-	    }
-	    fprintf(outfile,"  ERROR %d: %s\n", node->error,
-						SECU_Strerror(node->error));
-	    errstr = NULL;
-	    switch (node->error) {
-	    case SEC_ERROR_INADEQUATE_KEY_USAGE:
-		flags = (unsigned int)node->arg;
-		switch (flags) {
-		case KU_DIGITAL_SIGNATURE:
-		    errstr = "Cert cannot sign.";
-		    break;
-		case KU_KEY_ENCIPHERMENT:
-		    errstr = "Cert cannot encrypt.";
-		    break;
-		case KU_KEY_CERT_SIGN:
-		    errstr = "Cert cannot sign other certs.";
-		    break;
-		default:
-		    errstr = "[unknown usage].";
-		    break;
-		}
-	    case SEC_ERROR_INADEQUATE_CERT_TYPE:
-		flags = (unsigned int)node->arg;
-		switch (flags) {
-		case NS_CERT_TYPE_SSL_CLIENT:
-		case NS_CERT_TYPE_SSL_SERVER:
-		    errstr = "Cert cannot be used for SSL.";
-		    break;
-		case NS_CERT_TYPE_SSL_CA:
-		    errstr = "Cert cannot be used as an SSL CA.";
-		    break;
-		case NS_CERT_TYPE_EMAIL:
-		    errstr = "Cert cannot be used for SMIME.";
-		    break;
-		case NS_CERT_TYPE_EMAIL_CA:
-		    errstr = "Cert cannot be used as an SMIME CA.";
-		    break;
-		case NS_CERT_TYPE_OBJECT_SIGNING:
-		    errstr = "Cert cannot be used for object signing.";
-		    break;
-		case NS_CERT_TYPE_OBJECT_SIGNING_CA:
-		    errstr = "Cert cannot be used as an object signing CA.";
-		    break;
-		default:
-		    errstr = "[unknown usage].";
-		    break;
-		}
-	    case SEC_ERROR_UNKNOWN_ISSUER:
-	    case SEC_ERROR_UNTRUSTED_ISSUER:
-	    case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
-		errstr = node->cert->issuerName;
-		break;
-	    default:
-		break;
-	    }
-	    if (errstr) {
-		fprintf(stderr,"    %s\n",errstr);
-	    }
-	    CERT_DestroyCertificate(node->cert);
-	}    
-    }
-    PORT_SetError(err); /* restore original error code */
-}
-
 typedef struct certMemStr {
     struct certMemStr * next;
     CERTCertificate * cert;
@@ -349,7 +236,7 @@ main(int argc, char *argv[], char *envp[])
     CERTCertDBHandle *   defaultDB    = NULL;
     PRBool               isAscii      = PR_FALSE;
     SECStatus            secStatus;
-    SECCertUsage         certUsage    = certUsageSSLServer;
+    SECCertificateUsage  certUsage    = certificateUsageSSLServer;
     PLOptState *         optstate;
     PLOptStatus          status;
 
@@ -364,7 +251,7 @@ main(int argc, char *argv[], char *envp[])
 	case 'a' : isAscii  = PR_TRUE;                        break;
 	case 'd' : certDir  = PL_strdup(optstate->value);     break;
 	case 'r' : isAscii  = PR_FALSE;                       break;
-	case 'u' : certUsage = (SECCertUsage)PORT_Atoi(optstate->value); break;
+	case 'u' : certUsage = ((SECCertificateUsage) 1) << PORT_Atoi(optstate->value); break;
 	case 'w' : password = PL_strdup(optstate->value);     break;
 	case 'v' : verbose++;                                 break;
 	default  : Usage(progName);                           break;
@@ -412,25 +299,26 @@ breakout:
 
     /* NOW, verify the cert chain. */
     defaultDB = CERT_GetDefaultCertDB();
-    secStatus = CERT_VerifyCert(defaultDB, firstCert, 
+    secStatus = CERT_VerifyCertificate(defaultDB, firstCert, 
                                 PR_TRUE /* check sig */,
 				certUsage, 
 				PR_Now(), 
 				NULL, 		/* wincx  */
-				NULL);		/* error log */
+				NULL,		/* error log */
+                                NULL);          /* returned usages */
 
     if (secStatus != SECSuccess) {
 	PRIntn err = PR_GetError();
 	fprintf(stderr, "Chain is bad, %d = %s\n", err, SECU_Strerror(err));
-	printCertProblems(stderr, defaultDB, firstCert, 
-			  PR_TRUE, certUsage, NULL);
+	SECU_printCertProblems(stderr, defaultDB, firstCert, 
+			  PR_TRUE, certUsage, NULL, verbose);
     } else {
     	fprintf(stderr, "Chain is good!\n");
     }
 
 punt:
     forgetCerts();
-    if (NSS_Shutdown != SECSuccess) {
+    if (NSS_Shutdown() != SECSuccess) {
 	exit(1);
     }
     PR_Cleanup();
