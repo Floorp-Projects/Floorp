@@ -62,7 +62,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIChromeRegistry methods:
-    NS_IMETHOD EnsureRegistryDataSource();  
+    NS_IMETHOD InitRegistry();  
     NS_IMETHOD ConvertChromeURL(nsIURL* aChromeURL);
 
     // nsIRDFDataSource methods
@@ -280,7 +280,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::EnsureRegistryDataSource()
+nsChromeRegistry::InitRegistry()
 {
   if (mInner == nsnull)
     return Init("rdf:chrome");
