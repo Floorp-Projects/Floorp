@@ -466,6 +466,7 @@ NS_IMETHODIMP
 nsMenuBarFrame::CreateDismissalListener()
 {
   // Create the listener.
+  /*
   nsMenuFrame::mMenuDismissalListener = new nsMenuDismissalListener();
   
   // Get the global object for the content node and convert it to a DOM
@@ -475,16 +476,16 @@ nsMenuBarFrame::CreateDismissalListener()
   if (!doc)
     return NS_OK;
 
-  // doc->GetScriptContextOwner(...);
+  doc->GetScriptContextOwner(...);
 
-  // owner->GetScriptGlobalObject(...);
+  owner->GetScriptGlobalObject(...);
 
   // qi global object to an nsidomwindow
 
   // Walk up the parent chain until we reach the outermost window.
 
   // Attach ourselves as a mousedown listener.
-
+*/
   return NS_OK;
 }
 
