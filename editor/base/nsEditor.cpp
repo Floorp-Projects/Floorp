@@ -586,14 +586,20 @@ NS_IMETHODIMP
 nsEditor::Do(nsITransaction *aTxn)
 {
   nsresult result = NS_OK;
-  if (aTxn)
-  {
-    if (mTxnMgr) {
-      result = mTxnMgr->Do(aTxn);
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(selectionResult) && selection) {
+    selection->StartBatchChanges();
+    if (aTxn)
+    {
+      if (mTxnMgr) {
+        result = mTxnMgr->Do(aTxn);
+      }
+      else {
+        result = aTxn->Do();
+      }
     }
-    else {
-      result = aTxn->Do();
-    }
+    selection->EndBatchChanges();
   }
   return result;
 }
@@ -602,15 +608,21 @@ NS_IMETHODIMP
 nsEditor::Undo(PRUint32 aCount)
 {
   nsresult result = NS_OK;
-  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
-  {
-    PRUint32 i=0;
-    for ( ; i<aCount; i++)
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(selectionResult) && selection) {
+    selection->StartBatchChanges();
+    if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
     {
-      result = mTxnMgr->Undo();
-      if (NS_FAILED(result))
-        break;
+      PRUint32 i=0;
+      for ( ; i<aCount; i++)
+      {
+        result = mTxnMgr->Undo();
+        if (NS_FAILED(result))
+          break;
+      }
     }
+    selection->EndBatchChanges();
   }
   return result;
 }
@@ -619,15 +631,21 @@ NS_IMETHODIMP
 nsEditor::Redo(PRUint32 aCount)
 {
   nsresult result = NS_OK;
-  if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
-  {
-    PRUint32 i=0;
-    for ( ; i<aCount; i++)
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(selectionResult) && selection) {
+    selection->StartBatchChanges();
+    if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
     {
-      result = mTxnMgr->Redo();
-      if (NS_FAILED(result))
-        break;
+      PRUint32 i=0;
+      for ( ; i<aCount; i++)
+      {
+        result = mTxnMgr->Redo();
+        if (NS_FAILED(result))
+          break;
+      }
     }
+    selection->EndBatchChanges();
   }
   return result;
 }
