@@ -202,7 +202,7 @@ public:
                                nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID) = 0;
   NS_IMETHOD GenerateStateKey(nsIContent* aContent,
                               nsIStatefulFrame::SpecialStateID aID,
-                              nsACString& aString) = 0;
+                              nsCString& aString) = 0;
 
 
   /**

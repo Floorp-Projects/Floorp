@@ -188,7 +188,7 @@ public:
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
-  NS_IMETHOD DoneAddingChildren(PRBool aIsDone);
+  NS_IMETHOD DoneAddingContent(PRBool aIsDone);
   NS_IMETHOD OnOptionSelected(nsIPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected);

@@ -71,7 +71,6 @@
 #include "nsIContentList.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsPrintfCString.h"
 
   #ifdef DEBUG
     #undef NOISY_DEBUG
@@ -367,7 +366,7 @@ public:
                                nsIStatefulFrame::SpecialStateID aID = nsIStatefulFrame::eNoID);
   NS_IMETHOD GenerateStateKey(nsIContent* aContent,
                               nsIStatefulFrame::SpecialStateID aID,
-                              nsACString& aString);
+                              nsCString& aString);
 
   // Gets and sets properties on a given frame
   NS_IMETHOD GetFrameProperty(nsIFrame* aFrame,
@@ -2049,14 +2048,14 @@ FrameManager::RestoreFrameState(nsIPresContext* aPresContext, nsIFrame* aFrame, 
 }
 
 
-static inline void KeyAppendSep(nsACString& aKey)
+static inline void KeyAppendSep(nsCString& aKey)
 {
   if (!aKey.IsEmpty()) {
-    aKey.Append('>');
+    aKey.Append(">");
   }
 }
 
-static inline void KeyAppendString(const nsAString& aString, nsACString& aKey)
+static inline void KeyAppendString(const nsAString& aString, nsCString& aKey)
 {
   KeyAppendSep(aKey);
 
@@ -2066,14 +2065,14 @@ static inline void KeyAppendString(const nsAString& aString, nsACString& aKey)
   aKey.Append(NS_ConvertUCS2toUTF8(aString));
 }
 
-static inline void KeyAppendInt(PRInt32 aInt, nsACString& aKey)
+static inline void KeyAppendInt(PRInt32 aInt, nsCString& aKey)
 {
   KeyAppendSep(aKey);
 
-  aKey.Append(nsPrintfCString("%d", aInt));
+  aKey.AppendInt(aInt);
 }
 
-static inline void KeyAppendAtom(nsIAtom* aAtom, nsACString& aKey)
+static inline void KeyAppendAtom(nsIAtom* aAtom, nsCString& aKey)
 {
   NS_PRECONDITION(aAtom, "KeyAppendAtom: aAtom can not be null!\n");
 
@@ -2094,7 +2093,7 @@ static inline PRBool IsAutocompleteOff(nsIDOMElement* aElement)
 NS_IMETHODIMP
 FrameManager::GenerateStateKey(nsIContent* aContent,
                                nsIStatefulFrame::SpecialStateID aID,
-                               nsACString& aKey)
+                               nsCString& aKey)
 {
   aKey.Truncate();
 

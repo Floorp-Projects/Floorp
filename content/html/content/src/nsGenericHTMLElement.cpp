@@ -2951,98 +2951,44 @@ nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
 
   nsresult result = NS_OK;
 
-  nsCOMPtr<nsILayoutHistoryState> history;
-  nsCAutoString key;
-  GetLayoutHistoryAndKey(aContent, getter_AddRefs(history), key);
-
-  if (history) {
-    // Get the pres state for this key, if it doesn't exist, create one
-    result = history->GetState(key, aPresState);
-    if (!*aPresState) {
-      result = nsComponentManager::CreateInstance(kPresStateCID, nsnull,
-                                                  NS_GET_IID(nsIPresState),
-                                                  (void**)aPresState);
-      if (NS_SUCCEEDED(result)) {
-        result = history->AddState(key, *aPresState);
-      }
-    }
-  }
-
-  return result;
-}
-
-
-nsresult
-nsGenericHTMLElement::GetLayoutHistoryAndKey(nsIHTMLContent* aContent,
-                                             nsILayoutHistoryState** aHistory,
-                                             nsACString& aKey)
-{
-  //
-  // Get the pres shell
-  //
+  // Generate the state key
   nsCOMPtr<nsIDocument> doc;
-  nsresult rv = aContent->GetDocument(*getter_AddRefs(doc));
+  result = aContent->GetDocument(*getter_AddRefs(doc));
   if (!doc) {
-    return rv;
+    return result;
   }
 
   nsCOMPtr<nsIPresShell> presShell;
   doc->GetShellAt(0, getter_AddRefs(presShell));
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-  //
-  // Get the history (don't bother with the key if the history is not there)
-  //
-  rv = presShell->GetHistoryState(aHistory);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!*aHistory) {
-    return NS_OK;
-  }
-
-  //
-  // Get the state key
-  //
   nsCOMPtr<nsIFrameManager> frameManager;
   presShell->GetFrameManager(getter_AddRefs(frameManager));
   NS_ENSURE_TRUE(frameManager, NS_ERROR_FAILURE);
 
-  rv = frameManager->GenerateStateKey(aContent, nsIStatefulFrame::eNoID, aKey);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCAutoString stateKey;
+  result = frameManager->GenerateStateKey(aContent, nsIStatefulFrame::eNoID, stateKey);
+  NS_ENSURE_TRUE((NS_SUCCEEDED(result) && !stateKey.IsEmpty()), result);
 
-  // If the state key is blank, this is anonymous content or for
-  // whatever reason we are not supposed to save/restore state.
-  if (aKey.IsEmpty()) {
-    NS_RELEASE(*aHistory);
-    return NS_OK;
-  }
-
-  // Add something unique to content so layout doesn't muck us up
-  aKey += "-C";
-
-  return rv;
-}
-
-PRBool
-nsGenericHTMLElement::RestoreFormControlState(nsIHTMLContent* aContent,
-                                              nsIFormControl* aControl)
-{
+  // Get the pres state for this key, if it doesn't exist, create one
+  //
+  // Return early if we can't get history - we don't want to create a
+  // new history state that is free-floating, not in history.
   nsCOMPtr<nsILayoutHistoryState> history;
-  nsCAutoString key;
-  nsresult rv = GetLayoutHistoryAndKey(aContent, getter_AddRefs(history), key);
-  if (!history) {
-    return PR_FALSE;
+  result = presShell->GetHistoryState(getter_AddRefs(history));
+  NS_ENSURE_TRUE(NS_SUCCEEDED(result) && history, result);
+
+  history->GetState(stateKey, aPresState);
+  if (!*aPresState) {
+    result = nsComponentManager::CreateInstance(kPresStateCID, nsnull,
+                                                NS_GET_IID(nsIPresState),
+                                                (void**)aPresState);
+    if (NS_SUCCEEDED(result)) {
+      result = history->AddState(stateKey, *aPresState);
+    }
   }
 
-  nsCOMPtr<nsIPresState> state;
-  // Get the pres state for this key
-  rv = history->GetState(key, getter_AddRefs(state));
-  if (state) {
-    rv = aControl->RestoreState(state);
-    history->RemoveState(key);
-    return NS_SUCCEEDED(rv);
-  }
-
-  return PR_FALSE;
+  return result;
 }
 
 // XXX This creates a dependency between content and frames
@@ -4254,11 +4200,6 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
 {
   nsresult rv = NS_OK;
 
-  // Save state before doing anything if the document is being removed
-  if (!aDocument) {
-    SaveState();
-  }
-
   if (aDocument && mParent && !mForm) {
     rv = FindAndSetForm(this);
   } else if (!aDocument && mForm) {
@@ -4284,7 +4225,6 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
 
   return rv;
 }
-
 
 nsresult
 nsGenericHTMLElement::SetFormControlAttribute(nsIForm* aForm,
@@ -4504,11 +4444,6 @@ nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
 {
   nsresult rv = NS_OK;
 
-  // Save state before doing anything if the document is being removed
-  if (!aDocument) {
-    SaveState();
-  }
-
   if (aDocument && mParent && !mForm) {
     rv = FindAndSetForm(this);
   } else if (!aDocument && mForm) {
@@ -4533,13 +4468,6 @@ nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsGenericHTMLLeafFormElement::DoneCreatingElement()
-{
-  RestoreFormControlState(this, this);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

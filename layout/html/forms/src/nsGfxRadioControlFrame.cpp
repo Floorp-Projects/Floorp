@@ -94,6 +94,10 @@ nsGfxRadioControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*) ((nsIRadioControlFrame*) this);
     return NS_OK;
   }
+  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*) ((nsIStatefulFrame*) this);
+    return NS_OK;
+  }
 
   return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
 }
@@ -251,6 +255,25 @@ nsGfxRadioControlFrame::OnChecked(nsIPresContext* aPresContext,
 {
   nsFormControlHelper::ForceDrawFrame(aPresContext, this);
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxRadioControlFrame::SaveState(nsIPresContext* aPresContext,
+                                  nsIPresState** aState)
+{
+  return nsFormControlHelper::SaveContentState(this, aPresContext, aState);
+}
+        
+
+
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxRadioControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
+{
+  return nsFormControlHelper::RestoreContentState(this, aPresContext, aState);
 }
 
 

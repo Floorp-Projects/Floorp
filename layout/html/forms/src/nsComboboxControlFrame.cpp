@@ -1872,6 +1872,7 @@ nsComboboxControlFrame::GetDropDown(nsIFrame** aDropDownFrame)
 NS_IMETHODIMP 
 nsComboboxControlFrame::ToggleList(nsIPresContext* aPresContext)
 {
+
   ShowList(aPresContext, (PR_FALSE == mDroppedDown));
 
   return NS_OK;
@@ -1995,7 +1996,7 @@ nsComboboxControlFrame::GetIndexOfDisplayArea(PRInt32* aSelectedIndex)
 // nsISelectControlFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsComboboxControlFrame::DoneAddingChildren(PRBool aIsDone)
+nsComboboxControlFrame::DoneAddingContent(PRBool aIsDone)
 {
   nsISelectControlFrame* listFrame = nsnull;
   nsresult rv = NS_ERROR_FAILURE;
@@ -2003,7 +2004,7 @@ nsComboboxControlFrame::DoneAddingChildren(PRBool aIsDone)
     rv = mDropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
                                                 (void**)&listFrame);
     if (NS_SUCCEEDED(rv) && listFrame) {
-      rv = listFrame->DoneAddingChildren(aIsDone);
+      rv = listFrame->DoneAddingContent(aIsDone);
       NS_RELEASE(listFrame);
     }
   }
@@ -2671,7 +2672,6 @@ nsComboboxControlFrame::SaveState(nsIPresContext* aPresContext,
                                   nsIPresState** aState)
 {
   nsCOMPtr<nsIStatefulFrame> stateful(do_QueryInterface(mListControlFrame));
-  NS_ASSERTION(stateful, "Couldn't cast list frame to stateful frame!!!");
   if (stateful) {
     return stateful->SaveState(aPresContext, aState);
   }
@@ -2689,5 +2689,6 @@ nsComboboxControlFrame::RestoreState(nsIPresContext* aPresContext,
   nsresult rv = CallQueryInterface(mListControlFrame, &stateful);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Must implement nsIStatefulFrame");
   rv = stateful->RestoreState(aPresContext, aState);
+  InitTextStr();
   return rv;
 }

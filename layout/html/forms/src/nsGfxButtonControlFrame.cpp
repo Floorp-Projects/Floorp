@@ -466,6 +466,8 @@ nsGfxButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   if (aIID.Equals(NS_GET_IID(nsIAnonymousContentCreator))) {
     *aInstancePtr = NS_STATIC_CAST(nsIAnonymousContentCreator*, this);
+  } else if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = NS_STATIC_CAST(nsIStatefulFrame*, this);
   }
 else {
     return nsHTMLButtonControlFrame::QueryInterface(aIID, aInstancePtr);
@@ -648,4 +650,49 @@ nsGfxButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxButtonControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  // Get the value string
+  nsAutoString stateString;
+  nsresult res = GetProperty(nsHTMLAtoms::value, stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // Compare to default value, and only save if needed (Bug 62713)
+  NS_ENSURE_TRUE(mContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL),
+                 NS_ERROR_UNEXPECTED);
+  nsAutoString defaultStateString;
+  if (!mDefaultValueWasChanged) {
+    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, defaultStateString);
+  }
+
+  if (mDefaultValueWasChanged || !stateString.Equals(defaultStateString)) {
+
+    // Construct a pres state and store value in it.
+    res = NS_NewPresState(aState);
+    NS_ENSURE_SUCCESS(res, res);
+    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
+  }
+
+  return res;
+}
+
+NS_IMETHODIMP
+nsGfxButtonControlFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
+
+  // Set the value to the stored state.
+  nsAutoString stateString;
+  nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("value"), stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  return SetProperty(aPresContext, nsHTMLAtoms::value, stateString);
 }

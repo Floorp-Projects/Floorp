@@ -96,7 +96,10 @@ nsGfxCheckboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
   NS_ASSERTION(aInstancePtr, "QueryInterface requires a non-NULL destination!");
   if ( !aInstancePtr )
     return NS_ERROR_NULL_POINTER;
-
+  if (aIID.Equals(NS_GET_IID(nsIStatefulFrame))) {
+    *aInstancePtr = (void*)(nsIStatefulFrame*) this;
+    return NS_OK;
+  }
   if (aIID.Equals(NS_GET_IID(nsICheckboxControlFrame))) {
     *aInstancePtr = (void*) ((nsICheckboxControlFrame*) this);
     return NS_OK;
@@ -270,6 +273,21 @@ nsGfxCheckboxControlFrame::GetCheckboxState ( )
   PRBool retval = PR_FALSE;
   elem->GetChecked(&retval);
   return retval;
+}
+
+//----------------------------------------------------------------------
+// nsIStatefulFrame
+//----------------------------------------------------------------------
+NS_IMETHODIMP nsGfxCheckboxControlFrame::SaveState(nsIPresContext* aPresContext,
+                                                nsIPresState** aState)
+{
+  return nsFormControlHelper::SaveContentState(this, aPresContext, aState);
+}
+
+NS_IMETHODIMP nsGfxCheckboxControlFrame::RestoreState(nsIPresContext* aPresContext,
+                                                   nsIPresState* aState)
+{
+  return nsFormControlHelper::RestoreContentState(this, aPresContext, aState);
 }
 
 //------------------------------------------------------------

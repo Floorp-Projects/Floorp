@@ -58,6 +58,7 @@
 #include "nsIPresState.h"
 #include "nsCWeakReference.h"
 #include "nsIContent.h"
+#include "nsIStatefulFrame.h"
 
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLCollection;
@@ -67,6 +68,7 @@ class nsIViewManager;
 class nsIPresContext;
 class nsVoidArray;
 class nsIScrollableView;
+class nsIStatefulFrame;
 
 class nsListControlFrame;
 class nsSelectUpdateTimer;
@@ -281,7 +283,7 @@ public:
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 index);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
-  NS_IMETHOD DoneAddingChildren(PRBool aIsDone);
+  NS_IMETHOD DoneAddingContent(PRBool aIsDone);
   NS_IMETHOD OnOptionSelected(nsIPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected);
@@ -306,6 +308,10 @@ public:
   NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent)    { return NS_OK; }
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
+
+  //nsIStatefulFrame
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
 
   // Static Methods
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);

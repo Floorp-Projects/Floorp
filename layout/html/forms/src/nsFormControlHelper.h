@@ -160,6 +160,12 @@ public:
   static nsresult GetName(nsIContent* aContent, nsAString* aResult);
   static nsresult GetInputElementValue(nsIContent* aContent, nsString* aText, PRBool aInitialValue);
   static nsresult Reset(nsIFrame* aFrame, nsIPresContext* aPresContext);
+  static nsresult SaveContentState(nsIFrame* aFrame,
+                                   nsIPresContext* aPresContext,
+                                   nsIPresState** aState);
+  static nsresult RestoreContentState(nsIFrame* aFrame,
+                                      nsIPresContext* aPresContext,
+                                      nsIPresState* aState);
 
  /** 
   * Utility to convert a string to a PRBool
