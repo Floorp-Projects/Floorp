@@ -33,7 +33,7 @@
 //const char * kAOLMailMime = "AOLMAIL";
 //const char * kImageMime   = "text/image";
 
-#define kTextMime      "text/txt"
+#define kTextMime      "text/plain"
 #define kXIFMime       "text/xif"
 #define kUnicodeMime   "text/unicode"
 #define kHTMLMime      "text/html"
