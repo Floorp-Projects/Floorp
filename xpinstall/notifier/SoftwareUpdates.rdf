@@ -2,6 +2,6 @@
          xmlns:NC="http://home.netscape.com/softwareupdate-schema#">
 
   <RDF:Bag about="NC:SoftwareUpdateDataSources">
-    <RDF:li resource="resource://res/xpinstall/SoftwareUpdate-Source-1.rdf" />
+    <RDF:li resource="resource:/res/xpinstall/SoftwareUpdate-Source-1.rdf" />
   </RDF:Bag>
 </RDF:RDF>
