@@ -207,10 +207,6 @@ net_check_for_charset(URL_Struct *url_struct)
 
 	value = url_struct->all_headers.value[i];
 
-	/* don't bother unless this is a JS file to begin with */
-	if (!PL_strcasestr(value, APPLICATION_JAVASCRIPT))
-	    return CS_DEFAULT;
-
 	value = strtok(value, ";");
 	while (value) {
 	    value = XP_StripLine(value);
@@ -561,18 +557,19 @@ net_ProcessMocha(ActiveEntry * ae)
 	MochaDecoder * decoder;
 
 	HOLD_CON_DATA(con_data);
-	if (!LM_AttemptLockJS((JSLockReleaseFunc)net_process_mocha, con_data))
+	if (!LM_AttemptLockJS(context,
+			      (JSLockReleaseFunc)net_process_mocha, con_data))
 	    return 0;
 	DROP_CON_DATA(con_data);
 	decoder = LM_GetMochaDecoder(context);
 	if (!decoder) {
-	    LM_UnlockJS();
+	    LM_UnlockJS(context);
 	    ae->status = MK_OUT_OF_MEMORY;
 	    goto done;
 	}
         stream = decoder->stream;
         LM_PutMochaDecoder(decoder);
-	LM_UnlockJS();
+	LM_UnlockJS(context);
     }
     else {
 	stream = con_data->stream;
@@ -725,7 +722,8 @@ net_InterruptMocha(ActiveEntry *ae)
     con_data->active_entry = NULL;
 
     /* ae is about to go away, better get it off the JS lock waiters list */
-    if (LM_ClearAttemptLockJS((JSLockReleaseFunc)net_process_mocha, con_data))
+    if (LM_ClearAttemptLockJS(con_data->context,
+			      (JSLockReleaseFunc)net_process_mocha, con_data))
 	DROP_CON_DATA(con_data);
 
     return ae->status = MK_INTERRUPTED;
