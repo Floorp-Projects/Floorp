@@ -720,6 +720,7 @@ xpfe/global/resources/content/os2/Makefile
 xpfe/global/resources/content/unix/Makefile
 xpfe/global/resources/locale/Makefile
 xpfe/global/resources/locale/en-US/Makefile
+xpfe/global/resources/locale/en-US/region.dtd
 xpfe/global/resources/locale/en-US/mac/Makefile
 xpfe/global/resources/locale/en-US/os2/Makefile
 xpfe/global/resources/locale/en-US/unix/Makefile
