@@ -158,7 +158,7 @@ nsAppShellService::CreateTopLevelWindow(nsIURL* aUrl, nsString& aControllerIID,
   } else {
     rv = window->Initialize(mAppShell, aUrl, aControllerIID);
     if (NS_SUCCEEDED(rv)) {
-      mWindowList->AppendElement(window);
+      mWindowList->AppendElement((nsIWebShellContainer*)window);
       aResult = window->GetWidget();
     }
   }
@@ -184,7 +184,7 @@ nsAppShellService::CloseTopLevelWindow(nsIWidget* aWindow)
   if (nsnull != data) {
     PRBool bFound;
 
-    bFound = mWindowList->RemoveElement(window);
+    bFound = mWindowList->RemoveElement((nsIWebShellContainer*)window);
 
   }
 
