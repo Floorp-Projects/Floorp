@@ -24,15 +24,17 @@
         >
             <html:input flex="1" inherits="value,type,maxlength,disabled,size,readonly"/>
             <xul:popupset>
-                <xul:popup>
+                <xul:popup ignorekeys="true">
                 </xul:popup>
             </xul:popupset>
         </xul:box>
     </content>
 
     <interface>
-        <property name="timeout"    onset="return this.setAttribute('timeout', val);"
-                                    onget="return this.getAttribute('timeout');"/>
+        <property name="timeout"
+            onset="return this.setAttribute('timeout', val);"
+            onget="return this.getAttribute('timeout');"
+        />
 
         <property name="autoCompleteSession">
         <![CDATA[
@@ -47,6 +49,11 @@
             }
         ]]>
         </property>
+        
+        <property name="disableAutocomplete"
+            onset="return this.setAttribute('disableAutocomplete', val);"
+            onget="return this.getAttribute('disableAutocomplete');"
+        />
 
         <property name="autoCompleteTimer">
         <![CDATA[
@@ -67,7 +74,10 @@
             onAutoComplete: function(result, status) {
                 if (status == Components.interfaces.nsIAutoCompleteStatus.failed)
                     return;
-                    
+                
+                if (this.param.disableAutocomplete == "true")
+                    return;
+
                 this.param.lastResults = result;
                 if (status == Components.interfaces.nsIAutoCompleteStatus.ignored || 
                     status == Components.interfaces.nsIAutoCompleteStatus.noMatch)
@@ -137,6 +147,8 @@
             <![CDATA[
                 switch (action) {
                     case 'startLookup':
+                        if (me.disableAutocomplete == "true")
+                            return;
                         if (!me.lastResults || me.value != me.lastResults.searchString)
                             me.autoCompleteSession.onStartLookup(me.value, me.lastResults, me.autoCompleteListener);
                         break;
@@ -151,8 +163,10 @@
                             clearTimeout(me.autoCompleteTimer);
                             me.autoCompleteTimer = 0;
                         }
-                        me.autoCompleteSession.onAutoComplete(me.value, me.lastResults, me.autoCompleteListener);
                         me.needToAutocomplete = false;
+                        if (this.disableAutocomplete == "true")
+                            return;
+                        me.autoCompleteSession.onAutoComplete(me.value, me.lastResults, me.autoCompleteListener);
                         break;
                 }
             ]]>
@@ -163,6 +177,9 @@
             <argument name="event"/>
             <body>
             <![CDATA[
+                if (this.disableAutocomplete == "true")
+                    return;
+
                 inputElement = this.anonymousContent[0].firstChild;
                 entry = this.value.substring(0, inputElement.selectionStart) + this.value.substring(inputElement.selectionEnd, this.value.length);
 
