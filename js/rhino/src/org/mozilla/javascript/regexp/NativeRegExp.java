@@ -131,7 +131,7 @@ public class NativeRegExp extends IdScriptable implements Function {
     {
 
         NativeRegExp proto = new NativeRegExp();
-        proto.re = compileRE(cx, scope, "", null, false);
+        proto.re = (RECompiled)compileRE(cx, scope, "", null, false);
         proto.prototypeFlag = true;
         proto.setMaxId(MAX_PROTOTYPE_ID);
         proto.setParentScope(scope);
@@ -151,10 +151,9 @@ public class NativeRegExp extends IdScriptable implements Function {
         defineProperty(scope, "RegExp", ctor, ScriptableObject.DONTENUM);
     }
 
-    public NativeRegExp(Context cx, Scriptable scope, String source,
-                        String global, boolean flat)
+    NativeRegExp(Scriptable scope, Object regexpCompiled)
     {
-        this.re = compileRE(cx, scope, source, global, flat);
+        this.re = (RECompiled)regexpCompiled;
         this.lastIndex = 0;
         scope = getTopLevelScope(scope);
         setPrototype(getClassPrototype(scope, "RegExp"));
@@ -196,7 +195,7 @@ public class NativeRegExp extends IdScriptable implements Function {
         String global = args.length > 1 && args[1] != Undefined.instance
             ? ScriptRuntime.toString(args[1])
             : null;
-        this.re = compileRE(cx, scope, s, global, false);
+        this.re = (RECompiled)compileRE(cx, scope, s, global, false);
         this.lastIndex = 0;
         return this;
     }
@@ -254,9 +253,8 @@ public class NativeRegExp extends IdScriptable implements Function {
         return rval;
     }
 
-    private static RECompiled
-    compileRE(Context cx, Scriptable scope,
-              String str, String global, boolean flat)
+    static Object compileRE(Context cx, Scriptable scope,
+                            String str, String global, boolean flat)
     {
         RECompiled regexp = new RECompiled();
         regexp.source = str.toCharArray();

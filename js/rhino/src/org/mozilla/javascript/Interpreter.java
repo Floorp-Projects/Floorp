@@ -270,7 +270,7 @@ public class Interpreter
         for (int i = 0; i != N; i++) {
             String string = scriptOrFn.getRegexpString(i);
             String flags = scriptOrFn.getRegexpFlags(i);
-            array[i] = rep.newRegExp(cx, scope, string, flags);
+            array[i] = rep.compileRegExp(cx, scope, string, flags);
         }
         itsData.itsRegExpLiterals = array;
     }
@@ -1578,12 +1578,29 @@ public class Interpreter
                                              idata.encodedSourceEnd);
     }
 
+    private static Scriptable[] wrapRegExps(Context cx, Scriptable scope,
+                                            InterpreterData idata)
+    {
+        if (idata.itsRegExpLiterals == null) Context.codeBug();
+
+        RegExpProxy rep = ScriptRuntime.checkRegExpProxy(cx);
+        int N = idata.itsRegExpLiterals.length;
+        Scriptable[] array = new Scriptable[N];
+        for (int i = 0; i != N; ++i) {
+            array[i] = rep.wrapRegExp(cx, scope, idata.itsRegExpLiterals[i]);
+        }
+        return array;
+    }
+
     private static InterpretedFunction createFunction(Context cx,
                                                       Scriptable scope,
                                                       InterpreterData idata,
                                                       boolean fromEvalCode)
     {
         InterpretedFunction fn = new InterpretedFunction(idata);
+        if (idata.itsRegExpLiterals != null) {
+            fn.itsRegExps = wrapRegExps(cx, scope, idata);
+        }
         if (cx.hasCompileFunctionsWithDynamicScope()) {
              // Nested functions are not affected by the dynamic scope flag
              // as dynamic scope is already a parent of their scope
@@ -1692,6 +1709,11 @@ public class Interpreter
                 }
             }
         }
+
+        // Wrapped regexps for functions are stored in InterpretedFunction
+        // but for script which should not contain references to scope
+        // the regexps re-wrapped during each script execution
+        Scriptable[] scriptRegExps = null;
 
         boolean useActivationVars = false;
         if (debuggerFrame != null) {
@@ -2620,7 +2642,16 @@ public class Interpreter
     }
     case Token.REGEXP : {
         int i = getIndex(iCode, pc + 1);
-        stack[++stackTop] = idata.itsRegExpLiterals[i];
+        Scriptable regexp;
+        if (idata.itsFunctionType != 0) {
+            regexp = ((InterpretedFunction)fnOrScript).itsRegExps[i];
+        } else {
+            if (scriptRegExps == null) {
+                scriptRegExps = wrapRegExps(cx, scope, idata);
+            }
+            regexp = scriptRegExps[i];
+        }
+        stack[++stackTop] = regexp;
         pc += 2;
         break;
     }

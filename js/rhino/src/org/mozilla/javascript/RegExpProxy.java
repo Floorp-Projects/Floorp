@@ -46,10 +46,13 @@ package org.mozilla.javascript;
 public interface RegExpProxy
 {
 
-    public boolean isRegExp(Object obj);
+    public boolean isRegExp(Scriptable obj);
 
-    public Object newRegExp(Context cx, Scriptable scope,
-                            String source, String global);
+    public Object compileRegExp(Context cx, Scriptable scope,
+                                String source, String global);
+
+    public Scriptable wrapRegExp(Context cx, Scriptable scope,
+                                 Object compiled);
 
     public Object match(Context cx, Scriptable scope,
                         Scriptable thisObj, Object[] args)
@@ -64,7 +67,7 @@ public interface RegExpProxy
         throws JavaScriptException;
 
     public int find_split(Context cx, Scriptable scope, String target,
-                          String separator, Object re,
+                          String separator, Scriptable re,
                           int[] ip, int[] matchlen,
                           boolean[] matched, String[][] parensp);
 }

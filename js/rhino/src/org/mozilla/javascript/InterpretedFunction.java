@@ -66,5 +66,6 @@ final class InterpretedFunction extends NativeFunction
 
     InterpreterData itsData;
     boolean itsUseDynamicScope;
+    Scriptable[] itsRegExps;
 }
 

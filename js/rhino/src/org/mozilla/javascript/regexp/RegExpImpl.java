@@ -45,14 +45,20 @@ public class RegExpImpl implements RegExpProxy {
         parens = new ObjArray();
     }
 
-    public boolean isRegExp(Object obj) {
+    public boolean isRegExp(Scriptable obj) {
         return obj instanceof NativeRegExp;
     }
 
-    public Object newRegExp(Context cx, Scriptable scope,
-                            String source, String global)
+    public Object compileRegExp(Context cx, Scriptable scope,
+                                String source, String global)
     {
-        return new NativeRegExp(cx, scope, source, global, false);
+        return NativeRegExp.compileRE(cx, scope, source, global, false);
+    }
+
+    public Scriptable wrapRegExp(Context cx, Scriptable scope,
+                                 Object compiled)
+    {
+        return new NativeRegExp(scope, compiled);
     }
 
     public Object match(Context cx, Scriptable scope,
@@ -148,22 +154,25 @@ public class RegExpImpl implements RegExpProxy {
         data.str = str;
         Scriptable topScope = ScriptableObject.getTopLevelScope(scope);
 
-        if (args.length == 0)
-            re = new NativeRegExp(cx, topScope, "", "", false);
-        else
-            if (args[0] instanceof NativeRegExp) {
-                re = (NativeRegExp) args[0];
+        if (args.length == 0) {
+            Object compiled = NativeRegExp.compileRE(cx, topScope, "", "",
+                                                     false);
+            re = new NativeRegExp(topScope, compiled);
+        } else if (args[0] instanceof NativeRegExp) {
+            re = (NativeRegExp) args[0];
+        } else {
+            String src = ScriptRuntime.toString(args[0]);
+            String opt;
+            if (data.optarg < args.length) {
+                args[0] = src;
+                opt = ScriptRuntime.toString(args[data.optarg]);
             } else {
-                String src = ScriptRuntime.toString(args[0]);
-                String opt;
-                if (data.optarg < args.length) {
-                    args[0] = src;
-                    opt = ScriptRuntime.toString(args[data.optarg]);
-                } else {
-                    opt = null;
-                }
-                re = new NativeRegExp(cx, topScope, src, opt, forceFlat);
+                opt = null;
             }
+            Object compiled = NativeRegExp.compileRE(cx, topScope, src, opt,
+                                                     forceFlat);
+            re = new NativeRegExp(topScope, compiled);
+        }
         data.regexp = re;
 
         data.global = (re.getFlags() & NativeRegExp.JSREG_GLOB) != 0;
@@ -203,7 +212,7 @@ public class RegExpImpl implements RegExpProxy {
 
 
     public int find_split(Context cx, Scriptable scope, String target,
-                          String separator, Object reObj,
+                          String separator, Scriptable reObj,
                           int[] ip, int[] matchlen,
                           boolean[] matched, String[][] parensp)
     {

@@ -412,7 +412,7 @@ final class NativeString extends IdScriptable {
      */
     private static int find_split(Context cx, Scriptable scope, String target,
                                   String separator, int version,
-                                  RegExpProxy reProxy, Object re,
+                                  RegExpProxy reProxy, Scriptable re,
                                   int[] ip, int[] matchlen, boolean[] matched,
                                   String[][] parensp)
     {
@@ -548,12 +548,19 @@ final class NativeString extends IdScriptable {
         }
 
         String separator = null;
-        int[] matchlen = { 0 };
-        Object re = null;
-        RegExpProxy reProxy = ScriptRuntime.getRegExpProxy(cx);
-        if (reProxy != null && reProxy.isRegExp(args[0])) {
-            re = args[0];
-        } else {
+        int[] matchlen = new int[1];
+        Scriptable re = null;
+        RegExpProxy reProxy = null;
+        if (args[0] instanceof Scriptable) {
+            reProxy = ScriptRuntime.getRegExpProxy(cx);
+            if (reProxy != null) {
+                Scriptable test = (Scriptable)args[0];
+                if (reProxy.isRegExp(test)) {
+                    re = test;
+                }
+            }
+        }
+        if (re == null) {
             separator = ScriptRuntime.toString(args[0]);
             matchlen[0] = separator.length();
         }

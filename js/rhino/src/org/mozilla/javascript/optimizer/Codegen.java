@@ -332,6 +332,7 @@ public class Codegen extends Interpreter {
             }
         }
 
+        emitRegExpInit(cfw);
         emitConstantDudeInitializers(cfw);
 
         mainClassBytes = cfw.toByteArray();
@@ -653,7 +654,7 @@ public class Codegen extends Interpreter {
         // precompile all regexp literals
         int regexpCount = fn.getRegexpCount();
         if (regexpCount != 0) {
-        	cfw.addLoadThis();
+            cfw.addLoadThis();
             pushRegExpArray(cfw, fn, CONTEXT_ARG, SCOPE_ARG);
             cfw.add(ByteCode.PUTFIELD, mainClassName,
                     REGEXP_ARRAY_FIELD_NAME, REGEXP_ARRAY_FIELD_TYPE);
@@ -727,6 +728,68 @@ public class Codegen extends Interpreter {
         cfw.stopMethod((short)1, null);
     }
 
+    private void emitRegExpInit(ClassFileWriter cfw)
+    {
+        // precompile all regexp literals
+
+        int totalRegCount = 0;
+        for (int i = 0; i != scriptOrFnNodes.length; ++i) {
+            totalRegCount += scriptOrFnNodes[i].getRegexpCount();
+        }
+        if (totalRegCount == 0) {
+            return;
+        }
+
+        cfw.startMethod(REGEXP_INIT_METHOD_NAME, REGEXP_INIT_METHOD_SIGNATURE,
+            (short)(ClassFileWriter.ACC_STATIC | ClassFileWriter.ACC_PRIVATE
+                    | ClassFileWriter.ACC_SYNCHRONIZED));
+        cfw.addField("_reInitDone", "Z",
+                     (short)(ClassFileWriter.ACC_STATIC
+                             | ClassFileWriter.ACC_PRIVATE));
+        cfw.add(ByteCode.GETSTATIC, mainClassName, "_reInitDone", "Z");
+        int doInit = cfw.acquireLabel();
+        cfw.add(ByteCode.IFEQ, doInit);
+        cfw.add(ByteCode.RETURN);
+        cfw.markLabel(doInit);
+
+        for (int i = 0; i != scriptOrFnNodes.length; ++i) {
+            ScriptOrFnNode n = scriptOrFnNodes[i];
+            int regCount = n.getRegexpCount();
+            for (int j = 0; j != regCount; ++j) {
+                String reFieldName = getCompiledRegexpName(n, j);
+                String reFieldType = "Ljava/lang/Object;";
+                String reString = n.getRegexpString(j);
+                String reFlags = n.getRegexpFlags(j);
+                cfw.addField(reFieldName, reFieldType,
+                             (short)(ClassFileWriter.ACC_STATIC
+                                     | ClassFileWriter.ACC_PRIVATE));
+                cfw.addALoad(0); // proxy
+                cfw.addALoad(1); // context
+                cfw.addALoad(2); // scope
+                cfw.addPush(reString);
+                if (reFlags == null) {
+                    cfw.add(ByteCode.ACONST_NULL);
+                } else {
+                    cfw.addPush(reFlags);
+                }
+                cfw.addInvoke(ByteCode.INVOKEINTERFACE,
+                              "org/mozilla/javascript/RegExpProxy",
+                              "compileRegExp",
+                              "(Lorg/mozilla/javascript/Context;"
+                              +"Lorg/mozilla/javascript/Scriptable;"
+                              +"Ljava/lang/String;Ljava/lang/String;"
+                              +")Ljava/lang/Object;");
+                cfw.add(ByteCode.PUTSTATIC, mainClassName,
+                        reFieldName, reFieldType);
+            }
+        }
+
+        cfw.addPush(1);
+        cfw.add(ByteCode.PUTSTATIC, mainClassName, "_reInitDone", "Z");
+        cfw.add(ByteCode.RETURN);
+        cfw.stopMethod((short)3, null);
+    }
+
     private void emitConstantDudeInitializers(ClassFileWriter cfw)
     {
         int N = itsConstantListSize;
@@ -774,12 +837,9 @@ public class Codegen extends Interpreter {
         }
     }
 
-    static void pushRegExpArray(ClassFileWriter cfw,
-                                ScriptOrFnNode n,
-                                int contextArg,
-                                int scopeArg)
+    void pushRegExpArray(ClassFileWriter cfw, ScriptOrFnNode n,
+                         int contextArg, int scopeArg)
     {
-        // precompile all regexp literals
         int regexpCount = n.getRegexpCount();
         if (regexpCount == 0) badTree();
 
@@ -792,34 +852,32 @@ public class Codegen extends Interpreter {
                       "checkRegExpProxy",
                       "(Lorg/mozilla/javascript/Context;"
                       +")Lorg/mozilla/javascript/RegExpProxy;");
-
+        // Stack: proxy, array
+        cfw.add(ByteCode.DUP);
+        cfw.addALoad(contextArg);
+        cfw.addALoad(scopeArg);
+        cfw.addInvoke(ByteCode.INVOKESTATIC, mainClassName,
+                      REGEXP_INIT_METHOD_NAME, REGEXP_INIT_METHOD_SIGNATURE);
         for (int i = 0; i != regexpCount; ++i) {
+            // Stack: proxy, array
             cfw.add(ByteCode.DUP2);
-
-            // Stack structure: proxy, array, proxy, array
             cfw.addALoad(contextArg);
             cfw.addALoad(scopeArg);
-            cfw.addPush(n.getRegexpString(i));
-            String regexpFlags = n.getRegexpFlags(i);
-            if (regexpFlags == null) {
-                cfw.add(ByteCode.ACONST_NULL);
-            } else {
-                cfw.addPush(regexpFlags);
-            }
+            cfw.add(ByteCode.GETSTATIC, mainClassName,
+                    getCompiledRegexpName(n, i), "Ljava/lang/Object;");
+            // Stack: compiledRegExp, scope, cx, proxy, array, proxy, array
             cfw.addInvoke(ByteCode.INVOKEINTERFACE,
                           "org/mozilla/javascript/RegExpProxy",
-                          "newRegExp",
+                          "wrapRegExp",
                           "(Lorg/mozilla/javascript/Context;"
                           +"Lorg/mozilla/javascript/Scriptable;"
-                          +"Ljava/lang/String;Ljava/lang/String;"
-                          +")Ljava/lang/Object;");
-
-            // Stack structure: result of newRegExp, array, proxy, array
+                          +"Ljava/lang/Object;"
+                          +")Lorg/mozilla/javascript/Scriptable;");
+            // Stack: wrappedRegExp, array, proxy, array
             cfw.addPush(i);
             cfw.add(ByteCode.SWAP);
             cfw.add(ByteCode.AASTORE);
-
-            // Stack structure: proxy, array
+            // Stack: proxy, array
         }
         // remove proxy
         cfw.add(ByteCode.POP);
@@ -962,6 +1020,11 @@ public class Codegen extends Interpreter {
         return "_i"+getIndex(fn);
     }
 
+    String getCompiledRegexpName(ScriptOrFnNode n, int regexpIndex)
+    {
+        return "_re"+getIndex(n)+"_"+regexpIndex;
+    }
+
     static RuntimeException badTree()
     {
         throw new RuntimeException("Bad tree in codegen");
@@ -974,6 +1037,12 @@ public class Codegen extends Interpreter {
 
     private static final String ID_FIELD_NAME = "_id";
 
+    private static final String REGEXP_INIT_METHOD_NAME = "_reInit";
+    private static final String REGEXP_INIT_METHOD_SIGNATURE
+        =  "(Lorg/mozilla/javascript/RegExpProxy;"
+           +"Lorg/mozilla/javascript/Context;"
+           +"Lorg/mozilla/javascript/Scriptable;"
+           +")V";
     static final String REGEXP_ARRAY_FIELD_NAME = "_re";
     static final String REGEXP_ARRAY_FIELD_TYPE = "[Ljava/lang/Object;";
 
@@ -1139,7 +1208,7 @@ class BodyCodegen
             // See comments in visitRegexp
             if (scriptOrFn.getRegexpCount() != 0) {
                 scriptRegexpLocal = getNewWordLocal();
-                Codegen.pushRegExpArray(cfw, scriptOrFn, contextLocal,
+                codegen.pushRegExpArray(cfw, scriptOrFn, contextLocal,
                                         variableObjectLocal);
                 cfw.addAStore(scriptRegexpLocal);
             }
