@@ -271,12 +271,20 @@ nsNSSSocketInfo::SetShortSecurityDescription(const PRUnichar* aText) {
 /* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
 NS_IMETHODIMP nsNSSSocketInfo::GetInterface(const nsIID & uuid, void * *result)
 {
-  if (!mCallbacks) return NS_ERROR_FAILURE;
+  nsresult rv;
+  if (!mCallbacks) {
+    nsCOMPtr<nsIInterfaceRequestor> ir = new PipUIContext();
+    if (!ir)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-  // Proxy of the channel callbacks should probably go here, rather
-  // than in the password callback code
+    rv = ir->GetInterface(uuid, result);
+  } else {
+    // Proxy of the channel callbacks should probably go here, rather
+    // than in the password callback code
 
-  return mCallbacks->GetInterface(uuid, result);
+    rv = mCallbacks->GetInterface(uuid, result);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1805,7 +1813,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
     if (NS_FAILED(rv)) goto loser;
 
-    rv = dialogs->ChooseCertificate(NULL, cn, org, issuer, 
+    rv = dialogs->ChooseCertificate(info, cn, org, issuer, 
       (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
       nicknames->numnicknames, &selectedIndex, &canceled);
 
