@@ -854,8 +854,10 @@ sub ThrowCodeError {
   SendSQL("UNLOCK TABLES") if $unlock_tables;
   
   # Copy the extra_vars into the vars hash 
-  @::vars{keys %$extra_vars} = values %$extra_vars;
-
+  foreach my $var (keys %$extra_vars) {
+      $vars->{$var} = $extra_vars->{$var};
+  }
+  
   # We may one day log something to file here also.
   $vars->{'variables'} = $extra_vars;
   
@@ -873,8 +875,10 @@ sub ThrowUserError {
   SendSQL("UNLOCK TABLES") if $unlock_tables;
  
   # Copy the extra_vars into the vars hash 
-  @::vars{keys %$extra_vars} = values %$extra_vars;
-
+  foreach my $var (keys %$extra_vars) {
+      $vars->{$var} = $extra_vars->{$var};
+  }
+  
   print "Content-type: text/html\n\n" if !$vars->{'header_done'};
   $template->process("global/user-error.html.tmpl", $vars)
     || ThrowTemplateError($template->error());
