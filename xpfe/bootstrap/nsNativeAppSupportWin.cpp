@@ -20,6 +20,10 @@
  * Contributor(s): 
  *   Bill Law       law@netscape.com
  */
+
+// For server mode systray icon.
+#include "nsIStringBundle.h"
+
 #include "nsNativeAppSupportBase.h"
 #include "nsNativeAppSupportWin.h"
 #include "nsString.h"
@@ -46,13 +50,17 @@
 #include "nsIWindowMediator.h"
 
 #include <windows.h>
+#include <shellapi.h>
 #include <ddeml.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <io.h>
 #include <fcntl.h>
 
+#define TURBO_QUIT 1
+
 static HWND hwndForDOMWindow( nsISupports * );
+static nsAutoString closeText;
 
 static
 nsresult
@@ -67,6 +75,24 @@ GetMostRecentWindow(const PRUnichar* aType, nsIDOMWindowInternal** aWindow) {
 
     return NS_ERROR_FAILURE;
 }
+
+static
+void
+activateWindow( nsIDOMWindowInternal *win ) {
+    // Try to get native window handle.
+    HWND hwnd = hwndForDOMWindow( win );
+    if ( hwnd ) {
+        // Restore the window in case it is minimized.
+        ::ShowWindow( hwnd, SW_RESTORE );
+        // Use the OS call, if possible.
+        ::SetForegroundWindow( hwnd );
+    } else {
+        // Use internal method.
+        win->Focus();
+    }
+}
+
+
 
 // Define this macro to 1 to get DDE debugging output.
 #define MOZ_DEBUG_DDE 0
@@ -271,6 +297,7 @@ public:
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
     NS_IMETHOD StartServerMode();
+    NS_IMETHOD SetIsServerMode( PRBool isServerMode );
 
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
@@ -301,6 +328,10 @@ private:
     static nsresult OpenBrowserWindow( const char *args, PRBool newWindow = PR_TRUE );
     static nsresult ReParent( nsISupports *window, HWND newParent );
     static nsresult GetStartupURL(nsICmdLineService *args, nsCString& taskURL);
+    static void     SetupSysTrayIcon();
+    static void     RemoveSysTrayIcon();
+
+
     static int   mConversations;
     enum {
         topicOpenURL,
@@ -312,6 +343,9 @@ private:
         // Note: Insert new values above this line!!!!!
         topicCount // Count of the number of real topics
     };
+    static NOTIFYICONDATA mIconData;
+    static HMENU          mTrayIconMenu;
+
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
     static char *mAppName;
@@ -615,6 +649,16 @@ HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
 DWORD nsNativeAppSupportWin::mInstance      = 0;
 
+NOTIFYICONDATA nsNativeAppSupportWin::mIconData = { sizeof(NOTIFYICONDATA),
+                                                    0,
+                                                    1, 
+                                                    NIF_ICON | NIF_MESSAGE | NIF_TIP,
+                                                    WM_USER,
+                                                    0,
+                                                    0 };
+HMENU nsNativeAppSupportWin::mTrayIconMenu = 0;
+
+
 // Message window encapsulation.
 struct MessageWindow {
     // ctor/dtor are simplistic
@@ -693,9 +737,45 @@ struct MessageWindow {
             printf( "Incoming request: %s\n", (const char*)cds->lpData );
 #endif
             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)cds->lpData );
-        }
-        return TRUE;
-    }
+ } else if ( msg == WM_USER ) {
+     if ( lp == WM_RBUTTONUP ) {
+         // Show menu with Exit disabled/enabled appropriately.
+         nsCOMPtr<nsIDOMWindowInternal> win;
+         GetMostRecentWindow( 0, getter_AddRefs( win ) );
+         ::EnableMenuItem( nsNativeAppSupportWin::mTrayIconMenu, 1, win ? MF_GRAYED : MF_ENABLED );
+         POINT pt;
+         GetCursorPos( &pt );
+
+         SetForegroundWindow(msgWindow);
+         int selectedItem = ::TrackPopupMenu( nsNativeAppSupportWin::mTrayIconMenu,
+                                              TPM_NONOTIFY | TPM_RETURNCMD |
+                                              TPM_RIGHTBUTTON,
+                                              pt.x,
+                                              pt.y,
+                                              0,
+                                              msgWindow,
+                                              0 );
+
+         switch (selectedItem) {
+         case TURBO_QUIT:
+             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla -kill" );
+             break;
+         }
+         PostMessage(msgWindow, WM_NULL, 0, 0);
+     } else if ( lp == WM_LBUTTONDBLCLK ) {
+         // Activate window or open a new one.
+         nsCOMPtr<nsIDOMWindowInternal> win;
+         GetMostRecentWindow( 0, getter_AddRefs( win ) );
+         if ( win ) {
+             activateWindow( win );
+         } else {
+            // This will do the default thing and open a new window.
+            (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla" );
+         }
+     }
+  }
+  return TRUE;
+}
 
 private:
     HWND mHandle;
@@ -838,6 +918,12 @@ nsNativeAppSupportWin::Stop( PRBool *aResult ) {
 
         ddeLock.Unlock();
     }
+    else {
+        // No DDE application name specified, but that's OK.  Just
+        // forge ahead.
+        *aResult = PR_TRUE;
+    }
+
 
     return rv;
 }
@@ -1074,16 +1160,7 @@ void nsNativeAppSupportWin::ActivateLastWindow() {
     GetMostRecentWindow( NS_LITERAL_STRING("navigator:browser").get(), getter_AddRefs( navWin ) );
     if ( navWin ) {
         // Activate that window.
-        HWND hwnd = hwndForDOMWindow( navWin );
-        if ( hwnd ) {
-            // Restore the window in case it is minimized.
-            ::ShowWindow( hwnd, SW_RESTORE );
-            // Use the OS call, if possible.
-            ::SetForegroundWindow( hwnd );
-        } else {
-            // Use internal method.
-            navWin->Focus();
-        }
+        activateWindow( navWin );
     } else {
         // Need to create a Navigator window, then.
         OpenBrowserWindow( "about:blank" );
@@ -1168,6 +1245,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 
       return;
     }
+
 
     // ok, no idea what the param is. 
 #if MOZ_DEBUG_DDE
@@ -1589,6 +1667,67 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
     return OpenWindow( "chrome://navigator/content", args );
 }
 
+// Utility function that sets up system tray icon.
+void
+nsNativeAppSupportWin::SetupSysTrayIcon() {
+    // Mesages go to the hidden window.
+    mIconData.hWnd  = (HWND)MessageWindow();
+
+    // Icon is our default application icon.
+    mIconData.hIcon =  ::LoadIcon( ::GetModuleHandle( NULL ), IDI_APPLICATION ),
+
+    // Tooltip is the brand short name.
+    mIconData.szTip[0] = 0;
+    nsCOMPtr<nsIStringBundleService> svc( do_GetService( NS_STRINGBUNDLE_CONTRACTID ) );
+    if ( svc ) {
+        nsCOMPtr<nsIStringBundle> bundle1;
+        svc->CreateBundle( "chrome://global/locale/brand.properties", getter_AddRefs( bundle1 ) );
+        if ( bundle1 ) {
+            nsXPIDLString tooltip;
+            bundle1->GetStringFromName( NS_LITERAL_STRING( "brandShortName" ).get(),
+                                        getter_Copies( tooltip ) );
+            // (damned strings...)
+            nsAutoString autoTip( tooltip );
+            nsAutoCString tip( autoTip );    
+            ::strncpy( mIconData.szTip, (const char*)tip, sizeof mIconData.szTip - 1 );
+        }
+        // Build menu.
+        nsCOMPtr<nsIStringBundle> bundle2;
+        svc->CreateBundle( "chrome://communicator/locale/profile/profileManager.properties",
+                           getter_AddRefs( bundle2 ) );
+        nsAutoString exitText;
+        if ( bundle2 ) {
+            nsXPIDLString text;
+            bundle2->GetStringFromName( NS_LITERAL_STRING( "exitButton" ).get(),
+                                        getter_Copies( text ) );
+            exitText = (const PRUnichar*)text;
+        }
+        if ( exitText.IsEmpty() ) {
+            // Fall back to this.
+            exitText = NS_LITERAL_STRING( "Exit" );
+        }
+
+        // Create menu and add item.
+        mTrayIconMenu = ::CreatePopupMenu();
+        ::AppendMenuW( mTrayIconMenu, MF_STRING, TURBO_QUIT, exitText.get() );
+
+    }
+    
+    // Add the tray icon.
+    ::Shell_NotifyIcon( NIM_ADD, &mIconData );
+}
+
+// Utility function to remove the system tray icon.
+void
+nsNativeAppSupportWin::RemoveSysTrayIcon() {
+    // Remove the tray icon.
+    ::Shell_NotifyIcon( NIM_DELETE, &mIconData );
+    // Delete the menu.
+    ::DestroyMenu( mTrayIconMenu );
+}
+
+
+
 //   This opens a special browser window for purposes of priming the pump for
 //   server mode (getting stuff into the caching, loading .dlls, etc.).  The
 //   window will have these attributes:
@@ -1597,6 +1736,9 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
 //     - Pass magic arg to cause window to close in onload handler.
 NS_IMETHODIMP
 nsNativeAppSupportWin::StartServerMode() {
+    // Turn on system tray icon.
+    SetupSysTrayIcon();
+
     // Create some of the objects we'll need.
     nsCOMPtr<nsIWindowWatcher>   ww(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
     nsCOMPtr<nsISupportsWString> arg1(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
@@ -1640,6 +1782,15 @@ nsNativeAppSupportWin::StartServerMode() {
     ReParent( newWindow, (HWND)MessageWindow() );
 
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNativeAppSupportWin::SetIsServerMode( PRBool isServerMode ) {
+    // If it is being turned off, remove systray icon.
+    if ( mServerMode && !isServerMode ) {
+        RemoveSysTrayIcon();
+    }
+    return nsNativeAppSupportBase::SetIsServerMode( isServerMode );
 }
 
 
