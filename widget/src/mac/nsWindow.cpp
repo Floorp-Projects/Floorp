@@ -773,7 +773,8 @@ void nsWindow::SetColorMap(nsColorMap *aColorMap)
 //
 //-------------------------------------------------------------------------
 nsIDeviceContext* nsWindow::GetDeviceContext() 
-{ 
+{
+  NS_IF_ADDREF(mContext); 
   return mContext;
 }
 
@@ -784,6 +785,7 @@ nsIDeviceContext* nsWindow::GetDeviceContext()
 //-------------------------------------------------------------------------
 nsIAppShell* nsWindow::GetAppShell()
 { 
+  NS_IF_ADDREF(mAppShell); 
   return mAppShell;
 }
 
