@@ -39,10 +39,9 @@ function execute()
   xmlDoc.load("test.xml");
 }
 
-setTimeout(execute,0);
 </script>
 </head>
-<body>
+<body onload="execute();">
 <h1>Synchronized document.load() test</h1>
 
 <div class="box"><span class="boxheader">XML document serialized</span>
