@@ -366,8 +366,10 @@ nsresult nsMsgAccountManager::Init()
 nsresult nsMsgAccountManager::Shutdown()
 {
 
-
-  WriteToFolderCache(m_msgFolderCache);
+	if(m_msgFolderCache)
+	{
+	  WriteToFolderCache(m_msgFolderCache);
+	}
   CloseCachedConnections();
   UnloadAccounts();
 
