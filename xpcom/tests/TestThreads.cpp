@@ -205,7 +205,7 @@ static int Stress(int loops, int threads)
     return 0;
 }
 
-static void threadProc(void *arg)
+PR_STATIC_CALLBACK(void) threadProc(void *arg)
 {
     // printf("   running thread %d\n", (int) arg);
     PR_Sleep(1);
