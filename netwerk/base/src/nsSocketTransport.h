@@ -228,6 +228,8 @@ protected:
   PRInt32                           mWriteCount;
   nsCOMPtr<nsISupports>             mWriteContext;
   PRInt32							mBytesExpected;
+  PRInt32                           mReuseCount;
+  PRInt32                           mLastReuseCount;
 
   // The following four members are used when AsyncWrite(...) is called
   // with an nsIInputStream which does not also support the

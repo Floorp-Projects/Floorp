@@ -32,4 +32,6 @@ interface nsISocketTransport : nsISupports
 	 * needed by HTTP/1.1
 	 */
 	attribute long bytesExpected;
+
+	boolean	isAlive (in unsigned long seconds);
 };

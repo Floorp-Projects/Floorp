@@ -135,6 +135,9 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
      * Get/Set the application comment misc portion.
      */
     attribute wstring misc;
+
+	attribute boolean doKeepAlive;
+	attribute unsigned long keepAliveTimeout;
 };
 
 %{C++
