@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -14,12 +14,13 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
  *   Hubbie Shaw
  *   Doug Turner <dougt@netscape.com>
+ *   Stuart Parmenter <pavlov@netscape.com>
 */
 
 #include "nspr.h"
@@ -30,6 +31,7 @@
 #include "nsIPSMComponent.h"
 #include "nsPSMComponent.h"
 #include "nsCOMPtr.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIServiceManager.h"
 
 #include "nsIScriptGlobalObject.h"
@@ -85,47 +87,47 @@ PRLogModuleInfo* gSecureDocLog = nsnull;
 #endif /* PR_LOGGING */
 
  
-NS_IMETHODIMP                                                            
-nsSecureBrowserUIImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) 
-{                                                                               
-    nsresult rv;                                                                
-                                                                                
-    nsSecureBrowserUIImpl * inst;                                                      
-                                                                                
-    if (NULL == aResult) {                                                      
-        rv = NS_ERROR_NULL_POINTER;                                             
-        return rv;                                                              
-    }                                                                           
-    *aResult = NULL;                                                            
-    if (NULL != aOuter) {                                                       
-        rv = NS_ERROR_NO_AGGREGATION;                                           
-        return rv;                                                              
-    }                                                                           
-                                                                                
-    NS_NEWXPCOM(inst, nsSecureBrowserUIImpl);                                          
-    if (NULL == inst) {                                                         
-        rv = NS_ERROR_OUT_OF_MEMORY;                                            
-        return rv;                                                              
-    }                                                                           
-    NS_ADDREF(inst);                                                            
-    rv = inst->QueryInterface(aIID, aResult);                                   
-    NS_RELEASE(inst);                                                           
-                                                                                
-    return rv;                                                                  
-}                                                                               
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+    nsresult rv;
+
+    nsSecureBrowserUIImpl * inst;
+
+    if (NULL == aResult) {
+        rv = NS_ERROR_NULL_POINTER;
+        return rv;
+    }
+    *aResult = NULL;
+    if (NULL != aOuter) {
+        rv = NS_ERROR_NO_AGGREGATION;
+        return rv;
+    }
+
+    NS_NEWXPCOM(inst, nsSecureBrowserUIImpl);
+    if (NULL == inst) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        return rv;
+    }
+    NS_ADDREF(inst);
+    rv = inst->QueryInterface(aIID, aResult);
+    NS_RELEASE(inst);
+
+    return rv;
+}
 
 nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 {
-	NS_INIT_REFCNT();
-
+    NS_INIT_REFCNT();
+    
 #if defined(PR_LOGGING)
-  if (nsnull == gSecureDocLog) {
-      gSecureDocLog = PR_NewLogModule("nsSecureBroswerUI");
-  }
+    if (nsnull == gSecureDocLog) {
+        gSecureDocLog = PR_NewLogModule("nsSecureBroswerUI");
+    }
 #endif /* PR_LOGGING */
 
 
-	mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
+    mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
     mLastPSMStatus    = nsnull;
     mCurrentURI       = nsnull;
     mSecurityButton   = nsnull;
@@ -148,15 +150,15 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button)
 {
     mSecurityButton = button;
     mWindow         = window;
-    
+
     nsresult rv = nsServiceManager::GetService( kPrefCID, 
                                                 NS_GET_IID(nsIPref), 
                                                 getter_AddRefs(mPref));  
     if (NS_FAILED(rv)) return rv;
-    
+
     NS_WITH_SERVICE(nsIStringBundleService, service, kCStringBundleServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
-    
+
     nsILocale* locale = nsnull;
     rv = service->CreateBundle(SECURITY_STRING_BUNDLE_URL, locale, getter_AddRefs(mStringBundle));
     if (NS_FAILED(rv)) return rv;
@@ -166,8 +168,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button)
     rv = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, 
                                       NS_GET_IID(nsIObserverService), 
                                       (nsISupports**)&svc );
-    if ( NS_SUCCEEDED( rv ) && svc )
-    {
+    if (NS_SUCCEEDED(rv) && svc) {
         nsString  topic; topic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
         rv = svc->AddObserver( this, topic.GetUnicode());
         nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
@@ -175,19 +176,18 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window, nsIDOMElement *button)
 
     // hook up to the webprogress notifications.
     nsCOMPtr<nsIDocShell> docShell;
-	
+
     nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
-	if (!sgo) return NS_ERROR_NULL_POINTER;
-    
+    if (!sgo) return NS_ERROR_NULL_POINTER;
+
     sgo->GetDocShell(getter_AddRefs(docShell));
     if (!docShell) return NS_ERROR_NULL_POINTER;
-    
-    nsCOMPtr<nsIWebProgress> wp = do_QueryInterface(docShell);
+
+    nsCOMPtr<nsIWebProgress> wp = do_GetInterface(docShell);
     if (!wp) return NS_ERROR_NULL_POINTER;
 
     wp->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this));
 
-    
     mInitByLocationChange = PR_TRUE;
 
     return NS_OK;
@@ -198,8 +198,8 @@ nsSecureBrowserUIImpl::DisplayPageInfoUI()
 {
     nsresult res;
     NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
-	if (NS_FAILED(res)) 
-		return res;
+    if (NS_FAILED(res)) 
+        return res;
     
     nsXPIDLCString host;
     if (mCurrentURI)
@@ -214,7 +214,7 @@ nsSecureBrowserUIImpl::DisplayPageInfoUI()
 NS_IMETHODIMP 
 nsSecureBrowserUIImpl::Observe(nsISupports*, const PRUnichar*, const PRUnichar*) 
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -244,7 +244,7 @@ nsSecureBrowserUIImpl::Notify(nsIContent* formNode, nsIDOMWindow* window, nsIURI
     // Return NS_OK unless we want to prevent this form from submitting.
 
     if (!window || !actionURL || !formNode) {
-      return NS_OK;
+        return NS_OK;
     }
     
     nsCOMPtr<nsIDocument> document; 
@@ -298,15 +298,15 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     nsCOMPtr<nsIChannel> channel;
     channel = do_QueryInterface(aRequest, &res);
     if (NS_FAILED(res))
-      return NS_OK;
+        return NS_OK;
 
     nsCOMPtr<nsIURI> loadingURI;
     channel->GetURI(getter_AddRefs(loadingURI));
     
 #if defined(DEBUG)
-        nsXPIDLCString temp;
-        loadingURI->GetSpec(getter_Copies(temp));
-        PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnStateChange: %x :%s\n", this, aProgressStateFlags,(const char*)temp));
+    nsXPIDLCString temp;
+    loadingURI->GetSpec(getter_Copies(temp));
+    PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnStateChange: %x :%s\n", this, aProgressStateFlags,(const char*)temp));
 #endif
 
     // A Document is starting to load...
@@ -317,7 +317,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         PR_FREEIF(mLastPSMStatus); mLastPSMStatus = nsnull;
 
         mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
-        
+
         res = CheckProtocolContextSwitch( loadingURI, mCurrentURI);    
         return res;
     } 
@@ -325,39 +325,38 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     // A document has finished loading    
     if ((aProgressStateFlags & flag_stop) &&
         (aProgressStateFlags & flag_is_network) &&
-         mIsSecureDocument)
+        mIsSecureDocument)
     {
         if (!mIsDocumentBroken) // and status is okay  FIX
         {
             // qi for the psm information about this channel load.
             nsCOMPtr<nsISupports> info;
-	        channel->GetSecurityInfo(getter_AddRefs(info));
-	        nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info);
-            if ( psmInfo )
+            channel->GetSecurityInfo(getter_AddRefs(info));
+            nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info);
+            if (psmInfo)
             {
                 // Everything looks okay.  Lets stash the picked status.
                 PR_FREEIF(mLastPSMStatus);
                 res = psmInfo->GetPickledStatus(&mLastPSMStatus);
-    
-                if (NS_SUCCEEDED(res))
-                {
+
+                if (NS_SUCCEEDED(res)) {
                     PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to lock\n", this));
                     res = mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("high") );
                     return res;
                 }
-	        }
+            }
         }
-        
+
         PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to broken\n", this));
         mIsDocumentBroken = PR_TRUE;
         res = mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken"));
         return res;
     }
     
-///    if (aProgressStateFlags == nsIWebProgress::flag_net_redirecting)
-///    {
-///        // need to implmentent.
-///    }
+    ///    if (aProgressStateFlags == nsIWebProgress::flag_net_redirecting)
+    ///    {
+    ///        // need to implmentent.
+    ///    }
 
     // don't need to do anything more if the page is broken or not secure...
 
@@ -378,21 +377,20 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         if (1)  // FIX status from the flag...
         {
             nsCOMPtr<nsISupports> info;
-	        channel->GetSecurityInfo(getter_AddRefs(info));
-	        nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info, &res);
-        
-            // qi for the psm information about this channel load.
-            if ( psmInfo )
-            {
+            channel->GetSecurityInfo(getter_AddRefs(info));
+            nsCOMPtr<nsIPSMSocketInfo> psmInfo = do_QueryInterface(info, &res);
+
+                    // qi for the psm information about this channel load.
+            if (psmInfo) {
                 return NS_OK;    
-	        }
+            }
         }
 
         PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnStateChange - Icon set to broken\n", this));
         mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken") );
-	    mIsDocumentBroken = PR_TRUE;
+        mIsDocumentBroken = PR_TRUE;
     }    
-    
+
     return res;
 }
 
@@ -407,7 +405,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIURI* aLocation)
         IsURLHTTPS(mCurrentURI, &mIsSecureDocument);
         mInitByLocationChange = PR_FALSE;
     }
-    
+
     return NS_OK;
 }
 
@@ -437,20 +435,18 @@ nsSecureBrowserUIImpl::IsURLHTTPS(nsIURI* aURL, PRBool* value)
 
 void nsSecureBrowserUIImpl::GetBundleString(const nsString& name, nsString &outString)
 {
-  if (mStringBundle && name.Length() > 0)
-  {
-    PRUnichar *ptrv = nsnull;
-    if (NS_SUCCEEDED(mStringBundle->GetStringFromName(name.GetUnicode(), &ptrv)))
-      outString = ptrv;
-    else
-      outString.SetLength(0);;
-    
-    nsMemory::Free(ptrv);
-  }
-  else
-  {
-    outString.SetLength(0);;
-  }
+    if (mStringBundle && name.Length() > 0) {
+        PRUnichar *ptrv = nsnull;
+        if (NS_SUCCEEDED(mStringBundle->GetStringFromName(name.GetUnicode(), &ptrv)))
+            outString = ptrv;
+        else
+            outString.SetLength(0);;
+
+        nsMemory::Free(ptrv);
+
+    } else {
+        outString.SetLength(0);;
+    }
 }
 
 nsresult 
@@ -460,84 +456,82 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldUR
     PRBool isNewSchemeSecure, isOldSchemeSecure, boolpref;
 
     res = IsURLHTTPS(oldURI, &isOldSchemeSecure);
-	if (NS_FAILED(res)) 
-		return res;
+    if (NS_FAILED(res)) 
+        return res;
     res = IsURLHTTPS(newURI, &isNewSchemeSecure);
-	if (NS_FAILED(res)) 
-		return res;
+    if (NS_FAILED(res)) 
+        return res;
+
+    // Check to see if we are going from a secure page to and insecure page
+    if ( !isNewSchemeSecure && isOldSchemeSecure)
+    {
+        mSecurityButton->RemoveAttribute( NS_ConvertASCIItoUCS2("level") );
     
-// Check to see if we are going from a secure page to and insecure page
-	if ( !isNewSchemeSecure && isOldSchemeSecure)
-	{
-		mSecurityButton->RemoveAttribute( NS_ConvertASCIItoUCS2("level") );
-	
         if ((mPref->GetBoolPref(LEAVE_SITE_PREF, &boolpref) != 0))
-			boolpref = PR_TRUE;
-		
-		if (boolpref) 
-		{
-			NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
-			if (NS_FAILED(res)) 
-				return res;
-            
+            boolpref = PR_TRUE;
+        
+        if (boolpref) 
+        {
+            NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
+            if (NS_FAILED(res)) 
+                return res;
+
             nsAutoString windowTitle, message, dontShowAgain;
-            
+
             GetBundleString(NS_ConvertASCIItoUCS2("Title"), windowTitle);
             GetBundleString(NS_ConvertASCIItoUCS2("LeaveSiteMessage"), message);
             GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
             PRBool outCheckValue = PR_TRUE;
-			dialog->AlertCheck(mWindow, 
+            dialog->AlertCheck(mWindow, 
                                windowTitle.GetUnicode(), 
                                message.GetUnicode(), 
                                dontShowAgain.GetUnicode(), 
                                &outCheckValue);
-            
-            if (!outCheckValue)
-            {
+
+            if (!outCheckValue) {
                 mPref->SetBoolPref(LEAVE_SITE_PREF, PR_FALSE);
-		        NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
-            	if (NS_FAILED(res)) 
-		            return res;
+                NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
+                if (NS_FAILED(res)) 
+                    return res;
                 psm->PassPrefs();
             }
         }
-	}
-	// check to see if we are going from an insecure page to a secure one.
-	else if (isNewSchemeSecure && !isOldSchemeSecure)
-	{
-    
-		if ((mPref->GetBoolPref(ENTER_SITE_PREF, &boolpref) != 0))
-			boolpref = PR_TRUE;
-		
-		if (boolpref) 
-		{
+    }
+    // check to see if we are going from an insecure page to a secure one.
+    else if (isNewSchemeSecure && !isOldSchemeSecure)
+    {
+        if ((mPref->GetBoolPref(ENTER_SITE_PREF, &boolpref) != 0))
+            boolpref = PR_TRUE;
+        
+        if (boolpref) 
+        {
             NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
-			if (NS_FAILED(res)) 
-				return res;
-            
+            if (NS_FAILED(res)) 
+                return res;
+
             nsAutoString windowTitle, message, dontShowAgain;
-            
+
             GetBundleString(NS_ConvertASCIItoUCS2("Title"), windowTitle);
             GetBundleString(NS_ConvertASCIItoUCS2("EnterSiteMessage"), message);
             GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
             PRBool outCheckValue = PR_TRUE;
-			dialog->AlertCheck(mWindow, 
+            dialog->AlertCheck(mWindow, 
                                windowTitle.GetUnicode(), 
                                message.GetUnicode(), 
                                dontShowAgain.GetUnicode(), 
                                &outCheckValue);
-            
+
             if (!outCheckValue)
             {
                 mPref->SetBoolPref(ENTER_SITE_PREF, PR_FALSE);
                 NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &res);
-            	if (NS_FAILED(res)) 
-		            return res;
+                if (NS_FAILED(res)) 
+                    return res;
                 psm->PassPrefs();
             }
-		}
+        }
     }
 
     mIsSecureDocument = isNewSchemeSecure;
@@ -552,25 +546,25 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsIURI* nextURI)
 
     nsresult rv = IsURLHTTPS(nextURI, &secure);
     if (NS_FAILED(rv))
-	    return rv;
-    
+        return rv;
+
     if (!secure  && mIsSecureDocument)
     {
         mIsDocumentBroken = PR_TRUE;
         mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken") );
 
         if (!mPref) return NS_ERROR_NULL_POINTER;
-	    
-        PRBool boolpref;
-	    if ((mPref->GetBoolPref(MIXEDCONTENT_PREF, &boolpref) != 0))
-		    boolpref = PR_TRUE;
 
-	    if (boolpref && !mMixContentAlertShown) 
-	    {
-		    NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
-		    if (NS_FAILED(rv)) 
-			    return rv;
-        
+        PRBool boolpref;
+        if ((mPref->GetBoolPref(MIXEDCONTENT_PREF, &boolpref) != 0))
+            boolpref = PR_TRUE;
+
+        if (boolpref && !mMixContentAlertShown) 
+        {
+            NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+            if (NS_FAILED(rv)) 
+                return rv;
+
             nsAutoString windowTitle, message, dontShowAgain;
 
             GetBundleString(NS_ConvertASCIItoUCS2("Title"), windowTitle);
@@ -578,28 +572,26 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsIURI* nextURI)
             GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
             PRBool outCheckValue = PR_TRUE;
-		    
+
             dialog->AlertCheck(mWindow, 
                                windowTitle.GetUnicode(), 
                                message.GetUnicode(), 
                                dontShowAgain.GetUnicode(), 
                                &outCheckValue);
-        
-            if (!outCheckValue)
-            {
+
+            if (!outCheckValue) {
                 mPref->SetBoolPref(MIXEDCONTENT_PREF, PR_FALSE);
                 NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &rv);
                 if (NS_FAILED(rv)) 
-		            return rv;
+                    return rv;
                 psm->PassPrefs();
             }
-        
-        
+
             mMixContentAlertShown = PR_TRUE;
         }
     }
-    
-    return NS_OK;
+
+  return NS_OK;
 }
 
 nsresult
@@ -609,7 +601,7 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
 
     nsresult rv = IsURLHTTPS(actionURL, &secure);
     if (NS_FAILED(rv))
-	    return rv;
+        return rv;
     
     // if we are posting to a secure link from a secure page, all is okay.
     if (secure  && mIsSecureDocument)
@@ -620,13 +612,12 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
 
     // posting to a non https URL.
     if ((mPref->GetBoolPref(INSECURE_SUBMIT_PREF, &boolpref) != 0))
-		boolpref = PR_TRUE;
-	
-	if (boolpref) 
-	{
+        boolpref = PR_TRUE;
+    
+    if (boolpref) {
         NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
-		if (NS_FAILED(rv)) 
-			return rv;
+        if (NS_FAILED(rv)) 
+            return rv;
 
         nsAutoString windowTitle, message, dontShowAgain;
         
@@ -634,37 +625,30 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
         GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
         // posting to insecure webpage from a secure webpage.
-        if (!secure  && mIsSecureDocument && !mIsDocumentBroken)
-        {
+        if (!secure  && mIsSecureDocument && !mIsDocumentBroken) {
             GetBundleString(NS_ConvertASCIItoUCS2("PostToInsecure"), message);
-        }
-        else  // anything else, post generic warning
-        {
+        } else { // anything else, post generic warning
             GetBundleString(NS_ConvertASCIItoUCS2("PostToInsecureFromInsecure"), message);
         }
 
         PRBool outCheckValue = PR_TRUE;
-		dialog->ConfirmCheck(mWindow, 
+        dialog->ConfirmCheck(mWindow, 
                              windowTitle.GetUnicode(), 
                              message.GetUnicode(), 
                              dontShowAgain.GetUnicode(), 
                              &outCheckValue, 
                              okayToPost);
-        
-        if (!outCheckValue)
-        {
+
+        if (!outCheckValue) {
             mPref->SetBoolPref(INSECURE_SUBMIT_PREF, PR_FALSE);
             NS_WITH_SERVICE(nsIPSMComponent, psm, PSM_COMPONENT_PROGID, &rv);
             if (NS_FAILED(rv)) 
-		        return rv;
+                return rv;
             psm->PassPrefs();
         }
     } else {
-      *okayToPost = PR_TRUE;
+        *okayToPost = PR_TRUE;
     }
-
+  
     return NS_OK;
 }
-
-
-
