@@ -589,7 +589,7 @@ protected:
   NS_HIDDEN_(void) GetUserPreferences();
   NS_HIDDEN_(void) GetFontPreferences();
 
-  NS_HIDDEN_(void) UpdateCharSet(const char* aCharSet);
+  NS_HIDDEN_(void) UpdateCharSet(const nsAFlatCString& aCharSet);
 
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -615,7 +615,6 @@ protected:
 
 #ifdef IBMBIDI
   nsBidiPresUtils*      mBidiUtils;
-  nsCString             mCharset;                 // the charset we are using
 #endif
 
   nsCOMPtr<nsITheme> mTheme;
