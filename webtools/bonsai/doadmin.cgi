@@ -153,7 +153,7 @@ sub change_passwd {
           $outfile = DataDir() . '/treepasswd';
      }
 
-     $encoded = trim(`./data/trapdoor $::FORM{'newpassword'}`);
+     $encoded = crypt($::FORM{'newpassword'}, "aa");
      unless (open(PASSWD, ">$outfile")) {
           error_screen("Oops -- Couldn't write password file!",
                        "Couldn't open `<tt>$outfile</tt>': $!.");

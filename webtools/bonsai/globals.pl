@@ -965,7 +965,7 @@ sub CheckGlobalPassword {
      my ($password, $encoded) = @_;
 
      my $correct = trim(`cat data/passwd`);
-     $encoded = trim(`./data/trapdoor '$password'`)
+     $encoded = crypt($password, "aa")
           unless ($encoded);
 
      unless ($correct eq $encoded) {
@@ -982,7 +982,7 @@ Please click the <b>Back</b> button and try again.";
 sub CheckPassword {
      my ($password) = @_;
 
-     my $encoded = trim(`./data/trapdoor '$password'`);
+     my $encoded = crypt($password, "aa");
      my $pw_file = DataDir() . "/treepasswd";
      my $correct = "xxx $encoded";
 
