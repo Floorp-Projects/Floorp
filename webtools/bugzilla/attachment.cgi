@@ -166,58 +166,64 @@ sub validateID
 {
     my $param = @_ ? $_[0] : 'id';
 
-    # Only do this check for no 'id' parameter if we are trying to
-    # validate the 'id' parameter
+    # If we're not doing interdiffs, check if id wasn't specified and
+    # prompt them with a page that allows them to choose an attachment.
+    # Happens when calling plain attachment.cgi from the urlbar directly
     if ($param eq 'id' && !$cgi->param('id')) {
 
         print Bugzilla->cgi->header();
         $template->process("attachment/choose.html.tmpl", $vars) ||
             ThrowTemplateError($template->error());
         exit;
-      
     }
-
-    # Validate the value of the "id" form field, which must contain an
-    # integer that is the ID of an existing attachment.
-
-    $vars->{'attach_id'} = $::FORM{$param};
     
-    detaint_natural($::FORM{$param}) 
-     || ThrowUserError("invalid_attach_id");
+    my $attach_id = $cgi->param($param);
+
+    # Validate the specified attachment id. detaint kills $attach_id if
+    # non-natural, so use the original value from $cgi in our exception
+    # message here.
+    detaint_natural($attach_id)
+     || ThrowUserError("invalid_attach_id", { attach_id => $cgi->param($param) });
   
     # Make sure the attachment exists in the database.
-    SendSQL("SELECT bug_id, isprivate FROM attachments WHERE attach_id = $::FORM{$param}");
+    SendSQL("SELECT bug_id, isprivate FROM attachments WHERE attach_id = $attach_id");
     MoreSQLData()
-      || ThrowUserError("invalid_attach_id");
+      || ThrowUserError("invalid_attach_id", { attach_id => $attach_id });
 
     # Make sure the user is authorized to access this attachment's bug.
     ($bugid, my $isprivate) = FetchSQLData();
     ValidateBugID($bugid);
-    if (($isprivate > 0 ) && Param("insidergroup") && !(UserInGroup(Param("insidergroup")))) {
+    if (($isprivate > 0 ) && Param("insidergroup") && 
+        !(UserInGroup(Param("insidergroup")))) {
         ThrowUserError("attachment_access_denied");
     }
+
+    # XXX shim code, kill $::FORM
+    $::FORM{$param} = $attach_id;
 }
 
 sub validateFormat
 {
-  $::FORM{'format'} ||= $_[0];
-  if (! grep { $_ eq $::FORM{'format'} } @_)
+  # receives a list of legal formats; first item is a default
+  my $format = $cgi->param('format') || $_[0];
+  if ( lsearch(\@_, $format) == -1)
   {
-     $vars->{'format'} = $::FORM{'format'};
-     $vars->{'formats'} = \@_;
-     ThrowUserError("invalid_format");
+     ThrowUserError("invalid_format", { format  => $format, formats => \@_ });
   }
+
+  # XXX shim code, kill $::FORM
+  $::FORM{'format'} = $format;
 }
 
 sub validateContext
 {
-  $::FORM{'context'} ||= "patch";
-  if ($::FORM{'context'} ne "file" && $::FORM{'context'} ne "patch") {
-    $vars->{'context'} = $::FORM{'context'};
-    detaint_natural($::FORM{'context'})
-      || ThrowUserError("invalid_context");
-    delete $vars->{'context'};
+  my $context = $cgi->param('context') || "patch";
+  if ($context ne "file" && $context ne "patch") {
+    detaint_natural($context)
+      || ThrowUserError("invalid_context", { context => $cgi->param('context') });
   }
+  # XXX shim code, kill $::FORM
+  $::FORM{'context'} = $context;
 }
 
 sub validateCanEdit
