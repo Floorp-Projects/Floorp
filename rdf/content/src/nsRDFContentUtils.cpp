@@ -510,3 +510,24 @@ nsRDFContentUtils::MakeElementID(nsIDocument* aDocument, const nsString& aURI, n
 
     return NS_OK;
 }
+
+
+nsRDFContentUtils::IsContainedBy(nsIContent* aElement, nsIContent* aContainer)
+{
+    nsCOMPtr<nsIContent> element( dont_QueryInterface(aElement) );
+    while (element) {
+        nsresult rv;
+
+        nsCOMPtr<nsIContent> parent;
+        rv = element->GetParent(*getter_AddRefs(parent));
+        if (NS_FAILED(rv)) return PR_FALSE;
+
+        if (parent.get() == aContainer)
+            return PR_TRUE;
+
+        element = parent;
+    }
+
+    return PR_FALSE;
+}
+

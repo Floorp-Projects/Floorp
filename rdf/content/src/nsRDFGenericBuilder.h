@@ -143,7 +143,8 @@ public:
     nsresult
     RemoveWidgetItem(nsIContent* aElement,
                      nsIRDFResource* aProperty,
-                     nsIRDFResource* aValue);
+                     nsIRDFResource* aValue,
+                     PRBool aNotify);
 
     nsresult
     CreateContainerContents(nsIContent* aElement, nsIRDFResource* aResource);
