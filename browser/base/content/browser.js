@@ -747,6 +747,8 @@ function ctrlNumberTabSelection(event)
 
 #ifdef XP_MACOSX
   if (!event.metaKey)
+#elifdef XP_UNIX
+  if (!event.altKey)
 #else
   if (!event.ctrlKey)
 #endif
