@@ -61,11 +61,8 @@ $dir = "" if ($dir =~ /^\.\.\/$/);
 $dir =~ s/^\/([^:]*)/$1/;
 $dir =~ s/([^:]*)\/$/$1/;
 
-my $rev = $::FORM{"rev"};
-
-if(!defined($rev)) {
-    $rev='';
-}
+my $rev = '';
+$rev = sanitize_revision($::FORM{"rev"}) if defined($::FORM{"rev"});
 
 print "Content-type: text/html\n\n";
 

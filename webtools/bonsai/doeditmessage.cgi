@@ -42,7 +42,13 @@ my $RealFilename = DataDir() . "/$Filename";
 Lock();
 
 my $Text = '';
-$Text = `cat $RealFilename` if -f $RealFilename;
+if (-f $RealFilename) {
+    open(FILE, $ReadFilename);
+    while (<FILE>) {
+        $Text .= $_;
+    }
+    close(FILE);
+}
 
 unless (FormData('origtext') eq $Text) {
      PutsHeader("Oops!", "Oops!", "Someone else has been here!");

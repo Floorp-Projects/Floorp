@@ -76,13 +76,6 @@ accreted wildly.  There is probably quite a lot of dead code in here.
 Makefile.in:		"make install" lets you specify where you store
 			perl and bonsai on your system.
 
-SourceChecker.cgi	scc wrote to help sanitize code.  DELETE
-			Called by: nobody
-
-SourceChecker.pm	Called by: 
-				SourceChecker.cgi
-				cvsblame.cgi when passed sanitize=<dictionary>
-
 addcheckin.pl		Perl. Add a checkin to a Bonsai hook. Determines
 			if the tree was open or closed at the time, shunts
 			checkin to proper tree.

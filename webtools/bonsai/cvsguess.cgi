@@ -28,7 +28,7 @@ require 'CGI.pl';
 my $file= $::FORM{'file'};
 my $mark= $::FORM{'mark'};
 my $ln = ($mark > 10 ? $mark-10 : 1 );
-my $rev = $::FORM{'rev'};
+my $rev = sanitize_revision($::FORM{'rev'});
 my $debug = $::FORM{'debug'};
 
 print "Content-Type: text/html\n\n";

@@ -39,7 +39,13 @@ my $Filename = FormData('msgname');
 my $RealFilename = DataDir() . "/$Filename";
 
 my $Text = '';
-$Text = `cat $RealFilename` if -f $RealFilename;
+if (-f $RealFilename) {
+    open(FILE, $ReadFilename);
+    while (<FILE>) {
+        $Text .= $_;
+    }
+    close(FILE);
+}
 
 LoadTreeConfig();
 PutsHeader("Message Editor", "Message Editor",

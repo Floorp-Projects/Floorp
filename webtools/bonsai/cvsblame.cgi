@@ -54,7 +54,6 @@ sub sillyness {
 
 require 'CGI.pl';
 require 'cvsblame.pl';
-use SourceChecker;
 
 # Cope with the cookie and print the header, first thing.  That way, if
 # any errors result, they will show up for the user.
@@ -72,15 +71,6 @@ my $Head = 'CVS Blame';
 my $SubHead = '';
 
 my @src_roots = getRepositoryList();
-
-# Init sanitiazation source checker
-#
-my $sanitization_dictionary = $::FORM{sanitize};
-my $opt_sanitize = defined $sanitization_dictionary;
-if ( $opt_sanitize )
-{
-    dbmopen %SourceChecker::token_dictionary, "$sanitization_dictionary", 0664;
-}
 
 # Init byrd's 'feature' to allow html in comments
 #
@@ -107,7 +97,8 @@ my $url_file_tail = url_quote($file_tail);
 # Handle the "rev" argument
 #
 $::opt_rev = '';
-$::opt_rev = $::FORM{rev} if defined $::FORM{rev} and $::FORM{rev} ne 'HEAD';
+$::opt_rev = sanitize_revision($::FORM{rev}) if 
+    defined $::FORM{rev} and $::FORM{rev} ne 'HEAD';
 my $revstr = '';
 $revstr = "&rev=$::opt_rev" unless $::opt_rev eq '';
 my $browse_revtag = 'HEAD';
@@ -322,9 +313,6 @@ foreach $revision (@::revision_map)
     if ($opt_html_comments) {
         # Don't escape HTML in C/C++ comments
         $text = &leave_html_comments($text);
-    } elsif ( $opt_sanitize ){
-        # Mark filty words and Escape HTML meta-characters
-        $text = markup_line($text);
     } else {
         $text =~ s/&/&amp;/g;
         $text =~ s/</&lt;/g;
@@ -437,11 +425,6 @@ if ($::use_layers || $::use_dom) {
 }
 
 &print_bottom;
-
-if ( $opt_sanitize )
-{
-    dbmclose %SourceChecker::token_dictionary;
-}
 
 ## END of main script
 

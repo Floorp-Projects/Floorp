@@ -123,17 +123,17 @@ $prefix = $script_name . $ENV{PATH_INFO} . '?' if (exists($ENV{PATH_INFO}));
 # http://w3/cgi/cvsview.pl?subdir=foo&file=bar would assign
 #   $opt_subdir = foo and $opt_file = bar.
 
-my $opt_rev1              = $request->param('rev1');
-my $opt_rev2              = $request->param('rev2');
+my $opt_rev1              = sanitize_revision($request->param('rev1'));
+my $opt_rev2              = sanitize_revision($request->param('rev2'));
 my $opt_root              = $request->param('root');
 my $opt_files             = $request->param('files');
 my $opt_skip              = $request->param('skip') || 0;
 my $opt_diff_mode         = $request->param('diff_mode') || 'context';
 my $opt_whitespace_mode   = $request->param('whitespace_mode') || 'show';
 my $opt_file              = $request->param('file');
-my $opt_rev               = $request->param('diff_mode');
+my $opt_rev               = sanitize_revision($request->param('rev'));
 my $opt_subdir            = $request->param('subdir');
-my $opt_branch            = $request->param('branch');
+my $opt_branch            = sanitize_revision($request->param('branch'));
 my $opt_command           = $request->param('command');
 my $url_file              = url_quote($opt_file);
 

@@ -41,8 +41,6 @@ RCSDIFF=@RCSDIFF@
 CVSGRAPH=@CVSGRAPH@
 
 FILES = CGI.pl			\
-	SourceChecker.cgi	\
-	SourceChecker.pm	\
 	addcheckin.pl		\
 	admin.cgi		\
 	adminfuncs.pl		\

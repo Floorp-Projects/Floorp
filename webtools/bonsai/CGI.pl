@@ -89,8 +89,22 @@ sub url_encode3 {
 # Quotify a string, suitable for invoking a shell process
 sub shell_escape {
     my ($file) = @_;
-    $file =~ s/([ \"\'\?\$\&\|\!<>\(\)\[\]\;\:])/\\$1/g;
+    $file =~ s/([ \"\'\`\~\?\$\&\|\!<>\(\)\[\]\;\:])/\\$1/g;
     return $file;
+}
+
+# Make sure CVS revisions are in a specific format
+sub sanitize_revision {
+    my ($rev) = @_;
+    print STDERR "Testing: |$rev|\n";
+    if ($rev =~ /^[A-Za-z]+/) {
+        $rev =~ s/^([\w-]+).*/$1/;
+    } elsif ($rev =~ /^\d+\.\d+/) {
+        $rev =~ s/^(\d+[\.\d+]+).*/$1/;
+    } elsif (defined($rev) && $rev ne "") {
+        $rev = "1.1";
+    }
+    return $rev;
 }
 
 ##
