@@ -1174,17 +1174,6 @@ nsObjectFrame::Paint(nsIPresContext* aPresContext,
     aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
-    float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
-    nscoord px3 = NSIntPixelsToTwips(3, p2t);
-    nsAutoString tmp;
-    nsIAtom* atom;
-    mContent->GetTag(atom);
-    if (nsnull != atom) {
-      atom->ToString(tmp);
-      NS_RELEASE(atom);
-      aRenderingContext.DrawString(tmp, px3, px3);
-    }
   }
 #else
   // delegate all painting to the plugin instance.
