@@ -57,6 +57,15 @@ namespace JavaScript {
 	 * But, it's pretty easy to do with macros:
 	 */
 	#define GC_CONTAINER(container, type) container<T, gc_allocator<T> >
+	
+	/*
+	// this gives an "unimplemented C++ feature" error using CWPro5.
+	// maybe someday.
+	template <template<class, class> typename Container, typename T>
+	struct gc_rebind {
+		typedef typename Container<T, gc_allocator<T> > container;
+	};
+	*/
 }
 
 #endif /* gc_container_h */
