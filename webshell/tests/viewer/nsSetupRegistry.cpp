@@ -52,6 +52,7 @@
 #include "nsCollationCID.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsLocaleCID.h"
+#include "nsLWBrkCIID.h"
 
 #include "nsIEditor.h"
 
@@ -80,6 +81,7 @@
 #define UNICHARUTIL_DLL   "unicharutil.dll"
 #define BASE_DLL   "raptorbase.dll"
 #define NSLOCALE_DLL "nslocale.dll"
+#define LWBRK_DLL "lwbrk.dll"
 #else
 #ifdef XP_MAC
 #define XPCOM_DLL   "XPCOM_DLL"
@@ -106,6 +108,7 @@
 #define UNICHARUTIL_DLL   "UNICHARUTIL_DLL"
 #define BASE_DLL   "base.shlb"
 #define NSLOCALE_DLL "NSLOCALE_DLL"
+#define LWBRK_DLL "LWBRK_DLL"
 #else
 #define XPCOM_DLL  "libxpcom.so"
 /** Currently CFLAGS  defines WIDGET_DLL and GFXWIN_DLL. If, for some 
@@ -136,6 +139,7 @@
 #define UNICHARUTIL_DLL   "libunicharutil.so"
 #define BASE_DLL     "libraptorbase.so"
 #define NSLOCALE_DLL "libnslocale.so"
+#define LWBRK_DLL "liblwbrk.so"
 #endif
 #endif
 
@@ -220,6 +224,8 @@ static NS_DEFINE_IID(kDateTimeFormatCID,          NS_DATETIMEFORMAT_CID);
 static NS_DEFINE_IID(kLocaleCID,                  NS_LOCALE_CID);
 static NS_DEFINE_IID(kLocaleFactoryCID,           NS_LOCALEFACTORY_CID); // do we need this ???
 
+static NS_DEFINE_IID(kLWBrkCID,                   NS_LWBRK_CID); 
+
 extern "C" void
 NS_SetupRegistry()
 {
@@ -299,6 +305,8 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kDateTimeFormatCID,       NSLOCALE_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kLocaleCID,               NSLOCALE_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kLocaleFactoryCID,        NSLOCALE_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kLWBrkCID,        LWBRK_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kCPluginManagerCID, PLUGIN_DLL,      PR_FALSE, PR_FALSE);
 #if defined(XP_PC) && defined(XP_MAC)

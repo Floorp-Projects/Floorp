@@ -49,6 +49,7 @@ LINCS=-I..\public -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
       -I$(PUBLIC)\uconv \
       -I$(PUBLIC)\strres \
       -I$(PUBLIC)\locale \
+      -I$(PUBLIC)\lwbrk \
       -I$(PUBLIC)\unicharutil \
       -I$(PUBLIC)\intl \
       -I$(PUBLIC)\caps
