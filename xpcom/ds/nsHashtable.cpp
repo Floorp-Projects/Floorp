@@ -246,15 +246,26 @@ PRUint32 nsStringKey::HashValue(void) const
 	if(mStr.IsUnicode())
 		{
 		PRUint32 h;
+		PRUint32 n;
+		PRUint32 m;
 		const PRUnichar* c;
 
 		h = 0;
-		for(c = mStr.GetUnicode(); *c; c++)
-			h = (h >> 28) ^ (h << 4) ^ *c;
+		n = mStr.Length();
+		c = mStr.GetUnicode();
+		if(n < 16)
+			{	/* Hash every char in a short string. */
+			for(; n; c++, n--)
+				h = (h >> 28) ^ (h << 4) ^ *c;
+			}
+		else
+			{	/* Sample a la jave.lang.String.hash(). */
+			for(m = n / 8; n >= m; c += m, n -= m)
+				h = (h >> 28) ^ (h << 4) ^ *c;
+			}
 		return h; 
 		}
-	else
-		return (PRUint32)PL_HashString((const void*) mStr.GetUnicode());
+	return (PRUint32)PL_HashString((const void*) mStr.GetBuffer());
 }
 
 PRBool nsStringKey::Equals(const nsHashKey* aKey) const
@@ -264,10 +275,7 @@ PRBool nsStringKey::Equals(const nsHashKey* aKey) const
 
 nsHashKey* nsStringKey::Clone() const
 {
-	if(mStr.IsUnicode())
-		return new nsStringKey(mStr.GetUnicode());
-	else
-		return new nsStringKey(mStr.GetBuffer());
+	return new nsStringKey(mStr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
