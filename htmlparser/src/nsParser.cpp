@@ -142,7 +142,6 @@ nsParser::nsParser() {
   mObserver = 0;
   mSink=0;
   mParserContext=0;
-  mParseLevel=0;
 }
 
 
@@ -320,7 +319,7 @@ PRBool FindSuitableDTD( CParserContext& aParserContext) {
     if(theDTD) {
       result=theDTD->CanParse(aParserContext.mSourceType,0); 
       if(result){
-        nsresult status=theDTD->CreateNewInstance(&aParserContext.mDTD);
+        theDTD->CreateNewInstance(&aParserContext.mDTD);
         break;
       }
     }
@@ -386,7 +385,7 @@ PRInt32 nsParser::WillBuildModel(nsString& aFilename){
   if(PR_TRUE==FindSuitableDTD(*mParserContext)) {
     mParserContext->mDTD->SetParser(this);
     mParserContext->mDTD->SetContentSink(mSink);
-    mParserContext->mDTD->WillBuildModel(aFilename,mParseLevel);
+    mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext));
   }
 
   return kNoError;
@@ -402,7 +401,7 @@ PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
   //One last thing...close any open containers.
   PRInt32 result=anErrorCode;
   if(mParserContext->mDTD) {
-    result=mParserContext->mDTD->DidBuildModel(anErrorCode,mParseLevel);
+    result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext));
   }
 
   return result;
@@ -455,7 +454,6 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug *
   NS_PRECONDITION(0!=aURL,kNullURL);
 
   PRInt32 status=kBadURL;
-  mParseLevel++;
 
 /* Disable DTD Debug for now...
   mDTDDebug = aDTDDebug;
@@ -481,7 +479,6 @@ PRInt32 nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener, nsIDTDDebug *
 PRInt32 nsParser::Parse(fstream& aStream){
 
   PRInt32 status=kNoError;
-  mParseLevel++;
   
   //ok, time to create our tokenizer and begin the process
   CParserContext* pc=new CParserContext(new CScanner(kUnknownFilename,aStream,PR_FALSE),&aStream,0);
@@ -497,7 +494,6 @@ PRInt32 nsParser::Parse(fstream& aStream){
 
   pc=PopContext();
   delete pc;
-  mParseLevel--;
 
   return status;
 }
@@ -515,7 +511,6 @@ PRInt32 nsParser::Parse(fstream& aStream){
  */
 PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString){
   PRInt32 result=kNoError;
-  mParseLevel++;
 
   CParserContext* pc=new CParserContext(new CScanner(aSourceBuffer),&aSourceBuffer,0);
 
@@ -529,7 +524,6 @@ PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString){
   }
   pc=PopContext();
   delete pc;
-  mParseLevel--;
   return result;
 }
 
@@ -853,7 +847,7 @@ PRInt32 nsParser::Tokenize(){
       mParserContext->mScanner->RewindToMark();
     }
   } 
-  if(result=kProcessComplete)
+  if(kProcessComplete==result)
     result=NS_OK;
   DidTokenize();
   return result;

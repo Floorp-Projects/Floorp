@@ -221,7 +221,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,PRInt32 aLevel);
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink);
 
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
@@ -231,7 +231,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel);
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink);
 
     /**
      *  This method is called by the parser, once for each token

@@ -43,9 +43,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID); 
 
-static const char* kNullURL = "Error: Null URL given";
-static const char* kNullFilename= "Error: Null filename given";
-static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
+//static const char* kNullURL = "Error: Null URL given";
+//static const char* kNullFilename= "Error: Null filename given";
 static const char* kNullToken = "Error: Null token given";
 static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static const char* kHTMLTextContentType = "text/html";
@@ -335,8 +334,7 @@ static CNavTokenDeallocator gTokenKiller;
  *  @param   
  *  @return  
  */
-CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller), 
-  mContextStack(), mStyleStack()  {
+CNavDTD::CNavDTD() : nsIDTD(), mContextStack(), mStyleStack(), mTokenDeque(gTokenKiller)  {
   NS_INIT_REFCNT();
   mParser=0;
   mSink = nsnull;
@@ -423,12 +421,12 @@ eAutoDetectResult CNavDTD::AutoDetectContentType(nsString& aBuffer,nsString& aTy
  * @param 
  * @return
  */
-nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
+nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink){
   nsresult result=NS_OK;
 
   mFilename=aFilename;
 
-  if((1==aLevel) && (mSink)) {
+  if((aNotifySink) && (mSink)) {
     mLineNumber=1;
     result = mSink->WillBuildModel();
   }
@@ -442,14 +440,14 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
  * @param 
  * @return
  */
-nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel){
+nsresult CNavDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
   nsresult result= NS_OK;
 
   if((kNoError==anErrorCode) && (mContextStack.mCount>0)) {
     result = CloseContainersTo(0,eHTMLTag_unknown,PR_FALSE);
   }
 
-  if((1==aLevel) && (mSink)) {
+  if((aNotifySink) && (mSink)) {
     result = mSink->DidBuildModel(1);
   }
 
@@ -818,9 +816,7 @@ nsresult CNavDTD::HandleAttributeToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
   NS_ERROR("attribute encountered -- this shouldn't happen!");
 
-  CAttributeToken*  at = (CAttributeToken*)(aToken);
-  nsresult result=NS_OK;
-  return result;
+  return NS_OK;
 }
 
 /**
@@ -872,9 +868,8 @@ nsresult CNavDTD::HandleScriptToken(CToken* aToken, nsCParserNode& aNode) {
 nsresult CNavDTD::HandleStyleToken(CToken* aToken){
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  CStyleToken*  st = (CStyleToken*)(aToken);
-  nsresult result=NS_OK;
-  return result;
+//  CStyleToken*  st = (CStyleToken*)(aToken);
+  return NS_OK;
 }
 
 
@@ -924,7 +919,6 @@ CITokenHandler* CNavDTD::AddTokenHandler(CITokenHandler* aHandler) {
   if(aHandler)  {
     eHTMLTokenTypes type=(eHTMLTokenTypes)aHandler->GetTokenType();
     if(type<eToken_last) {
-      CITokenHandler* old=mTokenHandlers[type];
       mTokenHandlers[type]=aHandler;
     }
     else {
@@ -1739,7 +1733,6 @@ PRBool CNavDTD::ForwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTag
  */
 PRBool CNavDTD::BackwardPropagate(nsString& aVector,eHTMLTags aParentTag,eHTMLTags aChildTag) const {
 
-  PRBool    result=PR_FALSE;
   eHTMLTags theParentTag=(eHTMLTags)aChildTag;
 
 //  aVector.Truncate();
@@ -2199,9 +2192,6 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aUpdateStyleStack){
   
   nsresult   result=NS_OK; 
   eHTMLTags nodeType=(eHTMLTags)aNode.GetNodeType();
-  PRInt32 num=aNode.GetSourceLineNumber();
-
-//  CloseTransientStyles(nodeType);
 
   switch(nodeType) {
 
@@ -2880,7 +2870,8 @@ nsresult CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
  */
 nsresult CNavDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
   nsresult result=NS_OK;
-  if(aToken=new CTextToken(aString)) {
+  aToken=new CTextToken(aString);
+  if(aToken) {
     PRUnichar ch=0;
     result=aToken->Consume(ch,aScanner);
     if(result) {

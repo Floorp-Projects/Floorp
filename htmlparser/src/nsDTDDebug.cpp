@@ -61,7 +61,7 @@ class CDTDDebug : public nsIDTDDebug {
 public:
 
     CDTDDebug(char * aVerifyDir = 0);
-    ~CDTDDebug();
+    virtual ~CDTDDebug();
 
     NS_DECL_ISUPPORTS
 

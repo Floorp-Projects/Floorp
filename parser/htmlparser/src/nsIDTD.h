@@ -110,7 +110,7 @@ class nsIDTD : public nsISupports {
      * @param	aFilename--string that contains name of file being parsed (if applicable)
      * @return  
      */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,PRInt32 aLevel)=0;
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink)=0;
 
     /**
      * Called by the parser after the parsing process has concluded
@@ -118,7 +118,7 @@ class nsIDTD : public nsISupports {
      * @param	anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel)=0;
+    NS_IMETHOD DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink)=0;
     
     /**
      *	Called during model building phase of parse process. Each token created during

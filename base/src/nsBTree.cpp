@@ -130,7 +130,6 @@ nsBTree::~nsBTree(){
  * @return ptr to added node or NULL
  */
 nsNode* nsBTree::Add(nsNode& aNode){
-  PRBool result=PR_TRUE;
 
   nsNode* node1=mRoot; //x
   nsNode* node2=0;     //y
@@ -225,7 +224,7 @@ nsBTree& nsBTree::Empty(nsNode* aNode) {
  * @return this
  */
 nsBTree& nsBTree::Erase(nsNode* aNode){
-  nsNode* node1 =(aNode) ? aNode : mRoot;
+//  nsNode* node1 =(aNode) ? aNode : mRoot;
 
   if(aNode) {
     Erase(aNode->mLeft);  //begin by walking left side

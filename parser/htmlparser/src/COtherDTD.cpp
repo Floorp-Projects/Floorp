@@ -58,12 +58,12 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_IOtherHTML_DTD_IID); 
 static NS_DEFINE_IID(kBaseClassIID, NS_INAVHTML_DTD_IID); 
 
-static const char* kNullURL = "Error: Null URL given";
-static const char* kNullFilename= "Error: Null filename given";
-static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
-static const char* kNullToken = "Error: Null token given";
-static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static const char* kHTMLTextContentType = "text/html";
+//static const char* kNullURL = "Error: Null URL given";
+//static const char* kNullFilename= "Error: Null filename given";
+//static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
+//static const char* kNullToken = "Error: Null token given";
+//static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
+//static const char* kHTMLTextContentType = "text/html";
 
 static nsAutoString gEmpty;
 
@@ -189,8 +189,8 @@ eAutoDetectResult COtherDTD::AutoDetectContentType(nsString& aBuffer,nsString& a
  * @param 
  * @return
  */
-NS_IMETHODIMP COtherDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel) {
-  return CNavDTD::WillBuildModel(aFilename, aLevel);
+NS_IMETHODIMP COtherDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink) {
+  return CNavDTD::WillBuildModel(aFilename, aNotifySink);
 }
 
 /**
@@ -199,8 +199,8 @@ NS_IMETHODIMP COtherDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel) {
  * @param 
  * @return
  */
-NS_IMETHODIMP COtherDTD::DidBuildModel(PRInt32 anErrorCode,PRInt32 aLevel){
-  return CNavDTD::DidBuildModel(anErrorCode, aLevel);
+NS_IMETHODIMP COtherDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySink){
+  return CNavDTD::DidBuildModel(anErrorCode, aNotifySink);
 }
 
 /**

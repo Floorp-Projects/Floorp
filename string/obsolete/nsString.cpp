@@ -534,7 +534,7 @@ char* nsString::ToCString(char* aBuf, PRInt32 aBufLength) const
 float nsString::ToFloat(PRInt32* aErrorCode) const
 {
   char buf[40];
-  if (mLength > sizeof(buf)-1) {
+  if (mLength > PRInt32(sizeof(buf)-1)) {
     *aErrorCode = (PRInt32) NS_ERROR_ILLEGAL_VALUE;
     return 0.0f;
   }
@@ -950,8 +950,6 @@ PRInt32 nsString::Insert(nsString& aCopy,PRInt32 anOffset,PRInt32 aCount) {
   
     //Copy rightmost chars, up to offset+aCount...
     while(first<last) {
-      char ch1=char(*last);
-      char ch2=char(*next);
       *next=*last;  
       next--;
       last--;
@@ -995,8 +993,6 @@ PRInt32 nsString::Insert(PRUnichar aChar,PRInt32 anOffset){
 
     //Copy rightmost chars, up to offset+aCount...
     while(first<last) {
-      char ch1=char(*last);
-      char ch2=char(*next);
       *next=*last;  
       next--;
       last--;
@@ -1280,7 +1276,6 @@ PRInt32 nsString::Find(const nsString& aString) const{
  *  @return  offset of found char, or -1 (kNotFound)
  *------------------------------------------------------*/
 PRInt32 nsString::Find(PRUnichar aChar, PRInt32 anOffset) const{
-  PRInt32 result=0;
 
   for(PRInt32 i=anOffset;i<mLength;i++)
     if(aChar==mStr[i])
@@ -2071,7 +2066,7 @@ NS_BASE int fputs(const nsString& aString, FILE* out)
   char buf[100];
   char* cp = buf;
   PRInt32 len = aString.Length();
-  if (len >= sizeof(buf)) {
+  if (len >= PRInt32(sizeof(buf))) {
     cp = aString.ToNewCString();
   } else {
     aString.ToCString(cp, len + 1);
