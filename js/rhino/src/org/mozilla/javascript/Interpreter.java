@@ -1703,6 +1703,8 @@ public class Interpreter {
             debuggerFrame.onEnter(cx, scope, thisObj, args);
         }
 
+        cx.interpreterSourceFile = idata.itsSourceFile;
+
         Object result = undefined;
         // If javaException != null on exit, it will be throw instead of
         // normal return
