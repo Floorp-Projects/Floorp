@@ -54,7 +54,7 @@ public:
 
 protected:
    nsXULWindow();
-   ~nsXULWindow();
+   virtual ~nsXULWindow();
 
    NS_IMETHOD EnsureChromeTreeOwner();
    NS_IMETHOD EnsureContentTreeOwner();
@@ -62,6 +62,8 @@ protected:
    NS_IMETHOD GetDOMElementFromDocShell(nsIDocShell* aDocShell, 
       nsIDOMElement** aDOMElement);
    NS_IMETHOD PersistPositionAndSize(PRBool aPosition, PRBool aSize);
+   NS_IMETHOD ContentShellAdded(nsIDocShellTreeItem* aContentShell,
+   PRBool aPrimary, const PRUnichar* aID);
 
 protected:
    nsChromeTreeOwner*      mChromeTreeOwner;
