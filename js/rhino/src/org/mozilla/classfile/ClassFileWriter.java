@@ -376,12 +376,12 @@ public class ClassFileWriter {
         int newStack = itsStackTop + ByteCode.stackChange(theOpCode);
         if (newStack < 0 || Short.MAX_VALUE < newStack) badStack(newStack);
         if (DEBUGCODE)
-            System.out.println("Add " + Integer.toHexString(theOpCode & 0xFF));
+            System.out.println("Add " + bytecodeStr(theOpCode));
         addToCodeBuffer(theOpCode);
         itsStackTop = (short)newStack;
         if (newStack > itsMaxStack) itsMaxStack = (short)newStack;
         if (DEBUGSTACK) {
-            System.out.println("After "+Integer.toHexString(theOpCode & 0xFF)
+            System.out.println("After "+bytecodeStr(theOpCode)
                                +" stack = "+itsStackTop);
         }
     }
@@ -394,7 +394,7 @@ public class ClassFileWriter {
      */
     public void add(byte theOpCode, int theOperand) {
         if (DEBUGCODE) {
-            System.out.println("Add "+Integer.toHexString(theOpCode & 0xFF)
+            System.out.println("Add "+bytecodeStr(theOpCode)
                                +", "+Integer.toHexString(theOperand));
         }
         int newStack = itsStackTop + ByteCode.stackChange(theOpCode);
@@ -533,7 +533,7 @@ public class ClassFileWriter {
         itsStackTop = (short)newStack;
         if (newStack > itsMaxStack) itsMaxStack = (short)newStack;
         if (DEBUGSTACK) {
-            System.out.println("After "+Integer.toHexString(theOpCode & 0xFF)
+            System.out.println("After "+bytecodeStr(theOpCode)
                                +" stack = "+itsStackTop);
         }
     }
@@ -603,7 +603,7 @@ public class ClassFileWriter {
      */
     public void add(byte theOpCode, int theOperand1, int theOperand2) {
         if (DEBUGCODE) {
-            System.out.println("Add "+Integer.toHexString(theOpCode & 0xFF)
+            System.out.println("Add "+bytecodeStr(theOpCode)
                                +", "+Integer.toHexString(theOperand1)
                                +", "+Integer.toHexString(theOperand2));
         }
@@ -646,7 +646,7 @@ public class ClassFileWriter {
         itsStackTop = (short)newStack;
         if (newStack > itsMaxStack) itsMaxStack = (short)newStack;
         if (DEBUGSTACK) {
-            System.out.println("After "+Integer.toHexString(theOpCode & 0xFF)
+            System.out.println("After "+bytecodeStr(theOpCode)
                                +" stack = "+itsStackTop);
         }
 
@@ -654,7 +654,7 @@ public class ClassFileWriter {
 
     public void add(byte theOpCode, String className) {
         if (DEBUGCODE) {
-            System.out.println("Add "+Integer.toHexString(theOpCode & 0xFF)
+            System.out.println("Add "+bytecodeStr(theOpCode)
                                +", "+className);
         }
         int newStack = itsStackTop + ByteCode.stackChange(theOpCode);
@@ -677,7 +677,7 @@ public class ClassFileWriter {
         itsStackTop = (short)newStack;
         if (newStack > itsMaxStack) itsMaxStack = (short)newStack;
         if (DEBUGSTACK) {
-            System.out.println("After "+Integer.toHexString(theOpCode & 0xFF)
+            System.out.println("After "+bytecodeStr(theOpCode)
                                +" stack = "+itsStackTop);
         }
     }
@@ -687,7 +687,7 @@ public class ClassFileWriter {
                     String fieldType)
     {
         if (DEBUGCODE) {
-            System.out.println("Add "+Integer.toHexString(theOpCode & 0xFF)
+            System.out.println("Add "+bytecodeStr(theOpCode)
                                +", "+className+", "+fieldName+", "+fieldType);
         }
         int newStack = itsStackTop + ByteCode.stackChange(theOpCode);
@@ -716,7 +716,7 @@ public class ClassFileWriter {
         itsStackTop = (short)newStack;
         if (newStack > itsMaxStack) itsMaxStack = (short)newStack;
         if (DEBUGSTACK) {
-            System.out.println("After "+Integer.toHexString(theOpCode & 0xFF)
+            System.out.println("After "+bytecodeStr(theOpCode)
                                +" stack = "+itsStackTop);
         }
     }
@@ -734,7 +734,7 @@ public class ClassFileWriter {
                           String methodType)
     {
         if (DEBUGCODE) {
-            System.out.println("Add "+Integer.toHexString(theOpCode & 0xFF)
+            System.out.println("Add "+bytecodeStr(theOpCode)
                                +", "+className+", "+methodName+", "
                                +methodType);
         }
@@ -777,7 +777,7 @@ public class ClassFileWriter {
         itsStackTop = (short)newStack;
         if (newStack > itsMaxStack) itsMaxStack = (short)newStack;
         if (DEBUGSTACK) {
-            System.out.println("After "+Integer.toHexString(theOpCode & 0xFF)
+            System.out.println("After "+bytecodeStr(theOpCode)
                                +" stack = "+itsStackTop);
         }
     }
@@ -1154,6 +1154,220 @@ public class ClassFileWriter {
         throw new IllegalStateException(s);
     }
 
+    private static String bytecodeStr(byte code)
+    {
+        if (DEBUGSTACK || DEBUGCODE) {
+            switch (code) {
+                case ByteCode.NOP:              return "nop";
+                case ByteCode.ACONST_NULL:      return "aconst_null";
+                case ByteCode.ICONST_M1:        return "iconst_m1";
+                case ByteCode.ICONST_0:         return "iconst_0";
+                case ByteCode.ICONST_1:         return "iconst_1";
+                case ByteCode.ICONST_2:         return "iconst_2";
+                case ByteCode.ICONST_3:         return "iconst_3";
+                case ByteCode.ICONST_4:         return "iconst_4";
+                case ByteCode.ICONST_5:         return "iconst_5";
+                case ByteCode.LCONST_0:         return "lconst_0";
+                case ByteCode.LCONST_1:         return "lconst_1";
+                case ByteCode.FCONST_0:         return "fconst_0";
+                case ByteCode.FCONST_1:         return "fconst_1";
+                case ByteCode.FCONST_2:         return "fconst_2";
+                case ByteCode.DCONST_0:         return "dconst_0";
+                case ByteCode.DCONST_1:         return "dconst_1";
+                case ByteCode.BIPUSH:           return "bipush";
+                case ByteCode.SIPUSH:           return "sipush";
+                case ByteCode.LDC:              return "ldc";
+                case ByteCode.LDC_W:            return "ldc_w";
+                case ByteCode.LDC2_W:           return "ldc2_w";
+                case ByteCode.ILOAD:            return "iload";
+                case ByteCode.LLOAD:            return "lload";
+                case ByteCode.FLOAD:            return "fload";
+                case ByteCode.DLOAD:            return "dload";
+                case ByteCode.ALOAD:            return "aload";
+                case ByteCode.ILOAD_0:          return "iload_0";
+                case ByteCode.ILOAD_1:          return "iload_1";
+                case ByteCode.ILOAD_2:          return "iload_2";
+                case ByteCode.ILOAD_3:          return "iload_3";
+                case ByteCode.LLOAD_0:          return "lload_0";
+                case ByteCode.LLOAD_1:          return "lload_1";
+                case ByteCode.LLOAD_2:          return "lload_2";
+                case ByteCode.LLOAD_3:          return "lload_3";
+                case ByteCode.FLOAD_0:          return "fload_0";
+                case ByteCode.FLOAD_1:          return "fload_1";
+                case ByteCode.FLOAD_2:          return "fload_2";
+                case ByteCode.FLOAD_3:          return "fload_3";
+                case ByteCode.DLOAD_0:          return "dload_0";
+                case ByteCode.DLOAD_1:          return "dload_1";
+                case ByteCode.DLOAD_2:          return "dload_2";
+                case ByteCode.DLOAD_3:          return "dload_3";
+                case ByteCode.ALOAD_0:          return "aload_0";
+                case ByteCode.ALOAD_1:          return "aload_1";
+                case ByteCode.ALOAD_2:          return "aload_2";
+                case ByteCode.ALOAD_3:          return "aload_3";
+                case ByteCode.IALOAD:           return "iaload";
+                case ByteCode.LALOAD:           return "laload";
+                case ByteCode.FALOAD:           return "faload";
+                case ByteCode.DALOAD:           return "daload";
+                case ByteCode.AALOAD:           return "aaload";
+                case ByteCode.BALOAD:           return "baload";
+                case ByteCode.CALOAD:           return "caload";
+                case ByteCode.SALOAD:           return "saload";
+                case ByteCode.ISTORE:           return "istore";
+                case ByteCode.LSTORE:           return "lstore";
+                case ByteCode.FSTORE:           return "fstore";
+                case ByteCode.DSTORE:           return "dstore";
+                case ByteCode.ASTORE:           return "astore";
+                case ByteCode.ISTORE_0:         return "istore_0";
+                case ByteCode.ISTORE_1:         return "istore_1";
+                case ByteCode.ISTORE_2:         return "istore_2";
+                case ByteCode.ISTORE_3:         return "istore_3";
+                case ByteCode.LSTORE_0:         return "lstore_0";
+                case ByteCode.LSTORE_1:         return "lstore_1";
+                case ByteCode.LSTORE_2:         return "lstore_2";
+                case ByteCode.LSTORE_3:         return "lstore_3";
+                case ByteCode.FSTORE_0:         return "fstore_0";
+                case ByteCode.FSTORE_1:         return "fstore_1";
+                case ByteCode.FSTORE_2:         return "fstore_2";
+                case ByteCode.FSTORE_3:         return "fstore_3";
+                case ByteCode.DSTORE_0:         return "dstore_0";
+                case ByteCode.DSTORE_1:         return "dstore_1";
+                case ByteCode.DSTORE_2:         return "dstore_2";
+                case ByteCode.DSTORE_3:         return "dstore_3";
+                case ByteCode.ASTORE_0:         return "astore_0";
+                case ByteCode.ASTORE_1:         return "astore_1";
+                case ByteCode.ASTORE_2:         return "astore_2";
+                case ByteCode.ASTORE_3:         return "astore_3";
+                case ByteCode.IASTORE:          return "iastore";
+                case ByteCode.LASTORE:          return "lastore";
+                case ByteCode.FASTORE:          return "fastore";
+                case ByteCode.DASTORE:          return "dastore";
+                case ByteCode.AASTORE:          return "aastore";
+                case ByteCode.BASTORE:          return "bastore";
+                case ByteCode.CASTORE:          return "castore";
+                case ByteCode.SASTORE:          return "sastore";
+                case ByteCode.POP:              return "pop";
+                case ByteCode.POP2:             return "pop2";
+                case ByteCode.DUP:              return "dup";
+                case ByteCode.DUP_X1:           return "dup_x1";
+                case ByteCode.DUP_X2:           return "dup_x2";
+                case ByteCode.DUP2:             return "dup2";
+                case ByteCode.DUP2_X1:          return "dup2_x1";
+                case ByteCode.DUP2_X2:          return "dup2_x2";
+                case ByteCode.SWAP:             return "swap";
+                case ByteCode.IADD:             return "iadd";
+                case ByteCode.LADD:             return "ladd";
+                case ByteCode.FADD:             return "fadd";
+                case ByteCode.DADD:             return "dadd";
+                case ByteCode.ISUB:             return "isub";
+                case ByteCode.LSUB:             return "lsub";
+                case ByteCode.FSUB:             return "fsub";
+                case ByteCode.DSUB:             return "dsub";
+                case ByteCode.IMUL:             return "imul";
+                case ByteCode.LMUL:             return "lmul";
+                case ByteCode.FMUL:             return "fmul";
+                case ByteCode.DMUL:             return "dmul";
+                case ByteCode.IDIV:             return "idiv";
+                case ByteCode.LDIV:             return "ldiv";
+                case ByteCode.FDIV:             return "fdiv";
+                case ByteCode.DDIV:             return "ddiv";
+                case ByteCode.IREM:             return "irem";
+                case ByteCode.LREM:             return "lrem";
+                case ByteCode.FREM:             return "frem";
+                case ByteCode.DREM:             return "drem";
+                case ByteCode.INEG:             return "ineg";
+                case ByteCode.LNEG:             return "lneg";
+                case ByteCode.FNEG:             return "fneg";
+                case ByteCode.DNEG:             return "dneg";
+                case ByteCode.ISHL:             return "ishl";
+                case ByteCode.LSHL:             return "lshl";
+                case ByteCode.ISHR:             return "ishr";
+                case ByteCode.LSHR:             return "lshr";
+                case ByteCode.IUSHR:            return "iushr";
+                case ByteCode.LUSHR:            return "lushr";
+                case ByteCode.IAND:             return "iand";
+                case ByteCode.LAND:             return "land";
+                case ByteCode.IOR:              return "ior";
+                case ByteCode.LOR:              return "lor";
+                case ByteCode.IXOR:             return "ixor";
+                case ByteCode.LXOR:             return "lxor";
+                case ByteCode.IINC:             return "iinc";
+                case ByteCode.I2L:              return "i2l";
+                case ByteCode.I2F:              return "i2f";
+                case ByteCode.I2D:              return "i2d";
+                case ByteCode.L2I:              return "l2i";
+                case ByteCode.L2F:              return "l2f";
+                case ByteCode.L2D:              return "l2d";
+                case ByteCode.F2I:              return "f2i";
+                case ByteCode.F2L:              return "f2l";
+                case ByteCode.F2D:              return "f2d";
+                case ByteCode.D2I:              return "d2i";
+                case ByteCode.D2L:              return "d2l";
+                case ByteCode.D2F:              return "d2f";
+                case ByteCode.I2B:              return "i2b";
+                case ByteCode.I2C:              return "i2c";
+                case ByteCode.I2S:              return "i2s";
+                case ByteCode.LCMP:             return "lcmp";
+                case ByteCode.FCMPL:            return "fcmpl";
+                case ByteCode.FCMPG:            return "fcmpg";
+                case ByteCode.DCMPL:            return "dcmpl";
+                case ByteCode.DCMPG:            return "dcmpg";
+                case ByteCode.IFEQ:             return "ifeq";
+                case ByteCode.IFNE:             return "ifne";
+                case ByteCode.IFLT:             return "iflt";
+                case ByteCode.IFGE:             return "ifge";
+                case ByteCode.IFGT:             return "ifgt";
+                case ByteCode.IFLE:             return "ifle";
+                case ByteCode.IF_ICMPEQ:        return "if_icmpeq";
+                case ByteCode.IF_ICMPNE:        return "if_icmpne";
+                case ByteCode.IF_ICMPLT:        return "if_icmplt";
+                case ByteCode.IF_ICMPGE:        return "if_icmpge";
+                case ByteCode.IF_ICMPGT:        return "if_icmpgt";
+                case ByteCode.IF_ICMPLE:        return "if_icmple";
+                case ByteCode.IF_ACMPEQ:        return "if_acmpeq";
+                case ByteCode.IF_ACMPNE:        return "if_acmpne";
+                case ByteCode.GOTO:             return "goto";
+                case ByteCode.JSR:              return "jsr";
+                case ByteCode.RET:              return "ret";
+                case ByteCode.TABLESWITCH:      return "tableswitch";
+                case ByteCode.LOOKUPSWITCH:     return "lookupswitch";
+                case ByteCode.IRETURN:          return "ireturn";
+                case ByteCode.LRETURN:          return "lreturn";
+                case ByteCode.FRETURN:          return "freturn";
+                case ByteCode.DRETURN:          return "dreturn";
+                case ByteCode.ARETURN:          return "areturn";
+                case ByteCode.RETURN:           return "return";
+                case ByteCode.GETSTATIC:        return "getstatic";
+                case ByteCode.PUTSTATIC:        return "putstatic";
+                case ByteCode.GETFIELD:         return "getfield";
+                case ByteCode.PUTFIELD:         return "putfield";
+                case ByteCode.INVOKEVIRTUAL:    return "invokevirtual";
+                case ByteCode.INVOKESPECIAL:    return "invokespecial";
+                case ByteCode.INVOKESTATIC:     return "invokestatic";
+                case ByteCode.INVOKEINTERFACE:  return "invokeinterface";
+                case ByteCode.NEW:              return "new";
+                case ByteCode.NEWARRAY:         return "newarray";
+                case ByteCode.ANEWARRAY:        return "anewarray";
+                case ByteCode.ARRAYLENGTH:      return "arraylength";
+                case ByteCode.ATHROW:           return "athrow";
+                case ByteCode.CHECKCAST:        return "checkcast";
+                case ByteCode.INSTANCEOF:       return "instanceof";
+                case ByteCode.MONITORENTER:     return "monitorenter";
+                case ByteCode.MONITOREXIT:      return "monitorexit";
+                case ByteCode.WIDE:             return "wide";
+                case ByteCode.MULTIANEWARRAY:   return "multianewarray";
+                case ByteCode.IFNULL:           return "ifnull";
+                case ByteCode.IFNONNULL:        return "ifnonnull";
+                case ByteCode.GOTO_W:           return "goto_w";
+                case ByteCode.JSR_W:            return "jsr_w";
+                case ByteCode.BREAKPOINT:       return "breakpoint";
+
+                case ByteCode.IMPDEP1:          return "impdep1";
+                case ByteCode.IMPDEP2:          return "impdep2";
+            }
+        }
+        return "";
+    }
+
     private static final int LineNumberTableSize = 16;
     private static final int ExceptionTableSize = 4;
 
@@ -1193,7 +1407,6 @@ public class ClassFileWriter {
     private short itsSourceFileNameIndex;
 
     private LabelTable itsLabels = new LabelTable();
-
 }
 
 final class ExceptionTableEntry
