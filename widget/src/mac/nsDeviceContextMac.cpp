@@ -158,25 +158,42 @@ NS_IMETHODIMP nsDeviceContextMac :: CheckFontExistence(const nsString& aFontName
 
 //------------------------------------------------------------------------
 
-bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &fontNum)
+bool nsDeviceContextMac :: GetMacFontNumber(const nsString& aFontName, short &aFontNum)
 {
-	//¥TODO: We need to optimize this. Some kind of caching would be nice.
+	Str255 		systemFontName;
+	Str255		aStr;
+	bool			fontExists;
 
-	Str255 	systemFontName;
-	Str255	aStr;
+	//¥TODO?: Maybe we shouldn't call that function so often. If nsFont could store the
+	//				fontNum, nsFontMetricsMac::SetFont() wouldn't need to call this at all.
+	static nsString		lastFontName;
+	static short			lastFontNum;
+	static bool				lastFontExists;
+
+	if (lastFontName == aFontName)
+	{
+		aFontNum = lastFontNum;
+		return lastFontExists;
+	}
 
 	aStr[0] = aFontName.Length();
 	aFontName.ToCString((char*)&aStr[1], sizeof(aStr)-1);
 
-	::GetFNum(aStr, &fontNum);
-	if (fontNum == 0)
+	::GetFNum(aStr, &aFontNum);
+	if (aFontNum == 0)
 	{
 		// Either we didn't find the font, or we were looking for the system font
 		::GetFontName(0, systemFontName);
-		return ::EqualString(aStr, systemFontName, FALSE, FALSE );
+		fontExists = ::EqualString(aStr, systemFontName, FALSE, FALSE );
 	}
 	else
-		return true;
+		fontExists = true;
+
+	lastFontExists = fontExists;
+	lastFontNum = aFontNum;
+	lastFontName = aFontName;
+
+	return fontExists;
 }
 
 //------------------------------------------------------------------------
