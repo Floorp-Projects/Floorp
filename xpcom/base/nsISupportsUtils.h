@@ -36,6 +36,18 @@ struct JSObject;
 struct JSContext;
 #endif
 
+  // under Metrowerks (Mac), we don't have autoconf yet
+#ifdef __MWERKS__
+  #define HAVE_CPP_SPECIALIZATION
+#endif
+
+	// until we fix the rest of the code, this needs to be turned off
+#undef HAVE_CPP_SPECIALIZATION
+
+#ifdef HAVE_CPP_SPECIALIZATION
+	#define NSCAP_FEATURE_HIDE_NSISUPPORTS_GETIID
+#endif
+
 /*@{*/
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +97,11 @@ typedef PRUint32 nsrefcnt;
  */
 class nsISupports XPCOM_OBJECT {
 public:
+
+#ifndef NSCAP_FEATURE_HIDE_NSISUPPORTS_GETIID
   static const nsIID& GetIID() { static nsIID iid = NS_ISUPPORTS_IID; return iid; }
+#endif
+
   /**
    * @name Methods
    */
@@ -241,7 +257,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
   }                                                                      \
-  if (aIID.Equals(nsISupports::GetIID())) {                              \
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {               \
     *aInstancePtr = (void*) ((nsISupports*)this);                        \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
@@ -702,6 +718,22 @@ extern "C++" {
 
 class nsISupports;
 
+template <class T>
+struct nsCOMTypeInfo
+	{
+		static const nsIID& GetIID() { return T::GetIID(); }
+	};
+
+#ifdef NSCAP_FEATURE_HIDE_NSISUPPORTS_GETIID
+	template <>
+	struct nsCOMTypeInfo<nsISupports>
+		{
+			static const nsIID& GetIID() { static nsIID iid = NS_ISUPPORTS_IID; return iid; }
+		};
+#endif
+
+#define NS_GET_IID(T) nsCOMTypeInfo<T>::GetIID()
+
 template <class DestinationType>
 inline
 nsresult
@@ -709,8 +741,9 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
 		// a type-safe shortcut for calling the |QueryInterface()| member function
 	{
 		NS_PRECONDITION(aSource, "null parameter");
+    NS_PRECONDITION(aDestination, "null parameter");
 
-		return aSource->QueryInterface(DestinationType::GetIID(), (void**)aDestination);
+		return aSource->QueryInterface(nsCOMTypeInfo<DestinationType>::GetIID(), (void**)aDestination);
 	}
 
 } // extern "C++"
