@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsIPref.h"
 
 #define NS_IMPL_IDS
 
@@ -29,8 +30,6 @@
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
 #include "nsIThrobber.h"
-
-#include "nsIPref.h"
 
 #ifdef XP_PC
 #define WIDGET_DLL "raptorwidget.dll"
