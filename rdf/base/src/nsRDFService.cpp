@@ -39,6 +39,24 @@
 #include "prprf.h"
 #include "prlog.h"
 
+#ifdef XP_MAC
+#include "nsIServiceManager.h"
+#include "nsRDFCID.h"
+static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,  NS_RDFBOOKMARKDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFContentSinkCID,         NS_RDFCONTENTSINK_CID);
+static NS_DEFINE_CID(kRDFHTMLBuilderCID,         NS_RDFHTMLBUILDER_CID);
+static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,  NS_RDFINMEMORYDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kRDFTreeBuilderCID,         NS_RDFTREEBUILDER_CID);
+static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
+static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
+static NS_DEFINE_CID(kXULDataSourceCID,			 NS_XULDATASOURCE_CID);
+static NS_DEFINE_CID(kXULDocumentCID,            NS_XULDOCUMENT_CID);
+static NS_DEFINE_CID(kRDFDefaultResourceCID,     NS_RDFDEFAULTRESOURCE_CID);
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 
 static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
@@ -434,9 +452,22 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
     PRInt32 pos = uriStr.Find(':');
     if (pos < 0) {
         // no colon, so try the default resource factory
+#ifdef XP_MAC
+        nsIServiceManager* servMgr;
+        nsServiceManager::GetGlobalServiceManager(&servMgr);
+        nsIFactory* fact;
+        rv = NSGetFactory(servMgr, kRDFDefaultResourceCID,
+                          "", NS_RDF_RESOURCE_FACTORY_PROGID, &fact);
+        if (rv == NS_OK) {
+            rv = fact->CreateInstance(nsnull, nsIRDFResource::IID(),
+                                      (void**)&result);
+            NS_RELEASE(fact);
+        }
+#else
         rv = nsRepository::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
                                           nsnull, nsIRDFResource::IID(),
                                           (void**)&result);
+#endif
         if (NS_FAILED(rv)) return rv;
     }
     else {
@@ -450,15 +481,41 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
         delete[] prefixStr;
         if (progID == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
+#ifdef XP_MAC
+        nsIServiceManager* servMgr;
+        nsServiceManager::GetGlobalServiceManager(&servMgr);
+        nsIFactory* fact;
+        rv = NSGetFactory(servMgr, kRDFDefaultResourceCID,
+                          "", progID, &fact);
+        if (rv == NS_OK) {
+            rv = fact->CreateInstance(nsnull, nsIRDFResource::IID(),
+                                      (void**)&result);
+            NS_RELEASE(fact);
+        }
+#else
         rv = nsRepository::CreateInstance(progID, nsnull,
                                           nsIRDFResource::IID(),
                                           (void**)&result);
+#endif
         PR_smprintf_free(progID);
         if (NS_FAILED(rv)) {
             // if we failed, try the default resource factory
+#ifdef XP_MAC
+            nsIServiceManager* servMgr;
+            nsServiceManager::GetGlobalServiceManager(&servMgr);
+            nsIFactory* fact;
+            rv = NSGetFactory(servMgr, kRDFDefaultResourceCID,
+                              "", NS_RDF_RESOURCE_FACTORY_PROGID, &fact);
+            if (rv == NS_OK) {
+                rv = fact->CreateInstance(nsnull, nsIRDFResource::IID(),
+                                          (void**)&result);
+                NS_RELEASE(fact);
+            }
+#else
             rv = nsRepository::CreateInstance(NS_RDF_RESOURCE_FACTORY_PROGID,
                                               nsnull, nsIRDFResource::IID(),
                                               (void**)&result);
+#endif
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -619,9 +676,36 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
     delete[] name;
     if (progID == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
+#ifdef XP_MAC
+    nsIServiceManager* servMgr;
+    nsServiceManager::GetGlobalServiceManager(&servMgr);
+    nsIFactory* fact;
+    nsCID cid;
+    if (dataSourceName.Equals("bookmarks"))
+        cid = kRDFBookmarkDataSourceCID;
+    else if (dataSourceName.Equals("composite-datasource"))
+        cid = kRDFCompositeDataSourceCID;
+    else if (dataSourceName.Equals("in-memory-datasource"))
+        cid = kRDFInMemoryDataSourceCID;
+    else if (dataSourceName.Equals("xml-datasource"))
+        cid = kRDFXMLDataSourceCID;
+    else if (dataSourceName.Equals("xul-datasource"))
+        cid = kXULDataSourceCID;
+    else
+        PR_ASSERT(0);
+
+    rv = NSGetFactory(servMgr, cid,
+                      "", progID, &fact);
+    if (rv == NS_OK) {
+        rv = fact->CreateInstance(nsnull, nsIRDFDataSource::IID(),
+                                  (void**)aDataSource);
+        NS_RELEASE(fact);
+    }
+#else
     rv = nsRepository::CreateInstance(progID, nsnull,
                                       nsIRDFDataSource::IID(),
                                       (void**)aDataSource);
+#endif
     PR_smprintf_free(progID);
     if (NS_FAILED(rv)) return rv;
     rv = (*aDataSource)->Init(uri);
