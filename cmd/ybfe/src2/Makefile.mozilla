@@ -59,7 +59,7 @@ REQUIRES  = \
 
 LIBS = -ljs -llayer -lxp -lutil -lraptorplugin -lsecfree \
 -lnetcache -labouturl -lftpurl -lfileurl -lmimetype -lhttpurl \
--ljsurl -lgophurl -lremoturl -lnetutil -lnetwork -lnetcnvts \
+-ljsurl -lgophurl -lremoturl -lnetutil -lnetwork -lnetcnvts -lzlib \
 -lpwcac -lreg -ljsdom -lraptorgfx -limg -ljpeg -lpng -lraptorbase \
 -lnetlib -lxpcom -lraptorwebwidget -lpref -lxpcom -lnspr21 -lplds21 \
 -lplc21
