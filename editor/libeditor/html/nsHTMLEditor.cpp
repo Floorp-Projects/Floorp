@@ -2781,10 +2781,10 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
             if (selectedElement)
             {
               // If we already found a node, then we have another element,
-              //   so don't return an element
+              //  thus there's not just one element selected
               if (bNodeFound)
               {
-                //bNodeFound;
+                bNodeFound = PR_FALSE;
                 break;
               }
 
@@ -2935,9 +2935,8 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   nsresult res=NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMSelection> selection;
 
-  // DON'T RETURN EXCEPT AT THE END -- WE NEED TO RELEASE THE aAnchorElement
-  if (!aAnchorElement)
-    goto DELETE_ANCHOR;    // DON'T USE GOTO IN C++!
+  if (!aAnchorElement) return NS_ERROR_NULL_POINTER; 
+
 
   // We must have a real selection
   res = GetSelection(getter_AddRefs(selection));
@@ -2945,8 +2944,8 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   {
     res = NS_ERROR_NULL_POINTER;
   }
-  if (NS_FAILED(res) || !selection)
-    goto DELETE_ANCHOR;
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_NULL_POINTER;
 
   PRBool isCollapsed;
   res = selection->GetIsCollapsed(&isCollapsed);
@@ -2963,8 +2962,9 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
     if (anchor)
     {
       nsAutoString href;
-      // XXX: ERROR_HANDLING   return code lost
-      if (NS_SUCCEEDED(anchor->GetHref(href)) && href.GetUnicode() && href.Length() > 0)      
+      res = anchor->GetHref(href);
+      if (NS_FAILED(res)) return res;
+      if (href.GetUnicode() && href.Length() > 0)      
       {
         nsAutoEditBatch beginBatching(this);
         const nsString attribute("href");
@@ -2975,16 +2975,11 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
       }
     }
   }
-DELETE_ANCHOR:
-  // We don't insert the element created in CreateElementWithDefaults 
-  //   into the document like we do in InsertElement,
-  //   so shouldn't we have to do this here?
-  //  It crashes in JavaScript if we do this!
-  //NS_RELEASE(aAnchorElement);
   return res;
 }
 
-NS_IMETHODIMP nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
+NS_IMETHODIMP 
+nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
 {
   NS_PRECONDITION(mDocWeak, "Missing Editor DOM Document");
   
@@ -7505,7 +7500,7 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
       
       // now that we have the list, do the font size change on each node
       PRUint32 listCount;
-      PRInt32 j;
+      PRUint32 j;
       arrayOfNodes->Count(&listCount);
       for (j = 0; j < listCount; j++)
       {
@@ -7565,7 +7560,7 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
   PRUint32 textLen;
   aTextNode->GetLength(&textLen);
   
-  if ( aEndOffset != textLen )
+  if ( (PRUint32)aEndOffset != textLen )
   {
     // we need to split off back of text node
     res = SplitNode(node, aEndOffset, getter_AddRefs(tmp));
@@ -7636,7 +7631,7 @@ nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange,
     PRInt32 j;
     PRUint32 childCount;
     childNodes->GetLength(&childCount);
-    for (j=0 ; j<childCount; j++)
+    for (j=0 ; j < (PRInt32)childCount; j++)
     {
       nsCOMPtr<nsIDOMNode> childNode;
       res = childNodes->Item(j, getter_AddRefs(childNode));

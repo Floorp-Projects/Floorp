@@ -23,12 +23,12 @@
 <!-- Window title -->
 <!ENTITY windowTitle.label "Insert Table">
 
-<!ENTITY numRowsEditField.label "Number of rows">
-<!ENTITY numColumnsEditField.label "Number of columns">
-<!ENTITY widthEditField.label "Table Width">
-<!ENTITY borderEditField.label "Border">
+<!ENTITY numRowsEditField.label "Number of rows:">
+<!ENTITY numColumnsEditField.label "Number of columns:">
+<!ENTITY widthEditField.label "Table width:">
+<!ENTITY borderEditField.label "Border:">
 
-<!ENTITY alignmentFieldset.label "Alignment">
+<!ENTITY alignmentBox.label "Alignment:">
 <!ENTITY leftPopup.value "Left">
 <!ENTITY centerPopup.value "Center">
 <!ENTITY rightPopup.value "Right">

@@ -24,7 +24,6 @@
  */
 
 var insertNew     = true;
-var SeeMore       = true;
 var wasEnableAll  = false;
 var oldSourceInt  = 0;
 var imageElement;
@@ -95,14 +94,14 @@ function Startup()
   // Set SeeMore bool to the OPPOSITE of the current state,
   //   which is automatically saved by using the 'persist="more"' 
   //   attribute on the MoreFewerButton button
-  //   onMoreFewer will toggle the state and redraw the dialog
+  //   onMoreFewerImage will toggle the state and redraw the dialog
   SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
 
   // Initialize widgets with image attributes in the case where the entire dialog isn't visible
-  if ( SeeMore ) // this is actually in the opposite state until onMoreFewer is called below
+  if ( SeeMore ) // this is actually in the opposite state until onMoreFewerImage is called below
     InitDialog();
   
-  onMoreFewer();  // this call will initialize all widgets if entire dialog is visible
+  onMoreFewerImage();  // this call will initialize all widgets if entire dialog is visible
   dialog.srcInput.focus();
 }
 
@@ -172,9 +171,8 @@ function InitDialog()
 	  }
   }
 
-  imageTypeExtension = checkForImage();
   // we want to force an update so initialize "wasEnableAll" to be the opposite of what the actual state is
-  wasEnableAll = !imageTypeExtension;
+  wasEnableAll = !IsValidImage(dialog.srcInput.value);
   doOverallEnabling();
 }
 
@@ -259,7 +257,7 @@ dump("alignment ="+alignment+"\n");
   globalElement.setAttribute("height", str);
 }
 
-function onMoreFewer()
+function onMoreFewerImage()
 {
   if (SeeMore)
   {
@@ -318,8 +316,7 @@ function doDimensionEnabling( doEnable )
 
 function doOverallEnabling()
 {
-  var imageTypeExtension = checkForImage();
-  var canEnableAll       = imageTypeExtension != 0;
+  var canEnableAll = IsValidImage(dialog.srcInput.value);
   if ( wasEnableAll == canEnableAll )
     return;
   
@@ -337,7 +334,7 @@ function doOverallEnabling()
   SetElementEnabledByID("alignLabel", canEnableAll );
   SetElementEnabledByID("alignTypeSelect", canEnableAll );
 
-  // spacing fieldset
+  // spacing Box
   SetElementEnabledByID( "spacingLabel", canEnableAll );
   SetElementEnabledByID( "imageleftrightInput", canEnableAll );
   SetElementEnabledByID( "leftrightLabel", canEnableAll );
@@ -359,42 +356,6 @@ function doOverallEnabling()
   // TODO: ADD APPROPRIATE DISABLING BASED ON EXISTENCE OF IMAGE MAP
   SetElementEnabledByID( "removeImageMap", canEnableAll && canRemoveImageMap);
 }
-
-// an API to validate and image by sniffing out the extension
-/* assumes that the element id is "srcInput" */
-/* returns lower-case extension or 0 */
-function checkForImage()
-{
-  image = dialog.srcInput.value.trimString();
-  if ( !image )
-    return 0;
-  
-  /* look for an extension */
-  var tailindex = image.lastIndexOf("."); 
-  if ( tailindex == 0 || tailindex == -1 ) /* -1 is not found */
-    return 0; 
-  
-  /* move past period, get the substring from the first character after the '.' to the last character (length) */
-  tailindex = tailindex + 1;
-  var type = image.substring(tailindex,image.length);
-  
-  /* convert extension to lower case */
-  if (type)
-    type = type.toLowerCase();
-  
-  // TODO: Will we convert .BMPs to a web format?
-  switch( type )  {
-    case "gif":
-    case "jpg":
-    case "jpeg":
-    case "png":
-      return type;
-      break;
-    default :
-     return 0;
-  }
-}
-
 
 // constrainProportions contribution by pete@postpagan.com
 // needs to handle pixels/percent
@@ -443,8 +404,7 @@ function removeImageMap()
 //   accessible to AdvancedEdit() [in EdDialogCommon.js]
 function ValidateData()
 {
-  var imageTypeExtension  = checkForImage();
-  if ( !imageTypeExtension ) {
+  if ( !IsValidImage(dialog.srcInput.value )) {
     ShowInputErrorMessage(GetString("MissingImageError"));
     return false;
   }
@@ -498,7 +458,7 @@ function ValidateData()
     width = ValidateNumberString(width, 1, maxLimitWidth);
     if (width == "") {
       if ( !SeeMore )
-        onMoreFewer();
+        onMoreFewerImage();
       dialog.widthInput.focus();
       return false;
     }
@@ -509,7 +469,7 @@ function ValidateData()
     height = ValidateNumberString(height, 1, maxLimitHeight);
     if (height == "") {
       if ( !SeeMore )
-        onMoreFewer();
+        onMoreFewerImage();
       dialog.heightInput.focus();
       return false;
     }

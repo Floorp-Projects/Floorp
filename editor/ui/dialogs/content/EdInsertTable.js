@@ -153,13 +153,13 @@ function onOK()
 
       // Create necessary rows and cells for the table
       dump("Rows = "+rows+"  Columns = "+columns+"\n");
-      for (i = 0; i < rows; i++)
+      for (var i = 0; i < rows; i++)
       {
         var newRow = editorShell.CreateElementWithDefaults("tr");
         if (newRow)
         {
           tableBody.appendChild(newRow);
-          for (j = 0; j < columns; j++)
+          for (var j = 0; j < columns; j++)
           {
             newCell = editorShell.CreateElementWithDefaults("td");
             if (newCell)

@@ -33,7 +33,7 @@ toolbox#EditorToolbox {
   min-width: 1px;
 }
 
-toolbar#FormatToolbar, toolbar#TitleToolbar {
+toolbar#FormatToolbar {
   border-bottom: 1px solid #003366;
 }
 
@@ -167,11 +167,6 @@ box#DisplayModeBar div.VerticalSeparator {
 	 margin: 1px 0px;
 }
 
-/* SHOULD BE IN GLOBAL.CSS */
-menuitem[hidden="true"] {
-  visibility: collapse;
-}
-
 spring.spacer3 {
       width:  3px;
       height: 3px;
@@ -294,7 +289,7 @@ titledbutton#InsertPopupButton {
 	list-style-image:url("chrome://editor/skin/images/object-popup.gif");
 }
 
-div.color-caption {
+text.color-caption {
   border: 1px inset white;
 }
 

@@ -30,11 +30,12 @@
 <!-- These strings are for use specifically in the editor's link dialog. -->
 <!ENTITY windowTitle.label "Link Properties">
 
-<!-- These are in the link source fieldset. -->
-<!ENTITY LinkText.label "Link text:">
+<!-- These are in the link source box. -->
+<!ENTITY LinkTitle.label "Link text:">
+<!ENTITY LinkImage.label "Link text:">
 
-<!-- These controls are in the Dimensions Fieldset of the advanced area -->
-<!ENTITY LinkURLFieldset.label "Link to">
+<!-- These controls are in the Dimensions box of the advanced area -->
+<!ENTITY LinkURLBox.label "Link to:">
 <!ENTITY LinkURLEditField.label "Enter a web page location or local file:">
 <!ENTITY RemoveLinkButton.label "Remove Link">
 <!ENTITY NamedAnchorMsg.label "or select a Named Anchor:">

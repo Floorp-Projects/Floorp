@@ -20,10 +20,14 @@
  * Contributor(s): 
  */
 
-var tabPanel;
-var currentTab;
-var colorPage;
-var colorIndex = 0;
+var MoreSection;
+var title = "";
+var author = "";
+var description = "";
+var authorElement;
+var descriptionElement;
+var insertNewAuthor = false;
+var insertNewDescription = false;
 
 //Cancel() is in EdDialogCommon.js
 // dialog initialization code
@@ -32,104 +36,172 @@ function Startup()
   if (!InitEditorShell())
     return;
 
-  colorPage = new Object;
-  if (!colorPage)
+  dialog = new Object;
+  if (!dialog)
   {
-    dump("Failed to create colorPage object!!!\n");
+    dump("Failed to create dialog object!!!\n");
     window.close();
   }
-
-  colorPage.ColorPreview = document.getElementById("ColorPreview");
-  colorPage.NormalText = document.getElementById("NormalText");
-  colorPage.LinkText = document.getElementById("LinkText");
-  colorPage.ActiveLinkText = document.getElementById("ActiveLinkText");
-  colorPage.FollowedLinkText = document.getElementById("FollowedLinkText");
-
-//  colorPage. = documentgetElementById("");
-
-  tabPanel = document.getElementById("tabPanel");
-
-  // Set the starting Tab:
-  var tabName = window.arguments[1];
-  currentTab = document.getElementById(tabName);
-  if (!currentTab)
-    currentTab = document.getElementById("GeneralTab");
-
-  if (!tabPanel || !currentTab)
-  {
-    dump("Not all dialog controls were found!!!\n");
-    window.close;
-  }
-
-  // Trigger setting of style for the selected tab widget
-  currentTab.setAttribute("selected", "true");
-  // Activate the corresponding panel
-  var index = 0;
-  switch(tabName)
-  {
-    case "ColorTab":
-      index = 1;
-      break;
-    case "MetaTab":
-      index = 2;
-      break;
-  }
-  tabPanel.setAttribute("index",index);
+  dialog.PageLocation     = document.getElementById("PageLocation");
+  dialog.PageModDate      = document.getElementById("PageModDate");
+  dialog.TitleInput       = document.getElementById("TitleInput");
+  dialog.AuthorInput      = document.getElementById("AuthorInput");
+  dialog.DescriptionInput = document.getElementById("DescriptionInput");
+  dialog.MoreSection      = document.getElementById("MoreSection");
+  dialog.MoreFewerButton  = document.getElementById("MoreFewerButton");
 
   doSetOKCancel(onOK, null);
+  
+  // Default string for new page is set from DTD string in XUL,
+  //   so set only if not new doc URL
+  var location = editorShell.editorDocument.location;
+  if (location != "about:blank")
+    dialog.PageLocation.setAttribute("value", editorShell.editorDocument.location);
 
+  authorElement = GetMetaElement("author");
+  if (!authorElement)
+  {
+    authorElement = CreateMetaElement("author");
+    if (!authorElement)
+      window.close();
+
+    insertNewAuthor = true;
+  }
+
+  descriptionElement = GetMetaElement("description");
+  if (!descriptionElement)
+  {
+    descriptionElement = CreateMetaElement("description");
+    if (!descriptionElement)
+      window.close();
+
+    insertNewDescription = true;
+  }
+
+  InitMoreFewer();
   InitDialog();
 
-  //.focus();
+  dialog.TitleInput.focus();
 }
 
 function InitDialog()
 {
+  dialog.TitleInput.value = editorShell.GetDocumentTitle();
+  dialog.AuthorInput.value = authorElement.getAttribute("content");
+  dialog.DescriptionInput.value = descriptionElement.getAttribute("content");
 }
 
-function GetColor(ColorPickerID, ColorWellID)
+
+function GetMetaElement(name)
 {
-  var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
-dump("GetColor, color="+color+"\n");
-  if (!color)
+  if (name)
   {
-    // No color was clicked on,
-    //  so user clicked on "Don't Specify Color" button
-    color = "inherit";
-    dump("Don't specify color\n");
+    name = name.toLowerCase();
+    if (name != "")
+    {
+      var metaNodes = editorShell.editorDocument.getElementsByTagName("meta");
+      if (metaNodes && metaNodes.length > 0)
+      {
+        for (var i = 0; i < metaNodes.length; i++)
+        {
+          var metaNode = metaNodes.item(i);
+          if (metaNode && metaNode.getAttribute("name") == name)
+            return metaNode;
+        }
+      }
+    }
   }
-  var colorString = "color:"+color;
-  switch( ColorPickerID )
+  return null;
+}
+
+function CreateMetaElement(name)
+{
+  metaElement = editorShell.CreateElementWithDefaults("meta");
+  if (metaElement)
+    metaElement.setAttribute("name", name);
+  else
+    dump("Failed to create metaElement!\n");
+  
+  return metaElement;
+}
+
+function CreateHTTPEquivElement(name)
+{
+  metaElement = editorShell.CreateElementWithDefaults("meta");
+  if (metaElement)
+    metaElement.setAttribute("http-equiv", name);
+  else
+    dump("Failed to create metaElement for http-equiv!\n");
+  
+  return metaElement;
+}
+
+// Change "content" attribute on a META element,
+//   or delete entire element it if content is empty
+// This uses undoable editor transactions 
+function SetMetaElementContent(metaElement, content, insertNew)
+{
+  if (metaElement)
   {
-    case "textCP":
-      colorPage.textColor = color;
-      colorPage.NormalText.setAttribute("style",colorString);
-      break;
-    case "linkCP":
-      colorPage.linkColor = color;
-      colorPage.LinkText.setAttribute("style",colorString);
-      break;
-    case "followedCP":
-      colorPage.followedLinkColor = color;
-      colorPage.FollowedLinkText.setAttribute("style",colorString);
-      break;
-    case "activeCP":
-      colorPage.activeLinkColor = color;
-      colorPage.ActiveLinkText.setAttribute("style",colorString);
-      break;
-    case "backgroundCP":
-      colorPage.backgroundColor = color;
-      colorPage.ColorPreview.setAttribute("bgcolor",color);
-      break;
+    if(!content || content == "")
+    {
+      if (!insertNew)
+        editorShell.DeleteElement(metaElement);
+    }
+    else
+    {
+      if (insertNew)
+      {
+        // Don't need undo for set attribute, just for InsertElement
+        metaElement.setAttribute("content", content);
+        AppendHeadElement(metaElement);
+      }
+      else
+        editorShell.SetAttribute(metaElement, "content", content);
+    }
   }
 }
 
-function RemoveColor(ColorWellID)
+function GetHeadElement()
 {
+  var headList = editorShell.editorDocument.getElementsByTagName("head");
+  if (headList)
+    return headList.item(0);
+  
+  return null;
+}
+
+function AppendHeadElement(element)
+{
+  var head = GetHeadElement();
+  if (head)
+    head.appendChild(element);
+}
+
+function ValidateData()
+{
+  title = dialog.TitleInput.value.trimString();
+  author = dialog.AuthorInput.value.trimString();
+  description = dialog.DescriptionInput.value.trimString();
+  return true;
 }
 
 function onOK()
 {
+  if (ValidateData())
+  {
+    editorShell.BeginBatchChanges();
 
- return true; // do close the window
+    // Set title contents even if string is empty
+    //  because TITLE is a required HTML element
+    editorShell.SetDocumentTitle(title);
+    
+    SetMetaElementContent(authorElement, author, insertNewAuthor);
+    SetMetaElementContent(descriptionElement, description, insertNewDescription);
+
+    editorShell.EndBatchChanges();
+    return true; // do close the window
+  }
+  return false;
 }
+

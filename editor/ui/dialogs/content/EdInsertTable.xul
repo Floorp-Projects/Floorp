@@ -30,80 +30,58 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorInsertTable.dtd">
 
-<xul:window class="dialog" title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
+<window class="dialog" title="&windowTitle.label;"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
-  <script language="JavaScript" src="chrome://editor/content/EdInsertTable.js"/>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EdInsertTable.js"/>
+  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
 
-  <xul:broadcaster id="args" value=""/>
-  <xul:keyset id="keyset"/>
-
-    <!-- preferred width and height added to increase performance in boxes (otherwise buttons will jump!!) -evaughan -->
-	<div style="width: 50px; height: 50px">
-    <table>
-    <tr>
-      <td align="right">
-        <label for="rows"> &numRowsEditField.label; </label>
-      </td>
-      <td collspan="2">
-        <input type="text" id="rows" maxlength="4" size="4"
-            onkeyup="forceInteger('rows')" />
-      </td>
-    </tr>
-    <tr>
-      <td align="right">
-        <label for="columns"> &numColumnsEditField.label; </label>
-      </td>
-      <td collspan="2">
-        <input type="text" id="columns" maxlength="4" size="4"
-            onkeyup="forceInteger('columns')" />
-      </td>
-    </tr>
-    <tr>
-      <td align="right">
-        <label for="width" > &widthEditField.label; </label>
-      </td>
-      <td>
-        <input type="text" id="width" size="4" maxlength="4"
-            onkeyup="forceInteger('width')" />
-      </td>
-      <td>
-        <select id="pixelOrPercentSelect" size="1"/>
-        <!-- option elements are appended by JS -->
-      </td>
-    </tr>
-    <tr>
-      <td align="right">
-        <label for="border"> &borderEditField.label; </label>
-      </td>
-      <td>
-        <input type="text" id="borderInput" size="4" onkeyup="forceInteger('borderInput')"/>
-      </td>
-      <!-- THIS IS DUMB Can't figure out how to put "pixels" after the 
-           input box and make them center vertically. Used another TD instead -->
-      <td>
-        <div>&pixelsPopup.value;</div>
-      </td>
-    </tr>
-  </table>
-  </div>
-  <xul:spring class="spacer"/>
+  <broadcaster id="args" value=""/>
+  <keyset id="keyset"/>
+  
+  <box valign="middle">
+    <text class="right" align="right" value="&numRowsEditField.label;"/>
+    <html:input type="text" id="rows" maxlength="4" size="4"
+        onkeyup="forceInteger('rows')" />
+  </box>
+  <spring class="spacer"/>
+  <box valign="middle">
+    <text class="right" align="right" value="&numColumnsEditField.label;"/>
+    <html:input type="text" id="columns" maxlength="4" size="4"
+          onkeyup="forceInteger('columns')" />
+  </box>
+  <spring class="spacer"/>
+  <box valign="middle">
+    <text class="right" align="right" value="&widthEditField.label;"/>
+    <html:input type="text" id="width" size="4" maxlength="4" 
+          onkeyup="forceInteger('width')" />
+    <spring class="spacer"/>
+    <html:select id="pixelOrPercentSelect" size="1"/>
+    <!-- option elements are appended by JS -->
+  </box>
+  <spring class="spacer"/>
+  <box valign="middle">
+    <text class="right" align="right" value="&borderEditField.label;"/>
+    <html:input type="text" id="borderInput" size="4" maxlength="4"
+            onkeyup="forceInteger('borderInput')" />
+    <spring class="spacer"/>
+    <text align="left" value="&pixelsPopup.value;"/>  
+  </box>
+  <spring class="spacer"/>
   <!-- from EdDialogOverlay -->
-  <xul:box id="AdvancedEdit"/>
+  <box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
-	<xul:box id="okCancelButtons"/> 
+	<box id="okCancelButtons"/> 
 
-<xul:popup id="PixelOrPercentMenu">
-  <xul:menu>
-    <xul:menuitem value="&pixelsPopup.value;" onclick="SetPixelOrPercentByID('pixelOrPercentButton', '')"/>
-    <xul:menuitem value="&percentPopup.value;" onclick="SetPixelOrPercentByID('pixelOrPercentButton', '%')"/>
-  </xul:menu>
-</xul:popup>
-
-</xul:window>
+<popup id="PixelOrPercentMenu">
+  <menu>
+    <menuitem value="&pixelsPopup.value;" onclick="SetPixelOrPercentByID('pixelOrPercentButton', '')"/>
+    <menuitem value="&percentPopup.value;" onclick="SetPixelOrPercentByID('pixelOrPercentButton', '%')"/>
+  </menu>
+</popup>
+</window>

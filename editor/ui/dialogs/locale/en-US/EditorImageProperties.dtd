@@ -28,13 +28,13 @@
 <!ENTITY pixelsPopup.value "pixels">
 <!ENTITY percentPopup.value "percent">
 
-<!-- These are in the location fieldset. -->
-<!ENTITY locationFieldset.label "Image Information">
+<!-- These are in the location box. -->
+<!ENTITY locationBox.label "Image Information">
 <!ENTITY locationEditField.label "Image URL">
 <!ENTITY altTextEditField.label "Alternative Text">
 
-<!-- These controls are in the Dimensions Fieldset of the expanded area -->
-<!ENTITY dimensionsFieldset.label "Dimensions">
+<!-- These controls are in the Dimensions box of the expanded area -->
+<!ENTITY dimensionsBox.label "Dimensions">
 <!ENTITY originalSizeRadio.label "Original Size">
 <!ENTITY customSizeRadio.label "Custom Size">
 <!ENTITY heightEditField.label "Height">
@@ -49,8 +49,8 @@
 <!ENTITY wrapRightPopup.value "wrap to the right">
 <!ENTITY wrapLeftPopup.value "wrap to the left">
 
-<!-- These controls are in the Spacing Fieldset of the expanded area -->
-<!ENTITY spacingFieldset.label "Spacing">
+<!-- These controls are in the Spacing Box of the expanded area -->
+<!ENTITY spacingBox.label "Spacing">
 <!ENTITY leftRightEditField.label "Left and Right">
 <!ENTITY topBottomEditField.label "Top and Bottom">
 <!ENTITY borderEditField.label "Solid Border">

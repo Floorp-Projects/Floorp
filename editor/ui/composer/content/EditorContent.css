@@ -28,24 +28,27 @@
 */
 
 a[name] {
+  margin-left: 2px;
   /* TEMPORARY TO COMPENSATE FOR BUG */
-  padding-left: 16px; 
+  padding-left: 13px; 
   background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
-  background-position: center center;
+  background-position: center left;
 }
 
 div {
+  margin-left: 2px;
   /* TEMPORARY TO COMPENSATE FOR BUG */
-  padding-left: 16px; 
+  padding-left: 13px; 
   background: url(chrome://editor/skin/images/div.gif) no-repeat; 
-/*  background-position: center center; */
+  background-position: center left;
 }
 
 span {
+  margin-left: 2px;
   /* TEMPORARY TO COMPENSATE FOR BUG */
-  padding-left: 16px; 
+  padding-left: 13px; 
   background: url(chrome://editor/skin/images/span.gif) no-repeat; 
-/*  background-position: center center; */
+  background-position: center left;
 }
 
 table {
