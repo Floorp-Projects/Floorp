@@ -85,7 +85,7 @@ function Startup()
   gName.select();
   gName.focus();
   onFieldInput();
-  setTimeout(fillSelectFolderMenupopup, 100);
+  setTimeout(fillSelectFolderMenupopup, 0);
   gIndentation = Array(16);
   gIndentation[0] = "";
   for (var i=1; i<16; ++i)
