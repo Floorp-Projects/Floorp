@@ -43,6 +43,7 @@
 #include "nsCapiCIID.h"
 #include "nspr.h"
 #include "prcvar.h"
+#include "nsXPFCToolkit.h"
 #include "nsX400Parser.h"
 
 #include "capi.h"
@@ -777,7 +778,7 @@ nsresult nsCalendarShell::ReceiveCommand(nsString& aCommand, nsString& aReply)
 
   nsString name("CommandCanvas");
 
-  mDocumentContainer->GetDocumentWidget()->GetRootCanvas(&root);
+  gXPFCToolkit->GetRootCanvas(&root);
 
   canvas = root->CanvasFromName(name);
 

@@ -74,7 +74,7 @@ nsCalendarContainer::nsCalendarContainer()
   mMenuManager = nsnull;
   mCalendarWidget = nsnull;
   mCalendarShell = nsnull;
-  mRootUI = nsnull;
+  mRootCanvas = nsnull;
   mToolkit = nsnull;
   mToolbarManager = nsnull;
   mViewManager = nsnull;
@@ -89,7 +89,7 @@ nsCalendarContainer::~nsCalendarContainer()
   NS_IF_RELEASE(mViewManager);
   NS_IF_RELEASE(mMenuManager);
   NS_IF_RELEASE(mCalendarWidget);
-  NS_IF_RELEASE(mRootUI);
+  NS_IF_RELEASE(mRootCanvas);
   NS_IF_RELEASE(mToolkit);
   NS_IF_RELEASE(mToolbarManager);
 }
@@ -157,7 +157,7 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
    * Create the Root UI
    */
 
-  if (mRootUI == nsnull)
+  if (mRootCanvas == nsnull)
   {
     /*
      * Create a basic canvas with ybox. When a toolbar gets added to
@@ -172,20 +172,22 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
     res = nsRepository::CreateInstance(kCXPFCCanvasCID, 
                                        nsnull, 
                                        kCXPFCCanvasCID, 
-                                       (void **)&mRootUI);
+                                       (void **)&mRootCanvas);
 
     if (NS_OK == res)
     {
 
-      mRootUI->Init();
+      mRootCanvas->Init();
     }
 
-    mRootUI->Init(aParent, aBounds,(((nsCalendarShell *)aCalendarShell)->mShellInstance->GetShellEventCallback()));    
+    mRootCanvas->Init(aParent, aBounds,(((nsCalendarShell *)aCalendarShell)->mShellInstance->GetShellEventCallback()));    
 
-    widget_parent = mRootUI->GetWidget();
+    widget_parent = mRootCanvas->GetWidget();
 
-    mRootUI->SetVisibility(PR_FALSE);
-    ((nsBoxLayout *)(mRootUI->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_vertical);
+    mRootCanvas->SetVisibility(PR_FALSE);
+    ((nsBoxLayout *)(mRootCanvas->GetLayout()))->SetLayoutAlignment(eLayoutAlignment_vertical);
+    gXPFCToolkit->GetCanvasManager()->SetRootCanvas(mRootCanvas);
+
 
 #if 0
     nsIView * view = nsnull ;
@@ -213,7 +215,7 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
 
     //view->GetWidget(widget_parent);
 
-    gXPFCToolkit->GetCanvasManager()->Register(mRootUI,view);
+    gXPFCToolkit->GetCanvasManager()->Register(mRootCanvas,view);
 #endif
   }
 
@@ -238,15 +240,7 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
 
   res = mCalendarWidget->Init(widget_parent, aBounds, aCalendarShell);
 
-  nsIXPFCCanvas * root ;
-
-  mCalendarWidget->GetRootCanvas(&root);
-
-  mRootUI->AddChildCanvas(root);
-
-  mRootUI->Layout();
-
-  NS_RELEASE(root);
+  mRootCanvas->Layout();  
 
   return (res);
 }
@@ -303,7 +297,7 @@ nsresult nsCalendarContainer::AddToolbar(nsIXPFCToolbar * aToolbar)
 
   if (NS_OK == res)
   {
-    mRootUI->AddChildCanvas(canvas,0);
+    mRootCanvas->AddChildCanvas(canvas,0);
 
   /*
    * Let's add a native widget here.  This code should be in XPFC
@@ -376,7 +370,7 @@ nsresult nsCalendarContainer::UpdateToolbars()
   if (w == nsnull)
     return NS_OK;
 
-  mRootUI->Layout();
+  mRootCanvas->Layout();
   w->Invalidate(PR_FALSE);
 
   return NS_OK;  
@@ -390,7 +384,7 @@ nsresult nsCalendarContainer::ShowDialog(nsIXPFCDialog * aDialog)
 
   if (NS_OK == res)
   {
-    //mRootUI->AddChildCanvas(canvas,0);
+    //mRootCanvas->AddChildCanvas(canvas,0);
 
   /*
    * Let's add a native widget here.  This code should be in XPFC
@@ -402,7 +396,7 @@ nsresult nsCalendarContainer::ShowDialog(nsIXPFCDialog * aDialog)
      */
     static NS_DEFINE_IID(kCWidgetCID, NS_WINDOW_CID);
 
-    nsIWidget * parent = mRootUI->GetWidget();
+    nsIWidget * parent = mRootCanvas->GetWidget();
 
     res = canvas->LoadWidget(kCWidgetCID);
 
@@ -556,9 +550,9 @@ nsEventStatus nsCalendarContainer::HandleEvent(nsGUIEvent *aEvent)
   }
 
   if (aEvent->message == NS_SIZE)
-    mRootUI->SetBounds(*(((nsSizeEvent*)aEvent)->windowSize));
+    mRootCanvas->SetBounds(*(((nsSizeEvent*)aEvent)->windowSize));
     
-  return (mRootUI->HandleEvent(aEvent));
+  return (mRootCanvas->HandleEvent(aEvent));
 }
 
 NS_CALENDAR nsresult NS_NewCalendarContainer(nsICalendarContainer** aInstancePtrResult)

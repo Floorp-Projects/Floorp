@@ -111,7 +111,6 @@ NS_IMPL_RELEASE(nsCalendarWidget)
 nsCalendarWidget::~nsCalendarWidget()
 {
   // Release windows and views
-  NS_IF_RELEASE(mRootCanvas);
   NS_IF_RELEASE(mWindow);
   ((nsIApplicationShell *)mCalendarShell)->Release();
 }
@@ -135,6 +134,7 @@ nsresult nsCalendarWidget::Init(nsIWidget * aParent,
   nsresult res ;
 
   mCalendarShell = aCalendarShell;
+  nsIXPFCCanvas * root;
 
   NS_ADDREF(((nsIApplicationShell *)mCalendarShell));
 
@@ -150,14 +150,23 @@ nsresult nsCalendarWidget::Init(nsIWidget * aParent,
   res = nsRepository::CreateInstance(kCXPFCCanvasCID, 
                                      nsnull, 
                                      kCXPFCCanvasCID, 
-                                     (void **)&mRootCanvas);
+                                     (void **)&root);
 
   if (NS_OK != res)
     return res ;
 
-  gXPFCToolkit->GetCanvasManager()->SetRootCanvas(mRootCanvas);
+  //gXPFCToolkit->GetCanvasManager()->SetRootCanvas(root);
+  root->Init();
 
-  mRootCanvas->Init(aParent, aBounds,(((nsCalendarShell *)mCalendarShell)->mShellInstance->GetShellEventCallback()));
+  //root->Init(aParent, aBounds,(((nsCalendarShell *)mCalendarShell)->mShellInstance->GetShellEventCallback()));
+
+  nsIXPFCCanvas * root_canvas ;
+
+  gXPFCToolkit->GetRootCanvas(&root_canvas);
+
+  root_canvas->AddChildCanvas(root);
+
+  NS_RELEASE(root_canvas);
 
   return res ;
 }
@@ -165,9 +174,16 @@ nsresult nsCalendarWidget::Init(nsIWidget * aParent,
 nsRect nsCalendarWidget::GetBounds()
 {
   nsRect zr(0, 0, 0, 0);
-  if (nsnull != mRootCanvas) {
-    mRootCanvas->GetBounds(zr);
+
+  nsIXPFCCanvas * root = nsnull ;
+
+  gXPFCToolkit->GetRootCanvas(&root);
+
+  if (nsnull != root) {
+    root->GetBounds(zr);
+    NS_RELEASE(root);
   }
+
   return zr;
 }
 
@@ -222,7 +238,15 @@ nsresult nsCalendarWidget::LoadURL(const nsString& aURLSpec, nsIStreamObserver* 
 
     iid_dtd  = (nsIID *) &kCCalXMLDTD;
     iid_sink = (nsIID *) &kCCalXMLContentSinkCID;
-    mRootCanvas->DeleteChildren();
+
+    nsIXPFCCanvas * root = nsnull ;
+  
+    gXPFCToolkit->GetRootCanvas(&root);
+
+    root->DeleteChildren();
+
+    NS_RELEASE(root);
+
   }
 
   res = stream_manager->LoadURL(((nsCalendarShell*)mCalendarShell)->mDocumentContainer,
@@ -257,12 +281,14 @@ nsIWidget* nsCalendarWidget::GetWWWindow()
 
 nsEventStatus nsCalendarWidget::HandleEvent(nsGUIEvent *aEvent)
 {  
-  return (mRootCanvas->HandleEvent(aEvent));
-}
+  nsIXPFCCanvas * root = nsnull ;
 
-nsresult nsCalendarWidget::GetRootCanvas(nsIXPFCCanvas ** aCanvas)
-{  
+  gXPFCToolkit->GetRootCanvas(&root);
 
-  return (mRootCanvas->QueryInterface(kIXPFCCanvasIID, (void **)aCanvas));
+  nsEventStatus st = root->HandleEvent(aEvent);
+
+  NS_RELEASE(root);
+
+  return (st);
 }
 

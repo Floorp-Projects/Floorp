@@ -64,8 +64,6 @@ public:
                      nsIStreamObserver* aListener,
                      nsIPostData* aPostData = 0) = 0;
 
-  NS_IMETHOD GetRootCanvas(nsIXPFCCanvas ** aCanvas) = 0;
-
 };
 
 

@@ -89,7 +89,7 @@ private:
   nsIMenuManager * mMenuManager;
   nsIToolbarManager * mToolbarManager;
   nsICalendarWidget * mCalendarWidget;
-  nsIXPFCCanvas * mRootUI;
+  nsIXPFCCanvas * mRootCanvas;
   nsICalToolkit * mToolkit;
   nsIViewManager* mViewManager;
 

@@ -74,11 +74,8 @@ public:
 
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent);
 
-  NS_IMETHOD GetRootCanvas(nsIXPFCCanvas ** aCanvas) ;
-
 private:
   nsIWidget * mWindow;
-  nsIXPFCCanvas * mRootCanvas ;
   nsIStreamListener * mStreamListener;
 
 public:
