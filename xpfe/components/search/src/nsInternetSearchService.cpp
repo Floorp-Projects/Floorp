@@ -710,7 +710,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 	InternetSearchDataSource *search = NS_STATIC_CAST(InternetSearchDataSource *, aClosure);
 	if (!search)	return;
 
-	if (search->busySchedule == PR_FALSE)
+  if (!search->busySchedule)
 	{
 		nsresult			rv;
 		nsCOMPtr<nsIRDFResource>	searchURI;
@@ -748,7 +748,6 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 #ifdef	DEBUG_SEARCH_UPDATES
 			printf("    InternetSearchDataSource::FireTimer - Pinging '%s'\n", (char *)updateURL);
 #endif
-
 		}
 	}
 #ifdef	DEBUG_SEARCH_UPDATES
@@ -983,7 +982,7 @@ InternetSearchDataSource::DeferredInit()
 {
 	nsresult	rv = NS_OK;
 
-	if (gEngineListBuilt == PR_FALSE)
+  if (!gEngineListBuilt)
 	{
 		gEngineListBuilt = PR_TRUE;
 
@@ -1254,8 +1253,8 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 	if (mInner)
 	{	
 		// defer search engine discovery until needed; small startup time improvement
-		if (((source == kNC_SearchEngineRoot) || isSearchURI(source)) && (property == kNC_Child)
-			&& (gEngineListBuilt == PR_FALSE))
+    if ((source == kNC_SearchEngineRoot || isSearchURI(source)) &&
+        property == kNC_Child && !gEngineListBuilt)
 		{
 			DeferredInit();
 		}
@@ -1273,7 +1272,8 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 				// if we do, BeginSearchRequest() won't bother doing the search again,
 				// otherwise it will kickstart it
 				PRBool		hasResults = PR_FALSE;
-				if (NS_SUCCEEDED((*targets)->HasMoreElements(&hasResults)) && (hasResults == PR_TRUE))
+        if (NS_SUCCEEDED((*targets)->HasMoreElements(&hasResults)) &&
+            hasResults)
 				{
 					doNetworkRequest = PR_FALSE;
 				}
@@ -1414,7 +1414,7 @@ InternetSearchDataSource::GetCategoryList()
 		}
 	}
 
-	if (isDirtyFlag == PR_TRUE)
+  if (isDirtyFlag)
 	{
 		if (remoteCategoryDataSource)
 		{
@@ -1763,18 +1763,18 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 		if (NS_SUCCEEDED(rv = mLocalstore->GetTargets(kNC_FilterSearchURLsRoot, kNC_Child,
 			PR_TRUE, getter_AddRefs(cursor))))
 		{
-			if (NS_SUCCEEDED(cursor->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE))
+      if (NS_SUCCEEDED(cursor->HasMoreElements(&hasMore)) && hasMore)
 			{
 				haveFilters = PR_TRUE;
 			}
 		}
-		if (haveFilters == PR_FALSE)
+    if (!haveFilters)
 		{
 			// check kNC_FilterSearchSitesRoot
 			if (NS_SUCCEEDED(rv = mLocalstore->GetTargets(kNC_FilterSearchSitesRoot, kNC_Child,
 				PR_TRUE, getter_AddRefs(cursor))))
 			{
-				if (NS_SUCCEEDED(cursor->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE))
+        if (NS_SUCCEEDED(cursor->HasMoreElements(&hasMore)) && hasMore)
 				{
 					haveFilters = PR_TRUE;
 				}
@@ -1783,8 +1783,9 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 	}
 
 	PRBool				isSearchResult = PR_FALSE;
-	if (NS_SUCCEEDED(rv = mInner->HasAssertion(source, kRDF_type, kNC_SearchResult,
-		PR_TRUE, &isSearchResult)) && (isSearchResult == PR_TRUE))
+  rv = mInner->HasAssertion(source, kRDF_type, kNC_SearchResult, PR_TRUE,
+          &isSearchResult);
+  if (NS_SUCCEEDED(rv) && isSearchResult)
 	{
 		nsCOMPtr<nsIRDFDataSource>	datasource;
 		if (NS_SUCCEEDED(rv = gRDFService->GetDataSource("rdf:bookmarks", getter_AddRefs(datasource))))
@@ -1796,8 +1797,8 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 				if (uri)
 				{
 					PRBool	isBookmarkedFlag = PR_FALSE;
-					if (NS_SUCCEEDED(rv = bookmarks->IsBookmarked(uri, &isBookmarkedFlag))
-						&& (isBookmarkedFlag == PR_FALSE))
+          rv = bookmarks->IsBookmarked(uri, &isBookmarkedFlag);
+          if (NS_SUCCEEDED(rv) && !isBookmarkedFlag)
 					{
 						cmdArray->AppendElement(kNC_SearchCommand_AddToBookmarks);
 					}
@@ -1810,8 +1811,9 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 
 		// if this is a search result, and it isn't filtered, enable command to be able to filter it
 		PRBool				isURLFiltered = PR_FALSE;
-		if (NS_SUCCEEDED(rv = mInner->HasAssertion(kNC_FilterSearchURLsRoot, kNC_Child, source,
-			PR_TRUE, &isURLFiltered)) && (isURLFiltered != PR_TRUE))
+    rv = mInner->HasAssertion(kNC_FilterSearchURLsRoot, kNC_Child, source,
+                              PR_TRUE, &isURLFiltered);
+    if (NS_SUCCEEDED(rv) && !isURLFiltered)
 		{
 			cmdArray->AppendElement(kNC_SearchCommand_FilterResult);
 		}
@@ -1820,7 +1822,7 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 		//     enable command to filter it
 		cmdArray->AppendElement(kNC_SearchCommand_FilterSite);
 
-		if (haveFilters == PR_TRUE)
+    if (haveFilters)
 		{
 			cmdArray->AppendElement(kNC_BookmarkSeparator);
 			cmdArray->AppendElement(kNC_SearchCommand_ClearFilters);
@@ -1828,7 +1830,7 @@ InternetSearchDataSource::GetAllCmds(nsIRDFResource* source,
 	}
 	else if (isSearchURI(source) || (source == kNC_LastSearchRoot))
 	{
-		if (haveFilters == PR_TRUE)
+    if (haveFilters)
 		{
 			cmdArray->AppendElement(kNC_SearchCommand_ClearFilters);
 		}
@@ -2011,8 +2013,9 @@ InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
 
 	// add aResource into a list of nodes to filter out
 	PRBool	alreadyFiltered = PR_FALSE;
-	if (NS_SUCCEEDED(rv = mLocalstore->HasAssertion(kNC_FilterSearchURLsRoot, kNC_Child, urlLiteral,
-		PR_TRUE, &alreadyFiltered)) && (alreadyFiltered == PR_TRUE))
+  rv = mLocalstore->HasAssertion(kNC_FilterSearchURLsRoot, kNC_Child,
+         urlLiteral, PR_TRUE, &alreadyFiltered);
+  if (NS_SUCCEEDED(rv) && alreadyFiltered)
 	{
 		// already filtered, nothing to do
 		return(rv);
@@ -2033,10 +2036,11 @@ InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
 		getter_AddRefs(anonArcs))))
 	{
 		PRBool			hasMoreAnonArcs = PR_TRUE;
-		while (hasMoreAnonArcs == PR_TRUE)
+    while (hasMoreAnonArcs)
 		{
-			if (NS_FAILED(anonArcs->HasMoreElements(&hasMoreAnonArcs)) ||
-				(hasMoreAnonArcs == PR_FALSE))	break;
+      if (NS_FAILED(anonArcs->HasMoreElements(&hasMoreAnonArcs)) ||
+          !hasMoreAnonArcs)
+        break;
 			nsCOMPtr<nsISupports>	anonArc;
 			if (NS_FAILED(anonArcs->GetNext(getter_AddRefs(anonArc))))
 				break;
@@ -2044,8 +2048,9 @@ InternetSearchDataSource::filterResult(nsIRDFResource *aResource)
 			if (!anonChild)	continue;
 
 			PRBool	isSearchResult = PR_FALSE;
-			if (NS_FAILED(rv = mInner->HasAssertion(anonChild, kRDF_type, kNC_SearchResult,
-				PR_TRUE, &isSearchResult)) || (isSearchResult == PR_FALSE))
+      rv = mInner->HasAssertion(anonChild, kRDF_type, kNC_SearchResult,
+                                PR_TRUE, &isSearchResult);
+      if (NS_FAILED(rv) || !isSearchResult)
 				continue;
 
 			nsCOMPtr<nsIRDFResource>	anonParent;
@@ -2088,8 +2093,9 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 
 	// add aResource into a list of nodes to filter out
 	PRBool	alreadyFiltered = PR_FALSE;
-	if (NS_SUCCEEDED(rv = mLocalstore->HasAssertion(kNC_FilterSearchSitesRoot, kNC_Child, urlLiteral,
-		PR_TRUE, &alreadyFiltered)) && (alreadyFiltered == PR_TRUE))
+  rv = mLocalstore->HasAssertion(kNC_FilterSearchSitesRoot, kNC_Child,
+         urlLiteral, PR_TRUE, &alreadyFiltered);
+  if (NS_SUCCEEDED(rv) && alreadyFiltered)
 	{
 		// already filtered, nothing to do
 		return(rv);
@@ -2119,10 +2125,11 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 	if (!cursor)	return(NS_ERROR_UNEXPECTED);
 
 	hasMore = PR_TRUE;
-	while (hasMore == PR_TRUE)
+  while (hasMore)
 	{
 		if (NS_FAILED(rv = cursor->HasMoreElements(&hasMore)))	return(rv);
-		if (hasMore == PR_FALSE)	break;
+    if (!hasMore)
+      break;
 		
 		nsCOMPtr<nsISupports>	isupports;
 		if (NS_FAILED(rv = cursor->GetNext(getter_AddRefs(isupports))))
@@ -2150,10 +2157,10 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 			PR_TRUE, getter_AddRefs(cursor))))
 		{
 			hasMore = PR_TRUE;
-			while (hasMore == PR_TRUE)
+      while (hasMore)
 			{
-				if (NS_FAILED(cursor->HasMoreElements(&hasMore)) ||
-					(hasMore == PR_FALSE))	break;
+        if (NS_FAILED(cursor->HasMoreElements(&hasMore)) || !hasMore)
+          break;
 
 				nsCOMPtr<nsISupports>		arc;
 				if (NS_FAILED(cursor->GetNext(getter_AddRefs(arc))))
@@ -2202,9 +2209,9 @@ InternetSearchDataSource::clearFilters(void)
 		PR_TRUE, getter_AddRefs(arcs))))
 	{
 		hasMore = PR_TRUE;
-		while (hasMore == PR_TRUE)
+    while (hasMore)
 		{
-			if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+      if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || !hasMore)
 				break;
 			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
 				break;
@@ -2221,9 +2228,9 @@ InternetSearchDataSource::clearFilters(void)
 		PR_TRUE, getter_AddRefs(arcs))))
 	{
 		hasMore = PR_TRUE;
-		while (hasMore == PR_TRUE)
+    while (hasMore)
 		{
-			if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+      if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || !hasMore)
 				break;
 			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
 				break;
@@ -2263,7 +2270,7 @@ InternetSearchDataSource::isSearchResultFiltered(const nsString &hrefStr)
 		if (NS_SUCCEEDED(rv = mLocalstore->HasAssertion(kNC_FilterSearchURLsRoot,
 			kNC_Child, hrefLiteral, PR_TRUE, &filterStatus)))
 		{
-			if (filterStatus == PR_TRUE)
+      if (filterStatus)
 			{
 				return(filterStatus);
 			}
@@ -2537,7 +2544,8 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	*resultURL = nsnull;
 
 	// if we haven't already, load in the engines
-	if (gEngineListBuilt == PR_FALSE)	DeferredInit();
+  if (!gEngineListBuilt)
+    DeferredInit();
 
 	nsresult			rv;
 	nsCOMPtr<nsIRDFResource>	engine;
@@ -2682,7 +2690,8 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 	shortURL.Truncate(optionsOffset);
 
 	// if we haven't already, load in the engines
-	if (gEngineListBuilt == PR_FALSE)	DeferredInit();
+  if (!gEngineListBuilt)
+    DeferredInit();
 
 	// look in available engines to see if any of them appear
 	// to match this url (minus the GET options)
@@ -2698,9 +2707,9 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 		PR_TRUE, getter_AddRefs(arcs))))
 	{
 		PRBool			hasMore = PR_TRUE;
-		while (hasMore == PR_TRUE)
+    while (hasMore)
 		{
-			if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+      if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || !hasMore)
 				break;
 			nsCOMPtr<nsISupports>	arc;
 			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
@@ -2740,7 +2749,7 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 			}
 		}
 	}
-	if (foundEngine == PR_TRUE)
+  if (foundEngine)
 	{
 		nsAutoString	searchURL;
 		searchURL.AssignWithConversion(url);
@@ -2893,9 +2902,9 @@ InternetSearchDataSource::ClearResults(PRBool flushLastSearchRef)
 	if (NS_SUCCEEDED(rv = mInner->GetTargets(kNC_LastSearchRoot, kNC_Child, PR_TRUE, getter_AddRefs(arcs))))
 	{
 		PRBool			hasMore = PR_TRUE;
-		while (hasMore == PR_TRUE)
+    while (hasMore)
 		{
-			if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+      if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || !hasMore)
 				break;
 			nsCOMPtr<nsISupports>	arc;
 			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
@@ -2915,8 +2924,7 @@ InternetSearchDataSource::ClearResults(PRBool flushLastSearchRef)
 			if (NS_FAILED(mInner->ArcLabelsIn(child, getter_AddRefs(inArcs))) ||
 				(!inArcs))
 				continue;
-			if (NS_FAILED(inArcs->HasMoreElements(&hasInArcs)) ||
-				(hasInArcs == PR_TRUE))
+      if (NS_FAILED(inArcs->HasMoreElements(&hasInArcs)) || hasInArcs)
 				continue;
 
 			// no other references, so also unassert any outgoing arcs
@@ -2926,10 +2934,10 @@ InternetSearchDataSource::ClearResults(PRBool flushLastSearchRef)
 				(!outArcs))
 				continue;
 			PRBool	hasMoreOutArcs = PR_TRUE;
-			while (hasMoreOutArcs == PR_TRUE)
+      while (hasMoreOutArcs)
 			{
-				if (NS_FAILED(outArcs->HasMoreElements(&hasMoreOutArcs)) ||
-					(hasMoreOutArcs == PR_FALSE))
+        if (NS_FAILED(outArcs->HasMoreElements(&hasMoreOutArcs)) ||
+            !hasMoreOutArcs)
 					break;
 				nsCOMPtr<nsISupports>	outArc;
 				if (NS_FAILED(outArcs->GetNext(getter_AddRefs(outArc))))
@@ -2946,7 +2954,7 @@ InternetSearchDataSource::ClearResults(PRBool flushLastSearchRef)
 		}
 	}
 
-	if (flushLastSearchRef == PR_TRUE)
+  if (flushLastSearchRef)
 	{
 		// forget the last search query
 		nsCOMPtr<nsIRDFNode>	lastTarget;
@@ -2978,9 +2986,9 @@ InternetSearchDataSource::ClearResultSearchSites(void)
 		if (NS_SUCCEEDED(rv = mInner->GetTargets(kNC_SearchResultsSitesRoot, kNC_Child, PR_TRUE, getter_AddRefs(arcs))))
 		{
 			PRBool			hasMore = PR_TRUE;
-			while (hasMore == PR_TRUE)
+      while (hasMore)
 			{
-				if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+        if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || !hasMore)
 					break;
 				nsCOMPtr<nsISupports>	arc;
 				if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
@@ -3035,7 +3043,7 @@ InternetSearchDataSource::Stop()
 		if (NS_SUCCEEDED(rv = mLoadGroup->GetRequests(getter_AddRefs(requests))))
 		{
 			PRBool			more;
-			while (NS_SUCCEEDED(rv = requests->HasMoreElements(&more)) && (more == PR_TRUE))
+      while (NS_SUCCEEDED(rv = requests->HasMoreElements(&more)) && more)
 			{
 				nsCOMPtr<nsISupports>	isupports;
 				if (NS_FAILED(rv = requests->GetNext(getter_AddRefs(isupports))))
@@ -3054,9 +3062,9 @@ InternetSearchDataSource::Stop()
 		getter_AddRefs(arcs))))
 	{
 		PRBool			hasMore = PR_TRUE;
-		while (hasMore == PR_TRUE)
+    while (hasMore)
 		{
-			if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+      if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || !hasMore)
 				break;
 			nsCOMPtr<nsISupports>	arc;
 			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
@@ -3198,7 +3206,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 			mInner->Assert(kNC_SearchResultsSitesRoot, kNC_Child, engine, PR_TRUE);
 		}
 
-		if (doNetworkRequest == PR_TRUE)
+    if (doNetworkRequest)
 		{
 			DoSearch(source, engine, nsAutoString(), text);
 			requestInitiated = PR_TRUE;
@@ -3208,7 +3216,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 	delete engineArray;
 	engineArray = nsnull;
 
-	if (requestInitiated == PR_FALSE)
+  if (!requestInitiated)
 	{
 		Stop();
 	}
@@ -3426,8 +3434,9 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 
 	PRBool	updatePrivateFiles = PR_FALSE;
 
-	if (NS_SUCCEEDED(rv = mInner->HasAssertion(engine, kNC_SearchType, kNC_Engine, PR_TRUE, &updatePrivateFiles))
-		&& (updatePrivateFiles == PR_TRUE))
+  rv = mInner->HasAssertion(engine, kNC_SearchType, kNC_Engine, PR_TRUE,
+                            &updatePrivateFiles);
+  if (NS_SUCCEEDED(rv) && updatePrivateFiles)
 	{
 		// rjc says: so here is our strategy. The spec says that the "search"|"update"
 		// attribute MUST refer to a binhex-ed file (i.e. ends with ".src.hqx"). We don't
@@ -3460,7 +3469,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 
 			// now, either way, ensure that we have a ".src" file
 			updateStr.Right(extension, 4);
-			if (extension.EqualsIgnoreCase(".src") == PR_FALSE)
+      if (!extension.EqualsIgnoreCase(".src"))
 			{
 				// and if we don't, toss it
 				updateStr.Truncate();
@@ -3945,9 +3954,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			}
 			
 			nsCOMPtr<nsIRequest> request;
-			if (NS_SUCCEEDED(rv = channel->AsyncOpen(this, context)))
-			{
-			}
+      rv = channel->AsyncOpen(this, context);
 		}
 	}
 
@@ -4110,7 +4117,7 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 		}
 	}
 
-	if (isSystemSearchFile == PR_FALSE)
+  if (!isSystemSearchFile)
 	{
 		// mark our private search files, so that we can distinguish
 		// between ours and any that are included with the OS
@@ -4189,8 +4196,9 @@ InternetSearchDataSource::SaveEngineInfoIntoGraph(nsIFile *file, nsIFile *icon,
 
 	// Note: add the child relationship last
 	PRBool	hasChildFlag = PR_FALSE;
-	if (NS_SUCCEEDED(rv = mInner->HasAssertion(kNC_SearchEngineRoot, kNC_Child, searchRes,
-		PR_TRUE, &hasChildFlag)) && (hasChildFlag == PR_FALSE))
+  rv = mInner->HasAssertion(kNC_SearchEngineRoot, kNC_Child, searchRes,
+                            PR_TRUE, &hasChildFlag);
+  if (NS_SUCCEEDED(rv) && !hasChildFlag)
 	{
 		mInner->Assert(kNC_SearchEngineRoot, kNC_Child, searchRes, PR_TRUE);
 	}
@@ -4259,7 +4267,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 		}
 
 #ifdef	XP_MAC
-		if (checkMacFileType == PR_TRUE)
+    if (checkMacFileType)
 		{
             nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(dirEntry));
             if (!macFile)
@@ -4296,7 +4304,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 			iconSpec = gifIconFile;
 			foundIconFlag = PR_TRUE;
 		}
-		if (foundIconFlag == PR_FALSE)
+    if (!foundIconFlag)
 		{
 			uri.Left(temp, uri.Length()-4);
 			temp.Append(NS_LITERAL_STRING(".jpg"));
@@ -4307,7 +4315,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 				foundIconFlag = PR_TRUE;
 			}
 		}
-		if (foundIconFlag == PR_FALSE)
+    if (!foundIconFlag)
 		{
 			uri.Left(temp, uri.Length()-4);
 			temp.Append(NS_LITERAL_STRING(".jpeg"));
@@ -4318,7 +4326,7 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 				foundIconFlag = PR_TRUE;
 			}
 		}
-		if (foundIconFlag == PR_FALSE)
+    if (!foundIconFlag)
 		{
 			uri.Left(temp, uri.Length()-4);
 			temp.Append(NS_LITERAL_STRING(".png"));
@@ -4398,7 +4406,7 @@ InternetSearchDataSource::GetNumInterpretSections(const PRUnichar *dataUni, PRUi
 		if (line.IsEmpty())	continue;		// skip empty lines
 		if (line[0] == PRUnichar('#'))	continue;	// skip comments
 		line.Trim(" \t");
-		if (inSection == PR_FALSE)
+    if (!inSection)
 		{
 			PRInt32	sectionOffset = nsString_Find(section, line, PR_TRUE);
 			if (sectionOffset < 0)	continue;
@@ -4447,7 +4455,7 @@ InternetSearchDataSource::GetData(const PRUnichar *dataUni, const char *sectionT
 		if (line.IsEmpty())	continue;		// skip empty lines
 		if (line[0] == PRUnichar('#'))	continue;	// skip comments
 		line.Trim(" \t");
-		if (inSection == PR_FALSE)
+    if (!inSection)
 		{
 			PRInt32	sectionOffset = nsString_Find(section, line, PR_TRUE);
 			if (sectionOffset < 0)	continue;
@@ -4539,7 +4547,7 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 		if (line.IsEmpty())	continue;		// skip empty lines
 		if (line[0] == PRUnichar('#'))	continue;	// skip comments
 		line.Trim(" \t");
-		if (inSection == PR_FALSE)
+    if (!inSection)
 		{
 			if (line[0] != PRUnichar('<'))	continue;
 			line.Cut(0, 1);
@@ -4554,7 +4562,8 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &userVar,
 				line.SetLength(len-1);
 			}
 		}
-		if (inSection == PR_TRUE)	continue;
+    if (inSection)
+      continue;
 
 		// look for inputs
 		if (line.Find("input", PR_TRUE) == 0)
@@ -4918,7 +4927,8 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 			{
 				updateAtom(mLocalstore, theEngine, kWEB_LastPingModDate, newValue,
 					&tempDirty);
-				if (tempDirty == PR_TRUE)	updateSearchEngineFile = PR_TRUE;
+        if (tempDirty)
+          updateSearchEngineFile = PR_TRUE;
 			}
 		}
 		if (!contentLengthValue.IsEmpty())
@@ -4929,7 +4939,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 			{
 				updateAtom(mLocalstore, theEngine, kWEB_LastPingContentLen, newValue,
 					&tempDirty);
-				if (tempDirty == PR_TRUE)
+        if (tempDirty)
 				{
 					updateSearchEngineFile = PR_TRUE;
 				}
@@ -4965,7 +4975,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 		// mark now as the last time we stat'ted the search engine
 		validateEngineNow(theEngine);
 
-		if (updateSearchEngineFile == PR_TRUE)
+    if (updateSearchEngineFile)
 		{
 #ifdef	DEBUG_SEARCH_UPDATES
 			printf("    Search engine='%s' needs updating, so fetching it\n", engineURI);
@@ -5218,7 +5228,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 		nsAutoString		htmlResults(htmlPageDecriptor);
 		PRUint32        startIndex = 0L, stopIndex = htmlPageSize;
 
-		if (useAllHREFsFlag == PR_FALSE)
+    if (!useAllHREFsFlag)
 		{
 			GetData(dataUni, "interpret", interpretSectionNum, "resultListStart", resultListStartStr);
 			GetData(dataUni, "interpret", interpretSectionNum, "resultListEnd", resultListEndStr);
@@ -5290,7 +5300,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 			{
         startIndex = resultListStart + resultListStartStr.Length();
 			}
-			else if (useAllHREFsFlag == PR_FALSE)
+      else if (!useAllHREFsFlag)
 			{
 				// if we have multiple <INTERPRET> sections but can't find the startIndex
 				// of a result list block, just continue on with the the next block
@@ -5335,7 +5345,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 			if (resultItemStart < 0)	break;
 
 			PRInt32	resultItemEnd;
-			if (trimItemStart == PR_TRUE)
+      if (trimItemStart)
 			{
 				resultItemStart += resultItemStartStr.Length();
 				resultItemEnd = nsString_Find(resultItemEndStr, htmlResults, PR_TRUE, resultItemStart);
@@ -5349,7 +5359,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 			{
 				resultItemEnd = stopIndex;
 			}
-			else if ((trimItemEnd == PR_FALSE) && (resultItemEnd >= 0))
+      else if (!trimItemEnd && resultItemEnd >= 0)
 			{
 				resultItemEnd += resultItemEndStr.Length();
 			}
@@ -5429,7 +5439,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 				nsCRT::free(absURIStr);
 				absURIStr = nsnull;
 
-				if ((absURI) && (skipLocalFlag == PR_TRUE))
+        if (absURI && skipLocalFlag)
 				{
 					nsCAutoString absPath;
 					absURI->GetPath(absPath);
@@ -5440,7 +5450,8 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 						if (pathOptionsOffset >= 0)
 							absPathStr.Truncate(pathOptionsOffset);
 						PRBool	pathsMatchFlag = serverPathStr.Equals(absPathStr, nsCaseInsensitiveStringComparator());
-						if (pathsMatchFlag == PR_TRUE)	continue;
+            if (pathsMatchFlag)
+              continue;
 					}
 
 					if (!hostName.IsEmpty())
@@ -5450,14 +5461,15 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 						if (!absHost.IsEmpty())
 						{
 							PRBool	hostsMatchFlag = !nsCRT::strcasecmp(hostName.get(), absHost.get());
-							if (hostsMatchFlag == PR_TRUE)	continue;
+              if (hostsMatchFlag)
+                continue;
 						}
 					}
 				}
 			}
 
 			// if this result is to be filtered out, notice it now
-			if (isSearchResultFiltered(hrefStr) == PR_TRUE)
+      if (isSearchResultFiltered(hrefStr))
 				continue;
 
 			nsAutoString	site(hrefStr);
@@ -5922,7 +5934,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 			{
 				mInner->HasAssertion(mParent, kNC_Child, res, PR_TRUE, &parentHasChildFlag);
 			}
-			if (parentHasChildFlag == PR_FALSE)
+      if (!parentHasChildFlag)
 #endif
 			{
 				if (mParent)
@@ -5949,10 +5961,14 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 	// set hints so that the appropriate columns can be displayed
 	if (mParent)
 	{
-		if (hasPriceFlag == PR_TRUE)		SetHint(mParent, kNC_Price);
-		if (hasAvailabilityFlag == PR_TRUE)	SetHint(mParent, kNC_Availability);
-		if (hasRelevanceFlag == PR_TRUE)	SetHint(mParent, kNC_Relevance);
-		if (hasDateFlag == PR_TRUE)		SetHint(mParent, kNC_Date);
+    if (hasPriceFlag)
+      SetHint(mParent, kNC_Price);
+    if (hasAvailabilityFlag)
+      SetHint(mParent, kNC_Availability);
+    if (hasRelevanceFlag)
+      SetHint(mParent, kNC_Relevance);
+    if (hasDateFlag)
+      SetHint(mParent, kNC_Date);
 	}
 
 #ifdef	DEBUG
@@ -5981,8 +5997,9 @@ InternetSearchDataSource::SetHint(nsIRDFResource *mParent, nsIRDFResource *hintR
 
 	nsresult	rv;
 	PRBool		hasAssertionFlag = PR_FALSE;
-	if (NS_SUCCEEDED(rv = mInner->HasAssertion(mParent, hintRes, kTrueLiteral, PR_TRUE, &hasAssertionFlag))
-		&& (hasAssertionFlag == PR_FALSE))
+  rv = mInner->HasAssertion(mParent, hintRes, kTrueLiteral, PR_TRUE,
+                            &hasAssertionFlag);
+  if (NS_SUCCEEDED(rv) && !hasAssertionFlag)
 	{
 		rv = mInner->Assert(mParent, hintRes, kTrueLiteral, PR_TRUE);
 	}
@@ -5998,7 +6015,7 @@ InternetSearchDataSource::ConvertEntities(nsString &nameStr, PRBool removeHTMLFl
 	PRInt32	startOffset = 0, ampOffset, semiOffset, offset;
 
 	// do this before converting entities
-	if (removeHTMLFlag == PR_TRUE)
+  if (removeHTMLFlag)
 	{
 		// munge out anything inside of HTML "<" / ">" tags
 		while ((offset = nameStr.FindChar(PRUnichar('<'), 0)) >= 0)
@@ -6127,7 +6144,7 @@ InternetSearchDataSource::ConvertEntities(nsString &nameStr, PRBool removeHTMLFl
 		}
 	}
 
-	if (removeCRLFsFlag == PR_TRUE)
+  if (removeCRLFsFlag)
 	{
 		// cut out any CRs or LFs
 		while ((offset = nameStr.FindCharInSet("\n\r", 0)) >= 0)
@@ -6136,7 +6153,7 @@ InternetSearchDataSource::ConvertEntities(nsString &nameStr, PRBool removeHTMLFl
 		}
 	}
 
-	if (trimWhiteSpaceFlag == PR_TRUE)
+  if (trimWhiteSpaceFlag)
 	{
 		// trim name
 		nameStr.Trim(" \t");
