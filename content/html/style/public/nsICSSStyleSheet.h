@@ -47,6 +47,7 @@ class nsINameSpace;
 class nsICSSStyleRuleProcessor;
 class nsIMediaList;
 class nsICSSGroupRule;
+class nsICSSImportRule;
 
 // IID for the nsICSSStyleSheet interface {8f83b0f0-b21a-11d1-8031-006008159b5a}
 #define NS_ICSS_STYLE_SHEET_IID     \
@@ -79,6 +80,8 @@ public:
   NS_IMETHOD  ClearMedia(void) = 0;
   NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
 
+  NS_IMETHOD  SetOwnerRule(nsICSSImportRule* aOwnerRule) = 0;
+  
   // get head of namespace chain for sheet
   NS_IMETHOD  GetNameSpace(nsINameSpace*& aNameSpace) const = 0;
   // set default namespace for sheet (may be overridden by @namespace)

@@ -445,17 +445,23 @@ CSSImportRuleImpl::CSSImportRuleImpl(const CSSImportRuleImpl& aCopy)
   
   if (aCopy.mChildSheet) {
     aCopy.mChildSheet->Clone(*getter_AddRefs(mChildSheet));
+    if (mChildSheet) {
+      mChildSheet->SetOwnerRule(this);
+    }      
   }
 
   NS_NewMediaList(getter_AddRefs(mMedia));
   
   if (aCopy.mMedia && mMedia) {
-      mMedia->AppendElement(aCopy.mMedia);
+    mMedia->AppendElement(aCopy.mMedia);
   }
 }
 
 CSSImportRuleImpl::~CSSImportRuleImpl(void)
 {
+  if (mChildSheet) {
+    mChildSheet->SetOwnerRule(nsnull);
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(CSSImportRuleImpl, nsCSSRule);
@@ -594,6 +600,7 @@ CSSImportRuleImpl::SetSheet(nsICSSStyleSheet* aSheet)
   
   // set the new sheet
   mChildSheet = aSheet;
+  aSheet->SetOwnerRule(this);
 
   // set our medialist to be the same as the sheet's medialist
   nsCOMPtr<nsIDOMStyleSheet> sheet(do_QueryInterface(mChildSheet, &rv));
