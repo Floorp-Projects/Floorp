@@ -86,10 +86,6 @@ label {
   -moz-user-select: text !important;
 }
 
-:-moz-dropdown-list {
-  -moz-user-select: text !important;
-} 
-
 option {
   -moz-user-select: text !important;
 }
