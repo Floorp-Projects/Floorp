@@ -481,8 +481,14 @@ sub ListSomething {
         push(@allcols, $row[0]);
     }
 
+    my $hiddencols = "";
     if (defined @F::showcolumns) {
         @cols = @F::showcolumns;
+        foreach my $c (@cols) {
+            $hiddencols .= hidden(-name=>"showcolumns",
+                                 -default=>$c,
+                                 -override=>1);
+        }
     }
 
     if (0 == @cols) {
@@ -492,6 +498,14 @@ sub ListSomething {
     my $rtext = th();
     my @list = ();
     my @emaillist = ();
+    my $hiddenbits = "";
+    if (defined $F::matchtype) {
+        $hiddenbits .= hidden(-name=>"matchtype");
+    }
+    if (defined $F::match) {
+        $hiddenbits .= hidden(-name=>"match");
+    }
+
     foreach my $c (@cols) {
         if ($c eq $sortorder) {
             $rtext .= th({-valign=>"top"}, "sorted by<br>$c");
@@ -499,6 +513,8 @@ sub ListSomething {
             $rtext .= th({-valign=>"top"},
                          MyForm($listprocname) .
                          submit($c) .
+                         $hiddenbits .
+                         $hiddencols .
                          hidden(-name=>"sortorder",
                                 -default=>$c,
                                 -override=>1) .
@@ -565,6 +581,7 @@ sub ListSomething {
                          -default=>\@cols,
                          -linebreak=>'true');
     print hidden(-name=>"sortorder", -default=>$sortorder, -override=>1);
+    print $hiddenbits;
     print end_form();
     
 
