@@ -76,11 +76,13 @@ use File::Spec::Unix; # on all platforms, because the #include syntax is unix-ba
 
 sub include {
     my($stack, $filename) = @_;
+    my $directory = $stack->{'variables'}->{'DIRECTORY'};
     if ($filename ne '-') {
-        $filename = File::Spec->rel2abs($filename, $stack->{'variables'}->{'DIRECTORY'});
-        my($volume, $directory) = File::Spec->splitpath($filename);
-        local $stack->{'variables'}->{'DIRECTORY'} = File::Spec->catpath($volume, $directory, '');
+        $filename = File::Spec->rel2abs($filename, $directory);
+        my($volume, $path) = File::Spec->splitpath($filename);
+        $directory = File::Spec->catpath($volume, $path, '');
     }
+    local $stack->{'variables'}->{'DIRECTORY'} = $directory;
     local $stack->{'variables'}->{'FILE'} = $filename;
     local $stack->{'variables'}->{'LINE'} = 0;
     local *FILE;
