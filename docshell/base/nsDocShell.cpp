@@ -4054,10 +4054,14 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
           nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repost").GetUnicode(), 
           getter_Copies(messageStr));
           
-		  if (NS_SUCCEEDED(rv) && messageStr) {
+          if (NS_SUCCEEDED(rv) && messageStr) {
              prompter->Confirm(nsnull, messageStr, &repost);
-		     if (!repost)
-                postData = nsnull;
+			  /* If the user pressed cancel in the dialog, 
+               * return failure. Don't try to load the page with out 
+               * the post data. 
+               */
+              if (!repost)
+                return NS_ERROR_FAILURE;
 		  }
 	   }
     }

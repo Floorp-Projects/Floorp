@@ -507,7 +507,14 @@ nsSHistory::LoadEntry(PRInt32 aIndex, PRBool aReloadFlag, long aLoadType)
    loadInfo->SetLoadType(aLoadType);
    loadInfo->SetSHEntry(nextEntry);
    // Time to initiate a document load
-   return docShell->LoadURI(nexturi, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+   nsresult rv = docShell->LoadURI(nexturi, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+   /* If the loadURI call failed for some reason,
+    * reset mIndex to what it was. so that back/forward
+    * won't misbehave
+    */
+   if (!NS_SUCCEEDED(rv))
+      mIndex = oldIndex;
+   return rv;
 }
 
 
