@@ -31,22 +31,13 @@
   IBOutlet NSButton *checkboxNewTabBlank;
   IBOutlet NSButton *checkboxNewWindowBlank;
   
-  IBOutlet id radioOpenTabsForCommand;
-  IBOutlet id radioOpenForAE;
-  IBOutlet NSButton *checkboxLoadTabsInBackground;
-  
   IBOutlet NSTextField *textFieldHistoryDays;
-  
-  IBOutlet NSPopUpButton* mDownloadFolder;
-  IBOutlet NSButton* mEnableHelperApps;
 }
 
-- (IBAction)checkboxClicked:(id)sender;
 - (IBAction)checkboxUseSystemHomePageClicked:(id)sender;
 - (IBAction)checkboxStartPageClicked:(id)sender;
 - (IBAction)historyDaysModified:(id)sender;
 - (IBAction)clearGlobalHistory:(id)sender;
-- (IBAction)chooseDownloadFolder:(id)sender;
 - (IBAction)clearDiskCache:(id)aSender;
 
 @end
