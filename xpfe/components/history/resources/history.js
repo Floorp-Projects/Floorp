@@ -392,18 +392,22 @@ function historyAddBookmarks()
     var currentIndex = gHistoryTree.currentIndex;
     url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
     title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
-    BookmarksUtils.addBookmark(url, title, undefined, true);
+    BookmarksUtils.addBookmark(url, title, null, true);
   }
   else if (count > 1) {
     var min = new Object(); 
     var max = new Object();
     var rangeCount = gHistoryTree.treeBoxObject.view.selection.getRangeCount();
+    if (!BMSVC) {
+      initServices();
+      initBMService();
+    }
     for (var i = 0; i < rangeCount; ++i) {
       gHistoryTree.treeBoxObject.view.selection.getRangeAt(i, min, max);
       for (var k = max.value; k >= min.value; --k) {
         url = gHistoryTree.treeBoxObject.view.getCellText(k, "URL");
         title = gHistoryTree.treeBoxObject.view.getCellText(k, "Name");
-        BookmarksUtils.addBookmark(url, title, undefined, false);
+        BookmarksUtils.addBookmark(url, title, null, false);
       }
     }
   }
@@ -453,6 +457,7 @@ function updateItems()
       sep1.hidden = false;
       sep2.hidden = false;
       bookmarkItem.setAttribute("label", document.getElementById('multipleBookmarks').getAttribute("label"));
+      bookmarkItem.setAttribute("accesskey", document.getElementById('multipleBookmarks').getAttribute("accesskey"));
       openItem.removeAttribute("default");
       openItemInNewWindow.setAttribute("default", "true");
       openItemInNewWindow.hidden = false;
@@ -462,6 +467,7 @@ function updateItems()
   else {
     openItemInNewWindow.hidden = false;
     bookmarkItem.setAttribute("label", document.getElementById('oneBookmark').getAttribute("label"));
+    bookmarkItem.setAttribute("accesskey", document.getElementById('oneBookmark').getAttribute("accesskey"));
     sep2.hidden = false;
     var currentIndex = gHistoryTree.currentIndex;
     if (isContainer(gHistoryTree, currentIndex)) {   // one folder selected

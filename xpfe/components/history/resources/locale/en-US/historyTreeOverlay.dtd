@@ -12,3 +12,5 @@
 <!ENTITY tree.header.hostname.akey           "H">
 <!ENTITY tree.header.visitcount.label        "Visit Count">
 <!ENTITY tree.header.visitcount.akey         "V">
+<!ENTITY bookmarkLinksCmd.label              "Bookmark These Links">
+<!ENTITY bookmarkLinksCmd.akey               "L">
