@@ -117,7 +117,8 @@ nsTextTransformer::Init(/*nsTextRun& aTextRun, XXX*/
   // Get the frames style and choose a transform proc
   const nsStyleText* styleText;
   aFrame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&) styleText);
-  mWhiteSpace = styleText->mWhiteSpace;
+  mPreformatted = (NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace) ||
+    (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace);
   mTextTransform = styleText->mTextTransform;
 
   if(NS_STYLE_TEXT_TRANSFORM_NONE != mTextTransform)
@@ -192,7 +193,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
   PRBool isWhitespace = XP_IS_SPACE(firstChar);
   offset++;
   if (isWhitespace) {
-    if (NS_STYLE_WHITESPACE_PRE == mWhiteSpace) {
+    if (mPreformatted) {
       if ('\t' == firstChar) {
         // Leave tab alone so that caller can expand it
       }
@@ -219,7 +220,7 @@ nsTextTransformer::GetNextWord(PRBool aInWord,
     offset = 0;
   }
   mCurrentFragOffset = offset;
-  if (isWhitespace && (NS_STYLE_WHITESPACE_PRE == mWhiteSpace)) {
+  if (isWhitespace && mPreformatted) {
     goto really_done;
   }
 
@@ -425,7 +426,7 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
   PRBool isWhitespace = XP_IS_SPACE(firstChar);
   offset--;
   if (isWhitespace) {
-    if (NS_STYLE_WHITESPACE_PRE == mWhiteSpace) {
+    if (mPreformatted) {
       if ('\t' == firstChar) {
         // Leave tab alone so that caller can expand it
       }
@@ -454,7 +455,7 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
     mCurrentFrag = --frag;
     offset = mCurrentFrag->GetLength()-1;
   }
-  if (isWhitespace && (NS_STYLE_WHITESPACE_PRE == mWhiteSpace)) {
+  if (isWhitespace && mPreformatted) {
     goto really_done;
   }
 

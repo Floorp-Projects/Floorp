@@ -95,7 +95,7 @@ protected:
   PRInt32 mCurrentFragOffset;
 
   PRUint8 mTextTransform;
-  PRUint8 mWhiteSpace;
+  PRUint8 mPreformatted;
 
   nsILineBreaker* mLineBreaker;
 };
