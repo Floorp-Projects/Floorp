@@ -10,10 +10,10 @@ class AssignmentNode extends BinaryNode {
         left.evalLHS(theEnv);
         right.eval(theEnv);
         
-        double dValue = theEnv.theStack.pop().d;
-        String id = theEnv.theStack.pop().id;
+        JSValue rValue = theEnv.theStack.pop();
+        JSValue lValue = theEnv.theStack.pop();
         
-        theEnv.theGlobals.put(id, new Double(dValue));
+        theEnv.theGlobals.put(lValue.toString(), rValue);
         
         
     }

@@ -1,21 +1,33 @@
 class JSBoolean extends JSValue {
- 
-    JSBoolean(String s)
+    
+    static JSBoolean JSTrue = new JSBoolean(true);
+    static JSBoolean JSFalse = new JSBoolean(false);
+
+    private JSBoolean(boolean p)
     {
-        if (s.equals("true"))        
-            b = true;
-        else
-            if (s.equals("false"))        
-                b = false;
-            else
-                throw new RuntimeException("Bad string for JSBoolean constructor : " + s);
+        b = p;
     }
     
     void eval(Environment theEnv)
     {
-        theEnv.theStack.push(new StackValue(b ? 1 : 0));
+        theEnv.theStack.push(this);
     }
     
+    boolean isTrue()
+    {
+        return b;
+    }
+            
+    boolean isFalse()
+    {
+        return !b;
+    }
+    
+    JSBoolean toJSBoolean() {
+        return this;
+    }
+    
+            
     boolean b;
     
 }

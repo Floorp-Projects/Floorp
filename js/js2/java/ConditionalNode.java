@@ -27,8 +27,8 @@ class ConditionalNode extends ControlNode {
     ControlNode eval(Environment theEnv)
     {
         ControlNode n = super.eval(theEnv);
-        double d = theEnv.theStack.pop().d;
-        if (d != 0.0)
+        JSBoolean b = theEnv.theStack.pop().toJSBoolean();
+        if (b.isTrue())
             return trueCode;
         else
             return n;

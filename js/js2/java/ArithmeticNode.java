@@ -7,23 +7,24 @@ class ArithmeticNode extends BinaryNode {
 
     void eval(Environment theEnv)
     {
-        super.eval(theEnv);
-        double dR = theEnv.theStack.pop().d;
-        double dL = theEnv.theStack.pop().d;
+        left.eval(theEnv);
+        JSValue lV = theEnv.theStack.pop();
+        right.eval(theEnv);
+
         if (op == "+")
-            theEnv.theStack.push(new StackValue(dL + dR));
+            lV.add(theEnv);
         else
         if (op == "-")
-            theEnv.theStack.push(new StackValue(dL - dR));
+            lV.subtract(theEnv);
         else
         if (op == "*")
-            theEnv.theStack.push(new StackValue(dL * dR));
+            lV.multiply(theEnv);
         else
         if (op == "/")
-            theEnv.theStack.push(new StackValue(dL / dR));
+            lV.divide(theEnv);
         else
         if (op == "%")
-            theEnv.theStack.push(new StackValue(dL % dR));
+            lV.remainder(theEnv);
         else
             System.out.println("missing arithmetic op " + op);
     }
