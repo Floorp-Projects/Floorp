@@ -456,7 +456,7 @@ static int
 MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
 											 MimeObject *obj)
 {
-  int status;
+  int status = 0;
   MimeInlineTextClass *textc = (MimeInlineTextClass *) obj->clazz;
 
   PR_ASSERT(!obj->closed_p);
