@@ -42,6 +42,7 @@
 class nsIDTD;
 class nsIParser;
 class nsVoidArray;
+// enum eHTMLTags;
 
 class nsIDTDDebug : public nsISupports {
             
