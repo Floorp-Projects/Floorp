@@ -23,7 +23,6 @@
 
 #include "nsIInterfaceInfo.h"
 #include "xpt_struct.h"
-#include "xpt_cpp.h"
 
 #include "nsInterfaceRecord.h"
 #include "nsInterfaceInfoManager.h"

@@ -37,7 +37,7 @@
 #include "jshash.h"
 #include "jsprf.h"
 #include "jsdbgapi.h"
-#include "xpt_cpp.h"
+#include "xptinfo.h"
 #include "xpcforwards.h"
 #include "xpclog.h"
 #include "xpccomponents.h"
