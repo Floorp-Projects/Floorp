@@ -4627,7 +4627,7 @@ if test "$MOZ_LDAP_XPCOM"; then
         mkdir "directory/c-sdk/ldap"    
     fi
 
-    ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-dist-prefix=$MOZ_BUILD_ROOT/dist --without-nss"
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-dist-prefix=$MOZ_BUILD_ROOT/dist --without-nss --with-mozilla"
     if test -n "$HAVE_64BIT_OS"; then
         ac_configure_args="$ac_configure_args --enable-64bit"
     fi
