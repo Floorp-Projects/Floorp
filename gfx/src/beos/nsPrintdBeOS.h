@@ -56,6 +56,7 @@ typedef struct beosprdata {
         PRBool fpf;                /* If PR_TRUE, first page first */
         PRBool grayscale;          /* If PR_TRUE, print grayscale */
         int size;                   /* Paper size e.g., SizeLetter */
+        int orientation;            /* Page orientation, e.g. portrait */
         char command[ PATH_MAX ];   /* Print command e.g., lpr */
         char path[ PATH_MAX ];      /* If toPrinter = PR_FALSE, dest file */
 	PRBool cancel;		    /* If PR_TRUE, user cancelled */
