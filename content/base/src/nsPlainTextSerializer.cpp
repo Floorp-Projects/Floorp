@@ -89,6 +89,8 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mCiteQuoteLevel = 0;
   mStructs = PR_TRUE;       // will be read from prefs later
   mHeaderStrategy = 1 /*indent increasingly*/;   // ditto
+  mQuotesPreformatted = PR_FALSE;                // ditto
+  mSpanLevel = 0;
   for (PRInt32 i = 0; i <= 6; i++) {
     mHeaderCounter[i] = 0;
   }
@@ -178,6 +180,8 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
     if (NS_SUCCEEDED(rv) && prefs) {
       prefs->GetBoolPref(PREF_STRUCTS, &mStructs);
       prefs->GetIntPref(PREF_HEADER_STRATEGY, &mHeaderStrategy);
+      // The quotesPreformatted pref is a temporary measure. See bug 69638.
+      prefs->GetBoolPref("editor.quotesPreformatted", &mQuotesPreformatted);
     }
   }
 
@@ -594,6 +598,9 @@ nsPlainTextSerializer::DoOpenContainer(PRInt32 aTag)
   else if (type == eHTMLTag_dd) {
     mIndent += kIndentSizeDD;
   }
+  else if (type == eHTMLTag_span) {
+    ++mSpanLevel;
+  }
 
   // Else make sure we'll separate block level tags,
   // even if we're about to leave, before doing any other formatting.
@@ -742,6 +749,10 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   else if (type == eHTMLTag_dd) {
     mIndent -= kIndentSizeDD;
   }
+  else if (type == eHTMLTag_span) {
+    --mSpanLevel;
+  }
+
   else if (IsBlockLevel(aTag)
            && type != eHTMLTag_blockquote
            && type != eHTMLTag_script
@@ -1356,9 +1367,8 @@ void
 nsPlainTextSerializer::Write(const nsAReadableString& aString)
 {
 #ifdef DEBUG_wrapping
-  char* foo = ToNewCString(aString);
-  printf("Write(%s): wrap col = %d\n", foo, mWrapColumn);
-  nsMemory::Free(foo);
+  printf("Write(%s): wrap col = %d\n",
+         NS_ConvertUCS2toUTF8(aString).get(), mWrapColumn);
 #endif
 
   PRInt32 bol = 0;
@@ -1366,10 +1376,16 @@ nsPlainTextSerializer::Write(const nsAReadableString& aString)
   
   PRInt32 totLen = aString.Length();
 
+  // If the string is empty, do nothing:
+  if (totLen <= 0) return;
+
   // We have two major codepaths here. One that does preformatted text and one
   // that does normal formatted text. The one for preformatted text calls
   // Output directly while the other code path goes through AddToLine.
-  if ((mPreFormatted && !mWrapColumn) || IsInPre()) {
+  if ((mPreFormatted && !mWrapColumn) || IsInPre()
+      || (!mQuotesPreformatted && mSpanLevel > 0
+          //&& Substring(aString, 0, 1) == NS_LITERAL_STRING(">"))) {
+          && aString.First() == PRUnichar('>'))) {
     // No intelligent wrapping.
 
     // This mustn't be mixed with intelligent wrapping without clearing
