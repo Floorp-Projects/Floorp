@@ -635,12 +635,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // released earlier.
     nsMemoryImpl::ReleaseObservers();
 
-    // Release our own singletons...
-    XPTI_FreeInterfaceInfoManager();
-
     // We may have AddRef'd for the caller of NS_InitXPCOM, so release it
     // here again:
-    
     NS_IF_RELEASE(servMgr);
 
     // Shutdown global servicemanager
