@@ -116,7 +116,7 @@ nsresult nsSVGCircleFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     circle->GetCx(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mCx));
+    length->GetAnimVal(getter_AddRefs(mCx));
     NS_ASSERTION(mCx, "no cx");
     if (!mCx) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mCx);
@@ -127,7 +127,7 @@ nsresult nsSVGCircleFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     circle->GetCy(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mCy));
+    length->GetAnimVal(getter_AddRefs(mCy));
     NS_ASSERTION(mCx, "no cy");
     if (!mCx) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mCy);
@@ -138,7 +138,7 @@ nsresult nsSVGCircleFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     circle->GetR(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mR));
+    length->GetAnimVal(getter_AddRefs(mR));
     NS_ASSERTION(mCx, "no r");
     if (!mCx) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mR);

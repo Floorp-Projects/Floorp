@@ -259,7 +259,7 @@ nsSVGClipPathFrame::GetCanvasTM()
   nsCOMPtr<nsIDOMSVGClipPathElement> path = do_QueryInterface(mContent);
   nsCOMPtr<nsIDOMSVGAnimatedEnumeration> aEnum;
   path->GetClipPathUnits(getter_AddRefs(aEnum));
-  aEnum->GetBaseVal(&units);
+  aEnum->GetAnimVal(&units);
   
   if (mClipParent &&
       units == nsIDOMSVGClipPathElement::SVG_CPUNITS_OBJECTBOUNDINGBOX) {

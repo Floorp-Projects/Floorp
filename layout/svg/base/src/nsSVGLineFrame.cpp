@@ -133,7 +133,7 @@ nsresult nsSVGLineFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     line->GetX1(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mX1));
+    length->GetAnimVal(getter_AddRefs(mX1));
     NS_ASSERTION(mX1, "no x1");
     if (!mX1) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX1);
@@ -144,7 +144,7 @@ nsresult nsSVGLineFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     line->GetY1(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mY1));
+    length->GetAnimVal(getter_AddRefs(mY1));
     NS_ASSERTION(mY1, "no y1");
     if (!mY1) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY1);
@@ -155,7 +155,7 @@ nsresult nsSVGLineFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     line->GetX2(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mX2));
+    length->GetAnimVal(getter_AddRefs(mX2));
     NS_ASSERTION(mX2, "no x2");
     if (!mX2) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX2);
@@ -166,7 +166,7 @@ nsresult nsSVGLineFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     line->GetY2(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mY2));
+    length->GetAnimVal(getter_AddRefs(mY2));
     NS_ASSERTION(mY2, "no y2");
     if (!mY2) return NS_ERROR_FAILURE;
     nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY2);

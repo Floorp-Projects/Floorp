@@ -1163,28 +1163,28 @@ nsSVGSVGElement::SetParentCoordCtxProvider(nsSVGCoordCtxProvider *parentCtx)
   // set the parentCtx as context on our width/height/x/y:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mX->GetBaseVal(getter_AddRefs(dom_length));
+    mX->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> l = do_QueryInterface(dom_length);
     l->SetContext(nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextX()));
   }
 
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mY->GetBaseVal(getter_AddRefs(dom_length));
+    mY->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> l = do_QueryInterface(dom_length);
     l->SetContext(nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextY()));
   }
 
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mWidth->GetBaseVal(getter_AddRefs(dom_length));
+    mWidth->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> l = do_QueryInterface(dom_length);
     l->SetContext(nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextX()));
   }
 
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mHeight->GetBaseVal(getter_AddRefs(dom_length));
+    mHeight->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> l = do_QueryInterface(dom_length);
     l->SetContext(nsRefPtr<nsSVGCoordCtx>(parentCtx->GetContextY()));
   }

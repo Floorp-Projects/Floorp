@@ -125,7 +125,7 @@ nsresult nsSVGRectFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetX(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mX));
+    length->GetAnimVal(getter_AddRefs(mX));
     NS_ASSERTION(mX, "no x");
     if (!mX)
       return NS_ERROR_FAILURE;
@@ -137,7 +137,7 @@ nsresult nsSVGRectFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetY(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mY));
+    length->GetAnimVal(getter_AddRefs(mY));
     NS_ASSERTION(mY, "no y");
     if (!mY)
       return NS_ERROR_FAILURE;
@@ -149,7 +149,7 @@ nsresult nsSVGRectFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetWidth(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mWidth));
+    length->GetAnimVal(getter_AddRefs(mWidth));
     NS_ASSERTION(mWidth, "no width");
     if (!mWidth)
       return NS_ERROR_FAILURE;
@@ -160,7 +160,7 @@ nsresult nsSVGRectFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetHeight(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mHeight));
+    length->GetAnimVal(getter_AddRefs(mHeight));
     NS_ASSERTION(mHeight, "no height");
     if (!mHeight)
       return NS_ERROR_FAILURE;
@@ -172,7 +172,7 @@ nsresult nsSVGRectFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetRx(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mRx));
+    length->GetAnimVal(getter_AddRefs(mRx));
     NS_ASSERTION(mRx, "no rx");
     if (!mRx)
       return NS_ERROR_FAILURE;
@@ -184,7 +184,7 @@ nsresult nsSVGRectFrame::Init()
   {
     nsCOMPtr<nsIDOMSVGAnimatedLength> length;
     Rect->GetRy(getter_AddRefs(length));
-    length->GetBaseVal(getter_AddRefs(mRy));
+    length->GetAnimVal(getter_AddRefs(mRy));
     NS_ASSERTION(mRy, "no ry");
     if (!mRy)
       return NS_ERROR_FAILURE;

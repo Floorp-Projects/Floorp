@@ -165,7 +165,7 @@ nsSVGGradientFrame::GetStopOffset(PRInt32 aIndex, float *aOffset)
   }
   nsCOMPtr<nsIDOMSVGAnimatedNumber> aNum;
   stopElement->GetOffset(getter_AddRefs(aNum));
-  aNum->GetBaseVal(aOffset);
+  aNum->GetAnimVal(aOffset);
   if (*aOffset < 0.0f)
     *aOffset = 0.0f;
   if (*aOffset > 1.0f)
@@ -293,7 +293,7 @@ nsSVGGradientFrame::GetGradientUnits(PRUint16 *aUnits)
   if (!checkURITarget(nsSVGAtoms::gradientUnits)) {
     // No, return the values
     aGrad->GetGradientUnits(getter_AddRefs(aEnum));
-    aEnum->GetBaseVal(aUnits);
+    aEnum->GetAnimVal(aUnits);
   } else {
     // Yes, get it from the target
     mNextGrad->GetGradientUnits(aUnits);
@@ -315,7 +315,7 @@ nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform)
     // No, return the values
     aGrad->GetGradientTransform(getter_AddRefs(aTrans));
     nsCOMPtr<nsIDOMSVGTransformList> lTrans;
-    aTrans->GetBaseVal(getter_AddRefs(lTrans));
+    aTrans->GetAnimVal(getter_AddRefs(lTrans));
     lTrans->GetConsolidationMatrix(aGradientTransform);
   } else {
     // Yes, get it from the target
@@ -337,7 +337,7 @@ nsSVGGradientFrame::GetSpreadMethod(PRUint16 *aSpreadMethod)
   if (!checkURITarget(nsSVGAtoms::spreadMethod)) {
     // No, return the values
     aGrad->GetSpreadMethod(getter_AddRefs(aEnum));
-    aEnum->GetBaseVal(aSpreadMethod);
+    aEnum->GetAnimVal(aSpreadMethod);
   } else {
     // Yes, get it from the target
     mNextGrad->GetSpreadMethod(aSpreadMethod);
@@ -451,7 +451,7 @@ nsSVGLinearGradientFrame::GetX1(float *aX1)
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
   aLgrad->GetX1(getter_AddRefs(aLen));
   nsCOMPtr<nsIDOMSVGLength> sLen;
-  aLen->GetBaseVal(getter_AddRefs(sLen));
+  aLen->GetAnimVal(getter_AddRefs(sLen));
   sLen->GetValue(aX1);
   return NS_OK;
 }
@@ -480,7 +480,7 @@ nsSVGLinearGradientFrame::GetY1(float *aY1)
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
   aLgrad->GetY1(getter_AddRefs(aLen));
   nsCOMPtr<nsIDOMSVGLength> sLen;
-  aLen->GetBaseVal(getter_AddRefs(sLen));
+  aLen->GetAnimVal(getter_AddRefs(sLen));
   sLen->GetValue(aY1);
   return NS_OK;
 }
@@ -509,7 +509,7 @@ nsSVGLinearGradientFrame::GetX2(float *aX2)
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
   aLgrad->GetX2(getter_AddRefs(aLen));
   nsCOMPtr<nsIDOMSVGLength> sLen;
-  aLen->GetBaseVal(getter_AddRefs(sLen));
+  aLen->GetAnimVal(getter_AddRefs(sLen));
   sLen->GetValue(aX2);
   return NS_OK;
 }
@@ -538,7 +538,7 @@ nsSVGLinearGradientFrame::GetY2(float *aY2)
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
   aLgrad->GetY2(getter_AddRefs(aLen));
   nsCOMPtr<nsIDOMSVGLength> sLen;
-  aLen->GetBaseVal(getter_AddRefs(sLen));
+  aLen->GetAnimVal(getter_AddRefs(sLen));
   sLen->GetValue(aY2);
   return NS_OK;
 }
@@ -597,7 +597,7 @@ nsSVGRadialGradientFrame::GetCx(float *aCx)
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
   aRgrad->GetCx(getter_AddRefs(aLen));
   nsCOMPtr<nsIDOMSVGLength> sLen;
-  aLen->GetBaseVal(getter_AddRefs(sLen));
+  aLen->GetAnimVal(getter_AddRefs(sLen));
   sLen->GetValue(aCx);
   return NS_OK;
 }
@@ -626,7 +626,7 @@ nsSVGRadialGradientFrame::GetCy(float *aCy)
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
   aRgrad->GetCy(getter_AddRefs(aLen));
   nsCOMPtr<nsIDOMSVGLength> sLen;
-  aLen->GetBaseVal(getter_AddRefs(sLen));
+  aLen->GetAnimVal(getter_AddRefs(sLen));
   sLen->GetValue(aCy);
   return NS_OK;
 }
@@ -655,7 +655,7 @@ nsSVGRadialGradientFrame::GetR(float *aR)
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
   aRgrad->GetR(getter_AddRefs(aLen));
   nsCOMPtr<nsIDOMSVGLength> sLen;
-  aLen->GetBaseVal(getter_AddRefs(sLen));
+  aLen->GetAnimVal(getter_AddRefs(sLen));
   sLen->GetValue(aR);
   return NS_OK;
 }
@@ -686,7 +686,7 @@ nsSVGRadialGradientFrame::GetFx(float *aFx)
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
   aRgrad->GetFx(getter_AddRefs(aLen));
   nsCOMPtr<nsIDOMSVGLength> sLen;
-  aLen->GetBaseVal(getter_AddRefs(sLen));
+  aLen->GetAnimVal(getter_AddRefs(sLen));
   sLen->GetValue(aFx);
   return NS_OK;
 }
@@ -717,7 +717,7 @@ nsSVGRadialGradientFrame::GetFy(float *aFy)
   nsCOMPtr<nsIDOMSVGAnimatedLength> aLen;
   aRgrad->GetFy(getter_AddRefs(aLen));
   nsCOMPtr<nsIDOMSVGLength> sLen;
-  aLen->GetBaseVal(getter_AddRefs(sLen));
+  aLen->GetAnimVal(getter_AddRefs(sLen));
   sLen->GetValue(aFy);
   return NS_OK;
 }
@@ -755,7 +755,7 @@ nsresult NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
     aRef->GetHref(getter_AddRefs(aHref));
     // We *really* want an observer on this
     nsAutoString aStr;
-    aHref->GetBaseVal(aStr);
+    aHref->GetAnimVal(aStr);
     it->mNextGradStr = aStr;
     it->mNextGrad = nsnull;
   }
@@ -793,7 +793,7 @@ nsresult NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
     aRef->GetHref(getter_AddRefs(aHref));
     // We *really* want an observer on this
     nsAutoString aStr;
-    aHref->GetBaseVal(aStr);
+    aHref->GetAnimVal(aStr);
     it->mNextGradStr = aStr;
     it->mNextGrad = nsnull;
   }

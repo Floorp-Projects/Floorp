@@ -234,7 +234,7 @@ void nsSVGEllipseElement::ParentChainChanged()
   // cx:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mCx->GetBaseVal(getter_AddRefs(dom_length));
+    mCx->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
@@ -244,7 +244,7 @@ void nsSVGEllipseElement::ParentChainChanged()
   // cy:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mCy->GetBaseVal(getter_AddRefs(dom_length));
+    mCy->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
@@ -254,7 +254,7 @@ void nsSVGEllipseElement::ParentChainChanged()
   // rx:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mRx->GetBaseVal(getter_AddRefs(dom_length));
+    mRx->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
@@ -264,7 +264,7 @@ void nsSVGEllipseElement::ParentChainChanged()
   // rx:
   {
     nsCOMPtr<nsIDOMSVGLength> dom_length;
-    mRy->GetBaseVal(getter_AddRefs(dom_length));
+    mRy->GetAnimVal(getter_AddRefs(dom_length));
     nsCOMPtr<nsISVGLength> length = do_QueryInterface(dom_length);
     NS_ASSERTION(length, "svg length missing interface");
 
