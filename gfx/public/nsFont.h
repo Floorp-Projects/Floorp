@@ -34,8 +34,7 @@
 typedef PRBool (*nsFontFamilyEnumFunc)(const nsString& aFamily, PRBool aGeneric, void *aData);
 
 // Font structure.
-class nsFont {
-public:
+struct nsFont {
   // The family name of the font -- MUST be in lowercase!
   nsString name;
 
