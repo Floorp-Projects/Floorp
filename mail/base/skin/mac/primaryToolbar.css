@@ -68,7 +68,7 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 32px 32px 0px);
 }
 
-#button-getmsg:hover:active {
+#button-getmsg[buttondown], #button-getmsg:hover:active {
   -moz-image-region: rect(32px 32px 64px 0px);
 } 
 
