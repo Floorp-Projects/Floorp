@@ -4,8 +4,8 @@
 # windows using javascript layers written by Elena Dykhno.
 
 
-# $Revision: 1.5 $ 
-# $Date: 2003/04/20 20:25:37 $ 
+# $Revision: 1.6 $ 
+# $Date: 2003/08/17 01:31:50 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/PortableLayers.pm,v $ 
 # $Name:  $ 
@@ -30,10 +30,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 

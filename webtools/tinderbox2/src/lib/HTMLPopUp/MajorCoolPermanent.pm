@@ -7,8 +7,8 @@
 # anything.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2002/12/09 18:19:59 $ 
+# $Revision: 1.3 $ 
+# $Date: 2003/08/17 01:31:49 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MajorCoolPermanent.pm,v $ 
 # $Name:  $ 
@@ -33,10 +33,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
