@@ -812,7 +812,7 @@ static void wfe_ProcessTimeouts(DWORD dwNow)
     dwSyncHack = 0;
 }
 #else
-NS_EXPORT_(void *)
+NS_EXPORT void*
 FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
 {
     return il_ss->SetTimeout((ilTimeoutCallbackFunction)func,
