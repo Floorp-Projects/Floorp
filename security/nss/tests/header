@@ -15,7 +15,7 @@
 #
 # parameters
 # ----------
-#   nssversion (supported: 30b, 31, tip)
+#   nssversion (supported: 30b, 31, tip, 32)
 #   builddate (default - today)
 #
 # options
@@ -154,6 +154,11 @@ if [ -z "$WIN_WAIT_FOREVER" ]    # header is global, some including scripts
 then                # want the init to wait forever for directories to
                     # appear (windows only) if OFF exit, if ON wait forever
     WIN_WAIT_FOREVER=OFF
+fi
+
+if [ -z "$BC_MASTER" ]    # master directory for backwardscompatibility testing
+then
+    BC_MASTER="20010212.1.nss32_rtm"
 fi
 
 EARLY_EXIT=TRUE     #before the report file has been created, causes Exit to 
@@ -329,7 +334,6 @@ set_files()
 write_to_tmpfile()
 {
     O_CRONFILE=ON
-    Debug "Writing to the TMPFILE"
     O_FILE=ON
     FILENAME=${TMP}/nsstmp.$$    # for now write to the temporary file
                                  # since we don't know the hostname yet
@@ -430,8 +434,6 @@ eval_opts()
     esac
     shift
   done
-
-  Debug "Builddate $BUILDDATE NssVersion $NSSVER"
 
   if [ -z "$BUILDDATE" ]         
   then
@@ -580,25 +582,76 @@ set_objdir()
     #at this point $MASTEBUILD is be either NT or unix
 
     LOCALDIST=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}/${MASTERBUILD}/mozilla/dist
+    BCDIST=${D1}/builds/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
     LOCALDIST_BIN=${LOCALDIST}/${OBJDIR}/bin
 
     DIST=$LOCALDIST
 
-#FIXME - test so PATH won't contai it double
-#FIXME - win2k problems with PATH containing : instead of ; as seperator
-    if [ "$O_WIN" = "ON" -a "$O_CYGNUS" != ON ] ; then
-        PATH="$TESTSCRIPTDIR;$LOCALDIST_BIN;$BASEPATH"
-    else
-        PATH=$TESTSCRIPTDIR:$LOCALDIST_BIN:$BASEPATH
+    if [ -z "${TEST_LEVEL}" ] ; then 
+        TEST_LEVEL=0
     fi
+    bc ${TEST_LEVEL}   #set the path for the backward compatibility test
+
     PATH_CONTAINS_BIN="TRUE"
     export PATH_CONTAINS_BIN
-    Debug "Path after set_objdir $PATH"
 
-    Debug "PATH $PATH"
-
-    export OBJDIR OS_ARCH LOCALDIST LOCALDIST_BIN DIST PATH
+    export OBJDIR OS_ARCH LOCALDIST LOCALDIST_BIN DIST PATH BCDIST
 }
+
+########################### bc #########################################
+# global shell function , sets paths for the backward compatibility test
+########################################################################
+bc()
+{
+  DON_T_SET_PATHS="TRUE"
+  case $1 in
+    0)
+      if [ "$O_WIN" = "ON" -a "$O_CYGNUS" != ON ] ; then
+          PATH="$TESTSCRIPTDIR;$LOCALDIST_BIN;$BASEPATH"
+      else
+          PATH=$TESTSCRIPTDIR:$LOCALDIST_BIN:$BASEPATH
+      fi
+      BC_ACTION=""
+      DON_T_SET_PATHS="FALSE" #let init.sh override - FIXME - check if necessary
+      ;;
+    1)
+      BC_ACTION="backward compatibility against shlibs in $BC_MASTER"
+      LD_LIBRARY_PATH=${BCDIST}/${OBJDIR}/lib
+      if [ "$O_WIN" = "ON" ] ; then
+          if [ "$O_CYGNUS" = ON ] ; then
+              PATH=$TESTSCRIPTDIR:$LOCALDIST_BIN:$BASEPATH:$LD_LIBRARY_PATH
+          else
+              PATH="$TESTSCRIPTDIR;$LOCALDIST_BIN;$BASEPATH;$LD_LIBRARY_PATH"
+          fi
+      else
+          PATH=$TESTSCRIPTDIR:$LOCALDIST_BIN:$BASEPATH
+      fi
+      Debug "1st stage of backward compatibility test"
+      ;;
+    *)
+      BC_ACTION="forward compatibility of binaries in $BC_MASTER"
+      BCDIST_BIN=${BCDIST}/${OBJDIR}/bin
+      LD_LIBRARY_PATH=${LOCALDIST}/${OBJDIR}/lib
+      if [ "$O_WIN" = "ON" ] ; then
+          if [ "$O_CYGNUS" = ON ] ; then
+              PATH=$TESTSCRIPTDIR:$BCDIST_BIN:$BASEPATH:$LD_LIBRARY_PATH
+          else
+              PATH="$TESTSCRIPTDIR;$BCDIST_BIN;$BASEPATH;$LD_LIBRARY_PATH"
+          fi
+      else
+          PATH=$TESTSCRIPTDIR:$BCDIST_BIN:$BASEPATH
+      fi
+      Debug "2nd stage of backward compatibility test"
+      ;;
+  esac
+  SHLIB_PATH=${LD_LIBRARY_PATH}
+  LIBPATH=${LD_LIBRARY_PATH}
+  Debug "PATH $PATH"
+  Debug "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
+  export PATH LD_LIBRARY_PATH SHLIB_PATH LIBPATH
+  export DON_T_SET_PATHS BC_ACTION
+}
+
 ########################### Ps #########################################
 # global shell function , attempts a platform specific ps
 ########################################################################
@@ -715,7 +768,7 @@ Exit()
         then
             cat $FILENAME | rmail $MAILINGLIST
         fi
-        rm $FILENAME 2>/dev/null
+        #rm $FILENAME 2>/dev/null
     elif  [ $O_MAIL = "ON" -a $EARLY_EXIT = TRUE ]
     then
         early_exit "$1"
