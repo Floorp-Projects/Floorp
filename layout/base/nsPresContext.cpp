@@ -70,7 +70,12 @@ nsPresContext::nsPresContext()
   nsLayoutAtoms::AddRefAtoms();
   mCompatibilityMode = eCompatibility_Standard;
   mCompatibilityLocked = PR_FALSE;
+#ifdef XP_MAC
+   //XXX This remains partial gfx for Mac until all Mac gfx blockers are fixed
   mWidgetRenderingMode = eWidgetRendering_PartialGfx; 
+#else
+  mWidgetRenderingMode = eWidgetRendering_Gfx; 
+#endif
  
 
 #ifdef _WIN32
