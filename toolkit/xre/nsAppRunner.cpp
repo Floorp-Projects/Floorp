@@ -1513,7 +1513,7 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
   PRBool StartOS2App(int aArgc, char **aArgv);
   if (!StartOS2App(gArgc, gArgv))
     return 1;
-  ScopedFPHandler handler();
+  ScopedFPHandler handler;
 #endif /* XP_OS2 */
 
 #if defined(XP_BEOS)
