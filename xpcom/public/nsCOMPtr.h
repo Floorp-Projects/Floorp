@@ -427,8 +427,10 @@ class nsCOMPtr
 					*/
       	{
       		if ( aRawPtr )
-	      		aRawPtr->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &mRawPtr));
-	      		// ...and |QueryInterface| does the |AddRef| for us
+	      		if ( !NS_SUCCEEDED(aRawPtr->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &mRawPtr))) )
+	      			mRawPtr = 0;	// ...in case they wrote |QueryInterface| wrong, and it returns an error _and_ a pointer
+
+	      		// ...and |QueryInterface| does the |AddRef| for us (if it returned a pointer)
       	}
 
       nsCOMPtr( const nsDontAddRef<T>& aSmartPtr )
@@ -471,7 +473,8 @@ class nsCOMPtr
 				{
       		T* rawPtr = 0;
       		if ( rhs )
-      			rhs->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &rawPtr));
+      			if ( !NS_SUCCEEDED(rhs->QueryInterface(T::IID(), NSCAP_REINTERPRET_CAST(void**, &rawPtr))) )
+      				rawPtr = 0;
 
 					if ( mIsAwaitingAddRef )
 						mIsAwaitingAddRef = 0;
