@@ -55,8 +55,6 @@
 #include "prprf.h"	 
 
 #include "nsCOMPtr.h"
-#include "nsIDOMXULElement.h"
-#include "nsIDOMNodeList.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsRDFResource.h"
@@ -127,46 +125,6 @@ static const char *AB_COLUMN_ARRAY[] = {
       kNotesColumn   
 };
 
-static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISupportsArray **resourceArray)
-{
-	nsresult rv = NS_OK;
-	PRUint32 listLength;
-	nsIDOMNode *node;
-	nsIDOMXULElement *xulElement;
-	nsIRDFResource *resource;
-
-	if(!resourceArray)
-		return NS_ERROR_NULL_POINTER;
-
-	if(NS_FAILED(rv = nodeList->GetLength(&listLength)))
-		return rv;
-
-	if(NS_FAILED(NS_NewISupportsArray(resourceArray)))
-	{
-		return NS_ERROR_OUT_OF_MEMORY;
-	}
-
-	for(PRUint32 i = 0; i < listLength; i++)
-	{
-		if(NS_FAILED(nodeList->Item(i, &node)))
-			return rv;
-
-		if(NS_SUCCEEDED(rv = node->QueryInterface(NS_GET_IID(nsIDOMXULElement), (void**)&xulElement)))
-		{
-			if(NS_SUCCEEDED(rv = xulElement->GetResource(&resource)))
-			{
-				(*resourceArray)->AppendElement(resource);
-				NS_RELEASE(resource);
-			}
-			NS_RELEASE(xulElement);
-		}
-		NS_RELEASE(node);
-		
-	}
-
-	return rv;
-}
-
 //
 // nsAddressBook
 //
@@ -210,19 +168,13 @@ NS_IMETHODIMP nsAddressBook::NewAddressBook
 }
 
 NS_IMETHODIMP nsAddressBook::DeleteAddressBooks
-(nsIRDFCompositeDataSource* db, nsISupportsArray *parentDir, nsIDOMNodeList *nodeList)
+(nsIRDFCompositeDataSource* db, nsISupportsArray *parentDir, nsISupportsArray *aResourceArray)
 {
-	if(!db || !parentDir || !nodeList)
-		return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(db);
+  NS_ENSURE_ARG_POINTER(parentDir);
+  NS_ENSURE_ARG_POINTER(aResourceArray);
 
-	nsresult rv = NS_OK;
-
-	nsCOMPtr<nsISupportsArray> resourceArray;
-	rv = ConvertDOMListToResourceArray(nodeList, getter_AddRefs(resourceArray));
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	DoCommand(db, NC_RDF_DELETE, parentDir, resourceArray);
-	return rv;
+	return DoCommand(db, NC_RDF_DELETE, parentDir, aResourceArray);
 }
 
 nsresult nsAddressBook::DoCommand(nsIRDFCompositeDataSource* db,

@@ -415,7 +415,12 @@ function AbDeleteDirectory()
     if (!window.confirm(confirmDeleteMessage))
        return;
 
-    top.addressbook.deleteAddressBooks(dirTree.database, parentArray, dirTree.selectedItems);
+    var resourceArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+    var selectedABResource = GetDirectoryFromURI(selectedABURI).QueryInterface(Components.interfaces.nsIRDFResource);
+
+    resourceArray.AppendElement(selectedABResource);
+
+    top.addressbook.deleteAddressBooks(dirTree.database, parentArray, resourceArray);
     SelectFirstAddressBook();
 }
 
