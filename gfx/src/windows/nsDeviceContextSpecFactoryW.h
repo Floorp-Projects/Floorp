@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsDeviceContextSpecFactoryWin_h___
-#define nsDeviceContextSpecFactoryWin_h___
+#ifndef nsDeviceContextSpecFactoryW_h___
+#define nsDeviceContextSpecFactoryW_h___
 
 #include "nsIDeviceContextSpecFactory.h"
 #include "nsIDeviceContextSpec.h"
