@@ -24,7 +24,7 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
-class nsIDOMNode;
+class nsIDOMElement;
 
 #define NS_IDOMNSHTMLSELECTELEMENT_IID \
  { 0xa6cf9105, 0x15b3, 0x11d2, \
@@ -34,17 +34,17 @@ class nsIDOMNSHTMLSelectElement : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMNSHTMLSELECTELEMENT_IID; return iid; }
 
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMElement** aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMNSHTMLSELECTELEMENT   \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMElement** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMNSHTMLSELECTELEMENT(_to)  \
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn) { return _to Item(aIndex, aReturn); }  \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMElement** aReturn) { return _to Item(aIndex, aReturn); }  \
 
 
 #endif // nsIDOMNSHTMLSelectElement_h__
