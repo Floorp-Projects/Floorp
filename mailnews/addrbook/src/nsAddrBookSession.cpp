@@ -112,8 +112,8 @@ NS_IMETHODIMP nsAddrBookSession::GetUserProfileDirectory(nsFileSpec * *userDir)
 	if (NS_FAILED(rv))
 		return rv;
 
-	nsIFileSpec* profiledir;
-	rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, &profiledir);
+	nsCOMPtr <nsIFileSpec> profiledir;
+	rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50, getter_AddRefs(profiledir));
 	if (NS_FAILED(rv))
 		return rv;
 	profiledir->GetFileSpec(mpUserDirectory);
