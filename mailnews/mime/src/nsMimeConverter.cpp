@@ -49,42 +49,6 @@ nsMimeConverter::~nsMimeConverter()
 }
 
 nsresult 
-nsMimeConverter::DecodeMimePartIIStr(const nsCString& header, 
-                                           nsCString& charset, 
-                                           nsString& decodedString,
-                                     PRBool eatContinuations)
-{
-  char charsetNameBuffer[kMAX_CSNAME+1];
-  char *decodedCstr = nsnull;
-  nsresult res = NS_OK;
-
-  // initialize the charset buffer
-  PL_strcpy(charsetNameBuffer, "us-ascii");
-
-  // apply MIME decode.
-  decodedCstr = MIME_DecodeMimePartIIStr(header,
-                                           charsetNameBuffer, eatContinuations);
-  if (nsnull == decodedCstr) {
-    // no decode needed and no default charset was specified
-    if (charset.IsEmpty()) {
-      decodedString.AssignWithConversion(header);
-    }
-    else {
-      // no MIME encoded, convert default charset to unicode
-      res = ConvertToUnicode(NS_ConvertASCIItoUCS2(charset), header, decodedString);
-    }
-  }
-  else {
-    // assign the charset encoded in MIME header
-    charset.Assign(charsetNameBuffer);
-    // convert MIME charset to unicode
-    res = ConvertToUnicode(NS_ConvertASCIItoUCS2(charset), (const char *) decodedCstr, decodedString);
-    PR_FREEIF(decodedCstr);
-  }
-  return res;
-}
-
-nsresult 
 nsMimeConverter::DecodeMimePartIIStr(const nsString& header, 
                                            nsString& charset, 
                                            PRUnichar **decodedString,
@@ -160,30 +124,47 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
 }
  
 nsresult
-nsMimeConverter::DecodeMimePartIIStr(const char *header, 
-                                           char       *charset, 
-                                           char **decodedString,
-                                     PRBool eatContinuations)
+nsMimeConverter::DecodeMimeHeader(const char *header, 
+                                  char **decodedString,
+                                  const char *default_charset, 
+                                  PRBool override_charset,
+                                  PRBool eatContinuations)
 {
-  char *retString;
-  if (charset)
-  {
-    retString = MIME_DecodeMimePartIIStr(header, charset, eatContinuations);
-  }
-  else
-  {
-    // the callder does not care about the charset, pass the local buffer
-    char charsetCstr[kMAX_CSNAME+1];
-    *charsetCstr = '\0';
-    retString = MIME_DecodeMimePartIIStr(header, charsetCstr, eatContinuations);
-  }
+  char *retString = MIME_DecodeMimeHeader(header, default_charset, 
+                                          override_charset,
+                                          eatContinuations);
   if (retString == NULL)
     return NS_ERROR_FAILURE;
-  else
-  {
-    *decodedString = retString;
-    return NS_OK;
+
+  *decodedString = retString;
+  return NS_OK;
+}
+
+// Decode routine (also converts output to unicode)
+nsresult 
+nsMimeConverter::DecodeMimeHeader(const nsCString& header, 
+                                  PRUnichar **decodedString,
+                                  const char *default_charset,
+                                  PRBool override_charset,
+                                  PRBool eatContinuations)
+{
+  char *decodedCstr = nsnull;
+  nsresult res = NS_OK;
+
+  // apply MIME decode.
+  decodedCstr = MIME_DecodeMimeHeader(header, default_charset,
+                                      override_charset, eatContinuations);
+  if (nsnull == decodedCstr) {
+    // no decode or conversion needed
+    *decodedString = header.ToNewUnicode();
   }
+  else {
+    *decodedString = NS_ConvertUTF8toUCS2(decodedCstr).ToNewUnicode();
+    if (!(*decodedString))
+      res = NS_ERROR_OUT_OF_MEMORY;
+    PR_FREEIF(decodedCstr);
+  }
+  return res;
 }
 
 nsresult

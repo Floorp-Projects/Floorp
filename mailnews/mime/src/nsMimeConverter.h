@@ -54,16 +54,18 @@ public:
   // content type handler plugins for processing stream data. 
 
   // Decode routine
-  NS_IMETHOD DecodeMimePartIIStr(const char *header, 
-                                 char       *charset, 
-                                 char **decodedString,
-                                 PRBool eatContinuations = PR_TRUE);
+  NS_IMETHOD DecodeMimeHeader(const char *header, 
+                              char **decodedString,
+                              const char *default_charset = 0,
+                              PRBool override_charset = PR_FALSE,
+                              PRBool eatContinuations = PR_TRUE);
 
   // Decode routine (also converts output to unicode)
-  NS_IMETHOD DecodeMimePartIIStr(const nsCString& header, 
-                                 nsCString& charset, 
-                                 nsString& decodedString,
-								 PRBool eatContinuations = PR_TRUE);
+  NS_IMETHOD DecodeMimeHeader(const nsCString& header, 
+                              PRUnichar **decodedString,
+                              const char *default_charset = 0,
+                              PRBool override_charset = PR_FALSE,
+                              PRBool eatContinuations = PR_TRUE);
 
   // OBSOLESCENT Decode routine (also converts output to unicode)
   NS_IMETHOD DecodeMimePartIIStr(const nsString& header, 

@@ -613,7 +613,14 @@ nsDBFolderInfo::GetCharacterSet(nsString *result, PRBool *usedDefault)
 NS_IMETHODIMP
 nsDBFolderInfo::GetCharPtrCharacterSet(char **result)
 {
-	return GetCharPtrProperty(kCharacterSetColumnName, result);
+    nsresult rv = GetCharPtrProperty(kCharacterSetColumnName, result);
+
+    if (NS_SUCCEEDED(rv) && *result == nsnull)
+    {
+        *result = gDefaultCharacterSet.ToNewCString();
+    }
+
+    return rv;
 }
 
 NS_IMETHODIMP nsDBFolderInfo::SetCharacterSet(nsString *charSet) 

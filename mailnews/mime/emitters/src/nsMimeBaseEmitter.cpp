@@ -624,7 +624,7 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
     nsXPIDLCString tValue;
 
     // we're going to need a converter to convert
-    nsresult rv = mUnicodeConverter->DecodeMimePartIIStr(value, "UTF-8", getter_Copies(tValue));
+    nsresult rv = mUnicodeConverter->DecodeMimeHeader(value, getter_Copies(tValue));
     if (NS_SUCCEEDED(rv))
     {
       if (!tValue)

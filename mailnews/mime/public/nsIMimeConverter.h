@@ -37,10 +37,10 @@
 #include "prtypes.h"
 #include "nsString.h"
 
-// {C09EDB23-B7AF-11d2-B35E-525400E2D63A}
+// {ea5b631e-1dd1-11b2-be0d-e02825f300d0}
 #define NS_IMIME_CONVERTER_IID \
-      { 0xfb953da, 0xd0b5, 0x11d2,   \
-      { 0xb3, 0x73, 0x52, 0x54, 0x0, 0xe2, 0xd6, 0x3a } }
+      { 0xea5b631e, 0x1dd1, 0x11b2,   \
+      { 0xbe, 0x0d, 0xe0, 0x28, 0x25, 0xf3, 0x00, 0xd0 } }
 
 // default line length for calling the encoder
 #define kMIME_ENCODED_WORD_SIZE       72 
@@ -59,17 +59,21 @@ public:
   // These methods are all implemented by libmime to be used by 
   // modules that need to encode/decode mail headers
 
-  // Decode routine
-  NS_IMETHOD DecodeMimePartIIStr(const char *header, 
-                                 char       *charset, 
-                                 char **decodedString,
-								 PRBool eatContinuations = PR_TRUE) = 0;
+  // Decode routine.
+  // If header does not need decoding, places nsnull in decodedString
+  NS_IMETHOD DecodeMimeHeader(const char *header, 
+                              char **decodedString,
+                              const char *default_charset = nsnull,
+                              PRBool override_charset = PR_FALSE,
+                              PRBool eatContinuations = PR_TRUE) = 0;
 
   // Decode routine (also converts output to unicode)
-  NS_IMETHOD DecodeMimePartIIStr(const nsCString& header, 
-                                 nsCString& charset, 
-                                 nsString& decodedString,
-								 PRBool eatContinuations = PR_TRUE) = 0;
+  // On success, decodedString is never null
+  NS_IMETHOD DecodeMimeHeader(const nsCString& header, 
+                              PRUnichar **decodedString,
+                              const char *default_charset = nsnull,
+                              PRBool override_charset = PR_FALSE,
+                              PRBool eatContinuations = PR_TRUE) = 0;
 
   // OBSOLESCENT Decode routine (also converts output to unicode)
   NS_IMETHOD DecodeMimePartIIStr(const nsString& header, 
