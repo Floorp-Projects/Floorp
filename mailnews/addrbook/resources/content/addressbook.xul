@@ -122,11 +122,11 @@ Rights Reserved.
 		<spring flex="100%"/>
 	</menubar>
 		<toolbar>
-			<titledbutton src="&newcardButton.img;" align="bottom" value="&newcardButton.label;" onclick="AbNewCardDialog()"/>
-			<titledbutton src="&newlistButton.img;" align="bottom" value="&newlistButton.label;" onclick="AbNewList()"/>
-			<titledbutton src="&editButton.img;" align="bottom" value="&editButton.label;" onclick="EditCard()"/>
-			<titledbutton src="&newmsgButton.img;" align="bottom" value="&newmsgButton.label;" onclick="AbNewMessage()"/>
-			<titledbutton src="&deleteButton.img;" align="bottom" value="&deleteButton.label;" onclick="AbDelete()"/>
+			<titledbutton src="&newcardButton.img;" align="top" value="&newcardButton.label;" onclick="AbNewCardDialog()"/>
+			<titledbutton src="&newlistButton.img;" align="top" value="&newlistButton.label;" onclick="AbNewList()"/>
+			<titledbutton src="&editButton.img;" align="top" value="&editButton.label;" onclick="EditCard()"/>
+			<titledbutton src="&newmsgButton.img;" align="top" value="&newmsgButton.label;" onclick="AbNewMessage()"/>
+			<titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="AbDelete()"/>
 
 			<html:div class="separator" align="vertical"/>
 			
@@ -136,11 +136,11 @@ Rights Reserved.
 				<html:input id="searchtext" type="text" align="bottom" style="min-width:100px; min-height:25px; padding-bottom:0px"/> 
 			</box>
 
-			<titledbutton src="&stopButton.img;" align="bottom" value="&stopButton.label;" onclick="AbStop()"/>
-			<titledbutton src="&searchButton.img;" align="bottom" value="&searchButton.label;" onclick="AbSearch()"/>
+			<titledbutton src="&stopButton.img;" align="top" value="&stopButton.label;" onclick="AbStop()"/>
+			<titledbutton src="&searchButton.img;" align="top" value="&searchButton.label;" onclick="AbSearch()"/>
 			<spring flex="100%"/>
 
-			<!--titledbutton id="Throbber" align="right" onclick="MsgHome('&throbber.url;')"/-->
+			<titledbutton id="Throbber" align="right" onclick="MsgHome('http://www.mozilla.org/')"/>
 		</toolbar>
 	</toolbox>
 
