@@ -59,8 +59,6 @@ EXPORTS = \
 	nsIMenu.h \
 	nsIMenuItem.h \
 	nsIPopUpMenu.h \
-	nsIClipboard.h \
-	nsIClipboardOwner.h \
 	nsIFontNameIterator.h \
 	nsIFontSizeIterator.h \
 	nsIFontRetrieverService.h \
@@ -79,6 +77,8 @@ XPIDLSRCS =				\
 	nsIDragSession.idl			\
 	nsIDragService.idl			\
 	nsIFormatConverter.idl			\
+	nsIClipboard.idl			\
+	nsIClipboardOwner.idl			\
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
