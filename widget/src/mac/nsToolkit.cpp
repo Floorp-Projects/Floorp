@@ -51,11 +51,18 @@
 #include "nsGfxCIID.h"
 #include "nsIPref.h"
 
+
 // Class IDs...
 static NS_DEFINE_CID(kEventQueueCID,  NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
 
 static nsMacNSPREventQueueHandler*  gEventQueueHandler = nsnull;
+
+//
+// Static thread local storage index of the Toolkit 
+// object associated with a given thread...
+//
+static PRUintn gToolkitTLSIndex = 0;
 
 
 static CFBundleRef getBundle(CFStringRef frameworkPath)
@@ -82,13 +89,6 @@ static void* getQDFunction(CFStringRef functionName)
     return CFBundleGetFunctionPointerForName(systemBundle, functionName);
   return NULL;
 }
-
-
-//
-// Static thread local storage index of the Toolkit 
-// object associated with a given thread...
-//
-static PRUintn gToolkitTLSIndex = 0;
 
 //-------------------------------------------------------------------------
 //
@@ -188,6 +188,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsToolkit, nsIToolkit);
 // assume we begin as the fg app
 bool nsToolkit::sInForeground = true;
 
+static const char* gQuartzRenderingPref = "browser.quartz.enable";
 
 //-------------------------------------------------------------------------
 //
@@ -235,6 +236,37 @@ NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
   mInited = true;
   
 #if TARGET_CARBON
+  SetupQuartzRendering();
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  if ( prefs )
+    prefs->RegisterCallback(gQuartzRenderingPref, QuartzChangedCallback, nsnull);
+#endif
+
+  return NS_OK;
+}
+
+#if TARGET_CARBON
+
+//
+// QuartzChangedCallback
+//
+// The pref changed, reset the app to use quartz rendering as dictated by the pref
+//
+int nsToolkit::QuartzChangedCallback(const char* pref, void* data)
+{
+  SetupQuartzRendering();
+  return NS_OK;
+}
+
+
+//
+// SetupQuartzRendering
+//
+// Use apple's technote for 10.1.5 to turn on quartz rendering with CG metrics. This
+// slows us down about 12% when turned on.
+//
+void nsToolkit::SetupQuartzRendering()
+{
   // from Apple's technote, yet un-numbered.
 #if UNIVERSAL_INTERFACES_VERSION <= 0x0400
   enum {
@@ -252,23 +284,21 @@ NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
   // in a pref to disable it, rather than force everyone who wants it to carry around
   // an extra pref.
   typedef UInt32 (*qd_procptr)(UInt32);  
-  qd_procptr SwapQDTextFlags = (qd_procptr) getQDFunction(CFSTR("SwapQDTextFlags"));
+  static qd_procptr SwapQDTextFlags = (qd_procptr) getQDFunction(CFSTR("SwapQDTextFlags"));
   if ( SwapQDTextFlags ) {
     nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
     if (!prefs)
-      return NS_OK;
+      return;
     PRBool enableQuartz = PR_TRUE;
-    nsresult rv = prefs->GetBoolPref("browser.quartz.enable", &enableQuartz);
-    if ( NS_FAILED(rv) || enableQuartz ) {
-      UInt32 oldFlags = SwapQDTextFlags(kQDDontChangeFlags);
-      SwapQDTextFlags(oldFlags | kQDUseTrueTypeScalerGlyphs | kQDUseCGTextRendering |
-                        kQDUseCGTextMetrics);
-    }
+    nsresult rv = prefs->GetBoolPref(gQuartzRenderingPref, &enableQuartz);
+    UInt32 oldFlags = SwapQDTextFlags(kQDDontChangeFlags);
+    if ( NS_FAILED(rv) || enableQuartz )
+      SwapQDTextFlags(oldFlags | kQDUseTrueTypeScalerGlyphs | kQDUseCGTextRendering);
+    else 
+      SwapQDTextFlags(oldFlags & !kQDUseCGTextRendering);
   }
-#endif
-
-  return NS_OK;
 }
+#endif
 
 
 //-------------------------------------------------------------------------
@@ -550,6 +580,4 @@ Boolean nsMacMemoryCushion::EnsureMemoryCushion()
     
     return true;
 }
-
-
 

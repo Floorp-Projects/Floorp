@@ -110,6 +110,12 @@ public:
   static void GetTopWidget ( WindowPtr aWindow, nsIWidget** outWidget ) ;
 
 protected:
+
+#if TARGET_CARBON
+  static int QuartzChangedCallback(const char* pref, void* data);
+  static void SetupQuartzRendering();
+#endif
+
   bool          mInited;
   static bool   sInForeground;
 };
