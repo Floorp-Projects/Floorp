@@ -201,13 +201,14 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection,
       // else we need to break it up into two parts and recurse
       *aCancel = PR_TRUE;
       nsString firstString;
+      nsString restOfString(*inString);
       // if first char is special, then use just it
       if (pos == 0) pos = 1;
       inString->Left(firstString, pos);
-      inString->Cut(0, pos);
+      restOfString.Cut(0, pos);
       if (NS_SUCCEEDED(mEditor->InsertText(firstString)))
       {
-        res = mEditor->InsertText(*inString);
+        res = mEditor->InsertText(restOfString);
       }
     }
   }
