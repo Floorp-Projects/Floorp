@@ -325,7 +325,7 @@ nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
   // check for table cell selection mode
   PRBool cellSelectionMode = PR_FALSE;
   nsCOMPtr<nsIDOMElement> cell;
-  res = GetFirstSelectedCell(getter_AddRefs(cell), nsnull);
+  res = GetFirstSelectedCell(nsnull, getter_AddRefs(cell));
   if (NS_SUCCEEDED(res) && cell)
   {
     cellSelectionMode = PR_TRUE;
