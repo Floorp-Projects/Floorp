@@ -14,6 +14,7 @@
             <NC:hostName>imap.aol.com</NC:hostName>
             <NC:type>imap</NC:type>
             <NC:rememberPassword>false</NC:rememberPassword>
+            <NC:redirectorType>aol</NC:redirectorType>
           </NC:nsIMsgIncomingServer>
         </NC:incomingServer>
 
@@ -21,17 +22,27 @@
         <NC:identity>
           <NC:nsIMsgIdentity>
             <NC:composeHtml>false</NC:composeHtml>
-            <NC:bccSelf>true</NC:bccSelf>
-            <NC:bccList>alecf@usa.net</NC:bccList>
           </NC:nsIMsgIdentity>
         </NC:identity>
 
+        <NC:smtp>
+          <NC:nsISmtpServer>
+            <NC:hostname>smtp.aol.com</NC:hostname>
+            <NC:redirectorType>aol</NC:redirectorType>
+          </NC:nsISmtpServer>
+        </NC:smtp>
+
+        
         <!-- other options... see http://www.mozilla.org/mailnews/?? -->
 
+        <NC:smtpRequiresUsername>true</NC:smtpRequiresUsername>
+        <NC:smtpCreateNewServer>true</NC:smtpCreateNewServer>
+        <NC:smtpUsePreferredServer>true</NC:smtpUsePreferredServer>
+
+        <NC:wizardSkipPanels>true</NC:wizardSkipPanels>
         <NC:wizardShortName>AOL</NC:wizardShortName>
         <NC:wizardLongName>America Online</NC:wizardLongName>
         <NC:wizardPromote>true</NC:wizardPromote>
-
       </NC:nsIMsgAccount>
     </NC:provider>
   </RDF:Description>
