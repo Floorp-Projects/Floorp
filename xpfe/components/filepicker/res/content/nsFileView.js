@@ -232,17 +232,21 @@ nsFileView.prototype = {
 
   /* void selectionChanged(); */
   selectionChanged: function() {
-    if (this.mSelectionCallback && this.mSelection.currentIndex != -1) {
-      var file;
-      if (this.mSelection.currentIndex < this.mDirList.length) {
-        file = this.mDirList[this.mSelection.currentIndex].file;
-      } else if ((this.mSelection.currentIndex - this.mDirList.length) < this.mFilteredFiles.length) {
-        file = this.mFilteredFiles[this.mSelection.currentIndex - this.mDirList.length].file;
+    if (this.mSelectionCallback) {
+      var file = null;
+      var rangeCount = this.mSelection.getRangeCount();
+      if (rangeCount > 0) {
+        var rangeStart = new Object();
+        var rangeEnd = new Object();
+        this.mSelection.getRangeAt(0, rangeStart, rangeEnd);
+        if (rangeStart.value < this.mDirList.length) {
+          file = this.mDirList[rangeStart.value].file;
+        } else if ((rangeStart.value - this.mDirList.length) < this.mFilteredFiles.length) {
+          file = this.mFilteredFiles[rangeStart.value - this.mDirList.length].file;
+        }
       }
-
-      if (file) {
-        this.mSelectionCallback(file);
-      }
+      
+      this.mSelectionCallback(file);
     }
   },
 
