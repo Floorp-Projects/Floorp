@@ -87,7 +87,6 @@ NS_OpenURI(nsIStreamListener* aConsumer, nsIURI* uri,
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->AsyncRead(0, -1, uri, // uri used as context
-                            nsnull,     // XXX need event queue of current thread
                             aConsumer);
     if (NS_FAILED(rv)) goto done;
 

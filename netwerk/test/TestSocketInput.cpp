@@ -22,6 +22,7 @@
 #endif
 
 #include "nscore.h"
+#include "nsCOMPtr.h"
 #include "nsISocketTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
@@ -151,12 +152,13 @@ main(int argc, char* argv[])
   NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsIEventQueue* eventQ;
   rv = eventQService->CreateThreadEventQueue();
   if (NS_FAILED(rv)) return rv;
 
-  eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
-  
+  nsCOMPtr<nsIEventQueue> eventQ;
+  rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), getter_AddRefs(eventQ));
+  if (NS_FAILED(rv)) return rv;
+
   NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -164,7 +166,7 @@ main(int argc, char* argv[])
 
   rv = sts->CreateTransport(hostName, port, &transport);
   if (NS_SUCCEEDED(rv)) {
-    transport->AsyncRead(0, -1, nsnull, eventQ, new InputTestConsumer);
+    transport->AsyncRead(0, -1, nsnull, new InputTestConsumer);
 
     NS_RELEASE(transport);
   }
@@ -192,8 +194,6 @@ main(int argc, char* argv[])
 
   sts->Shutdown();
   NS_RELEASE(sts);
-  NS_RELEASE(eventQService);
-
   return 0;
 }
 

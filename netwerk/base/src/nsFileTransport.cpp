@@ -25,7 +25,9 @@
 #include "nsFileSpec.h"
 #include "nsIBuffer.h"
 #include "nsIBufferInputStream.h"
+#include "nsIEventQueueService.h"
 
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,6 +52,7 @@ nsFileTransport::~nsFileTransport()
     NS_IF_RELEASE(mFileStream);
     NS_IF_RELEASE(mBuffer);
     NS_IF_RELEASE(mBufferStream);
+    NS_IF_RELEASE(mEventQueue);
 }
 
 nsresult
@@ -179,13 +182,19 @@ nsFileTransport::GetURI(nsIURI* *aURL)
 NS_IMETHODIMP
 nsFileTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                            nsISupports *ctxt,
-                           nsIEventQueue *eventQueue,
                            nsIStreamListener *listener)
 {
     nsresult rv;
 
+    if (!mEventQueue) {
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     nsIStreamListener* asyncListener;
-    rv = NS_NewAsyncStreamListener(&asyncListener, eventQueue, listener);
+    rv = NS_NewAsyncStreamListener(&asyncListener, mEventQueue, listener);
     if (NS_FAILED(rv)) return rv;
 
     rv = Init(ctxt, asyncListener, START_READ, startPosition, readCount);
@@ -202,7 +211,6 @@ nsFileTransport::AsyncWrite(nsIInputStream* fromStream,
                             PRUint32 startPosition,
                             PRInt32 writeCount,
                             nsISupports* context,
-                            nsIEventQueue* appEventQueue,
                             nsIStreamObserver* observer)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -144,7 +144,6 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         }
         // Create one
         pChannel = new nsHTTPChannel(i_URL, 
-                                     i_eventQueue,
                                      httpEventSink,
                                      this);
         if (pChannel) {

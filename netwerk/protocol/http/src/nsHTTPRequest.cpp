@@ -954,7 +954,6 @@ nsHTTPRequest::OnStopBinding(nsISupports* i_pContext,
             NS_ADDREF(pListener);
             rv = m_pTransport->AsyncRead(0, -1,
                                          i_pContext, 
-                                         m_pConnection->EventQueue(), 
                                          pListener);
             NS_RELEASE(pListener);
         } else {

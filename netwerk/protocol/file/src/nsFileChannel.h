@@ -23,6 +23,7 @@
 #include "nsIThread.h"
 #include "nsFileSpec.h"
 #include "prlock.h"
+#include "nsIEventQueueService.h"
 
 class nsIEventSinkGetter;
 class nsIStreamListener;
@@ -61,11 +62,11 @@ public:
     /* nsIOutputStream OpenOutputStream (); */
     NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
 
-    /* void AsyncRead (in unsigned long startPosition, in long readCount, in nsISupports ctxt, in nsIEventQueue eventQueue, in nsIStreamListener listener); */
-    NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIEventQueue *eventQueue, nsIStreamListener *listener);
+    /* void AsyncRead (in unsigned long startPosition, in long readCount, in nsISupports ctxt, in nsIStreamListener listener); */
+    NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener);
 
-    /* void AsyncWrite (in nsIInputStream fromStream, in unsigned long startPosition, in long writeCount, in nsISupports ctxt, in nsIEventQueue eventQueue, in nsIStreamObserver observer); */
-    NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIEventQueue *eventQueue, nsIStreamObserver *observer);
+    /* void AsyncWrite (in nsIInputStream fromStream, in unsigned long startPosition, in long writeCount, in nsISupports ctxt, in nsIStreamObserver observer); */
+    NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer);
 
     /* attribute boolean LoadQuiet; */
     NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);

@@ -27,6 +27,7 @@
 #include "nsIBuffer.h"
 #include "nsIInputStream.h"
 #include "nsIBufferInputStream.h"
+#include "nsIEventQueueService.h"
 
 //
 // This is the size of the global buffer used by all nsSocketTransport 
@@ -84,12 +85,10 @@ public:
   NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
   NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                        nsISupports *ctxt,
-                       nsIEventQueue *eventQueue,
                        nsIStreamListener *listener);
   NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, 
                         PRUint32 startPosition, PRInt32 writeCount,
                         nsISupports *ctxt,
-                        nsIEventQueue *eventQueue,
                         nsIStreamObserver *observer);
   NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
   NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
@@ -154,6 +153,7 @@ protected:
 
   nsSocketTransportService* mService;
   PRUint32                  mLoadAttributes;
+  nsIEventQueue*            mEventQueue;
 };
 
 

@@ -171,7 +171,6 @@ nsFTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval
 NS_IMETHODIMP
 nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                         nsISupports *ctxt,
-                        nsIEventQueue *eventQueue,
                         nsIStreamListener *listener)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -182,7 +181,6 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
                          PRUint32 startPosition,
                          PRInt32 writeCount,
                          nsISupports *ctxt,
-                         nsIEventQueue *eventQueue,
                          nsIStreamObserver *observer)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

@@ -41,7 +41,6 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
-                             nsIEventQueue* i_EQ, 
                              nsIHTTPEventSink* i_HTTPEventSink,
                              nsIHTTPHandler* i_Handler): 
     m_URI(dont_QueryInterface(i_URL)),
@@ -51,7 +50,6 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     m_pHandler(dont_QueryInterface(i_Handler)),
     m_pEventSink(dont_QueryInterface(i_HTTPEventSink)),
     m_pResponse(nsnull),
-    m_pEventQ(dont_QueryInterface(i_EQ)),
     m_pResponseDataListener(nsnull),
     mLoadAttributes(LOAD_NORMAL),
     mResponseContext(nsnull)
@@ -163,7 +161,6 @@ nsHTTPChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retva
 NS_IMETHODIMP
 nsHTTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsISupports *aContext,
-                         nsIEventQueue *eventQueue,
                          nsIStreamListener *listener)
 {
     nsresult rv = NS_OK;
@@ -194,7 +191,6 @@ nsHTTPChannel::AsyncWrite(nsIInputStream *fromStream,
                           PRUint32 startPosition,
                           PRInt32 writeCount,
                           nsISupports *ctxt,
-                          nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -475,7 +471,7 @@ nsHTTPChannel::Open(void)
 
             // Write the request to the server...
             rv = stream->GetLength(&count);
-            rv = channel->AsyncWrite(stream, 0, count, this , m_pEventQ, m_pRequest);
+            rv = channel->AsyncWrite(stream, 0, count, this , m_pRequest);
             if (NS_FAILED(rv)) return rv;
 
             m_State = HS_WAITING_FOR_RESPONSE;
