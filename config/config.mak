@@ -347,7 +347,7 @@ MKCPYFLAGS= -i
 #// Common Libraries
 #//
 #//------------------------------------------------------------------------
-NSPR_VERSION=3
+NSPR_VERSION=4
 LIBNSPR=$(DIST)\lib\nspr$(NSPR_VERSION).lib $(DIST)\lib\plds$(NSPR_VERSION).lib $(DIST)\lib\plc$(NSPR_VERSION).lib
 LIBPLC=$(DIST)\lib\plc$(NSPR_VERSION).lib
 
