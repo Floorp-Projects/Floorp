@@ -155,25 +155,10 @@ nsDll::nsDll(const char *libPersistentDescriptor, PRInt64* modDate, PRInt64* fil
 void
 nsDll::Init(nsIFile *dllSpec)
 {
-    // Addref the m_dllSpec
+    // Load will fail anyway. So dont bother to stat the file
+
     m_dllSpec = dllSpec;
 
-    // Make sure we are dealing with a file
-    PRBool isFile = PR_FALSE;
-    nsresult rv = m_dllSpec->IsFile(&isFile);
-    if (NS_FAILED(rv))
-    {
-        m_status = DLL_INVALID_PARAM;
-        return;
-    }
-
-    if (isFile == PR_FALSE)
-    {
-      // Not a file. Cant work with it.
-      m_status = DLL_NOT_FILE;
-      return;
-    }
-    
 	m_status = DLL_OK;			
 }
 
