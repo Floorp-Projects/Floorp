@@ -21,6 +21,7 @@
  */
 
 #include "prlog.h"
+#include "prprf.h"
 #include "nsHTTPResponse.h"
 #include "nsIInputStream.h"
 #include "nsIURL.h"
@@ -33,6 +34,13 @@
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
 #endif /* PR_LOGGING */
+
+// When deciding heuristically whether or not to validate an HTTP response with
+// the server, this constant can be used to tune how conservative the algorithm
+// is.  For example, when set to 0.10, a document is considered stale when the
+// document's age is one tenth of the time between when the document was last
+// modified and when it was served.
+#define HEURISTIC_STALENESS_FACTOR 0.10
 
 nsHTTPResponse::nsHTTPResponse()
 {
@@ -391,7 +399,7 @@ nsresult nsHTTPResponse::ProcessHeader(nsIAtom* aHeader, nsCString& aValue)
     }
     //
     // When the Content-Length response header is processed, set the
-    // ContentLength in the Channel...
+    // ContentLength in the response ...
     //
     else if (nsHTTPAtoms::Content_Length == aHeader) {
         PRInt32 length, status;
@@ -412,3 +420,299 @@ nsresult nsHTTPResponse::ProcessHeader(nsIAtom* aHeader, nsCString& aValue)
     return rv;
 }
 
+// Convert PRTime to unix-style time_t, i.e. seconds since the epoch
+static PRUint32
+convertPRTimeToSeconds(PRTime aTime64)
+{
+    double fpTime;
+    LL_L2D(fpTime, aTime64);
+    return (PRUint32)(fpTime * 1e-6 + 0.5);
+}
+
+// Parse an http header which has a value that is a date string,
+// return the result as a unix-style time_t, i.e. seconds since the epoch
+nsresult nsHTTPResponse::ParseDateHeader(nsIAtom *aAtom,
+                                         PRUint32 *aResultTime,
+                                         PRBool *aHeaderIsPresent)
+{
+    *aHeaderIsPresent = PR_FALSE;
+
+    char *header;
+    GetHeader(aAtom, &header);
+
+    if (!header)
+        return NS_OK;
+    *aHeaderIsPresent = PR_TRUE;
+
+    PRStatus status;
+    PRTime time64;
+    status = PR_ParseTimeString(header, PR_TRUE, &time64);
+    if (status != PR_SUCCESS)
+        return NS_ERROR_FAILURE;
+    
+    *aResultTime = convertPRTimeToSeconds(time64);
+
+    return NS_OK;
+}
+
+
+// Return the value of the (HTTP 1.1) max-age directive, which itself is a
+// component of the Cache-Control response header
+nsresult nsHTTPResponse::GetMaxAge(PRUint32* aMaxAge, PRBool* aMaxAgeIsPresent)
+{
+    *aMaxAgeIsPresent = PR_FALSE;
+
+    char *cacheControlHeader;
+    GetHeader(nsHTTPAtoms::Cache_Control, &cacheControlHeader);
+    if (!cacheControlHeader)
+        return NS_OK;
+
+    nsCAutoString header(cacheControlHeader);
+    nsAllocator::Free(cacheControlHeader);
+    
+    PRUint32 offset;
+    offset = header.Find("max-age=", PR_TRUE);
+    if (offset == kNotFound)
+        return NS_OK;
+
+    *aMaxAge = (PRUint32)atol(header.GetBuffer() + offset + 8);
+    *aMaxAgeIsPresent = PR_TRUE;
+    return NS_OK;
+}
+
+
+// Check to see if a (cached) HTTP response is stale and, therefore,
+// must be revalidated with the origin server.
+//
+// Staleness can occur for one of several reasons:
+//    + The response appears older than permitted by either the Expires
+//      response header or the (HTTP 1.1) max-age response directive.
+//    + The (HTTP 1.1) no-cache directive appears in the response headers
+//    + The cached response is heuristically stale
+//    + The response headers appear corrupted or malformed
+//
+PRBool nsHTTPResponse::IsStale(PRBool aUseHeuristicExpiration)
+{
+    nsresult rv;
+
+    // Check for the no-cache directive within the Cache-Control response
+    // header. Weirdly enough, the presence of the no-cache directive does not
+    // indicate that the HTTP response can't be cached.  Rather, it means that
+    // the response must always be revalidated with the origin server.  See
+    // section 14.9.1 of RFC2616.
+    //
+    char *cacheControlHeader;
+    GetHeader(nsHTTPAtoms::Cache_Control, &cacheControlHeader);
+    if (cacheControlHeader) {
+        nsCAutoString header(cacheControlHeader);
+        nsAllocator::Free(cacheControlHeader);
+        if (header.Find("no-cache", PR_TRUE) != kNotFound)
+            return PR_TRUE;
+    }
+
+    // Get the value of the 'Date:' header
+    PRUint32 date;
+    PRBool dateHeaderIsPresent;
+    rv = ParseDateHeader(nsHTTPAtoms::Date, &date, &dateHeaderIsPresent);
+
+    // Check for corrupted, missing or malformed 'Date:' header
+    if (NS_FAILED(rv) || !dateHeaderIsPresent || !date)
+        return PR_TRUE;
+
+    // Get the value of the 'max-age' directive from the 'Cache-Control:' header
+    PRUint32 maxAge;
+    PRBool maxAgeIsPresent;
+    rv = GetMaxAge(&maxAge, &maxAgeIsPresent);
+    if (NS_FAILED(rv)) return PR_TRUE; // Corrupted or malformed headers ?
+
+    // The below code calculates the age of the response, i.e. the number of
+    // seconds that has elapsed since the document was supplied by the origin
+    // server.  The HTTP 1.1 spec provides a somewhat more pessimistic
+    // computation that makes use of the 'Age:' header, if it is present, thus
+    // potentially reducing the effects of clock skew if all proxies on the
+    // path from the origin server to the client are HTTP1.1-compliant.
+    //
+    // However, I've used the simpler and more traditional formula: 
+    //   age = current_time - date_header
+    //
+
+    PRUint32 now = convertPRTimeToSeconds(PR_Now());
+    PRUint32 currentAge;
+
+    // Sometimes current time appears to be before the time that the document was
+    // sent due to clock skew between the client and the server, so sanity check it
+    if (now > date)
+        currentAge = now - date;
+    else
+        currentAge = 0;
+
+    // Compute document freshness and compare to minimum permitted
+    if (maxAgeIsPresent) {
+        // The Max-Age directive takes priority over Expires, so if max-age is present
+        // in a response, the calculation is simply: 
+        if (currentAge < maxAge)
+            return PR_FALSE;
+    } else {
+
+        // Get the value of the 'Expires:' header
+        PRUint32 expires;
+        PRBool expiresHeaderIsPresent;
+        rv = ParseDateHeader(nsHTTPAtoms::Expires, &expires, &expiresHeaderIsPresent);
+        if (NS_FAILED(rv)) return PR_TRUE; // Corrupted or malformed headers ?
+
+        if (expiresHeaderIsPresent) {
+            // Otherwise, if Expires is present in the response, the calculation is: 
+            if (currentAge < expires - date)
+                return PR_FALSE;
+        }
+    }
+
+    // At this point, there are no protocol-defined means to determine whether or
+    // not the HTTP response can be considered stale.  Hence, we resort to a heuristic
+    // approach.
+
+    // Check if the document's age is older than a specified fraction of time
+    if (aUseHeuristicExpiration) {
+
+        // Get the value of the 'LastModified:' header
+
+        PRUint32 lastModified;
+        PRBool lastModifiedHeaderIsPresent;
+        rv = ParseDateHeader(nsHTTPAtoms::Last_Modified, &lastModified,
+                             &lastModifiedHeaderIsPresent);
+
+        // Check for corrupted, missing or malformed 'LastModified:' header
+        if (NS_FAILED(rv) || !lastModifiedHeaderIsPresent || !lastModified)
+            return PR_TRUE;
+
+        if (lastModified > date) {
+            // Weird: document's last-modified date is after it was sent from the server
+            return PR_TRUE;
+        }
+
+        PRUint32 heuristicThresholdAge;
+        heuristicThresholdAge = (PRUint32)((date - lastModified) * HEURISTIC_STALENESS_FACTOR);
+        
+        if (currentAge < heuristicThresholdAge)
+            return PR_FALSE;
+    }
+
+    return PR_TRUE;
+}
+
+// This routine is used to reconstruct the HTTP response headers that will be
+// stored in the cache.  However, these are not exactly the same as the headers
+// that were received:
+//    + All hop-by-hop headers are removed, leaving only the end-to-end headers
+//    + The set-cookie header is removed since we do not usually want to replay
+//      setting of cookies when using a cached response
+//    + Header format is canonicalized, with extraneous whitespace deleted and
+//      multiple headers with the same field name coalesced into one header
+//      with comma-separated values.
+//    + Headers may appear in a different order than they were transmitted
+//
+nsresult nsHTTPResponse::EmitHeaders(nsCString& aResponseBuffer)
+{
+    nsresult rv;
+
+    //
+    // Write the status line
+    //
+    // i.e. HTTP/x.y SP Status-Code SP Reason-Phrase CRLF
+    //
+
+    char *versionString;
+    if (mServerVersion == HTTP_ZERO_NINE)
+        versionString = "0.9";
+    else if (mServerVersion == HTTP_ONE_ZERO)
+        versionString = "1.0";
+    else if (mServerVersion == HTTP_ONE_ONE)
+        versionString = "1.1";
+    else
+        versionString = "?.?";
+
+    char *statusLine;
+    statusLine = PR_smprintf("HTTP/%s %3d %s", versionString, mStatus, mStatusString);
+    if (!statusLine)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    aResponseBuffer = statusLine;
+    aResponseBuffer.Append(CRLF);
+
+    PR_smprintf_free(statusLine);
+
+    //
+    // Write the response headers, if any...
+    //
+    // i.e. field-name ":" [field-value] CRLF
+    //
+    nsCOMPtr<nsISimpleEnumerator> enumerator;
+    rv = mHeaders.GetEnumerator(getter_AddRefs(enumerator));
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool bMoreHeaders;
+    nsXPIDLCString autoBuffer;
+    nsAutoString autoString;
+    nsCOMPtr<nsISupports>   item;
+    nsCOMPtr<nsIHTTPHeader> header;
+    nsCOMPtr<nsIAtom>       headerAtom;
+
+    while (1) {
+        enumerator->HasMoreElements(&bMoreHeaders);
+        if (!bMoreHeaders)
+            break;
+
+        enumerator->GetNext(getter_AddRefs(item));
+        header = do_QueryInterface(item);
+
+        NS_ASSERTION(header, "Bad HTTP header.");
+        if (!header)
+            return NS_ERROR_FAILURE;
+
+        header->GetField(getter_AddRefs(headerAtom));
+        if (headerAtom == nsHTTPAtoms::Connection          ||
+            headerAtom == nsHTTPAtoms::Keep_Alive          ||
+            headerAtom == nsHTTPAtoms::Proxy_Authenticate  ||
+            headerAtom == nsHTTPAtoms::Proxy_Authorization ||
+            headerAtom == nsHTTPAtoms::TE                  ||
+            headerAtom == nsHTTPAtoms::Trailer             ||
+            headerAtom == nsHTTPAtoms::Transfer_Encoding   ||
+            headerAtom == nsHTTPAtoms::Upgrade             ||
+            headerAtom == nsHTTPAtoms::Set_Cookie)
+            continue;
+                    
+        header->GetValue(getter_Copies(autoBuffer));
+
+        headerAtom->ToString(autoString);
+        autoString.Append(": ");
+        autoString.Append(autoBuffer);
+        autoString.Append(CRLF);
+        aResponseBuffer.Append(autoString);
+    }
+
+    return NS_OK;
+}
+
+// Digest a single string that contains all the HTTP response headers,
+// including the status line.
+nsresult nsHTTPResponse::ParseHeaders(nsCString& aAllHeaders)
+{
+    PRUint32 beginLineOffset, endLineOffset;
+    nsCString lineBuffer;
+    nsresult rv;
+    
+    beginLineOffset = endLineOffset = 0;
+
+    while (1) {
+        endLineOffset = aAllHeaders.Find("\r", PR_FALSE, beginLineOffset);
+        if (endLineOffset == kNotFound)
+            return NS_OK;
+        aAllHeaders.Mid(lineBuffer, beginLineOffset, endLineOffset-1);
+        if (beginLineOffset == 0)
+            rv = ParseStatusLine(lineBuffer);
+        else
+            rv = ParseHeader(lineBuffer);
+        if (NS_FAILED(rv)) return rv;
+        beginLineOffset = endLineOffset + 2; // Skip past CRLF
+    }
+}
