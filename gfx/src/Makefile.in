@@ -52,7 +52,7 @@ ifdef MOZ_ENABLE_QT
 DIRS		+= qt
 endif
 ifdef MOZ_ENABLE_XLIB
-DIRS		+= xlib
+DIRS		+= xlibrgb xlib
 endif
 
 endif
