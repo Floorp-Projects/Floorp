@@ -44,6 +44,9 @@
 #include "nsIStringBundle.h"
 #include "nsICSSStyleSheet.h"
 
+// Parser Observation
+#include "nsEditorParserObserver.h"
+
 class nsIWebShell;
 class nsIScriptContext;
 class nsIDOMWindow;
@@ -98,6 +101,10 @@ class nsEditorShell :   public nsIEditorShell,
 
     nsIWebShellWindow  *mWebShellWin;					// weak reference
     nsIWebShell        *mWebShell;						// weak reference
+
+    // The webshell that contains the document being edited.
+    // Don't assume that webshell directly contains the document being edited;
+    // if we are in a frameset, this assumption is broken.
     nsIWebShell        *mContentAreaWebShell;	// weak reference
 
   	typedef enum {
@@ -113,7 +120,7 @@ class nsEditorShell :   public nsIEditorShell,
     NS_IMETHOD      TransferDocumentStateListeners();
     NS_IMETHOD			RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
     void 						SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
-		NS_IMETHOD  	  PrepareDocumentForEditing(nsIURI *aUrl);
+		NS_IMETHOD  	  PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl);
 		NS_IMETHOD      DoFind(PRBool aFindNext);
 
     void    Alert(const nsString& aTitle, const nsString& aMsg);
@@ -127,9 +134,6 @@ class nsEditorShell :   public nsIEditorShell,
 
 		// this returns an AddReffed nsIScriptContext. You must relase it.
 		nsIScriptContext*  GetScriptContext(nsIDOMWindow * aWin);
-
-    nsString            mEnableScript;     
-    nsString            mDisableScript;     
 
 		EEditorType					mEditorType;
 		nsString						mEditorTypeString;	// string which describes which editor type will be instantiated (lowercased)
@@ -148,6 +152,8 @@ class nsEditorShell :   public nsIEditorShell,
     nsStringArray   mDictionaryList;
     PRInt32         mDictionaryIndex;
 
+    PRPackedBool    mCloseWindowWhenLoaded;     // error on load. Close window when loaded
+    
     // this is a holding pen for doc state listeners. They will be registered with
     // the editor when that gets created.
     nsCOMPtr<nsISupportsArray> mDocStateListeners;		// contents are nsISupports
@@ -168,6 +174,8 @@ private:
     // Pointer to the EditorContent style sheet we load/unload
     //   for "Edit Mode"/"Browser mode" display
     nsCOMPtr<nsIStyleSheet> mEditModeStyleSheet;
+    
+    nsEditorParserObserver *mParserObserver;
 };
 
 #endif // nsEditorShell_h___
